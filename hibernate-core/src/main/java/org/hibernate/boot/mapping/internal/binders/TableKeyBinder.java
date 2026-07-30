@@ -26,7 +26,7 @@ import org.hibernate.boot.mapping.internal.materialize.ResolvedUniqueKey;
 import org.hibernate.boot.mapping.internal.materialize.UniqueKeyMappingMaterializer;
 import org.hibernate.boot.mapping.internal.sources.ColumnSource;
 import org.hibernate.boot.mapping.internal.context.BindingState;
-import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadata;
+import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadataImpl;
 import org.hibernate.boot.mapping.internal.sources.ForeignKeySource;
 import org.hibernate.boot.mapping.internal.sources.ToOneSource.JoinColumnOrFormulaSource;
 import org.hibernate.boot.model.naming.Identifier;
@@ -421,7 +421,7 @@ public class TableKeyBinder {
 	}
 
 	private IdentifierBinding resolveIdentifierBinding() {
-		final EntityTypeMetadata rootType = entityBinder.getManagedType().getHierarchy().getRoot();
+		final EntityTypeMetadataImpl rootType = entityBinder.getManagedType().getHierarchy().getRoot();
 		final IdentifierBinding entityIdentifierBinding = bindingState.getIdentifierBinding( rootType );
 		if ( entityIdentifierBinding == null ) {
 			throw new ModelsException( "Identifier binding not available for " + rootType.getEntityName() );

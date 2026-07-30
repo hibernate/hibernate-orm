@@ -16,7 +16,7 @@ import org.hibernate.boot.mapping.internal.model.ManagedTypeBinding;
 import org.hibernate.boot.mapping.internal.model.StandardAttributeUsageBinding;
 import org.hibernate.boot.mapping.internal.view.EntityHierarchyView;
 import org.hibernate.boot.mapping.internal.categorize.BasicKeyMapping;
-import org.hibernate.boot.mapping.internal.categorize.EntityHierarchy;
+import org.hibernate.boot.mapping.internal.categorize.EntityHierarchyImpl;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.AppliedMappingPart;
@@ -32,8 +32,8 @@ import org.hibernate.mapping.Subclass;
 import org.hibernate.models.spi.TypeDetails;
 import org.hibernate.orm.test.boot.models.bind.callbacks.HierarchyRoot;
 import org.hibernate.orm.test.boot.models.bind.callbacks.HierarchySuper;
-import org.hibernate.mapping.DeclarationRole;
-import org.hibernate.mapping.MappingRole;
+import org.hibernate.boot.mapping.spi.DeclarationRole;
+import org.hibernate.boot.mapping.spi.MappingRole;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
 
@@ -63,9 +63,9 @@ import static org.hibernate.orm.test.boot.models.bind.BindingTestingHelper.check
 public class MappedSuperclassTests {
 	@Test
 	void testAssumptions() {
-		final Set<EntityHierarchy> entityHierarchies = buildHierarchyMetadata( HierarchyRoot.class, HierarchySuper.class );
+		final Set<EntityHierarchyImpl> entityHierarchies = buildHierarchyMetadata( HierarchyRoot.class, HierarchySuper.class );
 		assertThat( entityHierarchies ).hasSize( 1 );
-		final EntityHierarchy entityHierarchy = entityHierarchies.iterator().next();
+		final EntityHierarchyImpl entityHierarchy = entityHierarchies.iterator().next();
 
 		assertThat( entityHierarchy.getIdMapping() ).isNotNull();
 		final BasicKeyMapping idMapping = (BasicKeyMapping) entityHierarchy.getIdMapping();
@@ -93,7 +93,7 @@ public class MappedSuperclassTests {
 					final var metadataCollector = context.getMetadataCollector();
 					final MappedSuperclass superBinding = metadataCollector.getMappedSuperclass( HierarchySuper.class );
 					final PersistentClass rootBinding = metadataCollector.getEntityBinding( HierarchyRoot.class.getName() );
-					final EntityHierarchy categorizedHierarchy = context.getCategorizedDomainModel()
+					final EntityHierarchyImpl categorizedHierarchy = context.getCategorizedDomainModel()
 							.getEntityHierarchies()
 							.iterator()
 							.next();

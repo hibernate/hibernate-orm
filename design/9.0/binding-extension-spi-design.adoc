@@ -1,384 +1,476 @@
 = Binding Extension SPI Design
 :toc:
 
-This document sketches a supported replacement SPI for the existing
-`org.hibernate.binder.AttributeBinder` and `org.hibernate.binder.TypeBinder`
-contracts.
+This document defines the ORM 9 direction for
+`org.hibernate.binder.AttributeBinder` and
+`org.hibernate.binder.TypeBinder`.
 
-The goal is not to expose ORM's internal binding model.  Built-in annotations
-such as `@TenantId`, `@NaturalId`, and `@Collate` may prove the design using
-internal contribution/view/materialization products, but the public extension
-contract must be a stable SPI facade over that machinery.
+The binders remain incubating extension SPIs.  They are not deprecated and are
+not treated as legacy adapters awaiting removal.  Incubation reflects that ORM
+9 must stabilize the shape and timing of the contracts around the new
+categorization, binding, and materialization pipeline.
 
-== Motivation
+== Decision
 
-The current `AttributeBinder` and `TypeBinder` contracts allow user annotations
-to mutate `org.hibernate.mapping` objects directly:
+`AttributeBinder` and `TypeBinder` are post-materialization boot-mapping
+customization SPIs.
 
-* `PersistentClass`
-* `Component`
-* `Property`
-* `Value`
-* `Column`
+Each invocation correlates:
 
-That shape is difficult to preserve as the boot model moves toward:
+* a read-only semantic description produced by categorization and binding;
+* the concrete application of that description at a managed-type or attribute
+  usage site;
+* mutable `org.hibernate.mapping` objects produced for that application; and
+* the boot services needed for broader metadata contributions.
 
-* source/categorization facts;
-* finalized binding model products;
-* stable views over those products;
-* compatibility materialization into `org.hibernate.mapping`.
+The binders continue to mutate `PersistentClass`, `Component`, `Property`,
+`Value`, `Column`, and related mapping objects directly.  This broad mutation
+surface is intentional: the binders exist for customizations which cannot be
+anticipated as a closed list of options.
 
-Direct mapping-object mutation also creates timing problems.  A custom binder
-can observe or mutate partially-resolved mapping objects before identifiers,
-mapped-superclass contributions, embeddable applications, table keys,
-selectable correspondence, or delayed ordering have been finalized.
+The public contract must not expose ORM's mutable internal working state.
+Categorized and binding-model contracts exposed to a binder are supported,
+read-only SPI.  Internal builders, resolvers, contribution records, value
+intents, materializers, and coordinator state remain internal.
 
-ORM 9 should migrate the extension concept, not the old mutation surface.
+== Why The Facet Model Is Not The Public Contract
 
-== Design Principle
+Earlier ORM 9 work rehearsed a capability/facet-based attribute contributor
+for `@TenantId`, `@NaturalId`, and `@Collate`.  It proved that ORM-owned
+annotations can be translated into structured internal contributions, but the
+facade itself duplicated the binder pipeline without defining a useful public
+contract.  It was therefore removed.
 
-The public SPI should be capability/facet based.
+The useful implementation pieces remain internal: semantic contribution
+records preserve facts in the boot binding model, and focused materializers
+apply those facts to `org.hibernate.mapping`.
 
-It should not ask extensions to create or return Hibernate's internal
-contribution records.  Instead, ORM should expose stable targets that represent
-what the extension is allowed to affect:
+`AttributeBinder` and `TypeBinder` are deliberately broad escape hatches.  A
+public facet model would either:
 
-* attribute-level options;
-* value/type intent;
-* selectable intent;
-* association intent;
-* component/path intent;
-* plural-attribute intent;
-* containing type or metadata-wide side effects through explicit services.
+* enumerate most mutations supported by `org.hibernate.mapping`, becoming a
+  second mapping API; or
+* expose only common operations and prevent the unusual customizations which
+  justify the extension point.
 
-Internally, target mutations may become contribution records, views, pending
-work items, or direct materialization calls.  That is ORM implementation detail.
-As the binding model matures, public SPI targets should wrap stable internal
-binding/view objects such as attribute bindings, not the temporary proof records
-used by individual built-in annotations.
+The existing uses demonstrate the range:
 
-The public SPI must not expose:
+* attribute access-strategy and insert/update/optional flags;
+* basic-value converters and type configuration;
+* collection batch sizing;
+* selectable and column decoration;
+* entity mutation expectations and discriminator behavior;
+* metadata-wide filter definitions; and
+* dialect-sensitive database initialization.
 
-* `BootBindingModel`;
-* internal `*Contribution` records;
-* internal contribution views;
-* internal materializers;
-* mutable `org.hibernate.mapping` compatibility objects as the primary contract.
+Targets, optional facets, contribution commands, conflict rules, and
+materialization adapters would make these operations more complicated while
+remaining less capable than direct mapping customization.
 
-== SPI Closure Requirement
+Internal semantic contributions and public custom binders therefore have
+different purposes:
 
-When this rehearsal becomes a supported SPI, the SPI boundary must be closed.
-That means every type exposed by, accepted by, or returned from the public
-contracts must itself be a supported API/SPI type or a stable JDK/Jakarta type.
+* ORM-owned annotations may use contribution records when that improves
+  pipeline correctness.
+* Public binders customize the materialized mapping with read-only access to
+  the semantic facts which produced it.
 
-For example, if public contracts include:
+An ORM-owned annotation migrated to an internal contribution path must not also
+run through the public binder dispatcher.
 
-* `AttributeBindingContributor`;
-* `AttributeBindingTarget`;
-* future managed-type / type-binder contributor contracts;
-* target facets such as `AttributeOptions`, `ValueBindingTarget`,
-  `SelectableBindingTarget`, `AssociationBindingTarget`, or
-  `ComponentBindingTarget`;
-* context objects such as `BindingContributionContext`;
+== Boundary
 
-then those targets, facets, source views, diagnostics objects, command objects,
-and any value objects they expose must also live in supported packages and obey
-the API/SPI/internal taxonomy.
+The binder invocation sits at the semantic-to-materialized mapping boundary:
 
-The current `org.hibernate.boot.mapping.internal.*` packages are rehearsal space;
-when a binding extension contract becomes supported, the SPI contracts should
-move to packages such as `org.hibernate.boot.mapping.context.spi` or
-`org.hibernate.boot.mapping.extension.spi`, while implementations and mutable
-working state remain under corresponding `.internal` packages.
+[source,text]
+----
+categorized domain model
+        |
+declaration / usage / application binding
+        |
+org.hibernate.mapping materialization
+        |
+AttributeBinder / TypeBinder
+        |
+value resolution and mapping finalization
+----
 
-The implementation may adapt those public contracts to internal binding-model
-objects, contribution records, pending work items, materializers, or
-`org.hibernate.mapping` compatibility objects.  But no public contributor should
-need to import `org.hibernate.boot.mapping.internal.*`, and no public
-target should leak an internal model object as a return type.
+The semantic side is observational.  The materialized side is mutable.
 
-This applies equally to the not-yet-modeled `TypeBinder` replacement.  A public
-managed-type contributor cannot expose internal managed-type bindings, internal
-embeddable/mapped-superclass contribution objects, or internal materialization
-products.  It needs its own SPI-safe managed-type target and facets.
+Binders do not receive mutation access to `BootBindingModel` or to the
+categorized domain model.  Arbitrary categorized-model mutation would require
+recategorization, extension ordering, conflict handling, fixed-point semantics,
+and archive rules.  That is a distinct early source/categorization extension
+problem and is not hidden inside these annotation binders.
 
-== Attribute Contributor Shape
+== Semantic Model SPI And Internal Split
 
-A possible replacement for `AttributeBinder` is:
+Binder contexts must not leak types from
+`org.hibernate.boot.mapping.internal.*`.  ORM 9 should promote a coherent
+read-only semantic model under:
+
+[source,text]
+----
+org.hibernate.boot.mapping.spi
+----
+
+Implementations, construction, resolution, and mutable state remain under:
+
+[source,text]
+----
+org.hibernate.boot.mapping.internal.categorize
+org.hibernate.boot.mapping.internal.model
+org.hibernate.boot.mapping.internal.context
+org.hibernate.boot.mapping.internal.materialize
+----
+
+Existing internal interfaces are inputs to the supported design, not contracts
+which are automatically promoted unchanged.  Some mix descriptive state with
+internal operations and must be split.
+
+=== Boundary Rules
+
+The supported semantic model obeys these rules:
+
+* No supported signature imports `org.hibernate.boot.mapping.internal.*`.
+* Contracts are read-only and ORM-produced.
+* Returned collections are immutable.
+* Categorization services, builders, resolvers, and mutable registries remain
+  internal.
+* Binding contributions, `ValueIntent`, materializers, and binding/coordinator
+  state remain internal.
+* Internal marker contracts such as `TableOwner` do not become public
+  supertypes merely because an implementation needs them.
+* An internal interface is introduced only for genuine internal polymorphism,
+  not merely to mirror a supported contract. Otherwise, an internal concrete
+  or abstract class implements the supported contract directly and owns any
+  additional internal operations.
+* Concrete internal implementations use an `Impl` suffix where using the SPI
+  simple name would create ambiguity.
+* Hibernate Models SPI types may be exposed deliberately where they describe a
+  source member or resolved Java type.
+* Every exposed type has a closed supported transitive signature.
+
+=== Categorized Contracts
+
+The initial closure should cover the descriptive contracts needed to navigate
+from a binder invocation to its source declaration and containing type:
+
+* `CategorizedDomainModel`;
+* `ManagedTypeMetadata`;
+* `IdentifiableTypeMetadata`;
+* `EntityTypeMetadata`;
+* `MappedSuperclassTypeMetadata`;
+* `EmbeddableTypeMetadata`;
+* `EmbeddableUsageMetadata`;
+* `AttributeMetadata`;
+* `SingularAttributeMetadata`;
+* `PluralAttributeMetadata`;
+* `ValueMetadata`;
+* `EmbeddedValueMetadata`;
+* `ValueNature`; and
+* a read-only entity-hierarchy view.
+
+The closure is use-case driven.  Persistence-unit registrations, key-resolution
+working state, generator-resolution state, and categorization services remain
+internal unless a binder requirement independently justifies supporting them.
+
+For example, the public embeddable contract may describe the declaration:
 
 [source,java]
 ----
-public interface AttributeBindingContributor<A extends Annotation> {
-	void contribute(
-			A annotation,
-			AttributeBindingTarget target,
-			BindingContributionContext context);
+public interface EmbeddableTypeMetadata {
+	ClassDetails getClassDetails();
+	AccessType getExplicitAccessType();
 }
 ----
 
-The contributor receives:
-
-* the annotation instance;
-* a stable target representing the annotated attribute;
-* a context for services, diagnostics, and broader contributions.
-
-The contributor does not receive `Property`, `Value`, `Column`, `Component`, or
-`PersistentClass`.
-
-== Attribute Target Facets
-
-`AttributeBindingTarget` should expose general facets rather than concrete
-Hibernate contribution types:
+The operation which resolves a usage remains on the internal implementation:
 
 [source,java]
 ----
-public interface AttributeBindingTarget {
-	AttributeSource source();
-	AttributeKind kind();
-
-	AttributeOptions options();
-	ValueBindingTarget value();
-	SelectableBindingTarget selectables();
-	ContainingTypeBindingTarget containingType();
-
-	Optional<PluralAttributeBindingTarget> plural();
-	Optional<AssociationBindingTarget> association();
-	Optional<ComponentBindingTarget> component();
+final class EmbeddableTypeMetadataImpl
+		implements org.hibernate.boot.mapping.spi.EmbeddableTypeMetadata {
+	EmbeddableUsageMetadata resolveUsage(
+			MemberDetails sourceMember,
+			TypeVariableScope scope,
+			AccessType inheritedAccessType,
+			CategorizationContext context);
 }
 ----
 
-The exact names are provisional.  The important point is that each facet
-represents a supported capability, not a mutable mapping object.
+Likewise, public `AttributeMetadata` does not extend the internal `TableOwner`
+marker. The internal `AttributeMetadataImplementor` intersection remains
+useful because multiple unrelated attribute implementations need both the
+supported descriptive contract and the internal table-owner role.
 
-=== Attribute Options
+The first implementation slice uses supported read-only superinterfaces and
+internal implementations. `CategorizedDomainModel` exposes source
+classes, mapped-superclass classes, entity hierarchies, and embeddable
+declarations; persistence-unit `GlobalRegistrations` remains on the internal
+`CategorizedDomainModelImpl`. The supported `EntityHierarchy` exposes root, absolute root,
+inheritance strategy, and default access.  Key, generator, cache, listener, and
+categorizer working state remain on `EntityHierarchyImpl`.
++
+`ManagedTypeMetadata`, its identifiable/entity/mapped-superclass
+specializations, attribute/value metadata, embeddable declarations/usages, and
+collection-id metadata follow the same pattern. Internal concrete classes and
+records implement the supported contracts directly. Shared implementation
+behavior lives on `AbstractManagedTypeMetadata` and
+`AbstractIdentifiableTypeMetadata`; embeddable usage resolution lives on
+`EmbeddableTypeMetadataImpl`. Data-only implementations such as
+`ValueMetadataImpl` likewise implement their supported contracts directly.
 
-Attribute-level options cover simple semantic flags and attribute behavior:
+=== Declaration, Usage, And Application Contracts
+
+The supported binding-side view follows the durable ORM 9 model:
+
+Declaration::
+Where a persistent attribute originates.
+
+Usage::
+How that declaration is interpreted in a contextual usage, including generic
+type resolution and an embeddable or inherited path.
+
+Application::
+The concrete occurrence of that usage in the mapping graph.
+
+The initial shape is:
 
 [source,java]
 ----
-public interface AttributeOptions {
-	void insertable(boolean insertable);
-	void updatable(boolean updatable);
-	void optional(boolean optional);
-	void propertyAccessStrategy(Class<? extends PropertyAccessStrategy> strategy);
-	void naturalId(boolean mutable);
+public interface AttributeDeclaration {
+	DeclarationRole getRole();
+	String getName();
+	ManagedTypeMetadata getDeclaringType();
+	MemberDetails getMember();
+	AccessType getAccessType();
+	AttributeNature getNature();
+}
+
+public interface AttributeUsage {
+	AttributeDeclaration getDeclaration();
+	MemberDetails getMember();
+	TypeDetails getResolvedType();
+	String getSourceRole();
+	String getAttributePath();
+	AttributeNature getNature();
+}
+
+public interface AttributeApplication {
+	AttributeUsage getUsage();
+	MappingRole getRole();
 }
 ----
 
-This facet covers current behavior such as:
+These names and JavaBean versus concise accessor style remain subject to the
+package/API consistency pass.  The three concepts and their read-only
+relationship are the contract.
 
-* `@NaturalId`;
-* `@AttributeAccessor`;
-* simple custom binders that mark an attribute non-updatable.
-
-=== Value and Selectable Targets
-
-Value/selectable facets cover type, conversion, and column-like intent:
+The existing internal types adapt to this SPI.  Internal contracts may add
+working information:
 
 [source,java]
 ----
-public interface ValueBindingTarget {
-	void converter(AttributeConverterDescriptor converter);
-	void mutability(MutabilityPlan<?> mutabilityPlan);
-}
-
-public interface SelectableBindingTarget {
-	void forEachSelectable(Consumer<SelectableTarget> consumer);
-}
-
-public interface SelectableTarget {
-	void collation(String collation);
-	void comment(String comment);
-	void readExpression(String expression);
-	void writeExpression(String expression);
+interface AttributeUsageBinding extends AttributeUsage {
+	AttributeUsageContainer usageContainer();
+	ValueIntent valueIntent();
 }
 ----
 
-This facet covers current behavior such as:
+`AttributeUsageContainer`, `ValueIntent`, contribution records, and mutable
+registration methods remain internal.
 
-* `@Collate`;
-* converter-like custom annotations;
-* future column/read/write-expression annotations.
+=== Stable Roles
 
-The SPI should avoid promising that every attribute has physical columns when
-the contribution is made.  The selectable facet may record intent against a
-logical selectable target and materialize it later.
+`DeclarationRole` and `MappingRole` are immutable semantic identities for a
+source declaration and a concrete mapping application.  They are not
+`org.hibernate.mapping` compatibility objects.  They are supported values in
+`org.hibernate.boot.mapping.spi`, shared by the read-only semantic model and
+the mutable boot mapping model.  The public closure of `MappingRole.RootKind`,
+`PartKind`, and `Part` is limited to stable identity and navigation vocabulary.
 
-=== Shape-Specific Targets
+The implementation places both immutable values in
+`org.hibernate.boot.mapping.spi`.  Their typed root/part vocabulary,
+construction, navigation, canonical rendering, equality, and serialization
+are tested as stable value semantics.  Mutable `org.hibernate.mapping` objects
+carry these SPI-owned identities when they represent a concrete application or
+a projection of a source declaration.
 
-Some annotations are legal only for certain attribute kinds.  Shape-specific
-facets should make that explicit:
+== Attribute Binder Shape
+
+The binder shape is:
 
 [source,java]
 ----
-public interface PluralAttributeBindingTarget {
-	void batchSize(int size);
-}
-
-public interface AssociationBindingTarget {
-	void referencedProperty(String propertyName);
-}
-
-public interface ComponentBindingTarget {
-	AttributePath path();
+public interface AttributeBinder<A extends Annotation> {
+	void bind(A annotation, AttributeBindingContext context);
 }
 ----
 
-For example, `@BatchSize` on an attribute should use the plural facet.  If the
-annotated attribute is not plural, ORM should throw a diagnostic tied to the
-source annotation and attribute.
-
-== Broader Contributions
-
-Some attribute annotations trigger contributions outside the attribute itself.
-`@TenantId` is the motivating example: it affects the property, the containing
-entity, metadata filter definitions, and possibly table initialization for
-row-level security.
-
-The context should expose explicit broader contribution services:
+The implemented context correlates the semantic application with the mutable materialized
+mapping:
 
 [source,java]
 ----
-public interface BindingContributionContext {
-	BootstrapContext bootstrapContext();
-	ServiceRegistry serviceRegistry();
-	TypeConfiguration typeConfiguration();
+public interface AttributeBindingContext {
+	CategorizedDomainModel getDomainModel();
+	AttributeApplication getAttribute();
 
-	MetadataContributionTarget metadata();
-	EntityContributionTarget entity();
-	Diagnostics diagnostics();
+	PersistentClass getPersistentClass();
+	Property getProperty();
+
+	MetadataBuildingContext getMetadataBuildingContext();
 }
 ----
 
-Potential broader targets:
+`getPersistentClass()` identifies the ultimate containing entity.  For an
+embeddable member it may differ from `Property#getPersistentClass()`.
+
+`AttributeApplication` supplies the information which cannot be reconstructed
+reliably from the mapping objects:
+
+* declaration owner versus concrete containing type;
+* declaration member versus contextual member interpretation;
+* resolved generic type;
+* nested or embedded usage path; and
+* stable declaration and mapping roles.
+
+Whether `CategorizedDomainModel` is exposed directly or reached through a
+narrow read-only navigation service depends on the final categorized-model
+closure.  The binder must at minimum see its local declaration, usage,
+application, and containing-type graph.
+
+== Type Binder Shape
+
+`TypeBinder` follows the same boundary but retains strongly typed entity and
+embeddable callbacks.  A single target with optional entity/embeddable facets
+is not needed.
+
+The implemented shape is:
 
 [source,java]
 ----
-public interface MetadataContributionTarget {
-	void filterDefinition(FilterDefinitionContribution definition);
-}
+public interface TypeBinder<A extends Annotation> {
+	default void bind(A annotation, EntityBindingContext context) {
+		context.unsupportedAnnotationPlacement( annotation );
+	}
 
-public interface EntityContributionTarget {
-	void filter(EntityFilterContribution filter);
-}
-
-public interface TableContributionTarget {
-	void initialization(TableInitializationContribution initialization);
+	default void bind(A annotation, EmbeddableBindingContext context) {
+		context.unsupportedAnnotationPlacement( annotation );
+	}
 }
 ----
 
-These should remain structured capabilities.  The SPI should not provide a
-generic "give me the mutable metadata collector" escape hatch.
+An entity context correlates categorized entity/hierarchy metadata with its
+`PersistentClass`.  An embeddable context correlates the embeddable declaration
+and particular usage/application path with its `Component` and ultimate
+containing entity.
 
-== Type Contributor Shape
+Default rejecting methods allow a binder to support only its legal target
+without every implementation repeating an exception-only overload.
+`unsupportedAnnotationPlacement(Annotation)` on each type context produces
+the standard `AnnotationException`, naming the annotation and categorized
+target type.
 
-A replacement for `TypeBinder` should follow the same model:
+== Execution Semantics
 
-[source,java]
-----
-public interface ManagedTypeBindingContributor<A extends Annotation> {
-	void contribute(
-			A annotation,
-			ManagedTypeBindingTarget target,
-			BindingContributionContext context);
-}
-----
+The stabilized contract must specify and test phase timing, not merely Java
+method signatures.
 
-The target can expose facets for entity, mapped-superclass, and embeddable
-capabilities:
+The ORM 9 pipeline currently establishes the intended order:
 
-[source,java]
-----
-public interface ManagedTypeBindingTarget {
-	ManagedTypeSource source();
-	ManagedTypeKind kind();
+. Managed-type structures and members are materialized.
+. Entity `TypeBinder`s run against structurally complete managed-type mapping
+  objects.
+. Embeddable `TypeBinder`s run against structurally complete components.
+. `AttributeBinder`s run after `Property` and structural `Value`
+  materialization.
+. Basic-value resolution runs after attribute customization.
+. Mappings created by later association and identifier phases drain through the
+  same component, attribute, and value-resolution phases.
+. Table-key, inverse-association, foreign-key, aggregate, and finalization
+  phases complete afterward.
 
-	Optional<EntityBindingTarget> entity();
-	Optional<MappedSuperclassBindingTarget> mappedSuperclass();
-	Optional<EmbeddableBindingTarget> embeddable();
-}
-----
+The precise state guaranteed for associations, collection keys, table keys,
+and foreign keys must be stated from focused use cases.  A binder must not
+depend on state which the documented invocation phase has not completed.
 
-This keeps entity-only annotations and embeddable-only annotations explicit
-without exposing `PersistentClass` or `Component`.
+Each discovered custom annotation results in one binder invocation for each
+concrete application.  Metadata restoration preserves the materialized result;
+it does not rediscover and rerun binders.
 
-== Evidence From Internal Proofs
+== Broader Boot Contributions
 
-ORM has an internal rehearsal of this shape under
-`org.hibernate.boot.mapping.internal.extension`.  It is intentionally not a
-supported extension contract.  Its purpose is to route built-in annotations
-through an SPI-shaped adapter before freezing the public API.
+`MetadataBuildingContext` remains available on binder contexts.  This is an
+intentional escape hatch for metadata-wide behavior which cannot be expressed
+by mutating the local mapping object.
 
-The rehearsal contracts are deliberately small:
+The supported semantic model does not absorb configuration services, dialect
+access, type registries, filter registration, or database mutation merely to
+make the local source view appear self-contained.  Capability-level narrowing
+of `MetadataBuildingContext` may be considered independently after real binder
+use cases identify a coherent smaller contract.
 
-* `AttributeBindingContributor` receives an annotation, an attribute target,
-  and a contribution context;
-* `AttributeBindingTarget` exposes capability facets instead of mapping
-  objects;
-* `BindingContributionContext` exposes binding services needed to translate the
-  contribution into ORM's current internal products;
-* `StandardAttributeBindingTarget` adapts those facet calls to today's
-  contribution records and compatibility materializers.
+== Implementation Sequence
 
-The three internal proofs point to the capability/facet model:
+. Define the exact read-only closure required by representative binder cases.
+. Split operational methods and internal marker inheritance from the
+  categorized interfaces.
+. Introduce supported declaration, usage, and application contracts.
+. Relocate or stabilize the declaration and mapping role value types.
+. Adapt existing internal implementations and bindings to the supported SPI.
+. Define `AttributeBindingContext`, `EntityBindingContext`, and
+  `EmbeddableBindingContext` using only the closed SPI.
+. Migrate built-in and test binder implementations.
+. Lock down timing, once-only invocation, diagnostics, and archive restoration
+  with focused tests.
+. Reconcile API Javadocs, the user guide, compatibility guidance, and Stage 5
+  design status.
 
-* `@TenantId` proves a complex attribute-triggered contribution with
-  entity/model-wide side effects.
-* `@NaturalId` proves a simple attribute semantic flag contribution.
-* `@Collate` proves value/selectable decoration, including nested component
-  paths.
+The semantic-model slice is implemented under `org.hibernate.boot.mapping.spi`.  Focused
+tests consume categorization results through `CategorizedDomainModel`,
+`EntityHierarchy`, and `IdentifiableTypeMetadata`, and consume applied binding
+results through `AttributeApplication`, `AttributeUsage`, and
+`AttributeDeclaration`.  The public package has no dependency on
+`org.hibernate.boot.mapping.internal.*`.
++
+The binder-context slice is also implemented.  `AttributeBinder` receives an
+`AttributeBindingContext`; `TypeBinder` receives typed entity or embeddable
+contexts with default unsupported-placement rejection.  The dispatcher
+correlates registered attribute applications where available and supplies a
+semantic application adapter for identifier, version, tenant-id, and other
+special properties which bypass the ordinary attribute application index.
+Embeddable callbacks retain the particular categorized
+`EmbeddableUsageMetadata`, including the source member, generic-resolution
+scope, effective access, and selected attributes.  Built-in and test binders
+use the stabilized signatures.  Focused tests cover all three contexts,
+standard unsupported-target diagnostics, once-only invocation, special
+version-property correlation, and archive restoration without binder
+re-execution while preserving binder mutations.
 
-The important lesson is not that the public SPI should expose
-`TenantIdContribution`, `NaturalIdContribution`, or `CollationContribution`.
-Those records are internal storage/materialization details.  The lesson is that
-a contributor needs a stable attribute target with facets for the different
-things an annotation may affect.
+== Remaining Shape Decisions
 
-This also clarifies the role of the lingering internal `*Contribution` records.
-Some are core boot facts, such as identifiers or mapped-superclass
-applications.  Others are extension-shaped semantic contributions discovered
-from annotations.  The public SPI should target the latter category through
-facets such as `options()`, `selectables()`, and `entity()`, while ORM remains
-free to store them internally as records, pending work items, or direct
-materialization calls.
+The following are bounded decisions within this design, not reasons to return
+to the facet model:
 
-== Compatibility Plan
-
-The existing `AttributeBinder` and `TypeBinder` contracts can remain as late
-compatibility adapters while needed.
-
-Compatibility adapters should run after enough materialization has happened to
-provide the old mutable mapping objects, but they should not become the semantic
-owner for ORM-owned annotations migrated to the new path.
-
-Built-in annotations migrated to internal contributions should be skipped by the
-legacy adapter in the new pipeline to avoid double application.
-
-== Open Questions
-
-These questions are stabilization or triggered follow-ups.  They do not block
-the PR unless the ORM 9 status of the legacy binders cannot be stated without a
-replacement.  See
-link:design-doc-audit.adoc#_open_question_routing[
-the centralized scope routing].
-
-* Package name: likely an SPI package, not an internal binding package.
-* Whether contributors mutate targets directly, return structured commands, or
-  both.
-* How much source-model API to expose directly versus wrapping `hibernate-models`
-  types in ORM-specific source views.
-* How to express ordering and conflicts when multiple annotations contribute to
-  the same facet.
-* How to expose diagnostics so errors consistently name the annotation,
-  attribute path, declaring type, and contribution phase.
-* Whether a service-loaded global contributor model is also needed, separate
-  from annotation-driven contributors.
+* the final package split within `org.hibernate.boot.mapping.spi`;
+* the exact public subset of `CategorizedDomainModel` and `EntityHierarchy`;
+* JavaBean versus concise accessor naming;
+* whether role part construction or only role observation is supported;
+* whether `MetadataBuildingContext` remains directly visible or is later
+  replaced by a separately justified boot-customization context.
 
 == Recommendation
 
-Do not freeze the public SPI yet.
+Stabilize `AttributeBinder` and `TypeBinder` around a supported semantic-to-
+materialized boundary:
 
-Use the three internal proofs to refine the capability/facet vocabulary while
-continuing the binding/view/materialization redesign.  Introduce the public SPI
-only when the target binding model and materialization phases are stable enough
-that the facade is unlikely to leak transitional concepts.
+* supported categorized and applied-model contracts for reading;
+* mutable `org.hibernate.mapping` targets for customization;
+* explicit boot context for broader contributions; and
+* documented invocation timing before value resolution and mapping
+  finalization.
+
+Do not publish the internal facet rehearsal as the binder SPI, and do not allow
+binders to mutate the categorized or internal binding models.

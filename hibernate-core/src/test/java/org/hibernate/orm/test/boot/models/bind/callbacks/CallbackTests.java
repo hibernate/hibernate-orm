@@ -9,10 +9,10 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.hibernate.boot.mapping.internal.categorize.CategorizedDomainModel;
-import org.hibernate.boot.mapping.internal.categorize.EntityHierarchy;
-import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadata;
-import org.hibernate.boot.mapping.internal.categorize.IdentifiableTypeMetadata;
+import org.hibernate.boot.mapping.internal.categorize.CategorizedDomainModelImpl;
+import org.hibernate.boot.mapping.internal.categorize.EntityHierarchyImpl;
+import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadataImpl;
+import org.hibernate.boot.mapping.internal.categorize.AbstractIdentifiableTypeMetadata;
 import org.hibernate.jpa.boot.spi.CallbackDefinition;
 import org.hibernate.jpa.event.spi.CallbackType;
 import org.hibernate.mapping.MappedSuperclass;
@@ -128,14 +128,14 @@ public class CallbackTests {
 
 	@Test
 	void testSimpleEventListenerResolution() {
-		final CategorizedDomainModel categorizedDomainModel = buildCategorizedDomainModel(
+		final CategorizedDomainModelImpl categorizedDomainModel = buildCategorizedDomainModel(
 				HierarchyRoot.class,
 				HierarchySuper.class
 		);
-		final Set<EntityHierarchy> entityHierarchies = categorizedDomainModel.getEntityHierarchies();
-		final EntityHierarchy hierarchy = entityHierarchies.iterator().next();
+		final Set<EntityHierarchyImpl> entityHierarchies = categorizedDomainModel.getEntityHierarchies();
+		final EntityHierarchyImpl hierarchy = entityHierarchies.iterator().next();
 
-		final EntityTypeMetadata rootMapping = hierarchy.getRoot();
+		final EntityTypeMetadataImpl rootMapping = hierarchy.getRoot();
 		assertThat( rootMapping.getHierarchyJpaEventListeners() ).hasSize( 3 );
 		final List<String> listenerClassNames = rootMapping.getHierarchyJpaEventListeners()
 				.stream()
@@ -147,7 +147,7 @@ public class CallbackTests {
 				HierarchyRoot.class.getName()
 		);
 
-		final IdentifiableTypeMetadata superMapping = rootMapping.getSuperType();
+		final AbstractIdentifiableTypeMetadata superMapping = rootMapping.getSuperType();
 		assertThat( superMapping.getHierarchyJpaEventListeners() ).hasSize( 1 );
 		assertThat( superMapping.getHierarchyJpaEventListeners().get( 0 ).getCallbackClass()
 				.getDirectAnnotationUsage( EntityListener.class ) )

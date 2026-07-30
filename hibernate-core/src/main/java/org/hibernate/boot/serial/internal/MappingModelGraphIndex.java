@@ -19,21 +19,21 @@ import org.hibernate.mapping.IdentifierCollection;
 import org.hibernate.mapping.IndexedCollection;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.MappedSuperclass;
-import org.hibernate.mapping.MappingRole;
+import org.hibernate.boot.mapping.spi.MappingRole;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SyntheticProperty;
 import org.hibernate.mapping.Value;
 
-import static org.hibernate.mapping.MappingRole.PartKind.COLLECTION_IDENTIFIER;
-import static org.hibernate.mapping.MappingRole.PartKind.DISCRIMINATOR;
-import static org.hibernate.mapping.MappingRole.PartKind.ELEMENT;
-import static org.hibernate.mapping.MappingRole.PartKind.IDENTIFIER;
-import static org.hibernate.mapping.MappingRole.PartKind.IDENTIFIER_MAPPER;
-import static org.hibernate.mapping.MappingRole.PartKind.INDEX;
-import static org.hibernate.mapping.MappingRole.PartKind.JOIN;
-import static org.hibernate.mapping.MappingRole.PartKind.KEY;
-import static org.hibernate.mapping.MappingRole.PartKind.VERSION;
+import static org.hibernate.boot.mapping.spi.MappingRole.PartKind.COLLECTION_IDENTIFIER;
+import static org.hibernate.boot.mapping.spi.MappingRole.PartKind.DISCRIMINATOR;
+import static org.hibernate.boot.mapping.spi.MappingRole.PartKind.ELEMENT;
+import static org.hibernate.boot.mapping.spi.MappingRole.PartKind.IDENTIFIER;
+import static org.hibernate.boot.mapping.spi.MappingRole.PartKind.IDENTIFIER_MAPPER;
+import static org.hibernate.boot.mapping.spi.MappingRole.PartKind.INDEX;
+import static org.hibernate.boot.mapping.spi.MappingRole.PartKind.JOIN;
+import static org.hibernate.boot.mapping.spi.MappingRole.PartKind.KEY;
+import static org.hibernate.boot.mapping.spi.MappingRole.PartKind.VERSION;
 
 /// Index of the durable parts of a finalized mapping graph by intrinsic mapping role.
 ///

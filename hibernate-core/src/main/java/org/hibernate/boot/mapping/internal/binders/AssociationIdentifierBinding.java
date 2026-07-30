@@ -10,7 +10,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import org.hibernate.boot.mapping.internal.model.IdentifierAttributeBinding;
 import org.hibernate.boot.mapping.internal.sources.ForeignKeySource;
-import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadata;
+import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadataImpl;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
@@ -32,7 +32,7 @@ import jakarta.persistence.JoinColumn;
 /// @since 9.0
 /// @author Steve Ebersole
 public record AssociationIdentifierBinding(
-		EntityTypeMetadata ownerType,
+		EntityTypeMetadataImpl ownerType,
 		PersistentClass ownerBinding,
 		Property property,
 		ToOne value,
@@ -45,7 +45,7 @@ public record AssociationIdentifierBinding(
 		List<Column> identifierColumns,
 		AtomicBoolean processed) {
 	public AssociationIdentifierBinding(
-			EntityTypeMetadata ownerType,
+			EntityTypeMetadataImpl ownerType,
 			PersistentClass ownerBinding,
 			Property property,
 			ToOne value,
@@ -70,7 +70,7 @@ public record AssociationIdentifierBinding(
 	}
 
 	public AssociationIdentifierBinding(
-			EntityTypeMetadata ownerType,
+			EntityTypeMetadataImpl ownerType,
 			PersistentClass ownerBinding,
 			Property property,
 			ToOne value,
@@ -98,7 +98,7 @@ public record AssociationIdentifierBinding(
 	}
 
 	public AssociationIdentifierBinding(
-			EntityTypeMetadata ownerType,
+			EntityTypeMetadataImpl ownerType,
 			PersistentClass ownerBinding,
 			Property property,
 			ToOne value,

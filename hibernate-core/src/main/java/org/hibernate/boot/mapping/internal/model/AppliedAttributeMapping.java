@@ -5,8 +5,8 @@
 package org.hibernate.boot.mapping.internal.model;
 
 import org.hibernate.models.spi.TypeDetails;
-import org.hibernate.mapping.DeclarationRole;
-import org.hibernate.mapping.MappingRole;
+import org.hibernate.boot.mapping.spi.DeclarationRole;
+import org.hibernate.boot.mapping.spi.MappingRole;
 
 import static java.util.Objects.requireNonNull;
 
@@ -67,7 +67,7 @@ public record AppliedAttributeMapping(
 		AttributeUsageBinding usage,
 
 		/// Stable identity of this attribute occurrence in the mapping graph.
-		MappingRole role) {
+		MappingRole role) implements org.hibernate.boot.mapping.spi.AttributeApplication {
 	public AppliedAttributeMapping {
 		requireNonNull( usage );
 		requireNonNull( role );

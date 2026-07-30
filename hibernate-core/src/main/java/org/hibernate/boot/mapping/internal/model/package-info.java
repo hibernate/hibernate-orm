@@ -38,13 +38,10 @@
 ///   nodes.
 /// * `*Intent` describes requested value/mapping facts that are not themselves
 ///   mapping objects, such as basic, embedded, or to-one value shape.
-/// * `*Contribution` is reserved for the internal recorded effect of a
-///   contribution/capability operation against an existing binding.  For
-///   example, a future public binding SPI might expose a method such as
-///   `target.naturalId(...)`; ORM may record that operation as a
-///   `NaturalIdContribution`, but the contribution record itself is not the
-///   public extension contract.  A contribution should not be the primary owner
-///   of a managed type, attribute, identifier, or other core model node.
+/// * `*Contribution` is reserved for an internal recorded semantic effect
+///   associated with an existing binding. A contribution should not be the
+///   primary owner of a managed type, attribute, identifier, or other core
+///   model node.
 /// * `*View` belongs in `org.hibernate.boot.mapping.internal.view` and exposes a
 ///   stable read shape over binding-model state for materializers and other
 ///   consumers.

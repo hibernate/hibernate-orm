@@ -25,7 +25,7 @@ import jakarta.persistence.SharedCacheMode;
 /// `BootstrapContext` or `MetadataBuildingContext`.
 ///
 /// Services exposed here are inputs to, or working state for, categorization.  They
-/// are intentionally separate from {@link CategorizedDomainModel}, which represents
+/// are intentionally separate from {@link CategorizedDomainModelImpl}, which represents
 /// the categorized result consumed by later binding phases.
 ///
 /// @since 9.0
@@ -47,9 +47,9 @@ public interface CategorizationContext {
 
 	ModelsContext getModelsContext();
 
-	Map<String, EmbeddableTypeMetadata> getEmbeddableTypes();
+	Map<String, EmbeddableTypeMetadataImpl> getEmbeddableTypes();
 
-	default EmbeddableTypeMetadata findEmbeddableType(ClassDetails classDetails) {
+	default EmbeddableTypeMetadataImpl findEmbeddableType(ClassDetails classDetails) {
 		final String className = classDetails.getClassName();
 		return getEmbeddableTypes().get( className == null ? classDetails.getName() : className );
 	}

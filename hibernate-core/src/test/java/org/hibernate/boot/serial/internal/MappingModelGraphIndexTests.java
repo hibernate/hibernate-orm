@@ -12,7 +12,7 @@ import java.util.Set;
 import org.hibernate.boot.mapping.internal.jpa.JpaStaticMetamodelInjectionSource;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.mapping.AppliedMappingPart;
-import org.hibernate.mapping.MappingRole;
+import org.hibernate.boot.mapping.spi.MappingRole;
 import org.hibernate.metamodel.internal.AttributeUsageHandoff;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;

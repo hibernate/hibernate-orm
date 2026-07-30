@@ -30,7 +30,7 @@ import jakarta.persistence.EntityListener;
 import jakarta.persistence.MappedSuperclass;
 
 /// In-flight holder for various types of "global" registrations.  Also acts as the
-/// {@linkplain #createResult builder} for {@linkplain CategorizedDomainModel} as returned
+/// {@linkplain #createResult builder} for {@linkplain CategorizedDomainModelImpl} as returned
 /// by {@linkplain org.hibernate.boot.mapping.internal.categorize.DomainModelCategorizer#categorize}
 ///
 /// @since 9.0
@@ -203,16 +203,16 @@ public class DomainModelCategorizationCollector {
 		}
 	}
 
-	/// Builder for {@linkplain CategorizedDomainModel} based on our internal state plus
+	/// Builder for {@linkplain CategorizedDomainModelImpl} based on our internal state plus
 	/// the incoming set of managed types.
 	///
 	/// @param entityHierarchies All entity hierarchies defined in the persistence-unit, built based
 	/// on {@linkplain #getRootEntities()}
 	///
 	/// @see org.hibernate.boot.mapping.internal.categorize.DomainModelCategorizer#categorize
-	public CategorizedDomainModel createResult(
-			Set<EntityHierarchy> entityHierarchies,
-			Map<String, EmbeddableTypeMetadata> embeddableMetadata) {
+	public CategorizedDomainModelImpl createResult(
+			Set<EntityHierarchyImpl> entityHierarchies,
+			Map<String, EmbeddableTypeMetadataImpl> embeddableMetadata) {
 		return new CategorizedDomainModelImpl(
 				entityHierarchies,
 				sourceClasses,

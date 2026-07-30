@@ -4,7 +4,6 @@
  */
 package org.hibernate.boot.mapping.internal.binders;
 
-import org.hibernate.annotations.TenantId;
 import org.hibernate.boot.mapping.internal.materialize.TenantIdMappingMaterializer;
 import org.hibernate.boot.mapping.internal.model.AttributeDeclarationBinding;
 import org.hibernate.boot.mapping.internal.model.AttributeUsageBinding;
@@ -12,17 +11,17 @@ import org.hibernate.boot.mapping.internal.model.BasicValueIntent;
 import org.hibernate.boot.mapping.internal.model.IdentifiableAttributeDeclarationBinding;
 import org.hibernate.boot.mapping.internal.model.ManagedTypeBinding;
 import org.hibernate.boot.mapping.internal.model.StandardAttributeUsageBinding;
-import org.hibernate.boot.mapping.internal.extension.BindingContributionContext;
-import org.hibernate.boot.mapping.internal.extension.StandardAttributeBindingTarget;
-import org.hibernate.boot.mapping.internal.extension.TenantIdAttributeContributor;
+import org.hibernate.boot.mapping.internal.model.TenantIdBinding;
 import org.hibernate.boot.mapping.internal.context.BindingContext;
 import org.hibernate.boot.mapping.internal.context.BindingOptions;
 import org.hibernate.boot.mapping.internal.context.BindingState;
-import org.hibernate.boot.mapping.internal.categorize.AttributeMetadata;
-import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadata;
+import org.hibernate.boot.mapping.internal.categorize.AttributeMetadataImplementor;
+import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadataImpl;
+import org.hibernate.boot.mapping.internal.view.TenantIdBindingView;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.models.spi.MemberDetails;
+import org.hibernate.type.BasicType;
 
 /// Binds the source-model `@TenantId` attribute.
 ///
@@ -38,8 +37,8 @@ public class TenantIdBinder {
 	public static final String PARAMETER_NAME = TenantIdMappingMaterializer.PARAMETER_NAME;
 
 	public static void bindTenantId(
-			AttributeMetadata attributeMetadata,
-			EntityTypeMetadata managedType,
+			AttributeMetadataImplementor attributeMetadata,
+			EntityTypeMetadataImpl managedType,
 			RootClass typeBinding,
 			BindingOptions bindingOptions,
 			BindingState bindingState,
@@ -52,28 +51,26 @@ public class TenantIdBinder {
 				bindingContext
 		);
 
-		final var contributionContext = new BindingContributionContext(
+		final String returnedClassName = usageBinding.resolvedType().determineRawClass().getClassName();
+		final BasicType<?> tenantIdType = bindingState.getTypeConfiguration()
+				.getBasicTypeRegistry()
+				.getRegisteredType( returnedClassName );
+		final var tenantIdBinding = new TenantIdBinding(
+				managedType,
+				usageBinding.attributeName(),
+				usageBinding.member(),
+				usageBinding.resolvedType(),
+				usageBinding.basicValueIntent(),
+				tenantIdType
+		);
+		bindingState.getBootBindingModel().addTenantIdBinding( managedType, tenantIdBinding );
+		final Property property = new TenantIdMappingMaterializer().materializeTenantId(
+				new TenantIdBindingView( tenantIdBinding ),
+				typeBinding,
 				bindingOptions,
 				bindingState,
 				bindingContext
 		);
-		final var target = StandardAttributeBindingTarget.forEntityAttribute(
-				managedType,
-				usageBinding,
-				typeBinding,
-				contributionContext
-		);
-		new TenantIdAttributeContributor().contribute(
-				memberDetails.getDirectAnnotationUsage( TenantId.class ),
-				target,
-				contributionContext
-		);
-		final Property property = target.contributedProperty();
-		if ( property == null ) {
-			throw new IllegalStateException(
-					"@TenantId contributor did not materialize property `" + attributeMetadata.getName() + "`"
-			);
-		}
 		bindingState.addAttributeCustomMapping(
 				CustomMappingBinder.attributeBinding(
 						memberDetails,
@@ -86,8 +83,8 @@ public class TenantIdBinder {
 	}
 
 	private static AttributeUsageBinding createTenantIdUsage(
-			AttributeMetadata attributeMetadata,
-			EntityTypeMetadata managedType,
+			AttributeMetadataImplementor attributeMetadata,
+			EntityTypeMetadataImpl managedType,
 			BindingState bindingState,
 			BindingContext bindingContext) {
 		final ManagedTypeBinding managedTypeBinding = bindingState.getBootBindingModel()

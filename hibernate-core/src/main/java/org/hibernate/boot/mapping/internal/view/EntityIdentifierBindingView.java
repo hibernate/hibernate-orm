@@ -8,7 +8,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadata;
+import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadataImpl;
 import org.hibernate.boot.mapping.internal.model.IdentifierAttributeBinding;
 import org.hibernate.boot.mapping.internal.model.EntityIdentifierBinding;
 import org.hibernate.boot.mapping.internal.model.IdentifierExtractionKind;
@@ -25,7 +25,7 @@ import jakarta.annotation.Nullable;
 /// @since 9.0
 /// @author Steve Ebersole
 public record EntityIdentifierBindingView(EntityIdentifierBinding binding) {
-	public EntityTypeMetadata owner() {
+	public EntityTypeMetadataImpl owner() {
 		return binding.owner();
 	}
 

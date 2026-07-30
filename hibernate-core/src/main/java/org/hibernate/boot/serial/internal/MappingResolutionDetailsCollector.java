@@ -11,7 +11,7 @@ import org.hibernate.boot.mapping.internal.materialize.BasicValueResolutionDetai
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.MappingSettings;
 import org.hibernate.mapping.BasicValue;
-import org.hibernate.mapping.MappingRole;
+import org.hibernate.boot.mapping.spi.MappingRole;
 
 /// Opt-in binding-phase capture which freezes resolution details only when an archive is stored.
 ///

@@ -18,9 +18,9 @@ import org.hibernate.boot.mapping.internal.context.BindingOptionsImpl;
 import org.hibernate.boot.mapping.internal.context.BindingStateImpl;
 import org.hibernate.boot.mapping.internal.context.InFlightMetadataCollectorAdapter;
 import org.hibernate.boot.mapping.internal.binders.BindingCoordinator;
-import org.hibernate.boot.mapping.internal.categorize.CategorizedDomainModel;
+import org.hibernate.boot.mapping.internal.categorize.CategorizedDomainModelImpl;
 import org.hibernate.boot.mapping.internal.categorize.DomainModelCategorizer;
-import org.hibernate.boot.mapping.internal.categorize.EntityHierarchy;
+import org.hibernate.boot.mapping.internal.categorize.EntityHierarchyImpl;
 import org.hibernate.boot.pipeline.internal.FunctionRegistryCoordinator;
 import org.hibernate.boot.pipeline.internal.FunctionRegistryCustomizations;
 import org.hibernate.boot.pipeline.internal.ResolvedMapping;
@@ -87,7 +87,7 @@ public class BindingTestingHelper {
 				mappingFiles,
 				domainClasses
 		);
-		final CategorizedDomainModel categorizedDomainModel = DomainModelCategorizer.categorize(
+		final CategorizedDomainModelImpl categorizedDomainModel = DomainModelCategorizer.categorize(
 				resolvedMappingSources,
 				metadataBuildingContext
 		);
@@ -145,7 +145,7 @@ public class BindingTestingHelper {
 			}
 
 			@Override
-			public CategorizedDomainModel getCategorizedDomainModel() {
+			public CategorizedDomainModelImpl getCategorizedDomainModel() {
 				return categorizedDomainModel;
 			}
 		} );
@@ -198,12 +198,12 @@ public class BindingTestingHelper {
 		);
 	}
 
-	public static Set<EntityHierarchy> buildHierarchyMetadata(Class<?>... classes) {
+	public static Set<EntityHierarchyImpl> buildHierarchyMetadata(Class<?>... classes) {
 		try (StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder().build()) {
 			final MetadataBuildingContext metadataBuildingContext = new MetadataBuildingContextTestingImpl( serviceRegistry );
 			final PreparedMappingSources resolvedMappingSources = buildPreparedMappingSources( metadataBuildingContext, classes );
 
-			final CategorizedDomainModel categorizedDomainModel = DomainModelCategorizer.categorize(
+			final CategorizedDomainModelImpl categorizedDomainModel = DomainModelCategorizer.categorize(
 					resolvedMappingSources,
 					metadataBuildingContext
 			);
@@ -212,7 +212,7 @@ public class BindingTestingHelper {
 		}
 	}
 
-	public static CategorizedDomainModel buildCategorizedDomainModel(Class<?>... classes) {
+	public static CategorizedDomainModelImpl buildCategorizedDomainModel(Class<?>... classes) {
 		try (StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder().build()) {
 			final MetadataBuildingContext metadataBuildingContext = new MetadataBuildingContextTestingImpl( serviceRegistry );
 			final PreparedMappingSources resolvedMappingSources = buildPreparedMappingSources( metadataBuildingContext, classes );
@@ -252,7 +252,7 @@ public class BindingTestingHelper {
 
 		BindingStateImpl getBindingState();
 
-		CategorizedDomainModel getCategorizedDomainModel();
+		CategorizedDomainModelImpl getCategorizedDomainModel();
 	}
 
 	@FunctionalInterface

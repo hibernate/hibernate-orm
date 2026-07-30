@@ -25,7 +25,7 @@ public record CategorizationContextImpl(
 		EffectiveMappingDefaults effectiveMappingDefaults,
 		ClassDetailsRegistry classDetailsRegistry,
 		ModelsContext modelsContext,
-		Map<String, EmbeddableTypeMetadata> embeddableTypes,
+		Map<String, EmbeddableTypeMetadataImpl> embeddableTypes,
 		SharedCacheMode sharedCacheMode,
 		org.hibernate.cache.spi.access.AccessType implicitCacheAccessType,
 		GlobalRegistrations globalRegistrations,
@@ -57,7 +57,7 @@ public record CategorizationContextImpl(
 	}
 
 	@Override
-	public Map<String, EmbeddableTypeMetadata> getEmbeddableTypes() {
+	public Map<String, EmbeddableTypeMetadataImpl> getEmbeddableTypes() {
 		return embeddableTypes;
 	}
 

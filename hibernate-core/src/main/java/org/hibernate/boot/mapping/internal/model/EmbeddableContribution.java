@@ -8,9 +8,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.boot.mapping.internal.sources.ComponentSource;
-import org.hibernate.boot.mapping.internal.categorize.AttributeMetadata;
-import org.hibernate.boot.mapping.internal.categorize.EmbeddableUsageMetadata;
-import org.hibernate.boot.mapping.internal.categorize.EmbeddedValueMetadata;
+import org.hibernate.boot.mapping.internal.categorize.AttributeMetadataImplementor;
+import org.hibernate.boot.mapping.internal.categorize.EmbeddableUsageMetadataImpl;
+import org.hibernate.boot.mapping.internal.categorize.EmbeddedValueMetadataImpl;
 import org.hibernate.boot.mapping.internal.context.BindingContext;
 import org.hibernate.boot.mapping.internal.context.BindingState;
 import org.hibernate.models.spi.ClassDetails;
@@ -40,6 +40,7 @@ public class EmbeddableContribution {
 	private final String namingPathPrefix;
 	private final List<ComponentMemberBinding> members;
 	private final EmbeddableDiscriminatorSource discriminator;
+	private final org.hibernate.boot.mapping.spi.EmbeddableUsageMetadata usage;
 
 	public EmbeddableContribution(
 			ComponentSource.Kind kind,
@@ -50,7 +51,8 @@ public class EmbeddableContribution {
 			String pathPrefix,
 			String namingPathPrefix,
 			List<ComponentMemberBinding> members,
-			EmbeddableDiscriminatorSource discriminator) {
+			EmbeddableDiscriminatorSource discriminator,
+			org.hibernate.boot.mapping.spi.EmbeddableUsageMetadata usage) {
 		this.kind = kind;
 		this.sourceMember = sourceMember;
 		this.componentType = componentType;
@@ -60,6 +62,7 @@ public class EmbeddableContribution {
 		this.namingPathPrefix = namingPathPrefix;
 		this.members = List.copyOf( members );
 		this.discriminator = discriminator;
+		this.usage = usage;
 	}
 
 	/// Creates a contribution for a synthetic component structure not represented
@@ -89,16 +92,17 @@ public class EmbeddableContribution {
 				source.pathPrefix(),
 				source.namingPathPrefix(),
 				members,
-				EmbeddableDiscriminatorSource.from( source, bindingContext )
+				EmbeddableDiscriminatorSource.from( source, bindingContext ),
+				new SyntheticEmbeddableUsage( source )
 		);
 	}
 
 	public static EmbeddableContribution from(
 			ComponentSource source,
-			EmbeddedValueMetadata valueMetadata,
+			EmbeddedValueMetadataImpl valueMetadata,
 			BindingState bindingState,
 			BindingContext bindingContext) {
-		final EmbeddableUsageMetadata usage = valueMetadata.getEmbeddableUsage();
+		final EmbeddableUsageMetadataImpl usage = valueMetadata.getEmbeddableUsage();
 		final List<ComponentMemberBinding> members = categorizedMembers(
 				source,
 				usage,
@@ -106,9 +110,9 @@ public class EmbeddableContribution {
 				bindingContext
 		);
 		if ( source.kind() != ComponentSource.Kind.EMBEDDED_IDENTIFIER ) {
-			for ( EmbeddableUsageMetadata subtypeUsage : valueMetadata.getSubtypeUsages() ) {
+			for ( EmbeddableUsageMetadataImpl subtypeUsage : valueMetadata.getSubtypeUsages() ) {
 				final String subtypeName = subtypeUsage.type().getClassDetails().getName();
-				for ( AttributeMetadata attribute : subtypeUsage.attributes() ) {
+				for ( AttributeMetadataImplementor attribute : subtypeUsage.attributes() ) {
 					if ( attribute.getMember().getDeclaringType().getName().equals( subtypeName ) ) {
 						members.add(
 								ComponentMemberBinding.from(
@@ -128,11 +132,11 @@ public class EmbeddableContribution {
 
 	private static List<ComponentMemberBinding> categorizedMembers(
 			ComponentSource source,
-			EmbeddableUsageMetadata usage,
+			EmbeddableUsageMetadataImpl usage,
 			BindingState bindingState,
 			BindingContext bindingContext) {
 		final List<ComponentMemberBinding> members = new ArrayList<>( usage.attributes().size() );
-		for ( AttributeMetadata attribute : usage.attributes() ) {
+		for ( AttributeMetadataImplementor attribute : usage.attributes() ) {
 			final ComponentSource.ComponentMember member = componentMember( source, usage, attribute );
 			members.add(
 					ComponentMemberBinding.from(
@@ -149,7 +153,7 @@ public class EmbeddableContribution {
 
 	private static EmbeddableContribution contribution(
 			ComponentSource source,
-			EmbeddableUsageMetadata usage,
+			EmbeddableUsageMetadataImpl usage,
 			List<ComponentMemberBinding> members,
 			BindingContext bindingContext) {
 		return new EmbeddableContribution(
@@ -161,14 +165,41 @@ public class EmbeddableContribution {
 				source.pathPrefix(),
 				source.namingPathPrefix(),
 				members,
-				EmbeddableDiscriminatorSource.from( source, bindingContext )
+				EmbeddableDiscriminatorSource.from( source, bindingContext ),
+				usage
 		);
+	}
+
+	public org.hibernate.boot.mapping.spi.EmbeddableUsageMetadata usage() {
+		return usage;
+	}
+
+	private record SyntheticEmbeddableUsage(
+			org.hibernate.boot.mapping.spi.EmbeddableTypeMetadata type,
+			MemberDetails sourceMember,
+			TypeVariableScope typeVariableScope,
+			AccessType accessType,
+			List<? extends org.hibernate.boot.mapping.spi.AttributeMetadata> attributes)
+			implements org.hibernate.boot.mapping.spi.EmbeddableUsageMetadata {
+		private SyntheticEmbeddableUsage(ComponentSource source) {
+			this(
+					new SyntheticEmbeddableType( source.componentType(), source.defaultAccessType() ),
+					source.sourceMember(),
+					source.typeVariableScope(),
+					source.defaultAccessType(),
+					List.of()
+			);
+		}
+	}
+
+	private record SyntheticEmbeddableType(ClassDetails getClassDetails, AccessType getExplicitAccessType)
+			implements org.hibernate.boot.mapping.spi.EmbeddableTypeMetadata {
 	}
 
 	private static ComponentSource.ComponentMember componentMember(
 			ComponentSource source,
-			EmbeddableUsageMetadata usage,
-			AttributeMetadata attribute) {
+			EmbeddableUsageMetadataImpl usage,
+			AttributeMetadataImplementor attribute) {
 		final MemberDetails member = attribute.getMember();
 		final String attributeName = attribute.getName();
 		final String path = source.pathPrefix() + attributeName;

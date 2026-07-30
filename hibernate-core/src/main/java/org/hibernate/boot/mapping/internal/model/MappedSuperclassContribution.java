@@ -7,9 +7,9 @@ package org.hibernate.boot.mapping.internal.model;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadata;
-import org.hibernate.boot.mapping.internal.categorize.IdentifiableTypeMetadata;
-import org.hibernate.boot.mapping.internal.categorize.MappedSuperclassTypeMetadata;
+import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadataImpl;
+import org.hibernate.boot.mapping.internal.categorize.AbstractIdentifiableTypeMetadata;
+import org.hibernate.boot.mapping.internal.categorize.MappedSuperclassTypeMetadataImpl;
 
 /// Binding-model contribution of one mapped-superclass declaration to one
 /// consuming hierarchy boundary.
@@ -23,29 +23,29 @@ import org.hibernate.boot.mapping.internal.categorize.MappedSuperclassTypeMetada
 /// @since 9.0
 /// @author Steve Ebersole
 public class MappedSuperclassContribution {
-	private final MappedSuperclassTypeMetadata declaration;
-	private final IdentifiableTypeMetadata consumer;
-	private final EntityTypeMetadata nearestEntityConsumer;
+	private final MappedSuperclassTypeMetadataImpl declaration;
+	private final AbstractIdentifiableTypeMetadata consumer;
+	private final EntityTypeMetadataImpl nearestEntityConsumer;
 	private final List<AppliedAttributeMapping> appliedAttributeMappings = new ArrayList<>();
 
 	public MappedSuperclassContribution(
-			MappedSuperclassTypeMetadata declaration,
-			IdentifiableTypeMetadata consumer,
-			EntityTypeMetadata nearestEntityConsumer) {
+			MappedSuperclassTypeMetadataImpl declaration,
+			AbstractIdentifiableTypeMetadata consumer,
+			EntityTypeMetadataImpl nearestEntityConsumer) {
 		this.declaration = declaration;
 		this.consumer = consumer;
 		this.nearestEntityConsumer = nearestEntityConsumer;
 	}
 
-	public MappedSuperclassTypeMetadata declaration() {
+	public MappedSuperclassTypeMetadataImpl declaration() {
 		return declaration;
 	}
 
-	public IdentifiableTypeMetadata consumer() {
+	public AbstractIdentifiableTypeMetadata consumer() {
 		return consumer;
 	}
 
-	public EntityTypeMetadata nearestEntityConsumer() {
+	public EntityTypeMetadataImpl nearestEntityConsumer() {
 		return nearestEntityConsumer;
 	}
 

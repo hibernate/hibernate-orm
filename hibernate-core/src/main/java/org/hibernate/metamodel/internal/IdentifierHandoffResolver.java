@@ -9,9 +9,9 @@ import java.util.Objects;
 
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.hibernate.mapping.MappingRole;
+import org.hibernate.boot.mapping.spi.MappingRole;
 
-import static org.hibernate.mapping.MappingRole.PartKind.IDENTIFIER;
+import static org.hibernate.boot.mapping.spi.MappingRole.PartKind.IDENTIFIER;
 
 /// Resolves applied identifier binding metadata from legacy identifier mapping
 /// objects during runtime/JPA metamodel creation.

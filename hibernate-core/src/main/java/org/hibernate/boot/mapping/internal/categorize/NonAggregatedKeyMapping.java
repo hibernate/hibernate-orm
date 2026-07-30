@@ -22,7 +22,7 @@ import org.hibernate.models.spi.ClassDetails;
 /// @author Steve Ebersole
 public interface NonAggregatedKeyMapping extends CompositeKeyMapping {
 	/// The attributes making up the composition.
-	List<AttributeMetadata> getIdAttributes();
+	List<AttributeMetadataImplementor> getIdAttributes();
 
 	/// Details about the {@linkplain jakarta.persistence.IdClass id-class}.
 	///

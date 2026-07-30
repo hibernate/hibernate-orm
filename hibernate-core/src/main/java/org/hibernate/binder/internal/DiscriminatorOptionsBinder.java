@@ -6,10 +6,8 @@ package org.hibernate.binder.internal;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.annotations.DiscriminatorOptions;
+import org.hibernate.binder.EntityBindingContext;
 import org.hibernate.binder.TypeBinder;
-import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.mapping.Component;
-import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
 
 /**
@@ -21,7 +19,8 @@ import org.hibernate.mapping.RootClass;
  */
 public class DiscriminatorOptionsBinder implements TypeBinder<DiscriminatorOptions> {
 	@Override
-	public void bind(DiscriminatorOptions options, MetadataBuildingContext context, PersistentClass persistentClass) {
+	public void bind(DiscriminatorOptions options, EntityBindingContext context) {
+		final var persistentClass = context.getPersistentClass();
 		if ( persistentClass instanceof RootClass rootClass ) {
 			if ( !rootClass.hasDiscriminator() ) {
 				throw new AnnotationException( "Root entity '" + rootClass.getEntityName()
@@ -36,9 +35,4 @@ public class DiscriminatorOptionsBinder implements TypeBinder<DiscriminatorOptio
 		}
 	}
 
-	@Override
-	public void bind(DiscriminatorOptions options, MetadataBuildingContext context, Component embeddableClass) {
-		throw new AnnotationException("Class '" + embeddableClass.getComponentClassName()
-				+ "' is an '@Embeddable' type and may not be annotated '@DiscriminatorOptions'");
-	}
 }

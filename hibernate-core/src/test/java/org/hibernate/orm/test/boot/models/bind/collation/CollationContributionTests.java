@@ -6,8 +6,8 @@ package org.hibernate.orm.test.boot.models.bind.collation;
 
 import org.hibernate.annotations.Collate;
 import org.hibernate.boot.mapping.internal.view.CollationContributionView;
-import org.hibernate.boot.mapping.internal.categorize.EntityHierarchy;
-import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadata;
+import org.hibernate.boot.mapping.internal.categorize.EntityHierarchyImpl;
+import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadataImpl;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
@@ -35,7 +35,7 @@ public class CollationContributionTests {
 	void testCollationContribution(ServiceRegistryScope scope) {
 		checkDomainModel(
 				(context) -> {
-					final EntityTypeMetadata entityType = entityType( context, CollatedEntity.class );
+					final EntityTypeMetadataImpl entityType = entityType( context, CollatedEntity.class );
 					final CollationContributionView nameContribution = context.getBindingState()
 							.getBootBindingModel()
 							.getCollationContributionView( entityType, "name" );
@@ -84,10 +84,10 @@ public class CollationContributionTests {
 		);
 	}
 
-	private static EntityTypeMetadata entityType(
+	private static EntityTypeMetadataImpl entityType(
 			BindingTestingHelper.DomainModelCheckContext context,
 			Class<?> entityClass) {
-		for ( EntityHierarchy hierarchy : context.getCategorizedDomainModel().getEntityHierarchies() ) {
+		for ( EntityHierarchyImpl hierarchy : context.getCategorizedDomainModel().getEntityHierarchies() ) {
 			if ( hierarchy.getRoot().getClassDetails().getClassName().equals( entityClass.getName() ) ) {
 				return hierarchy.getRoot();
 			}

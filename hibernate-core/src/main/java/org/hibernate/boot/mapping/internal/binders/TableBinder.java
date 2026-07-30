@@ -43,8 +43,8 @@ import org.hibernate.boot.mapping.internal.context.BindingOptions;
 import org.hibernate.boot.mapping.internal.context.BindingState;
 import org.hibernate.boot.mapping.internal.relational.QuotedIdentifierTarget;
 import org.hibernate.boot.mapping.internal.relational.TableReference;
-import org.hibernate.boot.mapping.internal.categorize.EntityHierarchy;
-import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadata;
+import org.hibernate.boot.mapping.internal.categorize.EntityHierarchyImpl;
+import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadataImpl;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.internal.util.StringHelper;
@@ -109,8 +109,8 @@ public class TableBinder {
 	}
 
 	public TableReference bindPrimaryTable(EntityTypeBinder entityBinder) {
-		final EntityTypeMetadata type = entityBinder.getManagedType();
-		final EntityHierarchy.HierarchyRelation hierarchyRelation = entityBinder.getHierarchyRelation();
+		final EntityTypeMetadataImpl type = entityBinder.getManagedType();
+		final EntityHierarchyImpl.HierarchyRelation hierarchyRelation = entityBinder.getHierarchyRelation();
 		final ClassDetails typeClassDetails = type.getClassDetails();
 		final jakarta.persistence.Table tableAnn = typeClassDetails.getDirectAnnotationUsage( jakarta.persistence.Table.class );
 		final JoinTable joinTableAnn = typeClassDetails.getDirectAnnotationUsage( JoinTable.class );
@@ -132,7 +132,7 @@ public class TableBinder {
 		if ( type.getHierarchy().getInheritanceType() == InheritanceType.TABLE_PER_CLASS ) {
 			assert subselectAnn == null;
 
-			if ( hierarchyRelation == EntityHierarchy.HierarchyRelation.ROOT ) {
+			if ( hierarchyRelation == EntityHierarchyImpl.HierarchyRelation.ROOT ) {
 				tableReference = bindPhysicalTable( type, TableSource.from( tableAnn ), true, viewAnn );
 			}
 			else {
@@ -140,7 +140,7 @@ public class TableBinder {
 			}
 		}
 		else if ( type.getHierarchy().getInheritanceType() == InheritanceType.SINGLE_TABLE ) {
-			if ( hierarchyRelation == EntityHierarchy.HierarchyRelation.ROOT ) {
+			if ( hierarchyRelation == EntityHierarchyImpl.HierarchyRelation.ROOT ) {
 				tableReference = normalTableDetermination( type, subselectAnn, TableSource.from( tableAnn ), viewAnn );
 			}
 			else {
@@ -167,7 +167,7 @@ public class TableBinder {
 	}
 
 	private TableReference normalTableDetermination(
-			EntityTypeMetadata type,
+			EntityTypeMetadataImpl type,
 			Subselect subselectAnn,
 			TableSource tableSource,
 			View viewAnn) {
@@ -185,7 +185,7 @@ public class TableBinder {
 	private TableReference bindUnionTable(
 			EntityTypeBinder entityBinder,
 			TableSource tableSource) {
-		final EntityTypeMetadata type = entityBinder.getManagedType();
+		final EntityTypeMetadataImpl type = entityBinder.getManagedType();
 		final EntityTypeBinder superEntityBinder = entityBinder.getSuperEntityBinder();
 		if ( superEntityBinder == null ) {
 			throw new MappingException( "Unable to resolve super entity table for table-per-class entity - "
@@ -255,7 +255,7 @@ public class TableBinder {
 	}
 
 	private InLineView bindVirtualTable(
-			EntityTypeMetadata type,
+			EntityTypeMetadataImpl type,
 			Subselect subselectAnn,
 			TableSource tableSource) {
 		final Identifier logicalName = determineLogicalName( type, tableSource );
@@ -284,14 +284,14 @@ public class TableBinder {
 	}
 
 	private TableReference bindPhysicalTable(
-			EntityTypeMetadata type,
+			EntityTypeMetadataImpl type,
 			TableSource tableSource,
 			boolean isPrimary) {
 		return bindPhysicalTable( type, tableSource, isPrimary, null );
 	}
 
 	private TableReference bindPhysicalTable(
-			EntityTypeMetadata type,
+			EntityTypeMetadataImpl type,
 			TableSource tableSource,
 			boolean isPrimary,
 			View viewAnn) {
@@ -303,7 +303,7 @@ public class TableBinder {
 		}
 	}
 
-	private TableReference bindImplicitPhysicalTable(EntityTypeMetadata type, boolean isPrimary, View viewAnn) {
+	private TableReference bindImplicitPhysicalTable(EntityTypeMetadataImpl type, boolean isPrimary, View viewAnn) {
 		final Identifier logicalName = determineLogicalName( type, null );
 		final Identifier logicalSchemaName = bindingOptions.getDefaultSchemaName();
 		final Identifier logicalCatalogName = bindingOptions.getDefaultCatalogName();
@@ -333,7 +333,7 @@ public class TableBinder {
 		);
 	}
 
-	private Identifier determineLogicalName(EntityTypeMetadata type, TableSource tableSource) {
+	private Identifier determineLogicalName(EntityTypeMetadataImpl type, TableSource tableSource) {
 		if ( tableSource != null ) {
 			final String name = tableSource.nonEmptyName();
 			if ( name != null ) {
@@ -357,7 +357,7 @@ public class TableBinder {
 	}
 
 	private TableReference bindExplicitPhysicalTable(
-			EntityTypeMetadata type,
+			EntityTypeMetadataImpl type,
 			TableSource tableSource,
 			boolean isPrimary,
 			View viewAnn) {
@@ -445,7 +445,7 @@ public class TableBinder {
 	}
 
 	public PhysicalTable bindCollectionTable(
-			EntityTypeMetadata ownerType,
+			EntityTypeMetadataImpl ownerType,
 			Table owningTable,
 			String attributeName,
 			CollectionTable collectionTable) {
@@ -460,7 +460,7 @@ public class TableBinder {
 	}
 
 	public PhysicalTable bindOwnedTable(
-			EntityTypeMetadata ownerType,
+			EntityTypeMetadataImpl ownerType,
 			Table owningTable,
 			String attributeName,
 			JoinTable joinTable) {
@@ -475,7 +475,7 @@ public class TableBinder {
 	}
 
 	public PhysicalTable bindAssociationTable(
-			EntityTypeMetadata ownerType,
+			EntityTypeMetadataImpl ownerType,
 			Table owningTable,
 			String attributeName,
 			EntityNaming targetType,
@@ -494,7 +494,7 @@ public class TableBinder {
 	}
 
 	public PhysicalTable bindAssociationTable(
-			EntityTypeMetadata ownerType,
+			EntityTypeMetadataImpl ownerType,
 			Table owningTable,
 			String attributeName,
 			EntityNaming targetType,
@@ -571,7 +571,7 @@ public class TableBinder {
 	}
 
 	private Identifier determineCollectionTableLogicalName(
-			EntityTypeMetadata ownerType,
+			EntityTypeMetadataImpl ownerType,
 			Table owningTable,
 			String attributeName,
 			TableSource tableSource) {
@@ -608,7 +608,7 @@ public class TableBinder {
 	}
 
 	private Identifier determineAssociationTableLogicalName(
-			EntityTypeMetadata ownerType,
+			EntityTypeMetadataImpl ownerType,
 			Table owningTable,
 			String attributeName,
 			EntityNaming targetType,
@@ -964,7 +964,7 @@ public class TableBinder {
 		return new Column( physicalName );
 	}
 
-	private void applyRowId(Table table, EntityTypeMetadata type) {
+	private void applyRowId(Table table, EntityTypeMetadataImpl type) {
 		final RowId rowId = type.getClassDetails().getDirectAnnotationUsage( RowId.class );
 		if ( rowId != null ) {
 			table.setRowId( rowId.value() );

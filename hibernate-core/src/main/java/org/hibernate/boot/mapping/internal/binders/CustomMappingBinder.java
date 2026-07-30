@@ -11,15 +11,31 @@ import org.hibernate.annotations.AttributeBinderType;
 import org.hibernate.annotations.Collate;
 import org.hibernate.annotations.TenantId;
 import org.hibernate.annotations.TypeBinderType;
+import org.hibernate.binder.AttributeBindingContext;
+import org.hibernate.binder.EmbeddableBindingContext;
+import org.hibernate.binder.EntityBindingContext;
 import org.hibernate.binder.TypeBinder;
+import org.hibernate.boot.mapping.internal.model.EmbeddableContribution;
+import org.hibernate.boot.mapping.spi.AttributeApplication;
+import org.hibernate.boot.mapping.spi.AttributeDeclaration;
+import org.hibernate.boot.mapping.spi.AttributeMetadata;
+import org.hibernate.boot.mapping.spi.AttributeUsage;
+import org.hibernate.boot.mapping.spi.CategorizedDomainModel;
+import org.hibernate.boot.mapping.spi.EntityHierarchy;
+import org.hibernate.boot.mapping.spi.EntityTypeMetadata;
+import org.hibernate.boot.mapping.spi.IdentifiableTypeMetadata;
 import org.hibernate.boot.mapping.internal.context.BindingContext;
 import org.hibernate.boot.mapping.internal.context.BindingState;
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.boot.mapping.spi.DeclarationRole;
+import org.hibernate.boot.mapping.spi.MappingRole;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
+import org.hibernate.models.spi.TypeDetails;
+
+import jakarta.persistence.AccessType;
 
 import static org.hibernate.internal.util.GenericsHelper.typeArguments;
 
@@ -28,11 +44,11 @@ import static org.hibernate.internal.util.GenericsHelper.typeArguments;
  */
 public class CustomMappingBinder {
 	public static ComponentBindingPhase.CustomMapping typeBinding(
-			ClassDetails classDetails,
+			EmbeddableContribution contribution,
 			Component component,
 			BindingState bindingState,
 			BindingContext bindingContext) {
-		return new ComponentTypeBinding( classDetails, component, bindingState, bindingContext );
+		return new ComponentTypeBinding( contribution, component, bindingState, bindingContext );
 	}
 
 	public static AttributeBindingPhase.CustomMapping attributeBinding(
@@ -45,30 +61,49 @@ public class CustomMappingBinder {
 	}
 
 	static void callTypeBinders(
-			ClassDetails classDetails,
+			org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadataImpl entityType,
 			PersistentClass persistentClass,
 			BindingState bindingState,
 			BindingContext bindingContext) {
 		final MetadataBuildingContext metadataBuildingContext = bindingState.getMetadataBuildingContext();
-		for ( var metaAnnotated : classDetails.getMetaAnnotated(
+		for ( var metaAnnotated : entityType.getClassDetails().getMetaAnnotated(
 				TypeBinderType.class,
 				bindingContext.getModelsContext()
 		) ) {
-			callTypeBinder( metaAnnotated, metaAnnotated.annotationType(), persistentClass, metadataBuildingContext );
+			callTypeBinder(
+					metaAnnotated,
+					metaAnnotated.annotationType(),
+					new StandardEntityBindingContext(
+							bindingContext.getCategorizedDomainModel(),
+							entityType,
+							persistentClass,
+							metadataBuildingContext
+					)
+			);
 		}
 	}
 
 	static void callTypeBinders(
-			ClassDetails classDetails,
+			EmbeddableContribution contribution,
 			Component component,
 			BindingState bindingState,
 			BindingContext bindingContext) {
 		final MetadataBuildingContext metadataBuildingContext = bindingState.getMetadataBuildingContext();
-		for ( var metaAnnotated : classDetails.getMetaAnnotated(
+		for ( var metaAnnotated : contribution.componentType().getMetaAnnotated(
 				TypeBinderType.class,
 				bindingContext.getModelsContext()
 		) ) {
-			callTypeBinder( metaAnnotated, metaAnnotated.annotationType(), component, metadataBuildingContext );
+			callTypeBinder(
+					metaAnnotated,
+					metaAnnotated.annotationType(),
+					new StandardEmbeddableBindingContext(
+							bindingContext.getCategorizedDomainModel(),
+							contribution.usage(),
+							component.getOwner(),
+							component,
+							metadataBuildingContext
+					)
+			);
 		}
 	}
 
@@ -82,7 +117,8 @@ public class CustomMappingBinder {
 			return;
 		}
 
-		final MetadataBuildingContext metadataBuildingContext = bindingState.getMetadataBuildingContext();
+		final AttributeBindingContext attributeBindingContext =
+				attributeBindingContext( member, persistentClass, property, bindingState, bindingContext );
 		for ( var metaAnnotated : member.getMetaAnnotated(
 				AttributeBinderType.class,
 				bindingContext.getModelsContext()
@@ -91,18 +127,18 @@ public class CustomMappingBinder {
 					|| metaAnnotated.annotationType() == Collate.class ) {
 				continue;
 			}
-			callAttributeBinder( metaAnnotated, metaAnnotated.annotationType(), persistentClass, property, metadataBuildingContext );
+			callAttributeBinder( metaAnnotated, metaAnnotated.annotationType(), attributeBindingContext );
 		}
 	}
 
 	private record ComponentTypeBinding(
-			ClassDetails classDetails,
+			EmbeddableContribution contribution,
 			Component component,
 			BindingState bindingState,
 			BindingContext bindingContext) implements ComponentBindingPhase.CustomMapping {
 		@Override
 		public void bindCustomMapping() {
-			callTypeBinders( classDetails, component, bindingState, bindingContext );
+			callTypeBinders( contribution, component, bindingState, bindingContext );
 		}
 	}
 
@@ -121,19 +157,17 @@ public class CustomMappingBinder {
 	private static <A extends Annotation> void callTypeBinder(
 			Annotation annotation,
 			Class<A> annotationType,
-			PersistentClass persistentClass,
-			MetadataBuildingContext metadataBuildingContext) {
+			EntityBindingContext context) {
 		try {
-			typeBinder( annotationType ).bind(
-					annotationType.cast( annotation ),
-					metadataBuildingContext,
-					persistentClass
-			);
+			typeBinder( annotationType ).bind( annotationType.cast( annotation ), context );
 		}
 		catch (Exception e) {
+			if ( e instanceof AnnotationException annotationException ) {
+				throw annotationException;
+			}
 			throw new AnnotationException(
 					"Error processing @TypeBinderType annotation '%s' for entity type '%s'"
-							.formatted( annotation, persistentClass.getClassName() ),
+							.formatted( annotation, context.getPersistentClass().getClassName() ),
 					e
 			);
 		}
@@ -142,19 +176,17 @@ public class CustomMappingBinder {
 	private static <A extends Annotation> void callTypeBinder(
 			Annotation annotation,
 			Class<A> annotationType,
-			Component component,
-			MetadataBuildingContext metadataBuildingContext) {
+			EmbeddableBindingContext context) {
 		try {
-			typeBinder( annotationType ).bind(
-					annotationType.cast( annotation ),
-					metadataBuildingContext,
-					component
-			);
+			typeBinder( annotationType ).bind( annotationType.cast( annotation ), context );
 		}
 		catch (Exception e) {
+			if ( e instanceof AnnotationException annotationException ) {
+				throw annotationException;
+			}
 			throw new AnnotationException(
 					"Error processing @TypeBinderType annotation '%s' for embeddable type '%s'"
-							.formatted( annotation, component.getComponentClassName() ),
+							.formatted( annotation, context.getComponent().getComponentClassName() ),
 					e
 			);
 		}
@@ -163,24 +195,175 @@ public class CustomMappingBinder {
 	private static <A extends Annotation> void callAttributeBinder(
 			Annotation annotation,
 			Class<A> annotationType,
-			PersistentClass persistentClass,
-			Property property,
-			MetadataBuildingContext metadataBuildingContext) {
+			AttributeBindingContext context) {
 		try {
-			attributeBinder( annotationType ).bind(
-					annotationType.cast( annotation ),
-					metadataBuildingContext,
-					persistentClass,
-					property
-			);
+			attributeBinder( annotationType ).bind( annotationType.cast( annotation ), context );
 		}
 		catch (Exception e) {
+			if ( e instanceof AnnotationException annotationException ) {
+				throw annotationException;
+			}
 			throw new AnnotationException(
 					"Error processing @AttributeBinderType annotation '%s' for attribute '%s' of entity type '%s'"
-							.formatted( annotation, property.getName(), persistentClass.getClassName() ),
+							.formatted(
+									annotation,
+									context.getProperty().getName(),
+									context.getPersistentClass().getClassName()
+							),
 					e
 			);
 		}
+	}
+
+	public static AttributeBindingContext attributeBindingContext(
+			MemberDetails member,
+			PersistentClass persistentClass,
+			Property property,
+			BindingState bindingState,
+			BindingContext bindingContext) {
+		return new StandardAttributeBindingContext(
+				bindingContext.getCategorizedDomainModel(),
+				resolveAttributeApplication( member, persistentClass, property, bindingState, bindingContext ),
+				persistentClass,
+				property,
+				bindingState.getMetadataBuildingContext()
+		);
+	}
+
+	private static AttributeApplication resolveAttributeApplication(
+			MemberDetails member,
+			PersistentClass persistentClass,
+			Property property,
+			BindingState bindingState,
+			BindingContext bindingContext) {
+		final MappingRole propertyRole = property.getMappingRole();
+		if ( propertyRole != null ) {
+			final AttributeApplication registered =
+					bindingState.getBootBindingModel().getAppliedAttributeMapping( propertyRole );
+			if ( registered != null ) {
+				return registered;
+			}
+		}
+
+		final EntityTypeMetadata entityType =
+				findEntityType( persistentClass, bindingContext.getCategorizedDomainModel() );
+		final AttributeMetadata attribute = findAttribute( entityType, member, property.getName() );
+		final MappingRole role = propertyRole == null
+				? MappingRole.entity( persistentClass.getEntityName() ).appendAttribute( property.getName() )
+				: propertyRole;
+		final AccessType accessType = entityType == null ? AccessType.FIELD : entityType.getAccessType();
+		final TypeDetails resolvedType = attribute == null
+				? member.getType()
+				: attribute.resolveAttributeType( entityType.getClassDetails() );
+		final var declaration = new BinderAttributeDeclaration(
+				new DeclarationRole( member.getDeclaringType().getName(), property.getName() ),
+				property.getName(),
+				member,
+				accessType,
+				attribute == null ? org.hibernate.boot.models.AttributeNature.BASIC : attribute.getNature()
+		);
+		final var usage = new BinderAttributeUsage(
+				property.getName(),
+				declaration,
+				member,
+				resolvedType,
+				persistentClass.getEntityName() + "." + property.getName(),
+				property.getName(),
+				attribute == null ? org.hibernate.boot.models.AttributeNature.BASIC : attribute.getNature()
+		);
+		return new BinderAttributeApplication( usage, role );
+	}
+
+	private static EntityTypeMetadata findEntityType(
+			PersistentClass persistentClass,
+			CategorizedDomainModel domainModel) {
+		for ( EntityHierarchy hierarchy : domainModel.getEntityHierarchies() ) {
+			final EntityTypeMetadata match = findEntityType( hierarchy.getAbsoluteRoot(), persistentClass );
+			if ( match != null ) {
+				return match;
+			}
+		}
+		return null;
+	}
+
+	private static EntityTypeMetadata findEntityType(
+			IdentifiableTypeMetadata candidate,
+			PersistentClass persistentClass) {
+		if ( candidate instanceof EntityTypeMetadata entity
+				&& ( entity.getEntityName().equals( persistentClass.getEntityName() )
+						|| entity.getClassDetails().getName().equals( persistentClass.getClassName() ) ) ) {
+			return entity;
+		}
+		for ( IdentifiableTypeMetadata subtype : candidate.getSubTypes() ) {
+			final EntityTypeMetadata match = findEntityType( subtype, persistentClass );
+			if ( match != null ) {
+				return match;
+			}
+		}
+		return null;
+	}
+
+	private static AttributeMetadata findAttribute(
+			EntityTypeMetadata entityType,
+			MemberDetails member,
+			String attributeName) {
+		for ( IdentifiableTypeMetadata type = entityType; type != null; type = type.getSuperType() ) {
+			final AttributeMetadata attribute = type.findAttribute( attributeName );
+			if ( attribute != null && attribute.getMember().equals( member ) ) {
+				return attribute;
+			}
+		}
+		return null;
+	}
+
+	private record StandardAttributeBindingContext(
+			CategorizedDomainModel getDomainModel,
+			AttributeApplication getAttribute,
+			PersistentClass getPersistentClass,
+			Property getProperty,
+			MetadataBuildingContext getMetadataBuildingContext)
+			implements AttributeBindingContext {
+	}
+
+	private record StandardEntityBindingContext(
+			CategorizedDomainModel getDomainModel,
+			EntityTypeMetadata getEntityType,
+			PersistentClass getPersistentClass,
+			MetadataBuildingContext getMetadataBuildingContext)
+			implements EntityBindingContext {
+	}
+
+	private record StandardEmbeddableBindingContext(
+			CategorizedDomainModel getDomainModel,
+			org.hibernate.boot.mapping.spi.EmbeddableUsageMetadata getEmbeddableUsage,
+			PersistentClass getPersistentClass,
+			Component getComponent,
+			MetadataBuildingContext getMetadataBuildingContext)
+			implements EmbeddableBindingContext {
+	}
+
+	private record BinderAttributeDeclaration(
+			DeclarationRole declarationRole,
+			String attributeName,
+			MemberDetails member,
+			AccessType accessType,
+			org.hibernate.boot.models.AttributeNature nature)
+			implements AttributeDeclaration {
+	}
+
+	private record BinderAttributeUsage(
+			String attributeName,
+			AttributeDeclaration declaration,
+			MemberDetails member,
+			TypeDetails resolvedType,
+			String sourceRole,
+			String attributePath,
+			org.hibernate.boot.models.AttributeNature nature)
+			implements AttributeUsage {
+	}
+
+	private record BinderAttributeApplication(AttributeUsage usage, MappingRole role)
+			implements AttributeApplication {
 	}
 
 	private static <A extends Annotation> TypeBinder<A> typeBinder(Class<A> annotationType)

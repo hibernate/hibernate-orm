@@ -9,6 +9,8 @@ import jakarta.persistence.AccessType;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.ExcludeDefaultListeners;
 import jakarta.persistence.ExcludeSuperclassListeners;
+import org.hibernate.boot.mapping.internal.relational.TableOwner;
+import org.hibernate.boot.mapping.spi.IdentifiableTypeMetadata;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
 
@@ -18,17 +20,17 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
 
-/// Abstract IdentifiableTypeMetadata impl
+/// Shared internal implementation of identifiable-type categorization.
 ///
 /// @since 9.0
 /// @author Steve Ebersole
 public abstract class AbstractIdentifiableTypeMetadata
 		extends AbstractManagedTypeMetadata
-		implements IdentifiableTypeMetadata {
-	private final EntityHierarchy hierarchy;
+		implements IdentifiableTypeMetadata, TableOwner {
+	private final EntityHierarchyImpl hierarchy;
 	private final ManagedTypeInheritanceState inheritanceState;
 	private final AbstractIdentifiableTypeMetadata superType;
-	private final Set<IdentifiableTypeMetadata> subTypes = new LinkedHashSet<>();
+	private final Set<AbstractIdentifiableTypeMetadata> subTypes = new LinkedHashSet<>();
 	private final AccessType accessType;
 
 	/**
@@ -36,7 +38,7 @@ public abstract class AbstractIdentifiableTypeMetadata
 	 */
 	public AbstractIdentifiableTypeMetadata(
 			ClassDetails classDetails,
-			EntityHierarchy hierarchy,
+			EntityHierarchyImpl hierarchy,
 			ManagedTypeInheritanceState inheritanceState,
 			CategorizationContext processingContext) {
 		super( classDetails, processingContext );
@@ -51,7 +53,7 @@ public abstract class AbstractIdentifiableTypeMetadata
 
 	public AbstractIdentifiableTypeMetadata(
 			ClassDetails classDetails,
-			EntityHierarchy hierarchy,
+			EntityHierarchyImpl hierarchy,
 			AbstractIdentifiableTypeMetadata superType,
 			ManagedTypeInheritanceState inheritanceState,
 			CategorizationContext processingContext) {
@@ -172,17 +174,17 @@ public abstract class AbstractIdentifiableTypeMetadata
 		return null;
 	}
 
-	private void addSubclass(IdentifiableTypeMetadata subclass) {
+	private void addSubclass(AbstractIdentifiableTypeMetadata subclass) {
 		subTypes.add( subclass );
 	}
 
 	@Override
-	public EntityHierarchy getHierarchy() {
+	public EntityHierarchyImpl getHierarchy() {
 		return hierarchy;
 	}
 
 	@Override
-	public IdentifiableTypeMetadata getSuperType() {
+	public AbstractIdentifiableTypeMetadata getSuperType() {
 		return superType;
 	}
 
@@ -202,14 +204,13 @@ public abstract class AbstractIdentifiableTypeMetadata
 		return subTypes.size();
 	}
 
-	@Override
-	public void forEachSubType(Consumer<IdentifiableTypeMetadata> consumer) {
+	public void forEachSubType(Consumer<AbstractIdentifiableTypeMetadata> consumer) {
 		// assume this is called only after its constructor is complete
 		subTypes.forEach( consumer );
 	}
 
 	@Override
-	public Iterable<IdentifiableTypeMetadata> getSubTypes() {
+	public Iterable<AbstractIdentifiableTypeMetadata> getSubTypes() {
 		// assume this is called only after its constructor is complete
 		return subTypes;
 	}
@@ -237,7 +238,7 @@ public abstract class AbstractIdentifiableTypeMetadata
 		final List<JpaEventListener> combined = new ArrayList<>();
 
 		if ( classDetails.getDirectAnnotationUsage( ExcludeSuperclassListeners.class ) == null ) {
-			final IdentifiableTypeMetadata superType = getSuperType();
+			final AbstractIdentifiableTypeMetadata superType = getSuperType();
 			if ( superType != null ) {
 				combined.addAll( superType.getHierarchyJpaEventListeners() );
 			}
@@ -321,4 +322,8 @@ public abstract class AbstractIdentifiableTypeMetadata
 		combined.addAll( getHierarchyJpaEventListeners() );
 		return combined;
 	}
+
+	public abstract List<JpaEventListener> getHierarchyJpaEventListeners();
+
+	public abstract List<JpaEventListener> getCompleteJpaEventListeners();
 }

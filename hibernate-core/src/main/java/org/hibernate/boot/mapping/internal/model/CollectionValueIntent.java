@@ -5,14 +5,14 @@
 package org.hibernate.boot.mapping.internal.model;
 
 import org.hibernate.annotations.CollectionId;
-import org.hibernate.boot.mapping.internal.categorize.EmbeddedValueMetadata;
-import org.hibernate.boot.mapping.internal.categorize.CollectionIdMetadata;
-import org.hibernate.boot.mapping.internal.categorize.PluralAttributeMetadata;
-import org.hibernate.boot.mapping.internal.categorize.ValueMetadata;
+import org.hibernate.boot.mapping.internal.categorize.EmbeddedValueMetadataImpl;
+import org.hibernate.boot.mapping.internal.categorize.CollectionIdMetadataImpl;
+import org.hibernate.boot.mapping.internal.categorize.PluralAttributeMetadataImpl;
 import org.hibernate.boot.mapping.internal.context.BindingContext;
 import org.hibernate.boot.mapping.internal.context.BindingState;
 import org.hibernate.boot.mapping.internal.sources.AnySource;
 import org.hibernate.boot.mapping.internal.sources.CollectionSource;
+import org.hibernate.boot.mapping.spi.ValueMetadata;
 import org.hibernate.boot.models.AttributeNature;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.models.spi.ClassDetails;
@@ -46,7 +46,7 @@ public record CollectionValueIntent(
 		ValueIntent elementIntent,
 		@Nullable ValueIntent indexIntent,
 		@Nullable BasicValueIntent collectionIdIntent,
-		@Nullable PluralAttributeMetadata valueMetadata) implements ValueIntent {
+		@Nullable PluralAttributeMetadataImpl valueMetadata) implements ValueIntent {
 	@Override
 	public AttributeNature nature() {
 		return switch ( collectionNature ) {
@@ -57,13 +57,13 @@ public record CollectionValueIntent(
 		};
 	}
 
-	public @Nullable CollectionIdMetadata collectionIdMetadata() {
+	public @Nullable CollectionIdMetadataImpl collectionIdMetadata() {
 		return valueMetadata == null ? null : valueMetadata.getCollectionId();
 	}
 
 	public static CollectionValueIntent fromAttribute(
 			CollectionSource source,
-			PluralAttributeMetadata valueMetadata,
+			PluralAttributeMetadataImpl valueMetadata,
 			String sourceRole,
 			String attributePath,
 			BindingState bindingState,
@@ -120,7 +120,7 @@ public record CollectionValueIntent(
 		return switch ( valueMetadata.getNature() ) {
 			case BASIC -> BasicValueIntent.fromCollectionElement( source );
 			case EMBEDDED -> EmbeddedValueIntent.fromAttribute(
-					valueMetadata instanceof EmbeddedValueMetadata embedded ? embedded : null,
+					valueMetadata instanceof EmbeddedValueMetadataImpl embedded ? embedded : null,
 					source.elementType(),
 					source.member().resolveAttributeName(),
 					sourceRole + ".<element>"
@@ -204,7 +204,7 @@ public record CollectionValueIntent(
 		return switch ( valueMetadata.getNature() ) {
 			case BASIC -> BasicValueIntent.fromMapKey( source );
 			case EMBEDDED -> EmbeddedValueIntent.fromAttribute(
-					valueMetadata instanceof EmbeddedValueMetadata embedded ? embedded : null,
+					valueMetadata instanceof EmbeddedValueMetadataImpl embedded ? embedded : null,
 					source.mapKeyType(),
 					source.member().resolveAttributeName() + ".<map-key>",
 					sourceRole + ".<map-key>"

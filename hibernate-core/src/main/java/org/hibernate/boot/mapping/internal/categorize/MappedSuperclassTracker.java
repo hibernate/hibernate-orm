@@ -30,7 +30,7 @@ public class MappedSuperclassTracker {
 		}
 	}
 
-	void markVisited(MappedSuperclassTypeMetadata mappedSuperclass) {
+	void markVisited(MappedSuperclassTypeMetadataImpl mappedSuperclass) {
 		if ( unusedMappedSuperclasses != null ) {
 			unusedMappedSuperclasses.remove( mappedSuperclass.getClassDetails().getClassName() );
 		}

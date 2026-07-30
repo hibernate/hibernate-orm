@@ -88,9 +88,10 @@ and compatibility decisions.
 | Keep as durable glossary.  Fold duplicate vocabulary from other docs into references to this file.
 
 | link:new-contributor-model-binding-guide.adoc[`new-contributor-model-binding-guide.adoc`]
-| Reference
+| Stage 5 input
 | Orientation for source, XML, categorization, binding, phases, pending state, package layout.
-| Keep as contributor guide.  Remove status or branch-health details if any are added later.
+| Replace with the three-guide structure defined by Stage 5, preserving its
+durable binding guidance in the boot-model/mapping-bootstrap guide.
 
 | link:flow-notation.adoc[`flow-notation.adoc`]
 | Reference
@@ -98,19 +99,22 @@ and compatibility decisions.
 | Keep only if still referenced by active docs.  Otherwise fold into the glossary or index.
 
 | link:session-factory-bootstrap-design.adoc[`session-factory-bootstrap-design.adoc`]
-| Active / Blocking
+| Resolved architecture
 | Durable bootstrap target: entry points, settings, source products, mapping resolution, metadata, factory handoff.
-| Keep as canonical bootstrap architecture.  Remove any status/test signal and point to handoff for current state.
+| Keep as canonical bootstrap architecture and source material for the Stage 5
+contributor guide.
 
 | link:session-factory-construction-design.adoc[`session-factory-construction-design.adoc`]
-| Active / Blocking
+| Resolved architecture
 | Final factory construction, `SessionFactoryImpl` constructor slimming, runtime components, custom factory producers.
-| Keep as focused construction design.  Trim constructor-audit tables once conclusions are folded into the target design.
+| Keep as the focused construction design and source material for the Stage 5
+contributor guide.  Trim migration-only audit tables during consolidation.
 
 | link:bootstrap-customizations-design.adoc[`bootstrap-customizations-design.adoc`]
-| Active / Blocking
+| Resolved
 | Ownership of mapping/type/function/session-factory customizations and `BootstrapContext` surface reduction.
-| Keep.  This remains relevant to `MappingCustomizations`, function registry ownership, and context narrowing.
+| Preserve its durable ownership and ordering rules during Stage 5
+consolidation; it no longer represents blocking implementation work.
 
 | `generator-descriptor-design.adoc`
 | Removed / Implemented
@@ -224,11 +228,13 @@ deleted.
 | Keep in the finished bucket as a completed audit.  Remaining deferred entries should point to active design areas rather than become current failure buckets.
 
 | link:binding-extension-spi-design.adoc[`binding-extension-spi-design.adoc`]
-| Triggered follow-up
-| Future public extension SPI replacing mapping-object-mutating binders.
-| Keep the internal facet proofs.  Do not freeze a public replacement without
-a concrete external use case after the binding/materialization boundary
-stabilizes.
+| Active / Stabilization
+| ORM 9 semantic-to-materialized contract for the incubating
+`AttributeBinder` and `TypeBinder` SPIs.
+| Define the supported read-only categorized and applied-model SPI, retain
+`org.hibernate.mapping` as the mutable target, and stabilize binder timing.
+The abandoned capability/facet facade has been removed; useful contribution
+records and materializers remain internal implementation architecture.
 
 | link:additional-mapping-contributor-design.adoc[`additional-mapping-contributor-design.adoc`]
 | Resolved / Triggered Follow-up
@@ -295,11 +301,14 @@ Resolved:
   `additional-mapping-contributor-design.adoc`] for the late immutable
   processed-model view.
 
-Triggered follow-up:
+Active stabilization:
 
 * link:binding-extension-spi-design.adoc[
-  `binding-extension-spi-design.adoc`] for a future public structured binding
-  SPI;
+  `binding-extension-spi-design.adoc`] for the supported semantic-to-
+  materialized `AttributeBinder` and `TypeBinder` boundary.
+
+Triggered follow-up:
+
 * the early source-level contributor portion of
   `additional-mapping-contributor-design.adoc`.
 
@@ -330,24 +339,26 @@ question section does not yet carry an inline disposition.
 | Questions To Resolve
 
 | Bootstrap customizations
-| Blocking
-| Product ownership and deterministic ordering for type, function, naming,
-mapping, cache, and factory customizations; removal of broad context transport.
+| Resolved
+| Product ownership and deterministic ordering are explicit pipeline
+responsibilities; broad context transport of resolved products has been
+removed.
 
 | Additional mapping contribution
-| Blocking / Triggered follow-up
-| Blocking: processed-model view for the retained late contributor.
-Follow-up: early source contribution, recategorization, ordering, and fixed
-points, triggered by a concrete pre-binding use case.
+| Resolved / Triggered follow-up
+| The retained late contributor uses its narrow processed-model and context
+views.  Early source contribution remains triggered by a concrete pre-binding
+use case.
 
 | Binding extensions
-| Stabilization / Triggered follow-up
-| Decide the ORM 9 status of legacy `AttributeBinder` and `TypeBinder`.
-Defer a public structured replacement until a concrete external use case
-validates the stable internal facet model.
+| Stabilization
+| Retain `AttributeBinder` and `TypeBinder` as incubating ORM 9 SPIs.  Close the
+supported read-only semantic-model surface used by their contexts and document
+the materialization and resolution timing.  Treat early categorization
+mutation as a distinct triggered extension problem.
 
 | JPA static metamodel
-| Stabilization
+| Resolved / Follow-up cleanup
 | Implemented materialization-time plan production, embeddable and inherited
 generic roles, processor/runtime field hiding, and resolved-pipeline retirement
 of duplicate runtime traversal.  Remaining legacy entry-point cleanup is
@@ -381,10 +392,10 @@ projection.
 embeddable, generic, identifier, or runtime consumer which exposes it.
 
 | Mapped superclasses, embeddables, and generics
-| Blocking
-| Finish stable role-based application and runtime/JPA handoffs, including
-mixed components and generic specialization; then consolidate overlapping
-notes.
+| Resolved
+| Stable role-based application and runtime/JPA handoffs cover mixed
+components and generic specialization.  Superseded focused notes have been
+consolidated or deleted.
 
 | Identifier correspondence
 | Resolved
@@ -398,9 +409,9 @@ introduce an executable runtime conversion plan with that consumer.
 question blocks the PR.
 
 | Mapping-key creation
-| Stabilization
-| Narrow remaining low-level compatibility/naming helpers without reopening
-resolved key products and materializers.
+| Resolved
+| Explicit key products and materializers are the final design.  Reopen only
+for a concrete compatibility failure.
 
 | `MetadataBuildingContext`
 | Resolved / follow-up only
@@ -409,10 +420,10 @@ count and compatibility constructor parameters are not completion metrics.
 Treat naming-source and `UserTypeCreationContext` SPI narrowing separately.
 
 | SessionFactory bootstrap/construction
-| Blocking
-| Prepare no-factory values, narrow runtime model creation context, make
-service/integrator phases explicit, remove broad contexts from the final
-construction boundary, and define the retained `SessionFactoryOptions` view.
+| Resolved
+| Explicit prepared products, narrowed runtime-model context,
+service/integrator phases, final construction boundary, and retained
+`SessionFactoryOptions` compatibility view are implemented.
 
 | Metadata snapshot/serialization
 | Resolved / Triggered follow-up

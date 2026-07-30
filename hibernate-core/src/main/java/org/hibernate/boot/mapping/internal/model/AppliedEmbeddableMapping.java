@@ -8,7 +8,7 @@ import java.util.HashSet;
 import java.util.List;
 
 import org.hibernate.models.spi.ClassDetails;
-import org.hibernate.mapping.MappingRole;
+import org.hibernate.boot.mapping.spi.MappingRole;
 
 import jakarta.annotation.Nullable;
 

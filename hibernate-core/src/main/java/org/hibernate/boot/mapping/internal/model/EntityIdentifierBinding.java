@@ -11,7 +11,7 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadata;
+import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadataImpl;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
 
@@ -29,21 +29,21 @@ import jakarta.annotation.Nullable;
 /// @since 9.0
 /// @author Steve Ebersole
 public class EntityIdentifierBinding {
-	private final EntityTypeMetadata owner;
+	private final EntityTypeMetadataImpl owner;
 	private final boolean idClass;
 	private final @Nullable ClassDetails idClassType;
 	private @Nullable MemberDetails identifierMember;
 	private final List<IdentifierAttributeBinding> attributes = new ArrayList<>();
 
 	public EntityIdentifierBinding(
-			EntityTypeMetadata owner,
+			EntityTypeMetadataImpl owner,
 			boolean idClass,
 			@Nullable ClassDetails idClassType) {
 		this( owner, idClass, idClassType, null );
 	}
 
 	public EntityIdentifierBinding(
-			EntityTypeMetadata owner,
+			EntityTypeMetadataImpl owner,
 			boolean idClass,
 			@Nullable ClassDetails idClassType,
 			@Nullable MemberDetails identifierMember) {
@@ -53,7 +53,7 @@ public class EntityIdentifierBinding {
 		this.identifierMember = identifierMember;
 	}
 
-	public EntityTypeMetadata owner() {
+	public EntityTypeMetadataImpl owner() {
 		return owner;
 	}
 

@@ -17,7 +17,7 @@ import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.OptimisticLock;
 import org.hibernate.boot.models.AnnotationPlacementException;
 import org.hibernate.boot.models.AttributeNature;
-import org.hibernate.boot.mapping.internal.categorize.AttributeMetadata;
+import org.hibernate.boot.mapping.internal.categorize.AttributeMetadataImplementor;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 
@@ -44,7 +44,7 @@ import org.hibernate.type.descriptor.java.MutabilityPlan;
 /// @author Steve Ebersole
 public class IdentifiableAttributeDeclarationBinding implements AttributeDeclarationBinding {
 	private final String attributeName;
-	private final @Nullable AttributeMetadata attributeMetadata;
+	private final @Nullable AttributeMetadataImplementor attributeMetadata;
 	private final ManagedTypeBinding ownerType;
 	private final ManagedTypeBinding declaringType;
 	private final MemberDetails member;
@@ -62,7 +62,7 @@ public class IdentifiableAttributeDeclarationBinding implements AttributeDeclara
 
 	public IdentifiableAttributeDeclarationBinding(
 			String attributeName,
-			@Nullable AttributeMetadata attributeMetadata,
+			@Nullable AttributeMetadataImplementor attributeMetadata,
 			ManagedTypeBinding ownerType,
 			ManagedTypeBinding declaringType,
 			MemberDetails member,
@@ -82,7 +82,7 @@ public class IdentifiableAttributeDeclarationBinding implements AttributeDeclara
 	}
 
 	public static IdentifiableAttributeDeclarationBinding from(
-			AttributeMetadata attributeMetadata,
+			AttributeMetadataImplementor attributeMetadata,
 			ManagedTypeBinding ownerType,
 			ManagedTypeBinding declaringType,
 			MemberDetails member,
@@ -110,7 +110,7 @@ public class IdentifiableAttributeDeclarationBinding implements AttributeDeclara
 		return attributeName;
 	}
 
-	public @Nullable AttributeMetadata attributeMetadata() {
+	public @Nullable AttributeMetadataImplementor attributeMetadata() {
 		return attributeMetadata;
 	}
 

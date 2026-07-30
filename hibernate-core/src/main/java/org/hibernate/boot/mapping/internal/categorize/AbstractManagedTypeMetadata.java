@@ -4,6 +4,7 @@
  */
 package org.hibernate.boot.mapping.internal.categorize;
 
+import org.hibernate.boot.mapping.spi.ManagedTypeMetadata;
 import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
@@ -58,14 +59,14 @@ public abstract class AbstractManagedTypeMetadata implements ManagedTypeMetadata
 
 	@Override
 	public String toString() {
-		return "ManagedTypeMetadata(" + classDetails.getName() + ")";
+		return "AbstractManagedTypeMetadata(" + classDetails.getName() + ")";
 	}
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// attribute handling
 
-	protected abstract List<AttributeMetadata> attributeList();
+	protected abstract List<AttributeMetadataImplementor> attributeList();
 
 	@Override
 	public int getNumberOfAttributes() {
@@ -73,15 +74,15 @@ public abstract class AbstractManagedTypeMetadata implements ManagedTypeMetadata
 	}
 
 	@Override
-	public Collection<AttributeMetadata> getAttributes() {
-		return attributeList();
+	public Collection<AttributeMetadataImplementor> getAttributes() {
+		return List.copyOf( attributeList() );
 	}
 
 	@Override
-	public AttributeMetadata findAttribute(String name) {
-		final List<AttributeMetadata> attributeList = attributeList();
+	public AttributeMetadataImplementor findAttribute(String name) {
+		final List<AttributeMetadataImplementor> attributeList = attributeList();
 		for ( int i = 0; i < attributeList.size(); i++ ) {
-			final AttributeMetadata attribute = attributeList.get( i );
+			final AttributeMetadataImplementor attribute = attributeList.get( i );
 			if ( attribute.getName().equals( name ) ) {
 				return attribute;
 			}
@@ -89,23 +90,22 @@ public abstract class AbstractManagedTypeMetadata implements ManagedTypeMetadata
 		return null;
 	}
 
-	@Override
-	public void forEachAttribute(IndexedConsumer<AttributeMetadata> consumer) {
+	public void forEachAttribute(IndexedConsumer<AttributeMetadataImplementor> consumer) {
 		for ( int i = 0; i < attributeList().size(); i++ ) {
 			consumer.accept( i, attributeList().get( i ) );
 		}
 	}
 
-	protected List<AttributeMetadata> resolveAttributes(AllMemberConsumer memberConsumer) {
+	protected List<AttributeMetadataImplementor> resolveAttributes(AllMemberConsumer memberConsumer) {
 		final List<MemberDetails> backingMembers = getModelContext()
 				.getPersistentAttributeMemberResolver()
 				.resolveAttributesMembers( classDetails, getAccessType(), memberConsumer, modelContext );
 
-		final List<AttributeMetadata> attributeList = arrayList( backingMembers.size() );
+		final List<AttributeMetadataImplementor> attributeList = arrayList( backingMembers.size() );
 
 		for ( MemberDetails backingMember : backingMembers ) {
 			var memberType = backingMember.getType().determineRelativeType( classDetails );
-			final AttributeMetadata attribute = AttributeMetadataResolver.resolve(
+			final AttributeMetadataImplementor attribute = AttributeMetadataResolver.resolve(
 					backingMember,
 					memberType,
 					getAccessType(),

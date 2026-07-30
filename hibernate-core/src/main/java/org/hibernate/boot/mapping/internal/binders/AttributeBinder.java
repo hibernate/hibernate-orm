@@ -15,27 +15,30 @@ import org.hibernate.annotations.NaturalId;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.mapping.internal.materialize.AttributeOptionsMappingMaterializer;
 import org.hibernate.boot.mapping.internal.materialize.BasicValueMappingMaterializer;
+import org.hibernate.boot.mapping.internal.materialize.CollationMappingMaterializer;
+import org.hibernate.boot.mapping.internal.materialize.NaturalIdMappingMaterializer;
 import org.hibernate.boot.mapping.internal.materialize.PropertyMappingMaterializer;
 import org.hibernate.boot.mapping.internal.model.AnyValueIntent;
 import org.hibernate.boot.mapping.internal.model.AppliedAttributeMapping;
 import org.hibernate.boot.mapping.internal.model.AggregateMappingIntent;
 import org.hibernate.boot.mapping.internal.model.BasicValueIntent;
 import org.hibernate.boot.mapping.internal.model.CollectionValueIntent;
+import org.hibernate.boot.mapping.internal.model.CollationContribution;
 import org.hibernate.boot.mapping.internal.model.EmbeddedValueIntent;
+import org.hibernate.boot.mapping.internal.model.ManagedTypeBinding;
+import org.hibernate.boot.mapping.internal.model.NaturalIdContribution;
 import org.hibernate.boot.mapping.internal.model.ToOneValueIntent;
 import org.hibernate.boot.mapping.internal.model.ValueIntent;
-import org.hibernate.boot.mapping.internal.extension.BindingContributionContext;
-import org.hibernate.boot.mapping.internal.extension.CollationAttributeContributor;
-import org.hibernate.boot.mapping.internal.extension.NaturalIdAttributeContributor;
-import org.hibernate.boot.mapping.internal.extension.StandardAttributeBindingTarget;
 import org.hibernate.boot.mapping.internal.view.AttributeBindingView;
+import org.hibernate.boot.mapping.internal.view.CollationContributionView;
+import org.hibernate.boot.mapping.internal.view.NaturalIdContributionView;
 import org.hibernate.boot.mapping.internal.context.BindingContext;
 import org.hibernate.boot.mapping.internal.context.BindingOptions;
 import org.hibernate.boot.mapping.internal.context.BindingState;
 import org.hibernate.boot.mapping.internal.relational.TableReference;
-import org.hibernate.boot.mapping.internal.categorize.AttributeMetadata;
-import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadata;
-import org.hibernate.boot.mapping.internal.categorize.IdentifiableTypeMetadata;
+import org.hibernate.boot.mapping.internal.categorize.AttributeMetadataImplementor;
+import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadataImpl;
+import org.hibernate.boot.mapping.internal.categorize.AbstractIdentifiableTypeMetadata;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.PersistentClass;
@@ -45,7 +48,7 @@ import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.TypeDetails;
-import org.hibernate.mapping.MappingRole;
+import org.hibernate.boot.mapping.spi.MappingRole;
 
 import jakarta.annotation.Nullable;
 
@@ -71,9 +74,9 @@ import static org.hibernate.boot.models.AttributeNature.ONE_TO_MANY;
 /// @since 9.0
 /// @author Steve Ebersole
 public class AttributeBinder {
-	private final IdentifiableTypeMetadata ownerType;
+	private final AbstractIdentifiableTypeMetadata ownerType;
 	private final AttributeBindingView attributeBinding;
-	private final AttributeMetadata attributeMetadata;
+	private final AttributeMetadataImplementor attributeMetadata;
 	private final BindingState bindingState;
 	private final BindingOptions bindingOptions;
 	private final BindingContext bindingContext;
@@ -82,7 +85,7 @@ public class AttributeBinder {
 	private final Table attributeTable;
 
 	public AttributeBinder(
-			IdentifiableTypeMetadata ownerType,
+			AbstractIdentifiableTypeMetadata ownerType,
 			AttributeBindingView attributeBinding,
 			PersistentClass ownerBinding,
 			Table primaryTable,
@@ -104,7 +107,7 @@ public class AttributeBinder {
 	}
 
 	public AttributeBinder(
-			IdentifiableTypeMetadata ownerType,
+			AbstractIdentifiableTypeMetadata ownerType,
 			AttributeBindingView attributeBinding,
 			PersistentClass ownerBinding,
 			Table primaryTable,
@@ -215,7 +218,7 @@ public class AttributeBinder {
 					modelBinders,
 					registerCollectionBindings
 			);
-			if ( !( ownerType instanceof EntityTypeMetadata ) ) {
+			if ( !( ownerType instanceof EntityTypeMetadataImpl ) ) {
 				collectionValue.setMappingRole( null );
 			}
 			binding.setValue( collectionValue );
@@ -245,9 +248,9 @@ public class AttributeBinder {
 	}
 
 	private static MappingRole determineMappingRole(
-			IdentifiableTypeMetadata ownerType,
+			AbstractIdentifiableTypeMetadata ownerType,
 			AttributeBindingView attributeBinding) {
-		if ( ownerType instanceof EntityTypeMetadata entityType ) {
+		if ( ownerType instanceof EntityTypeMetadataImpl entityType ) {
 			return MappingRole.entity( entityType.getEntityName() )
 					.appendAttribute( attributeBinding.attributeName() );
 		}
@@ -344,20 +347,17 @@ public class AttributeBinder {
 		if ( naturalId == null ) {
 			return;
 		}
-		final var contributionContext = new BindingContributionContext(
-				bindingOptions,
-				bindingState,
-				bindingContext
+		final var contribution = new NaturalIdContribution(
+				ownerType,
+				attributeBinding.attributeName(),
+				attributeBinding.member(),
+				naturalId.mutable()
 		);
-		new NaturalIdAttributeContributor().contribute(
-				naturalId,
-				StandardAttributeBindingTarget.forProperty(
-						ownerType,
-						attributeBinding.usageBinding(),
-						property,
-						contributionContext
-				),
-				contributionContext
+		bindingState.getBootBindingModel().addNaturalIdContribution( contribution );
+		new NaturalIdMappingMaterializer().materializeNaturalId(
+				new NaturalIdContributionView( contribution ),
+				property,
+				bindingState
 		);
 	}
 
@@ -366,20 +366,20 @@ public class AttributeBinder {
 		if ( collate == null ) {
 			return;
 		}
-		final var contributionContext = new BindingContributionContext(
-				bindingOptions,
-				bindingState,
-				bindingContext
+		final var usage = attributeBinding.usageBinding();
+		final var contribution = new CollationContribution(
+				ownerType,
+				usage.usageContainer() instanceof ManagedTypeBinding
+						? usage.attributePath()
+						: usage.sourceRole(),
+				usage.member(),
+				collate.value()
 		);
-		new CollationAttributeContributor().contribute(
-				collate,
-				StandardAttributeBindingTarget.forProperty(
-						ownerType,
-						attributeBinding.usageBinding(),
-						property,
-						contributionContext
-				),
-				contributionContext
+		bindingState.getBootBindingModel().addCollationContribution( contribution );
+		new CollationMappingMaterializer().materializeCollation(
+				new CollationContributionView( contribution ),
+				property,
+				bindingState
 		);
 	}
 

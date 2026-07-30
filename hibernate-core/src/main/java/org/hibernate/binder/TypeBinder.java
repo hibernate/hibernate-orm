@@ -4,48 +4,40 @@
  */
 package org.hibernate.binder;
 
+import java.lang.annotation.Annotation;
+
 import org.hibernate.Incubating;
-import org.hibernate.Remove;
-import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.annotations.TypeBinderType;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 
-import java.lang.annotation.Annotation;
-
 /**
- * Allows a user-written annotation to drive some customized model binding.
+ * Interprets a user-defined annotation applied to an entity or embeddable type
+ * and customizes the corresponding boot mapping.
  * <p>
- * An implementation of this interface interacts directly with model objects
- * like {@link PersistentClass} and {@link Component} to implement the
- * semantics of some {@linkplain org.hibernate.annotations.TypeBinderType
- * custom mapping annotation}.
+ * A custom annotation is associated with an implementation of this contract
+ * using {@link TypeBinderType @TypeBinderType}. Hibernate invokes the
+ * entity overload with an {@link EntityBindingContext} and the embeddable
+ * overload with an {@link EmbeddableBindingContext}. These contexts correlate
+ * read-only categorized type information with the mutable
+ * {@link PersistentClass} or {@link Component} produced from it.
  * <p>
- * For example, this annotation disables rowcount checking for insert,
- * update, and delete statements for annotated entities:
- * <pre>
- * &#064;TypeBinderType(binder = NoResultCheck.Binder.class)
- * &#064;Target(TYPE) &#064;Retention(RUNTIME)
- * public @interface NoResultCheck {
- *     class Binder implements TypeBinder&lt;NoResultCheck&gt; {
- *         &#064;Override
- *         public void bind(NoResultCheck annotation,
- *                 MetadataBuildingContext buildingContext,
- *                 PersistentClass persistentClass) {
- *             persistentClass.setInsertCheckStyle(NONE);
- *             persistentClass.setUpdateCheckStyle(NONE);
- *             persistentClass.setDeleteCheckStyle(NONE);
- *         }
- *         &#064;Override
- *         public void bind(NoResultCheck annotation,
- *                 MetadataBuildingContext buildingContext,
- *                 Component embeddableClass) {
- *             throw new AnnotationException("'@NoResultCheck' cannot annotate an '@Embeddable' class");
- *         }
- *     }
- * }
- * </pre>
+ * Entity binders run after the managed-type structure has been materialized.
+ * Embeddable binders run once for each concrete embeddable usage, after its
+ * component structure has been materialized. Both callbacks occur before
+ * later value resolution and mapping finalization; a binder should not assume
+ * that table keys, foreign keys, inverse associations, or other later-phase
+ * products have been finalized.
+ * <p>
+ * An implementation only needs to override the target kinds supported by its
+ * annotation. Each default method reports an unsupported placement using the
+ * standard diagnostic supplied by its context.
  *
- * @see org.hibernate.annotations.TypeBinderType
+ * @param <A> the user-defined annotation interpreted by this binder
+ *
+ * @see TypeBinderType
+ * @see EntityBindingContext
+ * @see EmbeddableBindingContext
  * @see AttributeBinder
  *
  * @author Gavin King
@@ -53,23 +45,30 @@ import java.lang.annotation.Annotation;
 @Incubating
 public interface TypeBinder<A extends Annotation> {
 	/**
-	 * Perform some custom configuration of the model relating to the given annotated
-	 * {@linkplain PersistentClass entity class}.
+	 * Customizes the materialized mapping of an annotated entity.
 	 *
-	 * @param annotation an annotation of the entity class that is declared as an
-	 *                   {@link org.hibernate.annotations.TypeBinderType}
-	 * @param persistentClass the entity class
+	 * @param annotation the annotation instance discovered on the entity type
+	 * @param context the categorized entity and its mutable boot mapping
+	 *
+	 * @throws org.hibernate.AnnotationException by default, indicating that the
+	 *         annotation is not supported on an entity
 	 */
-	@Remove
-	void bind(A annotation, MetadataBuildingContext buildingContext, PersistentClass persistentClass);
+	default void bind(A annotation, EntityBindingContext context) {
+		context.unsupportedAnnotationPlacement( annotation );
+	}
+
 	/**
-	 * Perform some custom configuration of the model relating to the given annotated
-	 * {@linkplain Component embeddable class}.
+	 * Customizes one materialized usage of an annotated embeddable type.
 	 *
-	 * @param annotation an annotation of the embeddable class that is declared as an
-	 *                   {@link org.hibernate.annotations.TypeBinderType}
-	 * @param embeddableClass the embeddable class
+	 * @param annotation the annotation instance discovered on the embeddable
+	 *                   type
+	 * @param context the categorized embeddable usage and its mutable component
+	 *                mapping
+	 *
+	 * @throws org.hibernate.AnnotationException by default, indicating that the
+	 *         annotation is not supported on an embeddable
 	 */
-	@Remove
-	void bind(A annotation, MetadataBuildingContext buildingContext, Component embeddableClass);
+	default void bind(A annotation, EmbeddableBindingContext context) {
+		context.unsupportedAnnotationPlacement( annotation );
+	}
 }

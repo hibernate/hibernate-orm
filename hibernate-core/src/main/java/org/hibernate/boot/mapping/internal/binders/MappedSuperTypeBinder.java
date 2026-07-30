@@ -9,7 +9,7 @@ import org.hibernate.PropertyNotFoundException;
 import org.hibernate.boot.mapping.internal.context.BindingContext;
 import org.hibernate.boot.mapping.internal.context.BindingOptions;
 import org.hibernate.boot.mapping.internal.context.BindingState;
-import org.hibernate.boot.mapping.internal.categorize.AttributeMetadata;
+import org.hibernate.boot.mapping.internal.categorize.AttributeMetadataImplementor;
 import org.hibernate.boot.mapping.internal.materialize.BasicValueMappingMaterializer;
 import org.hibernate.boot.mapping.internal.materialize.BasicValueResolutionBuilder;
 import org.hibernate.boot.mapping.internal.materialize.BasicValueResolutionDetails;
@@ -17,12 +17,12 @@ import org.hibernate.boot.mapping.internal.materialize.PropertyMappingMaterializ
 import org.hibernate.boot.mapping.internal.model.BasicValueIntent;
 import org.hibernate.boot.mapping.internal.model.MappedSuperclassContribution;
 import org.hibernate.boot.mapping.internal.sources.BasicValueSource;
-import org.hibernate.boot.mapping.internal.categorize.EntityHierarchy;
-import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadata;
-import org.hibernate.boot.mapping.internal.categorize.IdentifiableTypeMetadata;
+import org.hibernate.boot.mapping.internal.categorize.EntityHierarchyImpl;
+import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadataImpl;
+import org.hibernate.boot.mapping.internal.categorize.AbstractIdentifiableTypeMetadata;
 import org.hibernate.boot.mapping.internal.categorize.KeyMapping;
-import org.hibernate.boot.mapping.internal.categorize.ManagedTypeMetadata;
-import org.hibernate.boot.mapping.internal.categorize.MappedSuperclassTypeMetadata;
+import org.hibernate.boot.mapping.internal.categorize.AbstractManagedTypeMetadata;
+import org.hibernate.boot.mapping.internal.categorize.MappedSuperclassTypeMetadataImpl;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Join;
@@ -65,9 +65,9 @@ public class MappedSuperTypeBinder extends IdentifiableTypeBinder
 	private final ModelBinders modelBinders;
 
 	public MappedSuperTypeBinder(
-			MappedSuperclassTypeMetadata type,
-			IdentifiableTypeMetadata superType,
-			EntityHierarchy.HierarchyRelation hierarchyRelation,
+			MappedSuperclassTypeMetadataImpl type,
+			AbstractIdentifiableTypeMetadata superType,
+			EntityHierarchyImpl.HierarchyRelation hierarchyRelation,
 			ModelBinders modelBinders,
 			BindingState state,
 			BindingOptions options,
@@ -178,15 +178,15 @@ public class MappedSuperTypeBinder extends IdentifiableTypeBinder
 		}
 	}
 
-	private void applyDeclaredPropertiesToNearestEntityConsumers(IdentifiableTypeMetadata type) {
+	private void applyDeclaredPropertiesToNearestEntityConsumers(AbstractIdentifiableTypeMetadata type) {
 		type.forEachSubType( (subType) -> {
 			final var typeBinder = (IdentifiableTypeBinder) getBindingState().getTypeBinder( subType.getClassDetails() );
-			if ( subType.getManagedTypeKind() == ManagedTypeMetadata.Kind.ENTITY ) {
+			if ( subType.getManagedTypeKind() == AbstractManagedTypeMetadata.Kind.ENTITY ) {
 				final var entityBinding = (PersistentClass) typeBinder.getTypeBinding();
 				final MappedSuperclassContribution contribution = new MappedSuperclassContribution(
-						(MappedSuperclassTypeMetadata) getManagedType(),
+						(MappedSuperclassTypeMetadataImpl) getManagedType(),
 						subType,
-						(EntityTypeMetadata) subType
+						(EntityTypeMetadataImpl) subType
 				);
 				getBindingState().getBootBindingModel().addMappedSuperclassContribution( contribution );
 				// Transitional contribution-lite bridge: until PersistentClass derives inherited mapped-superclass
@@ -195,7 +195,7 @@ public class MappedSuperTypeBinder extends IdentifiableTypeBinder
 				bindDeclaredAttributes(
 						modelBinders,
 						getManagedType(),
-						(EntityTypeMetadata) subType,
+						(EntityTypeMetadataImpl) subType,
 						entityBinding,
 						entityBinding.getTable(),
 						(property, usage, secondaryTableJoin) -> {
@@ -234,7 +234,7 @@ public class MappedSuperTypeBinder extends IdentifiableTypeBinder
 					? entityBinding.getIdentifierProperty()
 					: entityBinding.getDeclaredIdentifierProperty();
 			if ( identifierProperty != null && declaresAttribute( identifierProperty.getName(), idMapping ) ) {
-				final AttributeMetadata attribute = getManagedType().findAttribute( identifierProperty.getName() );
+				final AttributeMetadataImplementor attribute = getManagedType().findAttribute( identifierProperty.getName() );
 				if ( isUnresolvedGenericAttribute( attribute ) ) {
 					final var identifierBinding = getBindingState().getBootBindingModel()
 							.findEntityIdentifierBinding( entityBinding.getClassName() );
@@ -255,7 +255,7 @@ public class MappedSuperTypeBinder extends IdentifiableTypeBinder
 
 		final var versionProperty = entityBinding.getVersion();
 		if ( versionProperty != null && declaresProperty( versionProperty ) ) {
-			final AttributeMetadata versionAttribute = getManagedType().findAttribute( versionProperty.getName() );
+			final AttributeMetadataImplementor versionAttribute = getManagedType().findAttribute( versionProperty.getName() );
 			binding.setDeclaredVersion(
 					isUnresolvedGenericAttribute( versionAttribute )
 							? prepareGenericDeclaredProperty( versionProperty, versionAttribute )
@@ -266,7 +266,7 @@ public class MappedSuperTypeBinder extends IdentifiableTypeBinder
 
 	private Property prepareGenericDeclaredProperty(
 			Property appliedProperty,
-			AttributeMetadata attribute) {
+			AttributeMetadataImplementor attribute) {
 		final Property declaredProperty = appliedProperty.copyForDeclaration(
 				genericBasicValue( (BasicValue) appliedProperty.getValue() )
 		);
@@ -305,7 +305,7 @@ public class MappedSuperTypeBinder extends IdentifiableTypeBinder
 		return declaresAttribute[0];
 	}
 
-	private boolean declaresAttribute(org.hibernate.boot.mapping.internal.categorize.AttributeMetadata attribute) {
+	private boolean declaresAttribute(org.hibernate.boot.mapping.internal.categorize.AttributeMetadataImplementor attribute) {
 		return attribute != null
 			&& attribute.getMember()
 					.getDeclaringType()
@@ -322,7 +322,7 @@ public class MappedSuperTypeBinder extends IdentifiableTypeBinder
 	}
 
 	private Property prepareDeclaredIdentifierProperty(Property identifierProperty) {
-		final AttributeMetadata attribute = getManagedType().findAttribute( identifierProperty.getName() );
+		final AttributeMetadataImplementor attribute = getManagedType().findAttribute( identifierProperty.getName() );
 		if ( !isUnresolvedGenericAttribute( attribute ) ) {
 			return identifierProperty;
 		}
@@ -384,7 +384,7 @@ public class MappedSuperTypeBinder extends IdentifiableTypeBinder
 	}
 
 	private void addGenericDeclaredPropertyIfNeeded(Property property) {
-		final AttributeMetadata attribute = getManagedType().findAttribute( property.getName() );
+		final AttributeMetadataImplementor attribute = getManagedType().findAttribute( property.getName() );
 		if ( !isUnresolvedGenericAttribute( attribute )
 				|| !supportsGenericDeclaredProperty( attribute )
 				|| hasDeclaredProperty( binding, property.getName() ) ) {
@@ -421,7 +421,7 @@ public class MappedSuperTypeBinder extends IdentifiableTypeBinder
 		binding.addDeclaredProperty( genericProperty );
 	}
 
-	private boolean supportsGenericDeclaredProperty(AttributeMetadata attribute) {
+	private boolean supportsGenericDeclaredProperty(AttributeMetadataImplementor attribute) {
 		return attribute.getNature() == org.hibernate.boot.models.AttributeNature.TO_ONE
 			|| attribute.getNature() == org.hibernate.boot.models.AttributeNature.EMBEDDED
 			|| attribute.getNature() == org.hibernate.boot.models.AttributeNature.BASIC
@@ -459,7 +459,7 @@ public class MappedSuperTypeBinder extends IdentifiableTypeBinder
 		return basicValue;
 	}
 
-	private boolean isUnresolvedGenericAttribute(AttributeMetadata attributeMetadata) {
+	private boolean isUnresolvedGenericAttribute(AttributeMetadataImplementor attributeMetadata) {
 		if ( attributeMetadata == null ) {
 			return false;
 		}
@@ -469,7 +469,7 @@ public class MappedSuperTypeBinder extends IdentifiableTypeBinder
 		return memberTypeUsesTypeVariable( attributeMetadata );
 	}
 
-	private boolean isGenericBridgeAttribute(AttributeMetadata attributeMetadata) {
+	private boolean isGenericBridgeAttribute(AttributeMetadataImplementor attributeMetadata) {
 		return attributeMetadata.getNature() == org.hibernate.boot.models.AttributeNature.TO_ONE
 			|| attributeMetadata.getNature() == org.hibernate.boot.models.AttributeNature.EMBEDDED
 			|| attributeMetadata.getNature() == org.hibernate.boot.models.AttributeNature.BASIC
@@ -511,7 +511,7 @@ public class MappedSuperTypeBinder extends IdentifiableTypeBinder
 	}
 
 	@Override
-	public EntityTypeMetadata findSuperEntity() {
+	public EntityTypeMetadataImpl findSuperEntity() {
 		if ( getSuperType() != null ) {
 			final var superTypeBinder = getBindingState().getSuperTypeBinder( getManagedType().getClassDetails() );
 			return superTypeBinder.findSuperEntity();

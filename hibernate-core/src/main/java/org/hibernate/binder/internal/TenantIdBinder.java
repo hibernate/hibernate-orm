@@ -8,6 +8,7 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.TenantId;
 import org.hibernate.binder.AttributeBinder;
+import org.hibernate.binder.AttributeBindingContext;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.rowsecurity.RowLevelSecurity;
@@ -38,9 +39,10 @@ public class TenantIdBinder implements AttributeBinder<TenantId> {
 	@Override
 	public void bind(
 			TenantId tenantId,
-			MetadataBuildingContext buildingContext,
-			PersistentClass persistentClass,
-			Property property) {
+			AttributeBindingContext context) {
+		final MetadataBuildingContext buildingContext = context.getMetadataBuildingContext();
+		final PersistentClass persistentClass = context.getPersistentClass();
+		final Property property = context.getProperty();
 		final var collector = buildingContext.getMetadataCollector();
 		final var tenantIdType =
 				collector.getTypeConfiguration().getBasicTypeRegistry()

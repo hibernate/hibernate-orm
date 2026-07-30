@@ -22,10 +22,10 @@ import org.hibernate.boot.mapping.internal.context.BindingOptions;
 import org.hibernate.boot.mapping.internal.context.BindingState;
 import org.hibernate.boot.models.AttributeNature;
 import org.hibernate.boot.mapping.internal.categorize.AggregatedKeyMapping;
-import org.hibernate.boot.mapping.internal.categorize.AttributeMetadata;
+import org.hibernate.boot.mapping.internal.categorize.AttributeMetadataImplementor;
 import org.hibernate.boot.mapping.internal.categorize.BasicKeyMapping;
-import org.hibernate.boot.mapping.internal.categorize.EntityHierarchy;
-import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadata;
+import org.hibernate.boot.mapping.internal.categorize.EntityHierarchyImpl;
+import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadataImpl;
 import org.hibernate.boot.mapping.internal.categorize.KeyMapping;
 import org.hibernate.boot.mapping.internal.categorize.NonAggregatedKeyMapping;
 import org.hibernate.mapping.RootClass;
@@ -77,7 +77,7 @@ public class IdentifierBinder {
 	}
 
 	public static IdentifierBinding bindIdentifier(
-			EntityTypeMetadata type,
+			EntityTypeMetadataImpl type,
 			RootClass typeBinding,
 			ModelBinders modelBinders,
 			BindingState state,
@@ -87,8 +87,8 @@ public class IdentifierBinder {
 		return identifierBinder.bindIdentifier( type, typeBinding );
 	}
 
-	private IdentifierBinding bindIdentifier(EntityTypeMetadata type, RootClass typeBinding) {
-		final EntityHierarchy hierarchy = type.getHierarchy();
+	private IdentifierBinding bindIdentifier(EntityTypeMetadataImpl type, RootClass typeBinding) {
+		final EntityHierarchyImpl hierarchy = type.getHierarchy();
 		final KeyMapping idMapping = hierarchy.getIdMapping();
 		final Table table = typeBinding.getTable();
 
@@ -110,9 +110,9 @@ public class IdentifierBinder {
 	private IdentifierBinding bindBasicIdentifier(
 			BasicKeyMapping basicKeyMapping,
 			Table table,
-			EntityTypeMetadata typeMetadata,
+			EntityTypeMetadataImpl typeMetadata,
 			RootClass typeBinding) {
-		final AttributeMetadata idAttribute = basicKeyMapping.getAttribute();
+		final AttributeMetadataImplementor idAttribute = basicKeyMapping.getAttribute();
 		final MemberDetails idAttributeMember = idAttribute.getMember();
 
 		final EntityIdentifierBinding entityIdentifierBinding = new EntityIdentifierBinding(
@@ -142,7 +142,7 @@ public class IdentifierBinder {
 	private IdentifierBinding bindAggregatedIdentifier(
 			AggregatedKeyMapping aggregatedKeyMapping,
 			Table table,
-			EntityTypeMetadata type,
+			EntityTypeMetadataImpl type,
 			RootClass typeBinding) {
 		final ClassDetails keyType = resolveAggregatedIdentifierKeyType( aggregatedKeyMapping, type );
 		final ComponentSource componentSource = ComponentSource.embeddedIdentifier(
@@ -168,7 +168,7 @@ public class IdentifierBinder {
 
 	private ClassDetails resolveAggregatedIdentifierKeyType(
 			AggregatedKeyMapping aggregatedKeyMapping,
-			EntityTypeMetadata type) {
+			EntityTypeMetadataImpl type) {
 		return aggregatedKeyMapping.getAttribute()
 				.resolveAttributeType( type.getClassDetails() )
 				.determineRawClass();
@@ -176,7 +176,7 @@ public class IdentifierBinder {
 
 	private TypeDetails resolveAggregatedIdentifierType(
 			AggregatedKeyMapping aggregatedKeyMapping,
-			EntityTypeMetadata type) {
+			EntityTypeMetadataImpl type) {
 		return aggregatedKeyMapping.getAttribute()
 				.resolveAttributeType( type.getClassDetails() );
 	}
@@ -184,7 +184,7 @@ public class IdentifierBinder {
 	private IdentifierBinding bindNonAggregatedIdentifier(
 			NonAggregatedKeyMapping idMapping,
 			Table table,
-			EntityTypeMetadata type,
+			EntityTypeMetadataImpl type,
 			RootClass typeBinding) {
 		final boolean hasIdClass = idMapping.getIdClassType() != null;
 		final boolean wholeDerivedIdClass = hasWholeDerivedIdClass( idMapping );
@@ -206,7 +206,7 @@ public class IdentifierBinder {
 				hasIdClass,
 				idMapping.getIdClassType()
 		);
-		for ( AttributeMetadata idAttribute : idMapping.getIdAttributes() ) {
+		for ( AttributeMetadataImplementor idAttribute : idMapping.getIdAttributes() ) {
 			final MemberDetails member = idAttribute.getMember();
 			final MemberDetails idClassMember = hasIdClass && !wholeDerivedIdClass
 					? resolveIdClassMember( idMapping, idAttribute )
@@ -237,14 +237,14 @@ public class IdentifierBinder {
 	private IdentifierBinding bindScalarIdClassIdentifier(
 			NonAggregatedKeyMapping idMapping,
 			Table table,
-			EntityTypeMetadata type,
+			EntityTypeMetadataImpl type,
 			RootClass typeBinding) {
 		final EntityIdentifierBinding entityIdentifierBinding = new EntityIdentifierBinding(
 				type,
 				true,
 				idMapping.getIdClassType()
 		);
-		for ( AttributeMetadata idAttribute : idMapping.getIdAttributes() ) {
+		for ( AttributeMetadataImplementor idAttribute : idMapping.getIdAttributes() ) {
 			entityIdentifierBinding.addAttribute( new IdentifierAttributeBinding(
 					idAttribute.getName(),
 					idAttribute.getMember(),
@@ -268,7 +268,7 @@ public class IdentifierBinder {
 		if ( idMapping.getIdClassType() == null || wholeDerivedIdClass ) {
 			return false;
 		}
-		for ( AttributeMetadata idAttribute : idMapping.getIdAttributes() ) {
+		for ( AttributeMetadataImplementor idAttribute : idMapping.getIdAttributes() ) {
 			final MemberDetails idClassMember = resolveIdClassMember( idMapping, idAttribute );
 			if ( idAttribute.getNature() != AttributeNature.BASIC
 					|| idClassMemberStoresAssociation( idAttribute, idClassMember ) ) {
@@ -281,14 +281,14 @@ public class IdentifierBinder {
 	private IdentifierBinding bindEmbeddedIdClassIdentifier(
 			NonAggregatedKeyMapping idMapping,
 			Table table,
-			EntityTypeMetadata type,
+			EntityTypeMetadataImpl type,
 			RootClass typeBinding) {
 		final EntityIdentifierBinding entityIdentifierBinding = new EntityIdentifierBinding(
 				type,
 				true,
 				idMapping.getIdClassType()
 		);
-		for ( AttributeMetadata idAttribute : idMapping.getIdAttributes() ) {
+		for ( AttributeMetadataImplementor idAttribute : idMapping.getIdAttributes() ) {
 			entityIdentifierBinding.addAttribute( new IdentifierAttributeBinding(
 					idAttribute.getName(),
 					idAttribute.getMember(),
@@ -311,14 +311,14 @@ public class IdentifierBinder {
 	private IdentifierBinding bindAssociationIdClassIdentifier(
 			NonAggregatedKeyMapping idMapping,
 			Table table,
-			EntityTypeMetadata type,
+			EntityTypeMetadataImpl type,
 			RootClass typeBinding) {
 		final EntityIdentifierBinding entityIdentifierBinding = new EntityIdentifierBinding(
 				type,
 				true,
 				idMapping.getIdClassType()
 		);
-		for ( AttributeMetadata idAttribute : idMapping.getIdAttributes() ) {
+		for ( AttributeMetadataImplementor idAttribute : idMapping.getIdAttributes() ) {
 			final MemberDetails idClassMember = resolveIdClassMember( idMapping, idAttribute );
 			entityIdentifierBinding.addAttribute( new IdentifierAttributeBinding(
 					idAttribute.getName(),
@@ -344,7 +344,7 @@ public class IdentifierBinder {
 			return false;
 		}
 		boolean hasEmbeddedAttribute = false;
-		for ( AttributeMetadata idAttribute : idMapping.getIdAttributes() ) {
+		for ( AttributeMetadataImplementor idAttribute : idMapping.getIdAttributes() ) {
 			final MemberDetails idClassMember = resolveIdClassMember( idMapping, idAttribute );
 			if ( idAttribute.getNature() == AttributeNature.EMBEDDED ) {
 				hasEmbeddedAttribute = true;
@@ -361,7 +361,7 @@ public class IdentifierBinder {
 		if ( idMapping.getIdClassType() == null || wholeDerivedIdClass ) {
 			return false;
 		}
-		for ( AttributeMetadata idAttribute : idMapping.getIdAttributes() ) {
+		for ( AttributeMetadataImplementor idAttribute : idMapping.getIdAttributes() ) {
 			final MemberDetails idClassMember = resolveIdClassMember( idMapping, idAttribute );
 			if ( idAttribute.getNature() == AttributeNature.TO_ONE
 					|| idClassMemberStoresAssociation( idAttribute, idClassMember ) ) {
@@ -371,8 +371,8 @@ public class IdentifierBinder {
 		return false;
 	}
 
-	private boolean hasMapsIdAttribute(EntityTypeMetadata type) {
-		for ( AttributeMetadata attribute : type.getAttributes() ) {
+	private boolean hasMapsIdAttribute(EntityTypeMetadataImpl type) {
+		for ( AttributeMetadataImplementor attribute : type.getAttributes() ) {
 			if ( attribute.getMember().hasDirectAnnotationUsage( jakarta.persistence.MapsId.class ) ) {
 				return true;
 			}
@@ -384,15 +384,15 @@ public class IdentifierBinder {
 		if ( idMapping.getIdClassType() == null || idMapping.getIdAttributes().size() != 1 ) {
 			return false;
 		}
-		final AttributeMetadata idAttribute = idMapping.getIdAttributes().get( 0 );
+		final AttributeMetadataImplementor idAttribute = idMapping.getIdAttributes().get( 0 );
 		return idAttribute.getMember().hasDirectAnnotationUsage( Id.class )
 				&& idAttribute.getNature() == AttributeNature.TO_ONE
 				&& findIdClassMember( idMapping, idAttribute ) == null;
 	}
 
-	private void validateIdClassMembers(NonAggregatedKeyMapping idMapping, EntityTypeMetadata type) {
+	private void validateIdClassMembers(NonAggregatedKeyMapping idMapping, EntityTypeMetadataImpl type) {
 		final Set<String> idAttributeNames = new HashSet<>();
-		for ( AttributeMetadata idAttribute : idMapping.getIdAttributes() ) {
+		for ( AttributeMetadataImplementor idAttribute : idMapping.getIdAttributes() ) {
 			idAttributeNames.add( idAttribute.getName() );
 			final MemberDetails idClassMember = findIdClassMember( idMapping, idAttribute );
 			if ( idClassMember == null ) {
@@ -437,7 +437,7 @@ public class IdentifierBinder {
 			NonAggregatedKeyMapping idMapping,
 			String idClassMemberName,
 			MemberDetails idClassMember) {
-		for ( AttributeMetadata idAttribute : idMapping.getIdAttributes() ) {
+		for ( AttributeMetadataImplementor idAttribute : idMapping.getIdAttributes() ) {
 			if ( idAttribute.getNature() != AttributeNature.TO_ONE ) {
 				continue;
 			}
@@ -496,9 +496,9 @@ public class IdentifierBinder {
 	}
 
 	private void validateIdClassMemberType(
-			AttributeMetadata idAttribute,
+			AttributeMetadataImplementor idAttribute,
 			MemberDetails idClassMember,
-			EntityTypeMetadata type) {
+			EntityTypeMetadataImpl type) {
 		if ( isToOneMember( idClassMember )
 				|| idAttribute.getNature() == AttributeNature.TO_ONE ) {
 			return;
@@ -590,7 +590,7 @@ public class IdentifierBinder {
 	}
 
 	private IdentifierExtractionKind identifierExtractionKind(
-			AttributeMetadata idAttribute,
+			AttributeMetadataImplementor idAttribute,
 			MemberDetails idClassMember,
 			boolean wholeDerivedIdClass) {
 		if ( wholeDerivedIdClass ) {
@@ -605,7 +605,7 @@ public class IdentifierBinder {
 		return IdentifierExtractionKind.DIRECT;
 	}
 
-	private boolean idClassMemberStoresAssociation(AttributeMetadata idAttribute, MemberDetails idClassMember) {
+	private boolean idClassMemberStoresAssociation(AttributeMetadataImplementor idAttribute, MemberDetails idClassMember) {
 		if ( isToOneMember( idClassMember ) ) {
 			return true;
 		}
@@ -615,7 +615,7 @@ public class IdentifierBinder {
 						.equals( idClassMember.getType().determineRawClass().getClassName() );
 	}
 
-	private MemberDetails resolveIdClassMember(NonAggregatedKeyMapping idMapping, AttributeMetadata idAttribute) {
+	private MemberDetails resolveIdClassMember(NonAggregatedKeyMapping idMapping, AttributeMetadataImplementor idAttribute) {
 		final MemberDetails member = findIdClassMember( idMapping, idAttribute );
 		if ( member != null ) {
 			return member;
@@ -627,7 +627,7 @@ public class IdentifierBinder {
 		);
 	}
 
-	private MemberDetails findIdClassMember(NonAggregatedKeyMapping idMapping, AttributeMetadata idAttribute) {
+	private MemberDetails findIdClassMember(NonAggregatedKeyMapping idMapping, AttributeMetadataImplementor idAttribute) {
 		ClassDetails idClassType = idMapping.getIdClassType();
 		if ( idClassType == null ) {
 			return idAttribute.getMember();
@@ -649,7 +649,7 @@ public class IdentifierBinder {
 	}
 
 	private EntityIdentifierBinding createAggregatedEntityIdentifierBinding(
-			EntityTypeMetadata type,
+			EntityTypeMetadataImpl type,
 			ComponentSource componentSource) {
 		final EntityIdentifierBinding entityIdentifierBinding = new EntityIdentifierBinding(
 				type,

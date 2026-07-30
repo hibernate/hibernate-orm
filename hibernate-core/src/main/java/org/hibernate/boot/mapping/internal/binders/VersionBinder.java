@@ -16,8 +16,8 @@ import org.hibernate.boot.mapping.internal.model.ManagedTypeBinding;
 import org.hibernate.boot.mapping.internal.model.StandardAttributeUsageBinding;
 import org.hibernate.boot.mapping.internal.model.VersionBinding;
 import org.hibernate.boot.mapping.internal.view.VersionBindingView;
-import org.hibernate.boot.mapping.internal.categorize.AttributeMetadata;
-import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadata;
+import org.hibernate.boot.mapping.internal.categorize.AttributeMetadataImplementor;
+import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadataImpl;
 import org.hibernate.mapping.RootClass;
 
 /// Binds the entity version property.
@@ -33,8 +33,8 @@ import org.hibernate.mapping.RootClass;
 /// @author Steve Ebersole
 public class VersionBinder {
 	public static void bindVersion(
-			AttributeMetadata attributeMetadata,
-			EntityTypeMetadata managedType,
+			AttributeMetadataImplementor attributeMetadata,
+			EntityTypeMetadataImpl managedType,
 			RootClass typeBinding,
 			BindingOptions bindingOptions,
 			BindingState bindingState,
@@ -63,8 +63,8 @@ public class VersionBinder {
 	}
 
 	private static AttributeUsageBinding createVersionUsage(
-			AttributeMetadata attributeMetadata,
-			EntityTypeMetadata managedType,
+			AttributeMetadataImplementor attributeMetadata,
+			EntityTypeMetadataImpl managedType,
 			BindingState bindingState,
 			BindingContext bindingContext) {
 		final ManagedTypeBinding managedTypeBinding = bindingState.getBootBindingModel()

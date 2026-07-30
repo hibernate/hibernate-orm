@@ -17,9 +17,9 @@ import org.hibernate.boot.mapping.internal.model.IdentifierExtractionKind;
 import org.hibernate.boot.mapping.internal.view.EntityView;
 import org.hibernate.boot.mapping.internal.view.EntityIdentifierBindingView;
 import org.hibernate.boot.mapping.internal.categorize.AggregatedKeyMapping;
-import org.hibernate.boot.mapping.internal.categorize.AttributeMetadata;
+import org.hibernate.boot.mapping.internal.categorize.AttributeMetadataImplementor;
 import org.hibernate.boot.mapping.internal.categorize.BasicKeyMapping;
-import org.hibernate.boot.mapping.internal.categorize.EntityHierarchy;
+import org.hibernate.boot.mapping.internal.categorize.EntityHierarchyImpl;
 import org.hibernate.boot.mapping.internal.categorize.NonAggregatedKeyMapping;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.AvailableSettings;
@@ -34,7 +34,7 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
 import org.hibernate.testing.orm.junit.Setting;
-import org.hibernate.mapping.MappingRole;
+import org.hibernate.boot.mapping.spi.MappingRole;
 
 import org.junit.jupiter.api.Test;
 
@@ -64,9 +64,9 @@ import static org.hibernate.orm.test.boot.models.bind.BindingTestingHelper.check
 public class SimpleIdTests {
 	@Test
 	void testSimpleId() {
-		final Set<EntityHierarchy> entityHierarchies = buildHierarchyMetadata( BasicIdEntity.class );
+		final Set<EntityHierarchyImpl> entityHierarchies = buildHierarchyMetadata( BasicIdEntity.class );
 		assertThat( entityHierarchies ).hasSize( 1 );
-		final EntityHierarchy entityHierarchy = entityHierarchies.iterator().next();
+		final EntityHierarchyImpl entityHierarchy = entityHierarchies.iterator().next();
 
 		assertThat( entityHierarchy.getIdMapping() ).isNotNull();
 		final BasicKeyMapping idMapping = (BasicKeyMapping) entityHierarchy.getIdMapping();
@@ -154,9 +154,9 @@ public class SimpleIdTests {
 
 	@Test
 	void testAggregatedId() {
-		final Set<EntityHierarchy> entityHierarchies = buildHierarchyMetadata( AggregatedIdEntity.class );
+		final Set<EntityHierarchyImpl> entityHierarchies = buildHierarchyMetadata( AggregatedIdEntity.class );
 		assertThat( entityHierarchies ).hasSize( 1 );
-		final EntityHierarchy entityHierarchy = entityHierarchies.iterator().next();
+		final EntityHierarchyImpl entityHierarchy = entityHierarchies.iterator().next();
 
 		assertThat( entityHierarchy.getIdMapping() ).isNotNull();
 		final AggregatedKeyMapping idMapping = (AggregatedKeyMapping) entityHierarchy.getIdMapping();
@@ -234,20 +234,20 @@ public class SimpleIdTests {
 
 	@Test
 	void testNonAggregatedId() {
-		final Set<EntityHierarchy> entityHierarchies = buildHierarchyMetadata( NonAggregatedIdEntity.class );
+		final Set<EntityHierarchyImpl> entityHierarchies = buildHierarchyMetadata( NonAggregatedIdEntity.class );
 		assertThat( entityHierarchies ).hasSize( 1 );
-		final EntityHierarchy entityHierarchy = entityHierarchies.iterator().next();
+		final EntityHierarchyImpl entityHierarchy = entityHierarchies.iterator().next();
 
 		assertThat( entityHierarchy.getIdMapping() ).isNotNull();
 		final NonAggregatedKeyMapping idMapping = (NonAggregatedKeyMapping) entityHierarchy.getIdMapping();
 		assertThat( idMapping.getIdAttributes() ).hasSize( 2 );
-		assertThat( idMapping.getIdAttributes().stream().map( AttributeMetadata::getName ) ).containsExactly( "id1", "id2" );
+		assertThat( idMapping.getIdAttributes().stream().map( AttributeMetadataImplementor::getName ) ).containsExactly( "id1", "id2" );
 		assertThat( idMapping.getIdClassType().getClassName() ).isEqualTo( NonAggregatedIdEntity.Pk.class.getName() );
 
 		assertThat( entityHierarchy.getNaturalIdMapping() ).isNotNull();
 		final NonAggregatedKeyMapping naturalIdMapping = (NonAggregatedKeyMapping) entityHierarchy.getNaturalIdMapping();
 		assertThat( naturalIdMapping.getIdAttributes() ).hasSize( 2 );
-		assertThat( naturalIdMapping.getIdAttributes().stream().map( AttributeMetadata::getName ) )
+		assertThat( naturalIdMapping.getIdAttributes().stream().map( AttributeMetadataImplementor::getName ) )
 				.containsExactly( "naturalKey1", "naturalKey2" );
 
 		assertThat( entityHierarchy.getVersionAttribute() ).isNotNull();
@@ -999,7 +999,7 @@ public class SimpleIdTests {
 	private static EntityView entityView(
 			DomainModelCheckContext context,
 			Class<?> entityClass) {
-		for ( EntityHierarchy hierarchy : context.getCategorizedDomainModel().getEntityHierarchies() ) {
+		for ( EntityHierarchyImpl hierarchy : context.getCategorizedDomainModel().getEntityHierarchies() ) {
 			if ( hierarchy.getRoot().getClassDetails().getClassName().equals( entityClass.getName() ) ) {
 				final EntityView entityView = context.getBindingState().getBootBindingModel().getEntityView( hierarchy.getRoot() );
 				if ( entityView != null ) {

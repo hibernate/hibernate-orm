@@ -29,8 +29,8 @@ import org.hibernate.metamodel.internal.EmbeddableHandoffResolver;
 import org.hibernate.metamodel.internal.AttributeUsageHandoff;
 import org.hibernate.boot.serial.internal.RuntimeMappingHandoffSnapshot;
 import org.hibernate.orm.test.boot.models.bind.BindingTestingHelper;
-import org.hibernate.mapping.DeclarationRole;
-import org.hibernate.mapping.MappingRole;
+import org.hibernate.boot.mapping.spi.DeclarationRole;
+import org.hibernate.boot.mapping.spi.MappingRole;
 
 import org.hibernate.annotations.Collate;
 import org.hibernate.annotations.EmbeddedTable;

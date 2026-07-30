@@ -43,7 +43,7 @@ public final class IdentifierGeneratorResolution {
 	/// annotation when its members are needed to create the eventual
 	/// {@link org.hibernate.mapping.GeneratorDescriptor}.
 	public record Part(
-			@Nonnull AttributeMetadata attribute,
+			@Nonnull AttributeMetadataImplementor attribute,
 			@Nonnull Nature nature,
 			@Nullable IdentifierGeneratorRegistration registration,
 			@Nullable Annotation configuration) {
@@ -56,12 +56,12 @@ public final class IdentifierGeneratorResolution {
 			}
 		}
 
-		public static Part identity(AttributeMetadata attribute) {
+		public static Part identity(AttributeMetadataImplementor attribute) {
 			return new Part( attribute, Nature.IDENTITY, null, null );
 		}
 
 		public static Part generator(
-				AttributeMetadata attribute,
+				AttributeMetadataImplementor attribute,
 				IdentifierGeneratorRegistration registration,
 				Annotation configuration) {
 			return new Part( attribute, Nature.GENERATOR, registration, configuration );
@@ -82,7 +82,7 @@ public final class IdentifierGeneratorResolution {
 
 	/// Find the generator resolution for the given identifier attribute.
 	@Nullable
-	public Part find(AttributeMetadata attribute) {
+	public Part find(AttributeMetadataImplementor attribute) {
 		for ( int i = 0; i < parts.size(); i++ ) {
 			final Part part = parts.get( i );
 			if ( part.attribute() == attribute ) {

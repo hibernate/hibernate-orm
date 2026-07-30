@@ -15,7 +15,7 @@ import org.hibernate.models.spi.ClassDetails;
 /// @author Steve Ebersole
 public interface SingleAttributeKeyMapping extends KeyMapping {
 	/// The persistent attribute that represents this key.
-	AttributeMetadata getAttribute();
+	AttributeMetadataImplementor getAttribute();
 
 	/// The name of the persistent attribute that represents this key.
 	default String getAttributeName() {
@@ -32,7 +32,7 @@ public interface SingleAttributeKeyMapping extends KeyMapping {
 	}
 
 	@Override
-	default boolean contains(AttributeMetadata attributeMetadata) {
+	default boolean contains(AttributeMetadataImplementor attributeMetadata) {
 		return attributeMetadata == getAttribute();
 	}
 }

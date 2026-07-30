@@ -4,6 +4,7 @@
  */
 package org.hibernate.mapping;
 
+import org.hibernate.boot.mapping.spi.MappingRole;
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Comparator;

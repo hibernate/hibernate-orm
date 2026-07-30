@@ -4,7 +4,10 @@
  */
 package org.hibernate.boot.mapping.internal.categorize;
 
+import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.hibernate.MappingException;
 import org.hibernate.annotations.BatchSize;
@@ -17,6 +20,8 @@ import org.hibernate.annotations.SQLInsert;
 import org.hibernate.annotations.SQLUpdate;
 import org.hibernate.annotations.Synchronize;
 import org.hibernate.boot.model.naming.EntityNaming;
+import org.hibernate.boot.mapping.spi.EntityTypeMetadata;
+import org.hibernate.boot.spi.ProcessedEntity;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.mapping.CustomSqlMapping;
 import org.hibernate.models.spi.ClassDetails;
@@ -30,17 +35,17 @@ import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.StringHelper.unqualify;
 import static org.hibernate.internal.util.ReflectHelper.getDefaultSupplier;
 
-/// Standard EntityTypeMetadata impl
+/// Internal categorized entity metadata.
 ///
 /// @since 9.0
 /// @author Steve Ebersole
 public class EntityTypeMetadataImpl
 		extends AbstractIdentifiableTypeMetadata
-		implements EntityTypeMetadata, EntityNaming {
+		implements EntityTypeMetadata, EntityNaming, ProcessedEntity {
 	private final String entityName;
 	private final String jpaEntityName;
 
-	private final List<AttributeMetadata> attributeList;
+	private final List<AttributeMetadataImplementor> attributeList;
 
 	private final boolean mutable;
 	private final boolean cacheable;
@@ -60,7 +65,7 @@ public class EntityTypeMetadataImpl
 
 	public EntityTypeMetadataImpl(
 			ClassDetails classDetails,
-			EntityHierarchy hierarchy,
+			EntityHierarchyImpl hierarchy,
 			ManagedTypeInheritanceState inheritanceState,
 			HierarchyMetadataCollector metadataCollector,
 			CategorizationContext modelContext) {
@@ -100,7 +105,7 @@ public class EntityTypeMetadataImpl
 
 	public EntityTypeMetadataImpl(
 			ClassDetails classDetails,
-			EntityHierarchy hierarchy,
+			EntityHierarchyImpl hierarchy,
 			AbstractIdentifiableTypeMetadata superType,
 			ManagedTypeInheritanceState inheritanceState,
 			HierarchyMetadataCollector metadataCollector,
@@ -140,7 +145,7 @@ public class EntityTypeMetadataImpl
 	}
 
 	@Override
-	protected List<AttributeMetadata> attributeList() {
+	protected List<AttributeMetadataImplementor> attributeList() {
 		return attributeList;
 	}
 
@@ -152,6 +157,30 @@ public class EntityTypeMetadataImpl
 	@Override
 	public String getJpaEntityName() {
 		return jpaEntityName;
+	}
+
+	@Override
+	public boolean isHierarchyRoot() {
+		return this == getHierarchy().getRoot();
+	}
+
+	@Override
+	public String getSuperEntityName() {
+		AbstractIdentifiableTypeMetadata superType = getSuperType();
+		while ( superType != null ) {
+			if ( superType instanceof EntityTypeMetadataImpl superEntity ) {
+				return superEntity.getEntityName();
+			}
+			superType = superType.getSuperType();
+		}
+		return null;
+	}
+
+	@Override
+	public Set<String> getDeclaredAttributeNames() {
+		final Set<String> attributeNames = new LinkedHashSet<>();
+		getAttributes().forEach( attribute -> attributeNames.add( attribute.getName() ) );
+		return Collections.unmodifiableSet( attributeNames );
 	}
 
 	@Override
@@ -189,17 +218,14 @@ public class EntityTypeMetadataImpl
 		return isDynamicUpdate;
 	}
 
-	@Override
 	public CustomSqlMapping getCustomInsert() {
 		return customInsert;
 	}
 
-	@Override
 	public CustomSqlMapping getCustomUpdate() {
 		return customUpdate;
 	}
 
-	@Override
 	public CustomSqlMapping getCustomDelete() {
 		return customDelete;
 	}

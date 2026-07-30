@@ -4,6 +4,7 @@
  */
 package org.hibernate.boot.mapping.internal.binders;
 
+import org.hibernate.boot.mapping.spi.ValueNature;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
@@ -31,12 +32,11 @@ import org.hibernate.boot.mapping.internal.context.BindingContext;
 import org.hibernate.boot.mapping.internal.context.BindingOptions;
 import org.hibernate.boot.mapping.internal.context.BindingState;
 import org.hibernate.boot.mapping.internal.relational.TableReference;
-import org.hibernate.boot.mapping.internal.categorize.AttributeMetadata;
+import org.hibernate.boot.mapping.internal.categorize.AttributeMetadataImplementor;
 import org.hibernate.boot.mapping.internal.categorize.SingularAttributeMetadataImpl;
-import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadata;
-import org.hibernate.boot.mapping.internal.categorize.IdentifiableTypeMetadata;
+import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadataImpl;
+import org.hibernate.boot.mapping.internal.categorize.AbstractIdentifiableTypeMetadata;
 import org.hibernate.boot.mapping.internal.categorize.ValueMetadataImpl;
-import org.hibernate.boot.mapping.internal.categorize.ValueNature;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
@@ -84,10 +84,10 @@ import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
 /// @since 9.0
 /// @author Steve Ebersole
 class ToOneAttributeBinder {
-	private final IdentifiableTypeMetadata ownerType;
+	private final AbstractIdentifiableTypeMetadata ownerType;
 	private final AttributeBindingView attributeBinding;
 	private final PersistentClass ownerBinding;
-	private final AttributeMetadata attributeMetadata;
+	private final AttributeMetadataImplementor attributeMetadata;
 	private final Table primaryTable;
 	private final ModelBinders modelBinders;
 	private final BindingOptions bindingOptions;
@@ -95,10 +95,10 @@ class ToOneAttributeBinder {
 	private final BindingContext bindingContext;
 
 	ToOneAttributeBinder(
-			IdentifiableTypeMetadata ownerType,
+			AbstractIdentifiableTypeMetadata ownerType,
 			AttributeBindingView attributeBinding,
 			PersistentClass ownerBinding,
-			AttributeMetadata attributeMetadata,
+			AttributeMetadataImplementor attributeMetadata,
 			Table primaryTable,
 			ModelBinders modelBinders,
 			BindingOptions bindingOptions,
@@ -147,7 +147,7 @@ class ToOneAttributeBinder {
 	}
 
 	static ManyToOne bindToOne(
-			IdentifiableTypeMetadata ownerType,
+			AbstractIdentifiableTypeMetadata ownerType,
 			PersistentClass ownerBinding,
 			String ownerClassName,
 			String propertyName,
@@ -177,7 +177,7 @@ class ToOneAttributeBinder {
 	}
 
 	static ManyToOne bindToOne(
-			IdentifiableTypeMetadata ownerType,
+			AbstractIdentifiableTypeMetadata ownerType,
 			PersistentClass ownerBinding,
 			String ownerClassName,
 			String propertyName,
@@ -208,7 +208,7 @@ class ToOneAttributeBinder {
 	}
 
 	static Value bindToOneValue(
-			IdentifiableTypeMetadata ownerType,
+			AbstractIdentifiableTypeMetadata ownerType,
 			PersistentClass ownerBinding,
 			String ownerClassName,
 			String propertyName,
@@ -240,7 +240,7 @@ class ToOneAttributeBinder {
 	}
 
 	static Value bindToOneValue(
-			IdentifiableTypeMetadata ownerType,
+			AbstractIdentifiableTypeMetadata ownerType,
 			PersistentClass ownerBinding,
 			String ownerClassName,
 			String propertyName,
@@ -274,7 +274,7 @@ class ToOneAttributeBinder {
 	}
 
 	static Value bindToOneValue(
-			IdentifiableTypeMetadata ownerType,
+			AbstractIdentifiableTypeMetadata ownerType,
 			PersistentClass ownerBinding,
 			String ownerClassName,
 			String propertyName,
@@ -355,7 +355,7 @@ class ToOneAttributeBinder {
 
 	private static OneToOne bindOwningPrimaryKeyOneToOne(
 			ToOneSource source,
-			IdentifiableTypeMetadata ownerType,
+			AbstractIdentifiableTypeMetadata ownerType,
 			PersistentClass ownerBinding,
 			String ownerClassName,
 			String propertyName,
@@ -405,7 +405,7 @@ class ToOneAttributeBinder {
 
 	private static ManyToOne bindToOne(
 			ToOneSource source,
-			IdentifiableTypeMetadata ownerType,
+			AbstractIdentifiableTypeMetadata ownerType,
 			PersistentClass ownerBinding,
 			String ownerClassName,
 			String propertyName,
@@ -670,9 +670,9 @@ class ToOneAttributeBinder {
 
 	private static OneToOne bindInverseOneToOne(
 			ToOneSource source,
-			IdentifiableTypeMetadata ownerType,
+			AbstractIdentifiableTypeMetadata ownerType,
 			PersistentClass ownerBinding,
-			AttributeMetadata attributeMetadata,
+			AttributeMetadataImplementor attributeMetadata,
 			Property property,
 			Table primaryTable,
 			String ownerClassName,
@@ -1015,7 +1015,7 @@ class ToOneAttributeBinder {
 	}
 
 	private static List<Column> resolveSharedIdentifierColumns(
-			IdentifiableTypeMetadata ownerType,
+			AbstractIdentifiableTypeMetadata ownerType,
 			Table associationTable,
 			BindingState bindingState) {
 		final IdentifierBinding entityIdentifierBinding = bindingState.getIdentifierBinding( ownerType.getHierarchy().getRoot() );
@@ -1309,7 +1309,7 @@ class ToOneAttributeBinder {
 	}
 
 	private static Table bindAssociationTable(
-			IdentifiableTypeMetadata ownerType,
+			AbstractIdentifiableTypeMetadata ownerType,
 			PersistentClass ownerBinding,
 			Table primaryTable,
 			String propertyName,
@@ -1458,8 +1458,8 @@ class ToOneAttributeBinder {
 		);
 	}
 
-	private static EntityTypeMetadata resolveOwnerEntityType(IdentifiableTypeMetadata ownerType) {
-		if ( ownerType instanceof EntityTypeMetadata entityType ) {
+	private static EntityTypeMetadataImpl resolveOwnerEntityType(AbstractIdentifiableTypeMetadata ownerType) {
+		if ( ownerType instanceof EntityTypeMetadataImpl entityType ) {
 			return entityType;
 		}
 		return ownerType.getHierarchy().getRoot();
@@ -1472,7 +1472,7 @@ class ToOneAttributeBinder {
 	private record TargetEntityBinding(
 			String entityName,
 			EntityTypeBinder typeBinder,
-			EntityTypeMetadata entityNaming,
+			EntityTypeMetadataImpl entityNaming,
 			Table primaryTable,
 			IdentifierBinding entityIdentifierBinding,
 			List<Column> identifierColumns) {

@@ -13,8 +13,8 @@ import org.hibernate.boot.mapping.internal.view.AttributeBindingView;
 import org.hibernate.boot.mapping.internal.context.BindingContext;
 import org.hibernate.boot.mapping.internal.context.BindingOptions;
 import org.hibernate.boot.mapping.internal.context.BindingState;
-import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadata;
-import org.hibernate.boot.mapping.internal.categorize.IdentifiableTypeMetadata;
+import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadataImpl;
+import org.hibernate.boot.mapping.internal.categorize.AbstractIdentifiableTypeMetadata;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Any;
 import org.hibernate.mapping.Join;
@@ -37,7 +37,7 @@ import jakarta.persistence.JoinTable;
 /// @since 9.0
 /// @author Steve Ebersole
 class AnyAttributeBinder {
-	private final IdentifiableTypeMetadata ownerType;
+	private final AbstractIdentifiableTypeMetadata ownerType;
 	private final AttributeBindingView attributeBinding;
 	private final PersistentClass ownerBinding;
 	private final ModelBinders modelBinders;
@@ -46,7 +46,7 @@ class AnyAttributeBinder {
 	private final BindingContext bindingContext;
 
 	AnyAttributeBinder(
-			IdentifiableTypeMetadata ownerType,
+			AbstractIdentifiableTypeMetadata ownerType,
 			AttributeBindingView attributeBinding,
 			PersistentClass ownerBinding,
 			ModelBinders modelBinders,
@@ -135,8 +135,8 @@ class AnyAttributeBinder {
 		return associationTable;
 	}
 
-	private EntityTypeMetadata resolveOwnerEntityType() {
-		if ( ownerType instanceof EntityTypeMetadata entityType ) {
+	private EntityTypeMetadataImpl resolveOwnerEntityType() {
+		if ( ownerType instanceof EntityTypeMetadataImpl entityType ) {
 			return entityType;
 		}
 		return ownerType.getHierarchy().getRoot();

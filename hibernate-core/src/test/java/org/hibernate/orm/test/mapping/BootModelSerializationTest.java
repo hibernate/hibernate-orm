@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.LinkedHashMap;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 
 import jakarta.persistence.ElementCollection;
@@ -59,6 +60,12 @@ import org.hibernate.annotations.ParamDef;
 import org.hibernate.annotations.SortComparator;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.ValueGenerationType;
+import org.hibernate.annotations.AttributeBinderType;
+import org.hibernate.annotations.TypeBinderType;
+import org.hibernate.binder.AttributeBinder;
+import org.hibernate.binder.AttributeBindingContext;
+import org.hibernate.binder.EntityBindingContext;
+import org.hibernate.binder.TypeBinder;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.serial.MetadataSerialization;
@@ -75,7 +82,7 @@ import org.hibernate.generator.EventType;
 import org.hibernate.generator.EventTypeSets;
 import org.hibernate.generator.OnExecutionGenerator;
 import org.hibernate.mapping.BasicValue;
-import org.hibernate.mapping.MappingRole;
+import org.hibernate.boot.mapping.spi.MappingRole;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
@@ -353,6 +360,10 @@ class BootModelSerializationTest {
 	@Test
 	void metadataCanBeRestoredFromExplicitSerialForm(DomainModelScope scope) {
 		final MetadataImplementor domainModel = scope.getDomainModel();
+		final int attributeBinderCalls = ArchiveAttributeBinder.callCount.get();
+		final int typeBinderCalls = ArchiveTypeBinder.callCount.get();
+		assertThat( attributeBinderCalls ).isPositive();
+		assertThat( typeBinderCalls ).isPositive();
 		final var serialForm = MetadataSerialization.serialize( domainModel );
 		final var archiveBytes = new ByteArrayOutputStream();
 		serialForm.writeTo( archiveBytes );
@@ -377,6 +388,10 @@ class BootModelSerializationTest {
 				.findFirst()
 				.orElseThrow();
 		final PersistentClass restoredBook = restored.getEntityBinding( originalBook.getEntityName() );
+		assertThat( ArchiveAttributeBinder.callCount ).hasValue( attributeBinderCalls );
+		assertThat( ArchiveTypeBinder.callCount ).hasValue( typeBinderCalls );
+		assertThat( restoredBook.getBatchSize() ).isEqualTo( 19 );
+		assertThat( restoredBook.getProperty( "title" ).isUpdatable() ).isFalse();
 		final var restoredTitle = (BasicValue) restoredBook.getProperty( "title" ).getValue();
 		assertThat( restoredTitle.getJpaAttributeConverterDescriptor() ).isNull();
 		assertThat( restoredTitle.resolve().getValueConverter() ).isNotNull();
@@ -461,6 +476,7 @@ class BootModelSerializationTest {
 	}
 
 	@Entity(name = "Book")
+	@ArchiveTypeBinding
 	@NamedQuery(name = "books", query = "from Book")
 	@NamedNativeQuery(name = "nativeBooks", query = "select title from Book", resultSetMapping = "book-title")
 	@NamedStoredProcedureQuery(
@@ -495,6 +511,7 @@ class BootModelSerializationTest {
 		@GeneratedValue(strategy = GenerationType.SEQUENCE)
 		private Integer id;
 		@Convert(converter = TitleConverter.class)
+		@ArchiveAttributeBinding
 		private String title;
 		@Type(SlugUserType.class)
 		private Slug slug;
@@ -526,6 +543,38 @@ class BootModelSerializationTest {
 	}
 
 	public record TitleProjection(String title) {
+	}
+
+	@Target(java.lang.annotation.ElementType.FIELD)
+	@Retention(RetentionPolicy.RUNTIME)
+	@AttributeBinderType(binder = ArchiveAttributeBinder.class)
+	public @interface ArchiveAttributeBinding {
+	}
+
+	public static class ArchiveAttributeBinder implements AttributeBinder<ArchiveAttributeBinding> {
+		private static final AtomicInteger callCount = new AtomicInteger();
+
+		@Override
+		public void bind(ArchiveAttributeBinding annotation, AttributeBindingContext context) {
+			callCount.incrementAndGet();
+			context.getProperty().setUpdatable( false );
+		}
+	}
+
+	@Target(java.lang.annotation.ElementType.TYPE)
+	@Retention(RetentionPolicy.RUNTIME)
+	@TypeBinderType(binder = ArchiveTypeBinder.class)
+	public @interface ArchiveTypeBinding {
+	}
+
+	public static class ArchiveTypeBinder implements TypeBinder<ArchiveTypeBinding> {
+		private static final AtomicInteger callCount = new AtomicInteger();
+
+		@Override
+		public void bind(ArchiveTypeBinding annotation, EntityBindingContext context) {
+			callCount.incrementAndGet();
+			context.getPersistentClass().setBatchSize( 19 );
+		}
 	}
 
 	public static class TitleConverter implements AttributeConverter<CharSequence, String> {

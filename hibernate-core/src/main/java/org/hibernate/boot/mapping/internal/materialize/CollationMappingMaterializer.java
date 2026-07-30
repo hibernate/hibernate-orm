@@ -15,9 +15,8 @@ import org.hibernate.mapping.Property;
 
 /// Materializes the legacy column collation for a `@Collate` attribute.
 ///
-/// `@Collate` is a compact proof for value/selectable-oriented attribute
-/// contributions.  The binding contribution owns the requested collation; this
-/// materializer applies it to the columns exposed by the legacy mapping value.
+/// The binding contribution owns the requested collation; this materializer
+/// applies it to the columns exposed by the legacy mapping value.
 ///
 /// @since 9.0
 /// @author Steve Ebersole

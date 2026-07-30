@@ -16,7 +16,7 @@ import org.hibernate.boot.pipeline.internal.MappingResolutionOptions;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.MappedSuperclass;
-import org.hibernate.mapping.MappingRole;
+import org.hibernate.boot.mapping.spi.MappingRole;
 import org.hibernate.mapping.PreparedGenerator;
 import org.hibernate.metamodel.mapping.DiscriminatorType;
 import org.hibernate.jpa.boot.spi.PersistenceUnitCallbackDefinition;

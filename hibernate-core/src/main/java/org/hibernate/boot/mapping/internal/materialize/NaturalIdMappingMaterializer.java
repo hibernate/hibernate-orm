@@ -11,9 +11,8 @@ import org.hibernate.mapping.Property;
 
 /// Materializes the legacy mapping flags for a `@NaturalId` attribute.
 ///
-/// Natural-id handling is intentionally represented as a binding contribution
-/// before mutating the legacy `Property`, making this a second proof of the
-/// binding-layer replacement shape for built-in and custom attribute binders.
+/// Natural-id handling is represented as internal binding state before the
+/// corresponding legacy `Property` is updated.
 ///
 /// @since 9.0
 /// @author Steve Ebersole

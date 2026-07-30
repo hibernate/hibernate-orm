@@ -7,13 +7,14 @@ package org.hibernate.metamodel.internal;
 import java.util.Map;
 import java.util.function.Supplier;
 
-import org.hibernate.bytecode.spi.ReflectionOptimizer;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
+import org.hibernate.models.accessor.HibernateAccessorMultiValueReader;
+import org.hibernate.models.accessor.HibernateAccessorMultiValueWriter;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.property.access.internal.PropertyAccessStrategyMapImpl;
 import org.hibernate.property.access.spi.PropertyAccess;
@@ -46,7 +47,12 @@ public class EmbeddableRepresentationStrategyMap implements EmbeddableRepresenta
 	}
 
 	@Override
-	public ReflectionOptimizer getReflectionOptimizer() {
+	public HibernateAccessorMultiValueReader getMultiValueReader() {
+		return null;
+	}
+
+	@Override
+	public HibernateAccessorMultiValueWriter getMultiValueWriter() {
 		return null;
 	}
 

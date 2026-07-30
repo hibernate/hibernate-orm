@@ -8,8 +8,7 @@ import java.util.function.Supplier;
 
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.spi.ValueAccess;
-
-import static org.hibernate.bytecode.spi.ReflectionOptimizer.InstantiationOptimizer;
+import org.hibernate.models.accessor.HibernateAccessorInstantiator;
 
 /**
  * Support for instantiating embeddables as POJO representation
@@ -19,20 +18,20 @@ public class EmbeddableInstantiatorPojoOptimized
 		extends AbstractPojoInstantiator
 		implements StandardEmbeddableInstantiator {
 	private final Supplier<EmbeddableMappingType> embeddableMappingAccess;
-	private final InstantiationOptimizer instantiationOptimizer;
+	private final HibernateAccessorInstantiator<?> instantiator;
 
 	public EmbeddableInstantiatorPojoOptimized(
 			Class<?> embeddableClass,
 			Supplier<EmbeddableMappingType> embeddableMappingAccess,
-			InstantiationOptimizer instantiationOptimizer) {
+			HibernateAccessorInstantiator<?> instantiator) {
 		super( embeddableClass );
 		this.embeddableMappingAccess = embeddableMappingAccess;
-		this.instantiationOptimizer = instantiationOptimizer;
+		this.instantiator = instantiator;
 	}
 
 	@Override
 	public Object instantiate(ValueAccess valuesAccess) {
-		final Object embeddable = instantiationOptimizer.newInstance();
+		final Object embeddable = instantiator.create();
 		final var embeddableMapping = embeddableMappingAccess.get();
 		final var values = valuesAccess.getValues();
 		if ( values != null ) {

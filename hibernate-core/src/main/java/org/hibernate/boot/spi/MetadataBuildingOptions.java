@@ -8,6 +8,7 @@ import java.util.List;
 
 import jakarta.annotation.Nonnull;
 import org.hibernate.Incubating;
+import org.hibernate.Remove;
 import org.hibernate.type.TimeZoneStorageStrategy;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
@@ -31,7 +32,10 @@ import jakarta.persistence.SharedCacheMode;
  * @author Steve Ebersole
  *
  * @since 5.0
+ *
+ * @apiNote This contract will be removed in 9.0.
  */
+@Remove
 public interface MetadataBuildingOptions {
 	/**
 	 * Access to the {@link StandardServiceRegistry}.

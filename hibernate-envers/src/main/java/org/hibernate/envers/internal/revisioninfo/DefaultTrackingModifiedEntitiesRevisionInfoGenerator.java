@@ -11,8 +11,7 @@ import org.hibernate.envers.RevisionListener;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.internal.entities.PropertyData;
 import org.hibernate.envers.internal.tools.ReflectionTools;
-import org.hibernate.property.access.spi.Getter;
-import org.hibernate.property.access.spi.Setter;
+import org.hibernate.property.access.spi.PropertyValueAccessor;
 import org.hibernate.service.ServiceRegistry;
 
 /**
@@ -25,8 +24,7 @@ import org.hibernate.service.ServiceRegistry;
  * @see org.hibernate.envers.DefaultTrackingModifiedEntitiesRevisionEntity
  */
 public class DefaultTrackingModifiedEntitiesRevisionInfoGenerator extends DefaultRevisionInfoGenerator {
-	private final Setter modifiedEntityNamesSetter;
-	private final Getter modifiedEntityNamesGetter;
+	private final PropertyValueAccessor modifiedEntityNamesAccessor;
 
 	public DefaultTrackingModifiedEntitiesRevisionInfoGenerator(
 			String revisionInfoEntityName,
@@ -36,8 +34,7 @@ public class DefaultTrackingModifiedEntitiesRevisionInfoGenerator extends Defaul
 			PropertyData modifiedEntityNamesData,
 			ServiceRegistry serviceRegistry) {
 		super( revisionInfoEntityName, revisionInfoClass, listenerClass, timestampValueResolver, serviceRegistry );
-		modifiedEntityNamesSetter = ReflectionTools.getSetter( revisionInfoClass, modifiedEntityNamesData, serviceRegistry );
-		modifiedEntityNamesGetter = ReflectionTools.getGetter( revisionInfoClass, modifiedEntityNamesData, serviceRegistry );
+		modifiedEntityNamesAccessor = ReflectionTools.getPropertyValueAccessor( revisionInfoClass, modifiedEntityNamesData, serviceRegistry );
 	}
 
 	@Override
@@ -49,10 +46,10 @@ public class DefaultTrackingModifiedEntitiesRevisionInfoGenerator extends Defaul
 			RevisionType revisionType,
 			Object revisionEntity) {
 		super.entityChanged( entityClass, entityName, entityId, revisionType, revisionEntity );
-		Set<String> modifiedEntityNames = (Set<String>) modifiedEntityNamesGetter.get( revisionEntity );
+		Set<String> modifiedEntityNames = (Set<String>) modifiedEntityNamesAccessor.get( revisionEntity );
 		if ( modifiedEntityNames == null ) {
 			modifiedEntityNames = new HashSet<>();
-			modifiedEntityNamesSetter.set( revisionEntity, modifiedEntityNames );
+			modifiedEntityNamesAccessor.set( revisionEntity, modifiedEntityNames );
 		}
 		modifiedEntityNames.add( entityName );
 	}

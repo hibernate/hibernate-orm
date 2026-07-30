@@ -13,7 +13,7 @@ import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.internal.entities.PropertyData;
 import org.hibernate.envers.internal.tools.ReflectionTools;
 import org.hibernate.mapping.Component;
-import org.hibernate.property.access.spi.Setter;
+import org.hibernate.property.access.spi.PropertyValueAccessor;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.spi.CompositeTypeImplementor;
 
@@ -57,7 +57,7 @@ public class EmbeddedIdMapper extends AbstractCompositeIdMapper implements Simpl
 			return false;
 		}
 
-		final Setter setter = ReflectionTools.getSetter( obj.getClass(), idPropertyData, getServiceRegistry() );
+		final PropertyValueAccessor setter = ReflectionTools.getPropertyValueAccessor( obj.getClass(), idPropertyData, getServiceRegistry() );
 		try {
 			final Object subObj;
 			boolean ret = true;

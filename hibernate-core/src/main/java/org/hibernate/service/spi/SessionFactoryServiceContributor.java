@@ -5,11 +5,16 @@
 package org.hibernate.service.spi;
 
 import jakarta.annotation.Nonnull;
+
+import org.hibernate.Remove;
 import org.hibernate.service.JavaServiceLoadable;
 
 /**
  * @author Steve Ebersole
+ *
+ * @apiNote This contract will be removed in 9.0.
  */
+@Remove
 @JavaServiceLoadable
 public interface SessionFactoryServiceContributor {
 	/**

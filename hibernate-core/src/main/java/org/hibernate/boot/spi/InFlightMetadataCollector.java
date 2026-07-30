@@ -256,6 +256,7 @@ public interface InFlightMetadataCollector extends MetadataImplementor {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// make sure these are account for better in metamodel
 
+	@Remove
 	void addIdentifierGenerator(IdentifierGeneratorDefinition generatorDefinition);
 
 	/**
@@ -322,6 +323,7 @@ public interface InFlightMetadataCollector extends MetadataImplementor {
 	String getLogicalColumnName(Table table, Identifier physicalName);
 	String getLogicalColumnName(Table table, String physicalName);
 
+	@Remove
 	void addDefaultIdentifierGenerator(IdentifierGeneratorDefinition generatorDefinition);
 
 	void addDefaultQuery(NamedHqlQueryDefinition<?> queryDefinition);

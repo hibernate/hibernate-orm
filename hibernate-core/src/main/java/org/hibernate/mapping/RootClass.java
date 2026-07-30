@@ -1,5 +1,6 @@
 package org.hibernate.mapping;
 
+import org.hibernate.boot.mapping.spi.MappingRole;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;

@@ -15,11 +15,11 @@ import org.hibernate.boot.mapping.internal.view.NaturalIdContributionView;
 import org.hibernate.boot.mapping.internal.view.TenantIdBindingView;
 import org.hibernate.boot.mapping.internal.view.VersionBindingView;
 import org.hibernate.boot.models.AttributeNature;
-import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadata;
-import org.hibernate.boot.mapping.internal.categorize.IdentifiableTypeMetadata;
+import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadataImpl;
+import org.hibernate.boot.mapping.internal.categorize.AbstractIdentifiableTypeMetadata;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
-import org.hibernate.mapping.MappingRole;
+import org.hibernate.boot.mapping.spi.MappingRole;
 
 import jakarta.annotation.Nullable;
 import jakarta.persistence.AccessType;
@@ -40,11 +40,11 @@ public class BootBindingModel {
 	private final JpaStaticMetamodelInjectionSource.Builder staticMetamodelInjectionPlan =
 			new JpaStaticMetamodelInjectionSource.Builder();
 	private final Map<ClassDetails, ManagedTypeBinding> managedTypeBindings = new LinkedHashMap<>();
-	private final Map<EntityTypeMetadata, EntityHierarchyBinding> entityHierarchyBindings = new LinkedHashMap<>();
-	private final Map<EntityTypeMetadata, EntityIdentifierBinding> entityIdentifierBindings = new LinkedHashMap<>();
+	private final Map<EntityTypeMetadataImpl, EntityHierarchyBinding> entityHierarchyBindings = new LinkedHashMap<>();
+	private final Map<EntityTypeMetadataImpl, EntityIdentifierBinding> entityIdentifierBindings = new LinkedHashMap<>();
 	private final Map<String, EntityIdentifierBinding> entityIdentifierBindingsByEntityName = new LinkedHashMap<>();
-	private final Map<EntityTypeMetadata, VersionBinding> versionBindings = new LinkedHashMap<>();
-	private final Map<EntityTypeMetadata, TenantIdBinding> tenantIdBindings = new LinkedHashMap<>();
+	private final Map<EntityTypeMetadataImpl, VersionBinding> versionBindings = new LinkedHashMap<>();
+	private final Map<EntityTypeMetadataImpl, TenantIdBinding> tenantIdBindings = new LinkedHashMap<>();
 	private final List<NaturalIdContribution> naturalIdContributions = new ArrayList<>();
 	private final List<CollationContribution> collationContributions = new ArrayList<>();
 	private final List<MappedSuperclassContribution> mappedSuperclassContributions = new ArrayList<>();
@@ -121,12 +121,12 @@ public class BootBindingModel {
 		return List.copyOf( appliedEmbeddableMappings.values() );
 	}
 
-	public void addEntityHierarchyBinding(EntityTypeMetadata rootType, EntityHierarchyBinding binding) {
+	public void addEntityHierarchyBinding(EntityTypeMetadataImpl rootType, EntityHierarchyBinding binding) {
 		entityHierarchyBindings.put( rootType, binding );
 		staticMetamodelInjectionPlan.addHierarchy( binding );
 	}
 
-	public @Nullable EntityHierarchyBinding getEntityHierarchyBinding(EntityTypeMetadata rootType) {
+	public @Nullable EntityHierarchyBinding getEntityHierarchyBinding(EntityTypeMetadataImpl rootType) {
 		return entityHierarchyBindings.get( rootType );
 	}
 
@@ -141,7 +141,7 @@ public class BootBindingModel {
 				.toList();
 	}
 
-	public @Nullable EntityHierarchyView getEntityHierarchyView(EntityTypeMetadata rootType) {
+	public @Nullable EntityHierarchyView getEntityHierarchyView(EntityTypeMetadataImpl rootType) {
 		final EntityHierarchyBinding binding = getEntityHierarchyBinding( rootType );
 		return binding == null ? null : new EntityHierarchyView( binding );
 	}
@@ -226,7 +226,7 @@ public class BootBindingModel {
 		return new ManagedTypeBinding( classDetails, ManagedTypeBinding.Kind.MAPPED_SUPERCLASS, accessType );
 	}
 
-	public void addEntityIdentifierBinding(EntityTypeMetadata rootType, EntityIdentifierBinding entityIdentifierBinding) {
+	public void addEntityIdentifierBinding(EntityTypeMetadataImpl rootType, EntityIdentifierBinding entityIdentifierBinding) {
 		entityIdentifierBindings.put( rootType, entityIdentifierBinding );
 		staticMetamodelInjectionPlan.addIdentifier( rootType.getClassDetails(), entityIdentifierBinding );
 		indexEntityIdentifierBinding( rootType.getEntityName(), entityIdentifierBinding );
@@ -235,7 +235,7 @@ public class BootBindingModel {
 		indexEntityIdentifierBinding( rootType.getClassDetails().getClassName(), entityIdentifierBinding );
 	}
 
-	public @Nullable EntityIdentifierBinding getEntityIdentifierBinding(EntityTypeMetadata rootType) {
+	public @Nullable EntityIdentifierBinding getEntityIdentifierBinding(EntityTypeMetadataImpl rootType) {
 		return entityIdentifierBindings.get( rootType );
 	}
 
@@ -260,12 +260,12 @@ public class BootBindingModel {
 				.toList();
 	}
 
-	public @Nullable EntityIdentifierBindingView getEntityIdentifierBindingView(EntityTypeMetadata rootType) {
+	public @Nullable EntityIdentifierBindingView getEntityIdentifierBindingView(EntityTypeMetadataImpl rootType) {
 		final EntityIdentifierBinding binding = getEntityIdentifierBinding( rootType );
 		return binding == null ? null : new EntityIdentifierBindingView( binding );
 	}
 
-	public @Nullable EntityView getEntityView(EntityTypeMetadata rootType) {
+	public @Nullable EntityView getEntityView(EntityTypeMetadataImpl rootType) {
 		final ManagedTypeBinding binding = getManagedTypeBinding( rootType.getClassDetails() );
 		if ( !( binding instanceof EntityTypeBinding entityBinding ) ) {
 			return null;
@@ -273,7 +273,7 @@ public class BootBindingModel {
 		return new EntityView( entityBinding, getEntityIdentifierBinding( rootType ) );
 	}
 
-	public void addVersionBinding(EntityTypeMetadata rootType, VersionBinding versionBinding) {
+	public void addVersionBinding(EntityTypeMetadataImpl rootType, VersionBinding versionBinding) {
 		versionBindings.put( rootType, versionBinding );
 		staticMetamodelInjectionPlan.addVersion( versionBinding );
 	}
@@ -284,7 +284,7 @@ public class BootBindingModel {
 		return staticMetamodelInjectionPlan.build();
 	}
 
-	public @Nullable VersionBinding getVersionBinding(EntityTypeMetadata rootType) {
+	public @Nullable VersionBinding getVersionBinding(EntityTypeMetadataImpl rootType) {
 		return versionBindings.get( rootType );
 	}
 
@@ -299,20 +299,20 @@ public class BootBindingModel {
 				.toList();
 	}
 
-	public @Nullable VersionBindingView getVersionBindingView(EntityTypeMetadata rootType) {
+	public @Nullable VersionBindingView getVersionBindingView(EntityTypeMetadataImpl rootType) {
 		final VersionBinding binding = getVersionBinding( rootType );
 		return binding == null ? null : new VersionBindingView( binding );
 	}
 
-	public void addTenantIdBinding(EntityTypeMetadata rootType, TenantIdBinding tenantIdBinding) {
+	public void addTenantIdBinding(EntityTypeMetadataImpl rootType, TenantIdBinding tenantIdBinding) {
 		tenantIdBindings.put( rootType, tenantIdBinding );
 	}
 
-	public @Nullable TenantIdBinding getTenantIdBinding(EntityTypeMetadata rootType) {
+	public @Nullable TenantIdBinding getTenantIdBinding(EntityTypeMetadataImpl rootType) {
 		return tenantIdBindings.get( rootType );
 	}
 
-	public @Nullable TenantIdBindingView getTenantIdBindingView(EntityTypeMetadata rootType) {
+	public @Nullable TenantIdBindingView getTenantIdBindingView(EntityTypeMetadataImpl rootType) {
 		final TenantIdBinding binding = getTenantIdBinding( rootType );
 		return binding == null ? null : new TenantIdBindingView( binding );
 	}
@@ -326,14 +326,14 @@ public class BootBindingModel {
 	}
 
 	public @Nullable NaturalIdContributionView getNaturalIdContributionView(
-			IdentifiableTypeMetadata owner,
+			AbstractIdentifiableTypeMetadata owner,
 			String attributeName) {
 		final NaturalIdContribution contribution = getNaturalIdContribution( owner, attributeName );
 		return contribution == null ? null : new NaturalIdContributionView( contribution );
 	}
 
 	private @Nullable NaturalIdContribution getNaturalIdContribution(
-			IdentifiableTypeMetadata owner,
+			AbstractIdentifiableTypeMetadata owner,
 			String attributeName) {
 		for ( NaturalIdContribution contribution : naturalIdContributions ) {
 			if ( contribution.owner() == owner && contribution.attributeName().equals( attributeName ) ) {
@@ -352,14 +352,14 @@ public class BootBindingModel {
 	}
 
 	public @Nullable CollationContributionView getCollationContributionView(
-			IdentifiableTypeMetadata owner,
+			AbstractIdentifiableTypeMetadata owner,
 			String attributePath) {
 		final CollationContribution contribution = getCollationContribution( owner, attributePath );
 		return contribution == null ? null : new CollationContributionView( contribution );
 	}
 
 	private @Nullable CollationContribution getCollationContribution(
-			IdentifiableTypeMetadata owner,
+			AbstractIdentifiableTypeMetadata owner,
 			String attributePath) {
 		for ( CollationContribution contribution : collationContributions ) {
 			if ( contribution.owner() == owner && contribution.attributePath().equals( attributePath ) ) {

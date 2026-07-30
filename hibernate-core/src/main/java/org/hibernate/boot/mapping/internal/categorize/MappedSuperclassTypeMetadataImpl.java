@@ -2,9 +2,10 @@ package org.hibernate.boot.mapping.internal.categorize;
 
 import java.util.List;
 
+import org.hibernate.boot.mapping.spi.MappedSuperclassTypeMetadata;
 import org.hibernate.models.spi.ClassDetails;
 
-/// Standard MappedSuperclassTypeMetadata impl
+/// Internal categorized mapped-superclass metadata.
 ///
 /// @since 9.0
 /// @author Steve Ebersole
@@ -12,13 +13,13 @@ public class MappedSuperclassTypeMetadataImpl
 		extends AbstractIdentifiableTypeMetadata
 		implements MappedSuperclassTypeMetadata {
 
-	private final List<AttributeMetadata> attributeList;
+	private final List<AttributeMetadataImplementor> attributeList;
 	private final List<JpaEventListener> hierarchyEventListeners;
 	private final List<JpaEventListener> completeEventListeners;
 
 	public MappedSuperclassTypeMetadataImpl(
 			ClassDetails classDetails,
-			EntityHierarchy hierarchy,
+			EntityHierarchyImpl hierarchy,
 			ManagedTypeInheritanceState inheritanceState,
 			HierarchyMetadataCollector metadataCollector,
 			CategorizationContext modelContext) {
@@ -34,7 +35,7 @@ public class MappedSuperclassTypeMetadataImpl
 
 	public MappedSuperclassTypeMetadataImpl(
 			ClassDetails classDetails,
-			EntityHierarchy hierarchy,
+			EntityHierarchyImpl hierarchy,
 			AbstractIdentifiableTypeMetadata superType,
 			ManagedTypeInheritanceState inheritanceState,
 			HierarchyMetadataCollector metadataCollector,
@@ -50,7 +51,7 @@ public class MappedSuperclassTypeMetadataImpl
 	}
 
 	@Override
-	protected List<AttributeMetadata> attributeList() {
+	protected List<AttributeMetadataImplementor> attributeList() {
 		return attributeList;
 	}
 

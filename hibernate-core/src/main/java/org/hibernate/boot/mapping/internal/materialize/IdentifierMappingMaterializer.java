@@ -39,10 +39,10 @@ import org.hibernate.boot.mapping.internal.context.MappingResolutionServices;
 import org.hibernate.boot.mapping.internal.context.MappingResolutionState;
 import org.hibernate.boot.models.AttributeNature;
 import org.hibernate.boot.mapping.internal.categorize.AggregatedKeyMapping;
-import org.hibernate.boot.mapping.internal.categorize.AttributeMetadata;
+import org.hibernate.boot.mapping.internal.categorize.AttributeMetadataImplementor;
 import org.hibernate.boot.mapping.internal.categorize.BasicKeyMapping;
 import org.hibernate.boot.mapping.internal.view.EntityIdentifierBindingView;
-import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadata;
+import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadataImpl;
 import org.hibernate.boot.mapping.internal.categorize.KeyMapping;
 import org.hibernate.boot.mapping.internal.categorize.NonAggregatedKeyMapping;
 import org.hibernate.mapping.BasicValue;
@@ -109,12 +109,12 @@ public class IdentifierMappingMaterializer {
 	}
 
 	public IdentifierBinding materializeBasicIdentifier(
-			EntityTypeMetadata typeMetadata,
+			EntityTypeMetadataImpl typeMetadata,
 			RootClass typeBinding,
 			BasicKeyMapping basicKeyMapping,
 			Table table,
 			EntityIdentifierBinding binding) {
-		final AttributeMetadata idAttribute = basicKeyMapping.getAttribute();
+		final AttributeMetadataImplementor idAttribute = basicKeyMapping.getAttribute();
 		final MemberDetails idAttributeMember = idAttribute.getMember();
 
 		final BasicValue idValue = createBasicIdValue(
@@ -155,7 +155,7 @@ public class IdentifierMappingMaterializer {
 	}
 
 	public IdentifierBinding materializeAggregatedIdentifier(
-			EntityTypeMetadata type,
+			EntityTypeMetadataImpl type,
 			RootClass typeBinding,
 			AggregatedKeyMapping aggregatedKeyMapping,
 			Table table,
@@ -199,7 +199,7 @@ public class IdentifierMappingMaterializer {
 				idValue,
 				table,
 				aggregatedKeyMapping.getAttribute()
-						instanceof org.hibernate.boot.mapping.internal.categorize.EmbeddedAttributeMetadata embedded
+						instanceof org.hibernate.boot.mapping.internal.categorize.EmbeddedAttributeMetadataImpl embedded
 								&& embedded.getValue().getType().determineRawClass().getName()
 										.equals( componentSource.componentType().getName() )
 								? embedded.getValue()
@@ -225,7 +225,7 @@ public class IdentifierMappingMaterializer {
 	}
 
 	public IdentifierBinding materializeScalarIdClassIdentifier(
-			EntityTypeMetadata type,
+			EntityTypeMetadataImpl type,
 			RootClass typeBinding,
 			NonAggregatedKeyMapping idMapping,
 			Table table,
@@ -256,7 +256,7 @@ public class IdentifierMappingMaterializer {
 			typeBinding.addProperty( propertyMappingMaterializer.createIdentifierMapperProperty( identifierMapper ) );
 
 		final List<Column> columns = new java.util.ArrayList<>( idMapping.getIdAttributes().size() );
-		for ( AttributeMetadata idAttribute : orderedIdAttributes( idMapping, binding ) ) {
+		for ( AttributeMetadataImplementor idAttribute : orderedIdAttributes( idMapping, binding ) ) {
 			final MemberDetails member = idAttribute.getMember();
 			final IdentifierAttributeBinding attribute = binding.getAttribute( idAttribute.getName() );
 			final MemberDetails idClassMember = attribute.idRepresentationMember();
@@ -308,7 +308,7 @@ public class IdentifierMappingMaterializer {
 	}
 
 	public IdentifierBinding materializeEmbeddedIdClassIdentifier(
-			EntityTypeMetadata type,
+			EntityTypeMetadataImpl type,
 			RootClass typeBinding,
 			NonAggregatedKeyMapping idMapping,
 			Table table,
@@ -316,7 +316,7 @@ public class IdentifierMappingMaterializer {
 		final IdClassMappingParts mappingParts = createIdClassMappingParts( typeBinding, idMapping, table );
 		final List<Column> columns = new java.util.ArrayList<>( idMapping.getIdAttributes().size() );
 
-		for ( AttributeMetadata idAttribute : orderedIdAttributes( idMapping, binding ) ) {
+		for ( AttributeMetadataImplementor idAttribute : orderedIdAttributes( idMapping, binding ) ) {
 			final MemberDetails member = idAttribute.getMember();
 			final IdentifierAttributeBinding attribute = binding.getAttribute( idAttribute.getName() );
 			final MemberDetails idClassMember = attribute.idRepresentationMember();
@@ -396,7 +396,7 @@ public class IdentifierMappingMaterializer {
 	}
 
 	public IdentifierBinding materializeAssociationIdClassIdentifier(
-			EntityTypeMetadata type,
+			EntityTypeMetadataImpl type,
 			RootClass typeBinding,
 			NonAggregatedKeyMapping idMapping,
 			Table table,
@@ -404,7 +404,7 @@ public class IdentifierMappingMaterializer {
 		final IdClassMappingParts mappingParts = createIdClassMappingParts( typeBinding, idMapping, table );
 		final List<Column> columns = new ArrayList<>( idMapping.getIdAttributes().size() );
 
-		for ( AttributeMetadata idAttribute : orderedIdAttributes( idMapping, binding ) ) {
+		for ( AttributeMetadataImplementor idAttribute : orderedIdAttributes( idMapping, binding ) ) {
 			final IdentifierAttributeBinding attribute = binding.getAttribute( idAttribute.getName() );
 			if ( idAttribute.getNature() == AttributeNature.BASIC && !isToOneMember( attribute.idRepresentationMember() ) ) {
 				materializeBasicIdClassAttribute(
@@ -456,7 +456,7 @@ public class IdentifierMappingMaterializer {
 	}
 
 	public IdentifierBinding materializeNonAggregatedIdentifier(
-			EntityTypeMetadata type,
+			EntityTypeMetadataImpl type,
 			RootClass typeBinding,
 			NonAggregatedKeyMapping idMapping,
 			Table table,
@@ -510,7 +510,7 @@ public class IdentifierMappingMaterializer {
 			}
 
 		final List<Column> columns = new ArrayList<>( idMapping.getIdAttributes().size() );
-		for ( AttributeMetadata idAttribute : orderedIdAttributes( idMapping, binding ) ) {
+		for ( AttributeMetadataImplementor idAttribute : orderedIdAttributes( idMapping, binding ) ) {
 			final IdentifierAttributeBinding attribute = binding.getAttribute( idAttribute.getName() );
 			final MemberDetails member = idAttribute.getMember();
 			final MemberDetails idClassMember = attribute.idRepresentationMember();
@@ -654,7 +654,7 @@ public class IdentifierMappingMaterializer {
 	}
 
 	public IdentifierBinding materializeEntityIdentifierBinding(
-			EntityTypeMetadata entityType,
+			EntityTypeMetadataImpl entityType,
 			RootClass rootClass,
 			KeyMapping keyMapping,
 			KeyValue identifierValue,
@@ -687,7 +687,7 @@ public class IdentifierMappingMaterializer {
 	}
 
 	private List<Column> bindComponentIdentifierProperties(
-			EntityTypeMetadata type,
+			EntityTypeMetadataImpl type,
 			RootClass typeBinding,
 			ComponentSource componentSource,
 			Component idValue,
@@ -696,12 +696,12 @@ public class IdentifierMappingMaterializer {
 	}
 
 	private List<Column> bindComponentIdentifierProperties(
-			EntityTypeMetadata type,
+			EntityTypeMetadataImpl type,
 			RootClass typeBinding,
 			ComponentSource componentSource,
 			Component idValue,
 			Table table,
-			@Nullable org.hibernate.boot.mapping.internal.categorize.EmbeddedValueMetadata valueMetadata) {
+			@Nullable org.hibernate.boot.mapping.internal.categorize.EmbeddedValueMetadataImpl valueMetadata) {
 		final ResolvedPrimaryTableKey primaryTableKey = primaryTableKeyMappingMaterializer.resolvePrimaryKey(
 				typeBinding,
 				table
@@ -774,11 +774,11 @@ public class IdentifierMappingMaterializer {
 	}
 
 	private void materializeBasicIdClassAttribute(
-			EntityTypeMetadata type,
+			EntityTypeMetadataImpl type,
 			RootClass typeBinding,
 			Table table,
 			IdClassMappingParts mappingParts,
-			AttributeMetadata idAttribute,
+			AttributeMetadataImplementor idAttribute,
 			MemberDetails idClassMember,
 			List<Column> columns,
 			EntityIdentifierBinding binding) {
@@ -818,11 +818,11 @@ public class IdentifierMappingMaterializer {
 	}
 
 	private void materializeEmbeddedIdClassAttribute(
-			EntityTypeMetadata type,
+			EntityTypeMetadataImpl type,
 			RootClass typeBinding,
 			Table table,
 			IdClassMappingParts mappingParts,
-			AttributeMetadata idAttribute,
+			AttributeMetadataImplementor idAttribute,
 			MemberDetails idClassMember,
 			List<Column> columns,
 			EntityIdentifierBinding binding) {
@@ -855,11 +855,11 @@ public class IdentifierMappingMaterializer {
 	}
 
 	private void materializeAssociationIdClassAttribute(
-			EntityTypeMetadata type,
+			EntityTypeMetadataImpl type,
 			RootClass typeBinding,
 			Table table,
 			IdClassMappingParts mappingParts,
-			AttributeMetadata idAttribute,
+			AttributeMetadataImplementor idAttribute,
 			IdentifierAttributeBinding identifierAttribute,
 			List<Column> identifierColumns) {
 		final MemberDetails member = idAttribute.getMember();
@@ -907,10 +907,10 @@ public class IdentifierMappingMaterializer {
 	}
 
 	private Component createEmbeddedIdClassComponent(
-			AttributeMetadata idAttribute,
+			AttributeMetadataImplementor idAttribute,
 			MemberDetails idClassMember,
 			Table table,
-			EntityTypeMetadata type,
+			EntityTypeMetadataImpl type,
 			RootClass typeBinding) {
 		final ClassDetails componentType = idClassMember.getType().determineRawClass();
 		final Component component = new Component( state.getMetadataBuildingContext(), typeBinding );
@@ -940,10 +940,10 @@ public class IdentifierMappingMaterializer {
 	}
 
 	private org.hibernate.mapping.Value createIdClassAssociationIdentifierValue(
-			AttributeMetadata idAttribute,
+			AttributeMetadataImplementor idAttribute,
 			MemberDetails idClassMember,
 			Table table,
-			EntityTypeMetadata type,
+			EntityTypeMetadataImpl type,
 			RootClass typeBinding) {
 		final ToOneSource source = ToOneSource.create(
 				isToOneMember( idClassMember ) ? idClassMember : idAttribute.getMember(),
@@ -1039,7 +1039,7 @@ public class IdentifierMappingMaterializer {
 				|| member.hasDirectAnnotationUsage( jakarta.persistence.OneToOne.class );
 	}
 
-	private boolean idClassMemberStoresAssociation(AttributeMetadata idAttribute, MemberDetails idClassMember) {
+	private boolean idClassMemberStoresAssociation(AttributeMetadataImplementor idAttribute, MemberDetails idClassMember) {
 		if ( isToOneMember( idClassMember ) ) {
 			return true;
 		}
@@ -1049,21 +1049,21 @@ public class IdentifierMappingMaterializer {
 						.equals( idClassMember.getType().determineRawClass().getClassName() );
 	}
 
-	private List<AttributeMetadata> orderedIdAttributes(
+	private List<AttributeMetadataImplementor> orderedIdAttributes(
 			NonAggregatedKeyMapping idMapping,
 			EntityIdentifierBinding binding) {
 		if ( !binding.idClass() ) {
 			return idMapping.getIdAttributes();
 		}
-		final ArrayList<AttributeMetadata> orderedAttributes = new ArrayList<>( binding.attributes().size() );
+		final ArrayList<AttributeMetadataImplementor> orderedAttributes = new ArrayList<>( binding.attributes().size() );
 		for ( IdentifierAttributeBinding attributeBinding : binding.attributes() ) {
 			orderedAttributes.add( idAttribute( idMapping, attributeBinding.attributeName() ) );
 		}
 		return orderedAttributes;
 	}
 
-	private AttributeMetadata idAttribute(NonAggregatedKeyMapping idMapping, String attributeName) {
-		for ( AttributeMetadata idAttribute : idMapping.getIdAttributes() ) {
+	private AttributeMetadataImplementor idAttribute(NonAggregatedKeyMapping idMapping, String attributeName) {
+		for ( AttributeMetadataImplementor idAttribute : idMapping.getIdAttributes() ) {
 			if ( idAttribute.getName().equals( attributeName ) ) {
 				return idAttribute;
 			}
@@ -1072,12 +1072,12 @@ public class IdentifierMappingMaterializer {
 	}
 
 	private ToOne bindToOneIdentifier(
-			AttributeMetadata idAttribute,
+			AttributeMetadataImplementor idAttribute,
 			org.hibernate.mapping.Value identifierValue,
 			IdentifierAttributeBinding identifierAttribute,
 			AtomicReference<org.hibernate.mapping.Value> identifierMapperValue,
 			Table table,
-			EntityTypeMetadata type,
+			EntityTypeMetadataImpl type,
 			RootClass typeBinding,
 			List<Column> identifierColumns,
 			MemberDetails associationMember) {
@@ -1151,13 +1151,13 @@ public class IdentifierMappingMaterializer {
 	}
 
 	private OneToOne bindInverseOneToOneIdentifier(
-			AttributeMetadata idAttribute,
+			AttributeMetadataImplementor idAttribute,
 			ToOneSource source,
 			org.hibernate.mapping.Value identifierValue,
 			IdentifierAttributeBinding identifierAttribute,
 			AtomicReference<org.hibernate.mapping.Value> identifierMapperValue,
 			Table table,
-			EntityTypeMetadata type,
+			EntityTypeMetadataImpl type,
 			RootClass typeBinding,
 			EntityTypeBinder targetTypeBinder,
 			List<Column> identifierColumns) {
@@ -1199,8 +1199,8 @@ public class IdentifierMappingMaterializer {
 	}
 
 	private void applyToOneIdentifierPropertyOptions(
-			AttributeMetadata idAttribute,
-			EntityTypeMetadata type,
+			AttributeMetadataImplementor idAttribute,
+			EntityTypeMetadataImpl type,
 			Property property,
 			MemberDetails associationMember) {
 		final ToOneSource source = ToOneSource.create(
@@ -1215,7 +1215,7 @@ public class IdentifierMappingMaterializer {
 	}
 
 	private Table bindAssociationIdentifierTable(
-			EntityTypeMetadata type,
+			EntityTypeMetadataImpl type,
 			RootClass typeBinding,
 			Table primaryTable,
 			String propertyName,
@@ -1346,11 +1346,11 @@ public class IdentifierMappingMaterializer {
 		return createBasicIdValue( table, idMember, idClassMember.getType(), typeBinding );
 	}
 
-	private Supplier<String> implicitIdentifierColumnName(EntityTypeMetadata type, AttributeMetadata idAttribute) {
+	private Supplier<String> implicitIdentifierColumnName(EntityTypeMetadataImpl type, AttributeMetadataImplementor idAttribute) {
 		return () -> context.getImplicitNamingStrategy()
 				.determineIdentifierColumnName( new ImplicitIdentifierColumnNameSource() {
 					@Override
-					public EntityTypeMetadata getEntityNaming() {
+					public EntityTypeMetadataImpl getEntityNaming() {
 						return type;
 					}
 
@@ -1395,7 +1395,7 @@ public class IdentifierMappingMaterializer {
 		}
 	}
 
-	private boolean declaresAttribute(EntityTypeMetadata type, AttributeMetadata attribute) {
+	private boolean declaresAttribute(EntityTypeMetadataImpl type, AttributeMetadataImplementor attribute) {
 		return isSameType( attribute.getMember().getDeclaringType(), type.getClassDetails() );
 	}
 

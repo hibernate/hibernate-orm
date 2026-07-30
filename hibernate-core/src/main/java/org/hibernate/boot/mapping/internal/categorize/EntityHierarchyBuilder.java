@@ -18,14 +18,14 @@ import java.util.Set;
 
 import jakarta.persistence.Entity;
 
-/// Builds [EntityHierarchy] references from
+/// Builds [EntityHierarchyImpl] references from
 /// {@linkplain ClassDetailsRegistry#forEachClassDetails managed classes}.
 ///
 /// @since 9.0
 /// @author Steve Ebersole
 public class EntityHierarchyBuilder {
 
-	public static Set<EntityHierarchy> createEntityHierarchies(
+	public static Set<EntityHierarchyImpl> createEntityHierarchies(
 			ManagedTypeInheritanceState inheritanceState,
 			CategorizationContext buildingContext) {
 		return new EntityHierarchyBuilder( buildingContext ).process( inheritanceState );
@@ -37,11 +37,11 @@ public class EntityHierarchyBuilder {
 		this.modelContext = modelContext;
 	}
 
-	private Set<EntityHierarchy> process(
+	private Set<EntityHierarchyImpl> process(
 			ManagedTypeInheritanceState inheritanceState,
 			MappedSuperclassTracker mappedSuperclassTracker) {
 		final Set<ClassDetails> rootEntities = inheritanceState.getRootEntities();
-		final Set<EntityHierarchy> hierarchies = new LinkedHashSet<>( rootEntities.size() );
+		final Set<EntityHierarchyImpl> hierarchies = new LinkedHashSet<>( rootEntities.size() );
 
 		rootEntities.forEach( (rootEntity) -> {
 			if ( hasEntitySuperType( rootEntity, inheritanceState ) ) {
@@ -74,9 +74,9 @@ public class EntityHierarchyBuilder {
 		return false;
 	}
 
-	private Set<EntityHierarchy> process(ManagedTypeInheritanceState inheritanceState) {
+	private Set<EntityHierarchyImpl> process(ManagedTypeInheritanceState inheritanceState) {
 		final MappedSuperclassTracker mappedSuperclassTracker = new MappedSuperclassTracker( inheritanceState );
-		final Set<EntityHierarchy> entityHierarchies = process(
+		final Set<EntityHierarchyImpl> entityHierarchies = process(
 				inheritanceState,
 				mappedSuperclassTracker
 		);

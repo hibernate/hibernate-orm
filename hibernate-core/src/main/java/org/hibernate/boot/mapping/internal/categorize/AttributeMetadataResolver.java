@@ -17,6 +17,8 @@ import org.hibernate.annotations.CollectionId;
 import org.hibernate.annotations.TargetEmbeddable;
 import org.hibernate.boot.model.IdentifierGeneratorRegistration;
 import org.hibernate.boot.mapping.internal.sources.CollectionSource;
+import org.hibernate.boot.mapping.spi.ValueMetadata;
+import org.hibernate.boot.mapping.spi.ValueNature;
 import org.hibernate.boot.models.AttributeNature;
 import org.hibernate.generator.Generator;
 import org.hibernate.id.IdentifierGenerator;
@@ -36,7 +38,7 @@ final class AttributeMetadataResolver {
 	private AttributeMetadataResolver() {
 	}
 
-	static AttributeMetadata resolve(
+	static AttributeMetadataImplementor resolve(
 			MemberDetails member,
 			TypeDetails memberType,
 			AccessType inheritedAccessType,
@@ -44,7 +46,7 @@ final class AttributeMetadataResolver {
 		return resolve( member, memberType, inheritedAccessType, context, new java.util.LinkedHashSet<>() );
 	}
 
-	static AttributeMetadata resolve(
+	static AttributeMetadataImplementor resolve(
 			MemberDetails member,
 			TypeDetails memberType,
 			AccessType inheritedAccessType,
@@ -77,7 +79,7 @@ final class AttributeMetadataResolver {
 		final ClassDetails embeddableClass = targetEmbeddable == null
 				? memberType.determineRawClass()
 				: context.getClassDetailsRegistry().resolveClassDetails( targetEmbeddable.value().getName() );
-		final EmbeddableTypeMetadata embeddableType = context.findEmbeddableType( embeddableClass );
+		final EmbeddableTypeMetadataImpl embeddableType = context.findEmbeddableType( embeddableClass );
 		if ( embeddableType == null ) {
 			return new SingularAttributeMetadataImpl(
 					member.resolveAttributeName(),
@@ -90,7 +92,7 @@ final class AttributeMetadataResolver {
 					)
 			);
 		}
-		final EmbeddableUsageMetadata usage = ( (EmbeddableTypeMetadataImpl) embeddableType ).resolveUsage(
+		final EmbeddableUsageMetadataImpl usage = ( (EmbeddableTypeMetadataImpl) embeddableType ).resolveUsage(
 				member,
 				targetEmbeddable == null ? memberType : TypeDetails.classType( embeddableClass ),
 				effectiveAccessType,
@@ -127,7 +129,7 @@ final class AttributeMetadataResolver {
 		return false;
 	}
 
-	private static PluralAttributeMetadata pluralAttribute(
+	private static PluralAttributeMetadataImpl pluralAttribute(
 			MemberDetails member,
 			TypeDetails collectionType,
 			AttributeNature nature,
@@ -269,11 +271,11 @@ final class AttributeMetadataResolver {
 		if ( effectiveNature != ValueNature.EMBEDDED ) {
 			return new ValueMetadataImpl( type, effectiveNature );
 		}
-		final EmbeddableTypeMetadata embeddableType = context.findEmbeddableType( type.determineRawClass() );
+		final EmbeddableTypeMetadataImpl embeddableType = context.findEmbeddableType( type.determineRawClass() );
 		if ( embeddableType == null ) {
 			return new ValueMetadataImpl( type, ValueNature.EMBEDDED );
 		}
-		final EmbeddableUsageMetadata usage = ( (EmbeddableTypeMetadataImpl) embeddableType ).resolveUsage(
+		final EmbeddableUsageMetadataImpl usage = ( (EmbeddableTypeMetadataImpl) embeddableType ).resolveUsage(
 				sourceMember,
 				type,
 				inheritedAccessType,
@@ -290,16 +292,16 @@ final class AttributeMetadataResolver {
 		);
 	}
 
-	private static EmbeddedValueMetadata embeddedValue(
+	private static EmbeddedValueMetadataImpl embeddedValue(
 			TypeDetails type,
-			EmbeddableUsageMetadata usage,
+			EmbeddableUsageMetadataImpl usage,
 			MemberDetails sourceMember,
 			AccessType inheritedAccessType,
 			CategorizationContext context,
 			Set<String> embeddableResolutionPath) {
 		final ClassDetails baseType = type.determineRawClass();
-		final List<EmbeddableUsageMetadata> subtypeUsages = new ArrayList<>();
-		for ( EmbeddableTypeMetadata candidate : context.getEmbeddableTypes().values() ) {
+		final List<EmbeddableUsageMetadataImpl> subtypeUsages = new ArrayList<>();
+		for ( EmbeddableTypeMetadataImpl candidate : context.getEmbeddableTypes().values() ) {
 			final ClassDetails candidateType = candidate.getClassDetails();
 			if ( isStrictSubtype( candidateType, baseType ) ) {
 				subtypeUsages.add(
@@ -346,7 +348,7 @@ final class AttributeMetadataResolver {
 		};
 	}
 
-	private static CollectionIdMetadata collectionId(
+	private static CollectionIdMetadataImpl collectionId(
 			CollectionSource source,
 			CategorizationContext context) {
 		final CollectionId collectionId = source.member().getDirectAnnotationUsage( CollectionId.class );
@@ -357,7 +359,7 @@ final class AttributeMetadataResolver {
 		if ( implementation != IdentifierGenerator.class ) {
 			@SuppressWarnings("unchecked")
 			final Class<? extends Generator> generatorClass = (Class<? extends Generator>) implementation;
-			return new CollectionIdMetadata(
+			return new CollectionIdMetadataImpl(
 					collectionId,
 					new IdentifierGeneratorRegistration(
 							source.member().getDeclaringType().getName() + "#"
@@ -368,7 +370,7 @@ final class AttributeMetadataResolver {
 					)
 			);
 		}
-		return new CollectionIdMetadata(
+		return new CollectionIdMetadataImpl(
 				collectionId,
 				context.getGlobalRegistrations()
 						.getIdentifierGeneratorRegistrations()

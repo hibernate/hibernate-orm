@@ -1,16 +1,19 @@
 package org.hibernate.boot.mapping.internal.categorize;
 
 import jakarta.annotation.Nonnull;
+
+import org.hibernate.boot.mapping.spi.SingularAttributeMetadata;
+import org.hibernate.boot.mapping.spi.ValueMetadata;
 import org.hibernate.models.spi.MemberDetails;
 
-/// Standard SingularAttributeMetadata impl
+/// Internal categorized singular attribute.
 ///
 /// @since 9.0
 /// @author Steve Ebersole
 public record SingularAttributeMetadataImpl(
 		String name,
 		MemberDetails member,
-		ValueMetadata value) implements SingularAttributeMetadata {
+		ValueMetadata value) implements AttributeMetadataImplementor, SingularAttributeMetadata {
 	@Override
 	public String getName() {
 		return name;
@@ -28,6 +31,6 @@ public record SingularAttributeMetadataImpl(
 
 	@Override @Nonnull
 	public String toString() {
-		return "AttributeMetadata(`" + name + "`)";
+		return "AttributeMetadataImplementor(`" + name + "`)";
 	}
 }

@@ -2,16 +2,17 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.boot.mapping.internal.categorize;
+package org.hibernate.boot.mapping.spi;
 
 import org.hibernate.boot.models.AttributeNature;
 import org.hibernate.models.spi.TypeDetails;
 
-/// Categorized metadata for an attribute which maps a single value.
+/// Categorized attribute which maps a single [ValueMetadata].
 ///
 /// @since 9.0
 /// @author Steve Ebersole
 public interface SingularAttributeMetadata extends AttributeMetadata {
+	/// The mapped value described by this attribute.
 	ValueMetadata getValue();
 
 	@Override

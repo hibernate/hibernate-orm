@@ -21,9 +21,9 @@ import org.hibernate.boot.mapping.internal.sources.ForeignKeySource;
 import org.hibernate.boot.mapping.internal.context.BindingContext;
 import org.hibernate.boot.mapping.internal.context.BindingOptions;
 import org.hibernate.boot.mapping.internal.context.BindingState;
-import org.hibernate.boot.mapping.internal.categorize.AttributeMetadata;
-import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadata;
-import org.hibernate.boot.mapping.internal.categorize.IdentifiableTypeMetadata;
+import org.hibernate.boot.mapping.internal.categorize.AttributeMetadataImplementor;
+import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadataImpl;
+import org.hibernate.boot.mapping.internal.categorize.AbstractIdentifiableTypeMetadata;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Component;
@@ -62,9 +62,9 @@ import static org.hibernate.boot.mapping.internal.binders.AttributeBinder.applyC
 /// @since 9.0
 /// @author Steve Ebersole
 class ElementCollectionAttributeBinder {
-	private final IdentifiableTypeMetadata ownerType;
+	private final AbstractIdentifiableTypeMetadata ownerType;
 	private final PersistentClass ownerBinding;
-	private final AttributeMetadata attributeMetadata;
+	private final AttributeMetadataImplementor attributeMetadata;
 	private final ModelBinders modelBinders;
 	private final BindingOptions bindingOptions;
 	private final BindingState bindingState;
@@ -74,9 +74,9 @@ class ElementCollectionAttributeBinder {
 	private final boolean registerCollectionBindings;
 
 	ElementCollectionAttributeBinder(
-			IdentifiableTypeMetadata ownerType,
+			AbstractIdentifiableTypeMetadata ownerType,
 			PersistentClass ownerBinding,
-			AttributeMetadata attributeMetadata,
+			AttributeMetadataImplementor attributeMetadata,
 			ModelBinders modelBinders,
 			BindingOptions bindingOptions,
 			BindingState bindingState,
@@ -96,9 +96,9 @@ class ElementCollectionAttributeBinder {
 	}
 
 	ElementCollectionAttributeBinder(
-			IdentifiableTypeMetadata ownerType,
+			AbstractIdentifiableTypeMetadata ownerType,
 			PersistentClass ownerBinding,
-			AttributeMetadata attributeMetadata,
+			AttributeMetadataImplementor attributeMetadata,
 			ModelBinders modelBinders,
 			BindingOptions bindingOptions,
 			BindingState bindingState,
@@ -119,9 +119,9 @@ class ElementCollectionAttributeBinder {
 	}
 
 	ElementCollectionAttributeBinder(
-			IdentifiableTypeMetadata ownerType,
+			AbstractIdentifiableTypeMetadata ownerType,
 			PersistentClass ownerBinding,
-			AttributeMetadata attributeMetadata,
+			AttributeMetadataImplementor attributeMetadata,
 			ModelBinders modelBinders,
 			BindingOptions bindingOptions,
 			BindingState bindingState,
@@ -143,9 +143,9 @@ class ElementCollectionAttributeBinder {
 	}
 
 	ElementCollectionAttributeBinder(
-			IdentifiableTypeMetadata ownerType,
+			AbstractIdentifiableTypeMetadata ownerType,
 			PersistentClass ownerBinding,
-			AttributeMetadata attributeMetadata,
+			AttributeMetadataImplementor attributeMetadata,
 			ModelBinders modelBinders,
 			BindingOptions bindingOptions,
 			BindingState bindingState,
@@ -527,8 +527,8 @@ class ElementCollectionAttributeBinder {
 					.getText();
 		}
 
-	private EntityTypeMetadata resolveOwnerEntityType() {
-		if ( ownerType instanceof EntityTypeMetadata entityType ) {
+	private EntityTypeMetadataImpl resolveOwnerEntityType() {
+		if ( ownerType instanceof EntityTypeMetadataImpl entityType ) {
 			return entityType;
 		}
 		return ownerType.getHierarchy().getRoot();

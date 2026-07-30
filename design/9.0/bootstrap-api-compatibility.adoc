@@ -133,8 +133,11 @@ Retained focused contribution SPIs.  Their ordering and single ownership are
 part of bootstrap-customization completion.
 
 `AttributeBinder` and `TypeBinder`::
-Retained compatibility extension points while the internal facet-based binding
-model stabilizes.  No public replacement SPI is committed yet.
+Retained incubating extension SPIs.  ORM 9 stabilizes them at the
+semantic-to-materialized boundary: binder contexts expose supported read-only
+categorized and applied-model facts, while `org.hibernate.mapping` objects
+remain the broad mutable customization targets.  Internal facet-based
+contributions used by ORM annotations are not their public replacement.
 
 `Integrator`::
 Retained lifecycle compatibility SPI.  It remains an adapter around explicit

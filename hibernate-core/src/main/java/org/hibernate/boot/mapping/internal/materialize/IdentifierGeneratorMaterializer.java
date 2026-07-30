@@ -6,7 +6,7 @@ package org.hibernate.boot.mapping.internal.materialize;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.annotations.UuidGenerator;
-import org.hibernate.boot.mapping.internal.categorize.CategorizedDomainModel;
+import org.hibernate.boot.mapping.internal.categorize.CategorizedDomainModelImpl;
 import org.hibernate.boot.mapping.internal.categorize.IdentifierGeneratorResolution;
 import org.hibernate.boot.model.IdentifierGeneratorRegistration;
 import org.hibernate.boot.model.internal.GeneratorAnnotationHelper;
@@ -27,7 +27,7 @@ final class IdentifierGeneratorMaterializer {
 	static IdentifierGeneratorResolution.Part findResolution(
 			MemberDetails member,
 			RootClass typeBinding,
-			CategorizedDomainModel categorizedDomainModel) {
+			CategorizedDomainModelImpl categorizedDomainModel) {
 		for ( var hierarchy : categorizedDomainModel.getEntityHierarchies() ) {
 			if ( hierarchy.getRoot().getEntityName().equals( typeBinding.getEntityName() ) ) {
 				return hierarchy.getIdentifierGeneratorResolution().find( member );

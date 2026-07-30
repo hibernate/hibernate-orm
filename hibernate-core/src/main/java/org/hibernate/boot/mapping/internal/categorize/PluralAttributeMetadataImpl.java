@@ -7,11 +7,13 @@ package org.hibernate.boot.mapping.internal.categorize;
 import jakarta.annotation.Nullable;
 
 import org.hibernate.boot.models.AttributeNature;
+import org.hibernate.boot.mapping.spi.PluralAttributeMetadata;
+import org.hibernate.boot.mapping.spi.ValueMetadata;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.TypeDetails;
 
-/// Standard [PluralAttributeMetadata] implementation.
+/// Standard [PluralAttributeMetadataImpl] implementation.
 ///
 /// @since 9.0
 /// @author Steve Ebersole
@@ -23,7 +25,8 @@ public record PluralAttributeMetadataImpl(
 		CollectionClassification collectionClassification,
 		ValueMetadata element,
 		@Nullable ValueMetadata index,
-		@Nullable CollectionIdMetadata collectionId) implements PluralAttributeMetadata {
+		@Nullable CollectionIdMetadataImpl collectionId)
+		implements AttributeMetadataImplementor, PluralAttributeMetadata {
 	@Override
 	public String getName() {
 		return name;
@@ -60,7 +63,7 @@ public record PluralAttributeMetadataImpl(
 	}
 
 	@Override
-	public CollectionIdMetadata getCollectionId() {
+	public CollectionIdMetadataImpl getCollectionId() {
 		return collectionId;
 	}
 }

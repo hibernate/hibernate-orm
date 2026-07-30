@@ -6,6 +6,7 @@ import jakarta.annotation.Nonnull;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.NaturalIdCache;
 import org.hibernate.annotations.OptimisticLocking;
+import org.hibernate.boot.mapping.spi.EntityHierarchy;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.models.spi.ClassDetails;
 
@@ -13,13 +14,13 @@ import jakarta.persistence.AccessType;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 
-/// Standard EntityHierarchy impl
+/// Internal entity hierarchy.
 ///
 /// @since 9.0
 /// @author Steve Ebersole
 public class EntityHierarchyImpl implements EntityHierarchy {
-	private final IdentifiableTypeMetadata absoluteRootTypeMetadata;
-	private final EntityTypeMetadata rootEntityTypeMetadata;
+	private final AbstractIdentifiableTypeMetadata absoluteRootTypeMetadata;
+	private final EntityTypeMetadataImpl rootEntityTypeMetadata;
 
 	private final InheritanceType inheritanceType;
 	private final AccessType defaultAccessType;
@@ -28,8 +29,8 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 	private final KeyMapping idMapping;
 	private final IdentifierGeneratorResolution identifierGeneratorResolution;
 	private final KeyMapping naturalIdMapping;
-	private final AttributeMetadata versionAttribute;
-	private final AttributeMetadata tenantIdAttribute;
+	private final AttributeMetadataImplementor versionAttribute;
+	private final AttributeMetadataImplementor tenantIdAttribute;
 
 	private final CacheRegion cacheRegion;
 	private final NaturalIdCacheRegion naturalIdCacheRegion;
@@ -121,12 +122,12 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 	}
 
 	@Override @Nonnull
-	public EntityTypeMetadata getRoot() {
+	public EntityTypeMetadataImpl getRoot() {
 		return rootEntityTypeMetadata;
 	}
 
 	@Override @Nonnull
-	public IdentifiableTypeMetadata getAbsoluteRoot() {
+	public AbstractIdentifiableTypeMetadata getAbsoluteRoot() {
 		return absoluteRootTypeMetadata;
 	}
 
@@ -140,49 +141,45 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 		return defaultAccessType;
 	}
 
-	@Override @Nonnull
+	@Nonnull
 	public KeyMapping getIdMapping() {
 		return idMapping;
 	}
 
-	@Override @Nonnull
+	@Nonnull
 	public IdentifierGeneratorResolution getIdentifierGeneratorResolution() {
 		return identifierGeneratorResolution;
 	}
 
-	@Override
 	public KeyMapping getNaturalIdMapping() {
 		return naturalIdMapping;
 	}
 
-	@Override
-	public AttributeMetadata getVersionAttribute() {
+	public AttributeMetadataImplementor getVersionAttribute() {
 		return versionAttribute;
 	}
 
-	@Override
-	public AttributeMetadata getTenantIdAttribute() {
+	public AttributeMetadataImplementor getTenantIdAttribute() {
 		return tenantIdAttribute;
 	}
 
-	@Override @Nonnull
+	@Nonnull
 	public OptimisticLockStyle getOptimisticLockStyle() {
 		return optimisticLockStyle;
 	}
 
-	@Override @Nonnull
+	@Nonnull
 	public CacheRegion getCacheRegion() {
 		return cacheRegion;
 	}
 
-	@Override @Nonnull
+	@Nonnull
 	public NaturalIdCacheRegion getNaturalIdCacheRegion() {
 		return naturalIdCacheRegion;
 	}
 
-	@Override
 	public void forEachType(HierarchyTypeVisitor typeVisitor) {
-		final IdentifiableTypeMetadata absoluteRoot = getAbsoluteRoot();
+		final AbstractIdentifiableTypeMetadata absoluteRoot = getAbsoluteRoot();
 		final HierarchyRelation hierarchyRelation;
 		if ( absoluteRoot == getRoot() ) {
 			hierarchyRelation = HierarchyRelation.ROOT;
@@ -195,8 +192,8 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 	}
 
 	private void forEachType(
-			IdentifiableTypeMetadata type,
-			IdentifiableTypeMetadata superType,
+			AbstractIdentifiableTypeMetadata type,
+			AbstractIdentifiableTypeMetadata superType,
 			HierarchyRelation hierarchyRelation,
 			HierarchyTypeVisitor typeVisitor) {
 		typeVisitor.visitType( type, superType, this, hierarchyRelation );
@@ -229,10 +226,22 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 	public String toString() {
 		return String.format(
 				Locale.ROOT,
-				"EntityHierarchy(`%s` (%s))",
+				"EntityHierarchyImpl(`%s` (%s))",
 				rootEntityTypeMetadata.getEntityName(),
 				inheritanceType.name()
 		);
+	}
+
+	/// Describes a type's place in the hierarchy relative to the root entity.
+	public enum HierarchyRelation { SUPER, ROOT, SUB }
+
+	@FunctionalInterface
+	public interface HierarchyTypeVisitor {
+		void visitType(
+				AbstractIdentifiableTypeMetadata type,
+				AbstractIdentifiableTypeMetadata superType,
+				EntityHierarchyImpl hierarchy,
+				HierarchyRelation relation);
 	}
 
 
@@ -281,7 +290,7 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 	 * Find the InheritanceType from the locally defined {@link Inheritance} annotation,
 	 * if one.  Returns {@code null} if {@link Inheritance} is not locally defined.
 	 *
-	 * @apiNote Used when building the {@link EntityHierarchy}
+	 * @apiNote Used when building the {@link EntityHierarchyImpl}
 	 */
 	private static InheritanceType getLocallyDefinedInheritanceType(ClassDetails managedClass) {
 		final Inheritance localAnnotation = managedClass.getDirectAnnotationUsage( Inheritance.class );
@@ -292,7 +301,7 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 		return localAnnotation.strategy();
 	}
 
-	private void ensureNoInheritanceAnnotationsOnSubclasses(IdentifiableTypeMetadata type) {
+	private void ensureNoInheritanceAnnotationsOnSubclasses(AbstractIdentifiableTypeMetadata type) {
 		type.forEachSubType( (subType) -> {
 			if ( getLocallyDefinedInheritanceType( subType.getClassDetails() ) != null ) {
 				CategorizationLogging.CATEGORIZATION_LOGGER.debugf(

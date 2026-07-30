@@ -2,7 +2,7 @@ package org.hibernate.boot.mapping.internal.model;
 
 import jakarta.annotation.Nullable;
 
-import org.hibernate.boot.mapping.internal.categorize.EmbeddedValueMetadata;
+import org.hibernate.boot.mapping.internal.categorize.EmbeddedValueMetadataImpl;
 import org.hibernate.boot.models.AttributeNature;
 import org.hibernate.boot.mapping.internal.sources.ComponentSource;
 import org.hibernate.models.spi.TypeDetails;
@@ -19,7 +19,7 @@ public record EmbeddedValueIntent(
 		TypeDetails memberType,
 		String path,
 		String fullPath,
-		@Nullable EmbeddedValueMetadata valueMetadata) implements ValueIntent {
+		@Nullable EmbeddedValueMetadataImpl valueMetadata) implements ValueIntent {
 	public EmbeddedValueIntent(TypeDetails memberType, String path, String fullPath) {
 		this( memberType, path, fullPath, null );
 	}
@@ -46,7 +46,7 @@ public record EmbeddedValueIntent(
 	}
 
 	public static EmbeddedValueIntent fromAttribute(
-			EmbeddedValueMetadata valueMetadata,
+			EmbeddedValueMetadataImpl valueMetadata,
 			String attributeName,
 			String sourceRole) {
 		return new EmbeddedValueIntent(
@@ -58,7 +58,7 @@ public record EmbeddedValueIntent(
 	}
 
 	public static EmbeddedValueIntent fromAttribute(
-			@Nullable EmbeddedValueMetadata valueMetadata,
+			@Nullable EmbeddedValueMetadataImpl valueMetadata,
 			TypeDetails memberType,
 			String attributeName,
 			String sourceRole) {

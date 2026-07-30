@@ -44,14 +44,14 @@ import org.hibernate.boot.mapping.internal.context.BindingContext;
 import org.hibernate.boot.mapping.internal.context.BindingOptions;
 import org.hibernate.boot.mapping.internal.context.BindingState;
 import org.hibernate.boot.mapping.internal.sources.BasicValueSource;
-import org.hibernate.boot.mapping.internal.categorize.AttributeMetadata;
+import org.hibernate.boot.mapping.internal.categorize.AttributeMetadataImplementor;
 import org.hibernate.boot.mapping.internal.categorize.CacheRegion;
-import org.hibernate.boot.mapping.internal.categorize.EntityHierarchy;
-import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadata;
-import org.hibernate.boot.mapping.internal.categorize.IdentifiableTypeMetadata;
+import org.hibernate.boot.mapping.internal.categorize.EntityHierarchyImpl;
+import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadataImpl;
+import org.hibernate.boot.mapping.internal.categorize.AbstractIdentifiableTypeMetadata;
 import org.hibernate.boot.mapping.internal.categorize.JpaEventListener;
 import org.hibernate.boot.mapping.internal.categorize.JpaEventListenerStyle;
-import org.hibernate.boot.mapping.internal.categorize.ManagedTypeMetadata;
+import org.hibernate.boot.mapping.internal.categorize.AbstractManagedTypeMetadata;
 import org.hibernate.boot.mapping.internal.categorize.NaturalIdCacheRegion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.StringHelper;
@@ -74,7 +74,7 @@ import org.hibernate.mapping.Property;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.SingleTableSubclass;
-import org.hibernate.mapping.MappingRole;
+import org.hibernate.boot.mapping.spi.MappingRole;
 import org.hibernate.mapping.Subclass;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.TableOwner;
@@ -166,9 +166,9 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 	private IdentifierBinding entityIdentifierBinding;
 
 	public EntityTypeBinder(
-			EntityTypeMetadata type,
-			IdentifiableTypeMetadata superType,
-			EntityHierarchy.HierarchyRelation hierarchyRelation,
+			EntityTypeMetadataImpl type,
+			AbstractIdentifiableTypeMetadata superType,
+			EntityHierarchyImpl.HierarchyRelation hierarchyRelation,
 			ModelBinders modelBinders,
 			BindingState state,
 			BindingOptions options,
@@ -251,7 +251,7 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 
 	private void validatePrimaryKeyJoinColumns() {
 		if ( getManagedType().getHierarchy().getInheritanceType() == InheritanceType.JOINED
-				&& getHierarchyRelation() == EntityHierarchy.HierarchyRelation.SUB ) {
+				&& getHierarchyRelation() == EntityHierarchyImpl.HierarchyRelation.SUB ) {
 			return;
 		}
 
@@ -269,7 +269,7 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 	}
 
 	private void validateSingleTableSubclassTable() {
-		if ( getHierarchyRelation() != EntityHierarchy.HierarchyRelation.ROOT
+		if ( getHierarchyRelation() != EntityHierarchyImpl.HierarchyRelation.ROOT
 				&& getManagedType().getHierarchy().getInheritanceType() == InheritanceType.SINGLE_TABLE
 				&& getManagedType().getClassDetails().hasDirectAnnotationUsage( jakarta.persistence.Table.class ) ) {
 			throw new AnnotationException(
@@ -382,7 +382,7 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 	/// Only root entity binders participate in this phase.  Subclasses consume the
 	/// completed root identifier shape in later key/FK phases.
 	public void bindIdentifier() {
-		if ( getHierarchyRelation() == EntityHierarchy.HierarchyRelation.ROOT ) {
+		if ( getHierarchyRelation() == EntityHierarchyImpl.HierarchyRelation.ROOT ) {
 			entityIdentifierBinding = IdentifierBinder.bindIdentifier(
 					getManagedType(),
 					(RootClass) getTypeBinding(),
@@ -487,7 +487,7 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 			return;
 		}
 
-		final AttributeMetadata attribute = findDeclaringSuperEntityAttribute( declaredProperty.getName() );
+		final AttributeMetadataImplementor attribute = findDeclaringSuperEntityAttribute( declaredProperty.getName() );
 		if ( attribute == null ) {
 			return;
 		}
@@ -551,11 +551,11 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 		return false;
 	}
 
-	private AttributeMetadata findDeclaringSuperEntityAttribute(String propertyName) {
-		IdentifiableTypeMetadata superType = getManagedType().getSuperType();
+	private AttributeMetadataImplementor findDeclaringSuperEntityAttribute(String propertyName) {
+		AbstractIdentifiableTypeMetadata superType = getManagedType().getSuperType();
 		while ( superType != null ) {
-			final AttributeMetadata attribute = superType.findAttribute( propertyName );
-			if ( attribute != null && superType.getManagedTypeKind() == ManagedTypeMetadata.Kind.ENTITY ) {
+			final AttributeMetadataImplementor attribute = superType.findAttribute( propertyName );
+			if ( attribute != null && superType.getManagedTypeKind() == AbstractManagedTypeMetadata.Kind.ENTITY ) {
 				return attribute;
 			}
 			superType = superType.getSuperType();
@@ -624,7 +624,7 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 			String name,
 			ClassDetails classDetails,
 			Class<?> overrideClass) {
-		final IdentifiableTypeMetadata declaringSuperEntity = findDeclaringSuperEntity( StringHelper.root( name ) );
+		final AbstractIdentifiableTypeMetadata declaringSuperEntity = findDeclaringSuperEntity( StringHelper.root( name ) );
 		if ( declaringSuperEntity != null ) {
 			throw new AnnotationException( "Property '" + name
 					+ "' is inherited from entity '" + declaringSuperEntity.getClassDetails().getName()
@@ -633,18 +633,18 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 		}
 	}
 
-	private IdentifiableTypeMetadata findDeclaringSuperEntity(String attributeName) {
-		IdentifiableTypeMetadata superType = getManagedType().getSuperType();
+	private AbstractIdentifiableTypeMetadata findDeclaringSuperEntity(String attributeName) {
+		AbstractIdentifiableTypeMetadata superType = getManagedType().getSuperType();
 		while ( superType != null ) {
 			if ( superType.findAttribute( attributeName ) != null ) {
-				return superType.getManagedTypeKind() == ManagedTypeMetadata.Kind.ENTITY ? superType : null;
+				return superType.getManagedTypeKind() == AbstractManagedTypeMetadata.Kind.ENTITY ? superType : null;
 			}
 			superType = superType.getSuperType();
 		}
 		return null;
 	}
 
-	private void processJpaEventListeners(EntityTypeMetadata type, BindingState state, BindingContext context) {
+	private void processJpaEventListeners(EntityTypeMetadataImpl type, BindingState state, BindingContext context) {
 		final List<JpaEventListener> listeners = type.getCompleteJpaEventListeners();
 		if ( CollectionHelper.isEmpty( listeners ) ) {
 			return;
@@ -903,17 +903,17 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 	}
 
 	@Override
-	public EntityTypeMetadata getManagedType() {
-		return (EntityTypeMetadata) super.getManagedType();
+	public EntityTypeMetadataImpl getManagedType() {
+		return (EntityTypeMetadataImpl) super.getManagedType();
 	}
 
 	@Override
-	public EntityTypeMetadata findSuperEntity() {
+	public EntityTypeMetadataImpl findSuperEntity() {
 		return getManagedType();
 	}
 
 	private PersistentClass createBinding() {
-		if ( getHierarchyRelation() == EntityHierarchy.HierarchyRelation.SUB ) {
+		if ( getHierarchyRelation() == EntityHierarchyImpl.HierarchyRelation.SUB ) {
 			return createSubclass();
 		}
 		else {
@@ -922,7 +922,7 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 	}
 
 	private PersistentClass createSubclass() {
-		final IdentifiableTypeMetadata superType = getSuperType();
+		final AbstractIdentifiableTypeMetadata superType = getSuperType();
 
 		final IdentifiableTypeBinder superTypeBinder = (IdentifiableTypeBinder) getBindingState().getTypeBinder( superType.getClassDetails() );
 		final IdentifiableTypeClass superTypeBinding = superTypeBinder.getTypeBinding();
@@ -1036,7 +1036,7 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 
 	@Override
 	protected void prepareBinding(ModelBinders modelBinders) {
-		if ( getHierarchyRelation() == EntityHierarchy.HierarchyRelation.ROOT ) {
+		if ( getHierarchyRelation() == EntityHierarchyImpl.HierarchyRelation.ROOT ) {
 			prepareRootEntityBinding( (RootClass) getTypeBinding(), modelBinders );
 		}
 
@@ -1052,7 +1052,7 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 	@Override
 	public void bindCustomMapping() {
 		CustomMappingBinder.callTypeBinders(
-				getManagedType().getClassDetails(),
+				getManagedType(),
 				binding,
 				getBindingState(),
 				getBindingContext()
@@ -1060,7 +1060,7 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 	}
 
 	private static void bindCacheable(
-			EntityTypeMetadata managedType,
+			EntityTypeMetadataImpl managedType,
 			PersistentClass typeBinding,
 			ModelBinders modelBinders,
 			BindingOptions options,
@@ -1114,7 +1114,7 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 	}
 
 	private void bindDiscriminatorValue(
-			EntityTypeMetadata managedType,
+			EntityTypeMetadataImpl managedType,
 			PersistentClass typeBinding) {
 		final BasicValue discriminatorMapping = getDiscriminatorMapping();
 		if ( discriminatorMapping == null ) {
@@ -1157,7 +1157,7 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 	}
 
 	private static void bindDiscriminator(
-			EntityTypeMetadata managedType,
+			EntityTypeMetadataImpl managedType,
 			RootClass typeBinding,
 			ModelBinders modelBinders,
 			BindingOptions bindingOptions,
@@ -1256,26 +1256,26 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 	}
 
 	private static void bindVersion(
-			EntityTypeMetadata managedType,
+			EntityTypeMetadataImpl managedType,
 			RootClass typeBinding,
 			ModelBinders modelBinders,
 			BindingOptions options,
 			BindingState bindingState,
 			BindingContext bindingContext) {
-		final AttributeMetadata versionAttribute = managedType.getHierarchy().getVersionAttribute();
+		final AttributeMetadataImplementor versionAttribute = managedType.getHierarchy().getVersionAttribute();
 		if ( versionAttribute != null ) {
 			VersionBinder.bindVersion( versionAttribute, managedType, typeBinding, options, bindingState, bindingContext );
 		}
 	}
 
 	private static void bindTenantId(
-			EntityTypeMetadata managedType,
+			EntityTypeMetadataImpl managedType,
 			RootClass typeBinding,
 			ModelBinders modelBinders,
 			BindingOptions options,
 			BindingState bindingState,
 			BindingContext bindingContext) {
-		final AttributeMetadata tenantIdAttribute = managedType.getHierarchy().getTenantIdAttribute();
+		final AttributeMetadataImplementor tenantIdAttribute = managedType.getHierarchy().getTenantIdAttribute();
 		if ( tenantIdAttribute != null ) {
 			TenantIdBinder.bindTenantId( tenantIdAttribute, managedType, typeBinding, options, bindingState, bindingContext );
 		}
@@ -1383,12 +1383,12 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 
 	private void processOptimisticLocking(
 			RootClass rootEntity,
-			EntityTypeMetadata source) {
+			EntityTypeMetadataImpl source) {
 		rootEntity.setOptimisticLockStyle( source.getHierarchy().getOptimisticLockStyle() );
 	}
 
 	private void processRowManagement(
-			EntityTypeMetadata managedType,
+			EntityTypeMetadataImpl managedType,
 			PersistentClass typeBinding) {
 		if ( typeBinding instanceof RootClass rootClass ) {
 			rootClass.setMutable( managedType.isMutable() );
@@ -1558,10 +1558,10 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 	}
 
 	private void processCacheRegions(
-			EntityTypeMetadata source,
+			EntityTypeMetadataImpl source,
 			RootClass rootClass,
 			ClassDetails classDetails) {
-		final EntityHierarchy hierarchy = source.getHierarchy();
+		final EntityHierarchyImpl hierarchy = source.getHierarchy();
 		final CacheRegion cacheRegion = hierarchy.getCacheRegion();
 		final NaturalIdCacheRegion naturalIdCacheRegion = hierarchy.getNaturalIdCacheRegion();
 
@@ -1578,7 +1578,7 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 		}
 	}
 
-	private void processSqlRestriction(IdentifiableTypeMetadata type) {
+	private void processSqlRestriction(AbstractIdentifiableTypeMetadata type) {
 		final SQLRestriction restriction = findSqlRestriction( type );
 		if ( restriction == null ) {
 			return;
@@ -1593,7 +1593,7 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 		rootClass.setWhere( restriction.value() );
 	}
 
-	private SQLRestriction findSqlRestriction(IdentifiableTypeMetadata type) {
+	private SQLRestriction findSqlRestriction(AbstractIdentifiableTypeMetadata type) {
 		final Dialect dialect = getBindingState().getDatabase().getDialect();
 		final var modelsContext = getBindingContext().getModelsContext();
 		final SQLRestriction restriction = getOverridableAnnotation(
@@ -1606,7 +1606,7 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 			return restriction;
 		}
 
-		IdentifiableTypeMetadata superType = type.getSuperType();
+		AbstractIdentifiableTypeMetadata superType = type.getSuperType();
 		while ( superType != null
 				&& superType.getClassDetails().hasDirectAnnotationUsage( jakarta.persistence.MappedSuperclass.class ) ) {
 			final SQLRestriction superRestriction = getOverridableAnnotation(
@@ -1623,9 +1623,9 @@ public class EntityTypeBinder extends IdentifiableTypeBinder
 		return null;
 	}
 
-	private void processFilters(IdentifiableTypeMetadata type, BindingState state, BindingContext context) {
+	private void processFilters(AbstractIdentifiableTypeMetadata type, BindingState state, BindingContext context) {
 		processFilters( type.getClassDetails(), state, context );
-		IdentifiableTypeMetadata superType = type.getSuperType();
+		AbstractIdentifiableTypeMetadata superType = type.getSuperType();
 		while ( superType != null
 				&& superType.getClassDetails().hasDirectAnnotationUsage( jakarta.persistence.MappedSuperclass.class ) ) {
 			processFilters( superType.getClassDetails(), state, context );

@@ -36,7 +36,7 @@ final class IdentifierGeneratorResolutionResolver {
 	}
 
 	static IdentifierGeneratorResolution resolve(
-			EntityHierarchy hierarchy,
+			EntityHierarchyImpl hierarchy,
 			KeyMapping idMapping,
 			CategorizationContext context) {
 		final ArrayList<IdentifierGeneratorResolution.Part> parts = new ArrayList<>();
@@ -47,24 +47,25 @@ final class IdentifierGeneratorResolutionResolver {
 	}
 
 	private static void resolveAttribute(
-			EntityHierarchy hierarchy,
-			AttributeMetadata attribute,
+			EntityHierarchyImpl hierarchy,
+			AttributeMetadataImplementor attribute,
 			CategorizationContext context,
 			ArrayList<IdentifierGeneratorResolution.Part> parts) {
 		final IdentifierGeneratorResolution.Part part = resolvePart( hierarchy, attribute, context );
 		if ( part != null ) {
 			parts.add( part );
 		}
-		if ( attribute instanceof EmbeddedAttributeMetadata embeddedAttribute ) {
-			for ( AttributeMetadata nestedAttribute : embeddedAttribute.getEmbeddableUsage().attributes() ) {
+		if ( attribute instanceof EmbeddedAttributeMetadataImpl embeddedAttribute ) {
+			for ( AttributeMetadataImplementor nestedAttribute :
+					embeddedAttribute.getValue().getEmbeddableUsage().attributes() ) {
 				resolveAttribute( hierarchy, nestedAttribute, context, parts );
 			}
 		}
 	}
 
 	private static IdentifierGeneratorResolution.Part resolvePart(
-			EntityHierarchy hierarchy,
-			AttributeMetadata attribute,
+			EntityHierarchyImpl hierarchy,
+			AttributeMetadataImplementor attribute,
 			CategorizationContext context) {
 		final MemberDetails member = attribute.getMember();
 		final Annotation generatorAnnotation = findGeneratorAnnotation( hierarchy, member, context );
@@ -130,8 +131,8 @@ final class IdentifierGeneratorResolutionResolver {
 	}
 
 	private static IdentifierGeneratorResolution.Part resolveAuto(
-			EntityHierarchy hierarchy,
-			AttributeMetadata attribute,
+			EntityHierarchyImpl hierarchy,
+			AttributeMetadataImplementor attribute,
 			MemberDetails member,
 			GeneratedValue generatedValue,
 			CategorizationContext context) {
@@ -204,8 +205,8 @@ final class IdentifierGeneratorResolutionResolver {
 	}
 
 	private static IdentifierGeneratorResolution.Part resolveSequence(
-			EntityHierarchy hierarchy,
-			AttributeMetadata attribute,
+			EntityHierarchyImpl hierarchy,
+			AttributeMetadataImplementor attribute,
 			MemberDetails member,
 			GeneratedValue generatedValue,
 			CategorizationContext context) {
@@ -236,8 +237,8 @@ final class IdentifierGeneratorResolutionResolver {
 	}
 
 	private static IdentifierGeneratorResolution.Part resolveTable(
-			EntityHierarchy hierarchy,
-			AttributeMetadata attribute,
+			EntityHierarchyImpl hierarchy,
+			AttributeMetadataImplementor attribute,
 			MemberDetails member,
 			GeneratedValue generatedValue,
 			CategorizationContext context) {
@@ -288,8 +289,8 @@ final class IdentifierGeneratorResolutionResolver {
 	}
 
 	private static IdentifierGeneratorResolution.Part uuid(
-			EntityHierarchy hierarchy,
-			AttributeMetadata attribute,
+			EntityHierarchyImpl hierarchy,
+			AttributeMetadataImplementor attribute,
 			MemberDetails member,
 			CategorizationContext context) {
 		final UuidGenerator configuration = GeneratorAnnotationHelper.findLocalizedMatch(
@@ -313,20 +314,20 @@ final class IdentifierGeneratorResolutionResolver {
 	}
 
 	private static IdentifierGeneratorResolution.Part registered(
-			AttributeMetadata attribute,
+			AttributeMetadataImplementor attribute,
 			IdentifierGeneratorRegistration registration,
 			Annotation configuration) {
 		return IdentifierGeneratorResolution.Part.generator( attribute, registration, configuration );
 	}
 
-	private static String registrationName(EntityHierarchy hierarchy, GeneratedValue generatedValue) {
+	private static String registrationName(EntityHierarchyImpl hierarchy, GeneratedValue generatedValue) {
 		return generatedValue.generator().isBlank()
 				? hierarchy.getRoot().getJpaEntityName()
 				: generatedValue.generator();
 	}
 
 	private static Annotation findGeneratorAnnotation(
-			EntityHierarchy hierarchy,
+			EntityHierarchyImpl hierarchy,
 			MemberDetails member,
 			CategorizationContext context) {
 		Annotation match = findGeneratorAnnotation( member, context );

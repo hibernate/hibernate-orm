@@ -21,9 +21,9 @@ import org.hibernate.boot.mapping.internal.model.CollectionValueIntent;
 import org.hibernate.boot.mapping.internal.context.BindingContext;
 import org.hibernate.boot.mapping.internal.context.BindingOptions;
 import org.hibernate.boot.mapping.internal.context.BindingState;
-import org.hibernate.boot.mapping.internal.categorize.AttributeMetadata;
-import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadata;
-import org.hibernate.boot.mapping.internal.categorize.IdentifiableTypeMetadata;
+import org.hibernate.boot.mapping.internal.categorize.AttributeMetadataImplementor;
+import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadataImpl;
+import org.hibernate.boot.mapping.internal.categorize.AbstractIdentifiableTypeMetadata;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.IdentifierCollection;
@@ -63,9 +63,9 @@ import jakarta.persistence.UniqueConstraint;
 /// @since 9.0
 /// @author Steve Ebersole
 class PluralAssociationAttributeBinder {
-	private final IdentifiableTypeMetadata ownerType;
+	private final AbstractIdentifiableTypeMetadata ownerType;
 	private final PersistentClass ownerBinding;
-	private final AttributeMetadata attributeMetadata;
+	private final AttributeMetadataImplementor attributeMetadata;
 	private final ModelBinders modelBinders;
 	private final BindingOptions bindingOptions;
 	private final BindingState bindingState;
@@ -76,9 +76,9 @@ class PluralAssociationAttributeBinder {
 	private final boolean registerCollectionBindings;
 
 	PluralAssociationAttributeBinder(
-			IdentifiableTypeMetadata ownerType,
+			AbstractIdentifiableTypeMetadata ownerType,
 			PersistentClass ownerBinding,
-			AttributeMetadata attributeMetadata,
+			AttributeMetadataImplementor attributeMetadata,
 			ModelBinders modelBinders,
 			BindingOptions bindingOptions,
 			BindingState bindingState,
@@ -99,9 +99,9 @@ class PluralAssociationAttributeBinder {
 	}
 
 	PluralAssociationAttributeBinder(
-			IdentifiableTypeMetadata ownerType,
+			AbstractIdentifiableTypeMetadata ownerType,
 			PersistentClass ownerBinding,
-			AttributeMetadata attributeMetadata,
+			AttributeMetadataImplementor attributeMetadata,
 			ModelBinders modelBinders,
 			BindingOptions bindingOptions,
 			BindingState bindingState,
@@ -123,9 +123,9 @@ class PluralAssociationAttributeBinder {
 	}
 
 	PluralAssociationAttributeBinder(
-			IdentifiableTypeMetadata ownerType,
+			AbstractIdentifiableTypeMetadata ownerType,
 			PersistentClass ownerBinding,
-			AttributeMetadata attributeMetadata,
+			AttributeMetadataImplementor attributeMetadata,
 			ModelBinders modelBinders,
 			BindingOptions bindingOptions,
 			BindingState bindingState,
@@ -148,9 +148,9 @@ class PluralAssociationAttributeBinder {
 	}
 
 	PluralAssociationAttributeBinder(
-			IdentifiableTypeMetadata ownerType,
+			AbstractIdentifiableTypeMetadata ownerType,
 			PersistentClass ownerBinding,
-			AttributeMetadata attributeMetadata,
+			AttributeMetadataImplementor attributeMetadata,
 			ModelBinders modelBinders,
 			BindingOptions bindingOptions,
 			BindingState bindingState,
@@ -174,9 +174,9 @@ class PluralAssociationAttributeBinder {
 	}
 
 	PluralAssociationAttributeBinder(
-			IdentifiableTypeMetadata ownerType,
+			AbstractIdentifiableTypeMetadata ownerType,
 			PersistentClass ownerBinding,
-			AttributeMetadata attributeMetadata,
+			AttributeMetadataImplementor attributeMetadata,
 			ModelBinders modelBinders,
 			BindingOptions bindingOptions,
 			BindingState bindingState,
@@ -1141,8 +1141,8 @@ class PluralAssociationAttributeBinder {
 		return targetTypeBinder;
 	}
 
-	private EntityTypeMetadata resolveOwnerEntityType() {
-		if ( ownerType instanceof EntityTypeMetadata entityType ) {
+	private EntityTypeMetadataImpl resolveOwnerEntityType() {
+		if ( ownerType instanceof EntityTypeMetadataImpl entityType ) {
 			return entityType;
 		}
 		return ownerType.getHierarchy().getRoot();
@@ -1151,7 +1151,7 @@ class PluralAssociationAttributeBinder {
 	private record TargetEntityBinding(
 			String entityName,
 			EntityTypeBinder typeBinder,
-			EntityTypeMetadata entityType,
+			EntityTypeMetadataImpl entityType,
 			Table primaryTable,
 			IdentifierBinding entityIdentifierBinding,
 			List<org.hibernate.mapping.Column> identifierColumns) {

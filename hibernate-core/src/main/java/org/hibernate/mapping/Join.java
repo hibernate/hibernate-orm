@@ -1,5 +1,6 @@
 package org.hibernate.mapping;
 
+import org.hibernate.boot.mapping.spi.MappingRole;
 import org.hibernate.MappingException;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.sql.Alias;

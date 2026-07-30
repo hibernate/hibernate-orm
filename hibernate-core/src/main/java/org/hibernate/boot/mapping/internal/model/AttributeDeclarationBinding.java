@@ -4,7 +4,7 @@ import jakarta.persistence.AccessType;
 
 import org.hibernate.boot.models.AttributeNature;
 import org.hibernate.models.spi.MemberDetails;
-import org.hibernate.mapping.DeclarationRole;
+import org.hibernate.boot.mapping.spi.DeclarationRole;
 
 /// Binding-model contract for the source-side declaration of an attribute.
 ///
@@ -25,7 +25,7 @@ import org.hibernate.mapping.DeclarationRole;
 ///
 /// @since 9.0
 /// @author Steve Ebersole
-public interface AttributeDeclarationBinding {
+public interface AttributeDeclarationBinding extends org.hibernate.boot.mapping.spi.AttributeDeclaration {
 	/// Stable identity of this source declaration.
 	default DeclarationRole declarationRole() {
 		return new DeclarationRole(

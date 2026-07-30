@@ -21,7 +21,7 @@ import org.hibernate.boot.mapping.internal.sources.ComponentSource;
 import org.hibernate.boot.mapping.internal.context.BindingContext;
 import org.hibernate.boot.mapping.internal.context.BindingOptions;
 import org.hibernate.boot.mapping.internal.context.BindingState;
-import org.hibernate.boot.mapping.internal.categorize.IdentifiableTypeMetadata;
+import org.hibernate.boot.mapping.internal.categorize.AbstractIdentifiableTypeMetadata;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.CheckConstraint;
 import org.hibernate.mapping.Column;
@@ -37,7 +37,7 @@ import org.hibernate.mapping.Value;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.TypeDetails;
 import org.hibernate.models.ModelsException;
-import org.hibernate.mapping.MappingRole;
+import org.hibernate.boot.mapping.spi.MappingRole;
 import org.hibernate.usertype.CompositeUserType;
 
 import jakarta.persistence.MapKey;
@@ -136,7 +136,7 @@ class CollectionIndexBinder {
 	}
 
 	static void bindMapKey(
-			IdentifiableTypeMetadata ownerType,
+			AbstractIdentifiableTypeMetadata ownerType,
 			PersistentClass ownerBinding,
 			CollectionSource source,
 			org.hibernate.mapping.Map collection,
@@ -161,7 +161,7 @@ class CollectionIndexBinder {
 	}
 
 	static void bindMapKey(
-			IdentifiableTypeMetadata ownerType,
+			AbstractIdentifiableTypeMetadata ownerType,
 			PersistentClass ownerBinding,
 			CollectionSource source,
 			org.hibernate.mapping.Map collection,
@@ -187,7 +187,7 @@ class CollectionIndexBinder {
 	}
 
 	static void bindMapKey(
-			IdentifiableTypeMetadata ownerType,
+			AbstractIdentifiableTypeMetadata ownerType,
 			PersistentClass ownerBinding,
 			CollectionSource source,
 			org.hibernate.mapping.Map collection,
@@ -213,7 +213,7 @@ class CollectionIndexBinder {
 	}
 
 	static void bindMapKey(
-			IdentifiableTypeMetadata ownerType,
+			AbstractIdentifiableTypeMetadata ownerType,
 			PersistentClass ownerBinding,
 			CollectionSource source,
 			org.hibernate.mapping.Map collection,
@@ -345,7 +345,7 @@ class CollectionIndexBinder {
 	}
 
 	private static void bindComponentMapKey(
-			IdentifiableTypeMetadata ownerType,
+			AbstractIdentifiableTypeMetadata ownerType,
 			PersistentClass ownerBinding,
 			CollectionSource collectionSource,
 			org.hibernate.mapping.Map collection,

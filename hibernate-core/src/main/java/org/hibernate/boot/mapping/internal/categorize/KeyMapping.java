@@ -20,5 +20,5 @@ public interface KeyMapping {
 	void forEachAttribute(AttributeConsumer consumer);
 
 	/// Whether the given attribute participates in this key.
-	boolean contains(AttributeMetadata attributeMetadata);
+	boolean contains(AttributeMetadataImplementor attributeMetadata);
 }

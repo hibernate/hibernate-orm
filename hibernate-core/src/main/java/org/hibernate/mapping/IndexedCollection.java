@@ -1,5 +1,6 @@
 package org.hibernate.mapping;
 
+import org.hibernate.boot.mapping.spi.MappingRole;
 import java.util.function.Supplier;
 
 import org.hibernate.MappingException;

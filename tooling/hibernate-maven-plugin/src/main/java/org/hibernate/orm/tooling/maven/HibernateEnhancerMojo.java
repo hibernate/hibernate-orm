@@ -25,6 +25,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -36,7 +37,9 @@ import java.util.Set;
 		requiresDependencyResolution = ResolutionScope.COMPILE)
 public class HibernateEnhancerMojo extends AbstractMojo {
 
-	final private List<File> sourceSet = new ArrayList<File>();
+	record SourceEntry(File baseDir, File classFile) {}
+
+	final private List<SourceEntry> sourceSet = new ArrayList<>();
 	private Enhancer enhancer;
 
 	/**
@@ -156,7 +159,7 @@ public class HibernateEnhancerMojo extends AbstractMojo {
 		for (String fileName : fileSetManager.getIncludedFiles(fileSet)) {
 			File candidateFile = new File(baseDir, fileName);
 			if (fileName.endsWith(".class")) {
-				sourceSet.add(candidateFile);
+				sourceSet.add(new SourceEntry(baseDir, candidateFile));
 				getLog().info(ADDED_FILE_TO_SOURCE_SET.formatted(candidateFile));
 			}
 			else {
@@ -222,17 +225,17 @@ public class HibernateEnhancerMojo extends AbstractMojo {
 
 	private void discoverTypes() throws MojoExecutionException {
 		getLog().debug(STARTING_TYPE_DISCOVERY) ;
-		for (File classFile : sourceSet) {
-			discoverTypesForClass(classFile);
+		for (SourceEntry entry : sourceSet) {
+			discoverTypesForClass(entry.baseDir(), entry.classFile());
 		}
 		getLog().debug(ENDING_TYPE_DISCOVERY) ;
 	}
 
-	private void discoverTypesForClass(File classFile) throws MojoExecutionException {
+	private void discoverTypesForClass(File baseDir, File classFile) throws MojoExecutionException {
 		getLog().debug(TRYING_TO_DISCOVER_TYPES_FOR_CLASS_FILE.formatted(classFile));
 		try {
 			enhancer.discoverTypes(
-					determineClassName(classFile),
+					determineClassName(baseDir, classFile),
 					Files.readAllBytes(classFile.toPath()));
 			getLog().info(SUCCESSFULLY_DISCOVERED_TYPES_FOR_CLASS_FILE.formatted(classFile));
 		}
@@ -241,22 +244,24 @@ public class HibernateEnhancerMojo extends AbstractMojo {
 		}
 	}
 
-	private String determineClassName(File classFile) {
+	private String determineClassName(File baseDir, File classFile) {
 		getLog().debug(DETERMINE_CLASS_NAME_FOR_FILE.formatted(classFile));
-		String classFilePath = classFile.getAbsolutePath();
-		String classesDirectoryPath = classesDirectory.getAbsolutePath();
-		return classFilePath.substring(
-						classesDirectoryPath.length() + 1,
-						classFilePath.length() - ".class".length())
-				.replace(File.separatorChar, '.');
+		final Path relativeClassPath = baseDir.toPath().relativize(classFile.toPath());
+		final String relativeClassPathString = relativeClassPath.toString();
+		final String classNameBase = relativeClassPathString.substring(
+				0,
+				relativeClassPathString.length() - ".class".length()
+		);
+		return classNameBase.replace(File.separatorChar, '.');
 	}
 
 	private void performEnhancement() throws MojoExecutionException {
 		getLog().debug(STARTING_CLASS_ENHANCEMENT) ;
 		boolean success = true;
-		for (File classFile : sourceSet) {
+		for (SourceEntry entry : sourceSet) {
+			var classFile = entry.classFile();
 			long lastModified = classFile.lastModified();
-			success = enhanceClass(classFile) & success;
+			success = enhanceClass(entry.baseDir(), classFile) & success;
 			final boolean timestampReset = classFile.setLastModified( lastModified );
 			if ( !timestampReset ) {
 				getLog().debug(SETTING_LASTMODIFIED_FAILED_FOR_CLASS_FILE.formatted(classFile));
@@ -268,11 +273,11 @@ public class HibernateEnhancerMojo extends AbstractMojo {
 		getLog().debug(ENDING_CLASS_ENHANCEMENT) ;
 	}
 
-	private boolean enhanceClass(File classFile) throws MojoExecutionException {
+	private boolean enhanceClass(File baseDir, File classFile) throws MojoExecutionException {
 		getLog().debug(TRYING_TO_ENHANCE_CLASS_FILE.formatted(classFile));
 		try {
 			byte[] newBytes = enhancer.enhance(
-					determineClassName(classFile),
+					determineClassName(baseDir, classFile),
 					Files.readAllBytes(classFile.toPath()));
 			if (newBytes != null) {
 				writeByteCodeToFile(newBytes, classFile);

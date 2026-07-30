@@ -4,11 +4,14 @@
  */
 package org.hibernate.boot.model.source.spi;
 
+import org.hibernate.Remove;
+
 /**
  * Additional contract for things which describe foreign keys.
  *
  * @author Steve Ebersole
  */
+@Remove
 public interface ForeignKeyContributingSource {
 	/**
 	 * Retrieve the name of the foreign key as supplied by the user, or {@code null} if the user supplied none.

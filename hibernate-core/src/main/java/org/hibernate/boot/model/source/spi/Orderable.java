@@ -4,11 +4,14 @@
  */
 package org.hibernate.boot.model.source.spi;
 
+import org.hibernate.Remove;
+
 /**
  * Contact to define if a plural attribute source is orderable or not.
  *
  * @author Steve Ebersole
  */
+@Remove
 public interface Orderable {
 	/**
 	 * If the source of plural attribute is supposed to be applied the {@code ORDER BY} when loading.

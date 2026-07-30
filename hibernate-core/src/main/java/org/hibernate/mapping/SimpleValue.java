@@ -18,6 +18,7 @@ import jakarta.annotation.Nonnull;
 import org.hibernate.AssertionFailure;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
+import org.hibernate.Remove;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.type.TimeZoneStorageStrategy;
 import org.hibernate.annotations.OnDeleteAction;
@@ -152,6 +153,7 @@ public abstract class SimpleValue implements KeyValue {
 	}
 
 	@Override
+	@Remove
 	public MetadataBuildingContext getBuildingContext() {
 		return buildingContext;
 	}
@@ -160,6 +162,7 @@ public abstract class SimpleValue implements KeyValue {
 		return getBuildingContext().getBootstrapContext();
 	}
 
+	@Remove
 	public MetadataImplementor getMetadata() {
 		return metadata;
 	}
@@ -169,11 +172,13 @@ public abstract class SimpleValue implements KeyValue {
 	}
 
 	@Override
+	@Remove
 	public ServiceRegistry getServiceRegistry() {
 		return getMetadata().getMetadataBuildingOptions().getServiceRegistry();
 	}
 
 	@Nonnull
+	@Remove
 	public TypeConfiguration getTypeConfiguration() {
 		return getBootstrapContext().getTypeConfiguration();
 	}
@@ -420,6 +425,7 @@ public abstract class SimpleValue implements KeyValue {
 	}
 
 	@Override
+	@Remove
 	public Generator createGenerator(
 			Dialect dialect,
 			RootClass rootClass,

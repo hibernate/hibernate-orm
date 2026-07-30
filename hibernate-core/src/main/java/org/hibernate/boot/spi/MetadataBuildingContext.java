@@ -118,27 +118,33 @@ public interface MetadataBuildingContext {
 		return isPreferLocaleLanguageTagEnabled( getRegistry() );
 	}
 
+	@Remove
 	static boolean isPreferJavaTimeJdbcTypesEnabled(ServiceRegistry serviceRegistry) {
 		return isPreferJavaTimeJdbcTypesEnabled( serviceRegistry.requireService( ConfigurationService.class ) );
 	}
 
+	@Remove
 	static boolean isPreferNativeEnumTypesEnabled(ServiceRegistry serviceRegistry) {
 		return isPreferNativeEnumTypesEnabled( serviceRegistry.requireService( ConfigurationService.class ) );
 	}
 
+	@Remove
 	static boolean isPreferLocaleLanguageTagEnabled(ServiceRegistry serviceRegistry) {
 		return isPreferLocaleLanguageTagEnabled( serviceRegistry.requireService( ConfigurationService.class ) );
 	}
 
+	@Remove
 	static boolean isPreferJavaTimeJdbcTypesEnabled(ConfigurationService configurationService) {
 		return getBoolean( JAVA_TIME_USE_DIRECT_JDBC, configurationService.getSettings() );
 	}
 
+	@Remove
 	static boolean isPreferNativeEnumTypesEnabled(ConfigurationService configurationService) {
 		//TODO: HHH-17905 proposes to switch this default to true
 		return getBoolean( PREFER_NATIVE_ENUM_TYPES, configurationService.getSettings() );
 	}
 
+	@Remove
 	static boolean isPreferLocaleLanguageTagEnabled(ConfigurationService configurationService) {
 		return getBoolean( PREFER_LOCALE_LANGUAGE_TAG, configurationService.getSettings() );
 	}

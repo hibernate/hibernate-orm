@@ -4,11 +4,14 @@
  */
 package org.hibernate.boot.model.source.spi;
 
+import org.hibernate.Remove;
+
 /**
  * Contract describing source of "table specification" information.
  *
  * @author Steve Ebersole
  */
+@Remove
 public interface TableSpecificationSource {
 	/**
 	 * Obtain the supplied schema name

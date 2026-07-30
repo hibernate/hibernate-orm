@@ -7,6 +7,7 @@ package org.hibernate.jpa.boot.spi;
 import jakarta.persistence.EntityManagerFactory;
 import javax.sql.DataSource;
 
+import org.hibernate.Remove;
 import org.hibernate.boot.model.process.spi.ManagedResources;
 import org.hibernate.boot.spi.MetadataImplementor;
 
@@ -24,6 +25,7 @@ import org.hibernate.boot.spi.MetadataImplementor;
  * @author Steve Ebersole
  * @author Scott Marlow
  */
+@Remove
 public interface EntityManagerFactoryBuilder {
 	ManagedResources getManagedResources();
 

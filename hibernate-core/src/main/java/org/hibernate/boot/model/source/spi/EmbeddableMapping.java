@@ -4,6 +4,8 @@
  */
 package org.hibernate.boot.model.source.spi;
 
+import org.hibernate.Remove;
+
 import java.util.List;
 
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmTuplizerType;
@@ -13,6 +15,7 @@ import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmTuplizerType;
  *
  * @author Steve Ebersole
  */
+@Remove
 public interface EmbeddableMapping {
 	String getClazz();
 	List<JaxbHbmTuplizerType> getTuplizer();

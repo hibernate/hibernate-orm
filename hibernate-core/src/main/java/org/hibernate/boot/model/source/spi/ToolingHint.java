@@ -4,11 +4,14 @@
  */
 package org.hibernate.boot.model.source.spi;
 
+import org.hibernate.Remove;
+
 import org.hibernate.mapping.MetaAttribute;
 
 /**
  * @author Steve Ebersole
  */
+@Remove
 public class ToolingHint {
 	private final String name;
 	private final boolean inheritable;

@@ -4,6 +4,8 @@
  */
 package org.hibernate.boot.model.source.spi;
 
+import org.hibernate.Remove;
+
 import java.util.List;
 
 import org.hibernate.boot.model.CustomSql;
@@ -12,6 +14,7 @@ import org.hibernate.engine.FetchStyle;
 /**
  * @author Steve Ebersole
  */
+@Remove
 public interface SecondaryTableSource extends ForeignKeyContributingSource {
 	/**
 	 * Obtain the table being joined to.

@@ -5,6 +5,7 @@
 package org.hibernate.metamodel.spi;
 
 import org.hibernate.action.queue.spi.PlanningOptions;
+import org.hibernate.Remove;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataImplementor;
@@ -27,8 +28,10 @@ import java.util.Map;
  * @author Steve Ebersole
  */
 public interface RuntimeModelCreationContext {
+	@Remove
 	SessionFactoryImplementor getSessionFactory();
 
+	@Remove
 	BootstrapContext getBootstrapContext();
 
 	MetadataImplementor getBootModel();

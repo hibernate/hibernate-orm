@@ -4,6 +4,8 @@
  */
 package org.hibernate.boot.model.source.spi;
 
+import org.hibernate.Remove;
+
 import java.util.Objects;
 
 /**
@@ -22,6 +24,7 @@ import java.util.Objects;
  *
  * @author Steve Ebersole
  */
+@Remove
 public class JdbcDataType {
 	private final int typeCode;
 	private final String typeName;

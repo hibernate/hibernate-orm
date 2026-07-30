@@ -4,12 +4,15 @@
  */
 package org.hibernate.boot.model.source.spi;
 
+import org.hibernate.Remove;
+
 /**
  * Describes the nature of plural attribute elements in terms of relational implications.
  *
  * @author Steve Ebersole
  * @author Gail Badner
  */
+@Remove
 public enum PluralAttributeElementNature {
 	/**
 	 * The collection elements are basic, simple values.

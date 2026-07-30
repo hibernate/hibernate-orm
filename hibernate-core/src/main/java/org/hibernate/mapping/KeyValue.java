@@ -5,6 +5,7 @@
 package org.hibernate.mapping;
 
 import org.hibernate.Incubating;
+import org.hibernate.Remove;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.generator.Generator;
 
@@ -20,8 +21,10 @@ import java.util.List;
  */
 public interface KeyValue extends Value {
 
+	@Remove
 	ForeignKey createForeignKeyOfEntity(String entityName, List<Column> referencedColumns);
 
+	@Remove
 	ForeignKey createForeignKeyOfEntity(String entityName);
 
 	boolean isCascadeDeleteEnabled();
@@ -35,5 +38,6 @@ public interface KeyValue extends Value {
 	boolean isUpdateable();
 
 	@Incubating
+	@Remove
 	Generator createGenerator(Dialect dialect, RootClass rootClass, Property property, GeneratorSettings defaults);
 }

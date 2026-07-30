@@ -4,6 +4,8 @@
  */
 package org.hibernate.boot.model.source.spi;
 
+import org.hibernate.Remove;
+
 import java.util.Set;
 
 /**
@@ -15,6 +17,7 @@ import java.util.Set;
  *
  * @author Steve Ebersole
  */
+@Remove
 public interface ColumnSource extends RelationalValueSource {
 	/**
 	 * Obtain the name of the column.

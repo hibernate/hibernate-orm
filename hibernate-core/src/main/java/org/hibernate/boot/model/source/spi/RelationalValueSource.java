@@ -4,6 +4,8 @@
  */
 package org.hibernate.boot.model.source.spi;
 
+import org.hibernate.Remove;
+
 /**
  * Unifying interface for {@link ColumnSource} and {@link DerivedValueSource}.
  *
@@ -12,6 +14,7 @@ package org.hibernate.boot.model.source.spi;
  * @see ColumnSource
  * @see DerivedValueSource
  */
+@Remove
 public interface RelationalValueSource {
 	/**
 	 * @return returns the name of the table that contains this value.

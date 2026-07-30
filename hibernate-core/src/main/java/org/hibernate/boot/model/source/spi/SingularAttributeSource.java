@@ -4,6 +4,8 @@
  */
 package org.hibernate.boot.model.source.spi;
 
+import org.hibernate.Remove;
+
 import org.hibernate.boot.jaxb.mapping.GenerationTiming;
 
 /**
@@ -11,6 +13,7 @@ import org.hibernate.boot.jaxb.mapping.GenerationTiming;
  *
  * @author Steve Ebersole
  */
+@Remove
 public interface SingularAttributeSource extends AttributeSource {
 	/**
 	 * Determine whether this is a virtual attribute or whether it physically exists on the users domain model.

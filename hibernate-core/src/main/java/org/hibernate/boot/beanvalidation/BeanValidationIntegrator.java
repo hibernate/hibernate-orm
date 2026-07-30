@@ -190,11 +190,6 @@ public class BeanValidationIntegrator implements Integrator {
 		}
 	}
 
-	@Override
-	public void disintegrate(SessionFactoryImplementor sessionFactory, SessionFactoryServiceRegistry serviceRegistry) {
-		// nothing to do here afaik
-	}
-
 	private record ActivationContextImpl(
 			Set<ValidationMode> modes,
 			ValidationConstraintDdlInfluence constraintInfluence,

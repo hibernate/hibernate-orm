@@ -5,6 +5,7 @@
 package org.hibernate.engine.spi;
 
 import jakarta.annotation.Nonnull;
+import org.hibernate.Remove;
 import org.hibernate.cache.internal.DisabledCaching;
 import org.hibernate.cache.internal.EnabledCaching;
 import org.hibernate.cache.internal.NoCachingRegionFactory;
@@ -19,6 +20,7 @@ import org.hibernate.service.spi.SessionFactoryServiceInitiatorContext;
  * @author Steve Ebersole
  * @author Strong Liu
  */
+@Remove
 public class CacheInitiator implements SessionFactoryServiceInitiator<CacheImplementor> {
 	public static final CacheInitiator INSTANCE = new CacheInitiator();
 

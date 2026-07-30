@@ -4,12 +4,15 @@
  */
 package org.hibernate.boot.model.source.spi;
 
+import org.hibernate.Remove;
+
 /**
  * Describes the source for the elements of persistent collections (plural
  * attributes) where the elements are many-to-many association
  *
  * @author Steve Ebersole
  */
+@Remove
 public interface PluralAttributeElementSourceManyToMany
 		extends PluralAttributeElementSourceAssociation, RelationalValueSourceContainer,
 				ForeignKeyContributingSource, Orderable {

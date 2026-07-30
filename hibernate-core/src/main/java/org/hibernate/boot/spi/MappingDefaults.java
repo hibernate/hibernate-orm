@@ -4,6 +4,7 @@
  */
 package org.hibernate.boot.spi;
 
+import org.hibernate.Remove;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.metamodel.CollectionClassification;
 
@@ -19,6 +20,7 @@ import org.hibernate.metamodel.CollectionClassification;
  *
  * @since 5.0
  */
+@Remove
 public interface MappingDefaults {
 	String DEFAULT_IDENTIFIER_COLUMN_NAME = "id";
 	String DEFAULT_TENANT_IDENTIFIER_COLUMN_NAME = "tenant_id";

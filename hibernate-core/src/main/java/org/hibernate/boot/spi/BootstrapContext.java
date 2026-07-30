@@ -160,6 +160,7 @@ public interface BootstrapContext {
 	 * @deprecated Set via the {@code hibernate-models} setting {@code hibernate.models.jandex.index} instead
 	 */
 	@Deprecated
+	@Remove
 	Object getJandexView();
 
 	/**

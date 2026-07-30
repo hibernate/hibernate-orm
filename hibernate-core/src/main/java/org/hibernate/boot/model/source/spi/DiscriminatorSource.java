@@ -4,6 +4,8 @@
  */
 package org.hibernate.boot.model.source.spi;
 
+import org.hibernate.Remove;
+
 import org.hibernate.boot.model.naming.ImplicitDiscriminatorColumnNameSource;
 
 /**
@@ -12,6 +14,7 @@ import org.hibernate.boot.model.naming.ImplicitDiscriminatorColumnNameSource;
  * @author Hardy Ferentschik
  * @author Steve Ebersole
  */
+@Remove
 public interface DiscriminatorSource extends ImplicitDiscriminatorColumnNameSource {
 	/**
 	 * Obtain the column/formula information about the discriminator.

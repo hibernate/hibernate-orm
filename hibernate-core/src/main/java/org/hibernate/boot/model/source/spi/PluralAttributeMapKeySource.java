@@ -4,6 +4,8 @@
  */
 package org.hibernate.boot.model.source.spi;
 
+import org.hibernate.Remove;
+
 /**
  * Describes source information about the key of a persistent map.
  *
@@ -12,6 +14,7 @@ package org.hibernate.boot.model.source.spi;
  * @see PluralAttributeMapKeyManyToManySource
  * @see PluralAttributeMapKeyManyToAnySource
  */
+@Remove
 public interface PluralAttributeMapKeySource extends PluralAttributeIndexSource {
 	enum Nature {
 		BASIC,

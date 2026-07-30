@@ -4,6 +4,7 @@
  */
 package org.hibernate.cfg;
 
+import org.hibernate.Remove;
 import org.hibernate.jpa.LegacySpecHints;
 import org.hibernate.jpa.SpecHints;
 
@@ -75,9 +76,16 @@ public interface AvailableSettings
 	// Hibernate settings
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+	@Remove
 	String CFG_XML_FILE = "hibernate.cfg_xml_file";
+
+	@Remove
 	String ORM_XML_FILES = "hibernate.orm_xml_files";
+
+	@Remove
 	String HBM_XML_FILES = "hibernate.hbm_xml_files";
+
+	@Remove
 	String LOADED_CLASSES = "hibernate.loaded_classes";
 
 	/**

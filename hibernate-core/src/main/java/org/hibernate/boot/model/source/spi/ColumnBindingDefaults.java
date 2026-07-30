@@ -4,9 +4,12 @@
  */
 package org.hibernate.boot.model.source.spi;
 
+import org.hibernate.Remove;
+
 /**
  * @author Steve Ebersole
  */
+@Remove
 public interface ColumnBindingDefaults {
 	/**
 	 * How should non-specification of value insertion by the individual value sources here be

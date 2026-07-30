@@ -13,10 +13,11 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.internal.entities.PropertyData;
 import org.hibernate.envers.tools.Pair;
-import org.hibernate.property.access.spi.Getter;
+import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
 import org.hibernate.property.access.spi.PropertyAccessStrategyResolver;
 import org.hibernate.property.access.spi.PropertyAccessorService;
+import org.hibernate.property.access.spi.PropertyValueAccessor;
 import org.hibernate.property.access.spi.Setter;
 import org.hibernate.service.ServiceRegistry;
 
@@ -26,12 +27,7 @@ import org.hibernate.service.ServiceRegistry;
  * @author Chris Cranford
  */
 public abstract class ReflectionTools {
-	private static final Map<Pair<Class, String>, Getter> GETTER_CACHE = new ConcurrentReferenceHashMap<>(
-			10,
-			ConcurrentReferenceHashMap.ReferenceType.SOFT,
-			ConcurrentReferenceHashMap.ReferenceType.SOFT
-	);
-	private static final Map<Pair<Class, String>, Setter> SETTER_CACHE = new ConcurrentReferenceHashMap<>(
+	private static final Map<Pair<Class, String>, PropertyAccess> GETTER_CACHE = new ConcurrentReferenceHashMap<>(
 			10,
 			ConcurrentReferenceHashMap.ReferenceType.SOFT,
 			ConcurrentReferenceHashMap.ReferenceType.SOFT
@@ -42,54 +38,40 @@ public abstract class ReflectionTools {
 				.resolvePropertyAccessStrategy( cls, accessorType, null );
 	}
 
-	public static Getter getGetter(Class cls, PropertyData propertyData, ServiceRegistry serviceRegistry) {
+	public static PropertyValueAccessor getPropertyValueAccessor(Class cls, PropertyData propertyData, ServiceRegistry serviceRegistry) {
 		if ( propertyData.getPropertyAccessStrategy() == null ) {
-			return getGetter( cls, propertyData.getBeanName(), propertyData.getAccessType(), serviceRegistry );
+			return getPropertyValueAccessor( cls, propertyData.getBeanName(), propertyData.getAccessType(), serviceRegistry );
 		}
 		else {
 			final String propertyName = propertyData.getName();
 			final Pair<Class, String> key = Pair.make( cls, propertyName );
-			Getter value = GETTER_CACHE.get( key );
+			PropertyAccess value = GETTER_CACHE.get( key );
 			if ( value == null ) {
 				value = propertyData.getPropertyAccessStrategy().buildPropertyAccess(
 						serviceRegistry.requireService( PropertyAccessorService.class ),
 						cls,
 						propertyData.getBeanName(), false
-				).getGetter();
+				);
 				// It's ok if two getters are generated concurrently
 				GETTER_CACHE.put( key, value );
 			}
-			return value;
+			return value.getPropertyValueAccessor();
 		}
 	}
 
-	public static Getter getGetter(Class cls, String propertyName, String accessorType, ServiceRegistry serviceRegistry) {
+	public static PropertyValueAccessor getPropertyValueAccessor(Class cls, String propertyName, String accessorType, ServiceRegistry serviceRegistry) {
+		return getPropertyAccess(cls, propertyName, accessorType, serviceRegistry ).getPropertyValueAccessor();
+	}
+
+	private static PropertyAccess getPropertyAccess(Class cls, String propertyName, String accessorType, ServiceRegistry serviceRegistry) {
 		final Pair<Class, String> key = Pair.make( cls, propertyName );
-		Getter value = GETTER_CACHE.get( key );
+		PropertyAccess value = GETTER_CACHE.get( key );
 		if ( value == null ) {
 			value = getAccessStrategy( cls, serviceRegistry, accessorType ).buildPropertyAccess(
 					serviceRegistry.requireService( PropertyAccessorService.class ),
-					cls, propertyName, true ).getGetter();
+					cls, propertyName, true );
 			// It's ok if two getters are generated concurrently
 			GETTER_CACHE.put( key, value );
-		}
-
-		return value;
-	}
-
-	public static Setter getSetter(Class cls, PropertyData propertyData, ServiceRegistry serviceRegistry) {
-		return getSetter( cls, propertyData.getBeanName(), propertyData.getAccessType(), serviceRegistry );
-	}
-
-	public static Setter getSetter(Class cls, String propertyName, String accessorType, ServiceRegistry serviceRegistry) {
-		final Pair<Class, String> key = Pair.make( cls, propertyName );
-		Setter value = SETTER_CACHE.get( key );
-		if ( value == null ) {
-			value = getAccessStrategy( cls, serviceRegistry, accessorType ).buildPropertyAccess(
-					serviceRegistry.requireService( PropertyAccessorService.class ),
-					cls, propertyName, true ).getSetter();
-			// It's ok if two setters are generated concurrently
-			SETTER_CACHE.put( key, value );
 		}
 
 		return value;
@@ -100,7 +82,7 @@ public abstract class ReflectionTools {
 		Class<?> clazz = cls;
 		while ( clazz != null && field == null ) {
 			try {
-				field = clazz.getDeclaredField( propertyData.getName() );
+				field = clazz.getDeclaredField( propertyData.getBeanName() );
 			}
 			catch ( Exception e ) {
 				// ignore
@@ -111,14 +93,14 @@ public abstract class ReflectionTools {
 	}
 
 	public static Class<?> getType(Class cls, PropertyData propertyData, ServiceRegistry serviceRegistry) {
-		final Setter setter = getSetter( cls, propertyData, serviceRegistry );
+		PropertyAccess propertyAccess = getPropertyAccess( cls, propertyData.getBeanName(), propertyData.getAccessType(), serviceRegistry );
+		if ( propertyAccess.getGetter().getMember() instanceof Field field ) {
+			return field.getType();
+		}
+		final Setter setter = propertyAccess.getSetter();
+
 		if ( setter.getMethod() != null && setter.getMethod().getParameterCount() > 0 ) {
 			return setter.getMethod().getParameterTypes()[0];
-		}
-
-		final Field field = getField( cls, propertyData );
-		if ( field != null ) {
-			return field.getType();
 		}
 
 		throw new AuditException(
@@ -159,7 +141,6 @@ public abstract class ReflectionTools {
 	}
 
 	public static void reset() {
-		SETTER_CACHE.clear();
 		GETTER_CACHE.clear();
 	}
 }

@@ -5,6 +5,7 @@
 package org.hibernate.engine.query.spi;
 
 import jakarta.annotation.Nonnull;
+import org.hibernate.Remove;
 import org.hibernate.engine.query.internal.NativeQueryInterpreterStandardImpl;
 import org.hibernate.service.spi.SessionFactoryServiceInitiator;
 import org.hibernate.service.spi.SessionFactoryServiceInitiatorContext;
@@ -12,6 +13,7 @@ import org.hibernate.service.spi.SessionFactoryServiceInitiatorContext;
 /**
  * @author Steve Ebersole
  */
+@Remove
 public class NativeQueryInterpreterInitiator implements SessionFactoryServiceInitiator<NativeQueryInterpreter> {
 	/**
 	 * Singleton access

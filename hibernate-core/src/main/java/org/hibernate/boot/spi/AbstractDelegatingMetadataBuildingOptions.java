@@ -8,6 +8,7 @@ import java.util.List;
 
 import jakarta.annotation.Nonnull;
 import org.hibernate.HibernateException;
+import org.hibernate.Remove;
 import org.hibernate.type.TimeZoneStorageStrategy;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
@@ -29,6 +30,7 @@ import jakarta.persistence.SharedCacheMode;
  * @author Steve Ebersole
  */
 @SuppressWarnings("unused")
+@Remove
 public abstract class AbstractDelegatingMetadataBuildingOptions implements MetadataBuildingOptions, JpaOrmXmlPersistenceUnitDefaultAware {
 
 	private final MetadataBuildingOptions delegate;

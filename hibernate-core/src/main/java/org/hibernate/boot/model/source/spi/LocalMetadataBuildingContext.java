@@ -4,6 +4,8 @@
  */
 package org.hibernate.boot.model.source.spi;
 
+import org.hibernate.Remove;
+
 import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 
@@ -12,6 +14,7 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
  *
  * @author Steve Ebersole
  */
+@Remove
 public interface LocalMetadataBuildingContext extends MetadataBuildingContext {
 	/**
 	 * Obtain the origin for this context

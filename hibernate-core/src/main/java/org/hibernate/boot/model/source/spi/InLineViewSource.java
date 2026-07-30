@@ -4,12 +4,15 @@
  */
 package org.hibernate.boot.model.source.spi;
 
+import org.hibernate.Remove;
+
 /**
  * Describes in-line view source information.  Generally, either {@link org.hibernate.annotations.Subselect}
  * or {@code <subselect/>}
  *
  * @author Steve Ebersole
  */
+@Remove
 public interface InLineViewSource extends TableSpecificationSource {
 	/**
 	 * Obtain the {@code SQL SELECT} statement to use.  Cannot be null!

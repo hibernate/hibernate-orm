@@ -5,6 +5,7 @@
 package org.hibernate.boot.spi;
 
 import org.hibernate.MappingException;
+import org.hibernate.Remove;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
@@ -71,11 +72,13 @@ public abstract class AbstractDelegatingMetadata implements MetadataImplementor 
 	}
 
 	@Override
+	@Remove
 	public SessionFactoryBuilder getSessionFactoryBuilder() {
 		return delegate.getSessionFactoryBuilder();
 	}
 
 	@Override
+	@Remove
 	public SessionFactoryImplementor buildSessionFactory() {
 		return delegate.buildSessionFactory();
 	}
@@ -206,6 +209,7 @@ public abstract class AbstractDelegatingMetadata implements MetadataImplementor 
 	}
 
 	@Override
+	@Remove
 	public MetadataBuildingOptions getMetadataBuildingOptions() {
 		return delegate.getMetadataBuildingOptions();
 	}

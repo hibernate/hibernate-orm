@@ -4,6 +4,8 @@
  */
 package org.hibernate.boot.model.source.spi;
 
+import org.hibernate.Remove;
+
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.id.EntityIdentifierNature;
 
@@ -12,6 +14,7 @@ import org.hibernate.id.EntityIdentifierNature;
  *
  * @author Steve Ebersole
  */
+@Remove
 public interface IdentifierSource extends ToolingHintContextContainer {
 	/**
 	 * Obtain the nature of this identifier source.

@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Objects;
 
 import org.hibernate.MappingException;
+import org.hibernate.Remove;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.FetchStyle;
@@ -50,11 +51,13 @@ public class OneToMany implements Value {
 	}
 
 	@Override
+	@Remove
 	public MetadataBuildingContext getBuildingContext() {
 		return buildingContext;
 	}
 
 	@Override
+	@Remove
 	public ServiceRegistry getServiceRegistry() {
 		return buildingContext.getBuildingOptions().getServiceRegistry();
 	}

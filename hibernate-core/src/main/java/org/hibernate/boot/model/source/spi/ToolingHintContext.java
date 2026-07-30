@@ -4,6 +4,8 @@
  */
 package org.hibernate.boot.model.source.spi;
 
+import org.hibernate.Remove;
+
 import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -21,6 +23,7 @@ import org.hibernate.mapping.MetaAttribute;
  *
  * @author Steve Ebersole
  */
+@Remove
 public class ToolingHintContext {
 	private final ConcurrentMap<String, ToolingHint> toolingHintMap = new ConcurrentHashMap<>();
 

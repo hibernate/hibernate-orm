@@ -4,6 +4,8 @@
  */
 package org.hibernate.boot.model.source.spi;
 
+import org.hibernate.Remove;
+
 import org.hibernate.engine.OptimisticLockStyle;
 
 /**
@@ -11,6 +13,7 @@ import org.hibernate.engine.OptimisticLockStyle;
  *
  * @author Steve Ebersole
  */
+@Remove
 public interface EntityHierarchySource {
 	/**
 	 * Obtain the hierarchy's root type source.

@@ -4,6 +4,8 @@
  */
 package org.hibernate.boot.model.source.spi;
 
+import org.hibernate.Remove;
+
 import org.hibernate.boot.model.naming.EntityNaming;
 
 /**
@@ -11,6 +13,7 @@ import org.hibernate.boot.model.naming.EntityNaming;
  *
  * @author Steve Ebersole
  */
+@Remove
 public interface EntityNamingSource extends EntityNaming {
 	/**
 	 * Decode the name that we should expect to be used elsewhere to reference

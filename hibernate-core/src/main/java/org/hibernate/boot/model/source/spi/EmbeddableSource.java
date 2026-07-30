@@ -4,6 +4,8 @@
  */
 package org.hibernate.boot.model.source.spi;
 
+import org.hibernate.Remove;
+
 import org.hibernate.boot.model.JavaTypeDescriptor;
 
 /**
@@ -15,6 +17,7 @@ import org.hibernate.boot.model.JavaTypeDescriptor;
  *
  * @author Steve Ebersole
  */
+@Remove
 public interface EmbeddableSource extends AttributeSourceContainer {
 	JavaTypeDescriptor getTypeDescriptor();
 

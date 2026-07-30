@@ -5,6 +5,7 @@
 package org.hibernate.binder;
 
 import org.hibernate.Incubating;
+import org.hibernate.Remove;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
@@ -59,6 +60,7 @@ public interface TypeBinder<A extends Annotation> {
 	 *                   {@link org.hibernate.annotations.TypeBinderType}
 	 * @param persistentClass the entity class
 	 */
+	@Remove
 	void bind(A annotation, MetadataBuildingContext buildingContext, PersistentClass persistentClass);
 	/**
 	 * Perform some custom configuration of the model relating to the given annotated
@@ -68,5 +70,6 @@ public interface TypeBinder<A extends Annotation> {
 	 *                   {@link org.hibernate.annotations.TypeBinderType}
 	 * @param embeddableClass the embeddable class
 	 */
+	@Remove
 	void bind(A annotation, MetadataBuildingContext buildingContext, Component embeddableClass);
 }

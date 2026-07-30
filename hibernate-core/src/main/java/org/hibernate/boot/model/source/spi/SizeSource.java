@@ -4,9 +4,12 @@
  */
 package org.hibernate.boot.model.source.spi;
 
+import org.hibernate.Remove;
+
 /**
  * @author Steve Ebersole
  */
+@Remove
 public interface SizeSource {
 	/**
 	 * The specified length.  Will return {@code null} if none was specified.

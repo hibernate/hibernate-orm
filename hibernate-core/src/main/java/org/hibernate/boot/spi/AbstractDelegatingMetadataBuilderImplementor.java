@@ -5,6 +5,7 @@
 package org.hibernate.boot.spi;
 
 import jakarta.persistence.FetchType;
+import org.hibernate.Remove;
 import org.hibernate.boot.CacheRegionDefinition;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataBuilder;
@@ -33,6 +34,7 @@ import jakarta.persistence.SharedCacheMode;
  * @param <T> The specific subclass; Allows subclasses to narrow the return type of the contract methods
  *            to a specialization of {@link MetadataBuilderImplementor}.
  */
+@Remove
 public abstract class AbstractDelegatingMetadataBuilderImplementor<T extends MetadataBuilderImplementor>  implements MetadataBuilderImplementor {
 
 	private final MetadataBuilderImplementor delegate;

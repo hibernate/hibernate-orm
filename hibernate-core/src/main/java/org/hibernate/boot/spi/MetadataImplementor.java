@@ -11,6 +11,7 @@ import java.util.function.Supplier;
 
 import org.hibernate.Incubating;
 import org.hibernate.MappingException;
+import org.hibernate.Remove;
 import org.hibernate.boot.Metadata;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.Component;
@@ -35,6 +36,7 @@ public interface MetadataImplementor extends Metadata {
 	 *
 	 * @return The {@link MetadataBuildingOptions}
 	 */
+	@Remove
 	MetadataBuildingOptions getMetadataBuildingOptions();
 
 	/**
@@ -76,5 +78,6 @@ public interface MetadataImplementor extends Metadata {
 	DiscriminatorType<?> resolveEmbeddableDiscriminatorType(Class<?> embeddableClass, Supplier<DiscriminatorType<?>> supplier);
 
 	@Override
+	@Remove
 	SessionFactoryImplementor buildSessionFactory();
 }

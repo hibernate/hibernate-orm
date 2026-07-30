@@ -11,6 +11,7 @@ import java.util.Set;
 import org.hibernate.Incubating;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
+import org.hibernate.Remove;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.FetchStyle;
@@ -139,11 +140,13 @@ public interface Value extends Serializable {
 
 	boolean isNullable();
 
+	@Remove
 	void createForeignKey();
 
 	// called when this is the foreign key of a
 	// @OneToOne with a FK, or a @OneToMany with
 	// a join table
+	@Remove
 	void createUniqueKey(MetadataBuildingContext context);
 
 	boolean isSimpleValue();
@@ -168,10 +171,12 @@ public interface Value extends Serializable {
 	void setNonInsertable();
 
 	@Incubating
+	@Remove
 	default MetadataBuildingContext getBuildingContext() {
 		throw new UnsupportedOperationException( "Value#getBuildingContext is not implemented by: " + getClass().getName() );
 	}
 
+	@Remove
 	ServiceRegistry getServiceRegistry();
 
 	Value copy();

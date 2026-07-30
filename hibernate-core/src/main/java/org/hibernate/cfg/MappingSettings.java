@@ -5,6 +5,7 @@
 package org.hibernate.cfg;
 
 import org.hibernate.Incubating;
+import org.hibernate.Remove;
 import org.hibernate.SessionFactory;
 import org.hibernate.annotations.ListIndexBase;
 import org.hibernate.annotations.Nationalized;
@@ -519,6 +520,7 @@ public interface MappingSettings {
 	 *
 	 * @since 6.1
 	 */
+	@Remove
 	String TRANSFORM_HBM_XML = "hibernate.transform_hbm_xml.enabled";
 
 	/**
@@ -529,6 +531,7 @@ public interface MappingSettings {
 	 *
 	 * @since 6.1
 	 */
+	@Remove
 	String TRANSFORM_HBM_XML_FEATURE_HANDLING = "hibernate.transform_hbm_xml.unsupported_feature_handling";
 
 	/**

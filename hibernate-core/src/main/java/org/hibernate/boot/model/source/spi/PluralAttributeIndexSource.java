@@ -4,6 +4,8 @@
  */
 package org.hibernate.boot.model.source.spi;
 
+import org.hibernate.Remove;
+
 /**
  * Highly abstract concept of the index of an "indexed persistent collection".
  * More concretely (and generally more usefully) categorized as either:<ul>
@@ -12,6 +14,7 @@ package org.hibernate.boot.model.source.spi;
  * </ul>
  *
  */
+@Remove
 public interface PluralAttributeIndexSource {
 	PluralAttributeIndexNature getNature();
 

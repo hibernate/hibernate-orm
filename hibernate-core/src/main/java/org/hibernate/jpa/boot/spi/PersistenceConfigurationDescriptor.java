@@ -13,6 +13,7 @@ import jakarta.persistence.ValidationMode;
 import jakarta.annotation.Nonnull;
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
+import org.hibernate.Remove;
 import org.hibernate.boot.archive.internal.StandardArchiveDescriptorFactory;
 import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
 import org.hibernate.boot.registry.StandardServiceRegistry;
@@ -53,6 +54,7 @@ import static org.hibernate.jpa.internal.JpaLogger.JPA_LOGGER;
  *
  * @author Steve Ebersole
  */
+@Remove
 public class PersistenceConfigurationDescriptor implements PersistenceUnitDescriptor {
 	private final PersistenceConfiguration persistenceConfiguration;
 

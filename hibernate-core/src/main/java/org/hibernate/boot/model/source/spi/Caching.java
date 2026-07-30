@@ -4,6 +4,8 @@
  */
 package org.hibernate.boot.model.source.spi;
 
+import org.hibernate.Remove;
+
 import org.hibernate.boot.CacheRegionDefinition;
 import org.hibernate.cache.spi.access.AccessType;
 
@@ -15,6 +17,7 @@ import static org.hibernate.internal.util.StringHelper.isEmpty;
  * @author Steve Ebersole
  * @author Hardy Ferentschik
  */
+@Remove
 public class Caching {
 	private Boolean requested;
 	private String region;

@@ -4,11 +4,14 @@
  */
 package org.hibernate.boot.model.source.spi;
 
+import org.hibernate.Remove;
+
 import java.lang.annotation.Annotation;
 
 /**
  * @author Steve Ebersole
  */
+@Remove
 public interface JpaCallbackSource {
 
 	/**

@@ -41,6 +41,7 @@ public interface Metadata extends MappingContext {
 	 *
 	 * @return The builder for {@link SessionFactory} instances.
 	 */
+	@Remove
 	SessionFactoryBuilder getSessionFactoryBuilder();
 
 	/**
@@ -49,6 +50,7 @@ public interface Metadata extends MappingContext {
 	 *
 	 * @return THe built SessionFactory.
 	 */
+	@Remove
 	SessionFactory buildSessionFactory();
 
 	/**

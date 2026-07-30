@@ -14,6 +14,7 @@ import jakarta.persistence.PersistenceUnitTransactionType;
 import jakarta.persistence.SchemaManagementAction;
 import jakarta.persistence.SharedCacheMode;
 import jakarta.persistence.ValidationMode;
+import org.hibernate.Remove;
 import org.hibernate.SessionFactory;
 import org.hibernate.StatementObserver;
 import org.hibernate.boot.scan.spi.ScanningProvider;
@@ -366,6 +367,7 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	 *
 	 * @see JpaComplianceSettings#JPA_ID_GENERATOR_GLOBAL_SCOPE_COMPLIANCE
 	 */
+	@Remove
 	@Nonnull
 	public HibernatePersistenceConfiguration globalGeneratorCompliance(boolean enabled) {
 		property( JpaComplianceSettings.JPA_ID_GENERATOR_GLOBAL_SCOPE_COMPLIANCE, enabled );

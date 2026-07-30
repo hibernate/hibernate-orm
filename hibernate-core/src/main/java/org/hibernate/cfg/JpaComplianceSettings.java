@@ -4,6 +4,8 @@
  */
 package org.hibernate.cfg;
 
+import org.hibernate.Remove;
+
 /**
  * @author Steve Ebersole
  */
@@ -158,6 +160,9 @@ public interface JpaComplianceSettings {
 	 * @apiNote If enabled, the name will be considered globally scoped, and so the existence
 	 * of two different generators with the same name will be considered a collision,
 	 * and will result in an exception during bootstrap.
+	 * Setting this to {@code false} enables legacy generator-name scoping as a temporary
+	 * compatibility measure. This setting will be removed in 9.0, when generator names
+	 * will always be globally scoped.
 	 *
 	 * @settingDefault {@link #JPA_COMPLIANCE}
 	 *
@@ -165,6 +170,7 @@ public interface JpaComplianceSettings {
 	 *
 	 * @since 5.2.17
 	 */
+	@Remove
 	String JPA_ID_GENERATOR_GLOBAL_SCOPE_COMPLIANCE = "hibernate.jpa.compliance.global_id_generators";
 
 	/**

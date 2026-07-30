@@ -43,6 +43,7 @@ public interface EntityBindingContext {
 	/// @deprecated There is no replacement per-se, but hopefully the deprecation
 	/// leads to reports about specific bits of the context which are needed
 	/// and/or useful for implementors.
+	@Deprecated(since = "9.0")
 	MetadataBuildingContext getMetadataBuildingContext();
 
 	/// Reports that the given custom annotation is not supported on this entity.

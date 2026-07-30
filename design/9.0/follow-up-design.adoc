@@ -1,0 +1,366 @@
+= ORM 9 Bootstrap Follow-up Design
+:toc2:
+:sectanchors:
+
+This document is the canonical home for nonblocking work discovered while
+completing the ORM 9 "Improve bootstrap" design.
+
+It records durable follow-up direction and the concrete condition which should
+trigger each item.  It is not a branch-status document and none of these items
+is part of the current completion boundary unless a focused correctness or
+metadata-restoration failure makes it blocking.
+
+When a completed design exposes possible later work, capture it here instead of
+leaving an open-question or follow-up section in the completed design.  A
+focused design document may remain as background for a substantial area, but
+this document owns its follow-up status and trigger.
+
+== Additional Mapping Contributions
+
+=== Current Boundary
+
+`AdditionalMappingContributor` is a late mapping-resolution extension.  The
+primary sources are categorized and bound before contributors run.
+Contributors receive:
+
+* `ProcessedMappings`, an immutable view of primary processed entities;
+* `AdditionalMappingContributorContext`, a narrow contextual-services view;
+* `AdditionalMappingContributions`, the write side.
+
+Managed classes and XML supplied by all contributors are accumulated,
+categorized separately from the primary model, and bound into the existing
+binding state.  Tables, sequences, auxiliary database objects, and the
+relational `Database` escape hatch mutate the shared relational boot model
+directly.  Every contributor sees the same primary `ProcessedMappings`
+snapshot; contributors do not observe source contributions made earlier in the
+same pass.
+
+This is deliberately incremental.  Hibernate does not combine primary and
+contributed sources and recategorize the primary model.
+
+=== Builder-Backed Categorized Contributions
+
+The next useful extension is another input form on the existing
+`AdditionalMappingContributions` boundary, not a new early contributor.
+A contributor should be able to use Hibernate-owned builders to describe an
+additional mapping programmatically and submit the resulting categorized
+contribution for binding.
+
+Names are intentionally provisional, but the shape is similar to:
+
+[source,java]
+----
+contributions.contributeEntityMapping( entityBuilder -> {
+    entityBuilder
+            .entityName( "AuditRecord" )
+            .classDetails( auditRecordClass )
+            .identifier( /* ... */ )
+            .attribute( /* ... */ );
+} );
+----
+
+The write-side builder is the construction contract.  `EntityTypeMetadata`
+remains a read-only categorized-model contract and must not become a contract
+which arbitrary contributor implementations are expected to implement.
+Hibernate owns the builder, validates its result, and produces the internal
+categorized representation consumed by binding.  The resulting metadata may
+be exposed through `EntityTypeMetadata` for inspection.
+
+This input form does not widen the semantic scope of
+`AdditionalMappingContributions`.  It provides a programmatic alternative for
+mapping concepts which may already be contributed as managed classes or XML.
+Existing source and direct-relational contribution methods remain supported.
+
+=== Initial Scope And Invariants
+
+The initial builder-backed form supports isolated entity mappings:
+
+* the contributed entity is the root of a new hierarchy;
+* it does not extend, replace, or otherwise alter an existing categorized
+  hierarchy;
+* Hibernate entity name, JPA entity name, Java type identity, and stable roles
+  do not conflict with existing or concurrently contributed mappings;
+* identifier, attribute, value, table, and any contribution-owned embeddable
+  metadata are complete before binding;
+* the contribution does not change primary persistence-unit defaults, XML
+  overlays, or global registrations;
+* associations may target primary or other contributed entities when normal
+  post-binding resolution can resolve them.
+
+The natural submitted unit is a complete isolated entity-hierarchy
+contribution, even when the initial builder exposes only a single root entity.
+An `EntityTypeMetadata` reference alone is not sufficient because hierarchy,
+attribute-usage, identifier, embeddable, and stable-role invariants must be
+validated together.
+
+=== Pipeline Integration
+
+The existing late phase remains:
+
+[source,text]
+----
+prepare, categorize, and bind primary mappings
+    -> create ProcessedMappings
+    -> invoke all AdditionalMappingContributor services
+    -> categorize contributed managed classes and XML
+    -> validate builder-produced categorized contributions
+    -> bind both forms into the existing BindingState
+    -> finalize Metadata
+----
+
+No primary recategorization is required.  Builder products bypass source
+interpretation and categorization but not validation, binding, materialization,
+resolution, or metadata finalization.
+
+Implementation must define deterministic duplicate diagnostics and contributor
+attribution for builder products.  Builder contributions should be accumulated
+across the complete contributor pass, just like class and XML contributions,
+so binding does not expose service-loader order accidentally.
+
+=== Later Hierarchy Or Primary-Model Mutation
+
+Extending an existing hierarchy or changing decisions already made for the
+primary categorized model is outside the initial scope.  Do not implement a
+second categorization pass over the same bootstrap context: XML processing,
+Hibernate Models overlays, persistence-unit defaults, and bootstrap registries
+are not currently a pure replayable transformation.
+
+Revisit an earlier extension only for a concrete integration which must alter
+primary discovery or categorization.  Such a design would require either:
+
+* a pre-categorization source contribution using a deliberately limited source
+  inventory; or
+* a pure discovery/classification product followed by source contribution and
+  exactly one mutating categorization pass.
+
+Do not introduce incremental hierarchy mutation, repeated recategorization, or
+a fixed-point contributor loop without explicit ordering, duplicate, cycle,
+convergence, and diagnostic rules.
+
+== Aggregate Runtime Mapping
+
+The boot-time aggregate design is complete.  Runtime work begins only when a
+focused SQL selection, assembly, JDBC access, or mutation consumer needs an
+authoritative storage description not supplied by the current runtime model.
+The implementation, tests, completion plan, and handoff retain the completed
+boot design; this section owns the remaining runtime direction.
+
+The follow-up should introduce an immutable aggregate storage descriptor and a
+resolved access strategy shared by scalar, nested, collection/map, and array
+aggregates.  The implementation must decide:
+
+* whether a distinct aggregate-valued model part or an optional contract owns
+  the descriptor;
+* whether member descriptors wrap existing model parts/selectables or add
+  aggregate-aware selectable paths to them;
+* whether one strategy owns selection, extraction, binding, and mutation or a
+  plan contains separate read and write strategies;
+* whether SQL `STRUCT` schema metadata remains distinct from the runtime
+  descriptor;
+* whole-value versus partial-member mutation fallback;
+* optimistic-lock behavior where member predicates are unavailable;
+* support or validation rules for mixed nested aggregate formats.
+
+Completion requires runtime consumers to stop reconstructing aggregate storage
+from boot details, Java container shape, or custom SQL-expression parentage.
+Tests must cover generated SQL, JDBC/result behavior, mutation, dirty tracking,
+generated values, and optimistic locking at the migrated consumer boundaries.
+
+== Mapping And Runtime Model Refinements
+
+Identifier correspondence::
+Introduce an executable runtime identifier-conversion plan only when a concrete
+identifier shape cannot use the existing target-id conversion and selectable
+decomposition.  Do not add a parallel general-purpose multipart boot DTO.
+
+Flattened compatibility views::
+Replace flattened `org.hibernate.mapping` projections only when a runtime or
+tooling consumer can move to the role-based declaration, usage, application,
+and handoff products without losing supported inspection behavior.
+
+Remove the `org.hibernate.mapping` model (longer term)::
+Investigate removing the intermediate `org.hibernate.mapping` model and using
+the semantic model, or purpose-specific semantic projections, directly for
+both schema management and `SessionFactory` runtime-model creation.  This
+would replace the current categorization -> binding/materialization ->
+`org.hibernate.mapping` handoff with explicit downstream products derived from
+the categorized domain model.
++
+Do not begin this as a mechanical type replacement.  First identify the
+information and mutation currently owned by `PersistentClass`, `Property`,
+`Value`, `Component`, `Collection`, `Table`, generator metadata, and the
+relational `Database`; then separate semantic mapping facts from
+dialect-sensitive relational interpretation and runtime-construction state.
+The design must establish:
+
+* whether schema management and runtime construction consume one shared
+  immutable semantic product or separate projections;
+* where relational tables, columns, constraints, auxiliary objects, SQL
+  expressions, and dialect-specific aggregate details are materialized;
+* how late association resolution, generators, custom binders, additional
+  mapping contributions, and metadata restoration reach the new products;
+* how tooling and supported `Metadata` inspection use cases are preserved or
+  deliberately replaced;
+* whether the categorized model must become persistent beyond binding and what
+  lifecycle or serialization guarantees that requires; and
+* a migration strategy which allows consumers to move incrementally without
+  maintaining two independently authoritative mapping models.
++
+Proceed only from a consumer-by-consumer replacement plan.  The end-state
+should have one authoritative semantic source, deterministic projections for
+schema and runtime needs, and no mutable compatibility model acting as the
+pipeline's central interchange format.
+
+State management::
+Add a first-class whole-model state-management boot descriptor only when a
+concrete feature cannot be represented by the existing `StateManagement`,
+`AuxiliaryMapping`, `TemporalMapping`, and `AuditMapping` products.
+
+JPA static metamodel::
+Remove remaining legacy static-metamodel entry points when all callers use the
+materialization-time, role-based injection plan.
+
+Dedicated type inputs::
+Extract a dedicated mapping-resolution type input product only when another
+consumer needs the type customizations independently of the current explicit
+pipeline ownership.
+
+Managed type representation strategy::
+Redesign `ManagedTypeRepresentationStrategy` when its required responsibilities
+and consumers are clearer.  The current strategy combines representation mode,
+mapped Java type, reflection optimization, and property-access resolution,
+while `ManagedTypeRepresentationResolver` selects entity and embeddable
+strategies using both boot descriptors and partially constructed runtime
+descriptors.  The desired replacement shape is intentionally undecided.
+Before changing it, identify which decisions belong to categorized-domain
+modeling, binding, runtime-model creation, proxy selection, bytecode
+enhancement, property access, and instantiation.  Prefer focused immutable
+inputs or phase-specific capabilities over another broad strategy contract.
+
+== Context And Extension Narrowing
+
+`BootstrapContext` construction-time use (ORM 9)::
+Continue replacing construction-time access to `BootstrapContext` with focused
+resolved products.  Mapping resolution may retain the broad context for
+metadata-building compatibility, but new construction SPIs must not expose it.
+Complete a replacement when a construction consumer can receive an existing
+immutable product or a coherent new field on `SessionFactoryRuntimeComponents`
+without recreating another general-purpose context.
+
+`BootstrapContext` resource separation (longer term)::
+Separate the durable boot environment (`TypeConfiguration`, Models context,
+managed-bean and class-loading capabilities) from disposable source-discovery
+resources (temporary class loader, scanner state, and archive interpretation).
+Revisit this when metadata building no longer requires one compatibility
+contract to expose both lifetimes.  The resulting lifecycle must make metadata
+materialization the explicit release boundary for source-discovery resources
+without invalidating products needed by factory construction.
+
+`MetadataBuildingContext`::
+Continue capability-level narrowing only around concrete SPI requirements.
+Current candidates are naming-source access, `UserTypeCreationContext`, and the
+deprecated binder-context escape hatch.  Reference-count reduction and removal
+of harmless compatibility constructor parameters are not goals by themselves.
+
+Integrator callbacks::
+Introduce narrower phase-specific integration SPIs only for a concrete
+integration which cannot use the existing explicit construction phases or
+retained compatibility callback.
+
+`SessionFactoryOptions`::
+Decompose the retained producer/runtime compatibility view only when a
+consumer-specific immutable product can replace a coherent subset without
+creating path-dependent construction requests.
+
+== User And Integration Documentation
+
+Keep the User Guide bootstrap chapter focused on supported entry points,
+configuration and mapping-source collection, the user-visible bootstrap
+lifecycle, and a concise index of extension points.  The index should identify
+each hook's purpose, phase, intended audience, and detailed documentation
+location without turning the bootstrap chapter into an SPI reference.
+
+Keep task-oriented `AttributeBinder` and `TypeBinder` explanation and examples
+with domain-model customization in the User Guide.  Link to those examples
+from the bootstrap extension index and from integration documentation.
+Metadata serialization and restoration remain in the User Guide bootstrap
+chapter because they are supported user-facing bootstrap workflows rather than
+primarily integration SPIs.
+
+Use the existing Integration Guide as the detailed home for extension and
+integration contracts.  Rewrite its currently stale service documentation and
+add a bootstrap/factory integration chapter organized by lifecycle:
+
+* mapping resolution: `TypeContributor`, `FunctionContributor`, and
+  `AdditionalMappingContributor`;
+* annotation-driven mapping customization: `AttributeBinder` and `TypeBinder`,
+  with links to the User Guide examples;
+* factory construction: `Integrator`, `CacheFactory`,
+  `NativeQueryInterpreter`, and `StatisticsFactory`;
+* per-session extension creation: `ExtensionIntegration`; and
+* complete factory-construction replacement: `SessionFactoryProducer`.
+
+The existing services material should continue to own `ServiceContributor`,
+service-registry roles, service initiation, and service replacement.
+Documentation for each SPI must explain discovery or explicit registration,
+invocation phase, available context, ownership and cleanup, ordering or
+selection rules, and whether the contract is intended for applications,
+libraries, containers, or full bootstrap replacements.
+
+== Bootstrap Compatibility And Provider Parity
+
+Track the following against focused compatibility failures or explicit API
+policy decisions:
+
+* provider exception-wrapping parity;
+* persistence-unit setting-precedence parity;
+* descriptor-backed source-contribution parity;
+* schema-generation script handling;
+* the long-term `Configuration` deprecation and migration policy;
+* replacement coverage for removed staged-builder contributor use cases;
+* the minimum public settings view needed by custom
+  `SessionFactoryProducer` implementations;
+* retaining `Metadata` as the resolved mapping inspection view unless a
+  concrete consumer proves it insufficient.
+
+== Metadata Archives And Tooling
+
+The factory-ready `MetadataArchive` is the completed restoration boundary.
+Introduce another snapshot layer only for a concrete tooling or startup use
+case which cannot consume the archive or an existing specific pipeline product.
+Any new layer must define stable identity, format/version validation, payload
+bounds, service reconstruction, and its relationship to live bootstrap.
+
+=== Categorized Domain Model Serialization
+
+Investigate serialization at the `CategorizedDomainModel` boundary as a
+possible dialect-independent modeling artifact.  This would preserve source
+discovery, Hibernate Models interpretation, generic specialization,
+inheritance, declaration/usage/application identity, and categorization while
+deferring dialect-sensitive binding and relational materialization to the
+consumer environment.
+
+This is an alternative artifact with a different purpose from the
+factory-ready `MetadataArchive`; it must not silently replace or weaken that
+completed boundary.  A useful design must establish:
+
+* whether every categorized contract has a stable data-only representation;
+* how `ClassDetails`, annotation usages, generic type resolutions, mapping
+  roles, declarations, usages, and applications retain stable identity;
+* which persistence-unit defaults, XML overlays, converters, generators,
+  custom annotations, and contributor results belong in the artifact;
+* whether `AttributeBinder` and `TypeBinder` run only after restoration and how
+  their implementation classes and annotation values are represented;
+* how service-loaded and programmatic customizations are replayed or rejected;
+* how the consumer reconstructs a compatible Models context and validates
+  application classes;
+* archive versioning, compatibility, trust, payload limits, and diagnostics;
+  and
+* whether the reduction in producer-side work remains valuable once the
+  consumer still performs binding, dialect interpretation, materialization,
+  value resolution, schema preparation, and runtime handoff.
+
+Proceed only if a concrete build-time tooling or deployment use case benefits
+from sharing categorized modeling across multiple dialect or service
+environments.  Keep live categorization and restored categorization convergent
+at the ordinary binding input boundary.

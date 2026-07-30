@@ -179,11 +179,12 @@ public final class SessionFactoryRuntimeComponentsBuilder {
 			return cacheFactory;
 		}
 
-		return sessionFactory -> {
+		return constructionContext -> {
+			final var sessionFactory = constructionContext.getSessionFactory();
 			final var regionFactory = sessionFactory.getServiceRegistry().requireService( RegionFactory.class );
 			return regionFactory instanceof NoCachingRegionFactory
 					? new DisabledCaching( sessionFactory )
-					: new EnabledCaching( sessionFactory );
+					: new EnabledCaching( constructionContext );
 		};
 	}
 

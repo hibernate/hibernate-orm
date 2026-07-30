@@ -1,4 +1,4 @@
-:version: 8.1
+:version: 9.0
 = What's New in {version}
 :toc2:
 :sectanchors:
@@ -12,44 +12,78 @@ Describes the new features and capabilities added to Hibernate ORM in {version}.
 
 IMPORTANT: If migrating from earlier versions, be sure to also check out the link:{migrationGuide}[Migration Guide] for discussion of impactful changes.
 
-[[schema-if-exists]]
-== Schema DDL uses `IF EXISTS` / `IF NOT EXISTS`
-
-Schema management DDL now uses `CREATE SCHEMA IF NOT EXISTS` and `DROP SCHEMA IF EXISTS` for dialects which support these clauses, avoiding warnings when a schema already exists or has already been dropped.
-
-Supported dialects: PostgreSQL, CockroachDB, H2, HSQLDB, SAP HANA, and SQL Server (DROP only, version 13+).
 
 [[bootstrap]]
-== SessionFactory bootstrap orchestration
+== Unified `SessionFactory` bootstrap
 
-ORM 9.0 introduces a new internal SessionFactory bootstrap pipeline which makes
+ORM 9.0 introduces a new internal `SessionFactory` bootstrap pipeline which makes
 the major bootstrap products explicit and shared across entry points.
 
 At a high level, the pipeline resolves bootstrap settings, normalizes source
 contributions, prepares available mapping resources, categorizes the domain
 model, resolves mapping metadata, resolves SessionFactory settings, and then
-builds the `SessionFactory` / `EntityManagerFactory`.  It also limits the number
-of bootstrap entry points and centralizes the handling based on that pipeline -
+builds the `SessionFactory` or `EntityManagerFactory`.  The supported entry
+points share this orchestration:
 
-* Jakarta Persistence SE bootstrap with `(Hibernate)PersistenceConfiguration`
+* Jakarta Persistence SE bootstrap with `PersistenceConfiguration` or
+  `HibernatePersistenceConfiguration`
 * Jakarta Persistence SE bootstrap with `Persistence`
 * Jakarta Persistence EE bootstrap with container and `PersistenceUnitInfo`
-* Hibernate native bootstrap with `Configuration` footnote:recommentation[Consider migrating to `(Hibernate)PersistenceConfiguration`]
+* Hibernate native bootstrap with `Configuration`
+  footnote:recommendation[Consider migrating to `HibernatePersistenceConfiguration`.]
 
-The end-user impact of this pipeline specifically is small - basically some
-historical bootstrap entry paths are compatibility paths rather than the
-canonical pipeline.  However, it is fundamental to most of the new features
-listed here.
+This unified orchestration ensures that source discovery, mapping, contributor
+ordering, schema preparation, and factory construction behave consistently
+regardless of the entry point.
+
+=== Expanded programmatic mapping sources
+
+`HibernatePersistenceConfiguration` now accepts managed class names and
+package names without first loading the classes.  XML mappings may be supplied
+as classpath resources or as `File`, `Path`, `URI`, and `URL` references, and
+additional archives may be supplied as JAR URLs.
+
+=== Metadata archives
+
+ORM 9 may capture a factory-ready resolved boot model as a
+`MetadataArchive`.  A trusted archive can be written in one process, read
+without loading application classes, and restored against a compatible
+`StandardServiceRegistry` in another process.
+
+Enable capture with `hibernate.boot.metadata_serialization.enabled=true`.
+`MetadataSerialization`, `MetadataArchive`, and `RestoredMetadata` provide the
+public archive, restoration, metadata-inspection, and factory-construction
+contracts.
+
+Archives require the exact same ORM version and a compatible mapping
+environment.  Service-loaded function contributors are replayed during
+restoration.
+
+=== Custom `SessionFactory` production
+
+The service-loadable `SessionFactoryProducer` SPI allows an integration to
+replace the final factory-construction step without replacing mapping
+resolution.  It receives finalized metadata, a read-only factory-options view,
+and the service registry through `SessionFactoryConstructionRequest`.
+
+When multiple producers are available, select one by its producer name using
+`hibernate.session_factory_producer`.
+
+=== Deterministic contributor ordering
+
+Function and type contributions now have one application owner across all
+bootstrap entry points and metadata restoration.  Dialect contributions are
+applied first, service-loaded and programmatic contributors are ordered by
+ascending ordinal, and explicit registrations are applied last.
 
 
+[[model-binding]]
+== ORM 9 model-binding pipeline
 
-== ORM 9 Model-Binding Pipeline
-
-Part of the work done for <<bootstrap>>, and building on top of dropping support for
-`hbm.xml` mappings, is deep changes to how Hibernate performs model binding.  The reasons
-and goals for this are numerous - from functionality to correctness to performance...
-
-Below are a few of the new capabilities beyond the historical model binding path.
+The <<bootstrap,unified bootstrap work>>, together with the removal of legacy
+`hbm.xml` mappings, enabled deep changes to model binding.  The new pipeline
+improves functionality, correctness, and the separation between semantic
+mapping, mutable boot metadata, and runtime model construction.
 
 
 === Discriminated association binding
@@ -72,3 +106,63 @@ new binder uses Hibernate's full entity-name implicit discriminator strategy.
 +
 Historically, implicit discriminator resolution had to be requested explicitly
 with `@AnyDiscriminatorImplicitValues`.
+
+=== Generic inheritance and metamodels
+
+Generic attributes inherited from mapped superclasses and embeddable
+superclasses are resolved in the context of each concrete usage.  This applies
+to basic values, associations, collections, identifiers, and nested or
+polymorphic embeddables.
+
+The runtime JPA metamodel and typed Criteria paths now report the specialized
+Java type instead of `Object`.  The static metamodel generator emits a
+same-named field on a concrete subtype when needed to represent a specialized
+generic attribute, while retaining the independently populated superclass
+declaration.
+
+=== Broader aggregate mapping support
+
+Aggregate mappings now use one resolved member plan across relational and
+runtime model construction.  Coverage includes scalar aggregates,
+UDT/`STRUCT` mappings, aggregate arrays, nested aggregates, and JSON/XML
+aggregate values used as collection elements, map values, and map keys.
+
+The resolved member order is retained for database structures whose attribute
+order is significant.
+
+=== Stabilized custom binding extensions
+
+The incubating `AttributeBinder` and `TypeBinder` SPIs now run at an explicit
+semantic-to-materialized boundary.  Their context contracts expose the
+read-only categorized domain model—including attribute declaration, usage,
+and application information—together with the mutable
+`org.hibernate.mapping` objects being customized.
+
+Entity and embeddable type bindings have distinct contexts, and an embeddable
+type binder is invoked for each concrete embeddable usage.
+
+=== Consistent custom-generator lifecycle
+
+Identifier and value generators now have a common declarative descriptor and
+preparation lifecycle.  A schema-producing generator is created and configured
+once for a factory build, and the same managed instance is used for schema
+export and runtime generation.
+
+Custom generator annotations are retained as serializable declaration
+snapshots, allowing generator definitions to survive metadata archive
+restoration without retaining managed beans or live generator instances.
+
+
+[[jpa4-lifecycle]]
+== Jakarta Persistence 4.0 lifecycle callbacks
+
+ORM 9 supports the Jakarta Persistence 4.0 entity callbacks `@PreInsert`,
+`@PostInsert`, `@PreDelete`, `@PostDelete`, `@PreMerge`, `@PreUpsert`, and
+`@PostUpsert`, including callbacks declared by entity listeners.
+
+Persistence-unit lifecycle listeners may use `@PostCreate` and `@PreClose` for
+`EntityManagerFactory`, `EntityManager`, and `EntityAgent` lifecycle events.
+These callbacks may be declared with `@EntityListener` or in ORM XML.
+
+Bean Validation integration recognizes the corresponding persistence,
+database-operation, merge, and upsert validation groups.

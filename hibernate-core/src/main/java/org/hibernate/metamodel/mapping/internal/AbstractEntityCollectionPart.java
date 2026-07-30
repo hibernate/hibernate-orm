@@ -322,7 +322,7 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 						primaryTableReference,
 						creationState
 				),
-				creationContext.getSessionFactory()
+				creationState.getLoadQueryInfluencers().getSessionFactory()
 		);
 		// Make sure the association key's table is resolved in the table group
 		tableGroup.getTableReference( null, resolveFetchAssociationKey().table(), true );
@@ -343,9 +343,11 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 				nature == Nature.INDEX
 						? ( (IndexedCollection) collectionBootDescriptor ).getIndex()
 						: collectionBootDescriptor.getElement();
+		final var creationContext = creationProcess.getCreationContext();
 		final var entityBinding =
-				creationProcess.getCreationContext().getMetadata()
+				creationContext.getMetadata()
 						.getEntityBinding( elementTypeDescriptor.getEntityName() );
+		final var mappingContext = creationContext.getBootModel();
 
 		final String referencedPropertyName;
 		if ( bootModelValue instanceof OneToMany ) {
@@ -377,13 +379,15 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 							targetKeyPropertyNames,
 							compositeType.getPropertyNames()[0],
 							compositeType.getSubtypes()[0],
-							creationProcess.getCreationContext().getSessionFactory()
+							mappingContext,
+							creationProcess
 					);
 					addPrefixedPropertyNames(
 							targetKeyPropertyNames,
 							EntityIdentifierMapping.ID_ROLE_NAME,
 							propertyType,
-							creationProcess.getCreationContext().getSessionFactory()
+							mappingContext,
+							creationProcess
 					);
 				}
 				else {
@@ -391,7 +395,8 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 							targetKeyPropertyNames,
 							null,
 							propertyType,
-							creationProcess.getCreationContext().getSessionFactory()
+							mappingContext,
+							creationProcess
 					);
 				}
 			}
@@ -400,7 +405,8 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 						targetKeyPropertyNames,
 						entityBinding.getIdentifierProperty().getName(),
 						propertyType,
-						creationProcess.getCreationContext().getSessionFactory()
+						mappingContext,
+						creationProcess
 				);
 			}
 			return targetKeyPropertyNames;
@@ -415,7 +421,8 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 					targetKeyPropertyNames,
 					referencedPropertyName,
 					entityBinding.getRecursiveProperty( referencedPropertyName ).getType(),
-					creationProcess.getCreationContext().getSessionFactory()
+					mappingContext,
+					creationProcess
 			);
 			return targetKeyPropertyNames;
 		}
@@ -429,13 +436,15 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 						targetKeyPropertyNames,
 						compositeType.getPropertyNames()[0],
 						compositeType.getSubtypes()[0],
-						creationProcess.getCreationContext().getSessionFactory()
+						mappingContext,
+						creationProcess
 				);
 				addPrefixedPropertyNames(
 						targetKeyPropertyNames,
 						EntityIdentifierMapping.ID_ROLE_NAME,
 						propertyType,
-						creationProcess.getCreationContext().getSessionFactory()
+						mappingContext,
+						creationProcess
 				);
 				return targetKeyPropertyNames;
 			}
@@ -450,7 +459,8 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 							targetKeyPropertyNames,
 							mapsIdAttributeName,
 							elementTypeDescriptor.getEntityPersister().getIdentifierType(),
-							creationProcess.getCreationContext().getSessionFactory()
+							mappingContext,
+							creationProcess
 					);
 				}
 				else {
@@ -458,7 +468,8 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 							targetKeyPropertyNames,
 							null,
 							propertyType,
-							creationProcess.getCreationContext().getSessionFactory()
+							mappingContext,
+							creationProcess
 					);
 				}
 				return targetKeyPropertyNames;

@@ -65,12 +65,10 @@ public final class Jackson3XmlFormatMapper implements FormatMapper {
 		this(
 				createXmlMapper(
 						JacksonIntegration.loadJackson3Modules( creationContext ),
-						creationContext.getBootstrapContext()
-								.getMetadataBuildingOptions()
+						creationContext.getMappingResolutionOptions()
 								.isXmlFormatMapperLegacyFormatEnabled()
 				),
-				creationContext.getBootstrapContext()
-						.getMetadataBuildingOptions()
+				creationContext.getMappingResolutionOptions()
 						.isXmlFormatMapperLegacyFormatEnabled()
 		);
 	}

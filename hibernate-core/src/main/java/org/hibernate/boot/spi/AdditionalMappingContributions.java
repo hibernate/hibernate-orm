@@ -10,6 +10,7 @@ import org.hibernate.Incubating;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Sequence;
+import org.hibernate.boot.model.relational.Database;
 import org.hibernate.mapping.Table;
 import org.hibernate.models.spi.ClassDetails;
 
@@ -56,6 +57,14 @@ public interface AdditionalMappingContributions {
 	 * Contribute a materialized AuxiliaryDatabaseObject
 	 */
 	void contributeAuxiliaryDatabaseObject(AuxiliaryDatabaseObject auxiliaryDatabaseObject);
+
+	/**
+	 * Access to the relational contribution target.
+	 * <p>
+	 * This is a write-side escape hatch for mapping types, such as dialect JDBC
+	 * types, which materialize user-defined relational objects directly.
+	 */
+	Database getDatabase();
 
 	EffectiveMappingDefaults getEffectiveMappingDefaults();
 }

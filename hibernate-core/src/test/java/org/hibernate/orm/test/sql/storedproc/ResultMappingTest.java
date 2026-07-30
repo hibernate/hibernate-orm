@@ -4,7 +4,7 @@
  */
 package org.hibernate.orm.test.sql.storedproc;
 
-import org.hibernate.boot.MetadataBuilder;
+import org.hibernate.boot.pipeline.internal.MappingCustomizations;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.procedure.ProcedureOutputs;
@@ -34,9 +34,20 @@ public class ResultMappingTest extends BaseSessionFactoryFunctionalTest {
 	}
 
 	@Override
-	protected void applyMetadataBuilder(MetadataBuilder metadataBuilder) {
-		super.applyMetadataBuilder( metadataBuilder );
-		H2ProcTesting.applyProcDefinitions( metadataBuilder );
+	protected MappingCustomizations metadataCustomizations() {
+		return new MappingCustomizations(
+				null,
+				null,
+				null,
+				null,
+				null,
+				H2ProcTesting.procDefinitions(),
+				null,
+				null,
+				null,
+				null,
+				null
+		);
 	}
 
 	@Test

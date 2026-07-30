@@ -6,38 +6,47 @@ package org.hibernate.testing.boot;
 
 import org.hibernate.boot.internal.BootstrapContextImpl;
 import org.hibernate.boot.internal.InFlightMetadataCollectorImpl;
-import org.hibernate.boot.internal.MetadataBuilderImpl;
-import org.hibernate.boot.internal.RootMappingDefaults;
-import org.hibernate.boot.internal.TypeDefinitionRegistryStandardImpl;
+import org.hibernate.boot.mapping.internal.context.MappingResolutionServicesImpl;
+import org.hibernate.boot.mapping.internal.context.RootMappingDefaults;
+import org.hibernate.boot.mapping.internal.context.TypeDefinitionRegistryStandardImpl;
 import org.hibernate.boot.model.naming.ObjectNameNormalizer;
-import org.hibernate.boot.models.xml.internal.PersistenceUnitMetadataImpl;
+import org.hibernate.boot.mapping.internal.xml.PersistenceUnitMetadataImpl;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.EffectiveMappingDefaults;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.boot.spi.MetadataBuildingOptions;
+import org.hibernate.boot.pipeline.internal.MappingResolutionOptions;
+import org.hibernate.boot.mapping.internal.context.MappingResolutionServices;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
 * @author Steve Ebersole
 */
 public class MetadataBuildingContextTestingImpl implements MetadataBuildingContext {
-	private final MetadataBuildingOptions buildingOptions;
+	private final MappingResolutionOptions buildingPlan;
 	private final EffectiveMappingDefaults mappingDefaults;
 	private final InFlightMetadataCollector metadataCollector;
 	private final BootstrapContext bootstrapContext;
+	private final MappingResolutionServices serviceComponents;
 	private final ObjectNameNormalizer objectNameNormalizer;
 	private final TypeDefinitionRegistryStandardImpl typeDefinitionRegistry;
 
 	public MetadataBuildingContextTestingImpl(StandardServiceRegistry serviceRegistry) {
-		MetadataBuilderImpl.MetadataBuildingOptionsImpl buildingOptions = new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry );
-		this.buildingOptions = buildingOptions;
-		buildingOptions.setBootstrapContext( bootstrapContext = new BootstrapContextImpl( serviceRegistry, buildingOptions ) );
+		final var typeConfiguration = new TypeConfiguration();
+		org.hibernate.boot.pipeline.internal.MappingResolutionOptionsImpl buildingPlan =
+				new org.hibernate.boot.pipeline.internal.MappingResolutionOptionsImpl(
+						serviceRegistry,
+						typeConfiguration
+				);
+		this.buildingPlan = buildingPlan;
+		bootstrapContext = new BootstrapContextImpl( serviceRegistry, typeConfiguration );
+		serviceComponents = new MappingResolutionServicesImpl( bootstrapContext );
 		mappingDefaults = new RootMappingDefaults(
-				new MetadataBuilderImpl.MappingDefaultsImpl( serviceRegistry ),
+				new org.hibernate.boot.mapping.internal.context.GlobalMappingDefaultsImpl( serviceRegistry ),
 				new PersistenceUnitMetadataImpl()
 		);
-		metadataCollector = new InFlightMetadataCollectorImpl( bootstrapContext, buildingOptions );
+		metadataCollector = new InFlightMetadataCollectorImpl( bootstrapContext, buildingPlan );
 		objectNameNormalizer = new ObjectNameNormalizer(this);
 		typeDefinitionRegistry = new TypeDefinitionRegistryStandardImpl();
 		bootstrapContext.getTypeConfiguration().scope( this );
@@ -49,8 +58,13 @@ public class MetadataBuildingContextTestingImpl implements MetadataBuildingConte
 	}
 
 	@Override
-	public MetadataBuildingOptions getBuildingOptions() {
-		return buildingOptions;
+	public MappingResolutionServices getServiceComponents() {
+		return serviceComponents;
+	}
+
+	@Override
+	public MappingResolutionOptions getBuildingPlan() {
+		return buildingPlan;
 	}
 
 	@Override

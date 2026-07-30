@@ -5,8 +5,9 @@
 package org.hibernate.orm.test.annotations.enumerated.ormXml;
 
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.testing.ServiceRegistryBuilder;
 import org.hibernate.testing.junit4.ExtraAssertions;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
@@ -32,10 +33,11 @@ public class OrmXmlEnumTypeTest {
 		StandardServiceRegistry ssr = ServiceRegistryBuilder.buildServiceRegistry();
 
 		try {
-			MetadataSources ms = new MetadataSources( ssr );
-			ms.addResource( "org/hibernate/orm/test/annotations/enumerated/ormXml/orm.xml" );
-
-			Metadata metadata = ms.buildMetadata();
+			Metadata metadata = MetadataBuildingTestHelper.buildMetadata(
+					ssr,
+					new MappingSources()
+							.addMappingResource( "org/hibernate/orm/test/annotations/enumerated/ormXml/orm.xml" )
+			);
 
 			Type bindingPropertyType = metadata.getEntityBinding( BookWithOrmEnum.class.getName() )
 					.getProperty( "bindingStringEnum" )

@@ -20,7 +20,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Verifies that a {@link StatisticsFactory} supplied via the Java service loader
- * mechanism is picked up by {@code StatisticsInitiator} when no explicit
+ * mechanism is picked up during SessionFactory construction when no explicit
  * {@value org.hibernate.cfg.StatisticsSettings#STATS_BUILDER} setting is configured.
  */
 @JiraKey("HHH-18938")

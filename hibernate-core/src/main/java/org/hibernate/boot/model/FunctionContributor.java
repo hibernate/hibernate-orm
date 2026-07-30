@@ -17,8 +17,7 @@ import org.hibernate.service.JavaServiceLoadable;
  *     facility.
  * <li>
  *     Alternatively, a {@code FunctionContributor} may be programmatically supplied to
- *     {@link org.hibernate.cfg.Configuration#registerFunctionContributor(FunctionContributor)}
- *     or even {@link org.hibernate.boot.MetadataBuilder#applyFunctions(FunctionContributor)}.
+ *     {@link org.hibernate.cfg.Configuration#registerFunctionContributor(FunctionContributor)}.
  * </ul>
  *
  * @see org.hibernate.query.sqm.function.SqmFunctionRegistry

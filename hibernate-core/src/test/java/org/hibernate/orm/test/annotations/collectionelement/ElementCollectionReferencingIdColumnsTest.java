@@ -7,6 +7,7 @@ package org.hibernate.orm.test.annotations.collectionelement;
 import java.util.List;
 import java.util.Set;
 
+import org.hibernate.annotations.Bag;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -147,6 +148,7 @@ public class ElementCollectionReferencingIdColumnsTest {
 		private Long companyId;
 
 		@ElementCollection
+		@Bag
 		@CollectionTable(name = "PHONE",
 				joinColumns = @JoinColumn(name = "EMPLOYEE_ID"))
 		@Column(name = "PHONE_NUMBER")

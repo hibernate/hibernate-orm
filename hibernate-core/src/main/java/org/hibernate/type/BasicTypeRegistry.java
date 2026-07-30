@@ -15,7 +15,7 @@ import jakarta.annotation.Nullable;
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
-import org.hibernate.boot.spi.BootstrapContext;
+import org.hibernate.service.UnknownServiceException;
 import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
 import org.hibernate.type.descriptor.java.BasicPluralJavaType;
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
@@ -98,10 +98,33 @@ public class BasicTypeRegistry implements Serializable {
 		if ( javaType instanceof TemporalJavaType<T> temporalJavaType ) {
 			javaType = temporalJavaType.resolveTypeForPrecision( typeReference.getPrecision(), typeConfiguration  );
 		}
-		final var jdbcType = getJdbcTypeRegistry().getDescriptor( typeReference.getSqlTypeCode() );
+		final var jdbcType = getJdbcType( typeReference, javaType );
 		final var createdType = createBasicType( typeReference, javaType, jdbcType );
 		typesByName.put( typeReference.getName(), createdType );
 		return createdType;
+	}
+
+	private <T> JdbcType getJdbcType(BasicTypeReference<T> typeReference, JavaType<T> javaType) {
+		if ( useRecommendedJdbcType( typeReference ) ) {
+			return getRecommendedJdbcType( typeReference, javaType );
+		}
+		return getJdbcTypeRegistry().getDescriptor( typeReference.getSqlTypeCode() );
+	}
+
+	private <T> JdbcType getRecommendedJdbcType(BasicTypeReference<T> typeReference, JavaType<T> javaType) {
+		try {
+			return javaType.getRecommendedJdbcType( typeConfiguration.getCurrentBaseSqlTypeIndicators() );
+		}
+		catch (UnknownServiceException ignore) {
+			return getJdbcTypeRegistry().getDescriptor( typeReference.getSqlTypeCode() );
+		}
+	}
+
+	private static boolean useRecommendedJdbcType(BasicTypeReference<?> typeReference) {
+		final String name = typeReference.getName();
+		return StandardBasicTypes.OFFSET_DATE_TIME.getName().equals( name )
+				|| StandardBasicTypes.OFFSET_TIME.getName().equals( name )
+				|| StandardBasicTypes.ZONED_DATE_TIME.getName().equals( name );
 	}
 
 	private static <T> BasicType<T> createBasicType(
@@ -140,6 +163,11 @@ public class BasicTypeRegistry implements Serializable {
 		}
 	}
 
+	private <T> boolean dynamicTypeMatches(BasicTypeReference<T> typeReference, BasicType<T> type) {
+		return !useRecommendedJdbcType( typeReference )
+				|| type.getJdbcType() == getRecommendedJdbcType( typeReference, type.getMappedJavaType() );
+	}
+
 	public @Nullable BasicType<?> getRegisteredArrayType(java.lang.reflect.Type javaElementType) {
 		return getRegisteredType( javaElementType.getTypeName() + "[]" );
 	}
@@ -151,7 +179,9 @@ public class BasicTypeRegistry implements Serializable {
 				&& basicTypeReference.getJavaType() == type.getJavaType() ) {
 			@SuppressWarnings("unchecked") // safe, we just checked
 			final var castType = (BasicType<J>) type;
-			return castType;
+			return dynamicTypeMatches( basicTypeReference, castType )
+					? castType
+					: createBasicType( basicTypeReference.getName(), basicTypeReference );
 		}
 		else {
 			return null;
@@ -318,13 +348,13 @@ public class BasicTypeRegistry implements Serializable {
 		// if we are still building mappings, register this adhoc
 		// type via a unique code. (This is to support Envers.)
 		try {
-			final BootstrapContext bootstrapContext = getBootstrapContext();
-			final BasicType<J> existingAdHocBasicType = bootstrapContext.findAdHocBasicType( javaType, jdbcType );
+			final var metadataBuildingContext = typeConfiguration.getMetadataBuildingContext();
+			final BasicType<J> existingAdHocBasicType = metadataBuildingContext.findAdHocBasicType( javaType, jdbcType );
 			if ( existingAdHocBasicType != null ) {
 				return existingAdHocBasicType;
 			}
 			else {
-				bootstrapContext.registerAdHocBasicType( createdType );
+				metadataBuildingContext.registerAdHocBasicType( createdType );
 			}
 		}
 		catch (Exception ignore) {
@@ -332,10 +362,6 @@ public class BasicTypeRegistry implements Serializable {
 //			register( createdType );
 		}
 		return createdType;
-	}
-
-	private BootstrapContext getBootstrapContext() {
-		return typeConfiguration.getMetadataBuildingContext().getBootstrapContext();
 	}
 
 

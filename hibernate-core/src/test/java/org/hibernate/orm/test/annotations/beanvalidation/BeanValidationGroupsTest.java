@@ -7,7 +7,7 @@ package org.hibernate.orm.test.annotations.beanvalidation;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.constraints.NotNull;
 import org.hibernate.Transaction;
-import org.hibernate.boot.beanvalidation.BeanValidationIntegrator;
+import org.hibernate.cfg.SchemaToolingSettings;
 import org.hibernate.cfg.ValidationSettings;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -31,7 +31,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 		@Setting(name = ValidationSettings.JAKARTA_UPDATE_VALIDATION_GROUP, value = ""),
 		@Setting(name = ValidationSettings.JAKARTA_REMOVE_VALIDATION_GROUP,
 				value = "jakarta.validation.groups.Default, org.hibernate.orm.test.annotations.beanvalidation.Strict"),
-		@Setting(name = BeanValidationIntegrator.APPLY_CONSTRAINTS, value = "false"),
+		@Setting(name = SchemaToolingSettings.APPLY_VALIDATION_CONSTRAINTS, value = "false"),
 		@Setting(name = ValidationSettings.JAKARTA_VALIDATION_MODE, value = "auto"),
 })
 @DomainModel(annotatedClasses = {

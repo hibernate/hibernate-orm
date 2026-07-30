@@ -8,7 +8,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToOne;
 
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.util.ServiceRegistryUtil;
@@ -22,10 +23,12 @@ public class GetterAndIsMethodChecks {
 
 	@Test
 	public void testIt() {
-		new MetadataSources( ServiceRegistryUtil.serviceRegistry() ).addAnnotatedClass( A.class )
-				.buildMetadata()
-				.buildSessionFactory()
-				.close();
+		try (StandardServiceRegistry serviceRegistry = ServiceRegistryUtil.serviceRegistry()) {
+			org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory(
+					MetadataBuildingTestHelper.buildMetadata( serviceRegistry, A.class )
+			)
+					.close();
+		}
 	}
 
 	@Entity( name= "A" )

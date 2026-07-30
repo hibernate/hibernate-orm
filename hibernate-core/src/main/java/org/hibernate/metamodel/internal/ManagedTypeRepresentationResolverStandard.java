@@ -87,7 +87,7 @@ public class ManagedTypeRepresentationResolverStandard implements ManagedTypeRep
 			Component bootDescriptor, RuntimeModelCreationContext creationContext) {
 		if ( bootDescriptor.getTypeName() != null ) {
 			return beanInstance( creationContext,
-					creationContext.getBootstrapContext().getClassLoaderAccess()
+					creationContext.getClassLoaderAccess()
 							.classForName( bootDescriptor.getTypeName() ) );
 		}
 		else {
@@ -105,7 +105,7 @@ public class ManagedTypeRepresentationResolverStandard implements ManagedTypeRep
 			return new EmbeddableCompositeUserTypeInstantiator( (CompositeUserType) compositeUserType );
 		}
 		else if ( bootDescriptor.isRecord() ) {
-			if ( bootDescriptor.sortProperties() == null ) {
+			if ( bootDescriptor.completeShape() == null ) {
 				return new EmbeddableInstantiatorRecordStandard( bootDescriptor.getComponentClass() );
 			}
 			else {
@@ -116,7 +116,7 @@ public class ManagedTypeRepresentationResolverStandard implements ManagedTypeRep
 			}
 		}
 		else if ( bootDescriptor.getInstantiator() != null ) {
-			bootDescriptor.sortProperties();
+			bootDescriptor.completeShape();
 			return EmbeddableInstantiatorPojoIndirecting.of(
 					bootDescriptor.getPropertyNames(),
 					bootDescriptor.getInstantiator(),
@@ -129,13 +129,13 @@ public class ManagedTypeRepresentationResolverStandard implements ManagedTypeRep
 	}
 
 	private static <T> T beanInstance(RuntimeModelCreationContext creationContext, Class<T> userTypeClass) {
-		return creationContext.getBootModel().getMetadataBuildingOptions().isAllowExtensionsInCdi()
+		return creationContext.getBootModel().getMappingResolutionOptions().isAllowExtensionsInCdi()
 				? getBeanInstance( creationContext, userTypeClass )
 				: FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( userTypeClass );
 	}
 
 	private static <T> T getBeanInstance(RuntimeModelCreationContext creationContext, Class<T> userTypeClass) {
-		return creationContext.getBootstrapContext().getManagedBeanRegistry()
+		return creationContext.getManagedBeanRegistry()
 				.getBean( userTypeClass )
 				.getBeanInstance();
 	}

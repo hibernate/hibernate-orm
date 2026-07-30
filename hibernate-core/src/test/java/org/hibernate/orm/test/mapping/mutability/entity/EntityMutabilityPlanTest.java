@@ -8,7 +8,7 @@ import java.util.Date;
 
 import org.hibernate.MappingException;
 import org.hibernate.annotations.Mutability;
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.type.descriptor.java.Immutability;
 
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -27,10 +27,8 @@ import static org.junit.jupiter.api.Assertions.fail;
 public class EntityMutabilityPlanTest {
 	@Test
 	void verifyMetamodel(ServiceRegistryScope scope) {
-		final MetadataSources metadataSources = new MetadataSources( scope.getRegistry() );
-		metadataSources.addAnnotatedClass( Event.class );
 		try {
-			metadataSources.buildMetadata();
+			MetadataBuildingTestHelper.buildMetadata( scope.getRegistry(), Event.class );
 			fail( "Expecting exception about @Mutability on the entity" );
 		}
 		catch (MappingException expected) {

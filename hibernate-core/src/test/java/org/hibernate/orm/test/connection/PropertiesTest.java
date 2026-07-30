@@ -10,9 +10,6 @@ import java.util.Properties;
 
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataBuilder;
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistry;
@@ -20,6 +17,7 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator;
 import org.hibernate.internal.util.PropertiesHelper;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.tool.schema.Action;
 
 import org.hibernate.testing.env.ConnectionProviderBuilder;
@@ -64,17 +62,9 @@ public class PropertiesTest {
 					.applySetting( AvailableSettings.JAKARTA_JDBC_USER, ConnectionProviderBuilder.USER )
 					.applySetting( AvailableSettings.JAKARTA_JDBC_PASSWORD, ConnectionProviderBuilder.PASS )
 					.applySetting( AvailableSettings.HBM2DDL_AUTO, Action.UPDATE );
-
-			final MetadataSources metadataSources = new MetadataSources();
-
-
 			try (final StandardServiceRegistry build = standardServiceRegistryBuilder.build()) {
-				final MetadataBuilder metadataBuilder = metadataSources.getMetadataBuilder( build );
-
-				final Metadata metadata = metadataBuilder.build();
-				final SessionFactoryBuilder sessionFactoryBuilder = metadata.getSessionFactoryBuilder();
-
-				final SessionFactory sessionFactory = sessionFactoryBuilder.build();
+				final Metadata metadata = MetadataBuildingTestHelper.buildMetadata( build );
+				final SessionFactory sessionFactory = org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory( metadata );
 				sessionFactory.close();
 			}
 		}

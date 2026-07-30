@@ -28,7 +28,7 @@ public class InvalidNoCdiSupportTest {
 	public void testIt(DomainModelScope modelScope) {
 		// because there is no CDI available, building the SF should immediately
 		// try to build the ManagedBeans which should fail here
-		try (var sf = modelScope.getDomainModel().buildSessionFactory()) {
+		try (var sf = org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory( modelScope.getDomainModel() )) {
 			Assertions.fail( "Expecting failure" );
 		}
 		catch (InstantiationException expected) {

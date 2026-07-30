@@ -10,11 +10,9 @@ import java.util.List;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.ImplicitListAsBagProvider;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.orm.junit.SettingProvider;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Column;
@@ -31,7 +29,6 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hibernate.cfg.AvailableSettings.DEFAULT_LIST_SEMANTICS;
 import static org.hibernate.orm.test.util.SchemaUtil.getColumnNames;
 
 /**
@@ -46,10 +43,6 @@ import static org.hibernate.orm.test.util.SchemaUtil.getColumnNames;
  * at org.hibernate.cfg.PkDrivenByDefaultMapsIdSecondPass.doSecondPass(PkDrivenByDefaultMapsIdSecondPass.java:37)
  * at org.hibernate.boot.internal.InFlightMetadataCollectorImpl.processSecondPasses(InFlightMetadataCollectorImpl.java:1693)
  * at org.hibernate.boot.internal.InFlightMetadataCollectorImpl.processSecondPasses(InFlightMetadataCollectorImpl.java:1650)
- * at org.hibernate.boot.model.process.spi.MetadataBuildingProcess.complete(MetadataBuildingProcess.java:295)
- * at org.hibernate.boot.model.process.spi.MetadataBuildingProcess.build(MetadataBuildingProcess.java:86)
- * at org.hibernate.boot.internal.MetadataBuilderImpl.build(MetadataBuilderImpl.java:479)
- * at org.hibernate.boot.internal.MetadataBuilderImpl.build(MetadataBuilderImpl.java:85)
  * at org.hibernate.cfg.Configuration.buildSessionFactory(Configuration.java:709)
  * at org.hibernate.testing.junit4.BaseCoreFunctionalTestCase.buildSessionFactory(BaseCoreFunctionalTestCase.java:125)
  * at org.hibernate.testing.junit4.BaseCoreFunctionalTestCase.buildSessionFactory(BaseCoreFunctionalTestCase.java:110)
@@ -61,11 +54,7 @@ import static org.hibernate.orm.test.util.SchemaUtil.getColumnNames;
  */
 @JiraKey(value = "HHH-13295")
 @ServiceRegistry(
-		settingProviders = @SettingProvider(
-				settingName = DEFAULT_LIST_SEMANTICS,
-				provider = ImplicitListAsBagProvider.class
 		)
-)
 @DomainModel(
 		annotatedClasses = {
 				EmbeddedIdWithMapsIdTargetingDerivedEntityTest.Attendance.class,

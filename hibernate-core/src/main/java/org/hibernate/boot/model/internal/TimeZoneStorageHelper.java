@@ -27,7 +27,7 @@ public class TimeZoneStorageHelper {
 	private static final String OFFSET_DATETIME_CLASS = OffsetDateTime.class.getName();
 	private static final String ZONED_DATETIME_CLASS = ZonedDateTime.class.getName();
 
-	static Class<? extends CompositeUserType<?>> resolveTimeZoneStorageCompositeUserType(
+	public static Class<? extends CompositeUserType<?>> resolveTimeZoneStorageCompositeUserType(
 			MemberDetails attributeMember,
 			ClassDetails returnedClass,
 			MetadataBuildingContext context) {
@@ -68,19 +68,19 @@ public class TimeZoneStorageHelper {
 		return OFFSET_TIME_CLASS.equals( returnedClassName );
 	}
 
-	static boolean useColumnForTimeZoneStorage(AnnotationTarget element, MetadataBuildingContext context) {
+	public static boolean useColumnForTimeZoneStorage(AnnotationTarget element, MetadataBuildingContext context) {
 		final var timeZoneStorage = element.getDirectAnnotationUsage( TimeZoneStorage.class );
 		if ( timeZoneStorage == null ) {
 			return element instanceof MemberDetails attributeMember
 				&& isTemporalWithTimeZoneClass( attributeMember.getType().getName() )
 				//no @TimeZoneStorage annotation, so we need to use the default storage strategy
-				&& context.getBuildingOptions().getDefaultTimeZoneStorage() == COLUMN;
+				&& context.getBuildingPlan().getDefaultTimeZoneStorage() == COLUMN;
 		}
 		else {
 			return switch ( timeZoneStorage.value() ) {
 				case COLUMN -> true;
 				// if the db has native support for timezones, we use that, not a column
-				case AUTO -> context.getBuildingOptions().getTimeZoneSupport() != NATIVE;
+				case AUTO -> context.getBuildingPlan().getTimeZoneSupport() != NATIVE;
 				default -> false;
 			};
 		}

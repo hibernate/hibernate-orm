@@ -20,7 +20,7 @@ public class MetadataCopyingTest {
 		//we can actually read the matching state from an existing MetadataImpl instance.
 		MetadataImpl newcopy = new MetadataImpl(
 				existingInstance.getUUID(),
-				existingInstance.getMetadataBuildingOptions(),
+				existingInstance.getMappingResolutionOptions(),
 				existingInstance.getEntityBindingMap(),
 				existingInstance.getComposites(),
 				existingInstance.getGenericComponentsMap(),
@@ -31,12 +31,13 @@ public class MetadataCopyingTest {
 				existingInstance.getFilterDefinitions(),
 				existingInstance.getFetchProfileMap(),
 				existingInstance.getImports(),
-				existingInstance.getIdGeneratorDefinitionMap(),
+				existingInstance.getIdentifierGeneratorRegistrations(),
 				existingInstance.getNamedQueryMap(),
 				existingInstance.getNamedNativeQueryMap(),
 				existingInstance.getNamedProcedureCallMap(),
 				existingInstance.getSqlResultSetMappingMap(),
 				existingInstance.getNamedEntityGraphs(),
+				existingInstance.getFunctionRegistry(),
 				existingInstance.getSqlFunctionMap(),
 				existingInstance.getPersistenceUnitLifecycleCallbackDefinitions(),
 				existingInstance.getDatabase(),

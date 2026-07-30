@@ -233,28 +233,19 @@ if one is found its reported +JtaPlatform+ is used (first wins).
 This is the second level cache service in terms of starting the underlying cache provider
 
 
-==== SessionFactoryServiceRegistryFactory
+=== Factory-owned runtime components
 
-+org.hibernate.service.spi.SessionFactoryServiceRegistryFactory+ is a service that acts as a factory for building the
-third type of ServiceRegistry, +SessionFactoryServiceRegistry+ which we will discuss next.  I opted for the "factory as
-service" approach because in the current design there is really not a good exposed hook-in spot for when the
-+SessionFactoryServiceRegistry+ needs to be built.  This may very well change in 5.0
-
-
-=== SessionFactoryServiceRegistry
-
-+org.hibernate.service.spi.SessionFactoryServiceRegistry+ is the 3rd standard Hibernate ServiceRegistry.  Typically,
-its parent registry is the +StandardServiceRegistry+.  +SessionFactoryServiceRegistry+ is designed to hold Services
-which need access to the SessionFactory.  Currently that is just 3 Services.
-
-NOTE: Integrators, as it stands in 4.x, operate on the SessionFactoryServiceRegistry...
+Components which require a +SessionFactory+ are owned directly by the factory
+instead of being stored in a child service registry.  Replaceable strategies or
+factories are discovered as Java services while preparing factory construction.
 
 
 ==== EventListenerRegistry
 
-+org.hibernate.event.service.spi.EventListenerRegistry+ is the big Service managed in the +SessionFactoryServiceRegistry+.
-This is the Service that manages and exposes all of Hibernate's event listeners.  A major use-case for +Integrators+ is
-to alter the listener registry.
++org.hibernate.event.service.spi.EventListenerRegistry+ is owned by the
+factory's +EventEngine+.  It manages and exposes all of Hibernate's event
+listeners.  A major use-case for +Integrators+ is to alter the listener
+registry.
 
 If doing custom listener registration, it is important to understand the
 +org.hibernate.event.service.spi.DuplicationStrategy+ and its effect on registration.  The basic idea is to tell
@@ -266,7 +257,8 @@ Hibernate:
 ==== StatisticsImplementor
 
 +org.hibernate.stat.spi.StatisticsImplementor+ is the SPI portion of the +org.hibernate.stat.Statistics+ API.  The
-collector portion, if you will.
+collector portion, if you will.  Its factory may be registered as a Java
+service.
 
 
 == Service lifecycle

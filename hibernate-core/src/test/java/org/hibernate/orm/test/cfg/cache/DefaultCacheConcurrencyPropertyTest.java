@@ -9,7 +9,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import org.hibernate.annotations.Immutable;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
@@ -17,6 +16,7 @@ import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -43,13 +43,11 @@ public class DefaultCacheConcurrencyPropertyTest {
 			assertThat( ssr.getService( ConfigurationService.class ).getSettings()
 					.get( AvailableSettings.DEFAULT_CACHE_CONCURRENCY_STRATEGY ) )
 					.isEqualTo( "read-only" );
-			final MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr )
-					.addAnnotatedClass( TheEntity.class )
-					.buildMetadata();
-			assertThat( metadata.getMetadataBuildingOptions().getMappingDefaults().getImplicitCacheAccessType() )
+			final MetadataImplementor metadata = (MetadataImplementor) MetadataBuildingTestHelper.buildMetadata( ssr, TheEntity.class );
+			assertThat( metadata.getMappingResolutionOptions().getMappingDefaults().getImplicitCacheAccessType() )
 					.isEqualTo( AccessType.READ_ONLY );
 
-			try (SessionFactoryImplementor sf = metadata.buildSessionFactory()) {
+			try (SessionFactoryImplementor sf = org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory( metadata )) {
 				final EntityPersister persister = sf.getRuntimeMetamodels()
 						.getMappingMetamodel()
 						.getEntityDescriptor( TheEntity.class.getName() );

@@ -7,16 +7,16 @@ package org.hibernate.orm.test.mapping.collections;
 import java.sql.Timestamp;
 import java.sql.Types;
 import java.time.LocalDateTime;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.hibernate.annotations.MapKeyJavaType;
 import org.hibernate.annotations.MapKeyJdbcTypeCode;
+import org.hibernate.boot.pipeline.internal.BootstrapPipeline;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryBasedFunctionalTest;
 import org.hibernate.type.descriptor.java.JdbcTimestampJavaType;
 
@@ -68,19 +68,17 @@ public class MapKeyTypeTest extends EntityManagerFactoryBasedFunctionalTest {
 		try {
 			Map<String, Object> settings = buildSettings();
 			settings.put(
-				AvailableSettings.LOADED_CLASSES,
-				Collections.singletonList(
-					Person.class
-				)
-			);
-			settings.put(
 					AvailableSettings.HBM2DDL_AUTO,
 					"none"
 			);
-			entityManagerFactory =  Bootstrap.getEntityManagerFactoryBuilder(
-					new TestingPersistenceUnitDescriptorImpl(getClass().getSimpleName()),
+			entityManagerFactory =  BootstrapPipeline.build(
+					new TestingPersistenceUnitDescriptorImpl(
+							getClass().getSimpleName(),
+							List.of( Person.class.getName() ),
+							List.of()
+					),
 					settings
-			).build().unwrap(SessionFactoryImplementor.class);
+			).unwrap(SessionFactoryImplementor.class);
 
 			final EntityManagerFactory emf = entityManagerFactory;
 

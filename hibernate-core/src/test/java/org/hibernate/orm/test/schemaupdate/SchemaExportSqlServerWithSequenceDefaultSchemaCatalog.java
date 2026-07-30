@@ -6,12 +6,12 @@ package org.hibernate.orm.test.schemaupdate;
 
 import java.util.EnumSet;
 
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.SQLServerDialect;
-import org.hibernate.service.ServiceRegistry;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.TargetType;
 
@@ -39,7 +39,7 @@ import static org.hibernate.testing.jdbc.GradleParallelTestingResolver.resolveUs
 @BaseUnitTest
 @RequiresDialect(value = SQLServerDialect.class, majorVersion = 12)
 public class SchemaExportSqlServerWithSequenceDefaultSchemaCatalog {
-	protected ServiceRegistry serviceRegistry;
+	protected StandardServiceRegistry serviceRegistry;
 	protected MetadataImplementor metadata;
 
 	@Test
@@ -55,9 +55,7 @@ public class SchemaExportSqlServerWithSequenceDefaultSchemaCatalog {
 				.applySetting( Environment.DEFAULT_SCHEMA, "dbo" )
 				.applySetting( Environment.DEFAULT_CATALOG, resolveUsername( "hibernate_orm_test_$worker" ) )
 				.build();
-		metadata = (MetadataImplementor) new MetadataSources( serviceRegistry )
-				.addAnnotatedClass( MyEntity.class )
-				.buildMetadata();
+		metadata = (MetadataImplementor) MetadataBuildingTestHelper.buildMetadata( serviceRegistry, MyEntity.class );
 
 		System.out.println( "********* Starting SchemaExport for START-UP *************************" );
 		new SchemaExport().create( EnumSet.of( TargetType.DATABASE, TargetType.STDOUT ), metadata );

@@ -604,7 +604,7 @@ public class HANADialect extends Dialect {
 						// 146 - Resource busy and acquire with NOWAIT specified
 							new LockTimeoutException( message, sqlException, sql );
 					case 132 ->
-						// 132 - Transaction rolled back due to unavailable resource
+						// 132 - Transaction rolled back due to unavailable mapping source
 							new LockAcquisitionException( message, sqlException, sql );
 					case 133 ->
 						// 133 - Transaction rolled back by detected deadlock

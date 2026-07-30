@@ -22,7 +22,6 @@ import org.hibernate.mapping.UserDefinedObjectType;
  * {@value org.hibernate.cfg.AvailableSettings#COLUMN_ORDERING_STRATEGY}.
  *
  * @see org.hibernate.cfg.Configuration#setColumnOrderingStrategy(ColumnOrderingStrategy)
- * @see org.hibernate.boot.MetadataBuilder#applyColumnOrderingStrategy(ColumnOrderingStrategy)
  * @see org.hibernate.cfg.AvailableSettings#COLUMN_ORDERING_STRATEGY
  */
 @Incubating

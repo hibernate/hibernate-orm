@@ -14,14 +14,12 @@ import java.util.List;
 import java.util.Properties;
 
 import org.hibernate.HibernateException;
-import org.hibernate.boot.MetadataBuilder;
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
-import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
+import org.hibernate.boot.pipeline.internal.MetadataBuildingHelper;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.cfg.MappingSettings;
 import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.internal.util.collections.ArrayHelper;
 
@@ -106,17 +104,15 @@ public class SchemaValidatorTask extends MatchingTask {
 		try {
 			final StandardServiceRegistryBuilder ssrBuilder = new StandardServiceRegistryBuilder();
 			configure( ssrBuilder );
+			configureMetadataSettings( ssrBuilder );
 
 			final StandardServiceRegistry ssr = ssrBuilder.build();
 
 			try {
-				final MetadataSources metadataSources = new MetadataSources( ssrBuilder.build() );
-				configure( metadataSources );
+				final MappingSources mappingSources = new MappingSources();
+				configure( mappingSources );
 
-				final MetadataBuilder metadataBuilder = metadataSources.getMetadataBuilder();
-				configure( metadataBuilder, ssr );
-
-				final MetadataImplementor metadata = (MetadataImplementor) metadataBuilder.build();
+				final MetadataImplementor metadata = MetadataBuildingHelper.buildMetadata( ssr, mappingSources );
 
 				new SchemaValidator().validate( metadata, ssr );
 			}
@@ -158,13 +154,13 @@ public class SchemaValidatorTask extends MatchingTask {
 		registryBuilder.applySettings( properties );
 	}
 
-	private void configure(MetadataSources metadataSources) {
+	private void configure(MappingSources mappingSources) {
 		for ( String filename : collectFiles() ) {
 			if ( filename.endsWith(".jar") ) {
-				metadataSources.addJar( new File( filename ) );
+				throw new BuildException( "Jar file mapping discovery is no longer supported: " + filename );
 			}
 			else {
-				metadataSources.addFile( filename );
+				mappingSources.addMappingFile( new File( filename ) );
 			}
 		}
 	}
@@ -187,17 +183,12 @@ public class SchemaValidatorTask extends MatchingTask {
 		return ArrayHelper.toStringArray( files );
 	}
 
-	private void configure(MetadataBuilder metadataBuilder, StandardServiceRegistry serviceRegistry) {
-		final StrategySelector strategySelector = serviceRegistry.requireService( StrategySelector.class );
+	private void configureMetadataSettings(StandardServiceRegistryBuilder registryBuilder) {
 		if ( implicitNamingStrategy != null ) {
-			metadataBuilder.applyImplicitNamingStrategy(
-					strategySelector.resolveStrategy( ImplicitNamingStrategy.class, implicitNamingStrategy )
-			);
+			registryBuilder.applySetting( MappingSettings.IMPLICIT_NAMING_STRATEGY, implicitNamingStrategy );
 		}
 		if ( physicalNamingStrategy != null ) {
-			metadataBuilder.applyPhysicalNamingStrategy(
-					strategySelector.resolveStrategy( PhysicalNamingStrategy.class, physicalNamingStrategy )
-			);
+			registryBuilder.applySetting( MappingSettings.PHYSICAL_NAMING_STRATEGY, physicalNamingStrategy );
 		}
 	}
 }

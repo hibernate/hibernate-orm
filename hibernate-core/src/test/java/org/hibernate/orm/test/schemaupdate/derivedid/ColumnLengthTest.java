@@ -21,7 +21,6 @@ import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.TargetType;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -29,8 +28,8 @@ import java.io.File;
 import java.io.Serializable;
 import java.nio.file.Files;
 import java.util.EnumSet;
-import java.util.List;
 
+import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.hibernate.cfg.SchemaToolingSettings.HBM2DDL_AUTO;
 
 /**
@@ -62,20 +61,9 @@ public class ColumnLengthTest {
 
 		final var commands = Files.readAllLines( scriptFile.toPath() );
 
-		Assertions.assertTrue( checkCommandIsGenerated(
-				commands,
+		assertThat( commands ).contains(
 				"create table DEPENDENT (FK2 varchar(10) not null, FK1 varchar(32) not null, name varchar(255) not null, primary key (FK1, FK2, name));"
-		) );
-
-	}
-
-	boolean checkCommandIsGenerated(List<String> generatedCommands, String toCheck) {
-		for ( String command : generatedCommands ) {
-			if ( command.contains( toCheck ) ) {
-				return true;
-			}
-		}
-		return false;
+		);
 	}
 
 	@SuppressWarnings("unused")

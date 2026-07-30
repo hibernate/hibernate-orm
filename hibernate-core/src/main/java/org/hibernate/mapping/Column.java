@@ -17,7 +17,6 @@ import org.hibernate.MappingException;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Database;
-import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
@@ -115,12 +114,8 @@ public sealed class Column
 		this.value = value;
 	}
 
-	public JdbcMapping getType() {
-		return getValue().getSelectableType( getMetadataCollector(), getTypeIndex() );
-	}
-
-	private InFlightMetadataCollector getMetadataCollector() {
-		return getValue().getBuildingContext().getMetadataCollector();
+	public JdbcMapping getType(MappingContext mappingContext) {
+		return getValue().getSelectableType( mappingContext, getTypeIndex() );
 	}
 
 	public String getName() {
@@ -429,11 +424,21 @@ public sealed class Column
 		return columnSize;
 	}
 
+	public Size getColumnSizeForType(Dialect dialect, Type type) {
+		if ( columnSize == null ) {
+			columnSize = calculateColumnSize( dialect, null, type );
+		}
+		return columnSize;
+	}
+
 	Size calculateColumnSize(Dialect dialect, MappingContext mappingContext) {
+		return calculateColumnSize( dialect, mappingContext, getValue().getType() );
+	}
+
+	Size calculateColumnSize(Dialect dialect, MappingContext mappingContext, Type type) {
 		var lengthToUse = getLength();
 		var precisionToUse = getPrecision();
 		var scaleToUse = getScale();
-		var type = getValue().getType();
 		if ( type instanceof EntityType ) {
 			type = getTypeForEntityValue( mappingContext, type, getTypeIndex() );
 		}

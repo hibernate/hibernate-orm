@@ -14,9 +14,8 @@ import jakarta.persistence.PersistenceUnitTransactionType;
 import jakarta.persistence.SchemaManagementAction;
 import jakarta.persistence.SharedCacheMode;
 import jakarta.persistence.ValidationMode;
-import org.hibernate.Remove;
-import org.hibernate.SessionFactory;
 import org.hibernate.StatementObserver;
+import org.hibernate.SessionFactory;
 import org.hibernate.boot.scan.spi.ScanningProvider;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.AvailableSettings;
@@ -28,11 +27,13 @@ import org.hibernate.cfg.MappingSettings;
 import org.hibernate.cfg.PersistenceSettings;
 import org.hibernate.cfg.SchemaToolingSettings;
 import org.hibernate.cfg.StatisticsSettings;
-import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.tool.schema.Action;
 
+import java.io.File;
+import java.net.URI;
 import java.net.URL;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -60,13 +61,13 @@ import java.util.Objects;
  * {@link PersistenceConfiguration}. All configuration properties understood
  * by Hibernate are enumerated by {@link AvailableSettings}.
  * <pre>{@code
- * SessionFactory factory = new HibernatePersistenceConfiguration()
+ * SessionFactory factory = new HibernatePersistenceConfiguration("example")
  *     // scan classes for mapping annotations
  *     .managedClasses(Item.class, Bid.class, User.class)
  *     // set a configuration property
- *     .setProperty(PersistenceConfiguration.JDBC_DATASOURCE,
- *                  "java:comp/env/jdbc/test")
- *     .buildSessionFactory();
+ *     .property(PersistenceConfiguration.JDBC_DATASOURCE,
+ *               "java:comp/env/jdbc/test")
+ *     .createEntityManagerFactory();
  * }</pre>
  * <p>
  * When instantiated, an instance of
@@ -100,6 +101,10 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 
 	private final URL rootUrl;
 	private final List<URL> jarFileUrls = new ArrayList<>();
+	private final List<String> managedClassNames = new ArrayList<>();
+	private final List<String> packageNames = new ArrayList<>();
+	private final List<URI> mappingFileUris = new ArrayList<>();
+	private final List<URL> mappingFileUrls = new ArrayList<>();
 
 	/**
 	 * Create a new empty configuration. An empty configuration does not
@@ -154,17 +159,6 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	 */
 	public HibernatePersistenceConfiguration(@Nonnull String name, @Nonnull Class<?> classFromRootUrl) {
 		this( name, classFromRootUrl.getProtectionDomain().getCodeSource().getLocation() );
-	}
-
-	/**
-	 * Create a new {@link SessionFactory} based on this configuration.
-	 */
-	@Override
-	@Nonnull
-	public SessionFactory createEntityManagerFactory() {
-		new EntityManagerFactoryBuilderImpl( this ).build();
-
-		return (SessionFactory) super.createEntityManagerFactory();
 	}
 
 	/**
@@ -363,19 +357,6 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 
 	/**
 	 * Specifies whether Hibernate will strictly adhere to compliance with Jakarta Persistence for
-	 * in terms of collecting all named value generators globally, regardless of location.
-	 *
-	 * @see JpaComplianceSettings#JPA_ID_GENERATOR_GLOBAL_SCOPE_COMPLIANCE
-	 */
-	@Remove
-	@Nonnull
-	public HibernatePersistenceConfiguration globalGeneratorCompliance(boolean enabled) {
-		property( JpaComplianceSettings.JPA_ID_GENERATOR_GLOBAL_SCOPE_COMPLIANCE, enabled );
-		return this;
-	}
-
-	/**
-	 * Specifies whether Hibernate will strictly adhere to compliance with Jakarta Persistence for
 	 * the interpretation of {@link jakarta.persistence.OrderBy}.
 	 *
 	 * @see JpaComplianceSettings#JPA_ORDER_BY_MAPPING_COMPLIANCE
@@ -551,6 +532,90 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	}
 
 	/**
+	 * Add the specified class name as a managed class without loading the class.
+	 *
+	 * @see #managedClass(Class)
+	 */
+	@Nonnull
+	public HibernatePersistenceConfiguration managedClassName(@Nonnull String managedClassName) {
+		managedClassNames.add( managedClassName );
+		return this;
+	}
+
+	/**
+	 * Add the specified class names as managed classes without loading the classes.
+	 *
+	 * @see #managedClassName(String)
+	 */
+	@Nonnull
+	public HibernatePersistenceConfiguration managedClassNames(@Nonnull String... managedClassNames) {
+		Collections.addAll( this.managedClassNames, managedClassNames );
+		return this;
+	}
+
+	/**
+	 * Add the specified class names as managed classes without loading the classes.
+	 *
+	 * @see #managedClassName(String)
+	 */
+	@Nonnull
+	public HibernatePersistenceConfiguration managedClassNames(@Nonnull Collection<String> managedClassNames) {
+		this.managedClassNames.addAll( managedClassNames );
+		return this;
+	}
+
+	/**
+	 * Class names contributed as managed classes without loading the classes.
+	 */
+	@Nonnull
+	public List<String> managedClassNames() {
+		return managedClassNames;
+	}
+
+	/**
+	 * Add package-level mapping metadata by package name.
+	 */
+	@Nonnull
+	public HibernatePersistenceConfiguration packageName(@Nonnull String packageName) {
+		packageNames.add( packageName );
+		return this;
+	}
+
+	/**
+	 * Add package-level mapping metadata by package reference.
+	 */
+	@Nonnull
+	public HibernatePersistenceConfiguration packageName(@Nonnull Package packageReference) {
+		return packageName( packageReference.getName() );
+	}
+
+	/**
+	 * Add package-level mapping metadata by package names.
+	 */
+	@Nonnull
+	public HibernatePersistenceConfiguration packageNames(@Nonnull String... packageNames) {
+		Collections.addAll( this.packageNames, packageNames );
+		return this;
+	}
+
+	/**
+	 * Add package-level mapping metadata by package names.
+	 */
+	@Nonnull
+	public HibernatePersistenceConfiguration packageNames(@Nonnull Collection<String> packageNames) {
+		this.packageNames.addAll( packageNames );
+		return this;
+	}
+
+	/**
+	 * Package names contributed for package-level mapping metadata.
+	 */
+	@Nonnull
+	public List<String> packageNames() {
+		return packageNames;
+	}
+
+	/**
 	 * Add the specified resource names as {@linkplain #mappingFiles() mapping files}.
 	 *
 	 * @see #mappingFiles()
@@ -570,6 +635,88 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	public HibernatePersistenceConfiguration mappingFiles(@Nonnull Collection<String> names) {
 		mappingFiles().addAll( names );
 		return this;
+	}
+
+	/**
+	 * Add the specified resource name as a mapping file.
+	 *
+	 * @see #mappingFile(String)
+	 */
+	@Nonnull
+	public HibernatePersistenceConfiguration mappingResource(@Nonnull String name) {
+		mappingFile( name );
+		return this;
+	}
+
+	/**
+	 * Add the specified resource names as mapping files.
+	 *
+	 * @see #mappingFiles(String...)
+	 */
+	@Nonnull
+	public HibernatePersistenceConfiguration mappingResources(@Nonnull String... names) {
+		return mappingFiles( names );
+	}
+
+	/**
+	 * Add the specified resource names as mapping files.
+	 *
+	 * @see #mappingFiles(Collection)
+	 */
+	@Nonnull
+	public HibernatePersistenceConfiguration mappingResources(@Nonnull Collection<String> names) {
+		return mappingFiles( names );
+	}
+
+	/**
+	 * Add the specified filesystem path as a mapping file.
+	 */
+	@Nonnull
+	public HibernatePersistenceConfiguration mappingFile(@Nonnull Path path) {
+		mappingFileUris.add( path.toUri() );
+		return this;
+	}
+
+	/**
+	 * Add the specified filesystem file as a mapping file.
+	 */
+	@Nonnull
+	public HibernatePersistenceConfiguration mappingFile(@Nonnull File file) {
+		return mappingFile( file.toPath() );
+	}
+
+	/**
+	 * Add the specified URI as a mapping file.
+	 */
+	@Nonnull
+	public HibernatePersistenceConfiguration mappingFile(@Nonnull URI uri) {
+		mappingFileUris.add( uri );
+		return this;
+	}
+
+	/**
+	 * Add the specified URL as a mapping file.
+	 */
+	@Nonnull
+	public HibernatePersistenceConfiguration mappingFile(@Nonnull URL url) {
+		mappingFileUrls.add( url );
+		return this;
+	}
+
+	/**
+	 * Mapping file URIs contributed directly.
+	 */
+	@Nonnull
+	public List<URI> mappingFileUris() {
+		return mappingFileUris;
+	}
+
+	/**
+	 * Mapping file URLs contributed directly.
+	 */
+	@Nonnull
+	public List<URL> mappingFileUrls() {
+		return mappingFileUrls;
 	}
 
 	/**
@@ -712,6 +859,12 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// covariant overrides
+
+	@Override
+	@Nonnull
+	public SessionFactory createEntityManagerFactory() {
+		return (SessionFactory) super.createEntityManagerFactory();
+	}
 
 	@Override
 	@Nonnull

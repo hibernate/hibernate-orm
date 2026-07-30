@@ -7,11 +7,12 @@ package org.hibernate.orm.test.schemavalidation;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -99,11 +100,10 @@ public class InstantValidationTest implements ServiceRegistryProducer {
 
 	@Test
 	void testValidation(ServiceRegistryScope registryScope) {
-		final var newModel = (MetadataImplementor) new MetadataSources( registryScope.getRegistry() )
-				.addAnnotatedClasses( TestEntity.class )
-				.buildMetadata();
-		newModel.orderColumns( false );
-		newModel.validate();
+		final var newModel = MetadataBuildingTestHelper.buildValidatedMetadata(
+				registryScope.getRegistry(),
+				new MappingSources().addManagedClass( TestEntity.class )
+		);
 
 		final var tool = registryScope.getRegistry().requireService( SchemaManagementTool.class );
 

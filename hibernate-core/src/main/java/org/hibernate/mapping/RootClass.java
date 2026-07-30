@@ -4,6 +4,7 @@
  */
 package org.hibernate.mapping;
 
+import org.hibernate.boot.mapping.spi.MappingRole;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -184,6 +185,9 @@ public final class RootClass extends PersistentClass implements TableOwner, Soft
 
 	public void setVersion(Property version) {
 		this.version = version;
+		if ( version != null && getEntityName() != null ) {
+			version.setMappingRole( MappingRole.entity( getEntityName() ).append( MappingRole.PartKind.VERSION ) );
+		}
 	}
 
 	@Override
@@ -218,6 +222,11 @@ public final class RootClass extends PersistentClass implements TableOwner, Soft
 
 	public void setDiscriminator(Value discriminator) {
 		this.discriminator = discriminator;
+		if ( discriminator instanceof AppliedMappingPart mappingPart && getEntityName() != null ) {
+			mappingPart.setMappingRole(
+					MappingRole.entity( getEntityName() ).append( MappingRole.PartKind.DISCRIMINATOR )
+			);
+		}
 	}
 
 	public void setEmbeddedIdentifier(boolean embeddedIdentifier) {
@@ -226,12 +235,21 @@ public final class RootClass extends PersistentClass implements TableOwner, Soft
 
 	public void setIdentifier(KeyValue identifier) {
 		this.identifier = identifier;
+		if ( identifier instanceof AppliedMappingPart mappingPart && getEntityName() != null ) {
+			mappingPart.setMappingRole(
+					MappingRole.entity( getEntityName() ).append( MappingRole.PartKind.IDENTIFIER )
+			);
+		}
 	}
 
 	public void setIdentifierProperty(Property identifierProperty) {
 		this.identifierProperty = identifierProperty;
 		identifierProperty.setPersistentClass( this );
-
+		if ( getEntityName() != null ) {
+			identifierProperty.setMappingRole(
+					MappingRole.entity( getEntityName() ).append( MappingRole.PartKind.IDENTIFIER )
+			);
+		}
 	}
 
 	public void setMutable(boolean mutable) {
@@ -448,6 +466,10 @@ public final class RootClass extends PersistentClass implements TableOwner, Soft
 		this.auxiliaryColumnInPrimaryKey = key;
 	}
 
+	public String getAuxiliaryColumnInPrimaryKey() {
+		return auxiliaryColumnInPrimaryKey;
+	}
+
 	@Override
 	public boolean isPrimaryKeyDisabled() {
 		return primaryKeyDisabled;
@@ -461,25 +483,6 @@ public final class RootClass extends PersistentClass implements TableOwner, Soft
 	@Override
 	public Object accept(PersistentClassVisitor mv) {
 		return mv.accept( this );
-	}
-
-	@Override
-	public PrimaryKey makePrimaryKey(Table table) {
-		if ( isPrimaryKeyDisabled() ) {
-			return null;
-		}
-		else {
-			final var primaryKey = super.makePrimaryKey( table );
-			if ( isAuxiliaryColumnInPrimaryKey() ) {
-				if ( isVersioned() ) {
-					primaryKey.addColumns( getVersion().getValue() );
-				}
-				else {
-					primaryKey.addColumn( getAuxiliaryColumn( auxiliaryColumnInPrimaryKey ) );
-				}
-			}
-			return primaryKey;
-		}
 	}
 
 	public void setStateManagementType(Class<? extends StateManagement> stateManagementType) {

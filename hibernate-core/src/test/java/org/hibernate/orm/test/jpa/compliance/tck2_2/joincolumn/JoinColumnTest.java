@@ -4,10 +4,10 @@
  */
 package org.hibernate.orm.test.jpa.compliance.tck2_2.joincolumn;
 
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 
 import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.RequiresDialect;
@@ -29,11 +29,9 @@ public class JoinColumnTest {
 	@Test
 	public void testIt(ServiceRegistryScope scope) {
 
-		try (SessionFactoryImplementor sf = (SessionFactoryImplementor) new MetadataSources( scope.getRegistry() )
-				.addAnnotatedClass( Company.class )
-				.addAnnotatedClass( Location.class )
-				.buildMetadata()
-				.buildSessionFactory()) {
+		try (SessionFactoryImplementor sf = (SessionFactoryImplementor) org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory(
+				MetadataBuildingTestHelper.buildMetadata( scope.getRegistry(), Company.class, Location.class )
+		)) {
 			try {
 				inTransaction(
 						sf,

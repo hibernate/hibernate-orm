@@ -783,7 +783,6 @@ public interface SharedSessionContract extends EntityHandler, AutoCloseable, Ser
 	 * @since 5.2
 	 *
 	 * @see org.hibernate.boot.spi.SessionFactoryOptions#getJdbcBatchSize
-	 * @see org.hibernate.boot.SessionFactoryBuilder#applyJdbcBatchSize
 	 */
 	@Nullable
 	Integer getJdbcBatchSize();
@@ -809,7 +808,6 @@ public interface SharedSessionContract extends EntityHandler, AutoCloseable, Ser
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#STATEMENT_BATCH_SIZE
 	 * @see org.hibernate.boot.spi.SessionFactoryOptions#getJdbcBatchSize
-	 * @see org.hibernate.boot.SessionFactoryBuilder#applyJdbcBatchSize
 	 */
 	void setJdbcBatchSize(@Nullable Integer jdbcBatchSize);
 

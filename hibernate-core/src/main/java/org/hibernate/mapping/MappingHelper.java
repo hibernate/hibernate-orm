@@ -12,11 +12,14 @@ import java.util.Set;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.internal.DelayedParameterizedTypeBean;
-import org.hibernate.boot.spi.BootstrapContext;
+import org.hibernate.boot.model.relational.Database;
+import org.hibernate.boot.spi.ClassLoaderAccess;
 import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
 import org.hibernate.resource.beans.spi.ManagedBean;
+import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.resource.beans.spi.ProvidedInstanceManagedBeanImpl;
 import org.hibernate.usertype.AnnotationBasedUserType;
+import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.ParameterizedType;
 import org.hibernate.usertype.UserCollectionType;
 
@@ -32,14 +35,28 @@ public final class MappingHelper {
 	private MappingHelper() {
 	}
 
+	/**
+	 * Creates the live extension instance for a declaratively specified
+	 * {@link CompositeUserType}, consistently for normal boot and archive
+	 * restoration.
+	 */
+	public static CompositeUserType<?> createCompositeUserType(
+			Class<? extends CompositeUserType<?>> implementation,
+			ManagedBeanRegistry managedBeanRegistry,
+			boolean allowExtensionsInCdi) {
+		return allowExtensionsInCdi
+				? managedBeanRegistry.getBean( implementation ).getBeanInstance()
+				: FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( implementation );
+	}
+
 	public static ManagedBean<? extends UserCollectionType> createUserTypeBean(
 			String role,
 			Class<? extends UserCollectionType> userCollectionTypeClass,
 			Map<String, ?> parameters,
-			BootstrapContext bootstrapContext,
+			ManagedBeanRegistry managedBeanRegistry,
 			boolean allowExtensionsInCdi) {
 		return allowExtensionsInCdi
-				? createSharedUserTypeBean( role, userCollectionTypeClass, parameters, bootstrapContext )
+				? createSharedUserTypeBean( role, userCollectionTypeClass, parameters, managedBeanRegistry )
 				: createLocalUserTypeBean( role, userCollectionTypeClass, parameters );
 	}
 
@@ -47,10 +64,9 @@ public final class MappingHelper {
 			String role,
 			Class<? extends UserCollectionType> userCollectionTypeClass,
 			Map<String, ?> parameters,
-			BootstrapContext bootstrapContext) {
+			ManagedBeanRegistry managedBeanRegistry) {
 		final var managedBean =
-				bootstrapContext.getManagedBeanRegistry()
-						.getBean( userCollectionTypeClass );
+				managedBeanRegistry.getBean( userCollectionTypeClass );
 		if ( isNotEmpty( parameters ) ) {
 			if ( ParameterizedType.class.isAssignableFrom( managedBean.getBeanClass() ) ) {
 				// create a copy of the parameters and create a bean wrapper to delay injecting
@@ -106,20 +122,33 @@ public final class MappingHelper {
 	public static void checkPropertyColumnDuplication(
 			Set<QualifiedColumnName> distinctColumns,
 			List<Property> properties,
-			String owner) throws MappingException {
+			String owner,
+			Database database) throws MappingException {
 		for ( var property : properties ) {
 			if ( ( property.isUpdatable() || property.isInsertable() ) && !property.isGenericSpecialization() ) {
-				property.getValue().checkColumnDuplication( distinctColumns, owner );
+				property.getValue().checkColumnDuplication( distinctColumns, owner, database );
 			}
 		}
 	}
 
-	static Class<?> classForName(String typeName, BootstrapContext bootstrapContext) {
-		return bootstrapContext.getClassLoaderAccess().classForName( typeName );
+	static Class<?> classForName(String typeName, ClassLoaderAccess classLoaderAccess) {
+		if ( classLoaderAccess != null ) {
+			return classLoaderAccess.classForName( typeName );
+		}
+		return classForName( typeName );
 	}
 
-	static <T> Class<? extends T> classForName(Class<T> supertype, String typeName, BootstrapContext bootstrapContext) {
-		final var clazz = classForName( typeName, bootstrapContext );
+	static Class<?> classForName(String typeName) {
+		try {
+			return Class.forName( typeName );
+		}
+		catch (ClassNotFoundException e) {
+			throw new MappingException( "Class '" + typeName + "' could not be loaded", e );
+		}
+	}
+
+	static <T> Class<? extends T> classForName(Class<T> supertype, String typeName, ClassLoaderAccess classLoaderAccess) {
+		final var clazz = classForName( typeName, classLoaderAccess );
 		if ( supertype.isAssignableFrom( clazz ) ) {
 			//noinspection unchecked
 			return (Class<? extends T>) clazz;

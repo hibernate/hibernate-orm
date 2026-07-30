@@ -13,26 +13,25 @@ import org.hibernate.Cache;
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.Remove;
-import org.hibernate.cache.cfg.spi.DomainDataRegionConfig;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.service.Service;
 
 /**
- * An SPI supported by any Hibernate {@linkplain Service service} that provides an
- * implementation of the {@link Cache} API. Extends {@code Cache} with operations
- * called internally by Hibernate.
+ * The factory-owned implementation of the {@link Cache} API. Extends
+ * {@code Cache} with operations called internally by Hibernate.
+ * <p>
+ * A custom implementation may be provided via a {@link CacheFactory}.
  *
  * @since 4.1
  *
  * @author Strong Liu
  * @author Steve Ebersole
  */
-public interface CacheImplementor extends Service, Cache, Serializable {
+public interface CacheImplementor extends Cache, Serializable {
 	@Override
 	@Nonnull
 	SessionFactoryImplementor getSessionFactory();
@@ -49,21 +48,9 @@ public interface CacheImplementor extends Service, Cache, Serializable {
 	RegionFactory getRegionFactory();
 
 	/**
-	 * An initialization phase allowing the caching provider to prime itself
-	 * from the passed configurations.
-	 *
-	 * @since 5.3
-	 */
-	@Remove
-	void prime(@Nonnull Set<DomainDataRegionConfig> cacheRegionConfigs);
-
-	/**
 	 * Get a cache Region by name. If there is both a {@link DomainDataRegion}
 	 * and a {@link QueryResultsRegion} with the specified name, then the
 	 * {@link DomainDataRegion} will be returned.
-	 *
-	 * @apiNote It is illegal to call this method before {@link #prime} has
-	 *          been called.
 	 *
 	 * @since 5.3
 	 */
@@ -140,9 +127,6 @@ public interface CacheImplementor extends Service, Cache, Serializable {
 	 *
 	 * @param rootEntityName The NavigableRole representation of the root entity
 	 *
-	 * @implSpec It is illegal to call this method before {@link #prime} has
-	 *           been called.
-	 *
 	 * @apiNote Use {@link EntityPersister#getCacheAccessStrategy()} instead
 	 */
 	@Internal
@@ -157,9 +141,6 @@ public interface CacheImplementor extends Service, Cache, Serializable {
 	 *
 	 * @param rootEntityName The NavigableRole representation of the root entity
 	 *
-	 * @implSpec It is illegal to call this method before {@link #prime} has
-	 *           been called.
-	 *
 	 * @apiNote Use {@link EntityPersister#getNaturalIdCacheAccessStrategy()} instead
 	 */
 	@Internal
@@ -170,9 +151,6 @@ public interface CacheImplementor extends Service, Cache, Serializable {
 	/**
 	 * Find the cache data access strategy for the given collection, or return
 	 * {@code null} when the collection is not configured for caching.
-	 *
-	 * @implSpec It is illegal to call this method before {@link #prime} has
-	 *           been called.
 	 *
 	 * @apiNote Use {@link EntityPersister#getNaturalIdCacheAccessStrategy()} instead
 	 */

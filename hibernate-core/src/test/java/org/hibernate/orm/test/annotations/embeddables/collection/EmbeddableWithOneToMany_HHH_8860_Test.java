@@ -17,7 +17,7 @@ import jakarta.persistence.MapKeyColumn;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Version;
 
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 
@@ -26,11 +26,11 @@ import org.hibernate.testing.orm.junit.JiraKey;
  */
 @JiraKey(value = "HHH-8860")
 public class EmbeddableWithOneToMany_HHH_8860_Test
-		extends AbstractEmbeddableWithManyToManyTest {
+	extends AbstractEmbeddableWithManyToManyTest {
 
 	@Override
-	protected void addAnnotatedClasses(MetadataSources metadataSources) {
-		metadataSources.addAnnotatedClasses( Data.class );
+	protected void addAnnotatedClasses(MappingSources mappingSources) {
+		mappingSources.addManagedClasses( Data.class );
 	}
 
 	@Entity(name = "Data")

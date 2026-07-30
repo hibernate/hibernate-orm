@@ -57,9 +57,10 @@ public class DenormalizedTable extends Table {
 		includedTable.setHasDenormalizedTables();
 	}
 
-	@Override
-	public void createForeignKeys(MetadataBuildingContext context) {
-		includedTable.createForeignKeys( context );
+	public void createDenormalizedForeignKeys(MetadataBuildingContext context) {
+		if ( includedTable instanceof DenormalizedTable denormalizedTable ) {
+			denormalizedTable.createDenormalizedForeignKeys( context );
+		}
 		for ( var foreignKey : includedTable.getForeignKeyCollection() ) {
 			final var referencedClass =
 					foreignKey.resolveReferencedClass( context.getMetadataCollector() );
@@ -70,7 +71,7 @@ public class DenormalizedTable extends Table {
 
 			final var denormalizedForeignKey = createDenormalizedForeignKey( foreignKey );
 			createForeignKey(
-					context.getBuildingOptions()
+					context.getBuildingPlan()
 							.getImplicitNamingStrategy()
 							.determineForeignKeyName( new ForeignKeyNameSource( denormalizedForeignKey, this, context ) )
 							.render( context.getMetadataCollector().getDatabase().getDialect() ),
@@ -78,7 +79,7 @@ public class DenormalizedTable extends Table {
 					foreignKey.getReferencedEntityName(),
 					foreignKey.getKeyDefinition(),
 					foreignKey.getOptions(),
-					foreignKey.getReferencedColumns()
+					foreignKey.getReferencedColumns().isEmpty() ? null : foreignKey.getReferencedColumns()
 			);
 		}
 	}

@@ -49,6 +49,7 @@ public class EnumResolutionTests {
 
 		verifyEnumResolution(
 				entityBinding.getProperty( "rawEnum" ),
+				scope.getDomainModel().getTypeConfiguration(),
 				Types.TINYINT,
 				Byte.class,
 				null
@@ -63,6 +64,7 @@ public class EnumResolutionTests {
 
 		verifyEnumResolution(
 				entityBinding.getProperty( "unspecifiedMappingEnum" ),
+				scope.getDomainModel().getTypeConfiguration(),
 				Types.TINYINT,
 				Byte.class,
 				null
@@ -77,6 +79,7 @@ public class EnumResolutionTests {
 
 		verifyEnumResolution(
 				entityBinding.getProperty( "ordinalEnum" ),
+				scope.getDomainModel().getTypeConfiguration(),
 				Types.TINYINT,
 				Byte.class,
 				null
@@ -91,6 +94,7 @@ public class EnumResolutionTests {
 
 		verifyEnumResolution(
 				entityBinding.getProperty( "namedEnum" ),
+				scope.getDomainModel().getTypeConfiguration(),
 				Types.VARCHAR,
 				String.class,
 				null
@@ -105,6 +109,7 @@ public class EnumResolutionTests {
 
 		verifyEnumResolution(
 				entityBinding.getProperty( "convertedEnum" ),
+				scope.getDomainModel().getTypeConfiguration(),
 				Types.INTEGER,
 				Integer.class,
 				ConverterImpl.class
@@ -119,6 +124,7 @@ public class EnumResolutionTests {
 
 		verifyEnumResolution(
 				entityBinding.getProperty( "explicitEnum" ),
+				scope.getDomainModel().getTypeConfiguration(),
 				Types.SMALLINT,
 				Short.class,
 				null
@@ -133,6 +139,7 @@ public class EnumResolutionTests {
 
 		verifyEnumResolution(
 				entityBinding.getProperty( "singleCharEnum" ),
+				scope.getDomainModel().getTypeConfiguration(),
 				Types.CHAR,
 				Character.class,
 				null
@@ -141,11 +148,11 @@ public class EnumResolutionTests {
 
 	private void verifyEnumResolution(
 			Property property,
+			TypeConfiguration typeConfiguration,
 			int jdbcCode,
 			Class<?> javaType,
 			Class<? extends AttributeConverter<?,?>> converterClass) {
 		final BasicValue.Resolution<?> resolution = ( (BasicValue) property.getValue() ).resolve();
-		final TypeConfiguration typeConfiguration = ( (BasicValue) property.getValue() ).getTypeConfiguration();
 		final JdbcType jdbcType = typeConfiguration.getJdbcTypeRegistry().getDescriptor( jdbcCode );
 
 		// verify the interpretations used for reading

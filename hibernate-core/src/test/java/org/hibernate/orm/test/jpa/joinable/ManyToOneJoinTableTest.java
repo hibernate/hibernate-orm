@@ -16,7 +16,8 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.NamedQuery;
 import jakarta.persistence.SecondaryTable;
 
-import org.hibernate.boot.SessionFactoryBuilder;
+import org.hibernate.boot.internal.SessionFactoryOptionsCollector;
+import org.hibernate.boot.pipeline.internal.SessionFactoryPipeline;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -51,9 +52,9 @@ public class ManyToOneJoinTableTest implements SessionFactoryProducer {
 
 	@Override
 	public SessionFactoryImplementor produceSessionFactory(MetadataImplementor model) {
-		final SessionFactoryBuilder sessionFactoryBuilder = model.getSessionFactoryBuilder();
-		sqlStatementInterceptor = new SQLStatementInterceptor( sessionFactoryBuilder );
-		return (SessionFactoryImplementor) sessionFactoryBuilder.build();
+		final SessionFactoryOptionsCollector optionsCollector = new SessionFactoryOptionsCollector();
+		sqlStatementInterceptor = new SQLStatementInterceptor( optionsCollector );
+		return SessionFactoryPipeline.build( model, optionsCollector );
 	}
 
 

@@ -62,7 +62,7 @@ public class CteTable {
 		return new CteTable( name, tableGroupProducer, cteColumns );
 	}
 
-	public static CteTable createIdTable(String cteName, PersistentClass persistentClass) {
+	public static CteTable createIdTable(String cteName, PersistentClass persistentClass, Metadata metadata) {
 		final Property identifierProperty = persistentClass.getIdentifierProperty();
 		final String idName;
 		if ( identifierProperty != null ) {
@@ -72,11 +72,11 @@ public class CteTable {
 			idName = "id";
 		}
 		final List<CteColumn> columns = new ArrayList<>( persistentClass.getIdentifier().getColumnSpan() );
-		forEachCteColumn( idName, persistentClass.getIdentifier(), columns::add );
+		forEachCteColumn( idName, persistentClass.getIdentifier(), metadata, columns::add );
 		return new CteTable( cteName, columns );
 	}
 
-	public static CteTable createEntityTable(String cteName, PersistentClass persistentClass) {
+	public static CteTable createEntityTable(String cteName, PersistentClass persistentClass, Metadata metadata) {
 		final List<CteColumn> columns = new ArrayList<>( persistentClass.getTable().getColumnSpan() );
 		final Property identifierProperty = persistentClass.getIdentifierProperty();
 		final String idName;
@@ -86,12 +86,11 @@ public class CteTable {
 		else {
 			idName = "id";
 		}
-		final Metadata metadata = persistentClass.getIdentifier().getBuildingContext().getMetadataCollector();
-		forEachCteColumn( idName, persistentClass.getIdentifier(), columns::add );
+		forEachCteColumn( idName, persistentClass.getIdentifier(), metadata, columns::add );
 
 		final Value discriminator = persistentClass.getDiscriminator();
 		if ( discriminator != null && !discriminator.getSelectables().get( 0 ).isFormula() ) {
-			forEachCteColumn( "class", persistentClass.getIdentifier(), columns::add );
+			forEachCteColumn( "class", discriminator, metadata, columns::add );
 		}
 
 		// Collect all columns for all entity subtype attributes
@@ -100,6 +99,7 @@ public class CteTable {
 				forEachCteColumn(
 						property.getName(),
 						property.getValue(),
+						metadata,
 						columns::add
 				);
 			}
@@ -114,9 +114,9 @@ public class CteTable {
 		return new CteTable( cteName, columns );
 	}
 
-	private static void forEachCteColumn(String prefix, Value value, Consumer<CteColumn> consumer) {
-		SqmMutationStrategyHelper.forEachSelectableMapping( prefix, value, (columnName, selectable) -> {
-			consumer.accept( new CteColumn( columnName, selectable.getType() ) );
+	private static void forEachCteColumn(String prefix, Value value, Metadata metadata, Consumer<CteColumn> consumer) {
+		SqmMutationStrategyHelper.forEachSelectableMapping( prefix, value, metadata, (columnName, selectable) -> {
+			consumer.accept( new CteColumn( columnName, selectable.getType( metadata ) ) );
 		} );
 	}
 

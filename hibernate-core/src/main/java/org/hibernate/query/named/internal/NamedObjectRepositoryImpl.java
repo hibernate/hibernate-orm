@@ -233,12 +233,12 @@ public class NamedObjectRepositoryImpl implements NamedObjectRepository {
 
 		final var namedHqlQueryDefinition = bootMetamodel.getNamedHqlQueryMapping( registrationName );
 		if ( namedHqlQueryDefinition != null ) {
-			return handleNamedHqlDefinition( namedHqlQueryDefinition, sessionFactory );
+			return handleNamedHqlDefinition( namedHqlQueryDefinition );
 		}
 
 		final var namedNativeQueryDefinition = bootMetamodel.getNamedNativeQueryMapping( registrationName );
 		if ( namedNativeQueryDefinition != null ) {
-			return handleNamedNativeDefinition( namedNativeQueryDefinition, sessionFactory );
+			return handleNamedNativeDefinition( namedNativeQueryDefinition );
 		}
 		final var namedCallableQueryDefinition = bootMetamodel.getNamedProcedureCallMapping( registrationName );
 		if ( namedCallableQueryDefinition != null ) {
@@ -249,11 +249,49 @@ public class NamedObjectRepositoryImpl implements NamedObjectRepository {
 		return null;
 	}
 
+	@Override
+	@Nullable
+	public NamedSelectionMemento<?> resolveLoaderQuery(
+			@Nonnull MetadataImplementor bootMetamodel,
+			@Nonnull String registrationName) {
+		final var selectionMemento = selectionMementos.get( registrationName );
+		if ( selectionMemento != null ) {
+			return selectionMemento;
+		}
+		if ( mutationMementos.containsKey( registrationName ) ) {
+			throw invalidLoaderQuery( registrationName );
+		}
+
+		final var namedHqlQueryDefinition = bootMetamodel.getNamedHqlQueryMapping( registrationName );
+		if ( namedHqlQueryDefinition != null ) {
+			return asLoaderQuery( registrationName, handleNamedHqlDefinition( namedHqlQueryDefinition ) );
+		}
+
+		final var namedNativeQueryDefinition = bootMetamodel.getNamedNativeQueryMapping( registrationName );
+		return namedNativeQueryDefinition == null
+				? null
+				: asLoaderQuery( registrationName, handleNamedNativeDefinition( namedNativeQueryDefinition ) );
+	}
+
+	private static NamedSelectionMemento<?> asLoaderQuery(
+			String registrationName,
+			NamedQueryMemento<?> memento) {
+		if ( memento instanceof NamedSelectionMemento<?> selectionMemento ) {
+			return selectionMemento;
+		}
+		throw invalidLoaderQuery( registrationName );
+	}
+
+	private static IllegalArgumentException invalidLoaderQuery(String registrationName) {
+		return new IllegalArgumentException(
+				"Named query '" + registrationName + "' used as a custom loader is not a selection query"
+		);
+	}
+
 	@Nonnull
 	private NamedQueryMemento<?> handleNamedHqlDefinition(
-			@Nonnull NamedHqlQueryDefinition<?> namedHqlQueryDefinition,
-			@Nonnull SessionFactoryImplementor sessionFactory) {
-		var memento = namedHqlQueryDefinition.resolve( sessionFactory );
+			@Nonnull NamedHqlQueryDefinition<?> namedHqlQueryDefinition) {
+		var memento = namedHqlQueryDefinition.resolve();
 		if ( memento instanceof NamedSelectionMemento<?> selectionMemento ) {
 			selectionMementos.put( namedHqlQueryDefinition.getName(), selectionMemento );
 		}
@@ -265,9 +303,8 @@ public class NamedObjectRepositoryImpl implements NamedObjectRepository {
 
 	@Nonnull
 	private NamedNativeQueryMemento<?> handleNamedNativeDefinition(
-			@Nonnull NamedNativeQueryDefinition<?> namedNativeQueryDefinition,
-			@Nonnull SessionFactoryImplementor sessionFactory) {
-		final var memento = namedNativeQueryDefinition.resolve( sessionFactory );
+			@Nonnull NamedNativeQueryDefinition<?> namedNativeQueryDefinition) {
+		final var memento = namedNativeQueryDefinition.resolve();
 		if ( memento instanceof NamedSelectionMemento<?> selectionMemento ) {
 			selectionMementos.put( namedNativeQueryDefinition.getName(), selectionMemento );
 		}
@@ -280,11 +317,11 @@ public class NamedObjectRepositoryImpl implements NamedObjectRepository {
 	@Override
 	public void prepare(@Nonnull SessionFactoryImplementor sessionFactory, @Nonnull Metadata bootMetamodel) {
 		bootMetamodel.visitNamedHqlQueryDefinitions( definition ->
-				handleNamedHqlDefinition( definition, sessionFactory )
+				handleNamedHqlDefinition( definition )
 		);
 
 		bootMetamodel.visitNamedNativeQueryDefinitions( definition ->
-				handleNamedNativeDefinition( definition, sessionFactory )
+				handleNamedNativeDefinition( definition )
 		);
 
 		bootMetamodel.visitNamedResultSetMappingDefinition(

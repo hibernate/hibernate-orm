@@ -20,7 +20,8 @@ public class NativeGeneratorAnnotation implements NativeGenerator {
 	private TableGenerator tableForm;
 
 	/**
-	 * Used in legacy hbm.xml handling.  See {@linkplain GeneratorStrategies#generatorClass}
+	 * Used in legacy hbm.xml handling. See
+	 * {@linkplain GeneratorStrategies#resolveGeneratorClass}
 	 */
 	public NativeGeneratorAnnotation() {
 		this.sequenceForm = new SequenceGeneratorJpaAnnotation( null );

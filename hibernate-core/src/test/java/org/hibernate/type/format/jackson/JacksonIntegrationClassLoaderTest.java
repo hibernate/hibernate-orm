@@ -11,6 +11,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.BootstrapContext;
+import org.hibernate.boot.pipeline.internal.MappingResolutionOptions;
 import org.hibernate.type.format.FormatMapperCreationContext;
 
 import org.junit.jupiter.api.AfterEach;
@@ -66,7 +67,17 @@ class JacksonIntegrationClassLoaderTest {
 	private FormatMapperCreationContext recordingContext(AtomicBoolean workWithClassLoaderCalled) {
 		ClassLoaderService classLoaderService = classLoaderServiceProxy( workWithClassLoaderCalled );
 		BootstrapContext bootstrapContext = bootstrapContextProxy( classLoaderService );
-		return () -> bootstrapContext;
+		return new FormatMapperCreationContext() {
+			@Override
+			public BootstrapContext getBootstrapContext() {
+				return bootstrapContext;
+			}
+
+			@Override
+			public MappingResolutionOptions getMappingResolutionOptions() {
+				return null;
+			}
+		};
 	}
 
 	private ClassLoaderService classLoaderServiceProxy(AtomicBoolean workWithClassLoaderCalled) {

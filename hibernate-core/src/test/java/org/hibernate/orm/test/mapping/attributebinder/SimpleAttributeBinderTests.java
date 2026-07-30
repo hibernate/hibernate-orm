@@ -30,10 +30,7 @@ public class SimpleAttributeBinderTests {
 			assertThat( activeMapping.getJpaAttributeConverterDescriptor() ).isNotNull();
 
 			final BasicValue.Resolution<?> resolution = activeMapping.resolve();
-			final JdbcTypeRegistry jdbcTypeRegistry = activeMapping.getBuildingContext()
-					.getBuildingOptions()
-					.getTypeConfiguration()
-					.getJdbcTypeRegistry();
+			final JdbcTypeRegistry jdbcTypeRegistry = scope.getDomainModel().getTypeConfiguration().getJdbcTypeRegistry();
 
 			assertThat( resolution.getDomainJavaType().getJavaType() ).isEqualTo( Boolean.class );
 			assertThat( resolution.getRelationalJavaType().getJavaType() ).isEqualTo( Character.class );

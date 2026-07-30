@@ -5,7 +5,6 @@
 package org.hibernate.orm.test.event.collection.detached;
 
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Environment;
 import org.hibernate.event.spi.AbstractCollectionEvent;
 import org.hibernate.event.spi.PostCollectionRecreateEvent;
 import org.hibernate.event.spi.PreCollectionRemoveEvent;
@@ -42,7 +41,7 @@ import static org.junit.Assert.assertSame;
 @ServiceRegistry(
 		settings = {
 				@Setting(name = AvailableSettings.IMPLICIT_NAMING_STRATEGY, value = "legacy-jpa"),
-				@Setting(name = Environment.DEFAULT_LIST_SEMANTICS, value = "bag"), // CollectionClassification.BAG
+// CollectionClassification.BAG
 		}
 )
 @SessionFactory

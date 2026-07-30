@@ -7,10 +7,10 @@ package org.hibernate.orm.test.annotations.manytoone;
 import java.util.List;
 import java.util.Locale;
 
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
@@ -45,11 +45,11 @@ public class ManyToOneJoinTableForeignKeyNullabilityTest {
 
 	@Test
 	public void testJoinTableForeignKeyColumnIsNotNull() {
-		final var metadata = (MetadataImplementor)
-				new MetadataSources( ssr )
-						.addAnnotatedClass( Author.class )
-						.addAnnotatedClass( Publisher.class )
-						.buildMetadata();
+		final var metadata = (MetadataImplementor) MetadataBuildingTestHelper.buildMetadata(
+				ssr,
+				Author.class,
+				Publisher.class
+		);
 		metadata.orderColumns( true );
 		metadata.validate();
 

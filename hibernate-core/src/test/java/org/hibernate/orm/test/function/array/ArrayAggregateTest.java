@@ -7,11 +7,10 @@ package org.hibernate.orm.test.function.array;
 import java.util.Arrays;
 import java.util.List;
 
-import org.hibernate.boot.ResourceStreamLocator;
 import org.hibernate.boot.spi.AdditionalMappingContributions;
 import org.hibernate.boot.spi.AdditionalMappingContributor;
-import org.hibernate.boot.spi.InFlightMetadataCollector;
-import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.boot.spi.ProcessedMappings;
+import org.hibernate.boot.spi.AdditionalMappingContributorContext;
 import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.type.OracleArrayJdbcType;
@@ -69,11 +68,10 @@ public class ArrayAggregateTest {
 		@Override
 		public void contribute(
 				AdditionalMappingContributions contributions,
-				InFlightMetadataCollector metadata,
-				ResourceStreamLocator resourceStreamLocator,
-				MetadataBuildingContext buildingContext) {
-			if ( metadata.getDatabase().getDialect() instanceof OracleDialect ) {
-				final TypeConfiguration typeConfiguration = metadata.getTypeConfiguration();
+				ProcessedMappings processedMappings,
+				AdditionalMappingContributorContext contributorContext) {
+			if ( contributorContext.getDialect() instanceof OracleDialect ) {
+				final TypeConfiguration typeConfiguration = contributorContext.getTypeConfiguration();
 				final JavaTypeRegistry javaTypeRegistry = typeConfiguration.getJavaTypeRegistry();
 				final JdbcTypeRegistry jdbcTypeRegistry = typeConfiguration.getJdbcTypeRegistry();
 				new OracleArrayJdbcType(
@@ -83,8 +81,7 @@ public class ArrayAggregateTest {
 						new ArrayJavaType<>( javaTypeRegistry.resolveDescriptor( String.class ) ),
 						null,
 						Size.nil(),
-						metadata.getDatabase(),
-						typeConfiguration.getCurrentBaseSqlTypeIndicators()
+						contributions.getDatabase()
 				);
 			}
 		}

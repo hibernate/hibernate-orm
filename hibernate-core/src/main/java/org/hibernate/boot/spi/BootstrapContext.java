@@ -4,16 +4,8 @@
  */
 package org.hibernate.boot.spi;
 
-import java.util.Collection;
-import java.util.Map;
-
 import org.hibernate.Incubating;
-import org.hibernate.Remove;
-import org.hibernate.boot.CacheRegionDefinition;
-import org.hibernate.boot.Metadata;
 import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
-import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
-import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.scan.spi.Scanner;
@@ -21,19 +13,24 @@ import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.jpa.spi.MutableJpaCompliance;
 import org.hibernate.metamodel.spi.ManagedTypeRepresentationResolver;
 import org.hibernate.models.spi.ModelsContext;
-import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
-import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
-import org.hibernate.type.BasicType;
-import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
- * Defines a context for things available during the process of bootstrapping
- * a {@link org.hibernate.SessionFactory} which are expected to be cleaned up
- * after the {@code SessionFactory} is built.
+ * Defines the shared environment used while resolving mapping metadata.
+ * <p>
+ * The context owns both durable bootstrap products, such as the
+ * {@link TypeConfiguration} and {@link ModelsContext}, and temporary
+ * source-processing resources, such as the Jakarta Persistence temporary
+ * class loader and scanning state. {@link #release()} releases only the
+ * temporary resources when metadata materialization completes. Durable
+ * products may remain available to the subsequent
+ * {@link org.hibernate.SessionFactory} construction step.
+ * <p>
+ * This broad context is retained for metadata-building compatibility.
+ * New bootstrap and factory-construction SPIs should expose focused resolved
+ * products instead of exposing {@code BootstrapContext}.
  *
  * @author Steve Ebersole
  */
@@ -63,25 +60,11 @@ public interface BootstrapContext {
 	ModelsContext getModelsContext();
 
 	/**
-	 * The {@link SqmFunctionRegistry} belonging to this {@code BootstrapContext}.
-	 *
-	 * @see SqmFunctionRegistry
-	 */
-	@Remove
-	SqmFunctionRegistry getFunctionRegistry();
-
-	/**
 	 * The {@link BeanInstanceProducer} to use when creating custom type references.
 	 *
 	 * @implNote Usually a {@link org.hibernate.boot.internal.TypeBeanInstanceProducer}.
 	 */
 	BeanInstanceProducer getCustomTypeProducer();
-
-	/**
-	 * Options specific to building the {@linkplain Metadata boot metamodel}
-	 */
-	@Remove
-	MetadataBuildingOptions getMetadataBuildingOptions();
 
 	/**
 	 * Access to the {@link ClassLoaderService}.
@@ -152,86 +135,16 @@ public interface BootstrapContext {
 	Object getScanning();
 
 	/**
-	 * Access to the Jandex index passed by call to
-	 * {@link org.hibernate.boot.MetadataBuilder#applyIndexView(Object)}, if any.
-	 *
-	 * @return The Jandex index
-	 *
-	 * @deprecated Set via the {@code hibernate-models} setting {@code hibernate.models.jandex.index} instead
-	 */
-	@Deprecated
-	@Remove
-	Object getJandexView();
-
-	/**
-	 * Access to any SQL functions explicitly registered with the
-	 * {@link org.hibernate.boot.MetadataBuilder}.
-	 * This does not include {@code Dialect}-registered functions.
-	 * <p>
-	 * Should never return {@code null}.
-	 *
-	 * @return The {@link SqmFunctionDescriptor}s registered via {@code MetadataBuilder}
-	 */
-	@Remove
-	Map<String, SqmFunctionDescriptor> getSqlFunctions();
-
-	/**
-	 * Access to any {@link AuxiliaryDatabaseObject}s explicitly registered with
-	 * the {@link org.hibernate.boot.MetadataBuilder}.
-	 * This does not include {@link AuxiliaryDatabaseObject}s defined in mappings.
-	 * <p>
-	 * Should never return {@code null}.
-	 *
-	 * @return The {@link AuxiliaryDatabaseObject}s registered via {@code MetadataBuilder}
-	 */
-	@Remove
-	Collection<AuxiliaryDatabaseObject> getAuxiliaryDatabaseObjectList();
-
-	/**
-	 * Access to collected {@link jakarta.persistence.AttributeConverter} definitions.
-	 * <p>
-	 * Should never return {@code null}.
-	 *
-	 * @return The {@link ConverterDescriptor}s registered via {@code MetadataBuilder}
-	 */
-	@Remove
-	Collection<ConverterDescriptor<?, ?>> getAttributeConverters();
-
-	/**
-	 * Access to all explicit cache region mappings.
-	 * <p>
-	 * Should never return {@code null}.
-	 *
-	 * @return Explicit cache region mappings
-	 */
-	@Remove
-	Collection<CacheRegionDefinition> getCacheRegionDefinitions();
-
-	/**
 	 * @see ManagedTypeRepresentationResolver
 	 */
 	ManagedTypeRepresentationResolver getRepresentationStrategySelector();
 
 	/**
-	 * Releases the "bootstrap only" resources held by this {@code BootstrapContext}.
+	 * Releases temporary source-processing resources held by this context.
+	 * <p>
+	 * This occurs when metadata materialization completes. It does not invalidate
+	 * durable products such as the {@link TypeConfiguration} or
+	 * {@link ModelsContext}, which may be used during factory construction.
 	 */
 	void release();
-
-	/**
-	 * To support Envers.
-	 */
-	@Remove
-	void registerAdHocBasicType(BasicType<?> basicType);
-
-	/**
-	 * To support Envers.
-	 */
-	@Remove
-	<T> BasicType<T> resolveAdHocBasicType(String key);
-
-	/**
-	 * Find a previously registered ad-hoc BasicTypeImpl based on java and jdbc type.
-	 */
-	@Remove
-	<T> BasicType<T> findAdHocBasicType(JavaType<T> javaType, JdbcType jdbcType);
 }

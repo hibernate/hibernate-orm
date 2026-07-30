@@ -9,7 +9,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.Incubating;
-import org.hibernate.boot.beanvalidation.BeanValidationIntegrator;
 import org.hibernate.boot.beanvalidation.ValidationMode;
 import org.hibernate.cfg.SchemaToolingSettings;
 import org.hibernate.engine.config.spi.ConfigurationService;
@@ -51,7 +50,7 @@ public enum ValidationConstraintDdlInfluence {
 			}
 		}
 		// legacy boolean setting fallback
-		if ( !configurationService.getSetting( BeanValidationIntegrator.APPLY_CONSTRAINTS, StandardConverters.BOOLEAN, true ) ) {
+		if ( !configurationService.getSetting( SchemaToolingSettings.APPLY_VALIDATION_CONSTRAINTS, StandardConverters.BOOLEAN, true ) ) {
 			return DISABLED;
 		}
 		return AUTO;
@@ -66,7 +65,17 @@ public enum ValidationConstraintDdlInfluence {
 		if ( setting instanceof ValidationConstraintDdlInfluence type ) {
 			return type;
 		}
+		if ( setting instanceof Boolean enabled ) {
+			return enabled ? AUTO : DISABLED;
+		}
 
-		return valueOf( setting.toString().trim().toUpperCase( Locale.ROOT ) );
+		final String text = setting.toString().trim();
+		if ( text.equalsIgnoreCase( "true" ) ) {
+			return AUTO;
+		}
+		if ( text.equalsIgnoreCase( "false" ) ) {
+			return DISABLED;
+		}
+		return valueOf( text.toUpperCase( Locale.ROOT ) );
 	}
 }

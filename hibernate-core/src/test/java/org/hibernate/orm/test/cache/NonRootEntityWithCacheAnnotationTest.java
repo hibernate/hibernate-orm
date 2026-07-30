@@ -10,10 +10,10 @@ import java.util.Map;
 import org.hibernate.AnnotationException;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
-import org.hibernate.service.spi.ServiceRegistryImplementor;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.cache.CachingRegionFactory;
@@ -40,14 +40,11 @@ public class NonRootEntityWithCacheAnnotationTest {
 		settings.put( Environment.CACHE_REGION_FACTORY, CachingRegionFactory.class.getName() );
 		settings.put( AvailableSettings.JPA_SHARED_CACHE_MODE, SharedCacheMode.ENABLE_SELECTIVE );
 
-		try (ServiceRegistryImplementor serviceRegistry = (ServiceRegistryImplementor) ServiceRegistryUtil.serviceRegistryBuilder()
+		try (StandardServiceRegistry serviceRegistry = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySettings( settings )
 				.build()) {
 			try {
-				new MetadataSources( serviceRegistry )
-						.addAnnotatedClass( ABase.class )
-						.addAnnotatedClass( AEntity.class )
-						.buildMetadata();
+				MetadataBuildingTestHelper.buildMetadata( serviceRegistry, ABase.class, AEntity.class );
 				fail("No error for @Cache on subclass entity");
 			}
 			catch (AnnotationException ae) {

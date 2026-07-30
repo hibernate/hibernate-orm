@@ -4,23 +4,51 @@
  */
 package org.hibernate.binder;
 
+import java.lang.annotation.Annotation;
+
 import org.hibernate.Incubating;
-import org.hibernate.Remove;
-import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.annotations.AttributeBinderType;
+import org.hibernate.boot.mapping.spi.AttributeApplication;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 
-import java.lang.annotation.Annotation;
-
 /**
- * Allows a user-written annotation to drive some customized model binding.
+ * Interprets a user-defined annotation applied to a persistent attribute and
+ * customizes the corresponding boot mapping.
  * <p>
- * An implementation of this interface interacts directly with model objects
- * like {@link PersistentClass} and {@link Property} to implement the
- * semantics of some {@linkplain org.hibernate.annotations.AttributeBinderType
- * custom mapping annotation}.
+ * A custom annotation is associated with an implementation of this contract
+ * using {@link AttributeBinderType @AttributeBinderType}. For each concrete
+ * application of the annotated attribute, Hibernate supplies an
+ * {@link AttributeBindingContext} correlating:
+ * <ul>
+ *     <li>the read-only categorized domain model and semantic
+ *         {@link AttributeApplication}, and</li>
+ *     <li>the mutable {@link PersistentClass} and {@link Property} materialized
+ *         for that application.</li>
+ * </ul>
+ * This correlation is important for inherited, generic, and embeddable
+ * attributes, where a source declaration may have multiple contextual usages
+ * or concrete mapping applications.
+ * <p>
+ * Invocation occurs after the {@code Property} and the structural shape of its
+ * value have been materialized, but before value resolution and mapping
+ * finalization. Thus, a binder may customize the supplied boot mapping
+ * objects, but should not assume that table keys, foreign keys, inverse
+ * associations, or other later-phase products have been finalized.
+ * <p>
+ * For example, a binder may inspect the contextually resolved Java type while
+ * changing a property option:
+ * {@snippet :
+ * public void bind(MyReadOnly annotation, AttributeBindingContext context) {
+ *     var resolvedType = context.getAttribute().resolvedType();
+ *     context.getProperty().setUpdateable(false);
+ * }
+ * }
  *
- * @see org.hibernate.annotations.AttributeBinderType
+ * @param <A> the user-defined annotation interpreted by this binder
+ *
+ * @see AttributeBinderType
+ * @see AttributeBindingContext
  * @see TypeBinder
  *
  * @author Gavin King
@@ -28,17 +56,17 @@ import java.lang.annotation.Annotation;
 @Incubating
 public interface AttributeBinder<A extends Annotation> {
 	/**
-	 * Perform some custom configuration of the model relating to the given annotated
-	 * {@link Property} of the given {@linkplain PersistentClass entity class} or
-	 * {@linkplain org.hibernate.mapping.Component embeddable class}.
+	 * Customizes the materialized mapping for one application of an annotated
+	 * persistent attribute.
+	 * <p>
+	 * Mutations should be made during this callback. The semantic objects
+	 * exposed by the context are read-only; the supplied mapping objects are the
+	 * mutation targets.
 	 *
-	 * @param annotation an annotation of the property that is declared as an
-	 *                   {@link org.hibernate.annotations.AttributeBinderType}
-	 * @param persistentClass the entity class acting as the ultimate container of the
-	 *                        property (differs from {@link Property#getPersistentClass()}
-	 *                        in the case of a property of an embeddable class)
-	 * @param property a {@link Property} object representing the annotated property
+	 * @param annotation the annotation instance discovered on the persistent
+	 *                   attribute
+	 * @param context the semantic and materialized views of the concrete
+	 *                attribute application
 	 */
-	@Remove
-	void bind(A annotation, MetadataBuildingContext buildingContext, PersistentClass persistentClass, Property property);
+	void bind(A annotation, AttributeBindingContext context);
 }

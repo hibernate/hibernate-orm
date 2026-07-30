@@ -20,6 +20,7 @@ import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.query.sql.internal.FetchProfileRegistry;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -46,12 +47,30 @@ class FetchProfileHelper {
 			MetadataImplementor bootMetamodel,
 			RuntimeMetamodels runtimeMetamodels,
 			Map<String, FetchProfile> fetchProfiles) {
+		addFetchProfiles( bootMetamodel, runtimeMetamodels, fetchProfiles::put );
+	}
+
+	static void addFetchProfiles(
+			MetadataImplementor bootMetamodel,
+			RuntimeMetamodels runtimeMetamodels,
+			FetchProfileRegistry fetchProfileRegistry) {
+		addFetchProfiles( bootMetamodel, runtimeMetamodels, fetchProfileRegistry::put );
+	}
+
+	private static void addFetchProfiles(
+			MetadataImplementor bootMetamodel,
+			RuntimeMetamodels runtimeMetamodels,
+			FetchProfileConsumer fetchProfileConsumer) {
 		final MappingMetamodel mappingMetamodel = runtimeMetamodels.getMappingMetamodel();
 		for ( var mappingProfile : bootMetamodel.getFetchProfiles() ) {
 			final var fetchProfile = createFetchProfile( mappingMetamodel, mappingProfile );
-			fetchProfiles.put( fetchProfile.getName(), fetchProfile );
+			fetchProfileConsumer.accept( fetchProfile.getName(), fetchProfile );
 		}
-		fetchProfiles.put( HIBERNATE_DEFAULT_PROFILE, new DefaultFetchProfile( mappingMetamodel ) );
+		fetchProfileConsumer.accept( HIBERNATE_DEFAULT_PROFILE, new DefaultFetchProfile( mappingMetamodel ) );
+	}
+
+	private interface FetchProfileConsumer {
+		void accept(String name, FetchProfile fetchProfile);
 	}
 
 	private static FetchProfile createFetchProfile(

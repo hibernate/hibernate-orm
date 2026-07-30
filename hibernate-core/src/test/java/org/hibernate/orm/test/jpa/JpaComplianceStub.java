@@ -38,11 +38,6 @@ public class JpaComplianceStub implements JpaCompliance {
 	}
 
 	@Override
-	public boolean isGlobalGeneratorScopeEnabled() {
-		return false;
-	}
-
-	@Override
 	public boolean isJpaOrderByMappingComplianceEnabled() {
 		return false;
 	}

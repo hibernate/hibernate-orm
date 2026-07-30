@@ -108,9 +108,10 @@ public class NativeMetadataDescriptorTest {
 			jos.putNextEntry(new ZipEntry("META-INF/"));
 			jos.closeEntry();
 		}
-		NativeMetadataDescriptor descriptor = new NativeMetadataDescriptor(
-				null, new File[]{jarFile}, h2Props());
-		assertNotNull(descriptor.getProperties());
+		assertThrows(
+				IllegalArgumentException.class,
+				() -> new NativeMetadataDescriptor(null, new File[]{jarFile}, h2Props())
+		);
 	}
 
 	@Test

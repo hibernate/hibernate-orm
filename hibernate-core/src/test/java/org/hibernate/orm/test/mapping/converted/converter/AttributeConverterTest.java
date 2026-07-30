@@ -10,7 +10,11 @@ import java.sql.Types;
 import java.time.Instant;
 
 import org.hibernate.IrrelevantEntity;
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.mapping.internal.materialize.BasicValueResolutionBuilder;
+import org.hibernate.boot.mapping.internal.materialize.BasicValueResolutionDetails;
+import org.hibernate.boot.mapping.internal.context.MappingResolutionState;
+import org.hibernate.boot.mapping.internal.sources.BasicValueSource;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
 import org.hibernate.boot.model.convert.internal.ConverterDescriptors;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
@@ -22,6 +26,7 @@ import org.hibernate.internal.util.ConfigHelper;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.type.AbstractStandardBasicType;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.EnumJavaType;
@@ -98,6 +103,22 @@ public class AttributeConverterTest {
 	}
 
 	@Test
+	public void testReflectionUsesExplicitClassLoaderService() {
+		try ( var serviceRegistry = ServiceRegistryUtil.serviceRegistry() ) {
+			final var buildingContext = new MetadataBuildingContextTestingImpl( serviceRegistry );
+			final var basicValue = new BasicValue( buildingContext );
+
+			basicValue.setTypeUsingReflection(
+					IrrelevantEntity.class.getName(),
+					"name",
+					buildingContext.getClassLoaderService()
+			);
+
+			assertThat( basicValue.getTypeName(), equalTo( String.class.getName() ) );
+		}
+	}
+
+	@Test
 	public void testBasicOperation() {
 		try ( var serviceRegistry = ServiceRegistryUtil.serviceRegistry()) {
 			final var buildingContext = new MetadataBuildingContextTestingImpl( serviceRegistry );
@@ -108,7 +129,26 @@ public class AttributeConverterTest {
 			basicValue.setJpaAttributeConverterDescriptor(
 					ConverterDescriptors.of( new StringClobConverter() )
 			);
-			basicValue.setTypeUsingReflection( IrrelevantEntity.class.getName(), "name" );
+			basicValue.setTypeUsingReflection(
+					IrrelevantEntity.class.getName(),
+					"name",
+					buildingContext.getClassLoaderService()
+			);
+			final var details = BasicValueResolutionDetails.create(
+					basicValue,
+					BasicValueSource.attribute(
+							buildingContext.getModelsContext()
+									.getClassDetailsRegistry()
+									.resolveClassDetails( IrrelevantEntity.class.getName() )
+									.findFieldByName( "name" )
+					)
+			);
+			BasicValueResolutionBuilder.applyResolution(
+					details,
+					buildingContext.getServiceComponents(),
+					MappingResolutionState.from( buildingContext ),
+					buildingContext
+			);
 
 			final var type = basicValue.getType();
 			assertNotNull( type );
@@ -128,11 +168,11 @@ public class AttributeConverterTest {
 		final var ssr = ServiceRegistryUtil.serviceRegistry();
 
 		try {
-			var metadata = (MetadataImplementor) new MetadataSources( ssr )
-					.addAnnotatedClass( Tester.class )
-					.getMetadataBuilder()
-					.applyAttributeConverter( NotAutoAppliedConverter.class, false )
-					.build();
+			var metadata = (MetadataImplementor) MetadataBuildingTestHelper.buildMetadataWithAttributeConverters(
+					ssr,
+					new MappingSources().addManagedClass( Tester.class ),
+					ConverterDescriptors.of( NotAutoAppliedConverter.class, false, false )
+			);
 
 			var tester = metadata.getEntityBinding( Tester.class.getName() );
 			var nameProp = tester.getProperty( "name" );
@@ -154,11 +194,11 @@ public class AttributeConverterTest {
 		final var ssr = ServiceRegistryUtil.serviceRegistry();
 
 		try {
-			final var metadata = (MetadataImplementor) new MetadataSources( ssr )
-					.addAnnotatedClass( Tester.class )
-					.getMetadataBuilder()
-					.applyAttributeConverter( StringClobConverter.class, true )
-					.build();
+			final var metadata = (MetadataImplementor) MetadataBuildingTestHelper.buildMetadataWithAttributeConverters(
+					ssr,
+					new MappingSources().addManagedClass( Tester.class ),
+					ConverterDescriptors.of( StringClobConverter.class, true, false )
+			);
 			final var jdbcTypeRegistry = metadata.getTypeConfiguration()
 					.getJdbcTypeRegistry();
 
@@ -186,11 +226,12 @@ public class AttributeConverterTest {
 		final var ssr = ServiceRegistryUtil.serviceRegistry();
 
 		try {
-			var metadata = (MetadataImplementor) new MetadataSources( ssr )
-					.addAnnotatedClass( Tester.class )
-					.addURL( ConfigHelper.findAsResource( "org/hibernate/test/converter/orm.xml" ) )
-					.getMetadataBuilder()
-					.build();
+			var metadata = (MetadataImplementor) MetadataBuildingTestHelper.buildMetadata(
+					ssr,
+					new MappingSources()
+							.addManagedClass( Tester.class )
+							.addMappingUrl( ConfigHelper.findAsResource( "org/hibernate/test/converter/orm.xml" ) )
+			);
 			final var jdbcTypeRegistry = metadata.getTypeConfiguration()
 					.getJdbcTypeRegistry();
 
@@ -220,11 +261,12 @@ public class AttributeConverterTest {
 		final var ssr = ServiceRegistryUtil.serviceRegistry();
 
 		try {
-			var metadata = (MetadataImplementor) new MetadataSources( ssr )
-					.addAnnotatedClass( Tester.class )
-					.addURL( ConfigHelper.findAsResource( "org/hibernate/test/converter/package.xml" ) )
-					.getMetadataBuilder()
-					.build();
+			var metadata = (MetadataImplementor) MetadataBuildingTestHelper.buildMetadata(
+					ssr,
+					new MappingSources()
+							.addManagedClass( Tester.class )
+							.addMappingUrl( ConfigHelper.findAsResource( "org/hibernate/test/converter/package.xml" ) )
+			);
 			final var jdbcTypeRegistry = metadata.getTypeConfiguration()
 					.getJdbcTypeRegistry();
 
@@ -256,11 +298,11 @@ public class AttributeConverterTest {
 		final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry();
 
 		try {
-			var metadata = (MetadataImplementor) new MetadataSources( ssr )
-					.addAnnotatedClass( Tester2.class )
-					.getMetadataBuilder()
-					.applyAttributeConverter( StringClobConverter.class, true )
-					.build();
+			var metadata = (MetadataImplementor) MetadataBuildingTestHelper.buildMetadataWithAttributeConverters(
+					ssr,
+					new MappingSources().addManagedClass( Tester2.class ),
+					ConverterDescriptors.of( StringClobConverter.class, true, false )
+			);
 			final var jdbcTypeRegistry = metadata.getTypeConfiguration()
 					.getJdbcTypeRegistry();
 
@@ -328,11 +370,11 @@ public class AttributeConverterTest {
 		final var ssr = ServiceRegistryUtil.serviceRegistry();
 
 		try {
-			final var metadata = (MetadataImplementor) new MetadataSources( ssr )
-					.addAnnotatedClass( Tester5.class )
-					.getMetadataBuilder()
-					.applyAttributeConverter( IntegerToVarcharConverter.class, true )
-					.build();
+			final var metadata = (MetadataImplementor) MetadataBuildingTestHelper.buildMetadataWithAttributeConverters(
+					ssr,
+					new MappingSources().addManagedClass( Tester5.class ),
+					ConverterDescriptors.of( IntegerToVarcharConverter.class, true, false )
+			);
 			final var jdbcTypeRegistry = metadata.getTypeConfiguration()
 					.getJdbcTypeRegistry();
 
@@ -394,11 +436,11 @@ public class AttributeConverterTest {
 				.build();
 
 		try {
-			var metadata = (MetadataImplementor) new MetadataSources( ssr )
-					.addAnnotatedClass( EntityWithConvertibleField.class )
-					.getMetadataBuilder()
-					.applyAttributeConverter( ConvertibleEnumConverter.class, true )
-					.build();
+			var metadata = (MetadataImplementor) MetadataBuildingTestHelper.buildMetadataWithAttributeConverters(
+					ssr,
+					new MappingSources().addManagedClass( EntityWithConvertibleField.class ),
+					ConverterDescriptors.of( ConvertibleEnumConverter.class, true, false )
+			);
 			final var jdbcTypeRegistry = metadata.getTypeConfiguration()
 					.getJdbcTypeRegistry();
 
@@ -416,7 +458,7 @@ public class AttributeConverterTest {
 			assertThat( jdbcMapping.getJdbcType(), is( jdbcTypeRegistry.getDescriptor( Types.VARCHAR ) ) );
 
 			// then lets build the SF and verify its use...
-			final var sf = metadata.buildSessionFactory();
+			final var sf = org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory( metadata );
 			try {
 				var s = sf.openSession();
 				s.getTransaction().begin();

@@ -25,11 +25,10 @@ import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLInsert;
 import org.hibernate.annotations.SQLUpdate;
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.SessionFactoryBuilder;
-import org.hibernate.boot.internal.MetadataImpl;
-import org.hibernate.boot.internal.SessionFactoryBuilderImpl;
-import org.hibernate.boot.internal.SessionFactoryOptionsBuilder;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
+import org.hibernate.boot.internal.SessionFactoryOptionsCollector;
+import org.hibernate.boot.pipeline.internal.SessionFactoryPipeline;
+import org.hibernate.boot.pipeline.internal.source.XmlMappingSource;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
@@ -43,6 +42,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.generator.Generator;
 import org.hibernate.id.GenericGeneratorGeneration;
 import org.hibernate.id.IncrementGenerator;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableStrategy;
@@ -254,17 +254,17 @@ public class DefaultCatalogAndSchemaTest
 
 	@Override
 	public MetadataImplementor produceModel(StandardServiceRegistry serviceRegistry) {
-		final MetadataSources metadataSources = new MetadataSources( serviceRegistry );
-		metadataSources.addInputStream( getClass().getResourceAsStream( "implicit-file-level-catalog-and-schema.orm.xml" ) );
-		metadataSources.addInputStream( getClass().getResourceAsStream( "implicit-file-level-catalog-and-schema.hbm.xml" ) );
-		metadataSources.addInputStream( getClass().getResourceAsStream( "no-file-level-catalog-and-schema.orm.xml" ) );
-		metadataSources.addInputStream( getClass().getResourceAsStream( "no-file-level-catalog-and-schema.hbm.xml" ) );
-		metadataSources.addInputStream( getClass().getResourceAsStream( "database-object-using-catalog-placeholder.orm.xml" ) );
-		metadataSources.addInputStream( getClass().getResourceAsStream( "database-object-using-schema-placeholder.orm.xml" ) );
+		final MappingSources mappingSources = new MappingSources();
+		addXmlMapping( mappingSources, "implicit-file-level-catalog-and-schema.orm.xml" );
+		addXmlMapping( mappingSources, "implicit-file-level-catalog-and-schema.hbm.xml" );
+		addXmlMapping( mappingSources, "no-file-level-catalog-and-schema.orm.xml" );
+		addXmlMapping( mappingSources, "no-file-level-catalog-and-schema.hbm.xml" );
+		addXmlMapping( mappingSources, "database-object-using-catalog-placeholder.orm.xml" );
+		addXmlMapping( mappingSources, "database-object-using-schema-placeholder.orm.xml" );
 		if ( options.xmlMapping != null ) {
-			metadataSources.addInputStream( getClass().getResourceAsStream( options.xmlMapping ) );
+			addXmlMapping( mappingSources, options.xmlMapping );
 		}
-		metadataSources.addAnnotatedClasses(
+		mappingSources.addManagedClasses(
 				EntityWithDefaultQualifiers.class,
 				EntityWithExplicitQualifiers.class,
 				EntityWithJoinedInheritanceWithDefaultQualifiers.class,
@@ -288,33 +288,28 @@ public class DefaultCatalogAndSchemaTest
 				EntityWithExplicitQualifiersWithEnhancedSequenceGenerator.class
 		);
 
-		return (MetadataImplementor) metadataSources.buildMetadata();
+		return (MetadataImplementor) MetadataBuildingTestHelper.buildMetadata( serviceRegistry, mappingSources );
+	}
+
+	private void addXmlMapping(MappingSources mappingSources, String resourceName) {
+		mappingSources.addXmlMappingSource( XmlMappingSource.fromInputStream( getClass().getResourceAsStream( resourceName ) ) );
 	}
 
 	@Override
 	public SessionFactoryImplementor produceSessionFactory(MetadataImplementor model) {
-		SessionFactoryBuilder sfb;
+		final SessionFactoryOptionsCollector optionsCollector = new SessionFactoryOptionsCollector();
 		switch ( options.settingsMode ) {
 			case METADATA_SERVICE_REGISTRY:
-				sfb = model.getSessionFactoryBuilder();
-				break;
+				return SessionFactoryPipeline.build( model, optionsCollector );
 			case SESSION_FACTORY_SERVICE_REGISTRY:
 				var srb = ServiceRegistryUtil.serviceRegistryBuilder();
 				configureServiceRegistry( options.defaultCatalog, options.defaultSchema, srb );
 				final StandardServiceRegistry sr = srb.build();
 				autoCloseables.add( sr );
-				var bootstrapContext = ((MetadataImpl) model).getBootstrapContext();
-				sfb = new SessionFactoryBuilderImpl(
-						model,
-						new SessionFactoryOptionsBuilder( sr, bootstrapContext ),
-						bootstrapContext
-				);
-				break;
+				return SessionFactoryPipeline.build( model, sr, optionsCollector );
 			default:
 				throw new IllegalStateException( "Unknown settings mode: " + options.settingsMode );
 		}
-
-		return (SessionFactoryImplementor) sfb.build();
 	}
 
 	@Override

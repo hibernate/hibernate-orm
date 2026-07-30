@@ -537,7 +537,7 @@ public class EnhancerImpl implements Enhancer {
 	/**
 	 * Utility that determines the access-type of a mapped class based on an explicit annotation
 	 * or guessing it from the placement of its identifier property. Implementation should be
-	 * aligned with {@code InheritanceState#determineDefaultAccessType()}.
+	 * aligned with boot-time hierarchy categorization.
 	 *
 	 * @return the {@link AccessType} used by the mapped class
 	 *

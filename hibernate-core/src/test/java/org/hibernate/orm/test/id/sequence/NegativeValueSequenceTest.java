@@ -13,13 +13,14 @@ import jakarta.persistence.Table;
 
 import org.hibernate.Session;
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.id.enhanced.NoopOptimizer;
 import org.hibernate.id.enhanced.Optimizer;
 import org.hibernate.id.enhanced.PooledOptimizer;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
@@ -60,14 +61,12 @@ public class NegativeValueSequenceTest {
 
 			Triggerable triggerable = logInspection.watchForLogMessages( "HHH090205" );
 
-			Metadata metadata = new MetadataSources( serviceRegistry )
-					.addAnnotatedClass( NegativeOneIncrementSize.class )
-					.buildMetadata();
+			Metadata metadata = buildMetadata( serviceRegistry, NegativeOneIncrementSize.class );
 
 			// NegativeOneIncrementSize ID has allocationSize == -1, so warning should not be triggered.
 			assertFalse( triggerable.wasTriggered() );
 
-			sessionFactory = (SessionFactoryImplementor) metadata.buildSessionFactory();
+			sessionFactory = (SessionFactoryImplementor) org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory( metadata );
 
 			assertOptimizer( sessionFactory, NegativeOneIncrementSize.class, NoopOptimizer.class );
 
@@ -108,14 +107,12 @@ public class NegativeValueSequenceTest {
 
 			Triggerable triggerable = logInspection.watchForLogMessages( "HHH090205" );
 
-			Metadata metadata = new MetadataSources( serviceRegistry )
-					.addAnnotatedClass( NegativeTwoIncrementSize.class )
-					.buildMetadata();
+			Metadata metadata = buildMetadata( serviceRegistry, NegativeTwoIncrementSize.class );
 
 			// NegativeTwoIncrementSize ID has allocationSize == -2, so warning should be triggered.
 			assertTrue( triggerable.wasTriggered() );
 
-			sessionFactory = (SessionFactoryImplementor) metadata.buildSessionFactory();
+			sessionFactory = (SessionFactoryImplementor) org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory( metadata );
 
 			assertOptimizer( sessionFactory, NegativeTwoIncrementSize.class, NoopOptimizer.class );
 
@@ -157,14 +154,12 @@ public class NegativeValueSequenceTest {
 
 			Triggerable triggerable = logInspection.watchForLogMessages( "HHH090205" );
 
-			Metadata metadata = new MetadataSources( serviceRegistry )
-					.addAnnotatedClass( PositiveOneIncrementSize.class )
-					.buildMetadata();
+			Metadata metadata = buildMetadata( serviceRegistry, PositiveOneIncrementSize.class );
 
 			// PositiveOneIncrementSize ID has allocationSize == 1, so warning should not be triggered.
 			assertFalse( triggerable.wasTriggered() );
 
-			sessionFactory = (SessionFactoryImplementor) metadata.buildSessionFactory();
+			sessionFactory = (SessionFactoryImplementor) org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory( metadata );
 
 			assertOptimizer( sessionFactory, PositiveOneIncrementSize.class, NoopOptimizer.class );
 
@@ -206,15 +201,13 @@ public class NegativeValueSequenceTest {
 
 			Triggerable triggerable = logInspection.watchForLogMessages( "HHH090205" );
 
-			Metadata metadata = new MetadataSources( serviceRegistry )
-					.addAnnotatedClass( PositiveTwoIncrementSize.class )
-					.buildMetadata();
+			Metadata metadata = buildMetadata( serviceRegistry, PositiveTwoIncrementSize.class );
 
 			// NoopOptimizer is preferred (due to setting AvailableSettings.PREFERRED_POOLED_OPTIMIZER to "false")
 			// PositiveTwoIncrementSize ID has allocationSize == 2, so warning should be triggered.
 			assertTrue( triggerable.wasTriggered() );
 
-			sessionFactory = (SessionFactoryImplementor) metadata.buildSessionFactory();
+			sessionFactory = (SessionFactoryImplementor) org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory( metadata );
 
 			assertOptimizer( sessionFactory, PositiveTwoIncrementSize.class, NoopOptimizer.class );
 
@@ -256,15 +249,13 @@ public class NegativeValueSequenceTest {
 
 			Triggerable triggerable = logInspection.watchForLogMessages( "HHH090205" );
 
-			Metadata metadata = new MetadataSources( serviceRegistry )
-					.addAnnotatedClass( PositiveTwoIncrementSize.class )
-					.buildMetadata();
+			Metadata metadata = buildMetadata( serviceRegistry, PositiveTwoIncrementSize.class );
 
 			// PositiveTwoIncrementSize ID has allocationSize == 2, so PooledOptimizer should be used.
 			// Warning should not be triggered.
 			assertFalse( triggerable.wasTriggered() );
 
-			sessionFactory = (SessionFactoryImplementor) metadata.buildSessionFactory();
+			sessionFactory = (SessionFactoryImplementor) org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory( metadata );
 
 			assertOptimizer( sessionFactory, PositiveTwoIncrementSize.class, PooledOptimizer.class );
 
@@ -306,14 +297,12 @@ public class NegativeValueSequenceTest {
 
 			Triggerable triggerable = logInspection.watchForLogMessages( "HHH090205" );
 
-			Metadata metadata = new MetadataSources( serviceRegistry )
-					.addAnnotatedClass( NegativeTwoIncrementSizePositiveInitialValue.class )
-					.buildMetadata();
+			Metadata metadata = buildMetadata( serviceRegistry, NegativeTwoIncrementSizePositiveInitialValue.class );
 
 			// NegativeTwoIncrementSizePositiveInitialValue ID has allocationSize == -2, so warning should be triggered.
 			assertTrue( triggerable.wasTriggered() );
 
-			sessionFactory = (SessionFactoryImplementor) metadata.buildSessionFactory();
+			sessionFactory = (SessionFactoryImplementor) org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory( metadata );
 
 			assertOptimizer( sessionFactory, NegativeTwoIncrementSizePositiveInitialValue.class, NoopOptimizer.class );
 
@@ -356,6 +345,10 @@ public class NegativeValueSequenceTest {
 				.getEntityDescriptor( entityClass )
 				.getGenerator();
 		assertTrue( expectedOptimizerClass.isInstance( generator.getOptimizer() ) );
+	}
+
+	private static Metadata buildMetadata(ServiceRegistryImplementor serviceRegistry, Class<?> managedClass) {
+		return MetadataBuildingTestHelper.buildMetadata( (StandardServiceRegistry) serviceRegistry, managedClass );
 	}
 
 	@Entity( name = "NegativeOneIncrementSize" )

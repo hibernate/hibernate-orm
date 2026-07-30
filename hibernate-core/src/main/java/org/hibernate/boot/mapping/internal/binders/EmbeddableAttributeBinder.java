@@ -1,0 +1,402 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
+package org.hibernate.boot.mapping.internal.binders;
+
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+
+import org.hibernate.MappingException;
+import org.hibernate.annotations.CompositeType;
+import org.hibernate.annotations.EmbeddedTable;
+import org.hibernate.annotations.TargetEmbeddable;
+import org.hibernate.boot.mapping.internal.model.AggregateMappingIntent;
+import org.hibernate.boot.mapping.internal.model.EmbeddableContribution;
+import org.hibernate.boot.mapping.internal.materialize.EmbeddableMappingMaterializer;
+import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.mapping.internal.sources.BasicValueSource;
+import org.hibernate.boot.mapping.internal.sources.ComponentSource;
+import org.hibernate.boot.mapping.internal.view.AttributeBindingView;
+import org.hibernate.boot.mapping.internal.context.BindingContext;
+import org.hibernate.boot.mapping.internal.context.BindingOptions;
+import org.hibernate.boot.mapping.internal.context.BindingState;
+import org.hibernate.boot.mapping.internal.relational.TableReference;
+import org.hibernate.boot.mapping.internal.categorize.AttributeMetadataImplementor;
+import org.hibernate.boot.mapping.internal.categorize.AbstractIdentifiableTypeMetadata;
+import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.mapping.BasicValue;
+import org.hibernate.mapping.Component;
+import org.hibernate.mapping.MappingHelper;
+import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.Property;
+import org.hibernate.mapping.Table;
+import org.hibernate.metamodel.mapping.EmbeddableDiscriminatorConverter;
+import org.hibernate.metamodel.mapping.internal.DiscriminatorTypeImpl;
+import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.models.spi.MemberDetails;
+import org.hibernate.persister.entity.DiscriminatorHelper;
+import org.hibernate.property.access.internal.PropertyAccessStrategyCompositeUserTypeImpl;
+import org.hibernate.property.access.internal.PropertyAccessStrategyGetterImpl;
+import org.hibernate.usertype.CompositeUserType;
+
+import jakarta.persistence.DiscriminatorColumn;
+
+import static org.hibernate.boot.model.internal.TimeZoneStorageHelper.resolveTimeZoneStorageCompositeUserType;
+import static org.hibernate.internal.util.StringHelper.qualify;
+import static org.hibernate.metamodel.mapping.EntityDiscriminatorMapping.DISCRIMINATOR_ROLE_NAME;
+
+/// Binds component-valued singular attributes.
+///
+/// The binder creates the `Component` value for an embedded attribute and then
+/// delegates nested member binding to [ComponentBinder].  The component has a
+/// single physical table: either the owner's primary table or one secondary table
+/// selected by effective column/join-column declarations.  Hibernate does not
+/// support a single embeddable attribute spanning multiple tables, so conflicting
+/// nested table declarations are rejected here.
+///
+/// @since 9.0
+/// @author Steve Ebersole
+class EmbeddableAttributeBinder {
+	private final AbstractIdentifiableTypeMetadata ownerType;
+	private final AttributeBindingView attributeBinding;
+	private final PersistentClass ownerBinding;
+	private final AttributeMetadataImplementor attributeMetadata;
+	private final Table primaryTable;
+	private final ModelBinders modelBinders;
+	private final BindingState bindingState;
+	private final BindingOptions bindingOptions;
+	private final BindingContext bindingContext;
+	private final boolean registerCollectionBindings;
+	private ComponentSource componentSource;
+
+	EmbeddableAttributeBinder(
+			AbstractIdentifiableTypeMetadata ownerType,
+			AttributeBindingView attributeBinding,
+			PersistentClass ownerBinding,
+			AttributeMetadataImplementor attributeMetadata,
+			Table primaryTable,
+			ModelBinders modelBinders,
+			BindingState bindingState,
+			BindingOptions bindingOptions,
+			BindingContext bindingContext) {
+		this(
+				ownerType,
+				attributeBinding,
+				ownerBinding,
+				attributeMetadata,
+				primaryTable,
+				modelBinders,
+				bindingState,
+				bindingOptions,
+				bindingContext,
+				true
+		);
+	}
+
+	EmbeddableAttributeBinder(
+			AbstractIdentifiableTypeMetadata ownerType,
+			AttributeBindingView attributeBinding,
+			PersistentClass ownerBinding,
+			AttributeMetadataImplementor attributeMetadata,
+			Table primaryTable,
+			ModelBinders modelBinders,
+			BindingState bindingState,
+			BindingOptions bindingOptions,
+			BindingContext bindingContext,
+			boolean registerCollectionBindings) {
+		this.ownerType = ownerType;
+		this.attributeBinding = attributeBinding;
+		this.ownerBinding = ownerBinding;
+		this.attributeMetadata = attributeMetadata;
+		this.primaryTable = primaryTable;
+		this.modelBinders = modelBinders;
+		this.bindingState = bindingState;
+		this.bindingOptions = bindingOptions;
+		this.bindingContext = bindingContext;
+		this.registerCollectionBindings = registerCollectionBindings;
+	}
+
+	Component bind(Property property) {
+		final MemberDetails member = attributeBinding.member();
+		final Class<? extends CompositeUserType<?>> compositeUserTypeClass = resolveCompositeUserType( member );
+		if ( compositeUserTypeClass != null ) {
+			componentSource = ComponentSource.syntheticEmbeddedAttribute(
+					member,
+					resolveCompositeUserTypeEmbeddable( compositeUserTypeClass ),
+					ownerType.getClassDetails(),
+					ownerType.getHierarchy().getRoot().getClassDetails(),
+					ownerType.getAccessType(),
+					bindingContext
+			);
+		}
+		else if ( isPluralAggregateBasic( member ) ) {
+			componentSource = ComponentSource.pluralAggregateAttribute(
+					member,
+					ownerType.getClassDetails(),
+					ownerType.getHierarchy().getRoot().getClassDetails(),
+					ownerType.getAccessType(),
+					bindingContext
+			);
+		}
+		else {
+			componentSource = ComponentSource.embeddedAttribute(
+					member,
+					attributeBinding.embeddedValueIntent().memberType(),
+					ownerType.getClassDetails(),
+					ownerType.getHierarchy().getRoot().getClassDetails(),
+					ownerType.getAccessType(),
+					bindingContext
+			);
+		}
+		final Table componentTable = resolveComponentTable( member );
+		final EmbeddableMappingMaterializer materializer = new EmbeddableMappingMaterializer( bindingState );
+		final var embeddedValueIntent = attributeBinding.embeddedValueIntent();
+		final var embeddedValueMetadata = embeddedValueIntent == null ? null : embeddedValueIntent.valueMetadata();
+		final EmbeddableContribution contribution =
+				compositeUserTypeClass == null
+						&& !member.hasDirectAnnotationUsage( TargetEmbeddable.class )
+						&& embeddedValueMetadata != null
+						&& componentSource.componentType().getName()
+								.equals( member.getType().determineRawClass().getName() )
+						&& embeddedValueMetadata.getType().determineRawClass().getName()
+								.equals( member.getType().determineRawClass().getName() )
+						? materializer.createContribution(
+								componentSource,
+								embeddedValueMetadata,
+								bindingContext
+						)
+						: materializer.createContribution( componentSource, bindingContext );
+		final Component component = materializer.createEmbeddedAttributeComponent(
+				componentSource,
+				ownerBinding,
+				componentTable,
+				ownerType.getClassDetails().getClassName(),
+				attributeBinding.attributeName()
+		);
+		component.setMappingRole( property.getMappingRole() );
+		final CompositeUserType<?> compositeUserType = compositeUserTypeClass == null
+				? null
+				: instantiateCompositeUserType( compositeUserTypeClass );
+		if ( compositeUserType != null ) {
+			component.setCompositeUserType( compositeUserType );
+		}
+		bindDiscriminator( component, componentTable, contribution );
+
+		new ComponentBinder( modelBinders, bindingState, bindingOptions, bindingContext ).bindBasicProperties(
+				ownerType,
+				ownerBinding,
+				componentSource,
+				component,
+				componentTable,
+				(ignored, column) -> {
+				},
+				false,
+				true,
+				true,
+				registerCollectionBindings,
+				contribution
+		);
+		if ( compositeUserType != null ) {
+			processCompositeUserType( component, compositeUserType );
+		}
+		property.setOptional( true );
+		return component;
+	}
+
+	private static boolean isPluralAggregateBasic(MemberDetails member) {
+		return AggregateMappingIntent.isAggregateArray( member, member.getType() );
+	}
+
+	private Class<? extends CompositeUserType<?>> resolveCompositeUserType(MemberDetails member) {
+		final CompositeType compositeType = member.getDirectAnnotationUsage( CompositeType.class );
+		if ( compositeType != null ) {
+			return compositeType.value();
+		}
+
+		final var returnedClass = attributeBinding.resolvedType().determineRawClass();
+		final Class<? extends CompositeUserType<?>> timeZoneStorageCompositeUserType =
+				resolveTimeZoneStorageCompositeUserType(
+						member,
+						returnedClass,
+						bindingState.getMetadataBuildingContext()
+				);
+		if ( timeZoneStorageCompositeUserType != null ) {
+			return timeZoneStorageCompositeUserType;
+		}
+		if ( returnedClass == null || !returnedClass.isRealClass() ) {
+			return null;
+		}
+		final Class<?> javaClass = returnedClass.toJavaClass();
+		return javaClass == null ? null : bindingState.findRegisteredCompositeUserType( javaClass );
+	}
+
+	private ClassDetails resolveCompositeUserTypeEmbeddable(
+			Class<? extends CompositeUserType<?>> compositeUserTypeClass) {
+		final CompositeUserType<?> compositeUserType = instantiateCompositeUserType( compositeUserTypeClass );
+		return bindingContext.getClassDetailsRegistry()
+				.resolveClassDetails( compositeUserType.embeddable().getName() );
+	}
+
+	private CompositeUserType<?> instantiateCompositeUserType(
+			Class<? extends CompositeUserType<?>> compositeUserTypeClass) {
+		return MappingHelper.createCompositeUserType(
+				compositeUserTypeClass,
+				bindingContext.getManagedBeanRegistry(),
+				bindingContext.getBuildingPlan().isAllowExtensionsInCdi()
+		);
+	}
+
+	static void processCompositeUserType(Component component, CompositeUserType<?> compositeUserType) {
+		component.completeShape();
+		final List<String> sortedPropertyNames = new ArrayList<>( component.getPropertySpan() );
+		final List<Type> sortedPropertyTypes = new ArrayList<>( component.getPropertySpan() );
+		final var strategy = new PropertyAccessStrategyCompositeUserTypeImpl(
+				compositeUserType,
+				sortedPropertyNames,
+				sortedPropertyTypes
+		);
+		for ( var property : component.getProperties() ) {
+			final String propertyName = property.getName();
+			sortedPropertyNames.add( propertyName );
+			sortedPropertyTypes.add(
+					PropertyAccessStrategyGetterImpl.INSTANCE.buildPropertyAccess(
+							compositeUserType.embeddable(),
+							propertyName,
+							false
+					).getGetter().getReturnType()
+			);
+			property.setPropertyAccessStrategy( strategy );
+		}
+	}
+
+	private void bindDiscriminator(
+			Component component,
+			Table componentTable,
+			EmbeddableContribution contribution) {
+		bindDiscriminator(
+				component,
+				componentTable,
+				contribution,
+				attributeBinding.attributeName() + "_DTYPE",
+				bindingState,
+				bindingOptions,
+				bindingContext
+		);
+	}
+
+	static void bindDiscriminator(
+			Component component,
+			Table componentTable,
+			EmbeddableContribution contribution,
+			String implicitColumnName,
+			BindingState bindingState,
+			BindingOptions bindingOptions,
+			BindingContext bindingContext) {
+		final var discriminatorSource = contribution.discriminator();
+		if ( !discriminatorSource.polymorphic() ) {
+			return;
+		}
+
+		final BasicValue discriminator = BasicValue.unregistered( bindingState.getMetadataBuildingContext(), componentTable );
+		if ( component.getMappingRole() != null ) {
+			discriminator.setMappingRole(
+					component.getMappingRole().append( org.hibernate.boot.mapping.spi.MappingRole.PartKind.DISCRIMINATOR )
+			);
+		}
+		discriminator.setTable( componentTable );
+		discriminator.setTypeName( String.class.getName() );
+		final var overrideColumnSource = discriminatorSource.overrideColumnSource();
+		final DiscriminatorColumn discriminatorColumn = discriminatorSource.discriminatorColumn();
+		if ( overrideColumnSource != null ) {
+			final org.hibernate.mapping.Column column = ColumnBinder.bindColumn(
+					overrideColumnSource,
+					() -> implicitColumnName,
+					false,
+					true
+			);
+			componentTable.addColumn( column );
+			discriminator.addColumn( column, true, true );
+		}
+		else if ( discriminatorColumn == null ) {
+			final org.hibernate.mapping.Column column = ColumnBinder.bindColumn(
+					null,
+					() -> implicitColumnName,
+					false,
+					true
+			);
+			componentTable.addColumn( column );
+			discriminator.addColumn( column, true, true );
+		}
+		else {
+			ColumnBinder.bindDiscriminatorColumn(
+					bindingContext,
+					null,
+					discriminator,
+					discriminatorColumn,
+					bindingOptions,
+					bindingState
+			);
+		}
+		bindingState.addAttributeValueResolution(
+				AttributeBindingPhase.valueResolution(
+							discriminator,
+							BasicValueSource.discriminator( String.class ),
+							bindingState.getMetadataBuildingContext(),
+							bindingState.getMetadataBuildingContext().getServiceComponents(),
+							bindingState.getMappingResolutionState()
+					)
+			);
+		bindingState.addPostAttributeValueResolution( () ->
+				resolveDiscriminatorType( component, bindingState.getMetadataBuildingContext() ) );
+		component.setDiscriminator( discriminator );
+		component.setDiscriminatorValues( discriminatorSource.discriminatorValues() );
+		component.setSubclassToSuperclass( discriminatorSource.subclassToSuperclass() );
+	}
+
+	private static void resolveDiscriminatorType(
+			Component component,
+			MetadataBuildingContext metadataBuildingContext) {
+		final var metadataCollector = metadataBuildingContext.getMetadataCollector();
+		component.setDiscriminatorType(
+				metadataCollector.resolveEmbeddableDiscriminatorType( component.getComponentClass(), () -> {
+					final var javaTypeRegistry = metadataBuildingContext.getTypeConfiguration().getJavaTypeRegistry();
+					final var domainJavaType = javaTypeRegistry.resolveDescriptor( Class.class );
+					final var discriminatorType = DiscriminatorHelper.getDiscriminatorType( component );
+					final var converter = EmbeddableDiscriminatorConverter.fromValueMappings(
+							qualify( component.getComponentClassName(), DISCRIMINATOR_ROLE_NAME ),
+							domainJavaType,
+							discriminatorType,
+							component.getDiscriminatorValues(),
+							metadataBuildingContext.getServiceRegistry()
+					);
+					return new DiscriminatorTypeImpl<>( discriminatorType, converter );
+				} )
+		);
+	}
+
+	private Table resolveComponentTable(MemberDetails attributeMember) {
+		return resolveExplicitEmbeddedTable( attributeMember );
+	}
+
+	private Table resolveExplicitEmbeddedTable(MemberDetails attributeMember) {
+		final EmbeddedTable embeddedTable = attributeMember.getDirectAnnotationUsage( EmbeddedTable.class );
+		if ( embeddedTable == null ) {
+			return primaryTable;
+		}
+
+		final Identifier identifier = Identifier.toIdentifier( embeddedTable.value() );
+		final TableReference tableReference = bindingState.getTableByName( identifier.getCanonicalName() );
+		if ( tableReference == null ) {
+			throw new MappingException( String.format( Locale.ROOT,
+					"Could not resolve @EmbeddedTable table `%s` for %s.%s",
+					embeddedTable.value(),
+					attributeMember.getDeclaringType().getName(),
+					attributeBinding.attributeName()
+			) );
+			}
+			return tableReference.binding();
+		}
+}

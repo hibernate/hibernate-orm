@@ -10,18 +10,18 @@ import java.util.Map;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbTableImpl;
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.annotations.spi.CommonTableDetails;
-import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
+import org.hibernate.boot.mapping.internal.xml.XmlDocumentContext;
 import org.hibernate.models.spi.ModelsContext;
 
 import jakarta.persistence.Table;
 
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
-import static org.hibernate.boot.models.xml.internal.XmlAnnotationHelper.applyCatalog;
-import static org.hibernate.boot.models.xml.internal.XmlAnnotationHelper.applyOptionalString;
-import static org.hibernate.boot.models.xml.internal.XmlAnnotationHelper.applySchema;
-import static org.hibernate.boot.models.xml.internal.XmlAnnotationHelper.collectCheckConstraints;
-import static org.hibernate.boot.models.xml.internal.XmlAnnotationHelper.collectIndexes;
-import static org.hibernate.boot.models.xml.internal.XmlAnnotationHelper.collectUniqueConstraints;
+import static org.hibernate.boot.mapping.internal.xml.XmlAnnotationHelper.applyCatalog;
+import static org.hibernate.boot.mapping.internal.xml.XmlAnnotationHelper.applyOptionalString;
+import static org.hibernate.boot.mapping.internal.xml.XmlAnnotationHelper.applySchema;
+import static org.hibernate.boot.mapping.internal.xml.XmlAnnotationHelper.collectCheckConstraints;
+import static org.hibernate.boot.mapping.internal.xml.XmlAnnotationHelper.collectIndexes;
+import static org.hibernate.boot.mapping.internal.xml.XmlAnnotationHelper.collectUniqueConstraints;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")

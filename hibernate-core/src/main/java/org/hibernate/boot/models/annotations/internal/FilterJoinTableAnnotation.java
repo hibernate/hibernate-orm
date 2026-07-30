@@ -10,8 +10,8 @@ import java.util.Map;
 import org.hibernate.annotations.FilterJoinTable;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbFilterImpl;
 import org.hibernate.boot.models.annotations.spi.FilterDetails;
-import org.hibernate.boot.models.xml.internal.FilterProcessing;
-import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
+import org.hibernate.boot.mapping.internal.xml.FilterProcessing;
+import org.hibernate.boot.mapping.internal.xml.XmlDocumentContext;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.models.spi.ModelsContext;
 

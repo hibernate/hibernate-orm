@@ -5,8 +5,10 @@
 package org.hibernate.orm.test.subquery;
 
 import java.util.List;
+import java.util.Map;
 
-import org.hibernate.boot.MetadataBuilder;
+import org.hibernate.boot.pipeline.internal.MappingCustomizations;
+import org.hibernate.boot.pipeline.internal.FunctionRegistryCustomizations;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
@@ -65,8 +67,16 @@ public class SubqueryTest extends BaseSessionFactoryFunctionalTest {
 	}
 
 	@Override
-	protected void applyMetadataBuilder(MetadataBuilder metadataBuilder) {
-		metadataBuilder.applySqlFunction( "limit", LIMIT_FUNCTION );
+	protected MappingCustomizations metadataCustomizations() {
+		return MappingCustomizations.NONE;
+	}
+
+	@Override
+	protected FunctionRegistryCustomizations functionCustomizations() {
+		return new FunctionRegistryCustomizations(
+				List.of(),
+				Map.of( "limit", LIMIT_FUNCTION )
+		);
 	}
 
 	@Override

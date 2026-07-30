@@ -5,12 +5,14 @@
 package org.hibernate.orm.test.hbm.comment;
 
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
+import org.hibernate.boot.pipeline.internal.source.XmlMappingSource;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.internal.util.ReaderInputStream;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Table;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.util.ServiceRegistryUtil;
@@ -38,9 +40,12 @@ public class ClassCommentTest {
 	@Test
 	public void testClassComment() {
 		try (StandardServiceRegistry serviceRegistry = ServiceRegistryUtil.serviceRegistry()) {
-			MetadataSources metadataSources = new MetadataSources( serviceRegistry );
-			metadataSources.addInputStream( new ReaderInputStream( new StringReader( CLASS_COMMENT_HBM_XML ) ) );
-			Metadata metadata = metadataSources.buildMetadata();
+			Metadata metadata = MetadataBuildingTestHelper.buildMetadata(
+					serviceRegistry,
+					new MappingSources().addXmlMappingSource( XmlMappingSource.fromInputStream(
+							new ReaderInputStream( new StringReader( CLASS_COMMENT_HBM_XML ) )
+					) )
+			);
 			PersistentClass pc = metadata.getEntityBinding( "org.hibernate.test.hbm.Foo" );
 			assertThat( pc ).isNotNull();
 			Table table = pc.getTable();

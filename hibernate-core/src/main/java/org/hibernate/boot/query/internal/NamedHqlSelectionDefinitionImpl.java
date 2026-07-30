@@ -17,7 +17,6 @@ import org.hibernate.annotations.HQLSelect;
 import org.hibernate.annotations.NamedQuery;
 import org.hibernate.boot.query.NamedHqlQueryDefinition;
 import org.hibernate.boot.spi.NamedSelectionQueryDefinition;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.models.spi.AnnotationTarget;
 import org.hibernate.query.named.spi.NamedSqmQueryMemento;
@@ -110,7 +109,7 @@ public class NamedHqlSelectionDefinitionImpl<R>
 
 	@Nonnull
 	@Override
-	public NamedSqmQueryMemento<R> resolve(@Nonnull SessionFactoryImplementor factory) {
+	public NamedSqmQueryMemento<R> resolve() {
 		return new HqlSelectionMementoImpl<>(
 				getRegistrationName(), hqlString,
 				getResultType(), entityGraphName,

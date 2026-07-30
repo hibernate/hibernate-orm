@@ -19,7 +19,8 @@ import org.hibernate.action.queue.spi.meta.ColumnDescriptor;
 import org.hibernate.action.queue.spi.meta.TableKeyDescriptor;
 import org.hibernate.action.queue.internal.support.GraphBasedActionQueueFactory;
 import org.hibernate.annotations.CacheLayout;
-import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.boot.model.internal.GeneratorBinder;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
@@ -80,7 +81,8 @@ import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.filter.FilterAliasGenerator;
 import org.hibernate.persister.filter.internal.FilterHelper;
 import org.hibernate.persister.internal.SqlFragmentPredicate;
-import org.hibernate.query.named.spi.NamedQueryMemento;
+import org.hibernate.property.access.spi.PropertyAccessStrategyResolver;
+import org.hibernate.query.named.spi.NamedSelectionMemento;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.Alias;
@@ -161,6 +163,7 @@ public abstract class AbstractCollectionPersister
 	private final CollectionSemantics<?,?> collectionSemantics;
 	private final EntityPersister ownerPersister;
 	private final SessionFactoryImplementor factory;
+	private final SqlStringGenerationContext sqlStringGenerationContext;
 
 	protected final String qualifiedTableName;
 	private final CollectionTableMapping tableMapping;
@@ -202,6 +205,7 @@ public abstract class AbstractCollectionPersister
 	protected final String identifierColumnName;
 
 	private final String queryLoaderName;
+	private final NamedSelectionMemento<?> namedQueryLoaderMemento;
 
 	private final boolean isPrimitiveArray;
 	private final boolean isLazy;
@@ -253,12 +257,12 @@ public abstract class AbstractCollectionPersister
 			@Nullable CollectionDataAccess cacheAccessStrategy,
 			RuntimeModelCreationContext creationContext)
 					throws MappingException, CacheException {
-		factory = creationContext.getSessionFactory();
+		factory = creationContext.getSessionFactoryAccess().getSessionFactory();
+		sqlStringGenerationContext = creationContext.getSqlStringGenerationContext();
 		final var factoryOptions = creationContext.getSessionFactoryOptions();
 
 		collectionSemantics =
-				creationContext.getBootstrapContext().getMetadataBuildingOptions()
-						.getPersistentCollectionRepresentationResolver()
+				creationContext.getPersistentCollectionRepresentationResolver()
 						.resolveRepresentation( collectionBootDescriptor );
 
 		this.cacheAccessStrategy = cacheAccessStrategy;
@@ -366,7 +370,7 @@ public abstract class AbstractCollectionPersister
 			else if ( selectable instanceof Column column ) {
 				elementColumnNames[j] = column.getQuotedName( dialect );
 				elementColumnWriters[j] = column.getWriteExpr(
-						elementBootDescriptor.getSelectableType( factory.getRuntimeMetamodels(), j ),
+						elementBootDescriptor.getSelectableType( creationContext.getMetadata(), j ),
 						dialect,
 						creationContext.getBootModel()
 				);
@@ -500,9 +504,8 @@ public abstract class AbstractCollectionPersister
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// "mapping model"
 
-		if ( hasNamedQueryLoader() ) {
-			getNamedQueryMemento( collectionBootDescriptor.getMetadata() );
-		}
+		namedQueryLoaderMemento =
+				hasNamedQueryLoader() ? resolveNamedQueryLoader( creationContext ) : null;
 
 		tableMapping = buildCollectionTableMapping( collectionBootDescriptor, getTableName(), getCollectionSpaces() );
 
@@ -514,7 +517,7 @@ public abstract class AbstractCollectionPersister
 	private FilterHelper manyToManyFilterHelper(Collection collection, RuntimeModelCreationContext context) {
 		return collection.getManyToManyFilters().isEmpty()
 				? null
-				: new FilterHelper( collection.getManyToManyFilters(), context.getSessionFactory() );
+				: new FilterHelper( collection.getManyToManyFilters(), context );
 	}
 
 	private FilterHelper filterHelper(
@@ -522,7 +525,7 @@ public abstract class AbstractCollectionPersister
 		final var filters = collection.getFilters();
 		return filters.isEmpty()
 				? null
-				: new FilterHelper( filters, entityNameByTableNameMap( elementPersister, context ), factory );
+				: new FilterHelper( filters, entityNameByTableNameMap( elementPersister, context ), context );
 	}
 
 	private static Map<String, String> entityNameByTableNameMap(
@@ -531,7 +534,7 @@ public abstract class AbstractCollectionPersister
 				? null
 				: AbstractEntityPersister.getEntityNameByTableNameMap(
 						context.getBootModel().getEntityBinding( elementPersister.getEntityName() ),
-						context.getSessionFactory().getSqlStringGenerationContext()
+						context.getSqlStringGenerationContext()
 				);
 	}
 
@@ -632,7 +635,7 @@ public abstract class AbstractCollectionPersister
 							.getJdbcLiteralFormatter().toJdbcLiteral(
 									discriminatorValueDetails.getValue(),
 									creationContext.getDialect(),
-									creationContext.getSessionFactory().getWrapperOptions()
+									creationContext.getWrapperOptions()
 							);
 			return getNonEmptyOrConjunctionIfBothNonEmpty( collectionBootDescriptor.getWhere(),
 					discriminatorMapping.getSelectableName() + "=" + discriminatorLiteral );
@@ -681,9 +684,20 @@ public abstract class AbstractCollectionPersister
 	}
 
 	private BeforeExecutionGenerator createGenerator(RuntimeModelCreationContext context, IdentifierCollection collection) {
-		final Generator generator =
-				collection.getIdentifier()
-						.createGenerator( context.getDialect(), null, null, context.getGeneratorSettings() );
+		final var preparedGenerator =
+				context.getBootModel().consumePreparedCollectionIdentifierGenerator( collection.getRole() );
+		final Generator generator = preparedGenerator == null
+				? GeneratorBinder.createIdentifierGenerator(
+						collection.getIdentifier(),
+						context.getDialect(),
+						null,
+						null,
+						context.getGeneratorSettings(),
+						context.getBootModel().getDatabase(),
+						context.getServiceRegistry(),
+						context.getServiceRegistry().requireService( PropertyAccessStrategyResolver.class )
+				)
+				: preparedGenerator.getGenerator();
 		if ( generator.generatedOnExecution() ) {
 			throw new MappingException("must be an BeforeExecutionGenerator"); //TODO fix message
 		}
@@ -710,7 +724,7 @@ public abstract class AbstractCollectionPersister
 	}
 
 	protected String determineTableName(Table table) {
-		return getTableIdentifierExpression( table, factory );
+		return getTableIdentifierExpression( table, sqlStringGenerationContext );
 	}
 
 
@@ -718,8 +732,7 @@ public abstract class AbstractCollectionPersister
 	public void postInstantiate() throws MappingException {
 		collectionLoader =
 				hasNamedQueryLoader()
-						// We pass null as metamodel because we did the initialization during construction already
-						? createNamedQueryCollectionLoader( this, getNamedQueryMemento( null ) )
+						? createNamedQueryCollectionLoader( this, getNamedQueryMemento() )
 						: createCollectionLoader( new LoadQueryInfluencers( factory ) );
 
 		if ( attributeMapping.getIndexDescriptor() != null ) {
@@ -739,15 +752,22 @@ public abstract class AbstractCollectionPersister
 		logStaticSQL();
 	}
 
-	private NamedQueryMemento<?> getNamedQueryMemento(MetadataImplementor bootModel) {
+	private NamedSelectionMemento<?> resolveNamedQueryLoader(RuntimeModelCreationContext creationContext) {
 		final var memento =
-				factory.getQueryEngine().getNamedObjectRepository()
-						.resolve( factory, bootModel, queryLoaderName );
+				creationContext.getNamedLoaderQueryResolver()
+						.resolveLoaderQuery( creationContext.getBootModel(), queryLoaderName );
 		if ( memento == null ) {
 			throw new IllegalArgumentException( "Could not resolve named query '" + queryLoaderName
 					+ "' for loading collection '" + getRole() + "'" );
 		}
 		return memento;
+	}
+
+	private NamedSelectionMemento<?> getNamedQueryMemento() {
+		if ( namedQueryLoaderMemento == null ) {
+			throw new IllegalStateException( "Collection does not define a named query loader: " + getRole() );
+		}
+		return namedQueryLoaderMemento;
 	}
 
 	protected void logStaticSQL() {
@@ -886,7 +906,7 @@ public abstract class AbstractCollectionPersister
 	 * For Hibernate Reactive
 	 */
 	protected CollectionLoader createNamedQueryCollectionLoader(
-			CollectionPersister persister, NamedQueryMemento<?> namedQueryMemento) {
+			CollectionPersister persister, NamedSelectionMemento<?> namedQueryMemento) {
 		return new CollectionLoaderNamedQuery(persister, namedQueryMemento);
 	}
 

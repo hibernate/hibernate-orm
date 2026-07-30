@@ -11,10 +11,14 @@ import java.util.function.Consumer;
 import java.util.regex.Pattern;
 
 import org.hibernate.Filter;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.FilterConfiguration;
 import org.hibernate.metamodel.mapping.Restrictable;
+import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
+import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.EntityNameUse;
 import org.hibernate.persister.filter.FilterAliasGenerator;
 import org.hibernate.sql.Template;
@@ -22,6 +26,7 @@ import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.predicate.FilterPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import static org.hibernate.internal.FilterImpl.MARKER;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
@@ -50,6 +55,10 @@ public class FilterHelper {
 		this( filters, null, factory );
 	}
 
+	public FilterHelper(List<FilterConfiguration> filters, RuntimeModelCreationContext creationContext) {
+		this( filters, null, creationContext );
+	}
+
 	/**
 	 * The map of defined filters.  This is expected to be in format
 	 * where the filter names are the map keys, and the defined
@@ -59,6 +68,37 @@ public class FilterHelper {
 	 * @param factory The session factory
 	 */
 	public FilterHelper(List<FilterConfiguration> filters, Map<String, String> tableToEntityName, SessionFactoryImplementor factory) {
+		this(
+				filters,
+				tableToEntityName,
+				factory.getMappingMetamodel(),
+				factory.getSqlStringGenerationContext(),
+				factory.getJdbcServices().getDialect(),
+				factory.getTypeConfiguration()
+		);
+	}
+
+	public FilterHelper(
+			List<FilterConfiguration> filters,
+			Map<String, String> tableToEntityName,
+			RuntimeModelCreationContext creationContext) {
+		this(
+				filters,
+				tableToEntityName,
+				creationContext.getDomainModel(),
+				creationContext.getSqlStringGenerationContext(),
+				creationContext.getDialect(),
+				creationContext.getTypeConfiguration()
+		);
+	}
+
+	private FilterHelper(
+			List<FilterConfiguration> filters,
+			Map<String, String> tableToEntityName,
+			MappingMetamodelImplementor mappingMetamodel,
+			SqlStringGenerationContext sqlStringGenerationContext,
+			Dialect dialect,
+			TypeConfiguration typeConfiguration) {
 		final int filterCount = filters.size();
 
 		filterNames = new String[filterCount];
@@ -74,23 +114,28 @@ public class FilterHelper {
 			filterNames[i] = filterName;
 			filterConditions[i] = safeInterning( filter.getCondition() );
 
-			filterAliasTableMaps[i] = filter.getAliasTableMap( factory );
+			filterAliasTableMaps[i] =
+					filter.getAliasTableMap( mappingMetamodel, sqlStringGenerationContext );
 			filterAutoAliasFlags[i] = false;
 
-			injectAliases( factory, filter, i );
+			injectAliases( dialect, typeConfiguration, filter, i );
 			qualifyParameterNames( i, filterName );
 		}
 	}
 
-	private void injectAliases(SessionFactoryImplementor factory, FilterConfiguration filter, int filterCount) {
+	private void injectAliases(
+			Dialect dialect,
+			TypeConfiguration typeConfiguration,
+			FilterConfiguration filter,
+			int filterCount) {
 		if ( ( filterAliasTableMaps[filterCount].isEmpty()
 				|| isTableFromPersistentClass( filterAliasTableMaps[filterCount] ) )
 				&& filter.useAutoAliasInjection() ) {
 			final String autoAliasedCondition = Template.renderWhereStringTemplate(
 					filter.getCondition(),
 					MARKER,
-					factory.getJdbcServices().getDialect(),
-					factory.getTypeConfiguration()
+					dialect,
+					typeConfiguration
 			);
 			filterConditions[filterCount] = safeInterning( autoAliasedCondition );
 			filterAutoAliasFlags[filterCount] = true;

@@ -11,7 +11,6 @@ import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.boot.query.NamedHqlQueryDefinition;
 import org.hibernate.boot.query.NamedMutationDefinition;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.models.spi.AnnotationTarget;
 import org.hibernate.query.named.spi.NamedSqmQueryMemento;
 import org.hibernate.query.named.internal.HqlMutationMementoImpl;
@@ -56,7 +55,7 @@ public class NamedHqlMutationDefinitionImpl<T>
 
 	@Nonnull
 	@Override
-	public NamedSqmQueryMemento<T> resolve(@Nonnull SessionFactoryImplementor factory) {
+	public NamedSqmQueryMemento<T> resolve() {
 		return new HqlMutationMementoImpl<>(
 				getRegistrationName(),
 				hql, targetType, Map.of(),

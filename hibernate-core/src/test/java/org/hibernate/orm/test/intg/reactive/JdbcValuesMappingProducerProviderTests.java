@@ -31,7 +31,7 @@ public class JdbcValuesMappingProducerProviderTests {
 	@Test
 	@ExpectedException( GoodIfBadException.class )
 	public void testIt(DomainModelScope scope) {
-		try ( SessionFactory sessionFactory = scope.getDomainModel().buildSessionFactory() ) {
+		try ( SessionFactory sessionFactory = org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory( scope.getDomainModel() ) ) {
 		}
 	}
 

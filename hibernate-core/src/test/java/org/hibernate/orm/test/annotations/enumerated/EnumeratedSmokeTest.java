@@ -4,11 +4,11 @@
  */
 package org.hibernate.orm.test.annotations.enumerated;
 
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -37,11 +37,10 @@ public class EnumeratedSmokeTest {
 	@Test
 	@JiraKey( "HHH-10402" )
 	public void testEnumeratedTypeResolutions(ServiceRegistryScope serviceRegistryScope) {
-		final MetadataImplementor mappings = (MetadataImplementor) new MetadataSources( serviceRegistryScope.getRegistry() )
-				.addAnnotatedClass( EntityWithEnumeratedAttributes.class )
-				.buildMetadata();
-		mappings.orderColumns( false );
-		mappings.validate();
+		final MetadataImplementor mappings = MetadataBuildingTestHelper.buildValidatedMetadata(
+				serviceRegistryScope.getRegistry(),
+				EntityWithEnumeratedAttributes.class
+		);
 
 		final JdbcTypeRegistry jdbcTypeRegistry = mappings.getTypeConfiguration().getJdbcTypeRegistry();
 		final PersistentClass entityBinding = mappings.getEntityBinding( EntityWithEnumeratedAttributes.class.getName() );

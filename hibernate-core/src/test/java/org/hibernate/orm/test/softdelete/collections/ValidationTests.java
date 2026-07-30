@@ -4,9 +4,10 @@
  */
 package org.hibernate.orm.test.softdelete.collections;
 
-import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
 import org.hibernate.metamodel.UnsupportedMappingException;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 
 import org.junit.jupiter.api.Test;
 
@@ -17,11 +18,13 @@ import org.junit.jupiter.api.Test;
 public class ValidationTests {
 	@Test
 	void testOneToMany() {
-		try {
-			final Metadata metadata = new MetadataSources()
-					.addAnnotatedClass( InvalidCollectionOwner.class )
-					.addAnnotatedClass( CollectionOwned.class )
-					.buildMetadata();
+		try (var serviceRegistry = ServiceRegistryUtil.serviceRegistry()) {
+			MetadataBuildingTestHelper.buildMetadata(
+					serviceRegistry,
+					new MappingSources()
+							.addManagedClass( InvalidCollectionOwner.class )
+							.addManagedClass( CollectionOwned.class )
+			);
 		}
 		catch (UnsupportedMappingException expected) {
 		}

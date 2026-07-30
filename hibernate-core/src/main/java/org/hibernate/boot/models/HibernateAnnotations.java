@@ -13,7 +13,8 @@ import org.hibernate.boot.internal.AnyKeyType;
 import org.hibernate.boot.internal.CollectionClassification;
 import org.hibernate.boot.models.annotations.internal.*;
 import org.hibernate.boot.models.internal.OrmAnnotationHelper;
-import org.hibernate.models.internal.OrmAnnotationDescriptor;
+import org.hibernate.models.Creator;
+import org.hibernate.models.spi.MutableAnnotationDescriptor;
 import org.hibernate.models.spi.AnnotationDescriptor;
 
 import static org.hibernate.models.spi.AnnotationTarget.Kind;
@@ -31,930 +32,927 @@ import static org.hibernate.models.spi.AnnotationTarget.Kind;
  */
 @SuppressWarnings({ "deprecation", "removal", "unused" })
 public interface HibernateAnnotations {
-	OrmAnnotationDescriptor<Any, AnyAnnotation> ANY = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<Any, AnyAnnotation> ANY = Creator.createCompleteAnnotationDescriptor(
 			Any.class,
 			AnyAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD ),
 			false
 	);
-	OrmAnnotationDescriptor<AnyDiscriminator, AnyDiscriminatorAnnotation> ANY_DISCRIMINATOR = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<AnyDiscriminator, AnyDiscriminatorAnnotation> ANY_DISCRIMINATOR = Creator.createCompleteAnnotationDescriptor(
 			AnyDiscriminator.class,
 			AnyDiscriminatorAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.ANNOTATION ),
 			false
 	);
-	OrmAnnotationDescriptor<AnyDiscriminatorImplicitValues, AnyDiscriminatorImplicitValuesAnnotation> ANY_DISCRIMINATOR_IMPLICIT_VALUES = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<AnyDiscriminatorImplicitValues, AnyDiscriminatorImplicitValuesAnnotation> ANY_DISCRIMINATOR_IMPLICIT_VALUES = Creator.createCompleteAnnotationDescriptor(
 			AnyDiscriminatorImplicitValues.class,
 			AnyDiscriminatorImplicitValuesAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.ANNOTATION ),
 			false
 	);
-	OrmAnnotationDescriptor<AnyDiscriminatorValues, AnyDiscriminatorValuesAnnotation> ANY_DISCRIMINATOR_VALUES = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<AnyDiscriminatorValues, AnyDiscriminatorValuesAnnotation> ANY_DISCRIMINATOR_VALUES = Creator.createCompleteAnnotationDescriptor(
 			AnyDiscriminatorValues.class,
 			AnyDiscriminatorValuesAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.ANNOTATION ),
 			false
 	);
-	OrmAnnotationDescriptor<AnyDiscriminatorValue, AnyDiscriminatorValueAnnotation> ANY_DISCRIMINATOR_VALUE = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<AnyDiscriminatorValue, AnyDiscriminatorValueAnnotation> ANY_DISCRIMINATOR_VALUE = Creator.createCompleteAnnotationDescriptor(
 			AnyDiscriminatorValue.class,
 			AnyDiscriminatorValueAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.ANNOTATION ),
 			false,
 			ANY_DISCRIMINATOR_VALUES
 	);
-	OrmAnnotationDescriptor<AnyKeyJavaClass, AnyKeyJavaClassAnnotation> ANY_KEY_JAVA_CLASS = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<AnyKeyJavaClass, AnyKeyJavaClassAnnotation> ANY_KEY_JAVA_CLASS = Creator.createCompleteAnnotationDescriptor(
 			AnyKeyJavaClass.class,
 			AnyKeyJavaClassAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.ANNOTATION ),
 			false
 	);
-	OrmAnnotationDescriptor<AnyKeyJavaType, AnyKeyJavaTypeAnnotation> ANY_KEY_JAVA_TYPE = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<AnyKeyJavaType, AnyKeyJavaTypeAnnotation> ANY_KEY_JAVA_TYPE = Creator.createCompleteAnnotationDescriptor(
 			AnyKeyJavaType.class,
 			AnyKeyJavaTypeAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.ANNOTATION ),
 			false
 	);
-	OrmAnnotationDescriptor<AnyKeyJdbcType, AnyKeyJdbcTypeAnnotation> ANY_KEY_JDBC_TYPE = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<AnyKeyJdbcType, AnyKeyJdbcTypeAnnotation> ANY_KEY_JDBC_TYPE = Creator.createCompleteAnnotationDescriptor(
 			AnyKeyJdbcType.class,
 			AnyKeyJdbcTypeAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.ANNOTATION ),
 			false
 	);
-	OrmAnnotationDescriptor<AnyKeyJdbcTypeCode, AnyKeyJdbcTypeCodeAnnotation> ANY_KEY_JDBC_TYPE_CODE = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<AnyKeyJdbcTypeCode, AnyKeyJdbcTypeCodeAnnotation> ANY_KEY_JDBC_TYPE_CODE = Creator.createCompleteAnnotationDescriptor(
 			AnyKeyJdbcTypeCode.class,
 			AnyKeyJdbcTypeCodeAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.ANNOTATION ),
 			false
 	);
-	OrmAnnotationDescriptor<AnyKeyType, AnyKeTypeAnnotation> ANY_KEY_TYPE = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<AnyKeyType, AnyKeTypeAnnotation> ANY_KEY_TYPE = Creator.createCompleteAnnotationDescriptor(
 			AnyKeyType.class,
 			AnyKeTypeAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD ),
 			false
 	);
-	OrmAnnotationDescriptor<Array, ArrayAnnotation> ARRAY = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<Array, ArrayAnnotation> ARRAY = Creator.createCompleteAnnotationDescriptor(
 			Array.class,
 			ArrayAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD ),
 			false
 	);
-	OrmAnnotationDescriptor<AttributeAccessor, AttributeAccessorAnnotation> ATTRIBUTE_ACCESSOR = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<AttributeAccessor, AttributeAccessorAnnotation> ATTRIBUTE_ACCESSOR = Creator.createCompleteAnnotationDescriptor(
 			AttributeAccessor.class,
 			AttributeAccessorAnnotation.class,
 			EnumSet.of( Kind.FIELD, Kind.METHOD ),
 			false
 	);
-	OrmAnnotationDescriptor<AttributeBinderType, AttributeBinderTypeAnnotation> ATTRIBUTE_BINDER_TYPE = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<AttributeBinderType, AttributeBinderTypeAnnotation> ATTRIBUTE_BINDER_TYPE = Creator.createCompleteAnnotationDescriptor(
 			AttributeBinderType.class,
 			AttributeBinderTypeAnnotation.class,
 			EnumSet.of( Kind.ANNOTATION ),
 			false
 	);
-	OrmAnnotationDescriptor<Bag, BagAnnotation> BAG = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<Bag, BagAnnotation> BAG = Creator.createCompleteAnnotationDescriptor(
 			Bag.class,
 			BagAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.ANNOTATION ),
 			false
 	);
-	OrmAnnotationDescriptor<BatchSize, BatchSizeAnnotation> BATCH_SIZE = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<BatchSize, BatchSizeAnnotation> BATCH_SIZE = Creator.createCompleteAnnotationDescriptor(
 			BatchSize.class,
 			BatchSizeAnnotation.class,
 			EnumSet.of( Kind.CLASS, Kind.FIELD, Kind.METHOD ),
 			false
 	);
-	OrmAnnotationDescriptor<Cache, CacheAnnotation> CACHE = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<Cache, CacheAnnotation> CACHE = Creator.createCompleteAnnotationDescriptor(
 			Cache.class,
 			CacheAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.CLASS ),
 			false
 	);
-	OrmAnnotationDescriptor<Checks, ChecksAnnotation> CHECKS = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<Checks, ChecksAnnotation> CHECKS = Creator.createCompleteAnnotationDescriptor(
 			Checks.class,
 			ChecksAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.CLASS ),
 			false
 	);
-	OrmAnnotationDescriptor<Check, CheckAnnotation> CHECK = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<Check, CheckAnnotation> CHECK = Creator.createCompleteAnnotationDescriptor(
 			Check.class,
 			CheckAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.CLASS ),
 			false,
 			CHECKS
 	);
-	OrmAnnotationDescriptor<Collate, CollateAnnotation> COLLATE = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<Collate, CollateAnnotation> COLLATE = Creator.createCompleteAnnotationDescriptor(
 			Collate.class,
 			CollateAnnotation.class,
 			EnumSet.of( Kind.FIELD, Kind.METHOD ),
 			false
 	);
-	OrmAnnotationDescriptor<CollectionId, CollectionIdAnnotation> COLLECTION_ID = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<CollectionId, CollectionIdAnnotation> COLLECTION_ID = Creator.createCompleteAnnotationDescriptor(
 			CollectionId.class,
 			CollectionIdAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD ),
 			false
 	);
-	OrmAnnotationDescriptor<CollectionIdJavaClass, CollectionIdJavaClassAnnotation> COLLECTION_ID_JAVA_CLASS = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<CollectionIdJavaClass, CollectionIdJavaClassAnnotation> COLLECTION_ID_JAVA_CLASS = Creator.createCompleteAnnotationDescriptor(
 			CollectionIdJavaClass.class,
 			CollectionIdJavaClassAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.ANNOTATION ),
 			false
 	);
-	OrmAnnotationDescriptor<CollectionIdJavaType, CollectionIdJavaTypeAnnotation> COLLECTION_ID_JAVA_TYPE = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<CollectionIdJavaType, CollectionIdJavaTypeAnnotation> COLLECTION_ID_JAVA_TYPE = Creator.createCompleteAnnotationDescriptor(
 			CollectionIdJavaType.class,
 			CollectionIdJavaTypeAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.ANNOTATION ),
 			true
 	);
-	OrmAnnotationDescriptor<CollectionIdJdbcType, CollectionIdJdbcTypeAnnotation> COLLECTION_ID_JDBC_TYPE = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<CollectionIdJdbcType, CollectionIdJdbcTypeAnnotation> COLLECTION_ID_JDBC_TYPE = Creator.createCompleteAnnotationDescriptor(
 			CollectionIdJdbcType.class,
 			CollectionIdJdbcTypeAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.ANNOTATION ),
 			true
 	);
-	OrmAnnotationDescriptor<CollectionIdJdbcTypeCode, CollectionIdJdbcTypeCodeAnnotation> COLLECTION_ID_JDBC_TYPE_CODE = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<CollectionIdJdbcTypeCode, CollectionIdJdbcTypeCodeAnnotation> COLLECTION_ID_JDBC_TYPE_CODE = Creator.createCompleteAnnotationDescriptor(
 			CollectionIdJdbcTypeCode.class,
 			CollectionIdJdbcTypeCodeAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.ANNOTATION ),
 			true
 	);
-	OrmAnnotationDescriptor<CollectionIdMutability, CollectionIdMutabilityAnnotation> COLLECTION_ID_MUTABILITY = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<CollectionIdMutability, CollectionIdMutabilityAnnotation> COLLECTION_ID_MUTABILITY = Creator.createCompleteAnnotationDescriptor(
 			CollectionIdMutability.class,
 			CollectionIdMutabilityAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.ANNOTATION ),
 			true
 	);
-	OrmAnnotationDescriptor<CollectionIdType, CollectionIdTypeAnnotation> COLLECTION_ID_TYPE = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<CollectionIdType, CollectionIdTypeAnnotation> COLLECTION_ID_TYPE = Creator.createCompleteAnnotationDescriptor(
 			CollectionIdType.class,
 			CollectionIdTypeAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.ANNOTATION ),
 			false
 	);
-	OrmAnnotationDescriptor<CollectionType, CollectionTypeAnnotation> COLLECTION_TYPE = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<CollectionType, CollectionTypeAnnotation> COLLECTION_TYPE = Creator.createCompleteAnnotationDescriptor(
 			CollectionType.class,
 			CollectionTypeAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.ANNOTATION ),
 			false
 	);
-	OrmAnnotationDescriptor<CollectionClassification, CollectionClassificationXmlAnnotation> COLLECTION_CLASSIFICATION = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<CollectionClassification, CollectionClassificationXmlAnnotation> COLLECTION_CLASSIFICATION = Creator.createCompleteAnnotationDescriptor(
 			CollectionClassification.class,
 			CollectionClassificationXmlAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD ),
 			false
 	);
-	OrmAnnotationDescriptor<CollectionTypeRegistrations, CollectionTypeRegistrationsAnnotation> COLLECTION_TYPE_REGISTRATIONS = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<CollectionTypeRegistrations, CollectionTypeRegistrationsAnnotation> COLLECTION_TYPE_REGISTRATIONS = Creator.createCompleteAnnotationDescriptor(
 			CollectionTypeRegistrations.class,
 			CollectionTypeRegistrationsAnnotation.class,
 			EnumSet.of( Kind.CLASS, Kind.ANNOTATION ),
 			false
 	);
-	OrmAnnotationDescriptor<CollectionTypeRegistration, CollectionTypeRegistrationAnnotation> COLLECTION_TYPE_REGISTRATION = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<CollectionTypeRegistration, CollectionTypeRegistrationAnnotation> COLLECTION_TYPE_REGISTRATION = Creator.createCompleteAnnotationDescriptor(
 			CollectionTypeRegistration.class,
 			CollectionTypeRegistrationAnnotation.class,
 			EnumSet.of( Kind.CLASS, Kind.ANNOTATION, Kind.PACKAGE ),
 			false,
 			COLLECTION_TYPE_REGISTRATIONS
 	);
-	OrmAnnotationDescriptor<ColumnDefault, ColumnDefaultAnnotation> COLUMN_DEFAULT = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<ColumnDefault, ColumnDefaultAnnotation> COLUMN_DEFAULT = Creator.createCompleteAnnotationDescriptor(
 			ColumnDefault.class,
 			ColumnDefaultAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD ),
 			false
 	);
-	OrmAnnotationDescriptor<ColumnTransformers, ColumnTransformersAnnotation> COLUMN_TRANSFORMERS = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<ColumnTransformers, ColumnTransformersAnnotation> COLUMN_TRANSFORMERS = Creator.createCompleteAnnotationDescriptor(
 			ColumnTransformers.class,
 			ColumnTransformersAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD ),
 			false
 	);
-	OrmAnnotationDescriptor<ColumnTransformer, ColumnTransformerAnnotation> COLUMN_TRANSFORMER = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<ColumnTransformer, ColumnTransformerAnnotation> COLUMN_TRANSFORMER = Creator.createCompleteAnnotationDescriptor(
 			ColumnTransformer.class,
 			ColumnTransformerAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD ),
 			false,
 			COLUMN_TRANSFORMERS
 	);
-	OrmAnnotationDescriptor<CompositeType, CompositeTypeAnnotation> COMPOSITE_TYPE = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<CompositeType, CompositeTypeAnnotation> COMPOSITE_TYPE = Creator.createCompleteAnnotationDescriptor(
 			CompositeType.class,
 			CompositeTypeAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.ANNOTATION ),
 			false
 	);
-	OrmAnnotationDescriptor<CompositeTypeRegistrations, CompositeTypeRegistrationsAnnotation> COMPOSITE_TYPE_REGISTRATIONS = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<CompositeTypeRegistrations, CompositeTypeRegistrationsAnnotation> COMPOSITE_TYPE_REGISTRATIONS = Creator.createCompleteAnnotationDescriptor(
 			CompositeTypeRegistrations.class,
 			CompositeTypeRegistrationsAnnotation.class,
 			EnumSet.of( Kind.CLASS, Kind.ANNOTATION, Kind.PACKAGE ),
 			false
 	);
-	OrmAnnotationDescriptor<CompositeTypeRegistration, CompositeTypeRegistrationAnnotation> COMPOSITE_TYPE_REGISTRATION = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<CompositeTypeRegistration, CompositeTypeRegistrationAnnotation> COMPOSITE_TYPE_REGISTRATION = Creator.createCompleteAnnotationDescriptor(
 			CompositeTypeRegistration.class,
 			CompositeTypeRegistrationAnnotation.class,
 			EnumSet.of( Kind.CLASS, Kind.ANNOTATION, Kind.PACKAGE ),
 			false,
 			COMPOSITE_TYPE_REGISTRATIONS
 	);
-	OrmAnnotationDescriptor<ConcreteProxy, ConcreteProxyAnnotation> CONCRETE_PROXY = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<ConcreteProxy, ConcreteProxyAnnotation> CONCRETE_PROXY = Creator.createCompleteAnnotationDescriptor(
 			ConcreteProxy.class,
 			ConcreteProxyAnnotation.class,
 			EnumSet.of( Kind.CLASS ),
 			false
 	);
-	OrmAnnotationDescriptor<ConverterRegistrations, ConverterRegistrationsAnnotation> CONVERTER_REGISTRATIONS = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<ConverterRegistrations, ConverterRegistrationsAnnotation> CONVERTER_REGISTRATIONS = Creator.createCompleteAnnotationDescriptor(
 			ConverterRegistrations.class,
 			ConverterRegistrationsAnnotation.class,
 			EnumSet.of( Kind.CLASS, Kind.ANNOTATION, Kind.PACKAGE ),
 			false
 	);
-	OrmAnnotationDescriptor<ConverterRegistration, ConverterRegistrationAnnotation> CONVERTER_REGISTRATION = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<ConverterRegistration, ConverterRegistrationAnnotation> CONVERTER_REGISTRATION = Creator.createCompleteAnnotationDescriptor(
 			ConverterRegistration.class,
 			ConverterRegistrationAnnotation.class,
 			EnumSet.of( Kind.CLASS, Kind.ANNOTATION, Kind.PACKAGE ),
 			false,
 			CONVERTER_REGISTRATIONS
 	);
-	OrmAnnotationDescriptor<CreationTimestamp, CreationTimestampAnnotation> CREATION_TIMESTAMP = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<CreationTimestamp, CreationTimestampAnnotation> CREATION_TIMESTAMP = Creator.createCompleteAnnotationDescriptor(
 			CreationTimestamp.class,
 			CreationTimestampAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD ),
 			false
 	);
-	OrmAnnotationDescriptor<CurrentTimestamp, CurrentTimestampAnnotation> CURRENT_TIMESTAMP = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<CurrentTimestamp, CurrentTimestampAnnotation> CURRENT_TIMESTAMP = Creator.createCompleteAnnotationDescriptor(
 			CurrentTimestamp.class,
 			CurrentTimestampAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.ANNOTATION ),
 			false
 	);
-	OrmAnnotationDescriptor<DiscriminatorFormula, DiscriminatorFormulaAnnotation> DISCRIMINATOR_FORMULA = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<DiscriminatorFormula, DiscriminatorFormulaAnnotation> DISCRIMINATOR_FORMULA = Creator.createCompleteAnnotationDescriptor(
 			DiscriminatorFormula.class,
 			DiscriminatorFormulaAnnotation.class,
 			EnumSet.of( Kind.CLASS ),
 			false
 	);
-	OrmAnnotationDescriptor<DiscriminatorOptions, DiscriminatorOptionsAnnotation> DISCRIMINATOR_OPTIONS = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<DiscriminatorOptions, DiscriminatorOptionsAnnotation> DISCRIMINATOR_OPTIONS = Creator.createCompleteAnnotationDescriptor(
 			DiscriminatorOptions.class,
 			DiscriminatorOptionsAnnotation.class,
 			EnumSet.of( Kind.CLASS ),
 			false
 	);
-	OrmAnnotationDescriptor<DynamicInsert, DynamicInsertAnnotation> DYNAMIC_INSERT = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<DynamicInsert, DynamicInsertAnnotation> DYNAMIC_INSERT = Creator.createCompleteAnnotationDescriptor(
 			DynamicInsert.class,
 			DynamicInsertAnnotation.class,
 			EnumSet.of( Kind.CLASS ),
 			false
 	);
-	OrmAnnotationDescriptor<DynamicUpdate, DynamicUpdateAnnotation> DYNAMIC_UPDATE = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<DynamicUpdate, DynamicUpdateAnnotation> DYNAMIC_UPDATE = Creator.createCompleteAnnotationDescriptor(
 			DynamicUpdate.class,
 			DynamicUpdateAnnotation.class,
 			EnumSet.of( Kind.CLASS ),
 			false
 	);
-	OrmAnnotationDescriptor<EmbeddableInstantiator, EmbeddableInstantiatorAnnotation> EMBEDDABLE_INSTANTIATOR = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<EmbeddableInstantiator, EmbeddableInstantiatorAnnotation> EMBEDDABLE_INSTANTIATOR = Creator.createCompleteAnnotationDescriptor(
 			EmbeddableInstantiator.class,
 			EmbeddableInstantiatorAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.CLASS, Kind.ANNOTATION ),
 			false
 	);
-	OrmAnnotationDescriptor<EmbeddableInstantiatorRegistrations, EmbeddableInstantiatorRegistrationsAnnotation> EMBEDDABLE_INSTANTIATOR_REGISTRATIONS = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<EmbeddableInstantiatorRegistrations, EmbeddableInstantiatorRegistrationsAnnotation> EMBEDDABLE_INSTANTIATOR_REGISTRATIONS = Creator.createCompleteAnnotationDescriptor(
 			EmbeddableInstantiatorRegistrations.class,
 			EmbeddableInstantiatorRegistrationsAnnotation.class,
 			EnumSet.of( Kind.CLASS, Kind.ANNOTATION, Kind.PACKAGE ),
 			false
 	);
-	OrmAnnotationDescriptor<EmbeddableInstantiatorRegistration, EmbeddableInstantiatorRegistrationAnnotation> EMBEDDABLE_INSTANTIATOR_REGISTRATION = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<EmbeddableInstantiatorRegistration, EmbeddableInstantiatorRegistrationAnnotation> EMBEDDABLE_INSTANTIATOR_REGISTRATION = Creator.createCompleteAnnotationDescriptor(
 			EmbeddableInstantiatorRegistration.class,
 			EmbeddableInstantiatorRegistrationAnnotation.class,
 			EnumSet.of( Kind.CLASS, Kind.ANNOTATION, Kind.PACKAGE ),
 			false,
 			EMBEDDABLE_INSTANTIATOR_REGISTRATIONS
 	);
-	OrmAnnotationDescriptor<EmbeddedColumnNaming, EmbeddedColumnNamingAnnotation> EMBEDDED_COLUMN_NAMING = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<EmbeddedColumnNaming, EmbeddedColumnNamingAnnotation> EMBEDDED_COLUMN_NAMING = Creator.createCompleteAnnotationDescriptor(
 			EmbeddedColumnNaming.class,
 			EmbeddedColumnNamingAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD ),
 			false
 	);
-	OrmAnnotationDescriptor<EmbeddedTable, EmbeddedTableAnnotation> EMBEDDED_TABLE = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<EmbeddedTable, EmbeddedTableAnnotation> EMBEDDED_TABLE = Creator.createCompleteAnnotationDescriptor(
 			EmbeddedTable.class,
 			EmbeddedTableAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD ),
 			false
 	);
-	OrmAnnotationDescriptor<Fetch, FetchAnnotation> FETCH = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<Fetch, FetchAnnotation> FETCH = Creator.createCompleteAnnotationDescriptor(
 			Fetch.class,
 			FetchAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD ),
 			false
 	);
-	OrmAnnotationDescriptor<FetchProfiles, FetchProfilesAnnotation> FETCH_PROFILES = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<FetchProfiles, FetchProfilesAnnotation> FETCH_PROFILES = Creator.createCompleteAnnotationDescriptor(
 			FetchProfiles.class,
 			FetchProfilesAnnotation.class,
 			EnumSet.of( Kind.CLASS, Kind.PACKAGE ),
 			false
 	);
-	OrmAnnotationDescriptor<FetchProfile, FetchProfileAnnotation> FETCH_PROFILE = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<FetchProfile, FetchProfileAnnotation> FETCH_PROFILE = Creator.createCompleteAnnotationDescriptor(
 			FetchProfile.class,
 			FetchProfileAnnotation.class,
 			EnumSet.of( Kind.CLASS, Kind.PACKAGE ),
 			false,
 			FETCH_PROFILES
 	);
-	OrmAnnotationDescriptor<Filters, FiltersAnnotation> FILTERS = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<Filters, FiltersAnnotation> FILTERS = Creator.createCompleteAnnotationDescriptor(
 			Filters.class,
 			FiltersAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.CLASS ),
 			false
 	);
-	OrmAnnotationDescriptor<Filter, FilterAnnotation> FILTER = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<Filter, FilterAnnotation> FILTER = Creator.createCompleteAnnotationDescriptor(
 			Filter.class,
 			FilterAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.CLASS ),
 			false,
 			FILTERS
 	);
-	OrmAnnotationDescriptor<FilterDefs, FilterDefsAnnotation> FILTER_DEFS = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<FilterDefs, FilterDefsAnnotation> FILTER_DEFS = Creator.createCompleteAnnotationDescriptor(
 			FilterDefs.class,
 			FilterDefsAnnotation.class,
 			EnumSet.of( Kind.CLASS, Kind.PACKAGE ),
 			false
 	);
-	OrmAnnotationDescriptor<FilterDef, FilterDefAnnotation> FILTER_DEF = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<FilterDef, FilterDefAnnotation> FILTER_DEF = Creator.createCompleteAnnotationDescriptor(
 			FilterDef.class,
 			FilterDefAnnotation.class,
 			EnumSet.of( Kind.CLASS, Kind.PACKAGE ),
 			false,
 			FILTER_DEFS
 	);
-	OrmAnnotationDescriptor<FilterJoinTables, FilterJoinTablesAnnotation> FILTER_JOIN_TABLES = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<FilterJoinTables, FilterJoinTablesAnnotation> FILTER_JOIN_TABLES = Creator.createCompleteAnnotationDescriptor(
 			FilterJoinTables.class,
 			FilterJoinTablesAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.CLASS ),
 			false
 	);
-	OrmAnnotationDescriptor<FilterJoinTable, FilterJoinTableAnnotation> FILTER_JOIN_TABLE = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<FilterJoinTable, FilterJoinTableAnnotation> FILTER_JOIN_TABLE = Creator.createCompleteAnnotationDescriptor(
 			FilterJoinTable.class,
 			FilterJoinTableAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.CLASS ),
 			false,
 			FILTER_JOIN_TABLES
 	);
-	OrmAnnotationDescriptor<Formula, FormulaAnnotation> FORMULA = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<Formula, FormulaAnnotation> FORMULA = Creator.createCompleteAnnotationDescriptor(
 			Formula.class,
 			FormulaAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD ),
 			false
 	);
-	OrmAnnotationDescriptor<FractionalSeconds, FractionalSecondsAnnotation> FRACTIONAL_SECONDS = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<FractionalSeconds, FractionalSecondsAnnotation> FRACTIONAL_SECONDS = Creator.createCompleteAnnotationDescriptor(
 			FractionalSeconds.class,
 			FractionalSecondsAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD ),
 			false
 	);
-	OrmAnnotationDescriptor<Generated, GeneratedAnnotation> GENERATED = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<Generated, GeneratedAnnotation> GENERATED = Creator.createCompleteAnnotationDescriptor(
 			Generated.class,
 			GeneratedAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD ),
 			false
 	);
-	OrmAnnotationDescriptor<GeneratedColumn, GeneratedColumnAnnotation> GENERATED_COLUMN = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<GeneratedColumn, GeneratedColumnAnnotation> GENERATED_COLUMN = Creator.createCompleteAnnotationDescriptor(
 			GeneratedColumn.class,
 			GeneratedColumnAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD ),
 			false
 	);
-	OrmAnnotationDescriptor<GenericGenerator, GenericGeneratorAnnotation> GENERIC_GENERATOR = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<GenericGenerator, GenericGeneratorAnnotation> GENERIC_GENERATOR = Creator.createCompleteAnnotationDescriptor(
 			GenericGenerator.class,
 			GenericGeneratorAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.CLASS, Kind.PACKAGE ),
 			false
 	);
-	OrmAnnotationDescriptor<HQLSelect, HQLSelectAnnotation> HQL_SELECT = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<HQLSelect, HQLSelectAnnotation> HQL_SELECT = Creator.createCompleteAnnotationDescriptor(
 			HQLSelect.class,
 			HQLSelectAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.CLASS ),
 			false
 	);
-	OrmAnnotationDescriptor<IdGeneratorType, IdGeneratorTypeAnnotation> ID_GENERATOR_TYPE = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<IdGeneratorType, IdGeneratorTypeAnnotation> ID_GENERATOR_TYPE = Creator.createCompleteAnnotationDescriptor(
 			IdGeneratorType.class,
 			IdGeneratorTypeAnnotation.class,
 			EnumSet.of( Kind.ANNOTATION ),
 			false
 	);
-	OrmAnnotationDescriptor<Immutable, ImmutableAnnotation> IMMUTABLE = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<Immutable, ImmutableAnnotation> IMMUTABLE = Creator.createCompleteAnnotationDescriptor(
 			Immutable.class,
 			ImmutableAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.CLASS ),
 			false
 	);
-	OrmAnnotationDescriptor<Imported, ImportedAnnotation> IMPORTED = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<Imported, ImportedAnnotation> IMPORTED = Creator.createCompleteAnnotationDescriptor(
 			Imported.class,
 			ImportedAnnotation.class,
 			EnumSet.of( Kind.CLASS ),
 			false
 	);
-	// @Instantiator has @Target(CONSTRUCTOR) which is not supported by AnnotationTarget.Kind
-	OrmAnnotationDescriptor<Instantiator, InstantiatorAnnotation> INSTANTIATOR = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<Instantiator, InstantiatorAnnotation> INSTANTIATOR = Creator.createCompleteAnnotationDescriptor(
 			Instantiator.class,
-			InstantiatorAnnotation.class,
-			EnumSet.noneOf( Kind.class ), // @Target(CONSTRUCTOR) - not representable in Kind enum
-			false
+			InstantiatorAnnotation.class
 	);
-	OrmAnnotationDescriptor<JavaType, JavaTypeAnnotation> JAVA_TYPE = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<JavaType, JavaTypeAnnotation> JAVA_TYPE = Creator.createCompleteAnnotationDescriptor(
 			JavaType.class,
 			JavaTypeAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.ANNOTATION ),
 			true
 	);
-	OrmAnnotationDescriptor<JavaTypeRegistrations, JavaTypeRegistrationsAnnotation> JAVA_TYPE_REGISTRATIONS = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<JavaTypeRegistrations, JavaTypeRegistrationsAnnotation> JAVA_TYPE_REGISTRATIONS = Creator.createCompleteAnnotationDescriptor(
 			JavaTypeRegistrations.class,
 			JavaTypeRegistrationsAnnotation.class,
 			EnumSet.of( Kind.CLASS, Kind.ANNOTATION, Kind.PACKAGE ),
 			true
 	);
-	OrmAnnotationDescriptor<JavaTypeRegistration, JavaTypeRegistrationAnnotation> JAVA_TYPE_REGISTRATION = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<JavaTypeRegistration, JavaTypeRegistrationAnnotation> JAVA_TYPE_REGISTRATION = Creator.createCompleteAnnotationDescriptor(
 			JavaTypeRegistration.class,
 			JavaTypeRegistrationAnnotation.class,
 			EnumSet.of( Kind.CLASS, Kind.ANNOTATION, Kind.PACKAGE ),
 			true,
 			JAVA_TYPE_REGISTRATIONS
 	);
-	OrmAnnotationDescriptor<JdbcType, JdbcTypeAnnotation> JDBC_TYPE = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<JdbcType, JdbcTypeAnnotation> JDBC_TYPE = Creator.createCompleteAnnotationDescriptor(
 			JdbcType.class,
 			JdbcTypeAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.ANNOTATION ),
 			true
 	);
-	OrmAnnotationDescriptor<JdbcTypeCode, JdbcTypeCodeAnnotation> JDBC_TYPE_CODE = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<JdbcTypeCode, JdbcTypeCodeAnnotation> JDBC_TYPE_CODE = Creator.createCompleteAnnotationDescriptor(
 			JdbcTypeCode.class,
 			JdbcTypeCodeAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.ANNOTATION ),
 			true
 	);
-	OrmAnnotationDescriptor<JdbcTypeRegistrations, JdbcTypeRegistrationsAnnotation> JDBC_TYPE_REGISTRATIONS = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<JdbcTypeRegistrations, JdbcTypeRegistrationsAnnotation> JDBC_TYPE_REGISTRATIONS = Creator.createCompleteAnnotationDescriptor(
 			JdbcTypeRegistrations.class,
 			JdbcTypeRegistrationsAnnotation.class,
 			EnumSet.of( Kind.CLASS, Kind.PACKAGE ),
 			true
 	);
-	OrmAnnotationDescriptor<JdbcTypeRegistration, JdbcTypeRegistrationAnnotation> JDBC_TYPE_REGISTRATION = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<JdbcTypeRegistration, JdbcTypeRegistrationAnnotation> JDBC_TYPE_REGISTRATION = Creator.createCompleteAnnotationDescriptor(
 			JdbcTypeRegistration.class,
 			JdbcTypeRegistrationAnnotation.class,
 			EnumSet.of( Kind.CLASS, Kind.PACKAGE ),
 			true,
 			JDBC_TYPE_REGISTRATIONS
 	);
-	OrmAnnotationDescriptor<JoinColumnsOrFormulas, JoinColumnsOrFormulasAnnotation> JOIN_COLUMNS_OR_FORMULAS = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<JoinColumnsOrFormulas, JoinColumnsOrFormulasAnnotation> JOIN_COLUMNS_OR_FORMULAS = Creator.createCompleteAnnotationDescriptor(
 			JoinColumnsOrFormulas.class,
 			JoinColumnsOrFormulasAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD ),
 			false
 	);
-	OrmAnnotationDescriptor<JoinColumnOrFormula, JoinColumnOrFormulaAnnotation> JOIN_COLUMN_OR_FORMULA = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<JoinColumnOrFormula, JoinColumnOrFormulaAnnotation> JOIN_COLUMN_OR_FORMULA = Creator.createCompleteAnnotationDescriptor(
 			JoinColumnOrFormula.class,
 			JoinColumnOrFormulaAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD ),
 			false,
 			JOIN_COLUMNS_OR_FORMULAS
 	);
-	OrmAnnotationDescriptor<JoinFormula, JoinFormulaAnnotation> JOIN_FORMULA = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<JoinFormula, JoinFormulaAnnotation> JOIN_FORMULA = Creator.createCompleteAnnotationDescriptor(
 			JoinFormula.class,
 			JoinFormulaAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD ),
 			false
 	);
-	OrmAnnotationDescriptor<LazyGroup, LazyGroupAnnotation> LAZY_GROUP = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<LazyGroup, LazyGroupAnnotation> LAZY_GROUP = Creator.createCompleteAnnotationDescriptor(
 			LazyGroup.class,
 			LazyGroupAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD ),
 			false
 	);
-	OrmAnnotationDescriptor<ListIndexBase, ListIndexBaseAnnotation> LIST_INDEX_BASE = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<ListIndexBase, ListIndexBaseAnnotation> LIST_INDEX_BASE = Creator.createCompleteAnnotationDescriptor(
 			ListIndexBase.class,
 			ListIndexBaseAnnotation.class,
 			EnumSet.allOf( Kind.class ),
 			false
 	);
-	OrmAnnotationDescriptor<ListIndexJavaType, ListIndexJavaTypeAnnotation> LIST_INDEX_JAVA_TYPE = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<ListIndexJavaType, ListIndexJavaTypeAnnotation> LIST_INDEX_JAVA_TYPE = Creator.createCompleteAnnotationDescriptor(
 			ListIndexJavaType.class,
 			ListIndexJavaTypeAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.ANNOTATION ),
 			true
 	);
-	OrmAnnotationDescriptor<ListIndexJdbcType, ListIndexJdbcTypeAnnotation> LIST_INDEX_JDBC_TYPE = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<ListIndexJdbcType, ListIndexJdbcTypeAnnotation> LIST_INDEX_JDBC_TYPE = Creator.createCompleteAnnotationDescriptor(
 			ListIndexJdbcType.class,
 			ListIndexJdbcTypeAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.ANNOTATION ),
 			true
 	);
-	OrmAnnotationDescriptor<ListIndexJdbcTypeCode, ListIndexJdbcTypeCodeAnnotation> LIST_INDEX_JDBC_TYPE_CODE = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<ListIndexJdbcTypeCode, ListIndexJdbcTypeCodeAnnotation> LIST_INDEX_JDBC_TYPE_CODE = Creator.createCompleteAnnotationDescriptor(
 			ListIndexJdbcTypeCode.class,
 			ListIndexJdbcTypeCodeAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.ANNOTATION ),
 			true
 	);
-	OrmAnnotationDescriptor<ManyToAny, ManyToAnyAnnotation> MANY_TO_ANY = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<ManyToAny, ManyToAnyAnnotation> MANY_TO_ANY = Creator.createCompleteAnnotationDescriptor(
 			ManyToAny.class,
 			ManyToAnyAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD ),
 			false
 	);
-	OrmAnnotationDescriptor<MapKeyCompositeType, MapKeyCompositeTypeAnnotation> MAP_KEY_COMPOSITE_TYPE = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<MapKeyCompositeType, MapKeyCompositeTypeAnnotation> MAP_KEY_COMPOSITE_TYPE = Creator.createCompleteAnnotationDescriptor(
 			MapKeyCompositeType.class,
 			MapKeyCompositeTypeAnnotation.class,
-			EnumSet.allOf( Kind.class ),
+			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.ANNOTATION ),
 			false
 	);
-	OrmAnnotationDescriptor<MapKeyJavaType, MapKeyJavaTypeAnnotation> MAP_KEY_JAVA_TYPE = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<MapKeyJavaType, MapKeyJavaTypeAnnotation> MAP_KEY_JAVA_TYPE = Creator.createCompleteAnnotationDescriptor(
 			MapKeyJavaType.class,
 			MapKeyJavaTypeAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.ANNOTATION ),
 			true
 	);
-	OrmAnnotationDescriptor<MapKeyJdbcType, MapKeyJdbcTypeAnnotation> MAP_KEY_JDBC_TYPE = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<MapKeyJdbcType, MapKeyJdbcTypeAnnotation> MAP_KEY_JDBC_TYPE = Creator.createCompleteAnnotationDescriptor(
 			MapKeyJdbcType.class,
 			MapKeyJdbcTypeAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.ANNOTATION ),
 			true
 	);
-	OrmAnnotationDescriptor<MapKeyJdbcTypeCode, MapKeyJdbcTypeCodeAnnotation> MAP_KEY_JDBC_TYPE_CODE = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<MapKeyJdbcTypeCode, MapKeyJdbcTypeCodeAnnotation> MAP_KEY_JDBC_TYPE_CODE = Creator.createCompleteAnnotationDescriptor(
 			MapKeyJdbcTypeCode.class,
 			MapKeyJdbcTypeCodeAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.ANNOTATION ),
 			true
 	);
-	OrmAnnotationDescriptor<MapKeyMutability, MapKeyMutabilityAnnotation> MAP_KEY_MUTABILITY = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<MapKeyMutability, MapKeyMutabilityAnnotation> MAP_KEY_MUTABILITY = Creator.createCompleteAnnotationDescriptor(
 			MapKeyMutability.class,
 			MapKeyMutabilityAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.ANNOTATION ),
 			true
 	);
-	OrmAnnotationDescriptor<MapKeyType, MapKeyTypeAnnotation> MAP_KEY_TYPE = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<MapKeyType, MapKeyTypeAnnotation> MAP_KEY_TYPE = Creator.createCompleteAnnotationDescriptor(
 			MapKeyType.class,
 			MapKeyTypeAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.ANNOTATION ),
 			true
 	);
-	OrmAnnotationDescriptor<Mutability, MutabilityAnnotation> MUTABILITY = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<Mutability, MutabilityAnnotation> MUTABILITY = Creator.createCompleteAnnotationDescriptor(
 			Mutability.class,
 			MutabilityAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.CLASS, Kind.ANNOTATION ),
 			true
 	);
-	OrmAnnotationDescriptor<NamedEntityGraphs, NamedEntityGraphsAnnotation> NAMED_ENTITY_GRAPHS = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<NamedEntityGraphs, NamedEntityGraphsAnnotation> NAMED_ENTITY_GRAPHS = Creator.createCompleteAnnotationDescriptor(
 			NamedEntityGraphs.class,
 			NamedEntityGraphsAnnotation.class,
 			EnumSet.of( Kind.CLASS, Kind.ANNOTATION, Kind.PACKAGE ),
 			false
 	);
-	OrmAnnotationDescriptor<NamedEntityGraph, NamedEntityGraphAnnotation> NAMED_ENTITY_GRAPH = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<NamedEntityGraph, NamedEntityGraphAnnotation> NAMED_ENTITY_GRAPH = Creator.createCompleteAnnotationDescriptor(
 			NamedEntityGraph.class,
 			NamedEntityGraphAnnotation.class,
 			EnumSet.of( Kind.CLASS, Kind.PACKAGE ),
 			false,
 			NAMED_ENTITY_GRAPHS
 	);
-	OrmAnnotationDescriptor<NamedNativeQueries, NamedNativeQueriesAnnotation> NAMED_NATIVE_QUERIES = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<NamedNativeQueries, NamedNativeQueriesAnnotation> NAMED_NATIVE_QUERIES = Creator.createCompleteAnnotationDescriptor(
 			NamedNativeQueries.class,
 			NamedNativeQueriesAnnotation.class,
 			EnumSet.of( Kind.CLASS, Kind.PACKAGE ),
 			false
 	);
-	OrmAnnotationDescriptor<NamedNativeQuery, NamedNativeQueryAnnotation> NAMED_NATIVE_QUERY = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<NamedNativeQuery, NamedNativeQueryAnnotation> NAMED_NATIVE_QUERY = Creator.createCompleteAnnotationDescriptor(
 			NamedNativeQuery.class,
 			NamedNativeQueryAnnotation.class,
 			EnumSet.of( Kind.CLASS, Kind.PACKAGE ),
 			false,
 			NAMED_NATIVE_QUERIES
 	);
-	OrmAnnotationDescriptor<NamedQueries, NamedQueriesAnnotation> NAMED_QUERIES = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<NamedQueries, NamedQueriesAnnotation> NAMED_QUERIES = Creator.createCompleteAnnotationDescriptor(
 			NamedQueries.class,
 			NamedQueriesAnnotation.class,
 			EnumSet.of( Kind.CLASS, Kind.PACKAGE ),
 			false
 	);
-	OrmAnnotationDescriptor<NamedQuery, NamedQueryAnnotation> NAMED_QUERY = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<NamedQuery, NamedQueryAnnotation> NAMED_QUERY = Creator.createCompleteAnnotationDescriptor(
 			NamedQuery.class,
 			NamedQueryAnnotation.class,
 			EnumSet.of( Kind.CLASS, Kind.PACKAGE ),
 			false,
 			NAMED_QUERIES
 	);
-	OrmAnnotationDescriptor<Nationalized, NationalizedAnnotation> NATIONALIZED = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<Nationalized, NationalizedAnnotation> NATIONALIZED = Creator.createCompleteAnnotationDescriptor(
 			Nationalized.class,
 			NationalizedAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.ANNOTATION, Kind.PACKAGE ),
 			false
 	);
-	OrmAnnotationDescriptor<NativeGenerator, NativeGeneratorAnnotation> NATIVE_GENERATOR = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<NativeGenerator, NativeGeneratorAnnotation> NATIVE_GENERATOR = Creator.createCompleteAnnotationDescriptor(
 			NativeGenerator.class,
 			NativeGeneratorAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.CLASS, Kind.PACKAGE ),
 			false
 	);
-	OrmAnnotationDescriptor<NaturalId, NaturalIdAnnotation> NATURAL_ID = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<NaturalId, NaturalIdAnnotation> NATURAL_ID = Creator.createCompleteAnnotationDescriptor(
 			NaturalId.class,
 			NaturalIdAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD ),
 			false
 	);
-	OrmAnnotationDescriptor<NaturalIdCache, NaturalIdCacheAnnotation> NATURAL_ID_CACHE = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<NaturalIdCache, NaturalIdCacheAnnotation> NATURAL_ID_CACHE = Creator.createCompleteAnnotationDescriptor(
 			NaturalIdCache.class,
 			NaturalIdCacheAnnotation.class,
 			EnumSet.of( Kind.CLASS ),
 			false
 	);
-	OrmAnnotationDescriptor<NaturalIdClass, NaturalIdClassAnnotation> NATURAL_ID_CLASS = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<NaturalIdClass, NaturalIdClassAnnotation> NATURAL_ID_CLASS = Creator.createCompleteAnnotationDescriptor(
 			NaturalIdClass.class,
 			NaturalIdClassAnnotation.class,
 			EnumSet.of( Kind.CLASS ),
 			false
 	);
-	OrmAnnotationDescriptor<NotFound, NotFoundAnnotation> NOT_FOUND = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<NotFound, NotFoundAnnotation> NOT_FOUND = Creator.createCompleteAnnotationDescriptor(
 			NotFound.class,
 			NotFoundAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD ),
 			false
 	);
-	OrmAnnotationDescriptor<OnDelete, OnDeleteAnnotation> ON_DELETE = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<OnDelete, OnDeleteAnnotation> ON_DELETE = Creator.createCompleteAnnotationDescriptor(
 			OnDelete.class,
 			OnDeleteAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.CLASS ),
 			false
 	);
-	OrmAnnotationDescriptor<OptimisticLock, OptimisticLockAnnotation> OPTIMISTIC_LOCK = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<OptimisticLock, OptimisticLockAnnotation> OPTIMISTIC_LOCK = Creator.createCompleteAnnotationDescriptor(
 			OptimisticLock.class,
 			OptimisticLockAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD ),
 			false
 	);
-	OrmAnnotationDescriptor<OptimisticLocking, OptimisticLockingAnnotation> OPTIMISTIC_LOCKING = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<OptimisticLocking, OptimisticLockingAnnotation> OPTIMISTIC_LOCKING = Creator.createCompleteAnnotationDescriptor(
 			OptimisticLocking.class,
 			OptimisticLockingAnnotation.class,
 			EnumSet.of( Kind.CLASS ),
 			false
 	);
 	// @ParamDef has @Target({}) - used as nested annotation, not directly on code elements
-	OrmAnnotationDescriptor<ParamDef, ParamDefAnnotation> PARAM_DEF = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<ParamDef, ParamDefAnnotation> PARAM_DEF = Creator.createCompleteAnnotationDescriptor(
 			ParamDef.class,
 			ParamDefAnnotation.class,
 			EnumSet.noneOf( Kind.class ), // @Target({})
 			false
 	);
 	// @Parameter has @Target({}) - used as nested annotation, not directly on code elements
-	OrmAnnotationDescriptor<Parameter, ParameterAnnotation> PARAMETER = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<Parameter, ParameterAnnotation> PARAMETER = Creator.createCompleteAnnotationDescriptor(
 			Parameter.class,
 			ParameterAnnotation.class,
 			EnumSet.noneOf( Kind.class ), // @Target({})
 			false
 	);
-	OrmAnnotationDescriptor<Parent, ParentAnnotation> PARENT = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<Parent, ParentAnnotation> PARENT = Creator.createCompleteAnnotationDescriptor(
 			Parent.class,
 			ParentAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD ),
 			false
 	);
-	OrmAnnotationDescriptor<PartitionKey, PartitionKeyAnnotation> PARTITION_KEY = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<PartitionKey, PartitionKeyAnnotation> PARTITION_KEY = Creator.createCompleteAnnotationDescriptor(
 			PartitionKey.class,
 			PartitionKeyAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD ),
 			false
 	);
-	OrmAnnotationDescriptor<PropertyRef, PropertyRefAnnotation> PROPERTY_REF = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<PropertyRef, PropertyRefAnnotation> PROPERTY_REF = Creator.createCompleteAnnotationDescriptor(
 			PropertyRef.class,
 			PropertyRefAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.ANNOTATION ),
 			false
 	);
-	OrmAnnotationDescriptor<QueryCacheLayout, QueryCacheLayoutAnnotation> QUERY_CACHE_LAYOUT = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<QueryCacheLayout, QueryCacheLayoutAnnotation> QUERY_CACHE_LAYOUT = Creator.createCompleteAnnotationDescriptor(
 			QueryCacheLayout.class,
 			QueryCacheLayoutAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.CLASS ),
 			false
 	);
-	OrmAnnotationDescriptor<RowId, RowIdAnnotation> ROW_ID = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<RowId, RowIdAnnotation> ROW_ID = Creator.createCompleteAnnotationDescriptor(
 			RowId.class,
 			RowIdAnnotation.class,
 			EnumSet.of( Kind.CLASS ),
 			false
 	);
-	OrmAnnotationDescriptor<SecondaryRows, SecondaryRowsAnnotation> SECONDARY_ROWS = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<SecondaryRows, SecondaryRowsAnnotation> SECONDARY_ROWS = Creator.createCompleteAnnotationDescriptor(
 			SecondaryRows.class,
 			SecondaryRowsAnnotation.class,
 			EnumSet.of( Kind.CLASS ),
 			false
 	);
-	OrmAnnotationDescriptor<SecondaryRow, SecondaryRowAnnotation> SECONDARY_ROW = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<SecondaryRow, SecondaryRowAnnotation> SECONDARY_ROW = Creator.createCompleteAnnotationDescriptor(
 			SecondaryRow.class,
 			SecondaryRowAnnotation.class,
 			EnumSet.of( Kind.CLASS ),
 			false,
 			SECONDARY_ROWS
 	);
-	OrmAnnotationDescriptor<SoftDelete, SoftDeleteAnnotation> SOFT_DELETE = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<SoftDelete, SoftDeleteAnnotation> SOFT_DELETE = Creator.createCompleteAnnotationDescriptor(
 			SoftDelete.class,
 			SoftDeleteAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.CLASS, Kind.ANNOTATION, Kind.PACKAGE ),
 			false
 	);
-	OrmAnnotationDescriptor<SortComparator, SortComparatorAnnotation> SORT_COMPARATOR = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<SortComparator, SortComparatorAnnotation> SORT_COMPARATOR = Creator.createCompleteAnnotationDescriptor(
 			SortComparator.class,
 			SortComparatorAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD ),
 			false
 	);
-	OrmAnnotationDescriptor<SortNatural, SortNaturalAnnotation> SORT_NATURAL = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<SortNatural, SortNaturalAnnotation> SORT_NATURAL = Creator.createCompleteAnnotationDescriptor(
 			SortNatural.class,
 			SortNaturalAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD ),
 			false
 	);
-	OrmAnnotationDescriptor<SQLDeletes, SQLDeletesAnnotation> SQL_DELETES = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<SQLDeletes, SQLDeletesAnnotation> SQL_DELETES = Creator.createCompleteAnnotationDescriptor(
 			SQLDeletes.class,
 			SQLDeletesAnnotation.class,
 			EnumSet.of( Kind.CLASS ),
 			false
 	);
-	OrmAnnotationDescriptor<SQLDelete, SQLDeleteAnnotation> SQL_DELETE = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<SQLDelete, SQLDeleteAnnotation> SQL_DELETE = Creator.createCompleteAnnotationDescriptor(
 			SQLDelete.class,
 			SQLDeleteAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.CLASS ),
 			false,
 			SQL_DELETES
 	);
-	OrmAnnotationDescriptor<SQLDeleteAll, SQLDeleteAllAnnotation> SQL_DELETE_ALL = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<SQLDeleteAll, SQLDeleteAllAnnotation> SQL_DELETE_ALL = Creator.createCompleteAnnotationDescriptor(
 			SQLDeleteAll.class,
 			SQLDeleteAllAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.CLASS ),
 			false
 	);
 	// @SqlFragmentAlias has @Target({}) - used as nested annotation, not directly on code elements
-	OrmAnnotationDescriptor<SqlFragmentAlias, SqlFragmentAliasAnnotation> SQL_FRAGMENT_ALIAS = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<SqlFragmentAlias, SqlFragmentAliasAnnotation> SQL_FRAGMENT_ALIAS = Creator.createCompleteAnnotationDescriptor(
 			SqlFragmentAlias.class,
 			SqlFragmentAliasAnnotation.class,
 			EnumSet.noneOf( Kind.class ), // @Target({})
 			false
 	);
-	OrmAnnotationDescriptor<SQLInserts, SQLInsertsAnnotation> SQL_INSERTS = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<SQLInserts, SQLInsertsAnnotation> SQL_INSERTS = Creator.createCompleteAnnotationDescriptor(
 			SQLInserts.class,
 			SQLInsertsAnnotation.class,
 			EnumSet.of( Kind.CLASS ),
 			false
 	);
-	OrmAnnotationDescriptor<SQLInsert, SQLInsertAnnotation> SQL_INSERT = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<SQLInsert, SQLInsertAnnotation> SQL_INSERT = Creator.createCompleteAnnotationDescriptor(
 			SQLInsert.class,
 			SQLInsertAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.CLASS ),
 			false,
 			SQL_INSERTS
 	);
-	OrmAnnotationDescriptor<SQLOrder, SQLOrderAnnotation> SQL_ORDER = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<SQLOrder, SQLOrderAnnotation> SQL_ORDER = Creator.createCompleteAnnotationDescriptor(
 			SQLOrder.class,
 			SQLOrderAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD ),
 			false
 	);
-	OrmAnnotationDescriptor<SQLRestriction, SQLRestrictionAnnotation> SQL_RESTRICTION = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<SQLRestriction, SQLRestrictionAnnotation> SQL_RESTRICTION = Creator.createCompleteAnnotationDescriptor(
 			SQLRestriction.class,
 			SQLRestrictionAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.CLASS ),
 			false
 	);
-	OrmAnnotationDescriptor<SQLSelect, SQLSelectAnnotation> SQL_SELECT = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<SQLSelect, SQLSelectAnnotation> SQL_SELECT = Creator.createCompleteAnnotationDescriptor(
 			SQLSelect.class,
 			SQLSelectAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.CLASS ),
 			false
 	);
-	OrmAnnotationDescriptor<SQLJoinTableRestriction, SQLJoinTableRestrictionAnnotation> SQL_JOIN_TABLE_RESTRICTION = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<SQLJoinTableRestriction, SQLJoinTableRestrictionAnnotation> SQL_JOIN_TABLE_RESTRICTION = Creator.createCompleteAnnotationDescriptor(
 			SQLJoinTableRestriction.class,
 			SQLJoinTableRestrictionAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD ),
 			false
 	);
-	OrmAnnotationDescriptor<SQLUpdates, SQLUpdatesAnnotation> SQL_UPDATES = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<SQLUpdates, SQLUpdatesAnnotation> SQL_UPDATES = Creator.createCompleteAnnotationDescriptor(
 			SQLUpdates.class,
 			SQLUpdatesAnnotation.class,
 			EnumSet.of( Kind.CLASS ),
 			false
 	);
-	OrmAnnotationDescriptor<SQLUpdate, SQLUpdateAnnotation> SQL_UPDATE = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<SQLUpdate, SQLUpdateAnnotation> SQL_UPDATE = Creator.createCompleteAnnotationDescriptor(
 			SQLUpdate.class,
 			SQLUpdateAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.CLASS ),
 			false,
 			SQL_UPDATES
 	);
-	OrmAnnotationDescriptor<Struct, StructAnnotation> STRUCT = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<Struct, StructAnnotation> STRUCT = Creator.createCompleteAnnotationDescriptor(
 			Struct.class,
 			StructAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.CLASS ),
 			false
 	);
-	OrmAnnotationDescriptor<Subselect, SubselectAnnotation> SUBSELECT = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<Subselect, SubselectAnnotation> SUBSELECT = Creator.createCompleteAnnotationDescriptor(
 			Subselect.class,
 			SubselectAnnotation.class,
 			EnumSet.of( Kind.CLASS ),
 			false
 	);
-	OrmAnnotationDescriptor<Synchronize, SynchronizeAnnotation> SYNCHRONIZE = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<Synchronize, SynchronizeAnnotation> SYNCHRONIZE = Creator.createCompleteAnnotationDescriptor(
 			Synchronize.class,
 			SynchronizeAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.CLASS ),
 			false
 	);
-	OrmAnnotationDescriptor<TargetEmbeddable, TargetEmbeddableAnnotation> TARGET_EMBEDDABLE = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<TargetEmbeddable, TargetEmbeddableAnnotation> TARGET_EMBEDDABLE = Creator.createCompleteAnnotationDescriptor(
 			TargetEmbeddable.class,
 			TargetEmbeddableAnnotation.class,
 			EnumSet.of( Kind.CLASS, Kind.FIELD, Kind.METHOD ),
 			false
 	);
-	OrmAnnotationDescriptor<Temporal,TemporalAnnotation> TEMPORAL = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<Temporal,TemporalAnnotation> TEMPORAL = Creator.createCompleteAnnotationDescriptor(
 			Temporal.class,
 			TemporalAnnotation.class,
 			EnumSet.of( Kind.ANNOTATION, Kind.CLASS, Kind.FIELD, Kind.METHOD, Kind.PACKAGE ),
 			false
 	);
-	OrmAnnotationDescriptor<Temporal.HistoryPartitioning,HistoryPartitioningAnnotation> TEMPORAL_HISTORY_PARTITIONING =
-			new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<Temporal.HistoryPartitioning,HistoryPartitioningAnnotation> TEMPORAL_HISTORY_PARTITIONING =
+			Creator.createCompleteAnnotationDescriptor(
 					Temporal.HistoryPartitioning.class,
 					HistoryPartitioningAnnotation.class,
 					EnumSet.of( Kind.CLASS, Kind.FIELD, Kind.METHOD ),
 					false
 			);
-	OrmAnnotationDescriptor<Temporal.HistoryTable,HistoryTableAnnotation> TEMPORAL_HISTORY_TABLE =
-			new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<Temporal.HistoryTable,HistoryTableAnnotation> TEMPORAL_HISTORY_TABLE =
+			Creator.createCompleteAnnotationDescriptor(
 					Temporal.HistoryTable.class,
 					HistoryTableAnnotation.class,
 					EnumSet.of( Kind.CLASS, Kind.FIELD, Kind.METHOD ),
 					false
 			);
-	OrmAnnotationDescriptor<Temporal.Excluded,ExcludedAnnotation> TEMPORAL_EXCLUDED =
-			new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<Temporal.Excluded,ExcludedAnnotation> TEMPORAL_EXCLUDED =
+			Creator.createCompleteAnnotationDescriptor(
 					Temporal.Excluded.class,
 					ExcludedAnnotation.class,
 					EnumSet.of( Kind.FIELD, Kind.METHOD ),
 					false
 			);
-	OrmAnnotationDescriptor<TenantId, TenantIdAnnotation> TENANT_ID = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<TenantId, TenantIdAnnotation> TENANT_ID = Creator.createCompleteAnnotationDescriptor(
 			TenantId.class,
 			TenantIdAnnotation.class,
 			EnumSet.of( Kind.FIELD, Kind.METHOD ),
 			false
 	);
-	OrmAnnotationDescriptor<TimeZoneColumn, TimeZoneColumnAnnotation> TIME_ZONE_COLUMN = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<TimeZoneColumn, TimeZoneColumnAnnotation> TIME_ZONE_COLUMN = Creator.createCompleteAnnotationDescriptor(
 			TimeZoneColumn.class,
 			TimeZoneColumnAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD ),
 			false
 	);
-	OrmAnnotationDescriptor<TimeZoneStorage, TimeZoneStorageAnnotation> TIME_ZONE_STORAGE = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<TimeZoneStorage, TimeZoneStorageAnnotation> TIME_ZONE_STORAGE = Creator.createCompleteAnnotationDescriptor(
 			TimeZoneStorage.class,
 			TimeZoneStorageAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD ),
 			false
 	);
-	OrmAnnotationDescriptor<Type, TypeAnnotation> TYPE = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<Type, TypeAnnotation> TYPE = Creator.createCompleteAnnotationDescriptor(
 			Type.class,
 			TypeAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.ANNOTATION ),
 			false
 	);
-	OrmAnnotationDescriptor<TypeBinderType, TypeBinderTypeAnnotation> TYPE_BINDER_TYPE = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<TypeBinderType, TypeBinderTypeAnnotation> TYPE_BINDER_TYPE = Creator.createCompleteAnnotationDescriptor(
 			TypeBinderType.class,
 			TypeBinderTypeAnnotation.class,
 			EnumSet.of( Kind.ANNOTATION ),
 			false
 	);
-	OrmAnnotationDescriptor<TypeRegistrations, TypeRegistrationsAnnotation> TYPE_REGISTRATIONS = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<TypeRegistrations, TypeRegistrationsAnnotation> TYPE_REGISTRATIONS = Creator.createCompleteAnnotationDescriptor(
 			TypeRegistrations.class,
 			TypeRegistrationsAnnotation.class,
 			EnumSet.of( Kind.CLASS, Kind.ANNOTATION, Kind.PACKAGE ),
 			false
 	);
-	OrmAnnotationDescriptor<TypeRegistration, TypeRegistrationAnnotation> TYPE_REGISTRATION = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<TypeRegistration, TypeRegistrationAnnotation> TYPE_REGISTRATION = Creator.createCompleteAnnotationDescriptor(
 			TypeRegistration.class,
 			TypeRegistrationAnnotation.class,
 			EnumSet.of( Kind.CLASS, Kind.ANNOTATION, Kind.PACKAGE ),
 			false,
 			TYPE_REGISTRATIONS
 	);
-	OrmAnnotationDescriptor<UpdateTimestamp, UpdateTimestampAnnotation> UPDATE_TIMESTAMP = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<UpdateTimestamp, UpdateTimestampAnnotation> UPDATE_TIMESTAMP = Creator.createCompleteAnnotationDescriptor(
 			UpdateTimestamp.class,
 			UpdateTimestampAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD ),
 			false
 	);
-	OrmAnnotationDescriptor<UuidGenerator, UuidGeneratorAnnotation> UUID_GENERATOR = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<UuidGenerator, UuidGeneratorAnnotation> UUID_GENERATOR = Creator.createCompleteAnnotationDescriptor(
 			UuidGenerator.class,
 			UuidGeneratorAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD ),
 			false
 	);
-	OrmAnnotationDescriptor<ValueGenerationType, ValueGenerationTypeAnnotation> VALUE_GENERATION_TYPE = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<ValueGenerationType, ValueGenerationTypeAnnotation> VALUE_GENERATION_TYPE = Creator.createCompleteAnnotationDescriptor(
 			ValueGenerationType.class,
 			ValueGenerationTypeAnnotation.class,
 			EnumSet.of( Kind.ANNOTATION ),
 			false
 	);
-	OrmAnnotationDescriptor<View, ViewAnnotation> VIEW = new OrmAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<View, ViewAnnotation> VIEW = Creator.createCompleteAnnotationDescriptor(
 			View.class,
 			ViewAnnotation.class,
 			EnumSet.of( Kind.CLASS ),

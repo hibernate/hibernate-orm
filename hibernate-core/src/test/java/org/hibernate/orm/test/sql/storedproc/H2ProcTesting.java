@@ -4,6 +4,9 @@
  */
 package org.hibernate.orm.test.sql.storedproc;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityResult;
 import jakarta.persistence.FieldResult;
@@ -14,7 +17,6 @@ import jakarta.persistence.QueryHint;
 import jakarta.persistence.SqlResultSetMapping;
 import jakarta.persistence.StoredProcedureParameter;
 
-import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
@@ -24,8 +26,9 @@ import org.hibernate.dialect.H2Dialect;
  * @author Steve Ebersole
  */
 public class H2ProcTesting {
-	public static void applyProcDefinitions(MetadataBuilder metadataBuilder) {
-		metadataBuilder.applyAuxiliaryDatabaseObject(
+	public static List<AuxiliaryDatabaseObject> procDefinitions() {
+		final List<AuxiliaryDatabaseObject> auxiliaryDatabaseObjects = new ArrayList<>();
+		auxiliaryDatabaseObjects.add(
 				new AuxiliaryDatabaseObject() {
 					@Override
 					public String getExportIdentifier() {
@@ -69,7 +72,7 @@ public class H2ProcTesting {
 				}
 		);
 
-		metadataBuilder.applyAuxiliaryDatabaseObject(
+		auxiliaryDatabaseObjects.add(
 				new AuxiliaryDatabaseObject() {
 					@Override
 					public String getExportIdentifier() {
@@ -113,7 +116,7 @@ public class H2ProcTesting {
 				}
 		);
 
-		metadataBuilder.applyAuxiliaryDatabaseObject(
+		auxiliaryDatabaseObjects.add(
 				new AuxiliaryDatabaseObject() {
 					@Override
 					public String getExportIdentifier() {
@@ -156,7 +159,7 @@ public class H2ProcTesting {
 					}
 				}
 		);
-
+		return auxiliaryDatabaseObjects;
 	}
 
 	@Entity

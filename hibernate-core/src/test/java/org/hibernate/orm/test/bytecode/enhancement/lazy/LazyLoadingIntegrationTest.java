@@ -43,7 +43,6 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 		settings = {
 				@Setting( name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "false" ),
 				@Setting( name = AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS, value = "true" ),
-				@Setting( name = AvailableSettings.DEFAULT_LIST_SEMANTICS, value = "BAG" ),
 		}
 )
 @SessionFactory

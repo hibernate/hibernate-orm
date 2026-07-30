@@ -1,0 +1,921 @@
+= Hibernate ORM Bootstrap Pipeline Contributor Guide
+:toc:
+:toclevels: 3
+:sectanchors:
+
+This guide describes the Hibernate ORM bootstrap pipeline as implemented in ORM
+9.  It is the starting point for contributors changing mapping discovery,
+categorization, binding, the boot model, schema tooling, runtime metamodel
+creation, `SessionFactory` construction, or metadata serialization.
+
+It describes the final architecture, not the history of the ORM 9 bootstrap
+work.  API migration details belong in
+link:../migration-guide.adoc#bootstrap-api-changes[the ORM 9 migration guide],
+and deliberately deferred work belongs in
+link:9.0/follow-up-design.adoc[`follow-up-design.adoc`].
+
+[IMPORTANT]
+.Reading Pipeline Flows
+====
+Pipeline diagrams in this guide use a compact text notation:
+
+* unindented names are peer inputs or sibling products;
+* an indented `->` line is an ordered transformation or product of the line
+above it;
+* `(*)` marks a product retained or aggregated into the final gross product.
+
+For example:
+
+[source,text]
+----
+mapping sources
+    -> prepared mapping sources
+        -> categorized domain model (*)
+            -> binding model
+                -> org.hibernate.mapping model (*)
+----
+
+The notation distinguishes ordering and ownership without implying that every
+line corresponds to one Java method or object allocation.
+====
+
+== The Continuous Bootstrap Lifecycle
+
+All supported entry points converge on one pipeline:
+
+[source,text]
+----
+public bootstrap inputs
+    -> resolved bootstrap settings
+        -> service registries
+mapping source declarations
+    -> MappingSources
+        -> PreparedMappingSources
+            -> CategorizedDomainModel (*)
+                -> binding model
+                    -> materialized org.hibernate.mapping model (*)
+                        -> resolved mapping and RuntimeMappingHandoff (*)
+                            -> schema management, or
+                            -> resolved SessionFactory settings
+                                -> SessionFactory construction request
+                                    -> SessionFactory runtime model (*)
+----
+
+The major boundaries are:
+
+Categorization::
+Normalizes annotations and XML into a semantic description of managed types,
+attributes, identifiers, values, and global registrations.
+
+Binding::
+Interprets categorized facts in a particular inheritance, generic, embedded,
+and relational context.  It records declarations, contextual usages,
+applications, contributions, and deferred correspondence.
+
+Materialization::
+Creates and resolves the mutable boot model in `org.hibernate.mapping`.
+Mapping extensions are invoked at the semantic-to-materialized boundary.
+
+Runtime handoff and construction::
+Carries the few semantic facts which cannot be reliably reconstructed from
+`org.hibernate.mapping` into runtime JPA and mapping metamodel creation, then
+constructs the `SessionFactory`.
+
+The pipeline is continuous, but its products deliberately have different
+ownership and mutability.  Do not turn a convenient internal object from one
+stage into a general-purpose context for later stages.
+
+== Vocabulary
+
+The following terms have precise meanings in this guide and in the mapping
+packages.
+
+Declaration::
+A source fact at its point of origin.  For example, `Base<T>.value` is one
+attribute declaration even when many entities inherit it.
+
+Usage::
+The interpretation of a declaration in a context.  `Customer extends
+Base<UUID>` has a usage of `Base.value` whose resolved type is `UUID`.
+
+Application::
+The concrete occurrence of a usage in the materialized boot model.  It
+correlates the semantic usage with a stable `MappingRole` and an
+`org.hibernate.mapping.Property` or value.
+
+Contribution::
+A fact supplied to a larger product.  Source contributions, relational
+objects, generators, and runtime services have different owners and must be
+added at their documented boundary.
+
+Handoff::
+A deliberately small bridge to a later phase.  A handoff carries facts the
+consumer needs; it is not a back door to the producer's entire model.
+
+Correspondence::
+An explicit relationship between representations of the same semantic fact.
+Correspondence must use stable identity, such as `MappingRole`, rather than
+collection position, copied-object identity, or incidental traversal order.
+
+View::
+A read-only projection of Hibernate-owned state.
+
+Compatibility view::
+A retained API shape projected from the new pipeline.  `Metadata`,
+`SessionFactoryOptions`, and much of `org.hibernate.mapping` have compatibility
+responsibilities; they should not become parallel mutable sources of truth.
+
+== Public Entry Points And Settings
+
+`org.hibernate.boot.pipeline.internal.BootstrapPipeline` is the canonical
+internal coordinator.  Jakarta Persistence entry points based on
+`PersistenceConfiguration`, persistence-unit descriptors, and
+`PersistenceUnitInfo`, together with Hibernate's native compatibility entry
+points, normalize their input and converge there.
+
+`org.hibernate.cfg.Configuration` remains a supported native compatibility
+facade.  It collects settings, mappings, types, functions, and other
+customizations, but does not define an independent bootstrap architecture.
+`Metadata` remains the supported inspection view over resolved boot mappings.
+Neither contract is the mutable pipeline workspace.
+
+Settings are resolved into products with successively narrower lifetimes:
+
+`ResolvedBootstrapSettings`::
+Early settings needed to build registries, discover contributors, select class
+loading behavior, and normalize sources.
+
+`ResolvedMappingSettings`::
+Settings which control source processing, categorization, and binding.
+
+`ResolvedSessionFactorySettings`::
+Finalized settings consumed by runtime factory construction.  Compatibility
+consumers see a read-only `SessionFactoryOptions` projection.
+
+Contributors should add a setting at the earliest product which genuinely
+owns it and pass a narrower value forward.  Do not recover settings from a
+broad map late in the pipeline.
+
+== Mapping Sources And Preparation
+
+`MappingSources` is the internal collection of source declarations.  It may
+contain annotated classes and class names, packages, XML resources, or other
+entry-point-specific descriptions.  Discovery is not categorization.
+
+`PreparedMappingSources` is the normalized input to categorization.  Preparation
+resolves class and package references, reads XML, applies source ordering, and
+produces the uniform descriptors needed by the categorizer.
+
+=== Package metadata
+
+Package annotations and package-level registrations are source facts.  Package
+discovery must happen before categorization decides defaults and global
+registrations.  Avoid looking up `package-info` opportunistically from a
+binder: doing so bypasses source ordering and makes archive behavior differ
+from live bootstrap.
+
+=== XML preprocessing and overlays
+
+XML is preprocessed before ordinary annotation categorization:
+
+* complete-metadata documents suppress the affected annotation metadata;
+* non-complete XML contributes overlays to the annotation model;
+* global XML declarations are collected with annotation registrations; and
+* class, attribute, and access overrides are reflected in the prepared source
+  model.
+
+Later phases consume the combined semantic result.  They must not independently
+reinterpret whether an annotation was cleared or overlaid.
+
+=== Additional mapping contributions
+
+`AdditionalMappingContributor` is invoked after the initially prepared sources
+have been categorized and processed.  `ProcessedMappings` gives it a read-only
+description of mappings already handled, and `AdditionalMappingContributions`
+accepts the same kinds of isolated mapping contributions historically supported
+by this SPI.
+
+Contributed classes and XML are prepared and categorized as an additional
+source set, then bound into the same metadata collector.  The current contract
+is intentionally suited to isolated entities and related supported resources;
+it does not promise recategorization of the original combined source universe
+or arbitrary extension of an already categorized hierarchy.  A future builder
+API for categorized contributions is tracked in
+link:9.0/follow-up-design.adoc[`follow-up-design.adoc`].
+
+== Categorization
+
+Categorization turns prepared sources into a
+`org.hibernate.boot.mapping.spi.CategorizedDomainModel`.  This supported,
+read-only root exposes:
+
+* entity hierarchies and their absolute and entity roots;
+* entity, mapped-superclass, and embeddable metadata;
+* categorized attributes and value metadata;
+* identifier metadata;
+* imports and global registrations; and
+* class and member details from Hibernate Models.
+
+The implementation lives under
+`org.hibernate.boot.mapping.internal.categorize`.  Public SPI interfaces live
+under `org.hibernate.boot.mapping.spi`; internal contracts which add
+operations use the `Implementor` suffix, while concrete implementations use
+`Impl`.  Java `public` visibility in an `internal` package does not make a type
+a supported extension contract.
+
+The categorizer collector is responsible for deterministic aggregation.
+Global registrations include converters, generators, Java and JDBC type
+registrations, named queries, result-set mappings, entity graphs, fetch
+profiles, filters, imports, and database objects.  Consumers should use the
+categorized registration product rather than repeat classpath or annotation
+scans.
+
+=== Hierarchies, inheritance, and generics
+
+An `EntityHierarchy` has an absolute root, which may be a mapped superclass,
+and an entity root.  Categorization preserves the source declaration while
+binding resolves each usage against its concrete hierarchy.
+
+Consider:
+
+[source,java]
+----
+@MappedSuperclass
+class Base<T> {
+    T value;
+}
+
+@Entity
+class Customer extends Base<UUID> {
+}
+----
+
+`Base` owns the `AttributeMetadata` for `value`; `Customer` does not acquire a
+duplicate metadata object.  The declaration-site type is `T`.  Binding creates
+a `Customer` usage whose resolved type is `UUID`, and materialization creates a
+concrete application in the `Customer` mapping.
+
+[source,text]
+----
+AttributeMetadata
+    Base.value, declared as T
+    -> AttributeDeclaration
+        stable source identity for Base.value
+        -> AttributeUsage
+            Customer context, resolved as UUID
+            -> AttributeApplication
+                Customer mapping role and materialized Property
+----
+
+This distinction is essential for generic mapped superclasses, copied
+properties, runtime JPA metamodel types, and static metamodel fields.  Never
+infer semantic identity from the copied property's declaring object or list
+position.
+
+=== Embeddables
+
+Embeddable type metadata describes the declared embeddable type.  An
+`EmbeddableUsageMetadata` describes one use of it, including the owning path,
+resolved generic arguments, overrides, aggregate form, and nesting context.
+One embeddable declaration may therefore produce many component mappings.
+
+Polymorphic embeddables, nested embeddables, and embeddables used in
+collections must retain the distinction between declared type and concrete
+usage.  Attribute and type custom binders are invoked for the concrete usage,
+not for an abstract declaration detached from its owner.
+
+== Binding Model
+
+`BindingCoordinator` owns binding.  It registers declaration containers,
+creates managed-type binders, runs global binding, executes ordered type and
+attribute phases, resolves deferred state, and produces the materialized boot
+model and runtime handoff.
+
+The internal binding model preserves semantic facts which the mutable
+`org.hibernate.mapping` graph cannot yet express honestly:
+
+* `ManagedTypeBinding` and `EntityHierarchyBinding`;
+* `AttributeDeclaration`, `AttributeUsage`, and `AttributeApplication`;
+* value intents and relational contributions;
+* pending association and identifier work;
+* stable source and mapping roles; and
+* static-metamodel and runtime correspondence.
+
+Extensions receive supported read-only views from
+`org.hibernate.boot.mapping.spi`.  They do not receive the mutable binding
+model or an unrestricted lookup registry.
+
+=== Stable roles
+
+`DeclarationRole` identifies a source declaration.  `MappingRole` identifies a
+concrete occurrence in the boot mapping.  Both live in
+`org.hibernate.boot.mapping.spi`, are immutable and serializable, and are also
+carried by relevant `org.hibernate.mapping` objects.
+
+Use roles whenever a fact must survive copying, traversal changes,
+serialization, or transition to the runtime model.  Object identity and
+collection indexes are not durable correspondence mechanisms.
+
+=== Binding phases
+
+Managed-type binders implement only the narrow phase interfaces they need.
+The coordinator runs them in this order:
+
+. publish type skeletons;
+. create table shells;
+. connect supertypes;
+. apply entity-level metadata;
+. create root identifier shapes;
+. resolve association-valued identifier parts as far as possible;
+. bind discriminator, version, tenant id, and members;
+. invoke custom entity type binders;
+. invoke custom embeddable type binders;
+. invoke custom attribute binders;
+. resolve materialized basic values;
+. derive discriminator values;
+. derive root-entity state-management details;
+. resolve collection indexes;
+. resolve non-primary-key association targets;
+. resolve derived identifiers such as `@MapsId`;
+. strictly complete association identifiers;
+. drain newly-created component, attribute-customization, and value-resolution
+  work;
+. create dependent table keys;
+. copy owning-side state to inverse associations;
+. create and customize foreign keys;
+. drain late component, attribute-customization, and value-resolution work;
+. finalize aggregate mappings;
+. derive property and collection state-management details; and
+. run final mapping side effects.
+
+The phase interfaces are documented by
+`org.hibernate.boot.mapping.internal.binders.TypeBindingPhase`.  Add a narrow
+phase or typed pending record when a new dependency appears.  Do not restore
+an unordered second-pass callback queue or search a partially built model
+hoping that a dependency is already present.
+
+=== Pending state
+
+Pending records describe a known dependency and its producer and consumer
+phases.  They should carry stable semantic roles and the smallest typed inputs
+needed for resolution.  A pending record is not an invitation to retain a
+binder context, mutable annotation object, or whole source graph.
+
+Every pending category needs:
+
+* a deterministic insertion and drain order;
+* a non-strict phase if dependencies can be completed incrementally;
+* a strict phase which diagnoses anything unresolved;
+* diagnostics using source and mapping roles; and
+* archive-safe final output.
+
+== Materialization And The Mutable Boot Model
+
+Materializers create `PersistentClass`, `MappedSuperclass`, `Component`,
+`Property`, `Value`, `Table`, key, and constraint objects.  These are the
+mutable targets of bootstrap customization and the compatibility model exposed
+through `Metadata`.
+
+The materialized graph is a projection of resolved semantic state, not a second
+semantic source.  When a property is copied for inheritance or embedding,
+preserve its declaration role, mapping role, and usage correspondence.  Later
+consumers should use those facts instead of reverse-engineering the original
+member from the copy.
+
+Materialization is complete only after value resolution, aggregate
+finalization, association resolution, keys, constraints, and final model
+validation have succeeded.
+
+=== Identifier and value generators
+
+Generator handling spans several stages:
+
+. categorization discovers named generator registrations and generator
+  annotations;
+. binding resolves the applicable strategy for each identifier or generated
+  value;
+. materialization attaches a declarative `GeneratorDescriptor` to the
+  corresponding boot-model value or property;
+. relational preparation collects exportable database objects; and
+. runtime construction creates live generator instances using the factory
+  creation context.
+
+Descriptors, annotation snapshots, names, parameters, and stable roles may be
+archived.  Live generator instances, service references, and creation contexts
+must not be stored in resolved metadata.  This separation lets restored
+metadata create generators against the consumer's services and dialect while
+preserving the same mapping decision.
+
+Exportable generators contribute their database objects before schema
+management and before final runtime use.  Keep this ordering explicit when
+adding a generator strategy.
+
+=== Aggregate mappings
+
+Aggregate components initially bind their structural members like other
+embeddables.  Aggregate finalization runs only after member values and late
+association work are resolved.  It derives the aggregate JDBC mapping,
+column/read/write expressions, component aggregate metadata, and any
+dialect-sensitive relational details.
+
+Do not finalize an aggregate while its nested values are still mutable, and do
+not treat the aggregate column as a substitute identity for a nested
+attribute.  Nested attributes retain their own roles and applications.
+
+== Binding Extensions And Customization Hooks
+
+Choose the narrowest hook which owns the fact being changed:
+
+[cols="1,2,2"]
+|===
+| Hook | Use it for | Invocation boundary
+
+| `TypeContributor`
+| Java, JDBC, and basic type-system contributions
+| Before mapping resolution, against the bootstrap type configuration
+
+| `FunctionContributor`
+| SQM function registrations
+| During function-registry preparation; service-loaded contributors can be
+  replayed during archive restoration
+
+| `AdditionalMappingContributor`
+| Additional isolated classes, XML, tables, sequences, auxiliary objects, and
+  supported mapping resources
+| After the initial mappings are processed; contributions are prepared,
+  categorized, and bound into the same metadata collector
+
+| `AttributeBinder`
+| Custom annotation semantics for one concrete attribute application
+| After the property and structural value shape are materialized, before value
+  resolution and finalization
+
+| `TypeBinder`
+| Custom annotation semantics for an entity or concrete embeddable usage
+| After the corresponding `PersistentClass` or `Component` structure is
+  materialized, before later value resolution and finalization
+
+| naming and mapping customizations
+| Source-independent naming and mapping policy
+| During settings, source, and relational binding at the specific policy seam
+
+| `Integrator`
+| Integration with a nearly constructed factory and its services
+| After metadata ordering and validation, during default factory construction
+
+| `SessionFactoryProducer`
+| Replacement of the final factory implementation
+| At the final construction boundary, from finalized metadata, options, and
+  services
+|===
+
+=== AttributeBinder
+
+`AttributeBindingContext` deliberately exposes both sides of the
+semantic-to-materialized boundary:
+
+[source,java]
+----
+public void bind(MyAnnotation annotation, AttributeBindingContext context) {
+    AttributeApplication application = context.getAttribute();
+    AttributeUsage usage = application.usage();
+    AttributeDeclaration declaration = application.declaration();
+
+    // Read semantic facts.
+    Class<?> javaType =
+            usage.resolvedType().determineRawClass().toJavaClass();
+
+    // Mutate the correlated boot-model target.
+    Property property = context.getProperty();
+    property.setUpdateable(false);
+}
+----
+
+`getDomainModel()` exposes the complete categorized model for read-only
+navigation.  `getAttribute()` is invocation-scoped and is how the binder
+obtains the application and usage; they are not looked up from the categorized
+root.  `getProperty()` and `getPersistentClass()` are the mutable targets.
+
+`getMetadataBuildingContext()` is a deprecated escape hatch.  Do not use it for
+new binder behavior unless no narrow contract exists; a missing capability
+should normally result in a focused SPI addition.
+
+=== TypeBinder
+
+`TypeBinder` has typed callbacks:
+
+* `EntityBindingContext` correlates `EntityTypeMetadata` with its mutable
+  `PersistentClass`;
+* `EmbeddableBindingContext` correlates `EmbeddableUsageMetadata` with one
+  mutable `Component`.
+
+An implementation overrides only the supported placement.  The default method
+reports the standard unsupported-placement diagnostic.  An embeddable callback
+may run once for every concrete usage of the annotated embeddable type.
+
+Custom binders may mutate their supplied boot objects.  They must treat
+categorized metadata, declarations, usages, and applications as immutable,
+must not retain invocation contexts after bootstrap, and must not assume that
+table keys, foreign keys, inverse associations, or final value resolution
+already exist.
+
+== Metadata Finalization And Schema Management
+
+Resolved metadata owns the materialized `org.hibernate.mapping` model, the
+database model, the type configuration, named objects, and generator
+registrations.  The resolved mapping pairs that metadata with its runtime
+handoff.  Mapping resolution completes deferred binding and finalizes the
+metadata product before handing it to a target.  ORM's default SessionFactory
+construction path subsequently applies Bean Validation relational
+contributions, orders the model, and validates it as a hard gate before
+integrators and runtime-model creation.
+
+Schema management consumes resolved metadata and the service registry.  The
+`generateSchema` path follows the same settings, source preparation,
+categorization, binding, and function contribution flow as ordinary bootstrap,
+then stops before `SessionFactory` construction and delegates to
+`SchemaManagementToolCoordinator`.
+
+Schema tooling must not trigger an alternate mapping build.  Changes to tables,
+columns, constraints, auxiliary objects, or exportable generators must be
+present in resolved metadata before schema actions begin.
+
+== Runtime Mapping Handoff
+
+`org.hibernate.mapping` cannot by itself preserve every declaration/usage
+relationship needed by the runtime model, especially after inherited
+properties and components have been copied.  `RuntimeMappingHandoff` therefore
+carries finalized, data-only facts keyed by `MappingRole`:
+
+* attribute declaration and contextual usage correspondence;
+* resolved generic and embeddable type facts;
+* mapped-superclass and identifier specialization; and
+* the static-metamodel injection source.
+
+The handoff is built from finalized binding state and travels with the resolved
+mapping into `SessionFactory` construction.  It must contain no live binder,
+bootstrap context, service, or mutable binding-model reference.
+
+=== Runtime JPA metamodel generation
+
+Runtime metamodel construction consumes both the materialized boot model and
+the runtime handoff.  The boot model supplies mapped entities, components,
+properties, values, tables, and associations.  The handoff resolves cases
+where the runtime Java/JPA type of an inherited or embedded attribute cannot be
+derived reliably from a copied property.
+
+`MappedSuperclassHandoffResolver`, `EmbeddableHandoffResolver`, and
+`IdentifierHandoffResolver` use role-based correspondence.  The resulting
+`JpaMetamodel` is installed together with the runtime mapping metamodel in the
+in-flight factory model.
+
+=== JPA static metamodel population
+
+Static metamodel population is a consumer of runtime JPA metamodel attributes,
+not a second mapping interpretation.  During binding,
+`JpaStaticMetamodelInjectionSource` records managed-type and field
+correspondence, including concrete generic applications.  Runtime metamodel
+creation uses that plan to inject the correct attributes into generated
+`_`-classes.
+
+Result-set-mapping static fields are populated after the factory is available,
+because their values depend on runtime factory services.  The injection source
+has a data-only form and is preserved by metadata serialization.
+
+== SessionFactory Construction
+
+`SessionFactoryPipeline` takes the resolved mapping, resolved factory settings,
+service registry, and observers to the final construction boundary.
+`SessionFactoryConstructionCoordinator` selects a producer and builds either a
+custom factory or ORM's standard implementation.
+
+=== Construction request and producer SPI
+
+`SessionFactoryConstructionRequest` exposes:
+
+* finalized `MetadataImplementor`;
+* a read-only `SessionFactoryOptions` compatibility view; and
+* the factory's `ServiceRegistry`.
+
+It deliberately exposes neither `MetadataBuildingContext` nor a general
+`BootstrapContext`.  A service-loaded `SessionFactoryProducer` names itself
+with `getProducerName()` and returns a non-null `SessionFactoryImplementor`.
+
+With no discovered producer, ORM uses the default.  With one producer, that
+producer is selected.  If multiple producers are discovered, the
+`hibernate.session_factory_producer` setting must select exactly one unique
+name; ambiguity, a missing selected name, blank names, and a null result are
+bootstrap errors.
++
+A custom producer receives the same coherent construction request but does not
+run ORM's internal default construction plan.  It owns the equivalent
+preparation, validation, lifecycle, and cleanup required by its factory
+implementation.
+
+=== Default construction plan
+
+The default path prepares immutable or narrowly mutable products before
+allocating `SessionFactoryImpl`:
+
+`SessionFactoryRuntimeComponents`::
+Type configuration, Models context, class loading, managed beans, cache
+interpretation, statistics, SQL rendering, observers, filters, and other
+runtime services.
+
+`StandardServiceComponents`::
+Factory-scoped standard services whose construction can be coordinated
+outside the factory constructor.
+
+`SessionFactoryConstructionPlan`::
+The internal aggregate containing metadata, settings/options, identity,
+runtime handoff, prepared components, delayed factory reference, Bean
+Validation plan, and integrator lifecycle.
+
+The delayed factory reference makes unavoidable construction cycles explicit.
+Runtime persisters and generators may be prepared before the final factory
+reference is assigned, but access before assignment is an error.
+
+=== Ordering and integration lifecycle
+
+The important default-path ordering is:
+
+[source,text]
+----
+resolved mapping and factory settings
+    -> prepare standard-service components
+        -> apply Bean Validation relational contributions
+            -> order and validate metadata
+                -> prepare runtime components and construction plan
+                    -> allocate SessionFactoryImpl
+                        -> prime cache regions
+                            -> activate Bean Validation callbacks
+                                -> invoke integrators
+                                    -> complete runtime mapping and JPA metamodels
+                                        -> populate late static metamodel fields
+                                            -> notify SessionFactory observers
+----
+
+Integrators run against a tracked lifecycle.  Only successfully integrated
+instances are disintegrated on close or construction failure.  The integration
+context exposes the specific services
+an integrator needs, such as `ManagedBeanRegistry`, rather than a broad
+bootstrap context.
+
+Runtime-model completion remains factory-owned where persister and metamodel
+cycles require the eventual `SessionFactory`.  Preparation before allocation
+should still be preferred for acyclic data and services.
+
+If any construction step fails, observers and integration lifecycle cleanup
+must run consistently, and bootstrap-owned service registries must be
+released.  Success observers run only after the factory is usable.
+
+== Metadata Serialization And Restoration
+
+Metadata serialization is an optional alternate path from resolved mapping to
+the same factory-construction boundary:
+
+[source,text]
+----
+live source processing
+    -> resolved mapping
+        -> MetadataArchive
+            -> write/read data-only archive
+                -> restore against consumer services
+                    -> factory-ready RestoredMetadata
+                        -> ordinary SessionFactory construction
+----
+
+Enable archive production with
+`hibernate.boot.metadata_serialization.enabled`.  Then pass a supported
+`PersistenceConfiguration` to `MetadataSerialization.serialize()`, write the opaque
+`MetadataArchive`, read it in another process or build step, and call
+`restore(StandardServiceRegistry)`.  `RestoredMetadata` exposes the restored
+`Metadata` for inspection and `buildSessionFactory()` for the supported runtime
+transition.
+
+[source,java]
+----
+var producerConfiguration = new HibernatePersistenceConfiguration("example")
+        .managedClass(MyEntity.class)
+        .property(MappingSettings.METADATA_SERIALIZATION_ENABLED, true);
+
+MetadataArchive archive = MetadataSerialization.serialize(producerConfiguration);
+try (OutputStream output = Files.newOutputStream(archiveFile)) {
+    archive.writeTo(output);
+}
+
+MetadataArchive readArchive;
+try (InputStream input = Files.newInputStream(archiveFile)) {
+    readArchive = MetadataSerialization.read(input);
+}
+
+RestoredMetadata restored = readArchive.restore(consumerServiceRegistry);
+SessionFactory sessionFactory = restored.buildSessionFactory();
+----
+
+Reading and restoration are separate:
+
+Read::
+Validates and reconstructs data-only archive state.  It does not load
+application classes or create live metadata.
+
+Restore::
+Attaches the archive to the consumer's class loading, services, dialect, type
+configuration, Models context, and function registry; rebuilds derived value
+resolutions and the runtime handoff; and returns factory-ready metadata.
+
+=== Archive contents
+
+The archive records stable products rather than the working pipeline:
+
+* materialized metadata state;
+* declarative recipes for derived `BasicValue.Resolution` state, keyed by
+  stable `MappingRole`;
+* a data-only `RuntimeMappingHandoffSnapshot`;
+* the Hibernate Models archive needed to restore class and member details; and
+* format, ORM-version, dialect, and mapping-environment validation data.
+
+It does not serialize `PreparedMappingSources`, the categorized model, mutable
+binding state, binders, bootstrap contexts, service registries, live
+generators, or runtime factory objects.  Custom binders are not invoked again
+during restore: their mutations are already present in the materialized model.
+
+Generator descriptors remain declarative and create live generators only in
+the restored runtime environment.  Service-loaded `FunctionContributor`
+instances run again during restoration.  Explicit function descriptors,
+converter/type instances, or other instance-only customizations without a
+declarative reconstruction form make an archive ineligible.
+
+Archives are trusted build artifacts, not an interchange format for untrusted
+input.  Producer and consumer must use the exact supported ORM/archive format
+and compatible mapping environment; no forward or backward compatibility is
+promised.  Archive reading applies header, version, and payload bounds;
+restoration validates the mapping-environment fingerprint before recreating
+derived state.
+
+The central invariant is convergence: after restoration, live-built and
+restored metadata use the same runtime handoff and `SessionFactory`
+construction path.
+
+== Package Routing
+
+Start in these packages when changing a pipeline area:
+
+[cols="1,2"]
+|===
+| Package | Responsibility
+
+| `org.hibernate.boot.pipeline.internal`
+| Entry-point convergence, settings/source orchestration, mapping resolution,
+  schema target, and SessionFactory construction
+
+| `org.hibernate.boot.pipeline.spi`
+| Narrow supported construction SPIs and resolved factory-setting views
+
+| `org.hibernate.boot.mapping`
+| Mapping-pipeline package overview and internal implementation tree
+
+| `org.hibernate.boot.mapping.spi`
+| Supported read-only categorized and declaration/usage/application contracts
+
+| `org.hibernate.boot.mapping.internal.categorize`
+| Categorized model implementation
+
+| `org.hibernate.boot.mapping.internal.binders`
+| Coordinator, managed-type binders, phases, and deferred binding
+
+| `org.hibernate.boot.mapping.internal.model`
+| Mutable semantic binding state and correspondence
+
+| `org.hibernate.boot.mapping.internal.materialize`
+| Creation and population of `org.hibernate.mapping`
+
+| `org.hibernate.boot.mapping.internal.jpa`
+| Static-metamodel injection planning
+
+| `org.hibernate.boot.serial`
+| Supported metadata archive API
+
+| `org.hibernate.boot.serial.internal`
+| Archive snapshots, validation, and restoration
+
+| `org.hibernate.metamodel.internal`
+| Runtime handoff consumers and runtime JPA metamodel construction
+|===
+
+The package overviews in
+link:../hibernate-core/src/main/java/org/hibernate/boot/mapping/package-info.java[
+`org.hibernate.boot.mapping`] and
+link:../hibernate-core/src/main/java/org/hibernate/boot/mapping/spi/package-info.java[
+`org.hibernate.boot.mapping.spi`] provide the closest Javadoc-level description
+of the mapping stages and extension-facing semantic model.
+
+== Contributor Workflows
+
+=== Adding mapping support
+
+. Identify the source fact and add it to prepared/categorized metadata.
+. Decide whether the fact is a declaration, contextual usage, concrete
+  application, or global contribution.
+. Give cross-phase correspondence a stable role.
+. Bind it in the earliest phase where all dependencies exist.
+. Use typed pending state if a later producer is required.
+. Materialize it into `org.hibernate.mapping` only at the materialization
+  boundary.
+. Add runtime handoff data only if the fact cannot be recovered honestly from
+  the finalized boot model.
+. Verify live bootstrap, schema management, runtime metamodel creation, and
+  archive restoration as applicable.
+
+=== Adding an extension capability
+
+. Choose the narrowest existing hook.
+. Expose read-only semantic input and explicit mutable targets.
+. State precisely when the callback runs and what is incomplete at that point.
+. Avoid broad contexts and internal implementation types in supported SPIs.
+. Define deterministic discovery and invocation order.
+. Decide whether the contribution is replayed during restoration or captured
+  declaratively in the archive.
+. Test unsupported placements, duplicate discovery, repeated concrete usages,
+  and failure cleanup.
+
+=== Changing SessionFactory construction
+
+. Decide whether the value is resolved settings, a pre-allocation component, a
+  delayed cycle, or factory-owned runtime state.
+. Add it to the narrowest construction product.
+. Keep public producer requests smaller than ORM's internal construction plan.
+. Preserve metadata ordering and validation before integration and runtime
+  model completion.
+. Audit failure cleanup and observer timing.
+. Exercise both live and restored metadata paths.
+
+== Invariants And Common Traps
+
+Maintain these invariants:
+
+* all public entry points converge before mapping resolution;
+* categorization is read-only input to binding;
+* supported SPIs expose supported types, not public internal implementations;
+* declaration, usage, and application remain distinct;
+* copied mappings preserve role-based correspondence;
+* phase dependencies are explicit and deterministic;
+* schema tooling consumes the same resolved metadata as runtime bootstrap;
+* runtime handoffs are small and data-only;
+* custom binders mutate only their supplied boot-model targets;
+* archive restoration does not replay source binding;
+* live and restored paths converge before factory construction; and
+* broad compatibility contexts do not leak across new boundaries.
+
+Common mistakes include:
+
+* recategorizing annotations from a binder;
+* treating an inherited property copy as a new declaration;
+* resolving generics only from a raw declaring class;
+* identifying corresponding objects by list index;
+* creating generator instances during binding;
+* finalizing aggregates before nested value resolution;
+* adding an untyped second-pass callback;
+* invoking schema tooling on partially resolved metadata;
+* rebuilding the JPA metamodel during archive restore instead of restoring its
+  handoff inputs; and
+* moving work into `SessionFactoryImpl` merely because the factory is eventually
+  needed.
+
+== Verification
+
+Choose focused tests according to the changed boundary:
+
+Mapping bootstrap::
+Source preparation, XML overlay/clearing, package metadata, global
+registrations, hierarchy ordering, binding phases, relational keys, and
+constraints.
+
+Generics, inheritance, and embeddables::
+Mapped-superclass generics, overridden members, nested and polymorphic
+embeddables, identifier specialization, runtime JPA metamodel types, and static
+metamodel injection.
+
+Extensions::
+Entity, embeddable, ordinary attribute, embedded attribute, identifier, and
+version contexts; once-per-application invocation; unsupported placement;
+deterministic contributor ordering; and mutation survival.
+
+Generators and aggregates::
+Descriptor resolution, exportable objects, delayed generator creation,
+aggregate finalization, and restored factory behavior.
+
+Schema and construction::
+Schema-only bootstrap, Bean Validation relational contributions, metadata
+ordering and validation, producer selection, integrator lifecycle, observer
+timing, cache preparation, and failure cleanup.
+
+Serialization::
+Eligibility diagnostics, payload/version/fingerprint validation, data-only
+read, service-attached restoration, basic-value resolution reconstruction,
+runtime handoff restoration, and live/restored behavioral equivalence.
+
+Before completing a broad bootstrap change, run the focused tests first and
+then the complete `hibernate-core` test suite.  Also run documentation link
+checks and `git diff --check`; stale design links are often evidence that an
+old architectural path still survives in comments or tests.

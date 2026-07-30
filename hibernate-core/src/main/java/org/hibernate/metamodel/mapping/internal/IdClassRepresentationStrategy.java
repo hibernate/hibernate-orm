@@ -17,6 +17,7 @@ import org.hibernate.metamodel.internal.EmbeddableInstantiatorRecordStandard;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
 import org.hibernate.property.access.spi.PropertyAccess;
+import org.hibernate.property.access.spi.PropertyAccessStrategyResolver;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
@@ -25,12 +26,15 @@ import org.hibernate.type.descriptor.java.JavaType;
 public class IdClassRepresentationStrategy implements EmbeddableRepresentationStrategy {
 	private final JavaType<?> idClassType;
 	private final EmbeddableInstantiator instantiator;
+	private final PropertyAccessStrategyResolver propertyAccessStrategyResolver;
 
 	public IdClassRepresentationStrategy(
 			IdClassEmbeddable idClassEmbeddable,
 			boolean simplePropertyOrder,
-			Supplier<String[]> attributeNamesAccess) {
+			Supplier<String[]> attributeNamesAccess,
+			PropertyAccessStrategyResolver propertyAccessStrategyResolver) {
 		idClassType = idClassEmbeddable.getMappedJavaType();
+		this.propertyAccessStrategyResolver = propertyAccessStrategyResolver;
 		final var javaTypeClass = idClassType.getJavaTypeClass();
 		if ( javaTypeClass.isRecord() ) {
 			instantiator = simplePropertyOrder
@@ -67,7 +71,10 @@ public class IdClassRepresentationStrategy implements EmbeddableRepresentationSt
 
 	@Override
 	public PropertyAccess resolvePropertyAccess(Property bootAttributeDescriptor) {
-		final var strategy = bootAttributeDescriptor.getPropertyAccessStrategy( idClassType.getJavaTypeClass() );
+		final var strategy = bootAttributeDescriptor.getPropertyAccessStrategy(
+				idClassType.getJavaTypeClass(),
+				propertyAccessStrategyResolver
+		);
 
 		if ( strategy == null ) {
 			throw new HibernateException(

@@ -1,4 +1,4 @@
-:version: 8.1
+:version: 9.0
 
 = {version} Migration Guide
 :toc2:
@@ -33,6 +33,25 @@ See the link:{releaseSeriesBase}[website] for the list of requirements for the {
 
 See the link:{releaseSeriesBase}#whats-new[website] for the list of new features in the {version} series.
 
+[[metadata-serialization]]
+=== Metadata serialization
+
+Hibernate may now archive a factory-ready boot mapping and restore it in
+another compatible service environment.  Enable capture while building the
+mapping with `hibernate.boot.metadata_serialization.enabled=true`, then use
+`org.hibernate.boot.serial.MetadataSerialization` to create or read a
+`MetadataArchive`.
+
+`MetadataArchive#restore(StandardServiceRegistry)` returns `RestoredMetadata`,
+which exposes the restored `Metadata` for inspection and may build a
+`SessionFactory` directly.
+
+The archive is a trusted build artifact, not an interchange format for
+untrusted input.  Producer and consumer must use the same Hibernate ORM version
+and a compatible mapping environment.  Service-loaded function contributors
+are replayed during restoration, while instance-only customizations without a
+declarative representation make the mapping ineligible for serialization.
+
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // API changes
@@ -42,6 +61,181 @@ See the link:{releaseSeriesBase}#whats-new[website] for the list of new features
 == Changes to API
 
 This section describes changes to contracts (classes, interfaces, methods, etc.) which are considered https://hibernate.org/community/compatibility-policy/#api[API].
+
+[[legacy-xml-formats]]
+=== Legacy Hibernate XML formats
+
+Support for legacy `hbm.xml` mapping documents has been removed.  Applications
+must migrate these mappings to annotations, standard Jakarta Persistence
+`orm.xml`, or Hibernate's extended `orm.xml` format.  A document using the
+legacy Hibernate mapping DTD or XSD is rejected during bootstrap.
+
+The related `org.hibernate.boot.jaxb.hbm.spi` model and the legacy
+`org.hibernate.boot.model.source.spi` mapping-source hierarchy were removed.
+They have no replacement extension contract.
+
+The legacy `hibernate.cfg.xml` configuration format has also been removed.
+Move persistence-unit declarations to `META-INF/persistence.xml`, and move
+settings to `persistence.xml`, `hibernate.properties`, or the programmatic
+bootstrap entry point.
+
+The method signatures `Configuration#configure()` and
+`StandardServiceRegistryBuilder#configure()` remain, but their overloads always
+throw `UnsupportedOperationException`.  The `org.hibernate.boot.cfgxml.spi`
+package was removed.
+
+The following bootstrap-only settings were removed:
+
+* `hibernate.cfg_xml_file`;
+* `hibernate.orm_xml_files`;
+* `hibernate.hbm_xml_files`; and
+* `hibernate.loaded_classes`.
+
+Declare managed classes and mapping files through `persistence.xml` or the
+corresponding methods of `PersistenceConfiguration` or
+`HibernatePersistenceConfiguration`.
+
+Reverse-engineering tooling no longer generates `hbm.xml` mappings or
+`hibernate.cfg.xml`.  Generate annotated entity classes instead.
+
+[[legacy-identifier-generators]]
+=== Removed legacy identifier generators
+
+The following deprecated contracts in `org.hibernate.id` were removed:
+
+* `AbstractUUIDGenerator`;
+* `UUIDGenerator`;
+* `UUIDGenerationStrategy`;
+* `UUIDHexGenerator`;
+* `GUIDGenerator`; and
+* `ForeignGenerator`.
+
+For UUID identifiers, use `@UuidGenerator`, or use
+`@GeneratedValue(strategy = GenerationType.UUID)`.  `GenerationType.AUTO` also
+selects UUID generation for a UUID-typed identifier.  If an application
+requires the exact database-side or hexadecimal behavior of `GUIDGenerator` or
+`UUIDHexGenerator`, implement a custom generator explicitly.
+
+Replace `ForeignGenerator` shared-primary-key mappings with `@MapsId`.
+The legacy strategy names `uuid`, `uuid.hex`, `uuid2`, `guid`, and `foreign`
+are no longer recognized.
+
+[[bootstrap-api-changes]]
+=== Bootstrap API and integration changes
+
+Hibernate ORM 9 replaces the public staged bootstrap workflow with direct
+bootstrap entry points backed by one internal pipeline.
+
+==== Removed staged bootstrap APIs
+
+The former workflow
+
+[source,text]
+----
+MetadataSources
+    -> MetadataBuilder
+    -> Metadata
+    -> SessionFactoryBuilder
+    -> SessionFactory
+----
+
+has been removed, including:
+
+* `org.hibernate.boot.MetadataSources`;
+* `org.hibernate.boot.MetadataBuilder`;
+* `org.hibernate.boot.SessionFactoryBuilder`;
+* `Metadata#getSessionFactoryBuilder()`;
+* `Metadata#buildSessionFactory()`.
+
+There is no one-for-one replacement for constructing and mutating intermediate
+builders.  Configure a supported bootstrap entry point and build the
+`EntityManagerFactory` or `SessionFactory` directly.
+
+Preferred entry points are:
+
+* standard Jakarta Persistence bootstrap through `jakarta.persistence.Persistence`;
+* container bootstrap using `jakarta.persistence.spi.PersistenceUnitInfo`;
+* programmatic bootstrap using `jakarta.persistence.PersistenceConfiguration`
+  or `org.hibernate.jpa.HibernatePersistenceConfiguration`.
+
+`HibernatePersistenceConfiguration` now accepts managed class names, package
+names, mapping resources, mapping files represented by `File`, `Path`, `URI`,
+or `URL`, and JAR URLs.  These operations replace the corresponding source
+collection use cases of `MetadataSources`.
+
+`org.hibernate.cfg.Configuration` remains available as a native compatibility
+facade.  It adapts its accumulated sources, settings, and customizations to the
+same bootstrap pipeline and builds the `SessionFactory` directly.
+
+For an archived boot model,
+`org.hibernate.boot.serial.RestoredMetadata#buildSessionFactory()` is the
+supported transition to a `SessionFactory`.
+
+The `Configuration(MetadataSources)` constructor,
+`Configuration#getXmlMappingBinderAccess()`,
+`Configuration#addXmlMapping(Binding)`, and `Configuration#addJar(File)` were
+removed with the old source collector.  Prefer the corresponding
+`HibernatePersistenceConfiguration` mapping-source methods.  A retained
+`Configuration` may still add annotated classes, packages, resources, files,
+URLs, streams, and mapping directories through its supported methods.
+
+==== Removed broad integration hooks
+
+Broad hooks tied to the removed staged builders have also been removed.
+Integrations should use the narrow contract matching the actual contribution:
+
+[cols="2,3", options="header"]
+|===
+| Removed hook
+| Migration
+
+| `MetadataBuilderContributor`
+| Use `TypeContributor`, `FunctionContributor`, a supported programmatic
+customization, or another focused integration SPI.
+The `hibernate.metadata_builder_contributor` setting was removed with this
+contract.
+
+| `MetadataBuilderInitializer`
+| There is no broad replacement.  Use focused contributors or supported
+entry-point customizations.
+
+| `MetadataSourcesContributor`
+| Use `AdditionalMappingContributor` for the retained late mapping-contribution
+boundary.
+
+| `MetadataBuilderFactory` and `MetadataBuilderImplementor`
+| There is no replacement.  Mapping resolution is owned by Hibernate's
+bootstrap pipeline.
+
+| `SessionFactoryBuilderFactory`, `SessionFactoryBuilderService`, and
+`SessionFactoryBuilderImplementor`
+| Use bootstrap settings and supported entry-point customizations for factory
+options.  Use the service-loadable `SessionFactoryProducer` only when replacing
+factory construction itself.
+
+| `org.hibernate.jpa.boot.spi.Bootstrap`,
+`EntityManagerFactoryBuilder`, and `PersistenceConfigurationDescriptor`
+| Use the standard Jakarta Persistence entry points.  Hibernate's provider
+implementation is not a staged bootstrap SPI.
+|===
+
+Code which previously used a broad builder hook for several unrelated tasks
+should split that integration across the corresponding focused SPIs.  Do not
+replace removed builder dependencies with dependencies on
+`org.hibernate.boot.pipeline.internal` or
+`org.hibernate.boot.serial.internal`.
+
+==== Identifier-generator metadata
+
+`org.hibernate.boot.model.IdentifierGeneratorDefinition` was replaced by
+`IdentifierGeneratorRegistration`.  A registration records the resolved
+generator family, implementation class, name, and immutable parameters instead
+of retaining only a strategy string.
+
+Consequently, `Metadata#getIdentifierGenerator(String)` was replaced by:
+
+* `Metadata#getIdentifierGeneratorRegistration(String)`; and
+* `Metadata#getIdentifierGeneratorRegistrations()`.
 
 
 
@@ -54,10 +248,220 @@ This section describes changes to contracts (classes, interfaces, methods, etc.)
 
 This section describes changes to contracts (classes, interfaces, methods, etc.) which are considered https://hibernate.org/community/compatibility-policy/#spi[SPI].
 
-[[persistence-context]]
-=== Removed `PersistenceContext.reentrantSafeEntityEntries()`
+[[binding-extension-spi]]
+=== `AttributeBinder` and `TypeBinder`
 
-The deprecated `PersistenceContext.reentrantSafeEntityEntries()` method has been removed. The replacement method is `PersistenceContext.reentrantSafeManagedEntities()`.
+The incubating custom binding SPIs now operate at an explicit
+semantic-to-materialized boundary.  Their callback signatures have changed.
+
+An `AttributeBinder` previously implemented:
+
+[source,java]
+----
+void bind(
+        A annotation,
+        MetadataBuildingContext buildingContext,
+        PersistentClass persistentClass,
+        Property property);
+----
+
+It must now implement:
+
+[source,java]
+----
+void bind(A annotation, AttributeBindingContext context);
+----
+
+`AttributeBindingContext` provides the read-only categorized domain model and
+the concrete `AttributeApplication`, together with the mutable
+`PersistentClass` and `Property`.  Its
+`getMetadataBuildingContext()` method is a deprecated compatibility escape
+hatch and should not be used by new binders.
+
+A `TypeBinder` previously implemented separate methods receiving a
+`MetadataBuildingContext` and either `PersistentClass` or `Component`.  It now
+overrides one or both typed callbacks:
+
+[source,java]
+----
+void bind(A annotation, EntityBindingContext context);
+void bind(A annotation, EmbeddableBindingContext context);
+----
+
+The methods are default methods which report a standard unsupported-placement
+error.  Implement only the entity or embeddable placements supported by the
+custom annotation.  An embeddable binder is invoked for each concrete
+embeddable usage.
+
+The read-only categorized and declaration/usage/application contracts used by
+these contexts are in `org.hibernate.boot.mapping.spi`.  Do not replace the
+removed `MetadataBuildingContext` parameter with dependencies on
+`org.hibernate.boot.mapping.internal`.
+
+`MappingRole` and `DeclarationRole` moved from `org.hibernate.mapping` to
+`org.hibernate.boot.mapping.spi`, alongside the contracts which expose them.
+
+[[additional-mapping-contributor-spi]]
+=== `AdditionalMappingContributor`
+
+The `AdditionalMappingContributor#contribute()` signature no longer exposes
+`InFlightMetadataCollector`, `ResourceStreamLocator`, and
+`MetadataBuildingContext`.  It now receives:
+
+* `AdditionalMappingContributions`, the write-side collector;
+* `ProcessedMappings`, an immutable view of mappings processed before the
+  contributor runs; and
+* `AdditionalMappingContributorContext`, which exposes the Models context,
+  class loading and resource lookup, dialect, and type configuration.
+
+Use `ProcessedMappings#getEntityBinding()` to inspect an existing entity by
+its Hibernate entity name.  Use `AdditionalMappingContributions#getDatabase()`
+only for relational contributions which genuinely require direct database
+model access.
+
+[[integrator-spi]]
+=== `Integrator` and SessionFactory-owned components
+
+The `Integrator` lifecycle callbacks now use the same narrow context:
+
+[source,java]
+----
+void integrate(
+        Metadata metadata,
+        Integrator.Context context,
+        SessionFactoryImplementor sessionFactory);
+
+void disintegrate(
+        SessionFactoryImplementor sessionFactory,
+        Integrator.Context context);
+----
+
+`Integrator.Context` currently exposes `ManagedBeanRegistry`.  It replaces the
+former `BootstrapContext` argument to `integrate()` and the former
+`SessionFactoryServiceRegistry` argument to `disintegrate()`.
+
+The SessionFactory child service registry and its contribution infrastructure
+were removed, including:
+
+* `SessionFactoryServiceRegistry`;
+* `SessionFactoryServiceRegistryBuilder`;
+* `SessionFactoryServiceRegistryFactory`;
+* `SessionFactoryServiceContributor`;
+* `SessionFactoryServiceInitiator`; and
+* `SessionFactoryServiceInitiatorContext`.
+
+`SessionFactoryImplementor#getServiceRegistry()` now returns the standard
+registry used to build the factory.  Components requiring a SessionFactory are
+owned directly by the factory and are exposed through focused contracts.
+
+Use `ServiceContributor` for services which belong in the standard registry.
+For factory-owned components, use the corresponding Java service:
+
+[cols="2,3", options="header"]
+|===
+| Factory-owned concern
+| Integration
+
+| Event listeners
+| Register them from an `Integrator` using
+`SessionFactoryImplementor#getEventListenerRegistry()`.
+
+| Native-query interpretation
+| Provide a Java service implementation of `NativeQueryInterpreter`.
+
+| Cache facade construction
+| Provide a Java service implementation of `CacheFactory`.
+
+| Per-session extensions
+| Provide Java service implementations of `ExtensionIntegration`.
+|===
+
+`CacheFactory#buildCache(SessionFactoryImplementor)` was replaced by
+`CacheFactory#buildCache(CacheConstructionContext)`.  The construction context
+exposes the owning `SessionFactoryImplementor` and the immutable set of
+`DomainDataRegionConfig` instances prepared from the resolved mapping.
+
+`CacheImplementor#prime(Set<DomainDataRegionConfig>)` was removed.  A
+`CacheFactory` implementation must consume the region configurations while
+building the cache and return a fully initialized `CacheImplementor`.
+
+The old `CacheInitiator`, `NativeQueryInterpreterInitiator`, and
+`ExtensionIntegrationServiceInitiator` adapters were removed with the child
+registry.
+
+[[bean-validation-bootstrap-spi]]
+=== Bean Validation bootstrap
+
+`BeanValidationIntegrator` is no longer an `Integrator`.  It is retained as a
+deprecated compatibility holder, while Hibernate now coordinates Bean
+Validation through `BeanValidationPlan` so relational constraints and runtime
+callbacks run at their respective construction boundaries.
+
+Constants used by the integration moved to `BeanValidationSettings`.
+`ActivationContext#getServiceRegistry()` now returns the standard
+`ServiceRegistry`, and `ActivationContext#getSessionFactoryOptions()` exposes
+the options needed during the relational phase, before a `SessionFactory`
+exists.
+
+[[generator-spi]]
+=== Generator lifecycle
+
+`IdentifierGenerator` no longer extends `ExportableProducer`.  A custom
+identifier generator which contributes sequences, tables, or other schema
+objects must now implement `ExportableProducer` explicitly.  Generators which
+do not contribute schema objects no longer acquire that capability merely by
+implementing `IdentifierGenerator`.
+
+Generator creation, configuration, exportable registration, and initialization
+are coordinated as one lifecycle.  Custom generators must not assume that a
+new instance will be created separately for schema export and runtime use.
+Container-managed generators retain the managed reference through factory
+construction.
+
+`GeneratorCreator` is retained only as a deprecated compatibility alias for
+the internal `GeneratorDescriptor` contract.  Integrations should continue to
+define generator behavior through supported generator annotations and
+`Generator` implementations instead of depending on boot-model descriptor
+types.
+
+[[boot-model-spi-removals]]
+=== Boot-model implementation SPIs
+
+The following implementation-oriented boot contracts were removed or narrowed
+with the staged metadata builder:
+
+* `MetadataBuildingOptions` and its delegating implementation;
+* `MetadataBuildingProcess`;
+* `LocalMetadataBuildingContext`;
+* `SecondPass`;
+* `XmlMappingBinderAccess`; and
+* the `org.hibernate.boot.models.spi.GlobalRegistrations` model and its
+  registration DTOs.
+
+The legacy `org.hibernate.mapping.Resolvable` second-pass marker was also
+removed without replacement.
+
+There is no supported replacement callback for adding arbitrary second-pass
+work or mutating Hibernate's in-flight collector.  Use a focused contributor
+or custom binder at its documented phase boundary.
+
+`BootstrapContext` was narrowed to bootstrap-wide services and infrastructure.
+It no longer exposes `MetadataBuildingOptions`, the function registry,
+builder-registered SQL functions, auxiliary database objects, converters,
+cache-region definitions, the Jandex view, or the ad-hoc basic-type registry.
+Use the corresponding focused contributor or bootstrap setting instead of
+treating `BootstrapContext` as a general-purpose mapping collector.
+
+`MetadataImplementor#getMetadataBuildingOptions()` was likewise removed.
+Its replacement, `getMappingResolutionOptions()`, exposes an internal pipeline
+type and is not a supported integration point.  Integrations should obtain
+configuration through their focused SPI context or the standard service
+registry.
+
+`org.hibernate.boot.spi.MappingDefaults` was renamed to
+`GlobalMappingDefaults`.  This distinguishes persistence-unit defaults from
+the effective defaults applied in a narrower mapping context.
+
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Changes in Behavior
@@ -68,43 +472,101 @@ The deprecated `PersistenceContext.reentrantSafeEntityEntries()` method has been
 
 This section describes changes in behavior that applications should be aware of.
 
-[[jdbc-resource-release-autocommit]]
-=== JDBC resource release in autocommit mode
+[[implicit-list-semantics]]
+=== `List` attributes use list semantics
 
-When no transaction is active (autocommit), Hibernate now correctly releases the connection after statement
-execution if the configured `ConnectionReleaseMode` is set to `AFTER_TRANSACTION`.
-Previously, with `DELAYED_ACQUISITION_AND_RELEASE_AFTER_TRANSACTION` connection handling mode, JDBC resources
-and the physical connection were held until an explicit call to `afterTransaction()` or closing the session,
-even though in autocommit mode each statement is effectively its own transaction.
+A persistent attribute declared as `java.util.List` now uses LIST semantics by
+default.  When an owned collection has no explicit `@OrderColumn`, Hibernate
+uses an implicit order column.
 
-This change ensures that JDBC connections are promptly returned to the pool after each statement when there
-is no active transaction, preventing potential resource leaks.
+The `hibernate.mapping.default_list_semantics` setting and
+`MappingSettings#DEFAULT_LIST_SEMANTICS` were removed.  To map a Java `List` as
+an unordered bag, annotate the attribute with `@org.hibernate.annotations.Bag`.
 
-As a consequence, accessing LOB locators (i.e. `java.sql.Blob` or `java.sql.Clob` typed attributes) outside of
-an active transaction will no longer work and result in an exception on most dialects.
-Previously this appeared to work only because the connection happened to remain open; however, there were no
-transactional isolation guarantees — the data read from the LOB could have already been modified by another
-transaction.
+As before, inverse collections such as `@OneToMany(mappedBy = "...")` and
+`@ManyToMany(mappedBy = "...")` do not gain an implicit persistent order.  Use
+an explicit `@OrderColumn` where that mapping placement supports one.
 
-Note that this only affects entity attributes mapped as `java.sql.Blob` or `java.sql.Clob`, since these types
-rely on a JDBC locator that requires a live connection. Attributes mapped as `byte[]` or `String` are always
-eagerly materialized when the result set is read, and are not affected by this change. Similarly, some dialects
-that always use materialized LOB access are also unaffected.
+[[quoted-entity-names]]
+=== JPA entity names may not be quoted
 
-Applications that use `Blob` or `Clob` typed attributes must access them within an active transaction:
+The value of `@Entity(name = "...")` is a logical entity name, not a database
+identifier.  Hibernate now rejects entity names enclosed in identifier quote
+markers.  Remove the quotes from the entity name and use `@Table`, `@Column`,
+or the corresponding XML mapping when a database identifier requires quoting.
+
+[[global-generator-scope]]
+=== Identifier-generator names are always persistence-unit scoped
+
+Hibernate no longer supports entity-local scoping for explicitly named
+`@SequenceGenerator`, `@TableGenerator`, and custom generator declarations.
+Explicit generator names are always scoped to the persistence unit, and two
+different declarations may not use the same explicit name.
+
+The `hibernate.jpa.compliance.global_id_generators` setting and the related
+`JpaCompliance` and `HibernatePersistenceConfiguration` methods were removed.
+There is no setting which restores local named-generator scope.
+
+An unnamed generator declaration is implicitly named using the owning JPA
+entity name.  Different entities may therefore each declare an unnamed
+generator without colliding.
+
+Applications which formerly overrode a mapped-superclass generator by
+redeclaring the same local name should instead give each concrete generator a
+unique explicit name and reference it from `@GeneratedValue`.
+
+[[generic-jpa-metamodel-types]]
+=== Specialized generic types in the JPA metamodel
+
+JPA criteria paths and metamodel attributes inherited from a generic mapped
+superclass now expose the Java type resolved for the concrete entity usage.
+For example, an association declared as `T` by a mapped superclass and
+specialized as `Customer` by an entity now reports `Customer.class` from
+`TupleElement#getJavaType()` instead of `Object.class`.
+
+The static metamodel classes generated by `hibernate-processor` now represent
+the same specialization.  Given, for example:
 
 [source,java]
 ----
-// Before (assuming no active transaction, may have accidentally worked, but with no isolation guarantees):
-session.get(MyEntity.class, id);
-entity.getData().getBinaryStream(); // may now fail — connection already released
+@MappedSuperclass
+class Base<T> {
+    T value;
+}
 
-// After (correct):
-session.getTransaction().begin();
-session.get(MyEntity.class, id);
-entity.getData().getBinaryStream(); // works — connection held by the transaction
-session.getTransaction().commit();
+@Entity
+class Customer extends Base<UUID> {
+    // ...
+}
 ----
+
+the generated `Customer_` class declares its own `value` field typed for
+`Customer` and `UUID`.  That field intentionally hides the same-named field
+in `Base_`, which continues to represent the generic declaration.  In
+simplified form, the generated model is:
+
+[source,java]
+----
+abstract class Base_ {
+    static volatile SingularAttribute<Base, Object> value;
+}
+
+abstract class Customer_ extends Base_ {
+    static volatile SingularAttribute<Customer, UUID> value;
+}
+----
+
+Both fields are populated independently at runtime.  The same handling applies
+to a concrete embeddable which specializes a generic mapped superclass, and
+mapped-superclass attributes inherited by embeddables are now populated.
+
+Applications should regenerate their static metamodel sources when upgrading.
+Normal references such as `Customer_.value` now obtain the specialized type,
+but code which reflects on generated metamodel classes, inspects declaring
+classes, or assumes that the attribute field is declared only by the generic
+superclass must account for the new hiding field.  Code which worked around
+the previous raw or `Object` result should remove the workaround and use the
+specialized metamodel type.
 
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -115,6 +577,15 @@ session.getTransaction().commit();
 == Changes in XSD
 
 This section describes changes in XML Schema Descriptors
+
+The legacy `hbm.xml` and `hibernate.cfg.xml` schemas are no longer supported or
+distributed.  Use the Jakarta Persistence schemas for `orm.xml` and
+`persistence.xml`, or Hibernate's extended `mapping.xml` schema for
+Hibernate-specific mapping features.
+
+The ORM 9 extended mapping schema also adds `mutable` to basic and identifier
+mappings, and adds the Jakarta Persistence 4.0 persistence-unit lifecycle
+callbacks `post-create` and `pre-close`.
 
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -136,9 +607,3 @@ Such changes typically do not impact programs using a relational schema managed 
 == Changes in Dependencies
 
 This section describes changes to dependencies used by Hibernate ORM.
-
-[[dependency-changes-micrometer]]
-=== Micrometer dependency is now provided
-
-The `hibernate-micrometer` module no longer pulls `io.micrometer:micrometer-core` as a transitive runtime dependency.
-Applications using this module must now explicitly add `io.micrometer:micrometer-core` to their classpath.

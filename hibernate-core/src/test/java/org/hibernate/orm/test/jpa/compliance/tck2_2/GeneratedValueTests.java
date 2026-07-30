@@ -5,7 +5,6 @@
 package org.hibernate.orm.test.jpa.compliance.tck2_2;
 
 import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.Sequence;
@@ -24,6 +23,7 @@ import org.hibernate.id.enhanced.TableGenerator;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.orm.test.idgen.GeneratorSettingsImpl;
 
 import org.hibernate.testing.orm.junit.RequiresDialect;
@@ -55,18 +55,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class GeneratedValueTests {
 	@Test
 	public void baseline(ServiceRegistryScope scope) {
-		final MetadataImplementor bootModel = (MetadataImplementor) new MetadataSources( scope.getRegistry() )
-				.addAnnotatedClass( ExplicitGeneratorEntity.class )
-				.buildMetadata();
+		final MetadataImplementor bootModel = buildBootModel( scope, ExplicitGeneratorEntity.class );
 		final PersistentClass entityMapping = bootModel.getEntityBinding( ExplicitGeneratorEntity.class.getName() );
 		KeyValue keyValue = entityMapping.getIdentifier();
 		Dialect dialect = scope.getRegistry().getService( JdbcEnvironment.class ).getDialect();
-		final Generator gen = keyValue.createGenerator(
-				dialect,
-				(RootClass) entityMapping,
-				entityMapping.getIdentifierProperty(),
-				new GeneratorSettingsImpl( bootModel )
-		);
+		final Generator gen = GeneratorSettingsImpl.createIdentifierGenerator( keyValue, dialect, (RootClass) entityMapping, entityMapping.getIdentifierProperty(), bootModel );
 		final IdentifierGenerator generator = gen instanceof IdentifierGenerator ? (IdentifierGenerator) gen : null;
 		generator.initialize( SqlStringGenerationContextImpl.forTests( bootModel.getDatabase().getJdbcEnvironment() ) );
 
@@ -83,18 +76,11 @@ public class GeneratedValueTests {
 
 	@Test
 	public void testImplicitSequenceGenerator(ServiceRegistryScope scope) {
-		final MetadataImplementor bootModel = (MetadataImplementor) new MetadataSources( scope.getRegistry() )
-				.addAnnotatedClass( ImplicitSequenceGeneratorEntity.class )
-				.buildMetadata();
+		final MetadataImplementor bootModel = buildBootModel( scope, ImplicitSequenceGeneratorEntity.class );
 		final PersistentClass entityMapping = bootModel.getEntityBinding( ImplicitSequenceGeneratorEntity.class.getName() );
 		KeyValue keyValue = entityMapping.getIdentifier();
 		Dialect dialect = scope.getRegistry().getService( JdbcEnvironment.class ).getDialect();
-		final Generator gen = keyValue.createGenerator(
-				dialect,
-				(RootClass) entityMapping,
-				entityMapping.getIdentifierProperty(),
-				new GeneratorSettingsImpl( bootModel )
-		);
+		final Generator gen = GeneratorSettingsImpl.createIdentifierGenerator( keyValue, dialect, (RootClass) entityMapping, entityMapping.getIdentifierProperty(), bootModel );
 		final IdentifierGenerator generator = gen instanceof IdentifierGenerator ? (IdentifierGenerator) gen : null;
 		generator.initialize( SqlStringGenerationContextImpl.forTests( bootModel.getDatabase().getJdbcEnvironment() ) );
 
@@ -114,18 +100,11 @@ public class GeneratedValueTests {
 
 	@Test
 	public void testImplicitSequenceGeneratorGeneratorName(ServiceRegistryScope scope) {
-		final MetadataImplementor bootModel = (MetadataImplementor) new MetadataSources( scope.getRegistry() )
-				.addAnnotatedClass( ImplicitSequenceGeneratorEntity.class )
-				.buildMetadata();
+		final MetadataImplementor bootModel = buildBootModel( scope, ImplicitSequenceGeneratorEntity.class );
 		final PersistentClass entityMapping = bootModel.getEntityBinding( ImplicitSequenceGeneratorEntity.class.getName() );
 		KeyValue keyValue = entityMapping.getIdentifier();
 		Dialect dialect = scope.getRegistry().getService( JdbcEnvironment.class ).getDialect();
-		final Generator gen = keyValue.createGenerator(
-				dialect,
-				(RootClass) entityMapping,
-				entityMapping.getIdentifierProperty(),
-				new GeneratorSettingsImpl( bootModel )
-		);
+		final Generator gen = GeneratorSettingsImpl.createIdentifierGenerator( keyValue, dialect, (RootClass) entityMapping, entityMapping.getIdentifierProperty(), bootModel );
 		final IdentifierGenerator generator = gen instanceof IdentifierGenerator ? (IdentifierGenerator) gen : null;
 		generator.initialize( SqlStringGenerationContextImpl.forTests( bootModel.getDatabase().getJdbcEnvironment() ) );
 
@@ -146,19 +125,12 @@ public class GeneratedValueTests {
 	@Test
 	public void testExplicitSequenceGeneratorImplicitNamePreferGeneratorName(ServiceRegistryScope scope) {
 		// this should be the default behavior
-		final MetadataImplementor bootModel = (MetadataImplementor) new MetadataSources( scope.getRegistry() )
-				.addAnnotatedClass( ExplicitSequenceGeneratorImplicitNameEntity.class )
-				.buildMetadata();
+		final MetadataImplementor bootModel = buildBootModel( scope, ExplicitSequenceGeneratorImplicitNameEntity.class );
 		final PersistentClass entityMapping = bootModel.getEntityBinding(
 				ExplicitSequenceGeneratorImplicitNameEntity.class.getName() );
 		KeyValue keyValue = entityMapping.getIdentifier();
 		Dialect dialect = scope.getRegistry().getService( JdbcEnvironment.class ).getDialect();
-		final Generator gen = keyValue.createGenerator(
-				dialect,
-				(RootClass) entityMapping,
-				entityMapping.getIdentifierProperty(),
-				new GeneratorSettingsImpl( bootModel )
-		);
+		final Generator gen = GeneratorSettingsImpl.createIdentifierGenerator( keyValue, dialect, (RootClass) entityMapping, entityMapping.getIdentifierProperty(), bootModel );
 		final IdentifierGenerator generator = gen instanceof IdentifierGenerator ? (IdentifierGenerator) gen : null;
 		Database database = bootModel.getDatabase();
 		SqlStringGenerationContext sqlStringGenerationContext =
@@ -193,18 +165,11 @@ public class GeneratedValueTests {
 
 	@Test
 	public void testImplicitTableGenerator(ServiceRegistryScope scope) {
-		final MetadataImplementor bootModel = (MetadataImplementor) new MetadataSources( scope.getRegistry() )
-				.addAnnotatedClass( ImplicitTableGeneratorEntity.class )
-				.buildMetadata();
+		final MetadataImplementor bootModel = buildBootModel( scope, ImplicitTableGeneratorEntity.class );
 		final PersistentClass entityMapping = bootModel.getEntityBinding( ImplicitTableGeneratorEntity.class.getName() );
 		KeyValue keyValue = entityMapping.getIdentifier();
 		Dialect dialect = scope.getRegistry().getService( JdbcEnvironment.class ).getDialect();
-		final Generator gen = keyValue.createGenerator(
-				dialect,
-				(RootClass) entityMapping,
-				entityMapping.getIdentifierProperty(),
-				new GeneratorSettingsImpl( bootModel )
-		);
+		final Generator gen = GeneratorSettingsImpl.createIdentifierGenerator( keyValue, dialect, (RootClass) entityMapping, entityMapping.getIdentifierProperty(), bootModel );
 		final IdentifierGenerator generator = gen instanceof IdentifierGenerator ? (IdentifierGenerator) gen : null;
 		generator.initialize( SqlStringGenerationContextImpl.forTests( bootModel.getDatabase().getJdbcEnvironment() ) );
 
@@ -219,18 +184,11 @@ public class GeneratedValueTests {
 
 	@Test
 	public void testExplicitTableGeneratorImplicitName(ServiceRegistryScope scope) {
-		final MetadataImplementor bootModel = (MetadataImplementor) new MetadataSources( scope.getRegistry() )
-				.addAnnotatedClass( ExplicitTableGeneratorImplicitNameEntity.class )
-				.buildMetadata();
+		final MetadataImplementor bootModel = buildBootModel( scope, ExplicitTableGeneratorImplicitNameEntity.class );
 		final PersistentClass entityMapping = bootModel.getEntityBinding( ExplicitTableGeneratorImplicitNameEntity.class.getName() );
 		KeyValue keyValue = entityMapping.getIdentifier();
 		Dialect dialect = scope.getRegistry().getService( JdbcEnvironment.class ).getDialect();
-		final Generator gen = keyValue.createGenerator(
-				dialect,
-				(RootClass) entityMapping,
-				entityMapping.getIdentifierProperty(),
-				new GeneratorSettingsImpl( bootModel )
-		);
+		final Generator gen = GeneratorSettingsImpl.createIdentifierGenerator( keyValue, dialect, (RootClass) entityMapping, entityMapping.getIdentifierProperty(), bootModel );
 		final IdentifierGenerator generator = gen instanceof IdentifierGenerator ? (IdentifierGenerator) gen : null;
 		generator.initialize( SqlStringGenerationContextImpl.forTests( bootModel.getDatabase().getJdbcEnvironment() ) );
 
@@ -245,18 +203,11 @@ public class GeneratedValueTests {
 
 	@Test
 	public void testExplicitTableGenerator(ServiceRegistryScope scope) {
-		final MetadataImplementor bootModel = (MetadataImplementor) new MetadataSources( scope.getRegistry() )
-				.addAnnotatedClass( ExplicitTableGeneratorEntity.class )
-				.buildMetadata();
+		final MetadataImplementor bootModel = buildBootModel( scope, ExplicitTableGeneratorEntity.class );
 		final PersistentClass entityMapping = bootModel.getEntityBinding( ExplicitTableGeneratorEntity.class.getName() );
 		KeyValue keyValue = entityMapping.getIdentifier();
 		Dialect dialect = scope.getRegistry().getService( JdbcEnvironment.class ).getDialect();
-		final Generator gen = keyValue.createGenerator(
-				dialect,
-				(RootClass) entityMapping,
-				entityMapping.getIdentifierProperty(),
-				new GeneratorSettingsImpl( bootModel )
-		);
+		final Generator gen = GeneratorSettingsImpl.createIdentifierGenerator( keyValue, dialect, (RootClass) entityMapping, entityMapping.getIdentifierProperty(), bootModel );
 		final IdentifierGenerator generator = gen instanceof IdentifierGenerator ? (IdentifierGenerator) gen : null;
 		generator.initialize( SqlStringGenerationContextImpl.forTests( bootModel.getDatabase().getJdbcEnvironment() ) );
 
@@ -273,18 +224,11 @@ public class GeneratedValueTests {
 
 	@Test
 	public void testExplicitIncrementGenerator(ServiceRegistryScope scope) {
-		final MetadataImplementor bootModel = (MetadataImplementor) new MetadataSources( scope.getRegistry() )
-				.addAnnotatedClass( ExplicitIncrementGeneratorEntity.class )
-				.buildMetadata();
+		final MetadataImplementor bootModel = buildBootModel( scope, ExplicitIncrementGeneratorEntity.class );
 		final PersistentClass entityMapping = bootModel.getEntityBinding( ExplicitIncrementGeneratorEntity.class.getName() );
 		KeyValue keyValue = entityMapping.getIdentifier();
 		Dialect dialect = scope.getRegistry().getService( JdbcEnvironment.class ).getDialect();
-		final Generator gen = keyValue.createGenerator(
-				dialect,
-				(RootClass) entityMapping,
-				entityMapping.getIdentifierProperty(),
-				new GeneratorSettingsImpl( bootModel )
-		);
+		final Generator gen = GeneratorSettingsImpl.createIdentifierGenerator( keyValue, dialect, (RootClass) entityMapping, entityMapping.getIdentifierProperty(), bootModel );
 		final IdentifierGenerator generator = gen instanceof IdentifierGenerator ? (IdentifierGenerator) gen : null;
 		generator.initialize( SqlStringGenerationContextImpl.forTests( bootModel.getDatabase().getJdbcEnvironment() ) );
 
@@ -294,22 +238,19 @@ public class GeneratedValueTests {
 
 	@Test
 	public void testImplicitIncrementGenerator(ServiceRegistryScope scope) {
-		final MetadataImplementor bootModel = (MetadataImplementor) new MetadataSources( scope.getRegistry() )
-				.addAnnotatedClass( ImplicitIncrementGeneratorEntity.class )
-				.buildMetadata();
+		final MetadataImplementor bootModel = buildBootModel( scope, ImplicitIncrementGeneratorEntity.class );
 		final PersistentClass entityMapping = bootModel.getEntityBinding( ImplicitIncrementGeneratorEntity.class.getName() );
 		KeyValue keyValue = entityMapping.getIdentifier();
 		Dialect dialect = scope.getRegistry().getService( JdbcEnvironment.class ).getDialect();
-		final Generator gen = keyValue.createGenerator(
-				dialect,
-				(RootClass) entityMapping,
-				entityMapping.getIdentifierProperty(),
-				new GeneratorSettingsImpl( bootModel )
-		);
+		final Generator gen = GeneratorSettingsImpl.createIdentifierGenerator( keyValue, dialect, (RootClass) entityMapping, entityMapping.getIdentifierProperty(), bootModel );
 		final IdentifierGenerator generator = gen instanceof IdentifierGenerator ? (IdentifierGenerator) gen : null;
 		generator.initialize( SqlStringGenerationContextImpl.forTests( bootModel.getDatabase().getJdbcEnvironment() ) );
 
 		assertTyping( IncrementGenerator.class, generator );
+	}
+
+	private static MetadataImplementor buildBootModel(ServiceRegistryScope scope, Class<?> managedClass) {
+		return (MetadataImplementor) MetadataBuildingTestHelper.buildMetadata( scope.getRegistry(), managedClass );
 	}
 
 	@Entity

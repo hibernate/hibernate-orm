@@ -8,9 +8,9 @@ import java.util.Set;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.Hibernate;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.spi.RootGraphImplementor;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
@@ -159,10 +159,9 @@ class JpaFetchAnnotationGraphTest {
 	}
 
 	private static void buildSessionFactory(ServiceRegistryScope registryScope, Class<?>... classes) {
-		try (var sessionFactory = new MetadataSources( registryScope.getRegistry() )
-				.addAnnotatedClasses( classes )
-				.buildMetadata()
-				.buildSessionFactory()) {
+		try (var sessionFactory = org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory(
+				MetadataBuildingTestHelper.buildMetadata( registryScope.getRegistry(), classes )
+		)) {
 		}
 	}
 

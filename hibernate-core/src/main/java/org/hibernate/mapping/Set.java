@@ -4,20 +4,16 @@
  */
 package org.hibernate.mapping;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.function.Supplier;
 
 import org.hibernate.MappingException;
-import org.hibernate.boot.model.naming.Identifier;
-import org.hibernate.boot.model.naming.ImplicitUniqueKeyNameSource;
+import org.hibernate.boot.Metadata;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.OrderedSetType;
 import org.hibernate.type.SetType;
 import org.hibernate.type.SortedSetType;
-import org.hibernate.type.MappingContext;
 import org.hibernate.usertype.UserCollectionType;
 
 /**
@@ -52,7 +48,7 @@ public non-sealed class Set extends Collection {
 		return new Set( this );
 	}
 
-	public void validate(MappingContext mappingContext) throws MappingException {
+	public void validate(Metadata mappingContext) throws MappingException {
 		super.validate( mappingContext );
 		//for backward compatibility, disable this:
 		/*Iterator iter = getElement().getColumnIterator();
@@ -81,87 +77,19 @@ public non-sealed class Set extends Collection {
 		}
 	}
 
+	/**
+	 * Compatibility-only implementation of the hidden collection key hook.
+	 *
+	 * @deprecated ORM boot code should use
+	 * {@link org.hibernate.boot.mapping.internal.materialize.CollectionKeyMappingMaterializer}
+	 * with an explicit resolved collection-table key product instead.
+	 */
+	@Override
+	@Deprecated(since = "9.0", forRemoval = true)
 	void createPrimaryKey() {
-		if ( !isOneToMany() ) {
-			final var collectionTable = getCollectionTable();
-			if ( !collectionTable.hasPrimaryKey()
-					&& collectionTable.getUniqueKeys().isEmpty() ) {
-				boolean useUniqueKey = false;
-				for ( var selectable : getElement().getSelectables() ) {
-					if ( selectable instanceof Column column ) {
-						try {
-							if ( column.isSqlTypeLob( getMetadata() ) ) {
-								return;
-							}
-						}
-						catch (MappingException me) {
-							// ignore
-						}
-						if ( column.isNullable() ) {
-							useUniqueKey = true;
-						}
-					}
-				}
-				final Constraint key;
-				if ( useUniqueKey ) {
-					final var uniqueKey = new UniqueKey( collectionTable );
-					uniqueKey.setNullsNotDistinct( true );
-					key = uniqueKey;
-				}
-				else {
-					key = new PrimaryKey( collectionTable );
-				}
-				key.addColumns( getKey() );
-				for ( var selectable : getElement().getSelectables() ) {
-					if ( selectable instanceof Column column ) {
-						key.addColumn( column );
-					}
-				}
-				key.setName( getBuildingContext().getBuildingOptions().getImplicitNamingStrategy()
-						.determineUniqueKeyName( new ImplicitUniqueKeyNameSource() {
-							@Override
-							public Identifier getTableName() {
-								return getTable().getNameIdentifier();
-							}
-
-							@Override
-							public List<Identifier> getColumnNames() {
-								final List<Identifier> list = new ArrayList<>();
-								for ( var c : key.getColumns() ) {
-									list.add( c.getNameIdentifier( getBuildingContext() ) );
-								}
-								return list;
-							}
-
-							@Override
-							public Identifier getUserProvidedIdentifier() {
-								return null;
-							}
-
-							@Override
-							public MetadataBuildingContext getBuildingContext() {
-								return Set.this.getBuildingContext();
-							}
-						} )
-						.render( getMetadata().getDatabase().getDialect() ) );
-				if ( key.getColumnSpan() > getKey().getColumnSpan() ) {
-					if ( useUniqueKey ) {
-						collectionTable.addUniqueKey( (UniqueKey) key );
-					}
-					else {
-						collectionTable.setPrimaryKey( (PrimaryKey) key );
-					}
-				}
-//				else {
-					//for backward compatibility, allow a set with no not-null
-					//element columns, using all columns in the row locator SQL
-					//TODO: create an implicit not null constraint on all cols?
-//				}
-			}
-		}
-//		else {
-			//create an index on the key columns??
-//		}
+		throw new UnsupportedOperationException(
+				"Set primary-key materialization requires CollectionKeyMappingMaterializer"
+		);
 	}
 
 	public Object accept(ValueVisitor visitor) {

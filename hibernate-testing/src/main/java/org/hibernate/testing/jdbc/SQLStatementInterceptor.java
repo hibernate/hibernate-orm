@@ -7,7 +7,7 @@ package org.hibernate.testing.jdbc;
 import java.util.LinkedList;
 import java.util.Map;
 
-import org.hibernate.boot.SessionFactoryBuilder;
+import org.hibernate.boot.internal.SessionFactoryOptionsCollector;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.internal.util.PropertiesHelper;
@@ -31,8 +31,8 @@ public class SQLStatementInterceptor {
 		return sql;
 	};
 
-	public SQLStatementInterceptor(SessionFactoryBuilder sessionFactoryBuilder) {
-		sessionFactoryBuilder.applyStatementInspector( inspector );
+	public SQLStatementInterceptor(SessionFactoryOptionsCollector optionsCollector) {
+		optionsCollector.applyStatementInspector( inspector );
 	}
 
 	public SQLStatementInterceptor(Map<String,Object> settings) {

@@ -17,6 +17,7 @@ import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
+import org.hibernate.type.MappingContext;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -268,10 +269,12 @@ public class SybaseASEAggregateSupport extends AggregateSupportImpl {
 	@Override
 	public String aggregateCustomWriteExpression(
 			AggregateColumn aggregateColumn,
-			List<Column> aggregatedColumns) {
+			List<Column> aggregatedColumns,
+			MappingContext mappingContext,
+			TypeConfiguration typeConfiguration) {
 		// We need to know what array this is XML_ARRAY,
 		// which we can easily get from the type code of the aggregate column
-		final int sqlTypeCode = aggregateColumn.getType().getJdbcType().getDefaultSqlTypeCode();
+		final int sqlTypeCode = aggregateColumn.getJdbcType( mappingContext ).getDefaultSqlTypeCode();
 		switch ( sqlTypeCode == SqlTypes.ARRAY ? aggregateColumn.getTypeCode() : sqlTypeCode ) {
 			case SQLXML:
 			case XML_ARRAY:

@@ -11,11 +11,11 @@ import java.util.EnumSet;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.IdGeneratorType;
 import org.hibernate.annotations.ValueGenerationType;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.generator.EventType;
 import org.hibernate.generator.EventTypeSets;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -71,10 +71,9 @@ public class GeneratorTypeMismatchTest {
 
 	private static void buildSessionFactory(Class<?> annotatedClass) {
 		try ( var serviceRegistry = ServiceRegistryUtil.serviceRegistry() ) {
-			final var sessionFactory = new MetadataSources( serviceRegistry )
-					.addAnnotatedClass( annotatedClass )
-					.buildMetadata()
-					.buildSessionFactory();
+			final var sessionFactory = org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory(
+					MetadataBuildingTestHelper.buildMetadata( serviceRegistry, annotatedClass )
+					);
 			sessionFactory.close();
 		}
 	}

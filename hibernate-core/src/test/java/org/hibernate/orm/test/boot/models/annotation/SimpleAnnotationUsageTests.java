@@ -5,12 +5,12 @@
 package org.hibernate.orm.test.boot.models.annotation;
 
 import org.hibernate.boot.models.annotations.internal.EntityJpaAnnotation;
-import org.hibernate.models.internal.OrmAnnotationDescriptor;
 import org.hibernate.models.spi.AnnotationDescriptor;
 import org.hibernate.models.spi.AnnotationDescriptorRegistry;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
 import org.hibernate.models.spi.ModelsContext;
+import org.hibernate.models.spi.MutableAnnotationDescriptor;
 import org.hibernate.orm.test.boot.models.SourceModelTestHelper;
 
 import org.junit.jupiter.api.Test;
@@ -30,7 +30,7 @@ public class SimpleAnnotationUsageTests {
 		final ModelsContext context = SourceModelTestHelper.createBuildingContext( SimpleEntity.class );
 		final AnnotationDescriptorRegistry descriptorRegistry = context.getAnnotationDescriptorRegistry();
 		final AnnotationDescriptor<Entity> entityDescriptor = descriptorRegistry.getDescriptor( Entity.class );
-		assertThat( entityDescriptor ).isInstanceOf( OrmAnnotationDescriptor.class );
+		assertThat( entityDescriptor ).isInstanceOf( MutableAnnotationDescriptor.class );
 
 		final ClassDetailsRegistry classDetailsRegistry = context.getClassDetailsRegistry();
 		final ClassDetails classDetails = classDetailsRegistry.getClassDetails( SimpleEntity.class.getName() );

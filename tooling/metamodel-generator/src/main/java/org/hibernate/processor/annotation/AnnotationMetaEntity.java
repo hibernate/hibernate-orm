@@ -589,6 +589,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 			addPersistentMembers( fieldsOfClass, AccessType.FIELD );
 			addPersistentMembers( gettersAndSettersOfClass, AccessType.PROPERTY );
+			addConcreteGenericInheritedMembers();
 
 			if ( needsLifecycleEventListener() ) {
 				addLifecycleEventListener();
@@ -1594,6 +1595,92 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		}
 	}
 
+	/**
+	 * A concretely parameterized managed subtype needs a field which hides the
+	 * declaration field inherited from its generic mapped-superclass metamodel.
+	 * The hidden field exposes the attribute type resolved in the subtype
+	 * context, while the superclass field continues to represent the generic
+	 * declaration.
+	 */
+	private void addConcreteGenericInheritedMembers() {
+		if ( !( element.asType() instanceof DeclaredType subtype ) ) {
+			return;
+		}
+		TypeMirror superType = element.getSuperclass();
+		while ( superType instanceof DeclaredType declaredSuperType
+				&& declaredSuperType.asElement() instanceof TypeElement superElement
+				&& hasAnnotation( superElement, MAPPED_SUPERCLASS ) ) {
+			addConcreteGenericInheritedMembers(
+					subtype,
+					superElement,
+					fieldsIn( superElement.getEnclosedElements() ),
+					AccessType.FIELD
+			);
+			addConcreteGenericInheritedMembers(
+					subtype,
+					superElement,
+					methodsIn( superElement.getEnclosedElements() ),
+					AccessType.PROPERTY
+			);
+			superType = superElement.getSuperclass();
+		}
+	}
+
+	private void addConcreteGenericInheritedMembers(
+			DeclaredType subtype,
+			TypeElement declaringType,
+			List<? extends Element> declaredMembers,
+			AccessType membersKind) {
+		final AccessTypeInformation declaringTypeAccess =
+				context.getAccessTypeInfo( declaringType.getQualifiedName().toString() );
+		for ( Element declaredMember : declaredMembers ) {
+			final String attributeName = propertyName( declaredMember );
+			if ( members.containsKey( attributeName )
+					|| !isPersistent( declaredMember, membersKind, declaringTypeAccess )
+					|| !containsTypeVariable( declaredMember.asType() ) ) {
+				continue;
+			}
+			final TypeMirror resolvedMemberType =
+					context.getTypeUtils().asMemberOf( subtype, declaredMember );
+			if ( containsTypeVariable( resolvedMemberType ) ) {
+				continue;
+			}
+			final AnnotationMetaAttribute metaAttribute =
+					resolvedMemberType.accept(
+							new MetaAttributeGenerationVisitor( this, context ),
+							declaredMember
+					);
+			if ( metaAttribute != null ) {
+				members.put( attributeName, metaAttribute );
+			}
+		}
+	}
+
+	private static boolean containsTypeVariable(TypeMirror type) {
+		return switch ( type.getKind() ) {
+			case TYPEVAR -> true;
+			case ARRAY -> containsTypeVariable( ( (ArrayType) type ).getComponentType() );
+			case DECLARED -> ( (DeclaredType) type ).getTypeArguments()
+					.stream()
+					.anyMatch( AnnotationMetaEntity::containsTypeVariable );
+			case EXECUTABLE -> {
+				final ExecutableType executableType = (ExecutableType) type;
+				yield containsTypeVariable( executableType.getReturnType() )
+						|| executableType.getParameterTypes()
+								.stream()
+								.anyMatch( AnnotationMetaEntity::containsTypeVariable );
+			}
+			case WILDCARD -> {
+				final WildcardType wildcardType = (WildcardType) type;
+				yield wildcardType.getExtendsBound() != null
+								&& containsTypeVariable( wildcardType.getExtendsBound() )
+						|| wildcardType.getSuperBound() != null
+								&& containsTypeVariable( wildcardType.getSuperBound() );
+			}
+			default -> false;
+		};
+	}
+
 	private void addPersistentMember(Element memberOfClass) {
 		if ( jakartaDataStaticModel ) {
 			final var dataMetaAttribute =
@@ -1831,7 +1918,15 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	private boolean isPersistent(Element memberOfClass, AccessType membersKind) {
-		return (getEntityAccessTypeInfo().getAccessType() == membersKind
+		return isPersistent( memberOfClass, membersKind, getEntityAccessTypeInfo() );
+	}
+
+	private boolean isPersistent(
+			Element memberOfClass,
+			AccessType membersKind,
+			AccessTypeInformation accessTypeInformation) {
+		return accessTypeInformation != null
+			&& (accessTypeInformation.getAccessType() == membersKind
 				|| determineAnnotationSpecifiedAccessType( memberOfClass ) != null)
 			&& !containsAnnotation( memberOfClass, TRANSIENT )
 			&& !memberOfClass.getModifiers().contains( Modifier.TRANSIENT )

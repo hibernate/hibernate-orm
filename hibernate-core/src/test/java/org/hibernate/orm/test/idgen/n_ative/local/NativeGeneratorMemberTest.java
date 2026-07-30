@@ -6,11 +6,13 @@ package org.hibernate.orm.test.idgen.n_ative.local;
 
 
 import org.hibernate.generator.Generator;
+import org.hibernate.id.IdentityGenerator;
 import org.hibernate.id.NativeGenerator;
-import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.mapping.SimpleValue;
 import org.hibernate.orm.test.idgen.GeneratorSettingsImpl;
+import org.hibernate.testing.util.uuid.IdGeneratorCreationContext;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
@@ -39,13 +41,19 @@ public class NativeGeneratorMemberTest {
 
 		final PersistentClass entityBinding = domainModelScope.getEntityBinding( NativeEntity.class );
 		final Property idProperty = entityBinding.getIdentifierProperty();
-		final KeyValue identifier = entityBinding.getIdentifier();
+		final SimpleValue identifier = (SimpleValue) entityBinding.getIdentifier();
+		final var creationContext =
+				new IdGeneratorCreationContext( domainModelScope.getDomainModel(), entityBinding.getRootClass() );
 
-		final Generator generator = identifier.createGenerator(
+		assertThat( identifier.getCustomIdGeneratorCreator().getGeneratorClass( creationContext ) )
+				.isEqualTo( IdentityGenerator.class );
+
+		final Generator generator = GeneratorSettingsImpl.createIdentifierGenerator(
+				identifier,
 				domainModelScope.getDomainModel().getDatabase().getDialect(),
 				entityBinding.getRootClass(),
 				idProperty,
-				new GeneratorSettingsImpl( domainModelScope.getDomainModel() )
+				domainModelScope.getDomainModel()
 		);
 		assertThat( generator ).isInstanceOf( NativeGenerator.class );
 	}

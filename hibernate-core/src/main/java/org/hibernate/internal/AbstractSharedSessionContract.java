@@ -56,7 +56,6 @@ import org.hibernate.engine.creation.internal.options.SharedStatelessOptions;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.extension.spi.Extension;
 import org.hibernate.engine.extension.spi.ExtensionIntegrationContext;
-import org.hibernate.engine.extension.spi.ExtensionIntegrationService;
 import org.hibernate.engine.internal.SessionEventListenerManagerImpl;
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
@@ -345,14 +344,12 @@ abstract class AbstractSharedSessionContract
 			// This must happen *after* the JdbcSessionContext was initialized,
 			// because some calls retrieve this context indirectly via Session getters.
 			jdbcCoordinator = createJdbcCoordinator( options );
-			transactionCoordinator = factory.transactionCoordinatorBuilder
+			transactionCoordinator = factory.getTransactionCoordinatorBuilder()
 					.buildTransactionCoordinator( jdbcCoordinator, this );
 		}
 
 		extensions = new HashMap<>();
-		for ( var integration : factory.getServiceRegistry()
-				.requireService( ExtensionIntegrationService.class )
-				.extensionIntegrations() ) {
+		for ( var integration : factory.getExtensionIntegrationService().extensionIntegrations() ) {
 			extensions.put( integration.getExtensionType(),
 					integration.createExtension( this ) );
 		}
@@ -836,7 +833,7 @@ abstract class AbstractSharedSessionContract
 				statementInspector,
 				connectionHandlingMode,
 				getJdbcServices(),
-				factory.batchBuilder,
+				factory.getBatchBuilder(),
 				// TODO: this object is deprecated and should be removed
 				new JdbcEventHandler(
 						factory.getStatistics(),
@@ -1324,7 +1321,7 @@ abstract class AbstractSharedSessionContract
 		// This is overridden when SessionFactoryOptions isJtaTransactionAccessEnabled() is true.
 		return factoryOptions.isJtaTransactionAccessEnabled() // defaults to false in JPA bootstrap
 			|| !factoryOptions.getJpaCompliance().isJpaTransactionComplianceEnabled()
-			|| !factory.transactionCoordinatorBuilder.isJta();
+			|| !factory.getTransactionCoordinatorBuilder().isJta();
 	}
 
 	@Override
@@ -1455,7 +1452,7 @@ abstract class AbstractSharedSessionContract
 				jdbcConnectionAccess = new NonContextualJdbcConnectionAccess(
 						readOnly,
 						sessionEventsManager,
-						factory.connectionProvider,
+						factory.getConnectionProvider(),
 						this
 				);
 			}
@@ -1465,7 +1462,7 @@ abstract class AbstractSharedSessionContract
 						tenantIdentifier,
 						readOnly,
 						sessionEventsManager,
-						factory.multiTenantConnectionProvider,
+						factory.getMultiTenantConnectionProvider(),
 						this
 				);
 			}
@@ -2510,7 +2507,7 @@ abstract class AbstractSharedSessionContract
 	@Override
 	@Nonnull
 	public EventMonitor getEventMonitor() {
-		return factory.eventMonitor;
+		return factory.getEventMonitor();
 	}
 
 	@Override
@@ -2637,7 +2634,7 @@ abstract class AbstractSharedSessionContract
 				factory.getCache().getRegionFactory()
 						.createTransactionContext( this );
 		transactionCoordinator =
-				factory.transactionCoordinatorBuilder.buildTransactionCoordinator( jdbcCoordinator, this );
+				factory.getTransactionCoordinatorBuilder().buildTransactionCoordinator( jdbcCoordinator, this );
 
 		entityNameResolver = new CoordinatingEntityNameResolver( factory, interceptor, this );
 

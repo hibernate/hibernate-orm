@@ -7,7 +7,7 @@ package org.hibernate.orm.test.events;
 import org.hibernate.HibernateException;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
-import org.hibernate.boot.SessionFactoryBuilder;
+import org.hibernate.boot.internal.SessionFactoryOptionsCollector;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.spi.DeleteContext;
 import org.hibernate.event.spi.DeleteEvent;
@@ -105,10 +105,10 @@ public class CallbackTest {
 		}
 	}
 
-	public static class Configurer implements Consumer<SessionFactoryBuilder> {
+	public static class Configurer implements Consumer<SessionFactoryOptionsCollector> {
 		@Override
-		public void accept(SessionFactoryBuilder sessionFactoryBuilder) {
-			sessionFactoryBuilder.addSessionFactoryObservers( observer );
+		public void accept(SessionFactoryOptionsCollector optionsCollector) {
+			optionsCollector.addSessionFactoryObservers( observer );
 		}
 	}
 }

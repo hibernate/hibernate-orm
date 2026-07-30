@@ -12,10 +12,11 @@ import java.util.Objects;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.hibernate.boot.mapping.internal.context.MappingResolutionServices;
+import org.hibernate.boot.mapping.internal.context.MappingResolutionState;
 import org.hibernate.boot.model.process.internal.UserTypeResolution;
-import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.boot.spi.MetadataBuildingOptions;
+import org.hibernate.boot.pipeline.internal.MappingResolutionOptions;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
@@ -48,9 +49,8 @@ import static org.hibernate.mapping.MappingHelper.injectParameters;
  * ({@link org.hibernate.annotations.Type}) or XML mappings. An alternative way to
  * supply custom types is programmatically, via one of:
  * <ul>
- *     <li>{@link org.hibernate.boot.MetadataBuilder#applyBasicType(BasicType)}</li>
- *     <li>{@link org.hibernate.boot.MetadataBuilder#applyBasicType(UserType, String[])}</li>
- *     <li>{@link org.hibernate.boot.MetadataBuilder#applyTypes(TypeContributor)}</li>
+ *     <li>{@link org.hibernate.cfg.Configuration#registerTypeContributor(TypeContributor)}</li>
+ *     <li>{@link org.hibernate.boot.pipeline.internal.MappingResolutionOptions#getBasicTypeRegistrations()}</li>
  * </ul>
  *
  * @author Steve Ebersole
@@ -64,7 +64,7 @@ public class TypeDefinition implements Serializable {
 	private final String[] registrationKeys;
 	private final Map<String,String> parameters;
 
-	private BasicValue.Resolution<?> reusableResolution;
+	private transient BasicValue.Resolution<?> reusableResolution;
 
 
 	public TypeDefinition(
@@ -98,7 +98,21 @@ public class TypeDefinition implements Serializable {
 			Map<?,?> localConfigParameters,
 			MetadataBuildingContext context,
 			JdbcTypeIndicators indicators) {
-		return resolve( localConfigParameters, null, context, indicators );
+		return resolve(
+				localConfigParameters,
+				null,
+				context.getServiceComponents(),
+				MappingResolutionState.from( context ),
+				indicators
+		);
+	}
+
+	public BasicValue.Resolution<?> resolve(
+			Map<?,?> localConfigParameters,
+			MappingResolutionServices services,
+			MappingResolutionState state,
+			JdbcTypeIndicators indicators) {
+		return resolve( localConfigParameters, null, services, state, indicators );
 	}
 
 	public BasicValue.Resolution<?> resolve(
@@ -107,16 +121,32 @@ public class TypeDefinition implements Serializable {
 			MutabilityPlan<?> explicitMutabilityPlan,
 			MetadataBuildingContext context,
 			JdbcTypeIndicators indicators) {
+		return resolve(
+				localConfigParameters,
+				explicitMutabilityPlan,
+				context.getServiceComponents(),
+				MappingResolutionState.from( context ),
+				indicators
+		);
+	}
+
+	public BasicValue.Resolution<?> resolve(
+			Map<?,?> localConfigParameters,
+			// TODO: why is this parameter ignored??
+			MutabilityPlan<?> explicitMutabilityPlan,
+			MappingResolutionServices services,
+			MappingResolutionState state,
+			JdbcTypeIndicators indicators) {
 		if ( isEmpty( localConfigParameters ) ) {
 			// we can use the reusable resolution...
 			if ( reusableResolution == null ) {
-				reusableResolution = createResolution( this.name, emptyMap(), indicators, context );
+				reusableResolution = createResolution( this.name, emptyMap(), indicators, services, state );
 			}
 			return reusableResolution;
 		}
 		else {
 			final String name = this.name + ":" + NAME_COUNTER.getAndIncrement();
-			return createResolution( name, localConfigParameters, indicators, context );
+			return createResolution( name, localConfigParameters, indicators, services, state );
 		}
 	}
 
@@ -124,14 +154,16 @@ public class TypeDefinition implements Serializable {
 			String name,
 			Map<?,?> usageSiteProperties,
 			JdbcTypeIndicators indicators,
-			MetadataBuildingContext context) {
+			MappingResolutionServices services,
+			MappingResolutionState state) {
 		return createResolution(
 				name,
 				typeImplementorClass,
 				parameters,
 				usageSiteProperties,
 				indicators,
-				context
+				services,
+				state
 		);
 	}
 
@@ -141,9 +173,9 @@ public class TypeDefinition implements Serializable {
 			Map<?,?> parameters,
 			Map<?,?> usageSiteProperties,
 			JdbcTypeIndicators indicators,
-			MetadataBuildingContext context) {
-		final var bootstrapContext = context.getBootstrapContext();
-		final var typeConfiguration = bootstrapContext.getTypeConfiguration();
+			MappingResolutionServices services,
+			MappingResolutionState state) {
+		final var typeConfiguration = services.getTypeConfiguration();
 
 		final boolean isKnownType =
 				Type.class.isAssignableFrom( typeImplementorClass )
@@ -151,8 +183,13 @@ public class TypeDefinition implements Serializable {
 		// support for AttributeConverter would be nice too
 		if ( isKnownType ) {
 			final T typeInstance =
-					instantiateType( bootstrapContext.getServiceRegistry(), context.getBuildingOptions(),
-							name, typeImplementorClass, bootstrapContext.getCustomTypeProducer() );
+						instantiateType(
+								state.options(),
+								name,
+								typeImplementorClass,
+								services.getCustomTypeProducer(),
+								services.getManagedBeanRegistry()
+						);
 
 			if ( typeInstance instanceof TypeConfigurationAware configurationAware ) {
 				configurationAware.setTypeConfiguration( typeConfiguration );
@@ -300,18 +337,17 @@ public class TypeDefinition implements Serializable {
 	}
 
 	private static <T> T instantiateType(
-			StandardServiceRegistry serviceRegistry,
-			MetadataBuildingOptions buildingOptions,
+			MappingResolutionOptions buildingPlan,
 			String name,
 			Class<T> typeImplementorClass,
-			BeanInstanceProducer instanceProducer) {
-		if ( !buildingOptions.isAllowExtensionsInCdi() ) {
+			BeanInstanceProducer instanceProducer,
+			ManagedBeanRegistry beanRegistry) {
+		if ( !buildingPlan.isAllowExtensionsInCdi() ) {
 			return name != null
 					? instanceProducer.produceBeanInstance( name, typeImplementorClass )
 					: instanceProducer.produceBeanInstance( typeImplementorClass );
 		}
 		else {
-			final var beanRegistry = serviceRegistry.requireService( ManagedBeanRegistry.class );
 			final var typeBean = name != null
 					? beanRegistry.getBean( name, typeImplementorClass, instanceProducer )
 					: beanRegistry.getBean( typeImplementorClass, instanceProducer );
@@ -324,14 +360,30 @@ public class TypeDefinition implements Serializable {
 			Class<?> typeImplementorClass,
 			Map<?,?> localTypeParams,
 			MetadataBuildingContext buildingContext) {
+		return createLocalResolution(
+				name,
+				typeImplementorClass,
+				localTypeParams,
+				buildingContext.getServiceComponents(),
+				MappingResolutionState.from( buildingContext )
+		);
+	}
+
+	public static BasicValue.Resolution<?> createLocalResolution(
+			String name,
+			Class<?> typeImplementorClass,
+			Map<?,?> localTypeParams,
+			MappingResolutionServices services,
+			MappingResolutionState state) {
 		return createResolution(
 				name + ':' + NAME_COUNTER.getAndIncrement(),
 				typeImplementorClass,
 				localTypeParams,
 				null,
-				buildingContext.getBootstrapContext().getTypeConfiguration()
+				services.getTypeConfiguration()
 						.getCurrentBaseSqlTypeIndicators(),
-				buildingContext
+				services,
+				state
 		);
 	}
 

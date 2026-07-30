@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
@@ -22,6 +21,7 @@ import org.hibernate.dialect.OracleDialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.orm.test.util.DdlTransactionIsolatorTestingImpl;
 import org.hibernate.resource.transaction.spi.DdlTransactionIsolator;
 import org.hibernate.tool.schema.JdbcMetadataAccessStrategy;
@@ -130,7 +130,7 @@ public class PrimaryKeyColumnOrderTest extends BaseSessionFactoryFunctionalTest 
 	private static ExtractionContextImpl buildContext(
 			StandardServiceRegistry ssr,
 			DdlTransactionIsolator ddlTransactionIsolator) throws Exception {
-		Database database = new MetadataSources( ssr ).buildMetadata().getDatabase();
+		Database database = MetadataBuildingTestHelper.buildMetadata( ssr ).getDatabase();
 
 		SqlStringGenerationContext sqlStringGenerationContext = SqlStringGenerationContextImpl.forTests( database.getJdbcEnvironment() );
 

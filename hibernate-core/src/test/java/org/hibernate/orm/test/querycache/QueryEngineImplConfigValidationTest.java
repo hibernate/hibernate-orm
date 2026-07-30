@@ -38,7 +38,7 @@ public class QueryEngineImplConfigValidationTest {
 		settings.put( QuerySettings.QUERY_PLAN_CACHE_MAX_SIZE, 100 );
 		try (ServiceRegistry serviceRegistry = newRegistry()) {
 			QueryInterpretationCache interpretationCache = assertDoesNotThrow( () ->
-					QueryEngineImpl.buildInterpretationCache( serviceRegistry, settings )
+					buildInterpretationCache( serviceRegistry, settings )
 			);
 			testCacheEnabled( interpretationCache );
 		}
@@ -51,7 +51,7 @@ public class QueryEngineImplConfigValidationTest {
 		// No explicit max size - should use default
 		try (ServiceRegistry serviceRegistry = newRegistry()) {
 			QueryInterpretationCache interpretationCache = assertDoesNotThrow( () ->
-					QueryEngineImpl.buildInterpretationCache( serviceRegistry, settings )
+					buildInterpretationCache( serviceRegistry, settings )
 			);
 			testCacheEnabled( interpretationCache );
 		}
@@ -64,7 +64,7 @@ public class QueryEngineImplConfigValidationTest {
 		// No explicit max size - should work fine
 		try (ServiceRegistry serviceRegistry = newRegistry()) {
 			QueryInterpretationCache interpretationCache = assertDoesNotThrow( () ->
-					QueryEngineImpl.buildInterpretationCache( serviceRegistry, settings )
+					buildInterpretationCache( serviceRegistry, settings )
 			);
 			testCacheDisabled( interpretationCache );
 		}
@@ -78,7 +78,7 @@ public class QueryEngineImplConfigValidationTest {
 		//Explicit max size, with cache explicitly disabled is an inconsistency we want to flag
 		try (ServiceRegistry serviceRegistry = newRegistry()) {
 			ConfigurationException exception = assertThrows( ConfigurationException.class, () ->
-					QueryEngineImpl.buildInterpretationCache( serviceRegistry, settings )
+					buildInterpretationCache( serviceRegistry, settings )
 			);
 			assertTrue( exception.getMessage().matches(
 					"Inconsistent configuration: '" + QuerySettings.QUERY_PLAN_CACHE_MAX_SIZE + "' can only be set to a value greater than zero when '" + QuerySettings.QUERY_PLAN_CACHE_ENABLED + "' is enabled" ) );
@@ -92,7 +92,7 @@ public class QueryEngineImplConfigValidationTest {
 		settings.put( QuerySettings.QUERY_PLAN_CACHE_MAX_SIZE, 0 );
 		try (ServiceRegistry serviceRegistry = newRegistry()) {
 			QueryInterpretationCache interpretationCache = assertDoesNotThrow( () ->
-					QueryEngineImpl.buildInterpretationCache( serviceRegistry, settings )
+					buildInterpretationCache( serviceRegistry, settings )
 			);
 			testCacheDisabled( interpretationCache );
 		}
@@ -105,7 +105,7 @@ public class QueryEngineImplConfigValidationTest {
 		settings.put( QuerySettings.QUERY_PLAN_CACHE_MAX_SIZE, -1 );
 		try (ServiceRegistry serviceRegistry = newRegistry()) {
 			ConfigurationException exception = assertThrows( ConfigurationException.class, () ->
-					QueryEngineImpl.buildInterpretationCache( serviceRegistry, settings )
+					buildInterpretationCache( serviceRegistry, settings )
 			);
 			assertTrue( exception.getMessage().contains( "can't be set to a negative value" ) );
 		}
@@ -117,7 +117,7 @@ public class QueryEngineImplConfigValidationTest {
 		// No explicit settings - should use defaults and work fine
 		try (ServiceRegistry serviceRegistry = newRegistry()) {
 			QueryInterpretationCache interpretationCache = assertDoesNotThrow( () ->
-					QueryEngineImpl.buildInterpretationCache( serviceRegistry, settings )
+					buildInterpretationCache( serviceRegistry, settings )
 			);
 			testCacheEnabled( interpretationCache );
 		}
@@ -125,6 +125,12 @@ public class QueryEngineImplConfigValidationTest {
 
 	private static StandardServiceRegistry newRegistry() {
 		return new StandardServiceRegistryBuilder().build();
+	}
+
+	private static QueryInterpretationCache buildInterpretationCache(
+			ServiceRegistry serviceRegistry,
+			Map<String, Object> settings) {
+		return QueryEngineImpl.buildInterpretationCache( serviceRegistry, () -> null, settings );
 	}
 
 	private void testCacheEnabled(QueryInterpretationCache interpretationCache) {

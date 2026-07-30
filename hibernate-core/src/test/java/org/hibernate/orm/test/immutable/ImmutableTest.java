@@ -5,14 +5,16 @@
 package org.hibernate.orm.test.immutable;
 
 import java.util.Iterator;
+import java.util.List;
 import jakarta.persistence.PersistenceException;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
 
 import org.hibernate.Hibernate;
-import org.hibernate.boot.MetadataBuilder;
+import org.hibernate.boot.pipeline.internal.MappingCustomizations;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.boot.spi.BasicTypeRegistration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.Dialect;
@@ -54,11 +56,24 @@ public class ImmutableTest extends BaseSessionFactoryFunctionalTest {
 	}
 
 	@Override
-	protected void applyMetadataBuilder(MetadataBuilder metadataBuilder) {
+	protected MappingCustomizations metadataCustomizations() {
 		Dialect dialect = DialectContext.getDialect();
 		if ( OracleDialect.class.isInstance( dialect ) ) {
-			metadataBuilder.applyBasicType( TextAsMaterializedClobType.INSTANCE );
+			return new MappingCustomizations(
+					null,
+					null,
+					null,
+					List.of( new BasicTypeRegistration( TextAsMaterializedClobType.INSTANCE ) ),
+					null,
+					null,
+					null,
+					null,
+					null,
+					null,
+					null
+			);
 		}
+		return MappingCustomizations.NONE;
 	}
 
 	@Override

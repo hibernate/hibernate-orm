@@ -21,7 +21,6 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.Selectable;
-import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Subclass;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.ToOne;
@@ -32,7 +31,6 @@ import org.hibernate.tool.reveng.internal.core.util.EnhancedValue;
 import org.hibernate.tool.reveng.internal.util.AnnotationBuilder;
 import org.hibernate.tool.reveng.internal.util.IteratorTransformer;
 import org.hibernate.tool.reveng.internal.util.SkipBackRefPropertyIterator;
-import org.hibernate.tool.reveng.internal.util.ValueUtil;
 import org.hibernate.type.ForeignKeyDirection;
 
 import java.io.Serializable;
@@ -857,10 +855,6 @@ public class EntityPOJOClass extends BasicPOJOClass {
 		if(property.equals(pc.getIdentifierProperty())) {
 			if(property.getValue() instanceof EnhancedValue sv) {
 				return "assigned".equals(sv.getIdentifierGeneratorStrategy());
-			}
-			else if (property.getValue().isSimpleValue()) {
-				ValueUtil v = new ValueUtil((SimpleValue)property.getValue());
-				return "assigned".equals(v.getIdentifierGeneratorStrategy());
 			}
 		}
 		return false;

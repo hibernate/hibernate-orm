@@ -11,13 +11,12 @@ import jakarta.persistence.Id;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.SessionFactoryBuilder;
+import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.cache.internal.CacheKeyImplementation;
 import org.hibernate.cache.internal.DefaultCacheKeysFactory;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.util.ServiceRegistryUtil;
@@ -33,12 +32,13 @@ public class CacheKeyImplementationHashCodeTest {
 	@Test
 	@JiraKey( value = "HHH-12746")
 	public void test() {
-		try (ServiceRegistryImplementor serviceRegistry = ServiceRegistryUtil.serviceRegistry()) {
-			MetadataSources ms = new MetadataSources( serviceRegistry );
-			ms.addAnnotatedClass( AnEntity.class ).addAnnotatedClass( AnotherEntity.class );
-			Metadata metadata = ms.buildMetadata();
-			final SessionFactoryBuilder sfb = metadata.getSessionFactoryBuilder();
-			try ( SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) sfb.build()) {
+		try (StandardServiceRegistry serviceRegistry = ServiceRegistryUtil.serviceRegistry()) {
+			Metadata metadata = MetadataBuildingTestHelper.buildMetadata(
+					serviceRegistry,
+					AnEntity.class,
+					AnotherEntity.class
+			);
+			try ( SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) org.hibernate.testing.orm.junit.SessionFactoryUtil.buildSessionFactory( metadata )) {
 				CacheKeyImplementation anEntityCacheKey = createCacheKeyImplementation(
 						1,
 						sessionFactory.getRuntimeMetamodels()

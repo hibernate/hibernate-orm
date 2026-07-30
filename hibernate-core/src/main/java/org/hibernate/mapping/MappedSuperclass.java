@@ -3,9 +3,16 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.mapping;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+
+import org.hibernate.MappingException;
+import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
+import org.hibernate.models.spi.ClassDetails;
+
+import static java.util.Collections.unmodifiableList;
 
 /**
  * A mapping model object representing a {@linkplain jakarta.persistence.MappedSuperclass mapped superclass}
@@ -14,12 +21,15 @@ import java.util.List;
  *
  * @author Emmanuel Bernard
  */
-public class MappedSuperclass implements IdentifiableTypeClass {
+public class MappedSuperclass implements IdentifiableTypeClass, Serializable {
 	private final MappedSuperclass superMappedSuperclass;
 	private final PersistentClass superPersistentClass;
+	private final List<IdentifiableTypeClass> subTypes;
 	private final List<Property> declaredProperties;
 	private final Table implicitTable;
-	private Class<?> mappedClass;
+	private ClassDetails classDetails;
+	private String className;
+	private transient Class<?> mappedClass;
 	private Property identifierProperty;
 	private Property version;
 	private Component identifierMapper;
@@ -31,6 +41,7 @@ public class MappedSuperclass implements IdentifiableTypeClass {
 		this.superMappedSuperclass = superMappedSuperclass;
 		this.superPersistentClass = superPersistentClass;
 		this.implicitTable = implicitTable;
+		this.subTypes = new ArrayList<>();
 		this.declaredProperties = new ArrayList<>();
 	}
 
@@ -64,6 +75,18 @@ public class MappedSuperclass implements IdentifiableTypeClass {
 		return superPersistentClass;
 	}
 
+	/**
+	 * Registers a direct managed-type subtype.
+	 * <p>
+	 * This is a boot-time graph construction hook.  Consumers should use
+	 * {@link #getSubTypes()} to read the direct managed-type graph.
+	 */
+	public void addSubType(IdentifiableTypeClass subType) {
+		if ( !subTypes.contains( subType ) ) {
+			subTypes.add( subType );
+		}
+	}
+
 	@Override
 	public List<Property> getDeclaredProperties() {
 		return declaredProperties;
@@ -81,11 +104,35 @@ public class MappedSuperclass implements IdentifiableTypeClass {
 	}
 
 	public Class<?> getMappedClass() {
+		if ( mappedClass == null && classDetails != null ) {
+			try {
+				mappedClass = classDetails.toJavaClass();
+			}
+			catch (ClassLoadingException e) {
+				throw new MappingException( "mapped-superclass class not found: " + getClassName(), e );
+			}
+		}
 		return mappedClass;
 	}
 
 	public void setMappedClass(Class<?> mappedClass) {
 		this.mappedClass = mappedClass;
+		this.classDetails = null;
+		this.className = mappedClass == null ? null : mappedClass.getName();
+	}
+
+	public ClassDetails getClassDetails() {
+		return classDetails;
+	}
+
+	public void setClassDetails(ClassDetails classDetails) {
+		this.classDetails = classDetails;
+		this.className = classDetails == null ? null : classDetails.getClassName();
+		this.mappedClass = null;
+	}
+
+	public String getClassName() {
+		return className;
 	}
 
 	public Property getIdentifierProperty() {
@@ -223,7 +270,7 @@ public class MappedSuperclass implements IdentifiableTypeClass {
 
 	@Override
 	public List<IdentifiableTypeClass> getSubTypes() {
-		throw new UnsupportedOperationException( "Not implemented yet" );
+		return unmodifiableList( subTypes );
 	}
 
 	@Override

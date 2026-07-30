@@ -10,13 +10,11 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.TableGenerator;
 
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
-import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -24,16 +22,13 @@ import org.junit.jupiter.api.Test;
  * @author Andrea Boriero
  */
 @JiraKey(value = "HHH-12157")
-@ServiceRegistry(settings = {@Setting(name = AvailableSettings.JPA_ID_GENERATOR_GLOBAL_SCOPE_COMPLIANCE, value = "true")})
+@ServiceRegistry
 public class TableGeneratorMultipleDefinitionTest {
 
 	@Test
 	public void testDuplicateGeneratorNamesDefinition(ServiceRegistryScope scope) {
 		Assertions.assertThrows( IllegalArgumentException.class, () -> {
-					new MetadataSources( scope.getRegistry() )
-							.addAnnotatedClass( TestEntity2.class )
-							.addAnnotatedClass( TestEntity1.class )
-							.buildMetadata();
+					MetadataBuildingTestHelper.buildMetadata( scope.getRegistry(), TestEntity2.class, TestEntity1.class );
 				}
 		);
 	}

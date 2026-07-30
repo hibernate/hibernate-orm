@@ -7,7 +7,6 @@ package org.hibernate.orm.test.flush;
 import jakarta.annotation.Nonnull;
 import org.hibernate.Hibernate;
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.PreUpdateEvent;
@@ -96,7 +95,7 @@ public class TestCollectionInitializingDuringFlush {
 		@Override
 		public void integrate(
 				Metadata metadata,
-				BootstrapContext bootstrapContext,
+				Integrator.Context context,
 				SessionFactoryImplementor sessionFactory) {
 			integrate( sessionFactory );
 		}

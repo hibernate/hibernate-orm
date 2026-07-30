@@ -14,18 +14,16 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataBuilder;
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
-import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
+import org.hibernate.boot.pipeline.internal.MetadataBuildingHelper;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.MappingSettings;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.service.ServiceRegistry;
@@ -236,7 +234,7 @@ public class SchemaExport {
 	}
 
 	public void execute(EnumSet<TargetType> targetTypes, Action action, Metadata metadata) {
-		execute( targetTypes, action, metadata, ( (MetadataImplementor) metadata ).getMetadataBuildingOptions().getServiceRegistry() );
+		execute( targetTypes, action, metadata, ( (MetadataImplementor) metadata ).getMappingResolutionOptions().getServiceRegistry() );
 	}
 
 	public void execute(EnumSet<TargetType> targetTypes, Action action, Metadata metadata, ServiceRegistry serviceRegistry) {
@@ -370,7 +368,7 @@ public class SchemaExport {
 				action,
 				false,
 				metadata,
-				( (MetadataImplementor) metadata ).getMetadataBuildingOptions().getServiceRegistry(),
+				( (MetadataImplementor) metadata ).getMappingResolutionOptions().getServiceRegistry(),
 				new TargetDescriptorImpl( EnumSet.of( TargetType.SCRIPT ), target )
 		);
 	}
@@ -424,6 +422,12 @@ public class SchemaExport {
 			}
 		}
 		ssrBuilder.applySettings( properties );
+		if ( commandLineArgs.implicitNamingStrategyImplName != null ) {
+			ssrBuilder.applySetting( MappingSettings.IMPLICIT_NAMING_STRATEGY, commandLineArgs.implicitNamingStrategyImplName );
+		}
+		if ( commandLineArgs.physicalNamingStrategyImplName != null ) {
+			ssrBuilder.applySetting( MappingSettings.PHYSICAL_NAMING_STRATEGY, commandLineArgs.physicalNamingStrategyImplName );
+		}
 
 		return ssrBuilder.build();
 	}
@@ -431,37 +435,13 @@ public class SchemaExport {
 	private static MetadataImplementor buildMetadata(
 			CommandLineArgs parsedArgs,
 			StandardServiceRegistry serviceRegistry) {
-		final MetadataSources metadataSources = new MetadataSources( serviceRegistry );
+		final MappingSources mappingSources = new MappingSources();
 
 		for ( String filename : parsedArgs.mappingFiles ) {
-			metadataSources.addFile( filename );
+			mappingSources.addMappingFile( new File( filename ) );
 		}
 
-		for ( String filename : parsedArgs.jarFiles ) {
-			metadataSources.addJar( new File( filename ) );
-		}
-
-
-		final MetadataBuilder metadataBuilder = metadataSources.getMetadataBuilder();
-		final StrategySelector strategySelector = serviceRegistry.requireService( StrategySelector.class );
-		if ( parsedArgs.implicitNamingStrategyImplName != null ) {
-			metadataBuilder.applyImplicitNamingStrategy(
-					strategySelector.resolveStrategy(
-							ImplicitNamingStrategy.class,
-							parsedArgs.implicitNamingStrategyImplName
-					)
-			);
-		}
-		if ( parsedArgs.physicalNamingStrategyImplName != null ) {
-			metadataBuilder.applyPhysicalNamingStrategy(
-					strategySelector.resolveStrategy(
-							PhysicalNamingStrategy.class,
-							parsedArgs.physicalNamingStrategyImplName
-					)
-			);
-		}
-
-		return (MetadataImplementor) metadataBuilder.build();
+		return MetadataBuildingHelper.buildMetadata( serviceRegistry, mappingSources );
 	}
 
 	/**
@@ -514,7 +494,6 @@ public class SchemaExport {
 		String physicalNamingStrategyImplName = null;
 
 		List<String> mappingFiles = new ArrayList<>();
-		List<String> jarFiles = new ArrayList<>();
 
 		public static CommandLineArgs parseCommandLineArgs(String[] args) {
 			String targetText = null;
@@ -583,7 +562,9 @@ public class SchemaExport {
 				}
 				else {
 					if ( arg.endsWith( ".jar" ) ) {
-						parsedArgs.jarFiles.add( arg );
+						throw new IllegalArgumentException(
+								"Jar file mapping discovery is no longer supported: " + arg
+						);
 					}
 					else {
 						parsedArgs.mappingFiles.add( arg );

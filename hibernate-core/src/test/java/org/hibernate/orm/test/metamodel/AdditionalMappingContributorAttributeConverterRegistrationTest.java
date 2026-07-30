@@ -5,11 +5,10 @@
 package org.hibernate.orm.test.metamodel;
 
 import jakarta.persistence.*;
-import org.hibernate.boot.ResourceStreamLocator;
 import org.hibernate.boot.spi.AdditionalMappingContributions;
 import org.hibernate.boot.spi.AdditionalMappingContributor;
-import org.hibernate.boot.spi.InFlightMetadataCollector;
-import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.boot.spi.ProcessedMappings;
+import org.hibernate.boot.spi.AdditionalMappingContributorContext;
 import org.hibernate.testing.orm.junit.*;
 import org.junit.jupiter.api.Test;
 
@@ -110,12 +109,16 @@ public class AdditionalMappingContributorAttributeConverterRegistrationTest {
 	public static class Hibernate7AdditionalMappingContributor implements AdditionalMappingContributor {
 
 		@Override
-		public void contribute(AdditionalMappingContributions contributions, InFlightMetadataCollector metadata, ResourceStreamLocator resourceStreamLocator, MetadataBuildingContext buildingContext) {
+		public void contribute(
+				AdditionalMappingContributions contributions,
+				ProcessedMappings processedMappings,
+				AdditionalMappingContributorContext contributorContext) {
 // Skip if already registered
-			if (metadata.getEntityBinding(TestAdditionalMappingContributorEntity.class.getName()) != null) {
+			if ( processedMappings.hasEntityBinding( TestAdditionalMappingContributorEntity.class.getName() ) ) {
 				return;
 			}
-			contributions.contributeEntity(buildingContext.getBootstrapContext().getClassLoaderAccess().classForName(TestAdditionalMappingContributorEntity.class.getName()));
+			contributions.contributeEntity( contributorContext.getClassLoaderAccess()
+					.classForName( TestAdditionalMappingContributorEntity.class.getName() ) );
 		}
 	}
 

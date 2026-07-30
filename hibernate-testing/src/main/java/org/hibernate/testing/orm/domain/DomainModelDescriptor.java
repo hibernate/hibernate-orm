@@ -6,7 +6,9 @@ package org.hibernate.testing.orm.domain;
 
 import java.util.EnumSet;
 
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
+import org.hibernate.boot.pipeline.internal.FunctionRegistryCustomizations;
+import org.hibernate.boot.pipeline.internal.MappingCustomizations;
 import org.hibernate.dialect.Dialect;
 
 /**
@@ -24,9 +26,17 @@ public interface DomainModelDescriptor {
 	Class[] getAnnotatedClasses();
 
 	/**
-	 * Apply the model classes to the given MetadataSources
+	 * Apply the model classes to the given mapping sources.
 	 */
-	void applyDomainModel(MetadataSources sources);
+	void applyDomainModel(MappingSources sources);
+
+	default MappingCustomizations metadataCustomizations() {
+		return MappingCustomizations.NONE;
+	}
+
+	default FunctionRegistryCustomizations functionCustomizations() {
+		return FunctionRegistryCustomizations.NONE;
+	}
 
 	/**
 	 * The namespace to apply the model to.  This is interpreted as a catalog

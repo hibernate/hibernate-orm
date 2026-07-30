@@ -4,7 +4,6 @@
  */
 package org.hibernate.orm.test.joinedsubclass;
 
-import org.hibernate.boot.model.internal.AnnotatedDiscriminatorColumn;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.metamodel.mapping.DiscriminatorValue;
 import org.hibernate.persister.entity.EntityPersister;
@@ -53,11 +52,11 @@ public class JoinedSubclassWithImplicitDiscriminatorTest {
 		assertNotNull( p );
 		final JoinedSubclassEntityPersister dogPersister = assertTyping( JoinedSubclassEntityPersister.class, p );
 		assertEquals(
-				AnnotatedDiscriminatorColumn.DEFAULT_DISCRIMINATOR_TYPE,
+				"string",
 				dogPersister.getDiscriminatorType().getName()
 		);
 		assertEquals(
-				AnnotatedDiscriminatorColumn.DEFAULT_DISCRIMINATOR_COLUMN_NAME,
+				"DTYPE",
 				dogPersister.getDiscriminatorColumnName()
 		);
 		assertEquals( new DiscriminatorValue.Literal("Dog"), dogPersister.getDiscriminatorValue() );
@@ -66,11 +65,11 @@ public class JoinedSubclassWithImplicitDiscriminatorTest {
 		assertNotNull( p );
 		final JoinedSubclassEntityPersister catPersister = assertTyping( JoinedSubclassEntityPersister.class, p );
 		assertEquals(
-				AnnotatedDiscriminatorColumn.DEFAULT_DISCRIMINATOR_TYPE,
+				"string",
 				catPersister.getDiscriminatorType().getName()
 		);
 		assertEquals(
-				AnnotatedDiscriminatorColumn.DEFAULT_DISCRIMINATOR_COLUMN_NAME,
+				"DTYPE",
 				catPersister.getDiscriminatorColumnName()
 		);
 		assertEquals( new DiscriminatorValue.Literal("Cat"), catPersister.getDiscriminatorValue() );

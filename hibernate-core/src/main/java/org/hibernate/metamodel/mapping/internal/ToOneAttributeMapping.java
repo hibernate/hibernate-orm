@@ -29,6 +29,7 @@ import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.mapping.AssociationKey;
 import org.hibernate.metamodel.mapping.AttributeMetadata;
+import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
@@ -48,6 +49,7 @@ import org.hibernate.metamodel.mapping.SelectablePath;
 import org.hibernate.metamodel.mapping.ValuedModelPart;
 import org.hibernate.metamodel.mapping.VirtualModelPart;
 import org.hibernate.metamodel.model.domain.NavigableRole;
+import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.collection.AbstractCollectionPersister;
 import org.hibernate.persister.entity.EntityNameUse;
 import org.hibernate.persister.entity.EntityPersister;
@@ -97,6 +99,7 @@ import org.hibernate.sql.results.internal.domain.CircularFetchImpl;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.EmbeddedComponentType;
 import org.hibernate.type.EntityType;
+import org.hibernate.type.MappingContext;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -163,6 +166,7 @@ public class ToOneAttributeMapping
 
 	private final Cardinality cardinality;
 	private final boolean hasJoinTable;
+	private final boolean isMappedByOneToOne;
 	/*
 	Capture the other side's name of a possibly bidirectional association to allow resolving circular fetches.
 	It may be null if the referenced property is a non-entity.
@@ -192,6 +196,7 @@ public class ToOneAttributeMapping
 		targetKeyPropertyName = original.targetKeyPropertyName;
 		cardinality = original.cardinality;
 		hasJoinTable = original.hasJoinTable;
+		isMappedByOneToOne = original.isMappedByOneToOne;
 		bidirectionalAttributePath = original.bidirectionalAttributePath;
 		declaringTableGroupProducer = original.declaringTableGroupProducer;
 		isKeyTableNullable = original.isKeyTableNullable;
@@ -217,6 +222,7 @@ public class ToOneAttributeMapping
 			EntityMappingType entityMappingType,
 			ManagedMappingType declaringType,
 			EntityPersister declaringEntityPersister,
+			RuntimeModelCreationContext creationContext,
 			PropertyAccess propertyAccess) {
 		this(
 				name,
@@ -230,6 +236,7 @@ public class ToOneAttributeMapping
 				entityMappingType,
 				declaringType,
 				declaringEntityPersister,
+				creationContext,
 				propertyAccess
 		);
 	}
@@ -246,6 +253,7 @@ public class ToOneAttributeMapping
 			EntityMappingType entityMappingType,
 			ManagedMappingType declaringType,
 			EntityPersister declaringEntityPersister,
+			RuntimeModelCreationContext creationContext,
 			PropertyAccess propertyAccess) {
 		super(
 				name,
@@ -300,12 +308,13 @@ public class ToOneAttributeMapping
 		);
 		if ( bootValue instanceof ManyToOne manyToOne ) {
 			notFoundAction = manyToOne.getNotFoundAction();
+			isMappedByOneToOne = false;
 			cardinality =
 					manyToOne.isLogicalOneToOne()
 							? LOGICAL_ONE_TO_ONE
 							: MANY_TO_ONE;
 			final var entityBinding =
-					manyToOne.getMetadata()
+					creationContext.getBootModel()
 							.getEntityBinding( manyToOne.getReferencedEntityName() );
 			if ( referencedPropertyName == null ) {
 				SelectablePath bidirectionalAttributeName = null;
@@ -444,10 +453,13 @@ public class ToOneAttributeMapping
 			 */
 			final var oneToOne = (OneToOne) bootValue;
 			final String mappedByProperty = oneToOne.getMappedByProperty();
+			isMappedByOneToOne = mappedByProperty != null;
 			bidirectionalAttributePath =
-					mappedByProperty == null
-							? SelectablePath.parse( referencedPropertyName )
-							: SelectablePath.parse( mappedByProperty );
+					mappedByProperty != null
+							? SelectablePath.parse( mappedByProperty )
+							: referencedPropertyName == null
+									? null
+									: SelectablePath.parse( referencedPropertyName );
 			notFoundAction = null;
 			isKeyTableNullable = isNullable();
 			isOptional = !bootValue.isConstrained();
@@ -469,7 +481,7 @@ public class ToOneAttributeMapping
 			final Set<String> targetKeyPropertyNames = new HashSet<>( 2 );
 			targetKeyPropertyNames.add( EntityIdentifierMapping.ID_ROLE_NAME );
 			final var entityBinding =
-					bootValue.getBuildingContext().getMetadataCollector()
+					creationContext.getBootModel()
 							.getEntityBinding( entityMappingType.getEntityName() );
 			final var identifierMapper = entityBinding.getIdentifierMapper();
 			final var propertyType =
@@ -517,7 +529,7 @@ public class ToOneAttributeMapping
 		}
 		else {
 			final var entityBinding =
-					bootValue.getBuildingContext().getMetadataCollector()
+					creationContext.getBootModel()
 							.getEntityBinding( entityMappingType.getEntityName() );
 			final var propertyType =
 					entityBinding.getRecursiveProperty( referencedPropertyName )
@@ -725,6 +737,7 @@ public class ToOneAttributeMapping
 		this.targetKeyPropertyNames = original.targetKeyPropertyNames;
 		this.cardinality = original.cardinality;
 		this.hasJoinTable = original.hasJoinTable;
+		this.isMappedByOneToOne = original.isMappedByOneToOne;
 		this.bidirectionalAttributePath = original.bidirectionalAttributePath;
 		this.declaringTableGroupProducer = declaringTableGroupProducer;
 		this.isInternalLoadNullable = original.isInternalLoadNullable;
@@ -762,23 +775,12 @@ public class ToOneAttributeMapping
 			String prefix,
 			Type type,
 			SessionFactoryImplementor factory) {
-		addPrefixedPropertyNames(
+		addPrefixedPropertyPaths(
 				targetKeyPropertyNames,
 				prefix,
 				type,
-				factory
-		);
-		addPrefixedPropertyNames(
-				targetKeyPropertyNames,
-				ForeignKeyDescriptor.PART_NAME,
-				type,
-				factory
-		);
-		addPrefixedPropertyNames(
-				targetKeyPropertyNames,
-				EntityIdentifierMapping.ID_ROLE_NAME,
-				type,
-				factory
+				factory.getRuntimeMetamodels(),
+				FetchOptionsHelper.fromFactory( factory )
 		);
 	}
 
@@ -787,6 +789,44 @@ public class ToOneAttributeMapping
 			String prefix,
 			Type type,
 			SessionFactoryImplementor factory) {
+		addPrefixedPropertyNames(
+				targetKeyPropertyNames,
+				prefix,
+				type,
+				factory.getRuntimeMetamodels(),
+				FetchOptionsHelper.fromFactory( factory )
+		);
+	}
+
+	public static void addPrefixedPropertyPaths(
+			Set<String> targetKeyPropertyNames,
+			String prefix,
+			Type type,
+			MappingContext mappingContext,
+			FetchOptionsHelper.AssociationPersisterResolver persisterResolver) {
+		addPrefixedPropertyNames( targetKeyPropertyNames, prefix, type, mappingContext, persisterResolver );
+		addPrefixedPropertyNames(
+				targetKeyPropertyNames,
+				ForeignKeyDescriptor.PART_NAME,
+				type,
+				mappingContext,
+				persisterResolver
+		);
+		addPrefixedPropertyNames(
+				targetKeyPropertyNames,
+				EntityIdentifierMapping.ID_ROLE_NAME,
+				type,
+				mappingContext,
+				persisterResolver
+		);
+	}
+
+	public static void addPrefixedPropertyNames(
+			Set<String> targetKeyPropertyNames,
+			String prefix,
+			Type type,
+			MappingContext mappingContext,
+			FetchOptionsHelper.AssociationPersisterResolver persisterResolver) {
 		if ( prefix != null ) {
 			targetKeyPropertyNames.add( prefix );
 		}
@@ -795,13 +835,19 @@ public class ToOneAttributeMapping
 			final var componentTypeSubtypes = componentType.getSubtypes();
 			for ( int i = 0, propertyNamesLength = propertyNames.length; i < propertyNamesLength; i++ ) {
 				final String newPrefix = prefix == null ? propertyNames[i] : prefix + "." + propertyNames[i];
-				addPrefixedPropertyNames( targetKeyPropertyNames, newPrefix, componentTypeSubtypes[i], factory );
+				addPrefixedPropertyNames(
+						targetKeyPropertyNames,
+						newPrefix,
+						componentTypeSubtypes[i],
+						mappingContext,
+						persisterResolver
+				);
 			}
 		}
 		else if ( type instanceof EntityType entityType ) {
 			final var identifierOrUniqueKeyType =
-					entityType.getIdentifierOrUniqueKeyType( factory.getRuntimeMetamodels() );
-			final String propertyName = propertyName( factory, entityType, identifierOrUniqueKeyType );
+					entityType.getIdentifierOrUniqueKeyType( mappingContext );
+			final String propertyName = propertyName( persisterResolver, entityType, identifierOrUniqueKeyType );
 			final String newPrefix;
 			final String newPkPrefix;
 			final String newFkPrefix;
@@ -820,9 +866,27 @@ public class ToOneAttributeMapping
 				newPkPrefix = prefix + "." + EntityIdentifierMapping.ID_ROLE_NAME;
 				newFkPrefix = prefix + "." + ForeignKeyDescriptor.PART_NAME;
 			}
-			addPrefixedPropertyNames( targetKeyPropertyNames, newPrefix, identifierOrUniqueKeyType, factory );
-			addPrefixedPropertyNames( targetKeyPropertyNames, newPkPrefix, identifierOrUniqueKeyType, factory );
-			addPrefixedPropertyNames( targetKeyPropertyNames, newFkPrefix, identifierOrUniqueKeyType, factory );
+			addPrefixedPropertyNames(
+					targetKeyPropertyNames,
+					newPrefix,
+					identifierOrUniqueKeyType,
+					mappingContext,
+					persisterResolver
+			);
+			addPrefixedPropertyNames(
+					targetKeyPropertyNames,
+					newPkPrefix,
+					identifierOrUniqueKeyType,
+					mappingContext,
+					persisterResolver
+			);
+			addPrefixedPropertyNames(
+					targetKeyPropertyNames,
+					newFkPrefix,
+					identifierOrUniqueKeyType,
+					mappingContext,
+					persisterResolver
+			);
 			if ( identifierOrUniqueKeyType instanceof EmbeddedComponentType ) {
 				final String newEmbeddedPkPrefix;
 				final String newEmbeddedFkPrefix;
@@ -834,15 +898,30 @@ public class ToOneAttributeMapping
 					newEmbeddedPkPrefix = prefix + "." + EntityIdentifierMapping.ID_ROLE_NAME;
 					newEmbeddedFkPrefix = prefix + "." + ForeignKeyDescriptor.PART_NAME;
 				}
-				addPrefixedPropertyNames( targetKeyPropertyNames, newEmbeddedPkPrefix, identifierOrUniqueKeyType, factory );
-				addPrefixedPropertyNames( targetKeyPropertyNames, newEmbeddedFkPrefix, identifierOrUniqueKeyType, factory );
+				addPrefixedPropertyNames(
+						targetKeyPropertyNames,
+						newEmbeddedPkPrefix,
+						identifierOrUniqueKeyType,
+						mappingContext,
+						persisterResolver
+				);
+				addPrefixedPropertyNames(
+						targetKeyPropertyNames,
+						newEmbeddedFkPrefix,
+						identifierOrUniqueKeyType,
+						mappingContext,
+						persisterResolver
+				);
 			}
 		}
 	}
 
-	private static @Nullable String propertyName(SessionFactoryImplementor factory, EntityType entityType, Type identifierOrUniqueKeyType) {
+	private static @Nullable String propertyName(
+			FetchOptionsHelper.AssociationPersisterResolver persisterResolver,
+			EntityType entityType,
+			Type identifierOrUniqueKeyType) {
 		if ( entityType.isReferenceToPrimaryKey() ) {
-			return entityType.getAssociatedEntityPersister( factory ).getIdentifierPropertyName();
+			return persisterResolver.resolveEntityPersister( entityType ).getIdentifierPropertyName();
 		}
 		else if ( identifierOrUniqueKeyType instanceof EmbeddedComponentType ) {
 			return null;
@@ -860,7 +939,7 @@ public class ToOneAttributeMapping
 	public void setForeignKeyDescriptor(ForeignKeyDescriptor foreignKeyDescriptor) {
 		assert identifyingColumnsTableExpression != null;
 		this.foreignKeyDescriptor = foreignKeyDescriptor;
-		if ( cardinality == ONE_TO_ONE && bidirectionalAttributePath != null ) {
+		if ( isMappedByOneToOne ) {
 			sideNature = ForeignKeyDescriptor.Nature.TARGET;
 		}
 		else {
@@ -1938,7 +2017,8 @@ public class ToOneAttributeMapping
 		if ( side == ForeignKeyDescriptor.Nature.KEY ) {
 			// case 1.2
 			return !foreignKeyDescriptor.getNavigableRole()
-					.equals( identifierMapping.getNavigableRole() );
+					.equals( identifierMapping.getNavigableRole() )
+				&& !targetPartMatchesIdentifier( identifierMapping );
 		}
 		else {
 			// case 1.1
@@ -1948,6 +2028,16 @@ public class ToOneAttributeMapping
 				&& !( identifierMapping instanceof SingleAttributeIdentifierMapping
 						&& targetKeyPropertyNames.contains( identifierMapping.getAttributeName() ) );
 		}
+	}
+
+	private boolean targetPartMatchesIdentifier(EntityIdentifierMapping identifierMapping) {
+		if ( foreignKeyDescriptor.getTargetPart().getNavigableRole().equals( identifierMapping.getNavigableRole() ) ) {
+			return true;
+		}
+		return foreignKeyDescriptor.getTargetPart() instanceof BasicValuedModelPart targetPart
+			&& identifierMapping instanceof BasicValuedModelPart identifierPart
+			&& targetPart.getContainingTableExpression().equals( identifierPart.getContainingTableExpression() )
+			&& targetPart.getSelectionExpression().equals( identifierPart.getSelectionExpression() );
 	}
 
 	@Override
@@ -2041,7 +2131,7 @@ public class ToOneAttributeMapping
 
 	@Override
 	public SqlAstJoinType getDefaultSqlAstJoinType(TableGroup parentTableGroup) {
-		if ( isKeyTableNullable || isNullable ) {
+		if ( isKeyTableNullable || isNullable || isIgnoreNotFound() ) {
 			return SqlAstJoinType.LEFT;
 		}
 		else if ( parentTableGroup.getModelPart() instanceof CollectionPart ) {
@@ -2345,8 +2435,7 @@ public class ToOneAttributeMapping
 				tableGroupProducer,
 				explicitSourceAlias,
 				sqlAliasBase,
-				creationState.getCreationContext()
-						.getSessionFactory(),
+				creationState.getLoadQueryInfluencers().getSessionFactory(),
 				lhs
 		);
 
@@ -2468,7 +2557,7 @@ public class ToOneAttributeMapping
 						primaryTableReference,
 						creationState
 				),
-				creationState.getCreationContext().getSessionFactory()
+				creationState.getLoadQueryInfluencers().getSessionFactory()
 		);
 	}
 

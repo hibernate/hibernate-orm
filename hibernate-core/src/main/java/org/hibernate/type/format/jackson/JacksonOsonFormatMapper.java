@@ -42,8 +42,7 @@ public final class JacksonOsonFormatMapper extends AbstractJsonFormatMapper {
 
 	public JacksonOsonFormatMapper(FormatMapperCreationContext creationContext) {
 		this(
-				creationContext.getBootstrapContext()
-						.getClassLoaderService()
+				creationContext.getClassLoaderService()
 						.<List<Module>>workWithClassLoader( ObjectMapper::findModules )
 		);
 	}

@@ -9,9 +9,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
 
-import org.hibernate.Remove;
-import org.hibernate.SessionFactory;
-import org.hibernate.boot.model.IdentifierGeneratorDefinition;
+import org.hibernate.boot.model.IdentifierGeneratorRegistration;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
 import org.hibernate.boot.model.TypeDefinition;
 import org.hibernate.boot.model.relational.Database;
@@ -29,30 +27,12 @@ import org.hibernate.type.MappingContext;
 
 /**
  * Represents the ORM model as determined by aggregating the provided mapping sources.
- * An instance may be obtained by calling {@link MetadataSources#buildMetadata()}.
  *
  * @author Steve Ebersole
  *
  * @since 5.0
  */
 public interface Metadata extends MappingContext {
-	/**
-	 * Get the builder for {@link SessionFactory} instances based on this metamodel.
-	 *
-	 * @return The builder for {@link SessionFactory} instances.
-	 */
-	@Remove
-	SessionFactoryBuilder getSessionFactoryBuilder();
-
-	/**
-	 * Short-hand form of building a {@link SessionFactory} through the builder without any additional
-	 * option overrides.
-	 *
-	 * @return THe built SessionFactory.
-	 */
-	@Remove
-	SessionFactory buildSessionFactory();
-
 	/**
 	 * Gets the {@link UUID} for this metamodel.
 	 *
@@ -194,8 +174,20 @@ public interface Metadata extends MappingContext {
 
 	Map<String, NamedEntityGraphDefinition> getNamedEntityGraphs();
 
-	@Remove
-	IdentifierGeneratorDefinition getIdentifierGenerator(String name);
+	/**
+	 * Finds a persistence-unit scoped identifier-generator registration.
+	 *
+	 * @return the registration, or {@code null} when none is registered under
+	 * the given name
+	 */
+	IdentifierGeneratorRegistration getIdentifierGeneratorRegistration(String name);
+
+	/**
+	 * The persistence-unit scoped identifier-generator registrations.
+	 *
+	 * @return an immutable map keyed by registration name
+	 */
+	Map<String, IdentifierGeneratorRegistration> getIdentifierGeneratorRegistrations();
 
 	java.util.Collection<Table> collectTableMappings();
 

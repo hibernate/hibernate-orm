@@ -4,7 +4,6 @@
  */
 package org.hibernate.orm.test.jpa.persistenceunit;
 
-import java.util.List;
 import jakarta.persistence.Cacheable;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -18,7 +17,6 @@ import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.Setting;
-import org.hibernate.testing.orm.junit.SettingProvider;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -36,12 +34,6 @@ public class TwoPersistenceUnits2LCDisabledEnabledTest {
 			integrationSettings = {
 					@Setting(name = CacheSettings.JAKARTA_SHARED_CACHE_MODE, value = "ENABLE_SELECTIVE"),
 					@Setting(name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "true")
-			},
-			settingProviders = {
-					@SettingProvider(
-							settingName = AvailableSettings.LOADED_CLASSES,
-							provider = LoadedClassesSettingProvider.class
-					)
 			}
 	)
 	public void testEnabled(EntityManagerFactoryScope scope) {
@@ -58,12 +50,6 @@ public class TwoPersistenceUnits2LCDisabledEnabledTest {
 			integrationSettings = {
 					@Setting(name = CacheSettings.JAKARTA_SHARED_CACHE_MODE, value = "ENABLE_SELECTIVE"),
 					@Setting(name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "false")
-			},
-			settingProviders = {
-					@SettingProvider(
-							settingName = AvailableSettings.LOADED_CLASSES,
-							provider = LoadedClassesSettingProvider.class
-					)
 			}
 	)
 	public void testDisabled(EntityManagerFactoryScope scope) {
@@ -71,13 +57,6 @@ public class TwoPersistenceUnits2LCDisabledEnabledTest {
 				scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class )
 						.getMappingMetamodel().getEntityDescriptor( AnEntity.class );
 		assertNull( persister.getCacheAccessStrategy() );
-	}
-
-	public static class LoadedClassesSettingProvider implements SettingProvider.Provider<List<Class<?>>> {
-		@Override
-		public List<Class<?>> getSetting() {
-			return List.of(AnEntity.class);
-		}
 	}
 
 	@Cacheable

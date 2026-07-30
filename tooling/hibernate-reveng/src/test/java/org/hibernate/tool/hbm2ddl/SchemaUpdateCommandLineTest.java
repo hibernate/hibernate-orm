@@ -6,11 +6,14 @@ package org.hibernate.tool.hbm2ddl;
 
 import org.junit.jupiter.api.Test;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Tests the SchemaUpdate.CommandLineArgs parsing to cover
@@ -29,6 +32,15 @@ public class SchemaUpdateCommandLineTest {
 		java.lang.reflect.Field field = obj.getClass().getDeclaredField(fieldName);
 		field.setAccessible(true);
 		return field.get(obj);
+	}
+
+	private void assertJarRejected(String... args) {
+		final InvocationTargetException exception = assertThrows(
+				InvocationTargetException.class,
+				() -> parseArgs(args)
+		);
+		assertTrue(exception.getCause() instanceof IllegalArgumentException);
+		assertTrue(exception.getCause().getMessage().contains("Jar file mapping discovery is no longer supported"));
 	}
 
 	@Test
@@ -110,20 +122,11 @@ public class SchemaUpdateCommandLineTest {
 
 	@Test
 	public void testParseJarFile() throws Exception {
-		Object args = parseArgs(new String[]{"entities.jar"});
-		@SuppressWarnings("unchecked")
-		java.util.List<String> jarFiles = (java.util.List<String>) getField(args, "jarFiles");
-		assertEquals(1, jarFiles.size());
+		assertJarRejected("entities.jar");
 	}
 
 	@Test
 	public void testParseMixedFiles() throws Exception {
-		Object args = parseArgs(new String[]{"Person.mapping.xml", "entities.jar"});
-		@SuppressWarnings("unchecked")
-		java.util.List<String> mappingFiles = (java.util.List<String>) getField(args, "mappingFiles");
-		@SuppressWarnings("unchecked")
-		java.util.List<String> jarFiles = (java.util.List<String>) getField(args, "jarFiles");
-		assertEquals(1, mappingFiles.size());
-		assertEquals(1, jarFiles.size());
+		assertJarRejected("Person.mapping.xml", "entities.jar");
 	}
 }

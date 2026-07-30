@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.action.queue.internal.support.ActionQueueFactoryServiceInitiator;
-import org.hibernate.boot.internal.DefaultSessionFactoryBuilderInitiator;
 import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.bytecode.internal.BytecodeProviderInitiator;
 import org.hibernate.bytecode.internal.ProxyFactoryFactoryInitiator;
@@ -36,7 +35,6 @@ import org.hibernate.property.access.internal.PropertyAccessStrategyResolverInit
 import org.hibernate.query.sqm.mutation.internal.SqmMultiTableMutationStrategyProviderInitiator;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistryInitiator;
 import org.hibernate.resource.transaction.internal.TransactionCoordinatorBuilderInitiator;
-import org.hibernate.service.internal.SessionFactoryServiceRegistryFactoryInitiator;
 import org.hibernate.service.internal.ChangesetCoordinatorInitiator;
 import org.hibernate.sql.ast.internal.ParameterMarkerStrategyInitiator;
 import org.hibernate.sql.results.jdbc.internal.JdbcValuesMappingProducerProviderInitiator;
@@ -63,9 +61,6 @@ public final class StandardServiceInitiators {
 		// for example, we customize this list in Hibernate Reactive and Quarkus.
 
 		final ArrayList<StandardServiceInitiator<?>> serviceInitiators = new ArrayList<>();
-
-		// SessionFactoryBuilderService
-		serviceInitiators.add( DefaultSessionFactoryBuilderInitiator.INSTANCE );
 
 		// BytecodeProvider
 		serviceInitiators.add( BytecodeProviderInitiator.INSTANCE );
@@ -132,9 +127,6 @@ public final class StandardServiceInitiators {
 
 		// JtaPlatform
 		serviceInitiators.add( JtaPlatformInitiator.INSTANCE );
-
-		// SessionFactoryServiceRegistryFactory
-		serviceInitiators.add( SessionFactoryServiceRegistryFactoryInitiator.INSTANCE );
 
 		// RegionFactory
 		serviceInitiators.add( RegionFactoryInitiator.INSTANCE );

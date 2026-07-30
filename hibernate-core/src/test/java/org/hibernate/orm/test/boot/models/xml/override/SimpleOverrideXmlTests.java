@@ -4,17 +4,13 @@
  */
 package org.hibernate.orm.test.boot.models.xml.override;
 
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.internal.BootstrapContextImpl;
-import org.hibernate.boot.internal.InFlightMetadataCollectorImpl;
-import org.hibernate.boot.internal.MetadataBuilderImpl;
 import org.hibernate.boot.model.process.spi.ManagedResources;
-import org.hibernate.boot.model.process.spi.MetadataBuildingProcess;
-import org.hibernate.boot.model.source.internal.annotations.DomainModelSource;
+import org.hibernate.boot.model.source.internal.annotations.AdditionalManagedResourcesImpl;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
 import org.hibernate.models.spi.FieldDetails;
+import org.hibernate.orm.test.boot.models.SourceModelTestHelper;
 import org.hibernate.orm.test.boot.models.xml.SimpleEntity;
 
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -36,21 +32,12 @@ public class SimpleOverrideXmlTests {
 	void testSimpleCompleteEntity(ServiceRegistryScope scope) {
 		final StandardServiceRegistry serviceRegistry = scope.getRegistry();
 
-		final MetadataSources metadataSources = new MetadataSources().addResource( "mappings/models/override/simple-override.xml" );
-		final MetadataBuilderImpl.MetadataBuildingOptionsImpl options = new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry );
-		final BootstrapContextImpl bootstrapContext = new BootstrapContextImpl( serviceRegistry, options );
-		options.setBootstrapContext( bootstrapContext );
-
-		final ManagedResources managedResources = MetadataBuildingProcess.prepare( metadataSources, bootstrapContext );
-		final InFlightMetadataCollectorImpl metadataCollector = new InFlightMetadataCollectorImpl( bootstrapContext, options );
-		final DomainModelSource domainModelSource = MetadataBuildingProcess.processManagedResources(
-				managedResources,
-				metadataCollector,
-				bootstrapContext,
-				new MetadataBuilderImpl.MappingDefaultsImpl( serviceRegistry )
-		);
-
-		final ClassDetailsRegistry classDetailsRegistry = domainModelSource.getClassDetailsRegistry();
+			final ManagedResources managedResources = new AdditionalManagedResourcesImpl.Builder( serviceRegistry )
+					.addXmlMappings( "mappings/models/override/simple-override.xml" )
+					.build();
+			final ClassDetailsRegistry classDetailsRegistry =
+					SourceModelTestHelper.createBuildingContext( managedResources, serviceRegistry )
+							.getClassDetailsRegistry();
 
 		final ClassDetails classDetails = classDetailsRegistry.getClassDetails( SimpleEntity.class.getName() );
 

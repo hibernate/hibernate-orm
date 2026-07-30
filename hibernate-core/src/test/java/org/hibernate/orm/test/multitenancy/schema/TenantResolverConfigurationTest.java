@@ -4,7 +4,8 @@
  */
 package org.hibernate.orm.test.multitenancy.schema;
 
-import org.hibernate.boot.SessionFactoryBuilder;
+import org.hibernate.boot.internal.SessionFactoryOptionsCollector;
+import org.hibernate.boot.pipeline.internal.SessionFactoryPipeline;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -29,9 +30,9 @@ public class TenantResolverConfigurationTest implements SessionFactoryProducer {
 
 	@Override
 	public SessionFactoryImplementor produceSessionFactory(MetadataImplementor model) {
-		final SessionFactoryBuilder sessionFactoryBuilder = model.getSessionFactoryBuilder();
-		sessionFactoryBuilder.applyCurrentTenantIdentifierResolver( currentTenantResolver);
-		return (SessionFactoryImplementor) sessionFactoryBuilder.build();
+		final SessionFactoryOptionsCollector optionsCollector = new SessionFactoryOptionsCollector();
+		optionsCollector.applyCurrentTenantIdentifierResolver( currentTenantResolver );
+		return SessionFactoryPipeline.build( model, optionsCollector );
 	}
 
 	@Test

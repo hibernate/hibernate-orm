@@ -5,12 +5,13 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.io.Serializable;
 import java.util.Map;
 
 import org.hibernate.boot.jaxb.mapping.spi.JaxbTableGeneratorImpl;
 import org.hibernate.boot.models.annotations.spi.IndexCollector;
 import org.hibernate.boot.models.annotations.spi.UniqueConstraintCollector;
-import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
+import org.hibernate.boot.mapping.internal.xml.XmlDocumentContext;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.models.spi.ModelsContext;
 
@@ -18,12 +19,13 @@ import jakarta.persistence.TableGenerator;
 
 import static org.hibernate.boot.models.JpaAnnotations.TABLE_GENERATOR;
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
-import static org.hibernate.boot.models.xml.internal.XmlAnnotationHelper.collectIndexes;
-import static org.hibernate.boot.models.xml.internal.XmlAnnotationHelper.collectUniqueConstraints;
+import static org.hibernate.boot.mapping.internal.xml.XmlAnnotationHelper.collectIndexes;
+import static org.hibernate.boot.mapping.internal.xml.XmlAnnotationHelper.collectUniqueConstraints;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
-public class TableGeneratorJpaAnnotation implements TableGenerator, UniqueConstraintCollector, IndexCollector {
+public class TableGeneratorJpaAnnotation
+		implements TableGenerator, UniqueConstraintCollector, IndexCollector, Serializable {
 	private String name;
 	private String table;
 	private String catalog;

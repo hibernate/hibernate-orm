@@ -56,10 +56,6 @@ import org.hibernate.type.Type;
  * @see SessionBuilder#interceptor(Interceptor)
  * @see SharedSessionBuilder#interceptor()
  * @see org.hibernate.cfg.Configuration#setInterceptor(Interceptor)
- *
- * @see org.hibernate.boot.SessionFactoryBuilder#applyInterceptor(Interceptor)
- * @see org.hibernate.boot.SessionFactoryBuilder#applyStatelessInterceptor(Class)
- *
  * @author Gavin King
  */
 public interface Interceptor extends EntityManager.CreationOption, EntityAgent.CreationOption {

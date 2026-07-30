@@ -4,7 +4,10 @@
  */
 package org.hibernate.mapping;
 
+import java.util.function.Function;
+
 import org.hibernate.MappingException;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.type.Type;
 
@@ -14,7 +17,7 @@ import org.hibernate.type.Type;
  *
  * @author Gavin King
  */
-public class DependantValue extends SimpleValue implements Resolvable, SortableValue {
+public class DependantValue extends SimpleValue implements SortableValue {
 	private final KeyValue wrappedValue;
 	private boolean nullable;
 	private boolean updateable;
@@ -47,7 +50,11 @@ public class DependantValue extends SimpleValue implements Resolvable, SortableV
 	}
 
 	@Override
-	public void setTypeUsingReflection(String className, String propertyName) {}
+	public void setTypeUsingReflection(
+			String className,
+			String propertyName,
+			ClassLoaderService classLoaderService) {
+	}
 
 	@Override
 	public Object accept(ValueVisitor visitor) {
@@ -84,16 +91,9 @@ public class DependantValue extends SimpleValue implements Resolvable, SortableV
 			&& isSame( wrappedValue, other.wrappedValue );
 	}
 
-	@Override
-	public boolean resolve(MetadataBuildingContext buildingContext) {
-		resolve();
-		return true;
-	}
-
-	@Override
 	public BasicValue.Resolution<?> resolve() {
 		if ( wrappedValue instanceof BasicValue basicValue ) {
-			return basicValue.resolve();
+			return basicValue.requireResolution();
 		}
 		// not sure it is ever possible
 		throw new UnsupportedOperationException("Trying to resolve the wrapped value but it is non a BasicValue");
@@ -109,11 +109,11 @@ public class DependantValue extends SimpleValue implements Resolvable, SortableV
 	}
 
 	@Override
-	public int[] sortProperties() {
+	public int[] sortProperties(Function<String, PersistentClass> entityBindingResolver) {
 		if ( !sorted ) {
 			sorted = true;
 			if ( wrappedValue instanceof SortableValue sortableValue ) {
-				final int[] originalOrder = sortableValue.sortProperties();
+				final int[] originalOrder = sortableValue.sortProperties( entityBindingResolver );
 				if ( originalOrder != null ) {
 					sortColumns( originalOrder );
 					return originalOrder;

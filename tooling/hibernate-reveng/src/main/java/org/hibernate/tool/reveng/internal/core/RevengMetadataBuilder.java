@@ -8,14 +8,15 @@ package org.hibernate.tool.reveng.internal.core;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.internal.BootstrapContextImpl;
 import org.hibernate.boot.internal.InFlightMetadataCollectorImpl;
-import org.hibernate.boot.internal.MetadataBuilderImpl.MetadataBuildingOptionsImpl;
-import org.hibernate.boot.internal.MetadataBuildingContextRootImpl;
+import org.hibernate.boot.pipeline.internal.MappingResolutionOptionsImpl;
+import org.hibernate.boot.mapping.internal.context.MetadataBuildingContextRootImpl;
+import org.hibernate.boot.mapping.internal.context.MetadataBuildingContextRootInput;
 import org.hibernate.boot.internal.MetadataImpl;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.boot.spi.MetadataBuildingOptions;
+import org.hibernate.boot.pipeline.internal.MappingResolutionOptions;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.mapping.Table;
@@ -25,6 +26,7 @@ import org.hibernate.tool.reveng.api.core.RevengStrategy;
 import org.hibernate.tool.reveng.internal.core.binder.BinderContext;
 import org.hibernate.tool.reveng.internal.core.binder.RootClassBinder;
 import org.hibernate.tool.reveng.internal.core.reader.DatabaseReader;
+import org.hibernate.type.spi.TypeConfiguration;
 import org.jboss.logging.Logger;
 
 import java.util.Properties;
@@ -61,23 +63,23 @@ public class RevengMetadataBuilder {
 		this.serviceRegistry = new StandardServiceRegistryBuilder()
 				.applySettings(properties)
 				.build();
-		MetadataBuildingOptionsImpl metadataBuildingOptions =
-				new MetadataBuildingOptionsImpl(serviceRegistry);
+		final TypeConfiguration typeConfiguration = new TypeConfiguration();
+		MappingResolutionOptionsImpl metadataBuildingOptions =
+				new MappingResolutionOptionsImpl(serviceRegistry, typeConfiguration);
 		BootstrapContextImpl bootstrapContext = new BootstrapContextImpl(
 				serviceRegistry,
-				metadataBuildingOptions);
-		metadataBuildingOptions.setBootstrapContext(bootstrapContext);
+				typeConfiguration);
 		this.metadataCollector =
 				new InFlightMetadataCollectorImpl(
 						bootstrapContext,
 						metadataBuildingOptions);
 		handleTypes(bootstrapContext, metadataBuildingOptions);
-		this.metadataBuildingContext = new MetadataBuildingContextRootImpl(
+		this.metadataBuildingContext = new MetadataBuildingContextRootImpl( MetadataBuildingContextRootInput.create(
 				"tools",
 				bootstrapContext,
 				metadataBuildingOptions,
 				metadataCollector,
-				null);
+				null) );
 		this.binderContext = BinderContext
 				.create(
 						metadataBuildingContext,
@@ -129,11 +131,12 @@ public class RevengMetadataBuilder {
 			}
 			rootClassBinder.bind(table, revengMetadataCollector);
 		}
+		binderContext.finalizeCollectionAssociations();
 		metadataCollector.processSecondPasses(metadataBuildingContext);
 	}
 
 
-	private static void handleTypes(BootstrapContext bootstrapContext, MetadataBuildingOptions options) {
+	private static void handleTypes(BootstrapContext bootstrapContext, MappingResolutionOptions options) {
 		Dialect dialect = options.getServiceRegistry().getService( JdbcServices.class ).getDialect();
 		dialect.contributeTypes( () -> bootstrapContext.getTypeConfiguration(), options.getServiceRegistry() );
 	}

@@ -16,8 +16,7 @@ import java.util.function.Supplier;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.boot.SessionFactoryBuilder;
-import org.hibernate.boot.model.IdentifierGeneratorDefinition;
+import org.hibernate.boot.model.IdentifierGeneratorRegistration;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
 import org.hibernate.boot.model.TypeDefinition;
 import org.hibernate.boot.model.relational.ColumnOrderingStrategy;
@@ -29,11 +28,8 @@ import org.hibernate.boot.query.NamedProcedureCallDefinition;
 import org.hibernate.boot.query.NamedResultSetMappingDescriptor;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.BootstrapContext;
-import org.hibernate.boot.spi.MetadataBuildingOptions;
+import org.hibernate.boot.pipeline.internal.MappingResolutionOptions;
 import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.boot.spi.SessionFactoryBuilderFactory;
-import org.hibernate.boot.spi.SessionFactoryBuilderImplementor;
-import org.hibernate.boot.spi.SessionFactoryBuilderService;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -44,7 +40,9 @@ import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.FetchProfile;
 import org.hibernate.mapping.MappedSuperclass;
+import org.hibernate.boot.mapping.spi.MappingRole;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.PreparedGenerator;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UserDefinedObjectType;
 import org.hibernate.mapping.UserDefinedType;
@@ -57,7 +55,6 @@ import org.hibernate.tool.schema.Action;
 import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator.ActionGrouping;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import static java.lang.String.join;
 import static java.util.Collections.emptySet;
 import static org.hibernate.cfg.AvailableSettings.EVENT_LISTENER_PREFIX;
 import static org.hibernate.internal.util.StringHelper.splitAtCommas;
@@ -73,7 +70,7 @@ import static org.hibernate.internal.util.collections.CollectionHelper.mapOfSize
 public class MetadataImpl implements MetadataImplementor, Serializable {
 
 	private final UUID uuid;
-	private final MetadataBuildingOptions metadataBuildingOptions;
+	private final MappingResolutionOptions metadataBuildingOptions;
 	private final BootstrapContext bootstrapContext;
 
 	private final Map<String,PersistentClass> entityBindingMap;
@@ -86,19 +83,23 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	private final Map<String, FilterDefinition> filterDefinitionMap;
 	private final Map<String, FetchProfile> fetchProfileMap;
 	private final Map<String, String> imports;
-	private final Map<String, IdentifierGeneratorDefinition> idGeneratorDefinitionMap;
+	private final Map<String, IdentifierGeneratorRegistration> identifierGeneratorRegistrationMap;
 	private final Map<String, NamedHqlQueryDefinition<?>> namedQueryMap;
 	private final Map<String, NamedNativeQueryDefinition<?>> namedNativeQueryMap;
 	private final Map<String, NamedProcedureCallDefinition> namedProcedureCallMap;
 	private final Map<String, NamedResultSetMappingDescriptor> sqlResultSetMappingMap;
 	private final Map<String, NamedEntityGraphDefinition> namedEntityGraphMap;
+	private final SqmFunctionRegistry functionRegistry;
 	private final Map<String, SqmFunctionDescriptor> sqlFunctionMap;
 	private final List<PersistenceUnitCallbackDefinition> persistenceUnitLifecycleCallbackDefinitions;
 	private final Database database;
+	private final transient Map<String, PreparedGenerator<?>> preparedEntityIdentifierGenerators;
+	private final transient Map<String, PreparedGenerator<?>> preparedCollectionIdentifierGenerators;
+	private final transient Map<MappingRole, PreparedGenerator<?>> preparedValueGenerators;
 
 	public MetadataImpl(
 			UUID uuid,
-			MetadataBuildingOptions metadataBuildingOptions,
+			MappingResolutionOptions metadataBuildingOptions,
 			Map<String, PersistentClass> entityBindingMap,
 			List<Component> composites,
 			Map<Class<?>, Component> genericComponentsMap,
@@ -109,15 +110,73 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 			Map<String, FilterDefinition> filterDefinitionMap,
 			Map<String, FetchProfile> fetchProfileMap,
 			Map<String, String> imports,
-			Map<String, IdentifierGeneratorDefinition> idGeneratorDefinitionMap,
+			Map<String, IdentifierGeneratorRegistration> identifierGeneratorRegistrationMap,
 			Map<String, NamedHqlQueryDefinition<?>> namedQueryMap,
 			Map<String, NamedNativeQueryDefinition<?>> namedNativeQueryMap,
 			Map<String, NamedProcedureCallDefinition> namedProcedureCallMap,
 			Map<String, NamedResultSetMappingDescriptor> sqlResultSetMappingMap,
 			Map<String, NamedEntityGraphDefinition> namedEntityGraphMap,
+			SqmFunctionRegistry functionRegistry,
 			Map<String, SqmFunctionDescriptor> sqlFunctionMap,
 			List<PersistenceUnitCallbackDefinition> persistenceUnitLifecycleCallbackDefinitions,
 			Database database,
+			BootstrapContext bootstrapContext) {
+		this(
+				uuid,
+				metadataBuildingOptions,
+				entityBindingMap,
+				composites,
+				genericComponentsMap,
+				embeddableDiscriminatorTypesMap,
+				mappedSuperclassMap,
+				collectionBindingMap,
+				typeDefinitionMap,
+				filterDefinitionMap,
+				fetchProfileMap,
+				imports,
+				identifierGeneratorRegistrationMap,
+				namedQueryMap,
+				namedNativeQueryMap,
+				namedProcedureCallMap,
+				sqlResultSetMappingMap,
+				namedEntityGraphMap,
+				functionRegistry,
+				sqlFunctionMap,
+				persistenceUnitLifecycleCallbackDefinitions,
+				database,
+				null,
+				null,
+				null,
+				bootstrapContext
+		);
+	}
+
+	public MetadataImpl(
+			UUID uuid,
+			MappingResolutionOptions metadataBuildingOptions,
+			Map<String, PersistentClass> entityBindingMap,
+			List<Component> composites,
+			Map<Class<?>, Component> genericComponentsMap,
+			Map<Class<?>, DiscriminatorType<?>> embeddableDiscriminatorTypesMap,
+			Map<Class<?>, MappedSuperclass> mappedSuperclassMap,
+			Map<String, Collection> collectionBindingMap,
+			Map<String, TypeDefinition> typeDefinitionMap,
+			Map<String, FilterDefinition> filterDefinitionMap,
+			Map<String, FetchProfile> fetchProfileMap,
+			Map<String, String> imports,
+			Map<String, IdentifierGeneratorRegistration> identifierGeneratorRegistrationMap,
+			Map<String, NamedHqlQueryDefinition<?>> namedQueryMap,
+			Map<String, NamedNativeQueryDefinition<?>> namedNativeQueryMap,
+			Map<String, NamedProcedureCallDefinition> namedProcedureCallMap,
+			Map<String, NamedResultSetMappingDescriptor> sqlResultSetMappingMap,
+			Map<String, NamedEntityGraphDefinition> namedEntityGraphMap,
+			SqmFunctionRegistry functionRegistry,
+			Map<String, SqmFunctionDescriptor> sqlFunctionMap,
+			List<PersistenceUnitCallbackDefinition> persistenceUnitLifecycleCallbackDefinitions,
+			Database database,
+			Map<String, PreparedGenerator<?>> preparedEntityIdentifierGenerators,
+			Map<String, PreparedGenerator<?>> preparedCollectionIdentifierGenerators,
+			Map<MappingRole, PreparedGenerator<?>> preparedValueGenerators,
 			BootstrapContext bootstrapContext) {
 		this.uuid = uuid;
 		this.metadataBuildingOptions = metadataBuildingOptions;
@@ -131,20 +190,45 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		this.filterDefinitionMap = filterDefinitionMap;
 		this.fetchProfileMap = fetchProfileMap;
 		this.imports = imports;
-		this.idGeneratorDefinitionMap = idGeneratorDefinitionMap;
+		this.identifierGeneratorRegistrationMap = identifierGeneratorRegistrationMap;
 		this.namedQueryMap = namedQueryMap;
 		this.namedNativeQueryMap = namedNativeQueryMap;
 		this.namedProcedureCallMap = namedProcedureCallMap;
 		this.sqlResultSetMappingMap = sqlResultSetMappingMap;
 		this.namedEntityGraphMap = namedEntityGraphMap;
+		this.functionRegistry = functionRegistry;
 		this.sqlFunctionMap = sqlFunctionMap;
 		this.persistenceUnitLifecycleCallbackDefinitions = persistenceUnitLifecycleCallbackDefinitions;
 		this.database = database;
+		this.preparedEntityIdentifierGenerators = preparedEntityIdentifierGenerators;
+		this.preparedCollectionIdentifierGenerators = preparedCollectionIdentifierGenerators;
+		this.preparedValueGenerators = preparedValueGenerators;
 		this.bootstrapContext = bootstrapContext;
 	}
 
 	@Override
-	public MetadataBuildingOptions getMetadataBuildingOptions() {
+	public PreparedGenerator<?> consumePreparedEntityIdentifierGenerator(String rootEntityName) {
+		return preparedEntityIdentifierGenerators == null
+				? null
+				: preparedEntityIdentifierGenerators.remove( rootEntityName );
+	}
+
+	@Override
+	public PreparedGenerator<?> consumePreparedCollectionIdentifierGenerator(String collectionRole) {
+		return preparedCollectionIdentifierGenerators == null
+				? null
+				: preparedCollectionIdentifierGenerators.remove( collectionRole );
+	}
+
+	@Override
+	public PreparedGenerator<?> consumePreparedValueGenerator(MappingRole propertyRole) {
+		return preparedValueGenerators == null || propertyRole == null
+				? null
+				: preparedValueGenerators.remove( propertyRole );
+	}
+
+	@Override
+	public MappingResolutionOptions getMappingResolutionOptions() {
 		return metadataBuildingOptions;
 	}
 
@@ -155,58 +239,12 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 
 	@Override
 	public SqmFunctionRegistry getFunctionRegistry() {
-		return bootstrapContext.getFunctionRegistry();
+		return functionRegistry;
 	}
 
 	@Override
 	public List<PersistenceUnitCallbackDefinition> getPersistenceUnitLifecycleCallbackDefinitions() {
 		return persistenceUnitLifecycleCallbackDefinitions;
-	}
-
-	@Override
-	public SessionFactoryBuilder getSessionFactoryBuilder() {
-		final var defaultBuilder = getFactoryBuilder();
-		SessionFactoryBuilder builder = null;
-		List<String> activeFactoryNames = null;
-		for ( var discoveredBuilderFactory : getSessionFactoryBuilderFactories() ) {
-			final SessionFactoryBuilder returnedBuilder =
-					discoveredBuilderFactory.getSessionFactoryBuilder( this, defaultBuilder );
-			if ( returnedBuilder != null ) {
-				if ( activeFactoryNames == null ) {
-					activeFactoryNames = new ArrayList<>();
-				}
-				activeFactoryNames.add( discoveredBuilderFactory.getClass().getName() );
-				builder = returnedBuilder;
-			}
-		}
-
-		if ( activeFactoryNames != null && activeFactoryNames.size() > 1 ) {
-			throw new HibernateException(
-					"Multiple active SessionFactoryBuilderFactory definitions were discovered: " +
-							join( ", ", activeFactoryNames )
-			);
-		}
-
-		return builder == null ? defaultBuilder : builder;
-	}
-
-	private Iterable<SessionFactoryBuilderFactory> getSessionFactoryBuilderFactories() {
-		return getClassLoaderService().loadJavaServices( SessionFactoryBuilderFactory.class );
-	}
-
-	private SessionFactoryBuilderImplementor getFactoryBuilder() {
-		return metadataBuildingOptions.getServiceRegistry()
-				.requireService( SessionFactoryBuilderService.class )
-				.createSessionFactoryBuilder( this, bootstrapContext );
-	}
-
-	private ClassLoaderService getClassLoaderService() {
-		return metadataBuildingOptions.getServiceRegistry().requireService( ClassLoaderService.class );
-	}
-
-	@Override
-	public SessionFactoryImplementor buildSessionFactory() {
-		return (SessionFactoryImplementor) getSessionFactoryBuilder().build();
 	}
 
 	@Override
@@ -320,8 +358,13 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	}
 
 	@Override
-	public IdentifierGeneratorDefinition getIdentifierGenerator(String name) {
-		return idGeneratorDefinitionMap.get( name );
+	public IdentifierGeneratorRegistration getIdentifierGeneratorRegistration(String name) {
+		return identifierGeneratorRegistrationMap.get( name );
+	}
+
+	@Override
+	public Map<String, IdentifierGeneratorRegistration> getIdentifierGeneratorRegistrations() {
+		return Map.copyOf( identifierGeneratorRegistrationMap );
 	}
 
 	@Override
@@ -424,8 +467,10 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 					final int[] originalPrimaryKeyOrder = targetPrimaryKey.getOriginalOrder();
 					if ( originalPrimaryKeyOrder != null ) {
 						final var foreignKeyColumnsCopy = new ArrayList<>( columns );
-						for ( int i = 0; i < foreignKeyColumnsCopy.size(); i++ ) {
-							columns.set( i, foreignKeyColumnsCopy.get( originalPrimaryKeyOrder[i] ) );
+						if ( originalPrimaryKeyOrder.length == foreignKeyColumnsCopy.size() ) {
+							for ( int i = 0; i < foreignKeyColumnsCopy.size(); i++ ) {
+								columns.set( i, foreignKeyColumnsCopy.get( originalPrimaryKeyOrder[i] ) );
+							}
 						}
 					}
 				}
@@ -602,10 +647,6 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		return mappedSuperclassMap;
 	}
 
-	public Map<String, IdentifierGeneratorDefinition> getIdGeneratorDefinitionMap() {
-		return idGeneratorDefinitionMap;
-	}
-
 	public Map<String, NamedEntityGraphDefinition> getNamedEntityGraphMap() {
 		return namedEntityGraphMap;
 	}
@@ -641,4 +682,5 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	public Map<Class<?>, DiscriminatorType<?>> getEmbeddableDiscriminatorTypesMap() {
 		return embeddableDiscriminatorTypesMap;
 	}
+
 }

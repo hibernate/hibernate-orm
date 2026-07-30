@@ -4,18 +4,19 @@
  */
 package org.hibernate.mapping;
 
+import org.hibernate.boot.mapping.spi.MappingRole;
 import java.util.List;
 import java.util.Objects;
 
 import org.hibernate.MappingException;
-import org.hibernate.Remove;
 import org.hibernate.annotations.NotFoundAction;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.FetchStyle;
-import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.ManyToOneType;
-import org.hibernate.type.Type;
 import org.hibernate.type.MappingContext;
+import org.hibernate.type.Type;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_BOOLEAN_ARRAY;
 
@@ -24,8 +25,9 @@ import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_BOOLEAN_
  *
  * @author Gavin King
  */
-public class OneToMany implements Value {
-	private final MetadataBuildingContext buildingContext;
+public class OneToMany implements Value, AppliedMappingPart {
+	private MappingRole mappingRole;
+	private transient TypeConfiguration typeConfiguration;
 	private final Table referencingTable;
 
 	private String referencedEntityName;
@@ -33,12 +35,13 @@ public class OneToMany implements Value {
 	private NotFoundAction notFoundAction;
 
 	public OneToMany(MetadataBuildingContext buildingContext, PersistentClass owner) throws MappingException {
-		this.buildingContext = buildingContext;
+		this.typeConfiguration = buildingContext.getTypeConfiguration();
 		this.referencingTable = owner == null ? null : owner.getTable();
 	}
 
 	private OneToMany(OneToMany original) {
-		this.buildingContext = original.buildingContext;
+		this.mappingRole = original.mappingRole;
+		this.typeConfiguration = original.typeConfiguration;
 		this.referencingTable = original.referencingTable;
 		this.referencedEntityName = original.referencedEntityName;
 		this.associatedClass = original.associatedClass;
@@ -51,15 +54,17 @@ public class OneToMany implements Value {
 	}
 
 	@Override
-	@Remove
-	public MetadataBuildingContext getBuildingContext() {
-		return buildingContext;
+	public MappingRole getMappingRole() {
+		return mappingRole;
 	}
 
 	@Override
-	@Remove
-	public ServiceRegistry getServiceRegistry() {
-		return buildingContext.getBuildingOptions().getServiceRegistry();
+	public void setMappingRole(MappingRole mappingRole) {
+		this.mappingRole = mappingRole;
+	}
+
+	public void reattachTypeConfiguration(TypeConfiguration typeConfiguration) {
+		this.typeConfiguration = typeConfiguration;
 	}
 
 	public PersistentClass getAssociatedClass() {
@@ -71,14 +76,6 @@ public class OneToMany implements Value {
 	 */
 	public void setAssociatedClass(PersistentClass associatedClass) {
 		this.associatedClass = associatedClass;
-	}
-
-	public void createForeignKey() {
-		// no foreign key element for a one-to-many
-	}
-
-	@Override
-	public void createUniqueKey(MetadataBuildingContext context) {
 	}
 
 	@Override
@@ -117,7 +114,7 @@ public class OneToMany implements Value {
 	@Override
 	public Type getType() {
 		return new ManyToOneType(
-				buildingContext.getBootstrapContext().getTypeConfiguration(),
+				typeConfiguration,
 				getReferencedEntityName(),
 				true,
 				null,
@@ -169,7 +166,10 @@ public class OneToMany implements Value {
 	}
 
 	@Override
-	public void setTypeUsingReflection(String className, String propertyName) {
+	public void setTypeUsingReflection(
+			String className,
+			String propertyName,
+			ClassLoaderService classLoaderService) {
 	}
 
 	@Override

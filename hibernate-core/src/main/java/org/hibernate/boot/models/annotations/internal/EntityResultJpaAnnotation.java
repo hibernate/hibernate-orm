@@ -5,15 +5,19 @@
 package org.hibernate.boot.models.annotations.internal;
 
 import java.lang.annotation.Annotation;
+import java.io.Serializable;
 import java.util.Map;
 
 import org.hibernate.models.spi.ModelsContext;
 
 import jakarta.persistence.EntityResult;
 
+import static org.hibernate.boot.models.JpaAnnotations.ENTITY_RESULT;
+import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
+
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
-public class EntityResultJpaAnnotation implements EntityResult {
+public class EntityResultJpaAnnotation implements EntityResult, Serializable {
 	private java.lang.Class<?> entityClass;
 	private jakarta.persistence.LockModeType lockMode;
 	private jakarta.persistence.FieldResult[] fields;
@@ -34,7 +38,7 @@ public class EntityResultJpaAnnotation implements EntityResult {
 	public EntityResultJpaAnnotation(EntityResult annotation, ModelsContext modelContext) {
 		this.entityClass = annotation.entityClass();
 		this.lockMode = annotation.lockMode();
-		this.fields = annotation.fields();
+		this.fields = extractJdkValue( annotation, ENTITY_RESULT, "fields", modelContext );
 		this.discriminatorColumn = annotation.discriminatorColumn();
 	}
 

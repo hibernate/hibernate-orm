@@ -9,10 +9,10 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
 import org.hibernate.tool.schema.internal.SchemaDropperImpl;
 import org.hibernate.tool.schema.spi.GenerationTarget;
@@ -52,9 +52,7 @@ public class SchemaDropIfExistsTest {
 				.applySetting( AvailableSettings.HBM2DDL_CREATE_SCHEMAS, true )
 				.build();
 
-		metadata = new MetadataSources( serviceRegistry )
-				.addAnnotatedClass( TestEntity.class )
-				.buildMetadata();
+		metadata = MetadataBuildingTestHelper.buildMetadata( serviceRegistry, TestEntity.class );
 	}
 
 	@AfterEach

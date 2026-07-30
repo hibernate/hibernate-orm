@@ -27,8 +27,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
 		annotatedClasses = {
 				TypeVariableTest.SimpleEntity.class,
 		},
-		extraQueryImportClasses = {
-				TypeVariableTest.BasicSetterBasedDto.class
+		extraQueryImports = {
+				@DomainModel.ExtraQueryImport( name = "BasicSetterBasedDto", importedClass = TypeVariableTest.BasicSetterBasedDto.class )
 		}
 )
 @SessionFactory

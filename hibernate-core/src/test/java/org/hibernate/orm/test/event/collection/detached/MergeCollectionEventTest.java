@@ -6,9 +6,7 @@ package org.hibernate.orm.test.event.collection.detached;
 
 import org.hibernate.action.queue.spi.QueueType;
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Environment;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.spi.AbstractCollectionEvent;
 import org.hibernate.event.spi.PostCollectionRecreateEvent;
@@ -17,7 +15,6 @@ import org.hibernate.event.spi.PreCollectionRecreateEvent;
 import org.hibernate.event.spi.PreCollectionRemoveEvent;
 import org.hibernate.event.spi.PreCollectionUpdateEvent;
 import org.hibernate.integrator.spi.Integrator;
-import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 import org.hibernate.testing.orm.junit.BootstrapServiceRegistry;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -48,7 +45,7 @@ import static org.junit.Assert.assertEquals;
 @ServiceRegistry(
 		settings = {
 				@Setting(name = AvailableSettings.IMPLICIT_NAMING_STRATEGY, value = "legacy-jpa"),
-				@Setting(name = Environment.DEFAULT_LIST_SEMANTICS, value = "bag"), // CollectionClassification.BAG
+// CollectionClassification.BAG
 		}
 )
 @BootstrapServiceRegistry(integrators = MergeCollectionEventTest.ConfigurerIntegrator.class)
@@ -275,13 +272,13 @@ public class MergeCollectionEventTest {
 		}
 
 		@Override
-		public void integrate(Metadata metadata, BootstrapContext bootstrapContext, SessionFactoryImplementor sessionFactory) {
-			collectionListenerIntegrator.integrate( metadata, bootstrapContext, sessionFactory );
+		public void integrate(Metadata metadata, Integrator.Context context, SessionFactoryImplementor sessionFactory) {
+			collectionListenerIntegrator.integrate( metadata, context, sessionFactory );
 		}
 
 		@Override
-		public void disintegrate(SessionFactoryImplementor sessionFactory, SessionFactoryServiceRegistry serviceRegistry) {
-			collectionListenerIntegrator.disintegrate( sessionFactory, serviceRegistry );
+		public void disintegrate(SessionFactoryImplementor sessionFactory, Context context) {
+			collectionListenerIntegrator.disintegrate( sessionFactory, context );
 			collectionListenerIntegrator = null;
 		}
 	}

@@ -6,6 +6,7 @@ package org.hibernate.orm.test.sql.storedproc;
 
 import java.math.BigDecimal;
 import java.util.Date;
+import java.util.List;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.ParameterMode;
@@ -13,9 +14,9 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 
-import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
+import org.hibernate.boot.pipeline.internal.MappingCustomizations;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.procedure.ProcedureCall;
@@ -104,9 +105,20 @@ public class PostgresRefCursorSupportTest extends BaseSessionFactoryFunctionalTe
 	}
 
 	@Override
-	protected void applyMetadataBuilder(MetadataBuilder metadataBuilder) {
-		super.applyMetadataBuilder( metadataBuilder );
-		metadataBuilder.applyAuxiliaryDatabaseObject( ProcedureDefinitions.INSTANCE );
+	protected MappingCustomizations metadataCustomizations() {
+		return new MappingCustomizations(
+				null,
+				null,
+				null,
+				null,
+				null,
+				List.of( ProcedureDefinitions.INSTANCE ),
+				null,
+				null,
+				null,
+				null,
+				null
+		);
 	}
 
 	@Test

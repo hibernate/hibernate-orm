@@ -6,7 +6,7 @@ package org.hibernate.testing.orm.domain.retail;
 
 import java.util.EnumSet;
 
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
 
 import org.hibernate.testing.orm.domain.AbstractDomainModelDescriptor;
 import org.hibernate.testing.orm.domain.MappingFeature;
@@ -41,7 +41,7 @@ public class RetailDomainModel extends AbstractDomainModelDescriptor {
 		);
 	}
 
-	public static void applyRetailModel(MetadataSources sources) {
+	public static void applyRetailModel(MappingSources sources) {
 		INSTANCE.applyDomainModel( sources );
 	}
 

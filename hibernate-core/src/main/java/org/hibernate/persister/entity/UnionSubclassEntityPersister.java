@@ -55,6 +55,7 @@ import org.hibernate.sql.ast.tree.from.UnionTableReference;
 import org.hibernate.sql.ast.tree.from.UnknownTableReferenceException;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.type.BasicType;
+import org.hibernate.type.MappingContext;
 import org.hibernate.type.StandardBasicTypes;
 
 import static java.util.Collections.addAll;
@@ -151,18 +152,18 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		}
 		subclassSpaces = toStringArray( subclassTables );
 
-		subquery = generateSubquery( persistentClass );
+		subquery = generateSubquery( persistentClass, creationContext.getMetadata() );
 		final List<String> tableExpressions = new ArrayList<>( subclassSpaces.length * 2 );
 		addAll( tableExpressions, subclassSpaces );
 		tableExpressions.add( subquery );
 		var parentPersistentClass = persistentClass.getSuperclass();
 		while ( parentPersistentClass != null ) {
-			tableExpressions.add( generateSubquery( parentPersistentClass ) );
+			tableExpressions.add( generateSubquery( parentPersistentClass, creationContext.getMetadata() ) );
 			parentPersistentClass = parentPersistentClass.getSuperclass();
 		}
 		for ( var subclassPersistentClass : persistentClass.getSubclassClosure() ) {
 			if ( subclassPersistentClass.hasSubclasses() ) {
-				tableExpressions.add( generateSubquery( subclassPersistentClass ) );
+				tableExpressions.add( generateSubquery( subclassPersistentClass, creationContext.getMetadata() ) );
 			}
 		}
 		subclassTableExpressions = toStringArray( tableExpressions );
@@ -480,6 +481,10 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		return generateSubquery( model, null, null );
 	}
 
+	private String generateSubquery(PersistentClass model, MappingContext mappingContext) {
+		return generateSubquery( model, null, null, mappingContext );
+	}
+
 	/**
 	 * Generate a union subquery for the given model.
 	 *
@@ -492,6 +497,14 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 			PersistentClass model,
 			Function<String, String> tableNameResolver,
 			List<String> extraSelectExpressions) {
+		return generateSubquery( model, tableNameResolver, extraSelectExpressions, getFactory().getRuntimeMetamodels() );
+	}
+
+	private String generateSubquery(
+			PersistentClass model,
+			Function<String, String> tableNameResolver,
+			List<String> extraSelectExpressions,
+			MappingContext mappingContext) {
 		final var factory = getFactory();
 		final var sqlStringGenerationContext = factory.getSqlStringGenerationContext();
 		if ( !model.hasSubclasses() ) {
@@ -523,7 +536,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 					subquery.append( "select " );
 					for ( var column : columns ) {
 						if ( !table.containsColumn( column ) ) {
-							subquery.append( getSelectClauseNullString( column, dialect ) )
+							subquery.append( getSelectClauseNullString( column, dialect, mappingContext ) )
 									.append( " as " );
 						}
 						subquery.append( column.getQuotedName( dialect ) )
@@ -548,6 +561,10 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	private String getSelectClauseNullString(Column column, Dialect dialect) {
+		return getSelectClauseNullString( column, dialect, getFactory().getRuntimeMetamodels() );
+	}
+
+	private String getSelectClauseNullString(Column column, Dialect dialect, MappingContext mappingContext) {
 		return dialect.getSelectClauseNullString(
 				new SqlTypedMappingImpl(
 						column.getLength(),
@@ -555,7 +572,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 						column.getPrecision(),
 						column.getScale(),
 						column.getTemporalPrecision(),
-						column.getType()
+						column.getType( mappingContext )
 				),
 				getFactory().getTypeConfiguration()
 		);

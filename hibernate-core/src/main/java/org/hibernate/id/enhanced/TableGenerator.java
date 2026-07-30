@@ -37,7 +37,6 @@ import org.hibernate.jdbc.AbstractReturningWork;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PrimaryKey;
 import org.hibernate.mapping.Table;
-import org.hibernate.resource.transaction.spi.DdlTransactionIsolator;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.SimpleSelect;
 import org.hibernate.type.StandardBasicTypes;
@@ -702,40 +701,67 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 		final var table = existingTable == null ? createTable( database, namespace ) : existingTable;
 		// allow physical naming strategies a chance to kick in
 		physicalTableName = table.getQualifiedTableName();
-		table.addInitCommand( this::generateInsertInitCommand );
-		table.addResyncCommand( this::generateResyncCommand );
-		table.addResetCommand( this::generateResetCommand );
+		registerExportCommands(
+				table,
+				this.table,
+				physicalTableName,
+				segmentColumnName,
+				segmentValue,
+				valueColumnName,
+				initialValue,
+				storeLastUsedValue,
+				optimizer
+		);
 	}
 
-	private InitCommand generateResyncCommand(SqlStringGenerationContext context, DdlTransactionIsolator isolator) {
-		final String sequenceTableName = context.format( physicalTableName );
-		final String tableName = context.format( table.getQualifiedTableName() );
-		final String primaryKeyColumnName = table.getPrimaryKey().getColumn( 0 ).getName();
-		final int adjustment = optimizer.getAdjustment() - 1;
-		final long max = getMaxPrimaryKey( isolator, primaryKeyColumnName, tableName );
-		final long current =
-				getCurrentTableValue( isolator, sequenceTableName, valueColumnName,
-						segmentColumnName, segmentValue );
-		if ( max + adjustment > current ) {
-			optimizer.reset();
-			final String update =
-					"update " + sequenceTableName
-					+ " set " + valueColumnName + " = " + (max + adjustment)
-					+ " where " + segmentColumnName + " = '" + segmentValue + "'";
-			return new InitCommand( update );
-		}
-		else {
+	private static void registerExportCommands(
+			Table generatorTable,
+			Table entityTable,
+			QualifiedName physicalTableName,
+			String segmentColumnName,
+			String segmentValue,
+			String valueColumnName,
+			int initialValue,
+			boolean storeLastUsedValue,
+			Optimizer optimizer) {
+		final var optimizerState = new OptimizerResetState( optimizer );
+		generatorTable.addInitCommand( context -> {
+			final int value = storeLastUsedValue ? initialValue - 1 : initialValue;
+			return new InitCommand( "insert into " + context.format( physicalTableName )
+					+ "(" + segmentColumnName + ", " + valueColumnName + ")"
+					+ " values ('" + segmentValue + "'," + value + ")" );
+		} );
+		generatorTable.addResyncCommand( (context, isolator) -> {
+			final String sequenceTableName = context.format( physicalTableName );
+			final String tableName = context.format( entityTable.getQualifiedTableName() );
+			final String primaryKeyColumnName = entityTable.getPrimaryKey().getColumn( 0 ).getName();
+			final int adjustment = optimizerState.adjustment() - 1;
+			final long max = getMaxPrimaryKey( isolator, primaryKeyColumnName, tableName );
+			final long current = getCurrentTableValue(
+					isolator,
+					sequenceTableName,
+					valueColumnName,
+					segmentColumnName,
+					segmentValue
+			);
+			if ( max + adjustment > current ) {
+				optimizerState.reset();
+				return new InitCommand(
+						"update " + sequenceTableName
+						+ " set " + valueColumnName + " = " + (max + adjustment)
+						+ " where " + segmentColumnName + " = '" + segmentValue + "'"
+				);
+			}
 			return new InitCommand();
-		}
-	}
-
-	private InitCommand generateResetCommand(SqlStringGenerationContext context) {
-		optimizer.reset();
-		final String update =
-				"update " + context.format( physicalTableName )
-				+ " set " + valueColumnName + " = " + initialValue
-				+ " where " + segmentColumnName + " = '" + segmentValue + "'";
-		return new InitCommand( update );
+		} );
+		generatorTable.addResetCommand( context -> {
+			optimizerState.reset();
+			return new InitCommand(
+					"update " + context.format( physicalTableName )
+					+ " set " + valueColumnName + " = " + initialValue
+					+ " where " + segmentColumnName + " = '" + segmentValue + "'"
+			);
+		} );
 	}
 
 	private Table createTable(Database database, Namespace namespace) {

@@ -10,9 +10,14 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 import org.hibernate.action.queue.spi.PlanningOptions;
+import org.hibernate.boot.internal.MetadataImpl;
+import org.hibernate.boot.mapping.internal.model.BootBindingModel;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.model.relational.internal.SqlStringGenerationContextImpl;
+import org.hibernate.boot.pipeline.internal.ResolvedMappingImplementor;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.BootstrapContext;
+import org.hibernate.boot.spi.ClassLoaderAccess;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.spi.CacheImplementor;
@@ -26,8 +31,15 @@ import org.hibernate.generator.Generator;
 import org.hibernate.mapping.GeneratorSettings;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
+import org.hibernate.metamodel.spi.ManagedTypeRepresentationResolver;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.metamodel.spi.SessionFactoryAccess;
+import org.hibernate.metamodel.internal.RuntimeMappingHandoff;
+import org.hibernate.boot.serial.internal.RuntimeMappingHandoffSnapshot;
+import org.hibernate.models.spi.ModelsContext;
+import org.hibernate.query.named.spi.NamedLoaderQueryResolver;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
+import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -36,6 +48,8 @@ import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.temporal.spi.ChangesetCoordinator;
+import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.junit.jupiter.api.Test;
@@ -121,21 +135,55 @@ public class LocalTemporaryTableMutationStrategyNoDropTest {
 		private final SessionFactoryImplementor sessionFactory;
 		private final SessionFactoryScope scope;
 		private final JdbcServices jdbcServices;
+		private final BootstrapContext bootstrapContext;
+		private final RuntimeMappingHandoff runtimeMappingHandoff;
 
 		public ModelCreationContext(SessionFactoryImplementor sessionFactory, SessionFactoryScope scope, JdbcServices jdbcServices) {
 			this.sessionFactory = sessionFactory;
 			this.scope = scope;
 			this.jdbcServices = jdbcServices;
+			this.bootstrapContext = bootstrapContext( scope.getMetadataImplementor() );
+			this.runtimeMappingHandoff = RuntimeMappingHandoffSnapshot.from(
+					new BootBindingModel(),
+					scope.getMetadataImplementor()
+			);
+		}
+
+		private static BootstrapContext bootstrapContext(MetadataImplementor metadata) {
+			if ( metadata instanceof ResolvedMappingImplementor resolvedMapping ) {
+				return bootstrapContext( resolvedMapping.getResolvedMapping().metadata() );
+			}
+			return ( (MetadataImpl) metadata ).getBootstrapContext();
 		}
 
 		@Override
-		public SessionFactoryImplementor getSessionFactory() {
-			return sessionFactory;
+		public ModelsContext getModelsContext() {
+			return bootstrapContext.getModelsContext();
 		}
 
 		@Override
-		public BootstrapContext getBootstrapContext() {
-			return null;
+		public ClassLoaderService getClassLoaderService() {
+			return bootstrapContext.getClassLoaderService();
+		}
+
+		@Override
+		public ClassLoaderAccess getClassLoaderAccess() {
+			return bootstrapContext.getClassLoaderAccess();
+		}
+
+		@Override
+		public ManagedBeanRegistry getManagedBeanRegistry() {
+			return bootstrapContext.getManagedBeanRegistry();
+		}
+
+		@Override
+		public ManagedTypeRepresentationResolver getRepresentationStrategySelector() {
+			return bootstrapContext.getRepresentationStrategySelector();
+		}
+
+		@Override
+		public SessionFactoryAccess getSessionFactoryAccess() {
+			return () -> sessionFactory;
 		}
 
 		@Override
@@ -154,6 +202,11 @@ public class LocalTemporaryTableMutationStrategyNoDropTest {
 		}
 
 		@Override
+		public RuntimeMappingHandoff getRuntimeMappingHandoff() {
+			return runtimeMappingHandoff;
+		}
+
+		@Override
 		public MappingMetamodelImplementor getDomainModel() {
 			return null;
 		}
@@ -161,6 +214,11 @@ public class LocalTemporaryTableMutationStrategyNoDropTest {
 		@Override
 		public SqmFunctionRegistry getFunctionRegistry() {
 			return null;
+		}
+
+		@Override
+		public NamedLoaderQueryResolver getNamedLoaderQueryResolver() {
+			return sessionFactory.getQueryEngine().getNamedObjectRepository();
 		}
 
 		@Override
@@ -196,6 +254,16 @@ public class LocalTemporaryTableMutationStrategyNoDropTest {
 					null,
 					null
 			);
+		}
+
+		@Override
+		public WrapperOptions getWrapperOptions() {
+			return sessionFactory.getWrapperOptions();
+		}
+
+		@Override
+		public ChangesetCoordinator getChangesetCoordinator() {
+			return sessionFactory.getChangesetCoordinator();
 		}
 
 		@Override

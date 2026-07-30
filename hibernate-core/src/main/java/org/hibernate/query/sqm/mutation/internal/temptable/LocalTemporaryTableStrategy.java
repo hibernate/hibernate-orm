@@ -28,13 +28,22 @@ public class LocalTemporaryTableStrategy {
 	public static final String DROP_ID_TABLES = "hibernate.query.mutation_strategy.local_temporary.drop_tables";
 
 	private final TemporaryTable temporaryTable;
-	private final SessionFactoryImplementor sessionFactory;
+	private final TemporaryTableStrategy temporaryTableStrategy;
 
 	private boolean dropIdTables;
 
 	public LocalTemporaryTableStrategy(TemporaryTable temporaryTable, SessionFactoryImplementor sessionFactory) {
+		this(
+				temporaryTable,
+				castNonNull( sessionFactory.getJdbcServices().getDialect().getLocalTemporaryTableStrategy() )
+		);
+	}
+
+	public LocalTemporaryTableStrategy(
+			TemporaryTable temporaryTable,
+			TemporaryTableStrategy temporaryTableStrategy) {
 		this.temporaryTable = temporaryTable;
-		this.sessionFactory = sessionFactory;
+		this.temporaryTableStrategy = temporaryTableStrategy;
 	}
 
 	protected static TemporaryTableStrategy requireLocalTemporaryTableStrategy(Dialect dialect) {
@@ -43,14 +52,13 @@ public class LocalTemporaryTableStrategy {
 	}
 
 	public TemporaryTableStrategy getTemporaryTableStrategy() {
-		return castNonNull( sessionFactory.getJdbcServices().getDialect().getLocalTemporaryTableStrategy() );
+		return temporaryTableStrategy;
 	}
 
 	public void prepare(MappingModelCreationProcess mappingModelCreationProcess, JdbcConnectionAccess connectionAccess) {
 		final ConfigurationService configService =
 				mappingModelCreationProcess.getCreationContext()
-						.getBootstrapContext().getServiceRegistry()
-						.requireService( ConfigurationService.class );
+						.getConfigurationService();
 		dropIdTables = configService.getSetting( DROP_ID_TABLES, StandardConverters.BOOLEAN, false );
 	}
 
@@ -66,7 +74,4 @@ public class LocalTemporaryTableStrategy {
 		return dropIdTables;
 	}
 
-	public SessionFactoryImplementor getSessionFactory() {
-		return sessionFactory;
-	}
 }

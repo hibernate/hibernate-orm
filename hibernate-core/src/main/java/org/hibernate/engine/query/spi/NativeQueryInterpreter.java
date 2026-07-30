@@ -10,17 +10,22 @@ import org.hibernate.query.sql.internal.NativeSelectQueryPlanImpl;
 import org.hibernate.query.sql.spi.NativeSelectQueryDefinition;
 import org.hibernate.query.sql.spi.NativeSelectQueryPlan;
 import org.hibernate.query.sql.spi.ParameterRecognizer;
-import org.hibernate.service.Service;
+import org.hibernate.service.JavaServiceLoadable;
 
 /**
- * Service contract for dealing with native queries.
+ * Factory-owned strategy for dealing with native queries.
+ * <p>
+ * An implementation may be registered as a Java service. Exactly one
+ * implementation may be visible while building a {@code SessionFactory};
+ * when none is registered, Hibernate uses its standard implementation.
  *
  * @author Steve Ebersole
  * @author Gunnar Morling
  * @author Guillaume Smet
  */
 @Incubating
-public interface NativeQueryInterpreter extends Service {
+@JavaServiceLoadable
+public interface NativeQueryInterpreter {
 	/**
 	 * Parse the given native query and inform the recognizer of all
 	 * recognized parameter markers.

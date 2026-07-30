@@ -17,7 +17,7 @@ import jakarta.persistence.TableGenerator;
  */
 @Entity
 @NamedQuery(name = "manufacturer.findAll", query = "from Manufacturer where 1 = 2")
-@TableGenerator(name = "generator", table = "this is a broken name with select from and other SQL keywords")
+@TableGenerator(name = "broken_generator", table = "this is a broken name with select from and other SQL keywords")
 public class Manufacturer {
 	private Integer id;
 	private Set<Model> models = new HashSet<>();

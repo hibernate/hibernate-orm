@@ -16,7 +16,7 @@ import jakarta.persistence.TableGenerator;
  *
  * @author Emmanuel Bernard
  */
-@TableGenerator(name = "EMP_GEN", table = "GENERATOR_TABLE", pkColumnName = "pkey",
+@TableGenerator(name = "BALL_GEN", table = "GENERATOR_TABLE", pkColumnName = "pkey",
 		valueColumnName = "hi", pkColumnValue = "Ball", allocationSize = 10)
 @Entity
 @SuppressWarnings("serial")
@@ -24,7 +24,7 @@ public class Ball implements Serializable {
 	private Integer id;
 
 	@Id
-	@GeneratedValue(strategy = GenerationType.TABLE, generator = "EMP_GEN")
+	@GeneratedValue(strategy = GenerationType.TABLE, generator = "BALL_GEN")
 	@Column(name = "ball_id")
 	public Integer getId() {
 		return id;

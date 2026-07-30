@@ -25,7 +25,6 @@ import org.hibernate.action.queue.spi.meta.EntityTableDescriptor;
 import org.hibernate.action.queue.spi.meta.TableKeyDescriptor;
 import org.hibernate.annotations.CacheLayout;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
-import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
@@ -46,6 +45,7 @@ import org.hibernate.dialect.lock.LockingStrategy;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.OptimisticLockStyle;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.profile.internal.FetchProfileAffectee;
 import org.hibernate.engine.spi.CachedNaturalIdValueSource;
 import org.hibernate.engine.spi.CascadeStyle;
@@ -124,6 +124,7 @@ import org.hibernate.metamodel.mapping.NonAggregatedIdentifierMapping;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
+import org.hibernate.metamodel.mapping.SelectablePath;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.mapping.SoftDeleteMapping;
 import org.hibernate.metamodel.mapping.TableDetails;
@@ -149,7 +150,6 @@ import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.models.internal.util.CollectionHelper;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.mutation.DeleteCoordinator;
 import org.hibernate.action.queue.internal.decompose.entity.DeleteDecomposer;
@@ -166,7 +166,7 @@ import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.Setter;
 import org.hibernate.query.PathException;
-import org.hibernate.query.named.spi.NamedQueryMemento;
+import org.hibernate.query.named.spi.NamedSelectionMemento;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sql.internal.SQLQueryParser;
 import org.hibernate.query.sqm.ComparisonOperator;
@@ -325,6 +325,8 @@ public abstract class AbstractEntityPersister
 
 	private final NavigableRole navigableRole;
 	private final SessionFactoryImplementor factory;
+	private final SqlStringGenerationContext sqlStringGenerationContext;
+	private final JdbcServices jdbcServices;
 
 	private final String sqlAliasStem;
 	private final String jpaEntityName;
@@ -451,6 +453,7 @@ public abstract class AbstractEntityPersister
 	private Setter[] setterCache;
 
 	private final String queryLoaderName;
+	private final NamedSelectionMemento<?> namedQueryLoaderMemento;
 
 	protected ReflectionOptimizer.AccessOptimizer accessOptimizer;
 
@@ -484,6 +487,8 @@ public abstract class AbstractEntityPersister
 		super( persistentClass, creationContext );
 
 		final var factoryOptions = creationContext.getSessionFactoryOptions();
+		sqlStringGenerationContext = creationContext.getSqlStringGenerationContext();
+		jdbcServices = creationContext.getJdbcServices();
 
 		this.jpaEntityName = persistentClass.getJpaEntityName();
 		this.jpaCallbacks =
@@ -491,7 +496,7 @@ public abstract class AbstractEntityPersister
 						creationContext.getServiceRegistry() );
 
 		//set it here, but don't call it, since it's still uninitialized!
-		factory = creationContext.getSessionFactory();
+		factory = creationContext.getSessionFactoryAccess().getSessionFactory();
 
 		sqlAliasStem = SqlAliasStemHelper.INSTANCE.generateStemFromEntityName( persistentClass.getEntityName() );
 
@@ -517,8 +522,8 @@ public abstract class AbstractEntityPersister
 			filterHelper = new FilterHelper(
 					persistentClass.getFilters(),
 					getEntityNameByTableNameMap( persistentClass,
-							factory.getSqlStringGenerationContext() ),
-					factory
+							creationContext.getSqlStringGenerationContext() ),
+					creationContext
 			);
 		}
 		else {
@@ -528,7 +533,7 @@ public abstract class AbstractEntityPersister
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 		representationStrategy =
-				creationContext.getBootstrapContext().getRepresentationStrategySelector()
+				creationContext.getRepresentationStrategySelector()
 						.resolveStrategy( persistentClass, this, creationContext );
 		javaType = representationStrategy.getLoadJavaType();
 		assert javaType != null;
@@ -798,9 +803,8 @@ public abstract class AbstractEntityPersister
 		fullDiscriminatorSQLValues = toStringArray( sqlValues );
 		fullDiscriminatorValues = values.toArray( DiscriminatorValue[]::new );
 
-		if ( hasNamedQueryLoader() ) {
-			getNamedQueryMemento( creationContext.getBootModel() );
-		}
+		namedQueryLoaderMemento =
+				hasNamedQueryLoader() ? resolveNamedQueryLoader( creationContext ) : null;
 
 		// Hibernate Reactive needs to convert the stateManagement so that it can create reactive coordinators
 		stateManagement = statementManagerConverter.apply( persistentClass.getRootClass().getStateManagement() );
@@ -835,10 +839,10 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Nonnull
-	private NamedQueryMemento<?> getNamedQueryMemento(@Nonnull MetadataImplementor bootModel) {
+	private NamedSelectionMemento<?> resolveNamedQueryLoader(RuntimeModelCreationContext creationContext) {
 		final var memento =
-				factory.getQueryEngine().getNamedObjectRepository()
-						.resolve( factory, bootModel, queryLoaderName );
+				creationContext.getNamedLoaderQueryResolver()
+						.resolveLoaderQuery( creationContext.getBootModel(), queryLoaderName );
 		if ( memento == null ) {
 			throw new IllegalArgumentException( "Could not resolve named query '" + queryLoaderName
 					+ "' for loading entity '" + getEntityName() + "'" );
@@ -846,14 +850,19 @@ public abstract class AbstractEntityPersister
 		return memento;
 	}
 
+	private NamedSelectionMemento<?> getNamedQueryMemento() {
+		if ( namedQueryLoaderMemento == null ) {
+			throw new IllegalStateException( "Entity does not define a named query loader: " + getEntityName() );
+		}
+		return namedQueryLoaderMemento;
+	}
+
 	/**
 	 * For Hibernate Reactive
 	 */
 	protected SingleIdEntityLoader<?> buildSingleIdEntityLoader() {
 		if ( hasNamedQueryLoader() ) {
-			// We must resolve the named query on-demand through the boot model because it isn't initialized yet
-			final var memento = getNamedQueryMemento( null );
-			return new SingleIdEntityLoaderProvidedQueryImpl<>( this, memento );
+			return new SingleIdEntityLoaderProvidedQueryImpl<>( this, getNamedQueryMemento() );
 		}
 		else {
 			return buildSingleIdEntityLoader( new LoadQueryInfluencers( factory ), null );
@@ -2980,7 +2989,9 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public void forEachTableDetails(Consumer<TableDetails> consumer) {
-		CollectionHelper.forEach( getTableMappings(), consumer );
+		for ( TableMapping tableMapping : getTableMappings() ) {
+			consumer.accept( tableMapping );
+		}
 	}
 
 	/**
@@ -3539,6 +3550,9 @@ public abstract class AbstractEntityPersister
 	public final void postInstantiate(PersistentClass bootEntityDescriptor) throws MappingException {
 
 		tableMappings = buildTableMappings( bootEntityDescriptor );
+		if ( discriminatorMapping == null ) {
+			discriminatorMapping = generateDiscriminatorMapping( bootEntityDescriptor );
+		}
 
 		final List<AttributeMapping> insertGeneratedAttributes =
 				hasInsertGeneratedProperties()
@@ -5231,7 +5245,7 @@ public abstract class AbstractEntityPersister
 	public String determineTableName(Table table) {
 		return table.getSubselect() != null
 				? "( " + createSqlQueryParser( table ).process() + " )"
-				: factory.getSqlStringGenerationContext().format( table.getQualifiedTableName() );
+				: sqlStringGenerationContext.format( table.getQualifiedTableName() );
 	}
 
 	private SQLQueryParser createSqlQueryParser(Table table) {
@@ -5240,7 +5254,12 @@ public abstract class AbstractEntityPersister
 				null,
 				// NOTE: this allows finer control over catalog and schema used for
 				// placeholder handling (`{h-catalog}`, `{h-schema}`, `{h-domain}`)
-				new ExplicitSqlStringGenerationContext( table.getCatalog(), table.getSchema(), factory )
+				new ExplicitSqlStringGenerationContext(
+						table.getCatalog(),
+						table.getSchema(),
+						sqlStringGenerationContext,
+						jdbcServices
+				)
 		);
 	}
 
@@ -5383,12 +5402,38 @@ public abstract class AbstractEntityPersister
 				"Entity(" + getEntityName() + ") `staticFetchableList` generator",
 				() -> {
 					final var builder = new ImmutableAttributeMappingList.Builder( attributeMappings.size() );
-					visitSubTypeAttributeMappings( builder::add );
+					final var persistentClass =
+							creationProcess.getCreationContext().getBootModel()
+									.getEntityBinding( getEntityName() );
+					if ( persistentClass.hasSubclasses() ) {
+						for ( var property : persistentClass.getSubclassPropertyClosure() ) {
+							final var attributeMapping = getDeclaredAttributeMapping(
+									property.getPersistentClass(),
+									property,
+									creationProcess
+							);
+							if ( attributeMapping != null ) {
+								builder.add( attributeMapping );
+							}
+						}
+					}
+					else {
+						visitSubTypeAttributeMappings( builder::add );
+					}
 					assert superMappingType != null || builder.assertFetchableIndexes();
 					staticFetchableList = builder.build();
 					return true;
 				}
 		);
+	}
+
+	private AttributeMapping getDeclaredAttributeMapping(
+			PersistentClass propertyOwner,
+			Property property,
+			MappingModelCreationProcess creationProcess) {
+		final var persister =
+				(AbstractEntityPersister) creationProcess.getEntityPersister( propertyOwner.getEntityName() );
+		return persister.findDeclaredAttributeMapping( property.getName() );
 	}
 
 	private static ReflectionOptimizer.AccessOptimizer accessOptimizer(EntityRepresentationStrategy strategy) {
@@ -5442,15 +5487,14 @@ public abstract class AbstractEntityPersister
 		for ( var property : allPropertyClosure ) {
 			if ( !property.isGeneric() ) {
 				final String attributeName = property.getName();
-				final var bootProperty = bootEntityDescriptor.getProperty( attributeName );
 				if ( superMappingType == null
-					|| superMappingType.findAttributeMapping( bootProperty.getName() ) == null ) {
+					|| superMappingType.findAttributeMapping( property.getName() ) == null ) {
 					mappingsBuilder.put(
 							attributeName,
 							generateNonIdAttributeMapping(
-									bootProperty,
+									property,
 									stateArrayPosition++,
-									fetchableIndex++,
+									determineFetchableIndex( bootEntityDescriptor, property, fetchableIndex++ ),
 									creationProcess
 							)
 					);
@@ -5493,6 +5537,20 @@ public abstract class AbstractEntityPersister
 			}
 			// otherwise, it's defined on the supertype, skip it here
 		}
+	}
+
+	private int determineFetchableIndex(PersistentClass bootEntityDescriptor, Property property, int fallbackIndex) {
+		final var rootEntityDescriptor = bootEntityDescriptor.getRootClass();
+		if ( rootEntityDescriptor.hasSubclasses() ) {
+			int index = 0;
+			for ( var closureProperty : rootEntityDescriptor.getSubclassPropertyClosure() ) {
+				if ( closureProperty == property ) {
+					return index;
+				}
+				index++;
+			}
+		}
+		return fallbackIndex;
 	}
 
 	private static @Nullable BeforeExecutionGenerator createVersionGenerator(
@@ -6079,6 +6137,7 @@ public abstract class AbstractEntityPersister
 			final boolean isAttrColumnExpressionFormula;
 			final String customReadExpr;
 			final String customWriteExpr;
+			final SelectablePath selectablePath;
 			final Long length;
 			final Integer arrayLength;
 			final Integer precision;
@@ -6086,10 +6145,12 @@ public abstract class AbstractEntityPersister
 			final Integer temporalPrecision;
 			final boolean isLob;
 			final boolean nullable;
+			BasicType<?> basicAttrType = (BasicType<?>) value.getType();
 
 			if ( value instanceof DependantValue ) {
 				attrColumnExpression = attrColumnNames[0];
 				isAttrColumnExpressionFormula = false;
+				selectablePath = null;
 				customReadExpr = null;
 				customWriteExpr = "?";
 				Column column = value.getColumns().get( 0 );
@@ -6107,6 +6168,7 @@ public abstract class AbstractEntityPersister
 				if ( !value.getSelectables().get( 0 ).isFormula() ) {
 					attrColumnExpression = attrColumnNames[ 0 ];
 					isAttrColumnExpressionFormula = false;
+					selectablePath = null;
 
 					final var selectables = basicBootValue.getSelectables();
 					assert !selectables.isEmpty();
@@ -6121,7 +6183,7 @@ public abstract class AbstractEntityPersister
 							creationContext.getTypeConfiguration()
 					);
 					customWriteExpr = selectable.getWriteExpr(
-							(JdbcMapping) attrType,
+							basicAttrType,
 							dialect,
 							creationContext.getBootModel()
 					);
@@ -6133,11 +6195,18 @@ public abstract class AbstractEntityPersister
 					scale = column.getScale();
 					nullable = column.isNullable();
 					isLob = column.isSqlTypeLob( creationContext.getMetadata() );
-					resolveAggregateColumnBasicType( creationProcess, role, column );
+					final var aggregateColumnBasicType = resolveAggregateColumnBasicType( creationProcess, role, column );
+					if ( aggregateColumnBasicType != null ) {
+						basicAttrType = aggregateColumnBasicType;
+					}
 				}
 				else {
+					final Formula formula = (Formula) value.getSelectables().get( 0 );
 					attrColumnExpression = attrColumnNames[ 0 ];
 					isAttrColumnExpressionFormula = true;
+					selectablePath = formula.getSelectableName() == null
+							? null
+							: new SelectablePath( formula.getSelectableName() );
 					customReadExpr = null;
 					customWriteExpr = null;
 					length = null;
@@ -6157,10 +6226,10 @@ public abstract class AbstractEntityPersister
 					fetchableIndex,
 					bootProperty,
 					this,
-					(BasicType<?>) value.getType(),
+					basicAttrType,
 					tableExpression,
 					attrColumnExpression,
-					null,
+					selectablePath,
 					isAttrColumnExpressionFormula,
 					customReadExpr,
 					customWriteExpr,
@@ -6230,7 +6299,9 @@ public abstract class AbstractEntityPersister
 					this,
 					propertyAccess,
 					cascadeStyle,
-					getFetchStyle( stateArrayPosition ),
+					stateArrayPosition < 0 && value instanceof org.hibernate.mapping.Collection collection
+							? collection.getFetchStyle()
+							: getFetchStyle( stateArrayPosition ),
 					creationProcess
 			);
 		}

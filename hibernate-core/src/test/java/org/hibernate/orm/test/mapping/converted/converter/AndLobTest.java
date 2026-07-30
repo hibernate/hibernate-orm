@@ -13,7 +13,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Lob;
 
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.type.Type;
 import org.hibernate.type.internal.ConvertedBasicTypeImpl;
 
@@ -38,9 +38,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 public class AndLobTest {
 	@Test
 	public void testMappingAttributeWithLobAndAttributeConverter(ServiceRegistryScope scope) {
-		final Metadata metadata = new MetadataSources( scope.getRegistry() )
-				.addAnnotatedClass( EntityImpl.class )
-				.buildMetadata();
+		final Metadata metadata = MetadataBuildingTestHelper.buildMetadata( scope.getRegistry(), EntityImpl.class );
 
 		final Type type = metadata.getEntityBinding( EntityImpl.class.getName() ).getProperty( "status" ).getType();
 		final ConvertedBasicTypeImpl typeAdapter = assertTyping( ConvertedBasicTypeImpl.class, type );

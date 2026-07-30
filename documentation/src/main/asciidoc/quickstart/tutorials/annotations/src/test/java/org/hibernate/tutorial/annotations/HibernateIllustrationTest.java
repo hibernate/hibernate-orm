@@ -8,9 +8,7 @@ import java.time.LocalDateTime;
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.jpa.HibernatePersistenceConfiguration;
 
 import junit.framework.TestCase;
 
@@ -19,7 +17,7 @@ import static java.time.LocalDateTime.now;
 
 /**
  * Illustrates the use of Hibernate native APIs, including the use
- * of org.hibernate.boot for configuration and bootstrap.
+ * of HibernatePersistenceConfiguration for configuration and bootstrap.
  * Configuration properties are sourced from hibernate.properties.
  *
  * @author Steve Ebersole
@@ -30,21 +28,10 @@ public class HibernateIllustrationTest extends TestCase {
 	@Override
 	protected void setUp() {
 		// A SessionFactory is set up once for an application!
-		final StandardServiceRegistry registry =
-				new StandardServiceRegistryBuilder()
-						.build();
-		try {
-			sessionFactory =
-					new MetadataSources(registry)
-							.addAnnotatedClass(Event.class)
-							.buildMetadata()
-							.buildSessionFactory();
-		}
-		catch (Exception e) {
-			// The registry would be destroyed by the SessionFactory, but we
-			// had trouble building the SessionFactory so destroy it manually.
-			StandardServiceRegistryBuilder.destroy(registry);
-		}
+		sessionFactory =
+				new HibernatePersistenceConfiguration( "hibernate-tutorial-annotations" )
+						.managedClass(Event.class)
+						.createEntityManagerFactory();
 	}
 
 	@Override

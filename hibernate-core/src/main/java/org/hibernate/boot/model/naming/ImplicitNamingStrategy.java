@@ -41,7 +41,6 @@ import org.hibernate.Incubating;
  *
  * @see PhysicalNamingStrategy
  * @see org.hibernate.cfg.Configuration#setImplicitNamingStrategy(ImplicitNamingStrategy)
- * @see org.hibernate.boot.MetadataBuilder#applyImplicitNamingStrategy(ImplicitNamingStrategy)
  * @see org.hibernate.cfg.MappingSettings#IMPLICIT_NAMING_STRATEGY
  *
  * @author Steve Ebersole

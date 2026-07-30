@@ -231,13 +231,6 @@ public sealed class Subclass extends PersistentClass
 		return getTable() != getRootTable();
 	}
 
-	public void createForeignKey() {
-		if ( isJoinedSubclass() ) {
-			getKey().createForeignKeyOfEntity( getSuperclass().getEntityName() );
-		}
-	}
-
-
 	@Override
 	public int getJoinClosureSpan() {
 		return getSuperclass().getJoinClosureSpan() + super.getJoinClosureSpan();

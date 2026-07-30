@@ -20,6 +20,13 @@
  *     {@link org.hibernate.mapping.Column}, or
  *     {@link org.hibernate.mapping.ForeignKey}.
  * </ul>
+ * Concrete occurrences in this model may carry a
+ * {@link org.hibernate.boot.mapping.spi.MappingRole}, while attribute
+ * projections may also carry a
+ * {@link org.hibernate.boot.mapping.spi.DeclarationRole} identifying their
+ * source declaration. These stable identities are owned by the boot mapping
+ * SPI and allow binding, runtime-model handoff, and metadata serialization to
+ * correlate mapping parts without depending on Java object identity.
  * <p>
  * The lifecycle of these mapping objects is outlined below.
  * <ol>

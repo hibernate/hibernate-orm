@@ -4,6 +4,7 @@
  */
 package org.hibernate.id;
 
+import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.ExportableProducer;
 import org.hibernate.id.enhanced.Optimizer;
 import org.hibernate.id.enhanced.StandardOptimizerDescriptor;
@@ -12,6 +13,9 @@ import org.hibernate.id.enhanced.StandardOptimizerDescriptor;
  * Commonality between sequence-based and table-based generators
  */
 public interface OptimizableGenerator extends IdentifierGenerator, ExportableProducer {
+	@Override
+	void registerExportables(Database database);
+
 	/**
 	 * If an explicit sequence/table name is not configured,
 	 */

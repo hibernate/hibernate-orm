@@ -27,7 +27,7 @@ import org.hibernate.envers.internal.tools.ReflectionTools;
 import org.hibernate.envers.strategy.AuditStrategy;
 import org.hibernate.envers.strategy.spi.AuditStrategyContext;
 import org.hibernate.internal.util.config.ConfigurationHelper;
-import org.hibernate.property.access.spi.Getter;
+import org.hibernate.property.access.spi.PropertyValueAccessor;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.Stoppable;
@@ -124,9 +124,9 @@ public class EnversServiceImpl implements EnversService, Configurable, Stoppable
 					}
 
 					@Override
-					public Getter getRevisionInfoTimestampAccessor() {
+					public PropertyValueAccessor getRevisionInfoTimestampAccessor() {
 						final PropertyData pd = configuration.getRevisionInfo().getRevisionInfoTimestampData();
-						return ReflectionTools.getGetter( getRevisionInfoClass(), pd, serviceRegistry );
+						return ReflectionTools.getPropertyValueAccessor( getRevisionInfoClass(), pd, serviceRegistry );
 					}
 				}
 		);

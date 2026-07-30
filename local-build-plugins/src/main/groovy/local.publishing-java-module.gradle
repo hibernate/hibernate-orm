@@ -73,6 +73,22 @@ tasks.named("check") {
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Javadoc
+
+// Reduce the size of per-module javadoc jars published to Maven Central.
+// These options are intentionally NOT in local.javadoc.gradle,
+// so that the aggregated javadoc published to docs.hibernate.org is unaffected.
+tasks.withType(Javadoc).configureEach {
+    exclude '**/spi/**' // SPI pages are ~7M in the jar; SPI is for integrators who read the source
+    configure( options ) {
+        addStringOption('-override-methods', 'summary') // don't repeat inherited method docs; link to the declaring type instead
+        use = false // class-use pages are ~10M in the jar; IDEs provide better "find usages"
+        splitIndex = true // avoid a single 17M index-all.html; split into per-letter files instead
+        noTree = true // class hierarchy is ~7M uncompressed; IDEs show this better
+    }
+}
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Publishing
 
 var publishingExtension = project.getExtensions().getByType(PublishingExtension) as PublishingExtension

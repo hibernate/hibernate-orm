@@ -4,6 +4,7 @@
  */
 package org.hibernate.boot.models.spi;
 
+import org.hibernate.Remove;
 import java.util.Objects;
 
 import org.hibernate.models.spi.ClassDetails;
@@ -11,6 +12,7 @@ import org.hibernate.models.spi.ClassDetails;
 /**
  * @author Steve Ebersole
  */
+@Remove
 public record ConverterRegistration(ClassDetails converterClass, Boolean autoApply) {
 	@Override
 	public boolean equals(Object o) {

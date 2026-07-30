@@ -4,6 +4,7 @@
  */
 package org.hibernate.boot.models.spi;
 
+import org.hibernate.Remove;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 
 import java.util.List;
@@ -20,6 +21,7 @@ import java.util.List;
  *
  * @author Andrea Boriero
  */
+@Remove
 public record DatabaseObjectRegistration(
 		String create,
 		String drop,

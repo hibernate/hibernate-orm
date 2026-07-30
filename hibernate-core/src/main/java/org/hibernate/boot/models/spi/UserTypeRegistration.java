@@ -4,6 +4,7 @@
  */
 package org.hibernate.boot.models.spi;
 
+import org.hibernate.Remove;
 import org.hibernate.models.spi.ClassDetails;
 
 /**
@@ -13,6 +14,7 @@ import org.hibernate.models.spi.ClassDetails;
  *
  * @author Steve Ebersole
  */
+@Remove
 public class UserTypeRegistration {
 	private final ClassDetails domainClass;
 	private final ClassDetails userTypeClass;

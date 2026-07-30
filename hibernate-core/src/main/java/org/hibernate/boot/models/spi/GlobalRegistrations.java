@@ -4,6 +4,7 @@
  */
 package org.hibernate.boot.models.spi;
 
+import org.hibernate.Remove;
 import org.hibernate.models.spi.ClassDetails;
 
 import java.util.List;
@@ -17,6 +18,7 @@ import java.util.Set;
  *
  * @author Steve Ebersole
  */
+@Remove
 public interface GlobalRegistrations {
 	List<LifecycleEventHandler> getEntityListenerRegistrations();
 

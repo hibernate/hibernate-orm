@@ -4,6 +4,7 @@
  */
 package org.hibernate.boot.models.spi;
 
+import org.hibernate.Remove;
 import jakarta.persistence.SqlResultSetMapping;
 
 /**
@@ -12,5 +13,6 @@ import jakarta.persistence.SqlResultSetMapping;
  *
  * @author Steve Ebersole
  */
+@Remove
 public record SqlResultSetMappingRegistration(String name, SqlResultSetMapping configuration) {
 }

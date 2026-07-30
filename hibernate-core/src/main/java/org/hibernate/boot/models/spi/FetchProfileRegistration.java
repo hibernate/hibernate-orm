@@ -4,6 +4,7 @@
  */
 package org.hibernate.boot.models.spi;
 
+import org.hibernate.Remove;
 import java.util.List;
 
 /**
@@ -12,6 +13,7 @@ import java.util.List;
  * @see org.hibernate.annotations.FetchProfile
  * @see org.hibernate.boot.jaxb.mapping.spi.JaxbFetchProfileImpl
  */
+@Remove
 public class FetchProfileRegistration {
 	private final String name;
 	private final List<FetchOverride> fetchOverrides;
@@ -29,6 +31,7 @@ public class FetchProfileRegistration {
 		return fetchOverrides;
 	}
 
+	@Remove
 	public record FetchOverride(String entityName, String association, String style) {
 	}
 }

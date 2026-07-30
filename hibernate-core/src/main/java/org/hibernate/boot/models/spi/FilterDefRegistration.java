@@ -4,6 +4,7 @@
  */
 package org.hibernate.boot.models.spi;
 
+import org.hibernate.Remove;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -26,6 +27,7 @@ import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
  *
  * @author Marco Belladelli
  */
+@Remove
 public class FilterDefRegistration {
 	private final String name;
 	private final String defaultCondition;

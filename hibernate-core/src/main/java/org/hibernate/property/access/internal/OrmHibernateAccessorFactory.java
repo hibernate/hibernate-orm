@@ -29,6 +29,7 @@ import net.bytebuddy.dynamic.scaffold.subclass.ConstructorStrategy;
 import net.bytebuddy.implementation.Implementation;
 import net.bytebuddy.jar.asm.Opcodes;
 
+import net.bytebuddy.jar.asm.Type;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.bytecode.enhance.internal.bytebuddy.BridgeMembersClassInfo;
@@ -162,6 +163,7 @@ public class OrmHibernateAccessorFactory implements HibernateAccessorFactory {
 				) )
 				.make()
 				.getBytes();
+		dumpClassBytes( declaringClass, "Reader", classBytes );
 		return loadHiddenClass( declaringClass, classBytes, HibernateAccessorMultiValueReader.class, delegates );
 	}
 
@@ -203,6 +205,7 @@ public class OrmHibernateAccessorFactory implements HibernateAccessorFactory {
 				) )
 				.make()
 				.getBytes();
+		dumpClassBytes( declaringClass, "Writer", classBytes );
 		return loadHiddenClass( declaringClass, classBytes, HibernateAccessorMultiValueWriter.class, delegates );
 	}
 
@@ -532,6 +535,10 @@ public class OrmHibernateAccessorFactory implements HibernateAccessorFactory {
 				}
 			}
 		}
+	}
+
+	private void dumpClassBytes(Class<?> declaringClass, String suffix, byte[] bytes) {
+		bytecodeDumper.dump( Type.getInternalName( declaringClass ) + "$HibernateAccessor" + suffix, bytes );
 	}
 
 	/**

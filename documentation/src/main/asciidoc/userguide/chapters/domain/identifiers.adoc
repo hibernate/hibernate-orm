@@ -392,12 +392,14 @@ include::{example-dir-identifier}/SequenceGeneratorConfiguredTest.java[tag=ident
 Again the mapping specifies `explicit_product_sequence` as the physical sequence name, but it also specifies an
 explicit allocation-size ("increment by").
 
-The scope of the generator name can be controlled with the <<settings-hibernate.jpa.compliance.global_id_generators,`hibernate.jpa.compliance.global_id_generators`>>
+The scope of the generator name can be controlled with the
+<<settings-hibernate.jpa.compliance.global_id_generators,`hibernate.jpa.compliance.global_id_generators`>>
 configuration setting. With <<settings-compliance,JPA compliance>> enabled, the name scope is global i.e.
 there may not be two generator definitions with the same name. Historically, Hibernate ORM used a local scope i.e.
 every managed type may have a generator with the same name, preferring the "local" definition over a more distant one.
 This behavior allows to model e.g. a mapped superclass with a generator that should apply to subclasses by default,
 yet allow an entity subclass to choose a custom generator by simply specifying the same generator name.
+Disabling global generator-name scoping is deprecated and will no longer be supported in Hibernate ORM 9.0.
 
 [[identifiers-generators-sequence-override]]
 .Sequence override

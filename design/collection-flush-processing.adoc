@@ -1,0 +1,1523 @@
+:toc2:
+:toclevels: 3
+:sectanchors:
+:numbered:
+= Collection Flush Processing
+
+Status: Draft
+
+This document proposes a redesign of collection visitation and mutation planning
+during flush.  It focuses on the path from cascade and reachability processing,
+through logical collection-action discovery, to graph-based decomposition and
+execution of row mutations.
+
+The proposal builds on the graph action queue described in
+link:graph-action-queue.adoc[Graph Action Queue].  It does not replace the graph
+queue.  It defines a clearer collection-facing input to that queue and a reliable
+way to preserve logical action lifecycle across operation grouping and graph
+reordering.
+
+== Problem Statement
+
+Collection flush processing currently spans several independently useful
+abstractions:
+
+* cascade traversal and orphan discovery,
+* collection reachability processing,
+* `CollectionEntry` dirty checking and snapshot management,
+* `FlushProcessingContext` tracking,
+* legacy collection actions in `ActionQueue`,
+* `CollectionDecomposer` delta discovery,
+* row-level `FlushOperation` creation,
+* graph grouping, planning, and execution,
+* collection events, cache work, statistics, and monitoring.
+
+Each abstraction solves a real problem, but the complete logical collection
+mutation is not represented by one object.  Instead, its state is distributed
+between a `PersistentCollection`, its `CollectionEntry`, the flush tracker, one
+or more queued actions, emitted row operations, and callbacks attached to a
+selected operation.
+
+This distribution has several consequences:
+
+* the collection may be visited or compared to its snapshot multiple times,
+* decomposition reads mutable collection state late in the flush,
+* logical action identity is lost when operations are grouped by statement shape,
+* lifecycle completion is inferred from operation emission order,
+* speculative auto-flush rollback must mutate several queue lists independently,
+* orphan discovery and collection row-delta discovery may perform related work
+  separately,
+* graph and legacy queues may expose different event and monitoring behavior.
+
+The central design change proposed here is to explicitly model the logical
+collection mutation before it is decomposed into physical row operations.
+
+== Goals
+
+The redesign should:
+
+* Preserve collection reachability and shared-reference validation.
+* Preserve Hibernate collection, interceptor, entity callback, cache, statistics,
+  and transaction-completion semantics.
+* Represent a collection's logical transition once per flush.
+* Discover and retain a stable collection delta once per flush when possible.
+* Preserve logical action identity through graph planning and execution.
+* Run completion work only after all physical mutations for the logical action
+  have completed successfully.
+* Keep collection SQL batchable.
+* Allow row-sensitive unique-key and foreign-key ordering where it is required.
+* Support uninitialized collections, queued operations, forced initialization,
+  database cascade removal, and owner/role changes.
+* Make speculative auto-flush work atomically discardable.
+* Avoid repeatedly interpreting stable cascade metadata for every entity
+  traversal.
+* Make cascade traversal state and attribute-path handling explicit and
+  diagnosable.
+* Provide a staged migration from the existing collection actions.
+
+== Non-Goals
+
+This proposal does not initially attempt to:
+
+* redesign `PersistentCollection` user-facing behavior,
+* replace entity action decomposition,
+* change mapping semantics for ownership, orphan delete, or inverse collections,
+* change the order or lazy-loading semantics of existing cascade actions,
+* guarantee a global order between unrelated collection events,
+* remove the legacy action queue in the first implementation,
+* make every collection delta fully independent of generated entity identifiers.
+
+Generated identifiers and other values which legitimately become available
+during execution may still be represented by handles resolved by bind plans.
+
+== Potential Applicability to Entity Work
+
+This proposal is framed around collection visitation, collection events, and
+collection mutation work.  Several ideas may also apply to entity event/action
+processing:
+
+* a semantic boundary which is independent of `Executable`,
+* queue-native scheduling and physical representations,
+* logical mutation identity independent of SQL statement shape,
+* explicit completion across grouping, batching, and synthesized fixups,
+* lifecycle callbacks attached to semantic completion rather than an arbitrary
+  physical operation,
+* mutation-generation protection for changes made after work is frozen,
+* explicit checkpoint policies for speculative auto-flush.
+
+Entity insert, update, and delete processing has additional constraints,
+including identifier and version generation, entity state arrays, dirty
+attributes, natural-id and cache coordination, entity event contracts, and
+entity-specific state-management contributors.  This document has not analyzed
+whether the collection design transfers directly to those cases.
+
+Generalization to entity events or entity action processing is out of scope for
+this proposal.  Implementations should avoid unnecessarily preventing later
+reuse, but should not introduce a common entity/collection abstraction without
+a separate analysis, design proposal, and working specification.
+
+== Terminology
+
+Collection flush context::
+Flush-local mutable state used while collections are discovered, checked, and
+normalized.
+
+Collection mutation intent::
+The logical transition selected for a collection, independent of its eventual
+SQL representation.
+
+Collection delta::
+A stable semantic description of changes relative to an identified baseline.
+It may describe either the complete difference from a snapshot or only explicit
+changes queued against an uninitialized persisted baseline.
+
+Delta coverage::
+Whether a collection delta describes the complete difference from a known
+baseline or only the explicit changes queued against an uninitialized persisted
+baseline.
+
+Logical collection action::
+One observable collection lifecycle unit, such as create, remove, or update.
+Queued-operation finalization may be merged into such an action or represented
+as a dependent internal lifecycle unit.  A move may contain both a remove action
+and a create action because both lifecycles are observable.
+
+Physical collection operation::
+A table-level mutation emitted for a logical collection action.  In the graph
+queue this is usually a `FlushOperation` and often represents one row.
+
+Action completion::
+The point at which all physical operations belonging to one logical collection
+action have successfully completed and its state, cache, events, statistics, and
+other callbacks may be finalized.
+
+== Current Processing Model
+
+The current high-level flow is shown below.  The dashed arrows emphasize that
+the live collection and its snapshot are consulted during both visitation and
+later decomposition.
+
+[plantuml,collection-flush-current-flow,svg]
+.Current collection path
+----
+@startuml
+scale 1.5
+skinparam backgroundColor transparent
+skinparam shadowing false
+skinparam defaultTextAlignment center
+skinparam componentStyle rectangle
+top to bottom direction
+
+rectangle "PersistentCollection\n+ CollectionEntry + snapshot" as State #FFF2CC
+
+package "1. Flush preparation and collection visitation" #EAF2F8 {
+  rectangle "AbstractFlushingEventListener\npreFlush" as PreFlush
+  rectangle "Flush-time cascade\n+ association synchronization" as Cascade
+  rectangle "CollectionEntry.preFlush\n+ dirty checking" as DirtyCheck
+  rectangle "flushEntities\nWrapVisitor + FlushVisitor" as Visitors
+  rectangle "Collections\nreachable / unreachable processing" as Reachability
+  rectangle "FlushProcessingContext\nqueueCollectionXxx" as Context
+
+  PreFlush --> Cascade
+  Cascade --> DirtyCheck
+  DirtyCheck --> Visitors
+  Visitors --> Reachability
+  Reachability --> Context
+}
+
+package "2. Logical action storage" #FDEBD0 {
+  rectangle "CollectionRecreateAction\nCollectionRemoveAction\nCollectionUpdateAction\nQueuedOperationCollectionAction" as Actions
+  rectangle "ActionQueue collection lists" as Queue
+
+  Actions --> Queue
+}
+
+package "3. Graph decomposition" #E8F8F5 {
+  rectangle "GraphBasedActionQueue\nexecuteActions" as GraphQueue
+  rectangle "FlushCoordinator" as Coordinator
+  rectangle "Decomposer\n+ CollectionPersister.decompose" as Decomposer
+  rectangle "CollectionDecomposer\nrediscover row delta" as CollectionDecomposer
+  rectangle "FlushOperation\nmostly one per row" as Operations
+
+  GraphQueue --> Coordinator
+  Coordinator --> Decomposer
+  Decomposer --> CollectionDecomposer
+  CollectionDecomposer --> Operations
+}
+
+package "4. Group, plan, and execute" #F4ECF7 {
+  rectangle "Group by\nStatementShapeKey" as Grouping
+  rectangle "Dependency graph\n+ cycle handling" as Graph
+  rectangle "FlushPlan" as Plan
+  rectangle "Direct / batched\nJDBC execution" as Execution
+  rectangle "Callbacks attached to\nselected FlushOperation" as Callbacks #FADBD8
+
+  Grouping --> Graph
+  Graph --> Plan
+  Plan --> Execution
+  Execution --> Callbacks
+}
+
+Context --> Actions : queues immediately
+Queue --> GraphQueue
+Operations --> Grouping
+
+State ..> DirtyCheck : live state + snapshot
+State ..> Reachability : owner / role / key
+State ..> CollectionDecomposer : live state + snapshot read again
+
+note right of Grouping
+  SQL shape becomes the grouping identity;
+  logical collection-action identity is not retained.
+end note
+@enduml
+----
+
+`FlushProcessingContext` currently serves three roles:
+
+* reachability and duplicate-processing state,
+* a read-only `CollectionFlushActionTracker` used by later phases,
+* creation and immediate queuing of collection actions.
+
+The graph queue retains separate legacy-shaped collection action lists and only
+later turns those actions into row-level operations.  Collection decomposers
+therefore rediscover row deltas from the live collection during action
+decomposition.
+
+The main implementation touchpoints are:
+
+[cols="1,2",options="header"]
+|===
+| Responsibility | Current implementation
+
+| Flush orchestration
+| `AbstractFlushingEventListener`, `DefaultAutoFlushEventListener`
+
+| Collection visitation and action tracking
+| `WrapVisitor`, `FlushVisitor`, `Collections`, `FlushProcessingContext`,
+  `CollectionFlushActionTracker`
+
+| Cascade traversal
+| `Cascade`, `CascadingAction`, `CascadingActions`, `CascadeStyle`, `CascadePoint`
+
+| Logical action storage
+| `ActionQueue`, `ActionQueueLegacy`, `GraphBasedActionQueue`
+
+| Graph decomposition and grouping
+| `FlushCoordinator`, `Decomposer`, `CollectionDecomposer`
+
+| Collection delta discovery
+| `PersistentCollection.getChangeSet()`, `CollectionChangeSet`,
+  `BasicCollectionDecomposer`, `AbstractOneToManyDecomposer`
+
+| Planning and execution
+| `StandardFlushPlanner`, `FlushPlan`, `BatchingPlanStepExecutor`
+|===
+
+== Known Problems in the Current Model
+
+This section records concrete issues which motivate or constrain the design.
+They may be fixed independently before the larger redesign.
+
+=== Logical completion may execute too early
+
+Collection post-action work is usually attached to the last operation emitted by
+the decomposer.  Emission order is not an execution dependency: operations are
+subsequently grouped and may be reordered by the graph planner.
+
+No-op callback carriers are particularly vulnerable.  Their statement shape is
+derived from the table and `NO_OP` mutation kind.  Carriers for different logical
+actions on the same table may therefore be merged into one operation group.  The
+group receives the minimum ordinal of its members and has no database constraint
+edges.  A callback belonging to a later action may execute with the earliest
+carrier group, before the later action's mutations.
+
+This may prematurely perform:
+
+* `CollectionEntry.afterAction()`,
+* post-collection event delivery,
+* owner post-update callbacks,
+* cache eviction and statistics updates,
+* audit collection-change capture.
+
+Logical completion must not depend on shape grouping or on which emitted
+operation happened to be last.
+
+=== One-to-many fallback ordinals overlap action ranges
+
+The one-to-many update fallback currently invokes removal, change, and addition
+planning with `ordinalBase`, `ordinalBase + 1`, and `ordinalBase + 2`.
+`FlushCoordinator`, however, allocates only one base per queued action.
+
+The collection ordinal scheme already reserves distinct `DELETE`, `UPDATE`,
+`INSERT`, and `WRITEINDEX` slots inside one action range.  Incrementing the base
+therefore overlaps the ranges allocated to subsequent actions and can place an
+action-scoped callback before some mutations of its own action.
+
+=== Auto-flush rollback is not a queue checkpoint
+
+When an auto-flush check determines that execution is unnecessary, the action
+queue clears selected lists and truncates collection removals using a previously
+recorded size.  In the graph queue, the recorded removal count includes orphan
+collection removals while truncation applies only to the normal removal list.
+
+More generally, speculative flush rollback is expressed as knowledge of which
+lists are safe to clear rather than as restoration of an explicit queue
+checkpoint.
+
+=== Collection monitoring is not execution monitoring
+
+Basic collection-update monitoring currently surrounds decomposition rather
+than JDBC execution.  The legacy `CollectionRecreateAction` and remove
+decomposition paths do not provide equivalent execution monitoring.  This
+differs from the legacy action behavior and makes timing and success data
+queue-dependent.
+
+=== Flush listener collection counts are incorrect
+
+`DefaultAutoFlushEventListener` currently passes the processed entity count as
+both the entity and collection arguments to `partialFlushEnd()`.
+
+=== Collection state is repeatedly derived
+
+Depending on collection semantics and mapping, flush may separately perform:
+
+* dirty comparison,
+* orphan comparison,
+* delete discovery,
+* update discovery,
+* insertion discovery,
+* position-shift discovery,
+* unique-slot value extraction,
+* JDBC value extraction.
+
+Some indexed collection fallbacks perform nested scans to associate current
+elements with snapshot positions.  This is quadratic for large collections.
+
+== Required Invariants
+
+The implementation must maintain the following invariants.
+
+=== Discovery invariants
+
+* A persistent collection instance is processed at most once by normal
+  reachability handling during one flush.
+* A collection instance may not be reachable through multiple incompatible
+  owner/role references.
+* Collections added to the persistence context during flush are registered with
+  the active collection flush context.
+* Forced initialization during role/owner changes is visible to mutation
+  materialization.
+* A physical delete suppressed by database cascade remains a logical remove for
+  cache and collection-loading decisions.
+* `CREATE` describes the current role/key side and never implies a remove of the
+  loaded side; when both sides exist the transition is `REMOVE_AND_CREATE`.
+* A physical remove-all plus create-all strategy selected for an `UPDATE` does
+  not change its logical transition or event lifecycle.
+
+=== Delta invariants
+
+* One normalized delta describes the structural state used to plan an action.
+* The delta identifies its baseline and whether its coverage is complete.
+* A partial delta never implies that an unmentioned persisted row is absent or
+  unchanged in a way which requires knowing its value.
+* Ordered queued operations retain their sequential semantics until a
+  collection-specific normalizer can prove that folding them is equivalent.
+* Duplicate elements and mapping-specific equality semantics are preserved.
+* Snapshot positions and current positions are not conflated.
+* A delta is structurally stable after materialization.
+* Values which require generated identifiers use explicit deferred handles
+  rather than causing the collection to be rediscovered.
+
+=== Execution invariants
+
+* Every physical operation belongs to exactly one logical action.
+* SQL shape grouping must not erase logical action membership.
+* Pre-action behavior occurs before action mutation planning is finalized.
+* Action completion occurs exactly once.
+* Action completion occurs only after all its physical operations complete.
+* A failed physical operation prevents successful completion callbacks for that
+  action.
+* Batched operations count as complete only after their batch execution succeeds.
+* Empty physical plans still complete their logical action exactly once.
+
+=== Ordering invariants
+
+* Ordinal ranges do not overlap between logical actions.
+* Ordinals are deterministic hints, not substitutes for dependencies.
+* Row operations may batch across logical actions when SQL shape and database
+  dependencies allow it.
+* Batching across actions must not merge their completion state.
+
+== Proposed Model
+
+The proposed model separates discovery, normalization, decomposition, and
+completion.
+
+[plantuml,collection-flush-proposed-flow,svg]
+.Proposed collection path
+----
+@startuml
+scale 1.5
+skinparam backgroundColor transparent
+skinparam shadowing false
+skinparam defaultTextAlignment center
+skinparam componentStyle rectangle
+top to bottom direction
+
+package "1. Flush-local discovery" #EAF2F8 {
+  rectangle "Cascade + collection visitation" as Visit
+  rectangle "CollectionFlushContext" as Context
+  rectangle "CollectionMutationIntent" as Intent
+
+  Visit --> Context : reachability and transition facts
+  Context --> Intent : record; do not queue immediately
+}
+
+package "2. Normalize once" #FCF3CF {
+  rectangle "Resolve owner / role changes\nforced initialization\nqueued operations\ndatabase cascade mode" as Normalize
+  rectangle "Complete / partial CollectionDelta\nremovals + additions + shifts + changes" as Delta
+  rectangle "LogicalCollectionAction\nCollectionActionId + lifecycle" as LogicalAction
+
+  Normalize --> Delta : collection-semantics comparison
+  Delta --> LogicalAction
+}
+
+package "3. Physical planning" #E8F8F5 {
+  rectangle "CollectionDecomposer" as Decomposer
+  rectangle "Operation template\n+ row bindings" as Bindings
+  rectangle "FlushOperation\nexpand rows only when needed" as Operations
+
+  Decomposer --> Bindings
+  Bindings --> Operations
+}
+
+package "4. Graph execution" #F4ECF7 {
+  rectangle "Group and batch by\nStatementShapeKey" as Shape
+  rectangle "Dependency graph\n+ FlushPlan" as Plan
+  rectangle "JDBC execution" as Execute
+  rectangle "Completion accounting by\nCollectionActionId" as Completion #D5F5E3
+  rectangle "CollectionActionLifecycle\nafter all owned work succeeds" as Lifecycle #D5F5E3
+
+  Shape --> Plan
+  Plan --> Execute
+  Execute --> Completion : operation succeeded
+  Completion --> Lifecycle : outstanding count reaches zero
+}
+
+Intent --> Normalize
+LogicalAction --> Decomposer
+LogicalAction ..> Completion : registers owned operations
+Operations --> Shape
+
+note right of Shape
+  StatementShapeKey controls SQL grouping.
+  It does not control lifecycle completion.
+end note
+
+note right of Completion
+  CollectionActionId survives grouping,
+  batching, graph reordering, and fixups.
+end note
+@enduml
+----
+
+=== CollectionFlushContext
+
+Rename or evolve `FlushProcessingContext` into an internal
+`CollectionFlushContext` owned by one flush cycle.
+
+Its responsibilities are:
+
+* register every collection known during the flush,
+* track reached and processed state by collection identity,
+* record logical transition intent,
+* expose the narrow read-only tracker needed by collection loading and cache code,
+* normalize intents after reachability processing,
+* own the resulting collection mutation plans until they are transferred to the
+  action queue.
+
+It should not expose mutation through `CollectionFlushActionTracker`, and core
+flush visitors should receive the mutable context explicitly instead of
+downcasting the tracker obtained from `PersistenceContext`.
+
+The read-only view may retain queries such as:
+
+* `wasCollectionReached(collection)`,
+* `wasCollectionProcessed(collection)`,
+* `hasLogicalCollectionAction(collection)`,
+* `hasLogicalCollectionRemove(collection)`.
+
+=== CollectionMutationIntent
+
+Reachability handling records intent without immediately adding a physical
+action to `ActionQueue`.
+
+A conceptual representation is:
+
+[source,java]
+----
+record CollectionMutationIntent(
+        PersistentCollection<?> collection,
+        CollectionPersister loadedPersister,
+        Object loadedKey,
+        CollectionPersister currentPersister,
+        Object currentKey,
+        CollectionTransition transition,
+        QueuedOperationInput queuedOperations,
+        boolean emptySnapshot,
+        RemovalMode removalMode,
+        Object affectedOwner,
+        Object affectedOwnerId) {
+}
+
+enum CollectionTransition {
+    NONE,
+    UPDATE,
+    REMOVE,
+    CREATE,
+    REMOVE_AND_CREATE
+}
+
+enum RemovalMode {
+    NONE,
+    EXPLICIT_MUTATION,
+    DATABASE_CASCADE
+}
+----
+
+This is illustrative rather than a final public API.  Queued operations are
+orthogonal input to a transition, not a mutually exclusive transition.  An
+uninitialized collection may have queued changes while also requiring update,
+remove, or create semantics.
+
+`REMOVE_AND_CREATE` normalizes into two logical actions because remove and
+create each have observable collection lifecycle events and cache behavior.
+
+This vocabulary intentionally differs from the legacy
+`CollectionRecreateAction` name.  In collection handling, _recreate_ means
+"write every row of the current collection".  It does not imply that old rows
+exist or that a remove was performed.  The normalized transition therefore uses
+`CREATE` for the definite create side and represents the possible remove side
+separately.
+
+The transition mapping is:
+
+[cols="1,2",options="header"]
+|===
+| Normalized transition | Meaning
+
+| `CREATE`
+| No loaded collection role/key remains to remove; create the current collection
+  state.  The migration adapter may produce `CollectionRecreateAction`.
+
+| `REMOVE`
+| Remove the collection state associated with the loaded role/key.
+
+| `REMOVE_AND_CREATE`
+| The role or owner key changed and both sides exist.  Normalize to a remove for
+  the loaded role/key and a create for the current role/key.
+
+| `UPDATE`
+| The loaded and current role/key are the same, but collection state changed.
+|===
+
+An `UPDATE` may still select a physical remove-all plus create-all strategy when
+the collection persister reports that row-wise mutation is unsafe or
+unsupported.  That does not turn the logical transition into
+`REMOVE_AND_CREATE`: it retains update lifecycle and event semantics while using
+a replacement mutation strategy internally.
+
+=== CollectionDelta
+
+After all reachable and unreachable collections are processed, the context
+materializes the delta needed by each intent.
+
+[source,java]
+----
+record CollectionDelta(
+        CollectionBaseline baseline,
+        DeltaCoverage coverage,
+        List<CollectionChange> changes,
+        Set<DeltaSource> sources) {
+}
+
+enum CollectionBaseline {
+    EMPTY,
+    SNAPSHOT,
+    UNINITIALIZED_PERSISTED
+}
+
+enum DeltaCoverage {
+    COMPLETE,
+    EXPLICIT_CHANGES_ONLY
+}
+
+enum DeltaSource {
+    SNAPSHOT_COMPARISON,
+    QUEUED_OPERATION_LOG
+}
+----
+
+`CollectionChange` is an ordered semantic change such as addition, removal,
+replacement, position shift, or clear.  Physical row projections such as
+`removals()`, `additions()`, `shifts()`, and `valueChanges()` may be derived from
+the normalized changes where the mapping supports them.
+
+The existing `CollectionChangeSet` is the natural starting point.  It should be
+extended or adapted so every collection semantics can either:
+
+* produce a delta directly, or
+* explicitly request a remove-all plus create-all mutation strategy without
+  pretending a row delta is available.
+
+Delta construction belongs with collection semantics because list, map, set,
+bag, identifier-bag, and array equality and duplicate rules differ.
+
+For an initialized collection, the baseline is `SNAPSHOT` or `EMPTY` and coverage
+is normally `COMPLETE`.  For a still-uninitialized collection, queued operations
+normalize against `UNINITIALIZED_PERSISTED` with `EXPLICIT_CHANGES_ONLY`
+coverage.  The latter is a valid delta, but it may only answer questions about
+the changes explicitly represented by its operation log.
+
+The delta should also expose orphan candidates when the mapping requires orphan
+delete.  Cascade processing and collection mutation planning may then consume
+the same comparison result instead of independently comparing snapshot and
+current state.
+
+=== LogicalCollectionAction
+
+Intent normalization produces one or more logical actions.
+
+[source,java]
+----
+record LogicalCollectionAction(
+        CollectionActionId id,
+        CollectionActionKind kind,
+        PersistentCollection<?> collection,
+        CollectionPersister persister,
+        Object key,
+        CollectionDelta delta,
+        CollectionActionLifecycle lifecycle) {
+}
+----
+
+The graph queue should eventually consume this graph-native representation
+directly.  During migration, an adapter may create existing
+`CollectionRecreateAction`, `CollectionRemoveAction`, `CollectionUpdateAction`,
+and `QueuedOperationCollectionAction` instances.
+
+=== CollectionActionLifecycle
+
+Lifecycle state should be action-scoped rather than attached to an arbitrary row
+operation.
+
+A lifecycle contains ordered stages such as:
+
+* interceptor notification,
+* collection pre-event,
+* owner pre-update callback,
+* execution monitor start,
+* before-state-advance contributors such as audit snapshot capture,
+* queued-operation log finalization when present,
+* `CollectionEntry.afterAction()`,
+* owner loaded-state synchronization,
+* cache eviction,
+* collection post-event,
+* owner post-update callback,
+* statistics update,
+* execution monitor completion.
+
+The exact ordering of contributor hooks relative to `afterAction()` must be
+explicit.  Audit, for example, may require the old stored snapshot before
+collection state advances.
+
+=== Action completion tracking
+
+Every emitted physical operation carries its `CollectionActionId`, but SQL
+grouping continues to use statement shape.
+
+The coordinator registers the number of physical operations emitted for each
+logical action.  The executor reports successful operation completion after
+direct execution or successful batch execution.  The action lifecycle completes
+when its final outstanding operation reports success.
+
+This gives shape grouping and action completion different keys:
+
+[source]
+----
+StatementShapeKey  -> SQL grouping and batching
+CollectionActionId -> lifecycle and completion
+----
+
+An action with no physical operations is represented as explicit lifecycle work,
+not as a batchable `NO_OP` mutation.  Lifecycle work may have an ordinal anchor
+for deterministic ordering, but must not merge with another action's lifecycle.
+
+This approach avoids adding fake database dependencies to the graph solely to
+order callbacks.
+
+=== Ordinals
+
+Each logical action receives exactly one base range.
+
+All operations for that action use semantic slots inside the range:
+
+* delete/remove,
+* temporary order update,
+* value/FK update,
+* insert/add,
+* final order update,
+* state-management augmentation,
+* lifecycle anchor when no SQL exists.
+
+Contributors request a named slot instead of performing arithmetic directly.
+The ordinal API should validate that offsets remain inside the action range and
+should detect integer overflow.
+
+The one-to-many removal/change/addition paths must share the same base.
+
+=== Graph integration
+
+Collection decomposers become consumers of a stable logical action and delta:
+
+[source]
+----
+LogicalCollectionAction
+  -> CollectionDecomposer
+  -> operation template + row binding(s)
+  -> FlushOperation / grouped row operation
+----
+
+Graph construction continues to model database dependencies between physical
+mutations.  `CollectionActionId` is carried as execution metadata and is not part
+of `StatementShapeKey`.
+
+Where graph correctness requires row-sensitive facts, row bindings expose:
+
+* occupied and released unique slots,
+* collection key values,
+* element identifiers,
+* previous and current index values,
+* deferred collection-size and append-position handles,
+* deferred generated-identifier handles.
+
+Table-level dependency edges remain an acceptable conservative fallback, but
+the delta makes row-sensitive dependency extraction possible without revisiting
+the live collection.
+
+=== Physical row representation
+
+One `FlushOperation` per row is simple and remains necessary for some cycle and
+unique-slot cases.  It is not necessary for every collection mutation.
+
+The implementation should support a hybrid representation:
+
+* individual row operations for row-sensitive planning or callbacks,
+* one immutable operation template plus multiple row bindings when every row has
+  the same dependency signature,
+* lazy expansion only if graph planning needs individual rows.
+
+This preserves batching while reducing temporary allocation for large basic,
+many-to-many, and element collections.
+
+=== Uninitialized and queued-operation collections
+
+Uninitialized collections require explicit intent forms:
+
+* no structural work, cache notification only,
+* queued additions/removals,
+* forced initialization followed by normal delta materialization,
+* replacement of an uninitialized old collection by a new collection.
+
+Queued operations should be normalized into `CollectionDelta`, not carried as a
+separate decomposition language.  In this direction, _normalization_ is the
+appropriate term: an implementation-specific ordered command log is converted
+to the common collection-change model.  Turning the normalized delta into JDBC
+row operations is later decomposition or lowering.
+
+The normalization has two paths:
+
+Initialized before normalization::
+Collection initialization applies and clears the queued operations in their
+original order.  The normal snapshot comparison then produces a complete delta.
+
+Still uninitialized at normalization::
+The operation queue is copied to an immutable input and interpreted by the
+collection semantics.  It produces a delta with baseline
+`UNINITIALIZED_PERSISTED`, coverage `EXPLICIT_CHANGES_ONLY`, and source
+`QUEUED_OPERATION_LOG`.
+
+The second form must not imply knowledge of the whole persisted collection.  It
+contains only facts established by the commands and any extra-lazy point reads
+already performed by the collection wrapper.
+
+Conceptually, queued commands map as follows:
+
+[cols="1,2",options="header"]
+|===
+| Queued command | Normalized delta change
+
+| Add to a set or bag
+| Addition, retaining collection-specific duplicate semantics
+
+| Remove a known element
+| Removal using the element or identifier established by the extra-lazy check
+
+| Map put
+| Replacement at a known key, retaining both old and new values when known
+
+| Map remove
+| Removal at a known key
+
+| List set
+| Replacement at a known absolute position
+
+| List remove
+| Removal at a known position; any implied tail behavior remains semantic until
+  the mapping-specific mutation projection is selected
+
+| Append to an uninitialized list
+| Addition with a deferred position such as
+  `PersistedSize + QueuedAppendOrdinal`
+
+| Clear
+| Bulk-clear change; existing rows are not enumerated
+|===
+
+`Clear` is a barrier in the command sequence.  Add/remove cancellation, repeated
+map puts, and other folding are permitted only when the collection semantics can
+prove the same result without inspecting the unknown baseline.  Bags and lists
+in particular must not use set-like cancellation.
+
+The normalization API needs more information than the current
+`queuedAdditionIterator()` and `getQueuedOrphans()` projections expose.  An
+internal contract should allow collection semantics to visit an immutable view
+of each queued command, including command kind, element, old value, key or
+position, and insertion order.  Normalization must not drain the live queue.
+The queue is cleared only by successful logical-action completion, preserving
+the current execution boundary.
+
+The delta is semantic rather than a promise that this collection action owns all
+corresponding SQL.  Queued operations are currently enabled primarily for
+inverse collections.  For an inverse one-to-many, for example, entity actions
+may own the foreign-key mutation while the collection contribution only writes
+list indexes.  The persister-specific delta projection decides which physical
+operations this logical collection action emits.
+
+An uninitialized list append demonstrates why deferred values belong in the
+delta.  The existing implementation obtains the persisted collection size and
+assigns positions to queued additions later.  The normalized form should retain
+one shared persisted-size handle and express each append position relative to
+it.  The handle is resolved once during planning or execution and is available
+to row binding and dependency extraction.
+
+Queued-operation finalization is part of the logical action lifecycle:
+
+* every physical contribution derived from the queued delta completes first,
+* the original operation queue is then cleared exactly once,
+* `CollectionEntry.afterAction()` runs exactly once if no other normalized
+  transition owns that state advancement,
+* cache invalidation and dirty-state cleanup preserve current semantics.
+
+If queued input and another collection transition are normalized into the same
+logical action, they share one completion boundary.  If compatibility requires
+separate observable lifecycle units, the coordinator must add an explicit
+action dependency.  In neither case should ordering depend on statement shape
+or on a batchable no-op callback carrier.
+
+=== Database cascade removal
+
+Database cascade suppression should be represented by
+`RemovalMode.DATABASE_CASCADE` rather than by recording a remove in one object
+while omitting it from the action queue.
+
+The logical remove still participates in:
+
+* forced-initialization cache-put suppression,
+* interceptor and collection lifecycle behavior as currently specified,
+* collection entry state transition,
+* cache invalidation and transaction cleanup.
+
+Whether all existing remove events should fire for a database-cascade-only
+logical removal is an observable behavior decision and must be covered by tests.
+
+== Cascade Integration
+
+The collection redesign does not require a complete cascade rewrite, but it
+provides a better boundary for one.  The existing cascade implementation is
+functionally mature; the proposed changes primarily make its stable structure
+explicit, reduce repeated metadata interpretation, and make runtime traversal
+state easier to reason about.
+
+The cascade work is separable into two improvements:
+
+* an immutable, per-persister `CascadePlan` compiled from mapping metadata, and
+* a per-invocation `CascadeTraversalContext` carrying mutable runtime state.
+
+These should be introduced without changing the behavior, order, or lazy-loading
+rules of existing `CascadingAction` implementations.
+
+=== Current traversal costs and responsibilities
+
+Each call to `Cascade.cascade()` currently obtains parallel property metadata
+arrays and interprets them while traversing an entity:
+
+* property type, name, and `CascadeStyle`,
+* component subtypes and component property paths,
+* association kind and foreign-key direction,
+* logical one-to-one and orphan-delete eligibility,
+* collection role, persister, and element type,
+* mapping-level database cascade metadata,
+* whether the action applies to the property and at the current `CascadePoint`.
+
+Some of these decisions are runtime-sensitive, but much of the structural work
+is invariant for the lifetime of the `SessionFactory`.  Nested components also
+cause the walker to repeatedly reconstruct and mutate attribute-path state.
+
+The current method signatures pass this state as a long parameter list through
+`cascadeProperty()`, `cascadeComponent()`, `cascadeAssociation()`,
+`cascadeCollection()`, and `cascadeCollectionElements()`.  This makes ownership
+and restoration of path and parent/child state implicit.
+
+=== Compiled per-persister CascadePlan
+
+`CascadePlan` means a compiled traversal descriptor, not generated bytecode.
+It is an immutable tree built from stable mapping metadata and cached by the
+`EntityPersister` or mapping metamodel.
+
+A conceptual model is:
+
+[source,java]
+----
+record CascadePlan(
+        EntityPersister sourcePersister,
+        List<CascadePlanNode> roots,
+        CascadeCapabilities capabilities) {
+}
+
+sealed interface CascadePlanNode {
+    AttributePath path();
+    CascadeStyle cascadeStyle();
+    ValueAccess valueAccess();
+}
+
+record ComponentCascadeNode(
+        AttributePath path,
+        CascadeStyle cascadeStyle,
+        ValueAccess valueAccess,
+        List<CascadePlanNode> children) implements CascadePlanNode {
+}
+
+record AssociationCascadeNode(
+        AttributePath path,
+        CascadeStyle cascadeStyle,
+        ValueAccess valueAccess,
+        AssociationKind kind,
+        ForeignKeyDirection foreignKeyDirection,
+        boolean logicalOneToOne,
+        boolean orphanDelete,
+        DatabaseCascadeMetadata databaseCascade,
+        CollectionCascadeMetadata collectionMetadata) implements CascadePlanNode {
+}
+----
+
+The types are illustrative.  The important property is that the plan resolves
+and stores stable facts once:
+
+* property and component indexes,
+* complete attribute paths,
+* value-access strategy,
+* node kind: component, to-one, any, or collection,
+* `CascadeStyle` and orphan-delete capability,
+* logical one-to-one status,
+* foreign-key direction,
+* mapping-level `OnDelete` information,
+* collection role, collection persister, and element node classification,
+* whether a subtree can ever participate in any supported cascade action.
+
+The plan should preserve mapping property order, component property order, and
+collection iteration order.  Compilation must not flatten nodes in a way which
+changes value access, lazy handling, or observable cascade order.
+
+=== Static plan versus action-specific routes
+
+The base plan should contain every structurally relevant association and
+component.  Runtime traversal still asks the `CascadingAction` whether a node
+applies and whether its foreign-key direction participates at the current
+`CascadePoint`.
+
+Built-in actions may later use precomputed route masks or action profiles to
+avoid those repeated checks.  Such profiles must account for special behavior:
+
+* `PERSIST` and `PERSIST_ON_FLUSH` use persister-level cascade-persist flags,
+* `REMOVE` may traverse uninitialized collections and delete orphans,
+* `CHECK_ON_FLUSH` deliberately examines associations with cascade `NONE`,
+* `CHECK_ON_FLUSH` also depends on the unowned-association transient-check
+  setting,
+* `REFRESH` excludes entity-valued properties in its current implementation,
+* actions differ in whether lazy attributes are fetched,
+* database cascade relevance depends on the action's affected foreign-key
+  direction.
+
+The initial implementation should retain runtime action predicates over the
+compiled structural plan.  Action-specific profiles are an optimization after
+behavioral parity is established.  Custom or future `CascadingAction`
+implementations must always have a correct generic path; the plan must not rely
+on singleton action identity for correctness.
+
+=== Runtime-sensitive decisions
+
+The plan must not cache values or decisions which vary per session or entity
+instance.  Runtime traversal continues to determine:
+
+* the current property value,
+* whether an enhanced lazy attribute is loaded,
+* whether the parent is managed, detached, saving, deleted, or gone,
+* whether accessing an association may initialize it for this action,
+* the collection's initialization state and queued additions or removals,
+* current collection elements and orphan candidates,
+* persistence-context entity and collection entries,
+* action-specific cycle/deduplication state,
+* whether an association should cascade at this invocation's `CascadePoint`.
+
+This separation is the core contract: the plan contains mapping structure; the
+context and walker contain invocation state.
+
+=== CascadeTraversalContext
+
+A `CascadeTraversalContext<T>` should be created for one root cascade invocation
+and passed through the plan walker.  It replaces most of the parallel parameters
+currently threaded through private cascade methods.
+
+[source,java]
+----
+final class CascadeTraversalContext<T> {
+    private final CascadingAction<T> action;
+    private final CascadePoint cascadePoint;
+    private final EventSource session;
+    private final T actionContext;
+    private final Object root;
+    private final String rootEntityName;
+    private final CollectionFlushContext collectionFlushContext; // nullable
+
+    private Object parent;
+    private CascadePlanNode currentNode;
+    private final CascadePathStack path;
+    private final CascadeDiagnostics diagnostics;
+}
+----
+
+The context owns:
+
+* action, cascade point, session, and the action-specific `anything` value,
+* root and current parent identity,
+* the current compiled node and attribute path,
+* scoped persistence-context child/parent registration,
+* database cascade metadata for the current edge,
+* optional access to the active collection flush context,
+* diagnostic counters and trace state.
+
+Path and child/parent changes should use scoped push/pop operations with
+`try/finally` restoration.  Exceptions can then report the complete compiled
+attribute path without reconstructing it from a mutable `List<String>`.
+
+The context is invocation-local, thread-confined, and must not be retained by a
+persister or session after traversal.  Nested event-driven cascades may derive a
+child context, but the initial migration may continue to create one context per
+`Cascade.cascade()` entry.
+
+A generic visited set must not silently suppress traversal.  Existing action
+contexts such as `PersistContext`, `MergeContext`, and `DeleteContext` own the
+action-specific cycle and duplication semantics.  The traversal context may
+track visited edges for diagnostics or loop assertions, but using that state to
+change behavior requires an explicit per-action contract.
+
+=== Planned traversal
+
+[plantuml,compiled-cascade-traversal,svg]
+.Compiled cascade plan and runtime traversal context
+----
+@startuml
+scale 1.35
+skinparam backgroundColor transparent
+skinparam shadowing false
+skinparam defaultTextAlignment center
+skinparam componentStyle rectangle
+left to right direction
+
+package "SessionFactory bootstrap" #EAF2F8 {
+  rectangle "EntityPersister\n+ mapping metadata" as Persister
+  rectangle "CascadePlan compiler" as Compiler
+  rectangle "Immutable CascadePlan\ncomponent + association nodes" as Plan
+
+  Persister --> Compiler
+  Compiler --> Plan : cache per persister
+}
+
+package "Cascade invocation" #FCF3CF {
+  rectangle "CascadingAction\n+ CascadePoint" as Action
+  rectangle "Entity instance\n+ EventSource" as Runtime
+  rectangle "CascadeTraversalContext" as Context
+
+  Action --> Context
+  Runtime --> Context
+}
+
+package "Plan walk" #E8F8F5 {
+  rectangle "Filter node for action\n+ cascade point" as Filter
+  rectangle "Resolve lazy/current value" as Resolve
+  rectangle "To-one action\nCollection iteration\nComponent descent\nOrphan handling" as Perform
+
+  Filter --> Resolve
+  Resolve --> Perform
+}
+
+Plan --> Filter : stable structure
+Context --> Filter : invocation state
+Perform --> Context : scoped path / parent state
+@enduml
+----
+
+The walker performs the following steps:
+
+. Select the cached plan for the parent persister.
+. Use plan capabilities and `action.anythingToCascade()` for a root fast-path.
+. Apply the existing managed/detached and enhanced-lazy root guards.
+. Visit plan nodes in mapping order.
+. Apply `action.appliesTo()` and `action.cascadeNow()` unless a verified built-in
+  route has already encoded the same result.
+. Resolve the property value only when the node can participate.
+. Descend into components, invoke the action for to-one associations, or obtain
+  the action-specific collection iterator.
+. Perform logical one-to-one and collection orphan handling at the same points as
+  the current walker.
+
+=== Cascade invariants
+
+The compiled walker must preserve these behaviors:
+
+* every existing cascade action visits the same association values in the same
+  order,
+* enhanced lazy attributes are initialized, skipped, or represented by an
+  uninitialized `PersistentCollection` exactly as before,
+* detached parents do not cause unintended lazy initialization,
+* collection actions retain their loaded-elements versus all-elements iterator
+  semantics,
+* `CHECK_ON_FLUSH` continues to inspect applicable associations even when their
+  cascade style is `NONE`,
+* foreign-key direction and `CascadePoint` filtering remain action-specific,
+* logical one-to-one orphan removal retains before-update versus after-update
+  ordering,
+* database cascade flags are calculated for the same association direction,
+* persistence-context child/parent registration is always restored,
+* exceptions identify the same entity and a complete attribute path,
+* a custom `CascadingAction` remains correct without a precompiled action
+  profile.
+
+=== Relationship to CollectionDelta
+
+For orphan-delete collections, cascade should consume orphan candidates from a
+shared collection comparison when one is valid.  This does not mean that every
+cascade may require the final `CollectionDelta`.
+
+Flush-time `PERSIST_ON_FLUSH` cascade and orphan processing currently occur
+before final collection visitation and mutation-intent normalization.  Moreover,
+cascade callbacks may cause additional managed state to be discovered.  A delta
+materialized too early could therefore become stale.
+
+The initial contract should be:
+
+* use a finalized `CollectionDelta` when the active flush context has one for the
+  same structural state,
+* otherwise retain current initialized-collection and queued-orphan discovery,
+* never force initialization merely to share a delta,
+* do not reuse an orphan comparison after collection state may have changed.
+
+A later phase may introduce a flush-local `CollectionComparisonHandle` capable
+of producing an orphan projection early and a full row delta later.  Reuse would
+require either a collection structural-version token or phase ordering which
+guarantees the comparison remains valid.  This optimization must not precede a
+clear invalidation contract.
+
+Cascade operations outside flush have no `CollectionFlushContext` and always use
+the standalone fallback.
+
+=== Diagnostics and observability
+
+The context provides one place to collect low-cost diagnostics:
+
+* plan nodes considered and skipped,
+* lazy attributes initialized or skipped,
+* to-one and collection elements cascaded,
+* orphan candidates discovered,
+* maximum component and association depth,
+* compiled versus generic action filtering,
+* complete path information for failures and trace logging.
+
+Diagnostics should be disabled or allocation-free when not requested.  They are
+primarily intended for tests, trace logging, and performance investigation, not
+as a new public event stream.
+
+=== Cascade migration
+
+. Introduce `CascadeTraversalContext` while retaining the current metadata loop
+  and verify behavior with existing cascade tests.
+. Introduce the immutable plan model and compiler, initially using generic
+  runtime `CascadingAction` predicates.
+. Add a test-only decision trace which compares node selection between the
+  metadata walker and compiled-plan walker.
+. Switch built-in actions to the compiled walker after parity tests cover lazy
+  state, nested components, orphan deletion, database cascade, and all cascade
+  points.
+. Add built-in action route masks only when benchmarks demonstrate useful
+  savings.
+. Integrate orphan projections with collection deltas only after comparison
+  validity and phase ordering are specified.
+
+== Event and Monitoring Semantics
+
+The redesign should define per-action invariants rather than promise a global
+order between unrelated actions.
+
+For each logical collection action:
+
+* its pre-event fires exactly once before its mutation state is finalized,
+* its post-event fires exactly once after all physical mutations succeed,
+* the pre-event precedes its post-event,
+* affected owner and owner identifier are stable,
+* monitoring measures execution rather than decomposition,
+* monitoring completion reports SQL success or failure,
+* empty physical actions still produce the documented lifecycle.
+
+Graph-wide decomposition may cause pre-events for several actions to fire before
+any SQL executes.  This is observable and must either be accepted and documented
+or changed by separating pre-event state preparation from global decomposition.
+Tests should not indefinitely hide this decision behind queue-specific expected
+orders.
+
+== Auto-Flush Checkpoints
+
+The action queue should expose an explicit checkpoint for speculative auto-flush:
+
+[source,java]
+----
+ActionQueueCheckpoint checkpoint = actionQueue.checkpoint();
+...
+actionQueue.restore( checkpoint );
+----
+
+The checkpoint records the size or persistent root of every queue component
+which may be changed by flush preparation, including unresolved inserts and both
+normal and orphan collection removals.
+
+Collection mutation intents and deltas created after the checkpoint are owned by
+the flush context and discarded with it when execution is unnecessary.
+
+== Migration Plan
+
+=== Phase 1: Correctness fixes
+
+* Pass the collection count correctly to `partialFlushEnd()`.
+* Correct graph auto-flush removal rollback or introduce the queue checkpoint.
+* Stop incrementing `ordinalBase` inside one-to-many fallback planning.
+* Prevent lifecycle/no-op carriers from grouping across logical actions.
+* Align collection execution monitoring across update, legacy create
+  (`CollectionRecreateAction`), and remove.
+* Add focused regression tests for each issue.
+
+=== Phase 2: Explicit action identity
+
+* Introduce an internal `CollectionActionId`.
+* Tag emitted collection operations with action identity.
+* Move collection post-action handling to completion tracking.
+* Remove action-level lifecycle callbacks from arbitrary row operations.
+* Represent empty action completion without batchable no-op mutations.
+
+=== Phase 3: Intent normalization
+
+* Make `FlushProcessingContext` record mutation intent rather than immediately
+  queueing actions.
+* Treat queued-operation input as an orthogonal property of collection intent.
+* Normalize intent after reachable and unreachable processing.
+* Preserve the read-only tracker view for forced initialization and cache code.
+* Add a legacy adapter which queues existing collection action types.
+* Let the graph queue consume normalized logical actions directly.
+
+=== Phase 4: Stable delta production
+
+* Generalize `CollectionChangeSet` across collection semantics.
+* Compute and retain one delta per relevant collection and flush.
+* Add an internal immutable queued-command visitor and normalize queued commands
+  into complete or explicit-changes-only deltas.
+* Represent bulk clear and deferred append positions without initializing the
+  collection or enumerating its persisted baseline.
+* Share orphan candidates with flush-time cascade processing only where the
+  comparison is known to remain valid.
+* Change bind plans and unique-slot extraction to consume delta rows.
+* Remove repeated fallback scans where delta support exists.
+
+=== Phase 5: Compact row execution
+
+* Introduce operation templates with multiple row bindings.
+* Expand to individual operations only for row-sensitive graph planning.
+* Measure allocation, graph-build cost, and JDBC batching behavior against the
+  current per-row representation.
+
+=== Parallel workstream: Compiled cascade traversal
+
+The cascade migration described above can proceed independently through
+`CascadeTraversalContext`, generic compiled plans, parity verification, and
+optional built-in route masks.  Collection orphan comparison should join the
+main migration only after stable-delta timing and invalidation are resolved.
+
+== Testing Strategy
+
+=== Flush context tests
+
+Test collection identity state and intent normalization directly:
+
+* reachable, unreachable, and ignored collections,
+* shared references and duplicate processing,
+* new collections registered during flush,
+* remove, create, update, and remove-plus-create,
+* database-cascade-only removal,
+* forced initialization,
+* speculative auto-flush discard.
+
+=== Delta tests
+
+For every supported collection semantics, test:
+
+* additions and removals,
+* duplicates,
+* null values where supported,
+* entity equality by mapped identifier,
+* mutable embeddable values,
+* list shifts and order-column bases,
+* map key changes,
+* identifier bags and arrays,
+* queued operations on uninitialized collections,
+* complete versus explicit-changes-only coverage,
+* add/remove and repeated-put folding where it is provably safe,
+* command-order preservation for bags and lists,
+* clear followed by additions,
+* deferred list append positions resolved from one persisted-size handle,
+* inverse one-to-many deltas whose FK work is owned by entity actions,
+* queued-operation cleanup only after successful action completion.
+
+=== Cascade plan and traversal tests
+
+Verify the compiled walker against the existing metadata walker for:
+
+* every built-in `CascadingAction` and applicable `CascadePoint`,
+* cascade `NONE`, individual cascade styles, and combined styles,
+* nested embeddables containing to-one and collection associations,
+* logical one-to-one replacement and orphan ordering,
+* initialized and uninitialized collections, including queued additions and
+  queued orphans,
+* enhanced loaded and unloaded attributes on managed and detached entities,
+* foreign-key directions, inverse collections, and database `OnDelete` cascade,
+* enabled and disabled unowned-association transient checking,
+* complete attribute paths in transient-reference failures,
+* action-context cycle handling and child/parent registration cleanup,
+* a generic custom `CascadingAction` without a built-in route profile.
+
+Plan compiler unit tests should assert immutable structure, mapping order,
+component paths, node classification, and the absence of entity or session
+instance references in cached plans.
+
+=== Decomposer tests
+
+Directly assert:
+
+* operation kind, table, SQL shape, and semantic slot,
+* nonoverlapping action ordinal ranges,
+* row binding values from the stable delta,
+* state-management contributor operations,
+* action identity on every emitted operation,
+* zero-operation logical actions.
+
+=== Planner and executor tests
+
+Test multiple logical actions against the same table and shape:
+
+* SQL operations still batch,
+* lifecycle completion does not merge,
+* completion waits for every operation even after graph reordering,
+* batch failure prevents successful completion,
+* audit capture occurs before collection state advancement,
+* queued-operation completion precedes later work for the same collection.
+
+=== Event and monitoring tests
+
+Assert per-action invariants for both queue implementations during migration:
+
+* exactly one pre/post event pair,
+* stable affected owner and identifier,
+* post-event after final SQL operation,
+* correct entity and collection partial-flush counts,
+* monitor duration covers execution,
+* failure is reported when JDBC execution fails.
+
+=== Performance tests
+
+Measure:
+
+* number of collection and snapshot traversals,
+* delta construction time,
+* cascade plan nodes considered versus metadata properties scanned,
+* cascade traversal path allocations and component depth,
+* temporary allocation per changed row,
+* graph nodes and edges,
+* statement grouping and batch sizes,
+* large list/map/set/bag updates,
+* ordered many-to-many and one-to-many shifts.
+
+== Alternatives Considered
+
+=== Keep immediate action queuing and only fix callbacks
+
+Adding action identity and completion tracking without changing visitation would
+fix the most serious graph lifecycle problem with limited disruption.  It would
+not eliminate repeated delta discovery or the split ownership between tracker,
+entry, action, and live collection.
+
+This is a reasonable intermediate phase, not the desired final model.
+
+=== Make callback carriers unique operation groups
+
+Including action identity in the `NO_OP` grouping key prevents cross-action
+merging.  It still relies on ordinals or artificial edges to place the carrier
+after every mutation and retains lifecycle work as a fake physical operation.
+
+This is suitable as a short-term correctness fix only.
+
+=== Attach completion to the highest-ordinal operation
+
+The highest ordinal is still only an ordering hint.  A dependency may reorder
+another operation after it.  This does not establish action completion.
+
+=== Fully materialize JDBC values during visitation
+
+This would maximize plan stability but does not work for every generated
+identifier and value-generation scenario.  The proposed delta captures stable
+row identity and structure while allowing explicit deferred value handles.
+
+== Open Questions
+
+* Should `CollectionMutationIntent` and `CollectionDelta` remain internal, or is
+  some part useful as an incubating SPI for state-management contributors?
+* Should collection pre-events be allowed to mutate collection state, and if so,
+  must delta materialization happen after every pre-event?
+* Is cross-collection event order contractual, intentionally unspecified, or
+  required to match the legacy queue?
+* What is the exact lifecycle for a logical remove whose SQL is suppressed by
+  database cascade?
+* Can orphan discovery always share the flush delta, or do cascade timing rules
+  require an earlier partial delta?
+* Which collection shapes require row-level graph nodes for unique-slot or cycle
+  handling?
+* Should action completion be owned by `FlushCoordinator`, `FlushPlan`, or the
+  executor?
+* How should action completion interact with synthesized cycle-break fixups?
+  A logical action must not complete before any fixup required by its operations.
+* Should operation templates and row bindings be introduced before or after the
+  legacy collection actions are removed?
+* Should `CollectionDelta` retain one ordered change sequence for every source,
+  or expose ordered steps only for explicit-changes-only deltas and canonical
+  projections for complete deltas?
+* Does queued-operation finalization become part of another logical update when
+  both exist, or remain a separate internal action with an explicit dependency?
+* What session serialization guarantees are required for normalized collection
+  intents, deltas, and action completion state?
+* Should `CascadePlan` be owned directly by `EntityPersister` or by a mapping
+  metamodel service keyed by persister?
+* Do built-in cascade route profiles need a stable `CascadeActionKind`, or are
+  runtime `CascadingAction` predicates sufficiently cheap over the compiled
+  structural plan?
+* Should a traversal context span nested event-driven cascades, or remain scoped
+  to each `Cascade.cascade()` invocation and rely on the existing action context
+  for cross-invocation state?
+
+== Initial Decision Summary
+
+The initial direction is:
+
+* keep reachability state flush-local and identity-based,
+* record collection intent during visitation,
+* normalize intent after visitation and forced initialization,
+* compute a stable reusable delta,
+* normalize queued-operation logs into deltas with explicit baseline and
+  coverage,
+* preserve logical action identity independently of SQL shape,
+* complete lifecycle through explicit action completion tracking,
+* use one ordinal range per logical action,
+* retain per-row operations only where graph correctness needs them,
+* compile immutable cascade structure per persister,
+* keep cascade invocation state in a traversal context,
+* preserve a generic runtime-filtered path for every `CascadingAction`,
+* migrate incrementally while preserving a legacy action adapter.
+
+These decisions should be validated first by the Phase 1 regression tests and a
+small prototype of action completion tracking in the graph queue.

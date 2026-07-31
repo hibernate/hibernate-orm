@@ -1,0 +1,1314 @@
+:toc2:
+:toclevels: 3
+:sectanchors:
+:numbered:
+= Collection Flush Processing Working Specification
+
+Status: Working Specification -- Draft
+
+Revision: 0.8
+
+Approval status: Not approved
+
+Revision history::
+
+* `0.1` -- Initial working specification.
+* `0.2` -- Moved detailed cascade planning to a companion specification,
+  confirmed mutation visibility for interceptor hooks and pre-event listeners, and
+  split compatibility into API, observable-semantics, and internal-representation
+  layers pending further guidance.
+* `0.3` -- Confirmed compatibility of `org.hibernate.event.spi` contracts while
+  explicitly allowing queue-native internal work representations independent of
+  `org.hibernate.action.spi.Executable` and the legacy collection action classes.
+* `0.4` -- Documented the two-stage boundary as a provisional candidate with
+  explicit strengths and weaknesses, added a queue-participating vocabulary
+  alternative, and decomposed event compatibility into concrete dimensions.
+* `0.5` -- Defined event compatibility per semantic mutation rather than by one
+  global sequence, and specified safe deferral of cross-collection listener
+  mutations which occur after another collection is frozen.
+* `0.6` -- Noted possible applicability of the collection boundary, completion,
+  lifecycle, and freeze concepts to entity work while keeping entity
+  events/actions explicitly out of scope.
+* `0.7` -- Disambiguated Hibernate SPI events, interceptor hooks, Jakarta
+  Persistence lifecycle callbacks, diagnostic monitoring, internal completion
+  handlers, semantic mutations, legacy executables, and physical operations.
+* `0.8` -- Defined Jakarta Persistence update callbacks as an owner-level
+  lifecycle invoked at most once per owner per flush, independent of the number
+  of contributing entity and collection mutations.
+
+== Status and Relationship to the Design Proposal
+
+This document is the working specification for collection processing during a
+Hibernate flush.  It is intended to become precise enough to guide
+implementation and conformance testing while remaining open to development-team
+review and revision.
+
+The rationale, alternatives, exploratory analysis, and broader architectural
+direction live in
+link:collection-flush-processing.adoc[Collection Flush Processing].  That
+document is informative.  Changes to the proposal do not automatically change
+this specification, and changes to this specification should record the working
+decision which caused them.
+
+For implementation work explicitly targeting a revision of this specification:
+
+* normative requirements in this document are the conformance target,
+* working decisions are provisional until team approval,
+* open questions identify behavior which is not yet fully specified,
+* the proposal may be consulted for rationale but does not override a normative
+  requirement.
+
+The expected status progression is:
+
+[source]
+----
+Working Specification
+  -> Development-team review
+  -> Approval candidate
+  -> Approved Specification
+----
+
+== Normative Language
+
+The key words _MUST_, _MUST NOT_, _REQUIRED_, _SHOULD_, _SHOULD NOT_, and _MAY_
+are normative.
+
+Each requirement has a stable identifier.  An identifier remains stable if the
+wording is clarified without changing its meaning.  A semantic change receives
+a decision-log entry and, when necessary, a new identifier.
+
+Requirement groups use these prefixes:
+
+[cols="1,2",options="header"]
+|===
+| Prefix | Area
+
+| `CFS-CTX` | Flush-local collection context and discovery
+| `CFS-TRN` | Logical transition selection
+| `CFS-DLT` | Collection delta
+| `CFS-QOP` | Queued-operation normalization
+| `CFS-ACT` | Semantic collection mutations (`ACT` retained for ID stability)
+| `CFS-LFC` | Lifecycle notifications and state advancement
+| `CFS-CMP` | Semantic mutation completion
+| `CFS-GRP` | Graph grouping, ordering, and physical operations
+| `CFS-AFL` | Speculative auto-flush
+| `CFS-CAS` | Cascade integration
+| `CFS-COM` | Compatibility
+|===
+
+== Scope
+
+This specification covers:
+
+* collection discovery during flush,
+* selection of logical collection transitions,
+* complete and partial `CollectionDelta` production,
+* normalization of queued operations on uninitialized collections,
+* conversion of semantic collection mutations into physical graph operations,
+* mutation identity, ordering, batching, and completion,
+* collection interceptor hooks, Hibernate collection events, Jakarta Persistence
+  owner lifecycle callbacks, cache work, diagnostic monitoring, statistics, and
+  state advancement semantics,
+* speculative auto-flush rollback,
+* the boundary between collection comparison and cascade orphan discovery,
+* behavioral requirements for a compiled cascade plan and traversal context.
+
+The detailed structure and optimization of a compiled cascade plan will be
+defined in a companion working specification.  The behavioral boundary
+requirements in this document still apply to its interaction with collection
+flush processing.
+
+== Non-Goals
+
+This revision does not specify:
+
+* public user-facing changes to `PersistentCollection`,
+* entity event contracts, entity mutation boundary vocabulary, and entity action
+  decomposition, except where an entity action owns physical work represented by
+  a collection delta,
+* new ownership, inverse, orphan-delete, or database-cascade mapping semantics,
+* a global order between unrelated collection actions,
+* a particular SQL statement order when multiple orders satisfy the dependency
+  and lifecycle requirements,
+* removal of the legacy action queue in the initial implementation,
+* changes to `org.hibernate.event.spi` collection event contracts; such changes
+  require a separate design and specification,
+* a public SPI for collection intents, deltas, or cascade plans.
+
+== Potential Applicability to Entity Work
+
+[NOTE]
+====
+This section is informative and creates no entity-processing requirements.
+====
+
+Although this specification is collection-scoped, these concepts may be useful
+for later entity event/action work:
+
+* semantic mutation input independent of `Executable`,
+* queue-native scheduling representations,
+* mutation identity independent of statement shape,
+* explicit completion across grouping, batching, contributors, and fixups,
+* lifecycle delivery based on semantic completion,
+* protection for post-freeze mutations,
+* explicit speculative auto-flush retention policies.
+
+Entity insert, update, and delete processing also involves generated identifiers
+and versions, state arrays and dirty attributes, natural-id synchronization,
+entity cache behavior, entity event contracts, and entity-specific contributors.
+No conclusion is made here that the collection vocabulary or lifecycle applies
+unchanged to entities.
+
+Entity generalization requires a separate analysis, design proposal, and working
+specification.  The collection implementation should avoid accidental coupling
+which makes later reuse impossible, but this specification does not authorize
+changes to entity behavior.
+
+== Terminology
+
+Collection flush cycle::
+The flush preparation, optional execution, and post-flush work associated with
+one explicit flush or auto-flush attempt.
+
+Collection flush context::
+Identity-based, flush-local state used for collection discovery, intent
+normalization, and delta ownership.
+
+Logical transition::
+The relationship between the collection state associated with the loaded
+role/key and the state associated with the current role/key: `NONE`, `CREATE`,
+`REMOVE`, `UPDATE`, or `REMOVE_AND_CREATE`.
+
+Mutation strategy::
+The physical technique used to realize a logical transition.  An `UPDATE`, for
+example, may use row mutations or remove-all plus create-all.
+
+Collection delta::
+An immutable semantic description of collection changes relative to an explicit
+baseline.
+
+Complete delta::
+A delta which describes the complete difference from an empty or snapshot
+baseline.
+
+Explicit-changes-only delta::
+A partial delta containing only commands queued against an uninitialized
+persisted baseline.
+
+Semantic collection mutation::
+One lifecycle and completion unit derived from a transition.  It has a stable
+`CollectionMutationId` within the flush cycle.  It is not necessarily represented
+by a Java object enqueued in an action queue.
+
+Hibernate collection event::
+A pre/post collection event and listener contract from `org.hibernate.event.spi`,
+such as `PreCollectionUpdateEvent` and `PreCollectionUpdateEventListener`.
+
+Interceptor hook::
+An `Interceptor` method such as `onCollectionUpdate()`.  It is not a Hibernate
+collection event or a Jakarta Persistence lifecycle callback.
+
+Jakarta Persistence owner lifecycle callback::
+An entity callback such as `@PreUpdate` or `@PostUpdate`, including callbacks
+declared on an entity listener, invoked for the affected collection owner through
+`EntityCallbacks`.
+
+Diagnostic monitor span::
+A begin/complete pair reported through `org.hibernate.event.monitor.spi.EventMonitor`.
+Despite the package and type naming, it is diagnostic instrumentation rather
+than a Hibernate collection event delivered through `EventListenerGroup`.
+
+Completion handler::
+Internal work invoked after physical success, such as current
+`PostExecutionCallback` implementations.  It is neither a Hibernate event nor a
+Jakarta Persistence lifecycle callback.
+
+Legacy executable::
+An `org.hibernate.action.spi.Executable` scheduling unit used by the legacy
+queue, including existing collection action classes.
+
+Physical operation::
+A table mutation, state-management mutation, or explicit lifecycle anchor
+derived from a semantic collection mutation.
+
+Statement shape::
+The table, mutation kind, and SQL shape used for operation grouping and JDBC
+batching.
+
+=== Vocabulary rule
+
+In normative text, unqualified _event_ means a Hibernate collection event from
+`org.hibernate.event.spi`.  The specification uses _interceptor hook_, _Jakarta
+Persistence lifecycle callback_, _diagnostic monitor span_, and _completion
+handler_ for the other mechanisms.  Unqualified _action_ is avoided except when
+referring to an existing type or action-queue API.
+
+=== Representation layers
+
+The specification distinguishes these representation and notification layers:
+
+[cols="1,2",options="header"]
+|===
+| Layer | Contract
+
+| Collection events
+| Public `org.hibernate.event.spi` notifications delivered to listeners.  Their
+  contracts are compatibility-sensitive and queue-independent.
+
+| Interceptor hooks
+| `Interceptor.onCollectionRecreate()`, `onCollectionRemove()`, and
+  `onCollectionUpdate()` notifications.
+
+| Jakarta Persistence owner lifecycle callbacks
+| Entity/listener `@PreUpdate` and `@PostUpdate` callbacks invoked for an affected
+  non-inverse collection owner when applicable.
+
+| Diagnostic monitor spans
+| `EventMonitor` begin/complete instrumentation covering physical collection
+  execution and reporting success or failure.
+
+| Completion handlers
+| Internal successful-completion work.  Current graph code often represents this
+  using `PostExecutionCallback`; the specification does not require that type.
+
+| Semantic collection work
+| Internal description of transition, endpoints, delta or bulk strategy,
+  affected owner, and lifecycle obligations.  The exact boundary type remains
+  an open working decision.
+
+| Legacy executable actions
+| Types such as `CollectionRecreateAction`, `CollectionRemoveAction`, and
+  `CollectionUpdateAction`.  These are one queue implementation's scheduling
+  representation and are not the required common boundary.
+
+| Graph physical operations
+| Row or grouped mutation work, dependencies, bindings, and completion metadata
+  used by the graph queue.
+|===
+
+The semantic collection mutation does not require a Java type named
+`LogicalCollectionAction`, does not extend `Executable`, and does not require a
+queue to enqueue an object conventionally described as an action.
+
+The current candidate is a two-stage, queue-neutral protocol:
+
+[source,java]
+----
+record CollectionMutationInput(
+        PersistentCollection<?> collection,
+        CollectionTransition transition,
+        CollectionEndpoint loadedEndpoint,
+        CollectionEndpoint currentEndpoint,
+        QueuedOperationInput queuedOperations,
+        CollectionLifecycleKind lifecycleKind,
+        Object affectedOwner,
+        Object affectedOwnerId) {
+}
+
+interface CollectionMutationPreparer {
+    PreparedCollectionMutation prepare(
+            CollectionMutationInput input,
+            EventSource session);
+}
+
+record PreparedCollectionMutation(
+        CollectionMutationId id,
+        CollectionMutationKind kind,
+        CollectionEndpoint endpoint,
+        CollectionDelta delta,
+        CollectionLifecycle lifecycle) {
+}
+----
+
+These names and shapes are non-normative while `OQ-002` remains open.  The
+important separation is:
+
+. Visitation produces queue-neutral semantic input, not an `Executable`.
+. Shared preparation runs applicable pre-mutation lifecycle notifications in
+  their specified order, then freezes the delta.  The relative ordering of the
+  interceptor hook, Hibernate pre-event, and Jakarta Persistence owner callback
+  must be stated independently rather than grouped as generic callbacks.
+. The legacy queue may lower the prepared mutation to adapted legacy executable
+  actions or another native form; shared lifecycle notifications MUST NOT be
+  repeated by that representation.
+. The graph queue may lower it directly to graph-native operations and completion
+  metadata.
+
+A queue may choose when to invoke shared preparation and how to retain the input
+or prepared result.  It MUST NOT redefine transition or delta semantics in a way
+which produces queue-dependent collection behavior.
+
+==== Candidate A: Shared two-stage vocabulary
+
+The two-stage design above is the current provisional solution, not an approved
+boundary.
+
+Strengths::
+
+* Transition semantics are selected once outside queue-specific scheduling.
+* Pre-lifecycle mutation visibility and delta freezing have one shared contract.
+* A stable delta can be computed once and reused by execution, dependency
+  extraction, orphan projection, audit, and diagnostics.
+* Legacy/graph conformance can be tested at the prepared-mutation boundary.
+* Neither queue is required to use `Executable` or the other's physical model.
+
+Weaknesses::
+
+* A shared DTO model may become a lowest-common-denominator abstraction or favor
+  one queue's needs.
+* Shared preparation determines part of lifecycle timing and may constrain when
+  a queue would naturally discover or schedule work.
+* `CollectionMutationInput` plus `PreparedCollectionMutation` adds intermediate
+  allocation and lifecycle-state ownership.
+* New queue-specific optimization facts may require extending a central
+  vocabulary even when only one queue needs them.
+* The split between input, preparation, and queue lowering can become artificial
+  for the legacy queue or for a future queue with a different execution model.
+* Failure and re-entrancy handling must be coordinated across a shared preparer
+  and a queue-native executor.
+
+==== Candidate B: Queue-participating boundary vocabulary
+
+An alternative is to define the boundary jointly with the queue implementations
+instead of requiring one fixed prepared-mutation record.
+
+The shared flush layer would provide stable semantic services and facts, such as:
+
+* loaded/current collection endpoints,
+* selected transition constraints,
+* affected owner and identifier capture,
+* queued-command access,
+* collection-semantics delta production,
+* lifecycle notification services,
+* read-only reachability and logical-remove tracking.
+
+Each queue would participate through a queue-specific receiver, factory, or
+builder and could request or retain those facts in its natural representation.
+For example, the legacy queue could build executable actions while the graph
+queue could build graph-native mutation work without first materializing an
+identical intermediate object.
+
+Strengths::
+
+* Each queue receives a vocabulary suited to its scheduling and execution model.
+* Queue-specific optimization facts do not necessarily expand a shared DTO.
+* Intermediate allocation and translation layers may be reduced.
+* Migration can preserve the legacy queue's natural representation while the
+  graph queue evolves independently.
+
+Weaknesses::
+
+* Transition, delta-freezing, and lifecycle timing may diverge between queues.
+* Conformance must be stated behaviorally because there is no common prepared
+  representation to compare directly.
+* Stable-delta reuse is harder if queues request comparison at different times.
+* Queue-specific boundary implementations may duplicate normalization logic.
+* Adding another queue requires reviewing which semantic services are mandatory
+  rather than simply consuming one canonical record.
+
+The alternative MUST still preserve the normative transition, delta, lifecycle,
+and completion requirements in this specification.  Queue participation changes
+the shape and ownership of the boundary vocabulary, not the required semantics.
+
+==== Boundary selection criteria
+
+The boundary decision should be based on a prototype of both queues and should
+compare:
+
+* whether delta construction remains single and stable,
+* how pre-event mutation is observed,
+* lifecycle and failure ownership,
+* graph-specific dependency data availability,
+* legacy adapter complexity,
+* allocations and repeated collection traversal,
+* ease of queue-independent conformance testing,
+* extensibility for state-management contributors and future queue designs.
+
+== Collection Flush Context
+
+[[CFS-CTX-001]]
+`CFS-CTX-001`:: A collection flush cycle MUST create exactly one mutable
+collection flush context and MUST discard it when that flush cycle ends or is
+abandoned.
+
+[[CFS-CTX-002]]
+`CFS-CTX-002`:: The context MUST key collection state by collection instance
+identity, not by collection equality.
+
+[[CFS-CTX-003]]
+`CFS-CTX-003`:: Normal reachability handling MUST process a persistent collection
+instance at most once per flush cycle.
+
+[[CFS-CTX-004]]
+`CFS-CTX-004`:: Reaching the same collection instance through incompatible
+owner, role, or key references MUST fail with a shared-collection-reference
+error.
+
+[[CFS-CTX-005]]
+`CFS-CTX-005`:: A collection added to the persistence context while flush
+preparation is in progress MUST be registered with the active collection flush
+context.
+
+[[CFS-CTX-006]]
+`CFS-CTX-006`:: Core collection visitors MUST receive a mutable internal context
+through an explicit internal contract.  A read-only tracker exposed through the
+persistence context MUST NOT be downcast to obtain mutation access.
+
+[[CFS-CTX-007]]
+`CFS-CTX-007`:: The read-only tracker MUST be able to report whether a collection
+was reached, processed, has a semantic mutation, and has a logical remove.
+
+[[CFS-CTX-008]]
+`CFS-CTX-008`:: Forced initialization caused by a role or owner change MUST be
+visible before the affected collection delta is frozen.
+
+== Logical Transition Selection
+
+The base transition table is normative:
+
+[cols="1,1,1,1,2",options="header"]
+|===
+| Loaded side | Current side | Same role/key | Dirty or queued changes | Transition
+
+| absent | absent | n/a | any | `NONE`
+| absent | present | n/a | any | `CREATE`
+| present | absent | n/a | any | `REMOVE`
+| present | present | no | any | `REMOVE_AND_CREATE`
+| present | present | yes | no | `NONE`
+| present | present | yes | yes | `UPDATE`
+|===
+
+[[CFS-TRN-001]]
+`CFS-TRN-001`:: Transition selection MUST describe loaded and current collection
+association state independently of the chosen physical mutation strategy.
+
+[[CFS-TRN-002]]
+`CFS-TRN-002`:: `CREATE` MUST mean that current collection state is logically
+created.  It MUST NOT imply removal of loaded collection state.
+
+[[CFS-TRN-003]]
+`CFS-TRN-003`:: `REMOVE_AND_CREATE` MUST normalize into a logical remove for the
+loaded role/key and a logical create for the current role/key.
+
+[[CFS-TRN-004]]
+`CFS-TRN-004`:: An `UPDATE` which uses remove-all plus create-all MUST retain
+update lifecycle, Hibernate collection-event, statistics, and interceptor-hook
+semantics.  It MUST NOT be reported as `REMOVE_AND_CREATE`.
+
+[[CFS-TRN-005]]
+`CFS-TRN-005`:: An empty current collection does not change `CREATE` into `NONE`.
+The logical create MAY have zero physical row insertions.
+
+[[CFS-TRN-006]]
+`CFS-TRN-006`:: Suppression of physical removal by database cascade MUST NOT
+change `REMOVE` or the remove portion of `REMOVE_AND_CREATE` into `NONE`.
+
+[[CFS-TRN-007]]
+`CFS-TRN-007`:: Queued operations MUST be input to transition and delta
+normalization.  `QUEUED_OPERATIONS` MUST NOT be a mutually exclusive logical
+transition.
+
+[[CFS-TRN-008]]
+`CFS-TRN-008`:: The migration adapter MAY represent logical `CREATE` using the
+legacy `CollectionRecreateAction` type.  Legacy class naming MUST NOT leak into
+the normalized transition vocabulary.
+
+== Collection Delta
+
+A delta has the conceptual shape:
+
+[source,java]
+----
+record CollectionDelta(
+        CollectionBaseline baseline,
+        DeltaCoverage coverage,
+        List<CollectionChange> changes,
+        Set<DeltaSource> sources) {
+}
+----
+
+[[CFS-DLT-001]]
+`CFS-DLT-001`:: Every delta MUST identify its baseline as empty, snapshot, or
+uninitialized persisted state.
+
+[[CFS-DLT-002]]
+`CFS-DLT-002`:: Every delta MUST identify its coverage as complete or
+explicit-changes-only.
+
+[[CFS-DLT-003]]
+`CFS-DLT-003`:: A delta MUST be structurally immutable after it is frozen for
+semantic-mutation decomposition.
+
+[[CFS-DLT-004]]
+`CFS-DLT-004`:: A delta MUST preserve the collection semantics for equality,
+duplicate elements, nulls, keys, positions, identifiers, and mutable values.
+
+[[CFS-DLT-005]]
+`CFS-DLT-005`:: Snapshot positions and current positions MUST be represented as
+distinct values.
+
+[[CFS-DLT-006]]
+`CFS-DLT-006`:: Values unavailable until generated identifiers, collection size,
+or another execution-time fact is available MUST be represented by explicit
+deferred handles.  Delta discovery MUST NOT be repeated solely to obtain such a
+value.
+
+[[CFS-DLT-007]]
+`CFS-DLT-007`:: An explicit-changes-only delta MUST NOT imply the value, presence,
+absence, or position of an unmentioned persisted row.
+
+[[CFS-DLT-008]]
+`CFS-DLT-008`:: A delta MUST retain enough semantic information for the
+collection persister to select row-wise mutation, remove-all plus create-all,
+bulk clear, or no direct collection-table work.
+
+[[CFS-DLT-009]]
+`CFS-DLT-009`:: When orphan candidates are derived from a delta, the candidate
+projection MUST be used only while the compared collection state remains valid.
+
+[[CFS-DLT-010]]
+`CFS-DLT-010`:: Delta production MUST belong to collection semantics or an
+equivalent mapping-aware component.  Generic set-like folding MUST NOT be
+applied to bags, lists, or other semantics for which it is not equivalent.
+
+[[CFS-DLT-011]]
+`CFS-DLT-011`:: Delta freezing MUST capture a collection structural version,
+mutation generation, or equivalent token sufficient to distinguish changes
+represented by the frozen delta from changes made afterward.
+
+== Queued-Operation Normalization
+
+[[CFS-QOP-001]]
+`CFS-QOP-001`:: A collection which becomes initialized before delta freezing
+MUST apply queued commands in their original order and MUST produce a normal
+complete snapshot delta.
+
+[[CFS-QOP-002]]
+`CFS-QOP-002`:: A collection which remains uninitialized MUST normalize its
+queued command log into an explicit-changes-only delta whose baseline is
+uninitialized persisted state.
+
+[[CFS-QOP-003]]
+`CFS-QOP-003`:: The internal queued-command contract MUST expose command kind,
+element, known old value, key or position, and command order when applicable.
+The existing addition and orphan projections are insufficient as the normalized
+input contract.
+
+[[CFS-QOP-004]]
+`CFS-QOP-004`:: Normalization MUST copy or visit an immutable view of queued
+commands.  It MUST NOT drain the live operation queue.
+
+[[CFS-QOP-005]]
+`CFS-QOP-005`:: Clear MUST be represented as a bulk semantic change and an
+ordering barrier.  It MUST NOT require enumeration of persisted rows when
+mapping semantics permit bulk clear.
+
+[[CFS-QOP-006]]
+`CFS-QOP-006`:: A queued append to an uninitialized indexed collection MUST use a
+deferred position derived from one persisted-size handle plus the append's
+relative ordinal.  The persisted size SHOULD be resolved at most once for the
+semantic mutation.
+
+[[CFS-QOP-007]]
+`CFS-QOP-007`:: Queued commands MAY be folded only when collection semantics can
+prove equivalence without inspecting unknown persisted state.
+
+[[CFS-QOP-008]]
+`CFS-QOP-008`:: Normalized queued changes MUST NOT imply that the collection
+mutation owns all corresponding SQL.  For an inverse association, entity
+executables or mutation work MAY own FK mutations while the collection mutation
+owns index work or no SQL.
+
+[[CFS-QOP-009]]
+`CFS-QOP-009`:: For a still-uninitialized collection, the original queued-command
+log MUST be cleared exactly once after all physical work assigned to its
+completion boundary succeeds.
+
+[[CFS-QOP-010]]
+`CFS-QOP-010`:: Failed execution MUST NOT perform successful queued-operation
+finalization, `CollectionEntry.afterAction()`, or Hibernate post-collection
+events.
+
+The minimum command normalization is:
+
+[cols="1,2",options="header"]
+|===
+| Command | Delta representation
+
+| Set/bag add | Addition preserving collection duplicate semantics
+| Known element removal | Removal with known element or identifier
+| Map put | Replacement at the known key
+| Map remove | Removal at the known key
+| List set | Replacement at the known absolute position
+| List remove | Removal at the known position
+| Uninitialized list append | Addition with deferred append position
+| Clear | Bulk clear and command-order barrier
+|===
+
+== Semantic Collection Mutations
+
+[[CFS-ACT-001]]
+`CFS-ACT-001`:: Every semantic collection mutation MUST receive a
+`CollectionMutationId` unique within its collection flush cycle.
+
+[[CFS-ACT-002]]
+`CFS-ACT-002`:: A semantic collection mutation MUST capture its collection,
+mutation kind, persister, role/key, affected owner, affected owner identifier,
+delta or bulk strategy, removal mode, and lifecycle behavior before physical
+execution.
+
+[[CFS-ACT-003]]
+`CFS-ACT-003`:: `REMOVE_AND_CREATE` MUST produce two semantic mutations.  The
+remove mutation uses loaded role/key and affected-owner state; the create
+mutation uses current role/key and affected-owner state.
+
+[[CFS-ACT-004]]
+`CFS-ACT-004`:: Queued-operation finalization MAY be merged with another semantic
+mutation for the same collection when doing so does not change observable
+lifecycle behavior.  Otherwise it MUST be dependent internal work.
+
+[[CFS-ACT-005]]
+`CFS-ACT-005`:: A semantic mutation with no physical SQL MUST still execute its
+required lifecycle exactly once.
+
+[[CFS-ACT-006]]
+`CFS-ACT-006`:: A database-cascade removal MUST remain represented as a semantic
+remove mutation even when it emits no physical delete operation.
+
+== Lifecycle Notification and State-Advancement Semantics
+
+The following partial order is normative.  Requirements which depend on an open
+question are labeled provisional in the working decision table.  The placement
+of Jakarta Persistence owner lifecycle callbacks is provisional pending
+`OQ-011`; those callbacks are shown here to make the intended distinction from
+Hibernate collection events explicit, not to close that ordering question.
+
+[source]
+----
+transition selected
+  -> interceptor hook
+  -> affected owner/id captured
+  -> Hibernate collection pre-event
+  -> Jakarta Persistence owner pre-update callback, when applicable
+  -> delta frozen and physical plan sealed
+  -> diagnostic monitor span starts, when physical execution exists
+  -> all physical work succeeds
+  -> diagnostic monitor span completes successfully
+  -> before-state-advance contributors
+  -> queued-operation log finalized, when present
+  -> CollectionEntry.afterAction(), when applicable
+  -> owner loaded-state synchronization
+  -> cache work
+  -> Hibernate collection post-event
+  -> Jakarta Persistence owner post-update callback, when applicable
+  -> statistics
+----
+
+[[CFS-LFC-001]]
+`CFS-LFC-001`:: The applicable collection interceptor hook for each semantic
+mutation MUST run exactly once and before its delta is frozen.
+`REMOVE_AND_CREATE` therefore produces one remove notification and one legacy
+recreate notification.
+
+[[CFS-LFC-002]]
+`CFS-LFC-002`:: A Hibernate collection pre-event MUST run exactly once for
+`CREATE`, `REMOVE`, and `UPDATE` before the mutation's delta or bulk strategy is
+frozen.  Changes which the interceptor hook or Hibernate pre-event listener makes
+to the collection being prepared MUST be visible to that collection's physical
+mutation plan.
+
+[[CFS-LFC-003]]
+`CFS-LFC-003`:: Semantic `CREATE` MUST continue to use the existing Hibernate
+pre/post collection-recreate event types unless a separately approved API change
+renames those events.
+
+[[CFS-LFC-004]]
+`CFS-LFC-004`:: An `UPDATE` using remove-all plus create-all MUST fire update
+events, not remove and recreate event pairs.
+
+[[CFS-LFC-005]]
+`CFS-LFC-005`:: A Hibernate collection post-event MUST run exactly once and only
+after all physical work required by that semantic mutation succeeds.
+
+[[CFS-LFC-006]]
+`CFS-LFC-006`:: The affected owner and affected owner identifier observed by pre
+and post events MUST be stable for the semantic mutation even when collection
+owner references change during execution.
+
+[[CFS-LFC-007]]
+`CFS-LFC-007`:: A diagnostic monitor span MUST surround physical execution rather
+than delta discovery or graph decomposition.  It MUST report success or failure.
+
+[[CFS-LFC-008]]
+`CFS-LFC-008`:: Audit or other contributors requiring the old collection
+snapshot MUST run after physical success and before `CollectionEntry.afterAction()`.
+
+[[CFS-LFC-009]]
+`CFS-LFC-009`:: Cache invalidation, Hibernate post events, Jakarta Persistence
+owner post-update callbacks, and successful collection statistics MUST NOT run
+before semantic mutation completion.
+
+[[CFS-LFC-010]]
+`CFS-LFC-010`:: A failed physical operation MUST complete any active diagnostic
+monitor span with failure and MUST prevent successful completion handlers for
+every semantic mutation which remains incomplete.
+
+[[CFS-LFC-011]]
+`CFS-LFC-011`:: No global ordering between Hibernate collection events of
+unrelated semantic mutations is guaranteed.
+
+[[CFS-LFC-012]]
+`CFS-LFC-012`:: A semantic mutation which emits no physical execution MUST still
+perform its applicable state advancement, cache work, Hibernate events, Jakarta
+Persistence owner lifecycle callbacks, and statistics.  It MUST NOT emit a fake
+batchable SQL-shaped operation solely to carry completion handlers.
+
+[[CFS-LFC-013]]
+`CFS-LFC-013`:: A Hibernate pre-event listener mutation to a collection other
+than the collection whose event is being delivered is not guaranteed to be
+incorporated into the current flush when the other collection's delta was
+already frozen.
+
+[[CFS-LFC-014]]
+`CFS-LFC-014`:: A collection change made after its delta is frozen MUST NOT be
+lost.  The implementation MUST either invalidate and reprepare that collection
+for the current flush or leave the later change dirty and pending for a future
+flush.
+
+[[CFS-LFC-015]]
+`CFS-LFC-015`:: Successful state advancement MUST advance the collection entry
+only through the state represented by the executed delta.  It MUST NOT absorb a
+post-freeze change into the stored snapshot while simultaneously clearing that
+change's dirty state.
+
+[[CFS-LFC-016]]
+`CFS-LFC-016`:: When Jakarta Persistence owner `@PreUpdate` or `@PostUpdate`
+callbacks are applicable, each registered callback MUST run at most once for an
+owner in one flush cycle.  Entity mutation work and any number of collection
+mutations for that owner MUST participate in the same owner-level callback
+lifecycle rather than independently invoking callbacks.
+
+== Semantic Mutation Completion Protocol
+
+The semantic mutation state model is:
+
+[source]
+----
+DISCOVERED
+  -> REGISTERING
+  -> SEALED
+  -> EXECUTING
+  -> COMPLETED
+       or
+     FAILED
+----
+
+[[CFS-CMP-001]]
+`CFS-CMP-001`:: Every physical operation MUST belong to exactly one semantic
+mutation and carry its `CollectionMutationId` as execution metadata.
+
+[[CFS-CMP-002]]
+`CFS-CMP-002`:: All normal operations, state-management contributor operations,
+and synthesized fixups required by a semantic mutation MUST be registered before
+that mutation is sealed.
+
+[[CFS-CMP-003]]
+`CFS-CMP-003`:: A semantic mutation MUST NOT complete before it is sealed.
+
+[[CFS-CMP-004]]
+`CFS-CMP-004`:: Direct execution MUST report operation success only after the
+JDBC mutation succeeds.
+
+[[CFS-CMP-005]]
+`CFS-CMP-005`:: Batched execution MUST report contained operation success only
+after successful execution of the containing batch.
+
+[[CFS-CMP-006]]
+`CFS-CMP-006`:: A semantic mutation completes successfully when it is sealed and
+every registered physical operation has reported success.
+
+[[CFS-CMP-007]]
+`CFS-CMP-007`:: Successful semantic mutation completion and its lifecycle MUST
+occur exactly once.
+
+[[CFS-CMP-008]]
+`CFS-CMP-008`:: Failure of any registered operation MUST prevent successful
+completion of its semantic mutation.
+
+[[CFS-CMP-009]]
+`CFS-CMP-009`:: A zero-operation semantic mutation MAY complete immediately after
+sealing only after its explicit semantic dependencies are satisfied.
+
+[[CFS-CMP-010]]
+`CFS-CMP-010`:: Completion accounting MUST remain distinct from SQL statement
+shape grouping.
+
+== Graph Grouping and Ordering
+
+[[CFS-GRP-001]]
+`CFS-GRP-001`:: `StatementShapeKey` MUST be used only for compatible SQL grouping
+and batching.  It MUST NOT be used as semantic mutation identity.
+
+[[CFS-GRP-002]]
+`CFS-GRP-002`:: Operations from multiple semantic mutations MAY share an
+operation group or JDBC batch when statement shape and dependency constraints
+permit it.
+
+[[CFS-GRP-003]]
+`CFS-GRP-003`:: Grouping operations from multiple semantic mutations MUST
+preserve mutation identity and independent completion accounting of every
+contained operation.
+
+[[CFS-GRP-004]]
+`CFS-GRP-004`:: Each semantic mutation MUST receive one nonoverlapping ordinal range.
+All delete, update, insert, order, state-management, and lifecycle-anchor slots
+for that mutation MUST be allocated inside that range.
+
+[[CFS-GRP-005]]
+`CFS-GRP-005`:: Ordinals are deterministic ordering hints.  Correct lifecycle or
+database ordering MUST be represented by completion accounting or dependency
+edges, not inferred from the highest ordinal.
+
+[[CFS-GRP-006]]
+`CFS-GRP-006`:: One-to-many removal, change, and addition planning for one
+semantic mutation MUST use the same ordinal base.
+
+[[CFS-GRP-007]]
+`CFS-GRP-007`:: Physical row representation MAY use one operation per row or one
+operation template with multiple row bindings.  Lazy row expansion MUST preserve
+the same dependency and completion semantics.
+
+[[CFS-GRP-008]]
+`CFS-GRP-008`:: A remove and create produced by `REMOVE_AND_CREATE` MUST be
+ordered so that database constraints and the defined per-mutation lifecycle are
+satisfied.  The current working default is remove before create for that move.
+
+== Speculative Auto-Flush
+
+[[CFS-AFL-001]]
+`CFS-AFL-001`:: Before speculative flush preparation mutates queue state, the
+action queue MUST create a checkpoint which covers every mutable queue component
+affected by that preparation.
+
+[[CFS-AFL-002]]
+`CFS-AFL-002`:: A checkpoint MUST cover every queue component which flush
+preparation may mutate and MUST associate each component or action category with
+an explicit restoration policy.
+
+[[CFS-AFL-003]]
+`CFS-AFL-003`:: If auto-flush execution is unnecessary, restoration MUST preserve
+actions whose semantic effect survives the flush-needed check and MUST discard
+only work classified as speculative flush preparation.  Restoration MUST NOT
+depend on applying a count from one queue list to a different queue list.
+
+[[CFS-AFL-004]]
+`CFS-AFL-004`:: Collection inputs, deltas, and unsealed semantic mutations created
+only for an abandoned speculative flush MUST be discarded with its collection
+flush context.
+
+[[CFS-AFL-005]]
+`CFS-AFL-005`:: No successful semantic mutation lifecycle or completion handler
+MAY run for discarded speculative work.
+
+[[CFS-AFL-006]]
+`CFS-AFL-006`:: Partial-flush monitoring MUST report the actual processed entity
+and collection counts.
+
+== Cascade Boundary
+
+[[CFS-CAS-001]]
+`CFS-CAS-001`:: Stable cascade mapping structure SHOULD be represented by an
+immutable plan compiled once per entity persister or equivalent mapping
+descriptor.
+
+[[CFS-CAS-002]]
+`CFS-CAS-002`:: The compiled plan MUST NOT retain entity instances, session
+instances, persistence-context state, or collection contents.
+
+[[CFS-CAS-003]]
+`CFS-CAS-003`:: Runtime cascade state MUST be carried by an invocation-local,
+thread-confined traversal context.
+
+[[CFS-CAS-004]]
+`CFS-CAS-004`:: A compiled walker MUST preserve mapping property order,
+component order, collection iteration order, lazy-loading behavior,
+foreign-key-direction filtering, orphan timing, and database-cascade behavior.
+
+[[CFS-CAS-005]]
+`CFS-CAS-005`:: Every `CascadingAction`, including a custom action without a
+built-in route profile, MUST have a correct runtime-filtered traversal path.
+
+[[CFS-CAS-006]]
+`CFS-CAS-006`:: A generic traversal visited set MUST NOT suppress cascades unless
+the corresponding `CascadingAction` contract explicitly permits it.
+
+[[CFS-CAS-007]]
+`CFS-CAS-007`:: Cascade orphan discovery MAY consume an orphan projection from a
+collection delta only when the compared structural state is still valid.
+
+[[CFS-CAS-008]]
+`CFS-CAS-008`:: Cascade outside a collection flush context and cascade occurring
+before a valid delta exists MUST retain a standalone orphan-discovery path.
+
+== Compatibility Baseline
+
+=== Event compatibility dimensions
+
+Hibernate collection-event compatibility concerns listener-observable behavior,
+not the internal objects stored by an action queue.
+
+[cols="1,2,2",options="header"]
+|===
+| Dimension | Current working direction | Ramification
+
+| Event SPI
+| Preserve `org.hibernate.event.spi` listener and event contracts.
+| Existing integrations remain source and behavioral consumers of collection
+  events.  Any API redesign is separate work.
+
+| Event selection and count
+| Both queues produce the same applicable pre/post event kind and count for one
+  semantic collection mutation.
+| An update using remove-all plus create-all remains one update event pair rather
+  than becoming remove/recreate event pairs.
+
+| Event payload
+| Both queues expose equivalent collection, role/key, affected owner, and owner
+  identifier facts.
+| Listener behavior does not depend on which queue captured the payload.
+
+| Per-mutation ordering
+| Pre occurs before that mutation is frozen/executed; post occurs after all work
+  for that mutation succeeds.
+| A listener can reason about its own collection mutation independently of queue
+  scheduling.
+
+| Ordering between mutations
+| No guarantee is currently proposed for unrelated collection mutations.
+| The graph queue may reorder independent work.  A listener depending on the
+  global legacy event sequence could observe a change.
+
+| Hibernate event construction mechanics
+| Not a compatibility requirement.
+| A queue may create event objects through shared lifecycle services, native work
+  objects, factories, or another internal mechanism.
+
+| Cross-collection listener mutation
+| A mutation to collection B is not guaranteed to join the current flush when B
+  was already frozen, but it must remain pending if it is not included.
+| Queue scheduling may change whether B can be safely reprepared in the current
+  flush, but MUST NOT cause the mutation to be lost during B's state advancement.
+|===
+
+The difficult compatibility issue is therefore not which internal queue work
+item creates a Hibernate event.  It is whether event listeners may observe or
+influence other mutations in a globally ordered way.  Per-mutation equivalence
+leaves queues free to schedule independent work; global equivalence would
+constrain preparation and execution ordering across the entire flush.
+
+[[CFS-COM-001]]
+`CFS-COM-001`:: During migration, the legacy and graph action queues MUST satisfy
+the same per-mutation lifecycle and collection-state outcomes unless an
+explicitly approved compatibility exception exists.
+
+[[CFS-COM-002]]
+`CFS-COM-002`:: The following known defects are excluded from the compatibility
+baseline and MUST receive regression tests rather than preservation:
+
+* completion-handler carriers merged by statement shape may complete a semantic
+  mutation early,
+* one-to-many fallback ordinal bases may overlap subsequent mutation ranges,
+* graph auto-flush rollback may confuse normal and orphan collection removals,
+* collection monitoring may measure decomposition instead of execution,
+* auto-flush partial monitoring may report the entity count as collection count.
+
+[[CFS-COM-003]]
+`CFS-COM-003`:: Existing `org.hibernate.event.spi` pre/post collection event
+contracts and interceptor hooks MUST remain supported.  Semantic `CREATE`
+does not by itself rename the public recreate event API.  Changes to these
+contracts require a separate design and specification.
+
+[[CFS-COM-004]]
+`CFS-COM-004`:: SQL statement order, batching boundaries, and allocation count
+are not compatibility guarantees except where they affect database correctness,
+documented lifecycle, or an explicit performance requirement.
+
+[[CFS-COM-005]]
+`CFS-COM-005`:: Failure behavior MUST preserve Hibernate's transaction and
+session failure rules.  This specification does not make a failed flush
+retryable.
+
+[[CFS-COM-006]]
+`CFS-COM-006`:: Queue implementations MUST produce equivalent Hibernate event
+kind, count, and payload for the same semantic collection mutation unless an
+approved compatibility exception exists.
+
+[[CFS-COM-007]]
+`CFS-COM-007`:: Hibernate event construction location, call stack, and
+relationship to a queue's internal work representation are not compatibility
+requirements.
+
+== Acceptance Scenarios
+
+=== `CFS-SCN-001`: New collection
+
+Given no loaded side and a current collection, normalization produces `CREATE`.
+It produces one semantic create mutation and uses Hibernate collection-recreate
+events.  An empty collection may emit no row inserts but still completes its
+lifecycle.
+
+=== `CFS-SCN-002`: Collection move
+
+Given loaded and current sides with different role or key, normalization produces
+`REMOVE_AND_CREATE`.  It produces two semantic mutations with distinct IDs.  The
+remove uses loaded role/key; the create uses current role/key.  Completion of one
+MUST NOT complete the other.
+
+=== `CFS-SCN-003`: Update requiring physical replacement
+
+Given the same loaded/current role and key and a dirty collection whose persister
+requires remove-all plus create-all, normalization produces `UPDATE`.  The
+physical plan removes and creates rows, but exactly one Hibernate collection
+update pre/post event pair and one update statistic are produced.
+
+=== `CFS-SCN-004`: Uninitialized queued list appends
+
+Given an uninitialized inverse one-to-many list with queued appends, normalization
+produces an explicit-changes-only delta.  One persisted-size handle determines
+append positions.  Entity actions may own FK changes; collection operations own
+required index writes.  The queued log is cleared only after successful semantic
+mutation completion.
+
+=== `CFS-SCN-005`: Same-shape mutations
+
+Given two semantic collection mutations producing the same statement shape,
+their operations may batch together.  Each operation retains its mutation ID,
+and neither Hibernate post event nor another successful-completion lifecycle
+step may run until all operations belonging to that mutation succeed.
+
+=== `CFS-SCN-006`: Zero-SQL update
+
+Given a dirty uninitialized inverse collection whose direct physical plan is
+empty, the semantic update lifecycle completes once without a batchable no-op
+completion-handler carrier.
+
+=== `CFS-SCN-007`: Batch failure
+
+Given a semantic mutation with operations in a JDBC batch which fails, the
+mutation does not complete successfully.  Its queued log, collection entry,
+Hibernate post event, cache work, Jakarta Persistence owner post-update callback,
+and success statistics are not advanced as if the mutation had succeeded.
+
+=== `CFS-SCN-008`: Discarded auto-flush
+
+Given speculative flush preparation followed by a determination that execution
+is unnecessary, queue restoration applies the specified retention policy,
+preserves durable semantic mutation work, removes only speculative
+flush-preparation work, and discards the flush context.
+
+=== `CFS-SCN-009`: Database-cascade remove
+
+Given a logical remove whose SQL is suppressed by database cascade, the tracker
+still reports a logical remove and cache/loading decisions observe removal.  The
+exact pre/post collection-event behavior remains an open decision.
+
+=== `CFS-SCN-010`: Compiled cascade parity
+
+For every built-in cascade action and cascade point, a compiled walker visits the
+same values in the same order and has the same lazy initialization, orphan, and
+database-cascade effects as the metadata walker.
+
+=== `CFS-SCN-011`: Cross-collection listener mutation
+
+Given a pre-listener for collection A which mutates collection B after B's delta
+was frozen, Hibernate may invalidate and reprepare B for the current flush or
+defer the change.  If deferred, completion of B's frozen work advances only the
+executed state and leaves the later change dirty for a future flush.
+
+=== `CFS-SCN-012`: Owner callback deduplication
+
+Given an owner whose entity state and two non-inverse collections all produce
+mutation work in one successful flush, each applicable Jakarta Persistence
+owner `@PreUpdate` and `@PostUpdate` callback runs exactly once.  Entity and
+collection processing MUST share owner-level callback registration rather than
+deduplicating only within their respective work categories.
+
+== Test Traceability
+
+[cols="1,2",options="header"]
+|===
+| Requirement group | Required test level
+
+| `CFS-CTX-*`, `CFS-TRN-*`
+| Unit tests for identity state and transition tables; flush integration tests
+
+| `CFS-DLT-*`, `CFS-QOP-*`
+| Per-semantics delta contract tests and uninitialized queued-operation tests
+
+| `CFS-ACT-*`, `CFS-LFC-*`
+| Queue-independent Hibernate-event, interceptor-hook, Jakarta Persistence
+  lifecycle-callback, diagnostic-monitor, cache, and statistics tests
+
+| `CFS-CMP-*`, `CFS-GRP-*`
+| Direct decomposer tests plus planner, batching, fixup, and failure tests
+
+| `CFS-AFL-*`
+| Auto-flush checkpoint restoration and monitoring-count tests
+
+| `CFS-CAS-*`
+| Metadata-walker versus compiled-walker decision traces and behavior tests
+
+| `CFS-COM-*`
+| Legacy/graph conformance suite and focused regressions for excluded defects
+|===
+
+Before approval, every `MUST` requirement MUST map to at least one named test or
+an explicitly recorded reason why static verification is sufficient.
+
+== Working Decisions
+
+[cols="1,2,3",options="header"]
+|===
+| Decision | Status | Working direction
+
+| `WD-001`
+| Working
+| Use `CREATE` and `REMOVE_AND_CREATE` in the normalized model.  Keep recreate
+  only in legacy API and adapter names.
+
+| `WD-002`
+| Working
+| Normalize queued commands into `CollectionDelta` with explicit baseline,
+  coverage, and provenance.
+
+| `WD-003`
+| Working
+| Keep `CollectionMutationId` independent of `StatementShapeKey` and use
+  explicit completion accounting.
+
+| `WD-004`
+| Working
+| Represent stable cascade structure in a per-persister plan and runtime state in
+  a traversal context.
+
+| `WD-005`
+| Working
+| Preserve the ability of interceptor hooks and Hibernate pre-collection event
+  listeners to affect the mutation extracted for their own collection.
+
+| `WD-006`
+| Working
+| Do not guarantee global Hibernate collection-event order between unrelated
+  semantic mutations.
+
+| `WD-007`
+| Working
+| Preserve `org.hibernate.event.spi` contracts and queue-independent observable
+  lifecycle semantics.  Permit each queue to use native internal work
+  representations without requiring `Executable` or legacy collection action
+  forms as the common boundary.
+
+| `WD-008`
+| Working
+| Keep cascade boundary requirements in this specification and define detailed
+  `CascadePlan` and traversal mechanics in a companion working specification.
+
+| `WD-009`
+| Working
+| Define Hibernate collection-event equivalence per semantic mutation.  Preserve
+  mutations to the collection receiving its pre-event in the current flush;
+  permit safe deferral of post-freeze mutations to other collections without
+  losing their dirty state.
+
+| `WD-010`
+| Working
+| Note potential reuse of collection boundary, completion, lifecycle, and freeze
+  concepts for entity work, but keep entity events/actions outside this
+  specification and require separate design/specification work.
+
+| `WD-011`
+| Working
+| Treat Jakarta Persistence `@PreUpdate` and `@PostUpdate` callbacks as an
+  owner-level lifecycle.  Invoke each applicable callback at most once per owner
+  per flush even when an entity mutation and multiple collection mutations all
+  contribute work for that owner.
+|===
+
+== Open Questions and Guidance Needed
+
+[cols="1,1,2,3",options="header"]
+|===
+| Question | Impact | Working default | Decision needed
+
+| `OQ-002`
+| Internal boundary
+| Use queue-neutral `CollectionMutationInput` plus a shared preparation protocol
+  which performs pre-mutation lifecycle notifications and freezes a
+  `PreparedCollectionMutation`; each queue then lowers or schedules it natively.
+| Should the shared boundary use this two-stage semantic-input/prepared-mutation
+  protocol, or should queues receive still-rawer visitation state and own more of
+  transition and delta interpretation?
+
+| `OQ-005`
+| Database cascade
+| Preserve logical remove tracking, state advancement, and cache behavior;
+  Hibernate collection-event behavior is not yet selected.
+| Should Hibernate pre/post collection-remove events fire when database cascade
+  suppresses the physical remove operation?
+
+| `OQ-006`
+| Queued operations
+| Allow merge into another semantic mutation when observable lifecycle is
+  identical; otherwise create dependent internal work.
+| Is queued-operation finalization itself an observable lifecycle unit, or only
+  an internal completion obligation?
+
+| `OQ-007`
+| Auto-flush
+| Preserve existing interceptor timing until intentionally changed.
+| May interceptor hooks occur for speculative auto-flush work which is later
+  discarded, or must all such hooks be deferred until execution is known to be
+  required?
+
+| `OQ-008`
+| Ordering
+| Remove before create for the same `REMOVE_AND_CREATE` transition.
+| Is remove-before-create an observable lifecycle guarantee for a collection
+  move, or only a physical dependency selected when necessary?
+
+| `OQ-009`
+| Auto-flush
+| Preserve the legacy distinction between durable semantic mutation work and
+  discardable flush-derived work, but express it through named checkpoint
+  policies instead of ad hoc list clearing.
+| Which actions discovered during `PERSIST_ON_FLUSH`, orphan processing, or
+  other speculative preparation must survive when SQL execution is unnecessary?
+
+| `OQ-011`
+| Jakarta Persistence owner lifecycle callbacks
+| Cardinality is settled by `WD-011`.  Provisionally invoke `@PreUpdate` early
+  enough for its changes to participate in preparation and invoke `@PostUpdate`
+  only after successful completion of the owner's applicable work.
+| Exactly when should the single owner-level pre/post callbacks run relative to
+  interceptor hooks, Hibernate collection events, delta freezing, and the
+  owner's entity and collection operations?
+
+|===
+
+== Criteria for Development-Team Review
+
+This document is ready for broad development-team review when:
+
+* blocking open questions have a working answer,
+* transition and lifecycle scenario coverage is accepted as complete enough for
+  the first implementation phases,
+* every first-phase `MUST` has an acceptance-test location,
+* legacy/graph compatibility expectations are explicit,
+* prototype results validate semantic mutation completion across grouping,
+  batching, and synthesized fixups,
+* prototype results validate queued-operation normalization for at least set,
+  list, and map semantics.
+
+Team review may revise any working decision.  Approval requires recording the
+review outcome, resolving or explicitly deferring remaining observable-behavior
+questions, and changing the document status to `Approved Specification`.

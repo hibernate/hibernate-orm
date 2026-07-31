@@ -5,7 +5,7 @@
 :sectanchors:
 :numbered:
 
-Status: Proposed
+Status: Approved
 
 This document specifies:
 
@@ -13,6 +13,12 @@ This document specifies:
 * SPI report generation and build validation;
 * role-sensitive compatibility checking;
 * testing requirements for the annotation and its tooling.
+
+The tooling requirements in this document are normative.  Conformance requires
+the specified report generation, build validation, compatibility checking, and
+reference-provider enforcement; implementing only the annotation does not
+satisfy this specification.  The specification does not mandate a particular
+analysis engine.
 
 Dialect organization is a separate application of this specification and is
 defined in `design/dialect-extension-specification.adoc`.
@@ -30,6 +36,10 @@ in this document indicate requirement strength.
 Provider::
 Code outside Hibernate ORM which participates in a Hibernate extension
 contract.
+
+Application user::
+Application code which uses Hibernate but does not participate in the contract
+as an extension provider.
 
 SPI element::
 A package, type, constructor, method, field, or annotation type independently
@@ -120,17 +130,24 @@ interpreted from the perspective of external provider code:
 * `SUPPLY`: provider code makes an implementation, instance, or value available
   to Hibernate.
 
-It does not replace the support status of ordinary non-internal public API.
+`@SPI` does not grant application API status.  An SPI promise is made to
+provider code, not to application-user code.  A type MAY independently be both
+ordinary API and SPI, but each audience receives only the compatibility promise
+associated with its classification.
+
+Java visibility does not determine the supported audience.  Application code
+MAY be technically able to link to a public SPI element, but such linkage MUST
+NOT be treated as supported application API unless the element independently
+has ordinary API status.
 
 An element MAY declare more than one role.
 
-`IMPLEMENT` and `SUPPLY` each imply `USE`.  Neither `IMPLEMENT` nor `SUPPLY`
-implies the other.  Tools MUST expand declared roles into this effective role
-set.
+`USE`, `IMPLEMENT`, and `SUPPLY` are independent.  Tools MUST NOT infer one role
+from another.
 
-Explicitly declaring `USE` together with `IMPLEMENT` or `SUPPLY` is redundant.
-Tools MUST accept and normalize the redundant declaration and SHOULD report a
-style warning.
+Every role requires the common binary and source referenceability necessary to
+name the participating types in provider code.  That shared linkage requirement
+MUST NOT be reported or compatibility-checked as an implied `USE` role.
 
 An SPI element MAY also be:
 
@@ -186,20 +203,28 @@ A class marked `IMPLEMENT`:
 * MUST not be final;
 * MUST expose at least one supported constructor usable by provider subclasses;
 * MUST document the state and lifecycle assumptions relevant to subclasses;
+* MUST treat every public or protected overridable instance method as part of
+  its supported implementation surface;
+* MUST treat its other public or protected members accessible to provider
+  subclasses as supported implementation vocabulary without inferring `USE`;
 * SHOULD minimize its protected surface.
 
-Type-level `IMPLEMENT` permits implementing or subclassing the type.  It does
-not make every overridable method an intentional customization hook.
+Before an existing class is classified `IMPLEMENT`, its public and protected
+surface MUST be audited.  An overridable method which is not intended as a
+provider customization hook MUST be made non-overridable, assigned narrower
+visibility, or moved behind an internal collaborator, subject to the applicable
+compatibility and migration policy.
 
 The abstract methods of an `IMPLEMENT`-classified interface or abstract class
 form its required implementation surface and inherit effective `IMPLEMENT`;
 they do not need repetitive member annotations.  Public default methods on an
 `IMPLEMENT` interface are likewise part of its compatibility surface.
 
-An optional concrete or protected method intended as a provider override hook
-MUST carry `IMPLEMENT` directly or through a narrowly scoped declaration whose
-meaning includes the method.  Merely being technically overridable is not
-sufficient.
+Public and protected overridable instance methods of an `IMPLEMENT` class also
+inherit effective `IMPLEMENT`; they do not need repetitive member annotations.
+Direct method-level `IMPLEMENT` MAY be used to make the role locally visible or
+to classify an exceptional hook, but MUST NOT be required merely to repeat the
+enclosing class contract.
 
 A method marked `IMPLEMENT`:
 
@@ -212,8 +237,10 @@ A method marked `IMPLEMENT`:
 
 `SUPPLY` means provider code intentionally makes an implementation, instance,
 or value represented by the element available to Hibernate.  It never means
-that Hibernate supplies the element to provider code; a contract received from
-Hibernate is used by provider code and therefore has `USE` semantics.
+that Hibernate supplies the element to provider code.  A contract received
+from Hibernate has `USE` semantics only when provider code is intentionally
+allowed to invoke, inspect, or construct it; mere receipt or pass-through does
+not infer `USE`.
 
 A `SUPPLY` contract MUST document:
 
@@ -280,18 +307,28 @@ that exact package.  It does not apply to subpackages.
 Package-level `IMPLEMENT` SHOULD be used sparingly because it can create a broad
 implementation promise.
 
-A type-level role applies to the type-level semantics defined above.
-Member-level annotations SHOULD identify supported subclass constructors and
-optional concrete or protected methods which form the deliberate
-implementation surface.  They are not required on every abstract method of an
-`IMPLEMENT` type.
+A type-level role applies to the role-specific surface defined above:
 
-Effective roles are the union of direct, enclosing, explicit-package, and
-conventional roles, expanded according to the role hierarchy.  A direct
-declaration cannot remove a role inherited or implied from another origin.
-Tools MUST retain all origins on the canonical element record.  A package
-intended to contain mixed roles SHOULD therefore avoid a broad package
-annotation.
+* type-level `USE` covers the supported public use surface;
+* type-level `IMPLEMENT` covers the required interface surface, every public or
+  protected overridable instance method of a class, and other public or
+  protected members accessible as implementation vocabulary to provider
+  subclasses;
+* type-level `SUPPLY` classifies the type as a value or implementation providers
+  may supply, but does not make every member a supply point.
+
+A method through which provider code supplies an argument or result to
+Hibernate MUST therefore receive `SUPPLY` directly or from a declaration whose
+scope specifically includes that method.  Member-level annotations MAY also be
+used to make a derived role locally visible.  Supported subclass constructors
+MUST be classified explicitly for `IMPLEMENT`.
+
+Effective roles are the union of the roles applicable to the element from its
+direct, role-specific enclosing-type, explicit-package, and conventional
+origins.  No role expansion is performed.  A direct declaration cannot remove
+an applicable role.  Tools MUST retain all origins on the canonical element
+record.  A package intended to contain mixed roles SHOULD therefore avoid a
+broad package annotation.
 
 No SPI role propagates through Java inheritance to a subclass or implementing
 class.  Every built-in subclass intended as an SPI MUST be classified
@@ -313,7 +350,7 @@ explicitly through `@SPI` when intended.
 
 No annotation is required to restate the conventional `USE` role.  A direct
 `@SPI(IMPLEMENT)` or `@SPI(SUPPLY)` in an exact `.spi` package adds the declared
-role and retains the conventionally implied `USE`.
+role alongside the independently conventional `USE`.
 
 An externally accessible internal element MUST NOT be placed directly in an
 exact `.spi` package.  Internal helpers SHOULD be placed in an `internal`
@@ -348,7 +385,6 @@ The task MUST:
 * process all `org.hibernate.SPI` annotations;
 * resolve direct, enclosing, explicit-package, and exact `.spi` package
   classifications;
-* expand `IMPLEMENT` and `SUPPLY` to include effective `USE`;
 * traverse supported signatures from independently classified SPI roots;
 * construct one canonical record per encountered element;
 * produce deterministic output;
@@ -397,19 +433,28 @@ Within a single report view, an element MUST occupy exactly one effective-role
 bucket:
 
 `USE`::
-No stronger role.
+Provider use only.
 
 `IMPLEMENT`::
-Effective `USE + IMPLEMENT`.
+Provider implementation only.
 
 `SUPPLY`::
-Effective `USE + SUPPLY`.
+Provider supply only.
+
+`USE + IMPLEMENT`::
+Provider use and implementation.
+
+`USE + SUPPLY`::
+Provider use and supply.
 
 `IMPLEMENT + SUPPLY`::
-All three effective roles.
+Provider implementation and supply.
 
-This role bucketing MUST NOT duplicate an `IMPLEMENT` or `SUPPLY` element in the
-`USE` bucket merely because `USE` is implied.
+`USE + IMPLEMENT + SUPPLY`::
+All three provider roles.
+
+This role bucketing MUST NOT duplicate a multi-role element in its individual
+role buckets.
 
 === Conceptual SPI systems (non-normative)
 
@@ -490,7 +535,13 @@ sections.  Each system would contain effective-role buckets in this order:
 
   [SUPPLY]
 
+  [USE + IMPLEMENT]
+
+  [USE + SUPPLY]
+
   [IMPLEMENT + SUPPLY]
+
+  [USE + IMPLEMENT + SUPPLY]
 
 [Caching]
 
@@ -500,7 +551,13 @@ sections.  Each system would contain effective-role buckets in this order:
 
   [SUPPLY]
 
+  [USE + IMPLEMENT]
+
+  [USE + SUPPLY]
+
   [IMPLEMENT + SUPPLY]
+
+  [USE + IMPLEMENT + SUPPLY]
 
 [Unclassified]
 
@@ -510,7 +567,13 @@ sections.  Each system would contain effective-role buckets in this order:
 
   [SUPPLY]
 
+  [USE + IMPLEMENT]
+
+  [USE + SUPPLY]
+
   [IMPLEMENT + SUPPLY]
+
+  [USE + IMPLEMENT + SUPPLY]
 ----
 
 Systems would be ordered according to the checked-in registry, with
@@ -543,6 +606,11 @@ Release documentation SHOULD publish the SPI report alongside internal,
 incubating, deprecated, and removal reports.
 
 The published report SHOULD link each element to its Javadoc.
+
+The report and linked Javadoc MUST identify the audience as SPI providers.
+They MUST NOT describe provider `USE` as application-user API status.  A type
+which is independently ordinary API MAY document both audiences and their
+respective contracts.
 
 == SPI validation
 
@@ -606,9 +674,6 @@ allowlist for pre-existing dependencies.
 
 `SPI009` MUST follow the project's compatibility policy and release type.
 
-The validator SHOULD issue a non-error style diagnostic when `USE` is declared
-alongside `IMPLEMENT` or `SUPPLY`, because the stronger roles already imply it.
-
 === Conceptual system validation
 
 If the conceptual SPI system registry is adopted, the following validation
@@ -664,11 +729,23 @@ are repaired.
 
 == Role-sensitive compatibility
 
+=== Common SPI linkage compatibility
+
+For every SPI role, compatibility analysis MUST include the source and binary
+linkage necessary for provider code to name the classified element and the
+supported signature vocabulary required by that role.  Removing an applicable
+role is an incompatible SPI change unless handled by the project's applicable
+compatibility and migration policy.
+
+The common linkage floor MUST NOT cause callable methods, constructors, fields,
+or value semantics to be checked as provider `USE` surface unless the element
+has an independent `USE` role.
+
 === USE compatibility
 
 For `USE` elements, compatibility analysis MUST include:
 
-* removal or visibility reduction;
+* removal or visibility reduction of provider-callable surface;
 * incompatible signature changes;
 * constructor removal;
 * static versus instance changes;
@@ -676,7 +753,7 @@ For `USE` elements, compatibility analysis MUST include:
 
 === SUPPLY compatibility
 
-For `SUPPLY` elements, compatibility analysis MUST additionally include:
+For `SUPPLY` elements, compatibility analysis MUST include:
 
 * narrowing accepted implementation/value types;
 * removing registration mechanisms;
@@ -686,7 +763,7 @@ For `SUPPLY` elements, compatibility analysis MUST additionally include:
 
 === IMPLEMENT compatibility
 
-For `IMPLEMENT` elements, compatibility analysis MUST additionally include:
+For `IMPLEMENT` elements, compatibility analysis MUST include:
 
 * adding abstract interface methods without defaults;
 * removing or changing default methods incompatibly;
@@ -712,8 +789,9 @@ Tests MUST verify:
 * absence of `@Inherited`;
 * bare `@SPI` defaults to `USE`;
 * an explicitly empty role array is invalid;
-* `IMPLEMENT` and `SUPPLY` imply `USE`;
-* redundant explicit `USE` is accepted and normalized;
+* no role implies another role;
+* all role combinations retain exactly the roles declared or independently
+  conferred by another classification origin;
 * multiple roles on one declaration;
 * enum serialization through Jandex.
 
@@ -731,6 +809,8 @@ Report-generation tests MUST verify:
   retaining every reachability path;
 * signature-only collaborators appear in the derived supported-surface
   category;
+* `@SPI` classification alone does not classify an element as application API;
+* a dual-audience element retains distinct API and SPI classifications;
 * incubating and deprecation metadata;
 * aggregate report-task integration.
 
@@ -757,9 +837,15 @@ There MUST be positive fixtures proving:
 * a public `USE` interface need not be implementable;
 * a `SUPPLY` immutable type need not be implementable;
 * an exact `.spi` package confers implicit `USE` without an annotation;
-* an `IMPLEMENT` or `SUPPLY` declaration has effective `USE`;
+* an `IMPLEMENT` or `SUPPLY` declaration does not acquire effective `USE`
+  without an independent `USE` origin;
 * abstract methods of an `IMPLEMENT` type need no repetitive member
   annotations;
+* public and protected overridable instance methods of an `IMPLEMENT` class
+  inherit effective `IMPLEMENT` without repetitive member annotations;
+* non-overridable public and protected members accessible to subclasses remain
+  part of `IMPLEMENT` compatibility without creating effective `USE`;
+* type-level `SUPPLY` does not classify every member as a supply point;
 * an internal implementation may implement a supported SPI without itself
   becoming SPI;
 * supported request interfaces may have internal implementations.
@@ -772,11 +858,16 @@ baseline.
 CI MUST apply the role-sensitive compatibility rules defined by this
 specification.
 
+The SPI compatibility baseline MUST remain distinct from the ordinary API
+baseline.  Adding `@SPI` MUST NOT add an element to the API baseline, and
+removing ordinary API status from a dual-audience element MUST NOT be hidden by
+its remaining SPI classification.
+
 An intentional incompatible SPI change MUST:
 
 * identify the affected roles;
 * follow the applicable compatibility policy;
-* include migration documentation;
+* include an entry in the versioned Migration Guide under `Changes to SPI`;
 * update the baseline explicitly;
 * update reference provider fixtures.
 

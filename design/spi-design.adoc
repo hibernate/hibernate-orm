@@ -5,7 +5,7 @@
 :sectanchors:
 :numbered:
 
-Status: Proposed
+Status: Approved
 
 This document describes the general design for making Hibernate's
 service-provider interfaces explicit, mechanically verifiable, and usable
@@ -50,6 +50,11 @@ The annotation is accompanied by:
 * role-sensitive compatibility checking;
 * checks preventing reference providers from importing Hibernate internals;
 * documentation generated from the declared intent.
+
+These tooling capabilities are part of the design, not optional follow-up
+work.  An implementation of the annotation without build validation,
+reporting, compatibility analysis, and reference-provider checks does not
+satisfy this design.
 
 == Problem statement
 
@@ -127,7 +132,26 @@ is made.
 
 A type may be both API and SPI.  For example, a capability value may be
 observable by application code and also be used by a Dialect implementation.
-`@SPI` is additive metadata; it does not remove ordinary API status.
+`@SPI` is additive metadata; it does not remove ordinary API status and does
+not grant API status.
+
+API and SPI identify different supported audiences:
+
+Application user::
+Application code which uses Hibernate to implement business behavior.
+
+SPI provider::
+Code which implements or supplies a Hibernate extension, such as a Dialect,
+cache provider, service integrator, or bytecode provider.
+
+An SPI compatibility promise is made to SPI-provider code only.  In
+particular, `@SPI(USE)` means provider use; it does not promise that application
+code may use the element as ordinary Hibernate API.  A dual-audience type must
+carry both its ordinary API status and its SPI classification.
+
+This is a support and compatibility distinction, not Java access control.
+Application code may be technically able to reference a public SPI type, but
+that does not make such use supported application API.
 
 === SPI roles
 
@@ -154,25 +178,18 @@ Hibernate.
 expectations.
 |===
 
-The roles form a partial hierarchy.  `IMPLEMENT` and `SUPPLY` each imply the
-baseline `USE` role, but neither implies the other:
-
-[source]
-----
-       IMPLEMENT       SUPPLY
-             \         /
-                  USE
-----
-
-The implication means that a provider may reference the contract.  It does
-not mean that `IMPLEMENT` permits supplying an implementation to Hibernate, or
-that `SUPPLY` permits implementing an interface or subclassing a class.
+The roles are independent.  `IMPLEMENT` and `SUPPLY` necessarily require enough
+referenceability for provider bytecode to name the participating types, but
+that common linkage requirement is not the `USE` compatibility contract.
+`IMPLEMENT` therefore does not promise general provider invocation or
+construction, and `SUPPLY` does not promise either general provider use or
+provider implementation.
 
 Examples:
 
 [source,java]
 ----
-@SPI({ SPI.Role.IMPLEMENT, SPI.Role.SUPPLY })
+@SPI({ SPI.Role.USE, SPI.Role.IMPLEMENT, SPI.Role.SUPPLY })
 public interface ProviderStrategy {
     ...
 }
@@ -188,8 +205,8 @@ public interface ProviderRequest {
 }
 ----
 
-The first declaration has all three effective roles.  The second has `USE`
-and `IMPLEMENT`.  Bare `@SPI` has the precise default meaning `USE`.
+The first declaration has all three roles.  The second has only `IMPLEMENT`.
+Bare `@SPI` has the precise default meaning provider `USE`.
 
 === Managing annotation volume and staleness
 
@@ -219,8 +236,8 @@ This keeps declarations sparse:
 
 * an `IMPLEMENT` interface or class is annotated once; its required abstract
   surface is derived;
-* only deliberate optional override hooks on a subclassable base need member
-  annotations;
+* exposed overridable members of an `IMPLEMENT` class are derived from the
+  class classification and do not need repetitive member annotations;
 * `SUPPLY` is placed on the contract or registration/return point through
   which provider behavior becomes available to Hibernate;
 * coherent exact `.spi` packages require no annotation for baseline `USE`;
@@ -267,10 +284,10 @@ It is not coherent for the same effective element to be both `@SPI` and
 The annotation should be defined at the root, alongside `Internal` and
 `Incubating`, as `org.hibernate.SPI`.
 
-`USE` should be the default role.  In the partial hierarchy it is the precise
-common floor, so bare `@SPI` is not an unspecified marker.  `IMPLEMENT` and
-`SUPPLY` imply `USE`; spelling `USE` alongside either stronger role is
-redundant.
+`USE` should be the default role, so bare `@SPI` is not an unspecified marker.
+It has the precise meaning that SPI-provider code may use the element.  Because
+the roles are independent, an element intended for more than one form of
+provider participation must declare every applicable role.
 
 The annotation should:
 
@@ -287,15 +304,28 @@ automatically make Hibernate's concrete leaf implementation a supported
 subclassing point.
 
 Type-level `IMPLEMENT` states that implementing or subclassing the type is
-intentional.  It does not imply that every overridable method is a supported
-customization hook.  Methods intended for overriding should be marked
-explicitly, especially on large base classes.
+intentional.  For a class, every public or protected instance method which
+remains overridable is consequently part of the supported implementation
+surface.  Other public or protected members accessible to a provider subclass
+form supported implementation vocabulary without acquiring the independent
+`USE` role.  A class should not expose an overridable member while
+simultaneously claiming that provider subclasses may not depend on overriding
+it.
 
-This distinction allows Hibernate to document:
+This rule keeps the annotation sparse and makes Java visibility honest.  Before
+classifying an existing class `IMPLEMENT`, Hibernate must audit its exposed
+surface.  A method which is not an intentional provider hook should be made
+non-overridable, given narrower visibility, or moved behind an internal
+collaborator, subject to normal compatibility and migration requirements.
+Direct member annotations remain useful for documentation and for exceptional
+hooks, but are not required to repeat `IMPLEMENT` on every overridable member
+of an `IMPLEMENT` class.
+
+This allows Hibernate to document and validate:
 
 * which classes may be subclassed;
 * which constructors may be called by subclasses;
-* which methods are deliberate override points;
+* which exposed methods form the effective override surface;
 * which public methods are merely callable.
 
 == Tooling design
@@ -384,10 +414,13 @@ The report should have this shape:
 
   [IMPLEMENT]
   org.hibernate.sql.ast.spi.AbstractSqlAstTranslator
+  org.hibernate.sql.ast.SqlAstTranslatorFactory
+
+  [USE + IMPLEMENT + SUPPLY]
+  org.hibernate.dialect.Dialect
 
   [IMPLEMENT + SUPPLY]
-  org.hibernate.dialect.Dialect
-  org.hibernate.sql.ast.SqlAstTranslatorFactory
+  org.hibernate.dialect.Dialect#getSqlAstTranslatorFactory()
 
 [Caching]
 
@@ -398,12 +431,13 @@ The report should have this shape:
   ...
 ----
 
-Within one system, an element should appear in exactly one role bucket based on
-its effective role set: `USE`, `IMPLEMENT`, `SUPPLY`, or
-`IMPLEMENT + SUPPLY`.  This avoids duplicating every stronger role in the
-implied `USE` section.  An element shared by multiple conceptual systems may
-appear in each applicable system, but those presentations should point to one
-canonical machine-readable record.
+Within one system, an element should appear in exactly one bucket representing
+its complete role set.  The possible buckets are `USE`, `IMPLEMENT`, `SUPPLY`,
+`USE + IMPLEMENT`, `USE + SUPPLY`, `IMPLEMENT + SUPPLY`, and
+`USE + IMPLEMENT + SUPPLY`.  This avoids duplicating a multi-role element in
+each individual role section.  An element shared by multiple conceptual
+systems may appear in each applicable system, but those presentations should
+point to one canonical machine-readable record.
 `Unclassified` makes omissions in the system registry visible.
 
 The report should be included in the aggregate lifecycle-report task alongside
@@ -438,20 +472,67 @@ Signature validation should cover:
 The validator should report the complete path from the SPI element to the
 internal dependency where practical.
 
+=== Candidate structural-analysis engine: jQAssistant
+
+jQAssistant is a strong candidate for implementing the graph-oriented parts of
+SPI validation.  Its Java bytecode scanner, project-specific concepts, Cypher
+constraints, build-failure severities, reports, and baseline support align well
+with:
+
+* classifying API, SPI-role, package-convention, and internal nodes;
+* deriving override and supported-signature relationships;
+* finding transitive paths from SPI roots to internal types;
+* enforcing provider-module boundaries;
+* validating role and Java-modifier combinations;
+* organizing Dialect and other system views through graph reachability.
+
+Hibernate ORM does not currently integrate jQAssistant.  Other Hibernate
+projects, including Hibernate Search, provide organizational precedent for its
+use, rule maintenance, and dependency governance.  That precedent reduces
+adoption uncertainty but does not remove the need to prove integration with
+ORM's Gradle build and substantially larger bytecode surface.
+
+Adoption should follow a focused prototype against representative positive and
+negative fixtures.  The prototype must verify complete modeling of annotations,
+generic signatures, wildcard and type-variable bounds, checked exceptions,
+nested types, method overriding, artifact ownership, and deterministic paths.
+
+jQAssistant should not be assumed to replace every tooling component.  In
+particular:
+
+* role-sensitive compatibility across published releases may be better handled
+  by a dedicated compatibility engine consuming the generated SPI baseline;
+* required Javadoc content needs source or documentation-model analysis not
+  available from ordinary class-file scanning;
+* the canonical text and machine-readable SPI reports may require a dedicated
+  exporter over the analyzed model;
+* Hibernate's Gradle build needs a maintained integration, potentially through
+  the jQAssistant command line or an in-repository Gradle adapter;
+* migration exceptions require Hibernate metadata such as owner, issue,
+  reason, and removal release beyond a bare suppressed-result baseline.
+
+The specification defines required behavior, tasks, diagnostics, and outputs.
+It should not make jQAssistant itself normative unless the prototype confirms
+that it can satisfy those requirements sustainably.
+
 === Compatibility checking
 
 Compatibility checking should be sensitive to SPI role.
 
+Every SPI role has a common linkage floor: the classified element and the
+supported signature vocabulary required for that role must remain nameable and
+linkable.  This common floor does not expose callable `USE` surface.
+
 For `USE`, compatibility includes the externally callable surface.
 
-For `SUPPLY`, compatibility additionally includes:
+For `SUPPLY`, compatibility includes:
 
 * accepted provider types;
 * registration and discovery mechanisms;
 * lifecycle callbacks;
 * ownership and reuse assumptions.
 
-For `IMPLEMENT`, compatibility additionally includes:
+For `IMPLEMENT`, compatibility includes:
 
 * abstract interface methods;
 * default-method behavior;
@@ -475,6 +556,8 @@ allowlists; the terminal goal is an empty allowlist.
 Javadoc and reference documentation should use the generated SPI inventory to
 show:
 
+* that the documented contract is for SPI-provider code and does not by itself
+  grant application API status;
 * the role of each extension contract;
 * whether it is incubating;
 * lifecycle and ownership for provider-supplied instances;
@@ -519,13 +602,13 @@ Compatibility checks should detect:
 
 == Migration strategy
 
-. Introduce `@SPI`, its role hierarchy, the exact `.spi` package convention,
+. Introduce `@SPI`, its independent roles, the exact `.spi` package convention,
   report generation, and validation in reporting mode.
 . Generate an initial inventory from independent classifications and derived
   signature closure, and establish an explicit allowlist for existing
   violations.
-. Annotate only stronger roles and exceptional roots or hooks not already
-  covered by the package convention.
+. Annotate each provider role not already supplied by the exact `.spi` package
+  convention, concentrating declarations at extension roots.
 . Repair signatures which expose internal types.
 . Add reference-provider source checks and reduce their allowlists.
 . Baseline the role-sensitive SPI surface and make validation mandatory.

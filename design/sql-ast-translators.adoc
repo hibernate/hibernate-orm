@@ -13,6 +13,10 @@ See also:
 * `design/sql-ast.adoc`
 * `design/sql-ast-model.adoc`
 * `design/sql-ast-sources.adoc`
+* `design/spi-design.adoc`
+* `design/spi-specification.adoc`
+* `design/dialect-extension-design.adoc`
+* `design/dialect-extension-specification.adoc`
 
 == What a SQL AST translator does
 

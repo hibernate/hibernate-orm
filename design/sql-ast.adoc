@@ -14,6 +14,10 @@ See also:
 * `design/sql-ast-sources.adoc`
 * `design/sql-ast-translators.adoc`
 * `design/sqm-model.adoc`
+* `design/spi-design.adoc`
+* `design/spi-specification.adoc`
+* `design/dialect-extension-design.adoc`
+* `design/dialect-extension-specification.adoc`
 
 == Where SQL AST fits
 

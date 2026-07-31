@@ -20,8 +20,11 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
  *
  * @author Steve Ebersole
  */
-public class UUIDJavaType extends AbstractClassJavaType<UUID> {
+public class UUIDJavaType extends AbstractClassJavaType<UUID>
+		implements UuidCapableJavaType<UUID> {
 	public static final UUIDJavaType INSTANCE = new UUIDJavaType();
+	private static final UuidCapableJavaType.ValueTransformer<UUID> UUID_VALUE_TRANSFORMER =
+			adapt( PassThroughTransformer.INSTANCE, UUID.class );
 
 	public UUIDJavaType() {
 		super( UUID.class );
@@ -44,6 +47,16 @@ public class UUIDJavaType extends AbstractClassJavaType<UUID> {
 
 	@Override
 	public boolean useObjectEqualsHashCode() {
+		return true;
+	}
+
+	@Override
+	public UuidCapableJavaType.ValueTransformer<UUID> getUuidValueTransformer() {
+		return UUID_VALUE_TRANSFORMER;
+	}
+
+	@Override
+	public boolean prefersUuidGeneration() {
 		return true;
 	}
 
@@ -103,6 +116,26 @@ public class UUIDJavaType extends AbstractClassJavaType<UUID> {
 	public interface ValueTransformer {
 		Serializable transform(UUID uuid);
 		UUID parse(Object value);
+	}
+
+	/**
+	 * Adapt the legacy UUID transformer contract to the typed transformer
+	 * exposed by {@link UuidCapableJavaType}.
+	 */
+	static <T> UuidCapableJavaType.ValueTransformer<T> adapt(
+			ValueTransformer transformer,
+			Class<T> transformedType) {
+		return new UuidCapableJavaType.ValueTransformer<>() {
+			@Override
+			public T transform(UUID uuid) {
+				return transformedType.cast( transformer.transform( uuid ) );
+			}
+
+			@Override
+			public UUID parse(T value) {
+				return transformer.parse( value );
+			}
+		};
 	}
 
 	public static class PassThroughTransformer implements ValueTransformer {

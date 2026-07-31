@@ -13,6 +13,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Consumer;
 
@@ -101,6 +102,7 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbCascadeTypeImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbCheckConstraintImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbCollectionTableImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbCollectionUserTypeImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbAttributeOverrideImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbCollectionIdImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbColumnImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbColumnResultImpl;
@@ -399,6 +401,10 @@ public class HbmXmlTransformer {
 		final Map<String, Class<?>> superclassJavaTypes = new HashMap<>();
 
 		for ( var entry : transformationState.getEntityInfoByName().entrySet() ) {
+			final var entityMappingRoot = transformationState.getEntityToMappingXmlMap().get( entry.getKey() );
+			if ( entityMappingRoot != mappingXmlRoot ) {
+				continue;
+			}
 			final Class<?> javaClass = resolveMappedClass( entry.getValue().getPersistentClass() );
 			final var entity = transformationState.getMappingEntityByName().get( entry.getKey() );
 			final var attrs = entity != null ? entity.getAttributes() : null;
@@ -412,13 +418,310 @@ public class HbmXmlTransformer {
 							currentSuperclass, fieldAccess,
 							generatedSuperclasses, superclassJavaTypes, mappingXmlRoot );
 					moveInheritedAttributesToSuperclass(
-							entity, attrs, mappedSuperclass, currentSuperclass, fieldAccess );
+							entity, attrs, mappedSuperclass, currentSuperclass, javaClass, fieldAccess );
 					currentSuperclass = currentSuperclass.getSuperclass();
 				}
 			}
 		}
 
+		resolveOrReportAttributeConflicts( mappingXmlRoot, generatedSuperclasses, mappedEntityClassNames );
+
 		addTransientsForUnmappedProperties( generatedSuperclasses, superclassJavaTypes, fieldAccess );
+	}
+
+	/**
+	 * Resolves or reports attribute overlaps between entities and their generated
+	 * mapped-superclasses, produced by {@link #moveInheritedAttributesToSuperclass}.
+	 * <p>
+	 * In hbm.xml each {@code <class>} is self-contained, so sibling entities sharing
+	 * an unmapped Java superclass can freely diverge.  In orm.xml the generated
+	 * {@code <mapped-superclass>} is shared: one sibling's attribute is moved there,
+	 * and the other sibling keeps its own version because it redeclares the field.
+	 * <p>
+	 * This method handles five cases for such overlaps:
+	 * <ol>
+	 *   <li><b>Id — same generator:</b> the entity's id is removed (inherited from
+	 *       superclass).  If the column differs, an {@code <attribute-override>} is
+	 *       generated so the entity keeps its own column mapping.</li>
+	 *   <li><b>Basic attribute:</b> always resolvable — the entity's basic is removed
+	 *       (inherited from superclass).  If the column differs, an
+	 *       {@code <attribute-override>} is generated.</li>
+	 *   <li><b>Association — same type and target entity:</b> the entity's association
+	 *       is removed (inherited from superclass).</li>
+	 *   <li><b>Id — different generators:</b> unsupported — reported via
+	 *       {@link #handleUnsupported} because the generation strategy cannot be
+	 *       overridden with {@code <attribute-override>}.</li>
+	 *   <li><b>Association — different type or target:</b> unsupported — reported via
+	 *       {@link #handleUnsupported} because association type and target cannot be
+	 *       overridden.</li>
+	 * </ol>
+	 */
+	private void resolveOrReportAttributeConflicts(
+			JaxbEntityMappingsImpl mappingXmlRoot,
+			Map<String, JaxbMappedSuperclassImpl> generatedSuperclasses,
+			Set<String> mappedEntityClassNames) {
+		for ( var entry : transformationState.getEntityInfoByName().entrySet() ) {
+			final var entityMappingRoot = transformationState.getEntityToMappingXmlMap().get( entry.getKey() );
+			if ( entityMappingRoot != mappingXmlRoot ) {
+				continue;
+			}
+			final var entity = transformationState.getMappingEntityByName().get( entry.getKey() );
+			if ( entity == null || entity.getAttributes() == null ) {
+				continue;
+			}
+			final Class<?> javaClass = resolveMappedClass( entry.getValue().getPersistentClass() );
+			if ( javaClass == null ) {
+				continue;
+			}
+			Class<?> superclass = javaClass.getSuperclass();
+			while ( superclass != null
+					&& superclass != Object.class
+					&& !mappedEntityClassNames.contains( superclass.getName() ) ) {
+				final var mappedSuperclass = generatedSuperclasses.get( superclass.getName() );
+				if ( mappedSuperclass != null ) {
+					final var superAttrs = mappedSuperclass.getAttributes();
+					final var entityAttrs = entity.getAttributes();
+
+					resolveOrReportIdOverlaps( entity, entityAttrs, superAttrs, javaClass, superclass );
+					resolveBasicOverlaps( entity, entityAttrs, superAttrs );
+					resolveOrReportAssociationOverlaps(
+							entityAttrs.getOneToOneAttributes(), superAttrs.getOneToOneAttributes(),
+							JaxbOneToOneImpl::getTargetEntity, javaClass, superclass );
+					resolveOrReportAssociationOverlaps(
+							entityAttrs.getManyToOneAttributes(), superAttrs.getManyToOneAttributes(),
+							JaxbManyToOneImpl::getTargetEntity, javaClass, superclass );
+					resolveOrReportAssociationOverlaps(
+							entityAttrs.getOneToManyAttributes(), superAttrs.getOneToManyAttributes(),
+							JaxbOneToManyImpl::getTargetEntity, javaClass, superclass );
+					resolveOrReportAssociationOverlaps(
+							entityAttrs.getManyToManyAttributes(), superAttrs.getManyToManyAttributes(),
+							JaxbManyToManyImpl::getTargetEntity, javaClass, superclass );
+				}
+				superclass = superclass.getSuperclass();
+			}
+		}
+	}
+
+	private void resolveOrReportIdOverlaps(
+			JaxbEntityImpl entity,
+			JaxbAttributesContainerImpl entityAttrs,
+			JaxbAttributesContainerImpl superAttrs,
+			Class<?> entityClass,
+			Class<?> superclass) {
+		final var superIds = superAttrs.getIdAttributes();
+		if ( superIds.isEmpty() ) {
+			return;
+		}
+		final Map<String, JaxbIdImpl> superIdByName = new HashMap<>();
+		for ( var superId : superIds ) {
+			superIdByName.put( superId.getName(), superId );
+		}
+		final var entityIds = new ArrayList<>( entityAttrs.getIdAttributes() );
+		for ( var entityId : entityIds ) {
+			final var superId = superIdByName.get( entityId.getName() );
+			if ( superId == null ) {
+				continue;
+			}
+			if ( sameIdGenerationStrategy( entityId, superId ) ) {
+				entityAttrs.getIdAttributes().remove( entityId );
+				addColumnOverrideIfNeeded( entity, entityId.getName(),
+						entityId.getColumn(), superId.getColumn() );
+			}
+			else {
+				handleUnsupported(
+						"Entity '%s' and its mapped-superclass '%s' use different id generation "
+								+ "strategies for attribute '%s' — this cannot be resolved with "
+								+ "<attribute-override>. Declare the id field on each entity subclass "
+								+ "so each can define its own strategy",
+						entityClass.getName(), superclass.getName(), entityId.getName()
+				);
+			}
+		}
+	}
+
+	private static boolean sameIdGenerationStrategy(JaxbIdImpl a, JaxbIdImpl b) {
+		if ( !sameGeneratedValue( a.getGeneratedValue(), b.getGeneratedValue() ) ) {
+			return false;
+		}
+		return sameGenericGenerator( a.getGenericGenerator(), b.getGenericGenerator() );
+	}
+
+	private static boolean sameGeneratedValue(JaxbGeneratedValueImpl a, JaxbGeneratedValueImpl b) {
+		if ( a == b ) {
+			return true;
+		}
+		if ( a == null || b == null ) {
+			return false;
+		}
+		return Objects.equals( a.getStrategy(), b.getStrategy() )
+				&& Objects.equals( a.getGenerator(), b.getGenerator() );
+	}
+
+	private static boolean sameGenericGenerator(JaxbGenericIdGeneratorImpl a, JaxbGenericIdGeneratorImpl b) {
+		if ( a == b ) {
+			return true;
+		}
+		if ( a == null || b == null ) {
+			return false;
+		}
+		if ( !Objects.equals( a.getClazz(), b.getClazz() ) ) {
+			return false;
+		}
+		return generatorParameters( a )
+				.equals( generatorParameters( b ) );
+	}
+
+	private static List<String> generatorParameters(JaxbGenericIdGeneratorImpl generator) {
+		final List<String> normalized = new ArrayList<>();
+		for ( var parameter : generator.getParameters() ) {
+			normalized.add( parameter.getName() + "=" + parameter.getValue() );
+		}
+		Collections.sort( normalized );
+		return normalized;
+	}
+
+	private static void resolveBasicOverlaps(
+			JaxbEntityImpl entity,
+			JaxbAttributesContainerImpl entityAttrs,
+			JaxbAttributesContainerImpl superAttrs) {
+		final Map<String, JaxbBasicImpl> superBasicByName = new HashMap<>();
+		for ( var superBasic : superAttrs.getBasicAttributes() ) {
+			superBasicByName.put( superBasic.getName(), superBasic );
+		}
+		final var entityBasics = new ArrayList<>( entityAttrs.getBasicAttributes() );
+		for ( var entityBasic : entityBasics ) {
+			final var superBasic = superBasicByName.get( entityBasic.getName() );
+			if ( superBasic != null ) {
+				entityAttrs.getBasicAttributes().remove( entityBasic );
+				addColumnOverrideIfNeeded( entity, entityBasic.getName(),
+						entityBasic.getColumn(), superBasic.getColumn() );
+			}
+		}
+	}
+
+	private <T extends JaxbPersistentAttribute> void resolveOrReportAssociationOverlaps(
+			List<T> entityAssocs,
+			List<T> superAssocs,
+			java.util.function.Function<T, String> targetEntityExtractor,
+			Class<?> entityClass,
+			Class<?> superclass) {
+		if ( superAssocs.isEmpty() || entityAssocs.isEmpty() ) {
+			return;
+		}
+		final Map<String, T> superByName = new HashMap<>();
+		for ( var superAssoc : superAssocs ) {
+			superByName.put( superAssoc.getName(), superAssoc );
+		}
+		final var snapshot = new ArrayList<>( entityAssocs );
+		for ( var entityAssoc : snapshot ) {
+			final var superAssoc = superByName.get( entityAssoc.getName() );
+			if ( superAssoc == null ) {
+				continue;
+			}
+			if ( Objects.equals(
+					targetEntityExtractor.apply( entityAssoc ),
+					targetEntityExtractor.apply( superAssoc ) ) ) {
+				entityAssocs.remove( entityAssoc );
+			}
+			else {
+				handleUnsupported(
+						"Entity '%s' and its mapped-superclass '%s' map association '%s' to "
+								+ "different target entities — this cannot be resolved with "
+								+ "<attribute-override>. Declare the '%s' field on each entity "
+								+ "subclass so each can define its own mapping",
+						entityClass.getName(), superclass.getName(),
+						entityAssoc.getName(), entityAssoc.getName()
+				);
+			}
+		}
+	}
+
+	private static void addColumnOverrideIfNeeded(
+			JaxbEntityImpl entity,
+			String attrName,
+			JaxbColumnImpl entityColumn,
+			JaxbColumnImpl superColumn) {
+		// Nothing to preserve when the entity relies on the default column
+		if ( entityColumn == null ) {
+			return;
+		}
+		// if superclass has no explicit column, compare against defaults as needed;
+		// otherwise compare full explicit definitions
+		if ( sameEffectiveColumn( entityColumn, superColumn ) ) {
+			return;
+		}
+
+		final var override = new JaxbAttributeOverrideImpl();
+		override.setName( attrName );
+		override.setColumn( copyColumn( entityColumn ) );
+		entity.getAttributeOverrides().add( override );
+	}
+
+	private static boolean sameEffectiveColumn(JaxbColumnImpl a, JaxbColumnImpl b) {
+		if ( a == b ) {
+			return true;
+		}
+		if ( a == null || b == null ) {
+			return false;
+		}
+		return Objects.equals( a.getName(), b.getName() )
+				&& Objects.equals( a.getTable(), b.getTable() )
+				&& Objects.equals( a.isNullable(), b.isNullable() )
+				&& Objects.equals( a.isUnique(), b.isUnique() )
+				&& Objects.equals( a.isInsertable(), b.isInsertable() )
+				&& Objects.equals( a.isUpdatable(), b.isUpdatable() )
+				&& Objects.equals( a.getColumnDefinition(), b.getColumnDefinition() )
+				&& Objects.equals( a.getOptions(), b.getOptions() )
+				&& Objects.equals( a.getLength(), b.getLength() )
+				&& Objects.equals( a.getPrecision(), b.getPrecision() )
+				&& Objects.equals( a.getScale(), b.getScale() )
+				&& Objects.equals( a.getSecondPrecision(), b.getSecondPrecision() )
+				&& Objects.equals( a.getDefault(), b.getDefault() )
+				&& Objects.equals( a.getComment(), b.getComment() )
+				&& Objects.equals( a.getRead(), b.getRead() )
+				&& Objects.equals( a.getWrite(), b.getWrite() )
+				&& columnCheckConstraints( a ).equals( columnCheckConstraints( b ) );
+	}
+
+	private static List<String> columnCheckConstraints(JaxbColumnImpl column) {
+		final List<String> normalized = new ArrayList<>();
+		for ( var checkConstraint : column.getCheckConstraints() ) {
+			normalized.add(
+					checkConstraint.getName() + "="
+							+ checkConstraint.getConstraint() + "="
+							+ checkConstraint.getOptions()
+			);
+		}
+		Collections.sort( normalized );
+		return normalized;
+	}
+
+	private static JaxbColumnImpl copyColumn(JaxbColumnImpl source) {
+		final var copy = new JaxbColumnImpl();
+		copy.setName( source.getName() );
+		copy.setTable( source.getTable() );
+		copy.setNullable( source.isNullable() );
+		copy.setUnique( source.isUnique() );
+		copy.setInsertable( source.isInsertable() );
+		copy.setUpdatable( source.isUpdatable() );
+		copy.setColumnDefinition( source.getColumnDefinition() );
+		copy.setOptions( source.getOptions() );
+		copy.setLength( source.getLength() );
+		copy.setPrecision( source.getPrecision() );
+		copy.setScale( source.getScale() );
+		copy.setSecondPrecision( source.getSecondPrecision() );
+		copy.setDefault( source.getDefault() );
+		copy.setComment( source.getComment() );
+		copy.setRead( source.getRead() );
+		copy.setWrite( source.getWrite() );
+		for ( var sourceCheck : source.getCheckConstraints() ) {
+			final var copiedCheck = new JaxbCheckConstraintImpl();
+			copiedCheck.setName( sourceCheck.getName() );
+			copiedCheck.setConstraint( sourceCheck.getConstraint() );
+			copiedCheck.setOptions( sourceCheck.getOptions() );
+			copy.getCheckConstraints().add( copiedCheck );
+		}
+		return copy;
 	}
 
 	/**
@@ -498,22 +801,23 @@ public class HbmXmlTransformer {
 			JaxbAttributesContainerImpl attrs,
 			JaxbMappedSuperclassImpl mappedSuperclass,
 			Class<?> superclass,
+			Class<?> entityClass,
 			boolean fieldAccess) {
 		final var superAttrs = mappedSuperclass.getAttributes();
 
-		moveInheritedAttributes( attrs.getIdAttributes(), superAttrs.getIdAttributes(), superclass, fieldAccess );
-		moveInheritedAttributes( attrs.getBasicAttributes(), superAttrs.getBasicAttributes(), superclass, fieldAccess );
-		moveInheritedAttributes( attrs.getManyToOneAttributes(), superAttrs.getManyToOneAttributes(), superclass, fieldAccess );
-		moveInheritedAttributes( attrs.getOneToManyAttributes(), superAttrs.getOneToManyAttributes(), superclass, fieldAccess );
-		moveInheritedAttributes( attrs.getOneToOneAttributes(), superAttrs.getOneToOneAttributes(), superclass, fieldAccess );
-		moveInheritedAttributes( attrs.getManyToManyAttributes(), superAttrs.getManyToManyAttributes(), superclass, fieldAccess );
-		moveInheritedAttributes( attrs.getEmbeddedAttributes(), superAttrs.getEmbeddedAttributes(), superclass, fieldAccess );
-		moveInheritedAttributes( attrs.getElementCollectionAttributes(), superAttrs.getElementCollectionAttributes(), superclass, fieldAccess );
-		moveInheritedAttributes( attrs.getAnyMappingAttributes(), superAttrs.getAnyMappingAttributes(), superclass, fieldAccess );
-		moveInheritedAttributes( attrs.getPluralAnyMappingAttributes(), superAttrs.getPluralAnyMappingAttributes(), superclass, fieldAccess );
+		moveInheritedAttributes( attrs.getIdAttributes(), superAttrs.getIdAttributes(), superclass, entityClass, fieldAccess );
+		moveInheritedAttributes( attrs.getBasicAttributes(), superAttrs.getBasicAttributes(), superclass, entityClass, fieldAccess );
+		moveInheritedAttributes( attrs.getManyToOneAttributes(), superAttrs.getManyToOneAttributes(), superclass, entityClass, fieldAccess );
+		moveInheritedAttributes( attrs.getOneToManyAttributes(), superAttrs.getOneToManyAttributes(), superclass, entityClass, fieldAccess );
+		moveInheritedAttributes( attrs.getOneToOneAttributes(), superAttrs.getOneToOneAttributes(), superclass, entityClass, fieldAccess );
+		moveInheritedAttributes( attrs.getManyToManyAttributes(), superAttrs.getManyToManyAttributes(), superclass, entityClass, fieldAccess );
+		moveInheritedAttributes( attrs.getEmbeddedAttributes(), superAttrs.getEmbeddedAttributes(), superclass, entityClass, fieldAccess );
+		moveInheritedAttributes( attrs.getElementCollectionAttributes(), superAttrs.getElementCollectionAttributes(), superclass, entityClass, fieldAccess );
+		moveInheritedAttributes( attrs.getAnyMappingAttributes(), superAttrs.getAnyMappingAttributes(), superclass, entityClass, fieldAccess );
+		moveInheritedAttributes( attrs.getPluralAnyMappingAttributes(), superAttrs.getPluralAnyMappingAttributes(), superclass, entityClass, fieldAccess );
 
-		moveVersionIfInherited( attrs, superAttrs, superclass, fieldAccess );
-		moveEmbeddedIdIfInherited( attrs, superAttrs, superclass, fieldAccess );
+		moveVersionIfInherited( attrs, superAttrs, superclass, entityClass, fieldAccess );
+		moveEmbeddedIdIfInherited( attrs, superAttrs, superclass, entityClass, fieldAccess );
 		moveIdClassIfAllIdsMoved( entity, attrs, mappedSuperclass, superAttrs );
 
 		attrs.getTransients().removeIf( t -> isMemberDeclaredOnClass( t.getName(), superclass, fieldAccess ) );
@@ -527,10 +831,12 @@ public class HbmXmlTransformer {
 			JaxbAttributesContainerImpl attrs,
 			JaxbAttributesContainerImpl superAttrs,
 			Class<?> superclass,
+			Class<?> entityClass,
 			boolean fieldAccess) {
 		final var version = attrs.getVersion();
 		if ( version != null
-				&& isMemberDeclaredOnClass( version.getName(), superclass, fieldAccess ) ) {
+				&& isMemberDeclaredOnClass( version.getName(), superclass, fieldAccess )
+				&& !isMemberDeclaredOnClass( version.getName(), entityClass, fieldAccess ) ) {
 			if ( superAttrs.getVersion() == null ) {
 				superAttrs.setVersion( version );
 			}
@@ -546,10 +852,12 @@ public class HbmXmlTransformer {
 			JaxbAttributesContainerImpl attrs,
 			JaxbAttributesContainerImpl superAttrs,
 			Class<?> superclass,
+			Class<?> entityClass,
 			boolean fieldAccess) {
 		final var embeddedId = attrs.getEmbeddedIdAttribute();
 		if ( embeddedId != null
-				&& isMemberDeclaredOnClass( embeddedId.getName(), superclass, fieldAccess ) ) {
+				&& isMemberDeclaredOnClass( embeddedId.getName(), superclass, fieldAccess )
+				&& !isMemberDeclaredOnClass( embeddedId.getName(), entityClass, fieldAccess ) ) {
 			if ( superAttrs.getEmbeddedIdAttribute() == null ) {
 				superAttrs.setEmbeddedIdAttribute( embeddedId );
 			}
@@ -607,10 +915,12 @@ public class HbmXmlTransformer {
 			List<T> entityAttrs,
 			List<T> superAttrs,
 			Class<?> javaSuperclass,
+			Class<?> entityClass,
 			boolean fieldAccess) {
 		final var toMove = new ArrayList<T>();
 		for ( var attr : entityAttrs ) {
-			if ( isMemberDeclaredOnClass( attr.getName(), javaSuperclass, fieldAccess ) ) {
+			if ( isMemberDeclaredOnClass( attr.getName(), javaSuperclass, fieldAccess )
+					&& !isMemberDeclaredOnClass( attr.getName(), entityClass, fieldAccess ) ) {
 				toMove.add( attr );
 			}
 		}
@@ -658,10 +968,6 @@ public class HbmXmlTransformer {
 		}
 	}
 
-	/**
-	 * Check if a field or getter for the given property name is declared directly
-	 * on the given class (not inherited).
-	 */
 	private static boolean isMemberDeclaredOnClass(String propertyName, Class<?> clazz, boolean fieldAccess) {
 		if ( fieldAccess ) {
 			try {

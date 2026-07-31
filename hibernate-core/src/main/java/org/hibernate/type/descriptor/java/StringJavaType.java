@@ -23,8 +23,11 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  *
  * @author Steve Ebersole
  */
-public class StringJavaType extends AbstractClassJavaType<String> {
+public class StringJavaType extends AbstractClassJavaType<String>
+		implements UuidCapableJavaType<String> {
 	public static final StringJavaType INSTANCE = new StringJavaType();
+	private static final UuidCapableJavaType.ValueTransformer<String> UUID_VALUE_TRANSFORMER =
+			UUIDJavaType.adapt( UUIDJavaType.ToStringTransformer.INSTANCE, String.class );
 
 	public StringJavaType() {
 		super( String.class );
@@ -32,6 +35,16 @@ public class StringJavaType extends AbstractClassJavaType<String> {
 
 	@Override
 	public boolean useObjectEqualsHashCode() {
+		return true;
+	}
+
+	@Override
+	public UuidCapableJavaType.ValueTransformer<String> getUuidValueTransformer() {
+		return UUID_VALUE_TRANSFORMER;
+	}
+
+	@Override
+	public boolean prefersUuidGeneration() {
 		return true;
 	}
 

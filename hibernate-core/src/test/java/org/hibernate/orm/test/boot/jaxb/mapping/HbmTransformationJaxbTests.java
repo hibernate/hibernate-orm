@@ -53,6 +53,7 @@ import jakarta.xml.bind.JAXBException;
 
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.hibernate.orm.test.boot.jaxb.JaxbHelper.withStaxEventReader;
 
 /**
@@ -1499,6 +1500,171 @@ public class HbmTransformationJaxbTests {
 			assertThat( anotherEntity.getAttributes().getBasicAttributes() )
 					.extracting( JaxbBasicImpl::getName )
 					.containsExactly( "code" );
+		} );
+	}
+
+	@Test
+	@JiraKey( "HHH-20749" )
+	public void testSiblingEntitiesWithDifferentMappings(ServiceRegistryScope scope) {
+		// SiblingEntityA and SiblingEntityB both extend SiblingBase.
+		// Both redeclare 'id' so each keeps its own id on the entity.
+		// Only SiblingEntityA maps 'related' (and redeclares the field), so
+		// 'related' stays on the entity and becomes transient on the superclass.
+		// 'name' is shared by both — it moves to the mapped-superclass.
+		transformAndVerify( "xml/jaxb/mapping/sibling-mapping/hbm.xml", scope, transformed -> {
+			// One mapped-superclass for SiblingBase
+			assertThat( transformed.getMappedSuperclasses() )
+					.as( "One <mapped-superclass> should be generated for SiblingBase" )
+					.hasSize( 1 );
+
+			final JaxbMappedSuperclassImpl mappedSuperclass = transformed.getMappedSuperclasses().get( 0 );
+			assertThat( mappedSuperclass.getClazz() )
+					.endsWith( "SiblingBase" );
+
+			final var superAttrs = mappedSuperclass.getAttributes();
+
+			// 'name' should be on the mapped-superclass (shared by both siblings)
+			assertThat( superAttrs.getBasicAttributes() )
+					.extracting( JaxbBasicImpl::getName )
+					.containsExactly( "name" );
+
+			// 'id' and 'related' should be transient on the superclass
+			assertThat( superAttrs.getTransients() )
+					.extracting( JaxbTransientImpl::getName )
+					.contains( "id", "related" );
+
+			// No id on the superclass (both entities redeclare the field)
+			assertThat( superAttrs.getIdAttributes() )
+					.as( "Superclass should not have an id — both entities redeclare the field" )
+					.isEmpty();
+
+			// --- SiblingEntityA: has its own id and many-to-one related ---
+			final JaxbEntityImpl entityA = transformed.getEntities().stream()
+					.filter( e -> "SiblingEntityA".equals( e.getClazz() ) )
+					.findFirst()
+					.orElseThrow();
+
+			assertThat( entityA.getAttributes().getIdAttributes() )
+					.extracting( JaxbIdImpl::getName )
+					.containsExactly( "id" );
+
+			assertThat( entityA.getAttributes().getManyToOneAttributes() )
+					.extracting( JaxbManyToOneImpl::getName )
+					.containsExactly( "related" );
+
+			// --- SiblingEntityB: has its own id, no 'related' ---
+			final JaxbEntityImpl entityB = transformed.getEntities().stream()
+					.filter( e -> "SiblingEntityB".equals( e.getClazz() ) )
+					.findFirst()
+					.orElseThrow();
+
+			assertThat( entityB.getAttributes().getIdAttributes() )
+					.extracting( JaxbIdImpl::getName )
+					.containsExactly( "id" );
+
+			assertThat( entityB.getAttributes().getManyToOneAttributes() )
+					.as( "SiblingEntityB should not have 'related' — it was not mapped in the hbm.xml" )
+					.isEmpty();
+		} );
+	}
+
+	@Test
+	@JiraKey( "HHH-20749" )
+	public void testSiblingEntitiesWithConflictingIdStrategies(ServiceRegistryScope scope) {
+		// ConflictEntityA redeclares 'id' field → keeps its own id (sequence generator).
+		// ConflictEntityB does NOT redeclare 'id' → its id (native generator) moves to
+		// the ConflictBase mapped-superclass. ConflictEntityA then has its own id AND
+		// inherits one from the superclass — which JPA does not allow.
+		// The transformer should detect this and report it as unsupported.
+		assertThatThrownBy( () ->
+				transformAndVerify( "xml/jaxb/mapping/sibling-conflict/hbm.xml", scope, transformed -> {} )
+		)
+				.isInstanceOf( UnsupportedOperationException.class )
+				.hasMessageContaining( "different id generation strategies" );
+	}
+
+	@Test
+	@JiraKey( "HHH-20749" )
+	public void testSiblingEntitiesWithSameIdGeneratorDifferentColumns(ServiceRegistryScope scope) {
+		// OverrideEntityA and OverrideEntityB both extend OverrideBase and both use
+		// the native id generator, but OverrideEntityA maps the id to column "entity_a_id".
+		// OverrideEntityA redeclares the id field, so its id initially stays on the entity.
+		// Since the generators match, the transformer should resolve the overlap by removing
+		// the entity's id and generating an <attribute-override> for the different column.
+		transformAndVerify( "xml/jaxb/mapping/sibling-override/hbm.xml", scope, transformed -> {
+			assertThat( transformed.getMappedSuperclasses() ).hasSize( 1 );
+
+			final JaxbMappedSuperclassImpl mappedSuperclass = transformed.getMappedSuperclasses().get( 0 );
+			assertThat( mappedSuperclass.getClazz() ).endsWith( "OverrideBase" );
+
+			// Id should be on the mapped-superclass (inherited by both entities)
+			assertThat( mappedSuperclass.getAttributes().getIdAttributes() )
+					.extracting( JaxbIdImpl::getName )
+					.containsExactly( "id" );
+
+			// --- OverrideEntityA: no id attributes, but has an attribute-override for the column ---
+			final JaxbEntityImpl entityA = transformed.getEntities().stream()
+					.filter( e -> "OverrideEntityA".equals( e.getClazz() ) )
+					.findFirst()
+					.orElseThrow();
+
+			assertThat( entityA.getAttributes().getIdAttributes() )
+					.as( "EntityA should not have its own id — resolved by attribute-override" )
+					.isEmpty();
+
+			assertThat( entityA.getAttributeOverrides() )
+					.as( "EntityA should have an attribute-override for the id column" )
+					.hasSize( 1 );
+			assertThat( entityA.getAttributeOverrides().get( 0 ).getName() )
+					.isEqualTo( "id" );
+			assertThat( entityA.getAttributeOverrides().get( 0 ).getColumn().getName() )
+					.isEqualTo( "entity_a_id" );
+
+			// --- OverrideEntityB: no id attributes, no overrides (inherits as-is) ---
+			final JaxbEntityImpl entityB = transformed.getEntities().stream()
+					.filter( e -> "OverrideEntityB".equals( e.getClazz() ) )
+					.findFirst()
+					.orElseThrow();
+
+			assertThat( entityB.getAttributes().getIdAttributes() )
+					.as( "EntityB should not have its own id — inherits from superclass" )
+					.isEmpty();
+
+			assertThat( entityB.getAttributeOverrides() )
+					.as( "EntityB should have no attribute-overrides" )
+					.isEmpty();
+		} );
+	}
+
+	@Test
+	public void testSiblingEntitiesWithSameGeneratorClassDifferentParameters(ServiceRegistryScope scope) {
+		assertThatThrownBy( () ->
+				transformAndVerify( "xml/jaxb/mapping/sibling-generator-params/hbm.xml", scope, transformed -> {} )
+		)
+				.isInstanceOf( UnsupportedOperationException.class )
+				.hasMessageContaining( "different id generation strategies" );
+	}
+
+	@Test
+	public void testSiblingEntitiesWithSameColumnNameDifferentColumnMetadata(ServiceRegistryScope scope) {
+		transformAndVerify( "xml/jaxb/mapping/sibling-column-override/hbm.xml", scope, transformed -> {
+			final JaxbEntityImpl entityA = transformed.getEntities().stream()
+					.filter( e -> "ColumnOverrideEntityA".equals( e.getClazz() ) )
+					.findFirst()
+					.orElseThrow();
+
+			assertThat( entityA.getAttributes().getBasicAttributes() )
+					.extracting( JaxbBasicImpl::getName )
+					.doesNotContain( "name" );
+
+			final JaxbAttributeOverrideImpl override = entityA.getAttributeOverrides().stream()
+					.filter( candidate -> "name".equals( candidate.getName() ) )
+					.findFirst()
+					.orElseThrow();
+
+			assertThat( override.getColumn() ).isNotNull();
+			assertThat( override.getColumn().getName() ).isEqualTo( "shared_name" );
+			assertThat( override.getColumn().getLength() ).isEqualTo( 77 );
 		} );
 	}
 

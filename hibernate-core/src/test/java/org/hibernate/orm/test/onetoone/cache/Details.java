@@ -7,17 +7,12 @@ package org.hibernate.orm.test.onetoone.cache;
 import java.io.Serializable;
 
 public abstract class Details implements Serializable {
-	private int id;
 	private String data;
 	private Person person;
 
-	public int getId() {
-		return id;
-	}
+	abstract public int getId();
 
-	public void setId(int id) {
-		this.id = id;
-	}
+	abstract public void setId(int id);
 
 	public String getData() {
 		return data;

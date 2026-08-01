@@ -61,7 +61,7 @@ jobs:
     # Running with HANA requires at least 8GB memory just for the database, which we don't have on GH Actions runners
     #          - rdbms: hana
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - name: Reclaim Disk Space
@@ -71,7 +71,7 @@ jobs:
           RDBMS: ${{ matrix.rdbms }}
         run: ci/database-start.sh
       - name: Set up Java 25
-        uses: actions/setup-java@0f481fcb613427c0f801b606911222b5b6f3083a # v5.5.0
+        uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5.6.0
         with:
           distribution: 'temurin'
           java-version: '25'
@@ -193,7 +193,7 @@ jobs:
           - rdbms: base-database-service-26ai
           - rdbms: base-database-service-26ai-rac
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - name: Set up Java 25
@@ -250,7 +250,7 @@ jobs:
             ${{ steps.cache-key.outputs.buildtool-monthly-cache-key }}-
 
       - id: create_database
-        uses: oracle-actions/setup-testpilot@0e9d9b877bb35f65e3f1f1c54c6a425329dd7ece # v1.0.27
+        uses: oracle-actions/setup-testpilot@c90051df5f3c964d6e27d4578f9af70d36ec3b6f # v1.0.28
         with:
           oci-service: ${{ matrix.rdbms }}
           action: create
@@ -283,7 +283,7 @@ jobs:
           ./ci/build-github.sh "${common_gradle_args[@]}"
         shell: bash
 
-      - uses: oracle-actions/setup-testpilot@0e9d9b877bb35f65e3f1f1c54c6a425329dd7ece # v1.0.27
+      - uses: oracle-actions/setup-testpilot@c90051df5f3c964d6e27d4578f9af70d36ec3b6f # v1.0.28
         if: always()
         with:
           oci-service: ${{ matrix.rdbms }}
@@ -332,7 +332,7 @@ jobs:
         include:
           - rdbms: postgresql
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - name: Reclaim Disk Space
@@ -342,7 +342,7 @@ jobs:
           RDBMS: ${{ matrix.rdbms }}
         run: ci/database-start.sh
       - name: Set up Java 25
-        uses: actions/setup-java@0f481fcb613427c0f801b606911222b5b6f3083a # v5.5.0
+        uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5.6.0
         with:
           distribution: 'temurin'
           java-version: '25'
@@ -446,7 +446,7 @@ jobs:
           - rdbms: h2
           - rdbms: postgresql
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - name: Reclaim Disk Space
@@ -456,7 +456,7 @@ jobs:
           RDBMS: ${{ matrix.rdbms }}
         run: ci/database-start.sh
       - name: Set up Java 25
-        uses: actions/setup-java@0f481fcb613427c0f801b606911222b5b6f3083a # v5.5.0
+        uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5.6.0
         with:
           distribution: 'temurin'
           java-version: '25'
@@ -554,13 +554,13 @@ jobs:
     name: Static code analysis
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - name: Reclaim disk space and sanitize user home
         run: .github/ci-prerequisites-atlas.sh
       - name: Set up Java 25
-        uses: actions/setup-java@0f481fcb613427c0f801b606911222b5b6f3083a # v5.5.0
+        uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5.6.0
         with:
           distribution: 'temurin'
           java-version: '25'
@@ -656,10 +656,10 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Set up JDK 25
-        uses: actions/setup-java@0f481fcb613427c0f801b606911222b5b6f3083a # v5.5.0
+        uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5.6.0
         with:
           java-version: '25'
           distribution: 'temurin'

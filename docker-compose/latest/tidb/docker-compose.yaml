@@ -1,6 +1,6 @@
 services:
   tidb:
-    image: ${TIDB_IMAGE:-docker.io/pingcap/tidb:v8.5.7@sha256:07d9116fad581d6c93d49a789a944995b499dbc284f5d981750de045e67d9e06}
+    image: ${TIDB_IMAGE:-docker.io/pingcap/tidb:v8.5.7@sha256:fa871d3c2e28436d396e643062ef3776cb11439a82ae42ca65f877e49fa5f9e1}
     container_name: tidb
     ports:
       - "4000:4000"
@@ -10,7 +10,7 @@ services:
       timeout: 5s
       retries: 15
   mysql-client:
-    image: docker.io/library/mysql:9.7@sha256:ae269281abffe401d65f04cb54d45a069a495b8174b9c0a815e502fed7fa0370
+    image: docker.io/library/mysql:26.7@sha256:66aec17cd21a956029b83f083b813073859e8355dc1a00e55df6ba02f0e32345
     entrypoint: [ "/bin/sh", "-c" ]
     depends_on:
       tidb:

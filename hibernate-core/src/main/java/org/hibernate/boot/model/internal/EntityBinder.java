@@ -1835,6 +1835,11 @@ public class EntityBinder {
 	private void bindSqlRestriction() {
 		final var restriction = extractSQLRestriction( annotatedClass );
 		if ( restriction != null ) {
+			if ( restriction.aliases().length > 0 ) {
+				throw new AnnotationException( "Entity class '" + annotatedClass.getName()
+					+ "' specifies an '@SQLRestriction' with 'aliases'"
+					+ " (aliases are only supported for restrictions on collections)" );
+			}
 			where = restriction.value();
 		}
 	}

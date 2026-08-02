@@ -47,6 +47,20 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * List&lt;Document&gt; documents;
  * </pre>
  * <p>
+ * By default, the restriction is applied to the primary table of the
+ * entity. When the restriction involves columns of other tables, for
+ * example, columns mapped by a superclass in a {@linkplain
+ * jakarta.persistence.InheritanceType#JOINED joined inheritance}
+ * hierarchy, the tables holding the columns must be identified using
+ * {@linkplain #aliases alias placeholders} of the form {@code {name}}:
+ * <pre>
+ * &#64;OneToMany(mappedBy = "application")
+ * &#64;SQLRestriction(value = "{version}.effective_to is null",
+ *                 aliases = &#64;SqlFragmentAlias(alias = "version",
+ *                                              entity = AbstractVersion.class))
+ * List&lt;ApplicationVersion&gt; versions;
+ * </pre>
+ * <p>
  * Note that {@code @SQLRestriction}s are always applied and cannot be
  * disabled. Nor may they be parameterized. They're therefore <em>much</em>
  * less flexible than {@linkplain Filter filters}.
@@ -67,4 +81,16 @@ public @interface SQLRestriction {
 	 * A predicate, written in native SQL.
 	 */
 	String value();
+
+	/**
+	 * Explicitly specifies how aliases are interpolated into
+	 * the {@link #value} SQL expression. Each {@link
+	 * SqlFragmentAlias} specifies a placeholder name and the
+	 * table whose alias should be interpolated. Placeholders
+	 * are of form {@code {name}} where {@code name} matches
+	 * a {@link SqlFragmentAlias#alias}.
+	 *
+	 * @since 8.1
+	 */
+	SqlFragmentAlias[] aliases() default {};
 }

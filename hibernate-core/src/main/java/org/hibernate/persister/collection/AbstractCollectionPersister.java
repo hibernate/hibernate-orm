@@ -80,12 +80,12 @@ import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.filter.FilterAliasGenerator;
 import org.hibernate.persister.filter.internal.FilterHelper;
 import org.hibernate.persister.internal.SqlFragmentPredicate;
+import org.hibernate.persister.internal.SqlRestriction;
 import org.hibernate.query.named.spi.NamedQueryMemento;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.Alias;
 import org.hibernate.sql.SimpleSelect;
-import org.hibernate.sql.Template;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.SimpleFromClauseAccessImpl;
 import org.hibernate.sql.ast.spi.SqlAliasBaseConstant;
@@ -133,14 +133,11 @@ import java.util.function.UnaryOperator;
 import static java.util.Collections.emptyList;
 import static org.hibernate.internal.util.StringHelper.getNonEmptyOrConjunctionIfBothNonEmpty;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
-import static org.hibernate.internal.util.StringHelper.isNotEmpty;
-import static org.hibernate.internal.util.StringHelper.replace;
 import static org.hibernate.internal.util.StringHelper.unqualify;
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 import static org.hibernate.jdbc.Expectations.createExpectation;
 import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper.getTableIdentifierExpression;
 import static org.hibernate.pretty.MessageHelper.collectionInfoString;
-import static org.hibernate.sql.Template.renderWhereStringTemplate;
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
 import static org.hibernate.temporal.TemporalTableStrategy.HISTORY_TABLE;
 
@@ -170,8 +167,10 @@ public abstract class AbstractCollectionPersister
 	private String sqlDetectRowByElementString;
 
 	protected boolean hasWhere;
+	// the restriction for use in single-table contexts, which cannot
+	// interpolate table aliases; for other uses see sqlRestriction
 	protected String sqlWhereString;
-	private String sqlWhereStringTemplate;
+	private SqlRestriction sqlRestriction;
 
 	private final boolean hasOrder;
 	private final boolean hasManyToManyOrder;
@@ -233,8 +232,7 @@ public abstract class AbstractCollectionPersister
 	// dynamic filters specifically for many-to-many inside the collection
 	private final FilterHelper manyToManyFilterHelper;
 
-	private final String manyToManyWhereString;
-	private final String manyToManyWhereTemplate;
+	private final SqlRestriction manyToManySqlRestriction;
 
 	private final String[] spaces;
 
@@ -482,16 +480,12 @@ public abstract class AbstractCollectionPersister
 		// Handle any filters applied to this collectionBinding for many-to-many
 		manyToManyFilterHelper = manyToManyFilterHelper( collectionBootDescriptor, creationContext );
 
-		final String manyToManyWhere = collectionBootDescriptor.getManyToManyWhere();
-		if ( isEmpty( manyToManyWhere ) ) {
-			manyToManyWhereString = null;
-			manyToManyWhereTemplate = null;
-		}
-		else {
-			manyToManyWhereString = "( " + manyToManyWhere + ")";
-			manyToManyWhereTemplate =
-					renderWhereStringTemplate( manyToManyWhereString, creationContext.getDialect(), typeConfiguration );
-		}
+		manyToManySqlRestriction = SqlRestriction.create(
+			collectionBootDescriptor.getManyToManyWhere(),
+			collectionBootDescriptor.getManyToManyWhereAliases(),
+			() -> entityNameByTableNameMap( elementPersister, creationContext ),
+			creationContext.getSessionFactory()
+		);
 
 		comparator = collectionBootDescriptor.getComparator();
 
@@ -589,13 +583,7 @@ public abstract class AbstractCollectionPersister
 			}
 		}
 
-		if ( isNotEmpty( bootCollectionDescriptor.getWhere() ) ) {
-			hasWhere = true;
-			sqlWhereString = "(" + bootCollectionDescriptor.getWhere() + ")";
-			sqlWhereStringTemplate =
-					renderWhereStringTemplate( sqlWhereString, dialect,
-							creationContext.getTypeConfiguration() );
-		}
+		processWhereRestriction( bootCollectionDescriptor.getWhere(), bootCollectionDescriptor, creationContext );
 		buildStaticWhereFragmentSensitiveSql();
 	}
 
@@ -605,12 +593,22 @@ public abstract class AbstractCollectionPersister
 			Collection bootDescriptor,
 			RuntimeModelCreationContext creationContext) {
 		final String where = getWhere( entityPersister, mappedByProperty, bootDescriptor, creationContext );
-		if ( isNotEmpty( where ) ) {
+		processWhereRestriction( where, bootDescriptor, creationContext );
+	}
+
+	private void processWhereRestriction(
+			String where,
+			Collection bootDescriptor,
+			RuntimeModelCreationContext creationContext) {
+		sqlRestriction = SqlRestriction.create(
+			where,
+			bootDescriptor.getWhereAliases(),
+			() -> entityNameByTableNameMap( elementPersister, creationContext ),
+			creationContext.getSessionFactory()
+		);
+		if ( sqlRestriction != null ) {
 			hasWhere = true;
-			sqlWhereString = "(" + where + ")";
-			sqlWhereStringTemplate =
-					renderWhereStringTemplate( sqlWhereString, dialect,
-							creationContext.getTypeConfiguration() );
+			sqlWhereString = sqlRestriction.getSingleTableFragment();
 		}
 	}
 
@@ -1199,7 +1197,7 @@ public abstract class AbstractCollectionPersister
 
 	@Override
 	public boolean hasWhereRestrictions() {
-		return hasWhere || manyToManyWhereTemplate != null;
+		return hasWhere || manyToManySqlRestriction != null;
 	}
 
 	private static String aliasForWhereRestriction(TableReference tableReference, boolean useQualifier) {
@@ -1234,18 +1232,21 @@ public abstract class AbstractCollectionPersister
 			String alias,
 			TableGroup tableGroup,
 			SqlAstCreationState astCreationState) {
-		applyWhereFragments( predicateConsumer, alias, sqlWhereStringTemplate );
+		if ( sqlRestriction != null ) {
+			final String fragment =
+				sqlRestriction.isAliasBased()
+					? sqlRestriction.render( getFilterAliasGenerator( tableGroup ), tableGroup, astCreationState )
+					: sqlRestriction.render( alias );
+			applyWhereFragment( predicateConsumer, fragment );
+		}
 	}
 
 	/**
 	 * Applies all defined {@link org.hibernate.annotations.SQLRestriction}
 	 */
-	private static void applyWhereFragments(Consumer<Predicate> predicateConsumer, String alias, String template) {
-		if ( template != null ) {
-			final String fragment = replace( template, Template.TEMPLATE, alias );
-			if ( !isEmpty( fragment ) ) {
-				predicateConsumer.accept( new SqlFragmentPredicate( fragment ) );
-			}
+	private static void applyWhereFragment(Consumer<Predicate> predicateConsumer, String fragment) {
+		if ( !isEmpty( fragment ) ) {
+			predicateConsumer.accept( new SqlFragmentPredicate( fragment ) );
 		}
 	}
 
@@ -1280,7 +1281,7 @@ public abstract class AbstractCollectionPersister
 			Map<String, Filter> enabledFilters,
 			Set<String> treatAsDeclarations,
 			SqlAstCreationState creationState) {
-		if ( manyToManyFilterHelper != null || manyToManyWhereTemplate != null ) {
+		if ( manyToManyFilterHelper != null || manyToManySqlRestriction != null ) {
 			if ( manyToManyFilterHelper != null ) {
 				manyToManyFilterHelper.applyEnabledFilters(
 						predicateConsumer,
@@ -1291,10 +1292,22 @@ public abstract class AbstractCollectionPersister
 						creationState
 				);
 			}
-			if ( manyToManyWhereString != null ) {
-				final var tableReference = tableGroup.resolveTableReference( elementPersister.getTableName() );
-				final String alias = aliasForWhereRestriction( tableReference, useQualifier );
-				applyWhereFragments( predicateConsumer, alias, manyToManyWhereTemplate );
+			if ( manyToManySqlRestriction != null ) {
+				final String fragment;
+				if ( manyToManySqlRestriction.isAliasBased() ) {
+					fragment = manyToManySqlRestriction.render(
+						elementPersister.getFilterAliasGenerator( tableGroup ),
+						tableGroup,
+						creationState
+					);
+				}
+				else {
+					final var tableReference = tableGroup.resolveTableReference( elementPersister.getTableName() );
+					fragment = manyToManySqlRestriction.render(
+						aliasForWhereRestriction( tableReference, useQualifier )
+					);
+				}
+				applyWhereFragment( predicateConsumer, fragment );
 			}
 		}
 	}

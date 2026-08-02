@@ -1,6 +1,15 @@
 Hibernate 6 Changelog
 =======================
 
+Changes in 6.6.55.Final (August 02, 2026)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/39927
+
+
+** Task
+    * HHH-20736 Tune the content of javadocs to reduce the size of files published to Maven Central
+
 Changes in 6.6.54.Final (June 28, 2026)
 ------------------------------------------------------------------------------------------------------------------------
 

@@ -1,6 +1,15 @@
 Hibernate 7 Changelog
 =======================
 
+Changes in 7.2.24.Final (August 02, 2026)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/40132
+
+
+** Task
+    * HHH-20736 Tune the content of javadocs to reduce the size of files published to Maven Central
+
 Changes in 7.2.23.Final (July 12, 2026)
 ------------------------------------------------------------------------------------------------------------------------
 

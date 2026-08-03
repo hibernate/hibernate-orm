@@ -372,7 +372,11 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	public void addInnerClass(AnnotationMetaEntity metaEntity) {
-		putMember( "INNER_" + metaEntity.getQualifiedName(),
+		final var simpleName = metaEntity.getSimpleName();
+		final var key = metaEntity.repositoryQueryMetamodel
+				? "INNER-" + simpleName + "_"
+				: "INNER-_" + simpleName;
+		putMember( key,
 				new InnerClassMetaAttribute( metaEntity ) );
 	}
 

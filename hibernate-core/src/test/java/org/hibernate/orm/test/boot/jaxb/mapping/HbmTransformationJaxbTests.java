@@ -1545,6 +1545,48 @@ public class HbmTransformationJaxbTests {
 	}
 
 	@Test
+	@JiraKey( "HHH-20751" )
+	public void testIdBagCollectionIdTransformation(ServiceRegistryScope scope) {
+		// An <idbag> with a <collection-id> using a sequence generator should be
+		// transformed into a <many-to-many> with a <collection-id> element containing
+		// the column, generator reference, and target type.
+		transformAndVerify( "xml/jaxb/mapping/idbag-collection-id/hbm.xml", scope, transformed -> {
+			assertThat( transformed.getEntities() ).hasSize( 1 );
+
+			final JaxbEntityImpl entity = transformed.getEntities().get( 0 );
+
+			// The many-to-many should have a collection-id
+			assertThat( entity.getAttributes().getManyToManyAttributes() ).hasSize( 1 );
+			final var manyToMany = entity.getAttributes().getManyToManyAttributes().get( 0 );
+			assertThat( manyToMany.getName() ).isEqualTo( "children" );
+
+			final var collectionId = manyToMany.getCollectionId();
+			assertThat( collectionId )
+					.as( "collection-id should be present on the idbag many-to-many" )
+					.isNotNull();
+
+			// Column
+			assertThat( collectionId.getColumn() ).isNotNull();
+			assertThat( collectionId.getColumn().getName() ).isEqualTo( "bag_id" );
+
+			// Generator reference
+			assertThat( collectionId.getGenerator() ).isNotNull();
+			assertThat( collectionId.getGenerator().getGenerator() )
+					.as( "Generator should reference a named generic-generator" )
+					.isEqualTo( "children-collection-id-generator" );
+
+			// Target type
+			assertThat( collectionId.getTarget() ).isEqualTo( "Long" );
+
+			// The named generic-generator should be registered at entity-mappings level
+			assertThat( transformed.getGenericGenerators() )
+					.as( "A generic-generator for the collection-id should be at entity-mappings level" )
+					.anyMatch( g -> "children-collection-id-generator".equals( g.getName() )
+									&& "sequence".equals( g.getClazz() ) );
+		} );
+	}
+
+	@Test
 	@JiraKey( "HHH-20717" )
 	public void testImportWithoutRenameDefaultsToUnqualifiedClassName(ServiceRegistryScope scope) {
 		transformAndVerify( "xml/jaxb/mapping/import-no-rename/hbm.xml", scope, transformed -> {

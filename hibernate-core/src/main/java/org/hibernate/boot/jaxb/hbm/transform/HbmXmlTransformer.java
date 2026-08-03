@@ -101,6 +101,7 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbCascadeTypeImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbCheckConstraintImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbCollectionTableImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbCollectionUserTypeImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbCollectionIdImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbColumnImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbColumnResultImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbConfigurationParameterImpl;
@@ -2431,9 +2432,11 @@ public class HbmXmlTransformer {
 			transferMapKey( map, target, propertyInfo );
 			target.setClassification( LimitedCollectionClassification.MAP );
 		}
-		else if ( source instanceof JaxbHbmIdBagCollectionType ) {
-			handleUnsupported( "collection-id is not supported for transformation" );
-
+		else if ( source instanceof JaxbHbmIdBagCollectionType idBag ) {
+			// Do not set classification to BAG — the presence of <collection-id> on
+			// the target will cause CollectionBinder to classify it as ID_BAG.
+			// Setting BAG explicitly would bypass the CollectionId annotation check.
+			transferCollectionId( idBag, target );
 		}
 		else if ( source instanceof JaxbHbmBagCollectionType ) {
 			target.setClassification( LimitedCollectionClassification.BAG );
@@ -2462,6 +2465,57 @@ public class HbmXmlTransformer {
 			);
 			target.setClassification( LimitedCollectionClassification.LIST );
 		}
+	}
+
+	private void transferCollectionId(JaxbHbmIdBagCollectionType idBag, JaxbPluralAttribute target) {
+		final var hbmCollectionId = idBag.getCollectionId();
+		if ( hbmCollectionId == null ) {
+			return;
+		}
+
+		final var collectionId = new JaxbCollectionIdImpl();
+
+		final var column = new JaxbColumnImpl();
+		column.setName( hbmCollectionId.getColumnAttribute() );
+		if ( hbmCollectionId.getLength() != null ) {
+			column.setLength( hbmCollectionId.getLength() );
+		}
+		collectionId.setColumn( column );
+
+		final var hbmGenerator = hbmCollectionId.getGenerator();
+		if ( hbmGenerator != null ) {
+			final var generatedValue = new JaxbGeneratedValueImpl();
+			final String generatorClass = hbmGenerator.getClazz();
+			final var hbmParams = hbmGenerator.getConfigParameters();
+
+			if ( !hbmParams.isEmpty() ) {
+				final var generatorName = target.getName() + "-collection-id-generator";
+				generatedValue.setGenerator( generatorName );
+
+				final var genDef = new JaxbGenericIdGeneratorImpl();
+				genDef.setName( generatorName );
+				genDef.setClazz( generatorClass );
+				for ( var hbmParam : hbmParams ) {
+					final var param = new JaxbConfigurationParameterImpl();
+					param.setName( hbmParam.getName() );
+					param.setValue( hbmParam.getValue() );
+					genDef.getParameters().add( param );
+				}
+				mappingXmlBinding.getRoot().getGenericGenerators().add( genDef );
+			}
+			else {
+				generatedValue.setGenerator( generatorClass );
+			}
+
+			collectionId.setGenerator( generatedValue );
+		}
+
+		final String hbmType = hbmCollectionId.getType();
+		if ( isNotEmpty( hbmType ) ) {
+			collectionId.setTarget( Character.toUpperCase( hbmType.charAt( 0 ) ) + hbmType.substring( 1 ) );
+		}
+
+		target.setCollectionId( collectionId );
 	}
 
 	private void transferSort(String sort, JaxbPluralAttribute target) {

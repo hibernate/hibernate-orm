@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping" version="8.0">
+    <package>org.hibernate.orm.test.schemaupdate.idbag</package>
+
+    <generic-generator name="children-collection-id-generator" class="sequence">
+        <parameter name="sequence_name" value="seq_child_id"/>
+    </generic-generator>
+
+    <entity class="IdBagOwner" metadata-complete="true">
+        <attributes>
+            <id name="id">
+                <column name="id"/>
+                <generated-value generator="id-id-generator"/>
+                <generic-generator name="id-id-generator" class="sequence">
+                    <parameter name="sequence_name" value="seq_owner_id"/>
+                </generic-generator>
+            </id>
+            <many-to-many name="children" target-entity="IdBagOwner">
+                <collection-id>
+                    <column name="bag_id"/>
+                    <generator generator="children-collection-id-generator"/>
+                    <target>Long</target>
+                </collection-id>
+                <join-table name="idbag_owner_children">
+                    <join-column name="PARENT_FK"/>
+                    <inverse-join-column name="CHILD_FK"/>
+                </join-table>
+                <cascade>
+                    <cascade-all/>
+                </cascade>
+            </many-to-many>
+        </attributes>
+    </entity>
+</entity-mappings>

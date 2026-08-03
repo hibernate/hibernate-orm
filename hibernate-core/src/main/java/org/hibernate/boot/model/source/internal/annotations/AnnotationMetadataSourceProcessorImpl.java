@@ -13,6 +13,7 @@ import jakarta.persistence.FetchType;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.boot.internal.MetadataBuildingContextRootImpl;
+import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.model.process.spi.ManagedResources;
 import org.hibernate.boot.model.source.spi.MetadataSourceProcessor;
@@ -150,6 +151,15 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 
 	@Override
 	public void processIdentifierGenerators() {
+		final var collector = rootMetadataBuildingContext.getMetadataCollector();
+		for ( var registration : domainModelSource.getGlobalRegistrations()
+				.getGenericGeneratorRegistrations().values() ) {
+			collector.addIdentifierGenerator( new IdentifierGeneratorDefinition(
+					registration.name(),
+					registration.strategy(),
+					registration.parameters()
+			) );
+		}
 	}
 
 	@Override

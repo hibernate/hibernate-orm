@@ -31,7 +31,7 @@ import static org.hibernate.cfg.SchemaToolingSettings.HBM2DDL_AUTO;
 @JiraKey(value = "HHH-10373")
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSequences.class)
 @ServiceRegistry(settings = @Setting(name = HBM2DDL_AUTO, value = "none"))
-@DomainModel(xmlMappings = "org/hibernate/orm/test/schemaupdate/idbag/Mappings.hbm.xml")
+@DomainModel(xmlMappings = "org/hibernate/orm/test/schemaupdate/idbag/Mappings.orm.xml")
 public class IdBagSequenceTest {
 
 	@Test

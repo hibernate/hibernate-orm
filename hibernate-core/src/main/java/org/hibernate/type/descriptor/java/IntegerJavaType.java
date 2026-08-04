@@ -8,6 +8,8 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Locale;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -152,11 +154,26 @@ public class IntegerJavaType extends AbstractClassJavaType<Integer>
 	}
 
 	@Override
-	public Integer coerce(Object value) {
+	public @Nullable Integer coerce(@Nullable Object value) {
 		if ( value == null ) {
 			return null;
 		}
+		final var coerced = coerceOrNull( value );
+		if ( coerced == null ) {
+			throw new CoercionException(
+					String.format(
+							Locale.ROOT,
+							"Cannot coerce value '%s' [%s] to Integer",
+							value,
+							value.getClass().getName()
+					)
+			);
+		}
+		return coerced;
+	}
 
+	@Override
+	public @Nullable Integer coerceOrNull(@Nonnull Object value) {
 		if ( value instanceof Integer integer ) {
 			return integer;
 		}
@@ -195,14 +212,7 @@ public class IntegerJavaType extends AbstractClassJavaType<Integer>
 			);
 		}
 
-		throw new CoercionException(
-				String.format(
-						Locale.ROOT,
-						"Cannot coerce value '%s' [%s] to Integer",
-						value,
-						value.getClass().getName()
-				)
-		);
+		return null;
 	}
 
 	@Override

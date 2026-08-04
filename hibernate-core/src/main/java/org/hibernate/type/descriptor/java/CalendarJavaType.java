@@ -9,6 +9,8 @@ import java.time.ZonedDateTime;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.TemporalType;
 
 import org.hibernate.dialect.Dialect;
@@ -116,13 +118,18 @@ public class CalendarJavaType extends AbstractTemporalJavaType<Calendar> impleme
 	}
 
 	@Override
-	public Calendar coerce(Object value) {
+	public @Nullable Calendar coerce(@Nullable Object value) {
 		try {
 			return wrap( value, null );
 		}
 		catch (Exception e) {
 			throw CoercionHelper.coercionException( e );
 		}
+	}
+
+	@Override
+	public @Nullable Object coerceOrNull(@Nonnull Object value) {
+		return wrapOrNull( value );
 	}
 
 	public <X> X unwrap(Calendar value, Class<X> type, WrapperOptions options) {
@@ -151,7 +158,17 @@ public class CalendarJavaType extends AbstractTemporalJavaType<Calendar> impleme
 		if ( value == null ) {
 			return null;
 		}
-		else if (value instanceof Calendar calendar) {
+		else {
+			final var wrapped = wrapOrNull( value );
+			if ( wrapped == null ) {
+				throw unknownWrap( value.getClass() );
+			}
+			return wrapped;
+		}
+	}
+
+	private <X> @Nullable Calendar wrapOrNull(@Nonnull X value) {
+		if (value instanceof Calendar calendar) {
 			return calendar;
 		}
 		else if ( value instanceof java.util.Date date ) {
@@ -160,7 +177,7 @@ public class CalendarJavaType extends AbstractTemporalJavaType<Calendar> impleme
 			return cal;
 		}
 		else {
-			throw unknownWrap( value.getClass() );
+			return null;
 		}
 
 	}

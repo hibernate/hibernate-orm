@@ -7,6 +7,8 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Locale;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -136,11 +138,26 @@ public class ByteJavaType extends AbstractClassJavaType<Byte>
 	}
 
 	@Override
-	public Byte coerce(Object value) {
+	public @Nullable Byte coerce(@Nullable Object value) {
 		if ( value == null ) {
 			return null;
 		}
+		final var coerced = coerceOrNull( value );
+		if ( coerced == null ) {
+			throw new CoercionException(
+					String.format(
+							Locale.ROOT,
+							"Cannot coerce value '%s' [%s] to Byte",
+							value,
+							value.getClass().getName()
+					)
+			);
+		}
+		return coerced;
+	}
 
+	@Override
+	public @Nullable Byte coerceOrNull(@Nonnull Object value) {
 		if ( value instanceof Byte byteValue ) {
 			return byteValue;
 		}
@@ -179,14 +196,7 @@ public class ByteJavaType extends AbstractClassJavaType<Byte>
 			);
 		}
 
-		throw new CoercionException(
-				String.format(
-						Locale.ROOT,
-						"Cannot coerce value '%s' [%s] to Byte",
-						value,
-						value.getClass().getName()
-				)
-		);
+		return null;
 	}
 
 	@Override

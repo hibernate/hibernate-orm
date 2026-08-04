@@ -7,6 +7,8 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Locale;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -143,11 +145,26 @@ public class ShortJavaType extends AbstractClassJavaType<Short>
 	}
 
 	@Override
-	public Short coerce(Object value) {
+	public @Nullable Short coerce(@Nullable Object value) {
 		if ( value == null ) {
 			return null;
 		}
+		final var coerced = coerceOrNull( value );
+		if ( coerced == null ) {
+			throw new CoercionException(
+					String.format(
+							Locale.ROOT,
+							"Cannot coerce value '%s' [%s] to Short",
+							value,
+							value.getClass().getName()
+					)
+			);
+		}
+		return coerced;
+	}
 
+	@Override
+	public @Nullable Short coerceOrNull(@Nonnull Object value) {
 		if ( value instanceof Short shortValue ) {
 			return shortValue;
 		}
@@ -186,14 +203,7 @@ public class ShortJavaType extends AbstractClassJavaType<Short>
 			);
 		}
 
-		throw new CoercionException(
-				String.format(
-						Locale.ROOT,
-						"Cannot coerce value '%s' [%s] to Short",
-						value,
-						value.getClass().getName()
-				)
-		);
+		return null;
 	}
 	@Override
 	public Short seed(

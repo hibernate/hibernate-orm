@@ -8,6 +8,8 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Locale;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.spi.PrimitiveJavaType;
@@ -164,11 +166,26 @@ public class DoubleJavaType extends AbstractClassJavaType<Double> implements
 	}
 
 	@Override
-	public Double coerce(Object value) {
+	public @Nullable Double coerce(@Nullable Object value) {
 		if ( value == null ) {
 			return null;
 		}
+		final var coerced = coerceOrNull( value );
+		if ( coerced == null ) {
+			throw new CoercionException(
+					String.format(
+							Locale.ROOT,
+							"Cannot coerce value '%s' [%s] to Double",
+							value,
+							value.getClass().getName()
+					)
+			);
+		}
+		return coerced;
+	}
 
+	@Override
+	public @Nullable Double coerceOrNull(@Nonnull Object value) {
 		if ( value instanceof Double doubleValue ) {
 			return doubleValue;
 		}
@@ -195,14 +212,7 @@ public class DoubleJavaType extends AbstractClassJavaType<Double> implements
 			);
 		}
 
-		throw new CoercionException(
-				String.format(
-						Locale.ROOT,
-						"Cannot coerce value '%s' [%s] to Double",
-						value,
-						value.getClass().getName()
-				)
-		);
+		return null;
 	}
 
 }

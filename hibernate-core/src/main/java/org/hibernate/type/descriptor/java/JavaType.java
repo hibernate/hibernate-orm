@@ -10,6 +10,7 @@ import java.lang.reflect.Type;
 import java.util.Comparator;
 import java.util.Objects;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.Incubating;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
@@ -357,8 +358,27 @@ public interface JavaType<T> extends Serializable {
 	 * @throws CoercionException if coercion fails
 	 */
 	@Incubating
-	default Object coerce(Object value) {
+	default @Nullable Object coerce(@Nullable Object value) {
 		return value;
+	}
+
+	/**
+	 * Like {@link #coerce(Object)} but returns {@code null} instead of throwing an exception
+	 * when coercion fails.
+	 *
+	 * @param value The value to coerce
+	 * @return The coerced value, or the given value if no coercion was
+	 *         possible
+	 * @since 8.0
+	 */
+	@Incubating
+	default @Nullable Object coerceOrNull(@Nonnull Object value) {
+		try {
+			return coerce( value );
+		}
+		catch ( CoercionException ex ) {
+			return null;
+		}
 	}
 
 	/**

@@ -10,6 +10,8 @@ import java.sql.Blob;
 import java.sql.SQLException;
 import java.util.Arrays;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.jdbc.BinaryStream;
 import org.hibernate.engine.jdbc.internal.ArrayBackedBinaryStream;
@@ -131,10 +133,18 @@ public class PrimitiveByteArrayJavaType extends AbstractClassJavaType<byte[]>
 		throw unknownUnwrap( type );
 	}
 
-	public <X> byte[] wrap(X value, WrapperOptions options) {
+	public <X> @Nullable byte[] wrap(@Nullable X value, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
 		}
+		final var wrapped = wrapOrNull( value );
+		if ( wrapped == null ) {
+			throw unknownWrap( value.getClass() );
+		}
+		return wrapped;
+	}
+
+	private <X> @Nullable byte[] wrapOrNull(@Nonnull X value) {
 		if (value instanceof byte[] bytes) {
 			return bytes;
 		}
@@ -160,18 +170,22 @@ public class PrimitiveByteArrayJavaType extends AbstractClassJavaType<byte[]>
 			}
 			return bytes;
 		}
-
-		throw unknownWrap( value.getClass() );
+		return null;
 	}
 
 	@Override
-	public byte[] coerce(Object value) {
+	public @Nullable byte[] coerce(@Nullable Object value) {
 		try {
 			return wrap( value, null );
 		}
 		catch (Exception e) {
 			throw CoercionHelper.coercionException( e );
 		}
+	}
+
+	@Override
+	public @Nullable Object coerceOrNull(@Nonnull Object value) {
+		return wrapOrNull( value );
 	}
 
 	@Override

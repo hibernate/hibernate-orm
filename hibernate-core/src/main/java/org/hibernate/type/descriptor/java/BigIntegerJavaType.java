@@ -8,6 +8,8 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Locale;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -132,11 +134,26 @@ public class BigIntegerJavaType extends AbstractClassJavaType<BigInteger> {
 	}
 
 	@Override
-	public BigInteger coerce(Object value) {
+	public @Nullable BigInteger coerce(@Nullable Object value) {
 		if ( value == null ) {
 			return null;
 		}
+		final var coerced = coerceOrNull( value );
+		if ( coerced == null ) {
+			throw new CoercionException(
+					String.format(
+							Locale.ROOT,
+							"Unable to coerce value [%s (%s)] to BigInteger",
+							value,
+							value.getClass().getName()
+					)
+			);
+		}
+		return coerced;
+	}
 
+	@Override
+	public @Nullable BigInteger coerceOrNull(@Nonnull Object value) {
 		if ( value instanceof BigInteger bigInteger ) {
 			return bigInteger;
 		}
@@ -175,13 +192,6 @@ public class BigIntegerJavaType extends AbstractClassJavaType<BigInteger> {
 			);
 		}
 
-		throw new CoercionException(
-				String.format(
-						Locale.ROOT,
-						"Unable to coerce value [%s (%s)] to BigInteger",
-						value,
-						value.getClass().getName()
-				)
-		);
+		return null;
 	}
 }

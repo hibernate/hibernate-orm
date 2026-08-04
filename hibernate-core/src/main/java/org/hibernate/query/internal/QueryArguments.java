@@ -40,7 +40,8 @@ public class QueryArguments {
 			}
 			else {
 				// require that the argument be assignable to the parameter
-				return javaType.isInstance( javaType.coerce( value ) );
+				final var coerced = javaType.coerceOrNull( value );
+				return coerced != null && javaType.isInstance( coerced );
 			}
 		}
 		catch (HibernateException ce) {

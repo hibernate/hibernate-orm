@@ -16,6 +16,8 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.sql.ast.spi.SqlAppender;
@@ -115,13 +117,18 @@ public class JdbcTimeJavaType extends AbstractTemporalJavaType<Time> {
 	}
 
 	@Override
-	public Time coerce(Object value) {
+	public @Nullable Time coerce(@Nullable Object value) {
 		try {
 			return wrap( value, null );
 		}
 		catch (Exception e) {
 			throw CoercionHelper.coercionException( e );
 		}
+	}
+
+	@Override
+	public @Nullable Object coerceOrNull(@Nonnull Object value) {
+		return wrapOrNull( value );
 	}
 
 	@Override
@@ -184,11 +191,18 @@ public class JdbcTimeJavaType extends AbstractTemporalJavaType<Time> {
 	}
 
 	@Override
-	public Time wrap(Object value, WrapperOptions options) {
+	public @Nullable Time wrap(@Nullable Object value, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
 		}
+		final var wrapped = wrapOrNull( value );
+		if ( wrapped == null ) {
+			throw unknownWrap( value.getClass() );
+		}
+		return wrapped;
+	}
 
+	public @Nullable Time wrapOrNull(@Nonnull Object value) {
 		if ( value instanceof Time time ) {
 			return time;
 		}
@@ -214,7 +228,7 @@ public class JdbcTimeJavaType extends AbstractTemporalJavaType<Time> {
 			return new Time( calendar.getTimeInMillis() % 86_400_000 );
 		}
 
-		throw unknownWrap( value.getClass() );
+		return null;
 	}
 
 	static Time toTime(Date date) {

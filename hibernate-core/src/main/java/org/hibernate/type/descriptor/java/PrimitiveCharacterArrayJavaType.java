@@ -10,6 +10,8 @@ import java.sql.Clob;
 import java.sql.NClob;
 import java.util.Arrays;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.engine.jdbc.CharacterStream;
 import org.hibernate.engine.jdbc.internal.CharacterStreamImpl;
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -85,10 +87,18 @@ public class PrimitiveCharacterArrayJavaType extends AbstractClassJavaType<char[
 		throw unknownUnwrap( type );
 	}
 
-	public <X> char[] wrap(X value, WrapperOptions options) {
+	public <X> @Nullable char[] wrap(@Nullable X value, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
 		}
+		final var wrapped = wrapOrNull( value );
+		if ( wrapped == null ) {
+			throw unknownWrap( value.getClass() );
+		}
+		return wrapped;
+	}
+
+	private <X> @Nullable char[] wrapOrNull(@Nonnull X value) {
 		if (value instanceof char[] chars) {
 			return chars;
 		}
@@ -105,17 +115,24 @@ public class PrimitiveCharacterArrayJavaType extends AbstractClassJavaType<char[
 			// Support binding a single element as parameter value
 			return new char[]{ character };
 		}
-		throw unknownWrap( value.getClass() );
+		else {
+			return null;
+		}
 	}
 
 	@Override
-	public char[] coerce(Object value) {
+	public @Nullable char[] coerce(@Nullable Object value) {
 		try {
 			return wrap( value, null );
 		}
 		catch (Exception e) {
 			throw CoercionHelper.coercionException( e );
 		}
+	}
+
+	@Override
+	public @Nullable Object coerceOrNull(@Nonnull Object value) {
+		return wrapOrNull( value );
 	}
 
 	private static class ArrayMutabilityPlan extends MutableMutabilityPlan<char[]> {

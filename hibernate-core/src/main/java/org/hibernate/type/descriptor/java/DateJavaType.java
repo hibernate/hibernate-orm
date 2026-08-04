@@ -10,6 +10,8 @@ import java.sql.Types;
 import java.util.Calendar;
 import java.util.Date;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.TemporalType;
 
 import org.hibernate.dialect.Dialect;
@@ -203,14 +205,27 @@ public class DateJavaType extends AbstractTemporalJavaType<Date> implements Vers
 		};
 	}
 
+	private <X> @Nullable Date wrapOrNull(@Nonnull X value) {
+		return switch ( precision ) {
+			case TIMESTAMP -> JdbcTimestampJavaType.INSTANCE.wrapOrNull( value );
+			case DATE -> JdbcDateJavaType.INSTANCE.wrapOrNull( value );
+			case TIME -> JdbcTimeJavaType.INSTANCE.wrapOrNull( value );
+		};
+	}
+
 	@Override
-	public Object coerce(Object value) {
+	public @Nullable Object coerce(@Nullable Object value) {
 		try {
 			return wrap( value, null );
 		}
 		catch (Exception e) {
 			throw CoercionHelper.coercionException( e );
 		}
+	}
+
+	@Override
+	public @Nullable Object coerceOrNull(@Nonnull Object value) {
+		return wrapOrNull( value );
 	}
 
 	@Override

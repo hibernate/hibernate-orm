@@ -15,6 +15,8 @@ import java.util.Calendar;
 import java.sql.Date;
 import java.util.GregorianCalendar;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.HibernateException;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -123,6 +125,11 @@ public class JdbcDateJavaType extends AbstractTemporalJavaType<Date> {
 	}
 
 	@Override
+	public @Nullable Object coerceOrNull(@Nonnull Object value) {
+		return wrapOrNull( value );
+	}
+
+	@Override
 	public <X> X unwrap(Date value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
@@ -172,11 +179,18 @@ public class JdbcDateJavaType extends AbstractTemporalJavaType<Date> {
 	}
 
 	@Override
-	public Date wrap(Object value, WrapperOptions options) {
+	public @Nullable Date wrap(@Nullable Object value, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
 		}
+		final var wrapped = wrapOrNull( value );
+		if ( wrapped == null ) {
+			throw unknownWrap( value.getClass() );
+		}
+		return wrapped;
+	}
 
+	public @Nullable Date wrapOrNull(@Nonnull Object value) {
 		if ( value instanceof java.sql.Date date ) {
 			return date;
 		}
@@ -197,7 +211,7 @@ public class JdbcDateJavaType extends AbstractTemporalJavaType<Date> {
 			return java.sql.Date.valueOf( localDate );
 		}
 
-		throw unknownWrap( value.getClass() );
+		return null;
 	}
 
 	static java.sql.Date toDate(java.util.Date value) {

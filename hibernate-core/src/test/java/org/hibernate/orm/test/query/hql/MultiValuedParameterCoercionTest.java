@@ -8,6 +8,8 @@ import java.util.Collection;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
@@ -81,7 +83,7 @@ class MultiValuedParameterCoercionTest {
 		private static final AtomicInteger COLLECTION_COERCIONS = new AtomicInteger();
 
 		@Override
-		public String coerce(Object value) {
+		public @Nullable String coerce(@Nonnull Object value) {
 			if ( value instanceof Collection<?> ) {
 				COLLECTION_COERCIONS.incrementAndGet();
 			}

@@ -17,6 +17,8 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.TemporalType;
 
 import org.hibernate.HibernateException;
@@ -116,6 +118,11 @@ public class JdbcTimestampJavaType extends AbstractTemporalJavaType<Timestamp>
 	}
 
 	@Override
+	public @Nullable Object coerceOrNull(@Nonnull Object value) {
+		return wrapOrNull( value );
+	}
+
+	@Override
 	public <X> X unwrap(Timestamp value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
@@ -156,10 +163,18 @@ public class JdbcTimestampJavaType extends AbstractTemporalJavaType<Timestamp>
 	}
 
 	@Override
-	public <X> Timestamp wrap(X value, WrapperOptions options) {
+	public <X> @Nullable Timestamp wrap(@Nullable X value, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
 		}
+		final var wrapped = wrapOrNull( value );
+		if ( wrapped == null ) {
+			throw unknownWrap( value.getClass() );
+		}
+		return wrapped;
+	}
+
+	public <X> @Nullable Timestamp wrapOrNull(@Nonnull X value) {
 		if ( value instanceof Timestamp timestamp ) {
 			return timestamp;
 		}
@@ -180,7 +195,7 @@ public class JdbcTimestampJavaType extends AbstractTemporalJavaType<Timestamp>
 			return new Timestamp( calendar.getTimeInMillis() );
 		}
 
-		throw unknownWrap( value.getClass() );
+		return null;
 	}
 
 	static Timestamp wrapSqlTimestamp(Date date) {

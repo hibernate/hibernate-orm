@@ -10,6 +10,8 @@ import java.sql.Clob;
 import java.sql.NClob;
 import java.sql.Types;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.engine.jdbc.CharacterStream;
 import org.hibernate.engine.jdbc.internal.CharacterStreamImpl;
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -105,10 +107,18 @@ public class StringJavaType extends AbstractClassJavaType<String> {
 		throw unknownUnwrap( type );
 	}
 
-	public <X> String wrap(X value, WrapperOptions options) {
+	public <X> @Nullable String wrap(@Nullable X value, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
 		}
+		final var wrapped = wrapOrNull( value );
+		if ( wrapped == null ) {
+			throw unknownWrap( value.getClass() );
+		}
+		return wrapped;
+	}
+
+	private <X> @Nullable String wrapOrNull(@Nonnull X value) {
 		if (value instanceof String string) {
 			return string;
 		}
@@ -130,8 +140,7 @@ public class StringJavaType extends AbstractClassJavaType<String> {
 		if (value instanceof Long) {
 			return value.toString();
 		}
-
-		throw unknownWrap( value.getClass() );
+		return null;
 	}
 
 	@Override
@@ -147,9 +156,19 @@ public class StringJavaType extends AbstractClassJavaType<String> {
 	}
 
 	@Override
-	public String coerce(Object value) {
+	public @Nullable String coerce(@Nullable Object value) {
 		try {
 			return wrap( value, null );
+		}
+		catch (Exception e) {
+			throw CoercionHelper.coercionException( e );
+		}
+	}
+
+	@Override
+	public @Nullable String coerceOrNull(@Nonnull Object value) {
+		try {
+			return wrapOrNull( value );
 		}
 		catch (Exception e) {
 			throw CoercionHelper.coercionException( e );

@@ -8,6 +8,8 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Locale;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -162,11 +164,26 @@ public class FloatJavaType extends AbstractClassJavaType<Float> implements Primi
 	}
 
 	@Override
-	public Float coerce(Object value) {
+	public @Nullable Float coerce(@Nullable Object value) {
 		if ( value == null ) {
 			return null;
 		}
+		final var coerced = coerceOrNull( value );
+		if ( coerced == null ) {
+			throw new CoercionException(
+					String.format(
+							Locale.ROOT,
+							"Cannot coerce value '%s' [%s] to Float",
+							value,
+							value.getClass().getName()
+					)
+			);
+		}
+		return coerced;
+	}
 
+	@Override
+	public @Nullable Float coerceOrNull(@Nonnull Object value) {
 		if ( value instanceof Float floatValue ) {
 			return floatValue;
 		}
@@ -181,14 +198,7 @@ public class FloatJavaType extends AbstractClassJavaType<Float> implements Primi
 			);
 		}
 
-		throw new CoercionException(
-				String.format(
-						Locale.ROOT,
-						"Cannot coerce value '%s' [%s] to Float",
-						value,
-						value.getClass().getName()
-				)
-		);
+		return null;
 	}
 
 }

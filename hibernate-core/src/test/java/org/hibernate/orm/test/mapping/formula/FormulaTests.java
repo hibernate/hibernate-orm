@@ -75,6 +75,13 @@ public class FormulaTests {
 
 	@Test
 	void testCriteria(SessionFactoryScope scope) {
+		// GaussDB M mode treats `||` as logical OR (MySQL kernel), so the default @Formula
+		// "(rate * 100) || '%'" evaluates (1.25) || '%' = true -> "t" instead of "1.25%". The
+		// @DialectOverride.Formula(dialect=MySQLDialect, concat(...)) would fix it, but
+		// GaussDBDialect is not a MySQLDialect subtype so the override does not apply, and @Formula
+		// is user SQL the dialect does not rewrite (same inherent class as RefreshEntityWithLazyProperty
+		// / FormulaFromHbm `||`). A mode (PG kernel) supports `||` as concat, so M-only skip.
+		org.junit.jupiter.api.Assumptions.assumeFalse( scope.getSessionFactory().getJdbcServices().getDialect() instanceof org.hibernate.community.dialect.GaussDBDialect g && g.isMMode() );
 		scope.inTransaction( session -> {
 			final CriteriaBuilder criteriaBuilder = scope.getSessionFactory().getCriteriaBuilder();
 			final CriteriaQuery<Account> criteria = criteriaBuilder.createQuery( Account.class );

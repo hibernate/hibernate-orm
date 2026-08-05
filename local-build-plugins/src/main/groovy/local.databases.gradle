@@ -8,7 +8,8 @@ ext {
     assert project.hasProperty('db')
     db = project.getProperty('db')
     dbVersion = project.getProperty('dbVersion')
-    dbHost = System.getProperty( 'dbHost', 'localhost' )
+    // dbHost first takes the JVM system property -DdbHost, then takes the project property in gradle.properties, and finally defaults to localhost
+    dbHost = System.getProperty( 'dbHost' ) ?: project.findProperty( 'dbHost' ) ?: 'localhost'
     dbService = System.getProperty( 'dbService', '' )
     dbPassword = System.getProperty( 'dbPassword', '' ).replace('"', '')
     dbConnectionStringSuffix = System.getProperty( 'dbConnectionStringSuffix', '' ).replace('"', '')

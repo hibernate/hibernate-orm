@@ -50,6 +50,7 @@ import org.hibernate.type.descriptor.jdbc.CharJdbcType;
 import org.hibernate.type.descriptor.jdbc.NumericJdbcType;
 import org.hibernate.type.descriptor.jdbc.RealJdbcType;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
@@ -146,6 +147,8 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 	@SkipForDialect(dialectClass = DB2Dialect.class, majorVersion = 10, reason = "No support for the bit datatype so we use smallint")
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "No support for the bit datatype so we use char(1)")
 	public void booleanType(EntityManagerFactoryScope scope) {
+		// GaussDB M mode maps boolean to tinyint(1); gsjdbc4 reports TINYINT -> Byte, not Boolean
+		Assumptions.assumeFalse( scope.getDialect() instanceof GaussDBDialect g && g.isMMode() );
 		doTest( scope, BooleanEntity.class, true );
 	}
 
@@ -155,6 +158,8 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 	@SkipForDialect(dialectClass = DB2Dialect.class, majorVersion = 10, reason = "No support for the bit datatype so we use smallint")
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "No support for the bit datatype so we use char(1)")
 	public void bitType(EntityManagerFactoryScope scope) {
+		// GaussDB M mode maps bit to tinyint(1); gsjdbc4 reports TINYINT -> Byte, not Boolean
+		Assumptions.assumeFalse( scope.getDialect() instanceof GaussDBDialect g && g.isMMode() );
 		doTest( scope, BitEntity.class, false );
 	}
 
@@ -192,6 +197,8 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 	@SkipForDialect(dialectClass = TiDBDialect.class, reason = "Turns reals into doubles in result sets and advertises the type as double in the metadata")
 	@SkipForDialect(dialectClass = HSQLDialect.class, reason = "Turns reals into doubles in result sets and advertises the type as double in the metadata")
 	public void realType(EntityManagerFactoryScope scope) {
+		// GaussDB M mode maps real to double; gsjdbc4 reports DOUBLE, not Float (like MySQL)
+		Assumptions.assumeFalse( scope.getDialect() instanceof GaussDBDialect g && g.isMMode() );
 		doTest( scope, RealEntity.class, 15516.125f );
 	}
 

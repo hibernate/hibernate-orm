@@ -138,6 +138,12 @@ public class NamedNativeQueryTest {
 	@SkipForDialect( dialectClass = SQLServerDialect.class, reason = "SQL Server does not support the || operator.")
 	// TODO: Re-form DestinationEntity.insertSelect to something more supported?
 	public void testInsertMultipleValues(SessionFactoryScope scope) {
+		// The DestinationEntity.insertSelect native query uses `fe.name||fe.lastName` (|| as concat).
+		// GaussDB M mode treats `||` as logical OR (MySQL kernel), coercing 'Name0' to double and failing
+		// ("The double value 'Name0' is incorrect"). The @SkipForDialect(SQLServerDialect, "|| operator")
+		// above does not apply (GaussDBDialect is not a SQLServer subtype) and native SQL is not rewritten.
+		// A mode (PG kernel) supports `||` as concat, so M-only skip (same `||` inherent class as FormulaTests).
+		org.junit.jupiter.api.Assumptions.assumeFalse( scope.getSessionFactory().getJdbcServices().getDialect() instanceof org.hibernate.community.dialect.GaussDBDialect g && g.isMMode() );
 		final String name = "Name";
 		final String lastName = "LastName";
 		final List<Integer> ids = new ArrayList<>();

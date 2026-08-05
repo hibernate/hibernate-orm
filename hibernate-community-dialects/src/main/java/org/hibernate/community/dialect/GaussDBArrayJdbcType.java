@@ -6,17 +6,23 @@ package org.hibernate.community.dialect;
 
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.hibernate.HibernateException;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.ValueBinder;
+import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.BasicPluralJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
 import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
 import org.hibernate.type.descriptor.jdbc.BasicBinder;
+import org.hibernate.type.descriptor.jdbc.BasicExtractor;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 /**
@@ -33,9 +39,74 @@ public class GaussDBArrayJdbcType extends ArrayJdbcType {
 	}
 
 	@Override
+	protected String getElementTypeName(JavaType<?> javaType, SharedSessionContractImplementor session) {
+		// GaussDB M mode stores DATE columns as the non-standard `datea` type, so a date array
+		// column is `datea[]`. The base implementation resolves the element type name through the
+		// DDL type registry, which yields "date" for DATE — `createArrayOf("date", ...)` then
+		// produces a `date[]` array that GaussDB M mode rejects ("column ... is of type datea[] but
+		// expression is of type date[]"). Return "datea" for date elements so the array is built
+		// as `datea[]`, matching the column type.
+		// A mode (openGauss PG kernel) stores DATE as the standard `date` (reported as timestamp by
+		// the JDBC driver), and createArrayOf("date") works — so fall through to the base
+		// implementation, which yields "date". Without this guard A mode passed "datea" to
+		// createArrayOf and failed with "Unable to find server array type for provided name datea".
+		// The array element is the standard LocalDateJdbcType (jdbc code DATE), not
+		// GaussDBLocalDateJdbcType (which is OTHER/1111 and only used to read `datea` columns
+		// directly), so check the jdbc type code rather than the concrete class.
+		if ( getElementJdbcType().getJdbcTypeCode() == Types.DATE ) {
+			final var dialect = session.getJdbcServices().getDialect();
+			if ( dialect instanceof GaussDBDialect g && g.isMMode() ) {
+				return "datea";
+			}
+		}
+		return super.getElementTypeName( javaType, session );
+	}
+
+	@Override
 	public <X> ValueBinder<X> getBinder(final JavaType<X> javaTypeDescriptor) {
 		return new Binder<>( javaTypeDescriptor,
 				(BasicPluralJavaType<?>) javaTypeDescriptor );
+	}
+
+	@Override
+	public <X> ValueExtractor<X> getExtractor(final JavaType<X> javaTypeDescriptor) {
+		if ( getElementJdbcType().getJdbcTypeCode() == Types.DATE ) {
+			// gsjdbc4 returns PGobject for datea[] array elements (via java.sql.Array.getArray()),
+			// which LocalDateJavaType.wrap can't handle. Read each element through
+			// getResultSet().getDate(2) — reusing the same datea→java.sql.Date conversion that
+			// GaussDBLocalDateJdbcType uses for scalar datea columns — then let ArrayJavaType wrap
+			// the java.sql.Date[] via the standard LocalDateJavaType.wrap(java.sql.Date) path.
+			return new BasicExtractor<>( javaTypeDescriptor, this ) {
+				@Override
+				protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
+					return getJavaType().wrap( toDateArray( rs.getArray( paramIndex ) ), options );
+				}
+
+				@Override
+				protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
+					return getJavaType().wrap( toDateArray( statement.getArray( index ) ), options );
+				}
+
+				@Override
+				protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
+					return getJavaType().wrap( toDateArray( statement.getArray( name ) ), options );
+				}
+			};
+		}
+		return super.getExtractor( javaTypeDescriptor );
+	}
+
+	private static java.sql.Date[] toDateArray(java.sql.Array array) throws SQLException {
+		if ( array == null ) {
+			return null;
+		}
+		try ( ResultSet rs = array.getResultSet() ) {
+			final List<java.sql.Date> dates = new ArrayList<>();
+			while ( rs.next() ) {
+				dates.add( rs.getDate( 2 ) );
+			}
+			return dates.toArray( new java.sql.Date[0] );
+		}
 	}
 
 	private class Binder<X,E> extends BasicBinder<X> {

@@ -75,7 +75,9 @@ dependencies {
     testRuntimeOnly libs.jdbc.derby
     testRuntimeOnly libs.jdbc.derbyTools
     testRuntimeOnly libs.jdbc.hsqldb
-    testRuntimeOnly libs.jdbc.postgresql
+    if ( !db.startsWith( 'gaussdb' ) ) {
+        testRuntimeOnly libs.jdbc.postgresql
+    }
     testRuntimeOnly libs.jdbc.edb
     testRuntimeOnly libs.jdbc.mssql
     testRuntimeOnly libs.jdbc.informix
@@ -225,6 +227,18 @@ tasks.withType( Test.class ).configureEach { test ->
     test.systemProperties['hibernate.test.validatefailureexpected'] = true
     test.systemProperties['hibernate.highlight_sql'] = false
     test.systemProperties += providers.systemPropertiesPrefixedBy("hibernate.").get()
+
+    // GaussDB M mode reserves extra keywords (e.g. `excluded`) that PostgreSQL treats as non-reserved
+    // and thus Hibernate allows as column names. Enable keyword auto-quoting (together with
+    // registerKeyword in GaussDBDialect) so such identifiers are quoted automatically.
+    if ( db == 'gaussdb' ) {
+        test.systemProperties['hibernate.auto_quote_keyword'] = 'true'
+        // GaussDBDialect detects M mode (MySQL-compatible) from `datcompatibility` via JDBC metadata,
+        // but tests that set hibernate.temp.use_jdbc_metadata_defaults=false disable metadata on boot,
+        // leaving the dialect defaulting to A mode (breaks information_schema.sequences extraction,
+        // which M mode lacks). Pass the mode explicitly so detection works regardless of metadata.
+        test.systemProperties['hibernate.dialect.gaussdb.compatibility_mode'] = 'A'
+    }
 
     test.enableAssertions = true
 

@@ -202,6 +202,11 @@ public class CriteriaWindowFunctionTest {
 	@SkipForDialect(dialectClass = DB2Dialect.class, majorVersion = 10, reason = "No support for nth_value function")
 	@SkipForDialect(dialectClass = InformixDialect.class, reason = "No support for nth_value function")
 	public void testNthValue(SessionFactoryScope scope) {
+		// GaussDB M mode (MySQL kernel) reports "syntax error at or near nth_value" for nth_value() over(...);
+		// the function is registered, but the M-mode DB rejects the syntax. A mode (openGauss PG kernel) supports
+		// nth_value as a standard window function, so M-only skip (unlike testRank, where the function is unregistered
+		// and A mode also fails).
+		org.junit.jupiter.api.Assumptions.assumeFalse( scope.getSessionFactory().getJdbcServices().getDialect() instanceof org.hibernate.community.dialect.GaussDBDialect g && g.isMMode() );
 		scope.inTransaction(
 				session -> {
 					HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
@@ -230,6 +235,8 @@ public class CriteriaWindowFunctionTest {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.NotGaussDBMMode.class,
+			comment = "GaussDB M mode does not register the rank window function (GaussDBFunctionRegistry registers hypothetical-set functions only in A mode), so cb.rank(window) throws NPE in M mode. A mode supports rank() over().")
 	public void testRank(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -257,6 +264,8 @@ public class CriteriaWindowFunctionTest {
 	@Test
 	@SkipForDialect(dialectClass = DB2Dialect.class, majorVersion = 10, reason = "No support for percent_rank and cume_dist functions before DB2 11")
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "No support for percent_rank and cume_dist functions with over clause")
+	@RequiresDialectFeature(feature = DialectFeatureChecks.NotGaussDBMMode.class,
+			comment = "GaussDB M mode does not register the percent_rank/cume_dist window functions (GaussDBFunctionRegistry registers hypothetical-set functions only in A mode), so cb.percentRank/cumeDist(window) throw NPE in M mode. A mode supports them over().")
 	public void testReusableWindow(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

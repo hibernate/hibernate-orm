@@ -7,12 +7,14 @@ package org.hibernate.orm.test.multitenancy;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.hibernate.community.dialect.GaussDBDialect;
 import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.context.spi.TenantSchemaMapper;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseASEDialect;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.relational.SchemaManager;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
@@ -21,6 +23,7 @@ import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 
 import static org.hibernate.cfg.MultiTenancySettings.MULTI_TENANT_IDENTIFIER_RESOLVER;
@@ -44,6 +47,11 @@ public class SchemaBasedMultitenancyTest {
 	private static String currentTenantIdentifier;
 
 	@Test void test(EntityManagerFactoryScope scope) {
+		// GaussDB M mode is case-sensitive for schema identifiers (MySQL behavior): the test creates schema
+		// "HELLO" but the tenant resolver yields "hello", which don't match. A mode (PG kernel) folds to lowercase.
+		// A mode is unaffected, so it is not skipped (zero regression).
+		Assumptions.assumeFalse( scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class )
+				.getJdbcServices().getDialect() instanceof GaussDBDialect g && g.isMMode() );
 		var schemaManager = (SchemaManager) scope.getEntityManagerFactory().getSchemaManager();
 		createSchema( schemaManager, "HELLO" );
 		createSchema( schemaManager, "GOODBYE" );

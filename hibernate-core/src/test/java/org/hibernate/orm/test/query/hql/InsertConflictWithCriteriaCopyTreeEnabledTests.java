@@ -8,6 +8,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Tuple;
 import org.hibernate.cfg.QuerySettings;
+import org.hibernate.community.dialect.GaussDBDialect;
 import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
@@ -21,6 +22,7 @@ import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 
 
@@ -42,6 +44,9 @@ public class InsertConflictWithCriteriaCopyTreeEnabledTests {
 
 	@Test
 	void createCriteriaInsertValuesTest(SessionFactoryScope scope) {
+		// GaussDB A mode does not support ON CONFLICT and ON DUPLICATE KEY UPDATE rejects updating
+		// primary/unique key columns; the insert targets only the PK (id), so DO NOTHING cannot be emulated.
+		Assumptions.assumeFalse( scope.getSessionFactory().getJdbcServices().getDialect() instanceof GaussDBDialect g && !g.isMMode() );
 		scope.inTransaction(
 				session -> {
 					HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
@@ -59,6 +64,9 @@ public class InsertConflictWithCriteriaCopyTreeEnabledTests {
 
 	@Test
 	void createCriteriaInsertSelectTest(SessionFactoryScope scope) {
+		// GaussDB A mode does not support ON CONFLICT and ON DUPLICATE KEY UPDATE rejects updating
+		// primary/unique key columns; the insert targets only the PK (id), so DO NOTHING cannot be emulated.
+		Assumptions.assumeFalse( scope.getSessionFactory().getJdbcServices().getDialect() instanceof GaussDBDialect g && !g.isMMode() );
 		scope.inTransaction(
 				session -> {
 					HibernateCriteriaBuilder cb = session.getCriteriaBuilder();

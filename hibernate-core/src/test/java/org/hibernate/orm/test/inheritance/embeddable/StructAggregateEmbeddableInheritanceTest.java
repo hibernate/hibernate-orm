@@ -15,6 +15,7 @@ import org.hibernate.boot.spi.AdditionalMappingContributions;
 import org.hibernate.boot.spi.AdditionalMappingContributor;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.community.dialect.GaussDBDialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.OracleDialect;
@@ -162,6 +163,7 @@ public class StructAggregateEmbeddableInheritanceTest implements AdditionalMappi
 	@SkipForDialect( dialectClass = PostgreSQLDialect.class, majorVersion = 10, reason = "Procedures were only introduced in version 11" )
 	@SkipForDialect( dialectClass = PostgresPlusDialect.class, majorVersion = 10, reason = "Procedures were only introduced in version 11" )
 	@SkipForDialect( dialectClass = DB2Dialect.class, reason = "DB2 does not support struct types in procedures" )
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "GaussDB does not support struct types in procedures: gsjdbc4 rejects OUT parameter registration (This statement does not declare an OUT parameter)" )
 	public void testProcedure(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final Dialect dialect = session.getJdbcServices().getDialect();
@@ -225,7 +227,7 @@ public class StructAggregateEmbeddableInheritanceTest implements AdditionalMappi
 						namespace,
 						"create function structFunction() returns inheritance_embeddable as $$ declare result inheritance_embeddable; begin result.parentProp = 'function_embeddable'; result.childOneProp = 1; result.subChildOneProp = 1.0; result.childTwoProp = null; result.embeddable_type = 'sub_child_one'; return result; end $$ language plpgsql",
 						"drop function structFunction",
-						Set.of( PostgreSQLDialect.class.getName() )
+						Set.of( PostgreSQLDialect.class.getName(), GaussDBDialect.class.getName() )
 				)
 		);
 		contributions.contributeAuxiliaryDatabaseObject(

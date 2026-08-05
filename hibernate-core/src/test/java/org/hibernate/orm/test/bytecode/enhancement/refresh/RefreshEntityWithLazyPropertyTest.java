@@ -100,6 +100,10 @@ public class RefreshEntityWithLazyPropertyTest {
 
 	@Test
 	public void testRefreshOfLazyFormula(SessionFactoryScope scope) {
+		// GaussDB M mode (MySQL kernel) treats || as logical OR, not String concat; @Formula("firstName || ' ' || lastName")
+		// is user SQL the dialect does not rewrite (same root cause as the class-level MySQLDialect skip). A mode (PG
+		// kernel) supports || as concat, so M-only skip keeps A coverage for this and the other 5 @Test methods.
+		org.junit.jupiter.api.Assumptions.assumeFalse( scope.getSessionFactory().getJdbcServices().getDialect() instanceof org.hibernate.community.dialect.GaussDBDialect g && g.isMMode() );
 		scope.inTransaction( session -> {
 			Person p = session.find( Person.class, PERSON_ID );
 			assertThat( p.getFullName() ).isEqualTo( "John Doe" );

@@ -8,6 +8,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
+import org.hibernate.community.dialect.GaussDBDialect;
 import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
@@ -16,6 +17,7 @@ import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.RequiresDialects;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
@@ -122,6 +124,12 @@ public class UpsertTest {
 	}
 
 	@Test void testIdOnlySubtype(SessionFactoryScope scope) {
+		// GaussDB A mode: IdOnly/IdOnlyIntermediate have only the PK column. The default
+		// OptionalTableUpdateOperation misjudges them as "no previous non-null values" and falls back to a
+		// plain INSERT, which aborts the transaction on the 2nd upsert (duplicate key). The upsert-based
+		// emulation can't help either, because ON DUPLICATE KEY UPDATE rejects updating the PK. M mode
+		// allows updating the PK in ON DUPLICATE KEY, so it works there.
+		Assumptions.assumeFalse( scope.getSessionFactory().getJdbcServices().getDialect() instanceof GaussDBDialect g && !g.isMMode() );
 		scope.getSessionFactory().getSchemaManager().truncate();
 
 		scope.inStatelessTransaction(s-> {

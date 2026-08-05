@@ -2743,9 +2743,11 @@ public class HbmXmlTransformer {
 			// the target will cause CollectionBinder to classify it as ID_BAG.
 			// Setting BAG explicitly would bypass the CollectionId annotation check.
 			transferCollectionId( idBag, target );
+			target.setOrderBy( idBag.getOrderBy() );
 		}
-		else if ( source instanceof JaxbHbmBagCollectionType ) {
+		else if ( source instanceof JaxbHbmBagCollectionType bag ) {
 			target.setClassification( LimitedCollectionClassification.BAG );
+			target.setOrderBy( bag.getOrderBy() );
 		}
 		else if ( source instanceof JaxbHbmListType listType ) {
 			transferListIndex(

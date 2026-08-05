@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+    "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<hibernate-mapping package="org.hibernate.orm.test.boot.jaxb.mapping.idbagorderby">
+
+    <class name="IdBagOwner" table="idbag_owner">
+        <id name="name"/>
+
+        <idbag name="items" order-by="itemName asc" table="owner_items">
+            <collection-id type="long" column="bag_id">
+                <generator class="increment"/>
+            </collection-id>
+            <key column="ownerName"/>
+            <many-to-many column="itemName" class="IdBagItem"/>
+        </idbag>
+    </class>
+
+    <class name="IdBagItem" table="idbag_item">
+        <id name="name"/>
+    </class>
+
+</hibernate-mapping>

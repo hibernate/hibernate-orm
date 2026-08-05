@@ -1669,6 +1669,27 @@ public class HbmTransformationJaxbTests {
 	}
 
 	@Test
+	@JiraKey( "HHH-20762" )
+	public void testIdBagOrderByTransformation(ServiceRegistryScope scope) {
+		transformAndVerify( "xml/jaxb/mapping/idbag-order-by/hbm.xml", scope, transformed -> {
+			assertThat( transformed.getEntities() ).hasSize( 2 );
+
+			final JaxbEntityImpl ownerEntity = transformed.getEntities().stream()
+					.filter( e -> "IdBagOwner".equals( e.getClazz() ) )
+					.findFirst()
+					.orElseThrow();
+
+			assertThat( ownerEntity.getAttributes().getManyToManyAttributes() ).hasSize( 1 );
+
+			final JaxbManyToManyImpl items = ownerEntity.getAttributes().getManyToManyAttributes().get( 0 );
+			assertThat( items.getName() ).isEqualTo( "items" );
+			assertThat( items.getOrderBy() )
+					.as( "idbag order-by should be transferred to the many-to-many" )
+					.isEqualTo( "itemName asc" );
+		} );
+	}
+
+	@Test
 	@JiraKey( "HHH-20697" )
 	public void testNonAggregatedCompositeIdColumnsNotUnique(ServiceRegistryScope scope) {
 		transformAndVerify( "xml/jaxb/mapping/inverse-composite-key/hbm.xml", scope, transformed -> {

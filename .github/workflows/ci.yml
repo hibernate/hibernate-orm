@@ -70,6 +70,16 @@ jobs:
         env:
           RDBMS: ${{ matrix.rdbms }}
         run: ci/database-start.sh
+      - id: db_version
+        name: Determine changed database image version
+        env:
+          RDBMS: ${{ matrix.rdbms }}
+        run: |
+          if git diff --name-only origin/${{ github.base_ref }}...HEAD | grep -q '^docker-compose/'; then
+            echo "dbVersion=$(ci/database-version.sh)" >> "$GITHUB_OUTPUT"
+          else
+            echo "dbVersion=" >> "$GITHUB_OUTPUT"
+          fi
       - name: Set up Java 25
         uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5.6.0
         with:
@@ -131,6 +141,7 @@ jobs:
         shell: bash
         env:
           RDBMS: ${{ matrix.rdbms }}
+          DB_VERSION: ${{ steps.db_version.outputs.dbVersion }}
           JPA_PREVIEW: "true"
           # For jobs running on 'push', publish build scan and cache immediately.
           # This won't work for pull requests, since they don't have access to secrets.
@@ -341,6 +352,16 @@ jobs:
         env:
           RDBMS: ${{ matrix.rdbms }}
         run: ci/database-start.sh
+      - id: db_version
+        name: Determine changed database image version
+        env:
+          RDBMS: ${{ matrix.rdbms }}
+        run: |
+          if git diff --name-only origin/${{ github.base_ref }}...HEAD | grep -q '^docker-compose/'; then
+            echo "dbVersion=$(ci/database-version.sh)" >> "$GITHUB_OUTPUT"
+          else
+            echo "dbVersion=" >> "$GITHUB_OUTPUT"
+          fi
       - name: Set up Java 25
         uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5.6.0
         with:
@@ -402,6 +423,7 @@ jobs:
         shell: bash
         env:
           RDBMS: ${{ matrix.rdbms }}
+          DB_VERSION: ${{ steps.db_version.outputs.dbVersion }}
           JPA_PREVIEW: "true"
           # For jobs running on 'push', publish build scan and cache immediately.
           # This won't work for pull requests, since they don't have access to secrets.
@@ -455,6 +477,16 @@ jobs:
         env:
           RDBMS: ${{ matrix.rdbms }}
         run: ci/database-start.sh
+      - id: db_version
+        name: Determine changed database image version
+        env:
+          RDBMS: ${{ matrix.rdbms }}
+        run: |
+          if git diff --name-only origin/${{ github.base_ref }}...HEAD | grep -q '^docker-compose/'; then
+            echo "dbVersion=$(ci/database-version.sh)" >> "$GITHUB_OUTPUT"
+          else
+            echo "dbVersion=" >> "$GITHUB_OUTPUT"
+          fi
       - name: Set up Java 25
         uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5.6.0
         with:
@@ -516,6 +548,7 @@ jobs:
         shell: bash
         env:
           RDBMS: ${{ matrix.rdbms }}
+          DB_VERSION: ${{ steps.db_version.outputs.dbVersion }}
           # For jobs running on 'push', publish build scan and cache immediately.
           # This won't work for pull requests, since they don't have access to secrets.
           POPULATE_REMOTE_GRADLE_CACHE: ${{ github.event_name == 'push' && github.repository == 'hibernate/hibernate-orm' && 'true' || 'false' }}

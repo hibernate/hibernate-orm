@@ -145,6 +145,7 @@ public class OrderedSetAggregateTest {
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsStringAggregation.class)
 	@SkipForDialect(dialectClass = MySQLDialect.class, majorVersion = 8, reason = "https://bugs.mysql.com/bug.php?id=117765")
 	@SkipForDialect(dialectClass = MySQLDialect.class, majorVersion = 9, reason = "https://bugs.mysql.com/bug.php?id=117765")
+	@SkipForDialect(dialectClass = MySQLDialect.class, majorVersion = 26, reason = "https://bugs.mysql.com/bug.php?id=117765")
 	public void testListaggWithNullsClause(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

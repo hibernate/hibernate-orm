@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.post;
 
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -71,6 +72,7 @@ public final class SpiModel {
 					.append( "|declared=" ).append( element.getDeclaredRoles() )
 					.append( "|effective=" ).append( element.getEffectiveRoles() )
 					.append( "|origins=" ).append( element.getOrigins() )
+					.append( "|structure=" ).append( element.getStructure() )
 					.append( "|api=" ).append( element.getApplicationApiStatus() )
 					.append( "|lifecycle=" ).append( element.getLifecycle() )
 					.append( "|source=" ).append( element.getSource() )
@@ -124,6 +126,83 @@ public final class SpiModel {
 		API,
 		NON_API,
 		UNKNOWN
+	}
+
+	/// Compiled declaration structure needed by validation and compatibility
+	/// rules without exposing Jandex types outside the ingestion adapter.
+	public static final class Structure {
+		public static final Structure UNKNOWN = new Structure( 0, false, false, false );
+
+		private final int modifiers;
+		private final boolean interfaceType;
+		private final boolean declaringTypeFinal;
+		private final boolean known;
+
+		public Structure(int modifiers, boolean interfaceType, boolean declaringTypeFinal) {
+			this( modifiers, interfaceType, declaringTypeFinal, true );
+		}
+
+		private Structure(int modifiers, boolean interfaceType, boolean declaringTypeFinal, boolean known) {
+			this.modifiers = modifiers;
+			this.interfaceType = interfaceType;
+			this.declaringTypeFinal = declaringTypeFinal;
+			this.known = known;
+		}
+
+		public int getModifiers() {
+			return modifiers;
+		}
+
+		public boolean isKnown() {
+			return known;
+		}
+
+		public boolean isInterfaceType() {
+			return interfaceType;
+		}
+
+		public boolean isDeclaringTypeFinal() {
+			return declaringTypeFinal;
+		}
+
+		public boolean isPublic() {
+			return Modifier.isPublic( modifiers );
+		}
+
+		public boolean isProtected() {
+			return Modifier.isProtected( modifiers );
+		}
+
+		public boolean isPrivate() {
+			return Modifier.isPrivate( modifiers );
+		}
+
+		public boolean isStatic() {
+			return Modifier.isStatic( modifiers );
+		}
+
+		public boolean isFinal() {
+			return Modifier.isFinal( modifiers );
+		}
+
+		public boolean isAbstract() {
+			return Modifier.isAbstract( modifiers );
+		}
+
+		public boolean isExternallySubclassAccessible() {
+			return isPublic() || isProtected();
+		}
+
+		public boolean isOverridableMethod() {
+			return !isPrivate() && !isStatic() && !isFinal() && !declaringTypeFinal;
+		}
+
+		@Override
+		public String toString() {
+			return known
+					? "modifiers=" + modifiers + ",interface=" + interfaceType + ",declaringTypeFinal=" + declaringTypeFinal
+					: "unknown";
+		}
 	}
 
 	/// One origin contributing roles to an independently classified element.
@@ -279,6 +358,7 @@ public final class SpiModel {
 		private final ElementKind kind;
 		private final String declaringPackage;
 		private final String signature;
+		private final Structure structure;
 		private final Classification classification;
 		private final Set<Role> declaredRoles;
 		private final Set<Role> effectiveRoles;
@@ -295,6 +375,7 @@ public final class SpiModel {
 			kind = mutable.kind;
 			declaringPackage = mutable.declaringPackage;
 			signature = mutable.signature;
+			structure = mutable.structure;
 			classification = mutable.classification;
 			declaredRoles = immutableRoles( mutable.declaredRoles );
 			effectiveRoles = immutableRoles( mutable.effectiveRoles );
@@ -321,6 +402,10 @@ public final class SpiModel {
 
 		public String getSignature() {
 			return signature;
+		}
+
+		public Structure getStructure() {
+			return structure;
 		}
 
 		public Classification getClassification() {
@@ -378,11 +463,39 @@ public final class SpiModel {
 				Lifecycle lifecycle,
 				String source,
 				Collection<String> migrationExceptions) {
+			classify(
+					id,
+					kind,
+					declaringPackage,
+					signature,
+					Structure.UNKNOWN,
+					directlyDeclaredRoles,
+					origin,
+					applicationApiStatus,
+					lifecycle,
+					source,
+					migrationExceptions
+			);
+		}
+
+		void classify(
+				String id,
+				ElementKind kind,
+				String declaringPackage,
+				String signature,
+				Structure structure,
+				Collection<Role> directlyDeclaredRoles,
+				Origin origin,
+				ApiStatus applicationApiStatus,
+				Lifecycle lifecycle,
+				String source,
+				Collection<String> migrationExceptions) {
 			final MutableElement element = element(
 					id,
 					kind,
 					declaringPackage,
 					signature,
+					structure,
 					applicationApiStatus,
 					lifecycle,
 					source,
@@ -403,11 +516,35 @@ public final class SpiModel {
 				Lifecycle lifecycle,
 				String source,
 				Collection<String> migrationExceptions) {
+			derived(
+					id,
+					kind,
+					declaringPackage,
+					signature,
+					Structure.UNKNOWN,
+					applicationApiStatus,
+					lifecycle,
+					source,
+					migrationExceptions
+			);
+		}
+
+		void derived(
+				String id,
+				ElementKind kind,
+				String declaringPackage,
+				String signature,
+				Structure structure,
+				ApiStatus applicationApiStatus,
+				Lifecycle lifecycle,
+				String source,
+				Collection<String> migrationExceptions) {
 			element(
 					id,
 					kind,
 					declaringPackage,
 					signature,
+					structure,
 					applicationApiStatus,
 					lifecycle,
 					source,
@@ -420,6 +557,7 @@ public final class SpiModel {
 				ElementKind kind,
 				String declaringPackage,
 				String signature,
+				Structure structure,
 				ApiStatus applicationApiStatus,
 				Lifecycle lifecycle,
 				String source,
@@ -431,6 +569,7 @@ public final class SpiModel {
 						kind,
 						declaringPackage,
 						signature,
+						structure,
 						applicationApiStatus,
 						lifecycle,
 						source,
@@ -439,7 +578,7 @@ public final class SpiModel {
 				elements.put( id, element );
 			}
 			else {
-				element.mergeMetadata( applicationApiStatus, lifecycle, source, migrationExceptions );
+				element.mergeMetadata( structure, applicationApiStatus, lifecycle, source, migrationExceptions );
 			}
 			return element;
 		}
@@ -504,6 +643,7 @@ public final class SpiModel {
 		private final ElementKind kind;
 		private final String declaringPackage;
 		private final String signature;
+		private Structure structure;
 		private Classification classification = Classification.SIGNATURE_DERIVED;
 		private final EnumSet<Role> declaredRoles = EnumSet.noneOf( Role.class );
 		private final EnumSet<Role> effectiveRoles = EnumSet.noneOf( Role.class );
@@ -520,6 +660,7 @@ public final class SpiModel {
 				ElementKind kind,
 				String declaringPackage,
 				String signature,
+				Structure structure,
 				ApiStatus applicationApiStatus,
 				Lifecycle lifecycle,
 				String source,
@@ -528,6 +669,7 @@ public final class SpiModel {
 			this.kind = kind;
 			this.declaringPackage = declaringPackage;
 			this.signature = signature;
+			this.structure = structure;
 			this.applicationApiStatus = applicationApiStatus;
 			this.lifecycle = lifecycle;
 			this.source = source;
@@ -535,10 +677,20 @@ public final class SpiModel {
 		}
 
 		private void mergeMetadata(
+				Structure structure,
 				ApiStatus applicationApiStatus,
 				Lifecycle lifecycle,
 				String source,
 				Collection<String> migrationExceptions) {
+			if ( !this.structure.isKnown() ) {
+				this.structure = structure;
+			}
+			else if ( structure.isKnown()
+					&& (this.structure.getModifiers() != structure.getModifiers()
+					|| this.structure.isInterfaceType() != structure.isInterfaceType()
+					|| this.structure.isDeclaringTypeFinal() != structure.isDeclaringTypeFinal()) ) {
+				throw new IllegalArgumentException( "Conflicting declaration structure for " + id );
+			}
 			if ( this.applicationApiStatus == ApiStatus.UNKNOWN ) {
 				this.applicationApiStatus = applicationApiStatus;
 			}

@@ -136,6 +136,7 @@ public final class SpiJandexClassifier {
 					packageName,
 					packageName,
 					null,
+					SpiModel.Structure.UNKNOWN,
 					new SpiModel.Lifecycle( metadata.internal, metadata.incubating, metadata.deprecated )
 			);
 			descriptors.put( id, descriptor );
@@ -168,6 +169,7 @@ public final class SpiJandexClassifier {
 				packageName,
 				classInfo.name().toString(),
 				classInfo,
+				new SpiModel.Structure( classInfo.flags(), classInfo.isInterface(), false ),
 				lifecycle( classInfo, classInfo, packageName, index, packages )
 		);
 		descriptors.put( id, descriptor );
@@ -243,6 +245,7 @@ public final class SpiJandexClassifier {
 					packageName,
 					field.toString(),
 					field,
+					new SpiModel.Structure( field.flags(), false, Modifier.isFinal( classInfo.flags() ) ),
 					lifecycle( field, classInfo, packageName, index, packages )
 			);
 			descriptors.put( id, descriptor );
@@ -267,6 +270,7 @@ public final class SpiJandexClassifier {
 					packageName,
 					method.toString(),
 					method,
+					new SpiModel.Structure( method.flags(), false, Modifier.isFinal( classInfo.flags() ) ),
 					lifecycle( method, classInfo, packageName, index, packages )
 			);
 			descriptors.put( id, descriptor );
@@ -338,6 +342,7 @@ public final class SpiJandexClassifier {
 				descriptor.kind,
 				descriptor.declaringPackage,
 				descriptor.signature,
+				descriptor.structure,
 				directRoles,
 				new SpiModel.Origin( originKind, originSource, effectiveRoles ),
 				apiStatus( descriptor.id ),
@@ -499,6 +504,7 @@ public final class SpiJandexClassifier {
 							descriptor.kind,
 							descriptor.declaringPackage,
 							descriptor.signature,
+							descriptor.structure,
 							apiStatus( currentId ),
 							descriptor.lifecycle,
 							source( currentId ),
@@ -710,6 +716,7 @@ public final class SpiJandexClassifier {
 		private final String declaringPackage;
 		private final String signature;
 		private final AnnotationTarget target;
+		private final SpiModel.Structure structure;
 		private final SpiModel.Lifecycle lifecycle;
 
 		private Descriptor(
@@ -718,12 +725,14 @@ public final class SpiJandexClassifier {
 				String declaringPackage,
 				String signature,
 				AnnotationTarget target,
+				SpiModel.Structure structure,
 				SpiModel.Lifecycle lifecycle) {
 			this.id = id;
 			this.kind = kind;
 			this.declaringPackage = declaringPackage;
 			this.signature = signature;
 			this.target = target;
+			this.structure = structure;
 			this.lifecycle = lifecycle;
 		}
 	}

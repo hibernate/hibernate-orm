@@ -61,6 +61,12 @@ public class ReportGenerationPlugin implements Plugin<Project> {
 				(task) -> task.dependsOn( indexerTask )
 		);
 
+		project.getTasks().register(
+				"validateSpi",
+				SpiValidationTask.class,
+				(task) -> task.dependsOn( indexerTask )
+		);
+
 		final var dialectConfig = project.getConfigurations()
 				.maybeCreate( DIALECT_CONFIG_NAME )
 				.setDescription( "Used to define classpath for performing reflection on Dialects for the Dialect report" );

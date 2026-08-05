@@ -27,6 +27,7 @@ public class AntlrPlugin implements Plugin<Project> {
 
 	public static final String HQL_PKG = "org.hibernate.grammars.hql";
 	public static final String SQL_PKG = "org.hibernate.grammars.importsql";
+	public static final String SQL_FORMATTER_PKG = "org.hibernate.grammars.sql";
 	public static final String GRAPH_PKG = "org.hibernate.grammars.graph";
 	public static final String ORDER_PKG = "org.hibernate.grammars.ordering";
 
@@ -104,6 +105,17 @@ public class AntlrPlugin implements Plugin<Project> {
 					grammarDescriptor.getPackageName().set( ORDER_PKG );
 					grammarDescriptor.getLexerFileName().set( "OrderingLexer.g4" );
 					grammarDescriptor.getParserFileName().set( "OrderingParser.g4" );
+				}
+		);
+
+		antlrSpec.getGrammarDescriptors().create(
+				"sqlFormatter",
+				(grammarDescriptor) -> {
+					grammarDescriptor.getPackageName().set( SQL_FORMATTER_PKG );
+					grammarDescriptor.getLexerFileName().set( "SqlFormatterLexer.g4" );
+					grammarDescriptor.getParserFileName().set( "SqlFormatterParser.g4" );
+					grammarDescriptor.getGenerateVisitor().set( false );
+					grammarDescriptor.getGenerateListener().set( false );
 				}
 		);
 	}

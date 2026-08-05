@@ -27,7 +27,7 @@ eclipseJdtCore = "3.46.0"
 # Jakarta Libs
 jpa = "4.0.0-SNAPSHOT" # Can be replaced with ${jakartaJpaVersion} / gradle.libs.versions.jpa
 annotation = "3.0.0"
-cdi = "5.0.0.Beta1"
+cdi = "5.0.0.CR1"
 inject = "2.0.1"
 interceptors = "2.2.0"
 concurrency = "3.2.0-M2"

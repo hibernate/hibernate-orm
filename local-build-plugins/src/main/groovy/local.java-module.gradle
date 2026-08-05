@@ -226,10 +226,6 @@ tasks.withType( Test.class ).configureEach { test ->
 
     test.enableAssertions = true
 
-    if ( project.name != 'hibernate-testing' ) {
-        test.dependsOn ':hibernate-testing:test'
-    }
-
     // Allow to exclude specific tests
     if ( project.hasProperty( 'excludeTests' ) ) {
         test.filter {

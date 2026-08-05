@@ -5,12 +5,14 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import org.hibernate.annotations.Struct;
+import org.hibernate.community.dialect.GaussDBDialect;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks.SupportsStructAggregate;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks.SupportsTypedArrays;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
@@ -29,6 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 class StructArrayWithNullElementTestDemoTest {
 
 	@Test
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "gsjdbc4 can't bind struct arrays via createArrayOf (Unable to find server array type)")
 	void test(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			var book = new Book();

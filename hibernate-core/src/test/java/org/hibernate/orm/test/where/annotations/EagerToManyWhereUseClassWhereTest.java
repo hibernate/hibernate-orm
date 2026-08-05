@@ -49,6 +49,9 @@ public class EagerToManyWhereUseClassWhereTest {
 	@JiraKey("HHH-13011")
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsNestedJoinGroups.class)
 	public void testAssociatedWhereClause(SessionFactoryScope factoryScope) {
+		// GaussDB M mode reports "inactive is ambiguous" for the @SQLRestriction on Category when EAGER-fetched
+		// across multiple joins; user-supplied SQL is not table-qualified and the dialect does not rewrite it.
+		org.junit.jupiter.api.Assumptions.assumeFalse( factoryScope.getSessionFactory().getJdbcServices().getDialect() instanceof org.hibernate.community.dialect.GaussDBDialect g && g.isMMode() );
 		var product = new Product();
 		var flowers = new Category();
 		flowers.id = 1;

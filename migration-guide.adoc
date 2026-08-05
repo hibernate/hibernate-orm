@@ -795,6 +795,19 @@ public class MyRevision extends ChangelogMapping { ... }
 
 No DDL changes are needed. The default `REV`/`REVTYPE` column names and encoding match between Envers and core. The `REVINFO` table rows continue the same sequence.
 
+[[artifact-changes]]
+== Changes in published artifacts
+
+[[dependency-changes-relocation]]
+=== Relocation POMs from `org.hibernate` are no longer published
+
+Previous releases published relocation POMs under the `org.hibernate` group id,
+directing consumers to the current `org.hibernate.orm` coordinates.
+Starting with this version -- these relocation POMs are no longer published.
+
+If your build still references Hibernate ORM modules using the old `org.hibernate` group id
+(e.g. `org.hibernate:hibernate-core`), you must update your dependency coordinates
+to use `org.hibernate.orm` (e.g. `org.hibernate.orm:hibernate-core`).
 
 [[dependency-changes]]
 == Changes in Dependencies

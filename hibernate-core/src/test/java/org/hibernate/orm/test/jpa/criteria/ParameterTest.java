@@ -46,7 +46,7 @@ public class ParameterTest {
 	@Test
 	@SkipForDialect(dialectClass = InformixDialect.class,
 			reason = "Blobs are not allowed in this expression")
-	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsArrayComparison.class)
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsStructuralArrays.class)
 	public void testPrimitiveArrayParameterBinding(SessionFactoryScope scope) {
 		scope.inTransaction( em -> {
 			CriteriaQuery<MultiTypedBasicAttributesEntity> criteria = em.getCriteriaBuilder()
@@ -65,7 +65,7 @@ public class ParameterTest {
 	@Test
 	@SkipForDialect(dialectClass = InformixDialect.class,
 			reason = "Blobs are not allowed in this expression")
-	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsArrayComparison.class)
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsStructuralArrays.class)
 	public void testNonPrimitiveArrayParameterBinding(SessionFactoryScope scope) {
 		scope.inTransaction( em -> {
 			CriteriaQuery<MultiTypedBasicAttributesEntity> criteria = em.getCriteriaBuilder()
@@ -148,7 +148,7 @@ public class ParameterTest {
 	@JiraKey("HHH-17912")
 	@SkipForDialect(dialectClass = InformixDialect.class,
 			reason = "Blobs are not allowed in this expression")
-	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsArrayComparison.class)
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsStructuralArrays.class)
 	public void testAttributeEqualListParameter(SessionFactoryScope scope) {
 		scope.inTransaction( em -> {
 			final CriteriaBuilder criteriaBuilder = em.getCriteriaBuilder();

@@ -187,7 +187,7 @@ public class PostgreSQLDatabaseCleaner implements DatabaseCleaner {
 					}
 				}
 				sb.setCharAt( sb.length() - 1, ' ' );
-				sb.append( "RESTART IDENTITY CASCADE" );
+				sb.append( useRestartIdentity( connection ) ? "RESTART IDENTITY CASCADE" : "CASCADE" );
 				truncateSql = sb.toString();
 				truncateSqlPerSchema.put( schemaName, truncateSql );
 			}
@@ -223,6 +223,27 @@ public class PostgreSQLDatabaseCleaner implements DatabaseCleaner {
 			throw new RuntimeException( e );
 		}
 		return false;
+	}
+
+	/**
+	 * Whether {@code TRUNCATE ... RESTART IDENTITY} can be appended. GaussDB in MySQL-compatible mode
+	 * (datcompatibility "B"/"M") rejects {@code RESTART IDENTITY} with a syntax error, so only
+	 * {@code CASCADE} is used there. Real PostgreSQL has no {@code pg_database.datcompatibility} column,
+	 * so the query fails and {@code RESTART IDENTITY} is kept (A mode / true PostgreSQL support it).
+	 */
+	private static boolean useRestartIdentity(Connection connection) {
+		try (Statement stmt = connection.createStatement();
+				ResultSet rs = stmt.executeQuery(
+						"select datcompatibility from pg_database where datname = current_database()" )) {
+			if ( rs.next() ) {
+				final String mode = rs.getString( 1 );
+				return !"M".equals( mode ) && !"B".equals( mode );
+			}
+		}
+		catch (SQLException e) {
+			// not GaussDB — assume real PostgreSQL, which supports RESTART IDENTITY
+		}
+		return true;
 	}
 
 }

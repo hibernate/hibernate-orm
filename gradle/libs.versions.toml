@@ -87,9 +87,9 @@ hana = "2.29.7"
 h2gis = "2.2.5"
 hsqldb = "2.7.4"
 informix = "15.0.1.4"
-mariadb = "3.5.9"
+mariadb = "3.5.10"
 mssql = "13.4.0.jre11"
-mysql = "9.7.0"
+mysql = "26.7.0"
 oracle = "23.26.3.0.0"
 oracleJacksonOsonExtension = "1.1.0"
 pgsql = "42.7.13"
@@ -99,7 +99,7 @@ sybase = "1.3.1"
 teradata = "20.00.00.58"
 altibase = "8.1.0.0.3"
 cubrid = "11.3.2.0053"
-spanner = "2.41.0"
+spanner = "2.42.0"
 
 # Maven
 maven = "3.9.16"
@@ -110,7 +110,7 @@ mavenPlexusXml = "4.1.1"
 
 #Buildscript
 forbiddenapis = "3.10"
-jsoup = "1.22.2"
+jsoup = "1.23.1"
 slf4j = "2.0.18"
 
 # Asciidocs
@@ -127,7 +127,7 @@ guava = "33.6.0-jre"
 
 # Plugins
 develocity = "4.5.0"
-customUserData = "2.7.0"
+customUserData = "2.8.0"
 asciidoctor = "4.0.5"
 spotless = "8.9.0"
 errorpronePlugin = "5.1.0"

@@ -40,7 +40,12 @@ public abstract class AbstractJandexAwareTask extends DefaultTask {
 		setGroup( TASK_GROUP_NAME );
 
 		this.indexManager = getProject().provider( () -> getProject().getExtensions().getByType( IndexManager.class ) );
-		getInputs().property( "version", getProject().getExtensions().getByType( OrmBuildDetails.class ).getHibernateVersion() );
+		getInputs().property(
+				"version",
+				getProject().provider(
+						() -> getProject().getExtensions().getByType( OrmBuildDetails.class ).getHibernateVersion()
+				)
+		);
 	}
 
 	@Internal

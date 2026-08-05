@@ -55,6 +55,12 @@ public class ReportGenerationPlugin implements Plugin<Project> {
 				(task) -> task.dependsOn( indexerTask )
 		);
 
+		final var spiTask = project.getTasks().register(
+				"generateSpiReport",
+				SpiReportTask.class,
+				(task) -> task.dependsOn( indexerTask )
+		);
+
 		final var dialectConfig = project.getConfigurations()
 				.maybeCreate( DIALECT_CONFIG_NAME )
 				.setDescription( "Used to define classpath for performing reflection on Dialects for the Dialect report" );
@@ -90,6 +96,7 @@ public class ReportGenerationPlugin implements Plugin<Project> {
 		groupingTask.dependsOn( deprecationTask );
 		groupingTask.dependsOn( internalsTask );
 		groupingTask.dependsOn( loggingTask );
+		groupingTask.dependsOn( spiTask );
 		groupingTask.dependsOn( dialectTableTask );
 		groupingTask.dependsOn( communityDialectTableTask );
 	}

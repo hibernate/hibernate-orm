@@ -6,9 +6,9 @@ package org.hibernate.metamodel.mapping.ordering.ast;
 
 import jakarta.persistence.criteria.Nulls;
 import org.hibernate.metamodel.UnsupportedMappingException;
-import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.ordering.TranslationContext;
+import org.hibernate.persister.collection.AbstractCollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.SortDirection;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
@@ -20,6 +20,7 @@ import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SortSpecification;
 import org.hibernate.type.NullType;
 
+import static org.hibernate.internal.util.collections.ArrayHelper.contains;
 import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnReferenceKey;
 
 /**
@@ -104,22 +105,31 @@ public class ColumnReference implements OrderingExpression, SequencePart {
 	}
 
 	TableReference getTableReference(TableGroup tableGroup) {
-		ModelPartContainer modelPart = tableGroup.getModelPart();
-		if ( modelPart instanceof PluralAttributeMapping pluralAttribute ) {
-			if ( !pluralAttribute.getCollectionDescriptor().hasManyToManyOrdering() ) {
-				return tableGroup.getPrimaryTableReference();
-			}
-
-			if ( pluralAttribute.getElementDescriptor().getPartMappingType()
-					instanceof EntityPersister entityPersister ) {
-				final String tableName = entityPersister.getTableNameForColumn( columnExpression );
-				return tableGroup.getTableReference( tableGroup.getNavigablePath(), tableName );
+		if ( tableGroup.getModelPart() instanceof PluralAttributeMapping pluralAttribute ) {
+			if ( pluralAttribute.getElementDescriptor().getPartMappingType() instanceof EntityPersister entityPersister
+				&& pluralAttribute.getCollectionDescriptor() instanceof AbstractCollectionPersister persister
+				&& !persister.isOneToMany() ) {
+				if ( containsColumn( persister.getIndexColumnNames(), columnExpression )
+					|| containsColumn( persister.getKeyColumnNames(), columnExpression )
+					|| containsColumn( persister.getElementColumnNames(), columnExpression ) ) {
+					// Join-table columns
+					return tableGroup.getPrimaryTableReference();
+				}
+				return tableGroup.getTableReference( tableGroup.getNavigablePath(),
+						entityPersister.getTableNameForColumn( columnExpression ) );
 			}
 			else {
 				return tableGroup.getPrimaryTableReference();
 			}
 		}
 		return null;
+	}
+
+	public boolean containsColumn(String[] columns, String columnExpression) {
+		if ( columns != null ) {
+			return contains( columns, columnExpression );
+		}
+		return false;
 	}
 
 	@Override

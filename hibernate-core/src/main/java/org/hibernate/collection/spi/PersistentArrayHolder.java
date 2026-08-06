@@ -4,6 +4,7 @@
  */
 package org.hibernate.collection.spi;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -41,6 +42,8 @@ import static java.util.Collections.addAll;
 public class PersistentArrayHolder<E> extends AbstractPersistentCollection<E> {
 
 	protected Object array;
+	@Serial
+	private static final long serialVersionUID = 1L;
 
 	//just to help out during the load (ugly, i know)
 	private transient Class<?> elementClass;

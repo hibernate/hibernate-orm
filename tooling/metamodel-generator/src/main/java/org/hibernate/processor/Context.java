@@ -87,7 +87,7 @@ public final class Context {
 	 */
 	private @Nullable Boolean fullyXmlConfigured;
 	private boolean addInjectAnnotation = false;
-	private boolean addDependentAnnotation = false;
+	private boolean cdiAvailable = false;
 	private boolean addComponentAnnotation = false;
 	private boolean addNonnullAnnotation = false;
 	private boolean addGeneratedAnnotation = true;
@@ -193,12 +193,12 @@ public final class Context {
 		this.addInjectAnnotation = addInjectAnnotation;
 	}
 
-	public boolean addDependentAnnotation() {
-		return addDependentAnnotation;
+	public boolean isCdiAvailable() {
+		return cdiAvailable;
 	}
 
-	public void setAddDependentAnnotation(boolean addDependentAnnotation) {
-		this.addDependentAnnotation = addDependentAnnotation;
+	public void setCdiAvailable(boolean cdiAvailable) {
+		this.cdiAvailable = cdiAvailable;
 	}
 
 	public boolean addComponentAnnotation() {

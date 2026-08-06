@@ -47,6 +47,9 @@ public class LoadQueryInfluencers implements Serializable {
 	private CascadingFetchProfile enabledCascadingFetchProfile;
 
 	//Lazily initialized!
+	private @Nullable Set<String> refreshCollectionsToFetch;
+
+	//Lazily initialized!
 	private @Nullable HashSet<String> enabledFetchProfileNames;
 
 	//Lazily initialized!
@@ -144,6 +147,25 @@ public class LoadQueryInfluencers implements Serializable {
 	 */
 	public void setEnabledCascadingFetchProfile(CascadingFetchProfile enabledCascadingFetchProfile) {
 		this.enabledCascadingFetchProfile = enabledCascadingFetchProfile;
+	}
+
+	/**
+	 * The set of collection roles (full paths) that should be immediately fetched
+	 * while a {@link CascadingFetchProfile#REFRESH} cascade is in progress, or
+	 * {@code null} to indicate no restriction (fetch every cascaded collection).
+	 * <p>
+	 * This is used to avoid eagerly (re)loading collections which were not
+	 * initialized on the entity being refreshed. See HHH-12867.
+	 * <p>
+	 * A {@code null} set (the default) preserves the behavior of fetching
+	 * every cascaded collection.
+	 */
+	public @Nullable Set<String> getRefreshCollectionsToFetch() {
+		return refreshCollectionsToFetch;
+	}
+
+	public void setRefreshCollectionsToFetch(@Nullable Set<String> refreshCollectionsToFetch) {
+		this.refreshCollectionsToFetch = refreshCollectionsToFetch;
 	}
 
 

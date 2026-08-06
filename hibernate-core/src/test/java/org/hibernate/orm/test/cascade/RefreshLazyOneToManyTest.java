@@ -17,8 +17,8 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import org.hibernate.Hibernate;
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.JiraKeyGroup;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
@@ -27,7 +27,11 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
-@JiraKey(value = "HHH-12867")
+
+@JiraKeyGroup( {
+		@JiraKey(value = "HHH-12867"),
+		@JiraKey(value = "HHH-20628"),
+} )
 @DomainModel(
 		annotatedClasses = {
 				RefreshLazyOneToManyTest.Invoice.class,
@@ -39,18 +43,18 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 public class RefreshLazyOneToManyTest {
 
 	@Test
-	@FailureExpected(jiraKey = "HHH-12867")
 	public void testRefreshCascade(SessionFactoryScope scope) {
-		scope.inTransaction( session -> {
+		Integer id = scope.fromTransaction( session -> {
 			Invoice invoice = new Invoice( "An invoice for John Smith" );
 			session.persist( invoice );
 
 			session.persist( new Line( "1 pen - 5€", invoice ) );
 			session.persist( new Tax( "21%", invoice ) );
+			return invoice.id;
 		} );
 
 		scope.inTransaction( session -> {
-			Invoice invoice = session.get( Invoice.class, 1 );
+			Invoice invoice = session.find( Invoice.class, id );
 
 			assertFalse( Hibernate.isInitialized( invoice.getTaxes() ),
 					"Taxes should not be initialized before refresh" );

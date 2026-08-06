@@ -7,6 +7,7 @@ package org.hibernate.loader.ast.internal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.Consumer;
 
 import org.hibernate.LockOptions;
@@ -15,6 +16,7 @@ import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SubselectFetch;
+import org.hibernate.loader.ast.spi.CascadingFetchProfile;
 import org.hibernate.loader.ast.spi.Loadable;
 import org.hibernate.loader.ast.spi.Loader;
 import org.hibernate.metamodel.CollectionClassification;
@@ -854,9 +856,10 @@ public class LoaderSelectBuilder {
 							attributeMapping != null
 									? attributeMapping.getAttributeMetadata().getCascadeStyle()
 									: null;
-					final var cascadingAction =
-							loadQueryInfluencers.getEnabledCascadingFetchProfile().getCascadingAction();
-					if ( cascadeStyle == null || cascadeStyle.doCascade( cascadingAction ) ) {
+					final var cascadingFetchProfile = loadQueryInfluencers.getEnabledCascadingFetchProfile();
+					final var cascadingAction = cascadingFetchProfile.getCascadingAction();
+					if ( ( cascadeStyle == null || cascadeStyle.doCascade( cascadingAction ) )
+							&& cascadeShouldFetch( cascadingFetchProfile, isFetchablePluralAttributeMapping, fetchable ) ) {
 						fetchTiming = FetchTiming.IMMEDIATE;
 						// In 5.x the CascadeEntityJoinWalker only join fetched the first collection fetch
 						joined = !isFetchablePluralAttributeMapping || rowCardinality == RowCardinality.SINGLE;
@@ -940,6 +943,25 @@ public class LoaderSelectBuilder {
 				}
 			}
 		};
+	}
+
+	/**
+	 * When a {@link CascadingFetchProfile#REFRESH} cascade restricts the set of collections
+	 * to fetch (see {@link LoadQueryInfluencers#getRefreshCollectionsToFetch()}), a plural
+	 * attribute must only be immediately fetched if its role is part of that set, i.e., if
+	 * it was already initialized on the entity being refreshed. This avoids eagerly loading
+	 * collections that were left uninitialized. See HHH-12867.
+	 */
+	private boolean cascadeShouldFetch(
+			CascadingFetchProfile cascadingFetchProfile,
+			boolean isFetchablePluralAttributeMapping,
+			Fetchable fetchable) {
+		if ( cascadingFetchProfile != CascadingFetchProfile.REFRESH || !isFetchablePluralAttributeMapping ) {
+			return true;
+		}
+		final Set<String> collectionsToFetch = loadQueryInfluencers.getRefreshCollectionsToFetch();
+		return collectionsToFetch == null
+			|| collectionsToFetch.contains( fetchable.getNavigableRole().getFullPath() );
 	}
 
 	private static NavigablePath getFetchablePath(FetchParent fetchParent, Fetchable fetchable, boolean isKeyFetchable) {

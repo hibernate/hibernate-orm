@@ -89,9 +89,11 @@ public class SingleIdEntityLoaderStandardImpl<T> extends SingleIdEntityLoaderSup
 			// columns (which don't exist in the audit table)
 			return loadPlanCreator.apply( lockOptions, influencers );
 		}
-		else if ( influencers.hasEnabledCascadingFetchProfile()
-				// and if it's a non-exclusive (optimistic) lock
-				&& LockMode.PESSIMISTIC_READ.greaterThan( lockOptions.getLockMode() ) ) {
+		else if ( influencers.hasEnabledCascadingFetchProfile() ) {
+			// A cascading fetch profile changes the fetches baked into the plan, so such a plan
+			// must never be stored in (nor served from) the regular per-lock-mode cache, which
+			// does not account for it. This holds for every lock mode: the cascade cache is
+			// keyed by the lock mode too, and non-default pessimistic options stay uncacheable.
 			return getInternalCascadeLoadPlan( lockOptions, influencers );
 		}
 		else {

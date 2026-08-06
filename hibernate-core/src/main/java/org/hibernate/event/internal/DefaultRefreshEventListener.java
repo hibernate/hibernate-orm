@@ -9,6 +9,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.UnresolvableObjectException;
+import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.internal.Cascade;
 import org.hibernate.engine.internal.CascadePoint;
 import org.hibernate.engine.spi.CascadingActions;
@@ -24,6 +25,9 @@ import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.Type;
+
+import java.util.HashSet;
+import java.util.Set;
 
 import static org.hibernate.engine.internal.CacheHelper.usingCache;
 import static org.hibernate.engine.internal.CacheHelper.writingToCache;
@@ -154,6 +158,13 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 				refreshedAlready
 		);
 
+		// Capture, before eviction, which collections were already initialized so that the
+		// reload only immediately (re)fetches those. Collections that were left uninitialized
+		// must stay uninitialized rather than being eagerly loaded by the refresh. See HHH-12867.
+		final Set<String> collectionsToFetch = persister.hasCollections()
+				? initializedCollectionRoles( persister, object )
+				: null;
+
 		persistenceContext.removeEntityHolder( entry.getEntityKey() );
 		if ( persister.hasCollections() ) {
 			new EvictVisitor( source, object ).process( object, persister );
@@ -163,7 +174,41 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 		evictEntity( object, persister, id, source );
 		evictCachedCollections( persister, id, source );
 
-		refresh( event, object, source, persister, null, entry, id, persistenceContext );
+		final var influencers = source.getLoadQueryInfluencers();
+		final Set<String> previousCollectionsToFetch = influencers.getRefreshCollectionsToFetch();
+		influencers.setRefreshCollectionsToFetch( collectionsToFetch );
+		try {
+			refresh( event, object, source, persister, null, entry, id, persistenceContext );
+		}
+		finally {
+			influencers.setRefreshCollectionsToFetch( previousCollectionsToFetch );
+		}
+	}
+
+	private static Set<String> initializedCollectionRoles(EntityPersister persister, Object object) {
+		final Set<String> roles = new HashSet<>();
+		collectInitializedCollectionRoles( persister.getPropertyTypes(), persister.getValues( object ), roles );
+		return roles;
+	}
+
+	private static void collectInitializedCollectionRoles(Type[] types, Object[] values, Set<String> roles) {
+		for ( int i = 0; i < types.length; i++ ) {
+			final Type type = types[i];
+			final Object value = values[i];
+			if ( type instanceof CollectionType collectionType ) {
+				if ( value instanceof PersistentCollection<?> collection && collection.wasInitialized() ) {
+					roles.add( collectionType.getRole() );
+				}
+			}
+			else if ( type instanceof ComponentType componentType && value != null ) {
+				// Collections can also be nested inside embeddables (which are never lazy in practice).
+				collectInitializedCollectionRoles(
+						componentType.getSubtypes(),
+						componentType.getPropertyValues( value ),
+						roles
+				);
+			}
+		}
 	}
 
 	private static void refresh(

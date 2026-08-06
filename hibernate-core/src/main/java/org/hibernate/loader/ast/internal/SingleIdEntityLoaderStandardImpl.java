@@ -5,6 +5,9 @@
 package org.hibernate.loader.ast.internal;
 
 import java.util.EnumMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiFunction;
 
 import org.hibernate.Internal;
@@ -16,6 +19,7 @@ import org.hibernate.loader.ast.spi.CascadingFetchProfile;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
+import jakarta.annotation.Nullable;
 
 /**
  * Standard implementation of {@link org.hibernate.loader.ast.spi.SingleIdEntityLoader}.
@@ -26,8 +30,20 @@ public class SingleIdEntityLoaderStandardImpl<T> extends SingleIdEntityLoaderSup
 
 	private final EnumMap<LockMode, SingleIdLoadPlan<T>> selectByLockMode =
 			new EnumMap<>( LockMode.class );
-	private final EnumMap<CascadingFetchProfile, EnumMap<LockMode,SingleIdLoadPlan<T>>> selectByInternalCascadeProfile =
-			new EnumMap<>( CascadingFetchProfile.class );
+	private final Map<InternalCascadeLoadPlanKey, SingleIdLoadPlan<T>> selectByInternalCascadeProfile =
+			new ConcurrentHashMap<>();
+
+	/**
+	 * Key for a cached "internal cascade" (merge/refresh) load plan. In addition to the
+	 * {@link LockMode} and {@link CascadingFetchProfile}, a REFRESH cascade only immediately
+	 * fetches the collections that were already initialized on the entity being refreshed, so
+	 * the plan also depends on that set of collection roles ({@code null} when unrestricted).
+	 * See HHH-12867.
+	 */
+	private record InternalCascadeLoadPlanKey(
+			CascadingFetchProfile fetchProfile,
+			LockMode lockMode,
+			@Nullable Set<String> collectionsToFetch) {}
 
 	private final BiFunction<LockOptions, LoadQueryInfluencers, SingleIdLoadPlan<T>> loadPlanCreator;
 
@@ -121,40 +137,30 @@ public class SingleIdEntityLoaderStandardImpl<T> extends SingleIdEntityLoaderSup
 	}
 
 	private SingleIdLoadPlan<T> getInternalCascadeLoadPlan(LockOptions lockOptions, LoadQueryInfluencers influencers) {
-		// TODO: It might be more efficient to just instantiate a LoadPlanKey
-		//       object here than it is to maintain an EnumMap of EnumMaps
-		final var lockMode = lockOptions.getLockMode();
-		EnumMap<LockMode,SingleIdLoadPlan<T>> map;
+		final var fetchProfile = influencers.getEnabledCascadingFetchProfile();
+		final var collectionsToFetch =
+				fetchProfile == CascadingFetchProfile.REFRESH
+						? influencers.getRefreshCollectionsToFetch()
+						: null;
 		if ( isLoadPlanReusable( lockOptions, influencers ) ) {
-			final var fetchProfile = influencers.getEnabledCascadingFetchProfile();
-			final var existingMap = selectByInternalCascadeProfile.get( fetchProfile );
-			if ( existingMap == null ) {
-				map = new EnumMap<>( LockMode.class );
-				selectByInternalCascadeProfile.put( fetchProfile, map );
-			}
-			else {
-				final var existing = existingMap.get( lockMode );
-				if ( existing != null ) {
-					return existing;
-				}
-				else {
-					map = existingMap;
-				}
-			}
+			final var key = new InternalCascadeLoadPlanKey(
+					fetchProfile,
+					lockOptions.getLockMode(),
+					collectionsToFetch == null ? null : Set.copyOf( collectionsToFetch )
+			);
+			return selectByInternalCascadeProfile.computeIfAbsent(
+					key,
+					k -> loadPlanCreator.apply( lockOptions, influencers )
+			);
 		}
 		else {
-			map = null;
+			return loadPlanCreator.apply( lockOptions, influencers );
 		}
-
-		final var plan = loadPlanCreator.apply( lockOptions, influencers );
-		if ( map != null ) {
-			map.put( lockMode, plan );
-		}
-		return plan;
 	}
 
 	/**
-	 * We key the caches only by {@link LockMode} and {@link CascadingFetchProfile}.
+	 * We key the caches by {@link LockMode} and {@link CascadingFetchProfile} (plus, for a
+	 * REFRESH cascade, the set of collections to immediately fetch).
 	 * If there is a pessimistic lock with non-default options like timeout, a custom
 	 * fetch profile, or an entity graph, we don't cache and reuse the plan.
 	 */

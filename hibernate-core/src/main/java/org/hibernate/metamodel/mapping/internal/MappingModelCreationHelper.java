@@ -76,6 +76,7 @@ import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.property.access.internal.ChainedPropertyAccessImpl;
 import org.hibernate.property.access.spi.PropertyAccess;
+import org.hibernate.property.access.spi.PropertyAccessorService;
 import org.hibernate.query.sqm.sql.spi.SqmToSqlAstConverter;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.Clause;
@@ -324,6 +325,8 @@ public class MappingModelCreationHelper {
 		);
 
 		final var component = component( bootProperty, dependantValue );
+		final var propertyAccessorService = creationProcess.getCreationContext().getServiceRegistry()
+				.requireService( PropertyAccessorService.class );
 		final var embeddableMappingType = EmbeddableMappingTypeImpl.from(
 				component,
 				attrType,
@@ -337,6 +340,7 @@ public class MappingModelCreationHelper {
 				attributeMappingType -> {
 					if ( component.isEmbedded() ) {
 						return new VirtualEmbeddedAttributeMapping(
+								propertyAccessorService,
 								attrName,
 								declaringType.getNavigableRole().append( attrName ),
 								stateArrayPosition,
@@ -353,6 +357,7 @@ public class MappingModelCreationHelper {
 					}
 					else {
 						return new EmbeddedAttributeMapping(
+								propertyAccessorService,
 								attrName,
 								declaringType.getNavigableRole().append( attrName ),
 								stateArrayPosition,
@@ -1365,6 +1370,7 @@ public class MappingModelCreationHelper {
 					component.getColumnInsertability(),
 					component.getColumnUpdateability(),
 					inflightDescriptor -> new EmbeddedCollectionPart(
+							creationProcess.getCreationContext().getServiceRegistry().requireService( PropertyAccessorService.class ),
 							collectionDescriptor,
 							CollectionPart.Nature.INDEX,
 							inflightDescriptor,
@@ -1459,6 +1465,7 @@ public class MappingModelCreationHelper {
 					component.getColumnInsertability(),
 					component.getColumnUpdateability(),
 					embeddableMappingType -> new EmbeddedCollectionPart(
+							creationProcess.getCreationContext().getServiceRegistry().requireService( PropertyAccessorService.class ),
 							collectionDescriptor,
 							CollectionPart.Nature.ELEMENT,
 							embeddableMappingType,

@@ -8,6 +8,8 @@ import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.GetterMethodImpl;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
+import org.hibernate.property.access.spi.PropertyAccessorService;
+import org.hibernate.property.access.spi.PropertyValueAccessor;
 import org.hibernate.property.access.spi.Setter;
 import org.hibernate.property.access.spi.SetterMethodImpl;
 
@@ -30,8 +32,10 @@ public class PropertyAccessBasicImpl implements PropertyAccess {
 	private final PropertyAccessStrategyBasicImpl strategy;
 	private final GetterMethodImpl getter;
 	private final @Nullable SetterMethodImpl setter;
+	private final PropertyValueAccessor propertyValueAccessor;
 
 	public PropertyAccessBasicImpl(
+			PropertyAccessorService propertyAccessorService,
 			PropertyAccessStrategyBasicImpl strategy,
 			Class<?> containerJavaType,
 			final String propertyName,
@@ -47,6 +51,14 @@ public class PropertyAccessBasicImpl implements PropertyAccess {
 		setter = setterMethod != null
 				? new SetterMethodImpl( containerJavaType, propertyName, setterMethod )
 				: null;
+
+		propertyValueAccessor = PropertyValueAccessor.standard(
+				propertyAccessorService.hibernateAccessorFactory()
+						.valueReader( getterMethod ),
+				setterMethod == null ? null : propertyAccessorService.hibernateAccessorFactory()
+						.valueWriter( setterMethod ),
+				propertyName
+		);
 	}
 
 	@Override
@@ -62,5 +74,10 @@ public class PropertyAccessBasicImpl implements PropertyAccess {
 	@Override
 	public @Nullable Setter getSetter() {
 		return setter;
+	}
+
+	@Override
+	public PropertyValueAccessor getPropertyValueAccessor() {
+		return propertyValueAccessor;
 	}
 }

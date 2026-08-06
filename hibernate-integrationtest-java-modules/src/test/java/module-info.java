@@ -5,13 +5,18 @@ module org.hibernate.orm.integrationtest.java.module.test {
 	 */
 
 	opens org.hibernate.orm.integrationtest.java.module.test.entity to
-			org.hibernate.orm.core;
+			org.hibernate.orm.core,
+			org.hibernate.models.accessor,
+			org.hibernate.models.accessor.bytebuddy,
+			org.hibernate.orm.envers;
 
 	requires jakarta.persistence;
 	// IDEA will not find the modules below because it apparently doesn't support automatic module names
 	// for modules in the current project.
 	// Everything should work fine when building from the command line, though.
 	requires org.hibernate.orm.core;
+	requires org.hibernate.models.accessor;
+	requires org.hibernate.models.accessor.bytebuddy;
 	requires org.hibernate.orm.envers;
 
 	// Transitive dependencies that leak through the Hibernate ORM API

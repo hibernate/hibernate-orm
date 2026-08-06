@@ -31,7 +31,8 @@ import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeDescriptor;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
-import org.hibernate.bytecode.spi.ReflectionOptimizer;
+import org.hibernate.models.accessor.HibernateAccessorMultiValueReader;
+import org.hibernate.models.accessor.HibernateAccessorMultiValueWriter;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.cache.spi.entry.CacheEntry;
@@ -162,9 +163,8 @@ import org.hibernate.action.queue.internal.decompose.entity.UpdateDecomposer;
 import org.hibernate.persister.filter.internal.FilterHelper;
 import org.hibernate.persister.internal.SqlFragmentPredicate;
 import org.hibernate.persister.state.spi.StateManagement;
-import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.PropertyAccess;
-import org.hibernate.property.access.spi.Setter;
+import org.hibernate.property.access.spi.PropertyValueAccessor;
 import org.hibernate.query.PathException;
 import org.hibernate.query.named.spi.NamedQueryMemento;
 import org.hibernate.query.spi.QueryOptions;
@@ -447,12 +447,12 @@ public abstract class AbstractEntityPersister
 	protected AttributeMappingsMap declaredGenericAttributeMappings = AttributeMappingsMap.builder().build();
 	protected AttributeMappingsList staticFetchableList;
 	// We build a cache for getters and setters to avoid megamorphic calls
-	private Getter[] getterCache;
-	private Setter[] setterCache;
+	private PropertyValueAccessor[] accessorCache;
 
 	private final String queryLoaderName;
 
-	protected ReflectionOptimizer.AccessOptimizer accessOptimizer;
+	protected HibernateAccessorMultiValueReader multiValueReader;
+	protected HibernateAccessorMultiValueWriter multiValueWriter;
 
 	protected final String[] fullDiscriminatorSQLValues;
 	private final DiscriminatorValue[] fullDiscriminatorValues;
@@ -532,7 +532,8 @@ public abstract class AbstractEntityPersister
 						.resolveStrategy( persistentClass, this, creationContext );
 		javaType = representationStrategy.getLoadJavaType();
 		assert javaType != null;
-		accessOptimizer = accessOptimizer( representationStrategy );
+		multiValueReader = representationStrategy.getMultiValueReader();
+		multiValueWriter = representationStrategy.getMultiValueWriter();
 
 		concreteProxy =
 				isPolymorphic()
@@ -4839,8 +4840,8 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public void setPropertyValues(Object object, Object[] values) {
-		if ( accessOptimizer != null ) {
-			accessOptimizer.setPropertyValues( object, values );
+		if ( multiValueWriter != null ) {
+			multiValueWriter.set( object, values );
 		}
 		else {
 			final int size = getAttributeMappings().size();
@@ -4848,13 +4849,13 @@ public abstract class AbstractEntityPersister
 				for ( int i = 0; i < size; i++ ) {
 					final Object value = values[i];
 					if ( value != UNFETCHED_PROPERTY ) {
-						setterCache[i].set( object, value );
+						accessorCache[i].set( object, value );
 					}
 				}
 			}
 			else {
 				for ( int i = 0; i < size; i++ ) {
-					setterCache[i].set( object, values[i] );
+					accessorCache[i].set( object, values[i] );
 				}
 			}
 		}
@@ -4862,13 +4863,13 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public void setPropertyValue(Object object, int i, Object value) {
-		setterCache[i].set( object, value );
+		accessorCache[i].set( object, value );
 	}
 
 	@Override
 	public Object[] getPropertyValues(Object object) {
-		if ( accessOptimizer != null ) {
-			return accessOptimizer.getPropertyValues( object );
+		if ( multiValueReader != null ) {
+			return multiValueReader.get( object );
 		}
 		else {
 			final var enhancementMetadata = getBytecodeEnhancementMetadata();
@@ -4880,7 +4881,7 @@ public abstract class AbstractEntityPersister
 					final var attributeMapping = attributeMappings.get( i );
 					if ( !lazyAttributesMetadata.isLazyAttribute( attributeMapping.getAttributeName() )
 							|| enhancementMetadata.isAttributeLoaded( object, attributeMapping.getAttributeName() ) ) {
-						values[i] = getterCache[i].get( object );
+						values[i] = accessorCache[i].get( object );
 					}
 					else {
 						values[i] = UNFETCHED_PROPERTY;
@@ -4889,7 +4890,7 @@ public abstract class AbstractEntityPersister
 			}
 			else {
 				for ( int i = 0; i < attributeMappings.size(); i++ ) {
-					values[i] = getterCache[i].get( object );
+					values[i] = accessorCache[i].get( object );
 				}
 			}
 
@@ -4899,7 +4900,7 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public Object getPropertyValue(Object object, int i) {
-		return getterCache[i].get( object );
+		return accessorCache[i].get( object );
 	}
 
 	@Override
@@ -4910,7 +4911,7 @@ public abstract class AbstractEntityPersister
 		final Object baseValue;
 		final MappingType baseValueType;
 		if ( attributeMapping != null ) {
-			baseValue = getterCache[ attributeMapping.getStateArrayPosition() ].get( object );
+			baseValue = accessorCache[ attributeMapping.getStateArrayPosition() ].get( object );
 			baseValueType = attributeMapping.getMappedType();
 		}
 		else if ( identifierMapping instanceof NonAggregatedIdentifierMapping nonAggregatedIdentifierMapping ) {
@@ -4968,7 +4969,7 @@ public abstract class AbstractEntityPersister
 	public Object getVersion(Object object) {
 		final var versionMapping = getVersionMapping();
 		return versionMapping == null ? null
-				: versionMapping.getVersionAttribute().getPropertyAccess().getGetter().get( object );
+				: versionMapping.getVersionAttribute().getPropertyAccess().getPropertyValueAccessor().get( object );
 	}
 
 	@Override
@@ -5026,7 +5027,7 @@ public abstract class AbstractEntityPersister
 					versionMapping.getUnsavedStrategy()
 							.getDefaultValue( currentVersion );
 			versionMapping.getVersionAttribute().getPropertyAccess()
-					.getSetter().set( entity, defaultVersion );
+					.getPropertyValueAccessor().set( entity, defaultVersion );
 		}
 	}
 
@@ -5058,13 +5059,13 @@ public abstract class AbstractEntityPersister
 			Map<Object,Object> mergeMap,
 			SharedSessionContractImplementor session)
 				throws HibernateException {
-		if ( shouldGetAllProperties( entity ) && accessOptimizer != null ) {
-			return accessOptimizer.getPropertyValues( entity );
+		if ( shouldGetAllProperties( entity ) && multiValueReader != null ) {
+			return multiValueReader.get( entity );
 		}
 		else {
 			final var result = new Object[attributeMappings.size()];
 			for ( int i = 0; i < attributeMappings.size(); i++ ) {
-				result[i] = getterCache[i].getForInsert( entity, mergeMap, session );
+				result[i] = accessorCache[i].getForInsert( entity, mergeMap, session );
 			}
 			return result;
 		}
@@ -5391,10 +5392,6 @@ public abstract class AbstractEntityPersister
 		);
 	}
 
-	private static ReflectionOptimizer.AccessOptimizer accessOptimizer(EntityRepresentationStrategy strategy) {
-		final var reflectionOptimizer = strategy.getReflectionOptimizer();
-		return reflectionOptimizer == null ? null : reflectionOptimizer.getAccessOptimizer();
-	}
 
 	private void prepareMappings(MappingModelCreationProcess creationProcess) {
 		final var persistentClass =
@@ -6420,15 +6417,11 @@ public abstract class AbstractEntityPersister
 		attributeMappings = builder.build();
 
 		final int size = attributeMappings.size();
-		final var getters = new Getter[size];
-		final var setters = new Setter[size];
+		accessorCache = new PropertyValueAccessor[size];
 		for ( int i = 0; i < size; i++ ) {
 			final var propertyAccess = attributeMappings.get( i ).getAttributeMetadata().getPropertyAccess();
-			getters[i] = propertyAccess.getGetter();
-			setters[i] = propertyAccess.getSetter();
+			accessorCache[i] = propertyAccess.getPropertyValueAccessor();
 		}
-		getterCache = getters;
-		setterCache = setters;
 		// subclasses?  it depends on the usage
 	}
 

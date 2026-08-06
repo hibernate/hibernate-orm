@@ -14,11 +14,11 @@ public interface PropertyAccessStrategy {
 	/**
 	 * Build a {@link PropertyAccess} for the indicated property
 	 *
+	 * @param propertyAccessorService The property accessor service
 	 * @param containerJavaType The Java type that contains the property; may be {@code null} for non-pojo cases.
 	 * @param propertyName The property name
 	 * @param setterRequired Whether it is an error if we are unable to find a corresponding setter
-	 *
 	 * @return The appropriate PropertyAccess
 	 */
-	PropertyAccess buildPropertyAccess(Class<?> containerJavaType, String propertyName, boolean setterRequired);
+	PropertyAccess buildPropertyAccess(PropertyAccessorService propertyAccessorService, Class<?> containerJavaType, String propertyName, boolean setterRequired);
 }

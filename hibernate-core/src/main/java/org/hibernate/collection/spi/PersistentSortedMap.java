@@ -4,6 +4,7 @@
  */
 package org.hibernate.collection.spi;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Comparator;
@@ -30,6 +31,8 @@ import org.hibernate.persister.collection.BasicCollectionPersister;
 @Incubating
 public class PersistentSortedMap<K,E> extends PersistentMap<K,E> implements SortedMap<K,E> {
 	protected Comparator<? super K> comparator;
+	@Serial
+	private static final long serialVersionUID = 1L;
 
 	/**
 	 * Constructs a PersistentSortedMap.  This form needed for SOAP libraries, etc

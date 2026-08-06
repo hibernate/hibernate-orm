@@ -144,7 +144,7 @@ def stageIncubationReportTask = tasks.register( "stageIncubationReport", Copy ) 
     dependsOn ':documentation:generateIncubationReport'
     tasks.stageOrmReports.dependsOn task
 
-    from project( ":documentation" ).tasks.generateIncubationReport
+    from project( ":documentation" ).layout.buildDirectory.file( "orm/reports/incubating.txt" )
     into rootProject.layout.buildDirectory.dir("staging-deploy/documentation/incubating")
 }
 
@@ -154,18 +154,28 @@ def stageInternalsReportTask = tasks.register( "stageInternalsReport", Copy ) { 
 
     dependsOn ':documentation:generateInternalsReport'
 
-    from project( ":documentation" ).tasks.generateInternalsReport
+    from project( ":documentation" ).layout.buildDirectory.file( "orm/reports/internal.txt" )
     into rootProject.layout.buildDirectory.dir("staging-deploy/documentation/internals")
 }
 
 def stageDeprecationReportTask = tasks.register( "stageDeprecationReport", Copy ) {
     group = 'documentation'
-    description = "Stages the @Deprecated/@Remove report as part of assembling documentation in preparation for release"
+    description = "Stages the @Deprecated report as part of assembling documentation in preparation for release"
 
     dependsOn ':documentation:generateDeprecationReport'
 
-    from project( ":documentation" ).tasks.generateDeprecationReport
+    from project( ":documentation" ).layout.buildDirectory.file( "orm/reports/deprecated.txt" )
     into rootProject.layout.buildDirectory.dir("staging-deploy/documentation/deprecated")
+}
+
+def stageRemovalReportTask = tasks.register( "stageRemovalReport", Copy ) {
+    group = 'documentation'
+    description = "Stages the @Remove report as part of assembling documentation in preparation for release"
+
+    dependsOn ':documentation:generateRemovalReport'
+
+    from project( ":documentation" ).layout.buildDirectory.file( "orm/reports/removal.txt" )
+    into rootProject.layout.buildDirectory.dir("staging-deploy/documentation/removal")
 }
 
 def stageLoggingReportTask = tasks.register( "stageLoggingReport", Copy ) { task ->
@@ -186,6 +196,7 @@ def stageOrmReportsTask = tasks.register( "stageOrmReports" ) {
     dependsOn stageIncubationReportTask
     dependsOn stageInternalsReportTask
     dependsOn stageDeprecationReportTask
+    dependsOn stageRemovalReportTask
     dependsOn stageLoggingReportTask
 }
 

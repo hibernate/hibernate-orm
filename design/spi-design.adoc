@@ -45,8 +45,9 @@ value represented by the annotated element available to Hibernate.
 
 The annotation is accompanied by:
 
-* an SPI report generated from bytecode metadata;
-* validation of the transitive support boundary;
+* a published classification index generated from bytecode metadata;
+* focused API, SPI, internal, and lifecycle report projections;
+* validation of category and transitive support boundaries;
 * role-sensitive compatibility checking;
 * checks preventing reference providers from importing Hibernate internals;
 * documentation generated from the declared intent.
@@ -91,7 +92,8 @@ The goals are:
 * distinguish use, implementation/subclassing, and supply to Hibernate;
 * ensure supported extension contracts are transitively free of internal
   types;
-* generate an inventory of supported extension points;
+* generate a reusable inventory of API, SPI, internal, and lifecycle
+  classifications;
 * apply role-sensitive compatibility rules;
 * validate reference providers as external consumers;
 * keep annotations sparse and derive mechanically knowable surface area;
@@ -104,7 +106,8 @@ The goals are:
 This design does not:
 
 * make every public Hibernate type an SPI;
-* replace the general rule that non-internal public API is supported;
+* redefine ordinary API classification outside explicitly SPI or internal
+  scopes;
 * promise that every SPI is permanently stable;
 * replace `@Incubating`, `@Internal`, `@Deprecated`, or `@Remove`;
 * require all SPI contracts to live in packages named `spi`;
@@ -130,10 +133,16 @@ Internal::
 A Hibernate implementation detail for which no external compatibility promise
 is made.
 
-A type may be both API and SPI.  For example, a capability value may be
-observable by application code and also be used by a Dialect implementation.
-`@SPI` is additive metadata; it does not remove ordinary API status and does
-not grant API status.
+API, SPI, and internal are mutually exclusive categories for a valid
+Hibernate-owned declaration.  A resolved declaration has one supported
+audience and one corresponding compatibility policy.  Classification follows
+specificity: a declaration annotation overrides an enclosing-type annotation,
+which overrides an explicit package annotation, which overrides a package-name
+convention.  Contradictory evidence at the controlling specificity leaves the
+declaration unresolved and is a build-validation error rather than a combined
+category.  Weaker origins remain available as explanatory metadata.  An
+unresolved declaration has no effective category; conflict and unclassified
+states are migration and diagnostic states, not additional categories.
 
 API and SPI identify different supported audiences:
 
@@ -146,8 +155,9 @@ cache provider, service integrator, or bytecode provider.
 
 An SPI compatibility promise is made to SPI-provider code only.  In
 particular, `@SPI(USE)` means provider use; it does not promise that application
-code may use the element as ordinary Hibernate API.  A dual-audience type must
-carry both its ordinary API status and its SPI classification.
+code may use the element as ordinary Hibernate API.  An API declaration used
+by an SPI signature remains API; the reference does not add SPI classification
+or create a second audience.
 
 This is a support and compatibility distinction, not Java access control.
 Application code may be technically able to reference a public SPI type, but
@@ -219,18 +229,25 @@ Declared SPI::
 An element directly or effectively annotated `@SPI`.
 
 Conventionally classified SPI::
-An externally accessible element in an exact package whose name ends in
-`.spi`.  Such an element has implicit `USE`.  The convention does not propagate
-to subpackages such as `.spi.internal`.
-
-Signature-derived supported surface::
-A supported collaborator with no independent SPI classification which provider
-code must reference because it appears in the supported signature of a declared
-or conventionally classified SPI root.
+An externally accessible element in a package whose name contains an exact
+`spi` component.  Such an element has implicit `USE`; the convention covers
+both the package ending in `.spi` and every subpackage beneath it, equivalent
+to the package patterns `**.spi` and `**.spi.**`.
 
 Ordinary supported API::
-Public API which a provider may use but which is not provider-specific and does
-not need SPI classification merely because a provider happens to call it.
+Public API which application and provider code may use but which is not
+provider-specific and does not receive SPI classification merely because an
+SPI signature references it.
+
+Internal implementation::
+A declaration unsupported for external use.  API and SPI signatures must not
+require it.
+
+Signature dependency::
+A direct, typed reference from one supported declaration to another through a
+return type, parameter, supertype, generic bound, checked exception, field, or
+other supported-signature position.  A dependency is evidence for boundary
+validation; it never assigns the target's category.
 
 This keeps declarations sparse:
 
@@ -240,33 +257,33 @@ This keeps declarations sparse:
   class classification and do not need repetitive member annotations;
 * `SUPPLY` is placed on the contract or registration/return point through
   which provider behavior becomes available to Hibernate;
-* coherent exact `.spi` packages require no annotation for baseline `USE`;
-* supported signature collaborators are discovered by tooling rather than
-  annotated individually;
+* coherent `.spi` package trees require no annotation for baseline `USE`;
+* direct signature dependencies are discovered by tooling rather than
+  maintained as annotations or precomputed root-to-element paths;
 * internal implementations are never promoted merely to complete the graph.
 
 This approach reduces both annotation volume and staleness.  Signature changes
-automatically recompute the derived surface, while human-maintained annotations
-remain concentrated on the comparatively small set of intentional roots and
-override hooks.
+automatically recompute dependency edges and boundary validation, while
+human-maintained annotations remain concentrated on the comparatively small
+set of intentional roots and override hooks.
 
 A stale SPI declaration is an accidental compatibility promise and may be
 worse than missing descriptive metadata.  Tooling can detect contradictions
 such as a final `IMPLEMENT` class, a missing supply lifecycle, an internal
 signature dependency, or an incompatible baseline change.  It cannot prove
 that an otherwise coherent extension promise is still intended.  Consequently,
-the design relies on sparse declarations, generated closure, report diffs, and
+the design relies on sparse declarations, generated dependency validation, and
 normal compatibility review instead of attempting exhaustive annotation.
 
-=== Orthogonal lifecycle annotations
+=== Category and orthogonal lifecycle annotations
 
 `@SPI` answers _how is external provider code intended to interact with this
 element?_
 
-Other annotations answer different questions:
+`@Internal` is category evidence: it identifies the declaration as internal
+rather than API or SPI.
 
-`@Internal`::
-Is external use unsupported?
+Lifecycle annotations answer different questions:
 
 `@Incubating`::
 Is the contract still being actively designed?
@@ -275,9 +292,8 @@ Is the contract still being actively designed?
 Is the contract approaching the end of its lifecycle?
 
 It is coherent for a contract to be both `@SPI(SPI.Role.IMPLEMENT)` and
-`@Incubating`.
-It is not coherent for the same effective element to be both `@SPI` and
-`@Internal`.
+`@Incubating`.  It is not coherent for the same effective element to have more
+than one of the API, SPI, and internal categories.
 
 == Annotation design
 
@@ -330,118 +346,128 @@ This allows Hibernate to document and validate:
 
 == Tooling design
 
-=== Generated SPI report
+=== Canonical classification metadata
 
-The existing report-generation infrastructure already generates reports for
-internal and incubating elements using Jandex.
+The existing report-generation infrastructure independently scans Jandex for
+internal, incubating, and deprecated declarations.  A single canonical
+classification model should replace those parallel interpretations.
 
-The SPI report should be generated from a canonical element graph, not by
-concatenating independently discovered lists.  Each element has one canonical
-record containing:
+Every Hibernate-owned declaration represented by the model has a
+classification status.  A resolved record has exactly one effective category:
+API, SPI, or internal.  A conflicting or unclassified record retains no
+effective category while preserving the evidence needed for diagnostics.  Its
+canonical record also contains:
 
-* its effective role set;
-* whether it is directly annotated, classified by an explicit package or
-  enclosing declaration, or classified by the exact `.spi` package convention;
-* the SPI roots and signature paths through which it is reachable;
-* lifecycle metadata such as incubation, deprecation, and removal;
-* conceptual system memberships, if that model is later adopted.
+* stable declaration identity, kind, owner, and signature;
+* all classification origins, including weaker origins overridden during
+  category resolution;
+* its effective SPI role set when the category is SPI;
+* orthogonal lifecycle metadata such as incubation, deprecation, and removal;
+* its contributing artifact or module;
+* direct, typed supported-signature dependency edges.
 
-An independently classified SPI element must never also be listed as
-"signature-derived" merely because another SPI signature references it.
-Independent classification wins for presentation, while the dependency edge
-is retained for diagnostics.  For example, `SessionFactoryImplementor` is
-already classified by its `org.hibernate.engine.spi` package.  A translator
-signature which references it adds a reachability path to its canonical record;
-it does not create a second implied-surface entry.
+The build should generate this model as deterministic, schema-versioned
+`classifications.json` and publish its deterministic gzip encoding as
+`classifications.json.gz`.  Compression is an encoding of the same JSON
+contract, not a second classification format.  Generation must preserve
+unresolved records so validation and migration tooling consume the same model
+as reports.  The document should identify both the `x.y` Hibernate
+compatibility level and the exact source build.  It is a supported tooling
+contract for build tools and potential IDE integrations, not merely an
+intermediate serialization of the human SPI report.
 
-Only a collaborator with no independent SPI classification may appear in the
-signature-derived supported-surface section.  Ordinary public API may be
-identified as an API dependency without being relabeled SPI.
+A separate `spi.json` would duplicate part of the same contract and create a
+second machine-readable schema to evolve.  The initial design therefore
+publishes only `classifications.json.gz`; SPI-focused consumers select resolved
+records whose category is SPI after decoding the same JSON contract.
 
-NOTE: The system-oriented organization described in this section is still
-conceptual.  It records the preferred direction for making a large SPI report
-navigable, but does not yet select a registry format, membership algorithm, or
-validation policy.
+The JSON should store direct dependency edges rather than every root-to-element
+path.  Validation can compute a shortest useful path when explaining a
+failure, while IDE tooling can navigate or query the graph without paying the
+combinatorial cost of materialized paths.
 
-The report should be organized first by provider-facing system and then by SPI
-role.  Useful top-level systems include Dialect, Caching, Bootstrap and
-Services, Query, Schema Management, Types, Events, and Bytecode Enhancement.
+Classification origin is useful machine-readable evidence.  It lets tooling
+explain whether a declaration is API by ordinary convention, SPI by `@SPI` or
+a `.spi` package tree, or internal by annotation or package.  It does not
+need to be repeated in normal human reports.
 
-System membership is organizational metadata, while `USE`, `IMPLEMENT`, and
-`SUPPLY` are compatibility semantics.  For that reason, a free-form
-`group` or `system` attribute should not be added to every `@SPI` declaration.
-Doing so would:
+=== Human report projections
 
-* repeat the same value on many declarations;
-* introduce spelling and naming drift;
-* couple the core annotation to a changing documentation taxonomy;
-* make shared contracts choose one system even when they participate in
-  several;
-* turn report organization into part of the annotation's compatibility
-  meaning.
+The internal, incubating, deprecated, removal, and SPI reports should be
+deterministic projections of the same canonical classification model.  This
+ensures that package, enclosing-declaration, and lifecycle inheritance have one
+meaning across all reports.
 
-If this concept is adopted, report grouping should be described by a separate,
-checked-in system registry owned by the reporting tool.  Each system descriptor
-could define:
+In the final task architecture, `classifications.json` should be the declared
+input to one multi-output `generateClassificationReports` task.  That task
+should parse the canonical document once and render the internal, incubating,
+deprecated, removal, and SPI projections together.  Existing report-specific
+task names may remain as lifecycle aliases, but should not independently read
+or interpret the document.  This makes the published tooling contract the
+actual integration boundary between classification and presentation without
+paying the cost of reconstructing the complete model once per small projection.
 
-* a stable identifier and display name;
-* one or more root SPI elements;
-* optional explicit element or package inclusions;
-* optional exclusions.
+Other tasks which need the complete parsed model, notably classification and
+SPI validation, should share a lazy, project-scoped parsed-model extension.
+Each consumer still declares `classifications.json` as its task input and
+depends on metadata generation; the extension is only an in-memory optimization
+within one build execution and is not another persisted classification
+contract.  Migration may be staged: the classification metadata and SPI
+projection can be introduced first, followed by conversion and consolidation
+of the existing internal and lifecycle reports as a dedicated finalization
+increment.  The staged transition is an implementation concern; the completed
+facility has one classifier and no independently scanned or independently
+parsed human report.
 
-The tool could follow supported-signature relationships from each root to
-group its SPI collaborators.  Explicit inclusions handle useful helpers which
-are not signature-reachable.  An element may belong to more than one system.
+The checked-in compatibility baseline should use the deterministic gzip
+encoding.  Compatibility tooling should produce a focused semantic diff for
+review rather than relying on a textual diff of the compressed snapshot.
 
-The registry might be represented by build configuration or a small
-machine-readable descriptor.  If subsystem metadata later becomes useful
-outside report generation, it should receive a separate annotation rather than
-be added to `@SPI`.
+The provider-facing `spi.txt` report should answer what providers may use,
+implement, and supply.  It should not serialize classifier internals.  In
+particular, it should omit:
 
-A new `generateSpiReport` task should produce:
+* classification origin details;
+* root-to-element reachability paths;
+* a repeated SPI category label inside an SPI-only report;
+* application API status;
+* empty replacement metadata;
+* unknown source metadata;
+* repeated default lifecycle values.
 
-`build/orm/reports/spi.txt`
+The report should organize classification intent hierarchically.  Each package
+heading and effective SPI type should be listed once.  A member should be
+listed separately when it has a direct classification or an effective role set
+different from its enclosing declaration.  The full effective member surface
+remains available in `classifications.json`, Javadoc, and the compatibility
+model.
 
-The report should have this shape:
+The role buckets remain `USE`, `IMPLEMENT`, `SUPPLY`, `USE + IMPLEMENT`,
+`USE + SUPPLY`, `IMPLEMENT + SUPPLY`, and
+`USE + IMPLEMENT + SUPPLY`.  An SPI element appears in the one bucket matching
+its complete effective role set.
 
-[source]
-----
-[Dialect]
+Whether exceptional lifecycle states such as incubation and deprecation
+should appear as compact markers in `spi.txt` remains an open presentation
+question.  The canonical JSON and dedicated lifecycle reports always retain
+that information.
 
-  [USE]
-  org.hibernate.dialect.DatabaseVersion
-  org.hibernate.sql.ast.spi.SqlAstTranslationRequest
+=== Conceptual SPI systems
 
-  [IMPLEMENT]
-  org.hibernate.sql.ast.spi.AbstractSqlAstTranslator
-  org.hibernate.sql.ast.SqlAstTranslatorFactory
+The system-oriented organization remains conceptual.  Useful systems might
+include Dialect, Caching, Bootstrap and Services, Query, Schema Management,
+Types, Events, and Bytecode Enhancement.  System membership is organizational
+metadata, while SPI roles are compatibility semantics, so a free-form `group`
+or `system` attribute should not be added to `@SPI`.
 
-  [USE + IMPLEMENT + SUPPLY]
-  org.hibernate.dialect.Dialect
+If adopted, grouping should use a separate checked-in registry with stable
+identifiers, display names, roots, inclusions, and exclusions.  Membership may
+be many-to-many and may use direct classification-graph edges without changing
+an element's category.  The precise taxonomy, registry representation,
+membership algorithm, and enforcement policy remain outside the current
+design.
 
-  [IMPLEMENT + SUPPLY]
-  org.hibernate.dialect.Dialect#getSqlAstTranslatorFactory()
-
-[Caching]
-
-  [USE]
-  ...
-
-[Unclassified]
-  ...
-----
-
-Within one system, an element should appear in exactly one bucket representing
-its complete role set.  The possible buckets are `USE`, `IMPLEMENT`, `SUPPLY`,
-`USE + IMPLEMENT`, `USE + SUPPLY`, `IMPLEMENT + SUPPLY`, and
-`USE + IMPLEMENT + SUPPLY`.  This avoids duplicating a multi-role element in
-each individual role section.  An element shared by multiple conceptual
-systems may appear in each applicable system, but those presentations should
-point to one canonical machine-readable record.
-`Unclassified` makes omissions in the system registry visible.
-
-The report should be included in the aggregate lifecycle-report task alongside
-internal, incubating, deprecated, and removal reports.
+The generated reports should be included in the aggregate report lifecycle.
 
 === Build validation
 
@@ -450,9 +476,15 @@ source import scanning.
 
 The validator should reject:
 
-* an element which is both effectively internal and SPI;
-* an SPI element declared in an internal package;
-* a public or protected SPI signature referring to an internal type;
+* a declaration with contradictory category evidence at the controlling
+  specificity;
+* a public or protected API or SPI signature referring to an internal type;
+* an API signature referring to an SPI type;
+* an API declaration whose only supported exposure is through SPI or internal
+  declarations;
+* an SPI declaration whose only supported exposure is through internal
+  declarations;
+* an externally accessible Hibernate declaration with no effective category;
 * an `IMPLEMENT` class which cannot be subclassed;
 * an `IMPLEMENT` method which cannot be overridden;
 * role and declaration-target combinations which have no defined meaning;
@@ -469,8 +501,15 @@ Signature validation should cover:
 * abstract and intended override methods;
 * implemented interfaces and superclass types.
 
-The validator should report the complete path from the SPI element to the
-internal dependency where practical.
+The category dependency policy is intentionally layered:
+
+* API signatures may depend on API;
+* SPI signatures may depend on API or SPI;
+* internal signatures may depend on API, SPI, or internal.
+
+JDK, Jakarta, and third-party declarations are external dependencies rather
+than a fourth Hibernate-owned category.  The validator should report the
+shortest useful direct-edge path to a boundary violation.
 
 === Candidate structural-analysis engine: jQAssistant
 
@@ -479,9 +518,10 @@ SPI validation.  Its Java bytecode scanner, project-specific concepts, Cypher
 constraints, build-failure severities, reports, and baseline support align well
 with:
 
-* classifying API, SPI-role, package-convention, and internal nodes;
+* classifying mutually exclusive API, SPI-role, package-convention, and
+  internal nodes;
 * deriving override and supported-signature relationships;
-* finding transitive paths from SPI roots to internal types;
+* finding API-to-SPI and external-to-internal boundary violations;
 * enforcing provider-module boundaries;
 * validating role and Java-modifier combinations;
 * organizing Dialect and other system views through graph reachability.
@@ -504,8 +544,8 @@ particular:
   by a dedicated compatibility engine consuming the generated SPI baseline;
 * required Javadoc content needs source or documentation-model analysis not
   available from ordinary class-file scanning;
-* the canonical text and machine-readable SPI reports may require a dedicated
-  exporter over the analyzed model;
+* the canonical classification JSON and focused human reports may require a
+  dedicated exporter over the analyzed model;
 * Hibernate's Gradle build needs a maintained integration, potentially through
   the jQAssistant command line or an in-repository Gradle adapter;
 * migration exceptions require Hibernate metadata such as owner, issue,
@@ -547,22 +587,23 @@ breaking change unless an adequate default implementation is supplied.
 === Source-level consumer checks
 
 Bytecode validation protects Hibernate's declared surface.  Separate
-source-level checks should ensure designated reference-provider modules consume
-only supported API and SPI.  Such checks may initially use explicit, shrinking
-allowlists; the terminal goal is an empty allowlist.
+source-level checks should ensure application modules consume only API and
+designated reference-provider modules consume only API and SPI.  Such checks
+may initially use explicit, shrinking allowlists; the terminal goal is an
+empty allowlist.
 
 === Documentation
 
-Javadoc and reference documentation should use the generated SPI inventory to
-show:
+Javadoc and reference documentation should use the generated classification
+metadata and SPI projection to show:
 
-* that the documented contract is for SPI-provider code and does not by itself
-  grant application API status;
+* the declaration's one supported category when resolved;
 * the role of each extension contract;
 * whether it is incubating;
 * lifecycle and ownership for provider-supplied instances;
 * supported constructors and override points;
-* replacement contracts for deprecated SPI elements.
+* replacement contracts for deprecated SPI elements when such information has
+  a concrete documentation source.
 
 == Testing strategy
 
@@ -572,10 +613,13 @@ The annotation and tooling require tests for:
 
 * retention and supported declaration targets;
 * multiple roles;
-* report grouping and deterministic ordering;
-* canonical deduplication of independent and signature-derived
-  classifications;
-* retention of all signature-reachability paths on the canonical record;
+* mutually exclusive API, SPI, and internal categorization;
+* serialization and diagnostics for conflicting and unclassified records;
+* classification-origin and lifecycle inheritance;
+* deterministic classification JSON and report projections;
+* direct typed dependency edges without materialized root-to-element paths;
+* API-to-SPI, API-to-internal, and SPI-to-internal boundary violations;
+* invalid API and SPI reachability from the wrong category;
 * effective package annotations;
 * every validation failure;
 * interaction with `@Internal`, `@Incubating`, and deprecation;
@@ -589,7 +633,9 @@ Validator tests should use small positive and negative bytecode fixtures.
 
 === Compatibility tests
 
-The generated SPI inventory should be baselined between releases.
+The SPI projection of the canonical classification model should be baselined
+between releases.  A compatibility baseline must be fully resolved; conflict
+and unclassified migration states are diagnostics, not compatibility promises.
 
 Compatibility checks should detect:
 
@@ -598,22 +644,25 @@ Compatibility checks should detect:
 * added abstract methods or removed defaults on `IMPLEMENT` interfaces;
 * changed subclass constructors;
 * removed or finalized protected override points;
-* new internal dependencies in SPI signatures.
+* new forbidden category dependencies in API or SPI signatures.
 
 == Migration strategy
 
-. Introduce `@SPI`, its independent roles, the exact `.spi` package convention,
-  report generation, and validation in reporting mode.
-. Generate an initial inventory from independent classifications and derived
-  signature closure, and establish an explicit allowlist for existing
-  violations.
-. Annotate each provider role not already supplied by the exact `.spi` package
-  convention, concentrating declarations at extension roots.
-. Repair signatures which expose internal types.
+. Introduce `@SPI`, its independent roles, the `.spi` package-tree convention,
+  unified classification generation, and validation in reporting mode.
+. Generate an initial API, SPI, and internal classification inventory with
+  direct signature dependencies.  Keep validation as explicit diagnostic tasks
+  rather than integrating it into the normal build lifecycle while the
+  repository-wide violation inventory remains large.
+. Reorganize the Dialect, AST, translator, and related provider-facing surfaces,
+  annotate each provider role not already supplied by the `.spi` package-tree
+  convention, and repair signatures which expose internal types.
+. Reassess the remaining inventory after that migration.  Establish a reviewed
+  exception allowlist only if lifecycle integration is still useful before the
+  inventory reaches zero.
 . Add reference-provider source checks and reduce their allowlists.
 . Baseline the role-sensitive SPI surface and make validation mandatory.
-. Publish the generated SPI reference with lifecycle and replacement
-  documentation.
+. Publish the classification JSON and focused human report projections.
 
 == Alternatives considered
 
@@ -641,8 +690,12 @@ should remain orthogonal to `@SPI`.
 
 The general SPI design is successful when:
 
-* a generated report identifies Hibernate's provider-facing surface by role;
-* no effective SPI signature references an internal type;
+* every Hibernate-owned declaration has one effective API, SPI, or internal
+  category;
+* a published classification JSON supports build and IDE tooling;
+* a concise generated report identifies Hibernate's provider-facing surface by
+  role;
+* API and SPI signatures obey the category dependency policy;
 * compatibility tooling applies the appropriate checks for each role;
 * designated reference providers depend only on supported contracts;
 * extension authors can determine what they may use, implement, supply, and

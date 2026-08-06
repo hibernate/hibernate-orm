@@ -6,7 +6,8 @@ package org.hibernate.orm.post.fixture.validation.internal;
 
 import org.hibernate.SPI;
 
-/// Negative fixture for an SPI declaration in an internal package.
+/// Proves that a direct SPI annotation overrides the internal package
+/// convention.
 ///
 /// @author Steve Ebersole
 @SPI

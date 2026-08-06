@@ -1,159 +1,51 @@
-= Hibernate ORM Service Provider Interface Report
-:toc: left
+= Hibernate ORM Service Provider Interface
 
-This report describes contracts supported for external Hibernate SPI providers. SPI classification does not, by itself, make a contract application-user API.
+Compatibility version: `9.0`
 
-== Independently classified provider SPI
+Source version: `9.0.0-test`
 
-=== USE
+Audience: external Hibernate SPI providers. Provider `USE` does not make a declaration application-user API.
 
-==== `type:fixture.Use`
+== USE
 
-* Declaration kind: `TYPE`
-* Declaring package: `fixture`
-* Signature: `fixture.Use`
-* Classification: `INDEPENDENT`
-* Application API status: `API`
-* Declared roles: `USE`
-* Effective roles: `USE`
-* Lifecycle: internal=`false`, incubating=`true`, deprecated=`false`
-* Replacement: none specified
-* Source: `hibernate-core`
-* Classification origins:
-** `DIRECT` from `type:fixture.Use` with roles `USE`
-* Supported-signature reachability:
-** `type:fixture.Use`
-** `type:fixture.UseSupply -> type:fixture.Use`
+=== `fixture`
 
-=== IMPLEMENT
+* `Use`
+* `Use#direct()`
 
-==== `type:fixture.Implement`
+== IMPLEMENT
 
-* Declaration kind: `TYPE`
-* Declaring package: `fixture`
-* Signature: `fixture.Implement`
-* Classification: `INDEPENDENT`
-* Application API status: `NON_API`
-* Declared roles: _None._
-* Effective roles: `IMPLEMENT`
-* Lifecycle: internal=`false`, incubating=`false`, deprecated=`false`
-* Replacement: none specified
-* Source: `hibernate-core`
-* Classification origins:
-** `PACKAGE` from `package:fixture` with roles `IMPLEMENT`
-* Supported-signature reachability:
-** _None._
+=== `fixture`
 
-=== SUPPLY
+* `Implement`
 
-==== `type:fixture.Supply`
+== SUPPLY
 
-* Declaration kind: `TYPE`
-* Declaring package: `fixture`
-* Signature: `fixture.Supply`
-* Classification: `INDEPENDENT`
-* Application API status: `UNKNOWN`
-* Declared roles: _None._
-* Effective roles: `SUPPLY`
-* Lifecycle: internal=`false`, incubating=`false`, deprecated=`true`
-* Replacement: none specified
-* Source: `hibernate-core`
-* Classification origins:
-** `ENCLOSING_TYPE` from `type:fixture.Container` with roles `SUPPLY`
-* Supported-signature reachability:
-** _None._
+=== `fixture`
 
-=== USE + IMPLEMENT
+* `Supply`
 
-==== `type:fixture.UseImplement`
+== USE + IMPLEMENT
 
-* Declaration kind: `TYPE`
-* Declaring package: `fixture`
-* Signature: `fixture.UseImplement`
-* Classification: `INDEPENDENT`
-* Application API status: `NON_API`
-* Declared roles: _None._
-* Effective roles: `USE` + `IMPLEMENT`
-* Lifecycle: internal=`false`, incubating=`false`, deprecated=`false`
-* Replacement: none specified
-* Source: `hibernate-core`
-* Classification origins:
-** `EXACT_SPI_PACKAGE` from `package:fixture.spi` with roles `USE` + `IMPLEMENT`
-* Supported-signature reachability:
-** _None._
+=== `fixture`
 
-=== USE + SUPPLY
+* `UseImplement`
 
-==== `type:fixture.UseSupply`
+== USE + SUPPLY
 
-* Declaration kind: `TYPE`
-* Declaring package: `fixture`
-* Signature: `fixture.UseSupply`
-* Classification: `INDEPENDENT`
-* Application API status: `NON_API`
-* Declared roles: `USE` + `SUPPLY`
-* Effective roles: `USE` + `SUPPLY`
-* Lifecycle: internal=`false`, incubating=`false`, deprecated=`false`
-* Replacement: none specified
-* Source: `hibernate-core`
-* Classification origins:
-** `DIRECT` from `type:fixture.UseSupply` with roles `USE` + `SUPPLY`
-* Supported-signature reachability:
-** _None._
+=== `fixture`
 
-=== IMPLEMENT + SUPPLY
+* `UseSupply`
+* `Use#exception()`
 
-==== `type:fixture.ImplementSupply`
+== IMPLEMENT + SUPPLY
 
-* Declaration kind: `TYPE`
-* Declaring package: `fixture`
-* Signature: `fixture.ImplementSupply`
-* Classification: `INDEPENDENT`
-* Application API status: `NON_API`
-* Declared roles: `IMPLEMENT` + `SUPPLY`
-* Effective roles: `IMPLEMENT` + `SUPPLY`
-* Lifecycle: internal=`false`, incubating=`false`, deprecated=`false`
-* Replacement: none specified
-* Source: `hibernate-core`
-* Classification origins:
-** `DIRECT` from `type:fixture.ImplementSupply` with roles `IMPLEMENT` + `SUPPLY`
-* Supported-signature reachability:
-** _None._
+=== `fixture`
 
-=== USE + IMPLEMENT + SUPPLY
+* `ImplementSupply`
 
-==== `type:fixture.AllRoles`
+== USE + IMPLEMENT + SUPPLY
 
-* Declaration kind: `TYPE`
-* Declaring package: `fixture`
-* Signature: `fixture.AllRoles`
-* Classification: `INDEPENDENT`
-* Application API status: `NON_API`
-* Declared roles: `USE` + `IMPLEMENT` + `SUPPLY`
-* Effective roles: `USE` + `IMPLEMENT` + `SUPPLY`
-* Lifecycle: internal=`false`, incubating=`false`, deprecated=`false`
-* Replacement: none specified
-* Source: `hibernate-core`
-* Classification origins:
-** `DIRECT` from `type:fixture.AllRoles` with roles `USE` + `IMPLEMENT` + `SUPPLY`
-* Supported-signature reachability:
-** _None._
+=== `fixture`
 
-== Signature-derived supported surface
-
-==== `type:fixture.SignatureCollaborator`
-
-* Declaration kind: `TYPE`
-* Declaring package: `fixture`
-* Signature: `fixture.SignatureCollaborator`
-* Classification: `SIGNATURE_DERIVED`
-* Application API status: `NON_API`
-* Declared roles: _None._
-* Effective roles: _None._
-* Lifecycle: internal=`false`, incubating=`false`, deprecated=`false`
-* Replacement: none specified
-* Source: `hibernate-core`
-* Classification origins:
-** _None; signature-derived._
-* Supported-signature reachability:
-** `type:fixture.Use -> type:fixture.SignatureCollaborator`
+* `AllRoles`

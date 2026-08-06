@@ -4,7 +4,7 @@
  */
 package org.hibernate.orm.post.fixture.spi.child;
 
-/// Proves that the exact-`.spi` convention does not propagate to subpackages.
+/// Proves that the `.spi` convention propagates to subpackages.
 ///
 /// @author Steve Ebersole
 public class NotConventional {

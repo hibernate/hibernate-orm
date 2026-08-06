@@ -4,13 +4,13 @@
  */
 package org.hibernate.orm.post.fixture.packaged;
 
-import org.hibernate.orm.post.SpiJandexClassifierTests.DerivedCollaborator;
+import org.hibernate.orm.post.JandexClassificationClassifierTests.ApiValue;
 
 /// Package-classification fixture.
 ///
 /// @author Steve Ebersole
 public class PackagedContract {
-	protected DerivedCollaborator state() {
+	protected ApiValue state() {
 		return null;
 	}
 }

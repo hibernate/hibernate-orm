@@ -4,13 +4,13 @@
  */
 package org.hibernate.orm.post.fixture.spi;
 
-import org.hibernate.orm.post.SpiJandexClassifierTests.DerivedCollaborator;
+import org.hibernate.orm.post.JandexClassificationClassifierTests.ApiValue;
 
-/// Exact-`.spi` convention fixture.
+/// `.spi` package-tree convention fixture.
 ///
 /// @author Steve Ebersole
 public class ConventionalContract {
-	public DerivedCollaborator state() {
+	public ApiValue state() {
 		return null;
 	}
 }

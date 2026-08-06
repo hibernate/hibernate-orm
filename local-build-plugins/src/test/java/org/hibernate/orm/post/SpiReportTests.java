@@ -7,224 +7,200 @@ package org.hibernate.orm.post;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Collections;
 import java.util.EnumSet;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
-import jakarta.json.bind.Jsonb;
-import jakarta.json.bind.JsonbBuilder;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.testfixtures.ProjectBuilder;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
-import static org.hibernate.orm.post.SpiModel.ApiStatus.API;
-import static org.hibernate.orm.post.SpiModel.ApiStatus.NON_API;
-import static org.hibernate.orm.post.SpiModel.ApiStatus.UNKNOWN;
-import static org.hibernate.orm.post.SpiModel.ElementKind.TYPE;
-import static org.hibernate.orm.post.SpiModel.OriginKind.DIRECT;
-import static org.hibernate.orm.post.SpiModel.OriginKind.ENCLOSING_TYPE;
-import static org.hibernate.orm.post.SpiModel.OriginKind.EXACT_SPI_PACKAGE;
-import static org.hibernate.orm.post.SpiModel.OriginKind.PACKAGE;
-import static org.hibernate.orm.post.SpiModel.Role.IMPLEMENT;
-import static org.hibernate.orm.post.SpiModel.Role.SUPPLY;
-import static org.hibernate.orm.post.SpiModel.Role.USE;
+import static org.hibernate.orm.post.ClassificationModel.Category.API;
+import static org.hibernate.orm.post.ClassificationModel.Category.INTERNAL;
+import static org.hibernate.orm.post.ClassificationModel.Category.SPI;
+import static org.hibernate.orm.post.ClassificationModel.ElementKind.METHOD;
+import static org.hibernate.orm.post.ClassificationModel.ElementKind.TYPE;
+import static org.hibernate.orm.post.ClassificationModel.OriginKind.DIRECT;
+import static org.hibernate.orm.post.ClassificationModel.OriginKind.ENCLOSING_TYPE;
+import static org.hibernate.orm.post.ClassificationModel.OriginKind.ORDINARY_API;
+import static org.hibernate.orm.post.ClassificationModel.Role.IMPLEMENT;
+import static org.hibernate.orm.post.ClassificationModel.Role.SUPPLY;
+import static org.hibernate.orm.post.ClassificationModel.Role.USE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/// Tests the deterministic human-readable and machine-readable SPI reports.
+/// Tests the concise SPI projection of canonical classification metadata.
 ///
 /// @author Steve Ebersole
 public class SpiReportTests {
+	private static final String HIBERNATE_VERSION = "9.0";
+	private static final String SOURCE_VERSION = "9.0.0-test";
+
 	private final SpiReportRenderer renderer = new SpiReportRenderer();
 
 	@Test
-	public void reportsMatchGoldenFiles() throws IOException {
-		final SpiModel model = reportModel();
-		assertEquals( golden( "spi-report.adoc" ), renderer.renderAsciiDoc( model ) );
-		assertEquals( golden( "spi-report.json" ), renderer.renderJson( model ) );
-	}
-
-	@Test
-	@SuppressWarnings("unchecked")
-	public void jsonConformsToVersionOneContract() throws Exception {
-		final String report = renderer.renderJson( reportModel() );
-		final Map<String, Object> root;
-		try ( Jsonb jsonb = JsonbBuilder.create() ) {
-			root = jsonb.fromJson( report, Map.class );
-		}
-
-		assertEquals( SpiReportRenderer.JSON_SCHEMA, root.get( "schema" ) );
-		assertEquals( SpiReportRenderer.JSON_SCHEMA_VERSION, ((Number) root.get( "schemaVersion" )).intValue() );
-		assertEquals( "SPI_PROVIDER", root.get( "audience" ) );
-
-		final Map<String, List<Map<String, Object>>> independent =
-				(Map<String, List<Map<String, Object>>>) root.get( "independent" );
-		assertEquals( 7, independent.size() );
-		assertTrue(
-				independent.keySet().containsAll(
-						Arrays.asList(
-								"USE",
-								"IMPLEMENT",
-								"SUPPLY",
-								"USE_IMPLEMENT",
-								"USE_SUPPLY",
-								"IMPLEMENT_SUPPLY",
-								"USE_IMPLEMENT_SUPPLY"
-						)
-				)
-		);
-		for ( List<Map<String, Object>> bucket : independent.values() ) {
-			assertEquals( 1, bucket.size() );
-			assertEquals( "INDEPENDENT", bucket.get( 0 ).get( "classification" ) );
-		}
-		final List<Map<String, Object>> derived = (List<Map<String, Object>>) root.get( "signatureDerived" );
-		assertEquals( 1, derived.size() );
-		assertEquals( "SIGNATURE_DERIVED", derived.get( 0 ).get( "classification" ) );
+	public void reportMatchesGoldenFileAndOmitsClassifierInternals() throws IOException {
+		final String report = renderer.render( reportMetadata() );
+		assertEquals( golden( "spi-report.adoc" ), report );
+		assertFalse( report.contains( "classificationOrigins" ) );
+		assertFalse( report.contains( "reachability" ) );
+		assertFalse( report.contains( "applicationApiStatus" ) );
+		assertFalse( report.contains( "category" ) );
+		assertFalse( report.contains( "Unresolved" ) );
+		assertFalse( report.contains( "InheritedUse" ) );
+		assertFalse( report.contains( "ApiType" ) );
+		assertFalse( report.contains( "Conflicting" ) );
 	}
 
 	@Test
 	public void renderingIsByteForByteDeterministic() {
-		final SpiModel model = reportModel();
-		assertEquals( renderer.renderAsciiDoc( model ), renderer.renderAsciiDoc( model ) );
-		assertEquals( renderer.renderJson( model ), renderer.renderJson( model ) );
+		final ClassificationMetadata metadata = reportMetadata();
+		assertEquals( renderer.render( metadata ), renderer.render( metadata ) );
 	}
 
 	@Test
-	public void aggregateReportTaskIncludesSpiReport() {
-		final Project project = ProjectBuilder.builder().build();
+	public void reportTaskConsumesClassificationMetadata(@TempDir Path projectDirectory) throws Exception {
+		final Project project = ProjectBuilder.builder().withProjectDir( projectDirectory.toFile() ).build();
+		project.getLayout().getBuildDirectory().set( project.file( "target" ) );
 		new ReportGenerationPlugin().apply( project );
 
-		final Task spiReport = project.getTasks().getByName( "generateSpiReport" );
-		assertNotNull( spiReport );
-		assertSame( SpiReportTask.class, spiReport.getClass().getSuperclass() );
-		final Task aggregate = project.getTasks().getByName( "generateReports" );
-		assertTrue( aggregate.getTaskDependencies().getDependencies( aggregate ).contains( spiReport ) );
-	}
-
-	private static SpiModel reportModel() {
-		final SpiModel.Builder builder = SpiModel.builder();
-		classify(
-				builder,
-				"type:fixture.Use",
-				roles( USE ),
-				DIRECT,
-				"type:fixture.Use",
-				API,
-				new SpiModel.Lifecycle( false, true, false )
-		);
-		classify(
-				builder,
-				"type:fixture.Implement",
-				roles( IMPLEMENT ),
-				PACKAGE,
-				"package:fixture",
-				NON_API,
-				new SpiModel.Lifecycle( false, false, false )
-		);
-		classify(
-				builder,
-				"type:fixture.Supply",
-				roles( SUPPLY ),
-				ENCLOSING_TYPE,
-				"type:fixture.Container",
-				UNKNOWN,
-				new SpiModel.Lifecycle( false, false, true )
-		);
-		classify(
-				builder,
-				"type:fixture.UseImplement",
-				roles( USE, IMPLEMENT ),
-				EXACT_SPI_PACKAGE,
-				"package:fixture.spi",
-				NON_API,
-				new SpiModel.Lifecycle( false, false, false )
-		);
-		classify(
-				builder,
-				"type:fixture.UseSupply",
-				roles( USE, SUPPLY ),
-				DIRECT,
-				"type:fixture.UseSupply",
-				NON_API,
-				new SpiModel.Lifecycle( false, false, false )
-		);
-		classify(
-				builder,
-				"type:fixture.ImplementSupply",
-				roles( IMPLEMENT, SUPPLY ),
-				DIRECT,
-				"type:fixture.ImplementSupply",
-				NON_API,
-				new SpiModel.Lifecycle( false, false, false )
-		);
-		classify(
-				builder,
-				"type:fixture.AllRoles",
-				roles( USE, IMPLEMENT, SUPPLY ),
-				DIRECT,
-				"type:fixture.AllRoles",
-				NON_API,
-				new SpiModel.Lifecycle( false, false, false )
-		);
-
-		final String derivedId = "type:fixture.SignatureCollaborator";
-		builder.derived(
-				derivedId,
-				TYPE,
-				"fixture",
-				"fixture.SignatureCollaborator",
-				NON_API,
-				new SpiModel.Lifecycle( false, false, false ),
-				"hibernate-core",
-				Collections.emptySet()
-		);
-		builder.addReachabilityPath(
-				derivedId,
-				new SpiModel.ReachabilityPath( Arrays.asList( "type:fixture.Use", derivedId ) )
-		);
-		builder.addReachabilityPath(
-				"type:fixture.Use",
-				new SpiModel.ReachabilityPath( Collections.singletonList( "type:fixture.Use" ) )
-		);
-		builder.addReachabilityPath(
-				"type:fixture.Use",
-				new SpiModel.ReachabilityPath(
-						Arrays.asList( "type:fixture.UseSupply", "type:fixture.Use" )
+		final Task metadataTask = project.getTasks().getByName( "generateClassificationMetadata" );
+		final ClassificationReportsTask reports = (ClassificationReportsTask) project.getTasks()
+				.getByName( "generateClassificationReports" );
+		final Task spiReportAlias = project.getTasks().getByName( "generateSpiReport" );
+		assertSame( ClassificationReportsTask.class, reports.getClass().getSuperclass() );
+		assertTrue( reports.getTaskDependencies().getDependencies( reports ).contains( metadataTask ) );
+		assertTrue( spiReportAlias.getTaskDependencies().getDependencies( spiReportAlias ).contains( reports ) );
+		assertTrue(
+				reports.getClassificationMetadataFileReference().get().getAsFile().toPath().endsWith(
+						"target/orm/reports/classifications.json"
 				)
 		);
-		return builder.build();
+		assertTrue(
+				reports.getSpiReportFileReference().get().getAsFile().toPath().endsWith(
+						"target/orm/reports/spi.txt"
+				)
+		);
+
+		final Path metadataFile = reports.getClassificationMetadataFileReference().get().getAsFile().toPath();
+		Files.createDirectories( metadataFile.getParent() );
+		Files.writeString(
+				metadataFile,
+				new ClassificationMetadataJson().write( reportMetadata() ),
+				StandardCharsets.UTF_8
+		);
+		reports.generateReports();
+		assertEquals(
+				golden( "spi-report.adoc" ),
+				Files.readString( reports.getSpiReportFileReference().get().getAsFile().toPath() )
+		);
+
+		final Task aggregate = project.getTasks().getByName( "generateReports" );
+		assertTrue( aggregate.getTaskDependencies().getDependencies( aggregate ).contains( reports ) );
 	}
 
-	private static void classify(
-			SpiModel.Builder builder,
-			String id,
-			Set<SpiModel.Role> roles,
-			SpiModel.OriginKind originKind,
-			String originSource,
-			SpiModel.ApiStatus apiStatus,
-			SpiModel.Lifecycle lifecycle) {
-		builder.classify(
+	private static ClassificationMetadata reportMetadata() {
+		final ClassificationModel.Builder builder = ClassificationModel.builder();
+		spiType( builder, "fixture.Use", roles( USE ) );
+		spiType( builder, "fixture.Implement", roles( IMPLEMENT ) );
+		spiType( builder, "fixture.Supply", roles( SUPPLY ) );
+		spiType( builder, "fixture.UseImplement", roles( USE, IMPLEMENT ) );
+		spiType( builder, "fixture.UseSupply", roles( USE, SUPPLY ) );
+		spiType( builder, "fixture.ImplementSupply", roles( IMPLEMENT, SUPPLY ) );
+		spiType( builder, "fixture.AllRoles", roles( USE, IMPLEMENT, SUPPLY ) );
+
+		spiMember( builder, "fixture.Use", "direct()", roles( USE ), roles( USE ), DIRECT );
+		spiMember( builder, "fixture.Use", "InheritedUse()", roles( USE ), Collections.emptySet(), ENCLOSING_TYPE );
+		spiMember( builder, "fixture.Use", "exception()", roles( USE, SUPPLY ), Collections.emptySet(), ENCLOSING_TYPE );
+
+		declaration( builder, "type:fixture.ApiType", TYPE, "package:fixture", "fixture.ApiType" );
+		builder.addClassificationOrigin(
+				"type:fixture.ApiType",
+				new ClassificationModel.ClassificationOrigin(
+						API,
+						ORDINARY_API,
+						"type:fixture.ApiType",
+						Collections.emptySet()
+				),
+				Collections.emptySet()
+		);
+
+		declaration( builder, "type:fixture.Conflicting", TYPE, "package:fixture", "fixture.Conflicting" );
+		builder.addClassificationOrigin(
+				"type:fixture.Conflicting",
+				new ClassificationModel.ClassificationOrigin( SPI, DIRECT, "type:fixture.Conflicting", roles( USE ) ),
+				roles( USE )
+		);
+		builder.addClassificationOrigin(
+				"type:fixture.Conflicting",
+				new ClassificationModel.ClassificationOrigin(
+						INTERNAL,
+						DIRECT,
+						"type:fixture.Conflicting",
+						Collections.emptySet()
+				),
+				Collections.emptySet()
+		);
+
+		return new ClassificationMetadata( HIBERNATE_VERSION, SOURCE_VERSION, builder.build() );
+	}
+
+	private static void spiType(
+			ClassificationModel.Builder builder,
+			String className,
+			Set<ClassificationModel.Role> roles) {
+		final String id = "type:" + className;
+		declaration( builder, id, TYPE, "package:fixture", className );
+		builder.addClassificationOrigin(
 				id,
-				TYPE,
-				"fixture",
-				id.substring( "type:".length() ),
-				originKind == DIRECT ? roles : Collections.emptySet(),
-				new SpiModel.Origin( originKind, originSource, roles ),
-				apiStatus,
-				lifecycle,
-				"hibernate-core",
-				id.endsWith( "Supply" ) ? Collections.singleton( "SPI-MIGRATION-1" ) : Collections.emptySet()
+				new ClassificationModel.ClassificationOrigin( SPI, DIRECT, id, roles ),
+				roles
 		);
 	}
 
-	private static Set<SpiModel.Role> roles(SpiModel.Role... roles) {
-		return EnumSet.copyOf( Arrays.asList( roles ) );
+	private static void spiMember(
+			ClassificationModel.Builder builder,
+			String className,
+			String member,
+			Set<ClassificationModel.Role> effectiveRoles,
+			Set<ClassificationModel.Role> declaredRoles,
+			ClassificationModel.OriginKind originKind) {
+		final String id = "method:" + className + '#' + member;
+		final String owner = "type:" + className;
+		declaration( builder, id, METHOD, owner, member );
+		builder.addClassificationOrigin(
+				id,
+				new ClassificationModel.ClassificationOrigin( SPI, originKind, owner, effectiveRoles ),
+				declaredRoles
+		);
+	}
+
+	private static void declaration(
+			ClassificationModel.Builder builder,
+			String id,
+			ClassificationModel.ElementKind kind,
+			String owner,
+			String signature) {
+		builder.declaration(
+				id,
+				kind,
+				owner,
+				"fixture",
+				signature,
+				ClassificationModel.Structure.UNKNOWN,
+				"hibernate-core"
+		);
+	}
+
+	private static Set<ClassificationModel.Role> roles(ClassificationModel.Role... roles) {
+		return EnumSet.copyOf( java.util.Arrays.asList( roles ) );
 	}
 
 	private static String golden(String name) throws IOException {

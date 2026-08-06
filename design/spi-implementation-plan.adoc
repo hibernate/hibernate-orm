@@ -4,7 +4,7 @@
 :sectanchors:
 :numbered:
 
-Status: Review Draft
+Status: Approved
 
 This document plans implementation of `design/spi-specification.adoc`.
 It does not change or supplement the normative behavior defined by that
@@ -12,25 +12,35 @@ specification.  Where implementation reveals a missing or ambiguous
 requirement, the specification must be amended before an implementation choice
 is treated as normative.
 
+The governing specification and this replacement plan have been approved with
+the unified classification model.
+
 The Dialect application of this work is planned separately in
 `design/dialect-extension-implementation-plan.adoc`.
 
 == Objectives
 
-The implementation must deliver the complete SPI facility, not just the
-`@SPI` annotation:
+The implementation must deliver the complete classification and SPI facility,
+not just the `@SPI` annotation:
 
 * the annotation and its independent `USE`, `IMPLEMENT`, and `SUPPLY` roles;
-* the exact `.spi` package convention;
-* a single canonical classification model shared by reporting and validation;
-* deterministic human-readable and machine-readable SPI reports;
-* build-time validation, including provider-boundary validation;
+* the `.spi` package-tree convention;
+* exactly one API, SPI, or internal category for every resolved Hibernate
+  declaration in the reportable surface, with unresolved migration states
+  preserved for diagnostics;
+* one canonical classification model shared by reporting and validation;
+* a deterministic `classifications.json` tooling contract published using its
+  gzip encoding;
+* concise human SPI, internal, and lifecycle projections of that contract;
+* category-boundary and SPI-role validation, including consumer-boundary
+  validation;
 * role-sensitive compatibility baselines and CI checks;
 * tests and published provider documentation.
 
-The implementation must preserve the distinction between application API and
-provider SPI.  Java visibility and SPI classification must not implicitly add
-an element to Hibernate's application API.
+API, SPI, and internal must remain mutually exclusive categories.  Lifecycle
+metadata is orthogonal to that category.  Java visibility and a signature
+dependency must neither add a second audience nor promote a declaration to a
+different category.
 
 == Governing decisions
 
@@ -38,14 +48,31 @@ The following specification decisions are implementation assumptions:
 
 * roles are independent; no role implies another role;
 * bare `@SPI` means `@SPI(USE)`;
-* an exact package ending in `.spi` confers `USE` only on externally accessible
-  elements declared directly in that package;
+* a package containing an exact `spi` component confers `USE` on externally
+  accessible elements in that package and every subpackage;
+* a package containing an exact `internal` component confers internal status on
+  that package and every subpackage;
+* category origins resolve by specificity: direct declaration, enclosing type,
+  explicit package, package-tree convention, then ordinary API fallback;
+* weaker origins are retained for tooling but do not conflict with a stronger
+  controlling category;
 * annotations on packages and enclosing types follow the effective-role rules
   in the specification;
-* independently classified elements retain their own canonical record when
-  reached through another SPI signature;
-* signature-derived support is reachability information, not a second SPI
-  classification;
+* every reportable Hibernate declaration has one API, SPI, or internal
+  category, while incubation, deprecation, and removal are orthogonal;
+* reachability validates categories and never assigns or promotes one;
+* API may depend only on API, SPI may depend on API or SPI, and internal may
+  depend on any category;
+* the canonical graph retains direct typed edges and computes diagnostic paths
+  on demand rather than storing root-to-element paths;
+* the logical classification JSON is the only required machine-readable
+  classification artifact; it is published and baselined as
+  `classifications.json.gz`, with no separate required `spi.json`;
+* one completed multi-output human report task consumes `classifications.json`
+  instead of separate report tasks scanning Jandex or parsing the document
+  independently;
+* full-model consumers share a lazy project-scoped parsed model while retaining
+  `classifications.json` as a declared task input;
 * SPI system grouping remains conceptual and is not part of the initial data
   model or task contract;
 * jQAssistant is a possible implementation aid, not a selected dependency or
@@ -68,9 +95,26 @@ path.  The internal design should nevertheless keep classification and rule
 evaluation independent of Gradle task classes so another analysis engine can
 be evaluated later.
 
+Earlier increments produced an SPI-specific model, report, and validation
+foundation under the preceding approved specification.  Increment 1 remains
+valid.  The existing Increment 2 through 4 implementation is an input to the
+revised work, but must be generalized or replaced where it models API status
+independently, materializes reachability paths, emits a separate SPI JSON
+document, or uses the superseded validation rules.  No such behavior is
+grandfathered by having already been implemented.
+
 == Delivery sequence
 
+Each increment carries an explicit implementation status.  `COMPLETE` means its
+acceptance behavior is implemented and verified; `IMPLEMENTED / NOT ACTIVATED`
+means the tooling exists but repository-wide adoption is intentionally off;
+`DEFERRED` records an explicit sequencing decision; and `NOT STARTED` means no
+implementation should be inferred from the design or supporting hooks.  Update
+the status in the same change which advances an increment.
+
 === Increment 1: annotation and semantic fixtures
+
+Status:: `COMPLETE`
 
 Add `org.hibernate.SPI` exactly as specified, including:
 
@@ -84,7 +128,7 @@ Add focused fixtures covering every declaration target, all seven non-empty
 role combinations, a bare annotation, and an explicitly empty role array.
 
 The fixtures must establish that `IMPLEMENT` and `SUPPLY` do not acquire
-`USE`, and that application API classification is independent of SPI
+`USE`, and that SPI classification does not also confer application API
 classification.
 
 Acceptance for this increment:
@@ -96,102 +140,186 @@ Acceptance for this increment:
 * no existing Hibernate type is broadly reclassified merely to exercise the
   annotation.
 
-=== Increment 2: canonical SPI model
+=== Increment 2: unified canonical classification model
 
-Introduce an engine-neutral model in `local-build-plugins` for one canonical
-record per supported element.  Gradle task types must be adapters around this
-model, not its representation.
+Status:: `COMPLETE`
+
+Generalize the existing engine-neutral model in `local-build-plugins` to one
+canonical record per Hibernate-owned declaration in the reportable surface.
+Gradle task types must be adapters around this model, not its representation.
 
 At minimum, a record must retain:
 
 * stable element identity, kind, declaring package, and signature;
-* declared and effective roles;
-* every classification origin: direct annotation, package annotation,
-  enclosing declaration, or exact `.spi` convention;
-* application API status independently from SPI status;
-* `@Incubating`, `@Deprecated`, and `@Internal` state;
-* supported-signature reachability paths;
+* classification status and one effective API, SPI, or internal category when
+  resolved;
+* category evidence and, for SPI, declared and effective roles and their
+  origins;
+* incubation, deprecation, and removal metadata and origins, independently of
+  category;
 * source artifact or module;
-* validation suppressions or migration-allowlist matches.
+* direct typed supported-signature dependencies.
 
 Implement one classifier which:
 
 . reads compiled declarations from the aggregate Jandex index;
-. applies exact-package and enclosing-declaration rules;
-. computes roles without implication;
-. traverses role-sensitive supported signatures;
-. merges reachability paths into independently classified records;
-. creates signature-derived records only for types with no independent SPI
-  classification;
+. resolves categories using the specified origin-specificity hierarchy and
+  reports contradictory evidence at the controlling specificity;
+. assigns the ordinary API fallback only in the absence of SPI and internal
+  evidence;
+. applies exact explicit-package, package-tree convention, and
+  enclosing-declaration rules consistently;
+. computes SPI roles without implication;
+. captures ownership and every required direct signature edge kind;
 . returns records in a deterministic order.
 
-The traversal should use a cycle-safe graph keyed by complete element identity.
-It must retain all distinct useful root-to-element paths while imposing a
-deterministic limit on redundant paths for diagnostics and reports.  Any path
-limit selected during implementation must be documented and tested; it must
-not hide whether a violation exists.
+Use a cycle-safe graph keyed by complete element identity.  Do not retain
+root-to-element paths in canonical records.  Graph consumers compute a
+deterministic shortest useful path only when producing a diagnostic.
 
 Acceptance for this increment:
 
-* classification tests cover direct, package, enclosing, conventional, and
-  derived origins;
-* exact `.spi` classification does not propagate to subpackages;
-* one independently classified collaborator is emitted once even when reached
-  through multiple roots;
-* a fixture equivalent to `SessionFactoryImplementor` remains explicitly SPI
-  rather than appearing again as implied surface;
+* fixtures cover API, SPI, internal, lifecycle, direct, package, enclosing, and
+  conventional origins;
+* conflicting category evidence and unclassified declarations are retained as
+  unresolved records without inventing a category;
+* `.spi` and `internal` classification propagates through their complete
+  package subtrees and overlapping trees produce a category conflict in the
+  absence of a stronger annotation;
+* direct `@Internal` overrides a conventional `.spi` origin, with both origins
+  retained in the canonical record and all other validation still active;
+* an API dependency of SPI remains API and an SPI dependency remains SPI;
+* internal implementations of SPI contracts remain internal;
+* each declaration is emitted once regardless of the number of incoming
+  dependency edges;
+* direct edges cover all signature positions required by the specification;
+* no canonical record contains independent API status or stored reachability
+  paths;
 * deterministic model snapshots are stable across repeated builds.
 
-=== Increment 3: report generation
+=== Increment 3: published classification metadata
 
-Add `generateSpiReport` to `ReportGenerationPlugin` and make `generateReports`
-depend on it.
+Status:: `COMPLETE`
 
-Produce:
+Add `generateClassificationMetadata` to `ReportGenerationPlugin`.  It consumes
+the aggregate Jandex index, invokes the canonical classifier, and writes the
+schema-versioned `orm/reports/classifications.json` relative to Gradle's
+configured build directory.  The task must use the build-directory provider;
+in Hibernate ORM this resolves to
+`target/orm/reports/classifications.json`, not a hard-coded `build/` path.
+The task also writes the deterministic gzip encoding to the adjacent
+`classifications.json.gz`.  The raw file is the local input to the combined
+report task and other model consumers; only the gzip form is published or
+checked in as a compatibility baseline.
 
-* an AsciiDoc report for published documentation;
-* a machine-readable report for diffing, tooling, and CI retention.
+Introduce a typed JSON writer and reader owned by the build plugin.  The reader
+is the shared adapter for the combined report projection task, validation, and
+future build or IDE tooling tests; it must reject unsupported schema versions
+distinctly from an empty document and transparently accept raw or gzip
+encoding.
 
-JSON is the preferred initial machine-readable format unless existing report
-publication conventions make another deterministic format materially simpler.
-The format must carry a schema/version value from its first release.
+The initial schema must contain the fields and stable identifiers specified in
+the working specification, including:
+
+* `schema` and `schemaVersion`;
+* `hibernateVersion` as the `x.y` compatibility level;
+* `sourceVersion` as the exact source build;
+* one element record per reportable declaration;
+* classification status, nullable effective category, SPI roles and origins,
+  lifecycle metadata, artifact provenance, and direct typed references.
+
+Do not emit a separate `spi.json`.  Remove or redirect the provisional
+SPI-specific machine-readable output once every consumer has moved to the
+classification document.
+
+Acceptance for this increment:
+
+* schema-contract tests cover every required field and empty value;
+* resolved API, SPI, and internal records are mutually exclusive;
+* conflicting and unclassified records round-trip with a null category and all
+  available diagnostic evidence;
+* root-to-element paths and a second application-API status are absent;
+* repeated executions produce byte-for-byte identical JSON;
+* repeated gzip encoding produces byte-for-byte identical output and decodes
+  to the same canonical model;
+* `hibernateVersion`, `sourceVersion`, and `schemaVersion` retain their distinct
+  meanings;
+* external references are identifiable without receiving a Hibernate
+  category;
+* the provisional SPI JSON is no longer a required output or consumer input.
+
+=== Increment 4: concise SPI report projection
+
+Status:: `COMPLETE`; the projection is now produced by the combined Increment 6
+task.
+
+Introduce the SPI projection with `classifications.json` as its input and write
+the provider-facing `orm/reports/spi.txt` relative to the same configured build
+directory (`target/orm/reports/spi.txt` in Hibernate ORM).  It must parse the
+published classification document rather than rescan Jandex.  This increment
+may use a provisional dedicated `generateSpiReport` task; Increment 6
+consolidates it with the other human projections.
+
+The projection selects only `RESOLVED` records whose category is `SPI` and
+must not infer a category for unresolved records.
 
 The report must:
 
 * use effective-role-combination buckets, including all seven non-empty
   combinations;
-* distinguish declared/conventional SPI from signature-derived support;
-* distinguish provider SPI from application API;
-* show all classification origins and retained reachability paths;
-* show incubation, deprecation, and replacement information;
-* avoid duplicate inclusion of independently classified collaborators;
-* use stable ordering and stable element identifiers.
+* identify the Hibernate ORM compatibility level and exact source version
+  represented by the report;
+* organize declarations by package and declaring type;
+* list each effective SPI type once;
+* list a member only when it is directly classified or its effective roles
+  differ from its enclosing declaration;
+* omit category labels, classification origins, dependency paths, application
+  API status, empty replacement data, and repeated default lifecycle data.
 
 The first report should be generated as a build artifact before it is wired
 into published documentation.  Documentation wiring follows after the format
 has survived review against representative Hibernate packages.
 
+The report is a reproducible build output.  Routine CI builds do not upload or
+archive either form of the report.  Release or explicitly requested inventory
+jobs may publish it when the report itself is the requested deliverable.
+
 Acceptance for this increment:
 
-* golden report tests cover every classification origin and role combination;
+* a full ORM report is small enough for useful human review;
+* golden report tests cover every role combination and member exception;
 * repeated executions produce byte-for-byte identical results;
-* `generateReports` includes the SPI report;
-* machine-readable output validates against its declared schema/version;
+* origins and paths present in JSON are absent from the human report;
+* the SPI projection task declares `classifications.json` as its input;
+* both the JSON and human report contain the same `hibernateVersion` and
+  `sourceVersion`;
 * the report contains no system grouping presented as settled design.
 
-=== Increment 4: validation engine
+The unresolved compact lifecycle-marker presentation must be settled in the
+working specification before it is treated as an acceptance requirement.  It
+does not block lifecycle metadata in `classifications.json` or the dedicated
+lifecycle projections.
 
-Add `validateSpi`, backed by the same canonical records and signature graph as
-the report.
+=== Increment 5: classification and SPI validation
 
-Implement `SPI001` through `SPI010` as independently testable rules.  A
-diagnostic must include:
+Status:: `IMPLEMENTED / NOT ACTIVATED`.  The validators, diagnostics, and
+allowlist mechanics are implemented and tested as explicitly invoked tooling.
+Repository-wide lifecycle enforcement is intentionally deferred.  `SPI004`
+can consume compatibility evidence, while production of that evidence by a
+role-sensitive comparator remains Increment 8 work.
+
+Refactor the validator into `validateClassifications` for category and graph
+rules and `validateSpi` for role-specific rules.  Both are backed by the same
+canonical classification records and direct dependency graph.
+
+Implement `CLS001` through `CLS005` and `SPI001` through `SPI005` as
+independently testable rules.  Reserve `SPI006` without implementing it while
+system grouping remains conceptual.  A category diagnostic must include:
 
 * rule identifier and severity;
-* affected element;
-* classification origin;
-* role or roles which caused traversal;
-* the shortest useful provider-root path to the violation;
+* source and target declarations and categories;
+* the edge kind crossing the boundary;
+* the shortest useful category-root path, computed from direct graph edges;
 * an allowlist match, when applicable;
 * remediation guidance where the rule has a mechanical resolution.
 
@@ -199,10 +327,12 @@ Rules requiring Javadoc or source-only evidence may combine source metadata
 with the compiled model.  Compiled structure remains authoritative for
 declarations, linkage, and signatures.
 
-Add one version-controlled migration allowlist.  Use a structured format with
-required fields for rule, exact element identity, owner or issue, reason, and
-intended removal release.  Matching must be exact enough that an unrelated new
-violation cannot consume an old entry.
+Provide support for one version-controlled migration allowlist, but do not
+populate it for the initial repository inventory.  Use a structured format
+with required fields for rule, exact element identity, owner or issue, reason,
+and intended removal release.  Matching must be exact enough that an unrelated
+new violation cannot consume an old entry.  An empty or absent allowlist is the
+normal configuration while validation remains explicitly invoked.
 
 Validation must fail on:
 
@@ -211,50 +341,184 @@ Validation must fail on:
 * an unused allowlist entry;
 * an allowlist entry whose required metadata is absent.
 
-During initial rollout, `SPI006` and `SPI010` may be warnings as allowed by the
-specification.  Their configured severities must be explicit in output and in
-one central rule configuration.
+Translate or retire provisional allowlist entries and superseded `SPI` rule
+identifiers explicitly.  Do not silently reinterpret an old rule as a new
+category rule.  `SPI003` and `SPI005` may initially be warnings as specified;
+all category rules are errors for new violations.
 
 Acceptance for this increment:
 
-* each `SPI001` through `SPI010` rule has an isolated negative fixture;
+* each required `CLS001` through `CLS005` and `SPI001` through `SPI005` rule has
+  an isolated negative fixture;
 * all positive fixtures listed in the specification pass;
-* diagnostics include a reproducible dependency path;
-* adding a new violation fails even while historical violations are
-  allowlisted;
-* removing a historical violation without removing its exception fails as an
-  unused allowlist entry.
+* diagnostics include a reproducible shortest dependency path without storing
+  paths in the JSON;
+* an explicitly invoked validator fails for the current unallowlisted
+  inventory and produces its complete diagnostic report;
+* focused tests prove that adding a new violation fails when historical
+  violations are allowlisted;
+* focused tests prove that removing a historical violation without removing
+  its exception fails as an unused allowlist entry;
+* no populated repository-wide allowlist is required for this increment.
 
-=== Increment 5: lifecycle integration
+=== Increment 6: reporting finalization
 
-Establish the initial repository baseline only after the annotation,
-classifier, report, and validator have been reviewed together.
+Status:: `COMPLETE`
 
-Then:
+Replace the separate SPI, internal, incubating, deprecated, and removal report
+implementations with one multi-output `generateClassificationReports` task.
+It declares `classifications.json` as its input, parses it once, and selects all
+five projections from the resulting canonical model.  Preserve existing
+report-specific task names as dependency-only lifecycle aliases where useful;
+aliases must not declare duplicate outputs or parse the document.
 
-* add `validateSpi` to the appropriate aggregate `check` lifecycle;
-* retain the machine-readable report in CI;
-* publish the human-readable report with the documentation;
-* record the remaining migration-exception count;
-* reject any increase in that count.
+For the combined task:
+
+. preserve its intentional external report format unless the working
+  specification requires a change;
+. replace independent Jandex scans and annotation-scope interpretation with the
+  shared classification-document reader;
+. add projection tests proving that every reported declaration corresponds to
+  the same canonical JSON record;
+. declare `classifications.json` as its input, all five report files as outputs,
+  and the dependency which generates classification metadata first.
+
+Introduce a lazy project extension which owns the immutable parsed
+`ClassificationMetadata` for one build execution.  The combined report task and
+both validators use the extension.  Each task continues to declare
+`classifications.json` as its own input and to depend on metadata generation;
+the extension prevents redundant parsing but does not replace Gradle's input or
+dependency model.
+
+Update `generateReports` to depend on classification metadata generation and
+the combined human projection task.  Once migration is complete, remove obsolete
+per-report classifiers and any provisional SPI-specific JSON writer.  This
+increment may follow the initial classification and SPI work, but it is not
+optional final polish: the specification is not complete while any report
+still interprets classification or lifecycle scope independently.
+
+Acceptance for this increment:
+
+* `generateClassificationReports` declares `classifications.json` as an input
+  and all five human projections as outputs;
+* the task parses the canonical document once to produce all projections;
+* no completed report task or alias scans Jandex or parses the document
+  independently;
+* projection tests cover SPI, internal, incubation, deprecation, and removal;
+* a declaration shared by multiple lifecycle views resolves to the same stable
+  JSON element identity;
+* report and validation tasks executing together share one immutable parsed
+  model through a project-scoped extension;
+* `generateReports` has the correct task dependency order and includes the
+  combined projection task;
+* only `classifications.json.gz` is published as machine-readable
+  classification metadata.
+
+=== Increment 7: deferred build lifecycle integration
+
+Status:: `DEFERRED`.  Reassess after the Dialect, AST, and translator
+reclassification.  No populated migration allowlist or `check` dependency is
+established at this stage.
+
+Do not integrate `validateClassifications` or `validateSpi` into the normal
+aggregate `check` lifecycle during the initial migration.  Keep them as
+distinct, explicitly invoked diagnostic tasks while the Dialect, AST,
+translator, and related provider-facing work reduces the violation inventory.
+
+Metadata generation may occur while migration leaves unresolved records, but
+validation must report and reject them.  The compatibility baseline is not
+established until the model is fully resolved.
+
+After the Dialect-focused migration, review the remaining findings and decide
+explicitly whether to activate lifecycle validation.  If activated, then:
+
+* add `validateClassifications` and `validateSpi` to the appropriate aggregate
+  `check` lifecycle;
+* publish `classifications.json.gz` and the human-readable projections with
+  the release documentation;
+* establish exact reviewed migration exceptions only if violations still
+  remain;
+* reject every new violation without relying on a count-only gate;
+* emit focused validation failures in normal CI build output without uploading
+  the full classification inventory.
 
 Task inputs and outputs must be fully declared so Gradle can cache and skip the
-tasks correctly.  Validation must not require network access or a running
-external service.
+tasks correctly.  Both validators use the project-scoped parsed-model extension
+so executing them together does not reconstruct the canonical model twice.
+Validation must not require network access or a running external service.
 
-Acceptance for this increment:
+Acceptance for the current deferred state:
 
-* a clean checkout can execute `validateSpi` using only normal build
+* a clean checkout can execute both validators using only normal build
   dependencies;
-* `check` cannot pass with a new SPI error;
-* report and validation results are derived from the same canonical model;
-* CI retains enough output to diagnose a failure without rerunning locally.
+* neither validator is pulled into the normal aggregate `check` lifecycle;
+* report and validation results derive from the same canonical classification;
+* explicit validator output identifies the failed rule, affected elements,
+  categories or roles, dependency path where applicable, and remediation;
+* the implementation plan records lifecycle integration as a deferred decision
+  following the Dialect-focused migration.
 
-=== Increment 6: role-sensitive compatibility
+=== Pause and resumption criteria
 
-Create an SPI baseline distinct from the ordinary application API baseline.
-The baseline should be derived from the canonical machine-readable inventory,
-with sufficient bytecode detail to evaluate the role-sensitive rules.
+Implementation pauses after the standalone validation and reporting tooling
+and before Increment 8.  At the pause point, the repository audit contains
+6,340 diagnostics: 6,323 category-boundary dependencies and 17 unclassified
+elements.  This count records the reason for the sequencing decision; it is not
+a validation baseline or a gate.
+
+The next implementation work is the approved Dialect extension reorganization,
+including the Dialect, SQL AST, SQM/SQL translators, and related
+provider-facing feature families.  That work is expected to reclassify a
+material portion of the current findings and may reveal structural facts which
+the compatibility schema or comparator must represent.
+
+Resume this plan by:
+
+. regenerating `classifications.json` and both validation reports after the
+  Dialect-focused work;
+. reviewing the remaining unclassified declarations and category-boundary
+  violations;
+. reconsidering the deferred Increment 7 lifecycle decision without assuming a
+  migration allowlist is necessary;
+. beginning Increment 8 only when the provider-facing surface is deliberate
+  enough to serve as a compatibility promise.
+
+Do not create the checked-in compatibility snapshot before that review.  A
+baseline produced from the pre-reorganization model would preserve a surface
+already known to require material change and would create avoidable baseline
+churn.
+
+=== Increment 8: role-sensitive compatibility
+
+Status:: `NOT STARTED / PAUSED`.  Do not begin this increment before the
+Dialect-focused reclassification described above and the subsequent validation
+review.
+
+Use an exact, checked-in `classifications.json.gz` snapshot as the compatibility
+baseline.  It is the deterministic gzip encoding of the same classification
+JSON, not a second baseline schema or an expanded SPI-specific compatibility
+document.  The comparator selects the API and SPI surfaces and effective SPI
+roles directly from the decoded baseline and current classification documents;
+it must never parse `spi.txt`.
+
+Baseline creation and comparison must reject a document containing any
+`CONFLICTING` or `UNCLASSIFIED` record.  Unresolved migration state is useful
+classification metadata but is never a compatibility promise.
+
+The snapshot already stores the `x.y` Hibernate ORM compatibility level as
+`hibernateVersion`, the exact release or build as `sourceVersion`, and its
+classification schema version.  Compatibility output shows the baseline and
+current values for all three version concepts.
+
+Establish the snapshot when `x.y.0` defines its compatibility line.  Patch
+releases compare against that original snapshot; normal builds and compatible
+additions do not rewrite it.  A maintained branch retains only the active
+baseline for the `x.y` line it enforces and does not accumulate snapshots for
+every historical minor line.  When that branch advances to a newly established
+minor compatibility line, the new active snapshot may replace the preceding
+one in its working tree.  A later increment may add supplemental comparison of
+consecutive published releases if additions made within a line must become
+protected immediately.
 
 Implement compatibility comparison in two layers:
 
@@ -262,11 +526,12 @@ Implement compatibility comparison in two layers:
 . additional `USE`, `IMPLEMENT`, and `SUPPLY` checks defined by the
   specification.
 
-The initial implementation should reuse an existing compatible bytecode/API
-comparison facility if one is already adopted by ORM by the time this
-increment begins.  Otherwise, implement the required comparisons against the
-compiled Jandex/class-file model.  Tool choice must not collapse SPI into the
-ordinary API baseline.
+The classification schema must carry the compatibility-relevant structural
+facts required by the specified checks.  If implementation discovers a
+missing fact, extend the canonical schema rather than introduce a separate
+baseline format.  The comparator may reuse an existing compatible bytecode/API
+comparison facility, but tool choice must not collapse SPI into ordinary API
+or independently reinterpret category and SPI roles.
 
 Intentional baseline changes must be explicit review artifacts and must state
 the affected roles.  A baseline update is not an automatic side effect of
@@ -275,6 +540,16 @@ update a stable entry under `Changes to SPI` in the versioned root
 `migration-guide.adoc` in the same change as the implementation and baseline
 update.
 
+Because the checked-in snapshot is compressed, the baseline-update command
+must produce a focused semantic diff for review; review must not depend on a
+textual diff of gzip bytes.
+
+The current model and compatibility result are reproducible from the tested
+commit and the checked-in baseline.  Routine CI therefore does not upload or
+archive either one.  Compatibility failures are rendered as a focused diff in
+normal build output.  A small failure artifact may be added only when required
+by a particular CI system's log limitations; it is not part of the SPI design.
+
 Acceptance for this increment:
 
 * fixtures detect the incompatible changes enumerated for each role;
@@ -282,25 +557,36 @@ Acceptance for this increment:
   `USE` surface;
 * adding SPI classification does not add an element to the API baseline;
 * compatibility failures identify the old and new classifications and the
-  affected role;
+  affected role, baseline and current compatibility levels, and baseline and
+  current source versions;
 * baseline updates require an explicit command and produce a reviewable diff;
 * an incompatible baseline update is not complete without its Migration Guide
-  entry and updated provider fixture.
+  entry and updated provider fixture;
+* successful or failed comparisons do not require routine CI artifact
+  retention.
 
-=== Increment 7: documentation and contributor workflow
+=== Increment 9: documentation and contributor workflow
+
+Status:: `NOT STARTED`
 
 Document:
 
 * when to use API, SPI, `.spi`, `@Internal`, and `@Incubating`;
 * how to choose `USE`, `IMPLEMENT`, and `SUPPLY` independently;
 * how type-level `IMPLEMENT` affects subclass-accessible members;
-* how to run and interpret `generateSpiReport` and `validateSpi`;
+* how to run and interpret `generateClassificationMetadata`,
+  `generateClassificationReports`, its report-specific aliases,
+  `validateClassifications`, and `validateSpi`;
+* how IDE and other tooling consumers should negotiate the
+  `classifications.json` schema;
 * how to resolve or temporarily allowlist a violation;
 * how to review role-sensitive compatibility changes.
 
 Add a short contributor checklist to the relevant build/development guide.
-Examples must include dual-audience contracts and an `IMPLEMENT` or `SUPPLY`
-contract without `USE`.
+Examples must explain that API and SPI are different, mutually exclusive
+audiences and include an `IMPLEMENT` or `SUPPLY` contract without `USE`.
+Migration Guide instructions must require `Changes to SPI` entries for
+intentional incompatible provider-facing changes.
 
 == Optional jQAssistant evaluation
 
@@ -330,11 +616,15 @@ deferral of the spike does not block any required SPI deliverable.
 Tests should be divided by concern:
 
 Model tests::
-Small compiled fixtures for classification, role inheritance, exact-package
-behavior, signature traversal, and deduplication.
+Small compiled fixtures for classification, role inheritance, package-tree
+behavior, mutually exclusive categories, lifecycle metadata, direct signature
+edges, graph traversal, and canonical identity.
 
 Report tests::
-Golden AsciiDoc and machine-readable output with deterministic ordering.
+Golden human projections and JSON schema tests with deterministic ordering and
+explicit Hibernate ORM compatibility and source-version metadata distinct from
+the report schema version.  Cross-projection tests must prove that every human
+entry resolves to its canonical JSON record.
 
 Rule tests::
 One positive or negative fixture focused on each validation rule, plus combined
@@ -342,7 +632,9 @@ fixtures for interactions between rules.
 
 Gradle integration tests::
 Task registration, inputs/outputs, caching, lifecycle dependency, allowlist
-handling, and aggregate report integration.
+handling, aggregate report integration, `classifications.json` as the declared
+input of the combined human report task and validators, and one shared parsed
+model when consumers execute together.
 
 Compatibility tests::
 Old/new artifact pairs for common linkage and each role-specific incompatibility.
@@ -359,22 +651,29 @@ and make contradictions and compatibility drift build failures.  Do not depend
 on unvalidated prose inventories.
 
 Annotation volume::
-Use exact `.spi` package `USE`, type-level roles, and signature derivation where
-specified.  Do not annotate every method when type-level semantics already
-classify it.
+Use `.spi` package-tree `USE` and type-level roles.  Discover dependency edges
+mechanically, but do not turn dependencies into classifications or annotate
+every method when type-level semantics already classify it.
 
 False deduplication::
 Key records by complete declaration identity, retain all classification
-origins, and test independently classified signature collaborators explicitly.
+origins, and test declarations with multiple incoming edges explicitly.
+
+Report divergence::
+Generate classification metadata once, make one multi-output human report task
+declare that file as its input, and remove independent Jandex interpretation
+and redundant JSON parsing during the reporting-finalization increment.
 
 Build cost::
-Reuse the aggregate index, declare cacheable task inputs/outputs, and measure
-classification and validation time on the full repository before adding them
-to `check`.
+Reuse the aggregate index, parse the canonical document once per build through
+a lazy project-scoped extension, declare cacheable task inputs/outputs, and
+measure classification and validation time on the full repository before
+adding them to `check`.
 
 Migration paralysis::
-Baseline existing violations once, reject new ones immediately, and reject
-unused exceptions so progress is monotonic.
+Keep the validators explicitly runnable and use their reports to drive focused
+migrations.  Do not normalize thousands of findings into a temporary baseline
+before the Dialect-focused work has reduced and clarified the inventory.
 
 Tool lock-in::
 Keep the canonical model and rules independent of Gradle task types and Jandex
@@ -385,20 +684,28 @@ objects after ingestion.
 Implementation should pause for focused review at these points:
 
 . annotation shape and compiled semantic fixtures;
-. canonical record identity, origin, reachability, and machine-readable schema;
-. first representative report and diagnostic format;
-. initial allowlist and `check` enforcement switch;
+. exclusive category resolution, canonical record identity, direct edge model,
+  and `classifications.json` schema;
+. first concise SPI report and category-diagnostic format;
+. consolidation of the existing SPI, internal, and lifecycle reports behind one
+  multi-output JSON projection task;
+. lifecycle-integration decision after the Dialect-focused migration;
 . compatibility baseline format and update workflow;
 . any proposal to adopt jQAssistant.
 
-The first three increments form the recommended first implementation change:
-the annotation, canonical classification model, and report, with validator
-fixtures added alongside the model.  This produces something reviewable before
-repository-wide classification changes begin.
+Because Increment 1 already exists, the next reviewable implementation slice is
+the unified model and `classifications.json`, followed by the compact SPI
+projection.  Report-task finalization remains a separate slice so existing
+reports can be migrated and verified one at a time without weakening the final
+single-source requirement.
 
 == Completion criteria
 
-This plan is complete when every completion criterion in
-`design/spi-specification.adoc` is satisfied, the normal build enforces the
-required validation and compatibility rules, and provider-facing documentation
-is generated from the same canonical model used by those checks.
+The current tooling phase is complete when the explicit validation tasks and
+canonical reports satisfy their specification and the normal build does not
+invoke the validators implicitly.  The overall plan is complete only after the
+post-Dialect review decides to activate lifecycle enforcement, every completion
+criterion in `design/spi-specification.adoc` is satisfied, one combined task
+generates every classification and lifecycle report from
+`classifications.json`, and provider-facing documentation is generated from
+those canonical projections.

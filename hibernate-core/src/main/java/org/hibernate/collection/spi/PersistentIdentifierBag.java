@@ -4,6 +4,7 @@
  */
 package org.hibernate.collection.spi;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -47,6 +48,8 @@ public class PersistentIdentifierBag<E> extends AbstractPersistentCollection<E> 
 	@Deprecated(forRemoval = true, since = "7")
 	protected List<E> values;
 	protected Map<Integer, Object> identifiers;
+	@Serial
+	private static final long serialVersionUID = 1L;
 
 	/**
 	 * The actual bag.

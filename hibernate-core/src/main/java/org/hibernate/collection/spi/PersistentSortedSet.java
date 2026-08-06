@@ -4,6 +4,7 @@
  */
 package org.hibernate.collection.spi;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Comparator;
 import java.util.SortedSet;
@@ -27,6 +28,8 @@ import org.hibernate.persister.collection.BasicCollectionPersister;
 @Incubating
 public class PersistentSortedSet<E> extends PersistentSet<E> implements SortedSet<E> {
 	protected Comparator<? super E> comparator;
+	@Serial
+	private static final long serialVersionUID = 1L;
 
 	/**
 	 * Constructs a PersistentSortedSet.  This form needed for SOAP libraries, etc

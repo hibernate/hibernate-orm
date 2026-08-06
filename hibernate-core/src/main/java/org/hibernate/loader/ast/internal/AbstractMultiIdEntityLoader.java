@@ -246,9 +246,19 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 			// look for it in the second-level cache
 			final Object entity =
 					loadFromSecondLevelCache( entityKey, lockOptions, session );
+			final var persistenceContext = session.getPersistenceContextInternal();
 			if ( entity != null ) {
-				results.add( i, entity );
+				results.add( i, persistenceContext.proxyFor( getLoadable().getEntityPersister(), entityKey, entity ) );
 				return true;
+			}
+			else {
+				// check if the PC contains a deleted entry, if so return true
+				final var holder = persistenceContext.getEntityHolder( entityKey );
+				final var entry = holder == null ? null : holder.getEntityEntry();
+				if ( entry != null && entry.getStatus().isDeletedOrGone() ) {
+					results.add( i, null );
+					return true;
+				}
 			}
 		}
 

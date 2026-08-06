@@ -4,6 +4,7 @@
  */
 package org.hibernate.collection.spi;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -38,6 +39,8 @@ import static java.util.Collections.emptyMap;
 @Incubating
 public class PersistentBag<E> extends AbstractPersistentCollection<E> implements List<E> {
 
+	@Serial
+	private static final long serialVersionUID = 1L;
 	/**
 	 * @deprecated Use {@link #bagAsList()} or {@link #collection} instead.
 	 */

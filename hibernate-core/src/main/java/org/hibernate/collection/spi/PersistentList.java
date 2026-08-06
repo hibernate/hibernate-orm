@@ -4,6 +4,7 @@
  */
 package org.hibernate.collection.spi;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -32,6 +33,8 @@ import org.hibernate.type.Type;
 @Incubating
 public class PersistentList<E> extends AbstractPersistentCollection<E> implements List<E> {
 	protected List<E> list;
+	@Serial
+	private static final long serialVersionUID = 1L;
 
 	/**
 	 * Constructs a PersistentList.  This form needed for SOAP libraries, etc

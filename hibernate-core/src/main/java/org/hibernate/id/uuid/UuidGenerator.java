@@ -4,6 +4,7 @@
  */
 package org.hibernate.id.uuid;
 
+import java.io.Serializable;
 import java.lang.reflect.Member;
 import java.util.EnumSet;
 import java.util.Locale;
@@ -18,8 +19,11 @@ import org.hibernate.generator.EventType;
 import org.hibernate.generator.EventTypeSets;
 import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.models.spi.MemberDetails;
+import org.hibernate.type.BasicType;
+import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
+import org.hibernate.type.descriptor.java.StringJavaType;
 import org.hibernate.type.descriptor.java.UUIDJavaType;
-import org.hibernate.type.descriptor.java.UUIDJavaType.ValueTransformer;
+import org.hibernate.type.descriptor.java.UuidCapableJavaType;
 
 import static org.hibernate.annotations.UuidGenerator.Style.AUTO;
 import static org.hibernate.annotations.UuidGenerator.Style.TIME;
@@ -31,14 +35,15 @@ import static org.hibernate.internal.util.ReflectHelper.getPropertyType;
 /**
  * {@linkplain org.hibernate.generator.Generator} for producing {@link UUID} values.
  * <p>
- * Uses a {@linkplain UuidValueGenerator} and {@linkplain ValueTransformer} to
+ * Uses a {@linkplain UuidValueGenerator} and
+ * {@linkplain UuidCapableJavaType.ValueTransformer value transformer} to
  * generate the values.
  *
  * @see org.hibernate.annotations.UuidGenerator
  */
 public class UuidGenerator implements BeforeExecutionGenerator {
 	private final UuidValueGenerator generator;
-	private final ValueTransformer valueTransformer;
+	private final UuidCapableJavaType.ValueTransformer<?> valueTransformer;
 	private final Class<?> generatedType;
 
 	/**
@@ -47,8 +52,9 @@ public class UuidGenerator implements BeforeExecutionGenerator {
 	@Internal
 	public UuidGenerator(Class<?> memberType) {
 		generator = StandardRandomStrategy.INSTANCE;
-		valueTransformer = determineProperTransformer( memberType );
-		generatedType = memberType;
+		final var javaType = determineProperJavaType( memberType );
+		valueTransformer = javaType.getUuidValueTransformer();
+		generatedType = javaType.getJavaTypeClass();
 	}
 
 	/**
@@ -59,8 +65,21 @@ public class UuidGenerator implements BeforeExecutionGenerator {
 			org.hibernate.annotations.UuidGenerator config,
 			MemberDetails memberDetails) {
 		generator = determineValueGenerator( config, memberDetails.getDeclaringType().getName(), memberDetails.getName() );
-		generatedType = memberDetails.getType().determineRawClass().toJavaClass();
-		valueTransformer = determineProperTransformer( generatedType );
+		final var javaType =
+				determineProperJavaType( memberDetails.getType().determineRawClass().toJavaClass() );
+		generatedType = javaType.getJavaTypeClass();
+		valueTransformer = javaType.getUuidValueTransformer();
+	}
+
+	@Internal
+	public UuidGenerator(
+			org.hibernate.annotations.UuidGenerator config,
+			MemberDetails memberDetails,
+			GeneratorCreationContext creationContext) {
+		generator = determineValueGenerator( config, memberDetails.getDeclaringType().getName(), memberDetails.getName() );
+		final var javaType = determineProperJavaType( creationContext );
+		generatedType = javaType.getJavaTypeClass();
+		valueTransformer = javaType.getUuidValueTransformer();
 	}
 
 	@Internal
@@ -68,15 +87,19 @@ public class UuidGenerator implements BeforeExecutionGenerator {
 			org.hibernate.annotations.UuidGenerator config,
 			Member idMember) {
 		generator = determineValueGenerator( config, idMember.getDeclaringClass().getName(), idMember.getName() );
-		generatedType = getPropertyType( idMember );
-		valueTransformer = determineProperTransformer( generatedType );
+		final var javaType = determineProperJavaType( getPropertyType( idMember ) );
+		generatedType = javaType.getJavaTypeClass();
+		valueTransformer = javaType.getUuidValueTransformer();
 	}
 
 	public UuidGenerator(
 			org.hibernate.annotations.UuidGenerator config,
 			Member member,
 			GeneratorCreationContext creationContext) {
-		this( config, member );
+		generator = determineValueGenerator( config, member.getDeclaringClass().getName(), member.getName() );
+		final var javaType = determineProperJavaType( creationContext );
+		generatedType = javaType.getJavaTypeClass();
+		valueTransformer = javaType.getUuidValueTransformer();
 	}
 
 	/**
@@ -103,8 +126,25 @@ public class UuidGenerator implements BeforeExecutionGenerator {
 	}
 
 	@Internal
-	public ValueTransformer getValueTransformer() {
-		return valueTransformer;
+	public UUIDJavaType.ValueTransformer getValueTransformer() {
+		return new UUIDJavaType.ValueTransformer() {
+			@Override
+			public Serializable transform(UUID uuid) {
+				return (Serializable) valueTransformer.transform( uuid );
+			}
+
+			@Override
+			public UUID parse(Object value) {
+				return parseTransformedValue( valueTransformer, value );
+			}
+		};
+	}
+
+	@SuppressWarnings("unchecked")
+	private static <T> UUID parseTransformedValue(
+			UuidCapableJavaType.ValueTransformer<T> valueTransformer,
+			Object value) {
+		return valueTransformer.parse( (T) value );
 	}
 
 	private static UuidValueGenerator determineValueGenerator(
@@ -150,15 +190,23 @@ public class UuidGenerator implements BeforeExecutionGenerator {
 		}
 	}
 
-	private ValueTransformer determineProperTransformer(Class<?> propertyType) {
+	private static UuidCapableJavaType<?> determineProperJavaType(GeneratorCreationContext creationContext) {
+		if ( creationContext.getType() instanceof BasicType<?> basicType
+				&& basicType.getJavaTypeDescriptor() instanceof UuidCapableJavaType<?> uuidJavaType ) {
+			return uuidJavaType;
+		}
+		return determineProperJavaType( creationContext.getType().getReturnedClass() );
+	}
+
+	private static UuidCapableJavaType<?> determineProperJavaType(Class<?> propertyType) {
 		if ( UUID.class.isAssignableFrom( propertyType ) ) {
-			return UUIDJavaType.PassThroughTransformer.INSTANCE;
+			return UUIDJavaType.INSTANCE;
 		}
 		else if ( String.class.isAssignableFrom( propertyType ) ) {
-			return UUIDJavaType.ToStringTransformer.INSTANCE;
+			return StringJavaType.INSTANCE;
 		}
 		else if ( byte[].class.isAssignableFrom( propertyType ) ) {
-			return UUIDJavaType.ToBytesTransformer.INSTANCE;
+			return PrimitiveByteArrayJavaType.INSTANCE;
 		}
 		else {
 			throw new HibernateException( "Unanticipated return type [" + propertyType.getName() + "] for UUID conversion" );

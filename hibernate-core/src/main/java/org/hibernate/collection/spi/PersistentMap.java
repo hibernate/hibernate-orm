@@ -4,6 +4,7 @@
  */
 package org.hibernate.collection.spi;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -38,6 +39,8 @@ import org.hibernate.type.Type;
 public class PersistentMap<K,E> extends AbstractPersistentCollection<E> implements Map<K,E> {
 
 	protected Map<K,E> map;
+	@Serial
+	private static final long serialVersionUID = 1L;
 
 	/**
 	 * Empty constructor.

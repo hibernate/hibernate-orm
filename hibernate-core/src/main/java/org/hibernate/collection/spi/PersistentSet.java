@@ -4,6 +4,7 @@
  */
 package org.hibernate.collection.spi;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -34,6 +35,8 @@ import org.hibernate.type.Type;
 @Incubating
 public class PersistentSet<E> extends AbstractPersistentCollection<E> implements Set<E> {
 	protected Set<E> set;
+	@Serial
+	private static final long serialVersionUID = 1L;
 
 	/**
 	 * Empty constructor.

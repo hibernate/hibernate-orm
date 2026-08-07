@@ -234,6 +234,11 @@ public class MySQLDialect extends Dialect {
 		registerKeywords( info );
 	}
 
+	@Override
+	public boolean supportsBatchInsertReturningGeneratedKeys() {
+		return true;
+	}
+
 	@Deprecated(since="6.6")
 	protected static DatabaseVersion createVersion(DialectResolutionInfo info) {
 		return createVersion( info, MINIMUM_VERSION );

@@ -6,12 +6,16 @@ package org.hibernate.orm.test.jpa.criteria;
 
 import java.util.List;
 
+import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.DiscriminatorColumn;
+import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
@@ -31,10 +35,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * A Criteria path traversal through a to-one association whose target uses JOINED inheritance,
- * where the foreign key targets the identifier (declared on the root table), generates SQL with a
- * mismatched table alias in the join ON clause (e.g. {@code join mappings_a ma1_0 on ma1_1.id=...}
- * where {@code ma1_1} — the root-table alias — is never declared). Both {@code @OneToOne} and
- * {@code @ManyToOne} are affected.
+ * where the foreign key targets a column of a <em>superclass</em> table, generates SQL with a
+ * mismatched table alias in the join ON clause (e.g. {@code join mappings_a m1_0 on m1_1.id=...}
+ * where {@code m1_1} — the root-table alias — is never declared). Both {@code @OneToOne} and
+ * {@code @ManyToOne} are affected, with and without a discriminator column, and whether the
+ * referenced column is the root primary key or an ordinary unique column.
  */
 @Jpa(
 		annotatedClasses = {
@@ -43,7 +48,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 				CriteriaJoinedInheritanceToOneJoinAliasTest.MappingA.class,
 				CriteriaJoinedInheritanceToOneJoinAliasTest.RequestWithOneToOne.class,
 				CriteriaJoinedInheritanceToOneJoinAliasTest.RequestWithManyToOne.class,
-		}
+				CriteriaJoinedInheritanceToOneJoinAliasTest.BaseMappingWithDiscriminator.class,
+				CriteriaJoinedInheritanceToOneJoinAliasTest.MappingWithDiscriminator.class,
+				CriteriaJoinedInheritanceToOneJoinAliasTest.RequestWithDiscriminator.class,
+				CriteriaJoinedInheritanceToOneJoinAliasTest.BaseMappingWithCode.class,
+				CriteriaJoinedInheritanceToOneJoinAliasTest.MappingWithCode.class,
+				CriteriaJoinedInheritanceToOneJoinAliasTest.RequestWithPropertyRef.class,
+		},
+		useCollectingStatementInspector = true
 )
 public class CriteriaJoinedInheritanceToOneJoinAliasTest {
 
@@ -58,6 +70,14 @@ public class CriteriaJoinedInheritanceToOneJoinAliasTest {
 
 			entityManager.persist( new RequestWithOneToOne( "r1", mapping ) );
 			entityManager.persist( new RequestWithManyToOne( "r2", mapping ) );
+
+			MappingWithDiscriminator discriminatorMapping = new MappingWithDiscriminator( "m2", asset );
+			entityManager.persist( discriminatorMapping );
+			entityManager.persist( new RequestWithDiscriminator( "r3", discriminatorMapping ) );
+
+			MappingWithCode codeMapping = new MappingWithCode( "m3", "c1", asset );
+			entityManager.persist( codeMapping );
+			entityManager.persist( new RequestWithPropertyRef( "r4", codeMapping ) );
 		} );
 	}
 
@@ -66,8 +86,14 @@ public class CriteriaJoinedInheritanceToOneJoinAliasTest {
 		scope.inTransaction( entityManager -> {
 			entityManager.createQuery( "delete from RequestWithOneToOne" ).executeUpdate();
 			entityManager.createQuery( "delete from RequestWithManyToOne" ).executeUpdate();
+			entityManager.createQuery( "delete from RequestWithDiscriminator" ).executeUpdate();
+			entityManager.createQuery( "delete from RequestWithPropertyRef" ).executeUpdate();
 			entityManager.createQuery( "delete from MappingA" ).executeUpdate();
 			entityManager.createQuery( "delete from BaseMapping" ).executeUpdate();
+			entityManager.createQuery( "delete from MappingWithDiscriminator" ).executeUpdate();
+			entityManager.createQuery( "delete from BaseMappingWithDiscriminator" ).executeUpdate();
+			entityManager.createQuery( "delete from MappingWithCode" ).executeUpdate();
+			entityManager.createQuery( "delete from BaseMappingWithCode" ).executeUpdate();
 			entityManager.createQuery( "delete from Asset" ).executeUpdate();
 		} );
 	}
@@ -107,6 +133,63 @@ public class CriteriaJoinedInheritanceToOneJoinAliasTest {
 			List<RequestWithManyToOne> results = entityManager.createQuery( query ).getResultList();
 			assertThat( results ).hasSize( 1 );
 			assertThat( results.get( 0 ).getId() ).isEqualTo( "r2" );
+		} );
+	}
+
+	@Test
+	public void testImplicitJoinWithDiscriminatorColumn(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
+			CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+			CriteriaQuery<RequestWithDiscriminator> query = cb.createQuery( RequestWithDiscriminator.class );
+			Root<RequestWithDiscriminator> root = query.from( RequestWithDiscriminator.class );
+
+			Path<String> label = root
+					.get( "mapping" )
+					.get( "asset" )
+					.get( "label" );
+			query.where( cb.like( cb.lower( label ), "%some%" ) );
+
+			List<RequestWithDiscriminator> results = entityManager.createQuery( query ).getResultList();
+			assertThat( results ).hasSize( 1 );
+			assertThat( results.get( 0 ).getId() ).isEqualTo( "r3" );
+		} );
+	}
+
+	@Test
+	public void testImplicitJoinThroughNonKeyPropertyRef(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
+			CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+			CriteriaQuery<RequestWithPropertyRef> query = cb.createQuery( RequestWithPropertyRef.class );
+			Root<RequestWithPropertyRef> root = query.from( RequestWithPropertyRef.class );
+
+			Path<String> label = root
+					.get( "mapping" )
+					.get( "asset" )
+					.get( "label" );
+			query.where( cb.like( cb.lower( label ), "%some%" ) );
+
+			List<RequestWithPropertyRef> results = entityManager.createQuery( query ).getResultList();
+			assertThat( results ).hasSize( 1 );
+			assertThat( results.get( 0 ).getId() ).isEqualTo( "r4" );
+		} );
+	}
+
+	/**
+	 * Retaining the superclass table must stay confined to queries whose join predicate actually
+	 * references it: a query that only needs the subclass table must still prune the root-table join.
+	 */
+	@Test
+	public void testRootTableStillPrunedWhenNotReferenced(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
+			SQLStatementInspector inspector = scope.getCollectingStatementInspector();
+			inspector.clear();
+
+			entityManager.createQuery(
+					"select m.id from MappingA m where m.asset.label like '%some%'", String.class )
+					.getResultList();
+
+			assertThat( inspector.getSqlQueries() ).hasSize( 1 );
+			assertThat( inspector.getSqlQueries().get( 0 ) ).doesNotContain( "base_mappings" );
 		} );
 	}
 
@@ -229,6 +312,159 @@ public class CriteriaJoinedInheritanceToOneJoinAliasTest {
 		}
 
 		public MappingA getMapping() {
+			return mapping;
+		}
+	}
+
+	// ~~~~~~~~~~ JOINED hierarchy with a physical discriminator column ~~~~~~~~~~
+	// A discriminator does not avoid the problem: the referenced column still belongs to the
+	// root table, so the join predicate still qualifies it with the root-table alias.
+
+	@Entity(name = "BaseMappingWithDiscriminator")
+	@Table(name = "disc_base_mappings")
+	@Inheritance(strategy = InheritanceType.JOINED)
+	@DiscriminatorColumn(name = "mapping_type")
+	@DiscriminatorValue("base")
+	public static class BaseMappingWithDiscriminator {
+		@Id
+		private String id;
+
+		public BaseMappingWithDiscriminator() {
+		}
+
+		public BaseMappingWithDiscriminator(String id) {
+			this.id = id;
+		}
+
+		public String getId() {
+			return id;
+		}
+	}
+
+	@Entity(name = "MappingWithDiscriminator")
+	@Table(name = "disc_mappings_a")
+	@PrimaryKeyJoinColumn(name = "mapping_id")
+	@DiscriminatorValue("a")
+	public static class MappingWithDiscriminator extends BaseMappingWithDiscriminator {
+		@ManyToOne(fetch = FetchType.LAZY)
+		@JoinColumn(name = "asset_id")
+		private Asset asset;
+
+		public MappingWithDiscriminator() {
+		}
+
+		public MappingWithDiscriminator(String id, Asset asset) {
+			super( id );
+			this.asset = asset;
+		}
+
+		public Asset getAsset() {
+			return asset;
+		}
+	}
+
+	@Entity(name = "RequestWithDiscriminator")
+	@Table(name = "disc_requests")
+	public static class RequestWithDiscriminator {
+		@Id
+		private String id;
+
+		@ManyToOne(fetch = FetchType.EAGER)
+		@JoinColumn(name = "mapping_id", referencedColumnName = "id")
+		private MappingWithDiscriminator mapping;
+
+		public RequestWithDiscriminator() {
+		}
+
+		public RequestWithDiscriminator(String id, MappingWithDiscriminator mapping) {
+			this.id = id;
+			this.mapping = mapping;
+		}
+
+		public String getId() {
+			return id;
+		}
+
+		public MappingWithDiscriminator getMapping() {
+			return mapping;
+		}
+	}
+
+	// ~~~~~~~~~~ foreign key targeting an ordinary (non-key) column of the root table ~~~~~~~~~~
+	// Here the reference genuinely is not to the primary key, yet the outcome is the same: the
+	// target column lives on the root table, so the root-table alias appears in the predicate.
+
+	@Entity(name = "BaseMappingWithCode")
+	@Table(name = "code_base_mappings")
+	@Inheritance(strategy = InheritanceType.JOINED)
+	public static class BaseMappingWithCode {
+		@Id
+		private String id;
+
+		@Column(name = "code", unique = true)
+		private String code;
+
+		public BaseMappingWithCode() {
+		}
+
+		public BaseMappingWithCode(String id, String code) {
+			this.id = id;
+			this.code = code;
+		}
+
+		public String getId() {
+			return id;
+		}
+
+		public String getCode() {
+			return code;
+		}
+	}
+
+	@Entity(name = "MappingWithCode")
+	@Table(name = "code_mappings_a")
+	@PrimaryKeyJoinColumn(name = "mapping_id")
+	public static class MappingWithCode extends BaseMappingWithCode {
+		@ManyToOne(fetch = FetchType.LAZY)
+		@JoinColumn(name = "asset_id")
+		private Asset asset;
+
+		public MappingWithCode() {
+		}
+
+		public MappingWithCode(String id, String code, Asset asset) {
+			super( id, code );
+			this.asset = asset;
+		}
+
+		public Asset getAsset() {
+			return asset;
+		}
+	}
+
+	@Entity(name = "RequestWithPropertyRef")
+	@Table(name = "code_requests")
+	public static class RequestWithPropertyRef {
+		@Id
+		private String id;
+
+		@ManyToOne(fetch = FetchType.EAGER)
+		@JoinColumn(name = "mapping_code", referencedColumnName = "code")
+		private MappingWithCode mapping;
+
+		public RequestWithPropertyRef() {
+		}
+
+		public RequestWithPropertyRef(String id, MappingWithCode mapping) {
+			this.id = id;
+			this.mapping = mapping;
+		}
+
+		public String getId() {
+			return id;
+		}
+
+		public MappingWithCode getMapping() {
 			return mapping;
 		}
 	}

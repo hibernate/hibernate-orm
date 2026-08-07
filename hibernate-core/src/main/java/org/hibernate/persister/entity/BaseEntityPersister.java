@@ -23,9 +23,11 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.bytecode.internal.BytecodeEnhancementMetadataNonPojoImpl;
 import org.hibernate.bytecode.internal.BytecodeEnhancementMetadataPojoImpl;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
+import org.hibernate.cascade.spi.CascadePropertySelection;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.cascade.spi.CascadeStyle;
 import org.hibernate.cascade.spi.CascadeStyles;
+import org.hibernate.cascade.spi.CascadingAction;
 import org.hibernate.cascade.spi.CascadingActions;
 import org.hibernate.generator.EventType;
 import org.hibernate.generator.Generator;
@@ -93,6 +95,13 @@ abstract class BaseEntityPersister implements Serializable {
 	private final boolean[] propertyVersionability;
 	private final OnDeleteAction[] propertyOnDeleteActions;
 	private final CascadeStyle[] cascadeStyles;
+	private final CascadePropertySelection removePropertySelection;
+	private final CascadePropertySelection refreshPropertySelection;
+	private final CascadePropertySelection evictPropertySelection;
+	private final CascadePropertySelection mergePropertySelection;
+	private final CascadePropertySelection persistPropertySelection;
+	private final CascadePropertySelection persistOnFlushPropertySelection;
+	private final CascadePropertySelection checkOnFlushPropertySelection;
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	// value generations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -363,6 +372,42 @@ abstract class BaseEntityPersister implements Serializable {
 
 			mapPropertyToIndex( property, i );
 		}
+
+		removePropertySelection = CascadePropertySelection.determine(
+				propertyTypes,
+				cascadeStyles,
+				CascadingActions.REMOVE
+		);
+		refreshPropertySelection = CascadePropertySelection.determine(
+				propertyTypes,
+				cascadeStyles,
+				CascadingActions.REFRESH
+		);
+		evictPropertySelection = CascadePropertySelection.determine(
+				propertyTypes,
+				cascadeStyles,
+				CascadingActions.EVICT
+		);
+		mergePropertySelection = CascadePropertySelection.determine(
+				propertyTypes,
+				cascadeStyles,
+				CascadingActions.MERGE
+		);
+		persistPropertySelection = CascadePropertySelection.determine(
+				propertyTypes,
+				cascadeStyles,
+				CascadingActions.PERSIST
+		);
+		persistOnFlushPropertySelection = CascadePropertySelection.determine(
+				propertyTypes,
+				cascadeStyles,
+				CascadingActions.PERSIST_ON_FLUSH
+		);
+		checkOnFlushPropertySelection = CascadePropertySelection.determine(
+				propertyTypes,
+				cascadeStyles,
+				CascadingActions.CHECK_ON_FLUSH
+		);
 
 		if ( naturalIdNumbers.isEmpty() ) {
 			naturalIdPropertyNumbers = null;
@@ -804,6 +849,31 @@ abstract class BaseEntityPersister implements Serializable {
 
 	public boolean hasCascadePersist() {
 		return hasCascadePersist;
+	}
+
+	protected CascadePropertySelection getCascadePropertySelection(CascadingAction<?> action) {
+		if ( action == CascadingActions.REMOVE ) {
+			return removePropertySelection;
+		}
+		if ( action == CascadingActions.REFRESH ) {
+			return refreshPropertySelection;
+		}
+		if ( action == CascadingActions.EVICT ) {
+			return evictPropertySelection;
+		}
+		if ( action == CascadingActions.MERGE ) {
+			return mergePropertySelection;
+		}
+		if ( action == CascadingActions.PERSIST ) {
+			return persistPropertySelection;
+		}
+		if ( action == CascadingActions.PERSIST_ON_FLUSH ) {
+			return persistOnFlushPropertySelection;
+		}
+		if ( action == CascadingActions.CHECK_ON_FLUSH ) {
+			return checkOnFlushPropertySelection;
+		}
+		return CascadePropertySelection.all();
 	}
 
 	public boolean isMutable() {

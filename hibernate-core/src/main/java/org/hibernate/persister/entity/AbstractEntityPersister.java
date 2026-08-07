@@ -40,6 +40,7 @@ import org.hibernate.cache.spi.entry.ReferenceCacheEntryImpl;
 import org.hibernate.cache.spi.entry.StandardCacheEntryImpl;
 import org.hibernate.cache.spi.entry.StructuredCacheEntry;
 import org.hibernate.cache.spi.entry.UnstructuredCacheEntry;
+import org.hibernate.cascade.spi.CascadePropertySelection;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.lock.LockingStrategy;
@@ -49,6 +50,7 @@ import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.profile.internal.FetchProfileAffectee;
 import org.hibernate.engine.spi.CachedNaturalIdValueSource;
 import org.hibernate.cascade.spi.CascadeStyle;
+import org.hibernate.cascade.spi.CascadingAction;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
@@ -4802,6 +4804,11 @@ public abstract class AbstractEntityPersister
 	@Override
 	public CascadeStyle[] getPropertyCascadeStyles() {
 		return getCascadeStyles();
+	}
+
+	@Internal
+	public final CascadePropertySelection getCascadePropertySelection(CascadingAction<?> action) {
+		return super.getCascadePropertySelection( action );
 	}
 
 	@Override

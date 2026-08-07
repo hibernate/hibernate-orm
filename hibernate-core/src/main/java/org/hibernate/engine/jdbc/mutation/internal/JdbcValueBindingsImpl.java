@@ -29,7 +29,8 @@ public class JdbcValueBindingsImpl implements JdbcValueBindings {
 	private final JdbcValueDescriptorAccess jdbcValueDescriptorAccess;
 	private final SharedSessionContractImplementor session;
 
-	private final Map<String, BindingGroup> bindingGroupMap = new HashMap<>();
+	private BindingGroup singleBindingGroup;
+	private Map<String, BindingGroup> bindingGroupMap;
 
 	public JdbcValueBindingsImpl(
 			MutationType mutationType,
@@ -44,7 +45,15 @@ public class JdbcValueBindingsImpl implements JdbcValueBindings {
 
 	@Override
 	public BindingGroup getBindingGroup(String tableName) {
-		return bindingGroupMap.get( tableName );
+		if ( singleBindingGroup != null ) {
+			return tableName.equals( singleBindingGroup.getTableName() ) ? singleBindingGroup : null;
+		}
+		else if ( bindingGroupMap != null ) {
+			return bindingGroupMap.get( tableName );
+		}
+		else {
+			return null;
+		}
 	}
 
 	@Override
@@ -63,14 +72,32 @@ public class JdbcValueBindingsImpl implements JdbcValueBindings {
 	}
 
 	private BindingGroup resolveBindingGroup(String tableName) {
-		final var existing = bindingGroupMap.get( tableName );
-		if ( existing != null ) {
-			assert tableName.equals( existing.getTableName() );
-			return existing;
+		if ( singleBindingGroup != null ) {
+			if ( tableName.equals( singleBindingGroup.getTableName() ) ) {
+				return singleBindingGroup;
+			}
+			final var created = new BindingGroup( tableName );
+			bindingGroupMap = new HashMap<>();
+			bindingGroupMap.put( singleBindingGroup.getTableName(), singleBindingGroup );
+			bindingGroupMap.put( tableName, created );
+			singleBindingGroup = null;
+			return created;
+		}
+		else if ( bindingGroupMap != null ) {
+			final var existing = bindingGroupMap.get( tableName );
+			if ( existing != null ) {
+				assert tableName.equals( existing.getTableName() );
+				return existing;
+			}
+			else {
+				final var created = new BindingGroup( tableName );
+				bindingGroupMap.put( tableName, created );
+				return created;
+			}
 		}
 		else {
 			final var created = new BindingGroup( tableName );
-			bindingGroupMap.put( tableName, created );
+			singleBindingGroup = created;
 			return created;
 		}
 	}
@@ -78,7 +105,7 @@ public class JdbcValueBindingsImpl implements JdbcValueBindings {
 	@Override
 	public void beforeStatement(PreparedStatementDetails statementDetails) {
 		final var bindingGroup =
-				bindingGroupMap.get( statementDetails.getMutatingTableDetails().getTableName() );
+				getBindingGroup( statementDetails.getMutatingTableDetails().getTableName() );
 		if ( bindingGroup == null ) {
 			statementDetails.resolveStatement();
 		}
@@ -109,7 +136,22 @@ public class JdbcValueBindingsImpl implements JdbcValueBindings {
 
 	@Override
 	public void afterStatement(TableMapping mutatingTable) {
-		final var bindingGroup = bindingGroupMap.remove( mutatingTable.getTableName() );
+		final BindingGroup bindingGroup;
+		if ( singleBindingGroup != null ) {
+			if ( mutatingTable.getTableName().equals( singleBindingGroup.getTableName() ) ) {
+				bindingGroup = singleBindingGroup;
+				singleBindingGroup = null;
+			}
+			else {
+				bindingGroup = null;
+			}
+		}
+		else if ( bindingGroupMap != null ) {
+			bindingGroup = bindingGroupMap.remove( mutatingTable.getTableName() );
+		}
+		else {
+			bindingGroup = null;
+		}
 		if ( bindingGroup != null ) {
 			bindingGroup.clear();
 		}

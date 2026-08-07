@@ -949,7 +949,6 @@ public final class Cascade {
 		}
 	}
 
-	@SuppressWarnings("removal")
 	private static CascadeTraceEvent.CollectionIteratorMode collectionIteratorMode(
 			CascadingAction<?> action,
 			Iterator<?> iterator) {
@@ -961,8 +960,7 @@ public final class Cascade {
 					? CascadeTraceEvent.CollectionIteratorMode.EMPTY
 					: CascadeTraceEvent.CollectionIteratorMode.LOADED;
 		}
-		else if ( action == CascadingActions.LOCK
-				|| action == CascadingActions.EVICT
+		else if ( action == CascadingActions.EVICT
 				|| action == CascadingActions.MERGE
 				|| action == CascadingActions.PERSIST
 				|| action == CascadingActions.PERSIST_ON_FLUSH ) {

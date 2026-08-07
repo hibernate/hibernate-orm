@@ -7,8 +7,6 @@ package org.hibernate.cascade.spi;
 import jakarta.annotation.Nullable;
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
-import org.hibernate.LockMode;
-import org.hibernate.LockOptions;
 import org.hibernate.TransientPropertyValueException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.EntityEntry;
@@ -92,48 +90,6 @@ public class CascadingActions {
 		@Override
 		public String toString() {
 			return "ACTION_DELETE";
-		}
-	};
-
-	/**
-	 * @see org.hibernate.Session#lock(Object, LockMode)
-	 *
-	 * @deprecated because {@code org.hibernate.annotations.CascadeType#LOCK}
-	 *             was removed
-	 */
-	@Deprecated(since="7", forRemoval = true)
-	public static final CascadingAction<LockOptions> LOCK = new BaseCascadingAction<>() {
-		@Override
-		public void cascade(
-				EventSource session,
-				Object child,
-				String childEntityName,
-				String parentEntityName,
-				String propertyName,
-				List<String> attributePath,
-				LockOptions lockOptions,
-				boolean isCascadeDeleteEnabled) {
-			session.lock( childEntityName, child, lockOptions );
-		}
-
-		@Override
-		public Iterator<?> getCascadableChildrenIterator(
-				EventSource session,
-				CollectionType collectionType,
-				Object collection) {
-			// lock doesn't cascade to uninitialized collections
-			return getLoadedElementsIterator( collectionType, collection );
-		}
-
-		@Override
-		public boolean deleteOrphans() {
-			//TODO: should orphans really be deleted during lock???
-			return false;
-		}
-
-		@Override
-		public String toString() {
-			return "ACTION_LOCK";
 		}
 	};
 

@@ -20,7 +20,6 @@ import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.AttributeClassification;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.model.domain.internal.AbstractIdentifiableType;
-import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
@@ -29,12 +28,10 @@ import org.hibernate.metamodel.model.domain.MappedSuperclassDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.internal.AttributeContainer;
-import org.hibernate.metamodel.model.domain.internal.BasicTypeImpl;
 import org.hibernate.metamodel.model.domain.internal.EmbeddableTypeImpl;
 import org.hibernate.metamodel.model.domain.internal.EntityTypeImpl;
 import org.hibernate.metamodel.model.domain.internal.MappedSuperclassTypeImpl;
 import org.hibernate.metamodel.model.domain.internal.MappingMetamodelImpl;
-import org.hibernate.metamodel.model.domain.internal.PrimitiveBasicTypeImpl;
 import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.type.descriptor.java.spi.EntityJavaType;
@@ -883,38 +880,6 @@ public class MetadataContext {
 
 	public Set<MappedSuperclass> getUnusedMappedSuperclasses() {
 		return new HashSet<>( knownMappedSuperclasses );
-	}
-
-	private final Map<Class<?>, BasicDomainType<?>> basicDomainTypeMap = new HashMap<>();
-
-	public <J> BasicDomainType<J> resolveBasicType(Class<J> javaType) {
-		final var domainType = basicDomainTypeMap.get( javaType );
-		if ( domainType == null ) {
-			// we cannot use getTypeConfiguration().standardBasicTypeForJavaType(javaType)
-			// because that doesn't return the right thing for primitive types
-			basicDomainTypeMap.put( javaType, basicDomainType( javaType ) );
-			return basicDomainType( javaType );
-		}
-		else {
-			if ( domainType.getJavaType() != javaType ) {
-				throw new AssertionFailure( "Basic type mismatch:"
-						+ " expected " + javaType.getTypeName()
-						+ " but was " + domainType.getJavaType().getTypeName() );
-			}
-			@SuppressWarnings("unchecked") // Safe, we just checked
-			final var castDomainType = (BasicDomainType<J>) domainType;
-			return castDomainType;
-		}
-	}
-
-	private <J> BasicDomainType<J> basicDomainType(Class<J> javaType) {
-		final var javaTypeDescriptor = getJavaTypeRegistry().resolveDescriptor( javaType );
-		final var jdbcType =
-				javaTypeDescriptor.getRecommendedJdbcType(
-						typeConfiguration.getCurrentBaseSqlTypeIndicators() );
-		return javaType.isPrimitive()
-				? new PrimitiveBasicTypeImpl<>( javaTypeDescriptor, jdbcType, javaType )
-				: new BasicTypeImpl<>( javaTypeDescriptor, jdbcType );
 	}
 
 	public EmbeddableDomainType<?> locateEmbeddable(Class<?> embeddableClass, Component component) {

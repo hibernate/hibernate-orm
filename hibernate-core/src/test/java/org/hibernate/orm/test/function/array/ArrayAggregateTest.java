@@ -95,9 +95,12 @@ public class ArrayAggregateTest {
 		scope.inTransaction( em -> {
 			final EntityOfBasics e1 = new EntityOfBasics( 1 );
 			e1.setTheString( "abc" );
+			e1.setTheInt( 2 );
 			final EntityOfBasics e2 = new EntityOfBasics( 2 );
 			e2.setTheString( "def" );
+			e2.setTheInt( 1 );
 			final EntityOfBasics e3 = new EntityOfBasics( 3 );
+			e3.setTheInt( 3 );
 			em.persist( e1 );
 			em.persist( e2 );
 			em.persist( e3 );
@@ -172,6 +175,21 @@ public class ArrayAggregateTest {
 					.getResultList();
 			assertEquals( 1, results.size() );
 			assertArrayEquals( new Integer[]{ 1, 2, 3 }, results.get( 0 ) );
+		} );
+	}
+
+	@Test
+	@Jira("https://hibernate.atlassian.net/browse/HHH-20348")
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsArrayToString.class)
+	@SkipForDialect( dialectClass = SpannerPostgreSQLDialect.class, reason = "Spanner doesn't really support array_to_string")
+	public void testArrayToStringArrayAggPrimitive(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			List<String> results = em.createQuery(
+					"select array_to_string(array_agg(e.theInt) within group (order by e.theInt), ',') from EntityOfBasics e",
+					String.class
+			).getResultList();
+			assertEquals( 1, results.size() );
+			assertEquals( "1,2,3", results.get( 0 ) );
 		} );
 	}
 

@@ -2,17 +2,16 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.engine.internal;
+package org.hibernate.cascade.internal;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 
 import org.hibernate.HibernateException;
 import org.hibernate.annotations.OnDeleteAction;
+import org.hibernate.cascade.spi.CascadeStyle;
+import org.hibernate.cascade.spi.CascadingAction;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.spi.CascadeStyle;
-import org.hibernate.engine.spi.CascadingAction;
+import org.hibernate.cascade.spi.CascadePoint;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.event.spi.DeleteContext;
@@ -39,6 +38,7 @@ import static org.hibernate.pretty.MessageHelper.infoString;
  * {@linkplain CascadingAction actions}, implementing cascade processing.
  *
  * @author Gavin King
+ * @author Steve Ebersole
  * @see CascadingAction
  */
 public final class Cascade {
@@ -76,6 +76,14 @@ public final class Cascade {
 			final EntityPersister persister,
 			final Object parent,
 			final T anything) throws HibernateException {
+		cascade( new CascadeTraversalContext<>( action, cascadePoint, eventSource, persister, parent, anything ) );
+	}
+
+	static <T> void cascade(CascadeTraversalContext<T> context) throws HibernateException {
+		final var action = context.action();
+		final var persister = context.rootPersister();
+		final var eventSource = context.session();
+		final var parent = context.root();
 		if ( action.anythingToCascade( persister ) ) { // performance opt
 			final boolean traceEnabled = CORE_LOGGER.isTraceEnabled();
 			if ( traceEnabled ) {
@@ -156,17 +164,13 @@ public final class Cascade {
 						child = persister.getValue( parent, i );
 					}
 					cascadeProperty(
-							action,
-							cascadePoint,
-							eventSource,
-							persister.getEntityName(),
-							null,
+							context,
+							i,
 							parent,
 							child,
 							type,
 							style,
 							propertyName,
-							anything,
 							isCascadeDeleteEnabled
 					);
 				}
@@ -174,17 +178,28 @@ public final class Cascade {
 						// If the property is uninitialized, there cannot be any orphans.
 						&& !isUninitializedProperty
 						&& isLogicalOneToOne( type ) ) {
-					cascadeLogicalOneToOneOrphanRemoval(
-							action,
-							eventSource,
-							null,
-							parent,
-							persister.getValue( parent, i ),
-							type,
-							style,
-							propertyName,
-							isCascadeDeleteEnabled
-					);
+					final var previousParent = context.currentParent();
+					final var previousPropertyName = context.currentPropertyName();
+					final var previousPropertyType = context.currentPropertyType();
+					final var previousCascadeStyle = context.currentCascadeStyle();
+					final int previousPropertyIndex = context.currentPropertyIndex();
+					context.setCurrentProperty( parent, propertyName, type, style, i );
+					try {
+						cascadeLogicalOneToOneOrphanRemoval(
+								context,
+								persister.getValue( parent, i ),
+								isCascadeDeleteEnabled
+						);
+					}
+					finally {
+						context.setCurrentProperty(
+								previousParent,
+								previousPropertyName,
+								previousPropertyType,
+								previousCascadeStyle,
+								previousPropertyIndex
+						);
+					}
 				}
 			}
 
@@ -198,71 +213,69 @@ public final class Cascade {
 	 * Cascade an action to the child or children
 	 */
 	private static <T> void cascadeProperty(
-			final CascadingAction<T> action,
-			final CascadePoint cascadePoint,
-			final EventSource eventSource,
-			final String entityName,
-			List<String> componentPath,
+			final CascadeTraversalContext<T> context,
+			final int propertyIndex,
 			final Object parent,
 			final Object child,
 			final Type type,
 			final CascadeStyle style,
 			final String propertyName,
-			final T anything,
 			final boolean isCascadeDeleteEnabled) throws HibernateException {
+		final var previousParent = context.currentParent();
+		final var previousPropertyName = context.currentPropertyName();
+		final var previousPropertyType = context.currentPropertyType();
+		final var previousCascadeStyle = context.currentCascadeStyle();
+		final int previousPropertyIndex = context.currentPropertyIndex();
+		context.setCurrentProperty( parent, propertyName, type, style, propertyIndex );
+		try {
+			cascadePropertyValue( context, child, isCascadeDeleteEnabled );
+		}
+		finally {
+			context.setCurrentProperty(
+					previousParent,
+					previousPropertyName,
+					previousPropertyType,
+					previousCascadeStyle,
+					previousPropertyIndex
+			);
+		}
+	}
+
+	private static <T> void cascadePropertyValue(
+			final CascadeTraversalContext<T> context,
+			final Object child,
+			final boolean isCascadeDeleteEnabled) throws HibernateException {
+		final var action = context.action();
+		final var cascadePoint = context.cascadePoint();
+		final var eventSource = context.session();
+		final var type = context.currentPropertyType();
 
 		if ( child != null ) {
 			if ( type instanceof EntityType || type instanceof CollectionType || type instanceof AnyType ) {
 				if ( action.cascadeNow( cascadePoint, (AssociationType) type, eventSource.getFactory() ) ) {
-					cascadeAssociation(
-							action,
-							cascadePoint,
-							eventSource,
-							entityName,
-							propertyName,
-							componentPath,
-							parent,
-							child,
-							type,
-							style,
-							anything,
-							isCascadeDeleteEnabled
-					);
+					cascadeAssociation( context, child, isCascadeDeleteEnabled );
 				}
 			}
 			else if ( type instanceof ComponentType componentType ) {
-				if ( componentPath == null && propertyName != null ) {
-					componentPath = new ArrayList<>();
+				final var propertyName = context.currentPropertyName();
+				if ( context.path() == null && propertyName == null ) {
+					cascadeComponent( context, child, componentType );
 				}
-				if ( componentPath != null ) {
-					componentPath.add( propertyName );
-				}
-				cascadeComponent(
-						action,
-						cascadePoint,
-						eventSource,
-						entityName,
-						componentPath,
-						parent,
-						child,
-						componentType,
-						anything
-				);
-				if ( componentPath != null ) {
-					componentPath.remove( componentPath.size() - 1 );
+				else {
+					context.pushPath( propertyName );
+					try {
+						cascadeComponent( context, child, componentType );
+					}
+					finally {
+						context.popPath();
+					}
 				}
 			}
 		}
 		if ( isLogicalOneToOne( type ) ) {
 			cascadeLogicalOneToOneOrphanRemoval(
-					action,
-					eventSource,
-					componentPath,
-					parent,
+					context,
 					child,
-					type,
-					style,
-					propertyName,
 					isCascadeDeleteEnabled
 			);
 		}
@@ -270,15 +283,16 @@ public final class Cascade {
 
 	/** potentially we need to handle orphan deletes for one-to-ones here...*/
 	private static <T> void cascadeLogicalOneToOneOrphanRemoval(
-			final CascadingAction<T> action,
-			final EventSource eventSource,
-			final List<String> componentPath,
-			final Object parent,
+			final CascadeTraversalContext<T> context,
 			final Object child,
-			final Type type,
-			final CascadeStyle style,
-			final String propertyName,
 			final boolean isCascadeDeleteEnabled) throws HibernateException {
+		final var action = context.action();
+		final var eventSource = context.session();
+		final var componentPath = context.path();
+		final var parent = context.currentParent();
+		final var type = context.currentPropertyType();
+		final var style = context.currentCascadeStyle();
+		final var propertyName = context.currentPropertyName();
 
 		// We have a physical or logical one-to-one.  See if the attribute cascade settings and action-type require
 		// orphan checking
@@ -380,15 +394,11 @@ public final class Cascade {
 	}
 
 	private static <T> void cascadeComponent(
-			final CascadingAction<T> action,
-			final CascadePoint cascadePoint,
-			final EventSource eventSource,
-			final String entityName,
-			final List<String> componentPath,
-			final Object parent,
+			final CascadeTraversalContext<T> context,
 			final Object child,
-			final CompositeType componentType,
-			final T anything) {
+			final CompositeType componentType) {
+		final var action = context.action();
+		final var eventSource = context.session();
 		Object[] children = null;
 		final Type[] types = componentType.getSubtypes();
 		final String[] propertyNames = componentType.getPropertyNames();
@@ -403,17 +413,13 @@ public final class Cascade {
 					children = componentType.getPropertyValues( child, eventSource );
 				}
 				cascadeProperty(
-						action,
-						cascadePoint,
-						eventSource,
-						entityName,
-						componentPath,
-						parent,
+						context,
+						i,
+						context.currentParent(),
 						children[i],
 						subPropertyType,
 						componentPropertyStyle,
 						subPropertyName,
-						anything,
 						cascadeDeleteEnabled( action, componentType, i )
 				);
 			}
@@ -421,47 +427,15 @@ public final class Cascade {
 	}
 
 	private static <T> void cascadeAssociation(
-			final CascadingAction<T> action,
-			final CascadePoint cascadePoint,
-			final EventSource eventSource,
-			final String entityName,
-			final String propertyName,
-			final List<String> componentPath,
-			final Object parent,
+			final CascadeTraversalContext<T> context,
 			final Object child,
-			final Type type,
-			final CascadeStyle style,
-			final T anything,
 			final boolean isCascadeDeleteEnabled) {
+		final var type = context.currentPropertyType();
 		if ( type instanceof EntityType || type instanceof AnyType ) {
-			cascadeToOne(
-					action,
-					eventSource,
-					parent,
-					child,
-					type,
-					style,
-					anything,
-					isCascadeDeleteEnabled,
-					entityName,
-					propertyName,
-					componentPath
-			);
+			cascadeToOne( context, child, isCascadeDeleteEnabled );
 		}
 		else if ( type instanceof CollectionType collectionType ) {
-			cascadeCollection(
-					action,
-					cascadePoint,
-					eventSource,
-					entityName,
-					propertyName,
-					componentPath,
-					parent,
-					child,
-					style,
-					anything,
-					collectionType
-			);
+			cascadeCollection( context, child, collectionType );
 		}
 	}
 
@@ -469,17 +443,11 @@ public final class Cascade {
 	 * Cascade an action to a collection
 	 */
 	private static <T> void cascadeCollection(
-			final CascadingAction<T> action,
-			final CascadePoint cascadePoint,
-			final EventSource eventSource,
-			final String entityName,
-			final String propertyName,
-			final List<String> componentPath,
-			final Object parent,
+			final CascadeTraversalContext<T> context,
 			final Object child,
-			final CascadeStyle style,
-			final T anything,
 			final CollectionType type) {
+		final var action = context.action();
+		final var eventSource = context.session();
 		final var persister =
 				eventSource.getFactory().getMappingMetamodel()
 						.getCollectionDescriptor( type.getRole() );
@@ -487,21 +455,11 @@ public final class Cascade {
 		//cascade to current collection elements
 		if ( elemType instanceof EntityType || elemType instanceof AnyType || elemType instanceof ComponentType ) {
 			cascadeCollectionElements(
-				action,
-				cascadePoint == CascadePoint.AFTER_INSERT_BEFORE_DELETE
-						? CascadePoint.AFTER_INSERT_BEFORE_DELETE_VIA_COLLECTION
-						: cascadePoint,
-				eventSource,
-				entityName,
-				propertyName,
-				componentPath,
-				parent,
-				child,
-				type,
-				style,
-				elemType,
-				anything,
-				cascadeDeleteEnabled( action, persister )
+					context,
+					child,
+					type,
+					elemType,
+					cascadeDeleteEnabled( action, persister )
 			);
 		}
 	}
@@ -510,17 +468,14 @@ public final class Cascade {
 	 * Cascade an action to a to-one association or any type
 	 */
 	private static <T> void cascadeToOne(
-			final CascadingAction<T> action,
-			final EventSource eventSource,
-			final Object parent,
+			final CascadeTraversalContext<T> context,
 			final Object child,
-			final Type type,
-			final CascadeStyle style,
-			final T anything,
-			final boolean isCascadeDeleteEnabled,
-			final String parentEntityName,
-			final String propertyName,
-			final List<String> componentPath) {
+			final boolean isCascadeDeleteEnabled) {
+		final var action = context.action();
+		final var eventSource = context.session();
+		final var parent = context.currentParent();
+		final var type = context.currentPropertyType();
+		final var style = context.currentCascadeStyle();
 		if ( style.reallyDoCascade( action ) ) {
 			//not really necessary, but good for consistency...
 			final var persistenceContext = eventSource.getPersistenceContextInternal();
@@ -535,10 +490,10 @@ public final class Cascade {
 						eventSource,
 						child,
 						childEntityName,
-						parentEntityName,
-						propertyName,
-						componentPath,
-						anything,
+						context.rootEntityName(),
+						context.currentPropertyName(),
+						context.path(),
+						context.actionContext(),
 						isCascadeDeleteEnabled
 				);
 			}
@@ -552,46 +507,49 @@ public final class Cascade {
 	 * Cascade to the collection elements
 	 */
 	private static <T> void cascadeCollectionElements(
-			final CascadingAction<T> action,
-			final CascadePoint cascadePoint,
-			final EventSource eventSource,
-			final String entityName,
-			final String propertyName,
-			final List<String> componentPath,
-			final Object parent,
+			final CascadeTraversalContext<T> context,
 			final Object child,
 			final CollectionType collectionType,
-			final CascadeStyle style,
 			final Type elemType,
-			final T anything,
 			final boolean isCascadeDeleteEnabled) throws HibernateException {
+		final var action = context.action();
+		final var eventSource = context.session();
+		final var parent = context.currentParent();
+		final var propertyName = context.currentPropertyName();
+		final var style = context.currentCascadeStyle();
+		final var originalCascadePoint = context.cascadePoint();
+		final var collectionCascadePoint =
+				originalCascadePoint == CascadePoint.AFTER_INSERT_BEFORE_DELETE
+						? CascadePoint.AFTER_INSERT_BEFORE_DELETE_VIA_COLLECTION
+						: originalCascadePoint;
 
-		if ( style.reallyDoCascade( action ) ) {
-			final boolean traceEnabled = CORE_LOGGER.isTraceEnabled();
-			if ( traceEnabled ) {
-				CORE_LOGGER.cascadingCollection( action, collectionType.getRole() );
+		context.changeCascadePoint( collectionCascadePoint );
+		try {
+			if ( style.reallyDoCascade( action ) ) {
+				final boolean traceEnabled = CORE_LOGGER.isTraceEnabled();
+				if ( traceEnabled ) {
+					CORE_LOGGER.cascadingCollection( action, collectionType.getRole() );
+				}
+				final var iterator = action.getCascadableChildrenIterator( eventSource, collectionType, child );
+				while ( iterator.hasNext() ) {
+					cascadeProperty(
+							context,
+							-1,
+							parent,
+							iterator.next(),
+							elemType,
+							style,
+							propertyName,
+							isCascadeDeleteEnabled
+					);
+				}
+				if ( traceEnabled ) {
+					CORE_LOGGER.doneCascadingCollection( action, collectionType.getRole() );
+				}
 			}
-			final var iterator = action.getCascadableChildrenIterator( eventSource, collectionType, child );
-			while ( iterator.hasNext() ) {
-				cascadeProperty(
-						action,
-						cascadePoint,
-						eventSource,
-						entityName,
-						componentPath,
-						parent,
-						iterator.next(),
-						elemType,
-						style,
-						propertyName,
-//						collectionType.getRole().substring( collectionType.getRole().lastIndexOf('.') + 1 ),
-						anything,
-						isCascadeDeleteEnabled
-				);
-			}
-			if ( traceEnabled ) {
-				CORE_LOGGER.doneCascadingCollection( action, collectionType.getRole() );
-			}
+		}
+		finally {
+			context.changeCascadePoint( originalCascadePoint );
 		}
 
 		// a newly instantiated collection can't have orphans

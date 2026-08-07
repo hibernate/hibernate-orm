@@ -4,8 +4,8 @@
  */
 package org.hibernate.event.internal;
 
-import org.hibernate.engine.spi.CascadingAction;
-import org.hibernate.engine.spi.CascadingActions;
+import org.hibernate.cascade.spi.CascadingAction;
+import org.hibernate.cascade.spi.CascadingActions;
 import org.hibernate.event.spi.PersistContext;
 
 /**

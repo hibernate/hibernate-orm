@@ -9,7 +9,7 @@ import java.lang.reflect.Method;
 import org.hibernate.HibernateException;
 import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.engine.FetchStyle;
-import org.hibernate.engine.spi.CascadeStyle;
+import org.hibernate.cascade.spi.CascadeStyle;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**

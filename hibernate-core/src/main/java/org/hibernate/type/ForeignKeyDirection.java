@@ -4,7 +4,7 @@
  */
 package org.hibernate.type;
 
-import org.hibernate.engine.internal.CascadePoint;
+import org.hibernate.cascade.spi.CascadePoint;
 
 /**
  * Represents directionality of the foreign key constraint
@@ -40,7 +40,7 @@ public enum ForeignKeyDirection {
 	 *
 	 * @return {@code true} if cascading should be performed now.
 	 *
-	 * @see org.hibernate.engine.internal.Cascade
+	 * @see org.hibernate.cascade.internal.Cascade
 	 */
 	public abstract boolean cascadeNow(CascadePoint cascadePoint);
 }

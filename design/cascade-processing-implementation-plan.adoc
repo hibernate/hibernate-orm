@@ -1,0 +1,749 @@
+:toc2:
+:toclevels: 3
+:sectanchors:
+:numbered:
+= Cascade Processing Implementation Plan
+
+Status: Active Implementation Plan
+
+Revision: 0.5
+
+Specification: link:cascade-processing-spec.adoc[Cascade Processing Specification]
+
+Implementation started: 2026-08-06
+
+Revision history::
+
+* `0.1` -- Established the implementation sequence, internal responsibility
+  boundaries, per-stage work items and exit gates, route-migration and benchmark
+  gates, deferred collection-delta boundary, and the initial stage 1 checkpoint.
+* `0.2` -- Recorded the baseline regression inventory, completed stages 0 and 1,
+  and recorded compilation, traversal-context restoration, and focused cascade
+  regression results.
+* `0.3` -- Added the approved package migration as the first stage 2 work item:
+  cascade implementation under `org.hibernate.cascade.internal`, cascade
+  extension contracts under `org.hibernate.cascade.spi`, and `CascadePoint`
+  under `org.hibernate.engine.spi`, without legacy package adapters.
+* `0.4` -- Completed the cascade package migration and its stage 1 verification
+  gate.  Recorded compilation, focused context-test, regression-inventory, and
+  obsolete-reference audit results.
+* `0.5` -- Corrected the completed migration so `CascadePoint` resides with the
+  other cascade contracts in `org.hibernate.cascade.spi`.
+
+== Purpose and Authority
+
+This document describes how to implement the approved
+link:cascade-processing-spec.adoc[Cascade Processing Specification].  The
+specification remains authoritative for required behavior, compatibility, test
+coverage, acceptance criteria, and permitted scope.  This plan records code
+organization, sequencing, verification gates, migration mechanics, and current
+implementation status.
+
+Changing this plan does not change the approved specification.  Any discovered
+need to change an observable behavior, compatibility requirement, or normative
+`CPS-*` requirement MUST be disclosed and approved as a specification change
+before implementation proceeds with that deviation.
+
+The plan covers `CPS-STG-001` through `CPS-STG-004` and the benchmark-gated
+`CPS-STG-006` workstream.  `CPS-STG-005` remains deferred until the Collection
+Flush Processing Working Specification is approved.
+
+== Implementation Principles
+
+The implementation will follow these principles:
+
+* Preserve the behavior and signatures of the `Cascade.cascade(...)` entry
+  points and `CascadingAction` SPI except for the explicitly approved package
+  relocation in `CPS-COM-005` through `CPS-COM-009`.
+* Keep every completed stage buildable and behaviorally usable on its own.
+* Keep the metadata walker as the production route until a compiled route has
+  passed its complete differential and integration gates.
+* Separate stable mapping structure from invocation-local traversal state.
+* Apply runtime-sensitive action, style, cascade-point, lazy-state, and orphan
+  decisions at traversal time unless a route profile has independently passed
+  its parity gate.
+* Introduce no public plan, traversal-context, route-selection, or diagnostic
+  contract.
+* Avoid changes to persister SPI solely to expose cascade plans.  Registry access
+  will use an internal implementation boundary owned by the mapping metamodel.
+* Treat behavioral parity as absolute.  Performance measurements may affect
+  route selection but cannot excuse a parity failure.
+* Make scoped context mutation exception-safe with `try`/`finally` restoration.
+* Preserve action-specific contexts as the only authority for cross-invocation
+  cycle and duplicate handling.
+
+== Stage and Work-Item Status
+
+Status values are `Not started`, `In progress`, `Blocked`, `Deferred`, and
+`Complete`.  A stage is complete only when its implementation, focused tests,
+existing regression tests, and exit gate are complete.
+
+[cols="1,2,1,3",options="header"]
+|===
+| Stage | Purpose | Status | Current note
+
+| `CPS-STG-000`
+| Baseline inventory and change isolation
+| Complete
+| The inventory and worktree boundaries are recorded.  The lack of a clean
+  pre-refactor run is documented, compilation is restored, and the regression
+  inventory passes.
+
+| `CPS-STG-001`
+| Invocation-local traversal context over the metadata walker
+| Complete
+| Traversal state is context-owned and scoped restoration is covered for normal
+  lifecycle and exceptional component/collection exits.  The metadata walker
+  remains the sole production route.
+
+| `CPS-STG-002`
+| Immutable plan model, compiler, and registry
+| In progress
+| Package migration `CPI-002-00` and its verification gate are complete.  The
+  next work unit is the immutable plan and node model in `CPI-002-01`.
+
+| `CPS-STG-003`
+| Differential generic compiled walker
+| Not started
+| Requires the stage 2 plan model and test-only normalized tracing.
+
+| `CPS-STG-004`
+| Production migration of independently proven routes
+| Not started
+| Route migration follows parity and benchmark review.
+
+| `CPS-STG-005`
+| Collection-delta orphan-projection integration
+| Deferred
+| Requires approval of the Collection Flush Processing Specification.
+
+| `CPS-STG-006`
+| Profiles for exact built-in action routes
+| Not started
+| Follows the generic walker and is adopted per route only when useful.
+|===
+
+== Target Runtime Decomposition
+
+The implementation is expected to converge on these internal responsibilities.
+Names may be adjusted mechanically when the code makes a better name evident,
+but responsibility changes require updating this plan.
+
+[cols="2,4,3",options="header"]
+|===
+| Component | Responsibility | Initial location
+
+| Cascade extension contracts
+| Define action and style extension behavior and own the built-in action/style
+  registries and singleton instances.
+| `org.hibernate.cascade.spi`
+
+| `CascadePoint`
+| Identify the engine lifecycle point at which cascade traversal occurs.
+| `org.hibernate.cascade.spi`
+
+| `Cascade`
+| Preserve the existing entry point, create an invocation context, apply or
+  delegate root routing, and retain the metadata route during migration.
+| `org.hibernate.cascade.internal`
+
+| `CascadeTraversalContext`
+| Carry invocation-local action, cascade point, session, root, action context,
+  current parent, current node/metadata edge, and lazily materialized attribute
+  path.  Provide scoped restoration operations.
+| `org.hibernate.cascade.internal`
+
+| `CascadePlan`
+| Immutable entity-rooted ordered plan.
+| Internal cascade-plan package selected during stage 2
+
+| `CascadePlanNode`
+| Immutable stable mapping facts for a property or relative element edge,
+  including generic fallback information.
+| Internal cascade-plan package selected during stage 2
+
+| `CascadePlanCompiler`
+| Compile persister metadata into plans after all referenced persisters are
+  resolvable.
+| Mapping-metamodel internal implementation
+
+| `CascadePlanRegistry`
+| Own entity plans by `EntityPersister` identity and reusable element subplans by
+  `CollectionPersister` identity; become immutable for runtime lookup.
+| Factory-scoped mapping-metamodel internal implementation
+
+| Metadata walker
+| Preserve the current traversal as the production and parity-reference route.
+  It may initially remain in `Cascade` and later be extracted when dual walking
+  requires a clean boundary.
+| `org.hibernate.cascade.internal`
+
+| Generic compiled walker
+| Traverse plan nodes in mapping order while invoking the existing runtime
+  predicates and behavior.
+| `org.hibernate.cascade.internal`
+
+| Route selector
+| Select only routes that have passed migration gates; unknown/custom actions
+  always select generic filtering.
+| Internal implementation, with no public setting
+
+| Normalized decision trace
+| Record semantic decisions for differential tests without exposing a production
+  diagnostic contract.
+| Primarily test infrastructure, with only the minimum package-private hook
+  required to observe both walkers
+
+| `CascadeActionKind`
+| Classify an exact built-in `CascadingActions` singleton once per root entry.
+| Internal implementation introduced in stage 6
+|===
+
+The registry MUST be initialized after entity and collection persisters have
+completed the mapping-model phases needed by the compiler.  Stage 2 will verify
+the exact hook in `MappingMetamodelImpl.finishInitialization(...)`.  Access from
+the walker MUST NOT add a plan accessor to `EntityPersister` or
+`CollectionPersister`, and SHOULD avoid adding a new abstract method to an
+existing public or SPI interface.  An additional internal access interface
+implemented by the mapping-metamodel implementation is the preferred starting
+point.
+
+== `CPS-STG-000`: Baseline and Change Isolation
+
+This preparatory work is part of implementation hygiene rather than a normative
+specification stage.
+
+=== Work items
+
+`CPI-000-01`:: Record the existing cascade-related regression tests selected for
+repeated execution, including component, enhanced-lazy, collection, orphan,
+database-cascade, and cycle cases.
+
+`CPI-000-02`:: Compile `hibernate-core` before each stage and distinguish any
+pre-existing failure from a change introduced by this work.
+
+`CPI-000-03`:: Keep collection-flush proposal/specification edits independent of
+cascade implementation changes in review and reporting.
+
+`CPI-000-04`:: Do not mix production route migration with structural preparation
+in the same review unit.
+
+=== Exit gate
+
+The selected regression set and verification commands are recorded, unrelated
+worktree changes are identified, and the current implementation compiles before
+stage-specific behavior is evaluated.
+
+=== Baseline record
+
+The worktree already contained the collection-flush design/specification edits
+when cascade implementation began.  They are unrelated implementation inputs
+and MUST remain untouched by cascade code changes.  The cascade specification
+and this plan are documentation for the current workstream.  Production changes
+for stage 1 are limited to `Cascade` and new internal cascade traversal types;
+focused tests may add cascade-specific test files.
+
+The initial repeatable regression inventory is:
+
+* `org.hibernate.orm.test.component.cascading.toone.CascadeToComponentAssociationTest`
+* `org.hibernate.orm.test.component.cascading.collection.CascadeToComponentCollectionTest`
+* `org.hibernate.orm.test.bytecode.enhancement.cascade.CascadeDetachedTest`
+* `org.hibernate.orm.test.bytecode.enhancement.cascade.CascadeOnUninitializedTest`
+* `org.hibernate.orm.test.bytecode.enhancement.cascade.CascadeWithFkConstraintTest`
+* `org.hibernate.orm.test.collection.delayedOperation.BagDelayedOperationNoCascadeTest`
+* `org.hibernate.orm.test.jpa.cascade2.CascadeTest`
+* `org.hibernate.orm.test.jpa.orphan.onetoone.OneToOneOrphanTest`
+* `org.hibernate.orm.test.jpa.orphan.onetoone.multilevelcascade.DeleteMultiLevelOrphansTest`
+* `org.hibernate.orm.test.ondeletecascade.OnDeleteManyToOneTest`
+* `org.hibernate.orm.test.ondeletecascade.OnDeleteOneToManyTest`
+* `org.hibernate.orm.test.cascade.circle.CascadeManagedAndTransientTest`
+* `org.hibernate.orm.test.cascade.circle.MultiPathCircleCascadeTest`
+
+The focused verification command is `./gradlew :hibernate-core:test` with one
+`--tests` selector for each class above.  Stage checkpoints will record the exact
+executed command and results.  The full module gate remains
+`./gradlew :hibernate-core:test` without selectors.
+
+Because the initial `CascadeTraversalContext` refactor began before this baseline
+record was created, there is no claimed clean pre-change test run for this
+worktree.  Stage 1 therefore first restored compilation and then used the
+existing tests' unchanged assertions and observable behavior as the comparison
+baseline.  Any future failure not clearly attributable to the current stage will
+be reproduced against the repository revision or otherwise identified before
+being classified.
+
+The baseline checkpoint completed on 2026-08-06.  `hibernate-core` compilation
+succeeded.  The focused context test and all thirteen regression classes listed
+above passed after the stage 1 refactor.
+
+== `CPS-STG-001`: Traversal Context over the Metadata Walker
+
+=== Intended result
+
+Every public `Cascade.cascade(...)` entry creates one behaviorally independent,
+thread-confined traversal context.  The current metadata iteration remains the
+only walker and produces unchanged behavior.
+
+=== Production work
+
+`CPI-001-01`:: Add an internal `CascadeTraversalContext<T>` initialized with the
+active `CascadingAction<T>`, root `CascadePoint`, `EventSource`, root
+`EntityPersister`, root object, and action-specific context.
+
+`CPI-001-02`:: Represent the mutable current parent, current metadata edge, and
+current attribute path in the context.  Before plan nodes exist, the current
+metadata edge is the property name/type/style/index needed to identify the
+equivalent edge.  Stage 2 replaces or supplements this with a plan-node
+reference.
+
+`CPI-001-03`:: Route recursive component, association, to-one, collection, and
+orphan processing through the context instead of repeatedly passing traversal
+state as independent parameters.
+
+`CPI-001-04`:: Lazily materialize the component path so root-level traversal does
+not allocate a path list.  Preserve the `null` path supplied to existing actions
+for root-level associations.
+
+`CPI-001-05`:: Scope component-path, current-parent, current-edge, and temporary
+collection cascade-point changes with `try`/`finally`.  Restore the caller's
+state after both normal completion and exceptions.
+
+`CPI-001-06`:: Preserve the translation from
+`AFTER_INSERT_BEFORE_DELETE` to
+`AFTER_INSERT_BEFORE_DELETE_VIA_COLLECTION` only while traversing collection
+elements.
+
+`CPI-001-07`:: Preserve persistence-context child/parent registration and its
+existing `finally` cleanup around `CascadingAction.cascade(...)`.
+
+`CPI-001-08`:: Confirm that a nested event-driven public cascade entry creates a
+new traversal context while continuing to pass the action-specific context value
+according to the existing action contract.
+
+=== Test work
+
+`CPI-001-T01`:: Add focused context tests for initial state, lazy path creation,
+nested component paths, cascade-point translation, and restoration.
+
+`CPI-001-T02`:: Add exceptional-exit coverage proving path, parent, edge,
+cascade-point, and persistence-context child/parent restoration.
+
+`CPI-001-T03`:: Add or adapt a nested-entry/cycle test proving that no generic
+visited set changes action-specific duplicate suppression.
+
+`CPI-001-T04`:: Run existing component, collection, orphan, enhanced-lazy,
+database-cascade, and cascade-cycle regressions.
+
+=== Exit gate
+
+* `CPS-TST-008` and `CPS-TST-009` pass for the context behaviors available at
+  this stage.
+* Existing cascade tests selected by `CPI-000-01` pass.
+* Public and SPI signatures are unchanged.
+* The metadata walker remains the sole production route.
+* No completed context is retained by factory, metamodel, persister, session, or
+  persistence-context state.
+
+=== Completion record
+
+Stage 1 completed on 2026-08-06 with these results:
+
+* `CascadeTraversalContext` is package-private and one instance is created by
+  every public `Cascade.cascade(...)` entry.
+* Recursive component, association, collection, to-one, and orphan processing
+  reads scoped parent/property state from the context.
+* Component paths are materialized lazily and restored with `try`/`finally`.
+* Collection-element cascade-point translation is scoped and restored with
+  `try`/`finally`.
+* Existing persistence-context child/parent registration retains its exceptional
+  cleanup.
+* A package-private context-taking cascade entry permits focused state-restoration
+  tests without adding a public route or SPI.
+* `CascadeTraversalContextTest` passed, including exceptional component and
+  collection traversal.
+* The thirteen-class baseline regression inventory passed.
+* `Cascade` remains the metadata walker; no plan or compiled route exists yet.
+
+== `CPS-STG-002`: Plan Model, Compiler, and Registry
+
+=== Intended result
+
+The `SessionFactory` owns immutable entity-rooted plans and reusable
+collection-element subplans, but production cascade execution still uses the
+metadata walker.
+
+=== Production work
+
+`CPI-002-00`:: Establish the cascade package boundaries before adding plan
+types.  Move `Cascade` and `CascadeTraversalContext` to
+`org.hibernate.cascade.internal`; move `CascadeStyle`, `CascadeStyles`,
+`CascadingAction`, and `CascadingActions` to `org.hibernate.cascade.spi`; and
+move `CascadePoint` to `org.hibernate.cascade.spi`.  Add package documentation,
+update all Hibernate imports and references, retain one set of built-in action
+singletons, and add no legacy adapters or facades.  Re-run the complete stage 1
+gate before beginning `CPI-002-01`.
+
+`CPI-002-01`:: Define the immutable plan and node model.  Retain mapping order,
+property identity, root-relative path, mapped `Type`, runtime `CascadeStyle`
+reference, association classification, value-access information, FK direction,
+orphan facts, collection role, and generic fallback data required by
+`CPS-PLN-*`.
+
+`CPI-002-02`:: Include an ordered generic entry for every property considered by
+the metadata walker, including basic properties.  Do not pre-eliminate a
+property based only on built-in action or style assumptions.
+
+`CPI-002-03`:: Compile component structure recursively without retaining entity
+instances, sessions, collection wrappers, collection contents, or invocation
+state.
+
+`CPI-002-04`:: Compile collection owner nodes separately from reusable relative
+element subplans.  Key subplan reuse by `CollectionPersister` identity.
+
+`CPI-002-05`:: Add a factory-scoped registry keyed by persister identity.  Alias
+lookups resolving to the same persister MUST return the same root plan.
+
+`CPI-002-06`:: Integrate compilation after all entity and collection persisters
+are registered and references are resolvable.  Fail bootstrap on an invalid or
+incomplete plan rather than creating a runtime fallback plan.
+
+`CPI-002-07`:: Freeze registry contents for runtime lookup.  Any mutable maps used
+during compilation MUST not remain externally mutable after bootstrap.
+
+`CPI-002-08`:: Expose registry lookup only through an internal implementation
+boundary.  Do not alter public persister contracts.
+
+=== Test work
+
+`CPI-002-T00`:: Compile all affected modules and rerun
+`CascadeTraversalContextTest` plus the thirteen-class stage 1 regression
+inventory after package relocation.  Verify that no source outside generated or
+historical output references the old cascade packages.
+
+`CPI-002-T01`:: Implement `CascadePlanCompilerTest` for node classification,
+order, complete paths, null/basic/component/association nodes, and owner facts.
+
+`CPI-002-T02`:: Verify registry identity, alias behavior, collection-element
+subplan reuse, and immutable runtime lookup.
+
+`CPI-002-T03`:: Verify plans do not retain prohibited invocation or domain
+objects.  Prefer structural assertions; use reachability checks where structural
+inspection cannot prove the condition.
+
+`CPI-002-T04`:: Add bootstrap-failure tests for unresolved or invalid plan
+structure.
+
+=== Exit gate
+
+* `CPS-TST-001` passes and covers every `CPS-PLN-*` requirement.
+* The registry contains one plan per distinct entity-persister identity.
+* Plan creation occurs once during bootstrap, not on first cascade execution.
+* The metadata walker remains the sole production route.
+
+=== Package-migration checkpoint
+
+`CPI-002-00` and `CPI-002-T00` completed on 2026-08-07 with these results:
+
+* `Cascade` and `CascadeTraversalContext` moved to
+  `org.hibernate.cascade.internal`.
+* `CascadeStyle`, `CascadeStyles`, `CascadingAction`, and `CascadingActions`
+  moved to `org.hibernate.cascade.spi`, retaining one set of built-in action and
+  style singleton instances.
+* `CascadePoint` moved to `org.hibernate.cascade.spi`.
+* Package documentation was added for `org.hibernate.cascade`,
+  `org.hibernate.cascade.internal`, and `org.hibernate.cascade.spi`.
+* No compatibility adapters or legacy facades were added in the old packages.
+* `./gradlew :hibernate-core:compileJava` passed.
+* `CascadeTraversalContextTest` and all thirteen stage 1 regression classes
+  passed in one focused `:hibernate-core:test` execution.
+* A source-tree audit found no remaining references to the relocated old
+  package names outside generated or historical output.
+* The metadata walker remains the sole production route; no plan or compiled
+  route was introduced by the migration.
+
+== `CPS-STG-003`: Differential Generic Compiled Walker
+
+=== Intended result
+
+A generic compiled walker can execute or trace the same decisions as the
+metadata walker, but it is not yet the default production route.
+
+=== Production work
+
+`CPI-003-01`:: Establish a clean walker boundary.  Extract the metadata walker
+from `Cascade` if necessary so metadata and compiled variants receive equivalent
+fresh traversal contexts.
+
+`CPI-003-02`:: Implement ordered plan traversal with the existing
+`anythingToCascade()`, `appliesTo()`, `cascadeNow()`, `reallyDoCascade()`, lazy
+attribute, action iterator, orphan, and database-cascade decisions.
+
+`CPI-003-03`:: Resolve values only after the same predicates and lazy-state
+decisions used by the metadata walker require them.
+
+`CPI-003-04`:: Preserve collection wrapper acquisition without initialization,
+action-specific loaded/all/empty iterators, collection order, collection
+cascade-point translation, queued-orphan behavior, and holder-backed collection
+handling.
+
+`CPI-003-05`:: Add a package-private test route which selects metadata or generic
+compiled traversal without creating a public setting or SPI.
+
+`CPI-003-06`:: Add the minimum internal trace hook needed to emit normalized
+semantic decisions from both walkers.  A disabled hook MUST be a shared no-op or
+`null` path that avoids per-node trace allocation and retains no context.
+
+`CPI-003-07`:: Support decision-only differential execution while keeping real
+built-in integration tests for terminal action and orphan effects.
+
+`CPI-003-08`:: Attach complete root-relative path information to compiled-walker
+failures without reducing the entity information available from current
+exceptions.
+
+=== Test work
+
+`CPI-003-T01`:: Implement `CascadeWalkerParityTest` using fresh equivalent state
+for each walker and compare normalized ordered traces exactly.
+
+`CPI-003-T02`:: Cover the complete built-in action, cascade-point, cascade-style,
+FK-direction, lazy-state, collection-state, component-depth, orphan, and
+database-cascade matrices in `CPS-TST-002` through `CPS-TST-007`.
+
+`CPI-003-T03`:: Implement `CascadeExtensionCompatibilityTest` with a custom
+`CascadingAction`, a registered custom `CascadeStyle`, composed styles, and
+dormant/deprecated routes.
+
+`CPI-003-T04`:: Implement `CascadeDiagnosticsTest` for normalized trace content,
+complete failure paths, disabled trace behavior, and exceptional exits.
+
+`CPI-003-T05`:: Run real integration tests for built-in persist, persist-on-flush,
+merge, remove, refresh, evict, lock where supported, and check-on-flush behavior.
+
+=== Exit gate
+
+* `CPS-TST-002` through `CPS-TST-010` and `CPS-TST-012` pass.
+* Trace comparison is exact for all required routes; there are no accepted
+  semantic differences.
+* Existing cascade regression suites pass with both test-selected walkers where
+  the harness supports selection.
+* Production entry still selects the metadata walker by default.
+
+== `CPS-STG-004`: Production Route Migration
+
+=== Intended result
+
+Independently proven built-in and generic routes move to the compiled walker
+without removing the metadata fallback prematurely.
+
+=== Production work
+
+`CPI-004-01`:: Define an internal route table using exact action identity,
+cascade point, and any other stable discriminator required by the verified test
+matrix.  Stage 6 may replace the built-in identity mapping with
+`CascadeActionKind` classification.  Unknown/custom actions select the generic
+compiled route only after the custom-action gate passes; otherwise they remain
+on metadata traversal.
+
+`CPI-004-02`:: Migrate one independently testable route group at a time.  Initial
+ordering SHOULD favor a common, well-covered route with low orphan and lazy-state
+complexity before moving persist-on-flush, check-on-flush, and remove routes.
+
+`CPI-004-03`:: Retain per-node generic predicate evaluation in the compiled
+walker.  Route migration does not imply use of a route profile.
+
+`CPI-004-04`:: Retain the metadata walker until all supported and dormant routes
+have a conforming generic compiled path and removal has been reviewed separately.
+
+`CPI-004-05`:: Record each migrated route, its differential test coverage,
+integration test set, benchmark result, and any explicitly accepted performance
+exception.
+
+=== Route gate
+
+A route may switch only when:
+
+* its normalized decision traces match exactly,
+* its real-action integration tests pass,
+* its existing regression tests pass,
+* custom/registered styles encountered within the route retain generic behavior,
+* the paired benchmark has been reviewed under `CPS-PRF-006`, and
+* any traversal-time regression above 5% or allocation regression above 10% has
+  been investigated and explicitly accepted.
+
+=== Exit gate
+
+All production routes selected for this implementation have an auditable route
+gate record.  Routes not passing a gate continue to use metadata traversal and
+do not block migration of independent routes.
+
+== `CPS-STG-006`: Profiled Built-in Routes
+
+Stage 6 follows the generic compiled walker and may proceed independently of the
+deferred collection-delta stage.
+
+=== Production work
+
+`CPI-006-01`:: Introduce `CascadeActionKind` classification by exact identity of
+known `CascadingActions` singleton instances.  Resolve it once per root entry.
+
+`CPI-006-02`:: Add profile data only for stable built-in action/style/point facts
+covered by differential tests.
+
+`CPI-006-03`:: Permit profile use per node.  A registered style, unverified
+composed style, or unproven node uses the generic runtime predicates without
+disabling proven profiles elsewhere in the same plan.
+
+`CPI-006-04`:: Keep unclassified and custom actions entirely on the generic
+runtime-filtered path.
+
+=== Profile gate
+
+A profile is retained only when it has exact differential parity and demonstrates
+a measurable benefit in at least one targeted workload.  A profile that fails
+either condition is removed or left disabled without affecting the generic
+compiled route.
+
+== `CPS-STG-005`: Deferred Collection-Delta Integration
+
+No production implementation of `CPS-COL-*` is authorized yet.  Until the
+collection specification is approved:
+
+* cascade continues to discover collection orphans using current initialized or
+  queued-operation behavior,
+* cascade does not depend on `CollectionDelta`, delta freezing, or a collection
+  flush context,
+* the plan compiler and walker may reserve no behavior that assumes a future
+  delta representation, and
+* `CascadeCollectionBoundaryTest` remains planned but is not an exit dependency
+  for stages 1 through 4 or 6.
+
+After the collection specification is approved, this section will be expanded
+into concrete producer/consumer boundary work before stage 5 begins.
+
+== Benchmark Implementation and Review
+
+=== Artifact
+
+Add `org.hibernate.cascade.internal.CascadeTraversalBenchmark` under
+`hibernate-core/src/jmh/java`, or an equivalently named artifact preserving the
+traceability stated by `CPS-TST-013`.
+
+=== Development runs
+
+Short local runs may be used while shaping the implementation, but they are not
+approval evidence.  They SHOULD compare paired metadata and generic compiled
+variants and expose counters for nodes, metadata scans, value resolutions, and
+path allocations alongside JMH time and GC allocation.
+
+=== Route-approval runs
+
+Approval evidence MUST follow `CPS-PRF-003` through `CPS-PRF-006`: at least three
+forks, ten warmups, twenty measurements, recorded JVM/machine/heap/profiler
+settings, paired equivalent fixtures, and retained raw results.
+
+For each route review, retain:
+
+* the source revision,
+* benchmark command and environment,
+* raw JMH output or durable artifact reference,
+* a concise metadata-versus-compiled comparison,
+* allocation and traversal-time differences,
+* the route decision, and
+* the rationale for any explicitly accepted threshold exception.
+
+The checked-in location and CI artifact policy for raw benchmark results will be
+selected before the first production route migration.  That repository-layout
+choice does not alter the benchmark requirements.
+
+== Verification Strategy
+
+Verification is layered so failures remain attributable to a stage.
+
+[cols="1,3,3",options="header"]
+|===
+| Layer | When | Evidence
+
+| Compile and focused unit tests
+| Every implementation increment
+| Changed production classes compile; new focused tests pass
+
+| Focused cascade regressions
+| Every stage exit
+| Component, collection, lazy, orphan, database-cascade, and cycle cases pass
+
+| Differential matrix
+| Stages 3, 4, and 6
+| Exact normalized traces from equivalent fresh state
+
+| Real-action integration
+| Stages 3 and 4
+| Observable built-in action, orphan, lazy, ordering, and cleanup behavior
+
+| Full `hibernate-core` tests
+| Before a production route switch and final handoff
+| No module regression attributable to cascade changes
+
+| JMH characterization
+| Before stage 4 route switches and for every stage 6 profile
+| Paired time, allocation, and semantic work counters with retained results
+|===
+
+The initial focused regression inventory will include existing tests for:
+
+* cascades through components and nested components,
+* managed and detached enhanced-lazy associations,
+* uninitialized collections and queued operations,
+* persist, merge, remove, refresh, evict, and check-on-flush routes,
+* logical one-to-one and collection orphan removal,
+* `OnDelete` database cascade,
+* circular and multipath object graphs, and
+* collection cascade ordering and FK constraints.
+
+Exact Gradle selectors will be recorded with the implementation checkpoint once
+the smallest representative set has been confirmed.
+
+== Review Units and Checkpoints
+
+Implementation should be presented in reviewable units in this order:
+
+. traversal-context type and metadata-walker parameter refactor,
+. traversal-context restoration and regression tests,
+. immutable plan vocabulary,
+. compiler and registry bootstrap integration,
+. plan structural tests,
+. walker boundary and normalized trace vocabulary,
+. generic compiled walker,
+. full differential and compatibility matrix,
+. JMH benchmark suite,
+. independently gated production route migrations, and
+. independently gated built-in route profiles.
+
+Each checkpoint report will state:
+
+* completed work-item identifiers,
+* tests and benchmarks run with results,
+* remaining stage work,
+* observed compatibility or performance risks,
+* any implementation choice that materially refines this plan, and
+* any proposed deviation requiring specification approval.
+
+== Current Implementation Checkpoint
+
+As of this revision:
+
+* the cascade specification is approved,
+* `CPS-STG-000` and `CPS-STG-001` are complete,
+* every public `Cascade.cascade(...)` entry creates an invocation-local
+  `CascadeTraversalContext`,
+* recursive metadata-walker processing consumes scoped context state,
+* component path, property state, collection cascade point, and
+  persistence-context registration restoration are tested on exceptional exit,
+* `hibernate-core` compilation, the focused context tests, and the thirteen-class
+  cascade regression inventory pass, and
+* no compiled plan, registry, compiled walker, route migration, or collection
+  delta integration has been implemented.
+
+The next implementation action is `CPS-STG-002`: settle the immutable plan/node
+vocabulary and its internal package boundary, implement the compiler and
+factory-scoped registry, and verify the exact bootstrap hook before changing any
+runtime route.

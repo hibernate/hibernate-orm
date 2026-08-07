@@ -48,7 +48,7 @@ import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.profile.internal.FetchProfileAffectee;
 import org.hibernate.engine.spi.CachedNaturalIdValueSource;
-import org.hibernate.engine.spi.CascadeStyle;
+import org.hibernate.cascade.spi.CascadeStyle;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;

@@ -21,7 +21,7 @@ import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.cache.spi.entry.CacheEntryStructure;
-import org.hibernate.engine.spi.CascadeStyle;
+import org.hibernate.cascade.spi.CascadeStyle;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -351,7 +351,7 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 
 	/**
 	 * Determine whether this entity has any
-	 * {@linkplain org.hibernate.engine.spi.CascadeStyles#NONE cascading} operations.
+	 * {@linkplain org.hibernate.cascade.spi.CascadeStyles#NONE cascading} operations.
 	 *
 	 * @return True if the entity has any properties with a cascade other than NONE;
 	 *         false otherwise (aka, no cascading).
@@ -360,7 +360,7 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 
 	/**
 	 * Determine whether this entity has any
-	 * {@linkplain org.hibernate.engine.spi.CascadeStyles#PERSIST persist cascading}.
+	 * {@linkplain org.hibernate.cascade.spi.CascadeStyles#PERSIST persist cascading}.
 	 *
 	 * @return True if the entity has any properties with a cascade PERSIST or ALL;
 	 *         false otherwise.
@@ -369,7 +369,7 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 
 	/**
 	 * Determine whether this entity has any
-	 * {@linkplain org.hibernate.engine.spi.CascadeStyles#DELETE delete cascading}.
+	 * {@linkplain org.hibernate.cascade.spi.CascadeStyles#DELETE delete cascading}.
 	 *
 	 * @return True if the entity has any properties with a cascade REMOVE or ALL;
 	 *         false otherwise.

@@ -82,7 +82,22 @@ public final class Cascade {
 			final EntityPersister persister,
 			final Object parent,
 			final T anything) throws HibernateException {
+		if ( !isBuiltInAction( action ) ) {
+			throw new IllegalArgumentException(
+					"Unsupported cascading action implementation: " + action.getClass().getName()
+			);
+		}
 		cascade( new CascadeTraversalContext<>( action, cascadePoint, eventSource, persister, parent, anything ) );
+	}
+
+	private static boolean isBuiltInAction(CascadingAction<?> action) {
+		return action == CascadingActions.REMOVE
+				|| action == CascadingActions.REFRESH
+				|| action == CascadingActions.EVICT
+				|| action == CascadingActions.MERGE
+				|| action == CascadingActions.PERSIST
+				|| action == CascadingActions.PERSIST_ON_FLUSH
+				|| action == CascadingActions.CHECK_ON_FLUSH;
 	}
 
 	static <T> void cascade(CascadeTraversalContext<T> context) throws HibernateException {

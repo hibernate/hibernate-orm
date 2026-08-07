@@ -16,6 +16,25 @@ Post-approval clarifications::
   physical execution and completes before semantic state advancement, cache
   work, post-events, callbacks, and statistics.  Linked the companion cascade
   working specification which develops the approved cascade direction.
+* `2026-08-07` -- Aligned cascade terminology with the approved companion
+  specification: `LegacyCascadeWalker` is the transitional parity reference and
+  `CascadePlanWalker` is the plan-driven implementation.
+* `2026-08-07` -- Added an explicit cascade-extension support decision gate.
+  External `CascadeStyle` registration and custom `CascadingAction`
+  implementations are historical capabilities to characterize and either retain
+  deliberately or drop; they are no longer assumed permanent design constraints.
+* `2026-08-07` -- Approved deliberate removal of the deprecated, dormant
+  cascade-lock action, style, named mapping, and point.  The companion
+  specification defines the compatibility boundary and explicitly preserves
+  ordinary session, event, and database locking.  The removal and its
+  conformance coverage are implemented.
+* `2026-08-10` -- Reconciled the proposal with the completed cascade work.  The
+  compiled-plan and dual-walker direction was rejected after benchmarking;
+  cascade now uses one metadata-driven walker, invocation-local traversal state,
+  and persister-owned property selection.  The active collection proposal keeps
+  only the validity-gated collection-delta/orphan-projection boundary.  The
+  rejected compiled-plan material is retained below solely as historical design
+  context.
 
 This document proposes a redesign of collection visitation and mutation planning
 during flush.  It focuses on the path from cascade and reachability processing,
@@ -80,10 +99,10 @@ The redesign should:
 * Support uninitialized collections, queued operations, forced initialization,
   database cascade removal, and owner/role changes.
 * Make speculative auto-flush work atomically discardable.
-* Avoid repeatedly interpreting stable cascade metadata for every entity
-  traversal.
-* Make cascade traversal state and attribute-path handling explicit and
-  diagnosable.
+* Allow flush-time cascade orphan discovery to reuse a valid collection
+  comparison without coupling cascade to a queue representation.
+* Preserve a standalone orphan-discovery path whenever no valid flush-time
+  comparison is available.
 * Provide a staged migration from the existing collection actions.
 
 == Non-Goals
@@ -1054,29 +1073,39 @@ The logical remove still participates in:
 Whether all existing remove events should fire for a database-cascade-only
 logical removal is an observable behavior decision and must be covered by tests.
 
-== Cascade Integration
+== Cascade Integration Boundary
 
-The normative compiled-plan and traversal requirements derived from this section
-are defined in
-link:cascade-processing-spec.adoc[Cascade Processing Specification].
-The collection/cascade delta-sharing boundary remains specified in
+Cascade processing is implemented as one metadata-driven walker with
+invocation-local traversal state and persister-owned property selection.  The
+collection redesign does not reopen that architecture.  Its only required
+integration is an optional flush-time orphan projection derived from a stable
+collection comparison.
+
+The active boundary is:
+
+* consume an orphan projection only while its comparison-validity state matches
+  the collection state being inspected,
+* never initialize a collection solely to obtain or share a delta or orphan
+  projection,
+* retain standalone orphan discovery outside collection flush, before delta
+  freezing, and whenever comparison validity does not match, and
+* preserve orphan timing, queued-orphan behavior, collection iteration, and lazy
+  initialization exactly.
+
+The working specification defines these requirements normatively in
 link:collection-flush-processing-spec.adoc[Collection Flush Processing Working
-Specification].
+Specification] under `CFS-CAS-*`.
 
-The collection redesign does not require a complete cascade rewrite, but it
-provides a better boundary for one.  The existing cascade implementation is
-functionally mature; the proposed changes primarily make its stable structure
-explicit, reduce repeated metadata interpretation, and make runtime traversal
-state easier to reason about.
+== Historical Cascade Design (Superseded)
 
-The cascade work is separable into two improvements:
-
-* an immutable, entity-rooted `CascadePlan`, with reusable collection-element
-  subplans where useful, compiled from mapping metadata, and
-* a per-invocation `CascadeTraversalContext` carrying mutable runtime state.
-
-These should be introduced without changing the behavior, order, or lazy-loading
-rules of existing `CascadingAction` implementations.
+[NOTE]
+====
+The compiled-plan, dual-walker, route-profile, and migration material in this
+section records the design that was implemented experimentally and rejected by
+benchmarking.  It is not the active collection or cascade architecture and
+creates no implementation requirements.  It is retained only to explain the
+tradeoffs which led to the consolidated metadata walker.
+====
 
 === Current traversal costs and responsibilities
 
@@ -1201,9 +1230,72 @@ avoid those repeated checks.  Such profiles must account for special behavior:
 
 The initial implementation should retain runtime action predicates over the
 compiled structural plan.  Action-specific profiles are an optimization after
-behavioral parity is established.  Custom or future `CascadingAction`
-implementations must always have a correct generic path; the plan must not rely
-on singleton action identity for correctness.
+behavioral parity is established.  Before the extension-support decision, the
+plan must not rely on singleton action identity in a way which prevents accurate
+characterization of existing custom-action behavior.  Whether a permanent
+generic path for external actions remains supported is decided explicitly rather
+than assumed.
+
+=== Cascade extension-support review
+
+The current types make two different historical extension claims:
+
+* `CascadeStyles.registerCascadeStyle()` permits a globally named external
+  `BaseCascadeStyle` to participate in legacy mapping cascade strings, and
+* `CascadingAction` can be implemented and supplied by custom event-listener code
+  or by directly invoking the internal cascade coordinator.
+
+These mechanisms originally supported integration between Hibernate core and
+the formerly separate entity-manager module.  The current repository contains
+no external style registration or custom action implementation, there is no
+action registry or public session operation for invoking a custom action, and
+standard annotation mappings cannot name an arbitrary registered style.  Style
+registration is a mutable global registry with no lifecycle or unregister
+contract.
+
+Before any production route migration begins, the cascade work must make and
+record an explicit decision for each capability:
+
+* retain external custom styles as a supported SPI, replace registration with a
+  better-scoped mechanism, or remove external style registration;
+* retain custom actions as a supported SPI with a documented invocation path, or
+  classify them as unsupported internal implementations;
+* decide whether `CascadeStyle` and `CascadingAction` remain interfaces for
+  internal implementation flexibility even if external implementation support
+  is dropped; and
+* identify the source, binary, mapping, and bootstrap compatibility effects of
+  the selected outcome.
+
+Retention requires a concrete current use case, a supported installation or
+invocation path, and conformance tests.  Historical technical reachability alone
+is not sufficient.  Dropping support requires an explicit specification
+amendment identifying the affected APIs and mapping behavior; it must not happen
+accidentally as a side effect of route optimization.
+
+Dropping either mechanism also has concrete simplification value which must be
+part of the decision:
+
+* without externally registered styles, plan compilation can translate every
+  supported style to a closed internal classification or capability set instead
+  of retaining arbitrary style objects for runtime polymorphic predicates;
+* the plan registry no longer needs to account for a mutable global style
+  registry, external registration timing, or an unrecognized-style fallback;
+* without external actions, the supported action universe is closed and can be
+  represented directly by `CascadeActionKind`; plan nodes need not be retained
+  solely because an unknown action might return true from `appliesTo()`;
+* route profiles and the walker no longer need an unknown-action route or
+  per-node external-style fallback; and
+* if both are dropped, `CascadePlan` nodes may use compact precomputed action and
+  style capability masks, and `CascadePlanWalker` may dispatch entirely through
+  verified built-in behavior rather than a permanent generic extension path.
+
+These are opportunities, not permission to compile away supported built-in
+semantics.  Supported dormant cascade points, `CHECK_ON_FLUSH` handling of
+cascade `NONE`, lazy-state decisions, orphan timing, collection iteration rules,
+and action-specific cycle contexts remain requirements.  The separately
+specified cascade-lock removal is deliberate rather than an incidental
+optimization.  Nor does dropping external support by itself decide whether
+interfaces remain the best internal representation.
 
 === Runtime-sensitive decisions
 
@@ -1339,7 +1431,7 @@ The walker performs the following steps:
 
 === Cascade invariants
 
-The compiled walker must preserve these behaviors:
+The `CascadePlanWalker` must preserve these behaviors:
 
 * every existing cascade action visits the same association values in the same
   order,
@@ -1356,8 +1448,8 @@ The compiled walker must preserve these behaviors:
 * database cascade flags are calculated for the same association direction,
 * persistence-context child/parent registration is always restored,
 * exceptions identify the same entity and a complete attribute path,
-* a custom `CascadingAction` remains correct without a precompiled action
-  profile.
+* external action/style behavior follows the recorded extension-support
+  decision and is not silently changed by a precompiled action profile.
 
 === Relationship to CollectionDelta
 
@@ -1409,9 +1501,9 @@ as a new public event stream.
   and verify behavior with existing cascade tests.
 . Introduce the immutable plan model and compiler, initially using generic
   runtime `CascadingAction` predicates.
-. Add a test-only decision trace which compares node selection between the
-  metadata walker and compiled-plan walker.
-. Switch built-in actions to the compiled walker after parity tests cover lazy
+. Add a test-only decision trace which compares node selection between
+  `LegacyCascadeWalker` and `CascadePlanWalker`.
+. Switch built-in actions to `CascadePlanWalker` after parity tests cover lazy
   state, nested components, orphan deletion, database cascade, and all cascade
   points.
 . Add built-in action route masks only when benchmarks demonstrate useful
@@ -1512,12 +1604,12 @@ the flush context and discarded with it when execution is unnecessary.
 * Measure allocation, graph-build cost, and JDBC batching behavior against the
   current per-row representation.
 
-=== Parallel workstream: Compiled cascade traversal
+=== Downstream cascade integration
 
-The cascade migration described above can proceed independently through
-`CascadeTraversalContext`, generic compiled plans, parity verification, and
-optional built-in route masks.  Collection orphan comparison should join the
-main migration only after stable-delta timing and invalidation are resolved.
+After Phase 4 establishes stable-delta timing and invalidation, connect
+flush-time cascade orphan discovery to a validity-gated orphan projection.
+Retain standalone orphan discovery for every other invocation and preserve the
+existing cascade walker architecture and observable behavior.
 
 == Testing Strategy
 
@@ -1554,26 +1646,18 @@ For every supported collection semantics, test:
 * inverse one-to-many deltas whose FK work is owned by entity actions,
 * queued-operation cleanup only after successful action completion.
 
-=== Cascade plan and traversal tests
+=== Cascade boundary tests
 
-Verify the compiled walker against the existing metadata walker for:
+Verify the collection-delta/orphan-projection boundary against the existing
+cascade implementation for:
 
-* every built-in `CascadingAction` and applicable `CascadePoint`,
-* cascade `NONE`, individual cascade styles, and combined styles,
-* nested embeddables containing to-one and collection associations,
-* logical one-to-one replacement and orphan ordering,
-* initialized and uninitialized collections, including queued additions and
-  queued orphans,
-* enhanced loaded and unloaded attributes on managed and detached entities,
-* foreign-key directions, inverse collections, and database `OnDelete` cascade,
-* enabled and disabled unowned-association transient checking,
-* complete attribute paths in transient-reference failures,
-* action-context cycle handling and child/parent registration cleanup,
-* a generic custom `CascadingAction` without a built-in route profile.
-
-Plan compiler unit tests should assert immutable structure, mapping order,
-component paths, node classification, and the absence of entity or session
-instance references in cached plans.
+* valid frozen orphan-projection reuse,
+* stale comparison rejection and standalone fallback,
+* cascade before delta freezing and outside collection flush,
+* initialized and uninitialized collections, including queued orphans,
+* no initialization solely to obtain a delta or orphan projection,
+* unchanged orphan timing and collection iteration strategy, and
+* unchanged lazy-loading behavior.
 
 === Decomposer tests
 
@@ -1614,8 +1698,7 @@ Measure:
 
 * number of collection and snapshot traversals,
 * delta construction time,
-* cascade plan nodes considered versus metadata properties scanned,
-* cascade traversal path allocations and component depth,
+* orphan-projection reuse versus standalone comparison work,
 * temporary allocation per changed row,
 * graph nodes and edges,
 * statement grouping and batch sizes,
@@ -1679,16 +1762,6 @@ row identity and structure while allowing explicit deferred value handles.
   both exist, or remain a separate internal action with an explicit dependency?
 * What session serialization guarantees are required for normalized collection
   intents, deltas, and action completion state?
-* Should an entity-rooted `CascadePlan` be owned directly by `EntityPersister` or
-  by a mapping metamodel service keyed by it, and should reusable collection
-  element subplans be cached directly by `CollectionPersister` or by that same
-  service?
-* Do built-in cascade route profiles need a stable `CascadeActionKind`, or are
-  runtime `CascadingAction` predicates sufficiently cheap over the compiled
-  structural plan?
-* Should a traversal context span nested event-driven cascades, or remain scoped
-  to each `Cascade.cascade()` invocation and rely on the existing action context
-  for cross-invocation state?
 
 == Initial Decision Summary
 
@@ -1705,10 +1778,8 @@ The initial direction is:
 * complete lifecycle through explicit action completion tracking,
 * use one ordinal range per logical action,
 * retain per-row operations only where graph correctness needs them,
-* compile immutable entity-rooted cascade structure and reusable
-  collection-element subplans,
-* keep cascade invocation state in a traversal context,
-* preserve a generic runtime-filtered path for every `CascadingAction`,
+* share orphan projections with cascade only while comparison validity matches,
+* retain standalone orphan discovery and existing cascade semantics otherwise,
 * migrate incrementally while preserving a legacy action adapter.
 
 These decisions should be validated first by the Phase 1 regression tests and a

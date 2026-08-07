@@ -6,7 +6,7 @@
 
 Status: Working Specification -- Draft
 
-Revision: 0.17
+Revision: 0.19
 
 Approval status: Not approved
 
@@ -67,6 +67,15 @@ Revision history::
   defined informative implementation stages with explicit exit criteria.  It
   also clarified that owner callback coordination crosses entity and collection
   work without bringing entity mutation representation into scope.
+* `0.18` -- Aligned cascade terminology with the approved companion
+  specification by naming `LegacyCascadeWalker` as the transitional parity
+  reference and `CascadePlanWalker` as the plan-driven implementation.
+* `0.19` -- Reconciled the collection specification with the completed cascade
+  implementation.  Superseded the compiled-plan decisions, removed the former
+  companion-specification dependency, and made this specification authoritative
+  for the complete collection-delta/orphan-projection boundary, including
+  preservation of orphan timing, queued-orphan behavior, collection iteration,
+  and lazy initialization.
 
 == Status and Relationship to the Design Proposal
 
@@ -90,10 +99,11 @@ For implementation work explicitly targeting a revision of this specification:
 * the proposal may be consulted for rationale but does not override a normative
   requirement.
 
-Compiled cascade planning and traversal are specified separately by
-link:cascade-processing-spec.adoc[Cascade Processing Specification].
-This document owns the collection-delta and orphan-discovery boundary used by
-that specification.
+Cascade processing now uses one metadata-driven walker with invocation-local
+traversal state and persister-owned property selection.  This specification does
+not reopen that implementation.  It owns the collection-delta and
+orphan-discovery boundary through which cascade may reuse flush-time comparison
+results.
 
 The expected status progression is:
 
@@ -147,14 +157,7 @@ This specification covers:
   owner lifecycle callbacks, cache work, diagnostic monitoring, statistics, and
   state advancement semantics,
 * speculative auto-flush rollback,
-* the boundary between collection comparison and cascade orphan discovery,
-* behavioral requirements for a compiled cascade plan and traversal context.
-
-The detailed structure, required behavior, migration, and optimization of a
-compiled cascade plan are defined in
-link:cascade-processing-spec.adoc[Cascade Processing Specification].
-The behavioral boundary requirements in this document still apply to its
-interaction with collection flush processing.
+* the boundary between collection comparison and cascade orphan discovery.
 
 == Non-Goals
 
@@ -171,7 +174,9 @@ This revision does not specify:
 * removal of the legacy action queue in the initial implementation,
 * changes to `org.hibernate.event.spi` collection event contracts; such changes
   require a separate design and specification,
-* a public SPI for collection intents, deltas, or cascade plans.
+* a public SPI for collection intents or deltas,
+* changes to established cascade action, ordering, lazy-loading, or orphan
+  semantics beyond the collection-delta boundary defined by `CFS-CAS-*`.
 
 == Potential Applicability to Entity Work
 
@@ -1063,10 +1068,15 @@ path.
 matches MUST NOT be reused.  Cascade MUST use the standalone path or a newly
 valid comparison instead.
 
-Compiled cascade-plan structure, traversal-context behavior, compatibility, and
-conformance tests are normative in
-link:cascade-processing-spec.adoc[Cascade Processing Specification], not
-in this collection specification.
+[[CFS-CAS-005]]
+`CFS-CAS-005`:: Collection-delta integration MUST NOT change orphan timing,
+queued-orphan behavior, collection iteration behavior, or lazy initialization.
+The integration may replace duplicate comparison work only when it preserves
+those observable semantics.
+
+The internal structure of cascade traversal is outside this specification.  The
+requirements above completely define the collection-delta/orphan-projection
+contract which that traversal may consume.
 
 == Compatibility Baseline
 
@@ -1294,8 +1304,8 @@ normal complete loaded-state comparison.
 
 | `CFS-CAS-*`
 | Valid/stale orphan-projection reuse, no-forced-initialization, and standalone
-  fallback tests; compiled-walker conformance is traced in the companion cascade
-  specification
+  fallback tests, plus parity for orphan timing, queued-orphan behavior,
+  collection iteration, and lazy initialization
 
 | `CFS-COM-*`
 | Legacy/graph conformance suite and focused regressions for excluded defects
@@ -1326,12 +1336,11 @@ an explicitly recorded reason why static verification is sufficient.
   explicit completion accounting.
 
 | `WD-004`
-| Working
-| Represent stable cascade structure in an entity-persister-rooted plan and
-  runtime state in a traversal context.  Permit collection-persister-owned or
-  metamodel-owned collection-element subplans to be referenced by collection
-  nodes without making them independent cascade roots.  Treat these as normative
-  requirements of the companion cascade specification.
+| Superseded
+| The compiled cascade-plan direction was rejected after implementation and
+  benchmarking.  Cascade uses one metadata-driven walker with invocation-local
+  traversal state.  This specification does not prescribe its internal
+  representation.
 
 | `WD-005`
 | Working
@@ -1353,9 +1362,10 @@ an explicitly recorded reason why static verification is sufficient.
   common registration API.
 
 | `WD-008`
-| Working
-| Keep cascade boundary requirements in this specification and define detailed
-  `CascadePlan` and traversal mechanics in a companion working specification.
+| Revised
+| Keep the complete collection-delta/orphan-projection boundary in `CFS-CAS-*`.
+  Cascade traversal mechanics are already implemented and remain outside this
+  collection specification.
 
 | `WD-009`
 | Working
@@ -1537,10 +1547,10 @@ fully implemented.
   demonstrate correctness and characterize the compact representation's value.
 |===
 
-Compiled cascade traversal proceeds as a parallel workstream under
-link:cascade-processing-spec.adoc[Cascade Processing Specification].
-Its collection-delta integration gate depends on `CFS-STG-004`; its plan compiler,
-traversal context, and parity work do not.
+Cascade integration is downstream of `CFS-STG-004`.  Until stable delta timing
+and comparison validity are established, cascade retains its standalone orphan-
+discovery path.  Integration work must satisfy `CFS-CAS-*` without changing the
+existing cascade traversal architecture.
 
 == Criteria for Development-Team Review
 

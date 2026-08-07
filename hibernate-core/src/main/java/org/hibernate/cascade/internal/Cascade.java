@@ -5,11 +5,16 @@
 package org.hibernate.cascade.internal;
 
 import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
 
 import org.hibernate.HibernateException;
 import org.hibernate.annotations.OnDeleteAction;
+import org.hibernate.cascade.spi.CascadePropertySelection;
 import org.hibernate.cascade.spi.CascadeStyle;
 import org.hibernate.cascade.spi.CascadingAction;
+import org.hibernate.cascade.spi.CascadingActions;
+import org.hibernate.cascade.spi.PropertySelectionKind;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.cascade.spi.CascadePoint;
 import org.hibernate.engine.spi.EntityEntry;
@@ -17,6 +22,7 @@ import org.hibernate.engine.spi.Status;
 import org.hibernate.event.spi.DeleteContext;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.AnyType;
 import org.hibernate.type.AssociationType;
@@ -29,6 +35,7 @@ import org.hibernate.type.OneToOneType;
 import org.hibernate.type.Type;
 
 import static java.util.Collections.EMPTY_LIST;
+import static java.util.Collections.emptyIterator;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isHibernateProxy;
 import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.pretty.MessageHelper.infoString;
@@ -42,7 +49,6 @@ import static org.hibernate.pretty.MessageHelper.infoString;
  * @see CascadingAction
  */
 public final class Cascade {
-
 	private Cascade() {
 		// NOP
 	}
@@ -80,11 +86,73 @@ public final class Cascade {
 	}
 
 	static <T> void cascade(CascadeTraversalContext<T> context) throws HibernateException {
+		CascadeWalker.instance().traverse( context );
+	}
+
+	static <T> void cascade(
+			final CascadingAction<T> action,
+			final CascadePoint cascadePoint,
+			final EventSource eventSource,
+			final EntityPersister persister,
+			final Object parent,
+			final T anything,
+			final CascadeDecisionTrace decisionTrace) throws HibernateException {
+		cascade(
+				action,
+				cascadePoint,
+				eventSource,
+				persister,
+				parent,
+				anything,
+				decisionTrace,
+				CascadeEffectMode.EXECUTE
+		);
+	}
+
+	static <T> void cascade(
+			final CascadingAction<T> action,
+			final CascadePoint cascadePoint,
+			final EventSource eventSource,
+			final EntityPersister persister,
+			final Object parent,
+			final T anything,
+			final CascadeDecisionTrace decisionTrace,
+			final CascadeEffectMode effectMode) throws HibernateException {
+		CascadeWalker.instance().traverse(
+				new CascadeTraversalContext<>(
+						action,
+						cascadePoint,
+						eventSource,
+						persister,
+						parent,
+						anything,
+						decisionTrace,
+						effectMode
+				)
+		);
+	}
+
+	static <T> void traverseMetadata(CascadeTraversalContext<T> context) throws HibernateException {
+		traverseMetadata( context, null );
+	}
+
+	static <T> void traverseMetadata(
+			CascadeTraversalContext<T> context,
+			CascadePropertySelection propertySelectionOverride) throws HibernateException {
 		final var action = context.action();
 		final var persister = context.rootPersister();
 		final var eventSource = context.session();
 		final var parent = context.root();
-		if ( action.anythingToCascade( persister ) ) { // performance opt
+		final boolean anythingToCascade = action.anythingToCascade( persister );
+		if ( context.traceEnabled() ) {
+			context.trace( new CascadeTraceEvent.Root(
+					context.rootTraceLocation(),
+					anythingToCascade
+							? CascadeTraceEvent.RootDecision.TRAVERSE
+							: CascadeTraceEvent.RootDecision.NOTHING_TO_CASCADE
+			) );
+		}
+		if ( anythingToCascade ) { // performance opt
 			final boolean traceEnabled = CORE_LOGGER.isTraceEnabled();
 			if ( traceEnabled ) {
 				CORE_LOGGER.processingCascade( action, persister.getEntityName() );
@@ -96,6 +164,12 @@ public final class Cascade {
 				if ( entry != null
 						&& entry.getLoadedState() == null
 						&& entry.getStatus() == Status.MANAGED ) {
+					if ( context.traceEnabled() ) {
+						context.trace( new CascadeTraceEvent.Root(
+								context.rootTraceLocation(),
+								CascadeTraceEvent.RootDecision.MANAGED_WITHOUT_LOADED_STATE
+						) );
+					}
 					return;
 				}
 			}
@@ -107,8 +181,24 @@ public final class Cascade {
 			final String[] propertyNames = persister.getPropertyNames();
 			final var cascadeStyles = persister.getPropertyCascadeStyles();
 			final boolean hasUninitializedLazyProperties = bytecodeEnhancement.hasUnFetchedAttributes( parent );
+			final var propertySelection = determinePropertySelection(
+					context,
+					persister,
+					propertySelectionOverride
+			);
+			final var propertySelectionKind = propertySelection.getKind();
+			final boolean selectedProperties =
+					propertySelectionKind == PropertySelectionKind.SELECTED;
+			final int numberOfProperties = switch ( propertySelectionKind ) {
+				case NONE -> 0;
+				case ALL -> types.length;
+				case SELECTED -> propertySelection.getSelectedPropertyCount();
+			};
 
-			for ( int i = 0; i < types.length; i++) {
+			for ( int selectionPosition = 0; selectionPosition < numberOfProperties; selectionPosition++ ) {
+				final int i = selectedProperties
+						? propertySelection.getSelectedProperty( selectionPosition )
+						: selectionPosition;
 				final var style = cascadeStyles[ i ];
 				final String propertyName = propertyNames[ i ];
 				final Type type = types[i];
@@ -116,8 +206,16 @@ public final class Cascade {
 						hasUninitializedLazyProperties
 								&& !bytecodeEnhancement.isAttributeLoaded( parent, propertyName );
 				final boolean isCascadeDeleteEnabled = cascadeDeleteEnabled( action, persister, i );
+				final boolean applies = action.appliesTo( type, style );
+				if ( context.traceEnabled() ) {
+					context.trace( new CascadeTraceEvent.Node(
+							context.traceLocation( type, style, List.of( propertyName ) ),
+							applies,
+							isCascadeDeleteEnabled
+					) );
+				}
 
-				if ( action.appliesTo( type, style ) ) {
+				if ( applies ) {
 					final Object child;
 					if ( isUninitializedProperty ) {
 						assert bytecodeEnhancement.isEnhancedForLazyLoading();
@@ -131,6 +229,13 @@ public final class Cascade {
 						// (so lazy attributes must not be initialized).
 						if ( entry == null ) {
 							// parent was not in the PersistenceContext
+							traceLazy(
+									context,
+									type,
+									style,
+									propertyName,
+									CascadeTraceEvent.LazyDecision.DETACHED_PARENT_SKIP
+							);
 							continue;
 						}
 						else if ( type instanceof CollectionType collectionType ) {
@@ -147,21 +252,70 @@ public final class Cascade {
 									parent,
 									null
 							);
+							traceLazy(
+									context,
+									type,
+									style,
+									propertyName,
+									CascadeTraceEvent.LazyDecision.COLLECTION_WRAPPER
+							);
+							traceValue(
+									context,
+									type,
+									style,
+									propertyName,
+									CascadeTraceEvent.ValueResolution.LAZY_COLLECTION_WRAPPER
+							);
 						}
 						else if ( action.performOnLazyProperty() && type instanceof EntityType ) {
 							// Only need to initialize a lazy entity attribute when
 							// action.performOnLazyProperty() returns true.
 							child = bytecodeEnhancement.extractInterceptor( parent )
 									.fetchAttribute( parent, propertyName );
+							traceLazy(
+									context,
+									type,
+									style,
+									propertyName,
+									CascadeTraceEvent.LazyDecision.TO_ONE_FETCH
+							);
+							traceValue(
+									context,
+									type,
+									style,
+									propertyName,
+									CascadeTraceEvent.ValueResolution.LAZY_TO_ONE_FETCH
+							);
 
 						}
 						else {
 							// Nothing to do, so just skip cascading to this lazy attribute.
+							traceLazy(
+									context,
+									type,
+									style,
+									propertyName,
+									CascadeTraceEvent.LazyDecision.ACTION_SKIP
+							);
 							continue;
 						}
 					}
 					else {
+						traceLazy(
+								context,
+								type,
+								style,
+								propertyName,
+								CascadeTraceEvent.LazyDecision.LOADED
+						);
 						child = persister.getValue( parent, i );
+						traceValue(
+								context,
+								type,
+								style,
+								propertyName,
+								CascadeTraceEvent.ValueResolution.ENTITY_PROPERTY
+						);
 					}
 					cascadeProperty(
 							context,
@@ -185,6 +339,13 @@ public final class Cascade {
 					final int previousPropertyIndex = context.currentPropertyIndex();
 					context.setCurrentProperty( parent, propertyName, type, style, i );
 					try {
+						traceValue(
+								context,
+								type,
+								style,
+								propertyName,
+								CascadeTraceEvent.ValueResolution.ENTITY_PROPERTY
+						);
 						cascadeLogicalOneToOneOrphanRemoval(
 								context,
 								persister.getValue( parent, i ),
@@ -209,6 +370,64 @@ public final class Cascade {
 		}
 	}
 
+	private static CascadePropertySelection determinePropertySelection(
+			CascadeTraversalContext<?> context,
+			EntityPersister persister,
+			CascadePropertySelection propertySelectionOverride) {
+		if ( context.traceEnabled() ) {
+			return CascadePropertySelection.all();
+		}
+		if ( propertySelectionOverride != null ) {
+			return propertySelectionOverride;
+		}
+		return persister instanceof AbstractEntityPersister abstractPersister
+				? abstractPersister.getCascadePropertySelection( context.action() )
+				: CascadePropertySelection.all();
+	}
+
+	static <T> void traceLazy(
+			CascadeTraversalContext<T> context,
+			Type type,
+			CascadeStyle style,
+			String propertyName,
+			CascadeTraceEvent.LazyDecision decision) {
+		if ( context.traceEnabled() ) {
+			context.trace( new CascadeTraceEvent.Lazy(
+					context.traceLocation( type, style, List.of( propertyName ) ),
+					decision
+			) );
+		}
+	}
+
+	static <T> void traceValue(
+			CascadeTraversalContext<T> context,
+			Type type,
+			CascadeStyle style,
+			String propertyName,
+			CascadeTraceEvent.ValueResolution resolution) {
+		if ( context.traceEnabled() ) {
+			context.trace( new CascadeTraceEvent.Value(
+					context.traceLocation( type, style, List.of( propertyName ) ),
+					resolution
+			) );
+		}
+	}
+
+	private static void traceOrphan(
+			CascadeTraversalContext<?> context,
+			CascadeTraceEvent.OrphanEligibility eligibility,
+			CascadeTraceEvent.OrphanSource source,
+			CascadeTraceEvent.OrphanTiming timing) {
+		if ( context.traceEnabled() ) {
+			context.trace( new CascadeTraceEvent.Orphan(
+					context.currentTraceLocation(),
+					eligibility,
+					source,
+					timing
+			) );
+		}
+	}
+
 	/**
 	 * Cascade an action to the child or children
 	 */
@@ -229,6 +448,10 @@ public final class Cascade {
 		context.setCurrentProperty( parent, propertyName, type, style, propertyIndex );
 		try {
 			cascadePropertyValue( context, child, isCascadeDeleteEnabled );
+		}
+		catch (RuntimeException | Error failure) {
+			context.traceFailure( failure );
+			throw failure;
 		}
 		finally {
 			context.setCurrentProperty(
@@ -252,7 +475,13 @@ public final class Cascade {
 
 		if ( child != null ) {
 			if ( type instanceof EntityType || type instanceof CollectionType || type instanceof AnyType ) {
-				if ( action.cascadeNow( cascadePoint, (AssociationType) type, eventSource.getFactory() ) ) {
+				final boolean cascadeNow = action.cascadeNow(
+						cascadePoint,
+						(AssociationType) type,
+						eventSource.getFactory()
+				);
+				traceAssociation( context, cascadeNow );
+				if ( cascadeNow ) {
 					cascadeAssociation( context, child, isCascadeDeleteEnabled );
 				}
 			}
@@ -281,8 +510,17 @@ public final class Cascade {
 		}
 	}
 
+	private static void traceAssociation(CascadeTraversalContext<?> context, boolean cascadeNow) {
+		if ( context.traceEnabled() ) {
+			context.trace( new CascadeTraceEvent.Association(
+					context.currentTraceLocation(),
+					cascadeNow
+			) );
+		}
+	}
+
 	/** potentially we need to handle orphan deletes for one-to-ones here...*/
-	private static <T> void cascadeLogicalOneToOneOrphanRemoval(
+	static <T> void cascadeLogicalOneToOneOrphanRemoval(
 			final CascadeTraversalContext<T> context,
 			final Object child,
 			final boolean isCascadeDeleteEnabled) throws HibernateException {
@@ -293,15 +531,30 @@ public final class Cascade {
 		final var type = context.currentPropertyType();
 		final var style = context.currentCascadeStyle();
 		final var propertyName = context.currentPropertyName();
+		final boolean eligible = style.hasOrphanDelete() && action.deleteOrphans();
+		traceOrphan(
+				context,
+				eligible
+						? CascadeTraceEvent.OrphanEligibility.ELIGIBLE
+						: CascadeTraceEvent.OrphanEligibility.INELIGIBLE,
+				CascadeTraceEvent.OrphanSource.NONE,
+				CascadeTraceEvent.OrphanTiming.NONE
+		);
 
 		// We have a physical or logical one-to-one.  See if the attribute cascade settings and action-type require
 		// orphan checking
-		if ( style.hasOrphanDelete() && action.deleteOrphans() ) {
+		if ( eligible ) {
 			// value is orphaned if loaded state for this property shows not null
 			// because it is currently null.
 			final var persistenceContext = eventSource.getPersistenceContextInternal();
 			final var entry = persistenceContext.getEntry( parent );
 			if ( entry != null && entry.getStatus() != Status.SAVING ) {
+				if ( context.traceEnabled() ) {
+					context.trace( new CascadeTraceEvent.Value(
+							context.currentTraceLocation(),
+							CascadeTraceEvent.ValueResolution.LOADED_STATE
+					) );
+				}
 				Object loadedValue;
 				if ( componentPath == null ) {
 					// association defined on entity
@@ -347,28 +600,65 @@ public final class Cascade {
 						// associated one-to-one.
 						if ( child == loadedValue ) {
 							// do nothing
+							traceOrphan(
+									context,
+									CascadeTraceEvent.OrphanEligibility.NOT_ORPHANED,
+									CascadeTraceEvent.OrphanSource.ENTITY_LOADED_STATE,
+									CascadeTraceEvent.OrphanTiming.NONE
+							);
 							return;
 						}
 					}
 
 					if ( valueEntry != null ) {
-						final var persister = valueEntry.getPersister();
-						final String entityName = persister.getEntityName();
-						if ( CORE_LOGGER.isTraceEnabled() ) {
-							CORE_LOGGER.deletingOrphan(
-									infoString( entityName, persister.getIdentifier( loadedValue, eventSource ) ) );
-						}
-						if ( isForeignKeyToParent( type ) ) {
-							// If FK direction is to-parent, we must remove the orphan *before* the queued update(s)
-							// occur. Otherwise, replacing the association on a managed entity, without manually
-							// nulling and flushing, causes FK constraint violations.
-							eventSource.removeOrphanBeforeUpdates( entityName, loadedValue );
-						}
-						else {
-							// Else, we must delete after the updates.
-							eventSource.delete( entityName, loadedValue, isCascadeDeleteEnabled, DeleteContext.create() );
+						traceOrphan(
+								context,
+								CascadeTraceEvent.OrphanEligibility.ORPHANED,
+								CascadeTraceEvent.OrphanSource.ENTITY_LOADED_STATE,
+								isForeignKeyToParent( type )
+										? CascadeTraceEvent.OrphanTiming.BEFORE_UPDATES
+										: CascadeTraceEvent.OrphanTiming.AFTER_UPDATES
+						);
+						if ( context.executeEffects() ) {
+							final var persister = valueEntry.getPersister();
+							final String entityName = persister.getEntityName();
+							if ( CORE_LOGGER.isTraceEnabled() ) {
+								CORE_LOGGER.deletingOrphan(
+										infoString( entityName, persister.getIdentifier( loadedValue, eventSource ) ) );
+							}
+							if ( isForeignKeyToParent( type ) ) {
+								// If FK direction is to-parent, we must remove the orphan *before* the queued update(s)
+								// occur. Otherwise, replacing the association on a managed entity, without manually
+								// nulling and flushing, causes FK constraint violations.
+								eventSource.removeOrphanBeforeUpdates( entityName, loadedValue );
+							}
+							else {
+								// Else, we must delete after the updates.
+								eventSource.delete(
+										entityName,
+										loadedValue,
+										isCascadeDeleteEnabled,
+										DeleteContext.create()
+								);
+							}
 						}
 					}
+					else {
+						traceOrphan(
+								context,
+								CascadeTraceEvent.OrphanEligibility.ORPHANED,
+								CascadeTraceEvent.OrphanSource.ENTITY_LOADED_STATE,
+								CascadeTraceEvent.OrphanTiming.NONE
+						);
+					}
+				}
+				else {
+					traceOrphan(
+							context,
+							CascadeTraceEvent.OrphanEligibility.NOT_ORPHANED,
+							CascadeTraceEvent.OrphanSource.ENTITY_LOADED_STATE,
+							CascadeTraceEvent.OrphanTiming.NONE
+					);
 				}
 			}
 		}
@@ -406,11 +696,32 @@ public final class Cascade {
 			final CascadeStyle componentPropertyStyle = componentType.getCascadeStyle( i );
 			final String subPropertyName = propertyNames[i];
 			final Type subPropertyType = types[i];
-			if ( action.appliesTo( subPropertyType, componentPropertyStyle )
+			final boolean applies = action.appliesTo( subPropertyType, componentPropertyStyle );
+			final boolean cascadeDeleteEnabled = cascadeDeleteEnabled( action, componentType, i );
+			if ( context.traceEnabled() ) {
+				context.trace( new CascadeTraceEvent.Node(
+						context.childTraceLocation( subPropertyType, componentPropertyStyle, subPropertyName ),
+						applies,
+						cascadeDeleteEnabled
+				) );
+			}
+			if ( applies
 					|| componentPropertyStyle.hasOrphanDelete() && action.deleteOrphans() ) {
 				if ( children == null ) {
 					// Get children on demand.
 					children = componentType.getPropertyValues( child, eventSource );
+					if ( context.traceEnabled() ) {
+						context.trace( new CascadeTraceEvent.Value(
+								context.currentTraceLocation(),
+								CascadeTraceEvent.ValueResolution.COMPONENT_PROPERTIES
+						) );
+					}
+				}
+				if ( context.traceEnabled() ) {
+					context.trace( new CascadeTraceEvent.Value(
+							context.childTraceLocation( subPropertyType, componentPropertyStyle, subPropertyName ),
+							CascadeTraceEvent.ValueResolution.COMPONENT_PROPERTY
+					) );
 				}
 				cascadeProperty(
 						context,
@@ -420,7 +731,7 @@ public final class Cascade {
 						subPropertyType,
 						componentPropertyStyle,
 						subPropertyName,
-						cascadeDeleteEnabled( action, componentType, i )
+						cascadeDeleteEnabled
 				);
 			}
 		}
@@ -451,7 +762,8 @@ public final class Cascade {
 		final var persister =
 				eventSource.getFactory().getMappingMetamodel()
 						.getCollectionDescriptor( type.getRole() );
-		final var elemType = persister.getElementType();
+		final Type elemType = persister.getElementType();
+		final boolean cascadeDeleteEnabled = cascadeDeleteEnabled( action, persister );
 		//cascade to current collection elements
 		if ( elemType instanceof EntityType || elemType instanceof AnyType || elemType instanceof ComponentType ) {
 			cascadeCollectionElements(
@@ -459,7 +771,7 @@ public final class Cascade {
 					child,
 					type,
 					elemType,
-					cascadeDeleteEnabled( action, persister )
+					cascadeDeleteEnabled
 			);
 		}
 	}
@@ -476,7 +788,19 @@ public final class Cascade {
 		final var parent = context.currentParent();
 		final var type = context.currentPropertyType();
 		final var style = context.currentCascadeStyle();
-		if ( style.reallyDoCascade( action ) ) {
+		final boolean reallyDoCascade = style.reallyDoCascade( action );
+		if ( context.traceEnabled() ) {
+			context.trace( new CascadeTraceEvent.Action(
+					context.currentTraceLocation(),
+					reallyDoCascade
+							? context.executeEffects()
+									? CascadeTraceEvent.ActionDecision.INVOKED
+									: CascadeTraceEvent.ActionDecision.SUPPRESSED_BY_DECISION_ONLY
+							: CascadeTraceEvent.ActionDecision.SKIPPED_BY_STYLE,
+					isCascadeDeleteEnabled
+			) );
+		}
+		if ( reallyDoCascade && context.executeEffects() ) {
 			//not really necessary, but good for consistency...
 			final var persistenceContext = eventSource.getPersistenceContextInternal();
 			persistenceContext.addChildParent( child, parent );
@@ -525,13 +849,38 @@ public final class Cascade {
 
 		context.changeCascadePoint( collectionCascadePoint );
 		try {
-			if ( style.reallyDoCascade( action ) ) {
+			final boolean reallyDoCascade = style.reallyDoCascade( action );
+			if ( context.traceEnabled() ) {
+				context.trace( new CascadeTraceEvent.Style(
+						context.currentTraceLocation(),
+						reallyDoCascade
+				) );
+			}
+			if ( reallyDoCascade ) {
 				final boolean traceEnabled = CORE_LOGGER.isTraceEnabled();
 				if ( traceEnabled ) {
 					CORE_LOGGER.cascadingCollection( action, collectionType.getRole() );
 				}
 				final var iterator = action.getCascadableChildrenIterator( eventSource, collectionType, child );
+				if ( context.traceEnabled() ) {
+					context.trace( new CascadeTraceEvent.CollectionIterator(
+							context.currentTraceLocation(),
+							collectionType.getRole(),
+							collectionIteratorMode( action, iterator )
+					) );
+					context.trace( new CascadeTraceEvent.Value(
+							context.currentTraceLocation(),
+							CascadeTraceEvent.ValueResolution.COLLECTION_ITERATOR
+					) );
+				}
 				while ( iterator.hasNext() ) {
+					if ( context.traceEnabled() ) {
+						context.trace( new CascadeTraceEvent.Node(
+								context.currentPathTraceLocation( elemType, style ),
+								true,
+								isCascadeDeleteEnabled
+						) );
+					}
 					cascadeProperty(
 							context,
 							-1,
@@ -539,9 +888,9 @@ public final class Cascade {
 							iterator.next(),
 							elemType,
 							style,
-							propertyName,
-							isCascadeDeleteEnabled
-					);
+						propertyName,
+						isCascadeDeleteEnabled
+				);
 				}
 				if ( traceEnabled ) {
 					CORE_LOGGER.doneCascadingCollection( action, collectionType.getRole() );
@@ -565,9 +914,27 @@ public final class Cascade {
 				&& persistentCollection != null
 				// a newly instantiated collection can't have orphans
 				&& !persistentCollection.isNewlyInstantiated();
+		if ( context.traceEnabled() ) {
+			final CascadeTraceEvent.OrphanSource orphanSource =
+					persistentCollection == null
+							? CascadeTraceEvent.OrphanSource.NONE
+							: persistentCollection.wasInitialized()
+									? CascadeTraceEvent.OrphanSource.COLLECTION_LOADED_STATE
+									: CascadeTraceEvent.OrphanSource.QUEUED_OPERATIONS;
+			traceOrphan(
+					context,
+					deleteOrphans
+							? CascadeTraceEvent.OrphanEligibility.ELIGIBLE
+							: CascadeTraceEvent.OrphanEligibility.INELIGIBLE,
+					orphanSource,
+					deleteOrphans
+							? CascadeTraceEvent.OrphanTiming.DURING_COLLECTION_TRAVERSAL
+							: CascadeTraceEvent.OrphanTiming.NONE
+			);
+		}
 
 		if ( deleteOrphans ) {
-			final boolean traceEnabled = CORE_LOGGER.isTraceEnabled();
+			final boolean traceEnabled = context.executeEffects() && CORE_LOGGER.isTraceEnabled();
 			if ( traceEnabled ) {
 				CORE_LOGGER.deletingOrphans( collectionType.getRole() );
 			}
@@ -575,22 +942,49 @@ public final class Cascade {
 			// 1. newly instantiated collections
 			// 2. arrays (we can't track orphans for detached arrays)
 			final String elementEntityName = collectionType.getAssociatedEntityName( eventSource.getFactory() );
-			deleteOrphans( eventSource, elementEntityName, persistentCollection );
+			deleteOrphans( context, elementEntityName, persistentCollection );
 			if ( traceEnabled ) {
 				CORE_LOGGER.doneDeletingOrphans( collectionType.getRole() );
 			}
 		}
 	}
 
+	@SuppressWarnings("removal")
+	private static CascadeTraceEvent.CollectionIteratorMode collectionIteratorMode(
+			CascadingAction<?> action,
+			Iterator<?> iterator) {
+		if ( action == CascadingActions.REMOVE ) {
+			return CascadeTraceEvent.CollectionIteratorMode.ALL;
+		}
+		else if ( action == CascadingActions.REFRESH || action == CascadingActions.CHECK_ON_FLUSH ) {
+			return iterator == emptyIterator()
+					? CascadeTraceEvent.CollectionIteratorMode.EMPTY
+					: CascadeTraceEvent.CollectionIteratorMode.LOADED;
+		}
+		else if ( action == CascadingActions.LOCK
+				|| action == CascadingActions.EVICT
+				|| action == CascadingActions.MERGE
+				|| action == CascadingActions.PERSIST
+				|| action == CascadingActions.PERSIST_ON_FLUSH ) {
+			return CascadeTraceEvent.CollectionIteratorMode.LOADED;
+		}
+		else {
+			return CascadeTraceEvent.CollectionIteratorMode.CUSTOM;
+		}
+	}
+
 	/**
 	 * Delete any entities that were removed from the collection
 	 */
-	private static void deleteOrphans(EventSource eventSource, String entityName, PersistentCollection<?> collection) {
+	private static void deleteOrphans(
+			CascadeTraversalContext<?> context,
+			String entityName,
+			PersistentCollection<?> collection) {
 		//TODO: suck this logic into the collection!
-		for ( Object orphan : getOrphans( eventSource, entityName, collection ) ) {
-			if ( orphan != null ) {
+		for ( Object orphan : getOrphans( context.session(), entityName, collection ) ) {
+			if ( orphan != null && context.executeEffects() ) {
 				CORE_LOGGER.deletingOrphanOfType( entityName );
-				eventSource.delete( entityName, orphan, false, DeleteContext.create() );
+				context.session().delete( entityName, orphan, false, DeleteContext.create() );
 			}
 		}
 	}

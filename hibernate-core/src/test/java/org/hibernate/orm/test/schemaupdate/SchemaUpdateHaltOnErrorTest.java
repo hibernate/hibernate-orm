@@ -29,7 +29,7 @@ import java.util.EnumSet;
  * @author Gail Badner
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
-@SkipForDialect(dialectClass = DB2Dialect.class,
+@SkipForDialect(dialectClass = DB2Dialect.class, matchSubTypes = true,
 		reason = "DB2 is far more resistant to the reserved keyword usage. See HHH-12832.")
 @SkipForDialect(dialectClass = DerbyDialect.class,
 		reason = "Derby is far more resistant to the reserved keyword usage.")

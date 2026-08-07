@@ -39,7 +39,7 @@ import jakarta.persistence.Table;
 @RequiresDialects(
 		value = {
 				@RequiresDialect(value = OracleDialect.class),
-				@RequiresDialect(value = DB2Dialect.class),
+				@RequiresDialect(value = DB2Dialect.class, matchSubTypes = false),
 		}
 )
 public class SynonymValidationTest extends BaseSessionFactoryFunctionalTest {

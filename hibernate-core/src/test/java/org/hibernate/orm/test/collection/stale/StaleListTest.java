@@ -4,10 +4,12 @@
  */
 package org.hibernate.orm.test.collection.stale;
 
+import jakarta.persistence.CollectionTable;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OrderColumn;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.MariaDBDialect;
@@ -62,10 +64,13 @@ public class StaleListTest {
 			} );
 		} );
 	}
-	static @Entity class StaleListTestEntity {
+	@Entity(name = "StaleListTestEntity")
+	static class StaleListTestEntity {
 		@GeneratedValue @Id
 		long id;
-		@ElementCollection @OrderColumn
+		@ElementCollection
+		@CollectionTable(name = "stale_list_test_strings", joinColumns = @JoinColumn(name = "stale_list_test_id"))
+		@OrderColumn
 		List<String> stringList = new ArrayList<>();
 	}
 }

@@ -62,7 +62,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 		},
 		properties = @Setting(name = QUERY_PASS_PROCEDURE_PARAMETER_NAMES, value = "true")
 )
-@RequiresDialect( value = DB2Dialect.class )
+@RequiresDialect( value = DB2Dialect.class, matchSubTypes = false )
 @Jira( "https://hibernate.atlassian.net/browse/HHH-18332" )
 public class DB2StoredProcedureTest {
 

@@ -12,7 +12,9 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 
+import org.hibernate.annotations.DialectOverride;
 import org.hibernate.annotations.DiscriminatorFormula;
+import org.hibernate.dialect.DB2zDialect;
 
 /**
  * @author Emmanuel Bernard
@@ -20,6 +22,11 @@ import org.hibernate.annotations.DiscriminatorFormula;
 @Entity
 @DiscriminatorColumn(discriminatorType=DiscriminatorType.INTEGER)
 @DiscriminatorFormula("case when zik_type is null then 0 else zik_type end")
+// DB2 z/OS doesn't seem to support case expressions in a check constraint
+// and since the formula ends up as a part of the table definition check constraint,
+// we need to override the expression to use coalesce instead
+@DialectOverride.DiscriminatorFormula(dialect = DB2zDialect.class,
+		override = @DiscriminatorFormula("coalesce(zik_type, 0)"))
 @Table(uniqueConstraints = @UniqueConstraint(columnNames = {"avgBeat", "starred"} ))
 public abstract class Music {
 	private Integer id;

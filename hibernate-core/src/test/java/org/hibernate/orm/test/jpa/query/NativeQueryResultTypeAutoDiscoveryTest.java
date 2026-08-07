@@ -18,6 +18,7 @@ import org.hibernate.community.dialect.DerbyDialect;
 import org.hibernate.community.dialect.FirebirdDialect;
 import org.hibernate.community.dialect.GaussDBDialect;
 import org.hibernate.community.dialect.InformixDialect;
+import org.hibernate.dialect.DB2zDialect;
 import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.community.dialect.TiDBDialect;
 import org.hibernate.dialect.AbstractTransactSQLDialect;
@@ -144,6 +145,7 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 	@SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true, reason = "No support for the bit datatype so we use tinyint")
 	@SkipForDialect(dialectClass = OracleDialect.class, reason = "No support for the bit datatype so we use number(1,0)")
 	@SkipForDialect(dialectClass = DB2Dialect.class, majorVersion = 10, reason = "No support for the bit datatype so we use smallint")
+	@SkipForDialect(dialectClass = DB2zDialect.class, reason = "No support for the bit datatype so we use smallint")
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "No support for the bit datatype so we use char(1)")
 	public void booleanType(EntityManagerFactoryScope scope) {
 		doTest( scope, BooleanEntity.class, true );
@@ -153,6 +155,7 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 	@SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true, reason = "No support for the bit datatype so we use tinyint")
 	@SkipForDialect(dialectClass = OracleDialect.class, reason = "No support for the bit datatype so we use number(1,0)")
 	@SkipForDialect(dialectClass = DB2Dialect.class, majorVersion = 10, reason = "No support for the bit datatype so we use smallint")
+	@SkipForDialect(dialectClass = DB2zDialect.class, reason = "No support for the bit datatype so we use smallint")
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "No support for the bit datatype so we use char(1)")
 	public void bitType(EntityManagerFactoryScope scope) {
 		doTest( scope, BitEntity.class, false );
@@ -164,6 +167,7 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "Turns tinyints into shorts in result sets and advertises the type as short in the metadata")
 	@SkipForDialect(dialectClass = DerbyDialect.class, reason = "No support for the tinyint datatype so we use smallint")
 	@SkipForDialect(dialectClass = DB2Dialect.class, reason = "No support for the tinyint datatype so we use smallint")
+	@SkipForDialect(dialectClass = DB2zDialect.class, reason = "No support for the tinyint datatype so we use smallint")
 	@SkipForDialect(dialectClass = AbstractTransactSQLDialect.class, matchSubTypes = true, reason = "No support for the tinyint datatype so we use smallint")
 	@SkipForDialect(dialectClass = HANADialect.class, reason = "No support for the tinyint datatype so we use smallint")
 	@SkipForDialect(dialectClass = OracleDialect.class, reason = "Oracle maps tinyint to number")
@@ -181,6 +185,7 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 	@SkipForDialect(dialectClass = H2Dialect.class, reason = "Turns floats into doubles in result sets and advertises the type as double in the metadata")
 	@SkipForDialect(dialectClass = HSQLDialect.class, reason = "Turns floats into doubles in result sets and advertises the type as double in the metadata")
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Turns floats into doubles in result sets and advertises the type as double in the metadata")
+	@SkipForDialect(dialectClass = DB2zDialect.class, reason = "Turns floats into doubles in result sets and advertises the type as double in the metadata")
 	@SkipForDialect(dialectClass = SpannerDialect.class, reason = "Spanner maps float types to double (float64)")
 	public void floatType(EntityManagerFactoryScope scope) {
 		doTest( scope, FloatEntity.class, 15516.125f );
@@ -198,6 +203,7 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 	@Test
 	@SkipForDialect(dialectClass = DerbyDialect.class, reason = "Value is too big for the maximum allowed precision of Derby")
 	@SkipForDialect(dialectClass = DB2Dialect.class, reason = "Value is too big for the maximum allowed precision of DB2")
+	@SkipForDialect(dialectClass = DB2zDialect.class, reason = "Value is too big for the maximum allowed precision of DB2 z/OS")
 	@SkipForDialect(dialectClass = OracleDialect.class, reason = "Value is too big for the maximum allowed precision of Oracle")
 	@SkipForDialect(dialectClass = AbstractTransactSQLDialect.class, matchSubTypes = true, reason = "Value is too big for the maximum allowed precision of SQL Server and Sybase")
 	@SkipForDialect(dialectClass = HANADialect.class, reason = "Value is too big for the maximum allowed precision of HANA")
@@ -212,6 +218,7 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 	@Test
 	@SkipForDialect(dialectClass = DerbyDialect.class, reason = "Value is too big for the maximum allowed precision of Derby")
 	@SkipForDialect(dialectClass = DB2Dialect.class, reason = "Value is too big for the maximum allowed precision of DB2")
+	@SkipForDialect(dialectClass = DB2zDialect.class, reason = "Value is too big for the maximum allowed precision of DB2 z/OS")
 	@SkipForDialect(dialectClass = OracleDialect.class, reason = "Value is too big for the maximum allowed precision of Oracle")
 	@SkipForDialect(dialectClass = AbstractTransactSQLDialect.class, matchSubTypes = true, reason = "Value is too big for the maximum allowed precision of SQL Server and Sybase")
 	@SkipForDialect(dialectClass = HANADialect.class, reason = "Value is too big for the maximum allowed precision of HANA")

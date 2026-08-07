@@ -5,6 +5,7 @@
 package org.hibernate.orm.test.bytecode.enhancement.dirty;
 
 import jakarta.persistence.CollectionTable;
+import jakarta.persistence.JoinColumn;
 import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -81,7 +82,7 @@ public class DirtyTrackingCollectionTest {
 		Long id;
 
 		@ElementCollection
-		@CollectionTable(name = "SOME_STRINGS")
+		@CollectionTable(name = "SOME_STRINGS", joinColumns = @JoinColumn(name = "STRINGS_ENTITY_ID"))
 		List<String> someStrings;
 	}
 }

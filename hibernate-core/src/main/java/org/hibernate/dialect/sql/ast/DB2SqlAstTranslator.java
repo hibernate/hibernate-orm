@@ -213,6 +213,10 @@ public class DB2SqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslat
 		return true;
 	}
 
+	protected boolean supportsOffsetClause(QueryPart queryPart) {
+		return supportsOffsetClause();
+	}
+
 	@Override
 	public void visitQueryPartTableReference(QueryPartTableReference tableReference) {
 		final boolean oldLateral = inLateral;
@@ -273,7 +277,7 @@ public class DB2SqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslat
 
 	private boolean shouldEmulateFetch(QueryPart queryPart) {
 		return shouldEmulateFetchClause( queryPart )
-			|| getQueryPartForRowNumbering() != queryPart && !supportsOffsetClause() && hasOffset( queryPart );
+			|| getQueryPartForRowNumbering() != queryPart && !supportsOffsetClause( queryPart ) && hasOffset( queryPart );
 	}
 
 	@Override
@@ -299,7 +303,7 @@ public class DB2SqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslat
 	@Override
 	public void visitOffsetFetchClause(QueryPart queryPart) {
 		if ( !isRowNumberingCurrentQueryPart() ) {
-			if ( supportsOffsetClause() || !hasOffset( queryPart ) ) {
+			if ( supportsOffsetClause( queryPart ) || !hasOffset( queryPart ) ) {
 				renderOffsetFetchClause( queryPart, true );
 			}
 			else if ( queryPart.isRoot() && hasLimit() ) {

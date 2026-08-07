@@ -720,7 +720,7 @@ public class ManagedTypeProcessor {
 			AttributeProcessor.processAttributes(
 					jaxbEmbeddable.getAttributes(),
 					classDetails,
-					AccessType.FIELD,
+					classAccessType != null ? classAccessType : AccessType.FIELD,
 					memberAdjuster,
 					xmlDocumentContext
 			);
@@ -739,12 +739,17 @@ public class ManagedTypeProcessor {
 			classDetails.applyAnnotationUsage( JpaAnnotations.EMBEDDABLE,
 					xmlDocumentContext.getModelBuildingContext() );
 
+			final var classAccessType = coalesce(
+					jaxbEmbeddable.getAccess(),
+					xmlDocumentContext.getEffectiveDefaults().getDefaultPropertyAccessType()
+			);
+
 			final var attributes = jaxbEmbeddable.getAttributes();
 			if ( attributes != null ) {
 				AttributeProcessor.processAttributes(
 						attributes,
 						classDetails,
-						AccessType.FIELD,
+						classAccessType != null ? classAccessType : AccessType.FIELD,
 						ManagedTypeProcessor::adjustNonDynamicTypeMember,
 						xmlDocumentContext
 				);

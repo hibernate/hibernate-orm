@@ -24,7 +24,7 @@ import org.hibernate.collection.internal.StandardListSemantics;
 import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
-import org.hibernate.engine.spi.CascadeStyle;
+import org.hibernate.cascade.spi.CascadeStyle;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.AggregateColumn;
 import org.hibernate.mapping.Any;

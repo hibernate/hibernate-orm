@@ -6,7 +6,7 @@
 
 Status: Working Specification -- Draft
 
-Revision: 0.8
+Revision: 0.17
 
 Approval status: Not approved
 
@@ -35,6 +35,38 @@ Revision history::
 * `0.8` -- Defined Jakarta Persistence update callbacks as an owner-level
   lifecycle invoked at most once per owner per flush, independent of the number
   of contributing entity and collection mutations.
+* `0.9` -- Made successful initialization consume and clear all queued collection
+  operations, establishing that a valid initialized collection cannot retain a
+  queued-command log.
+* `0.10` -- Simplified the unmaterialized collection baseline name from
+  `UNINITIALIZED_PERSISTED` to `UNINITIALIZED`; existing persisted state is
+  implied, while `EMPTY` continues to represent a known empty baseline.
+* `0.11` -- Renamed the materialized collection baseline from `SNAPSHOT` to
+  `LOADED`, meaning the stored loaded state used for comparison rather than the
+  collection wrapper's current initialization status.
+* `0.12` -- Documented the conceptual delta types directly, distinguishing the
+  delta's reference baseline from the provenance and coverage of its changes.
+* `0.13` -- Assigned collection-specific delta production to
+  `CollectionSemantics`, while leaving direct-method versus associated-producer
+  SPI shape open.
+* `0.14` -- Clarified that the expected `ActionQueue` change replaces legacy
+  collection-action registration as the required common boundary, but does not
+  require a type named `LogicalCollectionAction`; the exact neutral boundary
+  remains provisional.
+* `0.15` -- Defined operation templates, row bindings, dependency signatures,
+  and deferred row materialization for the optional compact physical-row
+  representation.
+* `0.16` -- Clarified that cascade entry plans are entity-rooted while collection
+  persisters may own or key reusable collection-element subplans referenced by
+  entity-plan collection nodes.
+* `0.17` -- Made post-freeze comparison validity a conditional preparation
+  obligation rather than a mandatory `CollectionDelta` field; defined completion
+  in terms of all operation, contributor, and fixup obligations; confirmed that
+  diagnostic monitoring surrounds physical execution; moved compiled cascade
+  conformance and parity coverage to the companion cascade specification; and
+  defined informative implementation stages with explicit exit criteria.  It
+  also clarified that owner callback coordination crosses entity and collection
+  work without bringing entity mutation representation into scope.
 
 == Status and Relationship to the Design Proposal
 
@@ -57,6 +89,11 @@ For implementation work explicitly targeting a revision of this specification:
 * open questions identify behavior which is not yet fully specified,
 * the proposal may be consulted for rationale but does not override a normative
   requirement.
+
+Compiled cascade planning and traversal are specified separately by
+link:cascade-processing-spec.adoc[Cascade Processing Specification].
+This document owns the collection-delta and orphan-discovery boundary used by
+that specification.
 
 The expected status progression is:
 
@@ -113,10 +150,11 @@ This specification covers:
 * the boundary between collection comparison and cascade orphan discovery,
 * behavioral requirements for a compiled cascade plan and traversal context.
 
-The detailed structure and optimization of a compiled cascade plan will be
-defined in a companion working specification.  The behavioral boundary
-requirements in this document still apply to its interaction with collection
-flush processing.
+The detailed structure, required behavior, migration, and optimization of a
+compiled cascade plan are defined in
+link:cascade-processing-spec.adoc[Cascade Processing Specification].
+The behavioral boundary requirements in this document still apply to its
+interaction with collection flush processing.
 
 == Non-Goals
 
@@ -124,8 +162,8 @@ This revision does not specify:
 
 * public user-facing changes to `PersistentCollection`,
 * entity event contracts, entity mutation boundary vocabulary, and entity action
-  decomposition, except where an entity action owns physical work represented by
-  a collection delta,
+  decomposition, except for owner-level callback participation and cases where an
+  entity action owns physical work represented by a collection delta,
 * new ownership, inverse, orphan-delete, or database-cascade mapping semantics,
 * a global order between unrelated collection actions,
 * a particular SQL statement order when multiple orders satisfy the dependency
@@ -139,7 +177,10 @@ This revision does not specify:
 
 [NOTE]
 ====
-This section is informative and creates no entity-processing requirements.
+This section is informative and creates no entity mutation representation,
+decomposition, or execution requirements.  The owner-level callback coordination
+requirements in `CFS-LFC-016` are normative and intentionally accept
+participation from both entity and collection work.
 ====
 
 Although this specification is collection-scoped, these concepts may be useful
@@ -159,10 +200,11 @@ entity cache behavior, entity event contracts, and entity-specific contributors.
 No conclusion is made here that the collection vocabulary or lifecycle applies
 unchanged to entities.
 
-Entity generalization requires a separate analysis, design proposal, and working
-specification.  The collection implementation should avoid accidental coupling
-which makes later reuse impossible, but this specification does not authorize
-changes to entity behavior.
+Generalization of mutation identity, boundary vocabulary, decomposition, or
+completion to entity actions requires a separate analysis, design proposal, and
+working specification.  The collection implementation should avoid accidental
+coupling which makes later reuse impossible.  Owner-level callback coordination
+does not imply that broader generalization.
 
 == Terminology
 
@@ -188,7 +230,7 @@ An immutable semantic description of collection changes relative to an explicit
 baseline.
 
 Complete delta::
-A delta which describes the complete difference from an empty or snapshot
+A delta which describes the complete difference from an empty or loaded
 baseline.
 
 Explicit-changes-only delta::
@@ -216,7 +258,10 @@ declared on an entity listener, invoked for the affected collection owner throug
 Diagnostic monitor span::
 A begin/complete pair reported through `org.hibernate.event.monitor.spi.EventMonitor`.
 Despite the package and type naming, it is diagnostic instrumentation rather
-than a Hibernate collection event delivered through `EventListenerGroup`.
+than a Hibernate collection event delivered through `EventListenerGroup`.  A
+collection diagnostic monitor span measures physical execution and completes
+before semantic state advancement, cache work, post-events, callbacks, and
+statistics.
 
 Completion handler::
 Internal work invoked after physical success, such as current
@@ -519,17 +564,58 @@ A delta has the conceptual shape:
 
 [source,java]
 ----
+/// An immutable semantic description of collection changes relative to an
+/// identified reference state.
+///
+/// @param baseline the reference state against which `changes` are expressed
+/// @param coverage whether `changes` completely describe the difference from
+///                 the baseline
+/// @param changes the ordered semantic changes
+/// @param sources how the changes were discovered
 record CollectionDelta(
         CollectionBaseline baseline,
         DeltaCoverage coverage,
         List<CollectionChange> changes,
         Set<DeltaSource> sources) {
 }
+
+/// Identifies the reference state against which a collection delta is expressed.
+/// This does not identify how changes were discovered; that is `DeltaSource`.
+enum CollectionBaseline {
+    /// A synthetic empty reference because no prior collection state exists.
+    /// This is distinct from a `LOADED` baseline which happens to contain no rows.
+    EMPTY,
+
+    /// The stored loaded-state snapshot used as the comparison reference.
+    /// This does not merely indicate that the collection wrapper is initialized.
+    LOADED,
+
+    /// Existing collection state which was not materialized.
+    /// This state is unknown, not empty.
+    UNINITIALIZED
+}
+
+/// Identifies how completely the changes describe the difference from the
+/// selected baseline.
+enum DeltaCoverage {
+    COMPLETE,
+    EXPLICIT_CHANGES_ONLY
+}
+
+/// Identifies the provenance of the facts used to construct the delta.
+/// Multiple sources may contribute to one delta.
+enum DeltaSource {
+    SNAPSHOT_COMPARISON,
+    QUEUED_OPERATION_LOG
+}
 ----
 
 [[CFS-DLT-001]]
-`CFS-DLT-001`:: Every delta MUST identify its baseline as empty, snapshot, or
-uninitialized persisted state.
+`CFS-DLT-001`:: Every delta MUST identify its baseline as `EMPTY`, `LOADED`, or
+`UNINITIALIZED`.  `LOADED` refers to the stored loaded state used for comparison,
+not merely an initialized wrapper.  `UNINITIALIZED` represents existing
+collection state which was not materialized and MUST NOT be interpreted as
+empty.
 
 [[CFS-DLT-002]]
 `CFS-DLT-002`:: Every delta MUST identify its coverage as complete or
@@ -567,26 +653,43 @@ bulk clear, or no direct collection-table work.
 projection MUST be used only while the compared collection state remains valid.
 
 [[CFS-DLT-010]]
-`CFS-DLT-010`:: Delta production MUST belong to collection semantics or an
-equivalent mapping-aware component.  Generic set-like folding MUST NOT be
-applied to bags, lists, or other semantics for which it is not equivalent.
+`CFS-DLT-010`:: Delta production MUST be owned by or resolved through the
+`CollectionSemantics` selected by the collection persister.  Generic set-like
+folding MUST NOT be applied to bags, lists, or other semantics for which it is
+not equivalent.
 
 [[CFS-DLT-011]]
-`CFS-DLT-011`:: Delta freezing MUST capture a collection structural version,
-mutation generation, or equivalent token sufficient to distinguish changes
-represented by the frozen delta from changes made afterward.
+`CFS-DLT-011`:: When a prepared mutation can remain live across processing capable
+of changing delta-relevant collection state, the collection wrapper or flush
+context MUST expose mutation-generation or comparison-validity state and the
+prepared mutation MUST capture the corresponding value when its delta is frozen.
+The validity value MAY remain external to `CollectionDelta`.  It MUST allow state
+advancement to distinguish the state represented by the executed delta from
+changes made afterward.
+
+[[CFS-DLT-012]]
+`CFS-DLT-012`:: The shared collection-mutation preparation protocol MUST invoke
+semantics-owned delta production after applicable pre-mutation lifecycle
+processing and before freezing the prepared mutation.  Queue-specific lowering
+or decomposition MUST NOT independently reconstruct the delta.
+
+[[CFS-DLT-013]]
+`CFS-DLT-013`:: The `CollectionFlushContext` MUST retain the frozen delta for the
+relevant collection structural state but MUST NOT implement collection-shape
+comparison or queued-command folding rules itself.
 
 == Queued-Operation Normalization
 
 [[CFS-QOP-001]]
-`CFS-QOP-001`:: A collection which becomes initialized before delta freezing
-MUST apply queued commands in their original order and MUST produce a normal
-complete snapshot delta.
+`CFS-QOP-001`:: Successful collection initialization MUST apply queued commands
+in their original order and clear the queued-command log before initialization
+is complete.  A collection in a valid initialized state MUST NOT retain queued
+commands and MUST produce a normal complete delta from its loaded-state baseline.
 
 [[CFS-QOP-002]]
 `CFS-QOP-002`:: A collection which remains uninitialized MUST normalize its
 queued command log into an explicit-changes-only delta whose baseline is
-uninitialized persisted state.
+uninitialized state.
 
 [[CFS-QOP-003]]
 `CFS-QOP-003`:: The internal queued-command contract MUST expose command kind,
@@ -808,9 +911,12 @@ DISCOVERED
 mutation and carry its `CollectionMutationId` as execution metadata.
 
 [[CFS-CMP-002]]
-`CFS-CMP-002`:: All normal operations, state-management contributor operations,
-and synthesized fixups required by a semantic mutation MUST be registered before
-that mutation is sealed.
+`CFS-CMP-002`:: Before a semantic mutation becomes eligible for successful
+completion, planning MUST have identified every normal operation,
+state-management contributor obligation, and synthesized fixup required by that
+mutation.  Every such obligation MUST participate in completion accounting,
+whether represented as a registered physical operation or as an explicit
+completion dependency.
 
 [[CFS-CMP-003]]
 `CFS-CMP-003`:: A semantic mutation MUST NOT complete before it is sealed.
@@ -825,7 +931,8 @@ after successful execution of the containing batch.
 
 [[CFS-CMP-006]]
 `CFS-CMP-006`:: A semantic mutation completes successfully when it is sealed and
-every registered physical operation has reported success.
+every physical operation and explicit completion dependency belonging to it has
+reported success.
 
 [[CFS-CMP-007]]
 `CFS-CMP-007`:: Successful semantic mutation completion and its lifecycle MUST
@@ -875,13 +982,34 @@ semantic mutation MUST use the same ordinal base.
 
 [[CFS-GRP-007]]
 `CFS-GRP-007`:: Physical row representation MAY use one operation per row or one
-operation template with multiple row bindings.  Lazy row expansion MUST preserve
-the same dependency and completion semantics.
+operation template with multiple row bindings.  An operation template MUST
+contain only immutable statement-shape, JDBC-mutation, and binding-plan metadata
+shared by its bindings; each binding MUST retain its row values and all
+graph-relevant row facts.
 
 [[CFS-GRP-008]]
 `CFS-GRP-008`:: A remove and create produced by `REMOVE_AND_CREATE` MUST be
 ordered so that database constraints and the defined per-mutation lifecycle are
 satisfied.  The current working default is remove before create for that move.
+
+[[CFS-GRP-009]]
+`CFS-GRP-009`:: Rows MUST NOT remain one compact graph unit merely because they
+share a `StatementShapeKey`.  Compaction MUST preserve the dependency endpoints,
+unique-slot ordering, cycle-breaking requirements, result checks, and fixups
+which individual row operations would expose, without introducing a false
+dependency cycle.
+
+[[CFS-GRP-010]]
+`CFS-GRP-010`:: Deferred row-operation materialization MUST use the frozen
+collection delta and immutable row bindings.  It MUST NOT rediscover changes or
+reread the live collection.  Planning MAY retain one compact unit, partition
+bindings by equivalent graph placement, or materialize individual operations.
+
+[[CFS-GRP-011]]
+`CFS-GRP-011`:: Compact representation MUST NOT merge semantic mutation identity
+or completion.  A semantic mutation containing multiple bindings completes only
+after every binding assigned to its physical work succeeds, including any
+synthesized fixup.
 
 == Speculative Auto-Flush
 
@@ -917,38 +1045,28 @@ and collection counts.
 == Cascade Boundary
 
 [[CFS-CAS-001]]
-`CFS-CAS-001`:: Stable cascade mapping structure SHOULD be represented by an
-immutable plan compiled once per entity persister or equivalent mapping
-descriptor.
+`CFS-CAS-001`:: Cascade orphan discovery MAY consume an orphan projection from a
+frozen collection delta only while the delta's comparison-validity state still
+matches the collection state being inspected.
 
 [[CFS-CAS-002]]
-`CFS-CAS-002`:: The compiled plan MUST NOT retain entity instances, session
-instances, persistence-context state, or collection contents.
+`CFS-CAS-002`:: Cascade MUST NOT force collection initialization solely to obtain
+or share a collection delta or orphan projection.
 
 [[CFS-CAS-003]]
-`CFS-CAS-003`:: Runtime cascade state MUST be carried by an invocation-local,
-thread-confined traversal context.
+`CFS-CAS-003`:: Cascade outside a collection flush context and cascade occurring
+before a valid frozen delta exists MUST retain a standalone orphan-discovery
+path.
 
 [[CFS-CAS-004]]
-`CFS-CAS-004`:: A compiled walker MUST preserve mapping property order,
-component order, collection iteration order, lazy-loading behavior,
-foreign-key-direction filtering, orphan timing, and database-cascade behavior.
+`CFS-CAS-004`:: An orphan projection whose comparison-validity state no longer
+matches MUST NOT be reused.  Cascade MUST use the standalone path or a newly
+valid comparison instead.
 
-[[CFS-CAS-005]]
-`CFS-CAS-005`:: Every `CascadingAction`, including a custom action without a
-built-in route profile, MUST have a correct runtime-filtered traversal path.
-
-[[CFS-CAS-006]]
-`CFS-CAS-006`:: A generic traversal visited set MUST NOT suppress cascades unless
-the corresponding `CascadingAction` contract explicitly permits it.
-
-[[CFS-CAS-007]]
-`CFS-CAS-007`:: Cascade orphan discovery MAY consume an orphan projection from a
-collection delta only when the compared structural state is still valid.
-
-[[CFS-CAS-008]]
-`CFS-CAS-008`:: Cascade outside a collection flush context and cascade occurring
-before a valid delta exists MUST retain a standalone orphan-discovery path.
+Compiled cascade-plan structure, traversal-context behavior, compatibility, and
+conformance tests are normative in
+link:cascade-processing-spec.adoc[Cascade Processing Specification], not
+in this collection specification.
 
 == Compatibility Baseline
 
@@ -1048,6 +1166,15 @@ approved compatibility exception exists.
 relationship to a queue's internal work representation are not compatibility
 requirements.
 
+[[CFS-COM-008]]
+`CFS-COM-008`:: The common collection-registration boundary of the `ActionQueue`
+SPI MUST NOT require every queue implementation to retain
+`CollectionRecreateAction`, `CollectionRemoveAction`,
+`CollectionUpdateAction`, or `QueuedOperationCollectionAction` as its native
+queued representation.  Existing overloads MAY coexist as migration adapters.
+The replacement boundary MUST use the queue-neutral protocol selected by
+`OQ-002`; it is not required to use a type named `LogicalCollectionAction`.
+
 == Acceptance Scenarios
 
 === `CFS-SCN-001`: New collection
@@ -1112,11 +1239,12 @@ Given a logical remove whose SQL is suppressed by database cascade, the tracker
 still reports a logical remove and cache/loading decisions observe removal.  The
 exact pre/post collection-event behavior remains an open decision.
 
-=== `CFS-SCN-010`: Compiled cascade parity
+=== `CFS-SCN-010`: Cascade orphan-projection reuse
 
-For every built-in cascade action and cascade point, a compiled walker visits the
-same values in the same order and has the same lazy initialization, orphan, and
-database-cascade effects as the metadata walker.
+Given an active collection flush context containing a frozen delta for the same
+comparison-validity state, cascade may consume its orphan projection.  Given no
+flush context, no frozen delta, or a validity mismatch, cascade uses standalone
+orphan discovery and does not initialize the collection merely to share a delta.
 
 === `CFS-SCN-011`: Cross-collection listener mutation
 
@@ -1133,6 +1261,14 @@ owner `@PreUpdate` and `@PostUpdate` callback runs exactly once.  Entity and
 collection processing MUST share owner-level callback registration rather than
 deduplicating only within their respective work categories.
 
+=== `CFS-SCN-013`: Initialization consumes queued operations
+
+Given an uninitialized collection with queued commands, when collection
+initialization completes successfully, the commands are applied to the loaded
+collection in their original order and the live command log is cleared.  Delta
+production observes an initialized collection with no queued commands and uses
+normal complete loaded-state comparison.
+
 == Test Traceability
 
 [cols="1,2",options="header"]
@@ -1143,7 +1279,8 @@ deduplicating only within their respective work categories.
 | Unit tests for identity state and transition tables; flush integration tests
 
 | `CFS-DLT-*`, `CFS-QOP-*`
-| Per-semantics delta contract tests and uninitialized queued-operation tests
+| Per-semantics delta contract tests, comparison-validity and post-freeze
+  invalidation tests, and uninitialized queued-operation tests
 
 | `CFS-ACT-*`, `CFS-LFC-*`
 | Queue-independent Hibernate-event, interceptor-hook, Jakarta Persistence
@@ -1156,7 +1293,9 @@ deduplicating only within their respective work categories.
 | Auto-flush checkpoint restoration and monitoring-count tests
 
 | `CFS-CAS-*`
-| Metadata-walker versus compiled-walker decision traces and behavior tests
+| Valid/stale orphan-projection reuse, no-forced-initialization, and standalone
+  fallback tests; compiled-walker conformance is traced in the companion cascade
+  specification
 
 | `CFS-COM-*`
 | Legacy/graph conformance suite and focused regressions for excluded defects
@@ -1188,8 +1327,11 @@ an explicitly recorded reason why static verification is sufficient.
 
 | `WD-004`
 | Working
-| Represent stable cascade structure in a per-persister plan and runtime state in
-  a traversal context.
+| Represent stable cascade structure in an entity-persister-rooted plan and
+  runtime state in a traversal context.  Permit collection-persister-owned or
+  metamodel-owned collection-element subplans to be referenced by collection
+  nodes without making them independent cascade roots.  Treat these as normative
+  requirements of the companion cascade specification.
 
 | `WD-005`
 | Working
@@ -1206,7 +1348,9 @@ an explicitly recorded reason why static verification is sufficient.
 | Preserve `org.hibernate.event.spi` contracts and queue-independent observable
   lifecycle semantics.  Permit each queue to use native internal work
   representations without requiring `Executable` or legacy collection action
-  forms as the common boundary.
+  forms as the common boundary.  The current collection-specific `ActionQueue`
+  overloads may remain temporarily as migration adapters but are not the target
+  common registration API.
 
 | `WD-008`
 | Working
@@ -1232,6 +1376,38 @@ an explicitly recorded reason why static verification is sufficient.
   owner-level lifecycle.  Invoke each applicable callback at most once per owner
   per flush even when an entity mutation and multiple collection mutations all
   contribute work for that owner.
+
+| `WD-012`
+| Working
+| Make the `CollectionSemantics` selected by the collection persister own or
+  resolve collection-specific `CollectionDelta` production.  Shared mutation
+  preparation invokes the producer, the flush context retains the frozen
+  result, and queues consume rather than reconstruct it.
+
+| `WD-013`
+| Working
+| Capture mutation-generation or comparison-validity state in the prepared
+  mutation only where preparation crosses code capable of changing relevant
+  collection state.  Do not require the value to be a field of every
+  `CollectionDelta`.
+
+| `WD-014`
+| Working
+| Prevent semantic completion until planning has identified all normal,
+  contributor, and synthesized-fixup obligations and every obligation has
+  completed successfully.  Do not require every queue to represent each
+  obligation as a registered physical operation.
+
+| `WD-015`
+| Working
+| Treat the collection diagnostic monitor as a physical-execution span which
+  completes before state advancement, cache work, post-events, owner callbacks,
+  and statistics.
+
+| `WD-016`
+| Working
+| Keep final conformance independent of migration stages.  Use named stages with
+  explicit temporary forms and test gates to organize incremental development.
 |===
 
 == Open Questions and Guidance Needed
@@ -1293,7 +1469,78 @@ an explicitly recorded reason why static verification is sufficient.
   interceptor hooks, Hibernate collection events, delta freezing, and the
   owner's entity and collection operations?
 
+| `OQ-012`
+| Delta-production SPI
+| Resolve an associated delta producer through `CollectionSemantics`; permit a
+  conservative default producer to force initialization when custom semantics
+  cannot safely describe an uninitialized delta.
+| Should `CollectionSemantics` expose delta production as a direct method or as
+  an associated producer object, and what compatibility fallback must existing
+  custom collection semantics receive?
+
 |===
+
+== Implementation and Migration Staging
+
+[NOTE]
+====
+These stages define an incremental implementation sequence, not partial levels
+of conformance.  The normative requirements in this specification describe the
+final endpoint.  Temporary adapters permitted by a stage MUST be removed or
+retained only as compatibility adapters before the specification is considered
+fully implemented.
+====
+
+[cols="1,2,2,2",options="header"]
+|===
+| Stage | Scope | Permitted temporary forms | Exit criteria
+
+| `CFS-STG-001`: Correctness baseline
+| Correct partial-flush counts, auto-flush restoration, one-to-many ordinal use,
+  mutation-local lifecycle completion, and collection execution monitoring.
+| Existing collection action classes and both current queue representations.
+| Each identified defect has a focused regression test running against every
+  affected queue implementation.
+
+| `CFS-STG-002`: Mutation identity and completion
+| Introduce `CollectionMutationId`, explicit completion obligations, sealing,
+  failure propagation, and zero-operation semantic completion.
+| Legacy actions may adapt their execution into the shared completion protocol.
+| Direct, batched, grouped, reordered, zero-operation, contributor, and
+  synthesized-fixup tests prove mutation-local completion and failure behavior.
+
+| `CFS-STG-003`: Intent normalization and queue boundary
+| Record collection mutation input during visitation, normalize after forced
+  initialization and unreachable processing, and prototype both boundary
+  candidates from `OQ-002`.
+| The legacy queue may construct existing `Executable` collection actions; the
+  graph queue may retain graph-native semantic work.
+| The selected boundary preserves transition, lifecycle, failure, and event
+  parity while allowing both queues to use native internal representations.
+
+| `CFS-STG-004`: Stable delta production
+| Move delta production behind `CollectionSemantics`, normalize queued commands,
+  retain one frozen delta for a relevant comparison state, and establish
+  post-freeze validity and orphan-projection rules.
+| Existing wrapper change-set logic may be adapted behind semantics-owned
+  producers while individual semantics are migrated.
+| Per-semantics complete and explicit-changes-only delta suites pass for set,
+  bag, list, map, identifier-bag, and array support present in Hibernate; stale
+  comparison and queued-operation lifecycle tests also pass.
+
+| `CFS-STG-005`: Compact row execution
+| Introduce immutable operation templates and row bindings and retain per-row
+  expansion where graph correctness requires it.
+| Per-row operation representation remains valid wherever compaction has not
+  demonstrated equivalent dependency and completion semantics.
+| Planner, cycle, unique-slot, result-check, batching, and allocation benchmarks
+  demonstrate correctness and characterize the compact representation's value.
+|===
+
+Compiled cascade traversal proceeds as a parallel workstream under
+link:cascade-processing-spec.adoc[Cascade Processing Specification].
+Its collection-delta integration gate depends on `CFS-STG-004`; its plan compiler,
+traversal context, and parity work do not.
 
 == Criteria for Development-Team Review
 
@@ -1301,8 +1548,8 @@ This document is ready for broad development-team review when:
 
 * blocking open questions have a working answer,
 * transition and lifecycle scenario coverage is accepted as complete enough for
-  the first implementation phases,
-* every first-phase `MUST` has an acceptance-test location,
+  the initial implementation stages,
+* every implementation stage identifies its exit-test locations,
 * legacy/graph compatibility expectations are explicit,
 * prototype results validate semantic mutation completion across grouping,
   batching, and synthesized fixups,

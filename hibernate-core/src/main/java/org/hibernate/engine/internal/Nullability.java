@@ -18,7 +18,7 @@ import org.hibernate.type.ComponentType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
 
-import static org.hibernate.engine.spi.CascadingActions.getLoadedElementsIterator;
+import static org.hibernate.cascade.spi.CascadingActions.getLoadedElementsIterator;
 import static org.hibernate.internal.util.StringHelper.qualify;
 
 /**

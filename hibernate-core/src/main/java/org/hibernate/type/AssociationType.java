@@ -10,7 +10,7 @@ import org.hibernate.persister.entity.Joinable;
 
 /**
  * A type that represents some kind of association between entities.
- * @see org.hibernate.engine.internal.Cascade
+ * @see org.hibernate.cascade.internal.Cascade
  * @author Gavin King
  */
 public interface AssociationType extends Type {

@@ -83,7 +83,8 @@ import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
  * @author Andrea Boriero
  */
 public class MappingMetamodelImpl
-		implements MappingMetamodelImplementor, JpaMetamodel, Metamodel, QueryParameterBindingTypeResolver, BindingContext, Serializable {
+		implements MappingMetamodelImplementor, JpaMetamodel, Metamodel, QueryParameterBindingTypeResolver, BindingContext,
+				Serializable {
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// JpaMetamodel

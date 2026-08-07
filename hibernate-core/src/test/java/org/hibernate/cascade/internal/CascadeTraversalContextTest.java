@@ -4,6 +4,7 @@
  */
 package org.hibernate.cascade.internal;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.HibernateException;
@@ -32,12 +33,48 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 /// Tests invocation-local cascade traversal state and exceptional restoration.
 ///
 /// @author Steve Ebersole
 class CascadeTraversalContextTest {
+	@Test
+	void eachTraversalContextIsIndependent() {
+		final var action = action();
+		final var session = mock( EventSource.class );
+		final var persister = mock( EntityPersister.class );
+		final var root = new Object();
+		final var actionContext = new Object();
+		final var firstContext = new CascadeTraversalContext<>(
+				action,
+				CascadePoint.BEFORE_FLUSH,
+				session,
+				persister,
+				root,
+				actionContext
+		);
+		final var secondContext = new CascadeTraversalContext<>(
+				action,
+				CascadePoint.BEFORE_FLUSH,
+				session,
+				persister,
+				root,
+				actionContext
+		);
+
+		assertThat( firstContext ).isNotSameAs( secondContext );
+		assertThat( firstContext.action() ).isSameAs( action );
+		assertThat( firstContext.cascadePoint() ).isEqualTo( CascadePoint.BEFORE_FLUSH );
+		assertThat( firstContext.session() ).isSameAs( session );
+		assertThat( firstContext.rootPersister() ).isSameAs( persister );
+		assertThat( firstContext.root() ).isSameAs( root );
+		assertThat( firstContext.actionContext() ).isSameAs( actionContext );
+		assertThat( firstContext.traceEnabled() ).isFalse();
+		verifyNoInteractions( action, session, persister );
+	}
+
 	@Test
 	void basicStateAndPathLifecycle() {
 		final var action = action();
@@ -95,6 +132,7 @@ class CascadeTraversalContextTest {
 		final var child = new Object();
 		final var actionContext = new Object();
 		final var failure = new HibernateException( "expected failure" );
+		final var traceEvents = new ArrayList<CascadeTraceEvent>();
 
 		when( session.getFactory() ).thenReturn( factory );
 		when( session.getPersistenceContextInternal() ).thenReturn( persistenceContext );
@@ -132,12 +170,17 @@ class CascadeTraversalContextTest {
 				session,
 				persister,
 				root,
-				actionContext
+				actionContext,
+				traceEvents::add
 		);
 
 		assertThatThrownBy( () -> Cascade.cascade( context ) ).isSameAs( failure );
 
 		assertRestoredRootState( context, root, CascadePoint.BEFORE_MERGE );
+		final var failureEvent = (CascadeTraceEvent.Failure) traceEvents.get( traceEvents.size() - 1 );
+		assertThat( failureEvent.location().path() ).containsExactly( "component", "association" );
+		assertThat( failureEvent.exceptionType() ).isEqualTo( HibernateException.class.getName() );
+		assertThat( failureEvent.message() ).isEqualTo( "expected failure" );
 		verify( persistenceContext ).removeChildParent( child );
 	}
 

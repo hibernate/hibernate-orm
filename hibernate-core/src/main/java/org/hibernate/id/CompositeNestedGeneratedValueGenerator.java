@@ -8,6 +8,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.Internal;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.ExportableProducer;
@@ -16,15 +17,18 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.generator.EventType;
+import org.hibernate.generator.GenerationRequest;
+import org.hibernate.generator.GenerationRequests;
 import org.hibernate.generator.Generator;
 import org.hibernate.generator.OnExecutionGenerator;
 import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.property.access.spi.Setter;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.CompositeType;
 
-import static org.hibernate.action.internal.EntityIdentityInsertAction.defaultedPrimitiveIds;
+import static org.hibernate.action.internal.DelayableEntityInsertAction.defaultedPrimitiveIds;
 import static org.hibernate.generator.EventType.INSERT;
 
 /**
@@ -189,6 +193,107 @@ public class CompositeNestedGeneratedValueGenerator
 		else {
 			return result;
 		}
+	}
+
+	@Override
+	public @Nonnull Object[] generateBatch(
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull GenerationRequests requests,
+			@Nonnull EventType eventType) {
+		if ( componentType.isMutable() ) {
+			return IdentifierGenerator.super.generateBatch(session, requests, eventType);
+		}
+		final Object[] results = new Object[requests.size()];
+		final Object[][] propertyValues = new Object[requests.size()][];
+		final ArrayList<Integer>[] generationRequestIndexMapping = new ArrayList[generationPlans.size()];
+		// Build result objects, extract property values and build an index mapping for generatedValues <=> results
+		for ( int i = 0; i < results.length; i++ ) {
+			final Object object = requests.get( i );
+			final Object context = generationContextLocator.locateGenerationContext( session, object );
+			results[i] = context != null ? context : instantiateEmptyComposite();
+			propertyValues[i] = componentType.getPropertyValues( results[i] );
+
+			for ( int j = 0; j < generationPlans.size(); j++ ) {
+				// Only add index mappings if the generator shall run for this object
+				if ( generationPlans.get( j ).getGenerator().generatedBeforeExecution( object, session ) ) {
+					final ArrayList<Integer> generationRequestMapping;
+					if ( generationRequestIndexMapping[j] == null ) {
+						generationRequestMapping = generationRequestIndexMapping[j] = new ArrayList<>( requests.size() );
+					}
+					else {
+						generationRequestMapping = generationRequestIndexMapping[j];
+					}
+					generationRequestMapping.add( i );
+				}
+			}
+		}
+		for ( int i = 0; i < generationPlans.size(); i++ ) {
+			final GenerationPlan generationPlan = generationPlans.get( i );
+			if ( generationRequestIndexMapping[i] != null ) {
+				// If the generator should be applied to at least one value, will be non-null
+				// If we encounter size equals results size, we run the generator for every result,
+				// so use null as sentinel to indicate this optimized case to avoid index lookups
+				final int[] generatedValueMapping = generationRequestIndexMapping[i].size() == results.length
+						? null
+						: ArrayHelper.toIntArray( generationRequestIndexMapping[i] );
+				// Run the batch generation for once
+				final Object[] generatedValues = generationPlan.getGenerator().generateBatch(
+						session,
+						new CompositeGenerationRequests( results, propertyValues, generatedValueMapping, generationPlan ),
+						eventType
+				);
+				// Apply generated values into the property values arrays
+				final int propertyIndex = generationPlan.getPropertyIndex();
+				if ( generatedValueMapping == null ) {
+					for ( int j = 0; j < propertyValues.length; j++ ) {
+						propertyValues[j][propertyIndex] = generatedValues[j];
+					}
+				}
+				else {
+					for ( int j = 0; j < generatedValueMapping.length; j++ ) {
+						propertyValues[generatedValueMapping[j]][propertyIndex] = generatedValues[j];
+					}
+				}
+			}
+		}
+		// Build new components with the new property values as result
+		for ( int i = 0; i < results.length; i++ ) {
+			results[i] = componentType.replacePropertyValues( results[i], propertyValues[i], session );
+		}
+		return results;
+	}
+
+	private record CompositeGenerationRequests(
+			Object[] results,
+			Object[][] propertyValues,
+			int[] generationRequestIndexMapping,
+			GenerationPlan generationPlan
+	) implements GenerationRequests {
+		@Override
+		public int size() {
+			return generationRequestIndexMapping == null ? results.length : generationRequestIndexMapping.length;
+		}
+
+		@Override
+		public GenerationRequest get(int index) {
+			final int idx = generationRequestIndexMapping == null ? index : generationRequestIndexMapping[index];
+			return GenerationRequest.of(
+					results[idx],
+					generationPlan.getGenerator().allowAssignedIdentifiers()
+						? propertyValues[idx][generationPlan.getPropertyIndex()]
+						: null
+			);
+		}
+	}
+
+	@Override
+	public boolean supportsBatchGeneration() {
+		for ( GenerationPlan generationPlan : generationPlans ) {
+			if ( !generationPlan.getGenerator().supportsBatchGeneration() ) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	@Override

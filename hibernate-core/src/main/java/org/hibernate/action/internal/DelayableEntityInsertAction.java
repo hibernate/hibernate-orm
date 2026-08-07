@@ -10,12 +10,16 @@ import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.PersistenceException;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.event.spi.BatchGenerationContext;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.PostCommitInsertEventListener;
 import org.hibernate.event.spi.PostInsertEvent;
 import org.hibernate.event.spi.PostInsertEventListener;
 import org.hibernate.event.spi.PreInsertEvent;
 import org.hibernate.exception.ConstraintViolationException;
+import org.hibernate.generator.BeforeExecutionGenerator;
+import org.hibernate.generator.EventType;
+import org.hibernate.generator.GenerationRequests;
 import org.hibernate.generator.values.GeneratedValues;
 import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
@@ -25,10 +29,12 @@ import org.hibernate.persister.entity.EntityPersister;
 
 /**
  * The action for performing entity insertions when entity is using {@code IDENTITY} column identifier generation
+ * or batch generation via {@link BeforeExecutionGenerator#generateBatch(SharedSessionContractImplementor, GenerationRequests, EventType)}
  *
  * @see EntityInsertAction
+ * @see BeforeExecutionGenerator#supportsBatchGeneration()
  */
-public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
+public class DelayableEntityInsertAction extends AbstractEntityInsertAction implements BatchGenerationContext.GeneratedValueConsumer {
 
 	private final boolean isDelayed;
 	private final @Nullable EntityKey delayedEntityKey;
@@ -37,7 +43,7 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 	private @Nullable Object rowId;
 
 	/**
-	 * Constructs an EntityIdentityInsertAction
+	 * Constructs an DelayableEntityInsertAction
 	 *
 	 * @param state The current (extracted) entity state
 	 * @param instance The entity instance
@@ -45,41 +51,30 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 	 * @param session The session
 	 * @param isDelayed Are we in a situation which allows the insertion to be delayed?
 	 */
-	public EntityIdentityInsertAction(
+	public DelayableEntityInsertAction(
 			final @Nonnull Object[] state,
 			final @Nonnull Object instance,
 			final @Nonnull EntityPersister persister,
 			final @Nonnull EventSource session,
 			final boolean isDelayed) {
-		this( state, instance, persister, session, isDelayed, isDelayed );
-	}
-
-	private EntityIdentityInsertAction(
-			final @Nonnull Object[] state,
-			final @Nonnull Object instance,
-			final @Nonnull EntityPersister persister,
-			final @Nonnull EventSource session,
-			final boolean isDelayed,
-			final boolean useDelayedIdentifier) {
 		super(
-				useDelayedIdentifier ? generateDelayedPostInsertIdentifier() : null,
+				isDelayed ? generateDelayedPostInsertIdentifier() : null,
 				state,
 				instance,
 				persister,
 				session
 		);
 		this.isDelayed = isDelayed;
-		this.delayedEntityKey = useDelayedIdentifier ? generateDelayedEntityKey() : null;
+		this.delayedEntityKey = isDelayed ? generateDelayedEntityKey() : null;
 	}
 
 	@Nonnull
-	public static EntityIdentityInsertAction delayedCopy(@Nonnull EntityIdentityInsertAction action) {
-		return new EntityIdentityInsertAction(
+	public static DelayableEntityInsertAction delayedCopy(@Nonnull DelayableEntityInsertAction action) {
+		return new DelayableEntityInsertAction(
 				action.getState(),
 				action.getInstance(),
 				action.getPersister(),
 				action.getSession(),
-				true,
 				true
 		);
 	}
@@ -346,6 +341,17 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 	@Override
 	public boolean isEarlyInsert() {
 		return !isDelayed;
+	}
+
+	@Override
+	public void consumeGeneratedValue(Object generatedValue, SharedSessionContractImplementor session) {
+		getPersister().setIdentifier( getInstance(), generatedValue, session );
+		setGeneratedId( generatedValue );
+		final var entityKey = session.generateEntityKey( generatedValue, getPersister() );
+		setEntityKey( entityKey );
+		session.getPersistenceContextInternal().checkUniqueness( entityKey, getInstance() );
+		session.getPersistenceContextInternal()
+				.replaceDelayedEntityIdentityInsertKeys( delayedEntityKey, generatedId );
 	}
 
 	@Override

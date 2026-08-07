@@ -22,6 +22,7 @@ import org.hibernate.action.queue.internal.constraint.DeferrableConstraintMode;
 import org.hibernate.action.queue.internal.exec.PlanStepExecutor;
 import org.hibernate.action.queue.internal.exec.PlanStepExecutorFactory;
 import org.hibernate.action.queue.internal.decompose.Decomposer;
+import org.hibernate.event.spi.BatchGenerationContext;
 import org.hibernate.action.queue.internal.graph.GraphBuilder;
 import org.hibernate.action.queue.internal.graph.StandardGraphBuilder;
 import org.hibernate.action.queue.spi.plan.FlushOperation;
@@ -428,6 +429,11 @@ public class FlushCoordinator {
 		// Decompose each phase separately, maintaining ordinal ordering
 		ordinalBase = decomposePhase( orphanCollectionRemovals, ordinalBase, operationCollector );
 		ordinalBase = decomposePhase( orphanRemovals, ordinalBase, operationCollector );
+
+		// Set up batch generation context for insert and update phases
+		final var batchContext = new BatchGenerationContext();
+		decomposer.setBatchGenerationContext( batchContext );
+
 		ordinalBase = decomposePhase( insertions, ordinalBase, operationCollector );
 		ordinalBase = decomposePhase( updates, ordinalBase, operationCollector );
 		ordinalBase = decomposePhase( collectionQueuedOps, ordinalBase, operationCollector );
@@ -435,6 +441,10 @@ public class FlushCoordinator {
 		ordinalBase = decomposePhase( collectionUpdates, ordinalBase, operationCollector );
 		ordinalBase = decomposePhase( collectionCreations, ordinalBase, operationCollector );
 		ordinalBase = decomposePhase( deletions, ordinalBase, operationCollector );
+
+		// Resolve batch generation — replaces placeholders with real values
+		batchContext.resolve( session );
+		decomposer.setBatchGenerationContext( null );
 
 		decomposer.endFlush();
 

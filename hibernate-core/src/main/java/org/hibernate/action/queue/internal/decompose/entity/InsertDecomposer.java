@@ -91,7 +91,10 @@ public class InsertDecomposer extends AbstractDecomposer<AbstractEntityInsertAct
 
 		// apply any pre-insert in-memory value generation
 		final boolean hasStateDependentGenerator =
-				insertMutationPlanner.preInsertInMemoryValueGeneration( state, entity, session );
+				insertMutationPlanner.preInsertInMemoryValueGeneration(
+						state, entity, session,
+						decompositionContext != null ? decompositionContext.getBatchGenerationContext() : null
+				);
 
 		final var insertable = entityPersister.getPropertyInsertability();
 		final var valuesAnalysis =

@@ -301,6 +301,25 @@ public class EnhancerImpl implements Enhancer {
 							.defineMethod( EnhancerConstants.TRACKER_COLLECTION_GET_NAME, constants.TypeCollectionTracker, constants.methodModifierPUBLIC )
 									.intercept( FieldAccessor.ofField( EnhancerConstants.TRACKER_COLLECTION_NAME ) );
 
+					final Advice.OffsetMapping.Factory<?> attributeInterceptor;
+					if ( enhancementContext.hasLazyLoadableAttributes( managedCtClass ) ) {
+						attributeInterceptor = new Advice.OffsetMapping.ForField.Resolved.Factory<>(
+								CodeTemplates.AttributeInterceptor.class,
+								new FieldDescription.Latent(
+										managedCtClass,
+										EnhancerConstants.INTERCEPTOR_FIELD_NAME,
+										constants.fieldModifierPRIVATE_TRANSIENT,
+										constants.TypePersistentAttributeInterceptor.asGenericType(),
+										Collections.emptyList()
+								)
+						);
+					}
+					else {
+						attributeInterceptor = Advice.OffsetMapping.ForStackManipulation.Factory.of(
+								CodeTemplates.AttributeInterceptor.class,
+								null
+						);
+					}
 					Implementation isDirty = StubMethod.INSTANCE, getDirtyNames = StubMethod.INSTANCE, clearDirtyNames = StubMethod.INSTANCE;
 					for ( AnnotatedFieldDescription collectionField : collectionFields ) {
 						String collectionFieldName = collectionField.getName();
@@ -322,11 +341,13 @@ public class EnhancerImpl implements Enhancer {
 							isDirty = Advice.withCustomMapping()
 									.bind( CodeTemplates.FieldName.class, collectionFieldName )
 									.bind( CodeTemplates.FieldValue.class, fieldDescription )
+									.bind( attributeInterceptor )
 									.to( adviceIsDirty, constants.adviceLocator )
 									.wrap( isDirty );
 							getDirtyNames = Advice.withCustomMapping()
 									.bind( CodeTemplates.FieldName.class, collectionFieldName )
 									.bind( CodeTemplates.FieldValue.class, fieldDescription )
+									.bind( attributeInterceptor )
 									.to( adviceGetDirtyNames, constants.adviceLocator )
 									.wrap( getDirtyNames );
 							clearDirtyNames = Advice.withCustomMapping()
@@ -341,11 +362,13 @@ public class EnhancerImpl implements Enhancer {
 							isDirty = Advice.withCustomMapping()
 									.bind( CodeTemplates.FieldName.class, collectionFieldName )
 									.bind( CodeTemplates.FieldValue.class, getterMapping )
+									.bind( attributeInterceptor )
 									.to( adviceIsDirty, constants.adviceLocator )
 									.wrap( isDirty );
 							getDirtyNames = Advice.withCustomMapping()
 									.bind( CodeTemplates.FieldName.class, collectionFieldName )
 									.bind( CodeTemplates.FieldValue.class, getterMapping )
+									.bind( attributeInterceptor )
 									.to( adviceGetDirtyNames, constants.adviceLocator )
 									.wrap( getDirtyNames );
 							clearDirtyNames = Advice.withCustomMapping()

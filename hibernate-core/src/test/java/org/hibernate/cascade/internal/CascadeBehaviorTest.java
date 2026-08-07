@@ -335,7 +335,6 @@ class CascadeBehaviorTest {
 				.orElseThrow();
 	}
 
-	@SuppressWarnings("removal")
 	private static Stream<Arguments> builtInActionRoutes() {
 		return Stream.of(
 				Arguments.of(
@@ -348,12 +347,6 @@ class CascadeBehaviorTest {
 						CascadingActions.REMOVE,
 						CascadePoint.BEFORE_INSERT_AFTER_DELETE,
 						CascadeStyles.ALL_DELETE_ORPHAN,
-						ForeignKeyDirection.FROM_PARENT
-				),
-				Arguments.of(
-						CascadingActions.LOCK,
-						CascadePoint.AFTER_LOCK,
-						CascadeStyles.LOCK,
 						ForeignKeyDirection.FROM_PARENT
 				),
 				Arguments.of(

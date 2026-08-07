@@ -19,7 +19,7 @@
         <many-to-one name="organizer" column="EVENT_ORGANIZER" class="org.hibernate.orm.test.jcache.domain.Person"/>
 
         <set name="participants" table="PERSON_EVENT" lazy="false"
-             inverse="true" cascade="lock">
+             inverse="true">
             <cache usage="read-write"/>
             <key column="EVENT_ID"/>
             <many-to-many column="PERSON_ID"

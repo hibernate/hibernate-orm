@@ -11,7 +11,7 @@
             <schema>schema1</schema>
             <catalog>catalog1</catalog>
             <default-access>MIXED</default-access>
-            <default-cascade>REMOVE,LOCK</default-cascade>
+            <default-cascade>REMOVE</default-cascade>
         </persistence-unit-defaults>
     </persistence-unit-metadata>
 

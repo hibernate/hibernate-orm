@@ -45,15 +45,9 @@ public enum CascadePoint {
 	AFTER_EVICT,
 
 	/**
-	 * A cascade point that occurs just after locking a transient parent entity into the
-	 * session cache
+	 * A cascade point that occurs just before refreshing a parent entity
 	 */
 	BEFORE_REFRESH,
-
-	/**
-	 * A cascade point that occurs just after refreshing a parent entity
-	 */
-	AFTER_LOCK,
 
 	/**
 	 * A cascade point that occurs just before merging from a transient parent entity into

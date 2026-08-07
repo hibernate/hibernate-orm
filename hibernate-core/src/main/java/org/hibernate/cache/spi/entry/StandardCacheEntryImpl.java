@@ -44,12 +44,16 @@ public class StandardCacheEntryImpl implements CacheEntry {
 			final SharedSessionContractImplementor session,
 			final Object owner) throws HibernateException {
 		// disassembled state gets put in a new array (we write to cache by value!)
+		// Pass the persister so that UNFETCHED_PROPERTY placeholders for lazy
+		// fields can be resolved from the entity when isLazyPropertiesCacheable
+		// is true (HHH-20773).
 		this.disassembledState = CacheEntryHelper.disassemble(
 				state,
 				persister.getPropertyTypes(),
 				persister.isLazyPropertiesCacheable() ? null : persister.getPropertyLaziness(),
 				session,
-				owner
+				owner,
+				persister
 		);
 		this.subclass = persister.getEntityName();
 		this.version = version;

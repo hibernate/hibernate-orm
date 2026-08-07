@@ -128,15 +128,9 @@ public class RemoveCoordinatorTablePerSubclass implements RemoveCoordinator {
 		final var collectionTableMapping = mutationTarget.getCollectionTableMapping();
 		final var tableReference = new MutatingTableReference(
 				new CollectionTableMapping(
+						collectionTableMapping,
 						elementPersister.getMappedTableDetails().getTableName(),
-						collectionTableMapping.getSpaces(),
-						collectionTableMapping.isJoinTable(),
-						collectionTableMapping.isInverse(),
-						collectionTableMapping.getInsertDetails(),
-						collectionTableMapping.getUpdateDetails(),
-						collectionTableMapping.isCascadeDeleteEnabled(),
-						collectionTableMapping.getDeleteDetails(),
-						collectionTableMapping.getDeleteRowDetails()
+						collectionTableMapping.getSpaces()
 				)
 		);
 

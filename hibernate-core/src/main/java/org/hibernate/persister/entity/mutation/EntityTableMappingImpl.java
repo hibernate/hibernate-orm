@@ -4,6 +4,7 @@
  */
 package org.hibernate.persister.entity.mutation;
 
+import org.hibernate.action.queue.spi.meta.EntityTableDescriptor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
@@ -23,7 +24,6 @@ import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 
-import java.util.BitSet;
 import java.util.List;
 import java.util.Objects;
 
@@ -34,26 +34,11 @@ import static org.hibernate.internal.util.collections.ArrayHelper.contains;
  *
  * @author Steve Ebersole
  */
-public class EntityTableMappingImpl implements EntityTableMapping {
-	private enum Flag {
-		OPTIONAL,
-		INVERSE,
-		ID_TABLE,
-		CASCADE_DELETE,
-		SECONDARY_TABLE
-	}
-
-	private final String tableName;
-	private final int relativePosition;
+public class EntityTableMappingImpl extends EntityTableDescriptor implements EntityTableMapping {
 	private final KeyMapping keyMapping;
-
-	private final BitSet flags = new BitSet();
+	private final boolean secondaryTable;
 
 	private final int[] attributeIndexes;
-
-	private final MutationDetails insertDetails;
-	private final MutationDetails updateDetails;
-	private final MutationDetails deleteDetails;
 
 	public EntityTableMappingImpl(
 			String tableName,
@@ -76,54 +61,41 @@ public class EntityTableMappingImpl implements EntityTableMapping {
 			boolean deleteCallable,
 			boolean dynamicUpdate,
 			boolean dynamicInsert) {
-		this.tableName = tableName;
-		this.relativePosition = relativePosition;
+		super(
+				tableName,
+				relativePosition,
+				isIdentifierTable,
+				isOptional,
+				isInverse,
+				cascadeDeleteEnabled,
+				new MutationDetails(
+						MutationType.INSERT,
+						insertExpectation,
+						insertCustomSql,
+						insertCallable,
+						dynamicInsert
+				),
+				new MutationDetails(
+						MutationType.UPDATE,
+						updateExpectation,
+						updateCustomSql,
+						updateCallable,
+						dynamicUpdate
+				),
+				new MutationDetails(
+						MutationType.DELETE,
+						deleteExpectation,
+						deleteCustomSql,
+						deleteCallable
+				)
+		);
 		this.keyMapping = keyMapping;
+		this.secondaryTable = isSecondaryTable;
 		this.attributeIndexes = attributeIndexes;
-		this.insertDetails = new MutationDetails(
-				MutationType.INSERT,
-				insertExpectation,
-				insertCustomSql,
-				insertCallable,
-				dynamicInsert
-		);
-		this.updateDetails = new MutationDetails(
-				MutationType.UPDATE,
-				updateExpectation,
-				updateCustomSql,
-				updateCallable,
-				dynamicUpdate
-		);
-		this.deleteDetails = new MutationDetails(
-				MutationType.DELETE,
-				deleteExpectation,
-				deleteCustomSql,
-				deleteCallable
-		);
-
-		if ( isOptional ) {
-			flags.set( Flag.OPTIONAL.ordinal() );
-		}
-
-		if ( isInverse ) {
-			flags.set( Flag.INVERSE.ordinal() );
-		}
-
-		if ( isIdentifierTable ) {
-			flags.set( Flag.ID_TABLE.ordinal() );
-		}
-
-		if ( cascadeDeleteEnabled ) {
-			flags.set( Flag.CASCADE_DELETE.ordinal() );
-		}
-
-		if ( isSecondaryTable ) {
-			flags.set( Flag.SECONDARY_TABLE.ordinal() );
-		}
 	}
 
 	@Override public String getTableName() {
-		return tableName;
+		return name();
 	}
 
 	@Override
@@ -132,24 +104,24 @@ public class EntityTableMappingImpl implements EntityTableMapping {
 	}
 
 	@Override public int relativePosition() {
-		return relativePosition;
+		return super.relativePosition();
 	}
 
 	@Override public boolean isOptional() {
-		return flags.get( Flag.OPTIONAL.ordinal() );
+		return super.isOptional();
 	}
 
 	@Override public boolean isInverse() {
-		return flags.get( Flag.INVERSE.ordinal() );
+		return super.isInverse();
 	}
 
 	@Override public boolean isIdentifierTable() {
-		return flags.get( Flag.ID_TABLE.ordinal() );
+		return super.isIdentifierTable();
 	}
 
 	@Override
 	public boolean isSecondaryTable() {
-		return flags.get( Flag.SECONDARY_TABLE.ordinal() );
+		return secondaryTable;
 	}
 
 	@Override
@@ -173,7 +145,7 @@ public class EntityTableMappingImpl implements EntityTableMapping {
 	}
 
 	@Override public MutationDetails getInsertDetails() {
-		return insertDetails;
+		return insertDetails();
 	}
 
 	@Override
@@ -192,7 +164,7 @@ public class EntityTableMappingImpl implements EntityTableMapping {
 	}
 
 	@Override public MutationDetails getUpdateDetails() {
-		return updateDetails;
+		return updateDetails();
 	}
 
 	@Override
@@ -211,11 +183,11 @@ public class EntityTableMappingImpl implements EntityTableMapping {
 	}
 
 	@Override public boolean isCascadeDeleteEnabled() {
-		return flags.get( Flag.CASCADE_DELETE.ordinal() );
+		return cascadeDeleteEnabled();
 	}
 
 	@Override public MutationDetails getDeleteDetails() {
-		return deleteDetails;
+		return deleteDetails();
 	}
 
 	@Override
@@ -242,18 +214,18 @@ public class EntityTableMappingImpl implements EntityTableMapping {
 			return false;
 		}
 		else {
-			return tableName.equals( that.tableName );
+			return getTableName().equals( that.getTableName() );
 		}
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash( tableName );
+		return Objects.hash( getTableName() );
 	}
 
 	@Override
 	public String toString() {
-		return "TableMapping(" + tableName + ")";
+		return "TableMapping(" + getTableName() + ")";
 	}
 
 	public interface KeyMapping extends KeyDetails, SelectableMappings {
@@ -399,7 +371,6 @@ public class EntityTableMappingImpl implements EntityTableMapping {
 	}
 
 	public static class KeyColumn extends SelectableMappingImpl implements TableDetails.KeyColumn {
-
 		public KeyColumn(String tableName, SelectableMapping originalMapping) {
 			super(
 					tableName,

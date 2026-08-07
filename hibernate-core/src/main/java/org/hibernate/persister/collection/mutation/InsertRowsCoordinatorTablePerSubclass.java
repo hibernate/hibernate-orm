@@ -143,15 +143,9 @@ public class InsertRowsCoordinatorTablePerSubclass implements InsertRowsCoordina
 		final var collectionTableMapping = mutationTarget.getCollectionTableMapping();
 		final var operation = rowMutationOperations.getInsertRowOperation(
 				new CollectionTableMapping(
+						collectionTableMapping,
 						elementPersister.getMappedTableDetails().getTableName(),
-						collectionTableMapping.getSpaces(),
-						collectionTableMapping.isJoinTable(),
-						collectionTableMapping.isInverse(),
-						collectionTableMapping.getInsertDetails(),
-						collectionTableMapping.getUpdateDetails(),
-						collectionTableMapping.isCascadeDeleteEnabled(),
-						collectionTableMapping.getDeleteDetails(),
-						collectionTableMapping.getDeleteRowDetails()
+						collectionTableMapping.getSpaces()
 				)
 		);
 		return singleOperation( MutationType.INSERT, mutationTarget, operation );

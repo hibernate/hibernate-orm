@@ -23,6 +23,10 @@ Post-approval clarifications::
   External `CascadeStyle` registration and custom `CascadingAction`
   implementations are historical capabilities to characterize and either retain
   deliberately or drop; they are no longer assumed permanent design constraints.
+* `2026-08-07` -- Approved and implemented removal of both historical cascade
+  extension mechanisms.  The interfaces remain internal strategy abstractions;
+  named style lookup is immutable and custom actions are rejected before
+  traversal.  Compact closed representations remain benchmark-gated follow-up.
 * `2026-08-07` -- Approved deliberate removal of the deprecated, dormant
   cascade-lock action, style, named mapping, and point.  The companion
   specification defines the compatibility boundary and explicitly preserves
@@ -1230,50 +1234,22 @@ avoid those repeated checks.  Such profiles must account for special behavior:
 
 The initial implementation should retain runtime action predicates over the
 compiled structural plan.  Action-specific profiles are an optimization after
-behavioral parity is established.  Before the extension-support decision, the
-plan must not rely on singleton action identity in a way which prevents accurate
-characterization of existing custom-action behavior.  Whether a permanent
-generic path for external actions remains supported is decided explicitly rather
-than assumed.
+behavioral parity is established.  The approved extension-support removal closes
+the public action universe to Hibernate's exact built-in singletons while
+retaining generic internal predicates until a measured compact representation is
+selected.
 
-=== Cascade extension-support review
+=== Cascade extension-support removal
 
-The current types make two different historical extension claims:
+The companion cascade specification records separate approved decisions to
+remove external named-style registration and custom cascade-action invocation.
+`CascadeStyle` and `CascadingAction` remain `@Internal` strategy abstractions for
+the current implementation stage, but define no external implementation
+contract.  Hibernate-owned mapping bootstrap resolves names from an immutable
+built-in registry, and the cascade coordinator rejects a non-built-in action
+before metadata or entity traversal.
 
-* `CascadeStyles.registerCascadeStyle()` permits a globally named external
-  `BaseCascadeStyle` to participate in legacy mapping cascade strings, and
-* `CascadingAction` can be implemented and supplied by custom event-listener code
-  or by directly invoking the internal cascade coordinator.
-
-These mechanisms originally supported integration between Hibernate core and
-the formerly separate entity-manager module.  The current repository contains
-no external style registration or custom action implementation, there is no
-action registry or public session operation for invoking a custom action, and
-standard annotation mappings cannot name an arbitrary registered style.  Style
-registration is a mutable global registry with no lifecycle or unregister
-contract.
-
-Before any production route migration begins, the cascade work must make and
-record an explicit decision for each capability:
-
-* retain external custom styles as a supported SPI, replace registration with a
-  better-scoped mechanism, or remove external style registration;
-* retain custom actions as a supported SPI with a documented invocation path, or
-  classify them as unsupported internal implementations;
-* decide whether `CascadeStyle` and `CascadingAction` remain interfaces for
-  internal implementation flexibility even if external implementation support
-  is dropped; and
-* identify the source, binary, mapping, and bootstrap compatibility effects of
-  the selected outcome.
-
-Retention requires a concrete current use case, a supported installation or
-invocation path, and conformance tests.  Historical technical reachability alone
-is not sufficient.  Dropping support requires an explicit specification
-amendment identifying the affected APIs and mapping behavior; it must not happen
-accidentally as a side effect of route optimization.
-
-Dropping either mechanism also has concrete simplification value which must be
-part of the decision:
+The decisions provide these simplification opportunities:
 
 * without externally registered styles, plan compilation can translate every
   supported style to a closed internal classification or capability set instead
@@ -1289,7 +1265,8 @@ part of the decision:
   style capability masks, and `CascadePlanWalker` may dispatch entirely through
   verified built-in behavior rather than a permanent generic extension path.
 
-These are opportunities, not permission to compile away supported built-in
+These are opportunities, not a requirement to adopt compact masks immediately
+and not permission to compile away supported built-in
 semantics.  Supported dormant cascade points, `CHECK_ON_FLUSH` handling of
 cascade `NONE`, lazy-state decisions, orphan timing, collection iteration rules,
 and action-specific cycle contexts remain requirements.  The separately
@@ -1448,8 +1425,8 @@ The `CascadePlanWalker` must preserve these behaviors:
 * database cascade flags are calculated for the same association direction,
 * persistence-context child/parent registration is always restored,
 * exceptions identify the same entity and a complete attribute path,
-* external action/style behavior follows the recorded extension-support
-  decision and is not silently changed by a precompiled action profile.
+* unsupported named styles fail bootstrap and non-built-in actions are rejected
+  before a precompiled action profile or walker is selected.
 
 === Relationship to CollectionDelta
 

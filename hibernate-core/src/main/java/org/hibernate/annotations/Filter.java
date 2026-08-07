@@ -4,6 +4,9 @@
  */
 package org.hibernate.annotations;
 
+import jakarta.persistence.JoinColumn;
+import org.hibernate.Incubating;
+
 import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
@@ -107,4 +110,24 @@ public @interface Filter {
 	 * matches a given {@link SqlFragmentAlias#alias alias}.
 	 */
 	SqlFragmentAlias[] aliases() default {};
+
+	/**
+	 * If specified, include a join to the specified table,
+	 * using the specified join columns, and evaluate the
+	 * given {@linkplain #condition} on the columns of the
+	 * joined table.
+	 *
+	 * @since 7.4
+	 */
+	@Incubating
+	String tableName() default "";
+
+	/**
+	 * The columns to use in the join condition when
+	 * {@linkplain #tableName} is specified.
+	 *
+	 * @since 7.4
+	 */
+	@Incubating
+	JoinColumn[] joinColumns() default {};
 }

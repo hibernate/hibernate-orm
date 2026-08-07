@@ -17,6 +17,7 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 
 import org.hibernate.Hibernate;
+import org.hibernate.LockMode;
 import org.hibernate.TransientPropertyValueException;
 
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -44,6 +45,19 @@ class CascadeWalkerIntegrationTest {
 	void cleanUp(SessionFactoryScope scope) {
 		scope.getSessionFactory().getSchemaManager().truncate();
 	}
+
+	@Test
+	void ordinaryLockEventsRemainFunctional(SessionFactoryScope scope) {
+		scope.inTransaction( session -> session.persist( new Parent( 1 ) ) );
+
+		scope.inTransaction( session -> {
+			final var parent = session.find( Parent.class, 1 );
+			session.lock( parent, LockMode.PESSIMISTIC_READ );
+
+			assertThat( session.getCurrentLockMode( parent ) ).isEqualTo( LockMode.PESSIMISTIC_READ );
+		} );
+	}
+
 	@Test
 	void persistCascadesToTheCollection(SessionFactoryScope scope) {
 		final var parent = parentWithChild( 1, 11, "initial" );

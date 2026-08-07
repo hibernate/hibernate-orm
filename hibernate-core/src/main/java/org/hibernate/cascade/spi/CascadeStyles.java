@@ -46,7 +46,7 @@ public final class CascadeStyles {
 	};
 
 	/**
-	 * save / delete / update / evict / lock / merge / persist
+	 * save / delete / update / evict / merge / persist
 	 */
 	public static final CascadeStyle ALL = new BaseCascadeStyle() {
 		@Override
@@ -57,26 +57,6 @@ public final class CascadeStyles {
 		@Override
 		public String toString() {
 			return "STYLE_ALL";
-		}
-	};
-
-	/**
-	 * lock
-	 *
-	 * @deprecated because {@code org.hibernate.annotations.CascadeType#LOCK}
-	 *             was removed
-	 */
-	@Deprecated(since="7", forRemoval = true)
-	public static final CascadeStyle LOCK = new BaseCascadeStyle() {
-		@Override
-		public boolean doCascade(CascadingAction<?> action) {
-			return action == CascadingActions.LOCK
-				|| action == CascadingActions.CHECK_ON_FLUSH;
-		}
-
-		@Override
-		public String toString() {
-			return "STYLE_LOCK";
 		}
 	};
 
@@ -212,7 +192,6 @@ public final class CascadeStyles {
 		base.put( "all-delete-orphan", ALL_DELETE_ORPHAN );
 		base.put( "persist", PERSIST );
 		base.put( "merge", MERGE );
-		base.put( "lock", LOCK );
 		base.put( "refresh", REFRESH );
 		base.put( "evict", EVICT );
 		base.put( "delete", DELETE );

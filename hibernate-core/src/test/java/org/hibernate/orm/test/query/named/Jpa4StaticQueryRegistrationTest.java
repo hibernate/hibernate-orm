@@ -78,6 +78,8 @@ class Jpa4StaticQueryRegistrationTest {
 			queryName( CompanionRepository$.class, "findByTitle", String.class );
 	private static final String NESTED_QUERIES_FIND_BY_TITLE =
 			queryName( NestedQueries.class, "findByTitle", String.class );
+	private static final String NESTED_ENTITY_QUERIES_FIND_BY_TITLE =
+			queryName( Book.NestedEntityQueries.class, "findByTitle", String.class );
 
 	@Test
 	void registersMethodLevelQueriesAsNamedQueries(SessionFactoryScope scope) {
@@ -149,6 +151,15 @@ class Jpa4StaticQueryRegistrationTest {
 		assertThat( COMPANION_REPOSITORY_FIND_BY_TITLE )
 				.isEqualTo( CompanionRepository$.class.getName() + "#findByTitle(java.lang.String)" );
 		assertSelectionResultType( namedObjectRepository, COMPANION_REPOSITORY_FIND_BY_TITLE, Book.class );
+	}
+
+	@Test
+	void registersNestedEntityInterfaceQueries(SessionFactoryScope scope) {
+		final var namedObjectRepository = scope.getSessionFactory()
+				.getQueryEngine()
+				.getNamedObjectRepository();
+
+		assertSelectionResultType( namedObjectRepository, NESTED_ENTITY_QUERIES_FIND_BY_TITLE, Book.class );
 	}
 
 	private static void assertSelectionResultType(

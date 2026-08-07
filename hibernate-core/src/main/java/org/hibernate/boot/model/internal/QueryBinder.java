@@ -236,6 +236,19 @@ public abstract class QueryBinder {
 					new HashSet<>()
 			);
 		}
+		bindNestedStaticQueries( classDetails, context, modelsContext );
+	}
+
+	private static void bindNestedStaticQueries(
+			ClassDetails classDetails,
+			MetadataBuildingContext context,
+			ModelsContext modelsContext) {
+		final var classDetailsRegistry = modelsContext.getClassDetailsRegistry();
+		for ( var nested : classDetails.toJavaClass().getDeclaredClasses() ) {
+			final var nestedDetails = classDetailsRegistry.resolveClassDetails( nested.getName() );
+			final var processedMethods = new HashSet<MethodSignature>();
+			bindDeclaredStaticQueries( nestedDetails, nestedDetails, context, modelsContext, processedMethods );
+		}
 	}
 
 	private static void bindDeclaredStaticQueries(

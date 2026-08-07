@@ -4,8 +4,8 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
-import org.hibernate.engine.spi.CascadeStyle;
-import org.hibernate.engine.spi.CascadeStyles;
+import org.hibernate.cascade.spi.CascadeStyle;
+import org.hibernate.cascade.spi.CascadeStyles;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.mapping.AttributeMetadata;

@@ -2,14 +2,14 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.engine.spi;
+package org.hibernate.cascade.spi;
 
 import java.util.Iterator;
 import java.util.List;
 
 import jakarta.annotation.Nullable;
 import org.hibernate.Incubating;
-import org.hibernate.engine.internal.CascadePoint;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.AssociationType;

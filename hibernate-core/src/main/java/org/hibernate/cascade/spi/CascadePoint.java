@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.engine.internal;
+package org.hibernate.cascade.spi;
 
 /**
  * Describes the point at which a cascade is occurring

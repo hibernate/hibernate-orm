@@ -29,7 +29,7 @@ import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.internal.ForeignKeys;
-import org.hibernate.engine.spi.CascadingActions;
+import org.hibernate.cascade.spi.CascadingActions;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.EntityKey;

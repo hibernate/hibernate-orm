@@ -17,7 +17,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.cache.CacheException;
-import org.hibernate.engine.spi.CascadingAction;
+import org.hibernate.cascade.spi.CascadingAction;
 import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.internal.log.SubSystemLogging;
 

@@ -475,7 +475,7 @@ public class CascadingActions {
 		}
 	}
 
-	public abstract static class BaseCascadingAction<T> implements CascadingAction<T> {
+	abstract static class BaseCascadingAction<T> implements CascadingAction<T> {
 		@Override
 		public boolean performOnLazyProperty() {
 			return true;

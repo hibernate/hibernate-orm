@@ -4,6 +4,7 @@
  */
 package org.hibernate.collection.spi;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -54,6 +55,8 @@ import static org.hibernate.resource.transaction.spi.TransactionStatus.ROLLING_B
  */
 public abstract class AbstractPersistentCollection<E> implements Serializable, PersistentCollection<E> {
 
+	@Serial
+	private static final long serialVersionUID = 1L;
 	private transient SharedSessionContractImplementor session;
 	private boolean isTempSession = false;
 

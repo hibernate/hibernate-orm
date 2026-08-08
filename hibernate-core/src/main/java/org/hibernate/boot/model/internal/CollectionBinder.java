@@ -155,6 +155,8 @@ import static org.hibernate.boot.model.internal.BinderHelper.getFetchStyle;
 import static org.hibernate.boot.model.internal.BinderHelper.getPath;
 import static org.hibernate.boot.model.internal.BinderHelper.isDefault;
 import static org.hibernate.boot.model.internal.BinderHelper.isPrimitive;
+import static org.hibernate.boot.model.internal.BinderHelper.toAliasEntityMap;
+import static org.hibernate.boot.model.internal.BinderHelper.toAliasTableMap;
 import static org.hibernate.boot.model.internal.DialectOverridesAnnotationHelper.getOverridableAnnotation;
 import static org.hibernate.boot.model.internal.EmbeddableBinder.fillEmbeddable;
 import static org.hibernate.boot.model.internal.EntityBinder.isEntity;
@@ -1758,17 +1760,14 @@ public abstract class CollectionBinder {
 	}
 
 	private void addFilter(boolean hasAssociationTable, Filter filter) {
-		final Map<String,String> aliasTableMap = new HashMap<>();
-		final Map<String,String> aliasEntityMap = new HashMap<>();
-		fillAliasMaps( filter.aliases(), aliasTableMap, aliasEntityMap );
 		final String filterCondition = getFilterCondition( filter );
 		if ( hasAssociationTable ) {
 			collection.addManyToManyFilter(
 					filter.name(),
 					filterCondition,
 					filter.deduceAliasInjectionPoints(),
-					aliasTableMap,
-					aliasEntityMap
+					toAliasTableMap( filter.aliases() ),
+					toAliasEntityMap( filter.aliases() )
 			);
 		}
 		else {
@@ -1776,25 +1775,33 @@ public abstract class CollectionBinder {
 					filter.name(),
 					filterCondition,
 					filter.deduceAliasInjectionPoints(),
-					aliasTableMap,
-					aliasEntityMap
+					toAliasTableMap( filter.aliases() ),
+					toAliasEntityMap( filter.aliases() )
 			);
 		}
 	}
 
 	private void handleWhere(boolean hasAssociationTable) {
 		final String whereClause = getWhereClause();
+		final var restrictionOnCollection =
+			getOverridableAnnotation( property, SQLRestriction.class, getBuildingContext() );
+		final var whereAliases =
+			restrictionOnCollection == null
+				? List.<org.hibernate.mapping.SqlFragmentAlias>of()
+				: org.hibernate.mapping.SqlFragmentAlias.from( restrictionOnCollection.aliases() );
 		if ( hasAssociationTable ) {
 			// A many-to-many association has an association (join) table
 			// Collection#setManytoManyWhere is used to set the "where" clause that applies
 			// to the many-to-many associated entity table (not the join table).
 			collection.setManyToManyWhere( whereClause );
+			collection.setManyToManyWhereAliases( whereAliases );
 		}
 		else {
 			// A one-to-many association does not have an association (join) table.
 			// Collection#setWhere is used to set the "where" clause that applies to the collection table
 			// (which is the associated entity table for a one-to-many association).
 			collection.setWhere( whereClause );
+			collection.setWhereAliases( whereAliases );
 		}
 
 		final String whereJoinTableClause = getWhereJoinTableClause();
@@ -1807,8 +1814,8 @@ public abstract class CollectionBinder {
 			}
 			else {
 				throw new AnnotationException(
-						"Collection '" + qualify( propertyHolder.getPath(), propertyName )
-								+ "' is an association with no join table and may not have a 'WhereJoinTable'"
+					"Collection '" + qualify( propertyHolder.getPath(), propertyName )
+						+ "' is an association with no join table and may not have a '@SQLJoinTableRestriction'"
 				);
 			}
 		}
@@ -1821,11 +1828,11 @@ public abstract class CollectionBinder {
 
 	private String getWhereClause() {
 		// There are 2 possible sources of "where" clauses that apply to the associated entity table:
-		// 1) from the associated entity mapping; i.e., @Entity @Where(clause="...")
+		// 1) from the associated entity mapping; i.e., @Entity @SQLRestriction(clause="...")
 		//    (ignored if useEntityWhereClauseForCollections == false)
 		// 2) from the collection mapping;
-		//    for one-to-many, e.g., @OneToMany @JoinColumn @Where(clause="...") public Set<Rating> getRatings();
-		//    for many-to-many e.g., @ManyToMany @Where(clause="...") public Set<Rating> getRatings();
+		//    for one-to-many, e.g., @OneToMany @JoinColumn @SQLRestriction(clause="...") public Set<Rating> getRatings();
+		//    for many-to-many e.g., @ManyToMany @SQLRestriction(clause="...") public Set<Rating> getRatings();
 		return getNonEmptyOrConjunctionIfBothNonEmpty( getWhereOnClassClause(), getWhereOnCollectionClause() );
 	}
 
@@ -1846,15 +1853,12 @@ public abstract class CollectionBinder {
 
 	private void addFilterJoinTable(boolean hasAssociationTable, FilterJoinTable filter) {
 		if ( hasAssociationTable ) {
-			final Map<String,String> aliasTableMap = new HashMap<>();
-			final Map<String,String> aliasEntityMap = new HashMap<>();
-			fillAliasMaps( filter.aliases(), aliasTableMap, aliasEntityMap );
 			collection.addFilter(
-					filter.name(),
-					getFilterConditionForJoinTable( filter ),
-					filter.deduceAliasInjectionPoints(),
-					aliasTableMap,
-					aliasEntityMap
+				filter.name(),
+				getFilterConditionForJoinTable( filter ),
+				filter.deduceAliasInjectionPoints(),
+				toAliasTableMap( filter.aliases() ),
+				toAliasEntityMap( filter.aliases() )
 			);
 		}
 		else {

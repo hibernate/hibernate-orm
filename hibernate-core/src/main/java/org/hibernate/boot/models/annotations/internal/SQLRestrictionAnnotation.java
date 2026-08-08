@@ -8,17 +8,22 @@ import java.lang.annotation.Annotation;
 import java.util.Map;
 
 import org.hibernate.annotations.SQLRestriction;
+import org.hibernate.annotations.SqlFragmentAlias;
+import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.models.spi.ModelsContext;
+
+import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
 public class SQLRestrictionAnnotation implements SQLRestriction {
 	private String value;
-
+	private SqlFragmentAlias[] aliases;
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
 	public SQLRestrictionAnnotation(ModelsContext modelContext) {
+		this.aliases = new SqlFragmentAlias[]{};
 	}
 
 	/**
@@ -26,6 +31,7 @@ public class SQLRestrictionAnnotation implements SQLRestriction {
 	 */
 	public SQLRestrictionAnnotation(SQLRestriction annotation, ModelsContext modelContext) {
 		this.value = annotation.value();
+		this.aliases = extractJdkValue( annotation, HibernateAnnotations.SQL_RESTRICTION, "aliases", modelContext );
 	}
 
 	/**
@@ -33,6 +39,7 @@ public class SQLRestrictionAnnotation implements SQLRestriction {
 	 */
 	public SQLRestrictionAnnotation(Map<String, Object> attributeValues, ModelsContext modelContext) {
 		this.value = (String) attributeValues.get( "value" );
+		this.aliases = (SqlFragmentAlias[]) attributeValues.get( "aliases" );
 	}
 
 	@Override
@@ -49,5 +56,11 @@ public class SQLRestrictionAnnotation implements SQLRestriction {
 		this.value = value;
 	}
 
+	public SqlFragmentAlias[] aliases() {
+		return aliases;
+	}
 
+	public void aliases(SqlFragmentAlias[] aliases) {
+		this.aliases = aliases;
+	}
 }

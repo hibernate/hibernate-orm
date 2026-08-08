@@ -11,7 +11,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * Defines an interpolated alias occurring in a SQL
- * {@linkplain Filter#condition() filter condition}.
+ * {@linkplain Filter#condition() filter condition} or
+ * {@linkplain SQLRestriction#value() restriction}.
  * Aliases are interpolated where placeholders of the
  * form {@code {name}} occur, where {@code name} is
  * the value specified by {@link #alias}.

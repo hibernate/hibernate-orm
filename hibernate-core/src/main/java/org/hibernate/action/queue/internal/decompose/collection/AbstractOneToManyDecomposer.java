@@ -154,7 +154,9 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 				);
 			}
 
-			if ( jdbcOperations.updateIndexPlan() != null ) {
+			if ( jdbcOperations.updateIndexPlan() != null
+					&& entry != null
+					&& collection.entryExists( entry, entryCount ) ) {
 				final var writeIndexFlushOp = new FlushOperation(
 						jdbcOperations.tableDescriptor(),
 						MutationKind.UPDATE_ORDER,

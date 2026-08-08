@@ -43,8 +43,8 @@ public abstract class IndexerTask extends DefaultTask {
 	}
 
 	@OutputFile
-	public Provider<RegularFile> getPackageFileReferenceAccess() {
-		return indexManager.get().getPackageFileReferenceAccess();
+	public Provider<RegularFile> getArtifactFileReferenceAccess() {
+		return indexManager.get().getArtifactFileReferenceAccess();
 	}
 
 	@TaskAction

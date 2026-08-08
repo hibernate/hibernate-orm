@@ -1,0 +1,592 @@
+= Dialect Extension Implementation Plan
+:toc2:
+:toclevels: 4
+:sectanchors:
+:numbered:
+
+Status: Review Draft
+
+This document plans implementation of
+`design/dialect-extension-specification.adoc`.  It depends on the general SPI
+facility planned in `design/spi-implementation-plan.adoc` while keeping the
+Dialect-specific surface, migration, and tests as a separate workstream.
+
+No production implementation should begin from this document until its review
+is complete.  If inventory work changes a normative decision, the working
+specification must be amended before implementation proceeds.
+
+== Objectives
+
+The implementation must turn Dialect extension from an accidental collection
+of public, protected, and internal contracts into an explicit provider SPI.
+It must:
+
+* classify `Dialect` for independent `USE`, `IMPLEMENT`, and `SUPPLY` roles;
+* audit and deliberately reduce or retain its approximately 414 exposed
+  declarations;
+* provide supported replacements for internals used by maintained Dialects;
+* make the translator-visible SQL AST and model-mutation trees supported SPI;
+* provide deliberate generic and SQL-family translator bases;
+* separate database capabilities from global SQM and HQL integration;
+* treat community Dialects and a standalone provider as external consumers;
+* publish a Dialect compatibility test kit;
+* enforce all of this through the general SPI report and validator.
+
+This is an incremental migration.  It is not a package-wide declaration that
+everything under `org.hibernate.dialect` is SPI, and it is not a compatibility
+promise for every built-in implementation class.
+
+== Dependencies and sequencing
+
+The Dialect implementation can begin with read-only inventory while the first
+general SPI increments are being implemented.  Mutating classification and
+enforcement depend on these general SPI capabilities:
+
+* canonical roles and classification origins;
+* signature traversal and deduplication;
+* report generation;
+* validation plus a shrinking migration allowlist;
+* a distinct role-sensitive compatibility baseline.
+
+Dialect-specific logic should be implemented as inputs, views, and rules over
+the canonical SPI model.  It must not create a second classifier.
+
+== Work products
+
+The migration will maintain the following reviewable artifacts:
+
+Dialect surface ledger::
+One row for every public or protected declaration owned by `Dialect`, including
+roles, usage evidence, disposition, replacement, and required Migration Guide
+anchor.
+
+Provider dependency ledger::
+Every static dependency from `hibernate-community-dialects` to an upstream
+Hibernate internal element, including a usage category, remediation batch, and
+planned or completed Migration Guide anchor for its supported replacement.
+
+Family evidence matrix::
+Existing inheritance, copied behavior, compatibility modes, external-provider
+evidence when available, and a recommendation for each potential SQL family.
+
+Package-migration map::
+Every translator-visible SQL AST and model-mutation package/type, its final SPI
+classification or internal disposition, and any transition adapter.
+
+Migration allowlist::
+The general validator allowlist entries associated with Dialect/provider
+violations.  This is not a separate exception mechanism.
+
+Migration Guide coverage index::
+A generated or validated mapping from each completed provider-facing removal,
+relocation, narrowing, or replacement to a stable anchor in the versioned root
+`migration-guide.adoc`.
+
+Generated Dialect report::
+A provider-oriented view generated from the general canonical SPI model.
+
+These artifacts should be machine-readable where practical, with generated
+AsciiDoc views for review.  Hand-maintained evidence such as a disposition or
+tracking issue may be joined to generated declarations by stable element
+identity.
+
+== Delivery sequence
+
+=== Phase 0: reproducible baseline
+
+Create build-owned inventory tasks or scripts which operate on compiled
+artifacts and can be rerun throughout migration.
+
+Capture:
+
+* all public and protected declarations owned by `Dialect`;
+* all in-repository overrides of each declaration;
+* direct calls from Core and community Dialects;
+* all direct and transitive type references in exposed signatures;
+* every community-Dialect bytecode dependency on upstream internal elements;
+* every built-in and community Dialect inheritance edge;
+* every SQL AST, SQM, HQL, mutation, locking, DDL, schema, sequence, callable,
+  function, and type extension class used by community Dialects;
+* current uses of `getSqlAstTranslatorFactory()`,
+  `getSqmTranslatorFactory()`, and `getHqlTranslator()`.
+
+Bytecode/linkage analysis is authoritative for dependency counts.  A source
+import report may be retained as a convenient secondary view, but must not be
+the baseline because fully qualified references, inherited signatures, and
+other bytecode dependencies can evade import scanning.
+
+Store a dated baseline with stable element identifiers rather than embedding
+headline counts in the validator.  Report counts by category and module so a
+later change can explain why the total moved.
+
+Acceptance for this phase:
+
+* the inventories are reproducible from a clean checkout;
+* every exposed `Dialect` declaration has exactly one ledger row;
+* every community internal dependency has a path from a provider declaration;
+* rerunning the inventory without source changes produces no diff;
+* the results can seed, but do not yet weaken, general SPI validation.
+
+=== Phase 1: family inventory and decision checkpoint
+
+Derive the initial family inventory from repository evidence.  No initial list
+is required from the specification reviewer.
+
+For each candidate Dialect or translator family, record:
+
+* current superclass/subclass relationships in Core and community Dialects;
+* substantial duplicated or copied translation behavior;
+* compatible-database modes represented by the family;
+* assumptions currently obtained through casts to concrete built-in Dialects;
+* syntax differences which are better expressed as capabilities or rendering
+  strategies;
+* known maintained external subclasses, if evidence is available;
+* the estimated protected surface of a supported base.
+
+Recommend exactly one disposition:
+
+Supported family base::
+Introduce or retain an abstract `IMPLEMENT` base with a deliberate protected
+contract.
+
+Supported concrete subclassing::
+Classify an existing concrete Dialect as
+`SELECTABLE_AND_SUBCLASSABLE` because its identity and construction are useful
+to both application users and providers.
+
+Composable capability or strategy::
+Avoid inheritance and expose the varying behavior through a focused supported
+contract.
+
+No supported extension::
+Keep a built-in class selectable-only or internal because there is insufficient
+provider evidence.
+
+At minimum, evaluate PostgreSQL-compatible, MySQL-compatible, DB2-compatible,
+and Transact-SQL relationships; these are candidates, not predetermined
+outcomes.
+
+Review checkpoint:
+
+* review the evidence matrix and recommendations;
+* amend the specification with the accepted initial family list;
+* only then commit to the public/protected contract of a family base.
+
+The reviewer may improve the evidence by naming maintained external Dialects,
+but that input is useful rather than required to begin.
+
+=== Phase 2: classify and audit Dialect
+
+Add the specified type-level classification to `Dialect` and explicitly
+classify each supported subclass constructor for `IMPLEMENT`.
+
+Process the surface ledger declaration by declaration.  Assign:
+
+* independent effective roles;
+* evidence from Core, built-in, community, and surveyed external usage;
+* one disposition: retain, make final, reduce visibility, move behind an
+  internal collaborator, deprecate, or replace;
+* a compatibility and migration action;
+* the required Migration Guide entry or an explicit reason no provider-facing
+  migration is involved;
+* an owning remediation phase when other work is required first.
+
+Apply safe visibility reductions before establishing the first compatibility
+baseline.  A method must not remain overridable only because changing it
+requires a decision.  Conversely, commonly used accidental hooks should not be
+removed without a supported replacement and migration note.
+
+Supply points require explicit attention.  Methods returning a strategy,
+factory, descriptor, or service supplied by the subclass should be explicitly
+classified `SUPPLY`; type-level `SUPPLY` must not cause unrelated methods to be
+reported as supply points.
+
+Classify concrete built-in Dialects using the specified derived model:
+
+* `SELECTABLE_ONLY` is application API for explicit selection but has no
+  inferred provider role;
+* `SELECTABLE_AND_SUBCLASSABLE` is application API plus explicit
+  `@SPI(IMPLEMENT)`, with other roles independently declared;
+* `INTERNAL_LEAF` is internal implementation and not a supported application or
+  provider identity;
+* abstract family bases are `IMPLEMENT` SPI and are not selectable.
+
+Acceptance for this phase:
+
+* the generated inventory accounts for every exposed `Dialect` declaration;
+* every retained overridable method is intentionally in the `IMPLEMENT`
+  baseline;
+* supported constructors and actual supply points are explicit;
+* no whole-package `IMPLEMENT` classification is introduced;
+* built-in classification is derivable from API, SPI, and internal metadata;
+* compatibility-sensitive reductions include deprecation or migration handling
+  appropriate to the release policy;
+* every applied provider-facing reduction has a valid Migration Guide anchor.
+
+=== Phase 3: provider boundary and monotonic gate
+
+Treat `hibernate-community-dialects` production classes as provider code.
+Feed their compiled bytecode into `validateSpi` and seed the single migration
+allowlist from Phase 0.
+
+Add a standalone provider fixture which:
+
+* uses a non-Hibernate package;
+* compiles against the assembled/published Core artifact;
+* cannot access Core test sources or package-private declarations;
+* implements a custom Dialect and translator;
+* uses representative semantic SQL AST and model-mutation nodes;
+* obtains one standard component from a supported factory or builder;
+* implements one custom strategy;
+* contributes a type or function.
+
+Initially, the fixture may expose missing SPI rather than pass completely.  It
+becomes mandatory as each required family is made available.  New internal
+dependencies must fail from the first enforced baseline, and unused exceptions
+must fail so the allowlist shrinks monotonically.
+
+Acceptance for this phase:
+
+* the baseline identifies all current provider-to-upstream-internal linkage;
+* any new dependency fails with a complete root-to-internal path;
+* removing a dependency requires removing its allowlist entry;
+* provider-owned private `internal` packages are not mistaken for Hibernate
+  upstream internals;
+* the standalone fixture is compiled at the real artifact boundary.
+
+=== Phase 4: SQL AST and model-mutation SPI
+
+Inventory the actual semantic trees used by provider translators.  Define a
+package-migration map that keeps the coherent existing trees rather than
+introducing parallel façade nodes.
+
+For each package and node:
+
+* classify translator-read semantic nodes as `USE` SPI;
+* add `IMPLEMENT` only where providers implement or subclass a node;
+* add `SUPPLY` only where providers contribute or construct instances for
+  Hibernate;
+* keep execution-result implementations internal where providers do not need
+  to name them;
+* ensure every non-exact-`.spi` subpackage receives the necessary explicit
+  package classification;
+* identify package moves, compatibility adapters, and eventual removals.
+
+Establish `org.hibernate.dialect.sql.ast.spi` for supported generic and family
+translation bases, and use `org.hibernate.dialect.sql.ast.internal` for
+built-in leaves and non-contract helpers where practical.
+
+Make `SqlAstTranslatorFactory` implementable and classify the Dialect factory
+method for `IMPLEMENT + SUPPLY`.  Introduce a supported translation request or
+context when current factory inputs expose implementation detail.
+
+Refactor the generic translator base so provider translators can render select,
+query-mutation, and model-mutation SQL while consuming only supported contracts.
+Provide supported helpers/factories for internal JDBC operations, selections,
+bindings, and execution results instead of exposing their implementation
+classes.
+
+Include set-returning-function descriptors and anonymous-tuple leakage in this
+phase, not as an unrelated later cleanup.
+
+Acceptance for this phase:
+
+* the standalone provider traverses representative select and mutation trees;
+* supported walker and protected-hook signatures contain no internal types;
+* providers are not required to instantiate internal execution-result classes;
+* the real semantic trees are the supported contracts; no duplicate façade tree
+  exists;
+* generic translator public/protected surface has been audited before its
+  `IMPLEMENT` baseline is established;
+* package moves have explicit migration adapters or release-policy handling;
+* SQL AST and model-mutation relocations have versioned Migration Guide entries
+  with before-and-after imports or usage examples.
+
+=== Phase 5: feature-family remediation batches
+
+Repair internal dependencies in small vertical batches.  Each batch must
+include the supported contract, provider migration, tests, report changes,
+a versioned Migration Guide entry, other provider documentation, and removal of
+obsolete allowlist entries.
+
+Use this priority order:
+
+. internal types leaked directly by supported signatures;
+. SQL AST walker and translator requirements not completed in Phase 4;
+. DDL type construction and temporary-table/CTE mutation strategies;
+. locking support profiles and locking-clause rendering;
+. schema exporters and sequence information extractors;
+. callable statement support and function/type contribution;
+. remaining provider conveniences and utilities.
+
+For each observed external need, choose the narrowest appropriate shape:
+
+* factory, builder, profile, or registry for constructing stock behavior;
+* supported abstract base for deliberate subclassing;
+* read-only interface for semantic inspection;
+* request/context interface for state consumed by a base;
+* helper/factory when the provider needs to create an internal engine result.
+
+Do not promote an internal implementation class solely because community code
+currently imports it.  First decide whether providers need to use, implement,
+or supply the concept, then expose the smallest stable contract that satisfies
+that role.
+
+Each batch is accepted when:
+
+* every changed contract has explicit roles;
+* Core, community Dialects, and the standalone fixture use the supported path;
+* no replacement signature leaks another internal type;
+* before-and-after provider documentation exists;
+* the corresponding versioned Migration Guide entry exists and its stable
+  anchor is recorded in the affected ledgers;
+* the corresponding allowlist count decreases;
+* SQL-generation or database integration tests cover the behavior.
+
+=== Phase 6: accepted SQL-family bases
+
+Implement the family decisions accepted after Phase 1.
+
+For each supported family base:
+
+* make it abstract unless direct construction is a deliberate use case;
+* classify it `IMPLEMENT`;
+* document its grammar family and assumptions;
+* expose a reviewed, minimal protected hook set;
+* replace concrete-Dialect casts with supported family support interfaces;
+* move variable details into capabilities or composable strategies where
+  inheritance is not essential;
+* migrate in-repository subclasses and copied implementations;
+* keep built-in leaves unclassified or internal unless independently approved
+  for subclassing.
+
+Add a focused compatibility fixture per family.  The fixture should subclass
+the family base outside Hibernate packages and override every intended hook at
+least once across the fixture suite.
+
+Acceptance for this phase:
+
+* every family is justified by the accepted evidence matrix;
+* each base depends only on supported API/SPI;
+* its public/protected surface appears in the `IMPLEMENT` baseline;
+* small syntax variants use capabilities/strategies rather than unnecessary
+  subclasses;
+* no maintained in-repository subclass is left extending an unsupported
+  built-in leaf.
+
+=== Phase 7: SQM and HQL decoupling
+
+Replace database-specific full SQM converter selection with focused structural
+capabilities.  Start with the repeated synthetic-table behavior in Informix,
+Ingres, Sybase, and legacy Sybase:
+
+* define a supported capability describing when the synthetic table group is
+  needed and the semantic/rendering information required;
+* teach the standard SQM converter to interpret it;
+* migrate the four in-repository implementations;
+* test grouping, ordering, partitioning, and table-less selection behavior.
+
+Then inventory every `getSqmTranslatorFactory()` override and call site and
+distinguish database capabilities from general query-engine replacement.  Keep
+any general SQM translator integration outside Dialect and replace internal
+request types, including `DomainParameterXref`, with supported request/context
+contracts where that general integration remains supported.
+
+After migrating all in-repository uses, remove
+`Dialect#getSqmTranslatorFactory()` and `Dialect#getHqlTranslator()` directly.
+Do not deprecate them, add forwarding hooks, or include them in the initial
+Dialect SPI compatibility baseline.  Document migration toward focused Dialect
+capabilities or the global query translator integration, as appropriate, and
+reject new database-specific HQL parser selection.
+
+Add a dedicated versioned Migration Guide entry in the same change as the
+removal.  It must explain that there is no replacement hook on `Dialect` and
+separately show the focused-capability and global-integration migration paths.
+
+Acceptance for this phase:
+
+* in-repository database structural differences use focused capabilities;
+* normal Dialects do not replace the complete SQM converter for local syntax
+  variation;
+* remaining general integration signatures contain no internal types;
+* both Dialect hooks are absent from `Dialect` and from its SPI compatibility
+  baseline;
+* no equivalent general query-translator selection hook has been added back to
+  `Dialect`;
+* the removal's Migration Guide entry covers both provider migration paths;
+* tests prove equivalent query semantics and SQL for migrated Dialects.
+
+=== Phase 8: Dialect compatibility test kit
+
+Extract a supported provider test kit with two explicitly separated layers:
+
+SQL-generation contract suite::
+Runs without a target database and validates query planning, SQL shape,
+parameter order, binding metadata, and model-mutation rendering.
+
+Database-integration contract suite::
+Runs against the provider's database and validates DDL, DML, metadata,
+temporary-table lifecycle, mutations, callables, locking, and type behavior.
+
+Expose stable test descriptors and extension hooks, not ORM's internal test
+infrastructure.  Supply defaults providers can reuse and clear capability-based
+skips for features a database does not support.  A skipped test must identify
+the declared capability which makes it inapplicable.
+
+Use at least the standalone provider and representative community Dialects as
+consumers of the kit.  Cover every scenario required by the specification,
+including table-less selection, pagination, locking, CTEs, tuples, set
+operations, merge/upsert, returning values, flush-time mutations, DDL, schema
+metadata, temporary tables, callables, and supported database versions.
+
+Acceptance for this phase:
+
+* a provider can consume the kit without Hibernate test-source access;
+* SQL-generation tests run in the normal build without external services;
+* database tests integrate with the existing database matrix;
+* failures identify the capability and generated/expected behavior;
+* provider documentation explains how to add the kit to an external project.
+
+=== Phase 9: complete enforcement and publication
+
+After all remediation batches:
+
+* reduce the Dialect provider allowlist to zero;
+* make the standalone provider fixture fully mandatory;
+* retain community Dialects as a mandatory provider gate;
+* publish the Dialect extension inventory from the general SPI report;
+* activate role-sensitive compatibility comparison for the complete Dialect
+  surface;
+* verify the Migration Guide coverage index has no missing or unresolved
+  anchors;
+* publish versioned Migration Guide entries and supporting examples for every
+  replaced internal dependency category;
+* remove expired adapters according to normal compatibility policy.
+
+The generated Dialect report must separately present application selectability
+and provider SPI roles.  It may add Dialect-specific headings, but it must use
+the same canonical records and deduplication behavior as the general report.
+
+Acceptance for this phase is the completion criteria in the Dialect
+specification, including zero upstream Hibernate-internal production
+dependencies from community Dialects.
+
+== Test matrix
+
+[cols="24,38,38",options="header"]
+|===
+|Layer |Purpose |Primary consumers
+
+|Classification fixtures
+|Roles, constructors, supply points, concrete-Dialect categories
+|General SPI tooling tests
+
+|Surface audit tests
+|Complete accounting and compatibility of public/protected hooks
+|`Dialect` and supported translator/family bases
+
+|Provider-boundary compilation
+|Prove only published API/SPI is needed
+|Standalone provider fixture
+
+|Provider linkage validation
+|Reject upstream internal dependencies
+|Community Dialects and standalone provider
+
+|SQL-generation contracts
+|Rendering and binding without a live database
+|Standalone and representative community Dialects
+
+|Database integration contracts
+|Behavior against real database versions
+|Existing database test matrix and provider projects
+
+|Compatibility fixtures
+|Detect role-sensitive source/binary breaks
+|`Dialect`, translator bases, family bases, supplied strategies
+|===
+
+== Compatibility and migration policy
+
+Establish compatibility baselines only after the relevant visibility audit,
+not before.  Otherwise accidental public/protected methods become supported by
+default.
+
+For package moves and replacement contracts:
+
+* prefer deprecation plus a forwarding adapter when practical;
+* add or update the versioned Migration Guide entry in the same change;
+* document both the role being replaced and the supported replacement;
+* keep internal adapters out of the new SPI report;
+* remove adapters only according to the applicable release policy;
+* update provider fixtures before updating a compatibility baseline.
+
+The Migration Guide entry is required even where an accidental or internal
+contract did not previously receive a formal compatibility guarantee.  The
+entry explains the practical provider migration; it does not retroactively
+classify the old contract as supported SPI.
+
+Moving a real SQL AST node to an SPI-classified package may be more compatible
+and maintainable than defining a parallel interface.  The package-migration map
+must decide transitions per coherent tree area rather than through ad hoc
+single-class moves.
+
+== Risks and controls
+
+Oversized Dialect contract::
+Audit every declaration and reduce visibility/finality before baseline.  Track
+unresolved entries explicitly; do not equate current exposure with intent.
+
+Family-base overfitting::
+Require multiple implementations, maintained external use, or a documented
+compatibility mode.  Prefer capabilities for small variations.
+
+Package-move churn::
+Move coherent semantic tree areas, provide reviewed adapters, and avoid a
+parallel façade tree that doubles translator maintenance.
+
+Provider migration deadlock::
+Use vertical feature batches so a supported replacement, migrated community
+consumer, tests, documentation, and allowlist reduction land together.
+
+False confidence from source imports::
+Use compiled linkage for the enforcement baseline and source scanning only as
+supplementary evidence.
+
+General SPI tooling delay::
+Run read-only inventory and design of replacement contracts in parallel, but do
+not establish unsupported one-off Dialect classification logic.
+
+Compatibility kit scope::
+Separate SQL-generation from database integration and reuse the existing
+database matrix rather than requiring all external databases for the normal
+build.
+
+== Review checkpoints
+
+Implementation should pause for focused review at these points:
+
+. reproducible baseline formats and headline counts;
+. family evidence matrix and exact initial family list;
+. `Dialect` surface dispositions before its first SPI baseline;
+. SQL AST/model-mutation package-migration map;
+. first complete remediation batch and replacement-shape conventions;
+. SQM/HQL removal, replacement contracts, and migration text;
+. compatibility test-kit public surface;
+. zero-allowlist enforcement, complete Migration Guide coverage, and final
+  report presentation.
+
+The recommended first Dialect implementation change is Phase 0 plus the family
+evidence matrix from Phase 1.  In parallel, the general SPI work can implement
+its annotation and canonical model.  The first classification change to
+`Dialect` should wait until the surface ledger can show exactly what contract
+that classification creates.
+
+== Completion criteria
+
+This plan is complete when every completion criterion in
+`design/dialect-extension-specification.adoc` is satisfied, all required
+provider tests and build gates are active, the Dialect migration allowlist is
+empty, the Migration Guide coverage index has no missing anchors, and provider
+documentation is generated from the same canonical SPI model used for
+validation and compatibility checking.

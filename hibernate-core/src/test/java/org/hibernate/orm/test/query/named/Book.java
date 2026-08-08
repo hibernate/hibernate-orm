@@ -173,4 +173,9 @@ public class Book {
 	public int nativeDeleteByTitleWithOptions(String title) {
 		throw new UnsupportedOperationException();
 	}
+
+	public interface NestedEntityQueries {
+		@JakartaQuery( "from Jpa4StaticQueryBook where title = :title" )
+		List<Book> findByTitle(String title);
+	}
 }

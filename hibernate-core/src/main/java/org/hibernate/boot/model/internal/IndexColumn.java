@@ -7,6 +7,8 @@ package org.hibernate.boot.model.internal;
 import java.util.Map;
 
 import org.hibernate.annotations.ListIndexBase;
+import org.hibernate.boot.model.naming.ImplicitIndexColumnNameSource;
+import org.hibernate.boot.model.source.spi.AttributePath;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.dialect.Dialect;
@@ -44,7 +46,7 @@ public class IndexColumn extends AnnotatedColumn {
 		}
 		else {
 			column = new IndexColumn();
-			column.setLogicalColumnName( inferredData.getPropertyName() + "_ORDER" ); //JPA default name
+			column.setLogicalColumnName( getColumnNameFromNamingStrategy( inferredData, context ) );
 			column.setImplicit( true );
 //			column.setContext( context );
 //			column.setPropertyHolder( propertyHolder );
@@ -59,11 +61,29 @@ public class IndexColumn extends AnnotatedColumn {
 		return column;
 	}
 
+	private static String getColumnNameFromNamingStrategy(PropertyData inferredData, MetadataBuildingContext context)
+	{
+		final var implicitNamingStrategy = context.getBuildingOptions().getImplicitNamingStrategy();
+		final var identifier = implicitNamingStrategy.determineListIndexColumnName(
+				new ImplicitIndexColumnNameSource() {
+					@Override
+					public AttributePath getPluralAttributePath() {
+						return AttributePath.parse( inferredData.getPropertyName() );
+					}
+
+					@Override
+					public MetadataBuildingContext getBuildingContext() {
+						return context;
+					}
+				} );
+		return identifier.render( context.getMetadataCollector().getDatabase().getDialect() );
+	}
+
 	private void addIndexCheckConstraint(Dialect dialect) {
 		getMappingColumn()
 				.addCheckConstraint( new CheckConstraint( null,
 						getMappingColumn().getQuotedName( dialect )
-								+ ">=" + getBase() ) );
+						+ ">=" + getBase() ) );
 	}
 
 	private static void createParent(

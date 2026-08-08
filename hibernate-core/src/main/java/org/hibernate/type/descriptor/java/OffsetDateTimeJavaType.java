@@ -28,6 +28,8 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import static org.hibernate.type.descriptor.java.SqlDateTimeHelper.toLocalDateTime;
+
 import jakarta.persistence.TemporalType;
 
 import static java.time.format.DateTimeFormatter.ISO_LOCAL_DATE_TIME;
@@ -215,7 +217,7 @@ public class OffsetDateTimeJavaType extends AbstractTemporalJavaType<OffsetDateT
 			// - around 1905, both methods are equally valid, so we don't really care which
 			//   one is used.
 			return timestamp.getYear() < 5 // Timestamp year 0 is 1900
-					? timestamp.toLocalDateTime().atZone( ZoneId.systemDefault() ).toOffsetDateTime()
+					? toLocalDateTime( timestamp ).atZone( ZoneId.systemDefault() ).toOffsetDateTime()
 					: OffsetDateTime.ofInstant( timestamp.toInstant(), ZoneId.systemDefault() );
 		}
 

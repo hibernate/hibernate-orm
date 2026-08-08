@@ -14,7 +14,6 @@ import jakarta.persistence.AttributeConverter;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonMap;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
-import static org.hibernate.internal.util.StringHelper.join;
 import static org.hibernate.internal.util.StringHelper.split;
 
 /**
@@ -23,7 +22,7 @@ import static org.hibernate.internal.util.StringHelper.split;
 public class MapConverter implements AttributeConverter<Map<String, String>, String> {
 	@Override
 	public String convertToDatabaseColumn(Map<String, String> map) {
-		return CollectionHelper.isEmpty( map ) ? null : join( ", ", asPairs( map ) );
+		return CollectionHelper.isEmpty( map ) ? null : String.join( ", ", asPairs( map ) );
 	}
 
 	@Override

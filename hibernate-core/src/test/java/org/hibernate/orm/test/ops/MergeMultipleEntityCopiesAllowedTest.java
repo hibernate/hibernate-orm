@@ -39,7 +39,7 @@ import static org.junit.jupiter.api.Assertions.fail;
  * @author Gail Badner
  */
 @DomainModel(
-		xmlMappings = "org/hibernate/orm/test/ops/Hoarder.hbm.xml"
+		annotatedClasses = {Hoarder.class, Item.class, Category.class, SubItem.class, SubCategory.class}
 )
 @SessionFactory
 @ServiceRegistry(settings = @Setting(name = AvailableSettings.MERGE_ENTITY_COPY_OBSERVER, value = "allow"))

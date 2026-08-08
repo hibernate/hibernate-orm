@@ -33,8 +33,8 @@ import static org.junit.jupiter.api.Assertions.fail;
  */
 @DomainModel(
 		xmlMappings = {
-				"org/hibernate/orm/test/hql/Animal.hbm.xml",
-				"org/hibernate/orm/test/hql/SimpleEntityWithAssociation.hbm.xml",
+				"org/hibernate/orm/test/hql/Animal.orm.xml",
+				"org/hibernate/orm/test/hql/SimpleEntityWithAssociation.orm.xml",
 		}
 )
 @SessionFactory

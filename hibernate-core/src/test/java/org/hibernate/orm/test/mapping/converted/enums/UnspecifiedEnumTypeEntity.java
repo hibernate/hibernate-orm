@@ -6,13 +6,24 @@ package org.hibernate.orm.test.mapping.converted.enums;
 
 import java.io.Serializable;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+
 /**
  * @author Lukasz Antoniak
  */
+@Entity
+@Table(name = "ENUM_ENTITY")
 public class UnspecifiedEnumTypeEntity implements Serializable {
 	public static enum E1 { X, Y }
 	public static enum E2 { A, B }
 
+	@Id
+	@Column(name = "ID")
+	@GeneratedValue(generator = "increment")
 	private Long id;
 
 	private E1 enum1;

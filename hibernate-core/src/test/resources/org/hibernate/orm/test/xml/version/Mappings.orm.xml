@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping" version="8.0">
+    <attribute-accessor>property</attribute-accessor>
+    <default-cascade>none</default-cascade>
+    <default-lazy>true</default-lazy>
+    <entity class="org.hibernate.orm.test.xml.version.Order" metadata-complete="true">
+        <table name="Order"/>
+        <dynamic-insert>false</dynamic-insert>
+        <dynamic-update>false</dynamic-update>
+        <select-before-update>false</select-before-update>
+        <batch-size>-1</batch-size>
+        <mutable>true</mutable>
+        <optimistic-locking>VERSION</optimistic-locking>
+        <attributes>
+            <id name="id">
+                <column name="id" unique="false" nullable="false" insertable="true" updatable="false"/>
+                <generated-value generator="id-id-generator"/>
+                <generic-generator name="id-id-generator" class="increment"/>
+                <java-type>org.hibernate.type.descriptor.java.IntegerJavaType</java-type>
+                <jdbc-type>org.hibernate.type.descriptor.jdbc.IntegerJdbcType</jdbc-type>
+            </id>
+            <natural-id mutable="false">
+                <basic name="referenceCode" fetch="EAGER" optional="false" optimistic-lock="true">
+                    <generated>NEVER</generated>
+                    <java-type>org.hibernate.type.descriptor.java.StringJavaType</java-type>
+                    <jdbc-type>org.hibernate.type.descriptor.jdbc.VarcharJdbcType</jdbc-type>
+                </basic>
+            </natural-id>
+            <version name="rv">
+                <column name="rv"/>
+            </version>
+        </attributes>
+    </entity>
+</entity-mappings>

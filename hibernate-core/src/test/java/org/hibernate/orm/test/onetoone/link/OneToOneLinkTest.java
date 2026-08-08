@@ -29,7 +29,7 @@ import static org.junit.Assert.assertTrue;
  */
 @DomainModel(
 		xmlMappings = {
-				"org/hibernate/orm/test/onetoone/link/Person.hbm.xml"
+				"org/hibernate/orm/test/onetoone/link/Person.orm.xml"
 		}
 )
 @SessionFactory

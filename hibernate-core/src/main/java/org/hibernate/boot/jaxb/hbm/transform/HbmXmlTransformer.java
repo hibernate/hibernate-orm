@@ -1462,7 +1462,10 @@ public class HbmXmlTransformer {
 			String resultMappingName,
 			JaxbHbmNativeQueryReturnType hbmReturn) {
 		final var entityResult = new JaxbEntityResultImpl();
-		entityResult.setEntityClass( getFullyQualifiedClassName( hbmReturn.getClazz() ) );
+		final String entityName = hbmReturn.getClazz() != null
+				? hbmReturn.getClazz()
+				: hbmReturn.getEntityName();
+		entityResult.setEntityClass( getFullyQualifiedClassName( entityName ) );
 
 		for ( var propertyReturn : hbmReturn.getReturnProperty() ) {
 			final var field = new JaxbFieldResultImpl();
@@ -1500,15 +1503,9 @@ public class HbmXmlTransformer {
 			JaxbHbmNativeQueryScalarReturnType hbmReturn) {
 		final var columnResult = new JaxbColumnResultImpl();
 		columnResult.setName( hbmReturn.getColumn() );
-		columnResult.setClazz( hbmReturn.getType() );
-		handleUnsupportedContent(
-				String.format(
-						"SQL ResultSet mapping [name=%s] contained a <return-scalar column='%s'/> element; " +
-								"transforming type->class likely requires manual adjustment",
-						resultMappingName,
-						hbmReturn.getColumn()
-				)
-		);
+		if ( hbmReturn.getType() != null ) {
+			columnResult.setClazz( resolveHbmTypeName( hbmReturn.getType() ) );
+		}
 		return columnResult;
 	}
 
@@ -1609,7 +1606,9 @@ public class HbmXmlTransformer {
 		for ( Object content : hbmQuery.getContent() ) {
 			if ( content instanceof String qryString ) {
 				qryString = qryString.trim();
-				query.setQuery( qryString );
+				if ( !qryString.isEmpty() ) {
+					query.setQuery( qryString );
+				}
 			}
 			else if ( content instanceof JAXBElement<?> contentElement ) {
 				final Object element = contentElement.getValue();
@@ -1684,6 +1683,10 @@ public class HbmXmlTransformer {
 					);
 				}
 			}
+		}
+
+		if ( implicitResultSetMapping != null ) {
+			query.setResultSetMapping( implicitResultSetMappingName );
 		}
 
 		return query;

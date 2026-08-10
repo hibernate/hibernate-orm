@@ -11,6 +11,7 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.action.queue.spi.CollectionEndpoint;
 import org.hibernate.action.queue.spi.CollectionMutationInput;
 import org.hibernate.action.queue.spi.CollectionTransition;
+import org.hibernate.action.queue.internal.FrozenCollectionDelta;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CollectionFlushActionTracker;
 import org.hibernate.engine.spi.Status;
@@ -59,6 +60,7 @@ public final class FlushProcessingContext implements CollectionFlushActionTracke
 	private final boolean speculative;
 	private final OwnerUpdateCompletionCoordinator ownerUpdateCompletionCoordinator;
 	private final IdentityHashMap<PersistentCollection<?>, CollectionState> collectionStates = new IdentityHashMap<>();
+	private final IdentityHashMap<PersistentCollection<?>, FrozenCollectionDelta> frozenDeltas = new IdentityHashMap<>();
 
 	/// Creates a context for a single flush of the given session.
 	///
@@ -76,6 +78,19 @@ public final class FlushProcessingContext implements CollectionFlushActionTracke
 
 	public boolean isSpeculative() {
 		return speculative;
+	}
+
+	/// Retains the one frozen delta for a collection's current structural state.
+	public void retainFrozenDelta(
+			PersistentCollection<?> collection,
+			FrozenCollectionDelta frozenDelta) {
+		frozenDeltas.put( collection, frozenDelta );
+	}
+
+	/// Returns the retained delta only while its comparison state remains valid.
+	public FrozenCollectionDelta getValidFrozenDelta(PersistentCollection<?> collection) {
+		final var frozenDelta = frozenDeltas.get( collection );
+		return frozenDelta != null && frozenDelta.isValid( collection ) ? frozenDelta : null;
 	}
 
 	/// Registers an entity update as the authority for owner update-callback applicability.

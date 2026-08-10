@@ -7,6 +7,7 @@ package org.hibernate.collection.internal;
 import java.util.Collection;
 
 import org.hibernate.collection.spi.AbstractBagSemantics;
+import org.hibernate.collection.spi.CollectionDeltaProducer;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.collection.spi.PersistentIdentifierBag;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -25,6 +26,11 @@ public class StandardIdentifierBagSemantics<E> extends AbstractBagSemantics<E> {
 	public static final StandardIdentifierBagSemantics<?> INSTANCE = new StandardIdentifierBagSemantics<>();
 
 	private StandardIdentifierBagSemantics() {
+	}
+
+	@Override
+	public CollectionDeltaProducer getCollectionDeltaProducer() {
+		return StandardCollectionDeltaProducer.IDENTIFIER_BAG;
 	}
 
 	@Override

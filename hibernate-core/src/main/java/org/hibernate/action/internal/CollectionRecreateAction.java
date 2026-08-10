@@ -8,6 +8,7 @@ import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.action.queue.internal.FrozenCollectionDelta;
 import org.hibernate.engine.internal.FlushProcessingContext;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.PostCollectionRecreateEvent;
@@ -54,8 +55,9 @@ public final class CollectionRecreateAction extends CollectionAction {
 			final @Nullable Object id,
 			final @Nonnull EventSource session,
 			final @Nullable Object affectedOwner,
-			final @Nullable Object affectedOwnerId) {
-		super( persister, collection, id, session, true );
+			final @Nullable Object affectedOwnerId,
+			final FrozenCollectionDelta frozenDelta) {
+		super( persister, collection, id, session, true, frozenDelta );
 		this.affectedOwner = affectedOwner;
 		this.affectedOwnerId = affectedOwnerId;
 	}

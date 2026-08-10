@@ -422,6 +422,20 @@ public interface PersistentCollection<E> extends LazyInitializable, InstanceIden
 	boolean afterInitialize();
 
 	/**
+	 * Complete initialization after the loaded-state snapshot has been captured.
+	 * <p>
+	 * Implementations which retain queued operations until initialization should
+	 * apply and clear them here.  This ordering ensures that the loaded-state
+	 * snapshot remains the comparison baseline while the initialized collection
+	 * reflects every queued operation.
+	 *
+	 * @since 8.0
+	 */
+	@Incubating
+	default void afterInitializationSnapshot() {
+	}
+
+	/**
 	 * Disassemble the collection to get it ready for the cache
 	 *
 	 * @param persister The collection persister
@@ -436,6 +450,18 @@ public interface PersistentCollection<E> extends LazyInitializable, InstanceIden
 	 * @return {@code true} indicates there are pending, queued, delayed operations
 	 */
 	boolean hasQueuedOperations();
+
+	/**
+	 * Obtain an immutable, ordered view of queued collection commands.
+	 * <p>
+	 * Reading this view does not drain or apply the live operation queue.
+	 *
+	 * @since 8.0
+	 */
+	@Incubating
+	default List<QueuedCollectionOperation> getQueuedOperations() {
+		return List.of();
+	}
 
 	/**
 	 * Iterator over the "queued" additions
@@ -520,6 +546,20 @@ public interface PersistentCollection<E> extends LazyInitializable, InstanceIden
 	 * Mark the collection as dirty
 	 */
 	void dirty();
+
+	/**
+	 * A monotonically increasing generation for changes which can invalidate a
+	 * frozen collection comparison.
+	 * <p>
+	 * Implementations which do not expose a generation retain compatibility via
+	 * this default, but cannot provide post-freeze invalidation detection.
+	 *
+	 * @since 8.0
+	 */
+	@Incubating
+	default long getMutationGeneration() {
+		return 0;
+	}
 
 	/**
 	 * Called before inserting rows, to ensure that any surrogate keys

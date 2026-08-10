@@ -46,7 +46,8 @@ public final class CollectionMutationActionLowering {
 						endpoint.key(),
 						session,
 						mutation.affectedOwner(),
-						mutation.affectedOwnerId()
+						mutation.affectedOwnerId(),
+						mutation.frozenDelta()
 				);
 				case REMOVE -> new CollectionRemoveAction(
 						mutation.collection(),
@@ -55,7 +56,8 @@ public final class CollectionMutationActionLowering {
 						mutation.emptySnapshot(),
 						session,
 						mutation.affectedOwner(),
-						mutation.affectedOwnerId()
+						mutation.affectedOwnerId(),
+						mutation.frozenDelta()
 				);
 				case UPDATE -> new CollectionUpdateAction(
 						requireCollection( mutation ),
@@ -64,13 +66,15 @@ public final class CollectionMutationActionLowering {
 						mutation.emptySnapshot(),
 						session,
 						mutation.affectedOwner(),
-						mutation.affectedOwnerId()
+						mutation.affectedOwnerId(),
+						mutation.frozenDelta()
 				);
 				case QUEUED_OPERATIONS -> new QueuedOperationCollectionAction(
 						requireCollection( mutation ),
 						endpoint.persister(),
 						endpoint.key(),
-						session
+						session,
+						mutation.frozenDelta()
 				);
 			};
 			actionConsumer.accept( action );

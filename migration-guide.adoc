@@ -89,6 +89,21 @@ the incubating `ActionQueue` SPI.  Queue implementations may lower the semantic
 input to these legacy action forms internally, but they are no longer the common
 registration vocabulary.
 
+Collection delta production is now associated with `CollectionSemantics` through
+the new default `getCollectionDeltaProducer()` method.  Custom semantics remain
+source compatible and use the conservative compatibility producer unless they
+override this association.  `PersistentCollection` likewise has new default
+methods for exposing queued commands, a mutation generation, and the
+post-snapshot initialization step.
+
+Custom collection wrappers which apply queued commands during
+`afterInitialize()` should instead retain them until
+`afterInitializationSnapshot()`.  Hibernate captures the database-loaded state
+between these calls and then applies and clears queued commands, ensuring that an
+initialized collection has no queued commands while its snapshot still represents
+the persisted comparison baseline.  Wrappers derived from
+`AbstractPersistentCollection` inherit this sequencing automatically.
+
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Changes in Behavior
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

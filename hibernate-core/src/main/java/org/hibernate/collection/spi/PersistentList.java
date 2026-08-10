@@ -650,6 +650,17 @@ public class PersistentList<E> extends AbstractPersistentCollection<E> implement
 
 	final class Clear implements DelayedOperation<E> {
 		@Override
+		public QueuedCollectionOperation toQueuedOperation(int order) {
+			return new QueuedCollectionOperation(
+					QueuedCollectionOperation.Kind.CLEAR,
+					null,
+					null,
+					null,
+					order
+			);
+		}
+
+		@Override
 		public void operate() {
 			list.clear();
 		}
@@ -669,6 +680,17 @@ public class PersistentList<E> extends AbstractPersistentCollection<E> implement
 
 		public SimpleAdd(E addedValue) {
 			super( addedValue, null );
+		}
+
+		@Override
+		public QueuedCollectionOperation toQueuedOperation(int order) {
+			return new QueuedCollectionOperation(
+					QueuedCollectionOperation.Kind.ADD,
+					getAddedInstance(),
+					null,
+					null,
+					order
+			);
 		}
 
 		@Override
@@ -697,6 +719,17 @@ public class PersistentList<E> extends AbstractPersistentCollection<E> implement
 		}
 
 		@Override
+		public QueuedCollectionOperation toQueuedOperation(int order) {
+			return new QueuedCollectionOperation(
+					QueuedCollectionOperation.Kind.ADD,
+					getAddedInstance(),
+					null,
+					getIndex(),
+					order
+			);
+		}
+
+		@Override
 		public void operate() {
 			list.add( getIndex(), getAddedInstance() );
 		}
@@ -706,6 +739,17 @@ public class PersistentList<E> extends AbstractPersistentCollection<E> implement
 
 		public Set(int index, E addedValue, E orphan) {
 			super( index, addedValue, orphan );
+		}
+
+		@Override
+		public QueuedCollectionOperation toQueuedOperation(int order) {
+			return new QueuedCollectionOperation(
+					QueuedCollectionOperation.Kind.SET,
+					getAddedInstance(),
+					getOrphan(),
+					getIndex(),
+					order
+			);
 		}
 
 		@Override
@@ -721,6 +765,17 @@ public class PersistentList<E> extends AbstractPersistentCollection<E> implement
 		}
 
 		@Override
+		public QueuedCollectionOperation toQueuedOperation(int order) {
+			return new QueuedCollectionOperation(
+					QueuedCollectionOperation.Kind.REMOVE,
+					null,
+					getOrphan(),
+					getIndex(),
+					order
+			);
+		}
+
+		@Override
 		public void operate() {
 			list.remove( getIndex() );
 		}
@@ -730,6 +785,17 @@ public class PersistentList<E> extends AbstractPersistentCollection<E> implement
 
 		public SimpleRemove(E orphan) {
 			super( null, orphan );
+		}
+
+		@Override
+		public QueuedCollectionOperation toQueuedOperation(int order) {
+			return new QueuedCollectionOperation(
+					QueuedCollectionOperation.Kind.REMOVE,
+					null,
+					getOrphan(),
+					null,
+					order
+			);
 		}
 
 		@Override

@@ -84,7 +84,7 @@ public final class AuditHelper {
 			Collection collection,
 			MetadataBuildingContext context,
 			String propertyName) {
-		bindAuditTable( AuditTableConfig.fromAnnotationOverrides( collection.getOwner(), propertyName ), (Stateful) collection, context
+		bindAuditTable( AuditTableConfig.fromAnnotationOverrides( collection.getOwner(), propertyName, context ), (Stateful) collection, context
 		);
 	}
 	// called when audited collection and when audited entity
@@ -127,7 +127,7 @@ public final class AuditHelper {
 			// Resolve exclusions at second-pass time so collection-managed FK columns
 			// (added during collection binding) are detected
 			final var excludedColumns = auditable instanceof RootClass rootClass
-					? resolveExcludedColumns( rootClass )
+					? resolveExcludedColumns( rootClass, context )
 					: Set.<String>of();
 			copyTableColumns( table, auditLogTable, excludedColumns );
 			final var changesetIdColumn =
@@ -303,7 +303,7 @@ public final class AuditHelper {
 
 		// Table name: @Audited.CollectionTable name (if applicable, taken from @AuditOverride), or {OwnerJpaEntityName}_{ChildJpaEntityName}_AUD
 		final var referencedEntity = collector.getEntityBinding( referencedEntityName );
-		var auditOverride = findEffectiveAuditOverrideInHierarchy( collection.getOwner(), propertyName );
+		var auditOverride = findEffectiveAuditOverrideInHierarchy( collection.getOwner(), propertyName, context );
 
 		final String auditTableName =
 				auditTableName( collection, collectionAuditTable, referencedEntity, auditOverride );
@@ -377,11 +377,11 @@ public final class AuditHelper {
 		} );
 	}
 
-	private static Audited.Override findEffectiveAuditOverrideInHierarchy(PersistentClass rootClass, String propertyName) {
+	private static Audited.Override findEffectiveAuditOverrideInHierarchy(PersistentClass rootClass, String propertyName, MetadataBuildingContext context) {
 		var fullHierarchy = new ArrayList<PersistentClass>( rootClass.getSubclasses() );
 		fullHierarchy.add( rootClass );
 		for ( var persistentClass : fullHierarchy ) {
-			var auditOverride = findFirstAuditOverrideForProperty( persistentClass, propertyName );
+			var auditOverride = findFirstAuditOverrideForProperty( persistentClass, propertyName, context );
 			if ( auditOverride != null) {
 				return auditOverride;
 			}
@@ -803,7 +803,7 @@ public final class AuditHelper {
 		return excluded;
 	}
 
-	private static Set<String> resolveExcludedColumns(RootClass rootClass) {
+	private static Set<String> resolveExcludedColumns(RootClass rootClass, MetadataBuildingContext context) {
 		final Set<String> excluded = new HashSet<>();
 		final Set<String> mappedColumns = new HashSet<>();
 		// Identifier columns
@@ -817,14 +817,14 @@ public final class AuditHelper {
 			}
 		}
 		// All properties in the hierarchy (root + subclasses for SINGLE_TABLE)
-		collectPropertyColumns( rootClass, mappedColumns, excluded );
+		collectPropertyColumns( rootClass, mappedColumns, excluded, context );
 		for ( var subclass : rootClass.getSubclasses() ) {
-			collectPropertyColumns( subclass, mappedColumns, excluded );
+			collectPropertyColumns( subclass, mappedColumns, excluded, context );
 		}
 
 		//find and apply revocations
 		for ( var subclass : rootClass.getSubclasses() ) {
-			var revocations = findRevocations( subclass );
+			var revocations = findRevocations( subclass, context );
 			for ( var revocation : revocations ) {
 				var revokedPropertyName = revocation.name();
 				var property = rootClass.getProperty( revokedPropertyName );
@@ -844,30 +844,30 @@ public final class AuditHelper {
 		return excluded;
 	}
 
-	private static Set<Audited.Override> findRevocations(PersistentClass persistentClass) {
-		var revocations = getRevocations( persistentClass.getMappedClass() );
+	private static Set<Audited.Override> findRevocations(PersistentClass persistentClass, MetadataBuildingContext context) {
+		var revocations = getRevocations( persistentClass.getMappedClass(), context);
 
 		var mappedSuperClass = persistentClass.getSuperMappedSuperclass();
 		while ( mappedSuperClass != null ) {
-			revocations.addAll( getRevocations( mappedSuperClass.getMappedClass() ) );
+			revocations.addAll( getRevocations( mappedSuperClass.getMappedClass(), context ) );
 			mappedSuperClass = mappedSuperClass.getSuperMappedSuperclass();
 		}
 
 		return revocations;
 	}
 
-	private static Set<Audited.Override> getRevocations(Class<?> mappedClass) {
-		return getAuditOverrides( mappedClass ).stream()
+	private static Set<Audited.Override> getRevocations(Class<?> mappedClass, MetadataBuildingContext context) {
+		return getAuditOverrides( mappedClass, context ).stream()
 				.filter( Audited.Override::isAudited ).collect( Collectors.toSet() );
 	}
 
-	static Audited.Override findFirstAuditOverrideForProperty(PersistentClass rootClass, String name) {
-		var auditOverride = getAuditOverrideForProperty( rootClass.getMappedClass(), name );
+	static Audited.Override findFirstAuditOverrideForProperty(PersistentClass rootClass, String name, MetadataBuildingContext context) {
+		var auditOverride = getAuditOverrideForProperty( rootClass.getMappedClass(), name, context );
 		// if not, traverse up the hierarchy and find the first override.
 		if ( auditOverride == null ) {	//find first override in @MappedSuperClasses
 			var mappedSuperClass = rootClass.getSuperMappedSuperclass();
 			while ( mappedSuperClass != null && auditOverride == null) {
-				auditOverride = getAuditOverrideForProperty( mappedSuperClass.getMappedClass(), name );
+				auditOverride = getAuditOverrideForProperty( mappedSuperClass.getMappedClass(), name, context );
 				mappedSuperClass = mappedSuperClass.getSuperMappedSuperclass();
 			}
 		}
@@ -877,20 +877,24 @@ public final class AuditHelper {
 		return auditOverride.name().equals( name ) ? auditOverride : null;
 	}
 
-	private static java.util.Collection<Audited.Override> getAuditOverrides(Class<?> mappedClass) {
-		var override = mappedClass.getAnnotation( Audited.Override.class );
+	private static java.util.Collection<Audited.Override> getAuditOverrides(Class<?> mappedClass, MetadataBuildingContext context) {
+		var classDetailsRegistry = context.getBootstrapContext().getModelsContext().getClassDetailsRegistry();
+
+		var override = classDetailsRegistry.getClassDetails( mappedClass.getName() )
+				.getDirectAnnotationUsage( Audited.Override.class );
 		if ( override != null ) {
 			return Set.of( override );
 		}
-		var overrides = mappedClass.getAnnotation( Audited.Overrides.class );
+		var overrides = classDetailsRegistry.getClassDetails( mappedClass.getName() )
+				.getDirectAnnotationUsage( Audited.Overrides.class );
 		if ( overrides != null ) {
 			return new HashSet<>( Arrays.asList( overrides.value() ) );
 		}
 		return Set.of();
 	}
 
-	private static Audited.Override getAuditOverrideForProperty(Class<?> mappedClass, String name) {
-		var overrides = getAuditOverrides( mappedClass );
+	private static Audited.Override getAuditOverrideForProperty(Class<?> mappedClass, String name, MetadataBuildingContext context) {
+		var overrides = getAuditOverrides( mappedClass, context );
 		if ( overrides.isEmpty() ) {
 			return null;
 		}
@@ -901,10 +905,10 @@ public final class AuditHelper {
 	private static void collectPropertyColumns(
 			PersistentClass persistentClass,
 			Set<String> mappedColumns,
-			Set<String> excluded) {
+			Set<String> excluded, MetadataBuildingContext context) {
 
 		for ( var property : persistentClass.getProperties() ) {
-			if ( isReallyExcluded( property , persistentClass) || property instanceof Backref ) {
+			if ( isReallyExcluded( property , persistentClass, context ) || property instanceof Backref ) {
 				for ( var column : property.getColumns() ) {
 					excluded.add( column.getCanonicalName() );
 				}
@@ -923,8 +927,8 @@ public final class AuditHelper {
 	 * these kind of revocations.
 	 */
 
-	private static boolean isReallyExcluded(Property property, PersistentClass persistentClass) {
-		var firstAuditOverride = findFirstAuditOverrideForProperty( persistentClass, property.getName() );
+	private static boolean isReallyExcluded(Property property, PersistentClass persistentClass, MetadataBuildingContext context) {
+		var firstAuditOverride = findFirstAuditOverrideForProperty( persistentClass, property.getName(), context );
 		if ( firstAuditOverride == null ) { //no overrides
 			return property.isAuditedExcluded();
 		}

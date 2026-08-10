@@ -5,6 +5,7 @@
 package org.hibernate.boot.model.internal;
 
 import org.hibernate.annotations.Audited;
+import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.PersistentClass;
 
 import static org.hibernate.boot.model.internal.AuditHelper.findFirstAuditOverrideForProperty;
@@ -31,8 +32,8 @@ public record AuditTableConfig(String name, String schema, String catalog, Strin
 				table.modificationTypeColumn(), table.invalidatingChangesetIdColumn() );
 	}
 
-	static AuditTableConfig fromAnnotationOverrides(PersistentClass owner, String propertyName) {
-		var firstOverride = findFirstAuditOverrideForProperty( owner, propertyName );
+	static AuditTableConfig fromAnnotationOverrides(PersistentClass owner, String propertyName, MetadataBuildingContext context) {
+		var firstOverride = findFirstAuditOverrideForProperty( owner, propertyName, context );
 		if ( firstOverride == null ) {
 			return DEFAULT;
 		}

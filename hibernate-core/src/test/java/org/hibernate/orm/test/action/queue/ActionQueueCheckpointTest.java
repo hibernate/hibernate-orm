@@ -6,25 +6,25 @@ package org.hibernate.orm.test.action.queue;
 
 import java.util.Map;
 
-import org.hibernate.action.internal.CollectionRecreateAction;
-import org.hibernate.action.internal.CollectionRemoveAction;
-import org.hibernate.action.internal.CollectionUpdateAction;
 import org.hibernate.action.internal.EntityDeleteAction;
 import org.hibernate.action.internal.EntityInsertAction;
 import org.hibernate.action.internal.EntityUpdateAction;
 import org.hibernate.action.internal.OrphanRemovalAction;
-import org.hibernate.action.internal.QueuedOperationCollectionAction;
 import org.hibernate.action.queue.spi.ActionQueue;
 import org.hibernate.action.queue.spi.ActionQueueCheckpoint;
+import org.hibernate.action.queue.spi.CollectionEndpoint;
+import org.hibernate.action.queue.spi.CollectionMutationInput;
+import org.hibernate.action.queue.spi.CollectionTransition;
 import org.hibernate.action.queue.internal.GraphBasedActionQueue;
 import org.hibernate.action.queue.internal.constraint.ConstraintModel;
 import org.hibernate.action.queue.spi.PlanningOptions;
+import org.hibernate.engine.internal.FlushProcessingContext;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.PersistenceContext;
-import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.boot.spi.SessionFactoryOptions;
+import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.ActionQueueLegacy;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -50,14 +50,14 @@ public class ActionQueueCheckpointTest {
 	void checkpointContract(SessionFactoryScope scope) {
 		scope.inSession( session -> {
 			final EventSource eventSource = session.unwrap( EventSource.class );
-			verifyContract( eventSource.getActionQueue() );
-			verifyContract( new ActionQueueLegacy( eventSource ) );
+			verifyContract( eventSource.getActionQueue(), eventSource );
+			verifyContract( new ActionQueueLegacy( eventSource ), eventSource );
 		} );
 	}
 
 	@Test
 	void postCheckpointOrphanCollectionRemovalIsDurable() {
-		final var session = mock( SessionImplementor.class );
+		final var session = mock( EventSource.class );
 		final var sessionFactory = mock( SessionFactoryImplementor.class );
 		final var sessionFactoryOptions = mock( SessionFactoryOptions.class );
 		final var persistenceContext = mock( PersistenceContext.class );
@@ -68,6 +68,8 @@ public class ActionQueueCheckpointTest {
 		when( sessionFactory.getSessionFactoryOptions() ).thenReturn( sessionFactoryOptions );
 		when( persistenceContext.getEntry( owner ) ).thenReturn( ownerEntry );
 		when( ownerEntry.getStatus() ).thenReturn( Status.DELETED );
+		when( persistenceContext.getCollectionFlushActionTracker() )
+				.thenReturn( new FlushProcessingContext( session, true ) );
 
 		verifyOrphanCollectionRemoval(
 				new ActionQueueLegacy( session ),
@@ -91,9 +93,12 @@ public class ActionQueueCheckpointTest {
 		when( orphanRemoval.getInstance() ).thenReturn( owner );
 		actionQueue.addAction( orphanRemoval );
 
-		final var collectionRemoval = mock( CollectionRemoveAction.class );
-		when( collectionRemoval.getAffectedOwner() ).thenReturn( owner );
-		actionQueue.addAction( collectionRemoval );
+		actionQueue.addCollectionMutation( CollectionMutationInput.wrapperlessRemoval(
+				mock( CollectionPersister.class ),
+				1L,
+				owner,
+				1L
+		) );
 
 		actionQueue.restore( checkpoint );
 
@@ -101,27 +106,50 @@ public class ActionQueueCheckpointTest {
 		assertEquals( 1, actionQueue.numberOfCollectionRemovals() );
 	}
 
-	private static void verifyContract(ActionQueue actionQueue) {
-		verifyPreCheckpointWorkSurvives( actionQueue );
-		verifyRegenerableWorkIsDiscarded( actionQueue );
+	private static void verifyContract(ActionQueue actionQueue, EventSource eventSource) {
+		verifyPreCheckpointWorkSurvives( actionQueue, eventSource );
+		verifyRegenerableWorkIsDiscarded( actionQueue, eventSource );
 		verifyDurableWorkSurvives( actionQueue );
+		verifySemanticCollectionInputs( actionQueue, eventSource );
 		verifyCheckpointOwnership( actionQueue );
 	}
 
-	private static void verifyPreCheckpointWorkSurvives(ActionQueue actionQueue) {
+	private static void verifySemanticCollectionInputs(ActionQueue actionQueue, EventSource eventSource) {
 		actionQueue.clear();
-		actionQueue.addAction( mock( EntityUpdateAction.class ) );
-		actionQueue.addAction( mock( CollectionRemoveAction.class ) );
-		actionQueue.addAction( mock( CollectionUpdateAction.class ) );
-		actionQueue.addAction( recreateAction() );
+		withFlushProcessingContext( eventSource, () -> {
+			actionQueue.addCollectionMutation( mutationInput( CollectionTransition.UPDATE ) );
+			final var checkpoint = actionQueue.checkpoint();
+			actionQueue.addCollectionMutation( mutationInput( CollectionTransition.REMOVE_AND_CREATE ) );
 
-		final var checkpoint = actionQueue.checkpoint();
+			assertEquals( 1, actionQueue.numberOfCollectionUpdates() );
+			assertEquals( 1, actionQueue.numberOfCollectionRemovals() );
+			assertEquals( 1, actionQueue.numberOfCollectionCreations() );
+			assertTrue( actionQueue.areTablesToBeUpdated( java.util.Set.of( "collection_table" ) ) );
 
-		actionQueue.addAction( mock( EntityUpdateAction.class ) );
-		actionQueue.addAction( mock( CollectionRemoveAction.class ) );
-		actionQueue.addAction( mock( CollectionUpdateAction.class ) );
-		actionQueue.addAction( recreateAction() );
-		actionQueue.restore( checkpoint );
+			actionQueue.restore( checkpoint );
+
+			assertEquals( 1, actionQueue.numberOfCollectionUpdates() );
+			assertEquals( 0, actionQueue.numberOfCollectionRemovals() );
+			assertEquals( 0, actionQueue.numberOfCollectionCreations() );
+		} );
+	}
+
+	private static void verifyPreCheckpointWorkSurvives(ActionQueue actionQueue, EventSource eventSource) {
+		actionQueue.clear();
+		withFlushProcessingContext( eventSource, () -> {
+			actionQueue.addAction( mock( EntityUpdateAction.class ) );
+			actionQueue.addCollectionMutation( mutationInput( CollectionTransition.REMOVE ) );
+			actionQueue.addCollectionMutation( mutationInput( CollectionTransition.UPDATE ) );
+			actionQueue.addCollectionMutation( mutationInput( CollectionTransition.CREATE ) );
+
+			final var checkpoint = actionQueue.checkpoint();
+
+			actionQueue.addAction( mock( EntityUpdateAction.class ) );
+			actionQueue.addCollectionMutation( mutationInput( CollectionTransition.REMOVE ) );
+			actionQueue.addCollectionMutation( mutationInput( CollectionTransition.UPDATE ) );
+			actionQueue.addCollectionMutation( mutationInput( CollectionTransition.CREATE ) );
+			actionQueue.restore( checkpoint );
+		} );
 
 		assertEquals( 1, actionQueue.numberOfUpdates() );
 		assertEquals( 1, actionQueue.numberOfCollectionRemovals() );
@@ -129,14 +157,16 @@ public class ActionQueueCheckpointTest {
 		assertEquals( 1, actionQueue.numberOfCollectionCreations() );
 	}
 
-	private static void verifyRegenerableWorkIsDiscarded(ActionQueue actionQueue) {
+	private static void verifyRegenerableWorkIsDiscarded(ActionQueue actionQueue, EventSource eventSource) {
 		actionQueue.clear();
 		final var checkpoint = actionQueue.checkpoint();
-		actionQueue.addAction( mock( EntityUpdateAction.class ) );
-		actionQueue.addAction( mock( CollectionRemoveAction.class ) );
-		actionQueue.addAction( mock( CollectionUpdateAction.class ) );
-		actionQueue.addAction( recreateAction() );
-		actionQueue.addAction( mock( QueuedOperationCollectionAction.class ) );
+		withFlushProcessingContext( eventSource, () -> {
+			actionQueue.addAction( mock( EntityUpdateAction.class ) );
+			actionQueue.addCollectionMutation( mutationInput( CollectionTransition.REMOVE ) );
+			actionQueue.addCollectionMutation( mutationInput( CollectionTransition.UPDATE ) );
+			actionQueue.addCollectionMutation( mutationInput( CollectionTransition.CREATE ) );
+			actionQueue.addCollectionMutation( mutationInput( CollectionTransition.NONE, true ) );
+		} );
 
 		actionQueue.restore( checkpoint );
 
@@ -153,11 +183,13 @@ public class ActionQueueCheckpointTest {
 		actionQueue.addAction( insertAction() );
 		actionQueue.addAction( mock( EntityDeleteAction.class ) );
 		actionQueue.addAction( mock( OrphanRemovalAction.class ) );
+		actionQueue.addCollectionMutation( mutationInput( CollectionTransition.UPDATE ) );
 
 		actionQueue.restore( checkpoint );
 
 		assertEquals( 1, actionQueue.numberOfInsertions() );
 		assertEquals( 2, actionQueue.numberOfDeletions() );
+		assertEquals( 1, actionQueue.numberOfCollectionUpdates() );
 		assertTrue( actionQueue.hasAnyQueuedActions() );
 	}
 
@@ -177,11 +209,35 @@ public class ActionQueueCheckpointTest {
 		return action;
 	}
 
-	private static CollectionRecreateAction recreateAction() {
+	private static CollectionMutationInput mutationInput(CollectionTransition transition) {
+		return mutationInput( transition, false );
+	}
+
+	private static CollectionMutationInput mutationInput(
+			CollectionTransition transition,
+			boolean hasQueuedOperations) {
 		final var persister = mock( CollectionPersister.class );
-		when( persister.getRole() ).thenReturn( "checkpoint-role" );
-		final var action = mock( CollectionRecreateAction.class );
-		when( action.getPersister() ).thenReturn( persister );
-		return action;
+		when( persister.getCollectionSpaces() ).thenReturn( new String[] { "collection_table" } );
+		final var endpoint = new CollectionEndpoint( persister, 1L );
+		return new CollectionMutationInput(
+				mock( PersistentCollection.class ),
+				transition,
+				endpoint,
+				endpoint,
+				false,
+				hasQueuedOperations
+		);
+	}
+
+	private static void withFlushProcessingContext(EventSource eventSource, Runnable work) {
+		final var persistenceContext = eventSource.getPersistenceContextInternal();
+		final var previous = persistenceContext.getCollectionFlushActionTracker();
+		persistenceContext.setCollectionFlushActionTracker( new FlushProcessingContext( eventSource, true ) );
+		try {
+			work.run();
+		}
+		finally {
+			persistenceContext.setCollectionFlushActionTracker( previous );
+		}
 	}
 }

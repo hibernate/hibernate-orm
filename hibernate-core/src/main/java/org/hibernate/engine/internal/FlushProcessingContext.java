@@ -8,16 +8,18 @@ import java.util.EnumSet;
 import java.util.IdentityHashMap;
 
 import org.hibernate.AssertionFailure;
-import org.hibernate.action.internal.CollectionRecreateAction;
-import org.hibernate.action.internal.CollectionRemoveAction;
-import org.hibernate.action.internal.CollectionUpdateAction;
+import org.hibernate.action.queue.spi.CollectionEndpoint;
+import org.hibernate.action.queue.spi.CollectionMutationInput;
+import org.hibernate.action.queue.spi.CollectionTransition;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CollectionFlushActionTracker;
+import org.hibernate.engine.spi.Status;
 import org.hibernate.event.spi.EventSource;
+import org.hibernate.event.internal.FlushVisitor;
 import org.hibernate.persister.collection.CollectionPersister;
 
+import static org.hibernate.engine.internal.Collections.processUnreachableCollection;
 import static org.hibernate.engine.internal.Collections.skipRemoval;
-import static org.hibernate.event.internal.EventListenerLogging.EVENT_LISTENER_LOGGER;
 
 /// Flush-local state for collection reachability and logical collection actions.
 ///
@@ -26,10 +28,10 @@ import static org.hibernate.event.internal.EventListenerLogging.EVENT_LISTENER_L
 /// while walking the object graph and preparing collection work, including reachability,
 /// duplicate-processing detection, and the logical collection actions queued for each collection.
 ///
-/// The context queues collection actions as soon as collection dirty-checking determines that work
-/// is needed. This keeps the action decision close to the collection-processing code while still
-/// exposing a read-only {@link CollectionFlushActionTracker} view to later phases such as action
-/// execution, result processing, and post-flush cleanup.
+/// The context records queue-neutral collection mutation inputs as collection dirty-checking
+/// determines that work is needed. Lifecycle preparation and queue-native lowering remain deferred
+/// until after a positive flush-needed decision. The context also exposes a read-only
+/// {@link CollectionFlushActionTracker} view to later flush phases.
 ///
 /// Collection state is keyed by collection instance identity.
 ///
@@ -37,7 +39,7 @@ import static org.hibernate.event.internal.EventListenerLogging.EVENT_LISTENER_L
 /// @author Steve Ebersole
 public final class FlushProcessingContext implements CollectionFlushActionTracker {
 	private enum CollectionActionKind {
-		RECREATE,
+		CREATE,
 		REMOVE,
 		UPDATE
 	}
@@ -46,9 +48,15 @@ public final class FlushProcessingContext implements CollectionFlushActionTracke
 		private boolean reached;
 		private boolean processed;
 		private EnumSet<CollectionActionKind> actions;
+		private CollectionEndpoint loadedEndpoint;
+		private CollectionEndpoint currentEndpoint;
+		private boolean emptySnapshot;
+		private boolean removalSkipped;
+		private boolean queuedOperations;
 	}
 
 	private final EventSource session;
+	private final boolean speculative;
 	private final OwnerUpdateCompletionCoordinator ownerUpdateCompletionCoordinator;
 	private final IdentityHashMap<PersistentCollection<?>, CollectionState> collectionStates = new IdentityHashMap<>();
 
@@ -56,8 +64,18 @@ public final class FlushProcessingContext implements CollectionFlushActionTracke
 	///
 	/// @param session The event source currently being flushed
 	public FlushProcessingContext(EventSource session) {
+		this( session, false );
+	}
+
+	/// Creates a context, optionally retaining work for an auto-flush-needed decision.
+	public FlushProcessingContext(EventSource session, boolean speculative) {
 		this.session = session;
+		this.speculative = speculative;
 		ownerUpdateCompletionCoordinator = new OwnerUpdateCompletionCoordinator( session );
+	}
+
+	public boolean isSpeculative() {
+		return speculative;
 	}
 
 	/// Registers an entity update as the authority for owner update-callback applicability.
@@ -140,31 +158,21 @@ public final class FlushProcessingContext implements CollectionFlushActionTracke
 		state.processed = true;
 	}
 
-	/// Records and queues a logical collection recreate action.
-	///
-	/// The associated interceptor callback is invoked before the action is added to the session
-	/// action queue.
+	/// Records a logical collection create mutation for later queue-neutral registration.
 	///
 	/// @param collection The collection instance
 	/// @param persister The collection persister
 	/// @param key The collection key
 	public void queueCollectionRecreate(PersistentCollection<?> collection, CollectionPersister persister, Object key) {
-		markAction( collection, CollectionActionKind.RECREATE );
-		EVENT_LISTENER_LOGGER.debugf( "Creating CollectionRecreateAction for role=%s, key=%s", persister.getRole(), key );
-		session.runInterceptorCallback(	() -> session.getInterceptor().onCollectionRecreate( collection, key ) );
-		session.getActionQueue().addAction(	new CollectionRecreateAction(
-				collection,
-				persister,
-				key,
-				session
-		) );
+		final var state = state( collection );
+		markAction( state, CollectionActionKind.CREATE );
+		state.currentEndpoint = new CollectionEndpoint( persister, key );
 	}
 
-	/// Records and queues a logical collection remove action.
+	/// Records a logical collection remove mutation for later queue-neutral registration.
 	///
-	/// The action is recorded even when {@link Collections#skipRemoval(EventSource, CollectionPersister, Object)}
-	/// suppresses the physical remove action, since later flush phases still need to know that remove
-	/// semantics were selected for the collection.
+	/// The mutation is recorded even when database cascade will later suppress physical removal,
+	/// since semantic remove lifecycle still applies.
 	///
 	/// @param collection The collection instance
 	/// @param persister The collection persister
@@ -175,22 +183,14 @@ public final class FlushProcessingContext implements CollectionFlushActionTracke
 			CollectionPersister persister,
 			Object key,
 			boolean emptySnapshot) {
-		markAction( collection, CollectionActionKind.REMOVE );
-		session.runInterceptorCallback(	() -> session.getInterceptor().onCollectionRemove( collection, key ) );
-		final boolean removalSkipped = skipRemoval( session, persister, key );
-		session.getActionQueue().addAction(	new CollectionRemoveAction(
-				collection,
-				persister,
-				key,
-				emptySnapshot || removalSkipped,
-				session
-		) );
+		final var state = state( collection );
+		markAction( state, CollectionActionKind.REMOVE );
+		state.loadedEndpoint = new CollectionEndpoint( persister, key );
+		state.emptySnapshot = emptySnapshot;
+		state.removalSkipped = skipRemoval( session, persister, key );
 	}
 
-	/// Records and queues a logical collection update action.
-	///
-	/// The associated interceptor callback is invoked before the action is added to the session
-	/// action queue.
+	/// Records a logical collection update mutation for later queue-neutral registration.
 	///
 	/// @param collection The collection instance
 	/// @param persister The collection persister
@@ -201,19 +201,114 @@ public final class FlushProcessingContext implements CollectionFlushActionTracke
 			CollectionPersister persister,
 			Object key,
 			boolean emptySnapshot) {
-		markAction( collection, CollectionActionKind.UPDATE );
-		session.runInterceptorCallback( () -> session.getInterceptor().onCollectionUpdate( collection, key ) );
-		session.getActionQueue().addAction( new CollectionUpdateAction(
-				collection,
-				persister,
-				key,
-				emptySnapshot,
-				session
-		) );
+		final var state = state( collection );
+		markAction( state, CollectionActionKind.UPDATE );
+		state.loadedEndpoint = new CollectionEndpoint( persister, key );
+		state.currentEndpoint = state.loadedEndpoint;
+		state.emptySnapshot = emptySnapshot;
 	}
 
-	private void markAction(PersistentCollection<?> collection, CollectionActionKind actionKind) {
+	/// Records delayed operations for normalization with the collection's transition.
+	public void queueCollectionQueuedOperations(
+			PersistentCollection<?> collection,
+			CollectionPersister persister,
+			Object key) {
 		final var state = state( collection );
+		state.queuedOperations = true;
+		if ( state.loadedEndpoint == null ) {
+			state.loadedEndpoint = new CollectionEndpoint( persister, key );
+		}
+	}
+
+	/// Registers normalized collection mutation inputs with the selected action queue.
+	public void registerCollectionMutationInputs() {
+		for ( var entry : collectionStates.entrySet() ) {
+			final var state = entry.getValue();
+			if ( state.actions == null && !state.queuedOperations ) {
+				continue;
+			}
+			session.getActionQueue().addCollectionMutation( new CollectionMutationInput(
+					entry.getKey(),
+					transition( state ),
+					state.loadedEndpoint,
+					state.currentEndpoint,
+					state.emptySnapshot,
+					state.removalSkipped,
+					state.queuedOperations,
+					null,
+					null
+			) );
+		}
+	}
+
+	/// Re-evaluates existing collection wrappers after deferred owner pre-update callbacks.
+	public void refreshCollectionMutationInputs() {
+		for ( var state : collectionStates.values() ) {
+			state.reached = false;
+			state.processed = false;
+			state.actions = null;
+			state.loadedEndpoint = null;
+			state.currentEndpoint = null;
+			state.emptySnapshot = false;
+			state.removalSkipped = false;
+			state.queuedOperations = false;
+		}
+		final var persistenceContext = session.getPersistenceContextInternal();
+		for ( var managedEntity : persistenceContext.reentrantSafeManagedEntities() ) {
+			final var entityEntry = managedEntity.$$_hibernate_getEntityEntry();
+			final var status = entityEntry.getStatus();
+			final var persister = entityEntry.getPersister();
+			if ( status != Status.LOADING
+					&& status != Status.GONE
+					&& status != Status.DELETED
+					&& persister.hasCollections() ) {
+				final Object entity = managedEntity.$$_hibernate_getEntityInstance();
+				new FlushVisitor( session, entity, this ).processEntityPropertyValues(
+						persister.getValues( entity ),
+						persister.getPropertyTypes()
+				);
+			}
+		}
+		persistenceContext.forEachCollectionEntry(
+				(collection, collectionEntry) -> {
+					if ( !wasCollectionReached( collection ) && !wasCollectionProcessed( collection ) ) {
+						processUnreachableCollection( collection, session, this );
+					}
+					if ( !collection.wasInitialized() && collection.hasQueuedOperations() ) {
+						queueCollectionQueuedOperations(
+								collection,
+								collectionEntry.getLoadedPersister(),
+								collectionEntry.getLoadedKey()
+						);
+					}
+				},
+				true
+		);
+		registerCollectionMutationInputs();
+	}
+
+	private static CollectionTransition transition(CollectionState state) {
+		if ( state.actions == null ) {
+			return CollectionTransition.NONE;
+		}
+		final boolean remove = state.actions.contains( CollectionActionKind.REMOVE );
+		final boolean create = state.actions.contains( CollectionActionKind.CREATE );
+		if ( remove && create ) {
+			return CollectionTransition.REMOVE_AND_CREATE;
+		}
+		if ( remove ) {
+			return CollectionTransition.REMOVE;
+		}
+		if ( create ) {
+			return CollectionTransition.CREATE;
+		}
+		if ( state.actions.contains( CollectionActionKind.UPDATE ) ) {
+			return CollectionTransition.UPDATE;
+		}
+		return CollectionTransition.NONE;
+	}
+
+	private static void markAction(CollectionState state, CollectionActionKind actionKind) {
 		if ( state.actions == null ) {
 			state.actions = EnumSet.noneOf( CollectionActionKind.class );
 		}

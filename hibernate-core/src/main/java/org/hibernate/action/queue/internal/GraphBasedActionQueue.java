@@ -6,6 +6,8 @@ package org.hibernate.action.queue.internal;
 
 import org.hibernate.action.queue.spi.ActionQueue;
 import org.hibernate.action.queue.spi.ActionQueueCheckpoint;
+import org.hibernate.action.queue.spi.CollectionMutationInput;
+import org.hibernate.action.queue.spi.CollectionTransition;
 import org.hibernate.action.queue.spi.PlanningOptions;
 
 import org.hibernate.HibernateException;
@@ -13,6 +15,7 @@ import org.hibernate.Incubating;
 import org.hibernate.PropertyValueException;
 import org.hibernate.action.internal.AbstractEntityInsertAction;
 import org.hibernate.action.internal.BulkOperationCleanupAction;
+import org.hibernate.action.internal.CollectionAction;
 import org.hibernate.action.internal.CollectionRecreateAction;
 import org.hibernate.action.internal.CollectionRemoveAction;
 import org.hibernate.action.internal.CollectionUpdateAction;
@@ -74,6 +77,8 @@ public class GraphBasedActionQueue implements ActionQueue {
 	private final List<CollectionUpdateAction> collectionUpdates;
 	private final List<CollectionRecreateAction> collectionCreations;
 	private final List<EntityDeleteAction> deletions;
+	private final List<CollectionMutationInput> collectionMutationInputs;
+	private final List<CollectionMutationInput> durableCollectionMutationInputs;
 
 	private boolean isTransactionCoordinatorShared;
 	private TransactionCompletionCallbacksImplementor transactionCompletionCallbacks;
@@ -109,6 +114,8 @@ public class GraphBasedActionQueue implements ActionQueue {
 		this.collectionUpdates = new ArrayList<>();
 		this.collectionCreations = new ArrayList<>();
 		this.deletions = new ArrayList<>();
+		this.collectionMutationInputs = new ArrayList<>();
+		this.durableCollectionMutationInputs = new ArrayList<>();
 
 		this.transactionCompletionCallbacks = new TransactionCompletionCallbacksImpl(session);
 		this.isTransactionCoordinatorShared = false;
@@ -143,6 +150,8 @@ public class GraphBasedActionQueue implements ActionQueue {
 		this.collectionUpdates = collectionUpdates;
 		this.collectionCreations = collectionCreations;
 		this.deletions = deletions;
+		this.collectionMutationInputs = new ArrayList<>();
+		this.durableCollectionMutationInputs = new ArrayList<>();
 
 		this.transactionCompletionCallbacks = new TransactionCompletionCallbacksImpl(session);
 		this.isTransactionCoordinatorShared = false;
@@ -150,6 +159,8 @@ public class GraphBasedActionQueue implements ActionQueue {
 
 	/// Clear all pending actions.
 	public void clear() {
+		collectionMutationInputs.clear();
+		durableCollectionMutationInputs.clear();
 		orphanCollectionRemovals.clear();
 		orphanRemovals.clear();
 		insertions.clear();
@@ -302,18 +313,59 @@ public class GraphBasedActionQueue implements ActionQueue {
 		orphanRemovals.add(action);
 	}
 
+	@Override
+	public void addCollectionMutation(CollectionMutationInput input) {
+		if ( isDurableCollectionMutation( input ) ) {
+			durableCollectionMutationInputs.add( input );
+		}
+		else {
+			collectionMutationInputs.add( input );
+		}
+	}
+
+	private boolean isDurableCollectionMutation(CollectionMutationInput input) {
+		return !(session.getPersistenceContextInternal().getCollectionFlushActionTracker()
+				instanceof FlushProcessingContext)
+				|| isOrphanCollectionRemoval( input );
+	}
+
+	private boolean isOrphanCollectionRemoval(CollectionMutationInput input) {
+		if ( input.transition() != CollectionTransition.REMOVE
+				&& input.transition() != CollectionTransition.REMOVE_AND_CREATE ) {
+			return false;
+		}
+		Object affectedOwner = input.affectedOwner();
+		if ( affectedOwner == null && input.collection() != null ) {
+			affectedOwner = session.getPersistenceContextInternal()
+					.getLoadedCollectionOwnerOrNull( input.collection() );
+		}
+		if ( affectedOwner == null ) {
+			return false;
+		}
+		final var entry = session.getPersistenceContextInternal().getEntry( affectedOwner );
+		if ( entry == null || !entry.getStatus().isDeletedOrGone() ) {
+			return false;
+		}
+		for ( var orphanRemoval : orphanRemovals ) {
+			if ( orphanRemoval.getInstance() == affectedOwner ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	/// Adds a collection (re)create action.
 	///
 	/// @param action The action representing the (re)creation of a collection
-	public void addAction(CollectionRecreateAction action) {
-		ACTION_LOGGER.tracef( "GraphBasedActionQueue.addAction(CollectionRecreateAction) - role=%s, key=%s", action.getPersister().getRole(), action.getKey() );
+	private void addCollectionAction(CollectionRecreateAction action) {
+		ACTION_LOGGER.tracef( "GraphBasedActionQueue.addCollectionAction(CollectionRecreateAction) - role=%s, key=%s", action.getPersister().getRole(), action.getKey() );
 		collectionCreations.add(action);
 	}
 
 	/// Adds a collection remove action.
 	///
 	/// @param action The action representing the removal of a collection
-	public void addAction(CollectionRemoveAction action) {
+	private void addCollectionAction(CollectionRemoveAction action) {
 		// Check if this is an orphan collection removal (owner is being orphan-removed)
 		// If so, add to orphanCollectionRemovals to execute before orphan removals
 		if (!orphanRemovals.isEmpty() && action.getAffectedOwner() != null) {
@@ -336,14 +388,14 @@ public class GraphBasedActionQueue implements ActionQueue {
 	/// Adds a collection update action.
 	///
 	/// @param action The action representing the update of a collection
-	public void addAction(CollectionUpdateAction action) {
+	private void addCollectionAction(CollectionUpdateAction action) {
 		collectionUpdates.add(action);
 	}
 
 	/// Adds an action relating to a collection queued operation (extra lazy).
 	///
 	/// @param action The action representing the queued operation
-	public void addAction(QueuedOperationCollectionAction action) {
+	private void addCollectionAction(QueuedOperationCollectionAction action) {
 		collectionQueuedOps.add(action);
 	}
 
@@ -560,11 +612,63 @@ public class GraphBasedActionQueue implements ActionQueue {
 	///
 	/// @throws HibernateException error preparing actions
 	public void prepareActions() throws HibernateException {
+		prepareDeferredOwnerPreUpdates();
+		prepareCollectionMutationInputs();
 		prepareOwnerUpdateCallbacks();
 		prepareCollectionActions(collectionRemovals);
 		prepareCollectionActions(collectionUpdates);
 		prepareCollectionActions(collectionCreations);
 		prepareCollectionActions(collectionQueuedOps);
+	}
+
+	private void prepareDeferredOwnerPreUpdates() {
+		boolean collectionRefreshRequired = false;
+		for ( var action : updates ) {
+			collectionRefreshRequired |= action.prepareDeferredOwnerPreUpdate();
+		}
+		if ( collectionRefreshRequired ) {
+			collectionMutationInputs.clear();
+			final var tracker = session.getPersistenceContextInternal().getCollectionFlushActionTracker();
+			if ( tracker instanceof FlushProcessingContext flushProcessingContext ) {
+				flushProcessingContext.refreshCollectionMutationInputs();
+			}
+		}
+	}
+
+	private void prepareCollectionMutationInputs() {
+		if ( collectionMutationInputs.isEmpty() && durableCollectionMutationInputs.isEmpty() ) {
+			return;
+		}
+		final var inputs = new ArrayList<CollectionMutationInput>(
+				collectionMutationInputs.size() + durableCollectionMutationInputs.size()
+		);
+		inputs.addAll( durableCollectionMutationInputs );
+		inputs.addAll( collectionMutationInputs );
+		CollectionMutationActionLowering.lower(
+				inputs,
+				(EventSource) session,
+				this::addPreparedCollectionAction
+		);
+		collectionMutationInputs.clear();
+		durableCollectionMutationInputs.clear();
+	}
+
+	private void addPreparedCollectionAction(CollectionAction action) {
+		if ( action instanceof CollectionRemoveAction remove ) {
+			addCollectionAction( remove );
+		}
+		else if ( action instanceof CollectionUpdateAction update ) {
+			addCollectionAction( update );
+		}
+		else if ( action instanceof CollectionRecreateAction recreate ) {
+			addCollectionAction( recreate );
+		}
+		else if ( action instanceof QueuedOperationCollectionAction queuedOperations ) {
+			addCollectionAction( queuedOperations );
+		}
+		else {
+			throw new IllegalArgumentException( "Unexpected prepared collection action " + action );
+		}
 	}
 
 	private void prepareOwnerUpdateCallbacks() {
@@ -644,21 +748,39 @@ public class GraphBasedActionQueue implements ActionQueue {
 	///
 	/// @return count of collection creations
 	public int numberOfCollectionCreations() {
-		return collectionCreations.size();
+		return collectionCreations.size() + countInputs( CollectionTransition.CREATE );
 	}
 
 	/// Get the number of collection updates currently queued.
 	///
 	/// @return count of collection updates
 	public int numberOfCollectionUpdates() {
-		return collectionUpdates.size();
+		return collectionUpdates.size() + countInputs( CollectionTransition.UPDATE );
 	}
 
 	/// Get the number of collection removals currently queued.
 	///
 	/// @return count of collection removals
 	public int numberOfCollectionRemovals() {
-		return collectionRemovals.size() + orphanCollectionRemovals.size();
+		return collectionRemovals.size() + orphanCollectionRemovals.size()
+				+ countInputs( CollectionTransition.REMOVE );
+	}
+
+	private int countInputs(CollectionTransition kind) {
+		return countInputs( collectionMutationInputs, kind )
+				+ countInputs( durableCollectionMutationInputs, kind );
+	}
+
+	private static int countInputs(List<CollectionMutationInput> inputs, CollectionTransition kind) {
+		int count = 0;
+		for ( var input : inputs ) {
+			if ( input.transition() == kind
+					|| input.transition() == CollectionTransition.REMOVE_AND_CREATE
+						&& (kind == CollectionTransition.REMOVE || kind == CollectionTransition.CREATE) ) {
+				count++;
+			}
+		}
+		return count;
 	}
 
 	/// Are there before transaction completion actions registered?
@@ -696,7 +818,8 @@ public class GraphBasedActionQueue implements ActionQueue {
 			return false;
 		}
 
-		return areTablesToBeUpdated(orphanCollectionRemovals, tables)
+		return collectionInputsAffect( tables )
+				|| areTablesToBeUpdated(orphanCollectionRemovals, tables)
 				|| areTablesToBeUpdated(orphanRemovals, tables)
 				|| areTablesToBeUpdated(insertions, tables)
 				|| areTablesToBeUpdated(updates, tables)
@@ -705,6 +828,25 @@ public class GraphBasedActionQueue implements ActionQueue {
 				|| areTablesToBeUpdated(collectionUpdates, tables)
 				|| areTablesToBeUpdated(collectionCreations, tables)
 				|| areTablesToBeUpdated(deletions, tables);
+	}
+
+	private boolean collectionInputsAffect(Set<? extends Serializable> tables) {
+		return collectionInputsAffect( collectionMutationInputs, tables )
+				|| collectionInputsAffect( durableCollectionMutationInputs, tables );
+	}
+
+	private boolean collectionInputsAffect(
+			List<CollectionMutationInput> inputs,
+			Set<? extends Serializable> tables) {
+		for ( var input : inputs ) {
+			for ( var space : input.getQuerySpaces() ) {
+				if ( tables.contains( space ) ) {
+					ACTION_LOGGER.changesMustBeFlushedToSpace( space );
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 
 	private boolean areTablesToBeUpdated(
@@ -725,7 +867,9 @@ public class GraphBasedActionQueue implements ActionQueue {
 	///
 	/// @return true if there are any queued actions
 	public boolean hasAnyQueuedActions() {
-		return !orphanCollectionRemovals.isEmpty()
+		return !collectionMutationInputs.isEmpty()
+				|| !durableCollectionMutationInputs.isEmpty()
+				|| !orphanCollectionRemovals.isEmpty()
 				|| !orphanRemovals.isEmpty()
 				|| !insertions.isEmpty()
 				|| !updates.isEmpty()
@@ -749,6 +893,7 @@ public class GraphBasedActionQueue implements ActionQueue {
 		return new GraphCheckpoint(
 				this,
 				updates.size(),
+				collectionMutationInputs.size(),
 				collectionQueuedOps.size(),
 				collectionRemovals.size(),
 				collectionUpdates.size(),
@@ -763,6 +908,7 @@ public class GraphBasedActionQueue implements ActionQueue {
 			throw new IllegalArgumentException( "Checkpoint was not created by this action queue" );
 		}
 		trimToSize( updates, graphCheckpoint.updatesSize() );
+		trimToSize( collectionMutationInputs, graphCheckpoint.collectionMutationInputsSize() );
 		trimToSize( collectionQueuedOps, graphCheckpoint.collectionQueuedOpsSize() );
 		trimToSize( collectionRemovals, graphCheckpoint.collectionRemovalsSize() );
 		trimToSize( collectionUpdates, graphCheckpoint.collectionUpdatesSize() );
@@ -778,6 +924,7 @@ public class GraphBasedActionQueue implements ActionQueue {
 	private record GraphCheckpoint(
 			GraphBasedActionQueue owner,
 			int updatesSize,
+			int collectionMutationInputsSize,
 			int collectionQueuedOpsSize,
 			int collectionRemovalsSize,
 			int collectionUpdatesSize,

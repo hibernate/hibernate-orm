@@ -39,7 +39,7 @@ public class DefaultAutoFlushEventListener extends AbstractFlushingEventListener
 				final var actionQueueCheckpoint = actionQueue.checkpoint();
 				final var session = event.getSession();
 				final var persistenceContext = session.getPersistenceContextInternal();
-				final var flushProcessingContext = beginFlushProcessing( session, persistenceContext );
+				final var flushProcessingContext = beginFlushProcessing( session, persistenceContext, true );
 				if ( !event.isSkipPreFlush() ) {
 					preFlush( session, persistenceContext, flushProcessingContext );
 				}

@@ -58,6 +58,23 @@ public final class CollectionUpdateAction extends CollectionAction {
 		affectedOwnerId = ownerEntry != null ? ownerEntry.getId() : null;
 	}
 
+	/// Creates the legacy lowering of an already-prepared semantic mutation.
+	///
+	/// @since 8.0
+	public CollectionUpdateAction(
+			final @Nonnull PersistentCollection<?> collection,
+			final @Nonnull CollectionPersister persister,
+			final @Nonnull Object id,
+			final boolean emptySnapshot,
+			final @Nonnull EventSource session,
+			final @Nullable Object affectedOwner,
+			final @Nullable Object affectedOwnerId) {
+		super( persister, collection, id, session, true );
+		this.emptySnapshot = emptySnapshot;
+		this.affectedOwner = affectedOwner;
+		this.affectedOwnerId = affectedOwnerId;
+	}
+
 	@Override
 	@Nonnull
 	public PersistentCollection<?> getCollection() {
@@ -86,7 +103,9 @@ public final class CollectionUpdateAction extends CollectionAction {
 		final var collection = getCollection();
 		final boolean affectedByFilters = persister.isAffectedByEnabledFilters( session );
 
-		preUpdate();
+		if ( !isLifecyclePrepared() ) {
+			preUpdate();
+		}
 
 		if ( !collection.wasInitialized() ) {
 			// If there were queued operations, they would have

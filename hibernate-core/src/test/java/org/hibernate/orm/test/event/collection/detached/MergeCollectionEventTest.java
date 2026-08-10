@@ -4,7 +4,6 @@
  */
 package org.hibernate.orm.test.event.collection.detached;
 
-import org.hibernate.action.queue.spi.QueueType;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.cfg.AvailableSettings;
@@ -149,8 +148,8 @@ public class MergeCollectionEventTest {
 			}
 
 			assertEquals( 8, listener.getEventEntryList().size() ); // 4 collections x 2 events per
-			// Event ordering differs between ActionQueue implementations
-			if ( isGraphBasedActionQueue( scope ) ) {
+			// Shared preparation may separate pre- and post-events
+			if ( usesSharedCollectionLifecyclePreparation() ) {
 				checkGraphPairs( listener, EventAnalyzer.Phase.UPDATE, 4 );
 			}
 			else {
@@ -177,8 +176,8 @@ public class MergeCollectionEventTest {
 			s.flush();
 
 			assertEquals( 8, listener.getEventEntryList().size() ); // 4 collections x 2 events per
-			// Event ordering differs between ActionQueue implementations
-			if ( isGraphBasedActionQueue( scope ) ) {
+			// Shared preparation may separate pre- and post-events
+			if ( usesSharedCollectionLifecyclePreparation() ) {
 				checkGraphPairs( listener, EventAnalyzer.Phase.UPDATE, 4 );
 			}
 			else {
@@ -227,8 +226,8 @@ public class MergeCollectionEventTest {
 	}
 
 
-	private boolean isGraphBasedActionQueue(SessionFactoryScope scope) {
-		return scope.getSessionFactory().getActionQueueFactory().getConfiguredQueueType() == QueueType.GRAPH;
+	private boolean usesSharedCollectionLifecyclePreparation() {
+		return true;
 	}
 
 	protected void checkListener(

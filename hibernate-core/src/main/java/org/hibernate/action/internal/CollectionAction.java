@@ -40,12 +40,22 @@ public abstract class CollectionAction implements ComparableExecutable {
 	private final Object key;
 	@Nonnull
 	private final String collectionRole;
+	private final boolean lifecyclePrepared;
 
 	protected CollectionAction(
 			final @Nonnull CollectionPersister persister,
 			final @Nullable PersistentCollection<?> collection,
 			final @Nullable Object key,
 			final @Nonnull EventSource session) {
+		this( persister, collection, key, session, false );
+	}
+
+	protected CollectionAction(
+			final @Nonnull CollectionPersister persister,
+			final @Nullable PersistentCollection<?> collection,
+			final @Nullable Object key,
+			final @Nonnull EventSource session,
+			final boolean lifecyclePrepared) {
 		assert persister != null;
 		assert session != null;
 		this.persister = persister;
@@ -53,6 +63,14 @@ public abstract class CollectionAction implements ComparableExecutable {
 		this.key = key;
 		this.collectionRole = persister.getRole();
 		this.collection = collection;
+		this.lifecyclePrepared = lifecyclePrepared;
+	}
+
+	/// Whether shared mutation preparation already delivered the interceptor hook and Hibernate pre-event.
+	///
+	/// @since 8.0
+	public final boolean isLifecyclePrepared() {
+		return lifecyclePrepared;
 	}
 
 	/**

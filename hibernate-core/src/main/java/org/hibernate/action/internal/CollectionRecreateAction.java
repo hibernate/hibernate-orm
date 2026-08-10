@@ -47,6 +47,21 @@ public final class CollectionRecreateAction extends CollectionAction {
 		this.affectedOwnerId = ownerEntry != null ? ownerEntry.getId() : null;
 	}
 
+	/// Creates the legacy lowering of an already-prepared semantic mutation.
+	///
+	/// @since 8.0
+	public CollectionRecreateAction(
+			final @Nonnull PersistentCollection<?> collection,
+			final @Nonnull CollectionPersister persister,
+			final @Nullable Object id,
+			final @Nonnull EventSource session,
+			final @Nullable Object affectedOwner,
+			final @Nullable Object affectedOwnerId) {
+		super( persister, collection, id, session, true );
+		this.affectedOwner = affectedOwner;
+		this.affectedOwnerId = affectedOwnerId;
+	}
+
 	@Override
 	@Nonnull
 	public PersistentCollection<?> getCollection() {
@@ -60,7 +75,9 @@ public final class CollectionRecreateAction extends CollectionAction {
 		// this method is called when a new non-null collection is persisted
 		// or when an existing (non-null) collection is moved to a new owner
 		final var collection = getCollection();
-		preRecreate();
+		if ( !isLifecyclePrepared() ) {
+			preRecreate();
+		}
 		final var session = getSession();
 		final var persister = getPersister();
 		final Object key = getKey();

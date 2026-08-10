@@ -70,8 +70,8 @@ public class DetachedMultipleCollectionChangeTest {
 			s.persist( mce.get() );
 		} );
 
-		// Event ordering differs between ActionQueue implementations
-		if ( isGraphBasedActionQueue( scope ) ) {
+		// Shared preparation may separate pre- and post-events
+		if ( usesSharedCollectionLifecyclePreparation() ) {
 			final var analysis = EventAnalyzer.matchEvents( listeners.getEvents() );
 			assertEquals( 0, analysis.unmatchedPre().size() );
 			assertEquals( 0, analysis.unmatchedPost().size() );
@@ -252,11 +252,8 @@ public class DetachedMultipleCollectionChangeTest {
 		assertEquals( nEventsExpected, listeners.getEvents().size() );
 	}
 
-	private boolean isGraphBasedActionQueue(SessionFactoryScope scope) {
-		return scope.fromSession( s -> {
-			org.hibernate.action.queue.spi.ActionQueue aq = s.unwrap(org.hibernate.event.spi.EventSource.class).getActionQueue();
-			return aq instanceof org.hibernate.action.queue.internal.GraphBasedActionQueue;
-		} );
+	private boolean usesSharedCollectionLifecyclePreparation() {
+		return true;
 	}
 
 }

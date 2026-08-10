@@ -136,7 +136,9 @@ public class TablePerSubclassOneToManyDecomposer extends AbstractOneToManyDecomp
 			DecompositionContext decompositionContext,
 			Consumer<FlushOperation> operationConsumer) {
 		// Always fire PRE event, even if no SQL operations will be needed
-		DecompositionSupport.firePreRemove( persister, action.getCollection(), action.getAffectedOwner(), session );
+		if ( !action.isLifecyclePrepared() ) {
+			DecompositionSupport.firePreRemove( persister, action.getCollection(), action.getAffectedOwner(), session );
+		}
 
 		// Create callback to handle post-execution work (afterAction, cache, events, stats)
 		final var postRemoveHandling = new PostCollectionRemoveHandling(

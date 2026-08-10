@@ -267,6 +267,8 @@ public class HibernateProcessor extends AbstractProcessor {
 	// dupe of ProcessorSessionFactory.ENTITY_INDEX for reasons of modularity
 	public static final String ENTITY_INDEX = "entity.index";
 
+	private static final String DATA_METAMODEL_MARKER_PACKAGE = "data.metamodel.generated";
+
 	private Context context;
 
 	@Override
@@ -690,6 +692,7 @@ public class HibernateProcessor extends AbstractProcessor {
 						"Writing Jakarta Data metamodel for entity '" + entity + "'" );
 				ClassWriter.writeFile( entity, context );
 				context.markGenerated(entity);
+				writeDataMetamodelMarker( entity );
 			}
 		}
 
@@ -849,7 +852,7 @@ public class HibernateProcessor extends AbstractProcessor {
 							&& alreadyExistingMetaEntity == null
 							// let a handwritten metamodel "override" the generated one
 							// (this is used in the Jakarta Data TCK)
-							&& !hasHandwrittenMetamodel(element) ) {
+							&& !hasHandwrittenMetamodel(typeElement) ) {
 						final var parentDataEntity =
 								parentMetadata( parent, context::getDataMetaEntity );
 						final var dataMetaEntity =
@@ -868,10 +871,27 @@ public class HibernateProcessor extends AbstractProcessor {
 		}
 	}
 
-	private static boolean hasHandwrittenMetamodel(Element element) {
-		return element.getEnclosingElement().getEnclosedElements()
-				.stream().anyMatch(e -> e.getSimpleName()
-						.contentEquals('_' + element.getSimpleName().toString()));
+	private boolean hasHandwrittenMetamodel(TypeElement element) {
+		final var dataMetamodelName = '_' + element.getSimpleName().toString();
+		final boolean dataMetamodelTypeExists = element.getEnclosingElement().getEnclosedElements()
+				.stream().anyMatch( e -> e.getSimpleName().contentEquals( dataMetamodelName ) );
+		if ( !dataMetamodelTypeExists ) {
+			return false;
+		}
+		// The processor writes one marker per generated Jakarta Data metamodel.
+		// If _Entity exists without a marker, assume that it was handwritten.
+		return !hasDataMetamodelMarker( element.getQualifiedName().toString() );
+	}
+
+	private boolean hasDataMetamodelMarker(String entityName) {
+		try (var marker = context.getProcessingEnvironment().getFiler()
+				.getResource( StandardLocation.CLASS_OUTPUT, DATA_METAMODEL_MARKER_PACKAGE, entityName )
+				.openInputStream()) {
+			return true;
+		}
+		catch (IOException ignored) {
+			return false;
+		}
 	}
 
 	private void indexEntityName(TypeElement typeElement) {
@@ -976,6 +996,25 @@ public class HibernateProcessor extends AbstractProcessor {
 		}
 		else if ( hasAnnotation( typeElement, EMBEDDABLE ) ) {
 			context.addDataMetaEmbeddable( key, entity );
+		}
+	}
+
+	private void writeDataMetamodelMarker(Metamodel entity) {
+		final var filer = context.getProcessingEnvironment().getFiler();
+		// Keep the marker with the classes: Maven clears generated sources before recompilation.
+		try (var marker = filer.createResource(
+						StandardLocation.CLASS_OUTPUT,
+						DATA_METAMODEL_MARKER_PACKAGE,
+						entity.getQualifiedName(),
+						entity.getElement()
+				)
+				.openOutputStream()) {
+			// The resource path identifies the generated metamodel; no content is needed.
+		}
+		catch (IOException e) {
+			context.getProcessingEnvironment().getMessager()
+					.printMessage( Diagnostic.Kind.WARNING,
+							"could not write data metamodel marker " + e.getMessage() );
 		}
 	}
 

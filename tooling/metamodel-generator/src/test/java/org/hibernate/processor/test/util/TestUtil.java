@@ -23,6 +23,8 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import javax.tools.Diagnostic;
@@ -269,6 +271,78 @@ public class TestUtil {
 		return outBaseDir;
 	}
 
+	public static File getSourceFile(Class<?> type) {
+		return getSourceFile( type, getSourceBaseDir( type ) );
+	}
+
+	/**
+	 * Returns the source path for a type under the given directory, whether or not the file exists.
+	 */
+	public static File getSourceFile(Class<?> type, File sourceDir) {
+		return new File(
+				sourceDir,
+				type.getName().replace( '.', File.separatorChar ) + ".java"
+		);
+	}
+
+	public static File getClassFile(Class<?> type, File classesDir) {
+		return getClassFile( type.getName(), classesDir );
+	}
+
+	private static File getClassFile(String binaryName, File classesDir) {
+		return new File( classesDir, binaryName.replace( '.', File.separatorChar ) + ".class" );
+	}
+
+	public static File getMetaModelClassFileFor(Class<?> entity, boolean prefix, File classesDir) {
+		return getClassFile( getMetaModelClassName( entity, prefix ), classesDir );
+	}
+
+	public static File getNestedRepositoryClassFileFor(Class<?> repository, boolean prefix, File classesDir) {
+		return getClassFile( getMetaModelClassName( repository.getEnclosingClass(), prefix )
+				+ "$_" + repository.getSimpleName(), classesDir );
+	}
+
+	public static Path getDataMetamodelMarkerFile(Class<?> entity, File classesDir) {
+		// CLASS_OUTPUT/data/metamodel/generated/<fully-qualified entity name>
+		return classesDir.toPath().resolve( "data/metamodel/generated" ).resolve( entity.getCanonicalName() );
+	}
+
+	/**
+	 * Compile the given source files with {@link org.hibernate.processor.HibernateProcessor},
+	 * writing output to {@code outDir} and placing {@code outDir} on the classpath so that
+	 * previously generated classes are visible (as happens in incremental Maven builds).
+	 */
+	public static void compile(File outDir, File... sourceFiles) throws Exception {
+		compile( outDir, outDir, sourceFiles );
+	}
+
+	/**
+	 * Compile with separate class and generated-source output directories, keeping
+	 * previously generated classes on the classpath for incremental builds.
+	 */
+	public static void compile(File classesDir, File generatedSourcesDir, File[] sourceFiles) throws Exception {
+		compile( classesDir, generatedSourcesDir,
+				List.of( "-processor", org.hibernate.processor.HibernateProcessor.class.getName() ), sourceFiles );
+	}
+
+	public static void compileWithoutProcessor(File outDir, File... sourceFiles) throws Exception {
+		compile( outDir, outDir, List.of( "-proc:none" ), sourceFiles );
+	}
+
+	private static void compile(File classesDir, File generatedSourcesDir, List<String> options, File[] sourceFiles)
+			throws Exception {
+		final var compilerOptions = new ArrayList<>( options );
+		compilerOptions.addAll( List.of(
+				"-d", classesDir.getAbsolutePath(),
+				"-s", generatedSourcesDir.getAbsolutePath()
+		) );
+		final List<Diagnostic<?>> diagnostics = new ArrayList<>();
+		assertTrue(
+				CompilationExtension.compile( List.of( sourceFiles ), compilerOptions, diagnostics ),
+				"Compilation failed: " + diagnostics
+		);
+	}
+
 	public static File getSourceBaseDir(Class<?> testClass) {
 		return getBaseDir( testClass, "java" );
 	}
@@ -350,14 +424,18 @@ public class TestUtil {
 	}
 
 	public static File getMetaModelSourceFileFor(Class<?> clazz, boolean prefix) {
+		return getMetaModelSourceFileFor( clazz, prefix, getOutBaseDir( clazz ) );
+	}
+
+	public static File getMetaModelSourceFileFor(Class<?> clazz, boolean prefix, File sourceDir) {
 		if ( clazz.isMemberClass() ) {
-			return getMetaModelSourceFileFor( clazz.getEnclosingClass(), prefix );
+			return getMetaModelSourceFileFor( clazz.getEnclosingClass(), prefix, sourceDir );
 		}
 		String metaModelClassName = getMetaModelClassName(clazz, prefix);
 		// generate the file name
 		String fileName = metaModelClassName.replace( PACKAGE_SEPARATOR, PATH_SEPARATOR );
 		fileName = fileName.concat( ".java" );
-		return new File( getOutBaseDir( clazz ), fileName );
+		return new File( sourceDir, fileName );
 	}
 
 	public static File getMetaModelSourceFileFor(String className) {
@@ -559,7 +637,11 @@ public class TestUtil {
 		}
 	}
 
-	private static void deleteFilesRecursive(File file) {
+	public static void deleteFilesRecursive(File file) {
+		if ( !file.exists() ) {
+			return;
+		}
+		// Delete children before their parent: a directory must be empty before deletion.
 		if ( file.isDirectory() ) {
 			for ( File c : file.listFiles() ) {
 				deleteFilesRecursive( c );

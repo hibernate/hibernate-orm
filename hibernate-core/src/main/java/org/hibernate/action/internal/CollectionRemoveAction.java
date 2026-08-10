@@ -4,6 +4,8 @@
  */
 package org.hibernate.action.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
@@ -53,6 +55,23 @@ public final class CollectionRemoveAction extends CollectionAction {
 		// both pre- and post- events
 		this.affectedOwner = session.getPersistenceContextInternal().getLoadedCollectionOwnerOrNull( collection );
 		this.affectedOwnerId = session.getPersistenceContextInternal().getLoadedCollectionOwnerIdOrNull( collection );
+	}
+
+	/// Creates the legacy lowering of an already-prepared semantic mutation.
+	///
+	/// @since 8.0
+	public CollectionRemoveAction(
+			final @Nullable PersistentCollection<?> collection,
+			final @Nonnull CollectionPersister persister,
+			final @Nullable Object id,
+			final boolean emptySnapshot,
+			final @Nonnull EventSource session,
+			final @Nullable Object affectedOwner,
+			final @Nullable Object affectedOwnerId) {
+		super( persister, collection, id, session, true );
+		this.emptySnapshot = emptySnapshot;
+		this.affectedOwner = affectedOwner;
+		this.affectedOwnerId = affectedOwnerId;
 	}
 
 	/**
@@ -110,7 +129,9 @@ public final class CollectionRemoveAction extends CollectionAction {
 
 	@Override
 	public void execute() throws HibernateException {
-		preRemove();
+		if ( !isLifecyclePrepared() && getCollection() != null ) {
+			preRemove();
+		}
 		final var session = getSession();
 		if ( !emptySnapshot ) {
 			// an existing collection that was either nonempty or uninitialized
@@ -134,9 +155,9 @@ public final class CollectionRemoveAction extends CollectionAction {
 		final PersistentCollection<?> collection = getCollection();
 		if ( collection != null ) {
 			session.getPersistenceContextInternal().getCollectionEntry( collection ).afterAction( collection );
+			postRemove();
 		}
 		evict();
-		postRemove();
 		final Runnable recordStatistics = () -> {
 			final var statistics = session.getFactory().getStatistics();
 			if ( statistics.isStatisticsEnabled() ) {

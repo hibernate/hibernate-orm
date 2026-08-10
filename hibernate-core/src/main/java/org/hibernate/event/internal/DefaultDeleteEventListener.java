@@ -10,9 +10,9 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.TransientObjectException;
-import org.hibernate.action.internal.CollectionRemoveAction;
 import org.hibernate.action.internal.EntityDeleteAction;
 import org.hibernate.action.internal.OrphanRemovalAction;
+import org.hibernate.action.queue.spi.CollectionMutationInput;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.cascade.internal.Cascade;
 import org.hibernate.cascade.spi.CascadePoint;
@@ -121,7 +121,9 @@ public class DefaultDeleteEventListener implements DeleteEventListener {
 					session.getFactory().getMappingMetamodel()
 							.getCollectionDescriptor( collectionType.getRole() );
 			if ( !persister.isInverse() && !skipRemoval( session, persister, key ) ) {
-				session.getActionQueue().addAction( new CollectionRemoveAction( persister, key, session ) );
+				session.getActionQueue().addCollectionMutation(
+						CollectionMutationInput.wrapperlessRemoval( persister, key, null, null )
+				);
 			}
 		}
 		else if ( type instanceof ComponentType componentType ) {

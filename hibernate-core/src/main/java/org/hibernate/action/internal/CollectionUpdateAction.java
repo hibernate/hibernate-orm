@@ -4,6 +4,8 @@
  */
 package org.hibernate.action.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
@@ -48,7 +50,40 @@ public final class CollectionUpdateAction extends CollectionAction {
 		this.affectedOwner = collection.getOwner();
 		// Also capture the owner ID from the entity entry at action creation time
 		final var ownerEntry = session.getPersistenceContextInternal().getEntry( affectedOwner );
-		this.affectedOwnerId = ownerEntry != null ? ownerEntry.getId() : null;
+		affectedOwnerId = ownerEntry != null ? ownerEntry.getId() : null;
+	}
+
+	/// Creates the legacy lowering of an already-prepared semantic mutation.
+	///
+	/// @since 8.0
+	public CollectionUpdateAction(
+			final @Nonnull PersistentCollection<?> collection,
+			final @Nonnull CollectionPersister persister,
+			final @Nonnull Object id,
+			final boolean emptySnapshot,
+			final @Nonnull EventSource session,
+			final @Nullable Object affectedOwner,
+			final @Nullable Object affectedOwnerId) {
+		super( persister, collection, id, session, true );
+		this.emptySnapshot = emptySnapshot;
+		this.affectedOwner = affectedOwner;
+		this.affectedOwnerId = affectedOwnerId;
+	}
+
+	@Override
+	@Nonnull
+	public PersistentCollection<?> getCollection() {
+		final var collection = super.getCollection();
+		assert collection != null;
+		return collection;
+	}
+
+	@Override
+	@Nonnull
+	public Object getKey() {
+		final Object key = super.getKey();
+		assert key != null;
+		return key;
 	}
 
 	public boolean isEmptySnapshot() {
@@ -63,7 +98,9 @@ public final class CollectionUpdateAction extends CollectionAction {
 		final var collection = getCollection();
 		final boolean affectedByFilters = persister.isAffectedByEnabledFilters( session );
 
-		preUpdate();
+		if ( !isLifecyclePrepared() ) {
+			preUpdate();
+		}
 
 		if ( !collection.wasInitialized() ) {
 			// If there were queued operations, they would have

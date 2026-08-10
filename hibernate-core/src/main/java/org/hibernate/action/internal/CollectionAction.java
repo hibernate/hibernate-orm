@@ -4,6 +4,8 @@
  */
 package org.hibernate.action.internal;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.action.spi.AfterTransactionCompletionProcess;
 import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
 import org.hibernate.cache.CacheException;
@@ -32,17 +34,37 @@ public abstract class CollectionAction implements ComparableExecutable {
 
 	private final Object key;
 	private final String collectionRole;
+	private final boolean lifecyclePrepared;
 
 	protected CollectionAction(
-			final CollectionPersister persister,
-			final PersistentCollection<?> collection,
-			final Object key,
-			final EventSource session) {
+			final @Nonnull CollectionPersister persister,
+			final @Nullable PersistentCollection<?> collection,
+			final @Nullable Object key,
+			final @Nonnull EventSource session) {
+		this( persister, collection, key, session, false );
+	}
+
+	protected CollectionAction(
+			final @Nonnull CollectionPersister persister,
+			final @Nullable PersistentCollection<?> collection,
+			final @Nullable Object key,
+			final @Nonnull EventSource session,
+			final boolean lifecyclePrepared) {
+		assert persister != null;
+		assert session != null;
 		this.persister = persister;
 		this.session = session;
 		this.key = key;
 		this.collectionRole = persister.getRole();
 		this.collection = collection;
+		this.lifecyclePrepared = lifecyclePrepared;
+	}
+
+	/// Whether shared mutation preparation already delivered the interceptor hook and Hibernate pre-event.
+	///
+	/// @since 8.0
+	public final boolean isLifecyclePrepared() {
+		return lifecyclePrepared;
 	}
 
 	/**

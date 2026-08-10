@@ -37,7 +37,7 @@ public abstract class AbstractAssociationCollectionEventTest extends AbstractCol
 		tx.commit();
 		s.close();
 
-		if ( isGraphBasedActionQueue( scope ) ) {
+		if ( usesSharedCollectionLifecyclePreparation() ) {
 			int expectedInitialize = 1;
 			int expectedUpdates = 0;
 			int expectedRemoves = 1;

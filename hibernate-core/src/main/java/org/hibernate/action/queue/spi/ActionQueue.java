@@ -9,15 +9,11 @@ import org.hibernate.Incubating;
 import org.hibernate.PropertyValueException;
 import org.hibernate.Session;
 import org.hibernate.action.internal.BulkOperationCleanupAction;
-import org.hibernate.action.internal.CollectionRecreateAction;
-import org.hibernate.action.internal.CollectionRemoveAction;
-import org.hibernate.action.internal.CollectionUpdateAction;
 import org.hibernate.action.internal.EntityDeleteAction;
 import org.hibernate.action.internal.EntityIdentityInsertAction;
 import org.hibernate.action.internal.EntityInsertAction;
 import org.hibernate.action.internal.EntityUpdateAction;
 import org.hibernate.action.internal.OrphanRemovalAction;
-import org.hibernate.action.internal.QueuedOperationCollectionAction;
 import org.hibernate.engine.spi.TransactionCompletionCallbacks;
 
 import java.io.IOException;
@@ -68,25 +64,15 @@ public interface ActionQueue extends TransactionCompletionCallbacks {
 	/// @param action The action representing orphan removal
 	void addAction(OrphanRemovalAction action);
 
-	/// Adds a collection recreation action.
+	/// Adds queue-neutral collection mutation input produced by flush visitation.
 	///
-	/// @param action The action representing the collection recreation
-	void addAction(CollectionRecreateAction action);
-
-	/// Adds a collection removal action.
+	/// The queue must retain this input without lifecycle side effects until a positive
+	/// speculative-flush decision has been made.
 	///
-	/// @param action The action representing the collection removal
-	void addAction(CollectionRemoveAction action);
-
-	/// Adds a collection update action.
+	/// @param input The queue-neutral semantic collection mutation
 	///
-	/// @param action The action representing the collection update
-	void addAction(CollectionUpdateAction action);
-
-	/// Adds a queued operation collection action.
-	///
-	/// @param action The action representing the queued collection operation
-	void addAction(QueuedOperationCollectionAction action);
+	/// @since 8.0
+	void addCollectionMutation(CollectionMutationInput input);
 
 	/// Adds a bulk operation cleanup action.
 	///

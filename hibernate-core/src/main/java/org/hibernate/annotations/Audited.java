@@ -274,9 +274,7 @@ public @interface Audited {
 	@interface Override {
 
 		/**
-		 * Name of the field (or property) whose mapping is being overridden. Allows empty value if
-		 * {@link Override} is used to change auditing behavior of all attributes inherited from
-		 * {@link jakarta.persistence.MappedSuperclass} type.
+		 * Name of the field (or property) whose mapping is being overridden.
 		 */
 		String name() default "";
 

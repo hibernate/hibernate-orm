@@ -39,6 +39,51 @@ Post-approval clarifications::
   only the validity-gated collection-delta/orphan-projection boundary.  The
   rejected compiled-plan material is retained below solely as historical design
   context.
+* `2026-08-10` -- Selected the two-stage queue-neutral collection boundary for
+  the working specification.  Each queue retains native lowering and scheduling
+  representations.  A queue-participating boundary vocabulary remains a
+  potential later investigation rather than a rejected alternative or an
+  approval-blocking prototype.
+* `2026-08-10` -- Selected semantic remove-event delivery for database-cascade
+  suppression.  A logical remove with an existing collection wrapper fires its
+  normal pre/post remove events even when no collection SQL is emitted.  No
+  wrapper is initialized or synthesized solely for event delivery.
+* `2026-08-10` -- Classified queued-operation finalization as an internal
+  completion obligation of its enclosing semantic collection mutation, not an
+  independent observable lifecycle.  Collection- and entity-owned physical work
+  must complete before the live command log is cleared.
+* `2026-08-10` -- Deferred collection-interceptor hooks, Hibernate events, owner
+  callbacks, final delta freezing, lowering, and successful lifecycle until a
+  positive speculative auto-flush decision.  This intentionally changes current
+  hook timing so one owner `@PreUpdate` can precede every contributing collection
+  hook and its changes can be observed.  Pre-decision inputs report conservative
+  potential query spaces.
+* `2026-08-10` -- Defined remove-before-create as a move-local ordering guarantee
+  for `REMOVE_AND_CREATE`.  Corresponding interceptor, event, execution, and
+  completion stages are remove-first, while both mutations may be prepared
+  before execution.  The normalized interceptor order intentionally changes the
+  current recreate-before-remove discovery order.
+* `2026-08-10` -- Selected an opaque checkpoint/restore contract for the
+  incubating `ActionQueue` SPI, replacing the list-specific
+  `clearFromFlushNeededCheck(int)` target.  Pre-checkpoint work survives;
+  post-checkpoint registration categories explicitly retain durable work or
+  discard safely regenerable work.
+* `2026-08-10` -- Defined one flush-local owner update-callback lifecycle across
+  entity and non-inverse collection work.  Owner `@PreUpdate` runs before final
+  preparation and its changes are re-evaluated; owner `@PostUpdate` runs once
+  only after all applicable owner work and Hibernate post-events succeed.
+* `2026-08-10` -- Selected an associated `CollectionDeltaProducer` obtained by a
+  default `CollectionSemantics` method.  Standard semantics may return cached
+  specialized producers.  Existing custom semantics use a legacy-compatible
+  producer which requests initialization, rather than guessing, only when a
+  required flush needs an uninitialized delta it cannot safely describe.
+* `2026-08-10` -- Approved revision `1.0` of
+  link:collection-flush-processing-spec.adoc[Collection Flush Processing
+  Specification] as the implementation and conformance baseline.
+* `2026-08-10` -- Added approved specification requirements for release
+  migration-guide notes covering the remove/create interceptor order, owner
+  callback and speculative-interceptor timing, and the `ActionQueue`
+  checkpoint/restore SPI signature change.
 
 This document proposes a redesign of collection visitation and mutation planning
 during flush.  It focuses on the path from cascade and reachability processing,
@@ -171,9 +216,9 @@ baseline or only the explicit changes queued against an uninitialized baseline.
 
 Logical collection action::
 One observable collection lifecycle unit, such as create, remove, or update.
-Queued-operation finalization may be merged into such an action or represented
-as a dependent internal lifecycle unit.  A move may contain both a remove action
-and a create action because both lifecycles are observable.
+Queued-operation finalization is an internal completion obligation of such an
+action and is not a separate lifecycle unit.  A move may contain both a remove
+action and a create action because both lifecycles are observable.
 
 Physical collection operation::
 A table-level mutation emitted for a logical collection action.  In the graph
@@ -632,6 +677,11 @@ remove, or create semantics.
 
 `REMOVE_AND_CREATE` normalizes into two semantic mutations because remove and
 create each have observable collection lifecycle events and cache behavior.
+Corresponding lifecycle stages are ordered remove-before-create.  Both mutations
+may be prepared before execution, but create-side physical work depends on
+successful completion of the remove-side physical obligations which must precede
+it.  This makes the existing remove-first event and execution direction explicit
+and normalizes interceptor delivery from its current recreate-first order.
 
 This vocabulary intentionally differs from the legacy
 `CollectionRecreateAction` name.  In collection handling, _recreate_ means
@@ -737,9 +787,11 @@ extended or adapted so every collection semantics can either:
 
 Delta construction belongs with `CollectionSemantics` because list, map, set,
 bag, identifier-bag, and array equality and duplicate rules differ.  A
-`CollectionSemantics` implementation may produce the delta directly or resolve
-an associated producer; the exact SPI shape remains a working-specification
-question.
+`CollectionSemantics` implementation resolves an associated
+`CollectionDeltaProducer` through a default method.  Standard semantics may
+return cached immutable specialized producers, avoiding per-flush allocation
+while keeping comparison, queued-command normalization, and orphan projection
+out of the queue implementations.
 
 The shared collection-mutation preparation protocol owns _when_ production
 occurs.  After applicable pre-mutation lifecycle processing, it asks the
@@ -753,7 +805,18 @@ it.
 
 This evolves the responsibility currently represented in part by
 `PersistentCollection.getChangeSet()`.  Existing wrapper-specific change-set
-logic may be reused behind the semantics-owned producer during migration.
+logic may be reused behind the semantics-owned producer during migration.  The
+default producer adapts the existing initialized-wrapper comparison contract so
+direct custom `CollectionSemantics` implementations remain source compatible,
+and `UserCollectionType` remains insulated by `CustomCollectionTypeSemantics`.
+If that producer cannot safely describe a required uninitialized delta, it
+requests initialization from shared mutation preparation rather than performing
+the initialization or guessing at coverage.  Preparation may honor that request
+only once flush execution is required; it must not initialize during a discarded
+speculative auto-flush or solely for cascade orphan inspection.  After successful
+initialization applies queued operations, production continues with a complete
+loaded-baseline delta.  Custom semantics may provide a specialized producer to
+avoid this conservative fallback.
 
 For an initialized collection, the baseline is `LOADED` or `EMPTY` and coverage
 is normally `COMPLETE`.  For a still-uninitialized collection, queued operations
@@ -779,7 +842,7 @@ earlier version of this proposal called a possible representation
 `LogicalCollectionAction`; that name does not define the `ActionQueue` boundary
 and is no longer the preferred vocabulary.
 
-The current provisional boundary has two queue-neutral stages:
+The selected working-specification boundary has two queue-neutral stages:
 
 [source]
 ----
@@ -793,9 +856,10 @@ The intent is to stop requiring every `ActionQueue` implementation to accept
 `CollectionRecreateAction`, `CollectionRemoveAction`,
 `CollectionUpdateAction`, and `QueuedOperationCollectionAction` as its primary
 collection registration vocabulary.  It is not to require a Java type named
-`LogicalCollectionAction`.  The exact common registration point remains
-provisional: it may accept semantic input, a prepared mutation, or allow a queue
-to participate in producing its boundary representation.
+`LogicalCollectionAction`.  The exact Java signatures remain an implementation
+detail, but shared semantic preparation remains distinct from queue-native
+lowering.  Allowing queues to participate more directly in producing their
+boundary representations remains a potential later investigation.
 
 During migration, the legacy queue may adapt the queue-neutral boundary into the
 existing collection action classes.  The graph queue may lower the same boundary
@@ -809,9 +873,11 @@ arbitrary row operation.
 
 A lifecycle contains ordered stages such as:
 
+* preliminary owner participation discovery,
+* owner pre-update callback,
+* refresh of owner entity state and collection inputs,
 * interceptor notification,
 * collection pre-event,
-* owner pre-update callback,
 * execution monitor start,
 * physical execution success or failure,
 * execution monitor completion,
@@ -820,9 +886,18 @@ A lifecycle contains ordered stages such as:
 * `CollectionEntry.afterAction()`,
 * owner loaded-state synchronization,
 * cache eviction,
-* collection post-event,
+* Hibernate entity and collection post-events,
 * owner post-update callback,
 * statistics update.
+
+A flush-local owner lifecycle coordinator keys participation by owner identity.
+Entity and non-inverse collection work register with the same coordinator.
+`@PreUpdate` runs once before final entity-state capture, collection interceptor
+hooks, collection pre-events, and delta freezing; its entity and collection
+changes are re-evaluated for the same flush.  `@PostUpdate` runs once only after
+all applicable owner entity and collection work and their Hibernate post-events
+succeed.  Inserted or deleted owners do not gain update lifecycle solely from
+collection create or remove work.
 
 The exact ordering of contributor hooks relative to `afterAction()` must be
 explicit.  Audit, for example, may require the old stored snapshot before
@@ -1055,11 +1130,12 @@ Queued-operation finalization is part of the logical action lifecycle:
   transition owns that state advancement,
 * cache invalidation and dirty-state cleanup preserve current semantics.
 
-If queued input and another collection transition are normalized into the same
-logical action, they share one completion boundary.  If compatibility requires
-separate observable lifecycle units, the coordinator must add an explicit
-action dependency.  In neither case should ordering depend on statement shape
-or on a batchable no-op callback carrier.
+Queued input and its selected collection transition share one completion
+boundary and one observable lifecycle.  Entity-owned foreign-key work or other
+external physical contributions participate as explicit completion dependencies
+when required.  Queued-operation finalization has no independent mutation ID,
+events, callbacks, cache lifecycle, or statistics, and its ordering does not
+depend on statement shape or on a batchable no-op callback carrier.
 
 === Database cascade removal
 
@@ -1074,8 +1150,12 @@ The logical remove still participates in:
 * collection entry state transition,
 * cache invalidation and transaction cleanup.
 
-Whether all existing remove events should fire for a database-cascade-only
-logical removal is an observable behavior decision and must be covered by tests.
+A database-cascade-only logical removal fires its normal pre/post remove events
+when an existing collection wrapper participates in the mutation.  This is an
+intentional observable change from the current `skipRemoval()` path.  Hibernate
+does not initialize or synthesize a wrapper solely to deliver those events, so
+an unloaded-proxy removal without a collection instance retains its existing
+no-event behavior.
 
 == Cascade Integration Boundary
 
@@ -1524,8 +1604,33 @@ The checkpoint records the size or persistent root of every queue component
 which may be changed by flush preparation, including unresolved inserts and both
 normal and orphan collection removals.
 
-Collection mutation intents and deltas created after the checkpoint are owned by
-the flush context and discarded with it when execution is unnecessary.
+Work present before the checkpoint is retained automatically.  Registration
+categories used after the checkpoint declare durable or regenerable semantics:
+
+* entity inserts, entity deletes, orphan removals, and orphan collection removals
+  are durable because persistence-context lifecycle state has already changed;
+* flush-derived entity updates, ordinary collection semantic inputs, collection
+  lowering results, and queued-operation finalization are regenerable while
+  their dirty, snapshot, and queued-command sources remain intact.
+
+Durable is the safe default.  A category is regenerable only when its producer
+can prove that complete source state remains available, no cleanup has consumed
+it, and a later required flush reconstructs equivalent work.  Restoration is
+therefore defined by the registration contract rather than by concrete queue
+list membership.  This deliberately changes the incubating `ActionQueue` SPI but
+does not prescribe either implementation's internal checkpoint representation.
+
+Collection mutation inputs and provisional analysis created after the checkpoint
+are owned by the flush context and discarded with it when execution is
+unnecessary.
+Collection interceptor hooks, Hibernate collection events, owner callbacks for
+collection work, final delta freezing, physical lowering, state advancement,
+cache work, completion handlers, and successful collection statistics all wait
+for a positive flush-needed decision.  Once positive, the owner's one applicable
+`@PreUpdate` callback precedes the hook for every contributing collection; entity
+and collection participation does not duplicate the owner callback.  Before
+that decision, semantic inputs expose a conservative set of potentially affected
+query spaces so physical decomposition is unnecessary.
 
 == Migration Plan
 
@@ -1561,9 +1666,13 @@ the flush context and discarded with it when execution is unnecessary.
 === Phase 4: Stable delta production
 
 * Generalize `CollectionChangeSet` across collection semantics.
-* Make `CollectionSemantics` own or resolve the collection-specific delta
-  producer; invoke it through shared mutation preparation rather than from a
-  queue-specific decomposer.
+* Make `CollectionSemantics` resolve the collection-specific delta producer
+  through a default associated-producer method; invoke it through shared
+  mutation preparation rather than from a queue-specific decomposer.
+* Adapt initialized custom wrappers through a conservative compatibility
+  producer and honor its initialization-required result only during a required
+  flush; never initialize through this fallback for discarded speculative work
+  or orphan inspection alone.
 * Compute and retain one delta per relevant collection and flush.
 * Add an internal immutable queued-command visitor and normalize queued commands
   into complete or explicit-changes-only deltas.
@@ -1720,8 +1829,6 @@ row identity and structure while allowing explicit deferred value handles.
   must delta materialization happen after every pre-event?
 * Is cross-collection event order contractual, intentionally unspecified, or
   required to match the legacy queue?
-* What is the exact lifecycle for a logical remove whose SQL is suppressed by
-  database cascade?
 * Can orphan discovery always share the flush delta, or do cascade timing rules
   require an earlier partial delta?
 * Which collection shapes require row-level graph nodes for unique-slot or cycle
@@ -1735,8 +1842,6 @@ row identity and structure while allowing explicit deferred value handles.
 * Should `CollectionDelta` retain one ordered change sequence for every source,
   or expose ordered steps only for explicit-changes-only deltas and canonical
   projections for complete deltas?
-* Does queued-operation finalization become part of another logical update when
-  both exist, or remain a separate internal action with an explicit dependency?
 * What session serialization guarantees are required for normalized collection
   intents, deltas, and action completion state?
 
@@ -1747,8 +1852,9 @@ The initial direction is:
 * keep reachability state flush-local and identity-based,
 * record collection intent during visitation,
 * normalize intent after visitation and forced initialization,
-* have `CollectionSemantics` produce a stable reusable delta during shared
-  mutation preparation,
+* have an associated `CollectionDeltaProducer` resolved through
+  `CollectionSemantics` produce a stable reusable delta during shared mutation
+  preparation,
 * normalize queued-operation logs into deltas with explicit baseline and
   coverage,
 * preserve logical action identity independently of SQL shape,

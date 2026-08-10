@@ -1787,6 +1787,77 @@ public class HbmTransformationJaxbTests {
 	}
 
 	@Test
+	@JiraKey( "HHH-20777" )
+	public void testReturnScalarTransformation(ServiceRegistryScope scope) {
+		transformAndVerify( "xml/jaxb/mapping/return-scalar/hbm.xml", scope, transformed -> {
+			// Scalar query should produce an implicit result set mapping
+			assertThat( transformed.getSqlResultSetMappings() ).hasSize( 2 );
+			assertThat( transformed.getNamedNativeQueries() ).hasSize( 2 );
+
+			// --- findScalars: return-scalar with typed and untyped columns ---
+			final var scalarMapping = transformed.getSqlResultSetMappings().stream()
+					.filter( m -> m.getName().startsWith( "findScalars" ) )
+					.findFirst()
+					.orElseThrow();
+			assertThat( scalarMapping.getColumnResult() ).hasSize( 3 );
+
+			final var colName = scalarMapping.getColumnResult().stream()
+					.filter( c -> "col_name".equals( c.getName() ) )
+					.findFirst()
+					.orElseThrow();
+			assertThat( colName.getClazz() )
+					.as( "HBM type 'string' should resolve to java.lang.String" )
+					.isEqualTo( "java.lang.String" );
+
+			final var colValue = scalarMapping.getColumnResult().stream()
+					.filter( c -> "col_value".equals( c.getName() ) )
+					.findFirst()
+					.orElseThrow();
+			assertThat( colValue.getClazz() )
+					.as( "HBM type 'long' should resolve to long" )
+					.isEqualTo( "long" );
+
+			final var colUntyped = scalarMapping.getColumnResult().stream()
+					.filter( c -> "col_untyped".equals( c.getName() ) )
+					.findFirst()
+					.orElseThrow();
+			assertThat( colUntyped.getClazz() )
+					.as( "Untyped return-scalar should have null class" )
+					.isNull();
+
+			// The query should reference the implicit result set mapping
+			final var scalarQuery = transformed.getNamedNativeQueries().stream()
+					.filter( q -> "findScalars".equals( q.getName() ) )
+					.findFirst()
+					.orElseThrow();
+			assertThat( scalarQuery.getResultSetMapping() )
+					.as( "Named native query with return-scalar should reference the implicit result set mapping" )
+					.isEqualTo( scalarMapping.getName() );
+			assertThat( scalarQuery.getQuery() )
+					.as( "Query text should be set (whitespace-only text nodes should be skipped)" )
+					.isNotNull();
+
+			// --- findEntityByName: return with entity-name instead of class ---
+			final var entityMapping = transformed.getSqlResultSetMappings().stream()
+					.filter( m -> m.getName().startsWith( "findEntityByName" ) )
+					.findFirst()
+					.orElseThrow();
+			assertThat( entityMapping.getEntityResult() ).hasSize( 1 );
+			assertThat( entityMapping.getEntityResult().get( 0 ).getEntityClass() )
+					.as( "Entity return using entity-name should resolve the entity class" )
+					.isEqualTo( "org.hibernate.orm.test.boot.jaxb.mapping.SimpleEntity" );
+
+			final var entityQuery = transformed.getNamedNativeQueries().stream()
+					.filter( q -> "findEntityByName".equals( q.getName() ) )
+					.findFirst()
+					.orElseThrow();
+			assertThat( entityQuery.getResultSetMapping() )
+					.as( "Named native query with entity return should reference the implicit result set mapping" )
+					.isEqualTo( entityMapping.getName() );
+		} );
+	}
+
+	@Test
 	@JiraKey( "HHH-20703" )
 	public void testCollectionTypeTypedefResolution(ServiceRegistryScope scope) {
 		transformAndVerify( "xml/jaxb/mapping/collection-type-typedef/hbm.xml", scope, transformed -> {

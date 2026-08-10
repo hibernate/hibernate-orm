@@ -49,6 +49,7 @@ public final class FlushProcessingContext implements CollectionFlushActionTracke
 	}
 
 	private final EventSource session;
+	private final OwnerUpdateCompletionCoordinator ownerUpdateCompletionCoordinator;
 	private final IdentityHashMap<PersistentCollection<?>, CollectionState> collectionStates = new IdentityHashMap<>();
 
 	/// Creates a context for a single flush of the given session.
@@ -56,6 +57,49 @@ public final class FlushProcessingContext implements CollectionFlushActionTracke
 	/// @param session The event source currently being flushed
 	public FlushProcessingContext(EventSource session) {
 		this.session = session;
+		ownerUpdateCompletionCoordinator = new OwnerUpdateCompletionCoordinator( session );
+	}
+
+	/// Registers an entity update as the authority for owner update-callback applicability.
+	public void registerOwnerEntityUpdate(Object owner, org.hibernate.persister.entity.EntityPersister persister) {
+		ownerUpdateCompletionCoordinator.registerEntityMutation( owner, persister );
+	}
+
+	/// Registers non-inverse collection work with an applicable owner update lifecycle.
+	public void registerOwnerCollectionMutation(Object owner, boolean inverse) {
+		ownerUpdateCompletionCoordinator.registerCollectionMutation( owner, inverse );
+	}
+
+	/// Seals owner update participation after entity and collection work has been discovered.
+	public void sealOwnerUpdateCallbacks() {
+		ownerUpdateCompletionCoordinator.seal();
+	}
+
+	public boolean coordinatesOwnerUpdate(Object owner) {
+		return ownerUpdateCompletionCoordinator.handles( owner );
+	}
+
+	public void ownerEntityUpdateCompleted(Object owner, Runnable successfulCompletionHandler) {
+		if ( !ownerUpdateCompletionCoordinator.entityMutationCompleted( owner, successfulCompletionHandler ) ) {
+			successfulCompletionHandler.run();
+		}
+	}
+
+	public void ownerCollectionMutationCompleted(
+			Object owner,
+			boolean inverse,
+			Runnable successfulCompletionHandler) {
+		if ( inverse
+				|| !ownerUpdateCompletionCoordinator.collectionMutationCompleted(
+						owner,
+						successfulCompletionHandler
+				) ) {
+			successfulCompletionHandler.run();
+		}
+	}
+
+	public void ownerMutationFailed(Object owner) {
+		ownerUpdateCompletionCoordinator.mutationFailed( owner );
 	}
 
 	/// Initializes flush-local state for a collection known to the persistence context before
@@ -133,15 +177,14 @@ public final class FlushProcessingContext implements CollectionFlushActionTracke
 			boolean emptySnapshot) {
 		markAction( collection, CollectionActionKind.REMOVE );
 		session.runInterceptorCallback(	() -> session.getInterceptor().onCollectionRemove( collection, key ) );
-		if ( !skipRemoval( session, persister, key ) ) {
-			session.getActionQueue().addAction(	new CollectionRemoveAction(
-					collection,
-					persister,
-					key,
-					emptySnapshot,
-					session
-			) );
-		}
+		final boolean removalSkipped = skipRemoval( session, persister, key );
+		session.getActionQueue().addAction(	new CollectionRemoveAction(
+				collection,
+				persister,
+				key,
+				emptySnapshot || removalSkipped,
+				session
+		) );
 	}
 
 	/// Records and queues a logical collection update action.

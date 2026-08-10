@@ -92,12 +92,7 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 				action.getAffectedOwnerId(),
 				DecompositionSupport.generateCacheKey( action, session )
 		);
-		final var postExecutionCallback = DecompositionSupport.withOwnerUpdateCallbacks(
-				persister,
-				affectedOwner( action.getAffectedOwner(), collection ),
-				decompositionContext,
-				postRecreateHandling
-		);
+		final var postExecutionCallback = postRecreateHandling;
 
 		final var entries = collection.entries( persister );
 		if ( !entries.hasNext() ) {
@@ -223,12 +218,7 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 				action.getAffectedOwnerId(),
 				DecompositionSupport.generateCacheKey( action, session )
 		);
-		final var postExecutionCallback = DecompositionSupport.withOwnerUpdateCallbacks(
-				persister,
-				affectedOwner( action.getAffectedOwner(), collection ),
-				decompositionContext,
-				postUpdateHandling
-		);
+		final var postExecutionCallback = postUpdateHandling;
 
 		final List<FlushOperation> operations = new ArrayList<>();
 
@@ -312,10 +302,6 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 			}
 		}
 		return true;
-	}
-
-	private Object affectedOwner(Object affectedOwner, PersistentCollection<?> collection) {
-		return affectedOwner == null ? collection.getOwner() : affectedOwner;
 	}
 
 	private void contributeCollectionChange(

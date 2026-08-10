@@ -8,6 +8,7 @@ import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.engine.internal.FlushProcessingContext;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.PostCollectionRemoveEvent;
 import org.hibernate.event.spi.PostCollectionRemoveEventListener;
@@ -139,10 +140,22 @@ public final class CollectionRemoveAction extends CollectionAction {
 		}
 		evict();
 		postRemove();
-
-		final var statistics = session.getFactory().getStatistics();
-		if ( statistics.isStatisticsEnabled() ) {
-			statistics.removeCollection( getPersister().getRole() );
+		final Runnable recordStatistics = () -> {
+			final var statistics = session.getFactory().getStatistics();
+			if ( statistics.isStatisticsEnabled() ) {
+				statistics.removeCollection( getPersister().getRole() );
+			}
+		};
+		final var tracker = session.getPersistenceContextInternal().getCollectionFlushActionTracker();
+		if ( tracker instanceof FlushProcessingContext flushProcessingContext ) {
+			flushProcessingContext.ownerCollectionMutationCompleted(
+					affectedOwner,
+					getPersister().isInverse(),
+					recordStatistics
+			);
+		}
+		else {
+			recordStatistics.run();
 		}
 	}
 

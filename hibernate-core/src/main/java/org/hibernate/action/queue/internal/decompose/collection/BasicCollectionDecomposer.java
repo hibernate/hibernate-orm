@@ -174,12 +174,7 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 				action.getAffectedOwnerId(),
 				DecompositionSupport.generateCacheKey( action, session )
 		);
-		final var postExecutionCallback = DecompositionSupport.withOwnerUpdateCallbacks(
-				persister,
-				affectedOwner( action.getAffectedOwner(), action.getCollection() ),
-				decompositionContext,
-				postRecreateHandling
-		);
+		final var postExecutionCallback = postRecreateHandling;
 
 		if ( !operations.isEmpty() ) {
 			contributeCollectionChange(
@@ -370,12 +365,7 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 				action.getAffectedOwnerId(),
 				DecompositionSupport.generateCacheKey(action, session)
 		);
-		final var postExecutionCallback = DecompositionSupport.withOwnerUpdateCallbacks(
-				persister,
-				affectedOwner( action.getAffectedOwner(), collection ),
-				decompositionContext,
-				postUpdateHandling
-		);
+		final var postExecutionCallback = postUpdateHandling;
 		if ( !operations.isEmpty() ) {
 			// Attach post-execution callback to the last operation
 			final var lastOperation = operations.get( operations.size() - 1 );
@@ -391,10 +381,6 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 					postExecutionCallback
 			) );
 		}
-	}
-
-	private Object affectedOwner(Object affectedOwner, PersistentCollection<?> collection) {
-		return affectedOwner == null ? collection.getOwner() : affectedOwner;
 	}
 
 	private void planDeleteRowOperations(

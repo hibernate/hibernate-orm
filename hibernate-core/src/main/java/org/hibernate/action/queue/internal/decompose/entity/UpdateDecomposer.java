@@ -134,10 +134,6 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 		if ( vetoed ) {
 			return;
 		}
-		if ( decompositionContext != null ) {
-			decompositionContext.registerOwnerUpdateCallbacks( action.getInstance() );
-		}
-
 		final Object entity = action.getInstance();
 		final Object identifier = action.getId();
 //		if ( identifier == null && decompositionContext != null ) {

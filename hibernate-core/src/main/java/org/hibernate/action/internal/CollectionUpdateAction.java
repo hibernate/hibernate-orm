@@ -9,6 +9,7 @@ import jakarta.annotation.Nullable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.engine.internal.FlushProcessingContext;
 import org.hibernate.engine.spi.ComparableExecutable;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.PostCollectionUpdateEvent;
@@ -132,10 +133,22 @@ public final class CollectionUpdateAction extends CollectionAction {
 		session.getPersistenceContextInternal().getCollectionEntry( collection ).afterAction( collection );
 		evict();
 		postUpdate();
-
-		final var statistics = session.getFactory().getStatistics();
-		if ( statistics.isStatisticsEnabled() ) {
-			statistics.updateCollection( persister.getRole() );
+		final Runnable recordStatistics = () -> {
+			final var statistics = session.getFactory().getStatistics();
+			if ( statistics.isStatisticsEnabled() ) {
+				statistics.updateCollection( persister.getRole() );
+			}
+		};
+		final var tracker = session.getPersistenceContextInternal().getCollectionFlushActionTracker();
+		if ( tracker instanceof FlushProcessingContext flushProcessingContext ) {
+			flushProcessingContext.ownerCollectionMutationCompleted(
+					affectedOwner,
+					persister.isInverse(),
+					recordStatistics
+			);
+		}
+		else {
+			recordStatistics.run();
 		}
 	}
 

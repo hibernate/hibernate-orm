@@ -89,6 +89,42 @@ equivalent work during a later required flush.
 
 This section describes changes in behavior that applications should be aware of.
 
+[[collection-remove-create-callback-order]]
+=== Collection remove/create callback order
+
+When moving a collection between owners or roles requires both removal of its old
+state and creation of its new state, Hibernate now invokes the collection-remove
+interceptor hook before the legacy collection-recreate hook.  The corresponding
+Hibernate collection events and semantic mutation completion are likewise
+remove-first.  Integrations must not retain the previous assumption that the
+recreate interceptor hook runs before the remove hook.
+
+[[collection-mutation-lifecycle-timing]]
+=== Collection mutation lifecycle timing
+
+Collection post-events, cache handling, successful statistics, and queued-operation
+finalization are now tied to semantic collection-mutation completion instead of to
+the last row operation produced during decomposition.  This ensures that grouped,
+reordered, and batched row work completes the correct collection lifecycle and that
+failed physical work suppresses successful completion handling.
+
+A collection mutation which produces no SQL now completes directly after its
+semantic work is sealed; Hibernate no longer creates a SQL-shaped no-op solely to
+carry its post-event.  Consequently, applications must not rely on a global order
+between pre/post collection events for unrelated collections.  Each mutation's
+pre-event still precedes its post-event, and a post-event still follows all physical
+work belonging to that mutation.
+
+[[collection-owner-update-callback-timing]]
+=== Collection owner update callback timing
+
+Jakarta Persistence owner update callbacks are coordinated once per owner and flush.
+When entity and non-inverse collection work both contribute to an applicable owner
+update, one `@PreUpdate` callback is invoked and one `@PostUpdate` callback is delayed
+until all contributing entity and collection post-events have been delivered.
+Collection create or remove work associated with owner insert/delete lifecycle does
+not by itself establish update-callback applicability.
+
 [[jdbc-resource-release-autocommit]]
 === JDBC resource release in autocommit mode
 

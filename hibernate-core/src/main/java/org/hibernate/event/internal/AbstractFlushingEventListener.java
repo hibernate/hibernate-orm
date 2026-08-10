@@ -8,7 +8,6 @@ import java.util.Map;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
-import org.hibernate.action.internal.QueuedOperationCollectionAction;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.internal.BidirectionalAssociationSynchronizer;
 import org.hibernate.cascade.internal.Cascade;
@@ -83,7 +82,14 @@ public abstract class AbstractFlushingEventListener {
 	}
 
 	protected FlushProcessingContext beginFlushProcessing(EventSource session, PersistenceContext persistenceContext) {
-		final var flushProcessingContext = new FlushProcessingContext( session );
+		return beginFlushProcessing( session, persistenceContext, false );
+	}
+
+	protected FlushProcessingContext beginFlushProcessing(
+			@Nonnull EventSource session,
+			@Nonnull PersistenceContext persistenceContext,
+			boolean speculative) {
+		final var flushProcessingContext = new FlushProcessingContext( session, speculative );
 		persistenceContext.setCollectionFlushActionTracker( flushProcessingContext );
 		return flushProcessingContext;
 	}
@@ -305,17 +311,15 @@ public abstract class AbstractFlushingEventListener {
 					// uninitialized. Once initialized, normal collection dirty-checking/action
 					// handling owns the changes.
 					if ( !collection.wasInitialized() && collection.hasQueuedOperations() ) {
-						actionQueue.addAction(
-								new QueuedOperationCollectionAction(
-										collection,
-										collectionEntry.getLoadedPersister(),
-										collectionEntry.getLoadedKey(),
-										session
-								)
+						flushProcessingContext.queueCollectionQueuedOperations(
+								collection,
+								collectionEntry.getLoadedPersister(),
+								collectionEntry.getLoadedKey()
 						);
 					}
 				}, true );
 
+		flushProcessingContext.registerCollectionMutationInputs();
 		actionQueue.sortCollectionActions();
 
 		return count;

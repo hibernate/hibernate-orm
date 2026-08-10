@@ -155,7 +155,9 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 			Consumer<FlushOperation> operationConsumer) {
 
 		// Always fire PRE event, even if no SQL operations will be needed
-		DecompositionSupport.firePreRecreate( persister, action.getCollection(), session );
+		if ( !action.isLifecyclePrepared() ) {
+			DecompositionSupport.firePreRecreate( persister, action.getCollection(), session );
+		}
 
 		var operations = planRecreateOperation(
 				action.getCollection(),
@@ -286,7 +288,9 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 		var collection = action.getCollection();
 		var key = action.getKey();
 
-		DecompositionSupport.firePreUpdate( persister, collection, session );
+		if ( !action.isLifecyclePrepared() ) {
+			DecompositionSupport.firePreUpdate( persister, collection, session );
+		}
 
 		final List<FlushOperation> operations = new ArrayList<>();
 
@@ -1044,7 +1048,9 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 		var affectedOwner = action.getAffectedOwner();
 
 		// Always fire PRE event, even if no SQL operations will be needed
-		DecompositionSupport.firePreRemove( persister, collection, affectedOwner, session );
+		if ( !action.isLifecyclePrepared() ) {
+			DecompositionSupport.firePreRemove( persister, collection, affectedOwner, session );
+		}
 
 		// Create callback to handle post-execution work (afterAction, cache, events, stats)
 		var postRemoveHandling = new PostCollectionRemoveHandling(

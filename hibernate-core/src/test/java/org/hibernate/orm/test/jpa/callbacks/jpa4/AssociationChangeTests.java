@@ -151,6 +151,34 @@ public class AssociationChangeTests {
 	}
 
 	@Test
+	void ownerPreUpdateCollectionReplacementIsIncludedInAutoFlush(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( session -> session.persist( new Vendor( 1, "A" ) ) );
+
+		UpdateWatcher.reset();
+		UpdateWatcher.vendorPreUpdateAction = vendor ->
+				vendor.superlatives = new HashSet<>( Set.of( "replacement from pre-update" ) );
+
+		factoryScope.inTransaction( session -> {
+			final var vendor = session.get( Vendor.class, 1 );
+			vendor.superlatives.size();
+			vendor.name = "B";
+
+			session.createQuery( "from Product", Product.class ).getResultList();
+			assertThat( UpdateWatcher.vendorPreUpdates ).isEmpty();
+			assertThat( UpdateWatcher.vendorPostUpdates ).isEmpty();
+
+			assertThat( session.createQuery(
+					"select count(s) from Vendor v join v.superlatives s",
+					Long.class
+			).getSingleResult() ).isEqualTo( 1L );
+			assertThat( vendor.superlatives ).containsExactly( "replacement from pre-update" );
+		} );
+
+		assertThat( UpdateWatcher.vendorPreUpdates ).hasSize( 1 );
+		assertThat( UpdateWatcher.vendorPostUpdates ).hasSize( 1 );
+	}
+
+	@Test
 	@Jira( "https://hibernate.atlassian.net/browse/HHH-20374" )
 	void testOwnerToManyChange(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( (session) -> {

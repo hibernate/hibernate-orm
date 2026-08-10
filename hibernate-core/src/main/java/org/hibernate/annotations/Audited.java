@@ -253,4 +253,65 @@ public @interface Audited {
 		 */
 		String catalog() default "";
 	}
+
+
+	/**
+	 * The {@code Audited.Override} annotation is used to override the auditing behavior of a single property
+	 * inherited from {@link jakarta.persistence.MappedSuperclass} type, or attribute inside an embedded component.
+	 * For example, a property whose auditing has been enabled in a {@link jakarta.persistence.MappedSuperclass}
+	 * can be excluded in the subclass by leveraging the {@code Audited.Override} annotation and setting
+	 * {@code isAudited} to {@code false}. The reverse is also possible: a previous {@linkplain Excluded exclusion}
+	 * of a property can be revoked with an {@code Audited.Override}.
+	 *
+	 * @see jakarta.persistence.Embedded
+	 * @see jakarta.persistence.Embeddable
+	 * @see jakarta.persistence.MappedSuperclass
+	 * @see jakarta.persistence.AssociationOverride
+	 */
+	@Target({TYPE, METHOD, FIELD})
+	@Retention(RUNTIME)
+	@Repeatable(Overrides.class)
+	@interface Override {
+
+		/**
+		 * Name of the field (or property) whose mapping is being overridden. Allows empty value if
+		 * {@link Override} is used to change auditing behavior of all attributes inherited from
+		 * {@link jakarta.persistence.MappedSuperclass} type.
+		 */
+		String name() default "";
+
+		/**
+		 * Indicates if the field (or property) is audited; defaults to {@code true}.
+		 */
+		boolean isAudited() default true;
+
+		/**
+		 * New {@link CollectionTable} used for this field (or property). Its value
+		 * is ignored if {@link #isAudited()} equals to {@code false}.
+		 */
+		CollectionTable collectionTable() default @CollectionTable( name = "");
+
+	}
+
+	/**
+	 * The {@code AuditingOverrides} annotation is used to override the auditing
+	 * behavior for one or more fields (or properties) inside an embedded
+	 * component.
+	 *
+	 * @see jakarta.persistence.Embedded
+	 * @see jakarta.persistence.Embeddable
+	 * @see jakarta.persistence.MappedSuperclass
+	 * @see jakarta.persistence.AssociationOverride
+	 * @see jakarta.persistence.AssociationOverrides
+	 * @see Override
+	 */
+	@Target({TYPE, METHOD, FIELD})
+	@Retention(RUNTIME)
+	@interface Overrides {
+		/**
+		 * An array of {@link Override} values, to define the new auditing
+		 * behavior.
+		 */
+		Override[] value();
+	}
 }

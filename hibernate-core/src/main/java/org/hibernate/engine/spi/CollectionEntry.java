@@ -194,6 +194,7 @@ public final class CollectionEntry implements Serializable {
 		final var loadedPersister = this.loadedPersister;
 		snapshot = loadedPersister != null && isModifiable() ? collection.getSnapshot( loadedPersister ) : null;
 		collection.setSnapshot( loadedKey, role, snapshot );
+		collection.afterInitializationSnapshot();
 		if ( loadedPersister != null
 				&& session.getLoadQueryInfluencers().effectivelyBatchLoadable( loadedPersister ) ) {
 			session.getPersistenceContextInternal().getBatchFetchQueue()

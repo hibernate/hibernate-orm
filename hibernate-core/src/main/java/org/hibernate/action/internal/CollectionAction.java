@@ -6,6 +6,7 @@ package org.hibernate.action.internal;
 
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
+import org.hibernate.action.queue.internal.FrozenCollectionDelta;
 import org.hibernate.action.spi.AfterTransactionCompletionProcess;
 import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
 import org.hibernate.cache.CacheException;
@@ -35,6 +36,8 @@ public abstract class CollectionAction implements ComparableExecutable {
 	private final Object key;
 	private final String collectionRole;
 	private final boolean lifecyclePrepared;
+	@Nullable
+	private final FrozenCollectionDelta frozenDelta;
 
 	protected CollectionAction(
 			final @Nonnull CollectionPersister persister,
@@ -50,6 +53,16 @@ public abstract class CollectionAction implements ComparableExecutable {
 			final @Nullable Object key,
 			final @Nonnull EventSource session,
 			final boolean lifecyclePrepared) {
+		this( persister, collection, key, session, lifecyclePrepared, null );
+	}
+
+	protected CollectionAction(
+			final @Nonnull CollectionPersister persister,
+			final @Nullable PersistentCollection<?> collection,
+			final @Nullable Object key,
+			final @Nonnull EventSource session,
+			final boolean lifecyclePrepared,
+			final @Nullable FrozenCollectionDelta frozenDelta) {
 		assert persister != null;
 		assert session != null;
 		this.persister = persister;
@@ -58,6 +71,7 @@ public abstract class CollectionAction implements ComparableExecutable {
 		this.collectionRole = persister.getRole();
 		this.collection = collection;
 		this.lifecyclePrepared = lifecyclePrepared;
+		this.frozenDelta = frozenDelta;
 	}
 
 	/// Whether shared mutation preparation already delivered the interceptor hook and Hibernate pre-event.
@@ -65,6 +79,15 @@ public abstract class CollectionAction implements ComparableExecutable {
 	/// @since 8.0
 	public final boolean isLifecyclePrepared() {
 		return lifecyclePrepared;
+	}
+
+	/// The queue-neutral delta frozen before this action was lowered, if this
+	/// mutation is expressed as a delta rather than a bulk strategy.
+	///
+	/// @since 8.0
+	@Nullable
+	public final FrozenCollectionDelta getFrozenDelta() {
+		return frozenDelta;
 	}
 
 	/**

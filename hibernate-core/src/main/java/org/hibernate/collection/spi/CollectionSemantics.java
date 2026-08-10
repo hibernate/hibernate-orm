@@ -42,6 +42,19 @@ import org.hibernate.sql.results.graph.FetchParent;
 @Incubating
 public interface CollectionSemantics<CE, E> {
 	/**
+	 * Obtain the producer responsible for describing collection changes for these semantics.
+	 * <p>
+	 * The default preserves custom-semantics compatibility by adapting the existing
+	 * {@link PersistentCollection} comparison contract for initialized wrappers and
+	 * requesting coordinated initialization otherwise.
+	 *
+	 * @since 8.0
+	 */
+	default CollectionDeltaProducer getCollectionDeltaProducer() {
+		return CollectionDeltaProducer.legacyCompatible();
+	}
+
+	/**
 	 * The classification handled by this semantic
 	 */
 	CollectionClassification getCollectionClassification();

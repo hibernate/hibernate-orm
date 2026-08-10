@@ -11,6 +11,7 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 import org.hibernate.collection.spi.AbstractSetSemantics;
+import org.hibernate.collection.spi.CollectionDeltaProducer;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.collection.spi.PersistentSortedSet;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -27,6 +28,11 @@ public class StandardSortedSetSemantics<E> extends AbstractSetSemantics<SortedSe
 	public static final StandardSortedSetSemantics<?> INSTANCE = new StandardSortedSetSemantics<>();
 
 	private StandardSortedSetSemantics() {
+	}
+
+	@Override
+	public CollectionDeltaProducer getCollectionDeltaProducer() {
+		return StandardCollectionDeltaProducer.SET;
 	}
 
 	@Override

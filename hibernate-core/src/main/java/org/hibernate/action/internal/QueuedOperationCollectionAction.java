@@ -4,11 +4,14 @@
  */
 package org.hibernate.action.internal;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.AbstractPersistentCollection;
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.action.queue.internal.FrozenCollectionDelta;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.persister.collection.CollectionPersister;
+
 
 /**
  * If a collection has queued ops, we still need to process them.
@@ -16,7 +19,7 @@ import org.hibernate.persister.collection.CollectionPersister;
  * For example, {@link org.hibernate.persister.collection.OneToManyPersister}
  * needs to insert indexes for lists.  See HHH-8083.
  *
- * @see CollectionPersister#decompose(QueuedOperationCollectionAction, int, org.hibernate.engine.spi.SharedSessionContractImplementor).
+ * @see CollectionPersister#decompose(org.hibernate.action.queue.internal.PreparedCollectionMutation, int, org.hibernate.engine.spi.SharedSessionContractImplementor, org.hibernate.action.queue.spi.decompose.DecompositionContext, java.util.function.Consumer).
  *
  * @author Brett Meyer
  */
@@ -35,6 +38,18 @@ public final class QueuedOperationCollectionAction extends CollectionAction {
 			final Object id,
 			final EventSource session) {
 		super( persister, collection, id, session );
+	}
+
+	/// Creates the legacy queued-work lowering of an already-prepared semantic mutation.
+	///
+	/// @since 8.0
+	public QueuedOperationCollectionAction(
+			final @Nonnull PersistentCollection<?> collection,
+			final @Nonnull CollectionPersister persister,
+			final @Nonnull Object id,
+			final @Nonnull EventSource session,
+			final FrozenCollectionDelta frozenDelta) {
+		super( persister, collection, id, session, true, frozenDelta );
 	}
 
 	@Override

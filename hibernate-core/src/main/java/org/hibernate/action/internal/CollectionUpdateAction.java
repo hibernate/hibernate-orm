@@ -9,6 +9,7 @@ import jakarta.annotation.Nullable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.action.queue.internal.FrozenCollectionDelta;
 import org.hibernate.engine.internal.FlushProcessingContext;
 import org.hibernate.engine.spi.ComparableExecutable;
 import org.hibernate.event.spi.EventSource;
@@ -63,8 +64,9 @@ public final class CollectionUpdateAction extends CollectionAction {
 			final boolean emptySnapshot,
 			final @Nonnull EventSource session,
 			final @Nullable Object affectedOwner,
-			final @Nullable Object affectedOwnerId) {
-		super( persister, collection, id, session, true );
+			final @Nullable Object affectedOwnerId,
+			final FrozenCollectionDelta frozenDelta) {
+		super( persister, collection, id, session, true, frozenDelta );
 		this.emptySnapshot = emptySnapshot;
 		this.affectedOwner = affectedOwner;
 		this.affectedOwnerId = affectedOwnerId;

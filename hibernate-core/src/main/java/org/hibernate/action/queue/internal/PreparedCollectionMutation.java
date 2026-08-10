@@ -26,7 +26,14 @@ public record PreparedCollectionMutation(
 		@Nonnull CollectionEndpoint endpoint,
 		boolean emptySnapshot,
 		@Nullable Object affectedOwner,
-		@Nullable Object affectedOwnerId) {
+		@Nullable Object affectedOwnerId,
+		@Nullable FrozenCollectionDelta frozenDelta) {
+
+	/// Whether the retained delta still describes the collection's current state.
+	public boolean isDeltaValid() {
+		return frozenDelta == null
+				|| collection != null && frozenDelta.isValid( collection );
+	}
 
 	public enum Kind {
 		CREATE,

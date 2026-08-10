@@ -78,30 +78,43 @@ public abstract class AbstractStepExecutor implements PlanStepExecutor {
 		for ( int i = 0; i < flushOperations.size(); i++ ) {
 			var flushOperation = flushOperations.get( i );
 			final boolean execute = beforeOperationExecution( flushOperation );
-
-			// No-op operations: only carry post-execution callback, skip SQL execution
-			if ( flushOperation.getKind() != MutationKind.NO_OP && execute ) {
-				final var bindPlan = flushOperation.getBindPlan();
-				if ( bindPlan.getGeneratedValuesCollector() != null ) {
-					// we need to execute these without batching
-					executeWithGeneratedValues( flushOperation );
-				}
-				else {
-					final var jdbcOperation = flushOperation.getJdbcOperation();
-					if ( jdbcOperation instanceof PreparableMutationOperation preparable ) {
-						executePreparable( preparable, flushOperation );
-					}
-					else if ( jdbcOperation instanceof SelfExecutingUpdateOperation selfExecuting ) {
-						executeSelfExecuting( selfExecuting, flushOperation );
+			try {
+				// No-op operations: only carry post-execution callback, skip SQL execution
+				if ( flushOperation.getKind() != MutationKind.NO_OP && execute ) {
+					beforePhysicalExecution( flushOperation );
+					final var bindPlan = flushOperation.getBindPlan();
+					if ( bindPlan.getGeneratedValuesCollector() != null ) {
+						// we need to execute these without batching
+						executeWithGeneratedValues( flushOperation );
 					}
 					else {
-						throw new IllegalStateException(
-								"Unsupported JdbcOperation type: " + jdbcOperation.getClass().getName() );
+						final var jdbcOperation = flushOperation.getJdbcOperation();
+						if ( jdbcOperation instanceof PreparableMutationOperation preparable ) {
+							executePreparable( preparable, flushOperation );
+						}
+						else if ( jdbcOperation instanceof SelfExecutingUpdateOperation selfExecuting ) {
+							executeSelfExecuting( selfExecuting, flushOperation );
+						}
+						else {
+							throw new IllegalStateException(
+									"Unsupported JdbcOperation type: " + jdbcOperation.getClass().getName() );
+						}
 					}
 				}
-			}
 
-			afterOperationExecution( flushOperation, newlyManagedEntityConsumer, fixupOperationConsumer );
+				afterOperationExecution( flushOperation, newlyManagedEntityConsumer, fixupOperationConsumer );
+			}
+			catch (RuntimeException | Error failure) {
+				afterFailedExecution( flushOperation );
+				throw failure;
+			}
+		}
+	}
+
+	protected void beforePhysicalExecution(FlushOperation flushOperation) {
+		final var executionMonitor = flushOperation.getExecutionMonitor();
+		if ( executionMonitor != null ) {
+			executionMonitor.beforeExecution( (SessionImplementor) session );
 		}
 	}
 
@@ -116,6 +129,21 @@ public abstract class AbstractStepExecutor implements PlanStepExecutor {
 	}
 
 	protected void afterOperationExecution(
+			FlushOperation flushOperation,
+			Consumer<Object> newlyManagedEntityConsumer,
+			Consumer<FlushOperation> fixupOperationConsumer) {
+		afterSuccessfulPhysicalExecution( flushOperation );
+		afterOperationCompletion( flushOperation, newlyManagedEntityConsumer, fixupOperationConsumer );
+	}
+
+	protected void afterSuccessfulPhysicalExecution(FlushOperation flushOperation) {
+		final var executionMonitor = flushOperation.getExecutionMonitor();
+		if ( executionMonitor != null && !flushOperation.isExecutionSkipped() ) {
+			executionMonitor.afterSuccessfulExecution( (SessionImplementor) session );
+		}
+	}
+
+	protected void afterOperationCompletion(
 			FlushOperation flushOperation,
 			Consumer<Object> newlyManagedEntityConsumer,
 			Consumer<FlushOperation> fixupOperationConsumer) {
@@ -160,6 +188,13 @@ public abstract class AbstractStepExecutor implements PlanStepExecutor {
 					fixupOperationConsumer.accept( fix );
 				}
 			}
+		}
+	}
+
+	protected void afterFailedExecution(FlushOperation flushOperation) {
+		final var executionMonitor = flushOperation.getExecutionMonitor();
+		if ( executionMonitor != null ) {
+			executionMonitor.afterFailedExecution( (SessionImplementor) session );
 		}
 	}
 

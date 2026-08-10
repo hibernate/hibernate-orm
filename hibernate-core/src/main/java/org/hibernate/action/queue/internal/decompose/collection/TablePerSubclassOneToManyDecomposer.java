@@ -170,6 +170,12 @@ public class TablePerSubclassOneToManyDecomposer extends AbstractOneToManyDecomp
 			} );
 
 			if ( !operations.isEmpty() ) {
+				DecompositionSupport.attachExecutionMonitor(
+						operations,
+						CollectionExecutionMonitor.Kind.REMOVE,
+						action.getKey(),
+						persister.getRole()
+				);
 				// Attach post-execution callback to the last operation
 				operations.get( operations.size() - 1 ).setPostExecutionCallback( postRemoveHandling );
 				operations.forEach( operationConsumer );

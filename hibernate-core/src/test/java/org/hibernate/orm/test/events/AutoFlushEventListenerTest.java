@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.HibernateException;
+import org.hibernate.SessionEventListener;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -80,6 +81,8 @@ public class AutoFlushEventListenerTest {
 
 		scope.inSession(
 				session -> {
+					final var partialFlushCounts = new PartialFlushCounts();
+					session.getEventListenerManager().addListener( partialFlushCounts );
 					session.beginTransaction();
 					try {
 						session.persist( new Entity2() );
@@ -90,6 +93,8 @@ public class AutoFlushEventListenerTest {
 								.getResultList();
 						assertThat( LISTENER.events.size() ).isEqualTo( 1 );
 						assertFalse( LISTENER.events.get( 0 ).isFlushRequired() );
+						assertThat( partialFlushCounts.entities ).isEqualTo( 1 );
+						assertThat( partialFlushCounts.collections ).isEqualTo( 0 );
 
 						session.getTransaction().commit();
 					}
@@ -143,6 +148,17 @@ public class AutoFlushEventListenerTest {
 		@Override
 		public void onAutoFlush(AutoFlushEvent event) throws HibernateException {
 			events.add( event );
+		}
+	}
+
+	private static class PartialFlushCounts implements SessionEventListener {
+		private int entities = -1;
+		private int collections = -1;
+
+		@Override
+		public void partialFlushEnd(int numberOfEntities, int numberOfCollections) {
+			entities = numberOfEntities;
+			collections = numberOfCollections;
 		}
 	}
 }

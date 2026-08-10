@@ -262,10 +262,18 @@ public interface ActionQueue extends TransactionCompletionCallbacks {
 	/// @param rescuedEntity The entity being rescued from deletion
 	void unScheduleDeletion(org.hibernate.engine.spi.EntityEntry entry, Object rescuedEntity);
 
-	/// Clear actions that were added during a flush needed check.
+	/// Capture this queue's state before speculative flush preparation.
 	///
-	/// @param previousCollectionRemovalSize The previous collection removal size
-	void clearFromFlushNeededCheck(int previousCollectionRemovalSize);
+	/// Work registered before the checkpoint survives [#restore].  Work
+	/// registered afterward is retained or discarded according to the semantic
+	/// contract of its registration category.
+	ActionQueueCheckpoint checkpoint();
+
+	/// Restore this queue after a speculative flush-needed check determines that
+	/// execution is unnecessary.
+	///
+	/// @param checkpoint A checkpoint previously created by this queue
+	void restore(ActionQueueCheckpoint checkpoint);
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Serialization

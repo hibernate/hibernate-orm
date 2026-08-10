@@ -9,6 +9,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.hibernate.collection.spi.AbstractSetSemantics;
+import org.hibernate.collection.spi.CollectionDeltaProducer;
 import org.hibernate.collection.spi.PersistentSet;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
@@ -25,6 +26,11 @@ public class StandardSetSemantics<E> extends AbstractSetSemantics<Set<E>,E> {
 	public static final StandardSetSemantics<?> INSTANCE = new StandardSetSemantics<>();
 
 	private StandardSetSemantics() {
+	}
+
+	@Override
+	public CollectionDeltaProducer getCollectionDeltaProducer() {
+		return StandardCollectionDeltaProducer.SET;
 	}
 
 	@Override

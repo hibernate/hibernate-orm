@@ -443,6 +443,17 @@ public class PersistentSet<E> extends AbstractPersistentCollection<E> implements
 
 	final class Clear implements DelayedOperation<E> {
 		@Override
+		public QueuedCollectionOperation toQueuedOperation(int order) {
+			return new QueuedCollectionOperation(
+					QueuedCollectionOperation.Kind.CLEAR,
+					null,
+					null,
+					null,
+					order
+			);
+		}
+
+		@Override
 		public void operate() {
 			set.clear();
 		}
@@ -465,6 +476,17 @@ public class PersistentSet<E> extends AbstractPersistentCollection<E> implements
 		}
 
 		@Override
+		public QueuedCollectionOperation toQueuedOperation(int order) {
+			return new QueuedCollectionOperation(
+					QueuedCollectionOperation.Kind.ADD,
+					getAddedInstance(),
+					null,
+					null,
+					order
+			);
+		}
+
+		@Override
 		public void operate() {
 			set.add( getAddedInstance() );
 		}
@@ -474,6 +496,17 @@ public class PersistentSet<E> extends AbstractPersistentCollection<E> implements
 
 		public SimpleRemove(E orphan) {
 			super( null, orphan );
+		}
+
+		@Override
+		public QueuedCollectionOperation toQueuedOperation(int order) {
+			return new QueuedCollectionOperation(
+					QueuedCollectionOperation.Kind.REMOVE,
+					null,
+					getOrphan(),
+					null,
+					order
+			);
 		}
 
 		@Override

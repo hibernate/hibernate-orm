@@ -5,13 +5,18 @@
 package org.hibernate.action.queue.internal;
 
 import java.util.ArrayList;
+import java.util.IdentityHashMap;
 import java.util.List;
 
 import org.hibernate.Internal;
 import org.hibernate.action.queue.spi.CollectionEndpoint;
 import org.hibernate.action.queue.spi.CollectionMutationInput;
 import org.hibernate.action.queue.spi.CollectionTransition;
+import org.hibernate.collection.spi.CollectionBaseline;
+import org.hibernate.collection.spi.CollectionDeltaProduction;
+import org.hibernate.collection.spi.CollectionDeltaProductionContext;
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.engine.internal.FlushProcessingContext;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.PreCollectionRecreateEvent;
 import org.hibernate.event.spi.PreCollectionRecreateEventListener;
@@ -69,11 +74,12 @@ public final class CollectionMutationPreparer {
 						endpoint,
 						input.emptySnapshot(),
 						null,
+						null,
 						null
 				) );
 			}
 		}
-		return List.copyOf( prepared );
+		return freezeDeltas( prepared, session );
 	}
 
 	private static void prepareCreate(
@@ -97,7 +103,8 @@ public final class CollectionMutationPreparer {
 				endpoint,
 				input.emptySnapshot(),
 				affectedOwner,
-				affectedOwnerId
+				affectedOwnerId,
+				null
 		) );
 	}
 
@@ -114,7 +121,8 @@ public final class CollectionMutationPreparer {
 					endpoint,
 					input.emptySnapshot() || input.removalSkipped(),
 					input.affectedOwner(),
-					input.affectedOwnerId()
+					input.affectedOwnerId(),
+					null
 			) );
 			return;
 		}
@@ -134,7 +142,8 @@ public final class CollectionMutationPreparer {
 				endpoint,
 				input.emptySnapshot() || input.removalSkipped(),
 				affectedOwner,
-				affectedOwnerId
+				affectedOwnerId,
+				null
 		) );
 	}
 
@@ -160,8 +169,82 @@ public final class CollectionMutationPreparer {
 				endpoint,
 				input.emptySnapshot(),
 				affectedOwner,
-				affectedOwnerId
+				affectedOwnerId,
+				null
 		) );
+	}
+
+	private static List<PreparedCollectionMutation> freezeDeltas(
+			List<PreparedCollectionMutation> mutations,
+			EventSource session) {
+		final var frozenByCollection = new IdentityHashMap<PersistentCollection<?>, FrozenCollectionDelta>();
+		final var result = new ArrayList<PreparedCollectionMutation>( mutations.size() );
+		for ( var mutation : mutations ) {
+			final var collection = mutation.collection();
+			if ( mutation.kind() == PreparedCollectionMutation.Kind.REMOVE || collection == null ) {
+				result.add( mutation );
+				continue;
+			}
+
+			var frozen = frozenByCollection.get( collection );
+			if ( frozen == null ) {
+				frozen = produceDelta( mutation, collection, session );
+				frozenByCollection.put( collection, frozen );
+				final var tracker = session.getPersistenceContextInternal().getCollectionFlushActionTracker();
+				if ( tracker instanceof FlushProcessingContext flushProcessingContext ) {
+					flushProcessingContext.retainFrozenDelta( collection, frozen );
+				}
+			}
+			result.add( new PreparedCollectionMutation(
+					mutation.kind(),
+					collection,
+					mutation.endpoint(),
+					mutation.emptySnapshot(),
+					mutation.affectedOwner(),
+					mutation.affectedOwnerId(),
+					frozen
+			) );
+		}
+		return List.copyOf( result );
+	}
+
+	private static FrozenCollectionDelta produceDelta(
+			PreparedCollectionMutation mutation,
+			PersistentCollection<?> collection,
+			EventSource session) {
+		final var persister = mutation.endpoint().persister();
+		final var producer = persister.getCollectionSemantics().getCollectionDeltaProducer();
+		CollectionBaseline baseline = baseline( mutation, collection );
+		CollectionDeltaProduction production = producer.produceDelta(
+				new CollectionDeltaProductionContext( collection, persister, baseline, session )
+		);
+		if ( production instanceof CollectionDeltaProduction.InitializationRequired ) {
+			collection.forceInitialization();
+			baseline = CollectionBaseline.LOADED;
+			production = producer.produceDelta(
+					new CollectionDeltaProductionContext( collection, persister, baseline, session )
+			);
+		}
+		if ( !(production instanceof CollectionDeltaProduction.Produced produced) ) {
+			throw new IllegalStateException(
+					"Collection delta producer still requires initialization for initialized collection "
+							+ persister.getRole()
+			);
+		}
+		return FrozenCollectionDelta.freeze( produced.delta(), collection );
+	}
+
+	private static CollectionBaseline baseline(
+			PreparedCollectionMutation mutation,
+			PersistentCollection<?> collection) {
+		return switch ( mutation.kind() ) {
+			case CREATE -> CollectionBaseline.EMPTY;
+			case UPDATE -> CollectionBaseline.LOADED;
+			case QUEUED_OPERATIONS -> collection.wasInitialized()
+					? CollectionBaseline.LOADED
+					: CollectionBaseline.UNINITIALIZED;
+			case REMOVE -> throw new IllegalArgumentException( "Remove uses a bulk strategy, not a delta" );
+		};
 	}
 
 	private static Object ownerId(Object owner, EventSource session) {

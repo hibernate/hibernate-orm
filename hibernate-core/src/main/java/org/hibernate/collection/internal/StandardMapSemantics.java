@@ -7,6 +7,7 @@ package org.hibernate.collection.internal;
 import java.util.Map;
 
 import org.hibernate.collection.spi.AbstractMapSemantics;
+import org.hibernate.collection.spi.CollectionDeltaProducer;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.collection.spi.PersistentMap;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -26,6 +27,11 @@ public class StandardMapSemantics<K,V> extends AbstractMapSemantics<Map<K,V>,K,V
 	public static final StandardMapSemantics<?,?> INSTANCE = new StandardMapSemantics<>();
 
 	private StandardMapSemantics() {
+	}
+
+	@Override
+	public CollectionDeltaProducer getCollectionDeltaProducer() {
+		return StandardCollectionDeltaProducer.MAP;
 	}
 
 	@Override

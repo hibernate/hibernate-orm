@@ -36,6 +36,7 @@ import org.hibernate.action.internal.EntityUpdateAction;
 import org.hibernate.action.internal.OrphanRemovalAction;
 import org.hibernate.action.internal.QueuedOperationCollectionAction;
 import org.hibernate.action.internal.UnresolvedEntityInsertActions;
+import org.hibernate.action.queue.spi.ActionQueueCheckpoint;
 import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
 import org.hibernate.action.spi.Executable;
 import org.hibernate.boot.spi.SessionFactoryOptions;
@@ -718,7 +719,9 @@ public class ActionQueueLegacy implements org.hibernate.action.queue.spi.ActionQ
 	}
 
 	public int numberOfCollectionRemovals() {
-		return collectionRemovals == null ? 0 : collectionRemovals.size();
+		final int removals = collectionRemovals == null ? 0 : collectionRemovals.size();
+		final int orphanRemovals = orphanCollectionRemovals == null ? 0 : orphanCollectionRemovals.size();
+		return removals + orphanRemovals;
 	}
 
 	public int numberOfCollectionUpdates() {
@@ -802,24 +805,48 @@ public class ActionQueueLegacy implements org.hibernate.action.queue.spi.ActionQ
 		return getSessionFactoryOptions().isOrderInsertsEnabled();
 	}
 
-	public void clearFromFlushNeededCheck(int previousCollectionRemovalSize) {
-		if ( collectionCreations != null ) {
-			collectionCreations.clear();
+	@Override
+	public ActionQueueCheckpoint checkpoint() {
+		return new LegacyCheckpoint(
+				this,
+				size( updates ),
+				size( collectionQueuedOps ),
+				size( collectionRemovals ),
+				size( collectionUpdates ),
+				size( collectionCreations )
+		);
+	}
+
+	@Override
+	public void restore(ActionQueueCheckpoint checkpoint) {
+		if ( !( checkpoint instanceof LegacyCheckpoint legacyCheckpoint )
+				|| legacyCheckpoint.owner() != this ) {
+			throw new IllegalArgumentException( "Checkpoint was not created by this action queue" );
 		}
-		if ( collectionUpdates != null ) {
-			collectionUpdates.clear();
+		trimToSize( updates, legacyCheckpoint.updatesSize() );
+		trimToSize( collectionQueuedOps, legacyCheckpoint.collectionQueuedOpsSize() );
+		trimToSize( collectionRemovals, legacyCheckpoint.collectionRemovalsSize() );
+		trimToSize( collectionUpdates, legacyCheckpoint.collectionUpdatesSize() );
+		trimToSize( collectionCreations, legacyCheckpoint.collectionCreationsSize() );
+	}
+
+	private static int size(@Nullable ExecutableList<?> actions) {
+		return actions == null ? 0 : actions.size();
+	}
+
+	private static void trimToSize(@Nullable ExecutableList<?> actions, int checkpointSize) {
+		if ( actions != null && actions.size() > checkpointSize ) {
+			actions.removeLastN( actions.size() - checkpointSize );
 		}
-		if ( collectionQueuedOps != null ) {
-			collectionQueuedOps.clear();
-		}
-		if ( updates != null) {
-			updates.clear();
-		}
-		// collection deletions are a special case since update() can add
-		// deletions of collections not loaded by the session.
-		if ( collectionRemovals != null && collectionRemovals.size() > previousCollectionRemovalSize ) {
-			collectionRemovals.removeLastN( collectionRemovals.size() - previousCollectionRemovalSize );
-		}
+	}
+
+	private record LegacyCheckpoint(
+			ActionQueueLegacy owner,
+			int updatesSize,
+			int collectionQueuedOpsSize,
+			int collectionRemovalsSize,
+			int collectionUpdatesSize,
+			int collectionCreationsSize) implements ActionQueueCheckpoint {
 	}
 
 	public boolean hasAfterTransactionActions() {
@@ -840,7 +867,9 @@ public class ActionQueueLegacy implements org.hibernate.action.queue.spi.ActionQ
 			|| nonempty( collectionUpdates )
 			|| nonempty( collectionQueuedOps )
 			|| nonempty( collectionRemovals )
-			|| nonempty( collectionCreations );
+			|| nonempty( collectionCreations )
+			|| nonempty( orphanRemovals )
+			|| nonempty( orphanCollectionRemovals );
 	}
 
 	private boolean nonempty(@Nullable ExecutableList<?> queue) {

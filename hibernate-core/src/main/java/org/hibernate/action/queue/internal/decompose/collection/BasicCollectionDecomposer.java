@@ -189,6 +189,12 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 					session,
 					operations::add
 			);
+			DecompositionSupport.attachExecutionMonitor(
+					operations,
+					CollectionExecutionMonitor.Kind.CREATE,
+					action.getKey(),
+					persister.getRole()
+			);
 			// Attach it to the last operation
 			operations.get( operations.size() - 1 ).setPostExecutionCallback( postExecutionCallback );
 			operations.forEach( operationConsumer );
@@ -301,63 +307,60 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 		}
 		else {
 			final boolean affectedByFilters = persister.isAffectedByEnabledFilters( session );
-			final var eventMonitor = session.getEventMonitor();
-			final var event = eventMonitor.beginCollectionUpdateEvent();
-			boolean success = false;
-			try {
-				if ( !affectedByFilters && collection.empty() ) {
-					if ( !action.isEmptySnapshot() ) {
-						var removeOperation = planRemoveOperation( key, ordinalBase );
-						if ( removeOperation != null ) {
-							operations.add( removeOperation );
-						}
+			if ( !affectedByFilters && collection.empty() ) {
+				if ( !action.isEmptySnapshot() ) {
+					var removeOperation = planRemoveOperation( key, ordinalBase );
+					if ( removeOperation != null ) {
+						operations.add( removeOperation );
 					}
 				}
-				else if ( collection.needsRecreate( persister ) ) {
-					if ( affectedByFilters ) {
-						throw new HibernateException( String.format( Locale.ROOT,
-								"cannot recreate collection while filter is enabled [%s : %s]",
-								persister.getRole(),
-								key
-						) );
-					}
-					if ( !action.isEmptySnapshot() ) {
-						var removeOperation = planRemoveOperation( key, ordinalBase );
-						if ( removeOperation != null ) {
-							operations.add( removeOperation );
-						}
-					}
-					// Recreate INSERTs use INSERT_OFFSET which is higher than DELETE_OFFSET to avoid unique constraint violations
-					operations.addAll( planRecreateOperation(
-							collection,
-							key,
-							ordinalBase,
-							session
+			}
+			else if ( collection.needsRecreate( persister ) ) {
+				if ( affectedByFilters ) {
+					throw new HibernateException( String.format( Locale.ROOT,
+							"cannot recreate collection while filter is enabled [%s : %s]",
+							persister.getRole(),
+							key
 					) );
 				}
-				else {
-					// Try changeset-based approach for indexed collections (much more efficient)
-					final var changeSet = collection.getChangeSet( persister );
-					if ( changeSet == null ) {
-						// Fallback to original approach for collections without change-set support.
-						planDeleteRowOperations( collection, key, ordinalBase, session, operations::add );
-						planUpdateRowOperations( collection, key, ordinalBase, session, operations::add );
-						planInsertRowOperations( collection, key, ordinalBase, session, operations::add );
-					}
-					else if ( !changeSet.isEmpty() ) {
-						planOperationsFromChangeSet( changeSet, collection, key, ordinalBase, session, operations::add );
+				if ( !action.isEmptySnapshot() ) {
+					var removeOperation = planRemoveOperation( key, ordinalBase );
+					if ( removeOperation != null ) {
+						operations.add( removeOperation );
 					}
 				}
-				success = true;
+				// Recreate INSERTs use INSERT_OFFSET which is higher than DELETE_OFFSET to avoid unique constraint violations
+				operations.addAll( planRecreateOperation(
+						collection,
+						key,
+						ordinalBase,
+						session
+				) );
 			}
-			finally {
-				eventMonitor.completeCollectionUpdateEvent( event, key, persister.getRole(), success, session );
+			else {
+				// Try changeset-based approach for indexed collections (much more efficient)
+				final var changeSet = collection.getChangeSet( persister );
+				if ( changeSet == null ) {
+					// Fallback to original approach for collections without change-set support.
+					planDeleteRowOperations( collection, key, ordinalBase, session, operations::add );
+					planUpdateRowOperations( collection, key, ordinalBase, session, operations::add );
+					planInsertRowOperations( collection, key, ordinalBase, session, operations::add );
+				}
+				else if ( !changeSet.isEmpty() ) {
+					planOperationsFromChangeSet( changeSet, collection, key, ordinalBase, session, operations::add );
+				}
 			}
 		}
 
 		// Create callback to handle post-execution work (afterAction, cache, events, stats)
 		if ( !operations.isEmpty() ) {
 			contributeCollectionChange( collection, key, ordinalBase, session, operations::add );
+			DecompositionSupport.attachExecutionMonitor(
+					operations,
+					CollectionExecutionMonitor.Kind.UPDATE,
+					key,
+					persister.getRole()
+			);
 		}
 		final var postUpdateHandling = new PostCollectionUpdateHandling(
 				persister,
@@ -1086,6 +1089,12 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 			) );
 		}
 		else {
+			DecompositionSupport.attachExecutionMonitor(
+					List.of( removeOperation ),
+					CollectionExecutionMonitor.Kind.REMOVE,
+					action.getKey(),
+					persister.getRole()
+			);
 			removeOperation.setPostExecutionCallback( postRemoveHandling );
 			operationConsumer.accept( removeOperation );
 		}

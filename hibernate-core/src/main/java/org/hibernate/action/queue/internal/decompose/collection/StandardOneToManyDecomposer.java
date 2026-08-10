@@ -15,6 +15,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.collection.OneToManyPersister;
 
+import java.util.List;
 import java.util.function.Consumer;
 
 /// Standard one-to-many decomposer for single-table and simple joined inheritance
@@ -72,6 +73,12 @@ public class StandardOneToManyDecomposer extends AbstractOneToManyDecomposer {
 					new RemoveBindPlan( action.getKey(), persister, mutationPlanContributor ),
 					ordinalBase * 1_000,
 					"RemoveAllRows(" + persister.getRolePath() + ")"
+			);
+			DecompositionSupport.attachExecutionMonitor(
+					List.of( plannedOp ),
+					CollectionExecutionMonitor.Kind.REMOVE,
+					action.getKey(),
+					persister.getRole()
 			);
 			// and attach to the operation
 			plannedOp.setPostExecutionCallback( postRemoveHandling );

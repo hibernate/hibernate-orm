@@ -181,6 +181,12 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 
 		if ( !operations.isEmpty() ) {
 			contributeCollectionChange( collection, key, ordinalBase, session, operations::add );
+			DecompositionSupport.attachExecutionMonitor(
+					operations,
+					CollectionExecutionMonitor.Kind.CREATE,
+					key,
+					persister.getRole()
+			);
 			// Attach it to the last operation
 			operations.get( operations.size() - 1 ).setPostExecutionCallback( postExecutionCallback );
 			operations.forEach( operationConsumer );
@@ -252,14 +258,18 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 				applyIndexedChangeSet( changeSet, collection, key, ordinalBase, session, operations::add );
 			}
 			else {
-				applyUpdateRemovals( collection, key, ordinalBase, session, operations::add );
-				applyUpdateChanges( collection, key, ordinalBase + 1, session, operations::add );
-				applyUpdateAdditions( collection, key, ordinalBase + 2, session, operations::add );
+				applyFallbackUpdate( collection, key, ordinalBase, session, operations::add );
 			}
 		}
 
 		if ( !operations.isEmpty() ) {
 			contributeCollectionChange( collection, key, ordinalBase, session, operations::add );
+			DecompositionSupport.attachExecutionMonitor(
+					operations,
+					CollectionExecutionMonitor.Kind.UPDATE,
+					key,
+					persister.getRole()
+			);
 			// Attach post-execution callback to the last operation
 			operations.get( operations.size() - 1 ).setPostExecutionCallback( postExecutionCallback );
 			operations.forEach( operationConsumer );
@@ -272,6 +282,17 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 					postExecutionCallback
 			) );
 		}
+	}
+
+	void applyFallbackUpdate(
+			PersistentCollection<?> collection,
+			Object key,
+			int ordinalBase,
+			SharedSessionContractImplementor session,
+			Consumer<FlushOperation> operationConsumer) {
+		applyUpdateRemovals( collection, key, ordinalBase, session, operationConsumer );
+		applyUpdateChanges( collection, key, ordinalBase, session, operationConsumer );
+		applyUpdateAdditions( collection, key, ordinalBase, session, operationConsumer );
 	}
 
 	private boolean hasNumericChangeSetIndexes(CollectionChangeSet changeSet) {

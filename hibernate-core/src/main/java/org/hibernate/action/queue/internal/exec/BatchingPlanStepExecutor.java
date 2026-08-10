@@ -13,6 +13,7 @@ import org.hibernate.action.queue.spi.MutationKind;
 import org.hibernate.action.queue.spi.StatementShapeKey;
 import org.hibernate.action.queue.spi.bind.JdbcValueBindings;
 import org.hibernate.engine.jdbc.batch.spi.SingleStatementBatch;
+import org.hibernate.engine.jdbc.batch.spi.BatchObserver;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.sql.model.PreparableMutationOperation;
@@ -23,7 +24,7 @@ import java.util.function.Consumer;
 /// PlanStepExecutor with support for JDBC batching.
 ///
 /// @author Steve Ebersole
-public class BatchingPlanStepExecutor extends AbstractStepExecutor {
+public class BatchingPlanStepExecutor extends AbstractStepExecutor implements BatchObserver {
 	private final int batchSize;
 
 	private StatementShapeKey batchKey;
@@ -86,6 +87,13 @@ public class BatchingPlanStepExecutor extends AbstractStepExecutor {
 	}
 
 	@Override
+	protected void beforePhysicalExecution(FlushOperation flushOperation) {
+		// Preparable operations begin monitoring when their JDBC batch actually
+		// executes. Generated-value and self-executing operations begin in their
+		// specialized execution methods after any preceding batch is drained.
+	}
+
+	@Override
 	protected void afterOperationExecution(
 			FlushOperation flushOperation,
 			Consumer<Object> newlyManagedEntityConsumer,
@@ -108,6 +116,7 @@ public class BatchingPlanStepExecutor extends AbstractStepExecutor {
 		reusableValueBindingsOperation = null;
 		reusableValueBindings = null;
 		batch = session.getJdbcCoordinator().getSingleStatementBatch( operationShapeKey, batchSize, preparable );
+		batch.addObserver( this );
 	}
 
 	private void applyToBatch(
@@ -127,7 +136,12 @@ public class BatchingPlanStepExecutor extends AbstractStepExecutor {
 			);
 		}
 		catch (ConstraintViolationException cve) {
+			runFailureCallbacks( currentBatchIndex + 1 );
 			throw convertBatchException( cve, currentBatchIndex + 1 );
+		}
+		catch (RuntimeException | Error failure) {
+			runFailureCallbacks( currentBatchIndex + 1 );
+			throw failure;
 		}
 		currentBatchIndex++;
 
@@ -161,7 +175,12 @@ public class BatchingPlanStepExecutor extends AbstractStepExecutor {
 				batch.execute();
 			}
 			catch (ConstraintViolationException cve) {
+				runFailureCallbacks( batchCount );
 				throw convertBatchException( cve, batchCount );
+			}
+			catch (RuntimeException | Error failure) {
+				runFailureCallbacks( batchCount );
+				throw failure;
 			}
 			runPostBatchCallbacks( batchCount );
 		}
@@ -173,6 +192,34 @@ public class BatchingPlanStepExecutor extends AbstractStepExecutor {
 			reusableValueBindingsOperation = null;
 			reusableValueBindings = null;
 		}
+	}
+
+	private void runFailureCallbacks(int batchCount) {
+		for ( int i = 0; i < batchCount; i++ ) {
+			final FlushOperation operation = batchOperations[i];
+			if ( operation != null ) {
+				afterFailedExecution( operation );
+			}
+		}
+	}
+
+	private void runBeforeBatchCallbacks(int batchCount) {
+		for ( int i = 0; i < batchCount; i++ ) {
+			final FlushOperation operation = batchOperations[i];
+			if ( operation != null ) {
+				super.beforePhysicalExecution( operation );
+			}
+		}
+	}
+
+	@Override
+	public void batchExplicitlyExecuted() {
+		runBeforeBatchCallbacks( currentBatchIndex );
+	}
+
+	@Override
+	public void batchImplicitlyExecuted() {
+		runBeforeBatchCallbacks( currentBatchIndex + 1 );
 	}
 
 	private RuntimeException convertBatchException(ConstraintViolationException cve, int batchCount) {
@@ -200,10 +247,16 @@ public class BatchingPlanStepExecutor extends AbstractStepExecutor {
 		if ( batchCount > operations.length ) {
 			throw new AssertionFailure( "Expecting at most " + operations.length + " batched operations; but got " + batchCount );
 		}
+		// The whole JDBC batch has succeeded. Complete every physical monitor
+		// before running any lifecycle callback, since a lifecycle failure must
+		// not leave another successfully executed operation's span open.
+		for ( int i = 0; i < batchCount; i++ ) {
+			afterSuccessfulPhysicalExecution( operations[i] );
+		}
 		for ( int i = 0; i < batchCount; i++ ) {
 			final FlushOperation operation = operations[i];
 			operations[i] = null;
-			super.afterOperationExecution( operation, newlyManagedEntityConsumer, fixupOperationConsumer );
+			afterOperationCompletion( operation, newlyManagedEntityConsumer, fixupOperationConsumer );
 		}
 	}
 
@@ -212,6 +265,7 @@ public class BatchingPlanStepExecutor extends AbstractStepExecutor {
 		if ( batchKey != null ) {
 			executeBatch();
 		}
+		super.beforePhysicalExecution( flushOperation );
 		super.executeWithGeneratedValues( flushOperation );
 	}
 
@@ -220,6 +274,7 @@ public class BatchingPlanStepExecutor extends AbstractStepExecutor {
 		if ( batchKey != null ) {
 			executeBatch();
 		}
+		super.beforePhysicalExecution( flushOperation );
 		super.executeSelfExecuting( selfExecuting, flushOperation );
 	}
 

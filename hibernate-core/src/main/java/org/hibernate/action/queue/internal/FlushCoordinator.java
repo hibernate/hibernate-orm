@@ -469,7 +469,7 @@ public class FlushCoordinator {
 	///
 	/// @param operations the raw operations from decomposition
 	/// @return grouped operations
-	private List<FlushOperationGroup> groupOperations(List<FlushOperation> operations) {
+	List<FlushOperationGroup> groupOperations(List<FlushOperation> operations) {
 		if (operations.isEmpty()) {
 			return List.of();
 		}
@@ -539,7 +539,8 @@ public class FlushCoordinator {
 		// Build composite key considering:
 		// 1. Self-referential tables: include ordinal to avoid false cycles
 		// 2. DELETE to tables with cyclic FKs: include ordinal to preserve cascade chain distinction
-		if ( operation.getMutatingTableDescriptor().isSelfReferential()
+		if ( operation.getKind() == MutationKind.NO_OP
+				|| operation.getMutatingTableDescriptor().isSelfReferential()
 				|| (operation.getKind() == MutationKind.DELETE
 					&& constraintModel.hasTableCyclicForeignKeys( operation.getTableExpression() )) ) {
 			return new OrdinalAwareOperationGroupKey(

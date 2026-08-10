@@ -11,6 +11,7 @@ import org.hibernate.action.queue.spi.bind.BindPlan;
 import org.hibernate.action.queue.internal.cyclebreak.BindingPatch;
 import org.hibernate.action.queue.spi.bind.ChainedPostExecutionCallback;
 import org.hibernate.action.queue.spi.bind.OperationResultChecker;
+import org.hibernate.action.queue.spi.bind.OperationExecutionMonitor;
 import org.hibernate.action.queue.spi.bind.PostExecutionCallback;
 import org.hibernate.action.queue.spi.bind.PreExecutionCallback;
 import org.hibernate.action.queue.spi.meta.TableDescriptor;
@@ -58,6 +59,7 @@ public class FlushOperation implements OperationResultChecker {
 	// remove the entity from persistence context (e.g., DELETE operations)
 	private PostExecutionCallback postExecutionCallback;
 	private PreExecutionCallback preExecutionCallback;
+	private OperationExecutionMonitor executionMonitor;
 	private boolean executionSkipped;
 
 	// metadata
@@ -256,6 +258,14 @@ public class FlushOperation implements OperationResultChecker {
 
 	public PreExecutionCallback getPreExecutionCallback() {
 		return preExecutionCallback;
+	}
+
+	public OperationExecutionMonitor getExecutionMonitor() {
+		return executionMonitor;
+	}
+
+	public void setExecutionMonitor(OperationExecutionMonitor executionMonitor) {
+		this.executionMonitor = executionMonitor;
 	}
 
 	public void setPreExecutionCallback(PreExecutionCallback preExecutionCallback) {

@@ -2589,7 +2589,8 @@ public abstract class CollectionBinder {
 	}
 
 	private boolean isEffectivelyExcluded() {
-		var firstOverride = findFirstAuditOverrideForProperty( propertyHolder.getPersistentClass(), propertyName );
+		var firstOverride = findFirstAuditOverrideForProperty( propertyHolder.getPersistentClass(), propertyName,
+				buildingContext );
 		if ( firstOverride != null ) {
 			return !firstOverride.isAudited();
 		}

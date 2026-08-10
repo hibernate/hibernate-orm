@@ -26,7 +26,6 @@
             </id>
             <basic name="name" fetch="EAGER" optional="false" optimistic-lock="true">
                 <column name="name" unique="false" nullable="false"/>
-                <generated>NEVER</generated>
                 <java-type>org.hibernate.type.descriptor.java.StringJavaType</java-type>
                 <jdbc-type>org.hibernate.type.descriptor.jdbc.VarcharJdbcType</jdbc-type>
             </basic>
@@ -46,17 +45,14 @@
         <discriminator-value>D</discriminator-value>
         <attributes>
             <basic name="content" fetch="EAGER" optional="true" optimistic-lock="true">
-                <generated>NEVER</generated>
                 <java-type>org.hibernate.type.descriptor.java.BlobJavaType</java-type>
                 <jdbc-type>org.hibernate.type.descriptor.jdbc.BlobJdbcType$2</jdbc-type>
             </basic>
             <basic name="modified" fetch="EAGER" optional="true" optimistic-lock="true">
-                <generated>NEVER</generated>
                 <java-type>org.hibernate.type.descriptor.java.CalendarJavaType</java-type>
                 <jdbc-type>org.hibernate.type.descriptor.jdbc.TimestampJdbcType</jdbc-type>
             </basic>
             <basic name="created" fetch="EAGER" optional="true" optimistic-lock="true">
-                <generated>NEVER</generated>
                 <java-type>org.hibernate.type.descriptor.java.CalendarJavaType</java-type>
                 <jdbc-type>org.hibernate.type.descriptor.jdbc.TimestampJdbcType</jdbc-type>
             </basic>
@@ -64,13 +60,27 @@
     </entity>
     <entity class="SecureDocument" metadata-complete="true">
         <extends>org.hibernate.orm.test.mixed.Document</extends>
+        <secondary-table name="SecureDocument" optional="false" owned="true">
+            <primary-key-join-column name="documentId"/>
+        </secondary-table>
         <dynamic-insert>false</dynamic-insert>
         <dynamic-update>true</dynamic-update>
         <select-before-update>false</select-before-update>
         <batch-size>-1</batch-size>
         <lazy>true</lazy>
         <discriminator-value>S</discriminator-value>
-        <attributes/>
+        <attributes>
+            <basic name="permissionBits" fetch="EAGER" optional="false" optimistic-lock="true">
+                <column unique="false" nullable="false" table="SecureDocument"/>
+                <java-type>org.hibernate.type.descriptor.java.ByteJavaType</java-type>
+                <jdbc-type>org.hibernate.type.descriptor.jdbc.TinyIntJdbcType</jdbc-type>
+            </basic>
+            <basic name="owner" fetch="EAGER" optional="false" optimistic-lock="true">
+                <column unique="false" nullable="false" table="SecureDocument"/>
+                <java-type>org.hibernate.type.descriptor.java.StringJavaType</java-type>
+                <jdbc-type>org.hibernate.type.descriptor.jdbc.VarcharJdbcType</jdbc-type>
+            </basic>
+        </attributes>
     </entity>
     <entity class="Folder" metadata-complete="true">
         <extends>org.hibernate.orm.test.mixed.Item</extends>

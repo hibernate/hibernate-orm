@@ -712,10 +712,19 @@ public class MappingMetamodelImpl
 
 	private static <T> Class<T> unproxiedClass(T bindValue) {
 		final var lazyInitializer = extractLazyInitializer( bindValue );
-		final var result =
-				lazyInitializer != null
-						? lazyInitializer.getPersistentClass()
-						: bindValue.getClass();
+		final Class<?> result;
+		if ( lazyInitializer != null ) {
+			result = lazyInitializer.getPersistentClass();
+		}
+		else if ( bindValue instanceof Enum<?> enumValue ) {
+			// The runtime class of an enum constant declared with a class body is an
+			// anonymous subclass of the enum type, and Class.isEnum() returns false
+			// for it, so we must obtain the enum type from the constant itself.
+			result = enumValue.getDeclaringClass();
+		}
+		else {
+			result = bindValue.getClass();
+		}
 		//noinspection unchecked
 		return (Class<T>) result;
 	}

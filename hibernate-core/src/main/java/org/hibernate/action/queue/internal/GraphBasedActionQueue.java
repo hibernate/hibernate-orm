@@ -5,6 +5,7 @@
 package org.hibernate.action.queue.internal;
 
 import org.hibernate.action.queue.spi.ActionQueue;
+import org.hibernate.action.queue.spi.ActionQueueCheckpoint;
 import org.hibernate.action.queue.spi.PlanningOptions;
 
 import org.hibernate.HibernateException;
@@ -712,32 +713,44 @@ public class GraphBasedActionQueue implements ActionQueue {
 		flushCoordinator.getDecomposer().validateNoUnresolvedInserts();
 	}
 
-	/// Clear queued actions that were added during a flush-needed check.
-	/// This is used when auto-flush determines that a flush is not actually needed.
-	///
-	/// @param previousCollectionRemovalSize the size of collection removals before the check
-	public void clearFromFlushNeededCheck(int previousCollectionRemovalSize) {
-		// Clear all actions except:
-		// - Inserts (keep them)
-		// - Orphan removals (keep them)
-		// - Deletes (keep them)
-		// - Collection removals that existed before the check
+	@Override
+	public ActionQueueCheckpoint checkpoint() {
+		return new GraphCheckpoint(
+				this,
+				updates.size(),
+				collectionQueuedOps.size(),
+				collectionRemovals.size(),
+				collectionUpdates.size(),
+				collectionCreations.size()
+		);
+	}
 
-		// Keep orphan collection removals
-		// Keep orphan removals (already in list)
-		// Keep insertions (already in list)
-		updates.clear();
-		collectionQueuedOps.clear();
-
-		// Keep only the first N collection removals
-		if (collectionRemovals.size() > previousCollectionRemovalSize) {
-			collectionRemovals.subList(previousCollectionRemovalSize, collectionRemovals.size()).clear();
+	@Override
+	public void restore(ActionQueueCheckpoint checkpoint) {
+		if ( !( checkpoint instanceof GraphCheckpoint graphCheckpoint )
+				|| graphCheckpoint.owner() != this ) {
+			throw new IllegalArgumentException( "Checkpoint was not created by this action queue" );
 		}
+		trimToSize( updates, graphCheckpoint.updatesSize() );
+		trimToSize( collectionQueuedOps, graphCheckpoint.collectionQueuedOpsSize() );
+		trimToSize( collectionRemovals, graphCheckpoint.collectionRemovalsSize() );
+		trimToSize( collectionUpdates, graphCheckpoint.collectionUpdatesSize() );
+		trimToSize( collectionCreations, graphCheckpoint.collectionCreationsSize() );
+	}
 
-		collectionUpdates.clear();
-		collectionCreations.clear();
-		// Keep deletions (already in list)
+	private static void trimToSize(List<?> actions, int checkpointSize) {
+		if ( actions.size() > checkpointSize ) {
+			actions.subList( checkpointSize, actions.size() ).clear();
+		}
+	}
 
+	private record GraphCheckpoint(
+			GraphBasedActionQueue owner,
+			int updatesSize,
+			int collectionQueuedOpsSize,
+			int collectionRemovalsSize,
+			int collectionUpdatesSize,
+			int collectionCreationsSize) implements ActionQueueCheckpoint {
 	}
 
 	/// Remove a scheduled deletion for an entity.

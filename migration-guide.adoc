@@ -349,6 +349,27 @@ Hibernate also uses this scanning SPI when applications use `HibernatePersistenc
 bootstrapping and supply the root and/or non-root URLs.
 
 
+[[action-queue-checkpoint-spi]]
+=== `ActionQueue` speculative-flush checkpoints
+
+The incubating `ActionQueue.clearFromFlushNeededCheck(int)` method has been
+replaced by an opaque checkpoint and restore contract:
+
+[source,java]
+----
+ActionQueueCheckpoint checkpoint();
+void restore(ActionQueueCheckpoint checkpoint);
+----
+
+An `ActionQueueCheckpoint` belongs to the queue instance which created it and
+does not expose the queue's internal list or graph representation.  Queue
+implementations must preserve all work registered before the checkpoint.  Work
+registered afterward is retained when it represents durable persistence-context
+state, including entity inserts, entity deletes, orphan removals, and orphan
+collection removals.  Flush-derived entity updates and ordinary collection work
+may be discarded only while their source state remains intact and can reproduce
+equivalent work during a later required flush.
+
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Changes in Behavior
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

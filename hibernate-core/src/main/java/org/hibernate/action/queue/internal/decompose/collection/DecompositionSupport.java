@@ -10,7 +10,9 @@ import org.hibernate.action.queue.spi.decompose.DecompositionContext;
 import org.hibernate.action.queue.spi.bind.ChainedPostExecutionCallback;
 import org.hibernate.action.queue.spi.bind.PostExecutionCallback;
 import org.hibernate.action.queue.spi.meta.TableDescriptor;
+import org.hibernate.action.queue.spi.plan.FlushOperation;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
+import org.hibernate.action.queue.spi.MutationKind;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.service.spi.EventListenerGroups;
@@ -30,11 +32,40 @@ import org.hibernate.event.spi.PreCollectionUpdateEventListener;
 import org.hibernate.jpa.event.spi.CallbackType;
 import org.hibernate.persister.collection.CollectionPersister;
 
+import java.util.List;
+
 /// Manages listener/callack events for collection actions when decomposed and performed
 /// through the graph-based action queue.
 ///
 /// @author Steve Ebersole
 public class DecompositionSupport {
+	static void attachExecutionMonitor(
+			List<FlushOperation> operations,
+			CollectionExecutionMonitor.Kind kind,
+			Object key,
+			String role) {
+		int physicalOperationCount = 0;
+		for ( var operation : operations ) {
+			if ( operation.getKind() != MutationKind.NO_OP ) {
+				physicalOperationCount++;
+			}
+		}
+		if ( physicalOperationCount == 0 ) {
+			return;
+		}
+
+		final var executionMonitor = new CollectionExecutionMonitor(
+				kind,
+				key,
+				role,
+				physicalOperationCount
+		);
+		for ( var operation : operations ) {
+			if ( operation.getKind() != MutationKind.NO_OP ) {
+				operation.setExecutionMonitor( executionMonitor );
+			}
+		}
+	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Recreate events

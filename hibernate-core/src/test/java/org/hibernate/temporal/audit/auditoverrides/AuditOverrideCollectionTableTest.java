@@ -12,8 +12,6 @@ import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import org.hibernate.SharedSessionContract;
-import org.hibernate.annotations.AuditOverride;
-import org.hibernate.annotations.AuditOverrides;
 import org.hibernate.annotations.Audited;
 import org.hibernate.cfg.StateManagementSettings;
 import org.hibernate.temporal.spi.ChangesetIdentifierSupplier;
@@ -80,10 +78,10 @@ public class AuditOverrideCollectionTableTest {
 
 	@Entity
 	@Table(name = "EntityWithOverrides")
-	@AuditOverrides(
-			{@AuditOverride(name = "firstCollection", isAudited = true),
-					@AuditOverride(name = "secondCollection", isAudited = false),
-			@AuditOverride(name = "thirdCollection", collectionTable = @Audited.CollectionTable( catalog = "cat", schema = "schema", name = "custom_audited_join_table_name" ))}
+	@Audited.Overrides(
+			{@Audited.Override(name = "firstCollection", isAudited = true),
+					@Audited.Override(name = "secondCollection", isAudited = false),
+			@Audited.Override(name = "thirdCollection", collectionTable = @Audited.CollectionTable( catalog = "cat", schema = "schema", name = "custom_audited_join_table_name" ))}
 	)
 	static class EntityWithOverrides extends MSCWithExcludedCollectionProperty{
 	}
@@ -127,13 +125,13 @@ public class AuditOverrideCollectionTableTest {
 
 	@Entity
 	@Table(name = "EntityWithOverrides")
-	@AuditOverrides(@AuditOverride(name = "auditedCollection", collectionTable = @Audited.CollectionTable( name = "overridden_aud")))
+	@Audited.Overrides(@Audited.Override(name = "auditedCollection", collectionTable = @Audited.CollectionTable( name = "overridden_aud")))
 	static class EntityWithCollection extends MSCWithCollection{
 
 	}
 
 	@Entity
-	@AuditOverrides(@AuditOverride(name = "auditedCollection", collectionTable = @Audited.CollectionTable( name = "double_overridden_aud", catalog = "mycatalog", schema = "myschema"  )))
+	@Audited.Overrides(@Audited.Override(name = "auditedCollection", collectionTable = @Audited.CollectionTable( name = "double_overridden_aud", catalog = "mycatalog", schema = "myschema"  )))
 	static class SubEntity extends EntityWithCollection{
 
 	}

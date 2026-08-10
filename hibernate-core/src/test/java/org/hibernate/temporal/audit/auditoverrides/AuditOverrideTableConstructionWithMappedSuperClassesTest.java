@@ -11,8 +11,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.Table;
 import org.hibernate.SharedSessionContract;
-import org.hibernate.annotations.AuditOverride;
-import org.hibernate.annotations.AuditOverrides;
 import org.hibernate.annotations.Audited;
 import org.hibernate.cfg.StateManagementSettings;
 import org.hibernate.mapping.Column;
@@ -74,7 +72,7 @@ public class AuditOverrideTableConstructionWithMappedSuperClassesTest {
 
 	@Entity
 	@Table(name = "EntityThatRevokesTheProperty")
-	@AuditOverride(name = "str1", isAudited = true)
+	@Audited.Override(name = "str1", isAudited = true)
 	static class EntityThatRevokesTheProperty extends MSCWithExcludedProperty {
 	}
 
@@ -110,7 +108,7 @@ public class AuditOverrideTableConstructionWithMappedSuperClassesTest {
 
 	@Entity
 	@Table(name = "EntityThatRevokesTheProperty2")
-	@AuditOverride(name = "str1", isAudited = true)
+	@Audited.Override(name = "str1", isAudited = true)
 	static class EntityThatRevokesTheProperty2 extends IntermediateMSCWithoutAnything {
 	}
 
@@ -132,7 +130,7 @@ public class AuditOverrideTableConstructionWithMappedSuperClassesTest {
 
 
 	@MappedSuperclass
-	@AuditOverride(name = "str1", isAudited = true)
+	@Audited.Override(name = "str1", isAudited = true)
 	static class IntermediateMSCWithAuditOverrideTrue extends MSCWithExcludedProperty {
 
 	}
@@ -185,7 +183,7 @@ public class AuditOverrideTableConstructionWithMappedSuperClassesTest {
 	}
 
 	@MappedSuperclass
-	@AuditOverrides( @AuditOverride(name = "str1", isAudited = false) )
+	@Audited.Overrides( @Audited.Override(name = "str1", isAudited = false) )
 	static class LowerMSCThatExcludesTheProperty extends UpperMSCThatAuditsAProperty {
 
 	}
@@ -196,7 +194,7 @@ public class AuditOverrideTableConstructionWithMappedSuperClassesTest {
 	}
 
 	@MappedSuperclass
-	@AuditOverrides(@AuditOverride(name = "str1", isAudited = true)) // <-- revocation of str1
+	@Audited.Overrides(@Audited.Override(name = "str1", isAudited = true)) // <-- revocation of str1
 	static class UpperSecondMSCThatRevokesTheExclusion extends EntityThatInheritsAnExcludedProperty {
 	}
 
@@ -248,7 +246,7 @@ public class AuditOverrideTableConstructionWithMappedSuperClassesTest {
 	}
 
 	@Entity
-	@AuditOverride(name = "contactPerson", isAudited = true)
+	@Audited.Override(name = "contactPerson", isAudited = true)
 	static class EntityThatRevokesTheProperty4 extends EntityThatRevokesTheProperty3 {
 	}
 

@@ -4,22 +4,9 @@
  */
 package org.hibernate.boot.model.internal;
 
-import java.lang.annotation.Annotation;
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
-
 import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.MappingException;
-import org.hibernate.annotations.AuditOverride;
-import org.hibernate.annotations.AuditOverrides;
 import org.hibernate.annotations.Audited;
 import org.hibernate.annotations.Changelog;
 import org.hibernate.audit.AuditStrategy;
@@ -51,7 +38,16 @@ import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.temporal.spi.ChangesetCoordinator;
 
-import jakarta.annotation.Nullable;
+import java.lang.annotation.Annotation;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.hibernate.annotations.Audited.Table.DEFAULT_CHANGESET_ID_COLUMN_NAME;
 import static org.hibernate.annotations.Audited.Table.DEFAULT_MODIFICATION_TYPE_COLUMN_NAME;
@@ -381,8 +377,8 @@ public final class AuditHelper {
 		} );
 	}
 
-	private static AuditOverride findEffectiveAuditOverrideInHierarchy(PersistentClass rootClass, String propertyName) {
-		var fullHierarchy = new LinkedList<PersistentClass>( rootClass.getSubclasses() );
+	private static Audited.Override findEffectiveAuditOverrideInHierarchy(PersistentClass rootClass, String propertyName) {
+		var fullHierarchy = new ArrayList<PersistentClass>( rootClass.getSubclasses() );
 		fullHierarchy.add( rootClass );
 		for ( var persistentClass : fullHierarchy ) {
 			var auditOverride = findFirstAuditOverrideForProperty( persistentClass, propertyName );
@@ -398,7 +394,7 @@ public final class AuditHelper {
 			Collection collection,
 			@Nullable Audited.CollectionTable collectionAuditTable,
 			PersistentClass referencedEntity,
-			AuditOverride auditOverride) {
+			Audited.Override auditOverride) {
 
 		if ( auditOverride != null && !auditOverride.collectionTable().name().isBlank()) {
 			return auditOverride.collectionTable().name();
@@ -848,7 +844,7 @@ public final class AuditHelper {
 		return excluded;
 	}
 
-	private static Set<AuditOverride> findRevocations(PersistentClass persistentClass) {
+	private static Set<Audited.Override> findRevocations(PersistentClass persistentClass) {
 		var revocations = getRevocations( persistentClass.getMappedClass() );
 
 		var mappedSuperClass = persistentClass.getSuperMappedSuperclass();
@@ -860,12 +856,12 @@ public final class AuditHelper {
 		return revocations;
 	}
 
-	private static Set<AuditOverride> getRevocations(Class<?> mappedClass) {
+	private static Set<Audited.Override> getRevocations(Class<?> mappedClass) {
 		return getAuditOverrides( mappedClass ).stream()
-				.filter( AuditOverride::isAudited ).collect( Collectors.toSet() );
+				.filter( Audited.Override::isAudited ).collect( Collectors.toSet() );
 	}
 
-	static AuditOverride findFirstAuditOverrideForProperty(PersistentClass rootClass, String name) {
+	static Audited.Override findFirstAuditOverrideForProperty(PersistentClass rootClass, String name) {
 		var auditOverride = getAuditOverrideForProperty( rootClass.getMappedClass(), name );
 		// if not, traverse up the hierarchy and find the first override.
 		if ( auditOverride == null ) {	//find first override in @MappedSuperClasses
@@ -881,19 +877,19 @@ public final class AuditHelper {
 		return auditOverride.name().equals( name ) ? auditOverride : null;
 	}
 
-	private static java.util.Collection<AuditOverride> getAuditOverrides(Class<?> mappedClass) {
-		var override = mappedClass.getAnnotation( AuditOverride.class );
+	private static java.util.Collection<Audited.Override> getAuditOverrides(Class<?> mappedClass) {
+		var override = mappedClass.getAnnotation( Audited.Override.class );
 		if ( override != null ) {
 			return Set.of( override );
 		}
-		var overrides = mappedClass.getAnnotation( AuditOverrides.class );
+		var overrides = mappedClass.getAnnotation( Audited.Overrides.class );
 		if ( overrides != null ) {
 			return new HashSet<>( Arrays.asList( overrides.value() ) );
 		}
 		return Set.of();
 	}
 
-	private static AuditOverride getAuditOverrideForProperty(Class<?> mappedClass, String name) {
+	private static Audited.Override getAuditOverrideForProperty(Class<?> mappedClass, String name) {
 		var overrides = getAuditOverrides( mappedClass );
 		if ( overrides.isEmpty() ) {
 			return null;
@@ -935,7 +931,7 @@ public final class AuditHelper {
 		return !isRevocation( firstAuditOverride );
 	}
 
-	private static boolean isRevocation(AuditOverride firstAuditOverride) {
+	private static boolean isRevocation(Audited.Override firstAuditOverride) {
 		return firstAuditOverride.isAudited();
 	}
 

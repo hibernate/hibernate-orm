@@ -25,6 +25,7 @@ import org.hibernate.Session;
 import org.hibernate.TransientPropertyValueException;
 import org.hibernate.action.internal.AbstractEntityInsertAction;
 import org.hibernate.action.internal.BulkOperationCleanupAction;
+import org.hibernate.action.internal.CollectionAction;
 import org.hibernate.action.internal.CollectionRecreateAction;
 import org.hibernate.action.internal.CollectionRemoveAction;
 import org.hibernate.action.internal.CollectionUpdateAction;
@@ -37,6 +38,8 @@ import org.hibernate.action.internal.OrphanRemovalAction;
 import org.hibernate.action.internal.QueuedOperationCollectionAction;
 import org.hibernate.action.internal.UnresolvedEntityInsertActions;
 import org.hibernate.action.queue.spi.ActionQueueCheckpoint;
+import org.hibernate.action.queue.spi.CollectionMutationInput;
+import org.hibernate.action.queue.spi.CollectionTransition;
 import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
 import org.hibernate.action.spi.Executable;
 import org.hibernate.boot.spi.SessionFactoryOptions;
@@ -55,6 +58,7 @@ import jakarta.annotation.Nullable;
 
 import static java.lang.System.arraycopy;
 import static org.hibernate.action.internal.ActionLogging.ACTION_LOGGER;
+import static org.hibernate.action.queue.internal.CollectionMutationActionLowering.lower;
 import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 
 /**
@@ -99,6 +103,8 @@ public class ActionQueueLegacy implements org.hibernate.action.queue.spi.ActionQ
 	private ExecutableList<QueuedOperationCollectionAction> collectionQueuedOps;
 	private ExecutableList<CollectionRemoveAction> collectionRemovals;
 	private ExecutableList<CollectionRemoveAction> orphanCollectionRemovals;
+	private final List<CollectionMutationInput> collectionMutationInputs = new ArrayList<>();
+	private final List<CollectionMutationInput> durableCollectionMutationInputs = new ArrayList<>();
 
 	// TODO: The removeOrphan concept is a temporary "hack" for HHH-6484.
 	//       This should be removed once action/task ordering is improved.
@@ -244,6 +250,8 @@ public class ActionQueueLegacy implements org.hibernate.action.queue.spi.ActionQ
 	}
 
 	public void clear() {
+		collectionMutationInputs.clear();
+		durableCollectionMutationInputs.clear();
 		for ( var value : ORDERED_OPERATIONS ) {
 			final var queue = value.getActions( this );
 			if ( queue != null ) {
@@ -357,12 +365,55 @@ public class ActionQueueLegacy implements org.hibernate.action.queue.spi.ActionQ
 		updates.add( action );
 	}
 
+	@Override
+	public void addCollectionMutation(CollectionMutationInput input) {
+		if ( isDurableCollectionMutation( input ) ) {
+			durableCollectionMutationInputs.add( input );
+		}
+		else {
+			collectionMutationInputs.add( input );
+		}
+	}
+
+	private boolean isDurableCollectionMutation(CollectionMutationInput input) {
+		return !(session.getPersistenceContextInternal().getCollectionFlushActionTracker()
+				instanceof FlushProcessingContext)
+				|| isOrphanCollectionRemoval( input );
+	}
+
+	private boolean isOrphanCollectionRemoval(CollectionMutationInput input) {
+		if ( input.transition() != CollectionTransition.REMOVE
+				&& input.transition() != CollectionTransition.REMOVE_AND_CREATE ) {
+			return false;
+		}
+		Object affectedOwner = input.affectedOwner();
+		if ( affectedOwner == null && input.collection() != null ) {
+			affectedOwner = session.getPersistenceContextInternal()
+					.getLoadedCollectionOwnerOrNull( input.collection() );
+		}
+		if ( affectedOwner == null ) {
+			return false;
+		}
+		final var entry = session.getPersistenceContextInternal().getEntry( affectedOwner );
+		if ( entry == null || !entry.getStatus().isDeletedOrGone() ) {
+			return false;
+		}
+		if ( orphanRemovals != null ) {
+			for ( var orphanRemoval : orphanRemovals ) {
+				if ( orphanRemoval.getInstance() == affectedOwner ) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
 	/**
 	 * Adds a collection (re)create action
 	 *
 	 * @param action The action representing the (re)creation of a collection
 	 */
-	public void addAction(final CollectionRecreateAction action) {
+	private void addCollectionAction(final CollectionRecreateAction action) {
 		OrderedActions.CollectionRecreateAction.ensureInitialized( this );
 		collectionCreations.add( action );
 	}
@@ -372,7 +423,7 @@ public class ActionQueueLegacy implements org.hibernate.action.queue.spi.ActionQ
 	 *
 	 * @param action The action representing the removal of a collection
 	 */
-	public void addAction(final CollectionRemoveAction action) {
+	private void addCollectionAction(final CollectionRemoveAction action) {
 		if ( orphanRemovals != null && action.getAffectedOwner() != null
 				&& session.getPersistenceContextInternal()
 						.getEntry( action.getAffectedOwner() )
@@ -397,7 +448,7 @@ public class ActionQueueLegacy implements org.hibernate.action.queue.spi.ActionQ
 	 *
 	 * @param action The action representing the update of a collection
 	 */
-	public void addAction(final CollectionUpdateAction action) {
+	private void addCollectionAction(final CollectionUpdateAction action) {
 		OrderedActions.CollectionUpdateAction.ensureInitialized( this );
 		collectionUpdates.add( action );
 	}
@@ -407,7 +458,7 @@ public class ActionQueueLegacy implements org.hibernate.action.queue.spi.ActionQ
 	 *
 	 * @param action The action representing the queued operation
 	 */
-	public void addAction(QueuedOperationCollectionAction action) {
+	private void addCollectionAction(QueuedOperationCollectionAction action) {
 		OrderedActions.QueuedOperationCollectionAction.ensureInitialized( this );
 		this.collectionQueuedOps.add( action );
 	}
@@ -517,11 +568,62 @@ public class ActionQueueLegacy implements org.hibernate.action.queue.spi.ActionQ
 	 * @throws HibernateException error preparing actions.
 	 */
 	public void prepareActions() throws HibernateException {
+		prepareDeferredOwnerPreUpdates();
+		prepareCollectionMutationInputs();
 		prepareOwnerUpdateCallbacks();
 		prepareActions( collectionRemovals );
 		prepareActions( collectionUpdates );
 		prepareActions( collectionCreations );
 		prepareActions( collectionQueuedOps );
+	}
+
+	private void prepareDeferredOwnerPreUpdates() {
+		boolean collectionRefreshRequired = false;
+		if ( updates != null ) {
+			for ( var action : updates ) {
+				collectionRefreshRequired |= action.prepareDeferredOwnerPreUpdate();
+			}
+		}
+		if ( collectionRefreshRequired ) {
+			collectionMutationInputs.clear();
+			final var tracker = session.getPersistenceContextInternal().getCollectionFlushActionTracker();
+			if ( tracker instanceof FlushProcessingContext flushProcessingContext ) {
+				flushProcessingContext.refreshCollectionMutationInputs();
+			}
+		}
+	}
+
+	private void prepareCollectionMutationInputs() {
+		if ( collectionMutationInputs.isEmpty() && durableCollectionMutationInputs.isEmpty() ) {
+			return;
+		}
+		final var inputs = new ArrayList<CollectionMutationInput>(
+				collectionMutationInputs.size() + durableCollectionMutationInputs.size()
+		);
+		inputs.addAll( durableCollectionMutationInputs );
+		inputs.addAll( collectionMutationInputs );
+		lower( inputs, (EventSource) session, this::addPreparedCollectionAction );
+		collectionMutationInputs.clear();
+		durableCollectionMutationInputs.clear();
+		sortCollectionActions();
+	}
+
+	private void addPreparedCollectionAction(CollectionAction action) {
+		if ( action instanceof CollectionRemoveAction remove ) {
+			addCollectionAction( remove );
+		}
+		else if ( action instanceof CollectionUpdateAction update ) {
+			addCollectionAction( update );
+		}
+		else if ( action instanceof CollectionRecreateAction recreate ) {
+			addCollectionAction( recreate );
+		}
+		else if ( action instanceof QueuedOperationCollectionAction queuedOperations ) {
+			addCollectionAction( queuedOperations );
+		}
+		else {
+			throw new AssertionFailure( "Unexpected prepared collection action " + action );
+		}
 	}
 
 	private void prepareOwnerUpdateCallbacks() {
@@ -636,6 +738,9 @@ public class ActionQueueLegacy implements org.hibernate.action.queue.spi.ActionQ
 		if ( tables.isEmpty() ) {
 			return false;
 		}
+		if ( collectionInputsAffect( tables ) ) {
+			return true;
+		}
 		for ( var action : ORDERED_OPERATIONS ) {
 			final var queue = action.getActions( this );
 			if ( areTablesToBeUpdated( queue, tables ) ) {
@@ -644,6 +749,25 @@ public class ActionQueueLegacy implements org.hibernate.action.queue.spi.ActionQ
 		}
 		return unresolvedInsertions != null
 			&& areTablesToBeUpdated( unresolvedInsertions, tables );
+	}
+
+	private boolean collectionInputsAffect(Set<? extends Serializable> tables) {
+		return collectionInputsAffect( collectionMutationInputs, tables )
+				|| collectionInputsAffect( durableCollectionMutationInputs, tables );
+	}
+
+	private static boolean collectionInputsAffect(
+			List<CollectionMutationInput> inputs,
+			Set<? extends Serializable> tables) {
+		for ( var input : inputs ) {
+			for ( var space : input.getQuerySpaces() ) {
+				if ( tables.contains( space ) ) {
+					ACTION_LOGGER.changesMustBeFlushedToSpace( space );
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 
 	private static boolean areTablesToBeUpdated(@Nullable ExecutableList<?> queue, Set<? extends Serializable> tableSpaces) {
@@ -766,15 +890,34 @@ public class ActionQueueLegacy implements org.hibernate.action.queue.spi.ActionQ
 	public int numberOfCollectionRemovals() {
 		final int removals = collectionRemovals == null ? 0 : collectionRemovals.size();
 		final int orphanRemovals = orphanCollectionRemovals == null ? 0 : orphanCollectionRemovals.size();
-		return removals + orphanRemovals;
+		return removals + orphanRemovals + countInputs( CollectionTransition.REMOVE );
 	}
 
 	public int numberOfCollectionUpdates() {
-		return collectionUpdates == null ? 0 : collectionUpdates.size();
+		return (collectionUpdates == null ? 0 : collectionUpdates.size())
+				+ countInputs( CollectionTransition.UPDATE );
 	}
 
 	public int numberOfCollectionCreations() {
-		return collectionCreations == null ? 0 : collectionCreations.size();
+		return (collectionCreations == null ? 0 : collectionCreations.size())
+				+ countInputs( CollectionTransition.CREATE );
+	}
+
+	private int countInputs(CollectionTransition kind) {
+		return countInputs( collectionMutationInputs, kind )
+				+ countInputs( durableCollectionMutationInputs, kind );
+	}
+
+	private static int countInputs(List<CollectionMutationInput> inputs, CollectionTransition kind) {
+		int count = 0;
+		for ( var input : inputs ) {
+			if ( input.transition() == kind
+					|| input.transition() == CollectionTransition.REMOVE_AND_CREATE
+						&& (kind == CollectionTransition.REMOVE || kind == CollectionTransition.CREATE) ) {
+				count++;
+			}
+		}
+		return count;
 	}
 
 	public int numberOfDeletions() {
@@ -855,6 +998,7 @@ public class ActionQueueLegacy implements org.hibernate.action.queue.spi.ActionQ
 		return new LegacyCheckpoint(
 				this,
 				size( updates ),
+				collectionMutationInputs.size(),
 				size( collectionQueuedOps ),
 				size( collectionRemovals ),
 				size( collectionUpdates ),
@@ -869,6 +1013,7 @@ public class ActionQueueLegacy implements org.hibernate.action.queue.spi.ActionQ
 			throw new IllegalArgumentException( "Checkpoint was not created by this action queue" );
 		}
 		trimToSize( updates, legacyCheckpoint.updatesSize() );
+		trimToSize( collectionMutationInputs, legacyCheckpoint.collectionMutationInputsSize() );
 		trimToSize( collectionQueuedOps, legacyCheckpoint.collectionQueuedOpsSize() );
 		trimToSize( collectionRemovals, legacyCheckpoint.collectionRemovalsSize() );
 		trimToSize( collectionUpdates, legacyCheckpoint.collectionUpdatesSize() );
@@ -885,9 +1030,16 @@ public class ActionQueueLegacy implements org.hibernate.action.queue.spi.ActionQ
 		}
 	}
 
+	private static void trimToSize(List<?> actions, int checkpointSize) {
+		if ( actions.size() > checkpointSize ) {
+			actions.subList( checkpointSize, actions.size() ).clear();
+		}
+	}
+
 	private record LegacyCheckpoint(
 			ActionQueueLegacy owner,
 			int updatesSize,
+			int collectionMutationInputsSize,
 			int collectionQueuedOpsSize,
 			int collectionRemovalsSize,
 			int collectionUpdatesSize,
@@ -906,6 +1058,8 @@ public class ActionQueueLegacy implements org.hibernate.action.queue.spi.ActionQ
 
 	public boolean hasAnyQueuedActions() {
 		return hasUnresolvedEntityInsertActions()
+			|| !collectionMutationInputs.isEmpty()
+			|| !durableCollectionMutationInputs.isEmpty()
 			|| nonempty( updates )
 			|| nonempty( insertions )
 			|| nonempty( deletions )

@@ -5,7 +5,7 @@
 package org.hibernate.event.internal;
 
 import org.hibernate.HibernateException;
-import org.hibernate.action.internal.CollectionRemoveAction;
+import org.hibernate.action.queue.spi.CollectionMutationInput;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.type.CompositeType;
@@ -95,8 +95,14 @@ public abstract class ReattachVisitor extends ProxyVisitor {
 					collectionInfoString( role, ownerIdentifier, source.getFactory() )
 			);
 		}
-		source.getActionQueue()
-				.addAction( new CollectionRemoveAction( owner, role, collectionKey, false, source ) );
+		source.getActionQueue().addCollectionMutation(
+				CollectionMutationInput.wrapperlessRemoval(
+						role,
+						collectionKey,
+						owner,
+						ownerIdentifier
+				)
+		);
 	}
 
 	/**

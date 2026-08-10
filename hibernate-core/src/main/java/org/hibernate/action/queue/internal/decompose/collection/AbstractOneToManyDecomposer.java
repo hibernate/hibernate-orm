@@ -81,7 +81,9 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 		var attribute = persister.getAttributeMapping();
 
 		// Always fire PRE event, even if no SQL operations will be needed
-		DecompositionSupport.firePreRecreate( persister, collection, session );
+		if ( !action.isLifecyclePrepared() ) {
+			DecompositionSupport.firePreRecreate( persister, collection, session );
+		}
 		collection.preInsert( persister );
 
 		// Create post-execution callback to handle post-execution work (afterAction, cache, events, stats)
@@ -207,7 +209,9 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 		final var key = action.getKey();
 
 		// Always fire PRE event, even if collection is not initialized
-		DecompositionSupport.firePreUpdate( persister, collection, session );
+		if ( !action.isLifecyclePrepared() ) {
+			DecompositionSupport.firePreUpdate( persister, collection, session );
+		}
 
 		// Create callback to handle post-execution work (afterAction, cache, events, stats)
 		var postUpdateHandling = new PostCollectionUpdateHandling(

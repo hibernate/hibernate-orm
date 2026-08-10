@@ -80,6 +80,15 @@ collection removals.  Flush-derived entity updates and ordinary collection work
 may be discarded only while their source state remains intact and can reproduce
 equivalent work during a later required flush.
 
+Collection mutation registration now uses the queue-neutral
+`addCollectionMutation(CollectionMutationInput)` method.  The collection-specific
+`addAction(CollectionRecreateAction)`, `addAction(CollectionRemoveAction)`,
+`addAction(CollectionUpdateAction)`, and
+`addAction(QueuedOperationCollectionAction)` overloads have been removed from
+the incubating `ActionQueue` SPI.  Queue implementations may lower the semantic
+input to these legacy action forms internally, but they are no longer the common
+registration vocabulary.
+
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Changes in Behavior
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

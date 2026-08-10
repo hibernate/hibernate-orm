@@ -5,7 +5,9 @@
 package org.hibernate.event.internal;
 
 import org.hibernate.HibernateException;
-import org.hibernate.action.internal.CollectionRemoveAction;
+import org.hibernate.action.queue.spi.CollectionEndpoint;
+import org.hibernate.action.queue.spi.CollectionMutationInput;
+import org.hibernate.action.queue.spi.CollectionTransition;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
@@ -159,15 +161,14 @@ public class WrapVisitor extends ProxyVisitor {
 			);
 		}
 		else {
-			session.runInterceptorCallback(
-					() -> session.getInterceptor().onCollectionRemove( collectionToRemove, key ) );
-			session.getActionQueue().addAction(
-					new CollectionRemoveAction(
+			session.getActionQueue().addCollectionMutation(
+					new CollectionMutationInput(
 							collectionToRemove,
-							persister,
-							key,
+							CollectionTransition.REMOVE,
+							new CollectionEndpoint( persister, key ),
+							null,
 							false,
-							session
+							false
 					)
 			);
 		}

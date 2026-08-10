@@ -6,7 +6,6 @@ package org.hibernate.orm.test.event.collection;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.action.queue.spi.QueueType;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.collection.spi.PersistentSet;
 import org.hibernate.dialect.HANADialect;
@@ -30,13 +29,10 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 /// Base class for testing collection event firing based on
 /// [collection actions][org.hibernate.action.internal.CollectionAction].
 ///
-/// The test asserts differently based on which ActionQueue implementation is
-/// used as determined using [#isGraphBasedActionQueue(SessionFactoryScope)].
-/// Assertions for the graph-based queue use [EventAnalyzer] to pair up
+/// Shared lifecycle preparation may separate the pre and post events of unrelated mutations.
+/// Order-independent assertions use [EventAnalyzer] to pair up
 /// pre- and post- events to get an accurate count of each "phase" of event,
-/// whereas assertions for the legacy queue use strict sequential assertions.
-/// This difference has nothing to do with correctness, just the path to
-/// get there.
+/// without imposing a global event order.
 ///
 /// @author Steve Ebersole
 /// @author Gail Badner
@@ -82,8 +78,8 @@ public abstract class AbstractCollectionEventTest {
 		ParentWithCollection parent = createParentWithOneChild( "parent", "child", scope );
 		int index = 0;
 		Child child = (Child) parent.getChildren().iterator().next();
-		// Event ordering differs between ActionQueue implementations
-		if ( isGraphBasedActionQueue( scope ) ) {
+		// Shared preparation may separate pre- and post-events
+		if ( usesSharedCollectionLifecyclePreparation() ) {
 			checkResult( listeners, listeners.getPreCollectionRecreateListener(), parent, index++ );
 			if ( child instanceof ChildWithBidirectionalManyToMany ) {
 				checkResult( listeners, listeners.getPreCollectionRecreateListener(),
@@ -128,7 +124,7 @@ public abstract class AbstractCollectionEventTest {
 		} );
 		Child newChild = childRef.get();
 
-		if ( isGraphBasedActionQueue( scope ) ) {
+		if ( usesSharedCollectionLifecyclePreparation() ) {
 			int expectedInitialize = ((PersistentCollection<?>) parent.getChildren()).wasInitialized() ? 1 : -1;
 			int expectedRecreates = 0;
 			int expectedUpdates = 1;
@@ -185,7 +181,7 @@ public abstract class AbstractCollectionEventTest {
 		//          * 0 or 1 initialization events
 		//          * 0 or 1 update events
 		//          * 0, 1, or 2 recreate events
-		if ( isGraphBasedActionQueue( scope ) ) {
+		if ( usesSharedCollectionLifecyclePreparation() ) {
 			int expectedInitialize = ((PersistentCollection) parent.getChildren()).wasInitialized() ? 1 : 0;
 			int expectedRecreates = 0;
 			int expectedUpdates = 1;
@@ -242,7 +238,7 @@ public abstract class AbstractCollectionEventTest {
 		//          * 0 or 1 initialization events
 		//          * 2 update events
 		//          * 0 or 2 recreate events
-		if ( isGraphBasedActionQueue( scope ) ) {
+		if ( usesSharedCollectionLifecyclePreparation() ) {
 			int expectedInitialize = ((PersistentCollection) parent.getChildren()).wasInitialized() ? 1 : 0;
 			int expectedRecreates = 0;
 			int expectedUpdates = 1;
@@ -297,8 +293,8 @@ public abstract class AbstractCollectionEventTest {
 		// Both have the same expectations in terms of the number and types of events generated -
 		//		* 0, 1, or 2 initialization events
 		//		* 0, 1, or 2 update events
-		// But event ordering differs between ActionQueue implementations.
-		if ( isGraphBasedActionQueue( scope ) ) {
+		// Shared preparation may separate pre- and post-events.
+		if ( usesSharedCollectionLifecyclePreparation() ) {
 			int expectedInitialize = ((PersistentCollection) parent.getChildren()).wasInitialized() ? 1 : 0;
 			int expectedUpdates = 0;
 			if ( !(parent.getChildren() instanceof PersistentSet) ) {
@@ -355,7 +351,7 @@ public abstract class AbstractCollectionEventTest {
 		tx.commit();
 		s.close();
 
-		if ( isGraphBasedActionQueue( scope ) ) {
+		if ( usesSharedCollectionLifecyclePreparation() ) {
 			int expectedInitialize = ((PersistentCollection) collectionOrig).wasInitialized() ? 1 : -1;
 			int expectedRecreates = 1; // parent's new collection
 			if ( newChild instanceof ChildWithBidirectionalManyToMany ) {
@@ -399,7 +395,7 @@ public abstract class AbstractCollectionEventTest {
 		tx.commit();
 		s.close();
 
-		if ( isGraphBasedActionQueue( scope ) ) {
+		if ( usesSharedCollectionLifecyclePreparation() ) {
 			int expectedInitialize = ((PersistentCollection) oldCollection).wasInitialized() ? 1 : -1;
 			int expectedRecreates = 1; // parent's new collection
 			if ( newChild instanceof ChildWithBidirectionalManyToMany ) {
@@ -447,7 +443,7 @@ public abstract class AbstractCollectionEventTest {
 		tx.commit();
 		s.close();
 
-		if ( isGraphBasedActionQueue( scope ) ) {
+		if ( usesSharedCollectionLifecyclePreparation() ) {
 			int expectedInitialize = 0;
 			if ( ((PersistentCollection) oldCollection).wasInitialized() ) {
 				expectedInitialize++;
@@ -510,7 +506,7 @@ public abstract class AbstractCollectionEventTest {
 		tx.commit();
 		s.close();
 
-		if ( isGraphBasedActionQueue( scope ) ) {
+		if ( usesSharedCollectionLifecyclePreparation() ) {
 			int expectedInitialize = 0;
 			if ( ((PersistentCollection) oldCollection).wasInitialized() ) {
 				expectedInitialize++;
@@ -579,8 +575,8 @@ public abstract class AbstractCollectionEventTest {
 		// Both have the same expectations in terms of the number and types of events generated -
 		//		* 0, 1, or 2 initialization events
 		//		* 1 or 2 update events
-		// But event ordering differs between ActionQueue implementations.
-		if ( isGraphBasedActionQueue( scope ) ) {
+		// Shared preparation may separate pre- and post-events.
+		if ( usesSharedCollectionLifecyclePreparation() ) {
 			int expectedInitialize = ((PersistentCollection) parent.getChildren()).wasInitialized() ? 1 : 0;
 			int expectedUpdates = 1;
 			if ( child instanceof ChildWithBidirectionalManyToMany childWithManyToMany ) {
@@ -641,8 +637,8 @@ public abstract class AbstractCollectionEventTest {
 		// Both have the same expectations in terms of the number and types of events generated -
 		//		* 0, 1, or 2 initialization events
 		//		* 1 or 2 update events
-		// But event ordering differs between ActionQueue implementations.
-		if ( isGraphBasedActionQueue( scope ) ) {
+		// Shared preparation may separate pre- and post-events.
+		if ( usesSharedCollectionLifecyclePreparation() ) {
 			int expectedInitialize = ((PersistentCollection) parent.getChildren()).wasInitialized() ? 1 : 0;
 			int expectedUpdates = 1;
 			if ( child instanceof ChildWithBidirectionalManyToMany childWithManyToMany ) {
@@ -710,8 +706,8 @@ public abstract class AbstractCollectionEventTest {
 		// Both have the same expectations in terms of the number and types of events generated -
 		//		* 0, 1, or 2 initialization events
 		//		* 1 or 2 update events
-		// But event ordering differs between ActionQueue implementations.
-		if ( isGraphBasedActionQueue( scope ) ) {
+		// Shared preparation may separate pre- and post-events.
+		if ( usesSharedCollectionLifecyclePreparation() ) {
 			int expectedInitialize = ((PersistentCollection<?>) parent.getChildren()).wasInitialized() ? 1 : 0;
 			int expectedUpdates = 1;
 			if ( oldChild instanceof ChildWithBidirectionalManyToMany oldChildWithManyToMany ) {
@@ -764,7 +760,7 @@ public abstract class AbstractCollectionEventTest {
 		tx.commit();
 		s.close();
 
-		if ( isGraphBasedActionQueue( scope ) ) {
+		if ( usesSharedCollectionLifecyclePreparation() ) {
 			checkGraphExpectations( listeners, 1, -1, -1, 1 );
 		}
 		else {
@@ -818,7 +814,7 @@ public abstract class AbstractCollectionEventTest {
 		tx.commit();
 		s.close();
 
-		if ( isGraphBasedActionQueue( scope ) ) {
+		if ( usesSharedCollectionLifecyclePreparation() ) {
 			int expectedInitialize = 1;
 			int expectedRemoves = 1;
 			if ( child instanceof ChildWithBidirectionalManyToMany ) {
@@ -870,8 +866,8 @@ public abstract class AbstractCollectionEventTest {
 		// Both have the same expectations in terms of the number and types of events generated -
 		//		* 0, 1, 2, or 3 initialization events
 		//		* 2 or 3 update events
-		// But event ordering differs between ActionQueue implementations.
-		if ( isGraphBasedActionQueue( scope ) ) {
+		// Shared preparation may separate pre- and post-events.
+		if ( usesSharedCollectionLifecyclePreparation() ) {
 			int expectedInitialize = 0;
 			if ( ((PersistentCollection) parent.getChildren()).wasInitialized() ) {
 				expectedInitialize++;
@@ -933,7 +929,7 @@ public abstract class AbstractCollectionEventTest {
 		tx.commit();
 		s.close();
 
-		if ( isGraphBasedActionQueue( scope ) ) {
+		if ( usesSharedCollectionLifecyclePreparation() ) {
 			int expectedInitialize = 0;
 			if ( ((PersistentCollection) parent.getChildren()).wasInitialized() ) {
 				expectedInitialize++;
@@ -1008,7 +1004,7 @@ public abstract class AbstractCollectionEventTest {
 			}
 		}
 
-		if ( isGraphBasedActionQueue( scope ) ) {
+		if ( usesSharedCollectionLifecyclePreparation() ) {
 			checkGraphExpectations( listeners, expectedInitialize, 1, expectedUpdates, 2 );
 		}
 		else {
@@ -1095,7 +1091,7 @@ public abstract class AbstractCollectionEventTest {
 			}
 		}
 
-		if ( isGraphBasedActionQueue( scope ) ) {
+		if ( usesSharedCollectionLifecyclePreparation() ) {
 			checkGraphExpectations( listeners, expectedInitialize, 2, expectedUpdates, 4 );
 		}
 		else {
@@ -1189,12 +1185,10 @@ public abstract class AbstractCollectionEventTest {
 	}
 
 	/**
-	 * Helper to detect which ActionQueue implementation is being used.
-	 * Graph-based ActionQueue fires all PRE events during decomposition,
-	 * then all POST events after SQL execution (different event ordering from legacy).
+	 * Shared preparation fires pre-events before queue-native execution.
 	 */
-	protected boolean isGraphBasedActionQueue(SessionFactoryScope scope) {
-		return scope.getSessionFactory().getActionQueueFactory().getConfiguredQueueType() == QueueType.GRAPH;
+	protected boolean usesSharedCollectionLifecyclePreparation() {
+		return true;
 	}
 
 	protected void checkGraphExpectations(

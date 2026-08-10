@@ -231,6 +231,18 @@ public class XmlAnnotationHelper {
 					xmlDocumentContext.getModelBuildingContext()
 			);
 		}
+		if ( jaxbEntity.isDynamicInsert() != null && jaxbEntity.isDynamicInsert() ) {
+			classDetails.applyAnnotationUsage(
+					HibernateAnnotations.DYNAMIC_INSERT,
+					xmlDocumentContext.getModelBuildingContext()
+			);
+		}
+		if ( jaxbEntity.isDynamicUpdate() != null && jaxbEntity.isDynamicUpdate() ) {
+			classDetails.applyAnnotationUsage(
+					HibernateAnnotations.DYNAMIC_UPDATE,
+					xmlDocumentContext.getModelBuildingContext()
+			);
+		}
 	}
 
 	public static void applyColumn(

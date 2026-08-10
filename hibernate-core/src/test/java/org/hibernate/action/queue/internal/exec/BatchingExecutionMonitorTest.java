@@ -12,6 +12,9 @@ import org.hibernate.action.queue.spi.MutationKind;
 import org.hibernate.action.queue.spi.StatementShapeKey;
 import org.hibernate.action.queue.spi.bind.BindPlan;
 import org.hibernate.action.queue.spi.bind.OperationExecutionMonitor;
+import org.hibernate.action.queue.spi.bind.PostExecutionCallback;
+import org.hibernate.action.queue.spi.CollectionMutationId;
+import org.hibernate.action.queue.internal.decompose.collection.CollectionMutationCompletion;
 import org.hibernate.action.queue.spi.meta.TableDescriptor;
 import org.hibernate.action.queue.spi.plan.FlushOperation;
 import org.hibernate.engine.jdbc.batch.spi.BatchObserver;
@@ -24,6 +27,8 @@ import org.hibernate.sql.model.PreparableMutationOperation;
 
 import org.junit.jupiter.api.Test;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -60,6 +65,14 @@ class BatchingExecutionMonitorTest {
 		);
 		final var executionMonitor = mock( OperationExecutionMonitor.class );
 		operation.setExecutionMonitor( executionMonitor );
+		final var completionHandler = mock( PostExecutionCallback.class );
+		final var mutationCompletion = new CollectionMutationCompletion(
+				new CollectionMutationId( 1 ),
+				null
+		);
+		mutationCompletion.registerOperation( operation );
+		mutationCompletion.registerCompletionHandler( completionHandler );
+		mutationCompletion.seal( session );
 
 		final var batch = mock( SingleStatementBatch.class );
 		when( jdbcCoordinator.getSingleStatementBatch( shapeKey, 5, jdbcOperation ) ).thenReturn( batch );
@@ -70,6 +83,7 @@ class BatchingExecutionMonitorTest {
 		} ).when( batch ).addObserver( org.mockito.ArgumentMatchers.any() );
 		doAnswer( invocation -> {
 			verify( executionMonitor, never() ).beforeExecution( session );
+			verify( completionHandler, never() ).handle( session );
 			observer.get().batchExplicitlyExecuted();
 			verify( executionMonitor ).beforeExecution( session );
 			return null;
@@ -79,5 +93,56 @@ class BatchingExecutionMonitorTest {
 
 		verify( executionMonitor ).afterSuccessfulExecution( session );
 		verify( executionMonitor, never() ).afterFailedExecution( session );
+		verify( completionHandler ).handle( session );
+	}
+
+	@Test
+	void failedBatchSuppressesSemanticCompletion() {
+		final var session = mock( SessionImplementor.class );
+		final var jdbcCoordinator = mock( JdbcCoordinator.class );
+		final var logicalConnection = mock( LogicalConnectionImplementor.class );
+		when( session.getJdbcCoordinator() ).thenReturn( jdbcCoordinator );
+		when( jdbcCoordinator.getLogicalConnection() ).thenReturn( logicalConnection );
+		when( logicalConnection.getPhysicalConnection() ).thenReturn( mock( Connection.class ) );
+
+		final var shapeKey = mock( StatementShapeKey.class );
+		final var jdbcOperation = mock( PreparableMutationOperation.class );
+		doReturn( List.of( mock( JdbcParameterBinder.class ) ) ).when( jdbcOperation ).getParameterBinders();
+		final var operation = new FlushOperation(
+				mock( TableDescriptor.class ),
+				MutationKind.UPDATE,
+				jdbcOperation,
+				mock( BindPlan.class ),
+				0,
+				"collection update",
+				shapeKey
+		);
+		final var completionHandler = mock( PostExecutionCallback.class );
+		final var mutationCompletion = new CollectionMutationCompletion(
+				new CollectionMutationId( 1 ),
+				null
+		);
+		mutationCompletion.registerOperation( operation );
+		mutationCompletion.registerCompletionHandler( completionHandler );
+		mutationCompletion.seal( session );
+
+		final var batch = mock( SingleStatementBatch.class );
+		when( jdbcCoordinator.getSingleStatementBatch( shapeKey, 5, jdbcOperation ) ).thenReturn( batch );
+		final var observer = new AtomicReference<BatchObserver>();
+		doAnswer( invocation -> {
+			observer.set( invocation.getArgument( 0 ) );
+			return null;
+		} ).when( batch ).addObserver( org.mockito.ArgumentMatchers.any() );
+		doAnswer( invocation -> {
+			observer.get().batchExplicitlyExecuted();
+			throw new IllegalStateException( "expected batch failure" );
+		} ).when( batch ).execute();
+
+		assertThatThrownBy(
+				() -> new BatchingPlanStepExecutor( 5, session ).execute( List.of( operation ), null, null )
+		).isInstanceOf( IllegalStateException.class );
+
+		verify( completionHandler, never() ).handle( session );
+		assertThat( mutationCompletion.getState() ).isEqualTo( CollectionMutationCompletion.State.FAILED );
 	}
 }

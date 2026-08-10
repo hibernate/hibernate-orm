@@ -15,6 +15,7 @@ import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
+import org.hibernate.engine.internal.FlushProcessingContext;
 import org.hibernate.event.monitor.spi.EventMonitor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.PostCommitUpdateEventListener;
@@ -183,10 +184,18 @@ public class EntityUpdateAction extends EntityAction {
 			updateCacheItem( previousVersion, cacheKey, entry );
 			handleNaturalIdSharedResolutions( id, persister, persistenceContext );
 			postUpdate();
-
-			final var statistics = session.getFactory().getStatistics();
-			if ( statistics.isStatisticsEnabled() ) {
-				statistics.updateEntity( getPersister().getEntityName() );
+			final Runnable recordStatistics = () -> {
+				final var statistics = session.getFactory().getStatistics();
+				if ( statistics.isStatisticsEnabled() ) {
+					statistics.updateEntity( getPersister().getEntityName() );
+				}
+			};
+			final var tracker = persistenceContext.getCollectionFlushActionTracker();
+			if ( tracker instanceof FlushProcessingContext flushProcessingContext ) {
+				flushProcessingContext.ownerEntityUpdateCompleted( instance, recordStatistics );
+			}
+			else {
+				recordStatistics.run();
 			}
 		}
 	}

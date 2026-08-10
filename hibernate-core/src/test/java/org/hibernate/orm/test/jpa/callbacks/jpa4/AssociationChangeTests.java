@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Consumer;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -41,6 +42,7 @@ public class AssociationChangeTests {
 	@AfterEach
 	void tearDown(SessionFactoryScope factoryScope) {
 		factoryScope.dropData();
+		UpdateWatcher.reset();
 	}
 
 	@Test
@@ -125,6 +127,27 @@ public class AssociationChangeTests {
 		// make sure we only get one set of callbacks
 		assertThat( UpdateWatcher.vendorPreUpdates ).hasSize( 1 );
 		assertThat( UpdateWatcher.vendorPostUpdates ).hasSize( 1 );
+	}
+
+	@Test
+	void ownerPreUpdateCollectionChangeIsIncludedInTheSameFlush(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( session -> session.persist( new Vendor( 1, "A" ) ) );
+
+		UpdateWatcher.reset();
+		UpdateWatcher.vendorPreUpdateAction = vendor -> vendor.superlatives.add( "changed in pre-update" );
+
+		factoryScope.inTransaction( session -> {
+			final var vendor = session.get( Vendor.class, 1 );
+			vendor.superlatives.size();
+			vendor.name = "B";
+		} );
+
+		assertThat( UpdateWatcher.vendorPreUpdates ).hasSize( 1 );
+		assertThat( UpdateWatcher.vendorPostUpdates ).hasSize( 1 );
+		factoryScope.inTransaction( session -> {
+			final var vendor = session.get( Vendor.class, 1 );
+			assertThat( vendor.superlatives ).containsExactly( "changed in pre-update" );
+		} );
 	}
 
 	@Test
@@ -283,6 +306,7 @@ public class AssociationChangeTests {
 
 		public static final List<Product> productPreUpdates = new ArrayList<>();
 		public static final List<Product> productPostUpdates = new ArrayList<>();
+		public static Consumer<Vendor> vendorPreUpdateAction;
 
 		public static void reset() {
 			vendorPreUpdates.clear();
@@ -293,11 +317,15 @@ public class AssociationChangeTests {
 
 			productPreUpdates.clear();
 			productPostUpdates.clear();
+			vendorPreUpdateAction = null;
 		}
 
 		@PreUpdate
 		public void preUpdate(Vendor vendor) {
 			vendorPreUpdates.add( vendor );
+			if ( vendorPreUpdateAction != null ) {
+				vendorPreUpdateAction.accept( vendor );
+			}
 		}
 
 		@PostUpdate

@@ -601,6 +601,7 @@ public class FlushCoordinator {
 
 	/// Executes planned operations in order. Handles fixups emitted from cycle breaks.
 	private void executePlan(FlushPlan plan) {
+		reserveCollectionMutationFixups( plan );
 		final PlanStepExecutor executor = PlanStepExecutorFactory.create( session );
 		final Consumer<Object> newlyManagedEntityConsumer = decomposer.hasUnresolvedInserts()
 				? newlyManagedEntities::add
@@ -618,6 +619,17 @@ public class FlushCoordinator {
 		final List<FlushOperation> fixups = plan.drainFixupsInOrder();
 		if (!fixups.isEmpty()) {
 			executor.execute( fixups, null, null );
+		}
+	}
+
+	private static void reserveCollectionMutationFixups(FlushPlan plan) {
+		for ( var step : plan.steps() ) {
+			for ( var operation : step.operations() ) {
+				final var collectionMutationCompletion = operation.getCollectionMutationCompletion();
+				if ( collectionMutationCompletion != null && operation.getBindingPatch() != null ) {
+					collectionMutationCompletion.reserveFixup( operation );
+				}
+			}
 		}
 	}
 

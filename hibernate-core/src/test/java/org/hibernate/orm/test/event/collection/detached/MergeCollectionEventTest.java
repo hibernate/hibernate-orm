@@ -17,6 +17,7 @@ import org.hibernate.event.spi.PreCollectionRecreateEvent;
 import org.hibernate.event.spi.PreCollectionRemoveEvent;
 import org.hibernate.event.spi.PreCollectionUpdateEvent;
 import org.hibernate.integrator.spi.Integrator;
+import org.hibernate.orm.test.event.collection.EventAnalyzer;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 import org.hibernate.testing.orm.junit.BootstrapServiceRegistry;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -150,15 +151,7 @@ public class MergeCollectionEventTest {
 			assertEquals( 8, listener.getEventEntryList().size() ); // 4 collections x 2 events per
 			// Event ordering differs between ActionQueue implementations
 			if ( isGraphBasedActionQueue( scope ) ) {
-				// Graph-based: all PRE events, then all POST events
-				checkListenerGraph( 0, PreCollectionUpdateEvent.class );
-				checkListenerGraph( 1, PreCollectionUpdateEvent.class );
-				checkListenerGraph( 2, PreCollectionUpdateEvent.class );
-				checkListenerGraph( 3, PreCollectionUpdateEvent.class );
-				checkListenerGraph( 4, PostCollectionUpdateEvent.class );
-				checkListenerGraph( 5, PostCollectionUpdateEvent.class );
-				checkListenerGraph( 6, PostCollectionUpdateEvent.class );
-				checkListenerGraph( 7, PostCollectionUpdateEvent.class );
+				checkGraphPairs( listener, EventAnalyzer.Phase.UPDATE, 4 );
 			}
 			else {
 				// Legacy: PRE/POST paired per collection
@@ -186,15 +179,7 @@ public class MergeCollectionEventTest {
 			assertEquals( 8, listener.getEventEntryList().size() ); // 4 collections x 2 events per
 			// Event ordering differs between ActionQueue implementations
 			if ( isGraphBasedActionQueue( scope ) ) {
-				// Graph-based: all PRE events, then all POST events
-				checkListenerGraph( 0, PreCollectionUpdateEvent.class );
-				checkListenerGraph( 1, PreCollectionUpdateEvent.class );
-				checkListenerGraph( 2, PreCollectionUpdateEvent.class );
-				checkListenerGraph( 3, PreCollectionUpdateEvent.class );
-				checkListenerGraph( 4, PostCollectionUpdateEvent.class );
-				checkListenerGraph( 5, PostCollectionUpdateEvent.class );
-				checkListenerGraph( 6, PostCollectionUpdateEvent.class );
-				checkListenerGraph( 7, PostCollectionUpdateEvent.class );
+				checkGraphPairs( listener, EventAnalyzer.Phase.UPDATE, 4 );
 			}
 			else {
 				// Legacy: PRE/POST paired per collection
@@ -218,6 +203,19 @@ public class MergeCollectionEventTest {
 //		checkListener(listeners, listeners.getPostCollectionUpdateListener(),
 //					  mce, mce.getRefEntities1(), eventCount++);
 
+	}
+
+	private void checkGraphPairs(
+			AggregatedCollectionEventListener listener,
+			EventAnalyzer.Phase phase,
+			int expectedPairCount) {
+		final var events = listener.getEventEntryList().stream()
+				.map( AggregatedCollectionEventListener.EventEntry::getEvent )
+				.toList();
+		final var analysis = EventAnalyzer.matchEvents( events );
+		assertEquals( 0, analysis.unmatchedPre().size() );
+		assertEquals( 0, analysis.unmatchedPost().size() );
+		assertEquals( expectedPairCount, analysis.pairs().get( phase ).size() );
 	}
 
 	private void checkListenerGraph(int index, Class<? extends AbstractCollectionEvent> expectedEventType) {

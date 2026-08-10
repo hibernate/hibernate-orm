@@ -11,6 +11,7 @@ import org.hibernate.event.spi.PostCollectionRecreateEvent;
 import org.hibernate.event.spi.PreCollectionRemoveEvent;
 import org.hibernate.event.spi.PreCollectionUpdateEvent;
 import org.hibernate.orm.test.event.collection.Entity;
+import org.hibernate.orm.test.event.collection.EventAnalyzer;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -71,14 +72,15 @@ public class DetachedMultipleCollectionChangeTest {
 
 		// Event ordering differs between ActionQueue implementations
 		if ( isGraphBasedActionQueue( scope ) ) {
-			checkListener( listeners, listeners.getPreCollectionRecreateListener(),
-					mce.get(), oldRefentities1, eventCount++ );
-			checkListener( listeners, listeners.getPreCollectionRecreateListener(),
-					mce.get(), oldRefentities2, eventCount++ );
-			checkListener( listeners, listeners.getPostCollectionRecreateListener(),
-					mce.get(), oldRefentities1, eventCount++ );
-			checkListener( listeners, listeners.getPostCollectionRecreateListener(),
-					mce.get(), oldRefentities2, eventCount++ );
+			final var analysis = EventAnalyzer.matchEvents( listeners.getEvents() );
+			assertEquals( 0, analysis.unmatchedPre().size() );
+			assertEquals( 0, analysis.unmatchedPost().size() );
+			assertEquals( 2, analysis.pairs().get( EventAnalyzer.Phase.RECREATE ).size() );
+			for ( var pair : analysis.pairs().get( EventAnalyzer.Phase.RECREATE ) ) {
+				assertEquals( mce.get(), pair.pre().getAffectedOwnerOrNull() );
+				assertEquals( mce.get(), pair.post().getAffectedOwnerOrNull() );
+			}
+			eventCount = 4;
 		}
 		else {
 			checkListener( listeners, listeners.getPreCollectionRecreateListener(),

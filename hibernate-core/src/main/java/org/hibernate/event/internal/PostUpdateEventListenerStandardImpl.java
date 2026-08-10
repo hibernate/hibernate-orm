@@ -6,6 +6,7 @@ package org.hibernate.event.internal;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
+import org.hibernate.engine.internal.FlushProcessingContext;
 import org.hibernate.event.spi.PostUpdateEvent;
 import org.hibernate.event.spi.PostUpdateEventListener;
 import org.hibernate.jpa.event.spi.CallbackType;
@@ -25,6 +26,11 @@ public class PostUpdateEventListenerStandardImpl implements PostUpdateEventListe
 			@Nonnull Object entity,
 			@Nonnull EntityPersister persister,
 			@Nonnull SharedSessionContractImplementor source) {
+		final var tracker = source.getPersistenceContextInternal().getCollectionFlushActionTracker();
+		if ( tracker instanceof FlushProcessingContext flushProcessingContext
+				&& flushProcessingContext.coordinatesOwnerUpdate( entity ) ) {
+			return;
+		}
 		// mimic the preUpdate filter
 		if ( source.isStateless()
 				|| source.getPersistenceContextInternal().getEntry( entity ).getStatus() != Status.DELETED ) {

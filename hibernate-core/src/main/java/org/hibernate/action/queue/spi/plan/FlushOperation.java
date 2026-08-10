@@ -6,9 +6,11 @@ package org.hibernate.action.queue.spi.plan;
 
 import org.hibernate.Incubating;
 import org.hibernate.action.queue.spi.MutationKind;
+import org.hibernate.action.queue.spi.CollectionMutationId;
 import org.hibernate.action.queue.spi.StatementShapeKey;
 import org.hibernate.action.queue.spi.bind.BindPlan;
 import org.hibernate.action.queue.internal.cyclebreak.BindingPatch;
+import org.hibernate.action.queue.internal.decompose.collection.CollectionMutationCompletion;
 import org.hibernate.action.queue.spi.bind.ChainedPostExecutionCallback;
 import org.hibernate.action.queue.spi.bind.OperationResultChecker;
 import org.hibernate.action.queue.spi.bind.OperationExecutionMonitor;
@@ -61,6 +63,8 @@ public class FlushOperation implements OperationResultChecker {
 	private PreExecutionCallback preExecutionCallback;
 	private OperationExecutionMonitor executionMonitor;
 	private boolean executionSkipped;
+	private CollectionMutationCompletion collectionMutationCompletion;
+	private boolean collectionMutationFixupReserved;
 
 	// metadata
 	private final boolean needsIdPrePhase;
@@ -268,6 +272,26 @@ public class FlushOperation implements OperationResultChecker {
 		this.executionMonitor = executionMonitor;
 	}
 
+	public CollectionMutationCompletion getCollectionMutationCompletion() {
+		return collectionMutationCompletion;
+	}
+
+	public CollectionMutationId getCollectionMutationId() {
+		return collectionMutationCompletion == null ? null : collectionMutationCompletion.getId();
+	}
+
+	public void setCollectionMutationCompletion(CollectionMutationCompletion collectionMutationCompletion) {
+		this.collectionMutationCompletion = collectionMutationCompletion;
+	}
+
+	public boolean isCollectionMutationFixupReserved() {
+		return collectionMutationFixupReserved;
+	}
+
+	public void setCollectionMutationFixupReserved(boolean collectionMutationFixupReserved) {
+		this.collectionMutationFixupReserved = collectionMutationFixupReserved;
+	}
+
 	public void setPreExecutionCallback(PreExecutionCallback preExecutionCallback) {
 		this.preExecutionCallback = preExecutionCallback;
 	}
@@ -290,5 +314,12 @@ public class FlushOperation implements OperationResultChecker {
 					postExecutionCallback
 			);
 		}
+	}
+
+	/// Removes and returns the callback currently attached to this operation.
+	public PostExecutionCallback takePostExecutionCallback() {
+		final var callback = postExecutionCallback;
+		postExecutionCallback = null;
+		return callback;
 	}
 }

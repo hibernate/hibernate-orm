@@ -41,6 +41,7 @@ import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
 import org.hibernate.action.spi.Executable;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.internal.TransactionCompletionCallbacksImpl;
+import org.hibernate.engine.internal.FlushProcessingContext;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.util.NullnessUtil;
 import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
@@ -516,10 +517,54 @@ public class ActionQueueLegacy implements org.hibernate.action.queue.spi.ActionQ
 	 * @throws HibernateException error preparing actions.
 	 */
 	public void prepareActions() throws HibernateException {
+		prepareOwnerUpdateCallbacks();
 		prepareActions( collectionRemovals );
 		prepareActions( collectionUpdates );
 		prepareActions( collectionCreations );
 		prepareActions( collectionQueuedOps );
+	}
+
+	private void prepareOwnerUpdateCallbacks() {
+		final var tracker = session.getPersistenceContextInternal().getCollectionFlushActionTracker();
+		if ( !(tracker instanceof FlushProcessingContext flushProcessingContext) ) {
+			return;
+		}
+		if ( updates != null ) {
+			for ( var action : updates ) {
+				flushProcessingContext.registerOwnerEntityUpdate( action.getInstance(), action.getPersister() );
+			}
+		}
+		registerOwnerCollectionMutations( orphanCollectionRemovals, flushProcessingContext );
+		registerOwnerCollectionMutations( collectionRemovals, flushProcessingContext );
+		registerOwnerCollectionMutations( collectionUpdates, flushProcessingContext );
+		registerOwnerCollectionMutations( collectionCreations, flushProcessingContext );
+		flushProcessingContext.sealOwnerUpdateCallbacks();
+	}
+
+	private static void registerOwnerCollectionMutations(
+			@Nullable ExecutableList<? extends org.hibernate.action.internal.CollectionAction> actions,
+			FlushProcessingContext flushProcessingContext) {
+		if ( actions != null ) {
+			for ( var action : actions ) {
+				final Object affectedOwner;
+				if ( action instanceof CollectionRecreateAction recreate ) {
+					affectedOwner = recreate.getAffectedOwner();
+				}
+				else if ( action instanceof CollectionRemoveAction remove ) {
+					affectedOwner = remove.getAffectedOwner();
+				}
+				else if ( action instanceof CollectionUpdateAction update ) {
+					affectedOwner = update.getAffectedOwner();
+				}
+				else {
+					throw new AssertionFailure( "Unexpected collection action " + action );
+				}
+				flushProcessingContext.registerOwnerCollectionMutation(
+						affectedOwner,
+						action.getPersister().isInverse()
+				);
+			}
+		}
 	}
 
 	private void prepareActions(@Nullable ExecutableList<?> queue) throws HibernateException {

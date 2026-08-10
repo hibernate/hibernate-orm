@@ -20,7 +20,6 @@ import static org.hibernate.engine.internal.CacheHelper.usingCache;
 /// See [ - Updating CollectionEntry state (afterAction)].
 /// See [ - Removing/evicting item from cache].
 /// See [ - Firing POST_COLLECTION_RECREATE event listeners].
-/// See [ - Updating statistics].
 ///
 /// See [CollectionRecreateAction].
 ///
@@ -67,11 +66,6 @@ public class PostCollectionRecreateHandling implements PostExecutionCallback {
 				session
 		);
 
-		// 4. Update statistics
-		final var statistics = session.getFactory().getStatistics();
-		if (statistics.isStatisticsEnabled()) {
-			statistics.recreateCollection(persister.getRole());
-		}
 	}
 
 	private void evict(SessionImplementor session, Object cacheKey) {

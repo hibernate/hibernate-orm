@@ -6,8 +6,6 @@ package org.hibernate.action.queue.internal.decompose.collection;
 
 
 import org.hibernate.action.internal.CollectionAction;
-import org.hibernate.action.queue.spi.decompose.DecompositionContext;
-import org.hibernate.action.queue.spi.bind.ChainedPostExecutionCallback;
 import org.hibernate.action.queue.spi.bind.PostExecutionCallback;
 import org.hibernate.action.queue.spi.meta.TableDescriptor;
 import org.hibernate.action.queue.spi.plan.FlushOperation;
@@ -28,7 +26,6 @@ import org.hibernate.event.spi.PreCollectionRemoveEvent;
 import org.hibernate.event.spi.PreCollectionRemoveEventListener;
 import org.hibernate.event.spi.PreCollectionUpdateEvent;
 import org.hibernate.event.spi.PreCollectionUpdateEventListener;
-import org.hibernate.jpa.event.spi.CallbackType;
 import org.hibernate.persister.collection.CollectionPersister;
 
 import java.util.List;
@@ -116,40 +113,6 @@ public class DecompositionSupport {
 		getListenerGroups( session ).eventListenerGroup_POST_COLLECTION_UPDATE.fireLazyEventOnEachListener(
 				() -> new PostCollectionUpdateEvent( persister, collection, (EventSource) session, affectedOwner, affectedOwnerId ),
 				PostCollectionUpdateEventListener::onPostUpdateCollection
-		);
-	}
-
-	public static PostExecutionCallback withOwnerUpdateCallbacks(
-			CollectionPersister persister,
-			Object affectedOwner,
-			DecompositionContext decompositionContext,
-			PostExecutionCallback callback) {
-		if ( persister.isInverse() || affectedOwner == null ) {
-			return callback;
-		}
-
-		final var ownerPersister = persister.getOwnerEntityPersister();
-		final var ownerCallbacks = ownerPersister.getEntityCallbacks();
-		final boolean hasPreUpdate = ownerCallbacks.hasRegisteredCallbacks( CallbackType.PRE_UPDATE );
-		final boolean hasPostUpdate = ownerCallbacks.hasRegisteredCallbacks( CallbackType.POST_UPDATE );
-		if ( !hasPreUpdate && !hasPostUpdate ) {
-			return callback;
-		}
-		if ( decompositionContext != null && !decompositionContext.registerOwnerUpdateCallbacks( affectedOwner ) ) {
-			return callback;
-		}
-
-		if ( hasPreUpdate ) {
-			ownerCallbacks.preUpdate( affectedOwner );
-		}
-
-		if ( !hasPostUpdate ) {
-			return callback;
-		}
-
-		return new ChainedPostExecutionCallback(
-				callback,
-				session -> ownerCallbacks.postUpdate( affectedOwner )
 		);
 	}
 

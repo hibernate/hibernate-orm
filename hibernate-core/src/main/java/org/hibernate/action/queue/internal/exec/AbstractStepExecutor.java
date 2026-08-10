@@ -160,34 +160,40 @@ public abstract class AbstractStepExecutor implements PlanStepExecutor {
 			}
 		}
 
+		FlushOperation fixupOperation = null;
 		if ( fixupOperationConsumer != null ) {
 			// If this op was cycle-broken, the patcher stored intended FK values in op.intendedFkValues.
-			if ( flushOperation.hasIntendedFkValues() ) {
+			if ( flushOperation.hasIntendedFkValues() || flushOperation.hasIntendedUniqueValues() ) {
 				final Object entityId = flushOperation.getBindPlan().getEntityId();
 
-				final FlushOperation fix = fixupSynthesizer.synthesizeFixupOperationIfNeeded(
+				fixupOperation = fixupSynthesizer.synthesizeFixupOperationIfNeeded(
 						flushOperation,
 						entityId,
 						session
 				);
-				if ( fix != null ) {
-					fixupOperationConsumer.accept( fix );
+			}
+		}
+
+		final var collectionMutationCompletion = flushOperation.getCollectionMutationCompletion();
+		if ( collectionMutationCompletion != null ) {
+			if ( flushOperation.isCollectionMutationFixupReserved() ) {
+				if ( fixupOperation == null ) {
+					collectionMutationCompletion.releaseReservedFixup(
+							flushOperation,
+							(SessionImplementor) session
+					);
+				}
+				else {
+					collectionMutationCompletion.attachReservedFixup( flushOperation, fixupOperation );
 				}
 			}
-
-			// If this op was cycle-broken for unique swap, the patcher stored intended values in op.intendedUniqueValues.
-			if ( flushOperation.hasIntendedUniqueValues() ) {
-				final Object entityId = flushOperation.getBindPlan().getEntityId();
-
-				final FlushOperation fix = fixupSynthesizer.synthesizeFixupOperationIfNeeded(
-						flushOperation,
-						entityId,
-						session
-				);
-				if ( fix != null ) {
-					fixupOperationConsumer.accept( fix );
-				}
+			if ( fixupOperation != null ) {
+				fixupOperationConsumer.accept( fixupOperation );
 			}
+			collectionMutationCompletion.operationSucceeded( (SessionImplementor) session );
+		}
+		else if ( fixupOperation != null ) {
+			fixupOperationConsumer.accept( fixupOperation );
 		}
 	}
 
@@ -195,6 +201,10 @@ public abstract class AbstractStepExecutor implements PlanStepExecutor {
 		final var executionMonitor = flushOperation.getExecutionMonitor();
 		if ( executionMonitor != null ) {
 			executionMonitor.afterFailedExecution( (SessionImplementor) session );
+		}
+		final var collectionMutationCompletion = flushOperation.getCollectionMutationCompletion();
+		if ( collectionMutationCompletion != null ) {
+			collectionMutationCompletion.operationFailed( (SessionImplementor) session );
 		}
 	}
 

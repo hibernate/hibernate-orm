@@ -269,6 +269,41 @@ public class TestUtil {
 		return outBaseDir;
 	}
 
+	public static File getSourceFile(Class<?> type) {
+		return new File(
+				getSourceBaseDir( type ),
+				type.getName().replace( '.', File.separatorChar ) + ".java"
+		);
+	}
+
+	/**
+	 * Compile the given source files with {@link org.hibernate.processor.HibernateProcessor},
+	 * writing output to {@code outDir} and placing {@code outDir} on the classpath so that
+	 * previously generated classes are visible (as happens in incremental Maven builds).
+	 */
+	public static void compile(File outDir, File... sourceFiles) throws Exception {
+		var compiler = javax.tools.ToolProvider.getSystemJavaCompiler();
+		var diagnostics = new javax.tools.DiagnosticCollector<javax.tools.JavaFileObject>();
+		try ( var fileManager = compiler.getStandardFileManager( diagnostics, null, null ) ) {
+			fileManager.setLocation( javax.tools.StandardLocation.CLASS_OUTPUT, List.of( outDir ) );
+			fileManager.setLocation( javax.tools.StandardLocation.SOURCE_OUTPUT, List.of( outDir ) );
+			var classpath = new java.util.ArrayList<File>();
+			for ( File f : fileManager.getLocation( javax.tools.StandardLocation.CLASS_PATH ) ) {
+				classpath.add( f );
+			}
+			classpath.add( outDir );
+			fileManager.setLocation( javax.tools.StandardLocation.CLASS_PATH, classpath );
+
+			var task = compiler.getTask(
+					null, fileManager, diagnostics,
+					List.of( "-processor", org.hibernate.processor.HibernateProcessor.class.getName() ),
+					null,
+					fileManager.getJavaFileObjectsFromFiles( List.of( sourceFiles ) )
+			);
+			assertTrue( task.call(), "Compilation failed: " + diagnostics.getDiagnostics() );
+		}
+	}
+
 	public static File getSourceBaseDir(Class<?> testClass) {
 		return getBaseDir( testClass, "java" );
 	}

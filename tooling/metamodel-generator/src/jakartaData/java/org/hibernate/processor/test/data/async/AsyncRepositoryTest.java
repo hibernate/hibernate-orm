@@ -4,7 +4,6 @@
  */
 package org.hibernate.processor.test.data.async;
 
-import java.io.File;
 import java.util.List;
 import java.util.Locale;
 import java.util.stream.Collectors;
@@ -61,8 +60,8 @@ class AsyncRepositoryTest {
 		final var compiler = ToolProvider.getSystemJavaCompiler();
 		try ( var fileManager = compiler.getStandardFileManager( diagnostics, Locale.ROOT, defaultCharset() ) ) {
 			final var sourceFiles = List.of(
-					sourceFile( AsyncBook.class ),
-					sourceFile( InvalidAsyncBookRepository.class )
+					TestUtil.getSourceFile( AsyncBook.class ),
+					TestUtil.getSourceFile( InvalidAsyncBookRepository.class )
 			);
 			final var task = compiler.getTask(
 					null,
@@ -86,12 +85,5 @@ class AsyncRepositoryTest {
 				.collect( Collectors.joining( "\n" ) );
 
 		assertTrue( messages.contains( "method annotated '@Asynchronous' must return 'CompletionStage'" ) );
-	}
-
-	private static File sourceFile(Class<?> type) {
-		return new File(
-				TestUtil.getSourceBaseDir( type ),
-				type.getName().replace( '.', File.separatorChar ) + ".java"
-		);
 	}
 }

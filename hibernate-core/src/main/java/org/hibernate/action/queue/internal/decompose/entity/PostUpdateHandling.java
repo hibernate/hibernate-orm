@@ -14,6 +14,7 @@ import org.hibernate.action.queue.spi.bind.PostExecutionCallback;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.Status;
+import org.hibernate.engine.internal.FlushProcessingContext;
 import org.hibernate.generator.values.GeneratedValues;
 
 /// Post-execution callback for entity update actions.
@@ -96,11 +97,21 @@ public class PostUpdateHandling implements PostExecutionCallback {
 		// For versioned immutable entities, increment statistics
 		// This seems completely counter-intuitive, but there are tests with exactly
 		// this expectation.
-		if ( action.getPersister().isVersioned() ) {
+		final Runnable recordStatistics = () -> {
+			if ( !action.getPersister().isVersioned() ) {
+				return;
+			}
 			final var statistics = session.getFactory().getStatistics();
 			if ( statistics.isStatisticsEnabled() ) {
 				statistics.updateEntity( action.getPersister().getEntityName() );
 			}
+		};
+		final var tracker = session.getPersistenceContextInternal().getCollectionFlushActionTracker();
+		if ( tracker instanceof FlushProcessingContext flushProcessingContext ) {
+			flushProcessingContext.ownerEntityUpdateCompleted( action.getInstance(), recordStatistics );
+		}
+		else {
+			recordStatistics.run();
 		}
 	}
 
@@ -171,10 +182,18 @@ public class PostUpdateHandling implements PostExecutionCallback {
 		final Status status = entry.getStatus();
 		if ( status != Status.DELETED && status != Status.GONE ) {
 			action.postUpdate();
-
-			final var statistics = session.getFactory().getStatistics();
-			if ( statistics.isStatisticsEnabled() ) {
-				statistics.updateEntity( action.getPersister().getEntityName() );
+			final Runnable recordStatistics = () -> {
+				final var statistics = session.getFactory().getStatistics();
+				if ( statistics.isStatisticsEnabled() ) {
+					statistics.updateEntity( action.getPersister().getEntityName() );
+				}
+			};
+			final var tracker = session.getPersistenceContextInternal().getCollectionFlushActionTracker();
+			if ( tracker instanceof FlushProcessingContext flushProcessingContext ) {
+				flushProcessingContext.ownerEntityUpdateCompleted( entity, recordStatistics );
+			}
+			else {
+				recordStatistics.run();
 			}
 		}
 	}

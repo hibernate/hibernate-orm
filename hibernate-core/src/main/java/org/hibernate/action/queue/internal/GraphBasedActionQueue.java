@@ -29,6 +29,7 @@ import org.hibernate.action.queue.internal.constraint.DeferrableConstraintMode;
 import org.hibernate.action.queue.internal.support.GraphBasedActionQueueFactory;
 import org.hibernate.action.spi.Executable;
 import org.hibernate.engine.internal.TransactionCompletionCallbacksImpl;
+import org.hibernate.engine.internal.FlushProcessingContext;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.TransactionCompletionCallbacksImplementor;
@@ -565,10 +566,46 @@ public class GraphBasedActionQueue implements ActionQueue {
 	///
 	/// @throws HibernateException error preparing actions
 	public void prepareActions() throws HibernateException {
+		prepareOwnerUpdateCallbacks();
 		prepareCollectionActions(collectionRemovals);
 		prepareCollectionActions(collectionUpdates);
 		prepareCollectionActions(collectionCreations);
 		prepareCollectionActions(collectionQueuedOps);
+	}
+
+	private void prepareOwnerUpdateCallbacks() {
+		final var tracker = session.getPersistenceContextInternal().getCollectionFlushActionTracker();
+		if ( !(tracker instanceof FlushProcessingContext flushProcessingContext) ) {
+			return;
+		}
+		for ( var action : updates ) {
+			flushProcessingContext.registerOwnerEntityUpdate( action.getInstance(), action.getPersister() );
+		}
+		for ( var action : orphanCollectionRemovals ) {
+			flushProcessingContext.registerOwnerCollectionMutation(
+					action.getAffectedOwner(),
+					action.getPersister().isInverse()
+			);
+		}
+		for ( var action : collectionRemovals ) {
+			flushProcessingContext.registerOwnerCollectionMutation(
+					action.getAffectedOwner(),
+					action.getPersister().isInverse()
+			);
+		}
+		for ( var action : collectionUpdates ) {
+			flushProcessingContext.registerOwnerCollectionMutation(
+					action.getAffectedOwner(),
+					action.getPersister().isInverse()
+			);
+		}
+		for ( var action : collectionCreations ) {
+			flushProcessingContext.registerOwnerCollectionMutation(
+					action.getAffectedOwner(),
+					action.getPersister().isInverse()
+			);
+		}
+		flushProcessingContext.sealOwnerUpdateCallbacks();
 	}
 
 	private void prepareCollectionActions(List<? extends Executable> actions) throws HibernateException {

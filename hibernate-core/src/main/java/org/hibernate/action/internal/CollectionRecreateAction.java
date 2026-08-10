@@ -6,6 +6,7 @@ package org.hibernate.action.internal;
 
 import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.engine.internal.FlushProcessingContext;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.PostCollectionRecreateEvent;
 import org.hibernate.event.spi.PostCollectionRecreateEventListener;
@@ -65,10 +66,22 @@ public final class CollectionRecreateAction extends CollectionAction {
 		session.getPersistenceContextInternal().getCollectionEntry( collection ).afterAction( collection );
 		evict();
 		postRecreate();
-
-		final var statistics = session.getFactory().getStatistics();
-		if ( statistics.isStatisticsEnabled() ) {
-			statistics.recreateCollection( persister.getRole() );
+		final Runnable recordStatistics = () -> {
+			final var statistics = session.getFactory().getStatistics();
+			if ( statistics.isStatisticsEnabled() ) {
+				statistics.recreateCollection( persister.getRole() );
+			}
+		};
+		final var tracker = session.getPersistenceContextInternal().getCollectionFlushActionTracker();
+		if ( tracker instanceof FlushProcessingContext flushProcessingContext ) {
+			flushProcessingContext.ownerCollectionMutationCompleted(
+					affectedOwner,
+					persister.isInverse(),
+					recordStatistics
+			);
+		}
+		else {
+			recordStatistics.run();
 		}
 	}
 

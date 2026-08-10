@@ -259,14 +259,6 @@ public final class Collections {
 				checkOnChangedOwner( collection, collectionEntry, loadedPersister, currentPersister );
 
 				// do the work
-				if ( currentPersister != null ) {
-					flushProcessingContext.queueCollectionRecreate(
-							collection,
-							currentPersister,
-							collectionEntry.getCurrentKey()
-					);
-				}
-
 				if ( loadedPersister != null ) {
 					// we will need to remove the old entries
 					flushProcessingContext.queueCollectionRemove(
@@ -279,6 +271,14 @@ public final class Collections {
 						CORE_LOGGER.forcingCollectionInitialization();
 						collection.forceInitialization();
 					}
+				}
+
+				if ( currentPersister != null ) {
+					flushProcessingContext.queueCollectionRecreate(
+							collection,
+							currentPersister,
+							collectionEntry.getCurrentKey()
+					);
 				}
 			}
 			else if ( collection.isDirty() ) {

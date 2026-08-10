@@ -19,7 +19,6 @@ import org.hibernate.persister.collection.CollectionPersister;
 /// See [ - Updating CollectionEntry state (afterAction)].
 /// See [ - Removing/evicting item from cache].
 /// See [ - Firing POST_COLLECTION_UPDATE event listeners].
-/// See [ - Updating statistics].
 ///
 /// See [CollectionUpdateAction].
 ///
@@ -68,10 +67,5 @@ public class PostCollectionUpdateHandling implements PostExecutionCallback {
 		// Fire POST_COLLECTION_UPDATE event
 		DecompositionSupport.firePostUpdate( persister, collection, affectedOwner, affectedOwnerId, session );
 
-		// Update statistics
-		final var statistics = session.getFactory().getStatistics();
-		if (statistics.isStatisticsEnabled()) {
-			statistics.updateCollection(persister.getRole());
-		}
 	}
 }

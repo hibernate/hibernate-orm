@@ -48,11 +48,4 @@ public interface DecompositionContext {
 		return null;
 	}
 
-	/// Register owner update callbacks for this flush.
-	///
-	/// @return `true` when callbacks should be fired by the caller; `false`
-	/// when another action already registered them for the same owner.
-	default boolean registerOwnerUpdateCallbacks(Object owner) {
-		return true;
-	}
 }

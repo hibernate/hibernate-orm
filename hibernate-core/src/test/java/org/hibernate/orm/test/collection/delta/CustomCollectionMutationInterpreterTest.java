@@ -6,7 +6,6 @@ package org.hibernate.orm.test.collection.delta;
 
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.hibernate.action.queue.internal.CollectionMutationPreparer;
@@ -15,14 +14,16 @@ import org.hibernate.action.queue.spi.CollectionMutationInput;
 import org.hibernate.action.queue.spi.CollectionTransition;
 import org.hibernate.collection.spi.CollectionBaseline;
 import org.hibernate.collection.spi.CollectionChange;
-import org.hibernate.collection.spi.CollectionChangeSet;
 import org.hibernate.collection.spi.CollectionDelta;
-import org.hibernate.collection.spi.CollectionDeltaProducer;
-import org.hibernate.collection.spi.CollectionDeltaProduction;
+import org.hibernate.collection.spi.CollectionInterpretationProduction;
+import org.hibernate.collection.spi.CollectionMutationInterpretation;
+import org.hibernate.collection.spi.CollectionMutationInterpreter;
 import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.collection.spi.DeltaCoverage;
 import org.hibernate.collection.spi.DeltaSource;
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.collection.spi.PhysicalCollectionMutation;
+import org.hibernate.collection.spi.SemanticCollectionChange;
 import org.hibernate.engine.internal.FlushProcessingContext;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.event.spi.EventSource;
@@ -31,20 +32,18 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.CALLS_REAL_METHODS;
-import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-/// Tests custom-semantics producer selection through shared mutation preparation.
+/// Tests custom interpreter selection through shared collection mutation preparation.
 ///
 /// @author Steve Ebersole
-public class CustomCollectionDeltaProducerTest {
+public class CustomCollectionMutationInterpreterTest {
 	@Test
-	void specializedProducerCanDescribeUninitializedStateWithoutInitialization() {
+	void specializedInterpreterCanDescribeUninitializedStateWithoutInitialization() {
 		final var expectedDelta = new CollectionDelta(
 				CollectionBaseline.UNINITIALIZED,
 				DeltaCoverage.EXPLICIT_CHANGES_ONLY,
@@ -52,52 +51,38 @@ public class CustomCollectionDeltaProducerTest {
 				Set.of( DeltaSource.QUEUED_OPERATION_LOG )
 		);
 		final var observedBaseline = new AtomicReference<CollectionBaseline>();
-		final CollectionDeltaProducer producer = context -> {
+		final CollectionMutationInterpreter interpreter = context -> {
 			observedBaseline.set( context.baseline() );
-			return CollectionDeltaProduction.produced( expectedDelta );
+			return CollectionInterpretationProduction.produced( new CollectionMutationInterpretation(
+					context.transition(),
+					new SemanticCollectionChange.Delta( expectedDelta ),
+					PhysicalCollectionMutation.noWork(),
+					context.collection().getMutationGeneration()
+			) );
 		};
-		final var fixture = fixture( producer );
+		final var fixture = fixture( interpreter );
 		when( fixture.collection().wasInitialized() ).thenReturn( false );
 
 		final var prepared = CollectionMutationPreparer.prepare( fixture.input(), fixture.session() );
 
 		assertEquals( CollectionBaseline.UNINITIALIZED, observedBaseline.get() );
-		assertSame( expectedDelta, prepared.get( 0 ).frozenDelta().delta() );
+		assertSame( expectedDelta, ( (SemanticCollectionChange.Delta)
+				prepared.get( 0 ).interpretation().semanticChange() ).delta() );
 		assertSame(
-				prepared.get( 0 ).frozenDelta(),
-				fixture.flushContext().getValidFrozenDelta( fixture.collection() )
+				prepared.get( 0 ).interpretation(),
+				fixture.flushContext().getValidCollectionInterpretation( fixture.collection() )
 		);
 		verify( fixture.collection(), never() ).forceInitialization();
 	}
 
-	@Test
-	void conservativeProducerRequestsCoordinatedInitialization() {
-		final var initialized = new AtomicBoolean();
-		final var fixture = fixture( CollectionDeltaProducer.legacyCompatible() );
-		when( fixture.collection().wasInitialized() ).thenAnswer( invocation -> initialized.get() );
-		doAnswer( invocation -> {
-			initialized.set( true );
-			return null;
-		} ).when( fixture.collection() ).forceInitialization();
-		when( fixture.collection().getChangeSet( fixture.persister() ) )
-				.thenReturn( CollectionChangeSet.EMPTY );
-
-		final var prepared = CollectionMutationPreparer.prepare( fixture.input(), fixture.session() );
-
-		assertTrue( initialized.get() );
-		verify( fixture.collection() ).forceInitialization();
-		assertEquals( CollectionBaseline.LOADED, prepared.get( 0 ).frozenDelta().delta().baseline() );
-		assertEquals( DeltaCoverage.COMPLETE, prepared.get( 0 ).frozenDelta().delta().coverage() );
-	}
-
-	private static Fixture fixture(CollectionDeltaProducer producer) {
+	private static Fixture fixture(CollectionMutationInterpreter interpreter) {
 		final var collection = mock( PersistentCollection.class );
 		final var semantics = mock( CollectionSemantics.class, CALLS_REAL_METHODS );
 		final var persister = mock( CollectionPersister.class );
 		final var session = mock( EventSource.class );
 		final var persistenceContext = mock( PersistenceContext.class );
 		final var flushContext = new FlushProcessingContext( session );
-		when( semantics.getCollectionDeltaProducer() ).thenReturn( producer );
+		when( semantics.getCollectionMutationInterpreter() ).thenReturn( interpreter );
 		when( persister.getCollectionSemantics() ).thenReturn( semantics );
 		when( session.getPersistenceContextInternal() ).thenReturn( persistenceContext );
 		when( persistenceContext.getCollectionFlushActionTracker() ).thenReturn( flushContext );

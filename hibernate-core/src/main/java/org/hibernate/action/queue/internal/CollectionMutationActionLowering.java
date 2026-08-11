@@ -19,8 +19,9 @@ import org.hibernate.event.spi.EventSource;
 
 /// Transitional lowering of prepared collection mutations to legacy executable actions.
 ///
-/// Both queues may use this adapter while their native representations are migrated. Lifecycle
-/// preparation remains queue-neutral and is never repeated by the resulting actions.
+/// The legacy queue uses this adapter to preserve its executable-action representation. Lifecycle
+/// preparation remains queue-neutral and is never repeated by the resulting actions. The graph
+/// queue consumes prepared mutations directly.
 ///
 /// @since 8.0
 /// @author Steve Ebersole
@@ -37,9 +38,19 @@ public final class CollectionMutationActionLowering {
 			List<CollectionMutationInput> inputs,
 			EventSource session,
 			Consumer<CollectionAction> actionConsumer) {
-		for ( var mutation : CollectionMutationPreparer.prepareAll( inputs, session ) ) {
-			final var endpoint = mutation.endpoint();
-			final var action = switch ( mutation.kind() ) {
+		CollectionMutationPreparer.prepareAll(
+				inputs,
+				List.of(),
+				session,
+				mutation -> actionConsumer.accept( lower( mutation, session ) )
+		);
+	}
+
+	private static CollectionAction lower(
+			PreparedCollectionMutation mutation,
+			EventSource session) {
+		final var endpoint = mutation.endpoint();
+		return switch ( mutation.kind() ) {
 				case CREATE -> new CollectionRecreateAction(
 						requireCollection( mutation ),
 						endpoint.persister(),
@@ -47,7 +58,7 @@ public final class CollectionMutationActionLowering {
 						session,
 						mutation.affectedOwner(),
 						mutation.affectedOwnerId(),
-						mutation.frozenDelta()
+						mutation.interpretation()
 				);
 				case REMOVE -> new CollectionRemoveAction(
 						mutation.collection(),
@@ -57,7 +68,7 @@ public final class CollectionMutationActionLowering {
 						session,
 						mutation.affectedOwner(),
 						mutation.affectedOwnerId(),
-						mutation.frozenDelta()
+						mutation.interpretation()
 				);
 				case UPDATE -> new CollectionUpdateAction(
 						requireCollection( mutation ),
@@ -67,18 +78,16 @@ public final class CollectionMutationActionLowering {
 						session,
 						mutation.affectedOwner(),
 						mutation.affectedOwnerId(),
-						mutation.frozenDelta()
+						mutation.interpretation()
 				);
 				case QUEUED_OPERATIONS -> new QueuedOperationCollectionAction(
 						requireCollection( mutation ),
 						endpoint.persister(),
 						endpoint.key(),
 						session,
-						mutation.frozenDelta()
+						mutation.interpretation()
 				);
-			};
-			actionConsumer.accept( action );
-		}
+		};
 	}
 
 	private static PersistentCollection<?> requireCollection(PreparedCollectionMutation mutation) {

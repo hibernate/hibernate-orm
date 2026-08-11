@@ -6,7 +6,7 @@
 
 Status: Approved Specification
 
-Revision: 1.1
+Revision: 1.2
 
 Approved by: Steve Ebersole
 
@@ -123,13 +123,21 @@ Revision history::
 * `1.1` -- Approved amendment requiring release migration-guide notes for
   remove/create call order, owner callback and interceptor timing, and the
   `ActionQueue` checkpoint/restore SPI signature change.
+* `1.2` -- Approved revision replacing mandatory delta-first physical lowering with
+  semantics-owned interpretation based on `CollectionTransition x
+  CollectionSemantics`.  The frozen interpretation composes semantic change
+  with a sealed physical mutation hierarchy.  `CollectionDelta` remains the
+  semantic difference model for queued operations, orphan projection, and other
+  semantic consumers, but is no longer required as an intermediate for create,
+  remove-all/create-all, or row execution.  This revision responds to graph
+  queue benchmarks which exposed the redundant
+  `CollectionChangeSet -> CollectionDelta -> CollectionChangeSet` path.
 
 == Status and Relationship to the Design Proposal
 
-This document is the approved specification for collection processing during a
-Hibernate flush.  It defines the implementation and conformance-testing
-baseline while remaining subject to normal development-team review and explicit
-future revision.
+Revision 1.2 is the approved specification for collection processing during a
+Hibernate flush.  It is the implementation and conformance baseline, revised in
+response to implementation and benchmark evidence.
 
 The rationale, alternatives, exploratory analysis, and broader architectural
 direction live in
@@ -160,8 +168,10 @@ The expected status progression is:
 Working Specification
   -> Development-team review
   -> Approval candidate
-  -> Approved Specification (current)
+  -> Approved Specification
 ----
+
+Revision 1.2 is currently at the final state.
 
 == Normative Language
 
@@ -180,6 +190,7 @@ Requirement groups use these prefixes:
 
 | `CFS-CTX` | Flush-local collection context and discovery
 | `CFS-TRN` | Logical transition selection
+| `CFS-INT` | Semantics-owned collection interpretation
 | `CFS-DLT` | Collection delta
 | `CFS-QOP` | Queued-operation normalization
 | `CFS-ACT` | Semantic collection mutations (`ACT` retained for ID stability)
@@ -198,7 +209,10 @@ This specification covers:
 
 * collection discovery during flush,
 * selection of logical collection transitions,
-* complete and partial `CollectionDelta` production,
+* semantics-owned interpretation of transition, collection state, and mapping
+  facts into semantic change and sealed physical mutation,
+* complete and partial `CollectionDelta` production when a semantic consumer
+  requires a delta,
 * normalization of queued operations on uninitialized collections,
 * conversion of semantic collection mutations into physical graph operations,
 * mutation identity, ordering, batching, and completion,
@@ -215,7 +229,7 @@ This revision does not specify:
 * public user-facing changes to `PersistentCollection`,
 * entity event contracts, entity mutation boundary vocabulary, and entity action
   decomposition, except for owner-level callback participation and cases where an
-  entity action owns physical work represented by a collection delta,
+  entity action owns physical work represented by a collection interpretation,
 * new ownership, inverse, orphan-delete, or database-cascade mapping semantics,
 * a global order between unrelated collection actions,
 * a particular SQL statement order when multiple orders satisfy the dependency
@@ -223,8 +237,8 @@ This revision does not specify:
 * removal of the legacy action queue in the initial implementation,
 * changes to `org.hibernate.event.spi` collection event contracts; such changes
   require a separate design and specification,
-* a general-purpose public consumption SPI for collection intents or deltas;
-  the narrow incubating production contract associated with
+* a general-purpose public consumption SPI for collection inputs,
+  interpretations, or deltas; the narrow incubating interpretation contract associated with
   `CollectionSemantics` is in scope,
 * changes to established cascade action, ordering, lazy-loading, or orphan
   semantics beyond the collection-delta boundary defined by `CFS-CAS-*`.
@@ -409,41 +423,46 @@ record CollectionMutationInput(
 }
 
 interface CollectionMutationPreparer {
-    PreparedCollectionMutation prepare(
+    CollectionMutationInterpretation prepare(
             CollectionMutationInput input,
             EventSource session);
 }
 
-record PreparedCollectionMutation(
-        CollectionMutationId id,
-        CollectionMutationKind kind,
-        CollectionEndpoint endpoint,
-        CollectionDelta delta,
-        CollectionLifecycle lifecycle) {
+record CollectionMutationInterpretation(
+        CollectionTransition transition,
+        CollectionMutationValidity validity,
+        SemanticCollectionChange semanticChange,
+        PhysicalCollectionMutation physicalMutation) {
 }
 ----
+
+Mutation identity, endpoints, and lifecycle state accompany the interpretation
+at the preparation and queue boundary; they are not produced by collection
+semantics and need not be fields of this value.
 
 These names and shapes are non-normative.  The two-stage responsibility
 separation is normative for this specification:
 
 . Visitation produces queue-neutral semantic input, not an `Executable`.
 . Shared preparation runs applicable pre-mutation lifecycle notifications in
-  their specified order, then freezes the delta.  The relative ordering of the
-  interceptor hook, Hibernate pre-event, and Jakarta Persistence owner callback
-  must be stated independently rather than grouped as generic callbacks.
-. The legacy queue may lower the prepared mutation to adapted legacy executable
+  their specified order, then asks the selected `CollectionSemantics` to
+  interpret the final transition and freezes the interpretation.  The relative
+  ordering of the interceptor hook, Hibernate pre-event, and Jakarta Persistence
+  owner callback must be stated independently rather than grouped as generic
+  callbacks.
+. The legacy queue may lower the frozen interpretation to adapted legacy executable
   actions or another native form; shared lifecycle notifications MUST NOT be
   repeated by that representation.
 . The graph queue may lower it directly to graph-native operations and completion
   metadata.
 
 A queue may choose when to invoke shared preparation and how to retain the input
-or prepared result.  It MUST NOT redefine transition or delta semantics in a way
-which produces queue-dependent collection behavior.
+or interpretation.  It MUST NOT redefine transition, semantic-delta, or physical
+mutation semantics in a way which produces queue-dependent collection behavior.
 
 For speculative auto-flush, shared preparation does not invoke owner callbacks
 or collection interceptor hooks, deliver Hibernate collection events, or freeze
-the final prepared mutation until the flush-needed decision is positive.  The
+the final interpretation until the flush-needed decision is positive.  The
 input exposes a conservative set of potentially affected query spaces so that
 decision does not require premature physical decomposition.
 
@@ -455,10 +474,12 @@ feedback may revise it only through the change-control process described below.
 Strengths::
 
 * Transition semantics are selected once outside queue-specific scheduling.
-* Pre-lifecycle mutation visibility and delta freezing have one shared contract.
-* A stable delta can be computed once and reused by execution, dependency
-  extraction, orphan projection, audit, and diagnostics.
-* Legacy/graph conformance can be tested at the prepared-mutation boundary.
+* Pre-lifecycle mutation visibility and interpretation freezing have one shared
+  contract.
+* Semantic delta and physical row facts can be produced together in one
+  semantics-specific interpretation without forcing either queue through the
+  other's intermediate representation.
+* Legacy/graph conformance can be tested at the frozen-interpretation boundary.
 * Neither queue is required to use `Executable` or the other's physical model.
 
 Weaknesses::
@@ -467,8 +488,8 @@ Weaknesses::
   one queue's needs.
 * Shared preparation determines part of lifecycle timing and may constrain when
   a queue would naturally discover or schedule work.
-* `CollectionMutationInput` plus `PreparedCollectionMutation` adds intermediate
-  allocation and lifecycle-state ownership.
+* `CollectionMutationInput` plus `CollectionMutationInterpretation` adds
+  intermediate allocation and lifecycle-state ownership.
 * New queue-specific optimization facts may require extending a central
   vocabulary even when only one queue needs them.
 * The split between input, preparation, and queue lowering can become artificial
@@ -479,7 +500,7 @@ Weaknesses::
 ==== Potential later investigation: Queue-participating boundary vocabulary
 
 A potential later investigation is to define the boundary jointly with the queue
-implementations instead of requiring one fixed prepared-mutation record.  That
+implementations instead of requiring one fixed interpretation record.  That
 investigation is not required before approval or initial implementation of this
 specification.
 
@@ -489,7 +510,7 @@ The shared flush layer would provide stable semantic services and facts, such as
 * selected transition constraints,
 * affected owner and identifier capture,
 * queued-command access,
-* collection-semantics delta production,
+* collection-semantics interpretation and semantic-delta services,
 * lifecycle notification services,
 * read-only reachability and logical-remove tracking.
 
@@ -509,16 +530,17 @@ Strengths::
 
 Weaknesses::
 
-* Transition, delta-freezing, and lifecycle timing may diverge between queues.
+* Transition, interpretation-freezing, and lifecycle timing may diverge between queues.
 * Conformance must be stated behaviorally because there is no common prepared
   representation to compare directly.
-* Stable-delta reuse is harder if queues request comparison at different times.
+* Stable semantic and physical projection reuse is harder if queues request
+  interpretation at different times.
 * Queue-specific boundary implementations may duplicate normalization logic.
 * Adding another queue requires reviewing which semantic services are mandatory
   rather than simply consuming one canonical record.
 
 Any later queue-participating design MUST still preserve the normative
-transition, delta, lifecycle, and completion requirements in this specification.
+transition, interpretation, delta, lifecycle, and completion requirements in this specification.
 Queue participation may change the shape and ownership of the boundary
 vocabulary, not the required semantics.
 
@@ -527,7 +549,7 @@ vocabulary, not the required semantics.
 A later decision to revisit the selected boundary should be based on evidence
 from both queues and should compare:
 
-* whether delta construction remains single and stable,
+* whether collection interpretation remains single and stable,
 * how pre-event mutation is observed,
 * lifecycle and failure ownership,
 * graph-specific dependency data availability,
@@ -572,7 +594,7 @@ was reached, processed, has a semantic mutation, and has a logical remove.
 
 [[CFS-CTX-008]]
 `CFS-CTX-008`:: Forced initialization caused by a role or owner change MUST be
-visible before the affected collection delta is frozen.
+visible before the affected collection interpretation is frozen.
 
 == Logical Transition Selection
 
@@ -616,8 +638,8 @@ The logical create MAY have zero physical row insertions.
 change `REMOVE` or the remove portion of `REMOVE_AND_CREATE` into `NONE`.
 
 [[CFS-TRN-007]]
-`CFS-TRN-007`:: Queued operations MUST be input to transition and delta
-normalization.  `QUEUED_OPERATIONS` MUST NOT be a mutually exclusive logical
+`CFS-TRN-007`:: Queued operations MUST be input to transition and collection
+interpretation.  `QUEUED_OPERATIONS` MUST NOT be a mutually exclusive logical
 transition.
 
 [[CFS-TRN-008]]
@@ -625,41 +647,181 @@ transition.
 legacy `CollectionRecreateAction` type.  Legacy class naming MUST NOT leak into
 the normalized transition vocabulary.
 
-== Collection Delta
+== Collection Mutation Interpretation
 
 The target `CollectionSemantics` association has this conceptual shape:
 
 [source,java]
 ----
 interface CollectionSemantics<CE, E> {
-    default CollectionDeltaProducer<CE, E> getCollectionDeltaProducer() {
-        return CollectionDeltaProducer.legacyCompatible();
+    default CollectionMutationInterpreter<CE, E> getCollectionMutationInterpreter() {
+        return CollectionMutationInterpreter.legacyCompatible();
     }
 }
 
-interface CollectionDeltaProducer<CE, E> {
-    CollectionDeltaProduction produceDelta(
-            CollectionDeltaProductionContext<CE, E> context);
+interface CollectionMutationInterpreter<CE, E> {
+    CollectionInterpretationProduction interpret(
+            CollectionInterpretationContext<CE, E> context);
 }
 
-sealed interface CollectionDeltaProduction {
-    record Produced(CollectionDelta delta)
-            implements CollectionDeltaProduction {}
+sealed interface CollectionInterpretationProduction {
+    record Produced(CollectionMutationInterpretation interpretation)
+            implements CollectionInterpretationProduction {}
 
     record InitializationRequired()
-            implements CollectionDeltaProduction {}
+            implements CollectionInterpretationProduction {}
+}
+
+record CollectionMutationInterpretation(
+        CollectionTransition transition,
+        CollectionMutationValidity validity,
+        SemanticCollectionChange semanticChange,
+        PhysicalCollectionMutation physicalMutation) {
+}
+
+sealed interface SemanticCollectionChange {
+    record None() implements SemanticCollectionChange {}
+    record Delta(CollectionDelta delta) implements SemanticCollectionChange {}
+    record BulkRemoval() implements SemanticCollectionChange {}
+}
+
+sealed interface PhysicalCollectionMutation {
+    record NoWork() implements PhysicalCollectionMutation {}
+    record RemoveAll(CollectionRemovalMode removalMode)
+            implements PhysicalCollectionMutation {}
+    record CreateAll(FrozenCollectionRows currentRows)
+            implements PhysicalCollectionMutation {}
+    record RowChanges(FrozenCollectionRowChanges changes)
+            implements PhysicalCollectionMutation {}
+    record RemoveAllAndCreateAll(
+            CollectionRemovalMode removalMode,
+            FrozenCollectionRows currentRows)
+            implements PhysicalCollectionMutation {}
 }
 ----
 
-The `getCollectionDeltaProducer()` association and its default behavior are
-normative.  The exact generic bounds and whether the invocation context and
-outcome are records, sealed types, or equivalent internal protocol types remain
-implementation details.  The protocol MUST distinguish a produced delta from a
-request for coordinated initialization without using `null` or an exception for
-ordinary control flow.  Types which a custom `CollectionSemantics` implementation
-must implement or construct MUST be accessible from the incubating collection
-SPI; this does not make collection intents or deltas a general contributor or
-consumer API.
+The `getCollectionMutationInterpreter()` association and its default behavior
+are normative.  Exact names, generic bounds, and whether the context and outcome
+are records or equivalent internal protocol types remain implementation details.
+The protocol MUST distinguish a produced interpretation from a request for
+coordinated initialization without using `null` or an exception for ordinary
+control flow.
+
+`CollectionTransition` describes observable semantic lifecycle.
+`PhysicalCollectionMutation` describes physical realization and uses a sealed
+hierarchy so every strategy has its required immutable payload.  A separately
+stored strategy enum, if retained for diagnostics, MUST be derived from the
+physical subtype and MUST NOT independently vary.
+
+`FrozenCollectionRows` and `FrozenCollectionRowChanges` are queue-neutral,
+immutable row facts.  They are not JDBC operations, graph nodes, or legacy
+executables.  Their exact row types are implementation details, but they MUST
+retain the current and prior values, positions, identifiers, deferred handles,
+and graph-relevant identity facts required by the selected physical mutation.
+
+`SemanticCollectionChange` is a closed choice between a `CollectionDelta`,
+bulk-removal semantics, and no separately materialized difference model.
+`None` means that no separate semantic-difference object was materialized; it
+does not change the non-`NONE` transition into no semantic work.  A delta MUST be
+present when orphan handling, queued-operation semantics, cascade reuse, audit,
+or another registered semantic consumer requires it.  Physical execution MUST
+NOT require a delta solely as an intermediate representation.  `BulkRemoval`
+records that prior collection contents are removed without claiming an
+enumerable per-row difference.
+
+[[CFS-INT-001]]
+`CFS-INT-001`:: Shared preparation MUST invoke interpretation after final
+transition selection and applicable pre-mutation lifecycle processing.  The
+primary dispatch MUST be the selected `CollectionTransition` and
+`CollectionSemantics`, with persister and session context supplying mapping and
+runtime facts.
+
+[[CFS-INT-002]]
+`CFS-INT-002`:: One frozen `CollectionMutationInterpretation` MUST separate the
+semantic transition, comparison validity, semantic change, and physical
+mutation.  Physical strategy MUST NOT redefine observable transition lifecycle.
+
+[[CFS-INT-003]]
+`CFS-INT-003`:: Physical mutation MUST be a closed, exhaustively dispatchable
+hierarchy equivalent to `NoWork`, `RemoveAll`, `CreateAll`, `RowChanges`, and
+`RemoveAllAndCreateAll`.  Each variant MUST require its complete physical
+payload and MUST NOT model required payload through unrelated optional fields.
+
+[[CFS-INT-004]]
+`CFS-INT-004`:: Logical `CREATE` MUST naturally interpret as `CreateAll` with a
+frozen current-row projection.  Logical `REMOVE` MUST naturally interpret as
+`RemoveAll`.  `REMOVE_AND_CREATE` MUST remain two semantic interpretations, one
+remove and one create, rather than one update-like physical variant.  A
+transition which has semantic lifecycle but owns no physical mutation MAY use
+`NoWork`.
+
+[[CFS-INT-005]]
+`CFS-INT-005`:: Logical `UPDATE` MAY interpret as `RowChanges` or
+`RemoveAllAndCreateAll` according to collection semantics and persister mapping
+facts.  Both variants MUST retain update lifecycle and event semantics.
+
+[[CFS-INT-006]]
+`CFS-INT-006`:: Standard semantics MUST perform collection comparison or current-
+row enumeration at most once per interpretation.  The graph path MUST NOT
+perform `CollectionChangeSet -> CollectionDelta -> CollectionChangeSet` or an
+equivalent mandatory semantic-to-physical round trip.
+
+[[CFS-INT-007]]
+`CFS-INT-007`:: `CreateAll` and `RemoveAllAndCreateAll` MUST retain all required
+current rows without first allocating one semantic `Addition` per row unless a
+registered semantic consumer independently requires those additions.
+
+[[CFS-INT-008]]
+`CFS-INT-008`:: `RowChanges` MUST retain the semantics-specific removals,
+updates, position changes, and additions needed by physical consumers.  Both
+queues MUST consume this frozen projection without rescanning the live
+collection or reconstructing a second complete row-change model.
+
+[[CFS-INT-009]]
+`CFS-INT-009`:: The graph queue MUST lower the sealed physical mutation directly
+to graph-native templates, bindings, dependencies, and operations.  The legacy
+queue MAY adapt the same physical mutation to existing action and coordinator
+forms without repeating shared lifecycle preparation.
+
+[[CFS-INT-010]]
+`CFS-INT-010`:: An interpretation which cannot safely describe required work for
+an uninitialized collection MUST request coordinated initialization.  Only a
+required flush may satisfy that request; discarded speculative auto-flush and
+orphan inspection MUST NOT initialize through this mechanism.
+
+[[CFS-INT-011]]
+`CFS-INT-011`:: The default interpreter for custom semantics MUST conservatively
+adapt existing initialized-wrapper behavior and preserve source compatibility.
+Specialized standard interpreters SHOULD be immutable and shared or cached.
+
+[[CFS-INT-012]]
+`CFS-INT-012`:: The frozen interpretation and every semantic or physical
+projection it contains MUST share one comparison-validity boundary.  A stale
+projection MUST NOT be executed or reused for orphan discovery.
+
+[[CFS-INT-013]]
+`CFS-INT-013`:: The graph-queue interpretation path MUST pass the approved
+Stage 0 performance gate across clean, sparse row mutation, clear, bag
+remove-all/create-all update, create, discarded auto-flush, and required auto-flush
+scenarios.  For the benchmark's average-time mode, each scenario's normalized
+score is the candidate mean divided by its Stage 0 mean, and the overall score
+is the geometric mean of those normalized scores.  The overall score MUST show
+a statistically credible improvement below `1.0`: the upper bound of its 95%
+confidence interval MUST be below `1.0`.  An improvement smaller than the
+measurement uncertainty does not satisfy the gate.  An individual scenario
+MUST NOT have a normalized score whose 95% confidence interval is entirely
+greater than `1.05` unless an exception is explicitly accepted with its
+allocation and traversal
+explanation.  Measurement MUST use the checked-in full-stack JMH fixture with at
+least three forks, derive both confidence intervals from fork-level
+measurements, document the interval calculation method, and retain the raw
+results and calculation.
+
+The accepted Stage 0 gate evidence is retained in
+link:collection-flush-processing-benchmark-results.adoc[Collection Flush
+Processing: Stage 0 Performance Gate].
+
+== Collection Delta
 
 A delta has the conceptual shape:
 
@@ -724,7 +886,7 @@ explicit-changes-only.
 
 [[CFS-DLT-003]]
 `CFS-DLT-003`:: A delta MUST be structurally immutable after it is frozen for
-semantic-mutation decomposition.
+semantic consumption.
 
 [[CFS-DLT-004]]
 `CFS-DLT-004`:: A delta MUST preserve the collection semantics for equality,
@@ -745,58 +907,61 @@ value.
 absence, or position of an unmentioned persisted row.
 
 [[CFS-DLT-008]]
-`CFS-DLT-008`:: A delta MUST retain enough semantic information for the
-collection persister to select row-wise mutation, remove-all plus create-all,
-bulk clear, or no direct collection-table work.
+`CFS-DLT-008`:: A delta MUST retain the semantic information required by its
+registered semantic consumers.  Physical mutation strategy and frozen physical
+rows belong to `CollectionMutationInterpretation` and MUST NOT be reconstructed
+from the delta when interpretation already produced them.
 
 [[CFS-DLT-009]]
 `CFS-DLT-009`:: When orphan candidates are derived from a delta, the candidate
 projection MUST be used only while the compared collection state remains valid.
 
 [[CFS-DLT-010]]
-`CFS-DLT-010`:: Delta production MUST be owned by or resolved through the
-`CollectionSemantics` selected by the collection persister.  Generic set-like
-folding MUST NOT be applied to bags, lists, or other semantics for which it is
-not equivalent.
+`CFS-DLT-010`:: Delta production, when required, MUST occur inside the
+interpreter owned by or resolved through the `CollectionSemantics` selected by
+the collection persister.  Generic set-like folding MUST NOT be applied to bags,
+lists, or other semantics for which it is not equivalent.
 
 [[CFS-DLT-011]]
-`CFS-DLT-011`:: When a prepared mutation can remain live across processing capable
+`CFS-DLT-011`:: When a frozen interpretation can remain live across processing capable
 of changing delta-relevant collection state, the collection wrapper or flush
 context MUST expose mutation-generation or comparison-validity state and the
-prepared mutation MUST capture the corresponding value when its delta is frozen.
+interpretation MUST capture the corresponding value when its delta is frozen.
 The validity value MAY remain external to `CollectionDelta`.  It MUST allow state
 advancement to distinguish the state represented by the executed delta from
 changes made afterward.
 
 [[CFS-DLT-012]]
 `CFS-DLT-012`:: The shared collection-mutation preparation protocol MUST invoke
-semantics-owned delta production after applicable pre-mutation lifecycle
-processing and before freezing the prepared mutation.  Queue-specific lowering
-or decomposition MUST NOT independently reconstruct the delta.  During
-speculative auto-flush, final delta production and freezing MUST occur only after
+semantics-owned interpretation after applicable pre-mutation lifecycle
+processing and before freezing the interpretation.  Queue-specific lowering or
+decomposition MUST NOT independently reconstruct a required delta.  During
+speculative auto-flush, final interpretation and freezing MUST occur only after
 execution is known to be required.
 
 [[CFS-DLT-013]]
-`CFS-DLT-013`:: The `CollectionFlushContext` MUST retain the frozen delta for the
-relevant collection structural state but MUST NOT implement collection-shape
-comparison or queued-command folding rules itself.
+`CFS-DLT-013`:: The `CollectionFlushContext` MUST retain the frozen
+interpretation, including any delta, for the relevant collection structural
+state but MUST NOT implement collection-shape comparison, physical row
+projection, or queued-command folding rules itself.
 
 [[CFS-DLT-014]]
 `CFS-DLT-014`:: `CollectionSemantics` MUST expose an associated
-`CollectionDeltaProducer` through a default method.  The producer MAY be shared
-or cached and MUST NOT require allocation for each collection or flush.  Delta
-production MUST NOT instead be distributed as collection-shape-specific methods
-on the shared mutation preparer or action queues.
+`CollectionMutationInterpreter` through a default method.  The interpreter MAY
+be shared or cached and MUST NOT require allocation for each collection or
+flush.  Delta production and physical projection MUST NOT instead be distributed
+as collection-shape-specific methods on the shared mutation preparer or action
+queues.
 
 [[CFS-DLT-015]]
-`CFS-DLT-015`:: The default producer MUST be a conservative,
-legacy-compatible producer.  For an initialized collection it MUST adapt the
+`CFS-DLT-015`:: The default interpreter MUST be conservative and
+legacy-compatible.  For an initialized collection it MUST adapt the
 existing `PersistentCollection` comparison contract so existing custom-wrapper
 behavior is preserved.  A direct `CollectionSemantics` implementation which
 does not override the default method MUST remain source compatible.
 
 [[CFS-DLT-016]]
-`CFS-DLT-016`:: A producer which cannot safely describe the required delta for
+`CFS-DLT-016`:: An interpreter which cannot safely describe a required delta for
 an uninitialized collection MUST return an explicit initialization-required
 outcome.  It MUST NOT initialize the collection itself or claim complete or
 explicit-changes-only coverage from facts it cannot prove.
@@ -805,19 +970,19 @@ explicit-changes-only coverage from facts it cannot prove.
 `CFS-DLT-017`:: The shared mutation preparer MAY satisfy an
 initialization-required outcome only after execution is known to be required.
 Successful initialization MUST consume queued operations as required by
-`CFS-QOP-001`, after which the producer MUST create a complete delta from the
-loaded-state baseline.  A discarded speculative auto-flush and cascade orphan
+`CFS-QOP-001`, after which the interpreter MUST create any required complete
+delta from the loaded-state baseline.  A discarded speculative auto-flush and cascade orphan
 inspection alone MUST NOT initialize a collection through this fallback.
 
 [[CFS-DLT-018]]
 `CFS-DLT-018`:: Hibernate's standard collection semantics which support queued
-operations MUST provide specialized immutable producers capable of initialized
-comparison and safe queued-command normalization for their collection shape.
-Other standard producers SHOULD also be immutable and specialized.  Custom
-semantics MAY provide a specialized producer to avoid conservative
+operations MUST provide specialized immutable interpreters capable of
+initialized comparison, frozen physical projection, and safe queued-command
+normalization for their collection shape.  Other standard interpreters SHOULD
+also be immutable and specialized.  Custom semantics MAY provide a specialized interpreter to avoid conservative
 initialization.  A `UserCollectionType` MUST NOT acquire a new method solely
 because its core `CustomCollectionTypeSemantics` adapter selects the
-compatibility producer.
+compatibility interpreter.
 
 == Queued-Operation Normalization
 
@@ -944,7 +1109,7 @@ preliminary owner participation discovered
   -> interceptor hook
   -> affected owner/id captured
   -> Hibernate collection pre-event
-  -> delta frozen and entity/collection mutation state sealed
+  -> interpretation frozen and entity/collection mutation state sealed
   -> diagnostic monitor span starts, when physical execution exists
   -> all physical work succeeds
   -> diagnostic monitor span completes successfully
@@ -960,13 +1125,13 @@ preliminary owner participation discovered
 
 [[CFS-LFC-001]]
 `CFS-LFC-001`:: The applicable collection interceptor hook for each semantic
-mutation MUST run exactly once and before its delta is frozen.
+mutation MUST run exactly once and before its interpretation is frozen.
 `REMOVE_AND_CREATE` therefore produces one remove notification and one legacy
 recreate notification.
 
 [[CFS-LFC-002]]
 `CFS-LFC-002`:: A Hibernate collection pre-event MUST run exactly once for
-`CREATE`, `REMOVE`, and `UPDATE` before the mutation's delta or bulk strategy is
+`CREATE`, `REMOVE`, and `UPDATE` before the mutation's interpretation is
 frozen.  Changes which the interceptor hook or Hibernate pre-event listener makes
 to the collection being prepared MUST be visible to that collection's physical
 mutation plan.
@@ -1020,18 +1185,18 @@ batchable SQL-shaped operation solely to carry completion handlers.
 [[CFS-LFC-013]]
 `CFS-LFC-013`:: A Hibernate pre-event listener mutation to a collection other
 than the collection whose event is being delivered is not guaranteed to be
-incorporated into the current flush when the other collection's delta was
+incorporated into the current flush when the other collection's interpretation was
 already frozen.
 
 [[CFS-LFC-014]]
-`CFS-LFC-014`:: A collection change made after its delta is frozen MUST NOT be
+`CFS-LFC-014`:: A collection change made after its interpretation is frozen MUST NOT be
 lost.  The implementation MUST either invalidate and reprepare that collection
 for the current flush or leave the later change dirty and pending for a future
 flush.
 
 [[CFS-LFC-015]]
 `CFS-LFC-015`:: Successful state advancement MUST advance the collection entry
-only through the state represented by the executed delta.  It MUST NOT absorb a
+only through the state represented by the executed interpretation.  It MUST NOT absorb a
 post-freeze change into the stored snapshot while simultaneously clearing that
 change's dirty state.
 
@@ -1066,13 +1231,13 @@ mutations MAY be prepared before physical execution begins.
 applicable entity and non-inverse collection participation by owner identity.
 It MUST invoke owner `@PreUpdate` before final entity mutation-state capture,
 before contributing collection interceptor hooks and Hibernate pre-events, and
-before any contributing collection delta is frozen.
+before any contributing collection interpretation is frozen.
 
 [[CFS-LFC-020]]
 `CFS-LFC-020`:: Changes made by owner `@PreUpdate` to entity properties or
 collections MUST be re-evaluated and included in the same flush.  Final
-transition selection, entity dirty-state capture, collection input, and delta
-production MUST observe those changes.
+transition selection, entity dirty-state capture, collection input, and
+interpretation production MUST observe those changes.
 
 [[CFS-LFC-021]]
 `CFS-LFC-021`:: Owner `@PostUpdate` MUST wait until every applicable owner entity
@@ -1198,9 +1363,10 @@ dependency cycle.
 
 [[CFS-GRP-010]]
 `CFS-GRP-010`:: Deferred row-operation materialization MUST use the frozen
-collection delta and immutable row bindings.  It MUST NOT rediscover changes or
-reread the live collection.  Planning MAY retain one compact unit, partition
-bindings by equivalent graph placement, or materialize individual operations.
+physical mutation and immutable row bindings.  It MUST NOT rediscover changes,
+rebuild a second complete row-change model, or reread the live collection.
+Planning MAY retain one compact unit, partition bindings by equivalent graph
+placement, or materialize individual operations.
 
 [[CFS-GRP-011]]
 `CFS-GRP-011`:: Compact representation MUST NOT merge semantic mutation identity
@@ -1270,7 +1436,7 @@ participation MUST NOT cause duplicate owner callbacks.
 `CFS-AFL-008`:: Before a positive flush-needed decision, speculative collection
 processing MUST NOT invoke collection interceptor hooks, deliver Hibernate
 collection pre/post events, invoke owner lifecycle callbacks for the collection
-mutation, freeze or publish its final delta, lower it to physical operations,
+mutation, freeze or publish its final interpretation, lower it to physical operations,
 advance collection state, perform cache work, run completion handlers, or record
 successful collection statistics.
 
@@ -1278,7 +1444,7 @@ successful collection statistics.
 `CFS-AFL-009`:: Before final preparation, each semantic collection input MUST
 expose every query space which its eventual mutation may affect.  The set MAY be
 a conservative superset.  The flush-needed decision MUST NOT require premature
-event delivery, final delta freezing, or physical decomposition.
+event delivery, final interpretation freezing, or physical decomposition.
 
 [[CFS-AFL-010]]
 `CFS-AFL-010`:: The incubating `ActionQueue` SPI MUST expose opaque checkpoint
@@ -1488,11 +1654,11 @@ it only once per applicable owner lifecycle, and make its mutations visible to
 the same flush.
 
 [[CFS-COM-013]]
-`CFS-COM-013`:: Adding the default associated-producer method to the incubating
+`CFS-COM-013`:: Adding the default associated-interpreter method to the incubating
 `CollectionSemantics` SPI MUST preserve existing implementations without source
 changes.  Existing `UserCollectionType` implementations remain behind
 `CustomCollectionTypeSemantics`; their initialized comparison behavior MUST be
-preserved by the compatibility producer.  Conservative initialization for an
+preserved by the compatibility interpreter.  Conservative initialization for an
 otherwise indescribable uninitialized delta is permitted only under
 `CFS-DLT-016` and `CFS-DLT-017`.
 
@@ -1502,7 +1668,7 @@ flush-needed decision is an intentional compatibility change from current
 speculative auto-flush timing.  A discarded attempt MUST NOT invoke the hooks.
 For a required auto-flush each applicable hook still runs exactly once, after
 the owner's single applicable `@PreUpdate` callback and before collection
-pre-events and delta freezing.
+pre-events and interpretation freezing.
 
 == Migration Guide Requirements
 
@@ -1608,7 +1774,7 @@ is unnecessary, queue restoration applies the specified retention policy,
 preserves durable semantic mutation work, removes only speculative
 flush-preparation work, and discards the flush context.  No collection
 interceptor hook, Hibernate collection event, owner callback for the collection
-mutation, final frozen delta, physical lowering, state advancement, cache work,
+mutation, final frozen interpretation, physical lowering, state advancement, cache work,
 completion handler, or successful collection statistic is produced for the
 discarded input.  All work which existed at the checkpoint survives; newly
 registered inserts, deletes, and orphan work survive as durable; newly derived
@@ -1631,7 +1797,7 @@ orphan discovery and does not initialize the collection merely to share a delta.
 
 === `CFS-SCN-011`: Cross-collection listener mutation
 
-Given a pre-listener for collection A which mutates collection B after B's delta
+Given a pre-listener for collection A which mutates collection B after B's interpretation
 was frozen, Hibernate may invalidate and reprepare B for the current flush or
 defer the change.  If deferred, completion of B's frozen work advances only the
 executed state and leaves the later change dirty for a future flush.
@@ -1653,19 +1819,35 @@ respective work categories.
 Given an uninitialized collection with queued commands, when collection
 initialization completes successfully, the commands are applied to the loaded
 collection in their original order and the live command log is cleared.  Delta
-production observes an initialized collection with no queued commands and uses
-normal complete loaded-state comparison.
+interpretation observes an initialized collection with no queued commands and
+uses normal complete loaded-state comparison.
 
 === `CFS-SCN-014`: Conservative custom-semantics delta fallback
 
-Given custom collection semantics which use the default delta producer, an
+Given custom collection semantics which use the default interpreter, an
 initialized wrapper is compared through its existing `PersistentCollection`
 contract.  Given an uninitialized wrapper whose required delta cannot safely be
-described, the producer requests initialization rather than guessing.  A
+described, the interpreter requests initialization rather than guessing.  A
 discarded speculative auto-flush and cascade orphan inspection do not satisfy
 that request.  A required flush may initialize the wrapper, consume its queued
 commands, and then produce one complete loaded-baseline delta.  A specialized
-custom producer may describe the same mutation without initialization.
+custom interpreter may describe the same mutation without initialization.
+
+=== `CFS-SCN-015`: Graph row-change interpretation
+
+Given an initialized set, list, or map with sparse changes, interpretation
+compares the collection once and freezes `RowChanges`.  Graph lowering consumes
+those row changes directly.  It does not reconstruct `CollectionChangeSet`,
+repeat snapshot comparison, or read the live collection after freezing.
+
+=== `CFS-SCN-016`: Create and bag-update row projection
+
+Given logical `CREATE`, interpretation freezes `CreateAll` with all current
+rows without allocating a semantic addition for every row unless another
+semantic consumer requires the additions delta.  Given a bag `UPDATE` requiring
+remove-all plus create-all, interpretation freezes
+`RemoveAllAndCreateAll` with the same kind of complete current-row projection.
+Both queues execute that projection without enumerating the collection again.
 
 == Test Traceability
 
@@ -1678,10 +1860,20 @@ custom producer may describe the same mutation without initialization.
   `CollectionTransitionSelectionTest` for transition tables, plus
   `CollectionFlushTransitionIntegrationTest` against each queue
 
+| `CFS-INT-*`
+| `CollectionMutationInterpreterContractTest` parameterized over transition and
+  every supported standard semantics, `CollectionPhysicalMutationTest` for
+  exhaustive sealed variants and required payload, and
+  `CollectionInterpretationQueueExecutionTest` against both queues.  The graph
+  execution test MUST detect a second collection comparison, a
+  `CollectionDelta -> CollectionChangeSet` reconstruction, and live collection
+  reads after freezing.
+
 | `CFS-DLT-*`, `CFS-QOP-*`
-| `CollectionDeltaProducerContractTest` parameterized over every supported
+| `CollectionDeltaInterpretationTest` parameterized over every supported
   semantics, `QueuedOperationDeltaTest`, `CollectionDeltaValidityTest`, and
-  `CustomCollectionDeltaProducerTest`
+  `CustomCollectionMutationInterpreterTest`, plus `QueuedOperationFailureTest`
+  for entity-owned physical work and unsuccessful flush completion
 
 | `CFS-ACT-*`, `CFS-LFC-*`
 | `CollectionMutationLifecycleTest` and `OwnerCollectionLifecycleTest` covering
@@ -1712,7 +1904,7 @@ custom producer may describe the same mutation without initialization.
 |===
 
 The acceptance scenarios map to methods `scenario001NewCollection()` through
-`scenario014ConservativeCustomSemanticsFallback()` in
+`scenario016CreateAndBagUpdateRowProjection()` in
 `CollectionFlushAcceptanceTest`, executed against both queue implementations
 unless a scenario explicitly concerns one queue's internal representation.
 
@@ -1793,16 +1985,14 @@ an explicitly recorded reason why static verification is sufficient.
   contribute work for that owner.
 
 | `WD-012`
-| Approved
-| Make the `CollectionSemantics` selected by the collection persister own or
-  resolve collection-specific `CollectionDelta` production.  Shared mutation
-  preparation invokes the producer, the flush context retains the frozen
-  result, and queues consume rather than reconstruct it.
+| Superseded by `WD-026`
+| Retain semantics ownership of collection interpretation, but no longer require
+  `CollectionDelta` as the sole physical-execution boundary.
 
 | `WD-013`
 | Approved
-| Capture mutation-generation or comparison-validity state in the prepared
-  mutation only where preparation crosses code capable of changing relevant
+| Capture mutation-generation or comparison-validity state in the frozen
+  interpretation only where preparation crosses code capable of changing relevant
   collection state.  Do not require the value to be a field of every
   `CollectionDelta`.
 
@@ -1825,11 +2015,11 @@ an explicitly recorded reason why static verification is sufficient.
   explicit temporary forms and test gates to organize incremental development.
 
 | `WD-017`
-| Approved
-| Use the two-stage queue-neutral semantic-input/prepared-mutation boundary.
+| Approved (revised in 1.2)
+| Use the two-stage queue-neutral semantic-input/interpretation boundary.
   Keep transition selection, lifecycle preparation, affected-owner capture, and
-  delta freezing shared while allowing each queue to lower and schedule the
-  prepared mutation in its native representation.  Treat queue-participating
+  interpretation freezing shared while allowing each queue to lower and schedule the
+  sealed physical mutation in its native representation.  Treat queue-participating
   boundary vocabulary as a potential later investigation, not a rejected
   alternative or an approval prerequisite.
 
@@ -1850,9 +2040,9 @@ an explicitly recorded reason why static verification is sufficient.
   queued-command log or advancing collection state.
 
 | `WD-020`
-| Approved
+| Approved (reworded in 1.2)
 | Defer collection interceptor hooks, Hibernate collection events, owner
-  callbacks, final delta freezing, lowering, and successful lifecycle until a
+  callbacks, final interpretation freezing, lowering, and successful lifecycle until a
   positive flush-needed decision.  Then invoke one applicable owner `@PreUpdate`
   before every contributing collection hook.  Require pre-decision semantic
   input to expose conservative potential query spaces.
@@ -1883,12 +2073,12 @@ an explicitly recorded reason why static verification is sufficient.
   applicability so insert/delete lifecycle does not become update lifecycle.
 
 | `WD-024`
-| Approved
+| Superseded by `WD-026`
 | Resolve a cached or shared associated `CollectionDeltaProducer` through a
   default `CollectionSemantics` method.  Preserve initialized custom-wrapper
   comparison through a legacy-compatible default producer; when uninitialized
-  state cannot be described safely, have the producer request initialization
-  and let shared preparation perform it only during a required flush.
+  state cannot be described safely, have the producer request initialization and
+  let shared preparation perform it only during a required flush.
 
 | `WD-025`
 | Approved
@@ -1896,11 +2086,31 @@ an explicitly recorded reason why static verification is sufficient.
   the `OQ-008` remove/create ordering change, the `OQ-011` owner callback and
   related interceptor timing change, and the `OQ-009` `ActionQueue` signature
   replacement in the behavior and SPI sections appropriate to each change.
+
+| `WD-026`
+| Approved in 1.2
+| Interpret collection mutation through `CollectionTransition x
+  CollectionSemantics` with persister context.  Freeze one
+  `CollectionMutationInterpretation` which composes semantic change with a
+  sealed `PhysicalCollectionMutation` hierarchy.  Keep `CollectionDelta` for
+  semantic consumers but do not require it as a physical-execution intermediate;
+  require graph lowering to consume frozen row projections directly.
+
+| `WD-027`
+| Approved in 1.2
+| Require the graph-queue Stage 0 benchmark matrix to demonstrate a statistically
+  credible overall improvement, measured as the geometric mean of per-scenario
+  normalized average times.  Treat a credible regression greater than 5% in any
+  scenario as a failure unless explicitly accepted and explained.
 |===
 
 == Open Questions and Guidance Needed
 
-No unresolved guidance questions remain in this approved revision.
+`OQ-012` is resolved: the graph queue must demonstrate a statistically credible
+overall improvement relative to Stage 0 across the agreed matrix, while a
+statistically credible regression greater than 5% in any individual scenario
+fails the gate unless explicitly accepted and explained.  `CFS-INT-013` defines
+the calculation and evidence requirements.
 
 == Implementation and Migration Staging
 
@@ -1947,18 +2157,19 @@ fully implemented.
 | The shared boundary preserves transition, lifecycle, failure, and event
   parity while allowing both queues to use native internal representations.
 
-| `CFS-STG-004`: Stable delta production
-| Move delta production behind `CollectionSemantics`, normalize queued commands,
-  retain one frozen delta for a relevant comparison state, and establish
+| `CFS-STG-004`: Stable collection interpretation
+| Move transition-aware interpretation behind `CollectionSemantics`, introduce
+  the sealed physical mutation hierarchy, normalize queued commands, retain one
+  frozen interpretation for a relevant comparison state, and establish
   post-freeze validity and orphan-projection rules.
-| Existing wrapper change-set logic may be adapted behind semantics-owned
-  producers while individual semantics are migrated.
-| Per-semantics complete and explicit-changes-only delta suites pass for set,
-  bag, list, map, identifier-bag, and array support present in Hibernate; stale
-  comparison and queued-operation lifecycle tests also pass.  Compatibility
-  tests cover initialized custom wrappers, conservative required-flush
-  initialization, specialized custom producers, discarded speculative flushes,
-  and orphan inspection which must not initialize.
+| Existing wrapper change-set logic may be adapted inside semantics-owned
+  interpreters while individual semantics are migrated.  Legacy actions may
+  temporarily lower the frozen physical variant through coordinator adapters.
+| Per-semantics interpretation and delta suites pass for set, bag, list, map,
+  identifier-bag, and array support present in Hibernate.  Graph lowering
+  consumes frozen physical variants directly; create and bag-update execution
+  perform no second enumeration; compatibility and validity tests pass; and the
+  graph queue satisfies the performance gate in `CFS-INT-013`.
 
 | `CFS-STG-005`: Compact row execution
 | Introduce immutable operation templates and row bindings and retain per-row
@@ -1969,14 +2180,16 @@ fully implemented.
   demonstrate correctness and characterize the compact representation's value.
 |===
 
-Cascade integration is downstream of `CFS-STG-004`.  Until stable delta timing
-and comparison validity are established, cascade retains its standalone orphan-
+Cascade integration is downstream of `CFS-STG-004`.  Until stable interpretation
+timing and comparison validity are established, cascade retains its standalone orphan-
 discovery path.  Integration work must satisfy `CFS-CAS-*` without changing the
 existing cascade traversal architecture.
 
 == Development-Team Review and Change Control
 
-This specification was approved after satisfying these readiness criteria:
+Revision 1.2 was approved after satisfying these readiness criteria, including
+acceptance of the resolved `OQ-012` performance gate and the new interpretation
+test and benchmark obligations:
 
 * no blocking guidance question remains unresolved,
 * transition and lifecycle scenario coverage is accepted as complete enough for

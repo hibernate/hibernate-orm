@@ -10,6 +10,7 @@ import java.util.Set;
 
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CollectionEntry;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.internal.entities.EntityConfiguration;
@@ -23,9 +24,12 @@ import org.hibernate.envers.internal.synchronization.work.AuditWorkUnit;
 import org.hibernate.envers.internal.synchronization.work.CollectionChangeWorkUnit;
 import org.hibernate.envers.internal.synchronization.work.FakeBidirectionalRelationWorkUnit;
 import org.hibernate.envers.internal.synchronization.work.PersistentCollectionChangeWorkUnit;
+import org.hibernate.envers.internal.tools.EntityTools;
 import org.hibernate.event.spi.AbstractCollectionEvent;
 import org.hibernate.persister.collection.AbstractCollectionPersister;
 import org.hibernate.persister.collection.OneToManyPersister;
+import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.proxy.LazyInitializer;
 
 /**
  * Base class for Envers' collection event related listeners
@@ -96,7 +100,7 @@ public abstract class BaseEnversCollectionEventListener extends BaseEnversEventL
 									referencingPropertyName,
 									getEnversService(),
 									event.getAffectedOwnerIdOrNull(),
-									event.getAffectedOwnerOrNull()
+									getPossiblyProxyTarget( event.getSession(), event.getAffectedOwnerOrNull() )
 							)
 					);
 
@@ -214,7 +218,7 @@ public abstract class BaseEnversCollectionEventListener extends BaseEnversEventL
 
 		// For each collection change, generating the bidirectional work unit.
 		for ( PersistentCollectionChangeData changeData : collectionChanges ) {
-			final Object relatedObj = changeData.getChangedElement();
+			final Object relatedObj = getPossiblyProxyTarget( event.getSession(), changeData.getChangedElement() );
 			final Serializable relatedId = (Serializable) relatedIdMapper.mapToIdFromEntity( relatedObj );
 			final RevisionType revType = (RevisionType) changeData.getData().get(
 					getEnversService().getConfig().getRevisionTypePropertyName()
@@ -258,7 +262,7 @@ public abstract class BaseEnversCollectionEventListener extends BaseEnversEventL
 						referencingPropertyName,
 						getEnversService(),
 						event.getAffectedOwnerIdOrNull(),
-						event.getAffectedOwnerOrNull()
+						getPossiblyProxyTarget( event.getSession(), event.getAffectedOwnerOrNull() )
 				)
 		);
 	}
@@ -288,7 +292,7 @@ public abstract class BaseEnversCollectionEventListener extends BaseEnversEventL
 			final String toPropertyName = toPropertyNames.iterator().next();
 
 			for ( PersistentCollectionChangeData changeData : workUnit.getCollectionChanges() ) {
-				final Object relatedObj = changeData.getChangedElement();
+				final Object relatedObj = getPossiblyProxyTarget( event.getSession(), changeData.getChangedElement() );
 				final Serializable relatedId = (Serializable) relatedIdMapper.mapToIdFromEntity( relatedObj );
 
 				auditProcess.addWorkUnit(
@@ -303,5 +307,18 @@ public abstract class BaseEnversCollectionEventListener extends BaseEnversEventL
 				);
 			}
 		}
+	}
+
+	/**
+	 * The audit work unit reads the entity's state with reflection getters, which on a proxy
+	 * would return null for every property - the state lives on the proxy's target. Mirrors
+	 * {@code BaseEnversEventListener#addCollectionChangeWorkUnit}.
+	 */
+	private Object getPossiblyProxyTarget(SessionImplementor session, Object entity) {
+		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( entity );
+		if ( lazyInitializer != null ) {
+			return EntityTools.getTargetFromProxy( session.getFactory(), lazyInitializer );
+		}
+		return entity;
 	}
 }

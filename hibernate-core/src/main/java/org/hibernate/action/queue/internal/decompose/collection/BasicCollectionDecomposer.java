@@ -11,10 +11,7 @@ import org.hibernate.action.queue.spi.decompose.collection.CollectionMutationPla
 import jakarta.annotation.Nonnull;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
-import org.hibernate.action.internal.CollectionRecreateAction;
-import org.hibernate.action.internal.CollectionRemoveAction;
-import org.hibernate.action.internal.CollectionUpdateAction;
-import org.hibernate.action.internal.QueuedOperationCollectionAction;
+import org.hibernate.action.queue.internal.PreparedCollectionMutation;
 import org.hibernate.action.queue.spi.MutationKind;
 import org.hibernate.action.queue.spi.StatementShapeKey;
 import org.hibernate.action.queue.spi.bind.BindPlan;
@@ -24,6 +21,11 @@ import org.hibernate.action.queue.spi.meta.CollectionTableDescriptor;
 import org.hibernate.action.queue.spi.meta.TableDescriptorAsTableMapping;
 import org.hibernate.action.queue.spi.plan.FlushOperation;
 import org.hibernate.collection.spi.CollectionChangeSet;
+import org.hibernate.collection.spi.CollectionMutationInterpretation;
+import org.hibernate.collection.spi.DeferredCollectionIdentifier;
+import org.hibernate.collection.spi.DeferredCollectionPosition;
+import org.hibernate.collection.spi.FrozenCollectionRows;
+import org.hibernate.collection.spi.PhysicalCollectionMutation;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.collection.spi.SnapshotIndexed;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
@@ -48,6 +50,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import static java.util.Collections.emptyList;
 import static org.hibernate.action.queue.internal.decompose.collection.CollectionOrdinalSupport.Slot;
 import static org.hibernate.action.queue.internal.decompose.collection.CollectionOrdinalSupport.calculateOrdinal;
 import static org.hibernate.action.queue.internal.decompose.collection.CollectionMutationPlanSupport.applyRemoveRestrictions;
@@ -107,15 +110,12 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 
 	@Override
 	public void decomposeQueuedOperations(
-			QueuedOperationCollectionAction action,
+			PreparedCollectionMutation action,
 			int ordinalBase,
 			SharedSessionContractImplementor session,
 			Consumer<FlushOperation> operationConsumer) {
-		operationConsumer.accept( DecompositionSupport.createNoOpCallbackCarrier(
-				tableDescriptor,
-				ordinalBase,
-				sessionImplementor -> action.afterQueuedOperationsProcessed()
-		) );
+		// Basic collection queued operations own no direct physical work.  Their log
+		// finalization is registered directly with the enclosing mutation completion.
 	}
 
 	/// Determines if an indexed collection needs recreate due to position shifts.
@@ -148,23 +148,24 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 	/// ````
 	/// > That's because the generated SQL is simply restricting on the foreign-key rather than the
 	public void decomposeRecreate(
-			CollectionRecreateAction action,
+			PreparedCollectionMutation action,
 			int ordinalBase,
 			SharedSessionContractImplementor session,
 			DecompositionContext decompositionContext,
 			Consumer<FlushOperation> operationConsumer) {
 
 		// Always fire PRE event, even if no SQL operations will be needed
-		if ( !action.isLifecyclePrepared() ) {
-			DecompositionSupport.firePreRecreate( persister, action.getCollection(), session );
-		}
-
-		var operations = planRecreateOperation(
-				action.getCollection(),
-				action.getKey(),
-				ordinalBase,
-				session
-		);
+		final var interpretation = validInterpretation( action, action.getCollection() );
+		var operations = interpretation == null
+				? planRecreateOperation( action.getCollection(), action.getKey(), ordinalBase, session )
+				: planInterpretedCreate(
+						interpretation,
+						action.getCollection(),
+						action.getKey(),
+						ordinalBase,
+						session,
+						canCompactCreate( action, decompositionContext )
+				);
 
 		// Create post-execution callback to handle post-execution work (afterAction, cache, events, stats)
 		var postRecreateHandling = new PostCollectionRecreateHandling(
@@ -279,22 +280,142 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 		return operations;
 	}
 
+	@Nonnull
+	private List<FlushOperation> planInterpretedCreate(
+			CollectionMutationInterpretation interpretation,
+			PersistentCollection<?> collection,
+			Object key,
+			int ordinalBase,
+			SharedSessionContractImplementor session,
+			boolean compactRows) {
+		if ( !(interpretation.physicalMutation() instanceof PhysicalCollectionMutation.CreateAll createAll) ) {
+			throw new IllegalStateException(
+					"CREATE interpretation selected " + interpretation.physicalMutation().getClass().getSimpleName()
+			);
+		}
+		return planRecreateRows( createAll.currentRows(), collection, key, ordinalBase, session, compactRows );
+	}
+
+	private boolean canCompactCreate(
+			PreparedCollectionMutation mutation,
+			DecompositionContext decompositionContext) {
+		return canCompactRecreatedRows()
+				&& mutation.getAffectedOwner() != null
+				&& decompositionContext.isBeingInsertedInCurrentFlush( mutation.getAffectedOwner() );
+	}
+
+	private boolean canCompactRecreatedRows() {
+		return mutationPlanContributor == CollectionMutationPlanContributor.STANDARD
+				&& !tableHasNonPrimaryUniqueConstraints
+				&& !tableDescriptor.isSelfReferential();
+	}
+
+	@Nonnull
+	private List<FlushOperation> planRecreateRows(
+			FrozenCollectionRows rows,
+			PersistentCollection<?> collection,
+			Object key,
+			int ordinalBase,
+			SharedSessionContractImplementor session) {
+		return planRecreateRows( rows, collection, key, ordinalBase, session, false );
+	}
+
+	@Nonnull
+	private List<FlushOperation> planRecreateRows(
+			FrozenCollectionRows rows,
+			PersistentCollection<?> collection,
+			Object key,
+			int ordinalBase,
+			SharedSessionContractImplementor session,
+			boolean compactRows) {
+		final var insertRowPlan = jdbcOperations.insertRowPlan();
+		if ( insertRowPlan == null ) {
+			return emptyList();
+		}
+
+		collection.preInsert( persister );
+		final var insertOrdinal = calculateOrdinal( ordinalBase, Slot.INSERT );
+		final var insertValues = insertRowPlan.values();
+		final var insertJdbcOperation = insertRowPlan.jdbcOperation();
+		final var insertShapeKey = StatementShapeKey.forMutation(
+				tableDescriptor.name(),
+				MutationKind.INSERT,
+				tableDescriptor,
+				insertJdbcOperation
+		);
+		final List<FlushOperation> operations = new ArrayList<>();
+		if ( compactRows && rows.size() > 0 ) {
+			operations.add( new FlushOperation(
+					tableDescriptor,
+					MutationKind.INSERT,
+					insertJdbcOperation,
+					new GroupedCollectionInsertBindPlan(
+							persister,
+							insertValues,
+							collection,
+							key,
+							rows
+					),
+					insertOrdinal,
+					insertOrigin,
+					insertShapeKey
+			) );
+			return operations;
+		}
+		rows.forEach( (entry, position) -> {
+			operations.add( new FlushOperation(
+					tableDescriptor,
+					MutationKind.INSERT,
+					insertJdbcOperation,
+					new SingleRowInsertBindPlan(
+							persister,
+							insertValues,
+							collection,
+							key,
+							entry,
+							position
+					),
+					insertOrdinal,
+					insertOrigin,
+					insertShapeKey
+			) );
+			contributeAdditionalInsert(
+					collection,
+					key,
+					entry,
+					position,
+					ordinalBase,
+					session,
+					operations::add
+			);
+		} );
+		return operations;
+	}
+
 	public void decomposeUpdate(
-			CollectionUpdateAction action,
+			PreparedCollectionMutation action,
 			int ordinalBase,
 			SharedSessionContractImplementor session,
 			DecompositionContext decompositionContext,
 			Consumer<FlushOperation> operationConsumer) {
 		var collection = action.getCollection();
 		var key = action.getKey();
-
-		if ( !action.isLifecyclePrepared() ) {
-			DecompositionSupport.firePreUpdate( persister, collection, session );
-		}
+		final var interpretation = validInterpretation( action, collection );
 
 		final List<FlushOperation> operations = new ArrayList<>();
 
-		if ( !collection.wasInitialized() ) {
+		if ( interpretation != null ) {
+			planInterpretedUpdate(
+					interpretation,
+					collection,
+					key,
+					ordinalBase,
+					session,
+					canCompactRecreatedRows(),
+					operations
+			);
+		}
+		else if ( !collection.wasInitialized() ) {
 			// If there were queued operations, they would have
 			// been processed and cleared by now.
 			if ( !collection.isDirty() ) {
@@ -384,6 +505,80 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 					postExecutionCallback
 			) );
 		}
+	}
+
+	private void planInterpretedUpdate(
+			CollectionMutationInterpretation interpretation,
+			PersistentCollection<?> collection,
+			Object key,
+			int ordinalBase,
+			SharedSessionContractImplementor session,
+			boolean compactRecreatedRows,
+			List<FlushOperation> operations) {
+		final var physicalMutation = interpretation.physicalMutation();
+		if ( physicalMutation instanceof PhysicalCollectionMutation.NoWork ) {
+			return;
+		}
+		if ( physicalMutation instanceof PhysicalCollectionMutation.RemoveAll removeAll ) {
+			if ( removeAll.removalMode() == PhysicalCollectionMutation.RemovalMode.EXECUTE ) {
+				final var removeOperation = planRemoveOperation( key, ordinalBase );
+				if ( removeOperation != null ) {
+					operations.add( removeOperation );
+				}
+			}
+			return;
+		}
+		if ( physicalMutation instanceof PhysicalCollectionMutation.RowChanges rowChanges ) {
+			if ( !rowChanges.changes().isEmpty() ) {
+				planOperationsFromChangeSet(
+						rowChanges.changes(),
+						collection,
+						key,
+						ordinalBase,
+						session,
+						operations::add
+				);
+			}
+			return;
+		}
+		if ( physicalMutation instanceof PhysicalCollectionMutation.RemoveAllAndCreateAll replaceAll ) {
+			if ( persister.isAffectedByEnabledFilters( session ) ) {
+				throw new HibernateException( String.format(
+						Locale.ROOT,
+						"cannot recreate collection while filter is enabled [%s : %s]",
+						persister.getRole(),
+						key
+				) );
+			}
+			if ( replaceAll.removalMode() == PhysicalCollectionMutation.RemovalMode.EXECUTE ) {
+				final var removeOperation = planRemoveOperation( key, ordinalBase );
+				if ( removeOperation != null ) {
+					operations.add( removeOperation );
+				}
+			}
+			operations.addAll( planRecreateRows(
+					replaceAll.currentRows(),
+					collection,
+					key,
+					ordinalBase,
+					session,
+					compactRecreatedRows
+			) );
+			return;
+		}
+		throw new IllegalStateException(
+				"UPDATE interpretation selected " + physicalMutation.getClass().getSimpleName()
+		);
+	}
+
+	private static CollectionMutationInterpretation validInterpretation(
+			PreparedCollectionMutation action,
+			PersistentCollection<?> collection) {
+		final var interpretation = action.getCollectionMutationInterpretation();
+		if ( interpretation != null && !interpretation.isValid( collection ) ) {
+			throw new IllegalStateException( "Collection changed after its mutation interpretation was frozen" );
+		}
+		return interpretation;
 	}
 
 	private void planDeleteRowOperations(
@@ -621,6 +816,7 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 
 		// Added rows are planned in the INSERT slot.
 		if ( insertRowPlan != null && !changeSet.additions().isEmpty() ) {
+			collection.preInsert( persister );
 			final int insertOrdinal = calculateOrdinal( ordinalBase, Slot.INSERT );
 			final var insertJdbcOperation = insertRowPlan.jdbcOperation();
 			final var insertValues = insertRowPlan.values();
@@ -636,7 +832,7 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 				}
 				else {
 					rowValue = addition.element();
-					entryIndex = (Integer) addition.index();
+					entryIndex = rowPosition( addition.index() );
 				}
 
 				operationConsumer.accept( new FlushOperation(
@@ -702,7 +898,7 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 				}
 				else {
 					entry = valueChange.newValue();
-					entryIndex = (Integer) valueChange.index();
+					entryIndex = rowPosition( valueChange.index() );
 				}
 
 				operationConsumer.accept( new FlushOperation(
@@ -724,6 +920,19 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 				) );
 			}
 		}
+	}
+
+	private static int rowPosition(Object position) {
+		if ( position instanceof Number number ) {
+			return number.intValue();
+		}
+		if ( position instanceof DeferredCollectionIdentifier identifier ) {
+			return identifier.entryPosition();
+		}
+		if ( position instanceof DeferredCollectionPosition deferredPosition ) {
+			return deferredPosition.resolve();
+		}
+		return -1;
 	}
 
 	private boolean canUpdateIndexedManyToManyValuesAtPositions(
@@ -1039,18 +1248,13 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 	}
 
 	public void decomposeRemove(
-			CollectionRemoveAction action,
+			PreparedCollectionMutation action,
 			int ordinalBase,
 			SharedSessionContractImplementor session,
 			DecompositionContext decompositionContext,
 			Consumer<FlushOperation> operationConsumer) {
 		var collection = action.getCollection();
 		var affectedOwner = action.getAffectedOwner();
-
-		// Always fire PRE event, even if no SQL operations will be needed
-		if ( !action.isLifecyclePrepared() ) {
-			DecompositionSupport.firePreRemove( persister, collection, affectedOwner, session );
-		}
 
 		// Create callback to handle post-execution work (afterAction, cache, events, stats)
 		var postRemoveHandling = new PostCollectionRemoveHandling(

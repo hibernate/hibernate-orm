@@ -10,7 +10,7 @@ import java.util.function.Consumer;
 
 import org.hibernate.action.queue.spi.decompose.collection.CollectionJdbcOperations;
 import org.hibernate.action.queue.spi.decompose.collection.CollectionMutationPlanContributor;
-import org.hibernate.action.internal.CollectionRemoveAction;
+import org.hibernate.action.queue.internal.PreparedCollectionMutation;
 import org.hibernate.action.queue.spi.decompose.DecompositionContext;
 import org.hibernate.action.queue.spi.plan.FlushOperation;
 import org.hibernate.collection.spi.PersistentCollection;
@@ -63,7 +63,7 @@ class OneToManyFallbackOrdinalTest {
 
 		@Override
 		public void decomposeRemove(
-				CollectionRemoveAction action,
+				PreparedCollectionMutation mutation,
 				int ordinalBase,
 				SharedSessionContractImplementor session,
 				DecompositionContext decompositionContext,

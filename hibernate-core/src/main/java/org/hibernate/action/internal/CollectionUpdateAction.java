@@ -9,7 +9,7 @@ import jakarta.annotation.Nullable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.action.queue.internal.FrozenCollectionDelta;
+import org.hibernate.collection.spi.CollectionMutationInterpretation;
 import org.hibernate.engine.internal.FlushProcessingContext;
 import org.hibernate.engine.spi.ComparableExecutable;
 import org.hibernate.event.spi.EventSource;
@@ -65,8 +65,8 @@ public final class CollectionUpdateAction extends CollectionAction {
 			final @Nonnull EventSource session,
 			final @Nullable Object affectedOwner,
 			final @Nullable Object affectedOwnerId,
-			final FrozenCollectionDelta frozenDelta) {
-		super( persister, collection, id, session, true, frozenDelta );
+			final CollectionMutationInterpretation interpretation) {
+		super( persister, collection, id, session, true, interpretation );
 		this.emptySnapshot = emptySnapshot;
 		this.affectedOwner = affectedOwner;
 		this.affectedOwnerId = affectedOwnerId;
@@ -103,6 +103,7 @@ public final class CollectionUpdateAction extends CollectionAction {
 		if ( !isLifecyclePrepared() ) {
 			preUpdate();
 		}
+		getValidCollectionMutationInterpretation();
 
 		if ( !collection.wasInitialized() ) {
 			// If there were queued operations, they would have

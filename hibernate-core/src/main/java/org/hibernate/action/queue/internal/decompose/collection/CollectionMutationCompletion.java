@@ -10,10 +10,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.AssertionFailure;
-import org.hibernate.action.internal.CollectionAction;
-import org.hibernate.action.internal.CollectionRecreateAction;
-import org.hibernate.action.internal.CollectionRemoveAction;
-import org.hibernate.action.internal.CollectionUpdateAction;
+import org.hibernate.action.queue.internal.PreparedCollectionMutation;
 import org.hibernate.action.queue.spi.CollectionMutationId;
 import org.hibernate.action.queue.spi.bind.PostExecutionCallback;
 import org.hibernate.action.queue.spi.plan.FlushOperation;
@@ -62,6 +59,7 @@ public final class CollectionMutationCompletion {
 	private Object affectedOwnerId;
 	private int obligationCount;
 	private int completedObligationCount;
+	private boolean flushSuccessRequired;
 
 	public CollectionMutationCompletion(
 			CollectionMutationId id,
@@ -107,23 +105,13 @@ public final class CollectionMutationCompletion {
 		return obligationCount;
 	}
 
-	public void configure(CollectionAction action) {
+	public void configure(PreparedCollectionMutation mutation) {
 		checkRegistering();
-		persister = action.getPersister();
-		key = action.getKey();
-		kind = determineKind( action );
-		if ( action instanceof CollectionRecreateAction recreate ) {
-			affectedOwner = recreate.getAffectedOwner();
-			affectedOwnerId = recreate.getAffectedOwnerId();
-		}
-		else if ( action instanceof CollectionUpdateAction update ) {
-			affectedOwner = update.getAffectedOwner();
-			affectedOwnerId = update.getAffectedOwnerId();
-		}
-		else if ( action instanceof CollectionRemoveAction remove ) {
-			affectedOwner = remove.getAffectedOwner();
-			affectedOwnerId = remove.getAffectedOwnerId();
-		}
+		persister = mutation.getPersister();
+		key = mutation.getKey();
+		kind = determineKind( mutation );
+		affectedOwner = mutation.affectedOwner();
+		affectedOwnerId = mutation.affectedOwnerId();
 	}
 
 	public void registerOperation(FlushOperation operation) {
@@ -135,6 +123,15 @@ public final class CollectionMutationCompletion {
 	public void registerCompletionHandler(PostExecutionCallback completionHandler) {
 		checkRegistering();
 		completionHandlers.add( completionHandler );
+	}
+
+	/// Prevents successful semantic completion until the enclosing flush succeeds.
+	///
+	/// Queued inverse-collection work may be physically owned by an entity mutation and
+	/// therefore have no collection operation which can represent its final dependency.
+	public void requireFlushSuccess() {
+		checkRegistering();
+		flushSuccessRequired = true;
 	}
 
 	public void seal(SessionImplementor session) {
@@ -199,8 +196,18 @@ public final class CollectionMutationCompletion {
 		}
 	}
 
+	/// Releases a completion which was waiting for successful completion of the whole flush.
+	public void flushSucceeded(SessionImplementor session) {
+		if ( state == State.FAILED || state == State.COMPLETED ) {
+			return;
+		}
+		flushSuccessRequired = false;
+		completeIfReady( session );
+	}
+
 	private void completeIfReady(SessionImplementor session) {
 		if ( (state == State.SEALED || state == State.EXECUTING)
+				&& !flushSuccessRequired
 				&& completedObligationCount == obligationCount ) {
 			try {
 				for ( var completionHandler : completionHandlers ) {
@@ -254,16 +261,12 @@ public final class CollectionMutationCompletion {
 		}
 	}
 
-	private static Kind determineKind(CollectionAction action) {
-		if ( action instanceof CollectionRecreateAction ) {
-			return Kind.CREATE;
-		}
-		if ( action instanceof CollectionUpdateAction ) {
-			return Kind.UPDATE;
-		}
-		if ( action instanceof CollectionRemoveAction ) {
-			return Kind.REMOVE;
-		}
-		return Kind.UNSPECIFIED;
+	private static Kind determineKind(PreparedCollectionMutation mutation) {
+		return switch ( mutation.kind() ) {
+			case CREATE -> Kind.CREATE;
+			case UPDATE -> Kind.UPDATE;
+			case REMOVE -> Kind.REMOVE;
+			case QUEUED_OPERATIONS -> Kind.UNSPECIFIED;
+		};
 	}
 }

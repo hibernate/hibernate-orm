@@ -12,7 +12,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 import org.hibernate.collection.spi.CollectionInitializerProducer;
-import org.hibernate.collection.spi.CollectionDeltaProducer;
+import org.hibernate.collection.spi.CollectionMutationInterpreter;
 import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.collection.spi.PersistentList;
@@ -44,8 +44,8 @@ public class StandardListSemantics<E> implements CollectionSemantics<List<E>, E>
 	}
 
 	@Override
-	public CollectionDeltaProducer getCollectionDeltaProducer() {
-		return StandardCollectionDeltaProducer.LIST;
+	public CollectionMutationInterpreter getCollectionMutationInterpreter() {
+		return StandardCollectionMutationInterpreter.LIST;
 	}
 
 	@Override

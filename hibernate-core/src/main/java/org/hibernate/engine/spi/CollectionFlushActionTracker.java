@@ -9,10 +9,11 @@ import org.hibernate.collection.spi.PersistentCollection;
 
 /// Read-only view of collection processing state and actions planned during the current flush.
 ///
-/// A tracker is associated with a single flush cycle. It exposes state that used to be stored as
-/// transient flags on {@link CollectionEntry}, allowing code that runs during or immediately after
-/// flush action execution to answer questions about reachability, processing, and queued logical
-/// collection actions without mutating the entry itself.
+/// A tracker is associated with a single flush cycle. It allows code that runs during or
+/// immediately after flush action execution to answer questions about reachability, processing,
+/// and queued logical collection actions. Implementations may delegate reachability and processing
+/// queries to compact transient state on {@link CollectionEntry} while retaining mutation state in
+/// the flush context.
 ///
 /// Implementations are expected to identify collections by instance identity, matching the way
 /// persistent collections are tracked by the persistence context.

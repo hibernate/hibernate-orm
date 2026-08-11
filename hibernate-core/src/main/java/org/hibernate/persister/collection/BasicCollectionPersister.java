@@ -7,10 +7,7 @@ package org.hibernate.persister.collection;
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
-import org.hibernate.action.internal.CollectionRecreateAction;
-import org.hibernate.action.internal.CollectionRemoveAction;
-import org.hibernate.action.internal.CollectionUpdateAction;
-import org.hibernate.action.internal.QueuedOperationCollectionAction;
+import org.hibernate.action.queue.internal.PreparedCollectionMutation;
 import org.hibernate.action.queue.spi.decompose.DecompositionContext;
 import org.hibernate.action.queue.internal.decompose.collection.BasicCollectionDecomposer;
 import org.hibernate.action.queue.spi.decompose.collection.CollectionDecomposer;
@@ -787,41 +784,21 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 
 	@Override
 	public void decompose(
-			CollectionRecreateAction action,
+			PreparedCollectionMutation mutation,
 			int ordinalBase,
 			SharedSessionContractImplementor session,
 			DecompositionContext decompositionContext,
 			Consumer<FlushOperation> operationConsumer) {
-		decomposer.decomposeRecreate( action, ordinalBase, session, decompositionContext, operationConsumer );
-	}
-
-	@Override
-	public void decompose(
-			CollectionUpdateAction action,
-			int ordinalBase,
-			SharedSessionContractImplementor session,
-			DecompositionContext decompositionContext,
-			Consumer<FlushOperation> operationConsumer) {
-		decomposer.decomposeUpdate( action, ordinalBase, session, decompositionContext, operationConsumer );
-	}
-
-	@Override
-	public void decompose(
-			CollectionRemoveAction action,
-			int ordinalBase,
-			SharedSessionContractImplementor session,
-			DecompositionContext decompositionContext,
-			Consumer<FlushOperation> operationConsumer) {
-		decomposer.decomposeRemove( action, ordinalBase, session, decompositionContext, operationConsumer );
-	}
-
-	@Override
-	public void decompose(
-			QueuedOperationCollectionAction action,
-			int ordinalBase,
-			SharedSessionContractImplementor session,
-			Consumer<FlushOperation> operationConsumer) {
-		decomposer.decomposeQueuedOperations( action, ordinalBase, session, operationConsumer );
+		switch ( mutation.kind() ) {
+			case CREATE -> decomposer.decomposeRecreate(
+					mutation, ordinalBase, session, decompositionContext, operationConsumer );
+			case REMOVE -> decomposer.decomposeRemove(
+					mutation, ordinalBase, session, decompositionContext, operationConsumer );
+			case UPDATE -> decomposer.decomposeUpdate(
+					mutation, ordinalBase, session, decompositionContext, operationConsumer );
+			case QUEUED_OPERATIONS -> decomposer.decomposeQueuedOperations(
+					mutation, ordinalBase, session, operationConsumer );
+		}
 	}
 
 }

@@ -8,7 +8,7 @@ import jakarta.annotation.Nonnull;
 import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.AbstractPersistentCollection;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.action.queue.internal.FrozenCollectionDelta;
+import org.hibernate.collection.spi.CollectionMutationInterpretation;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.persister.collection.CollectionPersister;
 
@@ -48,8 +48,8 @@ public final class QueuedOperationCollectionAction extends CollectionAction {
 			final @Nonnull CollectionPersister persister,
 			final @Nonnull Object id,
 			final @Nonnull EventSource session,
-			final FrozenCollectionDelta frozenDelta) {
-		super( persister, collection, id, session, true, frozenDelta );
+			final CollectionMutationInterpretation interpretation) {
+		super( persister, collection, id, session, true, interpretation );
 	}
 
 	@Override

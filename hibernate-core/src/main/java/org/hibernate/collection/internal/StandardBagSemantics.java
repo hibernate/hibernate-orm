@@ -7,7 +7,7 @@ package org.hibernate.collection.internal;
 import java.util.Collection;
 
 import org.hibernate.collection.spi.AbstractBagSemantics;
-import org.hibernate.collection.spi.CollectionDeltaProducer;
+import org.hibernate.collection.spi.CollectionMutationInterpreter;
 import org.hibernate.collection.spi.PersistentBag;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -29,8 +29,8 @@ public class StandardBagSemantics<E> extends AbstractBagSemantics<E> {
 	}
 
 	@Override
-	public CollectionDeltaProducer getCollectionDeltaProducer() {
-		return StandardCollectionDeltaProducer.BAG;
+	public CollectionMutationInterpreter getCollectionMutationInterpreter() {
+		return StandardCollectionMutationInterpreter.BAG;
 	}
 
 	@Override

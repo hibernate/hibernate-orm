@@ -4,14 +4,12 @@
  */
 package org.hibernate.engine.internal;
 
-import java.util.EnumSet;
 import java.util.IdentityHashMap;
 
-import org.hibernate.AssertionFailure;
 import org.hibernate.action.queue.spi.CollectionEndpoint;
 import org.hibernate.action.queue.spi.CollectionMutationInput;
 import org.hibernate.action.queue.spi.CollectionTransition;
-import org.hibernate.action.queue.internal.FrozenCollectionDelta;
+import org.hibernate.collection.spi.CollectionMutationInterpretation;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CollectionFlushActionTracker;
 import org.hibernate.engine.spi.Status;
@@ -25,42 +23,47 @@ import static org.hibernate.engine.internal.Collections.skipRemoval;
 /// Flush-local state for collection reachability and logical collection actions.
 ///
 /// A context is created at the beginning of a flush and installed on the persistence context for
-/// the duration of that flush. It owns the temporary collection-processing state that is needed
-/// while walking the object graph and preparing collection work, including reachability,
-/// duplicate-processing detection, and the logical collection actions queued for each collection.
+/// the duration of that flush. It coordinates collection reachability and duplicate-processing
+/// detection, whose compact traversal bits live on `CollectionEntry`, and owns the temporary
+/// mutation state needed while preparing collection work.
 ///
 /// The context records queue-neutral collection mutation inputs as collection dirty-checking
 /// determines that work is needed. Lifecycle preparation and queue-native lowering remain deferred
 /// until after a positive flush-needed decision. The context also exposes a read-only
 /// {@link CollectionFlushActionTracker} view to later flush phases.
 ///
-/// Collection state is keyed by collection instance identity.
+/// Mutation state is allocated only for collections which need it and is keyed by collection
+/// instance identity.
 ///
 /// @since 8.0
 /// @author Steve Ebersole
 public final class FlushProcessingContext implements CollectionFlushActionTracker {
-	private enum CollectionActionKind {
-		CREATE,
-		REMOVE,
-		UPDATE
-	}
+	private static final int CREATE = 1;
+	private static final int REMOVE = 1 << 1;
+	private static final int UPDATE = 1 << 2;
 
-	private static final class CollectionState {
-		private boolean reached;
-		private boolean processed;
-		private EnumSet<CollectionActionKind> actions;
+	private static final class CollectionMutationState {
+		private final PersistentCollection<?> collection;
+		private int actions;
 		private CollectionEndpoint loadedEndpoint;
 		private CollectionEndpoint currentEndpoint;
 		private boolean emptySnapshot;
 		private boolean removalSkipped;
 		private boolean queuedOperations;
+		private CollectionMutationInterpretation interpretation;
+		private CollectionMutationState next;
+
+		private CollectionMutationState(PersistentCollection<?> collection) {
+			this.collection = collection;
+		}
 	}
 
 	private final EventSource session;
 	private final boolean speculative;
-	private final OwnerUpdateCompletionCoordinator ownerUpdateCompletionCoordinator;
-	private final IdentityHashMap<PersistentCollection<?>, CollectionState> collectionStates = new IdentityHashMap<>();
-	private final IdentityHashMap<PersistentCollection<?>, FrozenCollectionDelta> frozenDeltas = new IdentityHashMap<>();
+	private IdentityHashMap<PersistentCollection<?>, CollectionMutationState> collectionMutationStates;
+	private CollectionMutationState firstCollectionMutation;
+	private CollectionMutationState lastCollectionMutation;
+	private OwnerUpdateCompletionCoordinator ownerUpdateCompletionCoordinator;
 
 	/// Creates a context for a single flush of the given session.
 	///
@@ -73,47 +76,59 @@ public final class FlushProcessingContext implements CollectionFlushActionTracke
 	public FlushProcessingContext(EventSource session, boolean speculative) {
 		this.session = session;
 		this.speculative = speculative;
-		ownerUpdateCompletionCoordinator = new OwnerUpdateCompletionCoordinator( session );
 	}
 
 	public boolean isSpeculative() {
 		return speculative;
 	}
 
-	/// Retains the one frozen delta for a collection's current structural state.
-	public void retainFrozenDelta(
+	/// Retains the frozen interpretation for a collection's current structural state.
+	public void retainCollectionInterpretation(
 			PersistentCollection<?> collection,
-			FrozenCollectionDelta frozenDelta) {
-		frozenDeltas.put( collection, frozenDelta );
+			CollectionMutationInterpretation interpretation) {
+		mutationState( collection ).interpretation = interpretation;
 	}
 
-	/// Returns the retained delta only while its comparison state remains valid.
-	public FrozenCollectionDelta getValidFrozenDelta(PersistentCollection<?> collection) {
-		final var frozenDelta = frozenDeltas.get( collection );
-		return frozenDelta != null && frozenDelta.isValid( collection ) ? frozenDelta : null;
+	/// Returns the retained interpretation only while its comparison state remains valid.
+	public CollectionMutationInterpretation getValidCollectionInterpretation(
+			PersistentCollection<?> collection) {
+		final var mutationState = mutationStateOrNull( collection );
+		final var interpretation = mutationState == null ? null : mutationState.interpretation;
+		return interpretation != null && interpretation.isValid( collection ) ? interpretation : null;
 	}
 
 	/// Registers an entity update as the authority for owner update-callback applicability.
 	public void registerOwnerEntityUpdate(Object owner, org.hibernate.persister.entity.EntityPersister persister) {
+		if ( !OwnerUpdateCompletionCoordinator.isNeeded( persister ) ) {
+			return;
+		}
+		if ( ownerUpdateCompletionCoordinator == null ) {
+			ownerUpdateCompletionCoordinator = new OwnerUpdateCompletionCoordinator( session );
+		}
 		ownerUpdateCompletionCoordinator.registerEntityMutation( owner, persister );
 	}
 
 	/// Registers non-inverse collection work with an applicable owner update lifecycle.
 	public void registerOwnerCollectionMutation(Object owner, boolean inverse) {
-		ownerUpdateCompletionCoordinator.registerCollectionMutation( owner, inverse );
+		if ( ownerUpdateCompletionCoordinator != null ) {
+			ownerUpdateCompletionCoordinator.registerCollectionMutation( owner, inverse );
+		}
 	}
 
 	/// Seals owner update participation after entity and collection work has been discovered.
 	public void sealOwnerUpdateCallbacks() {
-		ownerUpdateCompletionCoordinator.seal();
+		if ( ownerUpdateCompletionCoordinator != null ) {
+			ownerUpdateCompletionCoordinator.seal();
+		}
 	}
 
 	public boolean coordinatesOwnerUpdate(Object owner) {
-		return ownerUpdateCompletionCoordinator.handles( owner );
+		return ownerUpdateCompletionCoordinator != null && ownerUpdateCompletionCoordinator.handles( owner );
 	}
 
 	public void ownerEntityUpdateCompleted(Object owner, Runnable successfulCompletionHandler) {
-		if ( !ownerUpdateCompletionCoordinator.entityMutationCompleted( owner, successfulCompletionHandler ) ) {
+		if ( ownerUpdateCompletionCoordinator == null
+				|| !ownerUpdateCompletionCoordinator.entityMutationCompleted( owner, successfulCompletionHandler ) ) {
 			successfulCompletionHandler.run();
 		}
 	}
@@ -123,6 +138,7 @@ public final class FlushProcessingContext implements CollectionFlushActionTracke
 			boolean inverse,
 			Runnable successfulCompletionHandler) {
 		if ( inverse
+				|| ownerUpdateCompletionCoordinator == null
 				|| !ownerUpdateCompletionCoordinator.collectionMutationCompleted(
 						owner,
 						successfulCompletionHandler
@@ -132,15 +148,9 @@ public final class FlushProcessingContext implements CollectionFlushActionTracke
 	}
 
 	public void ownerMutationFailed(Object owner) {
-		ownerUpdateCompletionCoordinator.mutationFailed( owner );
-	}
-
-	/// Initializes flush-local state for a collection known to the persistence context before
-	/// collection reachability processing begins.
-	///
-	/// @param collection The collection instance
-	public void beginCollectionFlush(PersistentCollection<?> collection) {
-		collectionStates.put( collection, new CollectionState() );
+		if ( ownerUpdateCompletionCoordinator != null ) {
+			ownerUpdateCompletionCoordinator.mutationFailed( owner );
+		}
 	}
 
 	/// Was the collection already marked reachable during this flush?
@@ -149,14 +159,18 @@ public final class FlushProcessingContext implements CollectionFlushActionTracke
 	///
 	/// @return {@code true} if the collection was marked reachable
 	public boolean isCollectionReached(PersistentCollection<?> collection) {
-		return state( collection ).reached;
+		final var entry = session.getPersistenceContextInternal().getCollectionEntry( collection );
+		return entry != null && entry.wasReachedDuringFlush();
 	}
 
 	/// Marks the collection as reachable from a flushed entity.
 	///
 	/// @param collection The collection instance
 	public void markCollectionReached(PersistentCollection<?> collection) {
-		state( collection ).reached = true;
+		final var entry = session.getPersistenceContextInternal().getCollectionEntry( collection );
+		if ( entry != null ) {
+			entry.markReachedDuringFlush();
+		}
 	}
 
 	/// Marks the collection as processed by collection reachability handling.
@@ -166,11 +180,10 @@ public final class FlushProcessingContext implements CollectionFlushActionTracke
 	///
 	/// @param collection The collection instance
 	public void markCollectionProcessed(PersistentCollection<?> collection) {
-		final var state = state( collection );
-		if ( state.processed ) {
-			throw new AssertionFailure( "collection was processed twice by flush()" );
+		final var entry = session.getPersistenceContextInternal().getCollectionEntry( collection );
+		if ( entry != null ) {
+			entry.markProcessedDuringFlush();
 		}
-		state.processed = true;
 	}
 
 	/// Records a logical collection create mutation for later queue-neutral registration.
@@ -179,8 +192,8 @@ public final class FlushProcessingContext implements CollectionFlushActionTracke
 	/// @param persister The collection persister
 	/// @param key The collection key
 	public void queueCollectionRecreate(PersistentCollection<?> collection, CollectionPersister persister, Object key) {
-		final var state = state( collection );
-		markAction( state, CollectionActionKind.CREATE );
+		final var state = mutationState( collection );
+		state.actions |= CREATE;
 		state.currentEndpoint = new CollectionEndpoint( persister, key );
 	}
 
@@ -198,8 +211,8 @@ public final class FlushProcessingContext implements CollectionFlushActionTracke
 			CollectionPersister persister,
 			Object key,
 			boolean emptySnapshot) {
-		final var state = state( collection );
-		markAction( state, CollectionActionKind.REMOVE );
+		final var state = mutationState( collection );
+		state.actions |= REMOVE;
 		state.loadedEndpoint = new CollectionEndpoint( persister, key );
 		state.emptySnapshot = emptySnapshot;
 		state.removalSkipped = skipRemoval( session, persister, key );
@@ -216,8 +229,8 @@ public final class FlushProcessingContext implements CollectionFlushActionTracke
 			CollectionPersister persister,
 			Object key,
 			boolean emptySnapshot) {
-		final var state = state( collection );
-		markAction( state, CollectionActionKind.UPDATE );
+		final var state = mutationState( collection );
+		state.actions |= UPDATE;
 		state.loadedEndpoint = new CollectionEndpoint( persister, key );
 		state.currentEndpoint = state.loadedEndpoint;
 		state.emptySnapshot = emptySnapshot;
@@ -228,7 +241,7 @@ public final class FlushProcessingContext implements CollectionFlushActionTracke
 			PersistentCollection<?> collection,
 			CollectionPersister persister,
 			Object key) {
-		final var state = state( collection );
+		final var state = mutationState( collection );
 		state.queuedOperations = true;
 		if ( state.loadedEndpoint == null ) {
 			state.loadedEndpoint = new CollectionEndpoint( persister, key );
@@ -237,13 +250,9 @@ public final class FlushProcessingContext implements CollectionFlushActionTracke
 
 	/// Registers normalized collection mutation inputs with the selected action queue.
 	public void registerCollectionMutationInputs() {
-		for ( var entry : collectionStates.entrySet() ) {
-			final var state = entry.getValue();
-			if ( state.actions == null && !state.queuedOperations ) {
-				continue;
-			}
+		for ( var state = firstCollectionMutation; state != null; state = state.next ) {
 			session.getActionQueue().addCollectionMutation( new CollectionMutationInput(
-					entry.getKey(),
+					state.collection,
 					transition( state ),
 					state.loadedEndpoint,
 					state.currentEndpoint,
@@ -258,17 +267,14 @@ public final class FlushProcessingContext implements CollectionFlushActionTracke
 
 	/// Re-evaluates existing collection wrappers after deferred owner pre-update callbacks.
 	public void refreshCollectionMutationInputs() {
-		for ( var state : collectionStates.values() ) {
-			state.reached = false;
-			state.processed = false;
-			state.actions = null;
-			state.loadedEndpoint = null;
-			state.currentEndpoint = null;
-			state.emptySnapshot = false;
-			state.removalSkipped = false;
-			state.queuedOperations = false;
-		}
+		collectionMutationStates = null;
+		firstCollectionMutation = null;
+		lastCollectionMutation = null;
 		final var persistenceContext = session.getPersistenceContextInternal();
+		persistenceContext.forEachCollectionEntry(
+				(collection, collectionEntry) -> collectionEntry.resetFlushState(),
+				true
+		);
 		for ( var managedEntity : persistenceContext.reentrantSafeManagedEntities() ) {
 			final var entityEntry = managedEntity.$$_hibernate_getEntityEntry();
 			final var status = entityEntry.getStatus();
@@ -286,7 +292,8 @@ public final class FlushProcessingContext implements CollectionFlushActionTracke
 		}
 		persistenceContext.forEachCollectionEntry(
 				(collection, collectionEntry) -> {
-					if ( !wasCollectionReached( collection ) && !wasCollectionProcessed( collection ) ) {
+					if ( !collectionEntry.wasReachedDuringFlush()
+							&& !collectionEntry.wasProcessedDuringFlush() ) {
 						processUnreachableCollection( collection, session, this );
 					}
 					if ( !collection.wasInitialized() && collection.hasQueuedOperations() ) {
@@ -302,12 +309,12 @@ public final class FlushProcessingContext implements CollectionFlushActionTracke
 		registerCollectionMutationInputs();
 	}
 
-	private static CollectionTransition transition(CollectionState state) {
-		if ( state.actions == null ) {
+	private static CollectionTransition transition(CollectionMutationState state) {
+		if ( state.actions == 0 ) {
 			return CollectionTransition.NONE;
 		}
-		final boolean remove = state.actions.contains( CollectionActionKind.REMOVE );
-		final boolean create = state.actions.contains( CollectionActionKind.CREATE );
+		final boolean remove = (state.actions & REMOVE) != 0;
+		final boolean create = (state.actions & CREATE) != 0;
 		if ( remove && create ) {
 			return CollectionTransition.REMOVE_AND_CREATE;
 		}
@@ -317,44 +324,56 @@ public final class FlushProcessingContext implements CollectionFlushActionTracke
 		if ( create ) {
 			return CollectionTransition.CREATE;
 		}
-		if ( state.actions.contains( CollectionActionKind.UPDATE ) ) {
+		if ( (state.actions & UPDATE) != 0 ) {
 			return CollectionTransition.UPDATE;
 		}
 		return CollectionTransition.NONE;
 	}
 
-	private static void markAction(CollectionState state, CollectionActionKind actionKind) {
-		if ( state.actions == null ) {
-			state.actions = EnumSet.noneOf( CollectionActionKind.class );
-		}
-		state.actions.add( actionKind );
-	}
-
 	@Override
 	public boolean wasCollectionReached(PersistentCollection<?> collection) {
-		final var state = collectionStates.get( collection );
-		return state != null && state.reached;
+		return isCollectionReached( collection );
 	}
 
 	@Override
 	public boolean wasCollectionProcessed(PersistentCollection<?> collection) {
-		final var state = collectionStates.get( collection );
-		return state != null && state.processed;
+		final var entry = session.getPersistenceContextInternal().getCollectionEntry( collection );
+		return entry != null && entry.wasProcessedDuringFlush();
 	}
 
 	@Override
 	public boolean hasQueuedCollectionAction(PersistentCollection<?> collection) {
-		final var state = collectionStates.get( collection );
-		return state != null && state.actions != null && !state.actions.isEmpty();
+		final var state = mutationStateOrNull( collection );
+		return state != null && state.actions != 0;
 	}
 
 	@Override
 	public boolean hasQueuedCollectionRemove(PersistentCollection<?> collection) {
-		final var state = collectionStates.get( collection );
-		return state != null && state.actions != null && state.actions.contains( CollectionActionKind.REMOVE );
+		final var state = mutationStateOrNull( collection );
+		return state != null && (state.actions & REMOVE) != 0;
 	}
 
-	private CollectionState state(PersistentCollection<?> collection) {
-		return collectionStates.computeIfAbsent( collection, key -> new CollectionState() );
+	private CollectionMutationState mutationState(PersistentCollection<?> collection) {
+		if ( collectionMutationStates == null ) {
+			collectionMutationStates = new IdentityHashMap<>();
+		}
+		final var existing = collectionMutationStates.get( collection );
+		if ( existing != null ) {
+			return existing;
+		}
+		final var state = new CollectionMutationState( collection );
+		collectionMutationStates.put( collection, state );
+		if ( firstCollectionMutation == null ) {
+			firstCollectionMutation = state;
+		}
+		else {
+			lastCollectionMutation.next = state;
+		}
+		lastCollectionMutation = state;
+		return state;
+	}
+
+	private CollectionMutationState mutationStateOrNull(PersistentCollection<?> collection) {
+		return collectionMutationStates == null ? null : collectionMutationStates.get( collection );
 	}
 }

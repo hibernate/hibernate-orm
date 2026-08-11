@@ -10,6 +10,7 @@ import org.hibernate.action.queue.spi.plan.FlushOperation;
 
 import org.hibernate.action.queue.spi.MutationKind;
 import org.hibernate.action.queue.spi.bind.JdbcValueBindings;
+import org.hibernate.action.queue.spi.bind.GroupedRowBindPlan;
 import org.hibernate.action.queue.internal.cyclebreak.FixupSynthesizer;
 import org.hibernate.engine.jdbc.mutation.internal.JdbcValueBindingsImpl;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -256,12 +257,25 @@ public abstract class AbstractStepExecutor implements PlanStepExecutor {
 	protected void executePreparableDirectly(
 			PreparableMutationOperation preparable,
 			FlushOperation flushOperation) {
+		executePreparableDirectly( preparable, flushOperation, -1 );
+	}
+
+	protected void executePreparableDirectly(
+			PreparableMutationOperation preparable,
+			FlushOperation flushOperation,
+			int bindingIndex) {
 		try (var stmnt = session.getJdbcCoordinator()
 				.getStatementPreparer()
 				.prepareStatement( preparable.getSqlString() )) {
 			preparable.getExpectation().prepare( stmnt );
 			var valueBindings = new JdbcValueBindings( flushOperation.getMutatingTableDescriptor(), preparable );
-			flushOperation.getBindPlan().bindValues( valueBindings, flushOperation, session );
+			final var bindPlan = flushOperation.getBindPlan();
+			if ( bindingIndex >= 0 && bindPlan instanceof GroupedRowBindPlan groupedRowBindPlan ) {
+				groupedRowBindPlan.bindValues( bindingIndex, valueBindings, flushOperation, session );
+			}
+			else {
+				bindPlan.bindValues( valueBindings, flushOperation, session );
+			}
 			valueBindings.beforeStatement( stmnt, session );
 
 			final int affectedRowCount = session.getJdbcCoordinator()

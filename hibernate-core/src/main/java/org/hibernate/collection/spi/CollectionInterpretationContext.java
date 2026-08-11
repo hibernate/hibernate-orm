@@ -7,22 +7,22 @@ package org.hibernate.collection.spi;
 import jakarta.annotation.Nonnull;
 
 import org.hibernate.Incubating;
+import org.hibernate.action.queue.spi.CollectionTransition;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 
-/// Inputs available to a [CollectionDeltaProducer].
-///
-/// @param collection The persistent collection wrapper
-/// @param persister The collection mapping descriptor
-/// @param baseline The comparison reference selected by shared mutation preparation
-/// @param session The session performing preparation
+/// Runtime and mapping facts used to interpret a collection mutation.
 ///
 /// @since 8.0
 /// @author Steve Ebersole
 @Incubating
-public record CollectionDeltaProductionContext(
+public record CollectionInterpretationContext(
 		@Nonnull PersistentCollection<?> collection,
 		@Nonnull CollectionPersister persister,
+		@Nonnull CollectionTransition transition,
 		@Nonnull CollectionBaseline baseline,
+		boolean emptySnapshot,
+		boolean removalSkipped,
+		boolean semanticDeltaRequired,
 		@Nonnull SharedSessionContractImplementor session) {
 }

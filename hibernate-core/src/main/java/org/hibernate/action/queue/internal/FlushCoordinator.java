@@ -4,21 +4,21 @@
  */
 package org.hibernate.action.queue.internal;
 
+import jakarta.annotation.Nullable;
+
+import org.hibernate.Internal;
 import org.hibernate.action.queue.spi.MutationKind;
 import org.hibernate.action.queue.spi.PlanningOptions;
 import org.hibernate.action.queue.spi.StatementShapeKey;
 
 import org.hibernate.action.internal.AbstractEntityInsertAction;
 import org.hibernate.action.internal.ActionLogging;
-import org.hibernate.action.internal.CollectionRecreateAction;
-import org.hibernate.action.internal.CollectionRemoveAction;
-import org.hibernate.action.internal.CollectionUpdateAction;
 import org.hibernate.action.internal.EntityDeleteAction;
 import org.hibernate.action.internal.EntityUpdateAction;
 import org.hibernate.action.internal.OrphanRemovalAction;
-import org.hibernate.action.internal.QueuedOperationCollectionAction;
 import org.hibernate.action.queue.internal.constraint.ConstraintModel;
 import org.hibernate.action.queue.internal.constraint.DeferrableConstraintMode;
+import org.hibernate.action.queue.internal.decompose.collection.DecompositionSupport;
 import org.hibernate.action.queue.internal.exec.PlanStepExecutor;
 import org.hibernate.action.queue.internal.exec.PlanStepExecutorFactory;
 import org.hibernate.action.queue.internal.decompose.Decomposer;
@@ -153,14 +153,14 @@ public class FlushCoordinator {
 	/// Execute flush with separate action phases.
 	/// Preserves phase boundaries to maintain execution order intent.
 	public void executeFlush(
-			List<CollectionRemoveAction> orphanCollectionRemovals,
+			List<PreparedCollectionMutation> orphanCollectionRemovals,
 			List<OrphanRemovalAction> orphanRemovals,
 			List<AbstractEntityInsertAction> insertions,
 			List<EntityUpdateAction> updates,
-			List<QueuedOperationCollectionAction> collectionQueuedOps,
-			List<CollectionRemoveAction> collectionRemovals,
-			List<CollectionUpdateAction> collectionUpdates,
-			List<CollectionRecreateAction> collectionCreations,
+			List<PreparedCollectionMutation> collectionQueuedOps,
+			List<PreparedCollectionMutation> collectionRemovals,
+			List<PreparedCollectionMutation> collectionUpdates,
+			List<PreparedCollectionMutation> collectionCreations,
 			List<EntityDeleteAction> deletions) {
 
 		newlyManagedEntities.clear();
@@ -183,29 +183,54 @@ public class FlushCoordinator {
 		}
 	}
 
-	private void executeFlushInternal(
-			List<CollectionRemoveAction> orphanCollectionRemovals,
+	/// Builds the flush plan without executing it.
+	///
+	/// This is an internal diagnostic and benchmarking entry point. The caller must
+	/// discard the session after planning because physical execution and lifecycle
+	/// completion are intentionally skipped.
+	@Internal
+	public @Nullable FlushPlan buildFlushPlan(
+			List<PreparedCollectionMutation> orphanCollectionRemovals,
 			List<OrphanRemovalAction> orphanRemovals,
 			List<AbstractEntityInsertAction> insertions,
 			List<EntityUpdateAction> updates,
-			List<QueuedOperationCollectionAction> collectionQueuedOps,
-			List<CollectionRemoveAction> collectionRemovals,
-			List<CollectionUpdateAction> collectionUpdates,
-			List<CollectionRecreateAction> collectionCreations,
+			List<PreparedCollectionMutation> collectionQueuedOps,
+			List<PreparedCollectionMutation> collectionRemovals,
+			List<PreparedCollectionMutation> collectionUpdates,
+			List<PreparedCollectionMutation> collectionCreations,
+			List<EntityDeleteAction> deletions) {
+		newlyManagedEntities.clear();
+		try {
+			return createFlushPlan(
+					orphanCollectionRemovals,
+					orphanRemovals,
+					insertions,
+					updates,
+					collectionQueuedOps,
+					collectionRemovals,
+					collectionUpdates,
+					collectionCreations,
+					deletions
+			);
+		}
+		finally {
+			newlyManagedEntities.clear();
+			decomposer.clearFlushState();
+		}
+	}
+
+	private void executeFlushInternal(
+			List<PreparedCollectionMutation> orphanCollectionRemovals,
+			List<OrphanRemovalAction> orphanRemovals,
+			List<AbstractEntityInsertAction> insertions,
+			List<EntityUpdateAction> updates,
+			List<PreparedCollectionMutation> collectionQueuedOps,
+			List<PreparedCollectionMutation> collectionRemovals,
+			List<PreparedCollectionMutation> collectionUpdates,
+			List<PreparedCollectionMutation> collectionCreations,
 			List<EntityDeleteAction> deletions) {
 
-		// Count for early opt-out (return)
-		int totalActions = orphanCollectionRemovals.size() + orphanRemovals.size() + insertions.size()
-				+ updates.size() + collectionQueuedOps.size() + collectionRemovals.size()
-				+ collectionUpdates.size() + collectionCreations.size() + deletions.size();
-
-		if ( totalActions == 0 ) {
-			// EARLY EXIT!!
-			return;
-		}
-
-		// Decompose each phase separately to preserve phase identity
-		var operationGroups = decomposeExecutablePhases(
+		final var plan = createFlushPlan(
 				orphanCollectionRemovals,
 				orphanRemovals,
 				insertions,
@@ -216,27 +241,10 @@ public class FlushCoordinator {
 				collectionCreations,
 				deletions
 		);
-
-		if ( operationGroups.isEmpty() ) {
-			// No SQL operations needed - post-execution callbacks (if any) were already
-			// attached to Flush operations and would have run during decomposition.
-			// Since there are no operations, there's nothing to finalize.
-			decomposer.validateNoUnresolvedInserts();
+		if ( plan == null ) {
+			decomposer.flushSucceeded();
+			finalizeQueuedOperations( collectionQueuedOps );
 			return;
-		}
-
-		// Fast path: Skip graph building for simple scenarios with no dependencies
-		final FlushPlan plan;
-		if ( canSkipGraphBuilding( operationGroups ) ) {
-			// Fast path triggered - skip expensive graph building and planning
-			ActionLogging.ACTION_LOGGER.trace( "Skipping graph building - no statement dependencies" );
-			plan = createSimplePlan( operationGroups );
-		}
-		else {
-			// Complex scenario - use full graph-based planning
-			ActionLogging.ACTION_LOGGER.trace( "Building graph - statement dependencies found" );
-			var graph = graphBuilder.build( operationGroups, deferrableConstraintMode );
-			plan = flushPlanner.plan( graph, deferrableConstraintMode );
 		}
 
 		// Execute the plan - post-execution callbacks will run inline as operations complete
@@ -247,6 +255,64 @@ public class FlushCoordinator {
 
 		// Final validation - any remaining unresolved inserts are an error
 		decomposer.validateNoUnresolvedInserts();
+		decomposer.flushSucceeded();
+
+		// A queued command may be realized by entity-owned foreign-key work rather
+		// than a collection operation.  Finalize its live log only after every part
+		// of the flush has completed successfully.
+		finalizeQueuedOperations( collectionQueuedOps );
+	}
+
+	private void finalizeQueuedOperations(List<PreparedCollectionMutation> collectionQueuedOps) {
+		for ( var mutation : collectionQueuedOps ) {
+			DecompositionSupport.afterQueuedOperationsProcessed( mutation, session );
+		}
+	}
+
+	private @Nullable FlushPlan createFlushPlan(
+			List<PreparedCollectionMutation> orphanCollectionRemovals,
+			List<OrphanRemovalAction> orphanRemovals,
+			List<AbstractEntityInsertAction> insertions,
+			List<EntityUpdateAction> updates,
+			List<PreparedCollectionMutation> collectionQueuedOps,
+			List<PreparedCollectionMutation> collectionRemovals,
+			List<PreparedCollectionMutation> collectionUpdates,
+			List<PreparedCollectionMutation> collectionCreations,
+			List<EntityDeleteAction> deletions) {
+		final int totalActions = orphanCollectionRemovals.size() + orphanRemovals.size() + insertions.size()
+				+ updates.size() + collectionQueuedOps.size() + collectionRemovals.size()
+				+ collectionUpdates.size() + collectionCreations.size() + deletions.size();
+		if ( totalActions == 0 ) {
+			return null;
+		}
+
+		final var operationGroups = decomposeExecutablePhases(
+				orphanCollectionRemovals,
+				orphanRemovals,
+				insertions,
+				updates,
+				collectionQueuedOps,
+				collectionRemovals,
+				collectionUpdates,
+				collectionCreations,
+				deletions
+		);
+		if ( operationGroups.isEmpty() ) {
+			decomposer.validateNoUnresolvedInserts();
+			return null;
+		}
+
+		if ( canSkipGraphBuilding( operationGroups ) ) {
+			// Fast path triggered - skip expensive graph building and planning
+			ActionLogging.ACTION_LOGGER.trace( "Skipping graph building - no statement dependencies" );
+			return createSimplePlan( operationGroups );
+		}
+		else {
+			// Complex scenario - use full graph-based planning
+			ActionLogging.ACTION_LOGGER.trace( "Building graph - statement dependencies found" );
+			final var graph = graphBuilder.build( operationGroups, deferrableConstraintMode );
+			return flushPlanner.plan( graph, deferrableConstraintMode );
+		}
 	}
 
 	/// Check if we can skip graph building and use a simple direct execution plan.
@@ -409,14 +475,14 @@ public class FlushCoordinator {
 
 	/// Decompose executables from separate phases, preserving phase boundaries.
 	private List<FlushOperationGroup> decomposeExecutablePhases(
-			List<CollectionRemoveAction> orphanCollectionRemovals,
+			List<PreparedCollectionMutation> orphanCollectionRemovals,
 			List<OrphanRemovalAction> orphanRemovals,
 			List<AbstractEntityInsertAction> insertions,
 			List<EntityUpdateAction> updates,
-			List<QueuedOperationCollectionAction> collectionQueuedOps,
-			List<CollectionRemoveAction> collectionRemovals,
-			List<CollectionUpdateAction> collectionUpdates,
-			List<CollectionRecreateAction> collectionCreations,
+			List<PreparedCollectionMutation> collectionQueuedOps,
+			List<PreparedCollectionMutation> collectionRemovals,
+			List<PreparedCollectionMutation> collectionUpdates,
+			List<PreparedCollectionMutation> collectionCreations,
 			List<EntityDeleteAction> deletions) {
 
 		decomposer.beginFlush( insertions, updates, orphanRemovals, deletions );
@@ -426,14 +492,14 @@ public class FlushCoordinator {
 		int ordinalBase = 0;
 
 		// Decompose each phase separately, maintaining ordinal ordering
-		ordinalBase = decomposePhase( orphanCollectionRemovals, ordinalBase, operationCollector );
+		ordinalBase = decomposeCollectionPhase( orphanCollectionRemovals, ordinalBase, operationCollector );
 		ordinalBase = decomposePhase( orphanRemovals, ordinalBase, operationCollector );
 		ordinalBase = decomposePhase( insertions, ordinalBase, operationCollector );
 		ordinalBase = decomposePhase( updates, ordinalBase, operationCollector );
-		ordinalBase = decomposePhase( collectionQueuedOps, ordinalBase, operationCollector );
-		ordinalBase = decomposePhase( collectionRemovals, ordinalBase, operationCollector );
-		ordinalBase = decomposePhase( collectionUpdates, ordinalBase, operationCollector );
-		ordinalBase = decomposePhase( collectionCreations, ordinalBase, operationCollector );
+		ordinalBase = decomposeCollectionPhase( collectionQueuedOps, ordinalBase, operationCollector );
+		ordinalBase = decomposeCollectionPhase( collectionRemovals, ordinalBase, operationCollector );
+		ordinalBase = decomposeCollectionPhase( collectionUpdates, ordinalBase, operationCollector );
+		ordinalBase = decomposeCollectionPhase( collectionCreations, ordinalBase, operationCollector );
 		ordinalBase = decomposePhase( deletions, ordinalBase, operationCollector );
 
 		decomposer.endFlush();
@@ -446,8 +512,18 @@ public class FlushCoordinator {
 			List<? extends Executable> executables,
 			int ordinalBase,
 			Consumer<FlushOperation> operationConsumer) {
-		for (Executable e : executables) {
-			decomposer.decompose( e, ordinalBase++, operationConsumer );
+		for ( int i = 0, size = executables.size(); i < size; i++ ) {
+			decomposer.decompose( executables.get( i ), ordinalBase++, operationConsumer );
+		}
+		return ordinalBase;
+	}
+
+	private int decomposeCollectionPhase(
+			List<PreparedCollectionMutation> mutations,
+			int ordinalBase,
+			Consumer<FlushOperation> operationConsumer) {
+		for ( int i = 0, size = mutations.size(); i < size; i++ ) {
+			decomposer.decompose( mutations.get( i ), ordinalBase++, operationConsumer );
 		}
 		return ordinalBase;
 	}

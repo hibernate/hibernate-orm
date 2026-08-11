@@ -5,7 +5,6 @@
 package org.hibernate.action.queue.spi;
 
 import java.io.Serializable;
-import java.util.LinkedHashSet;
 import java.util.Set;
 
 import jakarta.annotation.Nonnull;
@@ -19,7 +18,8 @@ import org.hibernate.persister.collection.CollectionPersister;
 ///
 /// This input deliberately precedes lifecycle preparation and delta freezing. In particular,
 /// retaining it while deciding whether a speculative auto-flush is required has no callback or
-/// event side effects. [#getQuerySpaces()] exposes the conservative set needed for that decision.
+/// event side effects. [#findAffectedQuerySpace(Set)] performs the conservative query-space
+/// test needed for that decision without materializing an intermediate set.
 ///
 /// @param collection The collection wrapper being processed
 /// @param transition The selected logical transition
@@ -111,21 +111,31 @@ public record CollectionMutationInput(
 		);
 	}
 
-	/// Returns the conservative query spaces potentially affected by this input.
-	public Set<Serializable> getQuerySpaces() {
-		final Set<Serializable> spaces = new LinkedHashSet<>();
-		addQuerySpaces( loadedEndpoint, spaces );
-		addQuerySpaces( currentEndpoint, spaces );
-		return spaces;
+	/// Finds a query space potentially affected by this input.
+	///
+	/// Both the loaded and current endpoints are considered because a role change may affect
+	/// either side.  No intermediate collection of query spaces is allocated.
+	///
+	/// @param tables The query spaces relevant to the pending operation
+	///
+	/// @return a matching query space, or {@code null} when this input does not affect any
+	public @Nullable Serializable findAffectedQuerySpace(Set<? extends Serializable> tables) {
+		final Serializable loadedSpace = findAffectedQuerySpace( loadedEndpoint, tables );
+		return loadedSpace != null
+				? loadedSpace
+				: findAffectedQuerySpace( currentEndpoint, tables );
 	}
 
-	private static void addQuerySpaces(
+	private static @Nullable Serializable findAffectedQuerySpace(
 			@Nullable CollectionEndpoint endpoint,
-			Set<Serializable> spaces) {
+			Set<? extends Serializable> tables) {
 		if ( endpoint != null ) {
 			for ( var space : endpoint.persister().getCollectionSpaces() ) {
-				spaces.add( space );
+				if ( tables.contains( space ) ) {
+					return space;
+				}
 			}
 		}
+		return null;
 	}
 }

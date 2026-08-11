@@ -75,6 +75,23 @@ class CollectionMutationCompletionTest {
 	}
 
 	@Test
+	void queuedWorkWaitsForSuccessfulFlush() {
+		final var completion = completion( 7 );
+		final var handler = mock( PostExecutionCallback.class );
+		completion.registerCompletionHandler( handler );
+		completion.requireFlushSuccess();
+		completion.seal( session );
+
+		verify( handler, never() ).handle( session );
+		assertThat( completion.getState() ).isEqualTo( CollectionMutationCompletion.State.SEALED );
+
+		completion.flushSucceeded( session );
+
+		verify( handler ).handle( session );
+		assertThat( completion.getState() ).isEqualTo( CollectionMutationCompletion.State.COMPLETED );
+	}
+
+	@Test
 	void plannedFixupParticipatesInCompletion() {
 		final var completion = completion( 4 );
 		final var source = mock( FlushOperation.class );

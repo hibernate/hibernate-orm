@@ -42,7 +42,8 @@ import org.hibernate.sql.results.graph.FetchParent;
 @Incubating
 public interface CollectionSemantics<CE, E> {
 	/**
-	 * Obtain the producer responsible for describing collection changes for these semantics.
+	 * Obtain the interpreter responsible for selecting the semantic and physical
+	 * representation of collection mutations for these semantics.
 	 * <p>
 	 * The default preserves custom-semantics compatibility by adapting the existing
 	 * {@link PersistentCollection} comparison contract for initialized wrappers and
@@ -50,8 +51,8 @@ public interface CollectionSemantics<CE, E> {
 	 *
 	 * @since 8.0
 	 */
-	default CollectionDeltaProducer getCollectionDeltaProducer() {
-		return CollectionDeltaProducer.legacyCompatible();
+	default CollectionMutationInterpreter getCollectionMutationInterpreter() {
+		return CollectionMutationInterpreter.legacyCompatible();
 	}
 
 	/**

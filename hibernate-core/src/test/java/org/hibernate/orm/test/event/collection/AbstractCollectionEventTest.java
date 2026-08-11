@@ -25,6 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /// Base class for testing collection event firing based on
 /// [collection actions][org.hibernate.action.internal.CollectionAction].
@@ -80,16 +81,13 @@ public abstract class AbstractCollectionEventTest {
 		Child child = (Child) parent.getChildren().iterator().next();
 		// Shared preparation may separate pre- and post-events
 		if ( usesSharedCollectionLifecyclePreparation() ) {
-			checkResult( listeners, listeners.getPreCollectionRecreateListener(), parent, index++ );
+			final int expectedRecreates = child instanceof ChildWithBidirectionalManyToMany ? 2 : 1;
+			checkGraphExpectations( listeners, 0, expectedRecreates, 0, 0 );
+			checkEventPair( listeners, EventAnalyzer.Phase.RECREATE, parent );
 			if ( child instanceof ChildWithBidirectionalManyToMany ) {
-				checkResult( listeners, listeners.getPreCollectionRecreateListener(),
-						(ChildWithBidirectionalManyToMany) child, index++ );
+				checkEventPair( listeners, EventAnalyzer.Phase.RECREATE, child );
 			}
-			checkResult( listeners, listeners.getPostCollectionRecreateListener(), parent, index++ );
-			if ( child instanceof ChildWithBidirectionalManyToMany ) {
-				checkResult( listeners, listeners.getPostCollectionRecreateListener(),
-						(ChildWithBidirectionalManyToMany) child, index++ );
-			}
+			index = expectedRecreates * 2;
 		}
 		else {
 			checkResult( listeners, listeners.getPreCollectionRecreateListener(), parent, index++ );
@@ -1220,6 +1218,17 @@ public abstract class AbstractCollectionEventTest {
 			var removeList = extractionResult.pairs().get( EventAnalyzer.Phase.REMOVE );
 			assertEquals( expectedRemoveCount, removeList == null ? 0 : removeList.size() );
 		}
+	}
+
+	protected void checkEventPair(EventSink listeners, EventAnalyzer.Phase phase, Object expectedOwner) {
+		final var pairs = EventAnalyzer.EventPairExtractor.extract( listeners.getEvents() ).pairs().get( phase );
+		assertTrue(
+				pairs != null && pairs.stream().anyMatch( pair ->
+						pair.pre().getAffectedOwnerOrNull() == expectedOwner
+								&& pair.post().getAffectedOwnerOrNull() == expectedOwner
+				),
+				() -> "No matching " + phase + " event pair for " + expectedOwner
+		);
 	}
 
 	protected void checkResult(EventSink listeners,

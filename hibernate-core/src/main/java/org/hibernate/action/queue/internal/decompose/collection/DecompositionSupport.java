@@ -5,12 +5,14 @@
 package org.hibernate.action.queue.internal.decompose.collection;
 
 
-import org.hibernate.action.internal.CollectionAction;
+import org.hibernate.action.queue.internal.PreparedCollectionMutation;
 import org.hibernate.action.queue.spi.bind.PostExecutionCallback;
 import org.hibernate.action.queue.spi.meta.TableDescriptor;
 import org.hibernate.action.queue.spi.plan.FlushOperation;
 import org.hibernate.action.queue.spi.MutationKind;
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.collection.spi.AbstractPersistentCollection;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.service.spi.EventListenerGroups;
 import org.hibernate.event.spi.EventSource;
@@ -37,6 +39,18 @@ import static org.hibernate.engine.internal.CacheHelper.usingCache;
 ///
 /// @author Steve Ebersole
 public class DecompositionSupport {
+	public static void afterQueuedOperationsProcessed(
+			PreparedCollectionMutation mutation,
+			SessionImplementor session) {
+		final var collection = (AbstractPersistentCollection<?>) mutation.collection();
+		collection.clearOperationQueue();
+		final var collectionEntry = session.getPersistenceContextInternal().getCollectionEntry( collection );
+		final var tracker = session.getPersistenceContextInternal().getCollectionFlushActionTracker();
+		if ( tracker == null || !tracker.hasQueuedCollectionAction( collection ) ) {
+			collectionEntry.afterAction( collection );
+		}
+	}
+
 	static void attachExecutionMonitor(
 			List<FlushOperation> operations,
 			CollectionExecutionMonitor.Kind kind,
@@ -177,10 +191,12 @@ public class DecompositionSupport {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Caching
 
-	public static Object generateCacheKey(CollectionAction action, SharedSessionContractImplementor session) {
-		return usingCache( action.getPersister(),
+	public static Object generateCacheKey(
+			PreparedCollectionMutation mutation,
+			SharedSessionContractImplementor session) {
+		return usingCache( mutation.getPersister(),
 				cache -> {
-					final Object key = action.getKey();
+					final Object key = mutation.getKey();
 					//TODO: Highly suspicious assertion.
 					//      This method does sometimes
 					//      get called with an action
@@ -188,7 +204,7 @@ public class DecompositionSupport {
 					assert key != null;
 					return cache.generateCacheKey(
 							key,
-							action.getPersister(),
+							mutation.getPersister(),
 							session.getFactory(),
 							session.getTenantIdentifier()
 					);

@@ -1,0 +1,103 @@
+= Collection Flush Processing: Stage 0 Performance Gate
+
+Date: 2026-08-11
+
+Candidate: collection-flushing working tree based on `6b43a7628b`, after stable
+collection interpretation, graph-native lowering, compact create execution,
+correctness fixes, and allocation-free collection-input query-space checks.
+
+Baseline: `c8181aa784140c818467185bad0023e457440507` (`Stage 0`).  The baseline
+worktree contains only the compatible benchmark fixture and diagnostic graph
+planning entry points required to run that fixture; collection flush behavior is
+the behavior of the named revision.
+
+Environment: macOS arm64, Eclipse Temurin OpenJDK 25 (`25+36-LTS`).
+
+== Method
+
+The checked-in `CollectionFlushProcessingBenchmark.collectionFlush` full-stack
+fixture was run with the graph queue and the following JMH options:
+
+[source,shell]
+----
+-f 3 -wi 3 -w 500ms -i 5 -r 500ms -prof gc
+----
+
+For each scenario, the recorded raw value is the arithmetic mean of its five
+measurement iterations in one fork.  The scenario headline is the candidate
+mean divided by the Stage 0 mean.  The overall headline is the geometric mean
+of the nine scenario ratios.
+
+Confidence intervals use independent nonparametric bootstrap resampling of the
+three candidate fork means and three baseline fork means within each scenario.
+Each bootstrap sample calculates the nine ratios and their geometric mean.
+The interval is the percentile 95% interval from 50,000 samples with random
+seed `20766`.  Scenario intervals use the same method for one scenario at a
+time.  This is the fork-level calculation required by `CFS-INT-013`.
+
+== Raw fork means
+
+All time values are microseconds per operation.  Allocation is the JMH
+`gc.alloc.rate.norm` headline in bytes per operation; it includes invocation
+setup and teardown as documented by the fixture.
+
+[cols="2,1,1,1,1",options="header"]
+|===
+| Candidate scenario | Fork 1 | Fork 2 | Fork 3 | Allocation
+
+| `CLEAN_32` | 11.492428504 | 11.714321625 | 11.442332844 | 393497.097789
+| `SET_SPARSE_256` | 18.398820969 | 18.403935062 | 18.667740935 | 103990.025066
+| `SET_CLEAR_256` | 213.167567511 | 184.180651799 | 206.450498129 | 1948248.262684
+| `BAG_SPARSE_256` | 276.826171468 | 273.335163441 | 297.476712657 | 2913253.072966
+| `LIST_SPARSE_256` | 7.701266346 | 7.425449737 | 7.405993691 | 72581.009761
+| `MAP_SPARSE_256` | 15.011095760 | 15.197603562 | 14.645176360 | 114539.502919
+| `CREATE_16_BY_16` | 1254.289277669 | 1245.821866238 | 1206.179404995 | 8737955.165933
+| `AUTOFLUSH_DISCARDED` | 3.705210023 | 3.259583385 | 3.104487547 | 68644.270816
+| `AUTOFLUSH_REQUIRED` | 76.486446209 | 73.718787355 | 82.366303316 | 128022.358605
+|===
+
+[cols="2,1,1,1,1",options="header"]
+|===
+| Stage 0 scenario | Fork 1 | Fork 2 | Fork 3 | Allocation
+
+| `CLEAN_32` | 23.788745315 | 24.728690733 | 26.818993669 | 396474.241039
+| `SET_SPARSE_256` | 17.656239405 | 19.330089829 | 18.181353261 | 102726.852656
+| `SET_CLEAR_256` | 185.452294858 | 183.788236580 | 187.885609361 | 1902081.522596
+| `BAG_SPARSE_256` | 279.030889259 | 291.803317711 | 281.056451790 | 2934179.422194
+| `LIST_SPARSE_256` | 7.692751109 | 6.803488371 | 7.437456051 | 74342.241542
+| `MAP_SPARSE_256` | 14.763644819 | 14.339932697 | 14.890747653 | 118222.535975
+| `CREATE_16_BY_16` | 1324.141571430 | 1399.248146608 | 1629.770725613 | 8659239.255731
+| `AUTOFLUSH_DISCARDED` | 3.662951229 | 3.554539606 | 3.683116222 | 68549.588555
+| `AUTOFLUSH_REQUIRED` | 71.824329036 | 67.830010750 | 74.011487671 | 127330.216274
+|===
+
+== Gate result
+
+[cols="2,1,2",options="header"]
+|===
+| Scenario | Normalized score | Bootstrap 95% interval
+
+| `CLEAN_32` | 0.4599 | [0.4313, 0.4855]
+| `SET_SPARSE_256` | 1.0055 | [0.9566, 1.0471]
+| `SET_CLEAR_256` | 1.0838 | [0.9947, 1.1477]
+| `BAG_SPARSE_256` | 0.9950 | [0.9524, 1.0451]
+| `LIST_SPARSE_256` | 1.0273 | [0.9743, 1.1030]
+| `MAP_SPARSE_256` | 1.0195 | [0.9945, 1.0452]
+| `CREATE_16_BY_16` | 0.8514 | [0.7598, 0.9309]
+| `AUTOFLUSH_DISCARDED` | 0.9237 | [0.8560, 1.0178]
+| `AUTOFLUSH_REQUIRED` | 1.0885 | [1.0185, 1.1626]
+|===
+
+Overall normalized geometric mean: `0.914450`.
+
+Overall bootstrap 95% interval: `[0.894572, 0.934771]`.
+
+Allocation normalized geometric mean: `0.997973`.
+
+The candidate passes `CFS-INT-013`: the overall upper confidence bound is below
+`1.0`, and no individual scenario has a lower confidence bound above `1.05`.
+The required-auto-flush headline is noisy, so a separate five-fork
+`autoFlushIfRequired()` control excluded aggregate-query JDBC work.  Its
+candidate mean was 1.040 times Stage 0 and its median-fork ratio was 0.994,
+with candidate allocation approximately 0.9% higher.  This does not establish
+a collection-processing regression exceeding the specified threshold.

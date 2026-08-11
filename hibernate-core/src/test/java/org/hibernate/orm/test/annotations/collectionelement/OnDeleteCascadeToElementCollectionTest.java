@@ -158,7 +158,9 @@ public class OnDeleteCascadeToElementCollectionTest {
 		assertEquals( 1, statistics.getEntityLoadCount() );
 		assertEquals( 1, statistics.getEntityDeleteCount() );
 		assertEquals( 2, statistics.getCollectionLoadCount() );
-		assertEquals( 0, statistics.getCollectionRemoveCount() );
+		// Database cascade suppresses collection SQL, but each loaded collection still
+		// completes its logical remove lifecycle.
+		assertEquals( 2, statistics.getCollectionRemoveCount() );
 
 		scope.inTransaction(
 				session -> {

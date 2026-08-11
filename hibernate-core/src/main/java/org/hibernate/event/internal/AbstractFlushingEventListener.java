@@ -114,7 +114,7 @@ public abstract class AbstractFlushingEventListener {
 		// we could move this inside if we wanted to
 		// tolerate collection initializations during
 		// collection dirty checking:
-		prepareCollectionFlushes( persistenceContext, flushProcessingContext );
+		prepareCollectionFlushes( persistenceContext );
 		// now, any collections that are initialized
 		// inside this block do not get updated - they
 		// are ignored until the next flush
@@ -213,9 +213,7 @@ public abstract class AbstractFlushingEventListener {
 	/**
 	 * Initialize flush-local collection state, including the dirty check.
 	 */
-	private void prepareCollectionFlushes(
-			@Nonnull PersistenceContext persistenceContext,
-			@Nonnull FlushProcessingContext flushProcessingContext) {
+	private void prepareCollectionFlushes(@Nonnull PersistenceContext persistenceContext) {
 		// Initialize dirty flags for arrays + collections with composite elements
 		// and reset flush-local collection processing state.
 		EVENT_LISTENER_LOGGER.dirtyCheckingCollections();
@@ -225,7 +223,6 @@ public abstract class AbstractFlushingEventListener {
 					(InstanceIdentityMap<PersistentCollection<?>, CollectionEntry>)
 							collectionEntries;
 			for ( var entry : identityMap.toArray() ) {
-				flushProcessingContext.beginCollectionFlush( entry.getKey() );
 				entry.getValue().preFlush( entry.getKey() );
 			}
 		}
@@ -346,7 +343,7 @@ public abstract class AbstractFlushingEventListener {
 					(InstanceIdentityMap<PersistentCollection<?>, CollectionEntry>)
 							collectionEntries;
 			for ( var entry : identityMap.toArray() ) {
-				if ( !flushProcessingContext.wasCollectionReached( entry.getKey() )
+				if ( !entry.getValue().wasReachedDuringFlush()
 						&& !entry.getValue().isIgnore() ) {
 					processUnreachableCollection( entry.getKey(), session, flushProcessingContext );
 				}

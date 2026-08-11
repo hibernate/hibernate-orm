@@ -5,16 +5,19 @@
 package org.hibernate.action.queue.internal;
 
 import java.util.ArrayList;
-import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.function.Consumer;
 
 import org.hibernate.Internal;
 import org.hibernate.action.queue.spi.CollectionEndpoint;
 import org.hibernate.action.queue.spi.CollectionMutationInput;
 import org.hibernate.action.queue.spi.CollectionTransition;
 import org.hibernate.collection.spi.CollectionBaseline;
-import org.hibernate.collection.spi.CollectionDeltaProduction;
-import org.hibernate.collection.spi.CollectionDeltaProductionContext;
+import org.hibernate.collection.spi.CollectionInterpretationContext;
+import org.hibernate.collection.spi.CollectionInterpretationProduction;
+import org.hibernate.collection.spi.CollectionMutationInterpretation;
+import org.hibernate.collection.spi.PhysicalCollectionMutation;
+import org.hibernate.collection.spi.SemanticCollectionChange;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.internal.FlushProcessingContext;
 import org.hibernate.event.spi.EventSource;
@@ -42,24 +45,65 @@ public final class CollectionMutationPreparer {
 			List<CollectionMutationInput> inputs,
 			EventSource session) {
 		final var prepared = new ArrayList<PreparedCollectionMutation>( inputs.size() * 2 );
+		prepareAll( inputs, List.of(), session, prepared::add );
+		return prepared;
+	}
+
+	/// Prepares two ordered input segments directly into a queue-native consumer.
+	static void prepareAll(
+			List<CollectionMutationInput> firstInputs,
+			List<CollectionMutationInput> secondInputs,
+			EventSource session,
+			Consumer<PreparedCollectionMutation> mutationConsumer) {
+		prepareRemovals( firstInputs, session, mutationConsumer );
+		prepareRemovals( secondInputs, session, mutationConsumer );
+		prepareUpdates( firstInputs, session, mutationConsumer );
+		prepareUpdates( secondInputs, session, mutationConsumer );
+		prepareCreates( firstInputs, session, mutationConsumer );
+		prepareCreates( secondInputs, session, mutationConsumer );
+		prepareQueuedOperations( firstInputs, session, mutationConsumer );
+		prepareQueuedOperations( secondInputs, session, mutationConsumer );
+	}
+
+	private static void prepareRemovals(
+			List<CollectionMutationInput> inputs,
+			EventSource session,
+			Consumer<PreparedCollectionMutation> mutationConsumer) {
 		for ( var input : inputs ) {
 			if ( input.transition() == CollectionTransition.REMOVE
 					|| input.transition() == CollectionTransition.REMOVE_AND_CREATE ) {
-				prepareRemove( input, input.loadedEndpoint(), session, prepared );
+				prepareRemove( input, input.loadedEndpoint(), session, mutationConsumer );
 			}
 		}
+	}
+
+	private static void prepareUpdates(
+			List<CollectionMutationInput> inputs,
+			EventSource session,
+			Consumer<PreparedCollectionMutation> mutationConsumer) {
 		for ( var input : inputs ) {
 			if ( input.transition() == CollectionTransition.UPDATE ) {
-				prepareUpdate( input, input.currentEndpoint(), session, prepared );
+				prepareUpdate( input, input.currentEndpoint(), session, mutationConsumer );
 			}
 		}
+	}
+
+	private static void prepareCreates(
+			List<CollectionMutationInput> inputs,
+			EventSource session,
+			Consumer<PreparedCollectionMutation> mutationConsumer) {
 		for ( var input : inputs ) {
 			if ( input.transition() == CollectionTransition.CREATE
 					|| input.transition() == CollectionTransition.REMOVE_AND_CREATE ) {
-				prepareCreate( input, input.currentEndpoint(), session, prepared );
+				prepareCreate( input, input.currentEndpoint(), session, mutationConsumer );
 			}
 		}
+	}
 
+	private static void prepareQueuedOperations(
+			List<CollectionMutationInput> inputs,
+			EventSource session,
+			Consumer<PreparedCollectionMutation> mutationConsumer) {
 		for ( var input : inputs ) {
 			if ( input.hasQueuedOperations() ) {
 				final var endpoint = input.loadedEndpoint() != null
@@ -68,25 +112,38 @@ public final class CollectionMutationPreparer {
 				if ( endpoint == null ) {
 					throw new IllegalArgumentException( "Queued collection operations have no endpoint" );
 				}
-				prepared.add( new PreparedCollectionMutation(
+				final var retainedInterpretation = retainedInterpretation( input.collection(), session );
+				final var interpretation = retainedInterpretation == null
+						? interpret(
+								PreparedCollectionMutation.Kind.QUEUED_OPERATIONS,
+								input.collection(),
+								endpoint,
+								input.emptySnapshot(),
+								true,
+								session
+						)
+						: retainedInterpretation;
+				if ( retainedInterpretation == null ) {
+					retainInterpretation( input.collection(), interpretation, session );
+				}
+				mutationConsumer.accept( new PreparedCollectionMutation(
 						PreparedCollectionMutation.Kind.QUEUED_OPERATIONS,
 						input.collection(),
 						endpoint,
 						input.emptySnapshot(),
 						null,
 						null,
-						null
+						interpretation
 				) );
 			}
 		}
-		return freezeDeltas( prepared, session );
 	}
 
 	private static void prepareCreate(
 			CollectionMutationInput input,
 			CollectionEndpoint endpoint,
 			EventSource session,
-			List<PreparedCollectionMutation> prepared) {
+			Consumer<PreparedCollectionMutation> mutationConsumer) {
 		final var collection = requireCollection( input );
 		final Object key = endpoint.key();
 		session.runInterceptorCallback( () -> session.getInterceptor().onCollectionRecreate( collection, key ) );
@@ -97,14 +154,15 @@ public final class CollectionMutationPreparer {
 						() -> new PreCollectionRecreateEvent( endpoint.persister(), collection, session ),
 						PreCollectionRecreateEventListener::onPreRecreateCollection
 				);
-		prepared.add( new PreparedCollectionMutation(
+		mutationConsumer.accept( preparedMutation(
 				PreparedCollectionMutation.Kind.CREATE,
 				collection,
 				endpoint,
 				input.emptySnapshot(),
 				affectedOwner,
 				affectedOwnerId,
-				null
+				input.hasQueuedOperations(),
+				session
 		) );
 	}
 
@@ -112,17 +170,17 @@ public final class CollectionMutationPreparer {
 			CollectionMutationInput input,
 			CollectionEndpoint endpoint,
 			EventSource session,
-			List<PreparedCollectionMutation> prepared) {
+			Consumer<PreparedCollectionMutation> mutationConsumer) {
 		final var collection = input.collection();
 		if ( collection == null ) {
-			prepared.add( new PreparedCollectionMutation(
+			mutationConsumer.accept( new PreparedCollectionMutation(
 					PreparedCollectionMutation.Kind.REMOVE,
 					null,
 					endpoint,
 					input.emptySnapshot() || input.removalSkipped(),
 					input.affectedOwner(),
 					input.affectedOwnerId(),
-					null
+					wrapperlessRemoveInterpretation( input.emptySnapshot() || input.removalSkipped() )
 			) );
 			return;
 		}
@@ -136,14 +194,15 @@ public final class CollectionMutationPreparer {
 						() -> new PreCollectionRemoveEvent( endpoint.persister(), collection, session, affectedOwner ),
 						PreCollectionRemoveEventListener::onPreRemoveCollection
 				);
-		prepared.add( new PreparedCollectionMutation(
+		mutationConsumer.accept( preparedMutation(
 				PreparedCollectionMutation.Kind.REMOVE,
 				collection,
 				endpoint,
 				input.emptySnapshot() || input.removalSkipped(),
 				affectedOwner,
 				affectedOwnerId,
-				null
+				input.hasQueuedOperations(),
+				session
 		) );
 	}
 
@@ -151,7 +210,7 @@ public final class CollectionMutationPreparer {
 			CollectionMutationInput input,
 			CollectionEndpoint endpoint,
 			EventSource session,
-			List<PreparedCollectionMutation> prepared) {
+			Consumer<PreparedCollectionMutation> mutationConsumer) {
 		final var collection = requireCollection( input );
 		final Object key = endpoint.key();
 		session.runInterceptorCallback( () -> session.getInterceptor().onCollectionUpdate( collection, key ) );
@@ -163,88 +222,147 @@ public final class CollectionMutationPreparer {
 						() -> new PreCollectionUpdateEvent( endpoint.persister(), collection, session ),
 						PreCollectionUpdateEventListener::onPreUpdateCollection
 				);
-		prepared.add( new PreparedCollectionMutation(
+		mutationConsumer.accept( preparedMutation(
 				PreparedCollectionMutation.Kind.UPDATE,
 				collection,
 				endpoint,
 				input.emptySnapshot(),
 				affectedOwner,
 				affectedOwnerId,
-				null
+				input.hasQueuedOperations(),
+				session
 		) );
 	}
 
-	private static List<PreparedCollectionMutation> freezeDeltas(
-			List<PreparedCollectionMutation> mutations,
+	private static PreparedCollectionMutation preparedMutation(
+			PreparedCollectionMutation.Kind kind,
+			PersistentCollection<?> collection,
+			CollectionEndpoint endpoint,
+			boolean emptySnapshot,
+			Object affectedOwner,
+			Object affectedOwnerId,
+			boolean semanticDeltaRequired,
 			EventSource session) {
-		final var frozenByCollection = new IdentityHashMap<PersistentCollection<?>, FrozenCollectionDelta>();
-		final var result = new ArrayList<PreparedCollectionMutation>( mutations.size() );
-		for ( var mutation : mutations ) {
-			final var collection = mutation.collection();
-			if ( mutation.kind() == PreparedCollectionMutation.Kind.REMOVE || collection == null ) {
-				result.add( mutation );
-				continue;
-			}
-
-			var frozen = frozenByCollection.get( collection );
-			if ( frozen == null ) {
-				frozen = produceDelta( mutation, collection, session );
-				frozenByCollection.put( collection, frozen );
-				final var tracker = session.getPersistenceContextInternal().getCollectionFlushActionTracker();
-				if ( tracker instanceof FlushProcessingContext flushProcessingContext ) {
-					flushProcessingContext.retainFrozenDelta( collection, frozen );
-				}
-			}
-			result.add( new PreparedCollectionMutation(
-					mutation.kind(),
-					collection,
-					mutation.endpoint(),
-					mutation.emptySnapshot(),
-					mutation.affectedOwner(),
-					mutation.affectedOwnerId(),
-					frozen
-			) );
-		}
-		return List.copyOf( result );
+		final var interpretation = interpret(
+				kind,
+				collection,
+				endpoint,
+				emptySnapshot,
+				semanticDeltaRequired,
+				session
+		);
+		retainInterpretation( collection, interpretation, session );
+		return new PreparedCollectionMutation(
+				kind,
+				collection,
+				endpoint,
+				emptySnapshot,
+				affectedOwner,
+				affectedOwnerId,
+				interpretation
+		);
 	}
 
-	private static FrozenCollectionDelta produceDelta(
-			PreparedCollectionMutation mutation,
+	private static CollectionMutationInterpretation interpret(
+			PreparedCollectionMutation.Kind kind,
 			PersistentCollection<?> collection,
+			CollectionEndpoint endpoint,
+			boolean emptySnapshot,
+			boolean semanticDeltaRequired,
 			EventSource session) {
-		final var persister = mutation.endpoint().persister();
-		final var producer = persister.getCollectionSemantics().getCollectionDeltaProducer();
-		CollectionBaseline baseline = baseline( mutation, collection );
-		CollectionDeltaProduction production = producer.produceDelta(
-				new CollectionDeltaProductionContext( collection, persister, baseline, session )
+		final var persister = endpoint.persister();
+		final var interpreter = persister.getCollectionSemantics().getCollectionMutationInterpreter();
+		CollectionBaseline baseline = baseline( kind, collection );
+		CollectionInterpretationProduction production = interpreter.interpret(
+				new CollectionInterpretationContext(
+						collection,
+						persister,
+						transition( kind ),
+						baseline,
+						emptySnapshot,
+						false,
+						semanticDeltaRequired,
+						session
+				)
 		);
-		if ( production instanceof CollectionDeltaProduction.InitializationRequired ) {
+		if ( production instanceof CollectionInterpretationProduction.InitializationRequired ) {
 			collection.forceInitialization();
 			baseline = CollectionBaseline.LOADED;
-			production = producer.produceDelta(
-					new CollectionDeltaProductionContext( collection, persister, baseline, session )
+			production = interpreter.interpret(
+					new CollectionInterpretationContext(
+							collection,
+							persister,
+							transition( kind ),
+							baseline,
+							emptySnapshot,
+							false,
+							semanticDeltaRequired,
+							session
+					)
 			);
 		}
-		if ( !(production instanceof CollectionDeltaProduction.Produced produced) ) {
+		if ( !(production instanceof CollectionInterpretationProduction.Produced produced) ) {
 			throw new IllegalStateException(
-					"Collection delta producer still requires initialization for initialized collection "
+					"Collection mutation interpreter still requires initialization for initialized collection "
 							+ persister.getRole()
 			);
 		}
-		return FrozenCollectionDelta.freeze( produced.delta(), collection );
+		return produced.interpretation();
+	}
+
+	private static CollectionMutationInterpretation wrapperlessRemoveInterpretation(boolean removalSkipped) {
+		return new CollectionMutationInterpretation(
+				CollectionTransition.REMOVE,
+				SemanticCollectionChange.bulkRemoval(),
+				new PhysicalCollectionMutation.RemoveAll(
+						removalSkipped
+								? PhysicalCollectionMutation.RemovalMode.SKIP
+								: PhysicalCollectionMutation.RemovalMode.EXECUTE
+				),
+				-1
+		);
+	}
+
+	private static CollectionTransition transition(PreparedCollectionMutation.Kind kind) {
+		return switch ( kind ) {
+			case CREATE -> CollectionTransition.CREATE;
+			case REMOVE -> CollectionTransition.REMOVE;
+			case UPDATE -> CollectionTransition.UPDATE;
+			case QUEUED_OPERATIONS -> CollectionTransition.NONE;
+		};
 	}
 
 	private static CollectionBaseline baseline(
-			PreparedCollectionMutation mutation,
+			PreparedCollectionMutation.Kind kind,
 			PersistentCollection<?> collection) {
-		return switch ( mutation.kind() ) {
+		return switch ( kind ) {
 			case CREATE -> CollectionBaseline.EMPTY;
 			case UPDATE -> CollectionBaseline.LOADED;
 			case QUEUED_OPERATIONS -> collection.wasInitialized()
 					? CollectionBaseline.LOADED
 					: CollectionBaseline.UNINITIALIZED;
-			case REMOVE -> throw new IllegalArgumentException( "Remove uses a bulk strategy, not a delta" );
+			case REMOVE -> CollectionBaseline.LOADED;
 		};
+	}
+
+	private static CollectionMutationInterpretation retainedInterpretation(
+			PersistentCollection<?> collection,
+			EventSource session) {
+		final var tracker = session.getPersistenceContextInternal().getCollectionFlushActionTracker();
+		if ( tracker instanceof FlushProcessingContext flushProcessingContext ) {
+			return flushProcessingContext.getValidCollectionInterpretation( collection );
+		}
+		return null;
+	}
+
+	private static void retainInterpretation(
+			PersistentCollection<?> collection,
+			CollectionMutationInterpretation interpretation,
+			EventSource session) {
+		final var tracker = session.getPersistenceContextInternal().getCollectionFlushActionTracker();
+		if ( tracker instanceof FlushProcessingContext flushProcessingContext ) {
+			flushProcessingContext.retainCollectionInterpretation( collection, interpretation );
+		}
 	}
 
 	private static Object ownerId(Object owner, EventSource session) {

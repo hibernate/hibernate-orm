@@ -95,7 +95,7 @@ public class EventAnalyzer {
 
 	public static class EventPairExtractor {
 		public static Analysis extract(List<AbstractCollectionEvent> events) {
-			Map<Phase, Deque<AbstractCollectionEvent>> openPreByPhase = new HashMap<>();
+			Map<EventKey, Deque<AbstractCollectionEvent>> openPreEvents = new HashMap<>();
 
 			List<InitializeCollectionEvent> initializationEvents = new ArrayList<>();
 			Map<Phase,List<EventPair>> pairs = new HashMap<>();
@@ -108,13 +108,14 @@ public class EventAnalyzer {
 				}
 
 				var eventType = EventType.interpret(event);
+				final var eventKey = new EventKey( eventType.getPhase(), event.getCollection() );
 				switch ( eventType.getTiming() ) {
 					case PRE -> {
-						openPreByPhase.computeIfAbsent( eventType.getPhase(), phase -> new ArrayDeque<>() )
+						openPreEvents.computeIfAbsent( eventKey, key -> new ArrayDeque<>() )
 								.addLast( event );
 					}
 					case POST -> {
-						Deque<AbstractCollectionEvent> queue = openPreByPhase.get(eventType.getPhase());
+						Deque<AbstractCollectionEvent> queue = openPreEvents.get( eventKey );
 						if (queue == null || queue.isEmpty()) {
 							unmatchedPost.add(event);
 						}
@@ -128,11 +129,34 @@ public class EventAnalyzer {
 			}
 
 			List<AbstractCollectionEvent> unmatchedPre = new ArrayList<>();
-			for (Deque<AbstractCollectionEvent> queue : openPreByPhase.values()) {
+			for (Deque<AbstractCollectionEvent> queue : openPreEvents.values()) {
 				unmatchedPre.addAll(queue);
 			}
 
 			return new Analysis(pairs, initializationEvents, unmatchedPre, unmatchedPost);
+		}
+	}
+
+	private static final class EventKey {
+		private final Phase phase;
+		private final Object collection;
+
+		private EventKey(Phase phase, Object collection) {
+			this.phase = phase;
+			this.collection = collection;
+		}
+
+		@Override
+		public boolean equals(Object object) {
+			return this == object
+					|| object instanceof EventKey that
+					&& phase == that.phase
+					&& collection == that.collection;
+		}
+
+		@Override
+		public int hashCode() {
+			return 31 * phase.hashCode() + System.identityHashCode( collection );
 		}
 	}
 }

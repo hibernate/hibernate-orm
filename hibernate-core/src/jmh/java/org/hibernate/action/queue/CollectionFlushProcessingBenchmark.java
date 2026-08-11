@@ -4,6 +4,10 @@
  */
 package org.hibernate.action.queue;
 
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
+import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -27,9 +31,16 @@ import org.hibernate.Transaction;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.action.queue.internal.GraphBasedActionQueue;
+import org.hibernate.engine.internal.FlushProcessingContext;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.event.internal.AbstractFlushingEventListener;
+import org.hibernate.event.spi.EventSource;
+import org.hibernate.event.spi.FlushEvent;
 
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
+import org.openjdk.jmh.annotations.AuxCounters;
 import org.openjdk.jmh.annotations.Fork;
 import org.openjdk.jmh.annotations.Level;
 import org.openjdk.jmh.annotations.Measurement;
@@ -42,13 +53,15 @@ import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.annotations.TearDown;
 import org.openjdk.jmh.annotations.Warmup;
 
-/// Measures the full collection-flush processing path using revision-neutral ORM APIs.
+/// Measures collection-flush processing at full-stack and pre-JDBC boundaries.
 ///
 /// Database loading, collection initialization, and application mutation happen in
-/// invocation setup and are excluded from the measured operation. The benchmark
-/// measures either an explicit `Session.flush()` or the query which makes an
-/// auto-flush decision. Invocation teardown rolls back the transaction so every
-/// invocation observes the same persisted baseline.
+/// invocation setup and are excluded from the measured operation. [#collectionFlush]
+/// measures an explicit `Session.flush()` or the query which makes an auto-flush
+/// decision. [#collectionFlushPreparation] stops after queue-native preparation,
+/// and [#collectionFlushPlanning] additionally performs decomposition and graph
+/// planning while omitting physical execution. Invocation teardown rolls back the
+/// transaction so every invocation observes the same persisted baseline.
 ///
 /// The benchmark is deliberately compatible with the collection-flush-processing
 /// Stage 0 revision. Keep this source identical when comparing implementation
@@ -67,9 +80,81 @@ import org.openjdk.jmh.annotations.Warmup;
 @Measurement(iterations = 10, time = 1)
 @Fork(1)
 public class CollectionFlushProcessingBenchmark {
+	private static final MethodHandle CURRENT_THREAD_ALLOCATED_BYTES = currentThreadAllocatedBytesMethod();
+
 	@Benchmark
 	public long collectionFlush(FlushState state) {
 		return state.executeMeasuredOperation();
+	}
+
+	/// Measures collection discovery and queue preparation without executing JDBC mutations.
+	///
+	/// This complements the full-stack benchmark by retaining real Hibernate metadata,
+	/// persistent collection wrappers, lifecycle callbacks, mutation interpretation, and
+	/// queue-native preparation while stopping before action decomposition and execution.
+	@Benchmark
+	public long collectionFlushPreparation(FlushState state) {
+		return state.executePreparationOnly();
+	}
+
+	/// Measures the flush pipeline through construction of the graph-native flush plan,
+	/// without executing the plan or issuing JDBC mutations.
+	@Benchmark
+	public long collectionFlushPlanning(PlanningState state) {
+		return state.executePlanningOnly();
+	}
+
+	/// Reports allocations made strictly inside collection-flush planning.
+	///
+	/// Unlike the GC profiler's normalized allocation result, this counter excludes
+	/// invocation setup and teardown. The primary score includes the small cost of
+	/// reading the thread-allocation counter and is not a planning-time measurement.
+	/// JMH aggregates `EVENTS` counter headlines by summing measurement iterations;
+	/// inspect the raw per-iteration values, or divide the headline by the iteration
+	/// count, to obtain the per-planning-operation byte count.
+	@Benchmark
+	public long collectionFlushPlanningAllocations(
+			PlanningState state,
+			PlanningAllocationCounters counters) {
+		final long before = currentThreadAllocatedBytes();
+		final long result = state.executePlanningAllocationProbe( counters );
+		counters.planningBytes = currentThreadAllocatedBytes() - before;
+		return result;
+	}
+
+	@AuxCounters(AuxCounters.Type.EVENTS)
+	@State(Scope.Thread)
+	public static class PlanningAllocationCounters {
+		public long planningBytes;
+		public long discoveryBytes;
+		public long queuePreparationBytes;
+		public long graphPlanningBytes;
+		public long cleanupBytes;
+	}
+
+	private static MethodHandle currentThreadAllocatedBytesMethod() {
+		try {
+			final Class<?> threadMxBeanType = Class.forName( "com.sun.management.ThreadMXBean" );
+			return MethodHandles.publicLookup()
+					.findVirtual(
+							threadMxBeanType,
+							"getThreadAllocatedBytes",
+							MethodType.methodType( long.class, long.class )
+					)
+					.bindTo( ManagementFactory.getThreadMXBean() );
+		}
+		catch (ReflectiveOperationException e) {
+			throw new ExceptionInInitializerError( e );
+		}
+	}
+
+	private static long currentThreadAllocatedBytes() {
+		try {
+			return (long) CURRENT_THREAD_ALLOCATED_BYTES.invokeExact( Thread.currentThread().getId() );
+		}
+		catch (Throwable e) {
+			throw new IllegalStateException( "Could not read current-thread allocation count", e );
+		}
 	}
 
 	@State(Scope.Thread)
@@ -130,6 +215,10 @@ public class CollectionFlushProcessingBenchmark {
 			return selectedScenario.execute( session );
 		}
 
+		private long executePreparationOnly() {
+			return PreparationOnlyFlushListener.INSTANCE.prepare( (EventSource) session );
+		}
+
 		private void seedDatabase() {
 			try ( Session seedSession = sessionFactory.openSession() ) {
 				final Transaction seedTransaction = seedSession.beginTransaction();
@@ -139,6 +228,151 @@ public class CollectionFlushProcessingBenchmark {
 				seedSession.persist( newOwner( 1000L, 256 ) );
 				seedSession.persist( new BenchmarkMarker( 1L ) );
 				seedTransaction.commit();
+			}
+			verifySeededCollections();
+		}
+
+		private void verifySeededCollections() {
+			try ( Session verificationSession = sessionFactory.openSession() ) {
+				verifyRowCount( verificationSession, "setValues" );
+				verifyRowCount( verificationSession, "bagValues" );
+				verifyRowCount( verificationSession, "listValues" );
+				verifyRowCount( verificationSession, "mapValues" );
+			}
+		}
+
+		private static void verifyRowCount(Session session, String attributeName) {
+			final long expected = 32L * 16L + 256L;
+			final long actual = session.createQuery(
+					"select count(value) from FlushOwner owner join owner." + attributeName + " value",
+					Long.class
+			).getSingleResult();
+			if ( actual != expected ) {
+				throw new IllegalStateException(
+						"Expected " + expected + " seeded " + attributeName + " rows, but found " + actual
+				);
+			}
+		}
+	}
+
+	@State(Scope.Thread)
+	public static class PlanningState {
+		@Param({ "CREATE_16_BY_16", "CREATE_1_BY_256" })
+		public String scenario;
+
+		private FlushState flushState;
+
+		@Setup(Level.Trial)
+		public void setUpTrial() {
+			flushState = new FlushState();
+			flushState.queueType = "graph";
+			flushState.scenario = scenario;
+			flushState.setUpTrial();
+		}
+
+		@TearDown(Level.Trial)
+		public void tearDownTrial() {
+			flushState.tearDownTrial();
+		}
+
+		@Setup(Level.Invocation)
+		public void setUpInvocation() {
+			flushState.setUpInvocation();
+		}
+
+		@TearDown(Level.Invocation)
+		public void tearDownInvocation() {
+			flushState.tearDownInvocation();
+		}
+
+		private long executePlanningOnly() {
+			return PreparationOnlyFlushListener.INSTANCE.plan( (EventSource) flushState.session );
+		}
+
+		private long executePlanningAllocationProbe(PlanningAllocationCounters counters) {
+			return PreparationOnlyFlushListener.INSTANCE.plan(
+					(EventSource) flushState.session,
+					counters
+			);
+		}
+	}
+
+	private static final class PreparationOnlyFlushListener extends AbstractFlushingEventListener {
+		private static final PreparationOnlyFlushListener INSTANCE = new PreparationOnlyFlushListener();
+
+		private long prepare(EventSource session) {
+			final var persistenceContext = session.getPersistenceContextInternal();
+			final FlushProcessingContext flushProcessingContext = prepareFlushProcessing( new FlushEvent( session ) );
+			try {
+				persistenceContext.setFlushing( true );
+				session.getActionQueue().prepareActions();
+				return session.getActionQueue().numberOfCollectionCreations()
+						+ session.getActionQueue().numberOfCollectionUpdates()
+						+ session.getActionQueue().numberOfCollectionRemovals();
+			}
+			finally {
+				persistenceContext.setFlushing( false );
+				clearFlushProcessing( persistenceContext );
+			}
+		}
+
+		private long plan(EventSource session) {
+			final var persistenceContext = session.getPersistenceContextInternal();
+			final FlushProcessingContext flushProcessingContext = prepareFlushProcessing( new FlushEvent( session ) );
+			try {
+				persistenceContext.setFlushing( true );
+				final var actionQueue = session.getActionQueue();
+				actionQueue.prepareActions();
+				if ( !(actionQueue instanceof GraphBasedActionQueue graphBasedActionQueue) ) {
+					throw new IllegalStateException( "Flush planning benchmark requires the graph action queue" );
+				}
+				final var plan = graphBasedActionQueue.buildFlushPlan();
+				if ( plan == null ) {
+					return 0;
+				}
+				long result = plan.steps().size();
+				for ( var step : plan.steps() ) {
+					result += step.operations().size();
+				}
+				return result;
+			}
+			finally {
+				persistenceContext.setFlushing( false );
+				clearFlushProcessing( persistenceContext );
+			}
+		}
+
+		private long plan(EventSource session, PlanningAllocationCounters counters) {
+			final var persistenceContext = session.getPersistenceContextInternal();
+			long before = currentThreadAllocatedBytes();
+			final FlushProcessingContext flushProcessingContext = prepareFlushProcessing( new FlushEvent( session ) );
+			counters.discoveryBytes = currentThreadAllocatedBytes() - before;
+			try {
+				persistenceContext.setFlushing( true );
+				final var actionQueue = session.getActionQueue();
+				before = currentThreadAllocatedBytes();
+				actionQueue.prepareActions();
+				counters.queuePreparationBytes = currentThreadAllocatedBytes() - before;
+				if ( !(actionQueue instanceof GraphBasedActionQueue graphBasedActionQueue) ) {
+					throw new IllegalStateException( "Flush planning benchmark requires the graph action queue" );
+				}
+				before = currentThreadAllocatedBytes();
+				final var plan = graphBasedActionQueue.buildFlushPlan();
+				counters.graphPlanningBytes = currentThreadAllocatedBytes() - before;
+				if ( plan == null ) {
+					return 0;
+				}
+				long result = plan.steps().size();
+				for ( var step : plan.steps() ) {
+					result += step.operations().size();
+				}
+				return result;
+			}
+			finally {
+				before = currentThreadAllocatedBytes();
+				persistenceContext.setFlushing( false );
+				clearFlushProcessing( persistenceContext );
+				counters.cleanupBytes = currentThreadAllocatedBytes() - before;
 			}
 		}
 	}
@@ -194,6 +428,12 @@ public class CollectionFlushProcessingBenchmark {
 				}
 			}
 		},
+		CREATE_1_BY_256 {
+			@Override
+			void prepare(Session session) {
+				session.persist( newOwner( -1L, 256 ) );
+			}
+		},
 		AUTOFLUSH_DISCARDED {
 			@Override
 			void prepare(Session session) {
@@ -224,6 +464,69 @@ public class CollectionFlushProcessingBenchmark {
 						Long.class
 				).getSingleResult();
 			}
+		},
+		AUTOFLUSH_REQUIRED_CLEAN {
+			@Override
+			void prepare(Session session) {
+				owner( session ).setValues.size();
+			}
+
+			@Override
+			long execute(Session session) {
+				return aggregateSetRowCount( session );
+			}
+		},
+		AUTOFLUSH_REQUIRED_PREFLUSHED {
+			@Override
+			void prepare(Session session) {
+				final var values = owner( session ).setValues;
+				values.remove( value( 128 ) );
+				values.add( "required-auto-flush-preflushed" );
+				session.flush();
+			}
+
+			@Override
+			long execute(Session session) {
+				return aggregateSetRowCount( session );
+			}
+		},
+		AUTOFLUSH_DECISION_CLEAN {
+			@Override
+			void prepare(Session session) {
+				owner( session ).setValues.size();
+			}
+
+			@Override
+			long execute(Session session) {
+				return autoFlushSetTable( session );
+			}
+		},
+		AUTOFLUSH_DECISION_REQUIRED {
+			@Override
+			void prepare(Session session) {
+				final var values = owner( session ).setValues;
+				values.remove( value( 128 ) );
+				values.add( "required-auto-flush-decision" );
+			}
+
+			@Override
+			long execute(Session session) {
+				return autoFlushSetTable( session );
+			}
+		},
+		AUTOFLUSH_DECISION_PREFLUSHED {
+			@Override
+			void prepare(Session session) {
+				final var values = owner( session ).setValues;
+				values.remove( value( 128 ) );
+				values.add( "required-auto-flush-decision-preflushed" );
+				session.flush();
+			}
+
+			@Override
+			long execute(Session session) {
+				return autoFlushSetTable( session );
+			}
 		};
 
 		abstract void prepare(Session session);
@@ -235,6 +538,20 @@ public class CollectionFlushProcessingBenchmark {
 
 		FlushOwner owner(Session session) {
 			return session.find( FlushOwner.class, 1000L );
+		}
+
+		private static long aggregateSetRowCount(Session session) {
+			return session.createQuery(
+					"select count(value) from FlushOwner owner join owner.setValues value",
+					Long.class
+			).getSingleResult();
+		}
+
+		private static long autoFlushSetTable(Session session) {
+			return ((SharedSessionContractImplementor) session)
+					.autoFlushIfRequired( Set.of( "cfp_owner_sets" ) )
+					? 1L
+					: 0L;
 		}
 	}
 

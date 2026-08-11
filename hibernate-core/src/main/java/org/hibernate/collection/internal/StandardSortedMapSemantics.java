@@ -10,7 +10,7 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 
 import org.hibernate.collection.spi.AbstractMapSemantics;
-import org.hibernate.collection.spi.CollectionDeltaProducer;
+import org.hibernate.collection.spi.CollectionMutationInterpreter;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.collection.spi.PersistentSortedMap;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -30,8 +30,8 @@ public class StandardSortedMapSemantics<K,V> extends AbstractMapSemantics<Sorted
 	}
 
 	@Override
-	public CollectionDeltaProducer getCollectionDeltaProducer() {
-		return StandardCollectionDeltaProducer.MAP;
+	public CollectionMutationInterpreter getCollectionMutationInterpreter() {
+		return StandardCollectionMutationInterpreter.MAP;
 	}
 
 	@Override

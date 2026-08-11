@@ -11,6 +11,7 @@ import org.hibernate.action.queue.spi.plan.FlushOperation;
 import org.hibernate.AssertionFailure;
 import org.hibernate.action.queue.spi.MutationKind;
 import org.hibernate.action.queue.spi.StatementShapeKey;
+import org.hibernate.action.queue.spi.bind.GroupedRowBindPlan;
 import org.hibernate.action.queue.spi.bind.JdbcValueBindings;
 import org.hibernate.engine.jdbc.batch.spi.SingleStatementBatch;
 import org.hibernate.engine.jdbc.batch.spi.BatchObserver;
@@ -32,6 +33,7 @@ public class BatchingPlanStepExecutor extends AbstractStepExecutor implements Ba
 
 	private SingleStatementBatch batch;
 	private final FlushOperation[] batchOperations;
+	private final boolean[] batchOperationCompletions;
 	private PreparableMutationOperation reusableValueBindingsOperation;
 	private JdbcValueBindings reusableValueBindings;
 
@@ -42,6 +44,7 @@ public class BatchingPlanStepExecutor extends AbstractStepExecutor implements Ba
 		super(session);
 		this.batchSize = batchSize;
 		this.batchOperations = new FlushOperation[batchSize];
+		this.batchOperationCompletions = new boolean[batchSize];
 	}
 
 	@Override
@@ -66,6 +69,26 @@ public class BatchingPlanStepExecutor extends AbstractStepExecutor implements Ba
 
 	@Override
 	protected void executePreparable(PreparableMutationOperation preparable, FlushOperation flushOperation) {
+		if ( flushOperation.getBindPlan() instanceof GroupedRowBindPlan groupedRowBindPlan ) {
+			final int bindingCount = groupedRowBindPlan.getBindingCount();
+			for ( int bindingIndex = 0; bindingIndex < bindingCount; bindingIndex++ ) {
+				prepareBatch( flushOperation, preparable );
+				applyToBatch(
+						preparable,
+						flushOperation,
+						groupedRowBindPlan,
+						bindingIndex,
+						bindingIndex == bindingCount - 1
+				);
+			}
+			return;
+		}
+
+		prepareBatch( flushOperation, preparable );
+		applyToBatch( preparable, flushOperation, flushOperation.getBindPlan(), -1, true );
+	}
+
+	private void prepareBatch(FlushOperation flushOperation, PreparableMutationOperation preparable) {
 		final StatementShapeKey operationShapeKey = flushOperation.getShapeKey();
 		if ( batchKey == null ) {
 			newBatch( operationShapeKey, preparable );
@@ -75,7 +98,6 @@ public class BatchingPlanStepExecutor extends AbstractStepExecutor implements Ba
 			newBatch( operationShapeKey, preparable );
 		}
 
-		applyToBatch( preparable, flushOperation );
 	}
 
 	@Override
@@ -121,12 +143,20 @@ public class BatchingPlanStepExecutor extends AbstractStepExecutor implements Ba
 
 	private void applyToBatch(
 			PreparableMutationOperation preparable,
-			FlushOperation flushOperation) {
-		var bindPlan = flushOperation.getBindPlan();
+			FlushOperation flushOperation,
+			org.hibernate.action.queue.spi.bind.BindPlan bindPlan,
+			int bindingIndex,
+			boolean completesOperation) {
 		var valueBindings = getReusableValueBindings( preparable, flushOperation );
-		bindPlan.bindValues( valueBindings, flushOperation, session );
+		if ( bindingIndex >= 0 && bindPlan instanceof GroupedRowBindPlan groupedRowBindPlan ) {
+			groupedRowBindPlan.bindValues( bindingIndex, valueBindings, flushOperation, session );
+		}
+		else {
+			bindPlan.bindValues( valueBindings, flushOperation, session );
+		}
 
 		batchOperations[currentBatchIndex] = flushOperation;
+		batchOperationCompletions[currentBatchIndex] = completesOperation;
 
 		final var resultChecker = flushOperation.getOperationResultChecker();
 		try {
@@ -251,12 +281,17 @@ public class BatchingPlanStepExecutor extends AbstractStepExecutor implements Ba
 		// before running any lifecycle callback, since a lifecycle failure must
 		// not leave another successfully executed operation's span open.
 		for ( int i = 0; i < batchCount; i++ ) {
-			afterSuccessfulPhysicalExecution( operations[i] );
+			if ( batchOperationCompletions[i] ) {
+				afterSuccessfulPhysicalExecution( operations[i] );
+			}
 		}
 		for ( int i = 0; i < batchCount; i++ ) {
 			final FlushOperation operation = operations[i];
 			operations[i] = null;
-			afterOperationCompletion( operation, newlyManagedEntityConsumer, fixupOperationConsumer );
+			if ( batchOperationCompletions[i] ) {
+				afterOperationCompletion( operation, newlyManagedEntityConsumer, fixupOperationConsumer );
+				batchOperationCompletions[i] = false;
+			}
 		}
 	}
 

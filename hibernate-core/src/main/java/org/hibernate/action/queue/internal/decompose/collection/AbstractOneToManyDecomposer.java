@@ -8,9 +8,7 @@ import org.hibernate.action.queue.spi.decompose.collection.CollectionJdbcOperati
 import org.hibernate.action.queue.spi.decompose.collection.CollectionMutationPlanContributor;
 import org.hibernate.action.queue.spi.decompose.collection.OneToManyDecomposer;
 
-import org.hibernate.action.internal.CollectionRecreateAction;
-import org.hibernate.action.internal.CollectionUpdateAction;
-import org.hibernate.action.internal.QueuedOperationCollectionAction;
+import org.hibernate.action.queue.internal.PreparedCollectionMutation;
 import org.hibernate.action.queue.spi.MutationKind;
 import org.hibernate.action.queue.spi.bind.BindPlan;
 import org.hibernate.action.queue.spi.bind.JdbcValueBindings;
@@ -19,6 +17,8 @@ import org.hibernate.action.queue.spi.meta.TableDescriptor;
 import org.hibernate.action.queue.spi.meta.TableDescriptorAsTableMapping;
 import org.hibernate.action.queue.spi.plan.FlushOperation;
 import org.hibernate.collection.spi.CollectionChangeSet;
+import org.hibernate.collection.spi.CollectionMutationInterpretation;
+import org.hibernate.collection.spi.PhysicalCollectionMutation;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.ast.ColumnValueBinding;
@@ -40,6 +40,7 @@ import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
 import org.hibernate.sql.model.jdbc.JdbcValueDescriptor;
 
 import java.util.ArrayList;
+import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -70,20 +71,18 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 
 	@Override
 	public void decomposeRecreate(
-			CollectionRecreateAction action,
+			PreparedCollectionMutation action,
 			int ordinalBase,
 			SharedSessionContractImplementor session,
 			DecompositionContext decompositionContext,
 			Consumer<FlushOperation> operationConsumer) {
 		var collection = action.getCollection();
 		var key = action.getKey();
+		final var interpretation = validInterpretation( action, collection );
 
 		var attribute = persister.getAttributeMapping();
 
 		// Always fire PRE event, even if no SQL operations will be needed
-		if ( !action.isLifecyclePrepared() ) {
-			DecompositionSupport.firePreRecreate( persister, collection, session );
-		}
 		collection.preInsert( persister );
 
 		// Create post-execution callback to handle post-execution work (afterAction, cache, events, stats)
@@ -96,84 +95,50 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 		);
 		final var postExecutionCallback = postRecreateHandling;
 
-		final var entries = collection.entries( persister );
-		if ( !entries.hasNext() ) {
-			// No entries - create no-op to defer POST callback
-			operationConsumer.accept( DecompositionSupport.createNoOpCallbackCarrier(
-					persister.getCollectionTableDescriptor(),
-					calculateOrdinal( ordinalBase, Slot.INSERT ),
-					postExecutionCallback
-			) );
-			return;
-		}
-
 		final List<FlushOperation> operations = new ArrayList<>();
 
 		final var insertOrdinal = calculateOrdinal( ordinalBase, Slot.INSERT );
 		final var writeIndexOrdinal = calculateOrdinal( ordinalBase, Slot.WRITEINDEX );
 
-		int entryCount = 0;
-		while ( entries.hasNext() ) {
-			final Object entry = entries.next();
-			final var jdbcOperations = selectJdbcOperations( entry, session );
-			final var insertRowPlan = jdbcOperations.insertRowPlan();
-			// For inverse one-to-many collections, insertRowPlan will be null (inserts are managed by the owning side)
-			if ( insertRowPlan != null
-					&& collection.includeInRecreate( entry, entryCount, collection, attribute ) ) {
-				// For one-to-many collections, the "insert" is actually an UPDATE that sets the FK
-				// Use MutationKind.UPDATE so it's ordered AFTER entity INSERTs via FK edges
-				final var plannedOp = new FlushOperation(
-						jdbcOperations.tableDescriptor(),
-						MutationKind.UPDATE,
-						insertRowPlan.jdbcOperation(),
-						new SingleRowInsertBindPlan(
-								persister,
-								insertRowPlan.values(),
-								collection,
-								key,
-								entry,
-								entryCount
-						),
-						insertOrdinal,
-						"InsertRow[" + entryCount + "](" + persister.getRolePath() + ")"
-				);
-
-				operations.add( plannedOp );
-				contributeAdditionalInsert(
-						jdbcOperations,
+		if ( interpretation == null ) {
+			final var entries = collection.entries( persister );
+			int entryCount = 0;
+			while ( entries.hasNext() ) {
+				planRecreateEntry(
+						entries.next(),
+						entryCount++,
+						false,
 						collection,
 						key,
-						entry,
-						entryCount,
+						attribute,
+						insertOrdinal,
+						writeIndexOrdinal,
 						ordinalBase,
 						session,
-						operations::add
+						operations
 				);
 			}
-
-			if ( jdbcOperations.updateIndexPlan() != null ) {
-				final var writeIndexFlushOp = new FlushOperation(
-						jdbcOperations.tableDescriptor(),
-						MutationKind.UPDATE_ORDER,
-						jdbcOperations.updateIndexPlan().jdbcOperation(),
-						new SingleRowUpdateBindPlan(
-								persister,
-								collection,
-								key,
-								entry,
-								entryCount,
-								jdbcOperations.updateIndexPlan().values(),
-								jdbcOperations.updateIndexPlan().restrictions()
-						),
-						writeIndexOrdinal,
-						"WriteIndex[" + entryCount + "](" + persister.getRolePath() + ")"
-				);
-				//postExecCallbackRegistry.accept(... );
-				// on recreate we should be able to write the index as a normal planned-op
-				operations.add( writeIndexFlushOp );
-			}
-
-			entryCount++;
+		}
+		else if ( interpretation.physicalMutation() instanceof PhysicalCollectionMutation.CreateAll createAll ) {
+			createAll.currentRows().forEach( (entry, position) -> planRecreateEntry(
+					entry,
+					position,
+					true,
+					collection,
+					key,
+					attribute,
+					insertOrdinal,
+					writeIndexOrdinal,
+					ordinalBase,
+					session,
+					operations
+			) );
+		}
+		else {
+			throw new IllegalStateException(
+					"CREATE interpretation selected "
+							+ interpretation.physicalMutation().getClass().getSimpleName()
+			);
 		}
 
 		if ( !operations.isEmpty() ) {
@@ -198,21 +163,82 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 		}
 	}
 
+	private void planRecreateEntry(
+			Object entry,
+			int entryPosition,
+			boolean inclusionAlreadyTested,
+			PersistentCollection<?> collection,
+			Object key,
+			org.hibernate.metamodel.mapping.PluralAttributeMapping attribute,
+			int insertOrdinal,
+			int writeIndexOrdinal,
+			int ordinalBase,
+			SharedSessionContractImplementor session,
+			List<FlushOperation> operations) {
+		final var jdbcOperations = selectJdbcOperations( entry, session );
+		final var insertRowPlan = jdbcOperations.insertRowPlan();
+		if ( insertRowPlan != null
+				&& ( inclusionAlreadyTested
+						|| collection.includeInRecreate( entry, entryPosition, collection, attribute ) ) ) {
+			operations.add( new FlushOperation(
+					jdbcOperations.tableDescriptor(),
+					MutationKind.UPDATE,
+					insertRowPlan.jdbcOperation(),
+					new SingleRowInsertBindPlan(
+							persister,
+							insertRowPlan.values(),
+							collection,
+							key,
+							entry,
+							entryPosition
+					),
+					insertOrdinal,
+					"InsertRow[" + entryPosition + "](" + persister.getRolePath() + ")"
+			) );
+			contributeAdditionalInsert(
+					jdbcOperations,
+					collection,
+					key,
+					entry,
+					entryPosition,
+					ordinalBase,
+					session,
+					operations::add
+			);
+		}
+
+		if ( jdbcOperations.updateIndexPlan() != null ) {
+			operations.add( new FlushOperation(
+					jdbcOperations.tableDescriptor(),
+					MutationKind.UPDATE_ORDER,
+					jdbcOperations.updateIndexPlan().jdbcOperation(),
+					new SingleRowUpdateBindPlan(
+							persister,
+							collection,
+							key,
+							entry,
+							entryPosition,
+							jdbcOperations.updateIndexPlan().values(),
+							jdbcOperations.updateIndexPlan().restrictions()
+					),
+					writeIndexOrdinal,
+					"WriteIndex[" + entryPosition + "](" + persister.getRolePath() + ")"
+			) );
+		}
+	}
+
 	@Override
 	public final void decomposeUpdate(
-			CollectionUpdateAction action,
+			PreparedCollectionMutation action,
 			int ordinalBase,
 			SharedSessionContractImplementor session,
 			DecompositionContext decompositionContext,
 			Consumer<FlushOperation> operationConsumer) {
 		final var collection = action.getCollection();
 		final var key = action.getKey();
+		final var interpretation = validInterpretation( action, collection );
 
 		// Always fire PRE event, even if collection is not initialized
-		if ( !action.isLifecyclePrepared() ) {
-			DecompositionSupport.firePreUpdate( persister, collection, session );
-		}
-
 		// Create callback to handle post-execution work (afterAction, cache, events, stats)
 		var postUpdateHandling = new PostCollectionUpdateHandling(
 				persister,
@@ -226,7 +252,17 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 
 		final List<FlushOperation> operations = new ArrayList<>();
 
-		if ( !collection.wasInitialized() ) {
+		if ( interpretation != null ) {
+			applyInterpretation(
+					interpretation,
+					collection,
+					key,
+					ordinalBase,
+					session,
+					operations::add
+			);
+		}
+		else if ( !collection.wasInitialized() ) {
 			// If the collection wasn't initialized, we cannot access entries/deletes
 			// The collection should still be marked dirty for queued operations
 			// We only need to notify the cache via the post-execution callback
@@ -277,6 +313,193 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 			) );
 		}
 	}
+
+	private void applyInterpretation(
+			CollectionMutationInterpretation interpretation,
+			PersistentCollection<?> collection,
+			Object key,
+			int ordinalBase,
+			SharedSessionContractImplementor session,
+			Consumer<FlushOperation> operationConsumer) {
+		final var physicalMutation = interpretation.physicalMutation();
+		if ( physicalMutation instanceof PhysicalCollectionMutation.NoWork ) {
+			return;
+		}
+		if ( physicalMutation instanceof PhysicalCollectionMutation.RemoveAll removeAll ) {
+			if ( removeAll.removalMode() == PhysicalCollectionMutation.RemovalMode.EXECUTE ) {
+				planRemoveAll( key, ordinalBase, operationConsumer );
+			}
+			return;
+		}
+		if ( physicalMutation instanceof PhysicalCollectionMutation.RowChanges rowChanges ) {
+			applyFrozenChangeSet(
+					rowChanges.changes(),
+					collection,
+					key,
+					ordinalBase,
+					session,
+					operationConsumer
+			);
+			return;
+		}
+		if ( physicalMutation instanceof PhysicalCollectionMutation.RemoveAllAndCreateAll replaceAll ) {
+			if ( replaceAll.removalMode() == PhysicalCollectionMutation.RemovalMode.EXECUTE ) {
+				planRemoveAll( key, ordinalBase, operationConsumer );
+			}
+			collection.preInsert( persister );
+			replaceAll.currentRows().forEach( (entry, position) -> planInsert(
+					entry,
+					position,
+					collection,
+					key,
+					ordinalBase,
+					session,
+					operationConsumer
+			) );
+			return;
+		}
+		throw new IllegalStateException(
+				"UPDATE interpretation selected " + physicalMutation.getClass().getSimpleName()
+		);
+	}
+
+	private void planRemoveAll(
+			Object key,
+			int ordinalBase,
+			Consumer<FlushOperation> operationConsumer) {
+		final var removeOperation = buildRemoveOperation( persister.getCollectionTableDescriptor() );
+		if ( removeOperation != null ) {
+			operationConsumer.accept( new FlushOperation(
+					persister.getCollectionTableDescriptor(),
+					MutationKind.UPDATE,
+					removeOperation,
+					new RemoveBindPlan( key, persister, mutationPlanContributor ),
+					calculateOrdinal( ordinalBase, Slot.DELETE ),
+					"RemoveAllRows(" + persister.getRolePath() + ")"
+			) );
+		}
+	}
+
+	private void applyFrozenChangeSet(
+			CollectionChangeSet changeSet,
+			PersistentCollection<?> collection,
+			Object key,
+			int ordinalBase,
+			SharedSessionContractImplementor session,
+			Consumer<FlushOperation> operationConsumer) {
+		if ( changeSet.isEmpty() ) {
+			return;
+		}
+		if ( persister.hasIndex() && hasNumericChangeSetIndexes( changeSet ) ) {
+			applyIndexedChangeSet( changeSet, collection, key, ordinalBase, session, operationConsumer );
+			return;
+		}
+
+		final int deleteOrdinal = calculateOrdinal( ordinalBase, Slot.DELETE );
+		for ( var removal : changeSet.removals() ) {
+			final var jdbcOperations = selectJdbcOperations( removal.element(), session );
+			final var deleteRowPlan = jdbcOperations.deleteRowPlan();
+			if ( deleteRowPlan != null ) {
+				operationConsumer.accept( new FlushOperation(
+						jdbcOperations.tableDescriptor(),
+						MutationKind.UPDATE,
+						deleteRowPlan.jdbcOperation(),
+						new SingleRowDeleteBindPlan(
+								persister,
+								collection,
+								key,
+								removal.element(),
+								deleteRowPlan.restrictions()
+						),
+						deleteOrdinal,
+						"DeleteRow(" + persister.getRolePath() + ")"
+				) );
+			}
+		}
+		final boolean map = persister.getCollectionSemantics().getCollectionClassification().isMap();
+		for ( var addition : changeSet.additions() ) {
+			final Object rowValue = map
+					? new SimpleImmutableEntry<>( addition.index(), addition.element() )
+					: addition.element();
+			final int rowPosition = addition.index() instanceof Number number ? number.intValue() : -1;
+			planInsert(
+					rowValue,
+					rowPosition,
+					collection,
+					key,
+					ordinalBase,
+					session,
+					operationConsumer
+			);
+			if ( map ) {
+				final var jdbcOperations = selectJdbcOperations( rowValue, session );
+				if ( jdbcOperations.insertRowPlan() == null && jdbcOperations.updateIndexPlan() != null ) {
+					planWriteIndex(
+							collection,
+							key,
+							rowValue,
+							rowPosition,
+							jdbcOperations.tableDescriptor(),
+							jdbcOperations.updateIndexPlan(),
+							calculateOrdinal( ordinalBase, Slot.WRITEINDEX ),
+							"WriteIndex[" + addition.index() + "](" + persister.getRolePath() + ")",
+							operationConsumer
+					);
+				}
+			}
+		}
+	}
+
+	private void planInsert(
+			Object entry,
+			int position,
+			PersistentCollection<?> collection,
+			Object key,
+			int ordinalBase,
+			SharedSessionContractImplementor session,
+			Consumer<FlushOperation> operationConsumer) {
+		final var jdbcOperations = selectJdbcOperations( entry, session );
+		final var insertRowPlan = jdbcOperations.insertRowPlan();
+		if ( insertRowPlan == null ) {
+			return;
+		}
+		operationConsumer.accept( new FlushOperation(
+				jdbcOperations.tableDescriptor(),
+				MutationKind.UPDATE,
+				insertRowPlan.jdbcOperation(),
+				new SingleRowInsertBindPlan(
+						persister,
+						insertRowPlan.values(),
+						collection,
+						key,
+						entry,
+						position
+				),
+				calculateOrdinal( ordinalBase, Slot.INSERT ),
+				"InsertRow[" + position + "](" + persister.getRolePath() + ")"
+		) );
+		contributeAdditionalInsert(
+				jdbcOperations,
+				collection,
+				key,
+				entry,
+				position,
+				ordinalBase,
+				session,
+				operationConsumer
+		);
+	}
+
+	private static CollectionMutationInterpretation validInterpretation(
+			PreparedCollectionMutation action,
+			PersistentCollection<?> collection) {
+		final var interpretation = action.getCollectionMutationInterpretation();
+		if ( interpretation != null && !interpretation.isValid( collection ) ) {
+			throw new IllegalStateException( "Collection changed after its mutation interpretation was frozen" );
+		}
+		return interpretation;
+	}
+
 
 	void applyFallbackUpdate(
 			PersistentCollection<?> collection,
@@ -547,7 +770,7 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 
 	@Override
 	public void decomposeQueuedOperations(
-			QueuedOperationCollectionAction action,
+			PreparedCollectionMutation action,
 			int ordinalBase,
 			SharedSessionContractImplementor session,
 			Consumer<FlushOperation> operationConsumer) {
@@ -593,11 +816,6 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 			}
 		}
 
-		operations.add( DecompositionSupport.createNoOpCallbackCarrier(
-				persister.getCollectionTableDescriptor(),
-				writeIndexOrdinal + 1,
-				sessionImplementor -> action.afterQueuedOperationsProcessed()
-		) );
 		operations.forEach( operationConsumer );
 	}
 

@@ -84,6 +84,22 @@ Post-approval clarifications::
   migration-guide notes covering the remove/create interceptor order, owner
   callback and speculative-interceptor timing, and the `ActionQueue`
   checkpoint/restore SPI signature change.
+* `2026-08-10` -- Benchmarking delta production and consumption showed that an
+  always-materialized `CollectionDelta` adds an avoidable representation round
+  trip to the graph queue: `CollectionChangeSet -> CollectionDelta ->
+  CollectionChangeSet -> FlushOperation`.  The proposed revision instead makes
+  interpretation depend on `CollectionTransition x CollectionSemantics` and
+  freezes a queue-neutral `CollectionMutationInterpretation`.  Semantic delta
+  and physical row representation are independent components; physical strategy
+  uses a sealed hierarchy so create and physical replace-all paths may retain
+  current rows without first allocating one semantic addition per row.
+* `2026-08-10` -- Made overall graph-queue improvement relative to Stage 0 a
+  requirement of the revised direction.  The gate uses the geometric mean of
+  per-scenario normalized average times and also rejects a statistically
+  credible regression greater than 5% in an individual scenario unless the
+  exception is explicitly accepted and explained.
+* `2026-08-10` -- Approved revision `1.2` of the collection flush processing
+  specification as the implementation and conformance baseline.
 
 This document proposes a redesign of collection visitation and mutation planning
 during flush.  It focuses on the path from cascade and reachability processing,
@@ -139,7 +155,8 @@ The redesign should:
 * Preserve Hibernate collection, interceptor, entity callback, cache, statistics,
   and transaction-completion semantics.
 * Represent a collection's logical transition once per flush.
-* Discover and retain a stable collection delta once per flush when possible.
+* Interpret collection state once per transition and retain stable semantic and
+  physical projections without mandatory representation round trips.
 * Preserve logical action identity through graph planning and execution.
 * Run completion work only after all physical mutations for the logical action
   have completed successfully.
@@ -453,9 +470,12 @@ The implementation must maintain the following invariants.
 * A physical remove-all plus create-all strategy selected for an `UPDATE` does
   not change its logical transition or event lifecycle.
 
-=== Delta invariants
+=== Interpretation and delta invariants
 
-* One normalized delta describes the structural state used to plan an action.
+* One frozen interpretation describes the semantic and physical structural state
+  used to plan a collection mutation.
+* A delta is materialized when a semantic consumer requires a difference model;
+  physical execution does not require one solely as an intermediate.
 * The delta identifies its baseline and whether its coverage is complete.
 * A partial delta never implies that an unmentioned persisted row is absent or
   unchanged in a way which requires knowing its value.
@@ -466,7 +486,8 @@ The implementation must maintain the following invariants.
   a valid post-initialization state therefore never retains queued operations.
 * Duplicate elements and mapping-specific equality semantics are preserved.
 * Snapshot positions and current positions are not conflated.
-* A delta is structurally stable after materialization.
+* A delta and every physical row projection are structurally stable after
+  materialization.
 * Values which require generated identifiers use explicit deferred handles
   rather than causing the collection to be rediscovered.
 
@@ -492,7 +513,7 @@ The implementation must maintain the following invariants.
 
 == Proposed Model
 
-The proposed model separates discovery, normalization, decomposition, and
+The proposed model separates discovery, interpretation, physical planning, and
 completion.
 
 [plantuml,collection-flush-proposed-flow,svg]
@@ -515,13 +536,13 @@ package "1. Flush-local discovery" #EAF2F8 {
   Context --> Intent : record; do not queue immediately
 }
 
-package "2. Normalize once" #FCF3CF {
+package "2. Interpret once" #FCF3CF {
   rectangle "CollectionMutationPreparer\nresolve owner / role changes\nforced initialization\ndatabase cascade mode" as Normalize
-  rectangle "CollectionSemantics\nnormalize current or queued state\ninto CollectionDelta" as Delta
-  rectangle "Prepared semantic mutation\nCollectionMutationId + lifecycle" as SemanticMutation
+  rectangle "CollectionSemantics\ninterpret CollectionTransition\nusing collection state + mapping facts" as Interpret
+  rectangle "CollectionMutationInterpretation\nsemantic change + sealed physical mutation\n+ validity" as SemanticMutation
 
-  Normalize --> Delta : collection-semantics comparison
-  Delta --> SemanticMutation
+  Normalize --> Interpret : transition x semantics
+  Interpret --> SemanticMutation
 }
 
 package "3. Physical planning" #E8F8F5 {
@@ -565,7 +586,7 @@ end note
 
 No new monolithic coordinator is required.  Flush preparation and queue
 execution remain the two outer control points, with the flush-scoped context and
-prepared mutation forming the handoff between them:
+frozen interpretation forming the handoff between them:
 
 [cols="1,2,3",options="header"]
 |===
@@ -578,25 +599,27 @@ prepared mutation forming the handoff between them:
 | The context records identity-based reachability and `CollectionMutationIntent`
   without immediately constructing legacy collection actions.
 
-| 2. Normalize once
+| 2. Interpret once
 | Shared `CollectionMutationPreparer` processing, invoked after collection
   visitation and backed by the active `CollectionFlushContext`.
-| It runs the applicable pre-mutation lifecycle, selects the
-  `CollectionSemantics` delta producer, freezes `CollectionDelta`, and hands a
-  queue-neutral prepared mutation to the selected `ActionQueue`.
+| It runs the applicable pre-mutation lifecycle, asks the selected
+  `CollectionSemantics` to interpret the final transition, freezes semantic
+  change and physical row projections together, and hands a queue-neutral
+  `CollectionMutationInterpretation` to the selected `ActionQueue`.
 
 | 3. Physical planning
 | The selected queue implementation.  For `GraphBasedActionQueue`,
   `FlushCoordinator` invokes `CollectionDecomposer`; the legacy queue may instead
-  adapt the prepared mutation to existing executable action classes.
-| Queue-native semantic work becomes operation templates, bindings, and, for the
-  graph queue, `FlushOperation` instances carrying `CollectionMutationId`.
+  adapt the frozen interpretation to existing executable action classes.
+| The queue consumes the interpretation's sealed physical mutation directly.
+  Queue-native work becomes operation templates, bindings, and, for the graph
+  queue, `FlushOperation` instances carrying `CollectionMutationId`.
 
 | 4. Graph execution and completion
 | `FlushCoordinator`, `StandardFlushPlanner`, `FlushPlan`, and the plan-step
   executors coordinate graph planning, JDBC execution, and batching.
 | Completion accounting by `CollectionMutationId` joins reordered or grouped
-  physical results back to the prepared mutation and runs its lifecycle only
+  physical results back to the frozen interpretation and runs its lifecycle only
   after all owned work succeeds.
 |===
 
@@ -717,10 +740,118 @@ unsupported.  That does not turn the logical transition into
 `REMOVE_AND_CREATE`: it retains update lifecycle and event semantics while using
 a replacement mutation strategy internally.
 
+=== Collection mutation interpretation
+
+The final transition and the selected collection semantics jointly determine
+how collection state should be frozen for later consumers.  Delta production is
+therefore not an independent mandatory stage.  It is one possible semantic
+component of interpretation.
+
+A conceptual interpretation separates semantic lifecycle from physical
+realization:
+
+[source,java]
+----
+record CollectionMutationInterpretation(
+        CollectionTransition transition,
+        CollectionMutationValidity validity,
+        SemanticCollectionChange semanticChange,
+        PhysicalCollectionMutation physicalMutation) {
+}
+
+sealed interface SemanticCollectionChange {
+    record None() implements SemanticCollectionChange {}
+    record Delta(CollectionDelta delta) implements SemanticCollectionChange {}
+    record BulkRemoval() implements SemanticCollectionChange {}
+}
+
+sealed interface PhysicalCollectionMutation {
+    record NoWork() implements PhysicalCollectionMutation {}
+    record RemoveAll(RemovalMode removalMode)
+            implements PhysicalCollectionMutation {}
+    record CreateAll(FrozenCollectionRows currentRows)
+            implements PhysicalCollectionMutation {}
+    record RowChanges(FrozenCollectionRowChanges changes)
+            implements PhysicalCollectionMutation {}
+    record RemoveAllAndCreateAll(
+            RemovalMode removalMode,
+            FrozenCollectionRows currentRows)
+            implements PhysicalCollectionMutation {}
+}
+----
+
+These names and shapes are illustrative.  The important properties are:
+
+* `CollectionTransition` continues to describe observable semantic lifecycle.
+* The physical mutation hierarchy makes each strategy's required payload
+  explicit and prevents invalid optional-field combinations.
+* The physical strategy is derived from the subtype rather than stored as a
+  second independently varying enum.
+* `SemanticCollectionChange.None` means no separate semantic-difference object
+  was materialized, not that a non-`NONE` transition has no semantic lifecycle.
+* `SemanticCollectionChange.BulkRemoval` records removal of prior contents
+  without pretending that the removed rows can be enumerated.
+* Frozen current rows and frozen row changes are queue-neutral semantic row
+  facts, not JDBC operations and not graph nodes.
+* A `CollectionDelta` is retained when orphan handling, queued-operation
+  semantics, cascade reuse, audit, or another semantic consumer requires it.  It
+  is not materialized solely to be converted back into physical row changes.
+
+The primary interpretation matrix is:
+
+[cols="1,1,2",options="header"]
+|===
+| Transition | Semantics or mapping condition | Natural physical interpretation
+
+| `NONE`, or a semantic mutation which owns no physical work
+| Any
+| `NoWork`; an applicable lifecycle is still completed exactly once.
+
+| `CREATE`
+| Any initialized collection
+| `CreateAll` with one frozen projection of current rows.
+
+| `REMOVE`
+| Any
+| `RemoveAll`, including database-cascade suppression metadata where applicable.
+
+| `UPDATE`
+| Set, list, map, or another safely row-mutable shape
+| `RowChanges` containing the semantics-specific removals, updates, position
+  changes, and additions.
+
+| `UPDATE`
+| Bag or mapping for which row mutation is unsafe
+| `RemoveAllAndCreateAll` with a single frozen projection of all current rows.
+
+| `REMOVE_AND_CREATE`
+| Any
+| Normalize into a `REMOVE` interpretation and a `CREATE` interpretation so the
+  two observable lifecycles remain distinct.
+
+| Queued work on an uninitialized collection
+| Semantics capable of interpreting the command log
+| Usually `RowChanges` plus an explicit-changes-only semantic delta; otherwise
+  request coordinated initialization before final interpretation.
+|===
+
+The persister contributes mapping facts such as inverse ownership, row-update
+capability, physical indexes, collection identifiers, filters, temporal
+handling, and database-cascade mode.  Thus transition and semantics are the
+primary dispatch dimensions, while interpretation still receives a persister
+context.
+
+Standard semantics should interpret once.  In particular, the graph path must
+not obtain `CollectionChangeSet`, adapt it to `CollectionDelta`, and then rebuild
+another `CollectionChangeSet`.  A compatibility interpreter may adapt an
+existing custom wrapper contract, but queue lowering consumes its frozen
+physical variant rather than independently reinterpreting the live collection.
+
 === CollectionDelta
 
-After all reachable and unreachable collections are processed, the context
-materializes the delta needed by each intent.
+After all reachable and unreachable collections are processed, interpretation
+materializes a delta when a semantic consumer requires one.  Queued-operation
+normalization and orphan projection remain primary delta use cases.
 
 [source,java]
 ----
@@ -774,48 +905,49 @@ enum DeltaSource {
 ----
 
 `CollectionChange` is an ordered semantic change such as addition, removal,
-replacement, position shift, or clear.  Physical row projections such as
-`removals()`, `additions()`, `shifts()`, and `valueChanges()` may be derived from
-the normalized changes where the mapping supports them.
+replacement, position shift, or clear.  A row-mutating interpretation may
+produce its semantic delta and physical row-change projection in one comparison.
+Physical execution is not required to derive a second row model from the delta.
 
-The existing `CollectionChangeSet` is the natural starting point.  It should be
-extended or adapted so every collection semantics can either:
+The existing `CollectionChangeSet` is a migration input, not the intended graph
+boundary.  It may be extended or adapted so every collection semantics can:
 
-* produce a delta directly, or
-* explicitly request a remove-all plus create-all mutation strategy without
-  pretending a row delta is available.
+* produce semantic delta and frozen row changes together when both are needed,
+* produce only frozen current rows for create-all physical work, or
+* explicitly select remove-all plus create-all without pretending that a
+  difference-only delta contains every current row.
 
-Delta construction belongs with `CollectionSemantics` because list, map, set,
-bag, identifier-bag, and array equality and duplicate rules differ.  A
-`CollectionSemantics` implementation resolves an associated
-`CollectionDeltaProducer` through a default method.  Standard semantics may
-return cached immutable specialized producers, avoiding per-flush allocation
-while keeping comparison, queued-command normalization, and orphan projection
+Interpretation belongs with `CollectionSemantics` because list, map, set, bag,
+identifier-bag, and array equality and duplicate rules differ.  A
+`CollectionSemantics` implementation resolves an associated immutable
+interpreter through a default method.  Standard semantics may return cached
+specialized interpreters, avoiding per-flush strategy allocation while keeping
+comparison, queued-command normalization, row projection, and orphan projection
 out of the queue implementations.
 
 The shared collection-mutation preparation protocol owns _when_ production
 occurs.  After applicable pre-mutation lifecycle processing, it asks the
-`CollectionSemantics` selected by the `CollectionPersister` to produce the delta.
-The producer interprets the wrapper, persister, selected baseline, and immutable
-queued-command input using the collection's semantics.  The
-`CollectionFlushContext` retains the resulting frozen delta but does not itself
-implement list, bag, map, set, or array comparison rules.  Action-queue
-implementations consume that retained result and do not independently recreate
-it.
+`CollectionSemantics` selected by the `CollectionPersister` to interpret the
+transition.  The interpreter reads the wrapper, persister, selected baseline,
+and immutable queued-command input once using the collection's semantics.  The
+`CollectionFlushContext` retains the resulting frozen interpretation but does
+not itself implement list, bag, map, set, or array comparison rules.
+Action-queue implementations consume that retained result and do not
+independently recreate semantic or physical projections.
 
 This evolves the responsibility currently represented in part by
 `PersistentCollection.getChangeSet()`.  Existing wrapper-specific change-set
-logic may be reused behind the semantics-owned producer during migration.  The
-default producer adapts the existing initialized-wrapper comparison contract so
+logic may be reused inside the semantics-owned interpreter during migration.  The
+default interpreter adapts the existing initialized-wrapper comparison contract so
 direct custom `CollectionSemantics` implementations remain source compatible,
 and `UserCollectionType` remains insulated by `CustomCollectionTypeSemantics`.
-If that producer cannot safely describe a required uninitialized delta, it
+If that interpreter cannot safely describe a required uninitialized mutation, it
 requests initialization from shared mutation preparation rather than performing
 the initialization or guessing at coverage.  Preparation may honor that request
 only once flush execution is required; it must not initialize during a discarded
 speculative auto-flush or solely for cascade orphan inspection.  After successful
-initialization applies queued operations, production continues with a complete
-loaded-baseline delta.  Custom semantics may provide a specialized producer to
+initialization applies queued operations, interpretation continues with a complete
+loaded-baseline result.  Custom semantics may provide a specialized interpreter to
 avoid this conservative fallback.
 
 For an initialized collection, the baseline is `LOADED` or `EMPTY` and coverage
@@ -848,7 +980,7 @@ The selected working-specification boundary has two queue-neutral stages:
 ----
 CollectionMutationInput
   -> shared CollectionMutationPreparer
-  -> PreparedCollectionMutation
+  -> CollectionMutationInterpretation
   -> queue-native lowering or scheduling
 ----
 
@@ -857,9 +989,10 @@ The intent is to stop requiring every `ActionQueue` implementation to accept
 `CollectionUpdateAction`, and `QueuedOperationCollectionAction` as its primary
 collection registration vocabulary.  It is not to require a Java type named
 `LogicalCollectionAction`.  The exact Java signatures remain an implementation
-detail, but shared semantic preparation remains distinct from queue-native
-lowering.  Allowing queues to participate more directly in producing their
-boundary representations remains a potential later investigation.
+detail, but shared lifecycle preparation and semantics-owned interpretation
+remain distinct from queue-native lowering.  The sealed physical mutation is
+part of the queue-neutral interpretation; JDBC operations and graph nodes are
+not.
 
 During migration, the legacy queue may adapt the queue-neutral boundary into the
 existing collection action classes.  The graph queue may lower the same boundary
@@ -893,7 +1026,7 @@ A lifecycle contains ordered stages such as:
 A flush-local owner lifecycle coordinator keys participation by owner identity.
 Entity and non-inverse collection work register with the same coordinator.
 `@PreUpdate` runs once before final entity-state capture, collection interceptor
-hooks, collection pre-events, and delta freezing; its entity and collection
+hooks, collection pre-events, and interpretation freezing; its entity and collection
 changes are re-evaluated for the same flush.  `@PostUpdate` runs once only after
 all applicable owner entity and collection work and their Hibernate post-events
 succeed.  Inserted or deleted owners do not gain update lifecycle solely from
@@ -951,12 +1084,13 @@ The one-to-many removal/change/addition paths must share the same base.
 
 === Graph integration
 
-Collection decomposers become consumers of a stable prepared semantic mutation
-and delta:
+Collection decomposers become consumers of a stable interpretation and its
+sealed physical mutation:
 
 [source]
 ----
-PreparedCollectionMutation
+CollectionMutationInterpretation
+  -> PhysicalCollectionMutation
   -> CollectionDecomposer
   -> operation template + row binding(s)
   -> FlushOperation / grouped row operation
@@ -976,8 +1110,8 @@ Where graph correctness requires row-sensitive facts, row bindings expose:
 * deferred generated-identifier handles.
 
 Table-level dependency edges remain an acceptable conservative fallback, but
-the delta makes row-sensitive dependency extraction possible without revisiting
-the live collection.
+frozen rows and row changes make row-sensitive dependency extraction possible
+without revisiting the live collection.
 
 === Physical row representation
 
@@ -1013,10 +1147,18 @@ The implementation may therefore support a hybrid representation:
   required.
 
 _Deferred materialization_ does not mean rediscovering changes or rereading the
-live collection.  All row bindings already come from the frozen
-`CollectionDelta`; planning merely chooses whether to represent them as one
-compact node, partitions of equivalent rows, or individual `FlushOperation`
-instances.
+live collection.  All row bindings already come from the frozen physical
+mutation.  Planning merely chooses whether to represent them as one compact
+node, partitions of equivalent rows, or individual `FlushOperation` instances.
+
+`CreateAll` and `RemoveAllAndCreateAll` retain a frozen current-row projection
+directly.  They do not allocate one `CollectionChange.Addition` per row unless a
+separate semantic consumer actually requires an additions delta.
+
+`RowChanges` retains the removals, replacements, position changes, and additions
+produced by the semantics-specific comparison.  The graph decomposer consumes
+those facts directly; it does not rebuild `CollectionChangeSet` or rescan the
+collection.
 
 For example, inserts for a basic element collection normally share one owner
 dependency and may remain one template with many bindings.  List-index swaps
@@ -1624,7 +1766,7 @@ Collection mutation inputs and provisional analysis created after the checkpoint
 are owned by the flush context and discarded with it when execution is
 unnecessary.
 Collection interceptor hooks, Hibernate collection events, owner callbacks for
-collection work, final delta freezing, physical lowering, state advancement,
+collection work, final interpretation freezing, physical lowering, state advancement,
 cache work, completion handlers, and successful collection statistics all wait
 for a positive flush-needed decision.  Once positive, the owner's one applicable
 `@PreUpdate` callback precedes the hook for every contributing collection; entity
@@ -1663,25 +1805,34 @@ query spaces so physical decomposition is unnecessary.
 * Let the graph queue lower normalized semantic mutations directly without
   requiring legacy collection action instances.
 
-=== Phase 4: Stable delta production
+=== Phase 4: Stable collection interpretation
 
 * Generalize `CollectionChangeSet` across collection semantics.
-* Make `CollectionSemantics` resolve the collection-specific delta producer
-  through a default associated-producer method; invoke it through shared
-  mutation preparation rather than from a queue-specific decomposer.
+* Make `CollectionSemantics` resolve a collection-specific interpreter through
+  a default method; invoke it through shared mutation preparation using the
+  selected transition and persister context.
 * Adapt initialized custom wrappers through a conservative compatibility
-  producer and honor its initialization-required result only during a required
+  interpreter and honor its initialization-required result only during a required
   flush; never initialize through this fallback for discarded speculative work
   or orphan inspection alone.
-* Compute and retain one delta per relevant collection and flush.
+* Compute and retain one `CollectionMutationInterpretation` per relevant
+  transition and collection structural state.
 * Add an internal immutable queued-command visitor and normalize queued commands
   into complete or explicit-changes-only deltas.
 * Represent bulk clear and deferred append positions without initializing the
   collection or enumerating its persisted baseline.
 * Share orphan candidates with flush-time cascade processing only where the
   comparison is known to remain valid.
-* Change bind plans and unique-slot extraction to consume delta rows.
-* Remove repeated fallback scans where delta support exists.
+* Change both queues' bind plans and unique-slot extraction to consume the
+  interpretation's frozen physical mutation directly.
+* Ensure standard graph execution never performs
+  `CollectionChangeSet -> CollectionDelta -> CollectionChangeSet`.
+* For `CreateAll` and `RemoveAllAndCreateAll`, retain frozen current rows without
+  allocating per-row semantic additions unless another consumer requires them.
+* Remove repeated fallback scans where interpretation support exists.
+* Demonstrate a statistically credible overall graph-queue improvement against
+  Stage 0 across the full-stack benchmark matrix, with no unexplained credible
+  per-scenario regression greater than 5%.
 
 === Phase 5: Compact row execution
 
@@ -1739,7 +1890,7 @@ cascade implementation for:
 
 * valid frozen orphan-projection reuse,
 * stale comparison rejection and standalone fallback,
-* cascade before delta freezing and outside collection flush,
+* cascade before interpretation freezing and outside collection flush,
 * initialized and uninitialized collections, including queued orphans,
 * no initialization solely to obtain a delta or orphan projection,
 * unchanged orphan timing and collection iteration strategy, and
@@ -1751,7 +1902,7 @@ Directly assert:
 
 * operation kind, table, SQL shape, and semantic slot,
 * nonoverlapping action ordinal ranges,
-* row binding values from the stable delta,
+* row binding values from the frozen physical mutation,
 * state-management contributor operations,
 * action identity on every emitted operation,
 * zero-operation logical actions.
@@ -1823,8 +1974,9 @@ row identity and structure while allowing explicit deferred value handles.
 
 == Open Questions
 
-* Should `CollectionMutationIntent` and `CollectionDelta` remain internal, or is
-  some part useful as an incubating SPI for state-management contributors?
+* Should `CollectionMutationInput`, `CollectionMutationInterpretation`, and
+  `CollectionDelta` remain internal, or is some part useful as an incubating SPI
+  for state-management contributors?
 * Should collection pre-events be allowed to mutate collection state, and if so,
   must delta materialization happen after every pre-event?
 * Is cross-collection event order contractual, intentionally unspecified, or
@@ -1852,9 +2004,13 @@ The initial direction is:
 * keep reachability state flush-local and identity-based,
 * record collection intent during visitation,
 * normalize intent after visitation and forced initialization,
-* have an associated `CollectionDeltaProducer` resolved through
-  `CollectionSemantics` produce a stable reusable delta during shared mutation
-  preparation,
+* have an associated interpreter resolved through `CollectionSemantics`
+  interpret `CollectionTransition x CollectionSemantics` once during shared
+  mutation preparation,
+* represent physical strategy with a sealed hierarchy composed into the frozen
+  interpretation,
+* materialize `CollectionDelta` only when semantic consumers require it rather
+  than as a mandatory physical-execution intermediate,
 * normalize queued-operation logs into deltas with explicit baseline and
   coverage,
 * preserve logical action identity independently of SQL shape,

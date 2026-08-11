@@ -17,6 +17,7 @@ import java.util.function.Consumer;
 
 import jakarta.annotation.Nullable;
 import org.hibernate.collection.spi.CollectionInitializerProducer;
+import org.hibernate.collection.spi.CollectionMutationInterpreter;
 import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -30,6 +31,7 @@ import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.type.CollectionType;
+import org.hibernate.type.CustomCollectionType;
 
 import static org.hibernate.collection.spi.InitializerProducerBuilder.createCollectionTypeWrapperInitializerProducer;
 import static org.hibernate.internal.util.collections.CollectionHelper.linkedMap;
@@ -53,6 +55,21 @@ public class CustomCollectionTypeSemantics<CE, E> implements CollectionSemantics
 
 	public CollectionType getCollectionType() {
 		return collectionType;
+	}
+
+	@Override
+	public CollectionMutationInterpreter getCollectionMutationInterpreter() {
+		if ( collectionType instanceof CustomCollectionType ) {
+			return CollectionSemantics.super.getCollectionMutationInterpreter();
+		}
+		return switch ( getCollectionClassification() ) {
+			case ARRAY -> StandardCollectionMutationInterpreter.ARRAY;
+			case BAG -> StandardCollectionMutationInterpreter.BAG;
+			case ID_BAG -> StandardCollectionMutationInterpreter.IDENTIFIER_BAG;
+			case LIST -> StandardCollectionMutationInterpreter.LIST;
+			case MAP, ORDERED_MAP, SORTED_MAP -> StandardCollectionMutationInterpreter.MAP;
+			case SET, ORDERED_SET, SORTED_SET -> StandardCollectionMutationInterpreter.SET;
+		};
 	}
 
 	@Override

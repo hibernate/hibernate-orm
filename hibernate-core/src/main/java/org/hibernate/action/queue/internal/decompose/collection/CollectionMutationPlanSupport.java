@@ -201,7 +201,7 @@ final class CollectionMutationPlanSupport {
 		}
 		else if ( identifierDescriptor != null ) {
 			identifierDescriptor.decompose(
-					actualElement,
+					rowValue instanceof SnapshotIndexed<?> ? actualKey : actualElement,
 					jdbcValueBindings::bindRestriction,
 					session
 			);

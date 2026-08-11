@@ -6,12 +6,12 @@ package org.hibernate.action.internal;
 
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
-import org.hibernate.action.queue.internal.FrozenCollectionDelta;
 import org.hibernate.action.spi.AfterTransactionCompletionProcess;
 import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.collection.spi.CollectionMutationInterpretation;
 import org.hibernate.engine.spi.ComparableExecutable;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.EventSource;
@@ -43,7 +43,7 @@ public abstract class CollectionAction implements ComparableExecutable {
 	private final String collectionRole;
 	private final boolean lifecyclePrepared;
 	@Nullable
-	private final FrozenCollectionDelta frozenDelta;
+	private final CollectionMutationInterpretation interpretation;
 
 	protected CollectionAction(
 			final @Nonnull CollectionPersister persister,
@@ -68,7 +68,7 @@ public abstract class CollectionAction implements ComparableExecutable {
 			final @Nullable Object key,
 			final @Nonnull EventSource session,
 			final boolean lifecyclePrepared,
-			final @Nullable FrozenCollectionDelta frozenDelta) {
+			final @Nullable CollectionMutationInterpretation interpretation) {
 		assert persister != null;
 		assert session != null;
 		this.persister = persister;
@@ -77,7 +77,7 @@ public abstract class CollectionAction implements ComparableExecutable {
 		this.collectionRole = persister.getRole();
 		this.collection = collection;
 		this.lifecyclePrepared = lifecyclePrepared;
-		this.frozenDelta = frozenDelta;
+		this.interpretation = interpretation;
 	}
 
 	/// Whether shared mutation preparation already delivered the interceptor hook and Hibernate pre-event.
@@ -87,13 +87,25 @@ public abstract class CollectionAction implements ComparableExecutable {
 		return lifecyclePrepared;
 	}
 
-	/// The queue-neutral delta frozen before this action was lowered, if this
-	/// mutation is expressed as a delta rather than a bulk strategy.
+	/// The queue-neutral interpretation frozen before this action was lowered.
 	///
 	/// @since 8.0
 	@Nullable
-	public final FrozenCollectionDelta getFrozenDelta() {
-		return frozenDelta;
+	public final CollectionMutationInterpretation getCollectionMutationInterpretation() {
+		return interpretation;
+	}
+
+	/// Return the interpretation after verifying that the collection still has
+	/// the structural state from which it was produced.
+	@Nullable
+	protected final CollectionMutationInterpretation getValidCollectionMutationInterpretation() {
+		if ( interpretation == null ) {
+			return null;
+		}
+		if ( collection != null && !interpretation.isValid( collection ) ) {
+			throw new IllegalStateException( "Collection changed after its mutation interpretation was frozen" );
+		}
+		return interpretation;
 	}
 
 	/**

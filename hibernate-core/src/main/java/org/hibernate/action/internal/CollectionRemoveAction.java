@@ -8,7 +8,7 @@ import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.action.queue.internal.FrozenCollectionDelta;
+import org.hibernate.collection.spi.CollectionMutationInterpretation;
 import org.hibernate.engine.internal.FlushProcessingContext;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.PostCollectionRemoveEvent;
@@ -69,8 +69,8 @@ public final class CollectionRemoveAction extends CollectionAction {
 			final @Nonnull EventSource session,
 			final @Nullable Object affectedOwner,
 			final @Nullable Object affectedOwnerId,
-			final @Nullable FrozenCollectionDelta frozenDelta) {
-		super( persister, collection, id, session, true, frozenDelta );
+			final @Nullable CollectionMutationInterpretation interpretation) {
+		super( persister, collection, id, session, true, interpretation );
 		this.emptySnapshot = emptySnapshot;
 		this.affectedOwner = affectedOwner;
 		this.affectedOwnerId = affectedOwnerId;

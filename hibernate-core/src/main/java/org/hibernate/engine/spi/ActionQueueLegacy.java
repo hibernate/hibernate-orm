@@ -760,11 +760,10 @@ public class ActionQueueLegacy implements org.hibernate.action.queue.spi.ActionQ
 			List<CollectionMutationInput> inputs,
 			Set<? extends Serializable> tables) {
 		for ( var input : inputs ) {
-			for ( var space : input.getQuerySpaces() ) {
-				if ( tables.contains( space ) ) {
-					ACTION_LOGGER.changesMustBeFlushedToSpace( space );
-					return true;
-				}
+			final var affectedSpace = input.findAffectedQuerySpace( tables );
+			if ( affectedSpace != null ) {
+				ACTION_LOGGER.changesMustBeFlushedToSpace( affectedSpace );
+				return true;
 			}
 		}
 		return false;

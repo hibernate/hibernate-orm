@@ -12,7 +12,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 import org.hibernate.collection.spi.CollectionInitializerProducer;
-import org.hibernate.collection.spi.CollectionDeltaProducer;
+import org.hibernate.collection.spi.CollectionMutationInterpreter;
 import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.collection.spi.PersistentArrayHolder;
 import org.hibernate.collection.spi.PersistentCollection;
@@ -49,8 +49,8 @@ public class StandardArraySemantics<E> implements CollectionSemantics<E[], E> {
 	}
 
 	@Override
-	public CollectionDeltaProducer getCollectionDeltaProducer() {
-		return StandardCollectionDeltaProducer.ARRAY;
+	public CollectionMutationInterpreter getCollectionMutationInterpreter() {
+		return StandardCollectionMutationInterpreter.ARRAY;
 	}
 
 	@Override

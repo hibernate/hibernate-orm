@@ -5,17 +5,14 @@
 package org.hibernate.action.queue.spi.decompose.collection;
 
 import org.hibernate.Incubating;
-import org.hibernate.action.internal.CollectionRecreateAction;
-import org.hibernate.action.internal.CollectionRemoveAction;
-import org.hibernate.action.internal.CollectionUpdateAction;
-import org.hibernate.action.internal.QueuedOperationCollectionAction;
+import org.hibernate.action.queue.internal.PreparedCollectionMutation;
 import org.hibernate.action.queue.spi.decompose.DecompositionContext;
 import org.hibernate.action.queue.spi.plan.FlushOperation;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 import java.util.function.Consumer;
 
-/// Decomposer for [collection actions][org.hibernate.action.internal.CollectionAction].
+/// Decomposer for prepared collection mutations.
 /// Comes in 2 general flavors -
 ///
 /// * [OneToManyDecomposer] for `one-to-many` collections
@@ -42,7 +39,7 @@ import java.util.function.Consumer;
 public interface CollectionDecomposer {
 	/// Decomposes collection (re)create actions.
 	void decomposeRecreate(
-			CollectionRecreateAction action,
+			PreparedCollectionMutation mutation,
 			int ordinalBase,
 			SharedSessionContractImplementor session,
 			DecompositionContext decompositionContext,
@@ -50,7 +47,7 @@ public interface CollectionDecomposer {
 
 	/// Decomposes collection update actions.
 	void decomposeUpdate(
-			CollectionUpdateAction action,
+			PreparedCollectionMutation mutation,
 			int ordinalBase,
 			SharedSessionContractImplementor session,
 			DecompositionContext decompositionContext,
@@ -58,7 +55,7 @@ public interface CollectionDecomposer {
 
 	/// Decomposes collection removal ("delete all") operations.
 	void decomposeRemove(
-			CollectionRemoveAction action,
+			PreparedCollectionMutation mutation,
 			int ordinalBase,
 			SharedSessionContractImplementor session,
 			DecompositionContext decompositionContext,
@@ -66,7 +63,7 @@ public interface CollectionDecomposer {
 
 	/// Decomposes queued collection operations.
 	void decomposeQueuedOperations(
-			QueuedOperationCollectionAction action,
+			PreparedCollectionMutation mutation,
 			int ordinalBase,
 			SharedSessionContractImplementor session,
 			Consumer<FlushOperation> operationConsumer);

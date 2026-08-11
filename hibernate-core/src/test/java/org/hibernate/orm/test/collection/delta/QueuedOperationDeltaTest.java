@@ -14,14 +14,16 @@ import org.hibernate.collection.internal.StandardSetSemantics;
 import org.hibernate.collection.spi.CollectionBaseline;
 import org.hibernate.collection.spi.CollectionChange;
 import org.hibernate.collection.spi.CollectionDelta;
-import org.hibernate.collection.spi.CollectionDeltaProducer;
-import org.hibernate.collection.spi.CollectionDeltaProduction;
-import org.hibernate.collection.spi.CollectionDeltaProductionContext;
+import org.hibernate.collection.spi.CollectionInterpretationContext;
+import org.hibernate.collection.spi.CollectionInterpretationProduction;
+import org.hibernate.collection.spi.CollectionMutationInterpreter;
 import org.hibernate.collection.spi.DeferredCollectionPosition;
 import org.hibernate.collection.spi.DeltaCoverage;
 import org.hibernate.collection.spi.DeltaSource;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.collection.spi.QueuedCollectionOperation;
+import org.hibernate.collection.spi.SemanticCollectionChange;
+import org.hibernate.action.queue.spi.CollectionTransition;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.junit.jupiter.api.Test;
@@ -45,7 +47,7 @@ public class QueuedOperationDeltaTest {
 	@Test
 	void unindexedCommandsRetainOrderAndClearBarrier() {
 		final var delta = produce(
-				StandardBagSemantics.INSTANCE.getCollectionDeltaProducer(),
+				StandardBagSemantics.INSTANCE.getCollectionMutationInterpreter(),
 				List.of(
 						operation( ADD, "before-clear", null, null, 0 ),
 						operation( CLEAR, null, null, null, 1 ),
@@ -66,7 +68,7 @@ public class QueuedOperationDeltaTest {
 	@Test
 	void setUsesItsSemanticsOwnedProducer() {
 		final var delta = produce(
-				StandardSetSemantics.INSTANCE.getCollectionDeltaProducer(),
+				StandardSetSemantics.INSTANCE.getCollectionMutationInterpreter(),
 				List.of( operation( ADD, "added", null, null, 0 ) )
 		);
 
@@ -77,7 +79,7 @@ public class QueuedOperationDeltaTest {
 	@Test
 	void mapCommandsRetainKnownKeysAndOldValues() {
 		final var delta = produce(
-				StandardMapSemantics.INSTANCE.getCollectionDeltaProducer(),
+				StandardMapSemantics.INSTANCE.getCollectionMutationInterpreter(),
 				List.of(
 						operation( PUT, "new", "old", "key", 0 ),
 						operation( REMOVE, null, "removed", "other-key", 1 )
@@ -93,7 +95,7 @@ public class QueuedOperationDeltaTest {
 	@Test
 	void listAppendsShareOnePersistedSizeHandle() {
 		final var delta = produce(
-				StandardListSemantics.INSTANCE.getCollectionDeltaProducer(),
+				StandardListSemantics.INSTANCE.getCollectionMutationInterpreter(),
 				List.of(
 						operation( ADD, "first", null, null, 0 ),
 						operation( ADD, "second", null, null, 1 )
@@ -116,7 +118,7 @@ public class QueuedOperationDeltaTest {
 	@Test
 	void clearMakesFollowingAppendPositionAbsolute() {
 		final var delta = produce(
-				StandardListSemantics.INSTANCE.getCollectionDeltaProducer(),
+				StandardListSemantics.INSTANCE.getCollectionMutationInterpreter(),
 				List.of(
 						operation( CLEAR, null, null, null, 0 ),
 						operation( ADD, "first", null, null, 1 ),
@@ -138,19 +140,27 @@ public class QueuedOperationDeltaTest {
 	}
 
 	private static CollectionDelta produce(
-			CollectionDeltaProducer producer,
+			CollectionMutationInterpreter interpreter,
 			List<QueuedCollectionOperation> operations) {
 		final var collection = mock( PersistentCollection.class );
 		when( collection.wasInitialized() ).thenReturn( false );
 		when( collection.hasQueuedOperations() ).thenReturn( true );
 		when( collection.getQueuedOperations() ).thenReturn( operations );
-		final var production = producer.produceDelta( new CollectionDeltaProductionContext(
+		final var production = interpreter.interpret( new CollectionInterpretationContext(
 				collection,
 				mock( CollectionPersister.class ),
+				CollectionTransition.NONE,
 				CollectionBaseline.UNINITIALIZED,
+				false,
+				false,
+				true,
 				mock( SharedSessionContractImplementor.class )
 		) );
-		return assertInstanceOf( CollectionDeltaProduction.Produced.class, production ).delta();
+		final var interpretation = assertInstanceOf(
+				CollectionInterpretationProduction.Produced.class,
+				production
+		).interpretation();
+		return assertInstanceOf( SemanticCollectionChange.Delta.class, interpretation.semanticChange() ).delta();
 	}
 
 	private static QueuedCollectionOperation operation(

@@ -4,6 +4,7 @@
  */
 package org.hibernate.processor.test.data.basic;
 
+import org.hibernate.processor.HibernateProcessor;
 import org.hibernate.processor.test.util.CompilationTest;
 import org.hibernate.processor.test.util.WithClasses;
 import org.junit.jupiter.api.Test;

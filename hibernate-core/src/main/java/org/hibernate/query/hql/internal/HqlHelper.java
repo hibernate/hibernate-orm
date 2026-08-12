@@ -14,7 +14,9 @@ import static org.hibernate.grammars.hql.HqlLexer.GROUP;
 import static org.hibernate.grammars.hql.HqlLexer.HAVING;
 import static org.hibernate.grammars.hql.HqlLexer.LEFT_PAREN;
 import static org.hibernate.grammars.hql.HqlLexer.ORDER;
+import static org.hibernate.grammars.hql.HqlLexer.RIGHT_PAREN;
 import static org.hibernate.grammars.hql.HqlLexer.WHERE;
+import static org.hibernate.grammars.hql.HqlLexer.WITHIN;
 
 /**
  * Utility methods for HQL string manipulation.
@@ -50,23 +52,40 @@ public final class HqlHelper {
 			final var allTokens = hqlLexer.getAllTokens();
 			int previousType = -1;
 			int previousPreviousType = -1;
+			int parenthesis = 0;
 			for ( final var token : allTokens ) {
 				if ( token.getChannel() == Token.DEFAULT_CHANNEL ) {
 					final int tokenType = token.getType();
-					switch ( tokenType ) {
-						case FROM:
-							return hql;
-						case WHERE:
-							if ( previousType == LEFT_PAREN && previousPreviousType == FILTER ) {
-								break;
-							}
-							// fall through
-						case HAVING:
-						case GROUP:
-						case ORDER:
-							return new StringBuilder( hql )
-									.insert( token.getStartIndex(), "from " + entityName + " " )
-									.toString();
+					if ( tokenType == LEFT_PAREN ) {
+						parenthesis++;
+					}
+					else if ( tokenType == RIGHT_PAREN ) {
+						parenthesis--;
+					}
+					else if ( parenthesis == 0 ) {
+						switch ( tokenType ) {
+							case FROM:
+								return hql;
+							case WHERE:
+								if ( previousType == LEFT_PAREN && previousPreviousType == FILTER ) {
+									break;
+								}
+								// fall through
+							case GROUP:
+								if ( previousType == WITHIN ) {
+									break;
+								}
+								// fall through
+							case ORDER:
+								if ( previousType == LEFT_PAREN && previousPreviousType == GROUP ) {
+									break;
+								}
+								// fall through
+							case HAVING:
+								return new StringBuilder( hql )
+										.insert( token.getStartIndex(), "from " + entityName + " " )
+										.toString();
+						}
 					}
 					previousPreviousType = previousType;
 					previousType = tokenType;

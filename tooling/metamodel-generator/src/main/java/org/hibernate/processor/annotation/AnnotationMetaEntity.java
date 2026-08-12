@@ -69,6 +69,8 @@ import jakarta.persistence.AccessType;
 
 import static java.lang.Character.toUpperCase;
 import static org.antlr.v4.runtime.Token.DEFAULT_CHANNEL;
+import static org.hibernate.grammars.hql.HqlLexer.RIGHT_PAREN;
+import static org.hibernate.grammars.hql.HqlLexer.WITHIN;
 import static org.hibernate.processor.util.StringUtil.decapitalize;
 import static java.lang.Boolean.FALSE;
 import static java.util.Collections.emptyList;
@@ -3151,24 +3153,41 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			final var allTokens = hqlLexer.getAllTokens();
 			int previousType = -1;
 			int previousPreviousType = -1;
+			int parenthesis = 0;
 			for ( final var token : allTokens ) {
 				if ( token.getChannel() == DEFAULT_CHANNEL ) {
 					final int tokenType = token.getType();
-					switch ( tokenType ) {
-						case FROM:
-							return hql;
-						case WHERE:
-							if ( previousType == LEFT_PAREN && previousPreviousType == FILTER ) {
-								// WHERE is part of FILTER (WHERE ...), not the query's own WHERE clause
-								break;
-							}
-							// fall through
-						case HAVING:
-						case GROUP:
-						case ORDER:
-							return new StringBuilder( hql )
-									.insert( token.getStartIndex(), "from " + entityType + " " )
-									.toString();
+					if ( tokenType == LEFT_PAREN ) {
+						parenthesis++;
+					}
+					else if ( tokenType == RIGHT_PAREN ) {
+						parenthesis--;
+					}
+					else if ( parenthesis == 0 ) {
+						switch ( tokenType ) {
+							case FROM:
+								return hql;
+							case WHERE:
+								if ( previousType == LEFT_PAREN && previousPreviousType == FILTER ) {
+									// WHERE is part of FILTER (WHERE ...), not the query's own WHERE clause
+									break;
+								}
+								// fall through
+							case GROUP:
+								if ( previousType == WITHIN ) {
+									break;
+								}
+								// fall through
+							case ORDER:
+								if ( previousType == LEFT_PAREN && previousPreviousType == GROUP ) {
+									break;
+								}
+								// fall through
+							case HAVING:
+								return new StringBuilder( hql )
+										.insert( token.getStartIndex(), "from " + entityType + " " )
+										.toString();
+						}
 					}
 					previousPreviousType = previousType;
 					previousType = tokenType;

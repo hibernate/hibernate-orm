@@ -242,7 +242,8 @@ public class SelectionQueryImpl<R>
 	}
 
 	/// Used for [KeyedResult] handling.
-	<E> SelectionQueryImpl(@SuppressWarnings("rawtypes") SelectionQueryImpl original, KeyedPage<E> keyedPage) {
+	// Used by Hibernate Reactive
+	public <E> SelectionQueryImpl(@SuppressWarnings("rawtypes") SelectionQueryImpl original, KeyedPage<E> keyedPage) {
 		super( original );
 
 		final var page = keyedPage.getPage();
@@ -1052,7 +1053,8 @@ public class SelectionQueryImpl<R>
 		);
 	}
 
-	private static <R> KeyedPage<R> nextPage(KeyedPage<R> keyedPage, List<KeyedResult<R>> results) {
+	// Used by Hibernate Reactive
+	public static <R> KeyedPage<R> nextPage(KeyedPage<R> keyedPage, List<KeyedResult<R>> results) {
 		if ( keyedPage.getKeyInterpretation() == KEY_OF_FIRST_ON_NEXT_PAGE ) {
 			// the results come in reverse order
 			return !results.isEmpty()
@@ -1067,7 +1069,8 @@ public class SelectionQueryImpl<R>
 		}
 	}
 
-	private static <R> KeyedPage<R> previousPage(KeyedPage<R> keyedPage, List<KeyedResult<R>> results) {
+	// Used by Hibernate Reactive
+	public static <R> KeyedPage<R> previousPage(KeyedPage<R> keyedPage, List<KeyedResult<R>> results) {
 		if ( keyedPage.getKeyInterpretation() == KEY_OF_FIRST_ON_NEXT_PAGE ) {
 			// the results come in reverse order
 			final int pageSize = keyedPage.getPage().getSize();

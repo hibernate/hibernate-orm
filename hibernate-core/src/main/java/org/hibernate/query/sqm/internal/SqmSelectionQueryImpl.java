@@ -203,7 +203,8 @@ public class SqmSelectionQueryImpl<R> extends AbstractSqmSelectionQuery<R>
 
 	}
 
-	<E> SqmSelectionQueryImpl(AbstractSqmSelectionQuery<?> original, KeyedPage<E> keyedPage) {
+	// Used by Hibernate Reactive
+	public <E> SqmSelectionQueryImpl(AbstractSqmSelectionQuery<?> original, KeyedPage<E> keyedPage) {
 		super( original );
 
 		final var page = keyedPage.getPage();

@@ -59,7 +59,7 @@ import static org.hibernate.query.sqm.internal.SqmUtil.isSelectionAssignableToRe
 /**
  * @author Gavin King
  */
-abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
+public abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
 
 	AbstractSqmSelectionQuery(SharedSessionContractImplementor session) {
 		super(session);
@@ -364,7 +364,8 @@ abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
 		);
 	}
 
-	private static <R> KeyedPage<R> nextPage(KeyedPage<R> keyedPage, List<KeyedResult<R>> results) {
+	// Used by Hibernate Reactive
+	public static <R> KeyedPage<R> nextPage(KeyedPage<R> keyedPage, List<KeyedResult<R>> results) {
 		if ( keyedPage.getKeyInterpretation() == KEY_OF_FIRST_ON_NEXT_PAGE ) {
 			// the results come in reverse order
 			return !results.isEmpty()
@@ -379,7 +380,8 @@ abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
 		}
 	}
 
-	private static <R> KeyedPage<R> previousPage(KeyedPage<R> keyedPage, List<KeyedResult<R>> results) {
+	// Used by Hibernate Reactive
+	public static <R> KeyedPage<R> previousPage(KeyedPage<R> keyedPage, List<KeyedResult<R>> results) {
 		if ( keyedPage.getKeyInterpretation() == KEY_OF_FIRST_ON_NEXT_PAGE ) {
 			// the results come in reverse order
 			final int pageSize = keyedPage.getPage().getSize();

@@ -194,6 +194,22 @@ public class ArrayAggregateTest {
 		} );
 	}
 
+	public record ArrayAggResult(String foo, int[] theInts) {}
+
+	@Test
+	@Jira("https://hibernate.atlassian.net/browse/HHH-20772")
+	public void testArrayAggDtoMapping(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			List<ArrayAggResult> results = em.createQuery(
+					"select 'zzz' as foo, array_agg(e.theInt) within group (order by e.theInt) as theInts from EntityOfBasics e",
+					ArrayAggResult.class
+			).getResultList();
+			assertEquals( 1, results.size() );
+			assertEquals( "zzz", results.get( 0 ).foo() );
+			assertArrayEquals( new int[] { 1, 2, 3 }, results.get( 0 ).theInts() );
+		} );
+	}
+
 	@Test
 	@Jira("https://hibernate.atlassian.net/browse/HHH-19681")
 	@RequiresDialect(PostgreSQLDialect.class)

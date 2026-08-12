@@ -32,6 +32,7 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.action.queue.internal.GraphBasedActionQueue;
+import org.hibernate.action.queue.spi.bind.GroupedRowBindPlan;
 import org.hibernate.engine.internal.FlushProcessingContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.internal.AbstractFlushingEventListener;
@@ -109,6 +110,8 @@ public class CollectionFlushProcessingBenchmark {
 	/// Unlike the GC profiler's normalized allocation result, this counter excludes
 	/// invocation setup and teardown. The primary score includes the small cost of
 	/// reading the thread-allocation counter and is not a planning-time measurement.
+	/// The auxiliary counters also report materialized graph operations and physical
+	/// row bindings so compact and expanded representations can be compared directly.
 	/// JMH aggregates `EVENTS` counter headlines by summing measurement iterations;
 	/// inspect the raw per-iteration values, or divide the headline by the iteration
 	/// count, to obtain the per-planning-operation byte count.
@@ -130,6 +133,8 @@ public class CollectionFlushProcessingBenchmark {
 		public long queuePreparationBytes;
 		public long graphPlanningBytes;
 		public long cleanupBytes;
+		public long flushOperations;
+		public long rowBindings;
 	}
 
 	private static MethodHandle currentThreadAllocatedBytesMethod() {
@@ -257,7 +262,7 @@ public class CollectionFlushProcessingBenchmark {
 
 	@State(Scope.Thread)
 	public static class PlanningState {
-		@Param({ "CREATE_16_BY_16", "CREATE_1_BY_256" })
+		@Param({ "CREATE_16_BY_16", "CREATE_1_BY_256", "BAG_REMOVE_CREATE_512" })
 		public String scenario;
 
 		private FlushState flushState;
@@ -362,10 +367,22 @@ public class CollectionFlushProcessingBenchmark {
 				if ( plan == null ) {
 					return 0;
 				}
+				counters.flushOperations = 0;
+				counters.rowBindings = 0;
 				long result = plan.steps().size();
 				for ( var step : plan.steps() ) {
-					result += step.operations().size();
+					counters.flushOperations += step.operations().size();
+					for ( var operation : step.operations() ) {
+						final var bindPlan = operation.getBindPlan();
+						if ( bindPlan instanceof GroupedRowBindPlan grouped ) {
+							counters.rowBindings += grouped.getBindingCount();
+						}
+						else if ( operation.getJdbcOperation() != null ) {
+							counters.rowBindings++;
+						}
+					}
 				}
+				result += counters.flushOperations;
 				return result;
 			}
 			finally {
@@ -432,6 +449,15 @@ public class CollectionFlushProcessingBenchmark {
 			@Override
 			void prepare(Session session) {
 				session.persist( newOwner( -1L, 256 ) );
+			}
+		},
+		BAG_REMOVE_CREATE_512 {
+			@Override
+			void prepare(Session session) {
+				final var values = owner( session ).bagValues;
+				for ( int i = 256; i < 512; i++ ) {
+					values.add( value( i ) );
+				}
 			}
 		},
 		AUTOFLUSH_DISCARDED {

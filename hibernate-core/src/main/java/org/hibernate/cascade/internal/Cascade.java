@@ -10,13 +10,15 @@ import java.util.List;
 
 import org.hibernate.HibernateException;
 import org.hibernate.annotations.OnDeleteAction;
+import org.hibernate.cascade.spi.CascadePoint;
 import org.hibernate.cascade.spi.CascadePropertySelection;
 import org.hibernate.cascade.spi.CascadeStyle;
 import org.hibernate.cascade.spi.CascadingAction;
 import org.hibernate.cascade.spi.CascadingActions;
 import org.hibernate.cascade.spi.PropertySelectionKind;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.cascade.spi.CascadePoint;
+import org.hibernate.collection.spi.SemanticCollectionChange;
+import org.hibernate.engine.internal.FlushProcessingContext;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.event.spi.DeleteContext;
@@ -1002,7 +1004,15 @@ public final class Cascade {
 		}
 	}
 
-	private static Collection<?> getOrphans(EventSource eventSource, String entityName, PersistentCollection<?> collection) {
+	static Collection<?> getOrphans(EventSource eventSource, String entityName, PersistentCollection<?> collection) {
+		final var tracker = eventSource.getPersistenceContextInternal().getCollectionFlushActionTracker();
+		if ( tracker instanceof FlushProcessingContext flushProcessingContext ) {
+			final var interpretation = flushProcessingContext.getValidCollectionInterpretation( collection );
+			if ( interpretation != null
+					&& interpretation.semanticChange() instanceof SemanticCollectionChange.Delta delta ) {
+				return delta.delta().orphanCandidates();
+			}
+		}
 		if ( collection.wasInitialized() ) {
 			final var collectionEntry =
 					eventSource.getPersistenceContextInternal()

@@ -7,6 +7,7 @@ package org.hibernate.envers.internal.entities.mapper;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 
+import org.hibernate.Hibernate;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.internal.entities.PropertyData;
 import org.hibernate.envers.internal.tools.ReflectionTools;
@@ -34,7 +35,7 @@ public abstract class AbstractMapper {
 	@SuppressWarnings("unchecked")
 	protected <T> T getValueFromObject(PropertyData propertyData, Object object, ServiceRegistry serviceRegistry) {
 		final Getter getter = ReflectionTools.getGetter( object.getClass(), propertyData, serviceRegistry );
-		return (T) getter.get( object );
+		return (T) getter.get( Hibernate.unproxy( object ) );
 	}
 
 	/**
@@ -50,7 +51,7 @@ public abstract class AbstractMapper {
 	@SuppressWarnings("unchecked")
 	protected <T> T getValueFromObject(String propertyName, String accessType, Object object, ServiceRegistry serviceRegistry) {
 		final Getter getter = ReflectionTools.getGetter( object.getClass(), propertyName, accessType, serviceRegistry );
-		return (T) getter.get( object );
+		return (T) getter.get( Hibernate.unproxy( object ) );
 	}
 
 	/**
@@ -63,7 +64,7 @@ public abstract class AbstractMapper {
 	 */
 	protected void setValueOnObject(PropertyData propertyData, Object object, Object value, ServiceRegistry serviceRegistry) {
 		final Setter setter = ReflectionTools.getSetter(object.getClass(), propertyData, serviceRegistry );
-		setter.set( object, value );
+		setter.set( Hibernate.unproxy( object ), value );
 	}
 
 	/**
@@ -77,7 +78,7 @@ public abstract class AbstractMapper {
 	protected void getAndSetValue(PropertyData propertyData, Object source, Object destination, ServiceRegistry serviceRegistry) {
 		final Getter getter = ReflectionTools.getGetter( source.getClass(), propertyData, serviceRegistry );
 		final Setter setter = ReflectionTools.getSetter( destination.getClass(), propertyData, serviceRegistry );
-		setter.set( destination, getter.get( source ) );
+		setter.set( Hibernate.unproxy( destination ), getter.get( Hibernate.unproxy( source ) ) );
 	}
 
 	/**

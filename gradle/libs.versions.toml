@@ -124,7 +124,7 @@ mavenPluginDev = "1.0.3"
 hibernateBuild = "2.3.0"
 nexusPublish = "2.0.0"
 ideaExt = "1.4.1"
-taskTree = "4.0.1"
+taskTree = "4.0.2"
 
 
 [libraries]

@@ -66,8 +66,7 @@ public class IndexColumn extends AnnotatedColumn {
 		return column;
 	}
 
-	private static String getColumnNameFromNamingStrategy(PropertyData inferredData, MetadataBuildingContext context)
-	{
+	private static String getColumnNameFromNamingStrategy(PropertyData inferredData, MetadataBuildingContext context) {
 		final var implicitNamingStrategy = context.getBuildingOptions().getImplicitNamingStrategy();
 		final var identifier = implicitNamingStrategy.determineListIndexColumnName(
 				new ImplicitIndexColumnNameSource() {

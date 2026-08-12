@@ -10,6 +10,10 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.collection.spi.PersistentSet;
 import org.hibernate.dialect.HANADialect;
 import org.hibernate.event.spi.AbstractCollectionEvent;
+import org.hibernate.event.spi.PostCollectionRecreateEvent;
+import org.hibernate.event.spi.PostCollectionRemoveEvent;
+import org.hibernate.event.spi.PreCollectionRecreateEvent;
+import org.hibernate.event.spi.PreCollectionRemoveEvent;
 import org.hibernate.orm.test.event.collection.association.bidirectional.manytomany.ChildWithBidirectionalManyToMany;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -1004,6 +1008,7 @@ public abstract class AbstractCollectionEventTest {
 
 		if ( usesSharedCollectionLifecyclePreparation() ) {
 			checkGraphExpectations( listeners, expectedInitialize, 1, expectedUpdates, 2 );
+			assertRemoveBeforeRecreate( listeners, otherParent.getChildren() );
 		}
 		else {
 			int index = 0;
@@ -1229,6 +1234,33 @@ public abstract class AbstractCollectionEventTest {
 				),
 				() -> "No matching " + phase + " event pair for " + expectedOwner
 		);
+	}
+
+	private void assertRemoveBeforeRecreate(EventSink listeners, Object collection) {
+		int preRemove = -1;
+		int postRemove = -1;
+		int preRecreate = -1;
+		int postRecreate = -1;
+		for ( int i = 0; i < listeners.getEvents().size(); i++ ) {
+			final var event = listeners.getEvents().get( i );
+			if ( event.getCollection() != collection ) {
+				continue;
+			}
+			if ( event instanceof PreCollectionRemoveEvent ) {
+				preRemove = i;
+			}
+			else if ( event instanceof PostCollectionRemoveEvent ) {
+				postRemove = i;
+			}
+			else if ( event instanceof PreCollectionRecreateEvent ) {
+				preRecreate = i;
+			}
+			else if ( event instanceof PostCollectionRecreateEvent ) {
+				postRecreate = i;
+			}
+		}
+		assertTrue( preRemove >= 0 && preRecreate > preRemove, "remove preparation must precede create preparation" );
+		assertTrue( postRemove >= 0 && postRecreate > postRemove, "remove completion must precede create completion" );
 	}
 
 	protected void checkResult(EventSink listeners,

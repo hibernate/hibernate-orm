@@ -23,7 +23,8 @@ final class LegacyCompatibleCollectionMutationInterpreter implements CollectionM
 	public CollectionInterpretationProduction interpret(CollectionInterpretationContext context) {
 		final var collection = context.collection();
 		final var transition = context.transition();
-		if ( requiresCurrentState( transition ) && !collection.wasInitialized() ) {
+		if ( !collection.wasInitialized()
+				&& (requiresCurrentState( transition ) || context.semanticDeltaRequired()) ) {
 			if ( !collection.hasQueuedOperations() ) {
 				return CollectionInterpretationProduction.initializationRequired();
 			}

@@ -23,7 +23,11 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderColumn;
 import jakarta.persistence.Table;
 
+import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.FlushSettings;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -39,22 +43,44 @@ import static org.assertj.core.api.Assertions.assertThat;
 /// @author Steve Ebersole
 public class CollectionInterpretationQueueExecutionTest {
 	@DomainModel(annotatedClasses = { Owner.class, Child.class })
-	@SessionFactory
-	@ServiceRegistry(settings = @Setting(name = FlushSettings.FLUSH_QUEUE_TYPE, value = "legacy"))
+	@SessionFactory(generateStatistics = true)
+	@ServiceRegistry(settings = {
+			@Setting(name = FlushSettings.FLUSH_QUEUE_TYPE, value = "legacy"),
+			@Setting(
+					name = AvailableSettings.PHYSICAL_NAMING_STRATEGY,
+					value = "org.hibernate.orm.test.collection.delta.CollectionInterpretationQueueExecutionTest$LegacyTableNamingStrategy"
+			)
+	})
 	public static class LegacyQueue {
 		@Test
 		void executesCreateAndUpdateDeltas(SessionFactoryScope scope) {
 			verifyCreateAndUpdate( scope );
 		}
+
+		@Test
+		void bagReplacementRecordsOneSemanticUpdate(SessionFactoryScope scope) {
+			verifyBagReplacementStatistics( scope );
+		}
 	}
 
 	@DomainModel(annotatedClasses = { Owner.class, Child.class })
-	@SessionFactory
-	@ServiceRegistry(settings = @Setting(name = FlushSettings.FLUSH_QUEUE_TYPE, value = "graph"))
+	@SessionFactory(generateStatistics = true)
+	@ServiceRegistry(settings = {
+			@Setting(name = FlushSettings.FLUSH_QUEUE_TYPE, value = "graph"),
+			@Setting(
+					name = AvailableSettings.PHYSICAL_NAMING_STRATEGY,
+					value = "org.hibernate.orm.test.collection.delta.CollectionInterpretationQueueExecutionTest$GraphTableNamingStrategy"
+			)
+	})
 	public static class GraphQueue {
 		@Test
 		void executesCreateAndUpdateDeltas(SessionFactoryScope scope) {
 			verifyCreateAndUpdate( scope );
+		}
+
+		@Test
+		void bagReplacementRecordsOneSemanticUpdate(SessionFactoryScope scope) {
+			verifyBagReplacementStatistics( scope );
 		}
 
 		@Test
@@ -128,6 +154,20 @@ public class CollectionInterpretationQueueExecutionTest {
 		} );
 	}
 
+	private static void verifyBagReplacementStatistics(SessionFactoryScope scope) {
+		scope.inTransaction( session -> session.persist( newOwner( 10L, 4, 10L ) ) );
+		final var statistics = scope.getSessionFactory().getStatistics();
+		statistics.clear();
+
+		scope.inTransaction( session -> {
+			final var owner = session.find( Owner.class, 10L );
+			owner.bagValues.remove( "v1" );
+			owner.bagValues.add( "bag-replacement" );
+		} );
+
+		assertThat( statistics.getCollectionUpdateCount() ).isOne();
+	}
+
 	private static Owner newOwner() {
 		return newOwner( 1L, 4, 1L );
 	}
@@ -144,6 +184,31 @@ public class CollectionInterpretationQueueExecutionTest {
 			owner.children.add( new Child( firstChildId + i, "child-" + i ) );
 		}
 		return owner;
+	}
+
+	private abstract static class PrefixedTableNamingStrategy extends PhysicalNamingStrategyStandardImpl {
+		private final String prefix;
+
+		private PrefixedTableNamingStrategy(String prefix) {
+			this.prefix = prefix;
+		}
+
+		@Override
+		public Identifier toPhysicalTableName(Identifier logicalName, JdbcEnvironment jdbcEnvironment) {
+			return Identifier.toIdentifier( prefix + logicalName.getText(), logicalName.isQuoted() );
+		}
+	}
+
+	public static class LegacyTableNamingStrategy extends PrefixedTableNamingStrategy {
+		public LegacyTableNamingStrategy() {
+			super( "legacy_" );
+		}
+	}
+
+	public static class GraphTableNamingStrategy extends PrefixedTableNamingStrategy {
+		public GraphTableNamingStrategy() {
+			super( "graph_" );
+		}
 	}
 
 	@Entity(name = "CollectionDeltaExecutionOwner")

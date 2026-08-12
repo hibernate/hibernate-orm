@@ -77,7 +77,7 @@ There are many to choose from, as enumerated by link:{doc-javadoc-url}/org/hiber
 | `hibernate.agroal.acquisitionTimeout` | The maximum amount of time a thread can wait for a connection, after which an exception is thrown instead
 | `hibernate.agroal.reapTimeout` | The duration for eviction of idle connections
 | `hibernate.agroal.leakTimeout` | The duration of time a connection can be held without causing a leak to be reported
-| `hibernate.agroal.idleValidationTimeout` | A foreground validation is executed if a connection has been idle on the pool for longer than this duration
+| `hibernate.agroal.idleValidation` | A foreground validation is executed if a connection has been idle on the pool for longer than this duration
 | `hibernate.agroal.validationTimeout` | The interval between background validation checks
 | `hibernate.agroal.initialSql` | A SQL command to be executed when a connection is created
 |===

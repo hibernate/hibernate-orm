@@ -102,7 +102,7 @@ public interface AgroalSettings {
 	 *
 	 * @see java.time.Duration#parse(CharSequence)
 	 */
-	String AGROAL_IDLE_VALIDATION_TIMEOUT = AGROAL_CONFIG_PREFIX + ".idleValidation";
+	String AGROAL_IDLE_VALIDATION = AGROAL_CONFIG_PREFIX + ".idleValidation";
 
 	/**
 	 * An SQL command to be executed when a connection is created.
@@ -120,7 +120,7 @@ public interface AgroalSettings {
 
 	/**
 	 * If {@code true}, connections will receive foreground validation on every acquisition
-	 * regardless of {@link AgroalSettings#AGROAL_IDLE_VALIDATION_TIMEOUT}.
+	 * regardless of {@link AgroalSettings#AGROAL_IDLE_VALIDATION}.
 	 * <p>
 	 * The default is {@code false}.
 	 *

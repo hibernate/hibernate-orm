@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.orm.test;
+package org.hibernate.orm.test.namingstrategy;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -36,7 +36,7 @@ import static org.hibernate.cfg.MappingSettings.IMPLICIT_NAMING_STRATEGY;
 		),
 		settings = @Setting(
 				name = IMPLICIT_NAMING_STRATEGY,
-				value = "org.hibernate.orm.test.MetadataBuilderImplicitListIndexColumnNameTest$CustomImplicitNamingStrategy"
+				value = "org.hibernate.orm.test.namingstrategy.MetadataBuilderImplicitListIndexColumnNameTest$CustomImplicitNamingStrategy"
 		)
 )
 @DomainModel(

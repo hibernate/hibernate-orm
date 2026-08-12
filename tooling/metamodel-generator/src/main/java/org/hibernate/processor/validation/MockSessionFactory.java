@@ -43,7 +43,6 @@ import org.hibernate.cache.spi.CacheImplementor;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.query.internal.NativeQueryInterpreterStandardImpl;
 import org.hibernate.engine.query.spi.NativeQueryInterpreter;
@@ -120,6 +119,7 @@ import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.java.EnumJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.UnknownBasicJavaType;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.descriptor.jdbc.ObjectJdbcType;
 import org.hibernate.type.internal.BasicTypeImpl;
@@ -241,11 +241,6 @@ public abstract class MockSessionFactory
 		typeConfiguration = new TypeConfiguration();
 		typeConfiguration.scope((MetadataBuildingContext) this);
 		MockJdbcServicesInitiator.genericDialect.initializeFunctionRegistry(this);
-		var functionFactory = new CommonFunctionFactory(this);
-		functionFactory.listagg(null);
-		functionFactory.inverseDistributionOrderedSetAggregates();
-		functionFactory.hypotheticalOrderedSetAggregates();
-		functionFactory.windowFunctions();
 		typeConfiguration.scope((SessionFactoryImplementor) this);
 
 		nodeBuilder = new SqmCriteriaNodeBuilder("", "", this, this, this, serviceRegistry);
@@ -838,6 +833,23 @@ public abstract class MockSessionFactory
 	@Override
 	public SqmFunctionRegistry getFunctionRegistry() {
 		return functionRegistry;
+	}
+
+	@Override
+	public void registerAdHocBasicType(BasicType<?> basicType) {
+		// No-op
+	}
+
+	@Override
+	public <T> BasicType<T> resolveAdHocBasicType(String key) {
+		// No-op
+		return null;
+	}
+
+	@Override
+	public <T> BasicType<T> findAdHocBasicType(JavaType<T> javaType, JdbcType jdbcType) {
+		// No-op
+		return null;
 	}
 
 	@Override

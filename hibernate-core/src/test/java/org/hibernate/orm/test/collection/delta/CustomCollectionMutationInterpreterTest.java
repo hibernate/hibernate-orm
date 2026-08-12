@@ -6,6 +6,7 @@ package org.hibernate.orm.test.collection.delta;
 
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.hibernate.action.queue.internal.CollectionMutationPreparer;
@@ -14,6 +15,7 @@ import org.hibernate.action.queue.spi.CollectionMutationInput;
 import org.hibernate.action.queue.spi.CollectionTransition;
 import org.hibernate.collection.spi.CollectionBaseline;
 import org.hibernate.collection.spi.CollectionChange;
+import org.hibernate.collection.spi.CollectionChangeSet;
 import org.hibernate.collection.spi.CollectionDelta;
 import org.hibernate.collection.spi.CollectionInterpretationProduction;
 import org.hibernate.collection.spi.CollectionMutationInterpretation;
@@ -33,6 +35,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.mockito.Mockito.CALLS_REAL_METHODS;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -73,6 +76,30 @@ public class CustomCollectionMutationInterpreterTest {
 				fixture.flushContext().getValidCollectionInterpretation( fixture.collection() )
 		);
 		verify( fixture.collection(), never() ).forceInitialization();
+	}
+
+	@Test
+	void requiredFlushInitializesForConservativeInterpreterAndThenFreezesCompleteDelta() {
+		final var fixture = fixture( CollectionMutationInterpreter.legacyCompatible() );
+		final var initialized = new AtomicBoolean();
+		when( fixture.collection().wasInitialized() ).thenAnswer( ignored -> initialized.get() );
+		doAnswer( ignored -> {
+			initialized.set( true );
+			return null;
+		} ).when( fixture.collection() ).forceInitialization();
+		when( fixture.collection().getChangeSet( fixture.persister() ) ).thenReturn( CollectionChangeSet.EMPTY );
+
+		final var prepared = CollectionMutationPreparer.prepare( fixture.input(), fixture.session() );
+
+		verify( fixture.collection() ).forceInitialization();
+		final var delta = ( (SemanticCollectionChange.Delta)
+				prepared.get( 0 ).interpretation().semanticChange() ).delta();
+		assertEquals( CollectionBaseline.LOADED, delta.baseline() );
+		assertEquals( DeltaCoverage.COMPLETE, delta.coverage() );
+		assertSame(
+				prepared.get( 0 ).interpretation(),
+				fixture.flushContext().getValidCollectionInterpretation( fixture.collection() )
+		);
 	}
 
 	private static Fixture fixture(CollectionMutationInterpreter interpreter) {

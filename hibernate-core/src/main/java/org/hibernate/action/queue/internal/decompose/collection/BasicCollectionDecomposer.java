@@ -70,6 +70,7 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 	private final CollectionMutationPlanContributor mutationPlanContributor;
 	private final CollectionJdbcOperations jdbcOperations;
 	private final boolean tableHasNonPrimaryUniqueConstraints;
+	private final CollectionRowCompaction rowCompaction;
 
 	private final String insertOrigin;
 	private final String updateRowOrigin;
@@ -99,6 +100,11 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 				.getUniqueConstraintsForTable( tableDescriptor.name() )
 				.stream()
 				.anyMatch( uniqueConstraint -> !uniqueConstraint.isPrimaryKey() );
+		this.rowCompaction = new CollectionRowCompaction(
+				persister,
+				mutationPlanContributor,
+				tableHasNonPrimaryUniqueConstraints
+		);
 
 		insertOrigin = "InsertRow(" + persister.getRolePath() + ")";
 		updateRowOrigin = "UpdateRow(" + persister.getRolePath() + ")";
@@ -164,7 +170,7 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 						action.getKey(),
 						ordinalBase,
 						session,
-						canCompactCreate( action, decompositionContext )
+						rowCompaction.canCompactCreate( action, decompositionContext )
 				);
 
 		// Create post-execution callback to handle post-execution work (afterAction, cache, events, stats)
@@ -296,20 +302,6 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 		return planRecreateRows( createAll.currentRows(), collection, key, ordinalBase, session, compactRows );
 	}
 
-	private boolean canCompactCreate(
-			PreparedCollectionMutation mutation,
-			DecompositionContext decompositionContext) {
-		return canCompactRecreatedRows()
-				&& mutation.getAffectedOwner() != null
-				&& decompositionContext.isBeingInsertedInCurrentFlush( mutation.getAffectedOwner() );
-	}
-
-	private boolean canCompactRecreatedRows() {
-		return mutationPlanContributor == CollectionMutationPlanContributor.STANDARD
-				&& !tableHasNonPrimaryUniqueConstraints
-				&& !tableDescriptor.isSelfReferential();
-	}
-
 	@Nonnull
 	private List<FlushOperation> planRecreateRows(
 			FrozenCollectionRows rows,
@@ -411,7 +403,7 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 					key,
 					ordinalBase,
 					session,
-					canCompactRecreatedRows(),
+					rowCompaction.canCompactReplacement(),
 					operations
 			);
 		}

@@ -379,9 +379,10 @@ the incubating `ActionQueue` SPI.  Queue implementations may lower the semantic
 input to these legacy action forms internally, but they are no longer the common
 registration vocabulary.
 
-Collection delta production is now associated with `CollectionSemantics` through
-the new default `getCollectionDeltaProducer()` method.  Custom semantics remain
-source compatible and use the conservative compatibility producer unless they
+Collection mutation interpretation, including semantics-specific delta
+production, is now associated with `CollectionSemantics` through the new default
+`getCollectionMutationInterpreter()` method.  Custom semantics remain source
+compatible and use the conservative compatibility interpreter unless they
 override this association.  `PersistentCollection` likewise has new default
 methods for exposing queued commands, a mutation generation, and the
 post-snapshot initialization step.

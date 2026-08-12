@@ -10,6 +10,8 @@ import java.util.List;
 
 /// Represents the complete set of changes between a collection's snapshot state
 /// and its current state. Used for planning collection update operations.
+/// The four structural lists are defensively copied so graph planning always
+/// observes the comparison result frozen by the collection interpreter.
 ///
 /// @author Steve Ebersole
 /// @since 8.0
@@ -21,6 +23,13 @@ public record CollectionChangeSet(
 		List<Shift> shifts,
 		List<ValueChange> valueChanges) {
 	public static final CollectionChangeSet EMPTY = new CollectionChangeSet(List.of(), List.of(), List.of(), List.of());
+
+	public CollectionChangeSet {
+		removals = List.copyOf( removals );
+		additions = List.copyOf( additions );
+		shifts = List.copyOf( shifts );
+		valueChanges = List.copyOf( valueChanges );
+	}
 
 	public boolean isEmpty() {
 		return removals.isEmpty() && additions.isEmpty() && shifts.isEmpty() && valueChanges.isEmpty();

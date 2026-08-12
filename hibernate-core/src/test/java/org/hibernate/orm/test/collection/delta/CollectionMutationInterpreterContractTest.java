@@ -36,15 +36,21 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.CALLS_REAL_METHODS;
+import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.times;
 
 /// Contract tests for semantics-owned collection mutation interpretation.
 ///
@@ -88,6 +94,11 @@ public class CollectionMutationInterpreterContractTest {
 		assertSame( "first", rows.get( 0 ) );
 		assertSame( "second", rows.get( 1 ) );
 		verify( collection, never() ).getChangeSet( persister );
+
+		clearInvocations( collection );
+		createAll.currentRows().forEach( (entry, position) -> rows.add( entry ) );
+		verify( collection, times( 2 ) ).getMutationGeneration();
+		verifyNoMoreInteractions( collection );
 	}
 
 	@Test
@@ -112,6 +123,27 @@ public class CollectionMutationInterpreterContractTest {
 		);
 		assertSame( changes, rowChanges.changes() );
 		assertInstanceOf( SemanticCollectionChange.None.class, interpretation.semanticChange() );
+		verify( collection ).getChangeSet( persister );
+
+		clearInvocations( collection );
+		assertSame( changes, rowChanges.changes() );
+		assertEquals( 1, rowChanges.changes().additions().size() );
+		verifyNoInteractions( collection );
+	}
+
+	@Test
+	void changeSetFreezesStructuralLists() {
+		final var source = new ArrayList<CollectionChangeSet.Addition>();
+		source.add( new CollectionChangeSet.Addition( "added", 1 ) );
+		final var changes = new CollectionChangeSet( List.of(), source, List.of(), List.of() );
+
+		source.clear();
+
+		assertEquals( 1, changes.additions().size() );
+		assertThrows(
+				UnsupportedOperationException.class,
+				() -> changes.additions().add( new CollectionChangeSet.Addition( "later", 2 ) )
+		);
 	}
 
 	@Test

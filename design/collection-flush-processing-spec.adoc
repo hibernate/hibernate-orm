@@ -6,7 +6,7 @@
 
 Status: Approved Specification
 
-Revision: 1.2
+Revision: 1.4
 
 Approved by: Steve Ebersole
 
@@ -132,10 +132,20 @@ Revision history::
   remove-all/create-all, or row execution.  This revision responds to graph
   queue benchmarks which exposed the redundant
   `CollectionChangeSet -> CollectionDelta -> CollectionChangeSet` path.
+* `1.3` -- Replaced aspirational acceptance-suite names with traceability to the
+  concrete tests which now exercise the implementation.  Added explicit partial
+  and pending coverage markers so an unimplemented acceptance obligation cannot
+  be mistaken for a passing test.  This revision changes test traceability only;
+  it does not change normative behavior.
+* `1.4` -- Mapped the tests added to close every partial or pending
+  `CFS-SCN-*` acceptance scenario.  Added coverage for move-local ordering,
+  replacement statistics, failure suppression, database-cascade events,
+  collection-delta orphan reuse, cross-collection listener mutation,
+  conservative required-flush initialization, and frozen-state access.
 
 == Status and Relationship to the Design Proposal
 
-Revision 1.2 is the approved specification for collection processing during a
+Revision 1.4 is the approved specification for collection processing during a
 Hibernate flush.  It is the implementation and conformance baseline, revised in
 response to implementation and benchmark evidence.
 
@@ -171,7 +181,7 @@ Working Specification
   -> Approved Specification
 ----
 
-Revision 1.2 is currently at the final state.
+Revision 1.4 is currently at the final state.
 
 == Normative Language
 
@@ -1851,65 +1861,215 @@ Both queues execute that projection without enumerating the collection again.
 
 == Test Traceability
 
-[cols="1,2",options="header"]
+[cols="1,4,2",options="header"]
 |===
-| Requirement group | Required named test suite
+| Requirement group | Concrete current coverage | Remaining acceptance coverage
 
 | `CFS-CTX-*`, `CFS-TRN-*`
-| `CollectionFlushContextTest` for identity state and
-  `CollectionTransitionSelectionTest` for transition tables, plus
-  `CollectionFlushTransitionIntegrationTest` against each queue
+| `CollectionEntryFlushStateTest` covers flush-local reached/processed state and
+  duplicate visitation.  `AbstractCollectionEventTest` covers new, updated,
+  removed, replaced, and moved collections through the full stack.
+  `CollectionInterpretationQueueExecutionTest` covers create and update through
+  both queue implementations.
+| _Partial_: no focused test currently asserts the complete normalization table,
+  including loaded/current role-and-key combinations and explicit
+  `REMOVE_AND_CREATE` ordering.
 
 | `CFS-INT-*`
-| `CollectionMutationInterpreterContractTest` parameterized over transition and
-  every supported standard semantics, `CollectionPhysicalMutationTest` for
-  exhaustive sealed variants and required payload, and
-  `CollectionInterpretationQueueExecutionTest` against both queues.  The graph
-  execution test MUST detect a second collection comparison, a
-  `CollectionDelta -> CollectionChangeSet` reconstruction, and live collection
-  reads after freezing.
+| `CollectionMutationInterpreterContractTest` covers interpreter selection,
+  create projection, structural freezing, indexed updates, identifier-bag row
+  changes, and conservative initialization.  `CustomCollectionMutationInterpreterTest`
+  covers a specialized uninitialized interpretation.  `CollectionInterpretationQueueExecutionTest`
+  covers standard set, bag, list, map, and one-to-many execution through both
+  queues.  `CollectionRowCompactionTest`, `GroupedCollectionInsertBindPlanTest`,
+  and `OneToManyFallbackOrdinalTest` cover graph-native compact row projection,
+  per-row bindings, and fallback ordinals.
+| No known group-level gap.  `CollectionMutationInterpreterContractTest`
+  explicitly permits only mutation-generation validity checks after freezing
+  and rejects further live collection access.
 
 | `CFS-DLT-*`, `CFS-QOP-*`
-| `CollectionDeltaInterpretationTest` parameterized over every supported
-  semantics, `QueuedOperationDeltaTest`, `CollectionDeltaValidityTest`, and
-  `CustomCollectionMutationInterpreterTest`, plus `QueuedOperationFailureTest`
-  for entity-owned physical work and unsuccessful flush completion
+| `CollectionMutationInterpreterContractTest`, `QueuedOperationDeltaTest`,
+  `CollectionDeltaValidityTest`, `CustomCollectionMutationInterpreterTest`, and
+  `QueuedOperationInitializationTest` cover delta content, provenance-sensitive
+  queued commands, validity, orphan projection, and initialization sequencing.
+  `ListDelayedOperationTest` and `QueuedOperationFailureTest` cover full-stack
+  queued list work and unsuccessful entity-owned physical work.
+| No known group-level gap beyond the scenario-specific cascade integration and
+  required-flush custom-semantics cases identified below.
 
 | `CFS-ACT-*`, `CFS-LFC-*`
-| `CollectionMutationLifecycleTest` and `OwnerCollectionLifecycleTest` covering
-  queue-independent Hibernate events, interceptor hooks, Jakarta Persistence
-  callbacks, monitoring, cache, and statistics
+| The `AbstractCollectionEventTest` hierarchy,
+  `DetachedMultipleCollectionChangeTest`, and `MergeCollectionEventTest` cover
+  Hibernate collection-event pairs.  `CollectionAutoFlushLifecycleTest` covers
+  interceptor, pre-event, and owner-callback deferral.  `AssociationChangeTests`
+  and `OwnerUpdateCompletionCoordinatorTest` cover owner callback applicability,
+  deduplication, mutation visibility, ordering, and failure.  `CollectionExecutionMonitorTest`
+  and `BatchingExecutionMonitorTest` cover diagnostic monitoring.
+  `CollectionMutationCompletionTest#failedPhysicalWorkSuppressesEverySuccessfulLifecycleConsumer`
+  covers joint suppression of state advancement, post-event, cache, queued-work,
+  and statistics completion consumers.
+| No known group-level gap.
 
 | `CFS-CMP-*`, `CFS-GRP-*`
-| `CollectionMutationCompletionTest`, `CollectionMutationGroupingTest`, and
-  `CollectionMutationFixupTest` covering direct, planned, batched, and failed
-  execution
+| `CollectionMutationCompletionTest`, `CollectionMutationExecutorCompletionTest`,
+  `BatchingExecutionMonitorTest`, `FlushCoordinatorCollectionGroupingTest`,
+  `CollectionRowCompactionTest`, and `GroupedCollectionInsertBindPlanTest` cover
+  zero/direct/batched completion, failure, queued work, fixups, mutation identity,
+  compact row grouping, and per-row binding/result checks.
+| No known group-level gap.
 
 | `CFS-AFL-*`
-| `ActionQueueCheckpointTest` as a shared contract suite for every queue and
-  `CollectionAutoFlushLifecycleTest`
+| `ActionQueueCheckpointTest` invokes the checkpoint contract for both queues and
+  verifies durable orphan-collection removal.  `CollectionAutoFlushLifecycleTest`
+  and `AutoFlushEventListenerTest` cover required and discarded auto-flush paths.
+| No known group-level gap.
 
 | `CFS-CAS-*`
-| `CollectionDeltaOrphanProjectionTest` covering valid/stale reuse,
-  no-forced-initialization, standalone fallback, orphan timing, queued orphans,
-  iteration, and lazy initialization
+| `CollectionDeltaValidityTest#orphanProjectionContainsOnlyKnownRemovedState`
+  and `#mutationGenerationInvalidatesRetainedDelta` cover projection content and
+  invalidation primitives.  `CascadeCollectionDeltaOrphanTest` covers valid
+  reuse, stale fallback, standalone queued-orphan discovery, and
+  no-forced-initialization.  Existing cascade orphan-removal regression suites
+  continue to cover timing, iteration, and lazy behavior.
+| No known group-level gap.
 
 | `CFS-COM-*`
-| `CollectionFlushQueueConformanceTest` against both queues and focused
-  regression tests named in `CFS-COM-002`
+| `CollectionInterpretationQueueExecutionTest` is the explicit two-queue
+  full-stack suite.  `ActionQueueCheckpointTest` exercises both queue checkpoint
+  implementations.  `CrossCollectionListenerMutationTest` runs against both
+  queues.  The collection event hierarchy and the existing
+  delayed-operation, orphan-delete, one-to-many, many-to-many, element-collection,
+  and cache regression suites provide broader compatibility coverage.
+| No known acceptance-scenario gap.
 
 | `CFS-MIG-*`
-| Static documentation review of the required anchors and final implemented
-  signatures in `migration-guide.adoc`; no runtime test is required
+| Static review of `migration-guide.adoc` verifies the required anchors,
+  `ActionQueue#checkpoint()` / `#restore(ActionQueueCheckpoint)`, and
+  `CollectionSemantics#getCollectionMutationInterpreter()`.
+| No runtime test is required.
 |===
 
-The acceptance scenarios map to methods `scenario001NewCollection()` through
-`scenario016CreateAndBagUpdateRowProjection()` in
-`CollectionFlushAcceptanceTest`, executed against both queue implementations
-unless a scenario explicitly concerns one queue's internal representation.
+[cols="1,4,1",options="header"]
+|===
+| Acceptance scenario | Concrete test mapping | Coverage
 
-Every `MUST` requirement maps to at least one named test suite above or requires
-an explicitly recorded reason why static verification is sufficient.
+| `CFS-SCN-001` -- New collection
+| `AbstractCollectionEventTest#testSaveParentEmptyChildren` and
+  `#testSaveParentOneChild`;
+  `CollectionInterpretationQueueExecutionTest.LegacyQueue#executesCreateAndUpdateDeltas`
+  and `CollectionInterpretationQueueExecutionTest.GraphQueue#executesCreateAndUpdateDeltas`;
+  `CollectionMutationCompletionTest#zeroOperationMutationCompletesWhenSealed`
+| Covered
+
+| `CFS-SCN-002` -- Collection move
+| `AbstractCollectionEventTest#testMoveCollectionToDifferentParent` and
+  `#testMoveCollectionToDifferentParentFlushMoveToDifferentParent`;
+  `CollectionMutationCompletionTest#statementGroupingDoesNotMergeMutationIdentity`
+| Covered
+
+| `CFS-SCN-003` -- Update requiring physical replacement
+| `CollectionInterpretationQueueExecutionTest.LegacyQueue#executesCreateAndUpdateDeltas`
+  and `CollectionInterpretationQueueExecutionTest.GraphQueue#executesCreateAndUpdateDeltas`;
+  `CollectionInterpretationQueueExecutionTest.GraphQueue#executesCompactBagRecreateAcrossJdbcBatches`;
+  both queue fixtures of
+  `CollectionInterpretationQueueExecutionTest#bagReplacementRecordsOneSemanticUpdate`;
+  the update cases in `AbstractCollectionEventTest`
+| Covered
+
+| `CFS-SCN-004` -- Uninitialized queued list appends
+| `QueuedOperationDeltaTest#listAppendsShareOnePersistedSizeHandle`;
+  `ListDelayedOperationTest#testSimpleAddManaged`;
+  `CollectionMutationCompletionTest#queuedWorkWaitsForSuccessfulFlush`;
+  `QueuedOperationFailureTest#failedEntityInsertDoesNotFinalizeQueuedCollectionWork`
+| Covered
+
+| `CFS-SCN-005` -- Same-shape mutations
+| `CollectionMutationCompletionTest#statementGroupingDoesNotMergeMutationIdentity`;
+  `BatchingExecutionMonitorTest#groupedRowsRetainPerRowBindingAndResultChecksWithOneCompletion`;
+  `CollectionMutationExecutorCompletionTest#directExecutionVisitsEveryGroupedBindingAndCompletesOnce`
+| Covered
+
+| `CFS-SCN-006` -- Zero-SQL update
+| `CollectionMutationCompletionTest#zeroOperationMutationCompletesWhenSealed`;
+  `FlushCoordinatorCollectionGroupingTest#noOpCompletionCarriersRemainMutationLocal`
+| Covered
+
+| `CFS-SCN-007` -- Batch failure
+| `BatchingExecutionMonitorTest#failedBatchSuppressesSemanticCompletion`;
+  `CollectionMutationCompletionTest#failureSuppressesSuccessfulCompletion`;
+  `#failedPhysicalWorkSuppressesEverySuccessfulLifecycleConsumer`;
+  `QueuedOperationFailureTest#failedEntityInsertDoesNotFinalizeQueuedCollectionWork`;
+  `OwnerUpdateCompletionCoordinatorTest#failureSuppressesPostUpdate`
+| Covered
+
+| `CFS-SCN-008` -- Discarded auto-flush
+| `CollectionAutoFlushLifecycleTest#lifecycleWaitsForPositiveFlushDecision`;
+  `AutoFlushEventListenerTest#testAutoFlushNotRequired`;
+  `ActionQueueCheckpointTest#checkpointContract` and
+  `#postCheckpointOrphanCollectionRemovalIsDurable`
+| Covered
+
+| `CFS-SCN-009` -- Database-cascade remove
+| `OnDeleteCascadeToElementCollectionTest#testCascadingDeleteUnloaded` and
+  `#testCascadingDeleteLoaded`, including their direct remove-event assertions;
+  collection remove event pairing in
+  `AbstractAssociationCollectionEventTest#testDeleteParentButNotChild`
+| Covered
+
+| `CFS-SCN-010` -- Cascade orphan-projection reuse
+| `CascadeCollectionDeltaOrphanTest#reusesValidFlushDeltaInsteadOfRepeatingLoadedStateComparison`,
+  `#staleFlushDeltaFallsBackToStandaloneLoadedStateComparison`, and
+  `#absentFlushDeltaUsesQueuedOrphansWithoutInitialization`;
+  `CollectionDeltaValidityTest#orphanProjectionContainsOnlyKnownRemovedState`
+| Covered
+
+| `CFS-SCN-011` -- Cross-collection listener mutation
+| Both queue fixtures of
+  `CrossCollectionListenerMutationTest#laterListenerMutationRepreparesEarlierCollection`
+| Covered
+
+| `CFS-SCN-012` -- Owner callback deduplication
+| `AssociationChangeTests#testOwnerElementCollectionChangeGuardrail`,
+  `#testOwnerToManyChangeGuardrail`,
+  `#ownerPreUpdateCollectionChangeIsIncludedInTheSameFlush`, and
+  `#ownerPreUpdateCollectionReplacementIsIncludedInAutoFlush`;
+  `OwnerUpdateCompletionCoordinatorTest#waitsForEntityAndEveryCollectionParticipant`
+| Covered
+
+| `CFS-SCN-013` -- Initialization consumes queued operations
+| `QueuedOperationInitializationTest#queuedCommandsAreAppliedAndClearedAfterSnapshotCapture`
+| Covered
+
+| `CFS-SCN-014` -- Conservative custom-semantics fallback
+| `CollectionMutationInterpreterContractTest#defaultInterpreterRequestsInitializationForUninitializedCustomWrapper`;
+  `CustomCollectionMutationInterpreterTest#requiredFlushInitializesForConservativeInterpreterAndThenFreezesCompleteDelta`;
+  `CustomCollectionMutationInterpreterTest#specializedInterpreterCanDescribeUninitializedStateWithoutInitialization`;
+  `QueuedOperationInitializationTest#queuedCommandsAreAppliedAndClearedAfterSnapshotCapture`
+| Covered
+
+| `CFS-SCN-015` -- Graph row-change interpretation
+| `CollectionInterpretationQueueExecutionTest.LegacyQueue#executesCreateAndUpdateDeltas`
+  and `CollectionInterpretationQueueExecutionTest.GraphQueue#executesCreateAndUpdateDeltas`;
+  `CollectionMutationInterpreterContractTest#createRetainsCurrentRowsWithoutSemanticAdditions`;
+  `CollectionMutationInterpreterContractTest#indexedUpdateRetainsOriginalChangeSet`
+  and `#changeSetFreezesStructuralLists`
+| Covered
+
+| `CFS-SCN-016` -- Create and bag-update row projection
+| `CollectionMutationInterpreterContractTest#createRetainsCurrentRowsWithoutSemanticAdditions`;
+  `CollectionInterpretationQueueExecutionTest.GraphQueue#executesCompactCreateAcrossJdbcBatches`
+  and `#executesCompactBagRecreateAcrossJdbcBatches`;
+  `CollectionRowCompactionTest`; `GroupedCollectionInsertBindPlanTest`
+| Covered
+|===
+
+These tables describe current coverage rather than prescribing nonexistent
+monolithic suites.  Every `CFS-SCN-*` acceptance scenario now maps to concrete
+tests.  A _Partial_ or _Pending_ requirement-group row remains an open obligation
+outside the scenario matrix.  Before the implementation is considered fully
+conformant, every `MUST` requirement must map to a concrete test above or have an
+explicitly recorded reason why static verification is sufficient.
 
 == Approved Decisions
 
@@ -2187,7 +2347,8 @@ existing cascade traversal architecture.
 
 == Development-Team Review and Change Control
 
-Revision 1.2 was approved after satisfying these readiness criteria, including
+Revision 1.4 remains approved under the same readiness criteria as revision 1.2,
+including
 acceptance of the resolved `OQ-012` performance gate and the new interpretation
 test and benchmark obligations:
 

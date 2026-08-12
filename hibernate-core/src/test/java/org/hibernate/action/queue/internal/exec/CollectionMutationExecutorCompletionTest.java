@@ -5,6 +5,7 @@
 package org.hibernate.action.queue.internal.exec;
 
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.List;
 
 import org.hibernate.action.queue.internal.decompose.collection.CollectionMutationCompletion;
@@ -12,11 +13,15 @@ import org.hibernate.action.queue.spi.CollectionMutationId;
 import org.hibernate.action.queue.spi.MutationKind;
 import org.hibernate.action.queue.spi.StatementShapeKey;
 import org.hibernate.action.queue.spi.bind.BindPlan;
+import org.hibernate.action.queue.spi.bind.GroupedRowBindPlan;
+import org.hibernate.action.queue.spi.bind.JdbcValueBindings;
+import org.hibernate.action.queue.spi.bind.OperationResultChecker;
 import org.hibernate.action.queue.spi.bind.PostExecutionCallback;
 import org.hibernate.action.queue.spi.meta.TableDescriptor;
 import org.hibernate.action.queue.spi.plan.FlushOperation;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
 import org.hibernate.sql.model.PreparableMutationOperation;
 
@@ -54,6 +59,47 @@ class CollectionMutationExecutorCompletionTest {
 
 		verify( fixture.handler, never() ).handle( fixture.session );
 		assertThat( fixture.completion.getState() ).isEqualTo( CollectionMutationCompletion.State.FAILED );
+	}
+
+	@Test
+	void directExecutionVisitsEveryGroupedBindingAndCompletesOnce() {
+		final var session = session();
+		final var handler = mock( PostExecutionCallback.class );
+		final var bindPlan = new TestingGroupedBindPlan( 4 );
+		final var operation = operation( bindPlan );
+		final var completion = new CollectionMutationCompletion( new CollectionMutationId( 2 ), null );
+		completion.registerOperation( operation );
+		completion.registerCompletionHandler( handler );
+		completion.seal( session );
+		final var executor = new GroupedTestingExecutor( session );
+
+		executor.execute( List.of( operation ), null, null );
+
+		assertThat( executor.bindingIndexes ).containsExactly( 0, 1, 2, 3 );
+		verify( handler ).handle( session );
+		assertThat( completion.getState() ).isEqualTo( CollectionMutationCompletion.State.COMPLETED );
+	}
+
+	private static SessionImplementor session() {
+		final var session = mock( SessionImplementor.class );
+		final var jdbcCoordinator = mock( JdbcCoordinator.class );
+		final var logicalConnection = mock( LogicalConnectionImplementor.class );
+		when( session.getJdbcCoordinator() ).thenReturn( jdbcCoordinator );
+		when( jdbcCoordinator.getLogicalConnection() ).thenReturn( logicalConnection );
+		when( logicalConnection.getPhysicalConnection() ).thenReturn( mock( Connection.class ) );
+		return session;
+	}
+
+	private static FlushOperation operation(BindPlan bindPlan) {
+		return new FlushOperation(
+				mock( TableDescriptor.class ),
+				MutationKind.UPDATE,
+				mock( PreparableMutationOperation.class ),
+				bindPlan,
+				0,
+				"collection update",
+				mock( StatementShapeKey.class )
+		);
 	}
 
 	private static class Fixture {
@@ -108,6 +154,52 @@ class CollectionMutationExecutorCompletionTest {
 			if ( fail ) {
 				throw new IllegalStateException( "expected failure" );
 			}
+		}
+	}
+
+	private static class GroupedTestingExecutor extends StandardPlanStepExecutor {
+		private final java.util.ArrayList<Integer> bindingIndexes = new java.util.ArrayList<>();
+
+		private GroupedTestingExecutor(SessionImplementor session) {
+			super( session );
+		}
+
+		@Override
+		protected void executePreparableDirectly(
+				PreparableMutationOperation preparable,
+				FlushOperation flushOperation,
+				int bindingIndex) {
+			bindingIndexes.add( bindingIndex );
+		}
+	}
+
+	private static class TestingGroupedBindPlan implements GroupedRowBindPlan, OperationResultChecker {
+		private final int bindingCount;
+
+		private TestingGroupedBindPlan(int bindingCount) {
+			this.bindingCount = bindingCount;
+		}
+
+		@Override
+		public int getBindingCount() {
+			return bindingCount;
+		}
+
+		@Override
+		public void bindValues(
+				int bindingIndex,
+				JdbcValueBindings valueBindings,
+				FlushOperation flushOperation,
+				org.hibernate.engine.spi.SharedSessionContractImplementor session) {
+		}
+
+		@Override
+		public boolean checkResult(
+				int affectedRowCount,
+				int batchPosition,
+				String sqlString,
+				SessionFactoryImplementor sessionFactory) throws SQLException {
+			return true;
 		}
 	}
 }

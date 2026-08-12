@@ -101,3 +101,66 @@ The required-auto-flush headline is noisy, so a separate five-fork
 candidate mean was 1.040 times Stage 0 and its median-fork ratio was 0.994,
 with candidate allocation approximately 0.9% higher.  This does not establish
 a collection-processing regression exceeding the specified threshold.
+
+== Stage 5 compact-row characterization
+
+This is a development characterization of `CFS-STG-005`, not a replacement for
+the three-fork Stage 0 gate above.  It compares the production compact-row
+policy with a negative control which forces safe remove-and-create rows back to
+the expanded representation.
+
+The `BAG_REMOVE_CREATE_512` fixture loads a basic-valued bag with 256 rows and
+adds 256 values.  Bag semantics interpret the change as one bulk remove followed
+by creation of all 512 current rows.  The benchmark stops after graph planning,
+so JDBC latency does not obscure row-representation cost.  Both runs used one
+fork, five one-second warmup iterations, and ten one-second measurement
+iterations on the environment recorded above.
+
+[cols="2,1,1,1",options="header"]
+|===
+| Measurement | Compact | Expanded control | Compact / expanded
+
+| Planning time (`us/op`) | 4.711 | 42.535 | 0.1108
+| Planning allocation (`bytes/op`) | 11,976 | 106,208 | 0.1128
+| Graph-planning allocation (`bytes/op`) | 5,144 | 99,472 | 0.0517
+| Graph operations | 2 | 513 | 0.0039
+| Physical row bindings | 513 | 513 | 1.0000
+|===
+
+The compact representation reduced observed planning time by 88.9%, total
+planning allocation by 88.7%, and graph-planning allocation by 94.8% in this
+fixture.  The remove and insert templates still represent all 513 physical
+bindings: one binding for the bulk remove and 512 independently executed insert
+bindings.
+
+The policy remains deliberately conservative.  It keeps per-row operations for
+non-primary unique constraints, self-referential tables, entity-valued collection
+rows, and nonstandard mutation-plan contributors.  Those shapes may have
+row-specific unique slots, cycle or dependency endpoints, or state-management
+work which statement-shape equality alone cannot prove equivalent.
+
+=== Full-stack regression screen
+
+A one-fork graph-queue run of the nine-scenario full-stack matrix was compared
+with the mean of the three Stage 4 candidate forks recorded above.  This is a
+directional regression screen rather than a new confidence-bound gate.
+
+[cols="2,1,1,1",options="header"]
+|===
+| Scenario | Stage 4 mean (`us/op`) | Stage 5 screen (`us/op`) | Ratio
+
+| `CLEAN_32` | 11.550 | 11.011 | 0.953
+| `SET_SPARSE_256` | 18.490 | 16.904 | 0.914
+| `SET_CLEAR_256` | 201.266 | 176.073 | 0.875
+| `BAG_SPARSE_256` | 282.546 | 252.950 | 0.895
+| `LIST_SPARSE_256` | 7.511 | 7.670 | 1.021
+| `MAP_SPARSE_256` | 14.951 | 14.190 | 0.949
+| `CREATE_16_BY_16` | 1,235.430 | 1,270.319 | 1.028
+| `AUTOFLUSH_DISCARDED` | 3.356 | 3.352 | 0.999
+| `AUTOFLUSH_REQUIRED` | 77.524 | 77.138 | 0.995
+|===
+
+The geometric mean ratio was `0.957`.  No scenario moved adversely by 5%; the
+two adverse point estimates were 2.1% and 2.8%, both within the ordinary
+single-fork variation visible in the earlier gate.  The screen therefore found
+no broader performance regression requiring rollback or a new three-fork gate.

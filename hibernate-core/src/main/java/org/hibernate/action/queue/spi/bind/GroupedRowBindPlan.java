@@ -11,6 +11,13 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 /// A binding plan whose immutable row bindings share one physical operation
 /// template and graph placement.
 ///
+/// Implementations must retain every row value and any graph-relevant fact in
+/// frozen state. They may not reread a mutable domain collection while planning,
+/// and may be used only when every represented row has an equivalent dependency
+/// signature. A decomposer must retain separate [FlushOperation] instances when
+/// unique-slot ordering, cycle breaking, fixups, or another row-sensitive concern
+/// makes that equivalence uncertain.
+///
 /// The executor still performs one JDBC mutation for every binding. Grouping
 /// avoids materializing a separate [FlushOperation] and [BindPlan] for each row;
 /// it does not combine rows into one SQL statement or one JDBC result.

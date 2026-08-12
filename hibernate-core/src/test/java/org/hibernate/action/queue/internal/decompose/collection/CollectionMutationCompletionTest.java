@@ -4,17 +4,23 @@
  */
 package org.hibernate.action.queue.internal.decompose.collection;
 
+import org.hibernate.action.queue.internal.PreparedCollectionMutation;
 import org.hibernate.action.queue.spi.CollectionMutationId;
 import org.hibernate.action.queue.spi.bind.PostExecutionCallback;
 import org.hibernate.action.queue.spi.plan.FlushOperation;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.stat.spi.StatisticsImplementor;
 
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 /// Tests semantic collection mutation sealing and completion accounting.
 ///
@@ -71,6 +77,42 @@ class CollectionMutationCompletionTest {
 		completion.operationSucceeded( session );
 
 		verify( handler, never() ).handle( session );
+		assertThat( completion.getState() ).isEqualTo( CollectionMutationCompletion.State.FAILED );
+	}
+
+	@Test
+	void failedPhysicalWorkSuppressesEverySuccessfulLifecycleConsumer() {
+		final var completion = completion( 8 );
+		final var mutation = mock( PreparedCollectionMutation.class );
+		final var persister = mock( CollectionPersister.class );
+		final var factory = mock( SessionFactoryImplementor.class );
+		final var statistics = mock( StatisticsImplementor.class );
+		final var failureSession = mock( SessionImplementor.class );
+		final var collectionEntryAdvancement = mock( PostExecutionCallback.class );
+		final var postEvent = mock( PostExecutionCallback.class );
+		final var cacheLifecycle = mock( PostExecutionCallback.class );
+		final var queuedOperationFinalization = mock( PostExecutionCallback.class );
+		when( mutation.kind() ).thenReturn( PreparedCollectionMutation.Kind.UPDATE );
+		when( mutation.getPersister() ).thenReturn( persister );
+		when( persister.getRole() ).thenReturn( "Owner.values" );
+		when( failureSession.getFactory() ).thenReturn( factory );
+		when( factory.getStatistics() ).thenReturn( statistics );
+		when( statistics.isStatisticsEnabled() ).thenReturn( true );
+		completion.configure( mutation );
+		completion.registerOperation( mock( FlushOperation.class ) );
+		completion.registerCompletionHandler( collectionEntryAdvancement );
+		completion.registerCompletionHandler( postEvent );
+		completion.registerCompletionHandler( cacheLifecycle );
+		completion.registerCompletionHandler( queuedOperationFinalization );
+		completion.seal( failureSession );
+
+		completion.operationFailed( failureSession );
+
+		verify( collectionEntryAdvancement, never() ).handle( failureSession );
+		verify( postEvent, never() ).handle( failureSession );
+		verify( cacheLifecycle, never() ).handle( failureSession );
+		verify( queuedOperationFinalization, never() ).handle( failureSession );
+		verify( statistics, never() ).updateCollection( anyString() );
 		assertThat( completion.getState() ).isEqualTo( CollectionMutationCompletion.State.FAILED );
 	}
 

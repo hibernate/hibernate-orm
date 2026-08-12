@@ -55,14 +55,54 @@ public final class CollectionMutationPreparer {
 			List<CollectionMutationInput> secondInputs,
 			EventSource session,
 			Consumer<PreparedCollectionMutation> mutationConsumer) {
-		prepareRemovals( firstInputs, session, mutationConsumer );
-		prepareRemovals( secondInputs, session, mutationConsumer );
-		prepareUpdates( firstInputs, session, mutationConsumer );
-		prepareUpdates( secondInputs, session, mutationConsumer );
-		prepareCreates( firstInputs, session, mutationConsumer );
-		prepareCreates( secondInputs, session, mutationConsumer );
-		prepareQueuedOperations( firstInputs, session, mutationConsumer );
-		prepareQueuedOperations( secondInputs, session, mutationConsumer );
+		final var prepared = new ArrayList<PreparedCollectionMutation>(
+				(firstInputs.size() + secondInputs.size()) * 2
+		);
+		prepareRemovals( firstInputs, session, prepared::add );
+		prepareRemovals( secondInputs, session, prepared::add );
+		prepareUpdates( firstInputs, session, prepared::add );
+		prepareUpdates( secondInputs, session, prepared::add );
+		prepareCreates( firstInputs, session, prepared::add );
+		prepareCreates( secondInputs, session, prepared::add );
+		prepareQueuedOperations( firstInputs, session, prepared::add );
+		prepareQueuedOperations( secondInputs, session, prepared::add );
+		for ( var mutation : prepared ) {
+			mutationConsumer.accept( refreshInvalidInterpretation( mutation, session ) );
+		}
+	}
+
+	/// Reinterprets collection state changed by a later pre-collection listener without
+	/// delivering a second lifecycle callback for the same semantic mutation.
+	private static PreparedCollectionMutation refreshInvalidInterpretation(
+			PreparedCollectionMutation mutation,
+			EventSource session) {
+		if ( mutation.isInterpretationValid() ) {
+			return mutation;
+		}
+		final var collection = mutation.collection();
+		if ( collection == null ) {
+			return mutation;
+		}
+		final boolean semanticDeltaRequired = mutation.kind() == PreparedCollectionMutation.Kind.QUEUED_OPERATIONS
+				|| mutation.interpretation().semanticChange() instanceof SemanticCollectionChange.Delta;
+		final var interpretation = interpret(
+				mutation.kind(),
+				collection,
+				mutation.endpoint(),
+				mutation.emptySnapshot(),
+				semanticDeltaRequired,
+				session
+		);
+		retainInterpretation( collection, interpretation, session );
+		return new PreparedCollectionMutation(
+				mutation.kind(),
+				collection,
+				mutation.endpoint(),
+				mutation.emptySnapshot(),
+				mutation.affectedOwner(),
+				mutation.affectedOwnerId(),
+				interpretation
+		);
 	}
 
 	private static void prepareRemovals(

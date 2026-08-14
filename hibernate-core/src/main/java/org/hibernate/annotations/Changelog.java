@@ -34,6 +34,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * {@link CreationTimestamp}, in the constructor, or in a
  * {@link ChangesetListener}.
  * <p>
+ * You can extend from the base class {@link org.hibernate.audit.ChangelogMapping},
+ * or provide a fully custom implementation.
  * When a class annotated with {@code @Changelog} is found
  * in the domain model, it is automatically configured as the
  * {@link org.hibernate.temporal.spi.ChangesetIdentifierSupplier
@@ -47,6 +49,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * @see Timestamp
  * @see ModifiedEntities
  * @see ChangesetListener
+ * @see org.hibernate.audit.ChangelogMapping
  * @since 7.4
  */
 @Documented

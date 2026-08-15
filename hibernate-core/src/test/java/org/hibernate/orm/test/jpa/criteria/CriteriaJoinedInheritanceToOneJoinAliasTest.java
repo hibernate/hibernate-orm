@@ -25,6 +25,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.PrimaryKeyJoinColumn;
+import jakarta.persistence.SecondaryTable;
 import jakarta.persistence.Table;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
@@ -54,6 +55,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 				CriteriaJoinedInheritanceToOneJoinAliasTest.BaseMappingWithCode.class,
 				CriteriaJoinedInheritanceToOneJoinAliasTest.MappingWithCode.class,
 				CriteriaJoinedInheritanceToOneJoinAliasTest.RequestWithPropertyRef.class,
+				CriteriaJoinedInheritanceToOneJoinAliasTest.DeepBaseMapping.class,
+				CriteriaJoinedInheritanceToOneJoinAliasTest.DeepIntermediateMapping.class,
+				CriteriaJoinedInheritanceToOneJoinAliasTest.DeepLeafMapping.class,
+				CriteriaJoinedInheritanceToOneJoinAliasTest.RequestWithDeepMapping.class,
+				CriteriaJoinedInheritanceToOneJoinAliasTest.BaseMappingWithSecondaryTable.class,
+				CriteriaJoinedInheritanceToOneJoinAliasTest.MappingWithSecondaryTable.class,
+				CriteriaJoinedInheritanceToOneJoinAliasTest.RequestWithSecondaryTableRef.class,
 		},
 		useCollectingStatementInspector = true
 )
@@ -78,6 +86,14 @@ public class CriteriaJoinedInheritanceToOneJoinAliasTest {
 			MappingWithCode codeMapping = new MappingWithCode( "m3", "c1", asset );
 			entityManager.persist( codeMapping );
 			entityManager.persist( new RequestWithPropertyRef( "r4", codeMapping ) );
+
+			DeepLeafMapping deepMapping = new DeepLeafMapping( "m4", asset );
+			entityManager.persist( deepMapping );
+			entityManager.persist( new RequestWithDeepMapping( "r5", deepMapping ) );
+
+			MappingWithSecondaryTable secondaryTableMapping = new MappingWithSecondaryTable( "m5", "e1", asset );
+			entityManager.persist( secondaryTableMapping );
+			entityManager.persist( new RequestWithSecondaryTableRef( "r6", secondaryTableMapping ) );
 		} );
 	}
 
@@ -94,6 +110,12 @@ public class CriteriaJoinedInheritanceToOneJoinAliasTest {
 			entityManager.createQuery( "delete from BaseMappingWithDiscriminator" ).executeUpdate();
 			entityManager.createQuery( "delete from MappingWithCode" ).executeUpdate();
 			entityManager.createQuery( "delete from BaseMappingWithCode" ).executeUpdate();
+			entityManager.createQuery( "delete from RequestWithDeepMapping" ).executeUpdate();
+			entityManager.createQuery( "delete from DeepLeafMapping" ).executeUpdate();
+			entityManager.createQuery( "delete from DeepBaseMapping" ).executeUpdate();
+			entityManager.createQuery( "delete from RequestWithSecondaryTableRef" ).executeUpdate();
+			entityManager.createQuery( "delete from MappingWithSecondaryTable" ).executeUpdate();
+			entityManager.createQuery( "delete from BaseMappingWithSecondaryTable" ).executeUpdate();
 			entityManager.createQuery( "delete from Asset" ).executeUpdate();
 		} );
 	}
@@ -171,6 +193,77 @@ public class CriteriaJoinedInheritanceToOneJoinAliasTest {
 			List<RequestWithPropertyRef> results = entityManager.createQuery( query ).getResultList();
 			assertThat( results ).hasSize( 1 );
 			assertThat( results.get( 0 ).getId() ).isEqualTo( "r4" );
+		} );
+	}
+
+	/**
+	 * The entity to register a use for is the one whose <em>own</em> table is the referenced table,
+	 * which in a hierarchy deeper than two levels is not the immediate superclass. Widening the
+	 * search to everything in a persister's table span would match the intermediate class first —
+	 * its span covers the inherited root table too — and pruning, which retains one table per
+	 * registered entity name, would then keep the intermediate table and still drop the root.
+	 */
+	@Test
+	public void testImplicitJoinThroughThreeLevelHierarchy(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
+			CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+			CriteriaQuery<RequestWithDeepMapping> query = cb.createQuery( RequestWithDeepMapping.class );
+			Root<RequestWithDeepMapping> root = query.from( RequestWithDeepMapping.class );
+
+			Path<String> label = root
+					.get( "mapping" )
+					.get( "asset" )
+					.get( "label" );
+			query.where( cb.like( cb.lower( label ), "%some%" ) );
+
+			List<RequestWithDeepMapping> results = entityManager.createQuery( query ).getResultList();
+			assertThat( results ).hasSize( 1 );
+			assertThat( results.get( 0 ).getId() ).isEqualTo( "r5" );
+		} );
+	}
+
+	/**
+	 * The same three-level hierarchy reached through an explicit outer join, which prunes the
+	 * target's table group along a different path than the implicit inner join above.
+	 */
+	@Test
+	public void testOuterJoinThroughThreeLevelHierarchy(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
+			List<String> results = entityManager.createQuery(
+					"select r.id from RequestWithDeepMapping r left join r.mapping m"
+							+ " where lower(m.asset.label) like '%some%'", String.class )
+					.getResultList();
+
+			assertThat( results ).containsExactly( "r5" );
+		} );
+	}
+
+	/**
+	 * A foreign key targeting a column on a {@linkplain jakarta.persistence.SecondaryTable secondary
+	 * table} of a superclass. This is <em>not</em> a regression test for the entity name usage
+	 * registration: the generated SQL is identical with and without it, because
+	 * {@code JoinedSubclassEntityPersister} retains joins to secondary tables independently of any
+	 * registered use. It is here to document that boundary — registering a use could not retain such
+	 * a join anyway, since pruning translates a registered entity name into that entity's own primary
+	 * table only.
+	 */
+	@Test
+	public void testForeignKeyTargetingSecondaryTableOfSuperclass(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
+			CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+			CriteriaQuery<RequestWithSecondaryTableRef> query =
+					cb.createQuery( RequestWithSecondaryTableRef.class );
+			Root<RequestWithSecondaryTableRef> root = query.from( RequestWithSecondaryTableRef.class );
+
+			Path<String> label = root
+					.get( "mapping" )
+					.get( "asset" )
+					.get( "label" );
+			query.where( cb.like( cb.lower( label ), "%some%" ) );
+
+			List<RequestWithSecondaryTableRef> results = entityManager.createQuery( query ).getResultList();
+			assertThat( results ).hasSize( 1 );
+			assertThat( results.get( 0 ).getId() ).isEqualTo( "r6" );
 		} );
 	}
 
@@ -465,6 +558,169 @@ public class CriteriaJoinedInheritanceToOneJoinAliasTest {
 		}
 
 		public MappingWithCode getMapping() {
+			return mapping;
+		}
+	}
+
+	// ~~~~~~~~~~ JOINED hierarchy three levels deep, foreign key targeting the root table ~~~~~~~~~~
+	// The entity whose own table the foreign key targets is two levels up, so the intermediate class
+	// must be skipped: it maps deep_intermediate_mappings, not the referenced deep_base_mappings.
+
+	@Entity(name = "DeepBaseMapping")
+	@Table(name = "deep_base_mappings")
+	@Inheritance(strategy = InheritanceType.JOINED)
+	public static class DeepBaseMapping {
+		@Id
+		private String id;
+
+		public DeepBaseMapping() {
+		}
+
+		public DeepBaseMapping(String id) {
+			this.id = id;
+		}
+
+		public String getId() {
+			return id;
+		}
+	}
+
+	@Entity(name = "DeepIntermediateMapping")
+	@Table(name = "deep_intermediate_mappings")
+	@PrimaryKeyJoinColumn(name = "base_id")
+	public static class DeepIntermediateMapping extends DeepBaseMapping {
+		public DeepIntermediateMapping() {
+		}
+
+		public DeepIntermediateMapping(String id) {
+			super( id );
+		}
+	}
+
+	@Entity(name = "DeepLeafMapping")
+	@Table(name = "deep_leaf_mappings")
+	@PrimaryKeyJoinColumn(name = "intermediate_id")
+	public static class DeepLeafMapping extends DeepIntermediateMapping {
+		@ManyToOne(fetch = FetchType.LAZY)
+		@JoinColumn(name = "asset_id")
+		private Asset asset;
+
+		public DeepLeafMapping() {
+		}
+
+		public DeepLeafMapping(String id, Asset asset) {
+			super( id );
+			this.asset = asset;
+		}
+
+		public Asset getAsset() {
+			return asset;
+		}
+	}
+
+	@Entity(name = "RequestWithDeepMapping")
+	@Table(name = "deep_requests")
+	public static class RequestWithDeepMapping {
+		@Id
+		private String id;
+
+		@ManyToOne(fetch = FetchType.EAGER)
+		@JoinColumn(name = "mapping_id", referencedColumnName = "id")
+		private DeepLeafMapping mapping;
+
+		public RequestWithDeepMapping() {
+		}
+
+		public RequestWithDeepMapping(String id, DeepLeafMapping mapping) {
+			this.id = id;
+			this.mapping = mapping;
+		}
+
+		public String getId() {
+			return id;
+		}
+
+		public DeepLeafMapping getMapping() {
+			return mapping;
+		}
+	}
+
+	// ~~~~~~~~~~ foreign key targeting a column on a secondary table of the superclass ~~~~~~~~~~
+	// See testForeignKeyTargetingSecondaryTableOfSuperclass: this shape is unaffected by the entity
+	// name usage registration, because joins to secondary tables are retained by pruning regardless.
+
+	@Entity(name = "BaseMappingWithSecondaryTable")
+	@Table(name = "sec_base_mappings")
+	@SecondaryTable(name = "sec_base_mapping_details")
+	@Inheritance(strategy = InheritanceType.JOINED)
+	public static class BaseMappingWithSecondaryTable {
+		@Id
+		private String id;
+
+		@Column(table = "sec_base_mapping_details", name = "ext_code", unique = true)
+		private String extCode;
+
+		public BaseMappingWithSecondaryTable() {
+		}
+
+		public BaseMappingWithSecondaryTable(String id, String extCode) {
+			this.id = id;
+			this.extCode = extCode;
+		}
+
+		public String getId() {
+			return id;
+		}
+
+		public String getExtCode() {
+			return extCode;
+		}
+	}
+
+	@Entity(name = "MappingWithSecondaryTable")
+	@Table(name = "sec_mappings_a")
+	@PrimaryKeyJoinColumn(name = "mapping_id")
+	public static class MappingWithSecondaryTable extends BaseMappingWithSecondaryTable {
+		@ManyToOne(fetch = FetchType.LAZY)
+		@JoinColumn(name = "asset_id")
+		private Asset asset;
+
+		public MappingWithSecondaryTable() {
+		}
+
+		public MappingWithSecondaryTable(String id, String extCode, Asset asset) {
+			super( id, extCode );
+			this.asset = asset;
+		}
+
+		public Asset getAsset() {
+			return asset;
+		}
+	}
+
+	@Entity(name = "RequestWithSecondaryTableRef")
+	@Table(name = "sec_requests")
+	public static class RequestWithSecondaryTableRef {
+		@Id
+		private String id;
+
+		@ManyToOne(fetch = FetchType.EAGER)
+		@JoinColumn(name = "mapping_ext_code", referencedColumnName = "ext_code")
+		private MappingWithSecondaryTable mapping;
+
+		public RequestWithSecondaryTableRef() {
+		}
+
+		public RequestWithSecondaryTableRef(String id, MappingWithSecondaryTable mapping) {
+			this.id = id;
+			this.mapping = mapping;
+		}
+
+		public String getId() {
+			return id;
+		}
+
+		public MappingWithSecondaryTable getMapping() {
 			return mapping;
 		}
 	}

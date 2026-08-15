@@ -6,12 +6,14 @@ package org.hibernate.orm.test.lob;
 
 import junit.framework.AssertionFailedError;
 import org.hibernate.LockMode;
+import org.hibernate.community.dialect.CUBRIDDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -43,6 +45,7 @@ public class BlobLocatorTest {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = CUBRIDDialect.class, reason = "CUBRIDDialect maps BLOB to BlobJdbcType.MATERIALIZED, so the reloaded Blob is a read-only proxy and the in-place mutation this test performs is not supported")
 	public void testBoundedBlobLocatorAccess(SessionFactoryScope factoryScope) throws Exception {
 		byte[] original = buildByteArray( BLOB_SIZE, true );
 		byte[] changed = buildByteArray( BLOB_SIZE, false );

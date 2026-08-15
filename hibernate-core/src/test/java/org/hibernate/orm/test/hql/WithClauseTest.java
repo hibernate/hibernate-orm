@@ -11,6 +11,7 @@ import java.util.List;
 import org.hibernate.HibernateException;
 import org.hibernate.QueryException;
 import org.hibernate.community.dialect.DerbyDialect;
+import org.hibernate.community.dialect.CUBRIDDialect;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -158,6 +159,7 @@ public class WithClauseTest {
 
 	@Test
 	@JiraKey(value = "HHH-9329")
+	@SkipForDialect(dialectClass = CUBRIDDialect.class, reason = "CUBRID has no parenthesized joined table, and this outer join of a nested group cannot be flattened without changing which rows are null-extended")
 	public void testWithClauseAsSubquery(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) -> {
@@ -172,6 +174,7 @@ public class WithClauseTest {
 
 	@Test
 	@JiraKey(value = "HHH-11230")
+	@SkipForDialect(dialectClass = CUBRIDDialect.class, reason = "CUBRID has no parenthesized joined table, and this outer join of a nested group cannot be flattened without changing which rows are null-extended")
 	public void testWithClauseAsSubqueryWithEqualOperator(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) -> {
@@ -185,6 +188,7 @@ public class WithClauseTest {
 
 	@Test
 	@JiraKey(value = "HHH-9329")
+	@SkipForDialect(dialectClass = CUBRIDDialect.class, reason = "CUBRID has no parenthesized joined table, and this outer join of a nested group cannot be flattened without changing which rows are null-extended")
 	public void testWithClauseAsSubqueryWithKey(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) -> {

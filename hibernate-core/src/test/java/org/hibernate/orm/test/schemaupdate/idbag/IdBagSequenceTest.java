@@ -5,6 +5,7 @@
 package org.hibernate.orm.test.schemaupdate.idbag;
 
 import org.hamcrest.MatcherAssert;
+import org.hibernate.community.dialect.CUBRIDDialect;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
@@ -12,6 +13,7 @@ import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 import org.hibernate.tool.schema.TargetType;
 import org.junit.jupiter.api.Test;
@@ -35,6 +37,7 @@ import static org.hibernate.cfg.SchemaToolingSettings.HBM2DDL_AUTO;
 public class IdBagSequenceTest {
 
 	@Test
+	@SkipForDialect(dialectClass = CUBRIDDialect.class, reason = "CUBRID has no CREATE SEQUENCE; its sequences are created with 'create serial', which this test's literal assertion does not accept")
 	public void testIdBagSequenceGeneratorIsCreated(
 			DomainModelScope modelScope,
 			@TempDir File tmpDir) throws Exception {

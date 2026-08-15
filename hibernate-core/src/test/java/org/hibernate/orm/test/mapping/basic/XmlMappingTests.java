@@ -10,6 +10,7 @@ import java.util.Map;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.community.dialect.AltibaseDialect;
+import org.hibernate.community.dialect.CUBRIDDialect;
 import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.HANADialect;
 import org.hibernate.community.dialect.DerbyDialect;
@@ -66,6 +67,14 @@ public abstract class XmlMappingTests {
 		public Jackson() {
 			super( false );
 		}
+
+		@Test
+		@Override
+		@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "GaussDB don't support this xml feature")
+		@SkipForDialect(dialectClass = CUBRIDDialect.class, reason = "the XML written by the Jackson mapper deserializes back to a null node on CUBRID, while the JAXB mapper round-trips correctly")
+		public void verifyReadWorks(SessionFactoryScope scope) {
+			super.verifyReadWorks( scope );
+		}
 	}
 
 	@ServiceRegistry(settings = @Setting(name = AvailableSettings.XML_FORMAT_MAPPER, value = "jackson3-xml"))
@@ -73,6 +82,14 @@ public abstract class XmlMappingTests {
 
 		public Jackson3() {
 			super( false );
+		}
+
+		@Test
+		@Override
+		@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "GaussDB don't support this xml feature")
+		@SkipForDialect(dialectClass = CUBRIDDialect.class, reason = "the XML written by the Jackson mapper deserializes back to a null node on CUBRID, while the JAXB mapper round-trips correctly")
+		public void verifyReadWorks(SessionFactoryScope scope) {
+			super.verifyReadWorks( scope );
 		}
 	}
 
@@ -150,6 +167,7 @@ public abstract class XmlMappingTests {
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Altibase doesn't support comparing CLOBs with the = operator")
 	@SkipForDialect(dialectClass = InformixDialect.class, reason = "Blobs are not allowed in this expression")
 	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "GaussDB doesn't support comparing CLOBs with the = operator")
+	@SkipForDialect(dialectClass = CUBRIDDialect.class, reason = "CUBRID compares CLOB values by locator, so the = operator never matches the stored XML content")
 	public void verifyComparisonWorks(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) ->  {

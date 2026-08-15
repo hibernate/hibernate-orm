@@ -12,6 +12,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Lob;
 
+import org.hibernate.community.dialect.CUBRIDDialect;
 import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.HANADialect;
@@ -47,6 +48,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @SkipForDialect(dialectClass = DB2Dialect.class, matchSubTypes = true, reason = "DB2 jdbc driver doesn't support setNString")
 @SkipForDialect(dialectClass = DerbyDialect.class, matchSubTypes = true, reason = "Derby jdbc driver doesn't support setNString")
 @SkipForDialect(dialectClass = InformixDialect.class, reason = "It's not possible to compare blobs with simple equality operators")
+@SkipForDialect(dialectClass = CUBRIDDialect.class, reason = "CUBRID cannot compare CLOB values with the = operator")
 @SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Altibase doesn't support comparing LOBs with the = operator")
 public class StringMapLobTest {
 	@BeforeClassTemplate

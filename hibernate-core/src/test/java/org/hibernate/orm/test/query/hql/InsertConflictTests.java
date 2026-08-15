@@ -6,6 +6,7 @@ package org.hibernate.orm.test.query.hql;
 
 import java.time.LocalDate;
 
+import org.hibernate.community.dialect.CUBRIDDialect;
 import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.community.dialect.GaussDBDialect;
 import org.hibernate.dialect.SpannerPostgreSQLDialect;
@@ -88,6 +89,7 @@ public class InsertConflictTests {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsUpsertOrMerge.class)
+	@SkipForDialect(dialectClass = CUBRIDDialect.class, reason = "CUBRID's ON DUPLICATE KEY UPDATE cannot name the conflicting constraint columns and cannot reference the would-be-inserted row (IllegalQueryOperationException); CUBRID's ON DUPLICATE KEY UPDATE cannot reference the conflicting row's new values")
 	public void testOnConflictDoUpdate(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -118,6 +120,7 @@ public class InsertConflictTests {
 	@SkipForDialect(dialectClass = InformixDialect.class, reason = "MATCHED does not support AND condition")
 	@SkipForDialect(dialectClass = SpannerPostgreSQLDialect.class,
 			reason = "Spanner does not support predicates (WHERE clause) in conflict clauses")
+	@SkipForDialect(dialectClass = CUBRIDDialect.class, reason = "CUBRID's ON DUPLICATE KEY UPDATE cannot name the conflicting constraint columns and cannot reference the would-be-inserted row (IllegalQueryOperationException); CUBRID's ON DUPLICATE KEY UPDATE cannot reference the conflicting row's new values")
 	public void testOnConflictDoUpdateWithWhere(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -155,6 +158,7 @@ public class InsertConflictTests {
 	@SkipForDialect(dialectClass = InformixDialect.class, reason = "MATCHED does not support AND condition")
 	@SkipForDialect(dialectClass = SpannerPostgreSQLDialect.class,
 			reason = "Spanner does not support predicates (WHERE clause) in conflict clauses")
+	@SkipForDialect(dialectClass = CUBRIDDialect.class, reason = "CUBRID's ON DUPLICATE KEY UPDATE cannot name the conflicting constraint columns and cannot reference the would-be-inserted row (IllegalQueryOperationException); CUBRID's ON DUPLICATE KEY UPDATE cannot reference the conflicting row's new values")
 	public void testOnConflictDoUpdateWithWhereCriteria(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -227,6 +231,7 @@ public class InsertConflictTests {
 	@SkipForDialect( dialectClass = SpannerDialect.class,
 			reason = "Cloud Spanner does not support ON CONFLICT clauses for INSERT ... SELECT statements")
 	@SkipForDialect(dialectClass = SybaseASEDialect.class, reason = "MERGE into a table that has a self-referential FK does not work")
+	@SkipForDialect(dialectClass = CUBRIDDialect.class, reason = "CUBRID's ON DUPLICATE KEY UPDATE cannot name the conflicting constraint columns and cannot reference the would-be-inserted row (IllegalQueryOperationException); CUBRID's ON DUPLICATE KEY UPDATE cannot reference the conflicting row's new values")
 	public void testOnConflictDoUpdateMultiTable(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -260,6 +265,7 @@ public class InsertConflictTests {
 	@SkipForDialect(dialectClass = InformixDialect.class, reason = "MATCHED does not support AND condition")
 	@SkipForDialect(dialectClass = SpannerPostgreSQLDialect.class,
 			reason = "Spanner does not support predicates (WHERE clause) in conflict clauses")
+	@SkipForDialect(dialectClass = CUBRIDDialect.class, reason = "CUBRID's ON DUPLICATE KEY UPDATE cannot name the conflicting constraint columns and cannot reference the would-be-inserted row (IllegalQueryOperationException); CUBRID's ON DUPLICATE KEY UPDATE cannot reference the conflicting row's new values")
 	public void testOnConflictDoUpdateWithWhereMultiTable(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

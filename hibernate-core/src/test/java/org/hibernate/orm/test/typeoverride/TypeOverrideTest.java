@@ -7,6 +7,7 @@ package org.hibernate.orm.test.typeoverride;
 import java.sql.Types;
 
 import org.hibernate.boot.MetadataBuilder;
+import org.hibernate.community.dialect.CUBRIDDialect;
 import org.hibernate.community.dialect.GaussDBDialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.Dialect;
@@ -43,6 +44,7 @@ public class TypeOverrideTest extends BaseSessionFactoryFunctionalTest {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = CUBRIDDialect.class, reason = "CUBRIDDialect registers BlobJdbcType.MATERIALIZED because the driver has no stream-based LOB binding, but this test only expects an overridden BLOB descriptor for a fixed list of dialects")
 	public void testStandardBasicSqlTypeDescriptor() {
 		final Dialect dialect = getMetadata().getDatabase().getDialect();
 		final JdbcTypeRegistry jdbcTypeRegistry = getMetadata().getTypeConfiguration()

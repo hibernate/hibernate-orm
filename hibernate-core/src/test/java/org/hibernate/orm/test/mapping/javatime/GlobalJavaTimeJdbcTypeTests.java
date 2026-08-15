@@ -13,6 +13,7 @@ import java.time.temporal.ChronoUnit;
 
 import org.hibernate.cfg.MappingSettings;
 import org.hibernate.community.dialect.AltibaseDialect;
+import org.hibernate.community.dialect.CUBRIDDialect;
 import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.community.dialect.DerbyDialect;
@@ -85,6 +86,7 @@ public class GlobalJavaTimeJdbcTypeTests {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = CUBRIDDialect.class, reason = "CUBRID JDBC driver does not implement the JDBC 4.2 ResultSet.getObject(int, Class) that Hibernate's java.time JdbcTypes use on the read side")
 	void testInstant(SessionFactoryScope scope) {
 		final Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();
 		final Instant start = adjustToDefaultPrecision( Instant.EPOCH, dialect );
@@ -116,6 +118,7 @@ public class GlobalJavaTimeJdbcTypeTests {
 
 	@Test
 	@SkipForDialect(dialectClass = SpannerDialect.class, reason = "Spanner JDBC driver setObject does not accept LocalDateTime")
+	@SkipForDialect(dialectClass = CUBRIDDialect.class, reason = "CUBRID JDBC driver does not implement the JDBC 4.2 java.time binding required here")
 	void testLocalDateTime(SessionFactoryScope scope) {
 		final Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();
 		final LocalDateTime start = adjustToDefaultPrecision( LocalDateTime.now(), dialect );
@@ -146,6 +149,7 @@ public class GlobalJavaTimeJdbcTypeTests {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = CUBRIDDialect.class, reason = "CUBRID JDBC driver does not implement the JDBC 4.2 java.time binding required here")
 	void testLocalDate(SessionFactoryScope scope) {
 		final Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();
 		final LocalDate startTime = adjustToDefaultPrecision( LocalDate.now(), dialect );
@@ -180,6 +184,7 @@ public class GlobalJavaTimeJdbcTypeTests {
 	@SkipForDialect(dialectClass = HANADialect.class, reason = "HANA time type does not support fractional seconds")
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Altibase drivers truncate fractional seconds from the LocalTime")
 	@SkipForDialect(dialectClass = SpannerDialect.class, reason = "Spanner JDBC driver setObject does not accept LocalTime")
+	@SkipForDialect(dialectClass = CUBRIDDialect.class, reason = "CUBRID JDBC driver does not implement the JDBC 4.2 java.time binding required here")
 	void testLocalTime(SessionFactoryScope scope) {
 		final Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();
 		final LocalTime startTime = adjustToPrecision( LocalTime.now(), 0, dialect );

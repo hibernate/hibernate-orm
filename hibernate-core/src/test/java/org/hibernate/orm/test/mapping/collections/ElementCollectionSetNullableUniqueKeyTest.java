@@ -26,6 +26,8 @@ import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
@@ -62,6 +64,7 @@ public class ElementCollectionSetNullableUniqueKeyTest {
 
 	@Test
 	@SkipForDialect(dialectClass = InformixDialect.class, reason = "Informix treats two nulls as equal, which is why we don't create a unique constraint")
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsColumnCheck.class, comment = "CUBRID does not support column check constraints, so the @OrderColumn check is not generated")
 	void createsUniqueKeyForSetAndPrimaryKeyForOrderedList() {
 		final var metadata = buildMetadata( ssr );
 		final var commands = generateCreationCommands( ssr, metadata );

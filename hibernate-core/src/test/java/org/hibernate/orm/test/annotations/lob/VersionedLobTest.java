@@ -4,6 +4,8 @@
  */
 package org.hibernate.orm.test.annotations.lob;
 
+import org.hibernate.community.dialect.CUBRIDDialect;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -126,6 +128,7 @@ public class VersionedLobTest extends AbstractLobTest<VersionedBook, VersionedCo
 
 	@Test
 	@JiraKey(value = "HHH-5811")
+	@SkipForDialect(dialectClass = CUBRIDDialect.class, reason = "CUBRID JDBC driver's getBytes() skips its wasNull bookkeeping on the BLOB branch, so a BLOB read after a NULL column is discarded as null")
 	public void testVersionUnchangedByteArray(SessionFactoryScope scope) {
 		VersionedCompiledCode cc = createCompiledCode();
 		scope.inTransaction(

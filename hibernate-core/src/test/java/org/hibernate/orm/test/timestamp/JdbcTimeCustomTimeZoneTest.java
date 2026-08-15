@@ -17,6 +17,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.community.dialect.CUBRIDDialect;
 import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.dialect.SpannerPostgreSQLDialect;
@@ -78,6 +79,7 @@ public class JdbcTimeCustomTimeZoneTest
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = CUBRIDDialect.class, reason = "CUBRID JDBC driver does not apply the configured JDBC time zone when binding or reading date/time values")
 	public void testTimeZone() throws Throwable {
 
 		connectionProvider.clear();

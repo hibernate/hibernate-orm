@@ -81,6 +81,7 @@ import org.hibernate.metamodel.model.domain.internal.BasicSqmPathSource;
 import org.hibernate.metamodel.model.domain.internal.CompositeSqmPathSource;
 import org.hibernate.metamodel.model.domain.internal.EmbeddedSqmPathSource;
 import org.hibernate.metamodel.model.domain.internal.EntityTypeImpl;
+import org.hibernate.metamodel.model.domain.internal.TupleMappingModelExpressible;
 import org.hibernate.persister.entity.DiscriminatorHelper;
 import org.hibernate.persister.entity.EntityNameUse;
 import org.hibernate.persister.entity.EntityPersister;
@@ -6491,6 +6492,11 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		if ( inferredMapping != null ) {
 			if ( inferredMapping instanceof PluralAttributeMapping pluralAttributeMapping ) {
 				return pluralAttributeMapping.getElementDescriptor();
+			}
+			if ( inferredMapping instanceof TupleMappingModelExpressible tuple ) {
+				final var elementExpressible =
+						tuple.findComponentMappingModelExpressible( CollectionPart.Nature.ELEMENT.getName() );
+				return elementExpressible == null ? inferredMapping : elementExpressible;
 			}
 			else if ( !( inferredMapping instanceof JavaObjectType ) ) {
 				// Never report back the "object type" as inferred type and instead rely on the value type

@@ -257,11 +257,11 @@ public @interface Audited {
 
 	/**
 	 * The {@code Audited.Override} annotation is used to override the auditing behavior of a single property
-	 * inherited from {@link jakarta.persistence.MappedSuperclass} type, or attribute inside an embedded component.
-	 * For example, a property whose auditing has been enabled in a {@link jakarta.persistence.MappedSuperclass}
-	 * can be excluded in the subclass by leveraging the {@code Audited.Override} annotation and setting
-	 * {@code isAudited} to {@code false}. The reverse is also possible: a previous {@linkplain Excluded exclusion}
-	 * of a property can be revoked with an {@code Audited.Override}.
+	 * inherited from a superclass, or that of a sub-property inside an {@linkplain Embeddable embedded} component.
+	 * For example, a property whose auditing has been enabled in a superclass
+	 * can be excluded in its inheritors by leveraging the {@code Audited.Override} annotation and setting
+	 * {@code isAudited} to {@code false}. The reverse is also possible: a previously {@linkplain Excluded excluded}
+	 * property can be revoked with an {@code Audited.Override}.
 	 *
 	 * @see jakarta.persistence.Embedded
 	 * @see jakarta.persistence.Embeddable

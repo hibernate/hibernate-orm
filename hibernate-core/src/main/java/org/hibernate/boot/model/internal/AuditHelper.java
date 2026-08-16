@@ -857,17 +857,18 @@ public final class AuditHelper {
 	}
 
 	private static Set<Audited.Override> getRevocations(Class<?> mappedClass, MetadataBuildingContext context) {
-		return getAuditOverrides( mappedClass, context ).stream()
+		return getAuditOverrides( context, mappedClass.getName() ).stream()
 				.filter( Audited.Override::isAudited ).collect( Collectors.toSet() );
 	}
 
 	static Audited.Override findFirstAuditOverrideForProperty(PersistentClass rootClass, String name, MetadataBuildingContext context) {
-		var auditOverride = getAuditOverrideForProperty( rootClass.getMappedClass(), name, context );
+		var auditOverride = getAuditOverrideForProperty( rootClass.getClassName(), name, context );
 		// if not, traverse up the hierarchy and find the first override.
 		if ( auditOverride == null ) {	//find first override in @MappedSuperClasses
 			var mappedSuperClass = rootClass.getSuperMappedSuperclass();
-			while ( mappedSuperClass != null && auditOverride == null) {
-				auditOverride = getAuditOverrideForProperty( mappedSuperClass.getMappedClass(), name, context );
+			while ( mappedSuperClass != null && auditOverride == null ) {
+				auditOverride = getAuditOverrideForProperty( mappedSuperClass.getMappedClass().getName(), name, context
+				);
 				mappedSuperClass = mappedSuperClass.getSuperMappedSuperclass();
 			}
 		}
@@ -877,15 +878,15 @@ public final class AuditHelper {
 		return auditOverride.name().equals( name ) ? auditOverride : null;
 	}
 
-	private static java.util.Collection<Audited.Override> getAuditOverrides(Class<?> mappedClass, MetadataBuildingContext context) {
+	private static java.util.Collection<Audited.Override> getAuditOverrides(MetadataBuildingContext context, String className) {
 		var classDetailsRegistry = context.getBootstrapContext().getModelsContext().getClassDetailsRegistry();
 
-		var override = classDetailsRegistry.getClassDetails( mappedClass.getName() )
+		var override = classDetailsRegistry.getClassDetails( className )
 				.getDirectAnnotationUsage( Audited.Override.class );
 		if ( override != null ) {
 			return Set.of( override );
 		}
-		var overrides = classDetailsRegistry.getClassDetails( mappedClass.getName() )
+		var overrides = classDetailsRegistry.getClassDetails( className )
 				.getDirectAnnotationUsage( Audited.Overrides.class );
 		if ( overrides != null ) {
 			return new HashSet<>( Arrays.asList( overrides.value() ) );
@@ -893,8 +894,8 @@ public final class AuditHelper {
 		return Set.of();
 	}
 
-	private static Audited.Override getAuditOverrideForProperty(Class<?> mappedClass, String name, MetadataBuildingContext context) {
-		var overrides = getAuditOverrides( mappedClass, context );
+	private static Audited.Override getAuditOverrideForProperty(String className, String name, MetadataBuildingContext context) {
+		var overrides = getAuditOverrides( context, className );
 		if ( overrides.isEmpty() ) {
 			return null;
 		}

@@ -9,20 +9,8 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Embeddable;
-import jakarta.persistence.EmbeddedId;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.OneToMany;
-
-import org.hibernate.annotations.GenericGenerator;
-
-@Entity
 public class PurchaseRecord {
 
-	@Embeddable
 	public static class Id implements Serializable {
 		private int purchaseNumber;
 		private String purchaseSequence;
@@ -65,14 +53,10 @@ public class PurchaseRecord {
 		}
 	}
 
-	@EmbeddedId
-	@GenericGenerator(type = PurchaseRecordIdGenerator.class)
 	private Id id;
 
-	@Column(name = "`timestamp`")
 	private Date timestamp;
 
-	@OneToMany(mappedBy = "purchaseRecord", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
 	private Set<PurchaseDetail> details = new HashSet<>();
 
 	public PurchaseRecord() {}

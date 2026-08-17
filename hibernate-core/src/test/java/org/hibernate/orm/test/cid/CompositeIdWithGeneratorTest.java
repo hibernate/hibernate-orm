@@ -33,7 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 @JiraKey("HHH-2060")
 @DomainModel(
-		annotatedClasses = { PurchaseRecord.class, PurchaseDetail.class }
+		xmlMappings = "org/hibernate/orm/test/cid/PurchaseRecord.orm.xml"
 )
 @SessionFactory
 public class CompositeIdWithGeneratorTest {

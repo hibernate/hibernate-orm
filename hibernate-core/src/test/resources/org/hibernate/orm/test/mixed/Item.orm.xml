@@ -46,7 +46,6 @@
         <attributes>
             <basic name="content" fetch="EAGER" optional="true" optimistic-lock="true">
                 <java-type>org.hibernate.type.descriptor.java.BlobJavaType</java-type>
-                <jdbc-type>org.hibernate.type.descriptor.jdbc.BlobJdbcType$2</jdbc-type>
             </basic>
             <basic name="modified" fetch="EAGER" optional="true" optimistic-lock="true">
                 <java-type>org.hibernate.type.descriptor.java.CalendarJavaType</java-type>

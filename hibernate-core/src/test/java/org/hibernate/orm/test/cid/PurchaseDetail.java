@@ -4,24 +4,10 @@
  */
 package org.hibernate.orm.test.cid;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinColumns;
-import jakarta.persistence.ManyToOne;
-
-@Entity
 public class PurchaseDetail {
 
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumns({
-			@JoinColumn(name = "purchaseNumber", nullable = false),
-			@JoinColumn(name = "purchaseSequence", nullable = false)
-	})
 	private PurchaseRecord purchaseRecord;
 
-	@Id
 	private String productId;
 	private int quantity;
 

@@ -7,6 +7,8 @@ package org.hibernate.processor.annotation;
 import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.Recognizer;
 import jakarta.annotation.Nullable;
+import org.hibernate.annotations.processing.GenericDialect;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.processor.Context;
 import org.hibernate.processor.model.MetaAttribute;
 import org.hibernate.processor.model.Metamodel;
@@ -18,6 +20,7 @@ import org.hibernate.query.sqm.tree.spi.select.SqmSelectStatement;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
+import javax.lang.model.type.TypeMirror;
 import java.util.List;
 
 import static java.lang.Character.isJavaIdentifierStart;
@@ -26,7 +29,6 @@ import static org.hibernate.processor.util.Constants.HIB_ENABLED_FETCH_PROFILE;
 import static org.hibernate.processor.util.Constants.JAVA_OBJECT;
 import static org.hibernate.processor.util.Constants.NAMED_QUERY;
 import static org.hibernate.processor.util.Constants.TYPED_QUERY_REFERENCE;
-import static org.hibernate.processor.util.TypeUtils.containsAnnotation;
 import static org.hibernate.processor.util.TypeUtils.getAnnotationMirror;
 import static org.hibernate.processor.util.TypeUtils.getAnnotationValue;
 import static org.hibernate.processor.util.SqmTypeUtils.resultType;
@@ -60,22 +62,40 @@ public abstract class AnnotationMeta implements Metamodel {
 	void checkNamedQueries() {
 		// If we're a package, this represents the module and is nullable
 		@Nullable var enclosingElement = getElement().getEnclosingElement();
-		var checkHql = containsAnnotation( getElement(), Constants.CHECK_HQL )
-						|| enclosingElement != null && containsAnnotation( enclosingElement, Constants.CHECK_HQL );
-		handleNamedQueryAnnotation( NAMED_QUERY, checkHql );
-		handleNamedQueryRepeatableAnnotation( Constants.NAMED_QUERIES, checkHql );
-		handleNamedQueryAnnotation( Constants.HIB_NAMED_QUERY, checkHql );
-		handleNamedQueryRepeatableAnnotation( Constants.HIB_NAMED_QUERIES, checkHql );
+		var directAnnotation = getAnnotationMirror( getElement(), Constants.CHECK_HQL );
+		var enclosingAnnotation = enclosingElement == null || directAnnotation != null
+				? null
+				: getAnnotationMirror( enclosingElement, Constants.CHECK_HQL );
+		var checkHql = directAnnotation != null ? directAnnotation : enclosingAnnotation;
+		final Dialect dialect;
+		if ( checkHql != null ) {
+			var annotationValue = getAnnotationValue( checkHql );
+			var dialectClassName = annotationValue == null ? null : (TypeMirror) annotationValue.getValue();
+			if ( dialectClassName == null || GenericDialect.class.getName().equals( dialectClassName.toString() ) ) {
+				// Fall back to the default
+				dialect = null;
+			}
+			else {
+				dialect = getContext().constructDialect( dialectClassName.toString(), null );
+			}
+		}
+		else {
+			dialect = null;
+		}
+		handleNamedQueryAnnotation( NAMED_QUERY, checkHql != null, dialect );
+		handleNamedQueryRepeatableAnnotation( Constants.NAMED_QUERIES, checkHql != null, dialect );
+		handleNamedQueryAnnotation( Constants.HIB_NAMED_QUERY, checkHql != null, dialect );
+		handleNamedQueryRepeatableAnnotation( Constants.HIB_NAMED_QUERIES, checkHql != null, dialect );
 	}
 
-	private void handleNamedQueryAnnotation(String annotationName, boolean checkHql) {
+	private void handleNamedQueryAnnotation(String annotationName, boolean checkHql, @Nullable Dialect dialect) {
 		final var mirror = getAnnotationMirror( getElement(), annotationName );
 		if ( mirror != null ) {
-			handleNamedQuery( mirror, checkHql );
+			handleNamedQuery( mirror, checkHql, dialect );
 		}
 	}
 
-	private void handleNamedQueryRepeatableAnnotation(String annotationName, boolean checkHql) {
+	private void handleNamedQueryRepeatableAnnotation(String annotationName, boolean checkHql, @Nullable Dialect dialect) {
 		final var mirror = getAnnotationMirror( getElement(), annotationName );
 		if ( mirror != null ) {
 			final var value = getAnnotationValue( mirror );
@@ -84,13 +104,13 @@ public abstract class AnnotationMeta implements Metamodel {
 				final var annotationValues =
 						(List<? extends AnnotationValue>) value.getValue();
 				for ( var annotationValue : annotationValues ) {
-					handleNamedQuery( (AnnotationMirror) annotationValue.getValue(), checkHql );
+					handleNamedQuery( (AnnotationMirror) annotationValue.getValue(), checkHql, dialect );
 				}
 			}
 		}
 	}
 
-	private void handleNamedQuery(AnnotationMirror mirror, boolean checkHql) {
+	private void handleNamedQuery(AnnotationMirror mirror, boolean checkHql, @Nullable Dialect dialect) {
 		final var nameValue = getAnnotationValue( mirror, "name" );
 		if ( nameValue != null ) {
 			final var name = nameValue.getValue().toString();
@@ -98,7 +118,8 @@ public abstract class AnnotationMeta implements Metamodel {
 			final var reportErrors = context.checkNamedQuery( name );
 			final var value = getAnnotationValue( mirror, "query" );
 			if ( value != null && value.getValue() instanceof String hql ) {
-			final var statement =
+				dialect = dialect != null ? dialect : context.determineDialect( getElement() );
+				final var statement =
 					Validation.validate(
 								hql,
 								null,
@@ -110,7 +131,7 @@ public abstract class AnnotationMeta implements Metamodel {
 										reportErrors, checkHql ),
 								ProcessorSessionFactory.create( context.getProcessingEnvironment(),
 										context.getEntityNameMappings(), context.getEnumTypesByValue(),
-										context.isIndexing(), getElement() )
+										context.isIndexing(), getElement(), dialect )
 						);
 				if ( !isJakartaDataStyle()
 					&& statement instanceof SqmSelectStatement<?> selectStatement ) {

@@ -8,6 +8,7 @@ import org.hibernate.processor.HibernateProcessor;
 import org.hibernate.processor.test.util.CompilationTest;
 import org.hibernate.processor.test.util.TestUtil;
 import org.hibernate.processor.test.util.WithClasses;
+import org.hibernate.processor.test.util.WithProcessorOption;
 import org.junit.jupiter.api.Test;
 
 import javax.tools.Diagnostic;
@@ -33,6 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class DataTest {
 	@Test
 	@WithClasses({ Author.class, Book.class, BookAuthorRepository.class, IdOperations.class, Concrete.class, Thing.class })
+	@WithProcessorOption(key = HibernateProcessor.DIALECT_OPTION, value = "org.hibernate.dialect.PostgreSQLDialect")
 	void test() {
 		System.out.println( getMetaModelSourceAsString( Author.class ) );
 		System.out.println( getMetaModelSourceAsString( Book.class ) );

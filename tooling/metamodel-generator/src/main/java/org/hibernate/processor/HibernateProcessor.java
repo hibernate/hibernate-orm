@@ -51,6 +51,8 @@ import static org.hibernate.processor.HibernateProcessor.ADD_GENERATED_ANNOTATIO
 import static org.hibernate.processor.HibernateProcessor.ADD_GENERATION_DATE;
 import static org.hibernate.processor.HibernateProcessor.ADD_SUPPRESS_WARNINGS_ANNOTATION;
 import static org.hibernate.processor.HibernateProcessor.DEBUG_OPTION;
+import static org.hibernate.processor.HibernateProcessor.DIALECT_DATABASE_VERSION_OPTION;
+import static org.hibernate.processor.HibernateProcessor.DIALECT_OPTION;
 import static org.hibernate.processor.HibernateProcessor.EXCLUDE;
 import static org.hibernate.processor.HibernateProcessor.FULLY_ANNOTATION_CONFIGURED_OPTION;
 import static org.hibernate.processor.HibernateProcessor.INCLUDE;
@@ -149,7 +151,9 @@ import static org.hibernate.processor.util.TypeUtils.isMemberType;
 		INCLUDE, EXCLUDE,
 		INDEX,
 		JAKARTA_DATA_SORT_COMPLIANCE,
-		SUPPRESS_JAKARTA_DATA_SECURITY_ANNOTATIONS
+		SUPPRESS_JAKARTA_DATA_SECURITY_ANNOTATIONS,
+		DIALECT_OPTION,
+		DIALECT_DATABASE_VERSION_OPTION
 })
 public class HibernateProcessor extends AbstractProcessor {
 
@@ -172,6 +176,16 @@ public class HibernateProcessor extends AbstractProcessor {
 	 * Controls whether the processor should consider XML files
 	 */
 	public static final String FULLY_ANNOTATION_CONFIGURED_OPTION = "fullyAnnotationConfigured";
+
+	/**
+	 * The default dialect class to use for any HQL validation.
+	 */
+	public static final String DIALECT_OPTION = "dialect";
+
+	/**
+	 * The database version string to use for the default dialect class.
+	 */
+	public static final String DIALECT_DATABASE_VERSION_OPTION = "dialectDatabaseVersion";
 
 	/**
 	 * Controls whether the processor should only load XML files when there have been changes

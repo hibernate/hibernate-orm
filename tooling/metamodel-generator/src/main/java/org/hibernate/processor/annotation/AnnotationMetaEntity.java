@@ -4967,6 +4967,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			AnnotationValue value,
 			String hql,
 			List<String> paramNames, List<String> paramTypes) {
+		final var dialect = context.determineDialect( method );
 		final var statement =
 				Validation.validate(
 						hql,
@@ -4974,7 +4975,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						true,
 						new ErrorHandler( context, isLocal( method ) ? method : element, mirror, value, hql ),
 						ProcessorSessionFactory.create( context.getProcessingEnvironment(),
-								context.getEntityNameMappings(), context.getEnumTypesByValue(), context.isIndexing(), method )
+								context.getEntityNameMappings(), context.getEnumTypesByValue(), context.isIndexing(), method, dialect )
 				);
 		if ( statement != null ) {
 			if ( statement instanceof SqmSelectStatement<?> selectStatement ) {

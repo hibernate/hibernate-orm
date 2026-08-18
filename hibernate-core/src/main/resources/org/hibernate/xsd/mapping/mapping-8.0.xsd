@@ -1279,6 +1279,16 @@
                     </xsd:documentation>
                 </xsd:annotation>
             </xsd:element>
+
+            <!--
+                A composite identifier is an embeddable, not a scalar value, so only a custom
+                generator (declared inline via generic-generator or referenced by name from
+                generated-value) can produce it. The scalar strategies (sequence/table/uuid)
+                cannot populate an embeddable and are therefore intentionally not allowed here.
+            -->
+            <xsd:element name="generated-value" type="orm:generated-value" minOccurs="0"/>
+            <xsd:element name="generic-generator" type="orm:generic-id-generator" minOccurs="0"/>
+
             <xsd:element name="attribute-override" type="orm:attribute-override"
                          minOccurs="0" maxOccurs="unbounded"/>
         </xsd:sequence>

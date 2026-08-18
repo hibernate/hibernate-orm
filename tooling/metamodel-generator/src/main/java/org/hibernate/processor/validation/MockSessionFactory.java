@@ -167,7 +167,7 @@ public abstract class MockSessionFactory
 
 	private final ClassLoaderServiceImpl classLoaderService;
 
-	public MockSessionFactory() {
+	public MockSessionFactory(@Nullable Dialect dialect) {
 		classLoaderService = new ClassLoaderServiceImpl() {
 			@Override
 			@SuppressWarnings("unchecked")
@@ -193,11 +193,12 @@ public abstract class MockSessionFactory
 						Collections::emptyList
 				),
 //				new BootstrapServiceRegistryBuilder().applyClassLoaderService( classLoaderService ).build(),
-				singletonList(MockJdbcServicesInitiator.INSTANCE),
+				singletonList(new MockJdbcServicesInitiator( dialect )),
 				emptyList(),
 				emptyMap()
 		);
 
+		final JdbcServices jdbcServices = serviceRegistry.getService( JdbcServices.class );
 		functionRegistry = new SqmFunctionRegistry();
 		metamodel = new MockMappingMetamodelImpl();
 
@@ -221,7 +222,7 @@ public abstract class MockSessionFactory
 				emptyMap(),
 				emptyMap(),
 				emptyMap(),
-				new Database(this, MockJdbcServicesInitiator.jdbcServices.getJdbcEnvironment()),
+				new Database(this, jdbcServices.getJdbcEnvironment()),
 				this
 		);
 
@@ -237,7 +238,7 @@ public abstract class MockSessionFactory
 
 		typeConfiguration = new TypeConfiguration();
 		typeConfiguration.scope((MetadataBuildingContext) this);
-		MockJdbcServicesInitiator.genericDialect.initializeFunctionRegistry(this);
+		jdbcServices.getDialect().initializeFunctionRegistry(this);
 		typeConfiguration.scope((SessionFactoryImplementor) this);
 
 		nodeBuilder = new SqmCriteriaNodeBuilder("", "", this, this, this);
@@ -398,8 +399,7 @@ public abstract class MockSessionFactory
 
 	@Override
 	public JdbcServices getJdbcServices() {
-		return MockJdbcServicesInitiator.jdbcServices;
-//		return serviceRegistry.getService(JdbcServices.class);
+		return serviceRegistry.getService(JdbcServices.class);
 	}
 
 	@Override
@@ -690,7 +690,7 @@ public abstract class MockSessionFactory
 
 	@Override
 	public Dialect getDialect() {
-		return MockJdbcServicesInitiator.genericDialect;
+		return getJdbcServices().getDialect();
 	}
 
 	@Override

@@ -4,12 +4,14 @@
  */
 package org.hibernate.dialect;
 
+import org.hibernate.SPI;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 
 /**
  *
  * @author Christian Beikov
  */
+@SPI
 public enum PostgreSQLDriverKind {
 	PG_JDBC,
 	VERT_X,

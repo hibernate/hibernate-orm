@@ -79,11 +79,14 @@ final class DialectExtensionDecisionOverlay {
 		}
 		for ( Map.Entry<String, Decision> entry : decisions.entrySet() ) {
 			final String elementId = entry.getKey();
+			final Decision decision = entry.getValue();
 			final DialectExtensionInventory.SurfaceDeclaration declaration = declarations.get( elementId );
 			if ( declaration == null ) {
+				if ( decision.isCompletedSurfaceRemoval() ) {
+					continue;
+				}
 				throw new IllegalArgumentException( "Dialect decision does not match the current surface: " + elementId );
 			}
-			final Decision decision = entry.getValue();
 			if ( "FIELD".equals( declaration.getKind() )
 					&& decision.hasRole( "IMPLEMENT" ) ) {
 				throw new IllegalArgumentException( "IMPLEMENT is not valid for a field: " + elementId );
@@ -208,6 +211,17 @@ final class DialectExtensionDecisionOverlay {
 			return "APPROVED".equals( decisionStatus );
 		}
 
+		boolean isCompleted() {
+			return "COMPLETED".equals( decisionStatus );
+		}
+
+		private boolean isCompletedSurfaceRemoval() {
+			return isCompleted()
+					&& ( "REMOVE".equals( disposition )
+							|| "REPLACE".equals( disposition )
+							|| "MOVE_BEHIND_INTERNAL_COLLABORATOR".equals( disposition ) );
+		}
+
 		private boolean hasRole(String role) {
 			for ( String declaredRole : roles.split( "," ) ) {
 				if ( role.equals( declaredRole ) ) {
@@ -225,7 +239,10 @@ final class DialectExtensionDecisionOverlay {
 		}
 
 		private static String decisionStatus(String value, String elementId) {
-			if ( value.isBlank() || "PROPOSED".equals( value ) || "APPROVED".equals( value ) ) {
+			if ( value.isBlank()
+					|| "PROPOSED".equals( value )
+					|| "APPROVED".equals( value )
+					|| "COMPLETED".equals( value ) ) {
 				return value;
 			}
 			throw new IllegalArgumentException( "Unexpected decisionStatus for " + elementId + ": " + value );

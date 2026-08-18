@@ -8,6 +8,7 @@ import jakarta.persistence.TemporalType;
 import jakarta.persistence.Timeout;
 import org.hibernate.Length;
 import org.hibernate.QueryTimeoutException;
+import org.hibernate.SPI;
 import org.hibernate.Timeouts;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
@@ -99,6 +100,7 @@ import java.util.Locale;
 import java.util.TimeZone;
 
 import static java.lang.Integer.parseInt;
+import static org.hibernate.SPI.Role.IMPLEMENT;
 import static org.hibernate.cfg.SchemaToolingSettings.STORAGE_ENGINE;
 import static org.hibernate.dialect.lock.internal.MySQLLockingSupport.MYSQL_LOCKING_SUPPORT;
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
@@ -202,18 +204,24 @@ public class MySQLDialect extends Dialect {
 
 	private final boolean noBackslashEscapesEnabled;
 
+	@SPI( IMPLEMENT )
 	public MySQLDialect() {
 		this( MINIMUM_VERSION );
 	}
 
+	@SPI( IMPLEMENT )
 	public MySQLDialect(DatabaseVersion version) {
-		this( version, 4 );
+		this(
+				version,
+				new MySQLServerConfiguration(
+						4,
+						false,
+						Environment.getProperties().getProperty( STORAGE_ENGINE )
+				)
+		);
 	}
 
-	public MySQLDialect(DatabaseVersion version, int bytesPerCharacter) {
-		this( version, bytesPerCharacter, false );
-	}
-
+	@SPI( IMPLEMENT )
 	public MySQLDialect(DatabaseVersion version, MySQLServerConfiguration serverConfiguration) {
 		super( version );
 		maxVarcharLength = maxVarcharLength( getMySQLVersion(), serverConfiguration.getBytesPerCharacter() ); //conservative assumption
@@ -222,14 +230,7 @@ public class MySQLDialect extends Dialect {
 		storageEngine = createStorageEngine( serverConfiguration.getConfiguredStorageEngine() );
 	}
 
-	public MySQLDialect(DatabaseVersion version, int bytesPerCharacter, boolean noBackslashEscapes) {
-		super( version );
-		maxVarcharLength = maxVarcharLength( getMySQLVersion(), bytesPerCharacter ); //conservative assumption
-		maxVarbinaryLength = maxVarbinaryLength( getMySQLVersion() );
-		noBackslashEscapesEnabled = noBackslashEscapes;
-		storageEngine = createStorageEngine( Environment.getProperties().getProperty( STORAGE_ENGINE ) );
-	}
-
+	@SPI( IMPLEMENT )
 	public MySQLDialect(DialectResolutionInfo info) {
 		this( createVersion( info, MINIMUM_VERSION ),
 				MySQLServerConfiguration.fromDialectResolutionInfo( info ) );

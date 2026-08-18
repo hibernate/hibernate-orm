@@ -38,6 +38,7 @@ final class DialectExtensionInventoryRenderer {
 		root.put( "selectionMetadataElements", inventory.getSelectionMetadataElements() );
 		root.put( "selectionMechanisms", selectionMechanisms( inventory ) );
 		root.put( "dialectSelections", dialectSelections( inventory ) );
+		root.put( "familyCandidates", familyCandidates( inventory ) );
 		try ( Jsonb jsonb = JsonbBuilder.create( new JsonbConfig().withNullValues( true ) ) ) {
 			return jsonb.toJson( root ) + '\n';
 		}
@@ -212,6 +213,122 @@ final class DialectExtensionInventoryRenderer {
 		return result.toString();
 	}
 
+	String familyInventory(DialectExtensionInventory inventory) {
+		return familyInventory( inventory, null );
+	}
+
+	String familyInventory(
+			DialectExtensionInventory inventory,
+			DialectFamilyDecisionOverlay decisions) {
+		if ( decisions != null ) {
+			decisions.validate( inventory );
+		}
+		final StringBuilder result = new StringBuilder();
+		result.append( "= Dialect and Translator Family Evidence\n" )
+				.append( ":toc2:\n:toclevels: 2\n\n" )
+				.append( "This generated Phase 1 artifact records current compiled evidence. " )
+				.append( "Family membership represents compatible grammar or copied behavior and does not itself propose inheritance. " )
+				.append( "The exposed-overridable count is an estimate of today's subclass-visible method surface, including inherited methods.\n\n" )
+				.append( "External-provider survey:: Public subclass examples exist for several families, but no currently maintained external " )
+				.append( "subclass was confirmed strongly enough to treat as compatibility evidence. The proposals therefore rely on " )
+				.append( "compiled Core, community, and Spatial evidence; the survey is intentionally non-exhaustive.\n\n" );
+		for ( DialectExtensionInventory.FamilyCandidate family : inventory.getFamilyCandidates() ) {
+			result.append( "== " ).append( family.getTitle() ).append( "\n\n" );
+			if ( decisions != null ) {
+				appendFamilyDecisions( result, family, decisions );
+			}
+			result
+					.append( "=== Dialect evidence\n\n" )
+					.append( "[cols=\"34,16,30,8,10,10\",options=\"header\"]\n|===\n" )
+					.append( "|Type |Artifact |Direct superclass |Abstract |Exposed overridable |Declared protected\n" );
+			for ( DialectExtensionInventory.FamilyType type : family.getDialectTypes() ) {
+				appendFamilyType( result, type );
+			}
+			result.append( "|===\n\n=== SQL AST translator evidence\n\n" )
+					.append( "[cols=\"34,16,30,8,10,10\",options=\"header\"]\n|===\n" )
+					.append( "|Type |Artifact |Direct superclass |Abstract |Exposed overridable |Declared protected\n" );
+			for ( DialectExtensionInventory.FamilyType type : family.getTranslatorTypes() ) {
+				appendFamilyType( result, type );
+			}
+			result.append( "|===\n\n" )
+					.append( "Concrete Dialect dependencies from family translators:: " )
+					.append( family.getConcreteDialectDependencies().size() ).append( "\n" );
+			appendDependencyExamples( result, family.getConcreteDialectDependencies() );
+			result.append( "\nShared declared translator hooks:: " )
+					.append( family.getSharedTranslationHooks().size() ).append( "\n" );
+			appendHookExamples( result, family.getSharedTranslationHooks() );
+			result.append( '\n' );
+		}
+		return result.toString();
+	}
+
+	private static void appendFamilyDecisions(
+			StringBuilder result,
+			DialectExtensionInventory.FamilyCandidate family,
+			DialectFamilyDecisionOverlay decisions) {
+		result.append( "=== Proposed dispositions\n\n" )
+				.append( "[cols=\"12,12,28,48\",options=\"header\"]\n|===\n" )
+				.append( "|Subject |Status |Disposition and contract |Rationale\n" );
+		appendFamilyDecision( result, "Dialect", decisions.decision( family.getId() + ":DIALECT" ) );
+		appendFamilyDecision( result, "Translator", decisions.decision( family.getId() + ":TRANSLATOR" ) );
+		result.append( "|===\n\n" );
+	}
+
+	private static void appendFamilyDecision(
+			StringBuilder result,
+			String subject,
+			DialectFamilyDecisionOverlay.Decision decision) {
+		result.append( '|' ).append( subject )
+				.append( '|' ).append( decision.getDecisionStatus() )
+				.append( '|' ).append( cell( decision.getDisposition() + ": " + decision.getProposedContract() ) )
+				.append( '|' ).append( cell( decision.getRationale() ) ).append( '\n' );
+	}
+
+	private static void appendFamilyType(StringBuilder result, DialectExtensionInventory.FamilyType type) {
+		result.append( '|' ).append( cell( type.getClassName() ) )
+				.append( '|' ).append( cell( type.getArtifact() ) )
+				.append( '|' ).append( cell( type.getDirectSuperClass() == null ? "—" : type.getDirectSuperClass() ) )
+				.append( '|' ).append( type.isAbstractType() ? "yes" : "no" )
+				.append( '|' ).append( type.getExposedOverridableMethods() )
+				.append( '|' ).append( type.getDeclaredProtectedMethods() ).append( '\n' );
+	}
+
+	private static void appendDependencyExamples(
+			StringBuilder result,
+			List<DialectExtensionInventory.FamilyDependency> dependencies) {
+		if ( dependencies.isEmpty() ) {
+			return;
+		}
+		result.append( "+\n" );
+		for ( int i = 0; i < Math.min( dependencies.size(), 12 ); i++ ) {
+			final DialectExtensionInventory.FamilyDependency dependency = dependencies.get( i );
+			result.append( "* `" ).append( dependency.getSourceElementId() ).append( "` -> `" )
+					.append( dependency.getTargetElementId() ).append( "` (`" )
+					.append( dependency.getKind() ).append( "`)\n" );
+		}
+		if ( dependencies.size() > 12 ) {
+			result.append( "* _" ).append( dependencies.size() - 12 ).append( " more_\n" );
+		}
+	}
+
+	private static void appendHookExamples(
+			StringBuilder result,
+			List<DialectExtensionInventory.SharedTranslationHook> hooks) {
+		if ( hooks.isEmpty() ) {
+			return;
+		}
+		result.append( "+\n" );
+		for ( int i = 0; i < Math.min( hooks.size(), 20 ); i++ ) {
+			final DialectExtensionInventory.SharedTranslationHook hook = hooks.get( i );
+			result.append( "* `" ).append( hook.getSignature() ).append( "` — " )
+					.append( hook.getDeclaringTypes().size() ).append( " translators: `" )
+					.append( String.join( "`, `", hook.getDeclaringTypes() ) ).append( "`\n" );
+		}
+		if ( hooks.size() > 20 ) {
+			result.append( "* _" ).append( hooks.size() - 20 ).append( " more_\n" );
+		}
+	}
+
 	private static List<Map<String, Object>> surface(DialectExtensionInventory inventory) {
 		final List<Map<String, Object>> result = new ArrayList<>();
 		for ( DialectExtensionInventory.SurfaceDeclaration declaration : inventory.getDialectSurface() ) {
@@ -315,6 +432,51 @@ final class DialectExtensionInventoryRenderer {
 			entry.put( "configurationConstructors", dialect.getConfigurationConstructors() );
 			entry.put( "shortNames", registrationsJson( dialect.getShortNames() ) );
 			entry.put( "automaticResolution", registrationsJson( dialect.getAutomaticResolution() ) );
+			result.add( entry );
+		}
+		return result;
+	}
+
+	private static List<Map<String, Object>> familyCandidates(DialectExtensionInventory inventory) {
+		final List<Map<String, Object>> result = new ArrayList<>();
+		for ( DialectExtensionInventory.FamilyCandidate family : inventory.getFamilyCandidates() ) {
+			final Map<String, Object> entry = new LinkedHashMap<>();
+			entry.put( "id", family.getId() );
+			entry.put( "title", family.getTitle() );
+			entry.put( "dialectTypes", familyTypesJson( family.getDialectTypes() ) );
+			entry.put( "translatorTypes", familyTypesJson( family.getTranslatorTypes() ) );
+			final List<Map<String, Object>> dependencies = new ArrayList<>();
+			for ( DialectExtensionInventory.FamilyDependency dependency : family.getConcreteDialectDependencies() ) {
+				final Map<String, Object> dependencyEntry = new LinkedHashMap<>();
+				dependencyEntry.put( "sourceElementId", dependency.getSourceElementId() );
+				dependencyEntry.put( "targetElementId", dependency.getTargetElementId() );
+				dependencyEntry.put( "kind", dependency.getKind() );
+				dependencies.add( dependencyEntry );
+			}
+			entry.put( "concreteDialectDependencies", dependencies );
+			final List<Map<String, Object>> hooks = new ArrayList<>();
+			for ( DialectExtensionInventory.SharedTranslationHook hook : family.getSharedTranslationHooks() ) {
+				final Map<String, Object> hookEntry = new LinkedHashMap<>();
+				hookEntry.put( "signature", hook.getSignature() );
+				hookEntry.put( "declaringTypes", hook.getDeclaringTypes() );
+				hooks.add( hookEntry );
+			}
+			entry.put( "sharedTranslationHooks", hooks );
+			result.add( entry );
+		}
+		return result;
+	}
+
+	private static List<Map<String, Object>> familyTypesJson(List<DialectExtensionInventory.FamilyType> types) {
+		final List<Map<String, Object>> result = new ArrayList<>();
+		for ( DialectExtensionInventory.FamilyType type : types ) {
+			final Map<String, Object> entry = new LinkedHashMap<>();
+			entry.put( "className", type.getClassName() );
+			entry.put( "artifact", type.getArtifact() );
+			entry.put( "directSuperClass", type.getDirectSuperClass() );
+			entry.put( "abstract", type.isAbstractType() );
+			entry.put( "exposedOverridableMethods", type.getExposedOverridableMethods() );
+			entry.put( "declaredProtectedMethods", type.getDeclaredProtectedMethods() );
 			result.add( entry );
 		}
 		return result;

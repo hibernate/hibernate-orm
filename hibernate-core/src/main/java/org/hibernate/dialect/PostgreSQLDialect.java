@@ -12,6 +12,7 @@ import org.hibernate.Length;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.QueryTimeoutException;
+import org.hibernate.SPI;
 import org.hibernate.Timeouts;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
@@ -125,6 +126,7 @@ import java.util.List;
 import java.util.TimeZone;
 
 import static java.lang.Integer.parseInt;
+import static org.hibernate.SPI.Role.IMPLEMENT;
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.internal.util.JdbcExceptionHelper.extractSqlState;
 import static org.hibernate.internal.util.StringHelper.unroot;
@@ -190,20 +192,24 @@ public class PostgreSQLDialect extends Dialect {
 	private final ParameterMarkerStrategy parameterRenderer;
 	private final boolean supportsMerge;
 
+	@SPI( IMPLEMENT )
 	public PostgreSQLDialect() {
 		this( MINIMUM_VERSION );
 	}
 
+	@SPI( IMPLEMENT )
 	public PostgreSQLDialect(DialectResolutionInfo info) {
 		this( info.makeCopyOrDefault( MINIMUM_VERSION ),
 				PostgreSQLDriverKind.determineKind( info ) );
 		registerKeywords( info );
 	}
 
+	@SPI( IMPLEMENT )
 	public PostgreSQLDialect(DatabaseVersion version) {
 		this( version, PostgreSQLDriverKind.PG_JDBC );
 	}
 
+	@SPI( IMPLEMENT )
 	public PostgreSQLDialect(DatabaseVersion version, PostgreSQLDriverKind driverKind) {
 		super( version );
 		this.driverKind = driverKind;

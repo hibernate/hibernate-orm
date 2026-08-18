@@ -36,6 +36,7 @@ public abstract class DialectExtensionInventoryTask extends DefaultTask {
 	private final ConfigurableFileCollection indexedArtifacts;
 	private final ConfigurableFileCollection supportDocumentationFiles;
 	private final RegularFileProperty decisionOverlayFile;
+	private final RegularFileProperty familyDecisionOverlayFile;
 	private final DirectoryProperty outputDirectory;
 
 	public DialectExtensionInventoryTask() {
@@ -48,6 +49,11 @@ public abstract class DialectExtensionInventoryTask extends DefaultTask {
 		decisionOverlayFile.convention(
 				getProject().getRootProject().getLayout().getProjectDirectory()
 						.file( "design/dialect-extension-decisions.tsv" )
+		);
+		familyDecisionOverlayFile = getProject().getObjects().fileProperty();
+		familyDecisionOverlayFile.convention(
+				getProject().getRootProject().getLayout().getProjectDirectory()
+						.file( "design/dialect-family-decisions.tsv" )
 		);
 		outputDirectory = getProject().getObjects().directoryProperty();
 		outputDirectory.convention(
@@ -81,6 +87,11 @@ public abstract class DialectExtensionInventoryTask extends DefaultTask {
 		return decisionOverlayFile;
 	}
 
+	@InputFile
+	public Provider<RegularFile> getFamilyDecisionOverlayFileReference() {
+		return familyDecisionOverlayFile;
+	}
+
 	@OutputDirectory
 	public Provider<Directory> getOutputDirectoryReference() {
 		return outputDirectory;
@@ -103,6 +114,9 @@ public abstract class DialectExtensionInventoryTask extends DefaultTask {
 		final DialectExtensionDecisionOverlay decisions = decisionOverlayFile.isPresent()
 				? DialectExtensionDecisionOverlay.read( decisionOverlayFile.get().getAsFile().toPath() )
 				: DialectExtensionDecisionOverlay.empty();
+		final DialectFamilyDecisionOverlay familyDecisions = DialectFamilyDecisionOverlay.read(
+				familyDecisionOverlayFile.get().getAsFile().toPath()
+		);
 		final Path output = outputDirectory.get().getAsFile().toPath();
 		write(
 				output.resolve( "dialect-extension-inventory.json" ),
@@ -115,6 +129,10 @@ public abstract class DialectExtensionInventoryTask extends DefaultTask {
 		write( output.resolve( "dialect-extension-decisions.tsv" ), renderer.decisionOverlay( inventory, decisions ) );
 		write( output.resolve( "dialect-extension-summary.adoc" ), renderer.summary( inventory ) );
 		write( output.resolve( "dialect-selection-matrices.adoc" ), renderer.selectionMatrices( inventory ) );
+		write(
+				output.resolve( "dialect-family-inventory.adoc" ),
+				renderer.familyInventory( inventory, familyDecisions )
+		);
 		write(
 				output.resolve( "dialect-extension-review.adoc" ),
 				renderer.review(

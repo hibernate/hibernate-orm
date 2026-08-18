@@ -94,7 +94,8 @@ final class DialectExtensionInventoryAnalyzer {
 				extensionUses,
 				selectionMetadata( classifications, index ),
 				selectionFacts.getMechanisms(),
-				selectionFacts.getDialectSelections()
+				selectionFacts.getDialectSelections(),
+				new DialectFamilyInventoryAnalyzer().analyze( index, classifications, bytecodeLinks )
 		);
 	}
 

@@ -8,13 +8,17 @@ import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.NClob;
 
+import org.hibernate.SPI;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+
+import static org.hibernate.SPI.Role.IMPLEMENT;
 
 /**
  * Strategy for how dialects need {@code LOB} values to be merged.
  *
  * @author Steve Ebersole
  */
+@SPI( IMPLEMENT )
 public interface LobMergeStrategy {
 	/**
 	 * Perform merge on {@link Blob} values.

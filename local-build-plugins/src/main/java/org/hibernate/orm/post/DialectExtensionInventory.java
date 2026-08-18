@@ -17,7 +17,7 @@ import java.util.List;
 /// @author Steve Ebersole
 final class DialectExtensionInventory {
 	static final String SCHEMA = "hibernate-dialect-extension-inventory";
-	static final int SCHEMA_VERSION = 2;
+	static final int SCHEMA_VERSION = 3;
 
 	private final List<SurfaceDeclaration> dialectSurface;
 	private final List<Relationship> overrides;
@@ -28,6 +28,7 @@ final class DialectExtensionInventory {
 	private final List<String> selectionMetadataElements;
 	private final List<SelectionMechanism> selectionMechanisms;
 	private final List<DialectSelection> dialectSelections;
+	private final List<FamilyCandidate> familyCandidates;
 
 	DialectExtensionInventory(
 			Collection<SurfaceDeclaration> dialectSurface,
@@ -38,7 +39,8 @@ final class DialectExtensionInventory {
 			Collection<ExtensionUse> communityExtensionUses,
 			Collection<String> selectionMetadataElements,
 			Collection<SelectionMechanism> selectionMechanisms,
-			Collection<DialectSelection> dialectSelections) {
+			Collection<DialectSelection> dialectSelections,
+			Collection<FamilyCandidate> familyCandidates) {
 		this.dialectSurface = immutable( dialectSurface, Comparator.comparing( SurfaceDeclaration::getElementId ) );
 		this.overrides = immutable( overrides, Relationship.ORDER );
 		this.dialectHierarchy = immutable( dialectHierarchy, Relationship.ORDER );
@@ -60,6 +62,7 @@ final class DialectExtensionInventory {
 		this.selectionMetadataElements = Collections.unmodifiableList( selection );
 		this.selectionMechanisms = immutable( selectionMechanisms, Comparator.comparing( SelectionMechanism::getId ) );
 		this.dialectSelections = immutable( dialectSelections, Comparator.comparing( DialectSelection::getDialectClass ) );
+		this.familyCandidates = immutable( familyCandidates, Comparator.comparing( FamilyCandidate::getId ) );
 	}
 
 	List<SurfaceDeclaration> getDialectSurface() {
@@ -96,6 +99,10 @@ final class DialectExtensionInventory {
 
 	List<DialectSelection> getDialectSelections() {
 		return dialectSelections;
+	}
+
+	List<FamilyCandidate> getFamilyCandidates() {
+		return familyCandidates;
 	}
 
 	private static <T> List<T> immutable(Collection<T> values, Comparator<? super T> comparator) {
@@ -430,6 +437,154 @@ final class DialectExtensionInventory {
 
 		String getSource() {
 			return source;
+		}
+	}
+
+	static final class FamilyCandidate {
+		private final String id;
+		private final String title;
+		private final List<FamilyType> dialectTypes;
+		private final List<FamilyType> translatorTypes;
+		private final List<FamilyDependency> concreteDialectDependencies;
+		private final List<SharedTranslationHook> sharedTranslationHooks;
+
+		FamilyCandidate(
+				String id,
+				String title,
+				Collection<FamilyType> dialectTypes,
+				Collection<FamilyType> translatorTypes,
+				Collection<FamilyDependency> concreteDialectDependencies,
+				Collection<SharedTranslationHook> sharedTranslationHooks) {
+			this.id = id;
+			this.title = title;
+			this.dialectTypes = immutable( dialectTypes, Comparator.comparing( FamilyType::getClassName ) );
+			this.translatorTypes = immutable( translatorTypes, Comparator.comparing( FamilyType::getClassName ) );
+			this.concreteDialectDependencies = immutable(
+					concreteDialectDependencies,
+					Comparator.comparing( FamilyDependency::getSourceElementId )
+							.thenComparing( FamilyDependency::getTargetElementId )
+							.thenComparing( FamilyDependency::getKind )
+			);
+			this.sharedTranslationHooks = immutable(
+					sharedTranslationHooks,
+					Comparator.comparing( SharedTranslationHook::getSignature )
+			);
+		}
+
+		String getId() {
+			return id;
+		}
+
+		String getTitle() {
+			return title;
+		}
+
+		List<FamilyType> getDialectTypes() {
+			return dialectTypes;
+		}
+
+		List<FamilyType> getTranslatorTypes() {
+			return translatorTypes;
+		}
+
+		List<FamilyDependency> getConcreteDialectDependencies() {
+			return concreteDialectDependencies;
+		}
+
+		List<SharedTranslationHook> getSharedTranslationHooks() {
+			return sharedTranslationHooks;
+		}
+	}
+
+	static final class FamilyType {
+		private final String className;
+		private final String artifact;
+		private final String directSuperClass;
+		private final boolean abstractType;
+		private final int exposedOverridableMethods;
+		private final int declaredProtectedMethods;
+
+		FamilyType(
+				String className,
+				String artifact,
+				String directSuperClass,
+				boolean abstractType,
+				int exposedOverridableMethods,
+				int declaredProtectedMethods) {
+			this.className = className;
+			this.artifact = artifact;
+			this.directSuperClass = directSuperClass;
+			this.abstractType = abstractType;
+			this.exposedOverridableMethods = exposedOverridableMethods;
+			this.declaredProtectedMethods = declaredProtectedMethods;
+		}
+
+		String getClassName() {
+			return className;
+		}
+
+		String getArtifact() {
+			return artifact;
+		}
+
+		String getDirectSuperClass() {
+			return directSuperClass;
+		}
+
+		boolean isAbstractType() {
+			return abstractType;
+		}
+
+		int getExposedOverridableMethods() {
+			return exposedOverridableMethods;
+		}
+
+		int getDeclaredProtectedMethods() {
+			return declaredProtectedMethods;
+		}
+	}
+
+	static final class FamilyDependency {
+		private final String sourceElementId;
+		private final String targetElementId;
+		private final String kind;
+
+		FamilyDependency(BytecodeLinkageAnalyzer.Link link) {
+			sourceElementId = link.getSourceElementId();
+			targetElementId = link.getTargetElementId();
+			kind = link.getKind();
+		}
+
+		String getSourceElementId() {
+			return sourceElementId;
+		}
+
+		String getTargetElementId() {
+			return targetElementId;
+		}
+
+		String getKind() {
+			return kind;
+		}
+	}
+
+	static final class SharedTranslationHook {
+		private final String signature;
+		private final List<String> declaringTypes;
+
+		SharedTranslationHook(String signature, Collection<String> declaringTypes) {
+			this.signature = signature;
+			final List<String> types = new ArrayList<>( declaringTypes );
+			Collections.sort( types );
+			this.declaringTypes = Collections.unmodifiableList( types );
+		}
+
+		String getSignature() {
+			return signature;
+		}
+
+		List<String> getDeclaringTypes() {
+			return declaringTypes;
 		}
 	}
 

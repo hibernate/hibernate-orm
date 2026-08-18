@@ -44,6 +44,9 @@ public class DialectExtensionInventoryTests {
 		final Path overlay = Path.of( "..", "design", "dialect-extension-decisions.tsv" );
 		assertTrue( Files.isRegularFile( overlay ), overlay.toAbsolutePath().toString() );
 		DialectExtensionDecisionOverlay.read( overlay );
+		final Path familyOverlay = Path.of( "..", "design", "dialect-family-decisions.tsv" );
+		assertTrue( Files.isRegularFile( familyOverlay ), familyOverlay.toAbsolutePath().toString() );
+		DialectFamilyDecisionOverlay.read( familyOverlay );
 	}
 
 	@Test
@@ -134,6 +137,7 @@ public class DialectExtensionInventoryTests {
 		assertEquals( List.of( "NO_ARG" ), sampleSelection.getConfigurationConstructors() );
 		assertEquals( List.of( "Sample", "SampleLegacy" ), names( sampleSelection.getShortNames() ) );
 		assertEquals( List.of( "SAMPLE" ), names( sampleSelection.getAutomaticResolution() ) );
+		assertEquals( 4, inventory.getFamilyCandidates().size() );
 
 		final DialectExtensionInventoryRenderer renderer = new DialectExtensionInventoryRenderer();
 		final String first = renderer.json( inventory, "8.1", "8.1.0-test" );
@@ -148,6 +152,7 @@ public class DialectExtensionInventoryTests {
 		assertTrue( renderer.summary( inventory ).contains( "Community dependencies on internal contracts" ) );
 		assertTrue( renderer.selectionMatrices( inventory ).contains( "Dialect Selection Evidence" ) );
 		assertTrue( renderer.selectionMatrices( inventory ).contains( SampleDialect.class.getName() ) );
+		assertTrue( renderer.familyInventory( inventory ).contains( "Dialect and Translator Family Evidence" ) );
 		final String undecidedReview = renderer.review( inventory, emptyDecisions, "8.1", "8.1.0-test" );
 		assertTrue( undecidedReview.contains( "Dialect Extension Surface Review" ) );
 		assertTrue( undecidedReview.contains( "_Undecided_" ) );
@@ -176,6 +181,28 @@ public class DialectExtensionInventoryTests {
 		);
 		final DialectExtensionDecisionOverlay invalidFieldDecision = DialectExtensionDecisionOverlay.read( overlayFile );
 		assertThrows( IllegalArgumentException.class, () -> invalidFieldDecision.validate( inventory ) );
+
+		Files.writeString(
+				overlayFile,
+				DialectExtensionDecisionOverlay.HEADER + '\n'
+						+ "method:org.hibernate.dialect.Dialect#removedHook()\tGENERAL_CAPABILITY\tCOMPLETED\tINTERNAL\t"
+						+ "\tREMOVE\tRemoved provider hook\tReplacement\tdialect-removed-hook\tPhase 2\t\n",
+				StandardCharsets.UTF_8
+		);
+		final DialectExtensionDecisionOverlay completedRemoval =
+				DialectExtensionDecisionOverlay.read( overlayFile );
+		completedRemoval.validate( inventory );
+
+		Files.writeString(
+				overlayFile,
+				DialectExtensionDecisionOverlay.HEADER + '\n'
+						+ "method:org.hibernate.dialect.Dialect#missingRetainedHook()\tGENERAL_CAPABILITY\tCOMPLETED\tSPI\t"
+						+ "IMPLEMENT\tRETAIN\tMissing retained hook\t\t\tPhase 2\t\n",
+				StandardCharsets.UTF_8
+		);
+		final DialectExtensionDecisionOverlay invalidCompletedRetention =
+				DialectExtensionDecisionOverlay.read( overlayFile );
+		assertThrows( IllegalArgumentException.class, () -> invalidCompletedRetention.validate( inventory ) );
 	}
 
 	@Test

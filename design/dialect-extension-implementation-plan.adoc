@@ -234,8 +234,11 @@ Implementation progress:
   AsciiDoc surface-review report beneath
   `target/orm/reports/dialect-extension`;
 * the temporary checked-in `design/dialect-extension-decisions.tsv` overlay is
-  sparse, carries explicit `PROPOSED` or `APPROVED` status, and records the
+  sparse, carries explicit `PROPOSED`, `APPROVED`, or `COMPLETED` status, and records the
   rationale for each human decision without duplicating generated facts;
+  `COMPLETED` retains the audit and Migration Guide linkage for an approved
+  removal, replacement, or move after its former declaration no longer appears
+  in the current generated surface;
 * all 415 declaration decisions are approved across the completed groups and the
   reviewed type and function, identifier-quoting, literal-rendering,
   current-temporal, exception-handling, identifier-metadata, query-decoration,
@@ -385,7 +388,21 @@ Acceptance for this phase:
 
 === Phase 1: family inventory and decision checkpoint
 
-Status:: `NOT STARTED`
+Status:: `COMPLETE`
+
+Working artifacts::
+
+* `design/dialect-family-decisions.tsv` contains the eight approved Dialect and
+  translator dispositions from this checkpoint;
+* `documentation/target/orm/reports/dialect-extension/dialect-family-inventory.adoc`
+  joins those decisions to current hierarchy, protected-surface, concrete-
+  Dialect-coupling, and shared-translator-hook evidence;
+* the same generated facts are available under `familyCandidates` in
+  `dialect-extension-inventory.json`.
+
+All eight dispositions were approved and the accepted initial family list was
+incorporated into the specification.  Production classification and protected-
+surface commitments remain Phase 2 work.
 
 Derive the initial family inventory from repository evidence.  No initial list
 is required from the specification reviewer.
@@ -438,7 +455,7 @@ discovery is not required to begin.
 
 === Phase 2: classify and audit Dialect
 
-Status:: `NOT STARTED`
+Status:: `IN PROGRESS`
 
 Model the proposed type-level classification and roles in the surface ledger
 before changing production annotations.  Production `@SPI` annotations are
@@ -482,6 +499,68 @@ declarations deliberately excluded from the support surface.  Production
 classification may proceed in coherent ready batches but must not promise an
 unreviewed signature.
 
+==== Approved type and constructor matrix
+
+The initial family-base decision and constructor audit established the following
+Phase 2 target.  Type-level `IMPLEMENT` annotations remain deferred until the
+complete inherited overridable surface of each base is ready; constructor-level
+annotations may be applied independently when their signatures are ready.
+
+[cols="26,34,20,20",options="header"]
+|===
+|Type |Supported subclass constructors |Target |Phase 2 action
+
+|`Dialect`
+|`DatabaseVersion`; `DialectResolutionInfo`
+|`IMPLEMENT`
+|Retain as protected constructors
+
+|`PostgreSQLDialect`
+|No-arg; `DialectResolutionInfo`; `DatabaseVersion`; `DatabaseVersion, PostgreSQLDriverKind`
+|`IMPLEMENT`
+|Retain all four; classify `PostgreSQLDriverKind` as `USE` SPI
+
+|`MySQLDialect`
+|No-arg; `DialectResolutionInfo`; `DatabaseVersion`; `DatabaseVersion, MySQLServerConfiguration`
+|`IMPLEMENT`
+|Retain these four; remove the two scalar configuration overloads; classify the immutable context as `USE` SPI
+
+|`DB2Dialect`
+|No-arg; `DialectResolutionInfo`; `DatabaseVersion`
+|`IMPLEMENT`
+|Retain all three
+
+|`AbstractTransactSQLDialect`
+|`DatabaseVersion`; `DialectResolutionInfo`
+|`IMPLEMENT`
+|Narrow both constructors from public to protected
+
+|`PostgreSQLSqlAstTranslator`, `DB2SqlAstTranslator`, and generic translator templates
+|Deferred
+|Deferred to Phase 4
+|Wait for supported SQL AST signature closure
+|===
+
+`MySQLServerConfiguration` is the preferred complete MySQL-family construction
+context.  `DatabaseVersion` has an approved target of `USE` SPI, but its production
+annotation is deferred until the still-ordinary-API Dialect constructors and
+helpers which depend on it are reclassified; applying it earlier would knowingly
+introduce API-to-SPI validation failures.
+
+The first production tranche is complete.  It classifies the approved
+constructors, version-selection hooks, focused rendering hooks, and load-sizing
+and LOB strategy supply points whose signatures are already supported.  It also
+removes `Dialect#checkVersion()`, removes the scalar MySQL construction
+overloads, and narrows the `AbstractTransactSQLDialect` constructors.  The
+generated inventory verifies the resulting roles.
+
+Phase 2 remains in progress because type-level `IMPLEMENT` classification and
+the remainder of the inherited `Dialect` surface would prematurely support
+signatures assigned to Phases 4 and 5.  Work may proceed into those phases; this
+phase closes when their signature remediation makes the approved classifications
+safe to apply.  In particular, `getSizeStrategy()` and `DatabaseVersion` remain
+deferred rather than being annotated ahead of their supported boundaries.
+
 Acceptance for this phase:
 
 * the generated inventory accounts for every exposed `Dialect` declaration;
@@ -497,7 +576,7 @@ Acceptance for this phase:
 
 === Phase 3: provider-boundary diagnostics
 
-Status:: `NOT STARTED`
+Status:: `IN PROGRESS`
 
 Treat `hibernate-community-dialects` production classes as provider code.
 Feed their compiled bytecode into the explicitly invoked classification and SPI

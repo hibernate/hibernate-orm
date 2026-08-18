@@ -31,6 +31,17 @@ public class CommunityDialectSelectorTest {
 		testDialectNamingResolution( DerbyDialect.class );
 	}
 
+	@Test
+	public void verifyDialectVersionIsEstablishedDuringConstruction() {
+		final MimerSQLDialect mimerDialect = new MimerSQLDialect();
+		assertThat( mimerDialect.getVersion().getMajor() ).isZero();
+		assertThat( mimerDialect.determineDatabaseVersion( null ).getMajor() ).isZero();
+
+		final RDMSOS2200Dialect rdmsDialect = new RDMSOS2200Dialect();
+		assertThat( rdmsDialect.getVersion().getMajor() ).isZero();
+		assertThat( rdmsDialect.determineDatabaseVersion( null ).getMajor() ).isZero();
+	}
+
 	private void testDialectNamingResolution(final Class<?> dialectClass) {
 		String simpleName = dialectClass.getSimpleName();
 		if ( simpleName.endsWith( "Dialect" ) ) {

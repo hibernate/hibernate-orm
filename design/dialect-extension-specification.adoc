@@ -641,13 +641,47 @@ the subclass-facing and collaborator-facing compatibility surfaces deliberate
 and minimal.  Family evidence justifies sharing the invariant behavior; it does
 not by itself justify any particular protected method or composable contract.
 
-Potential initial families include PostgreSQL-compatible, MySQL-compatible,
-DB2-compatible, and Transact-SQL.  This list is illustrative, not mandatory.
+The accepted initial SQL-compatibility-family dispositions are:
 
-The exact initial family list is a deferred decision.  Until it is resolved, a
-built-in Dialect or translator used as an in-repository or maintained
-third-party superclass MUST NOT be converted to an internal leaf without a
-supported replacement.
+[cols="20,40,40",options="header"]
+|===
+|Family |Dialect inheritance |SQL AST translation
+
+|PostgreSQL-compatible
+|`PostgreSQLDialect` is a concrete `IMPLEMENT` provider base.
+|`PostgreSQLSqlAstTranslator` is a concrete `IMPLEMENT` provider base with
+composable conflict-clause, CTE, fetch, and array-predicate deviations.
+
+|MySQL-compatible
+|`MySQLDialect` is a concrete `IMPLEMENT` provider base.
+|The family uses `SqlAstTranslatorWithOnDuplicateKeyUpdate` plus focused
+rendering strategies and a narrow family-support view.  There is no mandatory
+MySQL-specific translator superclass.
+
+|DB2-compatible
+|`DB2Dialect` is a concrete `IMPLEMENT` provider base.
+|`DB2SqlAstTranslator` is a concrete `IMPLEMENT` provider base with composable
+version/fetch, comparison, and DML-result deviations.
+
+|Transact-SQL-compatible
+|`AbstractTransactSQLDialect` is an abstract `IMPLEMENT` family base.
+|There is no common Transact-SQL translator superclass.  Locking, pagination,
+DML-target, and comparison behavior are exposed through focused supported
+strategies or helpers.
+|===
+
+These dispositions decide supported Java inheritance and composition for the
+initial SQL-compatibility families.  They do not replace or constrain the
+locking, SQL AST translation, pagination, schema-management, or other feature
+families defined by this specification.  Membership in a compatibility family
+MUST NOT require inheritance from its supported base.
+
+Approval of a provider base does not approve its current public or protected
+surface declaration by declaration.  That surface, including constructors,
+MUST still pass the Dialect and translator SPI audits before classification is
+applied.  A built-in Dialect or translator used as an in-repository or
+maintained third-party superclass MUST NOT be converted to an internal leaf
+without a supported replacement.
 
 Core and community-Dialect usage is mandatory family evidence.  Publicly
 discoverable maintained third-party providers SHOULD be surveyed through their

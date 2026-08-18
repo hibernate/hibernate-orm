@@ -143,7 +143,7 @@ public class RDMSOS2200Dialect extends Dialect {
 	}
 
 	@Override
-	public DatabaseVersion getVersion() {
+	public DatabaseVersion determineDatabaseVersion(DialectResolutionInfo info) {
 		return ZERO_VERSION;
 	}
 

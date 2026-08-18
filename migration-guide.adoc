@@ -59,6 +59,32 @@ This section describes changes to contracts (classes, interfaces, methods, etc.)
 
 The deprecated `PersistenceContext.reentrantSafeEntityEntries()` method has been removed. The replacement method is `PersistenceContext.reentrantSafeManagedEntities()`.
 
+[[dialect-spi-construction]]
+=== Dialect SPI construction and identity
+
+The Dialect construction contract now captures the database version as immutable
+instance state. `Dialect.getVersion()` and `Dialect.toString()` are consequently
+final. A custom Dialect which previously overrode `getVersion()` must instead pass
+the effective version to a supported superclass constructor or override
+`determineDatabaseVersion(DialectResolutionInfo)` to establish it during
+construction. The latter method is invoked by the superclass constructor, so an
+override must not depend on subclass initialization.
+
+The protected `Dialect.checkVersion()` hook has been removed. Minimum-version
+validation is fixed constructor orchestration; custom Dialects continue to supply
+their construction-safe minimum through `getMinimumSupportedVersion()`.
+
+The partial MySQL-family constructors
+`MySQLDialect(DatabaseVersion, int)` and
+`MySQLDialect(DatabaseVersion, int, boolean)` have been removed. Custom
+MySQL-family Dialects should use
+`MySQLDialect(DatabaseVersion, MySQLServerConfiguration)`. The immutable
+`MySQLServerConfiguration` context and `PostgreSQLDriverKind` are now supported
+provider SPI.
+
+The constructors of the abstract `AbstractTransactSQLDialect` family base are now
+protected, matching their sole purpose as subclass-construction paths.
+
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Changes in Behavior
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

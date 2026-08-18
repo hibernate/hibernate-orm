@@ -6,6 +6,7 @@ package org.hibernate.dialect;
 
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.SPI;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.function.CaseLeastGreatestEmulation;
@@ -46,6 +47,7 @@ import java.sql.Types;
 import java.util.Map;
 
 import static org.hibernate.type.SqlTypes.BLOB;
+import static org.hibernate.SPI.Role.IMPLEMENT;
 import static org.hibernate.type.SqlTypes.BOOLEAN;
 import static org.hibernate.type.SqlTypes.CLOB;
 import static org.hibernate.type.SqlTypes.DATE;
@@ -64,11 +66,13 @@ import static org.hibernate.type.SqlTypes.TINYINT;
  */
 public abstract class AbstractTransactSQLDialect extends Dialect {
 
-	public AbstractTransactSQLDialect(DatabaseVersion version) {
+	@SPI( IMPLEMENT )
+	protected AbstractTransactSQLDialect(DatabaseVersion version) {
 		super(version);
 	}
 
-	public AbstractTransactSQLDialect(DialectResolutionInfo info) {
+	@SPI( IMPLEMENT )
+	protected AbstractTransactSQLDialect(DialectResolutionInfo info) {
 		super(info);
 	}
 

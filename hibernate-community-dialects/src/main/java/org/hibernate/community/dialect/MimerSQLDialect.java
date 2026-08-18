@@ -68,7 +68,7 @@ public class MimerSQLDialect extends Dialect {
 	//   in a cast or function call
 
 	public MimerSQLDialect() {
-		super( DatabaseVersion.make( 11 ) );
+		super( ZERO_VERSION );
 	}
 
 	public MimerSQLDialect(DialectResolutionInfo info) {
@@ -148,7 +148,7 @@ public class MimerSQLDialect extends Dialect {
 	}
 
 	@Override
-	public DatabaseVersion getVersion() {
+	public DatabaseVersion determineDatabaseVersion(DialectResolutionInfo info) {
 		return ZERO_VERSION;
 	}
 

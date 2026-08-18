@@ -376,6 +376,15 @@ public interface Statistics {
 	long getTransactionCount();
 
 	/**
+	 * The number of transactions we know to have failed.
+	 *
+	 * @since 8.1
+	 */
+	default long getFailedTransactionCount() {
+		return getTransactionCount() - getSuccessfulTransactionCount();
+	}
+
+	/**
 	 * The number of prepared statements that were acquired.
 	 */
 	long getPrepareStatementCount();

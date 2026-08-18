@@ -113,7 +113,7 @@ public class HibernateMetrics implements MeterBinder {
 				Statistics::getSuccessfulTransactionCount, "result", "success"
 		);
 		counter(registry, "hibernate.transactions", "The number of transactions we know to have failed",
-				s -> s.getTransactionCount() - s.getSuccessfulTransactionCount(), "result", "failure"
+				Statistics::getFailedTransactionCount, "result", "failure"
 		);
 		counter(registry,
 				"hibernate.optimistic.failures",

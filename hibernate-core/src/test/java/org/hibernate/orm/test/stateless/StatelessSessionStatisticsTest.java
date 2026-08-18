@@ -96,6 +96,8 @@ public class StatelessSessionStatisticsTest {
 		assertEquals(1, statistics.getEntityDeleteCount());
 		assertEquals(1, statistics.getCollectionRemoveCount());
 		assertEquals(4, statistics.getTransactionCount());
+		assertEquals(4, statistics.getSuccessfulTransactionCount());
+		assertEquals(0, statistics.getFailedTransactionCount());
 		assertEquals(stmtCount+=2, statistics.getPrepareStatementCount());
 		assertEquals(stmtCount, statistics.getCloseStatementCount());
 	}

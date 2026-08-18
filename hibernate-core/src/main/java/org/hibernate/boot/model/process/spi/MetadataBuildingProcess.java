@@ -678,7 +678,7 @@ public class MetadataBuildingProcess {
 		}
 
 		final int preferredSqlTypeCodeForDuration = getPreferredSqlTypeCodeForDuration( serviceRegistry );
-		if ( preferredSqlTypeCodeForDuration != SqlTypes.INTERVAL_SECOND ) {
+		if ( preferredSqlTypeCodeForDuration != SqlTypes.DURATION ) {
 			adaptToPreferredSqlTypeCode(
 					typeConfiguration,
 					jdbcTypeRegistry,
@@ -687,9 +687,6 @@ public class MetadataBuildingProcess {
 					StandardBasicTypes.DURATION.getName(),
 					"org.hibernate.type.DurationType"
 			);
-		}
-		else {
-			addFallbackIfNecessary( jdbcTypeRegistry, SqlTypes.INTERVAL_SECOND, SqlTypes.DURATION );
 		}
 
 		addFallbackIfNecessary( jdbcTypeRegistry, SqlTypes.INET, SqlTypes.VARBINARY );

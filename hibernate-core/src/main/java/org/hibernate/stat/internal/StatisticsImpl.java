@@ -99,6 +99,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 
 	private final LongAdder committedTransactionCount = new LongAdder();
 	private final LongAdder transactionCount = new LongAdder();
+	private final LongAdder failedTransactionCount = new LongAdder();
 
 	private final LongAdder optimisticFailureCount = new LongAdder();
 
@@ -193,6 +194,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 
 		transactionCount.reset();
 		committedTransactionCount.reset();
+		failedTransactionCount.reset();
 
 		optimisticFailureCount.reset();
 
@@ -852,6 +854,11 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 	}
 
 	@Override
+	public long getFailedTransactionCount() {
+		return failedTransactionCount.sum();
+	}
+
+	@Override
 	public long getCloseStatementCount() {
 		return closeStatementCount.sum();
 	}
@@ -896,6 +903,9 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 		transactionCount.increment();
 		if ( success ) {
 			committedTransactionCount.increment();
+		}
+		else {
+			failedTransactionCount.increment();
 		}
 	}
 

@@ -5,6 +5,7 @@
 package org.hibernate.processor.validation;
 
 import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.hibernate.annotations.processing.GenericDialect;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.dialect.Dialect;
@@ -26,15 +27,25 @@ import java.util.Map;
 @SuppressWarnings("nullness")
 class MockJdbcServicesInitiator extends JdbcServicesInitiator {
 
-	static final JdbcServicesInitiator INSTANCE = new MockJdbcServicesInitiator();
+	private static final GenericDialect GENERIC_DIALECT = new GenericDialect();
 
-	static final JdbcServices jdbcServices = Mocker.nullary(MockJdbcServices.class).get();
-	static final GenericDialect genericDialect = new GenericDialect();
+	private final JdbcServices jdbcServices;
+
+	public MockJdbcServicesInitiator(@Nullable Dialect dialect) {
+		this.jdbcServices = Mocker.variadic(MockJdbcServices.class).make( dialect == null ? GENERIC_DIALECT : dialect );
+	}
 
 	public abstract static class MockJdbcServices implements JdbcServices, JdbcEnvironment {
+
+		private final Dialect dialect;
+
+		public MockJdbcServices(Dialect dialect) {
+			this.dialect = dialect;
+		}
+
 		@Override
 		public Dialect getDialect() {
-			return genericDialect;
+			return dialect;
 		}
 
 		@Override
@@ -64,7 +75,7 @@ class MockJdbcServicesInitiator extends JdbcServicesInitiator {
 
 		@Override
 		public NameQualifierSupport getNameQualifierSupport() {
-			return genericDialect.getNameQualifierSupport();
+			return dialect.getNameQualifierSupport();
 		}
 	}
 

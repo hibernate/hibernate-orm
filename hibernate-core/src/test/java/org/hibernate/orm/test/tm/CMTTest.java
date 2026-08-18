@@ -437,6 +437,7 @@ public class CMTTest {
 
 			assertEquals( sessionFactory.getStatistics().getTransactionCount(), 4 );
 			assertEquals( sessionFactory.getStatistics().getSuccessfulTransactionCount(), 3 );
+			assertEquals( sessionFactory.getStatistics().getFailedTransactionCount(), 1 );
 			assertEquals( sessionFactory.getStatistics().getEntityDeleteCount(), 1 );
 			assertEquals( sessionFactory.getStatistics().getEntityInsertCount(), 1 );
 			assertEquals( sessionFactory.getStatistics().getSessionOpenCount(), 4 );

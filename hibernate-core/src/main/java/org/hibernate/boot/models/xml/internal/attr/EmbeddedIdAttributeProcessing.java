@@ -58,6 +58,12 @@ public class EmbeddedIdAttributeProcessing {
 
 		XmlAnnotationHelper.applyAttributeOverrides( jaxbEmbeddedId.getAttributeOverrides(), memberDetails, xmlDocumentContext );
 
+		// A composite identifier is an embeddable, so only a custom generator can produce it:
+		// generic-generator declares one inline, generated-value may reference one by name. The
+		// scalar strategies (sequence/table/uuid) cannot populate an embeddable and are not mapped.
+		XmlAnnotationHelper.applyGeneratedValue( jaxbEmbeddedId.getGeneratedValue(), memberDetails, xmlDocumentContext );
+		XmlAnnotationHelper.applyGenericGenerator( jaxbEmbeddedId.getGenericGenerator(), memberDetails, xmlDocumentContext );
+
 		return memberDetails;
 	}
 }

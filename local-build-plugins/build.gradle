@@ -26,6 +26,7 @@ dependencies {
     implementation libs.jakarta.basicjaxbPlugins
 
 	implementation libs.jandex
+	implementation libs.asm
     implementation libs.jakarta.jsonApi
     implementation libs.jakarta.jsonBind
     implementation libs.jakarta.yasson

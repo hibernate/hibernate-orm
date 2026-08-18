@@ -45,6 +45,15 @@ public class ReportGenerationPlugin implements Plugin<Project> {
 				ClassificationReportsTask.class,
 				(task) -> task.dependsOn( classificationMetadataTask )
 		);
+
+		final var dialectExtensionInventoryTask = project.getTasks().register(
+				"generateDialectExtensionInventory",
+				DialectExtensionInventoryTask.class,
+				(task) -> {
+					task.dependsOn( indexerTask );
+					task.getIndexedArtifacts().from( artifactsToProcess );
+				}
+		);
 		registerReportAlias(
 				project,
 				"generateSpiReport",
@@ -124,6 +133,12 @@ public class ReportGenerationPlugin implements Plugin<Project> {
 					task.getReportFile().set( project.getLayout().getBuildDirectory().file( "orm/generated/dialect/dialect-table-community.adoc" ) );
 				}
 		);
+
+		dialectExtensionInventoryTask.configure( (task) -> {
+			task.dependsOn( dialectTableTask, communityDialectTableTask );
+			task.getSupportDocumentationFiles().from( dialectTableTask.flatMap( DialectReportTask::getReportFile ) );
+			task.getSupportDocumentationFiles().from( communityDialectTableTask.flatMap( DialectReportTask::getReportFile ) );
+		} );
 
 		final var groupingTask = project.getTasks().maybeCreate( "generateReports" );
 		groupingTask.setGroup( TASK_GROUP_NAME );

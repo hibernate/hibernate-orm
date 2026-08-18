@@ -4,7 +4,7 @@
 :sectanchors:
 :numbered:
 
-Status: Proposed
+Status: Approved
 
 This document describes the supported extension surface for third-party
 Hibernate Dialects.  It applies the general `@SPI` roles defined by
@@ -44,8 +44,8 @@ The design:
   leaves;
 * uses `hibernate-community-dialects` as an in-repository conformance
   consumer;
-* includes build validation and generated provider-facing reports as required
-  deliverables.
+* uses canonical build validation and the general SPI reports, while treating a
+  separate focused Dialect-provider report as a provisional later decision.
 
 == Problem statement
 
@@ -67,24 +67,26 @@ temporary-table and multi-table mutation strategies, schema exporters, locking
 support, SQL model mutation nodes, JDBC operation implementations, and SQM
 parameter cross-reference state.
 
-The counts are a migration baseline, not the definition of the SPI.  Each
+The counts are an initial migration snapshot, not a validation baseline or the
+definition of the SPI.  Each
 dependency must be classified according to whether provider code needs to use
 a value, supply behavior to Hibernate, implement a contract, or merely obtain stock
 behavior through a supported factory.
 
-=== Dialect is both public API and provider SPI
+=== Dialect selection and provider SPI are independent
 
-`Dialect` is visible to applications, selected during configuration, queried
-by Hibernate, and subclassed by database vendors and third parties.  Moving it
-to `org.hibernate.dialect.spi` would express only one role and cause broad
-source and binary churn.  The useful change is to make its intentional
-extension surface explicit.
+`Dialect` is selected during configuration, queried by Hibernate, and
+subclassed by database vendors and third parties.  Moving it to
+`org.hibernate.dialect.spi` would cause broad source and binary churn.  The
+useful change is to make its intentional extension surface explicit while
+keeping configuration selection orthogonal.
 
-The audiences must remain distinct.  Application users receive the ordinary
-API promise associated with configuring or inspecting a Dialect.  Dialect
+The audiences must remain distinct.  Supporting a concrete Dialect name as a
+configuration selection does not classify its Java surface API.  `Dialect`
 providers receive the provider-facing `USE`, `IMPLEMENT`, and `SUPPLY`
-promises.  Marking an element `@SPI`, including `@SPI(USE)`, does not make it
-supported for use from application code.
+promises.  Application Java use of a concrete Dialect requires a separate API
+decision, and marking an element `@SPI`, including `@SPI(USE)`, never makes it
+supported for application code.
 
 === Built-in implementations are attractive accidental SPIs
 
@@ -122,7 +124,7 @@ between provider code and built-in leaf implementations.
 
 This design uses the `@SPI` role model directly:
 
-* a contract in an exact `.spi` package has implicit `USE`;
+* a contract in a `.spi` package tree has implicit `USE`;
 * a provider-implemented interface or subclassed class declares `IMPLEMENT`;
 * a type or value intentionally returned, registered, or otherwise made
   available to Hibernate declares `SUPPLY` at the supply point;
@@ -152,7 +154,8 @@ The whole `org.hibernate.dialect` package should not be declared an SPI.
 It contains:
 
 * the provider base class;
-* selectable built-in Dialects;
+* built-in Dialects which may be selectable independently of their Java
+  contract category;
 * public capability and value types;
 * implementation-specific helpers;
 * types with different extension roles.
@@ -180,6 +183,14 @@ Members which do not need to be externally visible should be removed from the
 exposed surface as part of this work where compatibility policy permits.
 Existing supported or commonly used members require an appropriate migration
 path before visibility is narrowed.
+
+The audit distinguishes classification from physical removal.  A declaration
+which is not part of the intended Dialect SPI may receive a direct `@Internal`
+override while it remains temporarily visible for compatibility.  Its concrete
+disposition--retention, bridge, deprecation, visibility reduction, or direct
+removal--is decided case by case under the release policy.  Production `@SPI`
+annotations represent ready support commitments and should not be used as
+temporary migration markers.
 
 Constructors are not inferred merely from class-level `IMPLEMENT`.  Supported
 subclass constructors should be classified explicitly so construction and
@@ -298,6 +309,12 @@ translator should be supported SPI.  They should be reorganized into
 subsystem-specific SPI packages instead of being hidden behind a second set of
 parallel facade interfaces and builders.
 
+Migration should move coherent subtrees in staged vertical batches rather than
+one atomic relocation.  Temporary mixed organization is acceptable when the
+package-migration map records the final boundary and each completed batch
+updates consumers, tests, classification, and migration documentation
+together.
+
 This applies to translator input such as select and mutation statements,
 expressions, predicates, table groups, table mutations, value bindings,
 restrictions, and returning-column descriptions.  Visitor and protected method
@@ -318,6 +335,11 @@ for output-side work such as:
 * rendering standard function-table forms;
 * adapting internal execution details which are not part of the semantic tree.
 
+This helper/factory boundary is the preferred direction, but its final shape
+should wait for the package and provider inventories to identify what
+translators actually construct.  The proposal should receive focused review
+before becoming a support commitment.
+
 === Request and context views
 
 Factories and base-class constructors should prefer supported request/context
@@ -330,6 +352,10 @@ Request interfaces:
 * may be backed by internal implementations;
 * do not expose the internal implementation through an unwrap operation unless
   such access is itself a separately supported SPI.
+
+The concrete request hierarchy and methods should be presented for focused
+review before changing `SqlAstTranslatorFactory`, including the relationship
+among select, query-mutation, and model-mutation requests.
 
 === SQL-family bases
 
@@ -356,8 +382,17 @@ A family base should be introduced only when:
 * the protected customization surface can be kept deliberate and reasonably
   small.
 
+A family identifies shared behavior and compatibility assumptions, not a
+prescribed customization mechanism.  Family inheritance and composition are
+complementary.  A family base may define the stable translation template while
+exposing individual variations through protected hooks, abstract methods,
+capabilities, profiles, rendering strategies, or delegates.  No single
+mechanism is required for every family.
+
 When only a few features differ, capabilities or composable rendering
-strategies are preferred over another inheritance layer.
+strategies are preferred over introducing another inheritance layer.  When a
+family base is otherwise justified, those same composable mechanisms may still
+be used within it instead of forcing every variation into subclass overrides.
 
 Family bases may apply to `Dialect` itself as well as to SQL AST translators.
 The exact initial families remain to be selected from the visibility and reuse
@@ -365,35 +400,54 @@ inventory.  No built-in leaf which is currently used as an in-repository or
 maintained third-party superclass should be made internal until an appropriate
 family base or other supported replacement exists.
 
-=== Concrete Dialect subclassing
+Core and community-Dialect evidence is mandatory.  Publicly discoverable
+maintained external providers should also be surveyed, without making an
+exhaustive ecosystem census a prerequisite for progress.
 
-Concrete built-in Dialects should be classified according to their supported
-application and provider audiences:
+=== Concrete Dialect category and selectability
 
-`SELECTABLE_ONLY`::
-The concrete type is supported for explicit application configuration and
-ordinary application use, but is not a provider subclassing contract.  Its
-selectability is API status, not `@SPI(USE)`.
+Java contract category, configuration selectability, and SPI roles are
+independent axes.  Selectability means that a Dialect may be named or resolved
+as the implementation Hibernate should use.  It does not make an SPI into API
+and does not by itself assign any Java contract category.
 
-`SELECTABLE_AND_SUBCLASSABLE`::
-The concrete type is supported for explicit application selection and is also
-an `@SPI(IMPLEMENT)` provider base.  It declares provider `USE` independently
-only when provider code is intended to call or construct it beyond what
-subclass implementation requires.
+A concrete built-in Dialect is internal by default as a Java implementation.
+It becomes SPI only when provider use or subclassing is deliberately approved,
+and API only when application Java use beyond configuration selection is
+deliberately supported.  A concrete SPI base may also be selectable without
+becoming API.  An abstract SQL-family base is normally non-selectable
+`IMPLEMENT` SPI.
 
-`INTERNAL_LEAF`::
-The concrete type is a Hibernate implementation detail and is `@Internal` or
-located in an internal package.  Hibernate may select it automatically, but its
-concrete identity is not a supported application selection or provider
-subclassing contract.
+The existing selection metadata is distributed principally between
+`DefaultDialectSelector` and `DialectResolver`.  The migration should inventory
+their distinct short-name-selection and database-metadata-resolution roles and
+investigate a shared catalog or metadata source where practical.  The exact
+representation of selectability is deferred until that inventory; a new
+annotation should not be introduced without evidence that existing sources
+cannot be unified or derived reliably.
 
-These are Dialect documentation/report classifications derived from ordinary
-API status, `@SPI`, and `@Internal`; they do not require a separate annotation.
-`SUPPLY` does not classify a built-in leaf because the external provider is not
-supplying Hibernate's built-in implementation.
+The inventory confirms intentionally supported application selection through a
+configured Dialect instance, Dialect class, or fully qualified class name and
+preferred automatic selection of built-in Dialects from
+`DialectResolutionInfo`.  Providers may participate in automatic selection
+through explicitly configured or Java-service-loaded `DialectResolver`
+implementations and in explicit-name selection through a Java-service-loaded
+`DialectSelector`.  Generic named registration through
+`StrategyRegistrationProvider` continues to work as part of that general SPI,
+but Dialect providers should prefer the purpose-built selector.
 
-Abstract SQL-family bases are outside this concrete classification.  They are
-provider `IMPLEMENT` contracts but are not selectable Dialects.
+Each named Dialect should have one supported canonical short name.  Historical
+version-qualified aliases and noncanonical product or mode names which no
+longer select distinct behavior should be removed with explicit Migration Guide
+mappings.  Automatic resolution remains preferred for built-in Dialects.
+
+The generated Dialect support table states supported database and minimum
+version coverage according to the containing module's support policy.  It does
+not assign a Java category, promise subclassability, or imply a particular
+selection mechanism.  Conversely, successful reflective construction of an
+undocumented concrete Dialect does not make it a supported selection target.
+Concrete-Dialect Java category and selectability decisions follow the family
+inventory; possible selector/resolver catalog unification remains deferred.
 
 The current package-level documentation promises that applications may extend
 concrete Dialects.  That promise must not be narrowed accidentally.  Any
@@ -447,6 +501,14 @@ the standard converter.
 
 HQL parsing is never database-specific and should not be selected by a Dialect.
 
+The existing explicit settings feed custom translators into
+`QueryEngineOptions`, which remains the canonical downstream integration
+contract.  Java service loading is a provisional additional discovery option.
+Any proposal must define precedence, ambiguity, lifecycle, and multiplicity;
+service-loaded contributions would feed `QueryEngineOptions` and would not
+restore a Dialect hook.  Explicit settings should provisionally take
+precedence, followed by service discovery and then the standard implementation.
+
 == Testing strategy
 
 === Community Dialects as a conformance consumer
@@ -498,6 +560,12 @@ The kit must separate SQL-generation tests from database integration tests so
 providers may run fast structural tests without provisioning every supported
 database version.
 
+The kit should be a dedicated published provider-facing test artifact rather
+than an exposure of ORM's internal test infrastructure.  Its reusable suites,
+descriptors, and assertions are provider `USE` SPI; extension contracts are
+`IMPLEMENT`, and provider-supplied configuration receives `SUPPLY` only where
+that direction is intentional.
+
 == Migration plan
 
 Provider-facing migration documentation is a deliverable of every phase, not a
@@ -517,7 +585,9 @@ mechanisms described by the SPI artifacts.
   unnecessary exposure, and classify the retained constructors, override
   surface, and supplied strategies by SPI role.
 * Record existing community-Dialect dependencies on internal contracts.
-* Establish an explicit allowlist for existing violations.
+* Keep validation explicitly invoked and use its complete diagnostic output to
+  guide remediation; do not establish a broad allowlist merely to make the
+  initial inventory pass.
 
 === Phase 2: Repair contaminated contracts
 
@@ -542,13 +612,16 @@ mechanisms described by the SPI artifacts.
 * Establish generic SQL AST translator bases.
 * Extract SQL-family bases where justified by actual reuse.
 
-=== Phase 5: Make conformance mandatory
+=== Phase 5: Complete provider conformance and reassess enforcement
 
-* Reduce the community-Dialect internal allowlist to zero.
-* Make Dialect-provider validation a required CI check.
+* Reduce violations within the defined Dialect provider boundary to zero.
+* Review separately whether Dialect-provider or general SPI validation should
+  become a required CI check.
 * Add the Dialect surface to the role-sensitive compatibility baseline.
-* Publish the generated Dialect extension inventory and required compatibility
-  test kit.
+* Publish the required compatibility test kit.
+* Reconsider whether a focused generated Dialect-provider report adds enough
+  value beyond `classifications.json`, the general SPI report, Javadocs, and
+  the Dialect Guide to justify its size and maintenance cost.
 
 === Phase 6: Remove migration adapters
 
@@ -590,8 +663,17 @@ behind helpers and factories.
 
 The following decisions are intentionally deferred for focused follow-up:
 
-* which specific Dialect and translator SQL-family bases are required in the
-  initial migration.
+* the storage format for generated inventory facts and reviewed decision
+  overlays, after Phase 0 produces representative artifacts;
+* the selectability metadata shape and possible selector/resolver catalog;
+* which specific Dialect and translator SQL-family bases are required;
+* the concrete SQL AST translation request/context interfaces;
+* the final output-result construction boundary after provider construction
+  requirements are inventoried;
+* whether Java service loading should supplement explicit HQL/SQM translator
+  settings;
+* whether a focused generated Dialect-provider report is useful and
+  manageable.
 
 == Success criteria
 
@@ -601,7 +683,8 @@ The Dialect extension design is successful when:
   internals;
 * a standalone reference Dialect implements representative advanced behavior
   using only supported contracts;
-* the generated SPI report identifies the Dialect surface by role;
+* the canonical classification metadata and general SPI report identify the
+  Dialect surface by role;
 * built-in leaves remain free to evolve internally;
 * `Dialect` no longer selects general SQM or HQL translation;
 * third-party authors have supported replacements and contract tests for the

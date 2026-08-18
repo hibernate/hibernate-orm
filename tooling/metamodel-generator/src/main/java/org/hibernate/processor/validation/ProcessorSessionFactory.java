@@ -7,6 +7,7 @@ package org.hibernate.processor.validation;
 import jakarta.persistence.AccessType;
 import jakarta.annotation.Nullable;
 import org.hibernate.PropertyNotFoundException;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.type.BasicType;
@@ -75,8 +76,9 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 			Map<String,String> entityNameMappings,
 			Map<String, Set<String>> enumTypesByValue,
 			boolean indexing,
-			@Nullable Element queryElement) {
-		return instance.make(environment, indexing, entityNameMappings, enumTypesByValue, queryElement);
+			@Nullable Element queryElement,
+			@Nullable Dialect dialect) {
+		return instance.make(environment, indexing, entityNameMappings, enumTypesByValue, queryElement, dialect);
 	}
 
 	static final Mocker<ProcessorSessionFactory> instance = Mocker.variadic(ProcessorSessionFactory.class);
@@ -101,7 +103,9 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 			boolean indexing,
 			Map<String,String> entityNameMappings,
 			Map<String, Set<String>> enumTypesByValue,
-			@Nullable Element queryElement) {
+			@Nullable Element queryElement,
+			@Nullable Dialect dialect) {
+		super( dialect );
 		elementUtil = processingEnvironment.getElementUtils();
 		typeUtil = processingEnvironment.getTypeUtils();
 		filer = processingEnvironment.getFiler();

@@ -8,7 +8,7 @@ import java.util.function.Supplier;
 
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.spi.ValueAccess;
-import org.hibernate.models.accessor.HibernateAccessorInstantiator;
+import org.hibernate.accessor.HibernateAccessorInstantiator;
 
 /**
  * Support for instantiating embeddables as POJO representation

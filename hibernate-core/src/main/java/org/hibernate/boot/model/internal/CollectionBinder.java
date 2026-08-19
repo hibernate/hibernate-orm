@@ -1657,8 +1657,16 @@ public abstract class CollectionBinder {
 		// For @OneToMany @JoinColumn on an @Audited entity, create a middle audit table
 		// to track collection membership changes (same approach as @ManyToMany / @JoinTable)
 		if ( !collection.isInverse() ) {
+			var revokedProperties = extractAuditedPropertiesFromOverrides( propertyHolder.getPersistentClass().getRootClass(), buildingContext ); //TODO calculate the set just once
 			final var audited = extract( Audited.class, property, buildingContext );
-			if ( audited != null && !property.hasDirectAnnotationUsage( Audited.Excluded.class ) ) { // && is not revoked
+			var excluded = property.hasDirectAnnotationUsage( Audited.Excluded.class );
+			if ( audited != null && !isEffectivelyExcluded(
+					property.getName(),
+					propertyHolder.getPersistentClass().getRootClass(),
+					revokedProperties,
+					excluded,
+					buildingContext
+			) ) { // && is not revoked
 				AuditHelper.bindOneToManyAuditTable(
 						extract( Audited.Table.class, property, buildingContext ),
 						collection,
@@ -2550,10 +2558,10 @@ public abstract class CollectionBinder {
 		if ( collection.isInverse() ) {
 			return;
 		}
-		//Unidirectional @OneToMany w/o JoinColumn and @ElementCollection
+		//Unidirectional @OneToMany w/o @JoinColumn and @ElementCollection
 		var revokedProperties = extractAuditedPropertiesFromOverrides( propertyHolder.getPersistentClass().getRootClass(), buildingContext ); //TODO calculate the set just once
 		final var audited = extract( Audited.class, property, buildingContext );
-		var excluded = extract( Audited.Excluded.class, property, buildingContext ) != null;
+		var excluded = property.hasDirectAnnotationUsage( Audited.Excluded.class );
 		if ( audited != null && !isEffectivelyExcluded(
 				property.getName(),
 				propertyHolder.getPersistentClass().getRootClass(),

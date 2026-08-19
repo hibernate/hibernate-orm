@@ -25,12 +25,14 @@ import org.junit.jupiter.api.Test;
 import java.util.Collection;
 import java.util.function.Consumer;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
 @SessionFactory
 @DomainModel(annotatedClasses = {
 		AuditOverrideTableConstructionWithMappedSuperClassesTest.EntityThatRevokesTheProperty.class,
+		AuditOverrideTableConstructionWithMappedSuperClassesTest.EntityThatExcludesTheProperty.class,
 		AuditOverrideTableConstructionWithMappedSuperClassesTest.EntityThatRevokesTheProperty2.class,
 		AuditOverrideTableConstructionWithMappedSuperClassesTest.EntityThatRevokesTheProperty3.class,
 		AuditOverrideTableConstructionWithMappedSuperClassesTest.EntityThatRevokesTheProperty4.class,
@@ -54,7 +56,7 @@ public class AuditOverrideTableConstructionWithMappedSuperClassesTest {
 	 * Case 1:
 	 * MSC: -
 	 * MSC: @Audited.Excluded
-	 * Entity: @Audited
+	 * Entity: @Audited.Override.isAudited = true
 	 *
 	 */
 	@MappedSuperclass
@@ -83,6 +85,37 @@ public class AuditOverrideTableConstructionWithMappedSuperClassesTest {
 			assertTrue( table.containsColumn( new Column( "str1" ) ) );
 		} );
 	}
+
+	/**
+	 * Case 1.1:
+	 * MSC: @Audited
+	 * Entity: @Audited.Override.isAudited = false
+	 *
+	 */
+
+	@MappedSuperclass
+	@Audited
+	static class MSCWithProperty {
+		@Id
+		long id;
+
+		String str1;
+	}
+
+	@Entity
+	@Table(name = "EntityThatExcludesTheProperty")
+	@Audited.Override(name = "str1", isAudited = false)
+	static class EntityThatExcludesTheProperty extends MSCWithProperty {
+	}
+
+	@Test
+	public void test2(DomainModelScope domainModelScope) {
+		var tables = domainModelScope.getDomainModel().collectTableMappings();
+		assertTable( tables, "EntityThatExcludesTheProperty_AUD", table -> {
+			assertFalse( table.containsColumn( new Column( "str1" ) ) );
+		} );
+	}
+
 
 	/**
 	 * Case 2:

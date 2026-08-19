@@ -5,7 +5,7 @@
 package org.hibernate.metamodel.internal;
 
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.models.accessor.HibernateAccessorInstantiator;
+import org.hibernate.accessor.HibernateAccessorInstantiator;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.descriptor.java.JavaType;
 

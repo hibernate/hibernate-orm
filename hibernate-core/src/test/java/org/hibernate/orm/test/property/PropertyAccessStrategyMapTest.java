@@ -4,7 +4,7 @@
  */
 package org.hibernate.orm.test.property;
 
-import org.hibernate.models.accessor.HibernateAccessorFactory;
+import org.hibernate.accessor.HibernateAccessorFactory;
 import org.hibernate.property.access.internal.PropertyAccessStrategyMapImpl;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.PropertyAccessorService;

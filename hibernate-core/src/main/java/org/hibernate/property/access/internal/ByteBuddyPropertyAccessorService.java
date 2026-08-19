@@ -7,7 +7,7 @@ package org.hibernate.property.access.internal;
 import java.lang.invoke.MethodHandles;
 import java.util.Map;
 
-import org.hibernate.models.accessor.HibernateAccessorFactory;
+import org.hibernate.accessor.HibernateAccessorFactory;
 import org.hibernate.property.access.spi.PropertyAccessorService;
 
 /**

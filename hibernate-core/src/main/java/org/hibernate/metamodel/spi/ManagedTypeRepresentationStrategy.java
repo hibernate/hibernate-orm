@@ -9,8 +9,8 @@ import jakarta.annotation.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.RepresentationMode;
-import org.hibernate.models.accessor.HibernateAccessorMultiValueReader;
-import org.hibernate.models.accessor.HibernateAccessorMultiValueWriter;
+import org.hibernate.accessor.HibernateAccessorMultiValueReader;
+import org.hibernate.accessor.HibernateAccessorMultiValueWriter;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.type.descriptor.java.JavaType;
 

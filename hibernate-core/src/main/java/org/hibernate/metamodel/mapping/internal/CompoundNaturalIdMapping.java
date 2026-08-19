@@ -25,7 +25,7 @@ import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.NaturalIdMapping;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
-import org.hibernate.models.accessor.HibernateAccessorFactory;
+import org.hibernate.accessor.HibernateAccessorFactory;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.property.access.spi.PropertyAccessorService;
 import org.hibernate.property.access.spi.PropertyValueAccessor;

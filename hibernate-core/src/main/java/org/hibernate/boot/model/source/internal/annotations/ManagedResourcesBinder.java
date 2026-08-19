@@ -129,6 +129,13 @@ public class ManagedResourcesBinder {
 		}
 	}
 
+	public void bindQueryRenames() {
+		final var importedRenames = domainModelSource.getGlobalRegistrations().getImportedRenames();
+		for ( var entry : importedRenames.entrySet() ) {
+			rootMetadataBuildingContext.getMetadataCollector().addImport( entry.getKey(), entry.getValue() );
+		}
+	}
+
 	public void bindFilterDefinitions() {
 		final var collector = rootMetadataBuildingContext.getMetadataCollector();
 		for ( var registration : domainModelSource.getGlobalRegistrations().getFilterDefRegistrations().values() ) {

@@ -235,6 +235,7 @@ public class MetadataBuildingProcess {
 
 		managedResourcesBinder.prepare();
 		managedResourcesBinder.bindTypeDefinitions();
+		managedResourcesBinder.bindQueryRenames();
 		managedResourcesBinder.bindFilterDefinitions();
 		managedResourcesBinder.bindFetchProfiles();
 		managedResourcesBinder.bindEntityHierarchies( new HashSet<>() );

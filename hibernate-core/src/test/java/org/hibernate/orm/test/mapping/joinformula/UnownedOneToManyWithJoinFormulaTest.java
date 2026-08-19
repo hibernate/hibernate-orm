@@ -98,10 +98,10 @@ public class UnownedOneToManyWithJoinFormulaTest {
 		@Id
 		public String memberOf;
 		@ManyToOne
-		@JoinFormula( "UPPER(id)" )
+		@JoinFormula( "LOWER(id)" )
 		public Group group;
 		@ManyToOne
-		@JoinFormula( "UPPER(memberOf)" )
+		@JoinFormula( "LOWER(memberOf)" )
 		public Person person;
 		@Override
 		public boolean equals(Object o) {

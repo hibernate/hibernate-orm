@@ -8,7 +8,7 @@ package org.hibernate.orm.test.optlock;
 /**
  * @author Gavin King
  */
-public class Document {
+public class LockAllDocument {
 	private Long id;
 	private String author;
 	private String title;

@@ -11,8 +11,8 @@ import java.util.Map;
 import jakarta.annotation.Nullable;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.models.accessor.HibernateAccessorValueReader;
-import org.hibernate.models.accessor.HibernateAccessorValueWriter;
+import org.hibernate.accessor.HibernateAccessorValueReader;
+import org.hibernate.accessor.HibernateAccessorValueWriter;
 import org.hibernate.property.access.internal.AccessStrategyHelper;
 import org.hibernate.usertype.CompositeUserType;
 

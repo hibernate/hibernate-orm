@@ -5,7 +5,7 @@
 package org.hibernate.orm.test.bytecode;
 import java.util.Date;
 
-import org.hibernate.models.accessor.HibernateAccessorFactory;
+import org.hibernate.accessor.HibernateAccessorFactory;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBasicImpl;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.PropertyAccess;

@@ -7,6 +7,7 @@ antlr = "4.13.2"
 byteBuddy = "1.18.11"
 geolatte = "1.12"
 hibernateModels = "1.2.0"
+hibernateAccessor = "0.0.1-SNAPSHOT"
 jandex = "3.6.0"
 jackson = "2.22.1"
 jackson3 = "3.2.1"
@@ -153,6 +154,7 @@ loggingAnnotations = { group = "org.jboss.logging", name = "jboss-logging-annota
 loggingProcessor = { group = "org.jboss.logging", name = "jboss-logging-processor", version.ref = "jbossLoggingTool" }
 hibernateModels = { group = "org.hibernate.models", name = "hibernate-models", version.ref = "hibernateModels" }
 hibernateModelsJandex = { group = "org.hibernate.models", name = "hibernate-models-jandex", version.ref = "hibernateModels" }
+hibernateModelsAccessorByteBuddy = { group = "org.hibernate.accessor", name = "hibernate-accessor-bytebuddy", version.ref = "hibernateAccessor" }
 jandex = { group = "io.smallrye", name = "jandex", version.ref = "jandex" }
 jackson = { group = "com.fasterxml.jackson.core", name = "jackson-databind", version.ref = "jackson" }
 jacksonXml = { group = "com.fasterxml.jackson.dataformat", name = "jackson-dataformat-xml", version.ref = "jackson" }

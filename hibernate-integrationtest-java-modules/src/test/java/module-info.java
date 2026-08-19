@@ -6,8 +6,8 @@ module org.hibernate.orm.integrationtest.java.module.test {
 
 	opens org.hibernate.orm.integrationtest.java.module.test.entity to
 			org.hibernate.orm.core,
-			org.hibernate.models.accessor,
-			org.hibernate.models.accessor.bytebuddy,
+			org.hibernate.accessor,
+			org.hibernate.accessor.bytebuddy,
 			org.hibernate.orm.envers;
 
 	requires jakarta.persistence;
@@ -15,8 +15,8 @@ module org.hibernate.orm.integrationtest.java.module.test {
 	// for modules in the current project.
 	// Everything should work fine when building from the command line, though.
 	requires org.hibernate.orm.core;
-	requires org.hibernate.models.accessor;
-	requires org.hibernate.models.accessor.bytebuddy;
+	requires org.hibernate.accessor;
+	requires org.hibernate.accessor.bytebuddy;
 	requires org.hibernate.orm.envers;
 
 	// Transitive dependencies that leak through the Hibernate ORM API

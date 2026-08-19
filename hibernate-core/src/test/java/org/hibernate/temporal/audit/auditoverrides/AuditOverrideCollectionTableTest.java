@@ -38,6 +38,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 		AuditOverrideCollectionTableTest.SubEntity.class,
 
+		AuditOverrideCollectionTableTest.EntityWithInitiallyExcludedCollection.class,
+		AuditOverrideCollectionTableTest.EntityWithRevocation.class,
+
 })
 @ServiceRegistry(settings = @Setting(name = StateManagementSettings.CHANGESET_ID_SUPPLIER,
 		value = "org.hibernate.temporal.audit.AuditEntityTest$TxIdSupplier"))
@@ -142,6 +145,31 @@ public class AuditOverrideCollectionTableTest {
 		var tableNames = tables.stream().map( org.hibernate.mapping.Table::getName ).collect( Collectors.toSet() );
 		assertFalse( tableNames.contains( "overridden_aud" ) );
 		assertTrue( tables.contains( createTableObject( "mycatalog", "myschema", "double_overridden_aud" ) ) );
+	}
+
+	@Entity
+	@Table(name = "EntityWithInitiallyExcludedCollection")
+	@Audited
+	static class EntityWithInitiallyExcludedCollection {
+		@Id
+		long id;
+
+		@OneToMany
+//		@JoinColumn(name = "owner_id") //TODO also without JoinColumn, where is the place that creates that audit table? its NOT bindOneToManyAuditTable
+		@Audited.Excluded
+		List<Other> collection;
+	}
+
+	@Entity
+	@Audited.Overrides(@Audited.Override(name = "collection", isAudited = true))
+	static class EntityWithRevocation extends EntityWithInitiallyExcludedCollection{
+	}
+
+	@Test
+	public void elementCollection3(DomainModelScope domainModelScope) {
+		var tables = domainModelScope.getDomainModel().collectTableMappings();
+		var tableNames = tables.stream().map( org.hibernate.mapping.Table::getName ).collect( Collectors.toSet() );
+		assertTrue( tableNames.contains( "EntityWithInitiallyExcludedCollection_AuditOverrideCollectionTableTest$Other_AUD" ) );
 	}
 
 	private static org.hibernate.mapping.Table createTableObject(String catalog, String schema, String tableName) {

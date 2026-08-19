@@ -48,6 +48,7 @@ import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmFetchStyleWithSubselectEnum;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmFilterAliasMappingType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmFilterParameterType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmFilterType;
+import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmGeneratorSpecificationType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmHibernateMapping;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmIdBagCollectionType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmIndexType;
@@ -569,6 +570,26 @@ public class HbmXmlTransformer {
 		}
 		return generatorParameters( a )
 				.equals( generatorParameters( b ) );
+	}
+
+	/**
+	 * Builds a {@link JaxbGenericIdGeneratorImpl} from an hbm {@code <generator>}, copying its
+	 * class and configuration parameters. A {@code null} name leaves the generator anonymous
+	 * (inline usage); a non-null name allows it to be referenced from a {@code <generated-value>}.
+	 */
+	private static JaxbGenericIdGeneratorImpl toGenericIdGenerator(
+			String name,
+			JaxbHbmGeneratorSpecificationType hbmGenerator) {
+		final var generator = new JaxbGenericIdGeneratorImpl();
+		generator.setName( name );
+		generator.setClazz( hbmGenerator.getClazz() );
+		for ( var hbmConfigParameter : hbmGenerator.getConfigParameters() ) {
+			final var jaxbParam = new JaxbConfigurationParameterImpl();
+			jaxbParam.setName( hbmConfigParameter.getName() );
+			jaxbParam.setValue( hbmConfigParameter.getValue() );
+			generator.getParameters().add( jaxbParam );
+		}
+		return generator;
 	}
 
 	private static List<String> generatorParameters(JaxbGenericIdGeneratorImpl generator) {
@@ -2796,26 +2817,15 @@ public class HbmXmlTransformer {
 		final var hbmGenerator = hbmCollectionId.getGenerator();
 		if ( hbmGenerator != null ) {
 			final var generatedValue = new JaxbGeneratedValueImpl();
-			final String generatorClass = hbmGenerator.getClazz();
-			final var hbmParams = hbmGenerator.getConfigParameters();
 
-			if ( !hbmParams.isEmpty() ) {
+			if ( !hbmGenerator.getConfigParameters().isEmpty() ) {
 				final var generatorName = target.getName() + "-collection-id-generator";
 				generatedValue.setGenerator( generatorName );
-
-				final var genDef = new JaxbGenericIdGeneratorImpl();
-				genDef.setName( generatorName );
-				genDef.setClazz( generatorClass );
-				for ( var hbmParam : hbmParams ) {
-					final var param = new JaxbConfigurationParameterImpl();
-					param.setName( hbmParam.getName() );
-					param.setValue( hbmParam.getValue() );
-					genDef.getParameters().add( param );
-				}
-				mappingXmlBinding.getRoot().getGenericGenerators().add( genDef );
+				mappingXmlBinding.getRoot().getGenericGenerators()
+						.add( toGenericIdGenerator( generatorName, hbmGenerator ) );
 			}
 			else {
-				generatedValue.setGenerator( generatorClass );
+				generatedValue.setGenerator( hbmGenerator.getClazz() );
 			}
 
 			collectionId.setGenerator( generatedValue );
@@ -3703,21 +3713,7 @@ public class HbmXmlTransformer {
 			final var jaxbGeneratedValue = new JaxbGeneratedValueImpl();
 			jaxbGeneratedValue.setGenerator( generatorName );
 			target.setGeneratedValue( jaxbGeneratedValue );
-
-			final var generator = new JaxbGenericIdGeneratorImpl();
-			generator.setName( generatorName );
-
-			target.setGenericGenerator( generator );
-			generator.setClazz( hbmGenerator.getClazz() );
-
-			final var hbmConfigParameters = hbmGenerator.getConfigParameters();
-			for ( int i = 0; i < hbmConfigParameters.size(); i++ ) {
-				final var hbmConfigParameter = hbmConfigParameters.get( i );
-				final var jaxbParam = new JaxbConfigurationParameterImpl();
-				generator.getParameters().add( jaxbParam );
-				jaxbParam.setName( hbmConfigParameter.getName() );
-				jaxbParam.setValue( hbmConfigParameter.getValue() );
-			}
+			target.setGenericGenerator( toGenericIdGenerator( generatorName, hbmGenerator ) );
 		}
 
 		target.setUnsavedValue( source.getUnsavedValue() );
@@ -3747,6 +3743,15 @@ public class HbmXmlTransformer {
 				jaxbEmbeddedId::setAttributeAccessor
 		);
 		jaxbEmbeddedId.setTarget( jaxbEmbeddable.getName() );
+
+		final var hbmGenerator = hbmCompositeId.getGenerator();
+		if ( hbmGenerator != null && !"assigned".equals( hbmGenerator.getClazz() ) ) {
+			final var generatorName = jaxbEmbeddedId.getName() + "-composite-id-generator";
+			final var jaxbGeneratedValue = new JaxbGeneratedValueImpl();
+			jaxbGeneratedValue.setGenerator( generatorName );
+			jaxbEmbeddedId.setGeneratedValue( jaxbGeneratedValue );
+			jaxbEmbeddedId.setGenericGenerator( toGenericIdGenerator( generatorName, hbmGenerator ) );
+		}
 	}
 
 	private void transferAccess(

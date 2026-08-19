@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+
+<!--
+
+  Demonstrates the use of dirty-property optimistic locking.
+  We do not recommend this approach, since it does not work
+  for detached entities. Use version-based optimistic locking.
+
+-->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 xsi:schemaLocation="http://www.hibernate.org/xsd/orm/mapping
+                https://www.hibernate.org/xsd/orm/mapping/mapping-8.0.xsd"
+                 version="8.0">
+    <package>org.hibernate.orm.test.optlock</package>
+    <entity name="LockDirty" class="LockDirtyDocument" access="PROPERTY" metadata-complete="true">
+        <table name="Document"/>
+        <dynamic-update>true</dynamic-update>
+        <optimistic-locking>DIRTY</optimistic-locking>
+        <attributes>
+            <id name="id">
+                <generated-value generator="id-id-generator"/>
+                <generic-generator name="id-id-generator" class="native"/>
+            </id>
+            <basic name="title"/>
+            <basic name="author"/>
+            <basic name="summary"/>
+            <basic name="totalSales" optimistic-lock="false"/>
+            <basic name="text">
+                <column name="`text`"/>
+            </basic>
+            <embedded name="pubDate"/>
+        </attributes>
+    </entity>
+    <entity name="LockAll" class="LockAllDocument" access="PROPERTY" metadata-complete="true">
+        <table name="Document"/>
+        <dynamic-update>true</dynamic-update>
+        <optimistic-locking>ALL</optimistic-locking>
+        <attributes>
+            <id name="id">
+                <generated-value generator="id-id-generator"/>
+                <generic-generator name="id-id-generator" class="native"/>
+            </id>
+            <basic name="title"/>
+            <basic name="author"/>
+            <basic name="summary"/>
+            <basic name="totalSales" optimistic-lock="false"/>
+            <basic name="text">
+                <column name="`text`"/>
+            </basic>
+            <embedded name="pubDate"/>
+        </attributes>
+    </entity>
+    <embeddable class="PublicationDate" access="PROPERTY" metadata-complete="true">
+        <attributes>
+            <basic name="year" optional="false">
+                <column name="pubDate_year"/>
+            </basic>
+            <basic name="month">
+                <column name="pubDate_month"/>
+            </basic>
+        </attributes>
+    </embeddable>
+</entity-mappings>

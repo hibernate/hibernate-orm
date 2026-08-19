@@ -37,11 +37,11 @@ import static org.junit.jupiter.api.Assertions.fail;
 		feature = DialectFeatureChecks.DoesRepeatableReadCauseReadersToBlockWritersCheck.class, reverse = true,
 		comment = "potential deadlock"
 )
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsConcurrentTransactions.class)
 @DomainModel(
-		xmlMappings = "org/hibernate/orm/test/optlock/Document.hbm.xml"
+		xmlMappings = "org/hibernate/orm/test/optlock/Document.orm.xml"
 )
 @SessionFactory
-@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsConcurrentTransactions.class)
 public class OptimisticLockTest {
 
 	@AfterEach
@@ -51,45 +51,25 @@ public class OptimisticLockTest {
 
 	@Test
 	public void testOptimisticLockDirty(SessionFactoryScope scope) {
-		testUpdateOptimisticLockFailure( "LockDirty", scope );
-	}
-
-	@Test
-	public void testOptimisticLockAll(SessionFactoryScope scope) {
-		testUpdateOptimisticLockFailure( "LockAll", scope );
-	}
-
-	@Test
-	public void testOptimisticLockDirtyDelete(SessionFactoryScope scope) {
-		testDeleteOptimisticLockFailure( "LockDirty", scope );
-	}
-
-	@Test
-	public void testOptimisticLockAllDelete(SessionFactoryScope scope) {
-		testDeleteOptimisticLockFailure( "LockAll", scope );
-	}
-
-	private void testUpdateOptimisticLockFailure(String entityName, SessionFactoryScope scope) {
-		Document doc = scope.fromTransaction(
+		final var doc = scope.fromTransaction(
 				session -> {
-					Document document = new Document();
+					final var document = new LockDirtyDocument();
 					document.setTitle( "Hibernate in Action" );
 					document.setAuthor( "Bauer et al" );
 					document.setSummary( "Very boring book about persistence" );
 					document.setText( "blah blah yada yada yada" );
 					document.setPubDate( new PublicationDate( 2004 ) );
-					session.persist( entityName, document );
+					session.persist(  document );
 					return document;
 				}
 		);
-
 		scope.inTransaction(
 				mainSession -> {
-					Document document = (Document) mainSession.get( entityName, doc.getId() );
+					final var document = mainSession.get(LockDirtyDocument.class, doc.getId() );
 
 					scope.inTransaction(
 							otherSession -> {
-								Document otherDoc = (Document) otherSession.get( entityName, document.getId() );
+								var otherDoc = otherSession.get(LockDirtyDocument.class, document.getId() );
 								otherDoc.setSummary( "A modern classic" );
 							}
 					);
@@ -108,27 +88,68 @@ public class OptimisticLockTest {
 		);
 
 		scope.inTransaction(
-				session -> {
-					Document document = (Document) session.getReference( entityName, doc.getId() );
-					session.remove( document );
-				}
+				session -> session.remove( session.getReference(  LockDirtyDocument.class, doc.getId() ) )
 		);
 	}
 
-	private void testDeleteOptimisticLockFailure(String entityName, SessionFactoryScope scope) {
-		Document doc = scope.fromTransaction(
+	@Test
+	public void testOptimisticLockAll(SessionFactoryScope scope) {
+		final var doc = scope.fromTransaction(
 				session -> {
-					Document document = new Document();
+					final var document = new LockDirtyDocument();
 					document.setTitle( "Hibernate in Action" );
 					document.setAuthor( "Bauer et al" );
 					document.setSummary( "Very boring book about persistence" );
 					document.setText( "blah blah yada yada yada" );
 					document.setPubDate( new PublicationDate( 2004 ) );
-					session.persist( entityName, document );
+					session.persist(  document );
+					return document;
+				}
+		);
+		scope.inTransaction(
+				mainSession -> {
+					final var document = mainSession.get( LockAllDocument.class, doc.getId() );
+
+					scope.inTransaction(
+							otherSession -> {
+								var otherDoc = otherSession.get( LockAllDocument.class, document.getId() );
+								otherDoc.setSummary( "A modern classic" );
+							}
+					);
+
+					try {
+						document.setSummary( "A machiavellian achievement of epic proportions" );
+						mainSession.flush();
+						fail( "expecting opt lock failure" );
+					}
+					catch (PersistenceException e) {
+						// expected
+						checkException( mainSession, e, scope );
+					}
+					mainSession.clear();
+				}
+		);
+
+		scope.inTransaction(
+				session -> session.remove( session.getReference(  LockAllDocument.class, doc.getId() ) )
+		);
+	}
+
+	@Test
+	public void testOptimisticLockDirtyDelete(SessionFactoryScope scope) {
+		final var doc = scope.fromTransaction(
+				session -> {
+					final var document = new LockDirtyDocument();
+					document.setTitle( "Hibernate in Action" );
+					document.setAuthor( "Bauer et al" );
+					document.setSummary( "Very boring book about persistence" );
+					document.setText( "blah blah yada yada yada" );
+					document.setPubDate( new PublicationDate( 2004 ) );
+					session.persist( document );
 					session.flush();
 					document.setSummary( "A modern classic" );
 					session.flush();
-					document.getPubDate().setMonth( Integer.valueOf( 3 ) );
+					document.getPubDate().setMonth( 3 );
 					session.flush();
 					return document;
 				}
@@ -136,11 +157,11 @@ public class OptimisticLockTest {
 
 		scope.inTransaction(
 				mainSession -> {
-					Document document = (Document) mainSession.get( entityName, doc.getId() );
+					final var document = mainSession.get(LockDirtyDocument.class, doc.getId() );
 
 					scope.inTransaction(
 							otherSession -> {
-								Document otherDoc = (Document) otherSession.get( entityName, document.getId() );
+								var otherDoc = otherSession.get(LockDirtyDocument.class, document.getId() );
 								otherDoc.setSummary( "my other summary" );
 								otherSession.flush();
 							}
@@ -163,10 +184,60 @@ public class OptimisticLockTest {
 		);
 
 		scope.inTransaction(
+				session -> session.remove( session.getReference( LockDirtyDocument.class, doc.getId() ) )
+		);
+	}
+
+	@Test
+	public void testOptimisticLockAllDelete(SessionFactoryScope scope) {
+		final var doc = scope.fromTransaction(
 				session -> {
-					Document document = (Document) session.getReference( entityName, doc.getId() );
-					session.remove( document );
+					final var document = new LockAllDocument();
+					document.setTitle( "Hibernate in Action" );
+					document.setAuthor( "Bauer et al" );
+					document.setSummary( "Very boring book about persistence" );
+					document.setText( "blah blah yada yada yada" );
+					document.setPubDate( new PublicationDate( 2004 ) );
+					session.persist( document );
+					session.flush();
+					document.setSummary( "A modern classic" );
+					session.flush();
+					document.getPubDate().setMonth( 3 );
+					session.flush();
+					return document;
 				}
+		);
+
+		scope.inTransaction(
+				mainSession -> {
+					final var document = mainSession.get( LockAllDocument.class, doc.getId() );
+
+					scope.inTransaction(
+							otherSession -> {
+								var otherDoc = otherSession.get( LockAllDocument.class, document.getId() );
+								otherDoc.setSummary( "my other summary" );
+								otherSession.flush();
+							}
+					);
+
+					try {
+						mainSession.remove( document );
+						mainSession.flush();
+						fail( "expecting opt lock failure" );
+					}
+					catch (StaleObjectStateException e) {
+						// expected
+					}
+					catch (PersistenceException e) {
+						// expected
+						checkException( mainSession, e, scope );
+					}
+					mainSession.clear();
+				}
+		);
+
+		scope.inTransaction(
+				session -> session.remove( session.getReference( LockAllDocument.class, doc.getId() ) )
 		);
 	}
 

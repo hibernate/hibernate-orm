@@ -907,6 +907,27 @@ public class HbmTransformationJaxbTests {
 		} );
 	}
 
+	@Test
+	@JiraKey( "HHH-20791" )
+	public void testEmbeddedIdGeneratorTransformation(ServiceRegistryScope scope) {
+		transformAndVerify( "xml/jaxb/mapping/embedded-id-generator/hbm.xml", scope, transformed -> {
+			assertThat( transformed.getEntities() ).hasSize( 1 );
+
+			final JaxbEntityImpl entity = transformed.getEntities().get( 0 );
+			final var embeddedId = entity.getAttributes().getEmbeddedIdAttribute();
+			assertThat( embeddedId )
+					.as( "Aggregated composite-id should be transformed to an embedded-id" )
+					.isNotNull();
+			assertThat( embeddedId.getName() ).isEqualTo( "id" );
+
+			assertThat( embeddedId.getGenericGenerator() )
+					.as( "The <generator> on <composite-id> should be transferred to the embedded-id" )
+					.isNotNull();
+			assertThat( embeddedId.getGenericGenerator().getClazz() )
+					.isEqualTo( "org.hibernate.orm.test.boot.jaxb.mapping.compositeidgenerator.OrderIdGenerator" );
+		} );
+	}
+
 	private void transformAndVerify(
 			String resourceName,
 			ServiceRegistryScope scope,

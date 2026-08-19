@@ -4,7 +4,7 @@
  */
 package org.hibernate.property.access.internal;
 
-import org.hibernate.models.accessor.spi.CrossClassLoaderLookupBridge;
+import org.hibernate.accessor.spi.CrossClassLoaderLookupBridge;
 
 import net.bytebuddy.jar.asm.ClassWriter;
 import net.bytebuddy.jar.asm.MethodVisitor;

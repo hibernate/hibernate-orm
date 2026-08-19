@@ -6,8 +6,8 @@ package org.hibernate.property.access.internal;
 
 import jakarta.persistence.AccessType;
 import jakarta.annotation.Nullable;
-import org.hibernate.models.accessor.HibernateAccessorValueReader;
-import org.hibernate.models.accessor.HibernateAccessorValueWriter;
+import org.hibernate.accessor.HibernateAccessorValueReader;
+import org.hibernate.accessor.HibernateAccessorValueWriter;
 import org.hibernate.property.access.spi.EnhancedGetterFieldImpl;
 import org.hibernate.property.access.spi.EnhancedSetterImpl;
 import org.hibernate.property.access.spi.EnhancedSetterMethodImpl;

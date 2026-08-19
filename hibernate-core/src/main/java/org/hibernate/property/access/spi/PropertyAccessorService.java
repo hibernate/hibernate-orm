@@ -4,7 +4,7 @@
  */
 package org.hibernate.property.access.spi;
 
-import org.hibernate.models.accessor.HibernateAccessorFactory;
+import org.hibernate.accessor.HibernateAccessorFactory;
 import org.hibernate.service.Service;
 
 /**

@@ -38,7 +38,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 		AuditOverrideTableConstructionWithMappedSuperClassesTest.EntityThatRevokesTheProperty4.class,
 		AuditOverrideTableConstructionWithMappedSuperClassesTest.EntityThatInherits.class,
 		AuditOverrideTableConstructionWithMappedSuperClassesTest.EntityThatInheritsAnExcludedProperty.class,
-		AuditOverrideTableConstructionWithMappedSuperClassesTest.EntityThatInheritesTheRevokedProperty.class,
+		AuditOverrideTableConstructionWithMappedSuperClassesTest.EntityThatInheritsTheRevokedProperty.class,
+		AuditOverrideTableConstructionWithMappedSuperClassesTest.EntityWithExcludedProperty.class,
+		AuditOverrideTableConstructionWithMappedSuperClassesTest.EntityThatOverridesTheProperty3.class,
 })
 @ServiceRegistry(settings = @Setting(name = StateManagementSettings.CHANGESET_ID_SUPPLIER,
 		value = "org.hibernate.temporal.audit.AuditEntityTest$TxIdSupplier"))
@@ -195,8 +197,8 @@ public class AuditOverrideTableConstructionWithMappedSuperClassesTest {
 
 	/**
 	 * Case 4: Two Groups in a hierarchy
-	 * MSC: @Audited
 	 * MSC: @Audited.Excluded
+	 * MSC: @Audited.Override.isAudited = false
 	 * Entity: -
 	 *
 	 * MSC: @Audited
@@ -236,7 +238,7 @@ public class AuditOverrideTableConstructionWithMappedSuperClassesTest {
 	}
 
 	@Entity
-	static class EntityThatInheritesTheRevokedProperty extends LowerSecondMSCThatDoesNothing {
+	static class EntityThatInheritsTheRevokedProperty extends LowerSecondMSCThatDoesNothing {
 	}
 
 	@Test
@@ -291,4 +293,42 @@ public class AuditOverrideTableConstructionWithMappedSuperClassesTest {
 			assertTrue( table.containsColumn( new Column( "lastName" ) ) );
 		} );
 	}
+
+	/**
+	 * Case 6:
+	 * Entity: @Audited.Excluded
+	 * MSC: @Audited.Override.isAudited = true
+	 * Entity: @Audited.Override.isAudited = false
+	 *
+	 */
+	@Entity
+	@Table(name = "EntityWithExcludedProperty")
+	@Audited
+	static class EntityWithExcludedProperty {
+		@Id
+		long id;
+
+		@Audited.Excluded
+		String str1;
+	}
+
+	@MappedSuperclass
+	@Audited.Override(name = "str1", isAudited = true)
+	static class MSC5 extends EntityWithExcludedProperty{
+	}
+
+	@Entity
+	@Audited.Override(name = "str1", isAudited = false)
+	static class EntityThatOverridesTheProperty3 extends MSC5{
+
+	}
+
+	@Test
+	public void entityUnderTwoMSCes5(DomainModelScope domainModelScope) {
+		var tables = domainModelScope.getDomainModel().collectTableMappings();
+		assertTable( tables, "EntityWithExcludedProperty_AUD", table -> {
+			assertFalse( table.containsColumn( new Column( "str1" ) ) );
+		} );
+	}
+
 }

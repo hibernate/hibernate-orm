@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<!-- used to test HbmXmlTransformer -->
+<hibernate-mapping package="org.hibernate.orm.test.boot.jaxb.mapping.compositeidgenerator">
+
+	<class name="Order" table="ORDERS">
+		<composite-id name="id" class="Order$Id">
+			<key-property name="number" column="ORDER_NUMBER" type="integer"/>
+			<key-property name="code" column="ORDER_CODE" type="string"/>
+			<generator class="org.hibernate.orm.test.boot.jaxb.mapping.compositeidgenerator.OrderIdGenerator"/>
+		</composite-id>
+		<property name="description" type="string"/>
+	</class>
+
+</hibernate-mapping>

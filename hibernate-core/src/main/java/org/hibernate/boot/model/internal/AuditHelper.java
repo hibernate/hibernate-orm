@@ -32,6 +32,7 @@ import org.hibernate.mapping.TableOwner;
 import org.hibernate.mapping.UnionSubclass;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.models.spi.ClassDetailsRegistry;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.persister.state.internal.AuditStateManagement;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
@@ -826,19 +827,6 @@ public final class AuditHelper {
 			collectPropertyColumns( subclass, mappedColumns, excluded, revokedProperties, context );
 		}
 
-		//find and apply revocations
-		for ( var subclass : rootClass.getSubclasses() ) {
-			var revocations = findRevocations( subclass, context );
-			for ( var revocation : revocations ) {
-				var revokedPropertyName = revocation.name();
-				var property = rootClass.getProperty( revokedPropertyName );
-				for ( var column : property.getColumns() ) {
-					mappedColumns.add( column.getCanonicalName() );
-					excluded.remove( column.getCanonicalName() );
-				}
-
-			}
-		}
 		// Exclude unmapped columns (e.g. FK from unidirectional @OneToMany @JoinColumn)
 		for ( var column : rootClass.getMainTable().getColumns() ) {
 			if ( !mappedColumns.contains( column.getCanonicalName() ) ) {
@@ -854,30 +842,30 @@ public final class AuditHelper {
 		var fullHierarchy = new ArrayList<PersistentClass>( rootClass.getSubclasses() );
 		fullHierarchy.add( rootClass );
 		fullHierarchy.forEach( pc -> {
+			var overrides = new HashMap<String, Audited.Override>();
 			var classToScanForRevocations = pc.getClassName();
-			registry.getClassDetails( classToScanForRevocations )
-					.forEachAnnotationUsage( Audited.Override.class, context.getBootstrapContext().getModelsContext(),
-							override -> {
-								if ( override.isAudited() ) {
-									revokedProperties.add( override.name() );
-								}
-							}
-					);
+			collectOverrides( context, registry, classToScanForRevocations, overrides );
 			var msc = pc.getSuperMappedSuperclass();
 			while ( msc != null ) {
-				registry.getClassDetails( msc.getMappedClass().getName() )
-						.forEachAnnotationUsage( Audited.Override.class,
-								context.getBootstrapContext().getModelsContext(),
-								override -> {
-									if ( override.isAudited() ) {
-										revokedProperties.add( override.name() );
-									}
-								}
-						);
+				collectOverrides( context, registry, msc.getMappedClass().getName(), overrides );
 				msc = msc.getSuperMappedSuperclass();
 			}
+
+			overrides.forEach( (property, annotation) -> {
+				if ( annotation.isAudited() ) {
+					revokedProperties.add( property );
+				}
+			} );
 		} );
 		return revokedProperties;
+	}
+
+	private static void collectOverrides(MetadataBuildingContext context, ClassDetailsRegistry registry, String classToScanForRevocations, HashMap<String, Audited.Override> revokedProperties) {
+		if (classToScanForRevocations == null) return;
+		registry.getClassDetails( classToScanForRevocations )
+				.forEachAnnotationUsage( Audited.Override.class, context.getBootstrapContext().getModelsContext(),
+						override -> revokedProperties.putIfAbsent( override.name(), override )
+				);
 	}
 
 	private static Set<Audited.Override> findRevocations(PersistentClass persistentClass, MetadataBuildingContext context) {
@@ -978,9 +966,9 @@ public final class AuditHelper {
 		if ( propertyIsExcludedAtDeclaration && !isRevoked( propertyName, auditedFromOverrides ) ) {
 			return true;
 		}
-		// declared and audited in a @MappedSuperClass but @AuditOverride.isAudited = false in its persistent class
+		// declared and audited in a @MappedSuperClass ( = initially not excluded) but @AuditOverride.isAudited = false on the persistent class or an intermediate MappedSuperClass
 		var firstAuditOverrideForProperty = findFirstAuditOverrideForProperty( rootClass, propertyName, context );
-		if ( firstAuditOverrideForProperty != null && !firstAuditOverrideForProperty.isAudited() ) {
+		if ( firstAuditOverrideForProperty != null && !firstAuditOverrideForProperty.isAudited() && !isRevoked( propertyName, auditedFromOverrides )) {
 			return true;
 		}
 

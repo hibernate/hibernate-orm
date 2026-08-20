@@ -145,8 +145,9 @@ import static org.hibernate.boot.model.internal.AnnotatedColumn.buildColumnFromN
 import static org.hibernate.boot.model.internal.AnnotatedColumn.buildFormulaFromAnnotation;
 import static org.hibernate.boot.model.internal.AnnotatedJoinColumns.buildJoinColumnsWithDefaultColumnSuffix;
 import static org.hibernate.boot.model.internal.AnnotatedJoinColumns.buildJoinTableJoinColumns;
-import static org.hibernate.boot.model.internal.AuditHelper.extractAuditedPropertiesFromOverrides;
+import static org.hibernate.boot.model.internal.AuditHelper.extractRevocations;
 import static org.hibernate.boot.model.internal.AuditHelper.isEffectivelyExcluded;
+import static org.hibernate.boot.model.internal.AuditHelper.isInitiallyExcluded;
 import static org.hibernate.boot.model.internal.BasicValueBinder.Kind.COLLECTION_ELEMENT;
 import static org.hibernate.boot.model.internal.BinderHelper.aggregateCascadeTypes;
 import static org.hibernate.boot.model.internal.BinderHelper.buildAnyValue;
@@ -238,6 +239,7 @@ public abstract class CollectionBinder {
 	private SQLOrder sqlOrder;
 	private SortNatural naturalSort;
 	private SortComparator comparatorSort;
+	private Map<String, Audited.Override> auditOverrideOnRootClassOrItsMappedSuperClasses;
 
 	protected CollectionBinder(
 			Supplier<ManagedBean<? extends UserCollectionType>> customTypeBeanResolver,
@@ -267,7 +269,9 @@ public abstract class CollectionBinder {
 			boolean isIdentifierMapper,
 			MetadataBuildingContext context,
 			Map<ClassDetails, InheritanceState> inheritanceStatePerClass,
-			AnnotatedJoinColumns joinColumns) {
+			AnnotatedJoinColumns joinColumns, Map<String,
+			Audited.Override> auditOverrideOnRootClassOrItsMappedSuperClasses
+			) {
 		final var modelsContext = context.getBootstrapContext().getModelsContext();
 		final var memberDetails = inferredData.getAttributeMember();
 
@@ -364,6 +368,9 @@ public abstract class CollectionBinder {
 			collectionBinder.setLocalGenerators( availableGenerators );
 
 		}
+
+		collectionBinder.setAuditOverrideOnRootClassOrItsMappedSuperClasses( auditOverrideOnRootClassOrItsMappedSuperClasses );
+		//
 		collectionBinder.bind();
 	}
 
@@ -1657,23 +1664,26 @@ public abstract class CollectionBinder {
 		// For @OneToMany @JoinColumn on an @Audited entity, create a middle audit table
 		// to track collection membership changes (same approach as @ManyToMany / @JoinTable)
 		if ( !collection.isInverse() ) {
-			var revokedProperties = extractAuditedPropertiesFromOverrides( propertyHolder.getPersistentClass().getRootClass(), buildingContext ); //TODO calculate the set just once
+			var revokedProperties = extractRevocations( propertyHolder.getPersistentClass().getRootClass(), buildingContext ); //TODO calculate the set just once
 			final var audited = extract( Audited.class, property, buildingContext );
-			var excluded = property.hasDirectAnnotationUsage( Audited.Excluded.class );
+			var isExcludedAtDeclaration = property.hasDirectAnnotationUsage( Audited.Excluded.class );
 			if ( audited != null && !isEffectivelyExcluded(
 					property.getName(),
-					propertyHolder.getPersistentClass().getRootClass(),
-					revokedProperties,
-					excluded,
-					buildingContext
-			) ) { // && is not revoked
+					isInitiallyExcluded(
+							property.getName(), auditOverrideOnRootClassOrItsMappedSuperClasses, //maybe "excluded" via override
+							isExcludedAtDeclaration ),
+					revokedProperties
+			) ) {
 				AuditHelper.bindOneToManyAuditTable(
 						extract( Audited.Table.class, property, buildingContext ),
 						collection,
 						oneToMany.getReferencedEntityName(),
 						extract( Audited.CollectionTable.class, property, buildingContext ),
 						buildingContext,
-						propertyName
+						propertyName,
+						AuditHelper.extractLowestAuditOverridesFromHierarchy( //TODO calculate only once
+								propertyHolder.getPersistentClass(),
+								buildingContext )
 				);
 			}
 		}
@@ -2559,21 +2569,26 @@ public abstract class CollectionBinder {
 			return;
 		}
 		//Unidirectional @OneToMany w/o @JoinColumn and @ElementCollection
-		var revokedProperties = extractAuditedPropertiesFromOverrides( propertyHolder.getPersistentClass().getRootClass(), buildingContext ); //TODO calculate the set just once
+		var revokedProperties = extractRevocations( propertyHolder.getPersistentClass().getRootClass(), buildingContext ); //TODO calculate the set just once
 		final var audited = extract( Audited.class, property, buildingContext );
-		var excluded = property.hasDirectAnnotationUsage( Audited.Excluded.class );
+		var isExcludedAtDeclaration = property.hasDirectAnnotationUsage( Audited.Excluded.class );
 		if ( audited != null && !isEffectivelyExcluded(
 				property.getName(),
-				propertyHolder.getPersistentClass().getRootClass(),
-				revokedProperties,
-				excluded,
-				buildingContext
+				isInitiallyExcluded(
+						property.getName(),
+						auditOverrideOnRootClassOrItsMappedSuperClasses, //whether collection is audited or not
+						isExcludedAtDeclaration ),
+				revokedProperties
 		) ) {
 			AuditHelper.bindAuditTable(
 					extract( Audited.Table.class, property, buildingContext ),
 					collection,
 					buildingContext,
-					propertyName
+					propertyName,
+					auditOverrideOnRootClassOrItsMappedSuperClasses,
+					AuditHelper.extractLowestAuditOverridesFromHierarchy( //TODO calculate only once
+							propertyHolder.getPersistentClass(),
+							buildingContext )
 			);
 		}
 	}
@@ -2967,5 +2982,9 @@ public abstract class CollectionBinder {
 				BOOT_LOGGER.bindingElementCollectionToCollectionTable( role );
 			}
 		}
+	}
+
+	public void setAuditOverrideOnRootClassOrItsMappedSuperClasses(Map<String, Audited.Override> auditOverrideOnRootClassOrItsMappedSuperClasses) {
+		this.auditOverrideOnRootClassOrItsMappedSuperClasses = auditOverrideOnRootClassOrItsMappedSuperClasses;
 	}
 }

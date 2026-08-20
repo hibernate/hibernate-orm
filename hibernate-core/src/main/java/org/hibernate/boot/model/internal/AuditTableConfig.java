@@ -5,10 +5,8 @@
 package org.hibernate.boot.model.internal;
 
 import org.hibernate.annotations.Audited;
-import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.mapping.PersistentClass;
 
-import static org.hibernate.boot.model.internal.AuditHelper.findFirstAuditOverrideForProperty;
+import java.util.Map;
 
 /**
  * Universal audit table configuration that can be created from different sources.
@@ -32,12 +30,12 @@ public record AuditTableConfig(String name, String schema, String catalog, Strin
 				table.modificationTypeColumn(), table.invalidatingChangesetIdColumn() );
 	}
 
-	static AuditTableConfig fromAnnotationOverrides(PersistentClass owner, String propertyName, MetadataBuildingContext context) {
-		var firstOverride = findFirstAuditOverrideForProperty( owner, propertyName, context );
-		if ( firstOverride == null ) {
+	static AuditTableConfig fromAnnotationOverrides(String propertyName, Map<String, Audited.Override> effectiveAuditOverride) {
+		var auditOverride = effectiveAuditOverride.get( propertyName );
+		if ( auditOverride == null ) {
 			return DEFAULT;
 		}
-		var collectionTable = firstOverride.collectionTable();
+		var collectionTable = auditOverride.collectionTable();
 		return new AuditTableConfig( collectionTable.name(), collectionTable.schema(), collectionTable.catalog(),
 				Audited.Table.DEFAULT_CHANGESET_ID_COLUMN_NAME, Audited.Table.DEFAULT_MODIFICATION_TYPE_COLUMN_NAME,
 				Audited.Table.DEFAULT_INVALIDATING_CHANGESET_ID_COLUMN_NAME );

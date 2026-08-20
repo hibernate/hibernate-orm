@@ -5,6 +5,7 @@
 package org.hibernate.processor;
 
 import jakarta.annotation.Nullable;
+import org.hibernate.Incubating;
 import org.hibernate.processor.annotation.AnnotationMetaEntity;
 import org.hibernate.processor.annotation.AnnotationMetaPackage;
 import org.hibernate.processor.annotation.NonManagedMetamodel;
@@ -180,11 +181,13 @@ public class HibernateProcessor extends AbstractProcessor {
 	/**
 	 * The default dialect class to use for any HQL validation.
 	 */
+	@Incubating
 	public static final String DIALECT_OPTION = "dialect";
 
 	/**
 	 * The database version string to use for the default dialect class.
 	 */
+	@Incubating
 	public static final String DIALECT_DATABASE_VERSION_OPTION = "dialectDatabaseVersion";
 
 	/**
@@ -222,6 +225,7 @@ public class HibernateProcessor extends AbstractProcessor {
 	 * {@code jakarta.data.Sort} types with a null type argument, which
 	 * the Jakarta Data specification allows.
 	 */
+	@Incubating
 	public static final String JAKARTA_DATA_SORT_COMPLIANCE = "jakartaDataSortCompliance";
 
 	/**
@@ -229,6 +233,7 @@ public class HibernateProcessor extends AbstractProcessor {
 	 * annotations from repository interfaces to generated implementations.
 	 * By default, security annotations are propagated.
 	 */
+	@Incubating
 	public static final String SUPPRESS_JAKARTA_DATA_SECURITY_ANNOTATIONS = "suppressJakartaDataSecurityAnnotations";
 
 
@@ -254,6 +259,7 @@ public class HibernateProcessor extends AbstractProcessor {
 	 * index is created. The index is used to speed up query validation
 	 * for faster compilation times.
 	 */
+	@Incubating
 	public static final String INDEX = "index";
 
 	private static final boolean ALLOW_OTHER_PROCESSORS_TO_CLAIM_ANNOTATIONS = false;

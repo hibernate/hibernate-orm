@@ -35,7 +35,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 		AuditOverrideCollectionTableTest.Other.class,
 		AuditOverrideCollectionTableTest.EntityWithCollection.class,
-
 		AuditOverrideCollectionTableTest.SubEntity.class,
 
 		AuditOverrideCollectionTableTest.EntityWithInitiallyExcludedCollection.class,

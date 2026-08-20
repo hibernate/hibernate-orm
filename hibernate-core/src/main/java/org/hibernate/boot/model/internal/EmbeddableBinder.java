@@ -61,6 +61,7 @@ import java.util.Map;
 import static org.hibernate.boot.model.internal.AggregateComponentBinder.processAggregate;
 import static org.hibernate.boot.model.internal.AnnotatedDiscriminatorColumn.DEFAULT_DISCRIMINATOR_COLUMN_NAME;
 import static org.hibernate.boot.model.internal.AnnotatedDiscriminatorColumn.buildDiscriminatorColumn;
+import static org.hibernate.boot.model.internal.AuditHelper.extractAuditOverrides;
 import static org.hibernate.boot.model.internal.BinderHelper.getPath;
 import static org.hibernate.boot.model.internal.BinderHelper.getRelativePath;
 import static org.hibernate.boot.model.internal.BinderHelper.hasToOneAnnotation;
@@ -555,7 +556,8 @@ public class EmbeddableBinder {
 					isComponentEmbedded,
 					inSecondPass,
 					context,
-					inheritanceStatePerClass
+					inheritanceStatePerClass,
+					extractAuditOverrides( subholder.getPersistentClass().getRootClass(), context )
 			);
 			processGeneratorAnnotations(
 					propertyHolder,

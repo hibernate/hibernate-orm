@@ -371,7 +371,6 @@ public abstract class CollectionBinder {
 		}
 
 		collectionBinder.setAuditOverrideOnRootClassOrItsMappedSuperClasses( auditOverrideOnRootClassOrItsMappedSuperClasses );
-		//
 		collectionBinder.bind();
 	}
 
@@ -2602,7 +2601,7 @@ public abstract class CollectionBinder {
 				property.getName(),
 				isInitiallyExcluded(
 						property.getName(),
-						auditOverrideOnRootClassOrItsMappedSuperClasses, //whether collection is audited or not
+						auditOverrideOnRootClassOrItsMappedSuperClasses,
 						isExcludedAtDeclaration ),
 				revokedProperties
 		) ) {

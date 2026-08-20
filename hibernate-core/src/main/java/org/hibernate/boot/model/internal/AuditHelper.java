@@ -87,11 +87,12 @@ public final class AuditHelper {
 				(Stateful) collection, context, auditOverrideOnRootClassOrItsMappedSuperClasses
 		);
 	}
-	// called when audited collection and when audited entity
+
 	private static void bindAuditTable(
 			AuditTableConfig auditTable,
 			Stateful auditable,
-			MetadataBuildingContext context, Map<String, Audited.Override> auditOverrideOnRootClassOrItsMappedSuperClasses
+			MetadataBuildingContext context,
+			Map<String, Audited.Override> auditOverrideOnRootClassOrItsMappedSuperClasses
 	) {
 		final var collector = context.getMetadataCollector();
 		final var table = auditable.getMainTable();
@@ -283,7 +284,6 @@ public final class AuditHelper {
 		model.addAuxiliaryColumn( MODIFICATION_TYPE, modificationTypeColumn );
 		model.setStateManagementType( AuditStateManagement.class );
 	}
-
 
 	/**
 	 * Create a middle audit table for unidirectional @OneToMany @JoinColumn.
@@ -835,7 +835,6 @@ public final class AuditHelper {
 			collectPropertyColumns( subclass, mappedColumns, excluded, revokedProperties,
 					auditOverrideOnRootClassOrItsMappedSuperClasses );
 		}
-
 		// Exclude unmapped columns (e.g. FK from unidirectional @OneToMany @JoinColumn)
 		for ( var column : rootClass.getMainTable().getColumns() ) {
 			if ( !mappedColumns.contains( column.getCanonicalName() ) ) {
@@ -886,13 +885,17 @@ public final class AuditHelper {
 	private static void collectPropertyColumns(
 			PersistentClass persistentClass,
 			Set<String> mappedColumns,
-			Set<String> excluded, HashSet<String> revocations, Map<String, Audited.Override> auditOverrideOnRootClassOrItsMappedSuperClasses) {
-
+			Set<String> excluded,
+			HashSet<String> revocations,
+			Map<String, Audited.Override> auditOverrideOnRootClassOrItsMappedSuperClasses) {
 		for ( var property : persistentClass.getProperties() ) {
 			if ( isEffectivelyExcluded(
 					property.getName(),
-					isInitiallyExcluded( property.getName(), auditOverrideOnRootClassOrItsMappedSuperClasses,
-							property.isAuditedExcluded() ),
+					isInitiallyExcluded(
+							property.getName(),
+							auditOverrideOnRootClassOrItsMappedSuperClasses,
+							property.isAuditedExcluded()
+					),
 					revocations
 			) || property instanceof Backref ) {
 				for ( var column : property.getColumns() ) {

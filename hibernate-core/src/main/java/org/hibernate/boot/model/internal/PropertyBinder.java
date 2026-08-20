@@ -808,7 +808,8 @@ public class PropertyBinder {
 			boolean isComponentEmbedded,
 			boolean inSecondPass,
 			MetadataBuildingContext context,
-			Map<ClassDetails, InheritanceState> inheritanceStatePerClass, Map<String, Audited.Override> auditOverrideOnRootClassOrItsMappedSuperClasses)
+			Map<ClassDetails, InheritanceState> inheritanceStatePerClass,
+			Map<String, Audited.Override> auditOverrideOnRootClassOrItsMappedSuperClasses)
 					throws MappingException {
 
 		if ( !alreadyProcessedBySuper( propertyHolder, inferredData, entityBinder ) ) {
@@ -954,7 +955,8 @@ public class PropertyBinder {
 			boolean isComponentEmbedded,
 			boolean inSecondPass,
 			ClassDetails returnedClass,
-			ColumnsBuilder columnsBuilder, Map<String, Audited.Override> auditOverrideOnRootClassOrItsMappedSuperClasses) {
+			ColumnsBuilder columnsBuilder,
+			Map<String, Audited.Override> auditOverrideOnRootClassOrItsMappedSuperClasses) {
 		final var property = inferredData.getAttributeMember();
 		if ( isVersion( property ) ) {
 			bindVersionProperty(

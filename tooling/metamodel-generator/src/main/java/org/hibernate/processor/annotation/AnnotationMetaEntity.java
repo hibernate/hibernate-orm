@@ -5909,7 +5909,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 	@Override
 	public List<AnnotationMirror> inheritedAnnotations() {
-		if ( repository && context.isCdiAvailable() ) {
+		if ( repository ) {
 			List<AnnotationMirror> list = new ArrayList<>();
 			for ( var annotationMirror : element.getAnnotationMirrors() ) {
 				if ( isInheritedAnnotation( annotationMirror, context ) ) {

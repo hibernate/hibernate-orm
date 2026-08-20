@@ -454,7 +454,8 @@ public class EntityBinder {
 				propertyHolder,
 				idPropertiesIfIdClass,
 				elementsToProcess,
-				inheritanceStates, auditOverrideOnRootClassOrItsMappedSuperClasses
+				inheritanceStates,
+				auditOverrideOnRootClassOrItsMappedSuperClasses
 		);
 	}
 
@@ -1121,7 +1122,8 @@ public class EntityBinder {
 			PropertyHolder propertyHolder,
 			Set<String> idPropertiesIfIdClass,
 			ElementsToProcess elementsToProcess,
-			Map<ClassDetails, InheritanceState> inheritanceStates, Map<String, Audited.Override> auditOverrideOnRootClassOrItsMappedSuperClasses) {
+			Map<ClassDetails, InheritanceState> inheritanceStates,
+			Map<String, Audited.Override> auditOverrideOnRootClassOrItsMappedSuperClasses) {
 		final Set<String> missingIdProperties = new HashSet<>( idPropertiesIfIdClass );
 		final Set<String> missingEntityProperties = new HashSet<>();
 		for ( var propertyAnnotatedElement : elementsToProcess.getElements() ) {

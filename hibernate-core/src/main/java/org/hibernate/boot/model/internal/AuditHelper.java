@@ -380,15 +380,6 @@ public final class AuditHelper {
 		} );
 	}
 
-	//TODO call just once
-	static Map<String, Audited.Override> extractLowestAuditOverridesFromHierarchy(PersistentClass persistentClass, MetadataBuildingContext context) {
-		var effectiveAuditOverride = new HashMap<String, Audited.Override>();
-		var fullHierarchy = new ArrayList<PersistentClass>( persistentClass.getSubclasses() );
-		fullHierarchy.add( persistentClass );
-		fullHierarchy.forEach( pc -> addOverridesToMap( context, pc, effectiveAuditOverride ) );
-		return effectiveAuditOverride;
-	}
-
 	private static void addOverridesToMap(MetadataBuildingContext context, PersistentClass pc, HashMap<String, Audited.Override> overridesMap) {
 		var classToScan = pc.getClassName();
 		collectOverrides( classToScan, overridesMap, context );
@@ -845,6 +836,15 @@ public final class AuditHelper {
 	}
 
 	//TODO call just once
+	static Map<String, Audited.Override> extractLowestAuditOverridesFromHierarchy(PersistentClass persistentClass, MetadataBuildingContext context) {
+		var effectiveAuditOverride = new HashMap<String, Audited.Override>();
+		var fullHierarchy = new ArrayList<PersistentClass>( persistentClass.getSubclasses() );
+		fullHierarchy.add( persistentClass );
+		fullHierarchy.forEach( pc -> addOverridesToMap( context, pc, effectiveAuditOverride ) );
+		return effectiveAuditOverride;
+	}
+
+	//TODO call just once
 	public static HashSet<String> extractRevocations(RootClass rootClass, MetadataBuildingContext context) {
 		var revokedProperties = new HashSet<String>();
 		var fullHierarchy = new ArrayList<PersistentClass>( rootClass.getSubclasses() );
@@ -861,15 +861,6 @@ public final class AuditHelper {
 		return revokedProperties;
 	}
 
-	private static void collectOverrides(String classToScan, HashMap<String, Audited.Override> overrides, MetadataBuildingContext context) {
-		var registry = context.getBootstrapContext().getModelsContext().getClassDetailsRegistry();
-		if (classToScan == null) return;
-		registry.getClassDetails( classToScan )
-				.forEachAnnotationUsage( Audited.Override.class, context.getBootstrapContext().getModelsContext(),
-						override -> overrides.putIfAbsent( override.name(), override )
-				);
-	}
-
 	/**
 	 * Finds all effective @Audited.Overrides within a hierarchy of an @Entity and its @MappedSuperClasses.
 	 * Effective means, the lowest @Audited.Override will be returned. @Audited.Override for the same prop on upper @MappedSuperClasses
@@ -880,6 +871,15 @@ public final class AuditHelper {
 		var effectiveAuditOverride = new HashMap<String, Audited.Override>();
 		addOverridesToMap( context, persistentClass, effectiveAuditOverride );
 		return effectiveAuditOverride;
+	}
+
+	private static void collectOverrides(String classToScan, HashMap<String, Audited.Override> overrides, MetadataBuildingContext context) {
+		var registry = context.getBootstrapContext().getModelsContext().getClassDetailsRegistry();
+		if (classToScan == null) return;
+		registry.getClassDetails( classToScan )
+				.forEachAnnotationUsage( Audited.Override.class, context.getBootstrapContext().getModelsContext(),
+						override -> overrides.putIfAbsent( override.name(), override )
+				);
 	}
 
 	private static void collectPropertyColumns(

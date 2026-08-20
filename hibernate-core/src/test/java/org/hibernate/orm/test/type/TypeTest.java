@@ -9,6 +9,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.hibernate.testing.util.ValueClassHelper;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeReference;
 import org.hibernate.type.SerializableType;
@@ -351,7 +352,8 @@ public class TypeTest {
 
 	protected <T> void runBasicTests(Type type, T original, T copy, T different) {
 		final SharedSessionContractImplementor session = null; //Not really used
-		final boolean nonCopyable = original instanceof Class || original instanceof Currency;
+		final boolean nonCopyable = original instanceof Class || original instanceof Currency
+									|| ValueClassHelper.isValue( type.getReturnedClass() );
 		if ( ! nonCopyable ) {
 			// these checks exclude classes which cannot really be cloned (singetons/enums)
 			assertNotSame( original, copy );

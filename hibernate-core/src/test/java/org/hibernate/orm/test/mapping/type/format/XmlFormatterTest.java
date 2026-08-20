@@ -9,6 +9,7 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SessionFactoryScopeAware;
+import org.hibernate.testing.util.ValueClassHelper;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
@@ -17,6 +18,7 @@ import org.hibernate.type.format.jackson.Jackson3XmlFormatMapper;
 import org.hibernate.type.format.jackson.JacksonXmlFormatMapper;
 import org.hibernate.type.format.jaxb.JaxbXmlFormatMapper;
 import org.hibernate.type.internal.ParameterizedTypeImpl;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -69,6 +71,8 @@ public class XmlFormatterTest implements SessionFactoryScopeAware {
 	@ParameterizedTest
 	@MethodSource("formatMappers")
 	public void testCollection(FormatMapper formatMapper) {
+		// Until https://github.com/eclipse-ee4j/jaxb-ri/pull/2006 is released
+		Assumptions.assumeFalse( formatMapper instanceof JaxbXmlFormatMapper && ValueClassHelper.isValue( Boolean.class ) );
 		assertCollection( List.of(), Integer.class, formatMapper );
 		assertCollection( Arrays.asList( new Integer[]{ null } ), Integer.class, formatMapper );
 		assertCollection( List.of( "Abc" ), String.class, formatMapper );
@@ -78,6 +82,8 @@ public class XmlFormatterTest implements SessionFactoryScopeAware {
 	@ParameterizedTest
 	@MethodSource("formatMappers")
 	public void testArray(FormatMapper formatMapper) {
+		// Until https://github.com/eclipse-ee4j/jaxb-ri/pull/2006 is released
+		Assumptions.assumeFalse( formatMapper instanceof JaxbXmlFormatMapper && ValueClassHelper.isValue( Boolean.class ) );
 		assertArray( new int[0], formatMapper );
 		assertArray( new String[]{ null }, formatMapper );
 		assertArray( new String[]{ "Abc" }, formatMapper );
@@ -88,6 +94,8 @@ public class XmlFormatterTest implements SessionFactoryScopeAware {
 	@ParameterizedTest
 	@MethodSource("formatMappers")
 	public void testByteArray(FormatMapper formatMapper) {
+		// Until https://github.com/eclipse-ee4j/jaxb-ri/pull/2006 is released
+		Assumptions.assumeFalse( formatMapper instanceof JaxbXmlFormatMapper && ValueClassHelper.isValue( Boolean.class ) );
 		assertArray( new byte[0][0], formatMapper );
 		assertArray( new byte[][]{ new byte[]{ 1 } }, formatMapper );
 	}

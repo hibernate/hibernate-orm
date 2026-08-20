@@ -32,7 +32,6 @@ import org.hibernate.mapping.TableOwner;
 import org.hibernate.mapping.UnionSubclass;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.models.spi.ClassDetails;
-import org.hibernate.models.spi.ClassDetailsRegistry;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.persister.state.internal.AuditStateManagement;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
@@ -384,19 +383,20 @@ public final class AuditHelper {
 	//TODO call just once
 	static Map<String, Audited.Override> extractLowestAuditOverridesFromHierarchy(PersistentClass persistentClass, MetadataBuildingContext context) {
 		var effectiveAuditOverride = new HashMap<String, Audited.Override>();
-		var registry = context.getBootstrapContext().getModelsContext().getClassDetailsRegistry();
 		var fullHierarchy = new ArrayList<PersistentClass>( persistentClass.getSubclasses() );
 		fullHierarchy.add( persistentClass );
-		fullHierarchy.forEach( pc -> {
-			var classToScanForRevocations = pc.getClassName();
-			collectOverrides( context, registry, classToScanForRevocations, effectiveAuditOverride );
-			var msc = pc.getSuperMappedSuperclass();
-			while ( msc != null ) {
-				collectOverrides( context, registry, msc.getMappedClass().getName(), effectiveAuditOverride );
-				msc = msc.getSuperMappedSuperclass();
-			}
-		} );
+		fullHierarchy.forEach( pc -> addOverridesToMap( context, pc, effectiveAuditOverride ) );
 		return effectiveAuditOverride;
+	}
+
+	private static void addOverridesToMap(MetadataBuildingContext context, PersistentClass pc, HashMap<String, Audited.Override> overridesMap) {
+		var classToScan = pc.getClassName();
+		collectOverrides( classToScan, overridesMap, context );
+		var msc = pc.getSuperMappedSuperclass();
+		while ( msc != null ) {
+			collectOverrides( msc.getMappedClass().getName(), overridesMap, context );
+			msc = msc.getSuperMappedSuperclass();
+		}
 	}
 
 	@Nonnull
@@ -848,19 +848,11 @@ public final class AuditHelper {
 	//TODO call just once
 	public static HashSet<String> extractRevocations(RootClass rootClass, MetadataBuildingContext context) {
 		var revokedProperties = new HashSet<String>();
-		var registry = context.getBootstrapContext().getModelsContext().getClassDetailsRegistry();
 		var fullHierarchy = new ArrayList<PersistentClass>( rootClass.getSubclasses() );
 		fullHierarchy.add( rootClass );
 		fullHierarchy.forEach( pc -> {
 			var overrides = new HashMap<String, Audited.Override>();
-			var classToScanForRevocations = pc.getClassName();
-			collectOverrides( context, registry, classToScanForRevocations, overrides );
-			var msc = pc.getSuperMappedSuperclass();
-			while ( msc != null ) {
-				collectOverrides( context, registry, msc.getMappedClass().getName(), overrides );
-				msc = msc.getSuperMappedSuperclass();
-			}
-
+			addOverridesToMap( context, pc, overrides );
 			overrides.forEach( (property, annotation) -> {
 				if ( annotation.isAudited() ) {
 					revokedProperties.add( property );
@@ -870,11 +862,12 @@ public final class AuditHelper {
 		return revokedProperties;
 	}
 
-	private static void collectOverrides(MetadataBuildingContext context, ClassDetailsRegistry registry, String classToScanForRevocations, HashMap<String, Audited.Override> revokedProperties) {
-		if (classToScanForRevocations == null) return;
-		registry.getClassDetails( classToScanForRevocations )
+	private static void collectOverrides(String classToScan, HashMap<String, Audited.Override> overrides, MetadataBuildingContext context) {
+		var registry = context.getBootstrapContext().getModelsContext().getClassDetailsRegistry();
+		if (classToScan == null) return;
+		registry.getClassDetails( classToScan )
 				.forEachAnnotationUsage( Audited.Override.class, context.getBootstrapContext().getModelsContext(),
-						override -> revokedProperties.putIfAbsent( override.name(), override )
+						override -> overrides.putIfAbsent( override.name(), override )
 				);
 	}
 
@@ -884,39 +877,11 @@ public final class AuditHelper {
 	 * will be ignored.
 	 */
 	//TODO call just once
-	static Map<String, Audited.Override> extractAuditOverridesFromPersistentClassAndItsMappedSuperClasses(PersistentClass rootClass, MetadataBuildingContext context) {
-		var auditOverride = getAllAuditOverrides( rootClass.getClassName(), context );
-		//find first override in @MappedSuperClasses
-		var mappedSuperClass = rootClass.getSuperMappedSuperclass();
-		while ( mappedSuperClass != null ) {
-			getAllAuditOverrides( mappedSuperClass.getMappedClass().getName(), context ).forEach(
-					auditOverride::putIfAbsent );
-			mappedSuperClass = mappedSuperClass.getSuperMappedSuperclass();
-		}
-		return auditOverride;
+	static Map<String, Audited.Override> extractAuditOverridesFromPersistentClassAndItsMappedSuperClasses(PersistentClass persistentClass, MetadataBuildingContext context) {
+		var effectiveAuditOverride = new HashMap<String, Audited.Override>();
+		addOverridesToMap( context, persistentClass, effectiveAuditOverride );
+		return effectiveAuditOverride;
 	}
-
-
-	private static Map<String, Audited.Override> getAllAuditOverrides(String className, MetadataBuildingContext context) {
-		var classDetailsRegistry = context.getBootstrapContext().getModelsContext().getClassDetailsRegistry();
-		var map = new HashMap<String, Audited.Override>();
-		var override = classDetailsRegistry.getClassDetails( className )
-				.getDirectAnnotationUsage( Audited.Override.class );
-		if ( override != null ) {
-			map.put( override.name(), override );
-		}
-		else {
-			var overrides = classDetailsRegistry.getClassDetails( className )
-					.getDirectAnnotationUsage( Audited.Overrides.class );
-			if ( overrides != null ) {
-				for ( var ov : overrides.value() ) {
-					map.put( ov.name(), ov );
-				}
-			}
-		}
-		return map;
-	}
-
 
 	private static void collectPropertyColumns(
 			PersistentClass persistentClass,

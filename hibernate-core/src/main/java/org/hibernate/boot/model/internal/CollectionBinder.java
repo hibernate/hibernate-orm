@@ -1692,7 +1692,7 @@ public abstract class CollectionBinder {
 		// For @OneToMany @JoinColumn on an @Audited entity, create a middle audit table
 		// to track collection membership changes (same approach as @ManyToMany / @JoinTable)
 		if ( !collection.isInverse() ) {
-			var revokedProperties = extractRevocations( propertyHolder.getPersistentClass().getRootClass(), buildingContext ); //TODO calculate the set just once
+			var revokedProperties = extractRevocations( propertyHolder.getPersistentClass().getRootClass(), buildingContext );
 			final var audited = extract( Audited.class, property, buildingContext );
 			var isExcludedAtDeclaration = property.hasDirectAnnotationUsage( Audited.Excluded.class );
 			if ( audited != null && !isEffectivelyExcluded(
@@ -1709,7 +1709,7 @@ public abstract class CollectionBinder {
 						extract( Audited.CollectionTable.class, property, buildingContext ),
 						buildingContext,
 						propertyName,
-						AuditHelper.extractLowestAuditOverridesFromHierarchy( //TODO calculate only once
+						AuditHelper.extractLowestAuditOverridesFromHierarchy(
 								propertyHolder.getPersistentClass(),
 								buildingContext )
 				);
@@ -2597,7 +2597,7 @@ public abstract class CollectionBinder {
 			return;
 		}
 		//Unidirectional @OneToMany w/o @JoinColumn and @ElementCollection
-		var revokedProperties = extractRevocations( propertyHolder.getPersistentClass().getRootClass(), buildingContext ); //TODO calculate the set just once
+		var revokedProperties = extractRevocations( propertyHolder.getPersistentClass().getRootClass(), buildingContext );
 		final var audited = extract( Audited.class, property, buildingContext );
 		var isExcludedAtDeclaration = property.hasDirectAnnotationUsage( Audited.Excluded.class );
 		if ( audited != null && !isEffectivelyExcluded(
@@ -2614,7 +2614,7 @@ public abstract class CollectionBinder {
 					buildingContext,
 					propertyName,
 					auditOverrideOnRootClassOrItsMappedSuperClasses,
-					AuditHelper.extractLowestAuditOverridesFromHierarchy( //TODO calculate only once
+					AuditHelper.extractLowestAuditOverridesFromHierarchy(
 							propertyHolder.getPersistentClass(),
 							buildingContext )
 			);

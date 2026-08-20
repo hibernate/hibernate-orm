@@ -381,10 +381,11 @@ public final class AuditHelper {
 		} );
 	}
 
+	//TODO call just once
 	static Map<String, Audited.Override> extractLowestAuditOverridesFromHierarchy(PersistentClass persistentClass, MetadataBuildingContext context) {
 		var effectiveAuditOverride = new HashMap<String, Audited.Override>();
 		var registry = context.getBootstrapContext().getModelsContext().getClassDetailsRegistry();
-		var fullHierarchy = new ArrayList<PersistentClass>( persistentClass.getSubclasses() ); //TODO does not return the subclass :((
+		var fullHierarchy = new ArrayList<PersistentClass>( persistentClass.getSubclasses() );
 		fullHierarchy.add( persistentClass );
 		fullHierarchy.forEach( pc -> {
 			var classToScanForRevocations = pc.getClassName();
@@ -826,7 +827,7 @@ public final class AuditHelper {
 			}
 		}
 		// All properties in the hierarchy (root + subclasses for SINGLE_TABLE)
-		var revokedProperties = extractRevocations( rootClass, context ); //TODO calculate the set just once
+		var revokedProperties = extractRevocations( rootClass, context );
 
 		collectPropertyColumns( rootClass, mappedColumns, excluded, revokedProperties,
 				auditOverrideOnRootClassOrItsMappedSuperClasses );
@@ -844,6 +845,7 @@ public final class AuditHelper {
 		return excluded;
 	}
 
+	//TODO call just once
 	public static HashSet<String> extractRevocations(RootClass rootClass, MetadataBuildingContext context) {
 		var revokedProperties = new HashSet<String>();
 		var registry = context.getBootstrapContext().getModelsContext().getClassDetailsRegistry();
@@ -881,7 +883,8 @@ public final class AuditHelper {
 	 * Effective means, the lowest @Audited.Override will be returned. @Audited.Override for the same prop on upper @MappedSuperClasses
 	 * will be ignored.
 	 */
-	static Map<String, Audited.Override> extractAuditOverrides(PersistentClass rootClass, MetadataBuildingContext context) {
+	//TODO call only once
+	static Map<String, Audited.Override> extractAuditOverridesFromPersistentClassAndItsMappedSuperClasses(PersistentClass rootClass, MetadataBuildingContext context) {
 		var auditOverride = getAllAuditOverrides( rootClass.getClassName(), context );
 		//find first override in @MappedSuperClasses
 		var mappedSuperClass = rootClass.getSuperMappedSuperclass();

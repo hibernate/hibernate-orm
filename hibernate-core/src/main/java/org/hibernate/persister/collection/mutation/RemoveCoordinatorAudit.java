@@ -6,6 +6,7 @@ package org.hibernate.persister.collection.mutation;
 
 import java.util.function.UnaryOperator;
 
+import jakarta.annotation.Nullable;
 import org.hibernate.action.queue.spi.decompose.collection.CollectionMutationTarget;
 import org.hibernate.audit.ModificationType;
 import org.hibernate.audit.spi.CollectionAuditWriter;
@@ -58,7 +59,7 @@ public class RemoveCoordinatorAudit implements RemoveCoordinator, CollectionAudi
 	}
 
 	@Override
-	public String getSqlString() {
+	public @Nullable String getSqlString() {
 		return standardCoordinator.getSqlString();
 	}
 

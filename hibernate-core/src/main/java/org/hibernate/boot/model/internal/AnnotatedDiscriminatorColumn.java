@@ -6,6 +6,9 @@ package org.hibernate.boot.model.internal;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.annotations.DiscriminatorFormula;
+import org.hibernate.boot.model.naming.EntityNaming;
+import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.model.naming.ImplicitDiscriminatorColumnNameSource;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 
 import jakarta.persistence.Column;
@@ -46,10 +49,14 @@ public class AnnotatedDiscriminatorColumn extends AnnotatedColumn {
 			DiscriminatorFormula discriminatorFormula,
 			Column columnOverride,
 			String defaultColumnName,
+			EntityNaming entityNaming,
 			MetadataBuildingContext context) {
 		final var parent = new AnnotatedColumns();
 		parent.setBuildingContext( context );
-		final var column = new AnnotatedDiscriminatorColumn( defaultColumnName );
+		final String resolvedDefaultName = entityNaming != null ?
+				determineImplicitColumnName( entityNaming, context ) :
+				defaultColumnName;
+		final var column = new AnnotatedDiscriminatorColumn( resolvedDefaultName );
 		final DiscriminatorType discriminatorType;
 		if ( discriminatorFormula != null ) {
 			final var type = discriminatorFormula.discriminatorType();
@@ -90,6 +97,25 @@ public class AnnotatedDiscriminatorColumn extends AnnotatedColumn {
 		column.setParent( parent );
 		column.bind();
 		return column;
+	}
+
+	private static String determineImplicitColumnName(EntityNaming entityNaming, MetadataBuildingContext context) {
+		final Identifier implicitName = context.getObjectNameNormalizer().normalizeIdentifierQuoting(
+				context.getBuildingOptions().getImplicitNamingStrategy().determineDiscriminatorColumnName(
+						new ImplicitDiscriminatorColumnNameSource() {
+							@Override
+							public EntityNaming getEntityNaming() {
+								return entityNaming;
+							}
+
+							@Override
+							public MetadataBuildingContext getBuildingContext() {
+								return context;
+							}
+						}
+				)
+		);
+		return implicitName.render( context.getMetadataCollector().getDatabase().getDialect() );
 	}
 
 	private static void setDiscriminatorType(

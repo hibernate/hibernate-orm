@@ -675,6 +675,7 @@ public class EmbeddableBinder {
 						discriminatorFormula,
 						overrides == null ? null : overrides[0],
 						columnPrefix + "_" + DEFAULT_DISCRIMINATOR_COLUMN_NAME,
+						null,
 						context
 				);
 			}

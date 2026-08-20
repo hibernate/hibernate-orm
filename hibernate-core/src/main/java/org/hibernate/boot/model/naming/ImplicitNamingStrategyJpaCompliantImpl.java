@@ -93,11 +93,8 @@ public class ImplicitNamingStrategyJpaCompliantImpl implements ImplicitNamingStr
 
 	@Override
 	public Identifier determineDiscriminatorColumnName(ImplicitDiscriminatorColumnNameSource source) {
-		final var context = source.getBuildingContext();
-		return toIdentifier(
-				context.getEffectiveDefaults().getDefaultDiscriminatorColumnName(),
-				context
-		);
+		// JPA spec mandates "DTYPE" as the default discriminator column name
+		return toIdentifier( "DTYPE", source.getBuildingContext() );
 	}
 
 	@Override

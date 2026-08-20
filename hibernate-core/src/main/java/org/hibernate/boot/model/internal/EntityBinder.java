@@ -1031,7 +1031,7 @@ public class EntityBinder {
 		if ( !inheritanceState.hasParents()
 				|| annotatedClass.hasAnnotationUsage( Inheritance.class, modelsContext() ) ) {
 			return buildDiscriminatorColumn( discriminatorColumn, discriminatorFormula,
-					null, DEFAULT_DISCRIMINATOR_COLUMN_NAME, context );
+					null, DEFAULT_DISCRIMINATOR_COLUMN_NAME, entityNamingFor(persistentClass), context );
 		}
 		else {
 			// not a root entity
@@ -1064,7 +1064,7 @@ public class EntityBinder {
 		if ( !inheritanceState.hasParents()
 				|| annotatedClass.hasAnnotationUsage( Inheritance.class, modelContext ) ) {
 			return useDiscriminatorColumnForJoined( discriminatorColumn )
-					? buildDiscriminatorColumn( discriminatorColumn, null, null, DEFAULT_DISCRIMINATOR_COLUMN_NAME, context )
+					? buildDiscriminatorColumn( discriminatorColumn, null, null, DEFAULT_DISCRIMINATOR_COLUMN_NAME, entityNamingFor(persistentClass), context )
 					: null;
 		}
 		else {
@@ -1075,6 +1075,25 @@ public class EntityBinder {
 			}
 			return null;
 		}
+	}
+
+	private static EntityNaming entityNamingFor(PersistentClass persistentClass) {
+		return new EntityNaming() {
+			@Override
+			public String getClassName() {
+				return persistentClass.getClassName();
+			}
+
+			@Override
+			public String getEntityName() {
+				return persistentClass.getEntityName();
+			}
+
+			@Override
+			public String getJpaEntityName() {
+				return persistentClass.getJpaEntityName();
+			}
+		};
 	}
 
 	/**

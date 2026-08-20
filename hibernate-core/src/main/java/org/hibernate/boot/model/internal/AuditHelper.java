@@ -883,7 +883,7 @@ public final class AuditHelper {
 	 * Effective means, the lowest @Audited.Override will be returned. @Audited.Override for the same prop on upper @MappedSuperClasses
 	 * will be ignored.
 	 */
-	//TODO call only once
+	//TODO call just once
 	static Map<String, Audited.Override> extractAuditOverridesFromPersistentClassAndItsMappedSuperClasses(PersistentClass rootClass, MetadataBuildingContext context) {
 		var auditOverride = getAllAuditOverrides( rootClass.getClassName(), context );
 		//find first override in @MappedSuperClasses

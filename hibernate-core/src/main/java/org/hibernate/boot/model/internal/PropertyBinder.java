@@ -808,7 +808,7 @@ public class PropertyBinder {
 			boolean isComponentEmbedded,
 			boolean inSecondPass,
 			MetadataBuildingContext context,
-			Map<ClassDetails, InheritanceState> inheritanceStatePerClass)
+			Map<ClassDetails, InheritanceState> inheritanceStatePerClass, Map<String, Audited.Override> auditOverrideOnRootClassOrItsMappedSuperClasses)
 					throws MappingException {
 
 		if ( !alreadyProcessedBySuper( propertyHolder, inferredData, entityBinder ) ) {
@@ -830,7 +830,8 @@ public class PropertyBinder {
 						isComponentEmbedded,
 						inSecondPass,
 						context,
-						inheritanceStatePerClass
+						inheritanceStatePerClass,
+						auditOverrideOnRootClassOrItsMappedSuperClasses
 				);
 			}
 		}
@@ -860,7 +861,8 @@ public class PropertyBinder {
 			boolean isComponentEmbedded,
 			boolean inSecondPass,
 			MetadataBuildingContext context,
-			Map<ClassDetails, InheritanceState> inheritanceStatePerClass) {
+			Map<ClassDetails, InheritanceState> inheritanceStatePerClass,
+			Map<String, Audited.Override> auditOverrideOnRootClassOrItsMappedSuperClasses) {
 
 		final var memberDetails = inferredData.getAttributeMember();
 
@@ -903,7 +905,8 @@ public class PropertyBinder {
 				isComponentEmbedded,
 				inSecondPass,
 				attributeTypeDetails.determineRawClass(),
-				columnsBuilder
+				columnsBuilder,
+				auditOverrideOnRootClassOrItsMappedSuperClasses
 		);
 		addNaturalIds( inSecondPass, memberDetails, columns, joinColumns, context );
 	}
@@ -951,7 +954,7 @@ public class PropertyBinder {
 			boolean isComponentEmbedded,
 			boolean inSecondPass,
 			ClassDetails returnedClass,
-			ColumnsBuilder columnsBuilder) {
+			ColumnsBuilder columnsBuilder, Map<String, Audited.Override> auditOverrideOnRootClassOrItsMappedSuperClasses) {
 		final var property = inferredData.getAttributeMember();
 		if ( isVersion( property ) ) {
 			bindVersionProperty(
@@ -1005,7 +1008,8 @@ public class PropertyBinder {
 					isIdentifierMapper,
 					buildingContext,
 					inheritanceStatePerClass,
-					columnsBuilder.getJoinColumns()
+					columnsBuilder.getJoinColumns(),
+					auditOverrideOnRootClassOrItsMappedSuperClasses
 			);
 		}
 		//Either a regular property or a basic @Id or @EmbeddedId while not ignoring id annotations

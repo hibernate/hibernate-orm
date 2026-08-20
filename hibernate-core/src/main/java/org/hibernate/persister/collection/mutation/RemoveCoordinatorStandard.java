@@ -4,6 +4,7 @@
  */
 package org.hibernate.persister.collection.mutation;
 
+import jakarta.annotation.Nullable;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.jdbc.mutation.spi.MutationExecutorService;
@@ -59,7 +60,7 @@ public class RemoveCoordinatorStandard implements RemoveCoordinator {
 	}
 
 	@Override
-	public String getSqlString() {
+	public @Nullable String getSqlString() {
 		if ( operationGroup == null ) {
 			// delayed creation of the operation-group
 			operationGroup = buildOperationGroup();

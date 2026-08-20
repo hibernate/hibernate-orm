@@ -6,6 +6,7 @@ package org.hibernate.persister.collection.mutation;
 
 import java.util.function.UnaryOperator;
 
+import jakarta.annotation.Nullable;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.jdbc.mutation.spi.MutationExecutorService;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -63,7 +64,7 @@ public class RemoveCoordinatorHistory implements RemoveCoordinator {
 	}
 
 	@Override
-	public String getSqlString() {
+	public @Nullable String getSqlString() {
 		if ( operationGroup == null ) {
 			operationGroup = buildOperationGroup( mutationTarget.getCollectionTableMapping() );
 		}

@@ -130,6 +130,7 @@ import static org.hibernate.boot.model.internal.AnnotatedClassType.MAPPED_SUPERC
 import static org.hibernate.boot.model.internal.AnnotatedDiscriminatorColumn.DEFAULT_DISCRIMINATOR_COLUMN_NAME;
 import static org.hibernate.boot.model.internal.AnnotatedDiscriminatorColumn.buildDiscriminatorColumn;
 import static org.hibernate.boot.model.internal.AnnotatedJoinColumn.buildInheritanceJoinColumn;
+import static org.hibernate.boot.model.internal.AuditHelper.extractAuditOverrides;
 import static org.hibernate.boot.model.internal.BinderHelper.extractFromPackage;
 import static org.hibernate.boot.model.internal.BinderHelper.getMappedSuperclassOrNull;
 import static org.hibernate.boot.model.internal.BinderHelper.getPath;
@@ -258,13 +259,16 @@ public class EntityBinder {
 				inheritanceStates
 		);
 		entityBinder.handleInheritance( inheritanceState, superEntity, holder );
-		entityBinder.handleIdentifier( holder, inheritanceStates, inheritanceState );
+		var auditOverrideOnRootClassOrItsMappedSuperClasses = extractAuditOverrides(
+				holder.getPersistentClass().getRootClass(), entityBinder.context );
+		entityBinder.handleIdentifier( holder, inheritanceStates, inheritanceState,
+				auditOverrideOnRootClassOrItsMappedSuperClasses );
 
 		if ( persistentClass instanceof RootClass rootClass ) {
 			collector.addSecondPass( new CreateKeySecondPass( rootClass ) );
 			bindSoftDelete( clazzToProcess, rootClass, context );
 			bindTemporal( clazzToProcess, rootClass, context );
-			bindAudited( clazzToProcess, rootClass, context );
+			bindAudited( clazzToProcess, rootClass, context, auditOverrideOnRootClassOrItsMappedSuperClasses );
 		}
 		if ( persistentClass instanceof Subclass subclass ) {
 			assert superEntity != null;
@@ -360,11 +364,12 @@ public class EntityBinder {
 	private static void bindAudited(
 			ClassDetails classDetails,
 			RootClass rootClass,
-			MetadataBuildingContext context) {
+			MetadataBuildingContext context, Map<String, Audited.Override> auditOverrideOnRootClassOrItsMappedSuperClasses) {
 		final var audited = extract( Audited.class, classDetails, context );
 		if ( audited != null ) {
 			final var auditTable = extract( Audited.Table.class, classDetails, context );
-			AuditHelper.bindAuditTable( auditTable, rootClass, classDetails, context );
+			AuditHelper.bindAuditTable( auditTable, rootClass, classDetails, context,
+					auditOverrideOnRootClassOrItsMappedSuperClasses );
 		}
 		else {
 			final var changelog = extract( Changelog.class, classDetails, context );
@@ -432,7 +437,7 @@ public class EntityBinder {
 	private void handleIdentifier(
 			PropertyHolder propertyHolder,
 			Map<ClassDetails, InheritanceState> inheritanceStates,
-			InheritanceState inheritanceState) {
+			InheritanceState inheritanceState, Map<String, Audited.Override> auditOverrideOnRootClassOrItsMappedSuperClasses) {
 		final var elementsToProcess = inheritanceState.postProcess( persistentClass, this );
 		final Set<String> idPropertiesIfIdClass = handleIdClass(
 				persistentClass,
@@ -449,7 +454,7 @@ public class EntityBinder {
 				propertyHolder,
 				idPropertiesIfIdClass,
 				elementsToProcess,
-				inheritanceStates
+				inheritanceStates, auditOverrideOnRootClassOrItsMappedSuperClasses
 		);
 	}
 
@@ -1116,7 +1121,7 @@ public class EntityBinder {
 			PropertyHolder propertyHolder,
 			Set<String> idPropertiesIfIdClass,
 			ElementsToProcess elementsToProcess,
-			Map<ClassDetails, InheritanceState> inheritanceStates) {
+			Map<ClassDetails, InheritanceState> inheritanceStates, Map<String, Audited.Override> auditOverrideOnRootClassOrItsMappedSuperClasses) {
 		final Set<String> missingIdProperties = new HashSet<>( idPropertiesIfIdClass );
 		final Set<String> missingEntityProperties = new HashSet<>();
 		for ( var propertyAnnotatedElement : elementsToProcess.getElements() ) {
@@ -1141,7 +1146,8 @@ public class EntityBinder {
 							false,
 							false,
 							context,
-							inheritanceStates
+							inheritanceStates,
+							auditOverrideOnRootClassOrItsMappedSuperClasses
 					);
 				}
 			}

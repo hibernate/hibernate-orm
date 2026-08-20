@@ -130,7 +130,7 @@ import static org.hibernate.boot.model.internal.AnnotatedClassType.MAPPED_SUPERC
 import static org.hibernate.boot.model.internal.AnnotatedDiscriminatorColumn.DEFAULT_DISCRIMINATOR_COLUMN_NAME;
 import static org.hibernate.boot.model.internal.AnnotatedDiscriminatorColumn.buildDiscriminatorColumn;
 import static org.hibernate.boot.model.internal.AnnotatedJoinColumn.buildInheritanceJoinColumn;
-import static org.hibernate.boot.model.internal.AuditHelper.extractAuditOverrides;
+import static org.hibernate.boot.model.internal.AuditHelper.extractAuditOverridesFromPersistentClassAndItsMappedSuperClasses;
 import static org.hibernate.boot.model.internal.BinderHelper.extractFromPackage;
 import static org.hibernate.boot.model.internal.BinderHelper.getMappedSuperclassOrNull;
 import static org.hibernate.boot.model.internal.BinderHelper.getPath;
@@ -259,7 +259,7 @@ public class EntityBinder {
 				inheritanceStates
 		);
 		entityBinder.handleInheritance( inheritanceState, superEntity, holder );
-		var auditOverrideOnRootClassOrItsMappedSuperClasses = extractAuditOverrides(
+		var auditOverrideOnRootClassOrItsMappedSuperClasses = extractAuditOverridesFromPersistentClassAndItsMappedSuperClasses(
 				holder.getPersistentClass().getRootClass(), entityBinder.context );
 		entityBinder.handleIdentifier( holder, inheritanceStates, inheritanceState,
 				auditOverrideOnRootClassOrItsMappedSuperClasses );

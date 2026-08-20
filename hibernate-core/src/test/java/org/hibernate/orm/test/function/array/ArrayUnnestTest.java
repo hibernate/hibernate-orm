@@ -6,7 +6,7 @@ package org.hibernate.orm.test.function.array;
 
 import java.util.List;
 
-import org.hibernate.dialect.SybaseASEDialect;
+import org.hibernate.dialect.MySQLDialect;import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.query.criteria.JpaFunctionJoin;
 import org.hibernate.query.criteria.JpaRoot;
@@ -193,6 +193,7 @@ public class ArrayUnnestTest {
 
 	@Test
 	@JiraKey("HHH-20438")
+	@SkipForDialect(dialectClass = MySQLDialect.class, majorVersion = 8, reason = "See https://bugs.mysql.com/bug.php?id=121143")
 	public void testExistsSubqueryWithBodyPredicate(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			List<Long> results = em.createQuery(
@@ -206,6 +207,7 @@ public class ArrayUnnestTest {
 
 	@Test
 	@JiraKey("HHH-20438")
+	@SkipForDialect(dialectClass = MySQLDialect.class, majorVersion = 8, reason = "See https://bugs.mysql.com/bug.php?id=121143")
 	public void testInSubqueryWithBodyPredicate(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			List<Long> results = em.createQuery(

@@ -83,7 +83,10 @@ public class TransformationHelper {
 			for ( String name : mappedPropertyNames ) {
 				effectiveMappedNames.add( StringHelper.decapitalize( name ) );
 			}
-			for ( var method : javaClass.getMethods() ) {
+			// only consider getters declared directly on this class (mirroring the field branch's
+			// getDeclaredFields()): a transient must resolve to a member of the class it is placed on,
+			// so inherited getters belong to the ancestor's own mapping, not this one
+			for ( var method : javaClass.getDeclaredMethods() ) {
 				final String propertyName = extractPropertyName( method );
 				if ( propertyName != null
 						&& !effectiveMappedNames.contains( propertyName )

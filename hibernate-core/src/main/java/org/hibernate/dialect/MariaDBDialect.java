@@ -104,6 +104,11 @@ public class MariaDBDialect extends MySQLDialect {
 	}
 
 	@Override
+	public boolean supportsBatchInsertReturningGeneratedKeys() {
+		return false;
+	}
+
+	@Override
 	public DatabaseVersion getMySQLVersion() {
 		return MYSQL57;
 	}

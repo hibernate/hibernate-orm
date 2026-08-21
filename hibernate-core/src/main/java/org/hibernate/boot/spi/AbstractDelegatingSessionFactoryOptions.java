@@ -232,6 +232,11 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
+	public boolean isBatchIdentityInsertsEnabled() {
+		return delegate.isBatchIdentityInsertsEnabled();
+	}
+
+	@Override
 	public boolean isMultiTenancyEnabled() {
 		return delegate.isMultiTenancyEnabled();
 	}

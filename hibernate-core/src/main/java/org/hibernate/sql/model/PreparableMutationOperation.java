@@ -55,10 +55,12 @@ public interface PreparableMutationOperation extends MutationOperation {
 			return false;
 		}
 
-		// This should already be guaranteed by the batchKey being null
+		// If the identifier table has a mutation delegate, batching is only allowed
+		// when the delegate itself supports batched generated-key retrieval.
 		assert !getTableDetails().isIdentifierTable()
-			|| !( getMutationTarget() instanceof EntityMutationTarget entityMutationTarget
-					&& entityMutationTarget.getMutationDelegate( getMutationType() ) != null );
+			|| !( getMutationTarget() instanceof EntityMutationTarget entityMutationTarget )
+			|| entityMutationTarget.getMutationDelegate( getMutationType() ) == null
+			|| entityMutationTarget.getMutationDelegate( getMutationType() ).supportsBatching();
 
 		if ( getMutationType() == MutationType.UPDATE ) {
 			// we cannot batch updates against optional tables

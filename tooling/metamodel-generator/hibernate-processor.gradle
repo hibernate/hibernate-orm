@@ -230,16 +230,7 @@ processDataIntegrationTestResources {
 }
 
 var publishingExtension = project.getExtensions().getByType(PublishingExtension) as PublishingExtension
-def oldGroupId = "org.hibernate"
 def oldArtifactId = "hibernate-jpamodelgen"
-
-publishingExtension.publications.named("groupRelocation", MavenPublication) {
-	artifactId = oldArtifactId
-	pom {
-		name = "Relocation : ${oldGroupId}:${oldArtifactId} -> ${project.group}:${project.name}"
-		description = "The `${oldArtifactId}` module has been renamed `${project.name}` and moved to the `${project.group}` group-id"
-	}
-}
 
 publishingExtension.publications.register("renameRelocation", MavenPublication) {
 	artifactId = oldArtifactId

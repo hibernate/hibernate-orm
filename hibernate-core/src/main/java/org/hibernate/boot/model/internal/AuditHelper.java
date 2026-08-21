@@ -83,8 +83,7 @@ public final class AuditHelper {
 			@Nullable Audited.Table auditTable,
 			Collection collection,
 			MetadataBuildingContext context,
-			String propertyName,
-			Audited.CollectionTable collectionTableOverride) {
+			@Nullable Audited.CollectionTable collectionTableOverride) {
 		bindAuditTable(
 				auditTable,
 				(Stateful) collection,
@@ -97,7 +96,7 @@ public final class AuditHelper {
 			@Nullable Audited.Table auditTable,
 			Stateful auditable,
 			MetadataBuildingContext context,
-			Audited.CollectionTable collectionTableOverride
+			@Nullable Audited.CollectionTable collectionTableOverride
 	) {
 		final var collector = context.getMetadataCollector();
 		final var table = auditable.getMainTable();
@@ -323,15 +322,13 @@ public final class AuditHelper {
 			String referencedEntityName,
 			@Nullable Audited.CollectionTable collectionAuditTable,
 			MetadataBuildingContext context,
-			String propertyName,
-			Map<String, Audited.Override> lowestAuditOverridesInHierarchy) {
+			Audited.Override auditOverride) {
 		final var collector = context.getMetadataCollector();
 		final var ownerTable = collection.getOwner().getTable();
 
 		// Table name: @Audited.CollectionTable name (if applicable, taken from @AuditOverride), or {OwnerJpaEntityName}_{ChildJpaEntityName}_AUD
 		final var referencedEntity = collector.getEntityBinding( referencedEntityName );
 
-		var auditOverride = lowestAuditOverridesInHierarchy.get(propertyName);
 
 		final String auditTableName =
 				auditTableName( collection, collectionAuditTable, referencedEntity, auditOverride );

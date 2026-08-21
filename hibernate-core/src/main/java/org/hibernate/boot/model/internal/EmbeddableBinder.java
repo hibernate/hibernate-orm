@@ -41,6 +41,7 @@ import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.models.spi.ConstructorDetails;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.TypeDetails;
 import org.hibernate.property.access.internal.PropertyAccessStrategyCompositeUserTypeImpl;
@@ -49,7 +50,6 @@ import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
 import org.hibernate.type.BasicType;
 import org.hibernate.usertype.CompositeUserType;
 
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -1017,9 +1017,12 @@ public class EmbeddableBinder {
 		embeddable.setCustomInstantiator( customInstantiatorImpl );
 		if ( type != null ) {
 			final var classDetails = type.determineRawClass();
-			final var constructor = resolveInstantiator( classDetails );
-			if ( constructor != null ) {
-				embeddable.setInstantiator( constructor, constructor.getAnnotation( Instantiator.class ).value() );
+			final var constructorDetails = resolveInstantiator( classDetails );
+			if ( constructorDetails != null ) {
+				embeddable.setInstantiator(
+						constructorDetails.toJavaConstructor(),
+						constructorDetails.getDirectAnnotationUsage( Instantiator.class ).value()
+				);
 			}
 			final var realClass = classDetails.isRealClass();
 			embeddable.setDynamic( !realClass );
@@ -1096,26 +1099,25 @@ public class EmbeddableBinder {
 		embeddable.setColumnNamingPattern( columnNamingPattern );
 	}
 
-	private static Constructor<?> resolveInstantiator(TypeDetails embeddableClass) {
+	private static ConstructorDetails resolveInstantiator(TypeDetails embeddableClass) {
 		return embeddableClass == null ? null : resolveInstantiator( embeddableClass.determineRawClass() );
 	}
 
-	private static Constructor<?> resolveInstantiator(ClassDetails embeddableClass) {
-		if ( embeddableClass != null && embeddableClass.isRealClass() ) {
-			final var declaredConstructors = embeddableClass.toJavaClass().getDeclaredConstructors();
-			Constructor<?> constructor = null;
-			for ( var declaredConstructor : declaredConstructors ) {
-				if ( declaredConstructor.isAnnotationPresent( Instantiator.class ) ) {
-					if ( constructor != null ) {
-						throw new AnnotationException( "Multiple constructors of '" + embeddableClass.getName()
-								+ "' are annotated '@Instantiator' but only one constructor can be the canonical constructor" );
-					}
-					constructor = declaredConstructor;
-				}
-			}
-			return constructor;
+	private static ConstructorDetails resolveInstantiator(ClassDetails embeddableClass) {
+		if ( embeddableClass == null ) {
+			return null;
 		}
-		return null;
+		ConstructorDetails result = null;
+		for ( var constructor : embeddableClass.getConstructors() ) {
+			if ( constructor.hasDirectAnnotationUsage( Instantiator.class ) ) {
+				if ( result != null ) {
+					throw new AnnotationException( "Multiple constructors of '" + embeddableClass.getName()
+							+ "' are annotated '@Instantiator' but only one constructor can be the canonical constructor" );
+				}
+				result = constructor;
+			}
+		}
+		return result;
 	}
 
 	public static Class<? extends EmbeddableInstantiator> determineCustomInstantiator(

@@ -36,6 +36,11 @@ import org.hibernate.SessionFactoryObserver;
 import org.hibernate.audit.AuditStrategy;
 import org.hibernate.StatementObserver;
 import org.hibernate.boot.model.internal.TemporalHelper;
+import org.hibernate.callback.internal.GlobalInterceptorStrategy;
+import org.hibernate.callback.internal.NoInterceptorStrategy;
+import org.hibernate.callback.internal.ProvidedInterceptorStrategy;
+import org.hibernate.callback.internal.ScopedInterceptorStrategy;
+import org.hibernate.callback.spi.InterceptorStrategy;
 import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.temporal.TemporalTableStrategy;
 import org.hibernate.context.spi.MultiTenancy;
@@ -162,6 +167,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private Interceptor interceptor;
 	private StatementObserver statementObserver;
 	private Supplier<? extends Interceptor> statelessInterceptorSupplier;
+	private InterceptorStrategy interceptorStrategy;
 	private StatementInspector statementInspector;
 	private final Class<? extends SessionEventListener> autoSessionEventListener;
 	private final List<SessionFactoryObserver> sessionFactoryObserverList = new ArrayList<>();
@@ -362,6 +368,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 		interceptor = determineInterceptor( settings, strategySelector );
 		statelessInterceptorSupplier = determineStatelessInterceptor( settings, strategySelector );
+		interceptorStrategy = determineInterceptorStrategy( settings, strategySelector, serviceRegistry );
 
 		statementObserver = interpretStatementObserver( settings );
 
@@ -886,23 +893,36 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 			Map<String, Object> configurationSettings,
 			StrategySelector strategySelector) {
 		final Object setting = configurationSettings.get( SESSION_SCOPED_INTERCEPTOR );
-		if ( setting == null ) {
-			return null;
-		}
-		else if ( setting instanceof Supplier ) {
+		if ( setting instanceof Supplier ) {
 			return (Supplier<? extends Interceptor>) setting;
 		}
-		else if ( setting instanceof Class ) {
-			return interceptorSupplier( (Class<? extends Interceptor>) setting );
+		return null;
+	}
+
+	@SuppressWarnings("unchecked")
+	private static InterceptorStrategy determineInterceptorStrategy(
+			Map<String, Object> settings,
+			StrategySelector strategySelector,
+			StandardServiceRegistry serviceRegistry) {
+		final Object interceptorSetting = settings.get( INTERCEPTOR );
+		if ( interceptorSetting instanceof Interceptor instance ) {
+			return new ProvidedInterceptorStrategy( instance );
 		}
-		else {
-			return interceptorSupplier(
-					strategySelector.selectStrategyImplementor(
-							Interceptor.class,
-							setting.toString()
-					)
-			);
+		if ( interceptorSetting != null ) {
+			final Class<? extends Interceptor> interceptorClass =
+					strategySelector.selectStrategyImplementor( Interceptor.class, interceptorSetting.toString() );
+			return new GlobalInterceptorStrategy( interceptorClass, serviceRegistry );
 		}
+		final Object sessionScopedSetting = settings.get( SESSION_SCOPED_INTERCEPTOR );
+		if ( sessionScopedSetting instanceof Class<?> clazz ) {
+			return new ScopedInterceptorStrategy( (Class<? extends Interceptor>) clazz, serviceRegistry );
+		}
+		if ( sessionScopedSetting != null && !( sessionScopedSetting instanceof Supplier ) ) {
+			final Class<? extends Interceptor> interceptorClass =
+					strategySelector.selectStrategyImplementor( Interceptor.class, sessionScopedSetting.toString() );
+			return new ScopedInterceptorStrategy( interceptorClass, serviceRegistry );
+		}
+		return NoInterceptorStrategy.INSTANCE;
 	}
 
 	@Nonnull
@@ -1092,6 +1112,11 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	@Override
 	public Interceptor getInterceptor() {
 		return interceptor == null ? EmptyInterceptor.INSTANCE : interceptor;
+	}
+
+	@Override
+	public InterceptorStrategy getInterceptorStrategy() {
+		return interceptorStrategy;
 	}
 
 	@Override

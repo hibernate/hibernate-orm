@@ -10,6 +10,7 @@ import jakarta.persistence.GeneratedValue;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.QualifiedNameParser;
 import org.hibernate.boot.model.relational.QualifiedSequenceName;
@@ -25,6 +26,7 @@ import static org.hibernate.id.PersistentIdentifierGenerator.TABLE;
 import static org.hibernate.id.enhanced.SequenceStyleGenerator.CONFIG_SEQUENCE_PER_ENTITY_SUFFIX;
 import static org.hibernate.id.enhanced.SequenceStyleGenerator.DEF_SEQUENCE_SUFFIX;
 import static org.hibernate.id.enhanced.TableGenerator.DEF_TABLE;
+import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getString;
 
@@ -74,7 +76,18 @@ public class StandardNamingStrategy implements ImplicitDatabaseObjectNamingStrat
 			Identifier schemaName,
 			Map<?, ?> configValues,
 			ServiceRegistry serviceRegistry) {
+		DEPRECATION_LOGGER.logDeprecatedImplicitDatabaseObjectNamingStrategyMethod();
 		return qualifiedSequenceName( catalogName, schemaName, serviceRegistry,
+				implicitSequenceName( getString( TABLE, configValues ), configValues ) );
+	}
+
+	@Override
+	public QualifiedName determineSequenceName(
+			Identifier catalogName,
+			Identifier schemaName,
+			Map<?, ?> configValues,
+			Database database) {
+		return qualifiedSequenceName( catalogName, schemaName, database,
 				implicitSequenceName( getString( TABLE, configValues ), configValues ) );
 	}
 
@@ -109,7 +122,18 @@ public class StandardNamingStrategy implements ImplicitDatabaseObjectNamingStrat
 			Identifier schemaName,
 			Map<?, ?> configValues,
 			ServiceRegistry serviceRegistry) {
+		DEPRECATION_LOGGER.logDeprecatedImplicitDatabaseObjectNamingStrategyMethod();
 		return qualifiedTableName( catalogName, schemaName, serviceRegistry,
+				implicitTableName( configValues ) );
+	}
+
+	@Override
+	public QualifiedName determineTableName(
+			Identifier catalogName,
+			Identifier schemaName,
+			Map<?, ?> configValues,
+			Database database) {
+		return qualifiedTableName( catalogName, schemaName, database,
 				implicitTableName( configValues ) );
 	}
 
@@ -130,6 +154,16 @@ public class StandardNamingStrategy implements ImplicitDatabaseObjectNamingStrat
 				);
 	}
 
+	private static QualifiedName qualifiedSequenceName(Identifier catalogName, Identifier schemaName, Database database, String implicitName) {
+		return implicitName.contains( "." )
+				? QualifiedNameParser.INSTANCE.parse( implicitName )
+				: new QualifiedSequenceName(
+						catalogName,
+						schemaName,
+						database.toIdentifier( implicitName )
+				);
+	}
+
 	private static QualifiedName qualifiedTableName(Identifier catalogName, Identifier schemaName, ServiceRegistry serviceRegistry, String implicitName) {
 		return implicitName.contains( "." )
 				? QualifiedNameParser.INSTANCE.parse( implicitName )
@@ -139,6 +173,16 @@ public class StandardNamingStrategy implements ImplicitDatabaseObjectNamingStrat
 						serviceRegistry.requireService( JdbcEnvironment.class )
 								.getIdentifierHelper()
 								.toIdentifier( implicitName )
+				);
+	}
+
+	private static QualifiedName qualifiedTableName(Identifier catalogName, Identifier schemaName, Database database, String implicitName) {
+		return implicitName.contains( "." )
+				? QualifiedNameParser.INSTANCE.parse( implicitName )
+				: new QualifiedTableName(
+						catalogName,
+						schemaName,
+						database.toIdentifier( implicitName )
 				);
 	}
 }

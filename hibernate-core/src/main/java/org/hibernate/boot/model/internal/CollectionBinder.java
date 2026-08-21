@@ -239,7 +239,6 @@ public abstract class CollectionBinder {
 	private SQLOrder sqlOrder;
 	private SortNatural naturalSort;
 	private SortComparator comparatorSort;
-	private Map<String, Audited.Override> auditOverrideOnRootClassOrItsMappedSuperClasses;
 
 	protected CollectionBinder(
 			Supplier<ManagedBean<? extends UserCollectionType>> customTypeBeanResolver,
@@ -269,9 +268,7 @@ public abstract class CollectionBinder {
 			boolean isIdentifierMapper,
 			MetadataBuildingContext context,
 			Map<ClassDetails, InheritanceState> inheritanceStatePerClass,
-			AnnotatedJoinColumns joinColumns, Map<String,
-			Audited.Override> auditOverrideOnRootClassOrItsMappedSuperClasses
-			) {
+			AnnotatedJoinColumns joinColumns			) {
 		final var modelsContext = context.getBootstrapContext().getModelsContext();
 		final var memberDetails = inferredData.getAttributeMember();
 
@@ -368,8 +365,6 @@ public abstract class CollectionBinder {
 			collectionBinder.setLocalGenerators( availableGenerators );
 
 		}
-
-		collectionBinder.setAuditOverrideOnRootClassOrItsMappedSuperClasses( auditOverrideOnRootClassOrItsMappedSuperClasses );
 		collectionBinder.bind();
 	}
 
@@ -1690,11 +1685,11 @@ public abstract class CollectionBinder {
 		// For @OneToMany @JoinColumn on an @Audited entity, create a middle audit table
 		// to track collection membership changes (same approach as @ManyToMany / @JoinTable)
 		if ( !collection.isInverse() ) {
-			var revokedProperties = extractRevocations( propertyHolder.getPersistentClass().getRootClass(), buildingContext );
+			var revocations = extractRevocations( propertyHolder.getPersistentClass().getRootClass(), buildingContext );
 			final var audited = extract( Audited.class, property, buildingContext );
 			var isExcludedAtDeclaration = property.hasDirectAnnotationUsage( Audited.Excluded.class );
 			if ( audited != null && !isEffectivelyExcluded( modelsContext(), collection.getOwner(),
-					property.getName(), isExcludedAtDeclaration ) ) {
+					property.getName(), isExcludedAtDeclaration, revocations ) ) {
 				AuditHelper.bindOneToManyAuditTable(
 						extract( Audited.Table.class, property, buildingContext ),
 						collection,
@@ -1704,7 +1699,7 @@ public abstract class CollectionBinder {
 						propertyName,
 						AuditHelper.extractLowestAuditOverridesFromHierarchy(
 								propertyHolder.getPersistentClass(),
-								buildingContext )
+								buildingContext.getBootstrapContext().getModelsContext() )
 				);
 			}
 		}
@@ -2590,20 +2585,19 @@ public abstract class CollectionBinder {
 			return;
 		}
 		//Unidirectional @OneToMany w/o @JoinColumn and @ElementCollection
-		var revokedProperties = extractRevocations( propertyHolder.getPersistentClass().getRootClass(), buildingContext );
+		var revocations = extractRevocations( propertyHolder.getPersistentClass().getRootClass(), buildingContext );
 		final var audited = extract( Audited.class, property, buildingContext );
 		var isExcludedAtDeclaration = property.hasDirectAnnotationUsage( Audited.Excluded.class );
 		if ( audited != null && !isEffectivelyExcluded( modelsContext(), collection.getOwner(),
-				property.getName(), isExcludedAtDeclaration ) ) {
+				property.getName(), isExcludedAtDeclaration, revocations ) ) {
 			AuditHelper.bindAuditTable(
 					extract( Audited.Table.class, property, buildingContext ),
 					collection,
 					buildingContext,
 					propertyName,
-					auditOverrideOnRootClassOrItsMappedSuperClasses,
 					AuditHelper.extractLowestAuditOverridesFromHierarchy(
 							propertyHolder.getPersistentClass(),
-							buildingContext )
+							buildingContext.getBootstrapContext().getModelsContext() )
 			);
 		}
 	}
@@ -2997,9 +2991,5 @@ public abstract class CollectionBinder {
 				BOOT_LOGGER.bindingElementCollectionToCollectionTable( role );
 			}
 		}
-	}
-
-	public void setAuditOverrideOnRootClassOrItsMappedSuperClasses(Map<String, Audited.Override> auditOverrideOnRootClassOrItsMappedSuperClasses) {
-		this.auditOverrideOnRootClassOrItsMappedSuperClasses = auditOverrideOnRootClassOrItsMappedSuperClasses;
 	}
 }

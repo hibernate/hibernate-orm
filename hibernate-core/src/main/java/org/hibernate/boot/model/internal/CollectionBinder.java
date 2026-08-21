@@ -147,7 +147,6 @@ import static org.hibernate.boot.model.internal.AnnotatedJoinColumns.buildJoinCo
 import static org.hibernate.boot.model.internal.AnnotatedJoinColumns.buildJoinTableJoinColumns;
 import static org.hibernate.boot.model.internal.AuditHelper.extractRevocations;
 import static org.hibernate.boot.model.internal.AuditHelper.isEffectivelyExcluded;
-import static org.hibernate.boot.model.internal.AuditHelper.isInitiallyExcluded;
 import static org.hibernate.boot.model.internal.BasicValueBinder.Kind.COLLECTION_ELEMENT;
 import static org.hibernate.boot.model.internal.BinderHelper.aggregateCascadeTypes;
 import static org.hibernate.boot.model.internal.BinderHelper.buildAnyValue;
@@ -1666,13 +1665,8 @@ public abstract class CollectionBinder {
 			var revokedProperties = extractRevocations( propertyHolder.getPersistentClass().getRootClass(), buildingContext );
 			final var audited = extract( Audited.class, property, buildingContext );
 			var isExcludedAtDeclaration = property.hasDirectAnnotationUsage( Audited.Excluded.class );
-			if ( audited != null && !isEffectivelyExcluded(
-					property.getName(),
-					isInitiallyExcluded(
-							property.getName(), auditOverrideOnRootClassOrItsMappedSuperClasses, //maybe "excluded" via override
-							isExcludedAtDeclaration ),
-					revokedProperties
-			) ) {
+			if ( audited != null && !isEffectivelyExcluded( modelsContext(), collection.getOwner(),
+					property.getName(), isExcludedAtDeclaration ) ) {
 				AuditHelper.bindOneToManyAuditTable(
 						extract( Audited.Table.class, property, buildingContext ),
 						collection,
@@ -2571,14 +2565,8 @@ public abstract class CollectionBinder {
 		var revokedProperties = extractRevocations( propertyHolder.getPersistentClass().getRootClass(), buildingContext );
 		final var audited = extract( Audited.class, property, buildingContext );
 		var isExcludedAtDeclaration = property.hasDirectAnnotationUsage( Audited.Excluded.class );
-		if ( audited != null && !isEffectivelyExcluded(
-				property.getName(),
-				isInitiallyExcluded(
-						property.getName(),
-						auditOverrideOnRootClassOrItsMappedSuperClasses,
-						isExcludedAtDeclaration ),
-				revokedProperties
-		) ) {
+		if ( audited != null && !isEffectivelyExcluded( modelsContext(), collection.getOwner(),
+				property.getName(), isExcludedAtDeclaration ) ) {
 			AuditHelper.bindAuditTable(
 					extract( Audited.Table.class, property, buildingContext ),
 					collection,

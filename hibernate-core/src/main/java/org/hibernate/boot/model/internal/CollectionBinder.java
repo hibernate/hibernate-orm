@@ -1690,16 +1690,16 @@ public abstract class CollectionBinder {
 			var isExcludedAtDeclaration = property.hasDirectAnnotationUsage( Audited.Excluded.class );
 			if ( audited != null && !isEffectivelyExcluded( modelsContext(), collection.getOwner(),
 					property.getName(), isExcludedAtDeclaration, revocations ) ) {
+				var lowestOverride = AuditHelper.extractLowestAuditOverridesFromHierarchy(
+						propertyHolder.getPersistentClass(),
+						buildingContext.getBootstrapContext().getModelsContext() ).get( propertyName );
 				AuditHelper.bindOneToManyAuditTable(
 						extract( Audited.Table.class, property, buildingContext ),
 						collection,
 						oneToMany.getReferencedEntityName(),
 						extract( Audited.CollectionTable.class, property, buildingContext ),
 						buildingContext,
-						propertyName,
-						AuditHelper.extractLowestAuditOverridesFromHierarchy(
-								propertyHolder.getPersistentClass(),
-								buildingContext.getBootstrapContext().getModelsContext() )
+						lowestOverride
 				);
 			}
 		}
@@ -2601,7 +2601,6 @@ public abstract class CollectionBinder {
 					extract( Audited.Table.class, property, buildingContext ),
 					collection,
 					buildingContext,
-					propertyName,
 					collectionTableOverride
 			);
 		}

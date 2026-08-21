@@ -25,6 +25,7 @@ import org.hibernate.SessionEventListener;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.audit.AuditStrategy;
 import org.hibernate.StatementObserver;
+import org.hibernate.callback.spi.InterceptorStrategy;
 import org.hibernate.cfg.StateManagementSettings;
 import org.hibernate.temporal.TemporalTableStrategy;
 import org.hibernate.context.spi.TenantCredentialsMapper;
@@ -157,6 +158,13 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	@Nullable
 	Interceptor getInterceptor();
 
+	/**
+	 * The {@link InterceptorStrategy} used to resolve and manage
+	 * {@linkplain Interceptor interceptor} instances for sessions
+	 * created by this factory.
+	 */
+	@Nonnull
+	InterceptorStrategy getInterceptorStrategy();
 	/**
 	 * The StatementObserver, if one, applied to this SessionFactory.
 	 *

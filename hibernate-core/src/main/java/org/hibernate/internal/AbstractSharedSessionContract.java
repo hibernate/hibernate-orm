@@ -1062,6 +1062,8 @@ abstract class AbstractSharedSessionContract
 				}
 			}
 
+			factoryOptions.getInterceptorStrategy().releaseInterceptor( interceptor );
+
 			if ( sessionEventsManager != null ) {
 				sessionEventsManager.end();
 			}

@@ -9,6 +9,8 @@ import jakarta.annotation.Nullable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.collection.spi.CollectionMutationInterpretation;
+import org.hibernate.engine.internal.FlushProcessingContext;
 import org.hibernate.engine.spi.ComparableExecutable;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.PostCollectionUpdateEvent;
@@ -57,6 +59,24 @@ public final class CollectionUpdateAction extends CollectionAction {
 		affectedOwnerId = ownerEntry != null ? ownerEntry.getId() : null;
 	}
 
+	/// Creates the legacy lowering of an already-prepared semantic mutation.
+	///
+	/// @since 8.0
+	public CollectionUpdateAction(
+			final @Nonnull PersistentCollection<?> collection,
+			final @Nonnull CollectionPersister persister,
+			final @Nonnull Object id,
+			final boolean emptySnapshot,
+			final @Nonnull EventSource session,
+			final @Nullable Object affectedOwner,
+			final @Nullable Object affectedOwnerId,
+			final CollectionMutationInterpretation interpretation) {
+		super( persister, collection, id, session, true, interpretation );
+		this.emptySnapshot = emptySnapshot;
+		this.affectedOwner = affectedOwner;
+		this.affectedOwnerId = affectedOwnerId;
+	}
+
 	@Override
 	@Nonnull
 	public PersistentCollection<?> getCollection() {
@@ -85,7 +105,10 @@ public final class CollectionUpdateAction extends CollectionAction {
 		final var collection = getCollection();
 		final boolean affectedByFilters = persister.isAffectedByEnabledFilters( session );
 
-		preUpdate();
+		if ( !isLifecyclePrepared() ) {
+			preUpdate();
+		}
+		getValidCollectionMutationInterpretation();
 
 		if ( !collection.wasInitialized() ) {
 			// If there were queued operations, they would have
@@ -132,10 +155,22 @@ public final class CollectionUpdateAction extends CollectionAction {
 		session.getPersistenceContextInternal().getCollectionEntry( collection ).afterAction( collection );
 		evict();
 		postUpdate();
-
-		final var statistics = session.getFactory().getStatistics();
-		if ( statistics.isStatisticsEnabled() ) {
-			statistics.updateCollection( persister.getRole() );
+		final Runnable recordStatistics = () -> {
+			final var statistics = session.getFactory().getStatistics();
+			if ( statistics.isStatisticsEnabled() ) {
+				statistics.updateCollection( persister.getRole() );
+			}
+		};
+		final var tracker = session.getPersistenceContextInternal().getCollectionFlushActionTracker();
+		if ( tracker instanceof FlushProcessingContext flushProcessingContext ) {
+			flushProcessingContext.ownerCollectionMutationCompleted(
+					affectedOwner,
+					persister.isInverse(),
+					recordStatistics
+			);
+		}
+		else {
+			recordStatistics.run();
 		}
 	}
 

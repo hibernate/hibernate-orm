@@ -29,6 +29,8 @@ import static org.hibernate.pretty.MessageHelper.collectionInfoString;
  * @author Gavin King
  */
 public final class CollectionEntry implements Serializable {
+	private static final byte REACHED = 1;
+	private static final byte PROCESSED = 1 << 1;
 
 	//ATTRIBUTES MAINTAINED BETWEEN FLUSH CYCLES
 
@@ -50,6 +52,9 @@ public final class CollectionEntry implements Serializable {
 	// "current" means the reference that was found during flush()
 	private transient @Nullable CollectionPersister currentPersister;
 	private transient @Nullable Object currentKey;
+
+	// Compact traversal state valid only for the current flush cycle
+	private transient byte flushState;
 
 	/**
 	 * For newly wrapped collections, or dereferenced collection wrappers
@@ -168,6 +173,7 @@ public final class CollectionEntry implements Serializable {
 	}
 
 	public void preFlush(PersistentCollection<?> collection) {
+		flushState = 0;
 		if ( loadedKey == null ) {
 			loadedKey = collection.getKey();
 		}
@@ -190,10 +196,49 @@ public final class CollectionEntry implements Serializable {
 		}
 	}
 
+	/// Was this collection reached during the current flush?
+	///
+	/// @since 8.0
+	public boolean wasReachedDuringFlush() {
+		return (flushState & REACHED) != 0;
+	}
+
+	/// Marks this collection as reached during the current flush.
+	///
+	/// @since 8.0
+	public void markReachedDuringFlush() {
+		flushState |= REACHED;
+	}
+
+	/// Was this collection processed during the current flush?
+	///
+	/// @since 8.0
+	public boolean wasProcessedDuringFlush() {
+		return (flushState & PROCESSED) != 0;
+	}
+
+	/// Marks this collection as processed during the current flush.
+	///
+	/// @since 8.0
+	public void markProcessedDuringFlush() {
+		if ( wasProcessedDuringFlush() ) {
+			throw new AssertionFailure( "collection was processed twice by flush()" );
+		}
+		flushState |= PROCESSED;
+	}
+
+	/// Clears traversal state before collection reachability is re-evaluated within the same flush.
+	///
+	/// @since 8.0
+	public void resetFlushState() {
+		flushState = 0;
+	}
+
 	public void postInitialize(PersistentCollection<?> collection, SharedSessionContractImplementor session) {
 		final var loadedPersister = this.loadedPersister;
 		snapshot = loadedPersister != null && isModifiable() ? collection.getSnapshot( loadedPersister ) : null;
 		collection.setSnapshot( loadedKey, role, snapshot );
+		collection.afterInitializationSnapshot();
 		if ( loadedPersister != null
 				&& session.getLoadQueryInfluencers().effectivelyBatchLoadable( loadedPersister ) ) {
 			session.getPersistenceContextInternal().getBatchFetchQueue()
@@ -205,7 +250,7 @@ public final class CollectionEntry implements Serializable {
 	 * Called after a successful flush
 	 */
 	public void postFlush(PersistentCollection<?> collection, CollectionFlushActionTracker collectionFlushActionTracker) {
-		if ( !ignore && !collectionFlushActionTracker.wasCollectionProcessed( collection ) ) {
+		if ( !ignore && !wasProcessedDuringFlush() ) {
 			throw new HibernateException( "Collection '" + collection.getRole() + "' was not processed by flush"
 					+ " (this is likely due to unsafe use of the session, for example, current use in multiple threads, or updates during entity lifecycle callbacks)");
 		}

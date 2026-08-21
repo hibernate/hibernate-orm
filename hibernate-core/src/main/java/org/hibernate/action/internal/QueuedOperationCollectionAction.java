@@ -8,6 +8,7 @@ import jakarta.annotation.Nonnull;
 
 import org.hibernate.collection.spi.AbstractPersistentCollection;
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.collection.spi.CollectionMutationInterpretation;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.persister.collection.CollectionPersister;
 
@@ -37,6 +38,18 @@ public final class QueuedOperationCollectionAction extends CollectionAction {
 			final @Nonnull EventSource session) {
 		super( persister, collection, id, session );
 		assert collection != null;
+	}
+
+	/// Creates the legacy queued-work lowering of an already-prepared semantic mutation.
+	///
+	/// @since 8.0
+	public QueuedOperationCollectionAction(
+			final @Nonnull PersistentCollection<?> collection,
+			final @Nonnull CollectionPersister persister,
+			final @Nonnull Object id,
+			final @Nonnull EventSource session,
+			final CollectionMutationInterpretation interpretation) {
+		super( persister, collection, id, session, true, interpretation );
 	}
 
 	@Override

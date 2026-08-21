@@ -8,6 +8,8 @@ import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.collection.spi.CollectionMutationInterpretation;
+import org.hibernate.engine.internal.FlushProcessingContext;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.PostCollectionRemoveEvent;
 import org.hibernate.event.spi.PostCollectionRemoveEventListener;
@@ -54,6 +56,24 @@ public final class CollectionRemoveAction extends CollectionAction {
 		final var persistenceContext = session.getPersistenceContextInternal();
 		affectedOwner = persistenceContext.getLoadedCollectionOwnerOrNull( collection );
 		affectedOwnerId = persistenceContext.getLoadedCollectionOwnerIdOrNull( collection );
+	}
+
+	/// Creates the legacy lowering of an already-prepared semantic mutation.
+	///
+	/// @since 8.0
+	public CollectionRemoveAction(
+			final @Nullable PersistentCollection<?> collection,
+			final @Nonnull CollectionPersister persister,
+			final @Nullable Object id,
+			final boolean emptySnapshot,
+			final @Nonnull EventSource session,
+			final @Nullable Object affectedOwner,
+			final @Nullable Object affectedOwnerId,
+			final @Nullable CollectionMutationInterpretation interpretation) {
+		super( persister, collection, id, session, true, interpretation );
+		this.emptySnapshot = emptySnapshot;
+		this.affectedOwner = affectedOwner;
+		this.affectedOwnerId = affectedOwnerId;
 	}
 
 	/**
@@ -111,7 +131,9 @@ public final class CollectionRemoveAction extends CollectionAction {
 
 	@Override
 	public void execute() {
-		preRemove();
+		if ( !isLifecyclePrepared() && getCollection() != null ) {
+			preRemove();
+		}
 		final var session = getSession();
 		if ( !emptySnapshot ) {
 			// an existing collection that was either nonempty or uninitialized
@@ -136,13 +158,25 @@ public final class CollectionRemoveAction extends CollectionAction {
 		final var collection = getCollection();
 		if ( collection != null ) {
 			session.getPersistenceContextInternal().getCollectionEntry( collection ).afterAction( collection );
+			postRemove();
 		}
 		evict();
-		postRemove();
-
-		final var statistics = session.getFactory().getStatistics();
-		if ( statistics.isStatisticsEnabled() ) {
-			statistics.removeCollection( getPersister().getRole() );
+		final Runnable recordStatistics = () -> {
+			final var statistics = session.getFactory().getStatistics();
+			if ( statistics.isStatisticsEnabled() ) {
+				statistics.removeCollection( getPersister().getRole() );
+			}
+		};
+		final var tracker = session.getPersistenceContextInternal().getCollectionFlushActionTracker();
+		if ( tracker instanceof FlushProcessingContext flushProcessingContext ) {
+			flushProcessingContext.ownerCollectionMutationCompleted(
+					affectedOwner,
+					getPersister().isInverse(),
+					recordStatistics
+			);
+		}
+		else {
+			recordStatistics.run();
 		}
 	}
 

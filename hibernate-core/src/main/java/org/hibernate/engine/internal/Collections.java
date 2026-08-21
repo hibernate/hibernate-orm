@@ -175,17 +175,17 @@ public final class Collections {
 				CORE_LOGGER.skippingUninitializedBytecodeLazyCollection(
 						collectionInfoString( persister, collection, collectionEntry.getCurrentKey(), session ) );
 			}
-			flushProcessingContext.markCollectionReached( collection );
-			flushProcessingContext.markCollectionProcessed( collection );
+			collectionEntry.markReachedDuringFlush();
+			collectionEntry.markProcessedDuringFlush();
 		}
 		// The reached status is just to detect any silly users
 		// who set up circular or shared references between/to collections.
-		else if ( flushProcessingContext.isCollectionReached( collection ) ) {
+		else if ( collectionEntry.wasReachedDuringFlush() ) {
 			// We've been here before
 			throw new HibernateException( "Found shared references to a collection: " + type.getRole() );
 		}
 		else {
-			flushProcessingContext.markCollectionReached( collection );
+			collectionEntry.markReachedDuringFlush();
 			logReachedCollection( collection, session, persister, collectionEntry );
 			prepareCollectionForUpdate( collection, collectionEntry, factory, flushProcessingContext );
 		}
@@ -241,7 +241,7 @@ public final class Collections {
 			CollectionEntry collectionEntry,
 			SessionFactoryImplementor factory,
 			FlushProcessingContext flushProcessingContext) {
-		flushProcessingContext.markCollectionProcessed( collection );
+		collectionEntry.markProcessedDuringFlush();
 
 		final var loadedPersister = collectionEntry.getLoadedPersister();
 		final var currentPersister = collectionEntry.getCurrentPersister();
@@ -259,14 +259,6 @@ public final class Collections {
 				checkOnChangedOwner( collection, collectionEntry, loadedPersister, currentPersister );
 
 				// do the work
-				if ( currentPersister != null ) {
-					flushProcessingContext.queueCollectionRecreate(
-							collection,
-							currentPersister,
-							collectionEntry.getCurrentKey()
-					);
-				}
-
 				if ( loadedPersister != null ) {
 					// we will need to remove the old entries
 					flushProcessingContext.queueCollectionRemove(
@@ -279,6 +271,14 @@ public final class Collections {
 						CORE_LOGGER.forcingCollectionInitialization();
 						collection.forceInitialization();
 					}
+				}
+
+				if ( currentPersister != null ) {
+					flushProcessingContext.queueCollectionRecreate(
+							collection,
+							currentPersister,
+							collectionEntry.getCurrentKey()
+					);
 				}
 			}
 			else if ( collection.isDirty() ) {

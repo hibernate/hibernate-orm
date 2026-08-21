@@ -11,6 +11,8 @@ import org.hibernate.CacheMode;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.SoftLock;
+import org.hibernate.engine.internal.FlushProcessingContext;
+import org.hibernate.engine.internal.Nullability;
 import org.hibernate.engine.spi.CachedNaturalIdValueSource;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.PersistenceContext;
@@ -22,15 +24,19 @@ import org.hibernate.event.spi.PostCommitUpdateEventListener;
 import org.hibernate.event.spi.PostUpdateEvent;
 import org.hibernate.event.spi.PostUpdateEventListener;
 import org.hibernate.event.spi.PreUpdateEvent;
+import org.hibernate.event.internal.WrapVisitor;
 import org.hibernate.generator.values.GeneratedValues;
+import org.hibernate.jpa.event.spi.CallbackType;
 import org.hibernate.metamodel.mapping.NaturalIdMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.stat.internal.StatsHelper;
 import org.hibernate.type.TypeHelper;
 
+import static org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer.UNFETCHED_PROPERTY;
 import static org.hibernate.cache.spi.entry.CacheEntryHelper.buildStructuredCacheEntry;
 import static org.hibernate.engine.internal.CacheHelper.writingToCache;
 import static org.hibernate.engine.internal.Versioning.getVersion;
+import static org.hibernate.engine.internal.Nullability.NullabilityCheckType.UPDATE;
 
 /**
  * The action for performing entity updates.
@@ -43,7 +49,7 @@ public class EntityUpdateAction extends EntityAction {
 	@Nullable
 	private final Object previousVersion;
 	@Nullable
-	private final int[] dirtyFields;
+	private int[] dirtyFields;
 	private final boolean hasDirtyCollection;
 	@Nullable
 	private final Object rowId;
@@ -57,6 +63,7 @@ public class EntityUpdateAction extends EntityAction {
 	private Object cacheEntry;
 	@Nullable
 	private SoftLock lock;
+	private boolean ownerPreUpdateDeferred;
 
 	/**
 	 * Constructs an EntityUpdateAction
@@ -154,6 +161,68 @@ public class EntityUpdateAction extends EntityAction {
 		return hasDirtyCollection;
 	}
 
+	/// Marks Jakarta Persistence owner pre-update lifecycle for positive-flush preparation.
+	///
+	/// @since 8.0
+	public void deferOwnerPreUpdate() {
+		ownerPreUpdateDeferred = getPersister().getEntityCallbacks()
+				.hasRegisteredCallbacks( CallbackType.PRE_UPDATE );
+	}
+
+	/// Invokes and incorporates a pre-update callback deferred by speculative auto-flush.
+	///
+	/// @since 8.0
+	public boolean prepareDeferredOwnerPreUpdate() {
+		if ( !ownerPreUpdateDeferred ) {
+			return false;
+		}
+		ownerPreUpdateDeferred = false;
+		final var session = getSession();
+		final var persister = getPersister();
+		session.runEntityLifecycleCallback( () -> persister.getEntityCallbacks().preUpdate( getInstance() ) );
+		refreshStateAfterOwnerCallback( persister );
+		new Nullability( session, UPDATE ).checkNullability( state, persister );
+		return true;
+	}
+
+	private void refreshStateAfterOwnerCallback(EntityPersister persister) {
+		final Object[] callbackState = persister.getValues( getInstance() );
+		final var propertyTypes = persister.getPropertyTypes();
+		if ( persister.hasCollections() ) {
+			final var wrapVisitor = new WrapVisitor( getInstance(), getId(), getSession() );
+			wrapVisitor.processEntityPropertyValues( callbackState, propertyTypes );
+			if ( wrapVisitor.isSubstitutionRequired() ) {
+				persister.setValues( getInstance(), callbackState );
+			}
+		}
+		final boolean[] dirty = new boolean[state.length];
+		if ( dirtyFields != null ) {
+			for ( int dirtyField : dirtyFields ) {
+				dirty[dirtyField] = true;
+			}
+		}
+		int dirtyCount = dirtyFields == null ? 0 : dirtyFields.length;
+		for ( int i = 0; i < state.length; i++ ) {
+			if ( state[i] == UNFETCHED_PROPERTY && callbackState[i] != UNFETCHED_PROPERTY
+					|| state[i] != callbackState[i] && !propertyTypes[i].isEqual( state[i], callbackState[i] ) ) {
+				state[i] = callbackState[i];
+				if ( !dirty[i] ) {
+					dirty[i] = true;
+					dirtyCount++;
+				}
+			}
+		}
+		if ( dirtyCount > 0 ) {
+			dirtyFields = new int[dirtyCount];
+			int index = 0;
+			for ( int i = 0; i < dirty.length; i++ ) {
+				if ( dirty[i] ) {
+					dirtyFields[index++] = i;
+				}
+			}
+		}
+	}
+
 	@Nullable
 	protected NaturalIdMapping getNaturalIdMapping() {
 		return getPersister().getNaturalIdMapping();
@@ -220,10 +289,18 @@ public class EntityUpdateAction extends EntityAction {
 			updateCacheItem( previousVersion, cacheKey, entry );
 			handleNaturalIdSharedResolutions( id, persister, persistenceContext );
 			postUpdate();
-
-			final var statistics = session.getFactory().getStatistics();
-			if ( statistics.isStatisticsEnabled() ) {
-				statistics.updateEntity( getPersister().getEntityName() );
+			final Runnable recordStatistics = () -> {
+				final var statistics = session.getFactory().getStatistics();
+				if ( statistics.isStatisticsEnabled() ) {
+					statistics.updateEntity( getPersister().getEntityName() );
+				}
+			};
+			final var tracker = persistenceContext.getCollectionFlushActionTracker();
+			if ( tracker instanceof FlushProcessingContext flushProcessingContext ) {
+				flushProcessingContext.ownerEntityUpdateCompleted( instance, recordStatistics );
+			}
+			else {
+				recordStatistics.run();
 			}
 		}
 	}

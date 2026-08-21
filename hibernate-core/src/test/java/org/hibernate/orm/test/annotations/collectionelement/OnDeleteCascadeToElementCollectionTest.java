@@ -13,6 +13,9 @@ import java.util.Set;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.exception.ConstraintViolationException;
+import org.hibernate.event.spi.PostCollectionRemoveEvent;
+import org.hibernate.event.spi.PreCollectionRemoveEvent;
+import org.hibernate.orm.test.event.collection.EventSink;
 
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
@@ -86,6 +89,7 @@ public class OnDeleteCascadeToElementCollectionTest {
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsCascadeDeleteCheck.class)
 	public void testCascadingDeleteUnloaded(SessionFactoryScope scope) {
 		var instance = new Cascading();
+		final var events = new EventSink( scope.getSessionFactory() );
 
 		scope.inTransaction(
 				session -> {
@@ -100,6 +104,7 @@ public class OnDeleteCascadeToElementCollectionTest {
 
 		StatisticsImplementor statistics = scope.getSessionFactory().getStatistics();
 		statistics.clear();
+		events.clear();
 
 		scope.inTransaction(
 				session -> {
@@ -111,6 +116,8 @@ public class OnDeleteCascadeToElementCollectionTest {
 		assertEquals( 1, statistics.getEntityDeleteCount() );
 		assertEquals( 0, statistics.getCollectionLoadCount() );
 		assertEquals( 0, statistics.getCollectionRemoveCount() );
+		assertEquals( 0, removeEventCount( events, PreCollectionRemoveEvent.class ) );
+		assertEquals( 0, removeEventCount( events, PostCollectionRemoveEvent.class ) );
 
 		scope.inTransaction(
 				session -> {
@@ -131,6 +138,7 @@ public class OnDeleteCascadeToElementCollectionTest {
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsCascadeDeleteCheck.class)
 	public void testCascadingDeleteLoaded(SessionFactoryScope scope) {
 		var instance = new Cascading();
+		final var events = new EventSink( scope.getSessionFactory() );
 
 		scope.inTransaction(
 				session -> {
@@ -145,6 +153,7 @@ public class OnDeleteCascadeToElementCollectionTest {
 
 		StatisticsImplementor statistics = scope.getSessionFactory().getStatistics();
 		statistics.clear();
+		events.clear();
 
 		scope.inTransaction(
 				session -> {
@@ -158,7 +167,11 @@ public class OnDeleteCascadeToElementCollectionTest {
 		assertEquals( 1, statistics.getEntityLoadCount() );
 		assertEquals( 1, statistics.getEntityDeleteCount() );
 		assertEquals( 2, statistics.getCollectionLoadCount() );
-		assertEquals( 0, statistics.getCollectionRemoveCount() );
+		// Database cascade suppresses collection SQL, but each loaded collection still
+		// completes its logical remove lifecycle.
+		assertEquals( 2, statistics.getCollectionRemoveCount() );
+		assertEquals( 2, removeEventCount( events, PreCollectionRemoveEvent.class ) );
+		assertEquals( 2, removeEventCount( events, PostCollectionRemoveEvent.class ) );
 
 		scope.inTransaction(
 				session -> {
@@ -173,6 +186,10 @@ public class OnDeleteCascadeToElementCollectionTest {
 									.getSingleResult() );
 				}
 		);
+	}
+
+	private static long removeEventCount(EventSink events, Class<?> eventType) {
+		return events.getEvents().stream().filter( eventType::isInstance ).count();
 	}
 
 	@Test

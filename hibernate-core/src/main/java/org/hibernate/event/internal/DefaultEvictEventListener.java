@@ -5,9 +5,9 @@
 package org.hibernate.event.internal;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.internal.Cascade;
-import org.hibernate.engine.internal.CascadePoint;
-import org.hibernate.engine.spi.CascadingActions;
+import org.hibernate.cascade.internal.Cascade;
+import org.hibernate.cascade.spi.CascadePoint;
+import org.hibernate.cascade.spi.CascadingActions;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.EvictEvent;

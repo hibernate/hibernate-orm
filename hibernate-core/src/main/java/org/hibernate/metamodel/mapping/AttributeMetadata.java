@@ -4,8 +4,8 @@
  */
 package org.hibernate.metamodel.mapping;
 
-import org.hibernate.engine.spi.CascadeStyle;
-import org.hibernate.engine.spi.CascadeStyles;
+import org.hibernate.cascade.spi.CascadeStyle;
+import org.hibernate.cascade.spi.CascadeStyles;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 

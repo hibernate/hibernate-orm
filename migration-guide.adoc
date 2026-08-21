@@ -59,6 +59,52 @@ This section describes changes to contracts (classes, interfaces, methods, etc.)
 
 The deprecated `PersistenceContext.reentrantSafeEntityEntries()` method has been removed. The replacement method is `PersistenceContext.reentrantSafeManagedEntities()`.
 
+[[action-queue-checkpoint-spi]]
+=== `ActionQueue` speculative-flush checkpoints
+
+The incubating `ActionQueue.clearFromFlushNeededCheck(int)` method has been
+replaced by an opaque checkpoint and restore contract:
+
+[source,java]
+----
+ActionQueueCheckpoint checkpoint();
+void restore(ActionQueueCheckpoint checkpoint);
+----
+
+An `ActionQueueCheckpoint` belongs to the queue instance which created it and
+does not expose the queue's internal list or graph representation.  Queue
+implementations must preserve all work registered before the checkpoint.  Work
+registered afterward is retained when it represents durable persistence-context
+state, including entity inserts, entity deletes, orphan removals, and orphan
+collection removals.  Flush-derived entity updates and ordinary collection work
+may be discarded only while their source state remains intact and can reproduce
+equivalent work during a later required flush.
+
+Collection mutation registration now uses the queue-neutral
+`addCollectionMutation(CollectionMutationInput)` method.  The collection-specific
+`addAction(CollectionRecreateAction)`, `addAction(CollectionRemoveAction)`,
+`addAction(CollectionUpdateAction)`, and
+`addAction(QueuedOperationCollectionAction)` overloads have been removed from
+the incubating `ActionQueue` SPI.  Queue implementations may lower the semantic
+input to these legacy action forms internally, but they are no longer the common
+registration vocabulary.
+
+Collection mutation interpretation, including semantics-specific delta
+production, is now associated with `CollectionSemantics` through the new default
+`getCollectionMutationInterpreter()` method.  Custom semantics remain source
+compatible and use the conservative compatibility interpreter unless they
+override this association.  `PersistentCollection` likewise has new default
+methods for exposing queued commands, a mutation generation, and the
+post-snapshot initialization step.
+
+Custom collection wrappers which apply queued commands during
+`afterInitialize()` should instead retain them until
+`afterInitializationSnapshot()`.  Hibernate captures the database-loaded state
+between these calls and then applies and clears queued commands, ensuring that an
+initialized collection has no queued commands while its snapshot still represents
+the persisted comparison baseline.  Wrappers derived from
+`AbstractPersistentCollection` inherit this sequencing automatically.
+
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Changes in Behavior
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -67,6 +113,42 @@ The deprecated `PersistenceContext.reentrantSafeEntityEntries()` method has been
 == Changes in Behavior
 
 This section describes changes in behavior that applications should be aware of.
+
+[[collection-remove-create-callback-order]]
+=== Collection remove/create callback order
+
+When moving a collection between owners or roles requires both removal of its old
+state and creation of its new state, Hibernate now invokes the collection-remove
+interceptor hook before the legacy collection-recreate hook.  The corresponding
+Hibernate collection events and semantic mutation completion are likewise
+remove-first.  Integrations must not retain the previous assumption that the
+recreate interceptor hook runs before the remove hook.
+
+[[collection-mutation-lifecycle-timing]]
+=== Collection mutation lifecycle timing
+
+Collection post-events, cache handling, successful statistics, and queued-operation
+finalization are now tied to semantic collection-mutation completion instead of to
+the last row operation produced during decomposition.  This ensures that grouped,
+reordered, and batched row work completes the correct collection lifecycle and that
+failed physical work suppresses successful completion handling.
+
+A collection mutation which produces no SQL now completes directly after its
+semantic work is sealed; Hibernate no longer creates a SQL-shaped no-op solely to
+carry its post-event.  Consequently, applications must not rely on a global order
+between pre/post collection events for unrelated collections.  Each mutation's
+pre-event still precedes its post-event, and a post-event still follows all physical
+work belonging to that mutation.
+
+[[collection-owner-update-callback-timing]]
+=== Collection owner update callback timing
+
+Jakarta Persistence owner update callbacks are coordinated once per owner and flush.
+When entity and non-inverse collection work both contribute to an applicable owner
+update, one `@PreUpdate` callback is invoked and one `@PostUpdate` callback is delayed
+until all contributing entity and collection post-events have been delivered.
+Collection create or remove work associated with owner insert/delete lifecycle does
+not by itself establish update-callback applicability.
 
 [[jdbc-resource-release-autocommit]]
 === JDBC resource release in autocommit mode

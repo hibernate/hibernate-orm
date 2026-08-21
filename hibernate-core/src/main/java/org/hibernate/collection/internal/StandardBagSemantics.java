@@ -7,6 +7,7 @@ package org.hibernate.collection.internal;
 import java.util.Collection;
 
 import org.hibernate.collection.spi.AbstractBagSemantics;
+import org.hibernate.collection.spi.CollectionMutationInterpreter;
 import org.hibernate.collection.spi.PersistentBag;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -25,6 +26,11 @@ public class StandardBagSemantics<E> extends AbstractBagSemantics<E> {
 	public static final StandardBagSemantics<?> INSTANCE = new StandardBagSemantics<>();
 
 	private StandardBagSemantics() {
+	}
+
+	@Override
+	public CollectionMutationInterpreter getCollectionMutationInterpreter() {
+		return StandardCollectionMutationInterpreter.BAG;
 	}
 
 	@Override

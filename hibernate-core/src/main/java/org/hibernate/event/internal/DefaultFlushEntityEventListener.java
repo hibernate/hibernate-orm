@@ -297,8 +297,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 			@Nullable Object nextVersion) {
 		// schedule the update
 		// note that we intentionally do _not_ pass in currentPersistentState!
-		session.getActionQueue().addAction(
-				new EntityUpdateAction(
+		final var action = new EntityUpdateAction(
 						entry.getId(),
 						values,
 						dirtyProperties,
@@ -312,8 +311,13 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 						entry.getRowId(),
 						persister,
 						session
-				)
-		);
+				);
+		final var tracker = session.getPersistenceContextInternal().getCollectionFlushActionTracker();
+		if ( tracker instanceof FlushProcessingContext flushProcessingContext
+				&& flushProcessingContext.isSpeculative() ) {
+			action.deferOwnerPreUpdate();
+		}
+		session.getActionQueue().addAction( action );
 	}
 
 	@Nullable
@@ -374,7 +378,11 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 		final Object[] values = event.getPropertyValues();
 		final var persister = entry.getPersister();
 
+		final var tracker = event.getSession().getPersistenceContextInternal().getCollectionFlushActionTracker();
+		final boolean deferOwnerPreUpdate = tracker instanceof FlushProcessingContext flushProcessingContext
+				&& flushProcessingContext.isSpeculative();
 		final boolean isDirty = entry.getStatus() != Status.DELETED
+				&& !deferOwnerPreUpdate
 				&& event.getSession().callEntityLifecycleCallback(
 						() -> persister.getEntityCallbacks().preUpdate( entity ) )
 				&& copyState( entity, persister.getPropertyTypes(), values, event.getFactory() );

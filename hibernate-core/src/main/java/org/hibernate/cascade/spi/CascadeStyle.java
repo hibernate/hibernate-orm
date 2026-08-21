@@ -2,18 +2,24 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.engine.spi;
+package org.hibernate.cascade.spi;
 
 import java.io.Serializable;
 
+import org.hibernate.Internal;
+
 /**
  * A contract for defining the aspects of cascading various persistence actions.
+ *
+ * @apiNote This is an internal strategy contract. External implementations are
+ * unsupported.
  *
  * @author Gavin King
  * @author Steve Ebersole
  *
  * @see CascadingAction
  */
+@Internal
 public interface CascadeStyle extends Serializable {
 	/**
 	 * For this style, should the given action be cascaded?

@@ -2,22 +2,19 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.engine.spi;
+package org.hibernate.cascade.spi;
 
-import java.util.HashMap;
 import java.util.Map;
 
+import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.internal.util.collections.ArrayHelper;
-
-import org.jboss.logging.Logger;
 
 /**
  * @author Steve Ebersole
  */
+@Internal
 public final class CascadeStyles {
-
-	private static final Logger LOG = Logger.getLogger( CascadeStyles.class );
 
 	/**
 	 * Disallow instantiation
@@ -46,7 +43,7 @@ public final class CascadeStyles {
 	};
 
 	/**
-	 * save / delete / update / evict / lock / merge / persist
+	 * save / delete / update / evict / merge / persist
 	 */
 	public static final CascadeStyle ALL = new BaseCascadeStyle() {
 		@Override
@@ -57,26 +54,6 @@ public final class CascadeStyles {
 		@Override
 		public String toString() {
 			return "STYLE_ALL";
-		}
-	};
-
-	/**
-	 * lock
-	 *
-	 * @deprecated because {@code org.hibernate.annotations.CascadeType#LOCK}
-	 *             was removed
-	 */
-	@Deprecated(since="7", forRemoval = true)
-	public static final CascadeStyle LOCK = new BaseCascadeStyle() {
-		@Override
-		public boolean doCascade(CascadingAction<?> action) {
-			return action == CascadingActions.LOCK
-				|| action == CascadingActions.CHECK_ON_FLUSH;
-		}
-
-		@Override
-		public String toString() {
-			return "STYLE_LOCK";
 		}
 	};
 
@@ -203,25 +180,18 @@ public final class CascadeStyles {
 		}
 	};
 
-	private static final Map<String, CascadeStyle> STYLES = buildBaseCascadeStyleMap();
-
-	private static Map<String, CascadeStyle> buildBaseCascadeStyleMap() {
-		final HashMap<String, CascadeStyle> base = new HashMap<>();
-
-		base.put( "all", ALL );
-		base.put( "all-delete-orphan", ALL_DELETE_ORPHAN );
-		base.put( "persist", PERSIST );
-		base.put( "merge", MERGE );
-		base.put( "lock", LOCK );
-		base.put( "refresh", REFRESH );
-		base.put( "evict", EVICT );
-		base.put( "delete", DELETE );
-		base.put( "remove", DELETE ); // adds remove as a sort-of alias for delete...
-		base.put( "delete-orphan", DELETE_ORPHAN );
-		base.put( "none", NONE );
-
-		return base;
-	}
+	private static final Map<String, CascadeStyle> STYLES = Map.of(
+			"all", ALL,
+			"all-delete-orphan", ALL_DELETE_ORPHAN,
+			"persist", PERSIST,
+			"merge", MERGE,
+			"refresh", REFRESH,
+			"evict", EVICT,
+			"delete", DELETE,
+			"remove", DELETE,
+			"delete-orphan", DELETE_ORPHAN,
+			"none", NONE
+	);
 
 	/**
 	 * Factory method for obtaining named cascade styles
@@ -240,20 +210,7 @@ public final class CascadeStyles {
 		}
 	}
 
-	public static void registerCascadeStyle(String name, BaseCascadeStyle cascadeStyle) {
-		LOG.tracef( "Registering external cascade style [%s : %s]", name, cascadeStyle );
-		final CascadeStyle old = STYLES.put( name, cascadeStyle );
-		if ( old != null ) {
-			LOG.debugf(
-					"External cascade style registration [%s : %s] overrode base registration [%s]",
-					name,
-					cascadeStyle,
-					old
-			);
-		}
-	}
-
-	public static abstract class BaseCascadeStyle implements CascadeStyle {
+	abstract static class BaseCascadeStyle implements CascadeStyle {
 		@Override
 		public boolean reallyDoCascade(CascadingAction<?> action) {
 			return doCascade( action );

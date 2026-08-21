@@ -8,19 +8,20 @@ import org.hibernate.action.queue.spi.decompose.DecompositionContext;
 
 import org.hibernate.TransientPropertyValueException;
 import org.hibernate.action.internal.AbstractEntityInsertAction;
-import org.hibernate.action.internal.CollectionRecreateAction;
-import org.hibernate.action.internal.CollectionRemoveAction;
-import org.hibernate.action.internal.CollectionUpdateAction;
 import org.hibernate.action.internal.EntityDeleteAction;
 import org.hibernate.action.internal.EntityUpdateAction;
 import org.hibernate.action.internal.OrphanRemovalAction;
-import org.hibernate.action.internal.QueuedOperationCollectionAction;
+import org.hibernate.action.queue.internal.PreparedCollectionMutation;
 import org.hibernate.action.queue.spi.bind.DelayedValueAccess;
+import org.hibernate.action.queue.spi.CollectionMutationId;
+import org.hibernate.action.queue.spi.MutationKind;
+import org.hibernate.action.queue.internal.decompose.collection.CollectionMutationCompletion;
 import org.hibernate.action.queue.spi.plan.FlushOperation;
 import org.hibernate.action.queue.internal.support.GraphBasedActionQueueFactory;
 import org.hibernate.action.spi.Executable;
 import org.hibernate.engine.internal.NonNullableTransientDependencies;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.internal.util.collections.CollectionHelper;
 
 import java.io.IOException;
@@ -62,7 +63,9 @@ public class Decomposer implements DecompositionContext {
 	private Set<Object> entitiesBeingDeleted = null;
 	private Map<Object, int[]> updatedAttributesByDeletedEntity = null;
 	private Map<Object, DelayedValueAccess> generatedIdentifierHandles = null;
-	private Set<Object> ownersWithUpdateCallbacks = null;
+	private Map<PersistentCollection<?>, CollectionMutationCompletion> pendingQueuedCollectionMutations;
+	private List<CollectionMutationCompletion> flushSuccessCompletions;
+	private long nextCollectionMutationId;
 	private boolean flushActive;
 
 	public Decomposer(SessionImplementor session) {
@@ -80,7 +83,9 @@ public class Decomposer implements DecompositionContext {
 		// Decomposer as arguments.
 		flushActive = true;
 		generatedIdentifierHandles = null;
-		ownersWithUpdateCallbacks = null;
+		pendingQueuedCollectionMutations = null;
+		flushSuccessCompletions = null;
+		nextCollectionMutationId = 0;
 
 		if ( CollectionHelper.isNotEmpty( insertions ) ) {
 			entitiesBeingInserted = Collections.newSetFromMap( new IdentityHashMap<>() );
@@ -135,16 +140,29 @@ public class Decomposer implements DecompositionContext {
 
 	/// End a flush operation - clear the tracking sets
 	public void endFlush() {
+		sealPendingQueuedCollectionMutations();
 		flushActive = false;
 		entitiesBeingInserted = null;
 		entitiesBeingDeleted = null;
 		updatedAttributesByDeletedEntity = null;
-		ownersWithUpdateCallbacks = null;
+		pendingQueuedCollectionMutations = null;
 	}
 
 	public void clearFlushState() {
 		endFlush();
 		generatedIdentifierHandles = null;
+		flushSuccessCompletions = null;
+	}
+
+	/// Completes semantic mutations whose physical obligations included work owned outside
+	/// the collection operation graph.
+	public void flushSucceeded() {
+		if ( flushSuccessCompletions != null ) {
+			for ( var completion : flushSuccessCompletions ) {
+				completion.flushSucceeded( session );
+			}
+			flushSuccessCompletions = null;
+		}
 	}
 
 	@Override
@@ -165,17 +183,6 @@ public class Decomposer implements DecompositionContext {
 	@Override
 	public DelayedValueAccess getGeneratedIdentifierHandle(Object entity) {
 		return generatedIdentifierHandles == null ? null : generatedIdentifierHandles.get( entity );
-	}
-
-	@Override
-	public boolean registerOwnerUpdateCallbacks(Object owner) {
-		if ( !flushActive ) {
-			return true;
-		}
-		if ( ownersWithUpdateCallbacks == null ) {
-			ownersWithUpdateCallbacks = Collections.newSetFromMap( new IdentityHashMap<>() );
-		}
-		return ownersWithUpdateCallbacks.add( owner );
 	}
 
 	/// Filter out dependencies on entities being inserted in the current flush
@@ -270,49 +277,121 @@ public class Decomposer implements DecompositionContext {
 			return;
 		}
 
-		if (executable instanceof CollectionRecreateAction cra) {
-			// MutationKind.INSERT
-			cra.getPersister().decompose(
-					cra,
-					ordinalBase,
-					session,
-					this,
-					operationConsumer
-			);
-			return;
-		}
-		if (executable instanceof CollectionRemoveAction cra) {
-			// MutationKind.DELETE
-			cra.getPersister().decompose(
-					cra,
-					ordinalBase,
-					session,
-					this,
-					operationConsumer
-			);
-			return;
-		}
-		if (executable instanceof CollectionUpdateAction cua) {
-			cua.getPersister().decompose(
-					cua,
-					ordinalBase,
-					session,
-					this,
-					operationConsumer
-			);
-			return;
-		}
-		if (executable instanceof QueuedOperationCollectionAction qoca) {
-			qoca.getPersister().decompose(
-					qoca,
-					ordinalBase,
-					session,
-					operationConsumer
-			);
+		throw new UnsupportedOperationException( "Decomposition not supported for " +  executable.getClass().getName() );
+	}
+
+	public void decompose(
+			PreparedCollectionMutation mutation,
+			int ordinalBase,
+			Consumer<FlushOperation> operationConsumer) {
+		final var resolvedMutation = mutation.resolveKey( session );
+		if ( resolvedMutation.kind() == PreparedCollectionMutation.Kind.QUEUED_OPERATIONS ) {
+			decomposeQueuedCollectionMutation( resolvedMutation, ordinalBase, operationConsumer );
 			return;
 		}
 
-		throw new UnsupportedOperationException( "Decomposition not supported for " +  executable.getClass().getName() );
+		final var collection = resolvedMutation.collection();
+		final var completion = collection == null
+				? newCollectionMutation( null )
+				: takePendingQueuedCollectionMutation( collection );
+		completion.configure( resolvedMutation );
+		try {
+			final Consumer<FlushOperation> trackedConsumer = trackedCollectionOperationConsumer(
+					completion,
+					operationConsumer
+			);
+			resolvedMutation.getPersister().decompose(
+					resolvedMutation,
+					ordinalBase,
+					session,
+					this,
+					trackedConsumer
+			);
+			completion.seal( session );
+		}
+		catch (RuntimeException | Error failure) {
+			completion.operationFailed( session );
+			throw failure;
+		}
+	}
+
+	private void decomposeQueuedCollectionMutation(
+			PreparedCollectionMutation mutation,
+			int ordinalBase,
+			Consumer<FlushOperation> operationConsumer) {
+		final var collection = mutation.collection();
+		if ( collection == null ) {
+			throw new IllegalStateException( "Queued collection mutation has no collection wrapper" );
+		}
+		if ( pendingQueuedCollectionMutations == null ) {
+			pendingQueuedCollectionMutations = new IdentityHashMap<>();
+		}
+		var completion = pendingQueuedCollectionMutations.get( collection );
+		if ( completion == null ) {
+			completion = newCollectionMutation( collection );
+			completion.requireFlushSuccess();
+			pendingQueuedCollectionMutations.put( collection, completion );
+			if ( flushSuccessCompletions == null ) {
+				flushSuccessCompletions = new ArrayList<>();
+			}
+			flushSuccessCompletions.add( completion );
+		}
+		try {
+			mutation.getPersister().decompose(
+					mutation,
+					ordinalBase,
+					session,
+					this,
+					trackedCollectionOperationConsumer( completion, operationConsumer )
+			);
+		}
+		catch (RuntimeException | Error failure) {
+			completion.operationFailed( session );
+			throw failure;
+		}
+	}
+
+	private CollectionMutationCompletion takePendingQueuedCollectionMutation(
+			PersistentCollection<?> collection) {
+		if ( pendingQueuedCollectionMutations != null ) {
+			final var pending = pendingQueuedCollectionMutations.remove( collection );
+			if ( pending != null ) {
+				return pending;
+			}
+		}
+		return newCollectionMutation( collection );
+	}
+
+	private CollectionMutationCompletion newCollectionMutation(PersistentCollection<?> collection) {
+		return new CollectionMutationCompletion(
+				new CollectionMutationId( nextCollectionMutationId++ ),
+				collection
+		);
+	}
+
+	private static Consumer<FlushOperation> trackedCollectionOperationConsumer(
+			CollectionMutationCompletion completion,
+			Consumer<FlushOperation> operationConsumer) {
+		return operation -> {
+			final var completionHandler = operation.takePostExecutionCallback();
+			if ( completionHandler != null ) {
+				completion.registerCompletionHandler( completionHandler );
+			}
+			if ( operation.getKind() != MutationKind.NO_OP ) {
+				completion.registerOperation( operation );
+				operationConsumer.accept( operation );
+			}
+		};
+	}
+
+	private void sealPendingQueuedCollectionMutations() {
+		if ( pendingQueuedCollectionMutations != null ) {
+			for ( var completion : pendingQueuedCollectionMutations.values() ) {
+				if ( completion.getState() == CollectionMutationCompletion.State.REGISTERING ) {
+					completion.seal( session );
+				}
+			}
+		}
 	}
 
 	/// Track an insert action that has unresolved dependencies on transient entities.

@@ -7,6 +7,8 @@ package org.hibernate.action.internal;
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.collection.spi.CollectionMutationInterpretation;
+import org.hibernate.engine.internal.FlushProcessingContext;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.PostCollectionRecreateEvent;
 import org.hibernate.event.spi.PostCollectionRecreateEventListener;
@@ -46,6 +48,22 @@ public final class CollectionRecreateAction extends CollectionAction {
 		this.affectedOwnerId = ownerEntry != null ? ownerEntry.getId() : null;
 	}
 
+	/// Creates the legacy lowering of an already-prepared semantic mutation.
+	///
+	/// @since 8.0
+	public CollectionRecreateAction(
+			final @Nonnull PersistentCollection<?> collection,
+			final @Nonnull CollectionPersister persister,
+			final @Nullable Object id,
+			final @Nonnull EventSource session,
+			final @Nullable Object affectedOwner,
+			final @Nullable Object affectedOwnerId,
+			final CollectionMutationInterpretation interpretation) {
+		super( persister, collection, id, session, true, interpretation );
+		this.affectedOwner = affectedOwner;
+		this.affectedOwnerId = affectedOwnerId;
+	}
+
 	@Override
 	@Nonnull
 	public PersistentCollection<?> getCollection() {
@@ -59,7 +77,9 @@ public final class CollectionRecreateAction extends CollectionAction {
 		// this method is called when a new non-null collection is persisted
 		// or when an existing (non-null) collection is moved to a new owner
 		final var collection = getCollection();
-		preRecreate();
+		if ( !isLifecyclePrepared() ) {
+			preRecreate();
+		}
 		final var session = getSession();
 		final var persister = getPersister();
 		final Object key = getKey();
@@ -68,6 +88,7 @@ public final class CollectionRecreateAction extends CollectionAction {
 		final var event = eventMonitor.beginCollectionRecreateEvent();
 		boolean success = false;
 		try {
+			getValidCollectionMutationInterpretation();
 			persister.recreate( collection, key, session );
 			success = true;
 		}
@@ -78,10 +99,22 @@ public final class CollectionRecreateAction extends CollectionAction {
 		session.getPersistenceContextInternal().getCollectionEntry( collection ).afterAction( collection );
 		evict();
 		postRecreate();
-
-		final var statistics = session.getFactory().getStatistics();
-		if ( statistics.isStatisticsEnabled() ) {
-			statistics.recreateCollection( persister.getRole() );
+		final Runnable recordStatistics = () -> {
+			final var statistics = session.getFactory().getStatistics();
+			if ( statistics.isStatisticsEnabled() ) {
+				statistics.recreateCollection( persister.getRole() );
+			}
+		};
+		final var tracker = session.getPersistenceContextInternal().getCollectionFlushActionTracker();
+		if ( tracker instanceof FlushProcessingContext flushProcessingContext ) {
+			flushProcessingContext.ownerCollectionMutationCompleted(
+					affectedOwner,
+					persister.isInverse(),
+					recordStatistics
+			);
+		}
+		else {
+			recordStatistics.run();
 		}
 	}
 

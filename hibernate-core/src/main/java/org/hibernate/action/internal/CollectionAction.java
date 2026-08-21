@@ -11,6 +11,7 @@ import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.collection.spi.CollectionMutationInterpretation;
 import org.hibernate.engine.spi.ComparableExecutable;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.EventSource;
@@ -40,12 +41,34 @@ public abstract class CollectionAction implements ComparableExecutable {
 	private final Object key;
 	@Nonnull
 	private final String collectionRole;
+	private final boolean lifecyclePrepared;
+	@Nullable
+	private final CollectionMutationInterpretation interpretation;
 
 	protected CollectionAction(
 			final @Nonnull CollectionPersister persister,
 			final @Nullable PersistentCollection<?> collection,
 			final @Nullable Object key,
 			final @Nonnull EventSource session) {
+		this( persister, collection, key, session, false );
+	}
+
+	protected CollectionAction(
+			final @Nonnull CollectionPersister persister,
+			final @Nullable PersistentCollection<?> collection,
+			final @Nullable Object key,
+			final @Nonnull EventSource session,
+			final boolean lifecyclePrepared) {
+		this( persister, collection, key, session, lifecyclePrepared, null );
+	}
+
+	protected CollectionAction(
+			final @Nonnull CollectionPersister persister,
+			final @Nullable PersistentCollection<?> collection,
+			final @Nullable Object key,
+			final @Nonnull EventSource session,
+			final boolean lifecyclePrepared,
+			final @Nullable CollectionMutationInterpretation interpretation) {
 		assert persister != null;
 		assert session != null;
 		this.persister = persister;
@@ -53,6 +76,36 @@ public abstract class CollectionAction implements ComparableExecutable {
 		this.key = key;
 		this.collectionRole = persister.getRole();
 		this.collection = collection;
+		this.lifecyclePrepared = lifecyclePrepared;
+		this.interpretation = interpretation;
+	}
+
+	/// Whether shared mutation preparation already delivered the interceptor hook and Hibernate pre-event.
+	///
+	/// @since 8.0
+	public final boolean isLifecyclePrepared() {
+		return lifecyclePrepared;
+	}
+
+	/// The queue-neutral interpretation frozen before this action was lowered.
+	///
+	/// @since 8.0
+	@Nullable
+	public final CollectionMutationInterpretation getCollectionMutationInterpretation() {
+		return interpretation;
+	}
+
+	/// Return the interpretation after verifying that the collection still has
+	/// the structural state from which it was produced.
+	@Nullable
+	protected final CollectionMutationInterpretation getValidCollectionMutationInterpretation() {
+		if ( interpretation == null ) {
+			return null;
+		}
+		if ( collection != null && !interpretation.isValid( collection ) ) {
+			throw new IllegalStateException( "Collection changed after its mutation interpretation was frozen" );
+		}
+		return interpretation;
 	}
 
 	/**

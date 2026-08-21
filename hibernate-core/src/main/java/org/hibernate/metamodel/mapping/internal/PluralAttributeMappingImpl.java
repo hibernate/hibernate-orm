@@ -10,7 +10,7 @@ import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.profile.internal.FetchProfileAffectee;
-import org.hibernate.engine.spi.CascadeStyle;
+import org.hibernate.cascade.spi.CascadeStyle;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.Generator;

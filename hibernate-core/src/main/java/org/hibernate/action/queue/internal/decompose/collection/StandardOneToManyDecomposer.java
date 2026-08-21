@@ -7,7 +7,7 @@ package org.hibernate.action.queue.internal.decompose.collection;
 import org.hibernate.action.queue.spi.decompose.collection.CollectionJdbcOperations;
 import org.hibernate.action.queue.spi.decompose.collection.CollectionMutationPlanContributor;
 
-import org.hibernate.action.internal.CollectionRemoveAction;
+import org.hibernate.action.queue.internal.PreparedCollectionMutation;
 import org.hibernate.action.queue.spi.MutationKind;
 import org.hibernate.action.queue.spi.decompose.DecompositionContext;
 import org.hibernate.action.queue.spi.plan.FlushOperation;
@@ -15,6 +15,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.collection.OneToManyPersister;
 
+import java.util.List;
 import java.util.function.Consumer;
 
 /// Standard one-to-many decomposer for single-table and simple joined inheritance
@@ -37,14 +38,11 @@ public class StandardOneToManyDecomposer extends AbstractOneToManyDecomposer {
 
 	@Override
 	public void decomposeRemove(
-			CollectionRemoveAction action,
+			PreparedCollectionMutation action,
 			int ordinalBase,
 			SharedSessionContractImplementor session,
 			DecompositionContext decompositionContext,
 			Consumer<FlushOperation> operationConsumer) {
-		// Always fire PRE event, even if no SQL operations will be needed
-		DecompositionSupport.firePreRemove( persister, action.getCollection(), action.getAffectedOwner(), session );
-
 		// Create post-execution callback to handle post-execution work (afterAction, cache, events, stats)
 		final var postRemoveHandling = new PostCollectionRemoveHandling(
 				persister,
@@ -72,6 +70,12 @@ public class StandardOneToManyDecomposer extends AbstractOneToManyDecomposer {
 					new RemoveBindPlan( action.getKey(), persister, mutationPlanContributor ),
 					ordinalBase * 1_000,
 					"RemoveAllRows(" + persister.getRolePath() + ")"
+			);
+			DecompositionSupport.attachExecutionMonitor(
+					List.of( plannedOp ),
+					CollectionExecutionMonitor.Kind.REMOVE,
+					action.getKey(),
+					persister.getRole()
 			);
 			// and attach to the operation
 			plannedOp.setPostExecutionCallback( postRemoveHandling );

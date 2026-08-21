@@ -11,6 +11,7 @@ import org.hibernate.event.spi.PostCollectionRecreateEvent;
 import org.hibernate.event.spi.PreCollectionRemoveEvent;
 import org.hibernate.event.spi.PreCollectionUpdateEvent;
 import org.hibernate.orm.test.event.collection.Entity;
+import org.hibernate.orm.test.event.collection.EventAnalyzer;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -69,16 +70,17 @@ public class DetachedMultipleCollectionChangeTest {
 			s.persist( mce.get() );
 		} );
 
-		// Event ordering differs between ActionQueue implementations
-		if ( isGraphBasedActionQueue( scope ) ) {
-			checkListener( listeners, listeners.getPreCollectionRecreateListener(),
-					mce.get(), oldRefentities1, eventCount++ );
-			checkListener( listeners, listeners.getPreCollectionRecreateListener(),
-					mce.get(), oldRefentities2, eventCount++ );
-			checkListener( listeners, listeners.getPostCollectionRecreateListener(),
-					mce.get(), oldRefentities1, eventCount++ );
-			checkListener( listeners, listeners.getPostCollectionRecreateListener(),
-					mce.get(), oldRefentities2, eventCount++ );
+		// Shared preparation may separate pre- and post-events
+		if ( usesSharedCollectionLifecyclePreparation() ) {
+			final var analysis = EventAnalyzer.matchEvents( listeners.getEvents() );
+			assertEquals( 0, analysis.unmatchedPre().size() );
+			assertEquals( 0, analysis.unmatchedPost().size() );
+			assertEquals( 2, analysis.pairs().get( EventAnalyzer.Phase.RECREATE ).size() );
+			for ( var pair : analysis.pairs().get( EventAnalyzer.Phase.RECREATE ) ) {
+				assertEquals( mce.get(), pair.pre().getAffectedOwnerOrNull() );
+				assertEquals( mce.get(), pair.post().getAffectedOwnerOrNull() );
+			}
+			eventCount = 4;
 		}
 		else {
 			checkListener( listeners, listeners.getPreCollectionRecreateListener(),
@@ -250,11 +252,8 @@ public class DetachedMultipleCollectionChangeTest {
 		assertEquals( nEventsExpected, listeners.getEvents().size() );
 	}
 
-	private boolean isGraphBasedActionQueue(SessionFactoryScope scope) {
-		return scope.fromSession( s -> {
-			org.hibernate.action.queue.spi.ActionQueue aq = s.unwrap(org.hibernate.event.spi.EventSource.class).getActionQueue();
-			return aq instanceof org.hibernate.action.queue.internal.GraphBasedActionQueue;
-		} );
+	private boolean usesSharedCollectionLifecyclePreparation() {
+		return true;
 	}
 
 }

@@ -2,16 +2,16 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.engine.spi;
+package org.hibernate.cascade.spi;
 
 import jakarta.annotation.Nullable;
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
-import org.hibernate.LockMode;
-import org.hibernate.LockOptions;
 import org.hibernate.TransientPropertyValueException;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.internal.CascadePoint;
+import org.hibernate.engine.spi.EntityEntry;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.DeleteContext;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.MergeContext;
@@ -90,48 +90,6 @@ public class CascadingActions {
 		@Override
 		public String toString() {
 			return "ACTION_DELETE";
-		}
-	};
-
-	/**
-	 * @see org.hibernate.Session#lock(Object, LockMode)
-	 *
-	 * @deprecated because {@code org.hibernate.annotations.CascadeType#LOCK}
-	 *             was removed
-	 */
-	@Deprecated(since="7", forRemoval = true)
-	public static final CascadingAction<LockOptions> LOCK = new BaseCascadingAction<>() {
-		@Override
-		public void cascade(
-				EventSource session,
-				Object child,
-				String childEntityName,
-				String parentEntityName,
-				String propertyName,
-				@Nullable List<String> attributePath,
-				LockOptions lockOptions,
-				boolean isCascadeDeleteEnabled) {
-			session.lock( childEntityName, child, lockOptions );
-		}
-
-		@Override
-		public Iterator<?> getCascadableChildrenIterator(
-				EventSource session,
-				CollectionType collectionType,
-				Object collection) {
-			// lock doesn't cascade to uninitialized collections
-			return getLoadedElementsIterator( collectionType, collection );
-		}
-
-		@Override
-		public boolean deleteOrphans() {
-			//TODO: should orphans really be deleted during lock???
-			return false;
-		}
-
-		@Override
-		public String toString() {
-			return "ACTION_LOCK";
 		}
 	};
 
@@ -517,7 +475,7 @@ public class CascadingActions {
 		}
 	}
 
-	public abstract static class BaseCascadingAction<T> implements CascadingAction<T> {
+	abstract static class BaseCascadingAction<T> implements CascadingAction<T> {
 		@Override
 		public boolean performOnLazyProperty() {
 			return true;

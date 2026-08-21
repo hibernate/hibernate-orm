@@ -35,16 +35,14 @@ public class DefaultAutoFlushEventListener extends AbstractFlushingEventListener
 		try {
 			eventListenerManager.partialFlushStart();
 			if ( flushMightBeNeeded( event, source ) ) {
-				// Need to get the number of collection removals before flushing to executions
-				// (because flushing to executions can add collection removal actions to the action queue).
 				final var actionQueue = source.getActionQueue();
+				final var actionQueueCheckpoint = actionQueue.checkpoint();
 				final var session = event.getSession();
 				final var persistenceContext = session.getPersistenceContextInternal();
-				final var flushProcessingContext = beginFlushProcessing( session, persistenceContext );
+				final var flushProcessingContext = beginFlushProcessing( session, persistenceContext, true );
 				if ( !event.isSkipPreFlush() ) {
 					preFlush( session, persistenceContext, flushProcessingContext );
 				}
-				final int oldSize = actionQueue.numberOfCollectionRemovals();
 				flushEverythingToExecutions( event, persistenceContext, session, flushProcessingContext );
 				if ( flushIsReallyNeeded( event, source ) ) {
 					EVENT_LISTENER_LOGGER.needToExecuteFlush();
@@ -69,7 +67,7 @@ public class DefaultAutoFlushEventListener extends AbstractFlushingEventListener
 				else {
 					EVENT_LISTENER_LOGGER.noNeedToExecuteFlush();
 					event.setFlushRequired( false );
-					actionQueue.clearFromFlushNeededCheck( oldSize );
+					actionQueue.restore( actionQueueCheckpoint );
 				}
 			}
 		}
@@ -78,7 +76,7 @@ public class DefaultAutoFlushEventListener extends AbstractFlushingEventListener
 			eventMonitor.completePartialFlushEvent( partialFlushEvent, event );
 			eventListenerManager.partialFlushEnd(
 					event.getNumberOfEntitiesProcessed(),
-					event.getNumberOfEntitiesProcessed()
+					event.getNumberOfCollectionsProcessed()
 			);
 		}
 	}

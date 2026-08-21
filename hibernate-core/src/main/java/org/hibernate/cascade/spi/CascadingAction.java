@@ -2,14 +2,15 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.engine.spi;
+package org.hibernate.cascade.spi;
 
 import java.util.Iterator;
 import java.util.List;
 
 import jakarta.annotation.Nullable;
 import org.hibernate.Incubating;
-import org.hibernate.engine.internal.CascadePoint;
+import org.hibernate.Internal;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.AssociationType;
@@ -20,11 +21,15 @@ import org.hibernate.type.Type;
 /**
  * A session action that may be cascaded from parent entity to its children
  *
+ * @apiNote This is an internal strategy contract. External implementations are
+ * unsupported and are rejected by the cascade coordinator.
+ *
  * @param <T> The type of some context propagated with the cascading action
  *
  * @author Gavin King
  * @author Steve Ebersole
  */
+@Internal
 public interface CascadingAction<T> {
 
 	/**

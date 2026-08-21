@@ -5,6 +5,7 @@
 package org.hibernate.action.queue.internal.exec;
 
 import org.hibernate.action.queue.spi.plan.FlushOperation;
+import org.hibernate.action.queue.spi.bind.GroupedRowBindPlan;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.sql.model.PreparableMutationOperation;
 
@@ -16,7 +17,14 @@ public class StandardPlanStepExecutor extends AbstractStepExecutor {
 
 	@Override
 	public void executePreparable(PreparableMutationOperation preparable, FlushOperation flushOperation) {
-		executePreparableDirectly( preparable, flushOperation );
+		if ( flushOperation.getBindPlan() instanceof GroupedRowBindPlan groupedRowBindPlan ) {
+			for ( int bindingIndex = 0; bindingIndex < groupedRowBindPlan.getBindingCount(); bindingIndex++ ) {
+				executePreparableDirectly( preparable, flushOperation, bindingIndex );
+			}
+		}
+		else {
+			executePreparableDirectly( preparable, flushOperation );
+		}
 	}
 
 }

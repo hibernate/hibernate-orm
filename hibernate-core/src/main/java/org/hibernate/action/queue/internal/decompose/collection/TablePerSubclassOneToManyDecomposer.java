@@ -7,7 +7,7 @@ package org.hibernate.action.queue.internal.decompose.collection;
 import org.hibernate.action.queue.spi.decompose.collection.CollectionJdbcOperations;
 import org.hibernate.action.queue.spi.decompose.collection.CollectionMutationPlanContributor;
 
-import org.hibernate.action.internal.CollectionRemoveAction;
+import org.hibernate.action.queue.internal.PreparedCollectionMutation;
 import org.hibernate.action.queue.spi.MutationKind;
 import org.hibernate.action.queue.spi.decompose.DecompositionContext;
 import org.hibernate.action.queue.spi.plan.FlushOperation;
@@ -130,14 +130,11 @@ public class TablePerSubclassOneToManyDecomposer extends AbstractOneToManyDecomp
 
 	@Override
 	public void decomposeRemove(
-			CollectionRemoveAction action,
+			PreparedCollectionMutation action,
 			int ordinalBase,
 			SharedSessionContractImplementor session,
 			DecompositionContext decompositionContext,
 			Consumer<FlushOperation> operationConsumer) {
-		// Always fire PRE event, even if no SQL operations will be needed
-		DecompositionSupport.firePreRemove( persister, action.getCollection(), action.getAffectedOwner(), session );
-
 		// Create callback to handle post-execution work (afterAction, cache, events, stats)
 		final var postRemoveHandling = new PostCollectionRemoveHandling(
 				persister,
@@ -170,6 +167,12 @@ public class TablePerSubclassOneToManyDecomposer extends AbstractOneToManyDecomp
 			} );
 
 			if ( !operations.isEmpty() ) {
+				DecompositionSupport.attachExecutionMonitor(
+						operations,
+						CollectionExecutionMonitor.Kind.REMOVE,
+						action.getKey(),
+						persister.getRole()
+				);
 				// Attach post-execution callback to the last operation
 				operations.get( operations.size() - 1 ).setPostExecutionCallback( postRemoveHandling );
 				operations.forEach( operationConsumer );

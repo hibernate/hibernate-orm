@@ -8,13 +8,12 @@ package org.hibernate.event.internal;
 import jakarta.annotation.Nullable;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
-import org.hibernate.action.internal.QueuedOperationCollectionAction;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.internal.BidirectionalAssociationSynchronizer;
-import org.hibernate.engine.internal.Cascade;
-import org.hibernate.engine.internal.CascadePoint;
+import org.hibernate.cascade.internal.Cascade;
+import org.hibernate.cascade.spi.CascadePoint;
 import org.hibernate.engine.internal.FlushProcessingContext;
-import org.hibernate.engine.spi.CascadingActions;
+import org.hibernate.cascade.spi.CascadingActions;
 import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.EntityEntry;
@@ -88,7 +87,14 @@ public abstract class AbstractFlushingEventListener {
 	protected FlushProcessingContext beginFlushProcessing(
 			@Nonnull EventSource session,
 			@Nonnull PersistenceContext persistenceContext) {
-		final var flushProcessingContext = new FlushProcessingContext( session );
+		return beginFlushProcessing( session, persistenceContext, false );
+	}
+
+	protected FlushProcessingContext beginFlushProcessing(
+			@Nonnull EventSource session,
+			@Nonnull PersistenceContext persistenceContext,
+			boolean speculative) {
+		final var flushProcessingContext = new FlushProcessingContext( session, speculative );
 		persistenceContext.setCollectionFlushActionTracker( flushProcessingContext );
 		return flushProcessingContext;
 	}
@@ -108,7 +114,7 @@ public abstract class AbstractFlushingEventListener {
 		// we could move this inside if we wanted to
 		// tolerate collection initializations during
 		// collection dirty checking:
-		prepareCollectionFlushes( persistenceContext, flushProcessingContext );
+		prepareCollectionFlushes( persistenceContext );
 		// now, any collections that are initialized
 		// inside this block do not get updated - they
 		// are ignored until the next flush
@@ -207,9 +213,7 @@ public abstract class AbstractFlushingEventListener {
 	/**
 	 * Initialize flush-local collection state, including the dirty check.
 	 */
-	private void prepareCollectionFlushes(
-			@Nonnull PersistenceContext persistenceContext,
-			@Nonnull FlushProcessingContext flushProcessingContext) {
+	private void prepareCollectionFlushes(@Nonnull PersistenceContext persistenceContext) {
 		// Initialize dirty flags for arrays + collections with composite elements
 		// and reset flush-local collection processing state.
 		EVENT_LISTENER_LOGGER.dirtyCheckingCollections();
@@ -219,7 +223,6 @@ public abstract class AbstractFlushingEventListener {
 					(InstanceIdentityMap<PersistentCollection<?>, CollectionEntry>)
 							collectionEntries;
 			for ( var entry : identityMap.toArray() ) {
-				flushProcessingContext.beginCollectionFlush( entry.getKey() );
 				entry.getValue().preFlush( entry.getKey() );
 			}
 		}
@@ -312,17 +315,15 @@ public abstract class AbstractFlushingEventListener {
 					// uninitialized. Once initialized, normal collection dirty-checking/action
 					// handling owns the changes.
 					if ( !collection.wasInitialized() && collection.hasQueuedOperations() ) {
-						actionQueue.addAction(
-								new QueuedOperationCollectionAction(
-										collection,
-										collectionEntry.getLoadedPersister(),
-										collectionEntry.getLoadedKey(),
-										session
-								)
+						flushProcessingContext.queueCollectionQueuedOperations(
+								collection,
+								collectionEntry.getLoadedPersister(),
+								collectionEntry.getLoadedKey()
 						);
 					}
 				}, true );
 
+		flushProcessingContext.registerCollectionMutationInputs();
 		actionQueue.sortCollectionActions();
 
 		return count;
@@ -342,7 +343,7 @@ public abstract class AbstractFlushingEventListener {
 					(InstanceIdentityMap<PersistentCollection<?>, CollectionEntry>)
 							collectionEntries;
 			for ( var entry : identityMap.toArray() ) {
-				if ( !flushProcessingContext.wasCollectionReached( entry.getKey() )
+				if ( !entry.getValue().wasReachedDuringFlush()
 						&& !entry.getValue().isIgnore() ) {
 					processUnreachableCollection( entry.getKey(), session, flushProcessingContext );
 				}

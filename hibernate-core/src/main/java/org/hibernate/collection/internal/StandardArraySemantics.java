@@ -12,6 +12,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 import org.hibernate.collection.spi.CollectionInitializerProducer;
+import org.hibernate.collection.spi.CollectionMutationInterpreter;
 import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.collection.spi.PersistentArrayHolder;
 import org.hibernate.collection.spi.PersistentCollection;
@@ -45,6 +46,11 @@ public class StandardArraySemantics<E> implements CollectionSemantics<E[], E> {
 	public static final StandardArraySemantics<?> INSTANCE = new StandardArraySemantics<>();
 
 	private StandardArraySemantics() {
+	}
+
+	@Override
+	public CollectionMutationInterpreter getCollectionMutationInterpreter() {
+		return StandardCollectionMutationInterpreter.ARRAY;
 	}
 
 	@Override

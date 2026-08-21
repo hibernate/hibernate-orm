@@ -10,6 +10,7 @@ import org.hibernate.action.queue.spi.plan.FlushOperation;
 
 import org.hibernate.action.queue.spi.MutationKind;
 import org.hibernate.action.queue.spi.bind.JdbcValueBindings;
+import org.hibernate.action.queue.spi.bind.GroupedRowBindPlan;
 import org.hibernate.action.queue.internal.cyclebreak.FixupSynthesizer;
 import org.hibernate.engine.jdbc.mutation.internal.JdbcValueBindingsImpl;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -78,30 +79,43 @@ public abstract class AbstractStepExecutor implements PlanStepExecutor {
 		for ( int i = 0; i < flushOperations.size(); i++ ) {
 			var flushOperation = flushOperations.get( i );
 			final boolean execute = beforeOperationExecution( flushOperation );
-
-			// No-op operations: only carry post-execution callback, skip SQL execution
-			if ( flushOperation.getKind() != MutationKind.NO_OP && execute ) {
-				final var bindPlan = flushOperation.getBindPlan();
-				if ( bindPlan.getGeneratedValuesCollector() != null ) {
-					// we need to execute these without batching
-					executeWithGeneratedValues( flushOperation );
-				}
-				else {
-					final var jdbcOperation = flushOperation.getJdbcOperation();
-					if ( jdbcOperation instanceof PreparableMutationOperation preparable ) {
-						executePreparable( preparable, flushOperation );
-					}
-					else if ( jdbcOperation instanceof SelfExecutingUpdateOperation selfExecuting ) {
-						executeSelfExecuting( selfExecuting, flushOperation );
+			try {
+				// No-op operations: only carry post-execution callback, skip SQL execution
+				if ( flushOperation.getKind() != MutationKind.NO_OP && execute ) {
+					beforePhysicalExecution( flushOperation );
+					final var bindPlan = flushOperation.getBindPlan();
+					if ( bindPlan.getGeneratedValuesCollector() != null ) {
+						// we need to execute these without batching
+						executeWithGeneratedValues( flushOperation );
 					}
 					else {
-						throw new IllegalStateException(
-								"Unsupported JdbcOperation type: " + jdbcOperation.getClass().getName() );
+						final var jdbcOperation = flushOperation.getJdbcOperation();
+						if ( jdbcOperation instanceof PreparableMutationOperation preparable ) {
+							executePreparable( preparable, flushOperation );
+						}
+						else if ( jdbcOperation instanceof SelfExecutingUpdateOperation selfExecuting ) {
+							executeSelfExecuting( selfExecuting, flushOperation );
+						}
+						else {
+							throw new IllegalStateException(
+									"Unsupported JdbcOperation type: " + jdbcOperation.getClass().getName() );
+						}
 					}
 				}
-			}
 
-			afterOperationExecution( flushOperation, newlyManagedEntityConsumer, fixupOperationConsumer );
+				afterOperationExecution( flushOperation, newlyManagedEntityConsumer, fixupOperationConsumer );
+			}
+			catch (RuntimeException | Error failure) {
+				afterFailedExecution( flushOperation );
+				throw failure;
+			}
+		}
+	}
+
+	protected void beforePhysicalExecution(FlushOperation flushOperation) {
+		final var executionMonitor = flushOperation.getExecutionMonitor();
+		if ( executionMonitor != null ) {
+			executionMonitor.beforeExecution( (SessionImplementor) session );
 		}
 	}
 
@@ -119,6 +133,21 @@ public abstract class AbstractStepExecutor implements PlanStepExecutor {
 			FlushOperation flushOperation,
 			Consumer<Object> newlyManagedEntityConsumer,
 			Consumer<FlushOperation> fixupOperationConsumer) {
+		afterSuccessfulPhysicalExecution( flushOperation );
+		afterOperationCompletion( flushOperation, newlyManagedEntityConsumer, fixupOperationConsumer );
+	}
+
+	protected void afterSuccessfulPhysicalExecution(FlushOperation flushOperation) {
+		final var executionMonitor = flushOperation.getExecutionMonitor();
+		if ( executionMonitor != null && !flushOperation.isExecutionSkipped() ) {
+			executionMonitor.afterSuccessfulExecution( (SessionImplementor) session );
+		}
+	}
+
+	protected void afterOperationCompletion(
+			FlushOperation flushOperation,
+			Consumer<Object> newlyManagedEntityConsumer,
+			Consumer<FlushOperation> fixupOperationConsumer) {
 		if ( flushOperation.getPostExecutionCallback() != null ) {
 			flushOperation.getPostExecutionCallback().handle( (SessionImplementor) session );
 		}
@@ -132,34 +161,51 @@ public abstract class AbstractStepExecutor implements PlanStepExecutor {
 			}
 		}
 
+		FlushOperation fixupOperation = null;
 		if ( fixupOperationConsumer != null ) {
 			// If this op was cycle-broken, the patcher stored intended FK values in op.intendedFkValues.
-			if ( flushOperation.hasIntendedFkValues() ) {
+			if ( flushOperation.hasIntendedFkValues() || flushOperation.hasIntendedUniqueValues() ) {
 				final Object entityId = flushOperation.getBindPlan().getEntityId();
 
-				final FlushOperation fix = fixupSynthesizer.synthesizeFixupOperationIfNeeded(
+				fixupOperation = fixupSynthesizer.synthesizeFixupOperationIfNeeded(
 						flushOperation,
 						entityId,
 						session
 				);
-				if ( fix != null ) {
-					fixupOperationConsumer.accept( fix );
+			}
+		}
+
+		final var collectionMutationCompletion = flushOperation.getCollectionMutationCompletion();
+		if ( collectionMutationCompletion != null ) {
+			if ( flushOperation.isCollectionMutationFixupReserved() ) {
+				if ( fixupOperation == null ) {
+					collectionMutationCompletion.releaseReservedFixup(
+							flushOperation,
+							(SessionImplementor) session
+					);
+				}
+				else {
+					collectionMutationCompletion.attachReservedFixup( flushOperation, fixupOperation );
 				}
 			}
-
-			// If this op was cycle-broken for unique swap, the patcher stored intended values in op.intendedUniqueValues.
-			if ( flushOperation.hasIntendedUniqueValues() ) {
-				final Object entityId = flushOperation.getBindPlan().getEntityId();
-
-				final FlushOperation fix = fixupSynthesizer.synthesizeFixupOperationIfNeeded(
-						flushOperation,
-						entityId,
-						session
-				);
-				if ( fix != null ) {
-					fixupOperationConsumer.accept( fix );
-				}
+			if ( fixupOperation != null ) {
+				fixupOperationConsumer.accept( fixupOperation );
 			}
+			collectionMutationCompletion.operationSucceeded( (SessionImplementor) session );
+		}
+		else if ( fixupOperation != null ) {
+			fixupOperationConsumer.accept( fixupOperation );
+		}
+	}
+
+	protected void afterFailedExecution(FlushOperation flushOperation) {
+		final var executionMonitor = flushOperation.getExecutionMonitor();
+		if ( executionMonitor != null ) {
+			executionMonitor.afterFailedExecution( (SessionImplementor) session );
+		}
+		final var collectionMutationCompletion = flushOperation.getCollectionMutationCompletion();
+		if ( collectionMutationCompletion != null ) {
+			collectionMutationCompletion.operationFailed( (SessionImplementor) session );
 		}
 	}
 
@@ -211,12 +257,25 @@ public abstract class AbstractStepExecutor implements PlanStepExecutor {
 	protected void executePreparableDirectly(
 			PreparableMutationOperation preparable,
 			FlushOperation flushOperation) {
+		executePreparableDirectly( preparable, flushOperation, -1 );
+	}
+
+	protected void executePreparableDirectly(
+			PreparableMutationOperation preparable,
+			FlushOperation flushOperation,
+			int bindingIndex) {
 		try (var stmnt = session.getJdbcCoordinator()
 				.getStatementPreparer()
 				.prepareStatement( preparable.getSqlString() )) {
 			preparable.getExpectation().prepare( stmnt );
 			var valueBindings = new JdbcValueBindings( flushOperation.getMutatingTableDescriptor(), preparable );
-			flushOperation.getBindPlan().bindValues( valueBindings, flushOperation, session );
+			final var bindPlan = flushOperation.getBindPlan();
+			if ( bindingIndex >= 0 && bindPlan instanceof GroupedRowBindPlan groupedRowBindPlan ) {
+				groupedRowBindPlan.bindValues( bindingIndex, valueBindings, flushOperation, session );
+			}
+			else {
+				bindPlan.bindValues( valueBindings, flushOperation, session );
+			}
 			valueBindings.beforeStatement( stmnt, session );
 
 			final int affectedRowCount = session.getJdbcCoordinator()

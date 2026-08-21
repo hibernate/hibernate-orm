@@ -7,6 +7,7 @@ package org.hibernate.orm.test.query.dynamic;
 import jakarta.persistence.criteria.CommonAbstractCriteria;
 import jakarta.persistence.criteria.CriteriaQuery;
 
+import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.engine.spi.SessionLazyDelegator;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -179,7 +180,12 @@ public class SimpleQuerySpecificationTests {
 		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
 
 		factoryScope.inTransaction( (session) -> {
-			var sessionProxy = new SessionLazyDelegator( () -> session );
+			SessionLazyDelegator sessionProxy = new SessionLazyDelegator() {
+				@Override
+				public Session delegate() {
+					return session;
+				}
+			};
 			// The test only makes sense if this is true. It currently is, but who knows what the future has in store for us.
 			//noinspection ConstantValue
 			assert !(sessionProxy instanceof SharedSessionContractImplementor);
@@ -199,7 +205,12 @@ public class SimpleQuerySpecificationTests {
 		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
 
 		factoryScope.inTransaction( (session) -> {
-			var sessionProxy = new SessionLazyDelegator( () -> session );
+			SessionLazyDelegator sessionProxy = new SessionLazyDelegator() {
+				@Override
+				public Session delegate() {
+					return session;
+				}
+			};
 			// The test only makes sense if this is true. It currently is, but who knows what the future has in store for us.
 			//noinspection ConstantValue
 			assert !(sessionProxy instanceof SharedSessionContractImplementor);

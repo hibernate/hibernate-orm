@@ -63,7 +63,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Supplier;
 
 
 /**
@@ -77,560 +76,556 @@ import java.util.function.Supplier;
  *
  * @author Sanne Grinovero
  */
-public class SessionLazyDelegator implements Session {
+public abstract class SessionLazyDelegator implements Session {
 
-	private final Supplier<Session> lazySession;
+	public abstract Session delegate();
 
 	@Override
 	@Nonnull
 	public SessionFactory getFactory() {
-		return lazySession.get().getFactory();
-	}
-
-	public SessionLazyDelegator(Supplier<Session> lazySessionLookup){
-		this.lazySession = lazySessionLookup;
+		return delegate().getFactory();
 	}
 
 	@Override
 	public void flush() {
-		this.lazySession.get().flush();
+		this.delegate().flush();
 	}
 
 	@Override
 	public void setFlushMode(@Nonnull FlushModeType flushMode) {
-		this.lazySession.get().setFlushMode( flushMode );
+		this.delegate().setFlushMode( flushMode );
 	}
 
 	@Override
 	public void setHibernateFlushMode(FlushMode flushMode) {
-		this.lazySession.get().setHibernateFlushMode( flushMode );
+		this.delegate().setHibernateFlushMode( flushMode );
 	}
 
 	@Override
 	@Nonnull
 	public FlushModeType getFlushMode() {
-		return this.lazySession.get().getFlushMode();
+		return this.delegate().getFlushMode();
 	}
 
 	@Override
 	public FlushMode getHibernateFlushMode() {
-		return this.lazySession.get().getHibernateFlushMode();
+		return this.delegate().getHibernateFlushMode();
 	}
 
 	@Override
 	public void setCacheMode(@Nonnull CacheMode cacheMode) {
-		this.lazySession.get().setCacheMode( cacheMode );
+		this.delegate().setCacheMode( cacheMode );
 	}
 
 	@Override
 	public void setCacheRetrieveMode(@Nonnull CacheRetrieveMode cacheRetrieveMode) {
-		this.lazySession.get().setCacheRetrieveMode( cacheRetrieveMode );
+		this.delegate().setCacheRetrieveMode( cacheRetrieveMode );
 	}
 
 	@Override
 	public void setCacheStoreMode(@Nonnull CacheStoreMode cacheStoreMode) {
-		this.lazySession.get().setCacheStoreMode( cacheStoreMode );
+		this.delegate().setCacheStoreMode( cacheStoreMode );
 	}
 
 	@Override
 	@Nonnull
 	public CacheStoreMode getCacheStoreMode() {
-		return this.lazySession.get().getCacheStoreMode();
+		return this.delegate().getCacheStoreMode();
 	}
 
 	@Override
 	@Nonnull
 	public CacheRetrieveMode getCacheRetrieveMode() {
-		return this.lazySession.get().getCacheRetrieveMode();
+		return this.delegate().getCacheRetrieveMode();
 	}
 
 	@Override
 	public void addOption(@Nonnull EntityManager.Option option) {
-		this.lazySession.get().addOption( option );
+		this.delegate().addOption( option );
 	}
 
 	@Override
 	@Nonnull
 	public Set<EntityManager.Option> getOptions() {
-		return this.lazySession.get().getOptions();
+		return this.delegate().getOptions();
 	}
 
 	@Override
 	@Nonnull
 	public CacheMode getCacheMode() {
-		return this.lazySession.get().getCacheMode();
+		return this.delegate().getCacheMode();
 	}
 
 	@Override
 	@Nonnull
 	public SessionFactory getSessionFactory() {
-		return this.lazySession.get().getSessionFactory();
+		return this.delegate().getSessionFactory();
 	}
 
 	@Override
 	public void cancelQuery() {
-		this.lazySession.get().cancelQuery();
+		this.delegate().cancelQuery();
 	}
 
 	@Override
 	public boolean isDirty() {
-		return this.lazySession.get().isDirty();
+		return this.delegate().isDirty();
 	}
 
 	@Override
 	public boolean isDefaultReadOnly() {
-		return this.lazySession.get().isDefaultReadOnly();
+		return this.delegate().isDefaultReadOnly();
 	}
 
 	@Override
 	public void setDefaultReadOnly(boolean readOnly) {
-		this.lazySession.get().setDefaultReadOnly( readOnly );
+		this.delegate().setDefaultReadOnly( readOnly );
 	}
 
 	@Override
 	@Nullable
 	public Object getIdentifier(@Nonnull Object object) {
-		return this.lazySession.get().getIdentifier( object );
+		return this.delegate().getIdentifier( object );
 	}
 
 	@Override
 	@SuppressWarnings("removal")
 	public boolean contains(@Nonnull String entityName, @Nonnull Object object) {
-		return this.lazySession.get().contains( entityName, object );
+		return this.delegate().contains( entityName, object );
 	}
 
 	@Override
 	public void detach(@Nonnull Object object) {
-		this.lazySession.get().detach( object );
+		this.delegate().detach( object );
 	}
 
 	@Override
 	public void evict(@Nonnull Object object) {
-		this.lazySession.get().evict( object );
+		this.delegate().evict( object );
 	}
 
 	@Override
 	public void load(@Nonnull Object object, @Nonnull Object id) {
-		this.lazySession.get().load( object, id );
+		this.delegate().load( object, id );
 	}
 
 	@Override
 	@Nonnull
 	public <T> T merge(@Nonnull T object) {
-		return this.lazySession.get().merge( object );
+		return this.delegate().merge( object );
 	}
 
 	@Override
 	@Nonnull
 	public <T> T merge(@Nonnull String entityName, @Nonnull T object) {
-		return this.lazySession.get().merge( entityName, object );
+		return this.delegate().merge( entityName, object );
 	}
 
 	@Override
 	@Nonnull
 	public <T> T merge(@Nonnull T object, @Nonnull EntityGraph<? super T> loadGraph) {
-		return this.lazySession.get().merge( object, loadGraph );
+		return this.delegate().merge( object, loadGraph );
 	}
 
 	@Override
 	public void persist(@Nonnull Object object) {
-		this.lazySession.get().persist( object );
+		this.delegate().persist( object );
 	}
 
 	@Override
 	public void persist(String entityName, Object object) {
-		this.lazySession.get().persist( entityName, object );
+		this.delegate().persist( entityName, object );
 	}
 
 	@Override
 	public void lock(@Nonnull Object object, @Nonnull LockMode lockMode) {
-		this.lazySession.get().lock( object, lockMode );
+		this.delegate().lock( object, lockMode );
 	}
 
 	@Override
 	public void lock(@Nonnull Object object, @Nonnull LockMode lockMode, @Nullable LockOption... lockOptions) {
-		this.lazySession.get().lock( object, lockMode, lockOptions );
+		this.delegate().lock( object, lockMode, lockOptions );
 	}
 
 	@Override
 	@SuppressWarnings("removal")
 	public void lock(@Nonnull Object object, @Nonnull LockOptions lockOptions) {
-		this.lazySession.get().lock( object, lockOptions );
+		this.delegate().lock( object, lockOptions );
 	}
 
 	@Override
 	public void refresh(@Nonnull Object object) {
-		this.lazySession.get().refresh( object );
+		this.delegate().refresh( object );
 	}
 
 	@Override
 	@SuppressWarnings("removal")
 	public void refresh(@Nonnull Object object, @Nonnull LockOptions lockOptions) {
-		this.lazySession.get().refresh( object, lockOptions );
+		this.delegate().refresh( object, lockOptions );
 	}
 
 	@Override
 	public void remove(@Nonnull Object object) {
-		this.lazySession.get().remove( object );
+		this.delegate().remove( object );
 	}
 
 	@Override
 	public LockMode getCurrentLockMode(Object object) {
-		return this.lazySession.get().getCurrentLockMode( object );
+		return this.delegate().getCurrentLockMode( object );
 	}
 
 	@Override
 	public void clear() {
-		this.lazySession.get().clear();
+		this.delegate().clear();
 	}
 
 	@Override
 	@Nonnull
 	public <E> List<E> findMultiple(@Nonnull Class<E> entityType, @Nonnull List<?> ids, @Nullable FindOption... options) {
-		return this.lazySession.get().findMultiple( entityType, ids, options );
+		return this.delegate().findMultiple( entityType, ids, options );
 	}
 
 	@Override
 	@Nonnull
 	public <E> List<E> findMultiple(@Nonnull EntityGraph<E> entityGraph, @Nonnull List<?> ids, @Nullable FindOption... options) {
-		return this.lazySession.get().findMultiple( entityGraph, ids, options );
+		return this.delegate().findMultiple( entityGraph, ids, options );
 	}
 
 	@Override
 	public <T> @Nonnull T get(@Nonnull Class<T> entityType, @Nonnull Object id) {
-		return this.lazySession.get().get( entityType, id );
+		return this.delegate().get( entityType, id );
 	}
 
 	@Override
 	public <T> @Nonnull T get(@Nonnull Class<T> entityType, @Nonnull Object key, @Nullable FindOption... findOptions) {
-		return this.lazySession.get().get( entityType, key, findOptions );
+		return this.delegate().get( entityType, key, findOptions );
 	}
 
 	@Override
 	public <T> @Nonnull T get(@Nonnull EntityGraph<T> entityGraph, @Nonnull Object key, @Nullable FindOption... findOptions) {
-		return this.lazySession.get().get( entityGraph, key, findOptions );
+		return this.delegate().get( entityGraph, key, findOptions );
 	}
 
 	@Override
 	@Nonnull
 	public <T> List<T> getMultiple(@Nonnull Class<T> entityType, @Nonnull List<?> keys, @Nullable FindOption... findOptions) {
-		return this.lazySession.get().getMultiple( entityType, keys, findOptions );
+		return this.delegate().getMultiple( entityType, keys, findOptions );
 	}
 
 	@Override
 	@Nonnull
 	public <T> List<T> getMultiple(@Nonnull EntityGraph<T> entityGraph, @Nonnull List<?> keys, @Nullable FindOption... findOptions) {
-		return this.lazySession.get().getMultiple( entityGraph, keys, findOptions );
+		return this.delegate().getMultiple( entityGraph, keys, findOptions );
 	}
 
 	@Override
 	@SuppressWarnings("removal")
 	@Nonnull
 	public <T> T get(@Nonnull Class<T> entityType, @Nonnull Object id, @Nonnull LockMode lockMode) {
-		return this.lazySession.get().get( entityType, id, lockMode );
+		return this.delegate().get( entityType, id, lockMode );
 	}
 
 	@Override
 	@Nonnull
 	public Object get(@Nonnull String entityName, @Nonnull Object key, @Nullable FindOption... findOptions) {
-		return this.lazySession.get().get( entityName, key, findOptions );
+		return this.delegate().get( entityName, key, findOptions );
 	}
 
 	@Override
 	@SuppressWarnings("removal")
 	@Nonnull
 	public Object get(@Nonnull String entityName, @Nonnull Object id, @Nonnull LockMode lockMode) {
-		return this.lazySession.get().get( entityName, id, lockMode );
+		return this.delegate().get( entityName, id, lockMode );
 	}
 
 	@Override
 	@SuppressWarnings("removal")
 	@Nonnull
 	public <T> T get(@Nonnull Class<T> entityType, @Nonnull Object id, @Nonnull LockOptions lockOptions) {
-		return this.lazySession.get().get( entityType, id, lockOptions );
+		return this.delegate().get( entityType, id, lockOptions );
 	}
 
 	@Override
 	@SuppressWarnings("removal")
 	@Nonnull
 	public Object get(@Nonnull String entityName, @Nonnull Object id, @Nonnull LockOptions lockOptions) {
-		return this.lazySession.get().get( entityName, id, lockOptions );
+		return this.delegate().get( entityName, id, lockOptions );
 	}
 
 	@Override
 	@Nonnull
 	public String getEntityName(@Nonnull Object object) {
-		return this.lazySession.get().getEntityName( object );
+		return this.delegate().getEntityName( object );
 	}
 
 	@Override
 	@Nonnull
 	public <T> T getReference(@Nonnull Class<T> entityType, @Nonnull Object id) {
-		return this.lazySession.get().getReference( entityType, id );
+		return this.delegate().getReference( entityType, id );
 	}
 
 	@Override
 	@Nonnull
 	public Object getReference(@Nonnull String entityName, @Nonnull Object id) {
-		return this.lazySession.get().getReference( entityName, id );
+		return this.delegate().getReference( entityName, id );
 	}
 
 	@Override
 	@Nonnull
 	public <T> T getReference(@Nonnull T object) {
-		return this.lazySession.get().getReference( object );
+		return this.delegate().getReference( object );
 	}
 
 	@Override
 	@Nonnull
 	public <T> T getReference(@Nonnull Class<T> entityType, @Nonnull Object key, @Nonnull KeyType keyType) {
-		return this.lazySession.get().getReference( entityType, key, keyType );
+		return this.delegate().getReference( entityType, key, keyType );
 	}
 
 	@Override
 	@SuppressWarnings("removal")
 	@Nonnull
 	public <T> IdentifierLoadAccess<T> byId(@Nonnull String entityName) {
-		return this.lazySession.get().byId( entityName );
+		return this.delegate().byId( entityName );
 	}
 
 	@Override
 	@SuppressWarnings("removal")
 	@Nonnull
 	public <T> MultiIdentifierLoadAccess<T> byMultipleIds(@Nonnull Class<T> entityClass) {
-		return this.lazySession.get().byMultipleIds( entityClass );
+		return this.delegate().byMultipleIds( entityClass );
 	}
 
 	@Override
 	@SuppressWarnings("removal")
 	@Nonnull
 	public <T> MultiIdentifierLoadAccess<T> byMultipleIds(@Nonnull String entityName) {
-		return this.lazySession.get().byMultipleIds( entityName );
+		return this.delegate().byMultipleIds( entityName );
 	}
 
 	@Override
 	@SuppressWarnings("removal")
 	@Nonnull
 	public <T> IdentifierLoadAccess<T> byId(@Nonnull Class<T> entityClass) {
-		return this.lazySession.get().byId( entityClass );
+		return this.delegate().byId( entityClass );
 	}
 
 	@Override @Deprecated
 	@Nonnull
 	public <T> NaturalIdLoadAccess<T> byNaturalId(@Nonnull String entityName) {
-		return this.lazySession.get().byNaturalId( entityName );
+		return this.delegate().byNaturalId( entityName );
 	}
 
 	@Override @Deprecated
 	@Nonnull
 	public <T> NaturalIdLoadAccess<T> byNaturalId(@Nonnull Class<T> entityClass) {
-		return this.lazySession.get().byNaturalId( entityClass );
+		return this.delegate().byNaturalId( entityClass );
 	}
 
 	@Override @Deprecated
 	@Nonnull
 	public <T> SimpleNaturalIdLoadAccess<T> bySimpleNaturalId(@Nonnull String entityName) {
-		return this.lazySession.get().bySimpleNaturalId( entityName );
+		return this.delegate().bySimpleNaturalId( entityName );
 	}
 
 	@Override @Deprecated
 	@Nonnull
 	public <T> SimpleNaturalIdLoadAccess<T> bySimpleNaturalId(@Nonnull Class<T> entityClass) {
-		return this.lazySession.get().bySimpleNaturalId( entityClass );
+		return this.delegate().bySimpleNaturalId( entityClass );
 	}
 
 	@Override @Deprecated
 	@Nonnull
 	public <T> NaturalIdMultiLoadAccess<T> byMultipleNaturalId(@Nonnull Class<T> entityClass) {
-		return this.lazySession.get().byMultipleNaturalId( entityClass );
+		return this.delegate().byMultipleNaturalId( entityClass );
 	}
 
 	@Override @Deprecated
 	@Nonnull
 	public <T> NaturalIdMultiLoadAccess<T> byMultipleNaturalId(@Nonnull String entityName) {
-		return this.lazySession.get().byMultipleNaturalId( entityName );
+		return this.delegate().byMultipleNaturalId( entityName );
 	}
 
 	@Override
 	@Nonnull
 	public Filter enableFilter(@Nonnull String filterName) {
-		return this.lazySession.get().enableFilter( filterName );
+		return this.delegate().enableFilter( filterName );
 	}
 
 	@Override
 	@Nullable
 	public Filter getEnabledFilter(@Nonnull String filterName) {
-		return this.lazySession.get().getEnabledFilter( filterName );
+		return this.delegate().getEnabledFilter( filterName );
 	}
 
 	@Override
 	public void disableFilter(@Nonnull String filterName) {
-		this.lazySession.get().disableFilter( filterName );
+		this.delegate().disableFilter( filterName );
 	}
 
 	@Override
 	@Nonnull
 	public SessionStatistics getStatistics() {
-		return this.lazySession.get().getStatistics();
+		return this.delegate().getStatistics();
 	}
 
 	@Override
 	public boolean isReadOnly(@Nonnull Object entityOrProxy) {
-		return this.lazySession.get().isReadOnly( entityOrProxy );
+		return this.delegate().isReadOnly( entityOrProxy );
 	}
 
 	@Override
 	public void setReadOnly(@Nonnull Object entityOrProxy,  boolean readOnly) {
-		this.lazySession.get().setReadOnly( entityOrProxy, readOnly );
+		this.delegate().setReadOnly( entityOrProxy, readOnly );
 	}
 
 	@Override
 	public boolean isFetchProfileEnabled(@Nonnull String name) throws UnknownProfileException {
-		return this.lazySession.get().isFetchProfileEnabled( name );
+		return this.delegate().isFetchProfileEnabled( name );
 	}
 
 	@Override
 	public void enableFetchProfile(@Nonnull String name) throws UnknownProfileException {
-		this.lazySession.get().enableFetchProfile( name );
+		this.delegate().enableFetchProfile( name );
 	}
 
 	@Override
 	public void disableFetchProfile(@Nonnull String name) throws UnknownProfileException {
-		this.lazySession.get().disableFetchProfile( name );
+		this.delegate().disableFetchProfile( name );
 	}
 
 	@Override
 	@SuppressWarnings("removal")
 	@Nonnull
 	public LobHelper getLobHelper() {
-		return this.lazySession.get().getLobHelper();
+		return this.delegate().getLobHelper();
 	}
 
 	@Override
 	@Nonnull
 	public Collection<?> getManagedEntities() {
-		return this.lazySession.get().getManagedEntities();
+		return this.delegate().getManagedEntities();
 	}
 
 	@Override
 	@Nonnull
 	public Collection<?> getManagedEntities(@Nonnull String entityName) {
-		return this.lazySession.get().getManagedEntities( entityName );
+		return this.delegate().getManagedEntities( entityName );
 	}
 
 	@Override
 	@Nonnull
 	public <E> Collection<E> getManagedEntities(@Nonnull Class<E> entityType) {
-		return this.lazySession.get().getManagedEntities( entityType );
+		return this.delegate().getManagedEntities( entityType );
 	}
 
 	@Override
 	@Nonnull
 	public <E> Collection<E> getManagedEntities(@Nonnull EntityType<E> entityType) {
-		return this.lazySession.get().getManagedEntities( entityType );
+		return this.delegate().getManagedEntities( entityType );
 	}
 
 	@Override
 	@Nonnull
 	public SharedSessionBuilder sessionWithOptions() {
-		return this.lazySession.get().sessionWithOptions();
+		return this.delegate().sessionWithOptions();
 	}
 
 	@Override
 	public void addEventListeners(@Nonnull SessionEventListener... listeners) {
-		this.lazySession.get().addEventListeners( listeners );
+		this.delegate().addEventListeners( listeners );
 	}
 
 	@Override
 	@Nonnull
 	public <T> RootGraph<T> createEntityGraph(@Nonnull Class<T> rootType) {
-		return this.lazySession.get().createEntityGraph( rootType );
+		return this.delegate().createEntityGraph( rootType );
 	}
 
 	@Override @Deprecated
 	@SuppressWarnings("removal")
 	@Nullable
 	public RootGraph<?> createEntityGraph(@Nonnull String graphName) {
-		return this.lazySession.get().createEntityGraph( graphName );
+		return this.delegate().createEntityGraph( graphName );
 	}
 
 	@Override @Deprecated
 	@SuppressWarnings("removal")
 	@Nullable
 	public <T> RootGraph<T> createEntityGraph(@Nonnull Class<T> rootType, @Nonnull String graphName) {
-		return this.lazySession.get().createEntityGraph( rootType, graphName );
+		return this.delegate().createEntityGraph( rootType, graphName );
 	}
 
 	@Override
 	@Nonnull
 	public RootGraph<?> getEntityGraph(@Nonnull String graphName) {
-		return this.lazySession.get().getEntityGraph( graphName );
+		return this.delegate().getEntityGraph( graphName );
 	}
 
 	@Override
 	@Nonnull
 	public <T> RootGraph<T> getEntityGraph(@Nonnull Class<T> entityClass, @Nonnull String name) {
-		return this.lazySession.get().getEntityGraph( entityClass, name );
+		return this.delegate().getEntityGraph( entityClass, name );
 	}
 
 	@Override
 	@Nonnull
 	public <T> List<EntityGraph<? super T>> getEntityGraphs(@Nonnull Class<T> entityClass) {
-		return this.lazySession.get().getEntityGraphs( entityClass );
+		return this.delegate().getEntityGraphs( entityClass );
 	}
 
 	@Override
 	public <C> void runWithConnection(@Nonnull ConnectionConsumer<C> action) {
-		this.lazySession.get().runWithConnection( action );
+		this.delegate().runWithConnection( action );
 	}
 
 	@Override
 	public <C, T> T callWithConnection(@Nonnull ConnectionFunction<C, T> function) {
-		return this.lazySession.get().callWithConnection( function );
+		return this.delegate().callWithConnection( function );
 	}
 
 	@Override
 	@Nonnull
 	public <R> SelectionQuery<R> createQuery(@Nonnull String queryString, @Nonnull Class<R> resultClass) {
 		//noinspection SqlSourceToSinkFlow
-		return this.lazySession.get().createQuery( queryString, resultClass );
+		return this.delegate().createQuery( queryString, resultClass );
 	}
 
 	@Override
 	@Nonnull
 	public <T> SelectionQuery<T> createQuery(@Nonnull String query, @Nonnull EntityGraph<T> entityGraph) {
-		return this.lazySession.get().createQuery( query, entityGraph );
+		return this.delegate().createQuery( query, entityGraph );
 	}
 
 	@Override
 	@Nonnull
 	public <R> SelectionQuery<R> createQuery(@Nonnull TypedQueryReference<R> typedQueryReference) {
-		return this.lazySession.get().createQuery( typedQueryReference );
+		return this.delegate().createQuery( typedQueryReference );
 	}
 
 	@Override
 	@Nonnull
 	public MutationOrSelectionQuery createQuery(@Nonnull String queryString) {
 		//noinspection SqlSourceToSinkFlow
-		return this.lazySession.get().createQuery( queryString );
+		return this.delegate().createQuery( queryString );
 	}
 
 	@Override
 	@Nonnull
 	public <R> SelectionQuery<R> createNamedQuery(@Nonnull String name, @Nonnull Class<R> resultClass) {
-		return this.lazySession.get().createNamedQuery( name, resultClass );
+		return this.delegate().createNamedQuery( name, resultClass );
 	}
 
 	@Override
 	@Nonnull
 	public MutationQuery createNamedStatement(@Nonnull String name) {
-		return this.lazySession.get().createNamedStatement( name );
+		return this.delegate().createNamedStatement( name );
 	}
 
 	@Override
 	@Nonnull
 	public <R> NativeQuery<R> createNamedQuery(@Nonnull String name, @Nonnull String resultSetMappingName) {
-		return this.lazySession.get().createNamedQuery( name, resultSetMappingName );
+		return this.delegate().createNamedQuery( name, resultSetMappingName );
 	}
 
 	@Override
@@ -639,169 +634,169 @@ public class SessionLazyDelegator implements Session {
 			@Nonnull String name,
 			@Nonnull String resultSetMappingName,
 			@Nonnull Class<R> resultClass) {
-		return this.lazySession.get().createNamedQuery( name, resultSetMappingName, resultClass );
+		return this.delegate().createNamedQuery( name, resultSetMappingName, resultClass );
 	}
 
 	@Override
 	@Nonnull
 	public MutationQuery createNativeStatement(@Nonnull String sql) {
-		return this.lazySession.get().createNativeStatement( sql );
+		return this.delegate().createNativeStatement( sql );
 	}
 
 	@Override
 	@Nonnull
 	public MutationOrSelectionQuery createNamedQuery(@Nonnull String name) {
-		return this.lazySession.get().createNamedQuery( name );
+		return this.delegate().createNamedQuery( name );
 	}
 
 	@Override
 	@Nonnull
 	public <R> SelectionQuery<R> createSelectionQuery(@Nonnull CriteriaSelect<R> criteria) {
-		return this.lazySession.get().createSelectionQuery( criteria );
+		return this.delegate().createSelectionQuery( criteria );
 	}
 
 	@Override
 	@Nonnull
 	public <T> SelectionQuery<T> createQuery(@Nonnull CriteriaSelect<T> selectQuery) {
-		return this.lazySession.get().createQuery( selectQuery );
+		return this.delegate().createQuery( selectQuery );
 	}
 
 	@Override
 	public SharedStatelessSessionBuilder statelessWithOptions() {
-		return this.lazySession.get().statelessWithOptions();
+		return this.delegate().statelessWithOptions();
 	}
 
 	@Override
 	@Nullable
 	public String getTenantIdentifier() {
-		return this.lazySession.get().getTenantIdentifier();
+		return this.delegate().getTenantIdentifier();
 	}
 
 	@Override
 	@Nullable
 	public Object getTenantIdentifierValue() {
-		return this.lazySession.get().getTenantIdentifierValue();
+		return this.delegate().getTenantIdentifierValue();
 	}
 
 	@Override
 	public void close() throws HibernateException {
-		this.lazySession.get().close();
+		this.delegate().close();
 	}
 
 	@Override
 	public boolean isOpen() {
-		return this.lazySession.get().isOpen();
+		return this.delegate().isOpen();
 	}
 
 	@Override
 	public boolean isConnected() {
-		return this.lazySession.get().isConnected();
+		return this.delegate().isConnected();
 	}
 
 	@Override
 	@Nonnull
 	public Transaction beginTransaction() {
-		return this.lazySession.get().beginTransaction();
+		return this.delegate().beginTransaction();
 	}
 
 	@Override
 	@Nonnull
 	public Transaction getTransaction() {
-		return this.lazySession.get().getTransaction();
+		return this.delegate().getTransaction();
 	}
 
 	@Override
 	@Nonnull
 	public ProcedureCall getNamedProcedureCall(@Nonnull String name) {
-		return this.lazySession.get().getNamedProcedureCall( name );
+		return this.delegate().getNamedProcedureCall( name );
 	}
 
 	@Override
 	@Nonnull
 	public ProcedureCall createStoredProcedureCall(@Nonnull String procedureName) {
-		return this.lazySession.get().createStoredProcedureCall( procedureName );
+		return this.delegate().createStoredProcedureCall( procedureName );
 	}
 
 	@Override
 	@Nonnull
 	public ProcedureCall createStoredProcedureCall(@Nonnull String procedureName, @Nonnull Class<?>... resultClasses) {
-		return this.lazySession.get().createStoredProcedureCall( procedureName, resultClasses );
+		return this.delegate().createStoredProcedureCall( procedureName, resultClasses );
 	}
 
 	@Override
 	@Nonnull
 	public ProcedureCall createStoredProcedureCall(@Nonnull String procedureName, @Nonnull String... resultSetMappings) {
-		return this.lazySession.get().createStoredProcedureCall( procedureName, resultSetMappings );
+		return this.delegate().createStoredProcedureCall( procedureName, resultSetMappings );
 	}
 
 	@Override
 	@Nonnull
 	public ProcedureCall createNamedStoredProcedureQuery(@Nonnull String name) {
-		return this.lazySession.get().createNamedStoredProcedureQuery( name );
+		return this.delegate().createNamedStoredProcedureQuery( name );
 	}
 
 	@Override
 	@Nonnull
 	public ProcedureCall createStoredProcedureQuery(@Nonnull String procedureName) {
-		return this.lazySession.get().createStoredProcedureQuery( procedureName );
+		return this.delegate().createStoredProcedureQuery( procedureName );
 	}
 
 	@Override
 	@Nonnull
 	public ProcedureCall createStoredProcedureQuery(@Nonnull String procedureName, @Nonnull Class... resultClasses) {
-		return this.lazySession.get().createStoredProcedureQuery( procedureName, resultClasses );
+		return this.delegate().createStoredProcedureQuery( procedureName, resultClasses );
 	}
 
 	@Override
 	@Nonnull
 	public ProcedureCall createStoredProcedureQuery(@Nonnull String procedureName, @Nonnull String... resultSetMappings) {
-		return this.lazySession.get().createStoredProcedureQuery( procedureName, resultSetMappings );
+		return this.delegate().createStoredProcedureQuery( procedureName, resultSetMappings );
 	}
 
 	@Override
 	public Integer getJdbcBatchSize() {
-		return this.lazySession.get().getJdbcBatchSize();
+		return this.delegate().getJdbcBatchSize();
 	}
 
 	@Override
 	public void setJdbcBatchSize(Integer jdbcBatchSize) {
-		this.lazySession.get().setJdbcBatchSize( jdbcBatchSize );
+		this.delegate().setJdbcBatchSize( jdbcBatchSize );
 	}
 
 	@Override
 	public int getFetchBatchSize() {
-		return this.lazySession.get().getFetchBatchSize();
+		return this.delegate().getFetchBatchSize();
 	}
 
 	@Override
 	public void setFetchBatchSize(int batchSize) {
-		this.lazySession.get().setFetchBatchSize( batchSize );
+		this.delegate().setFetchBatchSize( batchSize );
 	}
 
 	@Override
 	public boolean isSubselectFetchingEnabled() {
-		return this.lazySession.get().isSubselectFetchingEnabled();
+		return this.delegate().isSubselectFetchingEnabled();
 	}
 
 	@Override
 	public void setSubselectFetchingEnabled(boolean enabled) {
-		this.lazySession.get().setSubselectFetchingEnabled( enabled );
+		this.delegate().setSubselectFetchingEnabled( enabled );
 	}
 
 	@Override
 	@Nonnull
 	public HibernateCriteriaBuilder getCriteriaBuilder() {
-		return this.lazySession.get().getCriteriaBuilder();
+		return this.delegate().getCriteriaBuilder();
 	}
 
 	@Override
 	public void doWork(@Nonnull Work work) throws HibernateException {
-		this.lazySession.get().doWork( work );
+		this.delegate().doWork( work );
 	}
 
 	@Override
 	public <T> T doReturningWork(@Nonnull ReturningWork<T> work) throws HibernateException {
-		return this.lazySession.get().doReturningWork( work );
+		return this.delegate().doReturningWork( work );
 	}
 
 	@SuppressWarnings("rawtypes")
@@ -809,18 +804,18 @@ public class SessionLazyDelegator implements Session {
 	@Deprecated
 	@Nonnull
 	public NativeQuery createNativeQuery(@Nonnull String sqlString) {
-		return this.lazySession.get().createNativeQuery( sqlString );
+		return this.delegate().createNativeQuery( sqlString );
 	}
 
 	@Override @SuppressWarnings({"rawtypes", "unchecked"})
 	@Nonnull
 	public NativeQuery createNativeQuery(@Nonnull String sqlString, @Nonnull Class resultClass) {
-		return this.lazySession.get().createNativeQuery( sqlString, resultClass );
+		return this.delegate().createNativeQuery( sqlString, resultClass );
 	}
 
 	@Override
 	public <R> NativeQuery<R> createNativeQuery(String sqlString, Class<R> resultClass, String tableAlias) {
-		return this.lazySession.get().createNativeQuery( sqlString, resultClass, tableAlias );
+		return this.delegate().createNativeQuery( sqlString, resultClass, tableAlias );
 	}
 
 	@SuppressWarnings("rawtypes")
@@ -828,64 +823,64 @@ public class SessionLazyDelegator implements Session {
 	@Deprecated
 	@Nonnull
 	public NativeQuery createNativeQuery(@Nonnull String sqlString, @Nonnull String resultSetMappingName) {
-		return this.lazySession.get().createNativeQuery( sqlString, resultSetMappingName );
+		return this.delegate().createNativeQuery( sqlString, resultSetMappingName );
 	}
 
 	@Override
 	@Nonnull
 	public <T> TypedQuery<T> createNativeQuery(@Nonnull String sql, @Nonnull ResultSetMapping<T> resultSetMapping) {
-		return this.lazySession.get().createNativeQuery( sql, resultSetMapping );
+		return this.delegate().createNativeQuery( sql, resultSetMapping );
 	}
 
 	@Override
 	public <R> NativeQuery<R> createNativeQuery(String sqlString, String resultSetMappingName, Class<R> resultClass) {
-		return this.lazySession.get().createNativeQuery( sqlString, resultSetMappingName, resultClass );
+		return this.delegate().createNativeQuery( sqlString, resultSetMappingName, resultClass );
 	}
 
 	@Override
 	public <R> SelectionQuery<R> createSelectionQuery(String hqlString, Class<R> resultType) {
-		return this.lazySession.get().createSelectionQuery( hqlString, resultType );
+		return this.delegate().createSelectionQuery( hqlString, resultType );
 	}
 
 	@Override
 	public <R> SelectionQuery<R> createSelectionQuery(String hqlString, EntityGraph<R> resultGraph) {
-		return this.lazySession.get().createSelectionQuery( hqlString, resultGraph );
+		return this.delegate().createSelectionQuery( hqlString, resultGraph );
 	}
 
 	@Override
 	@Nonnull
 	public <R> SelectionQuery<R> createSelectionQuery(@Nonnull CriteriaQuery<R> criteria) {
-		return this.lazySession.get().createSelectionQuery( criteria );
+		return this.delegate().createSelectionQuery( criteria );
 	}
 
 	@Override
 	@Nonnull
 	public MutationQuery createMutationQuery(@Nonnull String hqlString) {
-		return this.lazySession.get().createMutationQuery( hqlString );
+		return this.delegate().createMutationQuery( hqlString );
 	}
 
 	@Override
 	@Nonnull
 	public MutationQuery createStatement(@Nonnull String hqlString) {
-		return this.lazySession.get().createStatement( hqlString );
+		return this.delegate().createStatement( hqlString );
 	}
 
 	@Override
 	@Nonnull
 	public MutationQuery createStatement(@Nonnull StatementReference statementReference) {
-		return this.lazySession.get().createStatement( statementReference );
+		return this.delegate().createStatement( statementReference );
 	}
 
 	@Override
 	@Nonnull
 	public MutationQuery createStatement(@Nonnull CriteriaStatement<?> criteriaStatement) {
-		return this.lazySession.get().createStatement( criteriaStatement );
+		return this.delegate().createStatement( criteriaStatement );
 	}
 
 	@Override
 	@Nonnull
 	public MutationQuery createMutationQuery(@Nonnull CriteriaStatement<?> criteriaStatement) {
-		return this.lazySession.get().createMutationQuery( criteriaStatement );
+		return this.delegate().createMutationQuery( criteriaStatement );
 	}
 
 	@Override
@@ -898,31 +893,31 @@ public class SessionLazyDelegator implements Session {
 	@Override
 	@Nonnull
 	public MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") @Nonnull JpaCriteriaInsert insert) {
-		return this.lazySession.get().createMutationQuery( insert );
+		return this.delegate().createMutationQuery( insert );
 	}
 
 	@Override
 	@Nonnull
 	public MutationQuery createNativeMutationQuery(@Nonnull String sqlString) {
-		return this.lazySession.get().createNativeMutationQuery( sqlString );
+		return this.delegate().createNativeMutationQuery( sqlString );
 	}
 
 	@Override
 	@Nonnull
 	public <R> SelectionQuery<R> createNamedSelectionQuery(@Nonnull String name, @Nonnull Class<R> resultType) {
-		return this.lazySession.get().createNamedSelectionQuery( name, resultType );
+		return this.delegate().createNamedSelectionQuery( name, resultType );
 	}
 
 	@Override
 	@Nonnull
 	public MutationQuery createNamedMutationQuery(@Nonnull String name) {
-		return this.lazySession.get().createNamedMutationQuery( name );
+		return this.delegate().createNamedMutationQuery( name );
 	}
 
 	@Override
 	@Nullable
 	public <T> T find(@Nonnull Class<T> entityClass, @Nonnull Object primaryKey) {
-		return this.lazySession.get().find( entityClass, primaryKey );
+		return this.delegate().find( entityClass, primaryKey );
 	}
 
 	@Override
@@ -931,7 +926,7 @@ public class SessionLazyDelegator implements Session {
 			@Nonnull Class<T> entityClass,
 			@Nonnull Object primaryKey,
 			@Nullable Map<String, Object> properties) {
-		return this.lazySession.get().find( entityClass, primaryKey, properties );
+		return this.delegate().find( entityClass, primaryKey, properties );
 	}
 
 	@Override
@@ -941,7 +936,7 @@ public class SessionLazyDelegator implements Session {
 			@Nonnull Object primaryKey,
 			@Nonnull LockModeType lockMode,
 			@Nullable Map<String, Object> properties) {
-		return this.lazySession.get().find( entityClass, primaryKey, lockMode, properties );
+		return this.delegate().find( entityClass, primaryKey, lockMode, properties );
 	}
 
 	@Override
@@ -950,7 +945,7 @@ public class SessionLazyDelegator implements Session {
 			@Nonnull Class<T> entityClass,
 			@Nonnull Object primaryKey,
 			@Nullable FindOption... options) {
-		return this.lazySession.get().find( entityClass, primaryKey, options );
+		return this.delegate().find( entityClass, primaryKey, options );
 	}
 
 	@Override
@@ -959,7 +954,7 @@ public class SessionLazyDelegator implements Session {
 			@Nonnull EntityGraph<T> entityGraph,
 			@Nonnull Object primaryKey,
 			@Nullable FindOption... options) {
-		return this.lazySession.get().find( entityGraph, primaryKey, options );
+		return this.delegate().find( entityGraph, primaryKey, options );
 	}
 
 	@Override
@@ -968,12 +963,12 @@ public class SessionLazyDelegator implements Session {
 			@Nonnull String entityName,
 			@Nonnull Object primaryKey,
 			@Nullable FindOption... options) {
-		return this.lazySession.get().find( entityName, primaryKey, options );
+		return this.delegate().find( entityName, primaryKey, options );
 	}
 
 	@Override
 	public void lock(@Nonnull Object entity, @Nonnull LockModeType lockMode) {
-		this.lazySession.get().lock( entity, lockMode );
+		this.delegate().lock( entity, lockMode );
 	}
 
 	@Override
@@ -981,61 +976,61 @@ public class SessionLazyDelegator implements Session {
 			@Nonnull Object entity,
 			@Nonnull LockModeType lockMode,
 			@Nullable  Map<String, Object> properties) {
-		this.lazySession.get().lock( entity, lockMode, properties );
+		this.delegate().lock( entity, lockMode, properties );
 	}
 
 	@Override
 	public void lock(@Nonnull Object entity, @Nonnull LockModeType lockMode, @Nullable LockOption... options) {
-		this.lazySession.get().lock( entity, lockMode, options );
+		this.delegate().lock( entity, lockMode, options );
 	}
 
 	@Override
 	public void refresh(@Nonnull Object entity, @Nullable Map<String, Object> properties) {
-		this.lazySession.get().refresh( entity, properties );
+		this.delegate().refresh( entity, properties );
 	}
 
 	@Override
 	public void refresh(@Nonnull Object entity,
 						@Nonnull LockModeType lockMode,
 						@Nullable  Map<String, Object> properties) {
-		this.lazySession.get().refresh( entity, lockMode, properties );
+		this.delegate().refresh( entity, lockMode, properties );
 	}
 
 	@Override
 	public void refresh(@Nonnull Object entity, @Nullable RefreshOption... options) {
-		this.lazySession.get().refresh( entity, options );
+		this.delegate().refresh( entity, options );
 	}
 
 	@Override
 	public boolean contains(@Nonnull Object entity) {
-		return this.lazySession.get().contains( entity );
+		return this.delegate().contains( entity );
 	}
 
 	@Override
 	@Nonnull
 	public LockModeType getLockMode(@Nonnull Object entity) {
-		return this.lazySession.get().getLockMode( entity );
+		return this.delegate().getLockMode( entity );
 	}
 
 	@Override
 	public void setProperty(@Nonnull String propertyName, @Nullable Object value) {
-		this.lazySession.get().setProperty( propertyName, value );
+		this.delegate().setProperty( propertyName, value );
 	}
 
 	@Override
 	@Nonnull
 	public Map<String, Object> getProperties() {
-		return this.lazySession.get().getProperties();
+		return this.delegate().getProperties();
 	}
 
 	@Override
 	public void joinTransaction() {
-		this.lazySession.get().joinTransaction();
+		this.delegate().joinTransaction();
 	}
 
 	@Override
 	public boolean isJoinedToTransaction() {
-		return this.lazySession.get().isJoinedToTransaction();
+		return this.delegate().isJoinedToTransaction();
 	}
 
 	@Override
@@ -1043,32 +1038,32 @@ public class SessionLazyDelegator implements Session {
 	public <T> T unwrap(@Nonnull Class<T> type) {
 		return type.isAssignableFrom( Session.class )
 				? type.cast( this )
-				: lazySession.get().unwrap( type );
+				: delegate().unwrap( type );
 	}
 
 	@Override @Deprecated
 	@SuppressWarnings({"rawtypes", "removal"})
 	@Nonnull
 	public NativeQuery getNamedNativeQuery(@Nonnull String name) {
-		return lazySession.get().getNamedNativeQuery( name );
+		return delegate().getNamedNativeQuery( name );
 	}
 
 	@Override @Deprecated
 	@Nonnull
 	public Object getDelegate() {
-		return lazySession.get().getDelegate();
+		return delegate().getDelegate();
 	}
 
 	@Override
 	@Nonnull
 	public EntityManagerFactory getEntityManagerFactory() {
-		return this.lazySession.get().getEntityManagerFactory();
+		return this.delegate().getEntityManagerFactory();
 	}
 
 	@Override
 	@Nonnull
 	public Metamodel getMetamodel() {
-		return this.lazySession.get().getMetamodel();
+		return this.delegate().getMetamodel();
 	}
 
 }

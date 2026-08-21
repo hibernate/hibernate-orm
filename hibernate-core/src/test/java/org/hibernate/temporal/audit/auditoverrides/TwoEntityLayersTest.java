@@ -27,12 +27,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SessionFactory
 @DomainModel(annotatedClasses = {
-		TwoEntityLayers.EntityWithExcludedProperty2.class,
-		TwoEntityLayers.EntityThatRevokes.class,
+		TwoEntityLayersTest.EntityWithExcludedProperty2.class,
+		TwoEntityLayersTest.EntityThatRevokes.class,
 })
 @ServiceRegistry(settings = @Setting(name = StateManagementSettings.CHANGESET_ID_SUPPLIER,
 		value = "org.hibernate.temporal.audit.AuditEntityTest$TxIdSupplier"))
-public class TwoEntityLayers {
+public class TwoEntityLayersTest {
 	private static int currentTxId;
 
 	public static class TxIdSupplier implements ChangesetIdentifierSupplier<Integer> {

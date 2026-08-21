@@ -4,10 +4,6 @@
  */
 package org.hibernate.orm.test.naming;
 
-import java.util.Set;
-
-import jakarta.persistence.ElementCollection;
-import jakarta.persistence.Embeddable;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
@@ -20,14 +16,10 @@ import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Test;
 
-@Jpa(annotatedClasses = {PhysicalNamingTest.TheEntity.class, PhysicalNamingTest.Contact.class},
-	integrationSettings = {
-			@Setting(name = MappingSettings.PHYSICAL_NAMING_STRATEGY,
-					value = "org.hibernate.orm.test.naming.PhysicalNamingTest$NamingStrategy"),
-			@Setting(name = MappingSettings.IMPLICIT_NAMING_STRATEGY,
-					value = "component-path")
-	}
-)
+@Jpa(annotatedClasses = PhysicalNamingTest.TheEntity.class,
+	integrationSettings = @Setting(
+			name = MappingSettings.PHYSICAL_NAMING_STRATEGY,
+			value = "org.hibernate.orm.test.naming.PhysicalNamingTest$NamingStrategy"))
 public class PhysicalNamingTest {
 
 	public static class NamingStrategy
@@ -52,37 +44,11 @@ public class PhysicalNamingTest {
 		});
 	}
 
-	@JiraKey("HHH-20350")
-	@Test void testEmbeddableColumns(EntityManagerFactoryScope scope) {
-		scope.inTransaction( em -> {
-			// make sure component-path logical names still pass through the physical naming strategy
-			em.createNativeQuery(
-							"select addresses_house_no_ from contact_addresses_",
-							Object[].class )
-					.getResultList();
-		} );
-	}
-
 	@Entity(name = "TheEntity")
-	public static class TheEntity {
+	static class TheEntity {
 		@Id long itsId;
 		String itsName;
 		@ManyToOne
 		TheEntity itsFriend;
-	}
-
-	@Entity(name = "Contact")
-	public static class Contact {
-		@Id
-		long id;
-		@ElementCollection
-		Set<Address> addresses;
-	}
-
-	@Embeddable
-	public static class Address {
-		String city;
-		String houseNo;
-		String postCode;
 	}
 }

@@ -5,7 +5,7 @@
 
 plugins {
     id "local.publishing-java-module"
-    alias(libs.plugins.mavenPluginDev)
+    id "org.gradlex.maven-plugin-development" version "1.0.3"
 }
 
 description = 'Maven plugin to integrate aspects of Hibernate into your build.'
@@ -24,28 +24,22 @@ configurations {
 
 dependencies {
     implementation project( ":hibernate-core" )
-    implementation project( ":hibernate-reveng" )
 
-    implementation(libs.maven.core) {
+    implementation "org.apache.maven:maven-plugin-api:3.9.12"
+    implementation ("org.apache.maven:maven-core:3.9.12") {
         exclude group: 'com.google.guava', module: 'guava'
     }
-    implementation(libs.maven.pluginApi) {
-        exclude group: 'com.google.guava', module: 'guava'
-    }
-    implementation(libs.maven.fileManagement)
+    implementation "org.apache.maven.shared:file-management:3.1.0"
 
-    compileOnly libs.maven.pluginToolsAnnotations
+    compileOnly "org.apache.maven.plugin-tools:maven-plugin-tools-annotations:3.15.1"
 
-    intTestImplementation libs.test.junitJupiter
-    intTestImplementation libs.maven.embedder
-    intTestRuntimeOnly libs.maven.compat
-    intTestRuntimeOnly libs.test.junitJupiterLauncher
-    intTestRuntimeOnly libs.maven.resolverHttp
-    intTestRuntimeOnly libs.maven.resolverBasic
-    intTestRuntimeOnly libs.test.logbackClassic
-    intTestRuntimeOnly libs.maven.resolverHttp
-    intTestRuntimeOnly libs.maven.plexusXml
-    intTestRuntimeOnly libs.jdbc.h2
+    intTestImplementation 'org.junit.jupiter:junit-jupiter:5.13.4'
+    intTestImplementation 'org.apache.maven:maven-embedder:3.9.12'
+    intTestRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    intTestRuntimeOnly 'ch.qos.logback:logback-classic:1.5.18'
+    intTestRuntimeOnly 'org.apache.maven:maven-compat:3.9.12'
+    intTestRuntimeOnly 'org.apache.maven.resolver:maven-resolver-transport-http:1.9.24'
+    intTestRuntimeOnly 'org.apache.maven.resolver:maven-resolver-connector-basic:1.9.24'
 }
 
 tasks.register('integrationTest', Test) {
@@ -57,6 +51,7 @@ tasks.register('integrationTest', Test) {
     shouldRunAfter test
 
     useJUnitPlatform()
+
 }
 
 tasks.forbiddenApisIntTest {
@@ -90,22 +85,8 @@ publishingExtension.publications.named("publishedArtifacts") {
 
 integrationTest {
     environment "hibernateVersion", project.version
-    environment "h2Version", libs.versions.h2.get()
-    ['MIRROR_MAVEN_CENTRAL_URL', 'MIRROR_MAVEN_CENTRAL_USERNAME', 'MIRROR_MAVEN_CENTRAL_PASSWORD',
-     'MIRROR_MAVEN_CENTRAL_FALLBACK',
-     'MIRROR_MAVEN_CENTRAL_SNAPSHOTS_URL', 'MIRROR_MAVEN_CENTRAL_SNAPSHOTS_USERNAME', 'MIRROR_MAVEN_CENTRAL_SNAPSHOTS_PASSWORD',
-     'MIRROR_MAVEN_CENTRAL_SNAPSHOTS_FALLBACK'].each { key ->
-        providers.environmentVariable(key).orElse(providers.gradleProperty(key)).orElse('').get().with {
-            if (!empty) environment key, it
-        }
-    }
-    testLogging {
-        exceptionFormat = 'full'
-    }
 }
 
-integrationTest.dependsOn project(':hibernate-core').tasks.publishToMavenLocal
-integrationTest.dependsOn ':hibernate-reveng:publishToMavenLocal'
-integrationTest.dependsOn ":hibernate-platform:publishToMavenLocal"
+integrationTest.dependsOn rootProject.childProjects.'hibernate-core'.tasks.publishToMavenLocal
 integrationTest.dependsOn publishToMavenLocal
 check.dependsOn integrationTest

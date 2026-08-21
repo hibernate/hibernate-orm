@@ -17,7 +17,7 @@ import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.OptimisticLockType;
 import org.hibernate.annotations.OptimisticLocking;
 
-@Entity(name = "CircularPerson")
+@Entity
 @OptimisticLocking(type = OptimisticLockType.DIRTY)
 @DynamicUpdate
 public class Person {

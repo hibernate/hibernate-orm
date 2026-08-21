@@ -64,7 +64,7 @@ public class DeleteDetachedJpaComplianceTest {
 		} );
 	}
 
-	@Entity(name = "Restaurant")
+	@Entity
 	static class Restaurant {
 		@Id
 		@GeneratedValue
@@ -72,7 +72,7 @@ public class DeleteDetachedJpaComplianceTest {
 		String name;
 	}
 
-	@Entity(name = "RestaurantWithCompositeKey")
+	@Entity
 	@IdClass(value = RestaurantPK.class)
 	static class RestaurantWithCompositeKey {
 		@Id

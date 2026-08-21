@@ -8,7 +8,6 @@ import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.TypeContributor;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
-import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.BasicArrayType;
@@ -28,7 +27,7 @@ public class PGVectorTypeContributor implements TypeContributor {
 	@Override
 	public void contribute(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		final Dialect dialect = serviceRegistry.requireService( JdbcServices.class ).getDialect();
-		if ( dialect instanceof PostgreSQLDialect && !( dialect instanceof SpannerPostgreSQLDialect ) ) {
+		if ( dialect instanceof PostgreSQLDialect ) {
 			final TypeConfiguration typeConfiguration = typeContributions.getTypeConfiguration();
 			final JavaTypeRegistry javaTypeRegistry = typeConfiguration.getJavaTypeRegistry();
 			final JdbcTypeRegistry jdbcTypeRegistry = typeConfiguration.getJdbcTypeRegistry();

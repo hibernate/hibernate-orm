@@ -38,7 +38,7 @@ import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.core.Is.is;
@@ -279,7 +279,7 @@ public class EntityJoinTest {
 		);
 	}
 
-	@BeforeAll
+	@BeforeEach
 	public void createTestData(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) -> {
@@ -295,11 +295,11 @@ public class EntityJoinTest {
 
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
-		// scope.getSessionFactory().getSchemaManager().truncate();
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity(name = "Customer")
-	@Table(name = "`a_customer`")
+	@Table(name = "`a:customer`")
 	public static class Customer {
 		private Integer id;
 		private String name;
@@ -331,7 +331,7 @@ public class EntityJoinTest {
 	}
 
 	@Entity(name = "FinancialRecord")
-	@Table(name = "`a_financial_record`")
+	@Table(name = "`a:financial_record`")
 	public static class FinancialRecord {
 		private Integer id;
 		private Customer customer;
@@ -375,7 +375,7 @@ public class EntityJoinTest {
 	}
 
 	@Entity(name = "User")
-	@Table(name = "`a_user`")
+	@Table(name = "`a:user`")
 	public static class User {
 		private Integer id;
 		private String username;

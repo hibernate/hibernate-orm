@@ -30,8 +30,6 @@ import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
 import org.hibernate.dialect.sequence.PostgreSQLSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.sql.ast.PostgreSQLSqlAstTranslator;
-import org.hibernate.dialect.temporal.PostgreSQLTemporalTableSupport;
-import org.hibernate.dialect.temporal.TemporalTableSupport;
 import org.hibernate.dialect.temptable.StandardLocalTemporaryTableStrategy;
 import org.hibernate.dialect.temptable.TemporaryTableStrategy;
 import org.hibernate.dialect.type.PgJdbcHelper;
@@ -161,15 +159,17 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTime;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMicros;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMillis;
 
-/// A {@linkplain Dialect SQL dialect} for PostgreSQL 14 and above.
-///
-/// Please refer to the
-/// <a href="https://www.postgresql.org/docs/current/index.html">PostgreSQL documentation</a>.
-///
-/// @author Gavin King
-/// @author Yoobin Yoon
+/**
+ * A {@linkplain Dialect SQL dialect} for PostgreSQL 13 and above.
+ * <p>
+ * Please refer to the
+ * <a href="https://www.postgresql.org/docs/current/index.html">PostgreSQL documentation</a>.
+ *
+ * @author Gavin King
+ * @author Yoobin Yoon
+ */
 public class PostgreSQLDialect extends Dialect {
-	protected final static DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 14 );
+	protected final static DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 13 );
 
 	private final UniqueDelegate uniqueDelegate = new CreateTableUniqueDelegate(this);
 	private final StandardTableExporter postgresqlTableExporter = new StandardTableExporter( this ) {
@@ -262,14 +262,6 @@ public class PostgreSQLDialect extends Dialect {
 	}
 
 	@Override
-	protected boolean isLob(int sqlTypeCode) {
-		return switch ( sqlTypeCode ) {
-			case LONG32VARCHAR, LONG32NVARCHAR, LONG32VARBINARY -> false;
-			default -> super.isLob( sqlTypeCode );
-		};
-	}
-
-	@Override
 	protected String castType(int sqlTypeCode) {
 		return switch (sqlTypeCode) {
 			case CHAR, NCHAR, VARCHAR, NVARCHAR -> "varchar";
@@ -282,10 +274,6 @@ public class PostgreSQLDialect extends Dialect {
 	@Override
 	protected void registerColumnTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.registerColumnTypes( typeContributions, serviceRegistry );
-		registerPostgreSQLColumnTypes( typeContributions, serviceRegistry );
-	}
-
-	protected void registerPostgreSQLColumnTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		final var ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
 
 		// We need to configure that the array type uses the raw element type for casts
@@ -475,10 +463,12 @@ public class PostgreSQLDialect extends Dialect {
 		return "current_timestamp";
 	}
 
-	/// The `extract()` function returns [TemporalUnit#DAY_OF_WEEK]
-	/// numbered from 0 to 6. This isn't consistent with what most other
-	/// databases do, so here we adjust the result by generating
-	/// `(extract(dow,arg)+1))`.
+	/**
+	 * The {@code extract()} function returns {@link TemporalUnit#DAY_OF_WEEK}
+	 * numbered from 0 to 6. This isn't consistent with what most other
+	 * databases do, so here we adjust the result by generating
+	 * {@code (extract(dow,arg)+1))}.
+	 */
 	@Override
 	public String extractPattern(TemporalUnit unit) {
 		return switch (unit) {
@@ -497,12 +487,14 @@ public class PostgreSQLDialect extends Dialect {
 		}
 	}
 
-	/// `microsecond` is the smallest unit for an `interval`,
-	/// and the highest precision for a `timestamp`, so we could
-	/// use it as the "native" precision, but it's more convenient to use
-	/// whole seconds (with the fractional part), since we want to use
-	/// `extract(epoch from ...)` in our emulation of
-	/// `timestampdiff()`.
+	/**
+	 * {@code microsecond} is the smallest unit for an {@code interval},
+	 * and the highest precision for a {@code timestamp}, so we could
+	 * use it as the "native" precision, but it's more convenient to use
+	 * whole seconds (with the fractional part), since we want to use
+	 * {@code extract(epoch from ...)} in our emulation of
+	 * {@code timestampdiff()}.
+	 */
 	@Override
 	public long getFractionalSecondPrecisionInNanos() {
 		return 1_000_000_000; //seconds
@@ -566,6 +558,7 @@ public class PostgreSQLDialect extends Dialect {
 		super.initializeFunctionRegistry( functionContributions );
 
 		final var functionFactory = new CommonFunctionFactory( functionContributions );
+		final var functionRegistry = functionContributions.getFunctionRegistry();
 
 		functionFactory.cot();
 		functionFactory.radians();
@@ -589,6 +582,7 @@ public class PostgreSQLDialect extends Dialect {
 		functionFactory.translate();
 		functionFactory.toCharNumberDateTimestamp();
 		functionFactory.concat_pipeOperator( "convert_from(lo_get(?1),pg_client_encoding())" );
+		functionFactory.localtimeLocaltimestamp();
 		functionFactory.length_characterLength_pattern( "length(lo_get(?1),pg_client_encoding())" );
 		functionFactory.bitLength_pattern( "bit_length(?1)", "length(lo_get(?1))*8" );
 		functionFactory.octetLength_pattern( "octet_length(?1)", "length(lo_get(?1))" );
@@ -598,8 +592,16 @@ public class PostgreSQLDialect extends Dialect {
 		functionFactory.bitandorxornot_operator();
 		functionFactory.bitAndOr();
 		functionFactory.everyAny_boolAndOr();
+		functionFactory.median_percentileCont( false );
+		functionFactory.stddev();
+		functionFactory.stddevPopSamp();
+		functionFactory.variance();
+		functionFactory.varPopSamp();
+		functionFactory.covarPopSamp();
 		functionFactory.corr();
 		functionFactory.regrLinearRegressionAggregates();
+		functionFactory.insert_overlay();
+		functionFactory.overlay();
 		functionFactory.soundex(); //was introduced in Postgres 9 apparently
 
 		functionFactory.locate_positionSubstring();
@@ -609,23 +611,6 @@ public class PostgreSQLDialect extends Dialect {
 		registerArrayFunctions( functionFactory );
 		registerJsonFunction( functionFactory );
 		registerXmlFunctions( functionFactory );
-		registerUtilityFunctions( functionContributions );
-	}
-
-	protected void registerUtilityFunctions( FunctionContributions functionContributions ) {
-		final var functionFactory = new CommonFunctionFactory( functionContributions );
-		final var functionRegistry =  functionContributions.getFunctionRegistry();
-
-		functionFactory.localtimeLocaltimestamp();
-
-		functionFactory.median_percentileCont( false );
-		functionFactory.stddev();
-		functionFactory.stddevPopSamp();
-		functionFactory.variance();
-		functionFactory.varPopSamp();
-		functionFactory.covarPopSamp();
-		functionFactory.insert_overlay();
-		functionFactory.overlay();
 
 		functionFactory.makeDateTimeTimestamp();
 		// Note that PostgreSQL doesn't support the OVER clause for ordered set-aggregate functions
@@ -663,7 +648,7 @@ public class PostgreSQLDialect extends Dialect {
 		functionFactory.regexpLike_postgresql( getVersion().isSameOrAfter( 15 ) );
 	}
 
-	protected void registerXmlFunctions(CommonFunctionFactory functionFactory) {
+	protected static void registerXmlFunctions(CommonFunctionFactory functionFactory) {
 		functionFactory.xmlelement();
 		functionFactory.xmlcomment();
 		functionFactory.xmlforest();
@@ -680,8 +665,8 @@ public class PostgreSQLDialect extends Dialect {
 			functionFactory.jsonValue_postgresql( true );
 			functionFactory.jsonQuery();
 			functionFactory.jsonExists();
-			functionFactory.jsonObject_postgresql( true );
-			functionFactory.jsonArray_postgresql( true );
+			functionFactory.jsonObject();
+			functionFactory.jsonArray();
 			functionFactory.jsonArrayAgg_postgresql( true );
 			functionFactory.jsonObjectAgg_postgresql( true );
 			functionFactory.jsonTable();
@@ -691,14 +676,14 @@ public class PostgreSQLDialect extends Dialect {
 			functionFactory.jsonQuery_postgresql();
 			functionFactory.jsonExists_postgresql();
 			if ( getVersion().isSameOrAfter( 16 ) ) {
-				functionFactory.jsonObject_postgresql( true );
-				functionFactory.jsonArray_postgresql( true );
+				functionFactory.jsonObject();
+				functionFactory.jsonArray();
 				functionFactory.jsonArrayAgg_postgresql( true );
 				functionFactory.jsonObjectAgg_postgresql( true );
 			}
 			else {
-				functionFactory.jsonObject_postgresql( false );
-				functionFactory.jsonArray_postgresql( false );
+				functionFactory.jsonObject_postgresql();
+				functionFactory.jsonArray_postgresql();
 				functionFactory.jsonArrayAgg_postgresql( false );
 				functionFactory.jsonObjectAgg_postgresql( false );
 			}
@@ -731,8 +716,12 @@ public class PostgreSQLDialect extends Dialect {
 		functionFactory.arrayRemoveIndex_unnest( true );
 		functionFactory.arraySlice_operator();
 		functionFactory.arrayReplace();
-		functionFactory.arrayTrim_trim_array();
-
+		if ( getVersion().isSameOrAfter( 14 ) ) {
+			functionFactory.arrayTrim_trim_array();
+		}
+		else {
+			functionFactory.arrayTrim_unnest();
+		}
 		if ( getVersion().isSameOrAfter( 18 ) ) {
 			functionFactory.arrayReverse();
 			functionFactory.arraySort();
@@ -750,49 +739,51 @@ public class PostgreSQLDialect extends Dialect {
 		return "ordinality";
 	}
 
-	/// Whether PostgreSQL supports `min(uuid)`/`max(uuid)`,
-	/// which it doesn't by default. Since the emulation does not perform well,
-	/// this method may be overridden by any user who ensures that aggregate
-	/// functions for handling uuids exist in the database.
-	///
-	/// The following definitions can be used for this purpose:
-	/// ```sql
-	/// create or replace function min(uuid, uuid)
-	///     returns uuid
-	///     immutable parallel safe
-	///     language plpgsql as
-	/// $$
-	/// begin
-	///     return least($1, $2);
-	/// end
-	/// $$;
-	///
-	/// create aggregate min(uuid) (
-	///     sfunc = min,
-	///     stype = uuid,
-	///     combinefunc = min,
-	///     parallel = safe,
-	///     sortop = operator (&lt;)
-	///     );
-	///
-	/// create or replace function max(uuid, uuid)
-	///     returns uuid
-	///     immutable parallel safe
-	///     language plpgsql as
-	/// $$
-	/// begin
-	///     return greatest($1, $2);
-	/// end
-	/// $$;
-	///
-	/// create aggregate max(uuid) (
-	///     sfunc = max,
-	///     stype = uuid,
-	///     combinefunc = max,
-	///     parallel = safe,
-	///     sortop = operator (&gt;)
-	///     );
-	/// ```
+	/**
+	 * Whether PostgreSQL supports {@code min(uuid)}/{@code max(uuid)},
+	 * which it doesn't by default. Since the emulation does not perform well,
+	 * this method may be overridden by any user who ensures that aggregate
+	 * functions for handling uuids exist in the database.
+	 * <p>
+	 * The following definitions can be used for this purpose:
+	 * <code><pre>
+	 * create or replace function min(uuid, uuid)
+	 *     returns uuid
+	 *     immutable parallel safe
+	 *     language plpgsql as
+	 * $$
+	 * begin
+	 *     return least($1, $2);
+	 * end
+	 * $$;
+	 *
+	 * create aggregate min(uuid) (
+	 *     sfunc = min,
+	 *     stype = uuid,
+	 *     combinefunc = min,
+	 *     parallel = safe,
+	 *     sortop = operator (&lt;)
+	 *     );
+	 *
+	 * create or replace function max(uuid, uuid)
+	 *     returns uuid
+	 *     immutable parallel safe
+	 *     language plpgsql as
+	 * $$
+	 * begin
+	 *     return greatest($1, $2);
+	 * end
+	 * $$;
+	 *
+	 * create aggregate max(uuid) (
+	 *     sfunc = max,
+	 *     stype = uuid,
+	 *     combinefunc = max,
+	 *     parallel = safe,
+	 *     sortop = operator (&gt;)
+	 *     );
+	 * </pre></code>
+	 */
 	protected boolean supportsMinMaxOnUuid() {
 		return false;
 	}
@@ -831,11 +822,6 @@ public class PostgreSQLDialect extends Dialect {
 
 	@Override
 	public boolean supportsIfExistsAfterAlterTable() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsIfExistsBeforeIndexName() {
 		return true;
 	}
 
@@ -936,12 +922,6 @@ public class PostgreSQLDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsNotNullAfterGeneratedAs() {
-		// actually it is allowed for 'generated always as (...) stored'
-		return false;
-	}
-
-	@Override
 	public String generatedAs(String generatedAs) {
 		return getVersion().isSameOrAfter( 18 )
 				? " generated always as (" + generatedAs + ")"
@@ -1007,11 +987,6 @@ public class PostgreSQLDialect extends Dialect {
 	@Override
 	public String getCurrentTimestampSelectString() {
 		return "select now()";
-	}
-
-	@Override
-	public boolean isCurrentTimestampStable() {
-		return true;
 	}
 
 	@Override
@@ -1081,8 +1056,10 @@ public class PostgreSQLDialect extends Dialect {
 		return EXTRACTOR;
 	}
 
-	/// Constraint-name extractor for Postgres constraint violation exceptions.
-	/// Originally contributed by Denny Bartelt.
+	/**
+	 * Constraint-name extractor for Postgres constraint violation exceptions.
+	 * Originally contributed by Denny Bartelt.
+	 */
 	private static final ViolatedConstraintNameExtractor EXTRACTOR =
 			new TemplatedViolatedConstraintNameExtractor( sqle -> {
 				final String sqlState = extractSqlState( sqle );
@@ -1507,7 +1484,9 @@ public class PostgreSQLDialect extends Dialect {
 		contributePostgreSQLTypes(typeContributions, serviceRegistry);
 	}
 
-	/// Allow for extension points to override this only
+	/**
+	 * Allow for extension points to override this only
+	 */
 	protected void contributePostgreSQLTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		final var jdbcTypeRegistry = typeContributions.getTypeConfiguration()
 				.getJdbcTypeRegistry();
@@ -1581,7 +1560,9 @@ public class PostgreSQLDialect extends Dialect {
 		return postgresqlTableExporter;
 	}
 
-	/// @return `true`, but only because we can "batch" truncate
+	/**
+	 * @return {@code true}, but only because we can "batch" truncate
+	 */
 	@Override
 	public boolean canBatchTruncate() {
 		return true;
@@ -1683,17 +1664,17 @@ public class PostgreSQLDialect extends Dialect {
 
 	@Override
 	public boolean supportsRecursiveCycleClause() {
-		return true;
+		return getVersion().isSameOrAfter( 14 );
 	}
 
 	@Override
 	public boolean supportsRecursiveCycleUsingClause() {
-		return true;
+		return getVersion().isSameOrAfter( 14 );
 	}
 
 	@Override
 	public boolean supportsRecursiveSearchClause() {
-		return true;
+		return getVersion().isSameOrAfter( 14 );
 	}
 
 	@Override
@@ -1704,10 +1685,5 @@ public class PostgreSQLDialect extends Dialect {
 	@Override
 	public boolean causesRollback(SQLException sqlException) {
 		return true;
-	}
-
-	@Override
-	public TemporalTableSupport getTemporalTableSupport() {
-		return new PostgreSQLTemporalTableSupport( this );
 	}
 }

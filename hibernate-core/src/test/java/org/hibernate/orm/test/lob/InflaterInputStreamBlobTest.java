@@ -86,7 +86,7 @@ class InflaterInputStreamBlobTest {
 		return bytes;
 	}
 
-	@Entity(name = "TestEntity")
+	@Entity
 	public static class TestEntity {
 
 		@Id

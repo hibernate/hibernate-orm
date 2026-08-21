@@ -6,11 +6,8 @@ package org.hibernate.orm.test.type;
 
 import java.time.LocalDateTime;
 import java.time.Month;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 
 import org.hibernate.community.dialect.InformixDialect;
-import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.HANADialect;
@@ -19,7 +16,6 @@ import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.SQLServerDialect;
-import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.dialect.SybaseASEDialect;
 
 import org.hibernate.testing.jdbc.SharedDriverManagerTypeCacheClearingIntegrator;
@@ -136,7 +132,6 @@ public class TimestampArrayTest {
 			reason = "The statement failed because binary large objects are not allowed in the Union, Intersect, or Minus ")
 	@SkipForDialect(dialectClass = MariaDBDialect.class, majorVersion = 10, minorVersion = 6,
 			reason = "Bug in MariaDB https://jira.mariadb.org/browse/MDEV-21530")
-	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsArrayComparison.class)
 	public void testQuery(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			TypedQuery<TableWithTimestampArrays> tq = em.createNamedQuery( "TableWithTimestampArrays.JPQL.getByData", TableWithTimestampArrays.class );
@@ -165,7 +160,6 @@ public class TimestampArrayTest {
 	@SkipForDialect(dialectClass = HANADialect.class, reason = "HANA requires a special function to compare LOBs")
 	@SkipForDialect(dialectClass = MySQLDialect.class, matchSubTypes = true, reason = "MySQL supports distinct from through a special operator")
 	@SkipForDialect(dialectClass = InformixDialect.class, reason = "Informix can't compare LOBs")
-	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsArrayComparison.class)
 	public void testNativeQuery(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			final Dialect dialect = em.getDialect();
@@ -196,17 +190,6 @@ public class TimestampArrayTest {
 								time1,
 								time2,
 								time3
-						} )
-				);
-			}
-			else if ( dialect instanceof SpannerPostgreSQLDialect || dialect instanceof SpannerDialect ) {
-				// Spanner always stores timestamp with timezone. So it always returns the date time with the timezone
-				assertThat(
-						tuple[1],
-						is( new OffsetDateTime[] {
-								OffsetDateTime.of(time1, ZoneOffset.UTC ),
-								OffsetDateTime.of(time2, ZoneOffset.UTC),
-								OffsetDateTime.of(time3, ZoneOffset.UTC)
 						} )
 				);
 			}

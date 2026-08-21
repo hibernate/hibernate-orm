@@ -28,7 +28,7 @@ public class LogDelegationTest {
 
 	@Test
 	public void testLogDelegationIsActivated() {
-		assertThat( LOG, instanceOf( DelegatingLogger.class ) );
+		assertThat( LOG, instanceOf( Log4J2DelegatingLogger.class ) );
 	}
 
 	@Test

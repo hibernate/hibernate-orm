@@ -11,7 +11,7 @@ import org.hibernate.sql.ast.SqlAstWalker;
  *
  * @author Steve Ebersole
  */
-public interface Statement extends SqlAstNode {
+public interface Statement {
 	/**
 	 * Visitation
 	 */

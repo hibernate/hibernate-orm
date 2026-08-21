@@ -15,7 +15,10 @@ import org.hibernate.sql.ast.tree.expression.Expression;
 /**
  * Oracle array_get function.
  */
-public class OracleArrayGetFunction extends AbstractArrayGetFunction {
+public class OracleArrayGetFunction extends ArrayGetUnnestFunction {
+
+	public OracleArrayGetFunction() {
+	}
 
 	@Override
 	public void render(

@@ -147,8 +147,9 @@ public abstract class BaseEnversCollectionEventListener extends BaseEnversEventL
 	protected boolean shouldGenerateRevision(AbstractCollectionEvent event) {
 		final String entityName = event.getAffectedOwnerEntityName();
 		if ( getEnversService().getEntitiesConfigurations().isVersioned( entityName ) ) {
-			final boolean isInverse = event.getCollectionPersister().isInverse();
-			final boolean isOneToMany = event.getCollectionPersister() instanceof OneToManyPersister;
+			final CollectionEntry collectionEntry = getCollectionEntry( event );
+			final boolean isInverse = collectionEntry.getLoadedPersister().isInverse();
+			final boolean isOneToMany = collectionEntry.getLoadedPersister() instanceof OneToManyPersister;
 			if ( isInverse || isOneToMany ) {
 				return getEnversService().getConfig().isGenerateRevisionsForCollections();
 			}

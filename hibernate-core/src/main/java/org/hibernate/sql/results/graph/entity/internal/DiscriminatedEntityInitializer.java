@@ -8,6 +8,7 @@ import java.util.function.BiConsumer;
 
 import org.hibernate.Hibernate;
 import org.hibernate.engine.spi.EntityHolder;
+import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.metamodel.mapping.DiscriminatedAssociationModelPart;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.persister.entity.EntityPersister;
@@ -154,7 +155,7 @@ public class DiscriminatedEntityInitializer
 			final var session = data.getRowProcessingState().getSession();
 			final Object identifier = data.entityIdentifier;
 			final var concreteDescriptor = data.concreteDescriptor;
-			final var entityKey = data.getRowProcessingState().getSession().generateEntityKey( identifier, concreteDescriptor );
+			final var entityKey = new EntityKey( identifier, concreteDescriptor );
 			final var persistenceContext = session.getPersistenceContextInternal();
 			final var holder = persistenceContext.getEntityHolder( entityKey );
 			final Object instance;
@@ -249,7 +250,7 @@ public class DiscriminatedEntityInitializer
 			data.entityIdentifier = lazyInitializer.getInternalIdentifier();
 		}
 
-		final var entityKey = session.generateEntityKey( data.entityIdentifier, data.concreteDescriptor );
+		final var entityKey = new EntityKey( data.entityIdentifier, data.concreteDescriptor );
 		final var entityHolder = session.getPersistenceContextInternal().getEntityHolder(
 				entityKey
 		);

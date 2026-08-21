@@ -30,52 +30,33 @@ public class DiscriminatedAssociationPathInterpretation<T> extends AbstractSqmPa
 	public static <T> DiscriminatedAssociationPathInterpretation<T> from(
 			SqmAnyValuedSimplePath<T> sqmPath,
 			SqmToSqlAstConverter converter) {
-		final TableGroup tableGroup =
-				converter.getFromClauseAccess()
-						.findTableGroup( sqmPath.getLhs().getNavigablePath() );
-		final var mapping =
-				(DiscriminatedAssociationModelPart)
-						tableGroup.getModelPart().findSubPart(
-								sqmPath.getReferencedPathSource().getPathName(),
-								null
-						);
-		return new DiscriminatedAssociationPathInterpretation<>(
+		final TableGroup tableGroup = converter.getFromClauseAccess()
+			.findTableGroup( sqmPath.getLhs().getNavigablePath() );
+
+		final DiscriminatedAssociationModelPart mapping = (DiscriminatedAssociationModelPart ) tableGroup.getModelPart().findSubPart(
+				sqmPath.getReferencedPathSource().getPathName(),
+				null
+		);
+
+		final List<Expression> tupleExpressions = new ArrayList<>();
+
+		mapping.forEachSelectable(
+				(selectionIndex, selectableMapping) -> {
+					final TableReference tableReference = tableGroup.resolveTableReference( sqmPath.getNavigablePath(), selectableMapping.getContainingTableExpression() );
+					final Expression expression = converter.getSqlExpressionResolver().resolveSqlExpression(
+							tableReference,
+							selectableMapping
+					);
+					tupleExpressions.add( expression );
+				}
+		);
+
+		return new DiscriminatedAssociationPathInterpretation<T>(
 				sqmPath.getNavigablePath(),
 				mapping,
 				tableGroup,
-				createSqlTuple( sqmPath.getNavigablePath(), mapping, tableGroup, converter )
+				new SqlTuple( tupleExpressions, mapping )
 		);
-	}
-
-	public static <T> DiscriminatedAssociationPathInterpretation<T> from(
-			NavigablePath navigablePath,
-			DiscriminatedAssociationModelPart mapping,
-			TableGroup tableGroup,
-			SqmToSqlAstConverter converter) {
-		return new DiscriminatedAssociationPathInterpretation<>(
-				navigablePath,
-				mapping,
-				tableGroup,
-				createSqlTuple( navigablePath, mapping, tableGroup, converter )
-		);
-	}
-
-	private static SqlTuple createSqlTuple(
-			NavigablePath navigablePath,
-			DiscriminatedAssociationModelPart mapping,
-			TableGroup tableGroup,
-			SqmToSqlAstConverter converter) {
-		final List<Expression> tupleExpressions = new ArrayList<>();
-		mapping.forEachSelectable(
-				(selectionIndex, selectableMapping) -> {
-					final TableReference tableReference =
-							tableGroup.resolveTableReference( navigablePath,
-									selectableMapping.getContainingTableExpression() );
-					tupleExpressions.add( converter.getSqlExpressionResolver()
-							.resolveSqlExpression( tableReference, selectableMapping ) );
-				}
-		);
-		return new SqlTuple( tupleExpressions, mapping );
 	}
 
 

@@ -13,6 +13,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.PropertyNotFoundException;
 import org.hibernate.QueryException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.grammars.hql.HqlLexer;
 import org.hibernate.grammars.hql.HqlParser;
 import org.hibernate.query.hql.internal.HqlParseTreeBuilder;
 import org.hibernate.query.hql.internal.SemanticQueryBuilder;
@@ -119,8 +120,8 @@ public class Validation {
 	}
 
 	private static HqlParser.StatementContext parseAndCheckSyntax(String hql, Handler handler) {
-		final var hqlLexer = HqlParseTreeBuilder.INSTANCE.buildHqlLexer( hql );
-		final var hqlParser = HqlParseTreeBuilder.INSTANCE.buildHqlParser( hql, hqlLexer );
+		final HqlLexer hqlLexer = HqlParseTreeBuilder.INSTANCE.buildHqlLexer( hql );
+		final HqlParser hqlParser = HqlParseTreeBuilder.INSTANCE.buildHqlParser( hql, hqlLexer );
 
 		hqlParser.getInterpreter().setPredictionMode( PredictionMode.SLL );
 		hqlParser.removeErrorListeners();
@@ -130,8 +131,9 @@ public class Validation {
 		try {
 			return hqlParser.statement();
 		}
-		catch ( ParseCancellationException e ) {
-			// reset the parser state (do not reset the input token stream)
+		catch ( ParseCancellationException e) {
+			// reset the input token stream and parser state
+			hqlLexer.reset();
 			hqlParser.reset();
 
 			// fall back to LL(k)-based parsing

@@ -75,7 +75,7 @@ public class GeneratorParameters {
 			RootClass rootClass,
 			Map<String, Object> configuration,
 			ConfigurationService configService) {
-		final var params = new Properties( dialect.getDefaultProperties() );
+		final var params = new Properties();
 		collectParameters( identifierValue, dialect, rootClass, params::put, configService );
 		if ( configuration != null ) {
 			params.putAll( configuration );

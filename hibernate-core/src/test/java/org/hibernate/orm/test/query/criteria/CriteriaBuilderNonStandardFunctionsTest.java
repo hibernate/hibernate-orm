@@ -17,8 +17,6 @@ import java.util.List;
 import jakarta.persistence.criteria.ParameterExpression;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
-import org.hibernate.dialect.SpannerDialect;
-import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.common.TemporalUnit;
@@ -137,7 +135,6 @@ public class CriteriaBuilderNonStandardFunctionsTest {
 
 	@Test
 	@RequiresDialect(PostgreSQLDialect.class)
-	@SkipForDialect(dialectClass = SpannerPostgreSQLDialect.class, reason = "Spanner PostgreSQL does not support inet type")
 	public void testSqlCustomType(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
@@ -161,7 +158,6 @@ public class CriteriaBuilderNonStandardFunctionsTest {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsFormat.class)
-	@SkipForDialect(dialectClass = SpannerDialect.class, reason = "Spanner FORMAT_DATE does not support time specifiers for DATE types")
 	public void testFormatWithJavaUtilDate(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
@@ -324,7 +320,6 @@ public class CriteriaBuilderNonStandardFunctionsTest {
 
 	@Test
 	@RequiresDialect(PostgreSQLDialect.class)
-	@SkipForDialect(dialectClass = SpannerPostgreSQLDialect.class, reason = "Spanner PostgreSQL does not support collation")
 	public void testCollatePostgreSQL(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
@@ -455,26 +450,21 @@ public class CriteriaBuilderNonStandardFunctionsTest {
 
 	@Test
 	@JiraKey("HHH-16185")
-	@JiraKey("HHH-20113")
 	public void testNumericTruncFunction(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final CriteriaBuilder cb = session.getCriteriaBuilder();
 			final CriteriaQuery<Tuple> query = cb.createTupleQuery();
 			query.multiselect(
 					cb.function( "trunc", Float.class, cb.literal( 32.92345f ) ),
-					cb.function( "truncate", Float.class, cb.parameter( Float.class, "floatValue" ) ),
-					cb.function( "trunc", Float.class, cb.parameter( Float.class, "floatValue" ), cb.parameter( Integer.class, "decimals" ) ),
+					cb.function( "truncate", Float.class, cb.literal( 32.92345f ) ),
+					cb.function( "trunc", Float.class, cb.literal( 32.92345f ), cb.literal( 3 ) ),
 					cb.function( "truncate", Float.class, cb.literal( 32.92345f ), cb.literal( 3 ) ),
-					cb.function( "trunc", Double.class, cb.parameter( Double.class, "doubleValue" ) ),
+					cb.function( "trunc", Double.class, cb.literal( 32.92345d ) ),
 					cb.function( "truncate", Double.class, cb.literal( 32.92345d ) ),
 					cb.function( "trunc", Double.class, cb.literal( 32.92345d ), cb.literal( 3 ) ),
-					cb.function( "truncate", Double.class, cb.parameter( Double.class, "doubleValue" ), cb.parameter( Integer.class, "decimals" ) )
+					cb.function( "truncate", Double.class, cb.literal( 32.92345d ), cb.literal( 3 ) )
 			);
-			final Tuple result = session.createQuery( query )
-					.setParameter( "floatValue", 32.92345f  )
-					.setParameter( "doubleValue", 32.92345d  )
-					.setParameter( "decimals", 3 )
-					.getSingleResult();
+			final Tuple result = session.createQuery( query ).getSingleResult();
 			assertEquals( 32f, result.get( 0 ) );
 			assertEquals( 32f, result.get( 1 ) );
 			assertEquals( 32.923f, result.get( 2 ) );

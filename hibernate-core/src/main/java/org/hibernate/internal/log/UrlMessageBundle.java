@@ -7,7 +7,6 @@ package org.hibernate.internal.log;
 import java.lang.invoke.MethodHandles;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.Locale;
 
 import org.hibernate.Internal;
 import org.jboss.logging.Logger;
@@ -37,7 +36,7 @@ public interface UrlMessageBundle {
 	String LOGGER_NAME = SubSystemLogging.BASE + ".url";
 
 	Logger URL_LOGGER = Logger.getLogger( LOGGER_NAME );
-	UrlMessageBundle URL_MESSAGE_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), UrlMessageBundle.class, LOGGER_NAME, Locale.ROOT );
+	UrlMessageBundle URL_MESSAGE_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), UrlMessageBundle.class, LOGGER_NAME );
 
 	/**
 	 * Logs a warning about a malformed URL, caused by a {@link URISyntaxException}

@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.annotations.uniqueconstraint;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
@@ -16,11 +17,12 @@ import jakarta.validation.constraints.NotNull;
 @Entity
 @Table(uniqueConstraints = {@UniqueConstraint(name = "uniqueWithInherited", columnNames = {"room_id", "cost"} )})
 public class House extends Building {
-	@Id
+	@Column(nullable = false)
 	public Long id;
 	@NotNull
 	public Integer cost;
 
+	@Id
 	public Long getId() {
 		return id;
 	}

@@ -111,7 +111,7 @@ public class ComponentType extends AbstractType
 		if ( discriminator != null ) {
 			this.discriminatorColumnSpan = discriminator.getColumnSpan();
 			this.propertyNames[i] = DISCRIMINATOR_ROLE_NAME;
-			this.propertyTypes[i] = component.getDiscriminatorType();
+			this.propertyTypes[i] = discriminator.getType();
 			this.propertyNullability[i] = false;
 			this.cascade[i] = CascadeStyles.NONE;
 			this.joinedFetch[i] = FetchMode.SELECT;
@@ -540,7 +540,7 @@ public class ComponentType extends AbstractType
 					copyCache
 			);
 
-			if ( target == null || !isMutable() || embeddableTypeDescriptor().isPolymorphic() ) {
+			if ( target == null || !isMutable() ) {
 				return instantiator( original ).instantiate( () -> replacedValues );
 			}
 			else {
@@ -574,7 +574,7 @@ public class ComponentType extends AbstractType
 					foreignKeyDirection
 			);
 
-			if ( target == null || !isMutable() || embeddableTypeDescriptor().isPolymorphic() ) {
+			if ( target == null || !isMutable() ) {
 				return instantiator( original ).instantiate( () -> replacedValues );
 			}
 			else {

@@ -17,14 +17,13 @@ import org.hibernate.type.BasicType;
  */
 public class ResolvedSqlSelection extends SqlSelectionImpl {
 
-	private final BasicType<?> resolvedType;
+	private final BasicType<Object> resolvedType;
 
 	public ResolvedSqlSelection(
 			int valuesArrayPosition,
 			Expression sqlExpression,
-			BasicType<?> resolvedType) {
-		super( valuesArrayPosition + 1, valuesArrayPosition, sqlExpression, null, false,
-				resolvedType.getJdbcValueExtractor() );
+			BasicType<Object> resolvedType) {
+		super( valuesArrayPosition + 1, valuesArrayPosition, sqlExpression, null, false, resolvedType.getJdbcValueExtractor() );
 		this.resolvedType = resolvedType;
 	}
 
@@ -33,8 +32,7 @@ public class ResolvedSqlSelection extends SqlSelectionImpl {
 			int valuesArrayPosition,
 			Expression sqlExpression,
 			BasicType<Object> resolvedType) {
-		super( jdbcPosition, valuesArrayPosition, sqlExpression, null, false,
-				resolvedType.getJdbcValueExtractor() );
+		super( jdbcPosition, valuesArrayPosition, sqlExpression, null, false, resolvedType.getJdbcValueExtractor() );
 		this.resolvedType = resolvedType;
 	}
 

@@ -10,9 +10,7 @@ import java.util.Date;
 
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.Generated;
-import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.query.Query;
-import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.type.StandardBasicTypes;
 
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
@@ -104,9 +102,7 @@ public class TimestampPropertyTest {
 		);
 	}
 
-	// TODO(spanner): Reenable this test once Spanner bug is fixed
 	@Test
-	@SkipForDialect(dialectClass = SpannerPostgreSQLDialect.class, reason = "Spanner has a bug with current_timestamp and default")
 	public void testTimeGeneratedByColumnDefault(SessionFactoryScope scope) {
 		final Entity eOrig = new Entity();
 

@@ -7,6 +7,7 @@ package org.hibernate.boot.models.xml.internal;
 import java.util.EnumSet;
 
 import org.hibernate.annotations.CascadeType;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbPersistenceUnitDefaultsImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbPersistenceUnitMetadataImpl;
 import org.hibernate.boot.models.xml.spi.PersistenceUnitMetadata;
 
@@ -79,7 +80,7 @@ public final class PersistenceUnitMetadataImpl implements PersistenceUnitMetadat
 
 		xmlComplete = xmlComplete || metadata.getXmlMappingMetadataComplete() != null;
 
-		final var defaults = metadata.getPersistenceUnitDefaults();
+		final JaxbPersistenceUnitDefaultsImpl defaults = metadata.getPersistenceUnitDefaults();
 		if ( defaults == null ) {
 			return;
 		}

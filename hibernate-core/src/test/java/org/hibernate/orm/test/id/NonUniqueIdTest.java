@@ -10,10 +10,8 @@ import jakarta.persistence.Table;
 
 import org.hibernate.HibernateException;
 
-import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterAll;
@@ -29,7 +27,6 @@ import static org.junit.jupiter.api.Assertions.fail;
 		annotatedClasses = NonUniqueIdTest.Category.class
 )
 @SessionFactory
-@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsTableWithoutPrimaryKey.class )
 public class NonUniqueIdTest {
 
 	@BeforeAll

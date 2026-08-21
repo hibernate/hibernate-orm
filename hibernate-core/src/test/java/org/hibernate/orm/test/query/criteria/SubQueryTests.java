@@ -7,9 +7,7 @@ package org.hibernate.orm.test.query.criteria;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 
 import org.hibernate.testing.orm.domain.gambit.BasicEntity;
-import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
@@ -25,7 +23,6 @@ import jakarta.persistence.criteria.Subquery;
  */
 @DomainModel( annotatedClasses = BasicEntity.class )
 @SessionFactory
-@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsAllQuantifiedSubqueriesWithComparison.class )
 public class SubQueryTests {
 
 	@Test

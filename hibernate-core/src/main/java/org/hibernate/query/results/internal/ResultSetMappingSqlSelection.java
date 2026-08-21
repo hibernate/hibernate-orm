@@ -7,7 +7,7 @@ package org.hibernate.query.results.internal;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.mapping.JdbcMappingContainer;
+import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.spi.SqlExpressionAccess;
 import org.hibernate.sql.ast.spi.SqlSelection;
@@ -24,16 +24,18 @@ import org.hibernate.type.descriptor.ValueExtractor;
  */
 public class ResultSetMappingSqlSelection implements SqlSelection, Expression, SqlExpressionAccess {
 	private final int valuesArrayPosition;
-	private final JdbcMapping valueMapping;
+	private final BasicValuedMapping valueMapping;
 	private final ValueExtractor<?> valueExtractor;
 
 	public ResultSetMappingSqlSelection(int valuesArrayPosition, BasicValuedMapping valueMapping) {
-		this ( valuesArrayPosition, valueMapping.getJdbcMapping() );
+		this.valuesArrayPosition = valuesArrayPosition;
+		this.valueMapping = valueMapping;
+		this.valueExtractor = valueMapping.getJdbcMapping().getJdbcValueExtractor();
 	}
 
 	public ResultSetMappingSqlSelection(int valuesArrayPosition, JdbcMapping jdbcMapping) {
 		this.valuesArrayPosition = valuesArrayPosition;
-		this.valueMapping = jdbcMapping;
+		this.valueMapping = null;
 		this.valueExtractor = jdbcMapping.getJdbcValueExtractor();
 	}
 
@@ -58,7 +60,7 @@ public class ResultSetMappingSqlSelection implements SqlSelection, Expression, S
 	}
 
 	@Override
-	public JdbcMappingContainer getExpressionType() {
+	public MappingModelExpressible<?> getExpressionType() {
 		return valueMapping;
 	}
 

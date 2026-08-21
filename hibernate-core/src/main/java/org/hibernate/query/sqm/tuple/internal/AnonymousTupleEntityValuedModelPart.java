@@ -23,7 +23,6 @@ import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.AttributeMappingsList;
 import org.hibernate.metamodel.mapping.AttributeMappingsMap;
 import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
-import org.hibernate.metamodel.mapping.DiscriminatorValue;
 import org.hibernate.metamodel.mapping.EntityAssociationMapping;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
@@ -647,7 +646,7 @@ public class AnonymousTupleEntityValuedModelPart
 	}
 
 	@Override
-	public DiscriminatorValue getDiscriminatorValue() {
+	public Object getDiscriminatorValue() {
 		return delegate.getEntityMappingType().getDiscriminatorValue();
 	}
 

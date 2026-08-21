@@ -4,7 +4,6 @@
  */
 package org.hibernate.orm.test.query.hql;
 
-import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
@@ -15,7 +14,6 @@ import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -49,9 +47,7 @@ public class CollateTests {
 		);
 	}
 
-	@Test
-	@RequiresDialect(PostgreSQLDialect.class)
-	@SkipForDialect( dialectClass = SpannerPostgreSQLDialect.class, reason = "Spanner doesn't support COLLATE clause" )
+	@Test @RequiresDialect(PostgreSQLDialect.class)
 	public void testCollatePostgreSQL(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

@@ -30,6 +30,10 @@ public class OnUpdateVisitor extends ReattachVisitor {
 
 	@Override
 	Object processCollection(Object collection, CollectionType type) throws HibernateException {
+		if ( collection == CollectionType.UNFETCHED_COLLECTION ) {
+			return null;
+		}
+
 		final var session = getSession();
 		final var persister =
 				session.getFactory().getMappingMetamodel()

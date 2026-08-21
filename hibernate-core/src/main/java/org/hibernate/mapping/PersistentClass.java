@@ -7,7 +7,6 @@ package org.hibernate.mapping;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -49,8 +48,7 @@ import static org.hibernate.sql.Template.collectColumnNames;
  * @author Gavin King
  */
 public abstract sealed class PersistentClass
-		implements IdentifiableTypeClass, AttributeContainer, AuxiliaryTableHolder,
-				Filterable, MetaAttributable, Contributable, Serializable
+		implements IdentifiableTypeClass, AttributeContainer, Filterable, MetaAttributable, Contributable, Serializable
 		permits RootClass, Subclass {
 
 	private static final Alias PK_ALIAS = new Alias( 15, "PK" );
@@ -102,8 +100,6 @@ public abstract sealed class PersistentClass
 	private boolean hasSubselectLoadableCollections;
 	private Component identifierMapper;
 	private List<CallbackDefinition> callbackDefinitions;
-	private Table auxiliaryTable;
-	private Map<String, Column> auxiliaryColumns;
 
 	private final List<CheckConstraint> checkConstraints = new ArrayList<>();
 
@@ -269,15 +265,6 @@ public abstract sealed class PersistentClass
 		return new JoinedList<>( lists );
 	}
 
-	public List<PersistentClass> getPersistentClassClosure() {
-		final ArrayList<List<PersistentClass>> lists = new ArrayList<>();
-		lists.add( getSuperclassClosure() );
-		for (int j = 0; j < subclasses.size(); j++) {
-			lists.add( subclasses.get(j).getSubclassClosure() );
-		}
-		return new JoinedList<>( lists );
-	}
-
 	public Table getIdentityTable() {
 		return getRootTable();
 	}
@@ -313,29 +300,6 @@ public abstract sealed class PersistentClass
 	}
 
 	public abstract Table getTable();
-
-	@Override
-	public Table getAuxiliaryTable() {
-		return auxiliaryTable;
-	}
-
-	@Override
-	public void setAuxiliaryTable(Table auxiliaryTable) {
-		this.auxiliaryTable = auxiliaryTable;
-	}
-
-	@Override
-	public Column getAuxiliaryColumn(String name) {
-		return auxiliaryColumns == null ? null : auxiliaryColumns.get( name );
-	}
-
-	@Override
-	public void addAuxiliaryColumn(String name, Column column) {
-		if ( auxiliaryColumns == null ) {
-			auxiliaryColumns = new HashMap<>();
-		}
-		auxiliaryColumns.put( name, column );
-	}
 
 	public String getEntityName() {
 		return entityName;
@@ -435,8 +399,6 @@ public abstract sealed class PersistentClass
 		return new JoinedList<>( getTableClosure(), subclassTables );
 	}
 
-	public abstract List<PersistentClass> getSuperclassClosure();
-
 	public boolean isClassOrSuperclassJoin(Join join) {
 		return joins.contains( join );
 	}
@@ -472,17 +434,8 @@ public abstract sealed class PersistentClass
 	}
 
 	public void createPrimaryKey() {
+		//Primary key constraint
 		final var table = getTable();
-		// Never overwrite the primary key if there already is an existing one,
-		// because previously created ForeignKey might depend on the order of columns,
-		// which the new PrimaryKey might not have
-		if ( table.getPrimaryKey() == null ) {
-			final var primaryKey = makePrimaryKey( table );
-			table.setPrimaryKey( primaryKey );
-		}
-	}
-
-	PrimaryKey makePrimaryKey(Table table) {
 		final var primaryKey = new PrimaryKey( table );
 		primaryKey.setName( PK_ALIAS.toAliasString( table.getName() ) );
 		primaryKey.addColumns( getKey() );
@@ -493,7 +446,7 @@ public abstract sealed class PersistentClass
 				}
 			}
 		}
-		return primaryKey;
+		table.setPrimaryKey( primaryKey );
 	}
 
 	private boolean addPartitionKeyToPrimaryKey() {

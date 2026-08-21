@@ -32,7 +32,6 @@ public class ModuleAspect implements Aspect {
 
 		target.getExtensions().add( "jakartaJpaVersion", ormBuildDetails.getJpaVersionNameOsgi() );
 		target.getExtensions().add( "db", ormBuildDetails.getDatabaseName() );
-		target.getExtensions().add( "dbVersion", ormBuildDetails.getDatabaseVersion() );
 
 		target.getConfigurations().configureEach( (files) -> {
 			files.exclude( Map.of( "group", "xml-apis", "module", "xml-apis" ) );

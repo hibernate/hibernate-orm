@@ -10,8 +10,6 @@ import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.MappingException;
 import org.hibernate.SessionFactoryObserver;
-import org.hibernate.audit.AuditStrategy;
-import org.hibernate.temporal.TemporalTableStrategy;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.type.TimeZoneStorageStrategy;
 import org.hibernate.boot.internal.DefaultCustomEntityDirtinessStrategy;
@@ -42,6 +40,7 @@ import org.hibernate.cache.spi.CacheImplementor;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.query.internal.NativeQueryInterpreterStandardImpl;
 import org.hibernate.engine.query.spi.NativeQueryInterpreter;
@@ -62,6 +61,7 @@ import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.internal.AbstractPluralAttribute;
 import org.hibernate.metamodel.model.domain.internal.BagAttributeImpl;
 import org.hibernate.metamodel.model.domain.internal.BasicSqmPathSource;
+import org.hibernate.metamodel.model.domain.internal.BasicTypeImpl;
 import org.hibernate.metamodel.model.domain.internal.EmbeddableTypeImpl;
 import org.hibernate.metamodel.model.domain.internal.EmbeddedSqmPathSource;
 import org.hibernate.metamodel.model.domain.internal.EntityTypeImpl;
@@ -118,10 +118,8 @@ import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.java.EnumJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.UnknownBasicJavaType;
-import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.descriptor.jdbc.ObjectJdbcType;
-import org.hibernate.type.internal.BasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import java.util.Collections;
@@ -167,7 +165,7 @@ public abstract class MockSessionFactory
 
 	private final ClassLoaderServiceImpl classLoaderService;
 
-	public MockSessionFactory(@Nullable Dialect dialect) {
+	public MockSessionFactory() {
 		classLoaderService = new ClassLoaderServiceImpl() {
 			@Override
 			@SuppressWarnings("unchecked")
@@ -193,12 +191,11 @@ public abstract class MockSessionFactory
 						Collections::emptyList
 				),
 //				new BootstrapServiceRegistryBuilder().applyClassLoaderService( classLoaderService ).build(),
-				singletonList(new MockJdbcServicesInitiator( dialect )),
+				singletonList(MockJdbcServicesInitiator.INSTANCE),
 				emptyList(),
 				emptyMap()
 		);
 
-		final JdbcServices jdbcServices = serviceRegistry.getService( JdbcServices.class );
 		functionRegistry = new SqmFunctionRegistry();
 		metamodel = new MockMappingMetamodelImpl();
 
@@ -222,7 +219,7 @@ public abstract class MockSessionFactory
 				emptyMap(),
 				emptyMap(),
 				emptyMap(),
-				new Database(this, jdbcServices.getJdbcEnvironment()),
+				new Database(this, MockJdbcServicesInitiator.jdbcServices.getJdbcEnvironment()),
 				this
 		);
 
@@ -238,7 +235,12 @@ public abstract class MockSessionFactory
 
 		typeConfiguration = new TypeConfiguration();
 		typeConfiguration.scope((MetadataBuildingContext) this);
-		jdbcServices.getDialect().initializeFunctionRegistry(this);
+		MockJdbcServicesInitiator.genericDialect.initializeFunctionRegistry(this);
+		CommonFunctionFactory functionFactory = new CommonFunctionFactory(this);
+		functionFactory.listagg(null);
+		functionFactory.inverseDistributionOrderedSetAggregates();
+		functionFactory.hypotheticalOrderedSetAggregates();
+		functionFactory.windowFunctions();
 		typeConfiguration.scope((SessionFactoryImplementor) this);
 
 		nodeBuilder = new SqmCriteriaNodeBuilder("", "", this, this, this);
@@ -254,16 +256,6 @@ public abstract class MockSessionFactory
 	@Override
 	public ClassLoaderService getClassLoaderService() {
 		return classLoaderService;
-	}
-
-	@Override
-	public TemporalTableStrategy getTemporalTableStrategy() {
-		return TemporalTableStrategy.SINGLE_TABLE;
-	}
-
-	@Override
-	public AuditStrategy getAuditStrategy() {
-		return AuditStrategy.DEFAULT;
 	}
 
 	@Override
@@ -343,13 +335,13 @@ public abstract class MockSessionFactory
 		return result;
 	}
 
-	private CollectionPersister createCollectionPersister(String role) {
-		MockCollectionPersister result = collectionPersistersByName.get(role);
+	private CollectionPersister createCollectionPersister(String entityName) {
+		MockCollectionPersister result = collectionPersistersByName.get(entityName);
 		if (result!=null) {
 			return result;
 		}
-		result = createMockCollectionPersister(role);
-		collectionPersistersByName.put(role, result);
+		result = createMockCollectionPersister(entityName);
+		collectionPersistersByName.put(entityName, result);
 		return result;
 	}
 
@@ -399,7 +391,8 @@ public abstract class MockSessionFactory
 
 	@Override
 	public JdbcServices getJdbcServices() {
-		return serviceRegistry.getService(JdbcServices.class);
+		return MockJdbcServicesInitiator.jdbcServices;
+//		return serviceRegistry.getService(JdbcServices.class);
 	}
 
 	@Override
@@ -449,7 +442,7 @@ public abstract class MockSessionFactory
 
 	@Override
 	public boolean isPreferNativeEnumTypesEnabled() {
-		return false;
+		return MetadataBuildingContext.super.isPreferNativeEnumTypesEnabled();
 	}
 
 	@Override
@@ -690,7 +683,7 @@ public abstract class MockSessionFactory
 
 	@Override
 	public Dialect getDialect() {
-		return getJdbcServices().getDialect();
+		return MockJdbcServicesInitiator.genericDialect;
 	}
 
 	@Override
@@ -810,23 +803,6 @@ public abstract class MockSessionFactory
 	@Override
 	public SqmFunctionRegistry getFunctionRegistry() {
 		return functionRegistry;
-	}
-
-	@Override
-	public void registerAdHocBasicType(BasicType<?> basicType) {
-		// No-op
-	}
-
-	@Override
-	public <T> BasicType<T> resolveAdHocBasicType(String key) {
-		// No-op
-		return null;
-	}
-
-	@Override
-	public <T> BasicType<T> findAdHocBasicType(JavaType<T> javaType, JdbcType jdbcType) {
-		// No-op
-		return null;
 	}
 
 	@Override

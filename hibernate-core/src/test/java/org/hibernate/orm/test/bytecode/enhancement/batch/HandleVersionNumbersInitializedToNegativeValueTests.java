@@ -48,7 +48,7 @@ class HandleVersionNumbersInitializedToNegativeValueTests {
 	}
 
 
-	@Entity(name = "RootEntity")
+	@Entity
 	@Table
 	public static class RootEntity {
 
@@ -115,7 +115,7 @@ class HandleVersionNumbersInitializedToNegativeValueTests {
 		}
 	}
 
-	@Entity(name = "ChildEntity")
+	@Entity
 	@Table
 	public static class ChildEntity {
 

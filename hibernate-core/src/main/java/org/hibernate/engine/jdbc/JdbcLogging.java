@@ -18,7 +18,6 @@ import org.jboss.logging.annotations.ValidIdRange;
 
 import java.lang.invoke.MethodHandles;
 import java.sql.SQLException;
-import java.util.Locale;
 
 import static org.jboss.logging.Logger.Level.DEBUG;
 import static org.jboss.logging.Logger.Level.INFO;
@@ -40,7 +39,7 @@ import static org.jboss.logging.Logger.Level.WARN;
 public interface JdbcLogging extends BasicLogger {
 	String NAME = SubSystemLogging.BASE + ".jdbc";
 
-	JdbcLogging JDBC_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), JdbcLogging.class, NAME, Locale.ROOT );
+	JdbcLogging JDBC_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), JdbcLogging.class, NAME );
 
 	@LogMessage(level = WARN)
 	@Message(

@@ -108,10 +108,6 @@ public enum CacheConcurrencyStrategy {
 	 *     version.
 	 * </ul>
 	 * <p>
-	 * This concurrency strategy should only be used with
-	 * {@linkplain jakarta.persistence.Version versioned}
-	 * entities.
-	 * <p>
 	 * This concurrency strategy is not compatible with
 	 * serializable transaction isolation.
 	 *

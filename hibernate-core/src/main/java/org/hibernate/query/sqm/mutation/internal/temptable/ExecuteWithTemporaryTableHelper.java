@@ -68,8 +68,7 @@ public final class ExecuteWithTemporaryTableHelper {
 				idTable.getTableExpression(),
 				InsertSelectStatement.DEFAULT_ALIAS
 		);
-		final var idTableInsert = new InsertSelectStatement( idTableReference,
-				mutatingEntityDescriptor.getEntityPersister() );
+		final var idTableInsert = new InsertSelectStatement( idTableReference );
 
 		for ( int i = 0; i < idTable.getColumns().size(); i++ ) {
 			final var temporaryTableColumn = idTable.getColumns().get( i );

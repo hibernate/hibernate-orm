@@ -39,7 +39,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  */
 @JiraKey(value = "HHH-12973")
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSequences.class)
-@RequiresDialectFeature(feature = DialectFeatureChecks.SupportPooledSequences.class)
 public class SequenceInformationTest extends
 		EntityManagerFactoryBasedFunctionalTest {
 

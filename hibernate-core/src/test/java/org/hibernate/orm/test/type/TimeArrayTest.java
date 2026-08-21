@@ -4,12 +4,9 @@
  */
 package org.hibernate.orm.test.type;
 
-import java.time.LocalDate;
 import java.time.LocalTime;
-import java.time.ZoneOffset;
 
 import org.hibernate.community.dialect.InformixDialect;
-import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.HANADialect;
@@ -18,7 +15,6 @@ import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.SQLServerDialect;
-import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.dialect.SybaseASEDialect;
 
 import org.hibernate.testing.jdbc.SharedDriverManagerTypeCacheClearingIntegrator;
@@ -59,7 +55,6 @@ import static org.hamcrest.core.Is.is;
 )
 @DomainModel(annotatedClasses = TimeArrayTest.TableWithTimeArrays.class)
 @SessionFactory
-@SkipForDialect( dialectClass = SpannerDialect.class, reason = "Spanner jdbc driver currently doesn't support time arrays")
 public class TimeArrayTest {
 
 	private LocalTime time1;
@@ -132,7 +127,6 @@ public class TimeArrayTest {
 			reason = "The statement failed because binary large objects are not allowed in the Union, Intersect, or Minus ")
 	@SkipForDialect(dialectClass = MariaDBDialect.class, majorVersion = 10, minorVersion = 6,
 			reason = "Bug in MariaDB https://jira.mariadb.org/browse/MDEV-21530")
-	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsArrayComparison.class )
 	public void testQuery(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			TypedQuery<TableWithTimeArrays> tq = em.createNamedQuery( "TableWithTimeArrays.JPQL.getByData", TableWithTimeArrays.class );
@@ -161,7 +155,6 @@ public class TimeArrayTest {
 	@SkipForDialect(dialectClass = HANADialect.class, reason = "HANA requires a special function to compare LOBs")
 	@SkipForDialect(dialectClass = MySQLDialect.class, matchSubTypes = true, reason = "MySQL supports distinct from through a special operator")
 	@SkipForDialect(dialectClass = InformixDialect.class, reason = "Informix can't compare LOBs")
-	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsArrayComparison.class )
 	public void testNativeQuery(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			final Dialect dialect = em.getDialect();
@@ -192,17 +185,6 @@ public class TimeArrayTest {
 								time1,
 								time2,
 								time3
-						} )
-				);
-			}
-			else if ( dialect instanceof SpannerPostgreSQLDialect ) {
-				LocalDate localDate = LocalDate.of( 1970, 1, 1 );
-				assertThat(
-						tuple[1],
-						is( new Object[] {
-								localDate.atTime( time1 ).atOffset( ZoneOffset.UTC ),
-								localDate.atTime( time2 ).atOffset( ZoneOffset.UTC ),
-								localDate.atTime( time3 ).atOffset( ZoneOffset.UTC )
 						} )
 				);
 			}

@@ -4,7 +4,6 @@
  */
 package org.hibernate.orm.test.bytecode.enhancement.lazy;
 
-import jakarta.persistence.CollectionTable;
 import org.hibernate.cfg.AvailableSettings;
 
 import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
@@ -119,7 +118,6 @@ public class LazyLoadingByEnhancerSetterTest {
 		@MapKeyColumn( name = "NAME" )
 		@Lob
 		@Column( name = "PARAM_VAL", length = 65535 )
-		@CollectionTable(name = "ITEM_FIELD_PARAMETERS")
 		private Map<String, String> parameters = new HashMap<>();
 
 		@Override
@@ -151,7 +149,6 @@ public class LazyLoadingByEnhancerSetterTest {
 		@Lob
 		@Column( name = "PARAM_VAL", length = 65535 )
 		@Override
-		@CollectionTable(name = "ITEM_PROPERTY_PARAMETERS")
 		public Map<String, String> getParameters() {
 			return parameterMap;
 		}

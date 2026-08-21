@@ -80,7 +80,7 @@ public class ManyToOneUniqueKeyReferenceWithCustomIdTest {
 		}
 	}
 
-	@Entity(name = "Users")
+	@Entity(name = "_User")
 	static class User {
 		@Id
 		@Type(CustomIdType.class)

@@ -31,7 +31,6 @@ import org.hibernate.type.internal.ConvertedBasicTypeImpl;
 import org.hibernate.type.internal.CustomMutabilityConvertedBasicTypeImpl;
 import org.hibernate.type.internal.ImmutableNamedBasicTypeImpl;
 import org.hibernate.type.internal.NamedBasicTypeImpl;
-import org.hibernate.type.internal.PrimitiveBasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.UserType;
 
@@ -52,7 +51,6 @@ public class BasicTypeRegistry implements Serializable {
 
 	private boolean primed;
 
-	private final Map<String, BasicType<?>> primitiveTypesByName = new ConcurrentHashMap<>();
 	private final Map<String, BasicType<?>> typesByName = new ConcurrentHashMap<>();
 	private final Map<String, BasicTypeReference<?>> typeReferencesByName = new ConcurrentHashMap<>();
 	private final Map<String, List<BasicTypeReference<?>>> typeReferencesByJavaTypeName = new ConcurrentHashMap<>();
@@ -139,26 +137,6 @@ public class BasicTypeRegistry implements Serializable {
 		}
 		else {
 			return null;
-		}
-	}
-
-	public <J> @Nullable BasicType<J> getRegisteredPrimitiveType(Class<J> javaClass) {
-		assert javaClass.isPrimitive();
-		final var basicType = primitiveTypesByName.get( javaClass.getTypeName() );
-		if ( basicType == null ) {
-			final var typeReference = typeReferencesByName.get( javaClass.getTypeName() );
-			// A primed BasicTypeRegistry always has a type reference for primitive class names
-			assert typeReference != null;
-			final var javaType = getJavaTypeRegistry().resolveDescriptor( javaClass );
-			final var jdbcType = getJdbcTypeRegistry().getDescriptor( typeReference.getSqlTypeCode() );
-			final var createdType = new PrimitiveBasicTypeImpl<>( javaType, jdbcType );
-			primitiveTypesByName.put( javaClass.getTypeName(), createdType );
-			return createdType;
-		}
-		else {
-			@SuppressWarnings("unchecked") // safe, it's a primitive
-			final var castType = (BasicType<J>) basicType;
-			return castType;
 		}
 	}
 
@@ -327,7 +305,9 @@ public class BasicTypeRegistry implements Serializable {
 				}
 			}
 		}
-		return getOrRegister( javaType, jdbcType, creator.get() );
+		final var createdType = creator.get();
+		register( javaType, jdbcType, createdType );
+		return createdType;
 	}
 
 	private static boolean registeredTypeMatches(JavaType<?> javaType, JdbcType jdbcType, @Nullable BasicType<?> registeredType) {
@@ -336,24 +316,16 @@ public class BasicTypeRegistry implements Serializable {
 			&& registeredType.getMappedJavaType() == javaType;
 	}
 
-	private <J> BasicType<J> getOrRegister(JavaType<J> javaType, JdbcType jdbcType, BasicType<J> createdType) {
-		// if we are still building mappings, register this adhoc
-		// type via a unique code. (This is to support Envers.)
-		try {
-			final BootstrapContext bootstrapContext = getBootstrapContext();
-			final BasicType<J> existingAdHocBasicType = bootstrapContext.findAdHocBasicType( javaType, jdbcType );
-			if ( existingAdHocBasicType != null ) {
-				return existingAdHocBasicType;
+	private <J> void register(JavaType<J> javaType, JdbcType jdbcType, BasicType<J> createdType) {
+		if ( createdType != null ) {
+			// if we are still building mappings, register this adhoc
+			// type via a unique code. (This is to support Envers.)
+			try {
+				getBootstrapContext().registerAdHocBasicType( createdType );
 			}
-			else {
-				bootstrapContext.registerAdHocBasicType( createdType );
+			catch (Exception ignore) {
 			}
 		}
-		catch (Exception ignore) {
-			// todo: Should we also call register?
-//			register( createdType );
-		}
-		return createdType;
 	}
 
 	private BootstrapContext getBootstrapContext() {

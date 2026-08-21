@@ -48,7 +48,6 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.StandardBasicTypes;
 
 import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
-import static org.hibernate.query.sqm.mutation.internal.SqmMutationStrategyHelper.isPartOfId;
 
 
 /**
@@ -512,14 +511,10 @@ public class TemporaryTable implements Exportable, Contributable {
 			}
 			return offset;
 		}
-		else if ( modelPart instanceof BasicValuedModelPart basicModelPart
-				&& !basicModelPart.isInsertable()
-				&& !(modelPart instanceof AttributeMapping attributeMapping && isPartOfId( attributeMapping )) ) {
-			return offset;
+		else if ( modelPart instanceof BasicValuedModelPart basicModelPart ) {
+			return offset + (basicModelPart.isInsertable() ? modelPart.getJdbcTypeCount() : 0);
 		}
-		else {
-			return offset + modelPart.getJdbcTypeCount();
-		}
+		return offset + modelPart.getJdbcTypeCount();
 	}
 
 	public boolean isRowNumberGenerated() {

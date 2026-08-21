@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.metamodel.model.domain.ReturnableType;
-import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.type.BindingContext;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.function.AbstractSqmFunctionDescriptor;
@@ -66,16 +65,6 @@ public class TruncFunction extends AbstractSqmFunctionDescriptor {
 			DatetimeTrunc datetimeTrunc,
 			String toDateFunction,
 			TypeConfiguration typeConfiguration) {
-		this( truncPattern, twoArgTruncPattern, datetimeTrunc, toDateFunction, SqlAstNodeRenderingMode.DEFAULT, typeConfiguration );
-	}
-
-	public TruncFunction(
-			String truncPattern,
-			String twoArgTruncPattern,
-			DatetimeTrunc datetimeTrunc,
-			String toDateFunction,
-			SqlAstNodeRenderingMode argumentRenderingMode,
-			TypeConfiguration typeConfiguration) {
 		super(
 				"trunc",
 				new TruncArgumentsValidator(),
@@ -87,8 +76,8 @@ public class TruncFunction extends AbstractSqmFunctionDescriptor {
 		);
 		this.datetimeTrunc = datetimeTrunc;
 		numericRenderingSupport =
-				new TruncRenderingSupport( new PatternRenderer( truncPattern, argumentRenderingMode ),
-						twoArgTruncPattern == null ? null : new PatternRenderer( twoArgTruncPattern, argumentRenderingMode ) );
+				new TruncRenderingSupport( new PatternRenderer( truncPattern ),
+						twoArgTruncPattern == null ? null : new PatternRenderer( twoArgTruncPattern ) );
 		if ( datetimeTrunc == null ) {
 			dateTruncEmulation = null;
 			datetimeRenderingSupport = null;

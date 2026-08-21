@@ -7,17 +7,11 @@ package org.hibernate.sql.ast.spi;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.persister.internal.SqlFragmentPredicate;
-import org.hibernate.query.sqm.function.SelfRenderingAggregateFunctionSqlAstExpression;
-import org.hibernate.query.sqm.function.SelfRenderingFunctionSqlAstExpression;
-import org.hibernate.query.sqm.function.SelfRenderingOrderedSetAggregateFunctionSqlAstExpression;
-import org.hibernate.query.sqm.function.SelfRenderingWindowFunctionSqlAstExpression;
 import org.hibernate.query.sqm.tree.expression.Conversion;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
-import org.hibernate.sql.ast.tree.expression.AliasedExpression;
 import org.hibernate.sql.ast.tree.expression.Any;
 import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
@@ -106,17 +100,9 @@ public class ExpressionReplacementWalker implements SqlAstWalker {
 	private SqlAstNode returnedNode;
 
 	public final <X extends SqlAstNode> X replaceExpressions(X expression) {
-		final var newExpression = replaceExpression( expression );
-		if ( newExpression != expression ) {
-			return newExpression;
-		}
-		else {
-			expression.accept( this );
-			//noinspection unchecked
-			final X result = (X) returnedNode;
-			returnedNode = null;
-			return result;
-		}
+		expression.accept( this );
+		//noinspection unchecked
+		return (X) returnedNode;
 	}
 
 	protected <X extends SqlAstNode> X replaceExpression(X expression) {
@@ -124,31 +110,7 @@ public class ExpressionReplacementWalker implements SqlAstWalker {
 	}
 
 	private void doReplaceExpression(SqlAstNode expression) {
-		assert isLeafExpression( expression );
 		returnedNode = replaceExpression( expression );
-	}
-
-	protected boolean isLeafExpression(SqlAstNode expression) {
-		return expression instanceof ColumnReference
-				|| expression instanceof AggregateColumnWriteExpression
-				|| expression instanceof ExtractUnit
-				|| expression instanceof Format
-				|| expression instanceof Star
-				|| expression instanceof TrimSpecification
-				|| expression instanceof CastTarget
-				|| expression instanceof SqlSelectionExpression
-				|| expression instanceof EntityTypeLiteral
-				|| expression instanceof EmbeddableTypeLiteral
-				|| expression instanceof Collation
-				|| expression instanceof JdbcParameter
-				|| expression instanceof JdbcLiteral<?>
-				|| expression instanceof QueryLiteral<?>
-				|| expression instanceof UnparsedNumericLiteral<?>
-				|| expression instanceof DurationUnit
-				|| expression instanceof SqlFragmentPredicate
-				|| expression instanceof SelfRenderingExpression
-					&& !(expression instanceof AliasedExpression)
-					&& !(expression instanceof SelfRenderingFunctionSqlAstExpression);
 	}
 
 	@Override
@@ -178,26 +140,12 @@ public class ExpressionReplacementWalker implements SqlAstWalker {
 
 	@Override
 	public void visitDistinct(Distinct distinct) {
-		final Expression expression = replaceExpressions( distinct.getExpression() );
-		if ( expression != distinct.getExpression() ) {
-			returnedNode = new Distinct( expression );
-		}
-		else {
-			returnedNode = distinct;
-		}
+		doReplaceExpression( distinct );
 	}
 
 	@Override
 	public void visitOverflow(Overflow overflow) {
-		final Expression separatorExpression = replaceExpressions( overflow.getSeparatorExpression() );
-		final Expression fillerExpression = replaceExpressions( overflow.getFillerExpression() );
-		if ( separatorExpression != overflow.getSeparatorExpression()
-			|| fillerExpression != overflow.getFillerExpression() ) {
-			returnedNode = new Overflow( separatorExpression, fillerExpression, overflow.isWithCount() );
-		}
-		else {
-			returnedNode = overflow;
-		}
+		doReplaceExpression( overflow );
 	}
 
 	@Override
@@ -217,301 +165,42 @@ public class ExpressionReplacementWalker implements SqlAstWalker {
 
 	@Override
 	public void visitBinaryArithmeticExpression(BinaryArithmeticExpression arithmeticExpression) {
-		final Expression lhsExpression = replaceExpressions( arithmeticExpression.getLeftHandOperand() );
-		final Expression rhsExpression = replaceExpressions( arithmeticExpression.getRightHandOperand() );
-		if ( lhsExpression != arithmeticExpression.getLeftHandOperand()
-			|| rhsExpression != arithmeticExpression.getRightHandOperand() ) {
-			returnedNode = new BinaryArithmeticExpression(
-					lhsExpression,
-					arithmeticExpression.getOperator(),
-					rhsExpression,
-					arithmeticExpression.getExpressionType()
-			);
-		}
-		else {
-			returnedNode = arithmeticExpression;
-		}
+		doReplaceExpression( arithmeticExpression );
 	}
 
 	@Override
 	public void visitCaseSearchedExpression(CaseSearchedExpression caseSearchedExpression) {
-		final var fragments = caseSearchedExpression.getWhenFragments();
-		List<CaseSearchedExpression.WhenFragment> newFragments = null;
-		for ( int i = 0; i < fragments.size(); i++ ) {
-			final var fragment = fragments.get( i );
-			final var predicate = fragment.getPredicate();
-			final var result = fragment.getResult();
-			final var newPred = replaceExpressions( predicate );
-			final var newResult = replaceExpressions( result );
-			if ( newPred != predicate || newResult != result ) {
-				if ( newFragments == null ) {
-					newFragments = new ArrayList<>( fragments );
-				}
-				newFragments.set( i, new CaseSearchedExpression.WhenFragment( newPred, newResult ) );
-			}
-		}
-		final var originalOtherwise = caseSearchedExpression.getOtherwise();
-		final var newOtherwise =
-				originalOtherwise == null
-						? null
-						: replaceExpressions( originalOtherwise );
-		if ( newFragments != null || newOtherwise != originalOtherwise ) {
-			returnedNode = new CaseSearchedExpression(
-					caseSearchedExpression.getExpressionType(),
-					newFragments != null ? newFragments : fragments,
-					newOtherwise
-			);
-		}
-		else {
-			returnedNode = caseSearchedExpression;
-		}
+		doReplaceExpression( caseSearchedExpression );
 	}
 
 	@Override
 	public void visitCaseSimpleExpression(CaseSimpleExpression caseSimpleExpression) {
-		final var newFixture = replaceExpressions( caseSimpleExpression.getFixture() );
-		final var fragments = caseSimpleExpression.getWhenFragments();
-		List<CaseSimpleExpression.WhenFragment> newFragments = null;
-		for ( int i = 0; i < fragments.size(); i++ ) {
-			final var fragment = fragments.get( i );
-			final var checkValue = fragment.getCheckValue();
-			final var result = fragment.getResult();
-			final var newCheck = replaceExpressions( checkValue );
-			final var newResult = replaceExpressions( result );
-			if ( newCheck != checkValue || newResult != result ) {
-				if ( newFragments == null ) {
-					newFragments = new ArrayList<>( fragments );
-				}
-				newFragments.set( i, new CaseSimpleExpression.WhenFragment( newCheck, newResult ) );
-			}
-		}
-		final var originalOtherwise = caseSimpleExpression.getOtherwise();
-		final var newOtherwise =
-				originalOtherwise == null
-						? null
-						: replaceExpressions( originalOtherwise );
-		if ( newFixture != caseSimpleExpression.getFixture()
-			|| newFragments != null
-			|| newOtherwise != originalOtherwise ) {
-			returnedNode = new CaseSimpleExpression(
-					caseSimpleExpression.getExpressionType(),
-					newFixture,
-					newFragments != null ? newFragments : fragments,
-					newOtherwise
-			);
-		}
-		else {
-			returnedNode = caseSimpleExpression;
-		}
+		doReplaceExpression( caseSimpleExpression );
 	}
 
 	@Override
 	public void visitAny(Any any) {
-		final SelectStatement subquery = replaceExpressions( any.getSubquery() );
-		if ( subquery != any.getSubquery() ) {
-			returnedNode = new Any( subquery, any.getExpressionType() );
-		}
-		else {
-			returnedNode = any;
-		}
+		doReplaceExpression( any );
 	}
 
 	@Override
 	public void visitEvery(Every every) {
-		final SelectStatement subquery = replaceExpressions( every.getSubquery() );
-		if ( subquery != every.getSubquery() ) {
-			returnedNode = new Every( subquery, every.getExpressionType() );
-		}
-		else {
-			returnedNode = every;
-		}
+		doReplaceExpression( every );
 	}
 
 	@Override
-	public void visitSummarization(Summarization summarization) {
-		final var groupings = summarization.getGroupings();
-		List<Expression> newGroupings = null;
-		for ( int i = 0; i < groupings.size(); i++ ) {
-			final var grouping = groupings.get( i );
-			final var newGrouping = replaceExpressions( grouping );
-			if ( newGrouping != grouping ) {
-				if ( newGroupings == null ) {
-					newGroupings = new ArrayList<>( groupings );
-				}
-				newGroupings.set( i, newGrouping );
-			}
-		}
-		if ( newGroupings != null ) {
-			returnedNode = new Summarization( summarization.getKind(), newGroupings );
-		}
-		else {
-			returnedNode = summarization;
-		}
+	public void visitSummarization(Summarization every) {
+		doReplaceExpression( every );
 	}
 
 	@Override
 	public void visitOver(Over<?> over) {
-		final var expression = over.getExpression();
-		final var newExpression = replaceExpressions( expression );
-		final var partitions = over.getPartitions();
-		List<Expression> newPartitions = null;
-		for ( int i = 0; i < partitions.size(); i++ ) {
-			final var partition = partitions.get( i );
-			final var newPartition = replaceExpressions( partition );
-			if ( newPartition != partition ) {
-				if ( newPartitions == null ) {
-					newPartitions = new ArrayList<>( partitions );
-				}
-				newPartitions.set( i, newPartition );
-			}
-		}
-		final var orderList = over.getOrderList();
-		List<SortSpecification> newOrderList = null;
-		for ( int i = 0; i < orderList.size(); i++ ) {
-			final var sortSpecification = orderList.get( i );
-			final var newSortSpecification = replaceExpressions( sortSpecification );
-			if ( newSortSpecification != sortSpecification ) {
-				if ( newOrderList == null ) {
-					newOrderList = new ArrayList<>( orderList );
-				}
-				newOrderList.set( i, newSortSpecification );
-			}
-		}
-		final var startExpression = over.getStartExpression();
-		final var newStartExpression = replaceExpressions( startExpression );
-		final var endExpression = over.getEndExpression();
-		final var newEndExpression = replaceExpressions( endExpression );
-		if ( expression != newExpression
-			|| newPartitions != null
-			|| newOrderList != null
-			|| newStartExpression != startExpression
-			|| newEndExpression != endExpression ) {
-			returnedNode = new Over<>(
-					newExpression,
-					newPartitions != null ? newPartitions : partitions,
-					newOrderList != null ? newOrderList : orderList,
-					over.getMode(),
-					over.getStartKind(),
-					newStartExpression,
-					over.getEndKind(),
-					newEndExpression,
-					over.getExclusion()
-			);
-		}
-		else {
-			returnedNode = over;
-		}
+		doReplaceExpression( over );
 	}
 
 	@Override
 	public void visitSelfRenderingExpression(SelfRenderingExpression expression) {
-		if ( expression instanceof AliasedExpression aliasExpression ) {
-			final var aliasedExpression = aliasExpression.getExpression();
-			final var newExpression = replaceExpressions( aliasedExpression );
-			if ( aliasedExpression != newExpression ) {
-				returnedNode = new AliasedExpression( newExpression, aliasExpression.getAlias() );
-			}
-			else {
-				returnedNode = aliasedExpression;
-			}
-		}
-		else if ( expression instanceof SelfRenderingFunctionSqlAstExpression<?> functionExpression ) {
-			final var arguments = functionExpression.getArguments();
-			List<SqlAstNode> newArguments = null;
-			for ( int i = 0; i < arguments.size(); i++ ) {
-				final var argument = arguments.get( i );
-				final var newArgument = replaceExpressions( argument );
-				if ( newArgument != newArguments ) {
-					if ( newArguments == null ) {
-						newArguments = new ArrayList<>( arguments );
-					}
-					newArguments.set( i, newArgument );
-				}
-			}
-			if ( expression instanceof SelfRenderingAggregateFunctionSqlAstExpression<?> aggregate ) {
-				final var filter = aggregate.getFilter();
-				final var newFilter = replaceExpressions( filter );
-				if ( expression instanceof SelfRenderingOrderedSetAggregateFunctionSqlAstExpression<?> setAggregate ) {
-					final var withinGroup = setAggregate.getWithinGroup();
-					List<SortSpecification> newWithinGroup = null;
-					for ( int i = 0; i < withinGroup.size(); i++ ) {
-						final var sortSpecification = withinGroup.get( i );
-						final var newSortSpecification = replaceExpressions( sortSpecification );
-						if ( newSortSpecification != sortSpecification ) {
-							if ( newWithinGroup == null ) {
-								newWithinGroup = new ArrayList<>( withinGroup );
-							}
-							newWithinGroup.set( i, newSortSpecification );
-						}
-					}
-					if ( newArguments != null || newFilter != filter || newWithinGroup != null ) {
-						returnedNode = new SelfRenderingOrderedSetAggregateFunctionSqlAstExpression<>(
-								functionExpression.getFunctionName(),
-								functionExpression.getFunctionRenderer(),
-								newArguments != null ? newArguments : arguments,
-								newFilter,
-								newWithinGroup != null ? newWithinGroup : withinGroup,
-								functionExpression.getType(),
-								functionExpression.getExpressible()
-						);
-					}
-					else {
-						returnedNode = functionExpression;
-					}
-				}
-				else {
-					if ( newArguments != null || newFilter != filter ) {
-						returnedNode = new SelfRenderingAggregateFunctionSqlAstExpression<>(
-								functionExpression.getFunctionName(),
-								functionExpression.getFunctionRenderer(),
-								newArguments != null ? newArguments : arguments,
-								newFilter,
-								functionExpression.getType(),
-								functionExpression.getExpressible()
-						);
-					}
-					else {
-						returnedNode = functionExpression;
-					}
-				}
-			}
-			else if ( expression instanceof SelfRenderingWindowFunctionSqlAstExpression<?> window ) {
-				final var filter = window.getFilter();
-				final var newFilter = replaceExpressions( filter );
-				if ( newArguments != null || newFilter != filter ) {
-					returnedNode = new SelfRenderingWindowFunctionSqlAstExpression<>(
-							functionExpression.getFunctionName(),
-							functionExpression.getFunctionRenderer(),
-							newArguments != null ? newArguments : arguments,
-							newFilter,
-							window.getRespectNulls(),
-							window.getFromFirst(),
-							functionExpression.getType(),
-							functionExpression.getExpressible()
-					);
-				}
-				else {
-					returnedNode = functionExpression;
-				}
-			}
-			else {
-				if ( newArguments != null ) {
-					returnedNode = new SelfRenderingFunctionSqlAstExpression<>(
-							functionExpression.getFunctionName(),
-							functionExpression.getFunctionRenderer(),
-							newArguments,
-							functionExpression.getType(),
-							functionExpression.getExpressible()
-					);
-				}
-				else {
-					returnedNode = functionExpression;
-				}
-			}
-		}
-		else {
-			doReplaceExpression( expression );
-		}
+		doReplaceExpression( expression );
 	}
 
 	@Override
@@ -531,24 +220,7 @@ public class ExpressionReplacementWalker implements SqlAstWalker {
 
 	@Override
 	public void visitTuple(SqlTuple tuple) {
-		final var expressions = tuple.getExpressions();
-		List<Expression> newExpressions = null;
-		for ( int i = 0; i < expressions.size(); i++ ) {
-			final var expression = expressions.get( i );
-			final var newExpression = replaceExpressions( expression );
-			if ( newExpression != expression ) {
-				if ( newExpressions == null ) {
-					newExpressions = new ArrayList<>( expressions );
-				}
-				newExpressions.set( i, newExpression );
-			}
-		}
-		if ( newExpressions != null ) {
-			returnedNode = new SqlTuple( newExpressions,  tuple.getExpressionType() );
-		}
-		else {
-			returnedNode = tuple;
-		}
+		doReplaceExpression( tuple );
 	}
 
 	@Override
@@ -578,29 +250,12 @@ public class ExpressionReplacementWalker implements SqlAstWalker {
 
 	@Override
 	public void visitUnaryOperationExpression(UnaryOperation unaryOperationExpression) {
-		final var operand = unaryOperationExpression.getOperand();
-		final var newOperand = replaceExpressions( operand );
-		if ( newOperand != operand ) {
-			returnedNode = new UnaryOperation(
-					unaryOperationExpression.getOperator(),
-					newOperand,
-					(BasicValuedMapping) unaryOperationExpression.getExpressionType()
-			);
-		}
-		else {
-			returnedNode = unaryOperationExpression;
-		}
+		doReplaceExpression( unaryOperationExpression );
 	}
 
 	@Override
 	public void visitModifiedSubQueryExpression(ModifiedSubQueryExpression expression) {
-		final SelectStatement subquery = replaceExpressions( expression.getSubQuery() );
-		if ( subquery != expression.getSubQuery() ) {
-			returnedNode = new ModifiedSubQueryExpression( subquery, expression.getModifier() );
-		}
-		else {
-			returnedNode = expression;
-		}
+		doReplaceExpression( expression );
 	}
 
 	@Override
@@ -610,46 +265,17 @@ public class ExpressionReplacementWalker implements SqlAstWalker {
 
 	@Override
 	public void visitDuration(Duration duration) {
-		final var magnitude = duration.getMagnitude();
-		final var newMagnitude = replaceExpressions( magnitude );
-		if ( newMagnitude != magnitude ) {
-			returnedNode = new Duration( newMagnitude, duration.getUnit(), duration.getExpressionType() );
-		}
-		else {
-			returnedNode = duration;
-		}
+		doReplaceExpression( duration );
 	}
 
 	@Override
 	public void visitConversion(Conversion conversion) {
-		final var duration = conversion.getDuration();
-		final var newDuration = replaceExpressions( duration );
-		if ( newDuration != duration ) {
-			returnedNode = new Conversion(
-					newDuration,
-					conversion.getUnit(),
-					(BasicValuedMapping) conversion.getExpressionType()
-			);
-		}
-		else {
-			returnedNode = conversion;
-		}
+		doReplaceExpression( conversion );
 	}
 
 	@Override
 	public void visitBooleanExpressionPredicate(BooleanExpressionPredicate booleanExpressionPredicate) {
-		final var expression = booleanExpressionPredicate.getExpression();
-		final var newExpressino = replaceExpressions( expression );
-		if ( newExpressino != expression ) {
-			returnedNode = new BooleanExpressionPredicate(
-					newExpressino,
-					booleanExpressionPredicate.isNegated(),
-					booleanExpressionPredicate.getExpressionType()
-			);
-		}
-		else {
-			returnedNode = booleanExpressionPredicate;
-		}
+		doReplaceExpression( booleanExpressionPredicate );
 	}
 
 	@Override
@@ -659,9 +285,9 @@ public class ExpressionReplacementWalker implements SqlAstWalker {
 
 	@Override
 	public void visitBetweenPredicate(BetweenPredicate betweenPredicate) {
-		final Expression expression = replaceExpressions( betweenPredicate.getExpression() );
-		final Expression lowerBound = replaceExpressions( betweenPredicate.getLowerBound() );
-		final Expression upperBound = replaceExpressions( betweenPredicate.getUpperBound() );
+		final Expression expression = replaceExpression( betweenPredicate.getExpression() );
+		final Expression lowerBound = replaceExpression( betweenPredicate.getLowerBound() );
+		final Expression upperBound = replaceExpression( betweenPredicate.getUpperBound() );
 		if ( expression != betweenPredicate.getExpression()
 				|| lowerBound != betweenPredicate.getLowerBound()
 				|| upperBound != betweenPredicate.getUpperBound() ) {
@@ -691,12 +317,12 @@ public class ExpressionReplacementWalker implements SqlAstWalker {
 
 	@Override
 	public void visitInListPredicate(InListPredicate inListPredicate) {
-		final Expression testExpression = replaceExpressions( inListPredicate.getTestExpression() );
+		final Expression testExpression = replaceExpression( inListPredicate.getTestExpression() );
 		List<Expression> items = null;
 		final List<Expression> listExpressions = inListPredicate.getListExpressions();
 		for ( int i = 0; i < listExpressions.size(); i++ ) {
 			final Expression listExpression = listExpressions.get( i );
-			final Expression newListExpression = replaceExpressions( listExpression );
+			final Expression newListExpression = replaceExpression( listExpression );
 			if ( newListExpression != listExpression ) {
 				if ( items == null ) {
 					items = new ArrayList<>( listExpressions );
@@ -719,14 +345,14 @@ public class ExpressionReplacementWalker implements SqlAstWalker {
 
 	@Override
 	public void visitInArrayPredicate(InArrayPredicate inArrayPredicate) {
-		final Expression replacedTestExpression = replaceExpressions( inArrayPredicate.getTestExpression() );
+		final Expression replacedTestExpression = replaceExpression( inArrayPredicate.getTestExpression() );
 		returnedNode = new InArrayPredicate( replacedTestExpression, inArrayPredicate.getArrayParameter() );
 	}
 
 	@Override
 	public void visitInSubQueryPredicate(InSubQueryPredicate inSubQueryPredicate) {
-		final Expression testExpression = replaceExpressions( inSubQueryPredicate.getTestExpression() );
-		final SelectStatement subQuery = replaceExpressions( inSubQueryPredicate.getSubQuery() );
+		final Expression testExpression = replaceExpression( inSubQueryPredicate.getTestExpression() );
+		final SelectStatement subQuery = replaceExpression( inSubQueryPredicate.getSubQuery() );
 		if ( testExpression != inSubQueryPredicate.getTestExpression()
 				|| subQuery != inSubQueryPredicate.getSubQuery() ) {
 			returnedNode = new InSubQueryPredicate(
@@ -743,7 +369,7 @@ public class ExpressionReplacementWalker implements SqlAstWalker {
 
 	@Override
 	public void visitExistsPredicate(ExistsPredicate existsPredicate) {
-		final SelectStatement selectStatement = replaceExpressions( existsPredicate.getExpression() );
+		final SelectStatement selectStatement = replaceExpression( existsPredicate.getExpression() );
 		if ( selectStatement != existsPredicate.getExpression() ) {
 			returnedNode = new ExistsPredicate(
 					selectStatement,
@@ -783,11 +409,11 @@ public class ExpressionReplacementWalker implements SqlAstWalker {
 
 	@Override
 	public void visitLikePredicate(LikePredicate likePredicate) {
-		final Expression matchExpression = replaceExpressions( likePredicate.getMatchExpression() );
-		final Expression patternExpression = replaceExpressions( likePredicate.getPattern() );
+		final Expression matchExpression = replaceExpression( likePredicate.getMatchExpression() );
+		final Expression patternExpression = replaceExpression( likePredicate.getPattern() );
 		final Expression escapeExpression = likePredicate.getEscapeCharacter() == null
 				? null
-				: replaceExpressions( likePredicate.getEscapeCharacter() );
+				: replaceExpression( likePredicate.getEscapeCharacter() );
 		if ( matchExpression != likePredicate.getMatchExpression()
 				|| patternExpression != likePredicate.getPattern()
 				|| escapeExpression != likePredicate.getEscapeCharacter() ) {
@@ -818,7 +444,7 @@ public class ExpressionReplacementWalker implements SqlAstWalker {
 
 	@Override
 	public void visitNullnessPredicate(NullnessPredicate nullnessPredicate) {
-		final Expression expression = replaceExpressions( nullnessPredicate.getExpression() );
+		final Expression expression = replaceExpression( nullnessPredicate.getExpression() );
 		if ( expression != nullnessPredicate.getExpression() ) {
 			returnedNode = new NullnessPredicate(
 					expression,
@@ -833,7 +459,7 @@ public class ExpressionReplacementWalker implements SqlAstWalker {
 
 	@Override
 	public void visitThruthnessPredicate(ThruthnessPredicate thruthnessPredicate) {
-		final Expression expression = replaceExpressions( thruthnessPredicate.getExpression() );
+		final Expression expression = replaceExpression( thruthnessPredicate.getExpression() );
 		if ( expression != thruthnessPredicate.getExpression() ) {
 			returnedNode = new ThruthnessPredicate(
 					expression,
@@ -849,8 +475,8 @@ public class ExpressionReplacementWalker implements SqlAstWalker {
 
 	@Override
 	public void visitRelationalPredicate(ComparisonPredicate comparisonPredicate) {
-		final Expression lhs = replaceExpressions( comparisonPredicate.getLeftHandExpression() );
-		final Expression rhs = replaceExpressions( comparisonPredicate.getRightHandExpression() );
+		final Expression lhs = replaceExpression( comparisonPredicate.getLeftHandExpression() );
+		final Expression rhs = replaceExpression( comparisonPredicate.getRightHandExpression() );
 		if ( lhs != comparisonPredicate.getLeftHandExpression()
 				|| rhs != comparisonPredicate.getRightHandExpression() ) {
 			returnedNode = new ComparisonPredicate(
@@ -867,7 +493,7 @@ public class ExpressionReplacementWalker implements SqlAstWalker {
 
 	@Override
 	public void visitSelfRenderingPredicate(SelfRenderingPredicate selfRenderingPredicate) {
-		final SelfRenderingExpression selfRenderingExpression = replaceExpressions( selfRenderingPredicate.getSelfRenderingExpression() );
+		final SelfRenderingExpression selfRenderingExpression = replaceExpression( selfRenderingPredicate.getSelfRenderingExpression() );
 		if ( selfRenderingExpression != selfRenderingPredicate.getSelfRenderingExpression() ) {
 			returnedNode = new SelfRenderingPredicate(
 					selfRenderingExpression

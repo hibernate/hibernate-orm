@@ -18,7 +18,6 @@ import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.persister.entity.JoinedSubclassEntityPersister;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
@@ -26,7 +25,6 @@ import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.expression.SelfRenderingExpression;
-import org.hibernate.sql.ast.tree.from.LazyTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.predicate.NullnessPredicate;
@@ -151,6 +149,11 @@ public class CaseStatementDiscriminatorMappingImpl extends AbstractDiscriminator
 	}
 
 	@Override
+	public @Nullable String getColumnDefinition() {
+		return null;
+	}
+
+	@Override
 	public @Nullable Long getLength() {
 		return null;
 	}
@@ -262,9 +265,6 @@ public class CaseStatementDiscriminatorMappingImpl extends AbstractDiscriminator
 					new ArrayList<>( tableDiscriminatorDetailsMap.size() );
 			tableDiscriminatorDetailsMap.forEach(
 					(tableName, tableDiscriminatorDetails) -> {
-						// Ensure, we're not accidentally initializing a table group racy (concurrency) fashion
-						assert !(entityTableGroup instanceof LazyTableGroup lazyTableGroup)
-							|| lazyTableGroup.isInitialized();
 						final var tableReference = entityTableGroup.getTableReference(
 								entityTableGroup.getNavigablePath(),
 								tableName,
@@ -284,31 +284,12 @@ public class CaseStatementDiscriminatorMappingImpl extends AbstractDiscriminator
 				SqlAppender sqlAppender,
 				SqlAstTranslator<?> walker,
 				SessionFactoryImplementor sessionFactory) {
-			getCaseExpression().accept( walker );
-		}
-
-		@Override
-		public void accept(SqlAstWalker sqlTreeWalker) {
-			getCaseExpression().accept( sqlTreeWalker );
-		}
-
-		/**
-		 * Builds (lazily, once) the underlying {@link CaseSearchedExpression}
-		 * and returns it. Exposed so transformations can access the case
-		 * expression's column references before SQL rendering.
-		 */
-		public CaseSearchedExpression getCaseExpression() {
-			//
-			CaseSearchedExpression expression = caseSearchedExpression;
-			if ( expression == null ) {
+			if ( caseSearchedExpression == null ) {
 				// todo (6.0): possible optimization is to omit cases for table reference joins, that touch a super class, where a subclass is inner joined due to pruning
-				CaseSearchedExpression caseExpression =
+				caseSearchedExpression =
 						new CaseSearchedExpression( CaseStatementDiscriminatorMappingImpl.this );
 				tableDiscriminatorDetailsMap.forEach(
 						(tableName, tableDiscriminatorDetails) -> {
-							// Ensure, we're not accidentally initializing a table group racy (concurrency) fashion
-							assert !(entityTableGroup instanceof LazyTableGroup lazyTableGroup)
-									|| lazyTableGroup.isInitialized();
 							final var tableReference = entityTableGroup.getTableReference(
 									entityTableGroup.getNavigablePath(),
 									tableName,
@@ -316,7 +297,7 @@ public class CaseStatementDiscriminatorMappingImpl extends AbstractDiscriminator
 							);
 
 							if ( tableReference != null ) {
-								caseExpression.when(
+								caseSearchedExpression.when(
 										new NullnessPredicate(
 												new ColumnReference(
 														tableReference,
@@ -329,7 +310,7 @@ public class CaseStatementDiscriminatorMappingImpl extends AbstractDiscriminator
 										),
 										new QueryLiteral<>(
 												tableDiscriminatorDetails.getDiscriminatorValue(),
-												(BasicType<?>) getJdbcMapping()
+												getUnderlyingJdbcMapping()
 										)
 								);
 							}
@@ -337,9 +318,8 @@ public class CaseStatementDiscriminatorMappingImpl extends AbstractDiscriminator
 							// not part of the processing entity's sub-hierarchy
 						}
 				);
-				caseSearchedExpression = expression = caseExpression;
 			}
-			return expression;
+			caseSearchedExpression.accept( walker );
 		}
 
 		@Override

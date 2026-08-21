@@ -296,7 +296,7 @@ public class TreatKeywordTest {
 		);
 	}
 
-	@Entity(name = "Person")
+	@Entity
 	@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 	public static class Person {
 		private Long id;
@@ -328,11 +328,11 @@ public class TreatKeywordTest {
 		}
 	}
 
-	@Entity(name = "Father")
+	@Entity
 	public static class Father extends Person {
 	}
 
-	@Entity(name = "Mother")
+	@Entity
 	public static class Mother extends Person {
 
 		public Mother() {
@@ -343,7 +343,7 @@ public class TreatKeywordTest {
 		}
 	}
 
-	@Entity(name = "Grandmother")
+	@Entity
 	public static class Grandmother extends Mother {
 		public Grandmother() {
 		}

@@ -24,7 +24,6 @@ import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import static org.hibernate.dialect.function.array.DdlTypeHelper.getCastTypeName;
 import static org.hibernate.type.SqlTypes.ARRAY;
 import static org.hibernate.type.SqlTypes.BIGINT;
 import static org.hibernate.type.SqlTypes.BINARY;
@@ -101,7 +100,7 @@ public class PostgreSQLAggregateSupport extends AggregateSupportImpl {
 								// because casting a jsonb[] to text[] will not omit the quotes of the jsonb text values
 								return template.replace(
 										placeholder,
-										"cast(array(select jsonb_array_elements(" + aggregateParentReadExpression + "->'" + columnExpression + "')) as " + getCastTypeName( column, typeConfiguration ) + ')'
+										"cast(array(select jsonb_array_elements(" + aggregateParentReadExpression + "->'" + columnExpression + "')) as " + column.getColumnDefinition() + ')'
 								);
 							case BINARY:
 							case VARBINARY:
@@ -114,13 +113,13 @@ public class PostgreSQLAggregateSupport extends AggregateSupportImpl {
 							default:
 								return template.replace(
 										placeholder,
-										"cast(array(select jsonb_array_elements_text(" + aggregateParentReadExpression + "->'" + columnExpression + "')) as " + getCastTypeName( column, typeConfiguration ) + ')'
+										"cast(array(select jsonb_array_elements_text(" + aggregateParentReadExpression + "->'" + columnExpression + "')) as " + column.getColumnDefinition() + ')'
 								);
 						}
 					default:
 						return template.replace(
 								placeholder,
-								"cast(" + aggregateParentReadExpression + "->>'" + columnExpression + "' as " + getCastTypeName( column, typeConfiguration ) + ')'
+								"cast(" + aggregateParentReadExpression + "->>'" + columnExpression + "' as " + column.getColumnDefinition() + ')'
 						);
 				}
 			case XML_ARRAY:
@@ -154,7 +153,7 @@ public class PostgreSQLAggregateSupport extends AggregateSupportImpl {
 					default:
 						return template.replace(
 								placeholder,
-								"(select t.v from xmltable(" + xmlExtractArguments( aggregateParentReadExpression, columnExpression ) + " columns v " + getCastTypeName( column, typeConfiguration ) + " path '.') t)"
+								"(select t.v from xmltable(" + xmlExtractArguments( aggregateParentReadExpression, columnExpression ) + " columns v " + column.getColumnDefinition() + " path '.') t)"
 						);
 				}
 			case STRUCT:
@@ -439,10 +438,12 @@ public class PostgreSQLAggregateSupport extends AggregateSupportImpl {
 	private static class AggregateXmlWriteExpression implements XmlWriteExpression {
 
 		private final SelectableMapping selectableMapping;
+		private final String columnDefinition;
 		private final LinkedHashMap<String, XmlWriteExpression> subExpressions = new LinkedHashMap<>();
 
-		private AggregateXmlWriteExpression(SelectableMapping selectableMapping) {
+		private AggregateXmlWriteExpression(SelectableMapping selectableMapping, String columnDefinition) {
 			this.selectableMapping = selectableMapping;
+			this.columnDefinition = columnDefinition;
 		}
 
 		protected void initializeSubExpressions(SelectableMapping aggregateColumn, SelectableMapping[] columns) {
@@ -456,7 +457,7 @@ public class PostgreSQLAggregateSupport extends AggregateSupportImpl {
 					final int selectableIndex = embeddableMappingType.getSelectableIndex( parts[i].getSelectableName() );
 					currentAggregate = (AggregateXmlWriteExpression) currentAggregate.subExpressions.computeIfAbsent(
 							parts[i].getSelectableName(),
-							k -> new AggregateXmlWriteExpression( embeddableMappingType.getJdbcValueSelectable( selectableIndex ) )
+							k -> new AggregateXmlWriteExpression( embeddableMappingType.getJdbcValueSelectable( selectableIndex ), columnDefinition )
 					);
 				}
 				final String customWriteExpression = column.getWriteExpression();
@@ -527,7 +528,7 @@ public class PostgreSQLAggregateSupport extends AggregateSupportImpl {
 		private final String path;
 
 		RootXmlWriteExpression(SelectableMapping aggregateColumn, SelectableMapping[] columns) {
-			super( aggregateColumn );
+			super( aggregateColumn, aggregateColumn.getColumnDefinition() );
 			path = aggregateColumn.getSelectionExpression();
 			initializeSubExpressions( aggregateColumn, columns );
 		}

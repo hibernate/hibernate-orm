@@ -11,6 +11,7 @@ import org.hibernate.proxy.HibernateProxy;
 
 import org.hibernate.testing.bytecode.enhancement.EnhancementOptions;
 import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.logger.LoggerInspectionRule;
 import org.hibernate.testing.logger.Triggerable;
 
 
@@ -20,9 +21,8 @@ import jakarta.persistence.Table;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.orm.logger.LoggerInspectionExtension;
+import org.junit.Rule;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
@@ -41,9 +41,8 @@ import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 @BytecodeEnhanced
 @EnhancementOptions(lazyLoading = true)
 public class NoProxyFactoryTests {
-	@RegisterExtension
-	public LoggerInspectionExtension logInspection =
-			LoggerInspectionExtension.builder().setLogger( CORE_LOGGER ).build();
+	@Rule
+	public LoggerInspectionRule logInspection = new LoggerInspectionRule( CORE_LOGGER );
 
 	/**
 	 * See org.hibernate.internal.CoreMessageLogger#unableToCreateProxyFactory

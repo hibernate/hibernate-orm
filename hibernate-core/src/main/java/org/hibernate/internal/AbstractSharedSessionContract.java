@@ -13,8 +13,6 @@ import jakarta.persistence.criteria.CriteriaUpdate;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.CacheMode;
 import org.hibernate.EntityNameResolver;
-import org.hibernate.audit.AuditLog;
-import org.hibernate.audit.spi.AuditWorkQueue;
 import org.hibernate.Filter;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
@@ -35,20 +33,13 @@ import org.hibernate.engine.creation.internal.SessionCreationOptionsAdaptor;
 import org.hibernate.engine.creation.internal.SharedSessionBuilderImpl;
 import org.hibernate.engine.creation.internal.SharedSessionCreationOptions;
 import org.hibernate.engine.creation.internal.SharedStatelessSessionBuilderImpl;
-import org.hibernate.engine.extension.spi.Extension;
-import org.hibernate.engine.extension.spi.ExtensionIntegration;
-import org.hibernate.engine.extension.spi.ExtensionIntegrationContext;
-import org.hibernate.engine.extension.spi.ExtensionIntegrationService;
 import org.hibernate.engine.internal.SessionEventListenerManagerImpl;
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.internal.JdbcCoordinatorImpl;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.EntityKey;
-import org.hibernate.engine.spi.TemporalCollectionKey;
-import org.hibernate.engine.spi.TemporalEntityKey;
 import org.hibernate.engine.spi.ExceptionConverter;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionEventListenerManager;
@@ -58,7 +49,6 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.StatelessSessionImplementor;
 import org.hibernate.engine.transaction.internal.TransactionImpl;
 import org.hibernate.event.monitor.spi.EventMonitor;
-import org.hibernate.temporal.spi.ChangesetIdentifierSupplier;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.internal.RootGraphImpl;
@@ -121,10 +111,8 @@ import java.io.ObjectOutputStream;
 import java.io.Serial;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Objects;
 import java.util.TimeZone;
 import java.util.UUID;
@@ -151,7 +139,7 @@ import static org.hibernate.query.sqm.internal.SqmUtil.verifyIsSelectStatement;
  *
  * @author Steve Ebersole
  */
-abstract class AbstractSharedSessionContract implements SharedSessionContractImplementor, ExtensionIntegrationContext {
+abstract class AbstractSharedSessionContract implements SharedSessionContractImplementor {
 
 	private transient SessionFactoryImpl factory;
 	private transient SessionFactoryOptions factoryOptions;
@@ -178,13 +166,9 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 	private final boolean readOnly;
 	private final TimeZone jdbcTimeZone;
 
-	private transient ChangesetIdentifierSupplier<?> changesetIdSupplier;
-
 	// mutable state
 	private CacheMode cacheMode;
 	private Integer jdbcBatchSize;
-
-	private transient Object currentChangesetId;
 
 	private boolean criteriaCopyTreeEnabled;
 	private boolean criteriaPlanCacheEnabled;
@@ -201,8 +185,6 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 	//Lazily initialized
 	private transient ExceptionConverter exceptionConverter;
 	private transient SessionAssociationMarkers sessionAssociationMarkers;
-
-	private transient final Map<Class<?>, Object> extensions;
 
 	AbstractSharedSessionContract(SessionFactoryImpl factory, SessionCreationOptions options) {
 		this.factory = factory;
@@ -227,8 +209,6 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 		nativeJdbcParametersIgnored = factoryOptions.getNativeJdbcParametersIgnored();
 
 		final var statementInspector = interpret( options.getStatementInspector() );
-
-		changesetIdSupplier = initializeChangesetIdSupplier( factory );
 
 		if ( options instanceof SharedSessionCreationOptions sharedOptions
 				&& sharedOptions.isTransactionCoordinatorShared() ) {
@@ -268,20 +248,6 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 			transactionCoordinator = factory.transactionCoordinatorBuilder
 					.buildTransactionCoordinator( jdbcCoordinator, this );
 		}
-
-		extensions = new HashMap<>();
-		for ( ExtensionIntegration<?> integration : factory.getServiceRegistry()
-				.requireService( ExtensionIntegrationService.class )
-				.extensionIntegrations() ) {
-			extensions.put( integration.getExtensionType(), integration.createExtension( this ) );
-		}
-	}
-
-	private static ChangesetIdentifierSupplier<?> initializeChangesetIdSupplier(SessionFactoryImplementor factory) {
-		final var changesetCoordinator = factory.getChangesetCoordinator();
-		return changesetCoordinator.useServerTimestamp( factory.getJdbcServices().getDialect() )
-				? null
-				: changesetCoordinator.getIdentifierSupplier();
 	}
 
 	final SessionFactoryOptions getSessionFactoryOptions() {
@@ -508,11 +474,6 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 	}
 
 	@Override
-	public SharedSessionContractImplementor getSession() {
-		return this;
-	}
-
-	@Override
 	public final Object getSessionToken() {
 		if ( sessionToken == null ) {
 			sessionToken = new Object();
@@ -522,9 +483,10 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 
 	@Override
 	public String getTenantIdentifier() {
-		return tenantIdentifier == null
-				? null
-				: factory.getTenantIdentifierJavaType().toString( tenantIdentifier );
+		if ( tenantIdentifier == null ) {
+			return null;
+		}
+		return factory.getTenantIdentifierJavaType().toString( tenantIdentifier );
 	}
 
 	@Override
@@ -644,38 +606,6 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 	}
 
 	@Override
-	public Object getCurrentChangesetIdentifier() {
-		if ( currentChangesetId != null ) {
-			return currentChangesetId;
-		}
-		else if ( isTransactionInProgress() ) {
-			initializeCurrentChangesetIdentifier();
-			return currentChangesetId;
-		}
-		else {
-			return generateCurrentChangesetIdentifier();
-		}
-	}
-
-	private Object generateCurrentChangesetIdentifier() {
-		return changesetIdSupplier == null
-				? null
-				: changesetIdSupplier.generateIdentifier( this );
-	}
-
-	@Override
-	public void afterTransactionBegin() {
-	}
-
-	protected void initializeCurrentChangesetIdentifier() {
-		currentChangesetId = generateCurrentChangesetIdentifier();
-	}
-
-	protected void clearTransactionStartInstant() {
-		currentChangesetId = null;
-	}
-
-	@Override
 	public void checkTransactionNeededForUpdateOperation(String exceptionMessage) {
 		if ( !factoryOptions.isAllowOutOfTransactionUpdateOperations()
 				&& !isTransactionInProgress() ) {
@@ -724,7 +654,6 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 
 	@Override
 	public void afterTransactionCompletion(boolean successful, boolean delayed) {
-		clearTransactionStartInstant();
 		cacheTransactionSynchronization.transactionCompleted( successful );
 	}
 
@@ -875,30 +804,9 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 		}
 	}
 
-	private AuditWorkQueue auditWorkQueue;
-
-	@Override
-	public AuditWorkQueue getAuditWorkQueue() {
-		if ( auditWorkQueue == null ) {
-			auditWorkQueue = new AuditWorkQueue();
-		}
-		return auditWorkQueue;
-	}
-
 	@Override
 	public EntityKey generateEntityKey(Object id, EntityPersister persister) {
-		final Object temporalId = getLoadQueryInfluencers().getTemporalIdentifier();
-		return temporalId != null && temporalId != AuditLog.ALL_CHANGESETS
-				? new TemporalEntityKey( id, persister, temporalId )
-				: new EntityKey( id, persister );
-	}
-
-	@Override
-	public CollectionKey generateCollectionKey(CollectionPersister persister, Object key) {
-		final Object temporalId = getLoadQueryInfluencers().getTemporalIdentifier();
-		return temporalId != null && temporalId != AuditLog.ALL_CHANGESETS
-				? new TemporalCollectionKey( persister, key, temporalId )
-				: new CollectionKey( persister, key );
+		return new EntityKey( id, persister );
 	}
 
 	@Override
@@ -1802,11 +1710,6 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 		return sessionAssociationMarkers;
 	}
 
-	@Override
-	public <E extends Extension> E getExtension(Class<E> extension) {
-		return extension.cast( extensions.get( extension ) );
-	}
-
 	@Serial
 	private void writeObject(ObjectOutputStream oos) throws IOException {
 		SESSION_LOGGER.serializingSession( getSessionIdentifier() );
@@ -1869,8 +1772,6 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 				factory.transactionCoordinatorBuilder.buildTransactionCoordinator( jdbcCoordinator, this );
 
 		entityNameResolver = new CoordinatingEntityNameResolver( factory, interceptor );
-
-		changesetIdSupplier = initializeChangesetIdSupplier( factory );
 	}
 
 }

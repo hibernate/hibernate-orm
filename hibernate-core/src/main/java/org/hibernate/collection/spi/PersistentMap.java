@@ -16,7 +16,6 @@ import java.util.Set;
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.util.Optional.Defined;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -147,49 +146,50 @@ public class PersistentMap<K,E> extends AbstractPersistentCollection<E> implemen
 
 	@Override
 	public E get(Object key) {
-		return readElementByIndex( key ).evaluate( () -> map.get( key ) );
+		final Object result = readElementByIndex( key );
+		return result == UNKNOWN
+				? map.get( key )
+				: (E) result;
 	}
 
 	@Override
 	public E put(K key, E value) {
-		if ( isPutQueueEnabled()
-				&& readElementByIndex( key ) instanceof Defined<E> element ) {
-			final E old = element.result();
-			queueOperation( new Put( key, value, old ) );
-			return old;
-		}
-		else {
-			initialize( true );
-			final E old = map.put( key, value );
-			// would be better to use the element-type to determine
-			// whether the old and the new are equal here; the problem being
-			// we do not necessarily have access to the element type in all
-			// cases
-			if ( value != old ) {
-				dirty();
+		if ( isPutQueueEnabled() ) {
+			final Object old = readElementByIndex( key );
+			if ( old != UNKNOWN ) {
+				queueOperation( new Put( key, value, (E) old ) );
+				return (E) old;
 			}
-			return old;
 		}
+		initialize( true );
+		final E old = map.put( key, value );
+		// would be better to use the element-type to determine
+		// whether the old and the new are equal here; the problem being
+		// we do not necessarily have access to the element type in all
+		// cases
+		if ( value != old ) {
+			dirty();
+		}
+		return old;
 	}
 
 	@Override
 	public E remove(Object key) {
-		if ( isPutQueueEnabled()
-				&& readElementByIndex( key ) instanceof Defined<E> element ) {
-			elementRemoved = true;
-			final E old = element.result();
-			queueOperation( new Remove( (K) key, old ) );
-			return old;
-		}
-		else {
-			// TODO : safe to interpret "map.remove(key) == null" as non-dirty?
-			initialize( true );
-			if ( map.containsKey( key ) ) {
+		if ( isPutQueueEnabled() ) {
+			final Object old = readElementByIndex( key );
+			if ( old != UNKNOWN ) {
 				elementRemoved = true;
-				dirty();
+				queueOperation( new Remove( (K) key, (E) old ) );
+				return (E) old;
 			}
-			return map.remove( key );
 		}
+		// TODO : safe to interpret "map.remove(key) == null" as non-dirty?
+		initialize( true );
+		if ( map.containsKey( key ) ) {
+			elementRemoved = true;
+			dirty();
+		}
+		return map.remove( key );
 	}
 
 	@Override

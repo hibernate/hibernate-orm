@@ -5,11 +5,9 @@
 package org.hibernate.boot.spi;
 
 import org.hibernate.Incubating;
-import org.hibernate.audit.AuditStrategy;
 import org.hibernate.boot.model.TypeDefinitionRegistry;
 import org.hibernate.boot.model.naming.ObjectNameNormalizer;
 import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.temporal.TemporalTableStrategy;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.ServiceRegistry;
@@ -17,8 +15,6 @@ import org.hibernate.service.ServiceRegistry;
 import static org.hibernate.cfg.MappingSettings.JAVA_TIME_USE_DIRECT_JDBC;
 import static org.hibernate.cfg.MappingSettings.PREFER_LOCALE_LANGUAGE_TAG;
 import static org.hibernate.cfg.MappingSettings.PREFER_NATIVE_ENUM_TYPES;
-import static org.hibernate.audit.AuditStrategy.DEFAULT;
-import static org.hibernate.temporal.TemporalTableStrategy.AUTO;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
 
 /**
@@ -137,12 +133,4 @@ public interface MetadataBuildingContext {
 	 * The name of the contributor whose mappings we are currently processing
 	 */
 	String getCurrentContributorName();
-
-	default TemporalTableStrategy getTemporalTableStrategy() {
-		return AUTO;
-	}
-
-	default AuditStrategy getAuditStrategy() {
-		return DEFAULT;
-	}
 }

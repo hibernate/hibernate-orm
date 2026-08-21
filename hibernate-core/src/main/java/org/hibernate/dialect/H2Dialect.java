@@ -97,7 +97,6 @@ import static org.hibernate.internal.util.StringHelper.split;
 import static org.hibernate.query.common.TemporalUnit.SECOND;
 import static org.hibernate.type.SqlTypes.BIGINT;
 import static org.hibernate.type.SqlTypes.BINARY;
-import static org.hibernate.type.SqlTypes.BLOB;
 import static org.hibernate.type.SqlTypes.CHAR;
 import static org.hibernate.type.SqlTypes.CLOB;
 import static org.hibernate.type.SqlTypes.DOUBLE;
@@ -221,18 +220,6 @@ public class H2Dialect extends Dialect {
 			case VARCHAR, NVARCHAR, LONG32VARCHAR, LONG32NVARCHAR -> "varchar";
 			case BINARY, VARBINARY, LONG32VARBINARY -> "varbinary";
 			default -> super.castType( sqlTypeCode );
-		};
-	}
-
-	@Override
-	protected String narrowCastType(int sqlTypeCode) {
-		// H2 misbehaves when casting to clob/blob (in particular, array_agg
-		// on clob produces funky results), so use unsized varchar/varbinary
-		// in narrow cast positions instead — consistent with castType().
-		return switch (sqlTypeCode) {
-			case CLOB, NCLOB -> "varchar";
-			case BLOB -> "varbinary";
-			default -> super.narrowCastType( sqlTypeCode );
 		};
 	}
 
@@ -367,8 +354,8 @@ public class H2Dialect extends Dialect {
 		functionFactory.arrayFill_h2();
 		functionFactory.arrayToString_h2( getMaximumArraySize() );
 
-		functionFactory.jsonObject_h2();
-		functionFactory.jsonArray_h2();
+		functionFactory.jsonObject();
+		functionFactory.jsonArray();
 		if ( getVersion().isSameOrAfter( 2, 2, 220 ) ) {
 			functionFactory.jsonValue_h2();
 			functionFactory.jsonQuery_h2();
@@ -730,11 +717,6 @@ public class H2Dialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsIfExistsBeforeIndexName() {
-		return true;
-	}
-
-	@Override
 	public String getCascadeConstraintsString() {
 		return " cascade ";
 	}
@@ -886,11 +868,6 @@ public class H2Dialect extends Dialect {
 		return "call current_timestamp()";
 	}
 
-	@Override
-	public boolean isCurrentTimestampStable() {
-		return true;
-	}
-
 
 	// Overridden informational metadata ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -933,11 +910,6 @@ public class H2Dialect extends Dialect {
 	@Override
 	public boolean supportsRecursiveCTE() {
 		return true;
-	}
-
-	@Override
-	public boolean supportsExceptAll() {
-		return false;
 	}
 
 	@Override

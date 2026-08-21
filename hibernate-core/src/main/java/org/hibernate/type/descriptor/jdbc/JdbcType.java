@@ -361,8 +361,7 @@ public interface JdbcType extends Serializable {
 	}
 
 	default CastType getCastType() {
-		final CastType sqlTypeCodeCastType = getCastType( getDefaultSqlTypeCode() );
-		return sqlTypeCodeCastType == CastType.OTHER ? getCastType( getDdlTypeCode() ) : sqlTypeCodeCastType;
+		return getCastType( getDdlTypeCode() );
 	}
 
 	static CastType getCastType(int typeCode) {

@@ -4,12 +4,10 @@
  */
 package org.hibernate.sql.results.graph.collection.internal;
 
-import java.util.Objects;
 import java.util.function.BiConsumer;
 
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CollectionKey;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
@@ -171,34 +169,21 @@ public abstract class AbstractCollectionInitializer<Data extends AbstractCollect
 				return;
 			}
 		}
+		final var persister = collectionAttributeMapping.getCollectionDescriptor();
 		// Try to reuse the previous collection key and collection if possible
-		if ( checkPreviousRow && oldKey != null && areKeysEqual( oldKey, data ) ) {
+		if ( checkPreviousRow && oldKey != null && areKeysEqual( oldKey.getKey(), data.collectionKeyValue ) ) {
 			data.collectionKey = oldKey;
 			data.setCollectionInstance( oldCollectionInstance );
 			data.setState( oldCollectionInstance == null ? State.MISSING : State.RESOLVED );
 		}
 		else {
-			final var persister = collectionAttributeMapping.getCollectionDescriptor();
-			final var session = data.getRowProcessingState().getSession();
-			data.collectionKey = session.generateCollectionKey( persister, data.collectionKeyValue );
+			data.collectionKey = new CollectionKey( persister, data.collectionKeyValue );
 			data.setState( State.KEY_RESOLVED );
 		}
 	}
 
-	private boolean areKeysEqual(CollectionKey oldKey, Data data) {
-		final var oldFk = oldKey.getKey();
-		final var newFk = data.collectionKeyValue;
-		final var sameFk = keyTypeForEqualsHashCode == null
-				? oldFk.equals( newFk )
-				: keyTypeForEqualsHashCode.isEqual( oldFk, newFk );
-		if ( sameFk ) {
-			final var currentTxId = data.getRowProcessingState()
-					.getLoadQueryInfluencers().getTemporalIdentifier();
-			return Objects.equals( oldKey.getChangesetId(), currentTxId );
-		}
-		else {
-			return false;
-		}
+	private boolean areKeysEqual(Object key1, Object key2) {
+		return keyTypeForEqualsHashCode == null ? key1.equals( key2 ) : keyTypeForEqualsHashCode.isEqual( key1, key2 );
 	}
 
 	PersistentCollection<?> getCollection(CollectionInitializerData data, Object instance) {
@@ -264,13 +249,4 @@ public abstract class AbstractCollectionInitializer<Data extends AbstractCollect
 	public boolean isResultInitializer() {
 		return isResultInitializer;
 	}
-
-	boolean isReadOnly(CollectionKey collectionKey, RowProcessingState rowProcessingState, SharedSessionContractImplementor session) {
-		if ( collectionKey.isTemporal() ) {
-			return true;
-		}
-		final Boolean readOnly = rowProcessingState.getQueryOptions().isReadOnly();
-		return readOnly == null ? session.isDefaultReadOnly() : readOnly;
-	}
-
 }

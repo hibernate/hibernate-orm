@@ -8,6 +8,7 @@ import java.lang.reflect.Method;
 
 import org.hibernate.LazyInitializationException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.internal.util.MarkerObject;
 import org.hibernate.proxy.AbstractLazyInitializer;
 import org.hibernate.type.CompositeType;
 
@@ -19,6 +20,8 @@ import static java.lang.System.identityHashCode;
  * @author Gavin King
  */
 public abstract class BasicLazyInitializer extends AbstractLazyInitializer {
+
+	protected static final Object INVOKE_IMPLEMENTATION = new MarkerObject( "INVOKE_IMPLEMENTATION" );
 
 	protected final Class<?> persistentClass;
 	protected final Method getIdentifierMethod;
@@ -47,10 +50,7 @@ public abstract class BasicLazyInitializer extends AbstractLazyInitializer {
 
 	protected abstract Object serializableProxy();
 
-	protected abstract Object call(Object proxy, Method method, Object[] args) throws Throwable;
-
-	protected final Object invoke(Method method, Object[] args, Object proxy)
-			throws Throwable {
+	protected final Object invoke(Method method, Object[] args, Object proxy) throws Throwable {
 		final String methodName = method.getName();
 		switch ( args.length ) {
 			case 0:
@@ -74,7 +74,7 @@ public abstract class BasicLazyInitializer extends AbstractLazyInitializer {
 				else if ( method.equals( setIdentifierMethod ) ) {
 					initialize();
 					setIdentifier( args[0] );
-					return call( proxy, method, args );
+					return INVOKE_IMPLEMENTATION;
 				}
 				break;
 		}
@@ -85,7 +85,7 @@ public abstract class BasicLazyInitializer extends AbstractLazyInitializer {
 		}
 
 		// otherwise:
-		return call( proxy, method, args );
+		return INVOKE_IMPLEMENTATION;
 	}
 
 	private Object getReplacement() {

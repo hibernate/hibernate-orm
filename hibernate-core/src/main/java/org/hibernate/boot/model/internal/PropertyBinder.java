@@ -30,7 +30,6 @@ import jakarta.persistence.Version;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
-import org.hibernate.annotations.Audited;
 import org.hibernate.annotations.Any;
 import org.hibernate.annotations.AttributeBinderType;
 import org.hibernate.annotations.CascadeType;
@@ -42,18 +41,15 @@ import org.hibernate.annotations.ManyToAny;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.OptimisticLock;
 import org.hibernate.annotations.Parent;
-import org.hibernate.annotations.Temporal.Excluded;
 import org.hibernate.boot.spi.AccessType;
-import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
-import org.hibernate.temporal.TemporalTableStrategy;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.generator.EventType;
 import org.hibernate.generator.EventTypeSets;
-import org.hibernate.mapping.Column;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.MappedSuperclass;
@@ -91,7 +87,6 @@ import static org.hibernate.boot.model.internal.EmbeddableBinder.bindEmbeddable;
 import static org.hibernate.boot.model.internal.EmbeddableBinder.createCompositeBinder;
 import static org.hibernate.boot.model.internal.EmbeddableBinder.createEmbeddable;
 import static org.hibernate.boot.model.internal.EmbeddableBinder.determineCustomInstantiator;
-import static org.hibernate.boot.model.internal.EmbeddableBinder.hasCompatibleType;
 import static org.hibernate.boot.model.internal.EmbeddableBinder.isEmbedded;
 import static org.hibernate.boot.model.internal.GeneratorBinder.createIdGeneratorsFromGeneratorAnnotations;
 import static org.hibernate.boot.model.internal.GeneratorBinder.createValueGeneratorFromAnnotations;
@@ -100,8 +95,6 @@ import static org.hibernate.boot.model.internal.TimeZoneStorageHelper.resolveTim
 import static org.hibernate.boot.model.internal.ToOneBinder.bindManyToOne;
 import static org.hibernate.boot.model.internal.ToOneBinder.bindOneToOne;
 import static org.hibernate.id.IdentifierGeneratorHelper.getForeignId;
-import static org.hibernate.internal.util.StringHelper.isEmpty;
-import static org.hibernate.internal.util.StringHelper.isBlank;
 import static org.hibernate.internal.util.StringHelper.qualify;
 
 /**
@@ -452,8 +445,6 @@ public class PropertyBinder {
 		handleMutability( property );
 		handleOptional( property );
 		inferOptimisticLocking( property );
-		handleTemporalExcluded( property );
-		handleAuditedExcluded( property );
 		return property;
 	}
 
@@ -475,8 +466,8 @@ public class PropertyBinder {
 		if ( memberDetails != null && memberDetails.hasDirectAnnotationUsage( Immutable.class ) ) {
 			updatable = false;
 		}
-		property.resetInsertable( insertable );
-		property.resetUpdateable( updatable );
+		property.setInsertable( insertable );
+		property.setUpdatable( updatable );
 	}
 
 	private void handleOptional(Property property) {
@@ -539,40 +530,6 @@ public class PropertyBinder {
 		}
 		else {
 			property.setOptimisticLocked( !isToOneValue(value) || insertable ); // && updatable as well???
-		}
-	}
-
-	private void handleTemporalExcluded(Property property) {
-		if ( memberDetails != null && memberDetails.hasDirectAnnotationUsage( Excluded.class ) ) {
-			property.setTemporalExcluded( true );
-			property.setOptimisticLocked( false );
-			addTemporalExcludedColumnOptions( property );
-		}
-	}
-
-	private void handleAuditedExcluded(Property property) {
-		if ( memberDetails != null && memberDetails.hasDirectAnnotationUsage( Audited.Excluded.class ) ) {
-			property.setAuditedExcluded( true );
-			property.setOptimisticLocked( false );
-		}
-	}
-
-	private void addTemporalExcludedColumnOptions(Property property) {
-		if ( buildingContext.getTemporalTableStrategy() == TemporalTableStrategy.NATIVE ) {
-			for ( var selectable : property.getSelectables() ) {
-				if ( selectable instanceof Column column ) {
-					final String existing = column.getOptions();
-					final String exclusion =
-							buildingContext.getMetadataCollector()
-									.getDatabase().getDialect().getTemporalTableSupport()
-									.getTemporalExclusionColumnOption();
-					final String options =
-							isBlank( existing )
-									? exclusion
-									: existing + " " + exclusion;
-					column.setOptions( options );
-				}
-			}
 		}
 	}
 
@@ -801,7 +758,7 @@ public class PropertyBinder {
 		if ( isPropertyOfRegularEmbeddable( propertyHolder, isComponentEmbedded )
 				&& isSimpleId( memberDetails ) ) {
 			throw new AnnotationException("Member '" + memberDetails.getName()
-					+ "' of embeddable class '" + propertyHolder.getClassName() + "' is annotated '@Id'");
+					+ "' of embeddable class " + propertyHolder.getClassName() + " is annotated '@Id'");
 		}
 
 		final var attributeTypeDetails =
@@ -972,11 +929,11 @@ public class PropertyBinder {
 		return property.hasDirectAnnotationUsage( Version.class );
 	}
 
-	static boolean isOneToOne(MemberDetails property) {
+	private static boolean isOneToOne(MemberDetails property) {
 		return property.hasDirectAnnotationUsage( OneToOne.class );
 	}
 
-	static boolean isManyToOne(MemberDetails property) {
+	private static boolean isManyToOne(MemberDetails property) {
 		return property.hasDirectAnnotationUsage( ManyToOne.class );
 	}
 
@@ -1103,7 +1060,12 @@ public class PropertyBinder {
 				|| propertyHolder.isOrWithinEmbeddedId()
 				|| propertyHolder.isInIdClass() ) {
 			// the associated entity could be using an @IdClass making the overridden property a component
-			return getPropertyOverriddenByMapperOrMapsId( propertyHolder, property );
+			return getPropertyOverriddenByMapperOrMapsId(
+					isId,
+					propertyHolder,
+					property.resolveAttributeName(),
+					buildingContext
+			);
 		}
 		else {
 			return null;
@@ -1199,7 +1161,7 @@ public class PropertyBinder {
 		}
 		else if ( isId() ) {
 			if ( isIdentifierMapper ) {
-				throw new AnnotationException( "Property '" + getPath( propertyHolder, inferredData )
+				throw new AnnotationException( "Property '"+ getPath( propertyHolder, inferredData )
 						+ "' belongs to an '@IdClass' and may not be annotated '@Id' or '@EmbeddedId'" );
 			}
 			//components and regular basic types create SimpleValue objects
@@ -1388,85 +1350,32 @@ public class PropertyBinder {
 		return null;
 	}
 
-	private PropertyData getPropertyOverriddenByMapperOrMapsId(
+	private static PropertyData getPropertyOverriddenByMapperOrMapsId(
+			boolean isId,
 			PropertyHolder propertyHolder,
-			MemberDetails property) {
-		final var persistentClass = propertyHolder.getPersistentClass();
+			String propertyName,
+			MetadataBuildingContext buildingContext) {
+		final var classDetailsRegistry =
+				buildingContext.getBootstrapContext().getModelsContext().getClassDetailsRegistry();
+		final PersistentClass persistentClass = propertyHolder.getPersistentClass();
 		final String name =
-				isEmpty( persistentClass.getClassName() )
+				StringHelper.isEmpty( persistentClass.getClassName() )
 						? persistentClass.getEntityName()
 						: persistentClass.getClassName();
-		final var classDetails =
-				buildingContext.getBootstrapContext().getModelsContext()
-						.getClassDetailsRegistry().resolveClassDetails( name );
-		final var collector = buildingContext.getMetadataCollector();
-		final String propertyName = property.resolveAttributeName();
+		final var classDetails = classDetailsRegistry.resolveClassDetails( name );
+		final var metadataCollector = buildingContext.getMetadataCollector();
 		if ( propertyHolder.isInIdClass() ) {
-			final var toOnePropertyData =
-					collector.getPropertyAnnotatedWithIdAndToOne( classDetails, propertyName );
-			if ( toOnePropertyData != null ) {
-				return toOnePropertyData;
+			final PropertyData data =
+					metadataCollector.getPropertyAnnotatedWithIdAndToOne( classDetails, propertyName );
+			if ( data != null ) {
+				return data;
 			}
-			else {
-				final var mapsIdProperty = collector.getPropertyAnnotatedWithMapsId( classDetails, propertyName );
-				if ( mapsIdProperty != null ) {
-					checkMappedId( propertyHolder, property, propertyName, mapsIdProperty, collector );
-				}
-				return mapsIdProperty;
+			// TODO: is this branch even necessary?
+			else  {
+				return metadataCollector.getPropertyAnnotatedWithMapsId( classDetails, propertyName );
 			}
 		}
-		else {
-			return collector.getPropertyAnnotatedWithMapsId( classDetails, isId ? "" : propertyName );
-		}
+		return metadataCollector.getPropertyAnnotatedWithMapsId( classDetails, isId ? "" : propertyName );
 	}
 
-	private static void checkMappedId(
-			PropertyHolder propertyHolder,
-			MemberDetails property,
-			String propertyName, PropertyData mapsIdProperty,
-			InFlightMetadataCollector collector) {
-		final var referencedEntityName = mapsIdProperty.getClassOrElementName();
-		final var referencedEntityBinding = collector.getEntityBinding( referencedEntityName );
-		if ( referencedEntityBinding != null ) {
-			if ( referencedEntityBinding.getIdentifier() instanceof Component compositeId ) {
-				if ( !isEmbeddedId( property ) ) {
-					throw new AnnotationException(
-							"Attribute '%s' of entity '%s' is mapped by association '%s' but is not annotated '@EmbeddedId'"
-									.formatted(
-											propertyName,
-											propertyHolder.getPersistentClass().getEntityName(),
-											mapsIdProperty.getPropertyName()
-									)
-					);
-				}
-				final String expectedTypeName = compositeId.getComponentClassName();
-				final String actualTypeName = property.getType().getName();
-				if ( !hasCompatibleType( actualTypeName, expectedTypeName ) ) {
-					throw new AnnotationException(
-							"Identifier attribute '%s' of entity '%s' has type '%s' but is mapped by association '%s' to entity '%s' with composite identifier type '%s'"
-									.formatted(
-											propertyName,
-											propertyHolder.getPersistentClass().getEntityName(),
-											actualTypeName,
-											mapsIdProperty.getPropertyName(),
-											referencedEntityName,
-											expectedTypeName
-									)
-					);
-				}
-			}
-			else {
-				if ( !isSimpleId( property ) ) {
-					throw new AnnotationException(
-							"Attribute '%s' of entity '%s' is mapped by association '%s' but is not annotated '@Id'"
-									.formatted(
-											propertyName,
-											propertyHolder.getPersistentClass().getEntityName(),
-											mapsIdProperty.getPropertyName()
-									)
-					);
-				}
-			}
-		}
-	}
 }

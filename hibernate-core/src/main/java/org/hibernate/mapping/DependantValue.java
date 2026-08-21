@@ -116,7 +116,6 @@ public class DependantValue extends SimpleValue implements Resolvable, SortableV
 				final int[] originalOrder = sortableValue.sortProperties();
 				if ( originalOrder != null ) {
 					sortColumns( originalOrder );
-					return originalOrder;
 				}
 			}
 		}

@@ -24,8 +24,6 @@ import org.hibernate.stat.QueryStatistics;
 import org.hibernate.stat.Statistics;
 
 import org.hibernate.testing.orm.junit.ExtraAssertions;
-import org.hibernate.testing.orm.junit.RequiresDialectFeature;
-import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -197,7 +195,6 @@ public class HibernateCacheTest extends BaseFunctionalTest {
 	}
 
 	@Test
-	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsPrimaryKeyUpdate.class)
 	public void testGeneralUsage() {
 		EventManager mgr = new EventManager( sessionFactory() );
 		Statistics stats = sessionFactory().getStatistics();

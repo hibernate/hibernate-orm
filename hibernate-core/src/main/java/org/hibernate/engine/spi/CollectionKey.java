@@ -19,13 +19,10 @@ import static org.hibernate.pretty.MessageHelper.collectionInfoString;
 
 /**
  * Uniquely identifies a collection instance in a particular session.
- * <p>
- * For temporal collections, use {@link TemporalCollectionKey} which includes a changeset identifier
- * to isolate historical snapshots in the persistence context.
  *
  * @author Gavin King
  */
-public sealed class CollectionKey implements Serializable permits TemporalCollectionKey {
+public final class CollectionKey implements Serializable {
 	private final String role;
 	private final Object key;
 	private final @Nullable Type keyType;
@@ -37,20 +34,15 @@ public sealed class CollectionKey implements Serializable permits TemporalCollec
 				persister.getRole(),
 				key,
 				persister.getKeyType().getTypeForEqualsHashCode(),
-				persister.getFactory(),
-				0
+				persister.getFactory()
 		);
 	}
 
-	/**
-	 * @param changesetIdHashCode hash code contribution from the changeset identifier
-	 */
-	CollectionKey(
+	private CollectionKey(
 			String role,
 			@Nullable Object key,
 			@Nullable Type keyType,
-			SessionFactoryImplementor factory,
-			int changesetIdHashCode) {
+			SessionFactoryImplementor factory) {
 		this.role = role;
 		if ( key == null ) {
 			throw new AssertionFailure( "null identifier for collection of role (" + role + ")" );
@@ -59,19 +51,13 @@ public sealed class CollectionKey implements Serializable permits TemporalCollec
 		this.keyType = keyType;
 		this.factory = factory;
 		//cache the hash-code
-		this.hashCode = generateHashCode( role, key, keyType, factory, changesetIdHashCode );
+		this.hashCode = generateHashCode();
 	}
 
-	private static int generateHashCode(
-			String role,
-			Object key,
-			@Nullable Type keyType,
-			SessionFactoryImplementor factory,
-			int changesetIdHashCode) {
+	private int generateHashCode() {
 		int result = 17;
 		result = 37 * result + role.hashCode();
-		result = 37 * result + (keyType == null ? key.hashCode() : keyType.getHashCode( key, factory ));
-		result = 37 * result + changesetIdHashCode;
+		result = 37 * result + ( keyType == null ? key.hashCode() : keyType.getHashCode( key, factory ) );
 		return result;
 	}
 
@@ -81,21 +67,6 @@ public sealed class CollectionKey implements Serializable permits TemporalCollec
 
 	public Object getKey() {
 		return key;
-	}
-
-	/**
-	 * The audit changeset identifier for this key, or {@code null} for
-	 * non-temporal collections.
-	 */
-	public @Nullable Object getChangesetId() {
-		return null;
-	}
-
-	/**
-	 * Whether this key refers to a temporal (historical) collection snapshot.
-	 */
-	public boolean isTemporal() {
-		return false;
 	}
 
 	@Override
@@ -111,30 +82,14 @@ public sealed class CollectionKey implements Serializable permits TemporalCollec
 		if ( this == other ) {
 			return true;
 		}
-		if ( !(other instanceof CollectionKey that) ) {
+		if ( other == null || CollectionKey.class != other.getClass() ) {
 			return false;
 		}
 
+		final CollectionKey that = (CollectionKey) other;
 		return that.role.equals( role )
-			&& sameKey( that )
-			&& sameChangesetId( that );
-	}
-
-	private boolean sameKey(final CollectionKey that) {
-		return this.key == that.key
-			|| (keyType == null ? this.key.equals( that.key ) : keyType.isEqual( this.key, that.key, factory ));
-	}
-
-	/**
-	 * Compare changeset identifiers without virtual dispatch, using
-	 * instanceof on the sealed hierarchy for optimal JIT performance.
-	 */
-	private boolean sameChangesetId(final CollectionKey otherKey) {
-		if ( this instanceof TemporalCollectionKey t1 ) {
-			return otherKey instanceof TemporalCollectionKey t2
-				&& t1.getChangesetId().equals( t2.getChangesetId() );
-		}
-		return !(otherKey instanceof TemporalCollectionKey);
+				&& ( this.key == that.key ||
+					keyType == null ? this.key.equals( that.key ) : keyType.isEqual( this.key, that.key, factory ) );
 	}
 
 	@Override
@@ -154,7 +109,6 @@ public sealed class CollectionKey implements Serializable permits TemporalCollec
 		oos.writeObject( role );
 		oos.writeObject( key );
 		oos.writeObject( keyType );
-		oos.writeObject( getChangesetId() );
 	}
 
 	/**
@@ -170,13 +124,12 @@ public sealed class CollectionKey implements Serializable permits TemporalCollec
 	public static CollectionKey deserialize(
 			ObjectInputStream ois,
 			SessionImplementor session) throws IOException, ClassNotFoundException {
-		final String role = (String) ois.readObject();
-		final Object key = ois.readObject();
-		final Type keyType = (Type) ois.readObject();
-		final Object changesetId = ois.readObject();
-		final SessionFactoryImplementor factory = session.getFactory();
-		return changesetId != null
-				? new TemporalCollectionKey( role, key, keyType, factory, changesetId )
-				: new CollectionKey( role, key, keyType, factory, 0 );
+		return new CollectionKey(
+				(String) ois.readObject(),
+				ois.readObject(),
+				(Type) ois.readObject(),
+				// Should never be able to be null
+				session.getFactory()
+		);
 	}
 }

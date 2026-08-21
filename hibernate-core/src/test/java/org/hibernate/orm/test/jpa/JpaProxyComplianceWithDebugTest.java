@@ -26,11 +26,15 @@ import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.Setting;
 
-import org.jboss.logging.Logger;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.logger.LogLevelContext.withLevel;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.LoggerContext;
+import org.apache.logging.log4j.core.config.Configuration;
+import org.apache.logging.log4j.core.config.LoggerConfig;
+
 
 @JiraKey(value = "HHH-13244")
 @Jpa(
@@ -73,13 +77,26 @@ public class JpaProxyComplianceWithDebugTest {
 	@Test
 	@JiraKey(value = "HHH-13244")
 	public void testJpaComplianceProxyWithDebug(EntityManagerFactoryScope scope) {
+		LoggerContext context = (LoggerContext) LogManager.getContext( false );
+		Configuration configuration = context.getConfiguration();
+
 		//This could be replaced with setting the root logger level, or the "org.hibernate" logger to debug.
 		//These are simply the narrowest log settings that trigger the bug
-		try (var epc = withLevel( "org.hibernate.internal.util.EntityPrinter", Logger.Level.DEBUG );
-			var afelc = withLevel( "org.hibernate.event.internal.AbstractFlushingEventListener", Logger.Level.DEBUG )) {
+		LoggerConfig entityLogger = configuration.getLoggerConfig( "org.hibernate.internal.util.EntityPrinter");
+		LoggerConfig listenerLogger = configuration.getLoggerConfig("org.hibernate.event.internal.AbstractFlushingEventListener");
+
+		Level oldEntityLogLevel = entityLogger.getLevel();
+		Level oldListenerLogLevel = listenerLogger.getLevel();
+
+		entityLogger.setLevel(Level.DEBUG);
+		listenerLogger.setLevel(Level.DEBUG);
+		try {
 			scope.inTransaction(
-					entityManager -> entityManager.find( MvnoBillingAgreement.class, 1 )
+					entityManager -> entityManager.find( MvnoBillingAgreement.class, 1)
 			);
+		} finally {
+			entityLogger.setLevel(oldEntityLogLevel);
+			listenerLogger.setLevel(oldListenerLogLevel);
 		}
 	}
 

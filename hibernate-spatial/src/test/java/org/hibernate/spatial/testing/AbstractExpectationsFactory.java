@@ -8,7 +8,6 @@ import java.lang.invoke.MethodHandles;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.Locale;
 
 import org.hibernate.spatial.HSMessageLogger;
 
@@ -44,8 +43,7 @@ public abstract class AbstractExpectationsFactory {
 	private static final HSMessageLogger LOG = Logger.getMessageLogger(
 			MethodHandles.lookup(),
 			HSMessageLogger.class,
-			AbstractExpectationsFactory.class.getName(),
-			Locale.ROOT
+			AbstractExpectationsFactory.class.getName()
 	);
 	private final static int TEST_SRID = 4326;
 	private static final int MAX_BYTE_LEN = 1024;

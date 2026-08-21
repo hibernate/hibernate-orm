@@ -28,7 +28,7 @@ public class FlushVisitor extends AbstractVisitor {
 	}
 
 	Object processCollection(Object collection, CollectionType type) throws HibernateException {
-		if ( collection != null ) {
+		if ( collection != null && collection != CollectionType.UNFETCHED_COLLECTION ) {
 			final var session = getSession();
 			final var persistentCollection = persistentCollection( collection, type, session );
 			if ( persistentCollection != null ) {

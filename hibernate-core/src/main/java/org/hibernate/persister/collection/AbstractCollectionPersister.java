@@ -124,7 +124,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.function.Consumer;
-import java.util.function.UnaryOperator;
 
 import static java.util.Collections.emptyList;
 import static org.hibernate.internal.util.StringHelper.getNonEmptyOrConjunctionIfBothNonEmpty;
@@ -138,7 +137,6 @@ import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelpe
 import static org.hibernate.pretty.MessageHelper.collectionInfoString;
 import static org.hibernate.sql.Template.renderWhereStringTemplate;
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
-import static org.hibernate.temporal.TemporalTableStrategy.HISTORY_TABLE;
 
 /**
  * Base implementation of the {@code QueryableCollection} interface.
@@ -179,8 +177,6 @@ public abstract class AbstractCollectionPersister
 
 	// columns
 	protected final String[] keyColumnNames;
-	protected final String[] keyFormulaTemplates;
-	protected final String[] keyFormulas;
 	protected final String[] indexColumnNames;
 	protected final String[] indexFormulaTemplates;
 	protected final String[] indexFormulas;
@@ -301,8 +297,6 @@ public abstract class AbstractCollectionPersister
 
 		isVersioned = collectionBootDescriptor.isOptimisticLocked();
 
-		final var typeConfiguration = creationContext.getTypeConfiguration();
-
 		// KEY
 
 		final var key = collectionBootDescriptor.getKey();
@@ -310,19 +304,16 @@ public abstract class AbstractCollectionPersister
 		keyType = key.getType();
 		final int keySpan = key.getColumnSpan();
 		keyColumnNames = new String[keySpan];
-		keyFormulaTemplates = new String[keySpan];
-		keyFormulas = new String[keySpan];
 		keyColumnAliases = new String[keySpan];
 		int k = 0;
 		for ( var selectable: key.getSelectables() ) {
 			// NativeSQL: collect key column and auto-aliases
 			keyColumnAliases[k] = selectable.getAlias( dialect, table );
-			if ( selectable instanceof Formula formula ) {
-				keyFormulaTemplates[k] = formula.getTemplate( dialect, typeConfiguration );
-				keyFormulas[k] = formula.getFormula();
-			}
-			else if ( selectable instanceof Column column ) {
+			if ( selectable instanceof Column column ) {
 				keyColumnNames[k] = column.getQuotedName( dialect );
+			}
+			else {
+				throw new MappingException( "Collection keys may not contain formulas: " + navigableRole.getFullPath() );
 			}
 			k++;
 		}
@@ -342,6 +333,8 @@ public abstract class AbstractCollectionPersister
 		// Defer this after the element persister was determined,
 		// because it's needed in OneToManyPersister.getTableName()
 		spaces[0] = getTableName();
+
+		final var typeConfiguration = creationContext.getTypeConfiguration();
 
 		final int elementSpan = elementBootDescriptor.getColumnSpan();
 		elementColumnAliases = new String[elementSpan];
@@ -520,23 +513,23 @@ public abstract class AbstractCollectionPersister
 	private FilterHelper filterHelper(
 			Collection collection, EntityPersister elementPersister, RuntimeModelCreationContext context) {
 		final var filters = collection.getFilters();
-		return filters.isEmpty()
-				? null
-				: new FilterHelper( filters, entityNameByTableNameMap( elementPersister, context ), factory );
-	}
-
-	private static Map<String, String> entityNameByTableNameMap(
-			EntityPersister elementPersister, RuntimeModelCreationContext context) {
-		return elementPersister == null
-				? null
-				: AbstractEntityPersister.getEntityNameByTableNameMap(
-						context.getBootModel().getEntityBinding( elementPersister.getEntityName() ),
-						context.getSessionFactory().getSqlStringGenerationContext()
-				);
+		if ( filters.isEmpty() ) {
+			return null;
+		}
+		else {
+			final var entityNameByTableNameMap =
+					elementPersister == null
+							? null
+							: AbstractEntityPersister.getEntityNameByTableNameMap(
+									context.getBootModel().getEntityBinding( elementPersister.getEntityName() ),
+									context.getSessionFactory().getSqlStringGenerationContext()
+							);
+			return new FilterHelper( filters, entityNameByTableNameMap, factory );
+		}
 	}
 
 	private static int batchSize(Collection collection, SessionFactoryOptions options) {
-		final int batchSize = collection.getBatchSize();
+		int batchSize = collection.getBatchSize();
 		return batchSize >= 0
 				? batchSize
 				: options.getDefaultBatchFetchSize();
@@ -545,8 +538,8 @@ public abstract class AbstractCollectionPersister
 	private static CacheEntryStructure cacheEntryStructure(Collection collection, SessionFactoryOptions options) {
 		if ( options.isStructuredCacheEntriesEnabled() ) {
 			return collection.isMap()
-					? StructuredMapCacheEntry.INSTANCE
-					: StructuredCollectionCacheEntry.INSTANCE;
+							? StructuredMapCacheEntry.INSTANCE
+							: StructuredCollectionCacheEntry.INSTANCE;
 		}
 		else {
 			return UnstructuredCacheEntry.INSTANCE;
@@ -894,8 +887,7 @@ public abstract class AbstractCollectionPersister
 		return useShallowQueryCacheLayout;
 	}
 
-	@Override
-	public abstract RowMutationOperations getRowMutationOperations();
+	protected abstract RowMutationOperations getRowMutationOperations();
 	protected abstract RemoveCoordinator getRemoveCoordinator();
 
 	@Override
@@ -1021,7 +1013,6 @@ public abstract class AbstractCollectionPersister
 		return new SimpleSelect( getFactory() )
 				.setTableName( getTableName() )
 				.addRestriction( getKeyColumnNames() )
-				.addRestriction( keyFormulas )
 				.addWhereToken( sqlWhereString )
 				.addColumn( selectValue )
 				.toStatementString();
@@ -1035,9 +1026,8 @@ public abstract class AbstractCollectionPersister
 			return new SimpleSelect( getFactory() )
 					.setTableName( getTableName() )
 					.addRestriction( getKeyColumnNames() )
-					.addRestriction( getKeyFormulas() )
 					.addRestriction( getIndexColumnNames() )
-					.addRestriction( getIndexFormulas() )
+					.addRestriction( indexFormulas )
 					.addWhereToken( sqlWhereString )
 					.addColumn( "1" )
 					.toStatementString();
@@ -1049,9 +1039,8 @@ public abstract class AbstractCollectionPersister
 		return new SimpleSelect( getFactory() )
 				.setTableName( getTableName() )
 				.addRestriction( getKeyColumnNames() )
-				.addRestriction( getKeyFormulas() )
 				.addRestriction( getElementColumnNames() )
-				.addRestriction( getElementFormulas() )
+				.addRestriction( elementFormulas )
 				.addWhereToken( sqlWhereString )
 				.addColumn( "1" )
 				.toStatementString();
@@ -1067,18 +1056,6 @@ public abstract class AbstractCollectionPersister
 
 	public String[] getKeyColumnNames() {
 		return keyColumnNames;
-	}
-
-	public String[] getKeyFormulas() {
-		return keyFormulas;
-	}
-
-	public String[] getElementFormulas() {
-		return elementFormulas;
-	}
-
-	public String[] getIndexFormulas() {
-		return indexFormulas;
 	}
 
 	@Override
@@ -1113,12 +1090,7 @@ public abstract class AbstractCollectionPersister
 		getRemoveCoordinator().deleteAllRows( id, session );
 	}
 
-	boolean isHistoryStrategy() {
-		return getFactory().getSessionFactoryOptions().getTemporalTableStrategy() == HISTORY_TABLE;
-	}
-
-	@Override
-	public boolean isRowDeleteEnabled() {
+	protected boolean isRowDeleteEnabled() {
 		return keyIsUpdateable;
 	}
 
@@ -1127,24 +1099,8 @@ public abstract class AbstractCollectionPersister
 		return !isInverse() && isRowDeleteEnabled();
 	}
 
-	@Override
-	public boolean isRowInsertEnabled() {
+	protected boolean isRowInsertEnabled() {
 		return keyIsUpdateable;
-	}
-
-	@Override
-	public boolean[] getIndexColumnIsSettable() {
-		return indexColumnIsSettable;
-	}
-
-	@Override
-	public boolean[] getElementColumnIsSettable() {
-		return elementColumnIsSettable;
-	}
-
-	@Override
-	public UnaryOperator<Object> getIndexIncrementer() {
-		return this::incrementIndexByBase;
 	}
 
 	public String getOwnerEntityName() {
@@ -1498,8 +1454,7 @@ public abstract class AbstractCollectionPersister
 	@Override
 	public Object getElementByIndex(Object key, Object index, SharedSessionContractImplementor session, Object owner) {
 		final var influencers = session.getLoadQueryInfluencers();
-		if ( influencers.hasEnabledFilters()
-			&& isAffectedByFilters( new HashSet<>(), attributeMapping.getElementDescriptor(), influencers, true ) ) {
+		if ( isAffectedByFilters( new HashSet<>(), attributeMapping.getElementDescriptor(), influencers, true ) ) {
 			return new CollectionElementLoaderByIndex( attributeMapping, influencers, factory )
 					.load( key, index, session );
 		}
@@ -1582,7 +1537,7 @@ public abstract class AbstractCollectionPersister
 			final var enabledFilters = influencers.getEnabledFilters();
 			return filterHelper != null && filterHelper.isAffectedBy( enabledFilters )
 				|| manyToManyFilterHelper != null && manyToManyFilterHelper.isAffectedBy( enabledFilters )
-				|| isKeyOrElementAffectedByFilters( new HashSet<>(), influencers, onlyApplyForLoadByKeyFilters );
+				|| isKeyOrElementAffectedByFilters( new HashSet<>(), influencers, onlyApplyForLoadByKeyFilters);
 		}
 		else {
 			return false;
@@ -1594,11 +1549,15 @@ public abstract class AbstractCollectionPersister
 			Set<ManagedMappingType> visitedTypes,
 			LoadQueryInfluencers influencers,
 			boolean onlyApplyForLoadByKeyFilters) {
-		assert influencers.hasEnabledFilters();
-		final var enabledFilters = influencers.getEnabledFilters();
-		return filterHelper != null && filterHelper.isAffectedBy( enabledFilters )
-			|| manyToManyFilterHelper != null && manyToManyFilterHelper.isAffectedBy( enabledFilters )
-			|| isKeyOrElementAffectedByFilters( visitedTypes, influencers, onlyApplyForLoadByKeyFilters );
+		if ( influencers.hasEnabledFilters() ) {
+			final var enabledFilters = influencers.getEnabledFilters();
+			return filterHelper != null && filterHelper.isAffectedBy( enabledFilters )
+				|| manyToManyFilterHelper != null && manyToManyFilterHelper.isAffectedBy( enabledFilters )
+				|| isKeyOrElementAffectedByFilters( visitedTypes, influencers, onlyApplyForLoadByKeyFilters);
+		}
+		else {
+			return false;
+		}
 	}
 
 	private boolean isKeyOrElementAffectedByFilters(

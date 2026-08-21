@@ -8,10 +8,13 @@ import jakarta.persistence.Timeout;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.Locking;
+import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.query.sqm.mutation.internal.SqmMutationStrategyHelper;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcSelectWithActionsBuilder;
@@ -20,9 +23,11 @@ import org.hibernate.sql.exec.spi.PostAction;
 import org.hibernate.sql.exec.spi.StatementAccess;
 
 import java.sql.Connection;
+import java.util.ArrayList;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static org.hibernate.sql.exec.SqlExecLogger.SQL_EXEC_LOGGER;
 
@@ -35,14 +40,18 @@ import static org.hibernate.sql.exec.SqlExecLogger.SQL_EXEC_LOGGER;
  */
 public class CollectionLockingAction implements PostAction {
 	// Used by Hibernate Reactive
+	protected final LoadedValuesCollectorImpl loadedValuesCollector;
+	// Used by Hibernate Reactive
 	protected final LockMode lockMode;
 	// Used by Hibernate Reactive
 	protected final Timeout lockTimeout;
 
 	// Used by Hibernate Reactive
 	protected CollectionLockingAction(
+			LoadedValuesCollectorImpl loadedValuesCollector,
 			LockMode lockMode,
 			Timeout lockTimeout) {
+		this.loadedValuesCollector = loadedValuesCollector;
 		this.lockMode = lockMode;
 		this.lockTimeout = lockTimeout;
 	}
@@ -53,32 +62,30 @@ public class CollectionLockingAction implements PostAction {
 			JdbcSelectWithActionsBuilder jdbcSelectBuilder) {
 		assert lockOptions.getScope() == Locking.Scope.INCLUDE_COLLECTIONS;
 
+		final var loadedValuesCollector = resolveLoadedValuesCollector( lockingTarget );
+
 		// NOTE: we need to set this separately so that it can get incorporated into
 		// the JdbcValuesSourceProcessingState for proper callbacks
-//		jdbcSelectBuilder.setLoadedValuesCollector( () -> resolveLoadedValuesCollector( lockingTarget ) );
-
-		jdbcSelectBuilder.setLoadedValuesCollectorFactory( resolveLoadedValuesCollectorFactory( lockingTarget) );
+		jdbcSelectBuilder.setLoadedValuesCollector( loadedValuesCollector );
 
 		// additionally, add a post-action which uses the collected values.
 		jdbcSelectBuilder.appendPostAction( new CollectionLockingAction(
+				loadedValuesCollector,
 				lockOptions.getLockMode(),
 				lockOptions.getTimeout()
 		) );
 	}
 
-
-
 	@Override
 	public void performPostAction(
 			StatementAccess jdbcStatementAccess,
 			Connection jdbcConnection,
-			ExecutionContext executionContext,
-			LoadedValuesCollector loadedValuesCollector) {
-		performPostAction( executionContext, loadedValuesCollector );
+			ExecutionContext executionContext) {
+		performPostAction( executionContext );
 	}
 
 	// Used by Hibernate Reactive
-	protected void performPostAction(ExecutionContext executionContext, LoadedValuesCollector loadedValuesCollector) {
+	protected void performPostAction(ExecutionContext executionContext) {
 		LockingHelper.logLoadedValues( loadedValuesCollector );
 
 		final var session = executionContext.getSession();
@@ -132,8 +139,8 @@ public class CollectionLockingAction implements PostAction {
 	}
 
 	// Used by Hibernate Reactive
-	protected static LoadedValuesCollectorFactory resolveLoadedValuesCollectorFactory(QuerySpec lockingTarget) {
-		return new LoadedValuesCollectorFactory( lockingTarget.getRootPathsForLocking() );
+	protected static LoadedValuesCollectorImpl resolveLoadedValuesCollector(QuerySpec lockingTarget) {
+		return new LoadedValuesCollectorImpl( lockingTarget.getRootPathsForLocking() );
 	}
 
 	// Used by Hibernate Reactive
@@ -147,4 +154,53 @@ public class CollectionLockingAction implements PostAction {
 		return map;
 	}
 
+	// Used by Hibernate Reactive
+	protected static class LoadedValuesCollectorImpl implements LoadedValuesCollector {
+		private final Set<NavigablePath> pathsToLock;
+
+		private List<LoadedEntityRegistration> entitiesToLock;
+		private List<LoadedCollectionRegistration> collectionsToLock;
+
+		private LoadedValuesCollectorImpl(Set<NavigablePath> pathsToLock) {
+			this.pathsToLock = pathsToLock;
+		}
+
+		@Override
+		public void registerEntity(NavigablePath navigablePath, EntityMappingType entityDescriptor, EntityKey entityKey) {
+			if ( pathsToLock.contains( navigablePath ) ) {
+				if ( entitiesToLock == null ) {
+					entitiesToLock = new ArrayList<>();
+				}
+				entitiesToLock.add( new LoadedEntityRegistration( navigablePath, entityDescriptor, entityKey ) );
+			}
+		}
+
+		@Override
+		public void registerCollection(NavigablePath navigablePath, PluralAttributeMapping collectionDescriptor, CollectionKey collectionKey) {
+			if ( collectionsToLock == null ) {
+				collectionsToLock = new ArrayList<>();
+			}
+			collectionsToLock.add( new LoadedCollectionRegistration( navigablePath, collectionDescriptor, collectionKey ) );
+		}
+
+		@Override
+		public void clear() {
+			if ( entitiesToLock != null ) {
+				entitiesToLock.clear();
+			}
+			if ( collectionsToLock != null ) {
+				collectionsToLock.clear();
+			}
+		}
+
+		@Override
+		public List<LoadedEntityRegistration> getCollectedEntities() {
+			return entitiesToLock;
+		}
+
+		@Override
+		public List<LoadedCollectionRegistration> getCollectedCollections() {
+			return collectionsToLock;
+		}
+	}
 }

@@ -16,9 +16,7 @@ import java.util.Set;
 
 import jakarta.persistence.LockModeType;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.query.named.NamedResultSetMappingMemento;
 
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
@@ -304,13 +302,7 @@ public class EntityResultTests extends AbstractUsageTest {
 					assertThat( result, notNullValue() );
 					assertThat( result, instanceOf( Object[].class ) );
 					final Object[] values = result;
-					if (scope.getSessionFactory().getJdbcServices().getDialect() instanceof SpannerPostgreSQLDialect ||
-						scope.getSessionFactory().getJdbcServices().getDialect() instanceof SpannerDialect ) {
-						// Spanner always stores the integer types as INT64/BIGINT
-						assertThat( values[ 0 ], is( 1L ) );
-					} else {
-						assertThat( values[ 0 ], is( 1 ) );
-					}
+					assertThat( values[ 0 ], is( 1 ) );;
 					assertThat( values[ 1 ], is( "hi" ) );
 					assertThat( values[ 2 ], is( "there" ) );
 				}

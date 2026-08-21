@@ -17,6 +17,8 @@ import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 
@@ -156,6 +158,7 @@ public class UnionOfPartitionResultsTest {
 	@Entity(name = "Apple")
 	public static class Apple {
 		@Id
+		@GeneratedValue(strategy = GenerationType.IDENTITY)
 		private Integer id;
 		private LocalDate bakedOn;
 		@ManyToOne
@@ -192,6 +195,7 @@ public class UnionOfPartitionResultsTest {
 	@Entity(name = "Pie")
 	public static class Pie {
 		@Id
+		@GeneratedValue(strategy = GenerationType.IDENTITY)
 		private Integer id;
 		private String taste;
 

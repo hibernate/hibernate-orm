@@ -16,7 +16,6 @@ import org.jboss.logging.annotations.MessageLogger;
 import org.jboss.logging.annotations.ValidIdRange;
 
 import java.lang.invoke.MethodHandles;
-import java.util.Locale;
 import java.util.UUID;
 
 import static org.jboss.logging.Logger.Level.DEBUG;
@@ -37,7 +36,7 @@ import static org.jboss.logging.Logger.Level.WARN;
 public interface SessionLogging extends BasicLogger {
 	String NAME = SubSystemLogging.BASE + ".session";
 
-	SessionLogging SESSION_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), SessionLogging.class, NAME, Locale.ROOT );
+	SessionLogging SESSION_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), SessionLogging.class, NAME );
 
 	@LogMessage(level = DEBUG)
 	@Message("Session creation specified 'autoJoinTransactions', "

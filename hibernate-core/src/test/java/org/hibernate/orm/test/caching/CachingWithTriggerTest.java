@@ -9,7 +9,6 @@ import java.time.Instant;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
@@ -17,7 +16,6 @@ import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.Setting;
-import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -39,7 +37,6 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 		}
 )
 @RequiresDialect(value = PostgreSQLDialect.class, comment = "To write a trigger only once")
-@SkipForDialect( dialectClass = SpannerPostgreSQLDialect.class, reason = "Spanner doesn't support triggers")
 public class CachingWithTriggerTest {
 
 	private static final String TRIGGER = "begin NEW.lastUpdatedAt = current_timestamp; return NEW; end;";

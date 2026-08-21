@@ -52,7 +52,6 @@ public class ArrayConstructorTest {
 	}
 
 	@Test
-	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsArrayComparison.class)
 	public void testEmpty(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			List<EntityWithArrays> results = em.createQuery( "from EntityWithArrays e where e.theArray = array()", EntityWithArrays.class )
@@ -63,7 +62,6 @@ public class ArrayConstructorTest {
 	}
 
 	@Test
-	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsArrayComparison.class)
 	public void testNonExisting(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			//tag::hql-array-example[]
@@ -109,7 +107,6 @@ public class ArrayConstructorTest {
 	}
 
 	@Test
-	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsArrayComparison.class)
 	public void testArrayConstructorSyntaxEmpty(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			List<EntityWithArrays> results = em.createQuery( "from EntityWithArrays e where e.theArray = []", EntityWithArrays.class )
@@ -120,7 +117,6 @@ public class ArrayConstructorTest {
 	}
 
 	@Test
-	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsArrayComparison.class)
 	public void testArrayConstructorSyntaxNonEmpty(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			//tag::hql-array-hql-example[]

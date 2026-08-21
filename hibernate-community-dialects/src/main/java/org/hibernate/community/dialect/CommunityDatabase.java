@@ -228,7 +228,6 @@ public enum CommunityDatabase {
 		}
 	},
 
-
 	DERBY {
 		@Override
 		public Dialect createDialect(DialectResolutionInfo info) {

@@ -4,7 +4,6 @@
  */
 package org.hibernate.envers.internal.entities.mapper;
 
-import org.hibernate.Hibernate;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.envers.boot.internal.EnversService;
@@ -103,8 +102,6 @@ public class MultiPropertyMapper extends AbstractPropertyMapper implements Exten
 			final Object newObj,
 			final Object oldObj) {
 		boolean ret = false;
-		final Object unproxiedOldObj = Hibernate.unproxy( oldObj );
-		final Object unproxiedNewObj = Hibernate.unproxy( newObj );
 		for ( Map.Entry<PropertyData, PropertyMapper> entry : properties.entrySet() ) {
 			final PropertyData propertyData = entry.getKey();
 			final PropertyMapper propertyMapper = entry.getValue();
@@ -115,16 +112,16 @@ public class MultiPropertyMapper extends AbstractPropertyMapper implements Exten
 			}
 
 			Getter getter;
-			if ( unproxiedNewObj != null ) {
+			if ( newObj != null ) {
 				getter = ReflectionTools.getGetter(
-						unproxiedNewObj.getClass(),
+						newObj.getClass(),
 						propertyData,
 						session.getFactory().getServiceRegistry()
 				);
 			}
-			else if ( unproxiedOldObj != null ) {
+			else if ( oldObj != null ) {
 				getter = ReflectionTools.getGetter(
-						unproxiedOldObj.getClass(),
+						oldObj.getClass(),
 						propertyData,
 						session.getFactory().getServiceRegistry()
 				);
@@ -135,8 +132,8 @@ public class MultiPropertyMapper extends AbstractPropertyMapper implements Exten
 
 			ret |= propertyMapper.mapToMapFromEntity(
 					session, data,
-					unproxiedNewObj == null ? null : getter.get( unproxiedNewObj ),
-					unproxiedOldObj == null ? null : getter.get( unproxiedOldObj )
+					newObj == null ? null : getter.get( newObj ),
+					oldObj == null ? null : getter.get( oldObj )
 			);
 		}
 		return ret;
@@ -148,8 +145,6 @@ public class MultiPropertyMapper extends AbstractPropertyMapper implements Exten
 			final Map<String, Object> data,
 			final Object newObj,
 			final Object oldObj) {
-		final Object unproxiedOldObj = Hibernate.unproxy( oldObj );
-		final Object unproxiedNewObj = Hibernate.unproxy( newObj );
 		for ( Map.Entry<PropertyData, PropertyMapper> entry : properties.entrySet() ) {
 			final PropertyData propertyData = entry.getKey();
 			final PropertyMapper propertyMapper = entry.getValue();
@@ -160,16 +155,16 @@ public class MultiPropertyMapper extends AbstractPropertyMapper implements Exten
 			}
 
 			Getter getter;
-			if ( unproxiedNewObj != null ) {
+			if ( newObj != null ) {
 				getter = ReflectionTools.getGetter(
-						unproxiedNewObj.getClass(),
+						newObj.getClass(),
 						propertyData,
 						session.getFactory().getServiceRegistry()
 				);
 			}
-			else if ( unproxiedOldObj != null ) {
+			else if ( oldObj != null ) {
 				getter = ReflectionTools.getGetter(
-						unproxiedOldObj.getClass(),
+						oldObj.getClass(),
 						propertyData,
 						session.getFactory().getServiceRegistry()
 				);
@@ -180,8 +175,8 @@ public class MultiPropertyMapper extends AbstractPropertyMapper implements Exten
 
 			propertyMapper.mapModifiedFlagsToMapFromEntity(
 					session, data,
-					unproxiedNewObj == null ? null : getter.get( unproxiedNewObj ),
-					unproxiedOldObj == null ? null : getter.get( unproxiedOldObj )
+					newObj == null ? null : getter.get( newObj ),
+					oldObj == null ? null : getter.get( oldObj )
 			);
 		}
 	}

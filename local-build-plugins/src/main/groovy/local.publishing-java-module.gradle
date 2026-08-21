@@ -9,6 +9,13 @@ plugins {
     id "local.code-quality"
 }
 
+// Ideally this should be in `local.java-module.gradle`,
+// but we need to skip this in hibernate-gradle-plugin.
+def skipJacoco = project.hasProperty('skipJacoco') ? project.getProperty('skipJacoco').toBoolean() : false
+if (!skipJacoco) {
+    plugins.apply('jacoco')
+}
+
 configurations {
     javadocSources {
         description = "All Java sources for the project's Javadoc"
@@ -20,73 +27,10 @@ configurations {
 
 dependencies {
     javadocSources sourceSets.main.allJava.filter { file ->
-        !(file.path.contains("/internal/")
-                || file.path.contains("/org/hibernate/boot/jaxb/")
-                || file.path.contains("/org/hibernate/tuple/")
-                || file.path.contains("/org/hibernate/grammars/hql/")
-        )
-    }
-
-    // align artifacts natively when consuming through Gradle
-    api platform(project(":hibernate-platform"))
-}
-
-def moduleVersionAlignmentDependencies = configurations.dependencyScope("moduleVersionAlignmentDependencies") {
-    dependencies.add(project.dependencies.create(project) { transitive = false })
-    dependencies.add(project.dependencies.create(project.dependencies.platform(project(":hibernate-platform"))))
-}
-def moduleVersionAlignment = configurations.resolvable("moduleVersionAlignment") {
-    extendsFrom(moduleVersionAlignmentDependencies.get())
-}
-def verifyModuleVersionAlignment = tasks.register("verifyModuleVersionAlignment") {
-    group = "verification"
-    description = "Verify module version alignment"
-
-    def rootComponent = moduleVersionAlignment.flatMap {
-        it.incoming.getResolutionResult().rootComponent
-    }
-    def projectPath = project.path
-
-    doLast {
-        if (!rootComponent
-                .get()
-                .dependencies
-                .find {
-                    it instanceof ResolvedDependencyResult &&
-                            it.selected.id instanceof ProjectComponentIdentifier &&
-                            it.selected.id.projectPath == ":hibernate-platform"
-                }
-                .selected
-                .dependencies
-                .any {
-                    it instanceof ResolvedDependencyResult &&
-                            it.constraint &&
-                            it.selected.id instanceof ProjectComponentIdentifier &&
-                            it.selected.id.projectPath == projectPath
-                }) {
-            throw new GradleException(":hibernate-platform is missing dependency on $projectPath")
-        }
+        !file.path.contains( "/internal/" )
     }
 }
-tasks.named("check") {
-    dependsOn(verifyModuleVersionAlignment)
-}
 
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// Javadoc
-
-// Reduce the size of per-module javadoc jars published to Maven Central.
-// These options are intentionally NOT in local.javadoc.gradle,
-// so that the aggregated javadoc published to docs.hibernate.org is unaffected.
-tasks.withType(Javadoc).configureEach {
-    exclude '**/spi/**' // SPI pages are ~7M in the jar; SPI is for integrators who read the source
-    configure( options ) {
-        addStringOption('-override-methods', 'summary') // don't repeat inherited method docs; link to the declaring type instead
-        use = false // class-use pages are ~10M in the jar; IDEs provide better "find usages"
-        splitIndex = true // avoid a single 17M index-all.html; split into per-letter files instead
-        noTree = true // class hierarchy is ~7M uncompressed; IDEs show this better
-    }
-}
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Publishing
@@ -112,3 +56,12 @@ def releasePrepareTask = tasks.register("releasePrepare") {
     // used by JReleaser during the release process
     dependsOn tasks.publishAllPublicationsToStagingRepository
 }
+
+// used from the h2 CI job
+tasks.register("preVerifyRelease") {
+    group = "release-prepare"
+    description = "Delegates to `releasePrepare` task"
+
+    dependsOn releasePrepareTask
+}
+

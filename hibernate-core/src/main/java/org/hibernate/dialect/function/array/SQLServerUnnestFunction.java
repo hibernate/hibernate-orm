@@ -24,7 +24,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public class SQLServerUnnestFunction extends UnnestFunction {
 
 	public SQLServerUnnestFunction() {
-		super( "v", "i", false );
+		super( "v", "i" );
 	}
 
 	@Override

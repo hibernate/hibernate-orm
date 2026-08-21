@@ -35,15 +35,12 @@ import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SQLServerDialect;
 
-import org.hibernate.dialect.SybaseASEDialect;
-import org.hibernate.dialect.lock.PessimisticEntityLockException;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryBasedFunctionalTest;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.orm.junit.VersionMatchMode;
 import org.hibernate.testing.transaction.TransactionUtil;
 import org.hibernate.testing.util.ExceptionUtil;
 import org.junit.jupiter.api.AfterEach;
@@ -93,7 +90,6 @@ public class LockTest extends EntityManagerFactoryBasedFunctionalTest {
 
 	@Test
 	@SkipForDialect( dialectClass = CockroachDialect.class )
-	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsNoWait.class )
 	public void testFindWithTimeoutHint() {
 		final Lock lock = new Lock();
 		lock.setName( "name" );
@@ -117,12 +113,10 @@ public class LockTest extends EntityManagerFactoryBasedFunctionalTest {
 
 	@Test
 	@JiraKey( value = "HHH-7252" )
-	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsNoWait.class,
+	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsLockTimeouts.class,
 							comment = "Test verifies proper exception throwing when a lock timeout is specified.",
 							jiraKey = "HHH-7252" )
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Altibase close socket after lock timeout occurred")
-	@SkipForDialect(dialectClass = SybaseASEDialect.class, majorVersion = 16, minorVersion = 0, microVersion = 2,
-			versionMatchMode = VersionMatchMode.SAME_OR_OLDER, reason = "holdlock isn't the same as updating a row. Bug in our Sybase ASE version?")
 	public void testFindWithPessimisticWriteLockTimeoutException() {
 		assertTimeout( Duration.ofSeconds(5), () -> {
 			Lock lock = new Lock();
@@ -152,12 +146,7 @@ public class LockTest extends EntityManagerFactoryBasedFunctionalTest {
 							lte.getCause();
 						}
 						catch (PessimisticLockException pe) {
-							// Per spec, the Hibernate LockTimeoutException is wrapped into a PessimisticLockException
-							// if the transaction was marked for rollback
-							if ( !entityManager.getTransaction().getRollbackOnly()
-								|| !(pe.getCause() instanceof org.hibernate.exception.LockTimeoutException) ) {
-								fail( "Find with immediate timeout should have thrown LockTimeoutException." );
-							}
+							fail( "Find with immediate timeout should have thrown LockTimeoutException." );
 						}
 						catch (PersistenceException pe) {
 							log.info(
@@ -176,12 +165,10 @@ public class LockTest extends EntityManagerFactoryBasedFunctionalTest {
 
 	@Test
 	@JiraKey( value = "HHH-13364" )
-	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsNoWait.class,
+	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsLockTimeouts.class,
 			comment = "Test verifies proper exception throwing when a lock timeout is specified for Query#getSingleResult.",
 			jiraKey = "HHH-13364" )
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Altibase close socket after lock timeout occurred")
-	@SkipForDialect(dialectClass = SybaseASEDialect.class, majorVersion = 16, minorVersion = 0, microVersion = 2,
-			versionMatchMode = VersionMatchMode.SAME_OR_OLDER, reason = "holdlock isn't the same as updating a row. Bug in our Sybase ASE version?")
 	public void testQuerySingleResultPessimisticWriteLockTimeoutException() {
 		assertTimeout( Duration.ofSeconds(5), () -> {
 			Lock lock = new Lock();
@@ -211,12 +198,7 @@ public class LockTest extends EntityManagerFactoryBasedFunctionalTest {
 							lte.getCause();
 						}
 						catch (PessimisticLockException pe) {
-							// Per spec, the Hibernate LockTimeoutException is wrapped into a PessimisticLockException
-							// if the transaction was marked for rollback
-							if ( !entityManager.getTransaction().getRollbackOnly()
-								|| !(pe.getCause() instanceof org.hibernate.exception.LockTimeoutException) ) {
-								fail( "Find with immediate timeout should have thrown LockTimeoutException." );
-							}
+							fail( "Find with immediate timeout should have thrown LockTimeoutException." );
 						}
 						catch (PersistenceException pe) {
 							log.info(
@@ -234,12 +216,10 @@ public class LockTest extends EntityManagerFactoryBasedFunctionalTest {
 
 	@Test
 	@JiraKey( value = "HHH-13364" )
-	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsNoWait.class,
+	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsLockTimeouts.class,
 			comment = "Test verifies proper exception throwing when a lock timeout is specified for Query#getResultList.",
 			jiraKey = "HHH-13364" )
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Altibase close socket after lock timeout occurred")
-	@SkipForDialect(dialectClass = SybaseASEDialect.class, majorVersion = 16, minorVersion = 0, microVersion = 2,
-			versionMatchMode = VersionMatchMode.SAME_OR_OLDER, reason = "holdlock isn't the same as updating a row. Bug in our Sybase ASE version?")
 	public void testQueryResultListPessimisticWriteLockTimeoutException() {
 		assertTimeout( Duration.ofSeconds(5), () -> {
 			Lock lock = new Lock();
@@ -269,12 +249,7 @@ public class LockTest extends EntityManagerFactoryBasedFunctionalTest {
 							lte.getCause();
 						}
 						catch (PessimisticLockException pe) {
-							// Per spec, the Hibernate LockTimeoutException is wrapped into a PessimisticLockException
-							// if the transaction was marked for rollback
-							if ( !entityManager.getTransaction().getRollbackOnly()
-								|| !(pe.getCause() instanceof org.hibernate.exception.LockTimeoutException) ) {
-								fail( "Find with immediate timeout should have thrown LockTimeoutException." );
-							}
+							fail( "Find with immediate timeout should have thrown LockTimeoutException." );
 						}
 						catch (PersistenceException pe) {
 							log.info(
@@ -297,8 +272,6 @@ public class LockTest extends EntityManagerFactoryBasedFunctionalTest {
 			comment = "Test verifies proper exception throwing when a lock timeout is specified for NamedQuery#getResultList.",
 			jiraKey = "HHH-13364" )
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Altibase close socket after lock timeout occurred")
-	@SkipForDialect(dialectClass = SybaseASEDialect.class, majorVersion = 16, minorVersion = 0, microVersion = 2,
-			versionMatchMode = VersionMatchMode.SAME_OR_OLDER, reason = "holdlock isn't the same as updating a row. Bug in our Sybase ASE version?")
 	public void testNamedQueryResultListPessimisticWriteLockTimeoutException() {
 		assertTimeout( Duration.ofSeconds(5), () -> {
 			Lock lock = new Lock();
@@ -325,12 +298,7 @@ public class LockTest extends EntityManagerFactoryBasedFunctionalTest {
 							lte.getCause();
 						}
 						catch (PessimisticLockException pe) {
-							// Per spec, the Hibernate LockTimeoutException is wrapped into a PessimisticLockException
-							// if the transaction was marked for rollback
-							if ( !entityManager.getTransaction().getRollbackOnly()
-								|| !(pe.getCause() instanceof org.hibernate.exception.LockTimeoutException) ) {
-								fail( "Find with immediate timeout should have thrown LockTimeoutException." );
-							}
+							fail( "Find with immediate timeout should have thrown LockTimeoutException." );
 						}
 						catch (PersistenceException pe) {
 							log.info(
@@ -926,17 +894,6 @@ public class LockTest extends EntityManagerFactoryBasedFunctionalTest {
 								// success
 								log.info( "testContendedPessimisticWriteLockNoWait: (BG) got expected timeout exception" );
 								timedOut.set( true );
-							}
-							catch (PessimisticLockException pe) {
-								// Per spec, the Hibernate LockTimeoutException is wrapped into a PessimisticLockException
-								// if the transaction was marked for rollback
-								if ( _entityManager.getTransaction().getRollbackOnly()
-									&& pe.getCause() instanceof PessimisticEntityLockException cause
-									&& cause.getCause() instanceof org.hibernate.exception.LockTimeoutException) {
-									// success
-									log.info( "testContendedPessimisticWriteLockNoWait: (BG) got expected timeout exception" );
-									timedOut.set( true );
-								}
 							}
 							catch ( Throwable e ) {
 								log.info( "Expected LockTimeoutException but got unexpected exception", e );

@@ -29,7 +29,7 @@ import java.util.Collection;
 /// @implSpec Note that this is also used to determine and track which
 /// tables to lock even for cases (T-SQL e.g.) where a "locking clause"
 /// per-se won't be used.  In such cases, only the first phase (along
-/// with `shouldLockRoot()` and `shouldLockJoin()`) have any impact.
+/// with [#shouldLockRoot] and [#shouldLockJoin]) have any impact.
 ///
 /// @see org.hibernate.dialect.Dialect#getLockingClauseStrategy
 /// @see org.hibernate.sql.exec.spi.JdbcSelectWithActionsBuilder
@@ -48,10 +48,6 @@ public interface LockingClauseStrategy {
 	/// Are any outer joins encountered during registration
 	/// of [roots][#registerRoot] and [joins][#registerJoin]
 	boolean containsOuterJoins();
-
-	/// Are any joins encountered during registration
-	/// of [roots][#registerRoot] and [joins][#registerJoin]
-	boolean containsJoins();
 
 	/// For cases where a locking clause is to be used,
 	/// render that locking clause.

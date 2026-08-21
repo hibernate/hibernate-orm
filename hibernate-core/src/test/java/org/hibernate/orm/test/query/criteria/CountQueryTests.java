@@ -12,7 +12,6 @@ import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
-import org.hibernate.query.criteria.JpaCteCriteria;
 import org.hibernate.query.criteria.JpaParameterExpression;
 import org.hibernate.query.criteria.JpaRoot;
 
@@ -316,33 +315,6 @@ public class CountQueryTests {
 	}
 
 	@Test
-	@JiraKey("HHH-20550")
-	public void testCteQuery(SessionFactoryScope scope) {
-		scope.inTransaction( session -> {
-			final HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
-
-			final JpaCriteriaQuery<Integer> cteQuery = cb.createQuery( Integer.class );
-			final JpaRoot<Contact> cteRoot = cteQuery.from( Contact.class );
-			cteQuery.select( cteRoot.<Integer>get( "id" ).alias( "id" ) )
-					.where( cb.equal( cteRoot.get( "name" ).get( "last" ), "Doe" ) );
-
-			final JpaCriteriaQuery<String> cq = cb.createQuery( String.class );
-			final JpaRoot<Contact> root = cq.from( Contact.class );
-			final JpaCteCriteria<Integer> cteContactIds = cq.with( "cte_contact_ids", cteQuery );
-			cq.select( root.get( "name" ).get( "first" ) )
-					.where( root.get( "id" ).in( cq.from( cteContactIds ).get( "id" ) ) );
-			cq.distinct( true );
-
-			final Boolean exists = session.createQuery( cq.createExistsQuery() ).getSingleResult();
-			final Long count = session.createQuery( cq.createCountQuery() ).getSingleResult();
-			final List<String> resultList = session.createQuery( cq ).getResultList();
-			assertTrue( exists );
-			assertEquals( 8L, count );
-			assertEquals( resultList.size(), count.intValue() );
-		} );
-	}
-
-	@Test
 	@Jira( "https://hibernate.atlassian.net/browse/HHH-18357" )
 	public void testJoinedEntityPath(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
@@ -462,7 +434,7 @@ public class CountQueryTests {
 		private String s;
 	}
 
-	@Entity(name = "Contract")
+	@Entity
 	@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 	public static class Contract extends LogSupport {
 		@Id

@@ -5,17 +5,11 @@
 package org.hibernate.dialect.unique;
 
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.model.naming.Identifier;
-import org.hibernate.boot.model.naming.NamingHelper;
-import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UniqueKey;
-
-import java.util.ArrayList;
-import java.util.List;
 
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 
@@ -35,25 +29,6 @@ public class AlterTableUniqueDelegate implements UniqueDelegate {
 		this.dialect = dialect;
 	}
 
-	static String constraintName(UniqueKey uniqueKey, Database database) {
-		final String uniqueKeyName = uniqueKey.getName();
-		if ( uniqueKeyName == null ) {
-			final List<Identifier> columnIdentifiers = new ArrayList<>();
-			for ( var column : uniqueKey.getColumns() ) {
-				columnIdentifiers.add( column.getNameIdentifier( database ) );
-			}
-			return NamingHelper.INSTANCE.generateHashedConstraintName("UK",
-					uniqueKey.getTable().getNameIdentifier(), columnIdentifiers );
-		}
-		else {
-			return database.getDialect().quote( uniqueKeyName );
-		}
-	}
-
-	static String tableName(UniqueKey uniqueKey, SqlStringGenerationContext context) {
-		return context.format( uniqueKey.getTable().getQualifiedTableName() );
-	}
-
 	// legacy model ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
@@ -69,19 +44,19 @@ public class AlterTableUniqueDelegate implements UniqueDelegate {
 	}
 
 	@Override
-	public String getAlterTableToAddUniqueKeyCommand(
-			UniqueKey uniqueKey, Metadata metadata,
+	public String getAlterTableToAddUniqueKeyCommand(UniqueKey uniqueKey, Metadata metadata,
 			SqlStringGenerationContext context) {
-		return dialect.getAlterTableString( tableName( uniqueKey, context ) )
-				+ " add constraint " + constraintName( uniqueKey, metadata.getDatabase() )
-				+ " " + uniqueConstraintSql( uniqueKey );
+		final String tableName = context.format( uniqueKey.getTable().getQualifiedTableName() );
+		final String constraintName = dialect.quote( uniqueKey.getName() );
+		return dialect.getAlterTableString( tableName )
+				+ " add constraint " + constraintName + " " + uniqueConstraintSql( uniqueKey );
 	}
 
 	protected String uniqueConstraintSql(UniqueKey uniqueKey) {
 		final var fragment = new StringBuilder();
 		fragment.append( "unique (" );
 		boolean first = true;
-		for ( var column : uniqueKey.getColumns() ) {
+		for ( Column column : uniqueKey.getColumns() ) {
 			if ( first ) {
 				first = false;
 			}
@@ -103,23 +78,22 @@ public class AlterTableUniqueDelegate implements UniqueDelegate {
 	@Override
 	public String getAlterTableToDropUniqueKeyCommand(UniqueKey uniqueKey, Metadata metadata,
 			SqlStringGenerationContext context) {
-		final String tableName = tableName( uniqueKey, context );
-		final String constraintName = constraintName( uniqueKey, metadata.getDatabase() );
-		final var command = new StringBuilder( dialect.getAlterTableString( tableName ) );
+		final String tableName = context.format( uniqueKey.getTable().getQualifiedTableName() );
+		final var command = new StringBuilder( dialect.getAlterTableString(tableName) );
 		command.append( ' ' );
 		command.append( dialect.getDropUniqueKeyString() );
 		if ( dialect.supportsIfExistsBeforeConstraintName() ) {
 			command.append( " if exists " );
-			command.append( constraintName );
+			command.append( dialect.quote( uniqueKey.getName() ) );
 		}
 		else if ( dialect.supportsIfExistsAfterConstraintName() ) {
 			command.append( ' ' );
-			command.append( constraintName );
+			command.append( dialect.quote( uniqueKey.getName() ) );
 			command.append( " if exists" );
 		}
 		else {
 			command.append( ' ' );
-			command.append( constraintName );
+			command.append( dialect.quote( uniqueKey.getName() ) );
 		}
 		return command.toString();
 	}

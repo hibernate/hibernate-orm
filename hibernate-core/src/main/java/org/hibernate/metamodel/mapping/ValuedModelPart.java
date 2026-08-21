@@ -6,7 +6,7 @@ package org.hibernate.metamodel.mapping;
 
 /**
  * Describes a ModelPart that is also a ValueMapping (and therefore also a SelectableMappings).
- * <p>
+ * <p/>
  * {@linkplain BasicValuedModelPart Basic} and {@linkplain EmbeddableValuedModelPart embedded}
  * model-parts fall into this category.
  *
@@ -41,9 +41,11 @@ public interface ValuedModelPart extends ModelPart, ValueMapping, SelectableMapp
 	default void forEachInsertable(SelectableConsumer consumer) {
 		ModelPart.super.forEachSelectable(
 				(selectionIndex, selectableMapping) -> {
-					if ( selectableMapping.isInsertable() && !selectableMapping.isFormula() ) {
-						consumer.accept( selectionIndex, selectableMapping );
+					if ( ! selectableMapping.isInsertable() || selectableMapping.isFormula() ) {
+						return;
 					}
+
+					consumer.accept( selectionIndex, selectableMapping );
 				}
 		);
 	}
@@ -51,9 +53,11 @@ public interface ValuedModelPart extends ModelPart, ValueMapping, SelectableMapp
 	default void forEachNonFormula(SelectableConsumer consumer) {
 		ModelPart.super.forEachSelectable(
 				(selectionIndex, selectableMapping) -> {
-					if ( !selectableMapping.isFormula() ) {
-						consumer.accept( selectionIndex, selectableMapping );
+					if ( selectableMapping.isFormula() ) {
+						return;
 					}
+
+					consumer.accept( selectionIndex, selectableMapping );
 				}
 		);
 	}
@@ -61,9 +65,11 @@ public interface ValuedModelPart extends ModelPart, ValueMapping, SelectableMapp
 	default void forEachUpdatable(SelectableConsumer consumer) {
 		ModelPart.super.forEachSelectable(
 				(selectionIndex, selectableMapping) -> {
-					if ( selectableMapping.isUpdateable() && !selectableMapping.isFormula() ) {
-						consumer.accept( selectionIndex, selectableMapping );
+					if ( ! selectableMapping.isUpdateable() || selectableMapping.isFormula() ) {
+						return;
 					}
+
+					consumer.accept( selectionIndex, selectableMapping );
 				}
 		);
 	}

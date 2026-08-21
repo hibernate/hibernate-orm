@@ -85,6 +85,7 @@ public class TemporaryTableColumn implements SqlTypedMapping {
 		return primaryKey;
 	}
 
+	@Override
 	public @Nullable String getColumnDefinition() {
 		return sqlTypeName;
 	}

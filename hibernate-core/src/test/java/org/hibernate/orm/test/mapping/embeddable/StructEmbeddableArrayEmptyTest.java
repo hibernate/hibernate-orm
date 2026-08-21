@@ -9,11 +9,12 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import org.hibernate.annotations.Struct;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.OracleDialect;
+import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.testing.jdbc.SharedDriverManagerTypeCacheClearingIntegrator;
 import org.hibernate.testing.orm.junit.BootstrapServiceRegistry;
-import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -36,7 +37,8 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 )
 @DomainModel(annotatedClasses = StructEmbeddableArrayEmptyTest.StructHolder.class)
 @SessionFactory
-@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsUserDefinedTypes.class )
+@RequiresDialect( PostgreSQLDialect.class )
+@RequiresDialect( OracleDialect.class )
 public class StructEmbeddableArrayEmptyTest {
 
 	@BeforeEach

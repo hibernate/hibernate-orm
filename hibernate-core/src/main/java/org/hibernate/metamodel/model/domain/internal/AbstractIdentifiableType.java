@@ -410,14 +410,6 @@ public abstract class AbstractIdentifiableType<J>
 	}
 
 	private SqmPathSource<?> interpretIdDescriptor() {
-		if ( id != null ) {
-			// simple id or aggregate composite id
-			return pathSource( id );
-		}
-		else if ( nonAggregatedIdAttributes != null && !nonAggregatedIdAttributes.isEmpty() ) {
-			return compositePathSource();
-		}
-
 		final var superType = getSuperType();
 		if ( superType != null ) {
 			final var idDescriptor = superType.getIdentifierDescriptor();
@@ -425,11 +417,21 @@ public abstract class AbstractIdentifiableType<J>
 				return idDescriptor;
 			}
 		}
-		if ( isIdMappingRequired() ) {
-			throw new UnsupportedMappingException(
-					"Could not build SqmPathSource for entity identifier: " + getTypeName() );
+
+		if ( id != null ) {
+			// simple id or aggregate composite id
+			return pathSource( id );
 		}
-		return null;
+		else if ( nonAggregatedIdAttributes != null && !nonAggregatedIdAttributes.isEmpty() ) {
+			return compositePathSource();
+		}
+		else {
+			if ( isIdMappingRequired() ) {
+				throw new UnsupportedMappingException(
+						"Could not build SqmPathSource for entity identifier: " + getTypeName() );
+			}
+			return null;
+		}
 	}
 
 	private AbstractSqmPathSource<?> compositePathSource() {

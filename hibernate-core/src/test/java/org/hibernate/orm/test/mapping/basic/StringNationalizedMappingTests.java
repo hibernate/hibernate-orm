@@ -10,7 +10,6 @@ import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
 
 import org.hibernate.annotations.Nationalized;
-import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.NationalizationSupport;
 import org.hibernate.dialect.SybaseASEDialect;
@@ -40,8 +39,6 @@ import static org.hamcrest.Matchers.is;
 @SessionFactory
 @SkipForDialect(dialectClass = SybaseASEDialect.class,
 		reason = "Error converting characters into server's character set")
-@SkipForDialect(dialectClass = AltibaseDialect.class,
-		reason = "Altibase character types do not preserve supplementary Unicode characters")
 public class StringNationalizedMappingTests {
 
 	@Test

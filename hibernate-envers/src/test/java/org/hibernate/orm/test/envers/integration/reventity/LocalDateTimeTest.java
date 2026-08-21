@@ -3,10 +3,6 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.envers.integration.reventity;
-import org.hibernate.testing.orm.junit.DialectFeatureChecks;
-
-import org.hibernate.testing.orm.junit.RequiresDialectFeature;
-
 
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -33,8 +29,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @author Chris Cranford
  */
 @JiraKey(value = "HHH-10496")
-// TableGenerator uses a separate transaction to allocate identifiers, requiring concurrent transactions.
-@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsConcurrentTransactions.class)
 @EnversTest
 @Jpa(annotatedClasses = {StrTestEntity.class, CustomLocalDateTimeRevEntity.class})
 public class LocalDateTimeTest {

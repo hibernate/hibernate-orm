@@ -149,7 +149,7 @@ public class QuoteTest {
 		@Column(name = "`ID`")
 		protected long id;
 
-		@Column(name = "id_")
+		@Column(name = "_id")
 		protected long _id;
 
 		@ManyToOne(fetch = FetchType.LAZY)
@@ -158,7 +158,7 @@ public class QuoteTest {
 	}
 
 	@Entity
-	@Table(name = "`CoNTaiNeR_Q`")
+	@Table(name = "`CoNTaiNeR`")
 	static class Container extends Item {
 
 		@OneToMany(mappedBy = "parent", targetEntity = Item.class)

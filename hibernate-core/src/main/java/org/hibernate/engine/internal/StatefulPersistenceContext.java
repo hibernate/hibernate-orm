@@ -8,7 +8,6 @@ import java.io.IOException;
 import java.io.InvalidObjectException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.Serial;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -31,7 +30,6 @@ import org.hibernate.MappingException;
 import org.hibernate.NonUniqueObjectException;
 import org.hibernate.bytecode.enhance.spi.interceptor.BytecodeLazyAttributeInterceptor;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
-import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.AssociationKey;
 import org.hibernate.engine.spi.BatchFetchQueue;
@@ -41,7 +39,6 @@ import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.EntityUniqueKey;
-import org.hibernate.engine.spi.ManagedEntity;
 import org.hibernate.engine.spi.NaturalIdResolutions;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
@@ -54,6 +51,7 @@ import org.hibernate.event.spi.PostLoadEventListener;
 import org.hibernate.internal.util.collections.InstanceIdentityMap;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.sql.exec.spi.Callback;
@@ -73,7 +71,6 @@ import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttrib
 import static org.hibernate.engine.internal.PersistenceContextLogging.PERSISTENCE_CONTEXT_LOGGER;
 import static org.hibernate.internal.util.collections.CollectionHelper.mapOfSize;
 import static org.hibernate.internal.util.collections.CollectionHelper.setOfSize;
-import static org.hibernate.pretty.MessageHelper.infoString;
 import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 
 /**
@@ -88,21 +85,6 @@ import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
  * @author Sanne Grinovero
  */
 class StatefulPersistenceContext implements PersistenceContext {
-
-	/**
-	 * Marker object used to indicate (via reference checking) that no row was returned.
-	 */
-	private static final Serializable NO_ROW = new Serializable() {
-		@Override
-		public String toString() {
-			return "NO_ROW";
-		}
-
-		@Serial
-		public Object readResolve() {
-			return NO_ROW;
-		}
-	};
 
 	private static final int INIT_COLL_SIZE = 8;
 
@@ -300,11 +282,10 @@ class StatefulPersistenceContext implements PersistenceContext {
 	@Override
 	public void setEntryStatus(EntityEntry entry, Status status) {
 		entry.setStatus( status );
-		setHasNonReadOnlyEntities( status );
-		// TODO: can/should we also set its collections to read-only?
+		setHasNonReadOnlyEnties( status );
 	}
 
-	private void setHasNonReadOnlyEntities(Status status) {
+	private void setHasNonReadOnlyEnties(Status status) {
 		if ( status==Status.DELETED || status==Status.MANAGED || status==Status.SAVING ) {
 			hasNonReadOnlyEntities = true;
 		}
@@ -380,7 +361,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 		if ( snapshot == NO_ROW ) {
 			throw new IllegalStateException(
 					"persistence context reported no row snapshot for "
-							+ infoString( key.getEntityName(), key.getIdentifier() )
+							+ MessageHelper.infoString( key.getEntityName(), key.getIdentifier() )
 			);
 		}
 		return (Object[]) snapshot;
@@ -402,12 +383,6 @@ class StatefulPersistenceContext implements PersistenceContext {
 			}
 			if ( entity != null ) {
 				assert oldHolder.entity == null || oldHolder.entity == entity;
-				if ( oldHolder.proxy != null && oldHolder.entity == null ) {
-					// When there was a proxy before, we have to set the implementation of the proxy to the new entity
-					final LazyInitializer lazyInitializer = extractLazyInitializer( oldHolder.proxy );
-					assert lazyInitializer != null;
-					lazyInitializer.setImplementation( entity );
-				}
 				oldHolder.entity = entity;
 			}
 			holder = oldHolder;
@@ -495,12 +470,6 @@ class StatefulPersistenceContext implements PersistenceContext {
 		var holder = getOrInitializeNewHolder().withEntity( key, key.getPersister(), entity );
 		final var oldHolder = entityHolderMap.putIfAbsent( key, holder );
 		if ( oldHolder != null ) {
-			if ( oldHolder.proxy != null && oldHolder.entity == null ) {
-				// When there was a proxy before, we have to set the implementation of the proxy to the new entity
-				final LazyInitializer lazyInitializer = extractLazyInitializer( oldHolder.proxy );
-				assert lazyInitializer != null;
-				lazyInitializer.setImplementation( entity );
-			}
 			oldHolder.entity = entity;
 			holder = oldHolder;
 		}
@@ -672,7 +641,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 						this
 				);
 		entityEntryContext.addEntityEntry( entity, entityEntry );
-		setHasNonReadOnlyEntities( status );
+		setHasNonReadOnlyEnties( status );
 		return entityEntry;
 	}
 
@@ -683,7 +652,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 		final var entityEntry = asManagedEntity( entity ).$$_hibernate_getEntityEntry();
 		entityEntry.setStatus( status );
 		entityEntryContext.addEntityEntry( entity, entityEntry );
-		setHasNonReadOnlyEntities( status );
+		setHasNonReadOnlyEnties( status );
 		return entityEntry;
 	}
 
@@ -1008,12 +977,8 @@ class StatefulPersistenceContext implements PersistenceContext {
 	}
 
 	@Override
-	public void addUninitializedCollection(
-			CollectionPersister persister,
-			PersistentCollection<?> collection,
-			Object id,
-			boolean readOnly) {
-		final var collectionEntry = new CollectionEntry( collection, persister, id, flushing, readOnly );
+	public void addUninitializedCollection(CollectionPersister persister, PersistentCollection<?> collection, Object id) {
+		final var collectionEntry = new CollectionEntry( collection, persister, id, flushing );
 		addCollection( collection, collectionEntry, id );
 		if ( session.getLoadQueryInfluencers().effectivelyBatchLoadable( persister ) ) {
 			getBatchFetchQueue().addBatchLoadableCollection( collection, collectionEntry );
@@ -1051,11 +1016,10 @@ class StatefulPersistenceContext implements PersistenceContext {
 						? new CollectionEntry( collection, session.getFactory() )
 						// A newly wrapped collection
 						: new CollectionEntry( persister, collection );
-		entry.setReadOnly( oldEntry.isReadOnly(), collection );
 		putCollectionEntry( collection, entry );
 		final Object key = collection.getKey();
 		if ( key != null ) {
-			final var collectionKey = session.generateCollectionKey( entry.getLoadedPersister(), key );
+			final var collectionKey = new CollectionKey( entry.getLoadedPersister(), key );
 			final var old = addCollectionByKey( collectionKey, collection );
 			if ( old == null ) {
 				throw new HibernateException( "No collection for replacement found: " + collectionKey.getRole() );
@@ -1072,7 +1036,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 	 */
 	private void addCollection(PersistentCollection<?> coll, CollectionEntry entry, Object key) {
 		putCollectionEntry( coll, entry );
-		final var collectionKey = session.generateCollectionKey( entry.getLoadedPersister(), key );
+		final var collectionKey = new CollectionKey( entry.getLoadedPersister(), key );
 		final var old = addCollectionByKey( collectionKey, coll );
 		if ( old != null ) {
 			if ( old == coll ) {
@@ -1116,13 +1080,9 @@ class StatefulPersistenceContext implements PersistenceContext {
 	}
 
 	@Override
-	public CollectionEntry addInitializedCollection(
-			CollectionPersister persister,
-			PersistentCollection<?> collection,
-			Object id,
-			boolean readOnly)
+	public CollectionEntry addInitializedCollection(CollectionPersister persister, PersistentCollection<?> collection, Object id)
 			throws HibernateException {
-		final var collectionEntry = new CollectionEntry( collection, persister, id, flushing, readOnly );
+		final var collectionEntry = new CollectionEntry( collection, persister, id, flushing );
 		collectionEntry.postInitialize( collection, session );
 		addCollection( collection, collectionEntry, id );
 		return collectionEntry;
@@ -1462,8 +1422,8 @@ class StatefulPersistenceContext implements PersistenceContext {
 	}
 
 	@Override
-	public ManagedEntity[] reentrantSafeManagedEntities() {
-		return entityEntryContext.reentrantSafeManagedEntities();
+	public Entry<Object,EntityEntry>[] reentrantSafeEntityEntries() {
+		return entityEntryContext.reentrantSafeEntityEntries();
 	}
 
 	@Override
@@ -1491,11 +1451,11 @@ class StatefulPersistenceContext implements PersistenceContext {
 
 		//not found in case, proceed
 		// iterate all the entities currently associated with the persistence context.
-		for ( var me : reentrantSafeManagedEntities() ) {
-			final var entityEntry = me.$$_hibernate_getEntityEntry();
+		for ( var me : reentrantSafeEntityEntries() ) {
+			final var entityEntry = me.getValue();
 			// does this entity entry pertain to the entity persister in which we are interested (owner)?
 			if ( persister.isSubclassEntityName( entityEntry.getEntityName() ) ) {
-				final Object entityEntryInstance = me.$$_hibernate_getEntityInstance();
+				final Object entityEntryInstance = me.getKey();
 
 				//check if the managed object is the parent
 				boolean found = isFoundInParent(
@@ -1624,10 +1584,10 @@ class StatefulPersistenceContext implements PersistenceContext {
 		}
 
 		//Not found in cache, proceed
-		for ( var entry : reentrantSafeManagedEntities() ) {
-			final var entityEntry = entry.$$_hibernate_getEntityEntry();
+		for ( var entry : reentrantSafeEntityEntries() ) {
+			final var entityEntry = entry.getValue();
 			if ( persister.isSubclassEntityName( entityEntry.getEntityName() ) ) {
-				final Object instance = entry.$$_hibernate_getEntityInstance();
+				final Object instance = entry.getKey();
 				Object index = getIndexInParent( property, childEntity, persister, collectionPersister, instance );
 				if ( index==null && mergeMap!=null ) {
 					final Object unMergedInstance = mergeMap.get( instance );
@@ -1737,19 +1697,8 @@ class StatefulPersistenceContext implements PersistenceContext {
 		if ( entry == null ) {
 			throw new IllegalArgumentException( "Given entity is not associated with the persistence context" );
 		}
-		if ( entry.setReadOnly( readOnly, entity ) ) {
-			hasNonReadOnlyEntities = hasNonReadOnlyEntities || !readOnly;
-			if ( collectionEntries != null && entry.getPersister().hasCollections() ) {
-				forEachCollectionEntry(
-						(collection, collectionEntry) -> {
-							if ( collection.getOwner() == entity ) {
-								collectionEntry.setReadOnly( readOnly, collection );
-							}
-						},
-						false
-				);
-			}
-		}
+		entry.setReadOnly( readOnly, entity );
+		hasNonReadOnlyEntities = hasNonReadOnlyEntities || ! readOnly;
 	}
 
 	@Override
@@ -1824,7 +1773,6 @@ class StatefulPersistenceContext implements PersistenceContext {
 			stream.writeObject( holder.entity );
 			stream.writeObject( holder.proxy );
 			stream.writeObject( holder.state );
-			writeLazyAttributeInterceptorState( holder, stream );
 		} );
 		writeMapToStream(
 				collectionsByKey,
@@ -1888,24 +1836,6 @@ class StatefulPersistenceContext implements PersistenceContext {
 			PERSISTENCE_CONTEXT_LOGGER.startingSerializationOfEntries( size, keysName );
 			for ( E entry : collection ) {
 				serializer.serialize( entry, oos );
-			}
-		}
-	}
-
-	private static void writeLazyAttributeInterceptorState(EntityHolderImpl holder, ObjectOutputStream stream)
-			throws IOException {
-		final var enhancementMetadata = holder.descriptor.getBytecodeEnhancementMetadata();
-		if ( enhancementMetadata.isEnhancedForLazyLoading() ) {
-			if ( holder.state != EntityHolderState.ENHANCED_PROXY ) {
-				if ( isPersistentAttributeInterceptable( holder.entity )
-						&& asPersistentAttributeInterceptable( holder.entity ).$$_hibernate_getInterceptor()
-								instanceof LazyAttributeLoadingInterceptor interceptor ) {
-					stream.writeBoolean( true );
-					interceptor.serialize( stream );
-				}
-				else {
-					stream.writeBoolean( false );
-				}
 			}
 		}
 	}
@@ -1990,28 +1920,6 @@ class StatefulPersistenceContext implements PersistenceContext {
 							// otherwise, the proxy was pruned during the serialization process
 							if ( traceEnabled ) {
 								PERSISTENCE_CONTEXT_LOGGER.encounteredPrunedProxy();
-							}
-						}
-					}
-					final var enhancementMetadata = persister.getBytecodeEnhancementMetadata();
-					if ( enhancementMetadata.isEnhancedForLazyLoading() ) {
-						if ( state == EntityHolderState.ENHANCED_PROXY ) {
-							if ( isPersistentAttributeInterceptable( entity ) ) {
-								enhancementMetadata.injectEnhancedEntityAsProxyInterceptor( entity, entityKey,
-										session );
-							}
-						}
-						else {
-							final var interceptor = ois.readBoolean()
-									? LazyAttributeLoadingInterceptor.deserialize( ois, holder, session )
-									: null;
-							if ( isPersistentAttributeInterceptable( entity ) ) {
-								if ( interceptor != null ) {
-									enhancementMetadata.injectInterceptor( entity, interceptor, session );
-								}
-								else {
-									enhancementMetadata.injectInterceptor( entity, entityKey.getIdentifier(), session );
-								}
 							}
 						}
 					}

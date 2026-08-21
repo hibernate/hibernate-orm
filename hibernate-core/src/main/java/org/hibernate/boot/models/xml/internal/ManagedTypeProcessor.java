@@ -8,14 +8,11 @@ import java.util.List;
 
 import org.hibernate.MappingException;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
-import org.hibernate.annotations.FetchMode;
-import org.hibernate.annotations.FetchProfile;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbAttributesContainerImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEmbeddableImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityOrMappedSuperclass;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbFetchProfileImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbMappedSuperclassImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbPersistentAttribute;
 import org.hibernate.boot.models.HibernateAnnotations;
@@ -25,9 +22,6 @@ import org.hibernate.boot.models.annotations.internal.AccessJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.AttributeAccessorAnnotation;
 import org.hibernate.boot.models.annotations.internal.CacheAnnotation;
 import org.hibernate.boot.models.annotations.internal.CacheableJpaAnnotation;
-import org.hibernate.boot.models.annotations.internal.FetchOverrideAnnotation;
-import org.hibernate.boot.models.annotations.internal.FetchProfileAnnotation;
-import org.hibernate.boot.models.annotations.internal.FetchProfilesAnnotation;
 import org.hibernate.boot.models.internal.ModelsHelper;
 import org.hibernate.boot.models.xml.internal.attr.BasicAttributeProcessing;
 import org.hibernate.boot.models.xml.internal.attr.BasicIdAttributeProcessing;
@@ -146,11 +140,6 @@ public class ManagedTypeProcessor {
 
 		classDetails.clearAnnotationUsages();
 
-		// In metadata-complete mode the XML is the sole source of truth — annotations have just
-		// been cleared, so the chosen access type must be stamped on the class regardless of
-		// whether it came from XML or from a fallback.
-		applyAccessAnnotation( classAccessType, classDetails, xmlDocumentContext );
-
 		// from here, processing is the same between override and metadata-complete modes
 		// (aside from the dynamic model handling)
 
@@ -199,8 +188,8 @@ public class ManagedTypeProcessor {
 			XmlDocumentContext xmlDocumentContext) {
 		XmlAnnotationHelper.applyEntity( jaxbEntity, classDetails, xmlDocumentContext );
 		XmlAnnotationHelper.applyInheritance( jaxbEntity, classDetails, xmlDocumentContext );
+		applyAccessAnnotation( classAccessType, classDetails, xmlDocumentContext );
 		applyCaching( jaxbEntity, classDetails, xmlDocumentContext );
-		applyFetchProfileAnnotation( jaxbEntity, classDetails, xmlDocumentContext );
 
 		if ( jaxbEntity.isAbstract() != null ) {
 			classDetails.applyAnnotationUsage( XmlAnnotations.ABSTRACT,
@@ -315,57 +304,6 @@ public class ManagedTypeProcessor {
 		);
 
 		renderClass( classDetails, xmlDocumentContext );
-	}
-
-	private static void applyFetchProfileAnnotation(JaxbEntityImpl jaxbEntity, MutableClassDetails target, XmlDocumentContext xmlDocumentContext) {
-		final List<JaxbFetchProfileImpl> jaxbFetchProfiles = jaxbEntity.getFetchProfiles();
-		if ( jaxbFetchProfiles.isEmpty() ) {
-			return;
-		}
-
-		final var modelBuildingContext = xmlDocumentContext.getModelBuildingContext();
-		final FetchProfilesAnnotation fetchProfilesUsage = (FetchProfilesAnnotation) target.replaceAnnotationUsage(
-				HibernateAnnotations.FETCH_PROFILE,
-				HibernateAnnotations.FETCH_PROFILES,
-				modelBuildingContext
-		);
-
-		final FetchProfile[] profiles = new FetchProfile[jaxbFetchProfiles.size()];
-		fetchProfilesUsage.value( profiles );
-
-		for ( int i = 0; i < jaxbFetchProfiles.size(); i++ ) {
-			final JaxbFetchProfileImpl jaxbFetchProfile = jaxbFetchProfiles.get( i );
-
-			final FetchProfileAnnotation profileAnnotation = HibernateAnnotations.FETCH_PROFILE.createUsage( modelBuildingContext );
-			profileAnnotation.name( jaxbFetchProfile.getName() );
-
-			final List<JaxbFetchProfileImpl.JaxbFetchImpl> jaxbFetches = jaxbFetchProfile.getFetch();
-			final FetchProfile.FetchOverride[] fetchOverrides = new FetchProfile.FetchOverride[jaxbFetches.size()];
-			for ( int j = 0; j < jaxbFetches.size(); j++ ) {
-				final JaxbFetchProfileImpl.JaxbFetchImpl jaxbFetch = jaxbFetches.get( j );
-				final FetchOverrideAnnotation overrideAnnotation = new FetchOverrideAnnotation();
-
-				final String entityName = jaxbFetch.getEntity();
-				if ( entityName != null ) {
-					overrideAnnotation.entity( xmlDocumentContext.resolveJavaType( entityName ).toJavaClass() );
-				}
-				else {
-					overrideAnnotation.entity( target.toJavaClass() );
-				}
-
-				overrideAnnotation.association( jaxbFetch.getAssociation() );
-
-				final String style = jaxbFetch.getStyle();
-				if ( style != null ) {
-					overrideAnnotation.mode( FetchMode.valueOf( style.toUpperCase() ) );
-				}
-
-				fetchOverrides[j] = overrideAnnotation;
-			}
-
-			profileAnnotation.fetchOverrides( fetchOverrides );
-			profiles[i] = profileAnnotation;
-		}
 	}
 
 	private static void renderClass(MutableClassDetails classDetails, XmlDocumentContext xmlDocumentContext) {
@@ -483,34 +421,20 @@ public class ManagedTypeProcessor {
 					getMutableClassDetails( xmlDocumentContext,
 							XmlProcessingHelper.determineClassName( jaxbRoot, jaxbEntity ) );
 
-			// Access type that has been explicitly requested via XML or via PU-defaults — if any.
-			// Only an explicit access type is stamped onto the class as @Access; stamping a
-			// fallback would force the chosen strategy and mask the natural annotation-driven
-			// detection (e.g. an @Id inherited from a @MappedSuperclass field), which causes
-			// field-level association mappings such as @OneToMany to be silently dropped.
-			final AccessType explicitAccessType = coalesceSuppliedValues(
+			final var classAccessType = coalesceSuppliedValues(
 					// look on this <entity/>
 					jaxbEntity::getAccess,
 					// look on the root <entity/>
 					jaxbRoot::getAccess,
-					// look for a default (PU metadata default) access
-					xmlDocumentContext.getEffectiveDefaults()::getDefaultPropertyAccessType
-			);
-
-			// Access type used internally for XML attribute processing, with a fallback chain.
-			final var classAccessType = coalesceSuppliedValues(
-					() -> explicitAccessType,
 					// look for @Access on the entity class
 					() -> determineAccessTypeFromClassAnnotations( classDetails ),
+					// look for a default (PU metadata default) access
+					xmlDocumentContext.getEffectiveDefaults()::getDefaultPropertyAccessType,
 					// look at @Id/@EmbeddedId
 					() -> determineAccessTypeFromClassMembers( classDetails ),
 					// fallback to PROPERTY
 					() -> AccessType.PROPERTY
 			);
-
-			if ( explicitAccessType != null ) {
-				applyAccessAnnotation( explicitAccessType, classDetails, xmlDocumentContext );
-			}
 
 			// from here, processing is the same between override and metadata-complete modes
 			processEntityMetadata(
@@ -738,7 +662,7 @@ public class ManagedTypeProcessor {
 			AttributeProcessor.processAttributes(
 					jaxbEmbeddable.getAttributes(),
 					classDetails,
-					classAccessType != null ? classAccessType : AccessType.FIELD,
+					AccessType.FIELD,
 					memberAdjuster,
 					xmlDocumentContext
 			);
@@ -757,17 +681,12 @@ public class ManagedTypeProcessor {
 			classDetails.applyAnnotationUsage( JpaAnnotations.EMBEDDABLE,
 					xmlDocumentContext.getModelBuildingContext() );
 
-			final var classAccessType = coalesce(
-					jaxbEmbeddable.getAccess(),
-					xmlDocumentContext.getEffectiveDefaults().getDefaultPropertyAccessType()
-			);
-
 			final var attributes = jaxbEmbeddable.getAttributes();
 			if ( attributes != null ) {
 				AttributeProcessor.processAttributes(
 						attributes,
 						classDetails,
-						classAccessType != null ? classAccessType : AccessType.FIELD,
+						AccessType.FIELD,
 						ManagedTypeProcessor::adjustNonDynamicTypeMember,
 						xmlDocumentContext
 				);

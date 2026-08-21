@@ -4,7 +4,6 @@
  */
 package org.hibernate.processor;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -13,13 +12,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
-
-import org.hibernate.dialect.DatabaseVersion;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
-import org.hibernate.internal.util.StringHelper;
-import org.hibernate.processor.spi.QuarkusDataTypeNames;
-
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
@@ -84,7 +76,6 @@ public final class Context {
 	private final boolean lazyXmlParsing;
 	private final String persistenceXmlLocation;
 	private final List<String> ormXmlFiles;
-	private final @Nullable Dialect defaultDialect;
 
 	/**
 	 * Whether all mapping files are xml-mapping-metadata-complete. In this case no annotation processing will take
@@ -101,24 +92,20 @@ public final class Context {
 	private boolean addTransactionScopedAnnotation;
 	private AccessType persistenceUnitDefaultAccessType;
 	private boolean generateJakartaDataStaticMetamodel;
-	private boolean jakartaDataSortCompliance;
 	private boolean quarkusInjection;
 	private boolean springInjection;
 	private boolean dataEventPackageAvailable;
 
 	// keep track of all classes for which model have been generated
 	private final Set<Metamodel> generatedModelClasses = new HashSet<>();
-	private final Set<String> generatedClassNames = new HashSet<>();
 
 	// keep track of which named queries have been checked
 	private final Set<String> checkedNamedQueries = new HashSet<>();
 
 	private boolean usesQuarkusOrm = false;
 	private boolean usesQuarkusReactive = false;
-	private boolean usesQuarkusDataHibernate = false;
+	private boolean usesQuarkusPanache2 = false;
 	private boolean usesQuarkusReactiveCommon = false;
-
-	private QuarkusDataTypeNames quarkusDataTypeNames;
 
 	private String[] includes = {"*"};
 	private String[] excludes = {};
@@ -158,15 +145,6 @@ public final class Context {
 			ormXmlFiles = emptyList();
 		}
 
-		final String dialectClassName = options.get( HibernateProcessor.DIALECT_OPTION );
-		if ( dialectClassName != null ) {
-			final String databaseVersion = options.get( HibernateProcessor.DIALECT_DATABASE_VERSION_OPTION );
-			defaultDialect = constructDialect1( dialectClassName, databaseVersion );
-		}
-		else {
-			defaultDialect = null;
-		}
-
 		lazyXmlParsing = parseBoolean( options.get( HibernateProcessor.LAZY_XML_PARSING ) );
 		logDebug = parseBoolean( options.get( HibernateProcessor.DEBUG_OPTION ) );
 	}
@@ -181,14 +159,6 @@ public final class Context {
 
 	public void setGenerateJakartaDataStaticMetamodel(boolean generateJakartaDataStaticMetamodel) {
 		this.generateJakartaDataStaticMetamodel = generateJakartaDataStaticMetamodel;
-	}
-
-	public boolean getJakartaDataSortCompliance() {
-		return jakartaDataSortCompliance;
-	}
-
-	public void setJakartaDataSortCompliance(boolean jakartaDataSortCompliance) {
-		this.jakartaDataSortCompliance = jakartaDataSortCompliance;
 	}
 
 	public boolean addInjectAnnotation() {
@@ -398,7 +368,6 @@ public final class Context {
 
 	void markGenerated(Metamodel metamodel) {
 		generatedModelClasses.add( metamodel );
-		generatedClassNames.add( ClassWriter.getFullyQualifiedClassName( metamodel ));
 	}
 
 	boolean isAlreadyGenerated(Metamodel metamodel) {
@@ -494,20 +463,12 @@ public final class Context {
 		return usesQuarkusReactive;
 	}
 
-	public void setUsesQuarkusDataHibernate(boolean b) {
-		usesQuarkusDataHibernate = b;
+	public void setUsesQuarkusPanache2(boolean b) {
+		usesQuarkusPanache2 = b;
 	}
 
-	public boolean usesQuarkusDataHibernate() {
-		return usesQuarkusDataHibernate;
-	}
-
-	public void setQuarkusDataTypeNames(QuarkusDataTypeNames quarkusDataTypeNames) {
-		this.quarkusDataTypeNames = quarkusDataTypeNames;
-	}
-
-	public QuarkusDataTypeNames quarkusDataTypeNames() {
-		return quarkusDataTypeNames;
+	public boolean usesQuarkusPanache2() {
+		return usesQuarkusPanache2;
 	}
 
 	public void setUsesQuarkusReactiveCommon(boolean b) {
@@ -621,108 +582,5 @@ public final class Context {
 
 	public boolean isIndexing() {
 		return indexing;
-	}
-
-	public boolean isGeneratedClass(String qualifiedName) {
-		return generatedClassNames.contains( qualifiedName );
-	}
-
-	public @Nullable Dialect determineDialect(Element method) {
-		return defaultDialect;
-	}
-
-	public Dialect constructDialect(String dialectClassName, @Nullable String databaseVersion) {
-		return constructDialect1( dialectClassName, databaseVersion );
-	}
-
-	private static Dialect constructDialect1(String dialectClassName, @Nullable String databaseVersion) {
-		final Class<? extends Dialect> dialectClass;
-		try {
-			//noinspection unchecked
-			dialectClass = (Class<? extends Dialect>) Class.forName( dialectClassName );
-		}
-		catch (ClassNotFoundException e) {
-			throw new RuntimeException( "Couldn't load dialect class: " + dialectClassName, e );
-		}
-		if ( databaseVersion != null ) {
-			final String[] versionParts = StringHelper.split( ".-", databaseVersion );
-			final String majorPart = versionParts[0];
-			final String minorPart = versionParts.length > 1 ? versionParts[1] : null;
-			final int majorVersion = parseIntOrDefault( majorPart, DatabaseVersion.NO_VERSION );
-			final int minorVersion = parseIntOrDefault( minorPart, DatabaseVersion.NO_VERSION );
-			try {
-				return dialectClass.getConstructor( DialectResolutionInfo.class ).newInstance( new DialectResolutionInfo() {
-					@Override
-					public String getDatabaseName() {
-						return null;
-					}
-
-					@Override
-					public String getDatabaseVersion() {
-						return databaseVersion;
-					}
-
-					@Override
-					public String getDriverName() {
-						return null;
-					}
-
-					@Override
-					public int getDriverMajorVersion() {
-						return 0;
-					}
-
-					@Override
-					public int getDriverMinorVersion() {
-						return 0;
-					}
-
-					@Override
-					public String getSQLKeywords() {
-						return "";
-					}
-
-					@Override
-					public int getDatabaseMajorVersion() {
-						return majorVersion;
-					}
-
-					@Override
-					public int getDatabaseMinorVersion() {
-						return minorVersion;
-					}
-				} );
-			}
-			catch (NoSuchMethodException e) {
-				throw new RuntimeException( e );
-			}
-			catch (InvocationTargetException | InstantiationException | IllegalAccessException e) {
-				throw new RuntimeException( "Couldn't instantiate dialect class: " + dialectClassName, e );
-			}
-		}
-		else {
-			try {
-				return dialectClass.getConstructor().newInstance();
-			}
-			catch (NoSuchMethodException e) {
-				throw new RuntimeException( "Couldn't find empty constructor for dialect class: " + dialectClassName,
-						e );
-			}
-			catch (InvocationTargetException | InstantiationException | IllegalAccessException e) {
-				throw new RuntimeException( "Couldn't instantiate dialect class: " + dialectClassName, e );
-			}
-		}
-	}
-
-	private static int parseIntOrDefault(@Nullable String string, int defaultValue) {
-		if (  string == null ) {
-			return defaultValue;
-		}
-		try {
-			return Integer.parseInt( string );
-		}
-		catch (NumberFormatException e) {
-			return defaultValue;
-		}
 	}
 }

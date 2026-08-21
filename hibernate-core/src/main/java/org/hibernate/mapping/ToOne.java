@@ -192,17 +192,14 @@ public abstract sealed class ToOne
 		return null;
 	}
 
-	boolean isActuallyConstrained() {
-		return isConstrained();
-	}
-
 	@Override
 	public void createForeignKey(PersistentClass referencedEntity, AnnotatedJoinColumns joinColumns) {
 		// Ensure properties are sorted before we create a foreign key
 		sortProperties();
-		if ( referencedPropertyName == null
-				&& isActuallyConstrained()
-				&& !hasAuxiliaryColumnInPrimaryKey( referencedEntity ) ) {
+		if ( isForeignKeyEnabled()
+				&& referencedPropertyName == null
+				&& !hasFormula()
+				&& isConstrained() ) {
 			final var firstColumn = joinColumns.getJoinColumns().get( 0 );
 			final Object owner = findReferencedColumnOwner( referencedEntity, firstColumn, getBuildingContext() );
 			if ( owner instanceof Join join ) {

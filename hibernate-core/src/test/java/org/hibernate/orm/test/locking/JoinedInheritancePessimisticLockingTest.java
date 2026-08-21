@@ -12,9 +12,11 @@ import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.Version;
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -55,6 +57,8 @@ public class JoinedInheritancePessimisticLockingTest {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = InformixDialect.class,
+			reason = "Informix disallows FOR UPDATE with multi-table queries")
 	public void findWithLock(EntityManagerFactoryScope scope) {
 		scope.inTransaction(entityManager -> {
 			BaseThing t = entityManager.find( BaseThing.class, 1L, LockModeType.PESSIMISTIC_WRITE );

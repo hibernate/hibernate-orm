@@ -61,6 +61,7 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 
 	private final String rootTable;
 	private final String pkColumnName;
+	private final @Nullable String columnDefinition;
 	private final @Nullable Long length;
 	private final @Nullable Integer arrayLength;
 	private final @Nullable Integer precision;
@@ -79,6 +80,7 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 			String attributeName,
 			String rootTable,
 			String pkColumnName,
+			String columnDefinition,
 			Long length,
 			Integer precision,
 			Integer scale,
@@ -89,12 +91,13 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 		this(
 				entityPersister,
 				instanceCreator,
-					attributeName,
-					rootTable,
-					pkColumnName,
-					length,
-					null,
-					precision,
+				attributeName,
+				rootTable,
+				pkColumnName,
+				columnDefinition,
+				length,
+				null,
+				precision,
 				scale,
 				insertable,
 				updateable,
@@ -109,6 +112,7 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 			String attributeName,
 			String rootTable,
 			String pkColumnName,
+			@Nullable String columnDefinition,
 			@Nullable Long length,
 			@Nullable Integer arrayLength,
 			@Nullable Integer precision,
@@ -117,6 +121,7 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 			boolean updateable,
 			BasicType<?> idType,
 			MappingModelCreationProcess creationProcess) {
+		this.columnDefinition = columnDefinition;
 		this.length = length;
 		this.arrayLength = arrayLength;
 		this.precision = precision;
@@ -355,6 +360,11 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 	@Override
 	public @Nullable String getCustomWriteExpression() {
 		return null;
+	}
+
+	@Override
+	public @Nullable String getColumnDefinition() {
+		return columnDefinition;
 	}
 
 	@Override

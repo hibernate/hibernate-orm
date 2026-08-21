@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.annotations.uniqueconstraint;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
@@ -12,7 +13,6 @@ import jakarta.persistence.Id;
  */
 @Entity
 public class Room {
-	@Id
 	private Long id;
 
 	private String name;
@@ -25,6 +25,8 @@ public class Room {
 		this.name = name;
 	}
 
+	@Id
+	@Column(nullable = false)
 	public Long getId() {
 		return id;
 	}

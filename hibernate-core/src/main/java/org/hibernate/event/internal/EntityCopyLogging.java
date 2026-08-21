@@ -14,7 +14,6 @@ import org.jboss.logging.annotations.MessageLogger;
 import org.jboss.logging.annotations.ValidIdRange;
 
 import java.lang.invoke.MethodHandles;
-import java.util.Locale;
 
 import static org.jboss.logging.Logger.Level.DEBUG;
 import static org.jboss.logging.Logger.Level.TRACE;
@@ -32,7 +31,7 @@ import static org.jboss.logging.Logger.Level.TRACE;
 public interface EntityCopyLogging extends BasicLogger {
 	String NAME = EventListenerLogging.NAME + ".copy";
 
-	EntityCopyLogging EVENT_COPY_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), EntityCopyLogging.class, NAME, Locale.ROOT );
+	EntityCopyLogging EVENT_COPY_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), EntityCopyLogging.class, NAME );
 
 
 	// EntityCopyObserver

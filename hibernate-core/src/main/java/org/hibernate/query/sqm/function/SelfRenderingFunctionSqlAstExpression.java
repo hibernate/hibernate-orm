@@ -75,16 +75,12 @@ public class SelfRenderingFunctionSqlAstExpression<T>
 				: expressible;
 	}
 
-	public FunctionRenderer getFunctionRenderer() {
+	FunctionRenderer getFunctionRenderer() {
 		return renderer;
 	}
 
-	public @Nullable ReturnableType<?> getType() {
+	@Nullable ReturnableType<?> getType() {
 		return type;
-	}
-
-	public @Nullable JdbcMappingContainer getExpressible() {
-		return expressible;
 	}
 
 	@Override

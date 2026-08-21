@@ -19,6 +19,7 @@ import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.SqlTypes;
+import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.BasicPluralJavaType;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -28,28 +29,17 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  */
 public class UnnestFunction extends AbstractSqmSelfRenderingSetReturningFunctionDescriptor {
 
-	private final boolean needsFormatJson;
-
 	public UnnestFunction(@Nullable String defaultBasicArrayColumnName, String defaultIndexSelectionExpression) {
-		this( defaultBasicArrayColumnName, defaultIndexSelectionExpression, false );
-	}
-
-	public UnnestFunction(@Nullable String defaultBasicArrayColumnName, String defaultIndexSelectionExpression, boolean needsFormatJson) {
-		this( new UnnestSetReturningFunctionTypeResolver( defaultBasicArrayColumnName, defaultIndexSelectionExpression ), needsFormatJson );
+		this( new UnnestSetReturningFunctionTypeResolver( defaultBasicArrayColumnName, defaultIndexSelectionExpression ) );
 	}
 
 	protected UnnestFunction(SetReturningFunctionTypeResolver setReturningFunctionTypeResolver) {
-		this( setReturningFunctionTypeResolver, false );
-	}
-
-	protected UnnestFunction(SetReturningFunctionTypeResolver setReturningFunctionTypeResolver, boolean needsFormatJson) {
 		super(
 				"unnest",
 				ArrayArgumentValidator.DEFAULT_INSTANCE,
 				setReturningFunctionTypeResolver,
 				null
 		);
-		this.needsFormatJson = needsFormatJson;
 	}
 
 	@Override
@@ -76,7 +66,15 @@ public class UnnestFunction extends AbstractSqmSelfRenderingSetReturningFunction
 	}
 
 	protected String getDdlType(SqlTypedMapping sqlTypedMapping, int containerSqlTypeCode, SqlAstTranslator<?> translator) {
-		return DdlTypeHelper.getTypeName( sqlTypedMapping, translator.getSessionFactory().getTypeConfiguration() );
+		final String columnDefinition = sqlTypedMapping.getColumnDefinition();
+		if ( columnDefinition != null ) {
+			return columnDefinition;
+		}
+		return translator.getSessionFactory().getTypeConfiguration().getDdlTypeRegistry().getTypeName(
+				sqlTypedMapping.getJdbcMapping().getJdbcType().getDdlTypeCode(),
+				sqlTypedMapping.toSize(),
+				(Type) sqlTypedMapping.getJdbcMapping()
+		);
 	}
 
 	protected void renderJsonTable(
@@ -110,9 +108,6 @@ public class UnnestFunction extends AbstractSqmSelfRenderingSetReturningFunction
 				}
 				else {
 					sqlAppender.append( getDdlType( selectableMapping, SqlTypes.JSON_ARRAY, walker ) );
-					if ( needsFormatJson && selectableMapping.getJdbcMapping().getJdbcType().isJson() ) {
-						sqlAppender.append( " format json" );
-					}
 					sqlAppender.appendSql( " path '$." );
 					sqlAppender.append( selectableMapping.getSelectableName() );
 					sqlAppender.appendSql( '\'' );
@@ -137,9 +132,6 @@ public class UnnestFunction extends AbstractSqmSelfRenderingSetReturningFunction
 				else {
 					sqlAppender.append( ' ' );
 					sqlAppender.append( getDdlType( selectableMapping, SqlTypes.JSON_ARRAY, walker ) );
-					if ( needsFormatJson && selectableMapping.getJdbcMapping().getJdbcType().isJson() ) {
-						sqlAppender.append( " format json" );
-					}
 					sqlAppender.appendSql( " path '$'" );
 					if ( errorOnError ) {
 						sqlAppender.appendSql( " error on error" );

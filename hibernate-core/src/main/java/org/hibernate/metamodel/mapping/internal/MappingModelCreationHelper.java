@@ -43,7 +43,6 @@ import org.hibernate.mapping.OneToOne;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Resolvable;
-import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.SortableValue;
 import org.hibernate.mapping.Table;
@@ -204,6 +203,7 @@ public class MappingModelCreationHelper {
 			boolean isAttrFormula,
 			String readExpr,
 			String writeExpr,
+			String columnDefinition,
 			Long length,
 			Integer precision,
 			Integer scale,
@@ -229,6 +229,7 @@ public class MappingModelCreationHelper {
 				isAttrFormula,
 				readExpr,
 				writeExpr,
+				columnDefinition,
 				length,
 				null,
 				precision,
@@ -259,6 +260,7 @@ public class MappingModelCreationHelper {
 			boolean isAttrFormula,
 			String readExpr,
 			String writeExpr,
+			String columnDefinition,
 			Long length,
 			Integer arrayLength,
 			Integer precision,
@@ -313,6 +315,7 @@ public class MappingModelCreationHelper {
 				isAttrFormula,
 				readExpr,
 				writeExpr,
+				columnDefinition,
 				length,
 				arrayLength,
 				precision,
@@ -572,16 +575,14 @@ public class MappingModelCreationHelper {
 				final var index = (BasicValue) ( (IndexedCollection) bootValueMapping ).getIndex();
 				final var selectableMapping = SelectableMappingImpl.from(
 						tableExpression,
-						index.getSelectables().get( 0 ),
-						null, // No support for @OrderFormula
-						null,
+						index.getSelectables().get(0),
 						creationContext.getTypeConfiguration().getBasicTypeForJavaType( Integer.class ),
 						creationProcess.getCreationContext().getTypeConfiguration(),
 						index.isColumnInsertable( 0 ),
 						index.isColumnUpdateable( 0 ),
 						false,
-						false,
 						dialect,
+						creationProcess.getSqmFunctionRegistry(),
 						creationProcess.getCreationContext()
 				);
 				indexDescriptor = new BasicValuedCollectionPart(
@@ -626,16 +627,14 @@ public class MappingModelCreationHelper {
 				final var index = (BasicValue) ( (IndexedCollection) bootValueMapping ).getIndex();
 				final var selectableMapping = SelectableMappingImpl.from(
 						tableExpression,
-						index.getSelectables().get( 0 ),
-						null, // No support for @OrderFormula
-						null,
+						index.getSelectables().get(0),
 						creationContext.getTypeConfiguration().getBasicTypeForJavaType( Integer.class ),
 						creationProcess.getCreationContext().getTypeConfiguration(),
 						index.isColumnInsertable( 0 ),
 						index.isColumnUpdateable( 0 ),
 						false,
-						false,
 						dialect,
+						creationProcess.getSqmFunctionRegistry(),
 						creationProcess.getCreationContext()
 				);
 				indexDescriptor = new BasicValuedCollectionPart(
@@ -836,17 +835,14 @@ public class MappingModelCreationHelper {
 			final String keyTableExpression = collectionTableName;//getTableIdentifierExpression( bootValueMappingKey.getTable(), creationProcess );
 			final var keySelectableMapping = SelectableMappingImpl.from(
 					keyTableExpression,
-					bootValueMappingKey.getSelectables().get( 0 ),
-					// In the annotation model it is not possible to have a @MapKeyFormula, but hbm.xml supports this
-					getPropertyPath( attributeMapping.getNavigableRole() ) + "." + CollectionPart.Nature.INDEX.getName(),
-					null,
+					bootValueMappingKey.getSelectables().get(0),
 					(JdbcMapping) keyType,
 					creationProcess.getCreationContext().getTypeConfiguration(),
 					bootValueMappingKey.isColumnInsertable( 0 ),
 					bootValueMappingKey.isColumnUpdateable( 0 ),
 					false,
-					false,
 					dialect,
+					creationProcess.getSqmFunctionRegistry(),
 					creationProcess.getCreationContext()
 			);
 
@@ -862,7 +858,6 @@ public class MappingModelCreationHelper {
 		}
 		else if ( fkTargetPart instanceof EmbeddableValuedModelPart embeddableValuedModelPart ) {
 			final var keyDescriptor = buildEmbeddableForeignKeyDescriptor(
-					getPropertyPath( attributeMapping.getNavigableRole() ),
 					embeddableValuedModelPart,
 					bootValueMapping,
 					keyDeclaringType,
@@ -883,22 +878,6 @@ public class MappingModelCreationHelper {
 					"Support for " + fkTargetPart.getClass() + " foreign keys not yet implemented: " + bootValueMapping.getRole()
 			);
 		}
-	}
-
-	static String getCollectionPropertyPath(CollectionPersister collectionPersister) {
-		return collectionPersister.getNavigableRole().getFullPath().substring( collectionPersister.getOwnerEntityPersister().getNavigableRole().getFullPath().length() + 1 );
-	}
-
-	static String getPropertyPath(NavigableRole navigableRole) {
-		final StringBuilder propertyPath = new StringBuilder();
-		while (navigableRole.getParent() != null) {
-			if ( !propertyPath.isEmpty() ) {
-				propertyPath.insert( 0, "." );
-			}
-			propertyPath.insert( 0, navigableRole.getLocalName() );
-			navigableRole = navigableRole.getParent();
-		}
-		return propertyPath.toString();
 	}
 
 	/**
@@ -972,12 +951,10 @@ public class MappingModelCreationHelper {
 			}
 			else if ( modelPart instanceof EmbeddableValuedModelPart embeddableValuedModelPart ) {
 				final var embeddedForeignKeyDescriptor = buildEmbeddableForeignKeyDescriptor(
-						getPropertyPath( attributeMapping.getNavigableRole() ),
 						embeddableValuedModelPart,
 						bootValueMapping,
 						attributeMapping.getDeclaringType(),
 						attributeMapping.findContainingEntityMapping(),
-						null,
 						true,
 						bootValueMapping.getColumnInsertability(),
 						bootValueMapping.getColumnUpdateability(),
@@ -1006,30 +983,43 @@ public class MappingModelCreationHelper {
 			final var columnIterator = bootValueMapping.getSelectables().iterator();
 			final var table = bootValueMapping.getTable();
 			final String tableExpression = getTableIdentifierExpression( table, creationProcess );
-			final PropertyAccess declaringKeyPropertyAccess = getDeclaringKeyPropertyAccess(
-					attributeMapping,
-					bootValueMapping,
-					inversePropertyAccess,
-					(PropertyBasedMapping) simpleFkTarget
-			);
+			final PropertyAccess declaringKeyPropertyAccess;
+			if ( inversePropertyAccess == null ) {
+				// So far, OneToOne mappings are only supported based on the owner's PK
+				if ( bootValueMapping instanceof OneToOne ) {
+					final var identifierMapping =
+							attributeMapping.findContainingEntityMapping().getIdentifierMapping();
+					declaringKeyPropertyAccess = ( (PropertyBasedMapping) identifierMapping ).getPropertyAccess();
+				}
+				else {
+					declaringKeyPropertyAccess = new ChainedPropertyAccessImpl(
+							attributeMapping.getPropertyAccess(),
+							( (PropertyBasedMapping) simpleFkTarget ).getPropertyAccess()
+					);
+				}
+			}
+			else {
+				declaringKeyPropertyAccess = new ChainedPropertyAccessImpl(
+						inversePropertyAccess,
+						( (PropertyBasedMapping) simpleFkTarget ).getPropertyAccess()
+				);
+			}
 			final var parentSelectablePath = getSelectablePath( attributeMapping.getDeclaringType() );
 			final SelectableMapping keySelectableMapping;
 			int i = 0;
 			final Value value = bootProperty.getValue();
 			if ( columnIterator.hasNext() ) {
-				final Selectable selectable = columnIterator.next();
 				keySelectableMapping = SelectableMappingImpl.from(
 						tableExpression,
-						selectable,
-						selectable.isFormula() ? getPropertyPath( attributeMapping.getNavigableRole() ) : null,
+						columnIterator.next(),
 						parentSelectablePath,
 						simpleFkTarget.getJdbcMapping(),
 						creationProcess.getCreationContext().getTypeConfiguration(),
 						value.isColumnInsertable( i ),
 						value.isColumnUpdateable( i ),
 						value.isPartitionKey(),
-						false,
 						dialect,
+						creationProcess.getSqmFunctionRegistry(),
 						creationProcess.getCreationContext()
 				);
 				i++;
@@ -1039,15 +1029,14 @@ public class MappingModelCreationHelper {
 				keySelectableMapping = SelectableMappingImpl.from(
 						tableExpression,
 						table.getPrimaryKey().getColumn( 0 ),
-						null, // Primary key selectable must always be a column
 						parentSelectablePath,
 						simpleFkTarget.getJdbcMapping(),
 						creationProcess.getCreationContext().getTypeConfiguration(),
 						value.isColumnInsertable( 0 ),
 						value.isColumnUpdateable( 0 ),
 						value.isPartitionKey(),
-						false,
 						dialect,
+						creationProcess.getSqmFunctionRegistry(),
 						creationProcess.getCreationContext()
 				);
 			}
@@ -1068,12 +1057,10 @@ public class MappingModelCreationHelper {
 		else if ( fkTarget instanceof EmbeddableValuedModelPart embeddableValuedModelPart ) {
 			final var value = bootProperty.getValue();
 			final var embeddedForeignKeyDescriptor = buildEmbeddableForeignKeyDescriptor(
-					getPropertyPath( attributeMapping.getNavigableRole() ),
 					embeddableValuedModelPart,
 					bootValueMapping,
 					attributeMapping.getDeclaringType(),
 					attributeMapping.findContainingEntityMapping(),
-					null,
 					swapDirection,
 					value.getColumnInsertability(),
 					value.getColumnUpdateability(),
@@ -1092,33 +1079,6 @@ public class MappingModelCreationHelper {
 		}
 
 		return true;
-	}
-
-	private static PropertyAccess getDeclaringKeyPropertyAccess(
-			ToOneAttributeMapping attributeMapping,
-			ToOne bootValueMapping,
-			PropertyAccess inversePropertyAccess,
-			PropertyBasedMapping simpleFkTarget) {
-		if ( inversePropertyAccess == null ) {
-			if ( bootValueMapping instanceof OneToOne ) {
-				final var identifierMapping = attributeMapping.findContainingEntityMapping().getIdentifierMapping();
-				// Check if the identifier is a single-column or "aggregated" composite identifier,
-				// otherwise it is a "non-aggregated" composite identifier
-				if ( identifierMapping instanceof PropertyBasedMapping propertyIdentifierMapping ) {
-					return propertyIdentifierMapping.getPropertyAccess();
-				}
-			}
-			return new ChainedPropertyAccessImpl(
-					attributeMapping.getPropertyAccess(),
-					simpleFkTarget.getPropertyAccess()
-			);
-		}
-		else {
-			return new ChainedPropertyAccessImpl(
-					inversePropertyAccess,
-					simpleFkTarget.getPropertyAccess()
-			);
-		}
 	}
 
 	/**
@@ -1171,7 +1131,6 @@ public class MappingModelCreationHelper {
 		return false;
 	}
 
-	@Deprecated(forRemoval = true)
 	public static EmbeddedForeignKeyDescriptor buildEmbeddableForeignKeyDescriptor(
 			EmbeddableValuedModelPart embeddableValuedModelPart,
 			Value bootValueMapping,
@@ -1183,7 +1142,6 @@ public class MappingModelCreationHelper {
 			Dialect dialect,
 			MappingModelCreationProcess creationProcess) {
 		return buildEmbeddableForeignKeyDescriptor(
-				null,
 				embeddableValuedModelPart,
 				bootValueMapping,
 				keyDeclaringType,
@@ -1197,8 +1155,7 @@ public class MappingModelCreationHelper {
 		);
 	}
 
-	public static EmbeddedForeignKeyDescriptor buildEmbeddableForeignKeyDescriptor(
-			String propertyPath,
+	private static EmbeddedForeignKeyDescriptor buildEmbeddableForeignKeyDescriptor(
 			EmbeddableValuedModelPart embeddableValuedModelPart,
 			Value bootValueMapping,
 			ManagedMappingType keyDeclaringType,
@@ -1222,7 +1179,6 @@ public class MappingModelCreationHelper {
 					keyTableExpression,
 					collectionBootValueMapping.getKey(),
 					getPropertyOrder( bootValueMapping, creationProcess ),
-					propertyPath,
 					parentSelectablePath,
 					creationProcess.getCreationContext().getMetadata(),
 					creationProcess.getCreationContext().getTypeConfiguration(),
@@ -1248,7 +1204,6 @@ public class MappingModelCreationHelper {
 					keyTableExpression,
 					bootValueMapping,
 					getPropertyOrder( bootValueMapping, creationProcess ),
-					propertyPath,
 					parentSelectablePath,
 					creationProcess.getCreationContext().getMetadata(),
 					creationProcess.getCreationContext().getTypeConfiguration(),
@@ -1431,16 +1386,13 @@ public class MappingModelCreationHelper {
 			final var selectableMapping = SelectableMappingImpl.from(
 					tableExpression,
 					basicValue.getSelectables().get( 0 ),
-					// In the annotation model it is not possible to have a @MapKeyFormula, but hbm.xml supports this
-					getCollectionPropertyPath( collectionDescriptor ) + "." + CollectionPart.Nature.INDEX.getName(),
-					null,
 					basicValue.resolve().getJdbcMapping(),
 					creationProcess.getCreationContext().getTypeConfiguration(),
 					insertable,
 					updatable,
 					false,
-					false,
 					dialect,
+					creationProcess.getSqmFunctionRegistry(),
 					creationProcess.getCreationContext()
 			);
 			return new BasicValuedCollectionPart(
@@ -1526,11 +1478,7 @@ public class MappingModelCreationHelper {
 		if ( element instanceof BasicValue basicElement ) {
 			final var selectableMapping = SelectableMappingImpl.from(
 					tableExpression,
-					basicElement.getSelectables().get( 0 ),
-					basicElement.getSelectables().get( 0 ).isFormula()
-							? getCollectionPropertyPath( collectionDescriptor )
-							: null,
-					null,
+					basicElement.getSelectables().get(0),
 					basicElement.resolve().getJdbcMapping(),
 					creationProcess.getCreationContext().getTypeConfiguration(),
 					basicElement.isColumnInsertable( 0 ),
@@ -1538,6 +1486,7 @@ public class MappingModelCreationHelper {
 					basicElement.isPartitionKey(),
 					true, // element collection does not support null elements
 					dialect,
+					creationProcess.getSqmFunctionRegistry(),
 					creationProcess.getCreationContext()
 			);
 			return new BasicValuedCollectionPart(

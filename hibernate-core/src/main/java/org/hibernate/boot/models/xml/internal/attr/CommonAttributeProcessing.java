@@ -65,7 +65,7 @@ public class CommonAttributeProcessing {
 		final ClassDetails strategyClassDetails = xmlDocumentContext
 				.getModelBuildingContext()
 				.getClassDetailsRegistry()
-				.resolveClassDetails( attributeAccessor );
+				.getClassDetails( attributeAccessor );
 		accessorAnn.strategy( strategyClassDetails.toJavaClass() );
 	}
 

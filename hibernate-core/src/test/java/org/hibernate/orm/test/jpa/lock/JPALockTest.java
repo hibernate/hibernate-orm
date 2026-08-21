@@ -81,7 +81,6 @@ public class JPALockTest extends AbstractJPATest {
 	 */
 	@Test
 	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "Cockroach uses SERIALIZABLE by default and fails to acquire a write lock after a TX in between committed changes to a row")
-	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsConcurrentTransactions.class)
 	public void testLockModeTypeRead() {
 		if ( !readCommittedIsolationMaintained( "ejb3 lock tests" ) ) {
 			return;

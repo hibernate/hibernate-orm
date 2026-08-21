@@ -110,12 +110,6 @@ public abstract class AbstractTableGroup extends AbstractColumnReferenceQualifie
 		tableGroupJoins.add( join );
 	}
 
-	public void removeTableGroupJoin(TableGroupJoin join) {
-		if ( tableGroupJoins != null ) {
-			tableGroupJoins.remove( join );
-		}
-	}
-
 	@Override
 	public void prependTableGroupJoin(NavigablePath navigablePath, TableGroupJoin join) {
 		int i = 0;

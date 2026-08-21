@@ -6,7 +6,6 @@ package org.hibernate.orm.test.joinedsubclass;
 
 import org.hibernate.boot.model.internal.AnnotatedDiscriminatorColumn;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.metamodel.mapping.DiscriminatorValue;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.JoinedSubclassEntityPersister;
 
@@ -60,7 +59,7 @@ public class JoinedSubclassWithImplicitDiscriminatorTest {
 				AnnotatedDiscriminatorColumn.DEFAULT_DISCRIMINATOR_COLUMN_NAME,
 				dogPersister.getDiscriminatorColumnName()
 		);
-		assertEquals( new DiscriminatorValue.Literal("Dog"), dogPersister.getDiscriminatorValue() );
+		assertEquals( "Dog", dogPersister.getDiscriminatorValue() );
 
 		p = scope.getSessionFactory().getMappingMetamodel().getEntityDescriptor(Cat.class.getName());
 		assertNotNull( p );
@@ -73,7 +72,7 @@ public class JoinedSubclassWithImplicitDiscriminatorTest {
 				AnnotatedDiscriminatorColumn.DEFAULT_DISCRIMINATOR_COLUMN_NAME,
 				catPersister.getDiscriminatorColumnName()
 		);
-		assertEquals( new DiscriminatorValue.Literal("Cat"), catPersister.getDiscriminatorValue() );
+		assertEquals( "Cat", catPersister.getDiscriminatorValue() );
 	}
 
 	@Test

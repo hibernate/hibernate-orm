@@ -15,7 +15,6 @@ import org.jboss.logging.annotations.ValidIdRange;
 
 import java.lang.invoke.MethodHandles;
 import java.net.URL;
-import java.util.Locale;
 
 /**
  * Logging related to {@linkplain org.hibernate.boot.archive.scan.spi.Scanner scanning}.
@@ -31,7 +30,7 @@ import java.util.Locale;
 public interface ScannerLogger extends BasicLogger {
 	String NAME = BootLogging.NAME + ".scan";
 
-	ScannerLogger SCANNER_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), ScannerLogger.class, NAME, Locale.ROOT );
+	ScannerLogger SCANNER_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), ScannerLogger.class, NAME );
 
 	@LogMessage(level = Logger.Level.WARN)
 	@Message(id = 60001, value = "Multiple ScannerFactory services available; using '%s'")

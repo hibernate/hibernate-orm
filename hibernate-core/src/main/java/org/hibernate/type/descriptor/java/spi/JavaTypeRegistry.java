@@ -50,11 +50,10 @@ public class JavaTypeRegistry implements JavaTypeBaseline.BaselineTarget, Serial
 
 	@Override
 	public void addBaselineDescriptor(JavaType<?> descriptor) {
-		final var javaType = descriptor.getJavaType();
-		if ( javaType == null ) {
+		if ( descriptor.getJavaType() == null ) {
 			throw new IllegalStateException( "Illegal to add BasicJavaType with null Java type" );
 		}
-		addBaselineDescriptor( javaType, descriptor );
+		addBaselineDescriptor( descriptor.getJavaType(), descriptor );
 	}
 
 	@Override
@@ -79,12 +78,11 @@ public class JavaTypeRegistry implements JavaTypeBaseline.BaselineTarget, Serial
 	}
 
 	public void addDescriptor(JavaType<?> descriptor) {
-		final var javaType = descriptor.getJavaType();
-		final var old = descriptorsByTypeName.put( javaType.getTypeName(), descriptor );
+		final var old = descriptorsByTypeName.put( descriptor.getJavaType().getTypeName(), descriptor );
 		if ( old != null ) {
 			LOG.debugf(
 					"JavaTypeRegistry entry replaced : %s -> %s (was %s)",
-					javaType,
+					descriptor.getJavaType(),
 					descriptor,
 					old
 			);
@@ -118,8 +116,8 @@ public class JavaTypeRegistry implements JavaTypeBaseline.BaselineTarget, Serial
 		}
 		else {
 			final var created = creator.get();
-			final var cachedNew = descriptorsByTypeName.putIfAbsent( javaTypeName, created );
-			return cachedNew == null ? created : checkCached( javaType, cachedNew );
+			descriptorsByTypeName.put( javaTypeName, created );
+			return created;
 		}
 	}
 
@@ -140,8 +138,8 @@ public class JavaTypeRegistry implements JavaTypeBaseline.BaselineTarget, Serial
 		}
 		else {
 			final var created = creator.get();
-			final var cachedNew = descriptorsByTypeName.putIfAbsent( javaTypeName, created );
-			return cachedNew == null ? created : cachedNew;
+			descriptorsByTypeName.put( javaTypeName, created );
+			return created;
 		}
 	}
 

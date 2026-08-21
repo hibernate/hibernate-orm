@@ -17,7 +17,6 @@ import org.jboss.logging.annotations.MessageLogger;
 import org.jboss.logging.annotations.ValidIdRange;
 
 import java.lang.invoke.MethodHandles;
-import java.util.Locale;
 
 import static org.jboss.logging.Logger.Level.TRACE;
 import static org.jboss.logging.Logger.Level.WARN;
@@ -38,7 +37,7 @@ import static org.jboss.logging.Logger.Level.DEBUG;
 public interface JtaLogging extends BasicLogger {
 	String LOGGER_NAME = SubSystemLogging.BASE + ".jta";
 
-	JtaLogging JTA_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), JtaLogging.class, LOGGER_NAME, Locale.ROOT );
+	JtaLogging JTA_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), JtaLogging.class, LOGGER_NAME );
 
 	int NAMESPACE = 90007000;
 

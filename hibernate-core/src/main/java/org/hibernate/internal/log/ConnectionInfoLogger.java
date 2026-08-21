@@ -6,7 +6,6 @@ package org.hibernate.internal.log;
 
 import java.lang.invoke.MethodHandles;
 import java.sql.SQLException;
-import java.util.Locale;
 
 import org.hibernate.Internal;
 import org.hibernate.cfg.JdbcSettings;
@@ -39,7 +38,7 @@ public interface ConnectionInfoLogger extends BasicLogger {
 	/**
 	 * Static access to the logging instance
 	 */
-	ConnectionInfoLogger CONNECTION_INFO_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), ConnectionInfoLogger.class, LOGGER_NAME, Locale.ROOT );
+	ConnectionInfoLogger CONNECTION_INFO_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), ConnectionInfoLogger.class, LOGGER_NAME );
 
 	@LogMessage(level = WARN)
 	@Message(value = "Using built-in connection pool (not intended for production use)", id = 10001002)

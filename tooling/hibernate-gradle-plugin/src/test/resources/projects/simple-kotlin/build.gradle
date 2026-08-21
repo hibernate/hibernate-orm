@@ -5,7 +5,7 @@
 
 plugins {
     //NOTE : kotlin version updated for configuration cache support
-    alias(libs.plugins.kotlin.jvm)
+    id 'org.jetbrains.kotlin.jvm' version '2.0.20'
     id 'org.hibernate.orm'
 }
 

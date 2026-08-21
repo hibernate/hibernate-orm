@@ -20,7 +20,6 @@ import org.hibernate.type.spi.TypeConfiguration;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import static org.hibernate.dialect.function.array.DdlTypeHelper.getCastTypeName;
 import static org.hibernate.type.SqlTypes.ARRAY;
 import static org.hibernate.type.SqlTypes.BIGINT;
 import static org.hibernate.type.SqlTypes.BINARY;
@@ -85,7 +84,7 @@ public class CockroachDBAggregateSupport extends AggregateSupportImpl {
 								// because casting a jsonb[] to text[] will not omit the quotes of the jsonb text values
 								return template.replace(
 										placeholder,
-										"cast(array(select jsonb_array_elements(" + aggregateParentReadExpression + "->'" + columnExpression + "')) as " + getCastTypeName( column, typeConfiguration ) + ')'
+										"cast(array(select jsonb_array_elements(" + aggregateParentReadExpression + "->'" + columnExpression + "')) as " + column.getColumnDefinition() + ')'
 								);
 							case BINARY:
 							case VARBINARY:
@@ -98,13 +97,13 @@ public class CockroachDBAggregateSupport extends AggregateSupportImpl {
 							default:
 								return template.replace(
 										placeholder,
-										"cast(array(select jsonb_array_elements_text(" + aggregateParentReadExpression + "->'" + columnExpression + "')) as " + getCastTypeName( column, typeConfiguration ) + ')'
+										"cast(array(select jsonb_array_elements_text(" + aggregateParentReadExpression + "->'" + columnExpression + "')) as " + column.getColumnDefinition() + ')'
 								);
 						}
 					default:
 						return template.replace(
 								placeholder,
-								"cast(" + aggregateParentReadExpression + "->>'" + columnExpression + "' as " + getCastTypeName( column, typeConfiguration ) + ')'
+								"cast(" + aggregateParentReadExpression + "->>'" + columnExpression + "' as " + column.getColumnDefinition() + ')'
 						);
 				}
 		}

@@ -18,9 +18,10 @@ import java.util.Optional;
  * {@link org.hibernate.annotations.NaturalId @NaturalId}. If an
  * entity has multiple attributes annotated {@code @NaturalId}, then
  * {@link NaturalIdLoadAccess} should be used instead.
- * <pre>{@code
+ * <p>
+ * <pre>
  * Book book = session.bySimpleNaturalId(Book.class).load(isbn);
- * }</pre>
+ * </pre>
  *
  * @author Eric Dalquist
  * @author Steve Ebersole
@@ -29,7 +30,7 @@ import java.util.Optional;
  * @see org.hibernate.annotations.NaturalId
  * @see NaturalIdLoadAccess
  *
- * @deprecated (since 7.3) Use {@linkplain Session#find} with {@link KeyType#NATURAL} instead.
+ * @deprecated (since 7.3) Use {@linkplain Session#findByNaturalId} instead.
  */
 @Deprecated
 public interface SimpleNaturalIdLoadAccess<T> {

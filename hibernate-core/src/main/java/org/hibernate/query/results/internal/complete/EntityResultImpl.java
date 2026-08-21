@@ -163,7 +163,6 @@ public class EntityResultImpl<E> implements EntityResult<E>, InitializerProducer
 				discriminatorFetch,
 				null,
 				null,
-				null,
 				NotFoundAction.EXCEPTION,
 				false,
 				null,

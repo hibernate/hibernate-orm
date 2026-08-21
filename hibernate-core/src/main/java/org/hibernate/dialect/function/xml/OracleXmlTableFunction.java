@@ -19,8 +19,6 @@ import org.hibernate.type.spi.TypeConfiguration;
 
 import java.util.List;
 
-import static org.hibernate.dialect.function.array.DdlTypeHelper.getNarrowCastTypeName;
-import static org.hibernate.dialect.function.array.DdlTypeHelper.removeUnresolvedTypeArguments;
 import static org.hibernate.dialect.function.json.OracleJsonValueFunction.isEncodedBoolean;
 
 /**
@@ -34,13 +32,10 @@ public class OracleXmlTableFunction extends XmlTableFunction {
 
 	@Override
 	protected String determineColumnType(CastTarget castTarget, SqlAstTranslator<?> walker) {
-		// Oracle's xmltable() columns clause rejects LOB types; use the narrow
-		// cast name which maps CLOB/NCLOB/BLOB to sized VARCHAR2/NVARCHAR2/RAW
-		final String typeName =
-				removeUnresolvedTypeArguments( getNarrowCastTypeName( castTarget,
-						walker.getSessionFactory().getTypeConfiguration() )
-		);
+		final String typeName = super.determineColumnType( castTarget, walker );
 		return switch ( typeName ) {
+			// clob is not supported as column type for xmltable
+			case "clob" -> "varchar2(" + walker.getSessionFactory().getJdbcServices().getDialect().getMaxVarcharLength() + ")";
 			case "number(1,0)" -> isEncodedBoolean( castTarget.getJdbcMapping() ) ? "varchar2(5)" : typeName;
 			default -> typeName;
 		};
@@ -64,6 +59,7 @@ public class OracleXmlTableFunction extends XmlTableFunction {
 						new SelectablePath( name ),
 						"decode(" + Template.TEMPLATE + "." + name + ",'true'," + trueFragment + ",'false'," + falseFragment + ")",
 						null,
+						"varchar2(5)",
 						null,
 						null,
 						null,

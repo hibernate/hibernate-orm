@@ -20,7 +20,6 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.metamodel.mapping.internal.SqlTypedMappingImpl;
 import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
@@ -71,8 +70,8 @@ public class CollectionBatchLoaderArrayParam
 		final var jdbcJavaTypeClass = jdbcMapping.getJdbcJavaType().getJavaTypeClass();
 
 		arraySqlTypedMapping = new SqlTypedMappingImpl(
+				selectable.getColumnDefinition(),
 				selectable.getLength(),
-				selectable.getArrayLength(),
 				selectable.getPrecision(),
 				selectable.getScale(),
 				selectable.getTemporalPrecision(),
@@ -83,8 +82,6 @@ public class CollectionBatchLoaderArrayParam
 				)
 		);
 
-		final var sqlAliasBaseGenerator = new SqlAliasBaseManager();
-
 		jdbcParameter = new SqlTypedMappingJdbcParameter( arraySqlTypedMapping );
 		sqlSelect = LoaderSelectBuilder.createSelectBySingleArrayParameter(
 				getLoadable(),
@@ -92,18 +89,12 @@ public class CollectionBatchLoaderArrayParam
 				getInfluencers(),
 				new LockOptions(),
 				jdbcParameter,
-				sqlAliasBaseGenerator,
 				getSessionFactory()
 		);
 
 		final var querySpec = sqlSelect.getQueryPart().getFirstQuerySpec();
 		final var tableGroup = querySpec.getFromClause().getRoots().get( 0 );
-		attributeMapping.applyAuxiliaryRestrictions(
-				tableGroup,
-				querySpec::applyPredicate,
-				getInfluencers(),
-				sqlAliasBaseGenerator
-		);
+		attributeMapping.applySoftDeleteRestrictions( tableGroup, querySpec::applyPredicate );
 
 		jdbcSelectOperation = getSessionFactory().getJdbcServices()
 				.getJdbcEnvironment()
@@ -169,11 +160,11 @@ public class CollectionBatchLoaderArrayParam
 			}
 		}
 		return session.getPersistenceContext()
-				.getCollection( collectionKey( keyBeingLoaded, session ) );
+				.getCollection( collectionKey( keyBeingLoaded ) );
 	}
 
-	private CollectionKey collectionKey(Object keyBeingLoaded, SharedSessionContractImplementor session) {
-		return session.generateCollectionKey( getLoadable().getCollectionDescriptor(), keyBeingLoaded );
+	private CollectionKey collectionKey(Object keyBeingLoaded) {
+		return new CollectionKey( getLoadable().getCollectionDescriptor(), keyBeingLoaded );
 	}
 
 	@Override

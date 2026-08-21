@@ -415,15 +415,12 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 		final var session = session();
 		// prevent identical re-caching
 		if ( fromSharedCache( session, cacheKey, persister, cacheAccess ) == null ) {
-			final boolean minimalPutsEnabled =
-					session.getFactory().getSessionFactoryOptions().isMinimalPutsEnabled()
-							&& !session.getCacheMode().isRefreshEnabled();
 			final var statistics = session.getFactory().getStatistics();
 			final var eventMonitor = session.getEventMonitor();
 			boolean put = false;
 			final var cachePutEvent = eventMonitor.beginCachePutEvent();
 			try {
-				put = cacheAccess.putFromLoad( session, cacheKey, id, null, minimalPutsEnabled );
+				put = cacheAccess.putFromLoad( session, cacheKey, id, null );
 				if ( put && statistics.isStatisticsEnabled() ) {
 					statistics.naturalIdCachePut(
 							rootEntityDescriptor.getNavigableRole(),

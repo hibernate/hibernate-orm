@@ -8,7 +8,6 @@ import com.sun.tools.xjc.BadCommandLineException;
 import com.sun.tools.xjc.Driver;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.file.DirectoryProperty;
-import org.gradle.api.file.FileSystemOperations;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.SetProperty;
@@ -21,7 +20,6 @@ import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskAction;
 
-import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Set;
@@ -32,7 +30,7 @@ import java.util.Set;
  * @author Steve Ebersole
  */
 @CacheableTask
-public abstract class XjcTask extends DefaultTask {
+public class XjcTask extends DefaultTask {
 	private final Property<String> schemaName;
 	private final DirectoryProperty outputDirectory;
 	private final RegularFileProperty xsdFile;
@@ -50,9 +48,6 @@ public abstract class XjcTask extends DefaultTask {
 
 		schemaName.convention( xsdFile.map( regularFile -> regularFile.getAsFile().getName() ) );
 	}
-
-	@Inject
-	protected abstract FileSystemOperations getFileSystemOperations();
 
 	@Internal
 	public Property<String> getSchemaName() {
@@ -83,9 +78,9 @@ public abstract class XjcTask extends DefaultTask {
 
 	@TaskAction
 	public void generateJaxbBindings() {
-		getFileSystemOperations().delete( spec -> spec.delete( outputDirectory.get().getAsFileTree() ) );
+		getProject().delete( outputDirectory.get().getAsFileTree() );
 
-		final XjcListenerImpl listener = new XjcListenerImpl( schemaName.get(), getLogger() );
+		final XjcListenerImpl listener = new XjcListenerImpl( schemaName.get(), getProject() );
 		final String[] args = buildXjcArgs();
 
 		try {

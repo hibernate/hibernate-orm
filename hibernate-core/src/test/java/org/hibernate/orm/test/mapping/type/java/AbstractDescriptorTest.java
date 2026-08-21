@@ -9,7 +9,6 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.env.internal.NonContextualLobCreator;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.testing.util.ValueClassHelper;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -131,7 +130,7 @@ public abstract class AbstractDescriptorTest<T> {
 	protected abstract boolean shouldBeMutable();
 
 	protected boolean isIdentityDifferentFromEquality() {
-		return !ValueClassHelper.isValue( typeDescriptor.getJavaTypeClass() );
+		return true;
 	}
 
 	@Test

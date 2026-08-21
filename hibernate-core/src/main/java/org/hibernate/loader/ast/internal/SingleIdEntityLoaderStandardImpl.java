@@ -14,7 +14,6 @@ import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.ast.spi.CascadingFetchProfile;
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
 
 /**
@@ -81,12 +80,6 @@ public class SingleIdEntityLoaderStandardImpl<T> extends SingleIdEntityLoaderSup
 			// This case is special because the filters need to be applied in order to
 			// properly restrict the SQL/JDBC results.  For this reason it has higher
 			// precedence than even "internal" fetch profiles.
-			return loadPlanCreator.apply( lockOptions, influencers );
-		}
-		else if ( influencers.getTemporalIdentifier() != null
-				&& getLoadable().getEntityPersister().getAuditMapping() != null ) {
-			// Audit context requires a fresh plan that excludes @Audited.Excluded
-			// columns (which don't exist in the audit table)
 			return loadPlanCreator.apply( lockOptions, influencers );
 		}
 		else if ( influencers.hasEnabledCascadingFetchProfile()
@@ -186,7 +179,6 @@ public class SingleIdEntityLoaderStandardImpl<T> extends SingleIdEntityLoaderSup
 						influencers,
 						lockOptions,
 						jdbcParametersBuilder::add,
-						new SqlAliasBaseManager(),
 						factory
 				),
 				jdbcParametersBuilder.build(),

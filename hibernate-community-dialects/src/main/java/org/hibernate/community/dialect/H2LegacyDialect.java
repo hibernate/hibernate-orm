@@ -424,8 +424,8 @@ public class H2LegacyDialect extends Dialect {
 				}
 			}
 			else {
-				functionFactory.jsonObject_h2();
-				functionFactory.jsonArray_h2();
+				functionFactory.jsonObject();
+				functionFactory.jsonArray();
 
 				// Use group_concat until 2.x as listagg was buggy
 				functionFactory.listagg_groupConcat();
@@ -889,11 +889,6 @@ public class H2LegacyDialect extends Dialect {
 	@Override
 	public String getCurrentTimestampSelectString() {
 		return "call current_timestamp()";
-	}
-
-	@Override
-	public boolean isCurrentTimestampStable() {
-		return true;
 	}
 
 

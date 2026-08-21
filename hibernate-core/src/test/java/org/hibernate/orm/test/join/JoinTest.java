@@ -147,7 +147,7 @@ public class JoinTest {
 				new AbstractWork() {
 					@Override
 					public void execute(Connection connection) throws SQLException {
-						try (PreparedStatement ps = connection.prepareStatement( "delete from t_user where 1=1" )) {
+						try (PreparedStatement ps = connection.prepareStatement( "delete from t_user" )) {
 							ps.execute();
 						}
 					}

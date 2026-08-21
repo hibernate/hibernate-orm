@@ -7,7 +7,6 @@ package org.hibernate.persister.entity;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Function;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
@@ -22,18 +21,15 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.MappingMetamodel;
-import org.hibernate.metamodel.mapping.DiscriminatorValue;
 import org.hibernate.metamodel.mapping.TableDetails;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.filter.internal.DynamicFilterAliasGenerator;
-import org.hibernate.persister.state.spi.StateManagement;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.model.ast.builder.MutationGroupBuilder;
 import org.hibernate.sql.model.ast.builder.TableInsertBuilder;
 import org.hibernate.type.BasicType;
 
-import static java.util.function.Function.identity;
 import static org.hibernate.internal.util.collections.ArrayHelper.indexOf;
 import static org.hibernate.internal.util.collections.ArrayHelper.join;
 import static org.hibernate.internal.util.collections.ArrayHelper.to2DStringArray;
@@ -42,6 +38,7 @@ import static org.hibernate.internal.util.collections.ArrayHelper.toIntArray;
 import static org.hibernate.internal.util.collections.ArrayHelper.toStringArray;
 import static org.hibernate.internal.util.collections.CollectionHelper.toSmallMap;
 import static org.hibernate.jdbc.Expectations.createExpectation;
+import static org.hibernate.persister.entity.DiscriminatorHelper.NULL_DISCRIMINATOR;
 import static org.hibernate.sql.model.ast.builder.TableMutationBuilder.NULL;
 
 /**
@@ -90,14 +87,14 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 	private final int[] subclassPropertyTableNumberClosure;
 
 	// discriminator column
-	private final Map<DiscriminatorValue, String> subclassesByDiscriminatorValue;
+	private final Map<Object, String> subclassesByDiscriminatorValue;
 	private final boolean forceDiscriminator;
 	private final String discriminatorColumnName;
 	private final String discriminatorColumnReaders;
 	private final String discriminatorColumnReaderTemplate;
 	private final String discriminatorFormulaTemplate;
 	private final BasicType<?> discriminatorType;
-	private final DiscriminatorValue discriminatorValue;
+	private final Object discriminatorValue;
 	private final String discriminatorSQLValue;
 	private final boolean discriminatorInsertable;
 
@@ -109,18 +106,8 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 			final EntityDataAccess cacheAccessStrategy,
 			final NaturalIdDataAccess naturalIdRegionAccessStrategy,
 			final RuntimeModelCreationContext creationContext)
-			throws HibernateException {
-		this( persistentClass, cacheAccessStrategy, naturalIdRegionAccessStrategy, creationContext, identity() );
-	}
-
-	protected SingleTableEntityPersister(
-			final PersistentClass persistentClass,
-			final EntityDataAccess cacheAccessStrategy,
-			final NaturalIdDataAccess naturalIdRegionAccessStrategy,
-			final RuntimeModelCreationContext creationContext,
-			final Function<StateManagement, StateManagement> statementManagerConverter)
 					throws HibernateException {
-		super( persistentClass, cacheAccessStrategy, naturalIdRegionAccessStrategy, creationContext, statementManagerConverter );
+		super( persistentClass, cacheAccessStrategy, naturalIdRegionAccessStrategy, creationContext );
 
 		final var dialect = creationContext.getDialect();
 		final var typeConfiguration = creationContext.getTypeConfiguration();
@@ -295,7 +282,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		//TODO: code duplication with JoinedSubclassEntityPersister
 
 		final ArrayList<Integer> propertyJoinNumbers = new ArrayList<>();
-		final Map<DiscriminatorValue, String> subclassesByDiscriminatorValueLocal = new HashMap<>();
+		final Map<Object, String> subclassesByDiscriminatorValueLocal = new HashMap<>();
 
 		for ( var property : persistentClass.getSubclassPropertyClosure() ) {
 			propertyJoinNumbers.add( persistentClass.getJoinNumber( property ) );
@@ -342,8 +329,8 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 	}
 
 	private static void addSubclassByDiscriminatorValue(
-			Map<DiscriminatorValue, String> subclassesByDiscriminatorValue,
-			DiscriminatorValue discriminatorValue,
+			Map<Object, String> subclassesByDiscriminatorValue,
+			Object discriminatorValue,
 			String entityName) {
 		final String mappedEntityName = subclassesByDiscriminatorValue.put( discriminatorValue, entityName );
 		if ( mappedEntityName != null ) {
@@ -390,7 +377,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
-	public Map<DiscriminatorValue, String> getSubclassByDiscriminatorValue() {
+	public Map<Object, String> getSubclassByDiscriminatorValue() {
 		return subclassesByDiscriminatorValue;
 	}
 
@@ -405,7 +392,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
-	public DiscriminatorValue getDiscriminatorValue() {
+	public Object getDiscriminatorValue() {
 		return discriminatorValue;
 	}
 
@@ -485,7 +472,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 			final TableInsertBuilder tableInsertBuilder =
 					insertGroupBuilder.getTableDetailsBuilder( getRootTableName() );
 			tableInsertBuilder.addValueColumn(
-					discriminatorValue == DiscriminatorValue.Special.NULL ? NULL : discriminatorSQLValue,
+					discriminatorValue == NULL_DISCRIMINATOR ? NULL : discriminatorSQLValue,
 					getDiscriminatorMapping()
 			);
 		}

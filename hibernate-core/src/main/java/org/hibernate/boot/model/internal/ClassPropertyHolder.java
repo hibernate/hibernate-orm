@@ -473,7 +473,7 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 	private Map<String, Join> getJoinsPerRealTableName() {
 		if ( joinsPerRealTableName == null ) {
 			joinsPerRealTableName = mapOfSize( joins.size() );
-			for ( var join : joins.values() ) {
+			for ( Join join : joins.values() ) {
 				joinsPerRealTableName.put( join.getTable().getName(), join );
 			}
 		}

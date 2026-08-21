@@ -17,7 +17,6 @@ import org.jboss.logging.annotations.ValidIdRange;
 
 import javax.naming.NamingException;
 import java.lang.invoke.MethodHandles;
-import java.util.Locale;
 
 import static org.jboss.logging.Logger.Level.DEBUG;
 import static org.jboss.logging.Logger.Level.ERROR;
@@ -37,7 +36,7 @@ public interface SessionFactoryRegistryMessageLogger extends BasicLogger  {
 	String LOGGER_NAME = SubSystemLogging.BASE + ".factoryRegistry";
 
 	SessionFactoryRegistryMessageLogger REGISTRY_LOGGER =
-			getMessageLogger( MethodHandles.lookup(), SessionFactoryRegistryMessageLogger.class, LOGGER_NAME, Locale.ROOT );
+			getMessageLogger( MethodHandles.lookup(), SessionFactoryRegistryMessageLogger.class, LOGGER_NAME );
 
 	@LogMessage(level = TRACE)
 	@Message("Initializing SessionFactoryRegistry @%s")

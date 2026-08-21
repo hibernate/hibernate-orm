@@ -7,6 +7,7 @@ package org.hibernate.dialect.function.json;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
+import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -20,6 +21,11 @@ public class HSQLJsonObjectFunction extends JsonObjectFunction {
 
 	@Override
 	protected void renderValue(SqlAppender sqlAppender, SqlAstNode value, SqlAstTranslator<?> walker) {
-		HSQLJsonArrayFunction.renderJsonWriteExpression( sqlAppender, value, walker );
+		if ( value instanceof Literal literal && literal.getLiteralValue() == null ) {
+			sqlAppender.appendSql( "cast(null as int)" );
+		}
+		else {
+			value.accept( walker );
+		}
 	}
 }

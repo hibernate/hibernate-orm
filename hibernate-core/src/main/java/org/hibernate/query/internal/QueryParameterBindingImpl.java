@@ -13,7 +13,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
-import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.query.QueryArgumentException;
@@ -22,7 +21,6 @@ import org.hibernate.query.QueryParameter;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindingTypeResolver;
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.type.NullType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -148,11 +146,11 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T> {
 			setBindValues( (Collection<?>) value, temporalTypePrecision );
 		}
 		else {
-			setExplicitTemporalPrecision( temporalTypePrecision );
 			final Object coerced = coerce( value );
 			validate( coerced );
 			initBindType( value );
 			bindSingleValue( coerced );
+			setExplicitTemporalPrecision( temporalTypePrecision );
 		}
 	}
 
@@ -237,8 +235,8 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T> {
 	public void setBindValues(
 			Collection<?> values,
 			@SuppressWarnings("deprecation") TemporalType temporalTypePrecision) {
-		setExplicitTemporalPrecision( temporalTypePrecision );
 		setBindValues( values );
+		setExplicitTemporalPrecision( temporalTypePrecision );
 	}
 
 	@Override
@@ -287,7 +285,6 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T> {
 
 	@Override @SuppressWarnings("unchecked")
 	public boolean setType(@Nullable MappingModelExpressible<T> type) {
-		final MappingModelExpressible<T> previousType = this.type;
 		this.type = type;
 		// If the bind type is undetermined or the given type is a model part, then we try to apply a new bind type
 		if ( bindType == null || bindType.getJavaType() == Object.class || type instanceof ModelPart ) {
@@ -300,32 +297,12 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T> {
 				final var jdbcMapping = basicValuedMapping.getJdbcMapping();
 				if ( jdbcMapping instanceof BindableType<?> ) {
 					final boolean changed = bindType != null && jdbcMapping != bindType;
-					if ( changed && previousType instanceof BasicValuedMapping previousBasicValuedMapping
-						&& !areTypesCompatible( basicValuedMapping, previousBasicValuedMapping ) ) {
-						// An SQM parameter is used in multiple type-incompatible contexts,
-						// so let's play safe and not force a type onto the binding,
-						// but let SQM type inference dictate the type instead
-						this.type = NullType.INSTANCE;
-						this.bindType = (BindableType<T>) NullType.INSTANCE;
-						return true;
-					}
-					else {
-						this.bindType = (BindableType<T>) jdbcMapping;
-						return changed;
-					}
+					bindType = (BindableType<T>) jdbcMapping;
+					return changed;
 				}
 			}
 		}
 		return false;
-	}
-
-	private boolean areTypesCompatible(BasicValuedMapping mapping1, BasicValuedMapping mapping2) {
-		final JdbcMapping jdbcMapping1 = mapping1.getSingleJdbcMapping();
-		final JdbcMapping jdbcMapping2 = mapping2.getSingleJdbcMapping();
-		// We can assume the java types are compatible, since this is relevant for cases when using the same parameter
-		// in multiple contexts e.g. assignment or comparison.
-		return jdbcMapping1.getJdbcType() == jdbcMapping2.getJdbcType()
-				&& jdbcMapping1.getValueConverter() == jdbcMapping2.getValueConverter();
 	}
 
 	private <V> void clarifyType(Object valueOrValues, BindableType<V> clarifiedType) {

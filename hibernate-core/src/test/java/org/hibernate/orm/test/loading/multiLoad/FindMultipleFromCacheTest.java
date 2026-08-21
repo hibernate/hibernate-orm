@@ -52,8 +52,7 @@ public class FindMultipleFromCacheTest {
 		assertEquals( 2,
 				scope.getSessionFactory().getStatistics().getSecondLevelCacheHitCount() );
 	}
-	@Entity(name = "Record")
-	@Cacheable
+	@Entity @Cacheable
 	static class Record {
 		@Id Long id;
 		String message;

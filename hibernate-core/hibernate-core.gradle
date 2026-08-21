@@ -8,9 +8,9 @@ plugins {
     id "local.publishing-java-module"
     id "local.publishing-group-relocation"
 
-    alias(libs.plugins.versionInjection)
-    alias(libs.plugins.hibernateBuildAntlr)
-    alias(libs.plugins.hibernateXjc)
+    id "org.hibernate.build.version-injection"
+    id "org.hibernate.orm.antlr"
+    id "local-xjc-plugin"
 }
 
 description = 'Hibernate\'s core ORM functionality'
@@ -23,60 +23,60 @@ configurations {
 
 
 dependencies {
-    api libs.jakarta.jpa
-    api libs.jakarta.jta
+    api jakartaLibs.jpa
+    api jakartaLibs.jta
 
     implementation libs.hibernateModels
     implementation libs.byteBuddy
 
-    implementation libs.jakarta.jaxbApi
-    implementation libs.jakarta.jaxb
-    implementation libs.jakarta.inject
+    implementation jakartaLibs.jaxbApi
+    implementation jakartaLibs.jaxb
+    implementation jakartaLibs.inject
 
     implementation libs.antlrRuntime
 
-    compileOnly libs.jakarta.jacc
-    compileOnly libs.jakarta.validation
-    compileOnly libs.jakarta.cdi
-    compileOnly libs.jakarta.jsonbApi
+    compileOnly jakartaLibs.jacc
+    compileOnly jakartaLibs.validation
+    compileOnly jakartaLibs.cdi
+    compileOnly jakartaLibs.jsonbApi
     compileOnly libs.jackson
     compileOnly libs.jacksonXml
     compileOnly libs.jackson3
     compileOnly libs.jackson3Xml
-    compileOnly libs.jdbc.postgresql
-    compileOnly libs.jdbc.edb
+    compileOnly jdbcLibs.postgresql
+    compileOnly jdbcLibs.edb
 
     testImplementation project(':hibernate-testing')
     testImplementation project(':hibernate-ant')
     testImplementation project(':hibernate-scan-jandex')
 
     // todo : to get rid of these
-    testImplementation libs.test.junit4
-    testImplementation libs.test.junit4Engine
+    testImplementation testLibs.junit4
+    testImplementation testLibs.junit4Engine
 
-    testImplementation libs.test.shrinkwrap
-    testImplementation libs.test.shrinkwrapDescriptors
-    testImplementation libs.jakarta.cdi
-    testImplementation libs.jakarta.jacc
-    testImplementation libs.jakarta.validation
-    testImplementation( libs.test.validator ) {
+    testImplementation testLibs.shrinkwrap
+    testImplementation testLibs.shrinkwrapDescriptors
+    testImplementation jakartaLibs.cdi
+    testImplementation jakartaLibs.jacc
+    testImplementation jakartaLibs.validation
+    testImplementation( testLibs.validator ) {
         // for test runtime
         transitive = true
     }
-    testImplementation libs.jdbc.h2
+    testImplementation jdbcLibs.h2
     testImplementation libs.hibernateModelsJandex
 
     testRuntimeOnly libs.byteBuddy
-    testRuntimeOnly libs.test.weld
-    implementation libs.logging
-    testRuntimeOnly(libs.test.wildFlyTxnClient) {
+    testRuntimeOnly testLibs.weld
+    implementation(libs.logging)
+    testRuntimeOnly(testLibs.wildFlyTxnClient) {
         // WildFly Elytron includes a whole copy of JBoss Logging, Jackson with its original package,
         // not even shaded, which causes lots of problems.
         // Since we don't need WildFly Elytron in our tests, we'll just exclude it.
         exclude group: 'org.wildfly.security', module: 'wildfly-elytron'
     }
     testImplementation libs.jandex
-    testImplementation libs.jakarta.jsonb
+    testImplementation jakartaLibs.jsonb
     testImplementation libs.jackson
     testRuntimeOnly libs.jacksonXml
     testRuntimeOnly libs.jacksonJsr310
@@ -102,7 +102,7 @@ jar {
 }
 
 ext {
-    jaxbTargetDir = project.layout.buildDirectory.dir("generated/sources/xjc/main").get().asFile
+    jaxbTargetDir = project.file( "${buildDir}/generated/sources/xjc/main" )
 }
 
 sourceSets {
@@ -144,11 +144,11 @@ versionInjection {
     into( 'org.hibernate.Version', 'initVersion' )
 }
 
-tasks.register('copyBundleResourcesXml', Copy) {
+task copyBundleResourcesXml (type: Copy) {
     inputs.property( "db", db )
     inputs.property( "dbHost", dbHost )
     ext {
-        bundlesTargetDir = layout.buildDirectory.dir("bundles").get().asFile
+        bundlesTargetDir = file( "${buildDir}/bundles" )
         // Escape
         bundleTokens = [
                 'db.dialect' : dbBundle[db]['db.dialect'].replace("&", "&amp;"),
@@ -159,7 +159,7 @@ tasks.register('copyBundleResourcesXml', Copy) {
                 'jdbc.datasource' : dbBundle[db]['jdbc.datasource'].replace("&", "&amp;"),
                 'connection.init_sql' : dbBundle[db]['connection.init_sql'].replace("&", "&amp;")
         ]
-        ext.bundleTokens['buildDirName'] = project.relativePath( layout.buildDirectory.asFile.get() )
+        ext.bundleTokens['buildDirName'] = project.relativePath( buildDir )
     }
 
     from('src/test/bundles/templates') {
@@ -173,13 +173,13 @@ tasks.register('copyBundleResourcesXml', Copy) {
     }
 }
 
-tasks.register('copyBundleResourcesNonXml', Copy) {
+task copyBundleResourcesNonXml (type: Copy) {
     inputs.property( "db", db )
     ext {
-        bundlesTargetDir = layout.buildDirectory.dir("bundles").get().asFile
+        bundlesTargetDir = file( "${buildDir}/bundles" )
         // Escape
         bundleTokens = dbBundle[db]
-        ext.bundleTokens['buildDirName'] = project.relativePath(layout.buildDirectory.asFile.get())
+        ext.bundleTokens['buildDirName'] = project.relativePath( buildDir )
     }
 
     from('src/test/bundles/templates') {
@@ -193,7 +193,7 @@ tasks.register('copyBundleResourcesNonXml', Copy) {
     }
 }
 
-tasks.register('copyBundleResources', Copy) {
+task copyBundleResources (type: Copy) {
     inputs.property( "db", db )
     dependsOn tasks.copyBundleResourcesXml
     dependsOn tasks.copyBundleResourcesNonXml
@@ -208,8 +208,7 @@ sourcesJar {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
-tasks.register('testJar', Jar) {
-    dependsOn testClasses
+task testJar(type: Jar, dependsOn: testClasses) {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     archiveClassifier.set( 'test' )
     from sourceSets.test.output
@@ -235,9 +234,9 @@ tasks.register( "generateAnnotationClasses", JavaCompile ) {
     destinationDirectory.set( project.layout.buildDirectory.dir( "generated/sources/annotations/" ) )
 }
 
-tasks.register('generateEnversStaticMetamodel', JavaCompile) {
-    description = "Generate the Hibernate Envers revision entity static metamodel classes."
-
+task generateEnversStaticMetamodel(
+        type: JavaCompile,
+        description: "Generate the Hibernate Envers revision entity static metamodel classes." ) {
     source = sourceSets.main.java
     // we only want to include these specific classes for metamodel generation.
     // if envers adds any additional revision entity classes, they must be listed here.
@@ -254,10 +253,10 @@ tasks.register('generateEnversStaticMetamodel', JavaCompile) {
     ]
 
     // put static metamodel classes back out to the source tree since they're version controlled.
-    destinationDirectory = layout.projectDirectory.dir("src/main/java").asFile
+    destinationDirectory = new File( "${projectDir}/src/main/java" )
 }
 
-tasks.withType( Test.class ).configureEach { test ->
+tasks.withType( Test.class ).each { test ->
     test.systemProperty 'file.encoding', 'utf-8'
     // Allow creating a function in HSQLDB for this Java method
     test.systemProperty 'hsqldb.method_class_names', 'org.hibernate.orm.test.jpa.transaction.TransactionTimeoutTest.sleep'
@@ -274,13 +273,13 @@ tasks.withType( Test.class ).configureEach { test ->
     // see GradleParallelTestingResolver for how the test worker id is resolved in JDBC configs
     if ( project.db == "h2" || project.db == "hsqldb" || project.db == "pgsql_ci" || project.db == "edb_ci"
             || project.db == "oracle_ci" || project.db == "oracle_xe_ci" || project.db == "mysql_ci" || project.db == "mariadb_ci"
-            || project.db == "db2_ci" || project.db == "mssql_ci" || project.db == "cockroachdb" || project.db == "hana_ci"
-            || project.db == "tidb" || project.db == "spanner" || project.db == "hana_cloud" || project.db == "oracle" ) {
-        // As soon as we hit 16+ threads, the returns are diminishing, so divide by 2
+            || project.db == "db2_ci" || project.db == "mssql_ci" || project.db == "cockroachdb" ) {
+        // Most systems have multi-threading and maxing out a core on both threads will hurt performance
+        // Also, as soon as we hit 16+ threads, the returns are diminishing, so divide by 4
         def threadCount = Runtime.runtime.availableProcessors()
         def testThreads = project.findProperty( "test.threads" )
         if ( testThreads == null ) {
-            testThreads = threadCount >= 16 ? threadCount.intdiv( 2 ) : threadCount
+            testThreads = threadCount >= 16 ? threadCount.intdiv( 4 ) : (threadCount.intdiv( 2 ) ?: 1)
         }
         else {
             testThreads = Integer.parseInt( testThreads.toString() )
@@ -290,20 +289,7 @@ tasks.withType( Test.class ).configureEach { test ->
     }
     else if ( project.db == "oracle_test_pilot_database" ) {
         // Since Oracle TestPilot databases run on separate machines, use all threads for testing
-        test.maxParallelForks = Runtime.runtime.availableProcessors() * 2
-        test.systemProperty 'maxParallelForks', test.maxParallelForks
-    }
-    else if ( project.db == "spannerpgsql" ) {
-        // Some databases can't handle too many threads/instances, so divide by 2 by default
-        def threadCount = Runtime.runtime.availableProcessors()
-        def testThreads = project.findProperty( "test.threads" )
-        if ( testThreads == null ) {
-            testThreads = threadCount.intdiv( 2 ) ?: 1
-        }
-        else {
-            testThreads = Integer.parseInt( testThreads.toString() )
-        }
-        test.maxParallelForks = testThreads
+        test.maxParallelForks = Runtime.runtime.availableProcessors()
         test.systemProperty 'maxParallelForks', test.maxParallelForks
     }
 }
@@ -311,12 +297,11 @@ tasks.withType( Test.class ).configureEach { test ->
 tasks.named( "javadoc", Javadoc ) {
     configure(options) {
         overview = rootProject.file( "shared/javadoc/overview.html" )
-        exclude( "**/internal/**", "org/hibernate/boot/jaxb/**", "org/hibernate/tuple/**", "org/hibernate/grammars/hql/**" )
+        exclude( "**/internal/**", "org/hibernate/boot/jaxb/**", "org/hibernate/tuple/**" )
     }
 }
 
 tasks.sourcesJar.dependsOn ':hibernate-core:generateGraphParser'
-tasks.sourcesJar.dependsOn ':hibernate-core:generateDeprecated-graphParser'
 tasks.sourcesJar.dependsOn ':hibernate-core:generateHqlParser'
 tasks.sourcesJar.dependsOn ':hibernate-core:generateSqlScriptParser'
 tasks.sourcesJar.dependsOn ':hibernate-core:generateOrderingParser'

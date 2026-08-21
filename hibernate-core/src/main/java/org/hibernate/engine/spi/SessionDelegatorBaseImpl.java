@@ -4,8 +4,6 @@
  */
 package org.hibernate.engine.spi;
 
-import org.hibernate.audit.spi.AuditWorkQueue;
-
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.EntityGraph;
@@ -45,7 +43,6 @@ import org.hibernate.UnknownProfileException;
 import org.hibernate.bytecode.enhance.spi.interceptor.SessionAssociationMarkers;
 import org.hibernate.cache.spi.CacheTransactionSynchronization;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.extension.spi.Extension;
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
@@ -56,7 +53,6 @@ import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.jdbc.ReturningWork;
 import org.hibernate.jdbc.Work;
-import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.query.MutationQuery;
@@ -101,7 +97,7 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 
 	/**
 	 * Returns the delegate session.
-	 *
+	 * <p>
 	 * @apiNote This returns a different object to the {@link #getDelegate()}
 	 *          method inherited from {@link jakarta.persistence.EntityManager}.
 	 *
@@ -114,11 +110,6 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public <T> T execute(Callback<T> callback) {
 		return delegate.execute( callback );
-	}
-
-	@Override
-	public AuditWorkQueue getAuditWorkQueue() {
-		return delegate.getAuditWorkQueue();
 	}
 
 	@Override
@@ -149,11 +140,6 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public EntityKey generateEntityKey(Object id, EntityPersister persister) {
 		return delegate.generateEntityKey( id, persister );
-	}
-
-	@Override
-	public CollectionKey generateCollectionKey(CollectionPersister persister, Object key) {
-		return delegate.generateCollectionKey( persister, key );
 	}
 
 	@Override
@@ -478,11 +464,6 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public Object getCurrentChangesetIdentifier() {
-		return delegate.getCurrentChangesetIdentifier();
-	}
-
-	@Override
 	public void afterTransactionBegin() {
 		delegate.afterTransactionBegin();
 	}
@@ -535,11 +516,6 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public RootGraphImplementor<?> getEntityGraph(String graphName) {
 		return delegate.getEntityGraph( graphName );
-	}
-
-	@Override
-	public <T extends Extension> T getExtension(Class<T> extension) {
-		return delegate.getExtension( extension );
 	}
 
 	@Override

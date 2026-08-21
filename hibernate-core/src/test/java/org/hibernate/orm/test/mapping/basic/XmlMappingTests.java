@@ -19,7 +19,6 @@ import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.testing.util.ValueClassHelper;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
@@ -30,9 +29,7 @@ import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.testing.orm.junit.SkipForDialect;
-import org.hibernate.type.format.jaxb.JaxbXmlFormatMapper;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -95,11 +92,6 @@ public abstract class XmlMappingTests {
 
 	@BeforeEach
 	public void setup(SessionFactoryScope scope) {
-		// Until https://github.com/eclipse-ee4j/jaxb-ri/pull/2006 is released
-		Assumptions.assumeFalse(
-				scope.getSessionFactory().getTypeConfiguration().getXmlFormatMapper() instanceof JaxbXmlFormatMapper
-				&& ValueClassHelper.isValue( Boolean.class )
-		);
 		scope.inTransaction(
 				(session) -> {
 					session.persist( new EntityWithXml( 1, stringMap, objectMap, list ) );

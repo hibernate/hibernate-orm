@@ -34,7 +34,7 @@ class CompositeIdWithGenericPartInMappedSuperclassTest {
 		scope.inSession( s -> s.createQuery( "from SampleEntity", SampleEntity.class ).getResultList() );
 	}
 
-	@Entity(name = "SampleCompositeIdEntity")
+	@Entity
 	@IdClass(SampleCompositeIdEntity.AdditionalIdEntityId.class)
 	static class SampleCompositeIdEntity extends SampleSuperclass<Long> {
 

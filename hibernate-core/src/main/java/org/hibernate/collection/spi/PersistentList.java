@@ -14,7 +14,6 @@ import java.util.ListIterator;
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.util.Optional.Defined;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.type.Type;
@@ -300,7 +299,8 @@ public class PersistentList<E> extends AbstractPersistentCollection<E> implement
 		if ( index < 0 ) {
 			throw new ArrayIndexOutOfBoundsException( "negative index" );
 		}
-		return readElementByIndex( index ).evaluate( () -> list.get( index ) );
+		final Object result = readElementByIndex( index );
+		return result == UNKNOWN ? list.get( index ) : (E) result;
 	}
 
 	@Override
@@ -308,15 +308,16 @@ public class PersistentList<E> extends AbstractPersistentCollection<E> implement
 		if (index<0) {
 			throw new ArrayIndexOutOfBoundsException("negative index");
 		}
-		if ( isPutQueueEnabled()
-				&& readElementByIndex( index ) instanceof Defined<E> element ) {
-			final E old = element.result();
-			queueOperation( new Set( index, value, old ) );
-			return old;
-		}
-		else {
+
+		final Object old = isPutQueueEnabled() ? readElementByIndex( index ) : UNKNOWN;
+
+		if ( old==UNKNOWN ) {
 			write();
 			return list.set( index, value );
+		}
+		else {
+			queueOperation( new Set( index, value, (E) old ) );
+			return (E) old;
 		}
 	}
 
@@ -325,17 +326,16 @@ public class PersistentList<E> extends AbstractPersistentCollection<E> implement
 		if ( index < 0 ) {
 			throw new ArrayIndexOutOfBoundsException( "negative index" );
 		}
+		final Object old = isPutQueueEnabled() ? readElementByIndex( index ) : UNKNOWN;
 		elementRemoved = true;
-		if ( isPutQueueEnabled()
-				&& readElementByIndex( index ) instanceof Defined<E> element ) {
-			final E old = element.result();
-			queueOperation( new Remove( index, old ) );
-			return old;
-		}
-		else {
+		if ( old == UNKNOWN ) {
 			write();
 			dirty();
 			return list.remove( index );
+		}
+		else {
+			queueOperation( new Remove( index, (E) old ) );
+			return (E) old;
 		}
 	}
 

@@ -5,13 +5,10 @@
 package org.hibernate.processor;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.hibernate.Incubating;
 import org.hibernate.processor.annotation.AnnotationMetaEntity;
 import org.hibernate.processor.annotation.AnnotationMetaPackage;
 import org.hibernate.processor.annotation.NonManagedMetamodel;
 import org.hibernate.processor.model.Metamodel;
-import org.hibernate.processor.spi.DefaultQuarkusDataTypeNames;
-import org.hibernate.processor.spi.QuarkusDataTypeNames;
 import org.hibernate.processor.util.Constants;
 import org.hibernate.processor.xml.JpaDescriptorParser;
 
@@ -42,10 +39,8 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.function.Function;
 
@@ -56,13 +51,10 @@ import static org.hibernate.processor.HibernateProcessor.ADD_GENERATED_ANNOTATIO
 import static org.hibernate.processor.HibernateProcessor.ADD_GENERATION_DATE;
 import static org.hibernate.processor.HibernateProcessor.ADD_SUPPRESS_WARNINGS_ANNOTATION;
 import static org.hibernate.processor.HibernateProcessor.DEBUG_OPTION;
-import static org.hibernate.processor.HibernateProcessor.DIALECT_DATABASE_VERSION_OPTION;
-import static org.hibernate.processor.HibernateProcessor.DIALECT_OPTION;
 import static org.hibernate.processor.HibernateProcessor.EXCLUDE;
 import static org.hibernate.processor.HibernateProcessor.FULLY_ANNOTATION_CONFIGURED_OPTION;
 import static org.hibernate.processor.HibernateProcessor.INCLUDE;
 import static org.hibernate.processor.HibernateProcessor.INDEX;
-import static org.hibernate.processor.HibernateProcessor.JAKARTA_DATA_SORT_COMPLIANCE;
 import static org.hibernate.processor.HibernateProcessor.LAZY_XML_PARSING;
 import static org.hibernate.processor.HibernateProcessor.ORM_XML_OPTION;
 import static org.hibernate.processor.HibernateProcessor.PERSISTENCE_XML_OPTION;
@@ -79,13 +71,7 @@ import static org.hibernate.processor.util.Constants.HIB_NAMED_NATIVE_QUERY;
 import static org.hibernate.processor.util.Constants.HIB_NAMED_QUERIES;
 import static org.hibernate.processor.util.Constants.HIB_NAMED_QUERY;
 import static org.hibernate.processor.util.Constants.HQL;
-import static org.hibernate.processor.util.Constants.JD_DELETE;
-import static org.hibernate.processor.util.Constants.JD_FIND;
-import static org.hibernate.processor.util.Constants.JD_INSERT;
-import static org.hibernate.processor.util.Constants.JD_QUERY;
 import static org.hibernate.processor.util.Constants.JD_REPOSITORY;
-import static org.hibernate.processor.util.Constants.JD_SAVE;
-import static org.hibernate.processor.util.Constants.JD_UPDATE;
 import static org.hibernate.processor.util.Constants.MAPPED_SUPERCLASS;
 import static org.hibernate.processor.util.Constants.NAMED_ENTITY_GRAPH;
 import static org.hibernate.processor.util.Constants.NAMED_ENTITY_GRAPHS;
@@ -136,10 +122,7 @@ import static org.hibernate.processor.util.TypeUtils.isMemberType;
 		ADD_SUPPRESS_WARNINGS_ANNOTATION,
 		SUPPRESS_JAKARTA_DATA_METAMODEL,
 		INCLUDE, EXCLUDE,
-		INDEX,
-		JAKARTA_DATA_SORT_COMPLIANCE,
-		DIALECT_OPTION,
-		DIALECT_DATABASE_VERSION_OPTION
+		INDEX
 })
 public class HibernateProcessor extends AbstractProcessor {
 
@@ -162,18 +145,6 @@ public class HibernateProcessor extends AbstractProcessor {
 	 * Controls whether the processor should consider XML files
 	 */
 	public static final String FULLY_ANNOTATION_CONFIGURED_OPTION = "fullyAnnotationConfigured";
-
-	/**
-	 * The default dialect class to use for any HQL validation.
-	 */
-	@Incubating
-	public static final String DIALECT_OPTION = "dialect";
-
-	/**
-	 * The database version string to use for the default dialect class.
-	 */
-	@Incubating
-	public static final String DIALECT_DATABASE_VERSION_OPTION = "dialectDatabaseVersion";
 
 	/**
 	 * Controls whether the processor should only load XML files when there have been changes
@@ -206,15 +177,6 @@ public class HibernateProcessor extends AbstractProcessor {
 	public static final String SUPPRESS_JAKARTA_DATA_METAMODEL = "suppressJakartaDataMetamodel";
 
 	/**
-	 * Option to suppress rejection of Jakarta Data repository interfaces that use
-	 * {@code jakarta.data.Sort} types with a null type argument, which
-	 * the Jakarta Data specification allows.
-	 */
-	@Incubating
-	public static final String JAKARTA_DATA_SORT_COMPLIANCE = "jakartaDataSortCompliance";
-
-
-	/**
 	 * Option to include only certain types, according to a list of patterns.
 	 * The wildcard character is {@code *}, and patterns are comma-separated.
 	 * For example: {@code *.entity.*,*Repository}. The default include is
@@ -236,7 +198,6 @@ public class HibernateProcessor extends AbstractProcessor {
 	 * index is created. The index is used to speed up query validation
 	 * for faster compilation times.
 	 */
-	@Incubating
 	public static final String INDEX = "index";
 
 	private static final boolean ALLOW_OTHER_PROCESSORS_TO_CLAIM_ANNOTATIONS = false;
@@ -293,11 +254,9 @@ public class HibernateProcessor extends AbstractProcessor {
 		PackageElement quarkusOrmPanachePackage =
 				context.getProcessingEnvironment().getElementUtils()
 						.getPackageElement( "io.quarkus.hibernate.orm.panache" );
-		final QuarkusDataTypeNames quarkusDataTypeNames = loadQuarkusDataTypeNames();
-		context.setQuarkusDataTypeNames( quarkusDataTypeNames );
-		PackageElement quarkusDataHibernatePackage =
+		PackageElement quarkusPanache2Package =
 				context.getProcessingEnvironment().getElementUtils()
-						.getPackageElement( quarkusDataTypeNames.packageName() );
+						.getPackageElement( "io.quarkus.hibernate.panache" );
 		PackageElement quarkusReactivePanachePackage =
 				context.getProcessingEnvironment().getElementUtils()
 						.getPackageElement( "io.quarkus.hibernate.reactive.panache" );
@@ -333,7 +292,7 @@ public class HibernateProcessor extends AbstractProcessor {
 		context.setUsesQuarkusReactive( packagePresent(quarkusReactivePanachePackage) );
 		context.setSpringInjection( packagePresent(springBeansPackage) );
 		context.setAddComponentAnnotation( packagePresent(springStereotypePackage) );
-		context.setUsesQuarkusDataHibernate( packagePresent(quarkusDataHibernatePackage) );
+		context.setUsesQuarkusPanache2( packagePresent(quarkusPanache2Package) );
 		context.setUsesQuarkusReactiveCommon( packagePresent(quarkusReactivePanacheCommonPackage) );
 
 		final Map<String, String> options = environment.getOptions();
@@ -341,8 +300,6 @@ public class HibernateProcessor extends AbstractProcessor {
 		final boolean suppressJakartaData = parseBoolean( options.get( SUPPRESS_JAKARTA_DATA_METAMODEL ) );
 
 		context.setGenerateJakartaDataStaticMetamodel( !suppressJakartaData && packagePresent(jakartaDataPackage) );
-
-		context.setJakartaDataSortCompliance( parseBoolean( options.get( JAKARTA_DATA_SORT_COMPLIANCE ) ) );
 
 		final String setting = options.get( ADD_GENERATED_ANNOTATION );
 		if ( setting != null ) {
@@ -370,16 +327,6 @@ public class HibernateProcessor extends AbstractProcessor {
 		return pack != null
 			//HHH-18019 ecj always returns a non-null PackageElement
 			&& !pack.getEnclosedElements().isEmpty();
-	}
-
-	private static QuarkusDataTypeNames loadQuarkusDataTypeNames() {
-		final Iterator<QuarkusDataTypeNames> iterator =
-				ServiceLoader.load( QuarkusDataTypeNames.class, QuarkusDataTypeNames.class.getClassLoader() )
-						.iterator();
-		if ( iterator.hasNext() ) {
-			return iterator.next();
-		}
-		return new DefaultQuarkusDataTypeNames();
 	}
 
 	@Override
@@ -431,12 +378,7 @@ public class HibernateProcessor extends AbstractProcessor {
 	private boolean included(Element element) {
 		if ( element instanceof TypeElement || element instanceof PackageElement ) {
 			final QualifiedNameable nameable = (QualifiedNameable) element;
-			String qualifiedName = nameable.getQualifiedName().toString();
-			if ( element instanceof TypeElement
-				&& context.isGeneratedClass( qualifiedName ) ) {
-				return false;
-			}
-			return context.isIncluded( qualifiedName );
+			return context.isIncluded( nameable.getQualifiedName().toString() );
 		}
 		else {
 			return false;
@@ -460,13 +402,13 @@ public class HibernateProcessor extends AbstractProcessor {
 		}
 
 		for ( Element element : roundEnvironment.getRootElements() ) {
-			processElement( element, null, null);
+			processElement( element, null );
 		}
 	}
 
-	private void processElement(Element element, @Nullable Element parent, @Nullable TypeElement primaryEntity) {
+	private void processElement(Element element, @Nullable Element parent) {
 		try {
-			inspectRootElement(element, parent, primaryEntity);
+			inspectRootElement(element, parent, null);
 		}
 		catch ( ProcessLaterException processLaterException ) {
 			if ( element instanceof TypeElement typeElement ) {
@@ -532,13 +474,16 @@ public class HibernateProcessor extends AbstractProcessor {
 				}
 			}
 			else {
-				if ( isImplicitRepository( typeElement ) ) {
-					context.logMessage( Diagnostic.Kind.OTHER, "Processing implicit repository class '" + element + "'" );
-					final AnnotationMetaEntity metaEntity =
-							AnnotationMetaEntity.create( typeElement, context,
-									parentMetadata( parent, context::getMetaEntity ),
-									primaryEntity );
-					context.addMetaAuxiliary( metaEntity.getQualifiedName(), metaEntity );
+				for ( Element member : typeElement.getEnclosedElements() ) {
+					if ( hasAnnotation( member, HQL, SQL, FIND ) ) {
+						context.logMessage( Diagnostic.Kind.OTHER, "Processing annotated class '" + element + "'" );
+						final AnnotationMetaEntity metaEntity =
+								AnnotationMetaEntity.create( typeElement, context,
+										parentMetadata( parent, context::getMetaEntity ),
+										primaryEntity );
+						context.addMetaAuxiliary( metaEntity.getQualifiedName(), metaEntity );
+						break;
+					}
 				}
 				if ( enclosesEntityOrEmbeddable( element ) ) {
 					final NonManagedMetamodel metaEntity =
@@ -551,30 +496,17 @@ public class HibernateProcessor extends AbstractProcessor {
 										parentMetadata( parent, context::getDataMetaEntity ) );
 						context.addDataMetaEntity( dataMetaEntity.getQualifiedName(), dataMetaEntity );
 					}
+
 				}
 			}
 		}
 		if ( isClassRecordOrInterfaceType( element ) ) {
-			// Any repository nested in an entity gets an automatic primary entity of the enclosing entity for Quarkus Panache 2
-			TypeElement newPrimaryEntity = isEntityOrEmbeddable( element ) && element instanceof TypeElement ? (TypeElement) element : null;
 			for ( final Element child : element.getEnclosedElements() ) {
 				if ( isClassRecordOrInterfaceType( child ) ) {
-					processElement( child, element, newPrimaryEntity );
+					processElement( child, element );
 				}
 			}
 		}
-	}
-
-	private boolean isImplicitRepository(TypeElement typeElement) {
-		if ( AnnotationMetaEntity.isQuarkusDataRepository( typeElement, context.quarkusDataTypeNames() ) ) {
-			return true;
-		}
-		for ( Element member : typeElement.getEnclosedElements() ) {
-			if ( hasAnnotation( member, HQL, SQL, FIND, JD_QUERY, JD_FIND, JD_DELETE, JD_INSERT, JD_SAVE, JD_UPDATE ) ) {
-				return true;
-			}
-		}
-		return false;
 	}
 
 	private void createMetaModelClasses() {
@@ -728,6 +660,7 @@ public class HibernateProcessor extends AbstractProcessor {
 				final TypeElement typeElement = (TypeElement) element;
 				indexEntityName( typeElement );
 				indexEnumFields( typeElement );
+				indexQueryInterfaces( typeElement );
 
 				final String qualifiedName = typeElement.getQualifiedName().toString();
 				final Metamodel alreadyExistingMetaEntity =
@@ -782,6 +715,14 @@ public class HibernateProcessor extends AbstractProcessor {
 		return element.getEnclosingElement().getEnclosedElements()
 				.stream().anyMatch(e -> e.getSimpleName()
 						.contentEquals('_' + element.getSimpleName().toString()));
+	}
+
+	private void indexQueryInterfaces(TypeElement typeElement) {
+		for ( Element element : typeElement.getEnclosedElements() ) {
+			if( element.getKind() == ElementKind.INTERFACE ) {
+				inspectRootElement( element, typeElement, typeElement );
+			}
+		}
 	}
 
 	private void indexEntityName(TypeElement typeElement) {

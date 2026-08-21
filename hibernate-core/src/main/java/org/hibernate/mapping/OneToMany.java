@@ -208,14 +208,6 @@ public class OneToMany implements Value {
 		return false;
 	}
 
-	@Override
-	public void setNonInsertable() {
-	}
-
-	@Override
-	public void setNonUpdatable() {
-	}
-
 	public NotFoundAction getNotFoundAction() {
 		return notFoundAction;
 	}

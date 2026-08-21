@@ -69,11 +69,11 @@ public class H2ArraySortFunction extends AbstractArraySortFunction {
 
 		sqlAppender.append( "case when " );
 		arrayExpression.accept( walker );
-		sqlAppender.append( " is not null then coalesce((select array_agg(" );
+		sqlAppender.append( " is not null then coalesce((select array_agg(array_get(" );
 		arrayExpression.accept( walker );
-		sqlAppender.append( "[i.idx] order by " );
+		sqlAppender.append( ",i.idx) order by array_get(" );
 		arrayExpression.accept( walker );
-		sqlAppender.append( "[i.idx]" );
+		sqlAppender.append( ",i.idx)" );
 
 		sqlAppender.append( descending
 									? ( actualNullsFirst ? " desc nulls first" : " desc nulls last" )
@@ -101,27 +101,27 @@ public class H2ArraySortFunction extends AbstractArraySortFunction {
 
 		sqlAppender.append( "case when " );
 		arrayExpression.accept( walker );
-		sqlAppender.append( " is not null then coalesce((select array_agg(" );
+		sqlAppender.append( " is not null then coalesce((select array_agg(array_get(" );
 		arrayExpression.accept( walker );
-		sqlAppender.append( "[i.idx] order by " );
+		sqlAppender.append( ",i.idx) order by " );
 
 		sqlAppender.append( '(' );
 		nullsFirstNode.accept( walker );
-		sqlAppender.append( "=(" );
+		sqlAppender.append( "=(array_get(" );
 		arrayExpression.accept( walker );
-		sqlAppender.append( "[i.idx] is null)) desc," );
+		sqlAppender.append( ",i.idx) is null)) desc," );
 
 		sqlAppender.append( "case when " );
 		descendingNode.accept( walker );
-		sqlAppender.append( " then " );
+		sqlAppender.append( " then array_get(" );
 		arrayExpression.accept( walker );
-		sqlAppender.append( "[i.idx] end desc," );
+		sqlAppender.append( ",i.idx) end desc," );
 
 		sqlAppender.append( "case when not " );
 		descendingNode.accept( walker );
-		sqlAppender.append( " then " );
+		sqlAppender.append( " then array_get(" );
 		arrayExpression.accept( walker );
-		sqlAppender.append( "[i.idx] end" );
+		sqlAppender.append( ",i.idx) end" );
 
 		sqlAppender.append( ") from system_range(1," );
 		sqlAppender.append( Integer.toString( maximumArraySize ) );

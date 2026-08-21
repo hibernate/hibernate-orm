@@ -4,7 +4,6 @@
  */
 package org.hibernate.dialect.sql.ast;
 
-import java.util.ArrayDeque;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -18,7 +17,6 @@ import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
-import org.hibernate.sql.ast.spi.FullJoinEmulation;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
@@ -37,8 +35,6 @@ import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
 import org.hibernate.sql.ast.tree.insert.Values;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
-import org.hibernate.sql.ast.tree.select.SelectClause;
-import org.hibernate.sql.ast.tree.select.SortSpecification;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 
@@ -50,15 +46,9 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
 public class SybaseSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstTranslator<T> {
 
 	private static final String UNION_ALL = " union all ";
-	private final ArrayDeque<FullJoinEmulation> fullJoinEmulations = new ArrayDeque<>();
 
 	public SybaseSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
 		super( sessionFactory, statement );
-		this.fullJoinEmulations.push( new FullJoinEmulation( this ) );
-	}
-
-	private FullJoinEmulation currentFullJoinEmulationHelper() {
-		return fullJoinEmulations.getFirst();
 	}
 
 	@Override
@@ -109,8 +99,7 @@ public class SybaseSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 	protected void visitAnsiCaseSearchedExpression(
 			CaseSearchedExpression caseSearchedExpression,
 			Consumer<Expression> resultRenderer) {
-		if ( getParameterRenderingMode() == SqlAstNodeRenderingMode.DEFAULT
-				&& areAllResultsParameters( caseSearchedExpression ) ) {
+		if ( getParameterRenderingMode() == SqlAstNodeRenderingMode.DEFAULT && areAllResultsParameters( caseSearchedExpression ) ) {
 			final List<CaseSearchedExpression.WhenFragment> whenFragments = caseSearchedExpression.getWhenFragments();
 			final Expression firstResult = whenFragments.get( 0 ).getResult();
 			super.visitAnsiCaseSearchedExpression(
@@ -134,8 +123,7 @@ public class SybaseSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 	protected void visitAnsiCaseSimpleExpression(
 			CaseSimpleExpression caseSimpleExpression,
 			Consumer<Expression> resultRenderer) {
-		if ( getParameterRenderingMode() == SqlAstNodeRenderingMode.DEFAULT
-				&& areAllResultsParameters( caseSimpleExpression ) ) {
+		if ( getParameterRenderingMode() == SqlAstNodeRenderingMode.DEFAULT && areAllResultsParameters( caseSimpleExpression ) ) {
 			final List<CaseSimpleExpression.WhenFragment> whenFragments = caseSimpleExpression.getWhenFragments();
 			final Expression firstResult = whenFragments.get( 0 ).getResult();
 			super.visitAnsiCaseSimpleExpression(
@@ -218,47 +206,10 @@ public class SybaseSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 
 	@Override
 	public void visitOffsetFetchClause(QueryPart queryPart) {
-		if ( !currentFullJoinEmulationHelper().isFullJoinEmulationQueryPart( queryPart ) ) {
-			assertRowsOnlyFetchClauseType( queryPart );
-			if ( !queryPart.isRoot() && queryPart.getOffsetClauseExpression() != null ) {
-				throw new IllegalArgumentException( "Can't emulate offset clause in subquery" );
-			}
+		assertRowsOnlyFetchClauseType( queryPart );
+		if ( !queryPart.isRoot() && queryPart.getOffsetClauseExpression() != null ) {
+			throw new IllegalArgumentException( "Can't emulate offset clause in subquery" );
 		}
-	}
-
-	@Override
-	public void visitQuerySpec(QuerySpec querySpec) {
-		final var helper = currentFullJoinEmulationHelper();
-		final boolean needsNestedHelper =
-				helper.hasActiveFullJoinEmulation()
-						&& !helper.isFullJoinEmulationQueryPart( querySpec );
-		if ( needsNestedHelper ) {
-			fullJoinEmulations.push( new FullJoinEmulation( this ) );
-		}
-		try {
-			final var currentHelper = currentFullJoinEmulationHelper();
-			if ( !currentHelper.renderFullJoinEmulationBranchIfNeeded( querySpec, super::visitQuerySpec )
-					&& !currentHelper.emulateFullJoinWithUnionIfNeeded( querySpec ) ) {
-				super.visitQuerySpec( querySpec );
-			}
-		}
-		finally {
-			if ( needsNestedHelper ) {
-				fullJoinEmulations.pop();
-			}
-		}
-	}
-
-	@Override
-	public void visitSelectClause(SelectClause selectClause) {
-		if ( !currentFullJoinEmulationHelper().renderSelectClauseIfNeeded( selectClause ) ) {
-			super.visitSelectClause( selectClause );
-		}
-	}
-
-	@Override
-	protected void visitOrderBy(List<SortSpecification> sortSpecifications) {
-		currentFullJoinEmulationHelper().renderOrderByIfNeeded( getCurrentQueryPart(), sortSpecifications, super::visitOrderBy );
 	}
 
 	@Override

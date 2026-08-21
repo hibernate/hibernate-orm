@@ -7,7 +7,6 @@ package org.hibernate.sql.exec.spi;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
-import org.hibernate.sql.exec.internal.lock.LoadedValuesCollectorFactory;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
 
 import java.sql.Connection;
@@ -27,16 +26,16 @@ public interface JdbcSelect extends PrimaryOperation, CacheableJdbcOperation {
 	int getMaxRows();
 
 	/**
-	 * Returns a Factory used to create a collector of values loaded to be applied during the
+	 * Access to a collector of values loaded to be applied during the
 	 * processing of the selection's results.
 	 * May be {@code null}.
 	 */
 	@Nullable
-	LoadedValuesCollectorFactory getLoadedValuesCollectorFactory();
+	LoadedValuesCollector getLoadedValuesCollector();
 
 	/**
 	 * Perform any pre-actions.
-	 * <p>
+	 * <p/>
 	 * Generally the pre-actions should use the passed {@code jdbcStatementAccess} to interact with the
 	 * database, although the {@code jdbcConnection} can be used to create specialized statements,
 	 * access the {@linkplain java.sql.DatabaseMetaData database metadata}, etc.
@@ -46,8 +45,9 @@ public interface JdbcSelect extends PrimaryOperation, CacheableJdbcOperation {
 	 * @param executionContext Access to contextual information useful while executing.
 	 */
 	void performPreActions(StatementAccess jdbcStatementAccess, Connection jdbcConnection, ExecutionContext executionContext);	/**
+
 	 * Perform any post-actions.
-	 * <p>
+	 * <p/>
 	 * Generally the post-actions should use the passed {@code jdbcStatementAccess} to interact with the
 	 * database, although the {@code jdbcConnection} can be used to create specialized statements,
 	 * access the {@linkplain java.sql.DatabaseMetaData database metadata}, etc.
@@ -56,13 +56,11 @@ public interface JdbcSelect extends PrimaryOperation, CacheableJdbcOperation {
 	 * @param jdbcStatementAccess Access to a JDBC Statement object which may be used to perform the action.
 	 * @param jdbcConnection The JDBC Connection.
 	 * @param executionContext Access to contextual information useful while executing.
-	 * @param loadedValuesCollector Access to the collector of values loaded as part of the primary operation.  This is useful for post-actions that need to know what was loaded in order to perform their work.
 	 */
-	void performPostActions(
+	void performPostAction(
 			boolean succeeded,
 			StatementAccess jdbcStatementAccess,
 			Connection jdbcConnection,
-			ExecutionContext executionContext,
-			LoadedValuesCollector loadedValuesCollector);
+			ExecutionContext executionContext);
 
 }

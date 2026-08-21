@@ -4,69 +4,48 @@
  */
 package org.hibernate.dialect;
 
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.Timeout;
+import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.ScrollMode;
+import org.hibernate.StaleObjectStateException;
+import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.FunctionContributions;
-import org.hibernate.boot.model.TypeContributions;
-import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.boot.model.relational.Exportable;
+import org.hibernate.boot.model.relational.Sequence;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.dialect.function.array.SpannerArrayConcatElementFunction;
-import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.engine.config.spi.StandardConverters;
-import org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy;
-import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
-import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
-import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
-import org.hibernate.service.ServiceRegistry;
-import org.hibernate.dialect.function.InsertSubstringOverlayEmulation;
-import org.hibernate.dialect.function.CastingConcatFunction;
-import org.hibernate.dialect.function.SpannerFormatFunction;
-import org.hibernate.dialect.function.SpannerExtractFunction;
-import org.hibernate.dialect.function.SpannerTruncFunction;
-import org.hibernate.dialect.function.array.ArrayAggFunction;
-import org.hibernate.dialect.function.array.ArrayToStringFunction;
-import org.hibernate.dialect.identity.IdentityColumnSupport;
-import org.hibernate.dialect.identity.SpannerIdentityColumnSupport;
+import org.hibernate.dialect.function.FormatFunction;
+import org.hibernate.dialect.lock.LockingStrategy;
+import org.hibernate.dialect.lock.LockingStrategyException;
+import org.hibernate.dialect.lock.internal.NoLockingSupport;
 import org.hibernate.dialect.lock.spi.LockingSupport;
-import org.hibernate.exception.ConstraintViolationException;
-import org.hibernate.exception.SQLGrammarException;
-import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitOffsetLimitHandler;
-import org.hibernate.dialect.sequence.SequenceSupport;
-import org.hibernate.dialect.sequence.SpannerSequenceSupport;
-import org.hibernate.dialect.type.SpannerJsonJdbcType;
-import org.hibernate.dialect.function.json.SpannerJsonValueFunction;
-import org.hibernate.dialect.function.json.SpannerJsonQueryFunction;
 import org.hibernate.dialect.sql.ast.SpannerSqlAstTranslator;
-import org.hibernate.dialect.unique.AlterTableUniqueIndexDelegate;
+import org.hibernate.dialect.temptable.SpannerTemporaryTableExporter;
+import org.hibernate.dialect.temptable.TemporaryTableExporter;
 import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
+import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
+import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.jdbc.env.spi.SchemaNameResolver;
-import org.hibernate.sql.model.MutationOperation;
-import org.hibernate.sql.model.ast.ColumnValueBinding;
-import org.hibernate.sql.model.internal.OptionalTableUpdate;
-import org.hibernate.persister.entity.mutation.EntityMutationTarget;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.mapping.Column;
+import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.Table;
+import org.hibernate.mapping.UniqueKey;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.common.TemporalUnit;
-import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.sqm.SetOperator;
 import org.hibernate.query.sqm.TrimSpec;
-import org.hibernate.query.sqm.produce.function.FunctionParameterType;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
-import org.hibernate.sql.ast.internal.PessimisticLockKind;
-import org.hibernate.dialect.lock.PessimisticLockStyle;
-import org.hibernate.dialect.lock.internal.LockingSupportSimple;
-import org.hibernate.dialect.lock.spi.ConnectionLockTimeoutStrategy;
-import org.hibernate.dialect.lock.spi.LockTimeoutType;
-import org.hibernate.dialect.lock.spi.OuterJoinLockingType;
 import org.hibernate.sql.ast.spi.LockingClauseStrategy;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
@@ -74,39 +53,20 @@ import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.spi.Exporter;
-import org.hibernate.dialect.function.CountFunction;
-import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
-import org.hibernate.type.descriptor.jdbc.JdbcType;
-import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
-import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
-import org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType;
-import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
-
-import org.hibernate.Timeouts;
-import java.util.Calendar;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.Map;
 
 import static org.hibernate.dialect.SimpleDatabaseVersion.ZERO_VERSION;
 import static org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers.useArgType;
 import static org.hibernate.sql.ast.internal.NonLockingClauseStrategy.NON_CLAUSE_STRATEGY;
-import static org.hibernate.type.SqlTypes.ARRAY;
 import static org.hibernate.type.SqlTypes.BIGINT;
-import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
 import static org.hibernate.type.SqlTypes.BINARY;
 import static org.hibernate.type.SqlTypes.BLOB;
 import static org.hibernate.type.SqlTypes.BOOLEAN;
 import static org.hibernate.type.SqlTypes.CHAR;
-import static org.hibernate.type.SqlTypes.JSON;
 import static org.hibernate.type.SqlTypes.CLOB;
 import static org.hibernate.type.SqlTypes.DECIMAL;
 import static org.hibernate.type.SqlTypes.DOUBLE;
@@ -123,12 +83,10 @@ import static org.hibernate.type.SqlTypes.REAL;
 import static org.hibernate.type.SqlTypes.SMALLINT;
 import static org.hibernate.type.SqlTypes.TIME;
 import static org.hibernate.type.SqlTypes.TIMESTAMP;
+import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
 import static org.hibernate.type.SqlTypes.TINYINT;
 import static org.hibernate.type.SqlTypes.VARBINARY;
 import static org.hibernate.type.SqlTypes.VARCHAR;
-import static org.hibernate.type.descriptor.DateTimeUtils.appendAsDate;
-import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMillis;
-import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithNanos;
 
 /**
  * A {@linkplain Dialect SQL dialect} for Cloud Spanner.
@@ -137,30 +95,19 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithN
  * @author Chengyuan Zhao
  * @author Daniel Zou
  * @author Dmitry Solomakha
- * @author Rayudu Abbireddy
  */
 public class SpannerDialect extends Dialect {
 
-	private final UniqueDelegate SPANNER_UNIQUE_DELEGATE = new AlterTableUniqueIndexDelegate( this );
-	private final Exporter<Table> SPANNER_TABLE_EXPORTER = new SpannerDialectTableExporter( this );
-	private final SequenceSupport SPANNER_SEQUENCE_SUPPORT = new SpannerSequenceSupport(this);
+	private final Exporter<Table> spannerTableExporter = new SpannerDialectTableExporter( this );
 
-	private static final Pattern NOT_NULL_PATTERN = Pattern.compile( ".*Cannot specify a null value for column(?:[:]? (.*?) in table|: (.*?(?=$))).*" );
-	private static final Pattern NOT_NULL_PATTERN_2 = Pattern.compile( ".*A new row in table .* does not specify a non-null value for NOT NULL column: (.*?)\\s*" );
-	private static final Pattern UNIQUE_INDEX_PATTERN = Pattern.compile( ".*UNIQUE violation on index (.*?)(?:,|$).*" );
-	private static final Pattern CHECK_PATTERN = Pattern.compile( ".*Check constraint (.*?) is violated.*" );
-	private static final Pattern FK_PATTERN = Pattern.compile( ".*Foreign key (.*?) constraint violation.*" );
+	private final SpannerTemporaryTableExporter spannerTemporaryTableExporter = new SpannerTemporaryTableExporter(
+			this );
 
-	private static final String USE_INTEGER_FOR_PRIMARY_KEY = "hibernate.dialect.spanner.use_integer_for_primary_key";
-	private boolean useIntegerForPrimaryKey;
+	private static final LockingStrategy LOCKING_STRATEGY = new DoNothingLockingStrategy();
 
-	private static final LockingSupport SPANNER_LOCKING_SUPPORT = new LockingSupportSimple(
-			PessimisticLockStyle.CLAUSE,
-			RowLockStrategy.NONE,
-			LockTimeoutType.NONE,
-			OuterJoinLockingType.FULL,
-			ConnectionLockTimeoutStrategy.NONE
-	);
+	private static final EmptyExporter NOOP_EXPORTER = new EmptyExporter();
+
+	private static final UniqueDelegate NOOP_UNIQUE_DELEGATE = new DoNothingUniqueDelegate();
 
 	public SpannerDialect() {
 		super( ZERO_VERSION );
@@ -170,162 +117,69 @@ public class SpannerDialect extends Dialect {
 		super(info);
 	}
 
-	public boolean useIntegerForPrimaryKey() {
-		return useIntegerForPrimaryKey;
-	}
-
-	@Override
-	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
-		super.contributeTypes( typeContributions, serviceRegistry );
-		final var configurationService = serviceRegistry.requireService( ConfigurationService.class );
-		this.useIntegerForPrimaryKey = configurationService.getSetting(
-				USE_INTEGER_FOR_PRIMARY_KEY,
-				StandardConverters.BOOLEAN,
-				false
-		);
-		final var jdbcTypeRegistry = typeContributions.getTypeConfiguration().getJdbcTypeRegistry();
-		jdbcTypeRegistry.addDescriptor( SpannerJsonJdbcType.INSTANCE );
-	}
-
-	@Override
-	public MutationOperation createOptionalTableUpdateOperation(
-			EntityMutationTarget mutationTarget,
-			OptionalTableUpdate optionalTableUpdate,
-			SessionFactoryImplementor factory) {
-		final boolean hasUpdatableBindings = optionalTableUpdate.getValueBindings().stream()
-				.anyMatch( ColumnValueBinding::isAttributeUpdatable );
-		if ( hasUpdatableBindings ) {
-			// If an entity contains BOTH updatable properties and read-only properties
-			// (like `@Column(updatable = false)`), we MUST fall back to Hibernate's core UPDATE-then-INSERT
-			// mutation workflow to protect the immutable state from being unintentionally overwritten,
-			// as Spanner's native `INSERT OR UPDATE` statement updates all columns.
-			// Spanner's native `INSERT OR UPDATE` statement does not support a `WHERE` clause,
-			// so optimistic locking checks cannot be applied there.
-			final boolean hasNonUpdatableBindings = optionalTableUpdate.getValueBindings().stream()
-					.anyMatch( binding -> !binding.isAttributeUpdatable() );
-			if ( hasNonUpdatableBindings || optionalTableUpdate.getNumberOfOptimisticLockBindings() > 0 ) {
-				return super.createOptionalTableUpdateOperation( mutationTarget, optionalTableUpdate, factory );
-			}
-		}
-		return new SpannerSqlAstTranslator<>( factory, optionalTableUpdate )
-				.createMergeOperation( optionalTableUpdate, hasUpdatableBindings );
-	}
-
-	@Override
-	protected void initDefaultProperties() {
-		super.initDefaultProperties();
-		getDefaultProperties().setProperty( AvailableSettings.PREFERRED_POOLED_OPTIMIZER, "none" );
-	}
-
-	@Override
-	public JdbcType resolveSqlTypeDescriptor(
-			String columnTypeName,
-			int jdbcTypeCode,
-			int precision,
-			int scale,
-			JdbcTypeRegistry jdbcTypeRegistry) {
-		if ( jdbcTypeCode == ARRAY ) {
-			final int startIndex = columnTypeName.indexOf( '<' ) + 1;
-			final int endIndex = columnTypeName.lastIndexOf( '>' );
-			final String componentTypeName = columnTypeName.substring( startIndex, endIndex ).trim();
-			// Spanner uses STRING for VARCHAR/CLOB. DdlTypeRegistry prefers CLOB for "string".
-			final Integer sqlTypeCode = componentTypeName.equalsIgnoreCase( "STRING" )
-					? VARCHAR
-					: resolveSqlTypeCode( componentTypeName, jdbcTypeRegistry.getTypeConfiguration() );
-			if ( sqlTypeCode != null ) {
-				return jdbcTypeRegistry.resolveTypeConstructorDescriptor(
-						jdbcTypeCode,
-						jdbcTypeRegistry.getDescriptor( sqlTypeCode ),
-						ColumnTypeInformation.EMPTY
-				);
-			}
-		}
-		return super.resolveSqlTypeDescriptor( columnTypeName, jdbcTypeCode, precision, scale, jdbcTypeRegistry );
-	}
-
-	@Override
-	protected void registerColumnTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
-		super.registerColumnTypes( typeContributions, serviceRegistry );
-		final DdlTypeRegistry ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
-		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, columnType( JSON ),this ));
-		ddlTypeRegistry.addDescriptor(
-				CapacityDependentDdlType.builder(
-						VARCHAR,
-						columnType( VARCHAR ),
-						castType( VARCHAR ),
-						castType( VARCHAR ),
-						this
-				)
-				.withTypeCapacity( getMaxVarcharLength(), columnType( VARCHAR ) )
-				.build()
-		);
-		ddlTypeRegistry.addDescriptor(
-				CapacityDependentDdlType.builder(
-						NVARCHAR,
-						columnType( NVARCHAR ),
-						castType( NVARCHAR ),
-						castType( NVARCHAR ),
-						this
-				)
-				.withTypeCapacity( getMaxNVarcharLength(), columnType( NVARCHAR ) )
-				.build()
-		);
-		ddlTypeRegistry.addDescriptor(
-				CapacityDependentDdlType.builder(
-						VARBINARY,
-						columnType( VARBINARY ),
-						castType( VARBINARY ),
-						castType( VARBINARY ),
-						this
-				)
-				.withTypeCapacity( getMaxVarbinaryLength(), columnType( VARBINARY ) )
-				.build()
-		);
-	}
-
 	@Override
 	protected String columnType(int sqlTypeCode) {
-		return switch ( sqlTypeCode ) {
-			case BOOLEAN -> "bool";
-			case TINYINT, SMALLINT, INTEGER, BIGINT -> "int64";
-			case REAL -> "float32";
-			case FLOAT, DOUBLE -> "float64";
-			case DECIMAL, NUMERIC -> "numeric";
-			//there is no time type of any kind
-			//timestamp does not accept precision
-			case TIME, TIMESTAMP, TIMESTAMP_WITH_TIMEZONE -> "timestamp";
-			case CHAR, NCHAR, VARCHAR, NVARCHAR -> "string($l)";
-			case BINARY, VARBINARY -> "bytes($l)";
-			case CLOB, NCLOB -> "string(max)";
-			case BLOB -> "bytes(max)";
-			case JSON -> "json";
-			default -> super.columnType( sqlTypeCode );
-		};
-	}
+		switch ( sqlTypeCode ) {
+			case BOOLEAN:
+				return "bool";
 
-	@Override
-	public String castPattern(CastType from, CastType to) {
-		if ( to == CastType.TIME && from == CastType.STRING ) {
-			return "cast('1970-01-01 ' || ?1 as timestamp)";
+			case TINYINT:
+			case SMALLINT:
+			case INTEGER:
+			case BIGINT:
+				return "int64";
+
+			case REAL:
+			case FLOAT:
+			case DOUBLE:
+			case DECIMAL:
+			case NUMERIC:
+				return "float64";
+
+			//there is no time type of any kind
+			case TIME:
+			//timestamp does not accept precision
+			case TIMESTAMP:
+			case TIMESTAMP_WITH_TIMEZONE:
+				return "timestamp";
+
+			case CHAR:
+			case NCHAR:
+			case VARCHAR:
+			case NVARCHAR:
+				return "string($l)";
+
+			case BINARY:
+			case VARBINARY:
+				return "bytes($l)";
+
+			case CLOB:
+			case NCLOB:
+				return "string(max)";
+			case BLOB:
+				return "bytes(max)";
+
+			default:
+				return super.columnType( sqlTypeCode );
 		}
-		if ( to == CastType.STRING && from == CastType.TIME ) {
-			return "format_timestamp('%H:%M:%E*S', ?1)";
-		}
-		return super.castPattern( from, to );
 	}
 
 	@Override
 	protected String castType(int sqlTypeCode) {
-		return switch ( sqlTypeCode ) {
-			case CHAR, NCHAR, VARCHAR, NVARCHAR, LONG32VARCHAR, LONG32NVARCHAR, CLOB, NCLOB -> "string";
-			case BINARY, VARBINARY, LONG32VARBINARY, BLOB -> "bytes";
-			default -> super.castType( sqlTypeCode );
-		};
-	}
-
-	@Override
-	public boolean supportsTruncateWithCast() {
-		return false;
+		switch ( sqlTypeCode ) {
+			case CHAR:
+			case NCHAR:
+			case VARCHAR:
+			case NVARCHAR:
+			case LONG32VARCHAR:
+			case LONG32NVARCHAR:
+				return "string";
+			case BINARY:
+			case VARBINARY:
+			case LONG32VARBINARY:
+				return "bytes";
+		}
+		return super.castType( sqlTypeCode );
 	}
 
 	@Override
@@ -353,35 +207,23 @@ public class SpannerDialect extends Dialect {
 	@Override
 	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
 		super.initializeFunctionRegistry( functionContributions );
+
 		final var basicTypeRegistry = functionContributions.getTypeConfiguration().getBasicTypeRegistry();
 		final var byteArrayType = basicTypeRegistry.resolve( StandardBasicTypes.BINARY );
-		final var intType = basicTypeRegistry.resolve( StandardBasicTypes.INTEGER );
 		final var longType = basicTypeRegistry.resolve( StandardBasicTypes.LONG );
-		final var doubleType = basicTypeRegistry.resolve( StandardBasicTypes.DOUBLE );
 		final var booleanType = basicTypeRegistry.resolve( StandardBasicTypes.BOOLEAN );
-		final var charType = basicTypeRegistry.resolve( StandardBasicTypes.CHARACTER );
 		final var stringType = basicTypeRegistry.resolve( StandardBasicTypes.STRING );
 		final var dateType = basicTypeRegistry.resolve( StandardBasicTypes.DATE );
 		final var timestampType = basicTypeRegistry.resolve( StandardBasicTypes.TIMESTAMP );
-
 		final var functionRegistry = functionContributions.getFunctionRegistry();
 
 		// Aggregate Functions
 		functionRegistry.namedAggregateDescriptorBuilder( "any_value" )
 				.setExactArgumentCount( 1 )
 				.register();
-		functionRegistry.register(
-				"count",
-				new CountFunction(
-						this,
-						functionContributions.getTypeConfiguration(),
-						SqlAstNodeRenderingMode.DEFAULT,
-						"||",
-						"string",
-						false
-				)
-		);
-		functionRegistry.register( ArrayAggFunction.FUNCTION_NAME, new ArrayAggFunction( "array_agg", false, true ) );
+		functionRegistry.namedAggregateDescriptorBuilder( "array_agg" )
+				.setExactArgumentCount( 1 )
+				.register();
 		functionRegistry.namedAggregateDescriptorBuilder( "countif" )
 				.setInvariantType( longType )
 				.setExactArgumentCount( 1 )
@@ -411,14 +253,7 @@ public class SpannerDialect extends Dialect {
 		functionFactory.tanh();
 		functionFactory.moreHyperbolic();
 
-		functionRegistry.registerPattern(
-				"var_pop",
-				"(avg(?1 * ?1)-power(avg(?1),2))" );
-		functionRegistry.registerPattern(
-				"stddev_pop",
-				"sqrt(avg(?1 * ?1)-power(avg(?1),2))" );
-
-		functionFactory.bitandorxornot_operator();
+		functionFactory.bitandorxornot_bitAndOrXorNot();
 
 		functionRegistry.namedDescriptorBuilder( "is_inf" )
 				.setInvariantType( booleanType )
@@ -436,18 +271,6 @@ public class SpannerDialect extends Dialect {
 				.setInvariantType( longType )
 				.setExactArgumentCount( 2 )
 				.register();
-		functionRegistry.registerPattern(
-				"degrees",
-				"(?1 * 180 / acos(-1))",
-				doubleType );
-		functionRegistry.registerPattern(
-				"radians",
-				"(?1 * acos(-1) / 180)",
-				doubleType );
-		functionRegistry.registerPattern(
-				"log",
-				"log(?2, ?1)",
-				doubleType );
 
 		functionFactory.sha1();
 
@@ -472,8 +295,6 @@ public class SpannerDialect extends Dialect {
 		functionFactory.repeat();
 		functionFactory.substr();
 		functionFactory.substring_substr();
-		functionFactory.octetLength();
-		functionFactory.bitLength_pattern( "(octet_length(?1) * 8)" );
 		functionRegistry.namedDescriptorBuilder( "byte_length" )
 				.setInvariantType( longType )
 				.setExactArgumentCount( 1 )
@@ -540,56 +361,31 @@ public class SpannerDialect extends Dialect {
 				.setInvariantType( stringType )
 				.setExactArgumentCount( 1 )
 				.register();
-		functionRegistry.registerPattern(
-				"hex",
-				"to_hex(cast(?1 as bytes))",
-				stringType );
-		functionRegistry.registerPattern(
-				"ascii",
-				"to_code_points(?1)[offset(0)]",
-				intType );
-		functionRegistry.registerPattern(
-				"chr",
-				"code_points_to_string([?1])",
-				charType );
-		functionRegistry.registerPattern(
-				"left",
-				"substr(?1, 1, ?2)",
-				stringType );
-		functionRegistry.registerPattern(
-				"right",
-				"substr(?1, -?2)",
-				stringType );
-		functionRegistry.register(
-				"overlay",
-				new InsertSubstringOverlayEmulation( functionContributions.getTypeConfiguration(), false ) );
-		functionRegistry.registerBinaryTernaryPattern(
-						"locate",
-						intType,
-						"strpos(?2,?1)",
-						"(strpos(substr(?2,?3),?1)+case when strpos(substr(?2,?3),?1)>0 then ?3-1 else 0 end)",
-						FunctionParameterType.STRING, FunctionParameterType.STRING, FunctionParameterType.INTEGER,
-						functionContributions.getTypeConfiguration()
-				)
-				.setArgumentListSignature( "(STRING pattern, STRING string[, INTEGER start])" );
 
 		// JSON Functions
-		functionRegistry.register(
-				"json_value",
-				new SpannerJsonValueFunction( functionContributions.getTypeConfiguration() ) );
-		functionRegistry.register(
-				"json_query",
-				new SpannerJsonQueryFunction( functionContributions.getTypeConfiguration() ) );
+		functionRegistry.namedDescriptorBuilder( "json_query" )
+				.setInvariantType( stringType )
+				.setExactArgumentCount( 2 )
+				.register();
+		functionRegistry.namedDescriptorBuilder( "json_value" )
+				.setInvariantType( stringType )
+				.setExactArgumentCount( 2 )
+				.register();
 
 		// Array Functions
 		functionRegistry.namedDescriptorBuilder( "array" )
 				.setExactArgumentCount( 1 )
 				.register();
-		functionFactory.arrayConcat_operator();
-		functionRegistry.register( "array_append", new SpannerArrayConcatElementFunction( false ) );
-		functionRegistry.register( "array_prepend", new SpannerArrayConcatElementFunction( true ) );
-		functionFactory.arrayLength_spanner();
-		functionRegistry.register( "array_to_string", new ArrayToStringFunction( functionContributions.getTypeConfiguration() ) );
+		functionRegistry.namedDescriptorBuilder( "array_concat" )
+				.register();
+		functionRegistry.namedDescriptorBuilder( "array_length" )
+				.setInvariantType( longType )
+				.setExactArgumentCount( 1 )
+				.register();
+		functionRegistry.namedDescriptorBuilder( "array_to_string" )
+				.setInvariantType( stringType )
+				.setArgumentCountBetween( 2, 3 )
+				.register();
 		functionRegistry.namedDescriptorBuilder( "array_reverse" )
 				.setExactArgumentCount( 1 )
 				.register();
@@ -633,6 +429,10 @@ public class SpannerDialect extends Dialect {
 				.register();
 
 		// Timestamp functions
+		functionRegistry.namedDescriptorBuilder( "string" )
+				.setInvariantType( stringType )
+				.setArgumentCountBetween( 1, 2 )
+				.register();
 		functionRegistry.namedDescriptorBuilder( "timestamp" )
 				.setInvariantType( timestampType )
 				.setArgumentCountBetween( 1, 2 )
@@ -685,32 +485,15 @@ public class SpannerDialect extends Dialect {
 				.setInvariantType( longType )
 				.setExactArgumentCount( 1 )
 				.register();
-		functionFactory.listagg_stringAgg( "string" );
-		functionFactory.array_spanner();
-
-		functionRegistry.register(
-				"extract",
-				new SpannerExtractFunction( this, functionContributions.getTypeConfiguration() )
-		);
 
 		functionRegistry.register(
 				"format",
-				new SpannerFormatFunction( functionContributions.getTypeConfiguration() )
+				new FormatFunction( "format_timestamp", true, true, functionContributions.getTypeConfiguration() )
 		);
-
-		functionRegistry.register(
-				"concat",
-				new CastingConcatFunction(
-						this,
-						"||",
-						false,
-						SqlAstNodeRenderingMode.DEFAULT,
-						functionContributions.getTypeConfiguration()
-				)
-		);
-
-		functionRegistry.register( "trunc", new SpannerTruncFunction() );
-		functionRegistry.registerAlternateKey( "truncate", "trunc" );
+		functionFactory.listagg_stringAgg( "string" );
+		functionFactory.inverseDistributionOrderedSetAggregates();
+		functionFactory.hypotheticalOrderedSetAggregates();
+		functionFactory.array_spanner();
 	}
 
 	@Override
@@ -722,6 +505,16 @@ public class SpannerDialect extends Dialect {
 				return new SpannerSqlAstTranslator<>( sessionFactory, statement );
 			}
 		};
+	}
+
+	@Override
+	public Exporter<Table> getTableExporter() {
+		return this.spannerTableExporter;
+	}
+
+	@Override
+	public String getCreateTableString() {
+		return "create table if not exists";
 	}
 
 	@Override
@@ -752,178 +545,6 @@ public class SpannerDialect extends Dialect {
 	}
 
 	@Override
-	public void appendBinaryLiteral(SqlAppender appender, byte[] bytes) {
-		appender.appendSql( "FROM_HEX('" );
-		PrimitiveByteArrayJavaType.INSTANCE.appendString( appender, bytes );
-		appender.appendSql( "')" );
-	}
-
-	@Override
-	public void appendLiteral(SqlAppender appender, String literal) {
-		// Spanner uses backslash escaping, so escape single quotes and backslashes with \
-		// We also explicitly escape newlines (\n) because Spanner forbids raw line breaks
-		// inside standard quoted strings
-		StringBuilder builder = new StringBuilder( literal.length() + 2 );
-		builder.append( '\'' );
-		for ( int i = 0; i < literal.length(); i++ ) {
-			final char c = literal.charAt( i );
-			switch ( c ) {
-				case '\'':
-				case '\\':
-					builder.append( '\\' );
-					builder.append( c );
-					break;
-				case '\n':
-					builder.append( "\\n" );
-					break;
-				default:
-					builder.append( c );
-			}
-		}
-		builder.append( '\'' );
-		appender.appendSql( builder.toString() );
-	}
-
-	@Override
-	public String currentTime() {
-		return currentTimestamp();
-	}
-
-	@Override
-	public boolean supportsTemporalLiteralOffset() {
-		return true;
-	}
-
-	@Override
-	public void appendDateTimeLiteral(
-			org.hibernate.sql.ast.spi.SqlAppender appender,
-			java.time.temporal.TemporalAccessor temporalAccessor,
-			jakarta.persistence.TemporalType precision,
-			java.util.TimeZone jdbcTimeZone) {
-		switch ( precision ) {
-			case DATE:
-				appender.appendSql( "DATE '" );
-				appendAsDate( appender, temporalAccessor );
-				appender.appendSql( "'" );
-				break;
-			case TIME:
-				appender.appendSql( "TIMESTAMP '" );
-				if ( temporalAccessor instanceof java.time.LocalTime localTime ) {
-					final OffsetDateTime offsetDateTime = localTime
-							.atDate( LocalDate.of( 1970, 1, 1 ) )
-							.atOffset( ZoneOffset.UTC );
-					appendAsTimestampWithNanos( appender, offsetDateTime, true, jdbcTimeZone );
-				}
-				else if ( temporalAccessor instanceof java.time.OffsetTime offsetTime ) {
-					OffsetDateTime offsetDateTime =
-							offsetTime.atDate( LocalDate.of( 1970, 1, 1 ) );
-					appendAsTimestampWithNanos( appender, offsetDateTime, true, jdbcTimeZone );
-				}
-				appender.appendSql( "'" );
-				break;
-			case TIMESTAMP:
-				appender.appendSql( "TIMESTAMP '" );
-				if ( temporalAccessor instanceof java.time.LocalDateTime ldt ) {
-					appendAsTimestampWithNanos(
-							appender,
-							ldt.atOffset( ZoneOffset.UTC ),
-							supportsTemporalLiteralOffset(),
-							jdbcTimeZone
-					);
-				}
-				else {
-					appendAsTimestampWithNanos(
-							appender,
-							temporalAccessor,
-							supportsTemporalLiteralOffset(),
-							jdbcTimeZone
-					);
-				}
-				appender.appendSql( "'" );
-				break;
-			default:
-				throw new IllegalArgumentException( "Unsupported TemporalType: " + precision );
-		}
-	}
-
-	@Override
-	public void appendDateTimeLiteral(
-			org.hibernate.sql.ast.spi.SqlAppender appender,
-			java.util.Date date,
-			jakarta.persistence.TemporalType precision,
-			java.util.TimeZone jdbcTimeZone) {
-		switch ( precision ) {
-			case DATE:
-				appender.appendSql( "DATE '" );
-				appendAsDate( appender, date );
-				appender.appendSql( "'" );
-				break;
-			case TIME:
-				appender.appendSql( "TIMESTAMP '" );
-				if ( date instanceof java.sql.Time time ) {
-					final OffsetDateTime offsetDateTime = time.toLocalTime()
-							.atDate( LocalDate.of( 1970, 1, 1 ) )
-							.atOffset( ZoneOffset.UTC );
-					appendAsTimestampWithNanos( appender, offsetDateTime, true, jdbcTimeZone );
-				}
-				appender.appendSql( "'" );
-				break;
-			case TIMESTAMP:
-				appender.appendSql( "TIMESTAMP '" );
-				appendAsTimestampWithNanos(
-						appender,
-						date.toInstant(),
-						supportsTemporalLiteralOffset(),
-						jdbcTimeZone
-				);
-				appender.appendSql( "'" );
-				break;
-			default:
-				throw new IllegalArgumentException( "Unsupported TemporalType: " + precision );
-		}
-	}
-
-	@Override
-	public void appendDateTimeLiteral(
-			org.hibernate.sql.ast.spi.SqlAppender appender,
-			java.util.Calendar calendar,
-			jakarta.persistence.TemporalType precision,
-			java.util.TimeZone jdbcTimeZone) {
-		switch ( precision ) {
-			case DATE:
-				appender.appendSql( "DATE '" );
-				appendAsDate( appender, calendar );
-				appender.appendSql( "'" );
-				break;
-			case TIME:
-				appender.appendSql( "TIMESTAMP '" );
-				final OffsetDateTime offsetDateTime = Instant.EPOCH.atOffset( ZoneOffset.UTC )
-						.withHour( calendar.get( Calendar.HOUR_OF_DAY ) )
-						.withMinute( calendar.get( Calendar.MINUTE ) )
-						.withSecond( calendar.get( Calendar.SECOND ) )
-						.withNano( calendar.get( Calendar.MILLISECOND ) * 1_000_000 );
-				appendAsTimestampWithMillis( appender, offsetDateTime, true, jdbcTimeZone );
-				appender.appendSql( "'" );
-				break;
-			case TIMESTAMP:
-				appender.appendSql( "TIMESTAMP '" );
-				final OffsetDateTime odt = OffsetDateTime.ofInstant(
-						calendar.toInstant(),
-						calendar.getTimeZone().toZoneId() );
-				appendAsTimestampWithMillis(
-						appender,
-						odt,
-						supportsTemporalLiteralOffset(),
-						jdbcTimeZone
-				);
-				appender.appendSql( "'" );
-				break;
-			default:
-				throw new IllegalArgumentException( "Unsupported TemporalType: " + precision );
-		}
-	}
-
-	@Override
 	public String translateExtractField(TemporalUnit unit) {
 		switch (unit) {
 			case WEEK:
@@ -941,64 +562,52 @@ public class SpannerDialect extends Dialect {
 
 	@Override
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
-		if ( temporalType == TemporalType.TIMESTAMP || temporalType == TemporalType.TIME ) {
-			switch ( unit ) {
+		if ( temporalType == TemporalType.TIMESTAMP ) {
+			switch (unit) {
 				case YEAR:
 				case QUARTER:
 				case MONTH:
-					throw new SemanticException( "Illegal unit for timestamp_add(): " + unit );
-				case WEEK:
-					return "timestamp_add(?3, interval cast(?2 * 7 as int64) day)";
-				case SECOND:
-					return "timestamp_add(?3, interval cast(?2 * 1000000000 as int64) nanosecond)";
+					throw new SemanticException("Illegal unit for timestamp_add(): " + unit);
 				default:
-					return "timestamp_add(?3, interval cast(?2 as int64) ?1)";
+					return "timestamp_add(?3,interval ?2 ?1)";
 			}
 		}
 		else {
-			switch ( unit ) {
+			switch (unit) {
 				case NANOSECOND:
 				case SECOND:
 				case MINUTE:
 				case HOUR:
 				case NATIVE:
-					throw new SemanticException( "Illegal unit for date_add(): " + unit );
+					throw new SemanticException("Illegal unit for date_add(): " + unit);
 				default:
-					return "date_add(?3, interval cast(?2 as int64) ?1)";
+					return "date_add(?3,interval ?2 ?1)";
 			}
 		}
 	}
 
 	@Override
 	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
-		if ( toTemporalType == TemporalType.TIMESTAMP || fromTemporalType == TemporalType.TIMESTAMP
-			|| toTemporalType == TemporalType.TIME || fromTemporalType == TemporalType.TIME ) {
-			switch ( unit ) {
+		if ( toTemporalType == TemporalType.TIMESTAMP || fromTemporalType == TemporalType.TIMESTAMP ) {
+			switch (unit) {
 				case YEAR:
 				case QUARTER:
 				case MONTH:
-					throw new SemanticException( "Illegal unit for timestamp_diff(): " + unit );
-				case WEEK:
-					return "div(timestamp_diff(?3, ?2, day), 7)";
-				case NATIVE:
-					return "timestamp_diff(?3, ?2, nanosecond)";
+					throw new SemanticException("Illegal unit for timestamp_diff(): " + unit);
 				default:
-					return "timestamp_diff(?3, ?2, ?1)";
+					return "timestamp_diff(?3,?2,?1)";
 			}
 		}
 		else {
-			switch ( unit ) {
+			switch (unit) {
 				case NANOSECOND:
-				case NATIVE:
-					return "(date_diff(?3, ?2, day) * 86400000000000)";
 				case SECOND:
-					return "(date_diff(?3, ?2, day) * 86400)";
 				case MINUTE:
-					return "(date_diff(?3, ?2, day) * 1440)";
 				case HOUR:
-					return "(date_diff(?3, ?2, day) * 24)";
+				case NATIVE:
+					throw new SemanticException("Illegal unit for date_diff(): " + unit);
 				default:
-					return "date_diff(?3, ?2, ?1)";
+					return "date_diff(?3,?2,?1)";
 			}
 		}
 	}
@@ -1057,121 +666,6 @@ public class SpannerDialect extends Dialect {
 	/* DDL-related functions */
 
 	@Override
-	public Exporter<Table> getTableExporter() {
-		return SPANNER_TABLE_EXPORTER;
-	}
-
-	@Override
-	public boolean supportsColumnCheck() {
-		return false;
-	}
-
-	@Override
-	public String getCreateIndexString(boolean unique) {
-		return unique ? "create unique null_filtered index" : "create index";
-	}
-
-	@Override
-	public boolean supportsUniqueConstraints() {
-		return false;
-	}
-
-	@Override
-	public UniqueDelegate getUniqueDelegate() {
-		return SPANNER_UNIQUE_DELEGATE;
-	}
-
-	@Override
-	public String getAddForeignKeyConstraintString(
-			String constraintName,
-			String[] foreignKey,
-			String referencedTable,
-			String[] primaryKey,
-			boolean referencesPrimaryKey) {
-		// Spanner requires the referenced columns to specify in all cases, including
-		// if the foreign key is referencing the primary key of the referenced table. Setting referencesPrimaryKey to
-		// false will add all the referenced columns.
-		return super.getAddForeignKeyConstraintString( constraintName, foreignKey, referencedTable, primaryKey, false );
-	}
-
-	@Override
-	public boolean supportsCircularCascadeDeleteConstraints() {
-		return false;
-	}
-
-	@Override
-	public String getColumnDefaultString(String defaultValue) {
-		if ( defaultValue != null && !defaultValue.startsWith( "(" ) ) {
-			return "(" + defaultValue + ")";
-		}
-		return defaultValue;
-	}
-
-	@Override
-	public boolean requiresNotNullBeforeDefault() {
-		return true;
-	}
-
-	@Override
-	public String generatedAs(String generatedAs) {
-		return " as (" + generatedAs + ") stored";
-	}
-
-	@Override
-	public boolean supportsNotNullAfterGeneratedAs() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsNoColumnsInsert() {
-		return false;
-	}
-
-	@Override
-	public IdentityColumnSupport getIdentityColumnSupport() {
-		return SpannerIdentityColumnSupport.INSTANCE;
-	}
-
-	@Override
-	public SequenceSupport getSequenceSupport() {
-		return SPANNER_SEQUENCE_SUPPORT;
-	}
-
-	@Override
-	public String getQuerySequencesString() {
-		return """
-				select seq.CATALOG as sequence_catalog,
-					seq.SCHEMA as sequence_schema,
-					seq.NAME as sequence_name,
-					coalesce(kind.OPTION_VALUE, 'bit_reversed_positive') as KIND,
-					coalesce(safe_cast(initial.OPTION_VALUE AS INT64),
-						case coalesce(kind.OPTION_VALUE, 'bit_reversed_positive')
-							when 'bit_reversed_positive' then 1
-							when 'bit_reversed_signed' then -pow(2, 63)
-							else 1
-						end
-					) as start_value, 1 as minimum_value, 9223372036854775807 as maximum_value,
-					1 as increment,
-					safe_cast(skip_range_min.OPTION_VALUE as int64) as skip_range_min,
-					safe_cast(skip_range_max.OPTION_VALUE as int64) as skip_range_max
-				from INFORMATION_SCHEMA.SEQUENCES seq
-				left outer join INFORMATION_SCHEMA.SEQUENCE_OPTIONS kind
-					on seq.CATALOG=kind.CATALOG and seq.SCHEMA=kind.SCHEMA and seq.NAME=kind.NAME and kind.OPTION_NAME='sequence_kind'
-				left outer join INFORMATION_SCHEMA.SEQUENCE_OPTIONS initial
-					on seq.CATALOG=initial.CATALOG and seq.SCHEMA=initial.SCHEMA and seq.NAME=initial.NAME and initial.OPTION_NAME='start_with_counter'
-				left outer join INFORMATION_SCHEMA.SEQUENCE_OPTIONS skip_range_min
-					on seq.CATALOG=skip_range_min.CATALOG and seq.SCHEMA=skip_range_min.SCHEMA and seq.NAME=skip_range_min.NAME and skip_range_min.OPTION_NAME='skip_range_min'
-				left outer join INFORMATION_SCHEMA.SEQUENCE_OPTIONS skip_range_max
-					on seq.CATALOG=skip_range_max.CATALOG and seq.SCHEMA=skip_range_max.SCHEMA and seq.NAME=skip_range_max.NAME and skip_range_max.OPTION_NAME='skip_range_max'
-				""";
-	}
-
-	@Override
-	public GenerationType getNativeValueGenerationStrategy() {
-		return GenerationType.SEQUENCE;
-	}
-
-	@Override
 	public boolean canCreateSchema() {
 		return false;
 	}
@@ -1201,8 +695,38 @@ public class SpannerDialect extends Dialect {
 	}
 
 	@Override
+	public boolean dropConstraints() {
+		return false;
+	}
+
+	@Override
 	public boolean qualifyIndexName() {
 		return false;
+	}
+
+	@Override
+	public String getDropForeignKeyString() {
+		throw new UnsupportedOperationException(
+				"Cannot drop foreign-key constraint because Cloud Spanner does not support foreign keys." );
+	}
+
+	@Override
+	public String getAddForeignKeyConstraintString(
+			String constraintName,
+			String[] foreignKey,
+			String referencedTable,
+			String[] primaryKey,
+			boolean referencesPrimaryKey) {
+		throw new UnsupportedOperationException(
+				"Cannot add foreign-key constraint because Cloud Spanner does not support foreign keys." );
+	}
+
+	@Override
+	public String getAddForeignKeyConstraintString(
+			String constraintName,
+			String foreignKeyDefinition) {
+		throw new UnsupportedOperationException(
+				"Cannot add foreign-key constraint because Cloud Spanner does not support foreign keys." );
 	}
 
 	@Override
@@ -1210,90 +734,164 @@ public class SpannerDialect extends Dialect {
 		throw new UnsupportedOperationException( "Cannot add primary key constraint in Cloud Spanner." );
 	}
 
+	@Override
+	public TemporaryTableExporter getTemporaryTableExporter() {
+		return spannerTemporaryTableExporter;
+	}
+
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Lock acquisition functions
 
+
 	@Override
 	public LockingSupport getLockingSupport() {
-		return SPANNER_LOCKING_SUPPORT;
+		return NoLockingSupport.NO_LOCKING_SUPPORT;
 	}
 
 	@Override
 	public LockingClauseStrategy getLockingClauseStrategy(QuerySpec querySpec, LockOptions lockOptions) {
-		if ( getPessimisticLockStyle() != PessimisticLockStyle.CLAUSE || lockOptions == null ) {
-			return NON_CLAUSE_STRATEGY;
-		}
-		final var lockKind = PessimisticLockKind.interpret( lockOptions.getLockMode() );
-		if ( lockKind == PessimisticLockKind.NONE ) {
-			return NON_CLAUSE_STRATEGY;
-		}
-		if ( lockOptions.getTimeout() != null ) {
-			validateSpannerLockTimeout( lockOptions.getTimeout().milliseconds() );
-		}
-		return buildLockingClauseStrategy(
-				lockKind, RowLockStrategy.NONE, lockOptions, querySpec.getRootPathsForLocking() );
+		// Spanner does not support the FOR UPDATE clause
+		return NON_CLAUSE_STRATEGY;
+	}
+
+	@Override
+	public LockingStrategy getLockingStrategy(EntityPersister lockable, LockMode lockMode) {
+		return LOCKING_STRATEGY;
 	}
 
 	@Override
 	public String getForUpdateString(LockOptions lockOptions) {
-		if ( lockOptions != null && lockOptions.getTimeout() != null ) {
-			validateSpannerLockTimeout( lockOptions.getTimeout().milliseconds() );
-		}
-		return getForUpdateString();
+		return "";
 	}
 
 	@Override
-	public String getWriteLockString(int timeout) {
-		validateSpannerLockTimeout( timeout );
-		return getForUpdateString();
+	public String getForUpdateString() {
+		return "";
+	}
+
+	@Override
+	public String getForUpdateString(String aliases) {
+		throw new UnsupportedOperationException(
+				"Cloud Spanner does not support selecting for lock acquisition." );
+	}
+
+	@Override
+	public String getForUpdateString(String aliases, LockOptions lockOptions) {
+		throw new UnsupportedOperationException(
+				"Cloud Spanner does not support selecting for lock acquisition." );
 	}
 
 	@Override
 	public String getWriteLockString(Timeout timeout) {
-		return getWriteLockString( timeout.milliseconds() );
+		throw new UnsupportedOperationException(
+				"Cloud Spanner does not support selecting for lock acquisition." );
 	}
 
 	@Override
-	public String getReadLockString(int timeout) {
-		validateSpannerLockTimeout( timeout );
-		return getForUpdateString();
+	public String getWriteLockString(String aliases, Timeout timeout) {
+		throw new UnsupportedOperationException(
+				"Cloud Spanner does not support selecting for lock acquisition." );
 	}
 
 	@Override
 	public String getReadLockString(Timeout timeout) {
-		return getReadLockString( timeout.milliseconds() );
+		throw new UnsupportedOperationException(
+				"Cloud Spanner does not support selecting for lock acquisition." );
+	}
+
+	@Override
+	public String getReadLockString(String aliases, Timeout timeout) {
+		throw new UnsupportedOperationException(
+				"Cloud Spanner does not support selecting for lock acquisition." );
+	}
+
+	@Override
+	public String getWriteLockString(int timeout) {
+		throw new UnsupportedOperationException(
+				"Cloud Spanner does not support selecting for lock acquisition." );
+	}
+
+	@Override
+	public String getWriteLockString(String aliases, int timeout) {
+		throw new UnsupportedOperationException(
+				"Cloud Spanner does not support selecting for lock acquisition." );
+	}
+
+	@Override
+	public String getReadLockString(int timeout) {
+		throw new UnsupportedOperationException(
+				"Cloud Spanner does not support selecting for lock acquisition." );
+	}
+
+	@Override
+	public String getReadLockString(String aliases, int timeout) {
+		throw new UnsupportedOperationException(
+				"Cloud Spanner does not support selecting for lock acquisition." );
 	}
 
 	@Override
 	public String getForUpdateNowaitString() {
-		throw new UnsupportedOperationException( "Spanner does not support no wait." );
+		throw new UnsupportedOperationException(
+				"Cloud Spanner does not support selecting for lock acquisition." );
 	}
 
 	@Override
 	public String getForUpdateNowaitString(String aliases) {
-		throw new UnsupportedOperationException( "Spanner does not support no wait." );
+		throw new UnsupportedOperationException(
+				"Cloud Spanner does not support selecting for lock acquisition." );
 	}
+
 
 	@Override
 	public String getForUpdateSkipLockedString() {
-		throw new UnsupportedOperationException( "Spanner does not support skip locked." );
+		throw new UnsupportedOperationException(
+				"Cloud Spanner does not support selecting for lock acquisition." );
 	}
 
 	@Override
 	public String getForUpdateSkipLockedString(String aliases) {
-		throw new UnsupportedOperationException( "Spanner does not support skip locked." );
+		throw new UnsupportedOperationException(
+				"Cloud Spanner does not support selecting for lock acquisition." );
 	}
 
-	private static void validateSpannerLockTimeout(int millis) {
-		if ( Timeouts.isRealTimeout( millis ) ) {
-			throw new UnsupportedOperationException( "Spanner does not support lock timeout." );
-		}
-		if ( millis == Timeouts.SKIP_LOCKED_MILLI ) {
-			throw new UnsupportedOperationException( "Spanner does not support skip locked." );
-		}
-		if ( millis == Timeouts.NO_WAIT_MILLI ) {
-			throw new UnsupportedOperationException( "Spanner does not support no wait." );
-		}
+	/* Unsupported Hibernate Exporters */
+
+	@Override
+	public Exporter<Sequence> getSequenceExporter() {
+		return NOOP_EXPORTER;
+	}
+
+	@Override
+	public Exporter<ForeignKey> getForeignKeyExporter() {
+		return NOOP_EXPORTER;
+	}
+
+	@Override
+	public Exporter<UniqueKey> getUniqueKeyExporter() {
+		return NOOP_EXPORTER;
+	}
+
+	@Override
+	public String applyLocksToSql(
+			String sql,
+			LockOptions aliasedLockOptions,
+			Map<String, String[]> keyColumnNames) {
+		return sql;
+	}
+
+	@Override
+	public UniqueDelegate getUniqueDelegate() {
+		return NOOP_UNIQUE_DELEGATE;
+	}
+
+	@Override
+	public boolean supportsCircularCascadeDeleteConstraints() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsCascadeDelete() {
+		return false;
 	}
 
 	@Override
@@ -1340,9 +938,6 @@ public class SpannerDialect extends Dialect {
 	public IdentifierHelper buildIdentifierHelper(
 			IdentifierHelperBuilder builder,
 			DatabaseMetaData metadata) throws SQLException {
-		if ( metadata == null ) {
-			builder.setUnquotedCaseStrategy( IdentifierCaseStrategy.MIXED );
-		}
 		builder.applyReservedWords( metadata );
 		builder.setAutoQuoteKeywords( true );
 		builder.setAutoQuoteDollar( true );
@@ -1413,63 +1008,68 @@ public class SpannerDialect extends Dialect {
 		return false;
 	}
 
-	@Override
-	public boolean supportsTupleDistinctCounts() {
-		return false;
+	/* Type conversion and casting */
+
+	/**
+	 * A no-op {@link Exporter} which is responsible for returning empty Create and Drop SQL strings.
+	 *
+	 * @author Daniel Zou
+	 */
+	static class EmptyExporter<T extends Exportable> implements Exporter<T> {
+
+		@Override
+		public String[] getSqlCreateStrings(T exportable, Metadata metadata, SqlStringGenerationContext context) {
+			return ArrayHelper.EMPTY_STRING_ARRAY;
+		}
+
+		@Override
+		public String[] getSqlDropStrings(T exportable, Metadata metadata, SqlStringGenerationContext context) {
+			return ArrayHelper.EMPTY_STRING_ARRAY;
+		}
 	}
 
-	@Override
-	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
-		return (sqlException, message, sql) -> {
-			final String sqlMessage = sqlException.getMessage();
-			if ( sqlMessage != null ) {
-				Matcher matcher = NOT_NULL_PATTERN.matcher( sqlMessage );
-				if ( matcher.matches() ) {
-					String group = matcher.group( 1 ) != null ? matcher.group( 1 ) : matcher.group( 2 );
-					return new ConstraintViolationException( message, sqlException, sql, ConstraintViolationException.ConstraintKind.NOT_NULL, extractConstraintName( group ) );
-				}
+	/**
+	 * A locking strategy for the Cloud Spanner dialect that does nothing. Cloud Spanner does not
+	 * support locking.
+	 *
+	 * @author Chengyuan Zhao
+	 */
+	static class DoNothingLockingStrategy implements LockingStrategy {
 
-				matcher = NOT_NULL_PATTERN_2.matcher( sqlMessage );
-				if ( matcher.matches() ) {
-					return new ConstraintViolationException( message, sqlException, sql, ConstraintViolationException.ConstraintKind.NOT_NULL, extractConstraintName( matcher.group( 1 ) ) );
-				}
-
-				matcher = UNIQUE_INDEX_PATTERN.matcher( sqlMessage );
-				if ( matcher.matches() ) {
-					return new ConstraintViolationException( message, sqlException, sql, ConstraintViolationException.ConstraintKind.UNIQUE, extractConstraintName( matcher.group( 1 ) ) );
-				}
-
-				if ( sqlMessage.contains( "Failed to insert row with primary key" ) ) {
-					return new ConstraintViolationException( message, sqlException, sql, ConstraintViolationException.ConstraintKind.UNIQUE, null );
-				}
-
-				if ( sqlMessage.contains( "Table not found" ) ) {
-					return new SQLGrammarException( message, sqlException, sql );
-				}
-
-				matcher = CHECK_PATTERN.matcher( sqlMessage );
-				if ( matcher.matches() ) {
-					return new ConstraintViolationException( message, sqlException, sql, ConstraintViolationException.ConstraintKind.CHECK, extractConstraintName( matcher.group( 1 ) ) );
-				}
-
-				matcher = FK_PATTERN.matcher( sqlMessage );
-				if ( matcher.matches() ) {
-					return new ConstraintViolationException( message, sqlException, sql, ConstraintViolationException.ConstraintKind.FOREIGN_KEY, extractConstraintName( matcher.group( 1 ) ) );
-				}
-			}
-			return null;
-		};
+		@Override
+		public void lock(
+				Object id, Object version, Object object, int timeout, SharedSessionContractImplementor session)
+				throws StaleObjectStateException, LockingStrategyException {
+			// Do nothing. Cloud Spanner doesn't have have locking strategies.
+		}
 	}
 
-	private String extractConstraintName(String name) {
-		if ( name == null ) {
-			return null;
+	/**
+	 * A no-op delegate for generating Unique-Constraints. Cloud Spanner offers unique-restrictions
+	 * via interleaved indexes with the "UNIQUE" option. This is not currently supported.
+	 *
+	 * @author Chengyuan Zhao
+	 */
+	static class DoNothingUniqueDelegate implements UniqueDelegate {
+
+		@Override
+		public String getColumnDefinitionUniquenessFragment(Column column, SqlStringGenerationContext context) {
+			return "";
 		}
-		name = name.replace( "`", "" ).replace( "\"", "" ).replace( "'", "" ).trim();
-		int dotIndex = name.lastIndexOf( '.' );
-		if ( dotIndex > -1 ) {
-			name = name.substring( dotIndex + 1 );
+
+		@Override
+		public String getTableCreationUniqueConstraintsFragment(Table table, SqlStringGenerationContext context) {
+			return "";
 		}
-		return name;
+
+		@Override
+		public String getAlterTableToAddUniqueKeyCommand(UniqueKey uniqueKey, Metadata metadata, SqlStringGenerationContext context) {
+			return "";
+		}
+
+		@Override
+		public String getAlterTableToDropUniqueKeyCommand(UniqueKey uniqueKey, Metadata metadata, SqlStringGenerationContext context) {
+			return "";
+		}
 	}
 }

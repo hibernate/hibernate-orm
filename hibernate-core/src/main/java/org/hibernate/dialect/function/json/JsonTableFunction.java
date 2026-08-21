@@ -5,6 +5,7 @@
 package org.hibernate.dialect.function.json;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.hibernate.dialect.function.array.DdlTypeHelper;
 import org.hibernate.query.sqm.tuple.internal.AnonymousTupleTableGroupProducer;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingSetReturningFunctionDescriptor;
@@ -41,8 +42,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import static org.hibernate.dialect.function.array.DdlTypeHelper.getTypeName;
-import static org.hibernate.dialect.function.array.DdlTypeHelper.removeUnresolvedTypeArguments;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.JSON;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.STRING;
 
@@ -137,11 +136,25 @@ public class JsonTableFunction extends AbstractSqmSelfRenderingSetReturningFunct
 	}
 
 	protected static String determineColumnType(CastTarget castTarget, TypeConfiguration typeConfiguration) {
-		return removeUnresolvedTypeArguments( getTypeName(
-				castTarget.getJdbcMapping(),
-				castTarget.toSize(),
-				typeConfiguration
-		) );
+		final String columnDefinition = castTarget.getColumnDefinition();
+		if ( columnDefinition != null ) {
+			return columnDefinition;
+		}
+		else {
+			final String typeName = DdlTypeHelper.getTypeName(
+					castTarget.getJdbcMapping(),
+					castTarget.toSize(),
+					typeConfiguration
+			);
+			final int parenthesisIndex = typeName.indexOf( '(' );
+			if ( parenthesisIndex != -1 && typeName.charAt( parenthesisIndex + 1 ) == '$' ) {
+				// Remove length/precision and scale arguments if it contains unresolved variables
+				return typeName.substring( 0, parenthesisIndex );
+			}
+			else {
+				return typeName;
+			}
+		}
 	}
 
 	protected int renderColumns(SqlAppender sqlAppender, JsonTableColumnsClause jsonTableColumnsClause, int clauseLevel, SqlAstTranslator<?> walker) {

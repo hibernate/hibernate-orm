@@ -4,7 +4,6 @@
  */
 package org.hibernate.event.internal;
 
-import org.hibernate.CacheMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.NonUniqueObjectException;
@@ -504,7 +503,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 		if ( session.getPersistenceContextInternal().containsDeletedUnloadedEntityKey( keyToLoad ) ) {
 			return null;
 		}
-		else if ( session.getCacheMode() != CacheMode.REFRESH_SESSION ) {
+		else {
 			final var persistenceContextEntry =
 					loadFromSessionCache( keyToLoad, event.getLockOptions(), options, session );
 			final Object entity = persistenceContextEntry.entity();
@@ -520,9 +519,6 @@ public class DefaultLoadEventListener implements LoadEventListener {
 			else {
 				return load( event, persister, keyToLoad );
 			}
-		}
-		else {
-			return load( event, persister, keyToLoad );
 		}
 	}
 

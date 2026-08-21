@@ -7,7 +7,6 @@ package org.hibernate.processor.validation;
 import jakarta.persistence.AccessType;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.PropertyNotFoundException;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.type.BasicType;
@@ -44,9 +43,7 @@ import javax.lang.model.type.TypeVariable;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import javax.tools.StandardLocation;
-
-import static org.hibernate.internal.util.StringHelper.qualifier;
-import static org.hibernate.processor.util.StringUtil.decapitalize;
+import java.beans.Introspector;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
@@ -58,7 +55,9 @@ import java.util.Set;
 
 import static java.util.Arrays.stream;
 import static org.hibernate.internal.util.StringHelper.qualify;
+import static org.hibernate.internal.util.StringHelper.root;
 import static org.hibernate.internal.util.StringHelper.split;
+import static org.hibernate.internal.util.StringHelper.unroot;
 import static org.hibernate.processor.util.Constants.JAVA_OBJECT;
 
 /**
@@ -75,10 +74,8 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 			ProcessingEnvironment environment,
 			Map<String,String> entityNameMappings,
 			Map<String, Set<String>> enumTypesByValue,
-			boolean indexing,
-			@Nullable Element queryElement,
-			@Nullable Dialect dialect) {
-		return instance.make(environment, indexing, entityNameMappings, enumTypesByValue, queryElement, dialect);
+			boolean indexing) {
+		return instance.make(environment, indexing, entityNameMappings, enumTypesByValue);
 	}
 
 	static final Mocker<ProcessorSessionFactory> instance = Mocker.variadic(ProcessorSessionFactory.class);
@@ -96,26 +93,18 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 	private final boolean indexing;
 	private final Map<String, String> entityNameMappings;
 	private final Map<String, Set<String>> enumTypesByValue;
-	private final @Nullable Name queryPackageName;
 
 	public ProcessorSessionFactory(
 			ProcessingEnvironment processingEnvironment,
 			boolean indexing,
 			Map<String,String> entityNameMappings,
-			Map<String, Set<String>> enumTypesByValue,
-			@Nullable Element queryElement,
-			@Nullable Dialect dialect) {
-		super( dialect );
+			Map<String, Set<String>> enumTypesByValue) {
 		elementUtil = processingEnvironment.getElementUtils();
 		typeUtil = processingEnvironment.getTypeUtils();
 		filer = processingEnvironment.getFiler();
 		this.indexing = indexing;
 		this.entityNameMappings = entityNameMappings;
 		this.enumTypesByValue = enumTypesByValue;
-		this.queryPackageName =
-				queryElement == null
-						? null
-						: elementUtil.getPackageOf(queryElement).getQualifiedName();
 	}
 
 	@Override
@@ -126,8 +115,8 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 
 	@Override
 	MockCollectionPersister createMockCollectionPersister(String role) {
-		final String entityName = extractEntityNameFromRole( role );
-		final String propertyPath = role.substring( entityName.length() + 1 );
+		final String entityName = root(role); //only works because entity names don't contain dots
+		final String propertyPath = unroot(role);
 		final TypeElement entityClass = findEntityClass(entityName);
 		final AccessType defaultAccessType = getDefaultAccessType(entityClass);
 		final Element property = findPropertyByPath(entityClass, propertyPath, defaultAccessType);
@@ -144,16 +133,6 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 		else {
 			return null;
 		}
-	}
-
-	private String extractEntityNameFromRole(String role) {
-		for ( String entityName : entityNameMappings.values() ) {
-			if ( role.startsWith( entityName ) ) {
-				return entityName;
-			}
-		}
-		// fragile fallback
-		return qualifier( role );
 	}
 
 	@Override
@@ -398,7 +377,7 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 		public String getRootEntityName() {
 			TypeElement result = type;
 			TypeMirror superclass = type.getSuperclass();
-			while ( superclass.getKind() == TypeKind.DECLARED ) {
+			while ( superclass!=null && superclass.getKind() == TypeKind.DECLARED ) {
 				final DeclaredType declaredType = (DeclaredType) superclass;
 				final TypeElement typeElement = (TypeElement) declaredType.asElement();
 				if ( hasAnnotation(typeElement, "Entity") ) {
@@ -573,42 +552,30 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 	private @Nullable TypeElement findIndexedEntityByUnqualifiedName(String entityName) {
 		final String qualifiedName = entityNameMappings.get(entityName);
 		if ( qualifiedName != null ) {
-			final TypeElement entity = elementUtil.getTypeElement( qualifiedName );
-			if ( entity != null && isVisibleFromQueryPackage(entity) ) {
-				return entity;
-			}
+			return elementUtil.getTypeElement(qualifiedName);
 		}
 		try (Reader reader = filer.getResource( StandardLocation.SOURCE_OUTPUT, ENTITY_INDEX, entityName)
 				.openReader(true); BufferedReader buffered = new BufferedReader(reader) ) {
-			final TypeElement entity = elementUtil.getTypeElement( buffered.readLine() );
-			if ( entity != null && isVisibleFromQueryPackage(entity) ) {
-				return entity;
-			}
+			return elementUtil.getTypeElement(buffered.readLine());
 		}
 		catch (IOException ignore) {
 		}
 		try (Reader reader = filer.getResource(StandardLocation.CLASS_PATH, ENTITY_INDEX, entityName)
 				.openReader(true); BufferedReader buffered = new BufferedReader(reader) ) {
-			final TypeElement entity = elementUtil.getTypeElement( buffered.readLine() );
-			if ( entity != null && isVisibleFromQueryPackage(entity) ) {
-				return entity;
-			}
+			return elementUtil.getTypeElement(buffered.readLine());
 		}
 		catch (IOException ignore) {
 		}
 		return null;
 	}
 
-	private @Nullable TypeElement findEntityByUnqualifiedName(
-			String entityName,
-			ModuleElement module) {
+	private static @Nullable TypeElement findEntityByUnqualifiedName(String entityName, ModuleElement module) {
 		for (Element element: module.getEnclosedElements()) {
 			if (element.getKind() == ElementKind.PACKAGE) {
 				final PackageElement pack = (PackageElement) element;
 				try {
 					for (Element member : pack.getEnclosedElements()) {
-						if (isMatchingEntity(member, entityName)
-								&& isVisibleFromQueryPackage(member)) {
+						if (isMatchingEntity(member, entityName)) {
 							return (TypeElement) member;
 						}
 					}
@@ -618,13 +585,6 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 			}
 		}
 		return null;
-	}
-
-	private boolean isVisibleFromQueryPackage(Element symbol) {
-		return symbol.getModifiers().contains( Modifier.PUBLIC )
-			|| queryPackageName == null
-			|| elementUtil.getPackageOf(symbol).getQualifiedName()
-					.contentEquals( queryPackageName );
 	}
 
 	private static boolean isMatchingEntity(Element symbol, String entityName) {
@@ -1149,7 +1109,7 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 			else if (name.startsWith("is")) {
 				name = name.substring(2);
 			}
-			return decapitalize(name);
+			return Introspector.decapitalize(name);
 		}
 		else {
 			return name;

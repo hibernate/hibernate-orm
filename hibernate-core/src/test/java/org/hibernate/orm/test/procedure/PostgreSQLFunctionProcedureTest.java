@@ -12,7 +12,6 @@ import org.hibernate.SessionFactory;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.NamedAuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Namespace;
-import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.PostgresPlusDialect;
 import org.hibernate.jpa.HibernateHints;
@@ -22,7 +21,6 @@ import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryBasedFunctionalTest;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialect;
-import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.type.StandardBasicTypes;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -47,7 +45,6 @@ import static org.junit.jupiter.api.Assertions.fail;
  * @author Vlad Mihalcea
  */
 @RequiresDialect(PostgreSQLDialect.class)
-@SkipForDialect( dialectClass = SpannerPostgreSQLDialect.class, reason = "Spanner doesn't support stored procedures")
 public class PostgreSQLFunctionProcedureTest extends EntityManagerFactoryBasedFunctionalTest {
 
 	@Override

@@ -7,10 +7,8 @@ package org.hibernate.orm.test.cache;
 import org.hibernate.LockMode;
 import org.hibernate.cache.internal.CollectionCacheInvalidator;
 import org.hibernate.cfg.Environment;
-import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -105,7 +103,6 @@ public class LockModeTest {
 
 	@JiraKey(value = "HHH-9764")
 	@Test
-	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsConcurrentTransactions.class )
 	public void testDefaultLockModeOnEntityLoad(SessionFactoryScope scope) {
 
 		// first evict user
@@ -140,7 +137,6 @@ public class LockModeTest {
 
 	@JiraKey(value = "HHH-9764")
 	@Test
-	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsConcurrentTransactions.class )
 	public void testReadLockModeOnEntityLoad(SessionFactoryScope scope) {
 
 		// first evict user

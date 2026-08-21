@@ -13,7 +13,6 @@ import org.hibernate.annotations.SoftDeleteType;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.models.spi.ClassDetails;
-import org.hibernate.persister.state.spi.StateManagement;
 
 import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.internal.util.ReflectHelper.overridesEquals;
@@ -50,13 +49,8 @@ public final class RootClass extends PersistentClass implements TableOwner, Soft
 	private int nextSubclassId;
 	private Property declaredIdentifierProperty;
 	private Property declaredVersion;
-
+	private Column softDeleteColumn;
 	private SoftDeleteType softDeleteStrategy;
-
-	private Class<? extends StateManagement> stateManagementType;
-	private boolean partitioned;
-	private String auxiliaryColumnInPrimaryKey;
-	private boolean primaryKeyDisabled;
 
 	public RootClass(MetadataBuildingContext buildingContext) {
 		super( buildingContext );
@@ -161,11 +155,6 @@ public final class RootClass extends PersistentClass implements TableOwner, Soft
 	public void addSubclass(Subclass subclass) throws MappingException {
 		super.addSubclass( subclass );
 		setPolymorphic( true );
-	}
-
-	@Override
-	public List<PersistentClass> getSuperclassClosure() {
-		return List.of( this );
 	}
 
 	@Override
@@ -422,8 +411,13 @@ public final class RootClass extends PersistentClass implements TableOwner, Soft
 
 	@Override
 	public void enableSoftDelete(Column indicatorColumn, SoftDeleteType strategy) {
-		SoftDeletable.super.enableSoftDelete( indicatorColumn, strategy );
+		softDeleteColumn = indicatorColumn;
 		softDeleteStrategy = strategy;
+	}
+
+	@Override
+	public Column getSoftDeleteColumn() {
+		return softDeleteColumn;
 	}
 
 	@Override
@@ -432,69 +426,8 @@ public final class RootClass extends PersistentClass implements TableOwner, Soft
 	}
 
 	@Override
-	public Table getMainTable() {
-		return table;
-	}
-
-	@Override
-	public boolean isMainTablePartitioned() {
-		return partitioned;
-	}
-
-	public void setMainTablePartitioned(boolean partitioned) {
-		this.partitioned = partitioned;
-	}
-
-	@Override
-	public boolean isAuxiliaryColumnInPrimaryKey() {
-		return auxiliaryColumnInPrimaryKey != null;
-	}
-
-	@Override
-	public void setAuxiliaryColumnInPrimaryKey(String key) {
-		this.auxiliaryColumnInPrimaryKey = key;
-	}
-
-	@Override
-	public boolean isPrimaryKeyDisabled() {
-		return primaryKeyDisabled;
-	}
-
-	@Override
-	public void setPrimaryKeyDisabled(boolean disabled) {
-		this.primaryKeyDisabled = disabled;
-	}
-
-	@Override
 	public Object accept(PersistentClassVisitor mv) {
 		return mv.accept( this );
-	}
-
-	@Override
-	public PrimaryKey makePrimaryKey(Table table) {
-		if ( isPrimaryKeyDisabled() ) {
-			return null;
-		}
-		else {
-			final var primaryKey = super.makePrimaryKey( table );
-			if ( isAuxiliaryColumnInPrimaryKey() ) {
-				if ( isVersioned() ) {
-					primaryKey.addColumns( getVersion().getValue() );
-				}
-				else {
-					primaryKey.addColumn( getAuxiliaryColumn( auxiliaryColumnInPrimaryKey ) );
-				}
-			}
-			return primaryKey;
-		}
-	}
-
-	public void setStateManagementType(Class<? extends StateManagement> stateManagementType) {
-		this.stateManagementType = stateManagementType;
-	}
-
-	public Class<? extends StateManagement> getStateManagementType() {
-		return stateManagementType;
 	}
 
 }

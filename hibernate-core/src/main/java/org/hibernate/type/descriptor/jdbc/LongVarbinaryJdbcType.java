@@ -15,19 +15,18 @@ public class LongVarbinaryJdbcType extends VarbinaryJdbcType {
 	public static final LongVarbinaryJdbcType INSTANCE = new LongVarbinaryJdbcType();
 
 	private final int defaultSqlTypeCode;
-	private final int ddlTypeCode;
 
 	public LongVarbinaryJdbcType() {
-		this( Types.LONGVARBINARY, Types.LONGVARBINARY );
+		this( Types.LONGVARBINARY );
 	}
 
 	public LongVarbinaryJdbcType(int defaultSqlTypeCode) {
-		this( defaultSqlTypeCode, defaultSqlTypeCode );
+		this.defaultSqlTypeCode = defaultSqlTypeCode;
 	}
 
-	public LongVarbinaryJdbcType(int defaultSqlTypeCode, int ddlTypeCode) {
-		this.defaultSqlTypeCode = defaultSqlTypeCode;
-		this.ddlTypeCode = ddlTypeCode;
+	@Override
+	public int getDefaultSqlTypeCode() {
+		return defaultSqlTypeCode;
 	}
 
 	@Override
@@ -38,15 +37,5 @@ public class LongVarbinaryJdbcType extends VarbinaryJdbcType {
 	@Override
 	public int getJdbcTypeCode() {
 		return Types.LONGVARBINARY;
-	}
-
-	@Override
-	public int getDdlTypeCode() {
-		return ddlTypeCode;
-	}
-
-	@Override
-	public int getDefaultSqlTypeCode() {
-		return defaultSqlTypeCode;
 	}
 }

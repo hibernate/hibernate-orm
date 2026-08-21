@@ -259,7 +259,6 @@ public class AdditionalMappingContributorTests {
 	}
 
 	@SuppressWarnings("unused")
-	@Table(name = "Entity5")
 	public static class Entity5 {
 		private Integer id;
 		private String name;

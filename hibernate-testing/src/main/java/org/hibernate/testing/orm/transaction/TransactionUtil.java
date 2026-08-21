@@ -10,22 +10,18 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import jakarta.persistence.EntityManager;
 
-import jakarta.persistence.PessimisticLockException;
 import jakarta.persistence.QueryTimeoutException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.SharedSessionContract;
-import org.hibernate.Timeouts;
 import org.hibernate.Transaction;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.SQLServerDialect;
-import org.hibernate.dialect.lock.spi.LockTimeoutType;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 
 import org.hibernate.engine.spi.StatelessSessionImplementor;
 import org.hibernate.exception.ConstraintViolationException;
-import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.testing.orm.AsyncExecutor;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.jboss.logging.Logger;
@@ -196,12 +192,6 @@ public abstract class TransactionUtil {
 					fail( "Expecting update to " + tableName + " to succeed, but failed due to async timeout (presumably due to locks)", re.getCause() );
 				}
 			}
-			else if ( re.getCause() instanceof PessimisticLockException ple
-					&& ple.getCause() instanceof LockTimeoutException ) {
-				if ( !expectingToBlock ) {
-					fail( "Expecting update to " + tableName + " to succeed, but failed due to async timeout (presumably due to locks)", re.getCause() );
-				}
-			}
 			else if ( re.getCause() instanceof ConstraintViolationException cve ) {
 				throw cve;
 			}
@@ -213,7 +203,7 @@ public abstract class TransactionUtil {
 
 	public static void assertRowLock(SessionFactoryScope factoryScope, String tableName, String columnName, String idColumn, Number id, boolean expectingToBlock) {
 		final Dialect dialect = factoryScope.getSessionFactory().getJdbcServices().getDialect();
-		final boolean skipLocked = dialect.getLockingSupport().getMetadata().getLockTimeoutType( Timeouts.SKIP_LOCKED ) != LockTimeoutType.NONE;
+		final boolean skipLocked = dialect.getLockingSupport().getMetadata().supportsSkipLocked();
 		// SQL Server readpast hint doesn't really work unfortunately
 		if ( skipLocked && !( dialect instanceof SQLServerDialect ) ) {
 			factoryScope.inTransaction( (session) -> {
@@ -254,12 +244,6 @@ public abstract class TransactionUtil {
 				if ( re.getCause() instanceof jakarta.persistence.LockTimeoutException
 					|| re.getCause() instanceof org.hibernate.exception.LockTimeoutException
 					|| re.getCause() instanceof QueryTimeoutException ) {
-					if ( !expectingToBlock ) {
-						fail( "Expecting update to " + tableName + " to succeed, but failed due to async timeout (presumably due to locks)", re.getCause() );
-					}
-				}
-				else if ( re.getCause() instanceof PessimisticLockException ple
-						&& ple.getCause() instanceof LockTimeoutException ) {
 					if ( !expectingToBlock ) {
 						fail( "Expecting update to " + tableName + " to succeed, but failed due to async timeout (presumably due to locks)", re.getCause() );
 					}

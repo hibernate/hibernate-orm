@@ -11,11 +11,9 @@ import org.hibernate.Internal;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.query.criteria.JpaPredicate;
-import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.predicate.SqmJunctionPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
-import org.hibernate.query.sqm.tuple.internal.AnonymousTupleType;
 import org.hibernate.spi.NavigablePath;
 
 import jakarta.persistence.criteria.Predicate;
@@ -87,27 +85,18 @@ public class SqmCreationHelper {
 		return alias;
 	}
 
-	public static NavigablePath buildParentNavigablePath(SqmPath<?> lhs, String subNavigable) {
+	public static NavigablePath buildSubNavigablePath(SqmPath<?> lhs, String subNavigable, @Nullable String alias) {
 		if ( lhs == null ) {
 			throw new IllegalArgumentException(
 					"`lhs` cannot be null for a sub-navigable reference - " + subNavigable
 			);
 		}
-		final NavigablePath navigablePath = lhs.getNavigablePath();
-		final SqmPathSource<?> resolvedModel = lhs.getResolvedModel();
-		if ( ( resolvedModel instanceof PluralPersistentAttribute<?, ?, ?>
-			|| resolvedModel instanceof AnonymousTupleType<?> tupleType
-				&& tupleType.findSubPathSource( CollectionPart.Nature.ELEMENT.getName() ) != null )
-			&& CollectionPart.Nature.fromName( subNavigable ) == null ) {
-			return navigablePath.append( CollectionPart.Nature.ELEMENT.getName() );
+		NavigablePath navigablePath = lhs.getNavigablePath();
+		if ( lhs.getResolvedModel() instanceof PluralPersistentAttribute<?, ?, ?>
+				&& CollectionPart.Nature.fromName( subNavigable ) == null ) {
+			navigablePath = navigablePath.append( CollectionPart.Nature.ELEMENT.getName() );
 		}
-		else {
-			return navigablePath;
-		}
-	}
-
-	public static NavigablePath buildSubNavigablePath(SqmPath<?> lhs, String subNavigable, @Nullable String alias) {
-		return buildSubNavigablePath( buildParentNavigablePath( lhs, subNavigable ), subNavigable, alias );
+		return buildSubNavigablePath( navigablePath, subNavigable, alias );
 	}
 
 	public static SqmPredicate combinePredicates(SqmPredicate baseRestriction, List<Predicate> incomingRestrictions) {

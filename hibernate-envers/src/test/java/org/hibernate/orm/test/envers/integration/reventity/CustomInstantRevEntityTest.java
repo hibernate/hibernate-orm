@@ -3,10 +3,6 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.envers.integration.reventity;
-import org.hibernate.testing.orm.junit.DialectFeatureChecks;
-
-import org.hibernate.testing.orm.junit.RequiresDialectFeature;
-
 
 import java.time.Instant;
 import java.util.Arrays;
@@ -31,8 +27,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 /**
  * @author Chris Cranford
  */
-// TableGenerator uses a separate transaction to allocate identifiers, requiring concurrent transactions.
-@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsConcurrentTransactions.class)
 @EnversTest
 @Jpa(annotatedClasses = {StrTestEntity.class, CustomInstantRevEntity.class})
 public class CustomInstantRevEntityTest {

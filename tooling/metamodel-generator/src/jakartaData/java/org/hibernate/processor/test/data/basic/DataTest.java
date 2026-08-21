@@ -4,10 +4,8 @@
  */
 package org.hibernate.processor.test.data.basic;
 
-import org.hibernate.processor.HibernateProcessor;
 import org.hibernate.processor.test.util.CompilationTest;
 import org.hibernate.processor.test.util.WithClasses;
-import org.hibernate.processor.test.util.WithProcessorOption;
 import org.junit.jupiter.api.Test;
 
 import static org.hibernate.processor.test.util.TestUtil.assertMetamodelClassGeneratedFor;
@@ -21,7 +19,6 @@ import static org.hibernate.processor.test.util.TestUtil.getMetaModelSourceAsStr
 class DataTest {
 	@Test
 	@WithClasses({ Author.class, Book.class, BookAuthorRepository.class, IdOperations.class, Concrete.class, Thing.class })
-	@WithProcessorOption(key = HibernateProcessor.DIALECT_OPTION, value = "org.hibernate.dialect.PostgreSQLDialect")
 	void test() {
 		System.out.println( getMetaModelSourceAsString( Author.class ) );
 		System.out.println( getMetaModelSourceAsString( Book.class ) );

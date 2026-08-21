@@ -77,7 +77,7 @@ public class CachingAndBatchTest {
 		);
 	}
 
-	@Entity(name = "MyEntity1")
+	@Entity
 	@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 	public static class MyEntity1 {
 		@Id()
@@ -126,7 +126,7 @@ public class CachingAndBatchTest {
 		}
 	}
 
-	@Entity(name = "MyEntity2")
+	@Entity
 	@BatchSize(size = 100)
 	public static class MyEntity2 {
 		@Id()

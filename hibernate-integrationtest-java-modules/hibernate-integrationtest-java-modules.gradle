@@ -7,6 +7,11 @@ plugins {
 	id "local.java-module"
 }
 
+def skipJacoco = project.hasProperty('skipJacoco') ? project.getProperty('skipJacoco').toBoolean() : false
+if (!skipJacoco) {
+	plugins.apply('jacoco')
+}
+
 description = 'Integration tests for running Hibernate ORM in the Java module path'
 
 // See https://docs.gradle.org/6.7.1/userguide/java_testing.html#blackbox_integration_testing
@@ -19,25 +24,15 @@ dependencies {
 	api project( ':hibernate-envers' )
 	implementation project( ':hibernate-scan-jandex' )
 
-    testImplementation libs.test.junitJupiterApi
+    testImplementation testLibs.junitJupiterApi
 
 	//Provide the jakarta.cdi module, as it's required by module jakarta.transaction
 	//but not provided as transitive dependency of Narayana.
-	testRuntimeOnly( libs.jakarta.cdi )
-	testRuntimeOnly( libs.jakarta.interceptors )
+	testRuntimeOnly( jakartaLibs.cdi )
+	testRuntimeOnly( jakartaLibs.interceptors )
 }
 
 test {
 	useJUnitPlatform()
 }
 
-tasks.withType(JavaCompile).configureEach {
-    // NOTE: we override the compiler args here since we don't want to include
-    //  the `--limit-modules` defined in the `local.java-module`.
-    //  This module is specific to module path testing and we require much much more than what's
-    //  defined in the `local.java-module` (e.g. we need JPA or ORM modules as well as things like logging etc.)
-    //
-    //  We also are dropping the JBoss logging arg from the list since the tests do not have loggers that require
-    //  impl generation.
-    options.compilerArgs = [ ]
-}

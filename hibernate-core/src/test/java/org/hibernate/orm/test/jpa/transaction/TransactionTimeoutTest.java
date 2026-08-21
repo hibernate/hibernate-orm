@@ -71,7 +71,7 @@ public class TransactionTimeoutTest {
 	}
 
 	@Test
-	@RequiresDialect(value = PostgreSQLDialect.class, matchSubTypes = false)
+	@RequiresDialect(PostgreSQLDialect.class)
 	@RequiresDialect(CockroachDialect.class)
 	public void testPostgreSQL(EntityManagerFactoryScope scope) throws Throwable {
 		test( scope, entityManager -> {

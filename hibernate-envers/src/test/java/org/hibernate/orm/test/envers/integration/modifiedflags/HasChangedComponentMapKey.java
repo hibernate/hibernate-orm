@@ -4,8 +4,6 @@
  */
 package org.hibernate.orm.test.envers.integration.modifiedflags;
 
-
-
 import java.util.List;
 
 import org.hibernate.envers.AuditReaderFactory;
@@ -18,8 +16,6 @@ import org.hibernate.testing.orm.junit.BeforeClassTemplate;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.Setting;
-import org.hibernate.testing.orm.junit.RequiresDialectFeature;
-import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 
 import org.junit.jupiter.api.Test;
 
@@ -31,7 +27,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * @author Adam Warski (adam at warski dot org)
  * @author Michal Skowronek (mskowr at o2 dot pl)
  */
-@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsPrimaryKeyUpdate.class)
 @Jpa(integrationSettings = @Setting(name = EnversSettings.GLOBAL_WITH_MODIFIED_FLAG, value = "true"),
 		annotatedClasses = {ComponentMapKeyEntity.class, ComponentTestEntity.class})
 public class HasChangedComponentMapKey extends AbstractModifiedFlagsEntityTest {

@@ -75,11 +75,6 @@ public class IncrementGenerator implements IdentifierGenerator {
 	}
 
 	@Override
-	public Class<?> getGeneratedType() {
-		return returnClass;
-	}
-
-	@Override
 	public void configure(GeneratorCreationContext creationContext, Properties parameters) throws MappingException {
 		returnClass = creationContext.getType().getReturnedClass();
 

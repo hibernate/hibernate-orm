@@ -13,7 +13,6 @@ import jakarta.persistence.Table;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator;
@@ -23,7 +22,6 @@ import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
-import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.TargetType;
@@ -48,7 +46,6 @@ import static org.hibernate.cfg.JdbcSettings.URL;
  */
 @RequiresDialect(PostgreSQLDialect.class)
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportSchemaCreation.class)
-@SkipForDialect( dialectClass = SpannerPostgreSQLDialect.class, reason = "Spanner doesn't support DROP...CASCADE")
 public class PostgreSQLMultipleSchemaSequenceTest {
 	private static final String extraSchemaName = "extra_schema_sequence_validation";
 

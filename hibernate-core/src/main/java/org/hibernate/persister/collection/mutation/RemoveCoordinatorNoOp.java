@@ -4,7 +4,6 @@
  */
 package org.hibernate.persister.collection.mutation;
 
-import jakarta.annotation.Nullable;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
@@ -28,7 +27,7 @@ public class RemoveCoordinatorNoOp implements RemoveCoordinator {
 	}
 
 	@Override
-	public @Nullable String getSqlString() {
+	public String getSqlString() {
 		return null;
 	}
 

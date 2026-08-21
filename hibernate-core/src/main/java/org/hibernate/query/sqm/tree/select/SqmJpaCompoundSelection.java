@@ -24,18 +24,22 @@ import org.hibernate.type.descriptor.java.JavaType;
 
 import jakarta.persistence.criteria.Selection;
 
-/// Models either a `Tuple` or `Object[]` selection as defined by the
-/// JPA Criteria API.
-///
-/// @see org.hibernate.query.sqm.internal.SqmCriteriaNodeBuilder#tuple(Selection[])
-/// @see jakarta.persistence.criteria.CriteriaBuilder#tuple(jakarta.persistence.criteria.Selection[])
-///
-/// @see org.hibernate.query.sqm.internal.SqmCriteriaNodeBuilder#array(Selection[])
-/// @see jakarta.persistence.criteria.CriteriaBuilder#array(jakarta.persistence.criteria.Selection[])
-///
-/// @see org.hibernate.query.sqm.tree.expression.SqmTuple
-///
-/// @author Steve Ebersole
+/**
+ * @asciidoctor
+ *
+ * Models either a `Tuple` or `Object[]` selection as defined by the
+ * JPA Criteria API.
+ *
+ * @see org.hibernate.query.sqm.internal.SqmCriteriaNodeBuilder#tuple(Selection[])
+ * @see jakarta.persistence.criteria.CriteriaBuilder#tuple(jakarta.persistence.criteria.Selection[])
+ *
+ * @see org.hibernate.query.sqm.internal.SqmCriteriaNodeBuilder#array(Selection[])
+ * @see jakarta.persistence.criteria.CriteriaBuilder#array(jakarta.persistence.criteria.Selection[])
+ *
+ * @see org.hibernate.query.sqm.tree.expression.SqmTuple
+ *
+ * @author Steve Ebersole
+ */
 public class SqmJpaCompoundSelection<T>
 		extends AbstractSqmExpression<T>
 		implements JpaCompoundSelection<T>, SqmExpressible<T> {

@@ -7,37 +7,8 @@ plugins {
 
 description = 'Annotation Processor to generate JPA 2 static metamodel classes'
 
-sourceSets {
-    legacyTest {
-        compileClasspath += sourceSets.main.output
-        runtimeClasspath += sourceSets.main.output
-    }
-}
-
-configurations {
-    legacyTestImplementation.extendsFrom testImplementation
-    legacyTestRuntimeOnly.extendsFrom testRuntimeOnly
-}
-
 dependencies {
     compileOnly libs.ant
-    implementation project(':hibernate-core')
-    api project(':hibernate-reveng')
+    implementation project( ':hibernate-core' )
     testImplementation libs.ant
-    testRuntimeOnly project(':hibernate-scan-jandex')
 }
-
-tasks.register('legacyTest', Test) {
-    description = 'Runs legacy tests.'
-    group = 'verification'
-    testClassesDirs = sourceSets.legacyTest.output.classesDirs
-    classpath = sourceSets.legacyTest.runtimeClasspath
-    useJUnitPlatform()
-}
-
-tasks.forbiddenApisLegacyTest {
-    enabled = false
-}
-
-test.dependsOn legacyTest
-

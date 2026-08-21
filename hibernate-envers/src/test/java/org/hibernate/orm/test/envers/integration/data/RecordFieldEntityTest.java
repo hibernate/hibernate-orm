@@ -3,8 +3,6 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.envers.integration.data;
-import jakarta.persistence.Table;
-
 
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
@@ -66,7 +64,6 @@ public class RecordFieldEntityTest {
 
 	@Entity
 	@Audited
-	@Table(name = "WithRecord")
 	static class WithRecord {
 		@Id
 		private Integer id;
@@ -89,7 +86,6 @@ public class RecordFieldEntityTest {
 
 	@Entity
 	@Audited
-	@Table(name = "WithoutRecord")
 	static class WithoutRecord {
 		@Id
 		private Integer id;

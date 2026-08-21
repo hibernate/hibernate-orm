@@ -7,7 +7,6 @@ package org.hibernate.dialect.aggregate;
 import java.util.List;
 
 import org.hibernate.Incubating;
-import org.hibernate.Internal;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.dialect.Dialect;
@@ -60,6 +59,7 @@ public interface AggregateSupport {
 				// which we can easily get from the type code of the aggregate column
 				sqlTypeCode == SqlTypes.ARRAY ? aggregateColumn.getTypeCode() : sqlTypeCode,
 				new SqlTypedMappingImpl(
+						column.getTypeName(),
 						column.getLength(),
 						column.getArrayLength(),
 						column.getPrecision(),
@@ -69,11 +69,6 @@ public interface AggregateSupport {
 				),
 				aggregateColumn.getComponent().getMetadata().getTypeConfiguration()
 		);
-	}
-
-	@Internal // TODO: find a better way!
-	default boolean useLengthsInCasts() {
-		return false;
 	}
 
 	/**

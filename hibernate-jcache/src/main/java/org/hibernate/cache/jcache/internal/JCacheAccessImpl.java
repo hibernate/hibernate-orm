@@ -14,14 +14,15 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
  *
  * @author Steve Ebersole
  */
+@SuppressWarnings("unchecked")
 public class JCacheAccessImpl implements DomainDataStorageAccess {
-	private final Cache<Object,Object> underlyingCache;
+	private final Cache underlyingCache;
 
-	public JCacheAccessImpl(Cache<Object,Object> underlyingCache) {
+	public JCacheAccessImpl(Cache underlyingCache) {
 		this.underlyingCache = underlyingCache;
 	}
 
-	public Cache<Object,Object> getUnderlyingCache() {
+	public Cache getUnderlyingCache() {
 		return underlyingCache;
 	}
 

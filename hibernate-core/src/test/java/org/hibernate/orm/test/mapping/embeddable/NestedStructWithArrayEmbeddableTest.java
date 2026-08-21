@@ -23,8 +23,6 @@ import org.hibernate.annotations.Struct;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
-import org.hibernate.testing.orm.junit.DialectFeatureChecks;
-import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.type.SqlTypes;
 
 import org.hibernate.testing.jdbc.SharedDriverManagerTypeCacheClearingIntegrator;
@@ -70,7 +68,6 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 )
 @DomainModel(annotatedClasses = NestedStructWithArrayEmbeddableTest.StructHolder.class)
 @SessionFactory
-@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsUserDefinedTypes.class )
 public class NestedStructWithArrayEmbeddableTest {
 
 	@BeforeEach

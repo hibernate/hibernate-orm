@@ -12,7 +12,6 @@ import org.hibernate.sql.ast.tree.cte.CteStatement;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
 import org.hibernate.sql.ast.tree.expression.AggregateColumnWriteExpression;
 import org.hibernate.sql.ast.tree.expression.AggregateFunctionExpression;
-import org.hibernate.sql.ast.tree.expression.AliasedExpression;
 import org.hibernate.sql.ast.tree.expression.Any;
 import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
@@ -46,7 +45,6 @@ import org.hibernate.sql.ast.tree.expression.Summarization;
 import org.hibernate.sql.ast.tree.expression.TrimSpecification;
 import org.hibernate.sql.ast.tree.expression.UnaryOperation;
 import org.hibernate.sql.ast.tree.expression.UnparsedNumericLiteral;
-import org.hibernate.sql.ast.tree.expression.WindowFunctionExpression;
 import org.hibernate.sql.ast.tree.from.FromClause;
 import org.hibernate.sql.ast.tree.from.FunctionTableReference;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
@@ -123,14 +121,6 @@ public class AbstractSqlAstWalker implements SqlAstWalker {
 					}
 				}
 			}
-			else if ( expression instanceof WindowFunctionExpression windowFunctionExpression ) {
-				if ( windowFunctionExpression.getFilter() != null ) {
-					windowFunctionExpression.getFilter().accept( this );
-				}
-			}
-		}
-		else if ( expression instanceof AliasedExpression aliasedExpression ) {
-			aliasedExpression.getExpression().accept( this );
 		}
 	}
 

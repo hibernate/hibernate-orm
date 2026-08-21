@@ -10,8 +10,6 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.hibernate.query.sqm.SqmExpressible;
-import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
 import org.hibernate.type.BindableType;
 import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.SqmPathSource;
@@ -42,7 +40,6 @@ import org.hibernate.query.sqm.tree.predicate.SqmNullnessPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmTruthnessPredicate;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSortSpecification;
-import org.hibernate.type.JavaObjectType;
 
 /**
  * @author Steve Ebersole
@@ -140,18 +137,15 @@ public class ParameterCollector extends BaseSemanticQueryWalker {
 	}
 
 	private <T> @Nullable BindableType<T> getInferredParameterType(JpaCriteriaParameter<?> expression) {
-		BindableType<?> parameterType = expression.getHibernateType();
-		// apply any inferred type
+		BindableType<?> parameterType = null;
 		if ( inferenceBasis != null ) {
 			final SqmBindableType<?> expressible = inferenceBasis.getExpressible();
 			if ( expressible != null ) {
-				// unless the parameter has real typing information applied
-				if ( parameterType == null
-					|| ((SqmExpressible<?>) parameterType).getSqmType() == null
-					|| parameterType instanceof JavaObjectType ) {
-					parameterType = expressible;
-				}
+				parameterType = expressible;
 			}
+		}
+		if ( parameterType == null ) {
+			parameterType = expression.getHibernateType();
 		}
 		//noinspection unchecked
 		return (BindableType<T>) parameterType;
@@ -320,13 +314,6 @@ public class ParameterCollector extends BaseSemanticQueryWalker {
 		super.visitIsTruePredicate( predicate );
 		this.inferenceBasis = original;
 		return predicate;
-	}
-
-	@Override
-	public Object visitBinaryArithmeticExpression(SqmBinaryArithmetic<?> expression) {
-		withTypeInference( expression.getRightHandOperand(), expression.getLeftHandOperand() );
-		withTypeInference( expression.getLeftHandOperand(), expression.getRightHandOperand() );
-		return expression;
 	}
 
 	@Override

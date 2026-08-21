@@ -15,7 +15,6 @@ import org.jboss.logging.annotations.MessageLogger;
 import org.jboss.logging.annotations.ValidIdRange;
 
 import java.lang.invoke.MethodHandles;
-import java.util.Locale;
 
 import static org.jboss.logging.Logger.Level.TRACE;
 import static org.jboss.logging.Logger.Level.DEBUG;
@@ -35,7 +34,7 @@ public interface BytecodeInterceptorLogging extends BasicLogger {
 	String LOGGER_NAME = SubSystemLogging.BASE + ".bytecode.interceptor";
 
 	Logger LOGGER = Logger.getLogger( LOGGER_NAME );
-	BytecodeInterceptorLogging BYTECODE_INTERCEPTOR_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), BytecodeInterceptorLogging.class, LOGGER_NAME, Locale.ROOT );
+	BytecodeInterceptorLogging BYTECODE_INTERCEPTOR_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), BytecodeInterceptorLogging.class, LOGGER_NAME );
 
 	@LogMessage(level = WARN)
 	@Message(

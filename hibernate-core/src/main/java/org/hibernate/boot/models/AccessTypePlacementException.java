@@ -13,11 +13,10 @@ import org.hibernate.models.spi.MemberDetails;
 import jakarta.persistence.Access;
 
 /**
- * Indicates a problem with the placement of the {@link Access} annotation; either
- * <ul>
+ * Indicates a problem with the placement of the {@link Access} annotation; either<ul>
  *     <li>{@linkplain jakarta.persistence.AccessType#FIELD FIELD} on a getter</li>
- *     <li>{@linkplain jakarta.persistence.AccessType#PROPERTY PROPERTY} on a field</li>
- *     <li>{@linkplain jakarta.persistence.AccessType#PROPERTY PROPERTY} on a setter</li>
+ *     <li>{@linkplain jakarta.persistence.AccessType#PROPERTY PROPERTY} on a field
+ *     <li>{@linkplain jakarta.persistence.AccessType#PROPERTY PROPERTY} on a setter</li></li>
  * </ul>
  *
  * @author Steve Ebersole

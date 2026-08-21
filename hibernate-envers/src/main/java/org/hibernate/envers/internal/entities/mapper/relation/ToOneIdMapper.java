@@ -14,6 +14,7 @@ import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 import org.hibernate.envers.internal.tools.EntityTools;
 import org.hibernate.envers.internal.tools.query.Parameters;
 import org.hibernate.persister.entity.EntityPersister;
+import org.jboss.logging.Logger;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -27,6 +28,7 @@ import java.util.Objects;
  * @author Luke Chen
  */
 public class ToOneIdMapper extends AbstractToOneMapper {
+	private static final Logger log = Logger.getLogger( ToOneIdMapper.class );
 	private final IdMapper delegate;
 	private final String referencedEntityName;
 	private final boolean nonInsertableFake;
@@ -60,7 +62,9 @@ public class ToOneIdMapper extends AbstractToOneMapper {
 
 		delegate.mapToMapFromEntity( newData, entity );
 
-		data.putAll( newData );
+		for ( Map.Entry<String, Object> entry : newData.entrySet() ) {
+			data.put( entry.getKey(), entry.getValue() );
+		}
 
 		return checkModified( session, newObj, oldObj );
 	}

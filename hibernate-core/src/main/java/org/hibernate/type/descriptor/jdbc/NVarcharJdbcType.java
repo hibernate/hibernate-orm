@@ -105,7 +105,13 @@ public class NVarcharJdbcType implements AdjustableJdbcType {
 			@Override
 			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options) throws SQLException {
 				if ( options.getDialect().supportsNationalizedMethods() ) {
-					st.setNString( index, javaType.unwrap( value, String.class, options ) );
+					try {
+						st.setNString( index, javaType.unwrap( value, String.class, options ) );
+					}
+					// workaround for jTDS driver for Sybase
+					catch ( AbstractMethodError e ) {
+						st.setBytes( index, javaType.unwrap( value, byte[].class, options ) );
+					}
 				}
 				else {
 					st.setString( index, javaType.unwrap( value, String.class, options ) );
@@ -122,27 +128,6 @@ public class NVarcharJdbcType implements AdjustableJdbcType {
 					st.setString( name, javaType.unwrap( value, String.class, options ) );
 				}
 			}
-
-			@Override
-			protected void doBindNull(PreparedStatement st, int index, WrapperOptions options) throws SQLException {
-				if ( options.getDialect().supportsNationalizedMethods() ) {
-					super.doBindNull( st, index, options );
-				}
-				else {
-					st.setNull( index, Types.VARCHAR );
-				}
-			}
-
-			@Override
-			protected void doBindNull(CallableStatement st, String name, WrapperOptions options)
-					throws SQLException {
-				if ( options.getDialect().supportsNationalizedMethods() ) {
-					super.doBindNull( st, name, options );
-				}
-				else {
-					st.setNull( name, Types.VARCHAR );
-				}
-			}
 		};
 	}
 
@@ -152,7 +137,13 @@ public class NVarcharJdbcType implements AdjustableJdbcType {
 			@Override
 			protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
 				if ( options.getDialect().supportsNationalizedMethods() ) {
-					return javaType.wrap( rs.getNString( paramIndex ), options );
+					try {
+						return javaType.wrap( rs.getNString( paramIndex ), options );
+					}
+					// workaround for jTDS driver for Sybase
+					catch ( AbstractMethodError e ) {
+						return javaType.wrap( rs.getBytes( paramIndex ), options );
+					}
 				}
 				else {
 					return javaType.wrap( rs.getString( paramIndex ), options );

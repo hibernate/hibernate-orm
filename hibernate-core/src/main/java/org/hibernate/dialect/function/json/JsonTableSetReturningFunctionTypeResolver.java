@@ -134,6 +134,7 @@ public class JsonTableSetReturningFunctionTypeResolver implements SetReturningFu
 				null,
 				null,
 				null,
+				null,
 				false,
 				false,
 				false,

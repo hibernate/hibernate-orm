@@ -80,7 +80,7 @@ public class ColumnZonedTest {
 		});
 	}
 
-	@Entity(name = "Zoned")
+	@Entity
 	public static class Zoned {
 		@Id
 		@GeneratedValue Long id;

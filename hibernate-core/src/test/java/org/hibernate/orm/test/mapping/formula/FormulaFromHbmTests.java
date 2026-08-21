@@ -13,8 +13,6 @@ import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
-import org.hibernate.testing.orm.junit.DialectFeatureChecks;
-import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -33,7 +31,6 @@ import static org.hamcrest.Matchers.is;
  */
 @DomainModel( xmlMappings = "org/hibernate/orm/test/mapping/formula/EntityOfFormulas.hbm.xml")
 @SessionFactory
-@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsJdbcEscapes.class )
 public class FormulaFromHbmTests {
 	@Test
 	public void mappingAssertions(DomainModelScope scope) {

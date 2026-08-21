@@ -35,7 +35,6 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.generator.Generator;
 import org.hibernate.generator.GeneratorCreationContext;
-import org.hibernate.generator.internal.GeneratorTypeHelper;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.TypeDetails;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
@@ -356,7 +355,7 @@ public abstract class SimpleValue implements KeyValue {
 
 	@Override
 	public ForeignKey createForeignKeyOfEntity(String entityName) {
-		if ( isConstrained() && !hasAuxiliaryColumnInPrimaryKey( entityName ) ) {
+		if ( isConstrained() ) {
 			final var foreignKey = table.createForeignKey(
 					getForeignKeyName(),
 					getConstraintColumns(),
@@ -374,7 +373,7 @@ public abstract class SimpleValue implements KeyValue {
 
 	@Override
 	public ForeignKey createForeignKeyOfEntity(String entityName, List<Column> referencedColumns) {
-		if ( isConstrained() && !hasAuxiliaryColumnInPrimaryKey( entityName ) ) {
+		if ( isConstrained() ) {
 			final var foreignKey = table.createForeignKey(
 					getForeignKeyName(),
 					getConstraintColumns(),
@@ -388,20 +387,6 @@ public abstract class SimpleValue implements KeyValue {
 		}
 
 		return null;
-	}
-
-	protected boolean hasAuxiliaryColumnInPrimaryKey(PersistentClass referencedEntity) {
-		return referencedEntity.getRootClass().isAuxiliaryColumnInPrimaryKey();
-	}
-
-	protected boolean hasAuxiliaryColumnInPrimaryKey(String entityName) {
-		if ( entityName == null ) {
-			return false;
-		}
-		else {
-			final var referencedEntity = metadata.getEntityBinding( entityName );
-			return referencedEntity != null && hasAuxiliaryColumnInPrimaryKey( referencedEntity );
-		}
 	}
 
 	@Override
@@ -453,7 +438,6 @@ public abstract class SimpleValue implements KeyValue {
 		if ( customIdGeneratorCreator != null ) {
 			final var context = new IdGeneratorCreationContext( this, rootClass, property, defaults );
 			final var generator = customIdGeneratorCreator.createGenerator( context );
-			GeneratorTypeHelper.checkGeneratorGeneratedType( generator, context );
 			if ( generator.allowAssignedIdentifiers() && nullValue == null ) {
 				setNullValueUndefined();
 			}
@@ -899,16 +883,6 @@ public abstract class SimpleValue implements KeyValue {
 	@Override
 	public boolean[] getColumnUpdateability() {
 		return extractBooleansFromList( updatability );
-	}
-
-	@Override
-	public void setNonInsertable() {
-		insertability.replaceAll( current -> false );
-	}
-
-	@Override
-	public void setNonUpdatable() {
-		updatability.replaceAll( current -> false );
 	}
 
 	@Override

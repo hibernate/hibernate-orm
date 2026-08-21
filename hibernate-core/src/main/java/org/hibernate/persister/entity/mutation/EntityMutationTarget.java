@@ -42,7 +42,7 @@ public interface EntityMutationTarget extends MutationTarget<EntityTableMapping>
 
 	void addDiscriminatorToInsertGroup(MutationGroupBuilder insertGroupBuilder);
 
-	void addAuxiliaryToInsertGroup(MutationGroupBuilder insertGroupBuilder);
+	void addSoftDeleteToInsertGroup(MutationGroupBuilder insertGroupBuilder);
 
 	/**
 	 * The name of the table to use when performing mutations (INSERT,UPDATE,DELETE)

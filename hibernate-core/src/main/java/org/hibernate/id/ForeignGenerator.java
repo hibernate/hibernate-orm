@@ -34,7 +34,6 @@ public class ForeignGenerator implements IdentifierGenerator {
 
 	private String entityName;
 	private String propertyName;
-	private Class<?> generatedType;
 
 	/**
 	 * Getter for property 'entityName'.
@@ -69,15 +68,9 @@ public class ForeignGenerator implements IdentifierGenerator {
 	public void configure(GeneratorCreationContext creationContext, Properties parameters) throws MappingException {
 		propertyName = parameters.getProperty( PROPERTY );
 		entityName = parameters.getProperty( ENTITY_NAME );
-		generatedType = creationContext.getType().getReturnedClass();
 		if ( propertyName==null ) {
 			throw new MappingException( "param named \"property\" is required for foreign id generation strategy" );
 		}
-	}
-
-	@Override
-	public Class<?> getGeneratedType() {
-		return generatedType;
 	}
 
 	@Override

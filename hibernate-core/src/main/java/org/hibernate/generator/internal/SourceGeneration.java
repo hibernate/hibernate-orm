@@ -64,11 +64,6 @@ public class SourceGeneration implements BeforeExecutionGenerator {
 	}
 
 	@Override
-	public Class<?> getGeneratedType() {
-		return propertyType.getJavaTypeClass();
-	}
-
-	@Override
 	public Object generate(SharedSessionContractImplementor session, Object owner, Object currentValue, EventType eventType) {
 		return valueGenerator == null
 				? propertyType.wrap( getCurrentTimestamp( session ), session )

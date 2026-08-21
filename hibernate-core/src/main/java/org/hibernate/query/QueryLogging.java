@@ -17,7 +17,6 @@ import org.jboss.logging.annotations.MessageLogger;
 import org.jboss.logging.annotations.ValidIdRange;
 
 import java.lang.invoke.MethodHandles;
-import java.util.Locale;
 
 import static org.jboss.logging.Logger.Level.ERROR;
 import static org.jboss.logging.Logger.Level.INFO;
@@ -37,7 +36,7 @@ public interface QueryLogging extends BasicLogger {
 	String LOGGER_NAME = SubSystemLogging.BASE + ".query";
 
 	Logger QUERY_LOGGER = Logger.getLogger( LOGGER_NAME );
-	QueryLogging QUERY_MESSAGE_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), QueryLogging.class, LOGGER_NAME, Locale.ROOT );
+	QueryLogging QUERY_MESSAGE_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), QueryLogging.class, LOGGER_NAME );
 
 	static String subLoggerName(String subName) {
 		return LOGGER_NAME + '.' + subName;

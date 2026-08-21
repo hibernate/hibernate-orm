@@ -7,6 +7,7 @@ package org.hibernate.query.results.internal.complete;
 import org.hibernate.AssertionFailure;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
+import org.hibernate.metamodel.mapping.DiscriminatorMapping;
 import org.hibernate.query.results.FetchBuilder;
 import org.hibernate.query.results.FetchBuilderBasicValued;
 import org.hibernate.query.results.MissingSqlSelectionException;
@@ -83,11 +84,15 @@ public class CompleteFetchBuilderBasicPart implements CompleteFetchBuilder, Fetc
 						? jdbcResultsMetadata.resolveColumnName( jdbcPosition )
 						: selectionAlias;
 
-		final int valuesArrayPosition = jdbcPositionToValuesArrayPosition( jdbcPosition );
+		final var jdbcMapping =
+				referencedModelPart instanceof DiscriminatorMapping discriminatorMapping
+						? discriminatorMapping.getUnderlyingJdbcMapping()
+						: referencedModelPart.getJdbcMapping();
 
+		final int valuesArrayPosition = jdbcPositionToValuesArrayPosition( jdbcPosition );
 		// we just care about the registration here.  The ModelPart will find it later
 		creationStateImpl.resolveSqlExpression(
-				createColumnReferenceKey( tableReference, referencedModelPart ),
+				createColumnReferenceKey( tableReference, referencedModelPart.getSelectablePath(), jdbcMapping ),
 				processingState -> new ResultSetMappingSqlSelection( valuesArrayPosition, referencedModelPart )
 		);
 

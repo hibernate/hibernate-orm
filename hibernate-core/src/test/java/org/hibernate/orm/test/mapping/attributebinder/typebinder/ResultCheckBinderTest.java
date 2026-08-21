@@ -21,7 +21,7 @@ public class ResultCheckBinderTest {
 		scope.inStatelessTransaction(s -> s.delete(entity) );
 	}
 	@NoResultCheck
-	@jakarta.persistence.Entity(name = "Entity")
+	@jakarta.persistence.Entity
 	static class Entity {
 		@Id long id;
 	}

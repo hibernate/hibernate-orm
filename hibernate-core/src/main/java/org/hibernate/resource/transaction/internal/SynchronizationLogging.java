@@ -17,7 +17,6 @@ import org.jboss.logging.annotations.MessageLogger;
 import org.jboss.logging.annotations.ValidIdRange;
 
 import java.lang.invoke.MethodHandles;
-import java.util.Locale;
 
 import static org.jboss.logging.Logger.Level.ERROR;
 import static org.jboss.logging.Logger.Level.INFO;
@@ -37,7 +36,7 @@ public interface SynchronizationLogging extends BasicLogger {
 	String LOGGER_NAME = SubSystemLogging.BASE + ".synchronization";
 
 	SynchronizationLogging SYNCHRONIZATION_LOGGER = Logger.getMessageLogger(
-			MethodHandles.lookup(), SynchronizationLogging.class, LOGGER_NAME, Locale.ROOT
+			MethodHandles.lookup(), SynchronizationLogging.class, LOGGER_NAME
 	);
 
 	int NAMESPACE = 90008000;

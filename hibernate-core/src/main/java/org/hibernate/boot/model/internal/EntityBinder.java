@@ -58,14 +58,11 @@ import org.hibernate.annotations.SQLSelect;
 import org.hibernate.annotations.SQLUpdate;
 import org.hibernate.annotations.SecondaryRow;
 import org.hibernate.annotations.SecondaryRows;
-import org.hibernate.annotations.Audited;
 import org.hibernate.annotations.SoftDelete;
-import org.hibernate.annotations.Temporal;
 import org.hibernate.annotations.Subselect;
 import org.hibernate.annotations.Synchronize;
 import org.hibernate.annotations.TypeBinderType;
 import org.hibernate.annotations.View;
-import org.hibernate.annotations.Changelog;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
 import org.hibernate.boot.model.internal.InheritanceState.ElementsToProcess;
 import org.hibernate.boot.model.naming.EntityNaming;
@@ -261,8 +258,6 @@ public class EntityBinder {
 		if ( persistentClass instanceof RootClass rootClass ) {
 			collector.addSecondPass( new CreateKeySecondPass( rootClass ) );
 			bindSoftDelete( clazzToProcess, rootClass, context );
-			bindTemporal( clazzToProcess, rootClass, context );
-			bindAudited( clazzToProcess, rootClass, context );
 		}
 		if ( persistentClass instanceof Subclass subclass ) {
 			assert superEntity != null;
@@ -327,7 +322,7 @@ public class EntityBinder {
 		// todo (soft-delete) : do we assume all package-level registrations are already available?
 		//		or should this be a "second pass"?
 
-		final var softDelete = extract( SoftDelete.class, classDetails, context );
+		final var softDelete = extractSoftDelete( classDetails, context );
 		if ( softDelete != null ) {
 			SoftDeleteHelper.bindSoftDeleteIndicator(
 					softDelete,
@@ -338,51 +333,16 @@ public class EntityBinder {
 		}
 	}
 
-	private static void bindTemporal(
-			ClassDetails classDetails,
-			RootClass rootClass,
-			MetadataBuildingContext context) {
-		final var temporal = extract( Temporal.class, classDetails, context );
-		if ( temporal != null ) {
-			TemporalHelper.bindTemporalColumns(
-					temporal,
-					rootClass,
-					rootClass.getRootTable(),
-					classDetails.getDirectAnnotationUsage( Temporal.HistoryTable.class ),
-					classDetails.getDirectAnnotationUsage( Temporal.HistoryPartitioning.class ),
-					context
-			);
-		}
-	}
-
-	private static void bindAudited(
-			ClassDetails classDetails,
-			RootClass rootClass,
-			MetadataBuildingContext context) {
-		final var audited = extract( Audited.class, classDetails, context );
-		if ( audited != null ) {
-			final var auditTable = extract( Audited.Table.class, classDetails, context );
-			AuditHelper.bindAuditTable( auditTable, rootClass, classDetails, context );
-		}
-		else {
-			final var changelog = extract( Changelog.class, classDetails, context );
-			if ( changelog != null ) {
-				AuditHelper.bindChangelog( changelog, rootClass, classDetails, context );
-			}
-		}
-	}
-
-	private static <T extends Annotation> T extract(
-			Class<T> annotationClass, ClassDetails classDetails, MetadataBuildingContext context) {
+	private static SoftDelete extractSoftDelete(ClassDetails classDetails, MetadataBuildingContext context) {
 		final var modelsContext = context.getBootstrapContext().getModelsContext();
-		final var fromClass = classDetails.getAnnotationUsage( annotationClass, modelsContext );
+		final var fromClass = classDetails.getAnnotationUsage( SoftDelete.class, modelsContext );
 		if ( fromClass != null ) {
 			return fromClass;
 		}
 
 		ClassDetails classToCheck = classDetails.getSuperClass();
 		while ( classToCheck != null ) {
-			final var fromSuper = classToCheck.getAnnotationUsage( annotationClass, modelsContext );
+			final var fromSuper = classToCheck.getAnnotationUsage( SoftDelete.class, modelsContext );
 			if ( fromSuper != null
 					&& classToCheck.hasAnnotationUsage( MappedSuperclass.class, modelsContext ) ) {
 				return fromSuper;
@@ -390,7 +350,7 @@ public class EntityBinder {
 			classToCheck = classToCheck.getSuperClass();
 		}
 
-		return extractFromPackage( annotationClass, classDetails, context );
+		return extractFromPackage( SoftDelete.class, classDetails, context );
 	}
 
 	private void handleCheckConstraints() {
@@ -1200,20 +1160,9 @@ public class EntityBinder {
 								basicValue.setTypeParameters( originalBasicValue.getTypeParameters() );
 								basicValue.setJpaAttributeConverterDescriptor( originalBasicValue.getJpaAttributeConverterDescriptor() );
 								// Don't copy over the implicit java type access, since we figure that out in ClassPropertyHolder#setType
-								// basicValue.setImplicitJavaTypeAccess( originalBasicValue.getImplicitJavaTypeAccess() );
+//									basicValue.setImplicitJavaTypeAccess( originalBasicValue.getImplicitJavaTypeAccess() );
 								basicValue.setExplicitJavaTypeAccess( originalBasicValue.getExplicitJavaTypeAccess() );
-								final var explicitJdbcTypeAccess = originalBasicValue.getExplicitJdbcTypeAccess();
-								// Always override the JDBC type with the parent's one, to correctly bind/extract values to/from the db
-								if ( explicitJdbcTypeAccess != null ) {
-									final var explicitJdbcType = explicitJdbcTypeAccess.apply( metadataCollector.getTypeConfiguration() );
-									basicValue.setExplicitJdbcTypeAccess( typeConfiguration -> explicitJdbcType == null ?
-											originalBasicValue.resolve().getJdbcType() :
-											explicitJdbcType
-									);
-								}
-								else {
-									basicValue.setExplicitJdbcTypeAccess( typeConfiguration -> originalBasicValue.resolve().getJdbcType() );
-								}
+								basicValue.setExplicitJdbcTypeAccess( originalBasicValue.getExplicitJdbcTypeAccess() );
 								basicValue.setExplicitMutabilityPlanAccess( originalBasicValue.getExplicitMutabilityPlanAccess() );
 								basicValue.setEnumerationStyle( originalBasicValue.getEnumeratedType() );
 								basicValue.setTimeZoneStorageType( originalBasicValue.getTimeZoneStorageType() );

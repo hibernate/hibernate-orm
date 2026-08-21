@@ -36,7 +36,8 @@ import static org.hibernate.query.sqm.produce.function.FunctionParameterType.NUM
  * This custom function falls back to using {@code floor} as a workaround only when necessary,
  * e.g. when there are 2 arguments to the function and either:
  * <ul>
- *     <li>The first argument is not of type {@code numeric}, or</li>
+ *     <li>The first argument is not of type {@code numeric}</li>
+ *     or
  *     <li>The dialect doesn't support the two-argument {@code trunc} function</li>
  * </ul>
  *
@@ -79,26 +80,23 @@ public class GaussDBTruncRoundFunction extends AbstractSqmFunctionDescriptor imp
 		}
 		else {
 			// workaround using floor
-			final SqlAstNode secondArg = arguments.get( 1 );
 			if ( getName().equals( "trunc" ) ) {
 				sqlAppender.appendSql( "sign(" );
 				firstArg.accept( walker );
 				sqlAppender.appendSql( ")*floor(abs(" );
 				firstArg.accept( walker );
-				sqlAppender.appendSql( ")*power(10," );
-				secondArg.accept( walker );
-				sqlAppender.appendSql( "))" );
+				sqlAppender.appendSql( ")*1e" );
+				arguments.get( 1 ).accept( walker );
 			}
 			else {
 				sqlAppender.appendSql( "floor(" );
 				firstArg.accept( walker );
-				sqlAppender.appendSql( "*power(10," );
-				secondArg.accept( walker );
-				sqlAppender.appendSql( ")+0.5)" );
+				sqlAppender.appendSql( "*1e" );
+				arguments.get( 1 ).accept( walker );
+				sqlAppender.appendSql( "+0.5" );
 			}
-			sqlAppender.appendSql( "/power(10," );
-			secondArg.accept( walker );
-			sqlAppender.appendSql( ")" );
+			sqlAppender.appendSql( ")/1e" );
+			arguments.get( 1 ).accept( walker );
 		}
 	}
 

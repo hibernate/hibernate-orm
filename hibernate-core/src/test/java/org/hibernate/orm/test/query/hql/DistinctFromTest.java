@@ -4,7 +4,6 @@
  */
 package org.hibernate.orm.test.query.hql;
 
-import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.SybaseDialect;
 
 import org.hibernate.testing.orm.domain.StandardDomainModel;
@@ -26,7 +25,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @ServiceRegistry
 @DomainModel(standardModels = StandardDomainModel.GAMBIT)
 @SessionFactory
-@SkipForDialect( dialectClass = SpannerPostgreSQLDialect.class, reason = "Spanner doesn't support IS DISTINCT FROM")
 public class DistinctFromTest {
 
 	@BeforeAll

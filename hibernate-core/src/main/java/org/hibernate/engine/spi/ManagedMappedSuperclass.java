@@ -5,8 +5,7 @@
 package org.hibernate.engine.spi;
 
 /**
- * Specialized {@link Managed} contract for
- * {@linkplain jakarta.persistence.MappedSuperclass mapped superclasses}.
+ * Specialized {@link Managed} contract for MappedSuperclass classes.
  *
  * @author Luis Barreiro
  */

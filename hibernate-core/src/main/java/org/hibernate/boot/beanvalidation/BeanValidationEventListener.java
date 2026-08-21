@@ -23,6 +23,7 @@ import org.hibernate.event.spi.PreUpdateEvent;
 import org.hibernate.event.spi.PreUpdateEventListener;
 import org.hibernate.event.spi.PreUpsertEvent;
 import org.hibernate.event.spi.PreUpsertEventListener;
+import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.persister.entity.EntityPersister;
 
 import jakarta.validation.ConstraintViolation;
@@ -31,8 +32,8 @@ import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
 
 import static org.hibernate.boot.beanvalidation.BeanValidationLogger.BEAN_VALIDATION_LOGGER;
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.internal.util.collections.CollectionHelper.setOfSize;
-import static org.hibernate.metamodel.RepresentationMode.POJO;
 
 /**
  * Event listener used to enable Bean Validation for insert/update/delete events.
@@ -111,8 +112,9 @@ public class BeanValidationEventListener
 
 	@Override
 	public void onPreUpdateCollection(PreCollectionUpdateEvent event) {
+		final Object entity = castNonNull( event.getCollection().getOwner() );
 		validate(
-				event.getAffectedOwnerOrNull(),
+				entity,
 				event.getCollectionPersister().getOwnerEntityPersister(),
 				GroupsPerOperation.Operation.UPDATE
 		);
@@ -120,7 +122,7 @@ public class BeanValidationEventListener
 
 	private <T> void validate(T object, EntityPersister persister, GroupsPerOperation.Operation operation) {
 		if ( object != null
-				&& persister.getRepresentationStrategy().getMode() == POJO ) {
+				&& persister.getRepresentationStrategy().getMode() == RepresentationMode.POJO ) {
 			final var groups = groupsPerOperation.get( operation );
 			if ( groups.length > 0 ) {
 				final var constraintViolations = validator.validate( object, groups );

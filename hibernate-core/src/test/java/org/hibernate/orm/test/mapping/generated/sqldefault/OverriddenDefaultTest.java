@@ -11,9 +11,7 @@ import org.hibernate.annotations.DialectOverride;
 import org.hibernate.annotations.Generated;
 import org.hibernate.dialect.H2Dialect;
 
-import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
@@ -30,7 +28,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel(annotatedClasses = OverriddenDefaultTest.OrderLine.class)
 @SessionFactory
-@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsNumericPrimaryKey.class )
 public class OverriddenDefaultTest {
 
 	@Test

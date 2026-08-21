@@ -9,7 +9,6 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.cache.MutableCacheKeyBuilder;
-import org.hibernate.temporal.TemporalTableStrategy;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
@@ -176,7 +175,6 @@ public class ToOneAttributeMapping
 	private boolean canUseParentTableGroup;
 	private @Nullable EmbeddableValuedModelPart circularFetchModelPart;
 
-	private final TemporalTableStrategy temporalTableStrategy;
 	/**
 	 * For Hibernate Reactive
 	 */
@@ -203,7 +201,7 @@ public class ToOneAttributeMapping
 		sideNature = original.sideNature;
 		identifyingColumnsTableExpression = original.identifyingColumnsTableExpression;
 		canUseParentTableGroup = original.canUseParentTableGroup;
-		temporalTableStrategy = original.temporalTableStrategy;
+
 	}
 
 	public ToOneAttributeMapping(
@@ -258,11 +256,6 @@ public class ToOneAttributeMapping
 				propertyAccess
 		);
 
-
-		temporalTableStrategy =
-				declaringEntityPersister.getFactory()
-						.getSessionFactoryOptions().getTemporalTableStrategy();
-
 		if ( entityMappingType.getRepresentationStrategy().getMode() == RepresentationMode.POJO ) {
 			// validate the type.
 			var declaredType = propertyAccess.getGetter().getReturnTypeClass();
@@ -309,8 +302,10 @@ public class ToOneAttributeMapping
 							.getEntityBinding( manyToOne.getReferencedEntityName() );
 			if ( referencedPropertyName == null ) {
 				SelectablePath bidirectionalAttributeName = null;
-				final String propertyName = bootValue.getPropertyName();
-				final String propertyPath = propertyName == null ? name : propertyName;
+				final String propertyPath =
+						bootValue.getPropertyName() == null
+								? name
+								: bootValue.getPropertyName();
 				if ( cardinality == LOGICAL_ONE_TO_ONE ) {
 					boolean hasJoinTable = false;
 					// Handle join table cases
@@ -728,7 +723,6 @@ public class ToOneAttributeMapping
 		this.bidirectionalAttributePath = original.bidirectionalAttributePath;
 		this.declaringTableGroupProducer = declaringTableGroupProducer;
 		this.isInternalLoadNullable = original.isInternalLoadNullable;
-		this.temporalTableStrategy = original.temporalTableStrategy;
 	}
 
 	private static boolean equal(Value lhsValue, Value rhsValue) {
@@ -1014,18 +1008,8 @@ public class ToOneAttributeMapping
 				// then there can't be a circular fetch
 				return null;
 			}
-			final var fetchParentNavigablePath = fetchParent.getNavigablePath();
 			var parentNavigablePath = fetchablePath.getParent();
-			assert parentNavigablePath.equals( fetchParentNavigablePath )
-				|| fetchParentNavigablePath instanceof TreatedNavigablePath
-						&& parentNavigablePath.equals( fetchParentNavigablePath.getRealParent() );
-			if ( fetchParentNavigablePath instanceof TreatedNavigablePath
-					&& parentNavigablePath.equals( fetchParentNavigablePath.getRealParent() ) ) {
-				// Children of treated paths report the untreated path as their parent.
-				// For circular-fetch resolution we need the actual treated fetch-parent path,
-				// otherwise bidirectional checks compare against the wrong navigable path.
-				parentNavigablePath = fetchParentNavigablePath;
-			}
+			assert parentNavigablePath.equals( fetchParent.getNavigablePath() );
 			// The parent navigable path is {fk} if we are creating the domain result for the foreign key for a circular fetch
 			// In the following example, we create a circular fetch for the composite `Card.field.{id}.card.field`
 			// While creating the domain result for the foreign key of `Card#field`, we run into this condition
@@ -2236,16 +2220,16 @@ public class ToOneAttributeMapping
 						associatedEntityMappingType.applyDiscriminator( null, null, tableGroup, creationState );
 					}
 
-					final var auxiliaryMapping =
-							associatedEntityMappingType.getAuxiliaryMapping();
-					if ( auxiliaryMapping != null ) {
-						auxiliaryMapping.applyPredicate(
-								associatedEntityMappingType,
-								join::applyPredicate,
-								lazyTableGroup,
-								navigablePath,
-								creationState
-						);
+					final var softDeleteMapping = associatedEntityMappingType.getSoftDeleteMapping();
+					if ( softDeleteMapping != null ) {
+						// add the restriction
+						final var tableReference =
+								lazyTableGroup.resolveTableReference( navigablePath,
+										associatedEntityMappingType.getSoftDeleteTableDetails().getTableName() );
+						join.applyPredicate( softDeleteMapping.createNonDeletedRestriction(
+								tableReference,
+								creationState.getSqlExpressionResolver()
+						) );
 					}
 				}
 		);
@@ -2283,6 +2267,7 @@ public class ToOneAttributeMapping
 				creationState.getSqlAliasBaseGenerator()
 		);
 
+		final var softDeleteMapping = getAssociatedEntityMappingType().getSoftDeleteMapping();
 		final boolean canUseInnerJoin;
 		final var currentlyProcessingJoinType =
 				creationState instanceof SqmToSqlAstConverter sqmToSqlAstConverter
@@ -2341,8 +2326,7 @@ public class ToOneAttributeMapping
 				tableGroupProducer,
 				explicitSourceAlias,
 				sqlAliasBase,
-				creationState.getCreationContext()
-						.getSessionFactory(),
+				creationState.getCreationContext().getSessionFactory(),
 				lhs
 		);
 
@@ -2359,18 +2343,13 @@ public class ToOneAttributeMapping
 					)
 			);
 
-			if ( fetched ) {
-				final var auxiliaryMapping =
-						getAssociatedEntityMappingType().getAuxiliaryMapping();
-				if ( auxiliaryMapping != null ) {
-					auxiliaryMapping.applyPredicate(
-							getAssociatedEntityMappingType(),
-							predicateConsumer,
-							lazyTableGroup,
-							navigablePath,
-							creationState
-					);
-				}
+			if ( fetched && softDeleteMapping != null ) {
+				// add the restriction
+				final var tableReference =
+						lazyTableGroup.resolveTableReference( navigablePath,
+								getAssociatedEntityMappingType().getSoftDeleteTableDetails().getTableName() );
+				predicateConsumer.accept( softDeleteMapping.createNonDeletedRestriction( tableReference,
+						creationState.getSqlExpressionResolver() ) );
 			}
 		}
 

@@ -200,10 +200,10 @@ public abstract class AbstractSelectionQuery<R>
 	 */
 	protected void prepareSessionCacheMode(SharedSessionContractImplementor session) {
 		assert sessionCacheMode == null;
-		final var cacheMode = getQueryOptions().getCacheMode();
-		if ( cacheMode != null ) {
+		final var effectiveCacheMode = getCacheMode();
+		if ( effectiveCacheMode != null ) {
 			sessionCacheMode = session.getCacheMode();
-			session.setCacheMode( cacheMode );
+			session.setCacheMode( effectiveCacheMode );
 		}
 	}
 
@@ -496,7 +496,7 @@ public abstract class AbstractSelectionQuery<R>
 		if ( isCacheable() ) {
 			hints.put( HINT_CACHEABLE, true );
 			putIfNotNull( hints, HINT_CACHE_REGION, getCacheRegion() );
-			putIfNotNull( hints, HINT_CACHE_MODE, queryOptions.getCacheMode() );
+			putIfNotNull( hints, HINT_CACHE_MODE, getCacheMode() );
 			putIfNotNull( hints, JAKARTA_SHARED_CACHE_RETRIEVE_MODE, queryOptions.getCacheRetrieveMode() );
 			putIfNotNull( hints, JAKARTA_SHARED_CACHE_STORE_MODE, queryOptions.getCacheStoreMode() );
 			//noinspection deprecation
@@ -544,8 +544,7 @@ public abstract class AbstractSelectionQuery<R>
 	}
 	@Override
 	public CacheMode getCacheMode() {
-		final var cacheMode = getQueryOptions().getCacheMode();
-		return cacheMode == null ? getSession().getCacheMode() : cacheMode;
+		return getQueryOptions().getCacheMode();
 	}
 
 	@Override
@@ -566,12 +565,12 @@ public abstract class AbstractSelectionQuery<R>
 
 	@Override
 	public SelectionQuery<R> setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode) {
-		return setCacheMode( fromJpaModes( cacheRetrieveMode, getCacheMode().getJpaStoreMode() ) );
+		return setCacheMode( fromJpaModes( cacheRetrieveMode, getQueryOptions().getCacheMode().getJpaStoreMode() ) );
 	}
 
 	@Override
 	public SelectionQuery<R> setCacheStoreMode(CacheStoreMode cacheStoreMode) {
-		return setCacheMode( fromJpaModes( getCacheMode().getJpaRetrieveMode(), cacheStoreMode ) );
+		return setCacheMode( fromJpaModes( getQueryOptions().getCacheMode().getJpaRetrieveMode(), cacheStoreMode ) );
 	}
 
 	@Override
@@ -581,9 +580,6 @@ public abstract class AbstractSelectionQuery<R>
 
 	@Override
 	public SelectionQuery<R> setCacheable(boolean cacheable) {
-		if ( cacheable && isHistorical() ) {
-			throw new IllegalStateException( "Query result set caching disallowed for historical query" );
-		}
 		getQueryOptions().setResultCachingEnabled( cacheable );
 		return this;
 	}

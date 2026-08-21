@@ -16,7 +16,6 @@ import java.util.Set;
 
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
-import org.hibernate.boot.model.internal.GeneratorBinder;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.ExportableProducer;
 import org.hibernate.boot.model.relational.QualifiedName;
@@ -29,8 +28,8 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.generator.Generator;
 import org.hibernate.id.CompositeNestedGeneratedValueGenerator;
-import org.hibernate.id.CompositeNestedGeneratedValueGenerator.GenerationPlan;
 import org.hibernate.id.Configurable;
+import org.hibernate.id.IdentifierGenerationException;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
@@ -547,26 +546,6 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 	}
 
 	@Override
-	public void setNonUpdatable() {
-		for ( var property : properties ) {
-			property.getValue().setNonUpdatable();
-		}
-		if ( isPolymorphic() ) {
-			getDiscriminator().setNonUpdatable();
-		}
-	}
-
-	@Override
-	public void setNonInsertable() {
-		for ( var property : properties ) {
-			property.getValue().setNonInsertable();
-		}
-		if ( isPolymorphic() ) {
-			getDiscriminator().setNonInsertable();
-		}
-	}
-
-	@Override
 	public boolean hasAnyUpdatableColumns() {
 		for ( var property : properties ) {
 			if ( property.getValue().hasAnyUpdatableColumns() ) {
@@ -698,8 +677,79 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 	@Override
 	public Generator createGenerator(Dialect dialect, RootClass rootClass, Property property, GeneratorSettings defaults) {
 		return getCustomIdGeneratorCreator().isAssigned()
-				? GeneratorBinder.buildIdentifierGenerator( this, dialect, rootClass, defaults )
+				? buildIdentifierGenerator( dialect, rootClass, defaults )
 				: super.createGenerator( dialect, rootClass, property, defaults );
+	}
+
+	private Generator buildIdentifierGenerator(Dialect dialect, RootClass rootClass, GeneratorSettings defaults) {
+		final var generator =
+				new CompositeNestedGeneratedValueGenerator(
+						new StandardGenerationContextLocator( rootClass.getEntityName() ),
+						getType()
+				);
+		final var properties = getProperties();
+		for ( int i = 0; i < properties.size(); i++ ) {
+			final var property = properties.get( i );
+			if ( property.getValue().isSimpleValue() ) {
+				final var value = (SimpleValue) property.getValue();
+				if ( !value.getCustomIdGeneratorCreator().isAssigned() ) {
+					// skip any 'assigned' generators, they would have been
+					// handled by the StandardGenerationContextLocator
+					if ( value.createGenerator( dialect, rootClass, property, defaults )
+							instanceof BeforeExecutionGenerator beforeExecutionGenerator ) {
+						generator.addGeneratedValuePlan( new ValueGenerationPlan(
+								beforeExecutionGenerator,
+								getType().isMutable()
+										? injector( property, getAttributeDeclarer( rootClass ) )
+										: null,
+								i
+						) );
+					}
+					else {
+						throw new IdentifierGenerationException( "Identity generation isn't supported for composite ids" );
+					}
+				}
+			}
+		}
+		return generator;
+	}
+
+	/**
+	 * Return the class that declares the composite pk attributes,
+	 * which might be an {@code @IdClass}, an {@code @EmbeddedId},
+	 * of the entity class itself.
+	 */
+	private Class<?> getAttributeDeclarer(RootClass rootClass) {
+		// See the javadoc discussion on CompositeNestedGeneratedValueGenerator
+		// for the various scenarios we need to account for here
+		if ( rootClass.getIdentifierMapper() != null ) {
+			// we have the @IdClass / <composite-id mapped="true"/> case
+			return resolveComponentClass();
+		}
+		else if ( rootClass.getIdentifierProperty() != null ) {
+			// we have the "@EmbeddedId" / <composite-id name="idName"/> case
+			return resolveComponentClass();
+		}
+		else {
+			// we have the "straight up" embedded (again the Hibernate term)
+			// component identifier: the entity class itself is the id class
+			return rootClass.getMappedClass();
+		}
+	}
+
+	private Setter injector(Property property, Class<?> attributeDeclarer) {
+		return property.getPropertyAccessStrategy( attributeDeclarer )
+				.buildPropertyAccess( attributeDeclarer, property.getName(), true )
+				.getSetter();
+	}
+
+	private Class<?> resolveComponentClass() {
+		try {
+			return getComponentClass();
+		}
+		catch ( Exception e ) {
+			return null;
+		}
 	}
 
 	@Internal
@@ -747,7 +797,7 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 		}
 	}
 
-	public static class ValueGenerationPlan implements GenerationPlan {
+	public static class ValueGenerationPlan implements CompositeNestedGeneratedValueGenerator.GenerationPlan {
 		private final BeforeExecutionGenerator generator;
 		private final Setter injector;
 		private final int propertyIndex;
@@ -859,6 +909,21 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 			properties.sort( Comparator.comparing( Property::getName ) );
 			originalPropertyOrder = null;
 		}
+		if ( isKey ) {
+			final var primaryKey = getOwner().getTable().getPrimaryKey();
+			if ( primaryKey != null ) {
+				// We have to re-order the primary key accordingly
+				final var columns = primaryKey.getColumns();
+				columns.clear();
+				for ( var property : properties ) {
+					for ( var selectable : property.getSelectables() ) {
+						if ( selectable instanceof Column column ) {
+							columns.add( column );
+						}
+					}
+				}
+			}
+		}
 		return this.originalPropertyOrder = originalPropertyOrder;
 	}
 
@@ -889,15 +954,6 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 			simple = simpleRecord = true;
 		}
 		return simple;
-	}
-
-	private Class<?> resolveComponentClass() {
-		try {
-			return getComponentClass();
-		}
-		catch ( Exception e ) {
-			return null;
-		}
 	}
 
 	public Class<? extends EmbeddableInstantiator> getCustomInstantiator() {

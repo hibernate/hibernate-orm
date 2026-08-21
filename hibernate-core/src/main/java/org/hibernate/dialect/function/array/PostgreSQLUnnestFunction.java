@@ -5,7 +5,6 @@
 package org.hibernate.dialect.function.array;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.type.descriptor.jdbc.XmlHelper;
 import org.hibernate.dialect.aggregate.AggregateSupport;
 import org.hibernate.metamodel.mapping.CollectionPart;
@@ -27,7 +26,7 @@ public class PostgreSQLUnnestFunction extends UnnestFunction {
 	private final boolean supportsJsonTable;
 
 	public PostgreSQLUnnestFunction(boolean supportsJsonTable) {
-		super( null, "ordinality", false );
+		super( null, "ordinality" );
 		this.supportsJsonTable = supportsJsonTable;
 	}
 
@@ -63,10 +62,7 @@ public class PostgreSQLUnnestFunction extends UnnestFunction {
 					sqlAppender.append( ',' );
 				}
 				if ( CollectionPart.Nature.INDEX.getName().equals( selectableMapping.getSelectableName() ) ) {
-					sqlAppender.append( "t.i" );
-				}
-				else if ( CollectionPart.Nature.ELEMENT.getName().equals( selectableMapping.getSelectableName() ) ) {
-					sqlAppender.append( "t.v" );
+					sqlAppender.appendSql( "t.i" );
 				}
 				else {
 					sqlAppender.append( aggregateSupport.aggregateComponentCustomReadExpression(
@@ -82,13 +78,7 @@ public class PostgreSQLUnnestFunction extends UnnestFunction {
 				sqlAppender.append( " as " );
 				sqlAppender.append( selectableMapping.getSelectionExpression() );
 			} );
-			final ModelPart elementPart = tupleType.findSubPart( CollectionPart.Nature.ELEMENT.getName(), null );
-			if ( elementPart != null && elementPart.getSingleJdbcMapping().getJdbcType().isStringLike() ) {
-				sqlAppender.appendSql( " from jsonb_array_elements_text(" );
-			}
-			else {
-				sqlAppender.appendSql( " from jsonb_array_elements(" );
-			}
+			sqlAppender.appendSql( " from jsonb_array_elements(" );
 			array.accept( walker );
 			sqlAppender.appendSql( ')' );
 			if ( tupleType.findSubPart( CollectionPart.Nature.INDEX.getName(), null ) != null ) {

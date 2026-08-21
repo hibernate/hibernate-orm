@@ -73,6 +73,7 @@ public class AnonymousTupleBasicValuedModelPart implements OwnedValuedModelPart,
 						null,
 						null,
 						null,
+						null,
 						false,
 						true,
 						false,
@@ -202,6 +203,11 @@ public class AnonymousTupleBasicValuedModelPart implements OwnedValuedModelPart,
 	@Override
 	public boolean hasPartitionedSelectionMapping() {
 		return selectableMapping.isPartitioned();
+	}
+
+	@Override
+	public @Nullable String getColumnDefinition() {
+		return selectableMapping.getColumnDefinition();
 	}
 
 	@Override

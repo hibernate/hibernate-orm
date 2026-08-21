@@ -7,21 +7,20 @@ package org.hibernate.orm.test.mapping.generated.always;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-import org.hibernate.annotations.DialectOverride;
 import org.hibernate.annotations.GeneratedColumn;
 import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.community.dialect.DerbyDialect;
 import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.HSQLDialect;
-import org.hibernate.dialect.SpannerDialect;
+import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.dialect.PostgresPlusDialect;
 import org.hibernate.dialect.SybaseASEDialect;
-import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.hibernate.testing.orm.junit.VersionMatchMode;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -38,9 +37,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @SkipForDialect(dialectClass = HSQLDialect.class)
 @SkipForDialect(dialectClass = DerbyDialect.class)
 @SkipForDialect(dialectClass = SybaseASEDialect.class)
+@SkipForDialect(dialectClass = PostgreSQLDialect.class, majorVersion = 11, versionMatchMode = VersionMatchMode.SAME_OR_OLDER) // 'generated always' was added in 12
+@SkipForDialect(dialectClass = PostgresPlusDialect.class, majorVersion = 11, versionMatchMode = VersionMatchMode.SAME_OR_OLDER) // 'generated always' was added in 12
 @SkipForDialect(dialectClass = AltibaseDialect.class, reason = "generated always is not supported in Altibase")
 @SkipForDialect(dialectClass = InformixDialect.class)
-@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsNumericPrimaryKey.class )
 public class GeneratedAlwaysTest {
 
 	@Test
@@ -73,8 +73,6 @@ public class GeneratedAlwaysTest {
 		private BigDecimal total;
 		@Column(name = "discountedTotal")
 		@GeneratedColumn(value = "unitPrice*quantity*(1.0-discount/100.0)")
-		@DialectOverride.GeneratedColumn(dialect = SpannerDialect.class,
-				override = @GeneratedColumn(value = "CAST(unitPrice*quantity*(1.0-discount/100.0) AS NUMERIC)"))
 		private BigDecimal discounted;
 
 		public OrderLine() {}

@@ -38,7 +38,6 @@ import static org.hamcrest.Matchers.containsString;
 
 @BaseUnitTest
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSequences.class)
-@RequiresDialectFeature( feature = DialectFeatureChecks.SupportPooledSequences.class )
 public class SequenceGeneratorIncrementTest {
 	private File output;
 	private ServiceRegistry ssr;

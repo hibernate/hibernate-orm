@@ -22,6 +22,7 @@ import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
@@ -100,9 +101,7 @@ public class LoadQueryInfluencersTest {
 	@BatchSize(size = 1)
 	public class EntityWithBatchSize1 {
 		@Id
-		// Identifier generation is not under test; use the default strategy so this
-		// metadata test remains portable to dialects without identity columns.
-		@GeneratedValue
+		@GeneratedValue(strategy = GenerationType.IDENTITY)
 		private Long id;
 
 		private String name;
@@ -140,9 +139,7 @@ public class LoadQueryInfluencersTest {
 	@Table(name = "ChildEntity")
 	public class ChildEntity {
 		@Id
-		// Identifier generation is not under test; use the default strategy so this
-		// metadata test remains portable to dialects without identity columns.
-		@GeneratedValue
+		@GeneratedValue(strategy = GenerationType.IDENTITY)
 		private Long id;
 
 		private String name;

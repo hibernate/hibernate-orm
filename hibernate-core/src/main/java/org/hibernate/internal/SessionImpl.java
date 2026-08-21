@@ -40,8 +40,6 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.service.spi.EventListenerGroups;
 import org.hibernate.event.spi.*;
 import org.hibernate.event.spi.LoadEventListener.LoadType;
-import org.hibernate.exception.GenericJDBCException;
-import org.hibernate.exception.JDBCConnectionException;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.internal.find.FindByKeyOperation;
@@ -409,9 +407,8 @@ public class SessionImpl
 		finally {
 			// E.g. When we are in the JTA context, the session can get closed while the
 			// transaction is still active and JTA will call the AfterCompletion itself.
-			// Also, some JTA environments close the Session through a Synchronization that is executed before ours.
 			// Hence, we don't want to clear out the action queue callbacks at this point:
-			if ( !isJtaTransactionCompletionProcessing()
+			if ( !getTransactionCoordinator().isTransactionActive()
 					&& actionQueue.hasAfterTransactionActions() ) {
 				SESSION_LOGGER.closingSessionWithUnprocessedBulkOperations();
 				actionQueue.executePendingBulkOperationCleanUpActions();
@@ -439,24 +436,11 @@ public class SessionImpl
 			&& transactionCoordinator.getTransactionDriverControl().isActiveAndNoMarkedForRollback();
 	}
 
-	private boolean isJtaTransactionCompletionProcessing() {
-		final var transactionCoordinator = getTransactionCoordinator();
-		return transactionCoordinator.getTransactionCoordinatorBuilder().isJta()
-			// Our Synchronization has been registered
-				&& transactionCoordinator.isJoined()
-			// Any transaction status other than NOT_ACTIVE indicates that the synchronizations are still running
-				&& transactionCoordinator.getTransactionDriverControl().getStatus() != TransactionStatus.NOT_ACTIVE;
-	}
-
 	@Override
 	protected void checkBeforeClosingJdbcCoordinator() {
-		// In a JTA environment the Session is usually closed through a Synchronization, that is invoked before ours,
-		// so only check for pending actions if we're not in a JTA transaction completion processing state
-		if ( !isJtaTransactionCompletionProcessing() ) {
-			final var actionQueue = getActionQueue();
-			if ( actionQueue.hasBeforeTransactionActions() || actionQueue.hasAfterTransactionActions() ) {
-				SESSION_LOGGER.closingSharedSessionWithUnprocessedTxCompletions();
-			}
+		final var actionQueue = getActionQueue();
+		if ( actionQueue.hasBeforeTransactionActions() || actionQueue.hasAfterTransactionActions() ) {
+			SESSION_LOGGER.closingSharedSessionWithUnprocessedTxCompletions();
 		}
 	}
 
@@ -969,20 +953,15 @@ public class SessionImpl
 			RootGraphImplementor<E> rootGraph,
 			List<Object> keys,
 			FindOption... options) {
-		try {
-			final var operation = new FindMultipleByKeyOperation<E>(
-					entityDescriptor,
-					lockOptions,
-					getCacheMode(),
-					isDefaultReadOnly(),
-					getFactory(),
-					options
-			);
-			return operation.performFind( keys, graphSemantic, rootGraph, this );
-		}
-		finally {
-			afterOperation( true ); // success value doesn't matter
-		}
+		final var operation = new FindMultipleByKeyOperation<E>(
+				entityDescriptor,
+				lockOptions,
+				getCacheMode(),
+				isDefaultReadOnly(),
+				getFactory(),
+				options
+		);
+		return operation.performFind( keys, graphSemantic, rootGraph, this );
 	}
 
 	@Override
@@ -2090,7 +2069,6 @@ public class SessionImpl
 	@Override
 	public void afterTransactionBegin() {
 		checkOpenOrWaitingForAutoClose();
-		super.afterTransactionBegin();
 		afterTransactionBeginEvents();
 	}
 
@@ -2211,11 +2189,8 @@ public class SessionImpl
 			throw getExceptionConverter().convert( new IllegalArgumentException( e.getMessage(), e ) );
 		}
 		catch ( JDBCException e ) {
-			final Transaction transaction = accessTransaction();
-			if ( transaction.isActive() && transaction.getRollbackOnly()
-				&& (e instanceof GenericJDBCException || e instanceof JDBCConnectionException) ) {
-				// Assume situation HHH-12472 running on WildFly,
-				// but only if the exception is generic to avoid swallowing locking exceptions (HHH-20260)
+			if ( accessTransaction().isActive() && accessTransaction().getRollbackOnly() ) {
+				// Assume situation HHH-12472 running on WildFly
 				// Just log the exception and return null
 				SESSION_LOGGER.jdbcExceptionThrownWithTransactionRolledBack( e );
 				return null;
@@ -2765,8 +2740,9 @@ public class SessionImpl
 		oos.defaultWriteObject();
 
 		PersistenceContexts.serialize( persistenceContext, oos );
-		oos.writeObject( loadQueryInfluencers );
 		actionQueue.serialize( oos );
+
+		oos.writeObject( loadQueryInfluencers );
 	}
 
 	/**
@@ -2786,8 +2762,9 @@ public class SessionImpl
 		ois.defaultReadObject();
 
 		persistenceContext = PersistenceContexts.deserialize( ois, this );
-		loadQueryInfluencers = (LoadQueryInfluencers) ois.readObject();
 		actionQueue = ActionQueue.deserialize( ois, this );
+
+		loadQueryInfluencers = (LoadQueryInfluencers) ois.readObject();
 
 		// LoadQueryInfluencers#getEnabledFilters() tries to validate each enabled
 		// filter, which will fail when called before FilterImpl#afterDeserialize( factory );

@@ -7,8 +7,6 @@ package org.hibernate.orm.test.hql;
 import java.util.List;
 
 import org.hibernate.annotations.processing.Exclude;
-import org.hibernate.dialect.SpannerDialect;
-import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 
@@ -18,7 +16,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Tuple;
 import jakarta.persistence.TypedQuery;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -32,8 +29,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @Exclude
 @DomainModel(annotatedClasses = QuotedIdentifierTest.Person.class)
 @SessionFactory
-@SkipForDialect( dialectClass = SpannerPostgreSQLDialect.class, reason = "Spanner doesn't support creating tables with spaces")
-@SkipForDialect( dialectClass = SpannerDialect.class, reason = "Spanner doesn't support creating tables with spaces")
 public class QuotedIdentifierTest {
 
 	@BeforeEach

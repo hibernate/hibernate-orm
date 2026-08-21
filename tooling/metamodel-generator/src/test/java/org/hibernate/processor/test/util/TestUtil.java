@@ -382,8 +382,7 @@ public class TestUtil {
 				 */
 				while ( ( line = input.readLine() ) != null ) {
 					contents.append( line );
-					// Always use \n as line terminator for this string to avoid testing issues on Windows
-					contents.append( '\n' );
+					contents.append( System.lineSeparator() );
 				}
 			}
 			finally {

@@ -7,7 +7,6 @@ package org.hibernate.internal.log;
 import java.lang.annotation.Annotation;
 import java.lang.invoke.MethodHandles;
 import java.util.List;
-import java.util.Locale;
 
 import org.hibernate.Internal;
 import org.hibernate.boot.jaxb.SourceType;
@@ -38,7 +37,7 @@ import static org.jboss.logging.Logger.Level.WARN;
 public interface DeprecationLogger extends BasicLogger {
 	String CATEGORY = SubSystemLogging.BASE + ".deprecation";
 
-	DeprecationLogger DEPRECATION_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), DeprecationLogger.class, CATEGORY, Locale.ROOT );
+	DeprecationLogger DEPRECATION_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), DeprecationLogger.class, CATEGORY );
 
 	@LogMessage(level = WARN)
 	@Message(
@@ -271,12 +270,4 @@ public interface DeprecationLogger extends BasicLogger {
 			value = "Custom CollectionPersister implementations are no longer supported - %s (%s)"
 	)
 	void customCollectionPersister(String role, String name);
-
-	@LogMessage(level = WARN)
-	@Message(
-			id = 90000044,
-			value = "Deprecated syntax when using @NamedEntityGraph: 'Type: attr1, attr2' is deprecated. " +
-					"Specify the root entity using the 'root' attribute instead of prefixing the graph with the entity type."
-	)
-	void deprecatedNamedEntityGraphTextThatContainTypeIndicator();
 }

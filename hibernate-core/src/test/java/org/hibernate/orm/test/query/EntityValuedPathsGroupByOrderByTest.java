@@ -4,10 +4,8 @@
  */
 package org.hibernate.orm.test.query;
 
-import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
-import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterAll;
@@ -32,7 +30,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 		EntityValuedPathsGroupByOrderByTest.EntityB.class
 } )
 @Jira( "https://hibernate.atlassian.net/browse/HHH-16409" )
-@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsFunctionalDependencyAnalysis.class )
 public class EntityValuedPathsGroupByOrderByTest {
 	@BeforeAll
 	public void setUp(SessionFactoryScope scope) {

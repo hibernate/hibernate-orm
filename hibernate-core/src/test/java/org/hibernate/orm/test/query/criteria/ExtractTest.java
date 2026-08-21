@@ -7,10 +7,8 @@ package org.hibernate.orm.test.query.criteria;
 import jakarta.persistence.criteria.LocalDateField;
 import jakarta.persistence.criteria.LocalDateTimeField;
 import jakarta.persistence.criteria.LocalTimeField;
-import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
-import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
@@ -22,9 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
 @Jpa
 class ExtractTest {
-	@Test
-	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "local date is evaluated in the database local time zone")
-	void testLocalDate(EntityManagerFactoryScope scope) {
+	@Test void testLocalDate(EntityManagerFactoryScope scope) {
 		scope.inEntityManager( entityManager -> {
 			var builder = entityManager.getCriteriaBuilder();
 			var query = builder.createQuery( Object[].class );

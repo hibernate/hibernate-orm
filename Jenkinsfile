@@ -22,8 +22,6 @@ import org.hibernate.jenkins.pipeline.helpers.job.JobHelper
 this.helper = new JobHelper(this)
 
 helper.runWithNotification {
-env.COMMON_GRADLE_ARGS = '-Igradle/init.gradle'
-
 stage('Configure') {
 	requireApprovalForPullRequest 'hibernate'
 
@@ -50,14 +48,12 @@ stage('Configure') {
 		// We want to enable preview features when testing newer builds of OpenJDK:
 		// even if we don't use these features, just enabling them can cause side effects
 		// and it's useful to test that.
-		new BuildEnvironment( testJdkVersion: '25', testJdkLauncherArgs: '--enable-preview' ),
-		new BuildEnvironment( testJdkVersion: '26', testJdkLauncherArgs: '--enable-preview' ),
+		new BuildEnvironment( testJdkVersion: '25', testJdkLauncherArgs: '--enable-preview', additionalOptions: '-PskipJacoco=true' ),
 		// The following JDKs aren't supported by Hibernate ORM out-of-the box yet:
 		// they require the use of -Dnet.bytebuddy.experimental=true.
 		// Make sure to remove that argument as soon as possible
 		// -- generally that requires upgrading bytebuddy after the JDK goes GA.
-		new BuildEnvironment( testJdkVersion: '27', testJdkLauncherArgs: '--enable-preview -Dnet.bytebuddy.experimental=true', additionalOptions: '-PskipJacoco=true' ),
-		new BuildEnvironment( testJdkVersion: '28', testJdkLauncherArgs: '--enable-preview --illegal-final-field-mutation=deny -Dnet.bytebuddy.experimental=true', additionalOptions: '-PskipJacoco=true' )
+		new BuildEnvironment( testJdkVersion: '26', testJdkLauncherArgs: '--enable-preview -Dnet.bytebuddy.experimental=true', additionalOptions: '-PskipJacoco=true' )
 	];
 
 	if ( env.CHANGE_ID ) {
@@ -105,17 +101,17 @@ if (currentBuild.getBuildCauses().toString().contains('BranchIndexingCause')) {
 	currentBuild.result = 'NOT_BUILT'
   	return
 }
-// This is a limited maintenance branch, so don't run this on pushes to the branch, only on PRs
-if ( !env.CHANGE_ID ) {
-    print "INFO: Build skipped because this job should only run for pull request, not for branch pushes"
-    currentBuild.result = 'NOT_BUILT'
-    return
-}
 
 stage('Build') {
 	Map<String, Closure> executions = [:]
 	Map<String, Map<String, String>> state = [:]
 	environments.each { BuildEnvironment buildEnv ->
+		// Don't build environments for newer JDKs when this is a PR, unless the PR is labelled with 'jdk' or 'jdk-<version>'
+		if ( helper.scmSource.pullRequest &&
+				buildEnv.testJdkVersion && buildEnv.testJdkVersion.toInteger() > DEFAULT_JDK_VERSION.toInteger() &&
+				!pullRequest.labels.contains( 'jdk' ) && !pullRequest.labels.contains( "jdk-${buildEnv.testJdkVersion}" ) ) {
+			return
+		}
 		state[buildEnv.tag] = [:]
 		executions.put(buildEnv.tag, {
 			runBuildOnNode(buildEnv.node ?: NODE_PATTERN_BASE) {
@@ -131,7 +127,7 @@ stage('Build') {
 				// Use withEnv instead of setting env directly, as that is global!
 				// See https://github.com/jenkinsci/pipeline-plugin/blob/master/TUTORIAL.md
 				withEnv(["JAVA_HOME=${javaHome}", "PATH+JAVA=${javaHome}/bin"]) {
-				    state[buildEnv.tag]['additionalOptions'] = ''
+					state[buildEnv.tag]['additionalOptions'] = '-PmavenMirror=nexus-load-balancer-c4cf05fd92f43ef8.elb.us-east-1.amazonaws.com'
 					if ( buildEnv.mainJdkVersion ) {
 						state[buildEnv.tag]['additionalOptions'] = state[buildEnv.tag]['additionalOptions'] +
 								" -Pmain.jdk.version=${buildEnv.mainJdkVersion}"
@@ -223,9 +219,6 @@ stage('Build') {
 			}
 		})
 	}
-    executions.put('Hibernate Search Update Dependency', {
-        build job: '/hibernate-search-dependency-update/8.4', propagate: true, parameters: [string(name: 'UPDATE_JOB', value: 'orm7.4'), string(name: 'ORM_REPOSITORY', value: helper.scmSource.remoteUrl), string(name: 'ORM_PULL_REQUEST_ID', value: helper.scmSource.pullRequest.id)]
-    })
 	parallel(executions)
 }
 
@@ -275,7 +268,7 @@ void ciBuild(buildEnv, String args) {
 		withCredentials([string(credentialsId: develocityCredentialsId,
 				variable: 'DEVELOCITY_ACCESS_KEY')]) {
 			withGradle { // withDevelocity, actually: https://plugins.jenkins.io/gradle/#plugin-content-capturing-build-scans-from-jenkins-pipeline
-				sh "./ci/build.sh \$COMMON_GRADLE_ARGS $args"
+				sh "./ci/build.sh $args"
 			}
 		}
 	}
@@ -283,20 +276,20 @@ void ciBuild(buildEnv, String args) {
 		// Pull request: we can't pass credentials to the build, since we'd be exposing secrets to e.g. tests.
 		// We do the build first, then publish the build scan separately.
 		tryFinally({
-			sh "./ci/build.sh \$COMMON_GRADLE_ARGS $args"
+			sh "./ci/build.sh $args"
 		}, { // Finally
 			withCredentials([string(credentialsId: 'develocity.commonhaus.dev-access-key-pr',
 					variable: 'DEVELOCITY_ACCESS_KEY')]) {
 				withGradle { // withDevelocity, actually: https://plugins.jenkins.io/gradle/#plugin-content-capturing-build-scans-from-jenkins-pipeline
 					// Don't fail a build if publishing fails
-					sh "./gradlew \$COMMON_GRADLE_ARGS buildScanPublishPrevious || true"
+					sh './gradlew buildScanPublishPrevious || true'
 				}
 			}
 		})
 	}
 	else {
 		// Don't do build scans
-		sh "./ci/build.sh \$COMMON_GRADLE_ARGS $args"
+		sh "./ci/build.sh $args"
 	}
 }
 

@@ -48,6 +48,7 @@ import static org.hibernate.internal.util.config.ConfigurationHelper.getString;
  * Variations range from actually using a sequence to using a table to mimic
  * a sequence.  These variations are encapsulated by the {@link DatabaseStructure}
  * interface internally.
+ * <p>
  * <table>
  * <caption>General configuration parameters</caption>
  * 	 <tr>
@@ -178,11 +179,6 @@ public class SequenceStyleGenerator
 	 */
 	public Type getIdentifierType() {
 		return identifierType;
-	}
-
-	@Override
-	public Class<?> getGeneratedType() {
-		return identifierType == null ? null : identifierType.getReturnedClass();
 	}
 
 

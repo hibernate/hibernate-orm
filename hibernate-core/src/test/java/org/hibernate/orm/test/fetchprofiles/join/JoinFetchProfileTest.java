@@ -25,7 +25,7 @@ import java.util.List;
  * @author Steve Ebersole
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
-@DomainModel(xmlMappings = "mappings/fetchprofile/Mappings.xml")
+@DomainModel(xmlMappings = "mappings/fetchprofile/Mappings.hbm.xml")
 @SessionFactory(generateStatistics = true)
 public class JoinFetchProfileTest {
 	@BeforeEach

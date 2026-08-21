@@ -36,6 +36,7 @@ import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlSelection;
+import org.hibernate.sql.ast.tree.from.StandardVirtualTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
@@ -83,7 +84,7 @@ public class DiscriminatedAssociationAttributeMapping
 				fetchableIndex,
 				attributeMetadata,
 				fetchTiming,
-				fetchTiming == FetchTiming.IMMEDIATE ? FetchStyle.JOIN : FetchStyle.SELECT,
+				FetchStyle.SELECT,
 				declaringType,
 				propertyAccess
 		);
@@ -139,17 +140,8 @@ public class DiscriminatedAssociationAttributeMapping
 				fetchTiming,
 				selected,
 				resultVariable,
-					creationState
-			);
-	}
-
-	@Override
-	public Fetch resolveCircularFetch(
-			NavigablePath fetchablePath,
-			FetchParent fetchParent,
-			FetchTiming fetchTiming,
-			DomainResultCreationState creationState) {
-		return discriminatorMapping.resolveCircularFetch( fetchParent, fetchablePath, fetchTiming, creationState );
+				creationState
+		);
 	}
 
 	@Override
@@ -525,14 +517,7 @@ public class DiscriminatedAssociationAttributeMapping
 			boolean fetched,
 			@Nullable Consumer<Predicate> predicateConsumer,
 			SqlAstCreationState creationState) {
-		return discriminatorMapping.createRootTableGroupJoin(
-				navigablePath,
-				lhs,
-				fetched,
-				sqlAstJoinType,
-				predicateConsumer,
-				creationState
-		);
+		return new StandardVirtualTableGroup( navigablePath, this, lhs, fetched );
 	}
 
 	@Override

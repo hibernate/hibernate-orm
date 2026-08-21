@@ -9,11 +9,9 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
 
-import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.MySQLDialect;
 
 import org.hibernate.community.dialect.TiDBDialect;
-import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -27,7 +25,6 @@ import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.Matchers.contains;
-import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.number.IsCloseTo.closeTo;
 import static org.junit.Assert.assertThat;
 
@@ -38,7 +35,6 @@ import static org.junit.Assert.assertThat;
 @SessionFactory
 @SkipForDialect(dialectClass = MySQLDialect.class, reason = "MySQL doesn't support casting to a VARCHAR(255)")
 @SkipForDialect(dialectClass = TiDBDialect.class, reason = "TiDB doesn't support casting to a VARCHAR(255)")
-@SkipForDialect(dialectClass = SpannerDialect.class, reason = "Spanner doesn't support casting to a VARCHAR(255)")
 public class ColumnTransformerTest {
 	public static final double ERROR = 0.01d;
 
@@ -100,13 +96,13 @@ public class ColumnTransformerTest {
 							.createQuery( "select s from Staff s join fetch s.integers where s.id = :id", Staff.class )
 							.setParameter( "id", 12 )
 							.uniqueResult();
-					assertThat( staffWithElements.getIntegers(), containsInAnyOrder( 1, 2, 3, 4 ) );
+					assertThat( staffWithElements.getIntegers(), contains( 1, 2, 3, 4 ) );
 
 					final Staff staffWithElements2 = session
 							.createQuery( "select s from Staff s join fetch s.integers2 where s.id = :id", Staff.class )
 							.setParameter( "id", 16 )
 							.uniqueResult();
-					assertThat( staffWithElements2.getIntegers2(), containsInAnyOrder( 5, 6, 7, 8 ) );
+					assertThat( staffWithElements2.getIntegers2(), contains( 5, 6, 7, 8 ) );
 				}
 		);
 	}
@@ -157,12 +153,7 @@ public class ColumnTransformerTest {
 							.createNativeQuery( sqlString )
 							.getResultList();
 
-					if (scope.getSessionFactory().getJdbcServices().getDialect() instanceof SpannerPostgreSQLDialect ) {
-						assertThat( results, containsInAnyOrder( 1L - 20, 2L - 20, 3L - 20, 4L - 20 ) );
-					}
-					else {
-						assertThat( results, contains( 1 - 20, 2 - 20, 3 - 20, 4 - 20 ) );
-					}
+					assertThat( results, contains( 1-20, 2-20, 3-20, 4-20 ) );
 				}
 		);
 	}

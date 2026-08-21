@@ -30,7 +30,7 @@ public interface AvailableSettings
 		extends BatchSettings, BytecodeSettings, CacheSettings, EnvironmentSettings, FetchSettings,
 		JdbcSettings, JpaComplianceSettings, ManagedBeanSettings, MappingSettings, MultiTenancySettings,
 		PersistenceSettings, QuerySettings, SchemaToolingSettings, SessionEventSettings, StatisticsSettings,
-		TransactionSettings, ValidationSettings, GraphParserSettings {
+		TransactionSettings, ValidationSettings {
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// JPA settings

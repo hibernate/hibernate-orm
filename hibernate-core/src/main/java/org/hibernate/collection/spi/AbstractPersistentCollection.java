@@ -17,7 +17,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.hibernate.AssertionFailure;
-import org.hibernate.audit.AuditLog;
+import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LazyInitializationException;
 import org.hibernate.engine.spi.CollectionEntry;
@@ -25,7 +25,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.engine.spi.TypedValue;
 import org.hibernate.internal.SessionFactoryRegistry;
-import org.hibernate.internal.util.Optional;
+import org.hibernate.internal.util.MarkerObject;
 import org.hibernate.internal.util.collections.IdentitySet;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.type.BasicType;
@@ -75,7 +75,6 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 
 	private String sessionFactoryUuid;
 	private boolean allowLoadOutsideTransaction;
-	private @Nullable Object temporalIdentifier;
 
 	private transient int instanceId;
 
@@ -88,8 +87,6 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 
 	protected AbstractPersistentCollection(SharedSessionContractImplementor session) {
 		this.session = session;
-		final Object tempId = session.getLoadQueryInfluencers().getTemporalIdentifier();
-		this.temporalIdentifier = tempId != AuditLog.ALL_CHANGESETS ? tempId : null;
 	}
 
 	@Override
@@ -100,10 +97,6 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 	@Override
 	public final @Nullable Object getKey() {
 		return key;
-	}
-
-	public @Nullable Object getTemporalIdentifier() {
-		return temporalIdentifier;
 	}
 
 	@Override
@@ -321,8 +314,10 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 			throwLazyInitializationException( "SessionFactory UUID not known; cannot create temporary session for loading" );
 		}
 
-		return (SharedSessionContractImplementor)
-				SessionFactoryRegistry.INSTANCE.getSessionFactory( sessionFactoryUuid ).openStatelessSession();
+		final var session = SessionFactoryRegistry.INSTANCE.getSessionFactory( sessionFactoryUuid ).openSession();
+		session.getPersistenceContextInternal().setDefaultReadOnly( true );
+		session.setHibernateFlushMode( FlushMode.MANUAL );
+		return session;
 	}
 
 	protected Boolean readIndexExistence(final Object index) {
@@ -388,7 +383,9 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 		}
 	}
 
-	protected Optional<E> readElementByIndex(final Object index) {
+	protected static final Object UNKNOWN = new MarkerObject( "UNKNOWN" );
+
+	protected Object readElementByIndex(final Object index) {
 		if ( !initialized ) {
 			return withTemporarySessionIfNeeded( () -> {
 				final var entry = getCollectionEntry();
@@ -398,16 +395,15 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 					if ( hasQueuedOperations() ) {
 						session.flush();
 					}
-					final Object element = persister.getElementByIndex( entry.getLoadedKey(), index, session, owner );
-					return Optional.of( (E) element );
+					return persister.getElementByIndex( entry.getLoadedKey(), index, session, owner );
 				}
 				else {
 					read();
-					return Optional.undefined();
+					return UNKNOWN;
 				}
 			} );
 		}
-		return Optional.undefined();
+		return UNKNOWN;
 	}
 
 	@Override
@@ -623,20 +619,7 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 		if ( !initialized ) {
 			withTemporarySessionIfNeeded(
 					() -> {
-						if ( temporalIdentifier != null ) {
-							final var influencers = session.getLoadQueryInfluencers();
-							final Object previous = influencers.getTemporalIdentifier();
-							influencers.setTemporalIdentifier( temporalIdentifier );
-							try {
-								session.initializeCollection( this, writing );
-							}
-							finally {
-								influencers.setTemporalIdentifier( previous );
-							}
-						}
-						else {
-							session.initializeCollection( this, writing );
-						}
+						session.initializeCollection( this, writing );
 						return null;
 					}
 			);

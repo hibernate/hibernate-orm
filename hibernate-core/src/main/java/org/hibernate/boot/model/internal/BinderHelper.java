@@ -23,6 +23,7 @@ import org.hibernate.annotations.SqlFragmentAlias;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.mapping.Any;
 import org.hibernate.mapping.AttributeContainer;
 import org.hibernate.mapping.BasicValue;
@@ -38,7 +39,6 @@ import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.SyntheticProperty;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
-import org.hibernate.metamodel.mapping.DiscriminatorValue;
 import org.hibernate.models.spi.AnnotationTarget;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
@@ -69,7 +69,6 @@ import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 import static org.hibernate.internal.util.StringHelper.qualifier;
 import static org.hibernate.internal.util.StringHelper.qualify;
-import static org.hibernate.internal.util.collections.ArrayHelper.forEach;
 import static org.hibernate.internal.util.collections.ArrayHelper.isEmpty;
 import static org.hibernate.models.spi.TypeDetailsHelper.resolveRawClass;
 import static org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies.EMBEDDED;
@@ -411,8 +410,6 @@ public class BinderHelper {
 		clone.setName( property.getName() );
 		clone.setNaturalIdentifier( property.isNaturalIdentifier() );
 		clone.setOptimisticLocked( property.isOptimisticLocked() );
-		clone.setTemporalExcluded( property.isTemporalExcluded() );
-		clone.setAuditedExcluded( property.isAuditedExcluded() );
 		clone.setOptional( property.isOptional() );
 		clone.setPersistentClass( property.getPersistentClass() );
 		clone.setPropertyAccessorName( property.getPropertyAccessorName() );
@@ -767,11 +764,11 @@ public class BinderHelper {
 
 		final var discriminatorJavaType = discriminator.resolve().getRelationalJavaType();
 
-		final Map<DiscriminatorValue,Class<?>> discriminatorValueMappings = new HashMap<>();
+		final Map<Object,Class<?>> discriminatorValueMappings = new HashMap<>();
 		processAnyDiscriminatorValues(
 				inferredData.getAttributeMember(),
 				valueMapping -> discriminatorValueMappings.put(
-						new DiscriminatorValue.Literal( discriminatorJavaType.wrap( valueMapping.discriminator(), null ) ),
+						discriminatorJavaType.wrap( valueMapping.discriminator(), null ),
 						valueMapping.entity()
 				),
 				context.getBootstrapContext().getModelsContext()
@@ -797,15 +794,11 @@ public class BinderHelper {
 			}
 		}
 		keyValueBinder.setType( memberDetails, memberDetails.getType() );
-		final var firstKeyColumn = columns.get( 0 ); //TODO: nasty
-		if ( firstKeyColumn.isNameDeferred() ) {
-			firstKeyColumn.applyDefaultAnyKeyColumnNaming();
-		}
 		final var keyDescriptor = keyValueBinder.make();
 		any.setKey( keyDescriptor );
 		keyValueBinder.fillSimpleValue();
 		keyColumns.checkPropertyConsistency();
-		firstKeyColumn.linkWithValue( keyDescriptor );
+		columns.get(0).linkWithValue( keyDescriptor ); //TODO: nasty
 		return any;
 	}
 
@@ -816,7 +809,7 @@ public class BinderHelper {
 		final var anyDiscriminatorValues =
 				property.locateAnnotationUsage( AnyDiscriminatorValues.class, sourceModelContext );
 		if ( anyDiscriminatorValues != null ) {
-			forEach( anyDiscriminatorValues.value(), consumer );
+			ArrayHelper.forEach( anyDiscriminatorValues.value(), consumer );
 		}
 		else {
 			final var anyDiscriminatorValue =

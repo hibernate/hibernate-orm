@@ -10,7 +10,6 @@ import org.hibernate.MappingException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.metamodel.mapping.DiscriminatorValue;
 import org.hibernate.metamodel.spi.ImplicitDiscriminatorStrategy;
 
 import java.sql.PreparedStatement;
@@ -27,13 +26,13 @@ public class MetaType extends AbstractType {
 
 	private final Type valueType;
 	private final ImplicitDiscriminatorStrategy implicitValueStrategy;
-	private final Map<DiscriminatorValue,String> discriminatorValuesToEntityNameMap;
+	private final Map<Object,String> discriminatorValuesToEntityNameMap;
 	private final Map<String,Object> entityNameToDiscriminatorValueMap;
 
 	public MetaType(
 			Type valueType,
 			ImplicitDiscriminatorStrategy implicitValueStrategy,
-			Map<DiscriminatorValue,String> explicitValueMappings) {
+			Map<Object,String> explicitValueMappings) {
 		this.valueType = valueType;
 		this.implicitValueStrategy = implicitValueStrategy;
 
@@ -62,7 +61,7 @@ public class MetaType extends AbstractType {
 		return REGISTRATION_KEYS;
 	}
 
-	public Map<DiscriminatorValue, String> getDiscriminatorValuesToEntityNameMap() {
+	public Map<Object, String> getDiscriminatorValuesToEntityNameMap() {
 		return discriminatorValuesToEntityNameMap;
 	}
 

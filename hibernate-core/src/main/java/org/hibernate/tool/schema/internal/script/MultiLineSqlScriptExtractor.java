@@ -48,9 +48,10 @@ public class MultiLineSqlScriptExtractor implements SqlScriptCommandExtractor {
 			return visitor.visitScript( scriptParseTree );
 		}
 		catch (Exception exception) {
-			throw exception instanceof SqlScriptException sqlScriptException
-					? sqlScriptException
-					: new SqlScriptException( "Error during SQL script parsing", exception );
+			if ( exception instanceof SqlScriptException sqlScriptException ) {
+				throw sqlScriptException;
+			}
+			throw new SqlScriptException( "Error during SQL script parsing", exception );
 		}
 	}
 
@@ -60,11 +61,11 @@ public class MultiLineSqlScriptExtractor implements SqlScriptCommandExtractor {
 	}
 
 	private static SqlScriptParser.ScriptContext buildScriptParseTree(SqlScriptLexer lexer) {
-		return buildScriptParseTree( new SqlScriptParser( new CommonTokenStream( lexer ) ) );
+		return buildScriptParseTree( lexer, new SqlScriptParser( new CommonTokenStream( lexer ) ) );
 	}
 
-	private static SqlScriptParser.ScriptContext buildScriptParseTree(SqlScriptParser parser) {
-		// try to use SLL(k)-based parsing first - it's faster
+	private static SqlScriptParser.ScriptContext buildScriptParseTree(SqlScriptLexer lexer, SqlScriptParser parser) {
+		// try to use SLL(k)-based parsing first - its faster
 		parser.getInterpreter().setPredictionMode( PredictionMode.SLL );
 		parser.removeErrorListeners();
 		parser.setErrorHandler( new BailErrorStrategy() );
@@ -73,8 +74,9 @@ public class MultiLineSqlScriptExtractor implements SqlScriptCommandExtractor {
 		try {
 			return parser.script();
 		}
-		catch ( ParseCancellationException e ) {
-			// reset the parser state (do not reset the input token stream)
+		catch ( ParseCancellationException e) {
+			// reset the input token stream and parser state
+			lexer.reset();
 			parser.reset();
 
 			// fall back to LL(k)-based parsing

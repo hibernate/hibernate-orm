@@ -14,7 +14,6 @@ import org.jboss.logging.annotations.MessageLogger;
 import org.jboss.logging.annotations.ValidIdRange;
 
 import java.lang.invoke.MethodHandles;
-import java.util.Locale;
 
 import static org.jboss.logging.Logger.Level.INFO;
 
@@ -34,8 +33,7 @@ public interface EnversBootLogger extends BasicLogger {
 	EnversBootLogger BOOT_LOGGER = Logger.getMessageLogger(
 			MethodHandles.lookup(),
 			EnversBootLogger.class,
-			LOGGER_NAME,
-			Locale.ROOT
+			LOGGER_NAME
 	);
 
 	boolean TRACE_ENABLED = BOOT_LOGGER.isTraceEnabled();

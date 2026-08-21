@@ -22,11 +22,11 @@ plugins {
 	id "local.module"
 	id "local.javadoc"
 
-    alias(libs.plugins.asciidoctor.convert)
-    alias(libs.plugins.asciidoctor.pdf)
+	id "org.hibernate.orm.build.reports"
 
-    alias(libs.plugins.hibernateBuildReports)
-    alias(libs.plugins.hibernateBuildSettingsDoc)
+	id 'org.asciidoctor.jvm.convert' version '4.0.5'
+	id 'org.asciidoctor.jvm.pdf' version '4.0.5'
+	id "org.hibernate.orm.build.settings-doc"
 }
 
 repositories {
@@ -39,13 +39,6 @@ def jpaVersion = ormBuildDetails.jpaVersion
 defaultTasks 'buildDocs'
 
 configurations {
-	// hibernate-ant -> hibernate-reveng -> google-java-format -> guava
-	// guava publishes JRE/Android variants that Gradle's reportAggregation
-	// configuration cannot resolve; guava is not needed for report aggregation
-	reportAggregation {
-		exclude group: 'com.google.guava', module: 'guava'
-	}
-
 	core
 
 	testing
@@ -63,7 +56,7 @@ configurations {
 
 	javadocClasspath {
 		description = 'Class files for the javadoc to be built'
-		resolutionStrategy.capabilitiesResolution.withCapability('org.junit.jupiter:junit-jupiter-params:'+libs.versions.junitJupiter.get()) { details ->
+		resolutionStrategy.capabilitiesResolution.withCapability('org.junit.jupiter:junit-jupiter-params:'+testLibs.versions.junitJupiter.get()) { details ->
 			details.select( details.candidates.first() ).because( 'first' )
 		}
 
@@ -167,20 +160,20 @@ dependencies {
 	jpamodelgen project( ':hibernate-processor' )
 
 	javadocClasspath libs.loggingAnnotations
-	javadocClasspath libs.jakarta.validation
-	javadocClasspath libs.jakarta.cdi
-	javadocClasspath libs.jakarta.jacc
-	javadocClasspath libs.jakarta.jsonbApi
+	javadocClasspath jakartaLibs.validation
+	javadocClasspath jakartaLibs.cdi
+	javadocClasspath jakartaLibs.jacc
+	javadocClasspath jakartaLibs.jsonbApi
 	javadocClasspath libs.ant
-	javadocClasspath libs.jdbc.postgresql
-	javadocClasspath libs.jdbc.edb
+	javadocClasspath jdbcLibs.postgresql
+	javadocClasspath jdbcLibs.edb
 	javadocClasspath libs.jackson
 	javadocClasspath libs.jackson3
 	javadocClasspath gradleApi()
 	javadocClasspath libs.jacksonXml
 	javadocClasspath libs.jackson3Xml
-	javadocClasspath libs.jdbc.oracle
-	javadocClasspath libs.jdbc.oracleJdbcJacksonOsonExtension
+	javadocClasspath jdbcLibs.oracle
+	javadocClasspath jdbcLibs.oracleJdbcJacksonOsonExtension
 }
 
 
@@ -367,9 +360,9 @@ def buildTutorialZipTask = tasks.register( 'buildTutorialZip', Zip ) { task ->
 	archiveFileName = 'hibernate-tutorials.zip'
 	expand(
 			version: project.version,
-			slf4j: libs.versions.slf4j.get(),
-			junit: libs.versions.junit4.get(),
-			h2: libs.versions.h2.get()
+			slf4j: "2.0.7",
+			junit: testLibs.versions.junit4.get(),
+			h2: jdbcLibs.versions.h2.get()
 	)
 }
 

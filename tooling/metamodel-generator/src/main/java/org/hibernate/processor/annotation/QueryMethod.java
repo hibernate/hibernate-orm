@@ -81,11 +81,6 @@ public class QueryMethod extends AbstractQueryMethod {
 	}
 
 	@Override
-	@Nullable String containerType() {
-		return containerType;
-	}
-
-	@Override
 	boolean singleResult() {
 		return containerType == null && !isUpdate;
 	}
@@ -134,30 +129,26 @@ public class QueryMethod extends AbstractQueryMethod {
 					.append('\t');
 			declaration.append("var _select = ");
 		}
-		if ( useSpecificationCreateQuery() ) {
-			declaration
-					.append("_spec.createQuery(");
-			localSession( declaration );
-			declaration
-					.append(")");
-		}
-		else if ( isUsingSpecification() ) {
-			localSession( declaration );
-			declaration
-					.append(".createQuery(_spec.buildCriteria(");
-			localSession( declaration );
+		if ( isUsingSpecification() ) {
 			if ( isReactive() ) {
 				declaration
+						.append(localSessionName())
+						.append(".createQuery(_spec.buildCriteria(")
+						.append(localSessionName())
 						.append(".getFactory().getCriteriaBuilder()))\n");
 			}
 			else {
 				declaration
-						.append(".getCriteriaBuilder()))");
+						.append("_spec.createQuery(")
+						.append(localSessionName())
+						.append(getObjectCall())
+						.append(")");
 			}
 		}
 		else {
-			localSession( declaration );
 			declaration
+					.append(localSessionName())
+					.append(getObjectCall())
 					.append('.')
 					.append(createQueryMethod())
 					.append("(")

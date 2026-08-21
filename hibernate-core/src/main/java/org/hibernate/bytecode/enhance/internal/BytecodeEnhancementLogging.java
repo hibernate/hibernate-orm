@@ -14,7 +14,6 @@ import org.jboss.logging.annotations.MessageLogger;
 import org.jboss.logging.annotations.ValidIdRange;
 
 import java.lang.invoke.MethodHandles;
-import java.util.Locale;
 
 import static org.jboss.logging.Logger.Level.DEBUG;
 import static org.jboss.logging.Logger.Level.INFO;
@@ -33,7 +32,7 @@ import static org.jboss.logging.Logger.Level.TRACE;
 @Internal
 public interface BytecodeEnhancementLogging extends BasicLogger {
 	String LOGGER_NAME = SubSystemLogging.BASE + ".bytecode.enhancement";
-	BytecodeEnhancementLogging ENHANCEMENT_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), BytecodeEnhancementLogging.class, LOGGER_NAME, Locale.ROOT );
+	BytecodeEnhancementLogging ENHANCEMENT_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), BytecodeEnhancementLogging.class, LOGGER_NAME  );
 
 	// ---- trace messages ----
 	@LogMessage(level = TRACE)

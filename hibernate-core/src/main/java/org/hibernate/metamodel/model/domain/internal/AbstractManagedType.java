@@ -318,9 +318,9 @@ public abstract class AbstractManagedType<J>
 			Class<Y> javaType) {
 		if ( attribute == null || !hasMatchingReturnType( attribute, javaType ) ) {
 			throw new IllegalArgumentException(
-					"No singular attribute named '" + name
-					+ ( javaType != null ? "' and of type '" + javaType.getName() : "" )
-					+ "' in type '" + hibernateTypeName + "'"
+					"SingularAttribute named " + name
+							+ ( javaType != null ? " and of type " + javaType.getName() : "" )
+							+ " is not present"
 			);
 		}
 		else {
@@ -418,9 +418,9 @@ public abstract class AbstractManagedType<J>
 				|| elementType != null && !attribute.getBindableJavaType().equals( elementType )
 				|| attribute.getCollectionType() != collectionType ) {
 			throw new IllegalArgumentException(
-					"No plural attribute named '" + name
-					+ ( elementType != null ? "' and of element type '" + elementType.getName() : "" )
-					+ "' in type '" + hibernateTypeName + "'"
+					attributeType + " named " + name
+							+ ( elementType != null ? " and of element type " + elementType : "" )
+							+ " is not present"
 			);
 		}
 	}

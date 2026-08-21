@@ -9,7 +9,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 
-@Entity(name = "CircularAddress")
+@Entity
 public class Address {
 	@Id
 	@GeneratedValue

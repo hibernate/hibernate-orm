@@ -51,19 +51,14 @@ public class OptionsTest {
 		schemaManager.drop(true);
 		statementInspector.clear();
 
-		try {
-			schemaManager.create( true );
-			assertThat( statementInspector.getStatements().size() ).isEqualTo( 3 );
-			assertThat( statementInspector.getStatements().get( 0 ) ).contains( " compression pglz" );
-			assertThat( statementInspector.getStatements().get( 0 ) ).contains( " deferrable" );
-			assertThat( statementInspector.getStatements().get( 1 ) ).contains( " nulls distinct" );
-			assertThat( statementInspector.getStatements().get( 2 ) ).contains( " match full" );
+		schemaManager.create(true);
+		assertThat( statementInspector.getStatements().size() ).isEqualTo( 3 );
+		assertThat( statementInspector.getStatements().get( 0 ) ).contains( " compression pglz" );
+		assertThat( statementInspector.getStatements().get( 0 ) ).contains( " deferrable" );
+		assertThat( statementInspector.getStatements().get( 1 ) ).contains( " nulls distinct" );
+		assertThat( statementInspector.getStatements().get( 2 ) ).contains( " match full" );
 
-			schemaManager.validate();
-		}
-		finally {
-			schemaManager.drop( true );
-		}
+		schemaManager.validate();
 	}
 
 	@Entity

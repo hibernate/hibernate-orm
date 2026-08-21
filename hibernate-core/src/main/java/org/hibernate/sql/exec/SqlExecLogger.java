@@ -15,7 +15,6 @@ import org.jboss.logging.annotations.MessageLogger;
 import org.jboss.logging.annotations.ValidIdRange;
 
 import java.lang.invoke.MethodHandles;
-import java.util.Locale;
 import java.util.Set;
 
 import static org.jboss.logging.Logger.Level.DEBUG;
@@ -34,7 +33,7 @@ import static org.jboss.logging.Logger.Level.TRACE;
 public interface SqlExecLogger extends BasicLogger {
 	String LOGGER_NAME = SubSystemLogging.BASE + ".sql.exec";
 
-	SqlExecLogger SQL_EXEC_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), SqlExecLogger.class, LOGGER_NAME, Locale.ROOT );
+	SqlExecLogger SQL_EXEC_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), SqlExecLogger.class, LOGGER_NAME );
 
 	@LogMessage(level = DEBUG)
 	@Message(id = 90004001, value = "Collection locking for collection table '%s' - %s")

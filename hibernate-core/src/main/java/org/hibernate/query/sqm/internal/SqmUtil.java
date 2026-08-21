@@ -29,7 +29,6 @@ import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
@@ -59,7 +58,6 @@ import org.hibernate.query.sqm.tree.SqmDeleteOrUpdateStatement;
 import org.hibernate.query.sqm.tree.SqmDmlStatement;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.SqmStatement;
-import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmSingularJoin;
 import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
@@ -81,7 +79,6 @@ import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.query.sqm.tree.select.SqmSortSpecification;
-import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlTreeCreationException;
@@ -93,13 +90,11 @@ import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
 import org.hibernate.type.BindableType;
 import org.hibernate.type.JavaObjectType;
-import org.hibernate.type.NullType;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.PrimitiveJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.internal.BasicTypeImpl;
-import org.hibernate.type.internal.BindingTypeHelper;
 import org.hibernate.type.internal.ConvertedBasicTypeImpl;
 
 import jakarta.persistence.Tuple;
@@ -623,9 +618,9 @@ public class SqmUtil {
 				}
 			}
 			else {
-				final var bindingJdbcMapping = jdbcMapping( domainParamBinding );
+				final var jdbcMapping = jdbcMapping( domainParamBinding );
 				final BasicValueConverter valueConverter =
-						bindingJdbcMapping == null ? null : bindingJdbcMapping.getValueConverter();
+						jdbcMapping == null ? null : jdbcMapping.getValueConverter();
 				if ( valueConverter != null ) {
 					final Object convertedValue =
 							valueConverter.toRelationalValue( domainParamBinding.getBindValue() );
@@ -633,7 +628,6 @@ public class SqmUtil {
 						final var jdbcParams = jdbcParamsBinds.get( i );
 						assert jdbcParams.size() == 1;
 						final var jdbcParameter = jdbcParams.get( 0 );
-						final var jdbcMapping = BindingTypeHelper.resolveBindType( bindingJdbcMapping, jdbcParameter );
 						jdbcParameterBindings.addBinding( jdbcParameter,
 								new JdbcParameterBindingImpl( jdbcMapping, convertedValue ) );
 					}
@@ -645,7 +639,6 @@ public class SqmUtil {
 							final var jdbcParams = jdbcParamsBinds.get( i );
 							for ( int j = 0; j < jdbcParams.size(); j++ ) {
 								final var jdbcParameter = jdbcParams.get( j );
-								final var jdbcMapping = BindingTypeHelper.resolveBindType( bindingJdbcMapping, jdbcParameter );
 								jdbcParameterBindings.addBinding( jdbcParameter,
 										new JdbcParameterBindingImpl( jdbcMapping, bindValue ) );
 							}
@@ -707,23 +700,10 @@ public class SqmUtil {
 		if ( parameterType == null ) {
 			throw new SqlTreeCreationException( "Unable to interpret mapping-model type for Query parameter: " + domainParam );
 		}
-		final Bindable resolvedParameterType;
-		if ( parameterType instanceof NullType ) {
-			assert jdbcParams.size() == 1;
-			final JdbcMappingContainer expressionType = jdbcParams.get( 0 ).getExpressionType();
-			resolvedParameterType = expressionType == null
-					? parameterType
-					// If the parameter bind type is a NullType, which is a BasicValuedMapping,
-					// the JdbcParameters' expression type must be a BasicValuedMapping, which is a Bindable
-					: (Bindable) expressionType;
-		}
-		else {
-			resolvedParameterType = parameterType;
-		}
 		final int offset =
 				jdbcParameterBindings.registerParametersForEachJdbcValue(
-						bindValue( resolvedParameterType, bindValue, session ),
-						parameterType( domainParamBinding, resolvedParameterType ),
+						bindValue( parameterType, bindValue, session ),
+						parameterType( domainParamBinding, parameterType ),
 						jdbcParams,
 						session
 				);
@@ -991,11 +971,6 @@ public class SqmUtil {
 	}
 
 	public static void validateCriteriaQuery(SqmQueryPart<?> queryPart) {
-		validateCriteriaQueryStructure( queryPart );
-		SqmCriteriaRootValidator.validate( queryPart );
-	}
-
-	private static void validateCriteriaQueryStructure(SqmQueryPart<?> queryPart) {
 		if ( queryPart instanceof SqmQuerySpec<?> sqmQuerySpec ) {
 			final var selectClause = sqmQuerySpec.getSelectClause();
 			if ( selectClause.getSelections().isEmpty() ) {
@@ -1004,27 +979,23 @@ public class SqmUtil {
 				if ( sqmRoots == null || sqmRoots.isEmpty() ) {
 					throw new IllegalArgumentException( "Criteria did not define any query roots" );
 				}
-				if ( sqmRoots.size() != 1 ) {
+				// if there is a single root, use that as the selection
+				if ( sqmRoots.size() == 1 ) {
+					selectClause.add( sqmRoots.get( 0 ), null );
+				}
+				else {
 					throw new IllegalArgumentException( "Criteria has multiple query roots" );
 				}
 			}
 		}
 		else if ( queryPart instanceof SqmQueryGroup<?> queryGroup ) {
 			for ( var part : queryGroup.getQueryParts() ) {
-				validateCriteriaQueryStructure( part );
+				validateCriteriaQuery( part );
 			}
 		}
 		else {
 			assert false;
 		}
-	}
-
-	public static void validateCriteriaTree(SqmDeleteStatement<?> statement) {
-		SqmCriteriaRootValidator.validate( statement );
-	}
-
-	public static void validateCriteriaTree(SqmUpdateStatement<?> statement) {
-		SqmCriteriaRootValidator.validate( statement );
 	}
 
 	private static class CriteriaParameterCollector {

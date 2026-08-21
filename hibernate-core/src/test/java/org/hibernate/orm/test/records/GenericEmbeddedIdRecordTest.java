@@ -49,7 +49,7 @@ class GenericEmbeddedIdRecordTest {
 									T referencedEntity) {
 	}
 
-	@Entity(name = "MainEntity")
+	@Entity
 	public static class MainEntity {
 
 		@EmbeddedId
@@ -60,7 +60,7 @@ class GenericEmbeddedIdRecordTest {
 
 	}
 
-	@Entity(name = "ReferencedEntity")
+	@Entity
 	public static class ReferencedEntity {
 
 		@Id

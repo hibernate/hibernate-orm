@@ -36,13 +36,10 @@ public interface ColumnValuesTableMutationBuilder<M extends TableMutation<?>> ex
 	 * Add a column as part of the values list
 	 */
 	default void addValueColumn(SelectableMapping selectableMapping) {
-		if ( !selectableMapping.isFormula() ) {
-//		if ( selectableMapping.isInsertable() || selectableMapping.isUpdateable() ) {
-			addValueColumn(
-					selectableMapping.getWriteExpression(),
-					selectableMapping
-			);
-		}
+		addValueColumn(
+				selectableMapping.getWriteExpression(),
+				selectableMapping
+		);
 	}
 
 	/**

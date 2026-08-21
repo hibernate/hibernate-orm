@@ -16,7 +16,6 @@ import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.naming.Identifier;
-import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.Dialect;
@@ -139,12 +138,8 @@ public sealed class Column
 
 	@Internal
 	public Identifier getNameIdentifier(MetadataBuildingContext buildingContext) {
-		return getNameIdentifier( buildingContext.getMetadataCollector().getDatabase() );
-	}
-
-	@Internal
-	public Identifier getNameIdentifier(Database database) {
-		return database.toIdentifier( getQuotedName() );
+		return buildingContext.getMetadataCollector().getDatabase()
+				.toIdentifier( getQuotedName() );
 	}
 
 	public boolean isExplicit() {
@@ -203,6 +198,7 @@ public sealed class Column
 
 	private @NonNull String aliasRoot() {
 		final int lastLetter = lastIndexOfLetter( name );
+		final String alias;
 		if ( lastLetter == -1 ) {
 			return "column";
 		}
@@ -298,17 +294,45 @@ public sealed class Column
 	}
 
 	private int getSqlTypeCode(MappingContext mapping, Type type) {
-		return ( (BasicType<?>) getUnderlyingType( mapping, type, typeIndex ) )
-				.getJdbcType()
-				.getDefaultSqlTypeCode();
+		final int[] sqlTypeCodes;
+		try {
+			sqlTypeCodes = type.getSqlTypeCodes( mapping );
+		}
+		catch ( Exception cause ) {
+			throw new MappingException(
+					String.format(
+							Locale.ROOT,
+							"Unable to resolve JDBC type code for column '%s' of table '%s'",
+							getName(),
+							getValue().getTable().getName()
+					),
+					cause
+			);
+		}
+		final int index = getTypeIndex();
+		if ( index >= sqlTypeCodes.length ) {
+			throw new MappingException(
+					String.format(
+							Locale.ROOT,
+							"Unable to resolve JDBC type code for column '%s' of table '%s'",
+							getName(),
+							getValue().getTable().getName()
+					)
+			);
+		}
+		return sqlTypeCodes[index];
 	}
 
 	private String getSqlTypeName(TypeConfiguration typeConfiguration, Dialect dialect, MappingContext mapping) {
 		if ( sqlTypeName == null ) {
 			final var ddlTypeRegistry = typeConfiguration.getDdlTypeRegistry();
-			final var type = ( (BasicType<?>) getUnderlyingType( mapping, getValue().getType(), typeIndex ) );
-			final var jdbcType = type.getJdbcType();
-			final var descriptor = ddlTypeRegistry.getDescriptor( jdbcType.getDdlTypeCode() );
+			final var jdbcTypeRegistry = typeConfiguration.getJdbcTypeRegistry();
+			final int sqlTypeCode = getSqlTypeCode( mapping );
+			final var jdbcType =
+					jdbcTypeRegistry.getConstructor( sqlTypeCode ) == null
+							? jdbcTypeRegistry.findDescriptor( sqlTypeCode )
+							: ( (BasicType<?>) getUnderlyingType( mapping, getValue().getType(), typeIndex ) ).getJdbcType();
+			final var descriptor = jdbcType == null ? null : ddlTypeRegistry.getDescriptor( jdbcType.getDdlTypeCode() );
 			if ( descriptor == null ) {
 				throw new MappingException(
 						String.format(
@@ -316,19 +340,19 @@ public sealed class Column
 								"Unable to determine SQL type name for column '%s' of table '%s' because there is no type mapping for org.hibernate.type.SqlTypes code: %s (%s)",
 								getName(),
 								getValue().getTable().getName(),
-								jdbcType.getDefaultSqlTypeCode(),
-								JdbcTypeNameMapper.getTypeName( jdbcType.getDefaultSqlTypeCode() )
+								sqlTypeCode,
+								JdbcTypeNameMapper.getTypeName( sqlTypeCode )
 						)
 				);
 			}
 			try {
 				final var size = getColumnSize( dialect, mapping );
-				sqlTypeName = descriptor.getTypeName( size, type, ddlTypeRegistry );
+				sqlTypeName = descriptor.getTypeName(
+						size,
+						getUnderlyingType( mapping, getValue().getType(), typeIndex ),
+						ddlTypeRegistry
+				);
 				sqlTypeLob = descriptor.isLob( size );
-				// TODO: this is rubbish (could not find another way)
-				if ( dialect.getAggregateSupport().useLengthsInCasts() ) {
-					length = size.getLength();
-				}
 			}
 			catch ( Exception cause ) {
 				throw new MappingException(

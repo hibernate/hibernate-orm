@@ -33,6 +33,7 @@ import jakarta.persistence.TemporalType;
 public class TimeUtcAsJdbcTimeJdbcType implements JdbcType {
 
 	public static final TimeUtcAsJdbcTimeJdbcType INSTANCE = new TimeUtcAsJdbcTimeJdbcType();
+	private static final Calendar UTC_CALENDAR = Calendar.getInstance( TimeZone.getTimeZone( "UTC" ) );
 
 	public TimeUtcAsJdbcTimeJdbcType() {
 	}
@@ -81,16 +82,14 @@ public class TimeUtcAsJdbcTimeJdbcType implements JdbcType {
 			@Override
 			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options) throws SQLException {
 				final OffsetTime offsetTime = javaType.unwrap( value, OffsetTime.class, options );
-				st.setTime( index, Time.valueOf( offsetTime.withOffsetSameInstant( ZoneOffset.UTC ).toLocalTime() ),
-						Calendar.getInstance( TimeZone.getTimeZone( "UTC" ) ) );
+				st.setTime( index, Time.valueOf( offsetTime.withOffsetSameInstant( ZoneOffset.UTC ).toLocalTime() ), UTC_CALENDAR );
 			}
 
 			@Override
 			protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 					throws SQLException {
 				final OffsetTime offsetTime = javaType.unwrap( value, OffsetTime.class, options );
-				st.setTime( name, Time.valueOf( offsetTime.withOffsetSameInstant( ZoneOffset.UTC ).toLocalTime() ),
-						Calendar.getInstance( TimeZone.getTimeZone( "UTC" ) ) );
+				st.setTime( name, Time.valueOf( offsetTime.withOffsetSameInstant( ZoneOffset.UTC ).toLocalTime() ), UTC_CALENDAR );
 			}
 		};
 	}
@@ -100,19 +99,19 @@ public class TimeUtcAsJdbcTimeJdbcType implements JdbcType {
 		return new BasicExtractor<>( javaType, this ) {
 			@Override
 			protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
-				final Time time = rs.getTime( paramIndex, Calendar.getInstance( TimeZone.getTimeZone( "UTC" ) ) );
+				final Time time = rs.getTime( paramIndex, UTC_CALENDAR );
 				return javaType.wrap( time == null ? null : time.toLocalTime().atOffset( ZoneOffset.UTC ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
-				final Time time = statement.getTime( index, Calendar.getInstance( TimeZone.getTimeZone( "UTC" ) ) );
+				final Time time = statement.getTime( index, UTC_CALENDAR );
 				return javaType.wrap( time == null ? null : time.toLocalTime().atOffset( ZoneOffset.UTC ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
-				final Time time = statement.getTime( name, Calendar.getInstance( TimeZone.getTimeZone( "UTC" ) ) );
+				final Time time = statement.getTime( name, UTC_CALENDAR );
 				return javaType.wrap( time == null ? null : time.toLocalTime().atOffset( ZoneOffset.UTC ), options );
 			}
 		};

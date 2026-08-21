@@ -7,11 +7,9 @@ package org.hibernate.orm.test.view;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
-import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
@@ -21,7 +19,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @SessionFactory
 @DomainModel(annotatedClasses = {ViewTest.Table.class, ViewTest.View.class, ViewTest.Summary.class})
-@SkipForDialect(dialectClass = SpannerDialect.class, reason = "Spanner requires SQL SECURITY clause for views")
 public class ViewTest {
 
 	@Test void test(SessionFactoryScope scope) {

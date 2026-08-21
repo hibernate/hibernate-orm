@@ -12,6 +12,7 @@ import org.hibernate.Timeouts;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.cfg.Environment;
+import org.hibernate.cfg.FetchSettings;
 import org.hibernate.dialect.aggregate.AggregateSupport;
 import org.hibernate.dialect.aggregate.MySQLAggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
@@ -23,8 +24,6 @@ import org.hibernate.dialect.pagination.LimitLimitHandler;
 import org.hibernate.dialect.sequence.NoSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.sql.ast.MySQLSqlAstTranslator;
-import org.hibernate.dialect.temporal.MySQLTemporalTableSupport;
-import org.hibernate.dialect.temporal.TemporalTableSupport;
 import org.hibernate.dialect.temptable.MySQLLocalTemporaryTableStrategy;
 import org.hibernate.dialect.temptable.TemporaryTableKind;
 import org.hibernate.dialect.temptable.TemporaryTableStrategy;
@@ -148,11 +147,6 @@ public class MySQLDialect extends Dialect {
 
 	private static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 8 );
 
-	/**
-	 * On MySQL, 1GB or {@code 2^30 - 1} is the maximum size that a char value can be casted.
-	 */
-	private static final int MAX_CHAR_SIZE = (1 << 30) - 1;
-
 	private final MySQLStorageEngine storageEngine;
 
 	private final SizeStrategy sizeStrategy = new SizeStrategyImpl() {
@@ -263,6 +257,12 @@ public class MySQLDialect extends Dialect {
 		return MINIMUM_VERSION;
 	}
 
+	@Override
+	protected void initDefaultProperties() {
+		super.initDefaultProperties();
+		getDefaultProperties().setProperty( FetchSettings.MAX_FETCH_DEPTH, "2" );
+	}
+
 	private MySQLStorageEngine createStorageEngine(String configuredStorageEngine) {
 		return configuredStorageEngine == null
 				? getDefaultMySQLStorageEngine()
@@ -364,21 +364,12 @@ public class MySQLDialect extends Dialect {
 		final int maxLobLen = 65_535;
 		final int maxMediumLobLen = 16_777_215;
 
-		ddlTypeRegistry.addDescriptor( new DdlTypeImpl(
-				CHAR,
-				false,
-				columnType( CHAR ),
-				"char($l)",
-				castType( CHAR ),
-				this
-		) );
-
-		final var varcharBuilder =
+		final CapacityDependentDdlType.Builder varcharBuilder =
 				CapacityDependentDdlType.builder(
 								VARCHAR,
 								CapacityDependentDdlType.LobKind.BIGGEST_LOB,
 								columnType( CLOB ),
-								this::charCastType,
+								columnType( CHAR ),
 								castType( CHAR ),
 								this
 						)
@@ -391,12 +382,12 @@ public class MySQLDialect extends Dialect {
 
 		// do not use nchar/nvarchar/ntext because these
 		// types use a deprecated character set on MySQL 8
-		final var nvarcharBuilder =
+		final CapacityDependentDdlType.Builder nvarcharBuilder =
 				CapacityDependentDdlType.builder(
 								NVARCHAR,
 								CapacityDependentDdlType.LobKind.BIGGEST_LOB,
 								columnType( NCLOB ),
-								this::charCastType,
+								columnType( NCHAR ),
 								castType( NCHAR ),
 								this
 						)
@@ -407,7 +398,7 @@ public class MySQLDialect extends Dialect {
 		}
 		ddlTypeRegistry.addDescriptor( nvarcharBuilder.build() );
 
-		final var varbinaryBuilder =
+		final CapacityDependentDdlType.Builder varbinaryBuilder =
 				CapacityDependentDdlType.builder(
 								VARBINARY,
 								CapacityDependentDdlType.LobKind.BIGGEST_LOB,
@@ -441,7 +432,7 @@ public class MySQLDialect extends Dialect {
 
 		ddlTypeRegistry.addDescriptor(
 				CapacityDependentDdlType.builder( CLOB,
-								columnType( CLOB ),  castType( CHAR ), this )
+								columnType( CLOB ), castType( CHAR ), this )
 						.withTypeCapacity( maxTinyLobLen, "tinytext" )
 						.withTypeCapacity( maxMediumLobLen, "mediumtext" )
 						.withTypeCapacity( maxLobLen, "text" )
@@ -457,17 +448,8 @@ public class MySQLDialect extends Dialect {
 						.build()
 		);
 
-		ddlTypeRegistry.addDescriptor( new NativeEnumDdlTypeImpl( this ) {
-			@Override
-			public String getCastTypeName(Long length) {
-				return length == null ? "char" : charCastType( length.intValue() );
-			}
-		} );
+		ddlTypeRegistry.addDescriptor( new NativeEnumDdlTypeImpl( this ) );
 		ddlTypeRegistry.addDescriptor( new NativeOrdinalEnumDdlTypeImpl( this ) );
-	}
-
-	private String charCastType(int length) {
-		return length > MAX_CHAR_SIZE ? "char" : "char(" + length + ")";
 	}
 
 	@Override
@@ -1658,6 +1640,11 @@ public class MySQLDialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsIntersect() {
+		return false;
+	}
+
+	@Override
 	public boolean supportsJoinsInDelete() {
 		return true;
 	}
@@ -1684,10 +1671,5 @@ public class MySQLDialect extends Dialect {
 	@Override
 	public InformationExtractor getInformationExtractor(ExtractionContext extractionContext) {
 		return new InformationExtractorMySQLImpl( extractionContext );
-	}
-
-	@Override
-	public TemporalTableSupport getTemporalTableSupport() {
-		return new MySQLTemporalTableSupport( this );
 	}
 }

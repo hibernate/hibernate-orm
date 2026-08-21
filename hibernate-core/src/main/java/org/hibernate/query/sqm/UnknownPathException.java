@@ -4,7 +4,10 @@
  */
 package org.hibernate.query.sqm;
 
+import java.util.Locale;
+
 import org.hibernate.query.PathException;
+import org.hibernate.query.sqm.tree.domain.SqmPath;
 
 /**
  * Indicates a failure to resolve an element of a path expression in HQL/JPQL.
@@ -31,4 +34,16 @@ public class UnknownPathException extends PathException {
 		super( message, hql, cause );
 	}
 
+
+	public static UnknownPathException unknownSubPath(SqmPath base, String name) {
+		return new UnknownPathException(
+				String.format(
+						Locale.ROOT,
+						"Could not resolve path element '%s' relative to '%s' (%s)",
+						name,
+						base.getReferencedPathSource().getPathType().getTypeName(),
+						base.getNavigablePath()
+				)
+		);
+	}
 }

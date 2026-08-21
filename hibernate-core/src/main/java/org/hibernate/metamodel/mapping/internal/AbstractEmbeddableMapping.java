@@ -59,7 +59,6 @@ import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 
 import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper.buildBasicAttributeMapping;
-import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper.getPropertyPath;
 
 /**
  * Base support for EmbeddableMappingType implementations
@@ -322,6 +321,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 				}
 				final var role = navigableRole.append( bootPropertyDescriptor.getName() );
 				final SelectablePath selectablePath;
+				final String columnDefinition;
 				final Long length;
 				final Integer arrayLength;
 				final Integer precision;
@@ -330,6 +330,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 				final boolean isLob;
 				final boolean nullable;
 				if ( selectable instanceof Column column ) {
+					columnDefinition = column.getSqlType();
 					length = column.getLength();
 					arrayLength = column.getArrayLength();
 					precision = column.getPrecision();
@@ -341,6 +342,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 					MappingModelCreationHelper.resolveAggregateColumnBasicType( creationProcess, role, column );
 				}
 				else {
+					columnDefinition = null;
 					length = null;
 					arrayLength = null;
 					precision = null;
@@ -369,6 +371,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 								dialect,
 								creationContext.getBootModel()
 						),
+						columnDefinition,
 						length,
 						arrayLength,
 						precision,
@@ -501,7 +504,11 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 	}
 
 	protected String determineEmbeddablePrefix() {
-		return getPropertyPath( getNavigableRole() );
+		var root = getNavigableRole().getParent();
+		while ( !root.isRoot() ) {
+			root = root.getParent();
+		}
+		return getNavigableRole().getFullPath().substring( root.getFullPath().length() + 1 ) + ".";
 	}
 
 	@Override

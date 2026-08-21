@@ -15,7 +15,6 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.BaseExecutionContext;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
@@ -50,7 +49,6 @@ public class EntityConcreteTypeLoader {
 				new LoadQueryInfluencers( sessionFactory ),
 				new LockOptions(),
 				builder::add,
-				new SqlAliasBaseManager(),
 				sessionFactory
 		);
 		jdbcParameters = builder.build();

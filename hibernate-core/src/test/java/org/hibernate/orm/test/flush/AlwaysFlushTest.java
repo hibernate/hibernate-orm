@@ -40,7 +40,7 @@ public class AlwaysFlushTest {
 	@Test
 	public void testFlushSQL(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( entityManager -> {
-			entityManager.createNativeQuery("delete from Person where 1=1").executeUpdate();
+			entityManager.createNativeQuery("delete from Person").executeUpdate();
 		});
 
 		factoryScope.inTransaction( entityManager -> {

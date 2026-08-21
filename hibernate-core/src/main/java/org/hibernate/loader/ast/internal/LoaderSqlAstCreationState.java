@@ -33,6 +33,7 @@ import org.hibernate.query.sqm.sql.internal.SqlAstQueryPartProcessingStateImpl;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
+import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlAstProcessingState;
@@ -56,7 +57,7 @@ public class LoaderSqlAstCreationState
 		ImmutableFetchList visitFetches(FetchParent fetchParent, LoaderSqlAstCreationState creationState);
 	}
 
-	private final SqlAliasBaseGenerator sqlAliasBaseManager;
+	private final SqlAliasBaseManager sqlAliasBaseManager;
 	private final boolean forceIdentifierSelection;
 	private final LoadQueryInfluencers loadQueryInfluencers;
 	private final SqlAstCreationContext sf;
@@ -71,7 +72,7 @@ public class LoaderSqlAstCreationState
 
 	public LoaderSqlAstCreationState(
 			QueryPart queryPart,
-			SqlAliasBaseGenerator sqlAliasBaseManager,
+			SqlAliasBaseManager sqlAliasBaseManager,
 			FromClauseAccess fromClauseAccess,
 			LockOptions lockOptions,
 			FetchProcessor fetchProcessor,

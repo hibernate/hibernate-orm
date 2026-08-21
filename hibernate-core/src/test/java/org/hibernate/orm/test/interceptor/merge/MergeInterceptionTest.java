@@ -51,7 +51,7 @@ class MergeInterceptionTest {
 			assertEquals( 2, thing.names.size() );
 		} );
 	}
-	@Entity(name = "Thing")
+	@Entity
 	static class Thing {
 		@Id @GeneratedValue
 		private Long id;

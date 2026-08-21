@@ -15,7 +15,6 @@ import org.hibernate.loader.ast.spi.MultiIdLoadOptions;
 import org.hibernate.loader.ast.spi.MultiKeyLoadSizingStrategy;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.spi.QueryOptionsAdapter;
-import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
@@ -114,7 +113,6 @@ public class MultiIdEntityLoaderInPredicate<T> extends AbstractMultiIdEntityLoad
 						session.getLoadQueryInfluencers(),
 						lockOptions,
 						jdbcParametersBuilder::add,
-						new SqlAliasBaseManager(),
 						getSessionFactory()
 				);
 

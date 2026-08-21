@@ -161,12 +161,7 @@ public class RootPersistentEntity extends PersistentEntity implements JoinAwareP
 		}
 
 		if ( discriminator != null ) {
-			var value = discriminator.build();
-			if (getPersistentClass() != null) {
-				value.setInsert( getPersistentClass().isDiscriminatorInsertable() );
-				value.setForce( getPersistentClass().isForceDiscriminator() );
-			}
-			entity.setDiscriminator( value );
+			entity.setDiscriminator( discriminator.build() );
 		}
 
 		if ( !StringTools.isEmpty( discriminatorValue ) ) {

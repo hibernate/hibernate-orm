@@ -17,7 +17,6 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 import org.hibernate.Session;
-import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.query.NativeQuery;
@@ -26,7 +25,6 @@ import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 
-import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -126,7 +124,6 @@ public class NativeQueryOrdinalParametersTest {
 	// Add RequiresDialect be Cockroach version 201
 	@RequiresDialect( value = PostgreSQLDialect.class )
 	@RequiresDialect( value = CockroachDialect.class, majorVersion = 20, minorVersion = 1 )
-	@SkipForDialect( dialectClass = SpannerPostgreSQLDialect.class, reason = "Spanner does not support Recursive WITH expressions" )
 	public void testCteNativeQueryOrdinalParameter(EntityManagerFactoryScope scope) {
 
 		Node root1 = new Node();

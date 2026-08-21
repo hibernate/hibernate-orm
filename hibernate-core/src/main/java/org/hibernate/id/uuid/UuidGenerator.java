@@ -30,7 +30,7 @@ import static org.hibernate.internal.util.ReflectHelper.getPropertyType;
 
 /**
  * {@linkplain org.hibernate.generator.Generator} for producing {@link UUID} values.
- * <p>
+ * <p/>
  * Uses a {@linkplain UuidValueGenerator} and {@linkplain ValueTransformer} to
  * generate the values.
  *
@@ -39,7 +39,6 @@ import static org.hibernate.internal.util.ReflectHelper.getPropertyType;
 public class UuidGenerator implements BeforeExecutionGenerator {
 	private final UuidValueGenerator generator;
 	private final ValueTransformer valueTransformer;
-	private final Class<?> generatedType;
 
 	/**
 	 * This form is used when there is no {@code @UuidGenerator} but we know we want this generator
@@ -48,7 +47,6 @@ public class UuidGenerator implements BeforeExecutionGenerator {
 	public UuidGenerator(Class<?> memberType) {
 		generator = StandardRandomStrategy.INSTANCE;
 		valueTransformer = determineProperTransformer( memberType );
-		generatedType = memberType;
 	}
 
 	/**
@@ -59,8 +57,7 @@ public class UuidGenerator implements BeforeExecutionGenerator {
 			org.hibernate.annotations.UuidGenerator config,
 			MemberDetails memberDetails) {
 		generator = determineValueGenerator( config, memberDetails.getDeclaringType().getName(), memberDetails.getName() );
-		generatedType = memberDetails.getType().determineRawClass().toJavaClass();
-		valueTransformer = determineProperTransformer( generatedType );
+		valueTransformer = determineProperTransformer( memberDetails.getType().determineRawClass().toJavaClass() );
 	}
 
 	@Internal
@@ -68,8 +65,7 @@ public class UuidGenerator implements BeforeExecutionGenerator {
 			org.hibernate.annotations.UuidGenerator config,
 			Member idMember) {
 		generator = determineValueGenerator( config, idMember.getDeclaringClass().getName(), idMember.getName() );
-		generatedType = getPropertyType( idMember );
-		valueTransformer = determineProperTransformer( generatedType );
+		valueTransformer = determineProperTransformer( getPropertyType( idMember ) );
 	}
 
 	public UuidGenerator(
@@ -85,11 +81,6 @@ public class UuidGenerator implements BeforeExecutionGenerator {
 	@Override
 	public EnumSet<EventType> getEventTypes() {
 		return INSERT_ONLY;
-	}
-
-	@Override
-	public Class<?> getGeneratedType() {
-		return generatedType;
 	}
 
 	@Override

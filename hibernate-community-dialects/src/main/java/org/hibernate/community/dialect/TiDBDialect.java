@@ -9,8 +9,6 @@ import jakarta.persistence.Timeout;
 import org.hibernate.Timeouts;
 import org.hibernate.community.dialect.sequence.SequenceInformationExtractorTiDBDatabaseImpl;
 import org.hibernate.community.dialect.sequence.TiDBSequenceSupport;
-import org.hibernate.community.dialect.temporal.TiDBTemporalTableSupport;
-import org.hibernate.dialect.temporal.TemporalTableSupport;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.FunctionalDependencyAnalysisSupport;
@@ -245,16 +243,5 @@ public class TiDBDialect extends MySQLDialect {
 			return translator.createMergeOperation( optionalTableUpdate );
 		}
 		return super.createOptionalTableUpdateOperation( mutationTarget, optionalTableUpdate, factory );
-	}
-
-	// https://github.com/pingcap/tidb/issues/66392
-	@Override
-	public boolean supportsExceptAll() {
-		return false;
-	}
-
-	@Override
-	public TemporalTableSupport getTemporalTableSupport() {
-		return new TiDBTemporalTableSupport( this );
 	}
 }

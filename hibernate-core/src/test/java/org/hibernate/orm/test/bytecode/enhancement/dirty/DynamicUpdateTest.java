@@ -74,7 +74,7 @@ public class DynamicUpdateTest {
 		);
 	}
 
-	@Entity(name = "Payment")
+	@Entity
 	@DynamicUpdate
 	public static class Payment {
 
@@ -131,7 +131,7 @@ public class DynamicUpdateTest {
 		}
 	}
 
-	@Entity(name = "StuffToPay")
+	@Entity
 	@DynamicUpdate
 	public static class StuffToPay {
 

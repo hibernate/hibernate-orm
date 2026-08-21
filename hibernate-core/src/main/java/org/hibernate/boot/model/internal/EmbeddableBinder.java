@@ -68,7 +68,6 @@ import static org.hibernate.boot.model.internal.Binders.callTypeBinder;
 import static org.hibernate.boot.model.internal.ComponentPropertyHolder.applyExplicitTableName;
 import static org.hibernate.boot.model.internal.DialectOverridesAnnotationHelper.getOverridableAnnotation;
 import static org.hibernate.boot.model.internal.EntityBinder.isMappedSuperclass;
-import static org.hibernate.boot.model.internal.InheritanceState.getSuperclassInheritanceState;
 import static org.hibernate.boot.model.internal.GeneratorBinder.createIdGeneratorsFromGeneratorAnnotations;
 import static org.hibernate.boot.model.internal.PropertyBinder.addElementsOfClass;
 import static org.hibernate.boot.model.internal.PropertyBinder.isEmbeddedId;
@@ -81,7 +80,6 @@ import static org.hibernate.internal.util.StringHelper.isBlank;
 import static org.hibernate.internal.util.StringHelper.qualify;
 import static org.hibernate.internal.util.StringHelper.unqualify;
 import static org.hibernate.internal.util.collections.CollectionHelper.mapOfSize;
-import static org.hibernate.spi.NavigablePath.IDENTIFIER_MAPPER_PROPERTY;
 
 /**
  * A binder responsible for interpreting {@link Embeddable} classes and producing
@@ -493,14 +491,6 @@ public class EmbeddableBinder {
 					context
 			);
 		}
-		else {
-			// We need to register ancestor @MappedSuperclass metadata even for embedded types of classes
-			// that are not annotated as @Embeddable (i.e. that don't have an inheritance state)
-			final var superState = getSuperclassInheritanceState( returnedClassOrElement, inheritanceStatePerClass );
-			if ( superState != null && superState.isEmbeddableSuperclass() ) {
-				superState.postProcess( embeddable );
-			}
-		}
 
 		final var annotatedTypeDetails = inferredData.getPropertyType();
 
@@ -583,7 +573,7 @@ public class EmbeddableBinder {
 			MetadataBuildingContext context) {
 		final var memberDetails = propertyAnnotatedElement.getAttributeMember();
 		if ( isIdClass || subholder.isOrWithinEmbeddedId() ) {
-			final var property = findProperty( embeddable, propertyAnnotatedElement.getPropertyName() );
+			final var property = findProperty( embeddable, memberDetails.getName() );
 			if ( property != null ) {
 				// Identifier properties are always simple values
 				final var value = (SimpleValue) property.getValue();
@@ -632,8 +622,7 @@ public class EmbeddableBinder {
 			PropertyData propertyData,
 			InheritanceState inheritanceState,
 			MetadataBuildingContext context) {
-		// Discriminated inheritance only applies to explicit @Embeddable types
-		if ( !inheritanceState.isEmbeddableSuperclass() ) {
+		if ( inheritanceState != null ) {
 			final var discriminatorColumn = processEmbeddableDiscriminatorProperties(
 					componentClass,
 					propertyData,
@@ -975,7 +964,7 @@ public class EmbeddableBinder {
 			&& !entityPropertyData.getClassOrElementType().equals( idClassPropertyData.getClassOrElementType() );
 	}
 
-	static boolean hasCompatibleType(String typeNameInIdClass, String typeNameInEntityClass) {
+	private static boolean hasCompatibleType(String typeNameInIdClass, String typeNameInEntityClass) {
 		return typeNameInIdClass.equals( typeNameInEntityClass )
 			|| canonicalize( typeNameInIdClass ).equals( typeNameInEntityClass )
 			|| typeNameInIdClass.equals( canonicalize( typeNameInEntityClass ) );
@@ -1006,7 +995,7 @@ public class EmbeddableBinder {
 		embeddable.setEmbedded( isNonAggregated );
 		applyExplicitTableName( embeddable, inferredData, propertyHolder, context );
 
-		if ( isIdentifierMapper( inferredData, isIdentifierMapper )
+		if ( isIdentifierMapper
 				|| isNonAggregated && inferredData.getPropertyName() == null ) {
 			embeddable.setComponentClassName( embeddable.getOwner().getClassName() );
 		}
@@ -1026,10 +1015,6 @@ public class EmbeddableBinder {
 		}
 		applyColumnNamingPattern( embeddable, inferredData );
 		return embeddable;
-	}
-
-	private static boolean isIdentifierMapper(PropertyData inferredData, boolean isIdentifierMapper) {
-		return isIdentifierMapper && IDENTIFIER_MAPPER_PROPERTY.equals( inferredData.getPropertyName() );
 	}
 
 	private static void checkEmbeddableRecursiveHierarchy(

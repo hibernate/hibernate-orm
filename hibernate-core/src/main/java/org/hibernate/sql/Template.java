@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.StringTokenizer;
-import java.util.function.Predicate;
+import java.util.function.Function;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -156,18 +156,10 @@ public final class Template {
 		//      a parser for SQL, no matter how "special" your case is. What I mean by this is: don't write code which
 		//      attempts to recognize the grammar of SQL, not even little bits of SQL. Previous "enhancements" to this
 		//      function did not respect this concept and resulted in code which was fragile and unmaintainable. If
-		//      lookahead is truly necessary, use lookPastBlankTokens() with the pre-tokenized list.
+		//      lookahead is truly necessary, use the lookahead() function provided below.
 
 		final String symbols = PUNCTUATION + WHITESPACE + dialect.openQuote() + dialect.closeQuote();
-
-		// Tokenize the entire SQL string once into a list so that lookahead is O(1) indexed
-		// access rather than the O(N) re-scan that StringTokenizer.countTokens() performs.
-		final var raw = new StringTokenizer( sql, symbols, true );
-		final var tokens = new ArrayList<String>();
-		while ( raw.hasMoreTokens() ) {
-			tokens.add( raw.nextToken() );
-		}
-		final int tokenCount = tokens.size();
+		final var tokens = new StringTokenizer( sql, symbols, true );
 		final var result = new StringBuilder();
 
 		boolean quoted = false;
@@ -182,12 +174,16 @@ public final class Template {
 		int inCast = -1;
 		int nestingLevel = 0;
 
-		String previousToken = null;
-		for ( int i = 0; i < tokenCount; i++ ) {
-			String token = tokens.get(i);
+		boolean hasMore = tokens.hasMoreTokens();
+		String nextToken = hasMore ? tokens.nextToken() : null;
+		String token = null;
+		String previousToken;
+		while ( hasMore ) {
+			previousToken = token;
+			token = nextToken;
 			String lcToken = token.toLowerCase(Locale.ROOT);
-			final int nextIndex = i + 1;
-			final String nextToken = nextIndex < tokenCount ? tokens.get(nextIndex) : null;
+			hasMore = tokens.hasMoreTokens();
+			nextToken = hasMore ? tokens.nextToken() : null;
 
 			boolean isQuoteCharacter = false;
 
@@ -300,14 +296,14 @@ public final class Template {
 			else if ( wasAfterFetch && FETCH_BIGRAMS.contains( lcToken ) ) {
 				processedToken = token;
 			}
-			else if ( isCurrent( lcToken, nextToken, tokens, nextIndex ) ) {
+			else if ( isCurrent( lcToken, nextToken, sql, symbols, tokens ) ) {
 				processedToken = token;
 				afterCurrent = true;
 			}
 			else if ( isBoolean( lcToken ) ) {
 				processedToken = dialect.toBooleanValueString( parseBoolean( token ) );
 			}
-			else if ( isFunctionCall( nextToken, tokens, nextIndex ) ) {
+			else if ( isFunctionCall( nextToken, sql, symbols, tokens ) ) {
 				if ( FUNCTION_WITH_FROM_KEYWORDS.contains( lcToken ) ) {
 					inExtractOrTrim = nestingLevel;
 				}
@@ -316,8 +312,9 @@ public final class Template {
 				}
 				processedToken = token;
 			}
-			else if ( isAliasableIdentifier( token, lcToken, nextToken, tokens, nextIndex,
-							wasAfterCurrent, dialect, typeConfiguration ) ) {
+			else if ( isAliasableIdentifier( token, lcToken, nextToken,
+							sql, symbols, tokens, wasAfterCurrent,
+							dialect, typeConfiguration ) ) {
 				processedToken = alias + '.' +  dialect.quote(token);
 			}
 			else {
@@ -332,8 +329,6 @@ public final class Template {
 					&& !BEFORE_TABLE_KEYWORDS.contains( lcToken ) ) {
 				inFromClause = false;
 			}
-
-			previousToken = token;
 		}
 
 		return result.toString();
@@ -341,32 +336,33 @@ public final class Template {
 
 	private static boolean isAliasableIdentifier(
 			String token, String lcToken, String nextToken,
-			List<String> tokens, int nextIndex,
+			String sql, String symbols, StringTokenizer tokens,
 			boolean wasAfterCurrent,
 			Dialect dialect, TypeConfiguration typeConfiguration) {
 		return isUnqualifiedIdentifier( token )
 			&& !isKeyword( lcToken, wasAfterCurrent, dialect, typeConfiguration )
-			&& !isLiteral( lcToken, nextToken, tokens, nextIndex );
+			&& !isLiteral( lcToken, nextToken, sql, symbols, tokens );
 	}
 
-	private static boolean isFunctionCall(String nextToken, List<String> tokens, int nextIndex) {
+	private static boolean isFunctionCall(
+			String nextToken,
+			String sql, String symbols, StringTokenizer tokens) {
 		if ( nextToken == null ) {
 			return false;
 		}
 		else {
 			return nextToken.isBlank()
-					? lookPastBlankTokens( tokens, nextIndex, "("::equals )
+					? lookPastBlankTokens( sql, symbols, tokens, 1, "("::equals )
 					: "(".equals( nextToken );
 		}
 	}
 
 	private static boolean isCurrent(
 			String lcToken, String nextToken,
-			List<String> tokens, int nextIndex) {
+			String sql, String symbols, StringTokenizer tokens) {
 		return "current".equals( lcToken )
-			&& nextToken != null
 			&& nextToken.isBlank()
-			&& lookPastBlankTokens( tokens, nextIndex, CURRENT_BIGRAMS::contains );
+			&& lookPastBlankTokens( sql, symbols, tokens, 1, CURRENT_BIGRAMS::contains );
 	}
 
 	private static boolean isFetch(Dialect dialect, String lcToken) {
@@ -380,7 +376,7 @@ public final class Template {
 
 	private static boolean isLiteral(
 			String lcToken, String next,
-			List<String> tokens, int nextIndex) {
+			String sqlWhereString, String symbols, StringTokenizer tokens) {
 		if ( next == null ) {
 			return false;
 		}
@@ -388,7 +384,7 @@ public final class Template {
 			if ( next.isBlank() ) {
 				// we need to look ahead in the token stream
 				// to find the first non-blank token
-				return lookPastBlankTokens( tokens, nextIndex,
+				return lookPastBlankTokens( sqlWhereString, symbols, tokens, 1,
 						nextToken -> "'".equals(nextToken)
 								|| lcToken.equals("time") && "with".equals(nextToken)
 								|| lcToken.equals("timestamp") && "with".equals(nextToken)
@@ -403,22 +399,40 @@ public final class Template {
 		}
 	}
 
-	/**
-	 * Scan forward from {@code startIndex} in the pre-tokenized list, skipping blank tokens,
-	 * and apply {@code check} to the first non-blank token found. Returns {@code false} if the
-	 * end of the list is reached before a non-blank token is found.
-	 *
-	 * @param tokens the full pre-tokenized list
-	 * @param startIndex the index to begin scanning from (inclusive)
-	 * @param check the predicate to apply to the first non-blank token
-	 */
 	private static boolean lookPastBlankTokens(
-			List<String> tokens, int startIndex, Predicate<String> check) {
-		int i = startIndex;
-		while ( i < tokens.size() && tokens.get(i).isBlank() ) {
-			i++;
+			String sqlWhereString, String symbols, StringTokenizer tokens,
+			@SuppressWarnings("SameParameterValue") int skip,
+			Function<String, Boolean> check) {
+		final var lookahead = lookahead( sqlWhereString, symbols, tokens, skip );
+		if ( lookahead.hasMoreTokens() ) {
+			String nextToken;
+			do {
+				nextToken = lookahead.nextToken().toLowerCase(Locale.ROOT);
+			}
+			while ( nextToken.isBlank() && lookahead.hasMoreTokens() );
+			return check.apply( nextToken );
 		}
-		return i < tokens.size() && check.test( tokens.get(i).toLowerCase(Locale.ROOT) );
+		else {
+			return false;
+		}
+	}
+
+	/**
+	 * Clone the given token stream, returning a token stream which begins
+	 * from the next token.
+	 *
+	 * @param sql the full SQL we are scanning
+	 * @param symbols the delimiter symbols
+	 * @param tokens the current token stream
+	 * @param skip the number of tokens to skip
+	 * @return a cloned token stream
+	 */
+	private static StringTokenizer lookahead(String sql, String symbols, StringTokenizer tokens, int skip) {
+		final var lookahead = new StringTokenizer( sql, symbols, true );
+		while ( lookahead.countTokens() > tokens.countTokens() + skip ) {
+			lookahead.nextToken();
+		}
+		return lookahead;
 	}
 
 	public static List<String> collectColumnNames(String sql, Dialect dialect, TypeConfiguration typeConfiguration) {

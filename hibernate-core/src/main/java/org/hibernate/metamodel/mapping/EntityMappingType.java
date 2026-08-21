@@ -7,7 +7,6 @@ package org.hibernate.metamodel.mapping;
 import jakarta.persistence.Entity;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.hibernate.AssertionFailure;
 import org.hibernate.Filter;
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
@@ -66,7 +65,7 @@ public interface EntityMappingType
 
 	/**
 	 * The entity name.
-	 * <p>
+	 * <p/>
 	 * For most entities, this will be the fully-qualified name
 	 * of the entity class.  The alternative is an explicit
 	 * {@linkplain org.hibernate.boot.jaxb.mapping.spi.JaxbEntity#getName() entity-name} which takes precedence if provided
@@ -253,22 +252,10 @@ public interface EntityMappingType
 	/**
 	 * The discriminator value which indicates this entity mapping
 	 */
-	DiscriminatorValue getDiscriminatorValue();
+	Object getDiscriminatorValue();
 
 	default String getDiscriminatorSQLValue() {
-		final DiscriminatorValue discriminatorValue = getDiscriminatorValue();
-		if ( discriminatorValue instanceof DiscriminatorValue.Literal literal ) {
-			return String.valueOf( literal.value() );
-		}
-		else if ( discriminatorValue instanceof DiscriminatorValue.Special special ) {
-			return switch ( special ) {
-				case NULL -> "null";
-				case NOT_NULL -> throw new IllegalStateException( "Illegal call for NOT_NULL discriminator" );
-			};
-		}
-		else {
-			throw new AssertionFailure( "Unrecognized DiscriminatorValue" );
-		}
+		return getDiscriminatorValue().toString();
 	}
 
 	default EntityMappingType getRootEntityDescriptor() {
@@ -399,28 +386,7 @@ public interface EntityMappingType
 	/**
 	 * Mapping for soft-delete support, or {@code null} if soft-delete not defined
 	 */
-	@Incubating
 	default SoftDeleteMapping getSoftDeleteMapping() {
-		return null;
-	}
-
-	/**
-	 * Mapping for temporal entity support, or {@code null} if not defined.
-	 */
-	@Incubating
-	default TemporalMapping getTemporalMapping() {
-		return null;
-	}
-
-	/**
-	 * Mapping for audit support, or {@code null} if not defined.
-	 */
-	@Incubating
-	default AuditMapping getAuditMapping() {
-		return null;
-	}
-
-	default AuxiliaryMapping getAuxiliaryMapping() {
 		return null;
 	}
 

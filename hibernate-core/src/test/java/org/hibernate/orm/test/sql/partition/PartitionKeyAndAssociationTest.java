@@ -6,10 +6,8 @@ package org.hibernate.orm.test.sql.partition;
 
 import org.hibernate.annotations.PartitionKey;
 
-import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
-import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterAll;
@@ -55,7 +53,6 @@ public class PartitionKeyAndAssociationTest {
 	}
 
 	@Test
-	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsPrimaryKeyUpdate.class )
 	public void testUpdate(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final SalesContact contact = session.find( SalesContact.class, 1L );

@@ -7,6 +7,7 @@ package org.hibernate.testing.junit4;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -168,7 +169,14 @@ public class CustomRunner extends BlockJUnit4ClassRunner {
 		if ( CollectionHelper.isEmpty( computedTestMethods ) ) {
 			return;
 		}
-		computedTestMethods.sort( Comparator.comparing( FrameworkMethod::getName ) );
+		Collections.sort(
+				computedTestMethods, new Comparator<FrameworkMethod>() {
+					@Override
+					public int compare(FrameworkMethod o1, FrameworkMethod o2) {
+						return o1.getName().compareTo( o2.getName() );
+					}
+				}
+		);
 	}
 
 	protected List<FrameworkMethod> doComputation() {
@@ -176,7 +184,7 @@ public class CustomRunner extends BlockJUnit4ClassRunner {
 		final List<FrameworkMethod> methods = super.computeTestMethods();
 
 		// Now process that full list of test methods and build our custom result
-		final List<FrameworkMethod> result = new ArrayList<>();
+		final List<FrameworkMethod> result = new ArrayList<FrameworkMethod>();
 		final boolean doValidation = Boolean.getBoolean( Helper.VALIDATE_FAILURE_EXPECTED );
 		int testCount = 0;
 
@@ -222,7 +230,7 @@ public class CustomRunner extends BlockJUnit4ClassRunner {
 		}
 	}
 
-	private static final Dialect dialect = determineDialect();
+	private static Dialect dialect = determineDialect();
 
 	private static Dialect determineDialect() {
 		try {
@@ -421,7 +429,7 @@ public class CustomRunner extends BlockJUnit4ClassRunner {
 			for ( RequiresDialectFeature requiresDialectFeature : requiresDialectFeatures ) {
 				try {
 					for ( Class<? extends DialectCheck> checkClass : requiresDialectFeature.value() ) {
-						if ( !checkClass.getDeclaredConstructor().newInstance().isMatch( dialect ) ) {
+						if ( !checkClass.newInstance().isMatch( dialect ) ) {
 							return buildIgnore( requiresDialectFeature );
 						}
 					}
@@ -468,6 +476,9 @@ public class CustomRunner extends BlockJUnit4ClassRunner {
 			foundMatch = requiresDialectAnn.strictMatching()
 					? requiresDialectAnn.value().equals( dialect.getClass() )
 					: requiresDialectAnn.value().isInstance( dialect );
+			if ( foundMatch ) {
+				break;
+			}
 			if ( foundMatch ) {
 				break;
 			}
@@ -546,29 +557,29 @@ public class CustomRunner extends BlockJUnit4ClassRunner {
 	}
 
 	private Ignore buildIgnore(Collection<RequiresDialect> requiresDialects) {
-		StringBuilder ignoreMessage = new StringBuilder();
+		String ignoreMessage = "";
 		for ( RequiresDialect requiresDialect : requiresDialects ) {
-			ignoreMessage.append( getIgnoreMessage(
+			ignoreMessage += getIgnoreMessage(
 					"@RequiresDialect non-match",
 					requiresDialect.comment(),
 					requiresDialect.jiraKey()
-			) );
-			ignoreMessage.append( System.lineSeparator() );
+			);
+			ignoreMessage += System.lineSeparator();
 		}
-		return new IgnoreImpl( ignoreMessage.toString() );
+		return new IgnoreImpl( ignoreMessage );
 	}
 
 	private Ignore buildIgnore2(Collection<org.hibernate.testing.orm.junit.RequiresDialect> requiresDialects) {
-		StringBuilder ignoreMessage = new StringBuilder();
+		String ignoreMessage = "";
 		for ( org.hibernate.testing.orm.junit.RequiresDialect requiresDialect : requiresDialects ) {
-			ignoreMessage.append( getIgnoreMessage(
+			ignoreMessage += getIgnoreMessage(
 					"@RequiresDialect non-match",
 					requiresDialect.comment(),
 					null
-			) );
-			ignoreMessage.append( System.lineSeparator() );
+			);
+			ignoreMessage += System.lineSeparator();
 		}
-		return new IgnoreImpl( ignoreMessage.toString() );
+		return new IgnoreImpl( ignoreMessage );
 	}
 
 	private Ignore buildIgnore(RequiresDialectFeature requiresDialectFeature) {
@@ -589,7 +600,7 @@ public class CustomRunner extends BlockJUnit4ClassRunner {
 
 	private boolean isMatch(Class<? extends Skip.Matcher> condition) {
 		try {
-			Skip.Matcher matcher = condition.getDeclaredConstructor().newInstance();
+			Skip.Matcher matcher = condition.newInstance();
 			return matcher.isMatch();
 		}
 		catch (Exception e) {

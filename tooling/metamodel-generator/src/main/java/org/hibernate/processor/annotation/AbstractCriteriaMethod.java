@@ -91,20 +91,22 @@ public abstract class AbstractCriteriaMethod extends AbstractFinderMethod {
 			declaration
 					.append("var _select = ");
 		}
-		if ( useSpecificationCreateQuery() ) {
+		final boolean specification = isUsingSpecification();
+		if ( specification && !isReactive() ) {
 			declaration
-					.append("_spec.createQuery(");
-			localSession( declaration );
-			declaration
+					.append("_spec.createQuery(")
+					.append(localSessionName())
+					.append(getObjectCall())
 					.append(")");
 		}
 		else {
-			localSession( declaration );
 			declaration
+					.append(localSessionName())
+					.append(getObjectCall())
 					.append(".")
 					.append(createQueryMethod())
 					.append('(');
-			if ( isUsingSpecification() ) {
+			if ( specification ) {
 				declaration
 						.append("_spec.buildCriteria(_builder)");
 			}
@@ -146,9 +148,9 @@ public abstract class AbstractCriteriaMethod extends AbstractFinderMethod {
 
 	private void createBuilder(StringBuilder declaration) {
 		declaration
-				.append("\tvar _builder = ");
-		localSession( declaration );
-		declaration
+				.append("\tvar _builder = ")
+				.append(localSessionName())
+				.append(getObjectCall())
 				.append(".getCriteriaBuilder();\n");
 	}
 

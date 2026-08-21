@@ -5,13 +5,13 @@
 package org.hibernate.orm.test.mapping.usertypes;
 
 public class TestEntity {
-	private String id;
+	private int id;
 	private TestEnum testEnum;
 
-	public void setId(String id) {
+	public void setId(int id) {
 		this.id = id;
 	}
-	public String getId() {
+	public int getId() {
 		return id;
 	}
 	public void setTestEnum(TestEnum testEnum) {

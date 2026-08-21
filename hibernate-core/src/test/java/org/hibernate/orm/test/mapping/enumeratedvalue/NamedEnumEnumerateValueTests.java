@@ -46,7 +46,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @RequiresDialect(value = PostgreSQLDialect.class)
 @RequiresDialect(value = OracleDialect.class, majorVersion = 23)
 @RequiresDialect(value = H2Dialect.class)
-@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsNamedEnum.class)
 public class NamedEnumEnumerateValueTests {
 	@Test
 	@DomainModel(annotatedClasses = Person.class)

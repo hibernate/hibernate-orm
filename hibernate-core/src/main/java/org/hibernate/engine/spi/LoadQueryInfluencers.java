@@ -14,7 +14,6 @@ import java.util.function.Supplier;
 import org.hibernate.Filter;
 import org.hibernate.Internal;
 import org.hibernate.UnknownProfileException;
-import org.hibernate.audit.AuditLog;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.internal.FilterImpl;
@@ -60,7 +59,6 @@ public class LoadQueryInfluencers implements Serializable {
 	private final EffectiveEntityGraph effectiveEntityGraph;
 
 	private Boolean readOnly;
-	private Object temporalIdentifier;
 
 	public LoadQueryInfluencers(SessionFactoryImplementor sessionFactory) {
 		this.sessionFactory = sessionFactory;
@@ -74,7 +72,6 @@ public class LoadQueryInfluencers implements Serializable {
 		batchSize = options.getDefaultBatchFetchSize();
 		subselectFetchEnabled = options.isSubselectFetchEnabled();
 		effectiveEntityGraph = new EffectiveEntityGraph();
-		temporalIdentifier = options.getTemporalIdentifier();
 		for ( var filterDefinition : sessionFactory.getAutoEnabledFilters() ) {
 			final var filter = new FilterImpl( filterDefinition );
 			if ( enabledFilters == null ) {
@@ -99,23 +96,11 @@ public class LoadQueryInfluencers implements Serializable {
 		return sessionFactory;
 	}
 
-	public Object getTemporalIdentifier() {
-		return temporalIdentifier;
-	}
-
-	public void setTemporalIdentifier(Object temporalIdentifier) {
-		this.temporalIdentifier = temporalIdentifier;
-	}
-
-	public boolean isAllRevisions() {
-		return temporalIdentifier == AuditLog.ALL_CHANGESETS;
-	}
-
 
 	// internal fetch profile support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	public <T> T fromInternalFetchProfile(CascadingFetchProfile profile, Supplier<T> supplier) {
-		final var previous = enabledCascadingFetchProfile;
+		final CascadingFetchProfile previous = enabledCascadingFetchProfile;
 		enabledCascadingFetchProfile = profile;
 		try {
 			return supplier.get();
@@ -181,7 +166,7 @@ public class LoadQueryInfluencers implements Serializable {
 	}
 
 	public Filter enableFilter(String filterName) {
-		final var filter = new FilterImpl( sessionFactory.getFilterDefinition( filterName ) );
+		final FilterImpl filter = new FilterImpl( sessionFactory.getFilterDefinition( filterName ) );
 		if ( enabledFilters == null ) {
 			enabledFilters = new TreeMap<>();
 		}
@@ -244,7 +229,7 @@ public class LoadQueryInfluencers implements Serializable {
 	public void enableFetchProfile(String name) throws UnknownProfileException {
 		checkFetchProfileName( name );
 		if ( enabledFetchProfileNames == null ) {
-			enabledFetchProfileNames = new HashSet<>();
+			this.enabledFetchProfileNames = new HashSet<>();
 		}
 		enabledFetchProfileNames.add( name );
 	}

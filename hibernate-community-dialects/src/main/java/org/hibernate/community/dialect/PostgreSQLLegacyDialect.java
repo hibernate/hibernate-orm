@@ -259,14 +259,6 @@ public class PostgreSQLLegacyDialect extends Dialect {
 	}
 
 	@Override
-	protected boolean isLob(int sqlTypeCode) {
-		return switch ( sqlTypeCode ) {
-			case LONG32VARCHAR, LONG32NVARCHAR, LONG32VARBINARY -> false;
-			default -> super.isLob( sqlTypeCode );
-		};
-	}
-
-	@Override
 	protected String castType(int sqlTypeCode) {
 		return switch ( sqlTypeCode ) {
 			case CHAR, NCHAR, VARCHAR, NVARCHAR -> "varchar";
@@ -692,8 +684,8 @@ public class PostgreSQLLegacyDialect extends Dialect {
 			functionFactory.jsonValue_postgresql( true );
 			functionFactory.jsonQuery();
 			functionFactory.jsonExists();
-			functionFactory.jsonObject_postgresql( true );
-			functionFactory.jsonArray_postgresql( true );
+			functionFactory.jsonObject();
+			functionFactory.jsonArray();
 			functionFactory.jsonArrayAgg_postgresql( true );
 			functionFactory.jsonObjectAgg_postgresql( true );
 			functionFactory.jsonTable();
@@ -703,14 +695,14 @@ public class PostgreSQLLegacyDialect extends Dialect {
 			functionFactory.jsonQuery_postgresql();
 			functionFactory.jsonExists_postgresql();
 			if ( getVersion().isSameOrAfter( 16 ) ) {
-				functionFactory.jsonObject_postgresql( true );
-				functionFactory.jsonArray_postgresql( true );
+				functionFactory.jsonObject();
+				functionFactory.jsonArray();
 				functionFactory.jsonArrayAgg_postgresql( true );
 				functionFactory.jsonObjectAgg_postgresql( true );
 			}
 			else {
-				functionFactory.jsonObject_postgresql( false );
-				functionFactory.jsonArray_postgresql( false );
+				functionFactory.jsonObject_postgresql();
+				functionFactory.jsonArray_postgresql();
 				functionFactory.jsonArrayAgg_postgresql( false );
 				functionFactory.jsonObjectAgg_postgresql( false );
 			}
@@ -994,11 +986,6 @@ public class PostgreSQLLegacyDialect extends Dialect {
 	@Override
 	public String getCurrentTimestampSelectString() {
 		return "select now()";
-	}
-
-	@Override
-	public boolean isCurrentTimestampStable() {
-		return true;
 	}
 
 	@Override

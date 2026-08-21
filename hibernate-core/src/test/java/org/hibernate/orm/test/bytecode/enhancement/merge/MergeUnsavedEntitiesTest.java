@@ -10,11 +10,9 @@ import java.util.List;
 import java.util.Set;
 
 import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
-import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
@@ -37,6 +35,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 		annotatedClasses = {
 				MergeUnsavedEntitiesTest.Parent.class,
 				MergeUnsavedEntitiesTest.Child.class,
+				MergeUnsavedEntitiesTest.Book.class,
+				MergeUnsavedEntitiesTest.BookNote.class,
 		}
 )
 @SessionFactory
@@ -106,14 +106,6 @@ public class MergeUnsavedEntitiesTest {
 
 	@Test
 	@Jira("HHH-18177")
-	@DomainModel(
-			annotatedClasses = {
-					MergeUnsavedEntitiesTest.Book.class,
-					MergeUnsavedEntitiesTest.BookNote.class,
-			}
-	)
-	@SessionFactory
-	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsIdentityColumns.class)
 	public void testMergeTransientInstanceWithGeneratedId(SessionFactoryScope scope) {
 		Book merged = scope.fromTransaction(
 				session -> {
@@ -129,6 +121,7 @@ public class MergeUnsavedEntitiesTest {
 					assertThat( book.getBookNotes() ).isEmpty();
 				}
 		);
+
 	}
 
 	@Entity(name = "Parent")
@@ -282,6 +275,7 @@ public class MergeUnsavedEntitiesTest {
 		public String getNote() {
 			return note;
 		}
+
 	}
 
 }

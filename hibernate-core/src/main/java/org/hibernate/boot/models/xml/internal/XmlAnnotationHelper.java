@@ -171,12 +171,6 @@ public class XmlAnnotationHelper {
 		if ( isNotEmpty( jaxbEntity.getName() ) ) {
 			entityAnn.name( jaxbEntity.getName() );
 		}
-		if ( jaxbEntity.isMutable() != null && !jaxbEntity.isMutable() ) {
-			classDetails.applyAnnotationUsage(
-					HibernateAnnotations.IMMUTABLE,
-					xmlDocumentContext.getModelBuildingContext()
-			);
-		}
 	}
 
 	public static void applyColumn(
@@ -205,7 +199,7 @@ public class XmlAnnotationHelper {
 
 	public static void applyColumnTransformation(
 			JaxbColumnImpl jaxbColumn,
-			MutableAnnotationTarget memberDetails,
+			MutableMemberDetails memberDetails,
 			XmlDocumentContext xmlDocumentContext) {
 		if ( isEmpty( jaxbColumn.getRead() )
 				&& isEmpty( jaxbColumn.getWrite() ) ) {
@@ -705,9 +699,6 @@ public class XmlAnnotationHelper {
 		final ColumnJpaAnnotation columnAnn = COLUMN.createUsage( modelBuildingContext );
 		overrideUsage.column( columnAnn );
 		columnAnn.apply( jaxbOverride.getColumn(), xmlDocumentContext );
-		if ( jaxbOverride.getColumn() != null ) {
-			applyColumnTransformation( jaxbOverride.getColumn(), target, xmlDocumentContext );
-		}
 		return overrideUsage;
 	}
 

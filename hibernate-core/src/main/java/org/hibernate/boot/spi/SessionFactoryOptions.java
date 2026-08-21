@@ -14,16 +14,12 @@ import org.hibernate.CacheMode;
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.FlushMode;
-import org.hibernate.GraphParserMode;
 import org.hibernate.Incubating;
 import org.hibernate.Interceptor;
 import org.hibernate.Internal;
 import org.hibernate.LockOptions;
 import org.hibernate.SessionEventListener;
 import org.hibernate.SessionFactoryObserver;
-import org.hibernate.audit.AuditStrategy;
-import org.hibernate.cfg.StateManagementSettings;
-import org.hibernate.temporal.TemporalTableStrategy;
 import org.hibernate.context.spi.TenantCredentialsMapper;
 import org.hibernate.context.spi.TenantSchemaMapper;
 import org.hibernate.type.TimeZoneStorageStrategy;
@@ -545,16 +541,6 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	TimeZone getJdbcTimeZone();
 
 	/**
-	 * @see StateManagementSettings#TEMPORAL_TABLE_STRATEGY
-	 */
-	TemporalTableStrategy getTemporalTableStrategy();
-
-	/**
-	 * @see StateManagementSettings#AUDIT_STRATEGY
-	 */
-	AuditStrategy getAuditStrategy();
-
-	/**
 	 * @see org.hibernate.cfg.AvailableSettings#CRITERIA_COPY_TREE
 	 */
 	default boolean isCriteriaCopyTreeEnabled() {
@@ -821,14 +807,4 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 * @see org.hibernate.Session#setProperty(String, Object)
 	 */
 	Map<String, Object> getDefaultSessionProperties();
-
-	/**
-	 * The graph parser mode to use for parsing entity graph strings.
-	 *
-	 * @see org.hibernate.cfg.GraphParserSettings#GRAPH_PARSER_MODE
-	 *
-	 * @since 7.0
-	 */
-	GraphParserMode getGraphParserMode();
-
 }

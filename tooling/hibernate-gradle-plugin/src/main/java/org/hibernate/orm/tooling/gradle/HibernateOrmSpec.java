@@ -15,7 +15,6 @@ import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.SourceSet;
 
 import org.hibernate.orm.tooling.gradle.enhance.EnhancementSpec;
-import org.hibernate.orm.tooling.gradle.reveng.RevengSpec;
 
 import javax.inject.Inject;
 
@@ -24,8 +23,6 @@ import javax.inject.Inject;
  */
 public abstract class HibernateOrmSpec {
 	public static final String DSL_NAME = "hibernate";
-
-	private RevengSpec revengSpec;
 
 	public HibernateOrmSpec() {
 		getUseSameVersion().convention( true );
@@ -76,21 +73,5 @@ public abstract class HibernateOrmSpec {
 		EnhancementSpec spec = getObjectFactory().newInstance( EnhancementSpec.class );
 		action.execute( spec );
 		getEnhancement().set( spec );
-	}
-
-	/**
-	 * DSL extension for configuring reverse engineering
-	 */
-	public RevengSpec getReveng() {
-		return revengSpec;
-	}
-
-	/**
-	 * @see #getReveng()
-	 */
-	@SuppressWarnings("unused")
-	public void reveng(Action<RevengSpec> action) {
-		revengSpec = new RevengSpec();
-		action.execute( revengSpec );
 	}
 }

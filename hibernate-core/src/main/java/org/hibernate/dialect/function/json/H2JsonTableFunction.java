@@ -540,10 +540,11 @@ public class H2JsonTableFunction extends JsonTableFunction {
 
 		@Override
 		public void renderToSql(SqlAppender sqlAppender, SqlAstTranslator<?> walker, SessionFactoryImplementor sessionFactory) {
+			sqlAppender.appendSql( "array_get(" );
 			array.accept( walker );
-			sqlAppender.appendSql( '[' );
+			sqlAppender.appendSql( ',' );
 			sqlAppender.appendSql( indexFragment );
-			sqlAppender.appendSql( ']' );
+			sqlAppender.appendSql( ')' );
 		}
 
 		@Override
@@ -632,7 +633,7 @@ public class H2JsonTableFunction extends JsonTableFunction {
 
 			final String parentReadExpression;
 			if ( isArray ) {
-				parentReadExpression = parentPath + "[" + tableIdentifierVariable + ".x]";
+				parentReadExpression = "array_get(" + parentPath + "," + tableIdentifierVariable + ".x)";
 			}
 			else {
 				parentReadExpression = '(' + parentPath + ')';
@@ -683,7 +684,7 @@ public class H2JsonTableFunction extends JsonTableFunction {
 			final String readExpression;
 			if ( isArray ) {
 				nextClauseLevel = clauseLevel + 1;
-				readExpression = parentPath + "[" + ordinalityExpression( tableIdentifierVariable, nextClauseLevel ) + "]";
+				readExpression = "array_get(" + parentPath + "," + ordinalityExpression( tableIdentifierVariable, nextClauseLevel ) + ")";
 			}
 			else {
 				nextClauseLevel = clauseLevel;
@@ -819,6 +820,7 @@ public class H2JsonTableFunction extends JsonTableFunction {
 					name,
 					new SelectablePath( name ),
 					elementReadExpression,
+					null,
 					null,
 					null,
 					null,

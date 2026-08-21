@@ -9,6 +9,7 @@ import java.sql.SQLException;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.cache.MutableCacheKeyBuilder;
+import org.hibernate.engine.internal.CacheHelper;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
@@ -165,16 +166,28 @@ public abstract class AbstractJdbcParameter
 
 	@Override
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {
-		return BasicValuedMapping.super.disassemble( value, session );
+		return value;
 	}
 
 	@Override
 	public void addToCacheKey(MutableCacheKeyBuilder cacheKey, Object value, SharedSessionContractImplementor session) {
-		BasicValuedMapping.super.addToCacheKey( cacheKey, value, session );
+		CacheHelper.addBasicValueToCacheKey( cacheKey, value, getJdbcMapping(), session );
 	}
 
 	@Override
 	public <X, Y> int forEachDisassembledJdbcValue(
+			Object value,
+			int offset,
+			X x,
+			Y y,
+			JdbcValuesBiConsumer<X, Y> valuesConsumer,
+			SharedSessionContractImplementor session) {
+		valuesConsumer.consume( offset, x, y, value, jdbcMapping );
+		return getJdbcTypeCount();
+	}
+
+	@Override
+	public <X, Y> int forEachJdbcValue(
 			Object value,
 			int offset,
 			X x,

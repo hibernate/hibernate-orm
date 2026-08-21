@@ -566,7 +566,9 @@ public final class Cascade {
 			final T anything,
 			final boolean isCascadeDeleteEnabled) throws HibernateException {
 
-		if ( style.reallyDoCascade( action ) ) {
+		final boolean reallyDoCascade = style.reallyDoCascade( action )
+				&& child != CollectionType.UNFETCHED_COLLECTION;
+		if ( reallyDoCascade ) {
 			final boolean traceEnabled = CORE_LOGGER.isTraceEnabled();
 			if ( traceEnabled ) {
 				CORE_LOGGER.cascadingCollection( action, collectionType.getRole() );

@@ -133,7 +133,7 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 
 		for ( int i = 0; i < ids.length; i++ ) {
 			final Object id = coerce( idType, ids[i] );
-			final var entityKey = session.generateEntityKey( id, persister );
+			final var entityKey = new EntityKey( id, persister );
 			if ( !loadFromEnabledCaches( loadOptions, session, lockOptions, entityKey, results, i ) ) {
 				// if we did not hit any of the continues above,
 				// then we need to batch load the entity state.
@@ -247,19 +247,9 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 			// look for it in the second-level cache
 			final Object entity =
 					loadFromSecondLevelCache( entityKey, lockOptions, session );
-			final var persistenceContext = session.getPersistenceContextInternal();
 			if ( entity != null ) {
-				results.add( i, persistenceContext.proxyFor( getLoadable().getEntityPersister(), entityKey, entity ) );
+				results.add( i, entity );
 				return true;
-			}
-			else {
-				// check if the PC contains a deleted entry, if so return true
-				final var holder = persistenceContext.getEntityHolder( entityKey );
-				final var entry = holder == null ? null : holder.getEntityEntry();
-				if ( entry != null && entry.getStatus().isDeletedOrGone() && loadOptions.getRemovalsMode() != RemovalsMode.INCLUDE ) {
-					results.add( i, null );
-					return true;
-				}
 			}
 		}
 
@@ -362,7 +352,7 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 							lockOptions,
 							resolutionConsumer,
 							id,
-							session.generateEntityKey( id, persister ),
+							new EntityKey( id, persister ),
 							unresolvedIds,
 							i,
 							session

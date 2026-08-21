@@ -22,7 +22,8 @@ import java.util.function.UnaryOperator;
  *     and therefore also the JDBC transaction, should be shared from parent
  *     to child.
  * </ul>
- * <pre>{@code
+ * <p>
+ * <pre>
  * try (var statelessSession
  *          = session.statelessWithOptions()
  *                  .connection() // share the JDBC connection
@@ -30,8 +31,8 @@ import java.util.function.UnaryOperator;
  *                  .openStatelessSession()) {
  *     ...
  * }
- * }</pre>
- *
+ * </pre>
+ * <p>
  * On the other hand, when JTA transaction management is used, all sessions
  * execute within the same transaction. Typically, connection sharing is
  * handled automatically by the JTA-enabled {@link javax.sql.DataSource}.

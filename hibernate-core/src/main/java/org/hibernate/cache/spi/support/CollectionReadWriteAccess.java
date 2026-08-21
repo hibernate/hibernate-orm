@@ -36,7 +36,6 @@ public class CollectionReadWriteAccess extends AbstractReadWriteAccess implement
 		this.versionComparator = config.getOwnerVersionComparator();
 	}
 
-	@Deprecated
 	@Override
 	protected AccessedDataClassification getAccessedDataClassification() {
 		return AccessedDataClassification.COLLECTION;

@@ -5,20 +5,16 @@
 package org.hibernate.engine.spi;
 
 /**
- * Contract for classes (specifically, entities and components/embeddables) that are "managed".
- * Developers can choose to either have their classes manually implement these interfaces, or
- * Hibernate can enhance their classes to implement these interfaces via built-time or run-time
- * enhancement.
+ * Contract for classes (specifically, entities and components/embeddables) that are "managed".  Developers can
+ * choose to either have their classes manually implement these interfaces or Hibernate can enhance their classes
+ * to implement these interfaces via built-time or run-time enhancement.
  * <p>
- * The term <em>managed</em> is used in two senses:<ul>
+ * The term managed here is used to describe both:<ul>
  *     <li>
- *         A class is considered managed if it belongs to the persistence unit. This is
- *         represented by the class implementing {@code Managed}.
+ *         the fact that they are known to the persistence provider (this is defined by the interface itself)
  *     </li>
  *     <li>
- *         An instance is considered managed if it is associated with a persistence context.
- *         Any such association is represented by the state exposed via operations of this
- *         interface.
+ *         its association with Session/EntityManager (this is defined by the state exposed through the interface)
  *     </li>
  * </ul>
  *

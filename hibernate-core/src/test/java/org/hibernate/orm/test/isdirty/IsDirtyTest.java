@@ -88,7 +88,7 @@ public class IsDirtyTest {
 			assertTrue( session.isDirty() );
 		} );
 	}
-	@Entity(name = "X")
+	@Entity
 	static class X {
 		@Id @GeneratedValue
 		Long id;
@@ -98,7 +98,7 @@ public class IsDirtyTest {
 		@ElementCollection
 		Set<String> strings = new HashSet<>();
 	}
-	@Entity(name = "Y")
+	@Entity
 	static class Y {
 		@Id @GeneratedValue
 		Long id;

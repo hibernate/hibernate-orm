@@ -11,7 +11,6 @@ import org.hibernate.dialect.AbstractTransactSQLDialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MySQLDialect;
-import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.generator.Generator;
 import org.hibernate.id.BulkInsertionCapableIdentifierGenerator;
@@ -66,7 +65,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 		}
 )
 @SessionFactory
-@SkipForDialect( dialectClass = SpannerDialect.class, reason = "temporary skip, high memory usage of spanner emulator")
 public class BulkManipulationTest {
 
 	@AfterEach
@@ -360,7 +358,7 @@ public class BulkManipulationTest {
 
 		// deletes
 		factoryScope.inTransaction( (session) -> {
-			int deleteCount = session.createNativeQuery( "delete from Truck where 1=1" ).executeUpdate();
+			int deleteCount = session.createNativeQuery( "delete from Truck" ).executeUpdate();
 			assertEquals( 1, deleteCount );
 
 			List<?> l = session.createQuery( "from Vehicle" ).list();
@@ -380,7 +378,7 @@ public class BulkManipulationTest {
 					.setParameter( "owner", "Joe" )
 					.executeUpdate() );
 
-			session.createNativeQuery( "delete from Pickup where 1=1" ).executeUpdate();
+			session.createNativeQuery( "delete from Pickup" ).executeUpdate();
 			l = session.createQuery( "from Vehicle" ).list();
 			assertEquals( 0, l.size() );
 		} );

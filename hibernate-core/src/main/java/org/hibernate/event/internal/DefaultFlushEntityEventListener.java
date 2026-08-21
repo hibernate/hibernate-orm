@@ -448,7 +448,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 
 	private boolean isCollectionDirtyCheckNecessary(EntityPersister persister, Status status) {
 		return ( status == Status.MANAGED || status == Status.READ_ONLY )
-			&& ( persister.isVersioned() || persister.getAuditMapping() != null )
+			&& persister.isVersioned()
 			&& persister.hasCollections();
 	}
 

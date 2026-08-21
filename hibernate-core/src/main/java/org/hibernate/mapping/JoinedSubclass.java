@@ -4,6 +4,8 @@
  */
 package org.hibernate.mapping;
 
+import java.util.List;
+
 import org.hibernate.MappingException;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -51,6 +53,10 @@ public final class JoinedSubclass extends Subclass implements TableOwner {
 					key.getType().getName()
 				);
 		}
+	}
+
+	public List<Property> getReferenceableProperties() {
+		return getProperties();
 	}
 
 	public Object accept(PersistentClassVisitor mv) {

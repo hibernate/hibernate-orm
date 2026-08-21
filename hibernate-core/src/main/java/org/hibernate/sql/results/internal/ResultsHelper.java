@@ -5,6 +5,7 @@
 package org.hibernate.sql.results.internal;
 
 
+import org.hibernate.CacheMode;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.cache.spi.entry.CollectionCacheEntry;
 import org.hibernate.collection.spi.PersistentCollection;
@@ -184,9 +185,6 @@ public class ResultsHelper {
 
 		// CollectionRegionAccessStrategy has no update, so avoid putting uncommitted data via putFromLoad
 		if ( isPutFromLoad( context, collectionDescriptor, entry ) ) {
-			final boolean minimalPutsEnabled =
-					factory.getSessionFactoryOptions().isMinimalPutsEnabled()
-							&& !session.getCacheMode().isRefreshEnabled();
 			final var eventListenerManager = session.getEventListenerManager();
 			final var eventMonitor = session.getEventMonitor();
 			final var cachePutEvent = eventMonitor.beginCachePutEvent();
@@ -198,7 +196,8 @@ public class ResultsHelper {
 						cacheKey,
 						collectionDescriptor.getCacheEntryStructure().structure( entry ),
 						version,
-						minimalPutsEnabled
+						factory.getSessionFactoryOptions().isMinimalPutsEnabled()
+						&& session.getCacheMode() != CacheMode.REFRESH
 				);
 			}
 			finally {

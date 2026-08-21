@@ -33,7 +33,6 @@ import org.hibernate.property.access.spi.Setter;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.generator.Generator;
 import org.hibernate.generator.GeneratorCreationContext;
-import org.hibernate.generator.internal.GeneratorTypeHelper;
 import org.hibernate.type.AnyType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.ComponentType;
@@ -63,8 +62,6 @@ public class Property implements Serializable, MetaAttributable {
 	private boolean insertable = true;
 	private boolean selectable = true;
 	private boolean optimisticLocked = true;
-	private boolean temporalExcluded;
-	private boolean auditedExcluded;
 	private GeneratorCreator generatorCreator;
 	private String propertyAccessorName;
 	private PropertyAccessStrategy propertyAccessStrategy;
@@ -135,17 +132,12 @@ public class Property implements Serializable, MetaAttributable {
 		return value;
 	}
 
-	public void resetInsertable(boolean insertable) {
-		setInsertable( insertable );
-		if ( !insertable ) {
-			value.setNonInsertable();
-		}
-	}
-
 	public void resetUpdateable(boolean updateable) {
 		setUpdatable( updateable );
-		if ( !updateable ) {
-			value.setNonUpdatable();
+		final boolean[] columnUpdateability = getValue().getColumnUpdateability();
+		final int columnSpan = getColumnSpan();
+		for ( int i = 0; i < columnSpan; i++ ) {
+			columnUpdateability[i] = updateable;
 		}
 	}
 
@@ -512,22 +504,6 @@ public class Property implements Serializable, MetaAttributable {
 		isGenericSpecialization = genericSpecialization;
 	}
 
-	public boolean isTemporalExcluded() {
-		return temporalExcluded;
-	}
-
-	public void setTemporalExcluded(boolean temporalExcluded) {
-		this.temporalExcluded = temporalExcluded;
-	}
-
-	public boolean isAuditedExcluded() {
-		return auditedExcluded;
-	}
-
-	public void setAuditedExcluded(boolean auditedExcluded) {
-		this.auditedExcluded = auditedExcluded;
-	}
-
 	public boolean isLob() {
 		return lob;
 	}
@@ -566,15 +542,8 @@ public class Property implements Serializable, MetaAttributable {
 	}
 
 	public Generator createGenerator(RuntimeModelCreationContext context) {
-		if ( generatorCreator == null ) {
-			return null;
-		}
-		else {
-			final var creationContext = new PropertyGeneratorCreationContext( context );
-			final var generator = generatorCreator.createGenerator( creationContext );
-			GeneratorTypeHelper.checkGeneratorGeneratedType( generator, creationContext );
-			return generator;
-		}
+		return generatorCreator == null ? null :
+				generatorCreator.createGenerator( new PropertyGeneratorCreationContext( context ) );
 	}
 
 	public Property copy() {
@@ -589,8 +558,6 @@ public class Property implements Serializable, MetaAttributable {
 		property.setInsertable( isInsertable() );
 		property.setSelectable( isSelectable() );
 		property.setOptimisticLocked( isOptimisticLocked() );
-		property.setTemporalExcluded( isTemporalExcluded() );
-		property.setAuditedExcluded( isAuditedExcluded() );
 		property.setValueGeneratorCreator( getValueGeneratorCreator() );
 		property.setPropertyAccessorName( getPropertyAccessorName() );
 		property.setPropertyAccessStrategy( getPropertyAccessStrategy() );

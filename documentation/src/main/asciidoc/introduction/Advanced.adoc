@@ -155,308 +155,62 @@ When we only need to filter rows by a static condition with no parameters, we do
 :envers-doc: {doc-user-guide-url}#envers
 
 We've mentioned that a filter can be used to implement versioning, and to provide _historical_ views of the data.
-But Hibernate 7.4 introduces two much more powerful ways of dealing with historical data.
+Being such a general-purpose construct, filters provide a lot of flexibility here.
+But if you're after a more focused/opinionated solution to this problem, you should definitely check out {envers}[Envers].
 
-[[temporal-data]]
-=== Temporal data
+[[envers]]
+.Using Envers for auditing historical data
+****
+Envers is an add-on to Hibernate ORM which keeps a historical record of each versioned entity in a separate _audit table_, and allows past revisions of the data to be viewed and queried.
+A full introduction to Envers would require a whole chapter, so we'll just give you a quick taste here.
 
-A _temporal entity_ is an entity that keeps a history of its state over time, allowing the database to be queried for state which was effective at a given moment in the past.
-The link:{doc-javadoc-url}org/hibernate/annotations/Temporal.html[`@Temporal`] annotation declares a temporal entity.
-
-[source,java]
-----
-@Temporal @Entity
-class Document {
-	...
-}
-----
-
-Any temporal entity has columns holding:
-
-- the moment at which a particular version of the entity became effective, and
-- the moment, if any, at which it the version is superseded (this is null for the currently-effective version).
-
-[source,java]
-----
-@Temporal(rowStart="effective",
-          rowEnd="superseded")
-@Entity
-class Document {
-	...
-}
-----
-
-Hibernate offers several different strategies for mapping temporal entities,
-enumerated by link:{doc-javadoc-url}org/hibernate/temporal/TemporalTableStrategy.html[`TemporalTableStrategy`].
-
-.Temporal table strategies
-[%breakable,cols="15,25,~"]
-|===
-| Strategy | Explanation | Comments
-
-| `NATIVE` | Use ANSI SQL 2011-style temporal tables
-| Requires native database support for temporal tables (Maria, SQL Server, Db2)
-| `SINGLE_TABLE` | Store historical data together with current data in one table
-| The table does not have the usual foreign key constraints that would exist for any non-temporal entity, and so it is the responsibility of the application program to maintain and enforce referential integrity
-| `HISTORY_TABLE` | Maintain two tables, one for current data and one for historical data
-| The table for current data has all the usual foreign key constraints that would exist for any non-temporal entity; the table for historical data has no foreign key constraints
-|===
-
-The temporal table strategy is controlled by the following property setting:
-
-.Temporal data configuration
-[%breakable,cols="36,~"]
-|===
-| Configuration property name           | Purpose
-
-| link:{doc-javadoc-url}org/hibernate/cfg/StateManagementSettings.html#TEMPORAL_TABLE_STRATEGY[`hibernate.temporal.table_strategy`]  | Specifies the `TemporalTableStrategy`
-|===
-
-In the `SINGLE_TABLE` strategy, the `@HistoryPartitioning` annotation allows historical data to be shifted to a separate partition.
-
-[source,java]
-----
-@Temporal @Entity
-@Table(name="documents")
-@Temporal.HistoryPartitioning(
-        currentPartition="doc_current",
-        historyPartition="doc_history")
-class Document {
-	...
-}
-----
-
-In the `HISTORY_TABLE` strategy, the `@HistoryTable` annotation specifies the name of the table holding the historical data.
-
-[source,java]
-----
-@Temporal @Entity
-@Table(name="documents")
-@Temporal.HistoryTable(name="document_history")
-class Document {
-	...
-}
-----
-
-By default, a session or stateless session reads the currently effective version of any temporal entity.
-To read historical versions effective at a given instant, we must specify the instant when creating the session or stateless session.
-
-[source,java]
-----
-Instant instant = ... ; // a past instant
-try (var session = factory.withOptions().asOf(instant).open()) {
-    var document =
-            // read the version of the document
-            // effective at the specified instant
-            session.find(Document.class, documentId);
-    ...
-}
-----
-
-A temporal entity tracks its state as it changes over time, but it doesn't keep any record of the _changes themselves_, nor about how modifications to the temporal entity relate to other modifications as part of a _changeset_ involving multiple entities.
-For this we need an audit log.
-
-[[audit-logs]]
-=== Audit logs
-
-An _audited entity_ is quite similar to a temporal entity with a separate history table.
-But whereas a history table only tracks the timestamp at which a version became effective, an _audit log_ keeps a record of each changeset and something about the nature of the change.
-The link:{doc-javadoc-url}org/hibernate/annotations/Audited.html[`@Audited`] annotation declares a temporal entity.
-
+First, we must mark an entity as versioned, using the `@Audited` annotation:
 [source,java]
 ----
 @Audited @Entity
-class Document {
-	...
-}
+@Table(name="CurrentDocument")
+@AuditTable("DocumentRevision")
+class Document { ... }
 ----
-
-The `@Audited.Table` annotation specified the table holding the audit log for that entity:
-
+[TIP]
+====
+The `@AuditTable` annotation is optional, and it's better to set either `org.hibernate.envers.audit_table_prefix` or `org.hibernate.envers.audit_table_suffix` and let the audit table name be inferred.
+====
+The `AuditReader` interface exposes operations for retrieving and querying historical revisions.
+It's really easy to get hold of one of these:
 [source,java]
 ----
-@Audited @Entity
-@Table(name="documents")
-@Audited.Table(name="document_aud_log")
-class Document {
-	...
-}
+AuditReader reader = AuditReaderFactory.get(entityManager);
 ----
-
-An audit log has columns holding:
-
-- an identifier of the changeset at which a revision of the entity became effective,
-- the nature of the change to entity that resulted in the revision being created--that is, the `ModificationType`,
-and
-- optionally, an identifier of the changeset which resulted in the revision being superseded.
-
+Envers tracks revisions of the data via a global _revision number_.
+We may easily find the revision number which was current at a given instant:
 [source,java]
 ----
-@Audited @Entity
-@Table(name="documents")
-@Audited.Table(
-        name="document_aud_log",
-        transactionIdColumn="REV",
-        modificationTypeColumn="REVTYPE")
-class Document {
-	...
-}
+Number revision = reader.getRevisionNumberForDate(datetime);
 ----
-
-NOTE: In the past, audit logging was provided by {envers}[Envers].
-The functionality provided by the `@Audited` annotation is completely new, but is backward compatible with the format of Envers audit logs.
-
-To make use of audited entities, we need a source of changeset ids.
-There are two approaches we could take:
-
-1. create an entity class which holds information about each changeset, and annotate it link:{doc-javadoc-url}org/hibernate/annotations/Changelog.html[`@Changelog`] or,
-2. supply our own custom implementation of link:{doc-javadoc-url}org/hibernate/temporal/spi/ChangesetIdentifierSupplier.html[`ChangesetIdentifierSupplier`] to assign changeset ids to transactions.
-
-With the first (recommended) approach, Hibernate automatically persists a new instance of the `@Changelog` entity in each transaction, using the `@ChangesetId` field--typically the generated identifier of the entity--as the changeset id.
-
+We can use the revision number to ask for the version of our entity associated with the given revision number:
 [source,java]
 ----
-@Changelog @Entity
-@Table(name = "REVINFO")
-static class ChangesetInfo {
-    @Id
-    @GeneratedValue
-    @Changelog.ChangesetId
-    @Column(name = "REV")
-    int id;
-
-    @Changelog.Timestamp
-    @Column(name = "REVTSTMP")
-    long timestamp;
-
-    @Basic(optional=false)
-    String description;
-}
+Document doc = reader.find(Document.class, id, revision);
 ----
-
-For those familiar with Envers, the changelog entity fills the role of the Envers "revision entity".
-
-.Audit log configuration
-[%breakable,cols="36,~"]
-|===
-| Configuration property name           | Purpose
-
-| link:{doc-javadoc-url}org/hibernate/cfg/StateManagementSettings.html#CHANGESET_ID_SUPPLIER[`hibernate.temporal.changeset_id_supplier`] | Specify a custom `ChangesetIdentifierSupplier`
-| link:{doc-javadoc-url}org/hibernate/cfg/StateManagementSettings.html#AUDIT_STRATEGY[`hibernate.audit.strategy`]  | Specifies whether there is a column holding the id of the changeset which superseded a revision
-|===
-
-By default, a session or stateless session reads the currently effective version of an audited entity and ignores the audit log.
-To read historical reversions, we must specify a changeset id when creating the session or stateless session.
-
+Alternatively, we can directly ask for the version which was current at a given instant:
 [source,java]
 ----
-Long changesetId = ... ; // a changeset id
-try (var session = factory.withOptions().atChangeset(changesetId).open()) {
-    var document =
-            // read the reversion of the document
-            // effective after the specified changeset
-            session.find(Document.class, documentId);
-}
+Document doc = reader.find(Document.class, id, datetime);
 ----
-
-The link:{doc-javadoc-url}org/hibernate/audit/AuditLog.html[`AuditLog`] interface lets us run more sophisticated queries against the audit log:
-
+We can even execute queries to obtain lists of entities current at the given revision number:
 [source,java]
 ----
-try (var auditLog = AuditLogFactory.create(factory)) {
-    for (var changesetId : auditLog.getChangesets(Document.class, documentId)) {
-        // iterate over the changesets which modified the given document
-        try (var session = factory.withOptions().atChangeset(changesetId).open()) {
-             ...
-        }
-    }
-}
+List documents =
+        reader.createQuery()
+            .forEntitiesAtRevision(Document.class, revision)
+            .getResultList();
 ----
+For much more information, see the {envers-doc}[User Guide].
+****
 
-For even more control, we can open a session with `ALL_CHANGESETS` and write custom HQL queries using the `changesetId()` and `modificationType()` functions:
-
-[source,java]
-----
-try (var session = factory.withOptions()
-        .atChangeset(AuditLog.ALL_CHANGESETS).open()) {
-    // find all documents deleted in a specific changeset
-    var deleted = session.createSelectionQuery(
-            "from Document d"
-                + " where changesetId(d) = :csId"
-                + " and modificationType(d) = :type",
-            Document.class)
-        .setParameter("csId", targetChangesetId)
-        .setParameter("type", ModificationType.DEL)
-        .getResultList();
-
-    // count modifications per changeset
-    var counts = session.createSelectionQuery(
-            "select changesetId(d), count(d)"
-                + " from Document d"
-                + " group by changesetId(d)"
-                + " order by changesetId(d)",
-            Object[].class)
-        .getResultList();
-}
-----
-
-You'll find much more information about these new APIs in the Javadoc.
-
-// [[envers]]
-// .Using Envers for auditing historical data
-// ****
-// Envers is an add-on to Hibernate ORM which keeps a historical record of each versioned entity in a separate _audit table_, and allows past revisions of the data to be viewed and queried.
-// A full introduction to Envers would require a whole chapter, so we'll just give you a quick taste here.
-//
-// First, we must mark an entity as versioned, using the `@Audited` annotation:
-// [source,java]
-// ----
-// @Audited @Entity
-// @Table(name="CurrentDocument")
-// @AuditTable("DocumentRevision")
-// class Document { ... }
-// ----
-// [TIP]
-// ====
-// The `@AuditTable` annotation is optional, and it's better to set either `org.hibernate.envers.audit_table_prefix` or `org.hibernate.envers.audit_table_suffix` and let the audit table name be inferred.
-// ====
-// The `AuditReader` interface exposes operations for retrieving and querying historical revisions.
-// It's really easy to get hold of one of these:
-// [source,java]
-// ----
-// AuditReader reader = AuditReaderFactory.get(entityManager);
-// ----
-// Envers tracks revisions of the data via a global _revision number_.
-// We may easily find the revision number which was current at a given instant:
-// [source,java]
-// ----
-// Number revision = reader.getRevisionNumberForDate(datetime);
-// ----
-// We can use the revision number to ask for the version of our entity associated with the given revision number:
-// [source,java]
-// ----
-// Document doc = reader.find(Document.class, id, revision);
-// ----
-// Alternatively, we can directly ask for the version which was current at a given instant:
-// [source,java]
-// ----
-// Document doc = reader.find(Document.class, id, datetime);
-// ----
-// We can even execute queries to obtain lists of entities current at the given revision number:
-// [source,java]
-// ----
-// List documents =
-//         reader.createQuery()
-//             .forEntitiesAtRevision(Document.class, revision)
-//             .getResultList();
-// ----
-// For much more information, see the {envers-doc}[User Guide].
-// ****
-//
-// Historically, filters where often used to implement soft-delete.
-// But, since 6.4, Hibernate now comes with soft-delete built in.
-
-Sometimes, keeping a full record of past revisions of an entity is too much.
+Historically, filters where often used to implement soft-delete.
+But, since 6.4, Hibernate now comes with soft-delete built in.
 
 [[soft-delete]]
 === Soft-delete
@@ -1215,9 +969,22 @@ There are a number of annotations which are useful to express this sort of compl
 | `@JoinColumn` | Specifies the foreign key column
 |===
 
-As a general principle, an `@Any` association shares the semantics of `@ManyToAny`, and, since Hibernate 7.4, may be used just like a  `@ManyToOne` in HQL and so on.
-
 Of course, `@Any` mappings are disfavored, except in extremely special cases, since it's much more difficult to enforce referential integrity at the database level.
+
+There's also currently some limitations around querying `@Any` associations in HQL.
+This is allowed:
+
+[source,hql]
+----
+from Order ord
+    join CashPayment cash
+        on id(ord.payment) = cash.id
+----
+
+[CAUTION]
+====
+Polymorphic association joins for `@Any` mappings are not currently implemented.
+====
 
 Further information may be found in the {any-doc}[User Guide].
 

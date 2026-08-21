@@ -4,7 +4,6 @@
  */
 package org.hibernate.boot.models;
 
-import java.util.EnumSet;
 import java.util.function.Consumer;
 
 import org.hibernate.boot.internal.Abstract;
@@ -21,41 +20,29 @@ import org.hibernate.boot.models.internal.OrmAnnotationHelper;
 import org.hibernate.models.internal.OrmAnnotationDescriptor;
 import org.hibernate.models.spi.AnnotationDescriptor;
 
-import static org.hibernate.models.spi.AnnotationTarget.Kind;
-
 /**
  * @author Steve Ebersole
  */
 public interface XmlAnnotations {
 	OrmAnnotationDescriptor<Abstract, AbstractXmlAnnotation> ABSTRACT = new OrmAnnotationDescriptor<>(
 			Abstract.class,
-			AbstractXmlAnnotation.class,
-			EnumSet.of( Kind.CLASS ),
-			false
+			AbstractXmlAnnotation.class
 	);
 	OrmAnnotationDescriptor<AnyKeyType, AnyKeyTypeXmlAnnotation> ANY_KEY_TYPE = new OrmAnnotationDescriptor<>(
 			AnyKeyType.class,
-			AnyKeyTypeXmlAnnotation.class,
-			EnumSet.of( Kind.FIELD, Kind.METHOD ),
-			false
+			AnyKeyTypeXmlAnnotation.class
 	);
 	OrmAnnotationDescriptor<CollectionClassification, CollectionClassificationXmlAnnotation> COLLECTION_CLASSIFICATION = new OrmAnnotationDescriptor<>(
 			CollectionClassification.class,
-			CollectionClassificationXmlAnnotation.class,
-			EnumSet.of( Kind.FIELD, Kind.METHOD ),
-			false
+			CollectionClassificationXmlAnnotation.class
 	);
 	OrmAnnotationDescriptor<Extends, ExtendsXmlAnnotation> EXTENDS = new OrmAnnotationDescriptor<>(
 			Extends.class,
-			ExtendsXmlAnnotation.class,
-			EnumSet.of( Kind.CLASS ),
-			false
+			ExtendsXmlAnnotation.class
 	);
 	OrmAnnotationDescriptor<Target, TargetXmlAnnotation> TARGET = new OrmAnnotationDescriptor<>(
 			Target.class,
-			TargetXmlAnnotation.class,
-			EnumSet.of( Kind.FIELD, Kind.METHOD ),
-			false
+			TargetXmlAnnotation.class
 	);
 
 	static void forEachAnnotation(Consumer<AnnotationDescriptor<?>> consumer) {

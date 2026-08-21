@@ -4,12 +4,7 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Locale;
-import java.util.Map;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
@@ -17,37 +12,21 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.Any;
 import org.hibernate.mapping.Column;
-import org.hibernate.metamodel.mapping.AssociationKey;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.DiscriminatedAssociationModelPart;
 import org.hibernate.metamodel.mapping.DiscriminatorMapping;
-import org.hibernate.metamodel.mapping.DiscriminatorValueDetails;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.SelectablePath;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.SqlAstJoinType;
-import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.from.TableGroupJoin;
-import org.hibernate.sql.ast.tree.from.TableReference;
-import org.hibernate.sql.ast.tree.from.TableGroupJoinProducer;
-import org.hibernate.sql.ast.tree.from.StandardVirtualTableGroup;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
-import org.hibernate.sql.ast.tree.expression.QueryLiteral;
-import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
-import org.hibernate.sql.ast.tree.predicate.Junction;
-import org.hibernate.sql.ast.tree.predicate.Predicate;
-import org.hibernate.sql.ast.tree.predicate.PredicateCollector;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchOptions;
 import org.hibernate.sql.results.graph.FetchParent;
-import org.hibernate.sql.results.graph.entity.internal.JoinedDiscriminatedEntityFetch;
-import org.hibernate.sql.results.graph.entity.internal.JoinedDiscriminatedEntityResult;
 import org.hibernate.sql.results.graph.entity.internal.DiscriminatedEntityFetch;
 import org.hibernate.sql.results.graph.entity.internal.DiscriminatedEntityResult;
 import org.hibernate.type.AnyType;
@@ -57,7 +36,6 @@ import org.hibernate.type.descriptor.java.JavaType;
 
 import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper.getSelectablePath;
 import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper.getTableIdentifierExpression;
-import static org.hibernate.query.sqm.ComparisonOperator.EQUAL;
 
 /**
  * Represents the "type" of an any-valued mapping
@@ -108,6 +86,7 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 						: new SelectablePath( metaColumn.getQuotedName( dialect ) ),
 				metaColumn.getCustomReadExpression(),
 				metaColumn.getCustomWriteExpression(),
+				metaColumn.getSqlType(),
 				metaColumn.getLength(),
 				metaColumn.getArrayLength(),
 				metaColumn.getPrecision(),
@@ -133,6 +112,7 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 						: new SelectablePath( keyColumn.getQuotedName( dialect ) ),
 				keyColumn.getCustomReadExpression(),
 				keyColumn.getCustomWriteExpression(),
+				keyColumn.getSqlType(),
 				keyColumn.getLength(),
 				keyColumn.getArrayLength(),
 				keyColumn.getPrecision(),
@@ -162,7 +142,6 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 	private final JavaType<?> baseAssociationJtd;
 	private final FetchTiming fetchTiming;
 	private final SessionFactoryImplementor sessionFactory;
-	private AssociationKey associationKey;
 
 	public DiscriminatedAssociationMapping(
 			DiscriminatedAssociationModelPart modelPart,
@@ -345,236 +324,12 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 
 	@Override
 	public FetchStyle getStyle() {
-		return fetchTiming == FetchTiming.IMMEDIATE ? FetchStyle.JOIN : FetchStyle.SELECT;
+		return FetchStyle.SELECT;
 	}
 
 	@Override
 	public FetchTiming getTiming() {
 		return fetchTiming;
-	}
-
-	AssociationKey getAssociationKey() {
-		if ( associationKey == null ) {
-			final List<String> columns = new ArrayList<>( discriminatorPart.getJdbcTypeCount() + keyPart.getJdbcTypeCount() );
-			discriminatorPart.forEachSelectable( (selectionIndex, selectableMapping) -> columns.add( selectableMapping.getSelectionExpression() ) );
-			keyPart.forEachSelectable( (selectionIndex, selectableMapping) -> columns.add( selectableMapping.getSelectionExpression() ) );
-			associationKey = new AssociationKey( discriminatorPart.getContainingTableExpression(), columns );
-		}
-		return associationKey;
-	}
-
-	Fetch resolveCircularFetch(
-			FetchParent fetchParent,
-			NavigablePath fetchablePath,
-			FetchTiming fetchTiming,
-			DomainResultCreationState creationState) {
-		if ( creationState.isAssociationKeyVisited( getAssociationKey() ) ) {
-			return new DiscriminatedEntityFetch(
-					fetchablePath,
-					baseAssociationJtd,
-					modelPart,
-					fetchTiming,
-					fetchParent,
-					creationState
-			);
-		}
-		return null;
-	}
-
-	private Fetch withRegisteredAssociationKey(
-			Supplier<Fetch> fetchCreator,
-			DomainResultCreationState creationState) {
-		final boolean added = creationState.registerVisitedAssociationKey( getAssociationKey() );
-		try {
-			return fetchCreator.get();
-		}
-		finally {
-			if ( added ) {
-				creationState.removeVisitedAssociationKey( getAssociationKey() );
-			}
-		}
-	}
-
-	List<DiscriminatorValueDetails> getMappedEntityValueDetails() {
-		final var valueDetails = new ArrayList<DiscriminatorValueDetails>();
-		discriminatorPart.getValueConverter().forEachValueDetail( valueDetails::add );
-		return valueDetails;
-	}
-
-	public static NavigablePath concreteEntityPath(NavigablePath associationPath, EntityMappingType entityMappingType) {
-		return associationPath.treatAs( entityMappingType.getEntityName() );
-	}
-
-	TableGroup createRootTableGroupJoin(
-			NavigablePath navigablePath,
-			TableGroup lhs,
-			boolean fetched,
-			SqlAstJoinType requestedJoinType,
-			Consumer<Predicate> predicateConsumer,
-			org.hibernate.sql.ast.spi.SqlAstCreationState creationState) {
-		final var virtualTableGroup = new StandardVirtualTableGroup( navigablePath, modelPart, lhs, fetched );
-		final var valueDetails = getMappedEntityValueDetails();
-		final SqlAstJoinType effectiveJoinType =
-				valueDetails.size() == 1 && requestedJoinType == SqlAstJoinType.INNER
-						? SqlAstJoinType.INNER
-						: SqlAstJoinType.LEFT;
-
-		for ( DiscriminatorValueDetails valueDetail : valueDetails ) {
-			addConcreteEntityTableGroupJoin(
-					virtualTableGroup,
-					lhs,
-					navigablePath,
-					valueDetail,
-					effectiveJoinType,
-					predicateConsumer,
-					creationState
-			);
-		}
-
-		return virtualTableGroup;
-	}
-
-	private void addConcreteEntityTableGroupJoin(
-			StandardVirtualTableGroup virtualTableGroup,
-			TableGroup lhs,
-			NavigablePath associationPath,
-			DiscriminatorValueDetails valueDetail,
-			SqlAstJoinType joinType,
-			Consumer<Predicate> predicateConsumer,
-			org.hibernate.sql.ast.spi.SqlAstCreationState creationState) {
-		final var entityMapping = valueDetail.getIndicatedEntity();
-		final var concretePath = concreteEntityPath( associationPath, entityMapping );
-		final var joinPredicateCollector = new PredicateCollector();
-
-		final var entityTableGroup = entityMapping.createRootTableGroup(
-				joinType == SqlAstJoinType.INNER && lhs.canUseInnerJoins(),
-				concretePath,
-				null,
-				null,
-				() -> joinPredicateCollector::applyPredicate,
-				creationState
-		);
-		joinPredicateCollector.applyPredicate(
-				createAssociationPredicate( lhs, entityTableGroup, entityMapping, valueDetail )
-		);
-
-		applyEntityRestrictions( joinPredicateCollector, entityMapping, entityTableGroup, creationState );
-
-		final var tableGroupJoin = new TableGroupJoin(
-				concretePath,
-				joinType,
-				entityTableGroup,
-				joinPredicateCollector.getPredicate()
-		);
-		virtualTableGroup.addNestedTableGroupJoin( tableGroupJoin );
-		creationState.getFromClauseAccess().registerTableGroup( concretePath, entityTableGroup );
-
-		if ( predicateConsumer != null && joinPredicateCollector.getPredicate() != null ) {
-			predicateConsumer.accept( joinPredicateCollector.getPredicate() );
-		}
-	}
-
-	private void applyEntityRestrictions(
-			PredicateCollector predicateCollector,
-			EntityMappingType entityMappingType,
-			TableGroup entityTableGroup,
-			org.hibernate.sql.ast.spi.SqlAstCreationState creationState) {
-		final Map<String, org.hibernate.Filter> enabledFilters = creationState.getLoadQueryInfluencers().getEnabledFilters();
-		if ( entityMappingType.getEntityPersister().hasFilterForLoadByKey() ) {
-			entityMappingType.applyBaseRestrictions(
-					predicateCollector::applyPredicate,
-					entityTableGroup,
-					true,
-					enabledFilters,
-					creationState.applyOnlyLoadByKeyFilters(),
-					null,
-					creationState
-			);
-		}
-		entityMappingType.applyWhereRestrictions(
-				predicateCollector::applyPredicate,
-				entityTableGroup,
-				true,
-				creationState
-		);
-		if ( entityMappingType.getSuperMappingType() != null && !creationState.supportsEntityNameUsage() ) {
-			entityMappingType.applyDiscriminator( null, null, entityTableGroup, creationState );
-		}
-		final var auxiliaryMapping = entityMappingType.getAuxiliaryMapping();
-		if ( auxiliaryMapping != null ) {
-			auxiliaryMapping.applyPredicate(
-					entityMappingType,
-					predicateCollector::applyPredicate,
-					entityTableGroup,
-					creationState.getSqlAliasBaseGenerator(),
-					creationState.getLoadQueryInfluencers()
-			);
-		}
-	}
-
-	private Predicate createAssociationPredicate(
-			TableGroup lhs,
-			TableGroup entityTableGroup,
-			EntityMappingType entityMappingType,
-			DiscriminatorValueDetails valueDetail) {
-		final var identifierMapping = entityMappingType.getIdentifierMapping();
-		final BasicValuedModelPart identifierPart = identifierMapping.asBasicValuedModelPart();
-		if ( identifierPart == null ) {
-			throw new UnsupportedOperationException(
-					"Join fetching an @Any association is not supported for entity '" + entityMappingType.getEntityName()
-							+ "' because it does not use a basic identifier"
-			);
-		}
-
-		final TableReference discriminatorTableReference =
-				lhs.resolveTableReference( null, discriminatorPart.getContainingTableExpression() );
-		final TableReference keyTableReference =
-				lhs.resolveTableReference( null, keyPart.getContainingTableExpression() );
-		final TableReference identifierTableReference =
-				entityTableGroup.resolveTableReference( entityTableGroup.getNavigablePath(), identifierPart.getContainingTableExpression() );
-
-		final Junction predicate = new Junction( Junction.Nature.CONJUNCTION );
-		predicate.add(
-				new ComparisonPredicate(
-						new ColumnReference( discriminatorTableReference, discriminatorPart ),
-						EQUAL,
-						new QueryLiteral<>( valueDetail.getValue(), discriminatorPart )
-				)
-		);
-		predicate.add(
-				new ComparisonPredicate(
-						new ColumnReference( identifierTableReference, identifierPart ),
-						EQUAL,
-						new ColumnReference( keyTableReference, keyPart )
-				)
-		);
-		return predicate;
-	}
-
-	private TableGroup resolveJoinedFetchTableGroup(
-			FetchParent fetchParent,
-			NavigablePath fetchablePath,
-			String resultVariable,
-			DomainResultCreationState creationState) {
-		final FromClauseAccess fromClauseAccess = creationState.getSqlAstCreationState().getFromClauseAccess();
-		return fromClauseAccess.resolveTableGroup(
-				fetchablePath,
-				navigablePath -> {
-					final TableGroup parentTableGroup = fromClauseAccess.getTableGroup( fetchParent.getNavigablePath() );
-					final TableGroupJoin tableGroupJoin = ( (TableGroupJoinProducer) modelPart ).createTableGroupJoin(
-							navigablePath,
-							parentTableGroup,
-							resultVariable,
-							null,
-							SqlAstJoinType.LEFT,
-							true,
-							false,
-							creationState.getSqlAstCreationState()
-					);
-					parentTableGroup.addTableGroupJoin( tableGroupJoin );
-					return tableGroupJoin.getJoinedGroup();
-				}
-		);
 	}
 
 	public Fetch generateFetch(
@@ -584,23 +339,6 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 			boolean selected,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		if ( selected ) {
-			return withRegisteredAssociationKey(
-					() -> {
-						resolveJoinedFetchTableGroup( fetchParent, fetchablePath, resultVariable, creationState );
-						return new JoinedDiscriminatedEntityFetch(
-								fetchablePath,
-								baseAssociationJtd,
-								modelPart,
-								fetchTiming,
-								fetchParent,
-								getMappedEntityValueDetails(),
-								creationState
-						);
-					},
-					creationState
-			);
-		}
 		return new DiscriminatedEntityFetch(
 				fetchablePath,
 				baseAssociationJtd,
@@ -616,49 +354,13 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 			TableGroup tableGroup,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		if ( resolveJoinedResultTableGroup( navigablePath, tableGroup, creationState ) != null ) {
-			return new JoinedDiscriminatedEntityResult<>(
-					navigablePath,
-					baseAssociationJtd,
-					modelPart,
-					resultVariable,
-					getMappedEntityValueDetails(),
-					creationState
-			);
-		}
-		else {
-			return new DiscriminatedEntityResult<>(
-					navigablePath,
-					baseAssociationJtd,
-					modelPart,
-					resultVariable,
-					creationState
-			);
-		}
-	}
-
-	private TableGroup resolveJoinedResultTableGroup(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			DomainResultCreationState creationState) {
-		final TableGroup joinedTableGroup =
-				creationState.getSqlAstCreationState().getFromClauseAccess()
-						.findTableGroup( navigablePath );
-		if ( joinedTableGroup != null
-				&& isModelPartWithRealJoins( joinedTableGroup ) ) {
-			return joinedTableGroup;
-		}
-		else if ( isModelPartWithRealJoins( tableGroup ) ) {
-			return tableGroup;
-		}
-		else {
-			return null;
-		}
-	}
-
-	private boolean isModelPartWithRealJoins(TableGroup joinedTableGroup) {
-		return joinedTableGroup.getModelPart() == modelPart
-			&& joinedTableGroup.hasRealJoins();
+		return new DiscriminatedEntityResult<>(
+				navigablePath,
+				baseAssociationJtd,
+				modelPart,
+				resultVariable,
+				creationState
+		);
 	}
 
 }

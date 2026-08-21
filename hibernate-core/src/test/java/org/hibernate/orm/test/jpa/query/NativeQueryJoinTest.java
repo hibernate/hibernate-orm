@@ -12,10 +12,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
-import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
@@ -35,7 +33,6 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 )
 @SessionFactory
 @JiraKey("HHH-19524")
-@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsNumericPrimaryKey.class)
 public class NativeQueryJoinTest {
 
 	private static final long ORDER_ID = 1L;

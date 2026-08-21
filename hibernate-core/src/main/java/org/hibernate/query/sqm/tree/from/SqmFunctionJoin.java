@@ -45,7 +45,7 @@ public class SqmFunctionJoin<E> extends AbstractSqmJoin<Object, E> implements Jp
 			@Nullable String alias,
 			SqmJoinType joinType,
 			boolean lateral,
-			SqmFrom<?, Object> sqmFrom) {
+			SqmRoot<Object> sqmRoot) {
 		this(
 				SqmCreationHelper.buildRootNavigablePath( "<<derived>>", alias ),
 				function,
@@ -53,7 +53,7 @@ public class SqmFunctionJoin<E> extends AbstractSqmJoin<Object, E> implements Jp
 				function.getType(),
 				alias,
 				validateJoinType( joinType, lateral ),
-				sqmFrom
+				sqmRoot
 		);
 	}
 
@@ -64,14 +64,14 @@ public class SqmFunctionJoin<E> extends AbstractSqmJoin<Object, E> implements Jp
 			SqmPathSource<E> pathSource,
 			@Nullable String alias,
 			SqmJoinType joinType,
-			SqmFrom<?, Object> sqmFrom) {
+			SqmRoot<Object> sqmRoot) {
 		super(
 				navigablePath,
 				pathSource,
-				sqmFrom,
+				sqmRoot,
 				alias,
 				joinType,
-				sqmFrom.nodeBuilder()
+				sqmRoot.nodeBuilder()
 		);
 		this.function = function;
 		this.lateral = lateral;
@@ -101,6 +101,7 @@ public class SqmFunctionJoin<E> extends AbstractSqmJoin<Object, E> implements Jp
 		if ( existing != null ) {
 			return existing;
 		}
+		//noinspection unchecked
 		final var path = context.registerCopy(
 				this,
 				new SqmFunctionJoin<>(
@@ -110,11 +111,20 @@ public class SqmFunctionJoin<E> extends AbstractSqmJoin<Object, E> implements Jp
 						getReferencedPathSource(),
 						getExplicitAlias(),
 						getSqmJoinType(),
-						getParent().copy( context )
+						(SqmRoot<Object>) findRoot().copy( context )
 				)
 		);
 		copyTo( path, context );
 		return path;
+	}
+
+	public SqmRoot<?> getRoot() {
+		return (SqmRoot<?>) (SqmFrom<?, ?>) castNonNull( super.getLhs() );
+	}
+
+	@Override
+	public SqmRoot<?> findRoot() {
+		return getRoot();
 	}
 
 	@Override
@@ -214,7 +224,8 @@ public class SqmFunctionJoin<E> extends AbstractSqmJoin<Object, E> implements Jp
 
 	@Override
 	public @NonNull SqmFrom<?, Object> getParent() {
-		return castNonNull( super.getParent() );
+		//noinspection unchecked
+		return (SqmFrom<?, Object>) (SqmFrom<?, ?>) getRoot();
 	}
 
 	@Override

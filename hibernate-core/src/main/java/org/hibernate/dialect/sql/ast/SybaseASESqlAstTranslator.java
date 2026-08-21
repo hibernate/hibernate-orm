@@ -4,10 +4,6 @@
  */
 package org.hibernate.dialect.sql.ast;
 
-import java.util.ArrayDeque;
-import java.util.List;
-import java.util.function.Consumer;
-
 import org.hibernate.Internal;
 import org.hibernate.LockMode;
 import org.hibernate.Locking;
@@ -21,7 +17,6 @@ import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
-import org.hibernate.sql.ast.spi.FullJoinEmulation;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.MutationStatement;
 import org.hibernate.sql.ast.tree.Statement;
@@ -45,10 +40,12 @@ import org.hibernate.sql.ast.tree.select.QueryGroup;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectClause;
-import org.hibernate.sql.ast.tree.select.SortSpecification;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.type.SqlTypes;
+
+import java.util.List;
+import java.util.function.Consumer;
 
 import static org.hibernate.Timeouts.SKIP_LOCKED_MILLI;
 
@@ -60,15 +57,9 @@ import static org.hibernate.Timeouts.SKIP_LOCKED_MILLI;
 public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstTranslator<T> {
 
 	private static final String UNION_ALL = " union all ";
-	private final ArrayDeque<FullJoinEmulation> fullJoinEmulations = new ArrayDeque<>();
 
 	public SybaseASESqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
 		super( sessionFactory, statement );
-		this.fullJoinEmulations.push( new FullJoinEmulation( this ) );
-	}
-
-	private FullJoinEmulation currentFullJoinEmulationHelper() {
-		return fullJoinEmulations.getFirst();
 	}
 
 	@Override
@@ -257,36 +248,6 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 	}
 
 	@Override
-	public void visitQuerySpec(QuerySpec querySpec) {
-		final var helper = currentFullJoinEmulationHelper();
-		final boolean needsNestedHelper =
-				helper.hasActiveFullJoinEmulation()
-						&& !helper.isFullJoinEmulationQueryPart( querySpec );
-		if ( needsNestedHelper ) {
-			fullJoinEmulations.push( new FullJoinEmulation( this ) );
-		}
-		try {
-			final var currentHelper = currentFullJoinEmulationHelper();
-			if ( !currentHelper.renderFullJoinEmulationBranchIfNeeded( querySpec, super::visitQuerySpec )
-					&& !currentHelper.emulateFullJoinWithUnionIfNeeded( querySpec ) ) {
-				super.visitQuerySpec( querySpec );
-			}
-		}
-		finally {
-			if ( needsNestedHelper ) {
-				fullJoinEmulations.pop();
-			}
-		}
-	}
-
-	@Override
-	public void visitSelectClause(SelectClause selectClause) {
-		if ( !currentFullJoinEmulationHelper().renderSelectClauseIfNeeded( selectClause ) ) {
-			super.visitSelectClause( selectClause );
-		}
-	}
-
-	@Override
 	public void visitQueryGroup(QueryGroup queryGroup) {
 		if ( queryGroup.hasSortSpecifications() || queryGroup.hasOffsetOrFetchClause() ) {
 			appendSql( "select " );
@@ -301,8 +262,8 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 			renderQueryGroup( queryGroup, false );
 			appendSql( ") grp_(c0" );
 			// Sybase doesn't have implicit names for non-column select expressions, so we need to assign names
-			final int itemCount = assignNamesToSelectItems( queryGroup );
-			for ( int i = 1; i < itemCount; i++ ) {
+			final int itemCount = queryGroup.getFirstQuerySpec().getSelectClause().getSqlSelections().size();
+			for (int i = 1; i < itemCount; i++) {
 				appendSql( ",c" );
 				appendSql( i );
 			}
@@ -312,27 +273,6 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 		else {
 			super.visitQueryGroup( queryGroup );
 		}
-	}
-
-	private int assignNamesToSelectItems(QueryGroup queryGroup) {
-		int itemCount =
-				currentFullJoinEmulationHelper()
-						.countRenderedSelectItemsIncludingEmulationSelections(
-								queryGroup.getFirstQuerySpec() );
-		final var sortSpecifications = queryGroup.getSortSpecifications();
-		if ( sortSpecifications != null ) {
-			for ( var sortSpecification : sortSpecifications ) {
-				final int[] sortSelectionIndexes = sortSpecification.getSortSelectionIndexes();
-				if ( sortSelectionIndexes != null ) {
-					for ( int sortSelectionIndex : sortSelectionIndexes ) {
-						if ( sortSelectionIndex >= 0 && sortSelectionIndex + 1 > itemCount ) {
-							itemCount = sortSelectionIndex + 1;
-						}
-					}
-				}
-			}
-		}
-		return itemCount;
 	}
 
 	@Override
@@ -350,19 +290,12 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 
 	@Override
 	public void visitOffsetFetchClause(QueryPart queryPart) {
-		if ( !currentFullJoinEmulationHelper().isFullJoinEmulationQueryPart( queryPart ) ) {
-			assertRowsOnlyFetchClauseType( queryPart );
-			if ( !queryPart.isRoot() && queryPart.hasOffsetOrFetchClause() ) {
-				if ( queryPart.getFetchClauseExpression() != null && queryPart.getOffsetClauseExpression() != null ) {
-					throw new IllegalArgumentException( "Can't emulate offset fetch clause in subquery" );
-				}
+		assertRowsOnlyFetchClauseType( queryPart );
+		if ( !queryPart.isRoot() && queryPart.hasOffsetOrFetchClause() ) {
+			if ( queryPart.getFetchClauseExpression() != null && queryPart.getOffsetClauseExpression() != null ) {
+				throw new IllegalArgumentException( "Can't emulate offset fetch clause in subquery" );
 			}
 		}
-	}
-
-	@Override
-	protected void visitOrderBy(List<SortSpecification> sortSpecifications) {
-		currentFullJoinEmulationHelper().renderOrderByIfNeeded( getCurrentQueryPart(), sortSpecifications, super::visitOrderBy );
 	}
 
 	@Override

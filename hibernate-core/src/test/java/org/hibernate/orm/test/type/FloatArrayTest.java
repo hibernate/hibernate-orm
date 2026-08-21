@@ -13,7 +13,6 @@ import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.SQLServerDialect;
-import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.dialect.SybaseASEDialect;
 
 import org.hibernate.testing.jdbc.SharedDriverManagerTypeCacheClearingIntegrator;
@@ -55,7 +54,6 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 )
 @DomainModel(annotatedClasses = FloatArrayTest.TableWithFloatArrays.class)
 @SessionFactory
-@SkipForDialect( dialectClass = SpannerDialect.class, reason = "Spanner jdbc driver currently doesn't accept float arrays for float64 type")
 public class FloatArrayTest {
 
 	private BasicType<Float[]> arrayType;
@@ -118,7 +116,6 @@ public class FloatArrayTest {
 			reason = "The statement failed because binary large objects are not allowed in the Union, Intersect, or Minus ")
 	@SkipForDialect(dialectClass = MariaDBDialect.class, majorVersion = 10, minorVersion = 6,
 			reason = "Bug in MariaDB https://jira.mariadb.org/browse/MDEV-21530")
-	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsArrayComparison.class)
 	public void testQuery(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			TypedQuery<TableWithFloatArrays> tq = em.createNamedQuery( "TableWithFloatArrays.JPQL.getByData", TableWithFloatArrays.class );
@@ -147,7 +144,6 @@ public class FloatArrayTest {
 	@SkipForDialect(dialectClass = HANADialect.class, reason = "HANA requires a special function to compare LOBs")
 	@SkipForDialect(dialectClass = MySQLDialect.class, matchSubTypes = true, reason = "MySQL supports distinct from through a special operator")
 	@SkipForDialect(dialectClass = InformixDialect.class, reason = "Informix can't compare LOBs")
-	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsArrayComparison.class)
 	public void testNativeQuery(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			final Dialect dialect = em.getDialect();

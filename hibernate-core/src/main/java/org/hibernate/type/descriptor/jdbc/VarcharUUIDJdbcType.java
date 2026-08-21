@@ -40,7 +40,7 @@ public class VarcharUUIDJdbcType implements JdbcType {
 
 	@Override
 	public String toString() {
-		return "VarcharUUIDJdbcType";
+		return "MariaDBUUIDJdbcType";
 	}
 
 	@Override

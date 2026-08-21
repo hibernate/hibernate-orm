@@ -6,11 +6,10 @@ package org.hibernate.orm.test.locking.options;
 
 import org.hibernate.EnabledFetchProfile;
 import org.hibernate.Hibernate;
-import org.hibernate.community.dialect.AltibaseDialect;
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.HSQLDialect;
-import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.dialect.lock.spi.OuterJoinLockingType;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -19,7 +18,6 @@ import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
-import org.hibernate.testing.orm.junit.VersionMatchMode;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -45,11 +43,6 @@ import static org.hibernate.orm.test.locking.options.Helper.Table.REPORT_LABELS;
 @Jira( "https://hibernate.atlassian.net/browse/HHH-19336" )
 @Jira( "https://hibernate.atlassian.net/browse/HHH-19459" )
 @RequiresDialectFeature( feature = DialectFeatureChecks.SupportsSelectLocking.class )
-@SkipForDialect(dialectClass = AltibaseDialect.class,
-		reason = "Altibase lock-wait probes can leave interrupted async DML in a state that interferes with schema truncation cleanup")
-@SkipForDialect(dialectClass = SybaseASEDialect.class, majorVersion = 16, minorVersion = 0, microVersion = 2,
-		versionMatchMode = VersionMatchMode.SAME_OR_OLDER, reason = "holdlock isn't the same as updating a row. Bug in our Sybase ASE version?")
-@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsConcurrentTransactions.class )
 @Tag("db-locking")
 public class ScopeTests {
 	@BeforeEach
@@ -63,6 +56,7 @@ public class ScopeTests {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = InformixDialect.class, reason = "update does not block")
 	void testFind(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( (session) -> {
 			final Book theTalisman = session.find( Book.class, 3, PESSIMISTIC_WRITE );
@@ -75,6 +69,7 @@ public class ScopeTests {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = InformixDialect.class, reason = "update does not block")
 	void testFindWithExtended(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( (session) -> {
 			final Book theTalisman = session.find( Book.class, 3, PESSIMISTIC_WRITE, EXTENDED );
@@ -89,6 +84,7 @@ public class ScopeTests {
 	@Test
 	@SkipForDialect(dialectClass = HSQLDialect.class, reason = "See https://sourceforge.net/p/hsqldb/bugs/1734/")
 	@SkipForDialect(dialectClass = H2Dialect.class, reason = "H2 seems to not extend locks across joins")
+	@SkipForDialect(dialectClass = InformixDialect.class, reason = "Cursor must be on simple SELECT for FOR UPDATE")
 	void testFindWithExtendedAndFetch(SessionFactoryScope factoryScope) {
 
 		// note that this is not strictly spec compliant as it says EXTENDED should extend
@@ -110,6 +106,7 @@ public class ScopeTests {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = InformixDialect.class, reason = "update does not block")
 	void testLock(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( (session) -> {
 			final Book theTalisman = session.find( Book.class, 3 );
@@ -124,6 +121,7 @@ public class ScopeTests {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = InformixDialect.class, reason = "update does not block")
 	void testLockWithExtended(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( (session) -> {
 			final Book theTalisman = session.find( Book.class, 3 );
@@ -138,6 +136,7 @@ public class ScopeTests {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = InformixDialect.class, reason = "update does not block")
 	void testRefresh(SessionFactoryScope factoryScope) {
 
 		factoryScope.inTransaction( (session) -> {
@@ -153,6 +152,7 @@ public class ScopeTests {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = InformixDialect.class, reason = "update does not block")
 	void testRefreshWithExtended(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( (session) -> {
 			final Book theTalisman = session.find( Book.class, 3 );
@@ -168,6 +168,7 @@ public class ScopeTests {
 
 	@Test
 	@SkipForDialect(dialectClass = HSQLDialect.class, reason = "See https://sourceforge.net/p/hsqldb/bugs/1734/")
+	@SkipForDialect(dialectClass = InformixDialect.class, reason = "Cursor must be on simple SELECT for FOR UPDATE")
 	void testEagerFind(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( (session) -> {
 			final Report report = session.find( Report.class, 2, PESSIMISTIC_WRITE );
@@ -178,6 +179,7 @@ public class ScopeTests {
 	@Test
 	@SkipForDialect(dialectClass = HSQLDialect.class, reason = "See https://sourceforge.net/p/hsqldb/bugs/1734/")
 	@SkipForDialect(dialectClass = H2Dialect.class, reason = "H2 seems to not extend locks across joins")
+	@SkipForDialect(dialectClass = InformixDialect.class, reason = "Cursor must be on simple SELECT for FOR UPDATE")
 	void testEagerFindWithExtended(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( (session) -> {
 			final Report report = session.find( Report.class, 2, PESSIMISTIC_WRITE, EXTENDED );
@@ -204,6 +206,7 @@ public class ScopeTests {
 	@Test
 	@SkipForDialect(dialectClass = HSQLDialect.class, reason = "See https://sourceforge.net/p/hsqldb/bugs/1734/")
 	@SkipForDialect(dialectClass = H2Dialect.class, reason = "H2 seems to not extend locks across joins")
+	@SkipForDialect(dialectClass = InformixDialect.class, reason = "Cursor must be on simple SELECT for FOR UPDATE")
 	void testEagerFindWithFetchScope(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( (session) -> {
 			final Report report = session.find( Report.class, 2, PESSIMISTIC_WRITE, INCLUDE_FETCHES );

@@ -70,7 +70,6 @@ public class Table implements Serializable, ContributableDatabaseObject {
 	private String comment;
 	private String viewQuery;
 	private String options;
-	private String extraDeclarations;
 
 	private List<Function<SqlStringGenerationContext, InitCommand>> initCommandProducers;
 	private List<BiFunction<SqlStringGenerationContext, DdlTransactionIsolator, InitCommand>> resyncCommandProducers;
@@ -858,13 +857,5 @@ public class Table implements Serializable, ContributableDatabaseObject {
 
 	public void setOptions(String options) {
 		this.options = options;
-	}
-
-	public String getExtraDeclarations() {
-		return extraDeclarations;
-	}
-
-	public void setExtraDeclarations(String extraDeclarations) {
-		this.extraDeclarations = extraDeclarations;
 	}
 }

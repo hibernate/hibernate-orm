@@ -43,8 +43,6 @@ public class RowMutationOperations {
 	private final OperationProducer deleteRowOperationProducer;
 	private final Restrictions deleteRowRestrictions;
 
-	private final OperationProducer deleteAllRowsOperationProducer;
-
 	private JdbcMutationOperation insertRowOperation;
 	private JdbcMutationOperation updateRowOperation;
 	private JdbcMutationOperation deleteRowOperation;
@@ -57,8 +55,7 @@ public class RowMutationOperations {
 			Values updateRowValues,
 			Restrictions updateRowRestrictions,
 			OperationProducer deleteRowOperationProducer,
-			Restrictions deleteRowRestrictions,
-			OperationProducer deleteAllRowsOperationProducer) {
+			Restrictions deleteRowRestrictions) {
 		this.target = target;
 
 		assert areSameNullness( insertRowOperationProducer, insertRowValues );
@@ -74,8 +71,6 @@ public class RowMutationOperations {
 
 		this.deleteRowOperationProducer = deleteRowOperationProducer;
 		this.deleteRowRestrictions = deleteRowRestrictions;
-
-		this.deleteAllRowsOperationProducer = deleteAllRowsOperationProducer;
 	}
 
 	@Override
@@ -185,9 +180,6 @@ public class RowMutationOperations {
 		}
 	}
 
-	public OperationProducer getDeleteAllRowsOperationProducer() {
-		return deleteAllRowsOperationProducer;
-	}
 
 	@FunctionalInterface
 	public interface Restrictions {

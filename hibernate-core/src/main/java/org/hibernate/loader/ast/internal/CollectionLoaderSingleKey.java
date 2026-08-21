@@ -15,7 +15,6 @@ import org.hibernate.engine.spi.SubselectFetch;
 import org.hibernate.loader.ast.spi.CollectionLoader;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.BaseExecutionContext;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
@@ -49,8 +48,6 @@ public class CollectionLoaderSingleKey implements CollectionLoader {
 		keyJdbcCount = attributeMapping.getKeyDescriptor().getJdbcTypeCount();
 		final var jdbcParametersBuilder = JdbcParametersList.newBuilder();
 
-		final var sqlAliasBaseGenerator = new SqlAliasBaseManager();
-
 		sqlAst = LoaderSelectBuilder.createSelect(
 				attributeMapping,
 				null,
@@ -60,18 +57,12 @@ public class CollectionLoaderSingleKey implements CollectionLoader {
 				influencers,
 				new LockOptions(),
 				jdbcParametersBuilder::add,
-				sqlAliasBaseGenerator,
 				sessionFactory
 		);
 
 		final var querySpec = sqlAst.getQueryPart().getFirstQuerySpec();
 		final var tableGroup = querySpec.getFromClause().getRoots().get( 0 );
-		attributeMapping.applyAuxiliaryRestrictions(
-				tableGroup,
-				querySpec::applyPredicate,
-				influencers,
-				sqlAliasBaseGenerator
-		);
+		attributeMapping.applySoftDeleteRestrictions( tableGroup, querySpec::applyPredicate );
 
 		jdbcParameters = jdbcParametersBuilder.build();
 		jdbcSelect =
@@ -99,7 +90,7 @@ public class CollectionLoaderSingleKey implements CollectionLoader {
 
 	@Override
 	public PersistentCollection<?> load(Object key, SharedSessionContractImplementor session) {
-		final var collectionKey = session.generateCollectionKey( attributeMapping.getCollectionDescriptor(), key );
+		final var collectionKey = new CollectionKey( attributeMapping.getCollectionDescriptor(), key );
 
 		final var jdbcParameterBindings = new JdbcParameterBindingsImpl( keyJdbcCount );
 		int offset = jdbcParameterBindings.registerParametersForEachJdbcValue(

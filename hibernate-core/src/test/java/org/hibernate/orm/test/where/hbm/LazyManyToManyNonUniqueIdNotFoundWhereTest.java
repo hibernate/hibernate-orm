@@ -10,8 +10,6 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.orm.junit.SkipForDialect;
-import org.hibernate.dialect.SpannerDialect;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -32,7 +30,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel(xmlMappings = "hbm/where/LazyManyToManyNonUniqueIdNotFoundWhereTest.hbm.xml")
 @SessionFactory
-@SkipForDialect(dialectClass = SpannerDialect.class, reason = "Spanner does not support varchar in column definition")
 public class LazyManyToManyNonUniqueIdNotFoundWhereTest {
 	@AfterAll
 	static void dropSchema(SessionFactoryScope factoryScope) {
@@ -70,7 +67,7 @@ public class LazyManyToManyNonUniqueIdNotFoundWhereTest {
 							RATING_ID integer not null,
 							primary key (BUILDING_ID, RATING_ID)
 						)""" );
-				statement.executeUpdate( """
+				statement.executeUpdate("""
 						create table MATERIAL_RATINGS(
 							MATERIAL_ID integer not null,
 							RATING_ID integer not null,

@@ -13,7 +13,7 @@
  * importance to application developers, though it remains a very important
  * internal abstraction.
  *
- * <h2 id="basic">Basic types</h2>
+ * <h3 id="basic">Basic types</h3>
  *
  * For {@linkplain jakarta.persistence.Basic basic} types, we prefer to model the
  * type mapping in terms the combination of:

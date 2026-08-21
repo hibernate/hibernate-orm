@@ -14,7 +14,6 @@ import org.jboss.logging.annotations.MessageLogger;
 import org.jboss.logging.annotations.ValidIdRange;
 
 import java.lang.invoke.MethodHandles;
-import java.util.Locale;
 
 import static org.jboss.logging.Logger.Level.INFO;
 import static org.jboss.logging.Logger.Level.TRACE;
@@ -38,8 +37,7 @@ public interface SequenceGeneratorLogger extends BasicLogger {
 	SequenceGeneratorLogger SEQUENCE_GENERATOR_LOGGER = Logger.getMessageLogger(
 			MethodHandles.lookup(),
 			SequenceGeneratorLogger.class,
-			NAME,
-			Locale.ROOT
+			NAME
 	);
 
 	@LogMessage(level = INFO)

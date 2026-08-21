@@ -15,7 +15,6 @@ import org.jboss.logging.annotations.MessageLogger;
 import org.jboss.logging.annotations.ValidIdRange;
 
 import java.lang.invoke.MethodHandles;
-import java.util.Locale;
 
 import static org.jboss.logging.Logger.Level.DEBUG;
 
@@ -32,7 +31,7 @@ import static org.jboss.logging.Logger.Level.DEBUG;
 public interface LoadingLogger extends BasicLogger {
 	String LOGGER_NAME = ResultsLogger.LOGGER_NAME + ".loading";
 
-	LoadingLogger LOADING_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), LoadingLogger.class, LOGGER_NAME, Locale.ROOT );
+	LoadingLogger LOADING_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), LoadingLogger.class, LOGGER_NAME );
 
 	static String subLoggerName(String subName) {
 		return LOGGER_NAME + "." + subName;

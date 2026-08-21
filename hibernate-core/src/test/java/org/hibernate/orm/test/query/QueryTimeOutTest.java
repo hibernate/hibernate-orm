@@ -12,7 +12,6 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.AbstractTransactSQLDialect;
 import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
 import org.hibernate.dialect.OracleDialect;
-import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -45,7 +44,7 @@ public class QueryTimeOutTest extends BaseSessionFactoryFunctionalTest {
 
 	private static final PreparedStatementSpyConnectionProvider CONNECTION_PROVIDER =
 			new PreparedStatementSpyConnectionProvider();
-	private static final String QUERY = "update AnEntity set name='abc' where 1=1";
+	private static final String QUERY = "update AnEntity set name='abc'";
 	private String expectedSqlQuery;
 
 	@Override
@@ -69,25 +68,22 @@ public class QueryTimeOutTest extends BaseSessionFactoryFunctionalTest {
 				.getDescriptor(
 						Types.VARCHAR
 				);
-		String baseQuery;
+		final String baseQuery;
 		if ( DialectContext.getDialect() instanceof OracleDialect ) {
-			baseQuery = "update AnEntity ae1_0 set ae1_0.name=? where 1=1";
+			baseQuery = "update AnEntity ae1_0 set ae1_0.name=?";
 		}
 		else if ( DialectContext.getDialect() instanceof SybaseDialect ) {
-			baseQuery = "update AnEntity set name=? from AnEntity ae1_0 where 1=1";
+			baseQuery = "update AnEntity set name=? from AnEntity ae1_0";
 		}
 		else if ( DialectContext.getDialect() instanceof AbstractTransactSQLDialect ) {
-			baseQuery = "update ae1_0 set name=? from AnEntity ae1_0 where 1=1";
-		}
-		else if ( DialectContext.getDialect() instanceof SpannerDialect ) {
-			baseQuery = "update AnEntity ae1_0 set name=? where 1=1";
+			baseQuery = "update ae1_0 set name=? from AnEntity ae1_0";
 		}
 		else if ( DialectContext.getDialect()
 						.getDmlTargetColumnQualifierSupport() == DmlTargetColumnQualifierSupport.NONE ) {
-			baseQuery = "update AnEntity set name=? where 1=1";
+			baseQuery = "update AnEntity set name=?";
 		}
 		else {
-			baseQuery = "update AnEntity ae1_0 set name=? where 1=1";
+			baseQuery = "update AnEntity ae1_0 set name=?";
 		}
 		expectedSqlQuery = baseQuery.replace(
 				"?",
@@ -99,7 +95,6 @@ public class QueryTimeOutTest extends BaseSessionFactoryFunctionalTest {
 						)
 		);
 	}
-
 
 	@Test
 	@JiraKey(value = "HHH-12075")

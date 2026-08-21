@@ -20,11 +20,6 @@ plugins {
     id "project-report"
 }
 
-def skipJacoco = project.hasProperty('skipJacoco') ? project.getProperty('skipJacoco').toBoolean() : false
-if (!skipJacoco) {
-    plugins.apply('jacoco')
-}
-
 def hibernateVersion = ormBuildDetails.hibernateVersion
 def jpaVersion = ormBuildDetails.jpaVersion
 
@@ -35,11 +30,11 @@ sourceSets {
     test {
         resources {
             configure( srcDir('src/test/resources') ) {
-            filter {
-                include '*.properties'
-                include '*.xml'
-                include '**/*.properties'
-                include '**/*.xml'
+                filter {
+                    include '*.properties'
+                    include '*.xml'
+                    include '**/*.properties'
+                    include '**/*.xml'
                 }
             }
         }
@@ -51,73 +46,71 @@ dependencies {
 
     compileOnly libs.loggingAnnotations
     // Used for compiling some Oracle specific JdbcTypes
-    compileOnly libs.jdbc.oracle
-    compileOnly (libs.jdbc.oracleJdbcJacksonOsonExtension) {
+    compileOnly jdbcLibs.oracle
+    compileOnly (jdbcLibs.oracleJdbcJacksonOsonExtension) {
         exclude group: 'com.oracle.database.jdbc', module: 'ojdbc8'
-        exclude group: 'jakarta.persistence', module: 'jakarta.persistence-api'
     }
 
     // JUnit dependencies made up of:
     // 		* JUnit (version 5 or later)
     // 		* the Jupiter engine which runs JUnit 6 based tests
     //		* the "vintage" engine - which runs JUnit 3 and 4 based tests
-    testImplementation libs.test.junitJupiterApi
-    testImplementation libs.test.junitJupiterEngine
-    testImplementation libs.test.junitJupiterParams
-    testImplementation libs.test.junitJupiterLauncher
-    testImplementation libs.test.assertjCore
+    testImplementation testLibs.junitJupiterApi
+    testImplementation testLibs.junitJupiterEngine
+    testImplementation testLibs.junitJupiterParams
+    testImplementation testLibs.junitJupiterLauncher
+    testImplementation testLibs.assertjCore
 
-    testRuntimeOnly libs.test.log4j2
+    testRuntimeOnly testLibs.log4j2
     testRuntimeOnly libs.byteBuddy
 
     //Databases
-    testRuntimeOnly libs.jdbc.h2
-    testRuntimeOnly libs.jdbc.derby
-    testRuntimeOnly libs.jdbc.derbyTools
-    testRuntimeOnly libs.jdbc.hsqldb
-    testRuntimeOnly libs.jdbc.postgresql
-    testRuntimeOnly libs.jdbc.edb
-    testRuntimeOnly libs.jdbc.mssql
-    testRuntimeOnly libs.jdbc.informix
-    testRuntimeOnly libs.jdbc.cockroachdb
-    testRuntimeOnly libs.jdbc.gaussdb
-    testRuntimeOnly libs.jdbc.sybase
-    testRuntimeOnly libs.jdbc.teradata
-    testRuntimeOnly libs.jdbc.spanner
+    testRuntimeOnly jdbcLibs.h2
+    testRuntimeOnly jdbcLibs.derby
+    testRuntimeOnly jdbcLibs.derbyTools
+    testRuntimeOnly jdbcLibs.hsqldb
+    testRuntimeOnly jdbcLibs.postgresql
+    testRuntimeOnly jdbcLibs.edb
+    testRuntimeOnly jdbcLibs.mssql
+    testRuntimeOnly jdbcLibs.informix
+    testRuntimeOnly jdbcLibs.cockroachdb
+    testRuntimeOnly jdbcLibs.gaussdb
+    testRuntimeOnly jdbcLibs.sybase
+    testRuntimeOnly jdbcLibs.teradata
+    testRuntimeOnly jdbcLibs.spanner
     testRuntimeOnly rootProject.fileTree(dir: 'drivers', include: '*.jar')
 
     // Since both the DB2 driver and HANA have a package "net.jpountz" we have to add dependencies conditionally
     // This is due to the "no split-packages" requirement of Java 9+
 
     if ( db.startsWith( 'db2' ) ) {
-        testRuntimeOnly libs.jdbc.db2
+        testRuntimeOnly jdbcLibs.db2
     }
     else if ( db.startsWith( 'hana' ) ) {
-        testRuntimeOnly libs.jdbc.hana
+        testRuntimeOnly jdbcLibs.hana
     }
     else if ( db.startsWith( 'mysql' ) || db.startsWith( 'tidb' ) ) {
-        testRuntimeOnly libs.jdbc.mysql
+        testRuntimeOnly jdbcLibs.mysql
     }
     else if ( db.startsWith( 'mariadb' ) ) {
-        testRuntimeOnly libs.jdbc.mariadb
+        testRuntimeOnly jdbcLibs.mariadb
     }
     else if ( db.startsWith( 'firebird' ) ) {
-        testRuntimeOnly libs.jdbc.firebird
+        testRuntimeOnly jdbcLibs.firebird
     }
     else if ( db.startsWith( 'oracle' ) ) {
-        testRuntimeOnly libs.jdbc.oracle
-        testRuntimeOnly libs.jdbc.oracleXml
-        testRuntimeOnly libs.jdbc.oracleXmlParser
-        testRuntimeOnly (libs.jdbc.oracleJdbcJacksonOsonExtension) {
+        testRuntimeOnly jdbcLibs.oracle
+        testRuntimeOnly jdbcLibs.oracleXml
+        testRuntimeOnly jdbcLibs.oracleXmlParser
+        testRuntimeOnly (jdbcLibs.oracleJdbcJacksonOsonExtension) {
             exclude group: 'com.oracle.database.jdbc', module: 'ojdbc8'
-            exclude group: 'jakarta.persistence', module: 'jakarta.persistence-api'
         }
     }
     else if ( db.startsWith( 'altibase' ) ) {
-        testRuntimeOnly libs.jdbc.altibase
+        testRuntimeOnly jdbcLibs.altibase
     }
     else if ( db.startsWith( 'informix' ) ) {
-        testRuntimeOnly libs.jdbc.informix
+        testRuntimeOnly jdbcLibs.informix
     }
 
     annotationProcessor libs.loggingProcessor
@@ -154,8 +147,6 @@ tasks.withType( JavaCompile ).configureEach {
     options.forkOptions.memoryMaximumSize = '896m'
 
     options.compilerArgs += [
-            // Limit observable modules to prevent accidental dependency on java.desktop (HHH-20148) and other non essential modules
-            '--limit-modules', 'java.base,java.compiler,java.instrument,java.management,java.naming,java.rmi,java.sql,java.transaction.xa,java.xml,jdk.compiler,jdk.jfr,java.sql.rowset',
             // disable adding @Generated annotation in the logger impls to make
             // the logging annotation processor create the same sources each time.
             "-Aorg.jboss.logging.tools.addGeneratedAnnotation=false"
@@ -188,12 +179,12 @@ processTestResources {
         }
         copy {
             from file( 'src/test/resources' )
-            into layout.buildDirectory.dir("resources/test").get().asFile
+            into file( "${buildDir}/resources/test" )
             exclude 'src/test/resources/hibernate.properties'
         }
         copy {
             from file( 'src/test/resources/hibernate.properties' )
-            into layout.buildDirectory.dir("resources/test").get().asFile
+            into file( "${buildDir}/resources/test" )
             filter( ReplaceTokens, tokens: dbBundle[db] )
         }
     }
@@ -203,7 +194,7 @@ processTestResources {
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Testing
 
-tasks.withType( Test.class ).configureEach { test ->
+tasks.withType( Test.class ).each { test ->
     test.useJUnitPlatform()
 
     // Byteman needs this property to be set, https://developer.jboss.org/thread/274997
@@ -238,29 +229,9 @@ tasks.withType( Test.class ).configureEach { test ->
             excludeTestsMatching project.property('excludeTests').toString()
         }
     }
-    if (!skipJacoco) {
-        def coverageReportSuffix = providers.gradleProperty('db').orElse('default')
-                .flatMap { db ->
-                    // Oracle DBs tested on OTP are all using the same db name no matter the version...
-                    // this would be a problem for creating/merging Jacoco reports, hence:
-                    if ("oracle_test_pilot_database" == db) {
-                        return providers.environmentVariable("RDBMS").orElse(db)
-                    } else {
-                        return providers.provider { db }
-                    }
-                }
-        def javaVersion = JavaVersion.current().majorVersion
-        test.jacoco {
-            destinationFile = layout.buildDirectory.file(
-                    coverageReportSuffix.map { db -> "jacoco/report-${db}-jdk${javaVersion}.exec" }
-            ).get().asFile
-        }
-    }
 }
 
 test {
-    inputs.property( "dbVersion", dbVersion )
-
     // Keep system properties in sync with gradle.properties!
     systemProperty 'user.language', 'en'
     systemProperty 'user.country', 'US'
@@ -273,8 +244,8 @@ test {
         // Log a statement for each test.
         // Used in the Travis build so that Travis doesn't end up panicking because there's no output for a long time.
         testLogging {
-            displayGranularity = 1
-            events = ["passed", "skipped", "failed"]
+            displayGranularity 1
+            events "passed", "skipped", "failed"
             exceptionFormat = 'full'
         }
     }
@@ -283,7 +254,7 @@ test {
 // Attach tools JAR to the classpath for byteman tests
 final File toolsJar = file("${System.getProperty('java.home')}/../lib/tools.jar")
 if ( toolsJar.exists() ) {
-    dependencies {
+    dependencies{
         testImplementation files( toolsJar )
     }
 }
@@ -298,7 +269,7 @@ java {
     withSourcesJar()
 }
 
-tasks.withType(Jar).configureEach {jarTask ->
+tasks.withType(Jar).configureEach {
     manifest {
         attributes(
                 // Basic JAR manifest attributes
@@ -318,37 +289,40 @@ tasks.withType(Jar).configureEach {jarTask ->
                 'Bundle-Vendor': 'Hibernate.org',
                 'Bundle-DocURL': "https://hibernate.org/orm/releases/${hibernateVersion.family}"
         )
-        if ("jar".equals(jarTask.name)) {
-            attributes(
-                    // Java 9 module name
-                    'Automatic-Module-Name': java9ModuleName,
-
-                    // BND Plugin instructions (for OSGi):
-                    '-reproducible': true,
-                    '-noextraheaders': true,
-                    'Bundle-Name': project.name,
-                    'Bundle-SymbolicName': java9ModuleName,
-                    // This is overridden in some sub-projects
-                    'Import-Package': [
-                            // Temporarily support JTA 1.1 -- Karaf and other frameworks still
-                            // use it.  Without this, the plugin generates [1.2,2).
-                            'javax.transaction;version="[1.1,2)"',
-                            // Also import every package referenced in the code
-                            // (note that '*' is resolved at build time to a list of packages)
-                            '*'
-                    ].join( ',' ),
-                    '-exportcontents': "*;version=${project.version}"
-            )
-        }
-    }
-    if ("jar".equals(jarTask.name)) {
-        metaInf {
-            from(rootProject.projectDir, {
-                include "LICENSE.txt"
-            })
-        }
     }
 }
+
+tasks.named("jar") {
+    manifest {
+        attributes(
+                // Java 9 module name
+                'Automatic-Module-Name': java9ModuleName,
+
+                // BND Plugin instructions (for OSGi):
+                '-reproducible': true,
+                '-noextraheaders': true,
+                'Bundle-Name': project.name,
+                'Bundle-SymbolicName': java9ModuleName,
+                // This is overridden in some sub-projects
+                'Import-Package': [
+                        // Temporarily support JTA 1.1 -- Karaf and other frameworks still
+                        // use it.  Without this, the plugin generates [1.2,2).
+                        'javax.transaction;version="[1.1,2)"',
+                        // Also import every package referenced in the code
+                        // (note that '*' is resolved at build time to a list of packages)
+                        '*'
+                ].join( ',' ),
+                '-exportcontents': "*;version=${project.version}"
+        )
+    }
+    metaInf {
+        from(rootProject.projectDir, {
+            include "LICENSE.txt"
+        })
+    }
+}
+
+
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Reproducible Builds
@@ -369,11 +343,6 @@ configurations.configureEach {
         // we use, as Mockito might pull in a mismatched version transitively
         if (details.requested.group == "net.bytebuddy" && details.requested.name == 'byte-buddy-agent') {
             details.useVersion libs.versions.byteBuddy.get()
-        }
-
-        // Force all 'checker-qual' (RUNTIME) requests to instead use 'checker-qual-android' (CLASS)
-        if (details.requested.group == 'org.checkerframework' && details.requested.name == 'checker-qual') {
-            details.useTarget("org.checkerframework:checker-qual-android:${details.requested.version}")
         }
     }
 }

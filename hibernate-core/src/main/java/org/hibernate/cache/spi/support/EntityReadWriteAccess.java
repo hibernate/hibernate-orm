@@ -46,7 +46,6 @@ public class EntityReadWriteAccess extends AbstractReadWriteAccess implements En
 		return AccessType.READ_WRITE;
 	}
 
-	@Deprecated
 	@Override
 	protected AccessedDataClassification getAccessedDataClassification() {
 		return AccessedDataClassification.ENTITY;

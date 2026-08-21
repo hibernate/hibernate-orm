@@ -39,7 +39,7 @@ public class StatelessCallbacksTest {
 		});
 	}
 
-	@Entity(name = "WithCallbacks")
+	@Entity
 	static class WithCallbacks {
 		boolean prePersist = false;
 		boolean preUpdate = false;

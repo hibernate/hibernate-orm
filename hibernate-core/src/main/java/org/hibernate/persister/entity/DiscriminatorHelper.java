@@ -7,9 +7,9 @@ package org.hibernate.persister.entity;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.internal.util.MarkerObject;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.metamodel.mapping.DiscriminatorValue;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.SqmPathSource;
@@ -28,6 +28,9 @@ import static org.hibernate.metamodel.mapping.EntityDiscriminatorMapping.DISCRIM
  */
 @Internal
 public class DiscriminatorHelper {
+
+	public static final Object NULL_DISCRIMINATOR = new MarkerObject( "<null discriminator>" );
+	public static final Object NOT_NULL_DISCRIMINATOR = new MarkerObject( "<not null discriminator>" );
 
 	/**
 	 * The underlying BasicType as the "JDBC mapping" between the relational {@link org.hibernate.type.descriptor.java.JavaType}
@@ -65,13 +68,11 @@ public class DiscriminatorHelper {
 		}
 	}
 
-	private static DiscriminatorValue parseDiscriminatorValue(PersistentClass persistentClass) {
+	private static Object parseDiscriminatorValue(PersistentClass persistentClass) {
 		final BasicType<?> discriminatorType = getDiscriminatorType( persistentClass );
 		final String discriminatorValue = persistentClass.getDiscriminatorValue();
 		try {
-			return new DiscriminatorValue.Literal(
-					discriminatorType.getJavaTypeDescriptor().fromString( discriminatorValue )
-			);
+			return discriminatorType.getJavaTypeDescriptor().fromString( discriminatorValue );
 		}
 		catch ( Exception e ) {
 			throw new MappingException( "Could not parse discriminator value '" + discriminatorValue
@@ -79,27 +80,15 @@ public class DiscriminatorHelper {
 		}
 	}
 
-	public static DiscriminatorValue getDiscriminatorValue(PersistentClass persistentClass) {
+	public static Object getDiscriminatorValue(PersistentClass persistentClass) {
 		if ( persistentClass.isDiscriminatorValueNull() ) {
-			return DiscriminatorValue.Special.NULL;
+			return NULL_DISCRIMINATOR;
 		}
 		else if ( persistentClass.isDiscriminatorValueNotNull() ) {
-			return DiscriminatorValue.Special.NOT_NULL;
+			return NOT_NULL_DISCRIMINATOR;
 		}
 		else {
 			return parseDiscriminatorValue( persistentClass );
-		}
-	}
-
-	public static Object toRelationalValue(DiscriminatorValue discriminatorValue) {
-		if ( discriminatorValue instanceof DiscriminatorValue.Literal literal ) {
-			return literal.value();
-		}
-		else if ( discriminatorValue == DiscriminatorValue.Special.NULL ) {
-			return null;
-		}
-		else {
-			throw new IllegalStateException( "Cannot convert NOT_NULL discriminator marker to a relational literal" );
 		}
 	}
 

@@ -68,7 +68,7 @@ class CriteriaIdVersionTest {
 		} );
 	}
 
-	@Entity(name = "Thing")
+	@Entity
 	static class Thing {
 		@Id
 		long id = 2;

@@ -71,7 +71,7 @@ public final class CacheModeHelper {
 
 		return switch ( cacheMode ) {
 			case NORMAL, PUT -> CacheStoreMode.USE;
-			case REFRESH, REFRESH_SESSION -> CacheStoreMode.REFRESH;
+			case REFRESH -> CacheStoreMode.REFRESH;
 			default -> CacheStoreMode.BYPASS;
 		};
 	}

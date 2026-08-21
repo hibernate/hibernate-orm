@@ -43,11 +43,6 @@ public class VersionGeneration implements BeforeExecutionGenerator {
 	}
 
 	@Override
-	public Class<?> getGeneratedType() {
-		return versionMapping.getJavaType().getJavaTypeClass();
-	}
-
-	@Override
 	public Object generate(SharedSessionContractImplementor session, Object owner, Object current, EventType eventType) {
 		return eventType == INSERT
 				? seed( versionMapping, session )

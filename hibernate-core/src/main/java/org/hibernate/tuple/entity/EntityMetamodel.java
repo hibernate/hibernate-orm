@@ -28,7 +28,6 @@ import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadeStyles;
 import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.generator.EventType;
 import org.hibernate.generator.Generator;
 import org.hibernate.generator.OnExecutionGenerator;
 import org.hibernate.generator.BeforeExecutionGenerator;
@@ -308,8 +307,7 @@ public class EntityMetamodel implements Serializable {
 					}
 					if ( generator.generatesOnInsert() ) {
 						if ( generatedOnExecution ) {
-							propertyInsertability[i] =
-									writePropertyValue( (OnExecutionGenerator) generator, EventType.INSERT );
+							propertyInsertability[i] = writePropertyValue( (OnExecutionGenerator) generator );
 						}
 						foundPostInsertGeneratedValues = foundPostInsertGeneratedValues
 								|| generatedOnExecution;
@@ -322,8 +320,7 @@ public class EntityMetamodel implements Serializable {
 					}
 					if ( generator.generatesOnUpdate() ) {
 						if ( generatedOnExecution ) {
-							propertyUpdateability[i] =
-									writePropertyValue( (OnExecutionGenerator) generator, EventType.UPDATE );
+							propertyUpdateability[i] = writePropertyValue( (OnExecutionGenerator) generator );
 						}
 						foundPostUpdateGeneratedValues = foundPostInsertGeneratedValues
 								|| generatedOnExecution;
@@ -581,8 +578,8 @@ public class EntityMetamodel implements Serializable {
 		);
 	}
 
-	private static boolean writePropertyValue(OnExecutionGenerator generator, EventType eventType) {
-		final boolean writePropertyValue = generator.writePropertyValue( eventType );
+	private static boolean writePropertyValue(OnExecutionGenerator generator) {
+		final boolean writePropertyValue = generator.writePropertyValue();
 		// TODO: move this validation somewhere else!
 //		if ( !writePropertyValue && generator instanceof BeforeExecutionGenerator ) {
 //			throw new HibernateException( "BeforeExecutionGenerator returned false from OnExecutionGenerator.writePropertyValue()" );

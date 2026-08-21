@@ -41,46 +41,24 @@ public class BatchBuilderInitiator implements StandardServiceInitiator<BatchBuil
 			builder = configurationValues.get( BATCH_STRATEGY );
 		}
 
-		final var classLoaderService = registry.requireService( ClassLoaderService.class );
-
 		if ( builder == null ) {
-			final var discovered = discover( classLoaderService );
-			return discovered != null
-					? discovered
-					: new BatchBuilderImpl( getInt( STATEMENT_BATCH_SIZE, configurationValues, 1 ) );
+			return new BatchBuilderImpl( getInt( STATEMENT_BATCH_SIZE, configurationValues, 1 ) );
 		}
-		else if ( builder instanceof BatchBuilder batchBuilder ) {
+
+		if ( builder instanceof BatchBuilder batchBuilder ) {
 			return batchBuilder;
 		}
-		else {
-			final String builderClassName = builder.toString();
-			try {
-				return (BatchBuilder)
-						classLoaderService
-								.classForName( builderClassName )
-								.getConstructor()
-								.newInstance();
-			}
-			catch (Exception e) {
-				throw new ServiceException( "Could not build explicit BatchBuilder [" + builderClassName + "]", e );
-			}
-		}
-	}
 
-	private static BatchBuilder discover(ClassLoaderService classLoaderService) {
-		final var discovered = classLoaderService.loadJavaServices( BatchBuilder.class );
-		final var iterator = discovered.iterator();
-		if ( iterator.hasNext() ) {
-			final var selected = iterator.next();
-			if ( iterator.hasNext() ) {
-				throw new ServiceException(
-						"Multiple BatchBuilder service registrations found via ServiceLoader; "
-						+ "specify one explicitly via '" + BUILDER + "'" );
-			}
-			return selected;
+		final String builderClassName = builder.toString();
+		try {
+			return (BatchBuilder)
+					registry.requireService( ClassLoaderService.class )
+							.classForName( builderClassName )
+							.getConstructor()
+							.newInstance();
 		}
-		else {
-			return null;
+		catch (Exception e) {
+			throw new ServiceException( "Could not build explicit BatchBuilder [" + builderClassName + "]", e );
 		}
 	}
 }

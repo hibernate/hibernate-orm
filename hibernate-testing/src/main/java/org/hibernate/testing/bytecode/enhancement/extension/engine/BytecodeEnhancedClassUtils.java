@@ -9,18 +9,15 @@ import static org.hibernate.bytecode.internal.BytecodeProviderInitiator.buildDef
 
 import java.io.BufferedInputStream;
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Enumeration;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -201,18 +198,8 @@ final class BytecodeEnhancedClassUtils {
 		private final List<EnhancementSelector> selectors;
 
 		public EnhancingClassLoader(Enhancer enhancer, List<EnhancementSelector> selectors) {
-			super( resolveParentClassLoader() );
 			this.enhancer = enhancer;
 			this.selectors = selectors;
-		}
-
-		private static ClassLoader resolveParentClassLoader() {
-			final ClassLoader tccl = Thread.currentThread().getContextClassLoader();
-			final ClassLoader self = BytecodeEnhancedClassUtils.class.getClassLoader();
-			if ( tccl == null || tccl == self ) {
-				return self;
-			}
-			return new FallbackClassLoader( tccl, self );
 		}
 
 		@Override
@@ -258,29 +245,5 @@ final class BytecodeEnhancedClassUtils {
 
 	private static ClassLoader getEnhancerClassLoader(EnhancementContext context, String packageName) {
 		return buildEnhancerClassLoader( context, Collections.singletonList( new PackageSelector( packageName ) ) );
-	}
-
-	private static class FallbackClassLoader extends ClassLoader {
-		private final ClassLoader fallback;
-
-		FallbackClassLoader(ClassLoader primary, ClassLoader fallback) {
-			super( primary );
-			this.fallback = fallback;
-		}
-
-		@Override
-		protected Class<?> findClass(String name) throws ClassNotFoundException {
-			return fallback.loadClass( name );
-		}
-
-		@Override
-		protected URL findResource(String name) {
-			return fallback.getResource( name );
-		}
-
-		@Override
-		protected Enumeration<URL> findResources(String name) throws IOException {
-			return fallback.getResources( name );
-		}
 	}
 }

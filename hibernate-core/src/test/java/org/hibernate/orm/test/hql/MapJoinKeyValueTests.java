@@ -100,7 +100,7 @@ class MapJoinKeyValueTests {
 		Map<Language, Book> translations;
 	}
 
-	@Entity(name = "Language")
+	@Entity
 	static class Language {
 		@Id
 		String id;

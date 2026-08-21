@@ -45,7 +45,6 @@ public class UUIDGenerator implements IdentifierGenerator {
 
 	private UUIDGenerationStrategy strategy;
 	private UUIDJavaType.ValueTransformer valueTransformer;
-	private Class<?> generatedType;
 
 	@Override
 	public void configure(GeneratorCreationContext creationContext, Properties parameters) throws MappingException {
@@ -60,7 +59,6 @@ public class UUIDGenerator implements IdentifierGenerator {
 
 	private UUIDJavaType.ValueTransformer valueTransformer(GeneratorCreationContext creationContext) {
 		final Type type = creationContext.getType();
-		generatedType = type.getReturnedClass();
 		if ( UUID.class.isAssignableFrom( type.getReturnedClass() ) ) {
 			return UUIDJavaType.PassThroughTransformer.INSTANCE;
 		}
@@ -96,11 +94,6 @@ public class UUIDGenerator implements IdentifierGenerator {
 			}
 		}
 		return StandardRandomStrategy.INSTANCE;
-	}
-
-	@Override
-	public Class<?> getGeneratedType() {
-		return generatedType;
 	}
 
 	public Object generate(SharedSessionContractImplementor session, Object object) {

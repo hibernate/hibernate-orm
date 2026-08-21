@@ -5,6 +5,7 @@
 package org.hibernate.orm.test.annotations.referencedcolumnname;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.Column;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 
@@ -14,6 +15,7 @@ import jakarta.persistence.Id;
 @Entity
 public class Clothes {
 	private Integer id;
+	@Column(name = "`type`")
 	private String type;
 	private String flavor;
 

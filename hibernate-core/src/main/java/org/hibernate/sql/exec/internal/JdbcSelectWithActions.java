@@ -16,7 +16,6 @@ import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.exec.internal.lock.CollectionLockingAction;
 import org.hibernate.sql.exec.internal.lock.FollowOnLockingAction;
-import org.hibernate.sql.exec.internal.lock.LoadedValuesCollectorFactory;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcLockStrategy;
 import org.hibernate.sql.exec.spi.JdbcOperationQuery;
@@ -46,7 +45,7 @@ public class JdbcSelectWithActions implements JdbcOperationQuery, JdbcSelect {
 	private final JdbcOperationQuerySelect primaryOperation;
 
 	// Used by Hibernate Reactive
-	protected final LoadedValuesCollectorFactory loadedValuesCollectorFactory;
+	protected final LoadedValuesCollector loadedValuesCollector;
 	// Used by Hibernate Reactive
 	protected final PreAction[] preActions;
 	// Used by Hibernate Reactive
@@ -54,19 +53,19 @@ public class JdbcSelectWithActions implements JdbcOperationQuery, JdbcSelect {
 
 	public JdbcSelectWithActions(
 			JdbcOperationQuerySelect primaryOperation,
-			LoadedValuesCollectorFactory loadedValuesCollectorFactory,
+			LoadedValuesCollector loadedValuesCollector,
 			PreAction[] preActions,
 			PostAction[] postActions) {
 		this.primaryOperation = primaryOperation;
-		this.loadedValuesCollectorFactory = loadedValuesCollectorFactory;
+		this.loadedValuesCollector = loadedValuesCollector;
 		this.preActions = preActions;
 		this.postActions = postActions;
 	}
 
 	public JdbcSelectWithActions(
 			JdbcOperationQuerySelect primaryAction,
-			LoadedValuesCollectorFactory loadedValuesCollectorFactory) {
-		this( primaryAction, loadedValuesCollectorFactory, null, null );
+			LoadedValuesCollector loadedValuesCollector) {
+		this( primaryAction, loadedValuesCollector, null, null );
 	}
 
 	@Override
@@ -100,8 +99,8 @@ public class JdbcSelectWithActions implements JdbcOperationQuery, JdbcSelect {
 	}
 
 	@Override
-	public @Nullable LoadedValuesCollectorFactory getLoadedValuesCollectorFactory() {
-		return loadedValuesCollectorFactory;
+	public @Nullable LoadedValuesCollector getLoadedValuesCollector() {
+		return loadedValuesCollector;
 	}
 
 	@Override
@@ -116,13 +115,16 @@ public class JdbcSelectWithActions implements JdbcOperationQuery, JdbcSelect {
 	}
 
 	@Override
-	public void performPostActions(boolean succeeded, StatementAccess jdbcStatementAccess, Connection jdbcConnection, ExecutionContext executionContext, LoadedValuesCollector loadedValuesCollector) {
+	public void performPostAction(boolean succeeded, StatementAccess jdbcStatementAccess, Connection jdbcConnection, ExecutionContext executionContext) {
 		if ( postActions != null ) {
 			for ( int i = 0; i < postActions.length; i++ ) {
 				if ( succeeded || postActions[i].shouldRunAfterFail() ) {
-					postActions[i].performPostAction( jdbcStatementAccess, jdbcConnection, executionContext, loadedValuesCollector );
+					postActions[i].performPostAction( jdbcStatementAccess, jdbcConnection, executionContext );
 				}
 			}
+		}
+		if ( loadedValuesCollector != null ) {
+			loadedValuesCollector.clear();
 		}
 	}
 
@@ -161,7 +163,7 @@ public class JdbcSelectWithActions implements JdbcOperationQuery, JdbcSelect {
 
 	public static class Builder implements JdbcSelectWithActionsBuilder {
 		private JdbcOperationQuerySelect primaryAction;
-		private LoadedValuesCollectorFactory loadedValuesCollectorFactory;
+		private LoadedValuesCollector loadedValuesCollector;
 		protected List<PreAction> preActions;
 		protected List<PostAction> postActions;
 		protected LockTimeoutType lockTimeoutType;
@@ -178,9 +180,10 @@ public class JdbcSelectWithActions implements JdbcOperationQuery, JdbcSelect {
 			return this;
 		}
 
+		@SuppressWarnings("UnusedReturnValue")
 		@Override
-		public JdbcSelectWithActionsBuilder setLoadedValuesCollectorFactory(LoadedValuesCollectorFactory loadedValuesCollectorFactory) {
-			this.loadedValuesCollectorFactory = loadedValuesCollectorFactory;
+		public Builder setLoadedValuesCollector(LoadedValuesCollector loadedValuesCollector) {
+			this.loadedValuesCollector = loadedValuesCollector;
 			return this;
 		}
 
@@ -237,12 +240,12 @@ public class JdbcSelectWithActions implements JdbcOperationQuery, JdbcSelect {
 				CollectionLockingAction.apply( lockOptions, lockingTarget, this );
 			}
 			if ( preActions == null && postActions == null ) {
-				assert loadedValuesCollectorFactory == null;
+				assert loadedValuesCollector == null;
 				return primaryAction;
 			}
 			final PreAction[] preActions = toPreActionArray( this.preActions );
 			final PostAction[] postActions = toPostActionArray( this.postActions );
-			return new JdbcSelectWithActions( primaryAction, loadedValuesCollectorFactory, preActions, postActions );
+			return new JdbcSelectWithActions( primaryAction, loadedValuesCollector, preActions, postActions );
 		}
 
 		/**

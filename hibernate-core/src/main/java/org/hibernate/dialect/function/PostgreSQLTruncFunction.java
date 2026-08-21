@@ -23,10 +23,6 @@ public class PostgreSQLTruncFunction extends TruncFunction {
 	private final PostgreSQLTruncRoundFunction postgreSQLTruncRoundFunction;
 
 	public PostgreSQLTruncFunction(boolean supportsTwoArguments, TypeConfiguration typeConfiguration) {
-		this( false, supportsTwoArguments, typeConfiguration );
-	}
-
-	public PostgreSQLTruncFunction(boolean requiresArgumentCasts, boolean supportsTwoArguments, TypeConfiguration typeConfiguration) {
 		super(
 				"trunc(?1)",
 				null,
@@ -34,7 +30,7 @@ public class PostgreSQLTruncFunction extends TruncFunction {
 				null,
 				typeConfiguration
 		);
-		this.postgreSQLTruncRoundFunction = new PostgreSQLTruncRoundFunction( "trunc", requiresArgumentCasts, supportsTwoArguments );
+		this.postgreSQLTruncRoundFunction = new PostgreSQLTruncRoundFunction( "trunc", supportsTwoArguments );
 	}
 
 	@Override

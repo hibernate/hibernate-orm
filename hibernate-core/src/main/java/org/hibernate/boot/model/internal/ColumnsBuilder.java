@@ -151,13 +151,12 @@ class ColumnsBuilder {
 			PropertyData inferredData) {
 		final var joinTable = propertyHolder.getJoinTable( property );
 		if ( joinTable != null ) {
-			final var inverseJoinColumns = joinTable.inverseJoinColumns();
-			return AnnotatedJoinColumns.buildJoinTableJoinColumns(
-					inverseJoinColumns.length == 0 ? null : inverseJoinColumns,
+			return AnnotatedJoinColumns.buildJoinColumns(
+					joinTable.inverseJoinColumns(),
+					null,
 					entityBinder.getSecondaryTables(),
 					propertyHolder,
 					inferredData,
-					null,
 					buildingContext
 			);
 		}

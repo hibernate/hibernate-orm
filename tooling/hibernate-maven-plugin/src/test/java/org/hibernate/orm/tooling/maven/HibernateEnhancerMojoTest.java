@@ -102,10 +102,9 @@ public class HibernateEnhancerMojoTest {
 		assertTrue(sourceSet.isEmpty());
 		assembleSourceSetMethod.invoke(enhanceMojo);
 		assertFalse(sourceSet.isEmpty());
+		assertTrue(sourceSet.contains(barClassFile));
+		assertFalse(sourceSet.contains(fooTxtFile));
 		assertEquals(1, sourceSet.size());
-		var entry = (HibernateEnhancerMojo.SourceEntry) sourceSet.get(0);
-		assertEquals(barClassFile, entry.classFile());
-		assertEquals(classesDirectory, entry.baseDir());
 		// verify the log messages
 		assertEquals(7, logMessages.size());
 		assertTrue(logMessages.contains(DEBUG + HibernateEnhancerMojo.STARTING_ASSEMBLY_OF_SOURCESET));
@@ -135,13 +134,6 @@ public class HibernateEnhancerMojoTest {
 		fileSet.addInclude("**/*.class");
 		fileSet.addExclude("**/baz/**");
 		addFileSetToSourceSetMethod.invoke(enhanceMojo, fileSet);
-		@SuppressWarnings("unchecked")
-		List<HibernateEnhancerMojo.SourceEntry> sourceSet =
-				(List<HibernateEnhancerMojo.SourceEntry>) sourceSetField.get(enhanceMojo);
-		var classFiles = sourceSet.stream().map(HibernateEnhancerMojo.SourceEntry::classFile).toList();
-		assertTrue(classFiles.contains(barClassFile));
-		assertTrue(classFiles.contains(fooClassFile));
-		assertFalse(classFiles.contains(bazClassFile));
 		// verify log messages
 		assertEquals(6, logMessages.size());
 		assertTrue(logMessages.contains(DEBUG + HibernateEnhancerMojo.PROCESSING_FILE_SET));
@@ -281,28 +273,12 @@ public class HibernateEnhancerMojoTest {
 	void testDetermineClassName() throws Exception {
 		Method determineClassNameMethod = HibernateEnhancerMojo.class.getDeclaredMethod(
 				"determineClassName",
-				new Class[] { File.class, File.class });
+				new Class[] { File.class });
 		determineClassNameMethod.setAccessible(true);
-		assertEquals("org.foo.Bar", determineClassNameMethod.invoke(enhanceMojo, classesDirectory, barClassFile));
+		assertEquals("org.foo.Bar", determineClassNameMethod.invoke(enhanceMojo, barClassFile));
 		// check log messages
 		assertEquals(1, logMessages.size());
 		assertTrue(logMessages.contains(DEBUG + HibernateEnhancerMojo.DETERMINE_CLASS_NAME_FOR_FILE.formatted(barClassFile)));
-	}
-
-	@Test
-	void testDetermineClassNameWithDifferentBaseDir() throws Exception {
-		Method determineClassNameMethod = HibernateEnhancerMojo.class.getDeclaredMethod(
-				"determineClassName",
-				new Class[] { File.class, File.class });
-		determineClassNameMethod.setAccessible(true);
-		File testClassesDirectory = new File(tempDir, "test-classes");
-		File testPackageDir = new File(testClassesDirectory, "org/hibernate/bugs");
-		testPackageDir.mkdirs();
-		File testClassFile = new File(testPackageDir, "TestEntity.class");
-		testClassFile.createNewFile();
-		assertEquals(
-				"org.hibernate.bugs.TestEntity",
-				determineClassNameMethod.invoke(enhanceMojo, testClassesDirectory, testClassFile));
 	}
 
 	@Test
@@ -310,7 +286,7 @@ public class HibernateEnhancerMojoTest {
 		final List<Boolean> hasRun = new ArrayList<Boolean>();
 		Method discoverTypesForClassMethod = HibernateEnhancerMojo.class.getDeclaredMethod(
 				"discoverTypesForClass",
-				new Class[] { File.class, File.class });
+				new Class[] { File.class });
 		discoverTypesForClassMethod.setAccessible(true);
 		Enhancer enhancer = (Enhancer)Proxy.newProxyInstance(
 				getClass().getClassLoader(),
@@ -327,7 +303,7 @@ public class HibernateEnhancerMojoTest {
 				});
 		enhancerField.set(enhanceMojo, enhancer);
 		assertFalse(hasRun.contains(true));
-		discoverTypesForClassMethod.invoke(enhanceMojo, classesDirectory, barClassFile);
+		discoverTypesForClassMethod.invoke(enhanceMojo, barClassFile);
 		assertTrue(hasRun.contains(true));
 		// verify log messages
 		assertEquals(3, logMessages.size());
@@ -365,9 +341,8 @@ public class HibernateEnhancerMojoTest {
 		assertTrue(logMessages.contains(DEBUG + HibernateEnhancerMojo.STARTING_TYPE_DISCOVERY));
 		assertTrue(logMessages.contains(DEBUG + HibernateEnhancerMojo.ENDING_TYPE_DISCOVERY));
 		logMessages.clear();
-		List<HibernateEnhancerMojo.SourceEntry> sourceSet =
-				new ArrayList<HibernateEnhancerMojo.SourceEntry>();
-		sourceSet.add(new HibernateEnhancerMojo.SourceEntry(classesDirectory, barClassFile));
+		List<File> sourceSet = new ArrayList<File>();
+		sourceSet.add(barClassFile);
 		sourceSetField.set(enhanceMojo, sourceSet);
 		discoverTypesMethod.invoke(enhanceMojo);
 		assertTrue(hasRun.contains(true));
@@ -436,7 +411,7 @@ public class HibernateEnhancerMojoTest {
 		calls.add(0, 0);
 		Method enhanceClassMethod = HibernateEnhancerMojo.class.getDeclaredMethod(
 				"enhanceClass",
-				new Class[] { File.class, File.class });
+				new Class[] { File.class });
 		enhanceClassMethod.setAccessible(true);
 		Enhancer enhancer = (Enhancer)Proxy.newProxyInstance(
 				getClass().getClassLoader(),
@@ -461,7 +436,7 @@ public class HibernateEnhancerMojoTest {
 		// First Run -> file is modified
 		enhancerField.set(enhanceMojo, enhancer);
 		assertEquals(0, calls.get(0));
-		enhanceClassMethod.invoke(enhanceMojo, classesDirectory, barClassFile);
+		enhanceClassMethod.invoke(enhanceMojo, barClassFile);
 		long afterFirstRun = barClassFile.lastModified();
 		assertEquals(1, calls.get(0));
 		assertTrue(afterFirstRun >= beforeRuns);
@@ -477,7 +452,7 @@ public class HibernateEnhancerMojoTest {
 		assertTrue(logMessages.contains(INFO + HibernateEnhancerMojo.SUCCESSFULLY_ENHANCED_CLASS_FILE.formatted(barClassFile)));
 		// Second Run -> file is not modified
 		logMessages.clear();
-		enhanceClassMethod.invoke(enhanceMojo, classesDirectory, barClassFile);
+		enhanceClassMethod.invoke(enhanceMojo, barClassFile);
 		long afterSecondRun = barClassFile.lastModified();
 		assertEquals(2, calls.get(0));
 		assertEquals(afterSecondRun, afterFirstRun);
@@ -490,7 +465,7 @@ public class HibernateEnhancerMojoTest {
 		// Third Run -> exception!
 		logMessages.clear();
 		try {
-			enhanceClassMethod.invoke(enhanceMojo, classesDirectory, barClassFile);
+			enhanceClassMethod.invoke(enhanceMojo, barClassFile);
 			fail();
 		} catch (Throwable e) {
 			long afterThirdRun = barClassFile.lastModified();
@@ -526,9 +501,8 @@ public class HibernateEnhancerMojoTest {
 					}
 				});
 		enhancerField.set(enhanceMojo, enhancer);
-		List<HibernateEnhancerMojo.SourceEntry> sourceSet =
-				new ArrayList<HibernateEnhancerMojo.SourceEntry>();
-		sourceSet.add(new HibernateEnhancerMojo.SourceEntry(classesDirectory, barClassFile));
+		List<File> sourceSet = new ArrayList<File>();
+		sourceSet.add(barClassFile);
 		sourceSetField.set(enhanceMojo, sourceSet);
 		long lastModified = barClassFile.lastModified();
 		assertFalse(hasRun.contains(true));
@@ -588,10 +562,9 @@ public class HibernateEnhancerMojoTest {
 		compiler.run(null, null, null, options);
 		String barBytesString = new String(Files.readAllBytes(barClassFile.toPath()));
 		String fooBytesString = new String(Files.readAllBytes(fooClassFile.toPath()));
-		List<HibernateEnhancerMojo.SourceEntry> sourceSet =
-				new ArrayList<HibernateEnhancerMojo.SourceEntry>();
-		sourceSet.add(new HibernateEnhancerMojo.SourceEntry(classesDirectory, barClassFile));
-		sourceSet.add(new HibernateEnhancerMojo.SourceEntry(classesDirectory, fooClassFile));
+		List<File> sourceSet = new ArrayList<File>();
+		sourceSet.add(barClassFile);
+		sourceSet.add(fooClassFile);
 		sourceSetField.set(enhanceMojo, sourceSet);
 		assertTrue(logMessages.isEmpty());
 		executeMethod.invoke(enhanceMojo);

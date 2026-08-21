@@ -19,7 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @DomainModel( annotatedClasses = TheEntity.class )
 @SessionFactory
-@RequiresDialectFeature( feature = DialectFeatureChecks.SupportPooledSequences.class )
+@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsSequences.class )
 public class CustomGeneratorTests {
 	@Test
 	public void verifyModel(DomainModelScope scope) {

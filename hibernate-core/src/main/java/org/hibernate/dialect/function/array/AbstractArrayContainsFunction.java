@@ -13,7 +13,6 @@ import org.hibernate.type.spi.TypeConfiguration;
 import org.jboss.logging.Logger;
 
 import java.lang.invoke.MethodHandles;
-import java.util.Locale;
 
 /**
  * Encapsulates the validator, return type and argument type resolvers for the array_contains function.
@@ -21,7 +20,7 @@ import java.util.Locale;
  */
 public abstract class AbstractArrayContainsFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 
-	protected static final DeprecationLogger LOG = Logger.getMessageLogger( MethodHandles.lookup(), DeprecationLogger.class, AbstractArrayContainsFunction.class.getName(), Locale.ROOT );
+	protected static final DeprecationLogger LOG = Logger.getMessageLogger( MethodHandles.lookup(), DeprecationLogger.class, AbstractArrayContainsFunction.class.getName() );
 
 	protected final boolean nullable;
 

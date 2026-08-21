@@ -5,8 +5,9 @@
 
 plugins {
     id "local.module"
-    alias(libs.plugins.hibernateBuildJdks)
-    alias(libs.plugins.idea)
+    id "org.hibernate.orm.build.jdks"
+
+    id "idea"
 }
 
 idea.module {
@@ -25,7 +26,7 @@ tasks.build.enabled = false
 //		2. generate and place all the artifacts in the staging directory (see local.publishing-java-module)
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-def releasePrepareTask = tasks.register("releasePrepare") {
+tasks.register("releasePrepare") {
     group = "release-prepare"
     description = "Scripted release 'Release Prepare' stage"
 

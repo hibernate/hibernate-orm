@@ -77,9 +77,7 @@ public class SequenceGeneratorOptionsTest {
 		for ( int i = 0; i < fileContent.length; i++ ) {
 			String statement = fileContent[i].toUpperCase( Locale.ROOT );
 			if ( dialect.getSequenceSupport().supportsSequences() ) {
-				String upperSequenceName = sequenceName.toUpperCase( Locale.ROOT );
-				if ( statement.contains( "CREATE SEQUENCE " + upperSequenceName )
-						|| statement.contains( "CREATE SEQUENCE IF NOT EXISTS " + upperSequenceName ) ) {
+				if ( statement.contains( "CREATE SEQUENCE " + sequenceName.toUpperCase( Locale.ROOT ) ) ) {
 					if ( statement.contains( options.toUpperCase( Locale.ROOT ) ) ) {
 						return true;
 					}

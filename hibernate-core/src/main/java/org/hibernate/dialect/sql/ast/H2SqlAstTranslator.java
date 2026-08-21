@@ -4,7 +4,6 @@
  */
 package org.hibernate.dialect.sql.ast;
 
-import java.util.ArrayDeque;
 import java.util.List;
 
 import org.hibernate.LockMode;
@@ -15,7 +14,6 @@ import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
-import org.hibernate.sql.ast.spi.FullJoinEmulation;
 import org.hibernate.sql.ast.spi.SqlAstTranslatorWithMerge;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.Statement;
@@ -29,8 +27,8 @@ import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.Summarization;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
-import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.QueryPartTableReference;
+import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.insert.ConflictClause;
 import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
@@ -38,8 +36,6 @@ import org.hibernate.sql.ast.tree.predicate.BooleanExpressionPredicate;
 import org.hibernate.sql.ast.tree.predicate.LikePredicate;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.SelectClause;
-import org.hibernate.sql.ast.tree.select.SortSpecification;
-import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.model.internal.TableInsertStandard;
@@ -55,45 +51,9 @@ import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
 public class H2SqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslatorWithMerge<T> {
 
 	private boolean renderAsArray;
-	private final ArrayDeque<FullJoinEmulation> fullJoinEmulations = new ArrayDeque<>();
 
 	public H2SqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
 		super( sessionFactory, statement );
-		this.fullJoinEmulations.push( new FullJoinEmulation( this ) );
-	}
-
-	private FullJoinEmulation currentFullJoinEmulationHelper() {
-		return fullJoinEmulations.getFirst();
-	}
-
-	@Override
-	public void visitQuerySpec(QuerySpec querySpec) {
-		final var helper = currentFullJoinEmulationHelper();
-		final boolean needsNestedHelper =
-				helper.hasActiveFullJoinEmulation()
-						&& !helper.isFullJoinEmulationQueryPart( querySpec );
-		if ( needsNestedHelper ) {
-			fullJoinEmulations.push( new FullJoinEmulation( this ) );
-		}
-		try {
-			final var currentHelper = currentFullJoinEmulationHelper();
-			if ( !currentHelper.renderFullJoinEmulationBranchIfNeeded( querySpec, super::visitQuerySpec )
-					&& !currentHelper.emulateFullJoinWithUnionIfNeeded( querySpec ) ) {
-				super.visitQuerySpec( querySpec );
-			}
-		}
-		finally {
-			if ( needsNestedHelper ) {
-				fullJoinEmulations.pop();
-			}
-		}
-	}
-
-	@Override
-	public void visitSelectClause(SelectClause selectClause) {
-		if ( !currentFullJoinEmulationHelper().renderSelectClauseIfNeeded( selectClause ) ) {
-			super.visitSelectClause( selectClause );
-		}
 	}
 
 	@Override
@@ -210,11 +170,10 @@ public class H2SqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslato
 
 	@Override
 	protected void visitConflictClause(ConflictClause conflictClause) {
-		if ( conflictClause != null
-				&& conflictClause.isDoUpdate()
-				&& conflictClause.getConstraintName() != null ) {
-			throw new IllegalQueryOperationException(
-					"Insert conflict 'do update' clause with constraint name is not supported" );
+		if ( conflictClause != null ) {
+			if ( conflictClause.isDoUpdate() && conflictClause.getConstraintName() != null ) {
+				throw new IllegalQueryOperationException( "Insert conflict 'do update' clause with constraint name is not supported" );
+			}
 		}
 	}
 
@@ -262,30 +221,22 @@ public class H2SqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslato
 	}
 
 	@Override
-	protected void visitOrderBy(List<SortSpecification> sortSpecifications) {
-		currentFullJoinEmulationHelper().renderOrderByIfNeeded( getCurrentQueryPart(), sortSpecifications, super::visitOrderBy );
-	}
-
-	@Override
 	public void visitOffsetFetchClause(QueryPart queryPart) {
-		if ( !currentFullJoinEmulationHelper().isFullJoinEmulationQueryPart( queryPart ) ) {
-			if ( isRowsOnlyFetchClauseType( queryPart ) ) {
-				if ( supportsOffsetFetchClause() ) {
-					renderOffsetFetchClause( queryPart, true );
-				}
-				else {
-					renderLimitOffsetClause( queryPart );
-				}
+		if ( isRowsOnlyFetchClauseType( queryPart ) ) {
+			if ( supportsOffsetFetchClause() ) {
+				renderOffsetFetchClause( queryPart, true );
 			}
 			else {
-				if ( supportsOffsetFetchClausePercentWithTies() ) {
-					renderOffsetFetchClause( queryPart, true );
-				}
-				else {
-					// FETCH PERCENT and WITH TIES were introduced along with window functions
-					throw new IllegalArgumentException(
-							"Can't emulate fetch clause type: " + queryPart.getFetchClauseType() );
-				}
+				renderLimitOffsetClause( queryPart );
+			}
+		}
+		else {
+			if ( supportsOffsetFetchClausePercentWithTies() ) {
+				renderOffsetFetchClause( queryPart, true );
+			}
+			else {
+				// FETCH PERCENT and WITH TIES were introduced along with window functions
+				throw new IllegalArgumentException( "Can't emulate fetch clause type: " + queryPart.getFetchClauseType() );
 			}
 		}
 	}

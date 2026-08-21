@@ -4,9 +4,7 @@
  */
 package org.hibernate.orm.test.idgen.biginteger.increment;
 
-import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
@@ -19,7 +17,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel(xmlMappings = "org/hibernate/orm/test/idgen/biginteger/increment/Mapping.hbm.xml")
 @SessionFactory
-@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsNumericPrimaryKey.class )
 public class BigIntegerIncrementGeneratorTest {
 	@Test
 	public void testBasics(SessionFactoryScope scope) {

@@ -41,7 +41,11 @@ public class ColumnValueBindingBuilder {
 			MutatingTableReference mutatingTableReference,
 			ParameterUsage parameterUsage,
 			Consumer<Object> parameterConsumer) {
-		final ColumnReference columnReference = new ColumnReference( mutatingTableReference, selectableMapping );
+		final ColumnReference columnReference = new ColumnReference(
+				mutatingTableReference,
+				selectableMapping.getSelectionExpression(),
+				selectableMapping.getJdbcMapping()
+		);
 		final ColumnWriteFragment columnWriteFragment = buildWriteFragment(
 				writeExpression,
 				selectableMapping,

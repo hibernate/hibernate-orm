@@ -62,7 +62,6 @@ import java.util.function.Function;
 
 import static java.util.Collections.emptyMap;
 import static org.hibernate.boot.model.internal.AnnotationHelper.extractParameterMap;
-import static org.hibernate.boot.model.internal.BinderHelper.extractFromPackage;
 import static org.hibernate.boot.model.internal.TableBinder.linkJoinColumnWithValueOverridingNameIfImplicit;
 import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
 
@@ -333,8 +332,7 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 
 	private boolean isNationalized(MemberDetails memberDetails) {
 		return buildingContext.getBuildingOptions().useNationalizedCharacterData()
-			|| memberDetails.locateAnnotationUsage( Nationalized.class, getSourceModelContext() ) != null
-			|| extractFromPackage( Nationalized.class, memberDetails.getDeclaringType(), buildingContext ) != null;
+			|| memberDetails.locateAnnotationUsage( Nationalized.class, getSourceModelContext() ) != null;
 	}
 
 	private boolean applyCustomType(MemberDetails memberDetails, TypeDetails typeDetails) {

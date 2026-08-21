@@ -49,7 +49,7 @@ public class FindMultipleEntityGraphTest {
 			assertTrue(Hibernate.isInitialized(all.get(1).owner));
 		});
 	}
-	@Entity(name = "Record")
+	@Entity
 	static class Record {
 		@Id Long id;
 		String message;
@@ -66,7 +66,7 @@ public class FindMultipleEntityGraphTest {
 		Record() {
 		}
 	}
-	@Entity(name = "Owner")
+	@Entity
 	static class Owner {
 		@Id String name;
 

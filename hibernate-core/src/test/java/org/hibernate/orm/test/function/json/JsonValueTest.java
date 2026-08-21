@@ -10,6 +10,7 @@ import java.util.List;
 import org.hibernate.HibernateException;
 import org.hibernate.JDBCException;
 import org.hibernate.cfg.QuerySettings;
+import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.sql.exec.ExecutionException;
 
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
@@ -19,6 +20,7 @@ import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -92,7 +94,7 @@ public class JsonValueTest {
 	}
 
 	@Test
-	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonFunctionErrorBehavior.class)
+	@SkipForDialect(dialectClass = MariaDBDialect.class, reason = "MariaDB reports the error 4038 as warning and simply returns null")
 	public void testOnError(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			try {
@@ -111,7 +113,7 @@ public class JsonValueTest {
 	}
 
 	@Test
-	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonFunctionErrorBehavior.class)
+	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsJsonValueErrorBehavior.class)
 	public void testOnEmpty(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			try {

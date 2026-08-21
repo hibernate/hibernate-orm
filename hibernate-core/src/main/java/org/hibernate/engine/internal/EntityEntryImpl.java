@@ -437,9 +437,8 @@ public final class EntityEntryImpl implements Serializable, EntityEntry {
 	}
 
 	@Override
-	public boolean setReadOnly(boolean readOnly, Object entity) {
-		final boolean changed = readOnly != isReadOnly();
-		if ( changed ) {
+	public void setReadOnly(boolean readOnly, Object entity) {
+		if ( readOnly != isReadOnly() ) {
 			if ( readOnly ) {
 				setStatus( READ_ONLY );
 				loadedState = null;
@@ -469,7 +468,6 @@ public final class EntityEntryImpl implements Serializable, EntityEntry {
 				}
 			}
 		}
-		return changed;
 	}
 
 	@Override

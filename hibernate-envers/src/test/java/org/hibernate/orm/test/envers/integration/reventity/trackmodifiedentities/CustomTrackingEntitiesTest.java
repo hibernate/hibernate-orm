@@ -3,10 +3,6 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.envers.integration.reventity.trackmodifiedentities;
-import org.hibernate.testing.orm.junit.DialectFeatureChecks;
-
-import org.hibernate.testing.orm.junit.RequiresDialectFeature;
-
 
 import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.envers.EntityTrackingRevisionListener;
@@ -35,8 +31,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  *
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
-// TableGenerator uses a separate transaction to allocate identifiers, requiring concurrent transactions.
-@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsConcurrentTransactions.class)
 @EnversTest
 @Jpa(annotatedClasses = {
 		ModifiedEntityTypeEntity.class,

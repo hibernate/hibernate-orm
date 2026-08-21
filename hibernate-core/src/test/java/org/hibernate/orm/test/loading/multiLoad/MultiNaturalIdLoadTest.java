@@ -22,11 +22,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -85,12 +82,14 @@ class MultiNaturalIdLoadTest {
 							.multiLoad( "Entity1","Entity2","Entity3","Entity4","Entity5" );
 					assertEquals( 5, results.size() );
 
-					Set<Integer> ids = new HashSet<>( Arrays.asList( 1, 2, 3, 4, 5 ) );
 					Iterator<SimpleNaturalIdEntity> it = results.iterator();
-					for ( SimpleNaturalIdEntity se: results ) {
-						ids.remove( se.getId() );
+					for ( int i = 1; i <= 5; i++ ) {
+						SimpleNaturalIdEntity se= it.next();
+						if ( i == se.getId() ) {
+							it.remove();
+						}
 					}
-					assertEquals( 0, ids.size() );
+					assertEquals( 0, results.size() );
 
 					final int paramCount = StringHelper.countUnquoted(
 							statementInspector.getSqlQueries().get( 0 ),

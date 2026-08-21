@@ -12,7 +12,6 @@ import org.hibernate.Interceptor;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.annotations.CacheLayout;
-import org.hibernate.audit.AuditStrategy;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.boot.spi.BootstrapContext;
@@ -22,7 +21,6 @@ import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.bytecode.internal.SessionFactoryObserverForBytecodeEnhancer;
 import org.hibernate.bytecode.spi.BytecodeProvider;
 import org.hibernate.cache.spi.TimestampsCacheFactory;
-import org.hibernate.temporal.TemporalTableStrategy;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.context.spi.TenantCredentialsMapper;
 import org.hibernate.context.spi.TenantSchemaMapper;
@@ -379,18 +377,6 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	@Override
 	public SessionFactoryBuilder applyCollectionsInDefaultFetchGroup(boolean enabled) {
 		optionsBuilder.enableCollectionInDefaultFetchGroup( enabled );
-		return this;
-	}
-
-	@Override
-	public SessionFactoryBuilder applyTemporalTableStrategy(TemporalTableStrategy strategy) {
-		optionsBuilder.applyTemporalTableStrategy( strategy );
-		return this;
-	}
-
-	@Override
-	public SessionFactoryBuilder applyAuditStrategy(AuditStrategy strategy) {
-		optionsBuilder.applyAuditStrategy( strategy );
 		return this;
 	}
 

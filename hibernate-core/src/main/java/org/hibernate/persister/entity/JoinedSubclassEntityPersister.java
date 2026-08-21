@@ -10,7 +10,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.function.Supplier;
 
 import org.hibernate.AssertionFailure;
@@ -27,7 +26,6 @@ import org.hibernate.jdbc.Expectation;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Table;
-import org.hibernate.metamodel.mapping.DiscriminatorValue;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
@@ -38,7 +36,6 @@ import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.filter.internal.DynamicFilterAliasGenerator;
-import org.hibernate.persister.state.spi.StateManagement;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -54,7 +51,6 @@ import org.hibernate.type.StandardBasicTypes;
 import org.jboss.logging.Logger;
 
 import static java.util.Collections.emptyMap;
-import static java.util.function.Function.identity;
 import static org.hibernate.internal.util.collections.ArrayHelper.contains;
 import static org.hibernate.internal.util.collections.ArrayHelper.join;
 import static org.hibernate.internal.util.collections.ArrayHelper.reverseFirst;
@@ -66,6 +62,8 @@ import static org.hibernate.internal.util.collections.CollectionHelper.linkedMap
 import static org.hibernate.jdbc.Expectations.createExpectation;
 import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper.buildEncapsulatedCompositeIdentifierMapping;
 import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper.buildNonEncapsulatedCompositeIdentifierMapping;
+import static org.hibernate.persister.entity.DiscriminatorHelper.NOT_NULL_DISCRIMINATOR;
+import static org.hibernate.persister.entity.DiscriminatorHelper.NULL_DISCRIMINATOR;
 
 /**
  * An {@link EntityPersister} implementing the normalized
@@ -121,7 +119,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	// subclass discrimination works by assigning particular
 	// values to certain combinations of not-null primary key
 	// values in the outer join using an SQL CASE
-	private final Map<DiscriminatorValue, String> subclassesByDiscriminatorValue = new HashMap<>();
+	private final Map<Object,String> subclassesByDiscriminatorValue = new HashMap<>();
 	private final String[] discriminatorValues;
 	private final boolean[] discriminatorAbstract;
 	private final String[] notNullColumnNames;
@@ -130,7 +128,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	private final String[] constraintOrderedTableNames;
 	private final String[][] constraintOrderedKeyColumnNames;
 
-	private final DiscriminatorValue discriminatorValue;
+	private final Object discriminatorValue;
 	private final String discriminatorSQLString;
 	private final BasicType<?> discriminatorType;
 	private final String explicitDiscriminatorColumnName;
@@ -144,7 +142,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	private final boolean[] isNullableTable;
 	private final boolean[] isInverseTable;
 
-	private final Map<String, DiscriminatorValue> discriminatorValuesByTableName;
+	private final Map<String, Object> discriminatorValuesByTableName;
 	private final Map<String, String> discriminatorColumnNameByTableName;
 
 	public JoinedSubclassEntityPersister(
@@ -152,18 +150,8 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			final EntityDataAccess cacheAccessStrategy,
 			final NaturalIdDataAccess naturalIdRegionAccessStrategy,
 			final RuntimeModelCreationContext creationContext)
-			throws HibernateException {
-		this( persistentClass, cacheAccessStrategy, naturalIdRegionAccessStrategy, creationContext, identity() );
-	}
-
-	protected JoinedSubclassEntityPersister(
-			final PersistentClass persistentClass,
-			final EntityDataAccess cacheAccessStrategy,
-			final NaturalIdDataAccess naturalIdRegionAccessStrategy,
-			final RuntimeModelCreationContext creationContext,
-			final Function<StateManagement, StateManagement> stateManagementConverter)
 					throws HibernateException {
-		super( persistentClass, cacheAccessStrategy, naturalIdRegionAccessStrategy, creationContext, stateManagementConverter );
+		super( persistentClass, cacheAccessStrategy, naturalIdRegionAccessStrategy, creationContext );
 
 		final var dialect = creationContext.getDialect();
 		final var typeConfiguration = creationContext.getTypeConfiguration();
@@ -193,8 +181,8 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 				discriminatorAlias = IMPLICIT_DISCRIMINATOR_ALIAS;
 				discriminatorType = basicTypeRegistry.resolve( StandardBasicTypes.INTEGER );
 				try {
-					discriminatorValue = new DiscriminatorValue.Literal( persistentClass.getSubclassId() );
-					discriminatorSQLString = Integer.toString( persistentClass.getSubclassId() );
+					discriminatorValue = persistentClass.getSubclassId();
+					discriminatorSQLString = discriminatorValue.toString();
 				}
 				catch ( Exception e ) {
 					throw new MappingException( "Could not format discriminator value to SQL string", e );
@@ -293,14 +281,13 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		final ArrayList<Boolean> isNullables = new ArrayList<>();
 
 		final ArrayList<String[]> allKeyColumns = new ArrayList<>();
-		for ( var persistentSubclass : persistentClass.getPersistentClassClosure() ) {
-			final Table table = persistentSubclass.getTable();
+		for ( var table : persistentClass.getSubclassTableClosure() ) {
 			isConcretes.add( persistentClass.isClassOrSuperclassTable( table ) );
 			isNullables.add( false );
 			final String tableName = determineTableName( table );
 			subclassTableNames.add( tableName );
 			final String[] key = new String[idColumnSpan];
-			final var columns = persistentSubclass.getKey().getColumns();
+			final var columns = table.getPrimaryKey().getColumnsInOriginalOrder();
 			for ( int k = 0; k < idColumnSpan; k++ ) {
 				key[k] = columns.get(k).getQuotedName( dialect );
 			}
@@ -315,7 +302,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			final String joinTableName = determineTableName( joinTable );
 			subclassTableNames.add( joinTableName );
 			final String[] key = new String[idColumnSpan];
-			final var columns = join.getKey().getColumns();
+			final var columns = joinTable.getPrimaryKey().getColumnsInOriginalOrder();
 			for ( int k = 0; k < idColumnSpan; k++ ) {
 				key[k] = columns.get(k).getQuotedName( dialect );
 			}
@@ -493,12 +480,12 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 				final var subclass = subclasses.get(k);
 				final var subclassTable = subclass.getTable();
 				if ( persistentClass.isPolymorphic() ) {
-					final DiscriminatorValue discriminatorValue = explicitDiscriminatorColumnName != null
+					final Object discriminatorValue = explicitDiscriminatorColumnName != null
 							? DiscriminatorHelper.getDiscriminatorValue( subclass )
 							// we now use subclass ids that are consistent across all
 							// persisters for a class hierarchy, so that the use of
 							// "foo.class = Bar" works in HQL
-							: new DiscriminatorValue.Literal( subclass.getSubclassId() );
+							: subclass.getSubclassId();
 					initDiscriminatorProperties( dialect, k, subclassTable, discriminatorValue, isAbstract( subclass ) );
 					subclassesByDiscriminatorValue.put( discriminatorValue, subclass.getEntityName() );
 					final int tableId = getTableId(
@@ -522,30 +509,17 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 
 	}
 
-	private void initDiscriminatorProperties(
-			Dialect dialect,
-			int k,
-			Table table,
-			DiscriminatorValue discriminatorValue,
-			boolean isAbstract) {
+	private void initDiscriminatorProperties(Dialect dialect, int k, Table table, Object discriminatorValue, boolean isAbstract) {
 		final String tableName = determineTableName( table );
 		final String columnName = table.getPrimaryKey().getColumn( 0 ).getQuotedName( dialect );
 		discriminatorValuesByTableName.put( tableName, discriminatorValue );
 		discriminatorColumnNameByTableName.put( tableName, columnName );
-		if ( discriminatorValue instanceof DiscriminatorValue.Literal literal ) {
-			discriminatorValues[k] = String.valueOf( literal.value() );
-		}
-		else if ( discriminatorValue == DiscriminatorValue.Special.NULL ) {
-			discriminatorValues[k] = "null";
-		}
-		else {
-			discriminatorValues[k] = "not null";
-		}
+		discriminatorValues[k] = discriminatorValue.toString();
 		discriminatorAbstract[k] = isAbstract;
 	}
 
 	@Override
-	public Map<DiscriminatorValue, String> getSubclassByDiscriminatorValue() {
+	public Map<Object, String> getSubclassByDiscriminatorValue() {
 		return subclassesByDiscriminatorValue;
 	}
 
@@ -730,7 +704,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
-	public DiscriminatorValue getDiscriminatorValue() {
+	public Object getDiscriminatorValue() {
 		return discriminatorValue;
 	}
 
@@ -774,10 +748,10 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	private String getDiscriminatorValueString() {
-		if ( discriminatorValue == DiscriminatorValue.Special.NULL ) {
+		if ( discriminatorValue == NULL_DISCRIMINATOR ) {
 			return "null";
 		}
-		else if ( discriminatorValue == DiscriminatorValue.Special.NOT_NULL ) {
+		else if ( discriminatorValue == NOT_NULL_DISCRIMINATOR ) {
 			return "not null";
 		}
 		else {
@@ -1030,11 +1004,13 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			MappingModelCreationProcess creationProcess,
 			BasicType<?> idType) {
 		final var identifier = persistentClass.getIdentifier();
+		final String columnDefinition;
 		final Long length;
 		final Integer arrayLength;
 		final Integer precision;
 		final Integer scale;
 		if ( identifier == null ) {
+			columnDefinition = null;
 			length = null;
 			arrayLength = null;
 			precision = null;
@@ -1042,6 +1018,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		}
 		else {
 			final var column = identifier.getColumns().get( 0 );
+			columnDefinition = column.getSqlType();
 			length = column.getLength();
 			arrayLength = column.getArrayLength();
 			precision = column.getPrecision();
@@ -1055,6 +1032,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 				identifierProperty.getName(),
 				getTableName(),
 				tableKeyColumns[0][0],
+				columnDefinition,
 				length,
 				arrayLength,
 				precision,

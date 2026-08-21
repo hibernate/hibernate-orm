@@ -42,9 +42,8 @@ import org.hibernate.testing.jdbc.SharedDriverManagerTypeCacheClearingIntegrator
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
 import org.hibernate.testing.orm.domain.gambit.MutableValue;
 import org.hibernate.testing.orm.junit.BootstrapServiceRegistry;
-import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -77,7 +76,9 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 @ServiceRegistry(settings = @Setting(name = AvailableSettings.COLUMN_ORDERING_STRATEGY, value = "legacy"))
 @DomainModel(annotatedClasses = NestedStructEmbeddableTest.StructHolder.class)
 @SessionFactory
-@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsUserDefinedTypes.class )
+@RequiresDialect( PostgreSQLDialect.class )
+@RequiresDialect( OracleDialect.class )
+@RequiresDialect( DB2Dialect.class )
 public class NestedStructEmbeddableTest implements AdditionalMappingContributor {
 
 	@Override
@@ -565,6 +566,8 @@ public class NestedStructEmbeddableTest implements AdditionalMappingContributor 
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = PostgreSQLDialect.class, majorVersion = 10, reason = "Procedures were only introduced in version 11")
+	@SkipForDialect(dialectClass = PostgresPlusDialect.class, majorVersion = 10, reason = "Procedures were only introduced in version 11")
 	@SkipForDialect(dialectClass = DB2Dialect.class, reason = "DB2 does not support struct types in procedures")
 	public void testProcedure(SessionFactoryScope scope) {
 		scope.inTransaction(

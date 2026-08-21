@@ -5,7 +5,6 @@
 package org.hibernate.boot.models;
 
 import java.lang.annotation.Annotation;
-import java.util.EnumSet;
 import java.util.function.Consumer;
 
 import org.hibernate.boot.models.annotations.internal.AccessJpaAnnotation;
@@ -99,8 +98,6 @@ import org.hibernate.boot.models.annotations.internal.VersionJpaAnnotation;
 import org.hibernate.boot.models.internal.OrmAnnotationHelper;
 import org.hibernate.models.internal.OrmAnnotationDescriptor;
 import org.hibernate.models.spi.AnnotationDescriptor;
-
-import static org.hibernate.models.spi.AnnotationTarget.Kind;
 
 import jakarta.persistence.Access;
 import jakarta.persistence.AssociationOverride;
@@ -199,632 +196,370 @@ import jakarta.persistence.Version;
 public interface JpaAnnotations {
 	OrmAnnotationDescriptor<Access,AccessJpaAnnotation> ACCESS = new OrmAnnotationDescriptor<>(
 			Access.class,
-			AccessJpaAnnotation.class,
-			EnumSet.of( Kind.CLASS, Kind.METHOD, Kind.FIELD ),
-			false
+			AccessJpaAnnotation.class
 	);
 
 	OrmAnnotationDescriptor<AssociationOverrides,AssociationOverridesJpaAnnotation> ASSOCIATION_OVERRIDES = new OrmAnnotationDescriptor<>(
 			AssociationOverrides.class,
-			AssociationOverridesJpaAnnotation.class,
-			EnumSet.of( Kind.CLASS, Kind.METHOD, Kind.FIELD ),
-			false
+			AssociationOverridesJpaAnnotation.class
 	);
-
 	OrmAnnotationDescriptor<AssociationOverride,AssociationOverrideJpaAnnotation> ASSOCIATION_OVERRIDE = new OrmAnnotationDescriptor<>(
 			AssociationOverride.class,
 			AssociationOverrideJpaAnnotation.class,
-			EnumSet.of( Kind.CLASS, Kind.METHOD, Kind.FIELD ),
-			false,
 			ASSOCIATION_OVERRIDES
 	);
-
 	OrmAnnotationDescriptor<AttributeOverrides,AttributeOverridesJpaAnnotation> ATTRIBUTE_OVERRIDES = new OrmAnnotationDescriptor<>(
 			AttributeOverrides.class,
-			AttributeOverridesJpaAnnotation.class,
-			EnumSet.of( Kind.CLASS, Kind.METHOD, Kind.FIELD ),
-			false
+			AttributeOverridesJpaAnnotation.class
 	);
-
 	OrmAnnotationDescriptor<AttributeOverride,AttributeOverrideJpaAnnotation> ATTRIBUTE_OVERRIDE = new OrmAnnotationDescriptor<>(
 			AttributeOverride.class,
 			AttributeOverrideJpaAnnotation.class,
-			EnumSet.of( Kind.CLASS, Kind.METHOD, Kind.FIELD ),
-			false,
 			ATTRIBUTE_OVERRIDES
 	);
-
 	OrmAnnotationDescriptor<Basic,BasicJpaAnnotation> BASIC = new OrmAnnotationDescriptor<>(
 			Basic.class,
-			BasicJpaAnnotation.class,
-			EnumSet.of( Kind.METHOD, Kind.FIELD ),
-			false
+			BasicJpaAnnotation.class
 	);
-
 	OrmAnnotationDescriptor<Cacheable,CacheableJpaAnnotation> CACHEABLE = new OrmAnnotationDescriptor<>(
 			Cacheable.class,
-			CacheableJpaAnnotation.class,
-			EnumSet.of( Kind.CLASS ),
-			false
+			CacheableJpaAnnotation.class
 	);
-
 	OrmAnnotationDescriptor<CheckConstraint,CheckConstraintJpaAnnotation> CHECK_CONSTRAINT = new OrmAnnotationDescriptor<>(
 			CheckConstraint.class,
-			CheckConstraintJpaAnnotation.class,
-			EnumSet.noneOf( Kind.class ),
-			false
+			CheckConstraintJpaAnnotation.class
 	);
-
 	OrmAnnotationDescriptor<CollectionTable,CollectionTableJpaAnnotation> COLLECTION_TABLE = new OrmAnnotationDescriptor<>(
 			CollectionTable.class,
-			CollectionTableJpaAnnotation.class,
-			EnumSet.of( Kind.METHOD, Kind.FIELD ),
-			false
+			CollectionTableJpaAnnotation.class
 	);
-
 	OrmAnnotationDescriptor<Column,ColumnJpaAnnotation> COLUMN = new OrmAnnotationDescriptor<>(
 			Column.class,
-			ColumnJpaAnnotation.class,
-			EnumSet.of( Kind.METHOD, Kind.FIELD ),
-			false
+			ColumnJpaAnnotation.class
 	);
-
 	OrmAnnotationDescriptor<ColumnResult,ColumnResultJpaAnnotation> COLUMN_RESULT = new OrmAnnotationDescriptor<>(
 			ColumnResult.class,
-			ColumnResultJpaAnnotation.class,
-			EnumSet.noneOf( Kind.class ),
-			false
+			ColumnResultJpaAnnotation.class
 	);
-
 	OrmAnnotationDescriptor<ConstructorResult,ConstructorResultJpaAnnotation> CONSTRUCTOR_RESULT = new OrmAnnotationDescriptor<>(
 			ConstructorResult.class,
-			ConstructorResultJpaAnnotation.class,
-			EnumSet.noneOf( Kind.class ),
-			false
+			ConstructorResultJpaAnnotation.class
 	);
-
 	OrmAnnotationDescriptor<Converts,ConvertsJpaAnnotation> CONVERTS = new OrmAnnotationDescriptor<>(
 			Converts.class,
-			ConvertsJpaAnnotation.class,
-			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.CLASS ),
-			false
+			ConvertsJpaAnnotation.class
 	);
-
 	OrmAnnotationDescriptor<Convert,ConvertJpaAnnotation> CONVERT = new OrmAnnotationDescriptor<>(
 			Convert.class,
 			ConvertJpaAnnotation.class,
-			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.CLASS ),
-			false,
 			CONVERTS
 	);
-
 	OrmAnnotationDescriptor<Converter,ConverterJpaAnnotation> CONVERTER = new OrmAnnotationDescriptor<>(
 			Converter.class,
-			ConverterJpaAnnotation.class,
-			EnumSet.of( Kind.CLASS ),
-			false
+			ConverterJpaAnnotation.class
 	);
-
 	OrmAnnotationDescriptor<DiscriminatorColumn,DiscriminatorColumnJpaAnnotation> DISCRIMINATOR_COLUMN = new OrmAnnotationDescriptor<>(
 			DiscriminatorColumn.class,
-			DiscriminatorColumnJpaAnnotation.class,
-			EnumSet.of( Kind.CLASS ),
-			false
+			DiscriminatorColumnJpaAnnotation.class
 	);
-
 	OrmAnnotationDescriptor<DiscriminatorValue,DiscriminatorValueJpaAnnotation> DISCRIMINATOR_VALUE = new OrmAnnotationDescriptor<>(
 			DiscriminatorValue.class,
-			DiscriminatorValueJpaAnnotation.class,
-			EnumSet.of( Kind.CLASS ),
-			false
+			DiscriminatorValueJpaAnnotation.class
 	);
-
 	OrmAnnotationDescriptor<ElementCollection,ElementCollectionJpaAnnotation> ELEMENT_COLLECTION = new OrmAnnotationDescriptor<>(
 			ElementCollection.class,
-			ElementCollectionJpaAnnotation.class,
-			EnumSet.of( Kind.METHOD, Kind.FIELD ),
-			false
+			ElementCollectionJpaAnnotation.class
 	);
-
 	OrmAnnotationDescriptor<Embeddable,EmbeddableJpaAnnotation> EMBEDDABLE = new OrmAnnotationDescriptor<>(
 			Embeddable.class,
-			EmbeddableJpaAnnotation.class,
-			EnumSet.of( Kind.CLASS ),
-			false
+			EmbeddableJpaAnnotation.class
 	);
-
 	OrmAnnotationDescriptor<Embedded,EmbeddedJpaAnnotation> EMBEDDED = new OrmAnnotationDescriptor<>(
 			Embedded.class,
-			EmbeddedJpaAnnotation.class,
-			EnumSet.of( Kind.METHOD, Kind.FIELD ),
-			false
+			EmbeddedJpaAnnotation.class
 	);
-
 	OrmAnnotationDescriptor<EmbeddedId,EmbeddedIdJpaAnnotation> EMBEDDED_ID = new OrmAnnotationDescriptor<>(
 			EmbeddedId.class,
-			EmbeddedIdJpaAnnotation.class,
-			EnumSet.of( Kind.METHOD, Kind.FIELD ),
-			false
+			EmbeddedIdJpaAnnotation.class
 	);
-
 	OrmAnnotationDescriptor<Entity,EntityJpaAnnotation> ENTITY = new OrmAnnotationDescriptor<>(
 			Entity.class,
-			EntityJpaAnnotation.class,
-			EnumSet.of( Kind.CLASS ),
-			false
+			EntityJpaAnnotation.class
 	);
-
 	OrmAnnotationDescriptor<EntityListeners,EntityListenersJpaAnnotation> ENTITY_LISTENERS = new OrmAnnotationDescriptor<>(
 			EntityListeners.class,
-			EntityListenersJpaAnnotation.class,
-			EnumSet.of( Kind.CLASS ),
-			false
+			EntityListenersJpaAnnotation.class
 	);
-
 	OrmAnnotationDescriptor<EntityResult,EntityResultJpaAnnotation> ENTITY_RESULT = new OrmAnnotationDescriptor<>(
 			EntityResult.class,
-			EntityResultJpaAnnotation.class,
-			EnumSet.noneOf( Kind.class ),
-			false
+			EntityResultJpaAnnotation.class
 	);
-
 	OrmAnnotationDescriptor<Enumerated,EnumeratedJpaAnnotation> ENUMERATED = new OrmAnnotationDescriptor<>(
 			Enumerated.class,
-			EnumeratedJpaAnnotation.class,
-			EnumSet.of( Kind.METHOD, Kind.FIELD ),
-			false
+			EnumeratedJpaAnnotation.class
 	);
-
-	OrmAnnotationDescriptor<EnumeratedValue,EnumeratedValueJpaAnnotation> ENUMERATED_VALUE = new OrmAnnotationDescriptor<>(
+	OrmAnnotationDescriptor<EnumeratedValue, EnumeratedValueJpaAnnotation> ENUMERATED_VALUE = new OrmAnnotationDescriptor<>(
 			EnumeratedValue.class,
-			EnumeratedValueJpaAnnotation.class,
-			EnumSet.of( Kind.FIELD ),
-			false
+			EnumeratedValueJpaAnnotation.class
 	);
-
 	OrmAnnotationDescriptor<ExcludeDefaultListeners,ExcludeDefaultListenersJpaAnnotation> EXCLUDE_DEFAULT_LISTENERS = new OrmAnnotationDescriptor<>(
 			ExcludeDefaultListeners.class,
-			ExcludeDefaultListenersJpaAnnotation.class,
-			EnumSet.of( Kind.CLASS ),
-			false
+			ExcludeDefaultListenersJpaAnnotation.class
 	);
-
 	OrmAnnotationDescriptor<ExcludeSuperclassListeners,ExcludeSuperclassListenersJpaAnnotation> EXCLUDE_SUPERCLASS_LISTENERS = new OrmAnnotationDescriptor<>(
 			ExcludeSuperclassListeners.class,
-			ExcludeSuperclassListenersJpaAnnotation.class,
-			EnumSet.of( Kind.CLASS ),
-			false
+			ExcludeSuperclassListenersJpaAnnotation.class
 	);
-
 	OrmAnnotationDescriptor<FieldResult,FieldResultJpaAnnotation> FIELD_RESULT = new OrmAnnotationDescriptor<>(
 			FieldResult.class,
-			FieldResultJpaAnnotation.class,
-			EnumSet.noneOf( Kind.class ),
-			false
+			FieldResultJpaAnnotation.class
 	);
-
 	OrmAnnotationDescriptor<ForeignKey,ForeignKeyJpaAnnotation> FOREIGN_KEY = new OrmAnnotationDescriptor<>(
 			ForeignKey.class,
-			ForeignKeyJpaAnnotation.class,
-			EnumSet.noneOf( Kind.class ),
-			false
+			ForeignKeyJpaAnnotation.class
 	);
-
 	OrmAnnotationDescriptor<GeneratedValue,GeneratedValueJpaAnnotation> GENERATED_VALUE = new OrmAnnotationDescriptor<>(
 			GeneratedValue.class,
-			GeneratedValueJpaAnnotation.class,
-			EnumSet.of( Kind.METHOD, Kind.FIELD ),
-			false
+			GeneratedValueJpaAnnotation.class
 	);
-
 	OrmAnnotationDescriptor<Id,IdJpaAnnotation> ID = new OrmAnnotationDescriptor<>(
 			Id.class,
-			IdJpaAnnotation.class,
-			EnumSet.of( Kind.METHOD, Kind.FIELD ),
-			false
+			IdJpaAnnotation.class
 	);
-
 	OrmAnnotationDescriptor<IdClass,IdClassJpaAnnotation> ID_CLASS = new OrmAnnotationDescriptor<>(
 			IdClass.class,
-			IdClassJpaAnnotation.class,
-			EnumSet.of( Kind.CLASS ),
-			false
+			IdClassJpaAnnotation.class
 	);
-
 	OrmAnnotationDescriptor<Index,IndexJpaAnnotation> INDEX = new OrmAnnotationDescriptor<>(
 			Index.class,
-			IndexJpaAnnotation.class,
-			EnumSet.noneOf( Kind.class ),
-			false
+			IndexJpaAnnotation.class
 	);
-
 	OrmAnnotationDescriptor<Inheritance,InheritanceJpaAnnotation> INHERITANCE = new OrmAnnotationDescriptor<>(
 			Inheritance.class,
-			InheritanceJpaAnnotation.class,
-			EnumSet.of( Kind.CLASS ),
-			false
+			InheritanceJpaAnnotation.class
 	);
-
 	OrmAnnotationDescriptor<JoinColumns,JoinColumnsJpaAnnotation> JOIN_COLUMNS = new OrmAnnotationDescriptor<>(
 			JoinColumns.class,
-			JoinColumnsJpaAnnotation.class,
-			EnumSet.of( Kind.METHOD, Kind.FIELD ),
-			false
+			JoinColumnsJpaAnnotation.class
 	);
-
 	OrmAnnotationDescriptor<JoinColumn,JoinColumnJpaAnnotation> JOIN_COLUMN = new OrmAnnotationDescriptor<>(
 			JoinColumn.class,
 			JoinColumnJpaAnnotation.class,
-			EnumSet.of( Kind.METHOD, Kind.FIELD ),
-			false,
 			JOIN_COLUMNS
 	);
-
 	OrmAnnotationDescriptor<JoinTable,JoinTableJpaAnnotation> JOIN_TABLE = new OrmAnnotationDescriptor<>(
 			JoinTable.class,
-			JoinTableJpaAnnotation.class,
-			EnumSet.of( Kind.METHOD, Kind.FIELD ),
-			false
+			JoinTableJpaAnnotation.class
 	);
-
 	OrmAnnotationDescriptor<Lob,LobJpaAnnotation> LOB = new OrmAnnotationDescriptor<>(
 			Lob.class,
-			LobJpaAnnotation.class,
-			EnumSet.of( Kind.METHOD, Kind.FIELD ),
-			false
+			LobJpaAnnotation.class
 	);
-
 	OrmAnnotationDescriptor<ManyToMany,ManyToManyJpaAnnotation> MANY_TO_MANY = new OrmAnnotationDescriptor<>(
 			ManyToMany.class,
-			ManyToManyJpaAnnotation.class,
-			EnumSet.of( Kind.METHOD, Kind.FIELD ),
-			false
+			ManyToManyJpaAnnotation.class
 	);
-
 	OrmAnnotationDescriptor<ManyToOne,ManyToOneJpaAnnotation> MANY_TO_ONE = new OrmAnnotationDescriptor<>(
 			ManyToOne.class,
-			ManyToOneJpaAnnotation.class,
-			EnumSet.of( Kind.METHOD, Kind.FIELD ),
-			false
+			ManyToOneJpaAnnotation.class
 	);
-
 	OrmAnnotationDescriptor<MapKey,MapKeyJpaAnnotation> MAP_KEY = new OrmAnnotationDescriptor<>(
 			MapKey.class,
-			MapKeyJpaAnnotation.class,
-			EnumSet.of( Kind.METHOD, Kind.FIELD ),
-			false
+			MapKeyJpaAnnotation.class
 	);
-
 	OrmAnnotationDescriptor<MapKeyClass,MapKeyClassJpaAnnotation> MAP_KEY_CLASS = new OrmAnnotationDescriptor<>(
 			MapKeyClass.class,
-			MapKeyClassJpaAnnotation.class,
-			EnumSet.of( Kind.METHOD, Kind.FIELD ),
-			false
+			MapKeyClassJpaAnnotation.class
 	);
-
 	OrmAnnotationDescriptor<MapKeyColumn,MapKeyColumnJpaAnnotation> MAP_KEY_COLUMN = new OrmAnnotationDescriptor<>(
 			MapKeyColumn.class,
-			MapKeyColumnJpaAnnotation.class,
-			EnumSet.of( Kind.METHOD, Kind.FIELD ),
-			false
+			MapKeyColumnJpaAnnotation.class
 	);
-
 	OrmAnnotationDescriptor<MapKeyEnumerated,MapKeyEnumeratedJpaAnnotation> MAP_KEY_ENUMERATED = new OrmAnnotationDescriptor<>(
 			MapKeyEnumerated.class,
-			MapKeyEnumeratedJpaAnnotation.class,
-			EnumSet.of( Kind.METHOD, Kind.FIELD ),
-			false
+			MapKeyEnumeratedJpaAnnotation.class
 	);
-
 	OrmAnnotationDescriptor<MapKeyJoinColumns,MapKeyJoinColumnsJpaAnnotation> MAP_KEY_JOIN_COLUMNS = new OrmAnnotationDescriptor<>(
 			MapKeyJoinColumns.class,
-			MapKeyJoinColumnsJpaAnnotation.class,
-			EnumSet.of( Kind.METHOD, Kind.FIELD ),
-			false
+			MapKeyJoinColumnsJpaAnnotation.class
 	);
-
-	OrmAnnotationDescriptor<MapKeyJoinColumn,MapKeyJoinColumnJpaAnnotation> MAP_KEY_JOIN_COLUMN = new OrmAnnotationDescriptor<>(
+	OrmAnnotationDescriptor<MapKeyJoinColumn, MapKeyJoinColumnJpaAnnotation> MAP_KEY_JOIN_COLUMN = new OrmAnnotationDescriptor<>(
 			MapKeyJoinColumn.class,
 			MapKeyJoinColumnJpaAnnotation.class,
-			EnumSet.of( Kind.METHOD, Kind.FIELD ),
-			false,
 			MAP_KEY_JOIN_COLUMNS
 	);
-
 	OrmAnnotationDescriptor<MapKeyTemporal,MapKeyTemporalJpaAnnotation> MAP_KEY_TEMPORAL = new OrmAnnotationDescriptor<>(
 			MapKeyTemporal.class,
-			MapKeyTemporalJpaAnnotation.class,
-			EnumSet.of( Kind.METHOD, Kind.FIELD ),
-			false
+			MapKeyTemporalJpaAnnotation.class
 	);
-
 	OrmAnnotationDescriptor<MappedSuperclass,MappedSuperclassJpaAnnotation> MAPPED_SUPERCLASS = new OrmAnnotationDescriptor<>(
 			MappedSuperclass.class,
-			MappedSuperclassJpaAnnotation.class,
-			EnumSet.of( Kind.CLASS ),
-			false
+			MappedSuperclassJpaAnnotation.class
 	);
-
 	OrmAnnotationDescriptor<MapsId,MapsIdJpaAnnotation> MAPS_ID = new OrmAnnotationDescriptor<>(
 			MapsId.class,
-			MapsIdJpaAnnotation.class,
-			EnumSet.of( Kind.METHOD, Kind.FIELD ),
-			false
+			MapsIdJpaAnnotation.class
 	);
-
 	OrmAnnotationDescriptor<NamedAttributeNode,NamedAttributeNodeJpaAnnotation> NAMED_ATTRIBUTE_NODE = new OrmAnnotationDescriptor<>(
 			NamedAttributeNode.class,
-			NamedAttributeNodeJpaAnnotation.class,
-			EnumSet.noneOf( Kind.class ),
-			false
+			NamedAttributeNodeJpaAnnotation.class
 	);
-
 	OrmAnnotationDescriptor<NamedEntityGraphs,NamedEntityGraphsJpaAnnotation> NAMED_ENTITY_GRAPHS = new OrmAnnotationDescriptor<>(
 			NamedEntityGraphs.class,
-			NamedEntityGraphsJpaAnnotation.class,
-			EnumSet.of( Kind.CLASS ),
-			false
+			NamedEntityGraphsJpaAnnotation.class
 	);
-
 	OrmAnnotationDescriptor<NamedEntityGraph,NamedEntityGraphJpaAnnotation> NAMED_ENTITY_GRAPH = new OrmAnnotationDescriptor<>(
 			NamedEntityGraph.class,
 			NamedEntityGraphJpaAnnotation.class,
-			EnumSet.of( Kind.CLASS ),
-			false,
 			NAMED_ENTITY_GRAPHS
 	);
-
 	OrmAnnotationDescriptor<NamedNativeQueries,NamedNativeQueriesJpaAnnotation> NAMED_NATIVE_QUERIES = new OrmAnnotationDescriptor<>(
 			NamedNativeQueries.class,
-			NamedNativeQueriesJpaAnnotation.class,
-			EnumSet.of( Kind.CLASS ),
-			false
+			NamedNativeQueriesJpaAnnotation.class
 	);
-
 	OrmAnnotationDescriptor<NamedNativeQuery,NamedNativeQueryJpaAnnotation> NAMED_NATIVE_QUERY = new OrmAnnotationDescriptor<>(
 			NamedNativeQuery.class,
 			NamedNativeQueryJpaAnnotation.class,
-			EnumSet.of( Kind.CLASS ),
-			false,
 			NAMED_NATIVE_QUERIES
 	);
-
 	OrmAnnotationDescriptor<NamedQueries,NamedQueriesJpaAnnotation> NAMED_QUERIES = new OrmAnnotationDescriptor<>(
 			NamedQueries.class,
-			NamedQueriesJpaAnnotation.class,
-			EnumSet.of( Kind.CLASS ),
-			false
+			NamedQueriesJpaAnnotation.class
 	);
-
 	OrmAnnotationDescriptor<NamedQuery,NamedQueryJpaAnnotation> NAMED_QUERY = new OrmAnnotationDescriptor<>(
 			NamedQuery.class,
 			NamedQueryJpaAnnotation.class,
-			EnumSet.of( Kind.CLASS ),
-			false,
 			NAMED_QUERIES
 	);
-
 	OrmAnnotationDescriptor<NamedStoredProcedureQueries,NamedStoredProcedureQueriesJpaAnnotation> NAMED_STORED_PROCEDURE_QUERIES = new OrmAnnotationDescriptor<>(
 			NamedStoredProcedureQueries.class,
-			NamedStoredProcedureQueriesJpaAnnotation.class,
-			EnumSet.of( Kind.CLASS ),
-			false
+			NamedStoredProcedureQueriesJpaAnnotation.class
 	);
-
 	OrmAnnotationDescriptor<NamedStoredProcedureQuery,NamedStoredProcedureQueryJpaAnnotation> NAMED_STORED_PROCEDURE_QUERY = new OrmAnnotationDescriptor<>(
 			NamedStoredProcedureQuery.class,
 			NamedStoredProcedureQueryJpaAnnotation.class,
-			EnumSet.of( Kind.CLASS ),
-			false,
 			NAMED_STORED_PROCEDURE_QUERIES
 	);
-
 	OrmAnnotationDescriptor<NamedSubgraph,NamedSubgraphJpaAnnotation> NAMED_SUBGRAPH = new OrmAnnotationDescriptor<>(
 			NamedSubgraph.class,
-			NamedSubgraphJpaAnnotation.class,
-			EnumSet.noneOf( Kind.class ),
-			false
+			NamedSubgraphJpaAnnotation.class
 	);
-
 	OrmAnnotationDescriptor<OneToMany,OneToManyJpaAnnotation> ONE_TO_MANY = new OrmAnnotationDescriptor<>(
 			OneToMany.class,
-			OneToManyJpaAnnotation.class,
-			EnumSet.of( Kind.METHOD, Kind.FIELD ),
-			false
+			OneToManyJpaAnnotation.class
 	);
-
-	OrmAnnotationDescriptor<OneToOne,OneToOneJpaAnnotation> ONE_TO_ONE = new OrmAnnotationDescriptor<>(
+	OrmAnnotationDescriptor<OneToOne, OneToOneJpaAnnotation> ONE_TO_ONE = new OrmAnnotationDescriptor<>(
 			OneToOne.class,
-			OneToOneJpaAnnotation.class,
-			EnumSet.of( Kind.METHOD, Kind.FIELD ),
-			false
+			OneToOneJpaAnnotation.class
 	);
-
 	OrmAnnotationDescriptor<OrderBy,OrderByJpaAnnotation> ORDER_BY = new OrmAnnotationDescriptor<>(
 			OrderBy.class,
-			OrderByJpaAnnotation.class,
-			EnumSet.of( Kind.METHOD, Kind.FIELD ),
-			false
+			OrderByJpaAnnotation.class
 	);
-
 	OrmAnnotationDescriptor<OrderColumn,OrderColumnJpaAnnotation> ORDER_COLUMN = new OrmAnnotationDescriptor<>(
 			OrderColumn.class,
-			OrderColumnJpaAnnotation.class,
-			EnumSet.of( Kind.METHOD, Kind.FIELD ),
-			false
+			OrderColumnJpaAnnotation.class
 	);
-
 	OrmAnnotationDescriptor<PostLoad,PostLoadJpaAnnotation> POST_LOAD = new OrmAnnotationDescriptor<>(
 			PostLoad.class,
-			PostLoadJpaAnnotation.class,
-			EnumSet.of( Kind.METHOD ),
-			false
+			PostLoadJpaAnnotation.class
 	);
-
 	OrmAnnotationDescriptor<PostPersist,PostPersistJpaAnnotation> POST_PERSIST = new OrmAnnotationDescriptor<>(
 			PostPersist.class,
-			PostPersistJpaAnnotation.class,
-			EnumSet.of( Kind.METHOD ),
-			false
+			PostPersistJpaAnnotation.class
 	);
-
 	OrmAnnotationDescriptor<PostRemove,PostRemoveJpaAnnotation> POST_REMOVE = new OrmAnnotationDescriptor<>(
 			PostRemove.class,
-			PostRemoveJpaAnnotation.class,
-			EnumSet.of( Kind.METHOD ),
-			false
+			PostRemoveJpaAnnotation.class
 	);
-
 	OrmAnnotationDescriptor<PostUpdate,PostUpdateJpaAnnotation> POST_UPDATE = new OrmAnnotationDescriptor<>(
 			PostUpdate.class,
-			PostUpdateJpaAnnotation.class,
-			EnumSet.of( Kind.METHOD ),
-			false
+			PostUpdateJpaAnnotation.class
 	);
-
 	OrmAnnotationDescriptor<PrePersist,PrePersistJpaAnnotation> PRE_PERSIST = new OrmAnnotationDescriptor<>(
 			PrePersist.class,
-			PrePersistJpaAnnotation.class,
-			EnumSet.of( Kind.METHOD ),
-			false
+			PrePersistJpaAnnotation.class
 	);
-
 	OrmAnnotationDescriptor<PreRemove,PreRemoveJpaAnnotation> PRE_REMOVE = new OrmAnnotationDescriptor<>(
 			PreRemove.class,
-			PreRemoveJpaAnnotation.class,
-			EnumSet.of( Kind.METHOD ),
-			false
+			PreRemoveJpaAnnotation.class
 	);
-
 	OrmAnnotationDescriptor<PreUpdate,PreUpdateJpaAnnotation> PRE_UPDATE = new OrmAnnotationDescriptor<>(
 			PreUpdate.class,
-			PreUpdateJpaAnnotation.class,
-			EnumSet.of( Kind.METHOD ),
-			false
+			PreUpdateJpaAnnotation.class
 	);
-
 	OrmAnnotationDescriptor<PrimaryKeyJoinColumns,PrimaryKeyJoinColumnsJpaAnnotation> PRIMARY_KEY_JOIN_COLUMNS = new OrmAnnotationDescriptor<>(
 			PrimaryKeyJoinColumns.class,
-			PrimaryKeyJoinColumnsJpaAnnotation.class,
-			EnumSet.of( Kind.CLASS, Kind.METHOD, Kind.FIELD ),
-			false
+			PrimaryKeyJoinColumnsJpaAnnotation.class
 	);
-
-	OrmAnnotationDescriptor<PrimaryKeyJoinColumn,PrimaryKeyJoinColumnJpaAnnotation> PRIMARY_KEY_JOIN_COLUMN = new OrmAnnotationDescriptor<>(
+	OrmAnnotationDescriptor<PrimaryKeyJoinColumn, PrimaryKeyJoinColumnJpaAnnotation> PRIMARY_KEY_JOIN_COLUMN = new OrmAnnotationDescriptor<>(
 			PrimaryKeyJoinColumn.class,
 			PrimaryKeyJoinColumnJpaAnnotation.class,
-			EnumSet.of( Kind.CLASS, Kind.METHOD, Kind.FIELD ),
-			false,
 			PRIMARY_KEY_JOIN_COLUMNS
 	);
-
 	OrmAnnotationDescriptor<QueryHint,QueryHintJpaAnnotation> QUERY_HINT = new OrmAnnotationDescriptor<>(
 			QueryHint.class,
-			QueryHintJpaAnnotation.class,
-			EnumSet.noneOf( Kind.class ),
-			false
+			QueryHintJpaAnnotation.class
 	);
-
 	OrmAnnotationDescriptor<SecondaryTables,SecondaryTablesJpaAnnotation> SECONDARY_TABLES = new OrmAnnotationDescriptor<>(
 			SecondaryTables.class,
-			SecondaryTablesJpaAnnotation.class,
-			EnumSet.of( Kind.CLASS ),
-			false
+			SecondaryTablesJpaAnnotation.class
 	);
-
 	OrmAnnotationDescriptor<SecondaryTable,SecondaryTableJpaAnnotation> SECONDARY_TABLE = new OrmAnnotationDescriptor<>(
 			SecondaryTable.class,
 			SecondaryTableJpaAnnotation.class,
-			EnumSet.of( Kind.CLASS ),
-			false,
 			SECONDARY_TABLES
 	);
-
 	OrmAnnotationDescriptor<SequenceGenerators,SequenceGeneratorsJpaAnnotation> SEQUENCE_GENERATORS = new OrmAnnotationDescriptor<>(
 			SequenceGenerators.class,
-			SequenceGeneratorsJpaAnnotation.class,
-			EnumSet.of( Kind.CLASS, Kind.METHOD, Kind.FIELD, Kind.PACKAGE ),
-			false
+			SequenceGeneratorsJpaAnnotation.class
 	);
-
 	OrmAnnotationDescriptor<SequenceGenerator,SequenceGeneratorJpaAnnotation> SEQUENCE_GENERATOR = new OrmAnnotationDescriptor<>(
 			SequenceGenerator.class,
 			SequenceGeneratorJpaAnnotation.class,
-			EnumSet.of( Kind.CLASS, Kind.METHOD, Kind.FIELD, Kind.PACKAGE ),
-			false,
 			SEQUENCE_GENERATORS
 	);
-
 	OrmAnnotationDescriptor<SqlResultSetMappings,SqlResultSetMappingsJpaAnnotation> SQL_RESULT_SET_MAPPINGS = new OrmAnnotationDescriptor<>(
 			SqlResultSetMappings.class,
-			SqlResultSetMappingsJpaAnnotation.class,
-			EnumSet.of( Kind.CLASS ),
-			false
+			SqlResultSetMappingsJpaAnnotation.class
 	);
-
 	OrmAnnotationDescriptor<SqlResultSetMapping,SqlResultSetMappingJpaAnnotation> SQL_RESULT_SET_MAPPING = new OrmAnnotationDescriptor<>(
 			SqlResultSetMapping.class,
 			SqlResultSetMappingJpaAnnotation.class,
-			EnumSet.of( Kind.CLASS ),
-			false,
 			SQL_RESULT_SET_MAPPINGS
 	);
-
 	OrmAnnotationDescriptor<StoredProcedureParameter,StoredProcedureParameterJpaAnnotation> STORED_PROCEDURE_PARAMETER = new OrmAnnotationDescriptor<>(
 			StoredProcedureParameter.class,
-			StoredProcedureParameterJpaAnnotation.class,
-			EnumSet.noneOf( Kind.class ),
-			false
+			StoredProcedureParameterJpaAnnotation.class
 	);
-
 	OrmAnnotationDescriptor<Table,TableJpaAnnotation> TABLE = new OrmAnnotationDescriptor<>(
 			Table.class,
-			TableJpaAnnotation.class,
-			EnumSet.of( Kind.CLASS ),
-			false
+			TableJpaAnnotation.class
 	);
-
 	OrmAnnotationDescriptor<TableGenerators,TableGeneratorsJpaAnnotation> TABLE_GENERATORS = new OrmAnnotationDescriptor<>(
 			TableGenerators.class,
-			TableGeneratorsJpaAnnotation.class,
-			EnumSet.of( Kind.CLASS, Kind.METHOD, Kind.FIELD, Kind.PACKAGE ),
-			false
+			TableGeneratorsJpaAnnotation.class
 	);
-
 	OrmAnnotationDescriptor<TableGenerator,TableGeneratorJpaAnnotation> TABLE_GENERATOR = new OrmAnnotationDescriptor<>(
 			TableGenerator.class,
 			TableGeneratorJpaAnnotation.class,
-			EnumSet.of( Kind.CLASS, Kind.METHOD, Kind.FIELD, Kind.PACKAGE ),
-			false,
 			TABLE_GENERATORS
 	);
-
 	OrmAnnotationDescriptor<Temporal,TemporalJpaAnnotation> TEMPORAL = new OrmAnnotationDescriptor<>(
 			Temporal.class,
-			TemporalJpaAnnotation.class,
-			EnumSet.of( Kind.METHOD, Kind.FIELD ),
-			false
+			TemporalJpaAnnotation.class
 	);
-
 	OrmAnnotationDescriptor<Transient,TransientJpaAnnotation> TRANSIENT = new OrmAnnotationDescriptor<>(
 			Transient.class,
-			TransientJpaAnnotation.class,
-			EnumSet.of( Kind.METHOD, Kind.FIELD ),
-			false
+			TransientJpaAnnotation.class
 	);
-
 	OrmAnnotationDescriptor<UniqueConstraint,UniqueConstraintJpaAnnotation> UNIQUE_CONSTRAINT = new OrmAnnotationDescriptor<>(
 			UniqueConstraint.class,
-			UniqueConstraintJpaAnnotation.class,
-			EnumSet.noneOf( Kind.class ),
-			false
+			UniqueConstraintJpaAnnotation.class
 	);
-
 	OrmAnnotationDescriptor<Version,VersionJpaAnnotation> VERSION = new OrmAnnotationDescriptor<>(
 			Version.class,
-			VersionJpaAnnotation.class,
-			EnumSet.of( Kind.METHOD, Kind.FIELD ),
-			false
+			VersionJpaAnnotation.class
 	);
 
 	static void forEachAnnotation(Consumer<AnnotationDescriptor<? extends Annotation>> consumer) {

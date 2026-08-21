@@ -7,7 +7,6 @@ package org.hibernate.envers.internal;
 import org.jboss.logging.Logger;
 
 import java.lang.invoke.MethodHandles;
-import java.util.Locale;
 
 /**
  * Sad when you need helpers for generating loggers...
@@ -26,7 +25,7 @@ public class EnversLogging {
 	}
 
 	public static EnversMessageLogger messageLogger(String loggerName) {
-		return Logger.getMessageLogger( MethodHandles.lookup(), EnversMessageLogger .class, loggerName, Locale.ROOT );
+		return Logger.getMessageLogger( MethodHandles.lookup(), EnversMessageLogger .class, loggerName );
 	}
 
 	public static Logger logger(Class<?> classNeedingLogging) {

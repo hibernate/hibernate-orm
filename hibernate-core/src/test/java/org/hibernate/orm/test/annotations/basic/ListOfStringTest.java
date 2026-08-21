@@ -31,7 +31,7 @@ public class ListOfStringTest {
 		});
 
 	}
-	@Entity(name = "Unbroken")
+	@Entity
 	static class Unbroken {
 		@Id long id;
 		List<String> stringList; // this should be OK

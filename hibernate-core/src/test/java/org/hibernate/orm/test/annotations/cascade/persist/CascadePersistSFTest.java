@@ -44,7 +44,7 @@ public class CascadePersistSFTest {
 		});
 	}
 
-	@Entity(name = "Parent")
+	@Entity
 	static class Parent {
 		@Id
 		@GeneratedValue
@@ -54,7 +54,7 @@ public class CascadePersistSFTest {
 				mappedBy = "parent")
 		Set<Child> children = new HashSet<>();
 	}
-	@Entity(name = "Child")
+	@Entity
 	static class Child {
 		@Id @GeneratedValue
 		private Long id;

@@ -80,11 +80,6 @@ public class DelegatingQueryOptions implements QueryOptions {
 	}
 
 	@Override
-	public Boolean isLimitInMemoryEnabled() {
-		return queryOptions.isLimitInMemoryEnabled();
-	}
-
-	@Override
 	public CacheMode getCacheMode() {
 		return queryOptions.getCacheMode();
 	}
@@ -130,11 +125,6 @@ public class DelegatingQueryOptions implements QueryOptions {
 	}
 
 	@Override
-	public Limit peekOriginalLimit() {
-		return queryOptions.peekOriginalLimit();
-	}
-
-	@Override
 	public Integer getFirstRow() {
 		return queryOptions.getFirstRow();
 	}
@@ -157,10 +147,5 @@ public class DelegatingQueryOptions implements QueryOptions {
 	@Override
 	public ListResultsConsumer.UniqueSemantic getUniqueSemantic() {
 		return queryOptions.getUniqueSemantic();
-	}
-
-	@Override
-	public boolean isScrollExecution() {
-		return queryOptions.isScrollExecution();
 	}
 }

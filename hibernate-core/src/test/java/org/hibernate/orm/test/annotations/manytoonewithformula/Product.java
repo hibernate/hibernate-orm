@@ -28,7 +28,8 @@ public class Product implements Serializable
 	@Id
 	public Integer id;
 
-	@Column(name="product_idnf", length=18, nullable=false, unique=true)
+	@Column(name="product_idnf", length=18, nullable=false, unique=true,
+		columnDefinition="char(18)")
 	public String productIdnf;
 
 	@Column(name="description", nullable=false)

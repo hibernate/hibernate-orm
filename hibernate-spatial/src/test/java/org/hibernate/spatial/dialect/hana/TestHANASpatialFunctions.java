@@ -37,8 +37,7 @@ public class TestHANASpatialFunctions extends SpatialFunctionalTestCase {
 	private static final HSMessageLogger LOG = Logger.getMessageLogger(
 			MethodHandles.lookup(),
 			HSMessageLogger.class,
-			TestHANASpatialFunctions.class.getName(),
-			Locale.ROOT
+			TestHANASpatialFunctions.class.getName()
 	);
 
 	protected HANAExpectationsFactory hanaExpectationsFactory;

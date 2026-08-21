@@ -47,8 +47,8 @@ public class TransactSQLLockingSupport extends LockingSupportParameterized {
 	public static final LockingSupport SYBASE_ASE = new TransactSQLLockingSupport(
 			PessimisticLockStyle.TABLE_HINT,
 			LockTimeoutType.CONNECTION,
-			LockTimeoutType.CONNECTION,
-			LockTimeoutType.QUERY,
+			LockTimeoutType.NONE,
+			LockTimeoutType.NONE,
 			RowLockStrategy.TABLE,
 			OuterJoinLockingType.IDENTIFIED,
 			SybaseImpl.IMPL
@@ -154,7 +154,7 @@ public class TransactSQLLockingSupport extends LockingSupportParameterized {
 
 		@Override
 		public Level getSupportedLevel() {
-			return Level.EXTENDED;
+			return Level.SUPPORTED;
 		}
 
 		@Override
@@ -162,11 +162,11 @@ public class TransactSQLLockingSupport extends LockingSupportParameterized {
 			return Helper.getLockTimeout(
 					"select @@lock_timeout",
 					(resultSet) -> {
-						final int timeoutInSeconds = resultSet.getInt( 1 );
-						return switch ( timeoutInSeconds ) {
+						final int timeoutInMilliseconds = resultSet.getInt( 1 );
+						return switch ( timeoutInMilliseconds ) {
 							case -1 -> Timeouts.WAIT_FOREVER;
 							case 0 -> Timeouts.NO_WAIT;
-							default -> Timeout.seconds( timeoutInSeconds );
+							default -> Timeout.milliseconds( timeoutInMilliseconds );
 						};
 					},
 					connection,
@@ -176,30 +176,27 @@ public class TransactSQLLockingSupport extends LockingSupportParameterized {
 
 		@Override
 		public void setLockTimeout(Timeout timeout, Connection connection, SessionFactoryImplementor factory) {
-			// see https://infocenter.sybase.com/help/index.jsp?topic=/com.sybase.infocenter.dc31654.1600/doc/html/san1360629104549.html
-			// SAP Adaptive Server Enterprise 16.0
-			// > System Administration Guide 16.0: Volume 1
-			//   > Setting Configuration Parameters
-			//     > Configuration Parameters
-			//       > Alphabetical Listing of Configuration Parameters
-			//         > lock wait period
-			//
-			// range:   0 – 2147483647
-			// default: 2147483647
-			// unit:    seconds
 			final int milliseconds = timeout.milliseconds();
 
 			if ( milliseconds == Timeouts.SKIP_LOCKED_MILLI ) {
 				throw new HibernateException( "Sybase does not accept skip-locked for lock-timeout" );
 			}
 
-			if ( milliseconds == Timeouts.WAIT_FOREVER_MILLI ) {
+			// Sybase needs a special syntax for NO_WAIT rather than a number
+			if ( milliseconds == Timeouts.NO_WAIT_MILLI ) {
+				// NOTE: The docs say this is supported, and it does not fail when used,
+				// but immediately after the setting value is still -1.  So it seems to
+				// allow the call but ignore it.  Might just be jTDS.
+				Helper.setLockTimeout( "set lock nowait", connection, factory );
+			}
+			else if ( milliseconds == Timeouts.WAIT_FOREVER_MILLI ) {
 				// Even though Sybase's wait-forever (and default) value is -1, it won't accept
-				// -1 as a value because, well, of course it won't.  Need to omit the argument to reset it
-				Helper.setLockTimeout( "set lock wait", connection, factory );
+				// -1 as a value because, well, of course it won't.  Need to set max value instead
+				// because, well, of course you do.
+				Helper.setLockTimeout( 2147483647, "set lock wait %s", connection, factory );
 			}
 			else {
-				Helper.setLockTimeout( (int) Math.ceil( (double) milliseconds / 1000), "set lock wait %s", connection, factory );
+				Helper.setLockTimeout( milliseconds, "set lock wait %s", connection, factory );
 			}
 		}
 	}

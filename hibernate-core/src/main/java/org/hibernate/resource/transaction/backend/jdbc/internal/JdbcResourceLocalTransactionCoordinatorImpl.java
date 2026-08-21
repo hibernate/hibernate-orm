@@ -11,7 +11,6 @@ import java.util.List;
 import jakarta.persistence.RollbackException;
 import jakarta.transaction.Status;
 
-import org.hibernate.resource.transaction.backend.jta.internal.StatusTranslator;
 import org.hibernate.resource.transaction.spi.IsolationDelegate;
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.resource.transaction.backend.jdbc.spi.JdbcResourceTransaction;
@@ -179,10 +178,10 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 		}
 	}
 
-	private void afterCompletionCallback(int status) {
+	private void afterCompletionCallback(boolean successful) {
 		JDBC_LOGGER.notifyingResourceLocalObserversAfterCompletion();
-		synchronizationRegistry.notifySynchronizationsAfterTransactionCompletion( status );
-		final boolean successful = status == Status.STATUS_COMMITTED;
+		final int statusToSend = successful ? Status.STATUS_COMMITTED : Status.STATUS_ROLLEDBACK;
+		synchronizationRegistry.notifySynchronizationsAfterTransactionCompletion( statusToSend );
 		transactionCoordinatorOwner.afterTransactionCompletion( successful, false );
 		for ( var transactionObserver : observers() ) {
 			transactionObserver.afterCompletion( successful, false );
@@ -250,40 +249,25 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 		private void commitNoRollbackOnly() {
 			try {
 				beforeCompletionCallback();
-			}
-			catch (RuntimeException e) {
-				// error processing before completion callbacks
-				// attempt to roll back the transaction
-				try {
-					jdbcResourceTransaction.rollback();
-				}
-				catch (RuntimeException e2) {
-					e.addSuppressed( e2 );
-				}
-				try {
-					afterCompletionCallback( StatusTranslator.STATUS_FAILED_ROLLBACK );
-				}
-				catch (RuntimeException e2) {
-					e.addSuppressed( e2 );
-				}
-				throw e;
-			}
-
-			try {
 				jdbcResourceTransaction.commit();
+				afterCompletionCallback( true );
+			}
+			catch (RollbackException e) {
+				afterCompletionCallback( false );
+				throw e;
 			}
 			catch (RuntimeException e) {
-				// commit failed
+				// something went wrong, so make a last-ditch,
+				// hail-mary attempt to roll back the transaction
 				try {
-					afterCompletionCallback( StatusTranslator.STATUS_FAILED_COMMIT );
+					rollback();
 				}
 				catch (RuntimeException e2) {
 					e.addSuppressed( e2 );
+					JDBC_LOGGER.encounteredFailureRollingBackFailedCommit( e2 );
 				}
 				throw e;
 			}
-			// commit successful
-			afterCompletionCallback( Status.STATUS_COMMITTED );
 		}
 
 		private void commitRollbackOnly() {
@@ -298,7 +282,7 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 		public void rollback() {
 			if ( isActive() ) {
 				jdbcResourceTransaction.rollback();
-				afterCompletionCallback( Status.STATUS_ROLLEDBACK );
+				afterCompletionCallback( false );
 			}
 		}
 

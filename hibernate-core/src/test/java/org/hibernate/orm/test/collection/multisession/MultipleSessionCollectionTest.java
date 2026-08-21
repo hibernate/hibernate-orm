@@ -24,10 +24,8 @@ import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.engine.spi.CollectionEntry;
 
 import org.hibernate.exception.LockTimeoutException;
-import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
@@ -99,7 +97,6 @@ public class MultipleSessionCollectionTest {
 	@JiraKey("HHH-9518")
 	@SkipForDialect(dialectClass = HSQLDialect.class, reason = "The select triggered by the merge just hang without any exception")
 	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "The merge in the second session causes a deadlock")
-	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsConcurrentTransactions.class)
 	public void testCopyPersistentCollectionReferenceAfterFlush(SessionFactoryScope scope) {
 		Parent p = new Parent();
 		Child c = new Child();
@@ -143,7 +140,6 @@ public class MultipleSessionCollectionTest {
 
 	@Test
 	@JiraKey(value = "HHH-9518")
-	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsConcurrentTransactions.class)
 	public void testCopyUninitializedCollectionReferenceAfterGet(SessionFactoryScope scope) {
 		Parent parent = new Parent();
 		Child c = new Child();
@@ -183,7 +179,6 @@ public class MultipleSessionCollectionTest {
 
 	@Test
 	@JiraKey(value = "HHH-9518")
-	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsConcurrentTransactions.class)
 	public void testCopyInitializedCollectionReferenceAfterGet(SessionFactoryScope scope) {
 		Parent parent = new Parent();
 		Child c = new Child();
@@ -228,7 +223,6 @@ public class MultipleSessionCollectionTest {
 
 	@Test
 	@JiraKey(value = "HHH-9518")
-	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsConcurrentTransactions.class)
 	public void testCopyInitializedCollectionReferenceToNewEntityCollectionRoleAfterGet(SessionFactoryScope scope) {
 		Parent parent = new Parent();
 		Child c = new Child();

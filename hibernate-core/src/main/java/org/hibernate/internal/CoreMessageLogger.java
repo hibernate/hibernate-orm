@@ -10,7 +10,6 @@ import java.lang.invoke.MethodHandles;
 import java.net.URL;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
-import java.util.Locale;
 import java.util.Properties;
 
 import org.hibernate.HibernateException;
@@ -53,7 +52,7 @@ public interface CoreMessageLogger extends BasicLogger {
 
 	String NAME = SubSystemLogging.BASE + ".core";
 
-	CoreMessageLogger CORE_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, NAME, Locale.ROOT );
+	CoreMessageLogger CORE_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, NAME );
 
 	@LogMessage(level = INFO)
 	@Message(value = "Hibernate ORM core version %s", id = 1)

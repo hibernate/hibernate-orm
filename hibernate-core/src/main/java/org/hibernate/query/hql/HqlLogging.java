@@ -14,7 +14,6 @@ import org.jboss.logging.annotations.MessageLogger;
 import org.jboss.logging.annotations.ValidIdRange;
 
 import java.lang.invoke.MethodHandles;
-import java.util.Locale;
 
 /**
  * @author Steve Ebersole
@@ -29,7 +28,7 @@ import java.util.Locale;
 public interface HqlLogging extends BasicLogger {
 	String LOGGER_NAME = QueryLogging.LOGGER_NAME + ".hql";
 
-	HqlLogging QUERY_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), HqlLogging.class, LOGGER_NAME, Locale.ROOT );
+	HqlLogging QUERY_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), HqlLogging.class, LOGGER_NAME );
 
 	static String subLoggerName(String subName) {
 		return LOGGER_NAME + '.' + subName;
@@ -40,6 +39,6 @@ public interface HqlLogging extends BasicLogger {
 	}
 
 	static <T> T subLogger(String subName, Class<T> loggerJavaType) {
-		return Logger.getMessageLogger( MethodHandles.lookup(), loggerJavaType, subLoggerName( subName ), Locale.ROOT );
+		return Logger.getMessageLogger( MethodHandles.lookup(), loggerJavaType, subLoggerName( subName ) );
 	}
 }

@@ -8,8 +8,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 
-import org.hibernate.dialect.aggregate.HANAAggregateSupport;
-import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
@@ -61,13 +59,7 @@ public class HANAJsonObjectFunction extends JsonObjectFunction {
 		sqlAppender.appendSql( ')' );
 	}
 
-	@Override
-	protected void renderValue(SqlAppender sqlAppender, SqlAstNode value, SqlAstTranslator<?> walker) {
-		final JdbcMappingContainer expressionType = ( (Expression) value ).getExpressionType();
-		HANAAggregateSupport.appendJsonWriteExpression( sqlAppender, () -> value.accept( walker ), expressionType.getSingleJdbcMapping() );
-	}
-
-	private void replaceJsonArgumentsEscaping(
+	private static void replaceJsonArgumentsEscaping(
 			SqlAppender sqlAppender,
 			List<? extends SqlAstNode> sqlAstArguments,
 			SqlAstTranslator<?> walker,
@@ -78,13 +70,13 @@ public class HANAJsonObjectFunction extends JsonObjectFunction {
 
 		if ( jsonArg < jsonArgumentFields.size() ) {
 			// Take the substring before the match
-			sqlAppender.appendSql( "select substring(t.jsonresult, 1, locate_regexpr(r.x in t.jsonresult) - 2)" );
+			sqlAppender.appendSql( "select substring(t.x, 1, locate_regexpr(r.x in t.x) - 2)" );
 
 			// The match itself after replacing double backslashes and backslash escaped quotes
-			sqlAppender.appendSql( "|| replace(replace(substr_regexpr(r.x in t.jsonresult),'\\\\','\\'),'\\\"','\"')" );
+			sqlAppender.appendSql( "|| replace(replace(substr_regexpr(r.x in t.x),'\\\\','\\'),'\\\"','\"')" );
 
 			// And the rest of the string after the match
-			sqlAppender.appendSql( "|| substring(t.jsonresult, locate_regexpr(r.x in t.jsonresult) + length(substr_regexpr(r.x in t.jsonresult)) + 1) jsonresult");
+			sqlAppender.appendSql( "|| substring(t.x, locate_regexpr(r.x in t.x) + length(substr_regexpr(r.x in t.x)) + 1) x");
 
 			sqlAppender.appendSql( " from (" );
 			replaceJsonArgumentsEscaping(
@@ -103,13 +95,13 @@ public class HANAJsonObjectFunction extends JsonObjectFunction {
 			sqlAppender.appendSql( "' x from sys.dummy) r" );
 		}
 		else {
-			sqlAppender.appendSql( "select " );
+			sqlAppender.appendSql( "select t.jsonresult x from (select" );
 			char separator = ' ';
 			for ( int i = 0; i < argumentsCount; i += 2 ) {
 				sqlAppender.appendSql( separator );
 				final SqlAstNode key = sqlAstArguments.get( i );
 				final SqlAstNode value = sqlAstArguments.get( i + 1 );
-				renderValue( sqlAppender, value, walker );
+				value.accept( walker );
 				sqlAppender.appendSql( ' ' );
 				final String literalValue = walker.getLiteralValue( (Expression) key );
 				sqlAppender.appendDoubleQuoteEscapedString( literalValue );
@@ -119,7 +111,7 @@ public class HANAJsonObjectFunction extends JsonObjectFunction {
 			if ( nullBehavior == JsonNullBehavior.NULL ) {
 				sqlAppender.appendSql( ",'omitnull'='no'" );
 			}
-			sqlAppender.appendSql( ')' );
+			sqlAppender.appendSql( ")) t" );
 		}
 	}
 

@@ -30,12 +30,10 @@ import org.hibernate.orm.test.jpa.Distributor;
 import org.hibernate.orm.test.jpa.Item;
 import org.hibernate.orm.test.jpa.Wallet;
 import org.hibernate.stat.Statistics;
-import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.Jpa;
-import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -863,7 +861,6 @@ public class QueryTest {
 	}
 
 	@Test
-	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsTimestampWithDateComparison.class)
 	public void testExplicitPositionalParameter(EntityManagerFactoryScope scope) {
 		scope.inTransaction( entityManager -> {
 			Wallet w = new Wallet();

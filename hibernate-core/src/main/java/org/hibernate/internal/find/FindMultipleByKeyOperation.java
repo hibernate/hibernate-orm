@@ -62,7 +62,6 @@ public class FindMultipleByKeyOperation<T> implements MultiIdLoadOptions, MultiN
 
 	private CacheStoreMode cacheStoreMode;
 	private CacheRetrieveMode cacheRetrieveMode;
-	private boolean refreshSession;
 
 	private LockMode lockMode;
 	private Locking.Scope lockScope;
@@ -87,7 +86,8 @@ public class FindMultipleByKeyOperation<T> implements MultiIdLoadOptions, MultiN
 		this.entityDescriptor = entityDescriptor;
 
 		if ( defaultCacheMode != null ) {
-			setCacheMode( defaultCacheMode );
+			cacheStoreMode = defaultCacheMode.getJpaStoreMode();
+			cacheRetrieveMode = defaultCacheMode.getJpaRetrieveMode();
 		}
 
 		if ( defaultLockOptions != null ) {
@@ -123,14 +123,13 @@ public class FindMultipleByKeyOperation<T> implements MultiIdLoadOptions, MultiN
 			}
 			else if ( option instanceof CacheStoreMode cacheStoreMode ) {
 				this.cacheStoreMode = cacheStoreMode;
-				this.refreshSession = false;
 			}
 			else if ( option instanceof CacheRetrieveMode cacheRetrieveMode ) {
 				this.cacheRetrieveMode = cacheRetrieveMode;
-				this.refreshSession = false;
 			}
 			else if ( option instanceof CacheMode cacheMode ) {
-				setCacheMode( cacheMode );
+				this.cacheStoreMode = cacheMode.getJpaStoreMode();
+				this.cacheRetrieveMode = cacheMode.getJpaRetrieveMode();
 			}
 			else if ( option instanceof LockModeType lockModeType ) {
 				this.lockMode = LockModeTypeHelper.getLockMode( lockModeType );
@@ -167,19 +166,6 @@ public class FindMultipleByKeyOperation<T> implements MultiIdLoadOptions, MultiN
 			enabledFetchProfiles = new HashSet<>();
 		}
 		enabledFetchProfiles.add( profileName );
-	}
-
-	private void setCacheMode(CacheMode cacheMode) {
-		cacheStoreMode = cacheMode.getJpaStoreMode();
-		cacheRetrieveMode = cacheMode.getJpaRetrieveMode();
-		refreshSession = cacheMode == CacheMode.REFRESH_SESSION;
-	}
-
-	protected CacheMode getCacheMode() {
-		final var cacheMode = CacheMode.fromJpaModes( cacheRetrieveMode, cacheStoreMode );
-		return refreshSession && cacheMode == CacheMode.REFRESH
-				? CacheMode.REFRESH_SESSION
-				: cacheMode;
 	}
 
 	public List<T> performFind(
@@ -236,8 +222,8 @@ public class FindMultipleByKeyOperation<T> implements MultiIdLoadOptions, MultiN
 		final var readOnly = session.isDefaultReadOnly();
 		session.setDefaultReadOnly( readOnlyMode == ReadOnlyMode.READ_ONLY );
 
-		final var previousCacheMode = session.getCacheMode();
-		session.setCacheMode( getCacheMode() );
+		final var cacheMode = session.getCacheMode();
+		session.setCacheMode( CacheMode.fromJpaModes( cacheRetrieveMode, cacheStoreMode ) );
 
 		try {
 			return action.get();
@@ -249,7 +235,7 @@ public class FindMultipleByKeyOperation<T> implements MultiIdLoadOptions, MultiN
 			}
 			influencers.setEnabledFetchProfileNames( fetchProfiles );
 			session.setDefaultReadOnly( readOnly );
-			session.setCacheMode( previousCacheMode );
+			session.setCacheMode( cacheMode );
 		}
 	}
 
@@ -346,7 +332,6 @@ public class FindMultipleByKeyOperation<T> implements MultiIdLoadOptions, MultiN
 		this.orderingMode = orderingMode;
 		this.cacheStoreMode = cacheMode.getJpaStoreMode();
 		this.cacheRetrieveMode = cacheMode.getJpaRetrieveMode();
-		this.refreshSession = cacheMode == CacheMode.REFRESH_SESSION;
 		this.lockMode = lockOptions.getLockMode();
 		this.lockScope = lockOptions.getScope();
 		this.lockFollowOn = lockOptions.getFollowOnStrategy();

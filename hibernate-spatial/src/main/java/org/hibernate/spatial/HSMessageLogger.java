@@ -14,7 +14,6 @@ import org.jboss.logging.annotations.MessageLogger;
 import org.jboss.logging.annotations.ValidIdRange;
 
 import java.lang.invoke.MethodHandles;
-import java.util.Locale;
 
 import static org.jboss.logging.Logger.Level.DEBUG;
 import static org.jboss.logging.Logger.Level.INFO;
@@ -35,7 +34,7 @@ public interface HSMessageLogger extends BasicLogger {
 
 	String LOGGER_NAME = "org.hibernate.spatial";
 
-	HSMessageLogger SPATIAL_MSG_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), HSMessageLogger.class, LOGGER_NAME, Locale.ROOT );
+	HSMessageLogger SPATIAL_MSG_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), HSMessageLogger.class, LOGGER_NAME );
 
 	@LogMessage(level = INFO)
 	@Message(value = "Hibernate Spatial integration enabled: %s", id = 80000001)

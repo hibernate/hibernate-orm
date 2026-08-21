@@ -55,11 +55,6 @@ public class UUIDHexGenerator extends AbstractUUIDGenerator {
 	}
 
 	@Override
-	public Class<?> getGeneratedType() {
-		return String.class;
-	}
-
-	@Override
 	public Object generate(SharedSessionContractImplementor session, Object obj) {
 		return format( getIP() ) + sep
 				+ format( getJVM() ) + sep

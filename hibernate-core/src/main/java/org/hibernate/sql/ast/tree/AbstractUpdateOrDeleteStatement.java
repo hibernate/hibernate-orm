@@ -12,7 +12,6 @@ import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.from.FromClause;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
-import org.hibernate.sql.model.MutationTarget;
 
 public abstract class AbstractUpdateOrDeleteStatement extends AbstractMutationStatement {
 	private final FromClause fromClause;
@@ -33,7 +32,6 @@ public abstract class AbstractUpdateOrDeleteStatement extends AbstractMutationSt
 		this( null, targetTable, fromClause, restriction, returningColumns );
 	}
 
-	@Deprecated(forRemoval = true, since = "7.3")
 	public AbstractUpdateOrDeleteStatement(
 			CteContainer cteContainer,
 			NamedTableReference targetTable,
@@ -41,18 +39,6 @@ public abstract class AbstractUpdateOrDeleteStatement extends AbstractMutationSt
 			Predicate restriction,
 			List<ColumnReference> returningColumns) {
 		super( cteContainer, targetTable, returningColumns );
-		this.fromClause = fromClause;
-		this.restriction = restriction;
-	}
-
-	public AbstractUpdateOrDeleteStatement(
-			CteContainer cteContainer,
-			NamedTableReference targetTable,
-			MutationTarget<?> mutationTarget,
-			FromClause fromClause,
-			Predicate restriction,
-			List<ColumnReference> returningColumns) {
-		super( cteContainer, targetTable, mutationTarget, returningColumns );
 		this.fromClause = fromClause;
 		this.restriction = restriction;
 	}

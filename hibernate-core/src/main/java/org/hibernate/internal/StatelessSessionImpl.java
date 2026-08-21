@@ -149,35 +149,11 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		}
 		temporaryPersistenceContext = createPersistenceContext( this );
 		influencers = new LoadQueryInfluencers( getFactory() );
-		influencers.setTemporalIdentifier( options.getTemporalIdentifier() );
 		eventListenerGroups = factory.getEventListenerGroups();
 		setUpMultitenancy( factory, influencers );
 		// A nonzero batch size forces the use of write-behind
 		// Therefore, ignore the value of hibernate.jdbc.batch_size
 		setJdbcBatchSize( 0 );
-
-		final var statistics = factory.getStatistics();
-		if ( statistics.isStatisticsEnabled() ) {
-			statistics.openSession();
-		}
-	}
-
-	@Override
-	public void close() {
-		if ( !isClosed() ) {
-			final var statistics = getFactory().getStatistics();
-			if ( statistics.isStatisticsEnabled() ) {
-				statistics.closeSession();
-			}
-		}
-		super.close();
-	}
-
-	@Override
-	protected void cleanupOnClose() {
-		// detach any tracked entities and collections so
-		// they don't hold references to a closed session
-		temporaryPersistenceContext.clear();
 	}
 
 	@Override
@@ -210,7 +186,6 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			for ( Object entity : entities ) {
 				insert( null, entity );
 			}
-			getJdbcCoordinator().executeBatch();
 		}
 		finally {
 			setJdbcBatchSize( batchSize );
@@ -351,7 +326,6 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			for ( Object entity : entities ) {
 				delete( null, entity );
 			}
-			getJdbcCoordinator().executeBatch();
 		}
 		finally {
 			setJdbcBatchSize( batchSize );
@@ -430,7 +404,6 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			for ( Object entity : entities ) {
 				update( null, entity );
 			}
-			getJdbcCoordinator().executeBatch();
 		}
 		finally {
 			setJdbcBatchSize( batchSize );
@@ -518,7 +491,6 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			for ( Object entity : entities ) {
 				upsert( null, entity );
 			}
-			getJdbcCoordinator().executeBatch();
 		}
 		finally {
 			setJdbcBatchSize( batchSize );
@@ -835,23 +807,21 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	@Override
 	public Object get(String entityName, Object id, LockMode lockMode) {
 		checkOpen();
-		final Object entity = getEntity( entityName, id, lockMode );
-		if ( temporaryPersistenceContext.isLoadFinished() ) {
-			temporaryPersistenceContext.clear();
-		}
-		return entity;
-	}
 
-	private Object getEntity(String entityName, Object id, LockMode lockMode) {
 		final var persister = requireEntityPersister( entityName );
 		if ( persister.canReadFromCache() ) {
 			final Object cachedEntity =
 					loadFromSecondLevelCache( persister, generateEntityKey( id, persister ), null, lockMode );
 			if ( cachedEntity != null ) {
+				temporaryPersistenceContext.clear();
 				return cachedEntity;
 			}
 		}
-		return persister.load( id, null, getNullSafeLockMode( lockMode ), this );
+		final Object result = persister.load( id, null, getNullSafeLockMode( lockMode ), this );
+		if ( temporaryPersistenceContext.isLoadFinished() ) {
+			temporaryPersistenceContext.clear();
+		}
+		return result;
 	}
 
 	@Override
@@ -936,15 +906,12 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 				throw new IllegalArgumentException("Null id");
 			}
 		}
-		try {
-			final var persister = requireEntityPersister( entityClass.getName() );
-			final var results = persister.multiLoad( ids.toArray(), this, MULTI_ID_LOAD_OPTIONS );
-			//noinspection unchecked
-			return (List<T>) results;
-		}
-		finally {
-			afterOperation();
-		}
+
+		final var persister = requireEntityPersister( entityClass.getName() );
+		final var results = persister.multiLoad( ids.toArray(), this, MULTI_ID_LOAD_OPTIONS );
+		//noinspection unchecked
+		return (List<T>) results;
+
 //		final List<Object> uncachedIds;
 //		final List<T> list = new ArrayList<>( ids.size() );
 //		if ( persister.canReadFromCache() ) {
@@ -1001,37 +968,35 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 
 	@Override
 	public void refresh(String entityName, Object entity, LockMode lockMode) {
-		try {
-			checkOpen();
-			final var persister = getEntityPersister( entityName, entity );
-			final Object id = persister.getIdentifier( entity, this );
-			if ( SESSION_LOGGER.isTraceEnabled() ) {
-				SESSION_LOGGER.refreshingTransient( infoString( persister, id, getFactory() ) );
-			}
-
-			if ( persister.canWriteToCache() ) {
-				final var cacheAccess = persister.getCacheAccessStrategy();
-				if ( cacheAccess != null ) {
-					final Object cacheKey = cacheAccess.generateCacheKey(
-							id,
-							persister,
-							getFactory(),
-							getTenantIdentifier()
-					);
-					cacheAccess.evict( cacheKey );
-				}
-			}
-
-			final Object result =
-					getLoadQueryInfluencers()
-							// TODO: This is wrong. StatelessSession is not supposed
-							//       to be affected by cascade = REFRESH. Fix in H8.
-							.fromInternalFetchProfile( CascadingFetchProfile.REFRESH,
-									() -> persister.load( id, entity, getNullSafeLockMode( lockMode ), this ) );
-			UnresolvableObjectException.throwIfNull( result, id, persister.getEntityName() );
+		checkOpen();
+		final var persister = getEntityPersister( entityName, entity );
+		final Object id = persister.getIdentifier( entity, this );
+		if ( SESSION_LOGGER.isTraceEnabled() ) {
+			SESSION_LOGGER.refreshingTransient( infoString( persister, id, getFactory() ) );
 		}
-		finally {
-			afterOperation();
+
+		if ( persister.canWriteToCache() ) {
+			final var cacheAccess = persister.getCacheAccessStrategy();
+			if ( cacheAccess != null ) {
+				final Object cacheKey = cacheAccess.generateCacheKey(
+						id,
+						persister,
+						getFactory(),
+						getTenantIdentifier()
+				);
+				cacheAccess.evict( cacheKey );
+			}
+		}
+
+		final Object result =
+				getLoadQueryInfluencers()
+						// TODO: This is wrong. StatelessSession is not supposed
+						//       to be affected by cascade = REFRESH. Fix in H8.
+						.fromInternalFetchProfile( CascadingFetchProfile.REFRESH,
+								() -> persister.load( id, entity, getNullSafeLockMode( lockMode ), this ) );
+		UnresolvableObjectException.throwIfNull( result, id, persister.getEntityName() );
+		if ( temporaryPersistenceContext.isLoadFinished() ) {
+			temporaryPersistenceContext.clear();
 		}
 	}
 
@@ -1383,15 +1348,8 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	//TODO: COPY/PASTE FROM SessionImpl, pull up!
 
 
-	@Override
 	public void afterOperation(boolean success) {
-		afterOperation();
-	}
-
-	private void afterOperation() {
-		if ( temporaryPersistenceContext.isLoadFinished() ) {
-			temporaryPersistenceContext.clear();
-		}
+		temporaryPersistenceContext.clear();
 		if ( !isTransactionInProgress() ) {
 			getJdbcCoordinator().afterTransaction();
 		}
@@ -1429,7 +1387,6 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 
 	@Override
 	public void afterTransactionBegin() {
-		super.afterTransactionBegin();
 		afterTransactionBeginEvents();
 	}
 
@@ -1444,7 +1401,6 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	public void afterTransactionCompletion(boolean successful, boolean delayed) {
 		transactionCompletionCallbacks.afterTransactionCompletion( successful );
 		afterTransactionCompletionEvents( successful );
-		clearTransactionStartInstant();
 		if ( shouldAutoClose() && !isClosed() ) {
 			managedClose();
 		}

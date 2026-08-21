@@ -71,7 +71,6 @@ import static org.hibernate.jpa.SpecHints.HINT_SPEC_CACHE_RETRIEVE_MODE;
 import static org.hibernate.jpa.SpecHints.HINT_SPEC_CACHE_STORE_MODE;
 import static org.hibernate.query.KeyedPage.KeyInterpretation.KEY_OF_FIRST_ON_NEXT_PAGE;
 import static org.hibernate.query.spi.SqlOmittingQueryOptions.omitSqlQueryOptions;
-import static org.hibernate.query.sqm.internal.AppliedGraphs.containsCollectionFetches;
 import static org.hibernate.query.sqm.internal.KeyBasedPagination.paginate;
 import static org.hibernate.query.sqm.internal.SqmInterpretationsKey.createInterpretationsKey;
 import static org.hibernate.query.sqm.internal.SqmUtil.isSelectionAssignableToResultType;
@@ -203,8 +202,7 @@ public class SqmSelectionQueryImpl<R> extends AbstractSqmSelectionQuery<R>
 
 	}
 
-	// Used by Hibernate Reactive
-	public <E> SqmSelectionQueryImpl(AbstractSqmSelectionQuery<?> original, KeyedPage<E> keyedPage) {
+	<E> SqmSelectionQueryImpl(AbstractSqmSelectionQuery<?> original, KeyedPage<E> keyedPage) {
 		super( original );
 
 		final var page = keyedPage.getPage();
@@ -399,28 +397,18 @@ public class SqmSelectionQueryImpl<R> extends AbstractSqmSelectionQuery<R>
 
 	protected List<R> doList() {
 		final var statement = getSqmStatement();
-		final var queryOptions = getQueryOptions();
 		final boolean containsCollectionFetches =
-				statement.containsCollectionFetches()
-						|| containsCollectionFetches( queryOptions );
-		final boolean hasLimit = hasLimit( statement, queryOptions );
-		final boolean limitInMemory = shouldApplyLimitInMemory( statement, queryOptions );
+				//TODO: why is this different from QuerySqmImpl.doList()?
+				statement.containsCollectionFetches();
+		final boolean hasLimit = hasLimit( statement, getQueryOptions() );
 		final boolean needsDistinct = needsDistinct( containsCollectionFetches, hasLimit, statement );
-		final boolean paginationInSql =
-				hasLimit && containsCollectionFetches && !limitInMemory && isPaginationPushedToDerivedTable();
-		final boolean applyLimitInMemory =
-				limitInMemory
-					|| hasLimit && containsCollectionFetches && !paginationInSql;
 		final var list =
 				resolveQueryPlan()
-						.performList( executionContext( hasLimit, containsCollectionFetches, limitInMemory ) );
-		return needsDistinct
-				? handleDistinct( applyLimitInMemory, statement, list )
-				: applyLimitInMemory ? this.handleDistinct( true, statement, list ) : list;
+						.performList( executionContext( hasLimit, containsCollectionFetches ) );
+		return needsDistinct ? handleDistinct( hasLimit, statement, list ) : list;
 	}
 
-	@Override
-	List<R> handleDistinct(boolean hasLimit, SqmSelectStatement<?> statement, List<R> list) {
+	private List<R> handleDistinct(boolean hasLimit, SqmSelectStatement<?> statement, List<R> list) {
 		int includedCount = -1;
 		// NOTE: 'firstRow' is zero-based
 		final int first = first( hasLimit, statement );
@@ -443,46 +431,31 @@ public class SqmSelectionQueryImpl<R> extends AbstractSqmSelectionQuery<R>
 	}
 
 	// TODO: very similar to QuerySqmImpl.executionContextForDoList()
-	private DomainQueryExecutionContext executionContext(
-			boolean hasLimit,
-			boolean containsCollectionFetches,
-			boolean limitInMemory) {
-		if ( limitInMemory ) {
-			return executionContext();
-		}
-		else if ( hasLimit && containsCollectionFetches ) {
-			if ( !isPaginationPushedToDerivedTable() ) {
-				errorOrLogForPaginationWithCollectionFetch();
+	private DomainQueryExecutionContext executionContext(boolean hasLimit, boolean containsCollectionFetches) {
+		if ( hasLimit && containsCollectionFetches ) {
+			errorOrLogForPaginationWithCollectionFetch();
+			final var originalQueryOptions = getQueryOptions();
+			final var normalizedQueryOptions = omitSqlQueryOptions( originalQueryOptions, true, false );
+			if ( originalQueryOptions == normalizedQueryOptions ) {
+				return this;
 			}
-			return executionContext();
+			else {
+				return new DelegatingDomainQueryExecutionContext( this ) {
+					@Override
+					public QueryOptions getQueryOptions() {
+						return normalizedQueryOptions;
+					}
+				};
+			}
 		}
 		else {
 			return this;
-		}
-	}
-
-	private DomainQueryExecutionContext executionContext() {
-		final var originalQueryOptions = getQueryOptions();
-		final var normalizedQueryOptions =
-				omitSqlQueryOptions( originalQueryOptions, true, false );
-		if ( originalQueryOptions == normalizedQueryOptions ) {
-			return this;
-		}
-		else {
-			return new DelegatingDomainQueryExecutionContext( this ) {
-				@Override
-				public QueryOptions getQueryOptions() {
-					return normalizedQueryOptions;
-				}
-			};
 		}
 	}
 
 	@Override
 	protected ScrollableResultsImplementor<R> doScroll(ScrollMode scrollMode) {
-		return resolveQueryPlan()
-				.performScroll( scrollMode,
-						scrollExecutionContext( getSqmStatement() ) );
+		return resolveQueryPlan().performScroll( scrollMode, this );
 	}
 
 	@Override
@@ -662,7 +635,7 @@ public class SqmSelectionQueryImpl<R> extends AbstractSqmSelectionQuery<R>
 			hints.put( HINT_CACHEABLE, true );
 			putIfNotNull( hints, HINT_CACHE_REGION, getCacheRegion() );
 
-			putIfNotNull( hints, HINT_CACHE_MODE, queryOptions.getCacheMode() );
+			putIfNotNull( hints, HINT_CACHE_MODE, getCacheMode() );
 			putIfNotNull( hints, HINT_SPEC_CACHE_RETRIEVE_MODE, queryOptions.getCacheRetrieveMode() );
 			putIfNotNull( hints, HINT_SPEC_CACHE_STORE_MODE, queryOptions.getCacheStoreMode() );
 			putIfNotNull( hints, HINT_JAVAEE_CACHE_RETRIEVE_MODE, queryOptions.getCacheRetrieveMode() );

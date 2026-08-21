@@ -4,7 +4,6 @@
  */
 package org.hibernate.orm.test.generatedkeys.generated;
 
-import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MySQLDialect;
@@ -47,7 +46,6 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 @RequiresDialect(DB2Dialect.class)
 @RequiresDialect(SQLServerDialect.class)
 @SkipForDialect(dialectClass = TiDBDialect.class, reason = "TiDB does not support triggers")
-@SkipForDialect( dialectClass = SpannerPostgreSQLDialect.class, reason = "Spanner doesn't support triggers")
 public class GeneratedTest {
 
 	@Test

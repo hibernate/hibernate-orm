@@ -49,6 +49,7 @@ public class BasicAttributeMapping
 	private final boolean isFormula;
 	private final @Nullable String customReadExpression;
 	private final @Nullable String customWriteExpression;
+	private final @Nullable String columnDefinition;
 	private final @Nullable Long length;
 	private final @Nullable Integer arrayLength;
 	private final @Nullable Integer precision;
@@ -79,6 +80,7 @@ public class BasicAttributeMapping
 			boolean isFormula,
 			@Nullable String customReadExpression,
 			@Nullable String customWriteExpression,
+			@Nullable String columnDefinition,
 			@Nullable Long length,
 			@Nullable Integer precision,
 			@Nullable Integer scale,
@@ -105,6 +107,7 @@ public class BasicAttributeMapping
 				isFormula,
 				customReadExpression,
 				customWriteExpression,
+				columnDefinition,
 				length,
 				null,
 				precision,
@@ -134,6 +137,7 @@ public class BasicAttributeMapping
 			boolean isFormula,
 			@Nullable String customReadExpression,
 			@Nullable String customWriteExpression,
+			@Nullable String columnDefinition,
 			@Nullable Long length,
 			@Nullable Integer arrayLength,
 			@Nullable Integer precision,
@@ -163,9 +167,10 @@ public class BasicAttributeMapping
 		this.temporalPrecision = temporalPrecision;
 		this.selectablePath =
 				selectablePath == null
-						? new SelectablePath( isFormula ? attributeName : mappedColumnExpression )
+						? new SelectablePath( mappedColumnExpression )
 						: selectablePath;
 		this.isFormula = isFormula;
+		this.columnDefinition = columnDefinition;
 		this.length = length;
 		this.arrayLength = arrayLength;
 		this.precision = precision;
@@ -232,6 +237,7 @@ public class BasicAttributeMapping
 				selectableMapping.isFormula(),
 				selectableMapping.getCustomReadExpression(),
 				selectableMapping.getCustomWriteExpression(),
+				selectableMapping.getColumnDefinition(),
 				selectableMapping.getLength(),
 				selectableMapping.getArrayLength(),
 				selectableMapping.getPrecision(),
@@ -325,6 +331,11 @@ public class BasicAttributeMapping
 	@Override
 	public String getWriteExpression() {
 		return customWriteExpression;
+	}
+
+	@Override
+	public @Nullable String getColumnDefinition() {
+		return columnDefinition;
 	}
 
 	@Override

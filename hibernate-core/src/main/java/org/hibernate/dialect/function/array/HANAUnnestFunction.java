@@ -9,8 +9,6 @@ import java.util.List;
 import java.util.Set;
 
 import org.hibernate.QueryException;
-import org.hibernate.dialect.function.xml.HANAXmlTableFunction;
-import org.hibernate.sql.ast.tree.predicate.PredicateContainer;
 import org.hibernate.type.descriptor.jdbc.XmlHelper;
 import org.hibernate.dialect.function.json.ExpressionTypeHelper;
 import org.hibernate.dialect.function.json.HANAJsonValueFunction;
@@ -48,6 +46,7 @@ import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.from.FunctionTableGroup;
 import org.hibernate.sql.ast.tree.from.StandardTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableGroupProducer;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.predicate.NullnessPredicate;
@@ -68,7 +67,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public class HANAUnnestFunction extends UnnestFunction {
 
 	public HANAUnnestFunction() {
-		super( "v", "i", true );
+		super( "v", "i" );
 	}
 
 	@Override
@@ -136,19 +135,13 @@ public class HANAUnnestFunction extends UnnestFunction {
 							final TableGroup parentTableGroup = querySpec.getFromClause().queryTableGroups(
 									tg -> tg.findTableGroupJoin( functionTableGroup ) == null ? null : tg
 							);
-							final PredicateContainer predicateContainer;
-							if ( parentTableGroup != null ) {
-								predicateContainer = parentTableGroup.findTableGroupJoin( functionTableGroup );
-							}
-							else {
-								predicateContainer = querySpec;
-							}
+							final TableGroupJoin join = parentTableGroup.findTableGroupJoin( functionTableGroup );
 							final Expression lhs = createExpression( tableQualifier, idColumns );
 							final Expression rhs = createExpression(
 									functionTableGroup.getPrimaryTableReference().getIdentificationVariable(),
 									idColumns
 							);
-							predicateContainer.applyPredicate( new ComparisonPredicate( lhs, ComparisonOperator.EQUAL, rhs ) );
+							join.applyPredicate( new ComparisonPredicate( lhs, ComparisonOperator.EQUAL, rhs ) );
 
 							final String tableName = cteName;
 							final List<CteColumn> cteColumns = List.of(
@@ -457,12 +450,7 @@ public class HANAUnnestFunction extends UnnestFunction {
 		if ( containerSqlTypeCode == SqlTypes.JSON_ARRAY ) {
 			return HANAJsonValueFunction.jsonValueReturningType( ddlType );
 		}
-		else if ( containerSqlTypeCode == SqlTypes.XML_ARRAY ) {
-			return HANAXmlTableFunction.xmlValueReturningType( sqlTypedMapping, ddlType );
-		}
-		else {
-			return ddlType;
-		}
+		return ddlType;
 	}
 
 	@Override

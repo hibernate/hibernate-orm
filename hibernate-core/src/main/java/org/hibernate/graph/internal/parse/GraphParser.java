@@ -4,19 +4,17 @@
  */
 package org.hibernate.graph.internal.parse;
 
-import org.hibernate.UnknownEntityTypeException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.grammars.graph.GraphLanguageParser;
 import org.hibernate.grammars.graph.GraphLanguageParserBaseVisitor;
 import org.hibernate.graph.GraphNode;
 import org.hibernate.graph.InvalidGraphException;
 import org.hibernate.graph.spi.AttributeNodeImplementor;
-import org.hibernate.graph.spi.GraphImplementor;
 import org.hibernate.graph.spi.GraphParserEntityNameResolver;
+import org.hibernate.graph.spi.GraphImplementor;
 import org.hibernate.graph.spi.SubGraphImplementor;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
-import org.hibernate.metamodel.model.domain.EntityDomainType;
 
 import static org.hibernate.graph.internal.GraphParserLogging.PARSING_LOGGER;
 import static org.hibernate.internal.util.StringHelper.repeat;
@@ -30,7 +28,7 @@ public class GraphParser extends GraphLanguageParserBaseVisitor<GraphNode<?>> {
 	private final GraphParserEntityNameResolver entityNameResolver;
 
 	private final Stack<GraphImplementor<?>> graphStack = new StandardStack<>();
-	private final Stack<AttributeNodeImplementor<?, ?, ?>> attributeNodeStack = new StandardStack<>();
+	private final Stack<AttributeNodeImplementor<?,?,?>> attributeNodeStack = new StandardStack<>();
 	private final Stack<SubGraphGenerator> graphSourceStack = new StandardStack<>();
 
 	public GraphParser(GraphParserEntityNameResolver entityNameResolver) {
@@ -40,6 +38,7 @@ public class GraphParser extends GraphLanguageParserBaseVisitor<GraphNode<?>> {
 	/**
 	 * @apiNote It is important that this form only be used after the session-factory is fully
 	 * initialized, especially the {@linkplain SessionFactoryImplementor#getJpaMetamodel()} JPA metamodel}.
+	 *
 	 * @see GraphParser#GraphParser(GraphParserEntityNameResolver)
 	 */
 	public GraphParser(SessionFactoryImplementor sessionFactory) {
@@ -51,7 +50,7 @@ public class GraphParser extends GraphLanguageParserBaseVisitor<GraphNode<?>> {
 	}
 
 	@Override
-	public AttributeNodeImplementor<?, ?, ?> visitAttributeNode(GraphLanguageParser.AttributeNodeContext attributeNodeContext) {
+	public AttributeNodeImplementor<?,?,?> visitAttributeNode(GraphLanguageParser.AttributeNodeContext attributeNodeContext) {
 		final var attributePathContext = attributeNodeContext.attributePath();
 		final var attributeQualifierContext = attributePathContext.attributeQualifier();
 
@@ -111,37 +110,7 @@ public class GraphParser extends GraphLanguageParserBaseVisitor<GraphNode<?>> {
 		}
 	}
 
-	private SubGraphImplementor<?> createSubGraph(AttributeNodeImplementor<?, ?, ?> attributeNode, String subTypeName) {
-
-		final var shouldCreateTreatedSubgraph = attributeNode == null && subTypeName != null;
-
-		if ( shouldCreateTreatedSubgraph ) {
-			final var currentGraph = graphStack.getCurrent();
-
-			final EntityDomainType entityDomainType = entityNameResolver.resolveEntityName( subTypeName );
-
-			if ( entityDomainType == null ) {
-				throw new UnknownEntityTypeException( subTypeName );
-			}
-
-			return currentGraph.addTreatedSubgraph(
-					entityDomainType
-			);
-
-		}
-
-
-		final var subGraphCreator = graphSourceStack.getCurrent();
-
-		return subGraphCreator.createSubGraph(
-				attributeNode,
-				subTypeName,
-				entityNameResolver
-		);
-
-	}
-
-	private AttributeNodeImplementor<?, ?, ?> resolveAttributeNode(String attributeName) {
+	private AttributeNodeImplementor<?,?,?> resolveAttributeNode(String attributeName) {
 		final var currentGraph = graphStack.getCurrent();
 		assert currentGraph != null;
 
@@ -166,8 +135,8 @@ public class GraphParser extends GraphLanguageParserBaseVisitor<GraphNode<?>> {
 	@Override
 	public SubGraphImplementor<?> visitSubGraph(GraphLanguageParser.SubGraphContext subGraphContext) {
 		final String subTypeName =
-				subGraphContext.subTypeIndicator() == null ? null
-						: subGraphContext.subTypeIndicator().TYPE_NAME().getText();
+				subGraphContext.typeIndicator() == null ? null
+						: subGraphContext.typeIndicator().TYPE_NAME().getText();
 
 		if ( PARSING_LOGGER.isTraceEnabled() ) {
 			PARSING_LOGGER.tracef(
@@ -178,8 +147,13 @@ public class GraphParser extends GraphLanguageParserBaseVisitor<GraphNode<?>> {
 		}
 
 		final var attributeNode = attributeNodeStack.getCurrent();
+		final var subGraphCreator = graphSourceStack.getCurrent();
 
-		final var subGraph = createSubGraph( attributeNode, subTypeName );
+		final var subGraph = subGraphCreator.createSubGraph(
+				attributeNode,
+				subTypeName,
+				entityNameResolver
+		);
 
 		graphStack.push( subGraph );
 

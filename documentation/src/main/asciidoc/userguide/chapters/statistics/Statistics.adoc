@@ -68,7 +68,6 @@ https://docs.hibernate.org/orm/{majorMinorVersion}/javadocs/org/hibernate/stat/S
 ==== Transaction statistics methods
 
 `getSuccessfulTransactionCount`:: The number of transactions that completed successfully.
-`getFailedTransactionCount`:: The number of transactions that did not complete successfully, that is, which were rolled back.
 `getTransactionCount`:: The number of transactions we know to have completed.
 
 [[statistics-concurrency-control]]

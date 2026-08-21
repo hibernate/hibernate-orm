@@ -17,6 +17,7 @@ import org.hibernate.Internal;
 import org.hibernate.LockMode;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.internal.ProxyUtil;
+import org.hibernate.internal.util.MarkerObject;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
@@ -41,6 +42,10 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * @author Steve Ebersole
  */
 public interface PersistenceContext {
+	/**
+	 * Marker object used to indicate (via reference checking) that no row was returned.
+	 */
+	Object NO_ROW = new MarkerObject( "NO_ROW" );
 
 	boolean isStateless();
 
@@ -121,12 +126,12 @@ public interface PersistenceContext {
 	 * <ol>
 	 * <li>no snapshot is obtained from the database if not already cached,
 	 *     and
-	 * <li>an entry of {@code NO_ROW} here results in an exception.
+	 * <li>an entry of {@link #NO_ROW} here results in an exception.
 	 * </ol>
 	 *
 	 * @param key The entity key for which to retrieve the cached snapshot
 	 * @return The cached snapshot
-	 * @throws IllegalStateException if the cached snapshot was {@code NO_ROW}.
+	 * @throws IllegalStateException if the cached snapshot was {@link #NO_ROW}.
 	 */
 	Object[] getCachedDatabaseSnapshot(EntityKey key);
 
@@ -378,18 +383,7 @@ public interface PersistenceContext {
 	/**
 	 * add a collection we just loaded up (still needs initializing)
 	 */
-	void addUninitializedCollection(
-			CollectionPersister persister,
-			PersistentCollection<?> collection,
-			Object id,
-			boolean readOnly);
-
-	default void addUninitializedCollection(
-			CollectionPersister persister,
-			PersistentCollection<?> collection,
-			Object id) {
-		addUninitializedCollection( persister, collection, id, false );
-	}
+	void addUninitializedCollection(CollectionPersister persister, PersistentCollection<?> collection, Object id);
 
 	/**
 	 * add a detached uninitialized collection
@@ -407,7 +401,9 @@ public interface PersistenceContext {
 	 * add an (initialized) collection that was created by another session and passed
 	 * into update() (ie. one with a snapshot and existing state on the database)
 	 */
-	void addInitializedDetachedCollection(CollectionPersister collectionPersister, PersistentCollection<?> collection);
+	void addInitializedDetachedCollection(
+			CollectionPersister collectionPersister,
+			PersistentCollection<?> collection);
 
 	/**
 	 * Replaces a directly accessible collection with the given one
@@ -424,15 +420,7 @@ public interface PersistenceContext {
 	CollectionEntry addInitializedCollection(
 			CollectionPersister persister,
 			PersistentCollection<?> collection,
-			Object id,
-			boolean readOnly);
-
-	default CollectionEntry addInitializedCollection(
-			CollectionPersister persister,
-			PersistentCollection<?> collection,
-			Object id) {
-		return addInitializedCollection( persister, collection, id, false );
-	}
+			Object id);
 
 	/**
 	 * Get the collection instance associated with the {@code CollectionKey}
@@ -571,32 +559,14 @@ public interface PersistenceContext {
 	 * Provides access to the entity/EntityEntry combos associated with the persistence context in a manner that
 	 * is safe from reentrant access.  Specifically, it is safe from additions/removals while iterating.
 	 */
-	@SuppressWarnings( "unchecked" )
-	default Map.Entry<Object,EntityEntry>[] reentrantSafeEntityEntries() {
-		final var managedEntities = reentrantSafeManagedEntities();
-		final var entityEntities = new Map.Entry[managedEntities.length];
-		for (var i = 0; i < managedEntities.length; i++) {
-			final var managedEntity = managedEntities[i];
-			entityEntities[i] = Map.entry(
-					managedEntity.$$_hibernate_getEntityInstance(),
-					managedEntity.$$_hibernate_getEntityEntry()
-			);
-		}
-		return entityEntities;
-	}
-
-	/**
-	 * Provides access to the managed entities associated with the persistence context in a manner that
-	 * is safe from reentrant access.  Specifically, it is safe from additions/removals while iterating.
-	 */
-	ManagedEntity[] reentrantSafeManagedEntities();
+	Map.Entry<Object,EntityEntry>[] reentrantSafeEntityEntries();
 
 //	/**
 //	 * Get the mapping from entity instance to entity entry
 //	 *
 //	 * @deprecated Due to the introduction of EntityEntryContext and bytecode enhancement; only valid really for
 //	 * sizing, see {@link #getNumberOfManagedEntities}.  For iterating the entity/EntityEntry combos, see
-//	 * {@link #reentrantSafeManagedEntities}
+//	 * {@link #reentrantSafeEntityEntries}
 //	 */
 //	@Deprecated
 //	Map getEntityEntries();

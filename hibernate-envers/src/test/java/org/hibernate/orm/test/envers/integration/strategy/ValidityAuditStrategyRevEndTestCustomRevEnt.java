@@ -3,10 +3,6 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.envers.integration.strategy;
-import org.hibernate.testing.orm.junit.DialectFeatureChecks;
-
-import org.hibernate.testing.orm.junit.RequiresDialectFeature;
-
 
 import java.sql.Types;
 import java.util.Arrays;
@@ -45,7 +41,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  *
  * @author Erik-Berndt Scheper
  */
-@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsTableWithoutPrimaryKey.class)
 @EnversTest(auditStrategies = ValidityAuditStrategy.class)
 @Jpa(
 		annotatedClasses = {

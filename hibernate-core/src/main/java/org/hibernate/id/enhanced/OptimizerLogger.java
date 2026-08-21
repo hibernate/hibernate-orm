@@ -16,7 +16,6 @@ import org.jboss.logging.annotations.MessageLogger;
 import org.jboss.logging.annotations.ValidIdRange;
 
 import java.lang.invoke.MethodHandles;
-import java.util.Locale;
 
 import static org.jboss.logging.Logger.Level.DEBUG;
 import static org.jboss.logging.Logger.Level.INFO;
@@ -39,8 +38,7 @@ public interface OptimizerLogger extends BasicLogger {
 	OptimizerLogger OPTIMIZER_MESSAGE_LOGGER = Logger.getMessageLogger(
 			MethodHandles.lookup(),
 			OptimizerLogger.class,
-			NAME,
-			Locale.ROOT
+			NAME
 	);
 
 	@LogMessage(level = TRACE)

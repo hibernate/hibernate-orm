@@ -7,7 +7,6 @@ package org.hibernate.orm.test.envers.integration.inheritance.single.discriminat
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
-import jakarta.persistence.Column;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
@@ -21,7 +20,6 @@ public class ClassTypeEntity {
 	@GeneratedValue
 	private Long id;
 
-	@Column(name = "entity_type")
 	private String type;
 
 	public boolean equals(Object o) {

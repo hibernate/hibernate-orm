@@ -6,6 +6,7 @@ package org.hibernate.query.sqm.tree.expression;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.Locale;
 
 /**
  * @author Steve Ebersole
@@ -19,25 +20,41 @@ public enum NumericTypeCategory {
 	BIG_DECIMAL;
 
 	public <N extends Number> N parseLiteralValue(String value) {
-		return switch ( this ) {
-			case INTEGER ->
+		switch ( this ) {
+			case INTEGER: {
 				//noinspection unchecked
-					(N) Integer.valueOf( value );
-			case LONG ->
+				return (N) Integer.valueOf( value );
+			}
+			case LONG: {
 				//noinspection unchecked
-					(N) Long.valueOf( value );
-			case BIG_INTEGER ->
+				return (N) Long.valueOf( value );
+			}
+			case BIG_INTEGER: {
 				//noinspection unchecked
-					(N) new BigInteger( value );
-			case DOUBLE ->
+				return (N) new BigInteger( value );
+			}
+			case DOUBLE: {
 				//noinspection unchecked
-					(N) Double.valueOf( value );
-			case FLOAT ->
+				return (N) Double.valueOf( value );
+			}
+			case FLOAT: {
 				//noinspection unchecked
-					(N) Float.valueOf( value );
-			case BIG_DECIMAL ->
+				return (N) Float.valueOf( value );
+			}
+			case BIG_DECIMAL: {
 				//noinspection unchecked
-					(N) new BigDecimal( value );
-		};
+				return (N) new BigDecimal( value );
+			}
+			default: {
+				throw new IllegalStateException(
+						String.format(
+								Locale.ROOT,
+								"Unable to parse numeric literal value `%s` - %s",
+								value,
+								name()
+						)
+				);
+			}
+		}
 	}
 }

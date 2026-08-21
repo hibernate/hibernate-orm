@@ -54,23 +54,19 @@ public class StandardJdbcValuesMapping implements JdbcValuesMapping {
 			List<DomainResult<?>> domainResults) {
 		this.sqlSelections = sqlSelections;
 		this.domainResults = domainResults;
-		// The native query might select more columns than the number of selections,
-		// so we need to compute the effective row size from the max values array position
-		int maxPosition = -1;
-		boolean needsResolve = false;
-		for ( SqlSelection sqlSelection : sqlSelections ) {
-			maxPosition = Math.max( maxPosition, sqlSelection.getValuesArrayPosition() );
-			needsResolve = needsResolve
-					|| sqlSelection instanceof SqlSelectionImpl selection && selection.needsResolve();
-		}
-		final int rowSize = maxPosition + 1;
+
+		final int rowSize = sqlSelections.size();
 		final var valueIndexesToCache = new BitSet( rowSize );
 		for ( var domainResult : domainResults ) {
 			domainResult.collectValueIndexesToCache( valueIndexesToCache );
 		}
 		final int[] valueIndexesToCacheIndexes = new int[rowSize];
 		int cacheIndex = 0;
-		for ( int i = 0; i < rowSize; i++ ) {
+		boolean needsResolve = false;
+		for ( int i = 0; i < valueIndexesToCacheIndexes.length; i++ ) {
+			final var sqlSelection = sqlSelections.get( i );
+			needsResolve = needsResolve
+					|| sqlSelection instanceof SqlSelectionImpl selection && selection.needsResolve();
 			if ( valueIndexesToCache.get( i ) ) {
 				valueIndexesToCacheIndexes[i] = cacheIndex++;
 			}

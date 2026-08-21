@@ -5,7 +5,6 @@
 package org.hibernate.engine.spi;
 
 import java.sql.Connection;
-import java.time.Instant;
 import java.util.TimeZone;
 import java.util.function.UnaryOperator;
 
@@ -235,18 +234,6 @@ public abstract class AbstractDelegatingSharedSessionBuilder implements SharedSe
 	@Override
 	public SharedSessionBuilder subselectFetchEnabled(boolean subselectFetchEnabled) {
 		delegate.subselectFetchEnabled( subselectFetchEnabled );
-		return this;
-	}
-
-	@Override
-	public SharedSessionBuilder asOf(Instant instant) {
-		delegate.asOf( instant );
-		return this;
-	}
-
-	@Override
-	public SharedSessionBuilder atChangeset(Object changesetId) {
-		delegate.atChangeset( changesetId );
 		return this;
 	}
 }

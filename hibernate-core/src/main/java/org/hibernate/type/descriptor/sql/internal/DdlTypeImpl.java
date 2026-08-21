@@ -7,13 +7,11 @@ package org.hibernate.type.descriptor.sql.internal;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.metamodel.mapping.SqlExpressible;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.java.CharacterJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.sql.DdlType;
-import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 
 /**
  * Descriptor for a SQL type.
@@ -27,12 +25,11 @@ public class DdlTypeImpl implements DdlType {
 	private final String typeNamePattern;
 	private final String castTypeNamePattern;
 	private final String castTypeName;
-	private final String narrowCastTypeName;
 	private final boolean castTypeNameIsStatic;
 	final Dialect dialect;
 
 	public DdlTypeImpl(int sqlTypeCode, String typeNamePattern, Dialect dialect) {
-		this( sqlTypeCode, typeNamePattern, typeNamePattern, typeNamePattern, typeNamePattern, dialect );
+		this( sqlTypeCode, typeNamePattern, typeNamePattern, typeNamePattern, dialect );
 	}
 
 	public DdlTypeImpl(
@@ -40,7 +37,7 @@ public class DdlTypeImpl implements DdlType {
 			String typeNamePattern,
 			String castTypeName,
 			Dialect dialect) {
-		this( sqlTypeCode, typeNamePattern, null, castTypeName, castTypeName, dialect );
+		this( sqlTypeCode, typeNamePattern, null, castTypeName, dialect );
 	}
 
 	public DdlTypeImpl(
@@ -49,7 +46,7 @@ public class DdlTypeImpl implements DdlType {
 			String typeNamePattern,
 			String castTypeName,
 			Dialect dialect) {
-		this( sqlTypeCode, isLob, typeNamePattern, null, castTypeName, castTypeName, dialect );
+		this( sqlTypeCode, isLob, typeNamePattern, null, castTypeName, dialect );
 	}
 
 	public DdlTypeImpl(
@@ -58,7 +55,7 @@ public class DdlTypeImpl implements DdlType {
 			String castTypeNamePattern, //optional, usually null
 			String castTypeName,
 			Dialect dialect) {
-		this( sqlTypeCode, typeNamePattern, castTypeNamePattern, castTypeName, castTypeName, dialect );
+		this( sqlTypeCode, JdbcType.isLob( sqlTypeCode ), typeNamePattern, castTypeNamePattern, castTypeName, dialect );
 	}
 
 	public DdlTypeImpl(
@@ -67,34 +64,12 @@ public class DdlTypeImpl implements DdlType {
 			String typeNamePattern,
 			String castTypeNamePattern, //optional, usually null
 			String castTypeName,
-			Dialect dialect) {
-		this( sqlTypeCode, isLob, typeNamePattern, castTypeNamePattern, castTypeName, castTypeName, dialect );
-	}
-
-	public DdlTypeImpl(
-			int sqlTypeCode,
-			String typeNamePattern,
-			String castTypeNamePattern, //optional, usually null
-			String castTypeName,
-			String narrowCastTypeName,
-			Dialect dialect) {
-		this( sqlTypeCode, JdbcType.isLob( sqlTypeCode ), typeNamePattern, castTypeNamePattern, castTypeName, narrowCastTypeName, dialect );
-	}
-
-	public DdlTypeImpl(
-			int sqlTypeCode,
-			boolean isLob,
-			String typeNamePattern,
-			String castTypeNamePattern, //optional, usually null
-			String castTypeName,
-			String narrowCastTypeName,
 			Dialect dialect) {
 		this.sqlTypeCode = sqlTypeCode;
 		this.isLob = isLob;
 		this.typeNamePattern = typeNamePattern;
 		this.castTypeNamePattern = castTypeNamePattern;
 		this.castTypeName = castTypeName;
-		this.narrowCastTypeName = narrowCastTypeName;
 		this.castTypeNameIsStatic =
 				!castTypeName.contains( "$s" )
 				&& !castTypeName.contains( "$p" )
@@ -132,8 +107,7 @@ public class DdlTypeImpl implements DdlType {
 
 	@Override
 	public String getCastTypeName(JdbcType jdbcType, JavaType<?> javaType, Long length, Integer precision, Integer scale) {
-		if ( length == null && precision == null
-				|| jdbcType.isInteger() ) {  // workaround for ordinal enums represented as TINYINT(255)
+		if ( length == null && precision == null ) {
 			return getCastTypeName( jdbcType, javaType );
 		}
 		else {
@@ -143,22 +117,9 @@ public class DdlTypeImpl implements DdlType {
 				//needed for cast(x as BigInteger(p))
 				size.setScale( javaType.getDefaultSqlScale( dialect, jdbcType ) );
 			}
-			if ( castTypeNamePattern != null ) {
-				return replace( castTypeNamePattern, size.getLength(), size.getPrecision(), size.getScale() );
-			}
-			else if ( castTypeNameIsStatic ) {
-				// the dialect's castType is a static literal like "varchar" with
-				// no size placeholders; fall back to the DDL type pattern so that
-				// sized casts like 'cast(x as varchar(N))' still produce a sized
-				// target (important on dialects where castType is deliberately
-				// unsized, e.g. H2)
-				return getTypeName( size.getLength(), size.getPrecision(), size.getScale() );
-			}
-			else {
-				// castTypeName itself is a pattern like "decimal($p,$s)" (used e.g.
-				// on MySQL for FLOAT/DOUBLE), so use it directly with substitution
-				return replace( castTypeName, size.getLength(), size.getPrecision(), size.getScale() );
-			}
+			return castTypeNamePattern == null
+					? getTypeName( size.getLength(), size.getPrecision(), size.getScale() )
+					: replace( castTypeNamePattern, size.getLength(), size.getPrecision(), size.getScale() );
 		}
 	}
 
@@ -178,62 +139,18 @@ public class DdlTypeImpl implements DdlType {
 		}
 	}
 
-	@Override
-	public String getNarrowCastTypeName(Size columnSize, SqlExpressible type, DdlTypeRegistry ddlTypeRegistry) {
-		if ( narrowCastTypeName.equals( castTypeName ) ) {
-			// no narrowing configured — delegate to cast-type for consistent
-			// handling of the CharacterJavaType special case, the
-			// castTypeNameIsStatic/size-fallback logic, etc.
-			return getCastTypeName( columnSize, type, ddlTypeRegistry );
-		}
-		final JdbcType jdbcType = type.getJdbcMapping().getJdbcType();
-		final JavaType<?> javaType = type.getJdbcMapping().getJavaTypeDescriptor();
-		final Size size = dialect.getSizeStrategy().resolveSize(
-				jdbcType,
-				javaType,
-				columnSize.getPrecision(),
-				columnSize.getScale(),
-				columnSize.getLength()
-		);
-		// if the pattern has $l but resolveSize produced no length (e.g. for a
-		// LOB-source JdbcType whose DdlTypeCode isn't in the standard switch),
-		// fall back to the dialect-default length for the narrow target type
-		if ( size.getLength() == null && narrowCastTypeName.contains( "$l" ) ) {
-			size.setLength( narrowDefaultLength( sqlTypeCode ) );
-		}
-		// LOB columns often carry Length.LONG32 (Integer.MAX_VALUE), which
-		// overflows any VARCHAR-family cast target; clamp to the dialect's
-		// max for the corresponding VARCHAR family
-		if ( size.getLength() != null ) {
-			switch ( sqlTypeCode ) {
-				case SqlTypes.CLOB, SqlTypes.LONG32VARCHAR ->
-						size.setLength( Math.min( size.getLength(), dialect.getMaxVarcharLength() ) );
-				case SqlTypes.NCLOB, SqlTypes.LONG32NVARCHAR ->
-						size.setLength( Math.min( size.getLength(), dialect.getMaxNVarcharLength() ) );
-				case SqlTypes.BLOB, SqlTypes.LONG32VARBINARY ->
-						size.setLength( Math.min( size.getLength(), dialect.getMaxVarbinaryLength() ) );
-			}
-		}
-		return replace( narrowCastTypeName, size.getLength(), size.getPrecision(), size.getScale() );
-	}
-
-	private Long narrowDefaultLength(int sqlTypeCode) {
-		return switch ( sqlTypeCode ) {
-			case SqlTypes.CLOB, SqlTypes.LONG32VARCHAR, SqlTypes.VARCHAR -> (long) dialect.getMaxVarcharLength();
-			case SqlTypes.NCLOB, SqlTypes.LONG32NVARCHAR, SqlTypes.NVARCHAR -> (long) dialect.getMaxNVarcharLength();
-			case SqlTypes.BLOB, SqlTypes.LONG32VARBINARY, SqlTypes.VARBINARY -> (long) dialect.getMaxVarbinaryLength();
-			default -> null;
-		};
-	}
-
 	//TODO: move this to JdbcType??
 	private Long defaultLength(JdbcType jdbcType) {
-		return switch ( jdbcType.getDdlTypeCode() ) {
-			case SqlTypes.VARCHAR -> (long) dialect.getMaxVarcharLength();
-			case SqlTypes.NVARCHAR -> (long) dialect.getMaxNVarcharLength();
-			case SqlTypes.VARBINARY -> (long) dialect.getMaxVarbinaryLength();
-			default -> null;
-		};
+		switch ( jdbcType.getDdlTypeCode() ) {
+			case SqlTypes.VARCHAR:
+				return (long) dialect.getMaxVarcharLength();
+			case SqlTypes.NVARCHAR:
+				return (long) dialect.getMaxNVarcharLength();
+			case SqlTypes.VARBINARY:
+				return (long) dialect.getMaxVarbinaryLength();
+			default:
+				return null;
+		}
 	}
 
 	/**

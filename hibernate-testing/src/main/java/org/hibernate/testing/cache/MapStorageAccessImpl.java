@@ -17,11 +17,14 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
  * @author Steve Ebersole
  */
 public class MapStorageAccessImpl implements DomainDataStorageAccess {
-	private ConcurrentMap<Object,Object> data;
+	private ConcurrentMap data;
 
 	@Internal
 	public Object getFromData(Object key) {
-		return data == null ? null : data.get( key );
+		if ( data == null ) {
+			return null;
+		}
+		return data.get( key );
 	}
 
 	@Override
@@ -35,13 +38,14 @@ public class MapStorageAccessImpl implements DomainDataStorageAccess {
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public void putIntoCache(Object key, Object value, SharedSessionContractImplementor session) {
 		getOrMakeDataMap().put( key, value );
 	}
 
-	protected ConcurrentMap<Object,Object> getOrMakeDataMap() {
+	protected ConcurrentMap getOrMakeDataMap() {
 		if ( data == null ) {
-			data = new ConcurrentHashMap<>();
+			data = new ConcurrentHashMap();
 		}
 		return data;
 	}

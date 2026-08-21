@@ -52,6 +52,7 @@ public class IdBagSequenceTest {
 				.execute( EnumSet.of( TargetType.SCRIPT ), metadata );
 
 		String fileContent = new String( Files.readAllBytes( scriptFile.toPath() ) );
-		MatcherAssert.assertThat( fileContent.toLowerCase().contains( "create sequence seq_child_id" ) || fileContent.toLowerCase().contains( "create sequence if not exists seq_child_id" ), is( true ) );
+		MatcherAssert.assertThat( fileContent.toLowerCase().contains( "create sequence seq_child_id" ), is( true ) );
 	}
+
 }

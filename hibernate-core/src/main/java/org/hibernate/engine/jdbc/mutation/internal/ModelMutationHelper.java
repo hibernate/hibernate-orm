@@ -15,6 +15,8 @@ import org.hibernate.StaleStateException;
 import org.hibernate.engine.jdbc.mutation.OperationResultChecker;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementGroup;
+import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
+import org.hibernate.engine.jdbc.spi.MutationStatementPreparer;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.values.GeneratedValuesMutationDelegate;
@@ -22,6 +24,7 @@ import org.hibernate.jdbc.TooManyRowsAffectedException;
 import org.hibernate.sql.model.MutationTarget;
 import org.hibernate.sql.model.MutationType;
 import org.hibernate.sql.model.PreparableMutationOperation;
+import org.hibernate.stat.spi.StatisticsImplementor;
 
 import static org.hibernate.engine.jdbc.mutation.internal.PreparedStatementGroupNone.GROUP_OF_NONE;
 
@@ -60,16 +63,14 @@ public class ModelMutationHelper {
 					batchPosition,
 					statementDetails.getSqlString()
 			);
-			return true;
 		}
 		catch (StaleStateException e) {
 			if ( !statementDetails.getMutatingTableDetails().isOptional() && affectedRowCount == 0 ) {
-				final String fullPath = mutationTarget.getNavigableRole().getFullPath();
-				final var statistics = sessionFactory.getStatistics();
+				final StatisticsImplementor statistics = sessionFactory.getStatistics();
 				if ( statistics.isStatisticsEnabled() ) {
-					statistics.optimisticFailure( fullPath );
+					statistics.optimisticFailure( mutationTarget.getNavigableRole().getFullPath() );
 				}
-				throw new StaleObjectStateException( fullPath, id, e );
+				throw new StaleObjectStateException( mutationTarget.getNavigableRole().getFullPath(), id, e );
 			}
 			return false;
 		}
@@ -87,6 +88,8 @@ public class ModelMutationHelper {
 		catch (Throwable t) {
 			return false;
 		}
+
+		return true;
 	}
 
 	public static PreparedStatementGroup toPreparedStatementGroup(
@@ -123,7 +126,7 @@ public class ModelMutationHelper {
 			PreparableMutationOperation jdbcMutation,
 			GeneratedValuesMutationDelegate delegate,
 			SharedSessionContractImplementor session) {
-		final var statement = delegate.prepareStatement( jdbcMutation.getSqlString(), session );
+		final PreparedStatement statement = delegate.prepareStatement( jdbcMutation.getSqlString(), session );
 		session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().register( null, statement );
 		return statement;
 	}
@@ -131,9 +134,9 @@ public class ModelMutationHelper {
 	public static PreparedStatement standardStatementPreparation(
 			PreparableMutationOperation jdbcMutation,
 			SharedSessionContractImplementor session) {
-		final var jdbcCoordinator = session.getJdbcCoordinator();
-		final var statementPreparer = jdbcCoordinator.getMutationStatementPreparer();
-		final var statement = statementPreparer.prepareStatement( jdbcMutation.getSqlString(), jdbcMutation.isCallable() );
+		final JdbcCoordinator jdbcCoordinator = session.getJdbcCoordinator();
+		final MutationStatementPreparer statementPreparer = jdbcCoordinator.getMutationStatementPreparer();
+		final PreparedStatement statement = statementPreparer.prepareStatement( jdbcMutation.getSqlString(), jdbcMutation.isCallable() );
 		session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().register( null, statement );
 		return statement;
 	}

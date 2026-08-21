@@ -6,8 +6,10 @@ package org.hibernate.orm.test.locking;
 
 import org.hibernate.Hibernate;
 
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -55,6 +57,8 @@ public class LockRefreshReferencedAndCascadingTest {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = InformixDialect.class,
+			reason = "Informix disallows FOR UPDATE with multi-table queries")
 	public void testRefreshBeforeRead(EntityManagerFactoryScope scope) {
 		scope.inTransaction(entityManager -> {
 			var m = entityManager.find( MainEntity.class, 0L );
@@ -100,6 +104,8 @@ public class LockRefreshReferencedAndCascadingTest {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = InformixDialect.class,
+			reason = "Informix disallows FOR UPDATE with multi-table queries")
 	public void testRefreshAfterRead(EntityManagerFactoryScope scope) {
 		scope.inTransaction(entityManager -> {
 			var m = entityManager.find( MainEntity.class, 0L );
@@ -123,6 +129,8 @@ public class LockRefreshReferencedAndCascadingTest {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = InformixDialect.class,
+			reason = "Informix disallows FOR UPDATE with multi-table queries")
 	public void testRefreshLockMode(EntityManagerFactoryScope scope) {
 		scope.inTransaction(entityManager -> {
 			var m = entityManager.find( MainEntity.class, 0L );
@@ -148,6 +156,8 @@ public class LockRefreshReferencedAndCascadingTest {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = InformixDialect.class,
+			reason = "Informix disallows FOR UPDATE with multi-table queries")
 	public void testFindWithLockMode(EntityManagerFactoryScope scope) {
 		scope.inTransaction(session -> {
 			var mainEntity = session.find( MainEntity.class, 0L, LockModeType.PESSIMISTIC_WRITE );

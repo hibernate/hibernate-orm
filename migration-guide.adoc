@@ -2,7 +2,7 @@
 :toc2:
 :sectanchors:
 :toclevels: 4
-:version: 7.4
+:version: 7.3
 :docsBase: https://docs.jboss.org/hibernate/orm
 :versionDocBase: {docsBase}/{version}
 :userGuideBase: {versionDocBase}/userguide/html_single/Hibernate_User_Guide.html
@@ -43,6 +43,8 @@ See the link:{releaseSeriesBase}#whats-new[website] for the list of new features
 
 This section describes changes to contracts (classes, interfaces, methods, etc.) which are considered https://hibernate.org/community/compatibility-policy/#api[API].
 
+The obsolete `@Columns` annotation was removed, since this is no longer used.
+
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // SPI changes
@@ -53,6 +55,16 @@ This section describes changes to contracts (classes, interfaces, methods, etc.)
 
 This section describes changes to contracts (classes, interfaces, methods, etc.) which are considered https://hibernate.org/community/compatibility-policy/#spi[SPI].
 
+=== Classmate removal
+
+The dependency on Classmate was removed, which had a minor impact on certain SPIs.
+In particular, `ClassmateContext` was completely removed.
+
+=== Raw types in JPA `Bootstrap`
+
+Raw `Map` types were eliminated from the signatures of methods of the class
+`org.hibernate.jpa.boot.spi.Bootstrap`.
+
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Changes in Behavior
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -62,75 +74,34 @@ This section describes changes to contracts (classes, interfaces, methods, etc.)
 
 This section describes changes in behavior that applications should be aware of.
 
-=== HQL `current date` and `local date` on Oracle
+=== Result deduplication
 
-Oracle has no true support for dates.
-Its `current_date` function produces a datetime.
-Starting with this release, the HQL expressions `current date` and `local date` translate to `trunc(current_date)`, which zeros out the time part.
+In Hibernate 6.x query result lists with duplicate results were handled in an
+ad hoc and inconsistent way by `getSingleResult()` and `getSingleResultOrNull()`.
+As of Hibernate 7.3, these methods _always_ throw when the result list contains
+more than one element (which is faithful to the documented semantics of these
+methods). If automatic deduplication is required, use:
 
-=== MySQL default max fetch depth
+[source,java]
+query.setResultListTransformer(ResultListTransformer.uniqueResultTransformer())
 
-Previously, `MySQLDialect` defined a dialect-level default value of `2` for the
-`hibernate.max_fetch_depth` configuration property.
+which collapses duplicate results according to value equality.
 
-As of Hibernate ORM {version}, this dialect-specific default has been removed.
-MySQL now behaves consistently with other dialects and relies on Hibernate’s
-general defaults or explicit user configuration.
+=== Envers association not-audited target mode
 
-Applications that relied on the previous implicit default should explicitly set
-`hibernate.max_fetch_depth` if required.
+Previously, if an association of an Envers `@Audited` entity pointing to another
+`@Audited` entity was defined as:
 
-=== Join fetching for eager @Any mappings
+[source,java]
+@ManyToOne
+@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
+private OtherEntity otherEntity;
 
-An `@Any` discriminated association mapping defaults to `fetch=EAGER`.
-Previously, such eager `@Any` associations were always fetched using a separate
-`SELECT` statement, which was inefficient. Eager `@Any` associations are now
-join fetched by default when an entity is loaded by id.
-
-=== Limits and fetch joins
-
-When pagination or a limit is used with a query which fetches a collection, the limit is now processed as part of the SQL query.
-To recover the previous behavior, set the query hint `org.hibernate.limitInMemory`.
-
-=== Schema actions now executed even without mapped entities
-
-Previously, if a persistence unit had no `@Entity` classes, all schema management
-actions (including `import.sql` execution) were silently skipped, even when explicitly
-configured via `hbm2ddl.auto` or `jakarta.persistence.schema-generation.database.action`.
-
-As of Hibernate {version}, schema actions are now processed regardless of whether any entities
-are mapped. This is the correct behavior, but it means that applications which have an
-`import.sql` file on the classpath by accident may now see it executed when it was
-previously ignored.
-
-=== Migration of Spanner PostgreSQL Dialect to core
-
-The `SpannerPostgreSQLDialect`, which was previously part of the `hibernate-community-dialects` artifact under the package name `org.hibernate.community.dialect`, has been migrated to the `hibernate-core` artifact and package name `org.hibernate.dialect`.
-
-Users currently using the community dialect must update their dialect configuration to use `org.hibernate.dialect.SpannerPostgreSQLDialect` (or rely on Hibernate's automatic dialect resolution).
-
-[[json-function-changes]]
-=== JSON function changes in ORM 7.4.4.Final
-
-JSON functions like `json_object` and `json_array` were previously not consistently behaving in a way that is compatible
-with the `AggregateSupport` of the `Dialect` when it comes to converting values of data types to JSON values,
-that have no obvious or multiple possible mappings, like binary, uuid, timestamp etc.
-Similarly, `json_value` was not able to extract data of such data types from a JSON document.
-
-To solve these problems and align the behavior with `AggregateSupport`, the implementations of `json_object`, `json_array` and `json_value`
-have been adapted for multiple dialects. Here is a quick outline of the behavior changes:
-
-==== DB2, Oracle, HSQLDB, MySQL
-
-* `json_array` and `json_object` now encode binary and UUID data as HEX string
-* `json_array` and `json_object` encode temporal data in ISO 8601 format with the `T` separator between date and time
-* `json_value` expects a HEX string when returning the `binary` or `uuid` type
-
-==== H2, PostgreSQL, CockroachDB, SQL Server
-
-* `json_array` and `json_object` now encodes binary data as HEX string
-* `json_value` expects a HEX string when returning the `binary` type
-
+the `targetAuditMode = RelationTargetAuditMode.NOT_AUDITED` setting was ignored,
+and when reading a historic version of the owning entity, the associated `OtherEntity`
+was also read from its historic audit table (at the relevant revision).
+As of Hibernate 7.3, the `NOT_AUDITED` setting is now respected: the associated
+`OtherEntity` is read from its current state, not from its historic audit table.
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // DDL changes
@@ -142,125 +113,12 @@ have been adapted for multiple dialects. Here is a quick outline of the behavior
 This section describes changes to DDL generated by the schema export tooling.
 Such changes typically do not impact programs using a relational schema managed externally to Hibernate.
 
-=== Unique constraints for `@ElementCollection` sets
+=== Not null constraints on version columns
 
-A unique constraint is now added to the table mapped by an `@ElementCollection` set where appropriate.
-
-=== `@CreationTimestamp` and `@UpdateTimestamp` columns inferred not-null
-
-A column mapped by a `@CreationTimestamp` or `@UpdateTimestamp` generator now has a `NOT NULL` constraint added automatically.
-
-[[oracle-value-lobs]]
-=== Oracle Value-Based LOBs
-
-On Oracle 23c and above, Hibernate now generates `lob(column) query as value` clauses in DDL
-for LOB columns mapped as Java types (e.g. `byte[]`, `String`) rather than JDBC LOB locator types
-(`java.sql.Blob`, `java.sql.Clob`).
-
-Value-based LOB access can improve performance by avoiding the use of LOB locators, allowing the
-database to treat LOB data inline.
-See the https://docs.oracle.com/en/database/oracle/oracle-database/26/adlob/value-based-LOBs.html[Oracle documentation] for more details.
-
-Value-based LOBs use https://docs.oracle.com/en/database/oracle/oracle-database/23/adlob/using-oracle-LOBs-storage.html[SecureFiles] storage,
-which requires a tablespace with Automatic Segment Space Management (ASSM).
-Attempting to create value LOB tables in a tablespace that uses Manual Segment Space Management
-(MSSM), such as the default `SYSTEM` tablespace, will fail with
-https://docs.oracle.com/en/database/oracle/oracle-database/23/errmg/ORA-43750.html[`ORA-43853`].
-Use an application user with a tablespace that supports ASSM (e.g. `USERS`)
-rather than the `SYSTEM` user.
-
-Additionally, some Oracle 23c versions contain a database kernel bug that causes `ORA-00600` internal
-errors when `FOR UPDATE ... SKIP LOCKED` queries are executed against tables with value-based LOBs.
-
-If you encounter either of these errors and cannot change the tablespace or Oracle version,
-the feature can be disabled by setting:
-
-[source,properties]
-----
-hibernate.dialect.oracle.value_lob_enabled=false
-----
-
-[[envers-migration]]
-== Optional: Migrating from Hibernate Envers to core `@Audited`
-
-NOTE: This migration is entirely optional. Hibernate Envers continues to work as before in {version}. However, if you wish to take advantage of the new core `@Audited` functionality, this section describes the steps involved.
-
-The new core audit support provides very similar functionality to Envers with a simpler programming model: you can use standard `Session` APIs (and even HQL queries!) within a temporal session opened via `atChangeset()`, or the more specialized `AuditLog` functionality, to access the audit logs of your entities.
-
-=== Annotation changes
-
-[cols="2,3"]
-|===
-| Envers | Core
-
-| `@org.hibernate.envers.Audited`
-| `@org.hibernate.annotations.Audited`
-
-| `@org.hibernate.envers.NotAudited`
-| `@org.hibernate.annotations.Audited.Excluded`
-
-| `@org.hibernate.envers.RevisionEntity`
-| `@org.hibernate.annotations.Changelog`
-
-| `@org.hibernate.envers.RevisionNumber`
-| `@org.hibernate.annotations.Changelog.ChangesetId`
-
-| `@org.hibernate.envers.RevisionTimestamp`
-| `@org.hibernate.annotations.Changelog.Timestamp`
-
-| `RevisionListener`
-| `org.hibernate.audit.ChangesetListener` (method: `newChangeset()`)
-
-| `EntityTrackingRevisionListener`
-| `org.hibernate.audit.EntityTrackingChangesetListener`
-|===
-
-=== Map your REVINFO table
-
-Define a `@Changelog` entity that maps to the existing `REVINFO` table (or use the built-in `DefaultChangelog`):
-
-[source,java]
-----
-@Entity
-@Table(name = "REVINFO")
-@Changelog(listener = MyChangesetListener.class)
-public class MyRevision extends ChangelogMapping { ... }
-----
-
-=== API changes
-
-[cols="2,3"]
-|===
-| Envers | Core
-
-| `AuditReader.find(Foo.class, id, rev)`
-| `auditLog.find(Foo.class, id, rev)` or `sf.withOptions().atChangeset(rev).openSession().find(Foo.class, id)`
-
-| `reader.getRevisions(Foo.class, id)`
-| `auditLog.getChangesets(Foo.class, id)`
-
-| `reader.getRevisionDate(rev)`
-| `auditLog.getChangesetTimestamp(rev)`
-
-| `reader.findRevision(RevInfo.class, rev)`
-| `auditLog.findChangeset(RevInfo.class, rev)`
-
-| `reader.createQuery().forEntitiesAtRevision(...)`
-| HQL in `atChangeset()` session
-
-| `reader.createQuery().forRevisionsOfEntity(...)`
-| `auditLog.getHistory(Foo.class, id)`
-
-| Custom `AuditQuery` criteria
-| HQL with `changesetId()` / `modificationType()` functions
-|===
-
-=== Schema compatibility
-
-No DDL changes are needed. The default `REV`/`REVTYPE` column names and encoding match between Envers and core. The `REVINFO` table rows continue the same sequence.
-
+Columns mapped by `@Version` fields are now declared `not null` by default.
 
 [[dependency-changes]]
 == Changes in Dependencies
 
 This section describes changes to dependencies used by Hibernate ORM.
+

@@ -286,7 +286,7 @@ public class AuditOverrideTableConstructionWithMappedSuperClassesTest {
 	}
 
 	@Test
-	public void entityUnderTwoMSCes4(DomainModelScope domainModelScope) {
+	public void withEmbeddable(DomainModelScope domainModelScope) {
 		var tables = domainModelScope.getDomainModel().collectTableMappings();
 		assertTable( tables, "EntityThatRevokesTheProperty3_AUD", table -> {
 			assertTrue( table.containsColumn( new Column( "firstName" ) ) );

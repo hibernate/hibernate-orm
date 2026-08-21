@@ -450,11 +450,10 @@ public interface HibernateAnnotations {
 			EnumSet.of( Kind.CLASS ),
 			false
 	);
-	// @Instantiator has @Target(CONSTRUCTOR) which is not supported by AnnotationTarget.Kind
 	OrmAnnotationDescriptor<Instantiator, InstantiatorAnnotation> INSTANTIATOR = new OrmAnnotationDescriptor<>(
 			Instantiator.class,
 			InstantiatorAnnotation.class,
-			EnumSet.noneOf( Kind.class ), // @Target(CONSTRUCTOR) - not representable in Kind enum
+			EnumSet.of( Kind.CONSTRUCTOR ),
 			false
 	);
 	OrmAnnotationDescriptor<JavaType, JavaTypeAnnotation> JAVA_TYPE = new OrmAnnotationDescriptor<>(

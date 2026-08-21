@@ -4,6 +4,7 @@
  */
 package org.hibernate.action.queue.internal.decompose.entity;
 
+import jakarta.annotation.Nullable;
 import org.hibernate.action.queue.spi.decompose.entity.EntityMutationPlanContributor;
 
 import java.util.function.Consumer;
@@ -17,6 +18,7 @@ import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.BeforeExecutionGenerator;
+import org.hibernate.event.spi.BatchGenerationContext;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.metamodel.mapping.TemporalMapping;
 import org.hibernate.persister.entity.EntityPersister;
@@ -57,7 +59,12 @@ public class TemporalEntityMutationPlanContributor implements EntityMutationPlan
 			return false;
 		}
 
-		preUpdateInMemoryValueGeneration( context.entity(), context.state(), context.session() );
+		preUpdateInMemoryValueGeneration(
+				context.entity(), context.state(), context.session(),
+				context.decompositionContext() != null
+						? context.decompositionContext().getBatchGenerationContext()
+						: null
+		);
 
 		final OptimisticLockStyle effectiveOptLockStyle = effectiveOptimisticLockStyle(
 				context.previousVersion(),
@@ -154,7 +161,10 @@ public class TemporalEntityMutationPlanContributor implements EntityMutationPlan
 		final boolean hasStateDependentInsertGenerator = insertMutationPlanner.preInsertInMemoryValueGeneration(
 				context.state(),
 				context.entity(),
-				context.session()
+				context.session(),
+				context.decompositionContext() != null
+						? context.decompositionContext().getBatchGenerationContext()
+						: null
 		);
 		final boolean[] effectiveInsertability = insertMutationPlanner.resolveInsertability( context.state() );
 		final var insertGroup = insertMutationPlanner.resolveInsertOperations(
@@ -219,7 +229,8 @@ public class TemporalEntityMutationPlanContributor implements EntityMutationPlan
 	private int[] preUpdateInMemoryValueGeneration(
 			Object object,
 			Object[] newValues,
-			SharedSessionContractImplementor session) {
+			SharedSessionContractImplementor session,
+			@Nullable BatchGenerationContext batchContext) {
 		if ( !entityPersister.hasPreUpdateGeneratedProperties() ) {
 			return ArrayHelper.EMPTY_INT_ARRAY;
 		}
@@ -233,8 +244,15 @@ public class TemporalEntityMutationPlanContributor implements EntityMutationPlan
 				if ( generator != null
 						&& generator.generatesOnUpdate()
 						&& generator.generatedBeforeExecution( object, session ) ) {
-					newValues[i] = ( (BeforeExecutionGenerator) generator ).generate( session, object, newValues[i], UPDATE );
-					entityPersister.setValue( object, i, newValues[i] );
+					final var beforeExecutionGenerator = (BeforeExecutionGenerator) generator;
+					if ( batchContext != null && beforeExecutionGenerator.supportsBatchGeneration() ) {
+						batchContext.register( beforeExecutionGenerator, i, object, newValues, entityPersister, UPDATE );
+						newValues[i] = BatchGenerationContext.PLACEHOLDER;
+					}
+					else {
+						newValues[i] = beforeExecutionGenerator.generate( session, object, newValues[i], UPDATE );
+						entityPersister.setValue( object, i, newValues[i] );
+					}
 					fieldsPreUpdateNeeded[count++] = i;
 				}
 			}

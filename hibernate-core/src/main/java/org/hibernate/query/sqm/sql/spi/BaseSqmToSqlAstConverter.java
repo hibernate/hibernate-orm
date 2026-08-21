@@ -22,7 +22,9 @@ import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.FetchOptions;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.BeforeExecutionGenerator;
+import org.hibernate.generator.GenerationRequests;
 import org.hibernate.generator.Generator;
 import org.hibernate.id.BulkInsertionCapableIdentifierGenerator;
 import org.hibernate.id.CompositeNestedGeneratedValueGenerator;
@@ -368,6 +370,7 @@ import org.hibernate.sql.ast.tree.update.Assignable;
 import org.hibernate.sql.ast.tree.update.Assignment;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.internal.AbstractJdbcParameter;
+import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterImpl;
 import org.hibernate.sql.exec.internal.JdbcParametersImpl;
 import org.hibernate.sql.exec.internal.LimitJdbcParameter;
@@ -375,6 +378,7 @@ import org.hibernate.sql.exec.internal.OffsetJdbcParameter;
 import org.hibernate.sql.exec.internal.SqlTypedMappingJdbcParameter;
 import org.hibernate.sql.exec.internal.VersionTypeSeedParameterSpecification;
 import org.hibernate.sql.exec.spi.ExecutionContext;
+import org.hibernate.sql.exec.spi.JdbcParameterBinding;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcParameters;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -1341,7 +1345,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 			for ( var sqmValues : sqmStatement.getValuesList() ) {
 				final var values = visitValues( sqmValues );
-				additionalInsertValues.applyValues( values );
+				additionalInsertValues.applyValues( values, sqmStatement.getValuesList().size() );
 				insertStatement.getValuesList().add( values );
 			}
 
@@ -1542,7 +1546,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			this.identifierMapping = identifierMapping;
 		}
 
-		public void applyValues(Values values) {
+		public void applyValues(Values values, int valuesListSize) {
 			final List<Expression> expressions = values.getExpressions();
 			if ( versionExpression != null ) {
 				expressions.add( versionExpression );
@@ -1552,9 +1556,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			}
 			if ( identifierGenerator != null && !identifierGenerator.generatedOnExecution() ) {
 				if ( identifierGeneratorParameter == null ) {
+					final var generator = (BeforeExecutionGenerator) identifierGenerator;
 					identifierGeneratorParameter =
-							new IdGeneratorParameter( identifierMapping,
-									(BeforeExecutionGenerator) identifierGenerator );
+							new IdGeneratorParameter( identifierMapping, generator, valuesListSize );
 				}
 				expressions.add( identifierGeneratorParameter );
 			}
@@ -1624,10 +1628,12 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	private static class IdGeneratorParameter extends AbstractJdbcParameter {
 
 		private final BeforeExecutionGenerator generator;
+		private final int neededIdCount;
 
-		public IdGeneratorParameter(BasicEntityIdentifierMapping identifierMapping, BeforeExecutionGenerator generator) {
+		public IdGeneratorParameter(BasicEntityIdentifierMapping identifierMapping, BeforeExecutionGenerator generator, int neededIdCount) {
 			super( identifierMapping.getJdbcMapping() );
 			this.generator = generator;
+			this.neededIdCount = neededIdCount;
 		}
 
 		@Override
@@ -1636,12 +1642,52 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				int startPosition,
 				JdbcParameterBindings jdbcParamBindings,
 				ExecutionContext executionContext) throws SQLException {
-			getJdbcMapping().getJdbcValueBinder().bind(
-					statement,
-					generator.generate( executionContext.getSession(), null, null, INSERT ),
-					startPosition,
-					executionContext.getSession()
-			);
+			final SharedSessionContractImplementor session = executionContext.getSession();
+			if ( generator.supportsBatchGeneration() ) {
+				JdbcParameterBinding binding = jdbcParamBindings.getBinding( this );
+				if ( binding == null ) {
+					final Object[] ids =
+							generator.generateBatch( session, GenerationRequests.of( neededIdCount ), INSERT );
+					binding = new JdbcParameterBindingImpl( null, new IdValues( ids ) );
+					jdbcParamBindings.addBinding( this, binding );
+				}
+				final IdValues idValues = (IdValues) binding.getBindValue();
+				getJdbcMapping().getJdbcValueBinder().bind(
+						statement,
+						idValues.nextValue(),
+						startPosition,
+						session
+				);
+				if ( !idValues.hasNext() ) {
+					// Remove the binding at the end to be safe
+					jdbcParamBindings.addBinding( this, null );
+				}
+			}
+			else {
+				getJdbcMapping().getJdbcValueBinder().bind(
+						statement,
+						generator.generate( session, null, null, INSERT ),
+						startPosition,
+						session
+				);
+			}
+		}
+	}
+
+	private static final class IdValues {
+		private final Object[] values;
+		private int nextIndex;
+
+		private IdValues(Object[] values) {
+			this.values = values;
+		}
+
+		public Object nextValue() {
+			return values[nextIndex++];
+		}
+
+		public boolean hasNext() {
+			return nextIndex < values.length;
 		}
 	}
 

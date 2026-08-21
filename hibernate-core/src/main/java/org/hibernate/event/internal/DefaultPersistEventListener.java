@@ -46,7 +46,9 @@ public class DefaultPersistEventListener
 	 */
 	@Override
 	public void onPersist(@Nonnull PersistEvent event) {
-		onPersist( event, PersistContext.create() );
+		final PersistContext persistContext = PersistContext.create();
+		onPersist( event, persistContext );
+		persistContext.resolveBatchGenerators( event.getSession() );
 	}
 
 	/**

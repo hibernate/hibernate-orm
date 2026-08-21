@@ -6,6 +6,7 @@ package org.hibernate.event.spi;
 
 import java.util.IdentityHashMap;
 import jakarta.annotation.Nonnull;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
  * A {@link PersistEvent} represents a {@linkplain org.hibernate.Session#persist(Object) persist operation}
@@ -14,7 +15,7 @@ import jakarta.annotation.Nonnull;
  *
  * @author Gavin King
  */
-public interface PersistContext {
+public interface PersistContext extends ManagedOperationContext {
 
 	boolean add(@Nonnull Object entity);
 
@@ -23,6 +24,9 @@ public interface PersistContext {
 		// a useless wrapper object
 		class Impl extends IdentityHashMap<Object,Object>
 				implements PersistContext {
+
+			private BatchGenerationContext batchGenerationContext;
+
 			Impl() {
 				super(10);
 			}
@@ -30,6 +34,21 @@ public interface PersistContext {
 			@Override
 			public boolean add(@Nonnull Object entity) {
 				return put(entity,entity)==null;
+			}
+
+			@Override
+			public @Nonnull BatchGenerationContext getBatchGenerationContext() {
+				if ( batchGenerationContext == null ) {
+					batchGenerationContext = new BatchGenerationContext();
+				}
+				return batchGenerationContext;
+			}
+
+			@Override
+			public void resolveBatchGenerators(@Nonnull SharedSessionContractImplementor session) {
+				if ( batchGenerationContext != null ) {
+					batchGenerationContext.resolve( session );
+				}
 			}
 		}
 		return new Impl();

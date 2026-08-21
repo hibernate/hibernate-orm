@@ -72,7 +72,9 @@ public abstract sealed class Collection
 	private CacheLayout queryCacheLayout;
 	private String orderBy;
 	private String where;
+	private List<SqlFragmentAlias> whereAliases = emptyList();
 	private String manyToManyWhere;
+	private List<SqlFragmentAlias> manyToManyWhereAliases = emptyList();
 	private String manyToManyOrderBy;
 	private String referencedPropertyName;
 	private String mappedByProperty;
@@ -155,7 +157,9 @@ public abstract sealed class Collection
 		this.cacheRegionName = original.cacheRegionName;
 		this.orderBy = original.orderBy;
 		this.where = original.where;
+		this.whereAliases = original.whereAliases;
 		this.manyToManyWhere = original.manyToManyWhere;
+		this.manyToManyWhereAliases = original.manyToManyWhereAliases;
 		this.manyToManyOrderBy = original.manyToManyOrderBy;
 		this.referencedPropertyName = original.referencedPropertyName;
 		this.mappedByProperty = original.mappedByProperty;
@@ -345,12 +349,28 @@ public abstract sealed class Collection
 		this.where = where;
 	}
 
+	public List<SqlFragmentAlias> getWhereAliases() {
+		return whereAliases;
+	}
+
+	public void setWhereAliases(List<SqlFragmentAlias> whereAliases) {
+		this.whereAliases = whereAliases;
+	}
+
 	public String getManyToManyWhere() {
 		return manyToManyWhere;
 	}
 
 	public void setManyToManyWhere(String manyToManyWhere) {
 		this.manyToManyWhere = manyToManyWhere;
+	}
+
+	public List<SqlFragmentAlias> getManyToManyWhereAliases() {
+		return manyToManyWhereAliases;
+	}
+
+	public void setManyToManyWhereAliases(List<SqlFragmentAlias> manyToManyWhereAliases) {
+		this.manyToManyWhereAliases = manyToManyWhereAliases;
 	}
 
 	public String getManyToManyOrdering() {
@@ -556,7 +576,9 @@ public abstract sealed class Collection
 			&& isSame( element, other.element )
 			&& Objects.equals( collectionTable, other.collectionTable )
 			&& Objects.equals( where, other.where )
+			&& Objects.equals( whereAliases, other.whereAliases )
 			&& Objects.equals( manyToManyWhere, other.manyToManyWhere )
+			&& Objects.equals( manyToManyWhereAliases, other.manyToManyWhereAliases )
 			&& Objects.equals( referencedPropertyName, other.referencedPropertyName )
 			&& Objects.equals( mappedByProperty, other.mappedByProperty )
 			&& Objects.equals( typeName, other.typeName )

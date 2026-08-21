@@ -4,10 +4,10 @@
  */
 package org.hibernate.mapping;
 
-import java.util.HashMap;
 import java.util.Map;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.persister.internal.SqlFragmentAliasHelper;
 
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonMap;
@@ -51,9 +51,9 @@ public class FilterConfiguration {
 	}
 
 	public Map<String, String> getAliasTableMap(SessionFactoryImplementor factory) {
-		final var mergedAliasTableMap = mergeAliasMaps( factory );
-		if ( !mergedAliasTableMap.isEmpty() ) {
-			return mergedAliasTableMap;
+		final var resolvedAliasTableMap = resolveAliasTableMap( factory );
+		if ( !resolvedAliasTableMap.isEmpty() ) {
+			return resolvedAliasTableMap;
 		}
 		else if ( persistentClass != null ) {
 			final String tableName =
@@ -66,21 +66,7 @@ public class FilterConfiguration {
 		}
 	}
 
-	private Map<String, String> mergeAliasMaps(SessionFactoryImplementor factory) {
-		final Map<String, String> result = new HashMap<>();
-		if ( aliasTableMap != null ) {
-			result.putAll( aliasTableMap );
-		}
-
-		if ( aliasEntityMap != null ) {
-			for ( var entry : aliasEntityMap.entrySet() ) {
-				final var joinable =
-						factory.getMappingMetamodel()
-								.getEntityDescriptor( entry.getValue() );
-				result.put( entry.getKey(), joinable.getTableName() );
-			}
-		}
-
-		return result;
+	private Map<String, String> resolveAliasTableMap(SessionFactoryImplementor factory) {
+		return SqlFragmentAliasHelper.resolveAliasTableMap( aliasTableMap, aliasEntityMap, factory );
 	}
 }

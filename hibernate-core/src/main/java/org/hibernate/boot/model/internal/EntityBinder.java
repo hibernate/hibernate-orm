@@ -130,7 +130,6 @@ import static org.hibernate.boot.model.internal.AnnotatedClassType.MAPPED_SUPERC
 import static org.hibernate.boot.model.internal.AnnotatedDiscriminatorColumn.DEFAULT_DISCRIMINATOR_COLUMN_NAME;
 import static org.hibernate.boot.model.internal.AnnotatedDiscriminatorColumn.buildDiscriminatorColumn;
 import static org.hibernate.boot.model.internal.AnnotatedJoinColumn.buildInheritanceJoinColumn;
-import static org.hibernate.boot.model.internal.AuditHelper.extractAuditOverridesFromPersistentClassAndItsMappedSuperClasses;
 import static org.hibernate.boot.model.internal.BinderHelper.extractFromPackage;
 import static org.hibernate.boot.model.internal.BinderHelper.getMappedSuperclassOrNull;
 import static org.hibernate.boot.model.internal.BinderHelper.getPath;
@@ -259,16 +258,13 @@ public class EntityBinder {
 				inheritanceStates
 		);
 		entityBinder.handleInheritance( inheritanceState, superEntity, holder );
-		var auditOverrideOnRootClassOrItsMappedSuperClasses = extractAuditOverridesFromPersistentClassAndItsMappedSuperClasses(
-				holder.getPersistentClass().getRootClass(), entityBinder.context );
-		entityBinder.handleIdentifier( holder, inheritanceStates, inheritanceState,
-				auditOverrideOnRootClassOrItsMappedSuperClasses );
+		entityBinder.handleIdentifier( holder, inheritanceStates, inheritanceState);
 
 		if ( persistentClass instanceof RootClass rootClass ) {
 			collector.addSecondPass( new CreateKeySecondPass( rootClass ) );
 			bindSoftDelete( clazzToProcess, rootClass, context );
 			bindTemporal( clazzToProcess, rootClass, context );
-			bindAudited( clazzToProcess, rootClass, context, auditOverrideOnRootClassOrItsMappedSuperClasses );
+			bindAudited( clazzToProcess, rootClass, context );
 		}
 		if ( persistentClass instanceof Subclass subclass ) {
 			assert superEntity != null;
@@ -364,12 +360,11 @@ public class EntityBinder {
 	private static void bindAudited(
 			ClassDetails classDetails,
 			RootClass rootClass,
-			MetadataBuildingContext context, Map<String, Audited.Override> auditOverrideOnRootClassOrItsMappedSuperClasses) {
+			MetadataBuildingContext context) {
 		final var audited = extract( Audited.class, classDetails, context );
 		if ( audited != null ) {
 			final var auditTable = extract( Audited.Table.class, classDetails, context );
-			AuditHelper.bindAuditTable( auditTable, rootClass, classDetails, context,
-					auditOverrideOnRootClassOrItsMappedSuperClasses );
+			AuditHelper.bindAuditTable( auditTable, rootClass, classDetails, context );
 		}
 		else {
 			final var changelog = extract( Changelog.class, classDetails, context );
@@ -437,7 +432,7 @@ public class EntityBinder {
 	private void handleIdentifier(
 			PropertyHolder propertyHolder,
 			Map<ClassDetails, InheritanceState> inheritanceStates,
-			InheritanceState inheritanceState, Map<String, Audited.Override> auditOverrideOnRootClassOrItsMappedSuperClasses) {
+			InheritanceState inheritanceState) {
 		final var elementsToProcess = inheritanceState.postProcess( persistentClass, this );
 		final Set<String> idPropertiesIfIdClass = handleIdClass(
 				persistentClass,
@@ -454,8 +449,7 @@ public class EntityBinder {
 				propertyHolder,
 				idPropertiesIfIdClass,
 				elementsToProcess,
-				inheritanceStates,
-				auditOverrideOnRootClassOrItsMappedSuperClasses
+				inheritanceStates
 		);
 	}
 
@@ -1122,8 +1116,7 @@ public class EntityBinder {
 			PropertyHolder propertyHolder,
 			Set<String> idPropertiesIfIdClass,
 			ElementsToProcess elementsToProcess,
-			Map<ClassDetails, InheritanceState> inheritanceStates,
-			Map<String, Audited.Override> auditOverrideOnRootClassOrItsMappedSuperClasses) {
+			Map<ClassDetails, InheritanceState> inheritanceStates) {
 		final Set<String> missingIdProperties = new HashSet<>( idPropertiesIfIdClass );
 		final Set<String> missingEntityProperties = new HashSet<>();
 		for ( var propertyAnnotatedElement : elementsToProcess.getElements() ) {
@@ -1148,8 +1141,7 @@ public class EntityBinder {
 							false,
 							false,
 							context,
-							inheritanceStates,
-							auditOverrideOnRootClassOrItsMappedSuperClasses
+							inheritanceStates
 					);
 				}
 			}

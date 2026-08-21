@@ -145,6 +145,8 @@ import static org.hibernate.boot.model.internal.AnnotatedColumn.buildColumnFromN
 import static org.hibernate.boot.model.internal.AnnotatedColumn.buildFormulaFromAnnotation;
 import static org.hibernate.boot.model.internal.AnnotatedJoinColumns.buildJoinColumnsWithDefaultColumnSuffix;
 import static org.hibernate.boot.model.internal.AnnotatedJoinColumns.buildJoinTableJoinColumns;
+import static org.hibernate.boot.model.internal.AuditHelper.extractRevocations;
+import static org.hibernate.boot.model.internal.AuditHelper.isEffectivelyExcluded;
 import static org.hibernate.boot.model.internal.BasicValueBinder.Kind.COLLECTION_ELEMENT;
 import static org.hibernate.boot.model.internal.BinderHelper.aggregateCascadeTypes;
 import static org.hibernate.boot.model.internal.BinderHelper.buildAnyValue;
@@ -1655,14 +1657,21 @@ public abstract class CollectionBinder {
 		// For @OneToMany @JoinColumn on an @Audited entity, create a middle audit table
 		// to track collection membership changes (same approach as @ManyToMany / @JoinTable)
 		if ( !collection.isInverse() ) {
+			var revocations = extractRevocations( propertyHolder.getPersistentClass().getRootClass(), buildingContext );
 			final var audited = extract( Audited.class, property, buildingContext );
-			if ( audited != null && !property.hasDirectAnnotationUsage( Audited.Excluded.class ) ) {
+			var isExcludedAtDeclaration = property.hasDirectAnnotationUsage( Audited.Excluded.class );
+			if ( audited != null && !isEffectivelyExcluded( modelsContext(), collection.getOwner(),
+					property.getName(), isExcludedAtDeclaration, revocations ) ) {
+				var lowestOverride = AuditHelper.extractLowestAuditOverridesFromHierarchy(
+						propertyHolder.getPersistentClass(),
+						buildingContext.getBootstrapContext().getModelsContext() ).get( propertyName );
 				AuditHelper.bindOneToManyAuditTable(
 						extract( Audited.Table.class, property, buildingContext ),
 						collection,
 						oneToMany.getReferencedEntityName(),
 						extract( Audited.CollectionTable.class, property, buildingContext ),
-						buildingContext
+						buildingContext,
+						lowestOverride
 				);
 			}
 		}
@@ -2547,12 +2556,24 @@ public abstract class CollectionBinder {
 		if ( collection.isInverse() ) {
 			return;
 		}
+		//Unidirectional @OneToMany w/o @JoinColumn and @ElementCollection
+		var revocations = extractRevocations( propertyHolder.getPersistentClass().getRootClass(), buildingContext );
 		final var audited = extract( Audited.class, property, buildingContext );
-		if ( audited != null && !property.hasDirectAnnotationUsage( Audited.Excluded.class ) ) {
+		var isExcludedAtDeclaration = property.hasDirectAnnotationUsage( Audited.Excluded.class );
+		if ( audited != null && !isEffectivelyExcluded( modelsContext(), collection.getOwner(),
+				property.getName(), isExcludedAtDeclaration, revocations ) ) {
+			var lowestOverrides = AuditHelper.extractLowestAuditOverridesFromHierarchy(
+					propertyHolder.getPersistentClass(),
+					buildingContext.getBootstrapContext().getModelsContext() );
+			Audited.CollectionTable collectionTableOverride = null;
+			if ( lowestOverrides.containsKey( propertyName ) ) {
+				collectionTableOverride = lowestOverrides.get( propertyName ).collectionTable();
+			}
 			AuditHelper.bindAuditTable(
 					extract( Audited.Table.class, property, buildingContext ),
 					collection,
-					buildingContext
+					buildingContext,
+					collectionTableOverride
 			);
 		}
 	}

@@ -2562,14 +2562,19 @@ public abstract class CollectionBinder {
 		var isExcludedAtDeclaration = property.hasDirectAnnotationUsage( Audited.Excluded.class );
 		if ( audited != null && !isEffectivelyExcluded( modelsContext(), collection.getOwner(),
 				property.getName(), isExcludedAtDeclaration, revocations ) ) {
+			var lowestOverrides = AuditHelper.extractLowestAuditOverridesFromHierarchy(
+					propertyHolder.getPersistentClass(),
+					buildingContext.getBootstrapContext().getModelsContext() );
+			Audited.CollectionTable collectionTableOverride = null;
+			if ( lowestOverrides.containsKey( propertyName ) ) {
+				collectionTableOverride = lowestOverrides.get( propertyName ).collectionTable();
+			}
 			AuditHelper.bindAuditTable(
 					extract( Audited.Table.class, property, buildingContext ),
 					collection,
 					buildingContext,
 					propertyName,
-					AuditHelper.extractLowestAuditOverridesFromHierarchy(
-							propertyHolder.getPersistentClass(),
-							buildingContext.getBootstrapContext().getModelsContext() )
+					collectionTableOverride
 			);
 		}
 	}

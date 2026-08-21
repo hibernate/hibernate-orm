@@ -66,6 +66,8 @@ annotationProcessor 'org.hibernate.orm:hibernate-processor:{fullVersion}'
 include::../userguide/chapters/tooling/extras/maven-example-metamodel.pom[]
 ----
 
+See link:{doc-user-guide-url}#tooling-modelgen-options[Generation Options] in the User Guide for the complete list of annotation processor options.
+
 === Excluding classes from processing
 
 There are three ways to limit the annotation processor to certain classes:

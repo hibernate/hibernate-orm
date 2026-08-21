@@ -267,7 +267,7 @@ public abstract class CollectionBinder {
 			boolean isIdentifierMapper,
 			MetadataBuildingContext context,
 			Map<ClassDetails, InheritanceState> inheritanceStatePerClass,
-			AnnotatedJoinColumns joinColumns			) {
+			AnnotatedJoinColumns joinColumns) {
 		final var modelsContext = context.getBootstrapContext().getModelsContext();
 		final var memberDetails = inferredData.getAttributeMember();
 

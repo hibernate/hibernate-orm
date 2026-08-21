@@ -628,4 +628,20 @@ public interface MappingSettings {
 	 */
 	String USE_NATIONALIZED_CHARACTER_DATA = "hibernate.use_nationalized_character_data";
 
+	/**
+	 * Specifies a JEP-290 {@link java.io.ObjectInputFilter} pattern applied when deserializing
+	 * {@link java.io.Serializable} basic values read back from the database, for example values
+	 * mapped via {@link org.hibernate.type.SerializableType}. The value is a standard filter
+	 * pattern as accepted by {@link java.io.ObjectInputFilter.Config#createFilter(String)}.
+	 * <p>
+	 * This is opt-in, defense-in-depth protection against deserializing unexpected classes from a
+	 * shared or otherwise untrusted database. By default no filter is installed and behaviour is
+	 * unchanged.
+	 *
+	 * @settingDefault none (no filter is installed)
+	 *
+	 * @since 8.1
+	 */
+	String SERIALIZATION_DESERIALIZATION_FILTER = "hibernate.serialization.deserialization_filter";
+
 }

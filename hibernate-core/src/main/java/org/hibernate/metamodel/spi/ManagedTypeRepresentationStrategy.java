@@ -4,10 +4,13 @@
  */
 package org.hibernate.metamodel.spi;
 
+import jakarta.annotation.Nullable;
+
 import org.hibernate.Incubating;
-import org.hibernate.bytecode.spi.ReflectionOptimizer;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.RepresentationMode;
+import org.hibernate.accessor.HibernateAccessorMultiValueReader;
+import org.hibernate.accessor.HibernateAccessorMultiValueWriter;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -26,9 +29,14 @@ public interface ManagedTypeRepresentationStrategy {
 	RepresentationMode getMode();
 
 	/**
-	 * The reflection optimizer to use for this embeddable.
+	 * The multi-value reader for bulk property access, or null if not available.
 	 */
-	ReflectionOptimizer getReflectionOptimizer();
+	@Nullable HibernateAccessorMultiValueReader getMultiValueReader();
+
+	/**
+	 * The multi-value writer for bulk property access, or null if not available.
+	 */
+	@Nullable HibernateAccessorMultiValueWriter getMultiValueWriter();
 
 	/**
 	 * The Java type descriptor for the concrete type.  For dynamic-map models

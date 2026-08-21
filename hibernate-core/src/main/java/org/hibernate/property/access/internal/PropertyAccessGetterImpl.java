@@ -11,6 +11,7 @@ import org.hibernate.property.access.spi.GetterMethodImpl;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.PropertyAccessBuildingException;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
+import org.hibernate.property.access.spi.PropertyValueAccessor;
 import org.hibernate.property.access.spi.Setter;
 
 import java.lang.reflect.Field;
@@ -86,5 +87,11 @@ public class PropertyAccessGetterImpl implements PropertyAccess {
 	@Override
 	public @Nullable Setter getSetter() {
 		return null;
+	}
+
+	@Override
+	public PropertyValueAccessor getPropertyValueAccessor() {
+		throw new UnsupportedOperationException(
+				"This PropertyAccess is not supposed to be used for setting/getting values" );
 	}
 }

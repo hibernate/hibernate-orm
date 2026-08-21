@@ -10,7 +10,7 @@ import org.hibernate.Internal;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
+import org.hibernate.property.access.spi.PropertyValueAccessor;
 
 /**
  * Certain operations for working with arrays of property values.
@@ -43,7 +43,7 @@ public class TypeHelper {
 		for ( int i = 0; i < types.length; i++ ) {
 			if ( copy[i] ) {
 				if ( values[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY
-					|| values[i] == PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
+					|| values[i] == PropertyValueAccessor.UNKNOWN ) {
 					target[i] = values[i];
 				}
 				else {
@@ -75,7 +75,7 @@ public class TypeHelper {
 		final Object[] copied = new Object[original.length];
 		for ( int i = 0; i < types.length; i++ ) {
 			if ( original[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY
-					|| original[i] == PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
+					|| original[i] == PropertyValueAccessor.UNKNOWN ) {
 				copied[i] = target[i];
 			}
 			else if ( target[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
@@ -109,7 +109,7 @@ public class TypeHelper {
 		for ( int i = 0; i < types.length; i++ ) {
 			final Object oldValue = values[i];
 			if ( oldValue != LazyPropertyInitializer.UNFETCHED_PROPERTY
-					&& oldValue != PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
+					&& oldValue != PropertyValueAccessor.UNKNOWN ) {
 				final Object newValue = types[i].replace( values[i], values[i], session, owner, copyCache );
 				if ( newValue != oldValue ) {
 					persister.setValue( entity, i, newValue );
@@ -142,7 +142,7 @@ public class TypeHelper {
 		final Object[] copied = new Object[original.length];
 		for ( int i = 0; i < types.length; i++ ) {
 			if ( original[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY
-					|| original[i] == PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
+					|| original[i] == PropertyValueAccessor.UNKNOWN ) {
 				copied[i] = target[i];
 			}
 			else if ( target[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
@@ -184,7 +184,7 @@ public class TypeHelper {
 		for ( int i = 0; i < types.length; i++ ) {
 			final Object currentOriginal = original[i];
 			if ( currentOriginal == LazyPropertyInitializer.UNFETCHED_PROPERTY
-					|| currentOriginal == PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
+					|| currentOriginal == PropertyValueAccessor.UNKNOWN ) {
 				copied[i] = target[i];
 			}
 			else {

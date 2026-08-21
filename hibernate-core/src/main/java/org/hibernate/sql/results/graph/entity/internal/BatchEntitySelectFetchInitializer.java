@@ -17,7 +17,7 @@ import org.hibernate.loader.ast.internal.EntityLoaderSubSelectFetch;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.property.access.spi.Setter;
+import org.hibernate.property.access.spi.PropertyValueAccessor;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -30,7 +30,7 @@ import static org.hibernate.internal.log.LoggingHelper.toLoggableString;
 
 public class BatchEntitySelectFetchInitializer extends AbstractBatchEntitySelectFetchInitializer<BatchEntitySelectFetchInitializer.BatchEntitySelectFetchInitializerData> {
 	protected final AttributeMapping[] parentAttributes;
-	protected final Setter referencedModelPartSetter;
+	protected final PropertyValueAccessor referencedModelPartSetter;
 	protected final Type referencedModelPartType;
 
 	public static class BatchEntitySelectFetchInitializerData extends AbstractBatchEntitySelectFetchInitializerData {
@@ -55,7 +55,7 @@ public class BatchEntitySelectFetchInitializer extends AbstractBatchEntitySelect
 		super( parentAccess, referencedModelPart, fetchedNavigable, concreteDescriptor, keyResult, affectedByFilter,
 				fetchOptions, creationState );
 		parentAttributes = getParentEntityAttributes( referencedModelPart.getAttributeName() );
-		referencedModelPartSetter = referencedModelPart.getPropertyAccess().getSetter();
+		referencedModelPartSetter = referencedModelPart.getPropertyAccess().getPropertyValueAccessor();
 		referencedModelPartType =
 				referencedModelPart.findContainingEntityMapping().getEntityPersister()
 						.getPropertyType( referencedModelPart.getAttributeName() );

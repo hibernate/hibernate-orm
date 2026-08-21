@@ -25,11 +25,10 @@ import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.NaturalIdMapping;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
+import org.hibernate.accessor.HibernateAccessorFactory;
 import org.hibernate.models.spi.ClassDetails;
-import org.hibernate.models.spi.ModelsContext;
-import org.hibernate.property.access.spi.Getter;
-import org.hibernate.property.access.spi.GetterFieldImpl;
-import org.hibernate.property.access.spi.GetterMethodImpl;
+import org.hibernate.property.access.spi.PropertyAccessorService;
+import org.hibernate.property.access.spi.PropertyValueAccessor;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -147,7 +146,7 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 	public Object[] extractNaturalIdFromEntity(Object entity) {
 		final var values = new Object[attributes.size()];
 		for ( int i = 0; i < attributes.size(); i++ ) {
-			values[i] = attributes.get( i ).getPropertyAccess().getGetter().get( entity );
+			values[i] = attributes.get( i ).getPropertyAccess().getPropertyValueAccessor().get( entity );
 		}
 		return values;
 	}
@@ -704,6 +703,9 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 		final var modelsContext =
 				creationProcess.getCreationContext().getBootstrapContext()
 						.getModelsContext();
+		final var hibernateAccessorFactory = creationProcess.getCreationContext().getServiceRegistry()
+				.requireService( PropertyAccessorService.class )
+				.hibernateAccessorFactory();
 
 		var naturalIdClass = naturalIdClassDetails.toJavaClass( modelsContext.getClassLoading(), modelsContext );
 		var naturalIdClassComponents = extractComponents( naturalIdClass );
@@ -717,7 +719,7 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 					keyAttribute,
 					naturalIdClassGetterAccess,
 					naturalIdClassComponents,
-					modelsContext
+					hibernateAccessorFactory
 			);
 			// todo (natural-id-class) : atm there is functionally no difference
 			//		between BasicAttributeMapperImpl and ToOneAttributeMapperImpl.
@@ -821,32 +823,40 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 		};
 	}
 
-	private static <T> Getter resolveMatchingExtractor(
+	private static <T> PropertyValueAccessor resolveMatchingExtractor(
 			Class<T> naturalIdClass,
 			AttributeMapping keyAttribute,
 			Function<String, Method> getterMethodAccess,
 			Map<String, RecordComponent> naturalIdClassComponents,
-			ModelsContext modelsContext) {
+			HibernateAccessorFactory hibernateAccessorFactory) {
 		// first, if the `naturalIdClass` is a record, look for a component
 		final String keyName = keyAttribute.getAttributeName();
 
 		if ( naturalIdClass.isRecord() ) {
 			final var component = naturalIdClassComponents.get( keyName );
 			if ( component != null ) {
-				return new GetterMethodImpl( naturalIdClass, keyName, component.getAccessor() );
+				return PropertyValueAccessor.readonly(
+						hibernateAccessorFactory.valueReader( component.getAccessor() ),
+						keyName
+				);
 			}
 		}
 
 		// next look for a getter method
 		final var getterMethod = getterMethodAccess.apply( keyName );
 		if ( getterMethod != null ) {
-			return new GetterMethodImpl( naturalIdClass, keyName, getterMethod );
+			return PropertyValueAccessor.readonly(
+					hibernateAccessorFactory.valueReader( getterMethod ),
+					keyName
+			);
 		}
 
 		// lastly, look for a field
 		try {
-			return new GetterFieldImpl( naturalIdClass, keyName,
-					naturalIdClass.getDeclaredField( keyName ) );
+			return PropertyValueAccessor.readonly(
+					hibernateAccessorFactory.valueReader( naturalIdClass.getDeclaredField( keyName ) ),
+					keyName
+			);
 		}
 		catch (NoSuchFieldException ignore) {
 		}
@@ -892,7 +902,7 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 	}
 
 	/// AttributeMapper for both basic and embedded values
-	public record BasicAttributeMapperImpl<T>(AttributeMapping entityAttribute, Getter keyClassExtractor)
+	public record BasicAttributeMapperImpl<T>(AttributeMapping entityAttribute, PropertyValueAccessor keyClassExtractor)
 			implements AttributeMapper<Object, T> {
 		@Override
 		public Object extractFrom(T keyValue) {
@@ -901,7 +911,7 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 	}
 
 	/// AttributeMapper for to-one values
-	public record ToOneAttributeMapperImpl<T>(AttributeMapping entityAttribute, Getter keyClassExtractor)
+	public record ToOneAttributeMapperImpl<T>(AttributeMapping entityAttribute, PropertyValueAccessor keyClassExtractor)
 			implements AttributeMapper<Object, T> {
 		@Override
 		public Object extractFrom(T keyValue) {

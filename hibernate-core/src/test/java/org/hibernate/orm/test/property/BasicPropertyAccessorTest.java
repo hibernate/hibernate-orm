@@ -4,8 +4,10 @@
  */
 package org.hibernate.orm.test.property;
 
+import org.hibernate.accessor.HibernateAccessorFactory;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBasicImpl;
 import org.hibernate.property.access.spi.PropertyAccess;
+import org.hibernate.property.access.spi.PropertyAccessorService;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.junit.jupiter.api.Test;
 
@@ -73,15 +75,24 @@ public class BasicPropertyAccessorTest {
 		var accessStrategy = PropertyAccessStrategyBasicImpl.INSTANCE;
 
 		{
-			final PropertyAccess access = accessStrategy.buildPropertyAccess( Duper.class, "it", true );
+			final PropertyAccess access = accessStrategy.buildPropertyAccess( TestPropertyAccessorService.INSTANCE, Duper.class, "it", true );
 			assertThat( access.getGetter().getReturnTypeClass() ).isEqualTo( String.class );
 			assertThat( access.getSetter().getMethod().getParameterTypes()[0] ).isEqualTo( Object.class );
 		}
 
 		{
-			final PropertyAccess access = accessStrategy.buildPropertyAccess( Duper2.class, "it", true );
+			final PropertyAccess access = accessStrategy.buildPropertyAccess( TestPropertyAccessorService.INSTANCE, Duper2.class, "it", true );
 			assertThat( access.getGetter().getReturnTypeClass() ).isEqualTo( String.class );
 			assertThat( access.getSetter().getMethod().getParameterTypes()[0] ).isEqualTo( String.class );
+		}
+	}
+
+	private static class TestPropertyAccessorService implements PropertyAccessorService {
+		static final PropertyAccessorService INSTANCE = new TestPropertyAccessorService();
+
+		@Override
+		public HibernateAccessorFactory hibernateAccessorFactory() {
+			return HibernateAccessorFactory.reflection();
 		}
 	}
 }

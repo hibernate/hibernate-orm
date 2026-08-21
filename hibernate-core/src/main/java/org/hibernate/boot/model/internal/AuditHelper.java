@@ -328,8 +328,6 @@ public final class AuditHelper {
 
 		// Table name: @Audited.CollectionTable name (if applicable, taken from @AuditOverride), or {OwnerJpaEntityName}_{ChildJpaEntityName}_AUD
 		final var referencedEntity = collector.getEntityBinding( referencedEntityName );
-
-
 		final String auditTableName =
 				auditTableName( collection, collectionAuditTable, referencedEntity, auditOverride );
 
@@ -843,8 +841,8 @@ public final class AuditHelper {
 		}
 		// All properties in the hierarchy (root + subclasses for SINGLE_TABLE)
 		var revokedProperties = extractRevocations( rootClass, context );
-
 		var modelsContext = context.getBootstrapContext().getModelsContext();
+
 		collectPropertyColumns( rootClass, mappedColumns, excluded, revokedProperties, modelsContext );
 		for ( var subclass : rootClass.getSubclasses() ) {
 			collectPropertyColumns( subclass, mappedColumns, excluded, revokedProperties, modelsContext );

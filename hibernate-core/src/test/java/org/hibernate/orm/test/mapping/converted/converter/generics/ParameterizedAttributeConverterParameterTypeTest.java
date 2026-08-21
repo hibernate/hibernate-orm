@@ -14,7 +14,6 @@ import jakarta.persistence.Id;
 
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.model.convert.internal.ConverterDescriptors;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.type.descriptor.converter.spi.JpaAttributeConverter;
 import org.hibernate.type.internal.ConvertedBasicTypeImpl;
 
@@ -95,7 +94,7 @@ public class ParameterizedAttributeConverterParameterTypeTest {
 				return null;
 			}
 			else {
-				return StringHelper.join( ", ", attribute.iterator() );
+				return String.join( ", ", attribute.stream().map( String::valueOf ).toArray( String[]::new ) );
 			}
 		}
 

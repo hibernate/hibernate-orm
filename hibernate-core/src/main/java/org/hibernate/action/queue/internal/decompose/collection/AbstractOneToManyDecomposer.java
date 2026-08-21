@@ -154,7 +154,9 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 				);
 			}
 
-			if ( jdbcOperations.updateIndexPlan() != null ) {
+			if ( jdbcOperations.updateIndexPlan() != null
+					&& entry != null
+					&& collection.entryExists( entry, entryCount ) ) {
 				final var writeIndexFlushOp = new FlushOperation(
 						jdbcOperations.tableDescriptor(),
 						MutationKind.UPDATE_ORDER,
@@ -547,6 +549,7 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 		final int writeIndexOrdinal = calculateOrdinal( ordinalBase, Slot.WRITEINDEX );
 		final List<QueuedIndexWrite> queuedIndexWrites = new ArrayList<>();
 		final var queuedAdditions = collection.queuedAdditionIterator();
+		int queuedPosition = 0;
 		while ( queuedAdditions.hasNext() ) {
 			final Object entry = queuedAdditions.next();
 			if ( entry != null ) {
@@ -555,16 +558,20 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 				if ( jdbcOperations.updateIndexPlan() != null ) {
 					queuedIndexWrites.add( new QueuedIndexWrite(
 							entry,
+							queuedPosition,
 							jdbcOperations.tableDescriptor(),
 							jdbcOperations.updateIndexPlan()
 					) );
 				}
 			}
+			// a null element writes no index of its own, but still occupies its position
+			queuedPosition++;
 		}
 
 		if ( !queuedIndexWrites.isEmpty() ) {
-			int entryPosition = persister.getSize( key, session );
+			final int firstPosition = persister.getSize( key, session );
 			for ( var queuedIndexWrite : queuedIndexWrites ) {
+				final int entryPosition = firstPosition + queuedIndexWrite.queuedPosition();
 				if ( collection.entryExists( queuedIndexWrite.entry(), entryPosition ) ) {
 					planWriteIndex(
 							collection,
@@ -577,7 +584,6 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 							"WriteQueuedIndex[" + entryPosition + "](" + persister.getRolePath() + ")",
 							operations::add
 					);
-					entryPosition++;
 				}
 			}
 		}
@@ -592,6 +598,7 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 
 	private record QueuedIndexWrite(
 			Object entry,
+			int queuedPosition,
 			TableDescriptor tableDescriptor,
 			CollectionJdbcOperations.UpdateRowPlan updateIndexPlan) {
 	}
@@ -714,6 +721,8 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 				assert jdbcOperations != null;
 				final var updateIndexPlan = jdbcOperations.updateIndexPlan();
 				if ( updateIndexPlan != null
+						&& entry != null
+						&& collection.entryExists( entry, entryCount )
 						&& ( persister.hasIndex() || collection.needsUpdating( entry, entryCount, persister.getAttributeMapping() ) ) ) {
 					final var plannedOp = new FlushOperation(
 							jdbcOperations.tableDescriptor(),

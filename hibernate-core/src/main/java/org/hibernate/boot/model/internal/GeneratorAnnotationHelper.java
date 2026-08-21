@@ -35,6 +35,7 @@ import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.ModelsContext;
+import org.hibernate.type.descriptor.java.UuidCapableJavaType;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
@@ -360,7 +361,21 @@ public class GeneratorAnnotationHelper {
 				null,
 				context
 		);
-		idValue.setCustomIdGeneratorCreator( creationContext -> new UuidGenerator( generatorConfig, idMember ) );
+		idValue.setCustomIdGeneratorCreator(
+				creationContext -> new UuidGenerator( generatorConfig, idMember, creationContext )
+		);
+	}
+
+	public static boolean prefersUuidGeneration(
+			MemberDetails idMember,
+			MetadataBuildingContext context) {
+		final var javaClass = idMember.getType().determineRawClass().toJavaClass();
+		final var javaType = context.getBootstrapContext()
+				.getTypeConfiguration()
+				.getJavaTypeRegistry()
+				.findDescriptor( javaClass );
+		return javaType instanceof UuidCapableJavaType<?> uuidJavaType
+			&& uuidJavaType.prefersUuidGeneration();
 	}
 
 	public static void handleIdentityStrategy(SimpleValue idValue) {

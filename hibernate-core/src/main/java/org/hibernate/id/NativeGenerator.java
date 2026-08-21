@@ -76,7 +76,7 @@ public class NativeGenerator
 				context.getDatabase().getDialect()
 						.getNativeValueGenerationStrategy();
 		dialectNativeGenerator = switch ( generationType ) {
-			case UUID -> new UuidGenerator( context.getType().getReturnedClass() );
+			case UUID -> new UuidGenerator( null, member, context );
 			case AUTO, SEQUENCE -> new SequenceStyleGenerator();
 			case TABLE -> new TableGenerator();
 			case IDENTITY -> {

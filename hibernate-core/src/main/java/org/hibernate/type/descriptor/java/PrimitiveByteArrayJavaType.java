@@ -27,8 +27,10 @@ import org.hibernate.type.descriptor.WrapperOptions;
  * @author Steve Ebersole
  */
 public class PrimitiveByteArrayJavaType extends AbstractClassJavaType<byte[]>
-		implements VersionJavaType<byte[]> {
+		implements VersionJavaType<byte[]>, UuidCapableJavaType<byte[]> {
 	public static final PrimitiveByteArrayJavaType INSTANCE = new PrimitiveByteArrayJavaType();
+	private static final UuidCapableJavaType.ValueTransformer<byte[]> UUID_VALUE_TRANSFORMER =
+			UUIDJavaType.adapt( UUIDJavaType.ToBytesTransformer.INSTANCE, byte[].class );
 
 	public PrimitiveByteArrayJavaType() {
 		super( byte[].class, new ArrayMutabilityPlan(), RowVersionComparator.INSTANCE );
@@ -42,6 +44,16 @@ public class PrimitiveByteArrayJavaType extends AbstractClassJavaType<byte[]>
 	@Override
 	public byte[] cast(Object value) {
 		return (byte[]) value;
+	}
+
+	@Override
+	public UuidCapableJavaType.ValueTransformer<byte[]> getUuidValueTransformer() {
+		return UUID_VALUE_TRANSFORMER;
+	}
+
+	@Override
+	public boolean prefersUuidGeneration() {
+		return false;
 	}
 
 	@Override

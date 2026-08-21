@@ -5,7 +5,6 @@
 package org.hibernate.boot.model.internal;
 
 import java.util.Locale;
-import java.util.UUID;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
@@ -14,7 +13,6 @@ import org.hibernate.boot.models.annotations.internal.GenericGeneratorAnnotation
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.SimpleValue;
-import org.hibernate.models.spi.ClassDetailsRegistry;
 import org.hibernate.models.spi.MemberDetails;
 
 import jakarta.persistence.GeneratedValue;
@@ -216,13 +214,13 @@ public class IdGeneratorResolverSecondPass extends AbstractEntityIdGeneratorReso
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// AUTO
 
-	private boolean handleAsUuid(ClassDetailsRegistry classDetailsRegistry) {
-		final var idMemberType = idMember.getType();
-		if ( idMemberType.isImplementor( UUID.class ) || idMemberType.isImplementor( String.class ) ) {
+	private boolean handleAsUuid() {
+		if ( GeneratorAnnotationHelper.prefersUuidGeneration( idMember, buildingContext ) ) {
 			GeneratorAnnotationHelper.handleUuidStrategy(
 					idValue,
 					idMember,
-					classDetailsRegistry.getClassDetails( entityMapping.getClassName() ),
+					buildingContext.getMetadataCollector().getClassDetailsRegistry()
+							.getClassDetails( entityMapping.getClassName() ),
 					buildingContext
 			);
 			return true;
@@ -268,7 +266,7 @@ public class IdGeneratorResolverSecondPass extends AbstractEntityIdGeneratorReso
 			return;
 		}
 
-		if ( handleAsUuid( classDetailsRegistry ) ) {
+		if ( handleAsUuid() ) {
 			return;
 		}
 
@@ -305,7 +303,7 @@ public class IdGeneratorResolverSecondPass extends AbstractEntityIdGeneratorReso
 			return;
 		}
 
-		if ( handleAsUuid( buildingContext.getMetadataCollector().getClassDetailsRegistry() ) ) {
+		if ( handleAsUuid() ) {
 			return;
 		}
 

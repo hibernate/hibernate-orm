@@ -6,10 +6,12 @@ package org.hibernate.orm.test.hql;
 
 
 
+import org.hibernate.community.dialect.CUBRIDDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -34,6 +36,7 @@ public class TreatKeywordTest {
 
 	@Test
 	@JiraKey( value = "HHH-9342" )
+	@SkipForDialect(dialectClass = CUBRIDDialect.class, reason = "CUBRID 10.2 cannot plan the joined-inheritance outer-join tree rendered for 'member of treat(...)' (Outer join query optimization failed); passes on 11.x but the dialect cannot detect the server version")
 	public void memberOfTreatTest(SessionFactoryScope factoryScope) {
 		// prepare test data
 		factoryScope.inTransaction( (s) -> {

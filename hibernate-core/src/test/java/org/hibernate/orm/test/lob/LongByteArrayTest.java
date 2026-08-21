@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.lob;
 
+import org.hibernate.community.dialect.CUBRIDDialect;
 import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -34,6 +35,7 @@ public abstract class LongByteArrayTest {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = CUBRIDDialect.class, reason = "CUBRID rejects the byte[] value Hibernate binds to this LOB column (type conversion error)")
 	public void testBoundedLongByteArrayAccess(SessionFactoryScope scope) {
 		byte[] original = buildRecursively( ARRAY_SIZE, true );
 		byte[] changed = buildRecursively( ARRAY_SIZE, false );
@@ -74,6 +76,7 @@ public abstract class LongByteArrayTest {
 
 	@Test
 	@SkipForDialect(dialectClass = SybaseASEDialect.class, reason = "Sybase returns byte[]{0}")
+	@SkipForDialect(dialectClass = CUBRIDDialect.class, reason = "CUBRID rejects binding a zero-length byte[] to this LOB column (type conversion error)")
 	public void testEmptyArray(SessionFactoryScope scope) {
 		byte[] empty = new byte[] {};
 

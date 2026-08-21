@@ -28,6 +28,7 @@ import jakarta.persistence.Table;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.community.dialect.TiDBDialect;
+import org.hibernate.community.dialect.CUBRIDDialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.H2Dialect;
@@ -221,6 +222,7 @@ public class OffsetTimeTest extends AbstractJavaTimeTypeTests<OffsetTime, Offset
 			reason = "Timezone issue?")
 	@SkipForDialect(dialectClass = H2Dialect.class,
 			reason = "As of version 2.0.202 this seems to be a problem")
+	@SkipForDialect(dialectClass = CUBRIDDialect.class, reason = "CUBRID JDBC driver binds java.sql.Time at zero offset but reads it back at the JVM default offset, so the time round-trips shifted")
 	public void writeThenNativeRead(SessionFactoryScope factoryScope) {
 		super.writeThenNativeRead( factoryScope );
 	}

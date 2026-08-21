@@ -10,6 +10,7 @@ import java.sql.Types;
 import java.time.Instant;
 import java.util.List;
 
+import org.hibernate.community.dialect.CUBRIDDialect;
 import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.DB2Dialect;
@@ -97,6 +98,7 @@ public class NativeQueryResultBuilderTests {
 	@SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true)
 	@SkipForDialect(dialectClass = OracleDialect.class)
 	@SkipForDialect(dialectClass = InformixDialect.class)
+	@SkipForDialect(dialectClass = CUBRIDDialect.class, reason = "CUBRID returns count() as an int before 11.2, so the implicit native query result type is Integer instead of Long; passes on 11.2+ but the dialect cannot detect the server version")
 	public void fullyImplicitTest2(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -315,6 +317,7 @@ public class NativeQueryResultBuilderTests {
 
 	@Test
 	@JiraKey("HHH-18629")
+	@SkipForDialect(dialectClass = CUBRIDDialect.class, reason = "DATA is a CUBRID reserved word, so the native query fails to parse")
 	public void testNativeQueryWithResultClass(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

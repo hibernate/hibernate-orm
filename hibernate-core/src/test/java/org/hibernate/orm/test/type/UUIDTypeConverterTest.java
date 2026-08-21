@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import org.hibernate.community.dialect.CUBRIDDialect;
 import org.hibernate.community.dialect.InformixDialect;
 
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -76,6 +77,7 @@ public class UUIDTypeConverterTest {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = CUBRIDDialect.class, reason = "CUBRID rejects the byte[] host variable Hibernate binds to the converted bit varying column")
 	public void testMerge2(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -89,6 +91,7 @@ public class UUIDTypeConverterTest {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = CUBRIDDialect.class, reason = "CUBRID rejects the byte[] host variable Hibernate binds to the converted bit varying column")
 	public void testMergeDetached(SessionFactoryScope scope) {
 		MarbleBox marbleBox = scope.fromTransaction(session ->
 				session.merge( new MarbleBox( List.of( new Marble() ) ) )

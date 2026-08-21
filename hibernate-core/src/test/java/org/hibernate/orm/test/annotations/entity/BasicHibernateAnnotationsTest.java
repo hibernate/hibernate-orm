@@ -13,6 +13,7 @@ import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.community.dialect.CUBRIDDialect;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
@@ -537,6 +538,7 @@ public class BasicHibernateAnnotationsTest {
 			dialectClass = OracleDialect.class,
 			reason = "Oracle does not support LOB comparisons, and data cleanup plus OptimisticLockType.ALL on Forest triggers LOB comparison"
 	)
+	@SkipForDialect(dialectClass = CUBRIDDialect.class, reason = "CUBRID JDBC driver's getBytes() skips its wasNull bookkeeping on the BLOB branch, so a BLOB read after a NULL column is discarded as null")
 	public void testSerialized(SessionFactoryScope scope) {
 		Forest f = new Forest();
 		f.setName( "Shire" );

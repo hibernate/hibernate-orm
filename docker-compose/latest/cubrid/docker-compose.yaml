@@ -4,6 +4,7 @@ services:
     container_name: cubrid
     environment:
       CUBRID_DB: hibernate_orm
+      CUBRID_LOCALE: en_US.utf8
       CUBRID_USER: hibernate_orm_test
       CUBRID_PASSWORD: hibernate_orm_test
     ports:

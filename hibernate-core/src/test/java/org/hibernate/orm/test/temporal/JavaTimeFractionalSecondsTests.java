@@ -16,6 +16,7 @@ import org.hibernate.annotations.FractionalSeconds;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.community.dialect.AltibaseDialect;
+import org.hibernate.community.dialect.CUBRIDDialect;
 import org.hibernate.community.dialect.FirebirdDialect;
 import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.SpannerPostgreSQLDialect;
@@ -103,6 +104,7 @@ public class JavaTimeFractionalSecondsTests {
 	@DomainModel(annotatedClasses = TestEntity.class)
 	@SessionFactory
 	@SkipForDialect(dialectClass = SybaseDialect.class, reason = "Because... Sybase...", matchSubTypes = true)
+	@SkipForDialect(dialectClass = CUBRIDDialect.class, reason = "CUBRID JDBC driver does not implement ResultSet.getObject(int, Class) for java.time types, so the LOCAL_DATE_TIME and LOCAL_TIME columns cannot be read back (the insert itself succeeds)")
 	void testUsage(SessionFactoryScope scope) {
 		final Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();
 		final Instant start;
@@ -137,6 +139,7 @@ public class JavaTimeFractionalSecondsTests {
 	@SkipForDialect(dialectClass = FirebirdDialect.class, reason = "Firebird does not support specifying a precision on timestamps")
 	@SkipForDialect(dialectClass = SpannerPostgreSQLDialect.class, reason = "Spanner doesn't support specifying precision on timestamps")
 	@SkipForDialect(dialectClass = SpannerDialect.class, reason = "Spanner doesn't support specifying precision on timestamps")
+	@SkipForDialect(dialectClass = CUBRIDDialect.class, reason = "CUBRID datetime takes no precision, so @FractionalSeconds(0) is ignored and the stored value keeps its milliseconds instead of being rounded to a whole second")
 	void testUsage0(SessionFactoryScope scope) {
 		final Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();
 		final Instant start;
@@ -170,6 +173,7 @@ public class JavaTimeFractionalSecondsTests {
 	@SkipForDialect(dialectClass = FirebirdDialect.class, reason = "Firebird does not support specifying a precision on timestamps")
 	@SkipForDialect(dialectClass = SpannerPostgreSQLDialect.class, reason = "Spanner doesn't support specifying precision on timestamps")
 	@SkipForDialect(dialectClass = SpannerDialect.class, reason = "Spanner doesn't support specifying precision on timestamps")
+	@SkipForDialect(dialectClass = CUBRIDDialect.class, reason = "CUBRID JDBC driver does not implement ResultSet.getObject(int, Class) for java.time types, so the LOCAL_DATE_TIME and LOCAL_TIME columns cannot be read back (the insert itself succeeds)")
 	void testUsage3(SessionFactoryScope scope) {
 		final Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();
 		final Instant start;
@@ -206,6 +210,7 @@ public class JavaTimeFractionalSecondsTests {
 	@SkipForDialect(dialectClass = HANADialect.class, reason = "HANA does not support specifying a precision on timestamps")
 	@SkipForDialect(dialectClass = InformixDialect.class, reason = "Informix only supports precision from 1 to 5")
 	@SkipForDialect(dialectClass = FirebirdDialect.class, reason = "Firebird does not support specifying a precision on timestamps")
+	@SkipForDialect(dialectClass = CUBRIDDialect.class, reason = "CUBRID datetime is limited to millisecond precision and truncates the rest, so fractional-second values do not round-trip")
 	void testUsage9(SessionFactoryScope scope) {
 		final Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();
 		final Instant start;

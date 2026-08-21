@@ -10,6 +10,7 @@ import org.hibernate.cache.spi.entry.CollectionCacheEntry;
 import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.community.dialect.CUBRIDDialect;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
@@ -748,6 +749,7 @@ public class DynamicFilterTest {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = CUBRIDDialect.class, reason = "CUBRID has no parenthesized joined table, and this outer join of a nested group cannot be flattened without changing which rows are null-extended")
 	public void testManyToManyFilterOnLoad(SessionFactoryScope factoryScope) {
 		var sessionFactory = factoryScope.getSessionFactory();
 		var stats = sessionFactory.getStatistics();

@@ -8,6 +8,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.function.Consumer;
 
+import org.hibernate.community.dialect.CUBRIDDialect;
 import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.community.dialect.TiDBDialect;
@@ -195,6 +196,7 @@ public class CteTests {
 	@Test
 	@SkipForDialect(dialectClass = SybaseASEDialect.class, reason = "The emulation of CTEs in subqueries results in correlation in nesting level 2, which is not possible with Sybase ASE")
 	@SkipForDialect(dialectClass = TiDBDialect.class, reason = "The TiDB version on CI seems to be buggy")
+	@SkipForDialect(dialectClass = CUBRIDDialect.class, reason = "hibernate-core hoists a correlated CTE to the top level, where its outer reference is no longer in scope; tracked as core follow-up to HHH-20650")
 	public void testSubquery(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

@@ -1525,6 +1525,61 @@ public class HbmTransformationJaxbTests {
 	}
 
 	@Test
+	@JiraKey( "HHH-20800" )
+	public void testMultiLevelUnmappedSuperclassTransientsAreDeclaredOnly(ServiceRegistryScope scope) {
+		// MultiLevelChild extends MultiLevelMiddle (declares id) extends MultiLevelBase (declares name).
+		// With property access the transformer generates a mapped-superclass for both MultiLevelMiddle
+		// and MultiLevelBase. Because getMethods() returns inherited getters, MultiLevelMiddle used to
+		// get a spurious <transient name="name"/> for the getter inherited from MultiLevelBase — which
+		// then fails member resolution at boot (name is not declared on MultiLevelMiddle).
+		// A generated mapped-superclass must only declare transients for properties it actually declares.
+		transformAndVerify( "xml/jaxb/mapping/multilevel-superclass/hbm.xml", scope, transformed -> {
+			assertThat( transformed.getMappedSuperclasses() )
+					.as( "One mapped-superclass per unmapped Java superclass" )
+					.hasSize( 2 );
+
+			final JaxbMappedSuperclassImpl middle = transformed.getMappedSuperclasses().stream()
+					.filter( ms -> ms.getClazz().endsWith( "MultiLevelMiddle" ) )
+					.findFirst()
+					.orElseThrow();
+
+			// id is declared on MultiLevelMiddle → it moves here
+			assertThat( middle.getAttributes().getIdAttributes() )
+					.extracting( JaxbIdImpl::getName )
+					.containsExactly( "id" );
+
+			// name is declared on MultiLevelBase, not MultiLevelMiddle → no transient here
+			assertThat( middle.getAttributes().getTransients() )
+					.extracting( JaxbTransientImpl::getName )
+					.as( "'name' is inherited from MultiLevelBase and must not be transient on MultiLevelMiddle" )
+					.doesNotContain( "name" );
+
+			final JaxbMappedSuperclassImpl base = transformed.getMappedSuperclasses().stream()
+					.filter( ms -> ms.getClazz().endsWith( "MultiLevelBase" ) )
+					.findFirst()
+					.orElseThrow();
+
+			// name is declared on and mapped for MultiLevelBase → it moves here as a basic attribute
+			assertThat( base.getAttributes().getBasicAttributes() )
+					.extracting( JaxbBasicImpl::getName )
+					.containsExactly( "name" );
+
+			// --- MultiLevelChild: keeps only its own 'data' ---
+			final JaxbEntityImpl child = transformed.getEntities().stream()
+					.filter( e -> "MultiLevelChild".equals( e.getClazz() ) )
+					.findFirst()
+					.orElseThrow();
+
+			assertThat( child.getAttributes().getIdAttributes() )
+					.as( "id is inherited from the mapped-superclass" )
+					.isEmpty();
+			assertThat( child.getAttributes().getBasicAttributes() )
+					.extracting( JaxbBasicImpl::getName )
+					.containsExactly( "data" );
+		} );
+	}
+
+	@Test
 	@JiraKey( "HHH-20749" )
 	public void testSiblingEntitiesWithDifferentMappings(ServiceRegistryScope scope) {
 		// SiblingEntityA and SiblingEntityB both extend SiblingBase.

@@ -15,6 +15,7 @@ import org.hibernate.Session;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.DB2zDialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.id.enhanced.NoopOptimizer;
 import org.hibernate.id.enhanced.Optimizer;
@@ -26,6 +27,7 @@ import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.logger.Triggerable;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.testing.orm.logger.LoggerInspectionExtension;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
@@ -42,6 +44,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @author Gail Badner
  */
 @RequiresDialectFeature( feature = DialectFeatureChecks.SupportPooledSequences.class )
+@SkipForDialect(dialectClass = DB2zDialect.class, reason = "DB2 z/OS does not like sequences that go into the negative range and fails with SQLCODE=-846, SQLSTATE=42815")
 public class NegativeValueSequenceTest {
 	@RegisterExtension
 	public LoggerInspectionExtension logInspection =

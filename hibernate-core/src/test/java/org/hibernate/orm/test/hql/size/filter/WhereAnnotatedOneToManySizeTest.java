@@ -85,7 +85,7 @@ public class WhereAnnotatedOneToManySizeTest {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = DB2Dialect.class,
+	@SkipForDialect(dialectClass = DB2Dialect.class, matchSubTypes = true,
 			reason = "DB2 does not support correlated subqueries in the ORDER BY clause")
 	@SkipForDialect(dialectClass = HANADialect.class,
 			reason = "HANA db does not support correlated subqueries in the ORDER BY clause")

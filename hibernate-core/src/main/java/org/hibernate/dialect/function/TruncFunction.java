@@ -47,6 +47,7 @@ public class TruncFunction extends AbstractSqmFunctionDescriptor {
 		DATE_TRUNC( "date_trunc('?2',?1)" ),
 		DATETRUNC( "datetrunc(?2,?1)" ),
 		TRUNC( "trunc(?1,?2)" ),
+		TRUNC_TIMESTAMP( "trunc_timestamp(?1,?2)" ),
 		FORMAT( null );
 
 		private final String pattern;
@@ -130,8 +131,8 @@ public class TruncFunction extends AbstractSqmFunctionDescriptor {
 						queryEngine
 				);
 			}
-			else if ( datetimeTrunc == DatetimeTrunc.TRUNC ) {
-				// the trunc() function requires translating the temporal_unit to a format string
+			else if ( datetimeTrunc == DatetimeTrunc.TRUNC || datetimeTrunc == DatetimeTrunc.TRUNC_TIMESTAMP ) {
+				// the trunc() and trunc_timestamp() functions require translating the temporal_unit to a format string
 				final var temporalUnit = extractUnit.getUnit();
 				final String pattern = switch ( temporalUnit ) {
 					case YEAR -> "YYYY";

@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.boot.ResourceStreamLocator;
-import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.annotations.internal.EntityJpaAnnotation;
 import org.hibernate.boot.models.internal.ModelsHelper;
@@ -397,7 +396,7 @@ public class AdditionalMappingContributorTests {
 								false,
 								modelBuildingContext
 						);
-						nameMember.applyAnnotationUsage( HibernateAnnotations.NATIONALIZED, modelBuildingContext );
+						nameMember.applyAnnotationUsage( JpaAnnotations.LOB, modelBuildingContext );
 
 						return classDetails;
 					}

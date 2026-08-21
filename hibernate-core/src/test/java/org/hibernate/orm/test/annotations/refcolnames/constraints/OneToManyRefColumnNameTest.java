@@ -146,12 +146,12 @@ class OneToManyRefColumnNameTest {
 		int compositeKeyTwo;
 
 		@OneToMany
-		@JoinColumn(referencedColumnName = "singleKey")
+		@JoinColumn(name = "singleKey", referencedColumnName = "singleKey")
 		Set<This> theseOnSingleKey = new HashSet<>();
 
 		@OneToMany
-		@JoinColumn(referencedColumnName = "compositeKeyOne")
-		@JoinColumn(referencedColumnName = "compositeKeyTwo")
+		@JoinColumn(name = "compositeKeyOne", referencedColumnName = "compositeKeyOne")
+		@JoinColumn(name = "compositeKeyTwo", referencedColumnName = "compositeKeyTwo")
 		Set<This> theseOnCompositeKey = new HashSet<>();
 	}
 

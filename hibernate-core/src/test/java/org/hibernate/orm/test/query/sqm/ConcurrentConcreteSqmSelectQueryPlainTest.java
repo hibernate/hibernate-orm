@@ -42,7 +42,7 @@ import static org.assertj.core.api.Assertions.fail;
  *
  * <p>Might cause incorrect SQL to be rendered. In case my MySQL this might cause "limit null,1" statements.
  *
- * @see https://hibernate.atlassian.net/browse/HHH-17742
+ * @see <a href="https://hibernate.atlassian.net/browse/HHH-17742">HHH-17742</a>
  */
 @RequiresDialect(MySQLDialect.class)
 @JiraKey("HHH-17742")

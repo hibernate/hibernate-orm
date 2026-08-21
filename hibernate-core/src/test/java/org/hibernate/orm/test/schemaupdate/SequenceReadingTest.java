@@ -31,8 +31,6 @@ import static org.hibernate.cfg.JdbcSettings.DIALECT;
  * Regression test fr a bug in org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl
  *
  * @author Steve Ebersole
- *
- * @see
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
 @JiraKey( value = "HHH-9745" )

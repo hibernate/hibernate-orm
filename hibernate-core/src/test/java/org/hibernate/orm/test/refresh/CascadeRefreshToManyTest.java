@@ -61,7 +61,9 @@ public class CascadeRefreshToManyTest {
 	}
 
 	@Test
-	public void refreshUninitializedCollectionRefreshesManagedChildren(SessionFactoryScope scope) {
+	@Jira("https://hibernate.atlassian.net/browse/HHH-12867")
+	public void refreshDoesNotFetchUninitializedCollection(SessionFactoryScope scope) {
+		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		scope.inTransaction( session -> {
 			final Parent parent = session.find( Parent.class, 1L );
 			final Child child = session.find( Child.class, 1L );
@@ -70,9 +72,16 @@ public class CascadeRefreshToManyTest {
 			session.createMutationQuery( "update RefreshChild c set c.name = 'updated child' where c.id = 1" )
 					.executeUpdate();
 
+			statementInspector.clear();
 			session.refresh( parent );
 
-			assertThat( child.getName() ).isEqualTo( "updated child" );
+			// The collection was not initialized before the refresh, so it must remain
+			// uninitialized and must not be eagerly fetched: only the parent row is reloaded.
+			assertThat( Hibernate.isInitialized( parent.getChildren() ) ).isFalse();
+			assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
+			// Consequently, the refresh does not cascade to the (unloaded) children, so the
+			// separately-managed child is left untouched.
+			assertThat( child.getName() ).isEqualTo( "child 1" );
 		} );
 	}
 

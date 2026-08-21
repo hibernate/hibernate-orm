@@ -33,6 +33,7 @@ import org.hibernate.mapping.UnionSubclass;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
+import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.persister.state.internal.AuditStateManagement;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.sql.results.graph.Fetchable;
@@ -820,11 +821,12 @@ public final class AuditHelper {
 		// All properties in the hierarchy (root + subclasses for SINGLE_TABLE)
 		var revokedProperties = extractRevocations( rootClass, context );
 
+		var modelsContext = context.getBootstrapContext().getModelsContext();
 		collectPropertyColumns( rootClass, mappedColumns, excluded, revokedProperties,
-				auditOverrideOnRootClassOrItsMappedSuperClasses );
+				modelsContext );
 		for ( var subclass : rootClass.getSubclasses() ) {
 			collectPropertyColumns( subclass, mappedColumns, excluded, revokedProperties,
-					auditOverrideOnRootClassOrItsMappedSuperClasses );
+					modelsContext );
 		}
 		// Exclude unmapped columns (e.g. FK from unidirectional @OneToMany @JoinColumn)
 		for ( var column : rootClass.getMainTable().getColumns() ) {
@@ -887,17 +889,10 @@ public final class AuditHelper {
 			Set<String> mappedColumns,
 			Set<String> excluded,
 			HashSet<String> revocations,
-			Map<String, Audited.Override> auditOverrideOnRootClassOrItsMappedSuperClasses) {
+			ModelsContext modelsContext) {
 		for ( var property : persistentClass.getProperties() ) {
-			if ( isEffectivelyExcluded(
-					property.getName(),
-					isInitiallyExcluded(
-							property.getName(),
-							auditOverrideOnRootClassOrItsMappedSuperClasses,
-							property.isAuditedExcluded()
-					),
-					revocations
-			) || property instanceof Backref ) {
+			if ( isEffectivelyExcluded( modelsContext, persistentClass, property.getName(),
+					property.isAuditedExcluded() ) || property instanceof Backref ) {
 				for ( var column : property.getColumns() ) {
 					excluded.add( column.getCanonicalName() );
 				}
@@ -922,8 +917,31 @@ public final class AuditHelper {
 		return isAuditExcludedAtDeclaration || (auditOverride != null && !auditOverride.isAudited());
 	}
 
-	static boolean isEffectivelyExcluded(String propertyName, boolean isInitiallyExcluded, HashSet<String> revocations) {
-		return isInitiallyExcluded && !isRevoked( propertyName, revocations );
+	static boolean isEffectivelyExcluded(ModelsContext modelsContext, PersistentClass persistentClass, String name, boolean excludedAtDeclaration) {
+		var classDetails = modelsContext.getClassDetailsRegistry().getClassDetails( persistentClass.getClassName() );
+		var override = findAuditOverride( name, classDetails, modelsContext );
+		boolean excluded = excludedAtDeclaration;
+		if ( override != null ) {
+			excluded = !override.isAudited();
+		}
+		return excluded;
+	}
+
+	static @Nullable Audited.Override findAuditOverride(
+			String propertyName,
+			ClassDetails classDetails,
+			ModelsContext modelsContext) {
+		var current = classDetails;
+		while ( current != null ) {
+			var override = current.getNamedAnnotationUsage(
+					Audited.Override.class, propertyName, "name", modelsContext
+			);
+			if ( override != null ) {
+				return override;
+			}
+			current = current.getSuperClass();
+		}
+		return null;
 	}
 
 	static boolean isRevoked(String property, Set<String> revokedProperties) {

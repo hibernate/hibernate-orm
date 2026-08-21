@@ -9,10 +9,14 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.orm.test.dialect.LimitQueryOptions;
 import org.hibernate.query.spi.Limit;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.hibernate.type.SqlTypes;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.spi.TypeConfiguration;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.sql.Types;
 import java.util.Locale;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -62,8 +66,45 @@ public class AltibaseDialectTestCase {
 				.isEqualTo( "select c1, c2 from t1 order by c1, c2 desc" );
 	}
 
+	@Test
+	public void testJsonTypeNotRegisteredForAltibase71() {
+		final Dialect dialect = new AltibaseDialect( DatabaseVersion.make( 7, 1 ) );
+		final TypeConfiguration typeConfiguration = typeConfigurationFor( dialect );
+
+		assertThat( typeConfiguration.getDdlTypeRegistry().getDescriptor( SqlTypes.JSON ) ).isNull();
+		assertThat( typeConfiguration.getJdbcTypeRegistry().findDescriptor( SqlTypes.JSON ) ).isNull();
+	}
+
+	@Test
+	public void testJsonTypeRegisteredForAltibase81() {
+		final Dialect dialect = new AltibaseDialect( DatabaseVersion.make( 8, 1 ) );
+		final TypeConfiguration typeConfiguration = typeConfigurationFor( dialect );
+
+		assertThat( typeConfiguration.getDdlTypeRegistry().getTypeName( SqlTypes.JSON, dialect ) )
+				.isEqualTo( "json" );
+		assertThat( typeConfiguration.getDdlTypeRegistry().getSqlTypeCode( "json" ) )
+				.isEqualTo( SqlTypes.JSON );
+
+		final JdbcType jsonJdbcType = typeConfiguration.getJdbcTypeRegistry().findDescriptor( SqlTypes.JSON );
+		assertThat( jsonJdbcType ).isNotNull();
+		assertThat( jsonJdbcType.getDdlTypeCode() ).isEqualTo( SqlTypes.JSON );
+		assertThat( dialect.resolveSqlTypeDescriptor(
+				"json",
+				Types.CLOB,
+				0,
+				0,
+				typeConfiguration.getJdbcTypeRegistry()
+		).getDdlTypeCode() ).isEqualTo( SqlTypes.JSON );
+	}
+
 	private String withLimit(String sql, Limit limit) {
 		return dialect.getLimitHandler().processSql( sql, -1, null, new LimitQueryOptions( limit ) );
+	}
+
+	private TypeConfiguration typeConfigurationFor(Dialect dialect) {
+		final TypeConfiguration typeConfiguration = new TypeConfiguration();
+		dialect.contributeTypes( () -> typeConfiguration, null );
+		return typeConfiguration;
 	}
 
 	private Limit toRowSelection(Integer firstRow, Integer maxRows) {

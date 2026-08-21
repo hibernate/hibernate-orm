@@ -14,21 +14,23 @@ dependencies {
 	api project( ':hibernate-core' )
 	api libs.geolatte
 
-	compileOnly jdbcLibs.postgresql
+	compileOnly libs.jdbc.postgresql
 
 	testImplementation project( ':hibernate-testing' )
 	testImplementation project( ':hibernate-ant' )
 	testImplementation project( path: ':hibernate-core', configuration: 'tests' )
 
-	testImplementation jakartaLibs.validation
+	testImplementation libs.jakarta.validation
 	testImplementation libs.jandex
-	testImplementation testLibs.validator
-	testImplementation 'org.dom4j:dom4j:2.1.3@jar'
+	testImplementation libs.test.validator
+    testImplementation(libs.test.dom4j) {
+        transitive = false
+    }
 
-	testImplementation jdbcLibs.postgresql
-	testImplementation jdbcLibs.h2gis
+	testImplementation libs.jdbc.postgresql
+	testImplementation libs.jdbc.h2gis
 
-	testRuntimeOnly 'jaxen:jaxen:1.1'
+    testRuntimeOnly libs.test.jaxen
 	testRuntimeOnly libs.byteBuddy
 }
 

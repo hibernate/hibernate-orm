@@ -8,6 +8,7 @@ import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.dialect.SpannerDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -49,12 +50,22 @@ public class UsageTests {
 		} );
 		// the SELECT + the 2 UPDATES
 		assertThat( sqlCollector.getSqlQueries() ).hasSize( 3 );
-		assertThat( sqlCollector.getSqlQueries().get( 1 ) ).contains( "update employee_accolades " );
-		assertThat( sqlCollector.getSqlQueries().get( 1 ) ).contains( "set deleted_on=" );
-		assertThat( sqlCollector.getSqlQueries().get( 1 ) ).contains( "and deleted_on is null" );
-		assertThat( sqlCollector.getSqlQueries().get( 2 ) ).contains( "update employees " );
-		assertThat( sqlCollector.getSqlQueries().get( 2 ) ).contains( "set deleted_at=" );
-		assertThat( sqlCollector.getSqlQueries().get( 2 ) ).contains( "deleted_at is null" );
+		if ( sessions.getSessionFactory().getJdbcServices().getDialect() instanceof SpannerDialect ) {
+			assertThat( sqlCollector.getSqlQueries().get( 1 ) ).contains( "update employee_accolades " );
+			assertThat( sqlCollector.getSqlQueries().get( 1 ) ).contains( "set e1_0.deleted_on=" );
+			assertThat( sqlCollector.getSqlQueries().get( 1 ) ).contains( "e1_0.deleted_on is null" );
+			assertThat( sqlCollector.getSqlQueries().get( 2 ) ).contains( "update employees " );
+			assertThat( sqlCollector.getSqlQueries().get( 2 ) ).contains( "set e1_0.deleted_at=" );
+			assertThat( sqlCollector.getSqlQueries().get( 2 ) ).contains( "e1_0.deleted_at is null" );
+		}
+		else {
+			assertThat( sqlCollector.getSqlQueries().get( 1 ) ).contains( "update employee_accolades " );
+			assertThat( sqlCollector.getSqlQueries().get( 1 ) ).contains( "set deleted_on=" );
+			assertThat( sqlCollector.getSqlQueries().get( 1 ) ).contains( "and deleted_on is null" );
+			assertThat( sqlCollector.getSqlQueries().get( 2 ) ).contains( "update employees " );
+			assertThat( sqlCollector.getSqlQueries().get( 2 ) ).contains( "set deleted_at=" );
+			assertThat( sqlCollector.getSqlQueries().get( 2 ) ).contains( "deleted_at is null" );
+		}
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// Make sure the "middle" employee is removed (load)

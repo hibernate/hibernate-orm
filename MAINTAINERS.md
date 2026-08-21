@@ -15,6 +15,32 @@ Continuous integration is split across two platforms:
 * GitHub Actions at https://github.com/hibernate/hibernate-orm/actions
 * a self-hosted Jenkins instance at https://ci.hibernate.org.
 
+### Tips
+
+The Hibernate ORM build can use mirrors instead of public repositories.
+The mirror configuration is in `gradle/mirror.gradle`, auto-activated from `settings.gradle`.
+Each mirror is activated independently when its `MIRROR_*_URL` property is set.
+
+Supported mirrors (each with `_URL`, `_USERNAME`, `_PASSWORD`, `_FALLBACK` suffixes):
+
+| Prefix                            | Repository              |
+|-----------------------------------|-------------------------|
+| `MIRROR_MAVEN_CENTRAL`            | Maven Central           |
+| `MIRROR_MAVEN_CENTRAL_SNAPSHOTS`  | Central Portal Snapshots|
+| `MIRROR_GRADLE_PLUGIN_PORTAL`     | Gradle Plugin Portal    |
+
+For example, to mirror Maven Central set `MIRROR_MAVEN_CENTRAL_URL` via any of
+(in order of precedence):
+* System property: `-DMIRROR_MAVEN_CENTRAL_URL=<url>`
+* Environment variable: `MIRROR_MAVEN_CENTRAL_URL=<url>`
+
+Optional properties (same resolution order per mirror):
+* `*_USERNAME` / `*_PASSWORD` — mirror credentials
+* `*_FALLBACK` — set to `true` to also keep the original repo as a fallback
+
+Note: Gradle project properties (`-P`) are not supported because they don't
+propagate to included builds (`local-build-plugins`).
+
 ### GitHub Actions workflows
 
 TODO: describe the workflows available.
@@ -32,7 +58,7 @@ It is generally triggered on push,
 but can also be triggered manually,
 which is particularly useful to test more environments on a pull request.
 
-See [Jenkinsfile](Jenkinsfile) for the job definition.
+See [Jenkinsfile](Jenkinsfile) for the job definition. 
 
 ### Release pipeline
 
@@ -84,7 +110,7 @@ In any case, before the release:
   * Check there are no resolved/closed issues in the corresponding "work-in-progress version"
     (e.g. `6.6`, `6.6-next`, ... naming convention may vary);
     if there are, you might want to assign them to your release.
-* Pull all upstream changes and perform `./gradlew preVerifyRelease` locally.
+* Pull all upstream changes and perform `./gradlew releasePrepare` locally.
 
 **If it's the first `Alpha`/`Beta` of a new major or minor release**, before the release:
 
@@ -167,16 +193,24 @@ In any case:
 
 ### Setting up the maintenance branch
 
-Once the release series (e.g. 7.2) is branched out and goes into maintenance mode make sure to:
+Once the release series (e.g. 7.3) is branched out and goes into maintenance mode make sure to:
 * Enable automated releases (for that branch)
   - Update [Jenkinsfile](ci/release/Jenkinsfile) and switch `RELEASE_ON_SCHEDULE` to `true`
 * Remove the nightly Jenkins job from that branch ([nightly.Jenkinsfile](nightly.Jenkinsfile))
 * Update GitHub workflows:
-  - For [ci.yml](.github/workflows/ci.yml) / [codeql.yml](.github/workflows/codeql.yml) 
+  - For [ci.yml](.github/workflows/ci.yml)
     + remove the branch push triggers (`on.pushbranches`)
     + update branch in the pull request triggers
-* Enable Quarkus testing job (in necessary)
+* Enable Quarkus testing job (if the update to this version was already merged(test against main Quarkus branch)/released(test the corresponding version branch))
   - In [quarkus.Jenkinsfile](ci/quarkus.Jenkinsfile) switch `ENABLE_QUARKUS_BUILDS` to true and update `QUARKUS_BRANCH_TO_TEST` as necessary.
+* Enable Hibernate Search dependency update job
+  - In [Jenkinsfile](Jenkinsfile) add an execution just before the `parallel(executions)`:
+  ```groovy
+    executions.put('Hibernate Search Update Dependency', {
+        build job: '/hibernate-search-dependency-update/{HIBERNATE_SEARCH_VERSION}', propagate: true, parameters: [string(name: 'UPDATE_JOB', value: 'orm{HIBERNATE_ORM_VERSION}'), string(name: 'ORM_REPOSITORY', value: helper.scmSource.remoteUrl), string(name: 'ORM_PULL_REQUEST_ID', value: helper.scmSource.pullRequest.id)]
+    })
+  ```
+  - In this example above, replace `{HIBERNATE_SEARCH_VERSION}` and `{HIBERNATE_ORM_VERSION}` with actual release series, e.g. `8.3`/`7.3` 
 * Update main build [Jenkinsfile](Jenkinsfile) (for the branch)
   - Enable JDK testing in the build by removing the conditions under `Don't build environments for newer JDKs`
   - Stop running this build for pushes to the branch

@@ -41,9 +41,9 @@ public class H2ArrayPositionFunction extends AbstractArrayPositionFunction {
 		sqlAppender.append( Integer.toString( maximumArraySize ) );
 		sqlAppender.append( ") i(idx) where i.idx<=coalesce(cardinality(");
 		arrayExpression.accept( walker );
-		sqlAppender.append("),0) and array_get(");
+		sqlAppender.append("),0) and ");
 		arrayExpression.accept( walker );
-		sqlAppender.append( ",i.idx) is not distinct from " );
+		sqlAppender.append( "[i.idx] is not distinct from " );
 		elementExpression.accept( walker );
 		sqlAppender.append( " order by i.idx fetch first 1 row only),0) end" );
 	}

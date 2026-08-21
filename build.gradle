@@ -9,9 +9,8 @@ buildscript {
 //	}
 
 	dependencies {
-//		classpath 'org.asciidoctor:asciidoctor-gradle-plugin:1.5.7'
-		classpath buildscriptLibs.forbiddenapis
-		classpath 'org.junit.platform:junit-platform-gradle-plugin:1.0.3'
+		classpath libs.buildscript.forbiddenapis
+		classpath libs.test.junitJupiterPlatformGradlePlugin
 	}
 }
 
@@ -19,20 +18,20 @@ buildscript {
 plugins {
 	id "local.module"
 
-	id "org.hibernate.build.version-injection" version "2.2.0" apply false
-	id 'org.hibernate.orm.database-service' apply false
-	id 'biz.aQute.bnd' version '7.2.0' apply false
+    alias(libs.plugins.versionInjection) apply false
+    alias(libs.plugins.hibernateDatabaseService) apply false
+    alias(libs.plugins.bndPlugin) apply false
 
-	id "com.diffplug.spotless" version "8.1.0"
-	id 'org.checkerframework' version '0.6.61'
-	id 'org.hibernate.orm.build.jdks'
+    alias(libs.plugins.spotless)
+    alias(libs.plugins.checkerFramework)
+	alias(libs.plugins.hibernateBuildJdks)
 
-	id 'io.github.gradle-nexus.publish-plugin' version '2.0.0'
+    alias(libs.plugins.nexusPublish)
 
-	id 'idea'
-	id 'org.jetbrains.gradle.plugin.idea-ext' version '1.3'
-	id 'eclipse'
-	id "com.dorongold.task-tree" version "4.0.1"
+    alias(libs.plugins.idea)
+    alias(libs.plugins.ideaExt)
+    alias(libs.plugins.eclipse)
+    alias(libs.plugins.taskTree)
 }
 
 
@@ -40,8 +39,8 @@ plugins {
 // Releasing
 
 tasks.register( 'releasePrepare' ) {
-	group "release-prepare"
-	description "Scripted release 'Release Prepare' stage.  " +
+	group = "release-prepare"
+	description = "Scripted release 'Release Prepare' stage.  " +
 			"Includes various checks as to the publish-ability of the project: testing, generation, etc.  " +
 			"Sub-projects register their own `releasePrepare` to hook into this stage."
 	// See `:release:releasePrepare` which does a lot of heavy lifting here
@@ -76,4 +75,22 @@ idea {
 	module {
 		name = "hibernate-orm"
 	}
+}
+
+tasks.register('copyDependenciesSonar', Copy) {
+    description = "Aggregates all runtime dependencies for Sonar CLI analysis."
+
+    def targetProjects = subprojects.findAll { it.name != 'reporting' }
+
+    targetProjects.each { sub ->
+        evaluationDependsOn(sub.path)
+
+        if (sub.plugins.hasPlugin('java')) {
+            from(sub.configurations.runtimeClasspath)
+        }
+    }
+
+    into(layout.buildDirectory.dir("sonar-dependencies"))
+
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }

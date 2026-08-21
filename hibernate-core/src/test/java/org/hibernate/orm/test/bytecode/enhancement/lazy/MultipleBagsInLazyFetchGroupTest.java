@@ -7,6 +7,8 @@ package org.hibernate.orm.test.bytecode.enhancement.lazy;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import jakarta.persistence.CollectionTable;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -71,9 +73,11 @@ public class MultipleBagsInLazyFetchGroupTest {
 
 		String text;
 
+		@CollectionTable(name = "SOME_STRINGS")
 		@ElementCollection(fetch = FetchType.EAGER)
 		List<String> someStrings;
 
+		@CollectionTable(name = "SOME_STRINGS_TWO")
 		@ElementCollection(fetch = FetchType.EAGER)
 		List<String> someStrings2;
 	}

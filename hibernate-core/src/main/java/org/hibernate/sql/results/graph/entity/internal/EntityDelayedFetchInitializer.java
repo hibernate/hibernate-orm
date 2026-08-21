@@ -195,7 +195,7 @@ public class EntityDelayedFetchInitializer
 		final var persistenceContext = session.getPersistenceContextInternal();
 
 		final var ek = entityKey == null ?
-				new EntityKey( data.entityIdentifier, concreteDescriptor ) :
+				session.generateEntityKey( data.entityIdentifier, concreteDescriptor ) :
 				entityKey;
 		final var holder = persistenceContext.getEntityHolder( ek );
 		if ( holder != null && holder.getEntity() != null ) {
@@ -252,11 +252,10 @@ public class EntityDelayedFetchInitializer
 				// field to the interceptor. If we don't get one, we load the entity by unique key.
 				final var persistentAttributeInterceptable =
 						getPersistentAttributeInterceptable( rowProcessingState );
-				if ( persistentAttributeInterceptable != null ) {
-					final var persistentAttributeInterceptor =
-							(LazyAttributeLoadingInterceptor)
-									persistentAttributeInterceptable.$$_hibernate_getInterceptor();
-					persistentAttributeInterceptor.addLazyFieldByGraph( navigablePath.getLocalName() );
+				if ( (persistentAttributeInterceptable != null ) &&
+					(persistentAttributeInterceptable.$$_hibernate_getInterceptor()
+							instanceof LazyAttributeLoadingInterceptor lazyAttributeLoadingInterceptor) ) {
+					lazyAttributeLoadingInterceptor.addLazyFieldByGraph( navigablePath.getLocalName() );
 					instance = UNFETCHED_PROPERTY;
 				}
 				else {
@@ -327,7 +326,7 @@ public class EntityDelayedFetchInitializer
 			final var entityDescriptor = getEntityDescriptor();
 			data.entityIdentifier = entityDescriptor.getIdentifier( instance, session );
 
-			final var entityKey = new EntityKey( data.entityIdentifier, entityDescriptor );
+			final var entityKey = session.generateEntityKey( data.entityIdentifier, entityDescriptor );
 			final var entityHolder = session.getPersistenceContextInternal().getEntityHolder(
 					entityKey
 			);

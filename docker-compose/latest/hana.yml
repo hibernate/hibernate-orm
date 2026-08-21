@@ -1,0 +1,39 @@
+services:
+  hana:
+    image: ${HANA_IMAGE:-docker.io/saplabs/hanaexpress:2.00.088.00.20251110.1@sha256:432be2785506e97cefc413f495393fc22fcdda034c2c80db2f0f88efeb16dfaf}
+    container_name: hana
+    hostname: 866f2ac5a147
+    privileged: true
+    ports:
+      - "39013:39013"
+      - "39017:39017"
+      - "39041-39045:39041-39045"
+      - "1128-1129:1128-1129"
+      - "59013-59014:59013-59014"
+    command:
+      - --passwords-url
+      - file:///config/password.json
+      - --agree-to-sap-license
+    environment:
+      HDB_INITIAL_PASSWORD: H1bernate_test
+    deploy:
+      resources:
+        limits:
+          memory: 8g
+    ulimits:
+      nofile:
+        soft: 524200
+        hard: 524200
+    sysctls:
+      kernel.shmmax: 1073741824
+      net.ipv4.ip_local_port_range: "40000 60999"
+      kernel.shmmni: 4096
+      kernel.shmall: 8388608
+    volumes:
+      - ../build-config/hana:/config:Z
+    healthcheck:
+      test: ["CMD-SHELL", "/usr/sap/HXE/HDB90/exe/hdbsql -i 90 -d HXE -u SYSTEM -p H1bernate_test 'SELECT * FROM DUMMY'"]
+      interval: 10s
+      timeout: 10s
+      retries: 30
+      start_period: 150s

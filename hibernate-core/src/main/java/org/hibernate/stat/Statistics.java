@@ -281,12 +281,16 @@ public interface Statistics {
 	long getSecondLevelCachePutCount();
 
 	/**
-	 * The global number of sessions closed.
+	 * The global number of sessions closed, counting both stateful
+	 * {@linkplain org.hibernate.Session sessions} and
+	 * {@linkplain org.hibernate.StatelessSession stateless sessions}.
 	 */
 	long getSessionCloseCount();
 
 	/**
-	 * The global number of sessions opened.
+	 * The global number of sessions opened, counting both stateful
+	 * {@linkplain org.hibernate.Session sessions} and
+	 * {@linkplain org.hibernate.StatelessSession stateless sessions}.
 	 */
 	long getSessionOpenCount();
 
@@ -380,6 +384,15 @@ public interface Statistics {
 	 * The number of transactions we know to have completed.
 	 */
 	long getTransactionCount();
+
+	/**
+	 * The number of transactions we know to have failed.
+	 *
+	 * @since 8.1
+	 */
+	default long getFailedTransactionCount() {
+		return getTransactionCount() - getSuccessfulTransactionCount();
+	}
 
 	/**
 	 * The number of prepared statements that were acquired.

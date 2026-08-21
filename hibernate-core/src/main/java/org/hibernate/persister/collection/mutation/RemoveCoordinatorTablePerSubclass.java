@@ -5,6 +5,7 @@
 package org.hibernate.persister.collection.mutation;
 
 
+import jakarta.annotation.Nullable;
 import org.hibernate.engine.jdbc.mutation.spi.MutationExecutorService;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.collection.OneToManyPersister;
@@ -35,10 +36,10 @@ public class RemoveCoordinatorTablePerSubclass implements RemoveCoordinator {
 	 */
 	public RemoveCoordinatorTablePerSubclass(
 			OneToManyPersister mutationTarget,
-			OperationProducer operationProducer,
+			RowMutationOperations mutationOperations,
 			ServiceRegistry serviceRegistry) {
 		this.mutationTarget = mutationTarget;
-		this.operationProducer = operationProducer;
+		this.operationProducer = mutationOperations.getDeleteAllRowsOperationProducer();
 		mutationExecutorService = serviceRegistry.getService( MutationExecutorService.class );
 	}
 
@@ -53,8 +54,8 @@ public class RemoveCoordinatorTablePerSubclass implements RemoveCoordinator {
 	}
 
 	@Override
-	public String getSqlString() {
-		throw new UnsupportedOperationException();
+	public @Nullable String getSqlString() {
+		return null;
 	}
 
 	@Override

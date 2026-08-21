@@ -17,6 +17,7 @@ import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
@@ -35,6 +36,7 @@ import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SettingProvider;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -108,6 +110,7 @@ public class OneToManyTest {
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = SpannerDialect.class, reason = "columnDefinition varchar(30) is not supported by Spanner" )
 	public void testColumnDefinitionPropagation(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

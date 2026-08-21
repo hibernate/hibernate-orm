@@ -90,6 +90,9 @@ public interface MutationQuery extends CommonQueryContract {
 	@Override @Deprecated(since = "7")
 	MutationQuery setHibernateFlushMode(FlushMode flushMode);
 
+	@Override @Incubating
+	MutationQuery setQueryFlushMode(QueryFlushMode queryFlushMode);
+
 	@Override
 	MutationQuery setTimeout(int timeout);
 
@@ -212,7 +215,4 @@ public interface MutationQuery extends CommonQueryContract {
 
 	@Override
 	MutationQuery setProperties(@SuppressWarnings("rawtypes") Map bean);
-
-	@Override
-	MutationQuery setQueryFlushMode(QueryFlushMode queryFlushMode);
 }

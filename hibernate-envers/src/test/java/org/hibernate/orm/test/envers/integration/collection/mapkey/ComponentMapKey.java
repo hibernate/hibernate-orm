@@ -3,6 +3,10 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.envers.integration.collection.mapkey;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+
 
 import java.util.Arrays;
 
@@ -23,6 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * @author Adam Warski (adam at warski dot org)
  */
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsPrimaryKeyUpdate.class)
 @EnversTest
 @Jpa(annotatedClasses = {ComponentMapKeyEntity.class, ComponentTestEntity.class})
 public class ComponentMapKey {

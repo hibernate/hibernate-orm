@@ -10,12 +10,14 @@ import java.util.Map;
 import org.hibernate.annotations.Any;
 import org.hibernate.boot.models.annotations.spi.AttributeMarker;
 import org.hibernate.models.spi.ModelsContext;
+import jakarta.persistence.CascadeType;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
 public class AnyAnnotation implements Any, AttributeMarker, AttributeMarker.Fetchable, AttributeMarker.Optionalable {
 	private jakarta.persistence.FetchType fetch;
 	private boolean optional;
+	private CascadeType[] cascade;
 
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
@@ -23,6 +25,7 @@ public class AnyAnnotation implements Any, AttributeMarker, AttributeMarker.Fetc
 	public AnyAnnotation(ModelsContext modelContext) {
 		this.fetch = jakarta.persistence.FetchType.EAGER;
 		this.optional = true;
+		this.cascade = new CascadeType[0];
 	}
 
 	/**
@@ -31,6 +34,7 @@ public class AnyAnnotation implements Any, AttributeMarker, AttributeMarker.Fetc
 	public AnyAnnotation(Any annotation, ModelsContext modelContext) {
 		this.fetch = annotation.fetch();
 		this.optional = annotation.optional();
+		this.cascade = annotation.cascade();
 	}
 
 	/**
@@ -39,6 +43,7 @@ public class AnyAnnotation implements Any, AttributeMarker, AttributeMarker.Fetc
 	public AnyAnnotation(Map<String, Object> attributeValues, ModelsContext modelContext) {
 		this.fetch = (jakarta.persistence.FetchType) attributeValues.get( "fetch" );
 		this.optional = (boolean) attributeValues.get( "optional" );
+		this.cascade = (CascadeType[]) attributeValues.getOrDefault( "cascade", new CascadeType[0] );
 	}
 
 	@Override
@@ -65,5 +70,13 @@ public class AnyAnnotation implements Any, AttributeMarker, AttributeMarker.Fetc
 		this.optional = value;
 	}
 
+	@Override
+	public CascadeType[] cascade() {
+		return cascade;
+	}
+
+	public void cascade(CascadeType[] value) {
+		this.cascade = value;
+	}
 
 }

@@ -47,7 +47,8 @@ public class CollectionPkTest {
 		verifyPkNameUsed(
 				"org/hibernate/orm/test/hbm/collectionpk/person_set.hbm.xml",
 				"primary key (group, name)",
-				"primary key (\"group\", name)"
+				"primary key (\"group\", name)",
+				"primary key (`group`, name)"
 		);
 	}
 
@@ -70,7 +71,8 @@ public class CollectionPkTest {
 		verifyPkNameUsed(
 				"org/hibernate/orm/test/hbm/collectionpk/person_map.hbm.xml",
 				"primary key (group, locale)",
-				"primary key (\"group\", locale)"
+				"primary key (\"group\", locale)",
+				"primary key (`group`, locale)"
 		);
 	}
 

@@ -41,6 +41,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 		xmlMappings = "org/hibernate/orm/test/optlock/Document.hbm.xml"
 )
 @SessionFactory
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsConcurrentTransactions.class)
 public class OptimisticLockTest {
 
 	@AfterEach

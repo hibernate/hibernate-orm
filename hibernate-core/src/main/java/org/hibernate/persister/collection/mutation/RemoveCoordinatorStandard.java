@@ -4,9 +4,12 @@
  */
 package org.hibernate.persister.collection.mutation;
 
+import jakarta.annotation.Nullable;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
+import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.jdbc.mutation.spi.MutationExecutorService;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.persister.entity.mutation.TemporalMutationHelper;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.sql.model.MutationType;
@@ -37,10 +40,10 @@ public class RemoveCoordinatorStandard implements RemoveCoordinator {
 	 */
 	public RemoveCoordinatorStandard(
 			CollectionMutationTarget mutationTarget,
-			OperationProducer operationProducer,
+			RowMutationOperations mutationOperations,
 			ServiceRegistry serviceRegistry) {
 		this.mutationTarget = mutationTarget;
-		this.operationProducer = operationProducer;
+		this.operationProducer = mutationOperations.getDeleteAllRowsOperationProducer();
 
 		batchKey = new BasicBatchKey( mutationTarget.getRolePath() + "#REMOVE" );
 		mutationExecutorService = serviceRegistry.getService( MutationExecutorService.class );
@@ -57,7 +60,7 @@ public class RemoveCoordinatorStandard implements RemoveCoordinator {
 	}
 
 	@Override
-	public String getSqlString() {
+	public @Nullable String getSqlString() {
 		if ( operationGroup == null ) {
 			// delayed creation of the operation-group
 			operationGroup = buildOperationGroup();
@@ -86,8 +89,7 @@ public class RemoveCoordinatorStandard implements RemoveCoordinator {
 
 		try {
 			final var jdbcValueBindings = mutationExecutor.getJdbcValueBindings();
-			final var foreignKeyDescriptor = mutationTarget.getTargetPart().getKeyDescriptor();
-			foreignKeyDescriptor.getKeyPart().decompose(
+			mutationTarget.getTargetPart().getKeyDescriptor().getKeyPart().decompose(
 					key,
 					0,
 					jdbcValueBindings,
@@ -95,6 +97,14 @@ public class RemoveCoordinatorStandard implements RemoveCoordinator {
 					RowMutationOperations.DEFAULT_RESTRICTOR,
 					session
 			);
+			final var temporalMapping = mutationTarget.getTargetPart().getTemporalMapping();
+			if ( temporalMapping != null && TemporalMutationHelper.isUsingParameters( session ) ) {
+				jdbcValueBindings.bindValue(
+						session.getCurrentChangesetIdentifier(),
+						temporalMapping.getEndingColumnMapping(),
+						ParameterUsage.SET
+				);
+			}
 
 			mutationExecutor.execute(
 					key,

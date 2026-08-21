@@ -45,6 +45,34 @@ public class CollectionTableMapping implements TableMapping {
 		this.deleteRowDetails = deleteRowDetails;
 	}
 
+	/**
+	 * Creates an auxiliary table mapping (for history or audit tables)
+	 * based on an existing collection table mapping.
+	 */
+	public CollectionTableMapping(CollectionTableMapping baseMapping, String tableName) {
+		this.tableName = tableName;
+		this.spaces = appendSpace( baseMapping.spaces, tableName );
+		this.isJoinTable = baseMapping.isJoinTable;
+		this.isInverse = baseMapping.isInverse;
+		this.insertDetails = baseMapping.insertDetails;
+		this.updateDetails = baseMapping.updateDetails;
+		this.cascadeDeleteEnabled = baseMapping.cascadeDeleteEnabled;
+		this.deleteAllDetails = baseMapping.deleteAllDetails;
+		this.deleteRowDetails = baseMapping.deleteRowDetails;
+	}
+
+	private static String[] appendSpace(String[] baseSpaces, String newSpace) {
+		for ( String space : baseSpaces ) {
+			if ( newSpace.equals( space ) ) {
+				return baseSpaces;
+			}
+		}
+		final var spaces = new String[baseSpaces.length + 1];
+		System.arraycopy( baseSpaces, 0, spaces, 0, baseSpaces.length );
+		spaces[baseSpaces.length] = newSpace;
+		return spaces;
+	}
+
 	@Override
 	public String getTableName() {
 		return tableName;

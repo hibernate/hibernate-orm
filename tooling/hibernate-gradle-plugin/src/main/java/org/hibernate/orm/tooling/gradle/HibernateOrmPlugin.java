@@ -5,6 +5,7 @@
 package org.hibernate.orm.tooling.gradle;
 
 import java.lang.reflect.Method;
+import java.util.Map;
 import java.util.Set;
 
 import org.gradle.api.Action;
@@ -18,11 +19,26 @@ import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.SourceSet;
 
 import org.hibernate.orm.tooling.gradle.enhance.EnhancementHelper;
+import org.hibernate.orm.tooling.gradle.reveng.RevengTask;
+import org.hibernate.orm.tooling.gradle.reveng.GenerateCfgTask;
+import org.hibernate.orm.tooling.gradle.reveng.GenerateDaoTask;
+import org.hibernate.orm.tooling.gradle.reveng.GenerateHbmTask;
+import org.hibernate.orm.tooling.gradle.reveng.GenerateJavaTask;
+import org.hibernate.orm.tooling.gradle.reveng.RunSqlTask;
 
 /**
  * Hibernate ORM Gradle plugin
  */
 public class HibernateOrmPlugin implements Plugin<Project> {
+
+	private static final Map<String, Class<? extends RevengTask>> REVENG_TASK_MAP = Map.of(
+			"runSql", RunSqlTask.class,
+			"generateJava", GenerateJavaTask.class,
+			"generateCfg", GenerateCfgTask.class,
+			"generateHbm", GenerateHbmTask.class,
+			"generateDao", GenerateDaoTask.class
+	);
+
 	@Override
 	public void apply(Project project) {
 		project.getPluginManager().withPlugin( "java", plugin -> {
@@ -35,6 +51,7 @@ public class HibernateOrmPlugin implements Plugin<Project> {
 
 			prepareEnhancement( ormDsl, project );
 			prepareHbmTransformation( ormDsl, project );
+			prepareReveng( ormDsl, project );
 
 			project
 					.getExtensions()
@@ -100,5 +117,14 @@ public class HibernateOrmPlugin implements Plugin<Project> {
 
 	private void prepareHbmTransformation(HibernateOrmSpec ormDsl, Project project) {
 
+	}
+
+	@SuppressWarnings("unchecked")
+	private void prepareReveng(HibernateOrmSpec ormDsl, Project project) {
+		for ( Map.Entry<String, Class<? extends RevengTask>> entry : REVENG_TASK_MAP.entrySet() ) {
+			project.getTasks().register( entry.getKey(), entry.getValue(), task -> {
+				task.doFirst( w -> task.initialize( ormDsl.getReveng() ) );
+			} );
+		}
 	}
 }

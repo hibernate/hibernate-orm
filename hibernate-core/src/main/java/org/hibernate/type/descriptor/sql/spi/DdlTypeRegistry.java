@@ -90,10 +90,60 @@ public class DdlTypeRegistry implements Serializable {
 		for ( String rawTypeName : ddlType.getRawTypeNames() ) {
 			final Integer previousSqlTypeCode = sqlTypes.put( rawTypeName, sqlTypeCode );
 			// Prefer the standard code over a custom code for a certain type name
-			if ( previousSqlTypeCode != null && JdbcTypeNameMapper.isStandardTypeCode( previousSqlTypeCode ) ) {
+			if ( previousSqlTypeCode != null
+				&& JdbcTypeNameMapper.isStandardTypeCode( previousSqlTypeCode )
+				&& (!JdbcTypeNameMapper.isStandardTypeCode( sqlTypeCode ) || isBigger( previousSqlTypeCode, sqlTypeCode )) ) {
 				sqlTypes.put( rawTypeName, previousSqlTypeCode );
 			}
 		}
+	}
+
+	/**
+	 * Whether {@code typeCode1} is bigger than {@code typeCode2}.
+	 * For example, a BIGINT is bigger than INTEGER, but if types are "unrelated",
+	 * e.g. VARCHAR and BIGINT, then this method will always return {@code false}.
+	 */
+	private static boolean isBigger(int typeCode1, int typeCode2) {
+		return switch ( typeCode1 ) {
+			// Integer type hierarchy: TINYINT < SMALLINT < INTEGER < BIGINT
+			case SqlTypes.BIGINT -> typeCode2 == SqlTypes.INTEGER
+					|| typeCode2 == SqlTypes.SMALLINT
+					|| typeCode2 == SqlTypes.TINYINT;
+			case SqlTypes.INTEGER -> typeCode2 == SqlTypes.SMALLINT
+					|| typeCode2 == SqlTypes.TINYINT;
+			case SqlTypes.SMALLINT -> typeCode2 == SqlTypes.TINYINT;
+			// Floating point hierarchy: REAL/FLOAT < DOUBLE
+			case SqlTypes.DOUBLE -> typeCode2 == SqlTypes.REAL
+					|| typeCode2 == SqlTypes.FLOAT;
+			// Character type hierarchy: CHAR < VARCHAR < LONG32VARCHAR < CLOB
+			case SqlTypes.CLOB -> typeCode2 == SqlTypes.LONG32VARCHAR
+					|| typeCode2 == SqlTypes.VARCHAR
+					|| typeCode2 == SqlTypes.CHAR;
+			case SqlTypes.LONG32VARCHAR -> typeCode2 == SqlTypes.VARCHAR
+					|| typeCode2 == SqlTypes.CHAR;
+			case SqlTypes.VARCHAR -> typeCode2 == SqlTypes.CHAR;
+			// National character type hierarchy: NCHAR < NVARCHAR < LONG32NVARCHAR < NCLOB
+			case SqlTypes.NCLOB -> typeCode2 == SqlTypes.LONG32NVARCHAR
+					|| typeCode2 == SqlTypes.NVARCHAR
+					|| typeCode2 == SqlTypes.NCHAR;
+			case SqlTypes.LONG32NVARCHAR -> typeCode2 == SqlTypes.NVARCHAR
+					|| typeCode2 == SqlTypes.NCHAR;
+			case SqlTypes.NVARCHAR -> typeCode2 == SqlTypes.NCHAR;
+			// Binary type hierarchy: BINARY < VARBINARY < LONG32VARBINARY < BLOB
+			case SqlTypes.BLOB -> typeCode2 == SqlTypes.LONG32VARBINARY
+					|| typeCode2 == SqlTypes.VARBINARY
+					|| typeCode2 == SqlTypes.BINARY;
+			case SqlTypes.LONG32VARBINARY -> typeCode2 == SqlTypes.VARBINARY
+					|| typeCode2 == SqlTypes.BINARY;
+			case SqlTypes.VARBINARY -> typeCode2 == SqlTypes.BINARY;
+			// Temporal type hierarchy: DATE/TIME < TIMESTAMP < TIMESTAMP_WITH_TIMEZONE
+			case SqlTypes.TIMESTAMP_WITH_TIMEZONE -> typeCode2 == SqlTypes.TIMESTAMP
+					|| typeCode2 == SqlTypes.DATE
+					|| typeCode2 == SqlTypes.TIME;
+			case SqlTypes.TIMESTAMP -> typeCode2 == SqlTypes.DATE
+					|| typeCode2 == SqlTypes.TIME;
+			default -> false;
+		};
 	}
 
 	/**

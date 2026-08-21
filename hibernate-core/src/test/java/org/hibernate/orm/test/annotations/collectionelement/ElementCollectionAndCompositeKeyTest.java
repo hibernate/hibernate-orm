@@ -12,6 +12,8 @@ import java.util.UUID;
 import org.hibernate.annotations.JdbcType;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.type.descriptor.jdbc.UUIDJdbcType;
 
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -42,6 +44,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @JiraKey("HHH-17964")
 @RequiresDialect( H2Dialect.class )
 @RequiresDialect( PostgreSQLDialect.class )
+@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsTableWithoutPrimaryKey.class )
 public class ElementCollectionAndCompositeKeyTest {
 
 	@BeforeEach

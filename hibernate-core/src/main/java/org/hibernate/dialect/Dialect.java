@@ -25,6 +25,7 @@ import org.hibernate.boot.model.TypeContributor;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.boot.spi.SessionFactoryOptions;
+import org.hibernate.audit.internal.AuditColumnFunction;
 import org.hibernate.dialect.aggregate.AggregateSupport;
 import org.hibernate.dialect.aggregate.AggregateSupportImpl;
 import org.hibernate.dialect.function.CastFunction;
@@ -55,6 +56,8 @@ import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.sequence.NoSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
+import org.hibernate.dialect.temporal.DefaultTemporalTableSupport;
+import org.hibernate.dialect.temporal.TemporalTableSupport;
 import org.hibernate.dialect.temptable.LegacyTemporaryTableStrategy;
 import org.hibernate.dialect.temptable.PersistentTemporaryTableStrategy;
 import org.hibernate.dialect.temptable.StandardTemporaryTableExporter;
@@ -78,6 +81,7 @@ import org.hibernate.exception.spi.ConversionContext;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.SQLExceptionConverter;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
+import org.hibernate.internal.util.QuotingHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.loader.ast.spi.MultiKeyLoadSizingStrategy;
 import org.hibernate.mapping.CheckConstraint;
@@ -161,6 +165,8 @@ import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.LongNVarcharJdbcType;
+import org.hibernate.type.descriptor.jdbc.LongVarbinaryJdbcType;
+import org.hibernate.type.descriptor.jdbc.LongVarcharJdbcType;
 import org.hibernate.type.descriptor.jdbc.NCharJdbcType;
 import org.hibernate.type.descriptor.jdbc.NClobJdbcType;
 import org.hibernate.type.descriptor.jdbc.NVarcharJdbcType;
@@ -497,7 +503,9 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 				sqlTypeCode,
 				isLob( sqlTypeCode ),
 				columnType( sqlTypeCode ),
+				null,
 				castType( sqlTypeCode ),
+				narrowCastType( sqlTypeCode ),
 				this
 		);
 	}
@@ -649,6 +657,36 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 */
 	protected String castType(int sqlTypeCode) {
 		return columnType( sqlTypeCode );
+	}
+
+	/**
+	 * The SQL type to use as the target of a cast, or as the declared column
+	 * type produced by a set-returning function like {@code json_table()} or
+	 * {@code xmltable()}, in positions where {@code CLOB}, {@code NCLOB}, and
+	 * {@code BLOB} are not accepted.
+	 * <p>
+	 * The default implementation maps LOB types (and their {@code LONG32}
+	 * siblings) to the {@linkplain #columnType column type} of the corresponding
+	 * {@code VARCHAR}-family type code, and defers to {@link #columnType} for
+	 * every other type code. This is the right answer for most dialects; a
+	 * few override the {@code VARCHAR}-family {@code columnType} so that
+	 * substitution is automatically picked up.
+	 *
+	 * @param sqlTypeCode The JDBC type code representing the target type
+	 * @return The SQL type name to use in the narrow cast position
+	 *
+	 * @since 7.4
+	 */
+	@Incubating
+	protected String narrowCastType(int sqlTypeCode) {
+		return columnType(
+				switch ( sqlTypeCode ) {
+					case CLOB, LONG32VARCHAR -> VARCHAR;
+					case NCLOB, LONG32NVARCHAR -> NVARCHAR;
+					case BLOB, LONG32VARBINARY -> VARBINARY;
+					default -> sqlTypeCode;
+				}
+		);
 	}
 
 	/**
@@ -915,7 +953,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 			}
 			check.append( separator );
 			if ( isCharacterJdbcType ) {
-				check.append('\'').append( value ).append('\'');
+				QuotingHelper.appendSingleQuoteEscapedString( check, String.valueOf( value ) );
 			}
 			else {
 				check.append( value );
@@ -1367,6 +1405,17 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		functionRegistry.registerAlternateKey( "current_instant", "instant" ); //deprecated legacy!
 
 		functionRegistry.register( "sql", new SqlFunction() );
+
+		//audit column accessor functions for @Audited entities
+
+		functionRegistry.register(
+				AuditColumnFunction.CHANGESET_ID_FUNCTION,
+				new AuditColumnFunction( AuditColumnFunction.CHANGESET_ID_FUNCTION, true, typeConfiguration )
+		);
+		functionRegistry.register(
+				AuditColumnFunction.MODIFICATION_TYPE_FUNCTION,
+				new AuditColumnFunction( AuditColumnFunction.MODIFICATION_TYPE_FUNCTION, false, typeConfiguration )
+		);
 	}
 
 	/**
@@ -1924,6 +1973,15 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 			jdbcTypeRegistry.addDescriptor( SqlTypes.MATERIALIZED_BLOB, BlobJdbcType.MATERIALIZED );
 			jdbcTypeRegistry.addDescriptor( SqlTypes.MATERIALIZED_CLOB, ClobJdbcType.MATERIALIZED );
 			jdbcTypeRegistry.addDescriptor( SqlTypes.MATERIALIZED_NCLOB, NClobJdbcType.MATERIALIZED );
+		}
+		if ( isLob( LONG32VARCHAR ) ) {
+			jdbcTypeRegistry.addDescriptor( new LongVarcharJdbcType( SqlTypes.LONG32VARCHAR, CLOB ) );
+		}
+		if ( isLob( LONG32NVARCHAR ) && nationalizationSupport == NationalizationSupport.EXPLICIT ) {
+			jdbcTypeRegistry.addDescriptor( new LongNVarcharJdbcType( SqlTypes.LONG32NVARCHAR, NCLOB ) );
+		}
+		if ( isLob( LONG32VARBINARY ) ) {
+			jdbcTypeRegistry.addDescriptor( new LongVarbinaryJdbcType( LONG32VARBINARY, BLOB ) );
 		}
 	}
 
@@ -3084,6 +3142,14 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
+	 * For dropping an index with {@code drop index}, can the phrase
+	 * {@code if exists} be applied before the index name?
+	 */
+	public boolean supportsIfExistsBeforeIndexName() {
+		return false;
+	}
+
+	/**
 	 * Does this dialect support modifying the type of an existing column?
 	 */
 	public boolean supportsAlterColumnType() {
@@ -3414,6 +3480,16 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 */
 	public boolean supportsStandardCurrentTimestampFunction() {
 		return true;
+	}
+
+	/**
+	 * Is the result of {@code current_timestamp} stable i.e. does it always produce the same value
+	 * within a transaction?
+	 *
+	 * @return {@code true} if it is stable; false otherwise.
+	 */
+	public boolean isCurrentTimestampStable() {
+		return false;
 	}
 
 
@@ -4133,6 +4209,32 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
+	 * Allows the dialect to format the default value for a column.
+	 * The default implementation returns the given default value as-is.
+	 *
+	 * @param defaultValue the default value expression
+	 * @return the formatted default value expression
+	 *
+	 * @since 7.4
+	 */
+	public String getColumnDefaultString(String defaultValue) {
+		return defaultValue;
+	}
+
+	/**
+	 * Does this dialect require the {@code not null} constraint to precede the
+	 * {@code default} or {@code generated as} clause?
+	 * Spanner strictly requires {@code not null} to come before {@code default}.
+	 *
+	 * @return {@code true} if {@code not null} should precede {@code default}
+	 *
+	 * @since 7.4
+	 */
+	public boolean requiresNotNullBeforeDefault() {
+		return false;
+	}
+
+	/**
 	 * The keyword used to specify a nullable column of the given SQL type.
 	 *
 	 * @implNote The culprit is {@code timestamp} columns on MySQL.
@@ -4404,6 +4506,12 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 *     {@link Clob#setString(long, String)},
 	 *     {@link Clob#setString(long, String, int, int)},
 	 *     or {@link Clob#truncate(long)}.
+	 * <li>For NCLOBs, the internal value might be changed by:
+	 *     {@link NClob#setAsciiStream(long)},
+	 *     {@link NClob#setCharacterStream(long)},
+	 *     {@link NClob#setString(long, String)},
+	 *     {@link NClob#setString(long, String, int, int)},
+	 *     or {@link NClob#truncate(long)}.
 	 *</ul>
 	 *
 	 * @implNote I do not know the correct answer currently for databases
@@ -5180,6 +5288,29 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
+	 * Tells whether the database supports VALUE LOB access
+	 * compared to usual REFERENCE LOB access.
+	 *
+	 * @return {@code true} if LOBs access can be VALUE based.
+	 *
+	 * @since 7.5
+	 */
+	public boolean supportsValueLOBAccess() {
+		return false;
+	}
+
+	/**
+	 * Returns the SQL fragment to define VALUE LOB
+	 *
+	 * @param columnName the column name
+	 *
+	 * @return the SQL fragment to add as extra table information
+	 */
+	public String getValueLOBFragmentForExtraCreateTableInfo(String columnName) {
+		return "";
+	}
+
+	/**
 	 * Whether to switch:
 	 * <ul>
 	 * <li>from {@code VARCHAR}-like types to {@link SqlTypes#MATERIALIZED_CLOB} types
@@ -5716,7 +5847,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 
 	/**
 	 * Support for native parameter markers.
-	 * <p/>
+	 * <p>
 	 * This is generally dependent on both the database and the driver.
 	 *
 	 * @return May return {@code null} to indicate that the JDBC
@@ -5764,6 +5895,29 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * marked for rollback on this database?
 	 */
 	public boolean causesRollback(SQLException sqlException) {
+		return false;
+	}
+
+	/**
+	 * Does this dialect allow an explicit {@code not null}
+	 * constraint on a {@link #generatedAs generated as}
+	 * column?
+	 */
+	public boolean supportsNotNullAfterGeneratedAs() {
+		return true;
+	}
+
+	/**
+	 * Get the {@link TemporalTableSupport} for this dialect.
+	 */
+	@Incubating
+	public TemporalTableSupport getTemporalTableSupport() {
+		return new DefaultTemporalTableSupport( this );
+	}
+
+	//TODO: DELETEME
+	@Incubating @Deprecated(forRemoval = true)
+	public boolean throttleDdl() {
 		return false;
 	}
 
@@ -6366,6 +6520,10 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		return true;
 	}
 
+	public boolean supportsExceptAll() {
+		return supportsIntersect();
+	}
+
 	/**
 	 * If the dialect supports using joins in mutation statement subquery
 	 * that could also use columns from the mutation target table
@@ -6532,10 +6690,10 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		return supportsRowValueConstructorSyntaxInInList();
 	}
 
-	/*
+	/**
 	 * @return True if database supports {@code UNIQUE} constraint
 	 * definitions in the {@code create table} and {@code alter table} statements.
-	 * If this is not supported then Hibernate will create a unique index instead.
+	 * If this is not supported, then Hibernate will create a unique index instead.
 	 */
 	public boolean supportsUniqueConstraints() {
 		return true;

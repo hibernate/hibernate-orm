@@ -1,0 +1,22 @@
+services:
+  tidb:
+    image: ${DB_IMAGE_TIDB_5_4:-docker.io/pingcap/tidb:v5.4.3@sha256:eecea206c5e6d11f6a2be7ebb8a05e2f6235083a8caa3655c95bd6c2485fa073}
+    container_name: tidb
+    ports:
+      - "4000:4000"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://127.0.0.1:10080/status || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 15
+  mysql-client:
+    image: docker.io/library/mysql:9.6@sha256:c5df04bee1a42b74a5841c6409e669cf62126cd0416f00c1cea8ab933b9361b9
+    entrypoint: [ "/bin/sh", "-c" ]
+    depends_on:
+      tidb:
+        condition: service_healthy
+    command:
+      - |
+        mysql -h tidb -P 4000 -uroot -e "$TIDB_DB_SETUP"
+        echo "Setup complete. Keeping container alive for Compose..."
+        tail -f /dev/null

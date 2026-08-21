@@ -19,25 +19,19 @@ import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.java.JavaType;
 
-/**
- * @asciidoc
- *
- * ```
- * @Entity
- * class MyEntity {
- *     ...
- *     @Column ( name = "the_column", ... )
- *     public String getTheColumn() { ... }
- *
- *     @Convert ( ... )
- *     @Column ( name = "the_column", ... )
- *     ConvertedType getTheConvertedColumn() { ... }
- *
- * }
- * ```
- *
- * @author Steve Ebersole
- */
+/// ```
+/// @Entity
+/// class MyEntity {
+///     ...
+///     @Column ( name = "the_column", ... )
+///     public String getTheColumn() { ... }
+///     @Convert ( ... )
+///     @Column ( name = "the_column", ... )
+///     ConvertedType getTheConvertedColumn() { ... }
+/// }
+/// ```
+///
+/// @author Steve Ebersole
 public class SqlSelectionImpl implements SqlSelection, SqlExpressionAccess {
 	private final int jdbcPosition;
 	private final int valuesArrayPosition;

@@ -113,6 +113,27 @@ public class JsonAsStringArrayJdbcType extends JsonArrayJdbcType implements Adju
 						st.setString( name, json );
 					}
 				}
+
+				@Override
+				protected void doBindNull(PreparedStatement st, int index, WrapperOptions options) throws SQLException {
+					if ( options.getDialect().supportsNationalizedMethods() ) {
+						super.doBindNull( st, index, options );
+					}
+					else {
+						st.setNull( index, SqlTypes.VARCHAR );
+					}
+				}
+
+				@Override
+				protected void doBindNull(CallableStatement st, String name, WrapperOptions options)
+						throws SQLException {
+					if ( options.getDialect().supportsNationalizedMethods() ) {
+						super.doBindNull( st, name, options );
+					}
+					else {
+						st.setNull( name, SqlTypes.VARCHAR );
+					}
+				}
 			};
 		}
 		else {

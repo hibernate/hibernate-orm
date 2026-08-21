@@ -5,9 +5,11 @@
 package org.hibernate;
 
 import java.sql.Connection;
+import java.time.Instant;
 import java.util.TimeZone;
 import java.util.function.UnaryOperator;
 
+import org.hibernate.cfg.StateManagementSettings;
 import org.hibernate.engine.creation.CommonBuilder;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
@@ -244,4 +246,22 @@ public interface SessionBuilder extends CommonBuilder {
 	 * @since 7.2
 	 */
 	SessionBuilder subselectFetchEnabled(boolean subselectFetchEnabled);
+
+	/**
+	 * Specify the instant for reading
+	 * {@linkplain org.hibernate.annotations.Temporal temporal} entity data.
+	 * Instances of temporal entities retrieved in the session represent the
+	 * revisions effective at the given instant.
+	 */
+	SessionBuilder asOf(Instant instant);
+
+	/**
+	 * Specify the
+	 * {@linkplain StateManagementSettings#CHANGESET_ID_SUPPLIER
+	 * changeset id} for reading {@linkplain org.hibernate.annotations.Temporal
+	 * temporal} or {@linkplain org.hibernate.annotations.Audited audited}
+	 * entity data. Instances of temporal or audited entities retrieved in
+	 * the session represent the state effective at the given changeset.
+	 */
+	SessionBuilder atChangeset(Object changesetId);
 }

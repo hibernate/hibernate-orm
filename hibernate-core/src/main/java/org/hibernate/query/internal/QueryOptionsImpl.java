@@ -13,6 +13,7 @@ import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.LockOptions;
 import org.hibernate.graph.GraphSemantic;
@@ -24,6 +25,7 @@ import org.hibernate.query.spi.Limit;
 import org.hibernate.query.spi.MutableQueryOptions;
 
 import static java.util.Collections.emptyList;
+import static org.hibernate.query.QueryLogging.QUERY_LOGGER;
 
 /**
  * @author Steve Ebersole
@@ -40,10 +42,12 @@ public class QueryOptionsImpl implements MutableQueryOptions, AppliedGraph {
 	private Integer fetchSize;
 	private CacheRetrieveMode cacheRetrieveMode;
 	private CacheStoreMode cacheStoreMode;
+	private boolean refreshSession;
 	private Boolean resultCachingEnabled;
 	private String resultCacheRegionName;
 	private Boolean readOnlyEnabled;
 	private Boolean queryPlanCachingEnabled;
+	private Boolean limitInMemoryEnabled;
 
 	private TupleTransformer<?> tupleTransformer;
 	private ResultListTransformer<?> resultListTransformer;
@@ -125,6 +129,14 @@ public class QueryOptionsImpl implements MutableQueryOptions, AppliedGraph {
 	}
 
 	@Override
+	public CacheMode getCacheMode() {
+		final var cacheMode = CacheMode.fromJpaModes( cacheRetrieveMode, cacheStoreMode );
+		return refreshSession && cacheMode == CacheMode.REFRESH
+				? CacheMode.REFRESH_SESSION
+				: cacheMode;
+	}
+
+	@Override
 	public CacheRetrieveMode getCacheRetrieveMode() {
 		return cacheRetrieveMode;
 	}
@@ -137,11 +149,25 @@ public class QueryOptionsImpl implements MutableQueryOptions, AppliedGraph {
 	@Override
 	public void setCacheRetrieveMode(CacheRetrieveMode retrieveMode) {
 		this.cacheRetrieveMode = retrieveMode;
+		this.refreshSession = false;
 	}
 
 	@Override
 	public void setCacheStoreMode(CacheStoreMode storeMode) {
 		this.cacheStoreMode = storeMode;
+		this.refreshSession = false;
+	}
+
+	@Override
+	public void setCacheMode(CacheMode cacheMode) {
+		if ( cacheMode == null ) {
+			QUERY_LOGGER.debug( "Null CacheMode passed to #setCacheMode; falling back to 'NORMAL'" );
+			cacheMode = CacheMode.NORMAL;
+		}
+
+		this.cacheRetrieveMode = cacheMode.getJpaRetrieveMode();
+		this.cacheStoreMode = cacheMode.getJpaStoreMode();
+		this.refreshSession = cacheMode == CacheMode.REFRESH_SESSION;
 	}
 
 	@Override
@@ -162,6 +188,11 @@ public class QueryOptionsImpl implements MutableQueryOptions, AppliedGraph {
 	@Override
 	public Boolean getQueryPlanCachingEnabled() {
 		return queryPlanCachingEnabled;
+	}
+
+	@Override
+	public Boolean isLimitInMemoryEnabled() {
+		return limitInMemoryEnabled;
 	}
 
 	@Override
@@ -192,6 +223,11 @@ public class QueryOptionsImpl implements MutableQueryOptions, AppliedGraph {
 	@Override
 	public void setFetchSize(int fetchSize) {
 		this.fetchSize = fetchSize;
+	}
+
+	@Override
+	public void setLimitInMemory(boolean limitInMemory) {
+		this.limitInMemoryEnabled = limitInMemory;
 	}
 
 	@Override

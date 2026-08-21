@@ -420,6 +420,20 @@ public interface SchemaToolingSettings {
 	 */
 	String HBM2DDL_SKIP_DEFAULT_IMPORT_FILE = "hibernate.hbm2ddl.skip_default_import_file";
 
+	/// Whether {@linkplain org.hibernate.mapping.Index indexes} should be validated when
+	/// performing {@linkplain org.hibernate.tool.schema.Action#VALIDATE schema validation}.
+	/// Valid values are defined by [org.hibernate.tool.schema.internal.ConstraintValidationType].
+	///
+	/// @since 7.3
+	String INDEX_VALIDATION =  "hibernate.tooling.schema.index_validation";
+
+	/// Whether {@linkplain org.hibernate.mapping.UniqueKey unique keys} should be validated when
+	/// performing {@linkplain org.hibernate.tool.schema.Action#VALIDATE schema validation}.
+	/// Valid values are defined by [org.hibernate.tool.schema.internal.ConstraintValidationType].
+	///
+	/// @since 7.3
+	String UNIQUE_KEY_VALIDATION =  "hibernate.tooling.schema.unique_key_validation";
+
 	/**
 	 * Specifies whether to automatically create also the database schema/catalog.
 	 * The default is false.

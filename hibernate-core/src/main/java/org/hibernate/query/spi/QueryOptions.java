@@ -106,6 +106,14 @@ public interface QueryOptions {
 	Boolean getQueryPlanCachingEnabled();
 
 	/**
+	 * Whether top-level HQL/criteria pagination should be applied in memory
+	 * instead of by SQL.
+	 */
+	default Boolean isLimitInMemoryEnabled() {
+		return null;
+	}
+
+	/**
 	 * The explicitly enabled profiles for this query
 	 */
 	Set<String> getEnabledFetchProfiles();
@@ -144,9 +152,21 @@ public interface QueryOptions {
 
 	/**
 	 * The limit to the query results.  May also be accessed via
-	 * {@link #getFirstRow} and {@link #getMaxRows}
+	 * {@link #getFirstRow} and {@link #getMaxRows}.
 	 */
 	Limit getLimit();
+
+	/**
+	 * The original {@link Limit} as set by the application, before any wrapper
+	 * (e.g. {@link org.hibernate.query.spi.SqlOmittingQueryOptions} or the
+	 * scroll execution context) hid it from {@link #getLimit()}. Used by
+	 * runtime parameter binders that the SQM-to-SQL converter pushed into the
+	 * SQL AST so they can bind the original value even when {@link #getLimit()}
+	 * has been intentionally suppressed for SQL rendering.
+	 */
+	default Limit peekOriginalLimit() {
+		return getLimit();
+	}
 
 	/**
 	 * The first row from the results to return
@@ -191,6 +211,15 @@ public interface QueryOptions {
 
 	default ListResultsConsumer.UniqueSemantic getUniqueSemantic(){
 		return null;
+	}
+
+	/**
+	 * Whether this execution goes through {@code scroll()} /
+	 * {@code getResultStream()} and therefore needs SQL row ordering stable
+	 * enough for scroll-style result grouping.
+	 */
+	default boolean isScrollExecution() {
+		return false;
 	}
 
 	/**

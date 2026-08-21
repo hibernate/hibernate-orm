@@ -9,6 +9,7 @@ import org.hibernate.annotations.Generated;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.EventType;
+import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.generator.OnExecutionGenerator;
 
 import java.util.EnumSet;
@@ -30,6 +31,7 @@ public class GeneratedGeneration implements OnExecutionGenerator {
 	private final EnumSet<EventType> eventTypes;
 	private final boolean writable;
 	private final String[] sql;
+	private Class<?> generatedType;
 
 	public GeneratedGeneration(EnumSet<EventType> eventTypes) {
 		this.eventTypes = eventTypes;
@@ -46,9 +48,19 @@ public class GeneratedGeneration implements OnExecutionGenerator {
 		}
 	}
 
+	public GeneratedGeneration(Generated annotation, GeneratorCreationContext context) {
+		this( annotation );
+		generatedType = context.getType().getReturnedClass();
+	}
+
 	@Override
 	public EnumSet<EventType> getEventTypes() {
 		return eventTypes;
+	}
+
+	@Override
+	public Class<?> getGeneratedType() {
+		return generatedType;
 	}
 
 	@Override

@@ -12,6 +12,7 @@ import java.util.Map;
 
 import jakarta.persistence.Timeout;
 import org.hibernate.FlushMode;
+import org.hibernate.Incubating;
 import org.hibernate.Session;
 
 import jakarta.persistence.FlushModeType;
@@ -59,9 +60,7 @@ import jakarta.persistence.metamodel.Type;
  * Setting the {@linkplain QueryFlushMode query flush mode} does not affect the flush
  * mode of other operations performed via the parent {@linkplain Session session}.
  * This operation is usually used as follows:
- * <p>
- * <pre>query.setQueryFlushMode(NO_FLUSH).getResultList()</pre>
- * <p>
+ * <pre>{@code query.setQueryFlushMode(NO_FLUSH).getResultList() }</pre>
  * The call to {@code setQueryFlushMode(NO_FLUSH)} disables the usual automatic flush
  * operation that occurs before query execution.
  *
@@ -81,19 +80,29 @@ public interface CommonQueryContract {
 	 * {@link FlushMode} of the owning {@link Session} determines whether
 	 * it is flushed.
 	 *
+	 * @apiNote The return type of this method will change in Hibernate
+	 * 8.0, since {@code jakarta.persistence.QueryFlushMode} was introduced
+	 * by JPA 4.
+	 *
 	 * @see Session#getHibernateFlushMode()
 	 *
 	 * @since 7.0
 	 */
+	@Incubating
 	QueryFlushMode getQueryFlushMode();
 
 	/**
 	 * Set the {@link QueryFlushMode} to use for this query.
 	 *
+	 * @apiNote The parameter type of this method will change in Hibernate
+	 * 8.0, since {@code jakarta.persistence.QueryFlushMode} was introduced
+	 * by JPA 4.
+	 *
 	 * @see Session#getHibernateFlushMode()
 	 *
 	 * @since 7.0
 	 */
+	@Incubating
 	CommonQueryContract setQueryFlushMode(QueryFlushMode queryFlushMode);
 
 	/**

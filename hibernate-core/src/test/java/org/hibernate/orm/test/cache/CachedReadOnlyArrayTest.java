@@ -30,7 +30,7 @@ class CachedReadOnlyArrayTest {
 	}
 
 	@Immutable
-	@Entity
+	@Entity(name = "Publication")
 	@Cache(usage = READ_ONLY)
 	static class Publication {
 		@Id

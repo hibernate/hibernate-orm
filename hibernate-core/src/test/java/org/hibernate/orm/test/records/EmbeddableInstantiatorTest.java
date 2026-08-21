@@ -89,7 +89,7 @@ public class EmbeddableInstantiatorTest {
 		}
 	}
 
-	@Entity
+	@Entity(name = "Wrapper")
 	public static class Wrapper {
 
 		@Id

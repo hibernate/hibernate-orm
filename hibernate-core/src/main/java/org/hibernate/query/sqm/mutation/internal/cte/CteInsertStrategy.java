@@ -24,80 +24,71 @@ import org.hibernate.sql.ast.tree.cte.CteTable;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 
 
-/**
- * @asciidoc
- *
- * {@link SqmMultiTableInsertStrategy} implementation using SQL's modifiable CTE (Common Table Expression)
- * approach to perform the update/delete.  E.g. (using delete):
- *
- * This strategy will create a query like this:
- *
- * ```
- * with hte_entity as (
- * 	select *, next value for sequence from ...
- * ),
- * dml_cte_1 as (
- * 	insert into base_table select e.id, e.base from hte_entity e
- * 	returning id
- * ),
- * dml_cte_2 as (
- *  insert into sub_table select e.id, e.sub1 from hte_entity e
- * 	returning id
- * )
- * select count(*) from dml_cte_1
- * ```
- *
- * if the sequence generator has an optimizer, the optimizer is implemented in SQL like this:
- *
- * ```
- * with hte_entity_raw as (
- * 	select *, row_number() over() from ...
- * ),
- * rows_with_next_val(rn, val) as (
- *  -- then, fetch a sequence value for every row number that needs it
- *  select rn, next value for sequence FROM rows_needing_next_val
- *  where (e.rn-1) % [incrementSize] = 0
- * ),
- * hte_entity as (
- *  select e.*, t.val + (e.rn - t.rn) as id
- *  from hte_entity_raw e
- *  -- join the data against the generated sequence value, based on the row number group they belong to
- *  -- i.e. where the row number is within the increment size
- *  left join rows_with_next_val t ON e.rn - ((e.rn-1) % 10) = t.rn
- * ),
- * dml_cte_1 as (
- * 	insert into base_table select e.id, e.base from hte_entity e
- * 	returning id
- * ),
- * dml_cte_2 as (
- *  insert into sub_table select e.id, e.sub1 from hte_entity e
- * 	returning id
- * )
- * select count(*) from dml_cte_1
- * ```
- *
- * in case the id generator uses identity generation, a row number will be created which should ensure insert ordering
- *
- * ```
- * with hte_entity_raw as (
- * 	select *, row_number() over() from ...
- * ),
- * dml_cte_1 as (
- * 	insert into base_table select e.id, e.base from hte_entity_raw e
- * 	returning id, e.row_number
- * ),
- * with hte_entity as (
- * 	select * from hte_entity e join dml_cte_1 c on e.row_number = c.row_number
- * ),
- * dml_cte_2 as (
- *  insert into sub_table select c.id, e.sub1 from hte_entity e
- * 	returning id
- * )
- * select count(*) from dml_cte_1
- * ```
- *
- * @author Christian Beikov
- */
+/// [SqmMultiTableInsertStrategy] implementation using SQL's modifiable CTE (Common Table Expression)
+/// approach to perform the update/delete.  E.g. (using delete):
+///
+/// This strategy will create a query like this:
+/// ```sql
+/// with hte_entity as (
+/// 	select *, next value for sequence from ...
+/// ),
+/// dml_cte_1 as (
+/// 	insert into base_table select e.id, e.base from hte_entity e
+/// 	returning id
+/// ),
+/// dml_cte_2 as (
+///  insert into sub_table select e.id, e.sub1 from hte_entity e
+/// 	returning id
+/// )
+/// select count(*) from dml_cte_1
+/// ```
+/// if the sequence generator has an optimizer, the optimizer is implemented in SQL like this:
+/// ```sql
+/// with hte_entity_raw as (
+/// 	select *, row_number() over() from ...
+/// ),
+/// rows_with_next_val(rn, val) as (
+///  -- then, fetch a sequence value for every row number that needs it
+///  select rn, next value for sequence FROM rows_needing_next_val
+///  where (e.rn-1) % [incrementSize] = 0
+/// ),
+/// hte_entity as (
+///  select e.*, t.val + (e.rn - t.rn) as id
+///  from hte_entity_raw e
+///  -- join the data against the generated sequence value, based on the row number group they belong to
+///  -- i.e. where the row number is within the increment size
+///  left join rows_with_next_val t ON e.rn - ((e.rn-1) % 10) = t.rn
+/// ),
+/// dml_cte_1 as (
+/// 	insert into base_table select e.id, e.base from hte_entity e
+/// 	returning id
+/// ),
+/// dml_cte_2 as (
+///  insert into sub_table select e.id, e.sub1 from hte_entity e
+/// 	returning id
+/// )
+/// select count(*) from dml_cte_1
+/// ```
+/// in case the id generator uses identity generation, a row number will be created which should ensure insert ordering
+/// ```sql
+/// with hte_entity_raw as (
+/// 	select *, row_number() over() from ...
+/// ),
+/// dml_cte_1 as (
+/// 	insert into base_table select e.id, e.base from hte_entity_raw e
+/// 	returning id, e.row_number
+/// ),
+/// with hte_entity as (
+/// 	select * from hte_entity e join dml_cte_1 c on e.row_number = c.row_number
+/// ),
+/// dml_cte_2 as (
+///  insert into sub_table select c.id, e.sub1 from hte_entity e
+/// 	returning id
+/// )
+/// select count(*) from dml_cte_1
+/// ```
+///
+/// @author Christian Beikov
 public class CteInsertStrategy implements SqmMultiTableInsertStrategy {
 	public static final String SHORT_NAME = "cte";
 

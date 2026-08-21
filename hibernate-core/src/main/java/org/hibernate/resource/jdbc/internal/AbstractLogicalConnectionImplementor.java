@@ -14,6 +14,7 @@ import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
 import org.hibernate.resource.jdbc.spi.PhysicalJdbcTransaction;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 
+import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_LOGGER;
 import static org.hibernate.resource.jdbc.internal.LogicalConnectionLogging.CONNECTION_LOGGER;
 
 /**
@@ -77,24 +78,41 @@ public abstract class AbstractLogicalConnectionImplementor implements LogicalCon
 
 	@Override
 	public void commit() {
+		if ( isPhysicallyConnected() ) {
+			commitConnection();
+		}
+		else {
+			errorIfClosed();
+			status = TransactionStatus.COMMITTED;
+		}
+		afterCompletion();
+	}
+
+	private void commitConnection() {
 		try {
 			CONNECTION_LOGGER.preparingToCommitViaConnectionCommit();
 			status = TransactionStatus.COMMITTING;
-			if ( isPhysicallyConnected() ) {
-				getConnectionForTransactionManagement().commit();
-			}
-			else {
-				errorIfClosed();
-			}
+			getConnectionForTransactionManagement().commit();
 			status = TransactionStatus.COMMITTED;
 			CONNECTION_LOGGER.transactionCommittedViaConnectionCommit();
 		}
-		catch( SQLException e ) {
+		catch (SQLException e) {
+			// commit failed, the current status of the
+			// transaction is ambiguous
 			status = TransactionStatus.FAILED_COMMIT;
+			// make a last ditch attempt to roll it back
+			try {
+				getConnectionForTransactionManagement().rollback();
+				status = TransactionStatus.ROLLED_BACK;
+			}
+			catch (SQLException e2) {
+				e.addSuppressed( e2 );
+				JDBC_LOGGER.encounteredFailureRollingBackFailedCommit( e2 );
+				// at this point we can't really know for
+				// sure what happened to the transaction
+			}
 			throw new TransactionException( "Unable to commit against JDBC Connection", e );
 		}
-
-		afterCompletion();
 	}
 
 	protected void afterCompletion() {
@@ -128,7 +146,7 @@ public abstract class AbstractLogicalConnectionImplementor implements LogicalCon
 			status = TransactionStatus.ROLLED_BACK;
 			CONNECTION_LOGGER.transactionRolledBackViaConnectionRollback();
 		}
-		catch( SQLException e ) {
+		catch ( SQLException e ) {
 			status = TransactionStatus.FAILED_ROLLBACK;
 			throw new TransactionException( "Unable to rollback against JDBC Connection", e );
 		}
@@ -147,7 +165,7 @@ public abstract class AbstractLogicalConnectionImplementor implements LogicalCon
 	}
 
 	@Override
-	public TransactionStatus getStatus(){
+	public TransactionStatus getStatus() {
 		return status;
 	}
 

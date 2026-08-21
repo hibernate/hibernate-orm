@@ -922,4 +922,37 @@ public final class StringHelper {
 		return string == null ? null : string.intern();
 	}
 
+	/**
+	 * Converts a string to normal Java variable name capitalization following
+	 * the JavaBeans Introspector rules. This normally means converting the first
+	 * character from upper case to lower case, but in the (unusual) special case
+	 * when there is more than one character and both the first and second characters
+	 * are upper case, we leave it alone.
+	 * <p>
+	 * Thus "FooBah" becomes "fooBah" and "X" becomes "x", but "URL" stays as "URL".
+	 * <p>
+	 * This is a reimplementation of {@code java.beans.Introspector.decapitalize()}
+	 * to avoid pulling in the java.desktop module dependency.
+	 *
+	 * @param name The string to be decapitalized.
+	 * @return The decapitalized version of the string.
+	 */
+	public static String decapitalize(final String name) {
+		if ( name == null || name.isEmpty() ) {
+			return name;
+		}
+		final char firstChar = name.charAt( 0 );
+		// Already lowercase - return as-is to avoid allocation
+		if ( Character.isLowerCase( firstChar ) ) {
+			return name;
+		}
+		// Both first and second chars uppercase - return unchanged per JavaBeans spec
+		if ( name.length() > 1 && Character.isUpperCase( name.charAt( 1 ) ) ) {
+			return name;
+		}
+		final char[] chars = name.toCharArray();
+		chars[0] = Character.toLowerCase( firstChar );
+		return new String( chars );
+	}
+
 }

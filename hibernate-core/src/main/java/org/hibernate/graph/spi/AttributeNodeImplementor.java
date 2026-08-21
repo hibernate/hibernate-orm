@@ -29,6 +29,15 @@ public interface AttributeNodeImplementor<J, E, K> extends AttributeNode<J>, Gra
 	AttributeNodeImplementor<J, E, K> makeCopy(boolean mutable);
 
 	/**
+	 * Mark the attribute as removed or not.
+	 * We allow passing the boolean to allow for later unmarking it for removal, e.g.
+	 * should {@linkplain org.hibernate.graph.Graph#addAttributeNode} be called later.
+	 *
+	 * @return {@code this} for chaining.
+	 */
+	AttributeNodeImplementor<J, E, K> markRemoved(boolean removed);
+
+	/**
 	 * Create a value subgraph, without knowing whether it represents a singular value or
 	 * plural element, rooted at this attribute node.
 	 *

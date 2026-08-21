@@ -113,6 +113,13 @@ All you have to do is run the following command:
 
 omitting the argument will print a list of possible options.
 
+If you need to keep multiple databases started by the script running, start them with `-k/--keep-orphans` argument:
+
+----
+./docker_db.sh -k postgresql
+./docker_db.sh -k mysql
+----
+
 When the database is properly started, you can run tests with special profiles that are suffixed with `_ci`
 e.g. `pgsql_ci` for PostgreSQL. By using the system property `dbHost` you can configure the IP address of your docker host.
 
@@ -190,6 +197,10 @@ The following table illustrates a list of commands for various databases that ca
 |Informix
 |`./docker_db.sh informix`
 |`./gradlew test -Pdb=informix`
+
+|Spanner PostgreSQL
+|`./docker_db.sh spanner_pg`
+|`./gradlew test -Pdb=spannerpgsql`
 |===
 
 To stop a container started by `docker`, use the command

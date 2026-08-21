@@ -6,6 +6,8 @@ package org.hibernate.orm.test.lob;
 
 import java.sql.Blob;
 
+import jakarta.persistence.Access;
+import jakarta.persistence.AccessType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -32,6 +34,7 @@ public class LobEntity {
 
 	@Lob
 	@Column(length = BLOB_LENGTH)
+	@Access( AccessType.FIELD )
 	private Blob blob;
 
 	public Blob getBlob() {

@@ -54,7 +54,8 @@ class NoDefaultOptimisticLockAnnotationTest {
 			consumer.getConsumerItems().add( inventory );
 		} );
 
-		statementInspector.assertIsInsert( 1 );
+		// Might generate select statement for sequence, so assert insert happens rather than assert the first query is an insert
+		statementInspector.assertInsertCount(1);
 		statementInspector.assertNoUpdate();
 	}
 }

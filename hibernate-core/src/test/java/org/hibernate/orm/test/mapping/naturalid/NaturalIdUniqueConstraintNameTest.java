@@ -10,6 +10,7 @@ import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.boot.MetadataSources;
+import org.hibernate.mapping.Index;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
@@ -31,16 +32,28 @@ public class NaturalIdUniqueConstraintNameTest {
 				.addAnnotatedClasses( getAnnotatedClasses() )
 				.buildMetadata();
 
-		var uniqueKeys = metadata.getEntityBinding( City1.class.getName() )
-				.getTable()
-				.getUniqueKeys();
+		var table = metadata.getEntityBinding( City1.class.getName() )
+				.getTable();
 
-		// The unique key should not be duplicated for NaturalID + UniqueConstraint.
-		assertEquals( 1, uniqueKeys.size() );
+		if (metadata.getDatabase().getDialect().supportsUniqueConstraints()) {
+			var uniqueKeys = table.getUniqueKeys();
 
-		// The unique key should use the name specified in UniqueConstraint.
-		var uniqueKey = uniqueKeys.values().iterator().next();
-		assertEquals( "UK_zipCode_city", uniqueKey.getName() );
+			// The unique key should not be duplicated for NaturalID + UniqueConstraint.
+			assertEquals( 1, uniqueKeys.size() );
+
+			// The unique key should use the name specified in UniqueConstraint.
+			var uniqueKey = uniqueKeys.values().iterator().next();
+			assertEquals( "UK_zipCode_city", uniqueKey.getName() );
+		}
+		else {
+			var uniqueIndexes = table.getIndexes().values().stream().filter( Index::isUnique ).toList();
+
+			// The unique key should not be duplicated for NaturalID + UniqueConstraint.
+			assertEquals( 1, uniqueIndexes.size() );
+
+			// The unique key should use the name specified in UniqueConstraint.
+			assertEquals( "UK_zipCode_city", uniqueIndexes.get( 0 ).getName() );
+		}
 	}
 
 	@Test
@@ -49,17 +62,32 @@ public class NaturalIdUniqueConstraintNameTest {
 				.addAnnotatedClasses( getAnnotatedClasses() )
 				.buildMetadata();
 
-		var uniqueKeys = metadata.getEntityBinding( City2.class.getName() )
-				.getTable()
-				.getUniqueKeys();
+		var table = metadata.getEntityBinding( City1.class.getName() )
+				.getTable();
 
-		// The unique key should not be duplicated for NaturalID + UniqueConstraint.
-		assertEquals( 1, uniqueKeys.size() );
+		if (metadata.getDatabase().getDialect().supportsUniqueConstraints()) {
+			var uniqueKeys = table.getUniqueKeys();
 
-		// The unique key should use the name specified in UniqueConstraint.
-		var uniqueKey = uniqueKeys.values().iterator().next();
-		assertEquals( "zipCode", uniqueKey.getColumns().get( 0 ).getName() );
-		assertEquals( "city", uniqueKey.getColumns().get( 1 ).getName() );
+			// The unique key should not be duplicated for NaturalID + UniqueConstraint.
+			assertEquals( 1, uniqueKeys.size() );
+
+			// The unique key should use the name specified in UniqueConstraint.
+			var uniqueKey = uniqueKeys.values().iterator().next();
+			assertEquals( "zipCode", uniqueKey.getColumns().get( 0 ).getName() );
+			assertEquals( "city", uniqueKey.getColumns().get( 1 ).getName() );
+		}
+		else {
+			var uniqueIndexes = table.getIndexes().values().stream().filter( Index::isUnique ).toList();
+
+			// The unique key should not be duplicated for NaturalID + UniqueConstraint.
+			assertEquals( 1, uniqueIndexes.size() );
+
+			// The unique key should use the name specified in UniqueConstraint.
+			var uniqueIndex = uniqueIndexes.get( 0 );
+			assertEquals( "zipCode", uniqueIndex.getColumns().get( 0 ).getName() );
+			assertEquals( "city", uniqueIndex.getColumns().get( 1 ).getName() );
+		}
+
 	}
 
 	@Entity(name = "City1")

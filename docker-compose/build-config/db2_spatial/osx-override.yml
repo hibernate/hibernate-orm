@@ -1,0 +1,8 @@
+services:
+  db2spatial:
+    platform: linux/amd64
+    environment:
+      IS_OSXFS: "true"
+    volumes:
+      - ${db2_install_script}:/db2install.sh
+    entrypoint: ["/bin/bash", "-c", "/db2install.sh"]

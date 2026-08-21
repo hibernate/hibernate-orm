@@ -68,7 +68,8 @@ class CriteriaRestrictionTest {
 				}
 		);
 	}
-	@Entity static class Doc {
+	@Entity(name = "Doc")
+	static class Doc {
 		@Id
 		@GeneratedValue
 		UUID uuid;

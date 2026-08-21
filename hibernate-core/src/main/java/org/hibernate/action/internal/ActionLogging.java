@@ -5,6 +5,7 @@
 package org.hibernate.action.internal;
 
 import java.lang.invoke.MethodHandles;
+import java.util.Locale;
 import java.util.Set;
 
 import org.hibernate.Internal;
@@ -34,7 +35,7 @@ public interface ActionLogging extends BasicLogger {
 	String NAME = SubSystemLogging.BASE + ".action";
 
 	ActionLogging ACTION_LOGGER = Logger.getMessageLogger(
-			MethodHandles.lookup(), ActionLogging.class, NAME
+			MethodHandles.lookup(), ActionLogging.class, NAME, Locale.ROOT
 	);
 
 	int NAMESPACE = 90032000;

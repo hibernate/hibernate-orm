@@ -12,7 +12,7 @@ import org.hibernate.Incubating;
  * implementing {@link Generator#getEventTypes()}.
  * <p>
  * We usually work with {@linkplain EventTypeSets sets} of event types,
- * even though there are only two types.
+ * even though there are only three types.
  *
  * @author Gavin King
  *

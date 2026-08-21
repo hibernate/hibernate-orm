@@ -112,6 +112,7 @@ dependencies {
 }
 
 checkerFramework {
+    version = "dependencies"
     excludeTests = true
     skipCheckerFramework = !gradle.startParameter.taskNames.contains("ciCheck")
     checkers = [

@@ -21,7 +21,7 @@ import jakarta.persistence.UniqueConstraint;
 public class Sky implements Serializable {
 	@Id
 	protected Long id;
-	@Column(unique = true, columnDefinition = "varchar(250)", nullable = false)
+	@Column(unique = true, length = 250, nullable = false)
 	protected String color;
 	@Column(name="`day`",nullable = false)
 	protected String day;

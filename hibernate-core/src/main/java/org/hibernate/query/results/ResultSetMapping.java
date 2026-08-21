@@ -67,7 +67,7 @@ public interface ResultSetMapping extends JdbcValuesMappingProducer {
 
 	/**
 	 * Visit the "legacy" fetch builders.
-	 * <p/>
+	 * <p>
 	 * Historically these mappings in Hibernate were defined such that results and fetches are
 	 * unaware of each other.  So while {@link ResultBuilder} encapsulates the fetches (see
 	 * {@link ResultBuilder#visitFetchBuilders}), fetches defined in the legacy way are unassociated

@@ -4,39 +4,53 @@
  */
 package org.hibernate.query.sqm.internal;
 
+import java.util.List;
+import java.util.ArrayList;
+
+import jakarta.persistence.TupleElement;
+import jakarta.persistence.criteria.CompoundSelection;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.query.spi.QueryParameterImplementor;
-import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
-import org.hibernate.query.sqm.tree.expression.SqmParameter;
-import org.hibernate.query.sqm.tree.expression.ValueBindJpaCriteriaParameter;
+import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.query.KeyedPage;
 import org.hibernate.query.KeyedResultList;
 import org.hibernate.query.Page;
 import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.hql.internal.QuerySplitter;
+import org.hibernate.query.internal.DelegatingDomainQueryExecutionContext;
 import org.hibernate.query.spi.AbstractSelectionQuery;
+import org.hibernate.query.spi.DelegatingQueryOptions;
+import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.spi.HqlInterpretation;
 import org.hibernate.query.spi.MutableQueryOptions;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
+import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.spi.SelectQueryPlan;
 import org.hibernate.query.sqm.spi.NamedSqmQueryMemento;
+import org.hibernate.query.sqm.sql.BaseSqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.SqmStatement;
+import org.hibernate.query.sqm.tree.domain.SqmTreatedRoot;
+import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
 import org.hibernate.query.sqm.tree.expression.SqmJpaCriteriaParameterWrapper;
+import org.hibernate.query.sqm.tree.expression.SqmParameter;
+import org.hibernate.query.sqm.tree.expression.ValueBindJpaCriteriaParameter;
+import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
+import org.hibernate.query.sqm.tree.from.SqmFrom;
+import org.hibernate.query.sqm.tree.from.SqmRoot;
+import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.sql.results.internal.TupleMetadata;
 
-import java.util.List;
-
-import jakarta.persistence.TupleElement;
-import jakarta.persistence.criteria.CompoundSelection;
-
 import static org.hibernate.cfg.QuerySettings.FAIL_ON_PAGINATION_OVER_COLLECTION_FETCH;
 import static org.hibernate.query.KeyedPage.KeyInterpretation.KEY_OF_FIRST_ON_NEXT_PAGE;
 import static org.hibernate.query.QueryLogging.QUERY_MESSAGE_LOGGER;
+import static org.hibernate.query.common.FetchClauseType.PERCENT_ONLY;
+import static org.hibernate.query.common.FetchClauseType.PERCENT_WITH_TIES;
+import static org.hibernate.query.sqm.internal.AppliedGraphs.containsCollectionFetches;
+import static org.hibernate.query.spi.SqlOmittingQueryOptions.omitSqlQueryOptions;
 import static org.hibernate.query.sqm.internal.KeyedResult.collectKeys;
 import static org.hibernate.query.sqm.internal.KeyedResult.collectResults;
 import static org.hibernate.query.sqm.internal.SqmUtil.isHqlTuple;
@@ -45,7 +59,7 @@ import static org.hibernate.query.sqm.internal.SqmUtil.isSelectionAssignableToRe
 /**
  * @author Gavin King
  */
-abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
+public abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
 
 	AbstractSqmSelectionQuery(SharedSessionContractImplementor session) {
 		super(session);
@@ -67,8 +81,13 @@ abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
 				: getQueryOptions().getLimit().getFirstRow();
 	}
 
-	protected static boolean hasLimit(SqmSelectStatement<?> sqm, MutableQueryOptions queryOptions) {
+	protected static boolean hasLimit(SqmSelectStatement<?> sqm, QueryOptions queryOptions) {
 		return queryOptions.hasLimit() || sqm.getFetch() != null || sqm.getOffset() != null;
+	}
+
+	protected static boolean shouldApplyLimitInMemory(SqmSelectStatement<?> sqm, QueryOptions queryOptions) {
+		return queryOptions.isLimitInMemoryEnabled() == Boolean.TRUE
+			&& hasLimit( sqm, queryOptions );
 	}
 
 	protected boolean needsDistinct(boolean containsCollectionFetches, boolean hasLimit, SqmSelectStatement<?> sqmStatement) {
@@ -94,6 +113,124 @@ abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
 		else {
 			QUERY_MESSAGE_LOGGER.firstOrMaxResultsSpecifiedWithCollectionFetch();
 		}
+	}
+
+	List<R> handleDistinct(boolean hasLimit, SqmSelectStatement<?> statement, List<R> list) {
+		final int first = first( hasLimit, statement );
+		final int max = max( hasLimit, statement, list );
+		if ( first > 0 || max != -1 ) {
+			final int resultSize = list.size();
+			if ( first > resultSize ) {
+				return new ArrayList<>( 0 );
+			}
+			else {
+				final int toIndex = max != -1 ? first + max : resultSize;
+				return list.subList( first, Math.min( toIndex, resultSize ) );
+			}
+		}
+		else {
+			return list;
+		}
+	}
+
+	/**
+	 * The pagination is pushed down into a derived table over the root entity by
+	 * {@code BaseSqmToSqlAstConverter}'s
+	 * {@code CollectionFetchPaginationQueryTransformer}, so the in-memory slice
+	 * after execution is unnecessary and no warning needs to be logged. These
+	 * conditions must stay in sync with the transformer's preconditions.
+	 */
+	protected boolean isPaginationPushedToDerivedTable() {
+		if ( getQueryOptions().isLimitInMemoryEnabled() == Boolean.TRUE ) {
+			return false;
+		}
+		final var sessionFactory = getSessionFactory();
+		if ( !sessionFactory.getJdbcServices().getDialect().supportsOffsetInSubquery() ) {
+			return false;
+		}
+		final var stmt = getSqmStatement();
+		if ( !( stmt instanceof SqmSelectStatement<?> select ) ) {
+			return false;
+		}
+		final var queryPart = select.getQueryPart();
+		if ( !( queryPart instanceof SqmQuerySpec<?> spec ) ) {
+			return false;
+		}
+		final var roots = spec.getFromClause().getRoots();
+		if ( roots.isEmpty() ) {
+			return false;
+		}
+		// "fetch first N percent rows" pushed into the inner derived table needs
+		// either native PERCENT support in a subquery or window-function-based
+		// emulation; HSQLDB has neither. Mirror the converter's bail.
+		final var fetchClauseType = spec.getFetchClauseType();
+		if ( fetchClauseType == PERCENT_ONLY || fetchClauseType == PERCENT_WITH_TIES ) {
+			final var dialect = sessionFactory.getJdbcServices().getDialect();
+			if ( !dialect.supportsFetchClause( PERCENT_ONLY )
+					&& !dialect.supportsWindowFunctions() ) {
+				return false;
+			}
+		}
+		if ( BaseSqmToSqlAstConverter.ordersByPluralFetchBeforeOwner( spec ) ) {
+			// When a query orders by a collection element before the owner,
+			// pushing the owner table into a paginated subquery is not safe,
+			// because the pagination ordering depends on the collection element.
+			// This is arguably silly, but let's play safe here and disable the transformation in this case.
+			return false;
+		}
+		// The transformer only rewrites when at least one root contributes a
+		// fetched plural join (directly, or through a chain of fetched
+		// singulars). Without that, the converter leaves the limit on the
+		// original query spec; if the runtime suppresses the in-memory fallback
+		// here too, the query silently returns unpaginated results. Match the
+		// converter's preconditions.
+		return hasAnyReachableFetchedPlural( roots )
+			|| hasCollectionFetchesOnlyViaAppliedGraph( roots );
+	}
+
+	private boolean hasCollectionFetchesOnlyViaAppliedGraph(List<SqmRoot<?>> roots) {
+		return containsCollectionFetches( getQueryOptions() )
+			&& allRootsAreEntities( roots );
+	}
+
+	private static boolean hasAnyReachableFetchedPlural(List<SqmRoot<?>> roots) {
+		boolean anyReachable = false;
+		for ( var root : roots ) {
+			if ( !isEntityRoot( root ) ) {
+				return false;
+			}
+			if ( !anyReachable && hasReachableFetchedPluralJoin( root ) ) {
+				anyReachable = true;
+			}
+		}
+		return anyReachable;
+	}
+
+	private static boolean allRootsAreEntities(List<SqmRoot<?>> roots) {
+		for ( var root : roots ) {
+			if ( !isEntityRoot( root ) ) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	private static boolean isEntityRoot(SqmRoot<?> root) {
+		return root.getClass() == SqmRoot.class || root.getClass() == SqmTreatedRoot.class;
+	}
+
+	private static boolean hasReachableFetchedPluralJoin(SqmFrom<?, ?> from) {
+		for ( var join : from.getSqmJoins() ) {
+			if ( join instanceof SqmAttributeJoin<?, ?> attributeJoin
+					&& attributeJoin.isFetched() ) {
+				if ( attributeJoin.getReferencedPathSource() instanceof PluralPersistentAttribute
+						// Walk through fetched singulars looking for a nested fetched plural.
+						|| hasReachableFetchedPluralJoin( attributeJoin ) ) {
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 
 	public abstract SqmStatement<R> getSqmStatement();
@@ -187,16 +324,19 @@ abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
 		if ( jpaCriteriaParamResolutions.isEmpty() ) {
 			return null;
 		}
-		int maxId = 0;
-		for ( var criteriaWrapper : jpaCriteriaParamResolutions.values() ) {
-			maxId = Math.max( maxId, criteriaWrapper.getCriteriaParameterId() );
+		else {
+			int maxId = 0;
+			for ( var criteriaWrapper : jpaCriteriaParamResolutions.values() ) {
+				maxId = Math.max( maxId, criteriaWrapper.getCriteriaParameterId() );
+			}
+			final var unnamedParameterIndices = new int[maxId + 1];
+			for ( var entry : jpaCriteriaParamResolutions.entrySet() ) {
+				final var value = entry.getValue();
+				unnamedParameterIndices[value.getCriteriaParameterId()] =
+						value.getUnnamedParameterId();
+			}
+			return unnamedParameterIndices;
 		}
-		final var unnamedParameterIndices = new int[maxId + 1];
-		for ( var entry : jpaCriteriaParamResolutions.entrySet() ) {
-			unnamedParameterIndices[entry.getValue().getCriteriaParameterId()] =
-					entry.getValue().getUnnamedParameterId();
-		}
-		return unnamedParameterIndices;
 	}
 
 	@Override
@@ -224,7 +364,8 @@ abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
 		);
 	}
 
-	private static <R> KeyedPage<R> nextPage(KeyedPage<R> keyedPage, List<KeyedResult<R>> results) {
+	// Used by Hibernate Reactive
+	public static <R> KeyedPage<R> nextPage(KeyedPage<R> keyedPage, List<KeyedResult<R>> results) {
 		if ( keyedPage.getKeyInterpretation() == KEY_OF_FIRST_ON_NEXT_PAGE ) {
 			// the results come in reverse order
 			return !results.isEmpty()
@@ -239,7 +380,8 @@ abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
 		}
 	}
 
-	private static <R> KeyedPage<R> previousPage(KeyedPage<R> keyedPage, List<KeyedResult<R>> results) {
+	// Used by Hibernate Reactive
+	public static <R> KeyedPage<R> previousPage(KeyedPage<R> keyedPage, List<KeyedResult<R>> results) {
 		if ( keyedPage.getKeyInterpretation() == KEY_OF_FIRST_ON_NEXT_PAGE ) {
 			// the results come in reverse order
 			final int pageSize = keyedPage.getPage().getSize();
@@ -418,5 +560,47 @@ abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
 		return queryEngine.getInterpretationCache()
 				.resolveHqlInterpretation( memento.getHqlString(), expectedResultType,
 						queryEngine.getHqlTranslator() );
+	}
+
+	/**
+	 * When pagination has been pushed down into a derived table, the outer
+	 * {@code QueryOptions} limit must be suppressed&mdash;otherwise the
+	 * dialect would reapply it on the cartesian result of the outer fetch
+	 * joins, truncating rows mid-parent.
+	 */
+	DomainQueryExecutionContext scrollExecutionContext(SqmSelectStatement<?> statement) {
+		final var queryOptions = getQueryOptions();
+		final boolean pushedDown =
+				hasLimit( statement, queryOptions )
+						&& statement.containsCollectionFetches()
+						&& isPaginationPushedToDerivedTable();
+		final boolean applyLimitInScrollableResults =
+				shouldApplyLimitInMemory( statement, queryOptions )
+						|| hasLimit( statement, queryOptions )
+								&& statement.containsCollectionFetches()
+								&& !pushedDown;
+		final var normalizedQueryOptions =
+				applyLimitInScrollableResults || pushedDown
+						? omitSqlQueryOptions( queryOptions, true, false )
+						: queryOptions;
+		final var scrollQueryOptions = new DelegatingQueryOptions( normalizedQueryOptions ) {
+			@Override
+			public boolean isScrollExecution() {
+				return true;
+			}
+
+			@Override
+			public Boolean isLimitInMemoryEnabled() {
+				return applyLimitInScrollableResults
+						? Boolean.TRUE
+						: super.isLimitInMemoryEnabled();
+			}
+		};
+		return new DelegatingDomainQueryExecutionContext( this ) {
+			@Override
+			public QueryOptions getQueryOptions() {
+				return scrollQueryOptions;
+			}
+		};
 	}
 }

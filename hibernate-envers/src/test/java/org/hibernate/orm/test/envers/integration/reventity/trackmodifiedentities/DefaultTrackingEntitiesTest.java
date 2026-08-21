@@ -3,6 +3,11 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.envers.integration.reventity.trackmodifiedentities;
+import org.hibernate.dialect.SpannerPostgreSQLDialect;
+import org.hibernate.dialect.SpannerDialect;
+
+import org.hibernate.testing.orm.junit.SkipForDialect;
+
 
 import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.envers.CrossTypeRevisionChangesReader;
@@ -38,6 +43,8 @@ import static org.junit.jupiter.api.Assertions.fail;
  *
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
+@SkipForDialect(dialectClass = SpannerPostgreSQLDialect.class, reason = "Spanner uses bit-reversed sequences which break assumptions")
+@SkipForDialect(dialectClass = SpannerDialect.class, reason = "Spanner uses bit-reversed sequences which break assumptions")
 @EnversTest
 @DomainModel(annotatedClasses = {StrTestEntity.class, StrIntTestEntity.class})
 @ServiceRegistry(settings = @Setting(name = EnversSettings.TRACK_ENTITIES_CHANGED_IN_REVISION, value = "true"))

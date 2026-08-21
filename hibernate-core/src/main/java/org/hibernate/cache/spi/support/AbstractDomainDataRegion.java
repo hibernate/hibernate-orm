@@ -67,8 +67,7 @@ public abstract class AbstractDomainDataRegion extends AbstractRegion implements
 	protected void completeInstantiation(
 			DomainDataRegionConfig regionConfig,
 			DomainDataRegionBuildingContext buildingContext) {
-		L2CACHE_LOGGER.tracef( "DomainDataRegion created [%s]; key-factory = %s",
-				regionConfig.getRegionName(), effectiveKeysFactory );
+		L2CACHE_LOGGER.domainDataRegionCreated( regionConfig.getRegionName(), effectiveKeysFactory );
 
 		entityDataAccessMap = generateEntityDataAccessMap( regionConfig );
 		naturalIdDataAccessMap = generateNaturalIdDataAccessMap( regionConfig );

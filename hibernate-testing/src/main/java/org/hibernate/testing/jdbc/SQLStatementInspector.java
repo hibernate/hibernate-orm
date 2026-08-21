@@ -146,4 +146,9 @@ public class SQLStatementInspector implements StatementInspector {
 				.isNotEmpty()
 				.anySatisfy( sql -> Assertions.assertThat( sql.toLowerCase( Locale.ROOT ) ).matches( queryPattern ) );
 	}
+
+	public void assertInsertCount(long expected) {
+		long actual = sqlQueries.stream().filter(s -> s.toLowerCase(Locale.ROOT).startsWith("insert")).count();
+		assertEquals("Number of executed insert statements", expected, actual);
+	}
 }

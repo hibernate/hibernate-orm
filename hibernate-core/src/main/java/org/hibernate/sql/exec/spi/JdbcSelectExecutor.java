@@ -207,6 +207,12 @@ public interface JdbcSelectExecutor {
 			private final List<String> databaseHints;
 			private final Integer fetchSize;
 			private final Limit limit;
+			private final Boolean limitInMemoryEnabled;
+			// Preserved across the SqlOmittingQueryOptions wrap so that runtime
+			// JdbcParameter binders that the converter injected (offset/limit)
+			// can still see the application-set limit even though getLimit()
+			// reports NONE for SQL rendering.
+			private final Limit originalLimit;
 			private final ExecutionContext context;
 
 			public ScrollableExecutionContext(
@@ -225,6 +231,8 @@ public interface JdbcSelectExecutor {
 					List<String> databaseHints,
 					Integer fetchSize,
 					Limit limit,
+					Boolean limitInMemoryEnabled,
+					Limit originalLimit,
 					ExecutionContext context) {
 				super( context.getSession() );
 				this.timeout = timeout;
@@ -242,6 +250,8 @@ public interface JdbcSelectExecutor {
 				this.databaseHints = databaseHints;
 				this.fetchSize = fetchSize;
 				this.limit = limit;
+				this.limitInMemoryEnabled = limitInMemoryEnabled;
+				this.originalLimit = originalLimit;
 				this.context = context;
 			}
 
@@ -336,6 +346,16 @@ public interface JdbcSelectExecutor {
 			}
 
 			@Override
+			public Boolean isLimitInMemoryEnabled() {
+				return limitInMemoryEnabled;
+			}
+
+			@Override
+			public Limit peekOriginalLimit() {
+				return originalLimit;
+			}
+
+			@Override
 			public QueryParameterBindings getQueryParameterBindings() {
 				return context.getQueryParameterBindings();
 			}
@@ -380,6 +400,8 @@ public interface JdbcSelectExecutor {
 				options.getDatabaseHints(),
 				options.getFetchSize(),
 				options.getLimit(),
+				options.isLimitInMemoryEnabled(),
+				options.peekOriginalLimit(),
 				context
 		);
 	}

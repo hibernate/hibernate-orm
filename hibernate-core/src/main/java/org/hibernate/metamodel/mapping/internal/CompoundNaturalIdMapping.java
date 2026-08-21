@@ -57,7 +57,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import static java.beans.Introspector.decapitalize;
+import static org.hibernate.internal.util.StringHelper.decapitalize;
 import static java.lang.reflect.Modifier.isStatic;
 import static java.util.Collections.emptyMap;
 

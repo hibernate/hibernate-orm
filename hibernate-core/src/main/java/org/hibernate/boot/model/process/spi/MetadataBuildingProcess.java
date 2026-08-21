@@ -13,6 +13,8 @@ import java.time.OffsetTime;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -31,6 +33,8 @@ import org.hibernate.boot.jaxb.internal.MappingBinder;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.TypeContributor;
+import org.hibernate.boot.model.convert.internal.ConverterDescriptors;
+import org.hibernate.boot.model.convert.spi.RegisteredConversion;
 import org.hibernate.boot.model.process.internal.ManagedResourcesImpl;
 import org.hibernate.boot.model.process.internal.ScanningCoordinator;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
@@ -111,6 +115,10 @@ import static org.hibernate.internal.util.config.ConfigurationHelper.getPreferre
  * @author Steve Ebersole
  */
 public class MetadataBuildingProcess {
+
+	private static final Comparator<TypeContributor> TYPE_CONTRIBUTOR_COMPARATOR = Comparator.comparingInt(
+					TypeContributor::ordinal )
+			.thenComparing( a -> a.getClass().getCanonicalName() );
 
 	/**
 	 * Unified single phase for MetadataSources to Metadata process
@@ -221,18 +229,39 @@ public class MetadataBuildingProcess {
 			MetadataBuildingContextRootImpl rootMetadataBuildingContext,
 			DomainModelSource domainModelSource,
 			InFlightMetadataCollectorImpl metadataCollector) {
-		final var processor = new MetadataSourceProcessor() {
-			private final MetadataSourceProcessor hbmProcessor =
-					options.isXmlMappingEnabled()
-							? new HbmMetadataSourceProcessorImpl( managedResources, rootMetadataBuildingContext )
-							: new NoOpMetadataSourceProcessorImpl();
+		final MetadataSourceProcessor hbmProcessor = options.isXmlMappingEnabled()
+				? new HbmMetadataSourceProcessorImpl( managedResources, rootMetadataBuildingContext )
+				: new NoOpMetadataSourceProcessorImpl();
 
-			private final AnnotationMetadataSourceProcessorImpl annotationProcessor =
-					new AnnotationMetadataSourceProcessorImpl(
-							managedResources,
-							domainModelSource,
-							rootMetadataBuildingContext
-					);
+		final AnnotationMetadataSourceProcessorImpl annotationProcessor = new AnnotationMetadataSourceProcessorImpl(
+				managedResources,
+				domainModelSource,
+				rootMetadataBuildingContext
+		);
+
+		final var bootstrapContext = rootMetadataBuildingContext.getBootstrapContext();
+		final var classLoaderService = bootstrapContext.getClassLoaderService();
+		assert classLoaderService != null;
+
+		final var converterRegistry =
+				rootMetadataBuildingContext.getMetadataCollector().getConverterRegistry();
+		domainModelSource.getConversionRegistrations().forEach( registration -> {
+			final var explicitDomainType = registration.getExplicitDomainType();
+			converterRegistry.addRegisteredConversion( new RegisteredConversion(
+					explicitDomainType == void.class || explicitDomainType == Void.class
+							? void.class
+							: explicitDomainType,
+					registration.getConverterType(),
+					registration.isAutoApply()
+			) );
+		} );
+		domainModelSource.getConverterRegistrations().forEach( registration ->
+				converterRegistry.addAttributeConverter( ConverterDescriptors.of(
+						classLoaderService.classForName( registration.converterClass().getClassName() ),
+						registration.autoApply(), false
+				) ) );
+
+		final var processor = new MetadataSourceProcessor() {
 
 			@Override
 			public void prepare() {
@@ -711,7 +740,7 @@ public class MetadataBuildingProcess {
 		dialect.contribute( typeContributions, options.getServiceRegistry() );
 
 		// add TypeContributor contributed types.
-		for ( var typeContributor : classLoaderService.loadJavaServices( TypeContributor.class ) ) {
+		for ( var typeContributor : sortedTypeContributors( classLoaderService ) ) {
 			typeContributor.contribute( typeContributions, options.getServiceRegistry() );
 		}
 
@@ -836,6 +865,14 @@ public class MetadataBuildingProcess {
 //		}
 //		// else warning?
 //	}
+
+	private static List<TypeContributor> sortedTypeContributors(
+			ClassLoaderService classLoaderService) {
+		Collection<TypeContributor> typeContributors = classLoaderService.loadJavaServices( TypeContributor.class );
+		List<TypeContributor> contributors = new ArrayList<>( typeContributors );
+		contributors.sort( TYPE_CONTRIBUTOR_COMPARATOR );
+		return contributors;
+	}
 
 	private static void adaptToPreferredSqlTypeCode(
 			TypeConfiguration typeConfiguration,

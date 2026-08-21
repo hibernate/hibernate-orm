@@ -409,7 +409,7 @@ public class EntityManagerTest extends EntityManagerFactoryBasedFunctionalTest {
 			w.setSerial( "0324" );
 			entityManager.persist( w );
 			Wallet wallet = entityManager.find( Wallet.class, w.getSerial() );
-			entityManager.createNativeQuery( "delete from Wallet" ).executeUpdate();
+			entityManager.createNativeQuery( "delete from Wallet where 1=1" ).executeUpdate();
 			assertThrows(
 					EntityNotFoundException.class,
 					() -> entityManager.refresh( wallet ),

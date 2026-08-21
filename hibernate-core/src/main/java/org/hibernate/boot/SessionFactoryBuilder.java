@@ -13,7 +13,10 @@ import org.hibernate.Interceptor;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.annotations.CacheLayout;
+import org.hibernate.audit.AuditStrategy;
 import org.hibernate.cache.spi.TimestampsCacheFactory;
+import org.hibernate.cfg.StateManagementSettings;
+import org.hibernate.temporal.TemporalTableStrategy;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.context.spi.TenantCredentialsMapper;
 import org.hibernate.context.spi.TenantSchemaMapper;
@@ -692,6 +695,16 @@ public interface SessionFactoryBuilder {
 	 * @return {@code this}, for method chaining
 	 */
 	SessionFactoryBuilder applyCollectionsInDefaultFetchGroup(boolean enabled);
+
+	/**
+	 * @see StateManagementSettings#TEMPORAL_TABLE_STRATEGY
+	 */
+	SessionFactoryBuilder applyTemporalTableStrategy(TemporalTableStrategy strategy);
+
+	/**
+	 * @see StateManagementSettings#AUDIT_STRATEGY
+	 */
+	SessionFactoryBuilder applyAuditStrategy(AuditStrategy strategy);
 
 	/**
 	 * @see org.hibernate.cfg.AvailableSettings#ALLOW_UPDATE_OUTSIDE_TRANSACTION

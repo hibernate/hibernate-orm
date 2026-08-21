@@ -9,6 +9,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Lob;
 
 import org.hibernate.annotations.Nationalized;
+import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.dialect.SybaseASEDialect;
 
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
@@ -22,6 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * @author Vlad Mihalcea
  */
 @SkipForDialect(dialectClass = SybaseASEDialect.class)
+@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Altibase CLOB does not preserve supplementary Unicode characters")
 @Jpa( annotatedClasses = {NClobStringTest.Product.class} )
 public class NClobStringTest {
 

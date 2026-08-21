@@ -36,7 +36,7 @@ import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
@@ -62,7 +62,7 @@ public class XmlFunctionTests {
 
 	XmlHolder entity;
 
-	@BeforeEach
+	@BeforeAll
 	public void prepareData(SessionFactoryScope scope) {
 		scope.inTransaction(
 				em -> {
@@ -104,7 +104,7 @@ public class XmlFunctionTests {
 
 	@AfterEach
 	public void cleanupData(SessionFactoryScope scope) {
-		scope.getSessionFactory().getSchemaManager().truncate();
+		// scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

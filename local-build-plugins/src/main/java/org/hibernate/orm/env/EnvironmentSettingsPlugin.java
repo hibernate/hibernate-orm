@@ -22,7 +22,9 @@ public class EnvironmentSettingsPlugin implements Plugin<Settings> {
 		final JpaVersion jpaVersion = JpaVersion.from( settings );
 		settings.getExtensions().add( "jpaVersion", jpaVersion );
 		settings.getExtensions().add( JpaVersion.EXT_KEY, jpaVersion.getOsgiName() );
-		settings.getExtensions().add( "db", Objects.requireNonNullElse( getP( settings, "db" ), "h2" ) );
+		final String dbVersion = getP( settings, "dbVersion" );
+		final String dbSuffix = dbVersion == null ? "" : ("-" + dbVersion);
+		settings.getExtensions().add( "db", Objects.requireNonNullElse( getP( settings, "db" ), "h2" ) + dbSuffix );
 		String ciNode = getP( settings, "ci.node" );
 		if ( ciNode != null ) {
 			settings.getExtensions().add( "ci.node", ciNode );

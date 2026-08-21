@@ -173,6 +173,7 @@ public class SimpleDeleteQueryPlan extends SimpleNonSelectQueryPlan {
 					new UpdateStatement(
 							sqlDeleteAst,
 							targetTable,
+							sqlDeleteAst.getMutationTarget(),
 							sqlDeleteAst.getFromClause(),
 							Collections.singletonList( assignment ),
 							sqlDeleteAst.getRestriction(),

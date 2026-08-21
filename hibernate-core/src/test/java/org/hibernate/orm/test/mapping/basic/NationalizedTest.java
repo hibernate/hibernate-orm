@@ -8,11 +8,13 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
 import org.hibernate.annotations.Nationalized;
+import org.hibernate.community.dialect.AltibaseDialect;
 
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -22,6 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  */
 @Jpa(annotatedClasses = NationalizedTest.Product.class)
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsUnicodeNClob.class)
+@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Altibase character types do not preserve supplementary Unicode characters")
 public class NationalizedTest {
 
 	@Test

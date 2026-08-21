@@ -21,8 +21,12 @@ import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
+import org.hibernate.query.sqm.ComparisonOperator;
+import org.hibernate.sql.ast.tree.expression.ColumnReference;
+import org.hibernate.sql.ast.tree.from.CollectionTableGroup;
 import org.hibernate.sql.ast.tree.from.OneToManyTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableGroupJoinProducer;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
@@ -154,18 +158,78 @@ public class OneToManyCollectionPart extends AbstractEntityCollectionPart implem
 			boolean addsPredicate,
 			SqlAstCreationState creationState) {
 		final var joinType = requireNonNullElse( requestedJoinType, SqlAstJoinType.INNER );
-		final var elementTableGroup = ( (OneToManyTableGroup) lhs ).getElementTableGroup();
+		if ( lhs instanceof CollectionTableGroup
+			&& getCollectionDescriptor().getAttributeMapping().getAuditMapping() != null ) {
+			// Temporal OTM with middle audit table: the collection uses a CollectionTableGroup
+			// instead of OneToManyTableGroup, so we create the entity as a joined table group
+			final var sqlAliasBase = SqlAliasBase.from(
+					explicitSqlAliasBase,
+					explicitSourceAlias,
+					this,
+					creationState.getSqlAliasBaseGenerator()
+			);
+			final var entityTableGroup = createAssociatedTableGroup(
+					lhs.canUseInnerJoins(),
+					navigablePath,
+					fetched,
+					explicitSourceAlias,
+					sqlAliasBase,
+					creationState
+			);
+			final var tableGroupJoin = new TableGroupJoin( navigablePath, joinType, entityTableGroup );
+			// Join on entity identifier: collection_table.child_id = entity.id
+			getAssociatedEntityMappingType().getIdentifierMapping().forEachSelectable(
+					(i, sel) -> tableGroupJoin.applyPredicate(
+							new ComparisonPredicate(
+									new ColumnReference( lhs.getPrimaryTableReference(), sel ),
+									ComparisonOperator.EQUAL,
+									new ColumnReference( entityTableGroup.getPrimaryTableReference(), sel )
+							)
+					)
+			);
+			return withMapKeyJoin(
+					tableGroupJoin,
+					entityTableGroup,
+					navigablePath,
+					fetched,
+					addsPredicate,
+					creationState
+			);
+		}
+		else if ( lhs instanceof OneToManyTableGroup otmTableGroup ) {
+			final var elementTableGroup = otmTableGroup.getElementTableGroup();
+			final var tableGroupJoin = new TableGroupJoin( navigablePath, joinType, elementTableGroup );
+			return withMapKeyJoin( tableGroupJoin,
+					elementTableGroup,
+					navigablePath,
+					fetched,
+					addsPredicate,
+					creationState
+			);
+		}
+		else {
+			throw new IllegalStateException(
+					"Unexpected table group type for OneToManyCollectionPart: " + lhs.getClass().getName()
+			);
+		}
+	}
 
-		// INDEX is implied if mapKeyPropertyName is not null
+	private TableGroupJoin withMapKeyJoin(
+			TableGroupJoin tableGroupJoin,
+			TableGroup elementTableGroup,
+			NavigablePath navigablePath,
+			boolean fetched,
+			boolean addsPredicate,
+			SqlAstCreationState creationState) {
 		if ( mapKeyPropertyName != null ) {
 			final var elementPart =
 					(EntityCollectionPart)
 							getCollectionDescriptor().getAttributeMapping()
 									.getElementDescriptor();
 			if ( elementPart.getAssociatedEntityMappingType().findAttributeMapping( mapKeyPropertyName )
-							instanceof ToOneAttributeMapping toOne ) {
+					instanceof ToOneAttributeMapping toOne ) {
 				final var mapKeyPropertyPath = navigablePath.append( mapKeyPropertyName );
-				final var tableGroupJoin = toOne.createTableGroupJoin(
+				final var mapKeyJoin = toOne.createTableGroupJoin(
 						mapKeyPropertyPath,
 						elementTableGroup,
 						null,
@@ -176,12 +240,11 @@ public class OneToManyCollectionPart extends AbstractEntityCollectionPart implem
 						creationState
 				);
 				creationState.getFromClauseAccess()
-						.registerTableGroup( mapKeyPropertyPath, tableGroupJoin.getJoinedGroup() );
-				return tableGroupJoin;
+						.registerTableGroup( mapKeyPropertyPath, mapKeyJoin.getJoinedGroup() );
+				return mapKeyJoin;
 			}
 		}
-
-		return new TableGroupJoin( navigablePath, joinType, elementTableGroup );
+		return tableGroupJoin;
 	}
 
 	@Override

@@ -16,6 +16,7 @@ import org.hibernate.community.dialect.FirebirdDialect;
 import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.community.dialect.DerbyDialect;
+import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.Setting;
@@ -39,6 +40,8 @@ import org.junit.jupiter.api.Test;
 		reason = "AltibaseDialect has autoQuoteKeywords enabled, so it is far more resistant to the reserved keyword usage.")
 @SkipForDialect(dialectClass = InformixDialect.class,
 		reason = "Informix is far more resistant to the reserved keyword usage.")
+@SkipForDialect(dialectClass = SpannerDialect.class,
+		reason = "SpannerDialect has autoQuoteKeywords enabled, so it is far more resistant to the reserved keyword usage.")
 @Jpa(
 		annotatedClasses = SchemaMigratorHaltOnErrorTest.From.class,
 		integrationSettings = {

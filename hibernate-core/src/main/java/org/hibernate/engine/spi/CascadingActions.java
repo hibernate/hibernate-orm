@@ -21,6 +21,7 @@ import org.hibernate.event.spi.RefreshContext;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.CollectionType;
+import org.hibernate.type.EntityType;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.ManyToOneType;
 import org.hibernate.type.OneToOneType;
@@ -166,8 +167,16 @@ public class CascadingActions {
 				EventSource session,
 				CollectionType collectionType,
 				Object collection) {
-			// refresh doesn't cascade to uninitialized collections
-			return getLoadedElementsIterator( collectionType, collection );
+			return collectionType.getElementType( session.getFactory() ).isEntityType()
+					? emptyIterator()
+					// refresh doesn't cascade to uninitialized collections
+					: getLoadedElementsIterator( collectionType, collection );
+		}
+
+		@Override
+		public boolean appliesTo(Type type, CascadeStyle style) {
+			return !( type instanceof EntityType )
+				&& super.appliesTo( type, style );
 		}
 
 		@Override

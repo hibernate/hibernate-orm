@@ -19,7 +19,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * Specifies a {@link MutabilityPlan} for a basic value mapping.
- *
+ * <p>
  * Mutability refers to whether the internal state of a value can change.
  * For example, {@linkplain java.util.Date Date} is considered mutable because its
  * internal state can be changed using {@link java.util.Date#setTime} whereas
@@ -31,10 +31,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * {@linkplain java.util.Date Date}, {@linkplain java.lang.String String}, etc.
  * {@linkplain Mutability} and friends allow plugging in specific strategies.
  *
+ * <h2>Mutability for basic-typed attributes</h2>
  *
- *
- * <h3>Mutability for basic-typed attributes</h3>
- * <p>
  * For basic-valued attributes, {@code @Mutability} specifies the mutability
  * of the basic value type.
  * <p>

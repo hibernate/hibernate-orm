@@ -15,13 +15,30 @@ import org.hibernate.type.BasicPluralType;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import static org.hibernate.dialect.function.array.DdlTypeHelper.getNarrowCastTypeName;
+
 /**
  * Oracle unnest function.
  */
 public class OracleUnnestFunction extends UnnestFunction {
 
+	@Deprecated(forRemoval = true)
 	public OracleUnnestFunction() {
-		super( "column_value", "i" );
+		this( false );
+	}
+
+	public OracleUnnestFunction(boolean supportsJsonType) {
+		super( "column_value", "i", !supportsJsonType );
+	}
+
+	@Override
+	protected String getDdlType(SqlTypedMapping sqlTypedMapping, int containerSqlTypeCode, SqlAstTranslator<?> translator) {
+		// Oracle's json_table()/xmltable() columns clause doesn't accept
+		// CLOB/NCLOB/BLOB; use the narrow-cast type name, which maps LOB
+		// types to sized VARCHAR2/NVARCHAR2/RAW (via OracleDialect's
+		// columnType overrides and Dialect's default narrowCastType).
+		return getNarrowCastTypeName( sqlTypedMapping,
+				translator.getSessionFactory().getTypeConfiguration() );
 	}
 
 	@Override

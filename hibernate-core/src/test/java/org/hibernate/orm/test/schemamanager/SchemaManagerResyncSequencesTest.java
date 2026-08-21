@@ -8,7 +8,9 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.SequenceGenerator;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
@@ -17,6 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SessionFactory
 @DomainModel(annotatedClasses = SchemaManagerResyncSequencesTest.EntityWithSequence.class)
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportPooledSequences.class)
 class SchemaManagerResyncSequencesTest {
 	@Test void test(SessionFactoryScope scope) {
 		var schemaManager = scope.getSessionFactory().getSchemaManager();

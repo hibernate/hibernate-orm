@@ -670,63 +670,13 @@ order by title, published desc
 fetch first 50 rows only
 ----
 
-These are well-defined limits: the number of results returned by the database will be limited to 50, as promised.
-But not every query is quite so well-behaved.
-
-[NOTE]
+[CAUTION]
 ====
-_Limiting_ certainly _isn't_ a well-defined relational operation, and must be used with care.
-
-In particular, limits don't play well with <<explicit-fetch-join,fetch joins>>.
-====
-
-This next query is accepted by HQL, and no more than 50 results are returned by `getResultList()`, just as expected:
-
-[[bad-limit-example]]
-[source, hql]
-----
-select title from Book
-    join fetch authors
-order by title, published desc
-limit 50
-----
-However, if you log the SQL executed by Hibernate, you'll notice something wrong:
-
-[source, sql]
-----
-select
-    b1_0.isbn,
-    a1_0.books_isbn,
-    a1_0.authors_ORDER,
-    a1_1.id,
-    a1_1.bio,
-    a1_1.name,
-    a1_1.person_id,
-    b1_0.price,
-    b1_0.published,
-    b1_0.publisher_id,
-    b1_0.title
-from
-    Book b1_0
-join
-    (Book_Author a1_0
-        join
-            Author a1_1
-                on a1_1.id=a1_0.authors_id)
-        on b1_0.isbn=a1_0.books_isbn
-order by
-    b1_0.title,
-    b1_0.published desc
-----
-
-What happened to the `limit` clause?
-
-[%unbreakable]
-[IMPORTANT]
-====
-When limits or pagination are combined with a fetch join, Hibernate must retrieve all matching results from the database and _apply the limit in memory_!
-
-This _almost certainly_ isn't the behavior you were hoping for, and in general will exhibit _terrible_ performance characteristics.
+Limiting isn't a well-defined relational operation, and must be used with care.
+Prior to Hibernate 7.4, limits didn't play well with many-valued <<explicit-fetch-join,fetch joins>>.
+This problem is now fixed on any database that supports limits and offsets in subqueries.
+But when a limit or pagination is combined with a fetch join to a collection on a database which _doesn't_ support this (notably, Sybase ASE), Hibernate must retrieve all matching results from the database and _apply the limit in memory_!
+This probably isn't the behavior you intended, and in general exhibits terrible performance characteristics.
 ====
 
 [[with-cte]]

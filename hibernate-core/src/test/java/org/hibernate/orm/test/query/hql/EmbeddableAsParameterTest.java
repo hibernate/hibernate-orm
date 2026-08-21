@@ -15,7 +15,7 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -68,7 +68,7 @@ public class EmbeddableAsParameterTest {
 		);
 	}
 
-	@BeforeEach
+	@BeforeAll
 	public void setUp(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -84,7 +84,7 @@ public class EmbeddableAsParameterTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.getSessionFactory().getSchemaManager().truncate();
+		// scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity(name = "Person")

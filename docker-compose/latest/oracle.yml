@@ -1,0 +1,16 @@
+services:
+  oracle:
+    image: ${DB_IMAGE_ORACLE_23:-docker.io/gvenzl/oracle-free:23@sha256:62aad247879f5d4ca4a37ecc068ef6a5feb9e9bea789501b6a82d4814d14bbb3}
+    container_name: oracle
+    ports:
+      - "1521:1521"
+    environment:
+      ORACLE_PASSWORD: Oracle18
+    cap_add:
+      - NET_RAW
+    healthcheck:
+      test: ["CMD-SHELL", "healthcheck.sh"]
+      interval: 5s
+      timeout: 5s
+      retries: 60
+    shm_size: 1g

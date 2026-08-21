@@ -77,6 +77,20 @@ public class RightJoinNullnessPredicateQueryTest {
 	}
 
 	@Test
+	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsFullJoin.class )
+	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsExceptAll.class )
+	public void testFullJoinLiteralSelectionRetainsDuplicates(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final List<Integer> result = session.createQuery(
+					"select 1 from MainEntity m full join m.related r",
+					Integer.class
+			).getResultList();
+			assertThat( result ).hasSize( 3 );
+			assertThat( result ).containsOnly( 1 );
+		} );
+	}
+
+	@Test
 	public void testDereferenceIsNotNull(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final List<Long> result = session.createQuery(

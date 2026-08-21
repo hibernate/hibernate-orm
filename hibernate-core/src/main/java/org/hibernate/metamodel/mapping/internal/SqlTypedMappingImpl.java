@@ -14,7 +14,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  */
 public class SqlTypedMappingImpl implements SqlTypedMapping {
 
-	private final @Nullable String columnDefinition;
 	private final @Nullable Long length;
 	private final @Nullable Integer arrayLength;
 	private final @Nullable Integer precision;
@@ -23,40 +22,31 @@ public class SqlTypedMappingImpl implements SqlTypedMapping {
 	private final JdbcMapping jdbcMapping;
 
 	public SqlTypedMappingImpl(JdbcMapping jdbcMapping) {
-		this( null, null, null, null, null, null, jdbcMapping );
+		this( null, null, null, null, null, jdbcMapping );
 	}
 
 	public SqlTypedMappingImpl(
-			@Nullable String columnDefinition,
 			@Nullable Long length,
 			@Nullable Integer precision,
 			@Nullable Integer scale,
 			@Nullable Integer temporalPrecision,
 			JdbcMapping jdbcMapping) {
-		this( columnDefinition, length, null, precision, scale, temporalPrecision, jdbcMapping );
+		this( length, null, precision, scale, temporalPrecision, jdbcMapping );
 	}
 
 	public SqlTypedMappingImpl(
-			@Nullable String columnDefinition,
 			@Nullable Long length,
 			@Nullable Integer arrayLength,
 			@Nullable Integer precision,
 			@Nullable Integer scale,
 			@Nullable Integer temporalPrecision,
 			JdbcMapping jdbcMapping) {
-		// Save memory by using interned strings. Probability is high that we have multiple duplicate strings
-		this.columnDefinition = columnDefinition == null ? null : columnDefinition.intern();
 		this.length = length;
 		this.arrayLength = arrayLength;
 		this.precision = precision;
 		this.scale = scale;
 		this.temporalPrecision = temporalPrecision;
 		this.jdbcMapping = jdbcMapping;
-	}
-
-	@Override
-	public @Nullable String getColumnDefinition() {
-		return columnDefinition;
 	}
 
 	@Override

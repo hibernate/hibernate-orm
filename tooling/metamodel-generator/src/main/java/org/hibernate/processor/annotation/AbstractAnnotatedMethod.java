@@ -70,6 +70,13 @@ public abstract class AbstractAnnotatedMethod implements MetaAttribute {
 				: "";
 	}
 
+	void localSession(StringBuilder declaration) {
+		declaration.append(localSessionName());
+		if ( !isReactive() ) {
+			declaration.append(getObjectCall());
+		}
+	}
+
 	@Override
 	public List<AnnotationMirror> inheritedAnnotations() {
 		if ( annotationMetaEntity.isJakartaDataRepository() ) {

@@ -63,16 +63,39 @@ public abstract class AbstractCharsetNamingStrategyTest {
 				.applyImplicitNamingStrategy( new LongIdentifierNamingStrategy() )
 				.build();
 
-		var uniqueKey = metadata.getEntityBinding( Address.class.getName() ).getTable().getUniqueKeys().values()
-				.iterator().next();
-		assertThat( uniqueKey.getName() ).isEqualTo( expectedUniqueKeyName() );
+		var dialect = metadata.getDatabase().getDialect();
+		if ( dialect.supportsUniqueConstraints() ) {
+			var uniqueKey = metadata.getEntityBinding( Address.class.getName() ).getTable().getUniqueKeys().values()
+					.iterator().next();
+			assertThat( uniqueKey.getName() ).isEqualTo( expectedUniqueKeyName() );
+		}
 
 		var foreignKey = metadata.getEntityBinding( Address.class.getName() ).getTable().getForeignKeyCollection()
 				.iterator().next();
 		assertThat( foreignKey.getName() ).isEqualTo( expectedForeignKeyName() );
 
-		var index = metadata.getEntityBinding( Address.class.getName() ).getTable().getIndexes().values().iterator()
-				.next();
+		org.hibernate.mapping.Index index = null;
+		if ( dialect.supportsUniqueConstraints() ) {
+			index = metadata.getEntityBinding( Address.class.getName() ).getTable().getIndexes().values().iterator()
+					.next();
+		}
+		else {
+			var indexes = metadata.getEntityBinding( Address.class.getName() ).getTable().getIndexes().values();
+			assertThat( indexes.size() ).isEqualTo( 2 );
+
+			org.hibernate.mapping.Index uniqueIndex = null;
+			for ( var idx: indexes ) {
+				if ( idx.isUnique() ) {
+					uniqueIndex = idx;
+				}
+				else {
+					index = idx;
+				}
+			}
+			assertThat( uniqueIndex ).isNotNull();
+			assertThat( uniqueIndex.getName() ).isEqualTo( expectedUniqueKeyName() );
+		}
+		assertThat( index ).isNotNull();
 		assertThat( index.getName() ).isEqualTo( expectedIndexName() );
 	}
 

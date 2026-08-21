@@ -84,6 +84,11 @@ public final class QueryHints {
 	public static final String JAKARTA_HINT_LOADGRAPH = SpecHints.HINT_SPEC_LOAD_GRAPH;
 
 	/**
+	 * @see HibernateHints#HINT_LIMIT_IN_MEMORY
+	 */
+	public static final String HINT_LIMIT_IN_MEMORY = HibernateHints.HINT_LIMIT_IN_MEMORY;
+
+	/**
 	 * @see HibernateHints#HINT_FOLLOW_ON_STRATEGY
 	 */
 	public static final String HINT_FOLLOW_ON_STRATEGY = HibernateHints.HINT_FOLLOW_ON_STRATEGY;

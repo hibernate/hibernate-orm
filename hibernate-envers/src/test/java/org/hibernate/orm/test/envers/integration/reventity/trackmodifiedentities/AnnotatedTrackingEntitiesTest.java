@@ -3,6 +3,10 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.envers.integration.reventity.trackmodifiedentities;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+
 
 import org.hibernate.envers.ModifiedEntityNames;
 import org.hibernate.envers.configuration.EnversSettings;
@@ -20,6 +24,8 @@ import org.hibernate.testing.orm.junit.Setting;
  *
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
+// TableGenerator uses a separate transaction to allocate identifiers, requiring concurrent transactions.
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsConcurrentTransactions.class)
 @EnversTest
 @DomainModel(annotatedClasses = {StrTestEntity.class, StrIntTestEntity.class, AnnotatedTrackingRevisionEntity.class})
 @ServiceRegistry(settings = @Setting(name = EnversSettings.TRACK_ENTITIES_CHANGED_IN_REVISION, value = "false"))

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright 2004 - 2025 Red Hat, Inc.
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~     http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" basis,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+<!DOCTYPE hibernate-reverse-engineering SYSTEM "https://hibernate.org/dtd/hibernate-reverse-engineering-3.0.dtd" >
+
+<hibernate-reverse-engineering>
+
+	<type-mapping>
+		<sql-type jdbc-type="BINARY" length="1" hibernate-type="boolean" />
+		<sql-type jdbc-type="INTEGER" length="5" hibernate-type="int" />		
+		<sql-type jdbc-type="INTEGER" hibernate-type="long" />				
+		<sql-type jdbc-type="BIGINT" precision="5" hibernate-type="byte[]" />				
+		<sql-type jdbc-type="BIGINT" hibernate-type="java.math.BigInteger" />		
+		<sql-type jdbc-type="CHAR"   hibernate-type="string" />
+   
+        <!-- start HBX-534 -->
+		<sql-type jdbc-type="NUMERIC" precision='10' scale="0" hibernate-type="Long" />
+		<sql-type jdbc-type="NUMERIC" precision='10' hibernate-type="java.lang.Long" />
+        <!-- end HBX-534 -->
+        
+        <!--  nullability -->
+        <sql-type jdbc-type="FLOAT" scale="17" not-null="true" hibernate-type="nonnull-float" />
+        <sql-type jdbc-type="FLOAT" scale="17" not-null="false" hibernate-type="null-float" />
+        <sql-type jdbc-type="FLOAT" not-null="true" hibernate-type="onlynotnull" /> 
+        <sql-type jdbc-type="FLOAT" hibernate-type="donotcare" /> 
+		
+        
+	</type-mapping>
+
+</hibernate-reverse-engineering>

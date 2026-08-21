@@ -101,7 +101,7 @@ class HHH18813Test {
 		}
 	}
 
-	@Entity
+	@Entity(name = "SecondaryTableEntityBase")
 	@Inheritance(strategy = InheritanceType.JOINED)
 	public static class SecondaryTableEntityBase {
 

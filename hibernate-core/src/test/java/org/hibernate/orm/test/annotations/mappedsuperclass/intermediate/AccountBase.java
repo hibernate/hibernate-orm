@@ -17,8 +17,8 @@ import jakarta.persistence.MappedSuperclass;
 @MappedSuperclass
 public abstract class AccountBase {
 	@Id
-	@org.hibernate.annotations.GenericGenerator(name = "generator::Account", strategy = "increment")
-	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "generator::Account")
+	@org.hibernate.annotations.GenericGenerator(name = "generator_Account", strategy = "increment")
+	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "generator_Account")
 	@Column(name = "ACC_ID")
 	private Long id;
 

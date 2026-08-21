@@ -61,6 +61,8 @@ import org.hibernate.type.descriptor.java.BasicPluralJavaType;
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
+import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
+import org.hibernate.type.descriptor.jdbc.StructuredJdbcType;
 import org.hibernate.type.spi.CompositeTypeImplementor;
 
 import static java.lang.System.arraycopy;
@@ -218,6 +220,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 					bootDescriptor.getOwner().getTable()
 							.getQualifiedName( creationContext.getSqlStringGenerationContext() ),
 					aggregateColumn,
+					null,
 					bootDescriptor.getParentAggregateColumn() != null
 							? bootDescriptor.getParentAggregateColumn().getSelectablePath()
 							: null,
@@ -226,8 +229,8 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 					insertable,
 					updatable,
 					false,
+					false,
 					dialect,
-					null,
 					creationContext
 			);
 			final int defaultSqlTypeCode =
@@ -271,20 +274,14 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 		switch ( aggregateColumnSqlTypeCode ) {
 			case STRUCT:
 				aggregateSqlTypeCode = STRUCT;
-				structTypeName = aggregateColumn.getSqlType( creationContext.getMetadata() );
+				structTypeName = structTypeName( bootDescriptor, resolution );
 				break;
 			case ARRAY:
 			case STRUCT_ARRAY:
 			case STRUCT_TABLE:
 				isArray = true;
 				aggregateSqlTypeCode = STRUCT;
-				structTypeName = bootDescriptor.getStructName().render();
-				if ( structTypeName == null ) {
-					final String arrayTypeName = aggregateColumn.getSqlType( creationContext.getMetadata() );
-					if ( arrayTypeName.endsWith( " array" ) ) {
-						structTypeName = arrayTypeName.substring( 0, arrayTypeName.length() - " array".length() );
-					}
-				}
+				structTypeName = structTypeName( bootDescriptor, resolution );
 				break;
 			case JSON_ARRAY:
 				isArray = true;
@@ -336,6 +333,26 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 		}
 		resolution.updateResolution( resolvedJdbcMapping );
 		return resolvedJdbcMapping;
+	}
+
+	private static String structTypeName(Component bootDescriptor, BasicValue.Resolution<?> resolution) {
+		final var structName = bootDescriptor.getStructName();
+		if ( structName != null ) {
+			return structName.render();
+		}
+		else {
+			final var jdbcType = resolution.getJdbcType();
+			if ( jdbcType instanceof StructuredJdbcType structuredJdbcType ) {
+				return structuredJdbcType.getStructTypeName();
+			}
+			else if ( jdbcType instanceof ArrayJdbcType arrayJdbcType
+					&& arrayJdbcType.getElementJdbcType() instanceof StructuredJdbcType structuredJdbcType ) {
+				return structuredJdbcType.getStructTypeName();
+			}
+			else {
+				return null;
+			}
+		}
 	}
 
 	public EmbeddableMappingTypeImpl(
@@ -471,7 +488,6 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 						valueMapping.getNavigableRole()
 								.append( bootPropertyDescriptor.getName() );
 				final SelectablePath selectablePath;
-				final String columnDefinition;
 				final Long length;
 				final Integer arrayLength;
 				final Integer precision;
@@ -480,7 +496,6 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 				final boolean isLob;
 				final boolean nullable;
 				if ( selectable instanceof Column column ) {
-					columnDefinition = column.getSqlType();
 					length = column.getLength();
 					arrayLength = column.getArrayLength();
 					precision = column.getPrecision();
@@ -492,7 +507,6 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 					MappingModelCreationHelper.resolveAggregateColumnBasicType( creationProcess, role, column );
 				}
 				else {
-					columnDefinition = null;
 					length = null;
 					arrayLength = null;
 					precision = null;
@@ -520,7 +534,6 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 								dialect,
 								creationContext.getBootModel()
 						),
-						columnDefinition,
 						length,
 						arrayLength,
 						precision,
@@ -713,7 +726,6 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 
 		final var selectable = discriminator.getSelectables().get( 0 );
 		final String discriminatorColumnExpression;
-		final String columnDefinition;
 		final String name;
 		final Long length;
 		final Integer arrayLength;
@@ -726,7 +738,6 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 					creationContext.getDialect(),
 					creationContext.getTypeConfiguration()
 			);
-			columnDefinition = null;
 			length = null;
 			arrayLength = null;
 			precision = null;
@@ -736,7 +747,6 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 			final var column = discriminator.getColumns().get( 0 );
 			assert column != null : "Embeddable discriminators require a column";
 			discriminatorColumnExpression = column.getReadExpr( creationContext.getDialect() );
-			columnDefinition = column.getSqlType();
 			name = column.getName();
 			length = column.getLength();
 			arrayLength = column.getArrayLength();
@@ -753,7 +763,6 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 				isFormula,
 				!isFormula,
 				!isFormula,
-				columnDefinition,
 				selectable.getCustomReadExpression(),
 				length,
 				arrayLength,

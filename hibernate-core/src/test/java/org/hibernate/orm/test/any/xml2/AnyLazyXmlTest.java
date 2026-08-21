@@ -83,7 +83,7 @@ public class AnyLazyXmlTest {
 			Assertions.assertThat( result.getGeneralProperties().stream().map( NamedProperty::getName ) )
 					.containsOnly( "name", "age" );
 
-			Assertions.assertThat( sqlCollector.getSqlQueries() ).hasSize( 4 );
+			Assertions.assertThat( sqlCollector.getSqlQueries() ).hasSize( 2 );
 		} );
 	}
 }

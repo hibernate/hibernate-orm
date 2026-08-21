@@ -58,7 +58,7 @@ public class CreateTableUniqueDelegate extends AlterTableUniqueDelegate {
 				// then getColumnDefinitionUniquenessFragment() already handled it, and
 				// so we don't need to bother creating a constraint. The only downside
 				// to this is that if the user added a column marked unique=true to a
-				// named unique constraint, then the name gets lost. Unfortunately the
+				// named unique constraint, then the name gets lost. Unfortunately, the
 				// signature of getColumnDefinitionUniquenessFragment() doesn't let me
 				// detect this case. (But that would be easy to fix!)
 				if ( !isSingleColumnUnique( table, uniqueKey ) ) {

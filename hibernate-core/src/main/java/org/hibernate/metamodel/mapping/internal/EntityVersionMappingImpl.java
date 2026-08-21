@@ -47,7 +47,6 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 
 	private final String columnTableExpression;
 	private final String columnExpression;
-	private final @Nullable String columnDefinition;
 	private final @Nullable Long length;
 	private final @Nullable Integer arrayLength;
 	private final @Nullable Integer precision;
@@ -65,7 +64,6 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 			String attributeName,
 			String columnTableExpression,
 			String columnExpression,
-			String columnDefinition,
 			Long length,
 			Integer precision,
 			Integer scale,
@@ -75,13 +73,12 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 		this(
 				bootEntityDescriptor,
 				templateInstanceAccess,
-				attributeName,
-				columnTableExpression,
-				columnExpression,
-				columnDefinition,
-				length,
-				null,
-				precision,
+					attributeName,
+					columnTableExpression,
+					columnExpression,
+					length,
+					null,
+					precision,
 				scale,
 				temporalPrecision,
 				versionBasicType,
@@ -95,7 +92,6 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 			String attributeName,
 			String columnTableExpression,
 			String columnExpression,
-			@Nullable String columnDefinition,
 			@Nullable Long length,
 			@Nullable Integer arrayLength,
 			@Nullable Integer precision,
@@ -104,7 +100,6 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 			BasicType<?> versionBasicType,
 			EntityMappingType declaringType) {
 		this.attributeName = attributeName;
-		this.columnDefinition = columnDefinition;
 		this.length = length;
 		this.arrayLength = arrayLength;
 		this.precision = precision;
@@ -185,11 +180,6 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 	@Override
 	public @Nullable String getCustomWriteExpression() {
 		return null;
-	}
-
-	@Override
-	public @Nullable String getColumnDefinition() {
-		return columnDefinition;
 	}
 
 	@Override

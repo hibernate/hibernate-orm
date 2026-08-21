@@ -16,9 +16,9 @@ import org.hibernate.sql.ast.SqlAstWalker;
  */
 public class QueryGroup extends QueryPart {
 	private final SetOperator setOperator;
-	private final List<QueryPart> queryParts;
+	private final List<? extends QueryPart> queryParts;
 
-	public QueryGroup(boolean isRoot, SetOperator setOperator, List<QueryPart> queryParts) {
+	public QueryGroup(boolean isRoot, SetOperator setOperator, List<? extends QueryPart> queryParts) {
 		super( isRoot );
 		this.setOperator = setOperator;
 		this.queryParts = queryParts;
@@ -56,7 +56,7 @@ public class QueryGroup extends QueryPart {
 		return setOperator;
 	}
 
-	public List<QueryPart> getQueryParts() {
+	public List<? extends QueryPart> getQueryParts() {
 		return queryParts;
 	}
 

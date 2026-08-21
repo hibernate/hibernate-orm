@@ -18,6 +18,7 @@ import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.query.spi.QueryOptions;
+import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.BaseExecutionContext;
 import org.hibernate.sql.exec.internal.CallbackImpl;
@@ -66,6 +67,7 @@ public class SingleUniqueKeyEntityLoaderStandard<T> implements SingleUniqueKeyEn
 				loadQueryInfluencers,
 				new LockOptions(),
 				builder::add,
+				new SqlAliasBaseManager(),
 				factory
 		);
 		jdbcParameters = builder.build();
@@ -74,11 +76,12 @@ public class SingleUniqueKeyEntityLoaderStandard<T> implements SingleUniqueKeyEn
 
 	private static String getAttributePath(AttributeMapping attribute) {
 		ManagedMappingType declaringType = attribute.getDeclaringType();
-		if ( declaringType instanceof EmbeddableMappingType embeddableMappingType ) {
+		if ( declaringType instanceof EmbeddableMappingType ) {
 			final var path = new StringBuilder();
 			path.append( attribute.getAttributeName() );
 			do {
-				final var valueMapping = embeddableMappingType.getEmbeddedValueMapping();
+				// declaringType must be cast each time (not a pattern variable) as it's updated each iteration
+				final var valueMapping = ( (EmbeddableMappingType) declaringType ).getEmbeddedValueMapping();
 				attribute = valueMapping.asAttributeMapping();
 				if ( attribute == null ) {
 					break;
@@ -127,6 +130,7 @@ public class SingleUniqueKeyEntityLoaderStandard<T> implements SingleUniqueKeyEn
 				new LoadQueryInfluencers( factory ),
 				new LockOptions(),
 				builder::add,
+				new SqlAliasBaseManager(),
 				factory
 		);
 		final var bindings = jdbcParameterBindings( ukValue, builder.build(), session );

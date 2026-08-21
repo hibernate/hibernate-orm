@@ -167,9 +167,7 @@ public class PropertyContainer {
 		// Check fields...
 		for ( int i = 0; i < fields.size(); i++ ) {
 			final var fieldDetails = fields.get( i );
-			final var localAccessAnnotation = fieldDetails.getDirectAnnotationUsage( Access.class );
-			if ( localAccessAnnotation != null
-					&& localAccessAnnotation.value() == jakarta.persistence.AccessType.FIELD ) {
+			if ( fieldDetails.hasDirectAnnotationUsage( Access.class ) ) {
 				persistentAttributeMap.put( fieldDetails.getName(), fieldDetails );
 			}
 		}
@@ -177,9 +175,7 @@ public class PropertyContainer {
 		// Check getters...
 		for ( int i = 0; i < getters.size(); i++ ) {
 			final var getterDetails = getters.get( i );
-			final var localAccessAnnotation = getterDetails.getDirectAnnotationUsage( Access.class );
-			if ( localAccessAnnotation != null
-					&& localAccessAnnotation.value() == jakarta.persistence.AccessType.PROPERTY ) {
+			if ( getterDetails.hasDirectAnnotationUsage( Access.class ) ) {
 				final String name = getterDetails.resolveAttributeName();
 				// HHH-10242 detect registration of the same property getter twice - eg boolean isId() + UUID getId()
 				final var previous = persistentAttributesFromGetters.get( name );

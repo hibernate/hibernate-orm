@@ -24,6 +24,7 @@ import java.util.Date;
 import java.util.EnumSet;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.hibernate.MappingException;
 import org.hibernate.SessionFactory;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.CurrentTimestamp;
@@ -89,18 +90,33 @@ public class CurrentTimestampGeneration implements BeforeExecutionGenerator, OnE
 		delegate = getGeneratorDelegate( annotation.source(), context.getType(), context );
 		eventTypes = fromArray( annotation.event() );
 		propertyType = getPropertyType( context );
+		if ( eventTypes.contains( EventType.INSERT ) ) {
+			notNull( context );
+		}
 	}
 
 	public CurrentTimestampGeneration(CreationTimestamp annotation, GeneratorCreationContext context) {
 		delegate = getGeneratorDelegate( annotation.source(), context.getType(), context );
 		eventTypes = INSERT_ONLY;
 		propertyType = getPropertyType( context );
+		notNull( context );
 	}
 
 	public CurrentTimestampGeneration(UpdateTimestamp annotation, GeneratorCreationContext context) {
 		delegate = getGeneratorDelegate( annotation.source(), context.getType(), context );
 		eventTypes = INSERT_AND_UPDATE;
 		propertyType = getPropertyType( context );
+		notNull( context );
+	}
+
+	private static void notNull(GeneratorCreationContext context) {
+		final var property = context.getProperty();
+		property.setOptional( false );
+		final var columns = property.getColumns();
+		if ( columns.size() != 1 ) {
+			throw new MappingException( "CurrentTimestampGeneration requires exactly one column" );
+		}
+		columns.get( 0 ).setNullable( false );
 	}
 
 	private static GeneratorDelegate getGeneratorDelegate(
@@ -169,6 +185,11 @@ public class CurrentTimestampGeneration implements BeforeExecutionGenerator, OnE
 	@Override
 	public EnumSet<EventType> getEventTypes() {
 		return eventTypes;
+	}
+
+	@Override
+	public Class<?> getGeneratedType() {
+		return propertyType.getJavaTypeClass();
 	}
 
 	@Override
@@ -301,6 +322,10 @@ public class CurrentTimestampGeneration implements BeforeExecutionGenerator, OnE
 		}
 		else if ( clazz == MonthDay.class ) {
 			return () -> MonthDay.now( baseClock == null ? Clock.systemDefaultZone() : baseClock );
+		}
+		else if ( clazz == Long.class || clazz == long.class ) {
+			final var clock = baseClock == null ? Clock.systemDefaultZone() : baseClock;
+			return clock::millis;
 		}
 		// DEPRECATED:
 		else if ( clazz == Date.class ) {

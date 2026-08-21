@@ -9,6 +9,8 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 import org.hibernate.Filter;
+import org.hibernate.Incubating;
+import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.loader.ast.spi.Loadable;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
@@ -16,6 +18,7 @@ import org.hibernate.metamodel.mapping.ordering.OrderByFragment;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
+import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoinProducer;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
@@ -47,7 +50,14 @@ public interface PluralAttributeMapping
 		void applyPredicate(Predicate predicate);
 	}
 
-	void applySoftDeleteRestrictions(TableGroup tableGroup, PredicateConsumer predicateConsumer);
+	/**
+	 * Apply auxiliary restrictions (soft delete, temporal, audit) in a single pass.
+	 */
+	void applyAuxiliaryRestrictions(
+			TableGroup tableGroup,
+			PredicateConsumer predicateConsumer,
+			LoadQueryInfluencers influencers,
+			SqlAliasBaseGenerator sqlAliasBaseGenerator);
 
 	interface IndexMetadata {
 		CollectionPart getIndexDescriptor();
@@ -64,7 +74,24 @@ public interface PluralAttributeMapping
 	/**
 	 * Mapping for soft-delete support, or {@code null} if soft-delete not defined
 	 */
+	@Incubating
 	default SoftDeleteMapping getSoftDeleteMapping() {
+		return null;
+	}
+
+	/**
+	 * Mapping for temporal support, or {@code null} if temporal not defined
+	 */
+	@Incubating
+	default TemporalMapping getTemporalMapping() {
+		return null;
+	}
+
+	/**
+	 * Mapping for audit support, or {@code null} if audit not defined
+	 */
+	@Incubating
+	default AuditMapping getAuditMapping() {
 		return null;
 	}
 

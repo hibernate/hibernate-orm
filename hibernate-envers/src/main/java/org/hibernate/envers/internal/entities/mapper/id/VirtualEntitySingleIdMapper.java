@@ -6,6 +6,7 @@ package org.hibernate.envers.internal.entities.mapper.id;
 
 import java.util.Map;
 
+import org.hibernate.Hibernate;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.internal.entities.EntitiesConfigurations;
@@ -73,7 +74,7 @@ public class VirtualEntitySingleIdMapper extends SingleIdMapper {
 		);
 
 		// Get the value from the containing entity
-		final Object value = getter.get( objFrom );
+		final Object value = getter.get( Hibernate.unproxy( objFrom ) );
 		if ( value == null ) {
 			return;
 		}

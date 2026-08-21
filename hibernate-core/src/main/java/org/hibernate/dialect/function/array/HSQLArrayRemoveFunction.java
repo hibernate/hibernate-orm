@@ -30,7 +30,7 @@ public class HSQLArrayRemoveFunction extends AbstractArrayRemoveFunction {
 		final Expression elementExpression = (Expression) sqlAstArguments.get( 1 );
 		sqlAppender.append( "case when ");
 		arrayExpression.accept( walker );
-		sqlAppender.append( " is not null then coalesce((select array_agg(t.val) from unnest(" );
+		sqlAppender.append( " is not null then coalesce((select array_agg(t.val order by t.idx) from unnest(" );
 		arrayExpression.accept( walker );
 		sqlAppender.append( ") with ordinality t(val,idx) where t.val is distinct from " );
 		elementExpression.accept( walker );

@@ -279,7 +279,7 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 			ManagedDomainType<S> targetType, @Nullable String alias) {
 		if ( treats != null ) {
 			for ( var treat : treats ) {
-				if ( treat.getModel() == targetType ) {
+				if ( treat.getTreatTarget() == targetType ) {
 					if ( Objects.equals( treat.getExplicitAlias(), alias ) ) {
 						//noinspection unchecked
 						return (X) treat;

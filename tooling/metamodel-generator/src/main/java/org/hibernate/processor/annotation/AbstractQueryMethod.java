@@ -94,9 +94,18 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 
 	abstract boolean isNullable(int index);
 
+	@Nullable
+	abstract String containerType();
+
+	boolean useSpecificationCreateQuery() {
+		return isUsingSpecification()
+			&& !isReactive()
+			&& !isUnspecializedQueryType( containerType() );
+	}
+
 	boolean initiallyUnwrapped() {
 		return !isUsingEntityManager() // a TypedQuery from EntityManager is not a SelectionQuery
-			|| isUsingSpecification() && !isReactive(); // SelectionSpecification.createQuery() returns SelectionQuery
+			|| useSpecificationCreateQuery(); // SelectionSpecification.createQuery() returns SelectionQuery
 	}
 
 	List<String> parameterTypes() {
@@ -429,6 +438,7 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 		annotationMetaEntity.staticImport(HIB_PAGE, "page");
 		annotationMetaEntity.staticImport("org.hibernate.query.KeyedPage.KeyInterpretation", "*");
 		annotationMetaEntity.staticImport(COLLECTORS, "toList");
+		annotationMetaEntity.importType(LIST);
 		if ( returnTypeName == null ) {
 			throw new AssertionFailure("entity class cannot be null");
 		}
@@ -714,7 +724,6 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 			boolean mustUnwrap) {
 		if ( containerType == null ) {
 			if ( nullable ) {
-				unwrapQuery(declaration, unwrapped);
 				declaration
 						.append("\t\t\t.getSingleResultOrNull()");
 			}

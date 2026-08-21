@@ -4,14 +4,12 @@
  */
 package org.hibernate.dialect.sql.ast;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
-import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
 import org.hibernate.dialect.MySQLDialect;
-import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.query.sqm.ComparisonOperator;
@@ -19,7 +17,6 @@ import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
 import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
-import org.hibernate.sql.ast.tree.expression.CastTarget;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
@@ -36,10 +33,14 @@ import org.hibernate.sql.ast.tree.predicate.LikePredicate;
 import org.hibernate.sql.ast.tree.select.QueryGroup;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
+import org.hibernate.sql.ast.tree.select.SelectClause;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
+import org.hibernate.sql.ast.tree.select.SortSpecification;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.model.ast.ColumnValueBinding;
+import org.hibernate.sql.ast.spi.FullJoinEmulation;
+
 
 /**
  * A SQL AST translator for MySQL.
@@ -49,78 +50,52 @@ import org.hibernate.sql.model.ast.ColumnValueBinding;
  */
 public class MySQLSqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslatorWithOnDuplicateKeyUpdate<T> {
 
-	/**
-	 * On MySQL, 1GB or {@code 2^30 - 1} is the maximum size that a char value can be casted.
-	 */
-	private static final int MAX_CHAR_SIZE = (1 << 30) - 1;
-
 	private final MySQLDialect dialect;
+	private final ArrayDeque<FullJoinEmulation> fullJoinEmulations = new ArrayDeque<>();
 
 	public MySQLSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement, MySQLDialect dialect) {
 		super( sessionFactory, statement );
 		this.dialect = dialect;
+		this.fullJoinEmulations.push( new FullJoinEmulation( this ) );
 	}
 
-	public static String getSqlType(CastTarget castTarget, SessionFactoryImplementor factory) {
-		final String sqlType = getCastTypeName( castTarget, factory.getTypeConfiguration() );
-		return getSqlType( castTarget, sqlType, factory.getJdbcServices().getDialect() );
+	private FullJoinEmulation currentFullJoinEmulationHelper() {
+		return fullJoinEmulations.getFirst();
 	}
 
-	//TODO: this is really, really bad since it circumvents the whole machinery we have in DdlType
-	//      and in the Dialect for doing this in a unified way! These mappings should be held in
-	//      the DdlTypes themselves and should be set up in registerColumnTypes(). Doing it here
-	//      means we have problems distinguishing, say, the 'as Character' special case
-	private static String getSqlType(CastTarget castTarget, String sqlType, Dialect dialect) {
-		if ( sqlType != null ) {
-			int parenthesesIndex = sqlType.indexOf( '(' );
-			final String baseName = parenthesesIndex == -1 ? sqlType : sqlType.substring( 0, parenthesesIndex ).trim();
-			switch ( baseName.toLowerCase( Locale.ROOT ) ) {
-				case "bit":
-					return "unsigned";
-				case "tinyint":
-				case "smallint":
-				case "integer":
-				case "bigint":
-					return "signed";
-				case "float":
-				case "real":
-				case "double precision":
-					if ( ((MySQLDialect) dialect).getMySQLVersion().isSameOrAfter( 8, 0, 17 ) ) {
-						return sqlType;
-					}
-					final int precision = castTarget.getPrecision() == null
-							? dialect.getDefaultDecimalPrecision()
-							: castTarget.getPrecision();
-					final int scale = castTarget.getScale() == null ? Size.DEFAULT_SCALE : castTarget.getScale();
-					return "decimal(" + precision + "," + scale + ")";
-				case "char":
-				case "varchar":
-				case "nchar":
-				case "nvarchar":
-				case "text":
-				case "mediumtext":
-				case "longtext":
-				case "enum":
-					if ( castTarget.getLength() == null ) {
-						// TODO: this is ugly and fragile, but could easily be handled in a DdlType
-						if ( castTarget.getJdbcMapping().getJdbcJavaType().getJavaType() == Character.class ) {
-							return "char(1)";
-						}
-						else {
-							return "char";
-						}
-					}
-					return castTarget.getLength() > MAX_CHAR_SIZE ? "char" : "char(" + castTarget.getLength() + ")";
-				case "binary":
-				case "varbinary":
-				case "mediumblob":
-				case "longblob":
-					return castTarget.getLength() == null
-						? "binary"
-						: "binary(" + castTarget.getLength() + ")";
+	@Override
+	public void visitQuerySpec(QuerySpec querySpec) {
+		final var helper = currentFullJoinEmulationHelper();
+		final boolean needsNestedHelper =
+				helper.hasActiveFullJoinEmulation()
+						&& !helper.isFullJoinEmulationQueryPart( querySpec );
+		if ( needsNestedHelper ) {
+			fullJoinEmulations.push( new FullJoinEmulation( this ) );
+		}
+		try {
+			final var currentHelper = currentFullJoinEmulationHelper();
+			if ( !currentHelper.renderFullJoinEmulationBranchIfNeeded( querySpec, super::visitQuerySpec )
+					&& !currentHelper.emulateFullJoinWithUnionIfNeeded( querySpec ) ) {
+				if ( shouldEmulateFetchClause( querySpec ) ) {
+					emulateFetchOffsetWithWindowFunctions( querySpec, true );
+				}
+				else {
+					super.visitQuerySpec( querySpec );
+				}
 			}
 		}
-		return sqlType;
+		finally {
+			if ( needsNestedHelper ) {
+				fullJoinEmulations.pop();
+			}
+		}
+	}
+
+	@Override
+	public void visitSelectClause(SelectClause selectClause) {
+		if ( !currentFullJoinEmulationHelper().renderSelectClauseIfNeeded( selectClause ) ) {
+			super.visitSelectClause( selectClause );
+		}
 	}
 
 	@Override
@@ -293,8 +268,10 @@ public class MySQLSqlAstTranslator<T extends JdbcOperation> extends SqlAstTransl
 
 	protected boolean shouldEmulateFetchClause(QueryPart queryPart) {
 		// Check if current query part is already row numbering to avoid infinite recursion
-		return useOffsetFetchClause( queryPart ) && getQueryPartForRowNumbering() != queryPart
-				&& getDialect().supportsWindowFunctions() && !isRowsOnlyFetchClauseType( queryPart );
+		return useOffsetFetchClause( queryPart )
+			&& getQueryPartForRowNumbering() != queryPart
+			&& getDialect().supportsWindowFunctions()
+			&& !isRowsOnlyFetchClauseType( queryPart );
 	}
 
 	@Override
@@ -304,16 +281,6 @@ public class MySQLSqlAstTranslator<T extends JdbcOperation> extends SqlAstTransl
 		}
 		else {
 			super.visitQueryGroup( queryGroup );
-		}
-	}
-
-	@Override
-	public void visitQuerySpec(QuerySpec querySpec) {
-		if ( shouldEmulateFetchClause( querySpec ) ) {
-			emulateFetchOffsetWithWindowFunctions( querySpec, true );
-		}
-		else {
-			super.visitQuerySpec( querySpec );
 		}
 	}
 
@@ -334,8 +301,14 @@ public class MySQLSqlAstTranslator<T extends JdbcOperation> extends SqlAstTransl
 	}
 
 	@Override
+	protected void visitOrderBy(List<SortSpecification> sortSpecifications) {
+		currentFullJoinEmulationHelper().renderOrderByIfNeeded( getCurrentQueryPart(), sortSpecifications, super::visitOrderBy );
+	}
+
+	@Override
 	public void visitOffsetFetchClause(QueryPart queryPart) {
-		if ( !isRowNumberingCurrentQueryPart() ) {
+		if ( !currentFullJoinEmulationHelper().isFullJoinEmulationQueryPart( queryPart )
+				&& !isRowNumberingCurrentQueryPart() ) {
 			renderCombinedLimitClause( queryPart );
 		}
 	}
@@ -412,17 +385,6 @@ public class MySQLSqlAstTranslator<T extends JdbcOperation> extends SqlAstTransl
 	@Override
 	public MySQLDialect getDialect() {
 		return dialect;
-	}
-
-	@Override
-	public void visitCastTarget(CastTarget castTarget) {
-		String sqlType = getSqlType( castTarget, getSessionFactory() );
-		if ( sqlType != null ) {
-			appendSql( sqlType );
-		}
-		else {
-			super.visitCastTarget( castTarget );
-		}
 	}
 
 	@Override

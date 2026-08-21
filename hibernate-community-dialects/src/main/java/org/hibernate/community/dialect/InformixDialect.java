@@ -29,7 +29,9 @@ import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
 import org.hibernate.dialect.NullOrdering;
 import org.hibernate.dialect.Replacer;
 import org.hibernate.dialect.SelectItemReferenceStrategy;
+import org.hibernate.dialect.function.CountFunction;
 import org.hibernate.dialect.function.InsertSubstringOverlayEmulation;
+import org.hibernate.dialect.function.TruncFunction;
 import org.hibernate.dialect.function.TrimFunction;
 import org.hibernate.community.dialect.temptable.InformixLocalTemporaryTableStrategy;
 import org.hibernate.dialect.temptable.TemporaryTableStrategy;
@@ -45,7 +47,6 @@ import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
 import org.hibernate.type.BasicType;
-import org.hibernate.dialect.lock.internal.LockingSupportSimple;
 import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.type.descriptor.jdbc.VarcharUUIDJdbcType;
 import org.hibernate.dialect.function.CaseLeastGreatestEmulation;
@@ -341,7 +342,6 @@ public class InformixDialect extends Dialect {
 		functionFactory.instr();
 		functionFactory.substr();
 		functionFactory.substringFromFor();
-		functionFactory.trunc();
 		functionFactory.trim2();
 		functionFactory.space();
 		functionFactory.reverse();
@@ -396,7 +396,7 @@ public class InformixDialect extends Dialect {
 
 		if ( supportsWindowFunctions() ) {
 			functionFactory.windowFunctions();
-			functionFactory.hypotheticalOrderedSetAggregates();
+			functionFactory.hypotheticalOrderedSetAggregates_windowEmulation();
 		}
 
 		functionRegistry.register( "overlay",
@@ -415,6 +415,35 @@ public class InformixDialect extends Dialect {
 				new TrimFunction( this, typeConfiguration, SqlAstNodeRenderingMode.NO_UNTYPED ) );
 
 		functionRegistry.register( "regexp_like", new InformixRegexpLikeFunction( typeConfiguration ) );
+
+		functionRegistry.register(
+				"trunc",
+				new TruncFunction(
+						"trunc(?1)",
+						"trunc(?1*pow(10,?2))/pow(10,?2)",
+						null,
+						null,
+						typeConfiguration
+				)
+		);
+		functionRegistry.registerAlternateKey( "truncate", "trunc" );
+
+		// For the count distinct emulation distinct
+		functionContributions.getFunctionRegistry().register(
+				"count",
+				new CountFunction(
+						this,
+						functionContributions.getTypeConfiguration(),
+						SqlAstNodeRenderingMode.DEFAULT,
+						"count",
+						"||",
+						null,
+						false,
+						null,
+						// Use chr(1), because chr(0) produces NULL
+						1
+				)
+		);
 	}
 
 	@Override
@@ -544,10 +573,20 @@ public class InformixDialect extends Dialect {
 	}
 
 	@Override
+	public String getAlterColumnTypeString(String columnName, String columnType, String columnDefinition) {
+		return "modify (" + columnName + " " + columnDefinition + ")";
+	}
+
+	@Override
+	public boolean supportsAlterColumnType() {
+		return true;
+	}
+
+	@Override
 	public String getTruncateTableStatement(String tableName) {
-		return super.getTruncateTableStatement( tableName )
-				+ " reuse storage"
-				+ ( getVersion().isSameOrAfter( 12, 10 ) ? " keep statistics" : "" );
+		// Use delete instead of truncate, because truncate will fail if another connection still holds a lock
+		// https://www.ibm.com/docs/en/informix-servers/12.10.0?topic=statement-restrictions-truncate
+		return "delete from " + tableName;
 	}
 
 	@Override
@@ -582,16 +621,7 @@ public class InformixDialect extends Dialect {
 
 	@Override
 	public LockingSupport getLockingSupport() {
-		// TODO: need a custom impl, because:
-		//       1. Informix does not support 'skip locked'
-		//       2. Informix does not allow 'for update' with joins
-		return LockingSupportSimple.STANDARD_SUPPORT;
-	}
-
-	// TODO: remove once we have a custom LockingSupport impl
-	@Override @Deprecated(forRemoval = true)
-	public boolean supportsSkipLocked() {
-		return false;
+		return InformixLockingSupport.LOCKING_SUPPORT;
 	}
 
 	@Override
@@ -973,11 +1003,17 @@ public class InformixDialect extends Dialect {
 
 	@Override
 	public String currentTime() {
+		// means 'current hour to fraction(3)'
+		// but note that subsecond precision
+		// requires USEOSTIME config parameter
 		return "current hour to fraction";
 	}
 
 	@Override
 	public String currentTimestamp() {
+		// means 'current year to fraction(3)'
+		// but note that subsecond precision
+		// requires USEOSTIME config parameter
 		return "current";
 	}
 
@@ -1175,6 +1211,11 @@ public class InformixDialect extends Dialect {
 
 	@Override
 	public boolean supportsRowValueConstructorSyntaxInInList() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsTupleDistinctCounts() {
 		return false;
 	}
 

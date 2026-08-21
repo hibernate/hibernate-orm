@@ -22,6 +22,7 @@ import jakarta.data.repository.Repository;
 import jakarta.data.repository.Save;
 import jakarta.data.repository.Update;
 import org.hibernate.StatelessSession;
+import org.hibernate.annotations.processing.HQL;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -222,4 +223,19 @@ public interface BookAuthorRepository {
 
 	@Query("update Author set name = :name where ssn = :id")
 	boolean updateAuthorAddress3(String id, String name);
+
+	@HQL("SELECT 1L")
+	@Nullable
+	Long one();
+
+	@Query("select count(*) filter (where true)")
+	long countBooksWithIsbn();
+
+	@Query("with foo as (select count(*) filter (where true) > 0 as bool from Book) select bool from foo")
+	boolean countBooksWithIsbn2();
+
+	record AuthorBookPagesDto(String author, int[] bookPages) {}
+
+	@Query("select 'zzz' as author, array_agg(pages) within group (order by pages) from Book")
+	AuthorBookPagesDto authorPages();
 }

@@ -100,6 +100,7 @@ public class BasicHibernateAnnotationsTest {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsExpectedLobUsagePattern.class)
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsConcurrentTransactions.class)
 	public void testVersioning(SessionFactoryScope scope) {
 		Forest forest = new Forest();
 		forest.setName( "Fontainebleau" );
@@ -190,7 +191,7 @@ public class BasicHibernateAnnotationsTest {
 
 		scope.inTransaction(
 				session -> {
-					List<Doctor> list = session.createSelectionQuery( "from " + Doctor.class.getName(), Doctor.class )
+					List<Doctor> list = session.createSelectionQuery( "from " + Doctor.class.getName() + " order by id", Doctor.class )
 							.getResultList();
 
 					assertThat( list.size() ).isEqualTo( 2 );

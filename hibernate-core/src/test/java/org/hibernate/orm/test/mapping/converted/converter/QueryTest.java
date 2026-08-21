@@ -19,6 +19,8 @@ import jakarta.persistence.SqlResultSetMapping;
 import jakarta.persistence.Table;
 
 import org.hibernate.HibernateException;
+import org.hibernate.dialect.SpannerDialect;
+import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.query.NativeQuery;
 
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -71,7 +73,13 @@ public class QueryTest {
 			assertThat( results ).hasSize( 1 );
 
 			final Object[] values = results.get( 0 );
-			assertThat( values[0] ).isEqualTo( 1 );
+			if( scope.getSessionFactory().getJdbcServices().getDialect() instanceof SpannerPostgreSQLDialect ||
+				scope.getSessionFactory().getJdbcServices().getDialect() instanceof SpannerDialect) {
+				assertThat( values[0] ).isEqualTo( 1L );
+			}
+			else {
+				assertThat( values[0] ).isEqualTo( 1 );
+			}
 			assertThat( values[1] ).isEqualTo( SALARY );
 		} );
 	}
@@ -85,7 +93,13 @@ public class QueryTest {
 			assertThat( results ).hasSize( 1 );
 
 			final Object[] values = results.get( 0 );
-			assertThat( values[0] ).isEqualTo( 1 );
+			if( scope.getSessionFactory().getJdbcServices().getDialect() instanceof SpannerPostgreSQLDialect ||
+				scope.getSessionFactory().getJdbcServices().getDialect() instanceof SpannerDialect ) {
+				assertThat( values[0] ).isEqualTo( 1L );
+			}
+			else {
+				assertThat( values[0] ).isEqualTo( 1 );
+			}
 			assertThat( values[1] ).isEqualTo( SALARY );
 		} );
 	}
@@ -100,7 +114,13 @@ public class QueryTest {
 			assertThat( results ).hasSize( 1 );
 
 			final Object[] values = results.get( 0 );
-			assertThat( values[0] ).isEqualTo( 1 );
+			if( scope.getSessionFactory().getJdbcServices().getDialect() instanceof SpannerPostgreSQLDialect ||
+				scope.getSessionFactory().getJdbcServices().getDialect() instanceof SpannerDialect) {
+				assertThat( values[0] ).isEqualTo( 1L );
+			}
+			else {
+				assertThat( values[0] ).isEqualTo( 1 );
+			}
 			assertThat( values[1] ).isEqualTo( EXPECTED_NON_CONVERTED );
 		} );
 	}

@@ -1,0 +1,66 @@
+<?xml version="1.0"?>
+<!--
+  ~ Copyright 2004 - 2025 Red Hat, Inc.
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~     http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" basis,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC 
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"https://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<!-- 
+
+  This mapping is a test mapping for hbm2java
+     
+-->
+
+<hibernate-mapping package="properties">
+
+    <class name="PPerson">
+    	<id name="id" type="string">
+    		<generator class="native"/>
+    	</id>
+
+    	<property name="name" type="string" not-null="true"/>
+    	
+    	<properties name="emergencyContact" unique="true">
+    		<property name="contact" type="boolean" not-null="true"/>
+    		<many-to-one name="company" class="PCompany"/>
+    	</properties>
+    </class>
+    	
+    <class name="PCompany">
+    	<id name="id" type="string">
+    		<generator class="native"/>
+    	</id>
+
+    	<property name="brand" type="string" not-null="true"/>
+    	
+    	<set name="employees" inverse="true">
+    	  <key>
+    	    <column name="company_id"/>
+    	  </key>
+    	  <one-to-many class="PPerson"/>
+    	</set>
+    	
+<!-- 	<one-to-one name="emergencyContact" class="Person"
+		property-ref="emergencyContact">
+		<formula>'true'</formula>
+		<formula>id</formula>
+	</one-to-one> -->
+
+    </class>
+    
+</hibernate-mapping>
+
+

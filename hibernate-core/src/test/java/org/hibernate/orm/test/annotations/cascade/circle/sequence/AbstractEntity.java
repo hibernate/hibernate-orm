@@ -25,7 +25,7 @@ public abstract class AbstractEntity implements Serializable {
 	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "TIGER_GEN")
 	private Long id;
 	@Basic
-	@Column(unique = true, updatable = false, length = 36, columnDefinition = "char(36)")
+	@Column(unique = true, updatable = false, length = 36)
 	private String uuid;
 	@Column(updatable = false)
 	private Date created;

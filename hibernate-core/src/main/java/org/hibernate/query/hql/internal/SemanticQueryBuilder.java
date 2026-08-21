@@ -44,6 +44,7 @@ import org.hibernate.internal.util.collections.StandardStack;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.internal.AnyKeyPart;
+import org.hibernate.metamodel.model.domain.AnyMappingDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
@@ -52,7 +53,6 @@ import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.internal.AnyDiscriminatorSqmPath;
-import org.hibernate.metamodel.model.domain.internal.EntitySqmPathSource;
 import org.hibernate.query.ParameterLabelException;
 import org.hibernate.query.PathException;
 import org.hibernate.query.SemanticException;
@@ -1224,13 +1224,6 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	}
 
 	protected SqmSelectClause buildInferredSelectClause(SqmFromClause fromClause) {
-		if ( creationOptions.useStrictJpaCompliance() ) {
-			throw new StrictJpaComplianceViolation(
-					"Encountered implicit 'select' clause, but strict JPQL compliance was requested",
-					StrictJpaComplianceViolation.Type.IMPLICIT_SELECT
-			);
-		}
-
 		if ( fromClause.getNumberOfRoots() == 0 ) {
 			throw new SemanticException( "query has no 'select' clause, and no root entities"
 					+ " (every selection query must have an explicit 'select', an explicit 'from', or an explicit entity result type)",
@@ -1383,8 +1376,10 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		if ( expressionOrPredicate != null ) {
 			final var sqmExpression = (SqmExpression<?>) expressionOrPredicate.accept( this );
 			if ( sqmExpression instanceof SqmPath<?> sqmPath
-					&& sqmPath.getReferencedPathSource() instanceof PluralPersistentAttribute ) {
-				// for plural-attribute selections, use the element path as the selection
+					&& (sqmPath.getReferencedPathSource() instanceof PluralPersistentAttribute
+				|| sqmPath.getReferencedPathSource() instanceof AnonymousTupleType<?> tupleType
+					&& tupleType.findSubPathSource( CollectionPart.Nature.ELEMENT.getName() ) != null ) ) {
+			// for plural-attribute selections, use the element path as the selection
 				//		- this is not strictly JPA compliant
 				if ( creationOptions.useStrictJpaCompliance() ) {
 					SqmTreeCreationLogger.LOGGER.debugf(
@@ -3529,10 +3524,10 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	@Override
 	public SqmFkExpression<?> visitToOneFkReference(HqlParser.ToOneFkReferenceContext ctx) {
 		final var sqmPath = consumeDomainPath( (HqlParser.PathContext) ctx.getChild( 2 ) );
-		final var toOneReference = sqmPath.getReferencedPathSource();
+		final var toOneReference = sqmPath.getResolvedModel();
 		final boolean validToOneRef =
 				toOneReference.getBindableType() == Bindable.BindableType.SINGULAR_ATTRIBUTE
-						&& toOneReference instanceof EntitySqmPathSource;
+						&& toOneReference.getPathType() instanceof SqmEntityDomainType<?>;
 		if ( !validToOneRef ) {
 			throw new FunctionArgumentException(
 					String.format(
@@ -6071,24 +6066,26 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	private SqmPath<?> consumeManagedTypeReference(HqlParser.PathContext parserPath) {
 		final var sqmPath = consumeDomainPath( parserPath );
-		final var pathSource = sqmPath.getReferencedPathSource();
-		if ( pathSource.getPathType() instanceof ManagedDomainType<?> ) {
+		final var pathType = sqmPath.getReferencedPathSource().getPathType();
+		if ( pathType instanceof ManagedDomainType<?> || pathType instanceof AnyMappingDomainType<?> ) {
 			return sqmPath;
 		}
 		else {
-			throw new PathException( "Expecting ManagedType valued path [" + sqmPath.getNavigablePath()
-					+ "], but found: " + pathSource.getPathType() );
+			throw new PathException( "Expecting ManagedType or @Any valued path ["
+						+ sqmPath.getNavigablePath() + "], but found: " + pathType );
 		}
 	}
 
 	private SqmPath<?> consumePluralAttributeReference(HqlParser.PathContext parserPath) {
 		final var sqmPath = consumeDomainPath( parserPath );
-		if ( sqmPath.getReferencedPathSource() instanceof PluralPersistentAttribute ) {
+		final var pathSource = sqmPath.getReferencedPathSource();
+		if ( pathSource instanceof PluralPersistentAttribute ) {
 			return sqmPath;
 		}
 		else {
-			throw new PathException( "Expecting plural attribute valued path [" + sqmPath.getNavigablePath()
-					+ "], but found: " + sqmPath.getReferencedPathSource().getPathType() );
+			throw new PathException( "Expecting plural attribute valued path ["
+						+ sqmPath.getNavigablePath() + "], but found: "
+						+ pathSource.getPathType() );
 		}
 	}
 

@@ -17,7 +17,7 @@ import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -59,7 +59,7 @@ public class IsEmptyPredicateTest {
 		} );
 	}
 
-	@BeforeEach
+	@BeforeAll
 	protected void prepareTestData(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
 			Person personaWithoutNickname = new Person();
@@ -81,7 +81,7 @@ public class IsEmptyPredicateTest {
 
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
-		scope.getSessionFactory().getSchemaManager().truncate();
+		// scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity(name = "Person")

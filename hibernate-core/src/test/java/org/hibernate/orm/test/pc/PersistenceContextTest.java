@@ -240,7 +240,7 @@ public class PersistenceContextTest {
 
 			session.doWork( connection -> {
 				try (Statement statement = connection.createStatement()) {
-					statement.executeUpdate( "UPDATE Person SET name = UPPER(name)" );
+					statement.executeUpdate( "UPDATE Person SET name = UPPER(name) where 1=1" );
 				}
 			} );
 

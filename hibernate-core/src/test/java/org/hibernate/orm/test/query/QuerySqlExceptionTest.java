@@ -12,6 +12,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
@@ -86,6 +87,10 @@ public class QuerySqlExceptionTest {
 	private Query createQueryTriggeringStatementExecutionFailure(EntityManager entityManager) {
 		var dialect = entityManager.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class )
 				.getJdbcServices().getDialect();
+		if ( dialect instanceof AltibaseDialect ) {
+			return entityManager.createNativeQuery( "select cast( :param as integer ) from contacts" )
+					.setParameter( "param", "foo" );
+		}
 		Object badParamValue;
 		if ( dialect instanceof MySQLDialect ) {
 			// These databases are perfectly fine with the operation `"foo" / 2`

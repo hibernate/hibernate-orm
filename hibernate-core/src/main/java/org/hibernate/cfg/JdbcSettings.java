@@ -555,7 +555,7 @@ public interface JdbcSettings extends C3p0Settings, AgroalSettings, HikariCPSett
 
 	/**
 	 * Whether access to JDBC {@linkplain java.sql.DatabaseMetaData metadata} is allowed during bootstrap.
-	 * <p/>
+	 * <p>
 	 * Allowable options are defined by {@linkplain JdbcMetadataOnBoot}.  For configuration, any of the
 	 * following forms are accepted: <ul>
 	 *     <li>an instance of {@linkplain JdbcMetadataOnBoot}</li>

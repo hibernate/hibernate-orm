@@ -902,7 +902,7 @@ public class InFlightMetadataCollectorImpl
 		final var namespace = locateNamespace( schemaName, catalogName, database );
 		// annotation binding depends on the "table name" for @Subselect bindings
 		// being set into the generated table (mainly to avoid later NPE), but for now we need to keep that :(
-		final Identifier logicalName = name != null ? database.toIdentifier( name, isExplicit ) : null;
+		final Identifier logicalName = name == null ? null : database.toIdentifier( name, isExplicit );
 		if ( subselectFragment != null ) {
 			return new Table( buildingContext.getCurrentContributorName(),
 					namespace, logicalName, subselectFragment, isAbstract );

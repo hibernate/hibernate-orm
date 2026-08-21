@@ -66,6 +66,17 @@ public class OracleDatabaseCleaner implements DatabaseCleaner {
 				connection,
 				statement -> {
 					try {
+						return statement.executeQuery("SELECT 'ALTER TABLE ' || table_name || ' NO FLASHBACK ARCHIVE' FROM user_flashback_archive_tables");
+					}
+					catch (SQLException e) {
+						throw new RuntimeException( "Could not clear schema", e );
+					}
+				}
+		);
+		clearSchema0(
+				connection,
+				statement -> {
+					try {
 						return statement.executeQuery(
 								"SELECT 'DROP TABLE \"' || owner || '\".\"' || table_name || '\" CASCADE CONSTRAINTS PURGE' " +
 										"FROM all_tables " +

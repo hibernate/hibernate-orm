@@ -47,7 +47,6 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *     <li>{@link Formula#before() before} specifies that the override applies
  *         to all versions earlier than the given version.
  * </ul>
- * <p>
  *
  * @since 6.0
  * @author Gavin King

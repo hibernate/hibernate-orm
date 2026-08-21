@@ -8,7 +8,9 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.SequenceGenerator;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -21,6 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @SessionFactory
 @DomainModel(annotatedClasses = SchemaManagerResyncSequencesPooledLoTest.EntityWithSequence.class)
 @ServiceRegistry(settings = @Setting(name = PREFERRED_POOLED_OPTIMIZER, value = "pooled-lo"))
+@RequiresDialectFeature( feature = DialectFeatureChecks.SupportPooledOptimizer.class )
 class SchemaManagerResyncSequencesPooledLoTest {
 	@Test void test(SessionFactoryScope scope) {
 		var schemaManager = scope.getSessionFactory().getSchemaManager();

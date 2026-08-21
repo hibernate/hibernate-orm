@@ -53,6 +53,7 @@ public class PostgresPlusLegacyDialect extends PostgreSQLLegacyDialect {
 		super.initializeFunctionRegistry(functionContributions);
 
 		CommonFunctionFactory functionFactory = new CommonFunctionFactory(functionContributions);
+		functionFactory.arrayGet_bracket( false );
 		functionFactory.soundex();
 		functionFactory.rownumRowid();
 		functionFactory.sysdate();

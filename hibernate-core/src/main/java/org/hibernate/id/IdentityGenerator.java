@@ -4,7 +4,10 @@
  */
 package org.hibernate.id;
 
+import java.util.Properties;
+
 import org.hibernate.dialect.Dialect;
+import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.generator.OnExecutionGenerator;
 import org.hibernate.id.insert.BasicSelectingDelegate;
 import org.hibernate.id.insert.GetGeneratedKeysDelegate;
@@ -37,6 +40,17 @@ import static org.hibernate.generator.values.internal.GeneratedValuesHelper.noCu
  */
 public class IdentityGenerator
 		implements PostInsertIdentifierGenerator, BulkInsertionCapableIdentifierGenerator {
+	private Class<?> generatedType;
+
+	@Override
+	public void configure(GeneratorCreationContext creationContext, Properties parameters) {
+		generatedType = creationContext.getType().getReturnedClass();
+	}
+
+	@Override
+	public Class<?> getGeneratedType() {
+		return generatedType;
+	}
 
 	@Override
 	public boolean referenceColumnsInSql(Dialect dialect) {

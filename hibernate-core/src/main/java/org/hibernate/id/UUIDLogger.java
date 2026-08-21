@@ -16,6 +16,7 @@ import org.jboss.logging.annotations.MessageLogger;
 import org.jboss.logging.annotations.ValidIdRange;
 
 import java.lang.invoke.MethodHandles;
+import java.util.Locale;
 
 import static org.jboss.logging.Logger.Level.WARN;
 
@@ -35,7 +36,8 @@ public interface UUIDLogger extends BasicLogger {
 	UUIDLogger UUID_MESSAGE_LOGGER = Logger.getMessageLogger(
 			MethodHandles.lookup(),
 			UUIDLogger.class,
-			NAME
+			NAME,
+			Locale.ROOT
 	);
 
 	@LogMessage(level = WARN)

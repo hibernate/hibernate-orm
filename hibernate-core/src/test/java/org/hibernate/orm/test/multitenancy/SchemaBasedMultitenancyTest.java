@@ -8,6 +8,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.hibernate.community.dialect.InformixDialect;
+import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.context.spi.TenantSchemaMapper;
 import org.hibernate.dialect.SQLServerDialect;
@@ -34,6 +35,7 @@ import static org.junit.jupiter.api.AssertionsKt.assertNull;
 				@Setting(name = MULTI_TENANT_IDENTIFIER_RESOLVER,
 						value = "org.hibernate.orm.test.multitenancy.SchemaBasedMultitenancyTest$MyResolver")})
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportSchemaCreation.class)
+@SkipForDialect(dialectClass = SpannerPostgreSQLDialect.class, reason = "Spanner JDBC driver does not support setSchema")
 @SkipForDialect(dialectClass = SQLServerDialect.class, reason = "Warning: setSchema is a no-op in this driver version")
 @SkipForDialect(dialectClass = SybaseASEDialect.class, reason = "getSchema() method not implemented by jTDS")
 @SkipForDialect(dialectClass = InformixDialect.class, reason = "setSchema() method is a noop")
@@ -45,20 +47,26 @@ public class SchemaBasedMultitenancyTest {
 		var schemaManager = (SchemaManager) scope.getEntityManagerFactory().getSchemaManager();
 		createSchema( schemaManager, "HELLO" );
 		createSchema( schemaManager, "GOODBYE" );
-		currentTenantIdentifier = "hello";
-		scope.inTransaction( session -> {
-			Person person = new Person();
-			person.ssn = "123456789";
-			person.name = "Gavin";
-			session.persist( person );
-		} );
-		scope.inTransaction( session -> {
-			assertNotNull( session.find( Person.class, "123456789" ) );
-		} );
-		currentTenantIdentifier = "goodbye";
-		scope.inTransaction( session -> {
-			assertNull( session.find( Person.class, "123456789" ) );
-		} );
+		try {
+			currentTenantIdentifier = "hello";
+			scope.inTransaction( session -> {
+				Person person = new Person();
+				person.ssn = "123456789";
+				person.name = "Gavin";
+				session.persist( person );
+			} );
+			scope.inTransaction( session -> {
+				assertNotNull( session.find( Person.class, "123456789" ) );
+			} );
+			currentTenantIdentifier = "goodbye";
+			scope.inTransaction( session -> {
+				assertNull( session.find( Person.class, "123456789" ) );
+			} );
+		}
+		finally {
+			schemaManager.forSchema( "HELLO" ).drop( true );
+			schemaManager.forSchema( "GOODBYE" ).drop( true );
+		}
 	}
 
 	private static void createSchema(SchemaManager schemaManager, String schemaName) {

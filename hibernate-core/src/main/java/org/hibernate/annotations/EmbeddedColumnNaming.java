@@ -19,7 +19,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * For example, given a typical embeddable named {@code Address} and
  * {@code @EmbeddedColumnNaming("home_%s)}, we will get columns named
  * {@code home_street}, {@code home_city}, etc.
- * <p/>
+ * <p>
  * Explicit {@linkplain jakarta.persistence.Column @Column(name)} mappings are incorporated
  * into the result.  When embeddables are nested, the affect will be cumulative.  Given the following model:
  *
@@ -72,7 +72,7 @@ public @interface EmbeddedColumnNaming {
 	/**
 	 * The naming pattern.  It is expected to contain a single pattern marker ({@code %})
 	 * into which the "raw" column name will be injected.
-	 * <p/>
+	 * <p>
 	 * The {@code value} may be omitted which will indicate to use the pattern
 	 * {@code "{ATTRIBUTE_NAME}_%s"} where {@code {ATTRIBUTE_NAME}} is the name of the attribute
 	 * where the annotation is placed - e.g. {@code @Embedded @EmbeddedColumnNaming Address homeAddress}

@@ -24,14 +24,14 @@ public final class SqmInterpretationsKey implements QueryInterpretationCache.Key
 	public static SqmInterpretationsKey createInterpretationsKey(InterpretationsKeySource keySource) {
 		if ( isCacheable ( keySource ) ) {
 			final Object query = keySource.getQueryStringCacheKey();
-			final int hashCode = query instanceof SqmStatement<?> statement ? statement.cacheHashCode() : query.hashCode();
 			return new SqmInterpretationsKey(
 					query,
 					keySource.unnamedParameterIndices(),
-					hashCode,
+					query instanceof SqmStatement<?> statement ? statement.cacheHashCode() : query.hashCode(),
 					keySource.getResultType(),
 					keySource.getQueryOptions().getLockOptions(),
-					memoryEfficientDefensiveSetCopy( keySource.getLoadQueryInfluencers().getEnabledFetchProfileNames() )
+					memoryEfficientDefensiveSetCopy( keySource.getLoadQueryInfluencers().getEnabledFetchProfileNames() ),
+					keySource.getLoadQueryInfluencers().getTemporalIdentifier() != null
 			);
 		}
 		else {
@@ -63,6 +63,7 @@ public final class SqmInterpretationsKey implements QueryInterpretationCache.Key
 		// - especially wrt parameters atm; this works with HQL because the
 		// parameters are part of the query string; with Criteria, they're not.
 		return keySource.isQueryPlanCacheable()
+			&& keySource.getQueryOptions().isLimitInMemoryEnabled() != Boolean.TRUE
 				// At the moment we cannot cache query plan if there is filter enabled.
 			&& !keySource.getLoadQueryInfluencers().hasEnabledFilters()
 				// At the moment we cannot cache query plan if it has an entity graph
@@ -89,19 +90,22 @@ public final class SqmInterpretationsKey implements QueryInterpretationCache.Key
 	private final Class<?> resultType;
 	private final LockOptions lockOptions;
 	private final Collection<String> enabledFetchProfiles;
+	private final boolean historical;
 	private final int hashCode;
 
 	private SqmInterpretationsKey(
 			Object query,
 			int @Nullable [] unnamedParameterIndices,
-			int hash,
+			int hashCode,
 			Class<?> resultType,
 			LockOptions lockOptions,
-			Collection<String> enabledFetchProfiles) {
+			Collection<String> enabledFetchProfiles,
+			boolean historical) {
+		this.historical = historical;
 		assert query.getClass() == String.class || query instanceof SqmStatement<?>;
 		this.query = query;
 		this.unnamedParameterIndices = unnamedParameterIndices;
-		this.hashCode = hash;
+		this.hashCode = hashCode;
 		this.resultType = resultType;
 		this.lockOptions = lockOptions;
 		this.enabledFetchProfiles = enabledFetchProfiles;
@@ -116,7 +120,8 @@ public final class SqmInterpretationsKey implements QueryInterpretationCache.Key
 				resultType,
 				// Since lock options might be mutable, we need a copy for the cache key
 				lockOptions.makeDefensiveCopy(),
-				enabledFetchProfiles
+				enabledFetchProfiles,
+				historical
 		);
 	}
 
@@ -140,7 +145,8 @@ public final class SqmInterpretationsKey implements QueryInterpretationCache.Key
 			&& Arrays.equals( this.unnamedParameterIndices, that.unnamedParameterIndices )
 			&& Objects.equals( this.resultType, that.resultType )
 			&& Objects.equals( this.lockOptions, that.lockOptions )
-			&& Objects.equals( this.enabledFetchProfiles, that.enabledFetchProfiles );
+			&& Objects.equals( this.enabledFetchProfiles, that.enabledFetchProfiles )
+			&& this.historical == that.historical;
 	}
 
 	@Override

@@ -8,10 +8,12 @@ import java.util.Comparator;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.function.UnaryOperator;
 
 import org.hibernate.Filter;
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
+import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.entry.CacheEntryStructure;
@@ -27,6 +29,7 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.Restrictable;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.persister.collection.mutation.RowMutationOperations;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -123,6 +126,24 @@ public interface CollectionPersister extends Restrictable {
 	default boolean needsRemove() {
 		return true;
 	}
+
+	@Internal @Incubating
+	RowMutationOperations getRowMutationOperations();
+
+	@Internal @Incubating
+	boolean isRowInsertEnabled();
+
+	@Internal @Incubating
+	boolean isRowDeleteEnabled();
+
+	@Internal @Incubating
+	boolean[] getIndexColumnIsSettable();
+
+	@Internal @Incubating
+	boolean[] getElementColumnIsSettable();
+
+	@Internal @Incubating
+	UnaryOperator<Object> getIndexIncrementer();
 
 	/**
 	 * Access to the collection's cache region

@@ -77,6 +77,7 @@ public class SequenceMismatchStrategyDefaultExceptionTest extends EntityManagerF
 	@Override
 	protected void addConfigOptions(Map options) {
 		options.put( AvailableSettings.HBM2DDL_AUTO, "none" );
+		options.put(AvailableSettings.PREFERRED_POOLED_OPTIMIZER, "pooled");
 	}
 
 	@Override

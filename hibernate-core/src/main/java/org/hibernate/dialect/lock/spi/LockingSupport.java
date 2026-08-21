@@ -63,7 +63,7 @@ public interface LockingSupport {
 		/**
 		 * The {@linkplain RowLockStrategy strategy} for indicating which rows
 		 * to lock as part of a {@code for share of} style clause.
-		 * <p/>
+		 * <p>
 		 * By default, simply uses {@linkplain #getWriteRowLockStrategy()}.
 		 */
 		default RowLockStrategy getReadRowLockStrategy() {

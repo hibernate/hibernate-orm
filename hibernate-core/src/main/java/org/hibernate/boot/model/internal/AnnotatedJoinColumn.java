@@ -7,11 +7,16 @@ package org.hibernate.boot.model.internal;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.annotations.JoinFormula;
+import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.model.naming.ImplicitAnyKeyColumnNameSource;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
+import org.hibernate.boot.model.source.spi.AttributePath;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.mapping.Column;
+import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Value;
 
@@ -353,8 +358,28 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 		linkWithValue( value );
 	}
 
+	public void applyDefaultAnyKeyColumnNaming() {
+		final String columnName = defaultAnyKeyColumnName();
+		setLogicalColumnName( columnName );
+		setImplicit( true );
+		final var mappingColumn = getMappingColumn();
+		initMappingColumn(
+				columnName,
+				null,
+				mappingColumn != null ? mappingColumn.getLength() : null,
+				mappingColumn != null ? mappingColumn.getPrecision() : null,
+				mappingColumn != null ? mappingColumn.getScale() : null,
+				mappingColumn != null ? mappingColumn.getTemporalPrecision() : null,
+				mappingColumn != null ? mappingColumn.getArrayLength() : null,
+				mappingColumn == null || mappingColumn.isNullable(),
+				mappingColumn != null ? mappingColumn.getSqlType() : null,
+				mappingColumn != null && mappingColumn.isUnique(),
+				false
+		);
+	}
+
 	private String defaultColumnName(int columnIndex, PersistentClass referencedEntity, String logicalReferencedColumn) {
-		final AnnotatedJoinColumns parent = getParent();
+		final var parent = getParent();
 		if ( parent.hasMapsId() ) {
 			// infer the join column of the association
 			// from the name of the mapped primary key
@@ -377,24 +402,54 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 //		}
 	}
 
+	private String defaultAnyKeyColumnName() {
+		final var context = getBuildingContext();
+		final var buildingOptions = context.getBuildingOptions();
+		final Identifier logicalColumnName =
+				buildingOptions.getImplicitNamingStrategy()
+						.determineAnyKeyColumnName( new ImplicitAnyKeyColumnNameSource() {
+							private final AttributePath attributePath =
+									AttributePath.parse( getParent().getPropertyName() );
+							@Override
+							public AttributePath getAttributePath() {
+								return attributePath;
+							}
+
+							@Override
+							public MetadataBuildingContext getBuildingContext() {
+								return context;
+							}
+						} );
+		final var database = context.getMetadataCollector().getDatabase();
+		return buildingOptions.getPhysicalNamingStrategy()
+				.toPhysicalColumnName( logicalColumnName, database.getJdbcEnvironment() )
+				.render( database.getDialect() );
+	}
+
 	/**
 	 * Used for {@code mappedBy} cases.
 	 */
-	public void linkValueUsingAColumnCopy(Column column, SimpleValue value) {
-		initMappingColumn(
-				//column.getName(),
-				column.getQuotedName(),
-				null,
-				column.getLength(),
-				column.getPrecision(),
-				column.getScale(),
-				column.getTemporalPrecision(),
-				column.getArrayLength(),
-				getMappingColumn().isNullable(),
-				column.getSqlType(),
-				getMappingColumn().isUnique(),
-				false //We do copy no strategy here
-		);
+	public void linkValueUsingCopy(Selectable selectable, SimpleValue value) {
+		if ( selectable instanceof  Column column ) {
+			initMappingColumn(
+					//column.getName(),
+					column.getQuotedName(),
+					null,
+					column.getLength(),
+					column.getPrecision(),
+					column.getScale(),
+					column.getTemporalPrecision(),
+					column.getArrayLength(),
+					getMappingColumn().isNullable(),
+					column.getSqlType(),
+					getMappingColumn().isUnique(),
+					false //We do copy no strategy here
+			);
+		}
+		else if ( selectable instanceof Formula formula ) {
+			setFormula( formula.getFormula() );
+			initMappingFormula();
+		}
 		linkWithValue( value );
 	}
 

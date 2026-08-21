@@ -45,7 +45,7 @@ public class SqmFunctionJoin<E> extends AbstractSqmJoin<Object, E> implements Jp
 			@Nullable String alias,
 			SqmJoinType joinType,
 			boolean lateral,
-			SqmRoot<Object> sqmRoot) {
+			SqmFrom<?, Object> sqmFrom) {
 		this(
 				SqmCreationHelper.buildRootNavigablePath( "<<derived>>", alias ),
 				function,
@@ -53,7 +53,7 @@ public class SqmFunctionJoin<E> extends AbstractSqmJoin<Object, E> implements Jp
 				function.getType(),
 				alias,
 				validateJoinType( joinType, lateral ),
-				sqmRoot
+				sqmFrom
 		);
 	}
 
@@ -64,14 +64,14 @@ public class SqmFunctionJoin<E> extends AbstractSqmJoin<Object, E> implements Jp
 			SqmPathSource<E> pathSource,
 			@Nullable String alias,
 			SqmJoinType joinType,
-			SqmRoot<Object> sqmRoot) {
+			SqmFrom<?, Object> sqmFrom) {
 		super(
 				navigablePath,
 				pathSource,
-				sqmRoot,
+				sqmFrom,
 				alias,
 				joinType,
-				sqmRoot.nodeBuilder()
+				sqmFrom.nodeBuilder()
 		);
 		this.function = function;
 		this.lateral = lateral;
@@ -101,7 +101,6 @@ public class SqmFunctionJoin<E> extends AbstractSqmJoin<Object, E> implements Jp
 		if ( existing != null ) {
 			return existing;
 		}
-		//noinspection unchecked
 		final var path = context.registerCopy(
 				this,
 				new SqmFunctionJoin<>(
@@ -111,20 +110,11 @@ public class SqmFunctionJoin<E> extends AbstractSqmJoin<Object, E> implements Jp
 						getReferencedPathSource(),
 						getExplicitAlias(),
 						getSqmJoinType(),
-						(SqmRoot<Object>) findRoot().copy( context )
+						getParent().copy( context )
 				)
 		);
 		copyTo( path, context );
 		return path;
-	}
-
-	public SqmRoot<?> getRoot() {
-		return (SqmRoot<?>) (SqmFrom<?, ?>) castNonNull( super.getLhs() );
-	}
-
-	@Override
-	public SqmRoot<?> findRoot() {
-		return getRoot();
 	}
 
 	@Override
@@ -224,8 +214,7 @@ public class SqmFunctionJoin<E> extends AbstractSqmJoin<Object, E> implements Jp
 
 	@Override
 	public @NonNull SqmFrom<?, Object> getParent() {
-		//noinspection unchecked
-		return (SqmFrom<?, Object>) (SqmFrom<?, ?>) getRoot();
+		return castNonNull( super.getParent() );
 	}
 
 	@Override

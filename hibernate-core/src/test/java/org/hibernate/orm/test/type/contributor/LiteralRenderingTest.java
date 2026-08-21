@@ -95,6 +95,7 @@ public class LiteralRenderingTest {
 	public void testIdVersionFunctions(Object literalValue, SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
+
 					HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
 					JpaCriteriaQuery<Object> query = cb.createQuery();
 					query.from( BasicEntity.class );

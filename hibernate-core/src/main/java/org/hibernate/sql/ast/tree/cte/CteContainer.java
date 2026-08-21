@@ -27,6 +27,4 @@ public interface CteContainer {
 
 	void addCteObject(CteObject cteObject);
 
-
-
 }

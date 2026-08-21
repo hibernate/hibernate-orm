@@ -100,7 +100,7 @@ public class ActionQueue implements TransactionCompletionCallbacks {
 
 
 	private transient boolean isTransactionCoordinatorShared;
-	private TransactionCompletionCallbacksImplementor transactionCompletionCallbacks;;
+	private TransactionCompletionCallbacksImplementor transactionCompletionCallbacks;
 
 	// Extract this as a constant to perform efficient iterations:
 	// method values() otherwise allocates a new array on each invocation.
@@ -959,7 +959,8 @@ public class ActionQueue implements TransactionCompletionCallbacks {
 	 * Scheduling serially means, that there is an order which doesn't violate the FK constraint dependencies.
 	 * The inserts of insert groups which can't be scheduled, are going to be inserted in the original order.
 	 */
-	private static class InsertActionSorter implements ExecutableList.Sorter<AbstractEntityInsertAction> {
+	// Used by Hibernate Reactive
+	public static class InsertActionSorter implements ExecutableList.Sorter<AbstractEntityInsertAction> {
 		/**
 		 * Singleton access
 		 */

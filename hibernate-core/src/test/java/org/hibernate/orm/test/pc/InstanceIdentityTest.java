@@ -99,7 +99,7 @@ public class InstanceIdentityTest {
 
 		scope.inSession( session -> {
 			final EntityWithCollections entity = session.find( EntityWithCollections.class, 1 );
-			assertThat( entity.getStringList() ).hasSize( 3 ).containsExactly( "one", "two", "three" );
+			assertThat( entity.getStringList() ).hasSize( 3 ).containsExactlyInAnyOrder( "one", "two", "three" );
 			assertThat( entity.getEntityMap() ).isEmpty();
 		} );
 	}

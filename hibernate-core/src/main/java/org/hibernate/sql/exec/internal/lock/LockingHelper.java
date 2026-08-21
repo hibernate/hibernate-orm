@@ -19,9 +19,6 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.query.internal.QueryOptionsImpl;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.ComparisonOperator;
-import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.spi.LockingClauseStrategy;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
@@ -42,7 +39,6 @@ import org.hibernate.sql.exec.spi.LoadedValuesCollector;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -482,14 +478,6 @@ public static void lockCollectionTable(
 			} );
 			SQL_EXEC_LOGGER.followOnLockingCollectedLoadedValues( summary.toString() );
 		}
-	}
-
-	/**
-	 * Extracts all NavigablePaths to lock based on the {@linkplain LockingClauseStrategy locking strategy}
-	 * from the {@linkplain SqlAstTranslator SQL AST translator}.
-	 */
-	public static Collection<NavigablePath> extractPathsToLock(LockingClauseStrategy lockingClauseStrategy) {
-		return lockingClauseStrategy.getPathsToLock();
 	}
 
 	public static void segmentLoadedValues(List<LoadedValuesCollector.LoadedEntityRegistration> registrations, Map<EntityMappingType, List<EntityKey>> map) {

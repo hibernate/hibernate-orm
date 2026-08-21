@@ -32,6 +32,9 @@ import org.hibernate.type.spi.TypeConfiguration;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.hibernate.dialect.function.array.DdlTypeHelper.getNarrowCastTypeName;
+import static org.hibernate.dialect.function.array.DdlTypeHelper.removeUnresolvedTypeArguments;
+
 
 /**
  * Sybase ASE xmltable function.
@@ -58,7 +61,11 @@ public class SybaseASEXmlTableFunction extends XmlTableFunction {
 			return "varchar(5)";
 		}
 		else {
-			return super.determineColumnType( castTarget, walker );
+			// Sybase ASE's xmltable() columns clause rejects TEXT/UNITEXT/IMAGE;
+			// use the narrow cast name which maps LOB types to sized
+			// VARCHAR/NVARCHAR/VARBINARY
+			return removeUnresolvedTypeArguments( getNarrowCastTypeName( castTarget,
+							walker.getSessionFactory().getTypeConfiguration() ) );
 		}
 	}
 
@@ -152,7 +159,6 @@ public class SybaseASEXmlTableFunction extends XmlTableFunction {
 					null,
 					null,
 					null,
-					null,
 					false,
 					false,
 					false,
@@ -181,7 +187,6 @@ public class SybaseASEXmlTableFunction extends XmlTableFunction {
 						new SelectablePath( name ),
 						"case " + Template.TEMPLATE + "." + name + " when 'true' then " + trueFragment + " when 'false' then " + falseFragment + " end",
 						null,
-						"varchar(5)",
 						null,
 						null,
 						null,

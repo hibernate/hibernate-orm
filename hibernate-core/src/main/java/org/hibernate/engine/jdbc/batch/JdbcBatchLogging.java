@@ -15,6 +15,7 @@ import org.jboss.logging.annotations.MessageLogger;
 import org.jboss.logging.annotations.ValidIdRange;
 
 import java.lang.invoke.MethodHandles;
+import java.util.Locale;
 
 import static org.jboss.logging.Logger.Level.INFO;
 import static org.jboss.logging.Logger.Level.TRACE;
@@ -35,7 +36,7 @@ import static org.jboss.logging.Logger.Level.WARN;
 public interface JdbcBatchLogging extends BasicLogger {
 	String NAME = "org.hibernate.orm.jdbc.batch";
 
-	JdbcBatchLogging BATCH_MESSAGE_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), JdbcBatchLogging.class, NAME );
+	JdbcBatchLogging BATCH_MESSAGE_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), JdbcBatchLogging.class, NAME, Locale.ROOT );
 
 	@LogMessage(level = INFO)
 	@Message(id=100501, value = "Automatic JDBC statement batching enabled (maximum batch size %s)")

@@ -15,7 +15,7 @@ import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -34,7 +34,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SessionFactory
 public class ScrollableTest {
 
-	@BeforeEach
+	@BeforeAll
 	public void prepareTest(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			session.persist( new MyEntity( 1L, "entity_1" ) );
@@ -44,7 +44,7 @@ public class ScrollableTest {
 
 	@AfterEach
 	public void cleanupTest(SessionFactoryScope scope) {
-		scope.getSessionFactory().getSchemaManager().truncateMappedObjects();
+		// scope.getSessionFactory().getSchemaManager().truncateMappedObjects();
 	}
 
 	@Test

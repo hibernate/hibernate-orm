@@ -4,11 +4,13 @@
  */
 package org.hibernate.dialect.function.array;
 
+import java.util.Arrays;
 import java.util.List;
 
+import org.hibernate.dialect.aggregate.AggregateSupport;
 import org.hibernate.dialect.function.UnnestSetReturningFunctionTypeResolver;
+import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.util.NullnessUtil;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
@@ -16,6 +18,7 @@ import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectablePath;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.metamodel.mapping.internal.SelectableMappingImpl;
+import org.hibernate.metamodel.mapping.internal.SqlTypedMappingImpl;
 import org.hibernate.query.sqm.tuple.internal.AnonymousTupleTableGroupProducer;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.ComparisonOperator;
@@ -24,6 +27,7 @@ import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.Template;
+import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAppender;
@@ -33,13 +37,18 @@ import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.SelfRenderingExpression;
 import org.hibernate.sql.ast.tree.from.FunctionTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
+import org.hibernate.sql.ast.tree.predicate.Junction;
+import org.hibernate.sql.ast.tree.predicate.NullnessPredicate;
+import org.hibernate.sql.ast.tree.predicate.PredicateContainer;
 import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.BasicType;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.hibernate.type.descriptor.sql.DdlType;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * H2 unnest function.
@@ -55,7 +64,7 @@ public class H2UnnestFunction extends UnnestFunction {
 	private final int maximumArraySize;
 
 	public H2UnnestFunction(int maximumArraySize) {
-		super( new H2UnnestSetReturningFunctionTypeResolver() );
+		super( new H2UnnestSetReturningFunctionTypeResolver(), false );
 		this.maximumArraySize = maximumArraySize;
 	}
 
@@ -107,7 +116,17 @@ public class H2UnnestFunction extends UnnestFunction {
 							final TableGroup parentTableGroup = querySpec.getFromClause().queryTableGroups(
 									tg -> tg.findTableGroupJoin( functionTableGroup ) == null ? null : tg
 							);
-							final TableGroupJoin join = parentTableGroup.findTableGroupJoin( functionTableGroup );
+							final PredicateContainer predicateContainer;
+							final boolean innerJoin;
+							if ( parentTableGroup != null ) {
+								final var tableGroupJoin = parentTableGroup.findTableGroupJoin( functionTableGroup );
+								predicateContainer = tableGroupJoin;
+								innerJoin = tableGroupJoin.getJoinType() == SqlAstJoinType.INNER;
+							}
+							else {
+								predicateContainer = querySpec;
+								innerJoin = true;
+							}
 							final BasicType<Integer> integerType = walker.getSqmCreationContext()
 									.getNodeBuilder()
 									.getIntegerType();
@@ -135,7 +154,20 @@ public class H2UnnestFunction extends UnnestFunction {
 									null,
 									integerType
 							);
-							join.applyPredicate( new ComparisonPredicate( lhs, ComparisonOperator.GREATER_THAN_OR_EQUAL, rhs ) );
+							final var lengthCheck =
+									new ComparisonPredicate( lhs, ComparisonOperator.GREATER_THAN_OR_EQUAL, rhs );
+							predicateContainer.applyPredicate( lengthCheck );
+							// The following is necessary because of https://github.com/h2database/h2database/issues/4364
+							if ( innerJoin ) {
+								querySpec.applyPredicate( lengthCheck );
+							}
+							else {
+								querySpec.applyPredicate( new Junction(
+										Junction.Nature.DISJUNCTION,
+										Arrays.asList( lengthCheck, new NullnessPredicate( rhs ) ),
+										lengthCheck.getExpressionType()
+								) );
+							}
 							return querySpec;
 						} );
 					}
@@ -211,7 +243,6 @@ public class H2UnnestFunction extends UnnestFunction {
 					null,
 					null,
 					null,
-					null,
 					false,
 					false,
 					false,
@@ -231,8 +262,7 @@ public class H2UnnestFunction extends UnnestFunction {
 				}
 				// For column references we render an emulation through system_range(),
 				// so we need to render an array access to get to the element
-				final String elementReadExpression = "array_get(" + arrayColumnReference.getExpressionText() + "," + Template.TEMPLATE + ".x)";
-				final String arrayReadExpression = NullnessUtil.castNonNull( arrayColumnReference.getReadExpression() );
+				final String elementReadExpression = arrayColumnReference.getExpressionText() + "[" + Template.TEMPLATE + ".x]";
 				final EmbeddableMappingType embeddableMappingType = aggregateJdbcType.getEmbeddableMappingType();
 				final int jdbcValueCount = embeddableMappingType.getJdbcValueCount();
 				returnType = new SelectableMapping[jdbcValueCount + (indexMapping == null ? 0 : 1)];
@@ -240,14 +270,13 @@ public class H2UnnestFunction extends UnnestFunction {
 					final SelectableMapping selectableMapping = embeddableMappingType.getJdbcValueSelectable( i );
 					// The array expression has to be replaced with the actual array_get read expression in this emulation
 					final String customReadExpression = selectableMapping.getCustomReadExpression()
-							.replace( arrayReadExpression, elementReadExpression );
+							.replace( Template.TEMPLATE, elementReadExpression );
 					returnType[i] = new SelectableMappingImpl(
 							selectableMapping.getContainingTableExpression(),
 							selectableMapping.getSelectablePath().getSelectableName(),
 							new SelectablePath( selectableMapping.getSelectablePath().getSelectableName() ),
 							customReadExpression,
 							selectableMapping.getCustomWriteExpression(),
-							selectableMapping.getColumnDefinition(),
 							selectableMapping.getLength(),
 							selectableMapping.getArrayLength(),
 							selectableMapping.getPrecision(),
@@ -274,21 +303,57 @@ public class H2UnnestFunction extends UnnestFunction {
 					// For column references we render an emulation through system_range(),
 					// so we need to render an array access to get to the element
 					elementSelectionExpression = columnReference.getColumnExpression();
-					elementReadExpression = "array_get(" + columnReference.getExpressionText() + "," + Template.TEMPLATE + ".x)";
+					elementReadExpression = columnReference.getExpressionText() + "[" + Template.TEMPLATE + ".x]";
 				}
 				else {
 					elementSelectionExpression = defaultBasicArrayColumnName;
 					elementReadExpression = null;
 				}
+				final TypeConfiguration typeConfiguration = converter.getCreationContext().getTypeConfiguration();
+				final DdlType ddlType = typeConfiguration.getDdlTypeRegistry()
+						.getDescriptor( elementType.getJdbcType().getDefaultSqlTypeCode() );
+				final AggregateSupport aggregateSupport =
+						converter.getCreationContext().getDialect().getAggregateSupport();
 				final SelectableMapping elementMapping;
+				final int pluralSqlTypeCode = pluralType.getJdbcType().getDefaultSqlTypeCode();
 				if ( expressionType instanceof SqlTypedMapping typedMapping ) {
+					final String columnTypeName = ddlType.getTypeName(
+							new Size(
+									typedMapping.getPrecision(),
+									typedMapping.getScale(),
+									typedMapping.getLength()
+							),
+							elementType,
+							typeConfiguration.getDdlTypeRegistry()
+					);
+					final String readExpression;
+					if ( pluralSqlTypeCode == SqlTypes.JSON_ARRAY || pluralSqlTypeCode == SqlTypes.XML_ARRAY ) {
+						readExpression = aggregateSupport.aggregateComponentCustomReadExpression(
+								"",
+								"",
+								"",
+								elementReadExpression,
+								pluralSqlTypeCode,
+								new SqlTypedMappingImpl(
+										typedMapping.getLength(),
+										null,
+										typedMapping.getPrecision(),
+										typedMapping.getScale(),
+										typedMapping.getTemporalPrecision(),
+										elementType
+								),
+								typeConfiguration
+						);
+					}
+					else {
+						readExpression = elementReadExpression;
+					}
 					elementMapping = new SelectableMappingImpl(
 							"",
 							elementSelectionExpression,
 							new SelectablePath( CollectionPart.Nature.ELEMENT.getName() ),
-							elementReadExpression,
+							readExpression,
 							null,
-							typedMapping.getColumnDefinition(),
 							typedMapping.getLength(),
 							typedMapping.getArrayLength(),
 							typedMapping.getPrecision(),
@@ -304,12 +369,38 @@ public class H2UnnestFunction extends UnnestFunction {
 					);
 				}
 				else {
+					final String columnTypeName = ddlType.getTypeName(
+							Size.nil(),
+							elementType,
+							typeConfiguration.getDdlTypeRegistry()
+					);
+					final String readExpression;
+					if ( pluralSqlTypeCode == SqlTypes.JSON_ARRAY || pluralSqlTypeCode == SqlTypes.XML_ARRAY ) {
+						readExpression = aggregateSupport.aggregateComponentCustomReadExpression(
+								"",
+								"",
+								"",
+								elementReadExpression,
+								pluralSqlTypeCode,
+								new SqlTypedMappingImpl(
+										null,
+										null,
+										null,
+										null,
+										null,
+										elementType
+								),
+								typeConfiguration
+						);
+					}
+					else {
+						readExpression = elementReadExpression;
+					}
 					elementMapping = new SelectableMappingImpl(
 							"",
 							elementSelectionExpression,
 							new SelectablePath( CollectionPart.Nature.ELEMENT.getName() ),
-							elementReadExpression,
-							null,
+							readExpression,
 							null,
 							null,
 							null,

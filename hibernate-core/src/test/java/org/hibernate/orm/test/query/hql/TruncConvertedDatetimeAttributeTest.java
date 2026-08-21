@@ -67,6 +67,7 @@ public class TruncConvertedDatetimeAttributeTest {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsTimestampWithDateComparison.class)
 	public void testTruncComparison(SessionFactoryScope scope) {
 		scope.inSession( session -> {
 			assertThat( session.createQuery(

@@ -11,10 +11,12 @@ import java.time.Instant;
 import java.util.List;
 
 import org.hibernate.community.dialect.InformixDialect;
+import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.community.dialect.DerbyDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
@@ -72,9 +74,16 @@ public class NativeQueryResultBuilderTests {
 					final Object[] values = (Object[]) result;
 					assertThat( values.length, is(3 ) );
 
-					assertThat( values[ 0 ], is( STRING_VALUE ) );
-					assertThat( values[ 1 ], is( 2 ) );
-					assertThat( values[ 2 ], is( 1 ) );
+					assertThat( values[0], is( STRING_VALUE ) );
+					if (scope.getSessionFactory().getJdbcServices().getDialect() instanceof SpannerPostgreSQLDialect ||
+						scope.getSessionFactory().getJdbcServices().getDialect() instanceof SpannerDialect ) {
+						assertThat( values[1], is( 2L ) );
+						assertThat( values[2], is( 1L ) );
+					}
+					else {
+						assertThat( values[1], is( 2 ) );
+						assertThat( values[2], is( 1 ) );
+					}
 				}
 		);
 	}
@@ -125,9 +134,16 @@ public class NativeQueryResultBuilderTests {
 					final Object[] values = (Object[]) result;
 					assertThat( values.length, is(3 ) );
 
-					assertThat( values[ 0 ], is( 1 ) );
-					assertThat( values[ 1 ], is( 2 ) );
-					assertThat( values[ 2 ], is( STRING_VALUE ) );
+					if (scope.getSessionFactory().getJdbcServices().getDialect() instanceof SpannerPostgreSQLDialect ||
+						scope.getSessionFactory().getJdbcServices().getDialect() instanceof SpannerDialect) {
+						assertThat( values[0], is( 1L ) );
+						assertThat( values[1], is( 2L ) );
+					}
+					else {
+						assertThat( values[0], is( 1 ) );
+						assertThat( values[1], is( 2 ) );
+					}
+					assertThat( values[2], is( STRING_VALUE ) );
 				}
 		);
 	}
@@ -153,7 +169,13 @@ public class NativeQueryResultBuilderTests {
 					final Object[] values = (Object[]) result;
 					assertThat( values.length, is(3 ) );
 
-					assertThat( values[ 0 ], is( 1 ) );
+					if (scope.getSessionFactory().getJdbcServices().getDialect() instanceof SpannerPostgreSQLDialect ||
+						scope.getSessionFactory().getJdbcServices().getDialect() instanceof SpannerDialect) {
+						assertThat( values[0], is( 1L ) );
+					}
+					else {
+						assertThat( values[0], is( 1 ) );
+					}
 					assertThat( values[ 1 ], is( "MALE" ) );
 					assertThat( values[ 2 ], matchesOrdinal( EntityOfBasics.Gender.FEMALE ) );
 				}
@@ -176,7 +198,13 @@ public class NativeQueryResultBuilderTests {
 					final Object[] values = (Object[]) result;
 					assertThat( values.length, is(3 ) );
 
-					assertThat( values[ 0 ], is( 1 ) );
+					if ( scope.getSessionFactory().getJdbcServices().getDialect() instanceof SpannerPostgreSQLDialect ||
+						scope.getSessionFactory().getJdbcServices().getDialect() instanceof SpannerDialect) {
+						assertThat( values[0], is( 1L ) );
+					}
+					else {
+						assertThat( values[0], is( 1 ) );
+					}
 					assertThat( values[ 1 ], is( EntityOfBasics.Gender.MALE ) );
 					assertThat( values[ 2 ], is( EntityOfBasics.Gender.FEMALE ) );
 				}
@@ -195,9 +223,15 @@ public class NativeQueryResultBuilderTests {
 					assertThat( results.size(), is( 1 ) );
 
 					final Object result = results.get( 0 );
-					assertThat( result, instanceOf( Character.class ) );
-
-					assertThat( result, is( 'O' ) );
+					if (scope.getSessionFactory().getJdbcServices().getDialect() instanceof SpannerPostgreSQLDialect ||
+						scope.getSessionFactory().getJdbcServices().getDialect() instanceof SpannerDialect) {
+						assertThat( result, instanceOf( String.class ) );
+						assertThat( result, is( "O" ) );
+					}
+					else {
+						assertThat( result, instanceOf( Character.class ) );
+						assertThat( result, is( 'O' ) );
+					}
 				}
 		);
 

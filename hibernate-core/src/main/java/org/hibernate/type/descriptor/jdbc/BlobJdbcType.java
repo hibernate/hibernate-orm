@@ -11,6 +11,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
+import org.hibernate.boot.model.relational.Database;
 import org.hibernate.engine.jdbc.BinaryStream;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -23,6 +24,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  * @author Steve Ebersole
  * @author Gail Badner
  * @author Brett Meyer
+ * @author Loïc Lefèvre
  */
 public abstract class BlobJdbcType implements JdbcType {
 
@@ -78,6 +80,16 @@ public abstract class BlobJdbcType implements JdbcType {
 	@Override
 	public <X> BasicBinder<X> getBinder(final JavaType<X> javaType) {
 		return getBlobBinder( javaType );
+	}
+
+	@Override
+	public String getExtraCreateTableInfo(JavaType<?> javaType, String columnName, String tableName, Database database) {
+		if( javaType.getJavaTypeClass() != Blob.class && database.getDialect().supportsValueLOBAccess() ) {
+			return database.getDialect().getValueLOBFragmentForExtraCreateTableInfo(columnName);
+		}
+		else {
+			return JdbcType.super.getExtraCreateTableInfo( javaType, columnName, tableName, database );
+		}
 	}
 
 	public static final BlobJdbcType DEFAULT = new BlobJdbcType() {

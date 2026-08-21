@@ -25,7 +25,7 @@ import org.hibernate.annotations.SQLInsert;
 		indexes = {@Index(name = "secondname", columnList = "secondName"),
 				@Index(name = "nameindex", columnList = "name")},
 		comment = "My cat table")
-@SecondaryTable(name = "`Cat nbr1`",
+@SecondaryTable(name = "`Cat_nbr1`",
 		indexes = @Index(name = "story1index", columnList = "storyPart1"))
 @SecondaryTable(name = "Cat2",
 		uniqueConstraints = @UniqueConstraint(columnNames = {"storyPart2"}),
@@ -76,7 +76,7 @@ public class Cat implements Serializable {
 //		lifes = collection;
 //	}
 
-	@Column(table = "`Cat nbr1`")
+	@Column(table = "`Cat_nbr1`")
 	public String getStoryPart1() {
 		return storyPart1;
 	}

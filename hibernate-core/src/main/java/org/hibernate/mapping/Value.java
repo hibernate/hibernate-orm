@@ -158,6 +158,9 @@ public interface Value extends Serializable {
 
 	boolean hasAnyUpdatableColumns();
 
+	void setNonUpdatable();
+	void setNonInsertable();
+
 	@Incubating
 	default MetadataBuildingContext getBuildingContext() {
 		throw new UnsupportedOperationException( "Value#getBuildingContext is not implemented by: " + getClass().getName() );

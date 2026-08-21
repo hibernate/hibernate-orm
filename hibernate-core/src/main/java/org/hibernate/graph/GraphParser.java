@@ -24,7 +24,7 @@ import org.hibernate.graph.spi.GraphImplementor;
  *     attributeNode:: attributePath subGraph?
  *     subGraph:: LPAREN (subTypeEntityName COLON)? attributeList RPAREN
  * </pre>
- * <p/>
+ * <p>
  * The {@link #parse} methods all create a root {@link jakarta.persistence.EntityGraph}
  * based on the passed entity class and parse the graph string into that root graph.
  * <p>

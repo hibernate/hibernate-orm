@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<hibernate-mapping xmlns="http://www.hibernate.org/xsd/orm/hbm"
+                   package="org.hibernate.orm.test.boot.jaxb.mapping">
+    <class name="MapKeyManyToManyEntity">
+        <id name="id"/>
+        <map name="managers" table="entity_managers">
+            <key column="entityId" not-null="true"/>
+            <map-key-many-to-many column="siteId" class="SimpleEntity"/>
+            <many-to-many column="managerId" class="MapKeyManyToManyEntity"/>
+        </map>
+    </class>
+    <class name="SimpleEntity" table="simple_entity_table">
+        <id name="id"/>
+        <property name="name"/>
+    </class>
+</hibernate-mapping>

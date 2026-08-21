@@ -19,7 +19,7 @@ import org.hibernate.type.descriptor.java.JavaType;
 /**
  * Mapping of a discriminator, for either {@linkplain EntityMappingType#getDiscriminatorMapping() entity} or
  * {@linkplain DiscriminatedAssociationModelPart#getDiscriminatorMapping() association} (ANY) discrimination.
- * <p/>
+ * <p>
  * Represents a composition of <ul>
  *     <li>a {@linkplain #getValueConverter() converter} between the domain and relational form</li>
  *     <li>a {@linkplain #getUnderlyingJdbcMapping JDBC mapping} to read and write the relational values</li>

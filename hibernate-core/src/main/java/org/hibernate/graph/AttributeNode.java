@@ -51,6 +51,14 @@ public interface AttributeNode<J> extends GraphNode<J>, jakarta.persistence.Attr
 	PersistentAttribute<?, J> getAttributeDescriptor();
 
 	/**
+	 * Whether this attribute was {@linkplain Graph#removeAttributeNode removed}.
+	 * Per the Jakarta Persistence specification, such nodes should actually suppress inclusion of the
+	 * attribute mapped for eager fetching when the graph is used as a
+	 * {@linkplain org.hibernate.graph.GraphSemantic#LOAD load graph}.
+	 */
+	boolean isRemoved();
+
+	/**
 	 * All value subgraphs rooted at this node.
 	 * <p>
 	 * Includes treated subgraphs.

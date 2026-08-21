@@ -16,7 +16,7 @@ import jakarta.persistence.MappedSuperclass;
 /**
  * Reads the audited properties for components.
  *
- * @author Hern&aacut;n Chanfreau
+ * @author Hern&aacute;n Chanfreau
  * @author Michal Skowronek (mskowr at o2 dot pl)
  * @author Chris Cranford
  */

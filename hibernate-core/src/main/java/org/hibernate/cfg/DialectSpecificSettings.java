@@ -68,6 +68,15 @@ public interface DialectSpecificSettings {
 	String ORACLE_OSON_DISABLED = "hibernate.dialect.oracle.oson_format_disabled";
 
 	/**
+	 * Specifies whether {@code lob(column) query as value} should be used in DDL
+	 * for LOB columns on Oracle 23c and above.
+	 *
+	 * @settingDefault {@code true}
+	 * @since 7.4
+	 */
+	String ORACLE_VALUE_LOB_ENABLED = "hibernate.dialect.oracle.value_lob_enabled";
+
+	/**
 	 * Specifies whether the {@code ansinull} setting is enabled on Sybase.
 	 * <p>
 	 * Ignored if Hibernate is able to determine the value of {@code ansinull}

@@ -1,0 +1,30 @@
+services:
+  opengauss:
+    image: ${GAUSSDB_IMAGE:-opengauss/opengauss:7.0.0-RC1.B023@sha256:d81de95b31d10ec2b995829ee7fb7fcf029e0a07a72bcb47e0cc31514153ee7d}
+    container_name: opengauss
+    privileged: true
+    ports:
+      - "8000:8000"
+    environment:
+      GS_USERNAME: hibernate_orm_test
+      GS_PASSWORD: Hibernate_orm_test@1234
+      GS_PORT: "8000"
+    healthcheck:
+      test: ["CMD-SHELL", "su - omm -c \"gsql -d postgres -p 8000 -U hibernate_orm_test -W Hibernate_orm_test@1234 -t -c 'SELECT 1'\""]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+  opengauss-setup:
+    image: ${GAUSSDB_IMAGE:-opengauss/opengauss:7.0.0-RC1.B023@sha256:d81de95b31d10ec2b995829ee7fb7fcf029e0a07a72bcb47e0cc31514153ee7d}
+    depends_on:
+      opengauss:
+        condition: service_healthy
+    user: omm
+    environment:
+      - GS_PASSWORD=Hibernate_orm_test@1234
+    command: >
+      sh -c "
+      gsql -h opengauss -d postgres -p 8000 -U hibernate_orm_test -W Hibernate_orm_test@1234 -t -c 'CREATE DATABASE hibernate_orm_test;' &&
+      gsql -h opengauss -d postgres -p 8000 -U hibernate_orm_test -W Hibernate_orm_test@1234 -t -c 'CREATE SCHEMA test AUTHORIZATION hibernate_orm_test;' &&
+      tail -f /dev/null
+      "

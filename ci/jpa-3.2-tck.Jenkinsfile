@@ -6,17 +6,11 @@ if (currentBuild.getBuildCauses().toString().contains('BranchIndexingCause')) {
 	currentBuild.result = 'NOT_BUILT'
   	return
 }
-def throttleCount
-// Don't build the TCK on PRs, unless they use the tck label
-if ( env.CHANGE_ID != null ) {
-	if ( !pullRequest.labels.contains( 'tck' ) ) {
-		print "INFO: Build skipped because pull request doesn't have 'tck' label"
-		return
-	}
-	throttleCount = 20
-}
-else {
-	throttleCount = 1
+// This is a limited maintenance branch, so don't run this on pushes to the branch, only on PRs
+if ( !currentBuild.getBuildCauses().toString().contains( 'UserIdCause' ) && !env.CHANGE_ID ) {
+	print "INFO: Build skipped because this job should only run for pull request, not for branch pushes"
+	currentBuild.result = 'NOT_BUILT'
+	return
 }
 
 pipeline {
@@ -24,16 +18,18 @@ pipeline {
     tools {
         jdk 'OpenJDK 25 Latest'
     }
+    environment {
+        COMMON_GRADLE_ARGS = '-Igradle/init.gradle'
+    }
     options {
-  		rateLimitBuilds(throttle: [count: throttleCount, durationName: 'day', userBoost: true])
         buildDiscarder(logRotator(numToKeepStr: '3', artifactNumToKeepStr: '3'))
         disableConcurrentBuilds(abortPrevious: true)
     }
     parameters {
         choice(name: 'IMAGE_JDK', choices: ['jdk17', 'jdk25'], description: 'The JDK base image version to use for the TCK image.')
-        string(name: 'TCK_VERSION', defaultValue: '3.2.0', description: 'The version of the Jakarta JPA TCK i.e. `2.2.0` or `3.0.1`')
-        string(name: 'TCK_SHA', defaultValue: '', description: 'The SHA256 of the Jakarta JPA TCK that is distributed under https://download.eclipse.org/jakartaee/persistence/3.1/jakarta-persistence-tck-${TCK_VERSION}.zip.sha256')
-		string(name: 'TCK_URL', defaultValue: 'https://www.eclipse.org/downloads/download.php?file=/ee4j/jakartaee-tck/jakartaee11/staged/eftl/jakarta-persistence-tck-3.2.0.zip&mirror_id=1', description: 'The URL from which to download the TCK ZIP file. Only needed for testing staged builds. Ensure the TCK_VERSION variable matches the ZIP file name suffix.')
+        string(name: 'TCK_VERSION', defaultValue: '3.2.1', description: 'The version of the Jakarta JPA TCK i.e. `2.2.0` or `3.0.1`')
+        string(name: 'TCK_SHA', defaultValue: '1d282675f43fa13cf8ab2537d6dbfb1e1c95f7b838ab7cdd053e185c363a6519', description: 'The SHA256 of the Jakarta JPA TCK that is distributed under https://download.eclipse.org/jakartaee/persistence/3.1/jakarta-persistence-tck-${TCK_VERSION}.zip.sha256')
+		string(name: 'TCK_URL', defaultValue: 'https://download.eclipse.org/jakartaee/persistence/3.2/jakarta-persistence-tck-3.2.1.zip', description: 'The URL from which to download the TCK ZIP file. Only needed for testing staged builds. Ensure the TCK_VERSION variable matches the ZIP file name suffix.')
         choice(name: 'RDBMS', choices: ['postgresql','mysql','mssql','oracle','db2','sybase'], description: 'The JDK base image version to use for the TCK image.')
 	}
     stages {
@@ -44,7 +40,7 @@ pipeline {
         }
         stage('TCK') {
             agent {
-                label 'LongDuration'
+                label 'Worker&&Containers'
             }
             stages {
                 stage('Build') {
@@ -54,11 +50,11 @@ pipeline {
                             withEnv([
                                     "DISABLE_REMOTE_GRADLE_CACHE=true"
                             ]) {
-                                sh './gradlew clean publishToMavenLocal -x test --no-scan --no-daemon --no-build-cache --stacktrace -PmavenMirror=nexus-load-balancer-c4cf05fd92f43ef8.elb.us-east-1.amazonaws.com'
+                                sh './gradlew $COMMON_GRADLE_ARGS clean publishToMavenLocal -x test --no-scan --no-daemon --no-build-cache --stacktrace'
                                 // For some reason, Gradle does not publish hibernate-platform and hibernate-testing
                                 // to the local maven repository with the previous command,
                                 // but requires an extra run instead
-                                sh './gradlew :hibernate-testing:publishToMavenLocal :hibernate-platform:publishToMavenLocal -x test --no-scan --no-daemon --no-build-cache --stacktrace -PmavenMirror=nexus-load-balancer-c4cf05fd92f43ef8.elb.us-east-1.amazonaws.com'
+                                sh './gradlew $COMMON_GRADLE_ARGS :hibernate-testing:publishToMavenLocal :hibernate-platform:publishToMavenLocal -x test --no-scan --no-daemon --no-build-cache --stacktrace'
                             }
                             script {
                                 env.HIBERNATE_VERSION = sh (

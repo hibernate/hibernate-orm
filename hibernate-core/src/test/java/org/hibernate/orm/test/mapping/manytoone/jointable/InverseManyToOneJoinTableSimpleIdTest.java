@@ -33,7 +33,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * Asserts the runtime model descriptors related to the inverse side
  * of a many-to-one with join-table.
- * <p/>
+ * <p>
  * This tests simple keys.  See {@link InverseManyToOneJoinTableCompositeIdTest} for
  * composite id testing
  *

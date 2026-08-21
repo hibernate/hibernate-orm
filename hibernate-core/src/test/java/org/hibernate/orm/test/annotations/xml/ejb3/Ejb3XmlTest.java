@@ -8,8 +8,10 @@ import java.util.Date;
 import java.util.List;
 
 import org.hibernate.Transaction;
+import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.collection.BasicCollectionPersister;
 
@@ -37,6 +39,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 		}
 )
 @SessionFactory
+@SkipForDialect( dialectClass = SpannerPostgreSQLDialect.class, reason = "Spanner doesn't support table name with spaces" )
+@SkipForDialect( dialectClass = SpannerDialect.class, reason = "Spanner doesn't support table name with spaces" )
 public class Ejb3XmlTest {
 
 	@Test

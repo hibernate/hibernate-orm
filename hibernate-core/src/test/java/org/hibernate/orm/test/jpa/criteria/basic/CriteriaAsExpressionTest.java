@@ -8,6 +8,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.List;
 
+import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.orm.test.jpa.metamodel.Product;
@@ -76,6 +77,7 @@ public class CriteriaAsExpressionTest {
 	@JiraKey("HHH-5755")
 	@SkipForDialect(dialectClass = SybaseDialect.class )
 	@SkipForDialect(dialectClass = SybaseASEDialect.class )
+	@SkipForDialect(dialectClass = SpannerDialect.class, reason = "Spanner requires explicit casting for INT64 to STRING comparisons")
 	public void testAsToString(EntityManagerFactoryScope scope) {
 		SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
 		statementInspector.clear();

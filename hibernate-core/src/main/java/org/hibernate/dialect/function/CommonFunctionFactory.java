@@ -185,6 +185,44 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
+	/**
+	 *  For Spanner
+	 */
+	public void position_locate_spanner() {
+		functionRegistry.registerBinaryTernaryPattern(
+						"locate",
+						integerType,
+						"strpos(?2,?1)",
+						"(strpos(substr(?2,?3),?1)+case when strpos(substr(?2,?3),?1)>0 then ?3-1 else 0 end)",
+						FunctionParameterType.STRING, FunctionParameterType.STRING, FunctionParameterType.INTEGER,
+						typeConfiguration
+				)
+				.setArgumentListSignature( "(STRING pattern, STRING string[, INTEGER start])" );
+		functionRegistry.registerAlternateKey( "position", "locate" );
+	}
+
+	public void round_spanner() {
+		functionRegistry.registerUnaryBinaryPattern(
+				"round",
+				"round(?1::float8)",
+				"(floor(?1*power(10,?2)+0.5)/power(10,?2))",
+				NUMERIC, INTEGER,
+				typeConfiguration
+		).setArgumentListSignature( "(NUMERIC number[, INTEGER places])" );
+	}
+
+	public void log_spanner() {
+		functionRegistry.registerUnaryBinaryPattern(
+						"log",
+						doubleType,
+						"log(cast(?1 as float8))",
+						"ln(cast(?2 as float8))/ln(cast(?1 as  float8))",
+						NUMERIC, NUMERIC, typeConfiguration
+				)
+				.setArgumentListSignature( "(NUMERIC arg1[, NUMERIC arg2])" );
+		functionRegistry.registerAlternateKey( "log10", "log" );
+	}
+
 	public void log2() {
 		functionRegistry.namedDescriptorBuilder( "log2" )
 				.setInvariantType(doubleType)
@@ -312,20 +350,43 @@ public class CommonFunctionFactory {
 		functionRegistry.registerAlternateKey( "truncate", "trunc" );
 	}
 
-	private void trunc(TruncFunction.DatetimeTrunc datetimeTrunc) {
-		trunc( "trunc(?1)", "trunc(?1,?2)", datetimeTrunc, null );
-	}
-
 	public void trunc() {
-		trunc( null );
+		trunc( "trunc(?1)", "trunc(?1,?2)", null, null );
 	}
 
+	/**
+	 * H2, DB2
+	 */
 	public void trunc_dateTrunc() {
-		trunc( TruncFunction.DatetimeTrunc.DATE_TRUNC );
+		functionRegistry.register(
+				"trunc",
+				new TruncFunction(
+						"trunc(?1)",
+						"trunc(?1,?2)",
+						TruncFunction.DatetimeTrunc.DATE_TRUNC,
+						null,
+						NO_PLAIN_PARAMETER,
+						typeConfiguration
+				)
+		);
+		functionRegistry.registerAlternateKey( "truncate", "trunc" );
 	}
 
+	/**
+	 * HSQL
+	 */
 	public void trunc_dateTrunc_trunc() {
-		trunc( TruncFunction.DatetimeTrunc.TRUNC );
+		functionRegistry.register(
+				"trunc",
+				new TruncFunction(
+						"trunc(?1)",
+						"trunc(?1,?2)",
+						TruncFunction.DatetimeTrunc.TRUNC,
+						null,
+						NO_PLAIN_PARAMETER,
+						typeConfiguration )
+		);
+		functionRegistry.registerAlternateKey( "truncate", "trunc" );
 	}
 
 	/**
@@ -1735,7 +1796,8 @@ public class CommonFunctionFactory {
 		functionRegistry.registerBinaryTernaryPattern(
 						"locate",
 						integerType,
-						"position(?1 in ?2)", "(position(?1 in substring(?2 from ?3))+(?3)-1)",
+						"position(?1 in ?2)",
+						"(position(?1 in substring(?2 from ?3))+case when position(?1 in substring(?2 from ?3))=0 then 0 else (?3)-1 end)",
 						STRING, STRING, INTEGER,
 						typeConfiguration
 				)
@@ -2284,6 +2346,17 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
+	/**
+	 * power() for Spanner
+	 */
+	public void power_spanner() {
+		functionRegistry.patternDescriptorBuilder("power", "power(?1::float8, ?2::float8)")
+				.setExactArgumentCount(2)
+				.setParameterTypes(NUMERIC)
+				.setInvariantType(doubleType)
+				.register();
+	}
+
 	public void round() {
 		functionRegistry.namedDescriptorBuilder( "round" )
 				// To avoid truncating to a specific data type, we default to using the argument type
@@ -2291,6 +2364,24 @@ public class CommonFunctionFactory {
 				.setArgumentCountBetween( 1, 2 )
 				.setParameterTypes(NUMERIC, INTEGER)
 				.setArgumentListSignature( "(NUMERIC number[, INTEGER places])" )
+				.register();
+	}
+
+	private static final String VAR_SAMP_SUM_COUNT_SPANNER_PATTERN = "(sum(power(cast(?1 as float8), cast(2 as float8)))-(power(cast(sum(?1) as float8), cast(2 as float8))/count(?1)))/nullif(count(?1)-1,0)";
+
+	public void stddevSamp_sumCount_spanner() {
+		functionRegistry.patternAggregateDescriptorBuilder( "stddev_samp", "sqrt(" + VAR_SAMP_SUM_COUNT_SPANNER_PATTERN + ")" )
+				.setInvariantType( doubleType )
+				.setExactArgumentCount( 1 )
+				.setParameterTypes( NUMERIC )
+				.register();
+	}
+
+	public void varSamp_sumCount_spanner() {
+		functionRegistry.patternAggregateDescriptorBuilder( "var_samp", VAR_SAMP_SUM_COUNT_SPANNER_PATTERN )
+				.setInvariantType( doubleType )
+				.setExactArgumentCount( 1 )
+				.setParameterTypes( NUMERIC )
 				.register();
 	}
 
@@ -2354,6 +2445,14 @@ public class CommonFunctionFactory {
 				.setInvariantType(integerType)
 				.setParameterTypes( STRING )
 				.setExactArgumentCount( 1 )
+				.register();
+	}
+
+	public void sqrt_spanner() {
+		functionRegistry.patternDescriptorBuilder("sqrt", "sqrt(?1::float8)")
+				.setExactArgumentCount(1)
+				.setParameterTypes(NUMERIC)
+				.setInvariantType(doubleType)
 				.register();
 	}
 
@@ -2991,6 +3090,41 @@ public class CommonFunctionFactory {
 	}
 
 	/**
+	 * Spanner Postgres array_length() function
+	 */
+	public void arrayLength_spannerpg() {
+		functionRegistry.patternDescriptorBuilder( "array_length", "case when ?1 is null then null else coalesce(array_length(?1, 1), 0) end" )
+				.setReturnTypeResolver( StandardFunctionReturnTypeResolvers.invariant( integerType ) )
+				.setArgumentsValidator(
+						StandardArgumentsValidators.composite(
+								StandardArgumentsValidators.exactly( 1 ),
+								ArrayArgumentValidator.DEFAULT_INSTANCE
+						)
+				)
+				.setArgumentListSignature( "(ARRAY array)" )
+				.register();
+		functionRegistry.register( "length", new DynamicDispatchFunction( functionRegistry, "character_length", "array_length" ) );
+		functionRegistry.registerAlternateKey( "cardinality", "array_length" );
+	}
+
+	/**
+	 * Spanner array_length() function
+	 */
+	public void arrayLength_spanner() {
+		functionRegistry.patternDescriptorBuilder( "array_length", "array_length(?1)" )
+				.setReturnTypeResolver( StandardFunctionReturnTypeResolvers.invariant( integerType ) )
+				.setArgumentsValidator(
+						StandardArgumentsValidators.composite(
+								StandardArgumentsValidators.exactly( 1 ),
+								ArrayArgumentValidator.DEFAULT_INSTANCE
+						)
+				)
+				.setArgumentListSignature( "(ARRAY array)" )
+				.register();
+		functionRegistry.register( "length", new DynamicDispatchFunction( functionRegistry, "character_length", "array_length" ) );
+	}
+
+	/**
 	 * Oracle array_length() function
 	 */
 	public void arrayLength_oracle() {
@@ -3077,21 +3211,16 @@ public class CommonFunctionFactory {
 				.setArgumentListSignature( "(ARRAY array, INTEGER index)" )
 				.register();
 	}
+
+	public void arrayGet_bracket() {
+		arrayGet_bracket( true );
+	}
+
 	/**
 	 * CockroachDB and PostgreSQL array_get() function via bracket syntax
 	 */
-	public void arrayGet_bracket() {
-		functionRegistry.patternDescriptorBuilder( "array_get", "?1[?2]" )
-				.setReturnTypeResolver( ElementViaArrayArgumentReturnTypeResolver.DEFAULT_INSTANCE )
-				.setArgumentsValidator(
-						StandardArgumentsValidators.composite(
-								ArrayArgumentValidator.DEFAULT_INSTANCE,
-								new ArgumentTypesValidator( null, ANY, INTEGER )
-						)
-				)
-				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.invariant( ANY, INTEGER ) )
-				.setArgumentListSignature( "(ARRAY array, INTEGER index)" )
-				.register();
+	public void arrayGet_bracket(boolean supportsJsonBracket) {
+		functionRegistry.register( "array_get", new ArrayGetBracketFunction( supportsJsonBracket ) );
 	}
 
 	/**
@@ -3693,6 +3822,13 @@ public class CommonFunctionFactory {
 	}
 
 	/**
+	 * H2 json_object() function
+	 */
+	public void jsonObject_h2() {
+		functionRegistry.register( "json_object", new H2JsonObjectFunction( typeConfiguration ) );
+	}
+
+	/**
 	 * DB2 json_object() function
 	 */
 	public void jsonObject_db2() {
@@ -3737,8 +3873,13 @@ public class CommonFunctionFactory {
 	/**
 	 * PostgreSQL json_object() function
 	 */
+	@Deprecated(forRemoval = true)
 	public void jsonObject_postgresql() {
-		functionRegistry.register( "json_object", new PostgreSQLJsonObjectFunction( typeConfiguration ) );
+		jsonObject_postgresql( false );
+	}
+
+	public void jsonObject_postgresql(boolean supportsStandard) {
+		functionRegistry.register( "json_object", new PostgreSQLJsonObjectFunction( typeConfiguration, supportsStandard ) );
 	}
 
 	/**
@@ -3746,6 +3887,13 @@ public class CommonFunctionFactory {
 	 */
 	public void jsonArray() {
 		functionRegistry.register( "json_array", new JsonArrayFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * json_array() function
+	 */
+	public void jsonArray_h2() {
+		functionRegistry.register( "json_array", new H2JsonArrayFunction( typeConfiguration ) );
 	}
 
 	/**
@@ -3800,8 +3948,16 @@ public class CommonFunctionFactory {
 	/**
 	 * PostgreSQL json_array() function
 	 */
+	@Deprecated(forRemoval = true)
 	public void jsonArray_postgresql() {
-		functionRegistry.register( "json_array", new PostgreSQLJsonArrayFunction( typeConfiguration ) );
+		jsonArray_postgresql( false );
+	}
+
+	/**
+	 * PostgreSQL json_array() function
+	 */
+	public void jsonArray_postgresql(boolean supportsStandard) {
+		functionRegistry.register( "json_array", new PostgreSQLJsonArrayFunction( typeConfiguration, supportsStandard ) );
 	}
 
 	/**
@@ -4374,7 +4530,7 @@ public class CommonFunctionFactory {
 	 * Standard unnest() function
 	 */
 	public void unnest(@Nullable String defaultBasicArrayElementColumnName, String defaultIndexSelectionExpression) {
-		functionRegistry.register( "unnest", new UnnestFunction( defaultBasicArrayElementColumnName, defaultIndexSelectionExpression ) );
+		functionRegistry.register( "unnest", new UnnestFunction( defaultBasicArrayElementColumnName, defaultIndexSelectionExpression, false ) );
 	}
 
 	/**
@@ -4395,8 +4551,16 @@ public class CommonFunctionFactory {
 	/**
 	 * Oracle unnest() function
 	 */
+	@Deprecated(forRemoval = true)
 	public void unnest_oracle() {
 		functionRegistry.register( "unnest", new OracleUnnestFunction() );
+	}
+
+	/**
+	 * Oracle unnest() function
+	 */
+	public void unnest_oracle(boolean supportsJsonType) {
+		functionRegistry.register( "unnest", new OracleUnnestFunction( supportsJsonType ) );
 	}
 
 	/**

@@ -43,7 +43,7 @@ public class DB2UnnestFunction extends UnnestFunction {
 	private final int maximumArraySize;
 
 	public DB2UnnestFunction(int maximumArraySize) {
-		super( "v", "i" );
+		super( "v", "i", true );
 		this.maximumArraySize = maximumArraySize;
 	}
 
@@ -138,6 +138,9 @@ public class DB2UnnestFunction extends UnnestFunction {
 					sqlAppender.append( selectableMapping.getSelectionExpression() );
 					sqlAppender.append( ' ' );
 					sqlAppender.append( getDdlType( selectableMapping, SqlTypes.JSON_ARRAY, walker ) );
+					if ( selectableMapping.getJdbcMapping().getJdbcType().isJson() ) {
+						sqlAppender.append( " format json" );
+					}
 					sqlAppender.appendSql( " path '$." );
 					sqlAppender.append( selectableMapping.getSelectableName() );
 					sqlAppender.appendSql( "' error on error" );

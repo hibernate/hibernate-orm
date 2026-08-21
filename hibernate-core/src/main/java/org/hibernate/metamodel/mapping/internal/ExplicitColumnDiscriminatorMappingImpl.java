@@ -30,7 +30,6 @@ public class ExplicitColumnDiscriminatorMappingImpl extends AbstractDiscriminato
 	private final String columnFormula;
 	private final boolean isPhysical;
 	private final boolean isUpdateable;
-	private final @Nullable String columnDefinition;
 	private final @Nullable String customReadExpression;
 	private final @Nullable Long length;
 	private final @Nullable Integer arrayLength;
@@ -45,7 +44,6 @@ public class ExplicitColumnDiscriminatorMappingImpl extends AbstractDiscriminato
 			boolean isFormula,
 			boolean isPhysical,
 			boolean isUpdateable,
-			String columnDefinition,
 			String customReadExpression,
 			Long length,
 			Integer precision,
@@ -55,14 +53,13 @@ public class ExplicitColumnDiscriminatorMappingImpl extends AbstractDiscriminato
 				mappingType,
 				name,
 				tableExpression,
-				columnExpression,
-				isFormula,
-				isPhysical,
-				isUpdateable,
-				columnDefinition,
-				customReadExpression,
-				length,
-				null,
+					columnExpression,
+					isFormula,
+					isPhysical,
+					isUpdateable,
+					customReadExpression,
+					length,
+					null,
 				precision,
 				scale,
 				discriminatorType );
@@ -76,7 +73,6 @@ public class ExplicitColumnDiscriminatorMappingImpl extends AbstractDiscriminato
 			boolean isFormula,
 			boolean isPhysical,
 			boolean isUpdateable,
-			@Nullable String columnDefinition,
 			@Nullable String customReadExpression,
 			@Nullable Long length,
 			@Nullable Integer arrayLength,
@@ -90,7 +86,6 @@ public class ExplicitColumnDiscriminatorMappingImpl extends AbstractDiscriminato
 		this.name = name;
 		this.tableExpression = tableExpression;
 		this.isPhysical = isPhysical;
-		this.columnDefinition = columnDefinition;
 		this.customReadExpression = customReadExpression;
 		this.length = length;
 		this.arrayLength = arrayLength;
@@ -156,11 +151,6 @@ public class ExplicitColumnDiscriminatorMappingImpl extends AbstractDiscriminato
 	@Override
 	public @Nullable String getCustomWriteExpression() {
 		return null;
-	}
-
-	@Override
-	public @Nullable String getColumnDefinition() {
-		return columnDefinition;
 	}
 
 	@Override

@@ -1833,7 +1833,7 @@ xmltableDefaultClause
  * This parser rule helps with that.  Here we expect that the caller already understands their
  * context enough to know that keywords-as-identifiers are allowed.
  */
- // All except the possible optional following keywords LEFT, RIGHT, INNER, FULL, OUTER
+ // All except the possible optional following keywords LEFT, RIGHT, INNER, FULL, OUTER, NOT
  nakedIdentifier
 	: IDENTIFIER
 	| QUOTED_IDENTIFIER
@@ -1962,7 +1962,7 @@ xmltableDefaultClause
 	| NEW
 	| NEXT
 	| NO
-	| NOT
+//	| NOT
 	| NOTHING
 	| NULLS
 	| OBJECT
@@ -2054,4 +2054,5 @@ identifier
 	| LEFT
 	| OUTER
 	| RIGHT
+	| NOT
 	;

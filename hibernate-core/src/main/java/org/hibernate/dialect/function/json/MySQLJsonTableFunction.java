@@ -126,7 +126,8 @@ public class MySQLJsonTableFunction extends JsonTableFunction {
 		}
 		sqlAppender.appendSql( definition.name() );
 		sqlAppender.appendSql( ' ' );
-		sqlAppender.appendSql( DdlTypeHelper.getTypeName( definition.type(), walker.getSessionFactory().getTypeConfiguration() ) );
+		sqlAppender.appendSql( DdlTypeHelper.getTypeName( definition.type(),
+				walker.getSessionFactory().getTypeConfiguration() ) );
 		if ( definition.type().getJdbcType().getDdlTypeCode() != SqlTypes.JSON ) {
 			sqlAppender.appendSql( " format json" );
 		}
@@ -168,7 +169,8 @@ public class MySQLJsonTableFunction extends JsonTableFunction {
 		}
 		sqlAppender.appendSql( definition.name() );
 		sqlAppender.appendSql( ' ' );
-		sqlAppender.appendSql( DdlTypeHelper.getTypeName( definition.type(), walker.getSessionFactory().getTypeConfiguration() ) );
+		sqlAppender.appendSql( DdlTypeHelper.getTypeName( definition.type(),
+						walker.getSessionFactory().getTypeConfiguration() ) );
 
 		sqlAppender.appendSql( " exists" );
 		if ( definition.jsonPath() != null ) {

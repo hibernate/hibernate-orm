@@ -97,7 +97,7 @@ public class SynchronizedSpaceTests {
 		checkUseCase(
 				scope,
 				(session) -> {
-					final Query nativeQuery = session.createNativeQuery( "update " + table + " set name = 'updated'" );
+					final Query nativeQuery = session.createNativeQuery( "update " + table + " set name = 'updated' where 1=1" );
 					updateQueryConfigurer.accept( nativeQuery );
 					return nativeQuery;
 				},

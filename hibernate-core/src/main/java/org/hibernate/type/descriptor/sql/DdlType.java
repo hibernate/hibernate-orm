@@ -111,6 +111,18 @@ public interface DdlType extends Serializable {
 	}
 
 	/**
+	 * Return the database type name to use as a cast target, or as the
+	 * declared type of a column produced by a set-returning function like
+	 * {@code json_table()} or {@code xmltable()}, in positions where LOB
+	 * types ({@code CLOB}, {@code NCLOB}, {@code BLOB}) are not accepted.
+	 *
+	 * @since 7.4
+	 */
+	default String getNarrowCastTypeName(Size columnSize, SqlExpressible type, DdlTypeRegistry ddlTypeRegistry) {
+		return getCastTypeName( columnSize, type, ddlTypeRegistry );
+	}
+
+	/**
 	 * Return the database type corresponding to the given {@link JdbcType}
 	 * that may be used as a target type in casting operations using the SQL
 	 * {@code CAST()} function, using the given {@link JavaType} to help

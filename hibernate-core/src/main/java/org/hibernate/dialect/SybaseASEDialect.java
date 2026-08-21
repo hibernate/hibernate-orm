@@ -119,6 +119,21 @@ public class SybaseASEDialect extends SybaseDialect {
 	}
 
 	@Override
+	public DatabaseVersion determineDatabaseVersion(DialectResolutionInfo info) {
+		if ( SybaseDriverKind.determineKind( info ) == SybaseDriverKind.JTDS
+			&& info.getDatabaseMinorVersion() != DatabaseVersion.NO_VERSION ) {
+			// The jTDS driver encodes the SP part into the minor version, so we have to unpack this
+			final int infoMinorVersion = info.getDatabaseMinorVersion();
+			final int minorVersion = infoMinorVersion / 10;
+			final int microVersion = infoMinorVersion % 10;
+			return new SimpleDatabaseVersion( info.getDatabaseMajorVersion(), minorVersion, microVersion );
+		}
+		else {
+			return super.determineDatabaseVersion( info );
+		}
+	}
+
+	@Override
 	protected String columnType(int sqlTypeCode) {
 		return switch ( sqlTypeCode ) {
 			// On Sybase ASE, the 'bit' type cannot be null,
@@ -694,13 +709,24 @@ public class SybaseASEDialect extends SybaseDialect {
 						new QueryTimeoutException( message, sqlException, sql );
 					case "JZ0TO", "JZ006" ->
 						new LockTimeoutException( message, sqlException, sql );
-					case "S1000", "23000" ->
+					case "S1000" -> {
+						if ( errorCode == 12205 ) {
+							yield new LockTimeoutException( message, sqlException, sql );
+						}
+						else {
+							yield convertConstraintViolation( sqlException, message, sql, errorCode );
+						}
+					}
+					case "23000" ->
 						convertConstraintViolation( sqlException, message, sql, errorCode );
 					case "ZZZZZ" -> {
 						if ( 515 == errorCode ) {
 							// Attempt to insert NULL value into column; column does not allow nulls.
 							yield new ConstraintViolationException( message, sqlException, sql, ConstraintKind.NOT_NULL,
 									getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
+						}
+						else if ( errorCode == 12205 ) {
+							yield new LockTimeoutException( message, sqlException, sql );
 						}
 						else {
 							yield null;

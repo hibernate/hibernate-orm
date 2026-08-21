@@ -85,7 +85,7 @@ public interface QuerySpecification<T> {
 	 * Validate the query.
 	 *
 	 * @return {@code this} if everything is fine
-	 * @throws Exception if it ain't all good
+	 * @throws RuntimeException if it ain't all good
 	 */
 	QuerySpecification<T> validate(CriteriaBuilder builder);
 

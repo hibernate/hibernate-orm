@@ -8,7 +8,7 @@
 <hibernate-mapping>
   <class name="org.hibernate.orm.test.mapping.usertypes.TestEntity"
         table="TestTable">
-        <id name="id" column="ID" type="integer">
+        <id name="id" column="ID" type="string">
         	<generator class="uuid"/>
         </id>
 		

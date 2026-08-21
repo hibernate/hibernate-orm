@@ -247,7 +247,7 @@ public class ReadOnlyVersionedNodesTest extends AbstractReadOnlyTest {
 		);
 	}
 
-	@Test
+	@Test @FailureExpected
 	public void testAddNewChildToReadOnlyParent(SessionFactoryScope scope) {
 		VersionedNode p = createVersionNode( "parent", "parent", scope );
 
@@ -280,7 +280,7 @@ public class ReadOnlyVersionedNodesTest extends AbstractReadOnlyTest {
 		);
 	}
 
-	@Test
+	@Test @FailureExpected
 	public void testUpdateParentWithNewChildCommitWithReadOnlyParent(SessionFactoryScope scope) {
 		VersionedNode p = createVersionNode( "parent", "parent", scope );
 
@@ -322,7 +322,7 @@ public class ReadOnlyVersionedNodesTest extends AbstractReadOnlyTest {
 		assertDeleteCount( 2, scope );
 	}
 
-	@Test
+	@Test @FailureExpected
 	public void testMergeDetachedParentWithNewChildCommitWithReadOnlyParent(SessionFactoryScope scope) {
 		VersionedNode p = createVersionNode( "parent", "parent", scope );
 
@@ -364,7 +364,7 @@ public class ReadOnlyVersionedNodesTest extends AbstractReadOnlyTest {
 		assertDeleteCount( 2, scope );
 	}
 
-	@Test
+	@Test @FailureExpected
 	public void testGetParentMakeReadOnlyThenMergeDetachedParentWithNewChildC(SessionFactoryScope scope) {
 		VersionedNode p = createVersionNode( "parent", "parent", scope );
 

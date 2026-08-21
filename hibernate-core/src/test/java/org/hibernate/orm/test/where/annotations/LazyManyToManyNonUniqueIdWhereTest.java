@@ -16,10 +16,12 @@ import org.hibernate.annotations.Immutable;
 import org.hibernate.annotations.SQLJoinTableRestriction;
 import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -49,6 +51,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 		LazyManyToManyNonUniqueIdWhereTest.Size.class
 })
 @SessionFactory
+@SkipForDialect(dialectClass = SpannerDialect.class, reason = "Spanner does not support varchar in column definition")
 public class LazyManyToManyNonUniqueIdWhereTest {
 	@BeforeAll
 	public void createSchema(SessionFactoryScope factoryScope) {
@@ -75,7 +78,7 @@ public class LazyManyToManyNonUniqueIdWhereTest {
 							ASSOCIATION_CODE varchar(10) not null,
 							primary key (MAIN_ID, MAIN_CODE, ASSOCIATION_ID, ASSOCIATION_CODE)
 						)""" );
-				statement.executeUpdate("""
+				statement.executeUpdate( """
 						create table MATERIAL_RATINGS(
 							MATERIAL_ID integer not null,
 							RATING_ID integer not null,

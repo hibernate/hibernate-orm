@@ -18,12 +18,15 @@ import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
+import org.hibernate.sql.ast.spi.StringBuilderSqlAppender;
 import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import static org.hibernate.dialect.function.array.DdlTypeHelper.getCastTypeName;
+import static org.hibernate.dialect.function.array.DdlTypeHelper.getNarrowCastTypeName;
 import static org.hibernate.type.SqlTypes.ARRAY;
 import static org.hibernate.type.SqlTypes.BINARY;
 import static org.hibernate.type.SqlTypes.JSON;
@@ -53,24 +56,29 @@ public class H2AggregateSupport extends AggregateSupportImpl {
 		switch ( aggregateColumnTypeCode ) {
 			case JSON_ARRAY:
 			case JSON:
+				final String readExpression = aggregateParentReadExpression.isEmpty() ?
+						columnExpression
+						: "(" + aggregateParentReadExpression + ").\"" + columnExpression + "\"";
 				switch ( column.getJdbcMapping().getJdbcType().getDefaultSqlTypeCode() ) {
 					case JSON:
 					case JSON_ARRAY:
-						return template.replace(
-								placeholder,
-								"(" + aggregateParentReadExpression + ").\"" + columnExpression + "\""
-						);
+						return template.replace( placeholder, readExpression );
 					case BINARY:
 					case VARBINARY:
 					case LONG32VARBINARY:
 						// We encode binary data as hex, so we have to decode here
 						return template.replace(
 								placeholder,
-								hexDecodeExpression( queryExpression( "(" + aggregateParentReadExpression + ").\"" + columnExpression + "\"" ), column.getColumnDefinition() )
+								hexDecodeExpression( queryExpression( readExpression ), getCastTypeName( column, typeConfiguration ) )
 						);
 					case ARRAY:
 						final BasicPluralType<?, ?> pluralType = (BasicPluralType<?, ?>) column.getJdbcMapping();
-						final String elementTypeName = getElementTypeName( column.getColumnDefinition() );
+						// narrow cast type avoids clob/blob in array_agg, which H2 handles
+						// poorly. Pass the column's size so that the element inherits length/
+						// precision from the array column's @Column annotation.
+						final String elementTypeName =
+								getNarrowCastTypeName( pluralType.getElementType(),
+										column.toSize(), typeConfiguration );
 						switch ( pluralType.getElementType().getJdbcType().getDefaultSqlTypeCode() ) {
 							case BINARY:
 							case VARBINARY:
@@ -78,32 +86,22 @@ public class H2AggregateSupport extends AggregateSupportImpl {
 								// We encode binary data as hex, so we have to decode here
 								return template.replace(
 										placeholder,
-										"(select array_agg(" + hexDecodeExpression( queryExpression( "(" + aggregateParentReadExpression + ").\"" + columnExpression + "\"[i.x]" ), elementTypeName ) + ") from system_range(1,10000) i where i.x<=coalesce(array_length((" + aggregateParentReadExpression + ").\"" + columnExpression + "\"),0))"
+										"(select array_agg(" + hexDecodeExpression( queryExpression( readExpression + "[i.x]" ), elementTypeName ) + ") from system_range(1,10000) i where i.x<=coalesce(array_length(" + readExpression + "),0))"
 								);
 							default:
 								return template.replace(
 										placeholder,
-										"(select array_agg(" + valueExpression( "(" + aggregateParentReadExpression + ").\"" + columnExpression + "\"[i.x]", elementTypeName ) + ") from system_range(1,10000) i where i.x<=coalesce(array_length((" + aggregateParentReadExpression + ").\"" + columnExpression + "\"),0))"
+										"(select array_agg(" + valueExpression( readExpression + "[i.x]", elementTypeName ) + ") from system_range(1,10000) i where i.x<=coalesce(array_length(" + readExpression + "),0))"
 								);
 						}
 					default:
 						return template.replace(
 								placeholder,
-								columnExpression( aggregateParentReadExpression, columnExpression, column.getColumnDefinition() )
+								valueExpression( readExpression, getCastTypeName( column, typeConfiguration ) )
 						);
 				}
 		}
 		throw new IllegalArgumentException( "Unsupported aggregate SQL type: " + aggregateColumnTypeCode );
-	}
-
-	private static String getElementTypeName(String arrayTypeName) {
-		final String elementTypeName = arrayTypeName.substring( 0, arrayTypeName.lastIndexOf( " array" ) );
-		// Doing array_agg on clob produces funky results
-		return elementTypeName.equals( "clob" ) ? "varchar" : elementTypeName;
-	}
-
-	private static String columnExpression(String aggregateParentReadExpression, String columnExpression, String columnType) {
-		return valueExpression( "(" + aggregateParentReadExpression + ").\"" + columnExpression + "\"", columnType );
 	}
 
 	private static String hexDecodeExpression(String valueExpression, String columnType) {
@@ -122,13 +120,22 @@ public class H2AggregateSupport extends AggregateSupportImpl {
 	}
 
 	private static String jsonCustomWriteExpression(String customWriteExpression, JdbcMapping jdbcMapping) {
+		StringBuilderSqlAppender sqlAppender = new StringBuilderSqlAppender();
+		appendJsonWriteExpression( sqlAppender, () -> sqlAppender.appendSql( customWriteExpression ), jdbcMapping );
+		return sqlAppender.toString();
+	}
+
+	public static void appendJsonWriteExpression(SqlAppender sqlAppender, Runnable renderFunction, JdbcMapping jdbcMapping) {
 		final int sqlTypeCode = jdbcMapping.getJdbcType().getDefaultSqlTypeCode();
 		switch ( sqlTypeCode ) {
 			case BINARY:
 			case VARBINARY:
 			case LONG32VARBINARY:
 				// We encode binary data as hex
-				return "rawtohex(" + customWriteExpression + ")";
+				sqlAppender.append( "rawtohex(" );
+				renderFunction.run();
+				sqlAppender.append( ")" );
+				break;
 			case ARRAY:
 				final BasicPluralType<?, ?> pluralType = (BasicPluralType<?, ?>) jdbcMapping;
 				switch ( pluralType.getElementType().getJdbcType().getDefaultSqlTypeCode() ) {
@@ -136,12 +143,18 @@ public class H2AggregateSupport extends AggregateSupportImpl {
 					case VARBINARY:
 					case LONG32VARBINARY:
 						// We encode binary data as hex
-						return "(select array_agg(rawtohex(t.c1)) from unnest(" + customWriteExpression + ") t)";
+						sqlAppender.append( "(select array_agg(rawtohex(t.c1)) from unnest(" );
+						renderFunction.run();
+						sqlAppender.append( ") t)" );
+						break;
 					default:
-						return customWriteExpression;
+						renderFunction.run();
+						break;
 				}
+				break;
 			default:
-				return customWriteExpression;
+				renderFunction.run();
+				break;
 		}
 	}
 

@@ -125,6 +125,10 @@ public class UniqueConstraintDropTest {
 			String tableName,
 			Dialect dialect,
 			File scriptFile) throws IOException {
+		if ( !dialect.supportsUniqueConstraints() ) {
+			return isMatching( "drop index( if exists)? " + tableName + ".uk.*", scriptFile );
+		}
+
 		String regex = dialect.getAlterTableString( tableName ) + ' ' + dialect.getDropUniqueKeyString();
 		if ( dialect.supportsIfExistsBeforeConstraintName() ) {
 			regex += " if exists";
@@ -138,7 +142,7 @@ public class UniqueConstraintDropTest {
 	}
 
 	private boolean checkDropIndex(File scriptFile) throws IOException {
-		String regex = "drop index test_entity_item.uk.*";
+		String regex = "drop index( if exists)? test_entity_item.uk.*";
 		return isMatching( regex, scriptFile );
 	}
 

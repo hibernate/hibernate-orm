@@ -35,7 +35,8 @@ public class CollectionMappedByResolver {
 	private static final EnversMessageLogger LOG = Logger.getMessageLogger(
 			MethodHandles.lookup(),
 			EnversMessageLogger.class,
-			CollectionMappedByResolver.class.getName()
+			CollectionMappedByResolver.class.getName(),
+			Locale.ROOT
 	);
 
 	public static String resolveMappedBy(

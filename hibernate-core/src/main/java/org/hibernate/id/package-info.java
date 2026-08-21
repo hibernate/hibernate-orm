@@ -16,7 +16,7 @@
  *     <li>{@link org.hibernate.id.enhanced.TableGenerator} - {@code @GeneratedValue(strategy=TABLE)}
  *     <li>{@link org.hibernate.id.uuid.UuidGenerator} - {@code @UuidGenerator}
  * </ul>
- * <p>
+ *
  * @apiNote The remaining id generators are kept around for backward compatibility
  *          and as an implementation detail of the {@code hbm.xml} mapping format.
  *

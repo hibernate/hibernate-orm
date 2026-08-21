@@ -49,8 +49,8 @@ public class ReadOnlySessionTest extends AbstractReadOnlyTest {
 		s.setCacheMode( CacheMode.IGNORE );
 		s.beginTransaction();
 		DataPoint dp = new DataPoint();
-		dp.setX( new BigDecimal( 0.1d ).setScale( 19, BigDecimal.ROUND_DOWN ) );
-		dp.setY( new BigDecimal( Math.cos( dp.getX().doubleValue() ) ).setScale( 19, BigDecimal.ROUND_DOWN ) );
+		dp.setX( new BigDecimal( 0.1d ).setScale( getScale( scope ), BigDecimal.ROUND_DOWN ) );
+		dp.setY( new BigDecimal( Math.cos( dp.getX().doubleValue() ) ).setScale( getScale( scope ), BigDecimal.ROUND_DOWN ) );
 		dp.setDescription( "original" );
 		s.persist( dp );
 		long dpId = dp.getId();
@@ -90,8 +90,8 @@ public class ReadOnlySessionTest extends AbstractReadOnlyTest {
 		Transaction t = s.beginTransaction();
 		for ( int i = 0; i < 100; i++ ) {
 			DataPoint dp = new DataPoint();
-			dp.setX( new BigDecimal( i * 0.1d ).setScale( 19, BigDecimal.ROUND_DOWN ) );
-			dp.setY( new BigDecimal( Math.cos( dp.getX().doubleValue() ) ).setScale( 19, BigDecimal.ROUND_DOWN ) );
+			dp.setX( new BigDecimal( i * 0.1d ).setScale( getScale( scope ), BigDecimal.ROUND_DOWN ) );
+			dp.setY( new BigDecimal( Math.cos( dp.getX().doubleValue() ) ).setScale( getScale( scope ), BigDecimal.ROUND_DOWN ) );
 			s.persist( dp );
 		}
 		t.commit();
@@ -130,8 +130,8 @@ public class ReadOnlySessionTest extends AbstractReadOnlyTest {
 		Transaction t = s.beginTransaction();
 		for ( int i = 0; i < 100; i++ ) {
 			DataPoint dp = new DataPoint();
-			dp.setX( new BigDecimal( i * 0.1d ).setScale( 19, BigDecimal.ROUND_DOWN ) );
-			dp.setY( new BigDecimal( Math.cos( dp.getX().doubleValue() ) ).setScale( 19, BigDecimal.ROUND_DOWN ) );
+			dp.setX( new BigDecimal( i * 0.1d ).setScale( getScale( scope ), BigDecimal.ROUND_DOWN ) );
+			dp.setY( new BigDecimal( Math.cos( dp.getX().doubleValue() ) ).setScale( getScale( scope ), BigDecimal.ROUND_DOWN ) );
 			s.persist( dp );
 		}
 		t.commit();
@@ -170,8 +170,8 @@ public class ReadOnlySessionTest extends AbstractReadOnlyTest {
 		Transaction t = s.beginTransaction();
 		for ( int i = 0; i < 100; i++ ) {
 			DataPoint dp = new DataPoint();
-			dp.setX( new BigDecimal( i * 0.1d ).setScale( 19, BigDecimal.ROUND_DOWN ) );
-			dp.setY( new BigDecimal( Math.cos( dp.getX().doubleValue() ) ).setScale( 19, BigDecimal.ROUND_DOWN ) );
+			dp.setX( new BigDecimal( i * 0.1d ).setScale( getScale( scope ), BigDecimal.ROUND_DOWN ) );
+			dp.setY( new BigDecimal( Math.cos( dp.getX().doubleValue() ) ).setScale( getScale( scope ), BigDecimal.ROUND_DOWN ) );
 			s.persist( dp );
 		}
 		t.commit();
@@ -210,8 +210,8 @@ public class ReadOnlySessionTest extends AbstractReadOnlyTest {
 		Transaction t = s.beginTransaction();
 		for ( int i = 0; i < 100; i++ ) {
 			DataPoint dp = new DataPoint();
-			dp.setX( new BigDecimal( i * 0.1d ).setScale( 19, BigDecimal.ROUND_DOWN ) );
-			dp.setY( new BigDecimal( Math.cos( dp.getX().doubleValue() ) ).setScale( 19, BigDecimal.ROUND_DOWN ) );
+			dp.setX( new BigDecimal( i * 0.1d ).setScale( getScale( scope ), BigDecimal.ROUND_DOWN ) );
+			dp.setY( new BigDecimal( Math.cos( dp.getX().doubleValue() ) ).setScale( getScale( scope ), BigDecimal.ROUND_DOWN ) );
 			s.persist( dp );
 		}
 		t.commit();
@@ -252,8 +252,8 @@ public class ReadOnlySessionTest extends AbstractReadOnlyTest {
 		DataPoint dp = null;
 		for ( int i = 0; i < 100; i++ ) {
 			dp = new DataPoint();
-			dp.setX( new BigDecimal( i * 0.1d ).setScale( 19, BigDecimal.ROUND_DOWN ) );
-			dp.setY( new BigDecimal( Math.cos( dp.getX().doubleValue() ) ).setScale( 19, BigDecimal.ROUND_DOWN ) );
+			dp.setX( new BigDecimal( i * 0.1d ).setScale( getScale( scope ), BigDecimal.ROUND_DOWN ) );
+			dp.setY( new BigDecimal( Math.cos( dp.getX().doubleValue() ) ).setScale( getScale( scope ), BigDecimal.ROUND_DOWN ) );
 			s.persist( dp );
 		}
 		t.commit();
@@ -329,8 +329,8 @@ public class ReadOnlySessionTest extends AbstractReadOnlyTest {
 		DataPoint dp = null;
 		for ( int i = 0; i < 100; i++ ) {
 			dp = new DataPoint();
-			dp.setX( new BigDecimal( i * 0.1d ).setScale( 19, BigDecimal.ROUND_DOWN ) );
-			dp.setY( new BigDecimal( Math.cos( dp.getX().doubleValue() ) ).setScale( 19, BigDecimal.ROUND_DOWN ) );
+			dp.setX( new BigDecimal( i * 0.1d ).setScale( getScale( scope ), BigDecimal.ROUND_DOWN ) );
+			dp.setY( new BigDecimal( Math.cos( dp.getX().doubleValue() ) ).setScale( getScale( scope ), BigDecimal.ROUND_DOWN ) );
 			s.persist( dp );
 		}
 		t.commit();
@@ -404,8 +404,8 @@ public class ReadOnlySessionTest extends AbstractReadOnlyTest {
 		Transaction t = s.beginTransaction();
 		DataPoint dp = new DataPoint();
 		dp.setDescription( "original" );
-		dp.setX( new BigDecimal( 0.1d ).setScale( 19, BigDecimal.ROUND_DOWN ) );
-		dp.setY( new BigDecimal( Math.cos( dp.getX().doubleValue() ) ).setScale( 19, BigDecimal.ROUND_DOWN ) );
+		dp.setX( new BigDecimal( 0.1d ).setScale( getScale( scope ), BigDecimal.ROUND_DOWN ) );
+		dp.setY( new BigDecimal( Math.cos( dp.getX().doubleValue() ) ).setScale( getScale( scope ), BigDecimal.ROUND_DOWN ) );
 		s.persist( dp );
 		t.commit();
 		s.close();
@@ -448,8 +448,8 @@ public class ReadOnlySessionTest extends AbstractReadOnlyTest {
 		Transaction t = s.beginTransaction();
 		DataPoint dp = new DataPoint();
 		dp.setDescription( "original" );
-		dp.setX( new BigDecimal( 0.1d ).setScale( 19, BigDecimal.ROUND_DOWN ) );
-		dp.setY( new BigDecimal( Math.cos( dp.getX().doubleValue() ) ).setScale( 19, BigDecimal.ROUND_DOWN ) );
+		dp.setX( new BigDecimal( 0.1d ).setScale( getScale( scope ), BigDecimal.ROUND_DOWN ) );
+		dp.setY( new BigDecimal( Math.cos( dp.getX().doubleValue() ) ).setScale( getScale( scope ), BigDecimal.ROUND_DOWN ) );
 		s.persist( dp );
 		t.commit();
 		s.close();
@@ -504,8 +504,8 @@ public class ReadOnlySessionTest extends AbstractReadOnlyTest {
 		s.setCacheMode( CacheMode.IGNORE );
 		Transaction t = s.beginTransaction();
 		DataPoint dp = new DataPoint();
-		dp.setX( new BigDecimal( 0.1d ).setScale( 19, BigDecimal.ROUND_DOWN ) );
-		dp.setY( new BigDecimal( Math.cos( dp.getX().doubleValue() ) ).setScale( 19, BigDecimal.ROUND_DOWN ) );
+		dp.setX( new BigDecimal( 0.1d ).setScale( getScale( scope ), BigDecimal.ROUND_DOWN ) );
+		dp.setY( new BigDecimal( Math.cos( dp.getX().doubleValue() ) ).setScale( getScale( scope ), BigDecimal.ROUND_DOWN ) );
 		s.persist( dp );
 		t.commit();
 		s.close();
@@ -536,8 +536,8 @@ public class ReadOnlySessionTest extends AbstractReadOnlyTest {
 		s.setCacheMode( CacheMode.IGNORE );
 		Transaction t = s.beginTransaction();
 		DataPoint dp = new DataPoint();
-		dp.setX( new BigDecimal( 0.1d ).setScale( 19, BigDecimal.ROUND_DOWN ) );
-		dp.setY( new BigDecimal( Math.cos( dp.getX().doubleValue() ) ).setScale( 19, BigDecimal.ROUND_DOWN ) );
+		dp.setX( new BigDecimal( 0.1d ).setScale( getScale( scope ), BigDecimal.ROUND_DOWN ) );
+		dp.setY( new BigDecimal( Math.cos( dp.getX().doubleValue() ) ).setScale( getScale( scope ), BigDecimal.ROUND_DOWN ) );
 		s.persist( dp );
 		t.commit();
 		s.close();
@@ -569,8 +569,8 @@ public class ReadOnlySessionTest extends AbstractReadOnlyTest {
 		DataPoint dp = null;
 		for ( int i = 0; i < 100; i++ ) {
 			dp = new DataPoint();
-			dp.setX( new BigDecimal( i * 0.1d ).setScale( 19, BigDecimal.ROUND_DOWN ) );
-			dp.setY( new BigDecimal( Math.cos( dp.getX().doubleValue() ) ).setScale( 19, BigDecimal.ROUND_DOWN ) );
+			dp.setX( new BigDecimal( i * 0.1d ).setScale( getScale( scope ), BigDecimal.ROUND_DOWN ) );
+			dp.setY( new BigDecimal( Math.cos( dp.getX().doubleValue() ) ).setScale( getScale( scope ), BigDecimal.ROUND_DOWN ) );
 			s.persist( dp );
 		}
 		t.commit();
@@ -621,8 +621,8 @@ public class ReadOnlySessionTest extends AbstractReadOnlyTest {
 		DataPoint dp = null;
 		for ( int i = 0; i < 100; i++ ) {
 			dp = new DataPoint();
-			dp.setX( new BigDecimal( i * 0.1d ).setScale( 19, BigDecimal.ROUND_DOWN ) );
-			dp.setY( new BigDecimal( Math.cos( dp.getX().doubleValue() ) ).setScale( 19, BigDecimal.ROUND_DOWN ) );
+			dp.setX( new BigDecimal( i * 0.1d ).setScale( getScale( scope ), BigDecimal.ROUND_DOWN ) );
+			dp.setY( new BigDecimal( Math.cos( dp.getX().doubleValue() ) ).setScale( getScale( scope ), BigDecimal.ROUND_DOWN ) );
 			s.persist( dp );
 		}
 		t.commit();
@@ -705,8 +705,8 @@ public class ReadOnlySessionTest extends AbstractReadOnlyTest {
 		s.setCacheMode( CacheMode.IGNORE );
 		Transaction t = s.beginTransaction();
 		DataPoint dp = new DataPoint();
-		dp.setX( new BigDecimal( 0.1d ).setScale( 19, BigDecimal.ROUND_DOWN ) );
-		dp.setY( new BigDecimal( Math.cos( dp.getX().doubleValue() ) ).setScale( 19, BigDecimal.ROUND_DOWN ) );
+		dp.setX( new BigDecimal( 0.1d ).setScale( getScale( scope ), BigDecimal.ROUND_DOWN ) );
+		dp.setY( new BigDecimal( Math.cos( dp.getX().doubleValue() ) ).setScale( getScale( scope ), BigDecimal.ROUND_DOWN ) );
 		s.persist( dp );
 		t.commit();
 		s.close();
@@ -739,8 +739,8 @@ public class ReadOnlySessionTest extends AbstractReadOnlyTest {
 		s.setCacheMode( CacheMode.IGNORE );
 		Transaction t = s.beginTransaction();
 		DataPoint dp = new DataPoint();
-		dp.setX( new BigDecimal( 0.1d ).setScale( 19, BigDecimal.ROUND_DOWN ) );
-		dp.setY( new BigDecimal( Math.cos( dp.getX().doubleValue() ) ).setScale( 19, BigDecimal.ROUND_DOWN ) );
+		dp.setX( new BigDecimal( 0.1d ).setScale( getScale( scope ), BigDecimal.ROUND_DOWN ) );
+		dp.setY( new BigDecimal( Math.cos( dp.getX().doubleValue() ) ).setScale( getScale( scope ), BigDecimal.ROUND_DOWN ) );
 		s.persist( dp );
 		t.commit();
 		s.close();

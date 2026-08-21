@@ -90,9 +90,23 @@ public class MySQLLockingSupport implements LockingSupport, LockingSupport.Metad
 	}
 
 	public static class ConnectionLockTimeoutStrategyImpl implements ConnectionLockTimeoutStrategy {
+		// Making this configurable so TiDBDialect can re-use this, but with a lower value
+		// TiDB v8.5.5 limits innodb_lock_wait_timeout to 3600s
+		private final int foreverValue;
+
+		public ConnectionLockTimeoutStrategyImpl() {
+			// see https://dev.mysql.com/doc/refman/8.4/en/innodb-parameters.html#sysvar_innodb_lock_wait_timeout
+			// unit: seconds, allowed values: [1, 1073741824]
+			this( 100_000 );
+		}
+
+		public ConnectionLockTimeoutStrategyImpl(int foreverValue) {
+			this.foreverValue = foreverValue;
+		}
+
 		@Override
 		public Level getSupportedLevel() {
-			return ConnectionLockTimeoutStrategy.Level.EXTENDED;
+			return Level.SUPPORTED;
 		}
 
 		@Override
@@ -101,12 +115,9 @@ public class MySQLLockingSupport implements LockingSupport, LockingSupport.Metad
 					"SELECT @@SESSION.innodb_lock_wait_timeout",
 					(resultSet) -> {
 						// see https://dev.mysql.com/doc/refman/8.4/en/innodb-parameters.html#sysvar_innodb_lock_wait_timeout
-						final int millis = resultSet.getInt( 1 );
-						return switch ( millis ) {
-							case 0 -> Timeouts.NO_WAIT;
-							case 100000000 -> Timeouts.WAIT_FOREVER;
-							default -> Timeout.milliseconds( millis );
-						};
+						// unit: seconds, allowed values: [1, 1073741824]
+						final int seconds = resultSet.getInt( 1 );
+						return seconds == foreverValue ? Timeouts.WAIT_FOREVER : Timeout.seconds( seconds );
 					},
 					connection,
 					factory
@@ -119,14 +130,18 @@ public class MySQLLockingSupport implements LockingSupport, LockingSupport.Metad
 					timeout,
 					(t) -> {
 						// see https://dev.mysql.com/doc/refman/8.4/en/innodb-parameters.html#sysvar_innodb_lock_wait_timeout
+						// unit: seconds, allowed values: [1, 1073741824]
 						final int milliseconds = timeout.milliseconds();
 						if ( milliseconds == SKIP_LOCKED_MILLI ) {
 							throw new HibernateException( "Connection lock-timeout does not accept skip-locked" );
 						}
-						if ( milliseconds == WAIT_FOREVER_MILLI ) {
-							return 100000000;
+						if ( milliseconds == NO_WAIT_MILLI ) {
+							throw new HibernateException( "Connection lock-timeout does not accept no-wait" );
 						}
-						return milliseconds;
+						if ( milliseconds == WAIT_FOREVER_MILLI ) {
+							return foreverValue;
+						}
+						return (int) Math.ceil( (double) milliseconds / 1000);
 					},
 					"SET @@SESSION.innodb_lock_wait_timeout = %s",
 					connection,

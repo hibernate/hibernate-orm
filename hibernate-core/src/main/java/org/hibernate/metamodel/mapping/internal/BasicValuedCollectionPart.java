@@ -19,6 +19,7 @@ import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
+import org.hibernate.metamodel.mapping.SelectablePath;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.spi.EntityIdentifierNavigablePath;
@@ -86,6 +87,16 @@ public class BasicValuedCollectionPart
 	}
 
 	@Override
+	public SelectablePath getSelectablePath() {
+		return selectableMapping.getSelectablePath();
+	}
+
+	@Override
+	public String getSelectableName() {
+		return selectableMapping.getSelectableName();
+	}
+
+	@Override
 	public boolean isFormula() {
 		return selectableMapping.isFormula();
 	}
@@ -118,11 +129,6 @@ public class BasicValuedCollectionPart
 	@Override
 	public @Nullable String getCustomWriteExpression() {
 		return selectableMapping.getCustomWriteExpression();
-	}
-
-	@Override
-	public @Nullable String getColumnDefinition() {
-		return selectableMapping.getColumnDefinition();
 	}
 
 	@Override

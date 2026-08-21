@@ -160,4 +160,14 @@ public class ColumnValue implements Value {
 	public boolean isPartitionKey() {
 		return false;
 	}
+
+	@Override
+	public void setNonInsertable() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void setNonUpdatable() {
+		throw new UnsupportedOperationException();
+	}
 }

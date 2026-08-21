@@ -1,0 +1,23 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
+package org.hibernate.tool.reveng.ide.completion;
+
+/**
+ * Interface for code assist on HQL strings.
+ *
+ * @author Max Rydahl Andersen
+ *
+ */
+public interface IHQLCodeAssist {
+
+	/**
+	 *
+	 * @param query the query string (full or partial)
+	 * @param position the cursor position inside the query string
+	 * @param requestor requestor on which the codeassist will call methods with information about proposals.
+	 */
+	void codeComplete(String query, int position, IHQLCompletionRequestor requestor);
+
+}

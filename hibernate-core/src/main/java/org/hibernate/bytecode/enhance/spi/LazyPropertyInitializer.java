@@ -4,6 +4,7 @@
  */
 package org.hibernate.bytecode.enhance.spi;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.Set;
@@ -27,6 +28,7 @@ public interface LazyPropertyInitializer {
 			return "<lazy>";
 		}
 
+		@Serial
 		public Object readResolve() {
 			return UNFETCHED_PROPERTY;
 		}

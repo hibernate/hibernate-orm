@@ -234,22 +234,32 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 		final var jdbcTypeRegistry = typeContributions.getTypeConfiguration()
 				.getJdbcTypeRegistry();
 		if ( driverKind == SybaseDriverKind.JTDS ) {
-			jdbcTypeRegistry.addDescriptor( Types.TINYINT, TinyIntAsSmallIntJdbcType.INSTANCE );
+			jdbcTypeRegistry.addDescriptor( TinyIntAsSmallIntJdbcType.INSTANCE );
 
 			// The jTDS driver doesn't support the JDBC4 signatures using 'long length' for stream bindings
-			jdbcTypeRegistry.addDescriptor( Types.CLOB, ClobJdbcType.CLOB_BINDING );
-			jdbcTypeRegistry.addDescriptor( Types.NCLOB, NClobJdbcType.NCLOB_BINDING );
+			jdbcTypeRegistry.addDescriptor( ClobJdbcType.CLOB_BINDING );
+
+			// Need to register specialized JdbcType instances for jTDS because it throws an AbstractMethodError
+			// when invoking nationalized methods and requires binding through UTF-16LE bytes
+			jdbcTypeRegistry.addDescriptor( SybaseJtdsNClobJdbcType.JTDS_INSTANCE );
+			jdbcTypeRegistry.addDescriptor( SybaseJtdsNCharJdbcType.JTDS_INSTANCE );
+			jdbcTypeRegistry.addDescriptor( SybaseJtdsNVarcharJdbcType.JTDS_INSTANCE );
+			jdbcTypeRegistry.addDescriptor( SybaseJtdsLongNVarcharJdbcType.JTDS_INSTANCE );
+			jdbcTypeRegistry.addDescriptor( SybaseJtdsJsonAsStringJdbcType.JTDS_INSTANCE );
+			jdbcTypeRegistry.addDescriptor( SybaseJtdsXmlAsStringJdbcType.JTDS_INSTANCE );
+			jdbcTypeRegistry.addTypeConstructor( SybaseJtdsJsonAsStringArrayJdbcTypeConstructor.INSTANCE );
+			jdbcTypeRegistry.addTypeConstructor( SybaseJtdsXmlAsStringArrayJdbcTypeConstructor.INSTANCE );
 		}
 		else {
 			// jConnect driver only conditionally supports getClob/getNClob depending on a server setting. See
 			//		- https://help.sap.com/doc/e3cb6844decf441e85e4670e1cf48c9b/16.0.3.6/en-US/SAP_jConnect_Programmers_Reference_en.pdf
 			// 		- https://infocenter.sybase.com/help/index.jsp?topic=/com.sybase.infocenter.dc20155.1570/html/OS_SDK_nf/CIHJFDDH.htm
 			//		- HHH-7889
-			jdbcTypeRegistry.addDescriptor( Types.CLOB, ClobJdbcType.STREAM_BINDING_EXTRACTING );
-			jdbcTypeRegistry.addDescriptor( Types.NCLOB, ClobJdbcType.STREAM_BINDING_EXTRACTING );
+			jdbcTypeRegistry.addDescriptor( ClobJdbcType.STREAM_BINDING_EXTRACTING );
+			jdbcTypeRegistry.addDescriptor( NClobJdbcType.STREAM_BINDING_EXTRACTING );
 		}
 
-		jdbcTypeRegistry.addDescriptor( Types.BLOB, BlobJdbcType.PRIMITIVE_ARRAY_BINDING );
+		jdbcTypeRegistry.addDescriptor( BlobJdbcType.PRIMITIVE_ARRAY_BINDING );
 
 		// Sybase requires a custom binder for binding untyped nulls with the NULL type
 		typeContributions.contributeJdbcType( ObjectNullAsBinaryTypeJdbcType.INSTANCE );
@@ -277,6 +287,12 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 	public NationalizationSupport getNationalizationSupport() {
 		// At least the jTDS driver doesn't support this
 		return super.getNationalizationSupport();
+	}
+
+	@Override
+	public boolean supportsNationalizedMethods() {
+		// The jTDS driver doesn't support nationalized methods, but the jconn driver does
+		return driverKind != SybaseDriverKind.JTDS;
 	}
 
 	@Override

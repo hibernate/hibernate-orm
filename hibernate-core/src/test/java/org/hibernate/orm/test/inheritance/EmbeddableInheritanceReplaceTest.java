@@ -13,11 +13,14 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 @SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel(annotatedClasses = {
@@ -44,6 +47,24 @@ public class EmbeddableInheritanceReplaceTest {
 		} );
 	}
 
+	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-20125" )
+	void mergeAfterPersist(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final var entity = new Ent();
+			entity.setBase( new Emb( 42, "Hello, World!" ) );
+			session.persist( entity );
+			session.flush();
+			session.clear();
+
+			entity.setBase( new Base( 43 ) );
+			var merged = session.merge( entity );
+
+			assertThat( merged.getBase() ).isExactlyInstanceOf( Base.class );
+			assertThat( merged.getBase().getNum() ).isEqualTo( 43 );
+		} );
+	}
+
 	@Embeddable
 	@DiscriminatorValue("E")
 	public static final class Emb extends Next {
@@ -66,7 +87,7 @@ public class EmbeddableInheritanceReplaceTest {
 		protected Base() {
 		}
 
-		public Base(int num, String str) {
+		public Base(int num) {
 			this.num = num;
 		}
 
@@ -86,7 +107,7 @@ public class EmbeddableInheritanceReplaceTest {
 		private String str;
 
 		public Next(int num, String str) {
-			super( num, str );
+			super( num );
 			this.str = str;
 		}
 

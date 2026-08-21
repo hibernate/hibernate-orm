@@ -93,7 +93,7 @@ public class TransientOverrideAsPersistentWithEmbeddableTests {
 		scope.inTransaction( session -> {
 			//noinspection removal
 			var employees = session
-					.createQuery( "from Employee", Employee.class )
+					.createQuery( "from Employee order by name", Employee.class )
 					.getResultList();
 			assertEquals( 2, employees.size() );
 			assertThat( employees.get( 0 ), instanceOf( Editor.class ) );

@@ -360,8 +360,8 @@ public abstract class AbstractQuery<R>
 		putIfNotNull( hints, HINT_FETCH_SIZE, queryOptions.getFetchSize() );
 		putIfNotNull( hints, HINT_FLUSH_MODE,  queryOptions.getFlushMode() );
 
-		if ( getCacheMode() != null ) {
-			putIfNotNull( hints, HINT_CACHE_MODE, getCacheMode() );
+		if ( queryOptions.getCacheMode() != null ) {
+			putIfNotNull( hints, HINT_CACHE_MODE, queryOptions.getCacheMode() );
 			putIfNotNull( hints, HINT_SPEC_CACHE_RETRIEVE_MODE, queryOptions.getCacheRetrieveMode() );
 			putIfNotNull( hints, HINT_SPEC_CACHE_STORE_MODE, queryOptions.getCacheStoreMode() );
 			putIfNotNull( hints, HINT_JAVAEE_CACHE_RETRIEVE_MODE, queryOptions.getCacheRetrieveMode() );

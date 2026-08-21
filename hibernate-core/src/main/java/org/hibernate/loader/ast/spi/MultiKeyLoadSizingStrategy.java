@@ -28,12 +28,10 @@ import org.hibernate.dialect.Dialect;
 public interface MultiKeyLoadSizingStrategy {
 	/**
 	 * Determine the optimal batch size (number of key values) to load at a time.
-	 * <p/>
+	 * <p>
 	 * The return can be less than the total {@code numberOfKeys} to be loaded indicating
 	 * that the load should be split across multiple SQL queries.  E.g. if we are loading
 	 * 7 keys and the strategy says the optimal size is 5, we will perform 2 queries.
-	 * <p/>
-	 * @apiNote
 	 *
 	 * @param numberOfKeyColumns The number of columns to which the key is mapped
 	 * @param numberOfKeys The total number of keys we need to load

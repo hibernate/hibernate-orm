@@ -18,7 +18,6 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * This might result in improved performance if it is common to change
  * only some of the attributes of the entity. However, there is a cost
  * associated with generating the SQL at runtime.
- * <p>
  *
  * @author Steve Ebersole
  */

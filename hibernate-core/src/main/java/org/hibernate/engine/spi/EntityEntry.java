@@ -132,7 +132,7 @@ public interface EntityEntry {
 
 	boolean isReadOnly();
 
-	void setReadOnly(boolean readOnly, Object entity);
+	boolean setReadOnly(boolean readOnly, Object entity);
 
 	/**
 	 * Has a bit set for every attribute position that is potentially lazy.

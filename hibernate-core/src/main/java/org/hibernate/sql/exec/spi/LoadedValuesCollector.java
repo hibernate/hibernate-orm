@@ -46,15 +46,6 @@ public interface LoadedValuesCollector {
 			CollectionKey collectionKey);
 
 	/**
-	 * Clears the state of the collector.
-	 *
-	 * @implSpec In some cases, the collector may be cached as part of a
-	 * JdbcSelect being cached (see {@linkplain JdbcSelect#getLoadedValuesCollector()}.
-	 * This method allows clearing of the internal state after execution of the JdbcSelect.
-	 */
-	void clear();
-
-	/**
 	 * Access to all root entities loaded.
 	 */
 	List<LoadedEntityRegistration> getCollectedEntities();

@@ -7,10 +7,13 @@ package org.hibernate.type.descriptor.sql.internal;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.function.Function;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
+import org.hibernate.metamodel.mapping.SqlExpressible;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 
 /**
  * Descriptor for a SQL type.
@@ -125,7 +128,7 @@ public class CapacityDependentDdlType extends DdlTypeImpl {
 			String typeNamePattern,
 			String castTypeName,
 			Dialect dialect) {
-		return builder( sqlTypeCode, lobKind, typeNamePattern, null, castTypeName, dialect );
+		return builder( sqlTypeCode, lobKind, typeNamePattern, (String) null, castTypeName, dialect );
 	}
 
 	public static Builder builder(
@@ -154,6 +157,16 @@ public class CapacityDependentDdlType extends DdlTypeImpl {
 		return new Builder( sqlTypeCode, lobKind, typeNamePattern, castTypeNamePattern, castTypeName, dialect );
 	}
 
+	public static Builder builder(
+			int sqlTypeCode,
+			LobKind lobKind,
+			String typeNamePattern,
+			Function<Integer,String> parameterizedCastTypeName,
+			String castTypeName,
+			Dialect dialect) {
+		return new Builder( sqlTypeCode, lobKind, typeNamePattern, parameterizedCastTypeName, castTypeName, dialect );
+	}
+
 	public static class Builder {
 		private final int sqlTypeCode;
 		private final LobKind lobKind;
@@ -162,6 +175,7 @@ public class CapacityDependentDdlType extends DdlTypeImpl {
 		private final String castTypeName;
 		private final Dialect dialect;
 		private final List<TypeEntry> typeEntries;
+		private final Function<Integer,String> parameterizedCastTypeName;
 
 		private Builder(
 				int sqlTypeCode,
@@ -174,6 +188,24 @@ public class CapacityDependentDdlType extends DdlTypeImpl {
 			this.lobKind = lobKind;
 			this.typeNamePattern = typeNamePattern;
 			this.castTypeNamePattern = castTypeNamePattern;
+			this.parameterizedCastTypeName = null;
+			this.castTypeName = castTypeName;
+			this.dialect = dialect;
+			this.typeEntries = new ArrayList<>();
+		}
+
+		private Builder(
+				int sqlTypeCode,
+				LobKind lobKind,
+				String typeNamePattern,
+				Function<Integer,String> parameterizedCastTypeName,
+				String castTypeName,
+				Dialect dialect) {
+			this.sqlTypeCode = sqlTypeCode;
+			this.lobKind = lobKind;
+			this.typeNamePattern = typeNamePattern;
+			this.castTypeNamePattern = null;
+			this.parameterizedCastTypeName = parameterizedCastTypeName;
 			this.castTypeName = castTypeName;
 			this.dialect = dialect;
 			this.typeEntries = new ArrayList<>();
@@ -185,7 +217,16 @@ public class CapacityDependentDdlType extends DdlTypeImpl {
 		}
 
 		public CapacityDependentDdlType build() {
-			return new CapacityDependentDdlType( this );
+			return parameterizedCastTypeName == null
+					? new CapacityDependentDdlType( this )
+					: new CapacityDependentDdlType( this ) {
+						@Override
+						public String getCastTypeName(Size columnSize, SqlExpressible type, DdlTypeRegistry ddlTypeRegistry) {
+							return columnSize.getLength() == null
+									? super.getCastTypeName( columnSize, type, ddlTypeRegistry )
+									: parameterizedCastTypeName.apply( columnSize.getLength().intValue() );
+						}
+					};
 		}
 	}
 

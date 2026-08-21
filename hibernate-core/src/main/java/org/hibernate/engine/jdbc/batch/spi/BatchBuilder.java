@@ -9,17 +9,20 @@ import java.util.function.Supplier;
 import org.hibernate.Incubating;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementGroup;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
+import org.hibernate.service.JavaServiceLoadable;
 import org.hibernate.service.Service;
 
 /**
  * A builder for {@link Batch} instances.
  * <p>
- * A custom {@code BatchBuilder} may be selected using the configuration property
- * {@value org.hibernate.cfg.AvailableSettings#BUILDER}.
+ * A custom {@code BatchBuilder} may be selected either by setting the configuration
+ * property {@value org.hibernate.cfg.AvailableSettings#BUILDER}, or by registering it
+ * as a {@linkplain java.util.ServiceLoader Java service}.
  *
  * @author Steve Ebersole
  */
 @Incubating
+@JavaServiceLoadable
 public interface BatchBuilder extends Service {
 	/**
 	 * Build a batch.

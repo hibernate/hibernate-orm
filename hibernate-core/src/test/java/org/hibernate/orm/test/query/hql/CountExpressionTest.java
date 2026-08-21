@@ -11,12 +11,10 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.MapKeyColumn;
 import jakarta.persistence.OneToMany;
-import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -93,8 +91,8 @@ public class CountExpressionTest {
 
 	@Test
 	@JiraKey(value = "HHH-11042")
-	@SkipForDialect(dialectClass = InformixDialect.class,
-			reason = "Informix allows only one column in count(distinct)")
+//	@SkipForDialect(dialectClass = InformixDialect.class,
+//			reason = "Informix allows only one column in count(distinct)")
 	public void testCountDistinctTuple(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			List results = session.createQuery(
@@ -117,8 +115,8 @@ public class CountExpressionTest {
 
 	@Test
 	@JiraKey(value = "HHH-11042")
-	@SkipForDialect(dialectClass = InformixDialect.class,
-			reason = "Informix allows only one column in count(distinct)")
+//	@SkipForDialect(dialectClass = InformixDialect.class,
+//			reason = "Informix allows only one column in count(distinct)")
 	public void testCountDistinctTupleSanity(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			// A simple concatenation of tuple arguments would produce a distinct count of 1 in this case

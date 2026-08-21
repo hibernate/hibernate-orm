@@ -7,7 +7,6 @@ package org.hibernate.bytecode.enhance.spi.interceptor;
 import java.util.Locale;
 import java.util.function.BiFunction;
 
-import org.hibernate.FlushMode;
 import org.hibernate.LazyInitializationException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.SessionFactoryRegistry;
@@ -259,10 +258,8 @@ public class EnhancementHelper {
 			throw createLazyInitializationException( Cause.NO_SF_UUID, entityName, attributeName );
 		}
 
-		final var factory = SessionFactoryRegistry.INSTANCE.getSessionFactory( interceptor.getSessionFactoryUuid() );
-		final var session = factory.openSession();
-		session.getPersistenceContextInternal().setDefaultReadOnly( true );
-		session.setHibernateFlushMode( FlushMode.MANUAL );
-		return session;
+		return (SharedSessionContractImplementor)
+				SessionFactoryRegistry.INSTANCE.getSessionFactory( interceptor.getSessionFactoryUuid() )
+						.openStatelessSession();
 	}
 }

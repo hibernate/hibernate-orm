@@ -47,15 +47,16 @@ public class StatisticsInitiator implements SessionFactoryServiceInitiator<Stati
 
 	private static StatisticsFactory statisticsFactory(
 			@Nullable Object configValue, ServiceRegistryImplementor registry) {
+		final var classLoaderService = registry.requireService( ClassLoaderService.class );
 		if ( configValue == null ) {
-			return StatisticsImpl::new; // Use the default implementation
+			final var discovered = discover( classLoaderService );
+			return discovered != null ? discovered : StatisticsImpl::new;
 		}
 		else if ( configValue instanceof StatisticsFactory factory ) {
 			return factory;
 		}
 		else {
 			// assume it names the factory class
-			final var classLoaderService = registry.requireService( ClassLoaderService.class );
 			try {
 				return (StatisticsFactory)
 						classLoaderService.classForName( configValue.toString() )
@@ -70,6 +71,23 @@ public class StatisticsInitiator implements SessionFactoryServiceInitiator<Stati
 						e
 				);
 			}
+		}
+	}
+
+	private static @Nullable StatisticsFactory discover(ClassLoaderService classLoaderService) {
+		final var discovered = classLoaderService.loadJavaServices( StatisticsFactory.class );
+		final var iterator = discovered.iterator();
+		if ( iterator.hasNext() ) {
+			final StatisticsFactory selected = iterator.next();
+			if ( iterator.hasNext() ) {
+				throw new HibernateException(
+						"Multiple StatisticsFactory service registrations found via ServiceLoader; "
+						+ "specify one explicitly via '" + STATS_BUILDER + "'" );
+			}
+			return selected;
+		}
+		else {
+			return null;
 		}
 	}
 }

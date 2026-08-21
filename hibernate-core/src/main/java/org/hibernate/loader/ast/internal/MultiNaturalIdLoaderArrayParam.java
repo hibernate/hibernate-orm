@@ -17,6 +17,7 @@ import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.SimpleNaturalIdMapping;
 import org.hibernate.metamodel.mapping.internal.SqlTypedMappingImpl;
 import org.hibernate.query.spi.QueryOptionsAdapter;
+import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
 import org.hibernate.sql.exec.internal.SqlTypedMappingJdbcParameter;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 
@@ -53,8 +54,8 @@ public class MultiNaturalIdLoaderArrayParam<E> extends AbstractMultiNaturalIdLoa
 		final var selectable = getNaturalIdAttribute().getSelectable( 0 );
 		final JdbcMapping jdbcMapping = selectable.getJdbcMapping();
 		final SqlTypedMapping arraySqlTypedMapping = new SqlTypedMappingImpl(
-				selectable.getColumnDefinition(),
 				selectable.getLength(),
+				selectable.getArrayLength(),
 				selectable.getPrecision(),
 				selectable.getScale(),
 				selectable.getTemporalPrecision(),
@@ -71,6 +72,7 @@ public class MultiNaturalIdLoaderArrayParam<E> extends AbstractMultiNaturalIdLoa
 				session.getLoadQueryInfluencers(),
 				lockOptions,
 				jdbcParameter,
+				new SqlAliasBaseManager(),
 				factory
 		);
 		final var jdbcSelectOperation =

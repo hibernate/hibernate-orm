@@ -66,6 +66,13 @@ public class SQLServerDatabaseCleaner implements DatabaseCleaner {
 			}
 
 			rs = s.executeQuery(
+					"SELECT 'ALTER TABLE [' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']' + ' SET (SYSTEM_VERSIONING = OFF)' FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE' " +
+					"AND EXISTS (SELECT 1 FROM sys.tables t JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE t.is_ms_shipped = 0 AND s.name = TABLE_SCHEMA AND t.name = TABLE_NAME AND t.TEMPORAL_TYPE = 2 )" );
+			while ( rs.next() ) {
+				sqls.add( rs.getString( 1 ) );
+			}
+
+			rs = s.executeQuery(
 					"SELECT 'DROP TABLE [' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']' FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE' " +
 							"AND EXISTS (SELECT 1 FROM sys.tables t JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE t.is_ms_shipped = 0 AND s.name = TABLE_SCHEMA AND t.name = TABLE_NAME)" );
 			while ( rs.next() ) {

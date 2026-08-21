@@ -35,11 +35,11 @@ import org.hibernate.jdbc.Expectation;
 import org.hibernate.mapping.Backref;
 import org.hibernate.mapping.CheckConstraint;
 import org.hibernate.mapping.Collection;
-import org.hibernate.mapping.Column;
 import org.hibernate.mapping.DependantValue;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.PrimaryKey;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.SimpleValue;
@@ -482,7 +482,7 @@ public abstract class CollectionBinder {
 			mappedBy = null;
 			collectionBinder.setTargetEntity( ClassDetails.VOID_CLASS_DETAILS );
 			collectionBinder.setCascadeStrategy(
-					aggregateCascadeTypes( null, property, false, context ) );
+					aggregateCascadeTypes( property.getDirectAnnotationUsage( ManyToAny.class ).cascade(), property, false, context ) );
 			collectionBinder.setOneToMany( false );
 		}
 		else {
@@ -1569,6 +1569,21 @@ public abstract class CollectionBinder {
 						: foreignJoinColumns.getTable();
 		collection.setCollectionTable( collectionTable );
 
+		// For @OneToMany @JoinColumn on an @Audited entity, create a middle audit table
+		// to track collection membership changes (same approach as @ManyToMany / @JoinTable)
+		if ( !collection.isInverse() ) {
+			final var audited = extract( Audited.class, property, buildingContext );
+			if ( audited != null && !property.hasDirectAnnotationUsage( Audited.Excluded.class ) ) {
+				AuditHelper.bindOneToManyAuditTable(
+						extract( Audited.Table.class, property, buildingContext ),
+						collection,
+						oneToMany.getReferencedEntityName(),
+						extract( Audited.CollectionTable.class, property, buildingContext ),
+						buildingContext
+				);
+			}
+		}
+
 		bindSynchronize();
 		bindFilters( false );
 		handleWhere( false );
@@ -1898,88 +1913,43 @@ public abstract class CollectionBinder {
 		final var key = new DependantValue( buildingContext, collection.getCollectionTable(), keyValue );
 		key.setTypeName( null );
 		joinColumns.checkPropertyConsistency();
-		final var columns = joinColumns.getColumns();
-		key.setNullable( columns.isEmpty() || columns.get(0).isNullable() );
-		key.setUpdateable( columns.isEmpty() || columns.get(0).isUpdatable() );
+		setCollectionKeyNullableUpdatable( joinColumns, key );
 		key.setOnDeleteAction( onDeleteAction );
 		collection.setKey( key );
 
 		if ( property != null ) {
-			final var collectionTable = property.getDirectAnnotationUsage( CollectionTable.class );
-			if ( collectionTable != null ) {
+			if ( property.hasDirectAnnotationUsage( CollectionTable.class ) ) {
+				final var collectionTable = property.getDirectAnnotationUsage( CollectionTable.class );
 				final var foreignKey = collectionTable.foreignKey();
-				final var constraintMode = foreignKey.value();
-				if ( constraintMode == NO_CONSTRAINT
-						|| constraintMode == PROVIDER_DEFAULT && noConstraintByDefault ) {
-					key.disableForeignKey();
-				}
-				else {
-					key.setForeignKeyName( nullIfEmpty( foreignKey.name() ) );
-					key.setForeignKeyDefinition( nullIfEmpty( foreignKey.foreignKeyDefinition() ) );
-					key.setForeignKeyOptions( foreignKey.options() );
-					if ( key.getForeignKeyName() == null
-							&& key.getForeignKeyDefinition() == null
-							&& collectionTable.joinColumns().length == 1 ) {
-						final var joinColumn = collectionTable.joinColumns()[0];
-						final var nestedForeignKey = joinColumn.foreignKey();
-						key.setForeignKeyName( nullIfEmpty( nestedForeignKey.name() ) );
-						key.setForeignKeyDefinition( nullIfEmpty( nestedForeignKey.foreignKeyDefinition() ) );
-						key.setForeignKeyOptions( nestedForeignKey.options() );
-					}
-				}
+				handleForeignKey( collectionTable.joinColumns(), foreignKey.name(), foreignKey.foreignKeyDefinition(),
+						foreignKey.options(), foreignKey.value(), noConstraintByDefault, key );
+			}
+			else if ( property.hasDirectAnnotationUsage( JoinTable.class ) ) {
+				final var joinTable = property.getDirectAnnotationUsage( JoinTable.class );
+				final var foreignKey = joinTable.foreignKey();
+				handleForeignKey( joinTable.joinColumns(), foreignKey.name(), foreignKey.foreignKeyDefinition(),
+						foreignKey.options(), foreignKey.value(), noConstraintByDefault, key );
 			}
 			else {
-				final var joinTable = property.getDirectAnnotationUsage( JoinTable.class );
-				if ( joinTable != null ) {
-					final var foreignKey = joinTable.foreignKey();
-					String foreignKeyName = foreignKey.name();
-					String foreignKeyDefinition = foreignKey.foreignKeyDefinition();
-					String foreignKeyOptions = foreignKey.options();
-					ConstraintMode foreignKeyValue = foreignKey.value();
-					final var joinColumnAnnotations = joinTable.joinColumns();
-					if ( !ArrayHelper.isEmpty( joinColumnAnnotations ) ) {
-						final var joinColumnAnn = joinColumnAnnotations[0];
-						final var joinColumnForeignKey = joinColumnAnn.foreignKey();
-						if ( foreignKeyName.isBlank() ) {
-							foreignKeyName = joinColumnForeignKey.name();
-							foreignKeyDefinition = joinColumnForeignKey.foreignKeyDefinition();
-							foreignKeyOptions = joinColumnForeignKey.options();
-						}
-						if ( foreignKeyValue != NO_CONSTRAINT ) {
-							foreignKeyValue = joinColumnForeignKey.value();
-						}
-					}
-					if ( foreignKeyValue == NO_CONSTRAINT
-							|| foreignKeyValue == PROVIDER_DEFAULT && noConstraintByDefault ) {
+				final String propertyPath = qualify( propertyHolder.getPath(), property.getName() );
+				final var foreignKey = propertyHolder.getOverriddenForeignKey( propertyPath );
+				if ( foreignKey != null ) {
+					handleForeignKeyConstraint( noConstraintByDefault, key, foreignKey );
+				}
+				else {
+					final var oneToMany = property.getDirectAnnotationUsage( OneToMany.class );
+					final var onDelete = property.getDirectAnnotationUsage( OnDelete.class );
+					if ( oneToMany != null
+							&& !oneToMany.mappedBy().isBlank()
+							&& ( onDelete == null || onDelete.action() != OnDeleteAction.CASCADE ) ) {
+						// foreign key should be up to @ManyToOne side
+						// @OnDelete generate "on delete cascade" foreign key
 						key.disableForeignKey();
 					}
 					else {
-						key.setForeignKeyName( nullIfEmpty( foreignKeyName ) );
-						key.setForeignKeyDefinition( nullIfEmpty( foreignKeyDefinition ) );
-						key.setForeignKeyOptions( foreignKeyOptions );
-					}
-				}
-				else {
-					final String propertyPath = qualify( propertyHolder.getPath(), property.getName() );
-					final var foreignKey = propertyHolder.getOverriddenForeignKey( propertyPath );
-					if ( foreignKey != null ) {
-						handleForeignKeyConstraint( noConstraintByDefault, key, foreignKey );
-					}
-					else {
-						final var oneToMany = property.getDirectAnnotationUsage( OneToMany.class );
-						final var onDelete = property.getDirectAnnotationUsage( OnDelete.class );
-						if ( oneToMany != null
-								&& !oneToMany.mappedBy().isBlank()
-								&& ( onDelete == null || onDelete.action() != OnDeleteAction.CASCADE ) ) {
-							// foreign key should be up to @ManyToOne side
-							// @OnDelete generate "on delete cascade" foreign key
-							key.disableForeignKey();
-						}
-						else {
-							final var joinColumn = property.getDirectAnnotationUsage( JoinColumn.class );
-							if ( joinColumn != null ) {
-								handleForeignKeyConstraint( noConstraintByDefault, key, joinColumn.foreignKey() );
-							}
+						final var joinColumn = property.getDirectAnnotationUsage( JoinColumn.class );
+						if ( joinColumn != null ) {
+							handleForeignKeyConstraint( noConstraintByDefault, key, joinColumn.foreignKey() );
 						}
 					}
 				}
@@ -1987,6 +1957,56 @@ public abstract class CollectionBinder {
 		}
 
 		return key;
+	}
+
+	private static void setCollectionKeyNullableUpdatable(AnnotatedJoinColumns joinColumns, DependantValue key) {
+		final var columns = joinColumns.getColumns();
+		if ( columns.isEmpty() ) {
+			key.setNullable( true );
+			key.setUpdateable( true );
+		}
+		else {
+			for ( var column : columns ) {
+				if ( !column.isFormula() ) {
+					key.setNullable( column.isNullable() );
+					key.setUpdateable( column.isUpdatable() );
+					return;
+				}
+			}
+			key.setNullable( true );
+			key.setUpdateable( false );
+		}
+	}
+
+	private static void handleForeignKey(
+			JoinColumn[] joinColumnAnnotations,
+			String foreignKeyName,
+			String foreignKeyDefinition,
+			String foreignKeyOptions,
+			ConstraintMode foreignKeyValue,
+			boolean noConstraintByDefault,
+			DependantValue key) {
+		if ( !ArrayHelper.isEmpty( joinColumnAnnotations ) ) {
+			final var joinColumn = joinColumnAnnotations[0];
+			final var nestedForeignKey = joinColumn.foreignKey();
+			if ( foreignKeyName.isBlank() ) {
+				foreignKeyName = nestedForeignKey.name();
+				foreignKeyDefinition = nestedForeignKey.foreignKeyDefinition();
+				foreignKeyOptions = nestedForeignKey.options();
+			}
+			if ( foreignKeyValue != NO_CONSTRAINT ) {
+				foreignKeyValue = nestedForeignKey.value();
+			}
+		}
+		if ( foreignKeyValue == NO_CONSTRAINT
+			|| foreignKeyValue == PROVIDER_DEFAULT && noConstraintByDefault ) {
+			key.disableForeignKey();
+		}
+		else {
+			key.setForeignKeyName( nullIfEmpty( foreignKeyName ) );
+			key.setForeignKeyDefinition( nullIfEmpty( foreignKeyDefinition ) );
+			key.setForeignKeyOptions( foreignKeyOptions );
+		}
 	}
 
 	private static void handleForeignKeyConstraint(
@@ -2054,7 +2074,7 @@ public abstract class CollectionBinder {
 		bindCollectionSecondPass( targetEntity, joinColumns );
 
 		if ( isCollectionOfEntities ) {
-			final ManyToOne element = handleCollectionOfEntities( elementTypeDetails, targetEntity, hqlOrderBy );
+			final var element = handleCollectionOfEntities( elementTypeDetails, targetEntity, hqlOrderBy );
 			bindManyToManyInverseForeignKey( targetEntity, inverseJoinColumns, element, oneToMany );
 		}
 		else if ( isManyToAny ) {
@@ -2382,6 +2402,8 @@ public abstract class CollectionBinder {
 		collection.setCollectionTable( collectionTable );
 		handleCheckConstraints( collectionTable );
 		processSoftDeletes();
+		processTemporal();
+		processAudited();
 	}
 
 	private void handleCheckConstraints(Table collectionTable) {
@@ -2404,7 +2426,7 @@ public abstract class CollectionBinder {
 
 	private void processSoftDeletes() {
 		assert collection.getCollectionTable() != null;
-		final var softDelete = extractSoftDelete( property, buildingContext );
+		final var softDelete = extract( SoftDelete.class, property, buildingContext );
 		if ( softDelete != null ) {
 			SoftDeleteHelper.bindSoftDeleteIndicator(
 					softDelete,
@@ -2415,11 +2437,50 @@ public abstract class CollectionBinder {
 		}
 	}
 
-	private static SoftDelete extractSoftDelete(MemberDetails property, MetadataBuildingContext context) {
-		final var fromProperty = property.getDirectAnnotationUsage( SoftDelete.class );
-		return fromProperty == null
-				? extractFromPackage( SoftDelete.class, property.getDeclaringType(), context )
-				: fromProperty;
+	private void processTemporal() {
+		assert collection.getCollectionTable() != null;
+		final var temporal = extract( Temporal.class, property, buildingContext );
+		if ( temporal != null ) {
+			TemporalHelper.bindTemporalColumns(
+					temporal,
+					collection,
+					collection.getCollectionTable(),
+					property.getDirectAnnotationUsage( Temporal.HistoryTable.class ),
+					property.getDirectAnnotationUsage( Temporal.HistoryPartitioning.class ),
+					buildingContext
+			);
+		}
+	}
+
+	private void processAudited() {
+		assert collection.getCollectionTable() != null;
+		// Skip inverse collections (mappedBy): the FK is on the child entity's table,
+		// and auditing is handled by the owning side
+		if ( collection.isInverse() ) {
+			return;
+		}
+		final var audited = extract( Audited.class, property, buildingContext );
+		if ( audited != null && !property.hasDirectAnnotationUsage( Audited.Excluded.class ) ) {
+			AuditHelper.bindAuditTable(
+					extract( Audited.Table.class, property, buildingContext ),
+					collection,
+					buildingContext
+			);
+		}
+	}
+
+	private static <T extends Annotation> T extract(
+			Class<T> annotationClass, MemberDetails property, MetadataBuildingContext context) {
+		final var fromProperty = property.getDirectAnnotationUsage( annotationClass );
+		if ( fromProperty != null ) {
+			return fromProperty;
+		}
+		// Check the owning entity class hierarchy (class-level annotation propagates to collections)
+		final var modelsContext = context.getBootstrapContext().getModelsContext();
+		final var fromClass = property.getDeclaringType().getAnnotationUsage( annotationClass, modelsContext );
+		return fromClass == null ?
+				extractFromPackage( annotationClass, property.getDeclaringType(), context ) :
+				fromClass;
 	}
 
 	private void handleUnownedManyToMany(
@@ -2444,6 +2505,8 @@ public abstract class CollectionBinder {
 		collection.setCollectionTable( table );
 
 		processSoftDeletes();
+		processTemporal();
+		processAudited();
 		checkCheckAnnotation();
 	}
 
@@ -2467,7 +2530,8 @@ public abstract class CollectionBinder {
 						+ targetEntityMessage( elementType ) );
 			}
 			else if (isManyToAny) {
-				if ( propertyHolder.getJoinTable( property ) == null ) {
+				final var joinTable = propertyHolder.getJoinTable( property );
+				if ( joinTable == null ) {
 					throw new AnnotationException( "Association '" + safeCollectionRole()
 							+ "' is a '@ManyToAny' and must specify a '@JoinTable'" );
 				}
@@ -2662,14 +2726,21 @@ public abstract class CollectionBinder {
 		if ( notFoundAction == NotFoundAction.IGNORE ) {
 			value.disableForeignKey();
 		}
+		final boolean createPrimaryKey = unique && oneToMany && collection.isSet();
 		TableBinder.bindForeignKey(
 				targetEntity,
 				collection.getOwner(),
 				joinColumns,
 				value,
-				unique,
+				unique && !createPrimaryKey,
 				buildingContext
 		);
+		if ( createPrimaryKey ) {
+			final var table = value.getTable();
+			final var primaryKey = new PrimaryKey( table );
+			primaryKey.addColumns( value );
+			table.setPrimaryKey( primaryKey );
+		}
 	}
 
 	private void bindUnownedManyToManyInverseForeignKey(
@@ -2679,7 +2750,7 @@ public abstract class CollectionBinder {
 		final var mappedByProperty = targetEntity.getRecursiveProperty( mappedBy );
 		final var firstColumn = joinColumns.getJoinColumns().get(0);
 		for ( var selectable: mappedByColumns( targetEntity, mappedByProperty ) ) {
-			firstColumn.linkValueUsingAColumnCopy( (Column) selectable, value);
+			firstColumn.linkValueUsingCopy( selectable, value );
 		}
 		final var manyToOne = (ManyToOne) value;
 		setReferencedProperty( targetEntity.getEntityName(), mappedBy, manyToOne );

@@ -22,6 +22,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.loader.ast.internal.LoaderSelectBuilder;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
@@ -74,15 +75,16 @@ public class MappedFetchTests {
 				new LockOptions(),
 				jdbcParameter -> {
 				},
+				new SqlAliasBaseManager(),
 				sessionFactory
 		);
 
 		assertThat( sqlAst.getDomainResultDescriptors().size(), is( 1 ) );
 
-		final DomainResult domainResult = sqlAst.getDomainResultDescriptors().get( 0 );
+		final DomainResult<?> domainResult = sqlAst.getDomainResultDescriptors().get( 0 );
 		assertThat( domainResult, instanceOf( EntityResult.class ) );
 
-		final EntityResult entityResult = (EntityResult) domainResult;
+		final EntityResult<?> entityResult = (EntityResult<?>) domainResult;
 		final ImmutableFetchList fetches = entityResult.getFetches();
 
 		// name + both lists

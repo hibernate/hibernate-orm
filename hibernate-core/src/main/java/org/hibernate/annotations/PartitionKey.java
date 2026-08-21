@@ -25,7 +25,6 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * part of the identifier, use of this annotation
  * may improve the performance of SQL {@code update}
  * and {@code delete} statements.
- * <p>
  * <pre>
  * &#064;Entity
  * &#064;Table(name  = "partitioned_table",

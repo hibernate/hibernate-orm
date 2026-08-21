@@ -30,7 +30,7 @@ import org.hibernate.property.access.spi.Getter;
 
 import jakarta.persistence.Transient;
 
-import static java.beans.Introspector.decapitalize;
+import static org.hibernate.internal.util.StringHelper.decapitalize;
 import static java.lang.Character.isLowerCase;
 import static java.lang.Thread.currentThread;
 

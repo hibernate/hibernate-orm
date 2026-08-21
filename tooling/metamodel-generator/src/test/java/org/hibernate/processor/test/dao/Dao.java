@@ -4,6 +4,7 @@
  */
 package org.hibernate.processor.test.dao;
 
+import jakarta.annotation.Nullable;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
 import org.hibernate.annotations.processing.Find;
@@ -121,6 +122,10 @@ public interface Dao {
 
 	@HQL("from Book where isbn = :isbn")
 	Optional<Book> findByIsbnIfExists(String isbn);
+
+	@HQL("SELECT 1L")
+	@Nullable
+	Long one();
 
 	@SQL("select * from Book where isbn = :isbn")
 	Book findByIsbnNative(String isbn);

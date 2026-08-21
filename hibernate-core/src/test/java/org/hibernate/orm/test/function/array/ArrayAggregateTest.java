@@ -12,6 +12,7 @@ import org.hibernate.boot.spi.AdditionalMappingContributions;
 import org.hibernate.boot.spi.AdditionalMappingContributor;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.type.OracleArrayJdbcType;
 import org.hibernate.dialect.OracleDialect;
@@ -95,9 +96,12 @@ public class ArrayAggregateTest {
 		scope.inTransaction( em -> {
 			final EntityOfBasics e1 = new EntityOfBasics( 1 );
 			e1.setTheString( "abc" );
+			e1.setTheInt( 2 );
 			final EntityOfBasics e2 = new EntityOfBasics( 2 );
 			e2.setTheString( "def" );
+			e2.setTheInt( 1 );
 			final EntityOfBasics e3 = new EntityOfBasics( 3 );
+			e3.setTheInt( 3 );
 			em.persist( e1 );
 			em.persist( e2 );
 			em.persist( e3 );
@@ -142,6 +146,7 @@ public class ArrayAggregateTest {
 	}
 
 	@Test
+	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsArrayComparison.class )
 	public void testCompareAgainstArray(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			List<Integer> results = em.createQuery( "select 1 where array('abc','def',null) is not distinct from (select array_agg(e.theString) within group (order by e.theString asc nulls last) from EntityOfBasics e)", Integer.class )
@@ -175,8 +180,40 @@ public class ArrayAggregateTest {
 	}
 
 	@Test
+	@Jira("https://hibernate.atlassian.net/browse/HHH-20348")
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsArrayToString.class)
+	@SkipForDialect( dialectClass = SpannerPostgreSQLDialect.class, reason = "Spanner doesn't really support array_to_string")
+	public void testArrayToStringArrayAggPrimitive(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			List<String> results = em.createQuery(
+					"select array_to_string(array_agg(e.theInt) within group (order by e.theInt), ',') from EntityOfBasics e",
+					String.class
+			).getResultList();
+			assertEquals( 1, results.size() );
+			assertEquals( "1,2,3", results.get( 0 ) );
+		} );
+	}
+
+	public record ArrayAggResult(String foo, int[] theInts) {}
+
+	@Test
+	@Jira("https://hibernate.atlassian.net/browse/HHH-20772")
+	public void testArrayAggDtoMapping(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			List<ArrayAggResult> results = em.createQuery(
+					"select 'zzz' as foo, array_agg(e.theInt) within group (order by e.theInt) as theInts from EntityOfBasics e",
+					ArrayAggResult.class
+			).getResultList();
+			assertEquals( 1, results.size() );
+			assertEquals( "zzz", results.get( 0 ).foo() );
+			assertArrayEquals( new int[] { 1, 2, 3 }, results.get( 0 ).theInts() );
+		} );
+	}
+
+	@Test
 	@Jira("https://hibernate.atlassian.net/browse/HHH-19681")
 	@RequiresDialect(PostgreSQLDialect.class)
+	@SkipForDialect( dialectClass = SpannerPostgreSQLDialect.class, reason = "Spanner doesn't support VALUES list in FROM clause")
 	public void testJsonBJdbcArray(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			String sql = "select groupId, array_agg(json_values) " +

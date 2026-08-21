@@ -140,7 +140,21 @@ public class SchemaManagerImpl implements SchemaManager {
 
 	@Override
 	public void truncateTable(String tableName) {
-		Map<String, Object> properties = new HashMap<>( sessionFactory.getProperties() );
+		Map<String, Object> properties = new HashMap<>( sessionFactory.getProperties().size() );
+		for ( Map.Entry<String, Object> entry : sessionFactory.getProperties().entrySet() ) {
+			final String key = entry.getKey();
+			// The scripts and database actions can have a group suffix that we also need to overwrite
+			if ( key.startsWith( JAKARTA_HBM2DDL_DATABASE_ACTION ) ) {
+				properties.put( key, Action.TRUNCATE );
+			}
+			else if ( key.startsWith( JAKARTA_HBM2DDL_SCRIPTS_ACTION ) ) {
+				properties.put( key, Action.NONE );
+			}
+			else {
+				properties.put( key, entry.getValue() );
+			}
+		}
+
 		properties.put( JAKARTA_HBM2DDL_DATABASE_ACTION, Action.TRUNCATE );
 		properties.put( JAKARTA_HBM2DDL_SCRIPTS_ACTION, Action.NONE );
 		properties.put( HBM2DDL_SKIP_DEFAULT_IMPORT_FILE, true );

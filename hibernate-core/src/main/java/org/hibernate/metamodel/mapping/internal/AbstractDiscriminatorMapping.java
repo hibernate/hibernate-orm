@@ -153,7 +153,7 @@ public abstract class AbstractDiscriminatorMapping implements EntityDiscriminato
 		// create a SqlSelection based on the underlying JdbcMapping
 		final var sqlSelection = resolveSqlSelection(
 				fetchablePath,
-				underlyingJdbcMapping,
+				getJdbcMapping(),
 				tableGroup,
 				fetchParent,
 				creationState.getSqlAstCreationState()

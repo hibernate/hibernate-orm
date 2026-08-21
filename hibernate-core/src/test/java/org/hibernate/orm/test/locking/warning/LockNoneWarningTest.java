@@ -17,11 +17,13 @@ import jakarta.persistence.Table;
 
 import org.hibernate.internal.CoreMessageLogger;
 
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.Logger;
 import org.hibernate.testing.orm.junit.LoggingInspections;
 import org.hibernate.testing.orm.junit.LoggingInspectionsScope;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
@@ -48,6 +50,7 @@ import static jakarta.persistence.LockModeType.NONE;
 })
 @DomainModel(annotatedClasses = {LockNoneWarningTest.Item.class, LockNoneWarningTest.Bid.class})
 @SessionFactory
+@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsNumericPrimaryKey.class )
 public class LockNoneWarningTest {
 	@BeforeEach
 	void setUp(SessionFactoryScope factoryScope) {

@@ -5,6 +5,7 @@
 package org.hibernate.dialect.aggregate;
 
 import org.hibernate.dialect.Dialect;
+import org.hibernate.sql.ast.spi.StringBuilderSqlAppender;
 import org.hibernate.type.descriptor.jdbc.XmlHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Column;
@@ -23,12 +24,14 @@ import org.hibernate.type.spi.TypeConfiguration;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import static org.hibernate.dialect.function.array.DdlTypeHelper.getCastTypeName;
 import static org.hibernate.type.SqlTypes.*;
 
 public class SQLServerAggregateSupport extends AggregateSupportImpl {
 
-	private static final AggregateSupport JSON_INSTANCE = new SQLServerAggregateSupport( true );
-	private static final AggregateSupport LEGACY_INSTANCE = new SQLServerAggregateSupport( false );
+	private static final AggregateSupport EXTENDED_JSON_INSTANCE = new SQLServerAggregateSupport( JsonSupportLevel.EXTENDED );
+	private static final AggregateSupport JSON_INSTANCE = new SQLServerAggregateSupport( JsonSupportLevel.NORMAL );
+	private static final AggregateSupport LEGACY_INSTANCE = new SQLServerAggregateSupport( JsonSupportLevel.NONE );
 
 	private static final String JSON_QUERY_START = "json_query(";
 	private static final String JSON_QUERY_JSON_END = "')";
@@ -37,16 +40,24 @@ public class SQLServerAggregateSupport extends AggregateSupportImpl {
 	private static final String XML_QUERY_SEPARATOR = ".query('";
 	private static final String XML_QUERY_END = "/*') as nvarchar(max))+'</e>' as xml)";
 
-	private final boolean supportsJson;
+	private final JsonSupportLevel jsonSupportLevel;
 
-	private SQLServerAggregateSupport(boolean supportsJson) {
-		this.supportsJson = supportsJson;
+	private SQLServerAggregateSupport(JsonSupportLevel jsonSupportLevel) {
+		this.jsonSupportLevel = jsonSupportLevel;
+	}
+
+	private enum JsonSupportLevel {
+		EXTENDED,
+		NORMAL,
+		NONE
 	}
 
 	public static AggregateSupport valueOf(Dialect dialect) {
-		return dialect.getVersion().isSameOrAfter( 13 )
-				? SQLServerAggregateSupport.JSON_INSTANCE
-				: SQLServerAggregateSupport.LEGACY_INSTANCE;
+		return dialect.getVersion().isSameOrAfter( 16 )
+				? EXTENDED_JSON_INSTANCE
+				: dialect.getVersion().isSameOrAfter( 13 )
+					? JSON_INSTANCE
+					: LEGACY_INSTANCE;
 	}
 
 	@Override
@@ -61,7 +72,7 @@ public class SQLServerAggregateSupport extends AggregateSupportImpl {
 		switch ( aggregateColumnTypeCode ) {
 			case JSON:
 			case JSON_ARRAY:
-				if ( !supportsJson ) {
+				if ( jsonSupportLevel == JsonSupportLevel.NONE ) {
 					break;
 				}
 				final String parentJsonPartExpression;
@@ -84,17 +95,20 @@ public class SQLServerAggregateSupport extends AggregateSupportImpl {
 					case LONG32VARBINARY:
 					case BLOB:
 						// We encode binary data as hex, so we have to decode here
-						if ( determineLength( column ) * 2 > JSON_VALUE_MAX_LENGTH ) {
+						final Long binaryLength = column.getLength();
+						if ( binaryLength != null
+								? binaryLength * 2 > JSON_VALUE_MAX_LENGTH
+								: column.getJdbcMapping().getJdbcType().isLobOrLong() ) {
 							// Since data is HEX encoded, multiply the max length by 2 since we need 2 hex chars per byte
 							return template.replace(
 									placeholder,
-									"(select convert(" + column.getColumnDefinition() + ",v,2) from openjson(" + aggregateParentReadExpression + ") with (v varchar(max) '$." + columnExpression + "'))"
+									"(select convert(" + getCastTypeName( column, typeConfiguration ) + ",v,2) from openjson(" + aggregateParentReadExpression + ") with (v varchar(max) '$." + columnExpression + "'))"
 							);
 						}
 						else {
 							return template.replace(
 									placeholder,
-									"convert(" + column.getColumnDefinition() + ",json_value(" + parentJsonPartExpression + columnExpression + "'),2)"
+									"convert(" + getCastTypeName( column, typeConfiguration ) + ",json_value(" + parentJsonPartExpression + columnExpression + "'),2)"
 							);
 						}
 					case CHAR:
@@ -105,10 +119,13 @@ public class SQLServerAggregateSupport extends AggregateSupportImpl {
 					case LONG32NVARCHAR:
 					case CLOB:
 					case NCLOB:
-						if ( determineLength( column ) > JSON_VALUE_MAX_LENGTH ) {
+						final Long stringLength = column.getLength();
+						if ( stringLength != null
+								? stringLength > JSON_VALUE_MAX_LENGTH
+								: column.getJdbcMapping().getJdbcType().isLobOrLong() ) {
 							return template.replace(
 									placeholder,
-									"(select * from openjson(" + aggregateParentReadExpression + ") with (v " + column.getColumnDefinition() + " '$." + columnExpression + "'))"
+									"(select * from openjson(" + aggregateParentReadExpression + ") with (v " + getCastTypeName( column, typeConfiguration ) + " '$." + columnExpression + "'))"
 							);
 						}
 						// Fall-through intended
@@ -131,12 +148,12 @@ public class SQLServerAggregateSupport extends AggregateSupportImpl {
 					case TIMESTAMP_WITH_TIMEZONE:
 						return template.replace(
 								placeholder,
-								"cast(json_value(" + parentJsonPartExpression + columnExpression + "') as " + column.getColumnDefinition() + ")"
+								"cast(json_value(" + parentJsonPartExpression + columnExpression + "') as " + getCastTypeName( column, typeConfiguration ) + ")"
 						);
 					default:
 						return template.replace(
 								placeholder,
-								"(select * from openjson(" + aggregateParentReadExpression + ") with (v " + column.getColumnDefinition() + " '$." + columnExpression + "'))"
+								"(select * from openjson(" + aggregateParentReadExpression + ") with (v " + getCastTypeName( column, typeConfiguration ) + " '$." + columnExpression + "'))"
 						);
 				}
 			case SQLXML:
@@ -172,39 +189,16 @@ public class SQLServerAggregateSupport extends AggregateSupportImpl {
 						// We encode binary data as hex, so we have to decode here
 						return template.replace(
 								placeholder,
-								"convert(" + column.getColumnDefinition() + "," + xmlColumn + ".value('(" + parentXmlPartExpression + "/" + columnExpression + "/text())[1]','nvarchar(max)'),2)"
+								"convert(" + getCastTypeName( column, typeConfiguration ) + "," + xmlColumn + ".value('(" + parentXmlPartExpression + "/" + columnExpression + "/text())[1]','nvarchar(max)'),2)"
 						);
 					default:
 						return template.replace(
 								placeholder,
-								xmlColumn + ".value('(" + parentXmlPartExpression + "/" + columnExpression + "/text())[1]','" + column.getColumnDefinition() + "')"
+								xmlColumn + ".value('(" + parentXmlPartExpression + "/" + columnExpression + "/text())[1]','" + getCastTypeName( column, typeConfiguration ) + "')"
 						);
 				}
 		}
 		throw new IllegalArgumentException( "Unsupported aggregate SQL type: " + aggregateColumnTypeCode );
-	}
-
-	private static Long determineLength(SqlTypedMapping column) {
-		final Long length = column.getLength();
-		if ( length != null ) {
-			return length;
-		}
-		else {
-			final String columnDefinition = column.getColumnDefinition();
-			assert columnDefinition != null;
-			final int parenthesisIndex = columnDefinition.indexOf( '(' );
-			if ( parenthesisIndex != -1 ) {
-				int end;
-				for ( end = parenthesisIndex + 1; end < columnDefinition.length(); end++ ) {
-					if ( !Character.isDigit( columnDefinition.charAt( end ) ) ) {
-						break;
-					}
-				}
-				return Long.parseLong( columnDefinition.substring( parenthesisIndex + 1, end ) );
-			}
-			// Default to the max varchar length
-			return 8000L;
-		}
 	}
 
 	@Override
@@ -216,7 +210,7 @@ public class SQLServerAggregateSupport extends AggregateSupportImpl {
 		switch ( aggregateColumnTypeCode ) {
 			case JSON:
 			case JSON_ARRAY:
-				if ( !supportsJson ) {
+				if ( jsonSupportLevel == JsonSupportLevel.NONE ) {
 					break;
 				}
 			case SQLXML:
@@ -227,29 +221,59 @@ public class SQLServerAggregateSupport extends AggregateSupportImpl {
 		throw new IllegalArgumentException( "Unsupported aggregate SQL type: " + aggregateColumnTypeCode );
 	}
 
-	private static String jsonCustomWriteExpression(String customWriteExpression, JdbcMapping jdbcMapping) {
+	private String jsonCustomWriteExpression(String customWriteExpression, JdbcMapping jdbcMapping) {
+		StringBuilderSqlAppender sqlAppender = new StringBuilderSqlAppender();
+		appendJsonWriteExpression( sqlAppender, () -> sqlAppender.appendSql( customWriteExpression ), jdbcMapping );
+		return sqlAppender.toString();
+	}
+
+	public void appendJsonWriteExpression(SqlAppender sqlAppender, Runnable renderFunction, JdbcMapping jdbcMapping) {
 		switch ( jdbcMapping.getJdbcType().getDefaultSqlTypeCode() ) {
 			case BINARY:
 			case VARBINARY:
 			case LONG32VARBINARY:
 			case BLOB:
-				return "convert(nvarchar(max)," + customWriteExpression + ",2)";
+				sqlAppender.appendSql( "convert(nvarchar(max),");
+				renderFunction.run();
+				sqlAppender.appendSql( ",2)" );
+				break;
 			case TIME:
-				return "left(" + customWriteExpression + ",8)";
+				sqlAppender.appendSql( "left(");
+				renderFunction.run();
+				sqlAppender.appendSql( ",8)" );
+				break;
 			case DATE:
-				return "format(" + customWriteExpression + ",'yyyy-MM-dd')";
+				sqlAppender.appendSql( "format(");
+				renderFunction.run();
+				sqlAppender.appendSql( ",'yyyy-MM-dd')" );
+				break;
 			case TIMESTAMP:
-				return "format(" + customWriteExpression + ",'yyyy-MM-ddTHH:mm:ss.fffffff')";
+				sqlAppender.appendSql( "format(");
+				renderFunction.run();
+				sqlAppender.appendSql( ",'yyyy-MM-ddTHH:mm:ss.fffffff')" );
+				break;
 			case TIMESTAMP_UTC:
 			case TIMESTAMP_WITH_TIMEZONE:
-				return "format(" + customWriteExpression + ",'yyyy-MM-ddTHH:mm:ss.fffffffzzz')";
+				sqlAppender.appendSql( "format(");
+				renderFunction.run();
+				sqlAppender.appendSql( ",'yyyy-MM-ddTHH:mm:ss.fffffffzzz')" );
+				break;
 			case UUID:
-				return "cast(" + customWriteExpression + " as nvarchar(36))";
+				sqlAppender.appendSql( "cast(");
+				renderFunction.run();
+				sqlAppender.appendSql( " as nvarchar(36))" );
+				break;
 			case JSON:
 			case JSON_ARRAY:
-				return "json_query(" + customWriteExpression + ")";
+				if ( jsonSupportLevel != JsonSupportLevel.EXTENDED ) {
+					sqlAppender.appendSql( "json_query(" );
+					renderFunction.run();
+					sqlAppender.appendSql( ")" );
+					break;
+				}
 			default:
-				return customWriteExpression;
+				renderFunction.run();
+				break;
 		}
 	}
 
@@ -292,7 +316,7 @@ public class SQLServerAggregateSupport extends AggregateSupportImpl {
 		final int aggregateSqlTypeCode = aggregateColumn.getJdbcMapping().getJdbcType().getDefaultSqlTypeCode();
 		switch ( aggregateSqlTypeCode ) {
 			case JSON:
-				if ( !supportsJson ) {
+				if ( jsonSupportLevel == JsonSupportLevel.NONE ) {
 					break;
 				}
 				return new RootJsonWriteExpression( aggregateColumn, columnsToUpdate, this, typeConfiguration );
@@ -342,7 +366,7 @@ public class SQLServerAggregateSupport extends AggregateSupportImpl {
 						parts[parts.length - 1].getSelectableName(),
 						new BasicJsonWriteExpression(
 								column,
-								jsonCustomWriteExpression(
+								aggregateSupport.jsonCustomWriteExpression(
 										customWriteExpression,
 										column.getJdbcMapping()
 								)
@@ -463,12 +487,10 @@ public class SQLServerAggregateSupport extends AggregateSupportImpl {
 	private static class AggregateXmlWriteExpression implements XmlWriteExpression {
 
 		private final SelectableMapping selectableMapping;
-		private final String columnDefinition;
 		private final LinkedHashMap<String, XmlWriteExpression> subExpressions = new LinkedHashMap<>();
 
-		private AggregateXmlWriteExpression(SelectableMapping selectableMapping, String columnDefinition) {
+		private AggregateXmlWriteExpression(SelectableMapping selectableMapping) {
 			this.selectableMapping = selectableMapping;
-			this.columnDefinition = columnDefinition;
 		}
 
 		protected void initializeSubExpressions(SelectableMapping aggregateColumn, SelectableMapping[] columns) {
@@ -482,7 +504,7 @@ public class SQLServerAggregateSupport extends AggregateSupportImpl {
 					final int selectableIndex = embeddableMappingType.getSelectableIndex( parts[i].getSelectableName() );
 					currentAggregate = (AggregateXmlWriteExpression) currentAggregate.subExpressions.computeIfAbsent(
 							parts[i].getSelectableName(),
-							k -> new AggregateXmlWriteExpression( embeddableMappingType.getJdbcValueSelectable( selectableIndex ), columnDefinition )
+							k -> new AggregateXmlWriteExpression( embeddableMappingType.getJdbcValueSelectable( selectableIndex ) )
 					);
 				}
 				final String customWriteExpression = column.getWriteExpression();
@@ -554,7 +576,7 @@ public class SQLServerAggregateSupport extends AggregateSupportImpl {
 		private final String path;
 
 		RootXmlWriteExpression(SelectableMapping aggregateColumn, SelectableMapping[] columns) {
-			super( aggregateColumn, aggregateColumn.getColumnDefinition() );
+			super( aggregateColumn );
 			path = aggregateColumn.getSelectionExpression();
 			initializeSubExpressions( aggregateColumn, columns );
 		}

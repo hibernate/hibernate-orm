@@ -8,6 +8,7 @@ import org.hibernate.Transaction;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.mapping.Column;
+import org.hibernate.mapping.Index;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UniqueKey;
 
@@ -19,7 +20,10 @@ import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -46,12 +50,24 @@ public class QuoteGlobalTest {
 	@Test
 	@JiraKey(value = "HHH-7890")
 	public void testQuotedUniqueConstraint(SessionFactoryScope scope) {
-		for ( UniqueKey uk :
-				scope.getMetadataImplementor().getEntityBinding( Person.class.getName() )
-						.getTable().getUniqueKeys().values() ) {
-			assertEquals( 1, uk.getColumns().size() );
-			assertTrue(  uk.getColumn( 0 ).isQuoted() );
-			assertEquals( "name", uk.getColumn( 0 ).getName() );
+		if ( scope.getSessionFactory().getJdbcServices().getDialect().supportsUniqueConstraints() ) {
+			for ( UniqueKey uk :
+					scope.getMetadataImplementor().getEntityBinding( Person.class.getName() )
+							.getTable().getUniqueKeys().values() ) {
+				assertEquals( 1, uk.getColumns().size() );
+				assertTrue( uk.getColumn( 0 ).isQuoted() );
+				assertEquals( "name", uk.getColumn( 0 ).getName() );
+				return;
+			}
+		}
+		else {
+			Index uniqueIndex = scope.getMetadataImplementor().getEntityBinding( Person.class.getName() )
+					.getTable().getIndexes().values().stream().filter( Index::isUnique ).findAny().orElse(  null );
+			assertNotNull(  uniqueIndex );
+			List<Column> columns = uniqueIndex.getColumns();
+			assertEquals( 1, columns.size() );
+			assertTrue( columns.get( 0 ).isQuoted() );
+			assertEquals( "name", columns.get( 0 ).getName() );
 			return;
 		}
 		fail( "GLOBALLY_QUOTED_IDENTIFIERS caused the unique key creation to fail." );

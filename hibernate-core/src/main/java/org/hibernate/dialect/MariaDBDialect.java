@@ -4,6 +4,7 @@
  */
 package org.hibernate.dialect;
 
+import org.hibernate.Incubating;
 import org.hibernate.QueryTimeoutException;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
@@ -17,6 +18,8 @@ import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.sequence.MariaDBSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.sql.ast.MariaDBSqlAstTranslator;
+import org.hibernate.dialect.temporal.MariaDBTemporalTableSupport;
+import org.hibernate.dialect.temporal.TemporalTableSupport;
 import org.hibernate.dialect.type.MariaDBCastingJsonArrayJdbcTypeConstructor;
 import org.hibernate.dialect.type.MariaDBCastingJsonJdbcType;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
@@ -263,6 +266,11 @@ public class MariaDBDialect extends MySQLDialect {
 	}
 
 	@Override
+	public boolean supportsIfExistsBeforeIndexName() {
+		return true;
+	}
+
+	@Override
 	public SequenceSupport getSequenceSupport() {
 		return MariaDBSequenceSupport.INSTANCE;
 	}
@@ -409,17 +417,41 @@ public class MariaDBDialect extends MySQLDialect {
 	}
 
 	@Override
+	@Incubating
+	public boolean supportsDuplicateSelectItemsInQueryGroup() {
+		return false;
+	}
+
+	@Override
 	public boolean supportsWithClauseInSubquery() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsNotNullAfterGeneratedAs() {
 		return false;
 	}
 
 	@Override
 	public MutationOperation createOptionalTableUpdateOperation(EntityMutationTarget mutationTarget, OptionalTableUpdate optionalTableUpdate, SessionFactoryImplementor factory) {
 		if ( optionalTableUpdate.getNumberOfOptimisticLockBindings() == 0 ) {
-			final MariaDBSqlAstTranslator<?> translator = new MariaDBSqlAstTranslator<>( factory, optionalTableUpdate, MariaDBDialect.this );
-			return translator.createMergeOperation( optionalTableUpdate );
+			return new MariaDBSqlAstTranslator<>( factory, optionalTableUpdate, this )
+					.createMergeOperation( optionalTableUpdate );
 		}
-		return super.createOptionalTableUpdateOperation( mutationTarget, optionalTableUpdate, factory );
+		else {
+			return super.createOptionalTableUpdateOperation( mutationTarget, optionalTableUpdate, factory );
+		}
 	}
 
+	@Override
+	public String generatedAs(String generatedAs) {
+		return generatedAs.startsWith( "row " )
+				? " generated always as " + generatedAs
+				: super.generatedAs( generatedAs );
+	}
+
+	@Override
+	public TemporalTableSupport getTemporalTableSupport() {
+		return new MariaDBTemporalTableSupport( this );
+	}
 }

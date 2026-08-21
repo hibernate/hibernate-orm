@@ -1,0 +1,27 @@
+services:
+  sybase:
+    image: ${SYBASE_IMAGE:-docker.io/nguoianphu/docker-sybase@sha256:0fe38c4dafdb43dc5e5d0c1554006bc57efa7ed1a705aaef820ddbabf024c538}
+    container_name: sybase
+    ports:
+      - "9000:5000"
+      - "9001:5001"
+    entrypoint: ["/bin/bash"]
+    command:
+      - -c
+      - |
+        source /opt/sybase/SYBASE.sh
+        /opt/sybase/ASE-16_0/bin/dataserver \
+        -d/opt/sybase/data/master.dat \
+        -e/opt/sybase/ASE-16_0/install/MYSYBASE.log \
+        -c/opt/sybase/ASE-16_0/MYSYBASE.cfg \
+        -M/opt/sybase/ASE-16_0 \
+        -N/opt/sybase/ASE-16_0/sysam/MYSYBASE.properties \
+        -i/opt/sybase \
+        -sMYSYBASE \
+        -T11889
+        exit 0
+    healthcheck:
+      test: ["CMD-SHELL", "source /opt/sybase/SYBASE.sh && /opt/sybase/OCS-16_0/bin/isql -Usa -P myPassword -S MYSYBASE -Q 'SELECT 1' || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 30

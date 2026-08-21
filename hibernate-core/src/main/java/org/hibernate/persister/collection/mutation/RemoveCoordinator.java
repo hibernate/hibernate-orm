@@ -4,6 +4,7 @@
  */
 package org.hibernate.persister.collection.mutation;
 
+import jakarta.annotation.Nullable;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
@@ -24,9 +25,10 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
  */
 public interface RemoveCoordinator extends CollectionOperationCoordinator {
 	/**
-	 * The SQL used to perform the removal
+	 * The SQL used to perform the removal, or {@code null} if this is a no-op
+	 * or a more complex operation requiring multiple SQL strings.
 	 */
-	String getSqlString();
+	@Nullable String getSqlString();
 
 	/**
 	 * Delete all rows based on the collection-key

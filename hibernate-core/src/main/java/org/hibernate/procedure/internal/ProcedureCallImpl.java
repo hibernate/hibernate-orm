@@ -790,7 +790,7 @@ public class ProcedureCallImpl<R>
 				getSynchronizedQuerySpaces(),
 				isCacheable(),
 				getCacheRegion(),
-				getCacheMode(),
+				getQueryOptions().getCacheMode(),
 				getQueryOptions().getFlushMode(),
 				isReadOnly(),
 				getTimeout(),

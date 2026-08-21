@@ -34,6 +34,8 @@ public interface GlobalRegistrations {
 
 	Map<String, FilterDefRegistration> getFilterDefRegistrations();
 
+	List<FetchProfileRegistration> getFetchProfileRegistrations();
+
 	Map<String, String> getImportedRenames();
 
 	Map<String, SequenceGeneratorRegistration> getSequenceGeneratorRegistrations();

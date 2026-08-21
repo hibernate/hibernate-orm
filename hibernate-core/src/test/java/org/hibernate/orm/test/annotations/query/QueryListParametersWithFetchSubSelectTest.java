@@ -71,7 +71,7 @@ public class QueryListParametersWithFetchSubSelectTest {
 			List<Parent> results = query.getResultList();
 			assertThat( results )
 					.allSatisfy( parent -> assertThat( Hibernate.isInitialized( parent.getChildren() ) ).isTrue() )
-					.extracting( Parent::getId ).containsExactly( 0, 1, 2 );
+					.extracting( Parent::getId ).containsExactlyInAnyOrder( 0, 1, 2 );
 		} );
 
 		// If we get here, children were initialized eagerly.
@@ -93,19 +93,19 @@ public class QueryListParametersWithFetchSubSelectTest {
 			List<Parent> results = query.getResultList();
 			assertThat( results )
 					.allSatisfy( parent -> assertThat( Hibernate.isInitialized( parent.getChildren() ) ).isTrue() )
-					.extracting( Parent::getId ).containsExactly( 0, 1, 2, 3 );
+					.extracting( Parent::getId ).containsExactlyInAnyOrder( 0, 1, 2, 3 );
 
 			query.setParameter( "ids", Arrays.asList( 4, 5, 6 ) );
 			results = query.getResultList();
 			assertThat( results )
 					.allSatisfy( parent -> assertThat( Hibernate.isInitialized( parent.getChildren() ) ).isTrue() )
-					.extracting( Parent::getId ).containsExactly( 4, 5, 6 );
+					.extracting( Parent::getId ).containsExactlyInAnyOrder( 4, 5, 6 );
 
 			query.setParameter( "ids", Arrays.asList( 7, 8 ) );
 			results = query.getResultList();
 			assertThat( results )
 					.allSatisfy( parent -> assertThat( Hibernate.isInitialized( parent.getChildren() ) ).isTrue() )
-					.extracting( Parent::getId ).containsExactly( 7, 8 );
+					.extracting( Parent::getId ).containsExactlyInAnyOrder( 7, 8 );
 		} );
 
 		// If we get here, children were initialized eagerly.
@@ -128,19 +128,19 @@ public class QueryListParametersWithFetchSubSelectTest {
 			List<Parent> results = query.getResultList();
 			assertThat( results )
 					.allSatisfy( parent -> assertThat( Hibernate.isInitialized( parent.getChildren() ) ).isTrue() )
-					.extracting( Parent::getId ).containsExactly( 0, 1, 2, 3 );
+					.extracting( Parent::getId ).containsExactlyInAnyOrder( 0, 1, 2, 3 );
 
 			query.setParameter( 1, Arrays.asList( 4, 5, 6 ) );
 			results = query.getResultList();
 			assertThat( results )
 					.allSatisfy( parent -> assertThat( Hibernate.isInitialized( parent.getChildren() ) ).isTrue() )
-					.extracting( Parent::getId ).containsExactly( 4, 5, 6 );
+					.extracting( Parent::getId ).containsExactlyInAnyOrder( 4, 5, 6 );
 
 			query.setParameter( 1, Arrays.asList( 7, 8 ) );
 			results = query.getResultList();
 			assertThat( results )
 					.allSatisfy( parent -> assertThat( Hibernate.isInitialized( parent.getChildren() ) ).isTrue() )
-					.extracting( Parent::getId ).containsExactly( 7, 8 );
+					.extracting( Parent::getId ).containsExactlyInAnyOrder( 7, 8 );
 		} );
 
 		// If we get here, children were initialized eagerly.

@@ -17,7 +17,7 @@ import java.lang.annotation.RetentionPolicy;
  * Can also be useful for {@linkplain org.hibernate.annotations.Any any} and
  * {@linkplain org.hibernate.annotations.ManyToAny many-to-any} attributes to
  * specify a base type.
- * <p/>
+ * <p>
  * Other attribute classifications have spec-defined ways to specify the target<ul>
  *     <li>{@linkplain jakarta.persistence.ManyToOne#targetEntity()}</li>
  *     <li>{@linkplain jakarta.persistence.OneToOne#targetEntity()}</li>

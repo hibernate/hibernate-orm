@@ -64,7 +64,9 @@ public abstract class AbstractAuxiliaryDatabaseObject
 	@Override
 	public boolean appliesToDialect(Dialect dialect) {
 		// empty means no scoping
-		return getDialectScopes().isEmpty() || getDialectScopes().contains( dialect.getClass().getName() );
+		final var scopes = getDialectScopes();
+		return scopes.isEmpty()
+			|| scopes.contains( dialect.getClass().getName() );
 	}
 
 	@Override

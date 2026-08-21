@@ -33,7 +33,7 @@ import jakarta.persistence.SqlResultSetMapping;
 		}
 )
 @NamedNativeQuery(name = "all.dictionaries",
-		query = "select id, name, editor, disc as \"type\" from Dictionary",
+		query = "select id, name, editor, disc as type from Dictionary",
 		resultSetMapping = "dictionary")
 public class Dictionary {
 	private Integer id;

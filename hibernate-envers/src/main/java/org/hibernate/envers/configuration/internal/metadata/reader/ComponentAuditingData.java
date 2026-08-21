@@ -14,7 +14,7 @@ import static org.hibernate.envers.internal.tools.Tools.newHashMap;
  * Audit mapping meta-data for component.
  *
  * @author Adam Warski (adam at warski dot org)
- * @author Hern&aacut;n Chanfreau
+ * @author Hern&aacute;n Chanfreau
  * @author Chris Cranford
  */
 public class ComponentAuditingData extends PropertyAuditingData implements AuditedPropertiesHolder {

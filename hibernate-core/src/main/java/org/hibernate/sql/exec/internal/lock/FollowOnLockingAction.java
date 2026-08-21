@@ -22,7 +22,6 @@ import org.hibernate.persister.entity.UnionSubclassEntityPersister;
 import org.hibernate.query.internal.QueryOptionsImpl;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.mutation.internal.SqmMutationStrategyHelper;
-import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.LockingClauseStrategy;
 import org.hibernate.sql.ast.tree.from.FromClause;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
@@ -33,8 +32,6 @@ import org.hibernate.sql.exec.spi.PostAction;
 import org.hibernate.sql.exec.spi.StatementAccess;
 
 import java.sql.Connection;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.List;
@@ -48,14 +45,11 @@ import static org.hibernate.sql.exec.SqlExecLogger.SQL_EXEC_LOGGER;
  * PostAction for a {@linkplain org.hibernate.sql.exec.internal.JdbcSelectWithActions} which
  * performs follow-on locking based on the loaded values.
  *
+ * @author Steve Ebersole
  * @implSpec Relies on the fact that {@linkplain LoadedValuesCollector} has
  * already applied filtering for things which actually need locked.
- *
- * @author Steve Ebersole
  */
 public class FollowOnLockingAction implements PostAction {
-	// Used by Hibernate Reactive
-	protected  final LoadedValuesCollectorImpl loadedValuesCollector;
 	private final LockMode lockMode;
 	private final Timeout lockTimeout;
 	// Used by Hibernate Reactive
@@ -63,11 +57,9 @@ public class FollowOnLockingAction implements PostAction {
 
 	// Used by Hibernate Reactive
 	protected FollowOnLockingAction(
-			LoadedValuesCollectorImpl loadedValuesCollector,
 			LockMode lockMode,
 			Timeout lockTimeout,
 			Locking.Scope lockScope) {
-		this.loadedValuesCollector = loadedValuesCollector;
 		this.lockMode = lockMode;
 		this.lockTimeout = lockTimeout;
 		this.lockScope = lockScope;
@@ -79,15 +71,12 @@ public class FollowOnLockingAction implements PostAction {
 			LockingClauseStrategy lockingClauseStrategy,
 			JdbcSelectWithActionsBuilder jdbcSelectBuilder) {
 		final var fromClause = lockingTarget.getFromClause();
-		final var loadedValuesCollector = resolveLoadedValuesCollector( fromClause, lockingClauseStrategy );
-
 		// NOTE: we need to set this separately so that it can get incorporated into
 		// the JdbcValuesSourceProcessingState for proper callbacks
-		jdbcSelectBuilder.setLoadedValuesCollector( loadedValuesCollector );
+		jdbcSelectBuilder.setLoadedValuesCollectorFactory( resolveLoadedValuesCollectorFactory( fromClause, lockingClauseStrategy ) );
 
 		// additionally, add a post-action which uses the collected values.
 		jdbcSelectBuilder.appendPostAction( new FollowOnLockingAction(
-				loadedValuesCollector,
 				lockOptions.getLockMode(),
 				lockOptions.getTimeout(),
 				lockOptions.getScope()
@@ -98,7 +87,8 @@ public class FollowOnLockingAction implements PostAction {
 	public void performPostAction(
 			StatementAccess jdbcStatementAccess,
 			Connection jdbcConnection,
-			ExecutionContext executionContext) {
+			ExecutionContext executionContext,
+			LoadedValuesCollector loadedValuesCollector) {
 		LockingHelper.logLoadedValues( loadedValuesCollector );
 
 		final var session = executionContext.getSession();
@@ -110,8 +100,8 @@ public class FollowOnLockingAction implements PostAction {
 
 		try {
 			// collect registrations by entity type
-			final var entitySegments = segmentLoadedValues();
-			final var collectionSegments = segmentLoadedCollections();
+			final var entitySegments = segmentLoadedValues( loadedValuesCollector );
+			final var collectionSegments = segmentLoadedCollections( loadedValuesCollector );
 
 			// for each entity-type, prepare a locking select statement per table.
 			// this is based on the attributes for "state array" ordering purposes -
@@ -127,14 +117,9 @@ public class FollowOnLockingAction implements PostAction {
 
 				// at this point, we have all the individual locking selects ready to go - execute them
 				final var lockingOptions = buildLockingOptions(
-						tableLocks,
-						entityDetailsMap,
-						entityMappingType,
-						effectiveEntityGraph,
-						entityKeys,
-						collectionSegments,
-						session,
-						executionContext );
+						tableLocks, entityDetailsMap, entityMappingType, effectiveEntityGraph, entityKeys,
+						collectionSegments, session, executionContext, loadedValuesCollector
+				);
 
 				tableLocks.forEach( (s, tableLock) ->
 						tableLock.performActions( entityDetailsMap, lockingOptions, session ) );
@@ -153,10 +138,11 @@ public class FollowOnLockingAction implements PostAction {
 			Map<Object, EntityDetails> entityDetailsMap,
 			EntityMappingType entityMappingType,
 			EffectiveEntityGraph effectiveEntityGraph,
-			List<EntityKey>  entityKeys,
+			List<EntityKey> entityKeys,
 			Map<EntityMappingType, Map<PluralAttributeMapping, List<CollectionKey>>> collectionSegments,
 			SharedSessionContractImplementor session,
-			ExecutionContext executionContext) {
+			ExecutionContext executionContext,
+			LoadedValuesCollector loadedValuesCollector) {
 		if ( SQL_EXEC_LOGGER.isDebugEnabled() ) {
 			SQL_EXEC_LOGGER.startingFollowOnLockingProcess( entityMappingType.getEntityName() );
 		}
@@ -246,14 +232,14 @@ public class FollowOnLockingAction implements PostAction {
 	}
 
 	// Used by Hibernate Reactive
-	protected Map<EntityMappingType, List<EntityKey>> segmentLoadedValues() {
+	protected Map<EntityMappingType, List<EntityKey>> segmentLoadedValues(LoadedValuesCollector loadedValuesCollector) {
 		final Map<EntityMappingType, List<EntityKey>> map = new IdentityHashMap<>();
 		LockingHelper.segmentLoadedValues( loadedValuesCollector.getCollectedEntities(), map );
 		return map;
 	}
 
 	// Used by Hibernate Reactive
-	protected Map<EntityMappingType, Map<PluralAttributeMapping, List<CollectionKey>>> segmentLoadedCollections() {
+	protected Map<EntityMappingType, Map<PluralAttributeMapping, List<CollectionKey>>> segmentLoadedCollections(LoadedValuesCollector loadedValuesCollector) {
 		if ( lockScope == Locking.Scope.ROOT_ONLY ) {
 			return emptyMap();
 		}
@@ -281,62 +267,9 @@ public class FollowOnLockingAction implements PostAction {
 	}
 
 	// Used by Hibernate Reactive
-	protected static LoadedValuesCollectorImpl resolveLoadedValuesCollector(
+	protected static LoadedValuesCollectorFactory resolveLoadedValuesCollectorFactory(
 			FromClause fromClause,
 			LockingClauseStrategy lockingClauseStrategy) {
-		return new LoadedValuesCollectorImpl( lockingClauseStrategy );
-	}
-
-	public static class LoadedValuesCollectorImpl implements LoadedValuesCollector {
-		private final Collection<NavigablePath> pathsToLock;
-
-		private List<LoadedEntityRegistration> entitiesToLock;
-		private List<LoadedCollectionRegistration> collectionsToLock;
-
-		public LoadedValuesCollectorImpl(LockingClauseStrategy lockingClauseStrategy) {
-			pathsToLock = LockingHelper.extractPathsToLock( lockingClauseStrategy );
-		}
-
-		@Override
-		public void registerEntity(NavigablePath navigablePath, EntityMappingType entityDescriptor, EntityKey entityKey) {
-			if ( pathsToLock.contains( navigablePath ) ) {
-				if ( entitiesToLock == null ) {
-					entitiesToLock = new ArrayList<>();
-				}
-				entitiesToLock.add(
-						new LoadedEntityRegistration( navigablePath, entityDescriptor, entityKey ) );
-			}
-		}
-
-		@Override
-		public void registerCollection(NavigablePath navigablePath, PluralAttributeMapping collectionDescriptor, CollectionKey collectionKey) {
-			if ( pathsToLock.contains( navigablePath ) ) {
-				if ( collectionsToLock == null ) {
-					collectionsToLock = new ArrayList<>();
-				}
-				collectionsToLock.add(
-						new LoadedCollectionRegistration( navigablePath, collectionDescriptor, collectionKey ) );
-			}
-		}
-
-		@Override
-		public void clear() {
-			if ( entitiesToLock != null ) {
-				entitiesToLock.clear();
-			}
-			if ( collectionsToLock != null ) {
-				collectionsToLock.clear();
-			}
-		}
-
-		@Override
-		public List<LoadedEntityRegistration> getCollectedEntities() {
-			return entitiesToLock;
-		}
-
-		@Override
-		public List<LoadedCollectionRegistration> getCollectedCollections() {
-			return collectionsToLock;
-		}
+		return new LoadedValuesCollectorFactory( lockingClauseStrategy.getPathsToLock() );
 	}
 }

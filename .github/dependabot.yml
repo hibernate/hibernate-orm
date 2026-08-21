@@ -17,6 +17,8 @@ updates:
     allow:
       - dependency-name: "actions/*"
       - dependency-name: "redhat-actions/*"
+      - dependency-name: "graalvm/setup-graalvm"
+      - dependency-name: "oracle-actions/setup-testpilot"
   - package-ecosystem: "gradle"
     directory: "/"
     registries:
@@ -60,6 +62,7 @@ updates:
           - "com.dorongold*"
           - "org.asciidoctor*"
           - "com.diffplug.spotless*"
+          - "org.jetbrains.kotlin.jvm*"
           # Local build plugin dependencies:
           - "org.apache.maven*"
           - "org.apache.httpcomponents*"
@@ -80,6 +83,8 @@ updates:
           - "com.ibm.informix:jdbc"
           - "org.firebirdsql.jdbc:jaybird"
           - "com.altibase:altibase-jdbc"
+          - "com.google.cloud:google-cloud-spanner-jdbc"
+          - "com.teradata.jdbc:terajdbc"
           # Other test dependencies
           - "org.apache.groovy:groovy-jsr223" # used for scripting maven plugin
           - "org.apache.commons:commons-lang3" # used in hibernate-search-util-common tests
@@ -104,6 +109,15 @@ updates:
           - "org.jboss:jboss-transaction-spi"
           - "org.jboss.shrinkwrap*"
           - "org.jboss.byteman*"
+          - "ch.qos.logback:logback-classic"
+          # Used just in tests:
+          - "org.ehcache:ehcache"
+          - "org.dom4j:dom4j"
+          # - "jaxen:jaxen" -- the update is failing, let's leave it out for now until we fix the issue.
+      jackson:
+        patterns:
+          - "tools.jackson*"
+          - "com.fasterxml.jackson*"
       hibernate:
         patterns:
           - "org.hibernate*"
@@ -143,3 +157,13 @@ updates:
       # (see https://central.sonatype.com/artifact/org.apache.maven/maven-embedder/3.9.9/dependencies)
       - dependency-name: "org.slf4j:*"
         update-types: ["version-update:semver-major"]
+  # Monitor docker images in compose files for database version updates
+  - package-ecosystem: docker
+    directory: "/docker-compose/latest"
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 10
+    groups:
+      database-images:
+        patterns:
+          - "*"

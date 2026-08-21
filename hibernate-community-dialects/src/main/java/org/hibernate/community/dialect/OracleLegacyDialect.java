@@ -362,10 +362,7 @@ public class OracleLegacyDialect extends Dialect {
 				"mode",
 				new ModeStatsModeEmulation( typeConfiguration )
 		);
-		functionContributions.getFunctionRegistry().register(
-				"trunc",
-				new OracleTruncFunction( functionContributions.getTypeConfiguration() )
-		);
+		functionContributions.getFunctionRegistry().register( "trunc", new OracleTruncFunction() );
 		functionContributions.getFunctionRegistry().registerAlternateKey( "truncate", "trunc" );
 
 		functionFactory.array_oracle();
@@ -418,7 +415,7 @@ public class OracleLegacyDialect extends Dialect {
 		functionFactory.xmlagg();
 		functionFactory.xmltable_oracle();
 
-		functionFactory.unnest_oracle();
+		functionFactory.unnest_oracle( getVersion().isSameOrAfter( 21 ) );
 		functionFactory.generateSeries_recursive( getMaximumSeriesSize(), true, false );
 		functionFactory.regexpLike_predicateFunction();
 	}

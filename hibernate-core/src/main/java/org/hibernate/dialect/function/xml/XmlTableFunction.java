@@ -5,7 +5,6 @@
 package org.hibernate.dialect.function.xml;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.hibernate.dialect.function.array.DdlTypeHelper;
 import org.hibernate.query.sqm.tuple.internal.AnonymousTupleTableGroupProducer;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingSetReturningFunctionDescriptor;
@@ -33,6 +32,8 @@ import org.hibernate.type.spi.TypeConfiguration;
 
 import java.util.List;
 
+import static org.hibernate.dialect.function.array.DdlTypeHelper.getTypeName;
+import static org.hibernate.dialect.function.array.DdlTypeHelper.removeUnresolvedTypeArguments;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.STRING;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.XML;
 
@@ -114,25 +115,11 @@ public class XmlTableFunction extends AbstractSqmSelfRenderingSetReturningFuncti
 	}
 
 	protected static String determineColumnType(CastTarget castTarget, TypeConfiguration typeConfiguration) {
-		final String columnDefinition = castTarget.getColumnDefinition();
-		if ( columnDefinition != null ) {
-			return columnDefinition;
-		}
-		else {
-			final String typeName = DdlTypeHelper.getTypeName(
-					castTarget.getJdbcMapping(),
-					castTarget.toSize(),
-					typeConfiguration
-			);
-			final int parenthesisIndex = typeName.indexOf( '(' );
-			if ( parenthesisIndex != -1 && typeName.charAt( parenthesisIndex + 1 ) == '$' ) {
-				// Remove length/precision and scale arguments if it contains unresolved variables
-				return typeName.substring( 0, parenthesisIndex );
-			}
-			else {
-				return typeName;
-			}
-		}
+		return removeUnresolvedTypeArguments( getTypeName(
+				castTarget.getJdbcMapping(),
+				castTarget.toSize(),
+				typeConfiguration
+		) );
 	}
 
 	protected void renderColumns(SqlAppender sqlAppender, XmlTableColumnsClause xmlTableColumnsClause, SqlAstTranslator<?> walker) {

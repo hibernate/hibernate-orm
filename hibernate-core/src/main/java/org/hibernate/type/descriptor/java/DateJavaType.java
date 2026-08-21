@@ -26,6 +26,10 @@ import org.hibernate.type.spi.TypeConfiguration;
  */
 public class DateJavaType extends AbstractTemporalJavaType<Date> implements VersionJavaType<Date> {
 	public static final DateJavaType INSTANCE = new DateJavaType();
+	@SuppressWarnings("deprecation")
+	private static final DateJavaType DATE_INSTANCE = new DateJavaType( TemporalType.DATE );
+	@SuppressWarnings("deprecation")
+	private static final DateJavaType TIME_INSTANCE = new DateJavaType( TemporalType.TIME );
 	private final @SuppressWarnings("deprecation") TemporalType precision;
 
 	public static class DateMutabilityPlan extends MutableMutabilityPlan<Date> {
@@ -92,10 +96,18 @@ public class DateJavaType extends AbstractTemporalJavaType<Date> implements Vers
 	}
 
 	@Override
-	public TemporalJavaType<Date> resolveTypeForPrecision(
-			@SuppressWarnings("deprecation") TemporalType precision,
-			TypeConfiguration typeConfiguration) {
-		return precision == null ? this : new DateJavaType( precision );
+	protected TemporalJavaType<Date> forDatePrecision(TypeConfiguration typeConfiguration) {
+		return DATE_INSTANCE;
+	}
+
+	@Override
+	protected TemporalJavaType<Date> forTimePrecision(TypeConfiguration typeConfiguration) {
+		return TIME_INSTANCE;
+	}
+
+	@Override
+	protected TemporalJavaType<Date> forTimestampPrecision(TypeConfiguration typeConfiguration) {
+		return INSTANCE;
 	}
 
 	@Override

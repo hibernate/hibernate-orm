@@ -19,6 +19,8 @@ import java.util.Locale;
  * @see LockMode#PESSIMISTIC_FORCE_INCREMENT
  *
  * @author Steve Ebersole
+ *
+ * @since 7.1
  */
 @Incubating
 public interface Locking {
@@ -26,11 +28,15 @@ public interface Locking {
 	 * When pessimistic locking is requested, this enum defines
 	 * what exactly will be locked.
 	 *
-	 * @apiNote Same intention as the JPA {@linkplain PessimisticLockScope},
+	 * @apiNote Same intention as the JPA {@link PessimisticLockScope},
 	 * but offering the additional {@linkplain #INCLUDE_FETCHES} behavior.
+	 * @deprecated This method will be removed in Hibernate 8.0, since
+	 * equivalent functionality is offered by {@link PessimisticLockScope}
+	 * in JPA 4.
 	 *
 	 * @see FollowOn
 	 */
+	@Deprecated(since = "7.4", forRemoval = true)
 	enum Scope implements FindOption, LockOption, RefreshOption {
 		/**
 		 * Lock the database row(s) that correspond to the non-collection-valued
@@ -47,7 +53,7 @@ public interface Locking {
 		 * rows for collection tables ({@linkplain jakarta.persistence.ElementCollection},
 		 * {@linkplain jakarta.persistence.OneToMany} and {@linkplain jakarta.persistence.ManyToMany})
 		 * will also be locked.
-		 * <p/>
+		 * <p>
 		 * Hibernate will only lock these collection rows when they are joined.  The alternatives
 		 * would be to either:<ul>
 		 *     <li>

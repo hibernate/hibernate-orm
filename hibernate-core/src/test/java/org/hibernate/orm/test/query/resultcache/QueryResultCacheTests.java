@@ -19,22 +19,15 @@ import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
-import org.junit.jupiter.api.AfterAll;
+import org.jboss.logging.Logger;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.core.LoggerContext;
-import org.apache.logging.log4j.core.config.Configuration;
-import org.apache.logging.log4j.core.config.LoggerConfig;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hibernate.testing.logger.LogLevelContext.withLevel;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -48,77 +41,54 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @DomainModel(annotatedClasses = { TestEntity.class, AggregateEntity.class })
 @SessionFactory(generateStatistics = true)
 public class QueryResultCacheTests {
-	private final LoggerContext context = (LoggerContext) LogManager.getContext( false );
-	private final Configuration configuration = context.getConfiguration();
-	private final LoggerConfig resultsLoggerConfig = configuration.getLoggerConfig( ResultsLogger.LOGGER_NAME );
-	private final LoggerConfig execLoggerConfig = configuration.getLoggerConfig( SqlExecLogger.LOGGER_NAME );
-	private final LoggerConfig cacheLoggerConfig = configuration.getLoggerConfig( SecondLevelCacheLogger.LOGGER_NAME );
 
-	Logger resultsLogger = LogManager.getLogger( ResultsLogger.LOGGER_NAME );
-
-	private Level originalResultsLevel;
-	private Level originalExecLevel;
-	private Level originalCacheLevel;
-
-	@BeforeAll
-	public void setUpLogger() {
-		originalResultsLevel = resultsLoggerConfig.getLevel();
-		resultsLoggerConfig.setLevel( Level.TRACE );
-
-		originalExecLevel = execLoggerConfig.getLevel();
-		execLoggerConfig.setLevel( Level.TRACE );
-
-		originalCacheLevel = cacheLoggerConfig.getLevel();
-		cacheLoggerConfig.setLevel( Level.TRACE );
-	}
-
-	@AfterAll
-	public void resetLogger() {
-		resultsLoggerConfig.setLevel( originalResultsLevel );
-		execLoggerConfig.setLevel( originalExecLevel );
-		cacheLoggerConfig.setLevel( originalCacheLevel );
-	}
+	Logger resultsLogger = ResultsLogger.RESULTS_LOGGER;
 
 	@Test
 	public void testScalarCaching(SessionFactoryScope scope) {
-		final StatisticsImplementor statistics = scope.getSessionFactory().getStatistics();
-		statistics.clear();
+		try (var l1 = withLevel( ResultsLogger.LOGGER_NAME, Logger.Level.TRACE );
+			var l2 = withLevel( SqlExecLogger.LOGGER_NAME, Logger.Level.TRACE );
+			var l3 = withLevel( SecondLevelCacheLogger.LOGGER_NAME, Logger.Level.TRACE );) {
 
-		assertThat( statistics.getPrepareStatementCount(), is( 0L ) );
+			final StatisticsImplementor statistics = scope.getSessionFactory().getStatistics();
+			statistics.clear();
 
-		final String hql = "select e.id, e.name from TestEntity e order by e.id";
+			assertThat( statistics.getPrepareStatementCount(), is( 0L ) );
 
-		scope.inTransaction(
-				session -> {
-					resultsLogger.debug( "First query ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" );
+			final String hql = "select e.id, e.name from TestEntity e order by e.id";
 
-					final List values = session.createQuery( hql )
-							.setCacheable( true )
-							.setCacheMode( CacheMode.NORMAL )
-							.setCacheRegion( "scalar-region" )
-							.list();
+			scope.inTransaction(
+					session -> {
+						resultsLogger.debug( "First query ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" );
 
-					assertThat( statistics.getPrepareStatementCount(), is( 1L ) );
+						final List values = session.createQuery( hql )
+								.setCacheable( true )
+								.setCacheMode( CacheMode.NORMAL )
+								.setCacheRegion( "scalar-region" )
+								.list();
 
-					verifyScalarResults( values );
-				}
-		);
+						assertThat( statistics.getPrepareStatementCount(), is( 1L ) );
 
-		scope.inTransaction(
-				session -> {
-					resultsLogger.debug( "Second query ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" );
+						verifyScalarResults( values );
+					}
+			);
 
-					final List values = session.createQuery( hql )
-							.setCacheable( true )
-							.setCacheMode( CacheMode.NORMAL )
-							.setCacheRegion( "scalar-region" )
-							.list();
+			scope.inTransaction(
+					session -> {
+						resultsLogger.debug( "Second query ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" );
 
-					assertThat( statistics.getPrepareStatementCount(), is( 1L ) );
+						final List values = session.createQuery( hql )
+								.setCacheable( true )
+								.setCacheMode( CacheMode.NORMAL )
+								.setCacheRegion( "scalar-region" )
+								.list();
 
-					verifyScalarResults( values );
-				}
-		);
+						assertThat( statistics.getPrepareStatementCount(), is( 1L ) );
+
+						verifyScalarResults( values );
+					}
+			);
+		}
 	}
 
 	private void verifyScalarResults(List values) {
@@ -133,44 +103,48 @@ public class QueryResultCacheTests {
 
 	@Test
 	public void testJoinFetchCaching(SessionFactoryScope scope) {
-		final StatisticsImplementor statistics = scope.getSessionFactory().getStatistics();
-		statistics.clear();
+		try (var l1 = withLevel( ResultsLogger.LOGGER_NAME, Logger.Level.TRACE );
+			var l2 = withLevel( SqlExecLogger.LOGGER_NAME, Logger.Level.TRACE );
+			var l3 = withLevel( SecondLevelCacheLogger.LOGGER_NAME, Logger.Level.TRACE );) {
+			final StatisticsImplementor statistics = scope.getSessionFactory().getStatistics();
+			statistics.clear();
 
-		assertThat( statistics.getPrepareStatementCount(), is( 0L ) );
+			assertThat( statistics.getPrepareStatementCount(), is( 0L ) );
 
-		final String hql = "select e from AggregateEntity e join fetch e.value1 join fetch e.value2";
+			final String hql = "select e from AggregateEntity e join fetch e.value1 join fetch e.value2";
 
-		scope.inTransaction(
-				session -> {
-					resultsLogger.debug( "First query ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" );
+			scope.inTransaction(
+					session -> {
+						resultsLogger.debug( "First query ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" );
 
-					final List<AggregateEntity> values = session.createQuery( hql, AggregateEntity.class )
-							.setCacheable( true )
-							.setCacheMode( CacheMode.NORMAL )
-							.setCacheRegion( "fetch-region" )
-							.list();
+						final List<AggregateEntity> values = session.createQuery( hql, AggregateEntity.class )
+								.setCacheable( true )
+								.setCacheMode( CacheMode.NORMAL )
+								.setCacheRegion( "fetch-region" )
+								.list();
 
-					verifyFetchResults( values );
+						verifyFetchResults( values );
 
-					assertThat( statistics.getPrepareStatementCount(), is( 1L ) );
-				}
-		);
+						assertThat( statistics.getPrepareStatementCount(), is( 1L ) );
+					}
+			);
 
-		scope.inTransaction(
-				session -> {
-					resultsLogger.debug( "Second query ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" );
+			scope.inTransaction(
+					session -> {
+						resultsLogger.debug( "Second query ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" );
 
-					final List<AggregateEntity> values = session.createQuery( hql, AggregateEntity.class )
-							.setCacheable( true )
-							.setCacheMode( CacheMode.NORMAL )
-							.setCacheRegion( "fetch-region" )
-							.list();
+						final List<AggregateEntity> values = session.createQuery( hql, AggregateEntity.class )
+								.setCacheable( true )
+								.setCacheMode( CacheMode.NORMAL )
+								.setCacheRegion( "fetch-region" )
+								.list();
 
-					verifyFetchResults( values );
+						verifyFetchResults( values );
 
-					assertThat( statistics.getPrepareStatementCount(), is( 1L ) );
-				}
-		);
+						assertThat( statistics.getPrepareStatementCount(), is( 1L ) );
+					}
+			);
+		}
 	}
 
 	private void verifyFetchResults(List<AggregateEntity> values) {

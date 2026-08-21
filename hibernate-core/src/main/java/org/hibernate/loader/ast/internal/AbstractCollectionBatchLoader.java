@@ -72,8 +72,8 @@ public abstract class AbstractCollectionBatchLoader implements CollectionBatchLo
 
 	abstract void initializeKeys(Object key, Object[] keysToInitialize, SharedSessionContractImplementor session);
 
-	private CollectionKey collectionKey(Object key) {
-		return new CollectionKey( getLoadable().getCollectionDescriptor(), key );
+	private CollectionKey collectionKey(Object key, SharedSessionContractImplementor session) {
+		return session.generateCollectionKey( getLoadable().getCollectionDescriptor(), key );
 	}
 
 	@Override
@@ -90,7 +90,7 @@ public abstract class AbstractCollectionBatchLoader implements CollectionBatchLo
 		initializeKeys( key, keys, session );
 		finishInitializingKeys( keys, session );
 
-		return session.getPersistenceContext().getCollection( collectionKey( key ) );
+		return session.getPersistenceContext().getCollection( collectionKey( key, session ) );
 	}
 
 	abstract void finishInitializingKeys(Object[] key, SharedSessionContractImplementor session);
@@ -103,7 +103,7 @@ public abstract class AbstractCollectionBatchLoader implements CollectionBatchLo
 			}
 
 			final var persistenceContext = session.getPersistenceContext();
-			final var collection = persistenceContext.getCollection( collectionKey( key ) );
+			final var collection = persistenceContext.getCollection( collectionKey( key, session ) );
 			if ( !collection.wasInitialized() ) {
 				final var entry = persistenceContext.getCollectionEntry( collection );
 				collection.initializeEmptyCollection( entry.getLoadedPersister() );

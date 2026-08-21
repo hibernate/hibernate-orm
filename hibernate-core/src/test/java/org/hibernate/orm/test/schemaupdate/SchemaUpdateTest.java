@@ -23,8 +23,10 @@ import org.hamcrest.MatcherAssert;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.community.dialect.TiDBDialect;
 import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
@@ -139,6 +141,8 @@ public class SchemaUpdateTest implements ServiceRegistryProducer {
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = SpannerPostgreSQLDialect.class, reason = "Spanner doesn't support storing two tables with the name differs only by case")
+	@SkipForDialect( dialectClass = SpannerDialect.class, reason = "Spanner doesn't support storing two tables with the name differs only by case")
 	public void testSchemaUpdateAndValidation(DomainModelScope modelScope) throws Exception {
 		if ( skip ) {
 			SkipLog.reportSkip( "skipping test because quoted names are not case-sensitive." );

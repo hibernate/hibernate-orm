@@ -10,6 +10,7 @@ import org.hibernate.dialect.lock.spi.ConnectionLockTimeoutStrategy;
 import org.hibernate.dialect.lock.spi.LockTimeoutType;
 import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.lock.spi.OuterJoinLockingType;
+import org.hibernate.dialect.lock.internal.MySQLLockingSupport.ConnectionLockTimeoutStrategyImpl;
 
 import static org.hibernate.dialect.lock.internal.MySQLLockingSupport.MYSQL_CONN_LOCK_TIMEOUT_STRATEGY;
 
@@ -17,6 +18,8 @@ import static org.hibernate.dialect.lock.internal.MySQLLockingSupport.MYSQL_CONN
  * @author Steve Ebersole
  */
 public class TiDBLockingSupport implements LockingSupport, LockingSupport.Metadata {
+	// Max innodb_lock_wait_timeout in TiDB v8.5.5 is 3600
+	public static final ConnectionLockTimeoutStrategy MYSQL_CONN_LOCK_TIMEOUT_STRATEGY = new ConnectionLockTimeoutStrategyImpl(3600);
 	public static final TiDBLockingSupport TIDB_LOCKING_SUPPORT = new TiDBLockingSupport();
 
 	@Override

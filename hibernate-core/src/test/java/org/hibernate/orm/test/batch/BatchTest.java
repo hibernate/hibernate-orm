@@ -13,10 +13,13 @@ import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.SpannerDialect;
 
 /**
  * This is how to do batch processing in Hibernate. Remember to enable JDBC batch updates, or this test will take a
@@ -33,6 +36,7 @@ import java.math.RoundingMode;
 public class BatchTest {
 
 	@Test
+	@SkipForDialect(dialectClass = SpannerDialect.class, reason = "Long running test on emulator")
 	public void testBatchInsertUpdate(SessionFactoryScope factoryScope) {
 		long start = System.currentTimeMillis();
 		final int N = 5000; //26 secs with batch flush, 26 without
@@ -66,8 +70,9 @@ public class BatchTest {
 			session.setCacheMode( CacheMode.IGNORE );
 			for ( int i = 0; i < nEntities; i++ ) {
 				DataPoint dp = new DataPoint();
-				dp.setX( new BigDecimal( i * 0.1d ).setScale( 19, RoundingMode.DOWN ) );
-				dp.setY( BigDecimal.valueOf( Math.cos( dp.getX().doubleValue() ) ).setScale( 19, RoundingMode.DOWN ) );
+				final int scale = getScale( session.getDialect() );
+				dp.setX( new BigDecimal( i * 0.1d ).setScale( scale, RoundingMode.DOWN ) );
+				dp.setY( BigDecimal.valueOf( Math.cos( dp.getX().doubleValue() ) ).setScale( scale, RoundingMode.DOWN ) );
 				session.persist( dp );
 				if ( ( i + 1 ) % nBeforeFlush == 0 ) {
 					session.flush();
@@ -108,5 +113,13 @@ public class BatchTest {
 				}
 			}
 		} );
+	}
+
+	private int getScale(Dialect dialect) {
+		// Spanner NUMERIC type supports scale up to 9
+		if ( dialect instanceof SpannerDialect ) {
+			return 9;
+		}
+		return 19;
 	}
 }

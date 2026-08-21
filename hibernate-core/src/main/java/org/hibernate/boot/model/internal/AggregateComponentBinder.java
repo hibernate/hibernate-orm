@@ -9,7 +9,6 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.Struct;
 import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.QualifiedNameImpl;
-import org.hibernate.boot.model.relational.QualifiedNameParser;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.mapping.AggregateColumn;
@@ -42,7 +41,7 @@ public final class AggregateComponentBinder {
 			final var typeConfiguration = metadataCollector.getTypeConfiguration();
 			// Determine a struct name if this is a struct through some means
 			final QualifiedName structQualifiedName =
-					determineStructName( columns, inferredData, componentClassDetails, context );
+					determineStructName( inferredData, componentClassDetails, context );
 			final String structName = structQualifiedName == null ? null : structQualifiedName.render();
 
 			// We must register a special JavaType for the embeddable which can provide a recommended JdbcType
@@ -115,7 +114,6 @@ public final class AggregateComponentBinder {
 	}
 
 	private static QualifiedName determineStructName(
-			AnnotatedColumns columns,
 			PropertyData inferredData,
 			ClassDetails returnedClassOrElement,
 			MetadataBuildingContext context) {
@@ -124,31 +122,6 @@ public final class AggregateComponentBinder {
 			final var struct = memberDetails.getDirectAnnotationUsage( Struct.class );
 			if ( struct != null ) {
 				return toQualifiedName( struct, context );
-			}
-			else {
-				final var jdbcTypeCode = memberDetails.getDirectAnnotationUsage( JdbcTypeCode.class );
-				if ( jdbcTypeCode != null
-						&& ( jdbcTypeCode.value() == SqlTypes.STRUCT
-							|| jdbcTypeCode.value() == SqlTypes.STRUCT_ARRAY
-							|| jdbcTypeCode.value() == SqlTypes.STRUCT_TABLE )
-						&& columns != null ) {
-					final var columnList = columns.getColumns();
-					if ( columnList.size() == 1 ) {
-						final String sqlType = columnList.get( 0 ).getSqlType();
-						if ( sqlType != null ) {
-							if ( sqlType.contains( "." ) ) {
-								return QualifiedNameParser.INSTANCE.parse( sqlType );
-							}
-							else {
-								return new QualifiedNameParser.NameParts(
-										null,
-										null,
-										context.getMetadataCollector().getDatabase().toIdentifier( sqlType )
-								);
-							}
-						}
-					}
-				}
 			}
 		}
 

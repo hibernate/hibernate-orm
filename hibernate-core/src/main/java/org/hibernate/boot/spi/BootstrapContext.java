@@ -26,6 +26,8 @@ import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.type.BasicType;
+import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -233,4 +235,9 @@ public interface BootstrapContext {
 	 * To support Envers.
 	 */
 	<T> BasicType<T> resolveAdHocBasicType(String key);
+
+	/**
+	 * Find a previously registered ad-hoc BasicTypeImpl based on java and jdbc type.
+	 */
+	<T> BasicType<T> findAdHocBasicType(JavaType<T> javaType, JdbcType jdbcType);
 }

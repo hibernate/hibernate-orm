@@ -232,6 +232,7 @@ public class LockModeTest extends BaseSessionFactoryFunctionalTest {
 	@Test
 	@JiraKey(value = "HHH-12257")
 	@SkipForDialect( dialectClass = CockroachDialect.class )
+	@RequiresDialectFeature( feature =  DialectFeatureChecks.SupportNoWait.class )
 	public void testRefreshWithExplicitHigherLevelLockMode1() {
 		doInHibernate( this::sessionFactory, session -> {
 						A a = session.find( A.class, id );

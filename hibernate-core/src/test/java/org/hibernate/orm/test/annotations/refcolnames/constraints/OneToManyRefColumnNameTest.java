@@ -66,13 +66,13 @@ class OneToManyRefColumnNameTest {
 
 		assertThrows( ConstraintViolationException.class, () ->
 				scope.inTransaction( em -> {
-					em.createQuery( "update OneToManyRefColumnNameTest$That set singleKey = 'goodbye'" ).executeUpdate();
+					em.createQuery( "update That set singleKey = 'goodbye'" ).executeUpdate();
 				} )
 		);
 
 		assertThrows( ConstraintViolationException.class, () ->
 				scope.inTransaction( em -> {
-					em.createQuery( "update OneToManyRefColumnNameTest$That set compositeKeyOne = 69" ).executeUpdate();
+					em.createQuery( "update That set compositeKeyOne = 69" ).executeUpdate();
 				} )
 		);
 	}
@@ -131,7 +131,7 @@ class OneToManyRefColumnNameTest {
 		}
 	}
 
-	@Entity
+	@Entity(name = "That")
 	static class That {
 		@Id @GeneratedValue
 		long id;
@@ -152,7 +152,7 @@ class OneToManyRefColumnNameTest {
 		Set<This> theseOnCompositeKey = new HashSet<>();
 	}
 
-	@Entity
+	@Entity(name = "This")
 	static class This {
 		@Id @GeneratedValue
 		long id;

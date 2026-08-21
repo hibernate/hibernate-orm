@@ -8,6 +8,7 @@ import org.hibernate.Internal;
 import org.hibernate.internal.log.SubSystemLogging;
 
 import java.lang.invoke.MethodHandles;
+import java.util.Locale;
 
 import org.jboss.logging.BasicLogger;
 import org.jboss.logging.Logger;
@@ -34,7 +35,7 @@ public interface ModelMutationLogging extends BasicLogger {
 
 	String NAME = SubSystemLogging.BASE + ".jdbc.mutation";
 
-	ModelMutationLogging MODEL_MUTATION_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), ModelMutationLogging.class, NAME );
+	ModelMutationLogging MODEL_MUTATION_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), ModelMutationLogging.class, NAME, Locale.ROOT );
 
 	@LogMessage(level = TRACE)
 	@Message(id = 90005101, value = "Static SQL for entity: %s")

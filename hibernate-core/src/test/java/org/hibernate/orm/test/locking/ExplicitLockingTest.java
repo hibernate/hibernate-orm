@@ -20,10 +20,12 @@ import org.hibernate.Timeouts;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.query.Query;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.jboss.logging.Logger;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -58,6 +60,7 @@ public class ExplicitLockingTest {
 	}
 
 	@Test
+	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsLockTimeouts.class )
 	public void testJPALockTimeout(EntityManagerFactoryScope scope) {
 		Person p = scope.fromTransaction( entityManager -> {
 			Person person = new Person("John Doe");
@@ -104,6 +107,7 @@ public class ExplicitLockingTest {
 	}
 
 	@Test
+	@RequiresDialectFeature( feature =  DialectFeatureChecks.SupportNoWait.class )
 	public void testSessionLock(EntityManagerFactoryScope scope) {
 		final SQLStatementInspector sqlCollector = scope.getCollectingStatementInspector();
 

@@ -23,7 +23,7 @@ import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -41,7 +41,7 @@ import static org.junit.Assert.assertEquals;
 )
 @SessionFactory
 public class AggregateFunctionsWithSubSelectTest {
-	@BeforeEach
+	@BeforeAll
 	protected void prepareTest(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) -> {
@@ -68,7 +68,7 @@ public class AggregateFunctionsWithSubSelectTest {
 
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
-		scope.getSessionFactory().getSchemaManager().truncate();
+		// scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

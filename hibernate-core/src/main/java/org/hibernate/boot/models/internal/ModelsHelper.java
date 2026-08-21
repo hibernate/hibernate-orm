@@ -36,41 +36,11 @@ public class ModelsHelper {
 		registerPrimitive( Blob.class, buildingContext );
 		registerPrimitive( Clob.class, buildingContext );
 		registerPrimitive( NClob.class, buildingContext );
+		registerPrimitive( java.sql.Date.class, buildingContext );
+		registerPrimitive( java.sql.Time.class, buildingContext );
+		registerPrimitive( java.sql.Timestamp.class, buildingContext );
 
 		buildingContext.getAnnotationDescriptorRegistry().getDescriptor( TenantId.class );
-
-//		if ( buildingContext instanceof JandexModelBuildingContext ) {
-//			final IndexView jandexIndex = buildingContext.as( JandexModelBuildingContext.class ).getJandexIndex();
-//			if ( jandexIndex == null ) {
-//				return;
-//			}
-//
-//			final ClassDetailsRegistry classDetailsRegistry = buildingContext.getClassDetailsRegistry();
-//			final AnnotationDescriptorRegistry annotationDescriptorRegistry = buildingContext.getAnnotationDescriptorRegistry();
-//
-//			for ( ClassInfo knownClass : jandexIndex.getKnownClasses() ) {
-//				final String className = knownClass.name().toString();
-//
-//				if ( knownClass.isAnnotation() ) {
-//					// it is always safe to load the annotation classes - we will never be enhancing them
-//					//noinspection rawtypes
-//					final Class annotationClass = buildingContext
-//							.getClassLoading()
-//							.classForName( className );
-//					//noinspection unchecked
-//					annotationDescriptorRegistry.resolveDescriptor(
-//							annotationClass,
-//							(t) -> JdkBuilders.buildAnnotationDescriptor( annotationClass, buildingContext )
-//					);
-//				}
-//
-//				resolveClassDetails(
-//						className,
-//						classDetailsRegistry,
-//						() -> new JandexClassDetails( knownClass, buildingContext )
-//				);
-//			}
-//		}
 	}
 
 	private static void registerPrimitive(Class<?> theClass, ModelsContext buildingContext) {

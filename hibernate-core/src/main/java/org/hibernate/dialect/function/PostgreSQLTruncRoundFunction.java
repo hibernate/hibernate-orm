@@ -36,8 +36,7 @@ import static org.hibernate.query.sqm.produce.function.FunctionParameterType.NUM
  * This custom function falls back to using {@code floor} as a workaround only when necessary,
  * e.g. when there are 2 arguments to the function and either:
  * <ul>
- *     <li>The first argument is not of type {@code numeric}</li>
- *     or
+ *     <li>The first argument is not of type {@code numeric}, or</li>
  *     <li>The dialect doesn't support the two-argument {@code trunc} function</li>
  * </ul>
  *
@@ -45,15 +44,21 @@ import static org.hibernate.query.sqm.produce.function.FunctionParameterType.NUM
  * @see <a href="https://www.postgresql.org/docs/current/functions-math.html">PostgreSQL documentation</a>
  */
 public class PostgreSQLTruncRoundFunction extends AbstractSqmFunctionDescriptor implements FunctionRenderer {
+	private final boolean requiresArgumentCasts;
 	private final boolean supportsTwoArguments;
 
 	public PostgreSQLTruncRoundFunction(String name, boolean supportsTwoArguments) {
+		this( name, false, supportsTwoArguments );
+	}
+
+	public PostgreSQLTruncRoundFunction(String name, boolean requiresArgumentCasts, boolean supportsTwoArguments) {
 		super(
 				name,
 				new ArgumentTypesValidator( StandardArgumentsValidators.between( 1, 2 ), NUMERIC, INTEGER ),
 				StandardFunctionReturnTypeResolvers.useArgType( 1 ),
 				StandardFunctionArgumentTypeResolvers.invariant( NUMERIC, INTEGER )
 		);
+		this.requiresArgumentCasts = requiresArgumentCasts;
 		this.supportsTwoArguments = supportsTwoArguments;
 	}
 
@@ -79,23 +84,69 @@ public class PostgreSQLTruncRoundFunction extends AbstractSqmFunctionDescriptor 
 		}
 		else {
 			// workaround using floor
+			sqlAppender.appendSql( '(' );
+			final SqlAstNode secondArg = arguments.get( 1 );
 			if ( getName().equals( "trunc" ) ) {
 				sqlAppender.appendSql( "sign(" );
+				if ( requiresArgumentCasts ) {
+					sqlAppender.appendSql( "cast(" );
+				}
 				firstArg.accept( walker );
+				if ( requiresArgumentCasts ) {
+					sqlAppender.appendSql( " as numeric)" );
+				}
 				sqlAppender.appendSql( ")*floor(abs(" );
+				if ( requiresArgumentCasts ) {
+					sqlAppender.appendSql( "cast(" );
+				}
 				firstArg.accept( walker );
-				sqlAppender.appendSql( ")*1e" );
-				arguments.get( 1 ).accept( walker );
+				if ( requiresArgumentCasts ) {
+					sqlAppender.appendSql( " as numeric)" );
+				}
+				sqlAppender.appendSql( ")*" );
+				if ( requiresArgumentCasts ) {
+					sqlAppender.appendSql( "cast(" );
+				}
+				sqlAppender.appendSql( "power(10," );
+				secondArg.accept( walker );
+				sqlAppender.appendSql( ')' );
+				if ( requiresArgumentCasts ) {
+					sqlAppender.appendSql( " as numeric)" );
+				}
+				sqlAppender.appendSql( ')' );
 			}
 			else {
 				sqlAppender.appendSql( "floor(" );
+				if ( requiresArgumentCasts ) {
+					sqlAppender.appendSql( "cast(" );
+				}
 				firstArg.accept( walker );
-				sqlAppender.appendSql( "*1e" );
-				arguments.get( 1 ).accept( walker );
-				sqlAppender.appendSql( "+0.5" );
+				if ( requiresArgumentCasts ) {
+					sqlAppender.appendSql( " as numeric)" );
+				}
+				sqlAppender.appendSql( "*" );
+				if ( requiresArgumentCasts ) {
+					sqlAppender.appendSql( "cast(" );
+				}
+				sqlAppender.appendSql( "power(10," );
+				secondArg.accept( walker );
+				sqlAppender.appendSql( ')' );
+				if ( requiresArgumentCasts ) {
+					sqlAppender.appendSql( " as numeric)" );
+				}
+				sqlAppender.appendSql( "+0.5)" );
 			}
-			sqlAppender.appendSql( ")/1e" );
-			arguments.get( 1 ).accept( walker );
+			sqlAppender.appendSql( '/' );
+			if ( requiresArgumentCasts ) {
+				sqlAppender.appendSql( "cast(" );
+			}
+			sqlAppender.appendSql( "power(10," );
+			secondArg.accept( walker );
+			sqlAppender.appendSql( ')' );
+			if ( requiresArgumentCasts ) {
+				sqlAppender.appendSql( " as numeric)" );
+			}
+			sqlAppender.appendSql( ')' );
 		}
 	}
 

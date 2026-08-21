@@ -544,6 +544,7 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T>
 			if ( subquery.getFetch() == null && subquery.getOffset() == null ) {
 				subquery.getQueryPart().setOrderByClause( null );
 			}
+			query.addCteStatements( copy.getCteStatementMap() );
 			return query;
 		}
 	}

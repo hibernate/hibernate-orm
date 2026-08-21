@@ -71,6 +71,11 @@ public abstract class AbstractFinderMethod extends AbstractQueryMethod  {
 		throw new UnsupportedOperationException("operation not supported");
 	}
 
+	@Override
+	@Nullable String containerType() {
+		return containerType;
+	}
+
 	void comment(StringBuilder declaration) {
 		declaration
 				.append("\n/**")

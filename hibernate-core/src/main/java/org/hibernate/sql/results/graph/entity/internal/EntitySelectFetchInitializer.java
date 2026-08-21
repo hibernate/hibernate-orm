@@ -167,7 +167,7 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 				data.entityIdentifier = lazyInitializer.getInternalIdentifier();
 			}
 
-			final var entityKey = new EntityKey( data.entityIdentifier, concreteDescriptor );
+			final var entityKey = data.getRowProcessingState().getSession().generateEntityKey( data.entityIdentifier, concreteDescriptor );
 			final var entityHolder = persistenceContext.getEntityHolder(
 					entityKey
 			);
@@ -212,7 +212,7 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 		final var rowProcessingState = data.getRowProcessingState();
 		final var session = rowProcessingState.getSession();
 		final var persistenceContext = session.getPersistenceContextInternal();
-		final EntityKey entityKey = new EntityKey( data.entityIdentifier, concreteDescriptor );
+		final EntityKey entityKey = data.getRowProcessingState().getSession().generateEntityKey( data.entityIdentifier, concreteDescriptor );
 		initialize( data, persistenceContext.getEntityHolder( entityKey ), session, persistenceContext );
 	}
 
@@ -257,7 +257,7 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 		if ( instance == null ) {
 			checkNotFound( data );
 			persistenceContext.claimEntityHolderIfPossible(
-					new EntityKey( data.entityIdentifier, concreteDescriptor ),
+					data.getRowProcessingState().getSession().generateEntityKey( data.entityIdentifier, concreteDescriptor ),
 					null,
 					data.getRowProcessingState().getJdbcValuesSourceProcessingState(),
 					this

@@ -7,6 +7,7 @@ package org.hibernate.boot.model;
 import org.hibernate.graph.spi.GraphParserEntityClassResolver;
 import org.hibernate.graph.spi.GraphParserEntityNameResolver;
 import org.hibernate.graph.spi.RootGraphImplementor;
+import org.hibernate.service.ServiceRegistry;
 
 /**
  * @author Steve Ebersole
@@ -15,5 +16,6 @@ import org.hibernate.graph.spi.RootGraphImplementor;
 public interface NamedGraphCreator {
 	RootGraphImplementor<?> createEntityGraph(
 			GraphParserEntityClassResolver entityDomainClassResolver,
-			GraphParserEntityNameResolver entityDomainNameResolver);
+			GraphParserEntityNameResolver entityDomainNameResolver,
+			ServiceRegistry serviceRegistry);
 }

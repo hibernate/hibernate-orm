@@ -14,12 +14,12 @@ import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 
 import org.hibernate.ScrollableResults;
-import org.hibernate.dialect.HANADialect;
 import org.hibernate.query.Query;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.Jpa;
-import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -54,7 +54,7 @@ public class CriteriaToScrollableResultsFetchTest {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = HANADialect.class, reason = "HANA only supports forward-only cursors")
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsBackwardsScrollableResultSets.class)
 	public void testWithScroll(EntityManagerFactoryScope scope) {
 		// Creates data necessary for test
 		Long facilityId = populate(scope);

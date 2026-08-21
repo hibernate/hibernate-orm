@@ -55,32 +55,23 @@ public class PostgresPlusDialect extends PostgreSQLDialect {
 		final var functionFactory = new CommonFunctionFactory( functionContributions );
 		final var functionRegistry = functionContributions.getFunctionRegistry();
 
+		functionFactory.arrayGet_bracket( false );
 		functionFactory.soundex();
 		functionFactory.rownumRowid();
 		functionFactory.sysdate();
 		functionFactory.systimestamp();
 
-		if ( getVersion().isSameOrAfter( 14 ) ) {
-			// These functions were apparently only added in version 14
-			functionFactory.bitand();
-			functionFactory.bitor();
-			functionRegistry.patternDescriptorBuilder(
-							"bitxor",
-							"(bitor(?1,?2)-bitand(?1,?2))"
-					)
-					.setExactArgumentCount( 2 )
-					.setArgumentTypeResolver( ARGUMENT_OR_IMPLIED_RESULT_TYPE )
-					.register();
-		}
-		else {
-			functionRegistry.patternDescriptorBuilder(
-							"bitxor",
-							"((?1|?2)-(?1&?2))"
-					)
-					.setExactArgumentCount( 2 )
-					.setArgumentTypeResolver( ARGUMENT_OR_IMPLIED_RESULT_TYPE )
-					.register();
-		}
+
+		// These functions were apparently only added in version 14
+		functionFactory.bitand();
+		functionFactory.bitor();
+		functionRegistry.patternDescriptorBuilder(
+				"bitxor",
+						"(bitor(?1,?2)-bitand(?1,?2))"
+				)
+				.setExactArgumentCount( 2 )
+				.setArgumentTypeResolver( ARGUMENT_OR_IMPLIED_RESULT_TYPE )
+				.register();
 	}
 
 	@Override

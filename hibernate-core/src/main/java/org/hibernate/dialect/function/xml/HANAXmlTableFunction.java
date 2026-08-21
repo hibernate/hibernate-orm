@@ -49,10 +49,10 @@ import org.hibernate.sql.ast.tree.expression.XmlTableQueryColumnDefinition;
 import org.hibernate.sql.ast.tree.from.FunctionTableGroup;
 import org.hibernate.sql.ast.tree.from.StandardTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableGroupProducer;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.predicate.NullnessPredicate;
+import org.hibernate.sql.ast.tree.predicate.PredicateContainer;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
@@ -72,6 +72,9 @@ import static org.hibernate.sql.ast.spi.AbstractSqlAstTranslator.isParameter;
  * HANA xmltable function.
  */
 public class HANAXmlTableFunction extends XmlTableFunction {
+
+	// The memory limit for a data type on HANA
+	private static final int MEMORY_LIMIT = 1024 * 1024 * 64;
 
 	public HANAXmlTableFunction(TypeConfiguration typeConfiguration) {
 		super( false, new DB2XmlTableSetReturningFunctionTypeResolver(), typeConfiguration );
@@ -143,13 +146,19 @@ public class HANAXmlTableFunction extends XmlTableFunction {
 							final TableGroup parentTableGroup = querySpec.getFromClause().queryTableGroups(
 									tg -> tg.findTableGroupJoin( functionTableGroup ) == null ? null : tg
 							);
-							final TableGroupJoin join = parentTableGroup.findTableGroupJoin( functionTableGroup );
+							final PredicateContainer predicateContainer;
+							if ( parentTableGroup != null ) {
+								predicateContainer = parentTableGroup.findTableGroupJoin( functionTableGroup );
+							}
+							else {
+								predicateContainer = querySpec;
+							}
 							final Expression lhs = createExpression( tableQualifier, idColumns );
 							final Expression rhs = createExpression(
 									functionTableGroup.getPrimaryTableReference().getIdentificationVariable(),
 									idColumns
 							);
-							join.applyPredicate( new ComparisonPredicate( lhs, ComparisonOperator.EQUAL, rhs ) );
+							predicateContainer.applyPredicate( new ComparisonPredicate( lhs, ComparisonOperator.EQUAL, rhs ) );
 
 							final String tableName = cteName;
 							final List<CteColumn> cteColumns = List.of(
@@ -401,7 +410,8 @@ public class HANAXmlTableFunction extends XmlTableFunction {
 			// Float is also not supported, but double is
 			case "float" -> "double";
 			// Clobs are also not supported, so use the biggest nvarchar possible
-			case "clob", "nclob" -> "nvarchar(5000)";
+			case "clob" -> "varchar(" + MEMORY_LIMIT + ")";
+			case "nclob" -> "nvarchar(" + MEMORY_LIMIT + ")";
 			default -> columnDefinition;
 		};
 	}
@@ -449,7 +459,6 @@ public class HANAXmlTableFunction extends XmlTableFunction {
 						new SelectablePath( name ),
 						"case " + Template.TEMPLATE + "." + name + " when 'true' then " + trueFragment + " when 'false' then " + falseFragment + " end",
 						null,
-						"varchar(5)",
 						null,
 						null,
 						null,

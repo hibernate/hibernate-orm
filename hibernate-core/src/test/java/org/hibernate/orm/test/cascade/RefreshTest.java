@@ -83,7 +83,7 @@ public class RefreshTest {
 				Statement stmnt = null;
 				try {
 					stmnt = session.getJdbcCoordinator().getStatementPreparer().createStatement();
-					stmnt.execute( "UPDATE T_JOB SET JOB_STATUS = 1" );
+					stmnt.execute( "UPDATE T_JOB SET JOB_STATUS = 1 where 1=1" );
 				}
 				finally {
 					if ( stmnt != null ) {

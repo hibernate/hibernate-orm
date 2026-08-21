@@ -16,44 +16,25 @@ import org.hibernate.sql.ast.tree.SqlAstNode;
  */
 public class CastTarget implements Expression, SqlAstNode, SqlTypedMapping {
 	private final JdbcMapping type;
-	private final @Nullable String sqlType;
 	private final @Nullable Long length;
 	private final @Nullable Integer arrayLength;
 	private final @Nullable Integer precision;
 	private final @Nullable Integer scale;
 
 	public CastTarget(JdbcMapping type) {
-		this( type, null, null, null, null, null );
+		this( type, null, null, null, null );
 	}
 
 	public CastTarget(JdbcMapping type, @Nullable Long length, @Nullable Integer precision, @Nullable Integer scale) {
-		this( type, null, length, precision, scale );
+		this( type, length, null, precision, scale );
 	}
 
 	public CastTarget(JdbcMapping type, @Nullable Long length, @Nullable Integer arrayLength, @Nullable Integer precision, @Nullable Integer scale) {
-		this( type, null, length, arrayLength, precision, scale );
-	}
-
-	public CastTarget(JdbcMapping type, @Nullable String sqlType, @Nullable Long length, @Nullable Integer precision, @Nullable Integer scale) {
-		this( type, sqlType, length, null, precision, scale );
-	}
-
-	public CastTarget(JdbcMapping type, @Nullable String sqlType, @Nullable Long length, @Nullable Integer arrayLength, @Nullable Integer precision, @Nullable Integer scale) {
 		this.type = type;
-		this.sqlType = sqlType;
 		this.length = length;
 		this.arrayLength = arrayLength;
 		this.precision = precision;
 		this.scale = scale;
-	}
-
-	public @Nullable String getSqlType() {
-		return sqlType;
-	}
-
-	@Override
-	public @Nullable String getColumnDefinition() {
-		return sqlType;
 	}
 
 	@Override

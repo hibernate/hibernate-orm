@@ -36,7 +36,7 @@ public class BasicMutationQueryTests {
 	@Test
 	void basicNativeDeleteTest(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
-			session.createNativeMutationQuery( "delete from contacts" ).executeUpdate();
+			session.createNativeMutationQuery( "delete from contacts where 1=1" ).executeUpdate();
 		} );
 	}
 
@@ -98,7 +98,7 @@ public class BasicMutationQueryTests {
 	)
 	@NamedNativeQuery(
 			name = "valid-native",
-			query = "delete from contacts"
+			query = "delete from contacts where 1=1"
 	)
 	@NamedNativeQuery(
 			name = "invalid-native",

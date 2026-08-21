@@ -7,9 +7,11 @@ package org.hibernate.orm.test.subselect;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
+import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -25,6 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel(xmlMappings = "org/hibernate/orm/test/subselect/Beings.hbm.xml")
 @SessionFactory
+@SkipForDialect( dialectClass = SpannerDialect.class, reason = "Spanner requires explicit UNION ALL or UNION DISTINCT" )
 public class SubselectTest {
 	@AfterEach
 	void tearDown(SessionFactoryScope factoryScope) {

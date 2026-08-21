@@ -8,7 +8,9 @@ import java.time.LocalDate;
 
 import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.community.dialect.GaussDBDialect;
+import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.MySQLDialect;
+import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaConflictClause;
@@ -59,13 +61,16 @@ public class InsertConflictTests {
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = SpannerPostgreSQLDialect.class,
+			reason = "ON CONFLICT clause with empty conflict target in INSERT statement is not supported")
+	@SkipForDialect( dialectClass = SpannerDialect.class, reason = "UNIMPLEMENTED: ON CONFLICT clause with empty conflict target in INSERT statement is not supported in Emulator")
 	public void testOnConflictDoNothing(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
 					int updated = session.createMutationQuery(
 							"insert into BasicEntity (id, data) " +
-									"values (1, 'John') " +
-									"on conflict do nothing"
+							"values (1, 'John') " +
+							"on conflict do nothing"
 					).executeUpdate();
 					if ( scope.getSessionFactory().getJdbcServices().getDialect() instanceof MySQLDialect ) {
 						// Since JDBC set the MySQL CLIENT_FOUND_ROWS flag, the updated count is 1 even if values didn't change
@@ -111,6 +116,8 @@ public class InsertConflictTests {
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsUpsertOrMerge.class)
 	@SkipForDialect(dialectClass = InformixDialect.class, reason = "MATCHED does not support AND condition")
+	@SkipForDialect(dialectClass = SpannerPostgreSQLDialect.class,
+			reason = "Spanner does not support predicates (WHERE clause) in conflict clauses")
 	public void testOnConflictDoUpdateWithWhere(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -146,6 +153,8 @@ public class InsertConflictTests {
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsUpsertOrMerge.class)
 	@SkipForDialect(dialectClass = InformixDialect.class, reason = "MATCHED does not support AND condition")
+	@SkipForDialect(dialectClass = SpannerPostgreSQLDialect.class,
+			reason = "Spanner does not support predicates (WHERE clause) in conflict clauses")
 	public void testOnConflictDoUpdateWithWhereCriteria(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -185,6 +194,10 @@ public class InsertConflictTests {
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = SpannerDialect.class,
+			reason = "Cloud Spanner does not support ON CONFLICT clauses for INSERT ... SELECT statements")
+	@SkipForDialect( dialectClass = SpannerPostgreSQLDialect.class,
+			reason = "ON CONFLICT clause with empty conflict target in INSERT statement is not supported")
 	public void testOnConflictDoNothingMultiTable(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -211,6 +224,8 @@ public class InsertConflictTests {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsUpsertOrMerge.class)
+	@SkipForDialect( dialectClass = SpannerDialect.class,
+			reason = "Cloud Spanner does not support ON CONFLICT clauses for INSERT ... SELECT statements")
 	@SkipForDialect(dialectClass = SybaseASEDialect.class, reason = "MERGE into a table that has a self-referential FK does not work")
 	public void testOnConflictDoUpdateMultiTable(SessionFactoryScope scope) {
 		scope.inTransaction(
@@ -239,8 +254,12 @@ public class InsertConflictTests {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsUpsertOrMerge.class)
+	@SkipForDialect( dialectClass = SpannerDialect.class,
+			reason = "Cloud Spanner does not support ON CONFLICT clauses for INSERT ... SELECT statements")
 	@SkipForDialect(dialectClass = SybaseASEDialect.class, reason = "MERGE into a table that has a self-referential FK does not work")
 	@SkipForDialect(dialectClass = InformixDialect.class, reason = "MATCHED does not support AND condition")
+	@SkipForDialect(dialectClass = SpannerPostgreSQLDialect.class,
+			reason = "Spanner does not support predicates (WHERE clause) in conflict clauses")
 	public void testOnConflictDoUpdateWithWhereMultiTable(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

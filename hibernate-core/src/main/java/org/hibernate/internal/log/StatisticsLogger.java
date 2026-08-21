@@ -11,6 +11,7 @@ import org.jboss.logging.annotations.Message;
 import org.jboss.logging.annotations.MessageLogger;
 
 import java.lang.invoke.MethodHandles;
+import java.util.Locale;
 
 import static org.jboss.logging.Logger.Level.DEBUG;
 import static org.jboss.logging.Logger.Level.INFO;
@@ -24,7 +25,7 @@ import static org.jboss.logging.Logger.Level.TRACE;
 public interface StatisticsLogger extends BasicLogger {
 	String LOGGER_NAME = "org.hibernate.statistics";
 
-	StatisticsLogger STATISTICS_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), StatisticsLogger.class, LOGGER_NAME );
+	StatisticsLogger STATISTICS_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), StatisticsLogger.class, LOGGER_NAME, Locale.ROOT );
 
 	@LogMessage(level = TRACE)
 	@Message(value = "Statistics initialized", id = 460)

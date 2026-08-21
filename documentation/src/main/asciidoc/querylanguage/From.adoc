@@ -325,16 +325,16 @@ A query may have more than one fetch join, but be aware that:
 HQL doesn't disallow it, but it's usually a bad idea to apply a restriction to a ``join fetch``ed entity, since the elements of the fetched collection would be incomplete.
 Indeed, it's best to avoid even assigning an identification variable to a fetched joined entity except for the purpose of specifying a nested fetch join.
 
-[IMPORTANT]
-====
-Fetch joins should usually be avoided in limited or paged queries.
-This includes:
-
-- queries executed with limits specified via the `setFirstResult()` and `setMaxResults()` methods of `Query`, or
-- queries with a limit or offset declared in HQL, described below in <<limit-offset>>.
-
-Nor should they be used with the `scroll()` and `stream()` methods of the `Query` interface.
-====
+// [IMPORTANT]
+// ====
+// Fetch joins should usually be avoided in limited or paged queries.
+// This includes:
+//
+// - queries executed with limits specified via the `setFirstResult()` and `setMaxResults()` methods of `Query`, or
+// - queries with a limit or offset declared in HQL, described below in <<limit-offset>>.
+//
+// Nor should they be used with the `scroll()` and `stream()` methods of the `Query` interface.
+// ====
 
 Fetch joins are disallowed in subqueries, where they would make no sense.
 

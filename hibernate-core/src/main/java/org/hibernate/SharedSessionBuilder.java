@@ -9,6 +9,7 @@ import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 
 import java.sql.Connection;
+import java.time.Instant;
 import java.util.TimeZone;
 import java.util.function.UnaryOperator;
 
@@ -26,7 +27,6 @@ import java.util.function.UnaryOperator;
  *     and therefore also the JDBC transaction, should be shared from parent
  *     to child.
  * </ul>
- * <p>
  * <pre>
  * try (var childSession
  *          = session.sessionWithOptions()
@@ -36,7 +36,6 @@ import java.util.function.UnaryOperator;
  *     ...
  * }
  * </pre>
- * <p>
  * On the other hand, when JTA transaction management is used, all sessions
  * execute within the same transaction. Typically, connection sharing is
  * handled automatically by the JTA-enabled {@link javax.sql.DataSource}.
@@ -97,6 +96,12 @@ public interface SharedSessionBuilder extends SessionBuilder, CommonSharedBuilde
 	 * @return {@code this}, for method chaining
 	 */
 	SharedSessionBuilder autoClose();
+
+	@Override
+	SharedSessionBuilder asOf(Instant instant);
+
+	@Override
+	SharedSessionBuilder atChangeset(Object changesetId);
 
 	@Override @Deprecated
 	SharedSessionBuilder statementInspector(StatementInspector statementInspector);

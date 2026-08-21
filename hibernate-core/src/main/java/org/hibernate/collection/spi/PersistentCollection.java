@@ -451,7 +451,7 @@ public interface PersistentCollection<E> extends LazyInitializable, InstanceIden
 	 * <p>
 	 * Implementors that can copy elements out of a directly provided
 	 * collection into the wrapped collection should override this method.
-	 * <p>
+	 *
 	 * @param collection The collection
 	 * @return true, if {@code collection} was provided directly to this
 	 * PersistentCollection; false, otherwise.

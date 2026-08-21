@@ -8,10 +8,13 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.community.dialect.GaussDBDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgresPlusDialect;
+import org.hibernate.dialect.SpannerPostgreSQLDialect;
 
+import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.SkipForDialect;
@@ -27,11 +30,17 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 public class NativeQueryWithDatetimesTest {
 	@SkipForDialect(dialectClass = PostgresPlusDialect.class)
 	@SkipForDialect(dialectClass = OracleDialect.class)
+	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Altibase maps DATE and TIME to TIMESTAMP in native query result metadata")
 	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "type:resolved.gauss will map localdate to timestamp")
 	@Test void test(EntityManagerFactoryScope scope) {
 		scope.inTransaction(s -> s.persist(new Datetimes()));
 		Object[] result = scope.fromTransaction(s -> (Object[]) s.createNativeQuery("select ctime, cdate, cdatetime from tdatetimes", Object[].class).getSingleResult());
-		assertInstanceOf(LocalTime.class, result[0]);
+		if (scope.getDialect() instanceof SpannerPostgreSQLDialect || scope.getDialect() instanceof SpannerDialect ) {
+			assertInstanceOf( LocalDateTime.class, result[0] );
+		}
+		else {
+			assertInstanceOf( LocalTime.class, result[0] );
+		}
 		assertInstanceOf(LocalDate.class, result[1]);
 		assertInstanceOf(LocalDateTime.class, result[2]);
 //		result = scope.fromTransaction(s -> (Object[]) s.createNativeQuery("select current_time, current_date, current_timestamp from tdatetimes", Object[].class).getSingleResult());

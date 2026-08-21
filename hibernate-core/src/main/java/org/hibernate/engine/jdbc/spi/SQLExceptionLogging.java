@@ -14,6 +14,7 @@ import org.jboss.logging.annotations.MessageLogger;
 
 import java.lang.invoke.MethodHandles;
 import java.sql.SQLException;
+import java.util.Locale;
 
 import static org.jboss.logging.Logger.Level.DEBUG;
 import static org.jboss.logging.Logger.Level.WARN;
@@ -30,8 +31,8 @@ public interface SQLExceptionLogging extends BasicLogger {
 	String ERROR_NAME = SubSystemLogging.BASE + ".jdbc.error";
 	String WARN_NAME = SubSystemLogging.BASE + ".jdbc.warn";
 
-	SQLExceptionLogging ERROR_LOG = Logger.getMessageLogger( MethodHandles.lookup(), SQLExceptionLogging.class, ERROR_NAME );
-	SQLExceptionLogging WARNING_LOG = Logger.getMessageLogger( MethodHandles.lookup(), SQLExceptionLogging.class, WARN_NAME );
+	SQLExceptionLogging ERROR_LOG = Logger.getMessageLogger( MethodHandles.lookup(), SQLExceptionLogging.class, ERROR_NAME, Locale.ROOT );
+	SQLExceptionLogging WARNING_LOG = Logger.getMessageLogger( MethodHandles.lookup(), SQLExceptionLogging.class, WARN_NAME, Locale.ROOT );
 
 	@LogMessage(level = WARN)
 	@Message(value = "ErrorCode: %s, SQLState: %s", id = 247)

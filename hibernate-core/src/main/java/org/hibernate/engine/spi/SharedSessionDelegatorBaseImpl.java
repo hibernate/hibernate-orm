@@ -4,6 +4,8 @@
  */
 package org.hibernate.engine.spi;
 
+import org.hibernate.audit.spi.AuditWorkQueue;
+
 import jakarta.persistence.EntityGraph;
 import jakarta.persistence.TypedQueryReference;
 import jakarta.persistence.criteria.CriteriaDelete;
@@ -24,6 +26,7 @@ import org.hibernate.Transaction;
 import org.hibernate.bytecode.enhance.spi.interceptor.SessionAssociationMarkers;
 import org.hibernate.cache.spi.CacheTransactionSynchronization;
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.engine.extension.spi.Extension;
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
@@ -33,6 +36,7 @@ import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.jdbc.ReturningWork;
 import org.hibernate.jdbc.Work;
+import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.query.MutationQuery;
@@ -75,6 +79,11 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 	 */
 	protected SharedSessionContract delegate() {
 		return delegate;
+	}
+
+	@Override
+	public AuditWorkQueue getAuditWorkQueue() {
+		return delegate.getAuditWorkQueue();
 	}
 
 	@Override
@@ -409,6 +418,11 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 	}
 
 	@Override
+	public Object getCurrentChangesetIdentifier() {
+		return delegate.getCurrentChangesetIdentifier();
+	}
+
+	@Override
 	public boolean isTransactionInProgress() {
 		return delegate.isTransactionInProgress();
 	}
@@ -426,6 +440,11 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 	@Override
 	public EntityKey generateEntityKey(Object id, EntityPersister persister) {
 		return delegate.generateEntityKey( id, persister );
+	}
+
+	@Override
+	public CollectionKey generateCollectionKey(CollectionPersister persister, Object key) {
+		return delegate.generateCollectionKey( persister, key );
 	}
 
 	@Override
@@ -667,6 +686,11 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 	@Override
 	public RootGraphImplementor<?> getEntityGraph(String graphName) {
 		return delegate.getEntityGraph( graphName );
+	}
+
+	@Override
+	public <T extends Extension> T getExtension(Class<T> extension) {
+		return delegate.getExtension( extension);
 	}
 
 	@Override

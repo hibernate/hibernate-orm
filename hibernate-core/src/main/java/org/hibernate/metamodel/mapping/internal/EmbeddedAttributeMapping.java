@@ -20,7 +20,6 @@ import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.PropertyBasedMapping;
 import org.hibernate.metamodel.mapping.SelectableMappings;
 import org.hibernate.metamodel.model.domain.NavigableRole;
-import org.hibernate.property.access.internal.PropertyAccessStrategyBasicImpl;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.spi.NavigablePath;
@@ -51,6 +50,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static java.util.Objects.requireNonNullElse;
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
+import static org.hibernate.metamodel.mapping.internal.ParentPropertyAccessHelper.parentPropertyAccess;
 
 /**
  * @author Steve Ebersole
@@ -85,7 +85,7 @@ public class EmbeddedAttributeMapping
 			fetchableIndex,
 			tableExpression,
 			attributeMetadata,
-			getPropertyAccess( parentInjectionAttributeName, embeddableMappingType ),
+			parentPropertyAccess( parentInjectionAttributeName, embeddableMappingType ),
 			mappedFetchTiming,
 			mappedFetchStyle,
 			embeddableMappingType,
@@ -353,22 +353,6 @@ public class EmbeddedAttributeMapping
 	@Override
 	public String toString() {
 		return "EmbeddedAttributeMapping(" + navigableRole + ")@" + System.identityHashCode( this );
-	}
-
-	private static PropertyAccess getPropertyAccess(
-			String parentInjectionAttributeName,
-			EmbeddableMappingType embeddableMappingType) {
-		final PropertyAccess parentInjectionAttributePropertyAccess;
-		if ( parentInjectionAttributeName != null ) {
-			parentInjectionAttributePropertyAccess = PropertyAccessStrategyBasicImpl.INSTANCE.buildPropertyAccess(
-					embeddableMappingType.getMappedJavaType().getJavaTypeClass(),
-					parentInjectionAttributeName,
-					true );
-		}
-		else {
-			parentInjectionAttributePropertyAccess = null;
-		}
-		return parentInjectionAttributePropertyAccess;
 	}
 
 	@Override

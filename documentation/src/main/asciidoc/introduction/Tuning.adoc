@@ -839,7 +839,10 @@ A Hibernate `CacheMode` packages a `CacheRetrieveMode` with a `CacheStoreMode`.
 | `GET` | `CacheRetrieveMode.USE`, `CacheStoreMode.BYPASS`
 | `PUT` | `CacheRetrieveMode.BYPASS`, `CacheStoreMode.USE`
 | `REFRESH` | `CacheRetrieveMode.REFRESH`, `CacheStoreMode.BYPASS`
+| `REFRESH_SESSION` | none
 |===
+
+The `REFRESH_SESSION` mode specifies that entity state returned by a query should overwrite state held in the persistence context, just as if `refresh()` had been called.
 
 There's no particular reason to prefer Hibernate's `CacheMode` over the JPA equivalents.
 This enumeration only exists because Hibernate had cache modes long before they were added to JPA.

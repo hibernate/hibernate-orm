@@ -71,10 +71,9 @@ public class ConfigLoader {
 	}
 
 	public LoadedConfig loadConfigXmlFile(File cfgXmlFile) {
-		try {
-
+		try ( FileInputStream cfgFileStream = new FileInputStream( cfgXmlFile ) ) {
 			return LoadedConfig.consume( jaxbProcessorHolder.getValue()
-					.unmarshal( new FileInputStream( cfgXmlFile ),
+					.unmarshal( cfgFileStream,
 							new Origin( FILE, cfgXmlFile.getAbsolutePath() ) ) );
 		}
 		catch (FileNotFoundException e) {
@@ -82,6 +81,11 @@ public class ConfigLoader {
 					"Specified cfg.xml file [" + cfgXmlFile.getAbsolutePath() + "] does not exist"
 			);
 		}
+		catch (IOException e) {
+			BOOT_LOGGER.unableToCloseCfgXmlUrlStream( e );
+		}
+
+		return null;
 	}
 
 	public LoadedConfig loadConfigXmlUrl(URL url) {

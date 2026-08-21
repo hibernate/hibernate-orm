@@ -22,13 +22,17 @@ import org.hibernate.query.spi.SelectQueryPlan;
 import org.hibernate.query.sqm.spi.SqmParameterMappingModelResolutionAccess;
 import org.hibernate.query.sqm.sql.internal.SqmParameterInterpretation;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
-import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation;
+import org.hibernate.query.sqm.tree.from.SqmRoot;
+import org.hibernate.query.sqm.tree.select.SqmJpaCompoundSelection;
+import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
+import org.hibernate.sql.exec.internal.LimitJdbcParameter;
+import org.hibernate.sql.exec.internal.OffsetJdbcParameter;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
 import org.hibernate.sql.exec.spi.JdbcSelect;
@@ -47,6 +51,7 @@ import org.hibernate.sql.results.spi.ResultsConsumer;
 import org.hibernate.sql.results.spi.RowTransformer;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -88,6 +93,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 				sqm.producesUniqueResults() && !containsCollectionFetches( queryOptions )
 						? ListResultsConsumer.UniqueSemantic.NONE
 						: ListResultsConsumer.UniqueSemantic.ALLOW;
+		final var rowTransformer = determineRowTransformer( sqm, resultType, tupleMetadata );
 		executeQueryInterpreter = (resultsConsumer, executionContext, sqmInterpretation, jdbcParameterBindings, skipPreFlush) -> {
 			final var session = executionContext.getSession();
 			final var jdbcSelect = sqmInterpretation.jdbcOperation();
@@ -103,9 +109,11 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 						jdbcSelect,
 						jdbcParameterBindings,
 						listInterpreterExecutionContext( hql, executionContext, jdbcSelect, subSelectFetchKeyHandler ),
-						determineRowTransformer( sqm, resultType, tupleMetadata, executionContext.getQueryOptions() ),
+						executionContext.getQueryOptions().getTupleTransformer() != null
+								? makeRowTransformerTupleTransformerAdapter( sqm, executionContext.getQueryOptions() )
+								: rowTransformer,
 						null,
-						resultCountEstimate( sqmInterpretation, jdbcParameterBindings ),
+						resultCountEstimate( sqmInterpretation, jdbcParameterBindings, executionContext ),
 						resultsConsumer
 				);
 			}
@@ -129,10 +137,12 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 						jdbcSelect,
 						jdbcParameterBindings,
 						listInterpreterExecutionContext( hql, executionContext, jdbcSelect, subSelectFetchKeyHandler ),
-						determineRowTransformer( sqm, resultType, tupleMetadata, executionContext.getQueryOptions() ),
+						executionContext.getQueryOptions().getTupleTransformer() != null
+								? makeRowTransformerTupleTransformerAdapter( sqm, executionContext.getQueryOptions() )
+								: rowTransformer,
 						(Class<R>) executionContext.getResultType(),
 						uniqueSemantic,
-						resultCountEstimate( sqmInterpretation, jdbcParameterBindings )
+						resultCountEstimate( sqmInterpretation, jdbcParameterBindings, executionContext )
 				);
 			}
 			finally {
@@ -150,8 +160,10 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 						scrollMode,
 						jdbcParameterBindings,
 						new SqmJdbcExecutionContextAdapter( executionContext, jdbcSelect ),
-						determineRowTransformer( sqm, resultType, tupleMetadata, executionContext.getQueryOptions() ),
-						resultCountEstimate( sqmInterpretation, jdbcParameterBindings )
+						executionContext.getQueryOptions().getTupleTransformer() != null
+								? makeRowTransformerTupleTransformerAdapter( sqm, executionContext.getQueryOptions() )
+								: rowTransformer,
+						resultCountEstimate( sqmInterpretation, jdbcParameterBindings, executionContext )
 				);
 			}
 			finally {
@@ -162,13 +174,20 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 
 	private static int resultCountEstimate(
 			CacheableSqmInterpretation<SelectStatement, JdbcSelect> sqmInterpretation,
-			JdbcParameterBindings jdbcParameterBindings) {
-		return resultCountEstimate( jdbcParameterBindings,
-				sqmInterpretation.statement().getQueryPart().getFetchClauseExpression() );
+			JdbcParameterBindings jdbcParameterBindings,
+			DomainQueryExecutionContext executionContext) {
+		return resultCountEstimate(
+				jdbcParameterBindings,
+				sqmInterpretation.statement().getQueryPart().getFetchClauseExpression(),
+				executionContext
+		);
 	}
 
-	private static int resultCountEstimate(JdbcParameterBindings jdbcParameterBindings, Expression fetchExpression) {
-		return fetchExpression == null ? -1 : interpretIntExpression( fetchExpression, jdbcParameterBindings );
+	private static int resultCountEstimate(
+			JdbcParameterBindings jdbcParameterBindings,
+			Expression fetchExpression,
+			DomainQueryExecutionContext executionContext) {
+		return fetchExpression == null ? -1 : interpretIntExpression( fetchExpression, jdbcParameterBindings, executionContext );
 	}
 
 	protected static SqmJdbcExecutionContextAdapter listInterpreterExecutionContext(
@@ -179,12 +198,23 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 		return new MySqmJdbcExecutionContextAdapter( executionContext, jdbcSelect, subSelectFetchKeyHandler, hql );
 	}
 
-	protected static int interpretIntExpression(Expression expression, JdbcParameterBindings jdbcParameterBindings) {
+	protected static int interpretIntExpression(
+			Expression expression,
+			JdbcParameterBindings jdbcParameterBindings,
+			DomainQueryExecutionContext executionContext) {
 		if ( expression instanceof Literal literal ) {
 			return ( (Number) literal.getLiteralValue() ).intValue();
 		}
 		else if ( expression instanceof JdbcParameter jdbcParameter ) {
-			return (int) jdbcParameterBindings.getBinding( jdbcParameter ).getBindValue();
+			if ( jdbcParameter instanceof LimitJdbcParameter ) {
+				return executionContext.getQueryOptions().peekOriginalLimit().getMaxRowsJpa();
+			}
+			else if ( jdbcParameter instanceof OffsetJdbcParameter ) {
+				return executionContext.getQueryOptions().peekOriginalLimit().getFirstRowJpa();
+			}
+			else {
+				return (int) jdbcParameterBindings.getBinding( jdbcParameter ).getBindValue();
+			}
 		}
 		else if ( expression instanceof SqmParameterInterpretation parameterInterpretation ) {
 			final JdbcParameter jdbcParameter = (JdbcParameter) parameterInterpretation.getResolvedExpression();
@@ -196,7 +226,21 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 	}
 
 	private static List<SqmSelection<?>> selections(SqmSelectStatement<?> sqm) {
-		return sqm.getQueryPart().getFirstQuerySpec().getSelectClause().getSelections();
+		final SqmQuerySpec<?> querySpec = sqm.getQueryPart().getFirstQuerySpec();
+		final List<SqmSelection<?>> selections = querySpec.getSelectClause().getSelections();
+		if ( selections == null || selections.isEmpty() ) {
+			final List<SqmRoot<?>> sqmRoots = querySpec.getFromClause().getRoots();
+			if ( sqmRoots == null || sqmRoots.isEmpty() ) {
+				throw new IllegalArgumentException( "Criteria did not define any query roots" );
+			}
+			if ( sqmRoots.size() != 1 ) {
+				throw new IllegalArgumentException( "Criteria has multiple query roots" );
+			}
+			return Collections.singletonList( new SqmSelection<>( sqmRoots.get( 0 ), null ) );
+		}
+		else {
+			return selections;
+		}
 	}
 
 	private static final Map<Class<?>, Class<?>> WRAPPERS
@@ -228,22 +272,35 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 		if ( queryOptions.getTupleTransformer() != null ) {
 			return makeRowTransformerTupleTransformerAdapter( sqm, queryOptions );
 		}
-		else if ( resultClass == null || resultClass == Object.class ) {
+		else {
+			return determineRowTransformer( sqm, resultClass, tupleMetadata );
+		}
+	}
+
+	/**
+	 * If the result type of the query is {@link Tuple}, {@link Map}, {@link List},
+	 * or any record or class type with an appropriate constructor, then we attempt
+	 * to repackage the result tuple as an instance of the result type using an
+	 * appropriate {@link RowTransformer}.
+	 *
+	 * @param resultClass The requested result type of the query
+	 * @return A {@link RowTransformer} responsible for repackaging the result type
+	 */
+	protected static <T> RowTransformer<T> determineRowTransformer(
+			SqmSelectStatement<?> sqm,
+			Class<T> resultClass,
+			TupleMetadata tupleMetadata) {
+		if ( resultClass == null || resultClass == Object.class ) {
 			return RowTransformerStandardImpl.instance();
 		}
 		else {
 			final var selections = selections( sqm );
-			if ( selections == null ) {
-				throw new AssertionFailure( "No selections" );
-			}
-			else {
-				final var resultType = primitiveToWrapper( resultClass );
-				return switch ( selections.size() ) {
-					case 0 -> throw new AssertionFailure( "No selections" );
-					case 1 -> singleItemRowTransformer( sqm, tupleMetadata, selections.get( 0 ), resultType );
-					default -> multipleItemRowTransformer( sqm, tupleMetadata, resultType );
-				};
-			}
+			final var resultType = primitiveToWrapper( resultClass );
+			return switch ( selections.size() ) {
+				case 0 -> throw new AssertionFailure( "No selections" );
+				case 1 -> singleItemRowTransformer( sqm, tupleMetadata, selections.get( 0 ), resultType );
+				default -> multipleItemRowTransformer( sqm, tupleMetadata, resultType );
+			};
 		}
 	}
 
@@ -329,13 +386,12 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 	private static String[] adapterAliases(SqmSelectStatement<?> sqm) {
 		final List<String> aliases = new ArrayList<>();
 		for ( var sqmSelection : sqm.getQuerySpec().getSelectClause().getSelections() ) {
-			// The row a tuple transformer gets to see only contains 1 element for a dynamic instantiation
 			final var selectableNode = sqmSelection.getSelectableNode();
-			if ( selectableNode instanceof SqmDynamicInstantiation<?> ) {
-				aliases.add( sqmSelection.getAlias() );
+			if ( selectableNode instanceof SqmJpaCompoundSelection<?> ) {
+				selectableNode.visitSubSelectableNodes( subSelection -> aliases.add( subSelection.getAlias() ) );
 			}
 			else {
-				selectableNode.visitSubSelectableNodes( subSelection -> aliases.add( subSelection.getAlias() ) );
+				aliases.add( sqmSelection.getAlias() );
 			}
 		}
 		return toStringArray( aliases );
@@ -364,6 +420,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 
 	private <T, X> T withCacheableSqmInterpretation(DomainQueryExecutionContext executionContext, X context, SqmInterpreter<T, X> interpreter) {
 		final var session = executionContext.getSession();
+		final var queryOptions = executionContext.getQueryOptions();
 
 		final boolean preFlushed = session.autoPreFlushIfRequired( executionContext.getQueryParameterBindings() );
 
@@ -394,7 +451,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 					}
 					// If the translation depends on the limit or lock options, we have to rebuild the JdbcSelect
 					// We could avoid this by putting the lock options into the cache key
-					if ( !jdbcSelect.isCompatibleWith( jdbcParameterBindings, executionContext.getQueryOptions() ) ) {
+					if ( !jdbcSelect.isCompatibleWith( jdbcParameterBindings, queryOptions ) ) {
 						final MutableObject<JdbcParameterBindings> mutableValue = new MutableObject<>();
 						localCopy = buildInterpretation( sqm, domainParameterXref, executionContext, mutableValue );
 						jdbcParameterBindings = mutableValue.get();
@@ -412,7 +469,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 			}
 			// If the translation depends on the limit or lock options, we have to rebuild the JdbcSelect
 			// We could avoid this by putting the lock options into the cache key
-			if ( !jdbcSelect.isCompatibleWith( jdbcParameterBindings, executionContext.getQueryOptions() ) ) {
+			if ( !jdbcSelect.isCompatibleWith( jdbcParameterBindings, queryOptions ) ) {
 				final MutableObject<JdbcParameterBindings> mutableValue = new MutableObject<>();
 				localCopy = buildInterpretation( sqm, domainParameterXref, executionContext, mutableValue );
 				jdbcParameterBindings = mutableValue.get();
@@ -454,12 +511,13 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 			MutableObject<JdbcParameterBindings> firstJdbcParameterBindingsConsumer) {
 		final var session = executionContext.getSession();
 		final var sessionFactory = session.getFactory();
+		final var queryOptions = executionContext.getQueryOptions();
 
 		final var sqmTranslator =
 				sessionFactory.getQueryEngine().getSqmTranslatorFactory()
 						.createSelectTranslator(
 								sqm,
-								executionContext.getQueryOptions(),
+								queryOptions,
 								domainParameterXref,
 								executionContext.getQueryParameterBindings(),
 								executionContext.getSession().getLoadQueryInfluencers(),
@@ -492,7 +550,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 		firstJdbcParameterBindingsConsumer.set( jdbcParameterBindings );
 		return new CacheableSqmInterpretation<>(
 				sqmInterpretation.getSqlAst(),
-				selectTranslator.translate( jdbcParameterBindings, executionContext.getQueryOptions() ),
+				selectTranslator.translate( jdbcParameterBindings, queryOptions ),
 				jdbcParamsXref,
 				sqmInterpretation.getSqmParameterMappingModelTypeResolutions()
 		);

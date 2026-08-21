@@ -110,6 +110,7 @@ public class EntityResultImpl<E> extends AbstractEntityResultGraphNode
 				getDiscriminatorFetch(),
 				null,
 				getRowIdResult(),
+				getAuditChangesetIdResult(),
 				NotFoundAction.EXCEPTION,
 				false,
 				null,

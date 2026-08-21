@@ -11,6 +11,7 @@ import org.hibernate.community.dialect.DerbyDialect;
 import org.hibernate.community.dialect.FirebirdDialect;
 import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.DB2Dialect;
+import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -38,6 +39,8 @@ import java.util.EnumSet;
 		reason = "AltibaseDialect has autoQuoteKeywords enabled, so it is far more resistant to the reserved keyword usage.")
 @SkipForDialect(dialectClass = InformixDialect.class,
 		reason = "Informix is far more resistant to the reserved keyword usage.")
+@SkipForDialect(dialectClass = SpannerDialect.class,
+		reason = "SpannerDialect has autoQuoteKeywords enabled, so it is far more resistant to the reserved keyword usage.")
 @ServiceRegistry
 @DomainModel(annotatedClasses = SchemaUpdateHaltOnErrorTest.From.class)
 public class SchemaUpdateHaltOnErrorTest {

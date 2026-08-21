@@ -4,7 +4,6 @@
  */
 package org.hibernate.orm.test.softdelete.collections;
 
-import java.sql.Statement;
 import java.util.HashSet;
 import java.util.List;
 
@@ -59,12 +58,7 @@ public class FetchLoadableTests {
 
 	@AfterEach
 	void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction( (session) -> session.doWork( (connection) -> {
-			final Statement statement = connection.createStatement();
-			statement.execute( "delete from batch_loadables" );
-			statement.execute( "delete from subselect_loadables" );
-			statement.execute( "delete from coll_owner2" );
-		} ) );
+		scope.dropData();
 	}
 
 	@Test

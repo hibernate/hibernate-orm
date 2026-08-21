@@ -18,7 +18,20 @@ import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 public class LongNVarcharJdbcType extends NVarcharJdbcType {
 	public static final LongNVarcharJdbcType INSTANCE = new LongNVarcharJdbcType();
 
+	private final int defaultSqlTypeCode;
+	private final int ddlTypeCode;
+
 	public LongNVarcharJdbcType() {
+		this( Types.LONGNVARCHAR, Types.LONGNVARCHAR );
+	}
+
+	public LongNVarcharJdbcType(int defaultSqlTypeCode) {
+		this( defaultSqlTypeCode, defaultSqlTypeCode );
+	}
+
+	public LongNVarcharJdbcType(int defaultSqlTypeCode, int ddlTypeCode) {
+		this.defaultSqlTypeCode = defaultSqlTypeCode;
+		this.ddlTypeCode = ddlTypeCode;
 	}
 
 	@Override
@@ -29,6 +42,16 @@ public class LongNVarcharJdbcType extends NVarcharJdbcType {
 	@Override
 	public int getJdbcTypeCode() {
 		return Types.LONGNVARCHAR;
+	}
+
+	@Override
+	public int getDdlTypeCode() {
+		return ddlTypeCode;
+	}
+
+	@Override
+	public int getDefaultSqlTypeCode() {
+		return defaultSqlTypeCode;
 	}
 
 	@Override

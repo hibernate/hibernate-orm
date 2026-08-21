@@ -120,6 +120,27 @@ public class XmlAsStringArrayJdbcType extends XmlArrayJdbcType implements Adjust
 					st.setString( name, xml );
 				}
 			}
+
+			@Override
+			protected void doBindNull(PreparedStatement st, int index, WrapperOptions options) throws SQLException {
+				if ( options.getDialect().supportsNationalizedMethods() ) {
+					super.doBindNull( st, index, options );
+				}
+				else {
+					st.setNull( index, SqlTypes.VARCHAR );
+				}
+			}
+
+			@Override
+			protected void doBindNull(CallableStatement st, String name, WrapperOptions options)
+					throws SQLException {
+				if ( options.getDialect().supportsNationalizedMethods() ) {
+					super.doBindNull( st, name, options );
+				}
+				else {
+					st.setNull( name, SqlTypes.VARCHAR );
+				}
+			}
 		};
 	}
 
@@ -134,7 +155,7 @@ public class XmlAsStringArrayJdbcType extends XmlArrayJdbcType implements Adjust
 			@Override
 			protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
 				final XmlAsStringArrayJdbcType jdbcType = getXmlAsStringArrayJdbcType();
-				final String value;
+				String value;
 				if ( jdbcType.nationalized && options.getDialect().supportsNationalizedMethods() ) {
 					value = rs.getNString( paramIndex );
 				}
@@ -148,7 +169,7 @@ public class XmlAsStringArrayJdbcType extends XmlArrayJdbcType implements Adjust
 			protected X doExtract(CallableStatement statement, int index, WrapperOptions options)
 					throws SQLException {
 				final XmlAsStringArrayJdbcType jdbcType = getXmlAsStringArrayJdbcType();
-				final String value;
+				String value;
 				if ( jdbcType.nationalized && options.getDialect().supportsNationalizedMethods() ) {
 					value = statement.getNString( index );
 				}
@@ -162,7 +183,7 @@ public class XmlAsStringArrayJdbcType extends XmlArrayJdbcType implements Adjust
 			protected X doExtract(CallableStatement statement, String name, WrapperOptions options)
 					throws SQLException {
 				final XmlAsStringArrayJdbcType jdbcType = getXmlAsStringArrayJdbcType();
-				final String value;
+				String value;
 				if ( jdbcType.nationalized && options.getDialect().supportsNationalizedMethods() ) {
 					value = statement.getNString( name );
 				}

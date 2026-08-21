@@ -16,6 +16,7 @@ import org.hibernate.internal.util.NullnessUtil;
 import org.hibernate.loader.ast.spi.CollectionLoader;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.query.spi.QueryOptions;
+import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.internal.ResultsHelper;
@@ -43,6 +44,8 @@ public class CollectionLoaderSubSelectFetch implements CollectionLoader {
 		this.attributeMapping = attributeMapping;
 		this.subselect = subselect;
 
+		final var sqlAliasBaseGenerator = new SqlAliasBaseManager();
+
 		sqlAst = LoaderSelectBuilder.createSubSelectFetchSelect(
 				attributeMapping,
 				subselect,
@@ -50,12 +53,18 @@ public class CollectionLoaderSubSelectFetch implements CollectionLoader {
 				session.getLoadQueryInfluencers(),
 				new LockOptions(),
 				jdbcParameter -> {},
+				sqlAliasBaseGenerator,
 				session.getFactory()
 		);
 
 		final var querySpec = sqlAst.getQueryPart().getFirstQuerySpec();
 		final var tableGroup = querySpec.getFromClause().getRoots().get( 0 );
-		attributeMapping.applySoftDeleteRestrictions( tableGroup, querySpec::applyPredicate );
+		attributeMapping.applyAuxiliaryRestrictions(
+				tableGroup,
+				querySpec::applyPredicate,
+				session.getLoadQueryInfluencers(),
+				sqlAliasBaseGenerator
+		);
 	}
 
 	@Override
@@ -69,7 +78,7 @@ public class CollectionLoaderSubSelectFetch implements CollectionLoader {
 
 	@Override
 	public PersistentCollection<?> load(Object triggerKey, SharedSessionContractImplementor session) {
-		final var collectionKey = new CollectionKey( attributeMapping.getCollectionDescriptor(), triggerKey );
+		final var collectionKey = session.generateCollectionKey( attributeMapping.getCollectionDescriptor(), triggerKey );
 
 		final var sessionFactory = session.getFactory();
 		final var jdbcServices = sessionFactory.getJdbcServices();
@@ -90,7 +99,7 @@ public class CollectionLoaderSubSelectFetch implements CollectionLoader {
 				// there was one, so we want to make sure to prepare the corresponding collection
 				// reference for reading
 				for ( var key : registeredFetch.getResultingEntityKeys() ) {
-					final var containedCollection = persistenceContext.getCollection( collectionKey( key ) );
+					final var containedCollection = persistenceContext.getCollection( collectionKey( key, session ) );
 					if ( containedCollection != null && containedCollection != collection ) {
 						containedCollection.beginRead();
 						containedCollection.beforeInitialize( getLoadable().getCollectionDescriptor(), -1 );
@@ -142,8 +151,8 @@ public class CollectionLoaderSubSelectFetch implements CollectionLoader {
 		return collection;
 	}
 
-	private CollectionKey collectionKey(EntityKey key) {
-		return new CollectionKey( attributeMapping.getCollectionDescriptor(), key.getIdentifier() );
+	private CollectionKey collectionKey(EntityKey key, SharedSessionContractImplementor session) {
+		return session.generateCollectionKey( attributeMapping.getCollectionDescriptor(), key.getIdentifier() );
 	}
 
 }

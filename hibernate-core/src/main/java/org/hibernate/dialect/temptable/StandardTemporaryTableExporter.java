@@ -4,6 +4,7 @@
  */
 package org.hibernate.dialect.temptable;
 
+import java.util.Locale;
 import java.util.function.Function;
 
 import org.hibernate.dialect.Dialect;
@@ -96,7 +97,9 @@ public class StandardTemporaryTableExporter implements TemporaryTableExporter {
 					}
 				}
 				else {
-					buffer.append( " not null" );
+					if ( !databaseTypeName.toLowerCase( Locale.ROOT ).contains( "not null" ) ) {
+						buffer.append( " not null" );
+					}
 				}
 			}
 			buffer.append( ", " );

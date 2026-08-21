@@ -24,10 +24,8 @@ import org.hibernate.MappingException;
 import org.hibernate.collection.spi.AbstractPersistentCollection;
 import org.hibernate.collection.spi.PersistentArrayHolder;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.util.MarkerObject;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.Joinable;
@@ -49,9 +47,6 @@ import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
  * @author Gavin King
  */
 public abstract class CollectionType extends AbstractType implements AssociationType {
-
-	@Internal
-	public static final Object UNFETCHED_COLLECTION = new MarkerObject( "UNFETCHED COLLECTION" );
 
 	private final String role;
 	private final String foreignKeyPropertyName;
@@ -778,7 +773,7 @@ public abstract class CollectionType extends AbstractType implements Association
 	public Object getCollection(Object key, SharedSessionContractImplementor session, Object owner, Boolean overridingEager) {
 		final var persister = getPersister( session );
 		final var persistenceContext = session.getPersistenceContextInternal();
-		final var collectionKey = new CollectionKey( persister, key );
+		final var collectionKey = session.generateCollectionKey( persister, key );
 		// check if collection is currently being loaded
 		final var loadingCollectionEntry =
 				persistenceContext.getLoadContexts().findLoadingCollectionEntry( collectionKey );

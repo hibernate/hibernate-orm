@@ -81,7 +81,7 @@ public class BidirectionalOneToOneWithNonAggregateIdTest  {
 		protected int id;
 
 		@Version
-		@Column(name = "lock_version", nullable = false, columnDefinition = "smallint")
+		@Column(name = "lock_version", nullable = false)
 		protected int lockVersion;
 
 		@OneToOne(fetch = LAZY, cascade = ALL, orphanRemoval = true, mappedBy = "parent")
@@ -113,7 +113,7 @@ public class BidirectionalOneToOneWithNonAggregateIdTest  {
 		@Id
 		@OneToOne(fetch = LAZY, optional = false)
 		@LazyGroup("owner")
-		@JoinColumn(name = "parentid", nullable = false, updatable = false, columnDefinition = "smallint")
+		@JoinColumn(name = "parentid", nullable = false, updatable = false)
 		@Fetch(SELECT)
 		protected Entity1 parent;
 

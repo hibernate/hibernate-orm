@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.invoke.MethodHandles;
 import java.sql.Blob;
+import java.util.Locale;
 
 import org.hibernate.HibernateException;
 import org.hibernate.spatial.HSMessageLogger;
@@ -33,8 +34,8 @@ import org.geolatte.geom.jts.JTS;
 /**
  * A utility class to serialize from/to H2GIS WKB's.
  * <p>
- * <p>Note: this utility makes it unnecessary to have a dependency on GeoDB. As long as GeoDB is
- * not available in common maven repositories, such a dependency is to be avoided.</p>
+ * Note: this utility makes it unnecessary to have a dependency on GeoDB. As long as GeoDB is
+ * not available in common maven repositories, such a dependency is to be avoided.
  *
  * @author Karel Maesen, Geovise BVBA
  */
@@ -43,7 +44,8 @@ public class H2GISWkb {
 	private static final HSMessageLogger LOGGER = Logger.getMessageLogger(
 			MethodHandles.lookup(),
 			HSMessageLogger.class,
-			H2GISWkb.class.getName()
+			H2GISWkb.class.getName(),
+			Locale.ROOT
 	);
 
 	private H2GISWkb() {

@@ -74,6 +74,7 @@ public class ArrayContainsTest {
 	}
 
 	@Test
+	@RequiresDialectFeature( feature =  DialectFeatureChecks.SupportsArrayContainsNullable.class)
 	public void testNodeBuilderArray(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			final NodeBuilder cb = (NodeBuilder) em.getCriteriaBuilder();
@@ -103,6 +104,7 @@ public class ArrayContainsTest {
 	}
 
 	@Test
+	@RequiresDialectFeature( feature =  DialectFeatureChecks.SupportsArrayContainsNullable.class)
 	public void testNodeBuilderCollection(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			final NodeBuilder cb = (NodeBuilder) em.getCriteriaBuilder();

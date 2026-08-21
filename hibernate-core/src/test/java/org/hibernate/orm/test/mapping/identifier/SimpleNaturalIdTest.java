@@ -13,8 +13,10 @@ import org.hibernate.LockMode;
 import org.hibernate.Session;
 import org.hibernate.annotations.NaturalId;
 
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -63,9 +65,10 @@ public class SimpleNaturalIdTest {
 	}
 
 	@Test
+	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsLockTimeouts.class )
 	void testLoading(EntityManagerFactoryScope scope) {
 		scope.inTransaction( (entityManager) -> {
-			//tag::naturalid-loading-example
+			//tag::naturalid-loading-example[]
 			var book = entityManager.find( Book.class,
 					"978-9730228236",
 					KeyType.NATURAL,
@@ -76,7 +79,7 @@ public class SimpleNaturalIdTest {
 					KeyType.NATURAL,
 					LockMode.PESSIMISTIC_WRITE,
 					Timeout.seconds( 1 ) );
-			//end::naturalid-loading-example
+			//end::naturalid-loading-example[]
 		} );
 	}
 

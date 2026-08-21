@@ -9,7 +9,6 @@ import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
-import java.io.IOException;
 
 /**
  * JSON document producer.
@@ -34,14 +33,12 @@ public interface JsonDocumentWriter {
 	/**
 	 * Starts a new JSON array.
 	 * @return this instance
-	 * @throws IOException an I/O error roccured while starting the object.
 	 */
 	JsonDocumentWriter startArray();
 
 	/**
 	 * Ends a new JSON array.
 	 * @return this instance
-	 * @throws IOException an I/O error roccured while starting the object.
 	 */
 	JsonDocumentWriter endArray();
 
@@ -50,14 +47,12 @@ public interface JsonDocumentWriter {
 	 * @param key the element name.
 	 * @return this instance
 	 * @throws IllegalArgumentException key name does not follow JSON specification.
-	 * @throws IOException an I/O error occurred while starting the object.
 	 */
 	JsonDocumentWriter objectKey(String key);
 
 	/**
 	 * Adds a new JSON element null value.
 	 * @return this instance
-	 * @throws IOException an I/O error roccured while starting the object.
 	 */
 	JsonDocumentWriter nullValue();
 

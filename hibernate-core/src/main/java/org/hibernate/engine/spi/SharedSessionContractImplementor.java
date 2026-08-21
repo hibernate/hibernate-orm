@@ -6,9 +6,11 @@ package org.hibernate.engine.spi;
 
 import java.util.Set;
 import java.util.UUID;
+
 import jakarta.persistence.TransactionRequiredException;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import org.hibernate.audit.spi.AuditWorkQueue;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
@@ -18,6 +20,7 @@ import org.hibernate.LockOptions;
 import org.hibernate.StatelessSession;
 import org.hibernate.bytecode.enhance.spi.interceptor.SessionAssociationMarkers;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.extension.spi.Extension;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.query.Query;
@@ -28,6 +31,7 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.QueryProducerImplementor;
@@ -155,7 +159,7 @@ public interface SharedSessionContractImplementor
 
 	/**
 	 * Determines whether the session is closed.
-	 * <p>
+	 *
 	 * @apiNote Provided separately from {@link #isOpen()} as this method
 	 *          does not attempt any JTA synchronization registration,
 	 *          whereas {@link #isOpen()} does. This one is better for most
@@ -218,6 +222,15 @@ public interface SharedSessionContractImplementor
 	CacheTransactionSynchronization getCacheTransactionSynchronization();
 
 	/**
+	 * The changeset id associated with the current unit of work,
+	 * for use with {@linkplain org.hibernate.annotations.Temporal temporal}
+	 * effectivity columns and with
+	 * {@linkplain org.hibernate.annotations.Audited.Table#changesetIdColumn
+	 * audit log changeset id columns}.
+	 */
+	Object getCurrentChangesetIdentifier();
+
+	/**
 	 * Does this session have an active Hibernate transaction, or is it
 	 * associated with a JTA transaction currently in progress?
 	 */
@@ -274,8 +287,21 @@ public interface SharedSessionContractImplementor
 	TransactionCompletionCallbacksImplementor getTransactionCompletionCallbacksImplementor();
 
 	/**
+	 * Access the transaction-scoped audit work queue for deferred
+	 * audit row writes. Lazily initialized on first access.
+	 *
+	 * @since 7.4
+	 */
+	@Incubating
+	AuditWorkQueue getAuditWorkQueue();
+
+	/**
 	 * Instantiate an {@link EntityKey} with the given id and for the
 	 * entity represented by the given {@link EntityPersister}.
+	 * <p>
+	 * When operating in a temporal context, this will automatically
+	 * create a {@link TemporalEntityKey} that includes the transaction
+	 * identifier.
 	 *
 	 * @param id The entity id
 	 * @param persister The entity persister
@@ -283,6 +309,21 @@ public interface SharedSessionContractImplementor
 	 * @return The entity key
 	 */
 	EntityKey generateEntityKey(Object id, EntityPersister persister);
+
+	/**
+	 * Instantiate a {@link CollectionKey} with the given key and for the
+	 * collection represented by the given {@link CollectionPersister}.
+	 * <p>
+	 * When operating in a temporal context, this will automatically
+	 * create a {@link TemporalCollectionKey} that includes the transaction
+	 * identifier.
+	 *
+	 * @param persister The collection persister
+	 * @param key The collection key (owner FK)
+	 *
+	 * @return The collection key
+	 */
+	CollectionKey generateCollectionKey(CollectionPersister persister, Object key);
 
 	/**
 	 * Retrieves the {@link Interceptor} associated with this session.
@@ -631,4 +672,17 @@ public interface SharedSessionContractImplementor
 
 	@Override
 	RootGraphImplementor<?> getEntityGraph(String graphName);
+
+	/**
+	 * Allows accessing session scoped extension storages of the particular session instance.
+	 * <p>
+	 * Extensions first had to be registered with the {@link org.hibernate.SessionFactory}
+	 *
+	 * @param extension The extension storage attached to the current session.
+	 * if the current session does not yet have the particular storage type attached to this session.
+	 * @param <E> The type of the extension storage.
+	 */
+	@Incubating
+	<E extends Extension> E getExtension(Class<E> extension);
+
 }

@@ -16,7 +16,7 @@ import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -109,7 +109,7 @@ public class GroupByTest {
 		} );
 	}
 
-	@BeforeEach
+	@BeforeAll
 	public void prepareData(SessionFactoryScope scope) {
 		scope.inTransaction( (em) -> {
 			Contact entity1 = new Contact( 123, new Contact.Name( "Johnny", "Lawrence" ), Contact.Gender.MALE, LocalDate.of(1970, 1, 1) );
@@ -119,7 +119,7 @@ public class GroupByTest {
 
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
-		scope.getSessionFactory().getSchemaManager().truncate();
+		// scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 }

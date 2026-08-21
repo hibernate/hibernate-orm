@@ -19,14 +19,13 @@ import java.util.Optional;
  * entity. If the entity has exactly one attribute annotated
  * {@link org.hibernate.annotations.NaturalId @NaturalId},
  * then {@link SimpleNaturalIdLoadAccess} may be used instead.
- * <p>
- * <pre>
+ * <pre>{@code
  * Book book =
  *         session.byNaturalId(Book.class)
  *             .using(Book_.isbn, isbn)
  *             .using(Book_.printing, printing)
  *             .load();
- * </pre>
+ * }</pre>
  *
  * @author Eric Dalquist
  * @author Steve Ebersole
@@ -35,7 +34,7 @@ import java.util.Optional;
  * @see org.hibernate.annotations.NaturalId
  * @see SimpleNaturalIdLoadAccess
  *
- * @deprecated (since 7.3) Use {@linkplain Session#findByNaturalId} instead.
+ * @deprecated (since 7.3) Use {@linkplain Session#find} with {@link KeyType#NATURAL} instead.
  */
 @Deprecated
 public interface NaturalIdLoadAccess<T> {

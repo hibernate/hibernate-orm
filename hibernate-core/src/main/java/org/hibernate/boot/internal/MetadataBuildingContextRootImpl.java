@@ -4,11 +4,17 @@
  */
 package org.hibernate.boot.internal;
 
+import org.hibernate.audit.AuditStrategy;
+import org.hibernate.boot.model.internal.TemporalHelper;
 import org.hibernate.boot.model.naming.ObjectNameNormalizer;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
+import org.hibernate.temporal.TemporalTableStrategy;
+import org.hibernate.engine.config.spi.ConfigurationService;
+
+import static org.hibernate.boot.model.internal.AuditHelper.determineAuditStrategy;
 
 /**
  * Root {@link MetadataBuildingContext}.
@@ -21,6 +27,8 @@ public class MetadataBuildingContextRootImpl implements MetadataBuildingContext 
 	private final InFlightMetadataCollector metadataCollector;
 	private final ObjectNameNormalizer objectNameNormalizer;
 	private final TypeDefinitionRegistryStandardImpl typeDefinitionRegistry;
+	private final TemporalTableStrategy temporalTableStrategy;
+	private final AuditStrategy auditStrategy;
 
 	public MetadataBuildingContextRootImpl(
 			String contributor,
@@ -35,6 +43,24 @@ public class MetadataBuildingContextRootImpl implements MetadataBuildingContext 
 		this.metadataCollector = metadataCollector;
 		this.objectNameNormalizer = new ObjectNameNormalizer(this);
 		this.typeDefinitionRegistry = new TypeDefinitionRegistryStandardImpl();
+		this.temporalTableStrategy = temporalTableStrategy( bootstrapContext );
+		this.auditStrategy = auditStrategy( bootstrapContext );
+	}
+
+	private TemporalTableStrategy temporalTableStrategy(BootstrapContext bootstrapContext) {
+		final var settings =
+				bootstrapContext.getServiceRegistry()
+						.requireService( ConfigurationService.class )
+						.getSettings();
+		return TemporalHelper.determineTemporalTableStrategy( settings );
+	}
+
+	private AuditStrategy auditStrategy(BootstrapContext bootstrapContext) {
+		final var settings =
+				bootstrapContext.getServiceRegistry()
+						.requireService( ConfigurationService.class )
+						.getSettings();
+		return determineAuditStrategy( settings );
 	}
 
 	@Override
@@ -70,5 +96,23 @@ public class MetadataBuildingContextRootImpl implements MetadataBuildingContext 
 	@Override
 	public String getCurrentContributorName() {
 		return contributor;
+	}
+
+	@Override
+	public TemporalTableStrategy getTemporalTableStrategy() {
+		final var dialect = getMetadataCollector().getDatabase().getDialect();
+		return switch ( temporalTableStrategy ) {
+			case AUTO -> dialect.getTemporalTableSupport().getDefaultTemporalTableStrategy();
+			case SINGLE_TABLE, HISTORY_TABLE -> temporalTableStrategy;
+			case NATIVE ->
+					dialect.getTemporalTableSupport().supportsNativeTemporalTables()
+							? TemporalTableStrategy.NATIVE
+							: TemporalTableStrategy.HISTORY_TABLE;
+		};
+	}
+
+	@Override
+	public AuditStrategy getAuditStrategy() {
+		return auditStrategy;
 	}
 }

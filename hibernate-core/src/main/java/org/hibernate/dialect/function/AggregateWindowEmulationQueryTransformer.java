@@ -223,7 +223,7 @@ public class AggregateWindowEmulationQueryTransformer implements QueryTransforme
 								.get( selection.getValuesArrayPosition() )
 								.getExpression();
 					}
-					else {
+					else if ( !(expression instanceof Predicate) ) {
 						final Expression realExpression;
 						if ( expression instanceof SqmPathInterpretation<?> pathInterpretation ) {
 							realExpression = pathInterpretation.getSqlExpression();
@@ -261,6 +261,10 @@ public class AggregateWindowEmulationQueryTransformer implements QueryTransforme
 									.getExpression();
 						}
 					}
+					else {
+						outerExpression = (Expression) expression;
+					}
+					//noinspection unchecked
 					return (X) outerExpression;
 				}
 			}.replaceExpressions( subQuerySpec.getHavingClauseRestrictions() );

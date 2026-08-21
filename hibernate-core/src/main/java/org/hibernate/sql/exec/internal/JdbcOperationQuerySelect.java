@@ -7,6 +7,7 @@ package org.hibernate.sql.exec.internal;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
+import org.hibernate.sql.exec.internal.lock.LoadedValuesCollectorFactory;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcLockStrategy;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
@@ -37,6 +38,7 @@ public class JdbcOperationQuerySelect
 	private final JdbcParameter offsetParameter;
 	private final JdbcParameter limitParameter;
 	private final JdbcLockStrategy jdbcLockStrategy;
+	private final boolean scrollExecution;
 
 	public JdbcOperationQuerySelect(
 			String sql,
@@ -53,7 +55,8 @@ public class JdbcOperationQuerySelect
 				Collections.emptyMap(),
 				JdbcLockStrategy.AUTO,
 				null,
-				null
+				null,
+				false
 		);
 	}
 
@@ -67,7 +70,8 @@ public class JdbcOperationQuerySelect
 			Map<JdbcParameter, JdbcParameterBinding> appliedParameters,
 			JdbcLockStrategy jdbcLockStrategy,
 			JdbcParameter offsetParameter,
-			JdbcParameter limitParameter) {
+			JdbcParameter limitParameter,
+			boolean scrollExecution) {
 		super( sql, parameterBinders, affectedTableNames, appliedParameters );
 		this.jdbcValuesMappingProducer = jdbcValuesMappingProducer;
 		this.rowsToSkip = rowsToSkip;
@@ -75,6 +79,33 @@ public class JdbcOperationQuerySelect
 		this.jdbcLockStrategy = jdbcLockStrategy;
 		this.offsetParameter = offsetParameter;
 		this.limitParameter = limitParameter;
+		this.scrollExecution = scrollExecution;
+	}
+
+	public JdbcOperationQuerySelect(
+			String sql,
+			List<JdbcParameterBinder> parameterBinders,
+			JdbcValuesMappingProducer jdbcValuesMappingProducer,
+			Set<String> affectedTableNames,
+			int rowsToSkip,
+			int maxRows,
+			Map<JdbcParameter, JdbcParameterBinding> appliedParameters,
+			JdbcLockStrategy jdbcLockStrategy,
+			JdbcParameter offsetParameter,
+			JdbcParameter limitParameter) {
+		this(
+				sql,
+				parameterBinders,
+				jdbcValuesMappingProducer,
+				affectedTableNames,
+				rowsToSkip,
+				maxRows,
+				appliedParameters,
+				jdbcLockStrategy,
+				offsetParameter,
+				limitParameter,
+				false
+		);
 	}
 
 	@Override
@@ -93,7 +124,7 @@ public class JdbcOperationQuerySelect
 	}
 
 	@Override
-	public @Nullable LoadedValuesCollector getLoadedValuesCollector() {
+	public @Nullable LoadedValuesCollectorFactory getLoadedValuesCollectorFactory() {
 		return null;
 	}
 
@@ -102,7 +133,7 @@ public class JdbcOperationQuerySelect
 	}
 
 	@Override
-	public void performPostAction(boolean succeeded, StatementAccess jdbcStatementAccess, Connection jdbcConnection, ExecutionContext executionContext) {
+	public void performPostActions(boolean succeeded, StatementAccess jdbcStatementAccess, Connection jdbcConnection, ExecutionContext executionContext, LoadedValuesCollector loadedValuesCollector) {
 	}
 
 	@Override
@@ -126,6 +157,9 @@ public class JdbcOperationQuerySelect
 
 	@Override
 	public boolean isCompatibleWith(JdbcParameterBindings jdbcParameterBindings, QueryOptions queryOptions) {
+		if ( scrollExecution != queryOptions.isScrollExecution() ) {
+			return false;
+		}
 		final var limit = queryOptions.getLimit();
 		if ( !appliedParameters.isEmpty() ) {
 			if ( jdbcParameterBindings == null ) {

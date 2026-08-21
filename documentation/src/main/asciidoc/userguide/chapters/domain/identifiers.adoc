@@ -701,45 +701,6 @@ attribute, etc.
 for identifier generators.
 
 
-
-[[identifiers-generators-GenericGenerator]]
-==== Using `@GenericGenerator`
-
-[TIP]
-====
-`@GenericGenerator` is generally considered deprecated in favor of <<identifiers-generators-IdGeneratorType,@IdGeneratorType>>
-====
-
-`@GenericGenerator` allows integration of any Hibernate `org.hibernate.id.IdentifierGenerator` implementation, including any of the specific ones discussed here and any custom ones.
-
-[[identifiers-generators-pooled-lo-optimizer-mapping-example]]
-.Pooled-lo optimizer mapping using `@GenericGenerator` mapping
-====
-[source, java, indent=0]
-----
-include::{example-dir-identifier}/PooledOptimizerTest.java[tag=identifiers-generators-pooled-lo-optimizer-mapping-example]
-----
-====
-
-Now, when saving 5 `Person` entities and flushing the Persistence Context after every 3 entities:
-
-[[identifiers-generators-pooled-lo-optimizer-persist-example]]
-.Pooled-lo optimizer mapping using `@GenericGenerator` mapping
-====
-[source, java, indent=0]
-----
-include::{example-dir-identifier}/PooledOptimizerTest.java[tag=identifiers-generators-pooled-lo-optimizer-persist-example]
-----
-
-[source, sql, indent=0]
-----
-include::{extrasdir}/id/identifiers-generators-pooled-lo-optimizer-persist-example.sql[]
-----
-====
-
-As you can see from the list of generated SQL statements, you can insert 3 entities with just one database sequence call.
-This way, the pooled and the pooled-lo optimizers allow you to reduce the number of database round trips, therefore reducing the overall transaction response time.
-
 [[identifiers-derived]]
 ==== Derived Identifiers
 

@@ -5,6 +5,7 @@
 package org.hibernate.orm.test.bulkid;
 
 import org.hibernate.dialect.CockroachDialect;
+import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 
 /**
@@ -17,6 +18,7 @@ import org.hibernate.testing.orm.junit.SkipForDialect;
 		dialectClass = CockroachDialect.class,
 		reason = "Amount of rows lengthens the transaction time, leading to retry errors on CockroachDB: https://www.cockroachlabs.com/docs/v24.3/transaction-retry-error-reference.html#retry_commit_deadline_exceeded"
 )
+@SkipForDialect( dialectClass = SpannerDialect.class, reason = "temporary disable, taking too long to complete")
 public class OracleInlineMutationStrategyIdTest extends InlineMutationStrategyIdTest {
 
 	@Override

@@ -130,4 +130,38 @@ public class StringHelperTest {
 		return builder.toString();
 	}
 
+	@Test
+	public void testDecapitalize() {
+		// Null and empty strings should be returned as-is (same instance)
+		assertNull( StringHelper.decapitalize( null ) );
+		assertSame( "", StringHelper.decapitalize( "" ) );
+
+		// Single character strings
+		assertEquals( "x", StringHelper.decapitalize( "X" ) );
+		assertEquals( "x", StringHelper.decapitalize( "x" ) );
+
+		// Normal capitalized names should have first char lowercased
+		assertEquals( "fooBah", StringHelper.decapitalize( "FooBah" ) );
+		assertEquals( "name", StringHelper.decapitalize( "Name" ) );
+		assertEquals( "getString", StringHelper.decapitalize( "GetString" ) );
+
+		// Special case: when both first and second chars are uppercase,
+		// the string should remain unchanged (JavaBeans spec) - same instance returned
+		String url = "URL";
+		assertSame( url, StringHelper.decapitalize( url ) );
+		assertEquals( "ID", StringHelper.decapitalize( "ID" ) );
+		assertEquals( "XMLParser", StringHelper.decapitalize( "XMLParser" ) );
+
+		// Already lowercase strings should return same instance (optimization)
+		String lowercase = "alreadylowercase";
+		assertSame( lowercase, StringHelper.decapitalize( lowercase ) );
+
+		// Edge case: single uppercase char
+		assertEquals( "a", StringHelper.decapitalize( "A" ) );
+
+		// Edge case: single lowercase char should return same instance
+		String singleLower = "a";
+		assertSame( singleLower, StringHelper.decapitalize( singleLower ) );
+	}
+
 }

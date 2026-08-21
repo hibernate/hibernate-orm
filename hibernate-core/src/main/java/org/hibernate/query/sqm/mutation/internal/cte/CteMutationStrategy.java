@@ -23,34 +23,29 @@ import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.sql.ast.tree.cte.CteTable;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 
-/**
- * @asciidoc
- *
- * {@link SqmMultiTableMutationStrategy} implementation using SQL's modifiable CTE (Common Table Expression)
- * approach to perform the update/delete.  E.g. (using delete):
- *
- * ````
- * with cte_id (id) as (
- *     select
- *         id
- *     from Person
- *     where condition
- * ), delete_1 as (
- *   delete
- *   from
- *   	Person
- *   where
- *   	(id) in (
- *   		select id
- *   		from cte_id
- *   	)
- *   returning id
- * )
- * select count(*) from cte_id
- * ````
- *
- * @author Christian Beikov
- */
+/// [SqmMultiTableMutationStrategy] implementation using SQL's modifiable CTE (Common Table Expression)
+/// approach to perform the update/delete.  E.g. (using delete):
+/// ```sql
+/// with cte_id (id) as (
+///     select
+///         id
+///     from Person
+///     where condition
+/// ), delete_1 as (
+///   delete
+///   from
+///   	Person
+///   where
+///   	(id) in (
+///   		select id
+///   		from cte_id
+///   	)
+///   returning id
+/// )
+/// select count(*) from cte_id
+/// ````
+///
+/// @author Christian Beikov
 public class CteMutationStrategy implements SqmMultiTableMutationStrategy {
 	public static final String SHORT_NAME = "cte";
 	public static final String ID_TABLE_NAME = "id_cte";

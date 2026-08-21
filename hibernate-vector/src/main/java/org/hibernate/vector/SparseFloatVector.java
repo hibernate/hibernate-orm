@@ -21,6 +21,9 @@ public class SparseFloatVector extends AbstractSparseVector<Float> {
 	private float[] data = EMPTY_FLOAT_ARRAY;
 
 	public SparseFloatVector(int size) {
+		if ( size <= 0 ) {
+			throw new IllegalArgumentException( "size must be greater than zero" );
+		}
 		this.size = size;
 	}
 

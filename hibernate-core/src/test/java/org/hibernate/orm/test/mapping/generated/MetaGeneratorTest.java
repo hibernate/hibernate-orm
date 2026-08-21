@@ -79,27 +79,32 @@ public class MetaGeneratorTest {
 		} );
 	}
 
-	@Entity static class Thing {
+	@Entity(name = "Thing")
+	static class Thing {
 		@Id @Sequence
 		long id;
 	}
 
-	@Entity static class SecondThing {
+	@Entity(name = "SecondThing")
+	static class SecondThing {
 		@Id @SecondSequence(initial = 2)
 		long id;
 	}
 
-	@Entity static class ThirdThing {
+	@Entity(name = "ThirdThing")
+	static class ThirdThing {
 		@Id @ThirdSequence(initial = 3)
 		long id;
 	}
 
-	@Entity static class FourthThing {
+	@Entity(name = "FourthThing")
+	static class FourthThing {
 		@Id @FourthSequence(initial = 4)
 		long id;
 	}
 
-	@Entity static class FifthThing {
+	@Entity(name = "FifthThing")
+	static class FifthThing {
 		@Id @FifthSequence(initial = 5)
 		long id;
 	}

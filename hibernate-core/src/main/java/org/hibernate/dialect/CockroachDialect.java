@@ -285,6 +285,11 @@ public class CockroachDialect extends Dialect {
 			int scale,
 			JdbcTypeRegistry jdbcTypeRegistry) {
 		switch ( jdbcTypeCode ) {
+			case VARCHAR:
+				if ( "text".equals( columnTypeName ) && precision == Integer.MAX_VALUE ) {
+					jdbcTypeCode = LONG32VARCHAR;
+				}
+				break;
 			case OTHER:
 				switch ( columnTypeName ) {
 					case "uuid":
@@ -346,6 +351,20 @@ public class CockroachDialect extends Dialect {
 			case "int8" -> Types.BIGINT;
 			default -> super.resolveSqlTypeCode( columnTypeName, typeConfiguration );
 		};
+	}
+
+	@Override
+	public boolean equivalentTypes(int typeCode1, int typeCode2) {
+		switch ( typeCode1 ) {
+			// On CockroachDB, we use the same DDL type, so treat the types as equivalent
+			case LONG32VARCHAR, LONG32NVARCHAR, CLOB, NCLOB:
+				switch ( typeCode2 ) {
+					case LONG32VARCHAR, LONG32NVARCHAR, CLOB, NCLOB:
+						return true;
+				}
+			default:
+				return super.equivalentTypes( typeCode1, typeCode2 );
+		}
 	}
 
 	@Override
@@ -477,7 +496,7 @@ public class CockroachDialect extends Dialect {
 
 		functionContributions.getFunctionRegistry().register(
 				"trunc",
-				new PostgreSQLTruncFunction( true, functionContributions.getTypeConfiguration() )
+				new PostgreSQLTruncFunction( true, true, functionContributions.getTypeConfiguration() )
 		);
 		functionContributions.getFunctionRegistry().registerAlternateKey( "truncate", "trunc" );
 
@@ -491,8 +510,8 @@ public class CockroachDialect extends Dialect {
 		functionFactory.jsonValue_cockroachdb();
 		functionFactory.jsonQuery_cockroachdb();
 		functionFactory.jsonExists_cockroachdb();
-		functionFactory.jsonObject_postgresql();
-		functionFactory.jsonArray_postgresql();
+		functionFactory.jsonObject_postgresql( false );
+		functionFactory.jsonArray_postgresql( false );
 		functionFactory.jsonArrayAgg_postgresql( false );
 		functionFactory.jsonObjectAgg_postgresql( false );
 		functionFactory.jsonSet_postgresql();
@@ -565,6 +584,11 @@ public class CockroachDialect extends Dialect {
 	}
 
 	@Override
+	public boolean isCurrentTimestampStable() {
+		return true;
+	}
+
+	@Override
 	public boolean supportsDistinctFromPredicate() {
 		return true;
 	}
@@ -585,6 +609,11 @@ public class CockroachDialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsIfExistsBeforeIndexName() {
+		return true;
+	}
+
+	@Override
 	public boolean qualifyIndexName() {
 		return false;
 	}
@@ -592,6 +621,17 @@ public class CockroachDialect extends Dialect {
 	@Override
 	public IdentityColumnSupport getIdentityColumnSupport() {
 		return CockroachDBIdentityColumnSupport.INSTANCE;
+	}
+
+	@Override
+	public String getAlterColumnTypeString(String columnName, String columnType, String columnDefinition) {
+		// would need multiple statements to 'set not null'/'drop not null', 'set default'/'drop default', 'set generated', etc
+		return "alter column " + columnName + " set data type " + columnType;
+	}
+
+	@Override
+	public boolean supportsAlterColumnType() {
+		return true;
 	}
 
 	@Override

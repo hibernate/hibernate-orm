@@ -10,17 +10,20 @@ import java.util.Map;
 import org.hibernate.annotations.ManyToAny;
 import org.hibernate.boot.models.annotations.spi.AttributeMarker;
 import org.hibernate.models.spi.ModelsContext;
+import jakarta.persistence.CascadeType;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
 public class ManyToAnyAnnotation implements ManyToAny, AttributeMarker, AttributeMarker.Fetchable {
 	private jakarta.persistence.FetchType fetch;
+	private CascadeType[] cascade;
 
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
 	public ManyToAnyAnnotation(ModelsContext modelContext) {
 		this.fetch = jakarta.persistence.FetchType.EAGER;
+		this.cascade = new CascadeType[0];
 	}
 
 	/**
@@ -28,6 +31,7 @@ public class ManyToAnyAnnotation implements ManyToAny, AttributeMarker, Attribut
 	 */
 	public ManyToAnyAnnotation(ManyToAny annotation, ModelsContext modelContext) {
 		this.fetch = annotation.fetch();
+		this.cascade = annotation.cascade();
 	}
 
 	/**
@@ -35,6 +39,7 @@ public class ManyToAnyAnnotation implements ManyToAny, AttributeMarker, Attribut
 	 */
 	public ManyToAnyAnnotation(Map<String, Object> attributeValues, ModelsContext modelContext) {
 		this.fetch = (jakarta.persistence.FetchType) attributeValues.get( "fetch" );
+		this.cascade = (CascadeType[]) attributeValues.getOrDefault( "cascade", new CascadeType[0] );
 	}
 
 	@Override
@@ -51,5 +56,13 @@ public class ManyToAnyAnnotation implements ManyToAny, AttributeMarker, Attribut
 		this.fetch = value;
 	}
 
+	@Override
+	public CascadeType[] cascade() {
+		return cascade;
+	}
+
+	public void cascade(CascadeType[] value) {
+		this.cascade = value;
+	}
 
 }

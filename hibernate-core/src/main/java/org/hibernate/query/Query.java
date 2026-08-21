@@ -319,6 +319,7 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 *
 	 * @return The comment.
 	 */
+	@Override
 	String getComment();
 
 	/**
@@ -337,6 +338,7 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 *
 	 * @see #getComment()
 	 */
+	@Override
 	Query<R> setComment(String comment);
 
 	/**
@@ -397,6 +399,7 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 *
 	 * @return {@code this}, for method chaining
 	 */
+	@Override
 	Query<R> setTimeout(Timeout timeout);
 
 	/**
@@ -406,16 +409,19 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 *
 	 * @return {@code this}, for method chaining
 	 */
+	@Override
 	Query<R> setLockScope(PessimisticLockScope lockScope);
 
 	/**
 	 * Set a {@link TupleTransformer}.
 	 */
+	@Override
 	<T> Query<T> setTupleTransformer(TupleTransformer<T> transformer);
 
 	/**
 	 * Set a {@link ResultListTransformer}.
 	 */
+	@Override
 	Query<R> setResultListTransformer(ResultListTransformer<R> transformer);
 
 	/**
@@ -427,7 +433,10 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 * explicitly set by the client.
 	 *
 	 * @return Return the encapsulation of this query's options.
+	 *
+	 * @deprecated This operation exposes an SPI type and will be removed.
 	 */
+	@Deprecated(since = "7.4", forRemoval = true)
 	QueryOptions getQueryOptions();
 
 	/**
@@ -450,19 +459,21 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 *
 	 * @see #setParameter(String, Object, Type)
 	 */
+	@Override
 	<P> Query<R> setParameter(String parameter, P argument, Class<P> type);
 
 	/**
 	 * Bind the given argument to a named query parameter using the given
 	 * {@link Type}.
 	 */
+	@Override
 	<P> Query<R> setParameter(String parameter, P argument, Type<P> type);
 
 	/**
 	 * Bind an {@link Instant} value to the named query parameter using
 	 * just the portion indicated by the given {@link TemporalType}.
 	 */
-	@Deprecated(since = "7")
+	@Override @Deprecated(since = "7")
 	Query<R> setParameter(String parameter, Instant argument, TemporalType temporalType);
 
 	/**
@@ -499,12 +510,14 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 *
 	 * @see #setParameter(int, Object, Type)
 	 */
+	@Override
 	<P> Query<R> setParameter(int parameter, P argument, Class<P> type);
 
 	/**
 	 * Bind the given argument to an ordinal query parameter using the given
 	 * {@link Type}.
 	 */
+	@Override
 	<P> Query<R> setParameter(int parameter, P argument, Type<P> type);
 
 	/**
@@ -540,6 +553,7 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 *
 	 * @return {@code this}, for method chaining
 	 */
+	@Override
 	<T> Query<R> setParameter(QueryParameter<T> parameter, T argument);
 
 	/**
@@ -556,6 +570,7 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 *
 	 * @see #setParameter(QueryParameter, Object, Type)
 	 */
+	@Override
 	<P> Query<R> setParameter(QueryParameter<P> parameter, P argument, Class<P> type);
 
 	/**
@@ -568,6 +583,7 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 *
 	 * @return {@code this}, for method chaining
 	 */
+	@Override
 	<P> Query<R> setParameter(QueryParameter<P> parameter, P argument, Type<P> type);
 
 	/**
@@ -603,6 +619,7 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 *
 	 * @return {@code this}, for method chaining
 	 */
+	@Override
 	Query<R> setParameterList(String parameter, @SuppressWarnings("rawtypes") Collection arguments);
 
 	/**
@@ -618,6 +635,7 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 *
 	 * @return {@code this}, for method chaining
 	 */
+	@Override
 	<P> Query<R> setParameterList(String parameter, Collection<? extends P> arguments, Class<P> javaType);
 
 	/**
@@ -629,6 +647,7 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 *
 	 * @return {@code this}, for method chaining
 	 */
+	@Override
 	<P> Query<R> setParameterList(String parameter, Collection<? extends P> arguments, Type<P> type);
 
 
@@ -643,6 +662,7 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 *
 	 * @return {@code this}, for method chaining
 	 */
+	@Override
 	Query<R> setParameterList(String parameter, Object[] values);
 
 	/**
@@ -658,6 +678,7 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 *
 	 * @return {@code this}, for method chaining
 	 */
+	@Override
 	<P> Query<R> setParameterList(String parameter, P[] arguments, Class<P> javaType);
 
 
@@ -670,6 +691,7 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 *
 	 * @return {@code this}, for method chaining
 	 */
+	@Override
 	<P> Query<R> setParameterList(String parameter, P[] arguments, Type<P> type);
 
 	/**
@@ -683,6 +705,7 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 *
 	 * @return {@code this}, for method chaining
 	 */
+	@Override
 	Query<R> setParameterList(int parameter, @SuppressWarnings("rawtypes") Collection arguments);
 
 	/**
@@ -698,6 +721,7 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 *
 	 * @return {@code this}, for method chaining
 	 */
+	@Override
 	<P> Query<R> setParameterList(int parameter, Collection<? extends P> arguments, Class<P> javaType);
 
 	/**
@@ -709,6 +733,7 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 *
 	 * @return {@code this}, for method chaining
 	 */
+	@Override
 	<P> Query<R> setParameterList(int parameter, Collection<? extends P> arguments, Type<P> type);
 
 	/**
@@ -722,6 +747,7 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 *
 	 * @return {@code this}, for method chaining
 	 */
+	@Override
 	Query<R> setParameterList(int parameter, Object[] arguments);
 
 	/**
@@ -737,6 +763,7 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 *
 	 * @return {@code this}, for method chaining
 	 */
+	@Override
 	<P> Query<R> setParameterList(int parameter, P[] arguments, Class<P> javaType);
 
 	/**
@@ -748,6 +775,7 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 *
 	 * @return {@code this}, for method chaining
 	 */
+	@Override
 	<P> Query<R> setParameterList(int parameter, P[] arguments, Type<P> type);
 
 	/**
@@ -762,6 +790,7 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 *
 	 * @return {@code this}, for method chaining
 	 */
+	@Override
 	<P> Query<R> setParameterList(QueryParameter<P> parameter, Collection<? extends P> arguments);
 
 	/**
@@ -778,6 +807,7 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 *
 	 * @return {@code this}, for method chaining
 	 */
+	@Override
 	<P> Query<R> setParameterList(QueryParameter<P> parameter, Collection<? extends P> arguments, Class<P> javaType);
 
 	/**
@@ -792,6 +822,7 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 *
 	 * @return {@code this}, for method chaining
 	 */
+	@Override
 	<P> Query<R> setParameterList(QueryParameter<P> parameter, Collection<? extends P> arguments, Type<P> type);
 
 	/**
@@ -807,6 +838,7 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 *
 	 * @return {@code this}, for method chaining
 	 */
+	@Override
 	<P> Query<R> setParameterList(QueryParameter<P> parameter, P[] arguments);
 
 	/**
@@ -823,6 +855,7 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 *
 	 * @return {@code this}, for method chaining
 	 */
+	@Override
 	<P> Query<R> setParameterList(QueryParameter<P> parameter, P[] arguments, Class<P> javaType);
 
 	/**
@@ -837,6 +870,7 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 *
 	 * @return {@code this}, for method chaining
 	 */
+	@Override
 	<P> Query<R> setParameterList(QueryParameter<P> parameter, P[] arguments, Type<P> type);
 
 	/**
@@ -848,6 +882,7 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 *
 	 * @return {@code this}, for method chaining
 	 */
+	@Override
 	Query<R> setProperties(Object bean);
 
 	/**
@@ -859,6 +894,7 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 *
 	 * @return {@code this}, for method chaining
 	 */
+	@Override
 	Query<R> setProperties(@SuppressWarnings("rawtypes") Map bean);
 
 

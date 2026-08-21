@@ -38,6 +38,7 @@ import org.hibernate.query.criteria.JpaCriteriaInsert;
  * </ul>
  * This interface declares operations for creating instances of these objects.
  * <table style="width:100%;margin:10px">
+ *     <caption>Operations of different query types</caption>
  *     <tr>
  *         <th style="width:10%"></th>
  *         <th style="text-align:left;width:45%">Selection</th>
@@ -68,7 +69,6 @@ import org.hibernate.query.criteria.JpaCriteriaInsert;
  *         <td>{@link #createNamedMutationQuery(String)}</td>
  *     </tr>
  * </table>
- * <p>
  * Operations like {@link #createSelectionQuery(String, Class) createSelectionQuery()},
  * {@link #createNamedSelectionQuery(String, Class) createNamedSelectionQuery()}, and
  * {@link #createNativeQuery(String, Class) createNativeQuery()} accept a Java

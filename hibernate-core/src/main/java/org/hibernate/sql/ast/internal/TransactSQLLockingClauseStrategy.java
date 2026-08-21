@@ -26,6 +26,12 @@ public class TransactSQLLockingClauseStrategy extends AbstractLockingClauseStrat
 	}
 
 	@Override
+	public boolean containsJoins() {
+		// not used for T-SQL dialects
+		return false;
+	}
+
+	@Override
 	public void render(SqlAppender sqlAppender) {
 		// not used for T-SQL dialects
 	}

@@ -7,15 +7,22 @@ package org.hibernate.tool.schema.spi;
 import java.util.Map;
 
 import org.hibernate.Incubating;
+import org.hibernate.service.JavaServiceLoadable;
 import org.hibernate.service.Service;
 import org.hibernate.tool.schema.internal.exec.JdbcContext;
 
 /**
  * Contract for schema management tool integration.
+ * <p>
+ * A custom {@code SchemaManagementTool} may be selected either by setting the
+ * configuration property
+ * {@value org.hibernate.cfg.SchemaToolingSettings#SCHEMA_MANAGEMENT_TOOL}, or by
+ * registering it as a {@linkplain java.util.ServiceLoader Java service}.
  *
  * @author Steve Ebersole
  */
 @Incubating
+@JavaServiceLoadable
 public interface SchemaManagementTool extends Service {
 	SchemaCreator getSchemaCreator(Map<String,Object> options);
 	SchemaDropper getSchemaDropper(Map<String,Object> options);

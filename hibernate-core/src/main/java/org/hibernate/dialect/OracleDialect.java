@@ -27,6 +27,8 @@ import org.hibernate.dialect.pagination.Oracle12LimitHandler;
 import org.hibernate.dialect.sequence.OracleSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.sql.ast.OracleSqlAstTranslator;
+import org.hibernate.dialect.temporal.OracleTemporalTableSupport;
+import org.hibernate.dialect.temporal.TemporalTableSupport;
 import org.hibernate.dialect.temptable.OracleLocalTemporaryTableStrategy;
 import org.hibernate.dialect.temptable.StandardGlobalTemporaryTableStrategy;
 import org.hibernate.dialect.temptable.TemporaryTableKind;
@@ -127,6 +129,7 @@ import static java.lang.String.join;
 import static java.util.regex.Pattern.CASE_INSENSITIVE;
 import static org.hibernate.cfg.DialectSpecificSettings.ORACLE_OSON_DISABLED;
 import static org.hibernate.cfg.DialectSpecificSettings.ORACLE_USE_BINARY_FLOATS;
+import static org.hibernate.cfg.DialectSpecificSettings.ORACLE_VALUE_LOB_ENABLED;
 import static org.hibernate.dialect.DialectLogging.DIALECT_LOGGER;
 import static org.hibernate.dialect.type.OracleJdbcHelper.getArrayJdbcTypeConstructor;
 import static org.hibernate.dialect.type.OracleJdbcHelper.getNestedTableJdbcTypeConstructor;
@@ -229,6 +232,7 @@ public class OracleDialect extends Dialect {
 	protected final int driverMajorVersion;
 	protected final int driverMinorVersion;
 	private boolean useBinaryFloat;
+	private boolean useValueLOB; //TODO: if removed or issue fixed update SkipLockedWithLobTest
 
 	public OracleDialect() {
 		this( MINIMUM_VERSION );
@@ -374,17 +378,14 @@ public class OracleDialect extends Dialect {
 				"mode",
 				new ModeStatsModeEmulation( typeConfiguration )
 		);
-		functionRegistry.register(
-				"trunc",
-				new OracleTruncFunction( functionContributions.getTypeConfiguration() )
-		);
+		functionRegistry.register( "trunc", new OracleTruncFunction() );
 		functionRegistry.registerAlternateKey( "truncate", "trunc" );
 
 		registerArrayFunctions( functionFactory );
 		registerJsonFunctions( functionFactory );
 		registerXmlFunctions( functionFactory );
 
-		functionFactory.unnest_oracle();
+		functionFactory.unnest_oracle( getVersion().isSameOrAfter( 21 ) );
 		functionFactory.generateSeries_recursive( getMaximumSeriesSize(), true, false );
 
 		functionFactory.hex( "rawtohex(?1)" );
@@ -486,7 +487,7 @@ public class OracleDialect extends Dialect {
 
 	@Override
 	public String currentDate() {
-		return "current_date";
+		return "trunc(current_date)";
 	}
 
 	@Override
@@ -1011,6 +1012,7 @@ public class OracleDialect extends Dialect {
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		final var configurationService = serviceRegistry.requireService( ConfigurationService.class );
 		useBinaryFloat = configurationService.getSetting( ORACLE_USE_BINARY_FLOATS, StandardConverters.BOOLEAN, true );
+		useValueLOB = configurationService.getSetting( ORACLE_VALUE_LOB_ENABLED, StandardConverters.BOOLEAN, true );
 
 		super.contributeTypes( typeContributions, serviceRegistry );
 		if ( ConfigurationHelper.getPreferredSqlTypeCodeForBoolean( serviceRegistry, this ) == BIT ) {
@@ -1134,6 +1136,21 @@ public class OracleDialect extends Dialect {
 		return getVersion().isSameOrAfter( 23 );
 	}
 
+	/**
+	 * Available since 23c, 23ai, 26ai, VALUE LOBs are documented <a href="https://docs.oracle.com/en/database/oracle/oracle-database/26/adlob/value-based-LOBs.html">here</a>.
+	 *
+	 * @return {@code true} if LOBs access can be VALUE based.
+	 */
+	@Override
+	public boolean supportsValueLOBAccess() {
+		return useValueLOB && getVersion().isSameOrAfter( 23 );
+	}
+
+	@Override
+	public String getValueLOBFragmentForExtraCreateTableInfo(String columnName) {
+		return " lob(" + columnName + ") query as value";
+	}
+
 	// features which remain constant across 8i, 9i, and 10g ~~~~~~~~~~~~~~~~~~
 
 	@Override
@@ -1148,6 +1165,11 @@ public class OracleDialect extends Dialect {
 
 	@Override
 	public boolean supportsIfExistsAfterAlterTable() {
+		return getVersion().isSameOrAfter( 23 );
+	}
+
+	@Override
+	public boolean supportsIfExistsBeforeIndexName() {
 		return getVersion().isSameOrAfter( 23 );
 	}
 
@@ -1710,7 +1732,9 @@ public class OracleDialect extends Dialect {
 
 	@Override
 	public String generatedAs(String generatedAs) {
-		return " generated always as (" + generatedAs + ")";
+		return generatedAs.startsWith( "row " )
+				? ""
+				: " generated always as (" + generatedAs + ")";
 	}
 
 	@Override
@@ -1894,4 +1918,13 @@ public class OracleDialect extends Dialect {
 		return new InformationExtractorOracleImpl( extractionContext );
 	}
 
+	@Override
+	public TemporalTableSupport getTemporalTableSupport() {
+		return new OracleTemporalTableSupport( this );
+	}
+
+	@Override //TODO: DELETEME
+	public boolean throttleDdl() {
+		return true;
+	}
 }

@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.sqm.mutation.internal;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
@@ -42,6 +44,7 @@ import org.hibernate.metamodel.mapping.ValuedModelPart;
 import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.UnionSubclassEntityPersister;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.ast.tree.AbstractUpdateOrDeleteStatement;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
@@ -214,9 +217,27 @@ public class SqmMutationStrategyHelper {
 		);
 	}
 
+	/**
+	 * Returns the entity descriptors whose soft-delete tables need to be updated.
+	 * Only {@code TABLE_PER_CLASS} requires multiple targets (one per concrete
+	 * subtype table); other inheritance strategies share a single soft-delete table.
+	 */
+	public static List<EntityMappingType> softDeleteTargets(EntityMappingType entityDescriptor) {
+		if ( entityDescriptor.getEntityPersister() instanceof UnionSubclassEntityPersister ) {
+			// TABLE_PER_CLASS: each concrete subtype has its own table with the soft-delete column
+			final var targets = new ArrayList<EntityMappingType>();
+			targets.add( entityDescriptor );
+			targets.addAll( entityDescriptor.getSubMappingTypes() );
+			return targets;
+		}
+		else {
+			return singletonList( entityDescriptor );
+		}
+	}
+
 	public static boolean isId(JdbcMappingContainer type) {
-		return type instanceof EntityIdentifierMapping || type instanceof AttributeMapping attributeMapping
-														&& isPartOfId( attributeMapping );
+		return type instanceof EntityIdentifierMapping
+			|| type instanceof AttributeMapping attributeMapping && isPartOfId( attributeMapping );
 	}
 
 	public static boolean isPartOfId(AttributeMapping attributeMapping) {
@@ -227,7 +248,9 @@ public class SqmMutationStrategyHelper {
 
 	public static void forEachSelectableMapping(String prefix, ModelPart modelPart, BiConsumer<String, SelectableMapping> consumer) {
 		if ( modelPart instanceof BasicValuedModelPart basicModelPart ) {
-			if ( basicModelPart.isInsertable() ) {
+			if ( basicModelPart.isInsertable()
+					|| modelPart instanceof AttributeMapping attributeMapping
+							&& isPartOfId( attributeMapping ) ) {
 				consumer.accept( prefix, basicModelPart );
 			}
 		}

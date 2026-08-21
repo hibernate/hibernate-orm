@@ -36,7 +36,7 @@ class MergeAuditingInterceptorTest {
 		} );
 	}
 
-	@Entity
+	@Entity(name = "Thing")
 	static class Thing {
 		@Id
 		@GeneratedValue

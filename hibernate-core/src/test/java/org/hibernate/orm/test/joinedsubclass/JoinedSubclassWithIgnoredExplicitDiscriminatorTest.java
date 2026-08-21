@@ -25,6 +25,7 @@ import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Test;
 
+import static org.hibernate.metamodel.mapping.DiscriminatorValue.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -57,14 +58,14 @@ public class JoinedSubclassWithIgnoredExplicitDiscriminatorTest {
 		final JoinedSubclassEntityPersister dogPersister = assertTyping( JoinedSubclassEntityPersister.class, p );
 		assertEquals( "integer", dogPersister.getDiscriminatorType().getName() );
 		assertEquals( "clazz_", dogPersister.getDiscriminatorColumnName() );
-		assertTrue( Integer.class.isInstance( dogPersister.getDiscriminatorValue() ) );
+		assertTrue( dogPersister.getDiscriminatorValue() instanceof Literal l && l.value() instanceof Integer );
 
 		p = scope.getSessionFactory().getMappingMetamodel().getEntityDescriptor(Cat.class.getName());
 		assertNotNull( p );
 		final JoinedSubclassEntityPersister catPersister = assertTyping( JoinedSubclassEntityPersister.class, p );
 		assertEquals( "integer", catPersister.getDiscriminatorType().getName() );
 		assertEquals( "clazz_", catPersister.getDiscriminatorColumnName() );
-		assertTrue( Integer.class.isInstance( catPersister.getDiscriminatorValue() ) );
+		assertTrue( catPersister.getDiscriminatorValue() instanceof Literal l && l.value() instanceof Integer );
 	}
 
 	@Test

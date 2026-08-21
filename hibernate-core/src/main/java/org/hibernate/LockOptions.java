@@ -241,7 +241,7 @@ public class LockOptions implements Serializable {
 	/**
 	 * The {@linkplain #getTimeout() timeout}, in milliseconds, associated
 	 * with {@code this} options.
-	 * <p/>
+	 * <p>
 	 * {@link #NO_WAIT}, {@link #WAIT_FOREVER}, or {@link #SKIP_LOCKED}
 	 * represent 3 "magic" values.
 	 *
@@ -255,7 +255,7 @@ public class LockOptions implements Serializable {
 	/**
 	 * Set the {@linkplain #getTimeout() timeout}, in milliseconds, associated
 	 * with {@code this} options.
-	 * <p/>
+	 * <p>
 	 * {@link #NO_WAIT}, {@link #WAIT_FOREVER}, or {@link #SKIP_LOCKED}
 	 * represent 3 "magic" values.
 	 *

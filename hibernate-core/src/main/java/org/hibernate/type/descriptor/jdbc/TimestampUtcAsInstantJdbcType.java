@@ -31,7 +31,6 @@ import jakarta.persistence.TemporalType;
  */
 public class TimestampUtcAsInstantJdbcType implements JdbcType {
 	public static final TimestampUtcAsInstantJdbcType INSTANCE = new TimestampUtcAsInstantJdbcType();
-	private static final Calendar UTC_CALENDAR = Calendar.getInstance( TimeZone.getTimeZone( "UTC" ) );
 
 	public TimestampUtcAsInstantJdbcType() {
 	}
@@ -90,7 +89,8 @@ public class TimestampUtcAsInstantJdbcType implements JdbcType {
 				}
 				catch (SQLException|AbstractMethodError e) {
 					// fall back to treating it as a JDBC Timestamp
-					st.setTimestamp( index, Timestamp.from( instant ), UTC_CALENDAR );
+					st.setTimestamp( index, Timestamp.from( instant ),
+							Calendar.getInstance( TimeZone.getTimeZone( "UTC" ) ) );
 				}
 			}
 
@@ -108,7 +108,8 @@ public class TimestampUtcAsInstantJdbcType implements JdbcType {
 				}
 				catch (SQLException|AbstractMethodError e) {
 					// fall back to treating it as a JDBC Timestamp
-					st.setTimestamp( name, Timestamp.from( instant ), UTC_CALENDAR );
+					st.setTimestamp( name, Timestamp.from( instant ),
+							Calendar.getInstance( TimeZone.getTimeZone( "UTC" ) ) );
 				}
 			}
 		};
@@ -125,7 +126,8 @@ public class TimestampUtcAsInstantJdbcType implements JdbcType {
 				}
 				catch (SQLException|AbstractMethodError e) {
 					// fall back to treating it as a JDBC Timestamp
-					return javaType.wrap( rs.getTimestamp( position, UTC_CALENDAR ), wrapperOptions );
+					return javaType.wrap( rs.getTimestamp( position,
+							Calendar.getInstance( TimeZone.getTimeZone( "UTC" ) ) ), wrapperOptions );
 				}
 			}
 
@@ -137,7 +139,8 @@ public class TimestampUtcAsInstantJdbcType implements JdbcType {
 				}
 				catch (SQLException|AbstractMethodError e) {
 					// fall back to treating it as a JDBC Timestamp
-					return javaType.wrap( statement.getTimestamp( position, UTC_CALENDAR ), wrapperOptions );
+					return javaType.wrap( statement.getTimestamp( position,
+							Calendar.getInstance( TimeZone.getTimeZone( "UTC" ) ) ), wrapperOptions );
 				}
 			}
 
@@ -149,7 +152,8 @@ public class TimestampUtcAsInstantJdbcType implements JdbcType {
 				}
 				catch (SQLException|AbstractMethodError e) {
 					// fall back to treating it as a JDBC Timestamp
-					return javaType.wrap( statement.getTimestamp( name, UTC_CALENDAR ), wrapperOptions );
+					return javaType.wrap( statement.getTimestamp( name,
+							Calendar.getInstance( TimeZone.getTimeZone( "UTC" ) ) ), wrapperOptions );
 				}
 			}
 		};

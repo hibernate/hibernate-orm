@@ -51,6 +51,15 @@ public interface TableGroup extends SqlAstNode, ColumnReferenceQualifier, SqmPat
 	void addTableGroupJoin(TableGroupJoin join);
 
 	/**
+	 * Removes the given table group join from this group's joins. No-op if not
+	 * present. Default implementation is unsupported; concrete groups override.
+	 */
+	default void removeTableGroupJoin(TableGroupJoin join) {
+		throw new UnsupportedOperationException(
+				"removeTableGroupJoin not supported by " + getClass().getName() );
+	}
+
+	/**
 	 * Adds the given table group join before a join as found via the given navigable path.
 	 */
 	void prependTableGroupJoin(NavigablePath navigablePath, TableGroupJoin join);

@@ -20,6 +20,10 @@ import jakarta.persistence.FindOption;
  * {@link CacheStoreMode#REFRESH} always implies {@link CacheRetrieveMode#BYPASS},
  * so there's no {@code CacheMode} representing the combination
  * {@code (REFRESH, USE)}.
+ * <p>
+ * Furthermore, the enumeration introduces the option {@link #REFRESH_SESSION},
+ * allowing a query to refresh the state of entities already associated with
+ * the persistence context.
  *
  * @author Gavin King
  * @author Strong Liu
@@ -81,7 +85,20 @@ public enum CacheMode implements FindOption {
 	 *
 	 * @see org.hibernate.boot.SessionFactoryBuilder#applyMinimalPutsForCaching(boolean)
 	 */
-	REFRESH( CacheStoreMode.REFRESH, CacheRetrieveMode.BYPASS );
+	REFRESH( CacheStoreMode.REFRESH, CacheRetrieveMode.BYPASS ),
+
+	/**
+	 * Similar to {@link #REFRESH}, but also overwrites the state of
+	 * entities already associated with first-level cache (the current
+	 * persistence context). That is, execution of the query has a side
+	 * effect identical to the {@linkplain Session#refresh(Object) refresh}
+	 * operation.
+	 *
+	 * @see Session#refresh(Object)
+	 *
+	 * @since 7.4
+	 */
+	REFRESH_SESSION( CacheStoreMode.REFRESH, CacheRetrieveMode.BYPASS );
 
 	private final CacheStoreMode storeMode;
 	private final CacheRetrieveMode retrieveMode;
@@ -121,6 +138,16 @@ public enum CacheMode implements FindOption {
 	 */
 	public boolean isPutEnabled() {
 		return storeMode == CacheStoreMode.USE || storeMode == CacheStoreMode.REFRESH;
+	}
+
+	/**
+	 * Does this cache mode indicate that writes should force a refresh
+	 * of already-cached data?
+	 *
+	 * @return {@code true} if cached data should be refreshed; {@code false} otherwise.
+	 */
+	public boolean isRefreshEnabled() {
+		return storeMode == CacheStoreMode.REFRESH;
 	}
 
 	/**

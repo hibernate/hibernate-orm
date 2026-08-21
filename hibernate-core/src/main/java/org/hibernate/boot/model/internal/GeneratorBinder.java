@@ -20,33 +20,46 @@ import org.hibernate.boot.model.source.internal.hbm.MappingDocument;
 import org.hibernate.boot.models.spi.GlobalRegistrar;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.generator.AnnotationBasedGenerator;
 import org.hibernate.generator.Assigned;
 import org.hibernate.generator.BeforeExecutionGenerator;
+import org.hibernate.generator.EventType;
 import org.hibernate.generator.Generator;
 import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.generator.OnExecutionGenerator;
+import org.hibernate.id.CompositeNestedGeneratedValueGenerator;
+import org.hibernate.id.CompositeNestedGeneratedValueGenerator.GenerationPlan;
 import org.hibernate.id.Configurable;
+import org.hibernate.id.IdentifierGenerationException;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.IdentityGenerator;
 import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.id.uuid.UuidValueGenerator;
+import org.hibernate.mapping.Component;
 import org.hibernate.mapping.GeneratorCreator;
+import org.hibernate.mapping.GeneratorSettings;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.Property;
+import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Value;
 import org.hibernate.models.spi.AnnotationTarget;
 import org.hibernate.models.spi.MemberDetails;
+import org.hibernate.property.access.spi.Setter;
 import org.hibernate.resource.beans.container.spi.BeanContainer;
 import org.hibernate.resource.beans.internal.Helper;
+import org.hibernate.type.ComponentType;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Member;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
@@ -901,6 +914,163 @@ public class GeneratorBinder {
 	public static void applyIfNotEmpty(String name, String value, BiConsumer<String,String> consumer) {
 		if ( isNotEmpty( value ) ) {
 			consumer.accept( name, value );
+		}
+	}
+
+	private static Setter injector(Property property, Class<?> attributeDeclarer) {
+		return property.getPropertyAccessStrategy( attributeDeclarer )
+				.buildPropertyAccess( attributeDeclarer, property.getName(), true )
+				.getSetter();
+	}
+
+	/**
+	 * Return the class that declares the composite pk attributes,
+	 * which might be an {@code @IdClass}, an {@code @EmbeddedId},
+	 * of the entity class itself.
+	 */
+	private static Class<?> getAttributeDeclarer(RootClass rootClass, Component component) {
+		// See the javadoc discussion on CompositeNestedGeneratedValueGenerator
+		// for the various scenarios we need to account for here
+		if ( rootClass.getIdentifierMapper() != null ) {
+			// we have the @IdClass / <composite-id mapped="true"/> case
+			return resolveComponentClass( component );
+		}
+		else if ( rootClass.getIdentifierProperty() != null ) {
+			// we have the "@EmbeddedId" / <composite-id name="idName"/> case
+			return resolveComponentClass( component );
+		}
+		else {
+			// we have the "straight up" embedded (again the Hibernate term)
+			// component identifier: the entity class itself is the id class
+			return rootClass.getMappedClass();
+		}
+	}
+
+	private static Class<?> resolveComponentClass(Component component) {
+		try {
+			return component.getComponentClass();
+		}
+		catch ( Exception e ) {
+			return null;
+		}
+	}
+
+	public static Generator buildIdentifierGenerator(
+			Component component,
+			Dialect dialect,
+			RootClass rootClass,
+			GeneratorSettings defaults) {
+		final var properties = component.getProperties();
+		final List<Generator> generators = new ArrayList<>( properties.size() );
+		final int columnSpan = component.getColumnSpan();
+		String[] columnValues = null;
+		boolean[] columnInclusions = null;
+		boolean[] generatedOnExecutionColumns = null;
+		int columnIndex = 0;
+		final List<GenerationPlan> generationPlans = new ArrayList<>();
+		for ( int i = 0; i < properties.size(); i++ ) {
+			final var property = properties.get( i );
+			final var propertyGenerator =
+					propertyGenerator( component, dialect, rootClass, defaults, property, generationPlans, i );
+			generators.add( propertyGenerator );
+
+			final int span = property.getColumnSpan();
+			if ( propertyGenerator instanceof OnExecutionGenerator onExecutionGenerator
+					&& propertyGenerator.generatedOnExecution() ) {
+				if ( columnValues == null ) {
+					columnValues = new String[columnSpan];
+					columnInclusions = new boolean[columnSpan];
+					generatedOnExecutionColumns = new boolean[columnSpan];
+					for ( int j = 0; j < columnSpan; j++ ) {
+						columnValues[j] = "?";
+						columnInclusions[j] = true;
+					}
+				}
+				for ( int j = 0; j < span; j++ ) {
+					generatedOnExecutionColumns[columnIndex + j] = true;
+				}
+				if ( onExecutionGenerator.generatesOnInsert() ) {
+					if ( !onExecutionGenerator.referenceColumnsInSql( dialect, EventType.INSERT ) ) {
+						for ( int j = 0; j < span; j++ ) {
+							columnInclusions[columnIndex + j] = false;
+						}
+					}
+					else if ( onExecutionGenerator.writePropertyValue( EventType.INSERT ) ) {
+						// leave default parameter markers in place
+					}
+					else {
+						final String[] referencedColumnValues =
+								onExecutionGenerator.getReferencedColumnValues( dialect, EventType.INSERT );
+						if ( referencedColumnValues == null ) {
+							throw new IdentifierGenerationException(
+									"Generated column values were not provided for composite id property: "
+											+ property.getName()
+							);
+						}
+						if ( referencedColumnValues.length != span ) {
+							throw new IdentifierGenerationException(
+									"Mismatch between generated column values and column count for composite id property: "
+											+ property.getName()
+							);
+						}
+						System.arraycopy( referencedColumnValues, 0, columnValues, columnIndex, span );
+					}
+				}
+				else if ( !onExecutionGenerator.allowMutation() ) {
+					for ( int j = 0; j < span; j++ ) {
+						columnInclusions[columnIndex + j] = false;
+					}
+				}
+			}
+			columnIndex += span;
+		}
+
+		final var generator =
+				new CompositeNestedGeneratedValueGenerator(
+						new Component.StandardGenerationContextLocator( rootClass.getEntityName() ),
+						(ComponentType) component.getType(),
+						generators,
+						columnValues,
+						columnInclusions,
+						generatedOnExecutionColumns
+				);
+		for ( var plan : generationPlans ) {
+			generator.addGeneratedValuePlan( plan );
+		}
+		return generator;
+	}
+
+	private static Generator propertyGenerator(
+			Component component,
+			Dialect dialect,
+			RootClass rootClass,
+			GeneratorSettings defaults,
+			Property property,
+			List<GenerationPlan> generationPlans,
+			int propertyIndex) {
+		final var value = property.getValue();
+		if ( value instanceof SimpleValue simpleValue ) {
+			if ( !simpleValue.getCustomIdGeneratorCreator().isAssigned() ) {
+				// skip any 'assigned' generators, they would have been
+				// handled by the StandardGenerationContextLocator
+				final var propertyGenerator = simpleValue.createGenerator( dialect, rootClass, property, defaults );
+				if ( propertyGenerator instanceof BeforeExecutionGenerator beforeExecutionGenerator ) {
+					generationPlans.add( new Component.ValueGenerationPlan(
+							beforeExecutionGenerator,
+							component.getType().isMutable()
+									? injector( property, getAttributeDeclarer( rootClass, component ) )
+									: null,
+							propertyIndex
+					) );
+				}
+				return propertyGenerator;
+			}
+			else {
+				return null;
+			}
+		}
+		else {
+			return null;
 		}
 	}
 }

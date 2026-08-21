@@ -1,0 +1,28 @@
+services:
+  cockroach:
+    image: ${COCKROACHDB_IMAGE:-cockroachdb/cockroach:v25.4.2@sha256:6193bc59ed0fbf211dd617ab0b4dfb6036c3cbceeefa595aa1ca9bf59ce2df07}
+    container_name: cockroach
+    ports:
+      - "26257:26257"
+      - "8080:8080"
+    command:
+      - start-single-node
+      - --insecure
+      - --store=type=mem,size=0.25
+      - --advertise-addr=localhost
+      - |
+        --log=sinks:
+          stderr:
+            channels: all
+            filter: ERROR
+            redact: false
+            exit-on-error: true
+    deploy:
+      resources:
+        limits:
+          memory: 6g
+    healthcheck:
+      test: ["CMD-SHELL", "./cockroach sql --insecure -e 'SELECT 1'"]
+      interval: 10s
+      timeout: 5s
+      retries: 10

@@ -27,11 +27,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class PartitionKeyTests {
 	@Test
 	public void test(SessionFactoryScope scope) {
-		final SQLStatementInspector inspector = scope.getCollectingStatementInspector();
+		final var inspector = scope.getCollectingStatementInspector();
 
 		// update
 		scope.inTransaction( (session) -> {
-			final PartitionedEntity entity = session.find( PartitionedEntity.class, 1 );
+			final var entity = session.find( PartitionedEntity.class, 1 );
 			inspector.clear();
 			entity.setName( "The One" );
 		} );
@@ -39,11 +39,33 @@ public class PartitionKeyTests {
 
 		// delete
 		scope.inTransaction( (session) -> {
-			final PartitionedEntity entity = session.find( PartitionedEntity.class, 1 );
+			final var entity = session.find( PartitionedEntity.class, 1 );
 			inspector.clear();
 			session.remove( entity );
 		} );
 		checkWherePredicate( inspector );
+	}
+
+	@Test
+	public void testStatelessUpdate(SessionFactoryScope scope) {
+		final var inspector = scope.getCollectingStatementInspector();
+
+		try ( var statelessSession = scope.getSessionFactory().openStatelessSession() ) {
+			final var tx = statelessSession.beginTransaction();
+			final var entity = statelessSession.get( PartitionedEntity.class, 1 );
+			inspector.clear();
+			entity.setName( "The One" );
+			statelessSession.update( entity );
+			tx.commit();
+		}
+
+		checkWherePredicate( inspector );
+
+		scope.inTransaction( session -> {
+			inspector.clear();
+			final var entity = session.find( PartitionedEntity.class, 1 );
+			assertThat( entity.getName() ).isEqualTo( "The One" );
+		} );
 	}
 
 	private void checkWherePredicate(SQLStatementInspector inspector) {
@@ -75,7 +97,6 @@ public class PartitionKeyTests {
 		private String name;
 
 		protected PartitionedEntity() {
-			// for use by Hibernate
 		}
 
 		public PartitionedEntity(Integer id, Integer tenantId, String name) {

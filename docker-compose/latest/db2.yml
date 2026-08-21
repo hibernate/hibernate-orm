@@ -1,0 +1,28 @@
+services:
+  db2:
+    image: ${DB2_IMAGE:-icr.io/db2_community/db2:12.1.2.0@sha256:9cc0d21df5d86cd9a5ce1c65c390dc10d56b1d38ab6e992c8a08eda677368781}
+    container_name: db2
+    privileged: true
+    ports:
+      - "50000:50000"
+    environment:
+      DB2INSTANCE: orm_test
+      DB2INST1_PASSWORD: orm_test
+      DBNAME: orm_test
+      LICENSE: accept
+      AUTOCONFIG: "false"
+      ARCHIVE_LOGS: "false"
+      TO_CREATE_SAMPLEDB: "false"
+      REPODB: "false"
+      BLU: "false"
+      ENABLE_ORACLE_COMPATIBILITY: "false"
+      UPDATEAVAIL: "NO"
+      PERSISTENT_HOME: "true"
+      HADR_ENABLED: "false"
+    shm_size: 2g
+    healthcheck:
+      test: ["CMD-SHELL", "su - orm_test -c 'source ~/sqllib/db2profile && db2 connect to orm_test && db2 connect reset'"]
+      interval: 30s
+      timeout: 10s
+      retries: 20
+      start_period: 200s

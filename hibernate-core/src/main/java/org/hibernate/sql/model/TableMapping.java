@@ -9,7 +9,7 @@ import org.hibernate.metamodel.mapping.TableDetails;
 
 /**
  * Describes a table as far as Hibernate understands it from mapping details
- * <p/>
+ * <p>
  * Includes {@linkplain TableDetails basic details}, in addition to details
  * about the table in relation to a particular {@link MutationTarget}
  *

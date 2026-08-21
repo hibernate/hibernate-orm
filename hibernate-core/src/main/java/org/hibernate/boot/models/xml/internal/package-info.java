@@ -8,7 +8,7 @@
  * {@linkplain org.hibernate.models.spi.ClassDetails classes},
  * {@linkplain org.hibernate.models.spi.FieldDetails fields} and
  * {@linkplain org.hibernate.models.spi.MethodDetails methods}.
- * <p/>
+ * <p>
  * JPA defines 2 modes for applying mapping XML information, as covered under
  * section 12.1 (<i>Use of the XML Descriptor</i>) of the specification-<dl>
  *     <dt>metadata-complete</dt>
@@ -23,7 +23,7 @@
  *         12.2 (<i>XML Overriding Rules</i>) of the specification.
  *     </dd>
  * </dl>
- * <p/>
+ * <p>
  * When operating in metadata-complete mode,
  * {@linkplain org.hibernate.boot.models.xml.internal.ManagedTypeProcessor} will first clear
  * all annotations from the managed type's

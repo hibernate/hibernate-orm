@@ -21,6 +21,8 @@ import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 /**
  * NOTE : some subquery related tests still exist in other test classes in the suite.
  * This is a later attempt to create a more targeted set of subquery related tests.
@@ -81,8 +83,8 @@ public class SubQueryTest {
 			Root rootQueried = session.createQuery( qry, Root.class ).uniqueResult();
 			Assertions.assertEquals( "root name", rootQueried.rootName );
 			Assertions.assertEquals( "branch", rootQueried.branch.branchName );
-			Assertions.assertEquals( "leaf1", rootQueried.branch.leaves.get( 0 ).leafName );
-			Assertions.assertEquals( "leaf2", rootQueried.branch.leaves.get( 1 ).leafName );
+			assertThat(List.of( rootQueried.branch.leaves.get( 0 ).leafName, rootQueried.branch.leaves.get( 1 ).leafName) )
+					.containsExactlyInAnyOrder( "leaf1", "leaf2" );
 		} );
 
 		sessions.inTransaction( (session) -> {
@@ -103,8 +105,8 @@ public class SubQueryTest {
 			var rootQueried = session.createQuery( qry, Root.class ).uniqueResult();
 			Assertions.assertEquals( "root name", rootQueried.rootName );
 			Assertions.assertEquals( "branch", rootQueried.branch.branchName );
-			Assertions.assertEquals( "leaf1", rootQueried.branch.leaves.get( 0 ).leafName );
-			Assertions.assertEquals( "leaf2", rootQueried.branch.leaves.get( 1 ).leafName );
+			assertThat(List.of( rootQueried.branch.leaves.get( 0 ).leafName, rootQueried.branch.leaves.get( 1 ).leafName) )
+					.containsExactlyInAnyOrder( "leaf1", "leaf2" );
 		} );
 
 		sessions.inTransaction( (session) -> {
@@ -115,8 +117,8 @@ public class SubQueryTest {
 			var rootQueried = session.createQuery( qry, Root.class ).uniqueResult();
 			Assertions.assertEquals( "root name", rootQueried.rootName );
 			Assertions.assertEquals( "branch", rootQueried.branch.branchName );
-			Assertions.assertEquals( "leaf1", rootQueried.branch.leaves.get( 0 ).leafName );
-			Assertions.assertEquals( "leaf2", rootQueried.branch.leaves.get( 1 ).leafName );
+			assertThat(List.of( rootQueried.branch.leaves.get( 0 ).leafName, rootQueried.branch.leaves.get( 1 ).leafName) )
+					.containsExactlyInAnyOrder( "leaf1", "leaf2" );
 		} );
 
 	}

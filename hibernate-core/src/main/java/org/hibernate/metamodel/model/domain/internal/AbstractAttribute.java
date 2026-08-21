@@ -11,11 +11,10 @@ import java.lang.reflect.Member;
 import jakarta.persistence.metamodel.Attribute;
 
 import org.hibernate.metamodel.AttributeClassification;
-import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
-import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
+import org.hibernate.query.sqm.spi.SqmCreationHelper;
 import org.hibernate.query.sqm.tree.domain.SqmDomainType;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmPersistentAttribute;
@@ -63,12 +62,8 @@ public abstract class AbstractAttribute<D,J,B>
 
 	@Override
 	public Class<J> getJavaType() {
-		// TODO: create a new method to abstract this logic
-		return valueType instanceof BasicTypeImpl<?> basicType
-				// handles primitives in basic types
-				? (Class<J>) basicType.getJavaType()
-				// good for everything else
-				: attributeJtd.getJavaTypeClass();
+		//noinspection unchecked
+		return (Class<J>) valueType.getJavaType();
 	}
 
 	public SqmDomainType<B> getPathType() {
@@ -108,11 +103,7 @@ public abstract class AbstractAttribute<D,J,B>
 	NavigablePath getParentNavigablePath(SqmPath<?> parent) {
 		final var parentPathSource = parent.getResolvedModel();
 		final var parentType = parentPathSource.getPathType();
-		final NavigablePath parentNavigablePath =
-				parentPathSource instanceof PluralPersistentAttribute<?, ?, ?>
-						// for collections, implicitly navigate to the element
-						? parent.getNavigablePath().append( CollectionPart.Nature.ELEMENT.getName() )
-						: parent.getNavigablePath();
+		final NavigablePath parentNavigablePath = SqmCreationHelper.buildParentNavigablePath( parent, "" );
 		if ( parentType != declaringType
 				&& parentType instanceof EntityDomainType<?> entityDomainType
 				&& entityDomainType.findAttribute( name ) == null ) {

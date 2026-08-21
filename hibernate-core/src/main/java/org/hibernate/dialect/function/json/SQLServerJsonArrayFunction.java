@@ -6,10 +6,13 @@ package org.hibernate.dialect.function.json;
 
 import java.util.List;
 
+import org.hibernate.dialect.aggregate.SQLServerAggregateSupport;
+import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
+import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.JsonNullBehavior;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -36,7 +39,7 @@ public class SQLServerJsonArrayFunction extends JsonArrayFunction {
 		}
 		else {
 			if ( sqlAstArguments.isEmpty() ) {
-				sqlAppender.appendSql( "'[]'" );
+				sqlAppender.appendSql( "N'[]'" );
 			}
 			else {
 				final SqlAstNode lastArgument = sqlAstArguments.get( sqlAstArguments.size() - 1 );
@@ -51,7 +54,7 @@ public class SQLServerJsonArrayFunction extends JsonArrayFunction {
 					argumentsCount = sqlAstArguments.size();
 				}
 				if ( nullBehavior == JsonNullBehavior.ABSENT ) {
-					sqlAppender.appendSql( "(select '['+string_agg(substring(t.d,2,len(t.d)-2),',')" );
+					sqlAppender.appendSql( "(select N'['+string_agg(substring(t.d,2,len(t.d)-2),',')" );
 					sqlAppender.appendSql( "within group (order by t.k)+']' from (values" );
 					char separator = ' ';
 					for ( int i = 0; i < argumentsCount; i++ ) {
@@ -82,18 +85,15 @@ public class SQLServerJsonArrayFunction extends JsonArrayFunction {
 
 	@Override
 	protected void renderValue(SqlAppender sqlAppender, SqlAstNode value, SqlAstTranslator<?> walker) {
-		if ( ExpressionTypeHelper.isBoolean( value ) ) {
+		final JdbcMapping jdbcMapping = ((Expression) value).getExpressionType().getSingleJdbcMapping();
+		final boolean isBoolean = ExpressionTypeHelper.isBoolean( value );
+		if ( isBoolean ) {
 			sqlAppender.appendSql( "cast(" );
-			value.accept( walker );
+		}
+		((SQLServerAggregateSupport) walker.getSessionFactory().getJdbcServices().getDialect().getAggregateSupport())
+				.appendJsonWriteExpression( sqlAppender, () -> value.accept( walker ), jdbcMapping );
+		if ( isBoolean ) {
 			sqlAppender.appendSql( " as bit)" );
-		}
-		else if ( !supportsExtendedJson && ExpressionTypeHelper.isJson( value ) ) {
-			sqlAppender.appendSql( "json_query(" );
-			value.accept( walker );
-			sqlAppender.appendSql( ')' );
-		}
-		else {
-			value.accept( walker );
 		}
 	}
 }

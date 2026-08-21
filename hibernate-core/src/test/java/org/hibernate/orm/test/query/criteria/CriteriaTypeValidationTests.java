@@ -53,6 +53,20 @@ public class CriteriaTypeValidationTests {
 		);
 	}
 
+	@Test
+	@JiraKey( "HHH-20313" )
+	public void testCompareDoubleToInteger(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					final HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
+					final CriteriaQuery<Parent> cq = cb.createQuery(Parent.class);
+					final Root<Parent> root = cq.from(Parent.class);
+					cq.where( cb.lt( root.get( "price" ), cb.prod( cb.literal( 54 ), 2 ) ) );
+					session.createQuery(cq).getResultList();
+				}
+		);
+	}
+
 
 	@Entity(name = "Parent")
 	public static class Parent {
@@ -60,6 +74,7 @@ public class CriteriaTypeValidationTests {
 		private Long id;
 
 		private String name;
+		private Double price;
 
 		@OneToMany(mappedBy = "parent", fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
 		private Set<Child> children = new HashSet<>();

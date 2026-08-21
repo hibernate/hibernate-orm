@@ -20,6 +20,7 @@ import org.hibernate.sql.model.jdbc.UpsertOperation;
 
 import java.sql.PreparedStatement;
 import java.util.List;
+import java.util.function.BiConsumer;
 
 /**
  * @author Jan Schatteman
@@ -105,28 +106,52 @@ public class SqlAstTranslatorWithOnDuplicateKeyUpdate<T extends JdbcOperation> e
 		}
 
 		optionalTableUpdate.forEachValueBinding( (columnPosition, columnValueBinding) -> {
-			appendSql( ',' );
-			columnValueBinding.getValueExpression().accept( this );
+			if ( columnValueBinding.isAttributeInsertable() ) {
+				appendSql( ',' );
+				columnValueBinding.getValueExpression().accept( this );
+			}
 		} );
 		appendSql(") ");
-		renderNewRowAlias();
+		if ( optionalTableUpdate.getValueBindings().stream()
+				.anyMatch( ColumnValueBinding::isAttributeUpdatable ) ) {
+			renderNewRowAlias();
+		}
 	}
 
 	protected void renderNewRowAlias() {
 	}
 
 	protected void renderOnDuplicateKeyUpdate(OptionalTableUpdate optionalTableUpdate) {
-		if  ( !optionalTableUpdate.getValueBindings().isEmpty() ) {
-			appendSql( "on duplicate key update " );
-			optionalTableUpdate.forEachValueBinding( (columnPosition, columnValueBinding) -> {
-				final String columnName = columnValueBinding.getColumnReference().getColumnExpression();
-				if ( columnPosition > 0 ) {
-					appendSql( ',' );
+		appendSql( "on duplicate key update " );
+		if ( optionalTableUpdate.getValueBindings().stream()
+					.anyMatch( ColumnValueBinding::isAttributeUpdatable ) ) {
+			class BindingProcessor implements BiConsumer<Integer, ColumnValueBinding> {
+				boolean first = true;
+				@Override
+				public void accept(Integer columnPosition, ColumnValueBinding columnValueBinding) {
+					if ( columnValueBinding.isAttributeUpdatable() ) {
+						final String columnName = columnValueBinding.getColumnReference().getColumnExpression();
+						if ( first ) {
+							first = false;
+						}
+						else {
+							appendSql( ',' );
+						}
+						appendSql( columnName );
+						append( " = " );
+						renderUpdateValue( columnValueBinding );
+					}
 				}
-				appendSql( columnName );
-				append( " = " );
-				renderUpdateValue( columnValueBinding );
-			} );
+			}
+			optionalTableUpdate.forEachValueBinding( new BindingProcessor() );
+		}
+		else {
+			final String keyColName =
+					optionalTableUpdate.getKeyBindings().get( 0 )
+							.getColumnReference().getColumnExpression();
+			appendSql( keyColName );
+			appendSql( "=" );
+			appendSql( keyColName );
 		}
 	}
 

@@ -17,6 +17,7 @@ import java.util.Map;
 public class NamedEntityGraphAnnotation implements NamedEntityGraph {
 	private String name;
 	private String graph;
+	private Class<?> root;
 
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
@@ -31,6 +32,7 @@ public class NamedEntityGraphAnnotation implements NamedEntityGraph {
 	public NamedEntityGraphAnnotation(NamedEntityGraph annotation, ModelsContext modelContext) {
 		this.name = annotation.name();
 		this.graph = annotation.graph();
+		this.root = annotation.root();
 	}
 
 	/**
@@ -39,11 +41,21 @@ public class NamedEntityGraphAnnotation implements NamedEntityGraph {
 	public NamedEntityGraphAnnotation(Map<String, Object> attributeValues, ModelsContext modelContext) {
 		this.name = (String) attributeValues.get( "name" );
 		this.graph = (String) attributeValues.get( "graph" );
+		this.root = (Class<?>) attributeValues.get( "root" );
 	}
 
 	@Override
 	public Class<? extends Annotation> annotationType() {
 		return NamedEntityGraph.class;
+	}
+
+	@Override
+	public Class<?> root() {
+		return this.root;
+	}
+
+	public void root(Class<?> root) {
+		this.root = root;
 	}
 
 	@Override

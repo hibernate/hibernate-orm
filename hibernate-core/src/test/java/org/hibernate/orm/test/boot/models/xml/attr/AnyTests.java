@@ -10,6 +10,8 @@ import java.util.List;
 import org.hibernate.annotations.Any;
 import org.hibernate.annotations.AnyDiscriminator;
 import org.hibernate.annotations.AnyDiscriminatorValue;
+import org.hibernate.annotations.Cascade;
+import org.hibernate.annotations.CascadeType;
 import org.hibernate.boot.internal.AnyKeyType;
 import org.hibernate.boot.model.process.spi.ManagedResources;
 import org.hibernate.boot.model.source.internal.annotations.AdditionalManagedResourcesImpl;
@@ -77,6 +79,10 @@ public class AnyTests {
 		final JoinColumn keyColumn = associationField.getAnnotationUsage( JoinColumn.class, ModelsContext );
 		assertThat( keyColumn ).isNotNull();
 		assertThat( keyColumn.name() ).isEqualTo( "association_fk" );
+
+		final Cascade cascadeAnn = associationField.getDirectAnnotationUsage( Cascade.class );
+		assertThat( cascadeAnn ).isNotNull();
+		assertThat( cascadeAnn.value() ).containsExactly( CascadeType.ALL );
 	}
 
 	@Entity(name="Entity1")

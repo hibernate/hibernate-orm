@@ -9,6 +9,7 @@ import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -163,6 +164,7 @@ public class AutoDiscoveryTest {
 	@JiraKey("HHH-16697")
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Altibase sum(39.74) returns Float",
 			matchSubTypes = true)
+	@SkipForDialect(dialectClass = SpannerDialect.class, reason = "Spanner sum(39.74) returns Double")
 	public void testAggregateQueryAutoDiscovery(SessionFactoryScope scope) {
 		User u = new User( "steve" );
 		scope.inTransaction(

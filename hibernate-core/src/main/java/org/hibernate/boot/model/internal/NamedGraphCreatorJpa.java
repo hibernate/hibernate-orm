@@ -17,6 +17,7 @@ import org.hibernate.graph.spi.GraphImplementor;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.graph.spi.SubGraphImplementor;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.service.ServiceRegistry;
 
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
@@ -39,7 +40,8 @@ class NamedGraphCreatorJpa implements NamedGraphCreator {
 	@Override
 	public RootGraphImplementor<?> createEntityGraph(
 			GraphParserEntityClassResolver entityDomainClassResolver,
-			GraphParserEntityNameResolver entityDomainNameResolver) {
+			GraphParserEntityNameResolver entityDomainNameResolver,
+			ServiceRegistry serviceRegistry) {
 		return createGraph( (EntityDomainType<?>)
 				entityDomainNameResolver.resolveEntityName( jpaEntityName ) );
 	}

@@ -4,12 +4,12 @@
  */
 package org.hibernate.boot.models.xml.internal;
 
-import java.beans.Introspector;
-
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbManagedType;
 import org.hibernate.boot.models.MemberResolutionException;
 import org.hibernate.internal.util.StringHelper;
+
+import static org.hibernate.internal.util.StringHelper.decapitalize;
 import org.hibernate.models.spi.FieldDetails;
 import org.hibernate.models.spi.MethodDetails;
 import org.hibernate.models.spi.MutableClassDetails;
@@ -74,14 +74,14 @@ public class XmlProcessingHelper {
 				if ( methodDetails.getMethodKind() == MethodDetails.MethodKind.GETTER ) {
 					if ( methodDetails.getName().startsWith( "get" ) ) {
 						final String stemName = methodDetails.getName().substring( 3 );
-						final String decapitalizedStemName = Introspector.decapitalize( stemName );
+						final String decapitalizedStemName = decapitalize( stemName );
 						if ( stemName.equals( attributeName ) || decapitalizedStemName.equals( attributeName ) ) {
 							return (MutableMemberDetails) methodDetails;
 						}
 					}
 					else if ( methodDetails.getName().startsWith( "is" ) ) {
 						final String stemName = methodDetails.getName().substring( 2 );
-						final String decapitalizedStemName = Introspector.decapitalize( stemName );
+						final String decapitalizedStemName = decapitalize( stemName );
 						if ( stemName.equals( attributeName ) || decapitalizedStemName.equals( attributeName ) ) {
 							return (MutableMemberDetails) methodDetails;
 						}

@@ -4,10 +4,7 @@
  */
 package org.hibernate.query.sqm.internal;
 
-import org.hibernate.graph.spi.AppliedGraph;
-import org.hibernate.graph.spi.AttributeNodeImplementor;
 import org.hibernate.graph.spi.GraphImplementor;
-import org.hibernate.graph.spi.SubGraphImplementor;
 import org.hibernate.query.spi.QueryOptions;
 
 /**
@@ -19,18 +16,18 @@ public class AppliedGraphs {
 	}
 
 	public static boolean containsCollectionFetches(QueryOptions queryOptions) {
-		final AppliedGraph appliedGraph = queryOptions.getAppliedGraph();
+		final var appliedGraph = queryOptions.getAppliedGraph();
 		return appliedGraph != null
 			&& appliedGraph.getGraph() != null
 			&& containsCollectionFetches( appliedGraph.getGraph() );
 	}
 
 	private static boolean containsCollectionFetches(GraphImplementor<?> graph) {
-		for ( AttributeNodeImplementor<?,?,?> node : graph.getNodes().values() ) {
+		for ( var node : graph.getNodes().values() ) {
 			if ( node.getAttributeDescriptor().isCollection() ) {
 				return true;
 			}
-			for ( SubGraphImplementor<?> subgraph : node.getSubGraphs().values() ) {
+			for ( var subgraph : node.getSubGraphs().values() ) {
 				if ( containsCollectionFetches( subgraph ) ) {
 					return true;
 				}

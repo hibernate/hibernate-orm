@@ -7,7 +7,7 @@ package org.hibernate.spatial;
 /**
  * Spatial functions that users generally expect in a database.
  * <p>
- * <p>The javadoc contains references to these specifications.</p>
+ * The javadoc contains references to these specifications.
  * <ul>
  * <li>OpenGIS Simple Features Specification for SQL, rev. 1.1  (OGC 99-049)</li>
  * </ul>
@@ -148,15 +148,15 @@ public enum SpatialFunction {
 	/**
 	 * the distance within function
 	 * <p>
-	 * <p>The semantics are those of Postgis function ST_Dwithin (geom1, geom2, distance) : boolean. It returns true
-	 * if geom1 and geom2 are within the specified distance of one another (in units of the spatial reference system).</p>
+	 * The semantics are those of Postgis function ST_Dwithin (geom1, geom2, distance) : boolean. It returns true
+	 * if geom1 and geom2 are within the specified distance of one another (in units of the spatial reference system).
 	 */
 	dwithin( "common" ),
 
 	/**
 	 * the transform function
 	 * <p>
-	 * <p>The semantics are those of the Postgis function ST_Transform(geometry, srid) : geometry. It returns new geometry
+	 * The semantics are those of the Postgis function ST_Transform(geometry, srid) : geometry. It returns new geometry
 	 * with its coordinates transformed to the spatial reference system referenced by the srid parameter.
 	 */
 	transform( "common" ),
@@ -169,7 +169,7 @@ public enum SpatialFunction {
 	/**
 	 * The filter function
 	 * <p>
-	 * <p>Corresponds to the Oracle Spatial's "SDO_FILTER" function, or the "&amp;&amp;" operator of PostGIS.
+	 * Corresponds to the Oracle Spatial's "SDO_FILTER" function, or the "&amp;&amp;" operator of PostGIS.
 	 */
 	filter( "filter" ),
 

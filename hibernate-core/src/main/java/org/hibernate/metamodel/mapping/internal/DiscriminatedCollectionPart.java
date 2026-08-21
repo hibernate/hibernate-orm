@@ -30,7 +30,6 @@ import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlSelection;
-import org.hibernate.sql.ast.tree.from.StandardVirtualTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
@@ -369,7 +368,14 @@ public class DiscriminatedCollectionPart implements DiscriminatedAssociationMode
 			boolean fetched,
 			@Nullable Consumer<Predicate> predicateConsumer,
 			SqlAstCreationState creationState) {
-		return new StandardVirtualTableGroup( navigablePath, this, lhs, fetched );
+		return associationMapping.createRootTableGroupJoin(
+				navigablePath,
+				lhs,
+				fetched,
+				sqlAstJoinType,
+				predicateConsumer,
+				creationState
+		);
 	}
 
 	@Override

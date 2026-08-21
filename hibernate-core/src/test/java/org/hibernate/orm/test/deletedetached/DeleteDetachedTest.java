@@ -74,7 +74,7 @@ public class DeleteDetachedTest {
 		});
 		scope.inTransaction(s -> assertNull(s.find(Thing.class, thing.id)));
 	}
-	@Entity
+	@Entity(name = "Thing")
 	static class Thing {
 		@GeneratedValue @Id long id;
 		@Version int version;

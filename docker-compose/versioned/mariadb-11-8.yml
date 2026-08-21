@@ -1,0 +1,23 @@
+services:
+  mariadb:
+    image: ${DB_IMAGE_MARIADB_11_8:-docker.io/library/mariadb:11.8@sha256:78a5047d3ba33975f183f183c2464cc7f1eab13ec8667e57cc9a5821d6da7577}
+    container_name: mariadb
+    environment:
+      MARIADB_USER: hibernate_orm_test
+      MARIADB_PASSWORD: hibernate_orm_test
+      MARIADB_DATABASE: hibernate_orm_test
+      MARIADB_ROOT_PASSWORD: hibernate_orm_test
+    ports:
+      - "3306:3306"
+    tmpfs:
+      - /var/lib/mysql
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_bin
+      - --skip-character-set-client-handshake
+      - --lower_case_table_names=2
+    healthcheck:
+      test: ["CMD-SHELL", "healthcheck.sh --connect --innodb_initialized"]
+      interval: 3s
+      timeout: 3s
+      retries: 10

@@ -5,17 +5,19 @@
 package org.hibernate.engine.spi;
 
 /**
- * Specialized {@link Managed} contract for entity classes.  Essentially provides access to information
- * about an instance's association to a Session/EntityManager.  Specific information includes:<ul>
+ * Specialized {@link Managed} contract for entity classes, providing access to information
+ * about the association between the instance and the {@link PersistenceContext}, including:
+ * <ul>
  *     <li>
- *        the association's {@link EntityEntry} (by way of {@link #$$_hibernate_getEntityEntry} and
- *        {@link #$$_hibernate_setEntityEntry}).  EntityEntry describes states, snapshots, etc.
+ *        The {@link EntityEntry}, by way of {@link #$$_hibernate_getEntityEntry} and
+ *        {@link #$$_hibernate_setEntityEntry}. The {@code EntityEntry} describes states,
+ *        snapshots, and so on.
  *     </li>
  *     <li>
- *         link information.  ManagedEntity instances are part of a "linked list", thus link information
- *         describes the next and previous entries/nodes in that ordering.  See
+ *         Link information. {@code ManagedEntity} instances are part of a linked list; thus,
+ *         link information describes the next and previous entries/nodes in that ordering. See
  *         {@link #$$_hibernate_getNextManagedEntity}, {@link #$$_hibernate_setNextManagedEntity},
- *         {@link #$$_hibernate_getPreviousManagedEntity}, {@link #$$_hibernate_setPreviousManagedEntity}
+ *         {@link #$$_hibernate_getPreviousManagedEntity}, {@link #$$_hibernate_setPreviousManagedEntity}.
  *     </li>
  * </ul>
  *
@@ -39,8 +41,9 @@ public interface ManagedEntity extends Managed, InstanceIdentity {
 	EntityEntry $$_hibernate_getEntityEntry();
 
 	/**
-	 * Injects the EntityEntry associated with this entity instance.  The EntityEntry represents state associated
-	 * with the entity in regards to its association with a Hibernate Session.
+	 * Injects the {@link EntityEntry} associated with this entity instance.
+	 * The {@code EntityEntry} holds information about the association between
+	 * the instance and the persistence context.
 	 *
 	 * @param entityEntry The EntityEntry associated with this entity instance.
 	 */
@@ -88,25 +91,24 @@ public interface ManagedEntity extends Managed, InstanceIdentity {
 	 * 	String name
 	 * }
 	 *
-	 * inSession (
-	 * 	session -> {
+	 * inSession(session -> {
 	 * 		MyEntity entity = new MyEntity(1, "Poul");
 	 * 		session.persist(entity);
 	 * });
 	 *
 	 *
-	 * inSession (
-	 * 	session -> {
+	 * inSession(session -> {
 	 * 		MyEntity entity = new MyEntity(1, null);
 	 * 		session.merge(entity);
 	 * });
 	 * </pre>
-	 * Because the attribute `name` has been set to null the SelfDirtyTracker
-	 * does not detect any change and so doesn't mark the attribute as dirty
-	 * so the merge does not perform any update.
+	 * Because the attribute name has been set to null, the {@code SelfDirtyTracker}
+	 * does not detect any change and so doesn't mark the attribute as dirty so the
+	 * merge does not perform any update.
 	 *
 	 *
-	 * @param useTracker true if the tracker can be used to detect dirty properties, false otherwise
+	 * @param useTracker true if the tracker can be used to detect dirty properties;
+	 *                   false otherwise
 	 *
 	 */
 	void $$_hibernate_setUseTracker(boolean useTracker);
@@ -143,7 +145,7 @@ public interface ManagedEntity extends Managed, InstanceIdentity {
 	 * @since 7.0
 	 */
 	default EntityEntry $$_hibernate_setPersistenceInfo(EntityEntry entityEntry, ManagedEntity previous, ManagedEntity next, int instanceId) {
-		final EntityEntry oldEntry = $$_hibernate_getEntityEntry();
+		final var oldEntry = $$_hibernate_getEntityEntry();
 		$$_hibernate_setEntityEntry( entityEntry );
 		$$_hibernate_setPreviousManagedEntity( previous );
 		$$_hibernate_setNextManagedEntity( next );

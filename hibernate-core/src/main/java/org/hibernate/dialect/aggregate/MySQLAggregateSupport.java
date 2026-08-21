@@ -14,11 +14,13 @@ import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
+import org.hibernate.sql.ast.spi.StringBuilderSqlAppender;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import static org.hibernate.dialect.function.array.DdlTypeHelper.getCastTypeName;
 import static org.hibernate.type.SqlTypes.BIGINT;
 import static org.hibernate.type.SqlTypes.BINARY;
 import static org.hibernate.type.SqlTypes.BIT;
@@ -131,14 +133,14 @@ public class MySQLAggregateSupport extends AggregateSupportImpl {
 					default:
 						return template.replace(
 								placeholder,
-								valueExpression( aggregateParentReadExpression, columnExpression, columnCastType( column ) )
+								valueExpression( aggregateParentReadExpression, columnExpression, columnCastType( column, typeConfiguration ) )
 						);
 				}
 		}
 		throw new IllegalArgumentException( "Unsupported aggregate SQL type: " + aggregateColumnTypeCode );
 	}
 
-	private String columnCastType(SqlTypedMapping column) {
+	private String columnCastType(SqlTypedMapping column, TypeConfiguration typeConfiguration) {
 		return switch (column.getJdbcMapping().getJdbcType().getDdlTypeCode()) {
 			// special case for casting to Boolean
 			case BOOLEAN, BIT -> "unsigned";
@@ -148,14 +150,14 @@ public class MySQLAggregateSupport extends AggregateSupportImpl {
 			case DOUBLE -> "double";
 			case FLOAT -> jsonType
 					// In newer versions of MySQL, casting to float/double is supported
-					? column.getColumnDefinition()
+					? getCastTypeName( column, typeConfiguration )
 					: column.getPrecision() == null || column.getPrecision() == 53 ? "double" : "float";
 			// MySQL doesn't let you cast to TEXT/LONGTEXT
 			case CHAR, VARCHAR, LONG32VARCHAR, CLOB, ENUM -> "char";
 			case NCHAR, NVARCHAR, LONG32NVARCHAR, NCLOB -> "char character set utf8mb4";
 			// MySQL doesn't let you cast to BLOB/TINYBLOB/LONGBLOB
 			case BINARY, VARBINARY, LONG32VARBINARY, BLOB -> "binary";
-			default -> column.getColumnDefinition();
+			default -> getCastTypeName( column, typeConfiguration );
 		};
 	}
 
@@ -173,6 +175,12 @@ public class MySQLAggregateSupport extends AggregateSupportImpl {
 	}
 
 	private String jsonCustomWriteExpression(String customWriteExpression, JdbcMapping jdbcMapping) {
+		StringBuilderSqlAppender sqlAppender = new StringBuilderSqlAppender();
+		appendJsonWriteExpression( sqlAppender, () -> sqlAppender.appendSql( customWriteExpression ), jdbcMapping );
+		return sqlAppender.toString();
+	}
+
+	public void appendJsonWriteExpression(SqlAppender sqlAppender, Runnable renderFunction, JdbcMapping jdbcMapping) {
 		final int sqlTypeCode = jdbcMapping.getJdbcType().getDefaultSqlTypeCode();
 		switch ( sqlTypeCode ) {
 			case BINARY:
@@ -180,28 +188,47 @@ public class MySQLAggregateSupport extends AggregateSupportImpl {
 			case LONG32VARBINARY:
 			case BLOB:
 				// We encode binary data as hex
-				return "hex(" + customWriteExpression + ")";
+				sqlAppender.appendSql( "hex(" );
+				renderFunction.run();
+				sqlAppender.appendSql( ")" );
+				break;
 			case BOOLEAN:
-				return "(" + customWriteExpression + ")=true";
+				sqlAppender.appendSql( "(" );
+				renderFunction.run();
+				sqlAppender.appendSql( ")=true" );
+				break;
 			case TIMESTAMP:
-				return "date_format(" + customWriteExpression + ",'%Y-%m-%dT%T.%f')";
+				sqlAppender.appendSql( "date_format(" );
+				renderFunction.run();
+				sqlAppender.appendSql( ",'%Y-%m-%dT%T.%f')" );
+				break;
 			case TIMESTAMP_UTC:
-				return "date_format(" + customWriteExpression + ",'%Y-%m-%dT%T.%fZ')";
+				sqlAppender.appendSql( "date_format(" );
+				renderFunction.run();
+				sqlAppender.appendSql( ",'%Y-%m-%dT%T.%fZ')" );
+				break;
 			case UUID:
 				if ( jdbcMapping.getJdbcType().isBinary() ) {
 					if ( uuidFunctions ) {
-						return "bin_to_uuid(" + customWriteExpression + ")";
+						sqlAppender.appendSql( "bin_to_uuid(" );
+						renderFunction.run();
+						sqlAppender.appendSql( ")" );
 					}
 					else if ( jsonType ) {
-						return "insert(insert(insert(insert(lower(hex(" + customWriteExpression + ")),21,0,'-'),17,0,'-'),13,0,'-'),9,0,'-')";
+						sqlAppender.appendSql( "insert(insert(insert(insert(lower(hex(" );
+						renderFunction.run();
+						sqlAppender.appendSql( ")),21,0,'-'),17,0,'-'),13,0,'-'),9,0,'-')" );
 					}
 					else {
-						return "regexp_replace(lower(hex(" + customWriteExpression + ")),'^(.{8})(.{4})(.{4})(.{4})(.{12})$','\\\\1-\\\\2-\\\\3-\\\\4-\\\\5')";
+						sqlAppender.appendSql( "regexp_replace(lower(hex(" );
+						renderFunction.run();
+						sqlAppender.appendSql( ")),'^(.{8})(.{4})(.{4})(.{4})(.{12})$','\\\\1-\\\\2-\\\\3-\\\\4-\\\\5')" );
 					}
+					break;
 				}
 				// Fall-through intended
 			default:
-				return customWriteExpression;
+				renderFunction.run();
 		}
 	}
 

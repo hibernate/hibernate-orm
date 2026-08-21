@@ -9,7 +9,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 /**
  * Strategy for generating parameter markers used in {@linkplain java.sql.PreparedStatement preparable} SQL strings.
- * <p/>
+ * <p>
  * Generally Hibernate will use the JDBC standard marker - {@code ?}.  Many JDBC drivers support the
  * use of the "native" marker syntax of the underlying database - e.g. {@code $n}, {@code ?n}, ...
  *

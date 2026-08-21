@@ -166,7 +166,7 @@ public class TableBasedInsertHandler extends AbstractMutationHandler implements 
 				TemporaryTable.DEFAULT_ALIAS,
 				true
 		);
-		final var insertStatement = new InsertSelectStatement( entityTableReference );
+		final var insertStatement = new InsertSelectStatement( entityTableReference, getEntityDescriptor() );
 
 		final var additionalInsertValues = sqmConverter.visitInsertionTargetPaths(
 				(assignable, columnReferences) -> {
@@ -523,7 +523,7 @@ public class TableBasedInsertHandler extends AbstractMutationHandler implements 
 					FetchClauseType.ROWS_ONLY
 			);
 		}
-		final var insertStatement = new InsertSelectStatement( dmlTableReference );
+		final var insertStatement = new InsertSelectStatement( dmlTableReference, getEntityDescriptor() );
 		insertStatement.setConflictClause( conflictClause );
 		insertStatement.setSourceSelectStatement( querySpec );
 		applyAssignments( assignments, insertStatement, temporaryTableReference );
@@ -829,7 +829,7 @@ public class TableBasedInsertHandler extends AbstractMutationHandler implements 
 				getEntityDescriptor()
 		);
 		querySpec.getFromClause().addRoot( temporaryTableGroup );
-		final var insertStatement = new InsertSelectStatement( dmlTargetTableReference );
+		final var insertStatement = new InsertSelectStatement( dmlTargetTableReference, getEntityDescriptor() );
 		insertStatement.setSourceSelectStatement( querySpec );
 		applyAssignments( assignments, insertStatement, temporaryTableReference );
 		if ( insertStatement.getTargetColumns().stream()

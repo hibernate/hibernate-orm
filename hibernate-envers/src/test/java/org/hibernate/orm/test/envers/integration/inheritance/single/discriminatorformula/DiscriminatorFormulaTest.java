@@ -7,7 +7,6 @@ package org.hibernate.orm.test.envers.integration.inheritance.single.discriminat
 import java.util.Arrays;
 import java.util.List;
 
-import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.mapping.Formula;
 
@@ -17,7 +16,6 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SessionFactory;
-import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -103,7 +101,6 @@ public class DiscriminatorFormulaTest {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "'TYPE' is not escaped even though autoQuoteKeywords is enabled")
 	public void testRevisionsCounts(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			final var auditReader = AuditReaderFactory.get( em );
@@ -119,7 +116,6 @@ public class DiscriminatorFormulaTest {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "'TYPE' is not escaped even though autoQuoteKeywords is enabled")
 	public void testHistoryOfParent(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			final var auditReader = AuditReaderFactory.get( em );
@@ -129,7 +125,6 @@ public class DiscriminatorFormulaTest {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "'TYPE' is not escaped even though autoQuoteKeywords is enabled")
 	public void testHistoryOfChild(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			final var auditReader = AuditReaderFactory.get( em );
@@ -139,7 +134,6 @@ public class DiscriminatorFormulaTest {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "'TYPE' is not escaped even though autoQuoteKeywords is enabled")
 	public void testPolymorphicQuery(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			final var auditReader = AuditReaderFactory.get( em );

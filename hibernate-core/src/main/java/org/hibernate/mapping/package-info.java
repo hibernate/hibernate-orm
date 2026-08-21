@@ -24,14 +24,14 @@
  * The lifecycle of these mapping objects is outlined below.
  * <ol>
  * <li>It is the responsibility of the metadata binders in the package
- *     {@link org.hibernate.boot.model.internal} to process a set of
+ *     {@code org.hibernate.boot.model.internal} to process a set of
  *     annotated classes and produce fully-initialized mapping model
  *     objects. This is in itself a complicated multiphase process,
  *     since, for example, the type of an association mapping in one
  *     entity cannot be fully assigned until the target entity has
  *     been processed.
  * <li>The mapping model objects are then passed to the constructor
- *     of {@link org.hibernate.internal.SessionFactoryImpl}, which
+ *     of {@code org.hibernate.internal.SessionFactoryImpl}, which
  *     simply passes them along on to an object which implements
  *     {@link org.hibernate.metamodel.MappingMetamodel} and uses them
  *     to create persister objects for

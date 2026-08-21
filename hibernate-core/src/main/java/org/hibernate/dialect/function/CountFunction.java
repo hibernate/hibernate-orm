@@ -52,6 +52,7 @@ public class CountFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 	private final String concatArgumentCastType;
 	private final boolean castDistinctStringConcat;
 	private final String distinctArgumentCastType;
+	private final int separatorAsciiCode;
 
 	public CountFunction(
 			Dialect dialect,
@@ -116,6 +117,29 @@ public class CountFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 			String concatArgumentCastType,
 			boolean castDistinctStringConcat,
 			String distinctArgumentCastType) {
+		this(
+				dialect,
+				typeConfiguration,
+				defaultArgumentRenderingMode,
+				countFunctionName,
+				concatOperator,
+				concatArgumentCastType,
+				castDistinctStringConcat,
+				distinctArgumentCastType,
+				0
+		);
+	}
+
+	public CountFunction(
+			Dialect dialect,
+			TypeConfiguration typeConfiguration,
+			SqlAstNodeRenderingMode defaultArgumentRenderingMode,
+			String countFunctionName,
+			String concatOperator,
+			String concatArgumentCastType,
+			boolean castDistinctStringConcat,
+			String distinctArgumentCastType,
+			int separatorAsciiCode) {
 		super(
 				"count",
 				FunctionKind.AGGREGATE,
@@ -132,6 +156,7 @@ public class CountFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 		this.concatArgumentCastType = concatArgumentCastType;
 		this.castDistinctStringConcat = castDistinctStringConcat;
 		this.distinctArgumentCastType = distinctArgumentCastType;
+		this.separatorAsciiCode = separatorAsciiCode;
 	}
 
 	@Override
@@ -188,7 +213,7 @@ public class CountFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 											.findFunctionDescriptor( "chr" );
 					final List<Expression> chrArguments = List.of(
 							new QueryLiteral<>(
-									0,
+									separatorAsciiCode,
 									translator.getSessionFactory().getTypeConfiguration()
 											.getBasicTypeForJavaType( Integer.class )
 							)

@@ -6,9 +6,6 @@ package org.hibernate.orm.test.annotations.xml.ejb3;
 
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.CascadeType;
-import org.hibernate.annotations.JoinColumnOrFormula;
-import org.hibernate.annotations.JoinColumnsOrFormulas;
-import org.hibernate.annotations.JoinFormula;
 import org.hibernate.boot.internal.Target;
 import org.hibernate.models.spi.MemberDetails;
 
@@ -57,19 +54,16 @@ public class Ejb3XmlManyToOneTest extends Ejb3XmlTestCase {
 	public void testSingleJoinColumn() {
 		final MemberDetails memberDetails = getAttributeMember( Entity1.class, "field1", "many-to-one.orm2.xml" );
 		assertThat( memberDetails.hasDirectAnnotationUsage( ManyToOne.class ) ).isTrue();
-		assertThat( memberDetails.hasDirectAnnotationUsage( JoinColumnsOrFormulas.class ) ).isTrue();
 
-		assertThat( memberDetails.hasDirectAnnotationUsage( JoinColumnOrFormula.class ) ).isFalse();
-		assertThat( memberDetails.hasDirectAnnotationUsage( JoinColumns.class ) ).isFalse();
 		assertThat( memberDetails.hasDirectAnnotationUsage( JoinColumn.class ) ).isFalse();
-		assertThat( memberDetails.hasDirectAnnotationUsage( JoinFormula.class ) ).isFalse();
+		assertThat( memberDetails.hasDirectAnnotationUsage( JoinColumns.class ) ).isTrue();
 
 		assertThat( memberDetails.hasDirectAnnotationUsage( JoinTable.class ) ).isFalse();
 		assertThat( memberDetails.hasDirectAnnotationUsage( Id.class ) ).isFalse();
 		assertThat( memberDetails.hasDirectAnnotationUsage( MapsId.class ) ).isFalse();
 
-		final JoinColumnsOrFormulas joinColumnsOrFormulasUsage = memberDetails.getDirectAnnotationUsage( JoinColumnsOrFormulas.class );
-		final JoinColumn joinColumnUsage = joinColumnsOrFormulasUsage.value()[0].column();
+		final JoinColumns joinColumnsUsage = memberDetails.getDirectAnnotationUsage( JoinColumns.class );
+		final JoinColumn joinColumnUsage = joinColumnsUsage.value()[0];
 		assertThat( joinColumnUsage.name() ).isEqualTo( "col1" );
 		assertThat( joinColumnUsage.referencedColumnName() ).isEqualTo( "col2" );
 		assertThat( joinColumnUsage.table() ).isEqualTo( "table1" );
@@ -79,20 +73,18 @@ public class Ejb3XmlManyToOneTest extends Ejb3XmlTestCase {
 	public void testMultipleJoinColumns() {
 		final MemberDetails memberDetails = getAttributeMember( Entity1.class, "field1", "many-to-one.orm3.xml" );
 		assertThat( memberDetails.hasDirectAnnotationUsage( ManyToOne.class ) ).isTrue();
-		assertThat( memberDetails.hasDirectAnnotationUsage( JoinColumnsOrFormulas.class ) ).isTrue();
+		assertThat( memberDetails.hasDirectAnnotationUsage( JoinColumns.class ) ).isTrue();
 
-		assertThat( memberDetails.hasDirectAnnotationUsage( JoinColumnOrFormula.class ) ).isFalse();
-		assertThat( memberDetails.hasDirectAnnotationUsage( JoinFormula.class ) ).isFalse();
 		assertThat( memberDetails.hasDirectAnnotationUsage( JoinColumn.class ) ).isFalse();
 		assertThat( memberDetails.hasDirectAnnotationUsage( JoinTable.class ) ).isFalse();
 		assertThat( memberDetails.hasDirectAnnotationUsage( Id.class ) ).isFalse();
 		assertThat( memberDetails.hasDirectAnnotationUsage( MapsId.class ) ).isFalse();
 
-		final JoinColumnsOrFormulas joinColumnsOrFormulasUsage = memberDetails.getDirectAnnotationUsage( JoinColumnsOrFormulas.class );
-		final JoinColumnOrFormula[] joinColumnOrFormulaUsages = joinColumnsOrFormulasUsage.value();
-		assertThat( joinColumnOrFormulaUsages ).hasSize( 2 );
+		final JoinColumns joinColumnsUsage = memberDetails.getDirectAnnotationUsage( JoinColumns.class );
+		final JoinColumn[] joinColumnUsages = joinColumnsUsage.value();
+		assertThat( joinColumnUsages ).hasSize( 2 );
 
-		final JoinColumn joinColumnUsage0 = joinColumnOrFormulaUsages[0].column();
+		final JoinColumn joinColumnUsage0 = joinColumnUsages[0];
 		assertThat( joinColumnUsage0.name() ).isEmpty();
 		assertThat( joinColumnUsage0.referencedColumnName() ).isEmpty();
 		assertThat( joinColumnUsage0.table() ).isEmpty();
@@ -102,7 +94,7 @@ public class Ejb3XmlManyToOneTest extends Ejb3XmlTestCase {
 		assertThat( joinColumnUsage0.nullable() ).isTrue();
 		assertThat( joinColumnUsage0.unique() ).isFalse();
 
-		final JoinColumn joinColumnUsage1 = joinColumnOrFormulaUsages[1].column();
+		final JoinColumn joinColumnUsage1 = joinColumnUsages[1];
 		assertThat( joinColumnUsage1.name() ).isEqualTo( "col1" );
 		assertThat( joinColumnUsage1.referencedColumnName() ).isEqualTo( "col2" );
 		assertThat( joinColumnUsage1.table() ).isEqualTo( "table1" );

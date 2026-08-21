@@ -8,6 +8,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.JdbcSettings;
+import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.Dialect;
@@ -40,6 +41,7 @@ public class DataSourceTest {
 		assertTrue( dialect instanceof OracleDialect
 					|| dialect instanceof DB2Dialect
 					|| dialect instanceof InformixDialect // Informix metadata does not include the URL
+					|| dialect instanceof AltibaseDialect // Altibase DataSource metadata rewrites the JDBC protocol with a driver version
 					|| listener.seen );
 	}
 

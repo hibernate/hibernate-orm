@@ -74,8 +74,7 @@ public class WrapVisitor extends ProxyVisitor {
 			final var persistenceContext = session.getPersistenceContextInternal();
 			//TODO: move into collection type, so we can use polymorphism!
 			if ( collectionType.hasHolder() ) {
-				if ( collection != CollectionType.UNFETCHED_COLLECTION
-						&& persistenceContext.getCollectionHolder( collection ) == null ) {
+				if ( persistenceContext.getCollectionHolder( collection ) == null ) {
 					final var collectionHolder = collectionType.wrap( session, collection );
 					persistenceContext.addNewCollection( persister, collectionHolder );
 					persistenceContext.addCollectionHolder( collectionHolder );
@@ -103,7 +102,12 @@ public class WrapVisitor extends ProxyVisitor {
 										collectionInstance =
 												persister.getCollectionSemantics()
 														.instantiateWrapper( key, persister, session );
-										persistenceContext.addUninitializedCollection( persister, collectionInstance, key );
+										persistenceContext.addUninitializedCollection(
+												persister,
+												collectionInstance,
+												key,
+												entry.isReadOnly()
+										);
 										persistenceContext.getCollectionEntry( collectionInstance ).setDoremove( true );
 									}
 								}
@@ -132,10 +136,10 @@ public class WrapVisitor extends ProxyVisitor {
 	}
 
 	@Override
-	protected Object processComponent(Object component, CompositeType componentType) throws HibernateException {
+	protected Object processComponent(Object component, CompositeType compositeType) throws HibernateException {
 		if ( component != null ) {
-			final Object[] values = componentType.getPropertyValues( component, getSession() );
-			final Type[] types = componentType.getSubtypes();
+			final Object[] values = compositeType.getPropertyValues( component, getSession() );
+			final Type[] types = compositeType.getSubtypes();
 			boolean substituteComponent = false;
 			for ( int i = 0; i < types.length; i++ ) {
 				final Object result = processValue( values[i], types[i] );
@@ -145,7 +149,8 @@ public class WrapVisitor extends ProxyVisitor {
 				}
 			}
 			if ( substituteComponent ) {
-				componentType.setPropertyValues( component, values );
+				final Object newComponent = compositeType.replacePropertyValues( component, values, getSession() );
+				return newComponent == component ? null : newComponent;
 			}
 		}
 

@@ -16,6 +16,7 @@ import org.hibernate.Length;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.ScrollMode;
+import org.hibernate.SPI;
 import org.hibernate.Timeouts;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.FunctionContributor;
@@ -218,6 +219,9 @@ import java.util.regex.Pattern;
 import static java.lang.Math.ceil;
 import static java.lang.Math.log;
 import static java.lang.String.join;
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.SUPPLY;
+import static org.hibernate.SPI.Role.USE;
 import static org.hibernate.cfg.AvailableSettings.NON_CONTEXTUAL_LOB_CREATION;
 import static org.hibernate.cfg.AvailableSettings.STATEMENT_BATCH_SIZE;
 import static org.hibernate.cfg.AvailableSettings.USE_GET_GENERATED_KEYS;
@@ -351,6 +355,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 
 	// constructors and factory methods ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+	@SPI( IMPLEMENT )
 	protected Dialect(DatabaseVersion version) {
 		this.version = version;
 		checkVersion();
@@ -358,6 +363,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		initDefaultProperties();
 	}
 
+	@SPI( IMPLEMENT )
 	protected Dialect(DialectResolutionInfo info) {
 		this.version = determineDatabaseVersion( info );
 		checkVersion();
@@ -366,8 +372,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		initDefaultProperties();
 	}
 
-	protected void checkVersion() {
-		final var version = getVersion();
+	private void checkVersion() {
 		if ( version != null ) {
 			final var minimumVersion = getMinimumSupportedVersion();
 			if ( version.isBefore( minimumVersion.getMajor(), minimumVersion.getMinor(), minimumVersion.getMicro() ) ) {
@@ -383,10 +388,18 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	/**
 	 * Determine the database version, as precise as possible and using Dialect-specific techniques,
 	 * from a {@link DialectResolutionInfo} object.
+	 * <p>
+	 * This method is called during superclass construction by
+	 * {@link #Dialect(DialectResolutionInfo)}. Implementations must not depend on
+	 * subclass initialization.
+	 * Integration providers may also invoke this method on an existing Dialect
+	 * when database metadata becomes available after the Dialect was constructed.
+	 *
 	 * @param info The dialect resolution info that would be passed by Hibernate ORM
 	 * to the constructor of a Dialect of the same type.
 	 * @return The corresponding database version.
 	 */
+	@SPI({ USE, IMPLEMENT })
 	public DatabaseVersion determineDatabaseVersion(DialectResolutionInfo info) {
 		return info.makeCopyOrDefault( getMinimumSupportedVersion() );
 	}
@@ -709,13 +722,19 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	/**
 	 * Get the version of the SQL dialect that is the target of this instance.
 	 */
-	public DatabaseVersion getVersion() {
+	@SPI( USE )
+	public final DatabaseVersion getVersion() {
 		return version;
 	}
 
 	/**
 	 * Get the version of the SQL dialect that is the minimum supported by this implementation.
+	 * <p>
+	 * This method is called during superclass construction. Implementations must
+	 * return construction-safe immutable data and must not depend on subclass
+	 * initialization.
 	 */
+	@SPI({ IMPLEMENT, SUPPLY })
 	protected DatabaseVersion getMinimumSupportedVersion() {
 		return SimpleDatabaseVersion.ZERO_VERSION;
 	}
@@ -1519,6 +1538,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * @param to a {@link CastType} indicating the
 	 *           type the value argument is cast to
 	 */
+	@SPI({ USE, IMPLEMENT })
 	public String castPattern(CastType from, CastType to) {
 		switch ( to ) {
 			case STRING:
@@ -1771,6 +1791,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * {@code false} if the trim character is explicit and
 	 * the ?2 placeholder must be included in the pattern
 	 */
+	@SPI({ USE, IMPLEMENT })
 	public String trimPattern(TrimSpec specification, boolean isWhitespace) {
 		return "trim(" + specification + ( isWhitespace ? "" : " ?2" ) + " from ?1)";
 	}
@@ -1920,7 +1941,8 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	@Override
-	public String toString() {
+	@SPI( USE )
+	public final String toString() {
 		return getClass().getName() + ", version: " + getVersion();
 	}
 
@@ -1983,6 +2005,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * LOBs are not processed by merge.
 	 */
 	@SuppressWarnings("unused")
+	@SPI( USE )
 	protected static final LobMergeStrategy LEGACY_LOB_MERGE_STRATEGY = new LobMergeStrategy() {
 		@Override
 		public Blob mergeBlob(Blob original, Blob target, SharedSessionContractImplementor session) {
@@ -2004,6 +2027,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * A {@link LobMergeStrategy} based on transferring contents using streams.
 	 */
 	@SuppressWarnings("unused")
+	@SPI( USE )
 	protected static final LobMergeStrategy STREAM_XFER_LOB_MERGE_STRATEGY = new LobMergeStrategy() {
 		@Override
 		public Blob mergeBlob(Blob original, Blob target, SharedSessionContractImplementor session) {
@@ -2081,6 +2105,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	/**
 	 * A {@link LobMergeStrategy} based on creating a new LOB locator.
 	 */
+	@SPI( USE )
 	protected static final LobMergeStrategy NEW_LOCATOR_LOB_MERGE_STRATEGY = new LobMergeStrategy() {
 		@Override
 		public Blob mergeBlob(Blob original, Blob target, SharedSessionContractImplementor session) {
@@ -2141,6 +2166,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * Get the {@link LobMergeStrategy} to use, {@link #NEW_LOCATOR_LOB_MERGE_STRATEGY}
 	 * by default.
 	 */
+	@SPI({ IMPLEMENT, SUPPLY })
 	public LobMergeStrategy getLobMergeStrategy() {
 		return NEW_LOCATOR_LOB_MERGE_STRATEGY;
 	}
@@ -3602,6 +3628,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * @param operator The set operator
 	 * @return The SQL fragment (e.g., "union", "union all", "union distinct")
 	 */
+	@SPI({ USE, IMPLEMENT })
 	public String getSetOperatorSqlString(SetOperator operator) {
 		return operator.sqlString();
 	}
@@ -4977,6 +5004,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * @see org.hibernate.Session#byMultipleIds
 	 * @see org.hibernate.Session#byMultipleNaturalId
 	 */
+	@SPI({ IMPLEMENT, SUPPLY })
 	public MultiKeyLoadSizingStrategy getMultiKeyLoadSizingStrategy() {
 		return STANDARD_MULTI_KEY_LOAD_SIZING_STRATEGY;
 	}
@@ -4989,6 +5017,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 *
 	 * @see org.hibernate.annotations.BatchSize
 	 */
+	@SPI({ IMPLEMENT, SUPPLY })
 	public MultiKeyLoadSizingStrategy getBatchLoadSizingStrategy() {
 		return getMultiKeyLoadSizingStrategy();
 	}
@@ -4999,6 +5028,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		return maxBatchSize > 0 && batchSize > maxBatchSize ? maxBatchSize : batchSize;
 	}
 
+	@SPI( USE )
 	protected final MultiKeyLoadSizingStrategy STANDARD_MULTI_KEY_LOAD_SIZING_STRATEGY = this::calculateBatchSize;
 
 	/**

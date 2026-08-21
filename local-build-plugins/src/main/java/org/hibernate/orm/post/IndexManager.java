@@ -11,9 +11,9 @@ import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.Comparator;
-import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.TreeSet;
 
 import org.gradle.api.Project;
@@ -39,20 +39,20 @@ import org.jboss.jandex.Indexer;
 public class IndexManager {
 	private final Configuration artifactsToProcess;
 	private final Provider<RegularFile> indexFileReferenceAccess;
-	private final Provider<RegularFile> packageFileReferenceAccess;
+	private final Provider<RegularFile> artifactFileReferenceAccess;
 	private final Project project;
 
 	private Index index;
-	private TreeSet<Inclusion> internalPackageNames;
+	private Map<String, TreeSet<String>> artifactsByElement;
 
 	public IndexManager(Configuration artifactsToProcess, Project project) {
 		this.artifactsToProcess = artifactsToProcess;
 		this.indexFileReferenceAccess = project.getLayout()
 				.getBuildDirectory()
 				.file( "orm/reports/indexing/jandex.idx" );
-		this.packageFileReferenceAccess = project.getLayout()
+		this.artifactFileReferenceAccess = project.getLayout()
 				.getBuildDirectory()
-				.file( "orm/reports/indexing/internal-packages.txt" );
+				.file( "orm/reports/indexing/artifacts.txt" );
 		this.project = project;
 	}
 
@@ -64,20 +64,33 @@ public class IndexManager {
 		return indexFileReferenceAccess;
 	}
 
-	public Provider<RegularFile> getPackageFileReferenceAccess() {
-		return packageFileReferenceAccess;
-	}
-
-	public TreeSet<Inclusion> getInternalPackageNames() {
-		return internalPackageNames;
+	public Provider<RegularFile> getArtifactFileReferenceAccess() {
+		return artifactFileReferenceAccess;
 	}
 
 	public Index getIndex() {
 		if ( index == null ) {
 			index = loadIndex( indexFileReferenceAccess );
-			internalPackageNames = loadInternalPackageNames( packageFileReferenceAccess );
+			artifactsByElement = loadArtifacts( artifactFileReferenceAccess );
 		}
 		return index;
+	}
+
+	public String getArtifact(String elementId) {
+		getIndex();
+		final String lookupId;
+		if ( elementId.startsWith( "package:" ) || elementId.startsWith( "type:" ) ) {
+			lookupId = elementId;
+		}
+		else {
+			final int typeStart = elementId.indexOf( ':' ) + 1;
+			final int memberSeparator = elementId.indexOf( '#', typeStart );
+			lookupId = memberSeparator < 0
+					? elementId
+					: "type:" + elementId.substring( typeStart, memberSeparator );
+		}
+		final Set<String> artifacts = artifactsByElement.get( lookupId );
+		return artifacts == null || artifacts.isEmpty() ? "unknown" : String.join( ",", artifacts );
 	}
 
 	private static Index loadIndex(Provider<RegularFile> indexFileReferenceAccess) {
@@ -98,26 +111,25 @@ public class IndexManager {
 		}
 	}
 
-	private static TreeSet<Inclusion> loadInternalPackageNames(Provider<RegularFile> packageFileReferenceAccess) {
-		final File packageNameFile = packageFileReferenceAccess.get().getAsFile();
-		if ( !packageNameFile.exists() ) {
-			throw new IllegalStateException( "Cannot load internal packages; the stored file does not exist - " + packageNameFile.getAbsolutePath() );
+	private static Map<String, TreeSet<String>> loadArtifacts(Provider<RegularFile> artifactFileReferenceAccess) {
+		final File artifactFile = artifactFileReferenceAccess.get().getAsFile();
+		if ( !artifactFile.exists() ) {
+			throw new IllegalStateException( "Cannot load indexed artifact provenance; the stored file does not exist - " + artifactFile.getAbsolutePath() );
 		}
-
-		final TreeSet<Inclusion> inclusions = new TreeSet<>( Comparator.comparing( Inclusion::getPath ) );
+		final Map<String, TreeSet<String>> artifacts = new TreeMap<>();
 		try {
-			final List<String> lines = Files.readAllLines( packageNameFile.toPath() );
-			lines.forEach( (line) -> {
-				if ( line == null || line.isEmpty() ) {
-					return;
+			for ( String line : Files.readAllLines( artifactFile.toPath() ) ) {
+				final int separator = line.indexOf( '\t' );
+				if ( separator <= 0 || separator == line.length() - 1 ) {
+					throw new IllegalStateException( "Malformed indexed artifact provenance: " + line );
 				}
-
-				inclusions.add( new Inclusion( line, true ) );
-			} );
-			return inclusions;
+				artifacts.computeIfAbsent( line.substring( 0, separator ), (key) -> new TreeSet<>() )
+						.add( line.substring( separator + 1 ) );
+			}
+			return artifacts;
 		}
 		catch (IOException e) {
-			throw new RuntimeException( "Unable to read package-name file - " + packageNameFile.getAbsolutePath(), e );
+			throw new RuntimeException( "Unable to read indexed artifact provenance - " + artifactFile.getAbsolutePath(), e );
 		}
 	}
 
@@ -131,12 +143,13 @@ public class IndexManager {
 		}
 
 		final Indexer indexer = new Indexer();
-		internalPackageNames = new TreeSet<>( Comparator.comparing( Inclusion::getPath ) );
+		artifactsByElement = new TreeMap<>();
 
 		// note: each of `artifacts` is a jar-file
 		final Set<File> artifacts = artifactsToProcess.resolve();
 
 		artifacts.forEach( (jar) -> {
+			final String artifactName = jar.getName();
 			final FileTree jarFileTree = project.zipTree( jar );
 			jarFileTree.visit(
 					new FileVisitor() {
@@ -146,16 +159,7 @@ public class IndexManager {
 
 						@Override
 						public void visitDir(FileVisitDetails details) {
-							final RelativePath relativePath = details.getRelativePath();
-							if ( !isInOrmPackage( relativePath ) ) {
-								return;
-							}
-
-							if ( relativePath.getPathString().endsWith( "internal" )
-									|| relativePath.getPathString().endsWith( "internal/" ) ) {
-								final String packageName = relativePath.toString().replace( '/', '.' );
-								internalPackageNames.add( new Inclusion( packageName, true ) );
-							}
+							// No directory-level metadata is required by the canonical classifier.
 						}
 
 						@Override
@@ -172,6 +176,14 @@ public class IndexManager {
 										project.getLogger()
 												.lifecycle( "Problem indexing class file - " + details.getFile()
 														.getAbsolutePath() );
+									}
+									else {
+										final String className = classSummary.name().toString();
+										recordArtifact( "type:" + className, artifactName );
+										final int separator = className.lastIndexOf( '.' );
+										if ( separator > 0 ) {
+											recordArtifact( "package:" + className.substring( 0, separator ), artifactName );
+										}
 									}
 								}
 								catch (IllegalArgumentException e) {
@@ -194,7 +206,11 @@ public class IndexManager {
 
 		this.index = indexer.complete();
 		storeIndex();
-		storePackageNames();
+		storeArtifacts();
+	}
+
+	private void recordArtifact(String elementId, String artifactName) {
+		artifactsByElement.computeIfAbsent( elementId, (key) -> new TreeSet<>() ).add( artifactName );
 	}
 
 	private void storeIndex() {
@@ -212,25 +228,20 @@ public class IndexManager {
 		}
 	}
 
-	private void storePackageNames() {
-		final File packageNameFile = prepareOutputFile( packageFileReferenceAccess );
-
-		try ( final FileWriter fileWriter = new FileWriter( packageNameFile ) ) {
-			internalPackageNames.forEach( (inclusion) -> {
-				try {
-					fileWriter.write( inclusion.getPath() );
+	private void storeArtifacts() {
+		final File artifactFile = prepareOutputFile( artifactFileReferenceAccess );
+		try ( final FileWriter fileWriter = new FileWriter( artifactFile ) ) {
+			for ( Map.Entry<String, TreeSet<String>> entry : artifactsByElement.entrySet() ) {
+				for ( String artifact : entry.getValue() ) {
+					fileWriter.write( entry.getKey() );
+					fileWriter.write( '\t' );
+					fileWriter.write( artifact );
 					fileWriter.write( '\n' );
 				}
-				catch (IOException e) {
-					throw new RuntimeException( "Unable to write to package-name file - " + packageNameFile.getAbsolutePath(), e );
-				}
-			} );
-		}
-		catch (FileNotFoundException e) {
-			throw new RuntimeException( "Should never happen", e );
+			}
 		}
 		catch (IOException e) {
-			throw new RuntimeException( "Error accessing package-name file - " + packageNameFile.getAbsolutePath(), e );
+			throw new RuntimeException( "Error writing indexed artifact provenance - " + artifactFile.getAbsolutePath(), e );
 		}
 	}
 

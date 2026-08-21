@@ -6,7 +6,7 @@ package org.hibernate.dialect;
 
 import java.sql.SQLException;
 
-import org.hibernate.Internal;
+import org.hibernate.SPI;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 
@@ -22,7 +22,7 @@ import static org.hibernate.internal.util.config.ConfigurationHelper.getInt;
  *
  * @author Marco Belladelli
  */
-@Internal
+@SPI
 public class MySQLServerConfiguration {
 	private final int bytesPerCharacter;
 	private final boolean noBackslashEscapesEnabled;

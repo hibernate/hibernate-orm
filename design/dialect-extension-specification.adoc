@@ -1,0 +1,1043 @@
+= Dialect Extension Specification
+:toc2:
+:toclevels: 4
+:sectanchors:
+:numbered:
+
+Status: Approved
+
+This document specifies the organization, supported extension surface,
+translation contracts, tests, and migration requirements for third-party
+Hibernate Dialects.
+
+It applies the `USE`, `IMPLEMENT`, and `SUPPLY` semantics defined by
+`design/spi-specification.adoc`.  Annotation declaration, general reporting,
+validation rule definitions, and role-sensitive compatibility remain owned by
+that specification.
+
+Those tooling requirements are a normative part of this Dialect work through
+that dependency.  This specification additionally defines the mandatory
+Dialect-specific inventory, validation inputs, provider boundary, and test
+fixtures.  The separation between documents avoids duplicating general tooling
+rules; it does not make tooling optional or defer it to the implementation
+document.
+
+The rationale is described in `design/dialect-extension-design.adoc`.
+
+== Conventions
+
+The key words _MUST_, _MUST NOT_, _REQUIRED_, _SHOULD_, _SHOULD NOT_, and _MAY_
+in this document indicate requirement strength.
+
+Provider::
+Code outside Hibernate ORM which implements or supplies a Dialect extension.
+
+Built-in leaf::
+A concrete Hibernate implementation selected for a built-in feature or
+database, but not intended as a provider subclassing contract.
+
+SQL-family base::
+A supported abstract translator or Dialect base which implements behavior
+shared by a demonstrated family of compatible SQL grammars.
+
+General SPI terms, effective-role rules, and supported-signature rules have the
+meanings assigned by `design/spi-specification.adoc`.
+
+=== Deferred decisions
+
+The following parts of this working specification remain intentionally
+unresolved pending focused discussion:
+
+* how generated inventory facts and reviewed human decisions are persisted;
+* how selectability metadata is represented and whether selector and resolver
+  registrations share a catalog;
+* the exact Dialect and translator SQL-family bases required by the migration;
+* the concrete SQL AST translation request/context interfaces;
+* the final translator output-result construction boundary;
+* whether Java service loading supplements explicit HQL/SQM translator
+  settings;
+* whether a focused generated Dialect-provider report proves useful and
+  manageable.
+
+These decisions have explicit later review checkpoints.  They do not weaken
+the settled category, role, package, testing, or migration rules in this
+specification.
+
+== Dialect SPI
+
+=== Dialect classification and location
+
+`org.hibernate.dialect.Dialect` MUST remain in its established package.
+
+It MUST be classified:
+
+[source,java]
+----
+@SPI({ SPI.Role.USE, SPI.Role.IMPLEMENT, SPI.Role.SUPPLY })
+public abstract class Dialect {
+    ...
+}
+----
+
+The complete provider classification is `USE + IMPLEMENT + SUPPLY`; no role is
+inferred from another.
+
+Its supported subclass constructors MUST be classified for `IMPLEMENT`.
+
+Every public or protected overridable instance method declared by `Dialect`
+MUST be treated as effective `IMPLEMENT` through the class-level
+classification.  Repetitive method annotations MUST NOT be required.
+
+Methods through which a subclass supplies a strategy, factory, descriptor, or
+service to Hibernate MUST additionally be classified `SUPPLY`.  Type-level
+`SUPPLY` on `Dialect` MUST NOT automatically classify every method as a supply
+point.
+
+Public and protected members accessible to provider subclasses participate in
+the `IMPLEMENT` compatibility surface even when they are not overridable.
+Public members also participate in provider `USE` because `Dialect` declares
+that independent role.
+
+The package `org.hibernate.dialect` MUST NOT be classified wholesale as an
+`IMPLEMENT` SPI.
+
+=== Dialect visibility audit
+
+Before the initial Dialect SPI baseline is established, every public and
+protected declaration owned by `Dialect` MUST be audited.
+
+The audit record for each declaration MUST include:
+
+* Java declaration kind and signature;
+* effective `USE`, `IMPLEMENT`, and `SUPPLY` roles;
+* known use by Hibernate Core, built-in Dialects, community Dialects, and any
+  surveyed maintained third-party Dialects;
+* intended disposition: retain, make final, reduce visibility, move behind an
+  internal collaborator, deprecate, or replace;
+* replacement and migration information when the exposed surface is narrowed.
+
+A public or protected method which remains overridable after the audit MUST be
+included in the `IMPLEMENT` compatibility baseline.  A method which is not an
+intentional provider override point MUST NOT remain overridable merely to avoid
+making a classification decision.
+
+Existing compatibility policy applies to visibility reduction, finalization,
+movement, and removal.  Commonly used internal or accidental hooks SHOULD
+receive a documented replacement even where no formal compatibility guarantee
+previously applied.
+
+The audit MUST distinguish target classification from the concrete migration
+action.  A declaration excluded from the intended SPI MAY receive a direct
+`@Internal` override while remaining visible temporarily for compatibility.
+Retention, bridging, deprecation, visibility reduction, and removal MUST be
+decided case by case under the applicable release policy.
+
+Production `@SPI` annotations MUST represent ready support commitments.  The
+inventory MAY model proposed classifications before source annotations are
+added, but production annotations MUST NOT be used solely as temporary
+migration markers.  The type-level `Dialect` annotation MUST wait until every
+remaining exposed declaration has a reviewed disposition.
+
+=== Dialect surface inventory
+
+Dialect tooling MUST present a reviewable extension inventory derived from the
+general SPI role data.  This migration inventory is required even if the later
+proposal for a separately published provider report is rejected.  It does not
+standardize the still-conceptual system grouping of the general SPI report.
+
+The inventory MUST follow the general report's canonical deduplication rules.
+A collaborator independently classified by `@SPI` or a `.spi` package tree
+MUST retain that classification when reached from a Dialect signature and MUST
+NOT also appear as a signature-derived element.
+
+The section MUST distinguish:
+
+* supported `Dialect` constructors;
+* methods providers may override;
+* values and strategies providers may supply;
+* collaborator types providers may use;
+* incubating extension points;
+* deprecated extension points and their replacements.
+
+The audited Java surface and its derived SPI role data define the intentional
+Dialect subclassing contract.  The inventory MUST NOT silently omit a public or
+protected method which remains overridable.
+
+=== Concrete built-in Dialects
+
+Java contract category, configuration selectability, and SPI roles MUST be
+modeled independently.  Selectability means that a concrete Dialect may be
+named or resolved as the implementation Hibernate should use.  Selectability
+MUST NOT assign API or SPI category and MUST NOT add an SPI role.
+
+A concrete built-in Dialect MUST default to internal as a Java implementation.
+It becomes SPI only through a deliberate provider-use or subclassing decision,
+and API only through a deliberate decision to support application Java use
+beyond configuration selection.  Existing classes MUST be audited case by
+case; this target default does not authorize immediate narrowing of a
+documented or used contract.
+
+A concrete SPI Dialect MAY also be selectable without becoming API.  An
+internal concrete Dialect MAY be selectable without making its Java
+implementation surface supported.  API, SPI, and internal remain mutually
+exclusive Java categories in every case.
+
+The initial selectability source MUST be inventoried from at least
+`DefaultDialectSelector`, `DialectResolver`, and the existing Dialect support
+documentation.  Their distinct short-name-selection and
+database-metadata-resolution responsibilities SHOULD share metadata where
+practical.  The final representation is deferred; a new annotation MUST NOT be
+introduced without demonstrating that selectability cannot be derived or
+represented by a smaller shared catalog.
+
+`hibernate.dialect` MUST continue to accept a constructed `Dialect` instance,
+a `Class<? extends Dialect>`, or a fully qualified Dialect class name.  These are
+application-facing configuration forms and MUST NOT change the provider-SPI
+audience of the selected implementation.
+
+When `hibernate.dialect` is absent, standard automatic resolution from
+`DialectResolutionInfo` MUST remain supported and SHOULD be the documented
+preferred path for built-in Dialects.  The resolution information MAY come
+from JDBC metadata or explicitly supplied database-product metadata.
+
+`hibernate.dialect_resolvers` and Java-service-loaded `DialectResolver`
+implementations MUST remain supported.  Explicitly configured resolvers MUST
+run before service-loaded resolvers, and both MUST run before standard
+resolution.  Java-service-loaded `DialectSelector` MUST remain supported for
+provider-defined explicit names.  Named Dialect registration through
+`StrategyRegistrationProvider` MUST remain supported as part of the general
+named-strategy SPI, but provider documentation SHOULD direct Dialect-specific
+name contributions to `DialectSelector`.
+
+Each Dialect with supported explicit-name selection MUST have one canonical,
+unversioned short name.  Version-qualified legacy aliases MUST be removed, as
+must `SAPDB`, `DB2400`, `DB2390`, `HANARowStore`, `HANAColumnStore`, and
+`HANACloudColumnStore`, because none selects distinct current behavior.  Every
+removed name MUST have a versioned Migration Guide mapping to automatic
+resolution or to `MaxDB`, `DB2i`, `DB2z`, or `HANA`, as applicable.  An obsolete
+name MUST fail clearly instead of silently selecting a modern Dialect.
+
+Inclusion in the generated Dialect support table MUST mean that the database
+Dialect and listed minimum database version are supported according to the
+containing module's support policy.  It MUST NOT assign API or SPI category,
+promise subclassability, or imply a particular selection mechanism.  A
+concrete Dialect absent from that table MUST NOT gain a supported-selection
+promise solely because reflective FQCN construction succeeds.
+
+The family inventory MUST precede the final case-by-case Java-category,
+subclassability, constructor, and selectability decisions for concrete
+Dialects.  Possible selector/resolver catalog unification remains deferred and
+MUST NOT block the evidence inventory.
+
+`SUPPLY` MUST NOT be inferred for a built-in concrete Dialect.  Provider supply
+is expressed by the `Dialect` contract and its configuration or resolution
+points, not by Hibernate's built-in implementation class.
+
+An abstract family base MUST default to non-selectable `IMPLEMENT` SPI and MAY
+independently declare `USE` where provider invocation or construction is
+intended.  Direct construction or selection requires a separate affirmative
+decision.
+
+Existing documented subclassing support MUST remain until a replacement and
+migration path are provided.
+
+The classification model MUST be tested with fixtures proving:
+
+* selectability adds no Java category or SPI role;
+* a selectable concrete `IMPLEMENT` SPI remains SPI rather than becoming API;
+* a selectable internal implementation remains outside supported Java
+  surfaces;
+* API status requires independent application Java-use intent;
+* an abstract family base is `IMPLEMENT` SPI and non-selectable by default.
+
+=== Feature families
+
+Dialect-related SPI contracts MUST be organized by coherent feature family.
+
+The initial family inventory is:
+
+[cols="28m,32,40",options="header"]
+|===
+|Family |Primary provider responsibility |Expected SPI forms
+
+|SQL AST translation
+|Render SQL grammar and create executable operations.
+|Factory, request view, translator base, semantic AST views.
+
+|Locking
+|Describe lock syntax, timeout handling, and lock capabilities.
+|Strategy interface, metadata, standard profiles/builder.
+
+|Pagination
+|Render and bind limit/offset behavior.
+|Strategy interface and reusable standard implementations.
+
+|Identity
+|Describe identity-column DDL and generated-value retrieval.
+|Support interface and standard strategies.
+
+|Sequences
+|Describe sequence DDL, selection, and metadata extraction.
+|Support interface, extractor base, standard factories.
+
+|Temporary tables
+|Describe temporary-table kind, naming, creation, and lifecycle.
+|Strategy interfaces and builders.
+
+|Multi-table mutation
+|Choose and configure CTE or table-based mutation handling.
+|Provider factory, request context, strategy contracts.
+
+|Schema management
+|Export, migrate, clean, and extract schema objects.
+|Exporter/extractor interfaces, factories, and supported bases.
+
+|Callable statements
+|Render and register procedure/function calls.
+|Support interface and standard base/builder.
+
+|JDBC and DDL types
+|Register database type mappings and DDL names.
+|Contribution API, descriptor interfaces, builders.
+
+|Functions
+|Register and render database functions.
+|Contribution API, rendering interfaces, builders.
+
+|Aggregate, temporal, and row security
+|Describe specialized database features.
+|Narrow support interfaces and immutable metadata.
+|===
+
+New contracts SHOULD be placed with their feature family.  A generic
+`org.hibernate.dialect.spi` package MUST NOT become a dumping ground for
+unrelated contracts.
+
+=== Choosing interfaces, factories, builders, and bases
+
+For a Dialect dependency used only as a value or semantic view, Hibernate MUST
+prefer a supported interface or immutable value.
+
+For standard behavior which is configured but not subclassed, Hibernate SHOULD
+provide a supported factory, builder, or registry convenience method while
+keeping the implementation internal.
+
+For behavior demonstrably customized through inheritance, Hibernate SHOULD
+provide a supported abstract base with a deliberately limited protected
+surface.
+
+Concrete internal implementations MUST NOT be promoted solely because
+community Dialects currently construct them.
+
+=== Initial Dialect dependency remediation
+
+The reorganization MUST provide supported replacements for these common
+internal dependencies:
+
+* simple and capacity-dependent DDL type implementations;
+* native and named enum DDL type implementations;
+* local, global, and persistent temporary-table mutation and insert strategies;
+* CTE mutation and insert strategies;
+* standard locking support profiles and parameterized locking support;
+* non-locking and locking-clause rendering strategies;
+* standard schema exporters;
+* sequence information extractor bases and standard implementations;
+* callable statement support bases;
+* SQL selection and JDBC operation implementation construction;
+* SQL AST and model-mutation nodes required by provider translators;
+* anonymous tuple implementation types exposed by set-returning functions;
+* internal SQM parameter cross-reference types in provider signatures.
+
+Replacement choice MUST follow:
+
+[cols="35,65",options="header"]
+|===
+|Observed external need |Required replacement
+
+|Construct stock behavior
+|Factory, builder, profile, or registry convenience.
+
+|Subclass stock behavior
+|Supported abstract base with documented hooks.
+
+|Inspect semantic state
+|Supported read-only interface.
+
+|Pass state to a base implementation
+|Supported request/context interface.
+
+|Create engine result objects
+|Supported helper/factory owned by the base implementation.
+|===
+
+== Dialect tooling requirements
+
+=== Required build tasks
+
+The general `generateClassificationReports`, `validateClassifications`, and
+`validateSpi` tasks are REQUIRED inputs to the Dialect reorganization.  The
+Dialect work MUST use their canonical model rather than create another
+classifier.
+
+For Dialect validation, the tasks MUST analyze at least:
+
+* compiled Hibernate Core declarations;
+* compiled `hibernate-community-dialects` production declarations;
+* the standalone provider fixture;
+* the SPI annotation, package, lifecycle, and migration metadata required by
+  the general specification.
+
+During remediation, both validators MUST remain explicitly invoked diagnostic
+tasks and MUST NOT be pulled into the normal `check` lifecycle merely by this
+work.  After the defined Dialect provider boundary reaches zero violations,
+build-lifecycle integration MUST be reconsidered as the separate decision
+deferred by the general SPI implementation plan.  No broad Dialect allowlist or
+count-only gate is required during this diagnostic phase.
+
+Validation MUST operate on compiled structure.  Source analysis MAY supplement
+compiled analysis for Javadoc and source-only policy, but source-import scanning
+alone is insufficient.
+
+=== Dialect validation scope
+
+The validator MUST enforce, in addition to the general SPI rules:
+
+* the `Dialect` role and constructor classifications;
+* complete accounting of the audited public and protected `Dialect` surface;
+* independence of Java category, selectability, and SPI roles;
+* absence of internal types from supported translator and Dialect signatures;
+* SPI classification of translator-visible SQL AST and model-mutation tree
+  types;
+* absence of upstream Hibernate-internal dependencies from community Dialects
+  and the standalone provider fixture;
+* existence of every required versioned Migration Guide anchor referenced by a
+  completed Dialect surface or provider-dependency migration record;
+* the classification-specificity and provider-boundary rules inherited from
+  the general SPI specification.
+
+Diagnostics SHOULD include the complete path from the provider-facing root to
+the violating declaration or internal dependency.
+
+=== Provisional Dialect provider report
+
+A separately published Dialect-provider report is provisional.  Phase 0 or 2
+SHOULD generate a representative view from `classifications.json` and the
+reviewed migration inventory so its usefulness, size, redundancy, navigability,
+and maintenance cost can be reviewed.
+
+If adopted, it MUST be derived from the canonical classification model, MUST
+identify its provider audience, and MUST present selectability separately from
+Java category and SPI roles.  It SHOULD link completed migrations to stable
+Migration Guide anchors.  It MUST remain distinct from the existing generated
+Dialect/version tables used by `renderDialectGuide`.
+
+Until adopted, `classifications.json`, the general SPI report, the required
+migration inventory, Javadocs, the Dialect Guide, and test-kit documentation
+are the authoritative presentations.  Routine CI MUST NOT retain a provisional
+report merely for historical diffing.
+
+The specification defines these observable tasks, inputs, validations,
+diagnostics, and outputs.  It does not mandate a particular analysis engine.
+
+== SQL AST Dialect SPI
+
+=== Package organization
+
+Generic supported translation contracts and the translator-visible semantic
+SQL AST and model-mutation trees MUST live in subsystem-specific packages
+explicitly classified as SPI.
+
+The ownership split MUST be:
+
+`org.hibernate.sql.ast.spi...`::
+Semantic SQL AST contracts, walker contracts, translation request/context
+contracts, and generic engine-level translator SPI.
+
+`org.hibernate.dialect.sql.ast.spi...`::
+Dialect-oriented rendering bases, accepted SQL-family bases, and
+database-grammar extension hooks.
+
+Corresponding `internal` package trees::
+Built-in translator leaves and implementation helpers which are not extension
+contracts.
+
+The actual semantic node types MUST be made SPI directly.  Hibernate MUST NOT
+introduce a parallel facade tree or parallel facade node interfaces solely to
+avoid supporting the tree used by translators.  Existing coherent tree
+structure SHOULD be preserved beneath the selected SPI roots.  A `.spi`
+package component classifies the complete package subtree, as defined by the
+general specification; repetitive package annotations are not required.
+
+Physical migration MUST occur in coherent stages rather than requiring one
+atomic rewrite.  Each moved subtree MUST update Core, community Dialects, the
+standalone provider fixture, classification metadata, tests, and Migration
+Guide coverage together.  Temporary mixed organization is permitted while the
+package-migration map records the final boundary.
+
+Dialect-facing reusable translation bases SHOULD live under:
+
+`org.hibernate.dialect.sql.ast.spi`
+
+Built-in translation leaves and helpers which are not extension contracts MUST
+live under:
+
+`org.hibernate.dialect.sql.ast.internal`
+
+A package containing supported family bases MUST NOT be annotated `@Internal`.
+
+=== Translator factory
+
+`SqlAstTranslatorFactory` MUST be classified `IMPLEMENT`.
+
+The Dialect method which supplies it MUST be classified:
+
+`@SPI({ SPI.Role.IMPLEMENT, SPI.Role.SUPPLY })`
+
+Factory inputs SHOULD be consolidated into a supported
+`SqlAstTranslationRequest` or equivalent context contract.
+
+The request MUST expose only supported types.  Its implementation MAY be
+internal.
+
+Before the factory signature changes, the proposed request/context interfaces
+MUST receive focused review showing their complete methods, roles, ownership,
+and relationship among select, query-mutation, and model-mutation requests.
+
+=== Generic translator bases
+
+Hibernate MUST provide a supported generic translator base sufficient for a
+third-party Dialect to render select, query-mutation, and model-mutation SQL.
+
+Inheritance and composition MUST NOT be treated as mutually exclusive extension
+models.  A generic or SQL-family base MAY define an invariant translation
+template while exposing selected variation points through any deliberate
+combination of:
+
+* protected concrete or abstract methods;
+* supported rendering strategies or delegates;
+* Dialect capabilities or immutable profiles;
+* supported request/context collaborators;
+* helper or factory contracts.
+
+The chosen combination MUST follow the actual variation within that family and
+MUST expose only the smallest stable surface required by providers.  This
+specification does not require a family to use a strict template-method design,
+strict delegation, or composition alone.
+
+Generic reusable mutation forms SHOULD include supported bases, composable
+strategies, or a combination for:
+
+* standard SQL;
+* merge;
+* upsert;
+* `ON DUPLICATE KEY UPDATE`.
+
+Supported subclass constructors and protected hooks MUST be classified
+`IMPLEMENT`.  Composable collaborators MUST receive the independent roles
+appropriate to their direction: normally `USE` for a strategy invoked by the
+base, `IMPLEMENT` when providers implement the strategy contract, and `SUPPLY`
+at the point where a provider makes the strategy available to Hibernate.
+
+Any other public or protected member inherited by providers from an
+`IMPLEMENT` translator base MUST follow the general exposed-surface rule.  A
+member which is not a supported hook MUST be made non-overridable, assigned
+narrower visibility, or moved behind an internal collaborator before the base
+is classified `IMPLEMENT`.
+
+=== Walker and semantic model
+
+An `IMPLEMENT` SQL AST walker or translator MUST NOT require concrete internal
+node types.
+
+The SQL AST and model-mutation node types appearing in supported walker,
+translator, factory, constructor, or protected-hook signatures MUST themselves
+be supported SPI.  At minimum the supported tree MUST cover:
+
+* select statements, query specifications, and set operations;
+* expressions, predicates, table references, and table groups required by
+  translator overrides;
+* standard and custom table inserts;
+* standard, optional, and custom table updates;
+* standard and custom table deletes;
+* value and restriction bindings;
+* returning columns;
+* callable/custom-SQL distinctions.
+
+The tree types are normally `USE` SPI from the provider translator's
+perspective.  A node type MUST receive `IMPLEMENT` and, where appropriate,
+`SUPPLY` only when providers are expected to implement, subclass, construct, or
+contribute nodes.
+
+Hibernate MAY retain distinct visitor methods when the semantic distinction is
+stable.  It SHOULD prefer a general semantic callback plus supported
+discriminators when implementation variants may grow.
+
+=== Internal result construction
+
+The preferred result boundary is provisional pending inventory and focused
+review.  Provider translators SHOULD return supported result interfaces without
+being required to instantiate:
+
+* internal JDBC operation implementations;
+* internal SQL selection implementations;
+* internal JDBC binding implementations;
+* execution-oriented mutation implementations which are not part of the
+  supported semantic model.
+
+The proposed supported translator base SHOULD expose protected helpers or
+factories sufficient to produce the required internal results.  Before this
+becomes a final requirement, the package and provider inventories MUST show the
+actual construction requirements and the proposed helper/factory surface MUST
+receive explicit review.
+
+=== Set-returning functions
+
+Translator methods for set-returning functions MUST accept a supported
+descriptor exposing only the semantic information needed for rendering.
+
+They MUST NOT expose anonymous tuple implementation classes from internal
+packages.
+
+=== SQL-family bases
+
+A SQL family identifies a coherent body of shared grammar, translation
+behavior, and compatibility assumptions.  It does not prescribe how minor
+deviations are exposed.  In particular, classification as a family base MUST
+NOT imply that every variation is represented by subclass overriding.
+
+A SQL-family base MUST:
+
+* be abstract unless its direct construction is explicitly useful;
+* be classified `IMPLEMENT`;
+* depend only on supported SPI and API;
+* document the SQL grammar family it models;
+* document assumptions not represented as Dialect capabilities;
+* expose a deliberate extension surface, which MAY combine protected hooks and
+  composable collaborators;
+* avoid casts to a concrete built-in Dialect;
+* accept a supported family-support interface when additional family metadata
+  is required.
+
+A built-in leaf extending a family base MUST remain internal unless it is
+independently approved for application Java use or provider use/subclassing.
+
+A new family base SHOULD be introduced only when at least one of these is true:
+
+* multiple in-repository Dialects share substantial translator logic;
+* a maintained third-party Dialect currently extends or copies a built-in
+  translator;
+* the family represents a documented database compatibility mode.
+
+Small syntax variations SHOULD normally be modeled by capabilities or
+composable rendering strategies rather than requiring another family base.
+Once a family base is justified, it MAY still delegate individual syntax,
+capability, or rendering variations to composition instead of encoding every
+variation as a subclass override.  Protected concrete or abstract methods,
+capabilities, immutable profiles, strategies, delegates, and other reviewed
+composition points are all valid, and a family MAY combine them.
+
+The selected mechanism MUST follow the nature of each variation and keep both
+the subclass-facing and collaborator-facing compatibility surfaces deliberate
+and minimal.  Family evidence justifies sharing the invariant behavior; it does
+not by itself justify any particular protected method or composable contract.
+
+The accepted initial SQL-compatibility-family dispositions are:
+
+[cols="20,40,40",options="header"]
+|===
+|Family |Dialect inheritance |SQL AST translation
+
+|PostgreSQL-compatible
+|`PostgreSQLDialect` is a concrete `IMPLEMENT` provider base.
+|`PostgreSQLSqlAstTranslator` is a concrete `IMPLEMENT` provider base with
+composable conflict-clause, CTE, fetch, and array-predicate deviations.
+
+|MySQL-compatible
+|`MySQLDialect` is a concrete `IMPLEMENT` provider base.
+|The family uses `SqlAstTranslatorWithOnDuplicateKeyUpdate` plus focused
+rendering strategies and a narrow family-support view.  There is no mandatory
+MySQL-specific translator superclass.
+
+|DB2-compatible
+|`DB2Dialect` is a concrete `IMPLEMENT` provider base.
+|`DB2SqlAstTranslator` is a concrete `IMPLEMENT` provider base with composable
+version/fetch, comparison, and DML-result deviations.
+
+|Transact-SQL-compatible
+|`AbstractTransactSQLDialect` is an abstract `IMPLEMENT` family base.
+|There is no common Transact-SQL translator superclass.  Locking, pagination,
+DML-target, and comparison behavior are exposed through focused supported
+strategies or helpers.
+|===
+
+These dispositions decide supported Java inheritance and composition for the
+initial SQL-compatibility families.  They do not replace or constrain the
+locking, SQL AST translation, pagination, schema-management, or other feature
+families defined by this specification.  Membership in a compatibility family
+MUST NOT require inheritance from its supported base.
+
+Approval of a provider base does not approve its current public or protected
+surface declaration by declaration.  That surface, including constructors,
+MUST still pass the Dialect and translator SPI audits before classification is
+applied.  A built-in Dialect or translator used as an in-repository or
+maintained third-party superclass MUST NOT be converted to an internal leaf
+without a supported replacement.
+
+Core and community-Dialect usage is mandatory family evidence.  Publicly
+discoverable maintained third-party providers SHOULD be surveyed through their
+source, artifact metadata, issue history, and documentation, but an exhaustive
+ecosystem census MUST NOT block the inventory or recommendations.  Existing
+Javadoc promises and compatibility history remain evidence even where no
+current in-repository override is found.
+
+== SQM and HQL Dialect integration
+
+=== Default rule
+
+Database SQL syntax differences SHOULD be implemented in the SQL AST Dialect
+SPI, not by replacing HQL parsing or the complete SQM-to-SQL AST converter.
+
+`Dialect` MUST NOT select HQL parsing or general SQM-to-SQL AST translation.
+
+=== Focused SQM capabilities
+
+When a database requires a structural difference during SQM-to-SQL AST
+conversion, Hibernate SHOULD first define a narrow Dialect capability or
+strategy.
+
+The repeated synthetic-table behavior currently used by Informix, Ingres,
+Sybase, and legacy Sybase MUST be replaced by a supported capability describing:
+
+* the conditions under which a synthetic table group is required;
+* the semantic table reference or rendering information;
+* interaction with grouping, ordering, and partition expressions.
+
+The standard SQM converter MUST interpret that capability.
+
+=== SqmTranslatorFactory removal
+
+`Dialect#getSqmTranslatorFactory()` MUST be removed as part of the initial
+Dialect reorganization in favor of the global query translator integration
+mechanism.  It MUST NOT be deprecated and retained, and it MUST NOT be included
+in the initial Dialect SPI compatibility baseline.
+
+Before removal:
+
+* all in-repository overrides and call sites MUST be inventoried;
+* database-specific structural differences MUST be migrated to focused
+  capabilities interpreted by the standard converter;
+* general query-engine integrations MUST be migrated to the global integration
+  mechanism;
+* maintained third-party Dialects SHOULD be surveyed;
+* a versioned Migration Guide entry MUST distinguish the focused Dialect
+  capability path from the general framework-integration path.
+
+The general `SqmTranslatorFactory` integration SPI MAY remain outside the
+Dialect contract.  If retained, it MUST accept a supported request/context
+contract instead of `DomainParameterXref` and other internal engine types
+directly.
+
+The general integration SPI SHOULD be documented separately from normal
+Dialect implementation.
+
+No replacement general SQM translator selection method may be added to
+`Dialect`.
+
+=== HqlTranslator
+
+HQL translation is not database-specific.
+
+`Dialect#getHqlTranslator()` MUST be removed as part of the initial Dialect
+reorganization.  It MUST NOT be deprecated and retained, and it MUST NOT be
+included in the initial Dialect SPI compatibility baseline.
+
+Frameworks requiring a nonstandard HQL translator MUST use the global query
+translator integration mechanism.  No replacement HQL translator selection
+method may be added to `Dialect`.
+
+=== Global translator integration boundary
+
+`QueryEngineOptions` MUST remain the canonical downstream source of custom HQL
+and SQM translators.  Existing explicit settings remain supported and their
+participating contracts MUST be classified with the appropriate provider roles
+and repaired where their signatures expose internal types.  This Dialect work
+MUST NOT expand into a general query-engine redesign.
+
+Java service loading is a provisional additional source.  If adopted, loaded
+services MUST feed `QueryEngineOptions` and MUST NOT restore a Dialect hook.
+The proposal requires focused review of provider contract, precedence,
+ambiguity, multiplicity, and lifecycle.  The provisional precedence is:
+
+. explicit setting;
+. service-loaded contribution;
+. standard implementation.
+
+== Testing specification
+
+=== Community Dialect gate
+
+Production sources in `hibernate-community-dialects` MUST be validated as a
+provider module.
+
+After migration, they MUST contain no static dependency on Hibernate internal
+elements.
+
+This restriction applies to internal elements owned by Hibernate Core and
+other upstream Hibernate ORM artifacts.  A provider MAY use its own private
+implementation packages, including packages named `internal`.
+
+During migration:
+
+* explicit validation MUST report the complete current inventory;
+* no broad repository allowlist is required;
+* validation MUST remain outside the normal `check` lifecycle;
+* focused remediation batches SHOULD record the before-and-after Dialect
+  boundary counts without treating a count as diagnostic identity or a gate.
+
+The module MUST contain representative coverage of:
+
+* custom `Dialect` subclassing;
+* custom SQL AST translators;
+* SQL-family base reuse when introduced;
+* locking support;
+* pagination;
+* identity and sequence support;
+* temporary-table and multi-table mutation;
+* schema exporters and extractors;
+* callable statements;
+* DDL and JDBC type contribution;
+* function rendering.
+
+=== Standalone provider fixture
+
+The build MUST compile at least one standalone provider fixture:
+
+* in a non-`org.hibernate` package;
+* against the normal published/assembled Hibernate artifact;
+* without Hibernate test-source or package-private access;
+* with internal-import validation enabled.
+
+The fixture MUST implement or supply:
+
+* a custom `Dialect`;
+* a custom SQL AST translator or family-base subclass;
+* translator overrides which consume representative query and model-mutation
+  nodes from the supported SPI tree;
+* one standard component obtained through a supported builder/factory;
+* one custom strategy implementation;
+* type or function contribution.
+
+=== Dialect compatibility test kit
+
+Hibernate MUST publish a supported Dialect compatibility test kit.
+
+The kit MUST be a dedicated provider-facing test artifact or module.  It MUST
+NOT expose ORM's general internal test infrastructure.  Reusable suites,
+descriptors, and assertions are provider `USE` SPI; provider-implemented test
+extensions are `IMPLEMENT`; provider-supplied capabilities or configuration
+are `SUPPLY` only where that direction is intentional.  The exact artifact name
+and public API require focused review during implementation.
+
+The kit MUST distinguish:
+
+SQL-generation contract tests::
+Tests which build mappings and query plans and assert SQL structure without
+requiring a live target database.
+
+Database integration contract tests::
+Tests which execute DDL and DML against the provider's target database.
+
+The SQL-generation suite MUST cover:
+
+* table-less selects and synthetic table roots;
+* select item references in group-by and order-by;
+* limit and offset;
+* locking and lock timeouts;
+* CTEs and recursive CTEs;
+* lateral and derived tables;
+* tuple comparison and emulation;
+* set operations;
+* insert, update, and delete;
+* merge/upsert/conflict handling;
+* returning/generated values;
+* flush-time model mutations;
+* parameter marker order and binding metadata;
+* functions and set-returning functions.
+
+The database integration suite MUST cover:
+
+* schema creation and teardown;
+* sequence and identity behavior;
+* schema metadata extraction;
+* temporary-table lifecycle;
+* multi-table mutations;
+* callable statements;
+* locking behavior;
+* representative DDL/JDBC types;
+* minimum and current supported database versions.
+
+=== Dialect provider boundary
+
+The zero-violation completion boundary consists of:
+
+* `Dialect` and its supported subclass-facing surface;
+* supported SQL AST, model-mutation, and translator contracts;
+* supported Dialect feature-family contracts;
+* community-Dialect dependencies on upstream Hibernate elements;
+* the standalone provider fixture.
+
+Unrelated findings in caching, events, mapping, or other ORM subsystems remain
+visible through the general validators but MUST NOT block completion of the
+Dialect reorganization.  Activating general validation in `check` remains a
+separate SPI-workstream decision.
+
+== Migration requirements
+
+=== Initial inventory
+
+The first Dialect migration release MUST generate an inventory without
+requiring the entire Dialect surface to be immediately annotated.
+
+Phase 0 MUST prototype representative generated facts and reviewed-decision
+overlays before deciding what is checked in.  The review MUST compare at least
+a complete generated inventory with a compact overlay keyed by stable element
+identity.  No storage format is normative until that review.
+
+For `Dialect` itself, the initial inventory MUST derive the `IMPLEMENT` surface
+from its public and protected overridable instance methods after the visibility
+audit.  It MUST NOT depend on adding repetitive annotations to those methods.
+
+Known extension contracts MAY be added incrementally, but the initial Dialect
+inventory MUST include:
+
+* `Dialect`;
+* its translator factory methods;
+* locking, identity, sequence, pagination, temporary-table, schema, callable,
+  type, and function contribution points;
+* SQL AST translator factories and supported bases;
+* multi-table mutation strategy hooks.
+
+The inventory MUST also examine `DefaultDialectSelector`, `DialectResolver`,
+and existing support documentation as the distributed source of selectability
+metadata.  It MUST distinguish short-name selection from database-metadata
+resolution before proposing unification.
+
+Publicly discoverable maintained external Dialects SHOULD be surveyed.  The
+reviewer MAY supplement that discovery with private or vendor-maintained
+providers; such a list is useful but not required before inventory begins.
+
+=== Internal dependency inventory
+
+The initial Dialect migration MUST record existing internal dependencies in
+the community Dialect module.
+
+Migration work SHOULD be prioritized in this order:
+
+. SPI signatures which directly expose internal types.
+. SQL AST walker and translator implementation requirements.
+. Frequently constructed DDL type and mutation strategy implementations.
+. Locking support and clause strategies.
+. Schema exporters and sequence extractors.
+. Callable and function/type support.
+. Remaining convenience and utility dependencies.
+
+=== Replacement documentation
+
+Every removed or discouraged internal dependency used by a community Dialect
+MUST have a documented supported replacement.
+
+Replacement documentation SHOULD show before-and-after code for:
+
+* constructing a DDL type;
+* choosing a locking profile;
+* choosing a temporary-table or CTE mutation strategy;
+* creating a translator factory;
+* subclassing a generic or SQL-family translator;
+* customizing schema export or sequence extraction.
+
+=== Migration compatibility treatment
+
+Migration treatment MUST follow the existing contract classification and
+evidence rather than Java visibility alone:
+
+* existing supported API or SPI follows the normal compatibility policy;
+* an internal contract may move directly where practical, but known provider
+  use still requires a documented supported replacement;
+* an accidental public or protected contract requires a case-by-case decision
+  based on Javadoc, history, and provider evidence;
+* classification as `@Internal` MAY precede later physical removal when a
+  compatibility bridge or deprecation window is appropriate;
+* the separately approved removals of
+  `Dialect#getSqmTranslatorFactory()` and `Dialect#getHqlTranslator()` remain
+  direct-removal exceptions with mandatory Migration Guide coverage.
+
+=== Versioned Migration Guide entries
+
+Every provider-facing change which removes, relocates, narrows, deprecates, or
+replaces a previously usable Dialect extension contract MUST add or update an
+entry in the versioned `migration-guide.adoc` in the same implementation
+change.
+
+Entries for provider contracts MUST normally appear under `Changes to SPI`.
+When a change also affects application selection or use of a concrete Dialect,
+the application-facing effect MUST additionally be covered under `Changes to
+API` or cross-referenced from that section.
+
+A logically coherent migration MAY use one entry for multiple affected
+elements.  Each entry MUST include:
+
+* the affected provider audience and SPI role or roles;
+* the old contract, package, or usage pattern;
+* the supported replacement or an explicit statement that no Dialect-level
+  replacement exists;
+* required source changes and before-and-after code when useful;
+* compatibility adapters, deprecation windows, and planned removal timing when
+  applicable;
+* a stable AsciiDoc anchor which can be referenced from the Dialect surface and
+  provider-dependency ledgers.
+
+At minimum, the initial reorganization MUST include Migration Guide coverage
+for:
+
+* removal of `Dialect#getSqmTranslatorFactory()` and
+  `Dialect#getHqlTranslator()`;
+* SQL AST and model-mutation package relocations;
+* changes to supported Dialect constructors or override points;
+* concrete built-in Dialects whose Java category, selectability, or supported
+  subclassing changes;
+* removal of version-qualified and other noncanonical Dialect selection names,
+  with the replacement for every removed name;
+* every feature-family remediation which replaces an internal dependency used
+  by community Dialects;
+* introduction and intended use of supported generic and SQL-family bases.
+
+The migration inventory MUST reject a provider-facing change marked complete
+when its required Migration Guide anchor is absent.
+
+=== Completion criteria
+
+The Dialect SPI reorganization is complete when:
+
+* explicit validation reports zero errors within the defined Dialect provider
+  boundary;
+* no supported SPI signature references an internal type;
+* every public and protected `Dialect` declaration has an audited disposition;
+* `hibernate-community-dialects` has zero Hibernate-internal production
+  dependencies;
+* the standalone provider fixture passes;
+* the Dialect compatibility test kit covers the required feature families;
+* `classifications.json` and the general SPI report identify use,
+  implementation, and supply roles for the supported Dialect extension
+  surface;
+* concrete built-in Dialects and translator leaves have explicit extension
+  classifications;
+* `Dialect#getSqmTranslatorFactory()` and `Dialect#getHqlTranslator()` are
+  absent from `Dialect` and from the Dialect SPI compatibility baseline;
+* every provider-facing removal, relocation, narrowing, or replacement is
+  covered by a versioned Migration Guide entry;
+* maintained third-party providers have a documented migration path;
+* the provisional focused Dialect-provider report has either been adopted with
+  explicit acceptance criteria or rejected in favor of the authoritative
+  general artifacts and documentation;
+* general build-lifecycle enforcement has been reconsidered separately and is
+  not implicitly required for Dialect completion.

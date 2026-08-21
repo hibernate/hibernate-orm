@@ -8,6 +8,7 @@ import jakarta.persistence.TemporalType;
 import jakarta.persistence.Timeout;
 import jakarta.annotation.Nullable;
 import org.hibernate.Timeouts;
+import org.hibernate.SPI;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.aggregate.AggregateSupport;
@@ -119,6 +120,7 @@ import java.util.TimeZone;
 import java.util.regex.Pattern;
 
 import static java.lang.Integer.parseInt;
+import static org.hibernate.SPI.Role.IMPLEMENT;
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.internal.util.JdbcExceptionHelper.extractErrorCode;
 import static org.hibernate.type.SqlTypes.BINARY;
@@ -177,15 +179,18 @@ public class DB2Dialect extends Dialect {
 
 	private final LockingSupport lockingSupport;
 
+	@SPI( IMPLEMENT )
 	public DB2Dialect() {
 		this( MINIMUM_VERSION );
 	}
 
+	@SPI( IMPLEMENT )
 	public DB2Dialect(DialectResolutionInfo info) {
 		this( determinFullDatabaseVersion( info ) );
 		registerKeywords( info );
 	}
 
+	@SPI( IMPLEMENT )
 	public DB2Dialect(DatabaseVersion version) {
 		super( version );
 		lockingSupport = buildLockingSupport();

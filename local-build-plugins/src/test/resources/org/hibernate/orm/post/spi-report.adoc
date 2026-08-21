@@ -1,0 +1,51 @@
+= Hibernate ORM Service Provider Interface
+
+Compatibility version: `9.0`
+
+Source version: `9.0.0-test`
+
+Audience: external Hibernate SPI providers. Provider `USE` does not make a declaration application-user API.
+
+== USE
+
+=== `fixture`
+
+* `Use`
+* `Use#direct()`
+
+== IMPLEMENT
+
+=== `fixture`
+
+* `Implement`
+
+== SUPPLY
+
+=== `fixture`
+
+* `Supply`
+
+== USE + IMPLEMENT
+
+=== `fixture`
+
+* `UseImplement`
+
+== USE + SUPPLY
+
+=== `fixture`
+
+* `UseSupply`
+* `Use#exception()`
+
+== IMPLEMENT + SUPPLY
+
+=== `fixture`
+
+* `ImplementSupply`
+
+== USE + IMPLEMENT + SUPPLY
+
+=== `fixture`
+
+* `AllRoles`

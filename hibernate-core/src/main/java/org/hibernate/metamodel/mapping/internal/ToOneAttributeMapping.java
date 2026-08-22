@@ -2203,10 +2203,12 @@ public class ToOneAttributeMapping
 					if ( sideNature == ForeignKeyDescriptor.Nature.TARGET ) {
 						targetTableReference = lhsTableReference;
 						keyTableReference = tableGroup.resolveTableReference( foreignKeyDescriptor.getKeyTable() );
+						registerJoinedTableEntityNameUsage( lazyTableGroup, foreignKeyDescriptor.getKeyTable(), creationState );
 					}
 					else {
 						targetTableReference = tableGroup.resolveTableReference( foreignKeyDescriptor.getTargetTable() );
 						keyTableReference = lhsTableReference;
+						registerJoinedTableEntityNameUsage( lazyTableGroup, foreignKeyDescriptor.getTargetTable(), creationState );
 					}
 
 					join.applyPredicate( foreignKeyDescriptor.generateJoinPredicate(
@@ -2255,6 +2257,40 @@ public class ToOneAttributeMapping
 		);
 
 		return join;
+	}
+
+	/**
+	 * The foreign key of an association may target a column of a superclass table of a
+	 * {@linkplain jakarta.persistence.InheritanceType#JOINED joined} hierarchy, in which case the join
+	 * predicate qualifies that column with the superclass table. That table is reached through a table
+	 * reference join, which subclass pruning would otherwise remove, leaving the predicate with an
+	 * undeclared alias. Register an {@link EntityNameUse#EXPRESSION} for the entity mapping that table so
+	 * the join is retained.
+	 * <p>
+	 * Nothing is registered when the predicate refers to the associated entity's own table: that is the
+	 * table group's primary table reference, which is never pruned. Registering a use for it would be
+	 * pointless and harmful, since it would suppress narrowing to a concrete subtype.
+	 */
+	private void registerJoinedTableEntityNameUsage(
+			TableGroup tableGroup,
+			String tableExpression,
+			SqlAstCreationState creationState) {
+		final var associatedEntityMappingType = getAssociatedEntityMappingType();
+		if ( tableExpression.equals( associatedEntityMappingType.getEntityPersister().getTableName() ) ) {
+			return;
+		}
+		var superMappingType = associatedEntityMappingType.getSuperMappingType();
+		while ( superMappingType != null ) {
+			if ( tableExpression.equals( superMappingType.getEntityPersister().getTableName() ) ) {
+				creationState.registerEntityNameUsage(
+						tableGroup,
+						EntityNameUse.EXPRESSION,
+						superMappingType.getEntityName()
+				);
+				return;
+			}
+			superMappingType = superMappingType.getSuperMappingType();
+		}
 	}
 
 	@Override

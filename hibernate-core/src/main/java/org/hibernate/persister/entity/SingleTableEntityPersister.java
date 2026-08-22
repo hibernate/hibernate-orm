@@ -447,7 +447,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 	public void addDiscriminatorToInsertGroup(Function<String, TableInsertBuilder> insertGroupBuilder) {
 		if ( discriminatorInsertable ) {
 			// find the root table insert builder
-			final TableInsertBuilder tableInsertBuilder = insertGroupBuilder.apply( getRootTableName() );
+			final var tableInsertBuilder = insertGroupBuilder.apply( getRootTableName() );
 			if ( discriminatorValue == DiscriminatorValue.Special.NULL ) {
 				tableInsertBuilder.addColumnAssignment( getDiscriminatorMapping(), TableMutationBuilder.NULL );
 			}

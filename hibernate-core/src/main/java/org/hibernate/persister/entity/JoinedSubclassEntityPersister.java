@@ -44,7 +44,6 @@ import org.hibernate.sql.model.ast.builder.TableMutationBuilder;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.StandardBasicTypes;
-import org.jboss.logging.Logger;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -82,7 +81,6 @@ import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelpe
  */
 @Internal
 public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
-	private static final Logger LOG = Logger.getLogger( JoinedSubclassEntityPersister.class );
 
 	private static final String IMPLICIT_DISCRIMINATOR_ALIAS = "clazz_";
 
@@ -176,7 +174,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			forceDiscriminator = persistentClass.isForceDiscriminator();
 			final var discriminatorMapping = persistentClass.getDiscriminator();
 			if ( discriminatorMapping != null ) {
-				LOG.tracef( "Encountered explicit discriminator mapping for joined inheritance" );
+//				LOG.tracef( "Encountered explicit discriminator mapping for joined inheritance" );
 				final var selectable = discriminatorMapping.getSelectables().get(0);
 				if ( selectable instanceof Column column ) {
 					explicitDiscriminatorColumnName = column.getQuotedName( dialect );
@@ -476,10 +474,8 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			}
 		}
 
-		subclassNamesBySubclassTable = buildSubclassNamesBySubclassTableMapping(
-				persistentClass,
-				sqlStringGenerationContext
-		);
+		subclassNamesBySubclassTable =
+				buildSubclassNamesBySubclassTableMapping( persistentClass, sqlStringGenerationContext );
 	}
 
 	private void initDiscriminatorProperties(
@@ -738,8 +734,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 
 	@Override
 	public EntityTableDescriptor getIdentifierTableDescriptor() {
-		final var superMappingType = getSuperMappingType();
-		return superMappingType == null
+		return getSuperMappingType() == null
 				? getTableDescriptors()[0]
 				: getRootEntityDescriptor().getEntityPersister().getIdentifierTableDescriptor();
 	}
@@ -747,7 +742,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	@Override
 	public void addDiscriminatorToInsertGroup(Function<String, TableInsertBuilder> insertGroupBuilder) {
 		if ( explicitDiscriminatorColumnName != null ) {
-			final TableInsertBuilder tableInsertBuilder = insertGroupBuilder.apply( getRootTableName() );
+			final var tableInsertBuilder = insertGroupBuilder.apply( getRootTableName() );
 			if ( discriminatorValue == DiscriminatorValue.Special.NULL ) {
 				tableInsertBuilder.addColumnAssignment(	getDiscriminatorMapping(), TableMutationBuilder.NULL );
 			}
@@ -807,7 +802,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 
 	@Override
 	public String[] getPropertySpaces() {
-		return spaces; // don't need subclass tables, because they can't appear in conditions
+		return spaces; // don't need subclass tables because they can't appear in conditions
 	}
 
 	@Override
@@ -1134,7 +1129,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		else if ( hasSubclasses() ) {
 			final String formula = getDiscriminatorFormulaTemplate();
 			if ( explicitDiscriminatorColumnName != null || formula != null ) {
-				// even though this is a JOINED hierarchy the user has defined an
+				// even though this is a JOINED hierarchy, the user has defined an
 				// explicit discriminator column - so we can use the normal
 				// discriminator mapping
 				return super.generateDiscriminatorMapping( bootEntityDescriptor );
@@ -1275,8 +1270,8 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			}
 		}
 		if ( !tableReferenceJoins.isEmpty() ) {
-			// The optimization is to remove all table reference joins that are not contained in the retainedTableReferences
-			// In addition, we switch from a possible LEFT join, to an INNER join for all tablesToInnerJoin
+			// The optimization is to remove all table reference joins that are not contained in the retainedTableReferences.
+			// In addition, we switch from a possible LEFT join, to an INNER join for all tablesToInnerJoin.
 			if ( innerJoinOptimization ) {
 				final var oldJoins = tableReferenceJoins.toArray( new TableReferenceJoin[0] );
 				tableReferenceJoins.clear();

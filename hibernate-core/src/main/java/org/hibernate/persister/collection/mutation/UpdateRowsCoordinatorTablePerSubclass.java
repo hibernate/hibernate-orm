@@ -125,15 +125,9 @@ public class UpdateRowsCoordinatorTablePerSubclass extends AbstractUpdateRowsCoo
 		final var collectionTableMapping = getMutationTarget().getCollectionTableMapping();
 		final var operation = rowMutationOperations.getDeleteRowOperation(
 				new CollectionTableMapping(
+						collectionTableMapping,
 						elementPersister.getMappedTableDetails().getTableName(),
-						collectionTableMapping.getSpaces(),
-						collectionTableMapping.isJoinTable(),
-						collectionTableMapping.isInverse(),
-						collectionTableMapping.getInsertDetails(),
-						collectionTableMapping.getUpdateDetails(),
-						collectionTableMapping.isCascadeDeleteEnabled(),
-						collectionTableMapping.getDeleteDetails(),
-						collectionTableMapping.getDeleteRowDetails()
+						collectionTableMapping.getSpaces()
 				)
 		);
 
@@ -211,15 +205,9 @@ public class UpdateRowsCoordinatorTablePerSubclass extends AbstractUpdateRowsCoo
 		final var collectionTableMapping = getMutationTarget().getCollectionTableMapping();
 		final var operation = rowMutationOperations.getInsertRowOperation(
 				new CollectionTableMapping(
+						collectionTableMapping,
 						elementPersister.getMappedTableDetails().getTableName(),
-						collectionTableMapping.getSpaces(),
-						collectionTableMapping.isJoinTable(),
-						collectionTableMapping.isInverse(),
-						collectionTableMapping.getInsertDetails(),
-						collectionTableMapping.getUpdateDetails(),
-						collectionTableMapping.isCascadeDeleteEnabled(),
-						collectionTableMapping.getDeleteDetails(),
-						collectionTableMapping.getDeleteRowDetails()
+						collectionTableMapping.getSpaces()
 				)
 		);
 

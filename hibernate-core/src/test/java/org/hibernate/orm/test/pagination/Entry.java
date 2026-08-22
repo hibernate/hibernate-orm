@@ -3,12 +3,30 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.pagination;
+
 import java.util.HashSet;
 import java.util.Set;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+
+import org.hibernate.annotations.DynamicUpdate;
+
+@Entity
+@DynamicUpdate
 public class Entry {
+	@Id
+	@GeneratedValue
 	private int id;
 	private String name;
+	@ManyToMany
+	@JoinTable(name = "entry_tag",
+			joinColumns = @JoinColumn(name = "entry_id"),
+			inverseJoinColumns = @JoinColumn(name = "tag_id"))
 	private Set<Tag> tags = new HashSet<Tag>();
 
 	public Entry() {

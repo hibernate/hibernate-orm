@@ -41,7 +41,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 				@Setting( name = Environment.GENERATE_STATISTICS, value = "true" )
 		}
 )
-@DomainModel( xmlMappings = "mappings/natural-id/immutable/ParentChildWithManyToOne.hbm.xml" )
+@DomainModel( xmlMappings = "mappings/natural-id/immutable/ParentChildWithManyToOne.orm.xml" )
 @SessionFactory
 public class ImmutableManyToOneNaturalIdHbmTest {
 

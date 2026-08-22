@@ -25,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @DomainModel(
 		xmlMappings = {
-				"org/hibernate/orm/test/legacy/ABC.hbm.xml", "org/hibernate/orm/test/legacy/ABCExtends.hbm.xml"
+				"org/hibernate/orm/test/legacy/ABC.orm.xml", "org/hibernate/orm/test/legacy/ABCExtends.orm.xml"
 		}
 )
 @SessionFactory

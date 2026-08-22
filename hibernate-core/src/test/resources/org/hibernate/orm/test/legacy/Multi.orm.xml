@@ -1,0 +1,168 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 version="8.0">
+
+    <entity class="org.hibernate.orm.test.legacy.Top"
+            access="PROPERTY" metadata-complete="true">
+        <table name="rootclass"/>
+        <dynamic-insert>true</dynamic-insert>
+        <dynamic-update>true</dynamic-update>
+        <select-before-update>true</select-before-update>
+        <inheritance strategy="JOINED"/>
+        <attributes>
+            <id name="id">
+                <column name="id1_"/>
+                <generated-value/>
+            </id>
+            <basic name="name"/>
+            <basic name="address"/>
+            <basic name="date">
+                <column name="date_"/>
+            </basic>
+            <version name="count">
+                <column name="count_"/>
+            </version>
+            <many-to-one name="top" access="FIELD"
+                         target-entity="org.hibernate.orm.test.legacy.Top">
+                <join-column name="top_"/>
+            </many-to-one>
+            <transient name="other"/>
+        </attributes>
+    </entity>
+
+    <entity class="org.hibernate.orm.test.legacy.TrivialClass"
+            access="PROPERTY" metadata-complete="true">
+        <primary-key-join-column name="tcid"/>
+    </entity>
+
+    <entity class="org.hibernate.orm.test.legacy.Lower"
+            access="PROPERTY" metadata-complete="true">
+        <table name="leafsubclass"/>
+        <dynamic-insert>true</dynamic-insert>
+        <dynamic-update>true</dynamic-update>
+        <primary-key-join-column name="id__"/>
+        <attributes>
+            <basic name="intprop">
+                <column name="intprop" nullable="false"/>
+            </basic>
+            <basic name="foo"/>
+            <many-to-one name="another"
+                         target-entity="org.hibernate.orm.test.legacy.Top">
+                <join-column name="other1"/>
+            </many-to-one>
+            <many-to-one name="yetanother"
+                         target-entity="org.hibernate.orm.test.legacy.Lower">
+                <join-column name="other3"/>
+            </many-to-one>
+            <one-to-one name="mypo"
+                        target-entity="org.hibernate.orm.test.legacy.Po"
+                        mapped-by="lower"/>
+            <one-to-many name="set"
+                         target-entity="org.hibernate.orm.test.legacy.Top"
+                         fetch="EAGER"
+                         classification="SET">
+                <join-column name="parent"/>
+            </one-to-many>
+            <many-to-many name="bag"
+                          target-entity="org.hibernate.orm.test.legacy.Top"
+                          classification="BAG">
+                <join-table name="simple_simple">
+                    <join-column name="simple1"/>
+                    <inverse-join-column name="simple2"/>
+                </join-table>
+            </many-to-many>
+        </attributes>
+    </entity>
+
+    <entity class="org.hibernate.orm.test.legacy.Multi"
+            access="PROPERTY" metadata-complete="true">
+        <table name="nonleafsubclass"/>
+        <primary-key-join-column name="sid"/>
+        <attributes>
+            <basic name="extraProp">
+                <column name="dupe"/>
+            </basic>
+            <basic name="derived">
+                <formula>upper(dupe)</formula>
+            </basic>
+            <many-to-one name="po"
+                         target-entity="org.hibernate.orm.test.legacy.Po"/>
+            <embedded name="comp"/>
+        </attributes>
+    </entity>
+
+    <entity class="org.hibernate.orm.test.legacy.SubMulti"
+            access="PROPERTY" metadata-complete="true">
+        <table name="leafsubsubclass"/>
+        <primary-key-join-column name="sid"/>
+        <attributes>
+            <basic name="amount">
+                <column name="dupe"/>
+            </basic>
+            <many-to-one name="parent"
+                         target-entity="org.hibernate.orm.test.legacy.SubMulti"/>
+            <one-to-many name="children"
+                         target-entity="org.hibernate.orm.test.legacy.SubMulti"
+                         mapped-by="parent"
+                         classification="BAG"/>
+            <one-to-many name="moreChildren"
+                         target-entity="org.hibernate.orm.test.legacy.SubMulti"
+                         classification="LIST">
+                <join-column name="another_parent"/>
+                <order-column name="list_ind"/>
+            </one-to-many>
+        </attributes>
+    </entity>
+
+    <entity class="org.hibernate.orm.test.legacy.Po"
+            access="PROPERTY" metadata-complete="true">
+        <dynamic-insert>true</dynamic-insert>
+        <attributes>
+            <id name="id">
+                <column name="id_"/>
+                <generated-value/>
+            </id>
+            <basic name="value">
+                <column name="value_"/>
+            </basic>
+            <many-to-one name="top"
+                         target-entity="org.hibernate.orm.test.legacy.Top">
+                <join-column name="tl" insertable="false" updatable="false"/>
+            </many-to-one>
+            <many-to-one name="lower"
+                         target-entity="org.hibernate.orm.test.legacy.Lower">
+                <join-column name="tl"/>
+            </many-to-one>
+            <one-to-many name="list"
+                         target-entity="org.hibernate.orm.test.legacy.SubMulti"
+                         classification="LIST">
+                <join-column name="list_po"/>
+                <order-column name="i"/>
+                <cascade>
+                    <cascade-all/>
+                </cascade>
+            </one-to-many>
+            <one-to-many name="set"
+                         target-entity="org.hibernate.orm.test.legacy.Multi"
+                         mapped-by="po"
+                         classification="SET">
+                <cascade>
+                    <cascade-all/>
+                </cascade>
+            </one-to-many>
+        </attributes>
+    </entity>
+
+    <embeddable class="org.hibernate.orm.test.legacy.Multi$Component"
+                access="PROPERTY" metadata-complete="true">
+        <attributes>
+            <basic name="cal"/>
+            <basic name="floaty"/>
+        </attributes>
+    </embeddable>
+
+</entity-mappings>

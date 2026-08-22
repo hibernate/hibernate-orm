@@ -14,7 +14,7 @@ import java.util.Collection;
 public class Customer {
 	private Long id;
 	private String name;
-	private Collection orders = new ArrayList();
+	private Collection<Order> orders = new ArrayList<>();
 
 	public Customer() {
 	}
@@ -39,11 +39,11 @@ public class Customer {
 		this.name = name;
 	}
 
-	public Collection getOrders() {
+	public Collection<Order> getOrders() {
 		return orders;
 	}
 
-	public void setOrders(Collection orders) {
+	public void setOrders(Collection<Order> orders) {
 		this.orders = orders;
 	}
 }

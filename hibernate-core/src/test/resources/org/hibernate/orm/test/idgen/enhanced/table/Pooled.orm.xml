@@ -1,0 +1,20 @@
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping" version="8.0">
+    <package>org.hibernate.orm.test.idgen.enhanced.table</package>
+    <entity class="Entity" metadata-complete="true">
+        <table name="ID_TBL_POOL_ENTITY"/>
+        <attributes>
+            <id name="id">
+                <column name="ID"/>
+                <generated-value strategy="SEQUENCE" generator="id-gen"/>
+                <generic-generator name="id-gen" class="org.hibernate.id.enhanced.TableGenerator">
+                    <parameter name="table_name" value="ID_TBL_POOL_TBL"/>
+                    <parameter name="segment_value" value="test"/>
+                    <parameter name="initial_value" value="1"/>
+                    <parameter name="increment_size" value="10"/>
+                    <parameter name="optimizer" value="pooled"/>
+                </generic-generator>
+            </id>
+            <basic name="name"/>
+        </attributes>
+    </entity>
+</entity-mappings>

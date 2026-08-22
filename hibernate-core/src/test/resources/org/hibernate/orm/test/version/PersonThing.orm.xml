@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping">
+    <package>org.hibernate.orm.test.version</package>
+    <attribute-accessor>property</attribute-accessor>
+    <default-cascade>none</default-cascade>
+    <default-lazy>true</default-lazy>
+    <entity class="Person" metadata-complete="true">
+        <table name="Person"/>
+        <optimistic-locking>VERSION</optimistic-locking>
+        <attributes>
+            <id name="name">
+                <column name="name"/>
+            </id>
+            <version name="version">
+                <column name="`version`"/>
+            </version>
+            <one-to-many name="things" target-entity="Thing" fetch="LAZY" mapped-by="person" orphan-removal="true" classification="BAG" optimistic-lock="true">
+                <cascade>
+                    <cascade-all/>
+                    <cascade-remove/>
+                </cascade>
+            </one-to-many>
+            <one-to-many name="tasks" target-entity="Task" fetch="LAZY" mapped-by="person" orphan-removal="true" classification="BAG" optimistic-lock="false">
+                <cascade>
+                    <cascade-all/>
+                    <cascade-remove/>
+                </cascade>
+            </one-to-many>
+        </attributes>
+    </entity>
+    <entity class="Thing" metadata-complete="true">
+        <table name="Thing"/>
+        <optimistic-locking>VERSION</optimistic-locking>
+        <attributes>
+            <id name="description">
+                <column name="description"/>
+            </id>
+            <basic name="longDescription"/>
+            <version name="version">
+                <column name="`version`"/>
+            </version>
+            <many-to-one name="person" fetch="LAZY">
+                <join-column name="person"/>
+                <cascade/>
+            </many-to-one>
+        </attributes>
+    </entity>
+    <entity class="Task" metadata-complete="true">
+        <table name="Task"/>
+        <optimistic-locking>VERSION</optimistic-locking>
+        <attributes>
+            <id name="description">
+                <column name="description"/>
+            </id>
+            <version name="version">
+                <column name="`version`"/>
+            </version>
+            <many-to-one name="person" fetch="LAZY">
+                <join-column name="person"/>
+                <cascade/>
+            </many-to-one>
+        </attributes>
+    </entity>
+</entity-mappings>

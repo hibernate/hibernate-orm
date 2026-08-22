@@ -22,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
 @DomainModel(
-		xmlMappings = "org/hibernate/orm/test/iterate/Item.hbm.xml"
+		xmlMappings = "org/hibernate/orm/test/iterate/Item.orm.xml"
 )
 @SessionFactory(
 		generateStatistics = true

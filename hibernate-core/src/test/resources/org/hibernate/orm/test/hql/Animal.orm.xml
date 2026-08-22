@@ -1,0 +1,276 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 version="8.0">
+
+    <embeddable class="org.hibernate.orm.test.hql.Name"
+                access="FIELD" metadata-complete="true">
+        <attributes>
+            <basic name="first">
+                <column name="name_first"/>
+            </basic>
+            <basic name="initial">
+                <column name="name_initial"/>
+            </basic>
+            <basic name="last">
+                <column name="name_last"/>
+            </basic>
+        </attributes>
+    </embeddable>
+
+    <embeddable class="org.hibernate.orm.test.hql.Address"
+                access="FIELD" metadata-complete="true">
+        <attributes>
+            <basic name="street"/>
+            <basic name="city"/>
+            <basic name="postalCode"/>
+            <basic name="country"/>
+            <many-to-one name="stateProvince"
+                         target-entity="org.hibernate.orm.test.hql.StateProvince"
+                         fetch="LAZY">
+                <join-column name="state_prov_id"/>
+            </many-to-one>
+        </attributes>
+    </embeddable>
+
+    <entity class="org.hibernate.orm.test.hql.Animal"
+            access="FIELD" metadata-complete="true">
+        <inheritance strategy="JOINED"/>
+        <attributes>
+            <id name="id">
+                <generated-value/>
+            </id>
+            <basic name="description"/>
+            <basic name="bodyWeight">
+                <column name="body_weight"/>
+            </basic>
+            <basic name="serialNumber"/>
+            <many-to-one name="mother" fetch="LAZY">
+                <join-column name="mother_id"/>
+            </many-to-one>
+            <many-to-one name="father" fetch="LAZY">
+                <join-column name="father_id"/>
+            </many-to-one>
+            <many-to-one name="zoo" fetch="LAZY">
+                <join-column name="zoo_id"/>
+            </many-to-one>
+            <one-to-many name="offspring"
+                         target-entity="org.hibernate.orm.test.hql.Animal"
+                         classification="SET">
+                <order-by>father_id</order-by>
+                <join-column name="mother_id"/>
+            </one-to-many>
+        </attributes>
+    </entity>
+
+    <entity class="org.hibernate.orm.test.hql.Reptile"
+            access="FIELD" metadata-complete="true">
+        <primary-key-join-column name="animal"/>
+        <attributes>
+            <basic name="bodyTemperature"/>
+        </attributes>
+    </entity>
+
+    <entity class="org.hibernate.orm.test.hql.Lizard"
+            access="FIELD" metadata-complete="true">
+        <primary-key-join-column name="reptile"/>
+    </entity>
+
+    <entity class="org.hibernate.orm.test.hql.Mammal"
+            access="FIELD" metadata-complete="true">
+        <primary-key-join-column name="animal"/>
+        <attributes>
+            <basic name="pregnant">
+                <column name="pregnant" nullable="true"/>
+            </basic>
+            <basic name="birthdate">
+                <temporal>DATE</temporal>
+            </basic>
+        </attributes>
+    </entity>
+
+    <entity class="org.hibernate.orm.test.hql.DomesticAnimal"
+            access="FIELD" metadata-complete="true">
+        <primary-key-join-column name="mammal"/>
+        <attributes>
+            <many-to-one name="owner"
+                         target-entity="org.hibernate.orm.test.hql.Human"
+                         fetch="LAZY">
+                <join-column name="owner"/>
+            </many-to-one>
+        </attributes>
+    </entity>
+
+    <entity class="org.hibernate.orm.test.hql.Cat"
+            access="FIELD" metadata-complete="true">
+        <primary-key-join-column name="mammal"/>
+    </entity>
+
+    <entity class="org.hibernate.orm.test.hql.Dog"
+            access="FIELD" metadata-complete="true">
+        <primary-key-join-column name="mammal"/>
+    </entity>
+
+    <entity class="org.hibernate.orm.test.hql.Human"
+            access="FIELD" metadata-complete="true">
+        <primary-key-join-column name="mammal"/>
+        <attributes>
+            <basic name="nickName"/>
+            <basic name="heightInches">
+                <column name="height_centimeters" nullable="false">
+                    <read>height_centimeters / 2.54E0</read>
+                    <write>? * 2.54E0</write>
+                </column>
+            </basic>
+            <basic name="intValue">
+                <column name="intValue" nullable="true"/>
+            </basic>
+            <basic name="floatValue">
+                <column name="floatValue" nullable="true"/>
+            </basic>
+            <basic name="bigDecimalValue"/>
+            <basic name="bigIntegerValue"/>
+            <embedded name="name"/>
+            <many-to-many name="friends"
+                          target-entity="org.hibernate.orm.test.hql.Human"
+                          classification="BAG">
+                <join-table name="Human_friends">
+                    <join-column name="human1"/>
+                    <inverse-join-column name="human2"/>
+                </join-table>
+            </many-to-many>
+            <many-to-many name="family"
+                          target-entity="org.hibernate.orm.test.hql.Human"
+                          classification="MAP">
+                <map-key-class class="java.lang.String"/>
+                <map-key-column name="relationship"/>
+                <join-table name="Human_family">
+                    <join-column name="human1"/>
+                    <inverse-join-column name="human2"/>
+                </join-table>
+            </many-to-many>
+            <one-to-many name="pets"
+                         target-entity="org.hibernate.orm.test.hql.DomesticAnimal"
+                         mapped-by="owner"
+                         classification="BAG"/>
+            <element-collection name="nickNames" fetch="EAGER"
+                                target-class="java.lang.String"
+                                classification="SET">
+                <column name="nick_name" nullable="false"/>
+                <collection-table name="human_nick_names">
+                    <join-column name="human"/>
+                </collection-table>
+                <sort-natural/>
+            </element-collection>
+            <element-collection name="addresses"
+                                target-class="org.hibernate.orm.test.hql.Address"
+                                classification="MAP">
+                <map-key-class class="java.lang.String"/>
+                <collection-table name="addresses">
+                    <join-column name="human"/>
+                </collection-table>
+                <map-key-column name="`type`"/>
+            </element-collection>
+        </attributes>
+    </entity>
+
+    <entity class="org.hibernate.orm.test.hql.User"
+            access="FIELD" metadata-complete="true">
+        <table name="`User`"/>
+        <attributes>
+            <id name="id">
+                <generated-value generator="foreign-human"/>
+                <generic-generator name="foreign-human" class="foreign">
+                    <parameter name="property" value="human"/>
+                </generic-generator>
+            </id>
+            <basic name="userName"/>
+            <one-to-one name="human"
+                        target-entity="org.hibernate.orm.test.hql.Human"
+                        fetch="LAZY"
+                        constrained="true"/>
+            <element-collection name="permissions" target-class="java.lang.String" classification="LIST">
+                <order-column name="permissionId"/>
+                <column name="permissionName"/>
+                <collection-table>
+                    <join-column name="userId"/>
+                </collection-table>
+            </element-collection>
+        </attributes>
+    </entity>
+
+    <entity class="org.hibernate.orm.test.hql.Zoo"
+            access="FIELD" metadata-complete="true">
+        <inheritance strategy="SINGLE_TABLE"/>
+        <discriminator-column name="zooType" discriminator-type="CHAR"/>
+        <discriminator-value>Z</discriminator-value>
+        <attributes>
+            <id name="id">
+                <generated-value/>
+            </id>
+            <basic name="name"/>
+            <basic name="classification">
+                <type value="org.hibernate.orm.test.hql.ClassificationType"/>
+            </basic>
+            <embedded name="address"/>
+            <many-to-many name="directors"
+                          target-entity="org.hibernate.orm.test.hql.Human"
+                          classification="MAP">
+                <map-key-class class="java.lang.String"/>
+                <map-key-column name="`title`"/>
+                <join-table>
+                    <join-column name="directorZoo_id"/>
+                </join-table>
+            </many-to-many>
+            <one-to-many name="mammals"
+                         target-entity="org.hibernate.orm.test.hql.Mammal"
+                         classification="MAP">
+                <map-key-class class="java.lang.String"/>
+                <map-key-column name="name"/>
+                <join-column name="mammalZoo_id"/>
+            </one-to-many>
+            <one-to-many name="animals"
+                         target-entity="org.hibernate.orm.test.hql.Animal"
+                         mapped-by="zoo"
+                         classification="MAP">
+                <map-key name="serialNumber"/>
+            </one-to-many>
+        </attributes>
+    </entity>
+
+    <entity class="org.hibernate.orm.test.hql.PettingZoo"
+            access="FIELD" metadata-complete="true">
+        <discriminator-value>P</discriminator-value>
+    </entity>
+
+    <entity class="org.hibernate.orm.test.hql.StateProvince"
+            access="FIELD" metadata-complete="true">
+        <attributes>
+            <id name="id">
+                <generated-value/>
+            </id>
+            <basic name="name"/>
+            <basic name="isoCode"/>
+        </attributes>
+    </entity>
+
+    <entity class="org.hibernate.orm.test.hql.Joiner"
+            access="PROPERTY" metadata-complete="true">
+        <secondary-table name="JOINED" optional="false" owned="true">
+            <primary-key-join-column name="ID"/>
+        </secondary-table>
+        <attributes>
+            <id name="id">
+                <generated-value/>
+            </id>
+            <basic name="name"/>
+            <basic name="joinedName">
+                <column name="joinedName" table="JOINED"/>
+            </basic>
+        </attributes>
+    </entity>
+
+</entity-mappings>

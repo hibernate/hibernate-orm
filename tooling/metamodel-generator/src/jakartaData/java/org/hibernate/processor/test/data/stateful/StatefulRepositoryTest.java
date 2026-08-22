@@ -119,9 +119,9 @@ class StatefulRepositoryTest {
 		final var compiler = ToolProvider.getSystemJavaCompiler();
 		try ( var fileManager = compiler.getStandardFileManager( diagnostics, Locale.ROOT, defaultCharset() ) ) {
 			final var sourceFiles = List.of(
-					sourceFile( StatefulBook.class ),
-					sourceFile( StatefulBookRepository.class ),
-					sourceFile( StatelessBookRepository.class )
+					TestUtil.getSourceFile( StatefulBook.class ),
+					TestUtil.getSourceFile( StatefulBookRepository.class ),
+					TestUtil.getSourceFile( StatelessBookRepository.class )
 			);
 			final var options = List.of(
 					"-d",
@@ -180,9 +180,9 @@ class StatefulRepositoryTest {
 		final JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
 		try ( StandardJavaFileManager fileManager = compiler.getStandardFileManager( diagnostics, null, null ) ) {
 			final List<File> sourceFiles = List.of(
-					sourceFile( StatefulBook.class ),
-					sourceFile( InvalidStatefulBookRepository.class ),
-					sourceFile( InvalidStatelessBackedStatefulBookRepository.class )
+					TestUtil.getSourceFile( StatefulBook.class ),
+					TestUtil.getSourceFile( InvalidStatefulBookRepository.class ),
+					TestUtil.getSourceFile( InvalidStatelessBackedStatefulBookRepository.class )
 			);
 			final JavaCompiler.CompilationTask task = compiler.getTask(
 					null,
@@ -224,12 +224,5 @@ class StatefulRepositoryTest {
 				.filter( diagnostic -> diagnostic.getKind() == Diagnostic.Kind.ERROR )
 				.map( diagnostic -> diagnostic.getMessage( Locale.ROOT ) )
 				.collect( Collectors.joining( "\n" ) );
-	}
-
-	private static File sourceFile(Class<?> type) {
-		return new File(
-				TestUtil.getSourceBaseDir( type ),
-				type.getName().replace( '.', File.separatorChar ) + ".java"
-		);
 	}
 }

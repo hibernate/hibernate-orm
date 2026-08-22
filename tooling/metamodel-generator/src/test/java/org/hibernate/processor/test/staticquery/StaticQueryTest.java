@@ -15,7 +15,6 @@ import org.hibernate.processor.test.util.TestUtil;
 import org.hibernate.processor.test.util.WithClasses;
 import org.junit.jupiter.api.Test;
 
-import java.io.File;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.util.List;
@@ -108,8 +107,8 @@ class StaticQueryTest {
 		final var compiler = ToolProvider.getSystemJavaCompiler();
 		try ( var fileManager = compiler.getStandardFileManager( diagnostics, Locale.ROOT, null ) ) {
 			final var sourceFiles = List.of(
-					sourceFile( Book.class ),
-					sourceFile( InvalidNativeStaticQuery.class )
+					TestUtil.getSourceFile( Book.class ),
+					TestUtil.getSourceFile( InvalidNativeStaticQuery.class )
 			);
 			final var task = compiler.getTask(
 					null,
@@ -126,12 +125,5 @@ class StaticQueryTest {
 			);
 			assertTrue( task.call() );
 		}
-	}
-
-	private static File sourceFile(Class<?> type) {
-		return new File(
-				TestUtil.getSourceBaseDir( type ),
-				type.getName().replace( '.', File.separatorChar ) + ".java"
-		);
 	}
 }

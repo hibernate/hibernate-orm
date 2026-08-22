@@ -4,7 +4,6 @@
  */
 package org.hibernate.processor.test.data.select;
 
-import java.io.File;
 import java.util.List;
 import java.util.Locale;
 import java.util.stream.Collectors;
@@ -103,10 +102,10 @@ class SelectionTest {
 		final var compiler = ToolProvider.getSystemJavaCompiler();
 		try ( var fileManager = compiler.getStandardFileManager( diagnostics, Locale.ROOT, defaultCharset() ) ) {
 			final var sourceFiles = List.of(
-					sourceFile( SelectionStatus.class ),
-					sourceFile( SelectionPublisher.class ),
-					sourceFile( SelectionBook.class ),
-					sourceFile( InvalidSelectionRepository.class )
+					TestUtil.getSourceFile( SelectionStatus.class ),
+					TestUtil.getSourceFile( SelectionPublisher.class ),
+					TestUtil.getSourceFile( SelectionBook.class ),
+					TestUtil.getSourceFile( InvalidSelectionRepository.class )
 			);
 			final var task = compiler.getTask(
 					null,
@@ -138,12 +137,5 @@ class SelectionTest {
 		assertTrue( messages.contains( "'@First' may not be combined with a parameter of type 'jakarta.data.Limit'" ) );
 		assertTrue( messages.contains(
 				"Jakarta Data repository method annotations are mutually exclusive: @Find, @Query" ) );
-	}
-
-	private static File sourceFile(Class<?> type) {
-		return new File(
-				TestUtil.getSourceBaseDir( type ),
-				type.getName().replace( '.', File.separatorChar ) + ".java"
-		);
 	}
 }

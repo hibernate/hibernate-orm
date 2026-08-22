@@ -869,9 +869,10 @@ public class HibernateProcessor extends AbstractProcessor {
 	}
 
 	private static boolean hasHandwrittenMetamodel(Element element) {
+		final var generatedName = '_' + element.getSimpleName().toString();
 		return element.getEnclosingElement().getEnclosedElements()
-				.stream().anyMatch(e -> e.getSimpleName()
-						.contentEquals('_' + element.getSimpleName().toString()));
+				.stream().anyMatch(e -> e.getSimpleName().contentEquals( generatedName )
+						&& !hasAnnotation( e, Constants.JD_STATIC_METAMODEL ));
 	}
 
 	private void indexEntityName(TypeElement typeElement) {

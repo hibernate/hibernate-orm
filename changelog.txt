@@ -1,6 +1,15 @@
 Hibernate 6 Changelog
 =======================
 
+Changes in 6.6.56.Final (August 23, 2026)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/40368
+
+
+** Bug
+    * HHH-20696 Implicit name of list index columns not applied by MetadataBuilder
+
 Changes in 6.6.55.Final (August 02, 2026)
 ------------------------------------------------------------------------------------------------------------------------
 

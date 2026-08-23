@@ -1,6 +1,33 @@
 Hibernate 7 Changelog
 =======================
 
+Changes in 7.4.6.Final (August 23, 2026)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/40133
+
+
+** Bug
+    * HHH-20788 [Quarkus 3.20.5 / Hibernate ORM 6.6.40.Final] quarkus.otel.logs.enabled=true fails SessionFactory build for TABLE_PER_CLASS collections
+    * HHH-20783 hibernate.transactions{result="failure"} metric can transiently go negative due to non-atomic counter reads, breaking the whole Prometheus scrape on Micrometer 1.14+
+    * HHH-20779 Envers: unwrap proxies in collection-change audit work units
+    * HHH-20776 CriteriaBuilder.literal() mistypes an enum constant declared with a class body
+    * HHH-20772 ARRAY_AGG column in Jakarta Data query method cannot be mapped to result type property
+    * HHH-20743 `hibernate-maven-plugin` `enhance` goal computes wrong class names when `fileSets` directory differs from `classesDirectory`
+    * HHH-20707 Missing import for inner interface type in CDI accessor metamodel methods
+    * HHH-20696 Implicit name of list index columns not applied by MetadataBuilder
+    * HHH-20661 HQL UNION fails when unioning java.util.Date from different attribute paths
+    * HHH-20624 StackOverflowError when creating entity manager with attribute converter hierarchy with generic parameter
+    * HHH-20515 Adjust default for SessionCheckMode on Session.findMultiple()
+    * HHH-20472 Generated metamodel class missing `List` import
+    * HHH-20452 @OneToMany mapping silently dropped when orm.xml contributes a partial overlay (entity-listeners only) to an entity whose @Id is inherited from a @MappedSuperclass
+    * HHH-20438 Basic-array body predicates fail with AssertionError from SqmMappingModelHelper.resolveSqmPath
+    * HHH-20348 `DataException` / `ClassCastException` when aggregating primitive
+
+** Task
+    * HHH-20736 Tune the content of javadocs to reduce the size of files published to Maven Central
+    * HHH-20710 Update to hibernate-models 1.1.2
+
 Changes in 7.4.5.Final (July 12, 2026)
 ------------------------------------------------------------------------------------------------------------------------
 

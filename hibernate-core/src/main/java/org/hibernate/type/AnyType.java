@@ -35,7 +35,6 @@ import static org.hibernate.engine.internal.ForeignKeys.getEntityIdentifierIfNot
 import static org.hibernate.internal.util.collections.ArrayHelper.join;
 import static org.hibernate.metamodel.internal.FullNameImplicitDiscriminatorStrategy.FULL_NAME_STRATEGY;
 import static org.hibernate.pretty.MessageHelper.infoString;
-import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 
 /**
  * Handles "any" mappings
@@ -175,42 +174,11 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 	}
 
 	private EntityPersister guessEntityPersister(Object object, SessionFactoryImplementor factory) {
-		if ( typeConfiguration == null ) {
-			return null;
-		}
-
-		String entityName = null;
-
-		// this code is largely copied from Session's bestGuessEntityName
-		Object entity = object;
-		final var lazyInitializer = extractLazyInitializer( entity );
-		if ( lazyInitializer != null ) {
-			if ( lazyInitializer.isUninitialized() ) {
-				entityName = lazyInitializer.getEntityName();
-			}
-			entity = lazyInitializer.getImplementation();
-		}
-
-		if ( entityName == null ) {
-			entityName = entityNameFromResolvers( factory, entity );
-		}
-
-		if ( entityName == null ) {
-			// the old-time stand-by...
-			entityName = object.getClass().getName();
-		}
-
-		return factory.getMappingMetamodel().getEntityDescriptor( entityName );
-	}
-
-	private static String entityNameFromResolvers(SessionFactoryImplementor factory, Object entity) {
-		for ( var resolver : factory.getMappingMetamodel().getEntityNameResolvers() ) {
-			final String entityName = resolver.resolveEntityName( entity );
-			if ( entityName != null ) {
-				return entityName;
-			}
-		}
-		return null;
+		// delegate to bestGuessEntityName: it does not eagerly initialize the proxy
+		// (it reads the entity name from an uninitialized proxy) and, when no resolver
+		// matches, falls back to the name of the unwrapped implementation
+		final String entityName = factory.bestGuessEntityName( object );
+		return entityName == null ? null : factory.getMappingMetamodel().getEntityDescriptor( entityName );
 	}
 
 	@Override

@@ -5,10 +5,13 @@
 package org.hibernate.dialect.temptable.internal;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -34,6 +37,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.SingleTableSubclass;
+import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.mapping.Association;
 import org.hibernate.metamodel.mapping.AttributeMapping;
@@ -238,33 +242,35 @@ public class TemporaryTable implements TemporaryTableDescriptor, Exportable, Con
 				temporaryTable -> {
 					final MetadataImplementor metadata = runtimeModelCreationContext.getMetadata();
 					final List<TemporaryTableColumn> columns = new ArrayList<>();
-					final Set<String> columnNames = new TreeSet<>( String.CASE_INSENSITIVE_ORDER );
+					final Set<Identifier> columnNames = new TreeSet<>();
 					final List<Column> rootKeyColumns = persistentClass.getRootClass().getKey().getColumns();
 					final boolean identityColumn = rootKeyColumns.size() == 1 && rootKeyColumns.get( 0 ).isIdentity();
 					final boolean isExternallyGenerated;
 					if ( identityColumn ) {
 						isExternallyGenerated = false;
-						columnNames.add( ENTITY_TABLE_IDENTITY_COLUMN );
-						for ( Column column : persistentClass.getKey().getColumns() ) {
-							String sqlTypeName = "";
-							if ( dialect.getIdentityColumnSupport().hasDataTypeInIdentityColumn() ) {
-								sqlTypeName = column.getSqlType( metadata ) + " ";
-							}
-							sqlTypeName = sqlTypeName + dialect.getIdentityColumnSupport()
-									.getIdentityColumnString( column.getSqlTypeCode( metadata ) );
-							columns.add(
-									new TemporaryTableColumn(
-											temporaryTable,
-											ENTITY_TABLE_IDENTITY_COLUMN,
-											column.getType(),
-											sqlTypeName,
-											column.getColumnSize( dialect, metadata ),
-											// Always report as nullable as the identity column string usually includes the not null constraint
-											true,//column.isNullable()
-											true
-									)
-							);
+						final List<Column> keyColumns = persistentClass.getKey().getColumns();
+						assert keyColumns.size() == 1;
+						final Column column = keyColumns.get( 0 );
+						final String columnName = ENTITY_TABLE_IDENTITY_COLUMN;
+						String sqlTypeName = "";
+						if ( dialect.getIdentityColumnSupport().hasDataTypeInIdentityColumn() ) {
+							sqlTypeName = column.getSqlType( metadata ) + " ";
 						}
+						sqlTypeName = sqlTypeName + dialect.getIdentityColumnSupport()
+								.getIdentityColumnString( column.getSqlTypeCode( metadata ) );
+						columnNames.add( Identifier.toIdentifier( columnName ) );
+						columns.add(
+								new TemporaryTableColumn(
+										temporaryTable,
+										columnName,
+										column.getType(),
+										sqlTypeName,
+										column.getColumnSize( dialect, metadata ),
+										// Always report as nullable as the identity column string usually includes the not null constraint
+										true,//column.isNullable()
+										true
+								)
+						);
 					}
 					else {
 						// This is a bit fishy, because for the generator to exist in this map,
@@ -279,55 +285,98 @@ public class TemporaryTable implements TemporaryTableDescriptor, Exportable, Con
 						isExternallyGenerated = !(identifierGenerator instanceof OnExecutionGenerator generator
 							&& generator.generatedOnExecution());
 					}
-					final Property identifierProperty = persistentClass.getIdentifierProperty();
-					final String idName;
-					if ( identifierProperty != null ) {
-						idName = identifierProperty.getName();
-					}
-					else {
-						idName = "id";
-					}
-					forEachTemporaryTableColumn( metadata, temporaryTable, idName, persistentClass.getIdentifier(), columnNames, temporaryTableColumn -> {
-						columns.add( new TemporaryTableColumn(
-								temporaryTableColumn.getContainingTable(),
-								temporaryTableColumn.getColumnName(),
-								temporaryTableColumn.getJdbcMapping(),
-								temporaryTableColumn.getSqlTypeDefinition(),
-								temporaryTableColumn.getSize(),
-								// We have to set the identity column after the root table insert
-								identityColumn || isExternallyGenerated,
-								!identityColumn && !isExternallyGenerated
-						) );
-					});
+					forEachTemporaryTableColumn(
+							metadata,
+							temporaryTable,
+							persistentClass.getIdentifier(),
+							(table, temporaryTableColumn) -> {
+								columnNames.add( Identifier.toIdentifier( temporaryTableColumn.getColumnName() ) );
+								columns.add( new TemporaryTableColumn(
+										temporaryTableColumn.getContainingTable(),
+										temporaryTableColumn.getColumnName(),
+										temporaryTableColumn.getJdbcMapping(),
+										temporaryTableColumn.getSqlTypeDefinition(),
+										temporaryTableColumn.getSize(),
+										// We have to set the identity column after the root table insert
+										identityColumn || isExternallyGenerated,
+										!identityColumn && !isExternallyGenerated
+								) );
+							}
+					);
 
 					final Value discriminator = persistentClass.getDiscriminator();
 					if ( discriminator != null && !discriminator.getSelectables().get( 0 ).isFormula() ) {
-						forEachTemporaryTableColumn( metadata, temporaryTable, "class", discriminator, columnNames, temporaryTableColumn -> {
-							columns.add( new TemporaryTableColumn(
-									temporaryTableColumn.getContainingTable(),
-									temporaryTableColumn.getColumnName(),
-									temporaryTableColumn.getJdbcMapping(),
-									temporaryTableColumn.getSqlTypeDefinition(),
-									temporaryTableColumn.getSize(),
-									// We have to set the identity column after the root table insert
-									discriminator.isNullable()
-							) );
-						} );
+						forEachTemporaryTableColumn(
+								metadata,
+								temporaryTable,
+								discriminator,
+								(table, temporaryTableColumn) -> {
+									columnNames.add( Identifier.toIdentifier( temporaryTableColumn.getColumnName() ) );
+									columns.add( new TemporaryTableColumn(
+													temporaryTableColumn.getContainingTable(),
+													temporaryTableColumn.getColumnName(),
+													temporaryTableColumn.getJdbcMapping(),
+													temporaryTableColumn.getSqlTypeDefinition(),
+													temporaryTableColumn.getSize(),
+													// We have to set the identity column after the root table insert
+													discriminator.isNullable()
+											)
+									);
+								}
+						);
 					}
 
 					// Collect all columns for all entity subtype attributes
+					final var temporaryTableColumns = new LinkedHashMap<String, Map<Table, TemporaryTableColumn>>();
 					for ( Property property : persistentClass.getPropertyClosure() ) {
 						if ( !property.isSynthetic() ) {
 							forEachTemporaryTableColumn(
 									metadata,
 									temporaryTable,
-									property.getName(),
 									property.getValue(),
-									columnNames,
-									columns::add
+									(table, temporaryTableColumn) ->
+											temporaryTableColumns.computeIfAbsent( temporaryTableColumn.getColumnName(), k -> new LinkedHashMap<>() )
+													.put( table, temporaryTableColumn )
 							);
 						}
 					}
+					for ( Map.Entry<String, Map<Table, TemporaryTableColumn>> entry : temporaryTableColumns.entrySet() ) {
+						final Map<Table, TemporaryTableColumn> columnsPerTable = entry.getValue();
+						if ( columnsPerTable.size() == 1 && !columnNames.contains( Identifier.toIdentifier( entry.getKey() ) ) ) {
+							columns.add( columnsPerTable.values().iterator().next() );
+						}
+						else {
+							for ( Map.Entry<Table, TemporaryTableColumn> columnsEntry : columnsPerTable.entrySet() ) {
+								final var temporaryTableColumn = columnsEntry.getValue();
+								final var tableNameIdentifier = columnsEntry.getKey().getNameIdentifier();
+								final var tableName = tableNameIdentifier.render( dialect );
+								int counter = 0;
+								Identifier columnName;
+								do {
+									columnName = Identifier.toIdentifier(
+											tableName.replace(
+													tableNameIdentifier.getText(),
+													tableNameIdentifier.getText()
+												+ counter + "_" + temporaryTableColumn.getColumnName()
+											),
+											tableNameIdentifier.isQuoted()
+									);
+									counter++;
+								}
+								while ( !columnNames.add( columnName ) );
+
+								columns.add( new TemporaryTableColumn(
+										temporaryTableColumn.getContainingTable(),
+										columnName.render( dialect ),
+										temporaryTableColumn.getJdbcMapping(),
+										temporaryTableColumn.getSqlTypeDefinition(),
+										temporaryTableColumn.getSize(),
+										temporaryTableColumn.isNullable()
+								) );
+							}
+						}
+					}
+
 					if ( isExternallyGenerated ) {
 						final var typeConfiguration = metadata.getTypeConfiguration();
 						// We add a special row number column that we can use to identify and join rows
@@ -395,40 +444,23 @@ public class TemporaryTable implements TemporaryTableDescriptor, Exportable, Con
 	private static void forEachTemporaryTableColumn(
 			Metadata metadata,
 			TemporaryTable temporaryTable,
-			String prefix,
 			Value value,
-			Set<String> columnNames,
-			Consumer<TemporaryTableColumn> consumer) {
+			BiConsumer<Table, TemporaryTableColumn> consumer) {
 		final Dialect dialect = metadata.getDatabase().getDialect();
-		SqmMutationStrategyHelper.forEachSelectableMapping( prefix, value, (attributePath, selectable) -> {
+		SqmMutationStrategyHelper.forEachSelectableMapping( "", value, (attributePath, selectable) ->
 			consumer.accept(
+					selectable.getValue().getTable(),
 					new TemporaryTableColumn(
 							temporaryTable,
-							determineColumnName( selectable, dialect, columnNames ),
+							selectable.getQuotedName( dialect ),
 							selectable.getType(),
 							selectable.getSqlType( metadata ),
 							selectable.getColumnSize( dialect, metadata ),
 							// Treat regular temporary table columns as nullable for simplicity
 							true
 					)
-			);
-		} );
-	}
-
-	private static String determineColumnName(Column column, Dialect dialect, Set<String> columnNames) {
-		// The temporary table mirrors the physical columns of the entity, so the physical column name is used
-		final String columnName = column.getQuotedName( dialect );
-		if ( columnNames.add( columnName ) ) {
-			return columnName;
-		}
-		// Fallback: the column name is qualified with the name of the table it belongs to
-		// Since even that is not guaranteed to be unique, a counter is appended as a last resort
-		final String qualifiedColumnName = column.getValue().getTable().getName() + "_" + column.getName();
-		String uniqueName = qualifiedColumnName;
-		for ( int i = 1; !columnNames.add( uniqueName ); i++ ) {
-			uniqueName = qualifiedColumnName + "_" + i;
-		}
-		return uniqueName;
+			)
+		);
 	}
 
 	public List<TemporaryTableColumn> findTemporaryTableColumns(EntityPersister entityDescriptor, ModelPart modelPart) {

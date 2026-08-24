@@ -146,7 +146,7 @@ public class CrossCollectionListenerMutationTest {
 		private Long id;
 
 		@ElementCollection
-		@Column(name = "first_value")
+		@Column(name = "first_element")
 		private Set<String> first = new HashSet<>();
 
 		@ElementCollection

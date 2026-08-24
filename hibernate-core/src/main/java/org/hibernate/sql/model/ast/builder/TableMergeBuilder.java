@@ -14,7 +14,6 @@ import org.hibernate.sql.model.ast.ColumnValueBinding;
 import org.hibernate.sql.model.ast.MutatingTableReference;
 import org.hibernate.sql.model.ast.RestrictedTableMutation;
 import org.hibernate.sql.model.internal.OptionalTableUpdate;
-import org.hibernate.sql.model.internal.TableUpdateNoSet;
 
 import java.util.List;
 
@@ -41,9 +40,6 @@ public class TableMergeBuilder<O extends MutationOperation> extends AbstractTabl
 	@Override
 	public RestrictedTableMutation<O> buildMutation() {
 		final List<ColumnValueBinding> valueBindings = combine( getValueBindings(), getKeyBindings(), getLobValueBindings() );
-		if ( valueBindings.isEmpty() ) {
-			return (RestrictedTableMutation<O>) new TableUpdateNoSet( getMutatingTable(), getMutationTarget() );
-		}
 
 		// TODO: add getMergeDetails()
 //		if ( getMutatingTable().getTableMapping().getUpdateDetails().getCustomSql() != null ) {

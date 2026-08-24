@@ -26,6 +26,11 @@ public class AntlrBasedSQLFormatterImpl implements Formatter {
 
 	private static final Logger log = Logger.getLogger( AntlrBasedSQLFormatterImpl.class );
 
+	/**
+	 * Singleton access
+	 */
+	public static final AntlrBasedSQLFormatterImpl INSTANCE = new AntlrBasedSQLFormatterImpl();
+
 	private static final String INDENT = "    ";
 	private static final String LINE_SEPARATOR = System.lineSeparator();
 

@@ -6,7 +6,6 @@ package org.hibernate.orm.test.jdbc.util;
 
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.engine.jdbc.internal.AntlrBasedSQLFormatterImpl;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
 import org.jboss.logging.Logger;
@@ -20,6 +19,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static org.hibernate.engine.jdbc.internal.AntlrBasedSQLFormatterImpl.INSTANCE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -40,8 +40,6 @@ public class AntlrBasedSQLFormatterTest {
 	private static final String ID_SEP = "=== ID ===";
 
 	private final Map<String, SqlFixture> dmlFixtures = new HashMap<>(20);
-
-	private static final AntlrBasedSQLFormatterImpl formatter = new AntlrBasedSQLFormatterImpl();
 
 	@Test
 	public void testFixtures() {
@@ -72,13 +70,13 @@ public class AntlrBasedSQLFormatterTest {
 
 	@Test
 	public void testEmptyString() {
-		String formatted = formatter.format("");
+		String formatted = INSTANCE.format("");
 		assertTrue(formatted.isBlank(), "Empty string should remain empty");
 	}
 
 	@Test
 	public void testNullString() {
-		String formatted = formatter.format(null);
+		String formatted = INSTANCE.format(null);
 		assertTrue(formatted == null || formatted.isEmpty(), "Null should be handled gracefully");
 	}
 
@@ -128,7 +126,7 @@ public class AntlrBasedSQLFormatterTest {
 
 	private record SqlFixture(String id, String sql, String expected) {
 		public void verify() {
-				String actual = formatter.format( sql );
+				String actual = INSTANCE.format( sql );
 				assertEquals( expected, actual, "Sql formatting of \"%s\" failed".formatted(id) );
 			}
 		}

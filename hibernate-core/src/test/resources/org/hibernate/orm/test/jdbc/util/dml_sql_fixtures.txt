@@ -1,0 +1,796 @@
+# NOTE: if you edit this file, make sure to use the right indentation (check TokenBasedSQLFormatterImpl)
+# NOTE: none of the sql statements below necessarily make sense, they're only for formatting purposes
+# NOTE: To prevent a test from running, prefix its ID with '--'
+
+@@@@ FIXTURE @@@@
+=== ID ===
+simple_select_oneline
+
+=== SQL ===
+select name,dept,salary from empl e where e.salary >= 50000;
+
+=== EXPECTED ===
+select name, dept, salary
+from empl e
+where e.salary >= 50000;
+
+@@@@ FIXTURE @@@@
+=== ID ===
+order_by_multiline
+
+=== SQL ===
+select order_id,customer_id,store_location,order_date,total_amount from orders where status = 'completed' order by
+store_location asc,order_date desc,total_amount desc,order_id asc;
+
+=== EXPECTED ===
+select
+    order_id,
+    customer_id,
+    store_location,
+    order_date,
+    total_amount
+from orders
+where status = 'completed'
+order by
+    store_location asc,
+    order_date desc,
+    total_amount desc,
+    order_id asc;
+
+@@@@ FIXTURE @@@@
+=== ID ===
+group_by_multiline
+
+=== SQL ===
+select store_location,order_date,total_amount,order_id,count(*) from orders group by
+store_location,order_date,total_amount,order_id;
+
+=== EXPECTED ===
+select
+    store_location,
+    order_date,
+    total_amount,
+    order_id,
+    count(*)
+from orders
+group by
+    store_location,
+    order_date,
+    total_amount,
+    order_id;
+
+@@@@ FIXTURE @@@@
+=== ID ===
+simple_select_multiline
+
+=== SQL ===
+select id,name,dept,salary from empl e where e.salary >= 50000;
+
+=== EXPECTED ===
+select
+    id,
+    name,
+    dept,
+    salary
+from empl e
+where e.salary >= 50000;
+
+@@@@ FIXTURE @@@@
+=== ID ===
+complexselect
+
+=== SQL ===
+-- Non-indented single line comment
+with recursive recent_customer_activity as (select "O".`CUSTOMER_ID`,COUNT(*) AS order_count,MAX(o.created_at)
+as last_order_date,SUM(o.total_amount) as total_spent FROM orders o WHERE o.created_at >=
+CURRENT_DATE - INTERVAL '12 months' GROUP BY o.customer_id HAVING sum(o.total_amount) > 1000),/* Non-indented multi-line
+comment */
+product_performance as (select oi.product_id,/* Indented multi-line
+comment */
+trim(both '' from [OI].description),AVG(oi.unit_price)
+as avg_price,sum(oi.quantity) as total_units_sold from order_items oi group by oi.product_id
+having sum(oi.quantity) > 10) select c.customer_id,upper(c.full_name) as customer_name, c.region,
+case when rca.total_spent >= 10000 then 'PLATINUM' when rca.total_spent >= 5000 then 'GOLD'
+when rca.total_spent >= 2500 then 'SILVER' else 'STANDARD' end as customer_tier,
+rca.order_count,rca.total_spent,latest_order.order_id,latest_order.created_at as latest_order_date,
+pp.avg_price,pp.total_units_sold,promo_data.source_type,promo_data.reference_code,
+round(rca.total_spent / nullif(rca.order_count, 0),2) as avg_order_value,
+count(distinct s.shipment_id) as shipment_count from customers c join recent_customer_activity rca on
+rca.customer_id = c.customer_id left join orders o on o.customer_id = c.customer_id and o.status = 'COMPLETED'
+left join shipments s on s.order_id = o.order_id and s.shipped_at is not null left join lateral (select
+o2.order_id,o2.created_at from orders o2 where o2.customer_id = c.customer_id and o2.status in ('COMPLETED',
+'SHIPPED') order by o2.created_at desc fetch first 1 row only) latest_order on true join order_items oi on oi.order_id =
+o.order_id join product_performance pp on pp.product_id = oi.product_id and pp.avg_price > 20 left join(
+select cp.customer_id,cp.promo_code as reference_code,'PROMOTION' as source_type from customer_promotions cp union all
+select rv.customer_id, rv.referral_code as reference_code, 'REFERRAL' as source_type from customer_referrals rv)
+promo_data ON promo_data.customer_id = c.customer_id and promo_data.reference_code is not null where c.is_active = TRUE
+-- Indented single line comment
+and exists (select 1 from customer_tags ct where ct.customer_id = c.customer_id
+and ct.tag_name = 'VIP') group by c.customer_id,c.full_name,c.region,rca.order_count,rca.total_spent,
+latest_order.order_id,latest_order.created_at,pp.avg_price,pp.total_units_sold having count(distinct
+s.shipment_id) >= 2 order by rca.total_spent desc,latest_order.created_at desc offset 10 rows fetch
+first 5 rows with ties;
+
+=== EXPECTED ===
+-- Non-indented single line comment
+with recursive recent_customer_activity as (
+    select
+        "O".`CUSTOMER_ID`,
+        count(*) as order_count,
+        max(o.created_at) as last_order_date,
+        sum(o.total_amount) as total_spent
+    from orders o
+    where o.created_at >= current_date - interval '12 months'
+    group by o.customer_id
+    having sum(o.total_amount) > 1000
+),
+/* Non-indented multi-line
+comment */
+product_performance as (
+    select
+        oi.product_id,
+        /* Indented multi-line
+        comment */
+        trim(both '' from [OI].description),
+        avg(oi.unit_price) as avg_price,
+        sum(oi.quantity) as total_units_sold
+    from order_items oi
+    group by oi.product_id
+    having sum(oi.quantity) > 10
+)
+select
+    c.customer_id,
+    upper(c.full_name) as customer_name,
+    c.region,
+    case
+        when rca.total_spent >= 10000 then 'PLATINUM'
+        when rca.total_spent >= 5000 then 'GOLD'
+        when rca.total_spent >= 2500 then 'SILVER'
+        else 'STANDARD'
+    end as customer_tier,
+    rca.order_count,
+    rca.total_spent,
+    latest_order.order_id,
+    latest_order.created_at as latest_order_date,
+    pp.avg_price,
+    pp.total_units_sold,
+    promo_data.source_type,
+    promo_data.reference_code,
+    round(rca.total_spent / nullif(rca.order_count, 0), 2) as avg_order_value,
+    count(distinct s.shipment_id) as shipment_count
+from customers c
+join recent_customer_activity rca
+    on rca.customer_id = c.customer_id
+left join orders o
+    on o.customer_id = c.customer_id
+    and o.status = 'COMPLETED'
+left join shipments s
+    on s.order_id = o.order_id
+    and s.shipped_at is not null
+left join lateral (
+    select o2.order_id, o2.created_at
+    from orders o2
+    where o2.customer_id = c.customer_id
+        and o2.status in ('COMPLETED', 'SHIPPED')
+    order by o2.created_at desc
+    fetch first 1 row only
+) latest_order
+    on true
+join order_items oi
+    on oi.order_id = o.order_id
+join product_performance pp
+    on pp.product_id = oi.product_id
+    and pp.avg_price > 20
+left join (
+    select cp.customer_id, cp.promo_code as reference_code, 'PROMOTION' as source_type
+    from customer_promotions cp
+    union all
+    select rv.customer_id, rv.referral_code as reference_code, 'REFERRAL' as source_type
+    from customer_referrals rv
+) promo_data
+    on promo_data.customer_id = c.customer_id
+    and promo_data.reference_code is not null
+where c.is_active = true
+    -- Indented single line comment
+    and exists (
+        select 1
+        from customer_tags ct
+        where ct.customer_id = c.customer_id
+            and ct.tag_name = 'VIP'
+    )
+group by
+    c.customer_id,
+    c.full_name,
+    c.region,
+    rca.order_count,
+    rca.total_spent,
+    latest_order.order_id,
+    latest_order.created_at,
+    pp.avg_price,
+    pp.total_units_sold
+having count(distinct s.shipment_id) >= 2
+order by rca.total_spent desc, latest_order.created_at desc
+offset 10 rows
+fetch first 5 rows
+with ties;
+
+@@@@ FIXTURE @@@@
+=== ID ===
+select_from_subselect
+
+=== SQL ===
+select id,name,dept,salary from (select e.id,e.name,d.dept,es.salary from empl e join depts d on e.id=d.empl_id
+left join empl_salary es on e.id=es.empl_id) where salary >= 50000;
+
+=== EXPECTED ===
+select
+    id,
+    name,
+    dept,
+    salary
+from (
+    select
+        e.id,
+        e.name,
+        d.dept,
+        es.salary
+    from empl e
+    join depts d
+        on e.id = d.empl_id
+    left join empl_salary es
+        on e.id = es.empl_id
+)
+where salary >= 50000;
+
+@@@@ FIXTURE @@@@
+=== ID ===
+select_between
+
+=== SQL ===
+select * from employee e where e.salary between (select avg(salary) * 0.8 from employee e2 where e2.department_id =
+e.department_id and something = true) and (select avg(salary) * 1.2 + 5000 from employee e3 where e3.department_id = e.department_id);
+
+=== EXPECTED ===
+select *
+from employee e
+where e.salary between (
+    select avg(salary) * 0.8
+    from employee e2
+    where e2.department_id = e.department_id
+        and something = true
+) and (
+    select avg(salary) * 1.2 + 5000
+    from employee e3
+    where e3.department_id = e.department_id
+);
+
+@@@@ FIXTURE @@@@
+=== ID ===
+subquery_cte
+
+=== SQL ===
+select d.department_name, s.avg_salary from department d join (with dept_salaries as (select department_id, avg(salary)
+as avg_salary from employee group by department_id) select department_id, avg_salary from dept_salaries where avg_salary
+> 75000) s on d.department_id = s.department_id order by s.avg_salary desc;
+
+=== EXPECTED ===
+select d.department_name, s.avg_salary
+from department d
+join (
+    with dept_salaries as (
+        select department_id, avg(salary) as avg_salary
+        from employee
+        group by department_id
+    )
+    select department_id, avg_salary
+    from dept_salaries
+    where avg_salary > 75000
+) s
+    on d.department_id = s.department_id
+order by s.avg_salary desc;
+
+@@@@ FIXTURE @@@@
+=== ID ===
+scalar_subquery_cte
+
+=== SQL ===
+select e.employee_id, e.name,(with dept_avg as (select avg(salary) as avg_salary from employee e2 where
+e2.department_id = e.department_id) select avg_salary from dept_avg ) as department_average_salary from employee e;
+
+=== EXPECTED ===
+select
+    e.employee_id,
+    e.name,
+    (
+        with dept_avg as (
+            select avg(salary) as avg_salary
+            from employee e2
+            where e2.department_id = e.department_id
+        )
+        select avg_salary
+        from dept_avg
+    ) as department_average_salary
+from employee e;
+
+@@@@ FIXTURE @@@@
+=== ID ===
+insert_basic
+
+=== SQL ===
+insert into empl (id,name,email,salary) values (1,'alice','alice@ibm.com',75);
+
+=== EXPECTED ===
+insert into empl
+    (id, name, email, salary)
+values
+    (1, 'alice', 'alice@ibm.com', 75);
+
+@@@@ FIXTURE @@@@
+=== ID ===
+insert_basic_no_columns
+
+=== SQL ===
+insert into empl values (1,'alice','alice@ibm.com',75);
+
+=== EXPECTED ===
+insert into empl
+values
+    (1, 'alice', 'alice@ibm.com', 75);
+
+@@@@ FIXTURE @@@@
+=== ID ===
+insert_multi_row
+
+=== SQL ===
+insert into empl (id,name,email,salary) values (1,'alice','alice@ibm.com',75),(2,'lewis','lewis@ibm.com', 100)
+on conflict (email) do nothing;
+
+=== EXPECTED ===
+insert into empl
+    (id, name, email, salary)
+values
+    (1, 'alice', 'alice@ibm.com', 75),
+    (2, 'lewis', 'lewis@ibm.com', 100)
+on conflict (email)
+do nothing;
+
+@@@@ FIXTURE @@@@
+=== ID ===
+insert_on_conflict2
+
+=== SQL ===
+insert into empl (id,name,email,salary) values (1,'alice', 'alice@ibm.com', 75)
+on conflict on constraint user_pk do nothing;
+
+=== EXPECTED ===
+insert into empl
+    (id, name, email, salary)
+values
+    (1, 'alice', 'alice@ibm.com', 75)
+on conflict on constraint user_pk
+do nothing;
+
+@@@@ FIXTURE @@@@
+=== ID ===
+insert_from_select
+
+=== SQL ===
+insert into empl_arch (id,name,salary) select (id,name,salary) from empl where active = 'true';
+
+=== EXPECTED ===
+insert into empl_arch
+    (id, name, salary)
+select (id, name, salary)
+from empl
+where active = 'true';
+
+@@@@ FIXTURE @@@@
+=== ID ===
+upsert_returning
+
+=== SQL ===
+insert into empl (id,name,email,salary) values (1,'alice', 'alice@ibm.com', 75)
+on conflict (email) do update set name = excluded.name returning *;
+
+=== EXPECTED ===
+insert into empl
+    (id, name, email, salary)
+values
+    (1, 'alice', 'alice@ibm.com', 75)
+on conflict (email)
+do update
+set name = excluded.name
+returning *;
+
+@@@@ FIXTURE @@@@
+=== ID ===
+upsert2
+
+=== SQL ===
+insert into empl (id,name,email,salary) values (1,'alice', 'alice@ibm.com', 75)
+on duplicate key update name = values(name),salary=values(salary);
+
+=== EXPECTED ===
+insert into empl
+    (id, name, email, salary)
+values
+    (1, 'alice', 'alice@ibm.com', 75)
+on duplicate key
+update name = values(name), salary = values(salary);
+
+@@@@ FIXTURE @@@@
+=== ID ===
+update
+
+=== SQL ===
+update empl set salary=salary * 1.10, updated_at='2026-01-01',valid_until='2026-12-31',bonus_perc=bonus_perc*1.10 where dept_id=3;
+
+=== EXPECTED ===
+update empl
+set
+    salary = salary * 1.10,
+    updated_at = '2026-01-01',
+    valid_until = '2026-12-31',
+    bonus_perc = bonus_perc * 1.10
+where dept_id = 3;
+
+@@@@ FIXTURE @@@@
+=== ID ===
+update_many
+
+=== SQL ===
+update empl e set f1 = 1,f2 = 1,f3 = 1,f4 = 1,f5 = 1,f6 = 1,f7 = 1,f8 = 1,f9 = 1,f10 = 1,f11 = 1,
+f12 = 1,f13 = 1,f14 = 1,f15 = 1,f16 = 1 where e.dept_id=3;
+
+=== EXPECTED ===
+update empl e
+set
+    f1 = 1,
+    f2 = 1,
+    f3 = 1,
+    f4 = 1,
+    f5 = 1,
+    f6 = 1,
+    f7 = 1,
+    f8 = 1,
+    f9 = 1,
+    f10 = 1,
+    f11 = 1,
+    f12 = 1,
+    f13 = 1,
+    f14 = 1,
+    f15 = 1,
+    f16 = 1
+where e.dept_id = 3;
+
+@@@@ FIXTURE @@@@
+=== ID ===
+update_from
+
+=== SQL ===
+update empl e set salary=su.salary from salary_updates su where e.id=su.emp_id;
+
+=== EXPECTED ===
+update empl e
+set salary = su.salary
+from salary_updates su
+where e.id = su.emp_id;
+
+@@@@ FIXTURE @@@@
+=== ID ===
+update_subquery
+
+=== SQL ===
+update empl set dept_id = (select id from dept where name='engineering') where role='developer';
+
+=== EXPECTED ===
+update empl
+set dept_id = (
+    select id
+    from dept
+    where name = 'engineering'
+)
+where role = 'developer';
+
+@@@@ FIXTURE @@@@
+=== ID ===
+update_case
+
+=== SQL ===
+update orders set status = case when shipped_at is not null then 'SHIPPED'
+when return_date is not null and date_add(return_date, interval 30 day) > curdate() then 'DELIVERED' else 'PENDING' end
+,other_field = some_function_call();
+
+=== EXPECTED ===
+update orders
+set status =
+    case
+        when shipped_at is not null then 'SHIPPED'
+        when return_date is not null
+            and date_add(return_date, interval 30 day) > curdate() then 'DELIVERED'
+        else 'PENDING'
+    end,
+    other_field = some_function_call();
+
+@@@@ FIXTURE @@@@
+=== ID ===
+update_nested_case
+
+=== SQL ===
+update orders set status = case when shipped_at is not null then 'SHIPPED'
+when return_date is not null then case when date_add(return_date, interval 30 day) > curdate() then 'DELIVERED'
+else 'TRIAL' end else 'PENDING' end,other_field = some_function_call();
+
+=== EXPECTED ===
+update orders
+set status =
+    case
+        when shipped_at is not null then 'SHIPPED'
+        when return_date is not null then
+            case
+                when date_add(return_date, interval 30 day) > curdate() then 'DELIVERED'
+                else 'TRIAL'
+            end
+        else 'PENDING'
+    end,
+    other_field = some_function_call();
+
+@@@@ FIXTURE @@@@
+=== ID ===
+merge_upsert
+
+=== SQL ===
+merge into customers c using customer_updates cu on (c.id = cu.id) when matched then update set c.email = cu.email
+when not matched then insert (id, email) values (cu.id, cu.email);
+
+=== EXPECTED ===
+merge into customers c
+using customer_updates cu
+on
+    (c.id = cu.id)
+when matched then
+    update
+    set c.email = cu.email
+when not matched then
+    insert (id, email)
+    values
+        (cu.id, cu.email);
+
+@@@@ FIXTURE @@@@
+=== ID ===
+simple_delete
+
+=== SQL ===
+delete from eml;
+
+=== EXPECTED ===
+delete from eml;
+
+@@@@ FIXTURE @@@@
+=== ID ===
+delete_where_in
+
+=== SQL ===
+delete from empl where dept_id in (select id from depts where closed = true);
+
+=== EXPECTED ===
+delete from empl
+where dept_id in (
+    select id
+    from depts
+    where closed = true
+);
+
+@@@@ FIXTURE @@@@
+=== ID ===
+delete_with_using
+
+=== SQL ===
+delete from employees e using departments d where e.department_id = d.id and d.closed = true;
+
+=== EXPECTED ===
+delete from employees e
+using departments d
+where e.department_id = d.id
+    and d.closed = true;
+
+@@@@ FIXTURE @@@@
+=== ID ===
+truncate
+
+=== SQL ===
+truncate table empl;
+
+=== EXPECTED ===
+truncate table empl;
+
+@@@@ FIXTURE @@@@
+=== ID ===
+truncate_restart_cascade
+
+=== SQL ===
+truncate table empl restart identity cascade;
+
+=== EXPECTED ===
+truncate table empl restart identity cascade;
+
+@@@@ FIXTURE @@@@
+=== ID ===
+truncate_continue_cascade
+
+=== SQL ===
+truncate table empl continue identity cascade;
+
+=== EXPECTED ===
+truncate table empl continue identity cascade;
+
+@@@@ FIXTURE @@@@
+=== ID ===
+window_function
+
+=== SQL ===
+select department,name,salary,rank() over (partition by department order by name, salary desc) as salary_rank from employees
+order by department, salary_rank;
+
+=== EXPECTED ===
+select
+    department,
+    name,
+    salary,
+    rank() over (
+        partition by department
+        order by name, salary desc
+    ) as salary_rank
+from employees
+order by department, salary_rank;
+
+@@@@ FIXTURE @@@@
+=== ID ===
+named_window
+
+=== SQL ===
+select salesperson,region,sale_date,amount,row_number() over w as rn,rank() over w as ranking,sum(amount) over (w rows
+between unbounded preceding and current row) as running_total,avg(amount) over (w rows between 2 preceding and current
+row) as moving_average,lag(amount) over w as previous_sale,lead(amount) over w as next_sale from sales window w as (
+partition by region order by sale_date) order by region, sale_date;
+
+=== EXPECTED ===
+select
+    salesperson,
+    region,
+    sale_date,
+    amount,
+    row_number() over w as rn,
+    rank() over w as ranking,
+    sum(amount) over (
+        w
+        rows between unbounded preceding
+            and current row
+    ) as running_total,
+    avg(amount) over (
+        w
+        rows between 2 preceding
+            and current row
+    ) as moving_average,
+    lag(amount) over w as previous_sale,
+    lead(amount) over w as next_sale
+from sales
+window w as (
+    partition by region
+    order by sale_date
+)
+order by region, sale_date;
+
+@@@@ FIXTURE @@@@
+=== ID ===
+jira_example
+
+=== SQL ===
+select t1.column,"t1".`column`,trim(both '' from [t2].column) from tbl1 t1 left join tbl2 t2 on t2.fk = t1.fk
+join lateral(select t3.c1, t3.c2 from tbl3 t3) t(col1,col2) on true order by 1,2 offset 1 rows fetch first 1 rows only with ties
+
+=== EXPECTED ===
+select t1.column, "t1".`column`, trim(both '' from [t2].column)
+from tbl1 t1
+left join tbl2 t2
+    on t2.fk = t1.fk
+join lateral (
+    select t3.c1, t3.c2
+    from tbl3 t3
+) t(col1, col2)
+    on true
+order by 1, 2
+offset 1 rows
+fetch first 1 rows only
+with ties
+
+@@@@ FIXTURE @@@@
+=== ID ===
+function_args_inline
+
+=== SQL ===
+select coalesce(a, b, c, d, e), greatest(x, y, z, w, v, u), trim(both ' ' from col) from some_table;
+
+=== EXPECTED ===
+select coalesce(a, b, c, d, e), greatest(x, y, z, w, v, u), trim(both ' ' from col)
+from some_table;
+
+@@@@ FIXTURE @@@@
+=== ID ===
+--json_objectagg_orderby
+
+=== SQL ===
+# @todo At the moment this does not format according to the constraint rules (function args should stay on the same line)
+select json_objectagg(name value nickname absent on null with unique keys returning jsonb) from employee;
+
+=== EXPECTED ===
+select json_objectagg(
+    name value nickname
+    absent on null
+    with unique keys
+    returning jsonb
+)
+from employee;
+
+@@@@ FIXTURE @@@@
+=== ID ===
+string_agg_orderby
+
+=== SQL ===
+select department,string_agg(name,', ' order by salary desc, name, surname, address) as employees_by_salary from employee group by department;
+
+=== EXPECTED ===
+select department, string_agg(name, ', ' order by salary desc, name, surname, address) as employees_by_salary
+from employee
+group by department;
+
+@@@@ FIXTURE @@@@
+=== ID ===
+over_partition_by
+
+=== SQL ===
+select depname, empno, salary, enroll_date from (select depname, empno, salary, enroll_date, row_number() over
+(partition by depname,b,c,d order by salary desc, empno, depname, enroll_date) as pos from empsalary ) as ss where pos < 3;
+
+=== EXPECTED ===
+select
+    depname,
+    empno,
+    salary,
+    enroll_date
+from (
+    select
+        depname,
+        empno,
+        salary,
+        enroll_date,
+        row_number() over (
+            partition by
+                depname,
+                b,
+                c,
+                d
+            order by
+                salary desc,
+                empno,
+                depname,
+                enroll_date
+        ) as pos
+    from empsalary
+) as ss
+where pos < 3;
+
+@@@@ FIXTURE @@@@
+=== ID ===
+over_partition_by_named_window
+
+=== SQL ===
+select sum(salary) over w, avg(salary) over w from empsalary window w as (partition by depname order by salary desc);
+
+=== EXPECTED ===
+select sum(salary) over w, avg(salary) over w
+from empsalary
+window w as (
+    partition by depname
+    order by salary desc
+);

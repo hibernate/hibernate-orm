@@ -13,7 +13,7 @@ public enum FormatStyle {
 	/**
 	 * Formatting for SELECT, INSERT, UPDATE and DELETE statements
 	 */
-	BASIC( "basic", new BasicFormatterImpl() ),
+	BASIC( "basic", AntlrBasedSQLFormatterImpl.INSTANCE ),
 	/**
 	 * Formatting for DDL (CREATE, ALTER, DROP, etc) statements
 	 */

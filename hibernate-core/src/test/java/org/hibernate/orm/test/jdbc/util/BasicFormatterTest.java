@@ -4,7 +4,7 @@
  */
 package org.hibernate.orm.test.jdbc.util;
 
-import org.hibernate.engine.jdbc.internal.FormatStyle;
+import org.hibernate.engine.jdbc.internal.BasicFormatterImpl;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.jboss.logging.Logger;
 import org.junit.jupiter.api.Test;
@@ -95,7 +95,7 @@ public class BasicFormatterTest {
 	}
 
 	private void assertNoLoss(String query) {
-		String formattedQuery = FormatStyle.BASIC.getFormatter().format( query );
+		String formattedQuery = new BasicFormatterImpl().format( query );
 		StringTokenizer formatted = new StringTokenizer( formattedQuery, " \t\n\r\f()" );
 		StringTokenizer plain = new StringTokenizer( query, " \t\n\r\f()" );
 

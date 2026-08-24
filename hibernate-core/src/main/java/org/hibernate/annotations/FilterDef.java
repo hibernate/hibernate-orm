@@ -10,6 +10,7 @@ import java.lang.annotation.Target;
 
 import org.hibernate.Incubating;
 
+import static java.lang.annotation.ElementType.MODULE;
 import static java.lang.annotation.ElementType.PACKAGE;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
@@ -65,7 +66,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * @see org.hibernate.Filter
  * @see DialectOverride.FilterDefs
  */
-@Target({TYPE, PACKAGE})
+@Target({TYPE, PACKAGE, MODULE})
 @Retention(RUNTIME)
 @Repeatable(FilterDefs.class)
 public @interface FilterDef {

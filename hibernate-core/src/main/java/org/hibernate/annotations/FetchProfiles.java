@@ -7,6 +7,7 @@ package org.hibernate.annotations;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
+import static java.lang.annotation.ElementType.MODULE;
 import static java.lang.annotation.ElementType.PACKAGE;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
@@ -16,7 +17,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *
  * @author Hardy Ferentschik
  */
-@Target({ TYPE, PACKAGE })
+@Target({ TYPE, PACKAGE, MODULE })
 @Retention(RUNTIME)
 public @interface FetchProfiles {
 	/**

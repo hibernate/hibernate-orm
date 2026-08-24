@@ -15,6 +15,7 @@ import java.util.Set;
 import javax.tools.JavaCompiler;
 import javax.tools.ToolProvider;
 
+import org.hibernate.annotations.FilterDef;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 
@@ -96,6 +97,102 @@ public class ModuleLevelAnnotationsTest {
 		finally {
 			StandardServiceRegistryBuilder.destroy( serviceRegistry );
 		}
+	}
+
+	@Test
+	void testHibernateNamedQueryOnModuleInfo(@TempDir Path tempDir) throws Exception {
+		final var module = compileAndLoadModule(
+				tempDir,
+				"""
+				@org.hibernate.annotations.NamedQuery(name = "hqlModuleQuery", query = "select e from ModuleEntity e")
+				module test.module.subject {
+					requires static jakarta.persistence;
+				}
+				""",
+				hibernateClasspath()
+		);
+
+		final var serviceRegistry = new StandardServiceRegistryBuilder().build();
+		try {
+			final var metadataSources = new MetadataSources( serviceRegistry );
+			metadataSources.addAnnotatedClass( ModuleEntity.class );
+			metadataSources.addModule( module );
+
+			final var metadata = metadataSources.buildMetadata();
+			assertNotNull(
+					metadata.getNamedHqlQueryMapping( "hqlModuleQuery" ),
+					"Hibernate @NamedQuery 'hqlModuleQuery' defined on module-info.java should be available"
+			);
+		}
+		finally {
+			StandardServiceRegistryBuilder.destroy( serviceRegistry );
+		}
+	}
+
+	@Test
+	void testFilterDefOnModuleInfo(@TempDir Path tempDir) throws Exception {
+		final var module = compileAndLoadModule(
+				tempDir,
+				"""
+				@org.hibernate.annotations.FilterDef(name = "moduleFilter")
+				module test.module.subject {
+					requires static jakarta.persistence;
+				}
+				""",
+				hibernateClasspath()
+		);
+
+		final var serviceRegistry = new StandardServiceRegistryBuilder().build();
+		try {
+			final var metadataSources = new MetadataSources( serviceRegistry );
+			metadataSources.addAnnotatedClass( ModuleEntity.class );
+			metadataSources.addModule( module );
+
+			final var metadata = metadataSources.buildMetadata();
+			assertNotNull(
+					metadata.getFilterDefinition( "moduleFilter" ),
+					"Filter definition 'moduleFilter' from module-info.java should be available"
+			);
+		}
+		finally {
+			StandardServiceRegistryBuilder.destroy( serviceRegistry );
+		}
+	}
+
+	@Test
+	void testFetchProfileOnModuleInfo(@TempDir Path tempDir) throws Exception {
+		final var module = compileAndLoadModule(
+				tempDir,
+				"""
+				@org.hibernate.annotations.FetchProfile(name = "moduleFetchProfile")
+				module test.module.subject {
+					requires static jakarta.persistence;
+				}
+				""",
+				hibernateClasspath()
+		);
+
+		final var serviceRegistry = new StandardServiceRegistryBuilder().build();
+		try {
+			final var metadataSources = new MetadataSources( serviceRegistry );
+			metadataSources.addAnnotatedClass( ModuleEntity.class );
+			metadataSources.addModule( module );
+
+			final var metadata = metadataSources.buildMetadata();
+			assertNotNull(
+					metadata.getFetchProfile( "moduleFetchProfile" ),
+					"Fetch profile 'moduleFetchProfile' from module-info.java should be available"
+			);
+		}
+		finally {
+			StandardServiceRegistryBuilder.destroy( serviceRegistry );
+		}
+	}
+
+	private static String hibernateClasspath() throws Exception {
+		final var codeSource = FilterDef.class.getProtectionDomain().getCodeSource();
+		assertNotNull( codeSource, "Cannot determine hibernate-core classpath location" );
+		return Path.of( codeSource.getLocation().toURI() ).toString();
 	}
 
 	private Module compileAndLoadModule(

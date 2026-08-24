@@ -67,7 +67,7 @@ public class TemporaryTableColumnNamingTest {
 		// ANIMAL.NAME_ and DOG.NAME_ are distinct columns of the same entity,
 		// so the second one is qualified with the name of the table it belongs to
 		assertThat( entityTableColumnNames( scope, Dog.class ) )
-				.containsExactlyInAnyOrder( "ANIMAL_ID_", "NAME_", "BREED_", "DOG_NAME_" );
+				.containsExactlyInAnyOrder( "ANIMAL_ID_", "ANIMAL0_NAME_", "BREED_", "DOG0_NAME_" );
 	}
 
 	private static List<String> entityTableColumnNames(SessionFactoryScope scope, Class<?> entityType) {

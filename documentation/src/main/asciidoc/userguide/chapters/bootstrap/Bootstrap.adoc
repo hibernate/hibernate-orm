@@ -183,6 +183,9 @@ Configuration cfg = new Configuration()
     // reads package-level (package-info.class) annotations in the named package
     .addPackage( "org.hibernate.auction" )
 
+    // note: module-level (module-info.class) annotations can be registered
+    // via MetadataSources.addModule(Module) when scanning is not available
+
     .setProperty( "hibernate.dialect", "org.hibernate.dialect.H2Dialect" )
     .setProperty( "hibernate.connection.datasource", "java:comp/env/jdbc/test" )
     .setProperty( "hibernate.order_updates", "true" );

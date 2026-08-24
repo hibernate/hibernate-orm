@@ -464,6 +464,9 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 				if ( sources.getAnnotatedPackages() != null ) {
 					sources.getAnnotatedPackages().forEach( newSources::addPackage );
 				}
+				if ( sources.getAnnotatedModules() != null ) {
+					sources.getAnnotatedModules().forEach( newSources::addModule );
+				}
 				if ( sources.getExtraQueryImports() != null ) {
 					sources.getExtraQueryImports().forEach( newSources::addQueryImport );
 				}

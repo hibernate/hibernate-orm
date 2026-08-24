@@ -164,9 +164,27 @@ public final class AnnotationBinder {
 		}
 	}
 
-	private static void bindNamedEntityGraphs(ClassDetails packageInfoClassDetails, MetadataBuildingContext context) {
+	public static void bindModule(Module module, MetadataBuildingContext context) {
+		final var moduleDetails = modelsContext( context ).getModuleDetailsRegistry()
+				.resolveModuleDetails( module );
+
+		registerGlobalGenerators( moduleDetails, context );
+
+		bindTypeDescriptorRegistrations( moduleDetails, context );
+		bindEmbeddableInstantiatorRegistrations( moduleDetails, context );
+		bindUserTypeRegistrations( moduleDetails, context );
+		bindCompositeUserTypeRegistrations( moduleDetails, context );
+		bindConverterRegistrations( moduleDetails, context );
+
+		bindQueries( moduleDetails, context );
+		bindFilterDefs( moduleDetails, context );
+
+		bindNamedEntityGraphs( moduleDetails, context );
+	}
+
+	private static void bindNamedEntityGraphs(AnnotationTarget annotationTarget, MetadataBuildingContext context) {
 		final var collector = context.getMetadataCollector();
-		packageInfoClassDetails.forEachRepeatedAnnotationUsages(
+		annotationTarget.forEachRepeatedAnnotationUsages(
 				HibernateAnnotations.NAMED_ENTITY_GRAPH,
 				modelsContext( context ),
 				annotation -> collector.addNamedEntityGraph( new NamedEntityGraphDefinition(
@@ -468,6 +486,12 @@ public final class AnnotationBinder {
 		if ( packageInfoClassDetails != null ) {
 			bindFetchProfiles( packageInfoClassDetails, context );
 		}
+	}
+
+	public static void bindFetchProfilesForModule(Module module, MetadataBuildingContext context) {
+		final var moduleDetails = modelsContext( context ).getModuleDetailsRegistry()
+				.resolveModuleDetails( module );
+		bindFetchProfiles( moduleDetails, context );
 	}
 
 	private static void bindFetchProfiles(AnnotationTarget annotatedElement, MetadataBuildingContext context) {

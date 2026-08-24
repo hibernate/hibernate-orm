@@ -19,6 +19,7 @@ import org.hibernate.jpa.boot.spi.EntityCallbackDefinition;
 import org.hibernate.jpa.boot.spi.ListenerCallbackDefinition;
 import org.hibernate.jpa.event.spi.CallbackType;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.models.spi.AnnotationTarget;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MethodDetails;
 import org.hibernate.models.spi.ModelsContext;
@@ -46,6 +47,7 @@ public final class CallbackDefinitionResolver {
 		final List<CallbackDefinition> callbackDefinitions = new ArrayList<>();
 		final List<String> callbacksMethodNames = new ArrayList<>();
 		final List<LifecycleEventHandler> orderedPackageListeners = new ArrayList<>();
+		final List<LifecycleEventHandler> orderedModuleListeners = new ArrayList<>();
 		final List<LifecycleEventHandler> orderedListeners = new ArrayList<>();
 		final List<LifecycleEventHandler> orderedDefaultListeners = new ArrayList<>();
 
@@ -81,6 +83,7 @@ public final class CallbackDefinitionResolver {
 		while ( currentClazz != null );
 
 		applyPackageListeners( entityClass, orderedPackageListeners, modelsContext );
+		applyModuleListeners( entityClass, orderedModuleListeners, modelsContext );
 
 		//handle default listeners
 		if ( !stopDefaultListeners ) {
@@ -104,6 +107,13 @@ public final class CallbackDefinitionResolver {
 			}
 		}
 		for ( var listenerRegistration : orderedPackageListeners ) {
+			final var callbackDefinition =
+					resolveListenerCallback( listenerRegistration, entityClass, callbackType );
+			if ( callbackDefinition != null ) {
+				callbackDefinitions.add( 0, callbackDefinition );
+			}
+		}
+		for ( var listenerRegistration : orderedModuleListeners ) {
 			final var callbackDefinition =
 					resolveListenerCallback( listenerRegistration, entityClass, callbackType );
 			if ( callbackDefinition != null ) {
@@ -180,13 +190,13 @@ public final class CallbackDefinitionResolver {
 	}
 
 	private static void applyListeners(
-			ClassDetails currentClazz,
+			AnnotationTarget annotationTarget,
 			ClassDetails entityClass,
 			List<LifecycleEventHandler> listOfListeners,
 			ModelsContext sourceModelContext) {
 		final var classDetailsRegistry = sourceModelContext.getClassDetailsRegistry();
 
-		final var entityListeners = currentClazz.getDirectAnnotationUsage( EntityListeners.class );
+		final var entityListeners = annotationTarget.getDirectAnnotationUsage( EntityListeners.class );
 		if ( entityListeners != null ) {
 			final var listenerClasses = entityListeners.value();
 			int size = listenerClasses.length;
@@ -200,7 +210,7 @@ public final class CallbackDefinitionResolver {
 		}
 
 		if ( useAnnotationAnnotatedByListener ) {
-			for ( var metaAnnotatedUsage : currentClazz.getMetaAnnotated( EntityListeners.class, sourceModelContext ) ) {
+			for ( var metaAnnotatedUsage : annotationTarget.getMetaAnnotated( EntityListeners.class, sourceModelContext ) ) {
 				final var descriptor =
 						sourceModelContext.getAnnotationDescriptorRegistry()
 								.getDescriptor( metaAnnotatedUsage.getClass() );
@@ -233,6 +243,18 @@ public final class CallbackDefinitionResolver {
 			}
 			catch (ClassLoadingException ignore) {
 			}
+		}
+	}
+
+	private static void applyModuleListeners(
+			ClassDetails entityClass,
+			List<LifecycleEventHandler> listOfListeners,
+			ModelsContext sourceModelContext) {
+		final var module = entityClass.toJavaClass().getModule();
+		if ( module.isNamed() ) {
+			final var moduleDetails = sourceModelContext.getModuleDetailsRegistry()
+					.resolveModuleDetails( module );
+			applyListeners( moduleDetails, entityClass, listOfListeners, sourceModelContext );
 		}
 	}
 

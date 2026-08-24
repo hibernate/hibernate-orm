@@ -25,6 +25,9 @@ public interface ScanningResult {
 	/// All discovered package names (without `package-info`).
 	Set<String> discoveredPackages();
 
+	/// All discovered module names (from `module-info.class` entries).
+	Set<String> discoveredModules();
+
 	/// All discovered class names.
 	Set<String> discoveredClasses();
 

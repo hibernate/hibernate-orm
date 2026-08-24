@@ -227,7 +227,7 @@ public class CteInsertHandler implements InsertHandler {
 			final List<Values> valuesList = new ArrayList<>( sqmValuesList.size() );
 			for ( SqmValues sqmValues : sqmValuesList ) {
 				final Values values = sqmConverter.visitValues( sqmValues );
-				additionalInsertValues.applyValues( values );
+				additionalInsertValues.applyValues( values, sqmValuesList.size() );
 				valuesList.add( values );
 			}
 			final QuerySpec querySpec = new QuerySpec( true );

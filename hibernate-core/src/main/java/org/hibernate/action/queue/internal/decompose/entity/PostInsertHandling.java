@@ -9,7 +9,7 @@ import org.hibernate.action.queue.spi.decompose.entity.InsertCacheHandling;
 import jakarta.annotation.Nullable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.action.internal.AbstractEntityInsertAction;
-import org.hibernate.action.internal.EntityIdentityInsertAction;
+import org.hibernate.action.internal.DelayableEntityInsertAction;
 import org.hibernate.action.internal.EntityInsertAction;
 import org.hibernate.action.queue.spi.bind.GeneratedValuesCollector;
 import org.hibernate.action.queue.spi.bind.PostExecutionCallback;
@@ -37,7 +37,7 @@ import org.hibernate.persister.entity.EntityPersister;
 /// See [ - Marking the action as executed].
 ///
 /// See [EntityInsertAction].
-/// See [org.hibernate.action.internal.EntityIdentityInsertAction].
+/// See [DelayableEntityInsertAction].
 /// See [GeneratedValuesCollector].
 ///
 /// @author Steve Ebersole
@@ -112,7 +112,7 @@ public class PostInsertHandling implements PostExecutionCallback {
 			// 10. Mark action as executed
 			insertAction.markExecuted();
 		}
-		else if ( action instanceof EntityIdentityInsertAction identityInsertAction ) {
+		else if ( action instanceof DelayableEntityInsertAction identityInsertAction ) {
 			identityInsertAction.postInsert();
 
 			final var statistics = session.getFactory().getStatistics();
@@ -141,7 +141,7 @@ public class PostInsertHandling implements PostExecutionCallback {
 		if ( generatedId != null ) {
 			identifierHandle.set( generatedId );
 			persister.setIdentifier( entity, generatedId, session );
-			if ( action instanceof EntityIdentityInsertAction identityInsertAction ) {
+			if ( action instanceof DelayableEntityInsertAction identityInsertAction ) {
 				identityInsertAction.setGeneratedId( generatedId );
 				final var entityKey = session.generateEntityKey( generatedId, persister );
 				identityInsertAction.setEntityKey( entityKey );
@@ -197,7 +197,7 @@ public class PostInsertHandling implements PostExecutionCallback {
 			final Object rowId = generatedValues.getGeneratedValue( persister.getRowIdMapping() );
 			if ( rowId != null ) {
 				persistenceContext.replaceEntityEntryRowId( action.getInstance(), rowId );
-				if ( action instanceof EntityIdentityInsertAction identityInsertAction ) {
+				if ( action instanceof DelayableEntityInsertAction identityInsertAction ) {
 					identityInsertAction.setRowId( rowId );
 				}
 			}

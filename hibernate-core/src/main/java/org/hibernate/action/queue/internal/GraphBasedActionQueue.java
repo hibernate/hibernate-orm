@@ -17,7 +17,7 @@ import org.hibernate.action.internal.CollectionRemoveAction;
 import org.hibernate.action.internal.CollectionUpdateAction;
 import org.hibernate.action.internal.EntityActionVetoException;
 import org.hibernate.action.internal.EntityDeleteAction;
-import org.hibernate.action.internal.EntityIdentityInsertAction;
+import org.hibernate.action.internal.DelayableEntityInsertAction;
 import org.hibernate.action.internal.EntityInsertAction;
 import org.hibernate.action.internal.EntityUpdateAction;
 import org.hibernate.action.internal.OrphanRemovalAction;
@@ -187,11 +187,11 @@ public class GraphBasedActionQueue implements ActionQueue {
 	/// Adds an entity (IDENTITY) insert action.
 	///
 	/// @param action The action representing the entity insertion
-	public void addAction(EntityIdentityInsertAction action) {
+	public void addAction(DelayableEntityInsertAction action) {
 		ACTION_LOGGER.addingEntityIdentityInsertAction(action.getEntityName());
 		addInsertAction(
 				deferIdentityInserts && action.isEarlyInsert()
-						? EntityIdentityInsertAction.delayedCopy( action )
+						? DelayableEntityInsertAction.delayedCopy( action )
 						: action
 		);
 	}

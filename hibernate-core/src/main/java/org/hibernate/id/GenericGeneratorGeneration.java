@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
@@ -24,6 +25,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.AnnotationBasedGenerator;
 import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.generator.EventType;
+import org.hibernate.generator.GenerationRequests;
 import org.hibernate.generator.Generator;
 import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.generator.OnExecutionGenerator;
@@ -175,6 +177,19 @@ public class GenericGeneratorGeneration
 			Object currentValue,
 			EventType eventType) {
 		return beforeExecutionGenerator().generate( session, owner, currentValue, eventType );
+	}
+
+	@Override
+	public @Nonnull Object[] generateBatch(
+			@Nonnull SharedSessionContractImplementor session,
+			@Nonnull GenerationRequests requests,
+			@Nonnull EventType eventType) {
+		return beforeExecutionGenerator().generateBatch( session, requests, eventType );
+	}
+
+	@Override
+	public boolean supportsBatchGeneration() {
+		return beforeExecutionGenerator().supportsBatchGeneration();
 	}
 
 	@Override

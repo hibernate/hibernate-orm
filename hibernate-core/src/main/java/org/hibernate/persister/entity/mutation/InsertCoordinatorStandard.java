@@ -20,6 +20,7 @@ import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.generator.EventType;
 import org.hibernate.generator.Generator;
 import org.hibernate.generator.OnExecutionGenerator;
+import org.hibernate.event.spi.BatchGenerationContext;
 import org.hibernate.generator.values.GeneratedValues;
 import org.hibernate.id.CompositeNestedGeneratedValueGenerator;
 import org.hibernate.metamodel.mapping.AttributeMapping;
@@ -122,7 +123,11 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 				: doStaticInserts( id, values, entity, session );
 	}
 
-	protected boolean preInsertInMemoryValueGeneration(Object[] values, Object entity, SharedSessionContractImplementor session) {
+	protected boolean preInsertInMemoryValueGeneration(
+			Object[] values,
+			Object entity,
+			SharedSessionContractImplementor session,
+			@Nullable BatchGenerationContext batchContext) {
 		final var persister = entityPersister();
 		boolean foundStateDependentGenerator = false;
 		if ( persister.hasPreInsertGeneratedProperties() ) {
@@ -132,13 +137,24 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 				if ( generator != null
 						&& generator.generatesOnInsert()
 						&& generator.generatedBeforeExecution( entity, session ) ) {
-					values[i] = ( (BeforeExecutionGenerator) generator ).generate( session, entity, values[i], INSERT );
-					persister.setValue( entity, i, values[i] );
+					final var beforeExecutionGenerator = (BeforeExecutionGenerator) generator;
+					if ( batchContext != null && beforeExecutionGenerator.supportsBatchGeneration() ) {
+						batchContext.register( beforeExecutionGenerator, i, entity, values, persister, INSERT );
+						values[i] = BatchGenerationContext.PLACEHOLDER;
+					}
+					else {
+						values[i] = beforeExecutionGenerator.generate( session, entity, values[i], INSERT );
+						persister.setValue( entity, i, values[i] );
+					}
 					foundStateDependentGenerator = foundStateDependentGenerator || generator.generatedOnExecution();
 				}
 			}
 		}
 		return foundStateDependentGenerator;
+	}
+
+	protected boolean preInsertInMemoryValueGeneration(Object[] values, Object entity, SharedSessionContractImplementor session) {
+		return preInsertInMemoryValueGeneration( values, entity, session, null );
 	}
 
 	public static class InsertValuesAnalysis implements ValuesAnalysis {

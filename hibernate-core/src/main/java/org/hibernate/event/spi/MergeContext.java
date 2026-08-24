@@ -10,6 +10,7 @@ import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Set;
 
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.pretty.MessageHelper;
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
@@ -70,7 +71,7 @@ import jakarta.annotation.Nullable;
  *
  * @author Gail Badner
  */
-public class MergeContext implements Map<Object,Object> {
+public class MergeContext implements Map<Object,Object>, ManagedOperationContext {
 
 	private final EventSource session;
 	private final EntityCopyObserver entityCopyObserver;
@@ -92,6 +93,9 @@ public class MergeContext implements Map<Object,Object> {
 	private final Map<Object,Boolean> mergeEntityToOperatedOnFlagMap = new IdentityHashMap<>( 10 );
 		// key is a merge entity;
 		// value is a flag indicating if the merge entity is currently in the merge process.
+
+
+	private @Nullable BatchGenerationContext batchGenerationContext;
 
 	public MergeContext(@Nonnull EventSource session, @Nonnull EntityCopyObserver entityCopyObserver){
 		this.session = session;
@@ -372,5 +376,20 @@ public class MergeContext implements Map<Object,Object> {
 
 	public @Nonnull EventSource getEventSource() {
 		return session;
+	}
+
+	@Override
+	public @Nonnull BatchGenerationContext getBatchGenerationContext() {
+		if ( batchGenerationContext == null ) {
+			batchGenerationContext = new BatchGenerationContext();
+		}
+		return batchGenerationContext;
+	}
+
+	@Override
+	public void resolveBatchGenerators(@Nonnull SharedSessionContractImplementor session) {
+		if ( batchGenerationContext != null ) {
+			batchGenerationContext.resolve( session );
+		}
 	}
 }

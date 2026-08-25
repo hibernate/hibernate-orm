@@ -23,3 +23,8 @@ Supported dialects: PostgreSQL, CockroachDB, H2, HSQLDB, SAP HANA, and SQL Serve
 == `@Bag` and `@List` at type, package, and module level
 
 The `@Bag` annotation can now be placed on a class, `package-info.java`, or `module-info.java` to apply BAG semantics to all `java.util.List` attributes in that scope. Similarly, a new `@List` annotation forces LIST semantics (ordered, indexed list) at the same levels.
+
+[[default-schema]]
+== `@DefaultSchema` annotation
+
+A new `@DefaultSchema` annotation can be placed on an entity class, `package-info.java`, or `module-info.java` to set the default schema and/or catalog for entities in that scope. The explicit `@Table(schema=...)` or `@Table(catalog=...)` on an entity still takes precedence.

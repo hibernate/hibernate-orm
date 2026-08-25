@@ -245,7 +245,8 @@ It only makes sense to explicitly specify the `schema` in annotations if the dom
 Otherwise, it's a bad idea to hardcode the schema (or catalog) in a `@Table` annotation.
 Instead:
 
-- set the configuration property `hibernate.default_schema` (or `hibernate.default_catalog`), or
+- set the configuration property `hibernate.default_schema` (or `hibernate.default_catalog`),
+- use `@DefaultSchema(schema="...")` on a class, `package-info.java`, or `module-info.java` to scope the default schema to specific entities, or
 - simply specify the schema in the JDBC connection URL.
 ====
 

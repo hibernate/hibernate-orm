@@ -23,7 +23,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * @author stliu
  */
-@DomainModel(annotatedClasses = {Contact.class, Org.class, Country.class})
+@DomainModel(
+		xmlMappings = "org/hibernate/orm/test/stateless/Contact.orm.xml"
+)
 @SessionFactory
 @ServiceRegistry(
 		settings = @Setting(name = Environment.MAX_FETCH_DEPTH, value = "1")

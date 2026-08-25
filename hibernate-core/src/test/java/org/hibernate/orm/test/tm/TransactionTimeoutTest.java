@@ -31,7 +31,9 @@ import static org.junit.jupiter.api.Assertions.fail;
 				@Setting( name = AvailableSettings.IMPLICIT_NAMING_STRATEGY, value = "legacy-hbm" )
 		}
 )
-@DomainModel(annotatedClasses = {Person.class})
+@DomainModel(
+		xmlMappings = {"org/hibernate/orm/test/jdbc/Mappings.orm.xml"}
+)
 @SessionFactory
 public class TransactionTimeoutTest {
 

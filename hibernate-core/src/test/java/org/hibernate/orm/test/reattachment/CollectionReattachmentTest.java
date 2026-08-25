@@ -12,7 +12,9 @@ import org.junit.jupiter.api.Test;
  *
  * @author Steve Ebersole
  */
-@DomainModel(annotatedClasses = {Parent.class, Child.class})
+@DomainModel(
+		xmlMappings = "org/hibernate/orm/test/reattachment/Mappings.orm.xml"
+)
 @SessionFactory
 public class CollectionReattachmentTest {
 

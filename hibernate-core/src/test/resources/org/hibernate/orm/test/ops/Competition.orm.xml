@@ -1,4 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
 <entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping" version="8.0">
     <package>org.hibernate.orm.test.ops</package>
     <attribute-accessor>property</attribute-accessor>
@@ -52,7 +56,6 @@
                 <jdbc-type>org.hibernate.type.descriptor.jdbc.IntegerJdbcType</jdbc-type>
             </id>
             <basic name="name" fetch="EAGER" optional="true" optimistic-lock="true">
-                <generated>NEVER</generated>
                 <java-type>org.hibernate.type.descriptor.java.StringJavaType</java-type>
                 <jdbc-type>org.hibernate.type.descriptor.jdbc.VarcharJdbcType</jdbc-type>
             </basic>

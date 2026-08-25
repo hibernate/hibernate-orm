@@ -2042,6 +2042,33 @@ public class HbmTransformationJaxbTests {
 	}
 
 	@Test
+	@JiraKey( "HHH-20814" )
+	public void testCollectionLoaderTransformation(ServiceRegistryScope scope) {
+		transformAndVerify( "xml/jaxb/mapping/collection-loader/hbm.xml", scope, transformed -> {
+			final JaxbEntityImpl ownerEntity = transformed.getEntities().stream()
+					.filter( e -> "Owner".equals( e.getClazz() ) )
+					.findFirst()
+					.orElseThrow();
+
+			assertThat( ownerEntity.getAttributes().getOneToManyAttributes() ).hasSize( 1 );
+
+			final JaxbOneToManyImpl employments = ownerEntity.getAttributes().getOneToManyAttributes().get( 0 );
+			assertThat( employments.getName() ).isEqualTo( "employments" );
+
+			assertThat( employments.getSqlSelect() )
+					.as( "collection <loader query-ref> to a <load-collection> query should become <sql-select>" )
+					.isNotNull();
+			assertThat( employments.getSqlSelect().getSql() )
+					.as( "sql-select should carry the referenced native query SQL" )
+					.contains( "FROM Employment" );
+
+			assertThat( transformed.getNamedNativeQueries() )
+					.as( "a <load-collection> query is consumed as a collection loader and must not be emitted as a named native query" )
+					.noneMatch( q -> "ownerEmployments".equals( q.getName() ) );
+		} );
+	}
+
+	@Test
 	@JiraKey( "HHH-20703" )
 	public void testCollectionTypeTypedefResolution(ServiceRegistryScope scope) {
 		transformAndVerify( "xml/jaxb/mapping/collection-type-typedef/hbm.xml", scope, transformed -> {

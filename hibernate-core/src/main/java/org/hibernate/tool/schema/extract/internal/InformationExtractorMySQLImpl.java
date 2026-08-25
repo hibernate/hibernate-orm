@@ -59,8 +59,9 @@ public class InformationExtractorMySQLImpl extends InformationExtractorJdbcDatab
 					b.unique_constraint_name as PK_NAME
 				from information_schema.key_column_usage a
 				join information_schema.referential_constraints b using (constraint_catalog, constraint_schema, constraint_name)
+				where a.referenced_table_name is not null
 				""";
-		return getForeignKeysSql + (tableSchema == null ? "" : " where a.table_schema = ?")
+		return getForeignKeysSql + (tableSchema == null ? "" : " and a.table_schema = ?")
 				+ " order by a.referenced_table_schema, a.referenced_table_name, a.constraint_name, a.position_in_unique_constraint";
 	}
 

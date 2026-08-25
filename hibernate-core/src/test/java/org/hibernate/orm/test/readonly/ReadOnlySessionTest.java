@@ -29,7 +29,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @author Gail Badner
  */
 @DomainModel(
-		annotatedClasses = {DataPoint.class, Owner.class, Info.class, Container.class, TextHolder.class}
+		xmlMappings = {
+				"org/hibernate/orm/test/readonly/DataPoint.orm.xml",
+				"org/hibernate/orm/test/readonly/TextHolder.orm.xml"
+		}
 )
 public class ReadOnlySessionTest extends AbstractReadOnlyTest {
 

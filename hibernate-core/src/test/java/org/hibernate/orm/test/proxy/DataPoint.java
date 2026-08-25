@@ -3,30 +3,16 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.proxy;
-
 import java.io.Serializable;
 import java.math.BigDecimal;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
-
-@Entity
-@Table(uniqueConstraints = @UniqueConstraint(columnNames = {"xval", "yval"}))
+/**
+ * @author Gavin King
+ */
 public class DataPoint implements Serializable {
-	@Id
-	@GeneratedValue
 	private long id;
-
-	@Column(name = "xval", nullable = false, length = 4)
 	private BigDecimal x;
-
-	@Column(name = "yval", nullable = false, length = 4)
 	private BigDecimal y;
-
 	private String description;
 
 	public DataPoint() {

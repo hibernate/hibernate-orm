@@ -4,19 +4,11 @@
  */
 package org.hibernate.orm.test.stateless.fetching;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
 
 /**
  * @author Steve Ebersole
  */
-@Entity
-@Table(name = "SF_USER")
 public class User {
-	@Id
-	@GeneratedValue
 	private Long id;
 	private String name;
 

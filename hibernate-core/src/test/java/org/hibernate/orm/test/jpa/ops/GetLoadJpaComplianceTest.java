@@ -10,9 +10,9 @@ import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;
 
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
-import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.Setting;
@@ -33,7 +33,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 				Workload.class
 		},
 		integrationSettings = { @Setting(name = AvailableSettings.JPA_PROXY_COMPLIANCE, value = "true") },
-		xmlMappings = { "org/hibernate/orm/test/jpa/ops/Node.hbm.xml", "org/hibernate/orm/test/jpa/ops/Employer.hbm.xml" }
+		xmlMappings = { "org/hibernate/orm/test/jpa/ops/Node.orm.xml", "org/hibernate/orm/test/jpa/ops/Employer.orm.xml" }
 )
 public class GetLoadJpaComplianceTest {
 
@@ -44,7 +44,7 @@ public class GetLoadJpaComplianceTest {
 				entityManager -> {
 					try {
 						entityManager.getTransaction().begin();
-						Session s = (Session) entityManager.getDelegate();
+						Session s = entityManager.unwrap(Session.class);
 
 						assertNull( s.get( Workload.class, 999 ) );
 
@@ -97,7 +97,7 @@ public class GetLoadJpaComplianceTest {
 				entityManager -> {
 					try {
 						entityManager.getTransaction().begin();
-						Session s = (Session) entityManager.getDelegate();
+						Session s = entityManager.unwrap( Session.class );
 
 						assertNull( s.get( Employee.class, 999 ) );
 

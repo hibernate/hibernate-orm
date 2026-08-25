@@ -4,19 +4,11 @@
  */
 package org.hibernate.orm.test.jdbc;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
 
 /**
  * @author Steve Ebersole
  */
-@Entity
-@Table(name = "T_JDBC_PERSON")
 public class Person {
-	@Id
-	@GeneratedValue
 	private Long id;
 	private String firstName;
 	private String lastName;

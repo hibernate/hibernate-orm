@@ -12,7 +12,7 @@ import java.util.Set;
 public class Node {
 	private String name;
 	private Node parent;
-	private Set children = new HashSet();
+	private Set<Node> children = new HashSet<>();
 	private String description;
 
 	public Node() {
@@ -22,11 +22,11 @@ public class Node {
 		this.name = name;
 	}
 
-	public Set getChildren() {
+	public Set<Node> getChildren() {
 		return children;
 	}
 
-	public void setChildren(Set children) {
+	public void setChildren(Set<Node> children) {
 		this.children = children;
 	}
 

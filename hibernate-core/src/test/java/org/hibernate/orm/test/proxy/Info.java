@@ -4,16 +4,14 @@
  */
 package org.hibernate.orm.test.proxy;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
 
-@Entity
+/**
+ * todo: describe Info
+ *
+ * @author Steve Ebersole
+ */
 public class Info {
-	@Id
-	@GeneratedValue
 	private Long id;
-
 	private String details;
 
 	public Info() {

@@ -19,7 +19,7 @@ import org.junit.jupiter.api.Test;
 @RequiresDialect(value = OracleDialect.class)
 @JiraKey(value = "HHH-13104")
 @DomainModel(
-		xmlMappings = "org/hibernate/orm/test/ops/Competition.hbm.xml"
+		xmlMappings = "org/hibernate/orm/test/ops/Competition.orm.xml"
 )
 @SessionFactory
 public class OracleNoColumnInsertTest {

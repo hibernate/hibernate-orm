@@ -1,4 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
 <entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping" version="8.0">
     <package>org.hibernate.orm.test.onetoone.optional</package>
     <attribute-accessor>field</attribute-accessor>
@@ -31,7 +35,6 @@
         <batch-size>-1</batch-size>
         <attributes>
             <one-to-one name="address" fetch="EAGER" fetch-mode="JOIN" optional="true" orphan-removal="false">
-                <foreign-key/>
                 <cascade>
                     <cascade-all/>
                 </cascade>
@@ -64,17 +67,14 @@
                 <jdbc-type>org.hibernate.type.descriptor.jdbc.VarcharJdbcType</jdbc-type>
             </id>
             <basic name="street" fetch="EAGER" optional="true" optimistic-lock="true">
-                <generated>NEVER</generated>
                 <java-type>org.hibernate.type.descriptor.java.StringJavaType</java-type>
                 <jdbc-type>org.hibernate.type.descriptor.jdbc.VarcharJdbcType</jdbc-type>
             </basic>
             <basic name="state" fetch="EAGER" optional="true" optimistic-lock="true">
-                <generated>NEVER</generated>
                 <java-type>org.hibernate.type.descriptor.java.StringJavaType</java-type>
                 <jdbc-type>org.hibernate.type.descriptor.jdbc.VarcharJdbcType</jdbc-type>
             </basic>
             <basic name="zip" fetch="EAGER" optional="true" optimistic-lock="true">
-                <generated>NEVER</generated>
                 <java-type>org.hibernate.type.descriptor.java.StringJavaType</java-type>
                 <jdbc-type>org.hibernate.type.descriptor.jdbc.VarcharJdbcType</jdbc-type>
             </basic>

@@ -10,7 +10,6 @@ import org.hibernate.Hibernate;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.MappingSettings;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -28,13 +27,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @author Steve Ebersole
  */
 @DomainModel(
-		annotatedClasses = { Producer.class, Product.class, Vendor.class, User.class, Resource.class, Task.class }
+		annotatedClasses = { Producer.class, Product.class, Vendor.class },
+		xmlMappings = "org/hibernate/orm/test/stateless/fetching/Mappings.orm.xml"
 
 )
 @ServiceRegistry(
 		settings = {
 				@Setting(name = AvailableSettings.PHYSICAL_NAMING_STRATEGY, value = "org.hibernate.orm.test.stateless.fetching.TestingNamingStrategy"),
-				@Setting(name = MappingSettings.TRANSFORM_HBM_XML, value = "true")
 		}
 )
 @SessionFactory

@@ -31,7 +31,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * @author Gavin King
  */
-@DomainModel(annotatedClasses = {DataPoint.class, DataMetaPoint.class})
+@DomainModel(
+		xmlMappings = {
+				"org/hibernate/orm/test/pagination/DataPoint.orm.xml"
+		}
+)
 public class PaginationTest {
 	public static final int NUMBER_OF_TEST_ROWS = 100;
 

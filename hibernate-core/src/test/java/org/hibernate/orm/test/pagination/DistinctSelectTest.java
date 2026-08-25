@@ -25,7 +25,9 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Valotasios Yoryos
  */
 @JiraKey(value = "HHH-5715")
-@DomainModel(annotatedClasses = {Entry.class, Tag.class})
+@DomainModel(
+		xmlMappings = "org/hibernate/orm/test/pagination/EntryTag.orm.xml"
+)
 @SessionFactory
 public class DistinctSelectTest {
 	private static final int NUM_OF_USERS = 30;

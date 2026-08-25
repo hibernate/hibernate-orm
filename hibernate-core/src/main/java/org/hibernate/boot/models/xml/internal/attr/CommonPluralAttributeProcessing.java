@@ -193,6 +193,8 @@ public class CommonPluralAttributeProcessing {
 
 		XmlAnnotationHelper.applyFilters( jaxbPluralAttribute.getFilters(), memberDetails, xmlDocumentContext );
 		XmlAnnotationHelper.applySqlRestriction( jaxbPluralAttribute.getSqlRestriction(), memberDetails, xmlDocumentContext );
+		XmlAnnotationHelper.applySqlSelect( jaxbPluralAttribute.getSqlSelect(), memberDetails, xmlDocumentContext );
+		XmlAnnotationHelper.applyHqlSelect( jaxbPluralAttribute.getHqlSelect(), memberDetails, xmlDocumentContext );
 		XmlAnnotationHelper.applyCustomSql(
 				jaxbPluralAttribute.getSqlInsert(),
 				memberDetails,

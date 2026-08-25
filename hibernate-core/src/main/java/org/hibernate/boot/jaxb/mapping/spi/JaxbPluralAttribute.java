@@ -101,6 +101,12 @@ public interface JaxbPluralAttribute extends JaxbPersistentAttribute, JaxbLockab
 	String getSqlRestriction();
 	void setSqlRestriction(String sqlRestriction);
 
+	JaxbSqlSelectImpl getSqlSelect();
+	void setSqlSelect(JaxbSqlSelectImpl value);
+
+	String getHqlSelect();
+	void setHqlSelect(String value);
+
 	JaxbCustomSqlImpl getSqlInsert();
 	void setSqlInsert(JaxbCustomSqlImpl sqlInsert);
 

@@ -26,20 +26,17 @@
             <natural-id mutable="true">
                 <basic name="userCode" fetch="EAGER" optional="false" optimistic-lock="true">
                     <column name="short_code" unique="false" nullable="false"/>
-                    <generated>NEVER</generated>
                     <java-type>org.hibernate.type.descriptor.java.StringJavaType</java-type>
                     <jdbc-type>org.hibernate.type.descriptor.jdbc.VarcharJdbcType</jdbc-type>
                 </basic>
                 <basic name="assignment" fetch="EAGER" optional="false" optimistic-lock="true">
                     <column name="assignment" unique="false" nullable="false"/>
-                    <generated>NEVER</generated>
                     <java-type>org.hibernate.type.descriptor.java.StringJavaType</java-type>
                     <jdbc-type>org.hibernate.type.descriptor.jdbc.VarcharJdbcType</jdbc-type>
                 </basic>
             </natural-id>
             <basic name="name" fetch="EAGER" optional="false" optimistic-lock="true">
                 <column name="name" unique="false" nullable="false"/>
-                <generated>NEVER</generated>
                 <java-type>org.hibernate.type.descriptor.java.StringJavaType</java-type>
                 <jdbc-type>org.hibernate.type.descriptor.jdbc.VarcharJdbcType</jdbc-type>
             </basic>
@@ -58,12 +55,10 @@
     <embeddable class="org.hibernate.orm.test.mapping.attrorder.TheComponent" name="org.hibernate.orm.test.mapping.attrorder.TheComponent" metadata-complete="true">
         <attributes>
             <basic name="nestedName" fetch="EAGER" optional="true" optimistic-lock="true">
-                <generated>NEVER</generated>
                 <java-type>org.hibernate.type.descriptor.java.StringJavaType</java-type>
                 <jdbc-type>org.hibernate.type.descriptor.jdbc.VarcharJdbcType</jdbc-type>
             </basic>
             <basic name="nestedAnything" fetch="EAGER" optional="true" optimistic-lock="true">
-                <generated>NEVER</generated>
                 <java-type>org.hibernate.type.descriptor.java.StringJavaType</java-type>
                 <jdbc-type>org.hibernate.type.descriptor.jdbc.VarcharJdbcType</jdbc-type>
             </basic>
@@ -72,12 +67,10 @@
     <embeddable class="TheComponent" name="TheComponent" metadata-complete="true">
         <attributes>
             <basic name="nestedName" fetch="EAGER" optional="true" optimistic-lock="true">
-                <generated>NEVER</generated>
                 <java-type>org.hibernate.type.descriptor.java.StringJavaType</java-type>
                 <jdbc-type>org.hibernate.type.descriptor.jdbc.VarcharJdbcType</jdbc-type>
             </basic>
             <basic name="nestedAnything" fetch="EAGER" optional="true" optimistic-lock="true">
-                <generated>NEVER</generated>
                 <java-type>org.hibernate.type.descriptor.java.StringJavaType</java-type>
                 <jdbc-type>org.hibernate.type.descriptor.jdbc.VarcharJdbcType</jdbc-type>
             </basic>

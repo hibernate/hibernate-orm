@@ -265,6 +265,9 @@ public class ManagedTypeProcessor {
 
 		XmlAnnotationHelper.applySqlRestriction( jaxbEntity.getSqlRestriction(), classDetails, xmlDocumentContext );
 
+		XmlAnnotationHelper.applySqlSelect( jaxbEntity.getSqlSelect(), classDetails, xmlDocumentContext );
+		XmlAnnotationHelper.applyHqlSelect( jaxbEntity.getHqlSelect(), classDetails, xmlDocumentContext );
+
 		XmlAnnotationHelper.applyCustomSql( jaxbEntity.getSqlInsert(), classDetails, HibernateAnnotations.SQL_INSERT, xmlDocumentContext );
 		XmlAnnotationHelper.applyCustomSql( jaxbEntity.getSqlUpdate(), classDetails, HibernateAnnotations.SQL_UPDATE, xmlDocumentContext );
 		XmlAnnotationHelper.applyCustomSql( jaxbEntity.getSqlDelete(), classDetails, HibernateAnnotations.SQL_DELETE, xmlDocumentContext );

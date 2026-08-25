@@ -928,6 +928,18 @@ public class HbmTransformationJaxbTests {
 		} );
 	}
 
+	@Test
+	@JiraKey( "HHH-20811" )
+	public void testExplicitPolymorphismIsUnsupported(ServiceRegistryScope scope) {
+		// The <class polymorphism="explicit"> attribute has no equivalent in mapping.xsd,
+		// so the transformer must route it through handleUnsupported.
+		assertThatThrownBy( () ->
+				transformAndVerify( "xml/jaxb/mapping/polymorphism-explicit/hbm.xml", scope, transformed -> {} )
+		)
+				.isInstanceOf( UnsupportedOperationException.class )
+				.hasMessageContaining( "polymorphism" );
+	}
+
 	private void transformAndVerify(
 			String resourceName,
 			ServiceRegistryScope scope,

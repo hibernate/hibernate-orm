@@ -36,7 +36,7 @@ While we try to keep requirements for contributing to a minimum, there are a few
 we ask that you mind.
 
 For code contributions, these guidelines include:
-* Respect the project code style: make sure to run spotless and checkstyle checks before commiting your changes, e.g. `./gradlew formatChecks`.
+* Respect the project code style: make sure to run spotless and checkstyle checks before committing your changes, e.g. `./gradlew formatChecks`.
 Project contains the basic set of formatting styles for IntelliJ IDEA in the [.idea](.idea) directory.
 You can also refer to more generic [IntelliJ IDEA](https://hibernate.org/community/contribute/intellij-idea/) or [Eclipse](https://hibernate.org/community/contribute/eclipse-ide/)
 guides for additional details.

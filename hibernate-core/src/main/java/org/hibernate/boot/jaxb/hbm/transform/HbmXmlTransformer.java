@@ -1052,9 +1052,7 @@ public class HbmXmlTransformer {
 			mappingEntity.getSynchronizeTables().add( synchronizedTable );
 		}
 
-		if ( hbmClass.getLoader() != null ) {
-			handleUnsupported( "<loader/> is not supported in mapping.xsd - use <sql-select/> or <hql-select/> instead" );
-		}
+		transferEntityLoader( hbmClass, mappingEntity );
 
 		if ( !hbmClass.getTuplizer().isEmpty() ) {
 			handleUnsupported( "<tuplizer/> is not supported" );
@@ -1521,6 +1519,13 @@ public class HbmXmlTransformer {
 				? hbmReturn.getClazz()
 				: hbmReturn.getEntityName();
 		entityResult.setEntityClass( getFullyQualifiedClassName( entityName ) );
+
+		// Transfer lock mode if specified
+		if ( hbmReturn.getLockMode() != null ) {
+			entityResult.setLockMode(
+					LockModeConverter.convertToLockModeType( hbmReturn.getLockMode() )
+			);
+		}
 
 		for ( var propertyReturn : hbmReturn.getReturnProperty() ) {
 			final var field = new JaxbFieldResultImpl();
@@ -3072,6 +3077,31 @@ public class HbmXmlTransformer {
 		}
 
 		transferCollectionLoader( source, target );
+	}
+
+	private void transferEntityLoader(EntityInfo hbmClass, JaxbEntityImpl mappingEntity) {
+		final var loader = hbmClass.getLoader();
+		if ( loader == null || isEmpty( loader.getQueryRef() ) ) {
+			return;
+		}
+		final String queryRef = loader.getQueryRef();
+
+		final var nativeQuery = findNamedNativeQuery( queryRef );
+		if ( nativeQuery != null ) {
+			mappingEntity.setSqlSelect( toSqlSelect( nativeQuery ) );
+			return;
+		}
+
+		final var hqlQuery = findNamedHqlQuery( queryRef );
+		if ( hqlQuery != null ) {
+			mappingEntity.setHqlSelect( extractQueryText( hqlQuery.getContent() ) );
+			return;
+		}
+
+		handleUnsupported(
+				"Entity <loader query-ref=\"%s\"> could not be resolved to a named query",
+				queryRef
+		);
 	}
 
 	private void transferCollectionLoader(PluralAttributeInfo source, JaxbPluralAttribute target) {

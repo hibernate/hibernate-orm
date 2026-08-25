@@ -39,7 +39,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 )
 @DomainModel( xmlMappings = "mappings/natural-id/immutable/ParentChildWithManyToOne.orm.xml" )
 @SessionFactory
-public class ImmutableManyToOneNaturalIdHbmTest {
+public class ImmutableManyToOneNaturalIdXmlMappingTest {
 
 	@BeforeEach
 	public void createTestData(SessionFactoryScope scope) {

@@ -24,7 +24,7 @@ import org.junit.jupiter.api.Test;
 				@Setting(name = Environment.STATEMENT_BATCH_SIZE, value = "0")
 		},
 		xmlMappings = {
-				"org/hibernate/orm/test/jpa/ops/Node.hbm.xml"
+				"org/hibernate/orm/test/jpa/ops/Node.orm.xml"
 		}
 )
 public class MergeTest {

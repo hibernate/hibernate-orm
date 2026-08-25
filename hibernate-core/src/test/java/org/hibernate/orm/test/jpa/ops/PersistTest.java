@@ -41,8 +41,8 @@ import static org.junit.jupiter.api.Assertions.fail;
 				@Setting(name = Environment.STATEMENT_BATCH_SIZE, value = "0")
 		},
 		xmlMappings = {
-				"org/hibernate/orm/test/jpa/ops/Node.hbm.xml",
-				"org/hibernate/orm/test/jpa/ops/Employer.hbm.xml"
+				"org/hibernate/orm/test/jpa/ops/Node.orm.xml",
+				"org/hibernate/orm/test/jpa/ops/Employer.orm.xml"
 		}
 )
 public class PersistTest {

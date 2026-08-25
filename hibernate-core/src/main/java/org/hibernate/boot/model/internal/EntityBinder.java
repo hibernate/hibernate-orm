@@ -130,6 +130,7 @@ import static org.hibernate.boot.model.internal.AnnotatedClassType.MAPPED_SUPERC
 import static org.hibernate.boot.model.internal.AnnotatedDiscriminatorColumn.DEFAULT_DISCRIMINATOR_COLUMN_NAME;
 import static org.hibernate.boot.model.internal.AnnotatedDiscriminatorColumn.buildDiscriminatorColumn;
 import static org.hibernate.boot.model.internal.AnnotatedJoinColumn.buildInheritanceJoinColumn;
+import static org.hibernate.boot.model.internal.BinderHelper.extractFromModule;
 import static org.hibernate.boot.model.internal.BinderHelper.extractFromPackage;
 import static org.hibernate.boot.model.internal.BinderHelper.getMappedSuperclassOrNull;
 import static org.hibernate.boot.model.internal.BinderHelper.getPath;
@@ -392,7 +393,12 @@ public class EntityBinder {
 			classToCheck = classToCheck.getSuperClass();
 		}
 
-		return extractFromPackage( annotationClass, classDetails, context );
+		final var fromPackage = extractFromPackage( annotationClass, classDetails, context );
+		if ( fromPackage != null ) {
+			return fromPackage;
+		}
+
+		return extractFromModule( annotationClass, classDetails, context );
 	}
 
 	private void handleCheckConstraints() {

@@ -18,3 +18,8 @@ IMPORTANT: If migrating from earlier versions, be sure to also check out the lin
 Schema management DDL now uses `CREATE SCHEMA IF NOT EXISTS` and `DROP SCHEMA IF EXISTS` for dialects which support these clauses, avoiding warnings when a schema already exists or has already been dropped.
 
 Supported dialects: PostgreSQL, CockroachDB, H2, HSQLDB, SAP HANA, and SQL Server (DROP only, version 13+).
+
+[[bag-list-scope]]
+== `@Bag` and `@List` at type, package, and module level
+
+The `@Bag` annotation can now be placed on a class, `package-info.java`, or `module-info.java` to apply BAG semantics to all `java.util.List` attributes in that scope. Similarly, a new `@List` annotation forces LIST semantics (ordered, indexed list) at the same levels.

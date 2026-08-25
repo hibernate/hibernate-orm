@@ -113,7 +113,7 @@ public interface HibernateAnnotations {
 	OrmAnnotationDescriptor<Bag, BagAnnotation> BAG = new OrmAnnotationDescriptor<>(
 			Bag.class,
 			BagAnnotation.class,
-			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.ANNOTATION ),
+			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.CLASS, Kind.PACKAGE, Kind.MODULE, Kind.ANNOTATION ),
 			false
 	);
 	OrmAnnotationDescriptor<BatchSize, BatchSizeAnnotation> BATCH_SIZE = new OrmAnnotationDescriptor<>(
@@ -548,6 +548,12 @@ public interface HibernateAnnotations {
 			ListIndexJdbcTypeCodeAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.ANNOTATION ),
 			true
+	);
+	OrmAnnotationDescriptor<List, ListAnnotation> LIST = new OrmAnnotationDescriptor<>(
+			List.class,
+			ListAnnotation.class,
+			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.CLASS, Kind.PACKAGE, Kind.MODULE, Kind.ANNOTATION ),
+			false
 	);
 	OrmAnnotationDescriptor<ManyToAny, ManyToAnyAnnotation> MANY_TO_ANY = new OrmAnnotationDescriptor<>(
 			ManyToAny.class,

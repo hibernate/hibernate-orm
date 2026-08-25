@@ -1054,6 +1054,29 @@ public class BinderHelper {
 	}
 
 	/**
+	 * Extract an annotation from the module-info for the module the given class is defined in
+	 *
+	 * @param annotationType The type of annotation to return
+	 * @param classDetails The class in the module
+	 * @param context The processing context
+	 *
+	 * @return The annotation or {@code null}
+	 */
+	public static <A extends Annotation> A extractFromModule(
+			Class<A> annotationType,
+			ClassDetails classDetails,
+			MetadataBuildingContext context) {
+		final var modelsContext = context.getBootstrapContext().getModelsContext();
+		final Module module = classDetails.toJavaClass().getModule();
+		if ( module.isNamed() ) {
+			return modelsContext.getModuleDetailsRegistry()
+					.resolveModuleDetails( module )
+					.getAnnotationUsage( annotationType, modelsContext );
+		}
+		return null;
+	}
+
+	/**
 	 * Extract an annotation from the package-info for the package the given class is defined in
 	 *
 	 * @param annotationType The type of annotation to return

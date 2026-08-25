@@ -150,6 +150,7 @@ import static org.hibernate.boot.model.internal.BinderHelper.aggregateCascadeTyp
 import static org.hibernate.boot.model.internal.BinderHelper.buildAnyValue;
 import static org.hibernate.boot.model.internal.BinderHelper.checkMappedByType;
 import static org.hibernate.boot.model.internal.BinderHelper.createSyntheticPropertyReference;
+import static org.hibernate.boot.model.internal.BinderHelper.extractFromModule;
 import static org.hibernate.boot.model.internal.BinderHelper.extractFromPackage;
 import static org.hibernate.boot.model.internal.BinderHelper.getFetchStyle;
 import static org.hibernate.boot.model.internal.BinderHelper.getPath;
@@ -922,10 +923,19 @@ public abstract class CollectionBinder {
 		}
 
 		final var modelsContext = buildingContext.getBootstrapContext().getModelsContext();
-		if ( !property.hasAnnotationUsage( Bag.class, modelsContext ) ) {
-			return determineCollectionClassification( determineSemanticJavaType( property ), property, buildingContext );
+		if ( property.hasAnnotationUsage( Bag.class, modelsContext ) ) {
+			return determineBagClassification( property, modelsContext );
 		}
 
+		if ( property.hasAnnotationUsage( org.hibernate.annotations.List.class, modelsContext ) ) {
+			return determineListClassification( property, modelsContext );
+		}
+
+		return determineCollectionClassification( determineSemanticJavaType( property ), property, buildingContext );
+	}
+
+	private static CollectionClassification determineBagClassification(
+			MemberDetails property, ModelsContext modelsContext) {
 		if ( property.hasAnnotationUsage( OrderColumn.class, modelsContext ) ) {
 			throw new AnnotationException( "Attribute '"
 					+ qualify( property.getDeclaringType().getName(), property.getName() )
@@ -953,6 +963,26 @@ public abstract class CollectionBinder {
 							collectionJavaType.getName(),
 							java.util.List.class.getName(),
 							java.util.Collection.class.getName()
+					)
+			);
+		}
+	}
+
+	private static CollectionClassification determineListClassification(
+			MemberDetails property, ModelsContext modelsContext) {
+		final var collectionJavaType = property.getType().determineRawClass().toJavaClass();
+		if ( java.util.List.class.equals( collectionJavaType ) ) {
+			return CollectionClassification.LIST;
+		}
+		else {
+			throw new AnnotationException(
+					String.format(
+							Locale.ROOT,
+							"Attribute '%s.%s' of type '%s' is annotated '@List' (lists are of type '%s')",
+							property.getDeclaringType().getName(),
+							property.getName(),
+							collectionJavaType.getName(),
+							java.util.List.class.getName()
 					)
 			);
 		}
@@ -1003,6 +1033,14 @@ public abstract class CollectionBinder {
 				return CollectionClassification.BAG;
 			}
 
+			// check for @Bag or @List on the owning class, package, or module
+			if ( hasBagAnnotation( property, buildingContext ) ) {
+				return CollectionClassification.BAG;
+			}
+			if ( hasListAnnotation( property, buildingContext ) ) {
+				return CollectionClassification.LIST;
+			}
+
 			// otherwise, return the implicit classification for List attributes
 			return buildingContext.getBuildingOptions().getMappingDefaults().getImplicitListClassification();
 		}
@@ -1030,6 +1068,30 @@ public abstract class CollectionBinder {
 		}
 
 		return null;
+	}
+
+	private static boolean hasBagAnnotation(MemberDetails property, MetadataBuildingContext buildingContext) {
+		final var modelsContext = buildingContext.getBootstrapContext().getModelsContext();
+		final ClassDetails declaringType = property.getDeclaringType();
+		if ( declaringType.getAnnotationUsage( Bag.class, modelsContext ) != null ) {
+			return true;
+		}
+		if ( extractFromPackage( Bag.class, declaringType, buildingContext ) != null ) {
+			return true;
+		}
+		return extractFromModule( Bag.class, declaringType, buildingContext ) != null;
+	}
+
+	private static boolean hasListAnnotation(MemberDetails property, MetadataBuildingContext buildingContext) {
+		final var modelsContext = buildingContext.getBootstrapContext().getModelsContext();
+		final ClassDetails declaringType = property.getDeclaringType();
+		if ( declaringType.getAnnotationUsage( org.hibernate.annotations.List.class, modelsContext ) != null ) {
+			return true;
+		}
+		if ( extractFromPackage( org.hibernate.annotations.List.class, declaringType, buildingContext ) != null ) {
+			return true;
+		}
+		return extractFromModule( org.hibernate.annotations.List.class, declaringType, buildingContext ) != null;
 	}
 
 	private static Class<?> determineSemanticJavaType(MemberDetails property) {
@@ -2566,9 +2628,14 @@ public abstract class CollectionBinder {
 		// Check the owning entity class hierarchy (class-level annotation propagates to collections)
 		final var modelsContext = context.getBootstrapContext().getModelsContext();
 		final var fromClass = property.getDeclaringType().getAnnotationUsage( annotationClass, modelsContext );
-		return fromClass == null ?
-				extractFromPackage( annotationClass, property.getDeclaringType(), context ) :
-				fromClass;
+		if ( fromClass != null ) {
+			return fromClass;
+		}
+		final var fromPackage = extractFromPackage( annotationClass, property.getDeclaringType(), context );
+		if ( fromPackage != null ) {
+			return fromPackage;
+		}
+		return extractFromModule( annotationClass, property.getDeclaringType(), context );
 	}
 
 	private void handleUnownedManyToMany(

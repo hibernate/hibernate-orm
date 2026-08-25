@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 xsi:schemaLocation="http://www.hibernate.org/xsd/orm/mapping
+                https://www.hibernate.org/xsd/orm/mapping/mapping-8.0.xsd"
+                 version="8.0">
+    <package>org.hibernate.orm.test.loaders</package>
+
+    <entity class="CollectionCustomSelectXmlTest$Team" name="Team" access="FIELD" metadata-complete="true">
+        <table name="teams"/>
+        <attributes>
+            <id name="id"/>
+            <basic name="name"/>
+            <one-to-many name="players" target-entity="CollectionCustomSelectXmlTest$Player"
+                         mapped-by="team" classification="SET">
+                <hql-select>from Player p where p.team.id = ?1 and p.deleted = false</hql-select>
+                <cascade>
+                    <cascade-all/>
+                </cascade>
+            </one-to-many>
+        </attributes>
+    </entity>
+
+    <entity class="CollectionCustomSelectXmlTest$Player" name="Player" access="FIELD" metadata-complete="true">
+        <table name="players"/>
+        <attributes>
+            <id name="id"/>
+            <basic name="name"/>
+            <basic name="deleted"/>
+            <many-to-one name="team" target-entity="CollectionCustomSelectXmlTest$Team">
+                <join-column name="team_id"/>
+            </many-to-one>
+        </attributes>
+    </entity>
+
+</entity-mappings>

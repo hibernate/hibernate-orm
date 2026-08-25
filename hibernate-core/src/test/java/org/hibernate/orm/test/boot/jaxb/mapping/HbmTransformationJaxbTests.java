@@ -2069,6 +2069,24 @@ public class HbmTransformationJaxbTests {
 	}
 
 	@Test
+	@JiraKey( "HHH-20823" )
+	public void testEntityLoaderTransformation(ServiceRegistryScope scope) {
+		transformAndVerify( "xml/jaxb/mapping/entity-loader/hbm.xml", scope, transformed -> {
+			final JaxbEntityImpl productEntity = transformed.getEntities().stream()
+					.filter( e -> "Product".equals( e.getClazz() ) )
+					.findFirst()
+					.orElseThrow();
+
+			assertThat( productEntity.getSqlSelect() )
+					.as( "entity <loader query-ref> to a native query should become <sql-select>" )
+					.isNotNull();
+			assertThat( productEntity.getSqlSelect().getSql() )
+					.as( "sql-select should carry the referenced native query SQL" )
+					.contains( "FROM products" );
+		} );
+	}
+
+	@Test
 	@JiraKey( "HHH-20703" )
 	public void testCollectionTypeTypedefResolution(ServiceRegistryScope scope) {
 		transformAndVerify( "xml/jaxb/mapping/collection-type-typedef/hbm.xml", scope, transformed -> {

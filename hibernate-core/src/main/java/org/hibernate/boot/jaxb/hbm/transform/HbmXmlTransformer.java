@@ -78,6 +78,7 @@ import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmPrimitiveArrayType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmPropertiesType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmQueryParamType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmResultSetMappingType;
+import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmPolymorphismEnum;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmRootEntityType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmSecondaryTableType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmSetType;
@@ -1047,6 +1048,10 @@ public class HbmXmlTransformer {
 
 		if ( !hbmClass.getTuplizer().isEmpty() ) {
 			handleUnsupported( "<tuplizer/> is not supported" );
+		}
+
+		if ( hbmClass.getPolymorphism() == JaxbHbmPolymorphismEnum.EXPLICIT ) {
+			handleUnsupported( "explicit polymorphism no longer supported" );
 		}
 
 		if ( hbmClass.getSqlInsert() != null ) {

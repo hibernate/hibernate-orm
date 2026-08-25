@@ -19,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @author Gavin King
  */
 @DomainModel(
-		xmlMappings = "org/hibernate/orm/test/idbag/UserGroup.hbm.xml"
+		xmlMappings = "org/hibernate/orm/test/idbag/UserGroup.orm.xml"
 )
 @SessionFactory
 public class IdBagTest {

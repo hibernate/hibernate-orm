@@ -3401,8 +3401,8 @@
         </xsd:annotation>
         <xsd:sequence>
             <xsd:element name="sql" type="xsd:string"/>
-            <xsd:element name="result-set-mapping" type="orm:sql-result-set-mapping"/>
-            <xsd:element name="synchronize" type="orm:synchronized-table" maxOccurs="unbounded"/>
+            <xsd:element name="result-set-mapping" type="orm:sql-result-set-mapping" minOccurs="0"/>
+            <xsd:element name="synchronize" type="orm:synchronized-table" minOccurs="0" maxOccurs="unbounded"/>
         </xsd:sequence>
     </xsd:complexType>
 
@@ -3783,6 +3783,11 @@
             <xsd:element name="batch-size" type="xsd:int" minOccurs="0"/>
 
             <xsd:element name="sql-restriction" type="xsd:string" minOccurs="0"/>
+
+            <xsd:choice minOccurs="0">
+                <xsd:element name="sql-select" type="orm:sql-select"/>
+                <xsd:element name="hql-select" type="xsd:string"/>
+            </xsd:choice>
 
             <xsd:element name="sql-insert" type="orm:custom-sql" minOccurs="0"/>
             <xsd:element name="sql-update" type="orm:custom-sql" minOccurs="0"/>

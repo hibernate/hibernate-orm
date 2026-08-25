@@ -8,7 +8,7 @@
     "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 <hibernate-mapping package="org.hibernate.orm.test.ops">
 
-    <class name="NumberedNode" polymorphism="explicit">
+    <class name="NumberedNode">
         <id name="id" unsaved-value="0">
             <generator class="native"/>
         </id>

@@ -2088,6 +2088,41 @@ public class HbmTransformationJaxbTests {
 	}
 
 	@Test
+	@JiraKey( "HHH-20823" )
+	public void testEntityLoaderTransformation(ServiceRegistryScope scope) {
+		transformAndVerify( "xml/jaxb/mapping/entity-loader/hbm.xml", scope, transformed -> {
+			final JaxbEntityImpl productEntity = transformed.getEntities().stream()
+					.filter( e -> "Product".equals( e.getClazz() ) )
+					.findFirst()
+					.orElseThrow();
+
+			assertThat( productEntity.getSqlSelect() )
+					.as( "entity <loader query-ref> to a native query should become <sql-select>" )
+					.isNotNull();
+			assertThat( productEntity.getSqlSelect().getSql() )
+					.as( "sql-select should carry the referenced native query SQL" )
+					.contains( "FROM products" );
+
+			// Verify that a result-set-mapping is created with the correct lock mode
+			assertThat( transformed.getSqlResultSetMappings() )
+					.as( "A result-set-mapping should be created for the entity loader" )
+					.isNotEmpty();
+			assertThat( transformed.getSqlResultSetMappings() )
+					.anySatisfy( mapping -> {
+						assertThat( mapping.getEntityResult() )
+								.as( "Result set mapping should contain an entity-result" )
+								.hasSize( 1 );
+						assertThat( mapping.getEntityResult().get( 0 ).getEntityClass() )
+								.as( "Entity result should reference Product entity" )
+								.isEqualTo( "org.hibernate.orm.test.boot.jaxb.mapping.entityloader.Product" );
+						assertThat( mapping.getEntityResult().get( 0 ).getLockMode() )
+								.as( "Lock mode 'upgrade' should be converted to PESSIMISTIC_WRITE" )
+								.isEqualTo( LockModeType.PESSIMISTIC_WRITE );
+					} );
+		} );
+	}
+
+	@Test
 	@JiraKey( "HHH-20703" )
 	public void testCollectionTypeTypedefResolution(ServiceRegistryScope scope) {
 		transformAndVerify( "xml/jaxb/mapping/collection-type-typedef/hbm.xml", scope, transformed -> {

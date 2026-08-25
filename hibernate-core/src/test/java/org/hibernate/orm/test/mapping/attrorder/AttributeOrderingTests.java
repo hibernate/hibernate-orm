@@ -31,7 +31,7 @@ import static org.hamcrest.Matchers.notNullValue;
  */
 @DomainModel(
 		annotatedClasses = { TheComponent.class, TheEntity.class },
-		xmlMappings = "org/hibernate/orm/test/mapping/attrorder/mappings.hbm.xml"
+		xmlMappings = "org/hibernate/orm/test/mapping/attrorder/mappings.orm.xml"
 )
 @SessionFactory( exportSchema = false )
 public class AttributeOrderingTests {
@@ -51,7 +51,7 @@ public class AttributeOrderingTests {
 
 		final RuntimeMetamodels runtimeMetamodels = sessionFactory.getRuntimeMetamodels();
 		verifyRuntimeEntityMapping( runtimeMetamodels.getMappingMetamodel().getEntityDescriptor( TheEntity.class ) );
-		verifyRuntimeEntityMapping( runtimeMetamodels.getMappingMetamodel().getEntityDescriptor( "TheEntityHbm" ) );
+		verifyRuntimeEntityMapping( runtimeMetamodels.getMappingMetamodel().getEntityDescriptor( TheEntityXml.class ) );
 
 	}
 

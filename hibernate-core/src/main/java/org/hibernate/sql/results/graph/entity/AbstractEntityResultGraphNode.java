@@ -4,8 +4,7 @@
  */
 package org.hibernate.sql.results.graph.entity;
 
-import java.util.BitSet;
-
+import jakarta.annotation.Nullable;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.persister.entity.AbstractEntityPersister;
@@ -21,7 +20,7 @@ import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.type.descriptor.java.JavaType;
 
-import jakarta.annotation.Nullable;
+import java.util.BitSet;
 
 /**
  * AbstractFetchParent sub-class for entity-valued graph nodes

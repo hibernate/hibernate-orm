@@ -40,6 +40,7 @@ import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.ComponentType;
@@ -127,6 +128,7 @@ abstract class BaseEntityPersister implements Serializable {
 //	private final boolean hasCacheableNaturalId;
 
 	private final boolean lazy;
+	private final CascadeStyle identifierCascadeStyle;
 	private final boolean hasCascades;
 	private final boolean hasToOnes;
 	private final boolean hasCascadePersist;
@@ -238,6 +240,7 @@ abstract class BaseEntityPersister implements Serializable {
 		BitSet mutableIndexes = new BitSet();
 		boolean foundNonIdentifierPropertyNamedId = false;
 		boolean foundUpdateableNaturalIdProperty = false;
+		boolean hasIdentifierMapperProperty = false;
 		BeforeExecutionGenerator tempVersionGenerator = null;
 
 		final var props = persistentClass.getPropertyClosure();
@@ -257,6 +260,10 @@ abstract class BaseEntityPersister implements Serializable {
 
 			if ( "id".equals( property.getName() ) ) {
 				foundNonIdentifierPropertyNamedId = true;
+			}
+
+			if ( NavigablePath.IDENTIFIER_MAPPER_PROPERTY.equals( property.getName() ) ) {
+				hasIdentifierMapperProperty = true;
 			}
 
 			// temporary ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -428,6 +435,55 @@ abstract class BaseEntityPersister implements Serializable {
 		hasUpdateGeneratedValues = foundPostUpdateGeneratedValues;
 
 		versionGenerator = tempVersionGenerator;
+
+		if ( identifierProperty != null ) {
+			final CascadeStyle idCascade = identifierProperty.getCascadeStyle();
+			identifierCascadeStyle = idCascade;
+			if ( idCascade != CascadeStyles.NONE ) {
+				foundCascade = true;
+				if ( idCascade.doCascade( CascadingActions.PERSIST )
+						|| idCascade.doCascade( CascadingActions.PERSIST_ON_FLUSH ) ) {
+					foundCascadePersist = true;
+				}
+				if ( idCascade.doCascade( CascadingActions.REMOVE ) ) {
+					foundCascadeDelete = true;
+				}
+			}
+			if ( indicatesToOne( identifierType ) ) {
+				foundToOne = true;
+			}
+		}
+		else if ( !hasIdentifierMapperProperty
+				&& identifierType instanceof ComponentType componentType ) {
+			CascadeStyle idCascade = CascadeStyles.NONE;
+			final Type[] subtypes = componentType.getSubtypes();
+			for ( int k = 0; k < subtypes.length; k++ ) {
+				if ( componentType.getCascadeStyle( k ) != CascadeStyles.NONE ) {
+					idCascade = CascadeStyles.ALL;
+					break;
+				}
+			}
+			identifierCascadeStyle = idCascade;
+			if ( idCascade != CascadeStyles.NONE ) {
+				foundCascade = true;
+				if ( idCascade.doCascade( CascadingActions.PERSIST )
+						|| idCascade.doCascade( CascadingActions.PERSIST_ON_FLUSH ) ) {
+					foundCascadePersist = true;
+				}
+				if ( idCascade.doCascade( CascadingActions.REMOVE ) ) {
+					foundCascadeDelete = true;
+				}
+			}
+			for ( final Type subtype : subtypes ) {
+				if ( indicatesToOne( subtype ) ) {
+					foundToOne = true;
+					break;
+				}
+			}
+		}
+		else {
+			identifierCascadeStyle = CascadeStyles.NONE;
+		}
 
 		hasCascades = foundCascade;
 		hasToOnes = foundToOne;
@@ -835,6 +891,10 @@ abstract class BaseEntityPersister implements Serializable {
 
 	public boolean hasLazyProperties() {
 		return hasLazyProperties;
+	}
+
+	public CascadeStyle getIdentifierCascadeStyle() {
+		return identifierCascadeStyle;
 	}
 
 	public boolean hasCascades() {

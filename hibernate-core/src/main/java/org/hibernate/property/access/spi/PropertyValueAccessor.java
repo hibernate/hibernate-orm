@@ -10,6 +10,7 @@ import java.util.Map;
 
 import jakarta.annotation.Nullable;
 
+import org.hibernate.Incubating;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.accessor.HibernateAccessorValueReader;
 import org.hibernate.accessor.HibernateAccessorValueWriter;
@@ -29,6 +30,7 @@ import org.hibernate.usertype.CompositeUserType;
  * {@link HibernateAccessorValueReader}/{@link HibernateAccessorValueWriter}
  * from hibernate-accessor — ORM never implements those interfaces.
  */
+@Incubating
 public final class PropertyValueAccessor {
 
 	/**

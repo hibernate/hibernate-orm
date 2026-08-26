@@ -6,6 +6,7 @@ package org.hibernate.orm.test.function.json;
 
 import org.hibernate.cfg.QuerySettings;
 
+import jakarta.persistence.Tuple;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -15,6 +16,8 @@ import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Test;
+
+import static org.hibernate.orm.test.function.json.JsonTestHelper.assertNoJsonInjection;
 
 /**
  * @author Christian Beikov
@@ -31,6 +34,20 @@ public class JsonArrayInsertTest {
 			//tag::hql-json-array-insert-example[]
 			em.createQuery( "select json_array_insert('{\"a\":[1]}', '$.a[0]', 2)" ).getResultList();
 			//end::hql-json-array-insert-example[]
+		} );
+	}
+
+	@Test
+	public void testPathInjection(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			try {
+				em.createQuery( "select json_array_insert('{\"a\":1}', :path, 1)", Tuple.class )
+						.setParameter( "path", "$'--[0]" )
+						.getResultList();
+			}
+			catch ( RuntimeException e ) {
+				assertNoJsonInjection( e );
+			}
 		} );
 	}
 

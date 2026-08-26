@@ -12,6 +12,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
 import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
+import static java.lang.annotation.ElementType.MODULE;
 import static java.lang.annotation.ElementType.PACKAGE;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
@@ -32,7 +33,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *
  * @since 6.2
  */
-@Target( {TYPE, ANNOTATION_TYPE, PACKAGE} )
+@Target( {TYPE, ANNOTATION_TYPE, PACKAGE, MODULE} )
 @Retention( RUNTIME )
 @Repeatable( TypeRegistrations.class )
 @Discoverable

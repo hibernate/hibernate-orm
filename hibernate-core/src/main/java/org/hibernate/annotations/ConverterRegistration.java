@@ -13,6 +13,7 @@ import jakarta.persistence.Converter;
 import jakarta.persistence.spi.Discoverable;
 
 import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
+import static java.lang.annotation.ElementType.MODULE;
 import static java.lang.annotation.ElementType.PACKAGE;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
@@ -25,7 +26,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *
  * @author Steve Ebersole
  */
-@Target( {TYPE, ANNOTATION_TYPE, PACKAGE} )
+@Target( {TYPE, ANNOTATION_TYPE, PACKAGE, MODULE} )
 @Retention( RUNTIME )
 @Repeatable( ConverterRegistrations.class )
 @Discoverable

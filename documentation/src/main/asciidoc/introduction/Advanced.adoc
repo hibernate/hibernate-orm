@@ -19,7 +19,7 @@ Examples of well-defined filters might include:
 - a filter that restricts to data associated with a certain geographical region.
 
 A filter must be declared somewhere.
-A package descriptor is as good a place as any for a link:{doc-javadoc-url}org/hibernate/annotations/FilterDef.html[`@FilterDef`]:
+A package descriptor or a module descriptor is as good a place as any for a link:{doc-javadoc-url}org/hibernate/annotations/FilterDef.html[`@FilterDef`]:
 
 [source,java]
 ----
@@ -33,7 +33,12 @@ Fancier filters might in principle have multiple parameters, though we admit thi
 
 [IMPORTANT]
 ====
-If you add annotations to a package descriptor, and you're using `Configuration` to configure Hibernate, make sure you call `Configuration.addPackage()` to let Hibernate know that the package descriptor is annotated.
+In container environments with <<entity-discovery,scanning>>, annotated packages/modules are auto-discovered.
+
+In other environments, to let Hibernate know about the annotated packages/modules:
+
+* If you're using `Configuration` to configure Hibernate, use `Configuration.addPackage()`/`Configuration.addModule()`.
+* If you're using `MetadataSources` directly, use `MetadataSources.addPackage()`/`MetadataSources.addModule()`.
 ====
 
 _Typically_, but not necessarily, a `@FilterDef` specifies a default restriction:

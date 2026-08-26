@@ -16,6 +16,8 @@ import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.JsonNullBehavior;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import static org.hibernate.internal.util.QuotingHelper.*;
+
 /**
  * SAP HANA json_object function.
  */
@@ -120,9 +122,12 @@ public class HANAJsonObjectFunction extends JsonObjectFunction {
 			int argumentsCount,
 			SqlAstTranslator<?> walker) {
 		final ArrayList<String> jsonArgumentIndexes = new ArrayList<>();
+		final StringBuilder sb = new StringBuilder();
 		for ( int i = 0; i < argumentsCount; i += 2 ) {
 			if ( ExpressionTypeHelper.isJson( sqlAstArguments.get( i + 1 ) ) ) {
-				jsonArgumentIndexes.add( walker.getLiteralValue( (Expression) sqlAstArguments.get( i ) )  );
+				sb.setLength( 0 );
+				appendSingleQuoteEscapedString( sb, walker.getLiteralValue( (Expression) sqlAstArguments.get( i ) ) );
+				jsonArgumentIndexes.add( sb.substring( 1, sb.length() - 1 ) );
 			}
 		}
 		return jsonArgumentIndexes;

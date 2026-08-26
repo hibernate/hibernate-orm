@@ -124,7 +124,7 @@ public class SQLServerJsonQueryFunction extends JsonQueryFunction {
 						passingClause.getPassingExpressions().get( indexAccess.parameterName() )
 				);
 				sqlAppender.appendSql( "'strict $[" );
-				sqlAppender.appendSql( literalValue.toString() );
+				JsonPathHelper.appendJsonPassingLiteralValue( sqlAppender, literalValue );
 				sqlAppender.appendSql( "]'" );
 			}
 			else {

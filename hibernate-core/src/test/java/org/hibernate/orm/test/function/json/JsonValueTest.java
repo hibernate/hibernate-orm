@@ -27,6 +27,7 @@ import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Tuple;
 
+import static org.hibernate.orm.test.function.json.JsonTestHelper.assertNoJsonInjection;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -127,6 +128,64 @@ public class JsonValueTest {
 				if ( !( e instanceof JDBCException ) && !( e instanceof ExecutionException ) ) {
 					throw e;
 				}
+			}
+		} );
+	}
+
+	@Test
+	public void testPathInjection(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			try {
+				em.createQuery( "select json_value(e.json, :path) from EntityWithJson e", Tuple.class )
+						.setParameter( "path", "$'--" )
+						.getResultList();
+			}
+			catch ( RuntimeException e ) {
+				assertNoJsonInjection( e );
+			}
+		} );
+	}
+
+	@Test
+	public void testPassingInjection(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			try {
+				em.createQuery( "select json_value(e.json, '$[$a]' passing :val as a) from EntityWithJson e", Tuple.class )
+						.setParameter( "val", "'--" )
+						.getResultList();
+			}
+			catch ( RuntimeException e ) {
+				assertNoJsonInjection( e );
+			}
+		} );
+	}
+
+	@Test
+	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsJsonValueErrorBehavior.class)
+	public void testPassingInjectionError(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			try {
+				em.createQuery( "select json_value(e.json, '$[$a]' passing :val as a error on empty) from EntityWithJson e", Tuple.class )
+						.setParameter( "val", "'--" )
+						.getResultList();
+			}
+			catch ( RuntimeException e ) {
+				assertNoJsonInjection( e );
+			}
+		} );
+	}
+
+	@Test
+	public void testPathPassingInjection(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			try {
+				em.createQuery( "select json_value(e.json, :path passing :val as a) from EntityWithJson e", Tuple.class )
+						.setParameter( "path", "$'--" )
+						.setParameter( "val", "'--" )
+						.getResultList();
+			}
+			catch ( RuntimeException e ) {
+				assertNoJsonInjection( e );
 			}
 		} );
 	}

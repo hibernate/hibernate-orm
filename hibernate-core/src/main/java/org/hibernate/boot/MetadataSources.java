@@ -79,6 +79,7 @@ public class MetadataSources implements Serializable {
 	private LinkedHashSet<Class<?>> annotatedClasses;
 	private LinkedHashSet<String> annotatedClassNames;
 	private LinkedHashSet<String> annotatedPackages;
+	private LinkedHashSet<String> annotatedModuleNames;
 
 	private Map<String,Class<?>> extraQueryImports;
 
@@ -133,6 +134,10 @@ public class MetadataSources implements Serializable {
 
 	public List<Binding<JaxbHbmHibernateMapping>> getHbmXmlBindings() {
 		return hbmXmlBindings == null ? emptyList() : hbmXmlBindings;
+	}
+
+	public Collection<String> getAnnotatedModuleNames() {
+		return annotatedModuleNames == null ? emptySet() : annotatedModuleNames;
 	}
 
 	public Collection<String> getAnnotatedPackages() {
@@ -325,6 +330,46 @@ public class MetadataSources implements Serializable {
 	public MetadataSources addPackage(Package packageRef) {
 		addPackageInternal( packageRef.getName() );
 		return this;
+	}
+
+	/**
+	 * Read module-level metadata.
+	 *
+	 * @param module The module to process for annotations
+	 *
+	 * @return this (for method chaining)
+	 */
+	public MetadataSources addModule(Module module) {
+		if ( module == null ) {
+			throw new IllegalArgumentException( "The specified module cannot be null" );
+		}
+		if ( !module.isNamed() ) {
+			throw new IllegalArgumentException( "The specified module is not a named module" );
+		}
+		addModuleInternal( module.getName() );
+		return this;
+	}
+
+	/**
+	 * Read module-level metadata.
+	 *
+	 * @param moduleName The name of the module to process for annotations
+	 *
+	 * @return this (for method chaining)
+	 */
+	public MetadataSources addModule(String moduleName) {
+		if ( moduleName == null ) {
+			throw new IllegalArgumentException( "The specified module name cannot be null" );
+		}
+		addModuleInternal( moduleName );
+		return this;
+	}
+
+	private void addModuleInternal(String moduleName) {
+		if ( annotatedModuleNames == null ) {
+			annotatedModuleNames = new LinkedHashSet<>();
+		}
+		annotatedModuleNames.add( moduleName );
 	}
 
 	/**

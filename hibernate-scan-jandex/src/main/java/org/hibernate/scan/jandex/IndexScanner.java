@@ -9,7 +9,7 @@ import org.hibernate.boot.scan.internal.ResultCollector;
 import org.jboss.jandex.DotName;
 import org.jboss.jandex.IndexView;
 
-/// Scans the Jandex Index finding all "managed" classes.
+/// Scans the Jandex Index finding all "managed" classes and modules.
 /// As of JPA 4, this means classes with annotations which are defined with the
 /// [@Discoverable][Discoverable] annotation.
 ///
@@ -32,6 +32,11 @@ public class IndexScanner {
 
 		// Treat Jakarta Data repositories as if they were annotated with an annotation marked `@Discoverable`.
 		addDiscoveredClasses( JAKARTA_DATA_REPOSITORY, jandexIndex, resultCollector );
+
+		// Discover modules whose module-info has annotations
+		for ( var moduleInfo : jandexIndex.getKnownModules() ) {
+			resultCollector.addModule( moduleInfo.name().toString() );
+		}
 	}
 
 	private static void addDiscoveredClasses(

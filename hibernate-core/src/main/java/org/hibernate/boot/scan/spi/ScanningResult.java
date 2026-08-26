@@ -22,6 +22,9 @@ public interface ScanningResult {
 	/// Singleton access for "no results".
 	ScanningResult NONE = new ScanningResultImpl();
 
+	/// All discovered module names (from `module-info.class` entries).
+	Set<String> discoveredModules();
+
 	/// All discovered package names (without `package-info`).
 	Set<String> discoveredPackages();
 

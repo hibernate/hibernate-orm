@@ -18,3 +18,10 @@ IMPORTANT: If migrating from earlier versions, be sure to also check out the lin
 Schema management DDL now uses `CREATE SCHEMA IF NOT EXISTS` and `DROP SCHEMA IF EXISTS` for dialects which support these clauses, avoiding warnings when a schema already exists or has already been dropped.
 
 Supported dialects: PostgreSQL, CockroachDB, H2, HSQLDB, SAP HANA, and SQL Server (DROP only, version 13+).
+
+[[module-level-annotations]]
+== Module-level annotations
+
+Annotations such as `@NamedQuery`, `@FilterDef`, `@FetchProfile`, and type registration annotations can now be placed on `module-info.java`, in addition to `package-info.java` and entity classes.
+
+Modules are registered via `MetadataSources#addModule(Module)`.

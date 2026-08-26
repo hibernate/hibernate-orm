@@ -152,6 +152,7 @@ class CascadePropertySelectionIntegrationTest {
 				action
 		);
 
+		when( persister.getIdentifierCascadeStyle() ).thenReturn( CascadeStyles.NONE );
 		when( persister.hasCascades() ).thenReturn( true );
 		when( persister.hasCascadeDelete() ).thenReturn( true );
 		when( persister.hasCascadePersist() ).thenReturn( true );

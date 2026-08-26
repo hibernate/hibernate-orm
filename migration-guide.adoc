@@ -105,6 +105,16 @@ initialized collection has no queued commands while its snapshot still represent
 the persisted comparison baseline.  Wrappers derived from
 `AbstractPersistentCollection` inherit this sequencing automatically.
 
+[[session-lazy-delegator-spi]]
+=== `SessionLazyDelegator` initialization
+
+The `SessionLazyDelegator` class has been made abstract, and its constructor that
+accepted a `Supplier<Session>` removed, in order to align it with how the new
+StatelessSessionLazyDelegator` is implemented. Consumers of this class must extend it
+and implement the abstract `delegate()` method, thus providing the required Session to
+it.
+
+
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Changes in Behavior
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

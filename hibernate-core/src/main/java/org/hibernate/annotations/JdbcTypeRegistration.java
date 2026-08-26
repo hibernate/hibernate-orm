@@ -12,6 +12,7 @@ import java.lang.annotation.Target;
 import jakarta.persistence.spi.Discoverable;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
+import static java.lang.annotation.ElementType.MODULE;
 import static java.lang.annotation.ElementType.PACKAGE;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
@@ -40,7 +41,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *
  * @since 6.0
  */
-@Target({PACKAGE, TYPE})
+@Target({PACKAGE, TYPE, MODULE})
 @Inherited
 @Retention(RUNTIME)
 @Repeatable( JdbcTypeRegistrations.class )

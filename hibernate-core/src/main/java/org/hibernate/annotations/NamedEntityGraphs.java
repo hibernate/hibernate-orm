@@ -10,6 +10,7 @@ import java.lang.annotation.Target;
 import java.lang.annotation.Retention;
 
 import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
+import static java.lang.annotation.ElementType.MODULE;
 import static java.lang.annotation.ElementType.PACKAGE;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
@@ -20,7 +21,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * @since 7.0
  * @author Steve Ebersole
  */
-@Target({TYPE, PACKAGE, ANNOTATION_TYPE})
+@Target({TYPE, PACKAGE, ANNOTATION_TYPE, MODULE})
 @Retention(RUNTIME)
 @Discoverable
 public @interface NamedEntityGraphs {

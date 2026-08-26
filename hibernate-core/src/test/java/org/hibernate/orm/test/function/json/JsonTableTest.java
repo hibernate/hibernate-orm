@@ -30,6 +30,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static org.hibernate.orm.test.function.json.JsonTestHelper.assertNoJsonInjection;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
@@ -200,6 +201,67 @@ public class JsonTableTest {
 			assertEquals( 1, resultList.get( 0 ).get( 1 ) );
 			assertEquals( 2L, resultList.get( 1 ).get( 0 ) );
 			assertEquals( 2, resultList.get( 1 ).get( 1 ) );
+		} );
+	}
+
+	@Test
+	public void testPathInjection(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			try {
+				final String query = """
+						select t.a
+						from json_table('{"a":1}', :path columns(
+						a Integer
+						)) t
+						""";
+				em.createQuery( query, Tuple.class )
+						.setParameter( "path", "$'--" )
+						.getResultList();
+			}
+			catch ( RuntimeException e ) {
+				assertNoJsonInjection( e );
+			}
+		} );
+	}
+
+	@Test
+	public void testPassingInjection(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			try {
+				final String query = """
+						select t.a
+						from json_table('{"a":1}', '$[$a]' passing :val as a columns(
+						a Integer
+						)) t
+						""";
+				em.createQuery( query, Tuple.class )
+						.setParameter( "val", "'--" )
+						.getResultList();
+			}
+			catch ( RuntimeException e ) {
+				assertNoJsonInjection( e );
+			}
+		} );
+	}
+
+	@Test
+	public void testPathPassingInjection(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			try {
+				final String query = """
+						select t.a
+						from json_table('{"a":1}', :path passing :val as a columns(
+						a Integer
+						)) t
+						""";
+				em.createQuery( query, Tuple.class )
+						.setParameter( "path", "$'--" )
+						.setParameter( "val", "'--" )
+						.getResultList();
+			}
+			catch ( RuntimeException e ) {
+				assertNoJsonInjection( e );
+			}
 		} );
 	}
 

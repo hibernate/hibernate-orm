@@ -6,6 +6,7 @@ package org.hibernate.dialect.function.json;
 
 import org.hibernate.QueryException;
 import org.hibernate.metamodel.model.domain.ReturnableType;
+import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.expression.JsonPathPassingClause;
@@ -71,7 +72,7 @@ public class SQLServerJsonValueFunction extends JsonValueFunction {
 			);
 		}
 		else {
-			arguments.jsonPath().accept( walker );
+			walker.render( arguments.jsonPath(), SqlAstNodeRenderingMode.INLINE_ALL_PARAMETERS );
 		}
 		sqlAppender.appendSql( "))" );
 	}

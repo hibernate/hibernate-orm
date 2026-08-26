@@ -597,6 +597,7 @@ class CascadeBehaviorTest {
 		when( session.getFactory() ).thenReturn( factory );
 		when( session.getPersistenceContextInternal() ).thenReturn( persistenceContext );
 		when( persistenceContext.getEntry( root ) ).thenReturn( entry );
+		when( persister.getIdentifierCascadeStyle() ).thenReturn( CascadeStyles.NONE );
 		when( persister.getEntityName() ).thenReturn( "Root" );
 		when( persister.getBytecodeEnhancementMetadata() ).thenReturn( enhancementMetadata );
 		when( persister.getPropertyTypes() ).thenReturn( new EntityType[] { entityType } );
@@ -678,6 +679,7 @@ class CascadeBehaviorTest {
 		when( persistenceContext.getEntry( root ) ).thenReturn( entry );
 		when( entry.getLoadedState() ).thenReturn( new Object[] { wrapper } );
 		when( entry.getStatus() ).thenReturn( Status.MANAGED );
+		when( persister.getIdentifierCascadeStyle() ).thenReturn( CascadeStyles.NONE );
 		when( persister.getEntityName() ).thenReturn( "Root" );
 		when( persister.getBytecodeEnhancementMetadata() ).thenReturn( enhancementMetadata );
 		when( persister.getPropertyTypes() ).thenReturn( new CollectionType[] { collectionType } );
@@ -734,6 +736,7 @@ class CascadeBehaviorTest {
 		when( factory.getSessionFactoryOptions() ).thenReturn( factoryOptions );
 		when( factoryOptions.isUnownedAssociationTransientCheck() )
 				.thenReturn( scenario.inverse() );
+		when( persister.getIdentifierCascadeStyle() ).thenReturn( CascadeStyles.NONE );
 		when( persister.getFactory() ).thenReturn( factory );
 		when( persister.getEntityName() ).thenReturn( "Root" );
 		when( persister.getBytecodeEnhancementMetadata() ).thenReturn( enhancementMetadata );
@@ -824,6 +827,7 @@ class CascadeBehaviorTest {
 		stubNames( action );
 		when( session.getFactory() ).thenReturn( factory );
 		when( session.getPersistenceContextInternal() ).thenReturn( persistenceContext );
+		when( persister.getIdentifierCascadeStyle() ).thenReturn( CascadeStyles.NONE );
 		when( persister.getEntityName() ).thenReturn( "Root" );
 		when( persister.getBytecodeEnhancementMetadata() ).thenReturn( enhancementMetadata );
 		when( persister.getPropertyTypes() ).thenReturn( new CollectionType[] { collectionType } );
@@ -916,6 +920,7 @@ class CascadeBehaviorTest {
 		stubNames( action );
 		when( session.getFactory() ).thenReturn( factory );
 		when( session.getPersistenceContextInternal() ).thenReturn( persistenceContext );
+		when( persister.getIdentifierCascadeStyle() ).thenReturn( CascadeStyles.NONE );
 		when( persister.getEntityName() ).thenReturn( "Root" );
 		when( persister.getBytecodeEnhancementMetadata() ).thenReturn( enhancementMetadata );
 		when( persister.getPropertyTypes() ).thenReturn( new CollectionType[] { collectionType } );
@@ -1020,6 +1025,7 @@ class CascadeBehaviorTest {
 		stubNames( action );
 		when( session.getFactory() ).thenReturn( factory );
 		when( session.getPersistenceContextInternal() ).thenReturn( persistenceContext );
+		when( persister.getIdentifierCascadeStyle() ).thenReturn( CascadeStyles.NONE );
 		when( persister.getEntityName() ).thenReturn( "Root" );
 		when( persister.getBytecodeEnhancementMetadata() ).thenReturn( enhancementMetadata );
 		when( persister.getPropertyNames() ).thenReturn( new String[] { "rootBasic", "outer", "rootAny" } );
@@ -1139,6 +1145,7 @@ class CascadeBehaviorTest {
 		when( persistenceContext.getEntry( loadedValue ) ).thenReturn( loadedValueEntry );
 		when( entry.getStatus() ).thenReturn( Status.MANAGED );
 		when( entry.getLoadedValue( "child" ) ).thenReturn( loadedValue );
+		when( persister.getIdentifierCascadeStyle() ).thenReturn( CascadeStyles.NONE );
 		when( persister.getEntityName() ).thenReturn( "Root" );
 		when( persister.getBytecodeEnhancementMetadata() ).thenReturn( enhancementMetadata );
 		when( persister.getPropertyTypes() ).thenReturn( new OneToOneType[] { oneToOneType } );
@@ -1190,6 +1197,7 @@ class CascadeBehaviorTest {
 		stubNames( action );
 		when( session.getFactory() ).thenReturn( factory );
 		when( session.getPersistenceContextInternal() ).thenReturn( persistenceContext );
+		when( persister.getIdentifierCascadeStyle() ).thenReturn( CascadeStyles.NONE );
 		when( persister.getEntityName() ).thenReturn( "Root" );
 		when( persister.getBytecodeEnhancementMetadata() ).thenReturn( enhancementMetadata );
 		when( persister.getPropertyTypes() ).thenReturn( new CollectionType[] { collectionType } );
@@ -1251,6 +1259,7 @@ class CascadeBehaviorTest {
 
 		when( session.getFactory() ).thenReturn( factory );
 		when( factory.getSessionFactoryOptions() ).thenReturn( factoryOptions );
+		when( persister.getIdentifierCascadeStyle() ).thenReturn( CascadeStyles.NONE );
 		when( persister.getEntityName() ).thenReturn( "Root" );
 		when( persister.getBytecodeEnhancementMetadata() ).thenReturn( enhancementMetadata );
 		when( persister.getPropertyTypes() ).thenReturn( new EntityType[] { entityType } );
@@ -1285,6 +1294,7 @@ class CascadeBehaviorTest {
 
 		stubNames( action );
 		when( session.getFactory() ).thenReturn( factory );
+		when( persister.getIdentifierCascadeStyle() ).thenReturn( CascadeStyles.NONE );
 		when( persister.getEntityName() ).thenReturn( "Root" );
 		when( persister.getBytecodeEnhancementMetadata() ).thenReturn( enhancementMetadata );
 		when( persister.getPropertyTypes() ).thenReturn( new org.hibernate.type.Type[0] );
@@ -1309,6 +1319,7 @@ class CascadeBehaviorTest {
 
 		stubNames( action );
 		when( session.getFactory() ).thenReturn( factory );
+		when( persister.getIdentifierCascadeStyle() ).thenReturn( CascadeStyles.NONE );
 		when( persister.getEntityName() ).thenReturn( "Root" );
 		when( persister.getBytecodeEnhancementMetadata() ).thenReturn( enhancementMetadata );
 		when( persister.getPropertyTypes() ).thenReturn( new EntityType[] { entityType } );
@@ -1341,6 +1352,7 @@ class CascadeBehaviorTest {
 
 		stubNames( action );
 		when( session.getFactory() ).thenReturn( factory );
+		when( persister.getIdentifierCascadeStyle() ).thenReturn( CascadeStyles.NONE );
 		when( persister.getEntityName() ).thenReturn( "Root" );
 		when( persister.getBytecodeEnhancementMetadata() ).thenReturn( enhancementMetadata );
 		when( persister.getPropertyTypes() ).thenReturn( new ComponentType[] { componentType } );
@@ -1383,6 +1395,7 @@ class CascadeBehaviorTest {
 		stubNames( action );
 		when( session.getFactory() ).thenReturn( factory );
 		when( session.getPersistenceContextInternal() ).thenReturn( persistenceContext );
+		when( persister.getIdentifierCascadeStyle() ).thenReturn( CascadeStyles.NONE );
 		when( persister.getEntityName() ).thenReturn( "Root" );
 		when( persister.getBytecodeEnhancementMetadata() ).thenReturn( enhancementMetadata );
 		when( persister.getPropertyTypes() ).thenReturn( new CollectionType[] { collectionType } );

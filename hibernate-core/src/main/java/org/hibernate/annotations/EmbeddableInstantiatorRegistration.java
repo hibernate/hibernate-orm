@@ -12,6 +12,7 @@ import jakarta.persistence.spi.Discoverable;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 
 import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
+import static java.lang.annotation.ElementType.MODULE;
 import static java.lang.annotation.ElementType.PACKAGE;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
@@ -22,7 +23,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * <p>
  * May be overridden for a specific embedded using {@link org.hibernate.annotations.EmbeddableInstantiator}
  */
-@Target( {TYPE, ANNOTATION_TYPE, PACKAGE} )
+@Target( {TYPE, ANNOTATION_TYPE, PACKAGE, MODULE} )
 @Retention( RUNTIME )
 @Repeatable( EmbeddableInstantiatorRegistrations.class )
 @Discoverable

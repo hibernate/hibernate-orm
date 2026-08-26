@@ -11,6 +11,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
 import static jakarta.persistence.FetchType.EAGER;
+import static java.lang.annotation.ElementType.MODULE;
 import static java.lang.annotation.ElementType.PACKAGE;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
@@ -75,7 +76,7 @@ import static org.hibernate.annotations.FetchMode.JOIN;
  *
  * @author Hardy Ferentschik
  */
-@Target({TYPE, PACKAGE})
+@Target({TYPE, PACKAGE, MODULE})
 @Retention(RUNTIME)
 @Repeatable(FetchProfiles.class)
 public @interface FetchProfile {

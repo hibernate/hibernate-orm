@@ -16,6 +16,7 @@ import jakarta.persistence.spi.Discoverable;
 import org.hibernate.CacheMode;
 import jakarta.persistence.QueryFlushMode;
 
+import static java.lang.annotation.ElementType.MODULE;
 import static java.lang.annotation.ElementType.PACKAGE;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
@@ -37,7 +38,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * @see org.hibernate.annotations.NamedNativeQuery
  * @see jakarta.persistence.NamedQuery
  */
-@Target({TYPE, PACKAGE})
+@Target({TYPE, PACKAGE, MODULE})
 @Retention(RUNTIME)
 @Repeatable(NamedQueries.class)
 @Discoverable

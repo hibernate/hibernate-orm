@@ -7,6 +7,7 @@ package org.hibernate.orm.test.function.json;
 import java.util.HashMap;
 import java.util.List;
 
+import jakarta.persistence.Tuple;
 import org.hibernate.HibernateException;
 import org.hibernate.JDBCException;
 import org.hibernate.cfg.QuerySettings;
@@ -27,6 +28,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import static org.hibernate.orm.test.function.json.JsonTestHelper.assertNoJsonInjection;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -98,6 +100,49 @@ public class JsonExistsTest {
 				if ( !( e instanceof JDBCException ) && !( e instanceof ExecutionException ) ) {
 					throw e;
 				}
+			}
+		} );
+	}
+
+	@Test
+	public void testPathInjection(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			try {
+				em.createQuery( "select json_exists(e.json, :path) from EntityWithJson e", Tuple.class )
+						.setParameter( "path", "$'--" )
+						.getResultList();
+			}
+			catch ( RuntimeException e ) {
+				assertNoJsonInjection( e );
+			}
+		} );
+	}
+
+	@Test
+	public void testPassingInjection(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			try {
+				em.createQuery( "select json_exists(e.json, '$[$a]' passing :val as a) from EntityWithJson e", Tuple.class )
+						.setParameter( "val", "'--" )
+						.getResultList();
+			}
+			catch ( RuntimeException e ) {
+				assertNoJsonInjection( e );
+			}
+		} );
+	}
+
+	@Test
+	public void testPathPassingInjection(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			try {
+				em.createQuery( "select json_exists(e.json, :path passing :val as a) from EntityWithJson e", Tuple.class )
+						.setParameter( "path", "$'--" )
+						.setParameter( "val", "'--" )
+						.getResultList();
+			}
+			catch ( RuntimeException e ) {
+				assertNoJsonInjection( e );
 			}
 		} );
 	}

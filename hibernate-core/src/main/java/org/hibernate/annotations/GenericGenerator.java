@@ -18,6 +18,7 @@ import jakarta.persistence.GenerationType;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.ElementType.MODULE;
 import static java.lang.annotation.ElementType.PACKAGE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
@@ -63,7 +64,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *
  * @author Emmanuel Bernard
  */
-@Target({METHOD, FIELD, TYPE, PACKAGE})
+@Target({METHOD, FIELD, TYPE, PACKAGE, MODULE})
 @Retention(RUNTIME)
 @Incubating
 @IdGeneratorType(GenericGeneratorGeneration.class)

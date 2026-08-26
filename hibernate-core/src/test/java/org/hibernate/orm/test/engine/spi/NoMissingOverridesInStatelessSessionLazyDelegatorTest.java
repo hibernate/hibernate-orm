@@ -17,6 +17,7 @@ import java.util.Arrays;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -26,12 +27,18 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class NoMissingOverridesInStatelessSessionLazyDelegatorTest {
 
 	@Test
-	void mockTest(SessionFactoryScope scope) {
-		scope.inStatelessSession(
-			statelessSession -> {
-				MyStatelessSessionLazyDelegatorImpl delegator = new MyStatelessSessionLazyDelegatorImpl( statelessSession );
-				assertTrue( delegator.isConnected() );
-		});
+	@SuppressWarnings("resource")
+	void smokeTest(SessionFactoryScope scope) {
+		var delegator = new MyStatelessSessionLazyDelegatorImpl();
+		scope.inStatelessSession( statelessSession1 -> {
+			MyStatelessSessionLazyDelegatorImpl.DELEGATE.set( statelessSession1 );
+			assertTrue( delegator.isConnected() );
+		} );
+		assertFalse( delegator.isConnected() );
+		scope.inStatelessSession( statelessSession2 -> {
+			MyStatelessSessionLazyDelegatorImpl.DELEGATE.set( statelessSession2 );
+			assertTrue( delegator.isConnected() );
+		} );
 	}
 
 	@Test
@@ -72,15 +79,12 @@ public class NoMissingOverridesInStatelessSessionLazyDelegatorTest {
 	 */
 	private static class MyStatelessSessionLazyDelegatorImpl extends StatelessSessionLazyDelegator {
 
-		private final StatelessSession statelessSession;
-
-		public MyStatelessSessionLazyDelegatorImpl(StatelessSession statelessSession) {
-			this.statelessSession = statelessSession;
-		}
+		// Simulate an external context that would typically be used in such delegators
+		public static final ThreadLocal<StatelessSession> DELEGATE = new ThreadLocal<>();
 
 		@Override
 		public StatelessSession delegate() {
-			return statelessSession;
+			return DELEGATE.get();
 		}
 	}
 

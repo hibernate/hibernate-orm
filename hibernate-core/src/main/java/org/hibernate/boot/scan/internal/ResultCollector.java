@@ -16,9 +16,14 @@ import java.util.Set;
 ///
 /// @author Steve Ebersole
 public class ResultCollector {
+	private final Set<String> discoveredModules = new HashSet<>();
 	private final Set<String> discoveredPackages = new HashSet<>();
 	private final Set<String> discoveredClasses = new HashSet<>();
 	private final Set<URI> discoveredMappings = new HashSet<>();
+
+	public void addModule(String moduleName) {
+		discoveredModules.add( moduleName );
+	}
 
 	public void addPackage(String packageName) {
 		discoveredPackages.add( packageName );
@@ -27,6 +32,10 @@ public class ResultCollector {
 	public void addClass(String className) {
 		if ( className.endsWith( "package-info" ) ) {
 			addPackage( StringHelper.qualifier( className ) );
+		}
+		else if ( className.equals( "module-info" ) ) {
+			// module-info is indexed by Jandex as a ClassInfo but represents a module;
+			// module discovery is handled separately via addModule
 		}
 		else {
 			discoveredClasses.add( className );
@@ -40,6 +49,7 @@ public class ResultCollector {
 
 	public ScanningResult toResult() {
 		return new ScanningResultImpl(
+				Collections.unmodifiableSet( discoveredModules ),
 				Collections.unmodifiableSet( discoveredPackages ),
 				Collections.unmodifiableSet( discoveredClasses ),
 				Collections.unmodifiableSet( discoveredMappings )

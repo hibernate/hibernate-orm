@@ -72,6 +72,11 @@ public class AdditionalManagedResourcesImpl implements ManagedResources {
 	}
 
 	@Override
+	public Collection<String> getAnnotatedModuleNames() {
+		return emptyList();
+	}
+
+	@Override
 	public Collection<Binding<? extends JaxbBindableMappingDescriptor>> getXmlMappingBindings() {
 		if ( xmlMappings == null ) {
 			return emptyList();

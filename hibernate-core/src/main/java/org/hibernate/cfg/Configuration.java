@@ -103,6 +103,8 @@ import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
  *     .addAnnotatedClass(User.class)
  *     // read package-level annotations of the named package
  *     .addPackage("org.hibernate.auction")
+ *     // read module-level annotations of the given module
+ *     .addModule(MyModule.class.getModule())
  *     // set a configuration property
  *     .setProperty(AvailableSettings.DATASOURCE,
  *                  "java:comp/env/jdbc/test")
@@ -820,6 +822,46 @@ public class Configuration {
 		for ( String packageName : packageNames ) {
 			addPackage( packageName );
 		}
+		return this;
+	}
+
+	/**
+	 * Read module-level metadata from the given {@linkplain Module module}.
+	 * <p>
+	 * Annotations placed on {@code module-info.java} (such as
+	 * {@link org.hibernate.annotations.FilterDef @FilterDef},
+	 * {@link org.hibernate.annotations.TypeRegistration @TypeRegistration},
+	 * {@link jakarta.persistence.NamedQuery @NamedQuery}, etc.)
+	 * will be processed during bootstrap.
+	 *
+	 * @param module the module whose annotations should be processed
+	 *
+	 * @return {@code this} for method chaining
+	 *
+	 * @since 7.0
+	 *
+	 * @see org.hibernate.boot.MetadataSources#addModule(Module)
+	 */
+	@Incubating
+	public Configuration addModule(Module module) {
+		metadataSources.addModule( module );
+		return this;
+	}
+
+	/**
+	 * Read module-level metadata for the named module.
+	 *
+	 * @param moduleName the name of the module whose annotations should be processed
+	 *
+	 * @return {@code this} for method chaining
+	 *
+	 * @since 7.0
+	 *
+	 * @see org.hibernate.boot.MetadataSources#addModule(String)
+	 */
+	@Incubating
+	public Configuration addModule(String moduleName) {
+		metadataSources.addModule( moduleName );
 		return this;
 	}
 

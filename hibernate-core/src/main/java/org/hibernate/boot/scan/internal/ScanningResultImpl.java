@@ -14,12 +14,13 @@ import java.util.Set;
 ///
 /// @author Steve Ebersole
 public record ScanningResultImpl(
+		Set<String> discoveredModules,
 		Set<String> discoveredPackages,
 		Set<String> discoveredClasses,
 		Set<URI> mappingFiles) implements ScanningResult {
 
 	public ScanningResultImpl() {
-		this( Collections.emptySet(), Collections.emptySet(), Collections.emptySet() );
+		this( Collections.emptySet(), Collections.emptySet(), Collections.emptySet(), Collections.emptySet() );
 	}
 
 

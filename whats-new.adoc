@@ -259,3 +259,10 @@ The annotation processor now propagates security annotations from the `jakarta.a
 This behavior may be disabled by passing `-AsuppressJakartaDataSecurityAnnotations=true` to the annotation processor.
 
 See https://github.com/jakartaee/data/issues/1293[jakartaee/data#1293].
+
+[[module-level-annotations]]
+== Module-level annotations
+
+Annotations such as `@NamedQuery`, `@FilterDef`, `@FetchProfile`, and type registration annotations can now be placed on `module-info.java`, in addition to `package-info.java` and entity classes.
+
+Modules are registered via `MetadataSources#addModule(Module)`.

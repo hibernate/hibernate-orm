@@ -210,6 +210,8 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	private void applyScanning(HibernatePersistenceConfiguration cfg, MetadataSources metadataSources, StandardServiceRegistry standardServiceRegistry) {
 		var scanningResult = performScanning( cfg, standardServiceRegistry );
 
+		scanningResult.discoveredModules().forEach( metadataSources::addModule );
+
 		scanningResult.discoveredPackages().forEach( metadataSources::addPackage );
 
 		scanningResult.discoveredClasses().forEach( metadataSources::addAnnotatedClassName );

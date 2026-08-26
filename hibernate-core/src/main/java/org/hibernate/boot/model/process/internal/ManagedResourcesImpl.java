@@ -37,6 +37,7 @@ public class ManagedResourcesImpl implements ManagedResources {
 	private final Set<Class<?>> annotatedClassReferences = new LinkedHashSet<>();
 	private final Set<String> annotatedClassNames = new LinkedHashSet<>();
 	private final Set<String> annotatedPackageNames = new LinkedHashSet<>();
+	private final Set<String> annotatedModuleNames = new LinkedHashSet<>();
 	private final List<Binding<? extends JaxbBindableMappingDescriptor>> mappingFileBindings = new ArrayList<>();
 	private Map<String, Class<?>> extraQueryImports;
 
@@ -46,6 +47,7 @@ public class ManagedResourcesImpl implements ManagedResources {
 		managedResources.annotatedClassReferences.addAll( sources.getAnnotatedClasses() );
 		managedResources.annotatedClassNames.addAll( sources.getAnnotatedClassNames() );
 		managedResources.annotatedPackageNames.addAll( sources.getAnnotatedPackages() );
+		managedResources.annotatedModuleNames.addAll( sources.getAnnotatedModuleNames() );
 		handleXmlMappings( sources, managedResources, bootstrapContext );
 		managedResources.extraQueryImports = sources.getExtraQueryImports();
 		return managedResources;
@@ -91,6 +93,11 @@ public class ManagedResourcesImpl implements ManagedResources {
 	}
 
 	@Override
+	public Collection<String> getAnnotatedModuleNames() {
+		return unmodifiableSet( annotatedModuleNames );
+	}
+
+	@Override
 	public Collection<Binding<? extends JaxbBindableMappingDescriptor>> getXmlMappingBindings() {
 		return unmodifiableList( mappingFileBindings );
 	}
@@ -122,6 +129,11 @@ public class ManagedResourcesImpl implements ManagedResources {
 	@Internal
 	public void addAnnotatedPackageName(String annotatedPackageName) {
 		annotatedPackageNames.add( annotatedPackageName );
+	}
+
+	@Internal
+	public void addAnnotatedModuleName(String moduleName) {
+		annotatedModuleNames.add( moduleName );
 	}
 
 	@Internal

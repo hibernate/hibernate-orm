@@ -294,6 +294,8 @@ tasks.register('generateEnversStaticMetamodel', JavaCompile) {
 }
 
 tasks.withType( Test.class ).configureEach { test ->
+    test.dependsOn tasks.jar
+    test.systemProperty 'hibernate.core.jar.path', tasks.jar.archiveFile.get().asFile.absolutePath
     test.systemProperty 'file.encoding', 'utf-8'
     // Allow creating a function in HSQLDB for this Java method
     test.systemProperty 'hsqldb.method_class_names', 'org.hibernate.orm.test.jpa.transaction.TransactionTimeoutTest.sleep'

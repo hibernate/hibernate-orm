@@ -23,6 +23,7 @@ import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.cache.spi.entry.CacheEntryStructure;
 import org.hibernate.cascade.spi.CascadeStyle;
+import org.hibernate.cascade.spi.CascadeStyles;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -832,6 +833,15 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 * Get the cascade styles of the properties (optional operation)
 	 */
 	CascadeStyle[] getPropertyCascadeStyles();
+
+	/**
+	 * Get the cascade style of the identifier property, or
+	 * {@link CascadeStyles#NONE NONE}
+	 * if the identifier has no cascading.
+	 */
+	default CascadeStyle getIdentifierCascadeStyle() {
+		return CascadeStyles.NONE;
+	}
 
 	/**
 	 * Get the identifier type

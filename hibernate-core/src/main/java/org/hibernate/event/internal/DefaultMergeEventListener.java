@@ -281,30 +281,58 @@ public class DefaultMergeEventListener
 		if ( EVENT_LISTENER_LOGGER.isTraceEnabled() ) {
 			EVENT_LISTENER_LOGGER.mergingTransientInstance( infoString( entityName, id ) );
 		}
-		final String[] propertyNames = persister.getPropertyNames();
-		final Type[] propertyTypes = persister.getPropertyTypes();
-		final Object copy = copyEntity( copyCache, entity, session, persister, id );
+		final Object target = copyEntity( copyCache, entity, session, persister, id );
 
 		// cascade first, so that all unsaved objects get their
 		// copy created before we actually copy
 		//cascadeOnMerge(event, persister, entity, copyCache, Cascades.CASCADE_BEFORE_MERGE);
 		super.cascadeBeforeSave( session, persister, entity, copyCache );
 
+		if ( persister.getIdentifierCascadeStyle().doCascade( getCascadeAction() ) ) {
+			assert id != null;
+
+			// If cascades exist, it must be a component type
+			final var identifierType = (ComponentType) persister.getIdentifierType();
+			final Type[] propertyTypes = identifierType.getSubtypes();
+
+			final Object[] sourceValues = identifierType.getPropertyValues( id );
+			final Object[] originalValues = identifierType.getPropertyValues( id );
+
+			final Object[] targetValues = TypeHelper.replaceAssociations(
+					sourceValues,
+					originalValues,
+					propertyTypes,
+					session,
+					target,
+					copyCache,
+					ForeignKeyDirection.FROM_PARENT
+			);
+			final var persistenceContext = session.getPersistenceContextInternal();
+			persistenceContext.removeEntityHolder( session.generateEntityKey( id, persister ) );
+
+			final var managedId = identifierType.replacePropertyValues( id, targetValues, session );
+			persister.setIdentifier( target, managedId, session );
+
+			persistenceContext.addEntity( session.generateEntityKey( managedId, persister ), target );
+		}
+
+		final String[] propertyNames = persister.getPropertyNames();
+		final Type[] propertyTypes = persister.getPropertyTypes();
 		firePreMergeCallbacks( session, persister, entity );
 		final Object[] sourceValues = persister.getValues( entity );
 		session.runInterceptorCallback( () -> interceptor.preMerge( entity, sourceValues, propertyNames, propertyTypes ) );
 		final Object[] copiedValues = TypeHelper.replace(
 				sourceValues,
-				persister.getValues( copy ),
+				persister.getValues( target ),
 				propertyTypes,
 				session,
-				copy,
+				target,
 				copyCache,
 				ForeignKeyDirection.FROM_PARENT
 		);
-		persister.setValues( copy, copiedValues );
+		persister.setValues( target, copiedValues );
 
-		saveTransientEntity( copy, entityName, event.getRequestedId(), session, copyCache );
+		saveTransientEntity( target, entityName, event.getRequestedId(), session, copyCache );
 
 		// cascade first, so that all unsaved objects get their
 		// copy created before we actually copy
@@ -316,32 +344,32 @@ public class DefaultMergeEventListener
 //		final Object[] newSourceValues = persister.getValues( entity );
 		final Object[] targetValues = TypeHelper.replaceAssociations(
 				sourceValues, // newSourceValues,
-				persister.getValues( copy ),
+				persister.getValues( target ),
 				propertyTypes,
 				session,
-				copy,
+				target,
 				copyCache,
 				ForeignKeyDirection.TO_PARENT
 		);
-		persister.setValues( copy, targetValues );
+		persister.setValues( target, targetValues );
 		session.runInterceptorCallback(
-				() -> interceptor.postMerge( entity, copy, id, targetValues, null, propertyNames, propertyTypes ) );
+				() -> interceptor.postMerge( entity, target, id, targetValues, null, propertyNames, propertyTypes ) );
 
 		// saveTransientEntity has been called using a copy that contains empty collections
 		// (copyValues uses ForeignKeyDirection.FROM_PARENT) then the PC may contain a wrong
 		// collection snapshot, the CollectionVisitor realigns the collection snapshot values
 		// with the final copy
-		new CollectionVisitor( copy, id, session )
+		new CollectionVisitor( target, id, session )
 				.processEntityPropertyValues(
-						persister.getPropertyValuesToInsert( copy, getMergeMap( copyCache ), session ),
+						persister.getPropertyValuesToInsert( target, getMergeMap( copyCache ), session ),
 						persister.getPropertyTypes()
 				);
 
-		event.setResult( copy );
+		event.setResult( target );
 
-		if ( isPersistentAttributeInterceptable( copy )
-				&& asPersistentAttributeInterceptable( copy ).$$_hibernate_getInterceptor() == null ) {
-			persister.getBytecodeEnhancementMetadata().injectInterceptor( copy, id, session );
+		if ( isPersistentAttributeInterceptable( target )
+				&& asPersistentAttributeInterceptable( target ).$$_hibernate_getInterceptor() == null ) {
+			persister.getBytecodeEnhancementMetadata().injectInterceptor( target, id, session );
 		}
 	}
 
@@ -450,6 +478,30 @@ public class DefaultMergeEventListener
 			// copy created before we actually copy
 			cascadeOnMerge( session, persister, entity, copyCache );
 
+			if ( persister.getIdentifierCascadeStyle().doCascade( getCascadeAction() ) ) {
+				// If cascades exist, it must be a component type
+				final var identifierType = (ComponentType) persister.getIdentifierType();
+				final Type[] propertyTypes = identifierType.getSubtypes();
+
+				final Object[] sourceValues = identifierType.getPropertyValues( id );
+				final Object[] originalValues = identifierType.getPropertyValues( clonedIdentifier );
+
+				final Object[] targetValues = TypeHelper.replace(
+						sourceValues,
+						originalValues,
+						propertyTypes,
+						session,
+						target,
+						copyCache
+				);
+				final var persistenceContext = session.getPersistenceContextInternal();
+				persistenceContext.removeEntityHolder( session.generateEntityKey( clonedIdentifier, persister ) );
+
+				final var managedId = identifierType.replacePropertyValues( clonedIdentifier, targetValues, session );
+				persister.setIdentifier( target, managedId, session );
+
+				persistenceContext.addEntity( session.generateEntityKey( managedId, persister ), target );
+			}
 			final var interceptor = session.getInterceptor();
 			final String[] propertyNames = persister.getPropertyNames();
 			final Type[] propertyTypes = persister.getPropertyTypes();

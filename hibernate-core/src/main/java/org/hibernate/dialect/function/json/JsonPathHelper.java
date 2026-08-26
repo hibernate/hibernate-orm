@@ -9,8 +9,10 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.QueryException;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
 import org.hibernate.sql.spi.SqlAppender;
+import org.hibernate.sql.spi.StringBuilderSqlAppender;
 import org.hibernate.sql.ast.spi.query.expression.Expression;
 import org.hibernate.sql.ast.spi.query.expression.JsonPathPassingClause;
 
@@ -80,8 +82,13 @@ public class JsonPathHelper {
 			String jsonPath,
 			JsonPathPassingClause passingClause,
 			SqlAstTranslator<?> walker) {
-		for ( Map.Entry<String, Expression> entry : passingClause.getPassingExpressions().entrySet() ) {
-			jsonPath = jsonPath.replace( "$" + entry.getKey(), walker.getLiteralValue( entry.getValue() ).toString() );
+		if ( !passingClause.getPassingExpressions().isEmpty() ) {
+			final StringBuilderSqlAppender sqlAppender = new StringBuilderSqlAppender();
+			for ( Map.Entry<String, Expression> entry : passingClause.getPassingExpressions().entrySet() ) {
+				sqlAppender.getStringBuilder().setLength( 0 );
+				appendJsonPassingLiteralValue( sqlAppender, walker.getLiteralValue( entry.getValue() ) );
+				jsonPath = jsonPath.replace( "$" + entry.getKey(), sqlAppender.getStringBuilder().toString() );
+			}
 		}
 		return jsonPath;
 	}
@@ -93,14 +100,14 @@ public class JsonPathHelper {
 			JsonPathPassingClause passingClause,
 			SqlAstTranslator<?> walker) {
 		final String jsonPath = walker.getLiteralValue( jsonPathExpression );
-		final String[] parts = jsonPath.split( "\\$" );
-		sqlAppender.append( '\'' );
-		sqlAppender.append( prefix );
+		final String[] parts = StringHelper.split( "$", jsonPath );
+		sqlAppender.appendSql( '\'' );
+		sqlAppender.appendSql( prefix );
 		final int start;
-		if ( parts[0].isEmpty() ) {
-			start = 2;
-			sqlAppender.append( '$' );
-			sqlAppender.append( parts[1] );
+		if ( jsonPath.charAt( 0 ) == '$' ) {
+			start = 1;
+			sqlAppender.appendSql( '$' );
+			appendLiteral( sqlAppender, 0, parts[0] );
 		}
 		else {
 			start = 0;
@@ -114,20 +121,18 @@ public class JsonPathHelper {
 			if ( expression == null ) {
 				throw new QueryException( "JSON path [" + jsonPath + "] uses parameter [" + parameterName + "] that is not passed" );
 			}
-			final Object literalValue = walker.getLiteralValue( expression );
-			if ( literalValue instanceof String string ) {
-				appendLiteral( sqlAppender, 0, string );
-			}
-			else {
-				sqlAppender.appendSql( String.valueOf( literalValue ) );
-			}
+			appendJsonPassingLiteralValue( sqlAppender, walker.getLiteralValue( expression ) );
 			appendLiteral( sqlAppender, parameterNameEndIndex, part );
 		}
 		sqlAppender.appendSql( '\'' );
 	}
 
-	private static void appendLiteral(SqlAppender sqlAppender, int parameterNameEndIndex, String part) {
-		for ( int j = parameterNameEndIndex; j < part.length(); j++ ) {
+	public static void appendJsonPassingLiteralValue(SqlAppender sqlAppender, Object literalValue) {
+		appendLiteral( sqlAppender, 0, String.valueOf( literalValue ) );
+	}
+
+	private static void appendLiteral(SqlAppender sqlAppender, int startIndex, String part) {
+		for ( int j = startIndex; j < part.length(); j++ ) {
 			final char c = part.charAt( j );
 			if ( c == '\'') {
 				sqlAppender.appendSql( '\'' );
@@ -144,16 +149,16 @@ public class JsonPathHelper {
 			String concatStart,
 			String concatCombine) {
 		final String jsonPath = walker.getLiteralValue( jsonPathExpression );
-		final String[] parts = jsonPath.split( "\\$" );
-		sqlAppender.append( concatStart );
+		final String[] parts = StringHelper.split( "$", jsonPath );
+		sqlAppender.appendSql( concatStart );
 		final int start;
 		String separator = "(";
-		if ( parts[0].isEmpty() ) {
-			start = 2;
-			sqlAppender.append( separator );
-			sqlAppender.append( "'$'" );
-			sqlAppender.append( concatCombine );
-			sqlAppender.appendSingleQuoteEscapedString( parts[1] );
+		if ( jsonPath.charAt( 0 ) == '$' ) {
+			start = 1;
+			sqlAppender.appendSql( separator );
+			sqlAppender.appendSql( "'$'" );
+			sqlAppender.appendSql( concatCombine );
+			sqlAppender.appendSingleQuoteEscapedString( parts[0] );
 			separator = concatCombine;
 		}
 		else {
@@ -161,7 +166,7 @@ public class JsonPathHelper {
 		}
 		for ( int i = start; i < parts.length; i++ ) {
 			final String part = parts[i];
-			sqlAppender.append( separator );
+			sqlAppender.appendSql( separator );
 
 			final int parameterNameEndIndex = indexOfNonIdentifier( part, 0 );
 			final String parameterName = part.substring( 0, parameterNameEndIndex );
@@ -170,7 +175,7 @@ public class JsonPathHelper {
 				throw new QueryException( "JSON path [" + jsonPath + "] uses parameter [" + parameterName + "] that is not passed" );
 			}
 			expression.accept( walker );
-			sqlAppender.append( ',' );
+			sqlAppender.appendSql( ',' );
 			sqlAppender.appendSingleQuoteEscapedString( part.substring( parameterNameEndIndex ) );
 			separator = concatCombine;
 		}
@@ -189,7 +194,9 @@ public class JsonPathHelper {
 	}
 
 	private static void parseBracket(String jsonPath, int bracketStartIndex, int endIndex, ArrayList<JsonPathElement> jsonPathElements) {
-		assert jsonPath.charAt( bracketStartIndex ) == '[';
+		if ( jsonPath.charAt( bracketStartIndex ) != '[' ) {
+			throw new QueryException( "Can't emulate non-simple json path expression: " + jsonPath );
+		}
 		final int bracketEndIndex = jsonPath.lastIndexOf( ']', endIndex );
 		if ( bracketEndIndex < bracketStartIndex ) {
 			throw new QueryException( "Can't emulate non-simple json path expression: " + jsonPath );

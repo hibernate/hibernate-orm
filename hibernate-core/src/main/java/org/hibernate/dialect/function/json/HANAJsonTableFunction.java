@@ -105,9 +105,9 @@ public class HANAJsonTableFunction extends JsonTableFunction {
 				assert rawJsonPath.charAt( 0 ) == '$';
 				final String jsonPath = "$.v" + rawJsonPath.substring( 1 );
 
-				sqlAppender.appendSql( "nested path '" );
-				sqlAppender.appendSql( jsonPath );
-				sqlAppender.appendSql( "' columns" );
+				sqlAppender.appendSql( "nested path " );
+				sqlAppender.appendSingleQuoteEscapedString( jsonPath );
+				sqlAppender.appendSql( " columns" );
 			}
 			else {
 				sqlAppender.appendSql( "nested path '$.v' columns" );

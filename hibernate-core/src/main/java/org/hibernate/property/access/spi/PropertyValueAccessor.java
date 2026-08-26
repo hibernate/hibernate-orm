@@ -198,34 +198,73 @@ public final class PropertyValueAccessor {
 
 	@SuppressWarnings("unchecked")
 	public @Nullable Object get(Object owner) {
-		return switch ( kind ) {
-			case STANDARD,READ_ONLY -> reader.get( owner );
-			case MAP -> ( (Map<?, ?>) owner ).get( mapKey );
-			case EMBEDDED -> owner;
-			case NOOP -> null;
-			case COMPOSITE_USER_TYPE -> ( (CompositeUserType<Object>) compositeUserType ).getPropertyValue( owner, compositePropertyIndex );
-			case BACK_REF, INDEX_BACK_REF -> UNKNOWN;
-			case CHAINED -> {
-				Object result = owner;
-				for ( PropertyValueAccessor accessor : chain ) {
-					result = accessor.get( result );
+		try {
+			return switch ( kind ) {
+				case STANDARD,READ_ONLY -> reader.get( owner );
+				case MAP -> ( (Map<?, ?>) owner ).get( mapKey );
+				case EMBEDDED -> owner;
+				case NOOP -> null;
+				case COMPOSITE_USER_TYPE -> ( (CompositeUserType<Object>) compositeUserType ).getPropertyValue( owner, compositePropertyIndex );
+				case BACK_REF, INDEX_BACK_REF -> UNKNOWN;
+				case CHAINED -> {
+					Object result = owner;
+					for ( PropertyValueAccessor accessor : chain ) {
+						result = accessor.get( result );
+					}
+					yield result;
 				}
-				yield result;
+			};
+		}
+		catch (Error e) {
+			// never wrap fatal/VM errors
+			throw e;
+		}
+		catch (Throwable t) {
+			if ( t instanceof InterruptedException ie ) {
+				Thread.currentThread().interrupt();
+				throw sneakyThrow( ie );
 			}
-		};
+			throw new org.hibernate.PropertyAccessException(
+					t,
+					"Accessing the underlying property resulted in an exception: " + t.getMessage(),
+					false,
+					null,
+					null
+			);
+		}
 	}
 
 	@SuppressWarnings("unchecked")
 	public void set(Object target, @Nullable Object value) {
+
 		switch ( kind ) {
 			case STANDARD -> {
-				writer.set( target, value );
-				if ( enhancementState != ENHANCEMENT_STATE_NONE ) {
-					AccessStrategyHelper.handleEnhancedInjection( target, value, enhancementState, propertyName );
+				try {
+					writer.set( target, value );
+					if ( enhancementState != ENHANCEMENT_STATE_NONE ) {
+						AccessStrategyHelper.handleEnhancedInjection( target, value, enhancementState, propertyName );
+					}
+				}
+				catch (Error e) {
+					// never wrap fatal/VM errors
+					throw e;
+				}
+				catch (Throwable t) {
+					if ( t instanceof InterruptedException ie ) {
+						Thread.currentThread().interrupt();
+						throw sneakyThrow( ie );
+					}
+					throw new org.hibernate.PropertyAccessException(
+							t,
+							"Accessing the underlying property resulted in an exception: " + t.getMessage(),
+							false,
+							null,
+							null
+					);
 				}
 			}
 			case READ_ONLY -> throw new UnsupportedOperationException( "Cannot set read-only property" );
-			case MAP -> ( (Map<String, Object>) target ).put( mapKey, value );
+			case MAP -> ((Map<String, Object>) target).put( mapKey, value );
 			case EMBEDDED, NOOP, BACK_REF, INDEX_BACK_REF -> {
 			}
 			case COMPOSITE_USER_TYPE -> throw new UnsupportedOperationException(
@@ -260,5 +299,10 @@ public final class PropertyValueAccessor {
 			}
 			default -> get( owner );
 		};
+	}
+
+	@SuppressWarnings("unchecked")
+	private static <E extends Throwable> RuntimeException sneakyThrow(Throwable t) throws E {
+		throw (E) t;
 	}
 }

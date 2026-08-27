@@ -167,8 +167,8 @@ dependencies {
     annotationProcessor 'org.hibernate.orm:hibernate-processor:{fullVersion}'
 
     // Jakarta Data support (optional)
-    implementation 'jakarta.data:jakarta.data-api:1.1.0-M3'
-    implementation 'jakarta.data:jakarta.data-stateful:1.1.0-M3'
+    implementation 'jakarta.data:jakarta.data-api:1.1.0-M4'
+    implementation 'jakarta.data:jakarta.data.stateful-api:1.1.0-M4'
 
     // Hibernate Validator (optional)
     implementation 'org.hibernate.validator:hibernate-validator:9.0.1.Final'

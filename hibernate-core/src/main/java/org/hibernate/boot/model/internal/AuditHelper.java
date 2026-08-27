@@ -6,6 +6,8 @@ package org.hibernate.boot.model.internal;
 
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
+import jakarta.persistence.Inheritance;
+import jakarta.persistence.InheritanceType;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.Audited;
 import org.hibernate.annotations.Changelog;
@@ -208,7 +210,7 @@ public final class AuditHelper {
 				final var secondaryAuditTable = createAuditTable(
 						sourceTable,
 						csIdColumnName,
-						resolveExcludedColumns( join.getProperties() ),
+						resolveExcludedColumns( join.getProperties(), null, context.getBootstrapContext().getModelsContext() ), //TODO
 						nullIfBlank( auditSchema ),
 						nullIfBlank( auditCatalog ),
 						customName,
@@ -260,7 +262,7 @@ public final class AuditHelper {
 			MetadataBuildingContext context) {
 		final var modelsContext = context.getBootstrapContext().getModelsContext();
 		for ( var subclass : parent.getDirectSubclasses() ) {
-			if ( subclass instanceof TableOwner ) {
+			if ( subclass instanceof TableOwner ) { //TODO ich glaube für JOINED und TABLE_PER_CLASS ist das hier true, nicht?
 				// Check if the subclass has its own @Audited.Table for table name/schema/catalog override
 				final var subclassDetails = modelsContext.getClassDetailsRegistry()
 						.getClassDetails( subclass.getClassName() );
@@ -269,7 +271,7 @@ public final class AuditHelper {
 				final var subclassAuditTable = createAuditTable(
 						subclass.getTable(),
 						csIdColumnName,
-						resolveExcludedColumns( subclass.getProperties() ),
+						resolveExcludedColumns( subclass.getProperties(), subclass, context.getBootstrapContext().getModelsContext() ),
 						effective != null ? nullIfBlank( effective.schema() ) : null,
 						effective != null ? nullIfBlank( effective.catalog() ) : null,
 						effective != null ? nullIfBlank( effective.name() ) : null,
@@ -814,7 +816,7 @@ public final class AuditHelper {
 		return supplier != null ? supplier.getChangelogClass().getName() : null;
 	}
 
-	private static Set<String> resolveExcludedColumns(Iterable<Property> properties) {
+	private static Set<String> resolveExcludedColumns(Iterable<Property> properties, PersistentClass pc, ModelsContext mc) {
 		final Set<String> excluded = new HashSet<>();
 		for ( var property : properties ) {
 			if ( property.isAuditedExcluded() || property instanceof Backref ) {
@@ -823,6 +825,16 @@ public final class AuditHelper {
 				}
 			}
 		}
+		if ( pc != null ) {
+			var overridesMap = new HashMap<String, Audited.Override>();
+			addOverridesToMap( pc, overridesMap, mc );
+			overridesMap.forEach( (str, annotationo ) -> {
+				if ( !annotationo.isAudited() ) {
+					excluded.add( str ); //TODO column names instead of property names
+				}
+			} );
+		}
+
 		return excluded;
 	}
 
@@ -839,8 +851,12 @@ public final class AuditHelper {
 				mappedColumns.add( column.getCanonicalName() );
 			}
 		}
+		var classDetails = context.getBootstrapContext().getModelsContext().getClassDetailsRegistry()
+				.getClassDetails( rootClass.getClassName() )
+				.getAnnotationUsage( Inheritance.class, context.getBootstrapContext().getModelsContext() );
+		InheritanceType strategy = classDetails == null ? null : classDetails.strategy();
 		// All properties in the hierarchy (root + subclasses for SINGLE_TABLE)
-		var revokedProperties = extractRevocations( rootClass, context );
+		var revokedProperties = extractRevocations( rootClass, context, strategy == InheritanceType.SINGLE_TABLE );
 		var modelsContext = context.getBootstrapContext().getModelsContext();
 
 		collectPropertyColumns( rootClass, mappedColumns, excluded, revokedProperties, modelsContext );
@@ -866,11 +882,14 @@ public final class AuditHelper {
 	}
 
 	//TODO call just once
-	public static HashSet<String> extractRevocations(RootClass rootClass, MetadataBuildingContext context) {
+	public static HashSet<String> extractRevocations(RootClass rootClass, MetadataBuildingContext context, boolean processSubclasses) {
 		var revokedProperties = new HashSet<String>();
-		var fullHierarchy = new ArrayList<PersistentClass>( rootClass.getSubclasses() );
-		fullHierarchy.add( rootClass );
-		fullHierarchy.forEach( pc -> {
+		var classesToScan = new ArrayList<PersistentClass>();
+		if ( processSubclasses ) {
+			classesToScan.addAll( rootClass.getSubclasses() );
+		}
+		classesToScan.add( rootClass );
+		classesToScan.forEach( pc -> {
 			var overrides = new HashMap<String, Audited.Override>();
 			addOverridesToMap( pc, overrides, context.getBootstrapContext().getModelsContext() );
 			overrides.forEach( (property, annotation) -> {

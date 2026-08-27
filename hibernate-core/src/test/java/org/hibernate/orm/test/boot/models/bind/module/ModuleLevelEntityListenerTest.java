@@ -11,6 +11,7 @@ import org.hibernate.SessionFactory;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.boot.spi.MetadataBuilderImplementor;
 
 import org.hibernate.testing.orm.junit.Jira;
 import org.junit.jupiter.api.AfterAll;
@@ -70,7 +71,14 @@ public class ModuleLevelEntityListenerTest {
 		metadataSources.addAnnotatedClass( excludingEntityClass );
 		metadataSources.addModule( loaded.module() );
 
-		sessionFactory = metadataSources.buildMetadata().buildSessionFactory();
+		// Pre-register the module in the ModuleDetailsRegistry, because
+		// resolveModuleDetails(String) only searches ModuleLayer.boot()
+		// and cannot find modules from custom module layers.
+		final var builder = (MetadataBuilderImplementor) metadataSources.getMetadataBuilder();
+		builder.getBootstrapContext().getModelsContext()
+				.getModuleDetailsRegistry().resolveModuleDetails( loaded.module() );
+
+		sessionFactory = builder.build().buildSessionFactory();
 	}
 
 	@AfterAll

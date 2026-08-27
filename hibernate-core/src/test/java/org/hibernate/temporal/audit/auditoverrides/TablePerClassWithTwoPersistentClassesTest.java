@@ -6,6 +6,8 @@ package org.hibernate.temporal.audit.auditoverrides;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.Inheritance;
+import jakarta.persistence.InheritanceType;
 import jakarta.persistence.Table;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.annotations.Audited;
@@ -22,17 +24,18 @@ import org.junit.jupiter.api.Test;
 import java.util.Collection;
 import java.util.function.Consumer;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
 @SessionFactory
 @DomainModel(annotatedClasses = {
-		TwoEntityLayersTest.EntityWithExcludedProperty2.class,
-		TwoEntityLayersTest.EntityThatRevokes.class,
+		TablePerClassWithTwoPersistentClassesTest.Base.class,
+		TablePerClassWithTwoPersistentClassesTest.Sub.class,
 })
 @ServiceRegistry(settings = @Setting(name = StateManagementSettings.CHANGESET_ID_SUPPLIER,
 		value = "org.hibernate.temporal.audit.AuditEntityTest$TxIdSupplier"))
-public class TwoEntityLayersTest {
+public class TablePerClassWithTwoPersistentClassesTest {
 	private static int currentTxId;
 
 	public static class TxIdSupplier implements ChangesetIdentifierSupplier<Integer> {
@@ -50,28 +53,42 @@ public class TwoEntityLayersTest {
 	 */
 
 	@Entity
-	@Table(name = "EntityWithExcludedProperty2")
+	@Table(name = "Base")
 	@Audited
-	static class EntityWithExcludedProperty2 {
+	@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
+	static class Base {
 		@Id
 		long id;
 
 		@Audited.Excluded
 		String str1;
+
+		String str2;
 	}
 
 	@Entity
-	@Audited.Override(name = "str1", isAudited = true) // <-- revokes initial exclusion of str1
-	static class EntityThatRevokes extends EntityWithExcludedProperty2{
+	@Audited.Overrides( {
+			@Audited.Override(name = "str1", isAudited = true), // <-- revokes initial exclusion of str1
+			@Audited.Override(name = "str2", isAudited = false) // <-- revokes initial inclusion of str2
+	} )
+
+	static class Sub extends Base {
 
 	}
 
 	@Test
-	public void revocationInSubEntity(DomainModelScope domainModelScope) {
+	public void test(DomainModelScope domainModelScope) {
 		var tables = domainModelScope.getDomainModel().collectTableMappings();
-		assertTable( tables, "EntityWithExcludedProperty2_AUD", table -> {
-			assertTrue( table.containsColumn( new Column( "str1" ) ) );
+		assertTable( tables, "Base_AUD", table -> {
+			assertFalse( table.containsColumn( new Column( "str1" ) ) );
+			assertTrue( table.containsColumn( new Column( "str2" ) ) );
 		} );
+
+		assertTable( tables, "TablePerClassWithTwoPersistentClassesTest$Sub_AUD", table -> {
+			assertTrue( table.containsColumn( new Column( "str1" ) ) );
+			assertFalse( table.containsColumn( new Column( "str2" ) ) );
+		} );
+
 	}
 
 	private static void assertTable(Collection<org.hibernate.mapping.Table> tables, String tableName, Consumer<org.hibernate.mapping.Table> consumer) {

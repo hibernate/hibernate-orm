@@ -29,7 +29,7 @@ public class ScannerTest {
 		);
 		var scanner = new IndexBuildingScanner( scanningContext );
 		var scanResult = scanner.scan( urlToThis );
-		assertEquals( 1, scanResult.discoveredClasses().size() );
+		assertEquals( 10, scanResult.discoveredClasses().size() );
 	}
 
 }

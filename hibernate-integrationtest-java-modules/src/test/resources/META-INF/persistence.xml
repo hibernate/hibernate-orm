@@ -9,6 +9,7 @@
              version="1.0">
     <persistence-unit name="primaryPU">
         <class>org.hibernate.orm.integrationtest.java.module.test.entity.Author</class>
+        <exclude-unlisted-classes>true</exclude-unlisted-classes>
         <properties>
             <property name="hibernate.connection.driver_class" value="org.h2.Driver"/>
             <property name="hibernate.dialect" value="org.hibernate.dialect.H2Dialect"/>

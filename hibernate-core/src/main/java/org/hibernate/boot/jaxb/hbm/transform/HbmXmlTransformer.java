@@ -145,6 +145,8 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbMappedSuperclassImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbPersistentAttribute;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedNativeQueryImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedHqlQueryImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedStoredProcedureQueryImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbStoredProcedureParameterImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbNaturalIdImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbOneToManyImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbOneToOneImpl;
@@ -157,6 +159,7 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbPluralAttribute;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbPluralFetchModeImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbPrimaryKeyJoinColumnImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbPropertyRefImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbQueryHintImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbQueryParamTypeImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbSecondaryTableImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbSingularAssociationAttribute;
@@ -192,6 +195,8 @@ import org.hibernate.property.access.internal.PropertyAccessStrategyEmbeddedImpl
 import org.hibernate.property.access.internal.PropertyAccessStrategyMapImpl;
 import org.hibernate.property.access.internal.PropertyAccessStrategyMixedImpl;
 import org.hibernate.property.access.internal.PropertyAccessStrategyNoopImpl;
+import org.hibernate.query.sql.internal.ParameterParser;
+import org.hibernate.query.sql.spi.ParameterRecognizer;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.ConvertedBasicType;
 import org.hibernate.type.CustomType;
@@ -206,6 +211,7 @@ import jakarta.persistence.DiscriminatorType;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.InheritanceType;
+import jakarta.persistence.ParameterMode;
 import jakarta.persistence.TemporalType;
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBElement;
@@ -213,6 +219,9 @@ import jakarta.xml.bind.JAXBException;
 import jakarta.xml.bind.Marshaller;
 
 import static org.hibernate.boot.jaxb.hbm.transform.HbmTransformationLogging.TRANSFORMATION_LOGGER;
+import static org.hibernate.jpa.HibernateHints.HINT_COMMENT;
+import static org.hibernate.jpa.HibernateHints.HINT_FLUSH_MODE;
+import static org.hibernate.jpa.SpecHints.HINT_SPEC_QUERY_TIMEOUT;
 import static org.hibernate.internal.util.StringHelper.isBlank;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
@@ -1096,7 +1105,12 @@ public class HbmXmlTransformer {
 
 		for ( var hbmQuery : hbmClass.getSqlQuery() ) {
 			final String name = mappingEntity.getName() + "." + hbmQuery.getName();
-			mappingEntity.getNamedNativeQueries().add( transformNamedNativeQuery( hbmQuery, name ) );
+			if ( hbmQuery.isCallable() ) {
+				mappingEntity.getNamedStoredProcedureQueries().add( transformNamedStoredProcedureQuery( hbmQuery, name ) );
+			}
+			else {
+				mappingEntity.getNamedNativeQueries().add( transformNamedNativeQuery( hbmQuery, name ) );
+			}
 		}
 
 		final var filters = mappingEntity.getFilters();
@@ -1142,7 +1156,12 @@ public class HbmXmlTransformer {
 		for ( var hbmQuery : hbmClass.getSqlQuery() ) {
 			// Tests implied this was the case...
 			final String name = hbmClass.getName() + "." + hbmQuery.getName();
-			mappingXmlBinding.getRoot().getNamedNativeQueries().add( transformNamedNativeQuery( hbmQuery, name ) );
+			if ( hbmQuery.isCallable() ) {
+				mappingXmlBinding.getRoot().getNamedProcedureQueries().add( transformNamedStoredProcedureQuery( hbmQuery, name ) );
+			}
+			else {
+				mappingXmlBinding.getRoot().getNamedNativeQueries().add( transformNamedNativeQuery( hbmQuery, name ) );
+			}
 		}
 	}
 
@@ -1388,8 +1407,9 @@ public class HbmXmlTransformer {
 			return null;
 		}
 		return switch ( hbmTypeName ) {
-			case "string" -> String.class.getName();
-			case "boolean" -> boolean.class.getName();
+			case "string", "text" -> String.class.getName();
+			case "character", "char" -> Character.class.getName();
+			case "boolean", "yes_no", "true_false", "numeric_boolean" -> boolean.class.getName();
 			case "byte" -> byte.class.getName();
 			case "short" -> short.class.getName();
 			case "integer", "int" -> int.class.getName();
@@ -1403,6 +1423,8 @@ public class HbmXmlTransformer {
 			case "big_integer" -> java.math.BigInteger.class.getName();
 			case "locale" -> java.util.Locale.class.getName();
 			case "currency" -> java.util.Currency.class.getName();
+			case "uuid", "uuid-binary", "uuid-char" -> java.util.UUID.class.getName();
+			case "class" -> Class.class.getName();
 			default -> hbmTypeName;
 		};
 	}
@@ -1605,8 +1627,16 @@ public class HbmXmlTransformer {
 		final var hbmNativeQueries = hbmXmlBinding.getRoot().getSqlQuery();
 		if ( !hbmNativeQueries.isEmpty() ) {
 			for ( var hbmQuery : hbmNativeQueries ) {
-				mappingXmlBinding.getRoot().getNamedNativeQueries()
-						.add( transformNamedNativeQuery( hbmQuery, hbmQuery.getName() ) );
+				// A callable <sql-query> maps to a <named-stored-procedure-query>, everything else
+				// maps to a <named-native-query>.
+				if ( hbmQuery.isCallable() ) {
+					mappingXmlBinding.getRoot().getNamedProcedureQueries()
+							.add( transformNamedStoredProcedureQuery( hbmQuery, hbmQuery.getName() ) );
+				}
+				else {
+					mappingXmlBinding.getRoot().getNamedNativeQueries()
+							.add( transformNamedNativeQuery( hbmQuery, hbmQuery.getName() ) );
+				}
 			}
 		}
 	}
@@ -1645,34 +1675,14 @@ public class HbmXmlTransformer {
 					query.getQueryParam().add( queryParam );
 				}
 				else if ( element instanceof JaxbHbmNativeQueryScalarReturnType scalarReturnType ) {
-					if ( implicitResultSetMapping == null ) {
-						implicitResultSetMapping = new JaxbSqlResultSetMappingImpl();
-						implicitResultSetMapping.setName( implicitResultSetMappingName );
-						implicitResultSetMapping.setDescription(
-								String.format(
-										Locale.ROOT,
-										"ResultSet mapping implicitly created for named native query `%s` during hbm.xml transformation",
-										queryName
-								)
-						);
-						mappingXmlBinding.getRoot().getSqlResultSetMappings().add( implicitResultSetMapping );
-					}
+					implicitResultSetMapping =
+							getOrCreateImplicitResultSetMapping( implicitResultSetMapping, implicitResultSetMappingName, queryName );
 					implicitResultSetMapping.getColumnResult()
 							.add( transferScalarReturnElement( implicitResultSetMappingName, scalarReturnType ) );
 				}
 				else if ( element instanceof JaxbHbmNativeQueryReturnType returnType ) {
-					if ( implicitResultSetMapping == null ) {
-						implicitResultSetMapping = new JaxbSqlResultSetMappingImpl();
-						implicitResultSetMapping.setName( implicitResultSetMappingName );
-						implicitResultSetMapping.setDescription(
-								String.format(
-										Locale.ROOT,
-										"ResultSet mapping implicitly created for named native query `%s` during hbm.xml transformation",
-										queryName
-								)
-						);
-						mappingXmlBinding.getRoot().getSqlResultSetMappings().add( implicitResultSetMapping );
-					}
+					implicitResultSetMapping =
+							getOrCreateImplicitResultSetMapping( implicitResultSetMapping, implicitResultSetMappingName, queryName );
 					implicitResultSetMapping.getEntityResult()
 							.add( transferEntityReturnElement( implicitResultSetMappingName, returnType ) );
 				}
@@ -1716,6 +1726,227 @@ public class HbmXmlTransformer {
 		}
 
 		return query;
+	}
+
+	private JaxbSqlResultSetMappingImpl getOrCreateImplicitResultSetMapping(
+			JaxbSqlResultSetMappingImpl current,
+			String implicitResultSetMappingName,
+			String queryName) {
+		if ( current != null ) {
+			return current;
+		}
+		final var implicitResultSetMapping = new JaxbSqlResultSetMappingImpl();
+		implicitResultSetMapping.setName( implicitResultSetMappingName );
+		implicitResultSetMapping.setDescription(
+				String.format(
+						Locale.ROOT,
+						"ResultSet mapping implicitly created for named native query `%s` during hbm.xml transformation",
+						queryName
+				)
+		);
+		mappingXmlBinding.getRoot().getSqlResultSetMappings().add( implicitResultSetMapping );
+		return implicitResultSetMapping;
+	}
+
+	/**
+	 * Transforms a callable {@code <sql-query callable="true">} into a {@code <named-stored-procedure-query>}.
+	 * The JDBC escape call syntax (e.g. {@code { call proc(?, :name) }}) is parsed to extract the procedure
+	 * name and its parameters, while any {@code <return>}/{@code <return-scalar>} elements are transformed into
+	 * an implicit result-set mapping - reusing the same helpers as {@link #transformNamedNativeQuery}.
+	 */
+	private JaxbNamedStoredProcedureQueryImpl transformNamedStoredProcedureQuery(
+			JaxbHbmNamedNativeQueryType hbmQuery,
+			String queryName) {
+		final String implicitResultSetMappingName = queryName + "-implicitResultSetMapping";
+
+		final var query = new JaxbNamedStoredProcedureQueryImpl();
+		query.setName( queryName );
+		transferProcedureQueryHints( query, hbmQuery );
+
+		JaxbSqlResultSetMappingImpl implicitResultSetMapping = null;
+		String callString = null;
+		// <query-param> elements carry (Hibernate) type information keyed by parameter name; collect them so a
+		// named procedure parameter can be given a matching Java class.
+		final Map<String, String> queryParamTypes = new HashMap<>();
+
+		// JaxbQueryElement#content elements can be either the call string or the result mappings
+		for ( Object content : hbmQuery.getContent() ) {
+			if ( content instanceof String qryString ) {
+				qryString = qryString.trim();
+				if ( !qryString.isEmpty() ) {
+					callString = qryString;
+				}
+			}
+			else if ( content instanceof JAXBElement<?> contentElement ) {
+				final Object element = contentElement.getValue();
+				if ( element instanceof JaxbHbmNativeQueryScalarReturnType scalarReturnType ) {
+					implicitResultSetMapping =
+							getOrCreateImplicitResultSetMapping( implicitResultSetMapping, implicitResultSetMappingName, queryName );
+					implicitResultSetMapping.getColumnResult()
+							.add( transferScalarReturnElement( implicitResultSetMappingName, scalarReturnType ) );
+				}
+				else if ( element instanceof JaxbHbmNativeQueryReturnType returnType ) {
+					implicitResultSetMapping =
+							getOrCreateImplicitResultSetMapping( implicitResultSetMapping, implicitResultSetMappingName, queryName );
+					implicitResultSetMapping.getEntityResult()
+							.add( transferEntityReturnElement( implicitResultSetMappingName, returnType ) );
+				}
+				else if ( element instanceof JaxbHbmQueryParamType hbmQueryParam ) {
+					// Remember the declared type so it can be applied to the matching (named) procedure parameter.
+					if ( isNotEmpty( hbmQueryParam.getName() ) && isNotEmpty( hbmQueryParam.getType() ) ) {
+						queryParamTypes.put( hbmQueryParam.getName(), hbmQueryParam.getType() );
+					}
+				}
+				else {
+					handleUnsupportedContent(
+							String.format(
+									"Named stored procedure query [name=%s] contained an unsupported element type",
+									queryName
+							)
+					);
+				}
+			}
+		}
+
+		if ( callString == null ) {
+			handleUnsupportedContent(
+					String.format(
+							"Callable named native query [name=%s] did not specify a query string",
+							queryName
+					)
+			);
+			return query;
+		}
+
+		transferProcedureCall( query, callString, queryName, queryParamTypes );
+
+		if ( implicitResultSetMapping != null ) {
+			query.getResultSetMappings().add( implicitResultSetMappingName );
+		}
+
+		return query;
+	}
+
+	/**
+	 * Transfers the hbm.xml query settings that a {@code ProcedureCall} actually honours as query hints. The
+	 * result-caching ({@code cacheable}/{@code cache-mode}/{@code cache-region}), {@code read-only} and
+	 * {@code fetch-size} settings are intentionally dropped, since {@code ProcedureCall} rejects those hints.
+	 */
+	private void transferProcedureQueryHints(JaxbNamedStoredProcedureQueryImpl query, JaxbHbmNamedNativeQueryType hbmQuery) {
+		addQueryHint( query, HINT_COMMENT, hbmQuery.getComment() );
+		if ( hbmQuery.getFlushMode() != null ) {
+			addQueryHint( query, HINT_FLUSH_MODE, hbmQuery.getFlushMode().name() );
+		}
+		if ( hbmQuery.getTimeout() != null ) {
+			addQueryHint( query, HINT_SPEC_QUERY_TIMEOUT, Integer.toString( hbmQuery.getTimeout().milliseconds() ) );
+		}
+	}
+
+	private static void addQueryHint(JaxbNamedStoredProcedureQueryImpl query, String name, String value) {
+		if ( isNotEmpty( value ) ) {
+			final var hint = new JaxbQueryHintImpl();
+			hint.setName( name );
+			hint.setValue( value );
+			query.getHints().add( hint );
+		}
+	}
+
+	/**
+	 * Parses the JDBC escape call syntax {@code { [?=] call procedureName(param, ...) }} and populates the
+	 * given stored-procedure-query with the procedure name and its (IN) parameters. Positional parameters are
+	 * left unnamed while named parameters retain their name. A named parameter is given the Java class derived
+	 * from a matching {@code <query-param>} declaration when one is present; otherwise the type defaults to
+	 * {@code void} (matching the legacy binding behaviour) so that it is inferred from the bound argument.
+	 */
+	private void transferProcedureCall(
+			JaxbNamedStoredProcedureQueryImpl query,
+			String callString,
+			String queryName,
+			Map<String, String> queryParamTypes) {
+		if ( !callString.startsWith( "{" ) || !callString.endsWith( "}" ) ) {
+			handleUnsupportedContent(
+					String.format(
+							"Callable named native query [name=%s] does not use the JDBC call syntax: %s",
+							queryName,
+							callString
+					)
+			);
+			return;
+		}
+
+		int index = skipWhitespace( callString, 1 );
+		// Skip the optional out param `?=` (function return) portion
+		if ( index < callString.length() && callString.charAt( index ) == '?' ) {
+			index = skipWhitespace( callString, index + 1 );
+			if ( index < callString.length() && callString.charAt( index ) == '=' ) {
+				index = skipWhitespace( callString, index + 1 );
+			}
+		}
+		// Skip the `call` keyword
+		if ( callString.regionMatches( true, index, "call", 0, 4 ) ) {
+			index = skipWhitespace( callString, index + 4 );
+		}
+		// Parse the procedure name (up to the opening parenthesis or whitespace)
+		final int procedureStart = index;
+		for ( ; index < callString.length(); index++ ) {
+			final char c = callString.charAt( index );
+			if ( c == '(' || Character.isWhitespace( c ) ) {
+				break;
+			}
+		}
+		query.setProcedureName( callString.substring( procedureStart, index ) );
+
+		index = skipWhitespace( callString, index );
+		// Reuse the shared parameter recognition for the remaining `(param, ...)` portion. Each recognised
+		// parameter becomes a <stored-procedure-parameter>, added in the order they appear in the call string.
+		ParameterParser.parse(
+				callString.substring( index, callString.length() - 1 ),
+				new ParameterRecognizer() {
+					@Override
+					public void ordinalParameter(int sourcePosition) {
+						// A JDBC `?` placeholder has no name, so it cannot be correlated with a <query-param>.
+						query.getProcedureParameters().add( createProcedureParameter( null, queryParamTypes ) );
+					}
+
+					@Override
+					public void namedParameter(String name, int sourcePosition) {
+						// A `:name` parameter can be matched (by name) against a declared <query-param> type.
+						query.getProcedureParameters().add( createProcedureParameter( name, queryParamTypes ) );
+					}
+
+					@Override
+					public void jpaPositionalParameter(int label, int sourcePosition) {
+						// A JPA `?1` ordinal placeholder is likewise unnamed and cannot be correlated by name.
+						query.getProcedureParameters().add( createProcedureParameter( null, queryParamTypes ) );
+					}
+
+					@Override
+					public void other(char character) {
+						// Non-parameter characters (e.g. commas/whitespace) are not relevant here.
+					}
+				}
+		);
+	}
+
+	private static JaxbStoredProcedureParameterImpl createProcedureParameter(String name, Map<String, String> queryParamTypes) {
+		final var parameter = new JaxbStoredProcedureParameterImpl();
+		String clazz = null;
+		if ( isNotEmpty( name ) ) {
+			parameter.setName( name );
+			// A <query-param> can only be correlated with a named parameter, since it is keyed by name.
+			clazz = resolveHbmTypeName( queryParamTypes.get( name ) );
+		}
+		parameter.setMode( ParameterMode.IN );
+		// Fall back to void when the type is unknown; the legacy binding then infers it from the bound argument.
+		parameter.setClazz( isNotEmpty( clazz ) ? clazz : void.class.getName() );
+		return parameter;
+	}
+
+	private static int skipWhitespace(String string, int index) {
+		while ( index < string.length() && Character.isWhitespace( string.charAt( index ) ) ) {
+			index++;
+		}
+		return index;
 	}
 
 	private void transferDatabaseObjects() {

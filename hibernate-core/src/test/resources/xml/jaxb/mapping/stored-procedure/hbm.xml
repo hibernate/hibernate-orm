@@ -1,0 +1,62 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+        "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="org.hibernate.orm.test.boot.jaxb.mapping">
+
+    <class name="SimpleEntity">
+        <id name="id">
+            <generator class="increment"/>
+        </id>
+        <property name="name" not-null="true"/>
+    </class>
+
+    <!-- callable query with a single named parameter (whose type is declared) and scalar returns -->
+    <sql-query name="simpleScalar" callable="true">
+        <return-scalar column="name" type="string"/>
+        <return-scalar column="value" type="long"/>
+        <query-param name="p_number" type="long"/>
+        { call simpleScalar(:p_number) }
+    </sql-query>
+
+    <!-- callable query with positional parameters -->
+    <sql-query name="paramhandling" callable="true">
+        <return-scalar column="value" type="long"/>
+        <return-scalar column="value2" type="long"/>
+        { call paramHandling(?,?) }
+    </sql-query>
+
+    <!-- callable query mixing a positional and a named parameter; only the named one carries a declared type -->
+    <sql-query name="paramhandling_mixed" callable="true">
+        <return-scalar column="value" type="long"/>
+        <return-scalar column="value2" type="long"/>
+        <query-param name="second" type="string"/>
+        { call paramHandling(?,:second) }
+    </sql-query>
+
+    <!-- callable query carrying query settings; only comment/flush-mode/timeout survive as hints -->
+    <sql-query name="querySettings" callable="true"
+               comment="a stored procedure call"
+               flush-mode="always"
+               timeout="30"
+               cacheable="true"
+               cache-mode="normal"
+               cache-region="proc-region"
+               read-only="true"
+               fetch-size="25">
+        <return-scalar column="value" type="long"/>
+        { call querySettings() }
+    </sql-query>
+
+    <!-- callable query returning an entity, with no parameters -->
+    <sql-query name="selectAll" callable="true">
+        <return alias="e" class="SimpleEntity"/>
+        { call selectAll() }
+    </sql-query>
+
+</hibernate-mapping>

@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.boot.models.bind.module;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.lang.module.Configuration;
 import java.lang.module.ModuleFinder;
@@ -89,9 +90,11 @@ final class TestModuleUtil {
 
 		final JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
 		assertNotNull( compiler, "No system Java compiler available" );
-		final int result = compiler.run( null, null, null, compilerArgs.toArray( new String[0] ) );
+		final var errOutput = new ByteArrayOutputStream();
+		final int result = compiler.run( null, null, errOutput, compilerArgs.toArray( new String[0] ) );
 		if ( result != 0 ) {
-			throw new AssertionError( "Compilation of module-info.java failed (exit code " + result + ")" );
+			throw new AssertionError( "Compilation of module-info.java failed (exit code " + result + "):\n"
+					+ errOutput );
 		}
 
 		final ClassLoader parentLoader = TestModuleUtil.class.getClassLoader();
@@ -130,23 +133,12 @@ final class TestModuleUtil {
 		);
 	}
 
-	private static Path hibernateCoreJar() throws Exception {
-		// In Gradle tests, FilterDef.class is loaded from the exploded
-		// classes directory, not a JAR. Automatic modules require an
-		// actual JAR (with Automatic-Module-Name in the manifest), so
-		// we locate the packaged JAR under target/libs/.
-		final var classesDir = Path.of(
-				org.hibernate.annotations.FilterDef.class.getProtectionDomain()
-						.getCodeSource().getLocation().toURI()
-		);
-		final var targetDir = classesDir.getParent().getParent().getParent();
-		try ( var paths = Files.list( targetDir.resolve( "libs" ) ) ) {
-			return paths
-					.filter( p -> p.getFileName().toString().startsWith( "hibernate-core-" ) )
-					.findFirst()
-					.orElseThrow( () -> new AssertionError( "hibernate-core JAR not found in "
-							+ targetDir.resolve( "libs" ) ) );
+	private static Path hibernateCoreJar() {
+		final var jarPath = System.getProperty( "hibernate.core.jar.path" );
+		if ( jarPath == null ) {
+			throw new AssertionError( "System property 'hibernate.core.jar.path' not set" );
 		}
+		return Path.of( jarPath );
 	}
 
 	private static void copyDirectory(Path source, Path target) throws IOException {

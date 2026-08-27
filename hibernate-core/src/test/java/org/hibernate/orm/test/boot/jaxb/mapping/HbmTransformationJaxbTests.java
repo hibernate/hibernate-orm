@@ -48,6 +48,7 @@ import org.hibernate.type.descriptor.java.IntegerJavaType;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.InheritanceType;
+import jakarta.persistence.ParameterMode;
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
 
@@ -1942,6 +1943,101 @@ public class HbmTransformationJaxbTests {
 			assertThat( entityQuery.getResultSetMapping() )
 					.as( "Named native query with entity return should reference the implicit result set mapping" )
 					.isEqualTo( entityMapping.getName() );
+		} );
+	}
+
+	@Test
+	@JiraKey( "HHH-20817" )
+	public void testCallableStoredProcedureTransformation(ServiceRegistryScope scope) {
+		transformAndVerify( "xml/jaxb/mapping/stored-procedure/hbm.xml", scope, transformed -> {
+			// Callable <sql-query> elements must become <named-stored-procedure-query>, not <named-native-query>
+			assertThat( transformed.getNamedNativeQueries() )
+					.as( "callable <sql-query> must not be emitted as a named native query" )
+					.isEmpty();
+			assertThat( transformed.getNamedProcedureQueries() ).hasSize( 5 );
+
+			// --- simpleScalar: single named parameter with scalar returns ---
+			final var simpleScalar = transformed.getNamedProcedureQueries().stream()
+					.filter( q -> "simpleScalar".equals( q.getName() ) )
+					.findFirst()
+					.orElseThrow();
+			assertThat( simpleScalar.getProcedureName() )
+					.as( "procedure name should be parsed from the JDBC call syntax" )
+					.isEqualTo( "simpleScalar" );
+			assertThat( simpleScalar.getProcedureParameters() ).hasSize( 1 );
+			final var namedParam = simpleScalar.getProcedureParameters().get( 0 );
+			assertThat( namedParam.getName() ).isEqualTo( "p_number" );
+			assertThat( namedParam.getMode() ).isEqualTo( ParameterMode.IN );
+			assertThat( namedParam.getClazz() )
+					.as( "the declared <query-param type> should be resolved to the parameter Java class" )
+					.isEqualTo( long.class.getName() );
+			assertThat( simpleScalar.getResultSetMappings() )
+					.as( "scalar returns should be transformed into an implicit result set mapping reference" )
+					.hasSize( 1 );
+			assertThat( transformed.getSqlResultSetMappings() )
+					.anyMatch( m -> m.getName().equals( simpleScalar.getResultSetMappings().get( 0 ) )
+							&& m.getColumnResult().size() == 2 );
+
+			// --- paramhandling: two positional parameters ---
+			final var paramhandling = transformed.getNamedProcedureQueries().stream()
+					.filter( q -> "paramhandling".equals( q.getName() ) )
+					.findFirst()
+					.orElseThrow();
+			assertThat( paramhandling.getProcedureName() ).isEqualTo( "paramHandling" );
+			assertThat( paramhandling.getProcedureParameters() ).hasSize( 2 );
+			assertThat( paramhandling.getProcedureParameters() )
+					.as( "positional parameters should be unnamed" )
+					.allMatch( p -> p.getName() == null && p.getMode() == ParameterMode.IN );
+
+			// --- paramhandling_mixed: a positional followed by a named parameter, in order ---
+			final var mixed = transformed.getNamedProcedureQueries().stream()
+					.filter( q -> "paramhandling_mixed".equals( q.getName() ) )
+					.findFirst()
+					.orElseThrow();
+			assertThat( mixed.getProcedureParameters() ).hasSize( 2 );
+			assertThat( mixed.getProcedureParameters().get( 0 ).getName() )
+					.as( "first parameter is positional" )
+					.isNull();
+			assertThat( mixed.getProcedureParameters().get( 0 ).getClazz() )
+					.as( "a positional parameter has no <query-param> to correlate with and defaults to void" )
+					.isEqualTo( void.class.getName() );
+			assertThat( mixed.getProcedureParameters().get( 1 ).getName() )
+					.as( "second parameter is named" )
+					.isEqualTo( "second" );
+			assertThat( mixed.getProcedureParameters().get( 1 ).getClazz() )
+					.as( "the named parameter should pick up the declared <query-param type>" )
+					.isEqualTo( String.class.getName() );
+
+			// --- querySettings: only ProcedureCall-relevant settings survive as hints ---
+			final var querySettings = transformed.getNamedProcedureQueries().stream()
+					.filter( q -> "querySettings".equals( q.getName() ) )
+					.findFirst()
+					.orElseThrow();
+			assertThat( querySettings.getHints() )
+					.as( "comment/flush-mode/timeout are honoured by ProcedureCall and should become hints" )
+					.anyMatch( h -> "org.hibernate.comment".equals( h.getName() )
+							&& "a stored procedure call".equals( h.getValue() ) )
+					.anyMatch( h -> "org.hibernate.flushMode".equals( h.getName() )
+							&& "ALWAYS".equals( h.getValue() ) )
+					.anyMatch( h -> "jakarta.persistence.query.timeout".equals( h.getName() )
+							&& "30000".equals( h.getValue() ) );
+			assertThat( querySettings.getHints() )
+					.as( "cache/read-only/fetch-size settings are rejected by ProcedureCall and must be dropped" )
+					.noneMatch( h -> h.getName().startsWith( "org.hibernate.cache" )
+							|| "org.hibernate.readOnly".equals( h.getName() )
+							|| "org.hibernate.fetchSize".equals( h.getName() ) );
+
+			// --- selectAll: entity return, no parameters ---
+			final var selectAll = transformed.getNamedProcedureQueries().stream()
+					.filter( q -> "selectAll".equals( q.getName() ) )
+					.findFirst()
+					.orElseThrow();
+			assertThat( selectAll.getProcedureName() ).isEqualTo( "selectAll" );
+			assertThat( selectAll.getProcedureParameters() ).isEmpty();
+			assertThat( selectAll.getResultSetMappings() ).hasSize( 1 );
+			assertThat( transformed.getSqlResultSetMappings() )
+					.anyMatch( m -> m.getName().equals( selectAll.getResultSetMappings().get( 0 ) )
+							&& m.getEntityResult().size() == 1 );
 		} );
 	}
 

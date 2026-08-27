@@ -1683,7 +1683,8 @@ public abstract class CollectionBinder {
 		// For @OneToMany @JoinColumn on an @Audited entity, create a middle audit table
 		// to track collection membership changes (same approach as @ManyToMany / @JoinTable)
 		if ( !collection.isInverse() ) {
-			var revocations = extractRevocations( propertyHolder.getPersistentClass().getRootClass(), buildingContext );
+			var revocations = extractRevocations( propertyHolder.getPersistentClass().getRootClass(), buildingContext,
+					true );
 			final var audited = extract( Audited.class, property, buildingContext );
 			var isExcludedAtDeclaration = property.hasDirectAnnotationUsage( Audited.Excluded.class );
 			if ( audited != null && !isEffectivelyExcluded( modelsContext(), collection.getOwner(),
@@ -2583,7 +2584,8 @@ public abstract class CollectionBinder {
 			return;
 		}
 		//Unidirectional @OneToMany w/o @JoinColumn and @ElementCollection
-		var revocations = extractRevocations( propertyHolder.getPersistentClass().getRootClass(), buildingContext );
+		var revocations = extractRevocations( propertyHolder.getPersistentClass().getRootClass(), buildingContext,
+				true );
 		final var audited = extract( Audited.class, property, buildingContext );
 		var isExcludedAtDeclaration = property.hasDirectAnnotationUsage( Audited.Excluded.class );
 		if ( audited != null && !isEffectivelyExcluded( modelsContext(), collection.getOwner(),

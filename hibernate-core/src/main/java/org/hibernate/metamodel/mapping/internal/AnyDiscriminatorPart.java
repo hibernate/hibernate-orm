@@ -330,7 +330,10 @@ public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions 
 		final var fromClauseAccess = sqlAstCreationState.getFromClauseAccess();
 		final var sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
 
-		final var tableGroup = fromClauseAccess.getTableGroup( fetchablePath.getParent().getParent() );
+		final var tableGroup = DiscriminatedAssociationMapping.resolveDeclaringTableGroup(
+				fetchablePath.getParent(),
+				fromClauseAccess
+		);
 		final var tableReference = tableGroup.resolveTableReference( fetchablePath, table );
 		final var columnReference = sqlExpressionResolver.resolveSqlExpression(
 				tableReference,

@@ -95,8 +95,14 @@ public class StoredProcedureParameterJpaAnnotation implements StoredProcedurePar
 			mode( jaxbParam.getMode() );
 		}
 
-		if ( StringHelper.isNotEmpty( jaxbParam.getClazz() ) ) {
-			type( xmlDocumentContext.resolveJavaType( jaxbParam.getClazz() ).toJavaClass() );
+		final var clazz = jaxbParam.getClazz();
+		if ( StringHelper.isEmpty( clazz ) || void.class.getName().equals( clazz ) ) {
+			// void is the sentinel for an unspecified parameter type; the actual type
+			// is then inferred from the bound argument.
+			type( void.class );
+		}
+		else {
+			type( xmlDocumentContext.resolveJavaType( clazz ).toJavaClass() );
 		}
 	}
 }

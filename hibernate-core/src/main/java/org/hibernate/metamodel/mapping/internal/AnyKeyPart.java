@@ -263,9 +263,10 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 		final var sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
 
 		final var tableReference =
-				sqlAstCreationState.getFromClauseAccess()
-						.getTableGroup( fetchParent.getNavigablePath().getParent() )
-						.resolveTableReference( fetchablePath, table );
+				DiscriminatedAssociationMapping.getTableGroup(
+						fetchParent.getNavigablePath(),
+						sqlAstCreationState.getFromClauseAccess()
+				).resolveTableReference( fetchablePath, table );
 
 		final var sqlSelection =
 				sqlExpressionResolver.resolveSqlSelection(

@@ -2,25 +2,25 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.orm.test.boot.models.bind.module.subject;
+package org.hibernate.orm.integrationtest.java.module.test.annotation;
 
 import java.sql.Types;
 
 import org.hibernate.usertype.UserType;
 
-public class StubUserType implements UserType<StubDomainType> {
+public class StubUserType implements UserType<StubBasicType> {
 	@Override
 	public int getSqlType() {
 		return Types.VARCHAR;
 	}
 
 	@Override
-	public Class<StubDomainType> returnedClass() {
-		return StubDomainType.class;
+	public Class<StubBasicType> returnedClass() {
+		return StubBasicType.class;
 	}
 
 	@Override
-	public StubDomainType deepCopy(StubDomainType value) {
+	public StubBasicType deepCopy(StubBasicType value) {
 		return value;
 	}
 

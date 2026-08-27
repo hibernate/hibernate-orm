@@ -2,13 +2,13 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.orm.test.boot.models.bind.module.subject;
+package org.hibernate.orm.integrationtest.java.module.test.listener;
 
 import jakarta.persistence.PrePersist;
 
-public class ModuleListener {
+public class PackageListener {
 	@PrePersist
 	public void prePersist(Object entity) {
-		EventTracker.events.add( "module:" + entity.getClass().getSimpleName() );
+		EventTracker.events.add( "package:" + entity.getClass().getSimpleName() );
 	}
 }

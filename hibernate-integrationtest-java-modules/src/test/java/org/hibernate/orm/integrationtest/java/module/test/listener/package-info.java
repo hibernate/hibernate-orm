@@ -4,6 +4,6 @@
  */
 
 @EntityListeners(PackageListener.class)
-package org.hibernate.orm.test.boot.models.bind.module.subject;
+package org.hibernate.orm.integrationtest.java.module.test.listener;
 
 import jakarta.persistence.EntityListeners;

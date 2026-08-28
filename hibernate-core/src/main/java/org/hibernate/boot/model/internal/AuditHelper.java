@@ -402,7 +402,8 @@ public final class AuditHelper {
 		} );
 	}
 
-	private static void addOverridesToMap(PersistentClass pc, HashMap<String, Audited.Override> overridesMap, ModelsContext modelsContext) {
+	private static HashMap<String, Audited.Override> getOverridesMap(PersistentClass pc, ModelsContext modelsContext) {
+		var overridesMap = new HashMap<String, Audited.Override>();
 		var classToScan = pc.getClassName();
 		collectOverrides( classToScan, overridesMap, modelsContext );
 		var msc = pc.getSuperMappedSuperclass();
@@ -410,6 +411,7 @@ public final class AuditHelper {
 			collectOverrides( msc.getMappedClass().getName(), overridesMap, modelsContext );
 			msc = msc.getSuperMappedSuperclass();
 		}
+		return overridesMap;
 	}
 
 	@Nonnull
@@ -819,16 +821,14 @@ public final class AuditHelper {
 	private static Set<String> resolveExcludedColumns(Iterable<Property> properties, PersistentClass pc, ModelsContext mc) {
 		final Set<String> excluded = new HashSet<>();
 		for ( var property : properties ) {
-			if ( property.isAuditedExcluded() || property instanceof Backref ) {
+			if ( isEffectivelyExcluded( mc, pc, property.getName(), property.isAuditedExcluded() ) || property instanceof Backref ) { //TODO hier effectivelyExcluded!
 				for ( var column : property.getColumns() ) {
 					excluded.add( column.getCanonicalName() );
 				}
 			}
 		}
 		if ( pc != null ) { //TODO currently, pc is null, when this method is called from bindSecondaryAuditTables (because secondary tables auditoverrides are not finished yet)
-			var overridesMap = new HashMap<String, Audited.Override>();
-			addOverridesToMap( pc, overridesMap, mc );
-			overridesMap.forEach( (str, annotation ) -> {
+			getOverridesMap( pc, mc ).forEach( (str, annotation ) -> {
 				if ( !annotation.isAudited() ) {
 					for ( var column : pc.getProperty( str ).getColumns() ) {
 						excluded.add( column.getCanonicalName() );
@@ -939,7 +939,7 @@ public final class AuditHelper {
 		if ( override != null ) {
 			initiallyExcluded = !override.isAudited();
 		}
-		return initiallyExcluded && !isRevoked( propertyName, persistentClass, inheritanceStrategy == InheritanceType.SINGLE_TABLE, modelsContext );
+		return initiallyExcluded && !isRevoked( propertyName, persistentClass, inheritanceStrategy != InheritanceType.TABLE_PER_CLASS, modelsContext );
 	}
 
 	static @Nullable Audited.Override findAuditOverride(

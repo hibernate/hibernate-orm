@@ -828,8 +828,8 @@ public final class AuditHelper {
 		if ( pc != null ) {
 			var overridesMap = new HashMap<String, Audited.Override>();
 			addOverridesToMap( pc, overridesMap, mc );
-			overridesMap.forEach( (str, annotationo ) -> {
-				if ( !annotationo.isAudited() ) {
+			overridesMap.forEach( (str, annotation ) -> {
+				if ( !annotation.isAudited() ) {
 					excluded.add( str ); //TODO column names instead of property names
 				}
 			} );
@@ -851,17 +851,12 @@ public final class AuditHelper {
 				mappedColumns.add( column.getCanonicalName() );
 			}
 		}
-		var classDetails = context.getBootstrapContext().getModelsContext().getClassDetailsRegistry()
-				.getClassDetails( rootClass.getClassName() )
-				.getAnnotationUsage( Inheritance.class, context.getBootstrapContext().getModelsContext() );
-		InheritanceType strategy = classDetails == null ? null : classDetails.strategy();
 		// All properties in the hierarchy (root + subclasses for SINGLE_TABLE)
-		var revokedProperties = extractRevocations( rootClass, context, strategy == InheritanceType.SINGLE_TABLE );
 		var modelsContext = context.getBootstrapContext().getModelsContext();
 
-		collectPropertyColumns( rootClass, mappedColumns, excluded, revokedProperties, modelsContext );
+		collectPropertyColumns( rootClass, mappedColumns, excluded, modelsContext );
 		for ( var subclass : rootClass.getSubclasses() ) {
-			collectPropertyColumns( subclass, mappedColumns, excluded, revokedProperties, modelsContext );
+			collectPropertyColumns( subclass, mappedColumns, excluded, modelsContext );
 		}
 		// Exclude unmapped columns (e.g. FK from unidirectional @OneToMany @JoinColumn)
 		for ( var column : rootClass.getMainTable().getColumns() ) {
@@ -872,6 +867,13 @@ public final class AuditHelper {
 		return excluded;
 	}
 
+	private static InheritanceType getInheritanceStrategy(String className, ModelsContext context) {
+		var classDetails = context.getClassDetailsRegistry()
+				.getClassDetails( className )
+				.getAnnotationUsage( Inheritance.class, context );
+		return classDetails == null ?  InheritanceType.SINGLE_TABLE : classDetails.strategy();
+	}
+
 	//TODO call just once
 	static Map<String, Audited.Override> extractLowestAuditOverridesFromHierarchy(PersistentClass persistentClass, ModelsContext modelsContext) {
 		var effectiveAuditOverride = new HashMap<String, Audited.Override>();
@@ -879,26 +881,6 @@ public final class AuditHelper {
 		fullHierarchy.add( persistentClass );
 		fullHierarchy.forEach( pc -> addOverridesToMap( pc, effectiveAuditOverride, modelsContext ) );
 		return effectiveAuditOverride;
-	}
-
-	//TODO call just once
-	public static HashSet<String> extractRevocations(RootClass rootClass, MetadataBuildingContext context, boolean processSubclasses) {
-		var revokedProperties = new HashSet<String>();
-		var classesToScan = new ArrayList<PersistentClass>();
-		if ( processSubclasses ) {
-			classesToScan.addAll( rootClass.getSubclasses() );
-		}
-		classesToScan.add( rootClass );
-		classesToScan.forEach( pc -> {
-			var overrides = new HashMap<String, Audited.Override>();
-			addOverridesToMap( pc, overrides, context.getBootstrapContext().getModelsContext() );
-			overrides.forEach( (property, annotation) -> {
-				if ( annotation.isAudited() ) {
-					revokedProperties.add( property );
-				}
-			} );
-		} );
-		return revokedProperties;
 	}
 
 	private static void collectOverrides(String classToScan, HashMap<String, Audited.Override> overrides, ModelsContext modelsContext) {
@@ -914,15 +896,13 @@ public final class AuditHelper {
 			PersistentClass persistentClass,
 			Set<String> mappedColumns,
 			Set<String> excluded,
-			HashSet<String> revocations,
 			ModelsContext modelsContext) {
 		for ( var property : persistentClass.getProperties() ) {
 			if ( isEffectivelyExcluded(
 					modelsContext,
 					persistentClass,
 					property.getName(),
-					property.isAuditedExcluded(),
-					revocations
+					property.isAuditedExcluded()
 			) || property instanceof Backref ) {
 				for ( var column : property.getColumns() ) {
 					excluded.add( column.getCanonicalName() );
@@ -937,9 +917,10 @@ public final class AuditHelper {
 	}
 
 
-	static boolean isEffectivelyExcluded(ModelsContext modelsContext, PersistentClass persistentClass, String name, boolean excludedAtDeclaration, HashSet<String> revocations) {
+	static boolean isEffectivelyExcluded(ModelsContext modelsContext, PersistentClass persistentClass, String propertyName, boolean excludedAtDeclaration) {
 		var classDetails = modelsContext.getClassDetailsRegistry().getClassDetails( persistentClass.getClassName() );
-		var override = findAuditOverride( name, classDetails, modelsContext );
+		var override = findAuditOverride( propertyName, classDetails, modelsContext );
+		var inheritanceStrategy = getInheritanceStrategy( persistentClass.getClassName(), modelsContext );
 
 		/*
 		 * A property is initially excluded in two cases:
@@ -952,7 +933,7 @@ public final class AuditHelper {
 		if ( override != null ) {
 			initiallyExcluded = !override.isAudited();
 		}
-		return initiallyExcluded && !isRevoked( name, revocations );
+		return initiallyExcluded && !isRevoked( propertyName, persistentClass, inheritanceStrategy == InheritanceType.SINGLE_TABLE, modelsContext );
 	}
 
 	static @Nullable Audited.Override findAuditOverride(
@@ -972,8 +953,20 @@ public final class AuditHelper {
 		return null;
 	}
 
-	static boolean isRevoked(String property, Set<String> revokedProperties) {
-		return revokedProperties.contains( property );
+	static boolean isRevoked(String propertyName, PersistentClass persistentClass, boolean processSubclasses, ModelsContext modelsContext) {
+		var classesToScan = new ArrayList<PersistentClass>();
+		if ( processSubclasses ) {
+			classesToScan.addAll( persistentClass.getSubclasses() );
+		}
+		classesToScan.add( persistentClass );
+		for ( var pc : classesToScan ) {
+			var auditOverride = findAuditOverride( propertyName,
+					modelsContext.getClassDetailsRegistry().getClassDetails( pc.getClassName() ), modelsContext );
+			if ( auditOverride != null && auditOverride.isAudited() ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	// --- Runtime helpers ---

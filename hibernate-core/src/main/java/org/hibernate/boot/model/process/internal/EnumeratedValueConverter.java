@@ -60,7 +60,19 @@ public class EnumeratedValueConverter<E extends Enum<E>,R> implements BasicValue
 
 	@Override
 	public @Nullable E toDomainValue(@Nullable R relationalForm) {
-		return relationalForm == null ? null : relationalToEnumMap.get( relationalForm );
+		if ( relationalForm == null ) {
+			return null;
+		}
+		final E enumConstant = relationalToEnumMap.get( relationalForm );
+		if ( enumConstant == null ) {
+			// mirror Enum.valueOf(), which the EnumType.STRING mapping relies on
+			throw new IllegalArgumentException(
+					"Unknown value [" + relationalForm + "] for enum class ["
+							+ enumJavaType.getJavaTypeClass().getName()
+							+ "]; expected one of " + relationalToEnumMap.keySet()
+			);
+		}
+		return enumConstant;
 	}
 
 	@Override

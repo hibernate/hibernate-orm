@@ -960,6 +960,17 @@ Alternatively, users can configure the allocation size to match the legacy value
 // XSD changes
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+[[enumerated-value-unknown-values]]
+=== Unknown column values for `@EnumeratedValue` enums
+
+When an enum is mapped via `@EnumeratedValue`, a column value which matches none of the
+declared enum values now results in an `IllegalArgumentException` while the row is read,
+consistent with the `EnumType.STRING` mapping (which relies on `Enum.valueOf()`).
+Previously such a value was silently read as `null`, which typically surfaced much later
+as a `NullPointerException` or as a wrong attribute value.  Applications which relied on
+the lenient behavior, e.g. while an enum value is being removed, must clean up the affected
+rows before the enum value is dropped.
+
 [[xsd-changes]]
 == Changes in XSD
 

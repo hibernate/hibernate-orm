@@ -324,14 +324,14 @@ public final class AuditHelper {
 			String referencedEntityName,
 			@Nullable Audited.CollectionTable collectionAuditTable,
 			MetadataBuildingContext context,
-			Audited.Override auditOverride) {
+			@Nullable Audited.CollectionTable collectionAuditTableOverride) {
 		final var collector = context.getMetadataCollector();
 		final var ownerTable = collection.getOwner().getTable();
 
 		// Table name: @Audited.CollectionTable name (if applicable, taken from @AuditOverride), or {OwnerJpaEntityName}_{ChildJpaEntityName}_AUD
 		final var referencedEntity = collector.getEntityBinding( referencedEntityName );
 		final String auditTableName =
-				auditTableName( collection, collectionAuditTable, referencedEntity, auditOverride );
+				auditTableName( collection, collectionAuditTable, referencedEntity, collectionAuditTableOverride );
 
 		final String auditSchema;
 		final String auditCatalog;
@@ -350,14 +350,14 @@ public final class AuditHelper {
 			modTypeColumnName = DEFAULT_MODIFICATION_TYPE_COLUMN_NAME;
 		}
 		final String schema =
-				auditOverride != null && !isBlank( auditOverride.collectionTable().schema() )
-						? auditOverride.collectionTable().schema() :
+				collectionAuditTableOverride != null && !isBlank( collectionAuditTableOverride.schema() )
+						? collectionAuditTableOverride.schema() :
 						collectionAuditTable != null && !isBlank( collectionAuditTable.schema() )
 								? collectionAuditTable.schema()
 								: !isBlank( auditSchema ) ? auditSchema : ownerTable.getSchema();
 		final String catalog =
-				auditOverride != null && !isBlank( auditOverride.collectionTable().catalog() )
-						? auditOverride.collectionTable().catalog() :
+				collectionAuditTableOverride != null && !isBlank( collectionAuditTableOverride.catalog() )
+						? collectionAuditTableOverride.catalog() :
 				collectionAuditTable != null && !isBlank( collectionAuditTable.catalog() )
 						? collectionAuditTable.catalog()
 						: !isBlank( auditCatalog ) ? auditCatalog : ownerTable.getCatalog();
@@ -417,10 +417,10 @@ public final class AuditHelper {
 			Collection collection,
 			@Nullable Audited.CollectionTable collectionAuditTable,
 			PersistentClass referencedEntity,
-			Audited.Override auditOverride) {
+			@Nullable Audited.CollectionTable collectionAuditTableOverride) {
 
-		if ( auditOverride != null && !auditOverride.collectionTable().name().isBlank()) {
-			return auditOverride.collectionTable().name();
+		if ( collectionAuditTableOverride != null && !collectionAuditTableOverride.name().isBlank()) {
+			return collectionAuditTableOverride.name();
 		}
 
 		// search name in Audited.CollectionTable
@@ -874,13 +874,17 @@ public final class AuditHelper {
 		return classDetails == null ?  InheritanceType.SINGLE_TABLE : classDetails.strategy();
 	}
 
-	//TODO call just once
-	static Map<String, Audited.Override> extractLowestAuditOverridesFromHierarchy(PersistentClass persistentClass, ModelsContext modelsContext) {
-		var effectiveAuditOverride = new HashMap<String, Audited.Override>();
+	static Audited.CollectionTable extractLowestCollectionTableAuditOverrideFromHierarchy(PersistentClass persistentClass, ModelsContext modelsContext, String propertyName) {
 		var fullHierarchy = new ArrayList<PersistentClass>( persistentClass.getSubclasses() );
 		fullHierarchy.add( persistentClass );
-		fullHierarchy.forEach( pc -> addOverridesToMap( pc, effectiveAuditOverride, modelsContext ) );
-		return effectiveAuditOverride;
+		for ( var pc : fullHierarchy ) {
+			var auditOverride = findAuditOverride( propertyName,
+					modelsContext.getClassDetailsRegistry().getClassDetails( pc.getClassName() ), modelsContext );
+			if ( auditOverride != null ) {
+				return auditOverride.collectionTable();
+			}
+		}
+		return null;
 	}
 
 	private static void collectOverrides(String classToScan, HashMap<String, Audited.Override> overrides, ModelsContext modelsContext) {

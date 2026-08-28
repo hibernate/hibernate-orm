@@ -1660,9 +1660,11 @@ public abstract class CollectionBinder {
 			var isExcludedAtDeclaration = property.hasDirectAnnotationUsage( Audited.Excluded.class );
 			if ( audited != null && !isEffectivelyExcluded( modelsContext(), collection.getOwner(),
 					property.getName(), isExcludedAtDeclaration ) ) {
-				var lowestOverride = AuditHelper.extractLowestAuditOverridesFromHierarchy(
+				var lowestOverride = AuditHelper.extractLowestCollectionTableAuditOverrideFromHierarchy(
 						propertyHolder.getPersistentClass(),
-						buildingContext.getBootstrapContext().getModelsContext() ).get( propertyName );
+						buildingContext.getBootstrapContext().getModelsContext(),
+						propertyName
+				);
 				AuditHelper.bindOneToManyAuditTable(
 						extract( Audited.Table.class, property, buildingContext ),
 						collection,
@@ -2559,18 +2561,14 @@ public abstract class CollectionBinder {
 		var isExcludedAtDeclaration = property.hasDirectAnnotationUsage( Audited.Excluded.class );
 		if ( audited != null && !isEffectivelyExcluded( modelsContext(), collection.getOwner(),
 				property.getName(), isExcludedAtDeclaration ) ) {
-			var lowestOverrides = AuditHelper.extractLowestAuditOverridesFromHierarchy(
+			var lowestOverride = AuditHelper.extractLowestCollectionTableAuditOverrideFromHierarchy(
 					propertyHolder.getPersistentClass(),
-					buildingContext.getBootstrapContext().getModelsContext() );
-			Audited.CollectionTable collectionTableOverride = null;
-			if ( lowestOverrides.containsKey( propertyName ) ) {
-				collectionTableOverride = lowestOverrides.get( propertyName ).collectionTable();
-			}
+					buildingContext.getBootstrapContext().getModelsContext(), propertyName );
 			AuditHelper.bindAuditTable(
 					extract( Audited.Table.class, property, buildingContext ),
 					collection,
 					buildingContext,
-					collectionTableOverride
+					lowestOverride
 			);
 		}
 	}

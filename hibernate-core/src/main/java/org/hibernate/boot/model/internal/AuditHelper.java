@@ -262,7 +262,7 @@ public final class AuditHelper {
 			MetadataBuildingContext context) {
 		final var modelsContext = context.getBootstrapContext().getModelsContext();
 		for ( var subclass : parent.getDirectSubclasses() ) {
-			if ( subclass instanceof TableOwner ) { //TODO ich glaube für JOINED und TABLE_PER_CLASS ist das hier true, nicht?
+			if ( subclass instanceof TableOwner ) {
 				// Check if the subclass has its own @Audited.Table for table name/schema/catalog override
 				final var subclassDetails = modelsContext.getClassDetailsRegistry()
 						.getClassDetails( subclass.getClassName() );
@@ -825,12 +825,14 @@ public final class AuditHelper {
 				}
 			}
 		}
-		if ( pc != null ) {
+		if ( pc != null ) { //TODO currently, pc is null, when this method is called from bindSecondaryAuditTables (because secondary tables auditoverrides are not finished yet)
 			var overridesMap = new HashMap<String, Audited.Override>();
 			addOverridesToMap( pc, overridesMap, mc );
 			overridesMap.forEach( (str, annotation ) -> {
 				if ( !annotation.isAudited() ) {
-					excluded.add( str ); //TODO column names instead of property names
+					for ( var column : pc.getProperty( str ).getColumns() ) {
+						excluded.add( column.getCanonicalName() );
+					}
 				}
 			} );
 		}

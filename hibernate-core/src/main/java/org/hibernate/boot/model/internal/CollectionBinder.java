@@ -145,7 +145,6 @@ import static org.hibernate.boot.model.internal.AnnotatedColumn.buildColumnFromN
 import static org.hibernate.boot.model.internal.AnnotatedColumn.buildFormulaFromAnnotation;
 import static org.hibernate.boot.model.internal.AnnotatedJoinColumns.buildJoinColumnsWithDefaultColumnSuffix;
 import static org.hibernate.boot.model.internal.AnnotatedJoinColumns.buildJoinTableJoinColumns;
-import static org.hibernate.boot.model.internal.AuditHelper.extractRevocations;
 import static org.hibernate.boot.model.internal.AuditHelper.isEffectivelyExcluded;
 import static org.hibernate.boot.model.internal.BasicValueBinder.Kind.COLLECTION_ELEMENT;
 import static org.hibernate.boot.model.internal.BinderHelper.aggregateCascadeTypes;
@@ -1657,12 +1656,10 @@ public abstract class CollectionBinder {
 		// For @OneToMany @JoinColumn on an @Audited entity, create a middle audit table
 		// to track collection membership changes (same approach as @ManyToMany / @JoinTable)
 		if ( !collection.isInverse() ) {
-			var revocations = extractRevocations( propertyHolder.getPersistentClass().getRootClass(), buildingContext,
-					true );
 			final var audited = extract( Audited.class, property, buildingContext );
 			var isExcludedAtDeclaration = property.hasDirectAnnotationUsage( Audited.Excluded.class );
 			if ( audited != null && !isEffectivelyExcluded( modelsContext(), collection.getOwner(),
-					property.getName(), isExcludedAtDeclaration, revocations ) ) {
+					property.getName(), isExcludedAtDeclaration ) ) {
 				var lowestOverride = AuditHelper.extractLowestAuditOverridesFromHierarchy(
 						propertyHolder.getPersistentClass(),
 						buildingContext.getBootstrapContext().getModelsContext() ).get( propertyName );
@@ -2558,12 +2555,10 @@ public abstract class CollectionBinder {
 			return;
 		}
 		//Unidirectional @OneToMany w/o @JoinColumn and @ElementCollection
-		var revocations = extractRevocations( propertyHolder.getPersistentClass().getRootClass(), buildingContext,
-				true );
 		final var audited = extract( Audited.class, property, buildingContext );
 		var isExcludedAtDeclaration = property.hasDirectAnnotationUsage( Audited.Excluded.class );
 		if ( audited != null && !isEffectivelyExcluded( modelsContext(), collection.getOwner(),
-				property.getName(), isExcludedAtDeclaration, revocations ) ) {
+				property.getName(), isExcludedAtDeclaration ) ) {
 			var lowestOverrides = AuditHelper.extractLowestAuditOverridesFromHierarchy(
 					propertyHolder.getPersistentClass(),
 					buildingContext.getBootstrapContext().getModelsContext() );

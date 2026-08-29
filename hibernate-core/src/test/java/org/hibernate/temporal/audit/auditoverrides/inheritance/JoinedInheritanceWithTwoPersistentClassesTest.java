@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.temporal.audit.auditoverrides;
+package org.hibernate.temporal.audit.auditoverrides.inheritance;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -21,9 +21,7 @@ import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Test;
 
-import java.util.Collection;
-import java.util.function.Consumer;
-
+import static org.hibernate.temporal.audit.auditoverrides.inheritance.SingleTableInheritanceTest.assertTable;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
@@ -90,17 +88,5 @@ public class JoinedInheritanceWithTwoPersistentClassesTest {
 		} );
 
 	}
-
-	private static void assertTable(Collection<org.hibernate.mapping.Table> tables, String tableName, Consumer<org.hibernate.mapping.Table> consumer) {
-		var tableFound = false;
-		for ( var table : tables ) {
-			if ( table.getName().equals( tableName ) ) {
-				tableFound = true;
-				consumer.accept( table );
-			}
-		}
-		assertTrue( tableFound, () -> "Table %s not found. Available tables: %s".formatted( tableName, tables ) );
-	}
-
 
 }

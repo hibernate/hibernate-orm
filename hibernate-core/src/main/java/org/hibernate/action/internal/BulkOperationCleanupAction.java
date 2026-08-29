@@ -275,7 +275,7 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 				@Nonnull EntityDataAccess cacheAccess,
 				@Nonnull SharedSessionContractImplementor session) {
 			this.cacheAccess = cacheAccess;
-			this.cacheLock = cacheAccess.lockRegion();
+			cacheLock = cacheAccess.lockRegion();
 			cacheAccess.removeAll( session );
 		}
 
@@ -292,7 +292,7 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 				@Nonnull CollectionDataAccess cacheAccess,
 				@Nonnull SharedSessionContractImplementor session) {
 			this.cacheAccess = cacheAccess;
-			this.cacheLock = cacheAccess.lockRegion();
+			cacheLock = cacheAccess.lockRegion();
 			cacheAccess.removeAll( session );
 		}
 
@@ -309,7 +309,7 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 				@Nonnull NaturalIdDataAccess naturalIdCacheAccessStrategy,
 				@Nonnull SharedSessionContractImplementor session) {
 			this.naturalIdCacheAccessStrategy = naturalIdCacheAccessStrategy;
-			this.cacheLock = naturalIdCacheAccessStrategy.lockRegion();
+			cacheLock = naturalIdCacheAccessStrategy.lockRegion();
 			naturalIdCacheAccessStrategy.removeAll( session );
 		}
 

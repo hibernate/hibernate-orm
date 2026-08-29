@@ -99,12 +99,12 @@ public class EntityUpdateAction extends EntityAction {
 		this.previousState = previousState;
 		this.previousVersion = previousVersion;
 		this.nextVersion = nextVersion;
-		this.dirtyFields = dirtyProperties;
+		dirtyFields = dirtyProperties;
 		this.hasDirtyCollection = hasDirtyCollection;
 		this.rowId = rowId;
 
 		final var naturalIdMapping = persister.getNaturalIdMapping();
-		this.previousNaturalIdValues =
+		previousNaturalIdValues =
 				naturalIdMapping == null
 						? null
 						: determinePreviousNaturalIdValues( persister, naturalIdMapping, id, previousState, session );

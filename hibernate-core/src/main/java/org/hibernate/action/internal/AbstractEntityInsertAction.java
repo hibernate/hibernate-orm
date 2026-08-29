@@ -57,8 +57,8 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 		assert state != null;
 		assert instance != null;
 		this.state = state;
-		this.isExecuted = false;
-		this.areTransientReferencesNullified = false;
+		isExecuted = false;
+		areTransientReferencesNullified = false;
 
 		if ( id != null ) {
 			handleNaturalIdPreSaveNotifications();
@@ -262,7 +262,7 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 	 * Indicate that the action has executed.
 	 */
 	public void markExecuted() {
-		this.isExecuted = true;
+		isExecuted = true;
 	}
 
 	/**
@@ -285,7 +285,7 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 		// guard against NullPointerException
 		if ( session != null ) {
 			final var entityEntry = session.getPersistenceContextInternal().getEntry( getInstance() );
-			this.state = entityEntry.getLoadedState();
+			state = entityEntry.getLoadedState();
 		}
 	}
 

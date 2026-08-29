@@ -403,13 +403,17 @@ public final class AuditHelper {
 	}
 
 	private static HashMap<String, Audited.Override> getOverridesMap(PersistentClass pc, ModelsContext modelsContext) {
+		var persistendClassToScan = pc;
 		var overridesMap = new HashMap<String, Audited.Override>();
-		var classToScan = pc.getClassName();
-		collectOverrides( classToScan, overridesMap, modelsContext );
-		var msc = pc.getSuperMappedSuperclass();
-		while ( msc != null ) {
-			collectOverrides( msc.getMappedClass().getName(), overridesMap, modelsContext );
-			msc = msc.getSuperMappedSuperclass();
+		while ( persistendClassToScan != null ) {
+			var classToScan = persistendClassToScan.getClassName();
+			collectOverrides( classToScan, overridesMap, modelsContext );
+			var msc = persistendClassToScan.getSuperMappedSuperclass();
+			while ( msc != null ) {
+				collectOverrides( msc.getMappedClass().getName(), overridesMap, modelsContext );
+				msc = msc.getSuperMappedSuperclass();
+			}
+			persistendClassToScan = persistendClassToScan.getSuperPersistentClass();
 		}
 		return overridesMap;
 	}
@@ -826,9 +830,9 @@ public final class AuditHelper {
 					excluded.add( column.getCanonicalName() );
 				}
 			}
-		}
+		} //TODO check joined inheritance aswell for the SubSub scenario and full hierarchy upscanning...
 		if ( pc != null ) { //TODO currently, pc is null, when this method is called from bindSecondaryAuditTables (because secondary tables auditoverrides are not finished yet)
-			getOverridesMap( pc, mc ).forEach( (str, annotation ) -> {
+			getOverridesMap( pc, mc ).forEach( (str, annotation ) -> { //TODO scan the full hierarchy for exclusions
 				if ( !annotation.isAudited() ) {
 					for ( var column : pc.getProperty( str ).getColumns() ) {
 						excluded.add( column.getCanonicalName() );
@@ -926,7 +930,7 @@ public final class AuditHelper {
 	static boolean isEffectivelyExcluded(ModelsContext modelsContext, PersistentClass persistentClass, String propertyName, boolean excludedAtDeclaration) {
 		var classDetails = modelsContext.getClassDetailsRegistry().getClassDetails( persistentClass.getClassName() );
 		var override = findAuditOverride( propertyName, classDetails, modelsContext );
-		var inheritanceStrategy = getInheritanceStrategy( persistentClass.getClassName(), modelsContext );
+		var inheritanceStrategy = getInheritanceStrategy( persistentClass.getRootClass().getClassName(), modelsContext ); //TODO get inheritance strategy from rootClass!
 
 		/*
 		 * A property is initially excluded in two cases:

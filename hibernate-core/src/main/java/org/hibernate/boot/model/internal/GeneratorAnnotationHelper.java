@@ -155,7 +155,9 @@ public class GeneratorAnnotationHelper {
 	}
 
 	public static ClassDetails locatePackageInfoDetails(ClassDetails classDetails, MetadataBuildingContext buildingContext) {
-		return locatePackageInfoDetails( classDetails, buildingContext.getBootstrapContext().getModelsContext() );
+		return buildingContext.getMetadataCollector()
+				.getPackageInfoClassDetails( qualifier( classDetails.getName() ) )
+				.orElse( null );
 	}
 
 	public static ClassDetails locatePackageInfoDetails(ClassDetails classDetails, ModelsContext modelContext) {

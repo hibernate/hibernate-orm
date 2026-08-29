@@ -21,7 +21,6 @@ import org.hibernate.annotations.AnyDiscriminatorValues;
 import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.annotations.SqlFragmentAlias;
-import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.engine.FetchStyle;
@@ -1067,27 +1066,16 @@ public class BinderHelper {
 			ClassDetails classDetails,
 			MetadataBuildingContext context) {
 
-// todo (soft-delete) : or if we want caching of this per package
-//  +
-//				final SoftDelete fromPackage = context.getMetadataCollector().resolvePackageAnnotation( packageName, SoftDelete.class );
-//  +
-//		where context.getMetadataCollector() can cache some of this - either the annotations themselves
-//		or even just the XPackage resolutions
-
 		final String packageName = qualifier( classDetails.getName() );
 		if ( isEmpty( packageName ) ) {
 			return null;
 		}
 		else {
 			final var modelsContext = context.getBootstrapContext().getModelsContext();
-			try {
-				return modelsContext.getClassDetailsRegistry()
-						.resolveClassDetails( packageName + ".package-info" )
-						.getAnnotationUsage( annotationType, modelsContext );
-			}
-			catch (ClassLoadingException ignore) {
-				return null;
-			}
+			return context.getMetadataCollector()
+					.getPackageInfoClassDetails( packageName )
+					.map( packageInfoDetails -> packageInfoDetails.getAnnotationUsage( annotationType, modelsContext ) )
+					.orElse( null );
 		}
 	}
 }

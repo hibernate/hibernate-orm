@@ -52,6 +52,7 @@ import org.hibernate.boot.query.NamedNativeQueryDefinition;
 import org.hibernate.boot.query.NamedProcedureCallDefinition;
 import org.hibernate.boot.query.NamedResultSetMappingDescriptor;
 import org.hibernate.boot.query.internal.NamedProcedureCallDefinitionImpl;
+import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -102,6 +103,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -176,6 +178,7 @@ public class InFlightMetadataCollectorImpl
 	private final Set<String> defaultNamedNativeQueryNames = new HashSet<>();
 	private final Set<String> defaultSqlResultSetMappingNames = new HashSet<>();
 	private final Set<String> defaultNamedProcedureNames = new HashSet<>();
+	private final Map<String, Optional<ClassDetails>> packageInfoClassDetails = new HashMap<>();
 	private Map<Class<?>, MappedSuperclass> mappedSuperClasses;
 	private Map<ClassDetails, Map<String, PropertyData>> propertiesAnnotatedWithMapsId;
 	private Map<ClassDetails, Map<String, PropertyData>> propertiesAnnotatedWithIdAndToOne;
@@ -232,6 +235,20 @@ public class InFlightMetadataCollectorImpl
 	@Override
 	public PersistenceUnitMetadata getPersistenceUnitMetadata() {
 		return persistenceUnitMetadata;
+	}
+
+	@Override
+	public Optional<ClassDetails> getPackageInfoClassDetails(String packageName) {
+		return packageInfoClassDetails.computeIfAbsent( packageName, this::resolvePackageInfoClassDetails );
+	}
+
+	private Optional<ClassDetails> resolvePackageInfoClassDetails(String packageName) {
+		try {
+			return Optional.of( getClassDetailsRegistry().resolveClassDetails( packageName + ".package-info" ) );
+		}
+		catch (ClassLoadingException ignore) {
+			return Optional.empty();
+		}
 	}
 
 	@Override

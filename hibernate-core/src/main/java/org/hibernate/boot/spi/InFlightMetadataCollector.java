@@ -8,6 +8,7 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 
 import org.hibernate.DuplicateMappingException;
@@ -30,6 +31,7 @@ import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.boot.model.source.spi.LocalMetadataBuildingContext;
 import org.hibernate.boot.models.spi.GlobalRegistrations;
 import org.hibernate.boot.models.xml.spi.PersistenceUnitMetadata;
+import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.query.NamedHqlQueryDefinition;
 import org.hibernate.boot.query.NamedNativeQueryDefinition;
 import org.hibernate.boot.query.NamedProcedureCallDefinition;
@@ -81,6 +83,20 @@ public interface InFlightMetadataCollector extends MetadataImplementor {
 
 	default AnnotationDescriptorRegistry getAnnotationDescriptorRegistry() {
 		return getBootstrapContext().getModelsContext().getAnnotationDescriptorRegistry();
+	}
+
+	/**
+	 * Resolves the {@code package-info} class for the given package.
+	 *
+	 * @return the class details, or an empty value if the package has no {@code package-info} class
+	 */
+	default Optional<ClassDetails> getPackageInfoClassDetails(String packageName) {
+		try {
+			return Optional.of( getClassDetailsRegistry().resolveClassDetails( packageName + ".package-info" ) );
+		}
+		catch (ClassLoadingException ignore) {
+			return Optional.empty();
+		}
 	}
 
 	@Remove

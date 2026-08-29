@@ -44,7 +44,6 @@ public class EmbeddableTest {
 	}
 
 	/**
-	 * Case 5:
 	 * MSC: @Audited.Excluded, but with a property that has multiple columns: an @Embeddable
 	 * Entity: -
 	 * Entity: @Audited

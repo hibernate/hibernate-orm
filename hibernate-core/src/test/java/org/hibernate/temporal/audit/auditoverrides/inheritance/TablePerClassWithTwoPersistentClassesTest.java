@@ -30,6 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @DomainModel(annotatedClasses = {
 		TablePerClassWithTwoPersistentClassesTest.Base.class,
 		TablePerClassWithTwoPersistentClassesTest.Sub.class,
+		TablePerClassWithTwoPersistentClassesTest.SubSub.class,
 })
 @ServiceRegistry(settings = @Setting(name = StateManagementSettings.CHANGESET_ID_SUPPLIER,
 		value = "org.hibernate.temporal.audit.AuditEntityTest$TxIdSupplier"))
@@ -69,9 +70,16 @@ public class TablePerClassWithTwoPersistentClassesTest {
 			@Audited.Override(name = "str1", isAudited = true), // <-- revokes initial exclusion of str1
 			@Audited.Override(name = "str2", isAudited = false) // <-- revokes initial inclusion of str2
 	} )
-
 	static class Sub extends Base {
+		@Audited.Excluded
+		String str3;
+	}
 
+	@Entity
+	@Audited.Overrides( {
+			@Audited.Override(name = "str3", isAudited = true),
+	} )
+	static class SubSub extends Sub {
 	}
 
 	@Test
@@ -85,6 +93,13 @@ public class TablePerClassWithTwoPersistentClassesTest {
 		assertTable( tables, "TablePerClassWithTwoPersistentClassesTest$Sub_AUD", table -> {
 			assertTrue( table.containsColumn( new Column( "str1" ) ) );
 			assertFalse( table.containsColumn( new Column( "str2" ) ) );
+			assertFalse( table.containsColumn( new Column( "str3" ) ) );
+		} );
+
+		assertTable( tables, "TablePerClassWithTwoPersistentClassesTest$SubSub_AUD", table -> {
+			assertTrue( table.containsColumn( new Column( "str1" ) ) );
+			assertFalse( table.containsColumn( new Column( "str2" ) ) );
+			assertTrue( table.containsColumn( new Column( "str3" ) ) );
 		} );
 
 	}

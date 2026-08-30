@@ -168,7 +168,7 @@ public class DB2iDialect extends DB2Dialect {
 
 	@Override
 	public String getRowIdColumnString(String rowId) {
-		return rowId( rowId ) + " rowid not null generated always";
+		return rowId( rowId ) + " rowid not null implicitly hidden generated always";
 	}
 
 	@Override

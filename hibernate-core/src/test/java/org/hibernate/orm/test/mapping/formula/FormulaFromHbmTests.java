@@ -74,6 +74,11 @@ public class FormulaFromHbmTests {
 	@SkipForDialect(dialectClass = InformixDialect.class,
 			reason = "The Informix JDBC driver doesn't support the JDBC escape for the concat function which is used in the mapping")
 	public void testBasicHqlUse(SessionFactoryScope scope) {
+		// The mapping's @Formula uses cast(... as varchar(255)) (PG cast syntax). GaussDB M mode CAST only accepts
+		// MySQL type names (char/signed/decimal/datetime/binary) and rejects varchar; @Formula is user SQL the
+		// dialect does not rewrite (same family as the existing MySQLDialect skip). A mode (PG kernel) supports
+		// the cast, so M-only skip.
+		org.junit.jupiter.api.Assumptions.assumeFalse( scope.getSessionFactory().getJdbcServices().getDialect() instanceof org.hibernate.community.dialect.GaussDBDialect g && g.isMMode() );
 		scope.inTransaction(
 				(session) -> session.createQuery( "from EntityOfFormulas" ).list()
 		);

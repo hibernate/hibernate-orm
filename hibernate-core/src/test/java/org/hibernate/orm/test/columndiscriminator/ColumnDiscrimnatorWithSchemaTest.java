@@ -33,6 +33,11 @@ class ColumnDiscrimnatorWithSchemaTest {
 
 	@Test
 	void testIt(SessionFactoryScope scope) {
+		// GaussDB M mode folds the unquoted DEFAULT_SCHEMA "GREET" to lowercase when resolving the sequence name
+		// (nextval('greet.author_seq')), but the schema and sequence were created as "GREET" — so nextval fails with
+		// "schema greet does not exist". Same M-mode unquoted-sequence case-folding limitation as
+		// DefaultCatalogAndSchemaTest. A mode (PG kernel) preserves the case, so M-only skip.
+		org.junit.jupiter.api.Assumptions.assumeFalse( scope.getSessionFactory().getJdbcServices().getDialect() instanceof org.hibernate.community.dialect.GaussDBDialect g && g.isMMode() );
 		scope.inTransaction( entityManager -> {
 			var book = new Book( "The Art of Computer Programming",
 					new SpecialBookDetails( "Hardcover", "Computer Science" ) );

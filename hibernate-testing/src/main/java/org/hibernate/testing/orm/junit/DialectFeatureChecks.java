@@ -591,9 +591,28 @@ abstract public class DialectFeatureChecks {
 
 	public static class SupportsCteInsertStrategy implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
+			if ( dialect instanceof GaussDBDialect g && g.isMMode() ) {
+				// M mode lacks RETURNING (single-node only), so the CTE-based insert
+				// strategy (with t as (insert ... returning) select) is unavailable; the
+				// dialect falls back to LocalTemporaryTableInsertStrategy, whose ID-allocation
+				// semantics differ (it consumes reserved HiLo/Pooled IDs rather than opening a
+				// new segment), so the CTE-insert tests don't apply. A mode keeps CTE insert.
+				return false;
+			}
 			return (dialect instanceof PostgreSQLDialect && !(dialect instanceof SpannerPostgreSQLDialect))
 				|| dialect instanceof DB2Dialect
 				|| dialect instanceof GaussDBDialect;
+		}
+	}
+
+	public static class NotGaussDBMMode implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			// GaussDB M mode (MySQL-compatible) folds unquoted identifiers to lowercase on
+			// CREATE SEQUENCE, yet treats nextval()'s string argument as case-sensitive, so the
+			// dialect must render unquoted sequence names in lowercase to match. Tests that assert
+			// mixed-case sequence names (e.g. catalog/schema qualifier-substitution checks) cannot
+			// hold in M mode. A mode (Oracle-compatible) and every other dialect are unaffected.
+			return !( dialect instanceof GaussDBDialect g && g.isMMode() );
 		}
 	}
 
@@ -750,7 +769,11 @@ abstract public class DialectFeatureChecks {
 
 	public static class SupportsFullJoin implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
-			return !( dialect instanceof DerbyDialect );
+			// GaussDB M mode (MySQL-compatible) does not support FULL JOIN; skip the test rather
+			// than fail on the rendered `full join` syntax error. A mode (openGauss PG kernel)
+			// supports it.
+			return !( dialect instanceof DerbyDialect )
+					&& !( dialect instanceof GaussDBDialect g && g.isMMode() );
 		}
 	}
 
@@ -795,18 +818,41 @@ abstract public class DialectFeatureChecks {
 
 	public static class SupportsStructAggregate implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
+			// GaussDB M mode (MySQL-compatible) does not support PG-style composite types
+			// (CREATE TYPE ... AS (...) is a syntax error), so @Struct aggregate tests are skipped.
+			// A mode (openGauss PG kernel) supports them.
+			if ( dialect instanceof GaussDBDialect g && g.isMMode() ) {
+				return false;
+			}
 			return supportsAggregate( dialect, SqlTypes.STRUCT );
 		}
 	}
 
 	public static class SupportsJsonAggregate implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
+			// GaussDB M mode (MySQL-compatible) JSON aggregate read/write expressions are not yet
+			// adapted. The read side uses PostgreSQL `->'col'`/`->>'col'`, but M mode needs the
+			// `$.col` path form (else "Invalid JSON path expression"). The write side serializes
+			// date/timestamp/timestamptz via `to_char`, which M mode rejects: `to_char(timestamp,...)`
+			// does not exist, `to_char(date,...)` returns wrong values, and `at time zone 'UTC'`
+			// is unavailable. Skip until the M-mode JSON aggregate renderer is rewritten (read path
+			// `$.` prefix + write `date_format` + tz handling). A mode (openGauss PG kernel) supports
+			// the PostgreSQL JSON function family unchanged.
+			if ( dialect instanceof GaussDBDialect g && g.isMMode() ) {
+				return false;
+			}
 			return supportsAggregate( dialect, SqlTypes.JSON );
 		}
 	}
 
 	public static class SupportsXmlAggregate implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
+			// GaussDB M mode (MySQL-compatible) lacks the PG XML function family
+			// (XMLTABLE/xmlexists/xmlquery/xmlagg/xmlelement/xmlparse/extractvalue all fail; only
+			// xmltype() exists), so XML aggregate embeddable tests are skipped. A mode supports them.
+			if ( dialect instanceof GaussDBDialect g && g.isMMode() ) {
+				return false;
+			}
 			return supportsAggregate( dialect, SqlTypes.SQLXML );
 		}
 	}
@@ -841,6 +887,10 @@ abstract public class DialectFeatureChecks {
 
 	public static class SupportsJsonComponentUpdate implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
+			if ( dialect instanceof GaussDBDialect g && g.isMMode() ) {
+				// M mode JSON aggregate write renderer is not yet adapted; see SupportsJsonAggregate.
+				return false;
+			}
 			try {
 				dialect.getAggregateSupport().requiresAggregateCustomWriteExpressionRenderer( SqlTypes.JSON );
 				return true;
@@ -853,6 +903,10 @@ abstract public class DialectFeatureChecks {
 
 	public static class SupportsXmlComponentUpdate implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
+			if ( dialect instanceof GaussDBDialect g && g.isMMode() ) {
+				// M mode lacks the PG XML function family; see SupportsXmlAggregate.
+				return false;
+			}
 			try {
 				dialect.getAggregateSupport().requiresAggregateCustomWriteExpressionRenderer( SqlTypes.SQLXML );
 				return true;

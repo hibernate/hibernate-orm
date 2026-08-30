@@ -36,7 +36,9 @@ import static org.hibernate.query.sqm.produce.function.FunctionParameterType.COM
  */
 public class GaussDBMinMaxFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 
-	public GaussDBMinMaxFunction(String name) {
+	private final boolean mMode;
+
+	public GaussDBMinMaxFunction(String name, boolean mMode) {
 		super(
 				name,
 				FunctionKind.AGGREGATE,
@@ -44,6 +46,7 @@ public class GaussDBMinMaxFunction extends AbstractSqmSelfRenderingFunctionDescr
 				StandardFunctionReturnTypeResolvers.useFirstNonNull(),
 				StandardFunctionArgumentTypeResolvers.IMPLIED_RESULT_TYPE
 		);
+		this.mMode = mMode;
 	}
 
 	@Override
@@ -97,6 +100,15 @@ public class GaussDBMinMaxFunction extends AbstractSqmSelfRenderingFunctionDescr
 		final JdbcMapping sourceMapping = arg.getExpressionType().getSingleJdbcMapping();
 		// Cast uuid expressions to "text" first, aggregate that, and finally cast to uuid again
 		if ( sourceMapping.getJdbcType().getDefaultSqlTypeCode() == SqlTypes.UUID ) {
+			if ( mMode ) {
+				// M mode (MySQL-compatible) has no native uuid type: UUID is stored as varchar(36)
+				// (see GaussDBDialect.columnType/registerColumnTypes), so the column is already a
+				// plain varchar and can be aggregated directly. M mode rejects `cast(... as text)`
+				// (only char is allowed in CAST) and has no uuid type for the `::uuid` re-cast, so
+				// emit the argument as-is. A mode keeps the text-cast workaround for native uuid.
+				arg.accept( translator );
+				return null;
+			}
 			sqlAppender.appendSql( "cast(" );
 			arg.accept( translator );
 			sqlAppender.appendSql( " as text)" );

@@ -1,6 +1,20 @@
 Hibernate 7 Changelog
 =======================
 
+Changes in 7.4.7.Final (August 30, 2026)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/40441
+
+
+** Bug
+    * HHH-20773 @Basic(fetch=LAZY) field not served from 2LC for @Immutable entities with associations
+    * HHH-20720 Hibernate processor: @Transactional annotation should be copied for all repositories, not just Jakarta Data
+    * HHH-20718 Invalid SQL when a to-one foreign key references an ancestor table in a JOINED hierarchy
+
+** Improvement
+    * HHH-17990 More advanced "proxy" classes (and tests) for session/statelessSession for use in other libraries
+
 Changes in 7.4.6.Final (August 23, 2026)
 ------------------------------------------------------------------------------------------------------------------------
 

@@ -1907,6 +1907,10 @@ public class ToOneAttributeMapping
 				SqlAstJoinType.LEFT
 		);
 		if ( compatibleTableGroup != null ) {
+			creationState.getSqlAstCreationState().getFromClauseAccess().registerTableGroup(
+					fetchablePath,
+					compatibleTableGroup
+			);
 			return compatibleTableGroup;
 		}
 		// We have to create the table group that points to the target so that table reference resolving works

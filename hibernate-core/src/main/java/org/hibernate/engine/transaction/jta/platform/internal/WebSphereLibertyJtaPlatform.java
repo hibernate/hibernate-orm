@@ -63,7 +63,8 @@ public class WebSphereLibertyJtaPlatform extends AbstractJtaPlatform {
 	@Override
 	public void registerSynchronization(Synchronization synchronization) {
 		try {
-			NullnessUtil.castNonNull( retrieveTransactionManager() ).getTransaction().registerSynchronization(synchronization);
+			NullnessUtil.castNonNull( retrieveTransactionManager() ).getTransaction()
+					.registerSynchronization(synchronization);
 		}
 		catch ( RollbackException | SystemException x ) {
 			throw new RuntimeException(x);

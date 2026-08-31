@@ -117,7 +117,7 @@ public class ScrollableResultsImpl<R> extends AbstractScrollableResults<R> {
 
 	@Override
 	public boolean setRowNumber(int rowNumber) {
-		return position( rowNumber );
+		return position( rowNumber >= 0 ? rowNumber + 1 : rowNumber );
 	}
 
 	private void prepareCurrentRow(boolean underlyingScrollSuccessful) {

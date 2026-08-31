@@ -18,8 +18,10 @@ import org.hibernate.graph.GraphSemantic;
 import org.hibernate.internal.OptimisticLockHelper;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.TableDetails;
+import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.UnionSubclassEntityPersister;
 import org.hibernate.query.internal.QueryOptionsImpl;
 import org.hibernate.query.spi.QueryOptions;
@@ -168,8 +170,10 @@ public class FollowOnLockingAction implements PostAction {
 		effectiveEntityGraph.applyGraph( graph, GraphSemantic.FETCH );
 
 		entityMappingType.forEachAttributeMapping( (index, attributeMapping) -> {
-			// we need to handle collections specially (which we do below, so skip them here)
-			if ( !(attributeMapping instanceof PluralAttributeMapping) ) {
+			// we need to handle collections specially (which we do below, so skip them here),
+			// and inverse to-one attributes have no columns here to select at all
+			if ( !(attributeMapping instanceof PluralAttributeMapping)
+					&& !isInverseToOne( attributeMapping ) ) {
 				final var tableLock = resolveTableLock( attributeMapping, tableLocks, entityMappingType );
 				if ( tableLock == null ) {
 					throw new AssertionFailure( String.format(
@@ -217,6 +221,15 @@ public class FollowOnLockingAction implements PostAction {
 
 		// at this point, we have all the individual locking selects ready to go - execute them
 		return buildLockingOptions( executionContext );
+	}
+
+	/**
+	 * An inverse ({@code mappedBy}) to-one is mapped to the foreign-key columns of the
+	 * <em>associated</em> table rather than to any column of the table being locked.
+	 */
+	private static boolean isInverseToOne(AttributeMapping attributeMapping) {
+		return attributeMapping instanceof ToOneAttributeMapping toOne
+			&& toOne.getSideNature() == ForeignKeyDescriptor.Nature.TARGET;
 	}
 
 	private TableLock resolveTableLock(

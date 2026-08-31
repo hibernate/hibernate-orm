@@ -37,9 +37,9 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * private String uuid;
  * </pre>
  * <p>
- * On the other hand, when {@code @GenericGenerator} annotates a class or
- * package, {@code @GeneratedValue} must be applied to the generated id
- * field:
+ * On the other hand, when {@code @GenericGenerator} annotates a class,
+ * package, or module, {@code @GeneratedValue} must be applied to the
+ * generated id field:
  * <pre>
  * &#64;Entity
  * &#64;GenericGenerator(type = CustomUuidGenerator.class)

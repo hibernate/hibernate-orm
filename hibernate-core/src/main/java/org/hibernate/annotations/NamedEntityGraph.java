@@ -25,7 +25,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * <p>
  * When applied to a root entity class, the root entity name is implied - e.g. {@code "title, isbn, author(name, books)"}
  * <p>
- * When applied to a package, the root entity name must be specified - e.g. {@code "Book: title, isbn, author(name, books)"}
+ * When applied to a package or module, the root entity name must be specified - e.g. {@code "Book: title, isbn, author(name, books)"}
  *
  * @see EntityManager#getEntityGraph(String)
  * @see org.hibernate.SessionFactory#parseEntityGraph(CharSequence)
@@ -46,7 +46,7 @@ public @interface NamedEntityGraph {
 	/**
 	 * The entity that is the root of the {@linkplain #graph graph}.
 	 * When the annotation is applied to a class, the class itself is assumed.
-	 * When applied to a package, this attribute is required.
+	 * When applied to a package or module, this attribute is required.
 	 */
 	Class<?> root() default void.class;
 
@@ -63,7 +63,7 @@ public @interface NamedEntityGraph {
 	/**
 	 * The textual representation of the graph.
 	 * <p>
-	 * When applied to a package, the syntax requires the entity name - e.g., {@code "Book: title, isbn, author(name, books)"}.
+	 * When applied to a package or module, the syntax requires the entity name - e.g., {@code "Book: title, isbn, author(name, books)"}.
 	 * <p>
 	 * When applied to an entity, the entity name should be omitted - e.g., {@code "title, isbn, author(name, books)"}.
 	 * <p>

@@ -22,6 +22,11 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * Generator that picks a strategy based on the {@linkplain Dialect#getNativeValueGenerationStrategy() dialect}.
+ * <p>
+ * When placed on a {@code package-info.java} or {@code module-info.java},
+ * the generator applies to any entity in the package or module whose
+ * identifier uses {@link jakarta.persistence.GeneratedValue @GeneratedValue}
+ * without explicitly specifying a generator.
  *
  * @since 7.0
  * @author Steve Ebersole

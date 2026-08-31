@@ -25,13 +25,13 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * <li>{@link JdbcType#getJdbcTypeCode()}.
  * </ol>
  * <p>
- * Registrations applied to a package are processed before Hibernate begins to process
- * any attributes, etc.
+ * Registrations applied to a {@code package-info.java} or {@code module-info.java}
+ * are processed before Hibernate begins to process any attributes, etc.
  * <p>
  * Registrations applied to a class are only applied once Hibernate begins to process
  * that class; it will also affect all future processing. However, it will not change
  * previous resolutions to use this newly registered one. Due to this nondeterminism,
- * it is recommended to only apply registrations to packages or to use a
+ * it is recommended to only apply registrations to packages or modules, or to use a
  * {@link org.hibernate.boot.model.TypeContributor}.
  *
  * @see org.hibernate.boot.model.TypeContributor

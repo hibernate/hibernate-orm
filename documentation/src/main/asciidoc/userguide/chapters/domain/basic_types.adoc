@@ -2271,7 +2271,8 @@ include::{example-dir-basic-mapping}/basic/bitset/BitSetJavaTypeTests.java[tags=
 ====
 
 Or we can apply it globally using `@JavaTypeRegistration`.  This allows the registered `JavaType`
-to be used as the default whenever we encounter the `BitSet` type
+to be used as the default whenever we encounter the `BitSet` type.
+This annotation may also be placed on a `package-info.java` or `module-info.java`.
 
 [[basic-bitset-example-java-type-global]]
 .@JavaTypeRegistration
@@ -2325,7 +2326,8 @@ In this example, `@JdbcType` has been used to specify our custom `BitSetJdbcType
 this attribute.
 
 We could instead replace how Hibernate deals with all `VARBINARY` handling with our custom impl using
-`@JdbcTypeRegistration`
+`@JdbcTypeRegistration`.
+This annotation may also be placed on a `package-info.java` or `module-info.java`.
 
 [[basic-bitset-example-jdbc-type-global]]
 .@JdbcType

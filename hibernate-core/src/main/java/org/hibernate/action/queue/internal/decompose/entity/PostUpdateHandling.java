@@ -144,6 +144,16 @@ public class PostUpdateHandling implements PostExecutionCallback {
 			if ( persister.hasUpdateGeneratedProperties() ) {
 				persister.processUpdateGeneratedProperties( action.getId(), entity, state, generatedValues, session );
 			}
+			final var versionMapping = persister.getVersionMapping();
+			if ( generatedValues != null && versionMapping != null ) {
+				final Object resolvedVersion = generatedValues.getGeneratedValue( versionMapping );
+				if ( resolvedVersion != null ) {
+					final int versionPropertyIndex = persister.getVersionPropertyIndex();
+					state[versionPropertyIndex] = resolvedVersion;
+					persister.setPropertyValue( entity, versionPropertyIndex, resolvedVersion );
+					nextVersion = resolvedVersion;
+				}
+			}
 			// Check if version was DB-generated
 			if ( generatedValuesCollector != null && persister.isVersionPropertyGenerated() ) {
 				nextVersion = persister.getVersion( entity );

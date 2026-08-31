@@ -198,6 +198,13 @@ public class GeneratedValuesHelper {
 				getActualGeneratedModelParts( persister, timing, supportsArbitraryValues, supportsRowId ) );
 	}
 
+	public static GeneratedValuesMappingProducer createMappingProducer(
+			EntityPersister persister,
+			boolean supportsArbitraryValues,
+			List<? extends ModelPart> generatedProperties) {
+		return generatedValuesMappingProducer( persister, supportsArbitraryValues, generatedProperties );
+	}
+
 	private static GeneratedValuesMappingProducer generatedValuesMappingProducer(
 			EntityPersister persister,
 			boolean supportsArbitraryValues,

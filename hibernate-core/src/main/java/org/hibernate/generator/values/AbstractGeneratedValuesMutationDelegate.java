@@ -4,9 +4,12 @@
  */
 package org.hibernate.generator.values;
 
+import java.util.List;
+
 import org.hibernate.dialect.Dialect;
 import org.hibernate.generator.EventType;
 import org.hibernate.generator.values.internal.GeneratedValuesMappingProducer;
+import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
 
@@ -37,6 +40,20 @@ public abstract class AbstractGeneratedValuesMutationDelegate implements Generat
 		this.supportsRowId = supportsRowId;
 		this.jdbcValuesMappingProducer =
 				createMappingProducer( persister, timing, supportsArbitraryValues, supportsRowId );
+	}
+
+	public AbstractGeneratedValuesMutationDelegate(
+			EntityPersister persister,
+			EventType timing,
+			boolean supportsArbitraryValues,
+			boolean supportsRowId,
+			List<? extends ModelPart> generatedProperties) {
+		this.persister = persister;
+		this.timing = timing;
+		this.supportsArbitraryValues = supportsArbitraryValues;
+		this.supportsRowId = supportsRowId;
+		this.jdbcValuesMappingProducer =
+				createMappingProducer( persister, supportsArbitraryValues, generatedProperties );
 	}
 
 	@Override

@@ -59,6 +59,10 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * <li>it is explicitly enabled by calling {@code enableFilter}, or
  * <li>it is declared {@link #autoEnabled autoEnabled = true}.
  * </ul>
+ * <p>
+ * A filter may be declared on an entity class, in a {@code package-info.java},
+ * or in a {@code module-info.java}. The filter definition is global within the
+ * persistence unit regardless of where it is declared.
  *
  * @author Matthew Inger
  * @author Emmanuel Bernard

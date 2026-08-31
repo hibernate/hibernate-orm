@@ -29,6 +29,10 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * <p>
  * Note that the members of this annotation correspond to hints enumerated by
  * {@link org.hibernate.jpa.AvailableHints}.
+ * <p>
+ * This annotation may also be applied to a {@code package-info.java} or {@code module-info.java},
+ * which is a convenient location for query declarations not specific to any
+ * particular entity.
  *
  * @author Emmanuel Bernard
  *

@@ -54,8 +54,8 @@ import static org.hibernate.annotations.FetchMode.JOIN;
  * <p>
  * However, a fetch profile is not by nature rooted at any one particular
  * entity, and so {@code @FetchProfile} is not required to annotate the
- * entity classes it affects. It may even occur as a package-level
- * annotation.
+ * entity classes it affects. It may even occur as a package-level or
+ * module-level annotation.
  * <p>
  * Instead, the root entity of a fetch graph is determined by the context
  * in which the fetch profile is active. For example, if a fetch profile

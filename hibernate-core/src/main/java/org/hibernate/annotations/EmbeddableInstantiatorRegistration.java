@@ -21,7 +21,16 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * Registers a custom instantiator implementation to be used
  * for all references to a particular {@link jakarta.persistence.Embeddable}.
  * <p>
- * May be overridden for a specific embedded using {@link org.hibernate.annotations.EmbeddableInstantiator}
+ * May be overridden for a specific embedded using {@link org.hibernate.annotations.EmbeddableInstantiator}.
+ * <p>
+ * Registrations applied to a {@code package-info.java} or {@code module-info.java}
+ * are processed before Hibernate begins to process any attributes, etc.
+ * <p>
+ * Registrations applied to a class are only applied once Hibernate begins to process
+ * that class; it will also affect all future processing. However, it will not change
+ * previous resolutions to use this newly registered one. Due to this nondeterminism,
+ * it is recommended to only apply registrations to packages or modules,
+ * or directly to the relevant embeddable class.
  */
 @Target( {TYPE, ANNOTATION_TYPE, PACKAGE, MODULE} )
 @Retention( RUNTIME )

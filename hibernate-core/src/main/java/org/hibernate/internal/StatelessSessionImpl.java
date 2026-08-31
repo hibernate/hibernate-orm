@@ -67,6 +67,7 @@ import org.hibernate.event.spi.PreUpdateEvent;
 import org.hibernate.event.spi.PreUpsertEvent;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.generator.BeforeExecutionGenerator;
+import org.hibernate.generator.values.GeneratedValues;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.id.IdentifierGenerationException;
@@ -702,7 +703,10 @@ public class StatelessSessionImpl
 			final var event = eventMonitor.beginEntityUpdateEvent();
 			boolean success = false;
 			try {
-				persister.getUpdateCoordinator().update( entity, id, null, state, oldVersion, null, null, false, this );
+				final var generatedValues =
+						persister.getUpdateCoordinator()
+								.update( entity, id, null, state, oldVersion, null, null, false, this );
+				applyDatabaseResolvedVersion( entity, state, persister, generatedValues );
 				success = true;
 			}
 			finally {
@@ -714,6 +718,21 @@ public class StatelessSessionImpl
 			final var statistics = getStatistics();
 			if ( statistics.isStatisticsEnabled() ) {
 				statistics.updateEntity( persister.getEntityName() );
+			}
+		}
+	}
+
+	private static void applyDatabaseResolvedVersion(
+			Object entity,
+			Object[] state,
+			EntityPersister persister,
+			GeneratedValues generatedValues) {
+		final var versionMapping = persister.getVersionMapping();
+		if ( generatedValues != null && versionMapping != null ) {
+			final Object resolvedVersion = generatedValues.getGeneratedValue( versionMapping );
+			if ( resolvedVersion != null ) {
+				setVersion( state, resolvedVersion, persister );
+				persister.setValue( entity, persister.getVersionPropertyIndex(), resolvedVersion );
 			}
 		}
 	}

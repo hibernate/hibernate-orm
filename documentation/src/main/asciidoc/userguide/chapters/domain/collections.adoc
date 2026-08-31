@@ -453,7 +453,8 @@ include::{example-dir-collection}/semantics/UniqueListWrapper.java[tags=collecti
 
 For cases where an application wants to apply the same custom type to all
 plural attributes of a given classification, Hibernate also provides the
-`@CollectionTypeRegistration`:
+`@CollectionTypeRegistration`.
+This annotation may also be placed on a `package-info.java` or `module-info.java`.
 
 [[collection-type-usertype-registration-ex]]
 .UniqueListType Registration

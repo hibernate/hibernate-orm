@@ -1429,7 +1429,7 @@ We've already seen two different ways to override the default <<association-fetc
 - the `join fetch` clause in <<hql-queries,HQL>>, or, equivalently, the method `From.fetch()` in the criteria query API.
 
 A third way is to define a named fetch profile.
-First, we must declare the profile, by annotating a class or package link:{doc-javadoc-url}org/hibernate/annotations/FetchProfile.html[`@FetchProfile`]:
+First, we must declare the profile, by annotating a class, package, or module link:{doc-javadoc-url}org/hibernate/annotations/FetchProfile.html[`@FetchProfile`]:
 
 [source,java]
 ----

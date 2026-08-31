@@ -772,6 +772,7 @@ There are two ways to apply a converter:
 
 - the `@Convert` annotation applies an `AttributeConverter` to a particular entity attribute, or
 - the `@Converter` annotation (or, alternatively, the `@ConverterRegistration` annotation) registers an `AttributeConverter` for automatic application to all attributes of a given type.
+  `@ConverterRegistration` should preferably be placed on a `package-info.java` or `module-info.java`.
 
 For example, the following converter is automatically applied to any attribute of type `EnumSet<DayOfWeek>`, and takes care of persisting the `EnumSet<DayOfWeek>` to a column of type `INTEGER`:
 
@@ -867,6 +868,7 @@ BitSet bitSet;
 ----
 
 Alternatively, the `@JavaTypeRegistration` annotation may be used to register `BitSetJavaType` as the default `JavaType` for `BitSet`.
+This annotation should preferably be placed on a `package-info.java` or `module-info.java`.
 
 [[jdbc-type]]
 [discrete]
@@ -898,6 +900,7 @@ long currentTimeMillis;
 ----
 
 The `@JdbcTypeRegistration` annotation may be used to register a user-written `JdbcType` as the default for a given SQL type code.
+This annotation should preferably be placed on a `package-info.java` or `module-info.java`.
 
 [NOTE]
 ====

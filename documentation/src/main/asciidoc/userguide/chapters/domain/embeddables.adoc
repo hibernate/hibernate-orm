@@ -439,6 +439,7 @@ include::{example-dir-embeddableinstantiator}/embeddable/Person.java[tags=embedd
 Lastly, `@org.hibernate.annotations.EmbeddableInstantiatorRegistration` may be used, which is useful
 when the application developer does not control the embeddable to be able to apply the instantiator
 on the <<embeddable-instantiator-class-ex,embeddable>>.
+This annotation may also be placed on a `package-info.java` or `module-info.java`.
 
 [[embeddable-instantiator-registration-ex]]
 .`@EmbeddableInstantiatorRegistration`
@@ -511,6 +512,7 @@ include::{example-dir-compositeusertype}/embedded/Person.java[tags=embeddable-us
 
 Or `@org.hibernate.annotations.CompositeTypeRegistration` may be used, which is useful
 when the application developer wants to apply the composite user type for all domain type uses.
+This annotation may also be placed on a `package-info.java` or `module-info.java`.
 
 [[embeddable-usertype-registration-ex]]
 .`@CompositeTypeRegistration`

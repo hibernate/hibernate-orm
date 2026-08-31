@@ -402,7 +402,8 @@ Named SQL queries can also be defined during mapping and called in exactly the s
 In this case, you do _not_ need to call `addEntity()` anymore.
 
 Jakarta Persistence defines the `jakarta.persistence.NamedNativeQuery` annotation for this purpose,
-and the Hibernate `org.hibernate.annotations.NamedNativeQuery` annotation extends it and adds the following attributes:
+and the Hibernate `org.hibernate.annotations.NamedNativeQuery` annotation extends it and adds the following attributes.
+Both annotations may be placed on a `package-info.java` or `module-info.java`, which is a convenient location for query declarations not specific to any particular entity.
 
 `flushMode()`::
 	The flush mode for the query. By default, it uses the current Persistence Context flush mode.

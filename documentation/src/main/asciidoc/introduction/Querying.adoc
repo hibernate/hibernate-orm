@@ -873,12 +873,14 @@ We have to make sure that the class with the `@NamedQuery` annotation will be sc
 - by adding `<class>org.hibernate.example.BookQueries</class>` to `persistence.xml`, or
 - by calling `persistenceConfiguration.managedClass(BookQueries.class)`.
 
-Alternatively, the `@NamedQuery` annotation can be placed on a package descriptor.
-If we declare a named query at the package level, we must call:
+Alternatively, the `@NamedQuery` annotation can be placed on a package or module descriptor.
+If we declare a named query at the package or module level, we must call:
 
 [source,java]
 ----
 configuration.addPackage("org.hibernate.example")
+// or
+configuration.addModule("org.hibernate-example")
 ----
 so that Hibernate knows where to find it.
 
@@ -890,6 +892,7 @@ Hibernate Processor can do that for us, with the help of the link:{doc-javadoc-u
 ====
 
 The `@NamedNativeQuery` and `@NamedNativeStatement`  annotations let us do something similar with native SQL queries.
+Like `@NamedQuery`, they may be placed on a package or module descriptor.
 But there's much less advantage to using `@NamedNativeQuery`, because there's very little Hibernate can do to validate the correctness of a query written in the native SQL dialect of your database.
 
 Whether it's written in HQL or SQL, we execute our named query like this:

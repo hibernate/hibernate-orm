@@ -449,8 +449,8 @@ class Book {
 Since Hibernate 7.3 a `root` attribute is available on the Hibernate-specific `@NamedEntityGraph` annotation
 to explicitly indicate the entity type that is the root of the graph.
 
-When `@NamedEntityGraph` is placed on a package, the `root` attribute **must** be specified.
-If the annotation is placed on a package and the `root` is omitted:
+When `@NamedEntityGraph` is placed on a package or module, the `root` attribute **must** be specified.
+If the annotation is placed on a package or module and the `root` is omitted:
 * In `legacy` parser mode a deprecation warning will be emitted.
 * In `modern` parser mode the omission is **not allowed** and results in an error.
 

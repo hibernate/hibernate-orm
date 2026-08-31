@@ -8,6 +8,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.hibernate.AssertionFailure;
+import org.hibernate.resource.beans.container.internal.CdiBeanContainerDelayedAccessImpl;
+import org.hibernate.resource.beans.container.internal.CdiBeanContainerExtendedAccessImpl;
+import org.hibernate.resource.beans.container.internal.DelayedBeanImpl;
+import org.hibernate.resource.beans.container.internal.JpaCompliantLifecycleStrategy;
 import org.hibernate.resource.beans.container.spi.BeanContainer;
 import org.hibernate.resource.beans.container.spi.FallbackContainedBean;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
@@ -29,9 +33,44 @@ public class ManagedBeanRegistryImpl implements ManagedBeanRegistry, BeanContain
 		this.beanContainer = beanContainer;
 	}
 
+	private boolean isContainerBootstrapSafe(){
+		if ( beanContainer == null || beanContainer instanceof CdiBeanContainerDelayedAccessImpl ||
+			beanContainer instanceof CdiBeanContainerExtendedAccessImpl ) {
+			return true;
+		}
+		return false;
+	}
+
 	@Override
 	public BeanContainer getBeanContainer() {
 		return beanContainer;
+	}
+
+	@Override
+	public <T> ManagedBean<T> getBootstrapSafeBean(Class<T> beanClass) {
+		if ( isContainerBootstrapSafe() ) {
+			return getBean( beanClass );
+		}
+		final String beanClassName = beanClass.getName();
+		final var existingBean = registrations.get( beanClassName );
+		if ( existingBean != null ) {
+			//checks to see if we found a bean under same key but no the same type
+			if (!beanClass.equals( existingBean.getBeanClass() ) ) {
+				throw new AssertionFailure( "Wrong bean type: " + beanClassName );
+			}
+			return (ManagedBean<T>) existingBean;
+		}
+		else {
+			final var bean = new DelayedBeanImpl<>(
+					beanClass,
+					JpaCompliantLifecycleStrategy.INSTANCE,
+					FallbackBeanInstanceProducer.INSTANCE,
+					beanContainer
+			);
+			registrations.put( beanClassName, bean );
+			return bean;
+		}
+
 	}
 
 	@Override

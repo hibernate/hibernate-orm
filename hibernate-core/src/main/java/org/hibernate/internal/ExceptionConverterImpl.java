@@ -27,6 +27,7 @@ import org.hibernate.exception.SnapshotIsolationException;
 import org.hibernate.exception.TransactionSerializationException;
 import org.hibernate.loader.MultipleBagFetchException;
 import org.hibernate.query.IllegalQueryOperationException;
+import org.hibernate.query.QueryTypeMismatchException;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.SyntaxException;
 
@@ -127,6 +128,9 @@ public class ExceptionConverterImpl implements ExceptionConverter {
 			final var converted = new EntityNotFoundException( exception.getMessage(), exception );
 			rollbackIfNecessary( converted );
 			return converted;
+		}
+		else if ( isJpaBootstrap && exception instanceof QueryTypeMismatchException ) {
+			return new IllegalArgumentException( exception );
 		}
 		else if ( exception instanceof SyntaxException
 				|| exception instanceof SemanticException

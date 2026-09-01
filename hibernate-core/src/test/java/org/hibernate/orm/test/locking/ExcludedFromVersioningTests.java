@@ -114,7 +114,7 @@ public class ExcludedFromVersioningTests {
 			return created;
 		} );
 
-		counter.count++;
+		counter.excludedValue++;
 		factoryScope.getSessionFactory()
 				.runInTransaction( EntityAgent.class,
 						agent -> agent.update( counter ) );
@@ -122,7 +122,7 @@ public class ExcludedFromVersioningTests {
 		assertThat( counter.version ).isZero();
 		factoryScope.inTransaction( session -> {
 			final var reloaded = session.find( Counter.class, counter.id );
-			assertThat( reloaded.count ).isOne();
+			assertThat( reloaded.excludedValue ).isOne();
 			assertThat( reloaded.version ).isZero();
 		} );
 	}
@@ -175,7 +175,7 @@ public class ExcludedFromVersioningTests {
 		private Long id;
 
 		@ExcludedFromVersioning
-		private long count;
+		private long excludedValue;
 
 		@Version
 		private Long version;

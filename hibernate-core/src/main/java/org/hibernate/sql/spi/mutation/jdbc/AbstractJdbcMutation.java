@@ -6,6 +6,7 @@ package org.hibernate.sql.spi.mutation.jdbc;
 
 import java.util.List;
 import java.util.Set;
+import java.util.function.Consumer;
 
 import org.hibernate.SPI;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
@@ -98,6 +99,25 @@ public abstract class AbstractJdbcMutation implements JdbcMutationOperation {
 		}
 		return null;
 	}
+
+	@Override
+	public final int forEachValueDescriptor(
+			String tableName,
+			String columnName,
+			ParameterUsage usage,
+			Consumer<JdbcValueDescriptor> consumer) {
+		assert getTableDetails().containsTableName( tableName );
+		int count = 0;
+		for ( int i = 0; i < jdbcValueDescriptors.size(); i++ ) {
+			final var descriptor = jdbcValueDescriptors.get( i );
+			if ( descriptor.matches( columnName, usage ) ) {
+				consumer.accept( descriptor );
+				count++;
+			}
+		}
+		return count;
+	}
+
 	@Override
 	public final boolean isCallable() {
 		return callable;

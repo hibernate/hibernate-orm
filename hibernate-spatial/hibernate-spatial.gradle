@@ -32,8 +32,7 @@ sourceSets.test.resources {
 tasks.test {
 
 	enabled = ['h2',
-			   'postgresql',
-			   'pgsql',
+			   'postgis',
 			   'cockroachdb',
 			   'mariadb',
 			   'mariadb',

@@ -263,6 +263,8 @@ postgresql() {
     postgresql_setup
 }
 
+# The plain postgresql target uses the pgvector image, so the vector extension
+# is already available and doesn't need to be installed via apt.
 postgresql_setup() {
     databases=()
     for n in $(seq 1 $DB_COUNT)

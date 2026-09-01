@@ -1,7 +1,7 @@
 services:
-  postgres:
-    image: ${DB_IMAGE_POSTGRESQL_14:-docker.io/postgis/postgis:14-3.3@sha256:b2ea11c9767c1b327f4c02252d9077fbbcea684d4d5b1369dc05f0eeebc82ff5}
-    container_name: postgres
+  postgis:
+    image: ${DB_IMAGE_POSTGIS_14:-docker.io/postgis/postgis:14-3.3@sha256:b2ea11c9767c1b327f4c02252d9077fbbcea684d4d5b1369dc05f0eeebc82ff5}
+    container_name: postgis
     platform: ${POSTGRESQL_PLATFORM:-linux/amd64}
     environment:
       POSTGRES_USER: hibernate_orm_test

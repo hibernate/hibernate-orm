@@ -190,6 +190,10 @@ The following table illustrates a list of commands for various databases that ca
 |`./db.sh postgresql`
 |`./gradlew test -Pdb=postgresql`
 
+|PostgreSQL with PostGIS (required for `hibernate-spatial`)
+|`./db.sh postgis`
+|`./gradlew test -Pdb=postgis`
+
 |EnterpriseDB
 |`./db.sh edb`
 |`./gradlew test -Pdb=edb`

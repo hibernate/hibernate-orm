@@ -179,6 +179,7 @@ updates:
       - "/docker-compose/latest/mssql"
       - "/docker-compose/latest/mysql"
       - "/docker-compose/latest/oracle"
+      - "/docker-compose/latest/postgis"
       - "/docker-compose/latest/postgresql"
       - "/docker-compose/latest/spanner"
       - "/docker-compose/latest/sybase"

@@ -33,9 +33,12 @@ elif [ "$RDBMS" == "mariadb_10_6" ]; then
 elif [ "$RDBMS" == "postgresql" ]; then
   goal="-Pdb=postgresql"
   containerName=postgres
-elif [ "$RDBMS" == "postgresql_14" ]; then
-  goal="-Pdb=postgresql -PdbVersion=${DB_VERSION:-14}"
-  containerName=postgres
+elif [ "$RDBMS" == "postgis" ]; then
+  goal="-Pdb=postgis"
+  containerName=postgis
+elif [ "$RDBMS" == "postgis_14" ]; then
+  goal="-Pdb=postgis -PdbVersion=${DB_VERSION:-14}"
+  containerName=postgis
 elif [ "$RDBMS" == "gaussdb"  ]; then
   goal="-Pdb=gaussdb -DdbHost=localhost:8000"
   containerName=opengauss

@@ -80,6 +80,6 @@ test {
     // hence running without it is "pointless":
     onlyIf {
         def dbType = project.hasProperty('db') ? project.property('db') : ''
-        return (["postgresql", "pgsql", ""].contains( dbType )) && project.hasProperty('runtck')
+        return (["postgresql", "pgsql", "postgis", ""].contains( dbType )) && project.hasProperty('runtck')
     }
 }

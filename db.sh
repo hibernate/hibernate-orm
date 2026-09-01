@@ -283,43 +283,14 @@ mariadb_post_setup() {
 ###############################################################################
 
 postgresql() {
-  postgresql_18
-}
-
-postgresql_14() {
-    compose_down "postgres"
-    compose_up "versioned/postgresql-14/docker-compose.yaml"
-    postgresql_setup 14
-}
-
-postgresql_15() {
-    compose_down "postgres"
-    compose_up "versioned/postgresql-15/docker-compose.yaml"
-    postgresql_setup 15
-}
-
-postgresql_16() {
-    compose_down "postgres"
-    compose_up "versioned/postgresql-16/docker-compose.yaml"
-    postgresql_setup 16
-}
-
-postgresql_17() {
-    compose_down "postgres"
-    compose_up "versioned/postgresql-17/docker-compose.yaml"
-    postgresql_setup 17
-}
-
-postgresql_18() {
     compose_down "postgres"
     compose_up "latest/postgresql/docker-compose.yaml"
-    postgresql_setup 18
+    postgresql_setup
 }
 
+# The plain postgresql target uses the pgvector image, so the vector extension
+# is already available and doesn't need to be installed via apt.
 postgresql_setup() {
-    local pg_version="$1"
-    $CONTAINER_CLI exec postgres bash -c "/usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y && apt install -y postgresql-${pg_version}-pgvector" 2>/dev/null || true
-
     databases=()
     for n in $(seq 1 $DB_COUNT)
     do
@@ -333,7 +304,64 @@ postgresql_setup() {
     $CONTAINER_CLI exec postgres bash -c "${create_cmd}"
     $CONTAINER_CLI exec postgres bash -c 'psql -U hibernate_orm_test -d hibernate_orm_test -c "create extension vector;"'
     for i in "${!databases[@]}";do
-      $CONTAINER_CLI exec postgres bash -c "psql -U hibernate_orm_test -d ${databases[i]} -c \"create extension vector; create extension postgis;\""
+      $CONTAINER_CLI exec postgres bash -c "psql -U hibernate_orm_test -d ${databases[i]} -c \"create extension vector;\""
+    done
+}
+
+###############################################################################
+
+postgis() {
+  postgis_18
+}
+
+postgis_14() {
+    compose_down "postgis"
+    compose_up "versioned/postgis-14/docker-compose.yaml"
+    postgis_setup 14
+}
+
+postgis_15() {
+    compose_down "postgis"
+    compose_up "versioned/postgis-15/docker-compose.yaml"
+    postgis_setup 15
+}
+
+postgis_16() {
+    compose_down "postgis"
+    compose_up "versioned/postgis-16/docker-compose.yaml"
+    postgis_setup 16
+}
+
+postgis_17() {
+    compose_down "postgis"
+    compose_up "versioned/postgis-17/docker-compose.yaml"
+    postgis_setup 17
+}
+
+postgis_18() {
+    compose_down "postgis"
+    compose_up "latest/postgis/docker-compose.yaml"
+    postgis_setup 18
+}
+
+postgis_setup() {
+    local pg_version="$1"
+    $CONTAINER_CLI exec postgis bash -c "/usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y && apt install -y postgresql-${pg_version}-pgvector" 2>/dev/null || true
+
+    databases=()
+    for n in $(seq 1 $DB_COUNT)
+    do
+      databases+=("hibernate_orm_test_${n}")
+    done
+    create_cmd=
+    for i in "${!databases[@]}";do
+      create_cmd+="psql -U hibernate_orm_test -d postgres -c \"create database ${databases[i]};\";"
+    done
+    $CONTAINER_CLI exec postgis bash -c "until pg_isready -U hibernate_orm_test; do sleep 1; done"
+    $CONTAINER_CLI exec postgis bash -c "${create_cmd}"
+    $CONTAINER_CLI exec postgis bash -c 'psql -U hibernate_orm_test -d hibernate_orm_test -c "create extension vector;"'
+    for i in "${!databases[@]}";do
+      $CONTAINER_CLI exec postgis bash -c "psql -U hibernate_orm_test -d ${databases[i]} -c \"create extension vector; create extension postgis;\""
     done
 }
 
@@ -1254,11 +1282,12 @@ if [ -z ${1} ]; then
     echo -e "\toracle_db23c"
     echo -e "\tgaussdb"
     echo -e "\tpostgresql"
-    echo -e "\tpostgresql_18"
-    echo -e "\tpostgresql_17"
-    echo -e "\tpostgresql_16"
-    echo -e "\tpostgresql_15"
-    echo -e "\tpostgresql_14"
+    echo -e "\tpostgis"
+    echo -e "\tpostgis_18"
+    echo -e "\tpostgis_17"
+    echo -e "\tpostgis_16"
+    echo -e "\tpostgis_15"
+    echo -e "\tpostgis_14"
     echo -e "\tsybase"
     echo -e "\ttidb"
     echo -e "\ttidb_8_5"

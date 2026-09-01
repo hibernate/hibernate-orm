@@ -393,4 +393,8 @@ ext {
     // Backward compatibility for existing scripts
     // and IDE configurations using `-Pdb=pgsql`
     dbBundle.pgsql = dbBundle.postgresql
+
+    // PostGIS uses the same connection settings as PostgreSQL (same driver, dialect and URL);
+    // it only differs in the Docker image (see db.sh `postgis`), which ships the PostGIS extension.
+    dbBundle.postgis = dbBundle.postgresql
 }

@@ -30,7 +30,7 @@ stage('Configure') {
 		new BuildEnvironment( dbName: 'hsqldb_2_6' ),
 		new BuildEnvironment( dbName: 'mysql_8_0' ),
 		new BuildEnvironment( dbName: 'mariadb_10_6' ),
-		new BuildEnvironment( dbName: 'postgresql_14' ),
+		new BuildEnvironment( dbName: 'postgis_14' ),
 		new BuildEnvironment( dbName: 'edb_14' ),
 		new BuildEnvironment( dbName: 'db2_11_5' ), // Unfortunately there is no SQL Server 11.1 image, but 11.5 should mostly have feature parity
 		new BuildEnvironment( dbName: 'mssql_2017' ), // Unfortunately there is no SQL Server 2008 image, so we have to test with 2017
@@ -118,9 +118,9 @@ stage('Build') {
 									sh "./db.sh mariadb_10_6"
 									state[buildEnv.tag]['containerName'] = "mariadb"
 									break;
-								case "postgresql_14":
-									sh "./db.sh postgresql_14"
-									state[buildEnv.tag]['containerName'] = "postgres"
+								case "postgis_14":
+									sh "./db.sh postgis_14"
+									state[buildEnv.tag]['containerName'] = "postgis"
 									break;
 								case "edb_14":
 									sh "./db.sh edb_14"

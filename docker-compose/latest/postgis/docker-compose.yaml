@@ -1,7 +1,8 @@
 services:
-  postgres:
-    image: ${POSTGRESQL_IMAGE:-docker.io/pgvector/pgvector:pg18@sha256:2ba9ca5f2e7daa0f0e7723cba1ee9167bab54efd3640516a44ac1a928dd67e7a}
-    container_name: postgres
+  postgis:
+    image: ${POSTGIS_IMAGE:-docker.io/postgis/postgis:18-3.6@sha256:52d19e8b5a022824eb2e48a77ca448c1e47ab7081bd2bd9ff09e16b92e20326b}
+    container_name: postgis
+    platform: ${POSTGRESQL_PLATFORM:-linux/amd64}
     environment:
       POSTGRES_USER: hibernate_orm_test
       POSTGRES_PASSWORD: hibernate_orm_test

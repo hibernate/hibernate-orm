@@ -1693,7 +1693,7 @@ abstract class AbstractSharedSessionContract
 		}
 		catch (IllegalSelectQueryException e) {
 			// JPA requires IllegalArgumentException
-			var iae = new IllegalArgumentException( e.getMessage() );
+			final var iae = new IllegalArgumentException( e.getMessage() );
 			iae.addSuppressed( e );
 			throw iae;
 		}
@@ -1713,7 +1713,7 @@ abstract class AbstractSharedSessionContract
 		}
 		catch ( RuntimeException e ) {
 			markForRollbackOnly();
-			throw e;
+			throw getExceptionConverter().convert( e );
 		}
 	}
 
@@ -1730,7 +1730,6 @@ abstract class AbstractSharedSessionContract
 		}
 		selectionQuery.setComment( hql );
 		applyQuerySettingsAndHints( selectionQuery );
-
 		return selectionQuery;
 	}
 

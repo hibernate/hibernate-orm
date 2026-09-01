@@ -18,6 +18,7 @@ import org.hibernate.Hibernate;
 import org.hibernate.annotations.NamedEntityGraph;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.orm.test.query.resultmapping.dynamic.Book;
+import org.hibernate.query.QueryTypeMismatchException;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -31,6 +32,7 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
 import static org.assertj.core.api.Assertions.assertThatIllegalStateException;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * @author Steve Ebersole
@@ -143,6 +145,16 @@ public class QueryWithGraphTests {
 		factoryScope.inTransaction( (session) -> assertThatIllegalArgumentException()
 				.isThrownBy( () -> session.createNamedQuery( "Publisher.nativeNames" )
 						.ofType( Integer.class ) ) );
+	}
+
+	@Test
+	void incompatibleGraphPreservesHibernateException(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (session) -> {
+			final EntityGraph<Book> bookGraph = session.createEntityGraph( Book.class );
+
+			assertThatThrownBy( () -> session.createQuery( "from Publisher", bookGraph ) )
+					.isInstanceOf( QueryTypeMismatchException.class );
+		} );
 	}
 
 	@Test

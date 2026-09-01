@@ -6,6 +6,7 @@ package org.hibernate.sql.model.jdbc;
 
 import java.util.List;
 import java.util.Set;
+import java.util.function.Consumer;
 
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.jdbc.mutation.internal.JdbcValueDescriptorImpl;
@@ -87,6 +88,24 @@ public abstract class AbstractJdbcMutation implements JdbcMutationOperation {
 			}
 		}
 		return null;
+	}
+
+	@Override
+	public int forEachValueDescriptor(
+			String tableName,
+			String columnName,
+			ParameterUsage usage,
+			Consumer<JdbcValueDescriptor> consumer) {
+		assert getTableDetails().containsTableName( tableName );
+		int count = 0;
+		for ( int i = 0; i < jdbcValueDescriptors.size(); i++ ) {
+			final var descriptor = jdbcValueDescriptors.get( i );
+			if ( descriptor.matches( columnName, usage ) ) {
+				consumer.accept( descriptor );
+				count++;
+			}
+		}
+		return count;
 	}
 
 

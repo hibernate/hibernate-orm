@@ -4,6 +4,8 @@
  */
 package org.hibernate.engine.jdbc.mutation.internal;
 
+import java.util.function.Consumer;
+
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.jdbc.mutation.TableInclusionChecker;
@@ -39,6 +41,20 @@ public class MutationExecutorSingleSelfExecuting extends AbstractMutationExecuto
 	@Override
 	public JdbcValueDescriptor resolveValueDescriptor(String tableName, String columnName, ParameterUsage usage) {
 		return operation.findValueDescriptor( columnName, usage );
+	}
+
+	@Override
+	public int forEachValueDescriptor(
+			String tableName,
+			String columnName,
+			ParameterUsage usage,
+			Consumer<JdbcValueDescriptor> consumer) {
+		return operation.forEachValueDescriptor(
+				operation.getTableDetails().getTableName(),
+				columnName,
+				usage,
+				consumer
+		);
 	}
 
 	@Override

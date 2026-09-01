@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.function.Consumer;
 
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
 import org.hibernate.engine.jdbc.batch.spi.GroupedBatch;
@@ -195,6 +196,21 @@ public class MutationExecutorStandard extends AbstractMutationExecutor implement
 	@Override
 	public JdbcValueDescriptor resolveValueDescriptor(String tableName, String columnName, ParameterUsage usage) {
 		return mutationOperationGroup.getOperation( tableName ).findValueDescriptor( columnName, usage );
+	}
+
+	@Override
+	public int forEachValueDescriptor(
+			String tableName,
+			String columnName,
+			ParameterUsage usage,
+			Consumer<JdbcValueDescriptor> consumer) {
+		final var operation = mutationOperationGroup.getOperation( tableName );
+		return operation.forEachValueDescriptor(
+				operation.getTableDetails().getTableName(),
+				columnName,
+				usage,
+				consumer
+		);
 	}
 
 	@Override

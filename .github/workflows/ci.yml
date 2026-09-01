@@ -2,11 +2,12 @@ name: GH Actions CI
 
 on:
   push:
-    branches:
-      # Pattern order matters: the last matching inclusion/exclusion wins
-      - 'main'
+    branches-ignore:
       # We don't want to run CI on branches for dependabot, just on the PR.
-      - '!dependabot/**'
+      - 'dependabot/**'
+      # Ignore upstream maintenance/version branches (e.g. 6.6, 7.0);
+      # CI for those branches is handled through PRs.
+      - '[0-9]*.[0-9]*'
   pull_request:
     branches:
       - 'main'
@@ -15,6 +16,7 @@ on:
       - '!dependabot/**'
       - 'dependabot/maven/build-dependencies-**'
       - 'dependabot/github_actions/workflow-actions-**'
+  workflow_dispatch:
 
 permissions: { } # none
 
@@ -36,6 +38,9 @@ jobs:
 
   # Main job for h2/docker DBs.
   build:
+    # Skip push builds on forks for the main branch;
+    # this avoids duplicate CI when syncing the fork, since the upstream repo already runs CI on push to main.
+    if: github.repository == 'hibernate/hibernate-orm' || !endsWith(github.ref, '/main')
     permissions:
       contents: read
     name: OpenJDK 25 - ${{matrix.rdbms}}
@@ -330,6 +335,7 @@ jobs:
 
   # Main job for h2/docker DBs.
   tck-runner:
+    if: github.repository == 'hibernate/hibernate-orm' || !endsWith(github.ref, '/main')
     permissions:
       contents: read
     name: OpenJDK 25 - Jakarta Persistence TCK 4.0
@@ -457,6 +463,7 @@ jobs:
         run: ./ci/before-cache.sh
 
   data-tck-runner:
+    if: github.repository == 'hibernate/hibernate-orm' || !endsWith(github.ref, '/main')
     permissions:
       contents: read
     name: OpenJDK 25 - Jakarta Data TCK 1.1
@@ -582,6 +589,7 @@ jobs:
 
   # Static code analysis check
   format_checks:
+    if: github.repository == 'hibernate/hibernate-orm' || !endsWith(github.ref, '/main')
     permissions:
       contents: read
     name: Static code analysis
@@ -683,7 +691,8 @@ jobs:
       - build
       - otp
     if: |
-      always() && !cancelled()
+      (github.repository == 'hibernate/hibernate-orm' || !endsWith(github.ref, '/main'))
+      && always() && !cancelled()
       && needs.build.result != 'cancelled' && needs.otp.result != 'cancelled'
     runs-on: ubuntu-latest
 

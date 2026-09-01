@@ -62,6 +62,8 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbPrimaryKeyJoinColumnImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbSchemaAware;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbSecondaryTableImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbSequenceGeneratorImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbSqlResultSetMappingImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbSqlSelectImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbSynchronizedTableImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbTableGeneratorImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbTableImpl;
@@ -100,6 +102,7 @@ import org.hibernate.boot.models.annotations.internal.FiltersAnnotation;
 import org.hibernate.boot.models.annotations.internal.GeneratedAnnotation;
 import org.hibernate.boot.models.annotations.internal.GeneratedValueJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.GenericGeneratorAnnotation;
+import org.hibernate.boot.models.annotations.internal.HQLSelectAnnotation;
 import org.hibernate.boot.models.annotations.internal.IdClassJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.IndexJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.InheritanceJpaAnnotation;
@@ -118,11 +121,13 @@ import org.hibernate.boot.models.annotations.internal.PrimaryKeyJoinColumnsJpaAn
 import org.hibernate.boot.models.annotations.internal.RowIdAnnotation;
 import org.hibernate.boot.models.annotations.internal.SQLJoinTableRestrictionAnnotation;
 import org.hibernate.boot.models.annotations.internal.SQLRestrictionAnnotation;
+import org.hibernate.boot.models.annotations.internal.SQLSelectAnnotation;
 import org.hibernate.boot.models.annotations.internal.SecondaryRowAnnotation;
 import org.hibernate.boot.models.annotations.internal.SecondaryRowsAnnotation;
 import org.hibernate.boot.models.annotations.internal.SecondaryTableJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.SecondaryTablesJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.SequenceGeneratorJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.SqlResultSetMappingJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.SubselectAnnotation;
 import org.hibernate.boot.models.annotations.internal.SynchronizeAnnotation;
 import org.hibernate.boot.models.annotations.internal.TableGeneratorJpaAnnotation;
@@ -1408,6 +1413,67 @@ public class XmlAnnotationHelper {
 		if ( jaxbCustomSql.getResultCheck() != null ) {
 			annotation.verify( jaxbCustomSql.getResultCheck().expectationClass() );
 		}
+	}
+
+	public static void applySqlSelect(
+			JaxbSqlSelectImpl jaxbSqlSelect,
+			MutableAnnotationTarget target,
+			XmlDocumentContext xmlDocumentContext) {
+		if ( jaxbSqlSelect == null ) {
+			return;
+		}
+
+		final ModelsContext modelContext = xmlDocumentContext.getModelBuildingContext();
+		final SQLSelectAnnotation sqlSelectAnn = (SQLSelectAnnotation) target.applyAnnotationUsage(
+				HibernateAnnotations.SQL_SELECT,
+				modelContext
+		);
+
+		sqlSelectAnn.sql( jaxbSqlSelect.getSql() );
+
+		final List<JaxbSynchronizedTableImpl> synchronizations = jaxbSqlSelect.getSynchronize();
+		if ( CollectionHelper.isNotEmpty( synchronizations ) ) {
+			final String[] querySpaces = new String[synchronizations.size()];
+			for ( int i = 0; i < synchronizations.size(); i++ ) {
+				querySpaces[i] = synchronizations.get( i ).getTable();
+			}
+			sqlSelectAnn.querySpaces( querySpaces );
+		}
+
+		final JaxbSqlResultSetMappingImpl jaxbResultSetMapping = jaxbSqlSelect.getResultSetMapping();
+		if ( jaxbResultSetMapping != null ) {
+			final SqlResultSetMappingJpaAnnotation resultSetMapping =
+					JpaAnnotations.SQL_RESULT_SET_MAPPING.createUsage( modelContext );
+			resultSetMapping.name( jaxbResultSetMapping.getName() );
+			resultSetMapping.columns( QueryProcessing.extractColumnResults(
+					jaxbResultSetMapping.getColumnResult(),
+					xmlDocumentContext
+			) );
+			resultSetMapping.classes( QueryProcessing.extractConstructorResults(
+					jaxbResultSetMapping.getConstructorResult(),
+					xmlDocumentContext
+			) );
+			resultSetMapping.entities( QueryProcessing.extractEntityResults(
+					jaxbResultSetMapping.getEntityResult(),
+					xmlDocumentContext
+			) );
+			sqlSelectAnn.resultSetMapping( resultSetMapping );
+		}
+	}
+
+	public static void applyHqlSelect(
+			String hqlSelect,
+			MutableAnnotationTarget target,
+			XmlDocumentContext xmlDocumentContext) {
+		if ( isEmpty( hqlSelect ) ) {
+			return;
+		}
+
+		final HQLSelectAnnotation hqlSelectAnn = (HQLSelectAnnotation) target.applyAnnotationUsage(
+				HibernateAnnotations.HQL_SELECT,
+				xmlDocumentContext.getModelBuildingContext()
+		);
+		hqlSelectAnn.query( hqlSelect );
 	}
 
 	static void applyIdClass(

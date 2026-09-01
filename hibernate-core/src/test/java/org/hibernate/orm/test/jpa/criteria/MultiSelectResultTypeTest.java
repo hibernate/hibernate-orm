@@ -8,9 +8,11 @@ import java.util.List;
 
 import org.hibernate.query.QueryTypeMismatchException;
 
-import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -23,7 +25,8 @@ import jakarta.persistence.criteria.Root;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.fail;
 
-@Jpa(
+@SessionFactory
+@DomainModel(
 		annotatedClasses = {
 				MultiSelectResultTypeTest.TestEntity.class
 		}
@@ -32,7 +35,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.fail;
 public class MultiSelectResultTypeTest {
 
 	@BeforeAll
-	public static void setUp(EntityManagerFactoryScope scope) {
+	public static void setUp(SessionFactoryScope scope) {
 		scope.inTransaction(
 				entityManager -> {
 					TestEntity testEntity = new TestEntity( 1, "a" );
@@ -42,7 +45,7 @@ public class MultiSelectResultTypeTest {
 	}
 
 	@Test
-	public void testResultOfMultiSelect(EntityManagerFactoryScope scope) {
+	public void testResultOfMultiSelect(SessionFactoryScope scope) {
 		scope.inTransaction(
 				entityManager -> {
 					CriteriaBuilder cb = entityManager.getCriteriaBuilder();
@@ -58,7 +61,7 @@ public class MultiSelectResultTypeTest {
 	}
 
 	@Test
-	public void testResultOfMultiSelectPrimitive(EntityManagerFactoryScope scope) {
+	public void testResultOfMultiSelectPrimitive(SessionFactoryScope scope) {
 		scope.inTransaction(
 				entityManager -> {
 					CriteriaBuilder cb = entityManager.getCriteriaBuilder();
@@ -74,7 +77,7 @@ public class MultiSelectResultTypeTest {
 	}
 
 	@Test
-	public void testResultOfMultiSelect2(EntityManagerFactoryScope scope) {
+	public void testResultOfMultiSelect2(SessionFactoryScope scope) {
 		scope.inTransaction(
 				entityManager -> {
 					CriteriaBuilder cb = entityManager.getCriteriaBuilder();
@@ -91,7 +94,7 @@ public class MultiSelectResultTypeTest {
 	}
 
 	@Test
-	public void testResultOfSelect(EntityManagerFactoryScope scope) {
+	public void testResultOfSelect(SessionFactoryScope scope) {
 		scope.inTransaction(
 				entityManager -> {
 					CriteriaBuilder cb = entityManager.getCriteriaBuilder();
@@ -106,7 +109,7 @@ public class MultiSelectResultTypeTest {
 	}
 
 	@Test
-	public void testValidateSelectItemAgainstArrayComponentType(EntityManagerFactoryScope scope) {
+	public void testValidateSelectItemAgainstArrayComponentType(SessionFactoryScope scope) {
 		scope.inTransaction(
 				entityManager -> {
 					CriteriaBuilder cb = entityManager.getCriteriaBuilder();
@@ -125,7 +128,7 @@ public class MultiSelectResultTypeTest {
 	}
 
 	@Test
-	public void testValidateSelectItemAgainstArrayComponentType2(EntityManagerFactoryScope scope) {
+	public void testValidateSelectItemAgainstArrayComponentType2(SessionFactoryScope scope) {
 		scope.inTransaction(
 				entityManager -> {
 					CriteriaBuilder cb = entityManager.getCriteriaBuilder();

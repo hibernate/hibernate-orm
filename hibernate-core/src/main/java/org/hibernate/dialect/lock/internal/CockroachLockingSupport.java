@@ -6,11 +6,14 @@ package org.hibernate.dialect.lock.internal;
 
 import jakarta.persistence.Timeout;
 import org.hibernate.HibernateException;
-import org.hibernate.dialect.RowLockStrategy;
+import org.hibernate.dialect.lock.spi.RowLockStrategy;
 import org.hibernate.dialect.lock.spi.ConnectionLockTimeoutStrategy;
 import org.hibernate.dialect.lock.spi.LockTimeoutType;
+import org.hibernate.dialect.lock.spi.LockingClauseRenderer;
+import org.hibernate.dialect.lock.spi.LockingClauseRequest;
 import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.lock.spi.OuterJoinLockingType;
+import org.hibernate.dialect.lock.spi.PessimisticLockKind;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 import java.sql.Connection;
@@ -25,14 +28,17 @@ import static org.hibernate.dialect.lock.spi.LockTimeoutType.QUERY;
 /**
  * @author Steve Ebersole
  */
-public class CockroachLockingSupport implements LockingSupport, LockingSupport.Metadata, ConnectionLockTimeoutStrategy {
+public class CockroachLockingSupport
+		implements LockingSupport, LockingSupport.Metadata, ConnectionLockTimeoutStrategy, LockingClauseRenderer {
 	public static final CockroachLockingSupport COCKROACH_LOCKING_SUPPORT = new CockroachLockingSupport( false );
 	public static final CockroachLockingSupport LEGACY_COCKROACH_LOCKING_SUPPORT = new CockroachLockingSupport( true );
 
 	private final boolean supportsNoWait;
+	private final boolean supportsLockingClause;
 	private final RowLockStrategy rowLockStrategy;
 
 	public CockroachLockingSupport(boolean isLegacy) {
+		supportsLockingClause = !isLegacy;
 		rowLockStrategy = isLegacy ? RowLockStrategy.NONE : RowLockStrategy.TABLE;
 		supportsNoWait = !isLegacy;
 	}
@@ -40,6 +46,30 @@ public class CockroachLockingSupport implements LockingSupport, LockingSupport.M
 	@Override
 	public Metadata getMetadata() {
 		return this;
+	}
+
+	@Override
+	public LockingClauseRenderer getLockingClauseRenderer() {
+		return this;
+	}
+
+	@Override
+	public String render(LockingClauseRequest request) {
+		if ( !supportsLockingClause ) {
+			return "";
+		}
+
+		final StringBuilder fragment = new StringBuilder(
+				request.lockKind() == PessimisticLockKind.SHARE ? " for share" : " for update"
+		);
+		if ( !request.targets().isEmpty() ) {
+			fragment.append( " of " );
+			LockingClauseRendererSupport.appendTargets( fragment, request.targets() );
+		}
+		if ( request.timeout().milliseconds() == NO_WAIT_MILLI && supportsNoWait ) {
+			fragment.append( " nowait" );
+		}
+		return fragment.toString();
 	}
 
 	@Override

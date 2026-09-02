@@ -48,7 +48,7 @@ import java.util.function.BiFunction;
 
 import static java.util.Collections.unmodifiableMap;
 import static org.hibernate.internal.util.collections.ArrayHelper.contains;
-import static org.hibernate.metamodel.mapping.MappingModelCreationLogging.MAPPING_MODEL_CREATION_MESSAGE_LOGGER;
+import static org.hibernate.metamodel.mapping.internal.MappingModelCreationLogging.MAPPING_MODEL_CREATION_MESSAGE_LOGGER;
 import static org.hibernate.internal.util.collections.CollectionHelper.mapOfSize;
 import static org.hibernate.metamodel.internal.InjectionHelper.injectField;
 

@@ -4,8 +4,9 @@
  */
 package org.hibernate.community.dialect.pagination;
 
-import org.hibernate.dialect.pagination.AbstractLimitHandler;
-import org.hibernate.query.spi.Limit;
+import org.hibernate.dialect.pagination.spi.AbstractLimitHandler;
+import org.hibernate.dialect.pagination.spi.PaginationRequest;
+import org.hibernate.dialect.pagination.spi.PaginationResult;
 
 import java.util.Locale;
 
@@ -19,38 +20,38 @@ public class InterSystemsIRISLimitHandler extends AbstractLimitHandler {
 	}
 
 	@Override
-	public String processSql(String sql, Limit limit) {
-
-		boolean hasFirstRow = hasFirstRow( limit );
-		boolean hasMaxRows = hasMaxRows( limit );
+	public PaginationResult processSql(PaginationRequest request) {
+		final String sql = request.sql();
+		boolean hasFirstRow = request.hasFirstRow();
+		boolean hasMaxRows = request.hasMaxRows();
 
 		if ( !hasFirstRow && !hasMaxRows ) {
-			return sql;
+			return PaginationResult.unchanged( sql );
 		}
 
 		String lowersql = sql.toLowerCase( Locale.ROOT );
 		int selectIndex = lowersql.indexOf( "select" );
 		if ( hasFirstRow && hasMaxRows ) {
-			return new StringBuilder( sql.length() + 27 )
+			return result( request, new StringBuilder( sql.length() + 27 )
 					.append( sql )
 					.insert( selectIndex + 6, " %ROWOFFSET ? %ROWLIMIT ? " )
-					.toString();
+					.toString() );
 
 		}
 		else if ( hasFirstRow ) {
-			return new StringBuilder( sql.length() + 15 )
+			return result( request, new StringBuilder( sql.length() + 15 )
 					.append( sql )
 					.insert( selectIndex + 6, " %ROWOFFSET ? " )
-					.toString();
+					.toString() );
 		}
 		else {
 			final int selectDistinctIndex = lowersql.indexOf( "select distinct" );
 			final int insertionPoint = selectIndex + ( selectDistinctIndex == selectIndex ? 15 : 6 );
 
-			return new StringBuilder( sql.length() + 8 )
+			return result( request, new StringBuilder( sql.length() + 8 )
 					.append( sql )
 					.insert( insertionPoint, " TOP ? " )
-					.toString();
+					.toString() );
 		}
 	}
 

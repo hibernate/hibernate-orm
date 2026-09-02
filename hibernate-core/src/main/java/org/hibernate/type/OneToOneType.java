@@ -4,6 +4,8 @@
  */
 package org.hibernate.type;
 
+import org.hibernate.SPI;
+
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 
@@ -21,6 +23,7 @@ import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_INT_ARRA
  *
  * @author Gavin King
  */
+@SPI
 public class OneToOneType extends EntityType {
 
 	private final ForeignKeyDirection foreignKeyType;

@@ -12,13 +12,14 @@ import java.util.Objects;
 
 import jakarta.annotation.Nonnull;
 import org.hibernate.Incubating;
+import org.hibernate.SPI;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.CharSequenceHelper;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.compare.ComparableComparator;
-import org.hibernate.sql.ast.spi.SqlAppender;
+import org.hibernate.sql.spi.SqlAppender;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -27,46 +28,32 @@ import org.hibernate.type.spi.TypeConfiguration;
 
 import jakarta.annotation.Nullable;
 
-/**
- * Descriptor for the Java side of a value mapping. A {@code JavaType} is always
- * coupled with a {@link JdbcType} to describe the typing aspects of an attribute
- * mapping from Java to JDBC.
- * <p>
- * An instance of this interface represents a certain {@linkplain #getJavaType()
- * Java class or interface} which may occur as the type of a persistent property
- * or field of an entity class.
- * <p>
- * A {@code JavaType} decides how instances of the Java type are compared for
- * {@linkplain #areEqual equality} and {@linkplain #getComparator order}, and
- * it knows how to convert {@linkplain #unwrap to} and {@linkplain #wrap from}
- * various different representations that might be requested by its partner
- * {@link JdbcType}.
- * <p>
- * Every {@code JavaType} has a {@link MutabilityPlan} which defines how instances
- * of the type are {@linkplain MutabilityPlan#deepCopy(Object) cloned}, and how
- * they are {@linkplain MutabilityPlan#disassemble disassembled to} and
- * {@linkplain MutabilityPlan#assemble assembled from} their representation in the
- * {@linkplain org.hibernate.Cache second-level cache}.
- * <p>
- * Even though it's strictly only responsible for Java aspects of the mapping, a
- * {@code JavaType} usually does come with a {@linkplain #getRecommendedJdbcType
- * recommendation} for a friendly {@link JdbcType} it works particularly well
- * with, along with a default {@linkplain #getDefaultSqlLength length},
- * {@linkplain #getDefaultSqlPrecision precision}, and
- * {@linkplain #getDefaultSqlScale scale} for mapped columns.
- * <p>
- * A Java type may be selected when mapping an entity attribute using the
- * {@link org.hibernate.annotations.JavaType} annotation, though this is typically
- * unnecessary.
- * <p>
- * Custom implementations should be registered with the
- * {@link org.hibernate.type.descriptor.java.spi.JavaTypeRegistry} at startup.
- * The built-in implementations are registered automatically.
- *
- * @see JdbcType
- *
- * @author Steve Ebersole
- */
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.SUPPLY;
+import static org.hibernate.SPI.Role.USE;
+
+/// Describes the Java side of a value mapping. A `JavaType` is coupled with a
+/// [JdbcType] and defines the represented Java type, equality and ordering,
+/// wrapping and unwrapping, mutability, and the recommended JDBC descriptor.
+///
+/// Providers may implement this contract and contribute a stable descriptor
+/// through [org.hibernate.boot.model.TypeContributions] or
+/// [org.hibernate.type.descriptor.java.spi.JavaTypeRegistry]. Prefer
+/// [AbstractJavaType] or [AbstractClassJavaType] when their defaults match the
+/// provider value semantics. A mapping may select the descriptor using
+/// [org.hibernate.annotations.JavaType].
+///
+/// @param <T> the represented Java value type
+///
+/// @see JdbcType
+/// @see org.hibernate.boot.model.TypeContributions#contributeJavaType(JavaType)
+/// @see org.hibernate.type.descriptor.java.spi.JavaTypeRegistry#addDescriptor(JavaType)
+/// @see org.hibernate.type.descriptor.java.spi.JavaTypeRegistry#resolveDescriptor(Class, java.util.function.Supplier)
+/// @see org.hibernate.type.descriptor.java.spi.JavaTypeRegistry#resolveDescriptor(JavaType)
+/// @see #createJavaType(ParameterizedType, TypeConfiguration)
+///
+/// @author Steve Ebersole
+@SPI({ USE, IMPLEMENT, SUPPLY })
 public interface JavaType<T> extends Serializable {
 	/**
 	 * Get the Java type (a {@link Type} object) described by this {@code JavaType}.
@@ -128,7 +115,9 @@ public interface JavaType<T> extends Serializable {
 
 	/**
 	 * Retrieve the {@linkplain MutabilityPlan mutability plan} for this Java type.
+	 * @see MutabilityPlan
 	 */
+	@SPI(SUPPLY)
 	default MutabilityPlan<T> getMutabilityPlan() {
 		return ImmutableMutabilityPlan.instance();
 	}
@@ -158,7 +147,9 @@ public interface JavaType<T> extends Serializable {
 	 * @param context Contextual information
 	 *
 	 * @return The recommended SQL type descriptor
+	 * @see JdbcType
 	 */
+	@SPI(SUPPLY)
 	JdbcType getRecommendedJdbcType(JdbcTypeIndicators context);
 
 	/**
@@ -387,7 +378,9 @@ public interface JavaType<T> extends Serializable {
 	 *
 	 * @since 6.1
 	 */
+	/// @see JavaType
 	@Incubating
+	@SPI(SUPPLY)
 	default JavaType<T> createJavaType(ParameterizedType parameterizedType, TypeConfiguration typeConfiguration) {
 		return this;
 	}

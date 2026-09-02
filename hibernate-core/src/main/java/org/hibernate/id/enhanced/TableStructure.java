@@ -8,14 +8,19 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.List;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.LockOptions;
+import org.hibernate.Timeouts;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.InitCommand;
 import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
+import org.hibernate.dialect.lock.spi.LockingClauseRequest;
+import org.hibernate.dialect.lock.internal.TableLockHintRendererSupport;
+import org.hibernate.dialect.lock.spi.PessimisticLockKind;
 import org.hibernate.engine.jdbc.internal.FormatStyle;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.engine.spi.SessionEventListenerManager;
@@ -318,9 +323,14 @@ public class TableStructure implements DatabaseStructure {
 	public void initialize(SqlStringGenerationContext context) {
 		final var dialect = context.getDialect();
 		final String formattedPhysicalTableName = context.format( physicalTableName );
-		final String lockedTable =
-				dialect.appendLockHint( new LockOptions( PESSIMISTIC_WRITE ), formattedPhysicalTableName )
-						+ dialect.getForUpdateString();
+		final String lockingClause = dialect.getLockingSupport().getLockingClauseRenderer().render(
+				new LockingClauseRequest( PessimisticLockKind.UPDATE, Timeouts.WAIT_FOREVER, List.of() )
+		);
+		final String lockedTable = TableLockHintRendererSupport.renderTableReference(
+				dialect.getLockingSupport(),
+				new LockOptions( PESSIMISTIC_WRITE ),
+				formattedPhysicalTableName
+		) + lockingClause;
 		selectQuery = "select " + valueColumnNameText + " as id_val" +
 				" from " + lockedTable ;
 		updateQuery = "update " + formattedPhysicalTableName +

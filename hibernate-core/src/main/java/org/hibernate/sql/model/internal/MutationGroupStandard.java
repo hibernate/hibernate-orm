@@ -7,11 +7,11 @@ package org.hibernate.sql.model.internal;
 import java.util.List;
 import java.util.function.BiConsumer;
 
-import org.hibernate.sql.model.MutationOperation;
-import org.hibernate.sql.model.MutationTarget;
-import org.hibernate.sql.model.MutationType;
-import org.hibernate.sql.model.ast.MutationGroup;
-import org.hibernate.sql.model.ast.TableMutation;
+import org.hibernate.sql.spi.mutation.MutationOperation;
+import org.hibernate.sql.spi.mutation.MutationTarget;
+import org.hibernate.sql.spi.mutation.MutationType;
+import org.hibernate.sql.ast.spi.model.MutationGroup;
+import org.hibernate.sql.ast.spi.model.TableMutation;
 
 /**
  * Standard MutationGroup implementation for cases with multiple table mutations
@@ -20,12 +20,12 @@ import org.hibernate.sql.model.ast.TableMutation;
  */
 public class MutationGroupStandard implements MutationGroup {
 	private final MutationType mutationType;
-	private final MutationTarget<?,?> mutationTarget;
+	private final MutationTarget mutationTarget;
 	private final List<? extends TableMutation<?>> tableMutationList;
 
 	public MutationGroupStandard(
 			MutationType mutationType,
-			MutationTarget<?,?> mutationTarget,
+			MutationTarget mutationTarget,
 			List<? extends TableMutation<?>> tableMutationList) {
 		this.mutationType = mutationType;
 		this.mutationTarget = mutationTarget;
@@ -38,7 +38,7 @@ public class MutationGroupStandard implements MutationGroup {
 	}
 
 	@Override
-	public MutationTarget<?,?> getMutationTarget() {
+	public MutationTarget getMutationTarget() {
 		return mutationTarget;
 	}
 

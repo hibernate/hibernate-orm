@@ -18,9 +18,13 @@ import jakarta.annotation.Nullable;
  * (whatever that means for a specific result type) and returning it for
  * injection into the result "row" currently being processed
  *
+ * @see DomainResult#createResultAssembler(InitializerParent, AssemblerCreationState)
+ * @see Fetch#createAssembler(InitializerParent, AssemblerCreationState)
+ *
  * @author Steve Ebersole
  */
 @Incubating
+@org.hibernate.SPI({ org.hibernate.SPI.Role.USE, org.hibernate.SPI.Role.IMPLEMENT, org.hibernate.SPI.Role.SUPPLY })
 public interface DomainResultAssembler<J> {
 	/**
 	 * The main "assembly" contract.  Assemble the result and return it.
@@ -41,6 +45,10 @@ public interface DomainResultAssembler<J> {
 		assemble( rowProcessingState );
 	}
 
+	/// Supplies the initializer owned by this assembler, when one is required.
+	///
+	/// @see Initializer
+	@org.hibernate.SPI(org.hibernate.SPI.Role.SUPPLY)
 	default @Nullable Initializer<?> getInitializer() {
 		return null;
 	}

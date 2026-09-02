@@ -4,6 +4,9 @@
  */
 package org.hibernate.spatial;
 
+import org.hibernate.SPI;
+
+
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.AbstractJavaType;
@@ -27,6 +30,7 @@ import org.geolatte.geom.jts.JTS;
  * @author Karel Maesen, Geovise BVBA
  * creation-date: 10/12/12
  */
+@SPI
 public class GeolatteGeometryJavaType extends AbstractJavaType<Geometry> {
 
 	final private Wkt.Dialect wktDialect;

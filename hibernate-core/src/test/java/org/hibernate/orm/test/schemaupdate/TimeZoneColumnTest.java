@@ -66,7 +66,7 @@ public class TimeZoneColumnTest {
 		);
 		JdbcEnvironment jdbcEnvironment = ssr.getService( JdbcEnvironment.class );
 		Dialect dialect = jdbcEnvironment.getDialect();
-		if ( dialect.supportsCommentOn() ) {
+		if ( dialect.getSchemaCommentSupport().placement( org.hibernate.dialect.schema.spi.CommentTarget.TABLE ) != org.hibernate.dialect.schema.spi.CommentPlacement.NONE ) {
 			assertTrue(
 					tableCreationStatementContainsComment( output, "birthtime_offset_offset", "This is a comment" ),
 					"TimeZoneColumn comment have not been created "

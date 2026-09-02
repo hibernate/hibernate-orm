@@ -4,6 +4,8 @@
  */
 package org.hibernate.type;
 
+import org.hibernate.SPI;
+
 import java.util.Collection;
 import java.util.Objects;
 
@@ -20,6 +22,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
  *
  * @author Christian Beikov
  */
+@SPI
 public class ConvertedBasicCollectionType<C extends Collection<E>, E> extends BasicCollectionType<C, E> {
 
 	private final BasicValueConverter<C, ?> converter;

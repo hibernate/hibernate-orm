@@ -4,6 +4,7 @@
  */
 package org.hibernate.engine.jdbc.env;
 
+
 import org.hibernate.cfg.JdbcSettings;
 
 /**

@@ -4,6 +4,7 @@
  */
 package org.hibernate.annotations;
 
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
@@ -24,13 +25,13 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *         "normal" character data types ({@code CHAR, VARCHAR, CLOB}).
  *         For these dialects, this annotation is effectively ignored.
  *         <p>
- *         See {@link org.hibernate.dialect.NationalizationSupport#IMPLICIT}.
+ *         See {@link org.hibernate.dialect.type.spi.NationalizationSupport#IMPLICIT}.
  *     <li>Other databases support storing nationalized data only via the
  *         specialized, standard SQL variants ({@code NCHAR, NVARCHAR, NCLOB)}.
  *         For these dialects, this annotation will adjust the JDBC type
  *         code to use the specialized variant.
  *         <p>
- *         See {@link org.hibernate.dialect.NationalizationSupport#EXPLICIT}.
+ *         See {@link org.hibernate.dialect.type.spi.NationalizationSupport#EXPLICIT}.
  * </ul>
  * <p>This annotation may be applied to a field or property or to a
  * package descriptor. When applied at the package level, it acts as
@@ -38,7 +39,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * embeddable belonging to the package. This annotation may also be
  * used as a meta-annotation.
  *
- * @see org.hibernate.dialect.NationalizationSupport
+ * @see org.hibernate.dialect.type.spi.NationalizationSupport
  * @see org.hibernate.cfg.AvailableSettings#USE_NATIONALIZED_CHARACTER_DATA
  *
  * @author Steve Ebersole

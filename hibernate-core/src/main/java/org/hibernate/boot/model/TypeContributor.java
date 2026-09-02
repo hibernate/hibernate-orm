@@ -4,40 +4,40 @@
  */
 package org.hibernate.boot.model;
 
+import org.hibernate.SPI;
 import org.hibernate.service.JavaServiceLoadable;
 import org.hibernate.service.ServiceRegistry;
 
-/**
- * An object that contributes custom types and type descriptors, eventually to
- * a {@link org.hibernate.type.spi.TypeConfiguration}, via an instance of
- * {@link TypeContributions}.
- * <ul>
- * <li>
- *     The most common way to integrate a {@code TypeContributor} is by making
- *     it discoverable via the Java {@link java.util.ServiceLoader} facility.
- * <li>
- *     Alternatively, a {@code TypeContributor} may be programmatically supplied to
- *     {@link org.hibernate.cfg.Configuration#registerTypeContributor(TypeContributor)}
- *     or even {@link org.hibernate.boot.MetadataBuilder#applyTypes(TypeContributor)}.
- * <li>
- *     When bootstrapping Hibernate via JPA or {@link org.hibernate.cfg.Configuration},
- *
- *     Finally, in the JPA boostrap process, {@code TypeContributor}s may be
- *     listed via {@link org.hibernate.jpa.boot.spi.JpaSettings#TYPE_CONTRIBUTORS}.
- * </ul>
- *
- * @author Steve Ebersole
- *
- * @see org.hibernate.type.spi.TypeConfiguration
- */
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.SUPPLY;
+import static org.hibernate.SPI.Role.USE;
+
+/// Contributes custom type contracts and descriptors to a
+/// [org.hibernate.type.spi.TypeConfiguration] through [TypeContributions].
+///
+/// Providers normally expose an implementation as a Java
+/// [java.util.ServiceLoader] service. An application may instead supply one
+/// programmatically through
+/// [org.hibernate.cfg.Configuration#registerTypeContributor(TypeContributor)]
+/// or [org.hibernate.boot.MetadataBuilder#applyTypes(TypeContributor)]. JPA
+/// bootstrap may list contributors using
+/// [org.hibernate.jpa.boot.spi.JpaSettings#TYPE_CONTRIBUTORS].
+///
+/// A contributor must complete registration during [#contribute] and must not
+/// retain the supplied contributions or service registry.
+///
+/// @see org.hibernate.type.spi.TypeConfiguration
+/// @see org.hibernate.cfg.Configuration#registerTypeContributor(TypeContributor)
+/// @see org.hibernate.boot.MetadataBuilder#applyTypes(TypeContributor)
+///
+/// @author Steve Ebersole
 @JavaServiceLoadable
+@SPI({ USE, IMPLEMENT, SUPPLY })
 public interface TypeContributor {
-	/**
-	 * Contribute types
-	 *
-	 * @param typeContributions The callback for adding contributed types
-	 * @param serviceRegistry The service registry
-	 */
+	/// Contribute types during metadata bootstrap.
+	///
+	/// @param typeContributions the callback for adding contributed types
+	/// @param serviceRegistry the service registry
 	void contribute(TypeContributions typeContributions, ServiceRegistry serviceRegistry);
 
 	/**

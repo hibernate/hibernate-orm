@@ -4,25 +4,40 @@
  */
 package org.hibernate.engine.jdbc.dialect.spi;
 
+import org.hibernate.SPI;
+import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.service.JavaServiceLoadable;
 import org.hibernate.service.Service;
 
-/**
- * Contract for determining the {@link Dialect} to use based on information about the database / driver.
- *
- * @author Tomoto Shimizu Washio
- * @author Steve Ebersole
- */
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.SUPPLY;
+import static org.hibernate.SPI.Role.USE;
+
+/// Resolves a Dialect from database and driver information during bootstrap.
+///
+/// Expose an implementation through the Java [java.util.ServiceLoader]
+/// facility or list its class name in [JdbcSettings#DIALECT_RESOLVERS].
+/// Explicitly configured resolvers run before service-loaded resolvers, and
+/// Hibernate's standard resolver runs last.
+///
+/// Return `null` when the supplied information is not recognized. Do not
+/// retain the bootstrap-scoped resolution information or consume and close its
+/// optional JDBC metadata handle.
+///
+/// @author Tomoto Shimizu Washio
+/// @author Steve Ebersole
+/// @see #resolveDialect(DialectResolutionInfo)
+/// @see JdbcSettings#DIALECT_RESOLVERS
 @JavaServiceLoadable
+@SPI({ USE, IMPLEMENT, SUPPLY })
 public interface DialectResolver extends Service {
-	/**
-	 * Determine the {@link Dialect} to use based on the given information.  Implementations are expected to return
-	 * the {@link Dialect} instance to use, or {@code null} if they did not locate a match.
-	 *
-	 * @param info Access to the information about the database/driver needed to perform the resolution
-	 *
-	 * @return The dialect to use, or null.
-	 */
+	/// Supply the Dialect selected for the database and driver information.
+	///
+	/// @param info the non-null database and driver information
+	/// @return the selected Dialect, or `null` when this resolver declines the
+	/// request
+	/// @see Dialect
+	@SPI({ USE, IMPLEMENT, SUPPLY })
 	Dialect resolveDialect(DialectResolutionInfo info);
 }

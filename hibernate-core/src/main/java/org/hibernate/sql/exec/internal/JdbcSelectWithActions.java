@@ -11,14 +11,15 @@ import org.hibernate.dialect.lock.spi.LockTimeoutType;
 import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.sql.ast.spi.LockingClauseStrategy;
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
-import org.hibernate.sql.ast.tree.select.QuerySpec;
+import org.hibernate.dialect.lock.spi.LockingClauseStrategy;
+import org.hibernate.sql.ast.spi.query.expression.JdbcParameter;
+import org.hibernate.sql.ast.spi.query.select.QuerySpec;
 import org.hibernate.sql.exec.internal.lock.CollectionLockingAction;
 import org.hibernate.sql.exec.internal.lock.FollowOnLockingAction;
 import org.hibernate.sql.exec.internal.lock.LoadedValuesCollectorFactory;
 import org.hibernate.sql.exec.spi.ExecutionContext;
-import org.hibernate.sql.exec.spi.JdbcLockStrategy;
+import org.hibernate.sql.exec.spi.JdbcLockingApplication;
+import org.hibernate.sql.exec.spi.JdbcPaginationApplication;
 import org.hibernate.sql.exec.spi.JdbcOperationQuery;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.exec.spi.JdbcParameterBinding;
@@ -75,8 +76,13 @@ public class JdbcSelectWithActions implements JdbcOperationQuery, JdbcSelect {
 	}
 
 	@Override
-	public JdbcLockStrategy getLockStrategy() {
-		return primaryOperation.getLockStrategy();
+	public JdbcLockingApplication getLockingApplication() {
+		return primaryOperation.getLockingApplication();
+	}
+
+	@Override
+	public JdbcPaginationApplication getPaginationApplication() {
+		return primaryOperation.getPaginationApplication();
 	}
 
 	@Override

@@ -4,6 +4,11 @@
  */
 package org.hibernate.type;
 
+import org.hibernate.SPI;
+
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.USE;
+
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -46,6 +51,7 @@ import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
  *
  * @author Gavin King
  */
+@SPI({ USE, IMPLEMENT })
 public abstract class CollectionType extends AbstractType implements AssociationType {
 
 	private final String role;
@@ -55,6 +61,7 @@ public abstract class CollectionType extends AbstractType implements Association
 	// TODO initialize it at constructor time
 	private volatile CollectionPersister persister;
 
+	@SPI(IMPLEMENT)
 	public CollectionType(String role, String foreignKeyPropertyName) {
 		this.role = role;
 		this.foreignKeyPropertyName = foreignKeyPropertyName;

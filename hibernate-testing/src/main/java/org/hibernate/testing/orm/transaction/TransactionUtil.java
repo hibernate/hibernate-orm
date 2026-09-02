@@ -18,6 +18,7 @@ import org.hibernate.SharedSessionContract;
 import org.hibernate.Timeouts;
 import org.hibernate.Transaction;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.lock.internal.LockingSqlRewriterSupport;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.lock.spi.LockTimeoutType;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -218,11 +219,12 @@ public abstract class TransactionUtil {
 		if ( skipLocked && !( dialect instanceof SQLServerDialect ) ) {
 			factoryScope.inTransaction( (session) -> {
 				final String baseSql = String.format( "select %s from %s t where %s=%s", columnName, tableName, idColumn, id );
-				final String sql = dialect.applyLocksToSql(
+				final String sql = LockingSqlRewriterSupport.rewrite(
+						dialect.getLockingSupport(),
 						baseSql,
 						new LockOptions( LockMode.UPGRADE_SKIPLOCKED ),
 						Map.of( "t", new String[0] )
-				);
+				).sql();
 				final int resultSize = session.createNativeQuery( sql ).getResultList().size();
 				if ( expectingToBlock && resultSize > 0 ) {
 					fail( "Expecting update to " + tableName + " to block dues to locks" );

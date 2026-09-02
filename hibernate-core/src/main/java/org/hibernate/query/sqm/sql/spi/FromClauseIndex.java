@@ -11,8 +11,8 @@ import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.sqm.tree.spi.domain.SqmPath;
 import org.hibernate.query.sqm.tree.spi.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.spi.from.SqmFrom;
-import org.hibernate.sql.ast.spi.SimpleFromClauseAccessImpl;
-import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.spi.creation.SimpleFromClauseAccessImpl;
+import org.hibernate.sql.ast.spi.query.from.TableGroup;
 
 import org.jboss.logging.Logger;
 

@@ -9,7 +9,7 @@ import org.hibernate.action.queue.spi.decompose.entity.GraphEntityMutationTarget
 import org.hibernate.action.queue.spi.meta.TableDescriptor;
 import org.hibernate.action.queue.spi.meta.TableInclusionChecker;
 import org.hibernate.internal.util.collections.IdentitySet;
-import org.hibernate.sql.model.ValuesAnalysis;
+import org.hibernate.sql.spi.mutation.ValuesAnalysis;
 
 import java.util.Set;
 

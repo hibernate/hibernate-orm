@@ -4,12 +4,15 @@
  */
 package org.hibernate.type;
 
+import org.hibernate.SPI;
+
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.CollectionClassification;
 
 /**
  * A specialization of the set type, with (resultset-based) ordering.
  */
+@SPI
 public class OrderedSetType extends SetType {
 
 	public OrderedSetType(String role, String propertyRef) {

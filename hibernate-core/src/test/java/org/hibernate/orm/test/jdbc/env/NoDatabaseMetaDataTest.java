@@ -8,7 +8,9 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.jdbc.spi.JdbcMetadataOverrides;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
+import org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -20,6 +22,7 @@ import org.junit.jupiter.api.Test;
 import static org.hibernate.dialect.SimpleDatabaseVersion.ZERO_VERSION;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -36,7 +39,15 @@ public class NoDatabaseMetaDataTest {
 	})
 	public void testNoJdbcMetadataDefaultDialect(ServiceRegistryScope registryScope) {
 		registryScope.withService( JdbcEnvironment.class, (jdbcEnvironment) -> {
-			var extractedDatabaseMetaData = jdbcEnvironment.getExtractedDatabaseMetaData();
+			var jdbcMetadata = jdbcEnvironment.getJdbcMetadata();
+			var extractedDatabaseMetaData = jdbcMetadata.getExtractedDatabaseMetaData();
+			assertSame( jdbcMetadata, jdbcEnvironment.getJdbcMetadata() );
+			assertSame( extractedDatabaseMetaData, jdbcMetadata.getExtractedDatabaseMetaData() );
+			assertFalse( jdbcMetadata.isJdbcMetadataAccessible() );
+			assertFalse( extractedDatabaseMetaData.isJdbcMetadataAccessible() );
+			assertSame( IdentifierCaseStrategy.UPPER, jdbcMetadata.getUnquotedIdentifierCaseStrategy() );
+			assertSame( IdentifierCaseStrategy.MIXED, jdbcMetadata.getQuotedIdentifierCaseStrategy() );
+			assertTrue( jdbcMetadata.getSqlKeywords().isEmpty() );
 
 			assertNull( extractedDatabaseMetaData.getConnectionCatalogName() );
 			assertNull( extractedDatabaseMetaData.getConnectionSchemaName() );
@@ -48,6 +59,9 @@ public class NoDatabaseMetaDataTest {
 			assertFalse( extractedDatabaseMetaData.supportsDataDefinitionInTransaction() );
 			assertFalse( extractedDatabaseMetaData.doesDataDefinitionCauseTransactionCommit() );
 			assertNull( extractedDatabaseMetaData.getSqlStateType() );
+			assertFalse( jdbcMetadata.supportsNamedParameters() );
+			assertFalse( jdbcMetadata.supportsRefCursors() );
+			assertTrue( jdbcMetadata.supportsBatchUpdates() );
 		} );
 	}
 
@@ -59,7 +73,8 @@ public class NoDatabaseMetaDataTest {
 	)
 	public void testNoJdbcMetadataDialectOverride(ServiceRegistryScope registryScope) {
 		registryScope.withService( JdbcEnvironment.class, (jdbcEnvironment) -> {
-			var extractedDatabaseMetaData = jdbcEnvironment.getExtractedDatabaseMetaData();
+			var jdbcMetadata = jdbcEnvironment.getJdbcMetadata();
+			var extractedDatabaseMetaData = jdbcMetadata.getExtractedDatabaseMetaData();
 
 			assertNull( extractedDatabaseMetaData.getConnectionCatalogName() );
 			assertNull( extractedDatabaseMetaData.getConnectionSchemaName() );
@@ -71,10 +86,19 @@ public class NoDatabaseMetaDataTest {
 			assertFalse( extractedDatabaseMetaData.supportsDataDefinitionInTransaction() );
 			assertFalse( extractedDatabaseMetaData.doesDataDefinitionCauseTransactionCommit() );
 			assertNull( extractedDatabaseMetaData.getSqlStateType() );
+			assertTrue( jdbcMetadata.supportsNamedParameters() );
+			assertTrue( jdbcMetadata.supportsRefCursors() );
+			assertFalse( jdbcMetadata.supportsBatchUpdates() );
 		} );
 	}
 
 	public static class TestDialect extends Dialect implements SettingConfiguration.Configurer {
+		private static final JdbcMetadataOverrides JDBC_METADATA_OVERRIDES = JdbcMetadataOverrides.builder()
+				.namedParameterSupport( JdbcMetadataOverrides.SupportOverride.SUPPORTED )
+				.batchUpdateSupport( JdbcMetadataOverrides.SupportOverride.UNSUPPORTED )
+				.standardRefCursorSupport( JdbcMetadataOverrides.SupportOverride.SUPPORTED )
+				.build();
+
 		public TestDialect() {
 			super( ZERO_VERSION );
 		}
@@ -82,6 +106,11 @@ public class NoDatabaseMetaDataTest {
 		@Override
 		public void applySettings(StandardServiceRegistryBuilder registryBuilder) {
 			registryBuilder.applySetting( AvailableSettings.DIALECT, TestDialect.class.getName() );
+		}
+
+		@Override
+		public JdbcMetadataOverrides getJdbcMetadataOverrides() {
+			return JDBC_METADATA_OVERRIDES;
 		}
 	}
 

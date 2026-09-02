@@ -7,8 +7,8 @@ package org.hibernate.dialect.function.json;
 import org.hibernate.Internal;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.query.sqm.CastType;
-import org.hibernate.sql.ast.tree.SqlAstNode;
-import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.spi.SqlAstNode;
+import org.hibernate.sql.ast.spi.query.expression.Expression;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 @Internal

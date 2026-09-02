@@ -6,10 +6,10 @@ package org.hibernate.sql.model.internal;
 
 import java.util.Locale;
 
-import org.hibernate.sql.model.MutationOperation;
+import org.hibernate.sql.spi.mutation.MutationOperation;
 import org.hibernate.sql.model.MutationOperationGroup;
-import org.hibernate.sql.model.MutationTarget;
-import org.hibernate.sql.model.MutationType;
+import org.hibernate.sql.spi.mutation.MutationTarget;
+import org.hibernate.sql.spi.mutation.MutationType;
 
 /**
  * @author Steve Ebersole

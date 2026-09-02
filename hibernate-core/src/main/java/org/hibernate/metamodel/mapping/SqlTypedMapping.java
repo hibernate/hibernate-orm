@@ -13,6 +13,7 @@ import jakarta.annotation.Nullable;
  *
  * @author Christian Beikov
  */
+@org.hibernate.SPI({ org.hibernate.SPI.Role.USE, org.hibernate.SPI.Role.IMPLEMENT })
 public interface SqlTypedMapping {
 	@Nullable Long getLength();
 	@Nullable Integer getArrayLength();

@@ -4,6 +4,8 @@
  */
 package org.hibernate.spatial;
 
+import org.hibernate.SPI;
+
 import java.util.Locale;
 
 import org.hibernate.type.SqlTypes;
@@ -31,6 +33,7 @@ import org.locationtech.jts.io.WKTReader;
  * @author Karel Maesen, Geovise BVBA
  * creation-date: 7/27/11
  */
+@SPI
 public class JTSGeometryJavaType extends AbstractJavaType<Geometry> {
 
 	/**

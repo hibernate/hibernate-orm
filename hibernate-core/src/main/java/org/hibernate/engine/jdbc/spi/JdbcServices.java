@@ -11,8 +11,9 @@ import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
+import org.hibernate.engine.jdbc.env.spi.JdbcMetadata;
 import org.hibernate.service.Service;
-import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
+import org.hibernate.sql.spi.ParameterMarkerStrategy;
 import org.hibernate.sql.exec.internal.JdbcSelectExecutorStandardImpl;
 import org.hibernate.sql.exec.internal.StandardJdbcMutationExecutor;
 import org.hibernate.sql.exec.spi.JdbcMutationExecutor;
@@ -65,13 +66,22 @@ public interface JdbcServices extends Service {
 	 */
 	SqlExceptionHelper getSqlExceptionHelper();
 
-	/**
-	 * Obtain information about supported behavior reported by the JDBC driver.
-	 * <p>
-	 * Yuck, yuck, yuck! Much prefer this to be part of a "basic settings" type object.
-	 *
-	 * @return The extracted database metadata, oddly enough :)
-	 */
+	/// Obtain the stable effective JDBC metadata view.
+	///
+	/// Use this view for runtime support decisions. Access its raw snapshot only
+	/// when diagnostics, reporting, or an integration contract specifically
+	/// requires driver observations.
+	///
+	/// @since 8.0
+	JdbcMetadata getJdbcMetadata();
+
+	/// Obtain the raw JDBC driver and bootstrap-connection observations.
+	///
+	/// @return the raw extracted database metadata
+	/// @deprecated Use [#getJdbcMetadata()] for effective runtime decisions. For
+	/// intentional raw access, use
+	/// `getJdbcMetadata().getExtractedDatabaseMetaData()`.
+	@Deprecated(since = "8.0")
 	ExtractedDatabaseMetaData getExtractedMetaDataSupport();
 
 	/**

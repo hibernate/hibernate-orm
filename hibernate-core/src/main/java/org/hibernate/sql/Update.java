@@ -11,9 +11,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.Internal;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
+import org.hibernate.sql.spi.ParameterMarkerStrategy;
 
 /**
  * A SQL {@code UPDATE} statement.
@@ -128,7 +127,7 @@ public class Update implements RestrictionRenderingContext {
 
 	private void applyComment(StringBuilder buf) {
 		if ( comment != null ) {
-			buf.append( "/* " ).append( Dialect.escapeComment( comment ) ).append( " */ " );
+			buf.append( "/* " ).append( org.hibernate.sql.spi.SqlComments.escape( comment ) ).append( " */ " );
 		}
 	}
 

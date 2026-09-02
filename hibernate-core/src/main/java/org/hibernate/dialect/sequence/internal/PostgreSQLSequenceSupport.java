@@ -1,0 +1,44 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
+package org.hibernate.dialect.sequence.internal;
+
+import org.hibernate.dialect.sequence.spi.SequenceSupport;
+
+import org.hibernate.MappingException;
+
+/**
+ * Sequence support for {@link org.hibernate.dialect.PostgreSQLDialect}.
+ *
+ * @author Gavin King
+ */
+public class PostgreSQLSequenceSupport implements SequenceSupport {
+
+	private static final SequenceSupport INSTANCE = new PostgreSQLSequenceSupport();
+
+	public static SequenceSupport getInstance() {
+		return INSTANCE;
+	}
+
+	@Override
+	public String getSelectSequenceNextValString(String sequenceName) {
+		return "nextval('" + sequenceName + "')";
+	}
+
+	@Override
+	public String getSelectSequencePreviousValString(String sequenceName) throws MappingException {
+		return "currval('" + sequenceName + "')";
+	}
+
+	@Override
+	public boolean sometimesNeedsStartingValue() {
+		return true;
+	}
+
+	@Override
+	public String getDropSequenceString(String sequenceName) {
+		return "drop sequence if exists " + sequenceName;
+	}
+
+}

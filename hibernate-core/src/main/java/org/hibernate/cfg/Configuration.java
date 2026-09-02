@@ -22,6 +22,7 @@ import org.hibernate.Interceptor;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.Remove;
+import org.hibernate.SPI;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.boot.MetadataBuilder;
@@ -534,17 +535,19 @@ public class Configuration {
 	 * Add a {@link TypeContributor} to this configuration.
 	 *
 	 * @return {@code this} for method chaining
+	 * @see TypeContributor
 	 */
+	@SPI(SPI.Role.SUPPLY)
 	public Configuration registerTypeContributor(TypeContributor typeContributor) {
 		typeContributorRegistrations.add( typeContributor );
 		return this;
 	}
 
-	/**
-	 * Add a {@link FunctionContributor} to this configuration.
-	 *
-	 * @return {@code this} for method chaining
-	 */
+	/// Supply a function contributor to this configuration.
+	///
+	/// @return `this` for method chaining
+	/// @see FunctionContributor
+	@SPI(SPI.Role.SUPPLY)
 	public Configuration registerFunctionContributor(FunctionContributor functionContributor) {
 		functionContributorRegistrations.add( functionContributor );
 		return this;
@@ -1040,19 +1043,21 @@ public class Configuration {
 	}
 
 	/**
-	 * The {@link CustomEntityDirtinessStrategy}, if any, that was added to this configuration.
+	 * The {@link ColumnOrderingStrategy}, if any, that was added to this configuration.
 	 */
 	@Incubating
+	@SPI
 	public ColumnOrderingStrategy getColumnOrderingStrategy() {
 		return columnOrderingStrategy;
 	}
 
 	/**
-	 * Specify a {@link CustomEntityDirtinessStrategy} to be added to this configuration.
+	 * Specify a {@link ColumnOrderingStrategy} to be added to this configuration.
 	 *
 	 * @return {@code this} for method chaining
 	 */
 	@Incubating
+	@SPI
 	public Configuration setColumnOrderingStrategy(ColumnOrderingStrategy columnOrderingStrategy) {
 		this.columnOrderingStrategy = columnOrderingStrategy;
 		return this;
@@ -1186,19 +1191,15 @@ public class Configuration {
 		}
 	}
 
-	/**
-	 * Adds a {@linkplain SqmFunctionDescriptor function descriptor} to
-	 * this configuration.
-	 *
-	 * @apiNote For historical reasons, this method is misnamed.
-	 *          The function descriptor actually describes a function
-	 *          available in HQL, and it may or may not map directly
-	 *          to a function defined in SQL.
-	 *
-	 * @return {@code this} for method chaining
-	 *
-	 * @see SqmFunctionDescriptor
-	 */
+	/// Supply a [SqmFunctionDescriptor] under the given HQL registration name.
+	///
+	/// @apiNote For historical reasons, this method is misnamed. The descriptor
+	/// describes a function available in HQL and need not map directly to a
+	/// database SQL function.
+	///
+	/// @return `this` for method chaining
+	/// @see SqmFunctionDescriptor
+	@SPI(SPI.Role.SUPPLY)
 	public Configuration addSqlFunction(String functionName, SqmFunctionDescriptor function) {
 		if ( customFunctionDescriptors == null ) {
 			customFunctionDescriptors = new HashMap<>();

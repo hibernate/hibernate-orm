@@ -4,6 +4,7 @@
  */
 package org.hibernate.spatial.integration.functions;
 
+
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;

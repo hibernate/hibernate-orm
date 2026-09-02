@@ -4,6 +4,8 @@
  */
 package org.hibernate.spatial.dialect.hana;
 
+import org.hibernate.SPI;
+
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -21,6 +23,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 import org.geolatte.geom.Point;
 
+@SPI
 public class HANAPointType implements JdbcType {
 
 	/**

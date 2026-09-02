@@ -4,21 +4,29 @@
  */
 package org.hibernate.boot.model;
 
+import org.hibernate.SPI;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.service.Service;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
-/**
- * Allows custom function descriptors to be contributed to the eventual
- * {@link SqmFunctionRegistry}, either by a {@link org.hibernate.dialect.Dialect}
- * or by a {@link FunctionContributor}.
- *
- * @see FunctionContributor
- *
- * @author Christian Beikov
- */
+import static org.hibernate.SPI.Role.USE;
+
+/// Boot-scoped access used by a [FunctionContributor] or [Dialect] to register
+/// functions with the eventual [SqmFunctionRegistry].
+///
+/// Complete registrations during the active contribution callback. Do not
+/// retain this object or its mutable registry after the callback returns.
+/// Hibernate creates and supplies this callback; providers consume it but do
+/// not implement or supply it.
+///
+/// @see FunctionContributor
+/// @see Dialect#initializeFunctionRegistry(FunctionContributions)
+/// @see org.hibernate.dialect.function.CommonFunctionFactory
+///
+/// @author Christian Beikov
+@SPI(USE)
 public interface FunctionContributions {
 
 	/**

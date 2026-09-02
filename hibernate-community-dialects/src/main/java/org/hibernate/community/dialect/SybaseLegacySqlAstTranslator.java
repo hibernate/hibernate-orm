@@ -7,35 +7,31 @@ package org.hibernate.community.dialect;
 import java.util.List;
 import java.util.function.Consumer;
 
-import org.hibernate.LockMode;
+import org.hibernate.Internal;
 import org.hibernate.Locking;
-import org.hibernate.dialect.sql.ast.SybaseSqlAstTranslator;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.util.collections.Stack;
-import org.hibernate.query.IllegalQueryOperationException;
+import org.hibernate.dialect.sql.ast.spi.DerivedTableRenderingSupport;
+import org.hibernate.dialect.sql.ast.spi.PaginationRenderingSupport;
+import org.hibernate.dialect.sql.ast.spi.StandardPaginationRenderingSupport;
+import org.hibernate.dialect.sql.ast.spi.StandardDerivedTableRenderingSupport;
 import org.hibernate.query.sqm.ComparisonOperator;
-import org.hibernate.sql.ast.Clause;
-import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
-import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
-import org.hibernate.sql.ast.spi.SqlSelection;
-import org.hibernate.sql.ast.tree.Statement;
-import org.hibernate.sql.ast.tree.delete.DeleteStatement;
-import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
-import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
-import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
-import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.Literal;
-import org.hibernate.sql.ast.tree.expression.SqlTuple;
-import org.hibernate.sql.ast.tree.expression.Summarization;
-import org.hibernate.sql.ast.tree.from.NamedTableReference;
-import org.hibernate.sql.ast.tree.from.UnionTableReference;
-import org.hibernate.sql.ast.tree.from.ValuesTableReference;
-import org.hibernate.sql.ast.tree.insert.ConflictClause;
-import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
-import org.hibernate.sql.ast.tree.insert.Values;
-import org.hibernate.sql.ast.tree.select.QueryPart;
-import org.hibernate.sql.ast.tree.select.QuerySpec;
-import org.hibernate.sql.ast.tree.update.UpdateStatement;
+import org.hibernate.sql.ast.spi.translation.SqlAstNodeRenderingMode;
+import org.hibernate.dialect.sql.ast.spi.AbstractSqlAstTranslator;
+import org.hibernate.sql.ast.spi.query.select.SqlSelection;
+import org.hibernate.sql.ast.spi.Statement;
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
+import org.hibernate.dialect.sql.ast.spi.InsertConflictRenderingSupport;
+import org.hibernate.dialect.sql.ast.spi.StandardInsertConflictRenderingSupport;
+import org.hibernate.sql.ast.spi.query.delete.DeleteStatement;
+import org.hibernate.sql.ast.spi.query.expression.BinaryArithmeticExpression;
+import org.hibernate.sql.ast.spi.query.expression.CaseSearchedExpression;
+import org.hibernate.sql.ast.spi.query.expression.CaseSimpleExpression;
+import org.hibernate.sql.ast.spi.query.expression.Expression;
+import org.hibernate.sql.ast.spi.query.expression.Literal;
+import org.hibernate.sql.ast.spi.query.expression.SqlTuple;
+import org.hibernate.sql.ast.spi.query.expression.Summarization;
+import org.hibernate.sql.ast.spi.query.select.QueryPart;
+import org.hibernate.sql.ast.spi.query.select.QuerySpec;
+import org.hibernate.sql.ast.spi.query.update.UpdateStatement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 
 /**
@@ -45,50 +41,26 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
  */
 public class SybaseLegacySqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstTranslator<T> {
 
-	private static final String UNION_ALL = " union all ";
-
-	public SybaseLegacySqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
-		super( sessionFactory, statement );
+	public SybaseLegacySqlAstTranslator(SqlAstTranslationRequest<? extends Statement, T> request) {
+		super( request );
 	}
 
 	@Override
-	protected void visitInsertStatementOnly(InsertSelectStatement statement) {
-		if ( statement.getConflictClause() == null || statement.getConflictClause().isDoNothing() ) {
-			// Render plain insert statement and possibly run into unique constraint violation
-			super.visitInsertStatementOnly( statement );
-		}
-		else {
-			visitInsertStatementEmulateMerge( statement );
-			appendSql( ';' );
-		}
+	@Internal
+	protected InsertConflictRenderingSupport getInsertConflictRenderingSupport() {
+		return StandardInsertConflictRenderingSupport.TERMINATED_MERGE;
 	}
 
 	@Override
 	protected void renderDeleteClause(DeleteStatement statement) {
 		appendSql( "delete " );
-		final Stack<Clause> clauseStack = getClauseStack();
-		try {
-			clauseStack.push( Clause.DELETE );
-			renderDmlTargetTableExpression( statement.getTargetTable() );
-		}
-		finally {
-			clauseStack.pop();
-		}
+		renderDmlTargetTableExpression( statement.getTargetTable() );
 		visitFromClause( statement.getFromClause() );
 	}
 
 	@Override
 	protected void renderFromClauseAfterUpdateSet(UpdateStatement statement) {
 		visitFromClause( statement.getFromClause() );
-	}
-
-	@Override
-	protected void visitConflictClause(ConflictClause conflictClause) {
-		if ( conflictClause != null ) {
-			if ( conflictClause.isDoUpdate() && conflictClause.getConstraintName() != null ) {
-				throw new IllegalQueryOperationException( "Insert conflict 'do update' clause with constraint name is not supported" );
-			}
-		}
 	}
 
 	// Sybase does not allow CASE expressions where all result arms contain plain parameters.
@@ -144,38 +116,6 @@ public class SybaseLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 	}
 
 	@Override
-	protected boolean renderNamedTableReference(NamedTableReference tableReference, LockMode lockMode) {
-		final String tableExpression = tableReference.getTableExpression();
-		if ( tableReference instanceof UnionTableReference && lockMode != LockMode.NONE && tableExpression.charAt( 0 ) == '(' ) {
-			// SQL Server requires to push down the lock hint to the actual table names
-			int searchIndex = 0;
-			int unionIndex;
-			while ( ( unionIndex = tableExpression.indexOf( UNION_ALL, searchIndex ) ) != -1 ) {
-				append( tableExpression, searchIndex, unionIndex );
-				renderLockHint( lockMode );
-				appendSql( UNION_ALL );
-				searchIndex = unionIndex + UNION_ALL.length();
-			}
-			append( tableExpression, searchIndex, tableExpression.length() - 1 );
-			renderLockHint( lockMode );
-			appendSql( " )" );
-
-			registerAffectedTable( tableReference );
-			renderTableReferenceIdentificationVariable( tableReference );
-		}
-		else {
-			super.renderNamedTableReference( tableReference, lockMode );
-			renderLockHint( lockMode );
-		}
-		// Just always return true because SQL Server doesn't support the FOR UPDATE clause
-		return true;
-	}
-
-	private void renderLockHint(LockMode lockMode) {
-		append( SybaseSqlAstTranslator.determineLockHint( lockMode ) );
-	}
-
-	@Override
 	protected LockStrategy determineLockingStrategy(
 			QuerySpec querySpec,
 			Locking.FollowOn followOnStrategy) {
@@ -187,16 +127,13 @@ public class SybaseLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 	}
 
 	@Override
-	protected void visitValuesList(List<Values> valuesList) {
-		visitValuesListEmulateSelectUnion( valuesList );
+	protected DerivedTableRenderingSupport getDerivedTableRenderingSupport() {
+		return StandardDerivedTableRenderingSupport.VALUES_SELECT_UNION;
 	}
 
 	@Override
-	public void visitValuesTableReference(ValuesTableReference tableReference) {
-		append( '(' );
-		visitValuesListEmulateSelectUnion( tableReference.getValuesList() );
-		append( ')' );
-		renderDerivedTableReferenceIdentificationVariable( tableReference );
+	protected PaginationRenderingSupport getPaginationRenderingSupport() {
+		return StandardPaginationRenderingSupport.NONE;
 	}
 
 	@Override
@@ -205,6 +142,7 @@ public class SybaseLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 		if ( !queryPart.isRoot() && queryPart.getOffsetClauseExpression() != null ) {
 			throw new IllegalArgumentException( "Can't emulate offset clause in subquery" );
 		}
+		super.visitOffsetFetchClause( queryPart );
 	}
 
 	@Override
@@ -246,13 +184,4 @@ public class SybaseLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 		appendSql( CLOSE_PARENTHESIS );
 	}
 
-	@Override
-	protected boolean needsRowsToSkip() {
-		return true;
-	}
-
-	@Override
-	protected boolean needsMaxRows() {
-		return true;
-	}
 }

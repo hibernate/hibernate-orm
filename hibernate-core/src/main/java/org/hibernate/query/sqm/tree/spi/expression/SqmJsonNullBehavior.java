@@ -10,7 +10,7 @@ import org.hibernate.query.sqm.spi.SqmBindableType;
 import org.hibernate.query.sqm.tree.spi.SqmCopyContext;
 import org.hibernate.query.sqm.tree.spi.SqmRenderContext;
 import org.hibernate.query.sqm.tree.spi.SqmTypedNode;
-import org.hibernate.sql.ast.tree.expression.JsonNullBehavior;
+import org.hibernate.sql.ast.spi.query.expression.JsonNullBehavior;
 
 import jakarta.annotation.Nullable;
 

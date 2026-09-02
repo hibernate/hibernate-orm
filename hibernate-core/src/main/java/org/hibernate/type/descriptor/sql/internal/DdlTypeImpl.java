@@ -225,11 +225,11 @@ public class DdlTypeImpl implements DdlType {
 		if ( size.getLength() != null ) {
 			switch ( sqlTypeCode ) {
 				case SqlTypes.CLOB, SqlTypes.LONG32VARCHAR ->
-						size.setLength( Math.min( size.getLength(), dialect.getMaxVarcharLength() ) );
+						size.setLength( Math.min( size.getLength(), dialect.getTypeSizingProfile().maxVarcharLength() ) );
 				case SqlTypes.NCLOB, SqlTypes.LONG32NVARCHAR ->
-						size.setLength( Math.min( size.getLength(), dialect.getMaxNVarcharLength() ) );
+						size.setLength( Math.min( size.getLength(), dialect.getTypeSizingProfile().maxNVarcharLength() ) );
 				case SqlTypes.BLOB, SqlTypes.LONG32VARBINARY ->
-						size.setLength( Math.min( size.getLength(), dialect.getMaxVarbinaryLength() ) );
+						size.setLength( Math.min( size.getLength(), dialect.getTypeSizingProfile().maxVarbinaryLength() ) );
 			}
 		}
 		return replace( narrowCastTypeName, size.getLength(), size.getPrecision(), size.getScale() );
@@ -237,9 +237,9 @@ public class DdlTypeImpl implements DdlType {
 
 	private Long narrowDefaultLength(int sqlTypeCode) {
 		return switch ( sqlTypeCode ) {
-			case SqlTypes.CLOB, SqlTypes.LONG32VARCHAR, SqlTypes.VARCHAR -> (long) dialect.getMaxVarcharLength();
-			case SqlTypes.NCLOB, SqlTypes.LONG32NVARCHAR, SqlTypes.NVARCHAR -> (long) dialect.getMaxNVarcharLength();
-			case SqlTypes.BLOB, SqlTypes.LONG32VARBINARY, SqlTypes.VARBINARY -> (long) dialect.getMaxVarbinaryLength();
+			case SqlTypes.CLOB, SqlTypes.LONG32VARCHAR, SqlTypes.VARCHAR -> (long) dialect.getTypeSizingProfile().maxVarcharLength();
+			case SqlTypes.NCLOB, SqlTypes.LONG32NVARCHAR, SqlTypes.NVARCHAR -> (long) dialect.getTypeSizingProfile().maxNVarcharLength();
+			case SqlTypes.BLOB, SqlTypes.LONG32VARBINARY, SqlTypes.VARBINARY -> (long) dialect.getTypeSizingProfile().maxVarbinaryLength();
 			default -> null;
 		};
 	}
@@ -247,9 +247,9 @@ public class DdlTypeImpl implements DdlType {
 	//TODO: move this to JdbcType??
 	private Long defaultLength(JdbcType jdbcType) {
 		return switch ( jdbcType.getDdlTypeCode() ) {
-			case SqlTypes.VARCHAR -> (long) dialect.getMaxVarcharLength();
-			case SqlTypes.NVARCHAR -> (long) dialect.getMaxNVarcharLength();
-			case SqlTypes.VARBINARY -> (long) dialect.getMaxVarbinaryLength();
+			case SqlTypes.VARCHAR -> (long) dialect.getTypeSizingProfile().maxVarcharLength();
+			case SqlTypes.NVARCHAR -> (long) dialect.getTypeSizingProfile().maxNVarcharLength();
+			case SqlTypes.VARBINARY -> (long) dialect.getTypeSizingProfile().maxVarbinaryLength();
 			default -> null;
 		};
 	}

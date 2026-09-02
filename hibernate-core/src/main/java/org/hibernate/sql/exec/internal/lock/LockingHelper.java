@@ -4,6 +4,9 @@
  */
 package org.hibernate.sql.exec.internal.lock;
 
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
+import org.hibernate.dialect.sql.ast.spi.RowValueSupport;
+
 import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.Timeout;
 import org.hibernate.LockMode;
@@ -19,15 +22,15 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.query.internal.QueryOptionsImpl;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.ComparisonOperator;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
-import org.hibernate.sql.ast.tree.expression.SqlTuple;
-import org.hibernate.sql.ast.tree.from.NamedTableReference;
-import org.hibernate.sql.ast.tree.from.TableReference;
-import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
-import org.hibernate.sql.ast.tree.predicate.InListPredicate;
-import org.hibernate.sql.ast.tree.select.QuerySpec;
-import org.hibernate.sql.ast.tree.select.SelectStatement;
+import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
+import org.hibernate.sql.ast.spi.query.expression.JdbcParameter;
+import org.hibernate.sql.ast.spi.query.expression.SqlTuple;
+import org.hibernate.sql.ast.spi.query.from.NamedTableReference;
+import org.hibernate.sql.ast.spi.query.from.TableReference;
+import org.hibernate.sql.ast.spi.query.predicate.ComparisonPredicate;
+import org.hibernate.sql.ast.spi.query.predicate.InListPredicate;
+import org.hibernate.sql.ast.spi.query.select.QuerySpec;
+import org.hibernate.sql.ast.spi.query.select.SelectStatement;
 import org.hibernate.sql.exec.internal.BaseExecutionContext;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
@@ -263,7 +266,7 @@ public static void lockCollectionTable(
 			JdbcParameterBindingsImpl parameterBindings,
 			Map<Object, EntityDetails> ownerDetailsMap,
 			SharedSessionContractImplementor session) {
-		if ( !session.getDialect().supportsRowValueConstructorSyntaxInInList() ) {
+		if ( !session.getDialect().getRowValueSupport().supports( RowValueSupport.Feature.IN_LIST ) ) {
 			// for now...
 			throw new UnsupportedOperationException(
 					"Follow-on collection-table locking with composite keys is not supported for Dialects"
@@ -404,7 +407,7 @@ public static void lockCollectionTable(
 			JdbcParameterBindingsImpl parameterBindings,
 			List<CollectionKey> collectionKeys,
 			SharedSessionContractImplementor session) {
-		if ( !session.getDialect().supportsRowValueConstructorSyntaxInInList() ) {
+		if ( !session.getDialect().getRowValueSupport().supports( RowValueSupport.Feature.IN_LIST ) ) {
 			// for now...
 			throw new UnsupportedOperationException(
 					"Follow-on collection-table locking with composite keys is not supported for Dialects"
@@ -446,7 +449,7 @@ public static void lockCollectionTable(
 		final var jdbcServices = sessionFactory.getJdbcServices();
 		jdbcServices.getJdbcSelectExecutor().executeQuery(
 				jdbcServices.getDialect().getSqlAstTranslatorFactory()
-						.buildSelectTranslator( sessionFactory, new SelectStatement( querySpec ) )
+						.buildTranslator( new SqlAstTranslationRequest.Select( sessionFactory, new SelectStatement( querySpec ) ) )
 						.translate( jdbcParameterBindings, lockingExecutionContext.getQueryOptions() ),
 				jdbcParameterBindings,
 				lockingExecutionContext,

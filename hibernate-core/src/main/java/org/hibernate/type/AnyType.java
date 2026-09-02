@@ -4,6 +4,9 @@
  */
 package org.hibernate.type;
 
+import org.hibernate.Internal;
+import org.hibernate.SPI;
+
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
@@ -39,12 +42,14 @@ import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
  *
  * @author Gavin King
  */
+@SPI
 public class AnyType extends AbstractType implements CompositeType, AssociationType {
 	private final TypeConfiguration typeConfiguration;
 	private final Type identifierType;
 	private final MetaType discriminatorType;
 	private final boolean eager;
 
+	@Internal
 	public AnyType(TypeConfiguration typeConfiguration, MetaType discriminatorType, Type identifierType, boolean lazy) {
 		this.typeConfiguration = typeConfiguration;
 		this.discriminatorType = discriminatorType;

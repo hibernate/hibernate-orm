@@ -10,8 +10,8 @@ import org.hibernate.action.queue.internal.support.OperationGroupKey;
 import org.hibernate.action.queue.spi.meta.CollectionTableDescriptor;
 import org.hibernate.action.queue.spi.meta.TableDescriptor;
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
-import org.hibernate.sql.model.MutationOperation;
-import org.hibernate.sql.model.PreparableMutationOperation;
+import org.hibernate.sql.spi.mutation.MutationOperation;
+import org.hibernate.sql.spi.mutation.jdbc.PreparableMutationOperation;
 
 /// Helps identify similar mutations more concretely that just type+table.  This
 /// takes into consideration [#shapeHash] as well, which might be based on columns

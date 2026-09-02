@@ -118,13 +118,12 @@ public class StandardJdbcMutationExecutor implements JdbcMutationExecutor {
 	private static String applyOptions(
 			JdbcOperationQueryMutation jdbcMutation, ExecutionContext executionContext, JdbcServices jdbcServices) {
 		final var queryOptions = executionContext.getQueryOptions();
-		return queryOptions == null
-				? jdbcMutation.getSqlString()
-				: jdbcServices.getDialect().addSqlHintOrComment(
-						jdbcMutation.getSqlString(),
-						queryOptions,
-						executionContext.getSession().getFactory().getSessionFactoryOptions().isCommentsEnabled()
-				);
+		return QuerySqlDecorator.decorate(
+				jdbcMutation.getSqlString(),
+				queryOptions,
+				executionContext.getSession().getFactory().getSessionFactoryOptions().isCommentsEnabled(),
+				jdbcServices.getDialect()
+		);
 	}
 
 	private static boolean constraintNameMatches(String uniqueConstraintNameThatMayFail, String violatedConstraintName) {

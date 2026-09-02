@@ -169,7 +169,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 		final Set<String> exportIdentifiers = setOfSize( 50 );
 
 		final var database = metadata.getDatabase();
-		final var auxiliaryExporter = dialect.getAuxiliaryDatabaseObjectExporter();
+		final var auxiliaryExporter = new StandardAuxiliaryDatabaseObjectExporter( dialect );
 
 		// Drop all AuxiliaryDatabaseObjects
 		for ( var auxiliaryDatabaseObject : database.getAuxiliaryDatabaseObjects() ) {
@@ -207,10 +207,11 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 		boolean tryToCreateCatalogs = false;
 		boolean tryToCreateSchemas = false;
 		if ( options.shouldManageNamespaces() ) {
-			if ( dialect.canCreateSchema() ) {
+			final var namespaceSupport = dialect.getNamespaceSupport();
+			if ( namespaceSupport.canCreateSchema() ) {
 				tryToCreateSchemas = true;
 			}
-			if ( dialect.canCreateCatalog() ) {
+			if ( namespaceSupport.canCreateCatalog() ) {
 				tryToCreateCatalogs = true;
 			}
 		}
@@ -378,7 +379,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 		}
 
 		if ( uniqueConstraintStrategy != SKIP ) {
-			final var exporter = dialect.getUniqueKeyExporter();
+			final var exporter = new StandardUniqueKeyExporter( dialect );
 			for ( var uniqueKey : table.getUniqueKeys().values() ) {
 				// Skip if index already exists. Most of the time, this
 				// won't work since most Dialects use Constraints. However,
@@ -426,7 +427,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 			ExecutionOptions options,
 			SqlStringGenerationContext sqlGenerationContext,
 			GenerationTarget... targets) {
-		if ( dialect.hasAlterTable() ) {
+		if ( dialect.getForeignKeySupport().supportsAlterTableConstraints() ) {
 			final var exporter = dialect.getForeignKeyExporter();
 			for ( var foreignKey : table.getForeignKeyCollection() ) {
 				if ( foreignKey.isPhysicalConstraint()
@@ -519,6 +520,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 			SqlStringGenerationContext context,
 			GenerationTarget[] targets) {
 		if ( tryToCreateCatalogs || tryToCreateSchemas ) {
+			final var namespaceSupport = dialect.getNamespaceSupport();
 			final var logicalName = namespace.getName();
 			final var physicalName = namespace.getPhysicalName();
 
@@ -529,7 +531,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 						&& !existingDatabase.catalogExists( catalogPhysicalName ) ) {
 					applySqlStrings(
 							false,
-							dialect.getCreateCatalogCommand( catalogPhysicalName.render( dialect ) ),
+							namespaceSupport.getCreateCatalogCommands( catalogPhysicalName.render( dialect ) ),
 							formatter,
 							options,
 							targets
@@ -543,7 +545,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 				if ( schemaPhysicalName != null && !existingDatabase.schemaExists( physicalName ) ) {
 					applySqlStrings(
 							false,
-							dialect.getCreateSchemaCommand( schemaPhysicalName.render( dialect ) ),
+							namespaceSupport.getCreateSchemaCommands( schemaPhysicalName.render( dialect ) ),
 							formatter,
 							options,
 							targets

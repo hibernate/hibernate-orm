@@ -80,7 +80,10 @@ public abstract class OracleOsonCompatibilityTest {
 		scope.inTransaction(
 				(session) -> {
 					// force creation of a column type by creating the table ourselves
-					session.createNativeMutationQuery( session.getDialect().getDropTableString( "TEST_OSON_COMPAT" ) )
+					session.createNativeMutationQuery( org.hibernate.testing.DialectTestSupport.dropTableCommand(
+							session.getDialect(),
+							"TEST_OSON_COMPAT"
+					) )
 							.executeUpdate();
 					StringBuilder create = new StringBuilder();
 					create.append("CREATE TABLE TEST_OSON_COMPAT (");
@@ -115,7 +118,10 @@ public abstract class OracleOsonCompatibilityTest {
 	public void tearDown(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) -> {
-					session.createNativeQuery( session.getDialect().getDropTableString( "TEST_OSON_COMPAT" ) ).executeUpdate();
+					session.createNativeQuery( org.hibernate.testing.DialectTestSupport.dropTableCommand(
+							session.getDialect(),
+							"TEST_OSON_COMPAT"
+					) ).executeUpdate();
 				}
 		);
 	}

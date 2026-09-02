@@ -17,7 +17,9 @@ public class CUBRIDDialectTestCase {
 
 	@Test
 	public void testAlterColumnTypeUsesModifyWithFullDefinition() {
-		assertThat( dialect.getAlterColumnTypeString( "age", "integer", "integer not null" ) )
+		assertThat( dialect.getAlterTableSupport().alterColumnType(
+				new org.hibernate.dialect.schema.spi.AlterColumnTypeRequest( "age", "integer", "integer not null" )
+		) )
 				.isEqualTo( "modify column age integer not null" );
 	}
 }

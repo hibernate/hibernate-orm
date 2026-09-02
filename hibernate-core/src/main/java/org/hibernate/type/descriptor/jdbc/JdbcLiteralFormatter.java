@@ -6,22 +6,32 @@ package org.hibernate.type.descriptor.jdbc;
 
 import java.io.Serializable;
 
+import org.hibernate.SPI;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.sql.ast.spi.SqlAppender;
-import org.hibernate.sql.ast.spi.StringBuilderSqlAppender;
+import org.hibernate.sql.spi.SqlAppender;
+import org.hibernate.sql.spi.StringBuilderSqlAppender;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
 
-/**
- * A formatter object for rendering values of a given {@linkplain JavaType Java type}
- * as SQL literals of a certain {@linkplain JdbcType JDBC/SQL type}. Usually, an
- * instance is obtained by calling {@link JdbcType#getJdbcLiteralFormatter(JavaType)}.
- *
- * @param <T> the Java type that this instance formats as a SQL literal
- *
- * @author Steve Ebersole
- */
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.SUPPLY;
+import static org.hibernate.SPI.Role.USE;
+
+/// Renders values of a given [JavaType] as SQL literals of a certain
+/// [JdbcType].
+///
+/// Providers supply a formatter from
+/// [JdbcType#getJdbcLiteralFormatter(JavaType)]. Implementations append the
+/// literal immediately and must not retain the appender, value, Dialect, or
+/// wrapper options.
+///
+/// @param <T> the Java type formatted as a SQL literal
+///
+/// @see JdbcType#getJdbcLiteralFormatter(JavaType)
+///
+/// @author Steve Ebersole
 @FunctionalInterface
+@SPI({ USE, IMPLEMENT, SUPPLY })
 public interface JdbcLiteralFormatter<T> extends Serializable {
 	/**
 	 * Produces a string containing a SQL literal value representing the given Java value.

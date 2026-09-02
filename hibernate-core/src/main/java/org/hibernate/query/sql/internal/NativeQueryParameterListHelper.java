@@ -10,7 +10,7 @@ import org.hibernate.internal.util.MathHelper;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.sql.spi.ParameterOccurrence;
-import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
+import org.hibernate.sql.spi.ParameterMarkerStrategy;
 
 import java.util.List;
 
@@ -38,7 +38,7 @@ public final class NativeQueryParameterListHelper {
 		// Some DBs limit the number of IN expressions. For now, warn.
 		final var dialect = factory.getJdbcServices().getDialect();
 		final boolean paddingEnabled = factory.getSessionFactoryOptions().inClauseParameterPaddingEnabled();
-		final int inExprLimit = dialect.getInExpressionCountLimit();
+		final int inExprLimit = dialect.getParameterLimits().inExpressionCountLimit();
 		final var parameterMarkerStrategy = factory.getJdbcServices().getParameterMarkerStrategy();
 		final boolean needsMarker = !isStandardRenderer( parameterMarkerStrategy );
 

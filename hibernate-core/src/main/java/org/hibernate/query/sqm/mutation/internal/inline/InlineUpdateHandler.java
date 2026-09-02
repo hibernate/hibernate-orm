@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.sqm.mutation.internal.inline;
 
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
+
 import jakarta.annotation.Nullable;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -27,33 +29,34 @@ import org.hibernate.query.sqm.mutation.internal.UpdateHandler;
 import org.hibernate.query.sqm.spi.SqmParameterMappingModelResolutionAccess;
 import org.hibernate.query.sqm.sql.spi.SqmTranslation;
 import org.hibernate.query.sqm.sql.spi.SqmTranslator;
+import org.hibernate.query.sqm.sql.spi.SqmTranslationRequest;
 import org.hibernate.query.sqm.tree.spi.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.spi.update.SqmUpdateStatement;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.SqlAstJoinType;
-import org.hibernate.sql.ast.spi.SqlAliasBaseImpl;
-import org.hibernate.sql.ast.spi.SqlSelection;
-import org.hibernate.sql.ast.tree.MutationStatement;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
-import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.SqlTuple;
-import org.hibernate.sql.ast.tree.from.NamedTableReference;
-import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.from.TableGroupJoin;
-import org.hibernate.sql.ast.tree.from.TableGroupProducer;
-import org.hibernate.sql.ast.tree.from.TableReference;
-import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
-import org.hibernate.sql.ast.tree.from.UnionTableReference;
-import org.hibernate.sql.ast.tree.from.ValuesTableGroup;
-import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
-import org.hibernate.sql.ast.tree.insert.Values;
-import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
-import org.hibernate.sql.ast.tree.predicate.NullnessPredicate;
-import org.hibernate.sql.ast.tree.predicate.Predicate;
-import org.hibernate.sql.ast.tree.select.QuerySpec;
-import org.hibernate.sql.ast.tree.select.SortSpecification;
-import org.hibernate.sql.ast.tree.update.Assignment;
-import org.hibernate.sql.ast.tree.update.UpdateStatement;
+import org.hibernate.sql.ast.spi.query.from.SqlAstJoinType;
+import org.hibernate.sql.ast.spi.creation.SqlAliasBaseImpl;
+import org.hibernate.sql.ast.spi.query.select.SqlSelection;
+import org.hibernate.sql.ast.spi.query.MutationStatement;
+import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
+import org.hibernate.sql.ast.spi.query.expression.Expression;
+import org.hibernate.sql.ast.spi.query.expression.SqlTuple;
+import org.hibernate.sql.ast.spi.query.from.NamedTableReference;
+import org.hibernate.sql.ast.spi.query.from.TableGroup;
+import org.hibernate.sql.ast.spi.query.from.TableGroupJoin;
+import org.hibernate.sql.ast.spi.query.from.TableGroupProducer;
+import org.hibernate.sql.ast.spi.query.from.TableReference;
+import org.hibernate.sql.ast.spi.query.from.TableReferenceJoin;
+import org.hibernate.sql.ast.spi.query.from.UnionTableReference;
+import org.hibernate.sql.ast.spi.query.from.ValuesTableGroup;
+import org.hibernate.sql.ast.spi.query.insert.InsertSelectStatement;
+import org.hibernate.sql.ast.spi.query.insert.Values;
+import org.hibernate.sql.ast.spi.query.predicate.ComparisonPredicate;
+import org.hibernate.sql.ast.spi.query.predicate.NullnessPredicate;
+import org.hibernate.sql.ast.spi.query.predicate.Predicate;
+import org.hibernate.sql.ast.spi.query.select.QuerySpec;
+import org.hibernate.sql.ast.spi.query.select.SortSpecification;
+import org.hibernate.sql.ast.spi.query.update.Assignment;
+import org.hibernate.sql.ast.spi.query.update.UpdateStatement;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcOperationQueryMutation;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
@@ -97,12 +100,14 @@ public class InlineUpdateHandler extends AbstractInlineHandler implements Update
 		final SqmTranslator<? extends MutationStatement> translator = sessionFactory.getQueryEngine()
 				.getSqmTranslatorFactory()
 				.createMutationTranslator(
-						sqmStatement,
-						context.getQueryOptions(),
-						domainParameterXref,
-						context.getQueryParameterBindings(),
-						context.getSession().getLoadQueryInfluencers(),
-						sessionFactory.getSqlTranslationEngine()
+						new SqmTranslationRequest.Mutation(
+								sqmStatement,
+								context.getQueryOptions(),
+								domainParameterXref,
+								context.getQueryParameterBindings(),
+								context.getSession().getLoadQueryInfluencers(),
+								sessionFactory.getSqlTranslationEngine()
+						)
 				);
 		//noinspection unchecked
 		final SqmTranslation<UpdateStatement> translation = (SqmTranslation<UpdateStatement>) translator.translate();
@@ -487,7 +492,7 @@ public class InlineUpdateHandler extends AbstractInlineHandler implements Update
 		final JdbcServices jdbcServices = sessionFactory.getJdbcServices();
 		return jdbcServices.getJdbcEnvironment()
 				.getSqlAstTranslatorFactory()
-				.buildMutationTranslator( sessionFactory, updateStatement )
+				.buildTranslator( new SqlAstTranslationRequest.QueryMutation( sessionFactory, updateStatement ) )
 				.translate( jdbcParameterBindings, executionContext.getQueryOptions() );
 	}
 
@@ -559,7 +564,7 @@ public class InlineUpdateHandler extends AbstractInlineHandler implements Update
 		final JdbcServices jdbcServices = sessionFactory.getJdbcServices();
 		return jdbcServices.getJdbcEnvironment()
 				.getSqlAstTranslatorFactory()
-				.buildMutationTranslator( sessionFactory, insertStatement )
+				.buildTranslator( new SqlAstTranslationRequest.QueryMutation( sessionFactory, insertStatement ) )
 				.translate( jdbcParameterBindings, executionContext.getQueryOptions() );
 	}
 

@@ -104,8 +104,8 @@ public class XmlAsStringJdbcType extends XmlJdbcType implements AdjustableJdbcTy
 		final Dialect dialect = indicators.getDialect();
 		final long length = indicators.getColumnLength();
 		final long maxLength = indicators.isNationalized()
-				? dialect.getMaxNVarcharLength()
-				: dialect.getMaxVarcharLength();
+				? dialect.getTypeSizingProfile().maxNVarcharLength()
+				: dialect.getTypeSizingProfile().maxVarcharLength();
 		if ( length > maxLength ) {
 			return true;
 		}

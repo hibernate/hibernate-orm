@@ -11,7 +11,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.EventType;
 import org.hibernate.jdbc.Expectation;
-import org.hibernate.sql.model.ast.builder.TableMutationBuilder;
+import org.hibernate.sql.ast.spi.model.builder.TableMutationBuilder;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
 
 import java.sql.PreparedStatement;
@@ -31,6 +31,7 @@ import java.sql.PreparedStatement;
  * @see org.hibernate.generator.OnExecutionGenerator
  * @since 6.5
  */
+@org.hibernate.SPI({ org.hibernate.SPI.Role.USE, org.hibernate.SPI.Role.IMPLEMENT })
 public interface GeneratedValuesMutationDelegate {
 	/**
 	 * Create a {@link TableMutationBuilder} instance used to build table mutations for this delegate.

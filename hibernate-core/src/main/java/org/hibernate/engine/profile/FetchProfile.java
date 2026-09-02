@@ -135,6 +135,7 @@ public class FetchProfile {
 		return "FetchProfile[" + name + "]";
 	}
 
+	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	public boolean hasSubselectLoadableCollectionsEnabled(EntityPersister persister) {
 		for ( Fetch fetch : getFetches().values() ) {
 			if ( fetch.getMethod() == SUBSELECT

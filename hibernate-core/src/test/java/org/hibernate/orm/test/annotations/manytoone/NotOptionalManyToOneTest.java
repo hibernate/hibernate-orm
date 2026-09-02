@@ -10,7 +10,7 @@ import jakarta.persistence.ManyToOne;
 
 import org.hibernate.orm.test.annotations.manytoone.NotOptionalManyToOneTest.Child;
 import org.hibernate.orm.test.annotations.manytoone.NotOptionalManyToOneTest.Parent;
-import org.hibernate.sql.ast.SqlAstJoinType;
+import org.hibernate.sql.ast.spi.query.from.SqlAstJoinType;
 
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;

@@ -7,8 +7,8 @@ package org.hibernate.persister.entity.mutation;
 import java.util.List;
 
 import org.hibernate.Incubating;
-import org.hibernate.sql.model.TableMapping;
-import org.hibernate.sql.model.ValuesAnalysis;
+import org.hibernate.sql.spi.mutation.TableMapping;
+import org.hibernate.sql.spi.mutation.ValuesAnalysis;
 
 /**
  * Contains an aggregated analysis of the values for an update mutation

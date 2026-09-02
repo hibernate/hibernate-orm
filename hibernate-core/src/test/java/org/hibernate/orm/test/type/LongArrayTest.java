@@ -10,6 +10,7 @@ import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.HSQLDialect;
+import org.hibernate.dialect.sql.ast.spi.PredicateSupport;
 import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
@@ -152,7 +153,9 @@ public class LongArrayTest {
 	public void testNativeQuery(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			final Dialect dialect = em.getDialect();
-			final String op = dialect.supportsDistinctFromPredicate() ? "IS NOT DISTINCT FROM" : "=";
+			final String op = dialect.getPredicateSupport().supports( PredicateSupport.Capability.DISTINCT_FROM )
+					? "IS NOT DISTINCT FROM"
+					: "=";
 			final String param = arrayType.getJdbcType().wrapWriteExpression( ":data", null, dialect );
 			TypedQuery<TableWithLongArrays> tq = em.createNativeQuery(
 					"SELECT * FROM table_with_bigint_arrays t WHERE the_array " + op + " " + param,

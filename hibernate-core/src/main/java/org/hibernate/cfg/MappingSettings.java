@@ -4,6 +4,7 @@
  */
 package org.hibernate.cfg;
 
+
 import org.hibernate.Incubating;
 import org.hibernate.Remove;
 import org.hibernate.SessionFactory;
@@ -272,8 +273,8 @@ public interface MappingSettings {
 	 * @since 6.5
 	 *
 	 * @see org.hibernate.type.SqlTypes#NAMED_ENUM
-	 * @see org.hibernate.dialect.type.PostgreSQLEnumJdbcType
-	 * @see org.hibernate.dialect.type.OracleEnumJdbcType
+	 * @see org.hibernate.dialect.type.spi.PostgreSQLJdbcTypes#enumType()
+	 * @see org.hibernate.dialect.type.spi.OracleJdbcTypes#enumType()
 	 */
 	@Incubating
 	String PREFER_NATIVE_ENUM_TYPES = "hibernate.type.prefer_native_enum_types";
@@ -597,7 +598,7 @@ public interface MappingSettings {
 	 * {@link java.sql.Types#NCLOB} should be used instead.
 	 * <p>
 	 * This setting is relevant for use with databases with
-	 * {@linkplain org.hibernate.dialect.NationalizationSupport#EXPLICIT explicit
+	 * {@linkplain org.hibernate.dialect.type.spi.NationalizationSupport#EXPLICIT explicit
 	 * nationalization support}, and it is not needed for databases whose native
 	 * {@code varchar} and {@code clob} types support Unicode data. (If you're not
 	 * sure how your database handles Unicode, check out the implementation of

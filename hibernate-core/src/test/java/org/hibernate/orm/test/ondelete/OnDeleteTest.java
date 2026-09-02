@@ -69,7 +69,7 @@ public class OnDeleteTest {
 					session.getTransaction().commit();
 
 					assertThat( statistics.getEntityDeleteCount(), is( 2L ) );
-					if ( scope.getSessionFactory().getJdbcServices().getDialect().supportsCascadeDelete() ) {
+					if ( scope.getSessionFactory().getJdbcServices().getDialect().getForeignKeySupport().supportsOnDeleteAction( org.hibernate.annotations.OnDeleteAction.CASCADE ) ) {
 						assertThat( statistics.getPrepareStatementCount(), is( 1L ) );
 					}
 

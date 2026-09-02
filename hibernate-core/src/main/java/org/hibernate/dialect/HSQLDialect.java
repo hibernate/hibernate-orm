@@ -4,67 +4,103 @@
  */
 package org.hibernate.dialect;
 
+import org.hibernate.dialect.identifier.spi.KeywordRegistration;
+
+import org.hibernate.dialect.temporaltype.spi.TemporalValueSemantics;
+
+import org.hibernate.dialect.temporaltype.spi.CurrentTimestampSelection;
+
+import org.hibernate.dialect.temporaltype.spi.TemporalOperationSupport;
+import org.hibernate.dialect.temporaltype.spi.TemporalOperationSupports;
+
+import org.hibernate.dialect.temporaltype.spi.TemporalFormatSupport;
+
+import org.hibernate.dialect.temporaltype.spi.CurrentTemporalSupport;
+
+import org.hibernate.SPI;
+
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.SUPPLY;
+import static org.hibernate.SPI.Role.USE;
+import org.hibernate.dialect.mutation.spi.MultiTableMutationSupport;
+
+
+import org.hibernate.dialect.array.spi.ArraySupport;
+import org.hibernate.dialect.type.spi.BooleanDecoder;
+
+import org.hibernate.dialect.aggregate.spi.FunctionalDependencyAnalysisSupport;
+
+import org.hibernate.dialect.sql.ast.spi.NullOrdering;
+
+import org.hibernate.dialect.sql.ast.spi.DmlTargetColumnQualifierSupport;
+
+import org.hibernate.dialect.sql.ast.spi.CteSupport;
+import org.hibernate.dialect.sql.ast.spi.PredicateSupport;
+import org.hibernate.dialect.sql.ast.spi.NullOrderingSupport;
+import org.hibernate.dialect.sql.ast.spi.RowValueSupport;
+import org.hibernate.dialect.sql.ast.spi.SingleRowTableSupport;
+import org.hibernate.dialect.sql.ast.spi.SubquerySupport;
+import org.hibernate.dialect.sql.ast.spi.ValuesListSupport;
+
 import jakarta.persistence.TemporalType;
 import jakarta.annotation.Nullable;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.dialect.function.spi.ExpressionCoercionSupport;
+import org.hibernate.dialect.function.spi.TupleCountSupport;
 import org.hibernate.dialect.function.TrimFunction;
-import org.hibernate.dialect.identity.HSQLIdentityColumnSupport;
-import org.hibernate.dialect.identity.IdentityColumnSupport;
+import org.hibernate.dialect.identity.internal.HSQLIdentityColumnSupport;
+import org.hibernate.dialect.identity.spi.IdentityColumnSupport;
 import org.hibernate.dialect.lock.internal.HSQLLockingSupport;
 import org.hibernate.dialect.lock.spi.LockingSupport;
-import org.hibernate.dialect.pagination.LimitHandler;
-import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
-import org.hibernate.dialect.sequence.HSQLSequenceSupport;
-import org.hibernate.dialect.sequence.SequenceSupport;
-import org.hibernate.dialect.sql.ast.HSQLSqlAstTranslator;
-import org.hibernate.dialect.temptable.HSQLLocalTemporaryTableStrategy;
-import org.hibernate.dialect.temptable.StandardGlobalTemporaryTableStrategy;
-import org.hibernate.dialect.temptable.TemporaryTableKind;
-import org.hibernate.dialect.temptable.TemporaryTableStrategy;
-import org.hibernate.dialect.unique.CreateTableUniqueDelegate;
-import org.hibernate.dialect.unique.UniqueDelegate;
+import org.hibernate.dialect.namespace.spi.NamespaceSupport;
+import org.hibernate.dialect.namespace.spi.NamespaceSupports;
+import org.hibernate.dialect.pagination.spi.LimitHandler;
+import org.hibernate.dialect.pagination.spi.OffsetFetchLimitHandler;
+import org.hibernate.dialect.sequence.internal.HSQLSequenceSupport;
+import org.hibernate.dialect.sequence.spi.SequenceSupport;
+import org.hibernate.dialect.schema.spi.AlterColumnTypeRequest;
+import org.hibernate.dialect.schema.spi.ConstraintDropMode;
+import org.hibernate.dialect.schema.spi.ExistenceCheckPlacement;
+import org.hibernate.dialect.schema.spi.IfExistsSupport;
+import org.hibernate.dialect.schema.spi.SchemaDropSupport;
+import org.hibernate.dialect.sql.ast.internal.HSQLSqlAstTranslator;
+import org.hibernate.dialect.temptable.spi.TemporaryTableStrategies;
+import org.hibernate.dialect.temptable.spi.StandardGlobalTemporaryTableStrategy;
+import org.hibernate.dialect.temptable.spi.TemporaryTableStrategy;
+import org.hibernate.dialect.unique.spi.UniqueDelegates;
+import org.hibernate.dialect.unique.spi.UniqueDelegate;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
-import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
+import org.hibernate.dialect.identifier.spi.IdentifierHelperBuildRequest;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.ConstraintViolationException.ConstraintKind;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
-import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.persister.entity.mutation.EntityMutationTarget;
 import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.CastType;
-import org.hibernate.dialect.type.IntervalType;
-import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableInsertStrategy;
-import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableMutationStrategy;
-import org.hibernate.query.sqm.mutation.spi.AfterUseAction;
-import org.hibernate.query.sqm.mutation.spi.BeforeUseAction;
-import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
-import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
-import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
-import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.SqlAstTranslatorFactory;
-import org.hibernate.sql.ast.spi.SqlAppender;
-import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
-import org.hibernate.sql.ast.tree.Statement;
+import org.hibernate.dialect.temporaltype.spi.IntervalType;
+import org.hibernate.sql.ast.spi.translation.SqlAstNodeRenderingMode;
+import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslatorFactory;
+import org.hibernate.sql.spi.SqlAppender;
+import org.hibernate.dialect.sql.ast.spi.StandardSqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.Statement;
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
 import org.hibernate.sql.exec.spi.JdbcOperation;
-import org.hibernate.sql.model.MutationOperation;
-import org.hibernate.sql.model.internal.OptionalTableUpdate;
-import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorHSQLDBDatabaseImpl;
+import org.hibernate.sql.spi.mutation.MutationOperation;
+import org.hibernate.dialect.sql.ast.spi.OptionalTableUpdateOperationRequest;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
+import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractors;
+import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import java.sql.DatabaseMetaData;
-import java.sql.SQLException;
 import java.sql.Types;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
-import static org.hibernate.internal.util.JdbcExceptionHelper.extractErrorCode;
+import static org.hibernate.jdbc.spi.JdbcExceptionHelper.extractErrorCode;
 import static org.hibernate.type.SqlTypes.DOUBLE;
 import static org.hibernate.type.SqlTypes.NCLOB;
 
@@ -79,10 +115,35 @@ import static org.hibernate.type.SqlTypes.NCLOB;
  * @author Fred Toussi
  * @author Yoobin Yoon
  */
-public class HSQLDialect extends Dialect {
+public class HSQLDialect extends Dialect implements CurrentTemporalSupport, TemporalFormatSupport, TemporalOperationSupport {
+	private IfExistsSupport ifExistsSupport;
+	private SchemaDropSupport schemaDropSupport;
+
+
+	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
+	public TemporalOperationSupport getTemporalOperationSupport() {
+		return this;
+	}
+
+	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
+	public TemporalFormatSupport getTemporalFormatSupport() {
+		return this;
+	}
+
+	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
+	public CurrentTemporalSupport getCurrentTemporalSupport() {
+		return this;
+	}
+	private static final SequenceInformationExtractor SEQUENCE_INFORMATION_EXTRACTOR =
+			SequenceInformationExtractors.builder( "select * from information_schema.sequences" )
+					.startValueColumn( "start_with" )
+					.build();
 
 	private static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 2, 6, 1 );
-	private final UniqueDelegate uniqueDelegate = new CreateTableUniqueDelegate(this);
+	private final UniqueDelegate uniqueDelegate = UniqueDelegates.createTable( this );
 	private final HSQLIdentityColumnSupport identityColumnSupport;
 
 	public HSQLDialect(DialectResolutionInfo info) {
@@ -100,17 +161,20 @@ public class HSQLDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	protected DatabaseVersion getMinimumSupportedVersion() {
 		return MINIMUM_VERSION;
 	}
 
 	@Override
-	protected void registerDefaultKeywords() {
-		super.registerDefaultKeywords();
-		registerKeyword( "period" );
+	@SPI({ USE, IMPLEMENT, SUPPLY })
+	protected void contributeKeywords(KeywordRegistration registration) {
+		super.contributeKeywords( registration );
+		registration.registerKeyword( "period" );
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	protected String columnType(int sqlTypeCode) {
 		// Note that all floating point types are synonyms for 'double'
 
@@ -127,6 +191,7 @@ public class HSQLDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	protected Integer resolveSqlTypeCode(String typeName, String baseTypeName, TypeConfiguration typeConfiguration) {
 		return switch (baseTypeName) {
 			case "DOUBLE" -> DOUBLE;
@@ -135,11 +200,14 @@ public class HSQLDialect extends Dialect {
 	}
 
 	@Override
-	public int getDefaultStatementBatchSize() {
-		return 15;
+	@SPI({ IMPLEMENT, SUPPLY })
+	protected void contributeDefaultProperties(java.util.Properties properties) {
+		super.contributeDefaultProperties( properties );
+		properties.setProperty( org.hibernate.cfg.AvailableSettings.STATEMENT_BATCH_SIZE, Integer.toString( 15 ) );
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
 		super.initializeFunctionRegistry( functionContributions );
 
@@ -262,31 +330,36 @@ public class HSQLDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String currentTime() {
 		return "localtime";
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String currentTimestamp() {
 		return "localtimestamp";
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String currentTimestampWithTimeZone() {
 		return "current_timestamp";
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public SqlAstTranslatorFactory getSqlAstTranslatorFactory() {
 		return new StandardSqlAstTranslatorFactory() {
 			@Override
-			protected <T extends JdbcOperation> SqlAstTranslator<T> buildTranslator(
-					SessionFactoryImplementor sessionFactory, Statement statement) {
-				return new HSQLSqlAstTranslator<>( sessionFactory, statement );
+			protected <S extends Statement, T extends JdbcOperation> SqlAstTranslator<T> createTranslator(
+					SqlAstTranslationRequest<S, T> request) {
+				return new HSQLSqlAstTranslator<>( request );
 			}
 		};
 	}
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String castPattern(CastType from, CastType to) {
 		String result;
 		switch ( to ) {
@@ -340,6 +413,7 @@ public class HSQLDialect extends Dialect {
 	}
 
 	@Override @SuppressWarnings("deprecation")
+	@SPI({ USE, IMPLEMENT })
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
 		final var pattern = new StringBuilder();
 		final boolean castTo = temporalType != TemporalType.TIMESTAMP && !unit.isDateUnit();
@@ -370,6 +444,7 @@ public class HSQLDialect extends Dialect {
 	}
 
 	@Override @SuppressWarnings("deprecation")
+	@SPI({ USE, IMPLEMENT })
 	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
 		final var pattern = new StringBuilder();
 		final boolean castFrom = fromTemporalType != TemporalType.TIMESTAMP && !unit.isDateUnit();
@@ -406,15 +481,18 @@ public class HSQLDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String extractPattern(TemporalUnit unit) {
 		return unit == TemporalUnit.EPOCH
 				? "unix_timestamp(?2)"
-				: super.extractPattern( unit );
+				: TemporalOperationSupports.standard().extractPattern( unit );
 	}
 
 	@Override
-	public boolean supportsDistinctFromPredicate() {
-		return true;
+	public PredicateSupport getPredicateSupport() {
+		return PredicateSupport.builder( super.getPredicateSupport() )
+				.capability( PredicateSupport.Capability.DISTINCT_FROM, true )
+				.build();
 	}
 
 	@Override
@@ -431,46 +509,43 @@ public class HSQLDialect extends Dialect {
 	// But as CASCADE has to be after IF EXISTS in case it's after the table name,
 	// we put the IF EXISTS before the table name to be able to add CASCADE after.
 	@Override
-	public boolean supportsIfExistsAfterTableName() {
-		return false;
+	@SPI({ IMPLEMENT, SUPPLY })
+	public synchronized IfExistsSupport getIfExistsSupport() {
+		if ( ifExistsSupport == null ) {
+			ifExistsSupport = new IfExistsSupport(
+				ExistenceCheckPlacement.NONE,
+				ExistenceCheckPlacement.BEFORE_NAME,
+				ExistenceCheckPlacement.NONE,
+				ExistenceCheckPlacement.NONE
+		);
+		}
+		return ifExistsSupport;
 	}
 
 	@Override
-	public boolean supportsIfExistsBeforeTableName() {
-		return true;
+	@SPI({ USE, IMPLEMENT })
+	public String alterColumnType(AlterColumnTypeRequest request) {
+		return "alter column " + request.columnName() + " set data type " + request.columnType();
 	}
 
 	@Override
-	public boolean supportsAlterColumnType() {
-		return true;
-	}
-
-	@Override
-	public String getAlterColumnTypeString(String columnName, String columnType, String columnDefinition) {
-		return "alter column " + columnName + " set data type " + columnType;
-	}
-
-	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public SequenceSupport getSequenceSupport() {
-		return HSQLSequenceSupport.INSTANCE;
-	}
-
-	@Override
-	public String getQuerySequencesString() {
-		return "select * from information_schema.sequences";
+		return HSQLSequenceSupport.getInstance();
 	}
 
 	@Override
 	public SequenceInformationExtractor getSequenceInformationExtractor() {
-		return SequenceInformationExtractorHSQLDBDatabaseImpl.INSTANCE;
+		return SEQUENCE_INFORMATION_EXTRACTOR;
 	}
 
 	@Override
-	public boolean supportsStandardArrays() {
-		return true;
+	public ArraySupport getArraySupport() {
+		return ArraySupport.STANDARD;
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public ViolatedConstraintNameExtractor getViolatedConstraintNameExtractor() {
 		return EXTRACTOR_20;
 	}
@@ -485,6 +560,7 @@ public class HSQLDialect extends Dialect {
 					});
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
 		return (sqlException, message, sql) ->
 				switch ( extractErrorCode( sqlException ) ) {
@@ -509,7 +585,9 @@ public class HSQLDialect extends Dialect {
 	}
 
 	@Override
-	public String getSelectClauseNullString(int sqlType, TypeConfiguration typeConfiguration) {
+	@SPI({ USE, IMPLEMENT })
+	public String getSelectClauseNullString(SqlTypedMapping sqlTypeMapping, TypeConfiguration typeConfiguration) {
+		final int sqlType = sqlTypeMapping.getJdbcMapping().getJdbcType().getDdlTypeCode();
 		return switch (sqlType) {
 			case Types.LONGVARCHAR, Types.VARCHAR, Types.CHAR -> "cast(null as varchar(100))";
 			case Types.LONGVARBINARY, Types.VARBINARY, Types.BINARY -> "cast(null as varbinary(100))";
@@ -525,27 +603,15 @@ public class HSQLDialect extends Dialect {
 	}
 
 	@Override
-	public NullOrdering getNullOrdering() {
-		return NullOrdering.FIRST;
+	public NullOrderingSupport getNullOrderingSupport() {
+		return NullOrderingSupport.builder( super.getNullOrderingSupport() )
+				.defaultOrdering( NullOrdering.FIRST )
+				.build();
 	}
 
 	@Override
-	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(
-			EntityMappingType rootEntityDescriptor,
-			RuntimeModelCreationContext runtimeModelCreationContext) {
-		return new LocalTemporaryTableMutationStrategy( rootEntityDescriptor, runtimeModelCreationContext );
-	}
-
-	@Override
-	public SqmMultiTableInsertStrategy getFallbackSqmInsertStrategy(
-			EntityMappingType rootEntityDescriptor,
-			RuntimeModelCreationContext runtimeModelCreationContext) {
-		return new LocalTemporaryTableInsertStrategy( rootEntityDescriptor, runtimeModelCreationContext );
-	}
-
-	@Override
-	public TemporaryTableKind getSupportedTemporaryTableKind() {
-		return TemporaryTableKind.LOCAL;
+	public MultiTableMutationSupport getMultiTableMutationSupport() {
+		return MultiTableMutationSupport.LOCAL_TEMPORARY_TABLE;
 	}
 
 	@Override
@@ -555,108 +621,71 @@ public class HSQLDialect extends Dialect {
 
 	@Override
 	public TemporaryTableStrategy getLocalTemporaryTableStrategy() {
-		return HSQLLocalTemporaryTableStrategy.INSTANCE;
-	}
-
-	@Override
-	public String getTemporaryTableCreateCommand() {
-		return HSQLLocalTemporaryTableStrategy.INSTANCE.getTemporaryTableCreateCommand();
-	}
-
-	@Override
-	public AfterUseAction getTemporaryTableAfterUseAction() {
-		return HSQLLocalTemporaryTableStrategy.INSTANCE.getTemporaryTableAfterUseAction();
-	}
-
-	@Override
-	public BeforeUseAction getTemporaryTableBeforeUseAction() {
-		return HSQLLocalTemporaryTableStrategy.INSTANCE.getTemporaryTableBeforeUseAction();
+		return TemporaryTableStrategies.hsqlLocal();
 	}
 
 	// current timestamp support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
-	public boolean supportsCurrentTimestampSelection() {
-		return true;
+	@SPI({ USE, IMPLEMENT })
+	public CurrentTimestampSelection getCurrentTimestampSelection() {
+		return CurrentTimestampSelection.prepared( "values current_timestamp" );
 	}
 
 	@Override
-	public boolean isCurrentTimestampSelectStringCallable() {
-		return false;
+	@SPI({ IMPLEMENT, SUPPLY })
+	public TemporalValueSemantics getTemporalValueSemantics() {
+		return TemporalValueSemantics.TRUNCATING;
 	}
 
 	@Override
-	public String getCurrentTimestampSelectString() {
-		return "values current_timestamp";
+	@SPI({ IMPLEMENT, SUPPLY })
+	public org.hibernate.dialect.schema.spi.SchemaCommentSupport getSchemaCommentSupport() {
+		return org.hibernate.dialect.schema.spi.SchemaCommentSupports.commentOn();
 	}
 
 	@Override
-	public boolean doesRoundTemporalOnOverflow() {
-		// HSQLDB does truncation
-		return false;
-	}
-
-	@Override
-	public boolean supportsCommentOn() {
-		return true;
-	}
-
-	// Overridden informational metadata ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-	@Override
-	public boolean doesReadCommittedCauseWritersToBlockReaders() {
-		return true;
-	}
-
-	@Override
-	public boolean doesRepeatableReadCauseReadersToBlockWriters() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsLobValueChangePropagation() {
-		return false;
-	}
-
-	@Override
+	@SPI({ USE, IMPLEMENT })
 	public void appendBooleanValueString(SqlAppender appender, boolean bool) {
 		appender.appendSql( bool );
 	}
 
 	@Override
-	public boolean supportsTupleCounts() {
-		return true;
+	public TupleCountSupport getTupleCountSupport() {
+		return TupleCountSupport.builder()
+				.nonDistinctSyntax( TupleCountSupport.Syntax.PARENTHESIZED_TUPLE )
+				.build();
 	}
 
 	@Override
-	public boolean supportsTupleDistinctCounts() {
-		// 2.2.9 is added support for COUNT(DISTINCT ...) with multiple arguments
-		return true;
+	public SubquerySupport getSubquerySupport() {
+		return SubquerySupport.builder()
+				.features( SubquerySupport.Feature.OFFSET, SubquerySupport.Feature.LATERAL )
+				.build();
 	}
 
 	@Override
-	public boolean supportsOffsetInSubquery() {
-		return true;
+	public CteSupport getCteSupport() {
+		return CteSupport.builder()
+				.placement( CteSupport.Placement.TOP_LEVEL )
+				.recursiveFeature(
+						CteSupport.RecursiveFeature.RECURSIVE,
+						getVersion().isSameOrAfter( 2 )
+				)
+				.supportsRecursiveClauseArrayAndRowEmulation( false )
+				.build();
 	}
 
 	@Override
-	public boolean supportsLateral() {
-		return true;
+	public ExpressionCoercionSupport getExpressionCoercionSupport() {
+		return ExpressionCoercionSupport.builder()
+				.requirements( ExpressionCoercionSupport.Requirement.CAST_INTEGER_DIVISION_TO_FLOAT )
+				.build();
 	}
 
 	@Override
-	public boolean supportsRecursiveCTE() {
-		return getVersion().isSameOrAfter( 2 );
-	}
-
-	@Override
-	public boolean requiresFloatCastingOfIntegerDivision() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsValuesList() {
-		return true;
+	public ValuesListSupport getValuesListSupport() {
+		return ValuesListSupport.STANDARD;
 	}
 
 	@Override
@@ -665,28 +694,29 @@ public class HSQLDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public NameQualifierSupport getNameQualifierSupport() {
 		return NameQualifierSupport.SCHEMA;
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public FunctionalDependencyAnalysisSupport getFunctionalDependencyAnalysisSupport() {
-		return FunctionalDependencyAnalysisSupportImpl.TABLE_REFERENCE;
-	}
-
-	// Do not drop constraints explicitly, just do this by cascading instead.
-	@Override
-	public boolean dropConstraints() {
-		return false;
+		return FunctionalDependencyAnalysisSupport.TABLE_REFERENCE;
 	}
 
 	@Override
-	public String getCascadeConstraintsString() {
-		return " cascade ";
+	@SPI({ IMPLEMENT, SUPPLY })
+	public synchronized SchemaDropSupport getSchemaDropSupport() {
+		if ( schemaDropSupport == null ) {
+			schemaDropSupport = new SchemaDropSupport( java.util.List.of(), ConstraintDropMode.IMPLICIT, " cascade " );
+		}
+		return schemaDropSupport;
 	}
 
 	@Override
-	public void appendDatetimeFormat(SqlAppender appender, String format) {
+	@SPI({ USE, IMPLEMENT })
+	public void appendFormat(SqlAppender appender, String format) {
 		appender.appendSql(
 				OracleDialect.datetimeFormat( format, false, false )
 				// HSQL is case-sensitive i.e. requires MONTH and DAY instead of Month and Day
@@ -703,6 +733,7 @@ public class HSQLDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String translateExtractField(TemporalUnit unit) {
 		//TODO: does not support MICROSECOND, but on the
 		//      other hand it doesn't support microsecond
@@ -714,31 +745,38 @@ public class HSQLDialect extends Dialect {
 	}
 
 	@Override
-	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, DatabaseMetaData metadata)
-			throws SQLException {
+	@SPI({ USE, IMPLEMENT, SUPPLY })
+	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuildRequest request) {
+		final var builder = request.builder();
 		builder.setAutoQuoteInitialUnderscore( true );
 		builder.setAutoQuoteDollar( true );
-		return super.buildIdentifierHelper( builder, metadata );
+		return super.buildIdentifierHelper( request );
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public UniqueDelegate getUniqueDelegate() {
 		return uniqueDelegate;
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String quoteCollation(String collation) {
 		return '\"' + collation + '\"';
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT, SUPPLY })
 	public DmlTargetColumnQualifierSupport getDmlTargetColumnQualifierSupport() {
 		return DmlTargetColumnQualifierSupport.TABLE_ALIAS;
 	}
 
 	@Override
-	public String getFromDualForSelectOnly() {
-		return " from " + getDual();
+	public SingleRowTableSupport getSingleRowTableSupport() {
+		final var inherited = super.getSingleRowTableSupport();
+		return SingleRowTableSupport.builder( inherited )
+				.selectOnlyFromClause( " from " + inherited.getTableExpression() )
+				.build();
 	}
 
 	@Override
@@ -747,41 +785,24 @@ public class HSQLDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsArrayConstructor() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsRowValueConstructorSyntax() {
+	public RowValueSupport getRowValueSupport() {
 		// It's supported but not usable due to a bug: https://sourceforge.net/p/hsqldb/bugs/1714/
-		return false;
+		return RowValueSupport.NONE;
 	}
 
 	@Override
-	public boolean supportsWithClauseInSubquery() {
-		// Doesn't support correlations in the WITH clause
-		return false;
-	}
-
-	@Override
-	public boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
-		// It's supported but not usable due to a bug: https://sourceforge.net/p/hsqldb/bugs/1714/
-		return false;
-	}
-
-	@Override
-	public boolean supportsRowValueConstructorSyntaxInInList() {
-		// It's supported but not usable due to a bug: https://sourceforge.net/p/hsqldb/bugs/1714/
-		return false;
-	}
-
-	@Override
+	@SPI({ USE, IMPLEMENT, SUPPLY })
 	public MutationOperation createOptionalTableUpdateOperation(
-			EntityMutationTarget mutationTarget,
-			OptionalTableUpdate optionalTableUpdate,
-			SessionFactoryImplementor factory) {
-		return new HSQLSqlAstTranslator<>( factory, optionalTableUpdate )
+			OptionalTableUpdateOperationRequest request) {
+		final var optionalTableUpdate = request.update();
+		final var factory = request.sessionFactory();
+		return new HSQLSqlAstTranslator<>( new SqlAstTranslationRequest.ModelMutation<>( factory, optionalTableUpdate ) )
 				.createMergeOperation( optionalTableUpdate );
 	}
 
+	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
+	public NamespaceSupport getNamespaceSupport() {
+		return NamespaceSupports.standard( true, true );
+	}
 }

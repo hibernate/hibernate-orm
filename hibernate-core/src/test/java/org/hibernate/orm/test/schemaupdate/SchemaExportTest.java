@@ -9,6 +9,7 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.dialect.schema.spi.ExistenceCheckPlacement;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -39,7 +40,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class SchemaExportTest {
 	private boolean doesDialectSupportDropTableIfExist(ServiceRegistryScope registryScope) {
 		var dialect = registryScope.getRegistry().requireService( JdbcEnvironment.class ).getDialect();
-		return dialect.supportsIfExistsAfterTableName() || dialect.supportsIfExistsBeforeTableName();
+		return dialect.getIfExistsSupport().dropTablePlacement() != ExistenceCheckPlacement.NONE;
 	}
 
 	@BeforeEach

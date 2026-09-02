@@ -10,7 +10,7 @@ import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.sqm.sql.spi.FakeSqmToSqlAstConverter;
 import org.hibernate.query.sqm.sql.spi.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.spi.SqmTypedNode;
-import org.hibernate.sql.ast.tree.SqlAstNode;
+import org.hibernate.sql.ast.spi.SqlAstNode;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import java.util.List;
@@ -38,6 +38,7 @@ public interface FunctionReturnTypeResolver {
 	 * @deprecated Use {@link #resolveFunctionReturnType(ReturnableType, SqmToSqlAstConverter, List, TypeConfiguration)} instead
 	 */
 	@Deprecated(forRemoval = true)
+	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	default @Nullable ReturnableType<?> resolveFunctionReturnType(
 			@Nullable ReturnableType<?> impliedType,
 			Supplier<MappingModelExpressible<?>> inferredTypeSupplier,
@@ -62,6 +63,7 @@ public interface FunctionReturnTypeResolver {
 	 *
 	 * @return The resolved type.
 	 */
+	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	default @Nullable ReturnableType<?> resolveFunctionReturnType(
 			@Nullable ReturnableType<?> impliedType,
 			@Nullable SqmToSqlAstConverter converter,
@@ -86,6 +88,7 @@ public interface FunctionReturnTypeResolver {
 	 *
 	 * @return The resolved type.
 	 */
+	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	BasicValuedMapping resolveFunctionReturnType(
 			Supplier<BasicValuedMapping> impliedTypeAccess,
 			List<? extends SqlAstNode> arguments);

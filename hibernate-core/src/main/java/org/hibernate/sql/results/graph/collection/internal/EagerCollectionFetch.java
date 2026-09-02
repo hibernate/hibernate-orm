@@ -14,9 +14,9 @@ import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.spi.FromClauseAccess;
-import org.hibernate.sql.ast.tree.from.PluralTableGroup;
-import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.spi.creation.FromClauseAccess;
+import org.hibernate.sql.ast.spi.query.from.PluralTableGroup;
+import org.hibernate.sql.ast.spi.query.from.TableGroup;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
@@ -25,7 +25,6 @@ import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.graph.collection.CollectionInitializer;
-import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 import org.hibernate.type.descriptor.java.JavaType;
 
 import jakarta.annotation.Nullable;
@@ -41,7 +40,7 @@ public class EagerCollectionFetch extends CollectionFetch {
 	private final Fetch elementFetch;
 	private final Fetch indexFetch;
 
-	private final ImmutableFetchList fetches;
+	private final org.hibernate.sql.results.graph.FetchList fetches;
 
 	private final CollectionInitializerProducer initializerProducer;
 
@@ -201,7 +200,12 @@ public class EagerCollectionFetch extends CollectionFetch {
 	}
 
 	@Override
-	public ImmutableFetchList getFetches() {
+	public boolean isCollectionFetch() {
+		return true;
+	}
+
+	@Override
+	public org.hibernate.sql.results.graph.FetchList getFetches() {
 		return fetches;
 	}
 

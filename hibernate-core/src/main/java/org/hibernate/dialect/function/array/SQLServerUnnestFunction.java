@@ -8,10 +8,10 @@ import org.hibernate.type.descriptor.jdbc.XmlHelper;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
-import org.hibernate.query.sqm.tuple.internal.AnonymousTupleTableGroupProducer;
-import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.spi.SqlAppender;
-import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.spi.query.SetReturningFunctionType;
+import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
+import org.hibernate.sql.spi.SqlAppender;
+import org.hibernate.sql.ast.spi.query.expression.Expression;
 import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.java.BasicPluralJavaType;
@@ -28,15 +28,16 @@ public class SQLServerUnnestFunction extends UnnestFunction {
 	}
 
 	@Override
+	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	protected void renderJsonTable(
 			SqlAppender sqlAppender,
 			Expression array,
 			BasicPluralType<?, ?> pluralType,
 			@Nullable SqlTypedMapping sqlTypedMapping,
-			AnonymousTupleTableGroupProducer tupleType,
+			SetReturningFunctionType tupleType,
 			String tableIdentifierVariable,
 			SqlAstTranslator<?> walker) {
-		final ModelPart ordinalityPart = tupleType.findSubPart( CollectionPart.Nature.INDEX.getName(), null );
+		final ModelPart ordinalityPart = tupleType.findSubPart( CollectionPart.Nature.INDEX.getName() );
 		if ( ordinalityPart != null ) {
 			sqlAppender.appendSql( "(select t.*,row_number() over (order by (select null)) " );
 			sqlAppender.appendSql( ordinalityPart.asBasicValuedModelPart().getSelectionExpression() );
@@ -49,7 +50,7 @@ public class SQLServerUnnestFunction extends UnnestFunction {
 		sqlAppender.appendSql( ") with (" );
 
 		boolean[] comma = new boolean[1];
-		if ( tupleType.findSubPart( CollectionPart.Nature.ELEMENT.getName(), null ) == null ) {
+		if ( tupleType.findSubPart( CollectionPart.Nature.ELEMENT.getName() ) == null ) {
 			tupleType.forEachSelectable( 0, (selectionIndex, selectableMapping) -> {
 				if ( !CollectionPart.Nature.INDEX.getName().equals( selectableMapping.getSelectableName() ) ) {
 					if ( comma[0] ) {
@@ -95,12 +96,13 @@ public class SQLServerUnnestFunction extends UnnestFunction {
 	}
 
 	@Override
+	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	protected void renderXmlTable(
 			SqlAppender sqlAppender,
 			Expression array,
 			BasicPluralType<?, ?> pluralType,
 			@Nullable SqlTypedMapping sqlTypedMapping,
-			AnonymousTupleTableGroupProducer tupleType,
+			SetReturningFunctionType tupleType,
 			String tableIdentifierVariable,
 			SqlAstTranslator<?> walker) {
 		final XmlHelper.CollectionTags collectionTags = XmlHelper.determineCollectionTags(
@@ -109,7 +111,7 @@ public class SQLServerUnnestFunction extends UnnestFunction {
 
 		sqlAppender.appendSql( "(select" );
 
-		if ( tupleType.findSubPart( CollectionPart.Nature.ELEMENT.getName(), null ) == null ) {
+		if ( tupleType.findSubPart( CollectionPart.Nature.ELEMENT.getName() ) == null ) {
 			tupleType.forEachSelectable( 0, (selectionIndex, selectableMapping) -> {
 				if ( selectionIndex == 0 ) {
 					sqlAppender.append( ' ' );

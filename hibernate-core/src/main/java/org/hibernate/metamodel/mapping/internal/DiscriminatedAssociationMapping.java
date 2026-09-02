@@ -26,21 +26,22 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.SelectablePath;
+import org.hibernate.metamodel.mapping.SingleAttributeIdentifierMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.SqlAstJoinType;
-import org.hibernate.sql.ast.spi.FromClauseAccess;
-import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.from.TableGroupJoin;
-import org.hibernate.sql.ast.tree.from.TableReference;
-import org.hibernate.sql.ast.tree.from.TableGroupJoinProducer;
-import org.hibernate.sql.ast.tree.from.StandardVirtualTableGroup;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
-import org.hibernate.sql.ast.tree.expression.QueryLiteral;
-import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
-import org.hibernate.sql.ast.tree.predicate.Junction;
-import org.hibernate.sql.ast.tree.predicate.Predicate;
-import org.hibernate.sql.ast.tree.predicate.PredicateCollector;
+import org.hibernate.sql.ast.spi.query.from.SqlAstJoinType;
+import org.hibernate.sql.ast.spi.creation.FromClauseAccess;
+import org.hibernate.sql.ast.spi.query.from.TableGroup;
+import org.hibernate.sql.ast.spi.query.from.TableGroupJoin;
+import org.hibernate.sql.ast.spi.query.from.TableReference;
+import org.hibernate.sql.ast.spi.query.from.TableGroupJoinProducer;
+import org.hibernate.sql.ast.spi.query.from.StandardVirtualTableGroup;
+import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
+import org.hibernate.sql.ast.spi.query.expression.QueryLiteral;
+import org.hibernate.sql.ast.spi.query.predicate.ComparisonPredicate;
+import org.hibernate.sql.ast.spi.query.predicate.Junction;
+import org.hibernate.sql.ast.spi.query.predicate.Predicate;
+import org.hibernate.sql.ast.spi.query.predicate.PredicateCollector;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
@@ -411,7 +412,7 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 			boolean fetched,
 			SqlAstJoinType requestedJoinType,
 			Consumer<Predicate> predicateConsumer,
-			org.hibernate.sql.ast.spi.SqlAstCreationState creationState) {
+			org.hibernate.sql.ast.spi.creation.SqlAstCreationState creationState) {
 		final var virtualTableGroup = new StandardVirtualTableGroup( navigablePath, modelPart, lhs, fetched );
 		final var valueDetails = getMappedEntityValueDetails();
 		final SqlAstJoinType effectiveJoinType =
@@ -441,7 +442,7 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 			DiscriminatorValueDetails valueDetail,
 			SqlAstJoinType joinType,
 			Consumer<Predicate> predicateConsumer,
-			org.hibernate.sql.ast.spi.SqlAstCreationState creationState) {
+			org.hibernate.sql.ast.spi.creation.SqlAstCreationState creationState) {
 		final var entityMapping = valueDetail.getIndicatedEntity();
 		final var concretePath = concreteEntityPath( associationPath, entityMapping );
 		final var joinPredicateCollector = new PredicateCollector();
@@ -478,7 +479,7 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 			PredicateCollector predicateCollector,
 			EntityMappingType entityMappingType,
 			TableGroup entityTableGroup,
-			org.hibernate.sql.ast.spi.SqlAstCreationState creationState) {
+			org.hibernate.sql.ast.spi.creation.SqlAstCreationState creationState) {
 		final Map<String, org.hibernate.Filter> enabledFilters = creationState.getLoadQueryInfluencers().getEnabledFilters();
 		if ( entityMappingType.getEntityPersister().hasFilterForLoadByKey() ) {
 			entityMappingType.applyBaseRestrictions(

@@ -4,6 +4,7 @@
  */
 package org.hibernate.engine.jdbc.dialect.spi;
 
+
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.engine.config.spi.ConfigurationService;
 
@@ -70,16 +71,6 @@ public interface DialectResolutionInfo extends DatabaseVersion {
 	 * @see java.sql.DatabaseMetaData#getDriverMinorVersion()
 	 */
 	int getDriverMinorVersion();
-
-	/**
-	 * Obtain access to the SQL keywords of the JDBC driver, as returned from
-	 * {@link java.sql.DatabaseMetaData#getSQLKeywords()} for the target database.
-	 *
-	 * @return The JDBC driver keywords
-	 *
-	 * @see java.sql.DatabaseMetaData#getSQLKeywords()
-	 */
-	String getSQLKeywords();
 
 	/**
 	 * Obtain access to the {@link DatabaseMetaData} if it is available.

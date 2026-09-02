@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.queryhint;
 
+
 import java.util.List;
 
 import org.hibernate.cfg.AvailableSettings;

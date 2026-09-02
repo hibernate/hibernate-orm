@@ -5,6 +5,7 @@
 package org.hibernate.dialect.function.array;
 
 import jakarta.annotation.Nullable;
+import org.hibernate.SPI;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.produce.function.ArgumentTypesValidator;
@@ -17,12 +18,15 @@ import org.hibernate.type.BasicPluralType;
 
 import java.util.List;
 
-/**
- * Encapsulates the validator, return type and argument type resolvers for the array_contains function.
- * Subclasses only have to implement the rendering.
- */
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.USE;
+
+/// Base descriptor for `array_fill`, providing validation and type resolution
+/// while subclasses implement database-specific rendering.
+@SPI({ USE, IMPLEMENT })
 public abstract class AbstractArrayFillFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 
+	@SPI(IMPLEMENT)
 	public AbstractArrayFillFunction(boolean list) {
 		super(
 				"array_fill" + ( list ? "_list" : "" ),

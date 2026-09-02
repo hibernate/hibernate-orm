@@ -4,7 +4,11 @@
  */
 package org.hibernate.event.spi;
 
-import org.hibernate.Internal;import org.hibernate.collection.spi.PersistentCollection;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
+import org.hibernate.Internal;
+import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.persister.collection.CollectionPersister;
 
 /**
@@ -121,7 +125,8 @@ public abstract class AbstractCollectionEvent extends AbstractSessionEvent {
 		return ownerEntityName;
 	}
 
-	protected static CollectionPersister getLoadedCollectionPersister(PersistentCollection<?> collection, EventSource source) {
+	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
+	protected static @Nullable CollectionPersister getLoadedCollectionPersister(@Nonnull PersistentCollection<?> collection, @Nonnull EventSource source) {
 		final var entry = source.getPersistenceContextInternal().getCollectionEntry( collection );
 		return entry == null ? null : entry.getLoadedPersister();
 	}
@@ -139,10 +144,11 @@ public abstract class AbstractCollectionEvent extends AbstractSessionEvent {
 		return ownerEntry == null ? null : ownerEntry.getId();
 	}
 
-	protected static String getAffectedOwnerEntityName(
-			CollectionPersister collectionPersister,
-			Object affectedOwner,
-			EventSource source ) {
+	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
+	protected static @Nullable String getAffectedOwnerEntityName(
+			@Nullable CollectionPersister collectionPersister,
+			@Nullable Object affectedOwner,
+			@Nonnull EventSource source ) {
 		if ( affectedOwner != null ) {
 			final var entry =
 					source.getPersistenceContextInternal()

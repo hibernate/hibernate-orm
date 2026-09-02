@@ -15,7 +15,7 @@ import org.hibernate.tool.schema.spi.Exporter;
  *
  * @author Brett Meyer
  *
- * @see org.hibernate.dialect.unique.UniqueDelegate
+ * @see org.hibernate.dialect.unique.spi.UniqueDelegate
  */
 public class StandardUniqueKeyExporter implements Exporter<UniqueKey> {
 	private final Dialect dialect;

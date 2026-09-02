@@ -10,6 +10,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.stream.Stream;
 
+import org.hibernate.SPI;
 import org.hibernate.internal.util.collections.CaseInsensitiveDictionary;
 import org.hibernate.query.sqm.produce.function.FunctionParameterType;
 import org.hibernate.query.sqm.produce.function.NamedFunctionDescriptorBuilder;
@@ -22,18 +23,29 @@ import org.hibernate.type.spi.TypeConfiguration;
 import jakarta.annotation.Nullable;
 
 import static java.lang.String.CASE_INSENSITIVE_ORDER;
+import static org.hibernate.SPI.Role.SUPPLY;
+import static org.hibernate.SPI.Role.USE;
 import static org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers.useArgType;
 
-/**
- * Defines a registry for {@link SqmFunctionDescriptor} instances.
- * <p>
- * The {@code SqmFunctionRegistry} may be configured by a {@link org.hibernate.boot.model.FunctionContributor}.
- *
- * @see org.hibernate.boot.model.FunctionContributor
- * @see org.hibernate.boot.model.FunctionContributions
- *
- * @author Steve Ebersole
- */
+/// Boot-scoped registry of [SqmFunctionDescriptor] instances and alternate
+/// registration keys.
+///
+/// A [org.hibernate.boot.model.FunctionContributor] or
+/// [org.hibernate.dialect.Dialect] may consume this registry during its
+/// function-initialization callback. Complete registration during that
+/// callback and do not retain the mutable registry afterward.
+///
+/// Prefer the named and pattern descriptor builders for simple functions,
+/// [org.hibernate.dialect.function.CommonFunctionFactory] for Hibernate's stock
+/// definitions, and [#register(String, SqmFunctionDescriptor)] for a
+/// provider-owned descriptor.
+///
+/// @see org.hibernate.boot.model.FunctionContributor
+/// @see org.hibernate.boot.model.FunctionContributions
+/// @see org.hibernate.dialect.Dialect#initializeFunctionRegistry(org.hibernate.boot.model.FunctionContributions)
+///
+/// @author Steve Ebersole
+@SPI(USE)
 @SuppressWarnings("UnusedReturnValue")
 public class SqmFunctionRegistry {
 
@@ -132,9 +144,10 @@ public class SqmFunctionRegistry {
 		return functionDescriptor;
 	}
 
-	/**
-	 * Register a function descriptor by name
-	 */
+	/// Register a provider-supplied descriptor under the given key.
+	///
+	/// @see SqmFunctionDescriptor
+	@SPI(SUPPLY)
 	public SqmFunctionDescriptor register(String registrationKey, SqmFunctionDescriptor function) {
 		functionMap.put( registrationKey, function );
 		alternateKeyMap.remove( registrationKey );
@@ -381,6 +394,10 @@ public class SqmFunctionRegistry {
 				.register();
 	}
 
+	/// Register a JDBC-escape wrapper around a provider-supplied descriptor.
+	///
+	/// @see SqmFunctionDescriptor
+	@SPI(SUPPLY)
 	public SqmFunctionDescriptor wrapInJdbcEscape(String name, SqmFunctionDescriptor wrapped) {
 		final var wrapperTemplate = new JdbcEscapeFunctionDescriptor( name, wrapped );
 		register( name, wrapperTemplate );

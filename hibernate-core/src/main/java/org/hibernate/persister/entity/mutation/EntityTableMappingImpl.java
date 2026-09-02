@@ -15,10 +15,10 @@ import org.hibernate.metamodel.mapping.SelectableMappings;
 import org.hibernate.metamodel.mapping.TableDetails;
 import org.hibernate.metamodel.mapping.internal.SelectableMappingImpl;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.spi.SqlAstCreationState;
-import org.hibernate.sql.ast.spi.SqlSelection;
-import org.hibernate.sql.ast.tree.from.TableReference;
-import org.hibernate.sql.model.MutationType;
+import org.hibernate.sql.ast.spi.creation.SqlAstCreationState;
+import org.hibernate.sql.ast.spi.query.select.SqlSelection;
+import org.hibernate.sql.ast.spi.query.from.TableReference;
+import org.hibernate.sql.spi.mutation.MutationType;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.basic.BasicResult;
@@ -34,6 +34,7 @@ import static org.hibernate.internal.util.collections.ArrayHelper.contains;
  *
  * @author Steve Ebersole
  */
+@org.hibernate.Internal
 public class EntityTableMappingImpl implements EntityTableMapping {
 	private enum Flag {
 		OPTIONAL,

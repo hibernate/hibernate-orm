@@ -4,7 +4,7 @@
  */
 package org.hibernate.sql.results.graph.embeddable;
 
-import org.hibernate.sql.ast.spi.SqlSelection;
+import org.hibernate.sql.ast.spi.query.select.SqlSelection;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
 
@@ -14,6 +14,7 @@ import jakarta.annotation.Nullable;
  * Specialized EmbeddableResultGraphNode for cases where we have an actual embeddable class.
  */
 @org.hibernate.Incubating
+@org.hibernate.SPI({ org.hibernate.SPI.Role.USE, org.hibernate.SPI.Role.IMPLEMENT })
 public interface AggregateEmbeddableResultGraphNode extends EmbeddableResultGraphNode {
 	/**
 	 * Returns the positions within the values array of the respective nesting level

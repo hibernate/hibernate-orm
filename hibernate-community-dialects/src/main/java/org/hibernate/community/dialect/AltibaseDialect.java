@@ -4,72 +4,107 @@
  */
 package org.hibernate.community.dialect;
 
+import org.hibernate.dialect.temporaltype.spi.CurrentTimestampSelection;
+
+import org.hibernate.dialect.temporaltype.spi.TemporalOperationSupport;
+import org.hibernate.dialect.temporaltype.spi.TemporalOperationSupports;
+
+import org.hibernate.dialect.temporaltype.spi.TemporalFormatSupport;
+
+import org.hibernate.dialect.temporaltype.spi.CurrentTemporalSupport;
+
+import org.hibernate.SPI;
+import static org.hibernate.SPI.Role.USE;
+
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.SUPPLY;
+import org.hibernate.dialect.type.spi.StandardDdlTypes;
+
+import org.hibernate.dialect.type.spi.TypeSizingProfile;
+
+import org.hibernate.dialect.function.spi.TupleCountSupport;
+import org.hibernate.dialect.function.spi.WindowFunctionSupport;
+
+import org.hibernate.dialect.sql.ast.spi.CteSupport;
+import org.hibernate.dialect.sql.ast.spi.NullOrderingSupport;
+import org.hibernate.dialect.sql.ast.spi.MutationKind;
+import org.hibernate.dialect.sql.ast.spi.MutationSyntaxCapability;
+import org.hibernate.dialect.sql.ast.spi.MutationSyntaxSupport;
+import org.hibernate.dialect.sql.ast.spi.PredicateSupport;
+import org.hibernate.dialect.sql.ast.spi.RowValueSupport;
+import org.hibernate.dialect.sql.ast.spi.SingleRowTableSupport;
+import org.hibernate.dialect.sql.ast.spi.SetOperationSupport;
+import org.hibernate.dialect.sql.ast.spi.SubquerySupport;
+
 import jakarta.persistence.TemporalType;
-import jakarta.persistence.Timeout;
-import org.hibernate.Timeouts;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.community.dialect.pagination.AltibaseLimitHandler;
 import org.hibernate.community.dialect.sequence.AltibaseSequenceSupport;
-import org.hibernate.community.dialect.sequence.SequenceInformationExtractorAltibaseDatabaseImpl;
-import org.hibernate.dialect.BooleanDecoder;
+import org.hibernate.dialect.type.spi.BooleanDecoder;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
-import org.hibernate.dialect.NationalizationSupport;
-import org.hibernate.dialect.NullOrdering;
+import org.hibernate.dialect.jdbc.spi.ParameterLimits;
+import org.hibernate.dialect.sql.ast.spi.DmlTargetColumnQualifierSupport;
+import org.hibernate.dialect.type.spi.NationalizationSupport;
+import org.hibernate.dialect.sql.ast.spi.NullOrdering;
 import org.hibernate.dialect.OracleDialect;
-import org.hibernate.dialect.RowLockStrategy;
+import org.hibernate.dialect.lock.spi.RowLockStrategy;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.OracleTruncFunction;
 import org.hibernate.dialect.function.TrimFunction;
 import org.hibernate.dialect.lock.PessimisticLockStyle;
-import org.hibernate.dialect.lock.internal.LockingSupportParameterized;
 import org.hibernate.dialect.lock.spi.LockTimeoutType;
 import org.hibernate.dialect.lock.spi.LockingSupport;
+import org.hibernate.dialect.lock.spi.StandardLockingSupports;
+import org.hibernate.dialect.namespace.spi.NamespaceSupport;
+import org.hibernate.dialect.namespace.spi.NamespaceSupports;
 import org.hibernate.dialect.lock.spi.OuterJoinLockingType;
-import org.hibernate.dialect.pagination.LimitHandler;
-import org.hibernate.dialect.sequence.SequenceSupport;
-import org.hibernate.dialect.type.IntervalType;
+import org.hibernate.dialect.pagination.spi.LimitHandler;
+import org.hibernate.dialect.sequence.spi.SequenceSupport;
+import org.hibernate.dialect.schema.spi.ConstraintDropMode;
+import org.hibernate.dialect.schema.spi.IndexNameQualification;
+import org.hibernate.dialect.schema.spi.SchemaDropSupport;
+import org.hibernate.dialect.temporaltype.spi.IntervalType;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
-import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
+import org.hibernate.dialect.identifier.spi.IdentifierHelperBuildRequest;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.ConstraintViolationException.ConstraintKind;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
-import org.hibernate.internal.util.JdbcExceptionHelper;
+import org.hibernate.jdbc.spi.JdbcExceptionHelper;
 import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.CastType;
+import org.hibernate.query.sqm.SetOperator;
 import org.hibernate.query.sqm.TrimSpec;
 import org.hibernate.query.sqm.produce.function.FunctionParameterType;
 import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
-import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.SqlAstTranslatorFactory;
-import org.hibernate.sql.ast.spi.SqlAppender;
-import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
-import org.hibernate.sql.ast.tree.Statement;
+import org.hibernate.sql.ast.spi.translation.SqlAstNodeRenderingMode;
+import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslatorFactory;
+import org.hibernate.sql.spi.SqlAppender;
+import org.hibernate.dialect.sql.ast.spi.StandardSqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.Statement;
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
+import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractors;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JsonJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
-import org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType;
-import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.time.temporal.TemporalAccessor;
 import java.util.Date;
+import java.util.List;
 import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -89,16 +124,41 @@ import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
 import static org.hibernate.type.SqlTypes.TIME_WITH_TIMEZONE;
 import static org.hibernate.type.SqlTypes.TINYINT;
 import static org.hibernate.type.SqlTypes.VARBINARY;
-import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_END;
-import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_START_TIMESTAMP;
-import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMicros;
+import static org.hibernate.dialect.literal.spi.StandardDateTimeLiteralRendering.appendAsTimestampWithMicros;
 
 /**
  * An SQL dialect for Altibase 7.1 and above.
  *
  * @author Geoffrey Park
  */
-public class AltibaseDialect extends Dialect {
+public class AltibaseDialect extends Dialect implements CurrentTemporalSupport, TemporalFormatSupport, TemporalOperationSupport {
+	private SchemaDropSupport schemaDropSupport;
+
+
+	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
+	public TemporalOperationSupport getTemporalOperationSupport() {
+		return this;
+	}
+
+	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
+	public TemporalFormatSupport getTemporalFormatSupport() {
+		return this;
+	}
+
+	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
+	public CurrentTemporalSupport getCurrentTemporalSupport() {
+		return this;
+	}
+	private final TypeSizingProfile typeSizingProfile = TypeSizingProfile.builder( super.getTypeSizingProfile() )
+			.maxVarcharLength( 32_000 ).maxVarcharCapacity( 32_000 )
+			.maxNVarcharLength( 32_000 ).maxNVarcharCapacity( 32_000 )
+			.maxVarbinaryLength( 32_000 ).maxVarbinaryCapacity( 32_000 )
+			.build();
+
+	@Override public TypeSizingProfile getTypeSizingProfile() { return typeSizingProfile; }
 
 	private static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 7, 1 );
 	// Altibase's IN-list limit is around 1,020 elements; use 1,000 to stay below
@@ -107,12 +167,12 @@ public class AltibaseDialect extends Dialect {
 	private static final Pattern CHECK_CONSTRAINT_NAME_PATTERN = Pattern.compile( "Check constraint (.+) violated" );
 	private static final Pattern FOR_CONSTRAINT_NAME_PATTERN = Pattern.compile( ".*\\sfor\\s+([^.]+)\\.?" );
 	private static final Pattern COLON_CONSTRAINT_NAME_PATTERN = Pattern.compile( ".*:\\s*(.+)" );
-	private static final LockingSupport LOCKING_SUPPORT = new LockingSupportParameterized(
+	private static final LockingSupport LOCKING_SUPPORT = StandardLockingSupports.parameterized(
 			PessimisticLockStyle.CLAUSE,
 			RowLockStrategy.NONE,
-			true,
-			true,
-			false,
+			LockTimeoutType.QUERY,
+			LockTimeoutType.QUERY,
+			LockTimeoutType.NONE,
 			OuterJoinLockingType.UNSUPPORTED
 	);
 
@@ -123,7 +183,6 @@ public class AltibaseDialect extends Dialect {
 
 	public AltibaseDialect(DialectResolutionInfo info) {
 		this( info.makeCopyOrDefault( MINIMUM_VERSION ) );
-		registerKeywords( info );
 	}
 
 	public AltibaseDialect(DatabaseVersion version) {
@@ -131,6 +190,7 @@ public class AltibaseDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	protected String columnType(int sqlTypeCode) {
 		return switch ( sqlTypeCode ) {
 			case BOOLEAN -> "char(1)";
@@ -147,26 +207,28 @@ public class AltibaseDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	protected void registerColumnTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.registerColumnTypes( typeContributions, serviceRegistry );
 		final DdlTypeRegistry ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
 
 		ddlTypeRegistry.addDescriptor(
-				CapacityDependentDdlType.builder( BINARY, columnType( LONGVARBINARY ), this )
-						.withTypeCapacity( getMaxVarbinaryLength(), columnType( BINARY ) )
+				StandardDdlTypes.builder( BINARY, columnType( LONGVARBINARY ), this )
+						.withTypeCapacity( getTypeSizingProfile().maxVarbinaryLength(), columnType( BINARY ) )
 						.build()
 		);
 		ddlTypeRegistry.addDescriptor(
-				CapacityDependentDdlType.builder( BIT, columnType( LONGVARBINARY ), this )
+				StandardDdlTypes.builder( BIT, columnType( LONGVARBINARY ), this )
 						.withTypeCapacity( 64000, columnType( BIT ) )
 						.build()
 		);
 		if ( supportsNativeJsonType() ) {
-			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "json", this ) );
+			ddlTypeRegistry.addDescriptor( StandardDdlTypes.simple( JSON, "json", this ) );
 		}
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.contributeTypes( typeContributions, serviceRegistry );
 		if ( supportsNativeJsonType() ) {
@@ -179,6 +241,7 @@ public class AltibaseDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public JdbcType resolveSqlTypeDescriptor(
 			String columnTypeName,
 			int jdbcTypeCode,
@@ -192,21 +255,14 @@ public class AltibaseDialect extends Dialect {
 	}
 
 	@Override
-	public int getMaxVarcharLength() {
-		return 32_000;
+	@SPI({ IMPLEMENT, SUPPLY })
+	protected void contributeDefaultProperties(java.util.Properties properties) {
+		super.contributeDefaultProperties( properties );
+		properties.setProperty( org.hibernate.cfg.AvailableSettings.STATEMENT_BATCH_SIZE, Integer.toString( 15 ) );
 	}
 
 	@Override
-	public int getMaxVarbinaryLength() {
-		return 32_000;
-	}
-
-	@Override
-	public int getDefaultStatementBatchSize() {
-		return 15;
-	}
-
-	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String trimPattern(TrimSpec specification, boolean isWhitespace) {
 		return switch ( specification ) {
 			case BOTH -> isWhitespace ? "trim(?1)" : "trim(?1,?2)";
@@ -216,11 +272,13 @@ public class AltibaseDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public int getPreferredSqlTypeCodeForBoolean() {
 		return Types.BIT;
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
 		super.initializeFunctionRegistry(functionContributions);
 		final TypeConfiguration typeConfiguration = functionContributions.getTypeConfiguration();
@@ -301,43 +359,50 @@ public class AltibaseDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String currentDate() {
 		return currentTimestamp();
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String currentTime() {
 		return currentTimestamp();
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String currentTimestamp() {
 		return "sysdate";
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String currentLocalTime() {
 		return currentLocalTimestamp();
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String currentLocalTimestamp() {
 		// Drop microseconds, because sysdate comes with microseconds.
 		return "trunc(sysdate,'second')";
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String currentTimestampWithTimeZone() {
 		return currentTimestamp();
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public SqlAstTranslatorFactory getSqlAstTranslatorFactory() {
 		return new StandardSqlAstTranslatorFactory() {
 			@Override
-			protected <T extends JdbcOperation> SqlAstTranslator<T> buildTranslator(
-					SessionFactoryImplementor sessionFactory, Statement statement) {
-				return new AltibaseSqlAstTranslator<>( sessionFactory, statement );
+			protected <S extends Statement, T extends JdbcOperation> SqlAstTranslator<T> createTranslator(
+					SqlAstTranslationRequest<S, T> request) {
+				return new AltibaseSqlAstTranslator<>( request );
 			}
 		};
 	}
@@ -347,7 +412,8 @@ public class AltibaseDialect extends Dialect {
 	 * so use seconds as the native precision.
 	 */
 	@Override
-	public long getFractionalSecondPrecisionInNanos() {
+	@SPI({ USE, IMPLEMENT })
+	public long fractionalSecondPrecisionInNanos() {
 		return 1_000_000_000; //seconds
 	}
 
@@ -362,6 +428,7 @@ public class AltibaseDialect extends Dialect {
 	 * and {@link TemporalUnit#WEEK}.
 	 */
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String extractPattern(TemporalUnit unit) {
 		return switch (unit) {
 			case DAY_OF_WEEK -> "extract(?2, 'DAYOFWEEK')";
@@ -373,11 +440,12 @@ public class AltibaseDialect extends Dialect {
 						.replace( "?2", "TO_DATE('1970-01-01 00:00:00','YYYY-MM-DD HH24:MI:SS')" )
 						.replace( "?3", "?2" );
 			case QUARTER -> "extract(?2, 'QUARTER')";
-			default ->  super.extractPattern( unit );
+			default ->  TemporalOperationSupports.standard().extractPattern( unit );
 		};
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
 		return switch (unit) {
 			case NANOSECOND -> "timestampadd(MICROSECOND,(?2)/1e3,?3)";
@@ -387,6 +455,7 @@ public class AltibaseDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
 		return switch (unit) {
 			case SECOND, NATIVE -> "datediff(?2, ?3, 'SECOND')";
@@ -396,6 +465,7 @@ public class AltibaseDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public void appendBinaryLiteral(SqlAppender appender, byte[] bytes) {
 		appender.appendSql( "VARBYTE'" );
 		PrimitiveByteArrayJavaType.INSTANCE.appendString( appender, bytes );
@@ -403,11 +473,13 @@ public class AltibaseDialect extends Dialect {
 	}
 
 	@Override
-	public void appendDatetimeFormat(SqlAppender appender, String format) {
+	@SPI({ USE, IMPLEMENT })
+	public void appendFormat(SqlAppender appender, String format) {
 		appender.appendSql( OracleDialect.datetimeFormat( format, false, false ).result() );
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String castPattern(CastType from, CastType to) {
 		String result;
 		switch ( to ) {
@@ -484,130 +556,122 @@ public class AltibaseDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public void appendDateTimeLiteral(
 			SqlAppender appender,
 			TemporalAccessor temporalAccessor,
 			TemporalType precision,
 			TimeZone jdbcTimeZone) {
 		if (precision == TemporalType.TIMESTAMP) {
-			appender.appendSql(JDBC_ESCAPE_START_TIMESTAMP);
-			appendAsTimestampWithMicros(appender, temporalAccessor, supportsTemporalLiteralOffset(), jdbcTimeZone);
-			appender.appendSql(JDBC_ESCAPE_END);
+			appender.appendSql("{ts '");
+			appendAsTimestampWithMicros(appender, temporalAccessor, getTemporalValueSemantics().supportsLiteralOffset(), jdbcTimeZone);
+			appender.appendSql("'}");
 			return;
 		}
 		super.appendDateTimeLiteral(appender, temporalAccessor, precision, jdbcTimeZone);
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public void appendDateTimeLiteral(SqlAppender appender, Date date, TemporalType precision, TimeZone jdbcTimeZone) {
 		if (precision == TemporalType.TIMESTAMP) {
-			appender.appendSql(JDBC_ESCAPE_START_TIMESTAMP);
+			appender.appendSql("{ts '");
 			appendAsTimestampWithMicros( appender, date, jdbcTimeZone );
-			appender.appendSql(JDBC_ESCAPE_END);
+			appender.appendSql("'}");
 			return;
 		}
 		super.appendDateTimeLiteral(appender, date, precision, jdbcTimeZone);
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String translateDurationField(TemporalUnit unit) {
 		//use microsecond as the "native" precision
 		if ( unit == TemporalUnit.NATIVE ) {
 			return "microsecond";
 		}
-		return super.translateDurationField( unit );
+		return TemporalOperationSupports.standard().translateDurationField( unit );
 	}
 
 	@Override
-	public NullOrdering getNullOrdering() {
-		return NullOrdering.LAST;
+	public NullOrderingSupport getNullOrderingSupport() {
+		return NullOrderingSupport.builder( super.getNullOrderingSupport() )
+				.defaultOrdering( NullOrdering.LAST )
+				.build();
 	}
 
 	@Override
-	public String getAddColumnString() {
+	@SPI({ USE, IMPLEMENT })
+	public String addColumnPrefix() {
 		return "add column (";
 	}
 
 	@Override
-	public String getAddColumnSuffixString() {
+	@SPI({ USE, IMPLEMENT })
+	public String addColumnSuffix() {
 		return ")";
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public int getMaxIdentifierLength() {
 		return 40;
 	}
 
 	@Override
-	public IdentifierHelper buildIdentifierHelper(
-			IdentifierHelperBuilder builder,
-			DatabaseMetaData metadata) throws SQLException {
+	@SPI({ USE, IMPLEMENT, SUPPLY })
+	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuildRequest request) {
+		final var builder = request.builder();
 		// Any use of keywords as identifiers will result in syntax error, so enable auto quote always
 		builder.setAutoQuoteKeywords( true );
 		builder.setAutoQuoteInitialUnderscore( false );
-		builder.applyReservedWords( metadata );
 
-		return super.buildIdentifierHelper( builder, metadata );
+		return super.buildIdentifierHelper( request );
 	}
 
 	@Override
-	public boolean canCreateSchema() {
-		return false;
-	}
-
-	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public NameQualifierSupport getNameQualifierSupport() {
 		return NameQualifierSupport.SCHEMA;
 	}
 
 	@Override
-	public String[] getCreateSchemaCommand(String schemaName) {
-		throw new UnsupportedOperationException( "No create schema syntax supported by " + getClass().getName() );
+	@SPI({ IMPLEMENT, SUPPLY })
+	public NamespaceSupport getNamespaceSupport() {
+		return NamespaceSupports.none();
 	}
 
 	@Override
-	public String[] getDropSchemaCommand(String schemaName) {
-		throw new UnsupportedOperationException( "No drop schema syntax supported by " + getClass().getName() );
+	@SPI({ USE, IMPLEMENT })
+	public IndexNameQualification nameQualification() {
+		return IndexNameQualification.UNQUALIFIED;
 	}
 
 	@Override
-	public boolean qualifyIndexName() {
-		return false;
+	@SPI({ IMPLEMENT, SUPPLY })
+	public org.hibernate.dialect.schema.spi.SchemaCommentSupport getSchemaCommentSupport() {
+		return org.hibernate.dialect.schema.spi.SchemaCommentSupports.commentOn();
 	}
 
 	@Override
-	public boolean supportsTruncateWithCast(){
-		return false;
+	public TupleCountSupport getTupleCountSupport() {
+		return TupleCountSupport.NONE;
 	}
 
 	@Override
-	public boolean supportsCommentOn() {
-		return true;
+	public SubquerySupport getSubquerySupport() {
+		return SubquerySupport.builder()
+				.feature( SubquerySupport.Feature.EXISTS_IN_SELECT, false )
+				.feature( SubquerySupport.Feature.ORDER_BY, false )
+				.build();
 	}
 
 	@Override
-	public boolean supportsUnboundedLobLocatorMaterialization() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsTupleDistinctCounts() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsExistsInSelect() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsPartitionBy() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsFromClauseInUpdate() {
-		return true;
+	public MutationSyntaxSupport getMutationSyntaxSupport() {
+		return MutationSyntaxSupport.builder()
+				.capability( MutationKind.UPDATE, MutationSyntaxCapability.FROM_CLAUSE )
+				.capability( MutationKind.DELETE, MutationSyntaxCapability.JOIN )
+				.build();
 	}
 
 	@Override
@@ -615,50 +679,13 @@ public class AltibaseDialect extends Dialect {
 		return LOCKING_SUPPORT;
 	}
 
-	@Override
-	public String getForUpdateNowaitString() {
-		return getForUpdateString() + " nowait";
-	}
 
-	@Override
-	public String getForUpdateNowaitString(String aliases) {
-		return getForUpdateString( aliases ) + " nowait";
-	}
 
-	@Override
-	public String getForUpdateString(Timeout timeout) {
-		return withLockTimeout( getForUpdateString(), timeout );
-	}
 
-	@Override
-	public String getWriteLockString(Timeout timeout) {
-		return withLockTimeout( getForUpdateString(), timeout );
-	}
 
-	@Override
-	public String getWriteLockString(String aliases, Timeout timeout) {
-		return withLockTimeout( getForUpdateString( aliases ), timeout );
-	}
 
-	@Override
-	public String getReadLockString(Timeout timeout) {
-		return getWriteLockString( timeout );
-	}
 
-	@Override
-	public String getReadLockString(String aliases, Timeout timeout) {
-		return getWriteLockString( aliases, timeout );
-	}
 
-	private String withLockTimeout(String lockString, Timeout timeout) {
-		return switch ( timeout.milliseconds() ) {
-			case Timeouts.NO_WAIT_MILLI -> LOCKING_SUPPORT.getMetadata().getLockTimeoutType( timeout ) == LockTimeoutType.QUERY
-					? lockString + " nowait" : lockString;
-			case Timeouts.SKIP_LOCKED_MILLI, Timeouts.WAIT_FOREVER_MILLI -> lockString;
-			default -> LOCKING_SUPPORT.getMetadata().getLockTimeoutType( timeout ) == LockTimeoutType.QUERY
-					? lockString + " wait " + Timeouts.getTimeoutInSeconds( timeout ) : lockString;
-		};
-	}
 
 	@Override
 	public boolean supportsCrossJoin() {
@@ -666,23 +693,32 @@ public class AltibaseDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public SequenceSupport getSequenceSupport() {
 		return AltibaseSequenceSupport.INSTANCE;
 	}
 
-	@Override
-	public String getQuerySequencesString() {
-		return "SELECT a.user_name USER_NAME, b.table_name SEQUENCE_NAME, c.current_seq CURRENT_VALUE, "
+	private static final SequenceInformationExtractor SEQUENCE_INFORMATION_EXTRACTOR =
+			SequenceInformationExtractors.builder(
+					"SELECT a.user_name USER_NAME, b.table_name SEQUENCE_NAME, c.current_seq CURRENT_VALUE, "
 				+ "c.start_seq START_VALUE, c.min_seq MIN_VALUE, c.max_seq MAX_VALUE, c.increment_seq INCREMENT_BY, "
 				+ "c.flag CYCLE_, c.sync_interval CACHE_SIZE "
 				+ "FROM system_.sys_users_ a, system_.sys_tables_ b, x$seq c "
 				+ "WHERE a.user_id = b.user_id AND b.table_oid = c.seq_oid AND a.user_name <> 'SYSTEM_' AND b.table_type = 'S' "
-				+ "ORDER BY 1,2";
-	}
+				+ "ORDER BY 1,2"
+			)
+			.withoutCatalog()
+			.withoutSchema()
+			.sequenceNameColumn( "sequence_name" )
+			.startValueColumn( "start_value" )
+			.minimumValueColumn( "min_value" )
+			.maximumValueColumn( "max_value" )
+			.incrementValueColumn( "increment_by" )
+			.build();
 
 	@Override
 	public SequenceInformationExtractor getSequenceInformationExtractor() {
-		return SequenceInformationExtractorAltibaseDatabaseImpl.INSTANCE;
+		return SEQUENCE_INFORMATION_EXTRACTOR;
 	}
 
 	@Override
@@ -691,76 +727,67 @@ public class AltibaseDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT, SUPPLY })
 	public DmlTargetColumnQualifierSupport getDmlTargetColumnQualifierSupport() {
 		return DmlTargetColumnQualifierSupport.TABLE_ALIAS;
 	}
 
 	@Override
-	public boolean supportsCurrentTimestampSelection() {
-		return true;
+	@SPI({ USE, IMPLEMENT })
+	public CurrentTimestampSelection getCurrentTimestampSelection() {
+		return CurrentTimestampSelection.prepared( "select sysdate from dual" );
 	}
 
 	@Override
-	public String getCurrentTimestampSelectString() {
-		return "select sysdate from dual";
+	@SPI({ IMPLEMENT, SUPPLY })
+	public synchronized SchemaDropSupport getSchemaDropSupport() {
+		if ( schemaDropSupport == null ) {
+			schemaDropSupport = new SchemaDropSupport( List.of(), ConstraintDropMode.EXPLICIT, " cascade constraints" );
+		}
+		return schemaDropSupport;
 	}
 
 	@Override
-	public boolean isCurrentTimestampSelectStringCallable() {
-		return false;
+	public ParameterLimits getParameterLimits() {
+		return ParameterLimits.of( IN_LIST_SIZE_LIMIT );
 	}
 
 	@Override
-	public String getCascadeConstraintsString() {
-		return " cascade constraints";
+	public WindowFunctionSupport getWindowFunctionSupport() {
+		return WindowFunctionSupport.builder()
+				.features(
+						WindowFunctionSupport.Feature.WINDOW_FUNCTIONS,
+						WindowFunctionSupport.Feature.PARTITION_BY
+				)
+				.build();
 	}
 
 	@Override
-	public boolean supportsOrderByInSubquery() {
-		return false;
-	}
-
-	@Override
-	public int getInExpressionCountLimit() {
-		return IN_LIST_SIZE_LIMIT;
-	}
-
-	@Override
-	public boolean supportsWindowFunctions() {
-		return true;
-	}
-
-	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public NationalizationSupport getNationalizationSupport() {
 		return NationalizationSupport.IMPLICIT;
 	}
 
 	@Override
-	public boolean supportsTemporaryTables() {
-		return false;
+	public PredicateSupport getPredicateSupport() {
+		return PredicateSupport.builder( super.getPredicateSupport() )
+				.capability( PredicateSupport.Capability.EXPRESSION_PLACEMENT, false )
+				.build();
 	}
 
 	@Override
-	public boolean supportsTemporaryTablePrimaryKey() {
-		return false;
-	}
-
-	@Override
-	protected boolean supportsPredicateAsExpression() {
-		return false;
-	}
-
-	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String translateExtractField(TemporalUnit unit) {
 		return switch ( unit ) {
 			case DAY_OF_MONTH -> "day";
 			case DAY_OF_YEAR -> "dayofyear";
 			case DAY_OF_WEEK -> "dayofweek";
-			default -> super.translateExtractField( unit );
+			default -> TemporalOperationSupports.standard().translateExtractField( unit );
 		};
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
 		return (sqlException, message, sql) -> {
 			final String constraintName;
@@ -839,33 +866,44 @@ public class AltibaseDialect extends Dialect {
 	}
 
 	@Override
-	public String getDual() {
-		return "dual";
+	public SingleRowTableSupport getSingleRowTableSupport() {
+		final String tableExpression = "dual";
+		return SingleRowTableSupport.builder( super.getSingleRowTableSupport() )
+				.tableExpression( tableExpression )
+				.selectOnlyFromClause( " from " + tableExpression )
+				.build();
 	}
 
 	@Override
-	public String getFromDualForSelectOnly() {
-		return " from " + getDual();
+	public SetOperationSupport getSetOperationSupport() {
+		return SetOperationSupport.builder()
+				.operator( SetOperator.INTERSECT_ALL, false )
+				.operator( SetOperator.EXCEPT_ALL, false )
+				.capability( SetOperationSupport.Capability.SIMPLE_QUERY_GROUPING, false )
+				.build();
 	}
 
 	@Override
-	public boolean supportsJoinsInDelete() {
-		return true;
+	@SPI({ USE, IMPLEMENT })
+	public String getSetOperatorSqlString(SetOperator setOperator) {
+		return setOperator == SetOperator.EXCEPT
+				? "minus"
+				: super.getSetOperatorSqlString( setOperator );
 	}
 
 	@Override
-	public boolean supportsSimpleQueryGrouping() {
-		return false;
+	public CteSupport getCteSupport() {
+		return CteSupport.builder()
+				.placement( CteSupport.Placement.TOP_LEVEL )
+				.requiresRecursiveKeyword( false )
+				.build();
 	}
 
 	@Override
-	public boolean supportsWithClauseInSubquery() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
-		return false;
+	public RowValueSupport getRowValueSupport() {
+		return RowValueSupport.builder( super.getRowValueSupport() )
+				.feature( RowValueSupport.Feature.QUANTIFIED_COMPARISON, false )
+				.build();
 	}
 
 }

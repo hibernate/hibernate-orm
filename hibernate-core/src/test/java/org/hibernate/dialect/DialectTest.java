@@ -8,6 +8,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.stream.Stream;
 
+import org.hibernate.dialect.queryhint.spi.QueryHints;
+
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -57,7 +59,7 @@ class DialectTest {
 	@MethodSource("_addQueryHints")
 	@ParameterizedTest
 	void addQueryHints(String description, String expected, String query, String hints) {
-		final String queryWithHint = MySQLDialect.addUseIndexQueryHint(query, hints);
+		final String queryWithHint = QueryHints.addUseIndexHint(query, hints);
 		assertEquals(expected, queryWithHint, description);
 	}
 

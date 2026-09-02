@@ -73,6 +73,15 @@ public class DbVersionTest {
 				"owner version not incremented" );
 	}
 
+	private Timestamp truncateToPrecision(Timestamp timestamp, int precision) {
+		final Timestamp clonedTimestamp = (Timestamp) timestamp.clone();
+		if ( precision < 9 ) {
+			final long factor = (long) Math.pow( 10, 9 - precision );
+			clonedTimestamp.setNanos( (int) ( clonedTimestamp.getNanos() / factor * factor ) );
+		}
+		return clonedTimestamp;
+	}
+
 	@Test
 	public void testCollectionNoVersion(SessionFactoryScope factoryScope) throws Exception {
 		final var dialect = factoryScope.getSessionFactory().getJdbcServices().getDialect();
@@ -122,6 +131,6 @@ public class DbVersionTest {
 			timestamp = new Timestamp( timestamp.getTime() );
 		}
 
-		return timestamp;
+		return truncateToPrecision( timestamp, dialect.getTypeSizingProfile().defaultTimestampPrecision() );
 	}
 }

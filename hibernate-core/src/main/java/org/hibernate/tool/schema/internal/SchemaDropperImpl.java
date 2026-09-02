@@ -22,6 +22,7 @@ import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.schema.spi.ConstraintDropMode;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
@@ -58,7 +59,6 @@ import org.jboss.logging.Logger;
 import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.internal.util.collections.CollectionHelper.setOfSize;
 import static org.hibernate.tool.schema.internal.Helper.applyScript;
-import static org.hibernate.tool.schema.internal.Helper.applySqlString;
 import static org.hibernate.tool.schema.internal.Helper.applySqlStrings;
 import static org.hibernate.tool.schema.internal.Helper.createSqlStringGenerationContext;
 import static org.hibernate.tool.schema.internal.Helper.interpretFormattingEnabled;
@@ -202,7 +202,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 
 		// NOTE : init commands are irrelevant for dropping...
 
-		applySqlString( dialect.getBeforeDropStatement(), formatter, options, targets );
+		applySqlStrings( dialect.getSchemaDropSupport().beforeDropCommands(), formatter, options, targets );
 
 		final var context = createSqlStringGenerationContext( options, metadata );
 		// Reverse the list on drop to retain possible dependencies
@@ -281,13 +281,13 @@ public class SchemaDropperImpl implements SchemaDropper {
 			Formatter formatter,
 			SqlStringGenerationContext context,
 			GenerationTarget[] targets) {
+		final var exporter = new StandardAuxiliaryDatabaseObjectExporter( dialect );
 		for ( var auxiliaryDatabaseObject :
 				reverse( metadata.getDatabase().getAuxiliaryDatabaseObjects() ) ) {
 			if ( !auxiliaryDatabaseObject.beforeTablesOnCreation()
 					&& auxiliaryDatabaseObject.appliesToDialect(dialect) ) {
 				applySqlStrings(
-						dialect.getAuxiliaryDatabaseObjectExporter()
-								.getSqlDropStrings( auxiliaryDatabaseObject, metadata, context ),
+						exporter.getSqlDropStrings( auxiliaryDatabaseObject, metadata, context ),
 						formatter,
 						options,
 						targets
@@ -418,8 +418,9 @@ public class SchemaDropperImpl implements SchemaDropper {
 			SqlStringGenerationContext context,
 			GenerationTarget[] targets) {
 		final boolean manageNamespaces = options.shouldManageNamespaces();
-		final boolean tryToDropCatalogs = manageNamespaces && dialect.canCreateCatalog();
-		final boolean tryToDropSchemas = manageNamespaces && dialect.canCreateSchema();
+		final var namespaceSupport = dialect.getNamespaceSupport();
+		final boolean tryToDropCatalogs = manageNamespaces && namespaceSupport.canCreateCatalog();
+		final boolean tryToDropSchemas = manageNamespaces && namespaceSupport.canCreateSchema();
 		if ( tryToDropCatalogs || tryToDropSchemas) {
 			final Set<Identifier> exportedCatalogs = new HashSet<>();
 			for ( var namespace : metadata.getDatabase().getNamespaces() ) {
@@ -431,7 +432,12 @@ public class SchemaDropperImpl implements SchemaDropper {
 						final Identifier schemaPhysicalName = context.schemaWithDefault( physicalName.schema() );
 						if ( schemaPhysicalName != null ) {
 							final String schemaName = schemaPhysicalName.render( dialect );
-							applySqlStrings( dialect.getDropSchemaCommand( schemaName ), formatter, options, targets);
+							applySqlStrings(
+									namespaceSupport.getDropSchemaCommands( schemaName ),
+									formatter,
+									options,
+									targets
+							);
 						}
 					}
 
@@ -440,7 +446,12 @@ public class SchemaDropperImpl implements SchemaDropper {
 						final Identifier catalogPhysicalName = context.catalogWithDefault( physicalName.catalog() );
 						if ( catalogPhysicalName != null && !exportedCatalogs.contains( catalogLogicalName ) ) {
 							final String catalogName = catalogPhysicalName.render( dialect );
-							applySqlStrings( dialect.getDropCatalogCommand( catalogName ), formatter, options, targets );
+							applySqlStrings(
+									namespaceSupport.getDropCatalogCommands( catalogName ),
+									formatter,
+									options,
+									targets
+							);
 							exportedCatalogs.add( catalogLogicalName );
 						}
 					}
@@ -464,7 +475,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 			ContributableMatcher inclusionFilter,
 			GenerationTarget... targets) {
 		final var dialect = metadata.getDatabase().getJdbcEnvironment().getDialect();
-		if ( dialect.dropConstraints() ) {
+		if ( dialect.getSchemaDropSupport().constraintDropMode() == ConstraintDropMode.EXPLICIT ) {
 			for ( Table table : namespace.getTables() ) {
 				if ( table.isPhysicalTable()
 						&& schemaFilter.includeTable( table )

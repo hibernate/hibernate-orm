@@ -56,9 +56,9 @@ public class LazyElementCollectionBasicNonUniqueIdWhereTest {
 		factoryScope.inTransaction(  session -> session.doWork( connection -> {
 			final Dialect dialect = session.getDialect();
 			try ( final Statement statement = connection.createStatement() ) {
-				statement.executeUpdate( dialect.getDropTableString( "MAIN_TABLE" ) );
-				statement.executeUpdate( dialect.getDropTableString( "COLLECTION_TABLE" ) );
-				statement.executeUpdate( dialect.getDropTableString( "MATERIAL_RATINGS" ) );
+				statement.executeUpdate( org.hibernate.testing.DialectTestSupport.dropTableCommand( dialect, "MAIN_TABLE" ) );
+				statement.executeUpdate( org.hibernate.testing.DialectTestSupport.dropTableCommand( dialect, "COLLECTION_TABLE" ) );
+				statement.executeUpdate( org.hibernate.testing.DialectTestSupport.dropTableCommand( dialect, "MATERIAL_RATINGS" ) );
 
 				// MAIN_TABLE
 				statement.executeUpdate("""

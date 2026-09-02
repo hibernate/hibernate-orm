@@ -4,6 +4,7 @@
  */
 package org.hibernate.tool.reveng.hbm2x.hbm2hbmxml.BackrefTest;
 
+
 import org.hibernate.boot.Metadata;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.mapping.Backref;

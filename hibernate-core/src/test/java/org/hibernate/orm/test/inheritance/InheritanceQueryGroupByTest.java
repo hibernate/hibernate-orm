@@ -17,7 +17,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MappedSuperclass;
 import org.hibernate.community.dialect.InformixDialect;
-import org.hibernate.dialect.FunctionalDependencyAnalysisSupport;
+import org.hibernate.dialect.aggregate.spi.FunctionalDependencyAnalysisSupport;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.persister.entity.UnionSubclassEntityPersister;
 import org.hibernate.testing.jdbc.SQLStatementInspector;

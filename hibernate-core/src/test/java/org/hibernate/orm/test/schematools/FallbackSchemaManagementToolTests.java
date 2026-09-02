@@ -12,11 +12,11 @@ import java.util.Map;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.JdbcSettings;
+import org.hibernate.cfg.SchemaToolingSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.orm.test.tool.schema.ExecutionOptionsTestImpl;
-import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
@@ -47,17 +47,23 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.hibernate.dialect.SimpleDatabaseVersion.ZERO_VERSION;
 
 /**
- * Tests for {@link org.hibernate.dialect.Dialect#getFallbackSchemaManagementTool}
+ * Tests explicit schema-management-tool selection.
  *
  * @author Steve Ebersole
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
 @BaseUnitTest
 @ServiceRegistry(
-		settingProviders = @SettingProvider(
-				settingName = JdbcSettings.DIALECT,
-				provider = FallbackSchemaManagementToolTests.CustomDialectConfigProvider.class
-		)
+		settingProviders = {
+				@SettingProvider(
+						settingName = JdbcSettings.DIALECT,
+						provider = FallbackSchemaManagementToolTests.CustomDialectConfigProvider.class
+				),
+				@SettingProvider(
+						settingName = SchemaToolingSettings.SCHEMA_MANAGEMENT_TOOL,
+						provider = FallbackSchemaManagementToolTests.SchemaManagementToolConfigProvider.class
+				)
+		}
 )
 @DomainModel( annotatedClasses = FallbackSchemaManagementToolTests.SimpleEntity.class )
 @RequiresDialect(
@@ -141,14 +147,17 @@ public class FallbackSchemaManagementToolTests {
 		}
 	}
 
+	public static class SchemaManagementToolConfigProvider
+			implements SettingProvider.Provider<Class<SchemaManagementToolImpl>> {
+		@Override
+		public Class<SchemaManagementToolImpl> getSetting() {
+			return SchemaManagementToolImpl.class;
+		}
+	}
+
 	public static class CustomDialect extends Dialect {
 		public CustomDialect() {
 			super( ZERO_VERSION );
-		}
-
-		@Override
-		public SchemaManagementTool getFallbackSchemaManagementTool(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
-			return new SchemaManagementToolImpl();
 		}
 	}
 

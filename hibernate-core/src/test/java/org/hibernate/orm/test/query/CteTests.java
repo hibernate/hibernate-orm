@@ -20,8 +20,8 @@ import org.hibernate.query.criteria.JpaJoin;
 import org.hibernate.query.criteria.JpaParameterExpression;
 import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.criteria.JpaSubQuery;
-import org.hibernate.sql.ast.tree.cte.CteMaterialization;
-import org.hibernate.sql.ast.tree.cte.CteSearchClauseKind;
+import org.hibernate.sql.ast.spi.query.cte.CteMaterialization;
+import org.hibernate.sql.ast.spi.query.cte.CteSearchClauseKind;
 
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.SkipForDialect;

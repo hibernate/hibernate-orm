@@ -5,21 +5,19 @@
 package org.hibernate.sql.results.jdbc.internal;
 
 import jakarta.persistence.Timeout;
-import org.hibernate.LockOptions;
 import org.hibernate.Timeouts;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.pagination.LimitHandler;
-import org.hibernate.dialect.pagination.NoopLimitHandler;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.dialect.pagination.spi.NoopLimitHandler;
+import org.hibernate.dialect.pagination.spi.PaginationJdbcInstructions;
+import org.hibernate.dialect.pagination.spi.PaginationRequest;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.spi.Limit;
-import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
 import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
 import org.hibernate.sql.exec.spi.ExecutionContext;
-import org.hibernate.sql.exec.spi.JdbcLockStrategy;
+import org.hibernate.sql.exec.spi.JdbcLockingApplication;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
+import org.hibernate.sql.exec.spi.JdbcPaginationApplication;
 import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.exec.spi.JdbcSelectExecutor;
 
@@ -27,9 +25,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import static java.util.Collections.emptyMap;
 import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_LOGGER;
 import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
+import static org.hibernate.sql.ast.internal.ParameterMarkerStrategyStandard.isStandardRenderer;
 
 /**
  * @author Steve Ebersole
@@ -42,8 +40,9 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 	private final JdbcSelectExecutor.StatementCreator statementCreator;
 	private final SqlStatementLogger sqlStatementLogger;
 	private final String finalSql;
+	private final JdbcLockingApplication lockingApplication;
 	private final Limit limit;
-	private final LimitHandler limitHandler;
+	private final PaginationJdbcInstructions paginationInstructions;
 	private final int resultCountEstimate;
 
 	private PreparedStatement preparedStatement;
@@ -68,100 +67,54 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 		final var queryOptions = executionContext.getQueryOptions();
 		if ( queryOptions == null ) {
 			finalSql = jdbcSelect.getSqlString();
+			lockingApplication = JdbcLockingApplication.NONE;
 			limit = null;
-			limitHandler = NoopLimitHandler.NO_LIMIT;
+			paginationInstructions = new PaginationJdbcInstructions(
+					java.util.List.of(),
+					java.util.List.of(),
+					jdbcSelect.getMaxRows() == Integer.MAX_VALUE ? null : jdbcSelect.getMaxRows(),
+					jdbcSelect.getRowsToSkip()
+			);
 		}
 		else {
 			// Note that limit and lock aren't set for SQM as that is applied during SQL rendering
 			// But for native queries, we have to adapt the SQL string
 			final var dialect = jdbcServices.getDialect();
 
-			final String sql = jdbcSelect.getSqlString();
-
 			limit = queryOptions.getLimit();
-			final boolean needsLimitHandler = needsLimitHandler( jdbcSelect );
-			limitHandler = needsLimitHandler ? dialect.getLimitHandler() : NoopLimitHandler.NO_LIMIT;
-			final String sqlWithLimit =
-					needsLimitHandler
-							? sqlWithLimit( jdbcParameterBindings, sql, jdbcServices, queryOptions )
-							: sql;
-
-			final String sqlWithLocking =
-					sqlWithLocking( jdbcSelect.getLockStrategy(), sqlWithLimit, queryOptions, dialect );
-
-			finalSql =
-					dialect.addSqlHintOrComment( sqlWithLocking, queryOptions,
-							executionContext.getSession().getFactory()
-									.getSessionFactoryOptions().isCommentsEnabled() );
+			final var parameterMarkerStrategy = jdbcServices.getParameterMarkerStrategy();
+			final var paginationRequest = new PaginationRequest(
+					jdbcSelect.getSqlString(),
+					limit.getFirstRow(),
+					limit.getMaxRows(),
+					jdbcParameterBindings.getBindings().size(),
+					isStandardRenderer( parameterMarkerStrategy ) ? null : parameterMarkerStrategy
+			);
+			final var limitHandler = jdbcSelect.getPaginationApplication() == JdbcPaginationApplication.RAW_SQL
+					&& !paginationRequest.isEmpty()
+					? dialect.getLimitHandler()
+					: NoopLimitHandler.INSTANCE;
+			final JdbcSelectSqlFinalizer.FinalizedResult result = JdbcSelectSqlFinalizer.finalizeSql(
+					jdbcSelect.getSqlString(),
+					jdbcSelect.getPaginationApplication(),
+					jdbcSelect.getRowsToSkip(),
+					jdbcSelect.getMaxRows(),
+					paginationRequest,
+					limitHandler,
+					jdbcSelect.getLockingApplication(),
+					queryOptions.getLockOptions(),
+					limit,
+					dialect.getLockingSupport(),
+					jdbcSelect.getLoadedValuesCollectorFactory() != null,
+					dialect,
+					queryOptions,
+					executionContext.getSession().getFactory()
+							.getSessionFactoryOptions().isCommentsEnabled()
+			);
+			finalSql = result.sql();
+			lockingApplication = result.lockingApplication();
+			paginationInstructions = result.paginationInstructions();
 		}
-	}
-
-	private String sqlWithLimit(
-			JdbcParameterBindings jdbcParameterBindings,
-			String sql,
-			JdbcServices jdbcServices,
-			QueryOptions queryOptions) {
-		return limitHandler.processSql(
-				sql,
-				jdbcParameterBindings.getBindings().size(),
-				jdbcServices.getParameterMarkerStrategy(),
-				queryOptions
-		);
-	}
-
-	private static String sqlWithLocking(
-			JdbcLockStrategy jdbcLockStrategy,
-			String sqlWithLimit,
-			QueryOptions queryOptions,
-			Dialect dialect) {
-		final var lockOptions = queryOptions.getLockOptions();
-		if ( hasLocking( jdbcLockStrategy, lockOptions ) ) {
-			return useFollowOnLocking( jdbcLockStrategy, sqlWithLimit, queryOptions, lockOptions, dialect )
-					? sqlWithLimit
-					: dialect.applyLocksToSql( sqlWithLimit, lockOptions, emptyMap() );
-		}
-		else {
-			return sqlWithLimit;
-		}
-	}
-
-	private boolean needsLimitHandler(JdbcSelect jdbcSelect) {
-		return limit != null && !limit.isEmpty() && !jdbcSelect.usesLimitParameters();
-	}
-
-	private static boolean hasLocking(JdbcLockStrategy jdbcLockStrategy, LockOptions lockOptions) {
-		return jdbcLockStrategy != JdbcLockStrategy.NONE && lockOptions != null && !lockOptions.isEmpty();
-	}
-
-	private static boolean useFollowOnLocking(
-			JdbcLockStrategy jdbcLockStrategy,
-			String sql,
-			QueryOptions queryOptions,
-			@SuppressWarnings("removal") LockOptions lockOptions,
-			Dialect dialect) {
-		assert lockOptions != null;
-		return switch ( jdbcLockStrategy ) {
-			case FOLLOW_ON -> true;
-			case AUTO -> interpretAutoLockStrategy( sql, queryOptions, lockOptions, dialect);
-			case NONE -> false;
-		};
-	}
-
-	private static boolean interpretAutoLockStrategy(
-			String sql,
-			QueryOptions queryOptions,
-			@SuppressWarnings("removal") LockOptions lockOptions,
-			Dialect dialect) {
-		//noinspection removal
-		return switch ( lockOptions.getFollowOnStrategy() ) {
-			case ALLOW -> dialect.useFollowOnLocking( sql, queryOptions );
-			case FORCE -> true;
-			case DISALLOW, IGNORE -> false;
-		};
-	}
-
-	public LimitHandler getLimitHandler() {
-		return limitHandler;
 	}
 
 	public Limit getLimit() {
@@ -185,13 +138,19 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 		return finalSql;
 	}
 
+	public JdbcLockingApplication getLockingApplication() {
+		return lockingApplication;
+	}
+
 	protected void bindParameters(PreparedStatement preparedStatement) throws SQLException {
 		setQueryOptions( preparedStatement );
 
 		// bind parameters
 		// todo : validate that all query parameters were bound?
 		int paramBindingPosition = 1;
-		paramBindingPosition += limitHandler.bindLimitParametersAtStartOfQuery( limit, preparedStatement, paramBindingPosition );
+		for ( int value : paginationInstructions.parametersAtStart() ) {
+			preparedStatement.setInt( paramBindingPosition++, value );
+		}
 		for ( var parameterBinder : jdbcSelect.getParameterBinders() ) {
 			parameterBinder.bindParameterValue(
 					preparedStatement,
@@ -200,16 +159,12 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 					executionContext
 			);
 		}
-		paramBindingPosition += limitHandler.bindLimitParametersAtEndOfQuery( limit, preparedStatement, paramBindingPosition );
-
-		if ( !jdbcSelect.usesLimitParameters() && limit != null && limit.getMaxRows() != null ) {
-			limitHandler.setMaxRows( limit, preparedStatement );
+		for ( int value : paginationInstructions.parametersAtEnd() ) {
+			preparedStatement.setInt( paramBindingPosition++, value );
 		}
-		else {
-			final int maxRows = jdbcSelect.getMaxRows();
-			if ( maxRows != Integer.MAX_VALUE ) {
-				preparedStatement.setMaxRows( maxRows );
-			}
+
+		if ( paginationInstructions.maxRows() != null ) {
+			preparedStatement.setMaxRows( paginationInstructions.maxRows() );
 		}
 	}
 
@@ -308,11 +263,7 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 	}
 
 	private int getRowsToSkip() {
-		return !jdbcSelect.usesLimitParameters()
-			&& limit != null && limit.getFirstRow() != null
-			&& !limitHandler.supportsLimitOffset()
-				? limit.getFirstRow()
-				: jdbcSelect.getRowsToSkip();
+		return paginationInstructions.rowsToSkip();
 	}
 
 	protected ResultSet wrapResultSet(ResultSet resultSet) throws SQLException {

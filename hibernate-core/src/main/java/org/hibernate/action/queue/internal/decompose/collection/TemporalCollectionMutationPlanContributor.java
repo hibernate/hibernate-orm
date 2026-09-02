@@ -16,9 +16,9 @@ import org.hibernate.action.queue.spi.decompose.collection.CollectionMutationTar
 import org.hibernate.action.queue.spi.plan.FlushOperation;
 import org.hibernate.collection.spi.CollectionChangeSet;
 import org.hibernate.metamodel.mapping.TemporalMapping;
-import org.hibernate.sql.model.MutationOperation;
-import org.hibernate.sql.model.ast.MutatingTableReference;
-import org.hibernate.sql.model.ast.builder.TableUpdateBuilderStandard;
+import org.hibernate.sql.spi.mutation.MutationOperation;
+import org.hibernate.sql.ast.spi.model.MutatingTableReference;
+import org.hibernate.sql.ast.spi.model.builder.TableUpdateBuilderStandard;
 
 import static org.hibernate.action.queue.internal.decompose.collection.CollectionMutationPlanSupport.applyRemoveRestrictions;
 import static org.hibernate.action.queue.internal.decompose.collection.CollectionMutationPlanSupport.applyRowDeleteRestrictions;

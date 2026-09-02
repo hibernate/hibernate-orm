@@ -199,13 +199,13 @@ public class DdlTypeRegistry implements Serializable {
 			case SqlTypes.CHAR, SqlTypes.NCHAR, SqlTypes.VARCHAR, SqlTypes.NVARCHAR, SqlTypes.VARBINARY
 					-> getTypeName( typeCode, Size.length( Size.DEFAULT_LENGTH ) );
 			case SqlTypes.DECIMAL, SqlTypes.NUMERIC
-					-> getTypeName( typeCode, Size.precision( dialect.getDefaultDecimalPrecision() ) );
+					-> getTypeName( typeCode, Size.precision( dialect.getTypeSizingProfile().defaultDecimalPrecision() ) );
 			case SqlTypes.FLOAT, SqlTypes.REAL
-					-> getTypeName( typeCode, Size.precision( dialect.getFloatPrecision() ) );
+					-> getTypeName( typeCode, Size.precision( dialect.getTypeSizingProfile().floatPrecision() ) );
 			case SqlTypes.DOUBLE
-					-> getTypeName( typeCode, Size.precision( dialect.getDoublePrecision() ) );
+					-> getTypeName( typeCode, Size.precision( dialect.getTypeSizingProfile().doublePrecision() ) );
 			case SqlTypes.TIMESTAMP, SqlTypes.TIMESTAMP_WITH_TIMEZONE, SqlTypes.TIMESTAMP_UTC
-					-> getTypeName( typeCode, Size.precision( dialect.getDefaultTimestampPrecision() ) );
+					-> getTypeName( typeCode, Size.precision( dialect.getTypeSizingProfile().defaultTimestampPrecision() ) );
 			default -> getTypeName( typeCode, Size.nil() );
 		};
 	}

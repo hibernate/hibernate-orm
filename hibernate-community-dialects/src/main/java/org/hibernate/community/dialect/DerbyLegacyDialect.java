@@ -4,72 +4,98 @@
  */
 package org.hibernate.community.dialect;
 
+import org.hibernate.dialect.identifier.spi.KeywordRegistration;
+
+import org.hibernate.dialect.temporaltype.spi.CurrentTimestampSelection;
+
+import org.hibernate.dialect.temporaltype.spi.TemporalOperationSupport;
+import org.hibernate.dialect.temporaltype.spi.TemporalOperationSupports;
+
+import org.hibernate.dialect.temporaltype.spi.TemporalFormatSupport;
+
+import org.hibernate.dialect.temporaltype.spi.CurrentTemporalSupport;
+
+import org.hibernate.SPI;
+
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.SUPPLY;
+import static org.hibernate.SPI.Role.USE;
+import org.hibernate.dialect.type.spi.DdlTypeBuilder;
+
+import org.hibernate.dialect.type.spi.StandardDdlTypes;
+
+import org.hibernate.dialect.type.spi.TypeSizingProfile;
+
+import org.hibernate.dialect.mutation.spi.MultiTableMutationSupport;
+import org.hibernate.dialect.function.spi.ExpressionCoercionSupport;
+import org.hibernate.dialect.function.spi.TupleCountSupport;
+import org.hibernate.dialect.function.spi.WindowFunctionSupport;
+
+import org.hibernate.dialect.sql.ast.spi.CteSupport;
+import org.hibernate.dialect.sql.ast.spi.RowValueSupport;
+import org.hibernate.dialect.sql.ast.spi.SingleRowTableSupport;
+import org.hibernate.dialect.sql.ast.spi.ValuesListSupport;
+import org.hibernate.dialect.sql.ast.spi.SubquerySupport;
+
 import jakarta.persistence.TemporalType;
-import jakarta.persistence.Timeout;
 import org.hibernate.LockOptions;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.community.dialect.function.DerbyLpadEmulation;
 import org.hibernate.community.dialect.function.DerbyRpadEmulation;
+import org.hibernate.community.dialect.lock.internal.DerbyLockingSupport;
 import org.hibernate.community.dialect.pagination.DerbyLimitHandler;
 import org.hibernate.community.dialect.sequence.DerbySequenceSupport;
-import org.hibernate.community.dialect.sequence.SequenceInformationExtractorDerbyDatabaseImpl;
-import org.hibernate.community.dialect.temptable.DerbyLocalTemporaryTableStrategy;
+import org.hibernate.community.dialect.temptable.internal.DerbyLocalTemporaryTableStrategy;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
-import org.hibernate.dialect.NationalizationSupport;
-import org.hibernate.dialect.RowLockStrategy;
+import org.hibernate.metamodel.mapping.SqlTypedMapping;
+import org.hibernate.dialect.sql.ast.spi.DmlTargetColumnQualifierSupport;
+import org.hibernate.dialect.type.spi.NationalizationSupport;
+import org.hibernate.dialect.lock.spi.RowLockStrategy;
 import org.hibernate.dialect.function.CaseLeastGreatestEmulation;
 import org.hibernate.dialect.function.CastingConcatFunction;
 import org.hibernate.dialect.function.ChrLiteralEmulation;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.CountFunction;
 import org.hibernate.dialect.function.InsertSubstringOverlayEmulation;
-import org.hibernate.dialect.identity.DB2IdentityColumnSupport;
-import org.hibernate.dialect.identity.IdentityColumnSupport;
-import org.hibernate.dialect.lock.internal.LockingSupportSimple;
+import org.hibernate.community.dialect.identity.internal.DB2IdentityColumnSupport;
+import org.hibernate.dialect.identity.spi.IdentityColumnSupport;
 import org.hibernate.dialect.lock.spi.LockingSupport;
-import org.hibernate.dialect.pagination.AbstractLimitHandler;
-import org.hibernate.dialect.pagination.LimitHandler;
-import org.hibernate.dialect.sequence.SequenceSupport;
-import org.hibernate.dialect.temptable.TemporaryTableKind;
-import org.hibernate.dialect.temptable.TemporaryTableStrategy;
+import org.hibernate.dialect.namespace.spi.NamespaceSupport;
+import org.hibernate.dialect.pagination.spi.AbstractLimitHandler;
+import org.hibernate.dialect.pagination.spi.LimitHandler;
+import org.hibernate.dialect.sequence.spi.SequenceSupport;
+import org.hibernate.dialect.temptable.spi.TemporaryTableStrategy;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
-import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.dialect.identifier.spi.IdentifierHelperBuildRequest;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
-import org.hibernate.internal.util.JdbcExceptionHelper;
-import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.jdbc.spi.JdbcExceptionHelper;
 import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.CastType;
-import org.hibernate.dialect.type.IntervalType;
-import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableInsertStrategy;
-import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableMutationStrategy;
-import org.hibernate.query.sqm.mutation.spi.BeforeUseAction;
-import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
-import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
+import org.hibernate.dialect.temporaltype.spi.IntervalType;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
-import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.SqlAstTranslatorFactory;
-import org.hibernate.sql.ast.internal.PessimisticLockKind;
-import org.hibernate.sql.ast.spi.LockingClauseStrategy;
-import org.hibernate.sql.ast.spi.SqlAppender;
-import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
-import org.hibernate.sql.ast.tree.Statement;
+import org.hibernate.sql.ast.spi.translation.SqlAstNodeRenderingMode;
+import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslatorFactory;
+import org.hibernate.dialect.lock.spi.PessimisticLockKind;
+import org.hibernate.dialect.lock.spi.LockingClauseStrategy;
+import org.hibernate.dialect.lock.spi.StandardLockingClauseStrategies;
+import org.hibernate.sql.spi.SqlAppender;
+import org.hibernate.dialect.sql.ast.spi.StandardSqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.Statement;
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
 import org.hibernate.sql.exec.spi.JdbcOperation;
-import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
+import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractors;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.JavaObjectType;
@@ -79,12 +105,9 @@ import org.hibernate.type.descriptor.jdbc.ObjectNullResolvingJdbcType;
 import org.hibernate.type.descriptor.jdbc.SmallIntJdbcType;
 import org.hibernate.type.descriptor.jdbc.TimestampJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
-import org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import java.sql.DatabaseMetaData;
-import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Set;
 
@@ -116,7 +139,42 @@ import static org.hibernate.type.SqlTypes.VARCHAR;
  * @author Gavin King
  *
  */
-public class DerbyLegacyDialect extends Dialect {
+public class DerbyLegacyDialect extends Dialect implements CurrentTemporalSupport, TemporalFormatSupport, TemporalOperationSupport {
+
+	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
+	public TemporalOperationSupport getTemporalOperationSupport() {
+		return this;
+	}
+
+	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
+	public TemporalFormatSupport getTemporalFormatSupport() {
+		return this;
+	}
+
+	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
+	public CurrentTemporalSupport getCurrentTemporalSupport() {
+		return this;
+	}
+	private static final NamespaceSupport NAMESPACE_SUPPORT = new CommunityNamespaceSupport(
+			false,
+			CommunityNamespaceSupport::unsupportedCatalog,
+			CommunityNamespaceSupport::unsupportedCatalog,
+			true,
+			name -> new String[] { "create schema " + name },
+			name -> new String[] { "drop schema " + name + " restrict" }
+	);
+	private final TypeSizingProfile typeSizingProfile = TypeSizingProfile.builder( super.getTypeSizingProfile() )
+			.defaultDecimalPrecision( 31 ).defaultTimestampPrecision( 9 )
+			.floatPrecision( 23 ).doublePrecision( 52 )
+			.maxVarcharLength( 32_672 ).maxVarcharCapacity( 32_700 )
+			.maxNVarcharLength( 32_672 ).maxNVarcharCapacity( 32_672 )
+			.maxVarbinaryLength( 32_672 ).maxVarbinaryCapacity( 32_672 )
+			.build();
+
+	@Override public TypeSizingProfile getTypeSizingProfile() { return typeSizingProfile; }
 
 	// KNOWN LIMITATIONS:
 
@@ -146,6 +204,7 @@ public class DerbyLegacyDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	protected String columnType(int sqlTypeCode) {
 		return switch ( sqlTypeCode ) {
 			case BOOLEAN ->  getVersion().isBefore( 10, 7 ) ? "smallint" : super.columnType( sqlTypeCode );
@@ -166,6 +225,7 @@ public class DerbyLegacyDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	protected void registerColumnTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.registerColumnTypes( typeContributions, serviceRegistry );
 		final DdlTypeRegistry ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
@@ -173,55 +233,39 @@ public class DerbyLegacyDialect extends Dialect {
 		int varcharDdlTypeCapacity = 32_672;
 
 		ddlTypeRegistry.addDescriptor(
-				CapacityDependentDdlType.builder(
-								VARBINARY,
-								isLob( LONG32VARBINARY )
-										? CapacityDependentDdlType.LobKind.BIGGEST_LOB
-										: CapacityDependentDdlType.LobKind.NONE,
-								columnType( LONG32VARBINARY ),
-								columnType( VARBINARY ),
-								this
-						)
+				StandardDdlTypes.builder( VARBINARY, columnType( LONG32VARBINARY ), this )
+						.lobKind( getLobSupport().isLobType( LONG32VARBINARY )
+										? DdlTypeBuilder.LobKind.BIGGEST
+										: DdlTypeBuilder.LobKind.NONE )
+						.castTypeName( columnType( VARBINARY ) )
 						.withTypeCapacity( varcharDdlTypeCapacity, columnType( VARBINARY ) )
 						.build()
 		);
 		ddlTypeRegistry.addDescriptor(
-				CapacityDependentDdlType.builder(
-								VARCHAR,
-								isLob( LONG32VARCHAR )
-										? CapacityDependentDdlType.LobKind.BIGGEST_LOB
-										: CapacityDependentDdlType.LobKind.NONE,
-								columnType( LONG32VARCHAR ),
-								columnType( VARCHAR ),
-								this
-						)
+				StandardDdlTypes.builder( VARCHAR, columnType( LONG32VARCHAR ), this )
+						.lobKind( getLobSupport().isLobType( LONG32VARCHAR )
+										? DdlTypeBuilder.LobKind.BIGGEST
+										: DdlTypeBuilder.LobKind.NONE )
+						.castTypeName( columnType( VARCHAR ) )
 						.withTypeCapacity( varcharDdlTypeCapacity, columnType( VARCHAR ) )
 						.build()
 		);
 		ddlTypeRegistry.addDescriptor(
-				CapacityDependentDdlType.builder(
-								NVARCHAR,
-								isLob( LONG32NVARCHAR )
-										? CapacityDependentDdlType.LobKind.BIGGEST_LOB
-										: CapacityDependentDdlType.LobKind.NONE,
-								columnType( LONG32VARCHAR ),
-								columnType( NVARCHAR ),
-								this
-						)
+				StandardDdlTypes.builder( NVARCHAR, columnType( LONG32VARCHAR ), this )
+						.lobKind( getLobSupport().isLobType( LONG32NVARCHAR )
+										? DdlTypeBuilder.LobKind.BIGGEST
+										: DdlTypeBuilder.LobKind.NONE )
+						.castTypeName( columnType( NVARCHAR ) )
 						.withTypeCapacity( varcharDdlTypeCapacity, columnType( NVARCHAR ) )
 						.build()
 		);
 
 		ddlTypeRegistry.addDescriptor(
-				CapacityDependentDdlType.builder(
-								BINARY,
-								isLob( LONG32VARBINARY )
-										? CapacityDependentDdlType.LobKind.BIGGEST_LOB
-										: CapacityDependentDdlType.LobKind.NONE,
-								columnType( LONG32VARBINARY ),
-								columnType( VARBINARY ),
-								this
-						)
+				StandardDdlTypes.builder( BINARY, columnType( LONG32VARBINARY ), this )
+						.lobKind( getLobSupport().isLobType( LONG32VARBINARY )
+										? DdlTypeBuilder.LobKind.BIGGEST
+										: DdlTypeBuilder.LobKind.NONE )
+						.castTypeName( columnType( VARBINARY ) )
 						.withTypeCapacity( 254, "char($l) for bit data" )
 						.withTypeCapacity( varcharDdlTypeCapacity, columnType( VARBINARY ) )
 						.build()
@@ -229,52 +273,29 @@ public class DerbyLegacyDialect extends Dialect {
 
 		// This is the maximum size for the CHAR datatype on Derby
 		ddlTypeRegistry.addDescriptor(
-				CapacityDependentDdlType.builder(
-								CHAR,
-								isLob( LONG32VARCHAR )
-										? CapacityDependentDdlType.LobKind.BIGGEST_LOB
-										: CapacityDependentDdlType.LobKind.NONE,
-								columnType( LONG32VARCHAR ),
-								columnType( CHAR ),
-								this
-						)
+				StandardDdlTypes.builder( CHAR, columnType( LONG32VARCHAR ), this )
+						.lobKind( getLobSupport().isLobType( LONG32VARCHAR )
+										? DdlTypeBuilder.LobKind.BIGGEST
+										: DdlTypeBuilder.LobKind.NONE )
+						.castTypeName( columnType( CHAR ) )
 						.withTypeCapacity( 254, columnType( CHAR ) )
-						.withTypeCapacity( getMaxVarcharLength(), columnType( VARCHAR ) )
+						.withTypeCapacity( getTypeSizingProfile().maxVarcharLength(), columnType( VARCHAR ) )
 						.build()
 		);
 		ddlTypeRegistry.addDescriptor(
-				CapacityDependentDdlType.builder(
-								NCHAR,
-								isLob( LONG32NVARCHAR )
-										? CapacityDependentDdlType.LobKind.BIGGEST_LOB
-										: CapacityDependentDdlType.LobKind.NONE,
-								columnType( LONG32NVARCHAR ),
-								columnType( NCHAR ),
-								this
-						)
+				StandardDdlTypes.builder( NCHAR, columnType( LONG32NVARCHAR ), this )
+						.lobKind( getLobSupport().isLobType( LONG32NVARCHAR )
+										? DdlTypeBuilder.LobKind.BIGGEST
+										: DdlTypeBuilder.LobKind.NONE )
+						.castTypeName( columnType( NCHAR ) )
 						.withTypeCapacity( 254, columnType( NCHAR ) )
-						.withTypeCapacity( getMaxVarcharLength(), columnType( NVARCHAR ) )
+						.withTypeCapacity( getTypeSizingProfile().maxVarcharLength(), columnType( NVARCHAR ) )
 						.build()
 		);
 	}
 
 	@Override
-	public int getMaxVarcharLength() {
-		return 32_672;
-	}
-
-	@Override
-	public int getMaxVarcharCapacity() {
-		return 32_700;
-	}
-
-	@Override
-	public int getDefaultDecimalPrecision() {
-		//this is the maximum allowed in Derby
-		return 31;
-	}
-
-	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public int getPreferredSqlTypeCodeForBoolean() {
 		return getVersion().isBefore( 10, 7 )
 				? Types.SMALLINT
@@ -282,31 +303,20 @@ public class DerbyLegacyDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public NationalizationSupport getNationalizationSupport() {
 		return NationalizationSupport.IMPLICIT;
 	}
 
 	@Override
-	public int getDefaultStatementBatchSize() {
-		return 15;
+	@SPI({ IMPLEMENT, SUPPLY })
+	protected void contributeDefaultProperties(java.util.Properties properties) {
+		super.contributeDefaultProperties( properties );
+		properties.setProperty( org.hibernate.cfg.AvailableSettings.STATEMENT_BATCH_SIZE, Integer.toString( 15 ) );
 	}
 
 	@Override
-	public int getFloatPrecision() {
-		return 23;
-	}
-
-	@Override
-	public int getDoublePrecision() {
-		return 52;
-	}
-
-	@Override
-	public int getDefaultTimestampPrecision() {
-		return 9;
-	}
-
-	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
 		super.initializeFunctionRegistry(functionContributions);
 
@@ -386,12 +396,13 @@ public class DerbyLegacyDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public SqlAstTranslatorFactory getSqlAstTranslatorFactory() {
 		return new StandardSqlAstTranslatorFactory() {
 			@Override
-			protected <T extends JdbcOperation> SqlAstTranslator<T> buildTranslator(
-					SessionFactoryImplementor sessionFactory, Statement statement) {
-				return new DerbyLegacySqlAstTranslator<>( sessionFactory, statement );
+			protected <S extends Statement, T extends JdbcOperation> SqlAstTranslator<T> createTranslator(
+					SqlAstTranslationRequest<S, T> request) {
+				return new DerbyLegacySqlAstTranslator<>( request );
 			}
 		};
 	}
@@ -415,6 +426,7 @@ public class DerbyLegacyDialect extends Dialect {
 	 * by the parser).
 	 */
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String extractPattern(TemporalUnit unit) {
 		return switch (unit) {
 			case DAY_OF_MONTH -> "day(?2)";
@@ -431,11 +443,12 @@ public class DerbyLegacyDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String translateExtractField(TemporalUnit unit) {
 		return switch (unit) {
 			case WEEK, DAY_OF_YEAR, DAY_OF_WEEK -> throw new UnsupportedOperationException("field type not supported on Derby: " + unit);
 			case DAY_OF_MONTH -> "day";
-			default -> super.translateExtractField(unit);
+			default -> TemporalOperationSupports.standard().translateExtractField(unit);
 		};
 	}
 
@@ -446,6 +459,7 @@ public class DerbyLegacyDialect extends Dialect {
 	 * cast things to its floating point types.
 	 */
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String castPattern(CastType from, CastType to) {
 		switch ( to ) {
 			case FLOAT:
@@ -463,7 +477,7 @@ public class DerbyLegacyDialect extends Dialect {
 					case FLOAT:
 					case DOUBLE:
 						// Derby can't cast to char directly, but needs to be cast to decimal first...
-						return "cast(trim(cast(cast(?1 as decimal(" + getDefaultDecimalPrecision() + "," + BigDecimalJavaType.INSTANCE.getDefaultSqlScale( this, null ) + ")) as char(254))) as ?2)";
+						return "cast(trim(cast(cast(?1 as decimal(" + getTypeSizingProfile().defaultDecimalPrecision() + "," + BigDecimalJavaType.INSTANCE.getDefaultSqlScale( this, null ) + ")) as char(254))) as ?2)";
 					case INTEGER:
 					case LONG:
 					case FIXED:
@@ -484,6 +498,7 @@ public class DerbyLegacyDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
 		switch (unit) {
 			case NANOSECOND:
@@ -495,6 +510,7 @@ public class DerbyLegacyDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
 		return switch (unit) {
 			case NANOSECOND, NATIVE -> "{fn timestampdiff(sql_tsi_frac_second,?2,?3)}";
@@ -503,6 +519,7 @@ public class DerbyLegacyDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public void appendBooleanValueString(SqlAppender appender, boolean bool) {
 		if ( getVersion().isBefore( 10, 7 ) ) {
 			appender.appendSql( bool ? '1' : '0' );
@@ -513,40 +530,41 @@ public class DerbyLegacyDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public SequenceSupport getSequenceSupport() {
 		return getVersion().isBefore( 10, 6 )
 				? super.getSequenceSupport()
 				: DerbySequenceSupport.INSTANCE;
 	}
 
-	@Override
-	public String getQuerySequencesString() {
-		return getVersion().isBefore( 10, 6 )
-				? null
-				: "select sys.sysschemas.schemaname as sequence_schema,sys.syssequences.* from sys.syssequences left join sys.sysschemas on sys.syssequences.schemaid=sys.sysschemas.schemaid";
-	}
+	private static final SequenceInformationExtractor SEQUENCE_INFORMATION_EXTRACTOR =
+			SequenceInformationExtractors.builder(
+					"select sys.sysschemas.schemaname as sequence_schema,sys.syssequences.* from sys.syssequences left join sys.sysschemas on sys.syssequences.schemaid=sys.sysschemas.schemaid"
+			)
+			.withoutCatalog()
+			.sequenceNameColumn( "sequencename" )
+			.startValueColumn( "startvalue" )
+			.minimumValueColumn( "minimumvalue" )
+			.maximumValueColumn( "maximumvalue" )
+			.build();
 
 	@Override
 	public SequenceInformationExtractor getSequenceInformationExtractor() {
 		return getVersion().isBefore( 10, 6 )
-				? SequenceInformationExtractorNoOpImpl.INSTANCE
-				: SequenceInformationExtractorDerbyDatabaseImpl.INSTANCE;
+				? SequenceInformationExtractors.none()
+				: SEQUENCE_INFORMATION_EXTRACTOR;
 	}
 
 	@Override
-	public String[] getDropSchemaCommand(String schemaName) {
-		return new String[] {"drop schema " + schemaName + " restrict"};
+	@SPI({ IMPLEMENT, SUPPLY })
+	public NamespaceSupport getNamespaceSupport() {
+		return NAMESPACE_SUPPORT;
 	}
 
 	@Override
-	public String getSelectClauseNullString(int sqlType, TypeConfiguration typeConfiguration) {
-		return DB2Dialect.selectNullString( sqlType );
-	}
-
-	@Override
-	public boolean supportsCommentOn() {
-		//HHH-4531
-		return false;
+	@SPI({ USE, IMPLEMENT })
+	public String getSelectClauseNullString(SqlTypedMapping sqlTypeMapping, TypeConfiguration typeConfiguration) {
+		return DB2Dialect.selectNullString( sqlTypeMapping.getJdbcMapping().getJdbcType().getDdlTypeCode() );
 	}
 
 	@Override
@@ -555,58 +573,38 @@ public class DerbyLegacyDialect extends Dialect {
 			RowLockStrategy rowLockStrategy,
 			LockOptions lockOptions,
 			Set<NavigablePath> rootPathsForLocking) {
-		return new DerbyLockingClauseStrategy( this, lockKind, rowLockStrategy, lockOptions, rootPathsForLocking );
+		return StandardLockingClauseStrategies.standard(
+				request -> getLockingSupport().getLockingClauseRenderer().render( request ) + " with rs",
+				lockKind,
+				rowLockStrategy,
+				lockOptions,
+				rootPathsForLocking
+		);
 	}
 
-	@Override
-	public String getForUpdateString() {
-		return " for update with rs";
-	}
 
-	@Override
-	public String getWriteLockString(Timeout timeout) {
-		return " for update with rs";
-	}
 
-	@Override
-	public String getReadLockString(Timeout timeout) {
-		return " for read only with rs";
-	}
 
-	@Override
-	public String getWriteLockString(int timeout) {
-		return " for update with rs";
-	}
 
-	@Override
-	public String getReadLockString(int timeout) {
-		return " for read only with rs";
-	}
 
 	@Override
 	public LockingSupport getLockingSupport() {
-		return LockingSupportSimple.NO_OUTER_JOIN;
+		return DerbyLockingSupport.INSTANCE;
 	}
 
 	@Override
-	public boolean supportsExistsInSelect() {
-		//TODO: check this!
-		return false;
+	public SubquerySupport getSubquerySupport() {
+		return SubquerySupport.builder()
+				.feature( SubquerySupport.Feature.EXISTS_IN_SELECT, false )
+				.feature( SubquerySupport.Feature.ORDER_BY, getVersion().isSameOrAfter( 10, 5 ) )
+				.feature( SubquerySupport.Feature.MUTATION_JOIN, false )
+				.build();
 	}
 
 	@Override
-	public boolean supportsCurrentTimestampSelection() {
-		return true;
-	}
-
-	@Override
-	public String getCurrentTimestampSelectString() {
-		return "values current timestamp";
-	}
-
-	@Override
-	public boolean isCurrentTimestampSelectStringCallable() {
-		return false;
+	@SPI({ USE, IMPLEMENT })
+	public CurrentTimestampSelection getCurrentTimestampSelection() {
+		return CurrentTimestampSelection.prepared( "values current timestamp" );
 	}
 
 	@Override
@@ -620,34 +618,20 @@ public class DerbyLegacyDialect extends Dialect {
 	}
 
 	@Override
-	public boolean doesReadCommittedCauseWritersToBlockReaders() {
-		//TODO: check this
-		return true;
-	}
-
-	@Override
-	public boolean supportsResultSetPositionQueryMethodsOnForwardOnlyCursor() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsTupleDistinctCounts() {
+	public TupleCountSupport getTupleCountSupport() {
 		//checked on Derby 10.14
-		return false;
+		return TupleCountSupport.NONE;
 	}
 
 	@Override
-	public boolean supportsOrderByInSubquery() {
-		// As of version 10.5 Derby supports OFFSET and FETCH as well as ORDER BY in subqueries
-		return getVersion().isSameOrAfter( 10, 5 );
+	public ExpressionCoercionSupport getExpressionCoercionSupport() {
+		return ExpressionCoercionSupport.builder()
+				.requirements( ExpressionCoercionSupport.Requirement.CAST_NON_STRING_CONCATENATION_ARGUMENTS )
+				.build();
 	}
 
 	@Override
-	public boolean requiresCastForConcatenatingNonStrings() {
-		return true;
-	}
-
-	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.contributeTypes( typeContributions, serviceRegistry );
 		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration()
@@ -674,16 +658,7 @@ public class DerbyLegacyDialect extends Dialect {
 	// Overridden informational metadata ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
-	public boolean supportsLobValueChangePropagation() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsUnboundedLobLocatorMaterialization() {
-		return false;
-	}
-
-	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public ViolatedConstraintNameExtractor getViolatedConstraintNameExtractor() {
 		return new TemplatedViolatedConstraintNameExtractor( sqle -> {
 			final String sqlState = JdbcExceptionHelper.extractSqlState( sqle );
@@ -701,6 +676,7 @@ public class DerbyLegacyDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
 		return (sqlException, message, sql) -> {
 			final String sqlState = JdbcExceptionHelper.extractSqlState( sqlException );
@@ -728,239 +704,227 @@ public class DerbyLegacyDialect extends Dialect {
 	}
 
 	@Override
-	public void appendDatetimeFormat(SqlAppender appender, String format) {
+	@SPI({ USE, IMPLEMENT })
+	public void appendFormat(SqlAppender appender, String format) {
 		throw new UnsupportedOperationException("format() function not supported on Derby");
 	}
 
 	@Override
-	protected void registerDefaultKeywords() {
-		super.registerDefaultKeywords();
-		registerKeyword( "ADD" );
-		registerKeyword( "ALL" );
-		registerKeyword( "ALLOCATE" );
-		registerKeyword( "ALTER" );
-		registerKeyword( "AND" );
-		registerKeyword( "ANY" );
-		registerKeyword( "ARE" );
-		registerKeyword( "AS" );
-		registerKeyword( "ASC" );
-		registerKeyword( "ASSERTION" );
-		registerKeyword( "AT" );
-		registerKeyword( "AUTHORIZATION" );
-		registerKeyword( "AVG" );
-		registerKeyword( "BEGIN" );
-		registerKeyword( "BETWEEN" );
-		registerKeyword( "BIT" );
-		registerKeyword( "BOOLEAN" );
-		registerKeyword( "BOTH" );
-		registerKeyword( "BY" );
-		registerKeyword( "CALL" );
-		registerKeyword( "CASCADE" );
-		registerKeyword( "CASCADED" );
-		registerKeyword( "CASE" );
-		registerKeyword( "CAST" );
-		registerKeyword( "CHAR" );
-		registerKeyword( "CHARACTER" );
-		registerKeyword( "CHECK" );
-		registerKeyword( "CLOSE" );
-		registerKeyword( "COLLATE" );
-		registerKeyword( "COLLATION" );
-		registerKeyword( "COLUMN" );
-		registerKeyword( "COMMIT" );
-		registerKeyword( "CONNECT" );
-		registerKeyword( "CONNECTION" );
-		registerKeyword( "CONSTRAINT" );
-		registerKeyword( "CONSTRAINTS" );
-		registerKeyword( "CONTINUE" );
-		registerKeyword( "CONVERT" );
-		registerKeyword( "CORRESPONDING" );
-		registerKeyword( "COUNT" );
-		registerKeyword( "CREATE" );
-		registerKeyword( "CURRENT" );
-		registerKeyword( "CURRENT_DATE" );
-		registerKeyword( "CURRENT_TIME" );
-		registerKeyword( "CURRENT_TIMESTAMP" );
-		registerKeyword( "CURRENT_USER" );
-		registerKeyword( "CURSOR" );
-		registerKeyword( "DEALLOCATE" );
-		registerKeyword( "DEC" );
-		registerKeyword( "DECIMAL" );
-		registerKeyword( "DECLARE" );
-		registerKeyword( "DEFERRABLE" );
-		registerKeyword( "DEFERRED" );
-		registerKeyword( "DELETE" );
-		registerKeyword( "DESC" );
-		registerKeyword( "DESCRIBE" );
-		registerKeyword( "DIAGNOSTICS" );
-		registerKeyword( "DISCONNECT" );
-		registerKeyword( "DISTINCT" );
-		registerKeyword( "DOUBLE" );
-		registerKeyword( "DROP" );
-		registerKeyword( "ELSE" );
-		registerKeyword( "END" );
-		registerKeyword( "ENDEXEC" );
-		registerKeyword( "ESCAPE" );
-		registerKeyword( "EXCEPT" );
-		registerKeyword( "EXCEPTION" );
-		registerKeyword( "EXEC" );
-		registerKeyword( "EXECUTE" );
-		registerKeyword( "EXISTS" );
-		registerKeyword( "EXPLAIN" );
-		registerKeyword( "EXTERNAL" );
-		registerKeyword( "FALSE" );
-		registerKeyword( "FETCH" );
-		registerKeyword( "FIRST" );
-		registerKeyword( "FLOAT" );
-		registerKeyword( "FOR" );
-		registerKeyword( "FOREIGN" );
-		registerKeyword( "FOUND" );
-		registerKeyword( "FROM" );
-		registerKeyword( "FULL" );
-		registerKeyword( "FUNCTION" );
-		registerKeyword( "GET" );
-		registerKeyword( "GET_CURRENT_CONNECTION" );
-		registerKeyword( "GLOBAL" );
-		registerKeyword( "GO" );
-		registerKeyword( "GOTO" );
-		registerKeyword( "GRANT" );
-		registerKeyword( "GROUP" );
-		registerKeyword( "HAVING" );
-		registerKeyword( "HOUR" );
-		registerKeyword( "IDENTITY" );
-		registerKeyword( "IMMEDIATE" );
-		registerKeyword( "IN" );
-		registerKeyword( "INDICATOR" );
-		registerKeyword( "INITIALLY" );
-		registerKeyword( "INNER" );
-		registerKeyword( "INOUT" );
-		registerKeyword( "INPUT" );
-		registerKeyword( "INSENSITIVE" );
-		registerKeyword( "INSERT" );
-		registerKeyword( "INT" );
-		registerKeyword( "INTEGER" );
-		registerKeyword( "INTERSECT" );
-		registerKeyword( "INTO" );
-		registerKeyword( "IS" );
-		registerKeyword( "ISOLATION" );
-		registerKeyword( "JOIN" );
-		registerKeyword( "KEY" );
-		registerKeyword( "LAST" );
-		registerKeyword( "LEFT" );
-		registerKeyword( "LIKE" );
-		registerKeyword( "LONGINT" );
-		registerKeyword( "LOWER" );
-		registerKeyword( "LTRIM" );
-		registerKeyword( "MATCH" );
-		registerKeyword( "MAX" );
-		registerKeyword( "MIN" );
-		registerKeyword( "MINUTE" );
-		registerKeyword( "NATIONAL" );
-		registerKeyword( "NATURAL" );
-		registerKeyword( "NCHAR" );
-		registerKeyword( "NVARCHAR" );
-		registerKeyword( "NEXT" );
-		registerKeyword( "NO" );
-		registerKeyword( "NOT" );
-		registerKeyword( "NULL" );
-		registerKeyword( "NULLIF" );
-		registerKeyword( "NUMERIC" );
-		registerKeyword( "OF" );
-		registerKeyword( "ON" );
-		registerKeyword( "ONLY" );
-		registerKeyword( "OPEN" );
-		registerKeyword( "OPTION" );
-		registerKeyword( "OR" );
-		registerKeyword( "ORDER" );
-		registerKeyword( "OUT" );
-		registerKeyword( "OUTER" );
-		registerKeyword( "OUTPUT" );
-		registerKeyword( "OVERLAPS" );
-		registerKeyword( "PAD" );
-		registerKeyword( "PARTIAL" );
-		registerKeyword( "PREPARE" );
-		registerKeyword( "PRESERVE" );
-		registerKeyword( "PRIMARY" );
-		registerKeyword( "PRIOR" );
-		registerKeyword( "PRIVILEGES" );
-		registerKeyword( "PROCEDURE" );
-		registerKeyword( "PUBLIC" );
-		registerKeyword( "READ" );
-		registerKeyword( "REAL" );
-		registerKeyword( "REFERENCES" );
-		registerKeyword( "RELATIVE" );
-		registerKeyword( "RESTRICT" );
-		registerKeyword( "REVOKE" );
-		registerKeyword( "RIGHT" );
-		registerKeyword( "ROLLBACK" );
-		registerKeyword( "ROWS" );
-		registerKeyword( "RTRIM" );
-		registerKeyword( "SCHEMA" );
-		registerKeyword( "SCROLL" );
-		registerKeyword( "SECOND" );
-		registerKeyword( "SELECT" );
-		registerKeyword( "SESSION_USER" );
-		registerKeyword( "SET" );
-		registerKeyword( "SMALLINT" );
-		registerKeyword( "SOME" );
-		registerKeyword( "SPACE" );
-		registerKeyword( "SQL" );
-		registerKeyword( "SQLCODE" );
-		registerKeyword( "SQLERROR" );
-		registerKeyword( "SQLSTATE" );
-		registerKeyword( "SUBSTR" );
-		registerKeyword( "SUBSTRING" );
-		registerKeyword( "SUM" );
-		registerKeyword( "SYSTEM_USER" );
-		registerKeyword( "TABLE" );
-		registerKeyword( "TEMPORARY" );
-		registerKeyword( "TIMEZONE_HOUR" );
-		registerKeyword( "TIMEZONE_MINUTE" );
-		registerKeyword( "TO" );
-		registerKeyword( "TRAILING" );
-		registerKeyword( "TRANSACTION" );
-		registerKeyword( "TRANSLATE" );
-		registerKeyword( "TRANSLATION" );
-		registerKeyword( "TRUE" );
-		registerKeyword( "UNION" );
-		registerKeyword( "UNIQUE" );
-		registerKeyword( "UNKNOWN" );
-		registerKeyword( "UPDATE" );
-		registerKeyword( "UPPER" );
-		registerKeyword( "USER" );
-		registerKeyword( "USING" );
-		registerKeyword( "VALUES" );
-		registerKeyword( "VARCHAR" );
-		registerKeyword( "VARYING" );
-		registerKeyword( "VIEW" );
-		registerKeyword( "WHENEVER" );
-		registerKeyword( "WHERE" );
-		registerKeyword( "WITH" );
-		registerKeyword( "WORK" );
-		registerKeyword( "WRITE" );
-		registerKeyword( "XML" );
-		registerKeyword( "XMLEXISTS" );
-		registerKeyword( "XMLPARSE" );
-		registerKeyword( "XMLSERIALIZE" );
-		registerKeyword( "YEAR" );
+	@SPI({ USE, IMPLEMENT, SUPPLY })
+	protected void contributeKeywords(KeywordRegistration registration) {
+		super.contributeKeywords( registration );
+		registration.registerKeyword( "ADD" );
+		registration.registerKeyword( "ALL" );
+		registration.registerKeyword( "ALLOCATE" );
+		registration.registerKeyword( "ALTER" );
+		registration.registerKeyword( "AND" );
+		registration.registerKeyword( "ANY" );
+		registration.registerKeyword( "ARE" );
+		registration.registerKeyword( "AS" );
+		registration.registerKeyword( "ASC" );
+		registration.registerKeyword( "ASSERTION" );
+		registration.registerKeyword( "AT" );
+		registration.registerKeyword( "AUTHORIZATION" );
+		registration.registerKeyword( "AVG" );
+		registration.registerKeyword( "BEGIN" );
+		registration.registerKeyword( "BETWEEN" );
+		registration.registerKeyword( "BIT" );
+		registration.registerKeyword( "BOOLEAN" );
+		registration.registerKeyword( "BOTH" );
+		registration.registerKeyword( "BY" );
+		registration.registerKeyword( "CALL" );
+		registration.registerKeyword( "CASCADE" );
+		registration.registerKeyword( "CASCADED" );
+		registration.registerKeyword( "CASE" );
+		registration.registerKeyword( "CAST" );
+		registration.registerKeyword( "CHAR" );
+		registration.registerKeyword( "CHARACTER" );
+		registration.registerKeyword( "CHECK" );
+		registration.registerKeyword( "CLOSE" );
+		registration.registerKeyword( "COLLATE" );
+		registration.registerKeyword( "COLLATION" );
+		registration.registerKeyword( "COLUMN" );
+		registration.registerKeyword( "COMMIT" );
+		registration.registerKeyword( "CONNECT" );
+		registration.registerKeyword( "CONNECTION" );
+		registration.registerKeyword( "CONSTRAINT" );
+		registration.registerKeyword( "CONSTRAINTS" );
+		registration.registerKeyword( "CONTINUE" );
+		registration.registerKeyword( "CONVERT" );
+		registration.registerKeyword( "CORRESPONDING" );
+		registration.registerKeyword( "COUNT" );
+		registration.registerKeyword( "CREATE" );
+		registration.registerKeyword( "CURRENT" );
+		registration.registerKeyword( "CURRENT_DATE" );
+		registration.registerKeyword( "CURRENT_TIME" );
+		registration.registerKeyword( "CURRENT_TIMESTAMP" );
+		registration.registerKeyword( "CURRENT_USER" );
+		registration.registerKeyword( "CURSOR" );
+		registration.registerKeyword( "DEALLOCATE" );
+		registration.registerKeyword( "DEC" );
+		registration.registerKeyword( "DECIMAL" );
+		registration.registerKeyword( "DECLARE" );
+		registration.registerKeyword( "DEFERRABLE" );
+		registration.registerKeyword( "DEFERRED" );
+		registration.registerKeyword( "DELETE" );
+		registration.registerKeyword( "DESC" );
+		registration.registerKeyword( "DESCRIBE" );
+		registration.registerKeyword( "DIAGNOSTICS" );
+		registration.registerKeyword( "DISCONNECT" );
+		registration.registerKeyword( "DISTINCT" );
+		registration.registerKeyword( "DOUBLE" );
+		registration.registerKeyword( "DROP" );
+		registration.registerKeyword( "ELSE" );
+		registration.registerKeyword( "END" );
+		registration.registerKeyword( "ENDEXEC" );
+		registration.registerKeyword( "ESCAPE" );
+		registration.registerKeyword( "EXCEPT" );
+		registration.registerKeyword( "EXCEPTION" );
+		registration.registerKeyword( "EXEC" );
+		registration.registerKeyword( "EXECUTE" );
+		registration.registerKeyword( "EXISTS" );
+		registration.registerKeyword( "EXPLAIN" );
+		registration.registerKeyword( "EXTERNAL" );
+		registration.registerKeyword( "FALSE" );
+		registration.registerKeyword( "FETCH" );
+		registration.registerKeyword( "FIRST" );
+		registration.registerKeyword( "FLOAT" );
+		registration.registerKeyword( "FOR" );
+		registration.registerKeyword( "FOREIGN" );
+		registration.registerKeyword( "FOUND" );
+		registration.registerKeyword( "FROM" );
+		registration.registerKeyword( "FULL" );
+		registration.registerKeyword( "FUNCTION" );
+		registration.registerKeyword( "GET" );
+		registration.registerKeyword( "GET_CURRENT_CONNECTION" );
+		registration.registerKeyword( "GLOBAL" );
+		registration.registerKeyword( "GO" );
+		registration.registerKeyword( "GOTO" );
+		registration.registerKeyword( "GRANT" );
+		registration.registerKeyword( "GROUP" );
+		registration.registerKeyword( "HAVING" );
+		registration.registerKeyword( "HOUR" );
+		registration.registerKeyword( "IDENTITY" );
+		registration.registerKeyword( "IMMEDIATE" );
+		registration.registerKeyword( "IN" );
+		registration.registerKeyword( "INDICATOR" );
+		registration.registerKeyword( "INITIALLY" );
+		registration.registerKeyword( "INNER" );
+		registration.registerKeyword( "INOUT" );
+		registration.registerKeyword( "INPUT" );
+		registration.registerKeyword( "INSENSITIVE" );
+		registration.registerKeyword( "INSERT" );
+		registration.registerKeyword( "INT" );
+		registration.registerKeyword( "INTEGER" );
+		registration.registerKeyword( "INTERSECT" );
+		registration.registerKeyword( "INTO" );
+		registration.registerKeyword( "IS" );
+		registration.registerKeyword( "ISOLATION" );
+		registration.registerKeyword( "JOIN" );
+		registration.registerKeyword( "KEY" );
+		registration.registerKeyword( "LAST" );
+		registration.registerKeyword( "LEFT" );
+		registration.registerKeyword( "LIKE" );
+		registration.registerKeyword( "LONGINT" );
+		registration.registerKeyword( "LOWER" );
+		registration.registerKeyword( "LTRIM" );
+		registration.registerKeyword( "MATCH" );
+		registration.registerKeyword( "MAX" );
+		registration.registerKeyword( "MIN" );
+		registration.registerKeyword( "MINUTE" );
+		registration.registerKeyword( "NATIONAL" );
+		registration.registerKeyword( "NATURAL" );
+		registration.registerKeyword( "NCHAR" );
+		registration.registerKeyword( "NVARCHAR" );
+		registration.registerKeyword( "NEXT" );
+		registration.registerKeyword( "NO" );
+		registration.registerKeyword( "NOT" );
+		registration.registerKeyword( "NULL" );
+		registration.registerKeyword( "NULLIF" );
+		registration.registerKeyword( "NUMERIC" );
+		registration.registerKeyword( "OF" );
+		registration.registerKeyword( "ON" );
+		registration.registerKeyword( "ONLY" );
+		registration.registerKeyword( "OPEN" );
+		registration.registerKeyword( "OPTION" );
+		registration.registerKeyword( "OR" );
+		registration.registerKeyword( "ORDER" );
+		registration.registerKeyword( "OUT" );
+		registration.registerKeyword( "OUTER" );
+		registration.registerKeyword( "OUTPUT" );
+		registration.registerKeyword( "OVERLAPS" );
+		registration.registerKeyword( "PAD" );
+		registration.registerKeyword( "PARTIAL" );
+		registration.registerKeyword( "PREPARE" );
+		registration.registerKeyword( "PRESERVE" );
+		registration.registerKeyword( "PRIMARY" );
+		registration.registerKeyword( "PRIOR" );
+		registration.registerKeyword( "PRIVILEGES" );
+		registration.registerKeyword( "PROCEDURE" );
+		registration.registerKeyword( "PUBLIC" );
+		registration.registerKeyword( "READ" );
+		registration.registerKeyword( "REAL" );
+		registration.registerKeyword( "REFERENCES" );
+		registration.registerKeyword( "RELATIVE" );
+		registration.registerKeyword( "RESTRICT" );
+		registration.registerKeyword( "REVOKE" );
+		registration.registerKeyword( "RIGHT" );
+		registration.registerKeyword( "ROLLBACK" );
+		registration.registerKeyword( "ROWS" );
+		registration.registerKeyword( "RTRIM" );
+		registration.registerKeyword( "SCHEMA" );
+		registration.registerKeyword( "SCROLL" );
+		registration.registerKeyword( "SECOND" );
+		registration.registerKeyword( "SELECT" );
+		registration.registerKeyword( "SESSION_USER" );
+		registration.registerKeyword( "SET" );
+		registration.registerKeyword( "SMALLINT" );
+		registration.registerKeyword( "SOME" );
+		registration.registerKeyword( "SPACE" );
+		registration.registerKeyword( "SQL" );
+		registration.registerKeyword( "SQLCODE" );
+		registration.registerKeyword( "SQLERROR" );
+		registration.registerKeyword( "SQLSTATE" );
+		registration.registerKeyword( "SUBSTR" );
+		registration.registerKeyword( "SUBSTRING" );
+		registration.registerKeyword( "SUM" );
+		registration.registerKeyword( "SYSTEM_USER" );
+		registration.registerKeyword( "TABLE" );
+		registration.registerKeyword( "TEMPORARY" );
+		registration.registerKeyword( "TIMEZONE_HOUR" );
+		registration.registerKeyword( "TIMEZONE_MINUTE" );
+		registration.registerKeyword( "TO" );
+		registration.registerKeyword( "TRAILING" );
+		registration.registerKeyword( "TRANSACTION" );
+		registration.registerKeyword( "TRANSLATE" );
+		registration.registerKeyword( "TRANSLATION" );
+		registration.registerKeyword( "TRUE" );
+		registration.registerKeyword( "UNION" );
+		registration.registerKeyword( "UNIQUE" );
+		registration.registerKeyword( "UNKNOWN" );
+		registration.registerKeyword( "UPDATE" );
+		registration.registerKeyword( "UPPER" );
+		registration.registerKeyword( "USER" );
+		registration.registerKeyword( "USING" );
+		registration.registerKeyword( "VALUES" );
+		registration.registerKeyword( "VARCHAR" );
+		registration.registerKeyword( "VARYING" );
+		registration.registerKeyword( "VIEW" );
+		registration.registerKeyword( "WHENEVER" );
+		registration.registerKeyword( "WHERE" );
+		registration.registerKeyword( "WITH" );
+		registration.registerKeyword( "WORK" );
+		registration.registerKeyword( "WRITE" );
+		registration.registerKeyword( "XML" );
+		registration.registerKeyword( "XMLEXISTS" );
+		registration.registerKeyword( "XMLPARSE" );
+		registration.registerKeyword( "XMLSERIALIZE" );
+		registration.registerKeyword( "YEAR" );
 	}
 
 	@Override
-	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(
-			EntityMappingType rootEntityDescriptor,
-			RuntimeModelCreationContext runtimeModelCreationContext) {
-		return new LocalTemporaryTableMutationStrategy( rootEntityDescriptor, runtimeModelCreationContext );
-	}
-
-	@Override
-	public SqmMultiTableInsertStrategy getFallbackSqmInsertStrategy(
-			EntityMappingType rootEntityDescriptor,
-			RuntimeModelCreationContext runtimeModelCreationContext) {
-		return new LocalTemporaryTableInsertStrategy( rootEntityDescriptor, runtimeModelCreationContext );
-	}
-
-	@Override
-	public TemporaryTableKind getSupportedTemporaryTableKind() {
-		return TemporaryTableKind.LOCAL;
+	public MultiTableMutationSupport getMultiTableMutationSupport() {
+		return MultiTableMutationSupport.LOCAL_TEMPORARY_TABLE;
 	}
 
 	@Override
@@ -969,86 +933,51 @@ public class DerbyLegacyDialect extends Dialect {
 	}
 
 	@Override
-	public String getTemporaryTableCreateOptions() {
-		return DerbyLocalTemporaryTableStrategy.INSTANCE.getTemporaryTableCreateOptions();
-	}
-
-	@Override
-	public String getTemporaryTableCreateCommand() {
-		return DerbyLocalTemporaryTableStrategy.INSTANCE.getTemporaryTableCreateCommand();
-	}
-
-	@Override
-	public BeforeUseAction getTemporaryTableBeforeUseAction() {
-		return DerbyLocalTemporaryTableStrategy.INSTANCE.getTemporaryTableBeforeUseAction();
-	}
-
-	@Override
-	public boolean supportsTemporaryTablePrimaryKey() {
-		return DerbyLocalTemporaryTableStrategy.INSTANCE.supportsTemporaryTablePrimaryKey();
-	}
-
-	@Override
-	public boolean supportsPartitionBy() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsWindowFunctions() {
+	public WindowFunctionSupport getWindowFunctionSupport() {
 		// It seems at least the row_number function is supported as of 10.4
-		return getVersion().isSameOrAfter( 10, 4 );
+		return getVersion().isBefore( 10, 4 )
+				? WindowFunctionSupport.NONE
+				: WindowFunctionSupport.builder()
+						.features( WindowFunctionSupport.Feature.WINDOW_FUNCTIONS )
+						.build();
 	}
 
 	@Override
-	public boolean supportsValuesList() {
-		return true;
+	public ValuesListSupport getValuesListSupport() {
+		return ValuesListSupport.STANDARD;
 	}
 
 	@Override
-	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, DatabaseMetaData metadata)
-			throws SQLException {
+	@SPI({ USE, IMPLEMENT, SUPPLY })
+	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuildRequest request) {
+		final var builder = request.builder();
 		builder.setAutoQuoteInitialUnderscore(true);
-		return super.buildIdentifierHelper(builder, metadata );
+		return super.buildIdentifierHelper( request );
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT, SUPPLY })
 	public DmlTargetColumnQualifierSupport getDmlTargetColumnQualifierSupport() {
 		return DmlTargetColumnQualifierSupport.TABLE_ALIAS;
 	}
 
 	@Override
-	public String getDual() {
-		return "(values 0)";
+	public SingleRowTableSupport getSingleRowTableSupport() {
+		final String tableExpression = "(values 0)";
+		return SingleRowTableSupport.builder( super.getSingleRowTableSupport() )
+				.tableExpression( tableExpression )
+				.selectOnlyFromClause( " from " + tableExpression + " dual" )
+				.build();
 	}
 
 	@Override
-	public String getFromDualForSelectOnly() {
-		return " from " + getDual() + " dual";
+	public RowValueSupport getRowValueSupport() {
+		return RowValueSupport.NONE;
 	}
 
 	@Override
-	public boolean supportsJoinInMutationStatementSubquery() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsRowValueConstructorSyntax() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsWithClause() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsRowValueConstructorSyntaxInInList() {
-		return false;
+	public CteSupport getCteSupport() {
+		return CteSupport.NONE;
 	}
 
 }

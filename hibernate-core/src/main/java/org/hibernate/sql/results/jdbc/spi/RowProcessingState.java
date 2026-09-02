@@ -5,7 +5,7 @@
 package org.hibernate.sql.results.jdbc.spi;
 
 import org.hibernate.LockMode;
-import org.hibernate.sql.ast.spi.SqlSelection;
+import org.hibernate.sql.ast.spi.query.select.SqlSelection;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.results.graph.InitializerData;
 import org.hibernate.sql.results.graph.entity.EntityFetch;
@@ -16,7 +16,52 @@ import org.hibernate.sql.results.spi.RowReader;
  *
  * @author Steve Ebersole
  */
+@org.hibernate.SPI({ org.hibernate.SPI.Role.USE, org.hibernate.SPI.Role.IMPLEMENT })
 public interface RowProcessingState extends ExecutionContext {
+	/// Advance to the next row.
+	/// @since 8.0
+	boolean next();
+
+	/// Move to the previous row.
+	/// @since 8.0
+	boolean previous();
+
+	/// Move by the given relative number of rows.
+	/// @since 8.0
+	boolean scroll(int numberOfRows);
+
+	/// Move to the given absolute position.
+	/// @since 8.0
+	boolean position(int position);
+
+	/// Obtain the current row position.
+	/// @since 8.0
+	int getPosition();
+
+	/// Move before the first row.
+	/// @since 8.0
+	void beforeFirst();
+
+	/// Move to the first row.
+	/// @since 8.0
+	boolean first();
+
+	/// Move to the last row.
+	/// @since 8.0
+	boolean last();
+
+	/// Move after the last row.
+	/// @since 8.0
+	void afterLast();
+
+	/// Whether the cursor is on the first row.
+	/// @since 8.0
+	boolean isFirst();
+
+	/// Whether the cursor is on the last row.
+	/// @since 8.0
+	boolean isLast();
+
 	/**
 	 * Access to the state related to the overall processing of the results.
 	 */

@@ -58,6 +58,7 @@ public interface StateManagement {
 	/// Auxiliary mappings are rooted in the mapping model.  Legacy-only mutation
 	/// behavior is exposed separately through
 	/// [org.hibernate.metamodel.mapping.LegacyAuxiliaryMutationSupport].
+	@org.hibernate.Internal
 	AuxiliaryMapping createAuxiliaryMapping(
 			EntityPersister persister,
 			RootClass bootDescriptor,
@@ -70,6 +71,7 @@ public interface StateManagement {
 	/// Auxiliary mappings are rooted in the mapping model.  Legacy-only mutation
 	/// behavior is exposed separately through
 	/// [org.hibernate.metamodel.mapping.LegacyAuxiliaryMutationSupport].
+	@org.hibernate.Internal
 	AuxiliaryMapping createAuxiliaryMapping(
 			PluralAttributeMapping pluralAttributeMapping,
 			Collection bootDescriptor,

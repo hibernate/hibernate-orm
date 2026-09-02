@@ -13,7 +13,7 @@ import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.ValuedModelPart;
 import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
-import org.hibernate.metamodel.mapping.internal.SingleAttributeIdentifierMapping;
+import org.hibernate.metamodel.mapping.SingleAttributeIdentifierMapping;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.BasicPluralJavaType;
@@ -33,6 +33,7 @@ import static org.hibernate.type.descriptor.jdbc.StructHelper.getSubPart;
 /**
  * Stateless helper class to serialize managed type values to JSON.
  */
+@org.hibernate.Internal
 public class JsonGeneratingVisitor {
 
 	public static final JsonGeneratingVisitor INSTANCE = new JsonGeneratingVisitor();

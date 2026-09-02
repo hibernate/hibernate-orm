@@ -14,6 +14,7 @@ import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.dialect.HANADialect;
+import org.hibernate.dialect.lock.internal.LockingSqlRewriterSupport;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
@@ -82,24 +83,37 @@ public class HANADialectTestCase {
 
 		Map<String, String[]> keyColumns = new HashMap<>();
 
-		String sqlWithLock = dialect.applyLocksToSql( sql, lockOptions, new HashMap<>() );
+		String sqlWithLock = rewriteSql( dialect, sql, lockOptions, new HashMap<>() );
 		assertEquals( sql + " for update wait 2", sqlWithLock );
 
 		lockOptions.setTimeOut( 0 );
-		sqlWithLock = dialect.applyLocksToSql( sql, lockOptions, new HashMap<>() );
+		sqlWithLock = rewriteSql( dialect, sql, lockOptions, new HashMap<>() );
 		assertEquals( sql + " for update nowait", sqlWithLock );
 
 		lockOptions.setTimeOut( 500 );
-		sqlWithLock = dialect.applyLocksToSql( sql, lockOptions, new HashMap<>() );
+		sqlWithLock = rewriteSql( dialect, sql, lockOptions, new HashMap<>() );
 		assertEquals( sql + " for update wait 1", sqlWithLock );
 
 		lockOptions.setTimeOut( 1500 );
-		sqlWithLock = dialect.applyLocksToSql( sql, lockOptions, new HashMap<>() );
+		sqlWithLock = rewriteSql( dialect, sql, lockOptions, new HashMap<>() );
 		assertEquals( sql + " for update wait 2", sqlWithLock );
 
 		lockOptions.setLockMode( LockMode.PESSIMISTIC_READ );
 		keyColumns.put( "dummy", new String[]{ "dummy" } );
-		sqlWithLock = dialect.applyLocksToSql( sql, lockOptions, keyColumns );
+		sqlWithLock = rewriteSql( dialect, sql, lockOptions, keyColumns );
 		assertEquals( sql + " for update of dummy.dummy wait 2", sqlWithLock );
+	}
+
+	private static String rewriteSql(
+			HANADialect dialect,
+			String sql,
+			LockOptions lockOptions,
+			Map<String, String[]> keyColumns) {
+		return LockingSqlRewriterSupport.rewrite(
+				dialect.getLockingSupport(),
+				sql,
+				lockOptions,
+				keyColumns
+		).sql();
 	}
 }

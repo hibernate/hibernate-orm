@@ -4,6 +4,7 @@
  */
 package org.hibernate.spatial.dialect.mysql;
 
+
 /**
  * Spatial Dialect for MySQL 5.6 with InnoDB engine.
  *

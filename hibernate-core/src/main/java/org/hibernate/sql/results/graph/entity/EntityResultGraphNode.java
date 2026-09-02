@@ -20,6 +20,7 @@ import org.hibernate.type.descriptor.java.JavaType;
  *
  * @author Steve Ebersole
  */
+@org.hibernate.SPI({ org.hibernate.SPI.Role.USE, org.hibernate.SPI.Role.IMPLEMENT })
 public interface EntityResultGraphNode extends DomainResultGraphNode, FetchParent {
 	@Override
 	NavigablePath getNavigablePath();

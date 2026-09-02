@@ -6,8 +6,6 @@ package org.hibernate.mapping;
 
 import java.util.Objects;
 
-import org.hibernate.dialect.Dialect;
-
 /**
  * Represents a table or column level {@code check} constraint.
  *
@@ -67,10 +65,6 @@ public class CheckConstraint {
 
 	public void setOptions(String options) {
 		this.options = options;
-	}
-
-	public String constraintString(Dialect dialect) {
-		return dialect.getCheckConstraintString( this );
 	}
 
 	@Override

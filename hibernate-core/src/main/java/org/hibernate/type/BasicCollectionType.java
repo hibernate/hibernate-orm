@@ -4,6 +4,8 @@
  */
 package org.hibernate.type;
 
+import org.hibernate.SPI;
+
 import java.util.Collection;
 import java.util.Objects;
 
@@ -19,6 +21,7 @@ import static org.hibernate.type.BasicArrayType.determineElementTypeName;
  *
  * @author Christian Beikov
  */
+@SPI
 public class BasicCollectionType<C extends Collection<E>, E>
 		extends AbstractSingleColumnStandardBasicType<C>
 		implements AdjustableBasicType<C>, BasicPluralType<C, E> {

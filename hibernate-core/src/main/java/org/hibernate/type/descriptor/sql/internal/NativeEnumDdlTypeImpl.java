@@ -4,6 +4,8 @@
  */
 package org.hibernate.type.descriptor.sql.internal;
 
+import java.util.function.IntFunction;
+
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.metamodel.mapping.SqlExpressible;
@@ -19,7 +21,7 @@ import static org.hibernate.type.SqlTypes.ENUM;
  * may be treated as {@code varchar} for most purposes.
  *
  * @see org.hibernate.type.SqlTypes#ENUM
- * @see Dialect#getEnumTypeDeclaration(Class)
+ * @see Dialect#getEnumSupport()
  *
  * @author Gavin King
  */
@@ -27,9 +29,24 @@ import static org.hibernate.type.SqlTypes.ENUM;
 public class NativeEnumDdlTypeImpl implements DdlType {
 	private static final String[] ENUM_KEYWORD = {"enum"};
 	private final Dialect dialect;
+	private final String castTypeName;
+	private final IntFunction<String> parameterizedCastTypeName;
 
 	public NativeEnumDdlTypeImpl(Dialect dialect) {
+		this( dialect, "varchar", null );
+	}
+
+	public NativeEnumDdlTypeImpl(Dialect dialect, IntFunction<String> parameterizedCastTypeName) {
+		this( dialect, "varchar", parameterizedCastTypeName );
+	}
+
+	public NativeEnumDdlTypeImpl(
+			Dialect dialect,
+			String castTypeName,
+			IntFunction<String> parameterizedCastTypeName) {
 		this.dialect = dialect;
+		this.castTypeName = castTypeName;
+		this.parameterizedCastTypeName = parameterizedCastTypeName;
 	}
 
 	@Override
@@ -41,7 +58,7 @@ public class NativeEnumDdlTypeImpl implements DdlType {
 	public String getTypeName(Size columnSize, Type type, DdlTypeRegistry ddlTypeRegistry) {
 		return type == null
 				? "varchar(" + columnSize.getLength() + ")"
-				: dialect.getEnumTypeDeclaration(
+				: dialect.getEnumSupport().getTypeDeclaration(
 						type.getReturnedClass().getSimpleName(),
 						EnumHelper.getEnumeratedValues( type )
 				);
@@ -54,10 +71,13 @@ public class NativeEnumDdlTypeImpl implements DdlType {
 
 	@Override
 	public String getCastTypeName(Size columnSize, SqlExpressible type, DdlTypeRegistry ddlTypeRegistry) {
-		return castTypeName( columnSize.getLength() );
+		final Long length = columnSize.getLength();
+		return length != null && parameterizedCastTypeName != null
+				? parameterizedCastTypeName.apply( Math.toIntExact( length ) )
+				: castTypeName( length );
 	}
 
 	private String castTypeName(Long length) {
-		return length == null ? "varchar" : "varchar(" + length + ")";
+		return length == null ? castTypeName : "varchar(" + length + ")";
 	}
 }

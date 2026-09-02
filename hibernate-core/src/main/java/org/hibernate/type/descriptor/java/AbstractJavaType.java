@@ -10,41 +10,35 @@ import java.util.Comparator;
 import java.util.Objects;
 
 import org.hibernate.HibernateException;
+import org.hibernate.SPI;
 import org.hibernate.internal.util.compare.ComparableComparator;
 
-/**
- * Abstract adapter for Java type descriptors.
- *
- * @apiNote This abstract descriptor implements BasicJavaType
- * because we currently only categorize "basic" JavaTypes,
- * as in the {@link jakarta.persistence.metamodel.Type.PersistenceType#BASIC}
- * sense
- *
- * @author Steve Ebersole
- */
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.USE;
+
+/// Base adapter for a basic [JavaType] identified by a reflective [Type].
+///
+/// Use this base when the represented Java type is not most naturally modeled
+/// by a `Class`; otherwise prefer [AbstractClassJavaType].
+///
+/// @param <T> the represented Java value type
+/// @author Steve Ebersole
+@SPI({ USE, IMPLEMENT })
 public abstract class AbstractJavaType<T> implements BasicJavaType<T>, Serializable {
 	private final Type type;
 	private final MutabilityPlan<T> mutabilityPlan;
 	private final Comparator<T> comparator;
 
-	/**
-	 * Initialize a type descriptor for the given type.  Assumed immutable.
-	 *
-	 * @param type The Java type.
-	 *
-	 * @see #AbstractJavaType(Type, MutabilityPlan)
-	 */
+	/// Initialize an immutable descriptor for the given Java type.
+	/// @see #AbstractJavaType(Type, MutabilityPlan)
+	@SPI(IMPLEMENT)
 	protected AbstractJavaType(Type type) {
 		this( type, ImmutableMutabilityPlan.instance() );
 	}
 
-	/**
-	 * Initialize a type descriptor for the given type.  Assumed immutable.
-	 *
-	 * @param type The Java type.
-	 * @param mutabilityPlan The plan for handling mutability aspects of the java type.
-	 */
+	/// Initialize a descriptor with explicit mutability semantics.
 	@SuppressWarnings("unchecked")
+	@SPI(IMPLEMENT)
 	protected AbstractJavaType(Type type, MutabilityPlan<T> mutabilityPlan) {
 		this.type = type;
 		this.mutabilityPlan = mutabilityPlan;

@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.procedure;
 
+
 import java.sql.CallableStatement;
 import java.sql.Timestamp;
 import java.sql.Types;

@@ -4,6 +4,8 @@
  */
 package org.hibernate.persister.entity;
 
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
+
 import jakarta.persistence.PessimisticLockScope;
 import jakarta.annotation.Nullable;
 import jakarta.annotation.Nonnull;
@@ -43,7 +45,8 @@ import org.hibernate.cache.spi.entry.UnstructuredCacheEntry;
 import org.hibernate.cascade.spi.CascadePropertySelection;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.lock.LockingStrategy;
+import org.hibernate.dialect.lock.internal.EntityLockingStrategyRequestImpl;
+import org.hibernate.dialect.lock.spi.LockingStrategy;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.OptimisticLockStyle;
@@ -71,7 +74,7 @@ import org.hibernate.id.BulkInsertionCapableIdentifierGenerator;
 import org.hibernate.id.CompositeNestedGeneratedValueGenerator;
 import org.hibernate.id.OptimizableGenerator;
 import org.hibernate.internal.util.ImmutableBitSet;
-import org.hibernate.internal.util.IndexedConsumer;
+import org.hibernate.spi.IndexedConsumer;
 import org.hibernate.internal.util.collections.LockModeEnumMap;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.loader.ast.internal.EntityConcreteTypeLoader;
@@ -162,7 +165,7 @@ import org.hibernate.action.queue.internal.decompose.entity.InsertDecomposer;
 import org.hibernate.persister.entity.mutation.UpdateCoordinator;
 import org.hibernate.action.queue.internal.decompose.entity.UpdateDecomposer;
 import org.hibernate.persister.filter.internal.FilterHelper;
-import org.hibernate.persister.internal.SqlFragmentPredicate;
+import org.hibernate.sql.ast.spi.query.predicate.SqlFragmentPredicate;
 import org.hibernate.persister.state.spi.StateManagement;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.PropertyAccess;
@@ -180,36 +183,36 @@ import org.hibernate.sql.Alias;
 import org.hibernate.sql.InFragment;
 import org.hibernate.sql.SimpleSelect;
 import org.hibernate.sql.Template;
-import org.hibernate.sql.ast.spi.SimpleFromClauseAccessImpl;
-import org.hibernate.sql.ast.spi.SqlAliasBase;
-import org.hibernate.sql.ast.spi.SqlAliasBaseConstant;
-import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
-import org.hibernate.sql.ast.spi.SqlAliasStemHelper;
-import org.hibernate.sql.ast.spi.SqlAstCreationState;
-import org.hibernate.sql.ast.spi.SqlSelection;
-import org.hibernate.sql.ast.tree.expression.AliasedExpression;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
-import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.QueryLiteral;
-import org.hibernate.sql.ast.tree.from.AuxiliaryTableReference;
-import org.hibernate.sql.ast.tree.from.NamedTableReference;
-import org.hibernate.sql.ast.tree.from.StandardTableGroup;
-import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.from.TableReference;
-import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
-import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
-import org.hibernate.sql.ast.tree.predicate.InListPredicate;
-import org.hibernate.sql.ast.tree.predicate.Junction;
-import org.hibernate.sql.ast.tree.predicate.NullnessPredicate;
-import org.hibernate.sql.ast.tree.predicate.Predicate;
-import org.hibernate.sql.ast.tree.select.QuerySpec;
-import org.hibernate.sql.ast.tree.select.SelectStatement;
+import org.hibernate.sql.ast.spi.creation.SimpleFromClauseAccessImpl;
+import org.hibernate.sql.ast.spi.creation.SqlAliasBase;
+import org.hibernate.sql.ast.spi.creation.SqlAliasBaseConstant;
+import org.hibernate.sql.ast.spi.creation.SqlAliasBaseManager;
+import org.hibernate.sql.ast.spi.creation.SqlAliasStemHelper;
+import org.hibernate.sql.ast.spi.creation.SqlAstCreationState;
+import org.hibernate.sql.ast.spi.query.select.SqlSelection;
+import org.hibernate.sql.ast.spi.query.expression.AliasedExpression;
+import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
+import org.hibernate.sql.ast.spi.query.expression.Expression;
+import org.hibernate.sql.ast.spi.query.expression.QueryLiteral;
+import org.hibernate.sql.ast.spi.query.from.AuxiliaryTableReference;
+import org.hibernate.sql.ast.spi.query.from.NamedTableReference;
+import org.hibernate.sql.ast.spi.query.from.StandardTableGroup;
+import org.hibernate.sql.ast.spi.query.from.TableGroup;
+import org.hibernate.sql.ast.spi.query.from.TableReference;
+import org.hibernate.sql.ast.spi.query.from.TableReferenceJoin;
+import org.hibernate.sql.ast.spi.query.predicate.ComparisonPredicate;
+import org.hibernate.sql.ast.spi.query.predicate.InListPredicate;
+import org.hibernate.sql.ast.spi.query.predicate.Junction;
+import org.hibernate.sql.ast.spi.query.predicate.NullnessPredicate;
+import org.hibernate.sql.ast.spi.query.predicate.Predicate;
+import org.hibernate.sql.ast.spi.query.select.QuerySpec;
+import org.hibernate.sql.ast.spi.query.select.SelectStatement;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
-import org.hibernate.sql.model.MutationType;
-import org.hibernate.sql.model.TableMapping;
-import org.hibernate.sql.model.ast.builder.MutationGroupBuilder;
-import org.hibernate.sql.model.ast.builder.TableInsertBuilder;
-import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
+import org.hibernate.sql.spi.mutation.MutationType;
+import org.hibernate.sql.spi.mutation.TableMapping;
+import org.hibernate.sql.ast.spi.model.builder.MutationGroupBuilder;
+import org.hibernate.sql.ast.spi.model.builder.TableInsertBuilder;
+import org.hibernate.sql.spi.mutation.jdbc.JdbcMutationOperation;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.FetchParent;
@@ -298,7 +301,7 @@ import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelpe
 import static org.hibernate.metamodel.mapping.internal.MappingModelHelper.isCompatibleModelPart;
 import static org.hibernate.pretty.MessageHelper.infoString;
 import static org.hibernate.spi.NavigablePath.IDENTIFIER_MAPPER_PROPERTY;
-import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnReferenceKey;
+import static org.hibernate.sql.ast.spi.creation.SqlExpressionResolver.createColumnReferenceKey;
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
 
 /**
@@ -559,7 +562,7 @@ public abstract class AbstractEntityPersister
 
 		final var rootTable = persistentClass.getRootTable();
 		final String rowId = rootTable.getRowId();
-		rowIdName = rowId == null ? null : dialect.rowId( rowId );
+		rowIdName = rowId == null ? null : dialect.getRowIdSupport().resolveExpression( rowId );
 
 		queryLoaderName = persistentClass.getLoaderName();
 
@@ -2054,7 +2057,7 @@ public abstract class AbstractEntityPersister
 
 		final String sql =
 				getDialect().getSqlAstTranslatorFactory()
-						.buildSelectTranslator( getFactory(), new SelectStatement( rootQuerySpec ) )
+						.buildTranslator( new SqlAstTranslationRequest.Select( getFactory(), new SelectStatement( rootQuerySpec ) ) )
 						.translate( null, QueryOptions.NONE )
 						.getSqlString();
 		final int fromIndex = sql.lastIndexOf( " from" );
@@ -2345,7 +2348,16 @@ public abstract class AbstractEntityPersister
 	}
 
 	protected LockingStrategy generateLocker(LockMode lockMode, PessimisticLockScope lockScope) {
-		return getDialect().getLockingStrategy( this, lockMode, lockScope );
+		final var factory = Objects.requireNonNull(
+				getDialect().getEntityLockingStrategyFactory(),
+				"Dialect returned a null entity locking strategy factory"
+		);
+		return Objects.requireNonNull(
+				factory.createStrategy(
+						new EntityLockingStrategyRequestImpl( this, lockMode, lockScope )
+				),
+				"Entity locking strategy factory returned null"
+		);
 	}
 
 	// Used by Hibernate Reactive
@@ -5644,7 +5656,7 @@ public abstract class AbstractEntityPersister
 		}
 		return creationProcess.getCreationContext().getServiceRegistry()
 				.requireService( SqmMultiTableMutationStrategyProvider.class )
-				.createMutationStrategy( entityMappingDescriptor, creationProcess );
+				.createMutationStrategy( entityMappingDescriptor, creationProcess.getCreationContext() );
 	}
 
 	protected static SqmMultiTableInsertStrategy interpretSqmMultiTableInsertStrategy(
@@ -5652,7 +5664,7 @@ public abstract class AbstractEntityPersister
 			MappingModelCreationProcess creationProcess) {
 		return creationProcess.getCreationContext().getServiceRegistry()
 				.requireService( SqmMultiTableMutationStrategyProvider.class )
-				.createInsertStrategy( entityMappingDescriptor, creationProcess );
+				.createInsertStrategy( entityMappingDescriptor, creationProcess.getCreationContext() );
 	}
 
 	@Override

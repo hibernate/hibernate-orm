@@ -4,52 +4,50 @@
  */
 package org.hibernate.community.dialect;
 
-import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.util.collections.Stack;
+import org.hibernate.dialect.sql.ast.spi.DmlTargetColumnQualifierSupport;
+import org.hibernate.dialect.sql.ast.spi.DerivedTableRenderingSupport;
+import org.hibernate.dialect.sql.ast.spi.StandardDerivedTableRenderingSupport;
+import org.hibernate.dialect.sql.ast.spi.PaginationRenderingPlan;
+import org.hibernate.dialect.sql.ast.spi.PaginationRenderingSupport;
+import org.hibernate.query.common.FetchClauseType;
 import org.hibernate.query.sqm.ComparisonOperator;
-import org.hibernate.sql.ast.Clause;
-import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
-import org.hibernate.sql.ast.spi.SqlSelection;
-import org.hibernate.sql.ast.tree.MutationStatement;
-import org.hibernate.sql.ast.tree.Statement;
-import org.hibernate.sql.ast.tree.delete.DeleteStatement;
-import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
-import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.SqlTuple;
-import org.hibernate.sql.ast.tree.from.DerivedTableReference;
-import org.hibernate.sql.ast.tree.from.QueryPartTableReference;
-import org.hibernate.sql.ast.tree.from.ValuesTableReference;
-import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
-import org.hibernate.sql.ast.tree.select.QueryGroup;
-import org.hibernate.sql.ast.tree.select.QueryPart;
-import org.hibernate.sql.ast.tree.select.QuerySpec;
-import org.hibernate.sql.ast.tree.update.UpdateStatement;
+import org.hibernate.sql.ast.spi.translation.Clause;
+import org.hibernate.dialect.sql.ast.spi.AbstractSqlAstTranslator;
+import org.hibernate.sql.ast.spi.query.select.SqlSelection;
+import org.hibernate.sql.ast.spi.query.MutationStatement;
+import org.hibernate.sql.ast.spi.Statement;
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
+import org.hibernate.sql.ast.spi.query.delete.DeleteStatement;
+import org.hibernate.sql.ast.spi.query.expression.BinaryArithmeticExpression;
+import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
+import org.hibernate.sql.ast.spi.query.expression.Expression;
+import org.hibernate.sql.ast.spi.query.expression.SqlTuple;
+import org.hibernate.sql.ast.spi.query.insert.InsertSelectStatement;
+import org.hibernate.sql.ast.spi.query.update.UpdateStatement;
+import org.hibernate.sql.ast.spi.model.TableInsertStandard;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 
 import java.util.List;
 
 public class InterSystemsIRISSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstTranslator<T> {
 
-	protected InterSystemsIRISSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
-		super( sessionFactory, statement );
+	protected InterSystemsIRISSqlAstTranslator(SqlAstTranslationRequest<? extends Statement, T> request) {
+		super( request );
+	}
+
+	@Override
+	protected void renderInsertIntoNoColumns(TableInsertStandard tableInsert) {
+		renderIntoIntoAndTable( tableInsert );
+		appendSql( "default values" );
 	}
 
 
 	@Override
 	protected void renderDeleteClause(DeleteStatement statement) {
 		appendSql( "delete" );
-		final Stack<Clause> clauseStack = getClauseStack();
-		try {
-			clauseStack.push( Clause.DELETE );
-			appendSql( " from " );
-			renderDmlTargetTableExpression( statement.getTargetTable() );
-			renderTableReferenceIdentificationVariable( statement.getTargetTable() );
-		}
-		finally {
-			clauseStack.pop();
-		}
+		appendSql( " from " );
+		renderDmlTargetTableExpression( statement.getTargetTable() );
+		renderTableReferenceIdentificationVariable( statement.getTargetTable() );
 	}
 
 
@@ -97,23 +95,16 @@ public class InterSystemsIRISSqlAstTranslator<T extends JdbcOperation> extends A
 	}
 
 	@Override
-	public void visitValuesTableReference(ValuesTableReference tableReference) {
-		emulateValuesTableReferenceColumnAliasing( tableReference );
+	protected DerivedTableRenderingSupport getDerivedTableRenderingSupport() {
+		return StandardDerivedTableRenderingSupport.QUERY_AND_VALUES_SELECT_LIST;
 	}
 
 	@Override
 	protected void renderUpdateClause(UpdateStatement updateStatement) {
 		appendSql( "update" );
-		final Stack<Clause> clauseStack = getClauseStack();
-		try {
-			clauseStack.push( Clause.UPDATE );
-			append( WHITESPACE );
-			renderDmlTargetTableExpression( updateStatement.getTargetTable() );
-			renderTableReferenceIdentificationVariable( updateStatement.getTargetTable() );
-		}
-		finally {
-			clauseStack.pop();
-		}
+		append( WHITESPACE );
+		renderDmlTargetTableExpression( updateStatement.getTargetTable() );
+		renderTableReferenceIdentificationVariable( updateStatement.getTargetTable() );
 	}
 
 
@@ -151,43 +142,14 @@ public class InterSystemsIRISSqlAstTranslator<T extends JdbcOperation> extends A
 	}
 
 	@Override
-	public void visitQueryGroup(QueryGroup queryGroup) {
-		if ( shouldEmulateFetchClause( queryGroup ) ) {
-			emulateFetchOffsetWithWindowFunctions( queryGroup, true );
-		}
-		else {
-			super.visitQueryGroup( queryGroup );
-		}
+	protected PaginationRenderingSupport getPaginationRenderingSupport() {
+		return request -> request.fetchClauseType() != null
+				&& request.fetchClauseType() != FetchClauseType.ROWS_ONLY
+				&& !getDialect().getFetchClauseSupport().supports( request.fetchClauseType() )
+				? new PaginationRenderingPlan.Window( true )
+				: new PaginationRenderingPlan.OffsetFetch( true );
 	}
 
-	@Override
-	public void visitQuerySpec(QuerySpec querySpec) {
-		if ( shouldEmulateFetchClause( querySpec ) ) {
-			emulateFetchOffsetWithWindowFunctions( querySpec, true );
-		}
-		else {
-			super.visitQuerySpec( querySpec );
-		}
-	}
-
-	protected boolean shouldEmulateFetchClause(QueryPart queryPart) {
-		// Check if current query part is already row numbering to avoid infinite recursion
-		if ( getQueryPartForRowNumbering() == queryPart || isRowsOnlyFetchClauseType( queryPart ) ) {
-			return false;
-		}
-		return !getDialect().supportsFetchClause( queryPart.getFetchClauseType() );
-	}
-
-
-	@Override
-	protected void renderDerivedTableReferenceIdentificationVariable(DerivedTableReference tableReference) {
-		renderTableReferenceIdentificationVariable( tableReference );
-	}
-
-	@Override
-	public void visitQueryPartTableReference(QueryPartTableReference tableReference) {
-		emulateQueryPartTableReferenceColumnAliasing( tableReference );
-	}
 
 	@Override
 	protected void renderFromClauseAfterUpdateSet(UpdateStatement statement) {

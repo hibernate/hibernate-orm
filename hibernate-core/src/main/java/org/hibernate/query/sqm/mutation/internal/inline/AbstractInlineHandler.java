@@ -19,7 +19,7 @@ import org.hibernate.query.sqm.mutation.spi.MultiTableHandler;
 import org.hibernate.query.sqm.spi.SqmParameterMappingModelResolutionAccess;
 import org.hibernate.query.sqm.tree.spi.SqmDeleteOrUpdateStatement;
 import org.hibernate.query.sqm.tree.spi.expression.SqmParameter;
-import org.hibernate.sql.ast.tree.select.SelectStatement;
+import org.hibernate.sql.ast.spi.query.select.SelectStatement;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcSelect;
 

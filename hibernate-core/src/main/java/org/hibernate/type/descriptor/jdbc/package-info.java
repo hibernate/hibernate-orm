@@ -33,4 +33,7 @@
  * @see org.hibernate.type.SqlTypes
  * @see <a href="http://java.sun.com/j2se/1.5.0/docs/guide/jdbc/getstart/mapping.html">Mapping SQL and Java Types</a>
  */
+@SPI
 package org.hibernate.type.descriptor.jdbc;
+
+import org.hibernate.SPI;

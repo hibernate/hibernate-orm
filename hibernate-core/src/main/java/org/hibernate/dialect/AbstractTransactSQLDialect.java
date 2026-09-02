@@ -4,48 +4,52 @@
  */
 package org.hibernate.dialect;
 
-import org.hibernate.LockMode;
+import org.hibernate.dialect.temporaltype.spi.CurrentTimestampSelection;
+
+import org.hibernate.dialect.temporaltype.spi.CurrentTemporalSupport;
+
+import org.hibernate.dialect.mutation.spi.MultiTableMutationSupport;
+
+
+import org.hibernate.dialect.sql.ast.spi.NullOrdering;
+import org.hibernate.dialect.sql.ast.spi.NullOrderingSupport;
+import org.hibernate.dialect.sql.ast.spi.SubquerySupport;
+
 import org.hibernate.LockOptions;
+import org.hibernate.SPI;
+import static org.hibernate.SPI.Role.USE;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.function.CaseLeastGreatestEmulation;
 import org.hibernate.dialect.function.CastingConcatFunction;
 import org.hibernate.dialect.function.TransactSQLStrFunction;
-import org.hibernate.dialect.temptable.TemporaryTableStrategy;
-import org.hibernate.dialect.temptable.TransactSQLLocalTemporaryTableStrategy;
+import org.hibernate.dialect.temptable.spi.TemporaryTableStrategy;
+import org.hibernate.dialect.temptable.internal.TransactSQLLocalTemporaryTableStrategy;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.dialect.identity.AbstractTransactSQLIdentityColumnSupport;
-import org.hibernate.dialect.identity.IdentityColumnSupport;
-import org.hibernate.dialect.temptable.TemporaryTableKind;
-import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.dialect.function.spi.ExpressionCoercionSupport;
+import org.hibernate.dialect.function.spi.TupleCountSupport;
+import org.hibernate.dialect.identity.internal.AbstractTransactSQLIdentityColumnSupport;
+import org.hibernate.dialect.identity.spi.IdentityColumnSupport;
+import org.hibernate.dialect.schema.spi.IndexNameQualification;
 import org.hibernate.query.sqm.TrimSpec;
-import org.hibernate.query.sqm.mutation.spi.AfterUseAction;
-import org.hibernate.query.sqm.mutation.spi.BeforeUseAction;
-import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableInsertStrategy;
-import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableMutationStrategy;
-import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
-import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
-import org.hibernate.sql.ast.internal.TransactSQLLockingClauseStrategy;
-import org.hibernate.sql.ast.spi.LockingClauseStrategy;
-import org.hibernate.sql.ast.spi.SqlAppender;
-import org.hibernate.sql.ast.tree.select.QuerySpec;
+import org.hibernate.sql.ast.spi.translation.SqlAstNodeRenderingMode;
+import org.hibernate.dialect.lock.internal.TransactSQLLockingClauseStrategy;
+import org.hibernate.dialect.lock.spi.LockingClauseStrategy;
+import org.hibernate.sql.spi.SqlAppender;
+import org.hibernate.sql.ast.spi.query.select.QuerySpec;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JsonAsStringJdbcType;
 import org.hibernate.type.descriptor.jdbc.XmlAsStringJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
-import java.sql.CallableStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.sql.Types;
-import java.util.Map;
 
 import static org.hibernate.type.SqlTypes.BLOB;
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.SUPPLY;
 import static org.hibernate.type.SqlTypes.BOOLEAN;
 import static org.hibernate.type.SqlTypes.CLOB;
 import static org.hibernate.type.SqlTypes.DATE;
@@ -57,22 +61,37 @@ import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
 import static org.hibernate.type.SqlTypes.TIME_WITH_TIMEZONE;
 import static org.hibernate.type.SqlTypes.TINYINT;
 
-/**
- * An abstract base class for Sybase and MS SQL Server dialects.
- *
- * @author Gavin King
- */
-public abstract class AbstractTransactSQLDialect extends Dialect {
+/// A supported base for provider Dialects derived from the Transact-SQL family,
+/// including Sybase and Microsoft SQL Server variants.
+///
+/// Provider subclasses must invoke a protected constructor classified
+/// {@link SPI.Role#IMPLEMENT IMPLEMENT}. The generated SPI inventory identifies
+/// the constructors and members covered by this type-level implementation
+/// contract; unclassified implementation details are not provider extension
+/// points.
+///
+/// @author Gavin King
+@SPI({ USE, IMPLEMENT })
+public abstract class AbstractTransactSQLDialect extends Dialect implements CurrentTemporalSupport {
 
-	public AbstractTransactSQLDialect(DatabaseVersion version) {
+	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
+	public CurrentTemporalSupport getCurrentTemporalSupport() {
+		return this;
+	}
+
+	@SPI( IMPLEMENT )
+	protected AbstractTransactSQLDialect(DatabaseVersion version) {
 		super(version);
 	}
 
-	public AbstractTransactSQLDialect(DialectResolutionInfo info) {
+	@SPI( IMPLEMENT )
+	protected AbstractTransactSQLDialect(DialectResolutionInfo info) {
 		super(info);
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	protected String columnType(int sqlTypeCode) {
 		// note that 'real' is double precision on SQL Server, single precision on Sybase
 		// but 'float' is single precision on Sybase, double precision on SQL Server
@@ -98,6 +117,7 @@ public abstract class AbstractTransactSQLDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.contributeTypes( typeContributions, serviceRegistry );
 		final var jdbcTypeRegistry = typeContributions.getTypeConfiguration().getJdbcTypeRegistry();
@@ -106,11 +126,14 @@ public abstract class AbstractTransactSQLDialect extends Dialect {
 	}
 
 	@Override
-	public int getDefaultStatementBatchSize() {
-		return 0;
+	@SPI({ IMPLEMENT, SUPPLY })
+	protected void contributeDefaultProperties(java.util.Properties properties) {
+		super.contributeDefaultProperties( properties );
+		properties.setProperty( org.hibernate.cfg.AvailableSettings.STATEMENT_BATCH_SIZE, Integer.toString( 0 ) );
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public JdbcType resolveSqlTypeDescriptor(
 			String columnTypeName,
 			int jdbcTypeCode,
@@ -130,11 +153,13 @@ public abstract class AbstractTransactSQLDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public int getPreferredSqlTypeCodeForBoolean() {
 		return Types.BIT;
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
 		super.initializeFunctionRegistry( functionContributions );
 
@@ -182,6 +207,7 @@ public abstract class AbstractTransactSQLDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String trimPattern(TrimSpec specification, boolean isWhitespace) {
 		return replaceLtrimRtrim( specification, isWhitespace );
 	}
@@ -201,13 +227,15 @@ public abstract class AbstractTransactSQLDialect extends Dialect {
 	}
 
 	@Override
-	public String getAddColumnString() {
+	@SPI({ USE, IMPLEMENT })
+	public String addColumnPrefix() {
 		return "add";
 	}
 
 	@Override
-	public boolean qualifyIndexName() {
-		return false;
+	@SPI({ USE, IMPLEMENT })
+	public IndexNameQualification nameQualification() {
+		return IndexNameQualification.UNQUALIFIED;
 	}
 
 	@Override
@@ -215,108 +243,31 @@ public abstract class AbstractTransactSQLDialect extends Dialect {
 		return new TransactSQLLockingClauseStrategy( lockOptions.getScope(), querySpec.getRootPathsForLocking() );
 	}
 
+
 	@Override
-	public String getForUpdateString() {
-		return "";
+	@SPI({ USE, IMPLEMENT })
+	public CurrentTimestampSelection getCurrentTimestampSelection() {
+		return CurrentTimestampSelection.prepared( "select getdate()" );
 	}
 
 	@Override
-	public String appendLockHint(LockOptions lockOptions, String tableName) {
-		return lockOptions.getLockMode().greaterThan( LockMode.READ ) ? tableName + " holdlock" : tableName;
+	public NullOrderingSupport getNullOrderingSupport() {
+		return NullOrderingSupport.builder( super.getNullOrderingSupport() )
+				.defaultOrdering( NullOrdering.SMALLEST )
+				.build();
 	}
 
 	@Override
-	public String applyLocksToSql(String sql, LockOptions lockOptions, Map<String, String[]> keyColumnNameMap) {
-		if ( lockOptions.getLockMode() == LockMode.NONE || keyColumnNameMap == null ) {
-			return sql;
-		}
-
-		// TODO:  merge additional lock options support in Dialect.applyLocksToSql
-		final var buffer = new StringBuilder( sql );
-		keyColumnNameMap.forEach( (tableAlias, keyColumnNames) -> {
-			int start = -1;
-			int end = -1;
-			if ( sql.endsWith( " " + tableAlias ) ) {
-				start = ( buffer.length() - tableAlias.length() );
-				end = start + tableAlias.length();
-			}
-			else {
-				int position = buffer.indexOf( " " + tableAlias + " " );
-				if ( position <= -1 ) {
-					position = buffer.indexOf( " " + tableAlias + "," );
-				}
-				if ( position > -1 ) {
-					start = position + 1;
-					end = start + tableAlias.length();
-				}
-			}
-
-			if ( start > -1 ) {
-				final String lockHint = appendLockHint( lockOptions, tableAlias );
-				buffer.replace( start, end, lockHint );
-			}
-
-		} );
-
-		return buffer.toString();
+	@SPI({ IMPLEMENT, SUPPLY })
+	public ExpressionCoercionSupport getExpressionCoercionSupport() {
+		return ExpressionCoercionSupport.builder()
+				.requirements( ExpressionCoercionSupport.Requirement.CAST_NON_STRING_CONCATENATION_ARGUMENTS )
+				.build();
 	}
 
 	@Override
-	public int registerResultSetOutParameter(CallableStatement statement, int col) throws SQLException {
-		// sql server just returns automatically
-		return col;
-	}
-
-	@Override
-	public ResultSet getResultSet(CallableStatement ps) throws SQLException {
-		boolean isResultSet = ps.execute();
-		// This assumes you will want to ignore any update counts
-		while ( !isResultSet && ps.getUpdateCount() != -1 ) {
-			isResultSet = ps.getMoreResults();
-		}
-
-		// You may still have other ResultSets or update counts left to process here
-		// but you can't do it now or the ResultSet you just got will be closed
-		return ps.getResultSet();
-	}
-
-	@Override
-	public boolean supportsCurrentTimestampSelection() {
-		return true;
-	}
-
-	@Override
-	public boolean isCurrentTimestampSelectStringCallable() {
-		return false;
-	}
-
-	@Override
-	public String getCurrentTimestampSelectString() {
-		return "select getdate()";
-	}
-
-	@Override
-	public NullOrdering getNullOrdering() {
-		return NullOrdering.SMALLEST;
-	}
-
-	@Override
-	public boolean requiresCastForConcatenatingNonStrings() {
-		return true;
-	}
-
-	@Override
-	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(
-			EntityMappingType rootEntityDescriptor,
-			RuntimeModelCreationContext runtimeModelCreationContext) {
-		return new LocalTemporaryTableMutationStrategy( rootEntityDescriptor, runtimeModelCreationContext );
-	}
-
-	@Override
-	public SqmMultiTableInsertStrategy getFallbackSqmInsertStrategy(
-			EntityMappingType rootEntityDescriptor,
-			RuntimeModelCreationContext runtimeModelCreationContext) {
-		return new LocalTemporaryTableInsertStrategy( rootEntityDescriptor, runtimeModelCreationContext );
+	public MultiTableMutationSupport getMultiTableMutationSupport() {
+		return MultiTableMutationSupport.LOCAL_TEMPORARY_TABLE;
 	}
 
 	@Override
@@ -324,64 +275,33 @@ public abstract class AbstractTransactSQLDialect extends Dialect {
 		return TransactSQLLocalTemporaryTableStrategy.INSTANCE;
 	}
 
-	@Override
-	public TemporaryTableKind getSupportedTemporaryTableKind() {
-		return TemporaryTableKind.LOCAL;
-	}
-
-	@Override
-	public String getTemporaryTableCreateCommand() {
-		return TransactSQLLocalTemporaryTableStrategy.INSTANCE.getTemporaryTableCreateCommand();
-	}
-
-	@Override
-	public AfterUseAction getTemporaryTableAfterUseAction() {
-		return TransactSQLLocalTemporaryTableStrategy.INSTANCE.getTemporaryTableAfterUseAction();
-	}
-
-	@Override
-	public BeforeUseAction getTemporaryTableBeforeUseAction() {
-		return TransactSQLLocalTemporaryTableStrategy.INSTANCE.getTemporaryTableBeforeUseAction();
-	}
-
-	@Override
-	public String getSelectGUIDString() {
-		return "select newid()";
-	}
-
 	// Overridden informational metadata ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
-	public boolean supportsExistsInSelect() {
-		return false;
+	@SPI({ IMPLEMENT, SUPPLY })
+	public SubquerySupport getSubquerySupport() {
+		return SubquerySupport.builder()
+				.feature( SubquerySupport.Feature.EXISTS_IN_SELECT, false )
+				.build();
 	}
 
 	@Override
-	public boolean doesReadCommittedCauseWritersToBlockReaders() {
-		return true;
+	public TupleCountSupport getTupleCountSupport() {
+		return TupleCountSupport.NONE;
 	}
 
+	/// Supply the common Transact-SQL identity profile. Subclasses may override
+	/// this profile when their identity declaration or retrieval SQL differs.
+	///
+	/// @since 8.0
 	@Override
-	public boolean doesRepeatableReadCauseReadersToBlockWriters() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsTupleDistinctCounts() {
-		return false;
-	}
-
-	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public IdentityColumnSupport getIdentityColumnSupport() {
 		return AbstractTransactSQLIdentityColumnSupport.INSTANCE;
 	}
 
 	@Override
-	public boolean supportsPartitionBy() {
-		return true;
-	}
-
-	@Override
+	@SPI({ USE, IMPLEMENT })
 	public void appendBinaryLiteral(SqlAppender appender, byte[] bytes) {
 		appender.appendSql( "0x" );
 		PrimitiveByteArrayJavaType.INSTANCE.appendString( appender, bytes );

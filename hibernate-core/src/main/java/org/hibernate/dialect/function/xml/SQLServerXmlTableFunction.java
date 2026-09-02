@@ -4,15 +4,15 @@
  */
 package org.hibernate.dialect.function.xml;
 
-import org.hibernate.query.sqm.tuple.internal.AnonymousTupleTableGroupProducer;
-import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
-import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.spi.SqlAppender;
-import org.hibernate.sql.ast.tree.expression.XmlTableColumnDefinition;
-import org.hibernate.sql.ast.tree.expression.XmlTableColumnsClause;
-import org.hibernate.sql.ast.tree.expression.XmlTableOrdinalityColumnDefinition;
-import org.hibernate.sql.ast.tree.expression.XmlTableQueryColumnDefinition;
-import org.hibernate.sql.ast.tree.expression.XmlTableValueColumnDefinition;
+import org.hibernate.sql.ast.spi.query.SetReturningFunctionType;
+import org.hibernate.sql.ast.spi.translation.SqlAstNodeRenderingMode;
+import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
+import org.hibernate.sql.spi.SqlAppender;
+import org.hibernate.sql.ast.spi.query.expression.XmlTableColumnDefinition;
+import org.hibernate.sql.ast.spi.query.expression.XmlTableColumnsClause;
+import org.hibernate.sql.ast.spi.query.expression.XmlTableOrdinalityColumnDefinition;
+import org.hibernate.sql.ast.spi.query.expression.XmlTableQueryColumnDefinition;
+import org.hibernate.sql.ast.spi.query.expression.XmlTableValueColumnDefinition;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -25,7 +25,7 @@ public class SQLServerXmlTableFunction extends XmlTableFunction {
 	}
 
 	@Override
-	protected void renderXmlTable(SqlAppender sqlAppender, XmlTableArguments arguments, AnonymousTupleTableGroupProducer tupleType, String tableIdentifierVariable, SqlAstTranslator<?> walker) {
+	protected void renderXmlTable(SqlAppender sqlAppender, XmlTableArguments arguments, SetReturningFunctionType tupleType, String tableIdentifierVariable, SqlAstTranslator<?> walker) {
 		sqlAppender.appendSql( "(select" );
 		renderColumns( sqlAppender, arguments.columnsClause(), walker );
 		sqlAppender.appendSql( " from (select " );

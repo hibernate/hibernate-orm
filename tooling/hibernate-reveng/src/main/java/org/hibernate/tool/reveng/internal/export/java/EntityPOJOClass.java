@@ -257,6 +257,11 @@ public class EntityPOJOClass extends BasicPOJOClass {
 						idResult.append(builder.getResult());
 						buildAnnTableGenerator( wholeString, properties );
 					}
+					else if ( org.hibernate.id.uuid.UuidGenerator.class.getName().equals( strategy ) ) {
+						builder.resetAnnotation( importType("jakarta.persistence.GeneratedValue") )
+								.addAttribute( "strategy", staticImport("jakarta.persistence.GenerationType", "UUID" ) );
+						idResult.append(builder.getResult());
+					}
 					else {
 						isGenericGenerator = true;
 					}
@@ -300,7 +305,6 @@ public class EntityPOJOClass extends BasicPOJOClass {
 			case "uuid", "uuid.hex" -> org.hibernate.id.UUIDHexGenerator.class.getName();
 			case "uuid2" -> org.hibernate.id.UUIDGenerator.class.getName();
 			case "select" -> org.hibernate.id.SelectGenerator.class.getName();
-			case "guid" -> org.hibernate.id.GUIDGenerator.class.getName();
 			default -> strategy;
 		};
 	}

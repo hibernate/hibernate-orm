@@ -5,7 +5,7 @@
 package org.hibernate.spatial.dialect.oracle;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.sql.ast.spi.SqlAppender;
+import org.hibernate.sql.spi.SqlAppender;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;

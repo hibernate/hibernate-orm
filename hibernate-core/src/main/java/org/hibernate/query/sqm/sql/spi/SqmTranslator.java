@@ -5,8 +5,8 @@
 package org.hibernate.query.sqm.sql.spi;
 
 import org.hibernate.query.sqm.spi.JdbcParameterBySqmParameterAccess;
-import org.hibernate.sql.ast.spi.FromClauseAccess;
-import org.hibernate.sql.ast.tree.Statement;
+import org.hibernate.sql.ast.spi.creation.FromClauseAccess;
+import org.hibernate.sql.ast.spi.Statement;
 
 /**
  * @author Steve Ebersole

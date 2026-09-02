@@ -4,35 +4,47 @@
  */
 package org.hibernate.community.dialect;
 
+import org.hibernate.dialect.identifier.spi.KeywordRegistration;
+
+import org.hibernate.dialect.temporaltype.spi.TemporalOperationSupport;
+
+import org.hibernate.SPI;
+
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.SUPPLY;
+import static org.hibernate.SPI.Role.USE;
+
+import org.hibernate.dialect.sql.ast.spi.CteSupport;
+import org.hibernate.dialect.sql.ast.spi.RowValueSupport;
+import org.hibernate.dialect.sql.ast.spi.SingleRowTableSupport;
+import org.hibernate.dialect.sql.ast.spi.SetOperationSupport;
+
 import jakarta.persistence.TemporalType;
-import jakarta.persistence.Timeout;
-import org.hibernate.Timeouts;
 import org.hibernate.community.dialect.sequence.SequenceInformationExtractorTiDBDatabaseImpl;
 import org.hibernate.community.dialect.sequence.TiDBSequenceSupport;
 import org.hibernate.community.dialect.temporal.TiDBTemporalTableSupport;
-import org.hibernate.dialect.temporal.TemporalTableSupport;
+import org.hibernate.dialect.temporal.spi.TemporalTableSupport;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.FunctionalDependencyAnalysisSupport;
-import org.hibernate.dialect.FunctionalDependencyAnalysisSupportImpl;
+import org.hibernate.dialect.aggregate.spi.FunctionalDependencyAnalysisSupport;
 import org.hibernate.dialect.MySQLDialect;
-import org.hibernate.dialect.MySQLServerConfiguration;
-import org.hibernate.dialect.aggregate.AggregateSupport;
-import org.hibernate.dialect.aggregate.MySQLAggregateSupport;
+import org.hibernate.dialect.jdbc.spi.MySQLServerConfiguration;
+import org.hibernate.dialect.aggregate.spi.AggregateSupport;
+import org.hibernate.community.dialect.aggregate.internal.TiDBAggregateSupport;
 import org.hibernate.dialect.lock.spi.LockingSupport;
-import org.hibernate.dialect.sequence.SequenceSupport;
+import org.hibernate.dialect.sequence.spi.SequenceSupport;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.persister.entity.mutation.EntityMutationTarget;
 import org.hibernate.query.common.TemporalUnit;
-import org.hibernate.dialect.type.IntervalType;
-import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.SqlAstTranslatorFactory;
-import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
-import org.hibernate.sql.ast.tree.Statement;
+import org.hibernate.query.sqm.SetOperator;
+import org.hibernate.dialect.temporaltype.spi.IntervalType;
+import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslatorFactory;
+import org.hibernate.dialect.sql.ast.spi.StandardSqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.Statement;
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
 import org.hibernate.sql.exec.spi.JdbcOperation;
-import org.hibernate.sql.model.internal.OptionalTableUpdate;
-import org.hibernate.sql.model.MutationOperation;
+import org.hibernate.sql.spi.mutation.MutationOperation;
+import org.hibernate.dialect.sql.ast.spi.OptionalTableUpdateOperationRequest;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 
 import static org.hibernate.community.dialect.lock.internal.TiDBLockingSupport.TIDB_LOCKING_SUPPORT;
@@ -42,7 +54,13 @@ import static org.hibernate.community.dialect.lock.internal.TiDBLockingSupport.T
  *
  * @author Cong Wang
  */
-public class TiDBDialect extends MySQLDialect {
+public class TiDBDialect extends MySQLDialect implements TemporalOperationSupport {
+
+	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
+	public TemporalOperationSupport getTemporalOperationSupport() {
+		return this;
+	}
 
 	// 8.0.11 is the first MySQL 8.0 GA release.
 	// See also: https://docs.pingcap.com/tidb/stable/mysql-compatibility/
@@ -62,7 +80,6 @@ public class TiDBDialect extends MySQLDialect {
 
 	public TiDBDialect(DialectResolutionInfo info) {
 		super( createVersion( info, MINIMUM_VERSION ), MySQLServerConfiguration.fromDialectResolutionInfo( info ) );
-		registerKeywords( info );
 	}
 
 	@Override
@@ -72,47 +89,47 @@ public class TiDBDialect extends MySQLDialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	protected DatabaseVersion getMinimumSupportedVersion() {
 		return MINIMUM_VERSION;
 	}
 
 	@Override
-	protected void registerDefaultKeywords() {
-		super.registerDefaultKeywords();
+	@SPI({ USE, IMPLEMENT, SUPPLY })
+	protected void contributeKeywords(KeywordRegistration registration) {
+		super.contributeKeywords( registration );
 		// TiDB implemented 'Window Functions' of MySQL 8, so the following keywords are reserved.
-		registerKeyword( "CUME_DIST" );
-		registerKeyword( "DENSE_RANK" );
-		registerKeyword( "EXCEPT" );
-		registerKeyword( "FIRST_VALUE" );
-		registerKeyword( "GROUPS" );
-		registerKeyword( "LAG" );
-		registerKeyword( "LAST_VALUE" );
-		registerKeyword( "LEAD" );
-		registerKeyword( "NTH_VALUE" );
-		registerKeyword( "NTILE" );
-		registerKeyword( "PERCENT_RANK" );
-		registerKeyword( "RANK" );
-		registerKeyword( "ROW_NUMBER" );
+		registration.registerKeyword( "CUME_DIST" );
+		registration.registerKeyword( "DENSE_RANK" );
+		registration.registerKeyword( "EXCEPT" );
+		registration.registerKeyword( "FIRST_VALUE" );
+		registration.registerKeyword( "GROUPS" );
+		registration.registerKeyword( "LAG" );
+		registration.registerKeyword( "LAST_VALUE" );
+		registration.registerKeyword( "LEAD" );
+		registration.registerKeyword( "NTH_VALUE" );
+		registration.registerKeyword( "NTILE" );
+		registration.registerKeyword( "PERCENT_RANK" );
+		registration.registerKeyword( "RANK" );
+		registration.registerKeyword( "ROW_NUMBER" );
 	}
 
 	@Override
-	public boolean supportsCascadeDelete() {
-		return false;
+	@SPI({ USE, IMPLEMENT })
+	public boolean supportsOnDeleteAction(org.hibernate.annotations.OnDeleteAction action) {
+		return action == org.hibernate.annotations.OnDeleteAction.NO_ACTION;
 	}
 
 	@Override
-	public String getQuerySequencesString() {
-		return "SELECT sequence_name FROM information_schema.sequences WHERE sequence_schema = database()";
-	}
-
-	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public SequenceSupport getSequenceSupport() {
 		return TiDBSequenceSupport.INSTANCE;
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public AggregateSupport getAggregateSupport() {
-		return MySQLAggregateSupport.forTiDB( this );
+		return TiDBAggregateSupport.INSTANCE;
 	}
 
 	@Override
@@ -121,19 +138,22 @@ public class TiDBDialect extends MySQLDialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public SqlAstTranslatorFactory getSqlAstTranslatorFactory() {
 		return new StandardSqlAstTranslatorFactory() {
 			@Override
-			protected <T extends JdbcOperation> SqlAstTranslator<T> buildTranslator(
-					SessionFactoryImplementor sessionFactory, Statement statement) {
-				return new TiDBSqlAstTranslator<>( sessionFactory, statement, TiDBDialect.this );
+			protected <S extends Statement, T extends JdbcOperation> SqlAstTranslator<T> createTranslator(
+					SqlAstTranslationRequest<S, T> request) {
+				return new TiDBSqlAstTranslator<>( request, TiDBDialect.this );
 			}
 		};
 	}
 
 	@Override
-	public boolean supportsRecursiveCTE() {
-		return true;
+	public CteSupport getCteSupport() {
+		return CteSupport.builder( super.getCteSupport() )
+				.recursiveFeatures( CteSupport.RecursiveFeature.RECURSIVE )
+				.build();
 	}
 
 	@Override
@@ -147,85 +167,36 @@ public class TiDBDialect extends MySQLDialect {
 	}
 
 	@Override
-	public boolean supportsRowValueConstructorSyntaxInInList() {
-		return getVersion().isSameOrAfter( 5, 7 );
+	public RowValueSupport getRowValueSupport() {
+		final boolean supportsIn = getVersion().isSameOrAfter( 5, 7 );
+		return RowValueSupport.builder( RowValueSupport.NONE )
+				.features(
+						RowValueSupport.Feature.EQUALITY_COMPARISON,
+						RowValueSupport.Feature.ORDERING_COMPARISON,
+						RowValueSupport.Feature.DISTINCTNESS_COMPARISON
+				)
+				.feature( RowValueSupport.Feature.IN_LIST, supportsIn )
+				.feature( RowValueSupport.Feature.IN_SUBQUERY, supportsIn )
+				.build();
 	}
 
-	@Override
-	public String getReadLockString(Timeout timeout) {
-		if ( timeout.milliseconds() == Timeouts.NO_WAIT_MILLI ) {
-			return getForUpdateNowaitString();
-		}
-		return super.getReadLockString( timeout );
-	}
+
+
+
+
+
+
+
 
 	@Override
-	public String getReadLockString(String aliases, Timeout timeout) {
-		if ( timeout.milliseconds() == Timeouts.NO_WAIT_MILLI ) {
-			return getForUpdateNowaitString( aliases );
-		}
-		return super.getReadLockString( aliases, timeout );
-	}
-
-	@Override
-	public String getWriteLockString(Timeout timeout) {
-		if ( timeout.milliseconds() == Timeouts.NO_WAIT_MILLI ) {
-			return getForUpdateNowaitString();
-		}
-
-		if ( Timeouts.isRealTimeout( timeout ) ) {
-			return getForUpdateString() + " wait " + Timeouts.getTimeoutInSeconds( timeout );
-		}
-
-		return getForUpdateString();
-	}
-
-	@Override
-	public String getReadLockString(int timeout) {
-		if ( timeout == Timeouts.NO_WAIT_MILLI ) {
-			return getForUpdateNowaitString();
-		}
-		return super.getReadLockString( timeout );
-	}
-
-	@Override
-	public String getReadLockString(String aliases, int timeout) {
-		if ( timeout == Timeouts.NO_WAIT_MILLI ) {
-			return getForUpdateNowaitString( aliases );
-		}
-		return super.getReadLockString( aliases, timeout );
-	}
-
-	@Override
-	public String getWriteLockString(int timeout) {
-		if ( timeout == Timeouts.NO_WAIT_MILLI ) {
-			return getForUpdateNowaitString();
-		}
-
-		if ( Timeouts.isRealTimeout( timeout ) ) {
-			return getForUpdateString() + " wait " + Timeouts.getTimeoutInSeconds( timeout );
-		}
-
-		return getForUpdateString();
-	}
-
-	@Override
-	public String getForUpdateNowaitString() {
-		return getForUpdateString() + " nowait";
-	}
-
-	@Override
-	public String getForUpdateNowaitString(String aliases) {
-		return getForUpdateString( aliases ) + " nowait";
-	}
-
-	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public FunctionalDependencyAnalysisSupport getFunctionalDependencyAnalysisSupport() {
-		return FunctionalDependencyAnalysisSupportImpl.TABLE_REFERENCE;
+		return FunctionalDependencyAnalysisSupport.TABLE_REFERENCE;
 	}
 
 	@Override
 	@SuppressWarnings("deprecation")
+	@SPI({ USE, IMPLEMENT })
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
 		// TiDB doesn't natively support adding fractional seconds
 		return unit == TemporalUnit.SECOND && intervalType == null
@@ -234,26 +205,33 @@ public class TiDBDialect extends MySQLDialect {
 	}
 
 	@Override
-	public String getDual() {
-		return "dual";
+	public SingleRowTableSupport getSingleRowTableSupport() {
+		return SingleRowTableSupport.builder( super.getSingleRowTableSupport() )
+				.tableExpression( "dual" )
+				.build();
 	}
 
 	@Override
-	public MutationOperation createOptionalTableUpdateOperation(EntityMutationTarget mutationTarget, OptionalTableUpdate optionalTableUpdate, SessionFactoryImplementor factory) {
+	@SPI({ USE, IMPLEMENT, SUPPLY })
+	public MutationOperation createOptionalTableUpdateOperation(OptionalTableUpdateOperationRequest request) {
+		final var optionalTableUpdate = request.update();
 		if ( optionalTableUpdate.getNumberOfOptimisticLockBindings() == 0 ) {
-			final TiDBSqlAstTranslator<?> translator = new TiDBSqlAstTranslator<>( factory, optionalTableUpdate, TiDBDialect.this );
+			final TiDBSqlAstTranslator<?> translator = new TiDBSqlAstTranslator<>( new SqlAstTranslationRequest.ModelMutation<>( request.sessionFactory(), optionalTableUpdate ), TiDBDialect.this );
 			return translator.createMergeOperation( optionalTableUpdate );
 		}
-		return super.createOptionalTableUpdateOperation( mutationTarget, optionalTableUpdate, factory );
-	}
-
-	// https://github.com/pingcap/tidb/issues/66392
-	@Override
-	public boolean supportsExceptAll() {
-		return false;
+		return super.createOptionalTableUpdateOperation( request );
 	}
 
 	@Override
+	public SetOperationSupport getSetOperationSupport() {
+		return SetOperationSupport.builder()
+				.operator( SetOperator.INTERSECT_ALL, false )
+				.operator( SetOperator.EXCEPT_ALL, false )
+				.build();
+	}
+
+	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public TemporalTableSupport getTemporalTableSupport() {
 		return new TiDBTemporalTableSupport( this );
 	}

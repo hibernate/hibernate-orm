@@ -7,8 +7,9 @@ package org.hibernate.dialect.function;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.SPI;
 import org.hibernate.metamodel.model.domain.ReturnableType;
-import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
+import org.hibernate.sql.ast.spi.translation.SqlAstNodeRenderingMode;
 import org.hibernate.type.BindingContext;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.function.AbstractSqmFunctionDescriptor;
@@ -23,20 +24,21 @@ import org.hibernate.query.sqm.produce.function.internal.PatternRenderer;
 import org.hibernate.query.sqm.tree.spi.SqmTypedNode;
 import org.hibernate.query.sqm.tree.spi.expression.SqmExtractUnit;
 import org.hibernate.query.sqm.tree.spi.expression.SqmLiteral;
-import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.spi.SqlAppender;
-import org.hibernate.sql.ast.tree.SqlAstNode;
+import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
+import org.hibernate.sql.spi.SqlAppender;
+import org.hibernate.sql.ast.spi.SqlAstNode;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.NUMERIC;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.TEMPORAL;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.TEMPORAL_UNIT;
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.USE;
 
-/**
- * Custom function that manages both numeric and datetime truncation
- *
- * @author Marco Belladelli
- */
+/// Subclassable descriptor for numeric and datetime truncation.
+///
+/// @author Marco Belladelli
+@SPI({ USE, IMPLEMENT })
 public class TruncFunction extends AbstractSqmFunctionDescriptor {
 	protected final TruncRenderingSupport numericRenderingSupport;
 	protected final TruncRenderingSupport datetimeRenderingSupport;
@@ -60,6 +62,7 @@ public class TruncFunction extends AbstractSqmFunctionDescriptor {
 		}
 	}
 
+	@SPI(IMPLEMENT)
 	public TruncFunction(
 			String truncPattern,
 			String twoArgTruncPattern,
@@ -69,6 +72,7 @@ public class TruncFunction extends AbstractSqmFunctionDescriptor {
 		this( truncPattern, twoArgTruncPattern, datetimeTrunc, toDateFunction, SqlAstNodeRenderingMode.DEFAULT, typeConfiguration );
 	}
 
+	@SPI(IMPLEMENT)
 	public TruncFunction(
 			String truncPattern,
 			String twoArgTruncPattern,
@@ -166,11 +170,16 @@ public class TruncFunction extends AbstractSqmFunctionDescriptor {
 		);
 	}
 
-	protected static class TruncRenderingSupport implements FunctionRenderer {
+	/// Rendering state exposed to `TruncFunction` subclasses.
+	///
+	/// Consume the instances held by the enclosing descriptor when customizing
+	/// SQM generation. This collaborator is not a supported subclass base.
+	@SPI(USE)
+	protected static final class TruncRenderingSupport implements FunctionRenderer {
 		private final PatternRenderer truncPattern;
 		private final PatternRenderer twoArgTruncPattern;
 
-		public TruncRenderingSupport(PatternRenderer truncPattern, PatternRenderer twoArgTruncPattern) {
+		private TruncRenderingSupport(PatternRenderer truncPattern, PatternRenderer twoArgTruncPattern) {
 			this.truncPattern = truncPattern;
 			this.twoArgTruncPattern = twoArgTruncPattern;
 		}
@@ -189,7 +198,13 @@ public class TruncFunction extends AbstractSqmFunctionDescriptor {
 		}
 	}
 
-	protected static class TruncArgumentsValidator implements ArgumentsValidator {
+	/// Argument validators exposed to `TruncFunction` subclasses.
+	///
+	/// Consume the standard validators when preserving the enclosing
+	/// descriptor's numeric and datetime semantics. This collaborator is not a
+	/// supported subclass base.
+	@SPI(USE)
+	protected static final class TruncArgumentsValidator implements ArgumentsValidator {
 		protected static final ArgumentTypesValidator DATETIME_VALIDATOR = new ArgumentTypesValidator(
 				StandardArgumentsValidators.exactly( 2 ),
 				TEMPORAL,

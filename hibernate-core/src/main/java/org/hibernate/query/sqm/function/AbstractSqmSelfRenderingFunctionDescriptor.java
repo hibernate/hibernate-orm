@@ -5,6 +5,7 @@
 package org.hibernate.query.sqm.function;
 
 import jakarta.annotation.Nullable;
+import org.hibernate.SPI;
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
@@ -13,20 +14,29 @@ import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
 import org.hibernate.query.sqm.tree.spi.SqmTypedNode;
 import org.hibernate.query.sqm.tree.spi.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.spi.select.SqmOrderByClause;
-import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.spi.SqlAppender;
-import org.hibernate.sql.ast.tree.SqlAstNode;
+import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
+import org.hibernate.sql.spi.SqlAppender;
+import org.hibernate.sql.ast.spi.SqlAstNode;
 
 import java.util.List;
 
-/**
- * @author Gavin King
- */
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.USE;
+
+/// Base descriptor for functions which directly render their SQL AST form.
+///
+/// Subclasses implement [FunctionRenderer#render] and may override the focused
+/// SQM generation hooks when normal, aggregate, ordered-set aggregate, or
+/// window invocation requires a specialized node.
+///
+/// @author Gavin King
+@SPI({ USE, IMPLEMENT })
 public abstract class AbstractSqmSelfRenderingFunctionDescriptor
 		extends AbstractSqmFunctionDescriptor implements FunctionRenderer {
 
 	private final FunctionKind functionKind;
 
+	@SPI(IMPLEMENT)
 	public AbstractSqmSelfRenderingFunctionDescriptor(
 			String name,
 			@Nullable ArgumentsValidator argumentsValidator,
@@ -36,6 +46,7 @@ public abstract class AbstractSqmSelfRenderingFunctionDescriptor
 		this.functionKind = FunctionKind.NORMAL;
 	}
 
+	@SPI(IMPLEMENT)
 	public AbstractSqmSelfRenderingFunctionDescriptor(
 			String name,
 			FunctionKind functionKind,

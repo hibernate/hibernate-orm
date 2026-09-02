@@ -4,6 +4,8 @@
  */
 package org.hibernate.type;
 
+import org.hibernate.SPI;
+
 import jakarta.persistence.metamodel.Type;
 
 import jakarta.annotation.Nullable;
@@ -28,6 +30,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  * @see org.hibernate.query.sqm.internal.TypecheckUtil
  */
 @Incubating
+@SPI
 public interface BindingContext {
 	JpaMetamodel getJpaMetamodel();
 

@@ -5,7 +5,7 @@
 package org.hibernate.sql.exec.spi;
 
 import org.hibernate.query.Query;
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
+import org.hibernate.sql.ast.spi.query.expression.JdbcParameter;
 
 import java.util.Map;
 

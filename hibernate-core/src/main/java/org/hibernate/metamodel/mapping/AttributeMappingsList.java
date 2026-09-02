@@ -7,7 +7,7 @@ package org.hibernate.metamodel.mapping;
 import java.util.function.Consumer;
 
 import org.hibernate.Incubating;
-import org.hibernate.internal.util.IndexedConsumer;
+import org.hibernate.spi.IndexedConsumer;
 import org.hibernate.metamodel.mapping.internal.ImmutableAttributeMappingList;
 
 /**

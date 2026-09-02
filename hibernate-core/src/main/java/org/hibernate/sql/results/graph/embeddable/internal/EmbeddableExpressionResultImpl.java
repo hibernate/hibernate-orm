@@ -9,7 +9,7 @@ import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.tree.expression.SqlTuple;
+import org.hibernate.sql.ast.spi.query.expression.SqlTuple;
 import org.hibernate.sql.results.graph.AbstractFetchParent;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -73,7 +73,7 @@ public class EmbeddableExpressionResultImpl<T> extends AbstractFetchParent imple
 		this.containsAnyNonScalars = determineIfContainedAnyScalars( getFetches() );
 	}
 
-	private static boolean determineIfContainedAnyScalars(ImmutableFetchList fetches) {
+	private static boolean determineIfContainedAnyScalars(org.hibernate.sql.results.graph.FetchList fetches) {
 		for ( var fetch : fetches ) {
 			if ( fetch.containsAnyNonScalarResults() ) {
 				return true;

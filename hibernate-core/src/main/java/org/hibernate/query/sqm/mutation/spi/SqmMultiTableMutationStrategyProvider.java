@@ -5,7 +5,7 @@
 package org.hibernate.query.sqm.mutation.spi;
 
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
+import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.service.Service;
 
 /**
@@ -15,18 +15,15 @@ import org.hibernate.service.Service;
  *
  * @author Steve Ebersole
  */
+@org.hibernate.SPI({ org.hibernate.SPI.Role.USE, org.hibernate.SPI.Role.IMPLEMENT })
 public interface SqmMultiTableMutationStrategyProvider extends Service {
-	/**
-	 * Determine the SqmMultiTableMutationStrategy to use for the given entity
-	 */
+	/// Determines the multi-table mutation strategy for the given entity.
 	SqmMultiTableMutationStrategy createMutationStrategy(
 			EntityMappingType rootEntityDescriptor,
-			MappingModelCreationProcess creationProcess);
+			RuntimeModelCreationContext creationContext);
 
-	/**
-	 * Determine the SqmMultiTableInsertStrategy to use for the given entity
-	 */
+	/// Determines the multi-table insert strategy for the given entity.
 	SqmMultiTableInsertStrategy createInsertStrategy(
 			EntityMappingType rootEntityDescriptor,
-			MappingModelCreationProcess creationProcess);
+			RuntimeModelCreationContext creationContext);
 }

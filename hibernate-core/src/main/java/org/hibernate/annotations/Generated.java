@@ -4,6 +4,7 @@
  */
 package org.hibernate.annotations;
 
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
@@ -24,13 +25,13 @@ import static org.hibernate.generator.EventType.INSERT;
  * {@code select} statement, but this not necessary if:
  * <ul>
  * <li>
- * the SQL dialect of the database
- * {@linkplain org.hibernate.dialect.Dialect#supportsInsertReturning
- * supports} {@code returning} or {@code select from final table}, or
+ * the SQL dialect of the database reports
+ * {@link org.hibernate.dialect.generated.spi.GeneratedValuesSupport.Capability#INSERT_RETURNING}
+ * and supports {@code returning} or {@code select from final table}, or
  * <li>
- * the JDBC driver
- * {@linkplain org.hibernate.dialect.Dialect#supportsInsertReturningGeneratedKeys
- * provides} a similar capability via {@code getGeneratedKeys()}.
+ * the SQL dialect reports
+ * {@link org.hibernate.dialect.generated.spi.GeneratedValuesSupport.Capability#ARBITRARY_GENERATED_KEYS}
+ * for a JDBC driver which provides the value via {@code getGeneratedKeys()}.
  * </ul>
  * <p>
  * {@code @Generated} relieves the program of the need to explicitly call

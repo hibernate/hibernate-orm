@@ -13,7 +13,7 @@ import org.hibernate.query.results.spi.FetchBuilderBasicValued;
 import org.hibernate.query.results.spi.ResultBuilder;
 import org.hibernate.query.results.internal.ResultsHelper;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.spi.SqlAliasBaseConstant;
+import org.hibernate.sql.ast.spi.creation.SqlAliasBaseConstant;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.entity.EntityResult;

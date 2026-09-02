@@ -9,8 +9,8 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.metamodel.model.domain.ReturnableType;
-import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.spi.SqlAppender;
+import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
+import org.hibernate.sql.spi.SqlAppender;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -103,6 +103,7 @@ public class HANAJsonValueFunction extends JsonValueFunction {
 		}
 	}
 
+	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	public static String jsonValueReturningType(SqlTypedMapping column, TypeConfiguration typeConfiguration) {
 		return jsonValueReturningType( getCastTypeName( column, typeConfiguration ) );
 	}

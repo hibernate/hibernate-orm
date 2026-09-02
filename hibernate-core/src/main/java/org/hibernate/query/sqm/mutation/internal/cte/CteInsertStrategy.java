@@ -5,8 +5,9 @@
 package org.hibernate.query.sqm.mutation.internal.cte;
 
 import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.dialect.sql.ast.spi.CteSupport;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.temptable.TemporaryTable;
+import org.hibernate.dialect.temptable.internal.TemporaryTable;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.MutableObject;
 import org.hibernate.mapping.PersistentClass;
@@ -20,7 +21,7 @@ import org.hibernate.query.sqm.mutation.internal.InsertHandler;
 import org.hibernate.query.sqm.mutation.spi.MultiTableHandlerBuildResult;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.tree.spi.insert.SqmInsertStatement;
-import org.hibernate.sql.ast.tree.cte.CteTable;
+import org.hibernate.sql.ast.spi.query.cte.CteTable;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 
 
@@ -110,7 +111,7 @@ public class CteInsertStrategy implements SqmMultiTableInsertStrategy {
 
 		final Dialect dialect = runtimeModelCreationContext.getDialect();
 
-		if ( !dialect.supportsNonQueryWithCTE() ) {
+		if ( !dialect.getCteSupport().supports( CteSupport.MutationFeature.NON_QUERY ) ) {
 			throw new UnsupportedOperationException(
 					getClass().getSimpleName() +
 							" can only be used with Dialects that support CTE that can take UPDATE or DELETE statements as well"
@@ -133,7 +134,7 @@ public class CteInsertStrategy implements SqmMultiTableInsertStrategy {
 		}
 		final String cteName = TemporaryTable.ENTITY_TABLE_PREFIX + tableNameIdentifier.getText();
 		final String qualifiedCteName = new Identifier(
-				cteName.substring( 0, Math.min( dialect.getMaxIdentifierLength(), cteName.length() ) ),
+				cteName.substring( 0, Math.min( dialect.getIdentifierSupport().getMaxIdentifierLength(), cteName.length() ) ),
 				tableNameIdentifier.isQuoted()
 		).render( dialect );
 		this.entityCteTable = CteTable.createEntityTable( qualifiedCteName, persistentClass );

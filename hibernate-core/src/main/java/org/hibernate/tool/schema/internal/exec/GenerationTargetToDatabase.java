@@ -70,13 +70,12 @@ public class GenerationTargetToDatabase implements GenerationTarget {
 
 	@Override
 	public void accept(String command) {
-		//TODO: temporary workaround DELETE ME
 		if ( ddlTransactionIsolator.getJdbcContext().getDialect().throttleDdl() ) {
 			try {
 				Thread.sleep( 20 );
 			}
-			catch (InterruptedException e) {
-				//ignore
+			catch (InterruptedException ignore) {
+				Thread.currentThread().interrupt();
 			}
 		}
 

@@ -6,162 +6,94 @@ package org.hibernate.community.dialect;
 
 import java.util.List;
 
-import org.hibernate.LockMode;
-import org.hibernate.dialect.identity.H2IdentityColumnSupport;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.internal.util.collections.Stack;
-import org.hibernate.query.IllegalQueryOperationException;
+import org.hibernate.Internal;
+import org.hibernate.SPI;
+import org.hibernate.dialect.sql.ast.spi.PaginationRenderingPlan;
+import org.hibernate.dialect.sql.ast.spi.PaginationRenderingSupport;
+import org.hibernate.dialect.sql.ast.spi.NullOrderingSupport;
+import org.hibernate.dialect.sql.ast.spi.PrimaryTableReferenceContext;
+import org.hibernate.dialect.sql.ast.spi.QueryMutationRenderingSupport;
+import org.hibernate.dialect.sql.ast.spi.ReturningRenderingSupport;
+import org.hibernate.dialect.sql.ast.spi.SelectItemReferenceStrategy;
+import org.hibernate.dialect.sql.ast.spi.StandardReturningRenderingSupport;
+import org.hibernate.dialect.sql.ast.spi.StandardQueryMutationRenderingSupport;
+import org.hibernate.dialect.sql.ast.spi.UpdateRenderingPlan;
+import org.hibernate.query.common.FetchClauseType;
 import org.hibernate.query.sqm.ComparisonOperator;
-import org.hibernate.sql.ast.Clause;
-import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
-import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
-import org.hibernate.sql.ast.spi.SqlSelection;
-import org.hibernate.sql.ast.tree.Statement;
-import org.hibernate.sql.ast.tree.cte.CteContainer;
-import org.hibernate.sql.ast.tree.cte.CteTableGroup;
-import org.hibernate.sql.ast.tree.delete.DeleteStatement;
-import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
-import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.Literal;
-import org.hibernate.sql.ast.tree.expression.SqlTuple;
-import org.hibernate.sql.ast.tree.expression.SqlTupleContainer;
-import org.hibernate.sql.ast.tree.expression.Summarization;
-import org.hibernate.sql.ast.tree.from.NamedTableReference;
-import org.hibernate.sql.ast.tree.from.QueryPartTableReference;
-import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.from.TableReference;
-import org.hibernate.sql.ast.tree.insert.ConflictClause;
-import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
-import org.hibernate.sql.ast.tree.predicate.BooleanExpressionPredicate;
-import org.hibernate.sql.ast.tree.predicate.InSubQueryPredicate;
-import org.hibernate.sql.ast.tree.predicate.LikePredicate;
-import org.hibernate.sql.ast.tree.select.QueryPart;
-import org.hibernate.sql.ast.tree.select.SelectClause;
-import org.hibernate.sql.ast.tree.update.UpdateStatement;
+import org.hibernate.sql.ast.spi.translation.Clause;
+import org.hibernate.sql.ast.spi.translation.SqlAstNodeRenderingMode;
+import org.hibernate.dialect.sql.ast.spi.AbstractSqlAstTranslator;
+import org.hibernate.sql.ast.spi.query.select.SqlSelection;
+import org.hibernate.sql.ast.spi.Statement;
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
+import org.hibernate.dialect.sql.ast.spi.InsertConflictRenderingSupport;
+import org.hibernate.dialect.sql.ast.spi.StandardInsertConflictRenderingSupport;
+import org.hibernate.sql.ast.spi.query.cte.CteTableGroup;
+import org.hibernate.sql.ast.spi.query.expression.BinaryArithmeticExpression;
+import org.hibernate.sql.ast.spi.query.expression.Expression;
+import org.hibernate.sql.ast.spi.query.expression.Literal;
+import org.hibernate.sql.ast.spi.query.expression.SqlTuple;
+import org.hibernate.sql.ast.spi.query.expression.SqlTupleContainer;
+import org.hibernate.sql.ast.spi.query.expression.Summarization;
+import org.hibernate.sql.ast.spi.query.from.NamedTableReference;
+import org.hibernate.sql.ast.spi.query.from.TableGroup;
+import org.hibernate.sql.ast.spi.query.predicate.BooleanExpressionPredicate;
+import org.hibernate.sql.ast.spi.query.predicate.InSubQueryPredicate;
+import org.hibernate.sql.ast.spi.query.predicate.LikePredicate;
+import org.hibernate.sql.ast.spi.query.select.SelectClause;
 import org.hibernate.sql.exec.spi.JdbcOperation;
-import org.hibernate.sql.model.internal.TableInsertStandard;
-import org.hibernate.sql.model.internal.TableUpdateStandard;
+import org.hibernate.sql.ast.spi.model.TableInsertStandard;
 
-import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
 
 /**
  * A legacy SQL AST translator for H2.
  *
  * @author Christian Beikov
  */
+@Internal
 public class H2LegacySqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstTranslator<T> {
 
 	private boolean renderAsArray;
 
-	public H2LegacySqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
-		super( sessionFactory, statement );
+	public H2LegacySqlAstTranslator(SqlAstTranslationRequest<? extends Statement, T> request) {
+		super( request );
 	}
 
 	@Override
-	public void visitStandardTableInsert(TableInsertStandard tableInsert) {
-		if ( getDialect().getVersion().isSameOrAfter( 2 )
-				|| CollectionHelper.isEmpty( tableInsert.getReturningColumns() ) ) {
-			final boolean closeWrapper = renderReturningClause( tableInsert.getReturningColumns() );
-			super.visitStandardTableInsert( tableInsert );
-			if ( closeWrapper ) {
-				appendSql( ')' );
-			}
-		}
-		else {
-			visitReturningInsertStatement( tableInsert );
-		}
+	@SPI({ SPI.Role.IMPLEMENT, SPI.Role.SUPPLY })
+	protected SelectItemReferenceStrategy getGroupBySelectItemReferenceStrategy() {
+		return SelectItemReferenceStrategy.ALIAS;
 	}
 
 	@Override
-	public void visitStandardTableUpdate(TableUpdateStandard tableUpdate) {
-		final boolean closeWrapper = renderReturningClause( tableUpdate.getReturningColumns() );
-		super.visitStandardTableUpdate( tableUpdate );
-		if ( closeWrapper ) {
-			appendSql( ')' );
-		}
+	protected ReturningRenderingSupport getReturningRenderingSupport() {
+		return StandardReturningRenderingSupport.H2;
 	}
 
-	protected boolean renderReturningClause(List<ColumnReference> returningColumns) {
-		if ( isEmpty( returningColumns ) ) {
+	@Override
+	protected boolean renderLegacyReturningInsert(TableInsertStandard tableInsert) {
+		if ( getDialect().getVersion().isSameOrAfter( 2 ) ) {
 			return false;
 		}
-		appendSql( "select " );
-		for ( int i = 0; i < returningColumns.size(); i++ ) {
-			if ( i > 0 ) {
-				appendSql( ", " );
-			}
-			appendSql( returningColumns.get( i ).getColumnExpression() );
-		}
-		appendSql( " from final table (" );
-		return true;
-	}
-
-
-	@Override
-	protected void visitReturningColumns(List<ColumnReference> returningColumns) {
-		// do nothing - this is handled via `#renderReturningClause`
-	}
-
-	public void visitReturningInsertStatement(TableInsertStandard tableInsert) {
 		assert tableInsert.getReturningColumns() != null
 				&& !tableInsert.getReturningColumns().isEmpty();
 
-		final H2IdentityColumnSupport identitySupport = (H2IdentityColumnSupport) getSessionFactory()
-				.getJdbcServices()
-				.getDialect()
-				.getIdentityColumnSupport();
+		renderStandardTableInsert( tableInsert );
+		appendSql( " call identity();" );
+		return true;
+	}
 
-		identitySupport.render(
-				tableInsert,
-				this::appendSql,
-				(columnReference) -> columnReference.accept( this ),
-				() -> super.visitStandardTableInsert( tableInsert ),
-				getSessionFactory()
+	@Override
+	protected InsertConflictRenderingSupport getInsertConflictRenderingSupport() {
+		return StandardInsertConflictRenderingSupport.MERGE;
+	}
+
+	@Override
+	protected QueryMutationRenderingSupport getQueryMutationRenderingSupport() {
+		return StandardQueryMutationRenderingSupport.withTargetAliasedDelete(
+				new UpdateRenderingPlan.Merge(),
+				"dml_target_"
 		);
-	}
-
-	@Override
-	protected void visitInsertStatementOnly(InsertSelectStatement statement) {
-		if ( statement.getConflictClause() == null || statement.getConflictClause().isDoNothing() ) {
-			// Render plain insert statement and possibly run into unique constraint violation
-			super.visitInsertStatementOnly( statement );
-		}
-		else {
-			visitInsertStatementEmulateMerge( statement );
-		}
-	}
-
-	@Override
-	protected void visitDeleteStatementOnly(DeleteStatement statement) {
-		if ( hasNonTrivialFromClause( statement.getFromClause() ) ) {
-			appendSql( "delete from " );
-			final Stack<Clause> clauseStack = getClauseStack();
-			try {
-				clauseStack.push( Clause.DELETE );
-				super.renderDmlTargetTableExpression( statement.getTargetTable() );
-				append( " dml_target_" );
-			}
-			finally {
-				clauseStack.pop();
-			}
-			visitWhereClause( determineWhereClauseRestrictionWithJoinEmulation( statement, "dml_target_" ) );
-			visitReturningColumns( statement.getReturningColumns() );
-		}
-		else {
-			super.visitDeleteStatementOnly( statement );
-		}
-	}
-
-	@Override
-	protected void visitUpdateStatementOnly(UpdateStatement statement) {
-		if ( hasNonTrivialFromClause( statement.getFromClause() ) ) {
-			visitUpdateStatementEmulateMerge( statement );
-		}
-		else {
-			super.visitUpdateStatementOnly( statement );
-		}
 	}
 
 	@Override
@@ -173,21 +105,9 @@ public class H2LegacySqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	}
 
 	@Override
-	protected void visitConflictClause(ConflictClause conflictClause) {
-		if ( conflictClause != null ) {
-			if ( conflictClause.isDoUpdate() && conflictClause.getConstraintName() != null ) {
-				throw new IllegalQueryOperationException( "Insert conflict 'do update' clause with constraint name is not supported" );
-			}
-		}
-	}
-
-	@Override
-	public void visitCteContainer(CteContainer cteContainer) {
+	protected SqlAstNodeRenderingMode getCteParameterRenderingMode() {
 		// H2 has various bugs in different versions that make it impossible to use CTEs with parameters reliably
-		withParameterRenderingMode(
-				SqlAstNodeRenderingMode.INLINE_PARAMETERS,
-				() -> super.visitCteContainer( cteContainer )
-		);
+		return SqlAstNodeRenderingMode.INLINE_PARAMETERS;
 	}
 
 	@Override
@@ -225,24 +145,19 @@ public class H2LegacySqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	}
 
 	@Override
-	public void visitOffsetFetchClause(QueryPart queryPart) {
-		if ( isRowsOnlyFetchClauseType( queryPart ) ) {
-			if ( supportsOffsetFetchClause() ) {
-				renderOffsetFetchClause( queryPart, true );
+	protected PaginationRenderingSupport getPaginationRenderingSupport() {
+		return request -> {
+			if ( request.hasFetch() && request.fetchClauseType() != FetchClauseType.ROWS_ONLY ) {
+				if ( !supportsOffsetFetchClausePercentWithTies() ) {
+					throw new IllegalArgumentException(
+							"Can't emulate fetch clause type: " + request.fetchClauseType() );
+				}
+				return new PaginationRenderingPlan.OffsetFetch( true );
 			}
-			else {
-				renderLimitOffsetClause( queryPart );
-			}
-		}
-		else {
-			if ( supportsOffsetFetchClausePercentWithTies() ) {
-				renderOffsetFetchClause( queryPart, true );
-			}
-			else {
-				// FETCH PERCENT and WITH TIES were introduced along with window functions
-				throw new IllegalArgumentException( "Can't emulate fetch clause type: " + queryPart.getFetchClauseType() );
-			}
-		}
+			return supportsOffsetFetchClause()
+					? new PaginationRenderingPlan.OffsetFetch( true )
+					: new PaginationRenderingPlan.LimitOffset();
+		};
 	}
 
 	@Override
@@ -276,13 +191,13 @@ public class H2LegacySqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	}
 
 	@Override
-	protected void visitSqlSelections(SelectClause selectClause) {
+	protected void renderSelectItems(SelectClause selectClause) {
 		final boolean renderAsArray = this.renderAsArray;
 		this.renderAsArray = false;
 		if ( renderAsArray ) {
 			append( OPEN_PARENTHESIS );
 		}
-		super.visitSqlSelections( selectClause );
+		super.renderSelectItems( selectClause );
 		if ( renderAsArray ) {
 			append( CLOSE_PARENTHESIS );
 		}
@@ -319,15 +234,12 @@ public class H2LegacySqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	}
 
 	@Override
-	protected boolean renderPrimaryTableReference(TableGroup tableGroup, LockMode lockMode) {
-		final TableReference tableRef = tableGroup.getPrimaryTableReference();
+	protected void renderPrimaryTableReferencePrefix(PrimaryTableReferenceContext context) {
 		// The H2 parser can't handle a sub-query as first element in a nested join
 		// i.e. `join ( (select ...) alias join ... )`, so we have to introduce a dummy table reference
-		if ( getSqlBuffer().charAt( getSqlBuffer().length() - 1 ) == '('
-				&& ( tableRef instanceof QueryPartTableReference || tableRef.getTableId().startsWith( "(select" ) ) ) {
+		if ( context.beginsNestedJoinGroup() && context.subqueryLike() ) {
 			appendSql( "dual cross join " );
 		}
-		return super.renderPrimaryTableReference( tableGroup, lockMode );
 	}
 
 	@Override
@@ -342,7 +254,9 @@ public class H2LegacySqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	}
 
 	protected boolean allowsNullPrecedence() {
-		return getClauseStack().getCurrent() != Clause.WITHIN_GROUP || getDialect().supportsNullPrecedence();
+		return getClauseStack().getCurrent() != Clause.WITHIN_GROUP
+				|| getDialect().getNullOrderingSupport()
+						.supports( NullOrderingSupport.Capability.NULLS_FIRST_LAST );
 	}
 
 	private boolean supportsOffsetFetchClause() {

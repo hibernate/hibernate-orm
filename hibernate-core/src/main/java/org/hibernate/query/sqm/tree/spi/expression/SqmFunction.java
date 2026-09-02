@@ -20,7 +20,7 @@ import org.hibernate.query.sqm.tree.spi.SqmRenderContext;
 import org.hibernate.query.sqm.tree.spi.SqmTypedNode;
 import org.hibernate.query.sqm.tree.spi.domain.SqmFunctionPath;
 import org.hibernate.query.sqm.tree.spi.domain.SqmPath;
-import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.spi.query.expression.Expression;
 
 import jakarta.annotation.Nullable;
 

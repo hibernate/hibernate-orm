@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.dialect.resolver;
 
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -40,8 +41,8 @@ public class DialectSpecificConfigTest {
 		);
 
 		assertThat( dialect ).isInstanceOf( OracleDialect.class );
-		assertThat( dialect.getMaxVarcharLength() ).isEqualTo( 32_767 );
-		assertThat( dialect.getMaxVarbinaryLength() ).isEqualTo( 32_767 );
+		assertThat( dialect.getTypeSizingProfile().maxVarcharLength() ).isEqualTo( 32_767 );
+		assertThat( dialect.getTypeSizingProfile().maxVarbinaryLength() ).isEqualTo( 32_767 );
 	}
 
 	@Test
@@ -74,7 +75,7 @@ public class DialectSpecificConfigTest {
 		);
 
 		assertThat( dialect ).isInstanceOf( MySQLDialect.class );
-		assertThat( dialect.getMaxVarcharLength() ).isEqualTo( 65_535 );
+		assertThat( dialect.getTypeSizingProfile().maxVarcharLength() ).isEqualTo( 65_535 );
 	}
 
 	@Test

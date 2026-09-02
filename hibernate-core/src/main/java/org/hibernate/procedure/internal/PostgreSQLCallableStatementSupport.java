@@ -7,7 +7,9 @@ package org.hibernate.procedure.internal;
 import java.util.List;
 
 import org.hibernate.HibernateException;
-import org.hibernate.dialect.type.AbstractPostgreSQLStructJdbcType;
+import org.hibernate.Internal;
+import org.hibernate.dialect.type.spi.AbstractPostgreSQLStructJdbcType;
+import org.hibernate.procedure.spi.CallableStatementSupport;
 import org.hibernate.procedure.spi.FunctionReturnImplementor;
 import org.hibernate.procedure.spi.ProcedureCallImplementor;
 import org.hibernate.procedure.spi.ProcedureParameterImplementor;
@@ -46,7 +48,8 @@ import jakarta.persistence.ParameterMode;
  * yet this should work regardless of the configured 'escapeSyntaxCallMode'.
  *
  */
-public class PostgreSQLCallableStatementSupport extends AbstractStandardCallableStatementSupport {
+@Internal
+public final class PostgreSQLCallableStatementSupport implements CallableStatementSupport {
 	/**
 	 * Singleton access
 	 */

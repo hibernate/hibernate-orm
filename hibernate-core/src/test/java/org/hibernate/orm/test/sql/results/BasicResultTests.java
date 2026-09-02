@@ -4,7 +4,7 @@
  */
 package org.hibernate.orm.test.sql.results;
 
-import org.hibernate.sql.ast.tree.select.SelectStatement;
+import org.hibernate.sql.ast.spi.query.select.SelectStatement;
 import org.hibernate.sql.results.graph.DomainResultGraphPrinter;
 
 import org.hibernate.testing.orm.domain.StandardDomainModel;

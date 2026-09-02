@@ -8,26 +8,26 @@ import java.util.Locale;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
-import org.hibernate.sql.model.MutationTarget;
-import org.hibernate.sql.model.MutationType;
+import org.hibernate.sql.spi.mutation.MutationTarget;
+import org.hibernate.sql.spi.mutation.MutationType;
 
 /**
  * Indicates an attempt to access the parameter for an unknown column
  *
- * @see org.hibernate.sql.model.MutationOperation#getJdbcValueDescriptor(String, ParameterUsage)
+ * @see org.hibernate.sql.spi.mutation.MutationOperation#getJdbcValueDescriptor(String, ParameterUsage)
  *
  * @author Steve Ebersole
  */
 public class UnknownParameterException extends HibernateException {
 	private final MutationType mutationType;
-	private final MutationTarget<?,?> mutationTarget;
+	private final MutationTarget mutationTarget;
 	private final String tableName;
 	private final String columnName;
 	private final ParameterUsage usage;
 
 	public UnknownParameterException(
 			MutationType mutationType,
-			MutationTarget<?,?> mutationTarget,
+			MutationTarget mutationTarget,
 			String tableName,
 			String columnName,
 			ParameterUsage usage) {

@@ -36,7 +36,7 @@ import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.DiscriminatorType;
-import org.hibernate.metamodel.mapping.EmbeddableDiscriminatorConverter;
+import org.hibernate.metamodel.mapping.internal.EmbeddableDiscriminatorConverter;
 import org.hibernate.metamodel.mapping.internal.DiscriminatorTypeImpl;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.persister.entity.DiscriminatorHelper;
@@ -663,6 +663,7 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 		this.discriminator = discriminator;
 	}
 
+	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	public DiscriminatorType<?> getDiscriminatorType() {
 		final var type = discriminatorType;
 		if ( type == null ) {

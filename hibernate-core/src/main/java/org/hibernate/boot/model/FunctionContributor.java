@@ -4,28 +4,38 @@
  */
 package org.hibernate.boot.model;
 
+import org.hibernate.SPI;
 import org.hibernate.service.JavaServiceLoadable;
 
-/**
- * An object that contributes custom HQL functions, eventually to a
- * {@link org.hibernate.query.sqm.function.SqmFunctionRegistry}, via an
- * instance of {@link FunctionContributions}.
- * <ul>
- * <li>
- *     The most common way to integrate a {@code FunctionContributor} is by
- *     making it discoverable via the Java {@link java.util.ServiceLoader}
- *     facility.
- * <li>
- *     Alternatively, a {@code FunctionContributor} may be programmatically supplied to
- *     {@link org.hibernate.cfg.Configuration#registerFunctionContributor(FunctionContributor)}
- *     or even {@link org.hibernate.boot.MetadataBuilder#applyFunctions(FunctionContributor)}.
- * </ul>
- *
- * @see org.hibernate.query.sqm.function.SqmFunctionRegistry
- *
- * @author Karel Maesen
- */
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.SUPPLY;
+import static org.hibernate.SPI.Role.USE;
+
+/// Contributes custom HQL functions to the eventual
+/// [org.hibernate.query.sqm.function.SqmFunctionRegistry].
+///
+/// A provider normally exposes its implementation through the Java
+/// [java.util.ServiceLoader] facility. An application may instead supply one
+/// through
+/// [org.hibernate.cfg.Configuration#registerFunctionContributor(FunctionContributor)]
+/// or [org.hibernate.boot.MetadataBuilder#applyFunctions(FunctionContributor)].
+///
+/// Complete all registration during [#contributeFunctions]. Do not retain the
+/// supplied [FunctionContributions] or its mutable registry beyond the
+/// callback. Use a contributor for application- or library-wide functions; a
+/// Dialect should instead override
+/// [org.hibernate.dialect.Dialect#initializeFunctionRegistry(FunctionContributions)].
+///
+/// Contributors are invoked in ascending [#ordinal()] order. Higher ordinals
+/// therefore replace registrations made under the same key by lower ordinals.
+///
+/// @see org.hibernate.query.sqm.function.SqmFunctionRegistry
+/// @see org.hibernate.cfg.Configuration#registerFunctionContributor(FunctionContributor)
+/// @see org.hibernate.boot.MetadataBuilder#applyFunctions(FunctionContributor)
+///
+/// @author Karel Maesen
 @JavaServiceLoadable
+@SPI({ USE, IMPLEMENT, SUPPLY })
 public interface FunctionContributor {
 
 	/**

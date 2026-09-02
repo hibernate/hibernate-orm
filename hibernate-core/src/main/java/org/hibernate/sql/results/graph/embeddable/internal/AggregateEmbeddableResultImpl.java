@@ -7,7 +7,7 @@ package org.hibernate.sql.results.graph.embeddable.internal;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.SqlAstJoinType;
+import org.hibernate.sql.ast.spi.query.from.SqlAstJoinType;
 import org.hibernate.sql.results.graph.AbstractFetchParent;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -20,7 +20,6 @@ import org.hibernate.sql.results.graph.InitializerProducer;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.graph.embeddable.AggregateEmbeddableResultGraphNode;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableResult;
-import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 import org.hibernate.type.descriptor.java.JavaType;
 
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
@@ -105,7 +104,7 @@ public class AggregateEmbeddableResultImpl<T> extends AbstractFetchParent
 		return aggregateValuesArrayPositions;
 	}
 
-	private static boolean determineIfContainedAnyScalars(ImmutableFetchList fetches) {
+	private static boolean determineIfContainedAnyScalars(org.hibernate.sql.results.graph.FetchList fetches) {
 		for ( var fetch : fetches ) {
 			if ( fetch.containsAnyNonScalarResults() ) {
 				return true;

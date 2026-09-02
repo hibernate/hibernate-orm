@@ -4,7 +4,7 @@
  */
 package org.hibernate.sql.ast.internal;
 
-import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
+import org.hibernate.sql.spi.ParameterMarkerStrategy;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 /**

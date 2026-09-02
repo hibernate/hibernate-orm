@@ -4,6 +4,7 @@
  */
 package org.hibernate.spatial.dialect.hana;
 
+
 import java.sql.Blob;
 import java.sql.Connection;
 import java.sql.PreparedStatement;

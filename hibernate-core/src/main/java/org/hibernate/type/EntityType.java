@@ -4,6 +4,11 @@
  */
 package org.hibernate.type;
 
+import org.hibernate.SPI;
+
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.USE;
+
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Map;
@@ -32,6 +37,7 @@ import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
  *
  * @author Gavin King
  */
+@SPI({ USE, IMPLEMENT })
 public abstract class EntityType extends AbstractType implements AssociationType {
 
 	private final TypeConfiguration typeConfiguration;
@@ -61,6 +67,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	/**
 	 * Constructs the requested entity type mapping.
 	 */
+	@SPI(IMPLEMENT)
 	protected EntityType(
 			TypeConfiguration typeConfiguration,
 			String entityName,
@@ -76,6 +83,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		this.referenceToPrimaryKey = referenceToPrimaryKey;
 	}
 
+	@SPI(IMPLEMENT)
 	protected EntityType(EntityType original, String superTypeEntityName) {
 		this.typeConfiguration = original.typeConfiguration;
 		this.associatedEntityName = superTypeEntityName;

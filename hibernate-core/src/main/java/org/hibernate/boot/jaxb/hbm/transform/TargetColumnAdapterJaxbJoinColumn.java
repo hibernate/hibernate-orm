@@ -9,14 +9,14 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbJoinColumnImpl;
 /**
  * @author Steve Ebersole
  */
-public class TargetColumnAdapterJaxbJoinColumn implements TargetColumnAdapter {
+class TargetColumnAdapterJaxbJoinColumn implements TargetColumnAdapter {
 	private final JaxbJoinColumnImpl jaxbColumn;
 
-	public TargetColumnAdapterJaxbJoinColumn(ColumnDefaults columnDefaults) {
+	TargetColumnAdapterJaxbJoinColumn(ColumnDefaults columnDefaults) {
 		this( new JaxbJoinColumnImpl(), columnDefaults );
 	}
 
-	public TargetColumnAdapterJaxbJoinColumn(JaxbJoinColumnImpl jaxbColumn, ColumnDefaults columnDefaults) {
+	TargetColumnAdapterJaxbJoinColumn(JaxbJoinColumnImpl jaxbColumn, ColumnDefaults columnDefaults) {
 		this.jaxbColumn = jaxbColumn;
 		this.jaxbColumn.setNullable( columnDefaults.isNullable() );
 		this.jaxbColumn.setUnique( columnDefaults.isUnique() );

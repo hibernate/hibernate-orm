@@ -24,6 +24,7 @@ import org.hibernate.sql.exec.spi.ExecutionContext;
  *
  * @author Steve Ebersole
  */
+@org.hibernate.SPI({ org.hibernate.SPI.Role.USE, org.hibernate.SPI.Role.IMPLEMENT })
 public interface JdbcValuesSourceProcessingState {
 	ExecutionContext getExecutionContext();
 

@@ -5,8 +5,8 @@
 package org.hibernate.community.dialect.sequence;
 
 import org.hibernate.community.dialect.MimerSQLDialect;
-import org.hibernate.dialect.sequence.ANSISequenceSupport;
-import org.hibernate.dialect.sequence.SequenceSupport;
+import org.hibernate.dialect.sequence.spi.ANSISequenceSupport;
+import org.hibernate.dialect.sequence.spi.SequenceSupport;
 
 /**
  * Sequence support for {@link MimerSQLDialect}.

@@ -19,6 +19,7 @@ import org.hibernate.orm.test.envers.entities.manytomany.sametable.Child2Entity;
 import org.hibernate.orm.test.envers.entities.manytomany.sametable.ParentEntity;
 import org.hibernate.orm.test.envers.tools.TestTools;
 import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.DialectTestSupport;
 import org.hibernate.testing.orm.junit.BeforeClassTemplate;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
@@ -58,18 +59,23 @@ public class BasicSametable {
 			DdlTypeRegistry ddlTypeRegistry = em.unwrap( SessionImplementor.class ).getTypeConfiguration()
 					.getDdlTypeRegistry();
 			Session session = em.unwrap( Session.class );
+			final String nullableIntegerDefinition = DialectTestSupport.columnDefinition(
+					scope.getDialect(),
+					ddlTypeRegistry.getTypeName( Types.INTEGER, scope.getDialect() ),
+					true
+			);
 			session.createNativeQuery(
 					"CREATE TABLE children ( parent_id " + ddlTypeRegistry.getTypeName( Types.INTEGER, scope.getDialect() ) +
-							", child1_id " + ddlTypeRegistry.getTypeName( Types.INTEGER, scope.getDialect() ) + scope.getDialect().getNullColumnString() +
-							", child2_id " + ddlTypeRegistry.getTypeName( Types.INTEGER, scope.getDialect() ) + scope.getDialect().getNullColumnString() + " )"
+							", child1_id" + nullableIntegerDefinition +
+							", child2_id" + nullableIntegerDefinition + " )"
 			).executeUpdate();
 			session.createNativeQuery(
 					"CREATE TABLE children_AUD ( REV " + ddlTypeRegistry.getTypeName( Types.INTEGER, scope.getDialect() ) + " NOT NULL" +
 							", REVEND " + ddlTypeRegistry.getTypeName( Types.INTEGER, scope.getDialect() ) +
 							", REVTYPE " + ddlTypeRegistry.getTypeName( Types.TINYINT, scope.getDialect() ) +
 							", parent_id " + ddlTypeRegistry.getTypeName( Types.INTEGER, scope.getDialect() ) +
-							", child1_id " + ddlTypeRegistry.getTypeName( Types.INTEGER, scope.getDialect() ) + scope.getDialect().getNullColumnString() +
-							", child2_id " + ddlTypeRegistry.getTypeName( Types.INTEGER, scope.getDialect() ) + scope.getDialect().getNullColumnString() + " )"
+							", child1_id" + nullableIntegerDefinition +
+							", child2_id" + nullableIntegerDefinition + " )"
 			).executeUpdate();
 		} );
 

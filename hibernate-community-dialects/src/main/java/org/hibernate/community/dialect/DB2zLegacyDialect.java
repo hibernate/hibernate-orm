@@ -4,38 +4,51 @@
  */
 package org.hibernate.community.dialect;
 
+import org.hibernate.dialect.temporaltype.spi.TemporalOperationSupport;
+
+import org.hibernate.SPI;
+import static org.hibernate.SPI.Role.USE;
+
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.SUPPLY;
+import org.hibernate.dialect.sql.ast.spi.CteSupport;
+import org.hibernate.dialect.sql.ast.spi.PredicateSupport;
+import org.hibernate.dialect.sql.ast.spi.ValuesListSupport;
+import org.hibernate.dialect.sql.ast.spi.SubquerySupport;
+
 
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.dialect.DatabaseVersion;
-import org.hibernate.dialect.TimeZoneSupport;
+import org.hibernate.dialect.type.spi.TimeZoneSupport;
+import org.hibernate.dialect.rowid.spi.RowIdSupport;
+import org.hibernate.dialect.rowid.spi.RowIdSupports;
 import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.dialect.identity.DB2zIdentityColumnSupport;
-import org.hibernate.dialect.identity.IdentityColumnSupport;
-import org.hibernate.dialect.lock.internal.DB2LockingSupport;
+import org.hibernate.community.dialect.identity.internal.DB2zIdentityColumnSupport;
+import org.hibernate.dialect.identity.spi.IdentityColumnSupport;
+import org.hibernate.dialect.schema.spi.IndexDdlRequest;
 import org.hibernate.dialect.lock.spi.LockingSupport;
-import org.hibernate.dialect.pagination.FetchLimitHandler;
-import org.hibernate.dialect.pagination.LimitHandler;
-import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
-import org.hibernate.dialect.sequence.DB2zSequenceSupport;
-import org.hibernate.dialect.sequence.NoSequenceSupport;
-import org.hibernate.dialect.sequence.SequenceSupport;
-import org.hibernate.dialect.unique.AlterTableUniqueIndexDelegate;
-import org.hibernate.dialect.unique.SkipNullableUniqueDelegate;
-import org.hibernate.dialect.unique.UniqueDelegate;
+import org.hibernate.dialect.lock.spi.StandardLockingSupports;
+import org.hibernate.dialect.pagination.spi.FetchLimitHandler;
+import org.hibernate.dialect.pagination.spi.LimitHandler;
+import org.hibernate.dialect.pagination.spi.OffsetFetchLimitHandler;
+import org.hibernate.community.dialect.sequence.CommunitySequenceSupports;
+import org.hibernate.dialect.sequence.spi.SequenceSupport;
+import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
+import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractors;
+import org.hibernate.dialect.unique.spi.UniqueDelegates;
+import org.hibernate.dialect.unique.spi.UniqueDelegate;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.mapping.Column;
-import org.hibernate.dialect.type.IntervalType;
+import org.hibernate.dialect.temporaltype.spi.IntervalType;
 import org.hibernate.query.common.TemporalUnit;
-import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.SqlAstTranslatorFactory;
-import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
-import org.hibernate.sql.ast.tree.Statement;
+import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslatorFactory;
+import org.hibernate.dialect.sql.ast.spi.StandardSqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.Statement;
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 
 import jakarta.persistence.TemporalType;
 
-import java.util.List;
 
 import static org.hibernate.type.SqlTypes.ROWID;
 import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
@@ -46,7 +59,13 @@ import static org.hibernate.type.SqlTypes.TIME_WITH_TIMEZONE;
  *
  * @author Christian Beikov
  */
-public class DB2zLegacyDialect extends DB2LegacyDialect {
+public class DB2zLegacyDialect extends DB2LegacyDialect implements TemporalOperationSupport {
+
+	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
+	public TemporalOperationSupport getTemporalOperationSupport() {
+		return this;
+	}
 
 	final static DatabaseVersion DB2_LUW_VERSION9 = DatabaseVersion.make( 9, 0);
 
@@ -54,7 +73,6 @@ public class DB2zLegacyDialect extends DB2LegacyDialect {
 
 	public DB2zLegacyDialect(DialectResolutionInfo info) {
 		this( info.makeCopyOrDefault( DEFAULT_VERSION ) );
-		registerKeywords( info );
 	}
 
 	public DB2zLegacyDialect() {
@@ -67,10 +85,11 @@ public class DB2zLegacyDialect extends DB2LegacyDialect {
 
 	@Override
 	protected LockingSupport buildLockingSupport() {
-		return DB2LockingSupport.forDB2z();
+		return StandardLockingSupports.db2z();
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
 		super.initializeFunctionRegistry(functionContributions);
 		if ( getVersion().isSameOrAfter( 12 ) ) {
@@ -83,6 +102,7 @@ public class DB2zLegacyDialect extends DB2LegacyDialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	protected String columnType(int sqlTypeCode) {
 		if ( getVersion().isAfter( 10 ) ) {
 			switch ( sqlTypeCode ) {
@@ -101,48 +121,67 @@ public class DB2zLegacyDialect extends DB2LegacyDialect {
 	}
 
 	@Override
+	@SPI(IMPLEMENT)
 	protected UniqueDelegate createUniqueDelegate() {
 		//TODO: when was 'create unique where not null index' really first introduced?
 		return getVersion().isSameOrAfter(11)
 				//use 'create unique where not null index'
-				? new AlterTableUniqueIndexDelegate(this)
+				? UniqueDelegates.nullableIndex( this )
 				//ignore unique keys on nullable columns in earlier versions
-				: new SkipNullableUniqueDelegate(this);
+				: UniqueDelegates.skipNullable( this );
 	}
 
 	@Override
-	public String getCreateIndexString(boolean unique) {
+	@SPI({ USE, IMPLEMENT })
+	public String createCommand(IndexDdlRequest request) {
 		// we only create unique indexes, as opposed to unique constraints,
 		// when the column is nullable, so safe to infer unique => nullable
-		return unique ? "create unique where not null index" : "create index";
+		return request.unique() ? "create unique where not null index" : "create index";
 	}
 
 	@Override
-	public String getCreateIndexTail(boolean unique, List<Column> columns) {
+	@SPI({ USE, IMPLEMENT })
+	public String createTail(IndexDdlRequest request) {
 		return "";
 	}
 
 	@Override
-	public boolean supportsDistinctFromPredicate() {
-		// Supported at least since DB2 z/OS 9.0
-		return true;
+	public PredicateSupport getPredicateSupport() {
+		// DISTINCT FROM is supported at least since DB2 z/OS 9.0
+		return PredicateSupport.builder( super.getPredicateSupport() )
+				.capability( PredicateSupport.Capability.DISTINCT_FROM, true )
+				.build();
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public TimeZoneSupport getTimeZoneSupport() {
 		return getVersion().isAfter(10) ? TimeZoneSupport.NATIVE : TimeZoneSupport.NONE;
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public SequenceSupport getSequenceSupport() {
 		return getVersion().isBefore(8)
-				? NoSequenceSupport.INSTANCE
-				: DB2zSequenceSupport.INSTANCE;
+				? org.hibernate.dialect.sequence.spi.SequenceSupports.none()
+				: CommunitySequenceSupports.db2z();
 	}
 
+	private static final SequenceInformationExtractor SEQUENCE_INFORMATION_EXTRACTOR =
+			SequenceInformationExtractors.builder( "select * from sysibm.syssequences" )
+					.sequenceNameColumn( "seqname" )
+					.withoutCatalog()
+					.schemaColumn( "seqschema" )
+					.startValueColumn( "start" )
+					.minimumValueColumn( "minvalue" )
+					.maximumValueColumn( "maxvalue" )
+					.build();
+
 	@Override
-	public String getQuerySequencesString() {
-		return getVersion().isBefore(8) ? null : "select * from sysibm.syssequences";
+	public SequenceInformationExtractor getSequenceInformationExtractor() {
+		return getVersion().isBefore( 8 )
+				? SequenceInformationExtractors.none()
+				: SEQUENCE_INFORMATION_EXTRACTOR;
 	}
 
 	@Override
@@ -158,16 +197,24 @@ public class DB2zLegacyDialect extends DB2LegacyDialect {
 	}
 
 	@Override
-	public boolean supportsLateral() {
-		return true;
+	public SubquerySupport getSubquerySupport() {
+		return SubquerySupport.builder( super.getSubquerySupport() )
+				.feature( SubquerySupport.Feature.LATERAL, true )
+				.build();
 	}
 
 	@Override
-	public boolean supportsRecursiveCTE() {
-		return getVersion().isSameOrAfter( 11 );
+	public CteSupport getCteSupport() {
+		return CteSupport.builder( super.getCteSupport() )
+				.recursiveFeature(
+						CteSupport.RecursiveFeature.RECURSIVE,
+						getVersion().isSameOrAfter( 11 )
+				)
+				.build();
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
 		final StringBuilder pattern = new StringBuilder();
 		pattern.append("add_");
@@ -209,12 +256,13 @@ public class DB2zLegacyDialect extends DB2LegacyDialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public SqlAstTranslatorFactory getSqlAstTranslatorFactory() {
 		return new StandardSqlAstTranslatorFactory() {
 			@Override
-			protected <T extends JdbcOperation> SqlAstTranslator<T> buildTranslator(
-					SessionFactoryImplementor sessionFactory, Statement statement) {
-				return new DB2zLegacySqlAstTranslator<>( sessionFactory, statement, getVersion() );
+			protected <S extends Statement, T extends JdbcOperation> SqlAstTranslator<T> createTranslator(
+					SqlAstTranslationRequest<S, T> request) {
+				return new DB2zLegacySqlAstTranslator<>( request, getVersion() );
 			}
 		};
 	}
@@ -224,23 +272,18 @@ public class DB2zLegacyDialect extends DB2LegacyDialect {
 	// Note that the implementation inherited from DB2Dialect for LUW will not work!
 
 	@Override
-	public String rowId(String rowId) {
-		return rowId == null || rowId.isEmpty() ? "rowid_" : rowId;
+	@SPI({ IMPLEMENT, SUPPLY })
+	public RowIdSupport getRowIdSupport() {
+		return RowIdSupports.requestedName(
+				"rowid_",
+				ROWID,
+				" rowid not null generated always"
+		);
 	}
 
 	@Override
-	public int rowIdSqlType() {
-		return ROWID;
-	}
-
-	@Override
-	public String getRowIdColumnString(String rowId) {
-		return rowId( rowId ) + " rowid not null generated always";
-	}
-
-	@Override
-	public boolean supportsValuesList() {
+	public ValuesListSupport getValuesListSupport() {
 		// DB2 z/OS has a VALUES statement, but that doesn't support multiple values
-		return false;
+		return ValuesListSupport.INSERT_ONLY;
 	}
 }

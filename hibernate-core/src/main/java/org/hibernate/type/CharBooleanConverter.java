@@ -4,6 +4,10 @@
  */
 package org.hibernate.type;
 
+import org.hibernate.SPI;
+
+import static org.hibernate.SPI.Role.USE;
+
 import org.hibernate.type.descriptor.java.BooleanJavaType;
 import org.hibernate.type.descriptor.java.CharacterJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -26,11 +30,13 @@ public abstract class CharBooleanConverter implements StandardBooleanConverter<C
 	}
 
 	@Override
+	@SPI(USE)
 	public JavaType<Boolean> getDomainJavaType() {
 		return BooleanJavaType.INSTANCE;
 	}
 
 	@Override
+	@SPI(USE)
 	public JavaType<Character> getRelationalJavaType() {
 		return CharacterJavaType.INSTANCE;
 	}

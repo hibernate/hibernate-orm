@@ -4,6 +4,7 @@
  */
 package org.hibernate.annotations;
 
+
 import org.hibernate.Incubating;
 import org.hibernate.dialect.Dialect;
 

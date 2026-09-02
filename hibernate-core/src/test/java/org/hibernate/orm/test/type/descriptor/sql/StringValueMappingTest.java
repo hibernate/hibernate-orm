@@ -80,12 +80,7 @@ public class StringValueMappingTest {
 			return null;
 		}
 
-		private final Dialect dialect = new H2Dialect() {
-			@Override
-			public boolean useConnectionToCreateLob() {
-				return false;
-			}
-		};
+		private final Dialect dialect = new H2Dialect();
 
 		@Override
 		@Nonnull

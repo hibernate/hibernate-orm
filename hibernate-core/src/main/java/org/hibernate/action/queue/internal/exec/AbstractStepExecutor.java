@@ -18,8 +18,8 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.generator.values.GeneratedValuesMutationDelegate;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.sql.model.PreparableMutationOperation;
-import org.hibernate.sql.model.SelfExecutingUpdateOperation;
+import org.hibernate.sql.spi.mutation.jdbc.PreparableMutationOperation;
+import org.hibernate.sql.spi.mutation.SelfExecutingUpdateOperation;
 
 import java.sql.Connection;
 import java.sql.SQLException;

@@ -4,6 +4,11 @@
  */
 package org.hibernate.type;
 
+import org.hibernate.SPI;
+
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.USE;
+
 import java.lang.reflect.Method;
 
 import org.hibernate.HibernateException;
@@ -20,6 +25,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
  *
  * @author Steve Ebersole
  */
+@SPI({ USE, IMPLEMENT })
 public interface CompositeType extends Type {
 	/**
 	 * Get the types of the component properties

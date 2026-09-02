@@ -4,13 +4,14 @@
  */
 package org.hibernate.orm.test.sql.ast;
 
+
 import java.util.List;
 
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.ParamDef;
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
+import org.hibernate.sql.spi.ParameterMarkerStrategy;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 import org.hibernate.testing.jdbc.SQLStatementInspector;

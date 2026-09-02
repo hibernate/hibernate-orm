@@ -4,8 +4,8 @@
  */
 package org.hibernate.community.dialect.pagination;
 
-import org.hibernate.dialect.pagination.LimitLimitHandler;
-import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
+import org.hibernate.dialect.pagination.spi.LimitLimitHandler;
+import org.hibernate.dialect.pagination.spi.PaginationRequest;
 
 /**
  * Limit handler for {@link org.hibernate.community.dialect.AltibaseDialect}.
@@ -16,15 +16,10 @@ public class AltibaseLimitHandler extends LimitLimitHandler {
 	public static final AltibaseLimitHandler INSTANCE = new AltibaseLimitHandler();
 
 	@Override
-	protected String limitClause(boolean hasFirstRow) {
-		return hasFirstRow ? " limit 1+?,?" : " limit ?";
-	}
-
-	@Override
-	protected String limitClause(boolean hasFirstRow, int jdbcParameterCount, ParameterMarkerStrategy parameterMarkerStrategy) {
-		final String firstParameter = parameterMarkerStrategy.createMarker( jdbcParameterCount + 1, null );
+	protected String limitClause(boolean hasFirstRow, PaginationRequest request) {
+		final String firstParameter = request.parameterMarker( request.jdbcParameterCount() + 1 );
 		if ( hasFirstRow ) {
-			return " limit 1+" + firstParameter + "," + parameterMarkerStrategy.createMarker( jdbcParameterCount + 2, null );
+			return " limit 1+" + firstParameter + "," + request.parameterMarker( request.jdbcParameterCount() + 2 );
 		}
 		else {
 			return " limit " + firstParameter;
@@ -32,12 +27,7 @@ public class AltibaseLimitHandler extends LimitLimitHandler {
 	}
 
 	@Override
-	protected String offsetOnlyClause() {
-		return " limit 1+?," + Integer.MAX_VALUE;
-	}
-
-	@Override
-	protected String offsetOnlyClause(int jdbcParameterCount, ParameterMarkerStrategy parameterMarkerStrategy) {
-		return " limit 1+" + parameterMarkerStrategy.createMarker( jdbcParameterCount + 1, null ) + "," + Integer.MAX_VALUE;
+	protected String offsetOnlyClause(PaginationRequest request) {
+		return " limit 1+" + request.parameterMarker( request.jdbcParameterCount() + 1 ) + "," + Integer.MAX_VALUE;
 	}
 }

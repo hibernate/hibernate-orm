@@ -7,18 +7,19 @@ package org.hibernate.community.dialect;
 import java.util.List;
 
 import org.hibernate.Locking;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.dialect.sql.ast.spi.PaginationRenderingPlan;
+import org.hibernate.dialect.sql.ast.spi.PaginationRenderingSupport;
 import org.hibernate.query.sqm.ComparisonOperator;
-import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
-import org.hibernate.sql.ast.spi.SqlSelection;
-import org.hibernate.sql.ast.tree.Statement;
-import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.Literal;
-import org.hibernate.sql.ast.tree.expression.SqlTuple;
-import org.hibernate.sql.ast.tree.expression.Summarization;
-import org.hibernate.sql.ast.tree.select.QueryPart;
-import org.hibernate.sql.ast.tree.select.QuerySpec;
-import org.hibernate.sql.ast.tree.select.SelectClause;
+import org.hibernate.dialect.sql.ast.spi.AbstractSqlAstTranslator;
+import org.hibernate.sql.ast.spi.query.select.SqlSelection;
+import org.hibernate.sql.ast.spi.Statement;
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
+import org.hibernate.sql.ast.spi.query.expression.Expression;
+import org.hibernate.sql.ast.spi.query.expression.Literal;
+import org.hibernate.sql.ast.spi.query.expression.SqlTuple;
+import org.hibernate.sql.ast.spi.query.expression.Summarization;
+import org.hibernate.sql.ast.spi.query.select.QueryPart;
+import org.hibernate.sql.ast.spi.query.select.QuerySpec;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 
 /**
@@ -28,8 +29,8 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
  */
 public class IngresSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstTranslator<T> {
 
-	public IngresSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
-		super( sessionFactory, statement );
+	public IngresSqlAstTranslator(SqlAstTranslationRequest<? extends Statement, T> request) {
+		super( request );
 	}
 
 	@Override
@@ -48,11 +49,10 @@ public class IngresSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 	}
 
 	@Override
-	protected void visitSqlSelections(SelectClause selectClause) {
-		if ( !supportsOffsetFetchClause() ) {
-			renderFirstClause( (QuerySpec) getQueryPartStack().getCurrent() );
-		}
-		super.visitSqlSelections( selectClause );
+	protected PaginationRenderingSupport getPaginationRenderingSupport() {
+		return request -> supportsOffsetFetchClause()
+				? new PaginationRenderingPlan.OffsetFetch( false )
+				: new PaginationRenderingPlan.First();
 	}
 
 	@Override
@@ -77,12 +77,10 @@ public class IngresSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 
 	@Override
 	public void visitOffsetFetchClause(QueryPart queryPart) {
-		if ( supportsOffsetFetchClause() ) {
-			renderOffsetFetchClause( queryPart, false );
-		}
-		else if ( !queryPart.isRoot() && queryPart.getOffsetClauseExpression() != null ) {
+		if ( !supportsOffsetFetchClause() && !queryPart.isRoot() && queryPart.getOffsetClauseExpression() != null ) {
 			throw new IllegalArgumentException( "Can't emulate offset clause in subquery" );
 		}
+		super.visitOffsetFetchClause( queryPart );
 	}
 
 	@Override
@@ -113,11 +111,6 @@ public class IngresSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 		else {
 			expression.accept( this );
 		}
-	}
-
-	@Override
-	protected boolean needsRowsToSkip() {
-		return !supportsOffsetFetchClause();
 	}
 
 	private boolean supportsParameterOffsetFetchExpression() {

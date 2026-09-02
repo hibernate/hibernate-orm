@@ -16,10 +16,14 @@ import org.hibernate.Incubating;
  * DomainResult is distinctly different from a {@link Fetch} and so modeled as completely separate hierarchy.
  *
  * @see Fetch
+ * @see org.hibernate.sql.ast.spi.result.DomainResultProducer#createDomainResult(String, DomainResultCreationState)
+ * @see org.hibernate.metamodel.mapping.ModelPart#createDomainResult(org.hibernate.spi.NavigablePath, org.hibernate.sql.ast.spi.query.from.TableGroup, String, DomainResultCreationState)
+ * @see org.hibernate.query.results.spi.ResultBuilder#buildResult(org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata, int, DomainResultCreationState)
  *
  * @author Steve Ebersole
  */
 @Incubating
+@org.hibernate.SPI({ org.hibernate.SPI.Role.USE, org.hibernate.SPI.Role.IMPLEMENT, org.hibernate.SPI.Role.SUPPLY })
 public interface DomainResult<J> extends DomainResultGraphNode {
 	/**
 	 * The result-variable (alias) associated with this result.
@@ -28,7 +32,10 @@ public interface DomainResult<J> extends DomainResultGraphNode {
 
 	/**
 	 * Create an assembler (and any initializers) for this result.
+	 *
+	 * @see DomainResultAssembler
 	 */
+	@org.hibernate.SPI(org.hibernate.SPI.Role.SUPPLY)
 	DomainResultAssembler<J> createResultAssembler(
 			InitializerParent<?> parent,
 			AssemblerCreationState creationState);

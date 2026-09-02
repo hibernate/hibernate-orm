@@ -6,14 +6,15 @@ package org.hibernate.query.sqm.sql.internal;
 
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.spi.query.PathInterpretation;
+import org.hibernate.sql.ast.spi.query.from.TableGroup;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 
 /**
  * @author Andrea Boriero
  */
-public abstract class AbstractSqmPathInterpretation<T> implements SqmPathInterpretation<T> {
+public abstract class AbstractSqmPathInterpretation<T> implements PathInterpretation<T> {
 
 	private final NavigablePath navigablePath;
 	private final ModelPart mapping;

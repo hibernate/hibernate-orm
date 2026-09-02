@@ -1528,7 +1528,7 @@ formatFunction
 /**
  * A format pattern, with a syntax inspired by by java.time.format.DateTimeFormatter
  *
- * see 'Dialect.appendDatetimeFormat()'
+ * see 'TemporalFormatSupport.appendFormat()'
  */
 format
 	: STRING_LITERAL

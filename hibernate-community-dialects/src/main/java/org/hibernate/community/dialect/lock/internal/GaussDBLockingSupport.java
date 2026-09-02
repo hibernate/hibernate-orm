@@ -7,12 +7,15 @@ package org.hibernate.community.dialect.lock.internal;
 import jakarta.persistence.Timeout;
 import org.hibernate.HibernateException;
 import org.hibernate.Timeouts;
-import org.hibernate.dialect.RowLockStrategy;
-import org.hibernate.dialect.lock.internal.Helper;
+import org.hibernate.dialect.lock.spi.RowLockStrategy;
 import org.hibernate.dialect.lock.spi.ConnectionLockTimeoutStrategy;
+import org.hibernate.dialect.lock.spi.ConnectionLockTimeoutOperations;
 import org.hibernate.dialect.lock.spi.LockTimeoutType;
+import org.hibernate.dialect.lock.spi.LockingClauseRenderer;
+import org.hibernate.dialect.lock.spi.LockingClauseRequest;
 import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.lock.spi.OuterJoinLockingType;
+import org.hibernate.dialect.lock.spi.PessimisticLockKind;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 import java.sql.Connection;
@@ -28,7 +31,8 @@ import static org.hibernate.dialect.lock.spi.LockTimeoutType.QUERY;
  *
  * Notes: Original code of this class is based on PostgreSQLLockingSupport.
  */
-public class GaussDBLockingSupport implements LockingSupport, LockingSupport.Metadata, ConnectionLockTimeoutStrategy {
+public class GaussDBLockingSupport
+		implements LockingSupport, LockingSupport.Metadata, ConnectionLockTimeoutStrategy, LockingClauseRenderer {
 	public static final LockingSupport LOCKING_SUPPORT = new GaussDBLockingSupport();
 	private final boolean supportsNoWait;
 	private final boolean supportsSkipLocked;
@@ -45,6 +49,56 @@ public class GaussDBLockingSupport implements LockingSupport, LockingSupport.Met
 	@Override
 	public Metadata getMetadata() {
 		return this;
+	}
+
+	@Override
+	public LockingClauseRenderer getLockingClauseRenderer() {
+		return this;
+	}
+
+	@Override
+	public String render(LockingClauseRequest request) {
+		final StringBuilder fragment = new StringBuilder(
+				request.lockKind() == PessimisticLockKind.SHARE ? " for share" : " for update"
+		);
+		if ( !request.targets().isEmpty() ) {
+			fragment.append( " of " );
+			appendTargets( fragment, request );
+		}
+
+		switch ( request.timeout().milliseconds() ) {
+			case NO_WAIT_MILLI -> {
+				if ( supportsNoWait ) {
+					fragment.append( " nowait" );
+				}
+			}
+			case SKIP_LOCKED_MILLI -> {
+				if ( supportsSkipLocked ) {
+					fragment.append( " skip locked" );
+				}
+			}
+		}
+		return fragment.toString();
+	}
+
+	private static void appendTargets(StringBuilder fragment, LockingClauseRequest request) {
+		boolean first = true;
+		for ( LockingClauseRequest.Target target : request.targets() ) {
+			if ( first ) {
+				first = false;
+			}
+			else {
+				fragment.append( ',' );
+			}
+			if ( target instanceof LockingClauseRequest.TableTarget table ) {
+				fragment.append( table.tableAlias() );
+			}
+			else if ( target instanceof LockingClauseRequest.ColumnTarget column ) {
+				fragment.append( column.tableAlias() )
+						.append( '.' )
+						.append( column.columnName() );
+			}
+		}
 	}
 
 	@Override
@@ -79,8 +133,13 @@ public class GaussDBLockingSupport implements LockingSupport, LockingSupport.Met
 	}
 
 	@Override
+	public boolean supportsWait() {
+		return false;
+	}
+
+	@Override
 	public Timeout getLockTimeout(Connection connection, SessionFactoryImplementor factory) {
-		return Helper.getLockTimeout(
+		return ConnectionLockTimeoutOperations.query(
 				"select current_setting('lockwait_timeout')",
 				(resultSet) -> {
 					// even though lock_timeout is "in milliseconds", `current_setting`
@@ -122,7 +181,7 @@ public class GaussDBLockingSupport implements LockingSupport, LockingSupport.Met
 
 	@Override
 	public void setLockTimeout(Timeout timeout, Connection connection, SessionFactoryImplementor factory) {
-		Helper.setLockTimeout(
+		ConnectionLockTimeoutOperations.execute(
 				timeout,
 				(t) -> {
 					final int milliseconds = timeout.milliseconds();

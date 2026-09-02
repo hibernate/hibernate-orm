@@ -18,7 +18,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.MySQLDialect;
 
-import org.hibernate.tool.schema.internal.StandardTableMigrator;
+import org.hibernate.dialect.schema.internal.StandardTableMigrator;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;

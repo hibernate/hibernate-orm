@@ -5,7 +5,7 @@
 package org.hibernate.query.hql.spi;
 
 import org.hibernate.Incubating;
-import org.hibernate.internal.util.collections.Stack;
+import org.hibernate.spi.Stack;
 import org.hibernate.query.sqm.spi.SqmCreationContext;
 import org.hibernate.query.sqm.tree.spi.cte.SqmCteStatement;
 

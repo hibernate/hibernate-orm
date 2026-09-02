@@ -54,7 +54,10 @@ public class BasicConnectionTest {
 			try {
 				Transaction ddlTxn = session.beginTransaction();
 				Statement statement = jdbcCoordinator.getStatementPreparer().createStatement();
-				String dropSql = dialect.getDropTableString( "SANDBOX_JDBC_TST" );
+				String dropSql = org.hibernate.testing.DialectTestSupport.dropTableCommand(
+						dialect,
+						"SANDBOX_JDBC_TST"
+				);
 				try {
 					jdbcCoordinator.getResultSetReturn().execute( statement, dropSql );
 				}
@@ -90,7 +93,10 @@ public class BasicConnectionTest {
 				factoryScope.inTransaction( session, (s) -> session.doWork( connection -> {
 					final Statement stmnt = connection.createStatement();
 
-					stmnt.execute( dialect.getDropTableString( "SANDBOX_JDBC_TST" ) );
+					stmnt.execute( org.hibernate.testing.DialectTestSupport.dropTableCommand(
+							dialect,
+							"SANDBOX_JDBC_TST"
+					) );
 				} ) );
 			}
 

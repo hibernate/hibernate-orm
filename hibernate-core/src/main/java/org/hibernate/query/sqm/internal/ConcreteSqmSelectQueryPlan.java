@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.sqm.internal;
 
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
+
 import jakarta.persistence.Tuple;
 import org.hibernate.AssertionFailure;
 import org.hibernate.InstantiationException;
@@ -21,16 +23,17 @@ import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.SelectQueryPlan;
 import org.hibernate.query.sqm.spi.SqmParameterMappingModelResolutionAccess;
 import org.hibernate.query.sqm.sql.internal.SqmParameterInterpretation;
+import org.hibernate.query.sqm.sql.spi.SqmTranslationRequest;
 import org.hibernate.query.sqm.tree.spi.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.spi.from.SqmRoot;
 import org.hibernate.query.sqm.tree.spi.select.SqmJpaCompoundSelection;
 import org.hibernate.query.sqm.tree.spi.select.SqmQuerySpec;
 import org.hibernate.query.sqm.tree.spi.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.spi.select.SqmSelection;
-import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
-import org.hibernate.sql.ast.tree.expression.Literal;
-import org.hibernate.sql.ast.tree.select.SelectStatement;
+import org.hibernate.sql.ast.spi.query.expression.Expression;
+import org.hibernate.sql.ast.spi.query.expression.JdbcParameter;
+import org.hibernate.sql.ast.spi.query.expression.Literal;
+import org.hibernate.sql.ast.spi.query.select.SelectStatement;
 import org.hibernate.sql.exec.internal.LimitJdbcParameter;
 import org.hibernate.sql.exec.internal.OffsetJdbcParameter;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
@@ -518,20 +521,22 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 		final var sqmTranslator =
 				sessionFactory.getQueryEngine().getSqmTranslatorFactory()
 						.createSelectTranslator(
-								sqm,
-								queryOptions,
-								domainParameterXref,
-								executionContext.getQueryParameterBindings(),
-								executionContext.getSession().getLoadQueryInfluencers(),
-								sessionFactory.getSqlTranslationEngine(),
-								true
+								new SqmTranslationRequest.Select(
+										sqm,
+										queryOptions,
+										domainParameterXref,
+										executionContext.getQueryParameterBindings(),
+										executionContext.getSession().getLoadQueryInfluencers(),
+										sessionFactory.getSqlTranslationEngine(),
+										true
+								)
 						);
 		final var sqmInterpretation = sqmTranslator.translate();
 
 		final var selectTranslator =
 				sessionFactory.getJdbcServices().getJdbcEnvironment()
 						.getSqlAstTranslatorFactory()
-						.buildSelectTranslator( sessionFactory, sqmInterpretation.getSqlAst() );
+						.buildTranslator( new SqlAstTranslationRequest.Select( sessionFactory, sqmInterpretation.getSqlAst() ) );
 
 		final var jdbcParamsXref =
 				generateJdbcParamsXref( domainParameterXref, sqmInterpretation::getJdbcParamsBySqmParam );

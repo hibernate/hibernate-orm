@@ -4,6 +4,11 @@
  */
 package org.hibernate.type;
 
+import org.hibernate.SPI;
+
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.USE;
+
 import java.sql.CallableStatement;
 import java.sql.SQLException;
 
@@ -20,6 +25,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
  * @author Steve Ebersole
  */
 @Incubating
+@SPI({ USE, IMPLEMENT })
 public interface OutputableType<J> extends BindableType<J> {
 	/**
 	 * Can the given instance of this type actually perform the parameter value extractions?

@@ -6,7 +6,9 @@ package org.hibernate.procedure.internal;
 
 import java.util.List;
 
+import org.hibernate.Internal;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.procedure.spi.CallableStatementSupport;
 import org.hibernate.procedure.spi.FunctionReturnImplementor;
 import org.hibernate.procedure.spi.ProcedureCallImplementor;
 import org.hibernate.procedure.spi.ProcedureParameterImplementor;
@@ -21,11 +23,15 @@ import org.hibernate.type.SqlTypes;
  *
  * The JDBC driver of DB2 doesn't support function invocations, so we have to render a select statement instead.
  */
-public class DB2CallableStatementSupport extends AbstractStandardCallableStatementSupport {
+@Internal
+public final class DB2CallableStatementSupport implements CallableStatementSupport {
 	/**
 	 * Singleton access
 	 */
 	public static final DB2CallableStatementSupport INSTANCE = new DB2CallableStatementSupport();
+
+	private DB2CallableStatementSupport() {
+	}
 	private static final String FUNCTION_SYNTAX_START = "select ";
 	private static final String FUNCTION_SYNTAX_END = ") from sysibm.dual";
 	private static final String TABLE_FUNCTION_SYNTAX_START = "select * from table(";
@@ -84,7 +90,7 @@ public class DB2CallableStatementSupport extends AbstractStandardCallableStateme
 				);
 				final SharedSessionContractImplementor session = procedureCall.getSession();
 				if ( parameter.getName() != null
-						&& session.getJdbcServices().getExtractedMetaDataSupport().supportsNamedParameters()
+						&& session.getJdbcServices().getJdbcMetadata().supportsNamedParameters()
 						&& session.getFactory().getSessionFactoryOptions().isPassProcedureParameterNames() ) {
 					buffer.append( parameter.getName() ).append( " => ?" );
 				}

@@ -4,6 +4,8 @@
  */
 package org.hibernate.type;
 
+import org.hibernate.SPI;
+
 import java.util.Objects;
 
 import org.hibernate.type.descriptor.ValueBinder;
@@ -25,6 +27,7 @@ import static org.hibernate.type.BasicArrayType.determineArrayTypeName;
  *
  * @author Christian Beikov
  */
+@SPI
 public class ConvertedBasicArrayType<T,S,E>
 		extends AbstractSingleColumnStandardBasicType<T>
 		implements AdjustableBasicType<T>, BasicPluralType<T, E> {

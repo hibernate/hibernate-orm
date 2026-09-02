@@ -4,6 +4,7 @@
  */
 package org.hibernate.type.descriptor.jdbc;
 
+
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.Inet4Address;

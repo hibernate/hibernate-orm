@@ -4,10 +4,13 @@
  */
 package org.hibernate.procedure.internal;
 
+
 import java.util.List;
 
+import org.hibernate.Internal;
 import org.hibernate.QueryException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.procedure.spi.CallableStatementSupport;
 import org.hibernate.procedure.spi.FunctionReturnImplementor;
 import org.hibernate.procedure.spi.ProcedureCallImplementor;
 import org.hibernate.procedure.spi.ProcedureParameterImplementor;
@@ -23,11 +26,15 @@ import jakarta.persistence.ParameterMode;
  *
  * The JDBC driver of Sybase doesn't support function invocations, so we have to render a select statement instead.
  */
-public class SybaseCallableStatementSupport extends AbstractStandardCallableStatementSupport {
+@Internal
+public final class SybaseCallableStatementSupport implements CallableStatementSupport {
 	/**
 	 * Singleton access
 	 */
 	public static final SybaseCallableStatementSupport INSTANCE = new SybaseCallableStatementSupport();
+
+	private SybaseCallableStatementSupport() {
+	}
 	private static final String FUNCTION_SYNTAX_START = "select ";
 	private static final String FUNCTION_SYNTAX_END = ") from (select 1) t1(c1)";
 	private static final String CALL_SYNTAX_START = "{call ";
@@ -81,7 +88,7 @@ public class SybaseCallableStatementSupport extends AbstractStandardCallableStat
 				);
 				final SharedSessionContractImplementor session = procedureCall.getSession();
 				if (  parameter.getName() != null
-						&& session.getJdbcServices().getExtractedMetaDataSupport().supportsNamedParameters()
+						&& session.getJdbcServices().getJdbcMetadata().supportsNamedParameters()
 						&& session.getFactory().getSessionFactoryOptions().isPassProcedureParameterNames()  ) {
 					buffer.append("@").append( parameter.getName() ).append( " = ?" );
 				}

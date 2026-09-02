@@ -7,6 +7,7 @@ package org.hibernate.community.dialect;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.NamedAuxiliaryDatabaseObject;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.type.spi.EnumRelationalValues;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
@@ -29,7 +30,6 @@ import java.util.Arrays;
 import static java.util.Collections.emptySet;
 import static org.hibernate.type.SqlTypes.NAMED_ENUM;
 import static org.hibernate.type.SqlTypes.OTHER;
-import static org.hibernate.type.descriptor.converter.internal.EnumHelper.getEnumeratedValues;
 
 /**
  * Represents a named {@code enum} type on GaussDB.
@@ -42,8 +42,7 @@ import static org.hibernate.type.descriptor.converter.internal.EnumHelper.getEnu
  * </pre>
  *
  * @see org.hibernate.type.SqlTypes#NAMED_ENUM
- * @see GaussDBDialect#getEnumTypeDeclaration(String, String[])
- * @see GaussDBDialect#getCreateEnumTypeCommand(String, String[])
+ * @see GaussDBDialect#getEnumSupport()
  *
  * @author liubao
  *
@@ -71,7 +70,7 @@ public class GaussDBEnumJdbcType implements JdbcType {
 			appender.appendSql( "'" );
 			appender.appendSql( ((Enum<?>) value).name() );
 			appender.appendSql( "'::" );
-			appender.appendSql( dialect.getEnumTypeDeclaration( enumClass ) );
+			appender.appendSql( dialect.getEnumSupport().getTypeDeclaration( enumClass ) );
 		};
 	}
 
@@ -144,15 +143,18 @@ public class GaussDBEnumJdbcType implements JdbcType {
 		@SuppressWarnings("unchecked")
 		final String[] enumeratedValues =
 				valueConverter == null
-						? getEnumeratedValues( enumClass )
-						: getEnumeratedValues( enumClass, (BasicValueConverter<Enum<?>,?>) valueConverter ) ;
+						? EnumRelationalValues.names( enumClass )
+						: EnumRelationalValues.convertedValues(
+								enumClass,
+								(BasicValueConverter<Enum<?>, ?>) valueConverter
+						);
 		if ( getDefaultSqlTypeCode() == NAMED_ENUM ) {
 			Arrays.sort( enumeratedValues );
 		}
 		final Dialect dialect = database.getDialect();
-		final String[] create =
-				dialect.getCreateEnumTypeCommand( javaType.getJavaTypeClass().getSimpleName(), enumeratedValues );
-		final String[] drop = dialect.getDropEnumTypeCommand( enumClass );
+		final String[] create = dialect.getEnumSupport()
+				.getCreateTypeCommands( javaType.getJavaTypeClass().getSimpleName(), enumeratedValues );
+		final String[] drop = dialect.getEnumSupport().getDropTypeCommands( enumClass );
 		if ( create != null && create.length > 0 ) {
 			database.addAuxiliaryDatabaseObject(
 					new NamedAuxiliaryDatabaseObject(

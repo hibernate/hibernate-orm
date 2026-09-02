@@ -4,6 +4,8 @@
  */
 package org.hibernate.type;
 
+import org.hibernate.SPI;
+
 import java.io.Serializable;
 
 import org.hibernate.AssertionFailure;
@@ -21,6 +23,7 @@ import static org.hibernate.engine.internal.ForeignKeys.getEntityIdentifierIfNot
  *
  * @author Gavin King
  */
+@SPI
 public class SpecialOneToOneType extends OneToOneType {
 
 	public SpecialOneToOneType(

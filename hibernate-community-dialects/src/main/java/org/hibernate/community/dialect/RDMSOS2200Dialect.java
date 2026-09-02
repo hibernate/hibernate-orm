@@ -4,39 +4,56 @@
  */
 package org.hibernate.community.dialect;
 
-import jakarta.persistence.PessimisticLockScope;
+import org.hibernate.dialect.temporaltype.spi.TemporalOperationSupport;
+
+import org.hibernate.dialect.temporaltype.spi.TemporalFormatSupport;
+
+import org.hibernate.SPI;
+import static org.hibernate.SPI.Role.USE;
+
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.SUPPLY;
+import org.hibernate.dialect.type.spi.TypeSizingProfile;
+
 import jakarta.persistence.TemporalType;
-import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.community.dialect.sequence.RDMSSequenceSupport;
 import org.hibernate.dialect.AbstractTransactSQLDialect;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.lob.spi.LobSupport;
+import org.hibernate.dialect.lob.spi.LobSupports;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.SimpleDatabaseVersion;
 import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.dialect.lock.LockingStrategy;
-import org.hibernate.dialect.lock.PessimisticReadUpdateLockingStrategy;
-import org.hibernate.dialect.lock.PessimisticWriteUpdateLockingStrategy;
-import org.hibernate.dialect.lock.internal.LockingSupportSimple;
+import org.hibernate.dialect.lock.spi.EntityLockingStrategies;
+import org.hibernate.dialect.lock.spi.EntityLockingStrategyFactory;
 import org.hibernate.dialect.lock.spi.LockingSupport;
-import org.hibernate.dialect.pagination.FetchLimitHandler;
-import org.hibernate.dialect.pagination.LimitHandler;
-import org.hibernate.dialect.sequence.SequenceSupport;
+import org.hibernate.dialect.lock.spi.StandardLockingClauseStrategies;
+import org.hibernate.dialect.lock.spi.StandardLockingSupports;
+import org.hibernate.dialect.pagination.spi.FetchLimitHandler;
+import org.hibernate.dialect.pagination.spi.LimitHandler;
+import org.hibernate.dialect.sequence.spi.SequenceSupport;
+import org.hibernate.dialect.schema.spi.ColumnDefinitionRequest;
+import org.hibernate.dialect.schema.spi.ConstraintDropMode;
+import org.hibernate.dialect.schema.spi.IndexNameQualification;
+import org.hibernate.dialect.schema.spi.SchemaDropSupport;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.common.TemporalUnit;
-import org.hibernate.dialect.type.IntervalType;
+import org.hibernate.dialect.temporaltype.spi.IntervalType;
 import org.hibernate.query.sqm.TrimSpec;
-import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.SqlAstTranslatorFactory;
-import org.hibernate.sql.ast.spi.LockingClauseStrategy;
-import org.hibernate.sql.ast.spi.SqlAppender;
-import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
-import org.hibernate.sql.ast.tree.Statement;
-import org.hibernate.sql.ast.tree.select.QuerySpec;
+import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslatorFactory;
+import org.hibernate.dialect.sql.ast.spi.RowValueSupport;
+import org.hibernate.dialect.sql.ast.spi.SingleRowTableSupport;
+import org.hibernate.dialect.sql.ast.spi.SubquerySupport;
+import org.hibernate.dialect.lock.spi.LockingClauseStrategy;
+import org.hibernate.sql.spi.SqlAppender;
+import org.hibernate.dialect.sql.ast.spi.StandardSqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.Statement;
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
+import org.hibernate.sql.ast.spi.query.select.QuerySpec;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
@@ -44,7 +61,6 @@ import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import java.sql.Types;
 
 import static org.hibernate.dialect.SimpleDatabaseVersion.ZERO_VERSION;
-import static org.hibernate.sql.ast.internal.NonLockingClauseStrategy.NON_CLAUSE_STRATEGY;
 import static org.hibernate.type.SqlTypes.BIGINT;
 import static org.hibernate.type.SqlTypes.BINARY;
 import static org.hibernate.type.SqlTypes.BLOB;
@@ -75,7 +91,28 @@ import static org.hibernate.type.SqlTypes.VARCHAR;
  *
  * @author Ploski and Hanson
  */
-public class RDMSOS2200Dialect extends Dialect {
+public class RDMSOS2200Dialect extends Dialect implements TemporalFormatSupport, TemporalOperationSupport {
+	private SchemaDropSupport schemaDropSupport;
+
+
+	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
+	public TemporalOperationSupport getTemporalOperationSupport() {
+		return this;
+	}
+
+	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
+	public TemporalFormatSupport getTemporalFormatSupport() {
+		return this;
+	}
+	private final TypeSizingProfile typeSizingProfile = TypeSizingProfile.builder( super.getTypeSizingProfile() )
+			.defaultDecimalPrecision( 21 )
+			.maxVarbinaryLength( TypeSizingProfile.UNSUPPORTED )
+			.maxVarbinaryCapacity( TypeSizingProfile.UNSUPPORTED )
+			.build();
+
+	@Override public TypeSizingProfile getTypeSizingProfile() { return typeSizingProfile; }
 
 	/**
 	 * Constructs a RDMSOS2200Dialect
@@ -89,6 +126,7 @@ public class RDMSOS2200Dialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	protected String columnType(int sqlTypeCode) {
 		/*
 		 * For a list of column types to register, see section A-1
@@ -132,22 +170,19 @@ public class RDMSOS2200Dialect extends Dialect {
 	}
 
 	@Override
-	public boolean useMaterializedLobWhenCapacityExceeded() {
-		return false;
+	@SPI({ IMPLEMENT, SUPPLY })
+	public LobSupport getLobSupport() {
+		return LobSupports.noCapacityPromotion();
 	}
 
 	@Override
-	public int getMaxVarbinaryLength() {
-		//no varbinary type
-		return -1;
-	}
-
-	@Override
-	public DatabaseVersion getVersion() {
+	@SPI({ USE, IMPLEMENT })
+	public DatabaseVersion determineDatabaseVersion(DialectResolutionInfo info) {
 		return ZERO_VERSION;
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public JdbcType resolveSqlTypeDescriptor(
 			String columnTypeName,
 			int jdbcTypeCode,
@@ -167,17 +202,13 @@ public class RDMSOS2200Dialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public int getPreferredSqlTypeCodeForBoolean() {
 		return Types.BIT;
 	}
 
 	@Override
-	public int getDefaultDecimalPrecision() {
-		//the (really low) maximum
-		return 21;
-	}
-
-	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
 		super.initializeFunctionRegistry(functionContributions);
 
@@ -217,18 +248,20 @@ public class RDMSOS2200Dialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public SqlAstTranslatorFactory getSqlAstTranslatorFactory() {
 		return new StandardSqlAstTranslatorFactory() {
 			@Override
-			protected <T extends JdbcOperation> SqlAstTranslator<T> buildTranslator(
-					SessionFactoryImplementor sessionFactory, Statement statement) {
-				return new RDMSOS2200SqlAstTranslator<>( sessionFactory, statement );
+			protected <S extends Statement, T extends JdbcOperation> SqlAstTranslator<T> createTranslator(
+					SqlAstTranslationRequest<S, T> request) {
+				return new RDMSOS2200SqlAstTranslator<>( request );
 			}
 		};
 	}
 
 	@Override
-	public long getFractionalSecondPrecisionInNanos() {
+	@SPI({ USE, IMPLEMENT })
+	public long fractionalSecondPrecisionInNanos() {
 		return 1_000; //microseconds
 	}
 
@@ -247,6 +280,7 @@ public class RDMSOS2200Dialect extends Dialect {
 	 * redefined to include microseconds.
 	 */
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String extractPattern(TemporalUnit unit) {
 		return switch (unit) {
 			case SECOND -> "(second(?2)+microsecond(?2)/1e6)";
@@ -258,6 +292,7 @@ public class RDMSOS2200Dialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
 		return switch (unit) {
 			case NANOSECOND -> "timestampadd('SQL_TSI_FRAC_SECOND',(?2)/1e3,?3)";
@@ -267,6 +302,7 @@ public class RDMSOS2200Dialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
 		return switch (unit) {
 			case NANOSECOND -> "timestampdiff('SQL_TSI_FRAC_SECOND',?2,?3)*1e3";
@@ -283,20 +319,11 @@ public class RDMSOS2200Dialect extends Dialect {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public boolean qualifyIndexName() {
-		return false;
+	@SPI({ USE, IMPLEMENT })
+	public IndexNameQualification nameQualification() {
+		return IndexNameQualification.UNQUALIFIED;
 	}
 
-	/**
-	 * {@code FOR UPDATE} only supported for cursors
-	 *
-	 * @return the empty string
-	 */
-	@Override
-	public String getForUpdateString() {
-		// Original Dialect.java returns " for update";
-		return "";
-	}
 
 	// Verify the state of this new method in Hibernate 3.0 Dialect.java
 
@@ -307,35 +334,46 @@ public class RDMSOS2200Dialect extends Dialect {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public boolean supportsCascadeDelete() {
-		return false;
+	@SPI({ USE, IMPLEMENT })
+	public boolean supportsOnDeleteAction(org.hibernate.annotations.OnDeleteAction action) {
+		return action == org.hibernate.annotations.OnDeleteAction.NO_ACTION;
 	}
 
 	@Override
 	public LockingSupport getLockingSupport() {
-		return LockingSupportSimple.NO_OUTER_JOIN;
+		return StandardLockingSupports.none();
 	}
 
 	@Override
-	public String getAddColumnString() {
+	@SPI({ USE, IMPLEMENT })
+	public String addColumnPrefix() {
 		return "add";
 	}
 
 	@Override
-	public String getNullColumnString() {
+	@SPI({ USE, IMPLEMENT })
+	public void appendDefinition(SqlAppender appender, ColumnDefinitionRequest request) {
 		// The keyword used to specify a nullable column.
-		return " null";
+		super.appendDefinition( appender, request );
+		if ( request.nullable() ) {
+			appender.appendSql( " null" );
+		}
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public SequenceSupport getSequenceSupport() {
 		return RDMSSequenceSupport.INSTANCE;
 	}
 
 	@Override
-	public String getCascadeConstraintsString() {
+	@SPI({ IMPLEMENT, SUPPLY })
+	public synchronized SchemaDropSupport getSchemaDropSupport() {
 		// Used with DROP TABLE to delete all records in the table.
-		return " including contents";
+		if ( schemaDropSupport == null ) {
+			schemaDropSupport = new SchemaDropSupport( java.util.List.of(), ConstraintDropMode.EXPLICIT, " including contents" );
+		}
+		return schemaDropSupport;
 	}
 
 	@Override
@@ -344,31 +382,28 @@ public class RDMSOS2200Dialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsOrderByInSubquery() {
-		// This is just a guess
-		return false;
+	public SubquerySupport getSubquerySupport() {
+		return SubquerySupport.builder()
+				.feature( SubquerySupport.Feature.ORDER_BY, false )
+				.build();
 	}
 
 	@Override
-	protected LockingStrategy buildPessimisticWriteStrategy(EntityPersister lockable, LockMode lockMode, PessimisticLockScope lockScope) {
-		// RDMS has no known variation of "SELECT ... FOR UPDATE" syntax...
-		return new PessimisticWriteUpdateLockingStrategy( lockable, lockMode );
-	}
-
-	@Override
-	protected LockingStrategy buildPessimisticReadStrategy(EntityPersister lockable, LockMode lockMode, PessimisticLockScope lockScope) {
-		// RDMS has no known variation of "SELECT ... FOR UPDATE" syntax...
-		return new PessimisticReadUpdateLockingStrategy( lockable, lockMode );
+	@SPI({ IMPLEMENT, SUPPLY })
+	public EntityLockingStrategyFactory getEntityLockingStrategyFactory() {
+		// RDMS has no known variation of "SELECT ... FOR UPDATE" syntax.
+		return EntityLockingStrategies.pessimisticUpdate();
 	}
 
 	@Override
 	public LockingClauseStrategy getLockingClauseStrategy(QuerySpec querySpec, LockOptions lockOptions) {
 		// Unisys 2200 does not support the FOR UPDATE clause
-		return NON_CLAUSE_STRATEGY;
+		return StandardLockingClauseStrategies.none();
 	}
 
 	@Override
-	public void appendDatetimeFormat(SqlAppender appender, String format) {
+	@SPI({ USE, IMPLEMENT })
+	public void appendFormat(SqlAppender appender, String format) {
 		appender.appendSql(
 				OracleDialect.datetimeFormat( format, true, false ) //Does it really support FM?
 				.replace("SSSSSS", "MLS")
@@ -382,33 +417,23 @@ public class RDMSOS2200Dialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String trimPattern(TrimSpec specification, boolean isWhitespace) {
 		return AbstractTransactSQLDialect.replaceLtrimRtrim( specification, isWhitespace );
 	}
 
 	@Override
-	public String getDual() {
-		return "rdms.rdms_dummy";
+	public SingleRowTableSupport getSingleRowTableSupport() {
+		final String tableExpression = "rdms.rdms_dummy";
+		return SingleRowTableSupport.builder( super.getSingleRowTableSupport() )
+				.tableExpression( tableExpression )
+				.selectOnlyFromClause( " from " + tableExpression + " where key_col=1" )
+				.build();
 	}
 
 	@Override
-	public String getFromDualForSelectOnly() {
-		return " from " + getDual() + " where key_col=1";
-	}
-
-	@Override
-	public boolean supportsRowValueConstructorSyntax() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsRowValueConstructorSyntaxInInList() {
-		return false;
+	public RowValueSupport getRowValueSupport() {
+		return RowValueSupport.NONE;
 	}
 
 }

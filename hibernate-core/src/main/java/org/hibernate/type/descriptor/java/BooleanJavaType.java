@@ -4,6 +4,8 @@
  */
 package org.hibernate.type.descriptor.java;
 
+import java.util.Arrays;
+
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
@@ -225,18 +227,20 @@ public class BooleanJavaType extends AbstractClassJavaType<Boolean> implements
 	public String getCheckCondition(String columnName, JdbcType jdbcType, BasicValueConverter<Boolean, ?> converter, Dialect dialect) {
 		if ( converter != null ) {
 			if ( jdbcType.isString() ) {
-				return dialect.getCheckCondition( columnName,
-						getPossibleStringValues( converter,
+				return dialect.getEnumSupport().getCheckCondition( columnName,
+						Arrays.asList( getPossibleStringValues( converter,
 								converter.toRelationalValue( false ),
-								converter.toRelationalValue( true ) ) );
+								converter.toRelationalValue( true ) ) ),
+						jdbcType );
 			}
 			else if ( jdbcType.isInteger() ) {
 				@SuppressWarnings("unchecked")
 				final var numericConverter = (BasicValueConverter<Boolean, ? extends Number>) converter;
-				return dialect.getCheckCondition( columnName,
-						getPossibleNumericValues( numericConverter,
+				return dialect.getEnumSupport().getCheckCondition( columnName,
+						Arrays.asList( getPossibleNumericValues( numericConverter,
 								numericConverter.toRelationalValue( false ),
-								numericConverter.toRelationalValue( true ) ) );
+								numericConverter.toRelationalValue( true ) ) ),
+						jdbcType );
 			}
 		}
 		return null;

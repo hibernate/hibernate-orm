@@ -16,7 +16,7 @@ import org.hibernate.action.queue.spi.plan.FlushOperation;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.sql.model.ast.TableMutation;
+import org.hibernate.sql.ast.spi.model.TableMutation;
 
 /// Contributes state-management-specific graph mutation plans for entity actions.
 ///

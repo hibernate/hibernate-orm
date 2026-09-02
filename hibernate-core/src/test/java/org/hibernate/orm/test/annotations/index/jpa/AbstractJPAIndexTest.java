@@ -60,7 +60,7 @@ public abstract class AbstractJPAIndexTest {
 	public void testTableIndex(SessionFactoryScope scope) {
 		PersistentClass entity = scope.getMetadataImplementor().getEntityBinding( Car.class.getName() );
 		var dialect = scope.getSessionFactory().getJdbcServices().getDialect();
-		if ( dialect.supportsUniqueConstraints() ) {
+		if ( dialect.getUniqueDelegate().representation( new org.hibernate.dialect.unique.spi.UniqueKeyRepresentationRequest( false, false, false ) ) == org.hibernate.dialect.unique.spi.UniqueKeyRepresentation.CONSTRAINT ) {
 			// if dialect supports unique constraints then validate unique key
 			Iterator<UniqueKey> itr = entity.getTable().getUniqueKeys().values().iterator();
 			assertThat( itr.hasNext() ).isTrue();
@@ -77,7 +77,7 @@ public abstract class AbstractJPAIndexTest {
 
 		Iterator<Index> indexItr = entity.getTable().getIndexes().values().iterator();
 		Index index;
-		if ( dialect.supportsUniqueConstraints() ) {
+		if ( dialect.getUniqueDelegate().representation( new org.hibernate.dialect.unique.spi.UniqueKeyRepresentationRequest( false, false, false ) ) == org.hibernate.dialect.unique.spi.UniqueKeyRepresentation.CONSTRAINT ) {
 			// if dialect supports unique constraints, we don't have to check unique index
 			index  = indexItr.next();
 			assertThat( indexItr.hasNext() ).isFalse();

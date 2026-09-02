@@ -10,6 +10,7 @@ package org.hibernate.sql.results.graph;
  *
  * @author Steve Ebersole
  */
+@org.hibernate.SPI({ org.hibernate.SPI.Role.USE, org.hibernate.SPI.Role.IMPLEMENT })
 public interface InitializerParent<Data extends InitializerData> extends Initializer<Data> {
 
 }

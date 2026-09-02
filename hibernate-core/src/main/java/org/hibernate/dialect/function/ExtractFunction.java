@@ -5,6 +5,7 @@
 package org.hibernate.dialect.function;
 
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.function.spi.ExpressionCoercionSupport;
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.common.TemporalUnit;
@@ -27,10 +28,10 @@ import org.hibernate.query.sqm.tree.spi.expression.SqmExpressionHelper;
 import org.hibernate.query.sqm.tree.spi.expression.SqmExtractUnit;
 import org.hibernate.query.sqm.tree.spi.expression.SqmFormat;
 import org.hibernate.query.sqm.tree.spi.expression.SqmLiteral;
-import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.spi.SqlAppender;
-import org.hibernate.sql.ast.tree.SqlAstNode;
-import org.hibernate.sql.ast.tree.expression.ExtractUnit;
+import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
+import org.hibernate.sql.spi.SqlAppender;
+import org.hibernate.sql.ast.spi.SqlAstNode;
+import org.hibernate.sql.ast.spi.query.expression.ExtractUnit;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -48,7 +49,8 @@ import static org.hibernate.usertype.internal.AbstractTimeZoneStorageCompositeUs
 /**
  * ANSI SQL-inspired {@code extract()} function, where the date/time fields
  * are enumerated by {@link TemporalUnit}, and portability is achieved
- * by delegating to {@link Dialect#extractPattern(TemporalUnit)}.
+ * by delegating to
+ * {@link org.hibernate.dialect.temporaltype.spi.TemporalOperationSupport#extractPattern(TemporalUnit)}.
  *
  * @author Gavin King
  */
@@ -77,7 +79,7 @@ public class ExtractFunction extends AbstractSqmFunctionDescriptor implements Fu
 			SqlAstTranslator<?> walker) {
 		final ExtractUnit field = (ExtractUnit) sqlAstArguments.get( 0 );
 		final TemporalUnit unit = field.getUnit();
-		final String pattern = dialect.extractPattern( unit );
+		final String pattern = dialect.getTemporalOperationSupport().extractPattern( unit );
 		new PatternRenderer( pattern ).render( sqlAppender, sqlAstArguments, walker );
 	}
 
@@ -187,7 +189,9 @@ public class ExtractFunction extends AbstractSqmFunctionDescriptor implements Fu
 				builder
 		);
 		final SqmExpression<?> daySubtraction;
-		if ( dialect.requiresFloatCastingOfIntegerDivision() ) {
+		if ( dialect.getExpressionCoercionSupport().requires(
+				ExpressionCoercionSupport.Requirement.CAST_INTEGER_DIVISION_TO_FLOAT
+		) ) {
 			daySubtraction = queryEngine.getSqmFunctionRegistry()
 					.findFunctionDescriptor("cast")
 					.generateSqmExpression(

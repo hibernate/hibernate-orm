@@ -4,6 +4,8 @@
  */
 package org.hibernate.spatial.dialect.oracle;
 
+import org.hibernate.Internal;
+
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -27,6 +29,7 @@ import org.geolatte.geom.codec.db.oracle.SDOGeometry;
  * @author Karel Maesen, Geovise BVBA
  * creation-date: 8/22/11
  */
+@Internal
 public class SDOGeometryValueExtractor<X> extends BasicExtractor<X> {
 
 	/**

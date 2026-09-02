@@ -4,6 +4,12 @@
  */
 package org.hibernate.type;
 
+import org.hibernate.SPI;
+
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.SUPPLY;
+import static org.hibernate.SPI.Role.USE;
+
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -39,9 +45,17 @@ import jakarta.annotation.Nullable;
  * {@link org.hibernate.type.descriptor.java.JavaType} or
  * {@link org.hibernate.type.descriptor.jdbc.JdbcType} may be used instead.
  *
+ * @see org.hibernate.boot.model.TypeContributions#contributeType(BasicType)
+ * @see org.hibernate.type.BasicTypeRegistry#register(BasicType)
+ * @see org.hibernate.type.BasicTypeRegistry#register(BasicType, String)
+ * @see org.hibernate.type.BasicTypeRegistry#register(BasicType, String...)
+ * @see org.hibernate.boot.MetadataBuilder#applyBasicType(BasicType)
+ * @see org.hibernate.boot.MetadataBuilder#applyBasicType(BasicType, String...)
+ *
  * @author Gavin King
  * @author Steve Ebersole
  */
+@SPI({ USE, IMPLEMENT, SUPPLY })
 public interface Type extends Serializable {
 	/**
 	 * Return true if the implementation is castable to {@link AssociationType}. This does not

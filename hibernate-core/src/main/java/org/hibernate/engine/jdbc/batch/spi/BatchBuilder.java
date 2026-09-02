@@ -11,7 +11,7 @@ import org.hibernate.engine.jdbc.mutation.group.PreparedStatementGroup;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.service.JavaServiceLoadable;
 import org.hibernate.service.Service;
-import org.hibernate.sql.model.PreparableMutationOperation;
+import org.hibernate.sql.spi.mutation.jdbc.PreparableMutationOperation;
 
 /**
  * A builder for {@link Batch} instances.

@@ -6,6 +6,7 @@ package org.hibernate.boot;
 
 import jakarta.persistence.FetchType;
 import org.hibernate.Remove;
+import org.hibernate.SPI;
 import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
 import org.hibernate.boot.scan.spi.ScanningProvider;
 import org.hibernate.boot.model.FunctionContributor;
@@ -105,6 +106,7 @@ public interface MetadataBuilder {
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#IMPLICIT_NAMING_STRATEGY
 	 */
+	@SPI
 	MetadataBuilder applyColumnOrderingStrategy(ColumnOrderingStrategy columnOrderingStrategy);
 
 	/**
@@ -303,7 +305,9 @@ public interface MetadataBuilder {
 	 * @param typeContributor The contributor to apply
 	 *
 	 * @return {@code this}, for method chaining
+	 * @see TypeContributor
 	 */
+	@SPI(SPI.Role.SUPPLY)
 	MetadataBuilder applyTypes(TypeContributor typeContributor);
 
 	/**
@@ -335,21 +339,20 @@ public interface MetadataBuilder {
 	 */
 	MetadataBuilder applyTempClassLoader(ClassLoader tempClassLoader);
 
-	/**
-	 * Apply an explicit {@link FunctionContributor}
-	 * (implicit application via {@link java.util.ServiceLoader} will still happen too)
-	 *
-	 * @param functionContributor The contributor to apply
-	 *
-	 * @return {@code this}, for method chaining
-	 */
+	/// Supply an explicit [FunctionContributor]. Java service loading remains
+	/// active in addition to programmatic contributors.
+	///
+	/// @param functionContributor the contributor to apply
+	/// @return `this` for method chaining
+	/// @see FunctionContributor
+	@SPI(SPI.Role.SUPPLY)
 	MetadataBuilder applyFunctions(FunctionContributor functionContributor);
 
-	/**
-	 * Contribute a {@link SqmFunctionDescriptor} to HQL.
-	 *
-	 * @see org.hibernate.dialect.function.StandardSQLFunction
-	 */
+	/// Supply a [SqmFunctionDescriptor] under the given HQL registration name.
+	///
+	/// @see SqmFunctionDescriptor
+	/// @see org.hibernate.dialect.function.StandardSQLFunction
+	@SPI(SPI.Role.SUPPLY)
 	MetadataBuilder applySqlFunction(String functionName, SqmFunctionDescriptor function);
 
 	/**

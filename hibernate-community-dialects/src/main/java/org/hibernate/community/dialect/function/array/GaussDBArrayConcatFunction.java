@@ -8,9 +8,9 @@ import java.util.List;
 
 import org.hibernate.dialect.function.array.ArrayConcatFunction;
 import org.hibernate.metamodel.model.domain.ReturnableType;
-import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.spi.SqlAppender;
-import org.hibernate.sql.ast.tree.SqlAstNode;
+import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
+import org.hibernate.sql.spi.SqlAppender;
+import org.hibernate.sql.ast.spi.SqlAstNode;
 
 /**
  * GaussDB variant of the function to properly return {@code null} when one of the arguments is null.

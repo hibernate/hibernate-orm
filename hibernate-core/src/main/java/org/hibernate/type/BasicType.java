@@ -4,13 +4,21 @@
  */
 package org.hibernate.type;
 
+import org.hibernate.SPI;
+
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.SUPPLY;
+import static org.hibernate.SPI.Role.USE;
+
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.Incubating;
+import org.hibernate.boot.MetadataBuilder;
+import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.util.IndexedConsumer;
+import org.hibernate.spi.IndexedConsumer;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
@@ -22,11 +30,22 @@ import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 
-/**
- * Marker interface for basic types.
- *
- * @author Steve Ebersole
- */
+/// Describes a basic value mapping which combines its Java and JDBC type
+/// descriptors with the runtime mapping contracts required by Hibernate.
+///
+/// Implement this contract to provide a custom basic type, then supply the
+/// implementation through one of the linked bootstrap registration points.
+///
+/// @see TypeContributions#contributeType(BasicType)
+/// @see TypeContributions#contributeType(BasicType, String...)
+/// @see BasicTypeRegistry#register(BasicType)
+/// @see BasicTypeRegistry#register(BasicType, String)
+/// @see BasicTypeRegistry#register(BasicType, String...)
+/// @see MetadataBuilder#applyBasicType(BasicType)
+/// @see MetadataBuilder#applyBasicType(BasicType, String...)
+///
+/// @author Steve Ebersole
+@SPI({ USE, IMPLEMENT, SUPPLY })
 public interface BasicType<T>
 		extends Type, BasicDomainType<T>, MappingType, BasicValuedMapping, JdbcMapping, SqmDomainType<T> {
 	/**

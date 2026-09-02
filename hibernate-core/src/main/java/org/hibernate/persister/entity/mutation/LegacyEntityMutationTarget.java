@@ -12,8 +12,8 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.sql.model.LegacyMutationTarget;
-import org.hibernate.sql.model.MutationType;
-import org.hibernate.sql.model.ast.builder.MutationGroupBuilder;
+import org.hibernate.sql.spi.mutation.MutationType;
+import org.hibernate.sql.ast.spi.model.builder.MutationGroupBuilder;
 
 /**
  * Entity-specific mutation target for the legacy (sequential) action queue.
@@ -24,6 +24,7 @@ import org.hibernate.sql.model.ast.builder.MutationGroupBuilder;
  * @author Steve Ebersole
  */
 @Incubating
+@org.hibernate.SPI({ org.hibernate.SPI.Role.USE, org.hibernate.SPI.Role.IMPLEMENT })
 public interface LegacyEntityMutationTarget extends LegacyMutationTarget<EntityTableMapping> {
 
 	@Override

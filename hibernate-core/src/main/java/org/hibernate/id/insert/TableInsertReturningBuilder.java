@@ -8,11 +8,11 @@ import java.util.List;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
-import org.hibernate.sql.model.ast.MutatingTableReference;
-import org.hibernate.sql.model.ast.TableInsert;
-import org.hibernate.sql.model.ast.builder.AbstractTableInsertBuilder;
-import org.hibernate.sql.model.internal.TableInsertStandard;
+import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
+import org.hibernate.sql.ast.spi.model.MutatingTableReference;
+import org.hibernate.sql.ast.spi.model.TableInsert;
+import org.hibernate.sql.ast.spi.model.builder.AbstractTableInsertBuilder;
+import org.hibernate.sql.ast.spi.model.TableInsertStandard;
 
 /**
  * @author Steve Ebersole
@@ -20,6 +20,7 @@ import org.hibernate.sql.model.internal.TableInsertStandard;
 public class TableInsertReturningBuilder extends AbstractTableInsertBuilder {
 	private final List<ColumnReference> generatedColumns;
 
+	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	public TableInsertReturningBuilder(
 			EntityPersister mutationTarget,
 			MutatingTableReference tableReference,
@@ -30,6 +31,7 @@ public class TableInsertReturningBuilder extends AbstractTableInsertBuilder {
 	}
 
 	@Override
+	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	protected EntityPersister getMutationTarget() {
 		return (EntityPersister) super.getMutationTarget();
 	}

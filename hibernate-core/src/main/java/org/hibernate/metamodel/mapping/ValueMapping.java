@@ -16,6 +16,7 @@ import org.hibernate.type.descriptor.java.JavaTypedExpressible;
  *
  * @author Steve Ebersole
  */
+@org.hibernate.SPI({ org.hibernate.SPI.Role.USE, org.hibernate.SPI.Role.IMPLEMENT })
 public interface ValueMapping extends MappingModelExpressible, JavaTypedExpressible {
 	/**
 	 * Descriptor for the type of this mapping

@@ -8,6 +8,7 @@ import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import org.hibernate.Internal;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JavaTimeJdbcType;
@@ -20,6 +21,7 @@ import org.hibernate.type.descriptor.jdbc.internal.GetObjectExtractor;
  *
  * @author Christian Beikov
  */
+@Internal
 public class DB2GetObjectExtractor<T> extends GetObjectExtractor<T> {
 	public DB2GetObjectExtractor(
 			JavaType<T> javaType,

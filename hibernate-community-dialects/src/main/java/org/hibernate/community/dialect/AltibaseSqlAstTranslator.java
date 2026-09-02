@@ -6,44 +6,49 @@ package org.hibernate.community.dialect;
 
 import java.util.List;
 
+import org.hibernate.Internal;
 import org.hibernate.Locking;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.util.collections.Stack;
+import org.hibernate.dialect.sql.ast.spi.DerivedTableKind;
+import org.hibernate.dialect.sql.ast.spi.DerivedTableRenderingSupport;
+import org.hibernate.dialect.sql.ast.spi.InsertConflictRenderingSupport;
+import org.hibernate.dialect.sql.ast.spi.PaginationRenderingPlan;
+import org.hibernate.dialect.sql.ast.spi.PaginationRenderingSupport;
+import org.hibernate.dialect.sql.ast.spi.StandardDerivedTableRenderingSupport;
+import org.hibernate.dialect.sql.ast.spi.StandardInsertConflictRenderingSupport;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.common.FrameExclusion;
 import org.hibernate.query.common.FrameKind;
-import org.hibernate.sql.ast.Clause;
-import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
-import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
-import org.hibernate.sql.ast.spi.LockingClauseStrategy;
-import org.hibernate.sql.ast.tree.Statement;
-import org.hibernate.sql.ast.tree.SqlAstNode;
-import org.hibernate.sql.ast.tree.delete.DeleteStatement;
-import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
-import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
-import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
-import org.hibernate.sql.ast.tree.expression.CastTarget;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
-import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.FunctionExpression;
-import org.hibernate.sql.ast.tree.expression.Literal;
-import org.hibernate.sql.ast.tree.expression.Over;
-import org.hibernate.sql.ast.tree.expression.SqlTuple;
-import org.hibernate.sql.ast.tree.expression.SqlTupleContainer;
-import org.hibernate.sql.ast.tree.expression.Summarization;
-import org.hibernate.sql.ast.tree.from.NamedTableReference;
-import org.hibernate.sql.ast.tree.from.QueryPartTableReference;
-import org.hibernate.sql.ast.tree.from.ValuesTableReference;
-import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
-import org.hibernate.sql.ast.tree.predicate.Predicate;
-import org.hibernate.sql.ast.tree.select.QueryPart;
-import org.hibernate.sql.ast.tree.select.QuerySpec;
-import org.hibernate.sql.ast.tree.select.SelectStatement;
-import org.hibernate.sql.ast.tree.update.Assignment;
-import org.hibernate.sql.ast.tree.update.UpdateStatement;
-import org.hibernate.sql.exec.internal.VersionTypeSeedParameterSpecification;
+import org.hibernate.query.common.FetchClauseType;
+import org.hibernate.sql.ast.spi.translation.Clause;
+import org.hibernate.sql.ast.spi.translation.SqlAstNodeRenderingMode;
+import org.hibernate.dialect.sql.ast.spi.AbstractSqlAstTranslator;
+import org.hibernate.dialect.lock.spi.LockingClauseStrategy;
+import org.hibernate.sql.ast.spi.Statement;
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
+import org.hibernate.dialect.function.spi.WindowFunctionSupport;
+import org.hibernate.sql.ast.spi.SqlAstNode;
+import org.hibernate.sql.ast.spi.query.delete.DeleteStatement;
+import org.hibernate.sql.ast.spi.query.expression.BinaryArithmeticExpression;
+import org.hibernate.sql.ast.spi.query.expression.CaseSearchedExpression;
+import org.hibernate.sql.ast.spi.query.expression.CaseSimpleExpression;
+import org.hibernate.sql.ast.spi.query.expression.CastTarget;
+import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
+import org.hibernate.sql.ast.spi.query.expression.Expression;
+import org.hibernate.sql.ast.spi.query.expression.FunctionExpression;
+import org.hibernate.sql.ast.spi.query.expression.Literal;
+import org.hibernate.sql.ast.spi.query.expression.Over;
+import org.hibernate.sql.ast.spi.query.expression.SqlTuple;
+import org.hibernate.sql.ast.spi.query.expression.SqlTupleContainer;
+import org.hibernate.sql.ast.spi.query.expression.Summarization;
+import org.hibernate.sql.ast.spi.query.from.NamedTableReference;
+import org.hibernate.sql.ast.spi.query.insert.InsertSelectStatement;
+import org.hibernate.sql.ast.spi.query.predicate.Predicate;
+import org.hibernate.sql.ast.spi.query.select.QuerySpec;
+import org.hibernate.sql.ast.spi.query.select.SelectStatement;
+import org.hibernate.sql.ast.spi.query.update.Assignment;
+import org.hibernate.sql.ast.spi.query.update.UpdateStatement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 
@@ -54,21 +59,21 @@ import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
  */
 public class AltibaseSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstTranslator<T> {
 
-	// Tracks INSERT SELECT/VALUES source rendering so values like SELECT ?/version seed can be inlined.
-	private boolean renderingInsertSelectSource;
 	// Tracks SELECT-list expression rendering so CASE result parameters can be rendered Altibase-compatibly.
 	private boolean renderingSelectExpression;
 
-	public AltibaseSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
-		super( sessionFactory, statement );
+	public AltibaseSqlAstTranslator(SqlAstTranslationRequest<? extends Statement, T> request) {
+		super( request );
 	}
 
 	@Override
-	public void visitOffsetFetchClause(QueryPart queryPart) {
-		if ( !isRowNumberingCurrentQueryPart() ) {
-			// Use limit because Altibase does not support fetch first rows only.
-			renderCombinedLimitClause( queryPart );
-		}
+	protected PaginationRenderingSupport getPaginationRenderingSupport() {
+		return request -> request.hasFetch()
+				&& request.fetchClauseType() != FetchClauseType.ROWS_ONLY
+				&& getDialect().getWindowFunctionSupport()
+						.supports( WindowFunctionSupport.Feature.WINDOW_FUNCTIONS )
+						? new PaginationRenderingPlan.Window( true )
+						: new PaginationRenderingPlan.CombinedLimit();
 	}
 
 	@Override
@@ -216,23 +221,6 @@ public class AltibaseSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	}
 
 	@Override
-	public void visitQuerySpec(QuerySpec querySpec) {
-		if ( shouldEmulateFetchClause( querySpec ) ) {
-			// Altibase does not support row_with_ties
-			emulateFetchOffsetWithWindowFunctions( querySpec, true );
-		}
-		else {
-			super.visitQuerySpec( querySpec );
-		}
-	}
-
-	protected boolean shouldEmulateFetchClause(QueryPart queryPart) {
-		// Check if current query part is already row numbering to avoid infinite recursion
-		return useOffsetFetchClause( queryPart ) && getQueryPartForRowNumbering() != queryPart
-				&& getDialect().supportsWindowFunctions() && !isRowsOnlyFetchClauseType( queryPart );
-	}
-
-	@Override
 	protected LockStrategy determineLockingStrategy(QuerySpec querySpec, Locking.FollowOn followOnStrategy) {
 		final LockStrategy lockStrategy = super.determineLockingStrategy( querySpec, followOnStrategy );
 		final LockingClauseStrategy lockingClauseStrategy = getLockingClauseStrategy();
@@ -273,56 +261,37 @@ public class AltibaseSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	}
 
 	@Override
-	public void visitValuesTableReference(ValuesTableReference tableReference) {
-		// Emulated VALUES sources render through a SELECT-list, where Altibase does not reliably
-		// handle plain parameter markers. Mark this context so supported values can be inlined.
-		final boolean previousRenderingInsertSelectSource = renderingInsertSelectSource;
-		renderingInsertSelectSource = true;
-		try {
-			emulateValuesTableReferenceColumnAliasing( tableReference );
-		}
-		finally {
-			renderingInsertSelectSource = previousRenderingInsertSelectSource;
-		}
+	protected DerivedTableRenderingSupport getDerivedTableRenderingSupport() {
+		return StandardDerivedTableRenderingSupport.ALTIBASE;
 	}
 
 	@Override
-	protected void visitInsertStatementOnly(InsertSelectStatement statement) {
-		// INSERT SELECT uses the same SELECT-list workaround as emulated VALUES sources.
-		final boolean previousRenderingInsertSelectSource = renderingInsertSelectSource;
-		renderingInsertSelectSource = statement.getSourceSelectStatement() != null;
-		try {
-			if ( statement.getConflictClause() == null || statement.getConflictClause().isDoNothing() ) {
-				// Render plain insert statement and possibly run into unique constraint violation
-				super.visitInsertStatementOnly( statement );
-			}
-			else {
-				visitInsertStatementEmulateMerge( statement );
-			}
-		}
-		finally {
-			renderingInsertSelectSource = previousRenderingInsertSelectSource;
-		}
+	@Internal
+	protected InsertConflictRenderingSupport getInsertConflictRenderingSupport() {
+		return StandardInsertConflictRenderingSupport.MERGE;
 	}
 
 	@Override
 	protected void renderSelectExpression(Expression expression) {
 		// In INSERT SELECT/VALUES sources, inline simple values, version seeds and bound
 		// parameters that Hibernate would otherwise render as SELECT-list parameter markers.
+		final boolean renderingInsertSelectSource = !renderingSelectExpression
+				&& getStatementStack().getCurrent() instanceof InsertSelectStatement insertStatement
+				&& insertStatement.getSourceSelectStatement() != null;
+		final boolean renderingDerivedValuesSource = isRenderingDerivedTable( DerivedTableKind.VALUES )
+				&& !renderingSelectExpression;
 		final boolean previousRenderingSelectExpression = renderingSelectExpression;
-		final boolean previousRenderingInsertSelectSource = renderingInsertSelectSource;
 		renderingSelectExpression = true;
 		try {
 			// Apply INSERT SELECT/VALUES-specific inlining only while rendering their source SELECT-list.
-			if ( renderingInsertSelectSource ) {
-				renderingInsertSelectSource = false;
+			if ( renderingInsertSelectSource || renderingDerivedValuesSource ) {
 				// Render literals directly instead of turning them into parameter markers.
 				if ( expression instanceof Literal literal && renderInsertSelectLiteral( literal ) ) {
 					return;
 				}
 				// Render generated version seed values as SQL expressions such as 0 or current timestamp.
-				if ( expression instanceof VersionTypeSeedParameterSpecification versionSeedParameter
-						&& renderVersionSeedParameter( versionSeedParameter ) ) {
+				final EntityVersionMapping versionMapping = getVersionSeedMapping( expression );
+				if ( versionMapping != null && renderVersionSeedParameter( versionMapping ) ) {
 					return;
 				}
 				// Render remaining parameters in the source SELECT-list as SQL literals.
@@ -346,7 +315,6 @@ public class AltibaseSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 		}
 		finally {
 			renderingSelectExpression = previousRenderingSelectExpression;
-			renderingInsertSelectSource = previousRenderingInsertSelectSource;
 		}
 	}
 
@@ -432,8 +400,7 @@ public class AltibaseSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 
 	// Renders optimistic-lock version seeds through the JDBC literal formatter when possible.
 	@SuppressWarnings("unchecked")
-	private boolean renderVersionSeedParameter(VersionTypeSeedParameterSpecification versionSeedParameter) {
-		final EntityVersionMapping versionMapping = versionSeedParameter.getVersionMapping();
+	private boolean renderVersionSeedParameter(EntityVersionMapping versionMapping) {
 		final JdbcLiteralFormatter<Object> literalFormatter = (JdbcLiteralFormatter<Object>) versionMapping.getJdbcMapping()
 				.getJdbcType()
 				.getJdbcLiteralFormatter( versionMapping.getJavaType() );
@@ -459,7 +426,7 @@ public class AltibaseSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 		final Integer precision = versionMapping.getTemporalPrecision() != null
 				? versionMapping.getTemporalPrecision()
 				: versionMapping.getPrecision();
-		return precision != null ? precision : getDialect().getDefaultTimestampPrecision();
+		return precision != null ? precision : getDialect().getTypeSizingProfile().defaultTimestampPrecision();
 	}
 
 	@Override
@@ -473,20 +440,13 @@ public class AltibaseSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	@Override
 	protected void renderDeleteClause(DeleteStatement statement) {
 		appendSql( "delete" );
-		final Stack<Clause> clauseStack = getClauseStack();
-		try {
-			clauseStack.push( Clause.DELETE );
-			renderTableReferenceIdentificationVariable( statement.getTargetTable() );
-			if ( statement.getFromClause().getRoots().isEmpty() ) {
-				appendSql( " from " );
-				renderDmlTargetTableExpression( statement.getTargetTable() );
-			}
-			else {
-				visitFromClause( statement.getFromClause() );
-			}
+		renderTableReferenceIdentificationVariable( statement.getTargetTable() );
+		if ( statement.getFromClause().getRoots().isEmpty() ) {
+			appendSql( " from " );
+			renderDmlTargetTableExpression( statement.getTargetTable() );
 		}
-		finally {
-			clauseStack.pop();
+		else {
+			visitFromClause( statement.getFromClause() );
 		}
 	}
 
@@ -501,7 +461,7 @@ public class AltibaseSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	// Qualify assignment columns for multi-table updates to avoid ambiguity, but keep
 	// INSERT SELECT merge emulation assignments unqualified for Altibase MERGE syntax.
 	@Override
-	protected void appendAssignmentColumn(ColumnReference column) {
+	protected void renderAssignmentColumn(ColumnReference column) {
 		column.appendColumnForWrite(
 				this,
 				getAffectedTableNames().size() > 1 && !( getStatement() instanceof InsertSelectStatement )
@@ -527,16 +487,6 @@ public class AltibaseSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 			appendSql( "floor" );
 		}
 		super.visitBinaryArithmeticExpression(arithmeticExpression);
-	}
-
-	@Override
-	public void visitQueryPartTableReference(QueryPartTableReference tableReference) {
-		emulateQueryPartTableReferenceColumnAliasing( tableReference );
-	}
-
-	@Override
-	protected boolean needsRecursiveKeywordInWithClause() {
-		return false;
 	}
 
 }

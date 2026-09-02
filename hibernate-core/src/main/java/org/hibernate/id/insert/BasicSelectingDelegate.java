@@ -9,8 +9,8 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.generator.EventType;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.sql.model.ast.builder.TableInsertBuilderStandard;
-import org.hibernate.sql.model.ast.builder.TableMutationBuilder;
+import org.hibernate.sql.ast.spi.model.builder.TableInsertBuilderStandard;
+import org.hibernate.sql.ast.spi.model.builder.TableMutationBuilder;
 
 import static org.hibernate.cfg.AvailableSettings.USE_GET_GENERATED_KEYS;
 
@@ -21,6 +21,7 @@ import static org.hibernate.cfg.AvailableSettings.USE_GET_GENERATED_KEYS;
 public class BasicSelectingDelegate extends AbstractSelectingDelegate {
 	final private EntityPersister persister;
 
+	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	public BasicSelectingDelegate(EntityPersister persister) {
 		super( persister, EventType.INSERT, false, false );
 		this.persister = persister;

@@ -6,10 +6,11 @@ package org.hibernate.sql.exec.internal;
 
 import jakarta.annotation.Nullable;
 import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
+import org.hibernate.sql.ast.spi.query.expression.JdbcParameter;
 import org.hibernate.sql.exec.internal.lock.LoadedValuesCollectorFactory;
 import org.hibernate.sql.exec.spi.ExecutionContext;
-import org.hibernate.sql.exec.spi.JdbcLockStrategy;
+import org.hibernate.sql.exec.spi.JdbcLockingApplication;
+import org.hibernate.sql.exec.spi.JdbcPaginationApplication;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.exec.spi.JdbcParameterBinding;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
@@ -37,7 +38,8 @@ public class JdbcOperationQuerySelect
 	private final int maxRows;
 	private final JdbcParameter offsetParameter;
 	private final JdbcParameter limitParameter;
-	private final JdbcLockStrategy jdbcLockStrategy;
+	private final JdbcLockingApplication lockingApplication;
+	private final JdbcPaginationApplication paginationApplication;
 	private final boolean scrollExecution;
 
 	public JdbcOperationQuerySelect(
@@ -45,6 +47,8 @@ public class JdbcOperationQuerySelect
 			List<JdbcParameterBinder> parameterBinders,
 			JdbcValuesMappingProducer jdbcValuesMappingProducer,
 			Set<String> affectedTableNames) {
+		// This constructor is used by native-query plans, whose completed SQL
+		// still requires execution-time locking and pagination finalization.
 		this(
 				sql,
 				parameterBinders,
@@ -53,7 +57,8 @@ public class JdbcOperationQuerySelect
 				0,
 				Integer.MAX_VALUE,
 				Collections.emptyMap(),
-				JdbcLockStrategy.AUTO,
+				JdbcLockingApplication.RAW_SQL,
+				JdbcPaginationApplication.RAW_SQL,
 				null,
 				null,
 				false
@@ -68,7 +73,8 @@ public class JdbcOperationQuerySelect
 			int rowsToSkip,
 			int maxRows,
 			Map<JdbcParameter, JdbcParameterBinding> appliedParameters,
-			JdbcLockStrategy jdbcLockStrategy,
+			JdbcLockingApplication lockingApplication,
+			JdbcPaginationApplication paginationApplication,
 			JdbcParameter offsetParameter,
 			JdbcParameter limitParameter,
 			boolean scrollExecution) {
@@ -76,7 +82,8 @@ public class JdbcOperationQuerySelect
 		this.jdbcValuesMappingProducer = jdbcValuesMappingProducer;
 		this.rowsToSkip = rowsToSkip;
 		this.maxRows = maxRows;
-		this.jdbcLockStrategy = jdbcLockStrategy;
+		this.lockingApplication = lockingApplication;
+		this.paginationApplication = paginationApplication;
 		this.offsetParameter = offsetParameter;
 		this.limitParameter = limitParameter;
 		this.scrollExecution = scrollExecution;
@@ -90,7 +97,8 @@ public class JdbcOperationQuerySelect
 			int rowsToSkip,
 			int maxRows,
 			Map<JdbcParameter, JdbcParameterBinding> appliedParameters,
-			JdbcLockStrategy jdbcLockStrategy,
+			JdbcLockingApplication lockingApplication,
+			JdbcPaginationApplication paginationApplication,
 			JdbcParameter offsetParameter,
 			JdbcParameter limitParameter) {
 		this(
@@ -101,7 +109,8 @@ public class JdbcOperationQuerySelect
 				rowsToSkip,
 				maxRows,
 				appliedParameters,
-				jdbcLockStrategy,
+				lockingApplication,
+				paginationApplication,
 				offsetParameter,
 				limitParameter,
 				false
@@ -151,8 +160,13 @@ public class JdbcOperationQuerySelect
 	}
 
 	@Override
-	public JdbcLockStrategy getLockStrategy() {
-		return jdbcLockStrategy;
+	public JdbcLockingApplication getLockingApplication() {
+		return lockingApplication;
+	}
+
+	@Override
+	public JdbcPaginationApplication getPaginationApplication() {
+		return paginationApplication;
 	}
 
 	@Override

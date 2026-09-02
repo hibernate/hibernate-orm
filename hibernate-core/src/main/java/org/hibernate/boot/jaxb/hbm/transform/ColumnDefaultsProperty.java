@@ -9,10 +9,10 @@ import org.hibernate.mapping.Property;
 /**
  * @author Steve Ebersole
  */
-public class ColumnDefaultsProperty implements ColumnDefaults {
+class ColumnDefaultsProperty implements ColumnDefaults {
 	private final Property property;
 
-	public ColumnDefaultsProperty(Property property) {
+	ColumnDefaultsProperty(Property property) {
 		this.property = property;
 	}
 

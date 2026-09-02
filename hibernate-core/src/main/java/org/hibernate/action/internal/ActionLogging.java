@@ -211,4 +211,11 @@ public interface ActionLogging extends BasicLogger {
 			id = NAMESPACE + 23
 	)
 	void usingActionQueue(String name);
+
+	@LogMessage(level = WARN)
+	@Message(
+			value = "Custom MutationExecutorService [%s] is unused with the graph-based ActionQueue",
+			id = NAMESPACE + 24
+	)
+	void customMutationExecutorServiceUnused(String serviceClassName);
 }

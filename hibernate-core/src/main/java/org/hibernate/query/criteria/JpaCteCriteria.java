@@ -10,8 +10,8 @@ import java.util.List;
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.Incubating;
-import org.hibernate.sql.ast.tree.cte.CteMaterialization;
-import org.hibernate.sql.ast.tree.cte.CteSearchClauseKind;
+import org.hibernate.sql.ast.spi.query.cte.CteMaterialization;
+import org.hibernate.sql.ast.spi.query.cte.CteSearchClauseKind;
 
 /**
  * A CTE (common table expression) criteria.

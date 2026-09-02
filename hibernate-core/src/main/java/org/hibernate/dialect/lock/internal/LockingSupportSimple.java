@@ -4,11 +4,14 @@
  */
 package org.hibernate.dialect.lock.internal;
 
+
 import jakarta.persistence.Timeout;
-import org.hibernate.dialect.RowLockStrategy;
+import org.hibernate.dialect.lock.spi.RowLockStrategy;
 import org.hibernate.dialect.lock.PessimisticLockStyle;
 import org.hibernate.dialect.lock.spi.ConnectionLockTimeoutStrategy;
 import org.hibernate.dialect.lock.spi.LockTimeoutType;
+import org.hibernate.dialect.lock.spi.LockingClauseRenderer;
+import org.hibernate.dialect.lock.spi.LockingClauseRequest;
 import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.lock.spi.OuterJoinLockingType;
 
@@ -18,7 +21,7 @@ import org.hibernate.dialect.lock.spi.OuterJoinLockingType;
  *
  * @author Steve Ebersole
  */
-public class LockingSupportSimple implements LockingSupport, LockingSupport.Metadata {
+public class LockingSupportSimple implements LockingSupport, LockingSupport.Metadata, LockingClauseRenderer {
 	/**
 	 * The support as used to be defined on Dialect itself...
 	 */
@@ -70,6 +73,16 @@ public class LockingSupportSimple implements LockingSupport, LockingSupport.Meta
 	@Override
 	public Metadata getMetadata() {
 		return this;
+	}
+
+	@Override
+	public LockingClauseRenderer getLockingClauseRenderer() {
+		return this;
+	}
+
+	@Override
+	public String render(LockingClauseRequest request) {
+		return " for update";
 	}
 
 	@Override

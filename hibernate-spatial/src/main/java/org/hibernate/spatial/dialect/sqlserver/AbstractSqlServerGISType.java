@@ -4,6 +4,11 @@
  */
 package org.hibernate.spatial.dialect.sqlserver;
 
+import org.hibernate.SPI;
+
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.USE;
+
 import java.sql.Blob;
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
@@ -30,7 +35,12 @@ import org.geolatte.geom.codec.db.sqlserver.Encoders;
  * @author Karel Maesen, Geovise BVBA
  * creation-date: 8/23/11
  */
+@SPI({ USE, IMPLEMENT })
 public abstract class AbstractSqlServerGISType implements JdbcType {
+	@SPI(IMPLEMENT)
+	public AbstractSqlServerGISType() {
+	}
+
 
 	@Override
 	public int getJdbcTypeCode() {

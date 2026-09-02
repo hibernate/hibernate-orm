@@ -4,6 +4,7 @@
  */
 package org.hibernate.tool.reveng.hbm2x.DocExporterTest;
 
+
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.tool.reveng.api.export.ExporterConstants;
 import org.hibernate.tool.reveng.api.metadata.MetadataDescriptor;

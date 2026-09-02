@@ -24,6 +24,7 @@ import org.hibernate.orm.test.envers.entities.manytomany.sametable.Child2Entity;
 import org.hibernate.orm.test.envers.entities.manytomany.sametable.ParentEntity;
 import org.hibernate.orm.test.envers.tools.TestTools;
 import org.hibernate.testing.envers.junit.EnversTest;
+import org.hibernate.testing.DialectTestSupport;
 import org.hibernate.testing.orm.junit.BeforeClassTemplate;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
@@ -77,6 +78,11 @@ public class ValidityAuditStrategyRevEndTsTest {
 		final var session = em.unwrap( SessionImplementor.class );
 		final var ddlTypeRegistry = session.getTypeConfiguration().getDdlTypeRegistry();
 		dialect = session.getJdbcServices().getDialect();
+		final String nullableIntegerDefinition = DialectTestSupport.columnDefinition(
+				dialect,
+				ddlTypeRegistry.getTypeName( Types.INTEGER, dialect ),
+				true
+		);
 
 		// We need first to modify the columns in the middle (join table) to
 		// allow null values. Hbm2ddl doesn't seem
@@ -90,9 +96,8 @@ public class ValidityAuditStrategyRevEndTsTest {
 		em.getTransaction().begin();
 		session.createNativeQuery(
 						"CREATE TABLE children ( parent_id " + ddlTypeRegistry.getTypeName( Types.INTEGER, dialect ) +
-						", child1_id " + ddlTypeRegistry.getTypeName( Types.INTEGER, dialect ) + dialect.getNullColumnString() +
-						", child2_id " + ddlTypeRegistry.getTypeName( Types.INTEGER,
-								dialect ) + dialect.getNullColumnString() + " )"
+						", child1_id" + nullableIntegerDefinition +
+						", child2_id" + nullableIntegerDefinition + " )"
 				)
 				.executeUpdate();
 		session.createNativeQuery(
@@ -102,9 +107,8 @@ public class ValidityAuditStrategyRevEndTsTest {
 						", " + revendTimestampColumName + " " + ddlTypeRegistry.getTypeName( Types.TIMESTAMP, dialect ) +
 						", REVTYPE " + ddlTypeRegistry.getTypeName( Types.TINYINT, dialect ) +
 						", parent_id " + ddlTypeRegistry.getTypeName( Types.INTEGER, dialect ) +
-						", child1_id " + ddlTypeRegistry.getTypeName( Types.INTEGER, dialect ) + dialect.getNullColumnString() +
-						", child2_id " + ddlTypeRegistry.getTypeName( Types.INTEGER,
-								dialect ) + dialect.getNullColumnString() + " )"
+						", child1_id" + nullableIntegerDefinition +
+						", child2_id" + nullableIntegerDefinition + " )"
 				)
 				.executeUpdate();
 		em.getTransaction().commit();

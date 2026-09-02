@@ -9,7 +9,7 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.results.internal.ResultsHelper;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.spi.SqlAliasBaseConstant;
+import org.hibernate.sql.ast.spi.creation.SqlAliasBaseConstant;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.entity.EntityResult;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;

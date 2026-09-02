@@ -916,6 +916,7 @@ public interface NativeQuery<T>
 
 		String getDiscriminatorAlias();
 
+		@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 		EntityMappingType getEntityMapping();
 
 		NavigablePath getNavigablePath();
@@ -972,6 +973,7 @@ public interface NativeQuery<T>
 
 		String getTableAlias();
 
+		@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 		PluralAttributeMapping getPluralAttribute();
 
 		NavigablePath getNavigablePath();
@@ -987,6 +989,7 @@ public interface NativeQuery<T>
 
 		String getOwnerAlias();
 
+		@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 		Fetchable getFetchable();
 
 		String getFetchableName();

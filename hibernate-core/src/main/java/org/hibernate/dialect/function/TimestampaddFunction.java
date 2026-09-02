@@ -7,7 +7,7 @@ package org.hibernate.dialect.function;
 import jakarta.persistence.TemporalType;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.metamodel.model.domain.ReturnableType;
-import org.hibernate.dialect.type.IntervalType;
+import org.hibernate.dialect.temporaltype.spi.IntervalType;
 import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.function.SelfRenderingFunctionSqlAstExpression;
@@ -16,12 +16,12 @@ import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.query.sqm.produce.function.internal.PatternRenderer;
-import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
-import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.spi.SqlAppender;
-import org.hibernate.sql.ast.tree.SqlAstNode;
-import org.hibernate.sql.ast.tree.expression.DurationUnit;
-import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.spi.translation.SqlAstNodeRenderingMode;
+import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
+import org.hibernate.sql.spi.SqlAppender;
+import org.hibernate.sql.ast.spi.SqlAstNode;
+import org.hibernate.sql.ast.spi.query.expression.DurationUnit;
+import org.hibernate.sql.ast.spi.query.expression.Expression;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import java.util.List;
@@ -37,7 +37,7 @@ import static org.hibernate.type.spi.TypeConfiguration.getSqlTemporalType;
  * The {@code timestampadd()} or {@code dateadd()} function has a funny
  * syntax which accepts a {@link TemporalUnit} as the first argument,
  * and the actual set of accepted units varies widely. This class uses
- * {@link Dialect#timestampaddPattern(TemporalUnit, TemporalType, IntervalType)}
+ * {@link org.hibernate.dialect.temporaltype.spi.TemporalOperationSupport#timestampaddPattern(TemporalUnit, TemporalType, IntervalType)}
  * to abstract these differences.
  *
  * @author Gavin King
@@ -83,7 +83,10 @@ public class TimestampaddFunction
 	PatternRenderer patternRenderer(TemporalUnit unit, Expression interval, Expression to) {
 		TemporalType temporalType = getSqlTemporalType( to.getExpressionType() );
 		IntervalType intervalType = getSqlIntervalType( interval.getExpressionType().getSingleJdbcMapping() );
-		return new PatternRenderer( dialect.timestampaddPattern( unit, temporalType, intervalType ), renderingModes );
+		return new PatternRenderer(
+				dialect.getTemporalOperationSupport().timestampaddPattern( unit, temporalType, intervalType ),
+				renderingModes
+		);
 	}
 
 //	@Override

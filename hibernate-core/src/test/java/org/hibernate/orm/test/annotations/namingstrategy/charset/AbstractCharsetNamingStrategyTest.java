@@ -64,7 +64,7 @@ public abstract class AbstractCharsetNamingStrategyTest {
 				.build();
 
 		var dialect = metadata.getDatabase().getDialect();
-		if ( dialect.supportsUniqueConstraints() ) {
+		if ( dialect.getUniqueDelegate().representation( new org.hibernate.dialect.unique.spi.UniqueKeyRepresentationRequest( false, false, false ) ) == org.hibernate.dialect.unique.spi.UniqueKeyRepresentation.CONSTRAINT ) {
 			var uniqueKey = metadata.getEntityBinding( Address.class.getName() ).getTable().getUniqueKeys().values()
 					.iterator().next();
 			assertThat( uniqueKey.getName() ).isEqualTo( expectedUniqueKeyName() );
@@ -75,7 +75,7 @@ public abstract class AbstractCharsetNamingStrategyTest {
 		assertThat( foreignKey.getName() ).isEqualTo( expectedForeignKeyName() );
 
 		org.hibernate.mapping.Index index = null;
-		if ( dialect.supportsUniqueConstraints() ) {
+		if ( dialect.getUniqueDelegate().representation( new org.hibernate.dialect.unique.spi.UniqueKeyRepresentationRequest( false, false, false ) ) == org.hibernate.dialect.unique.spi.UniqueKeyRepresentation.CONSTRAINT ) {
 			index = metadata.getEntityBinding( Address.class.getName() ).getTable().getIndexes().values().iterator()
 					.next();
 		}

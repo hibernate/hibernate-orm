@@ -4,10 +4,12 @@
  */
 package org.hibernate.query.sqm.mutation.internal.temptable;
 
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
+
 import jakarta.annotation.Nullable;
-import org.hibernate.dialect.temptable.TemporaryTable;
-import org.hibernate.dialect.temptable.TemporaryTableColumn;
-import org.hibernate.dialect.temptable.TemporaryTableStrategy;
+import org.hibernate.dialect.temptable.internal.TemporaryTable;
+import org.hibernate.dialect.temptable.internal.TemporaryTableColumn;
+import org.hibernate.dialect.temptable.spi.TemporaryTableStrategy;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.BeforeExecutionGenerator;
@@ -39,30 +41,30 @@ import org.hibernate.query.sqm.mutation.internal.InsertHandler;
 import org.hibernate.query.sqm.mutation.internal.MultiTableSqmMutationConverter;
 import org.hibernate.query.sqm.mutation.spi.AfterUseAction;
 import org.hibernate.query.sqm.spi.SqmParameterMappingModelResolutionAccess;
-import org.hibernate.query.sqm.sql.internal.SqmPathInterpretation;
+import org.hibernate.sql.ast.spi.query.PathInterpretation;
 import org.hibernate.query.sqm.tree.spi.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.spi.insert.SqmInsertSelectStatement;
 import org.hibernate.query.sqm.tree.spi.insert.SqmInsertStatement;
 import org.hibernate.query.sqm.tree.spi.insert.SqmInsertValuesStatement;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
-import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
-import org.hibernate.sql.ast.tree.expression.QueryLiteral;
-import org.hibernate.sql.ast.tree.from.NamedTableReference;
-import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.from.TableReference;
-import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
-import org.hibernate.sql.ast.tree.from.UnionTableReference;
-import org.hibernate.sql.ast.tree.insert.ConflictClause;
-import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
-import org.hibernate.sql.ast.tree.insert.Values;
-import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
-import org.hibernate.sql.ast.tree.predicate.Predicate;
-import org.hibernate.sql.ast.tree.select.QuerySpec;
-import org.hibernate.sql.ast.tree.select.SelectStatement;
-import org.hibernate.sql.ast.tree.select.SortSpecification;
-import org.hibernate.sql.ast.tree.update.Assignment;
-import org.hibernate.sql.ast.tree.update.UpdateStatement;
+import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
+import org.hibernate.sql.ast.spi.query.expression.Expression;
+import org.hibernate.sql.ast.spi.query.expression.JdbcParameter;
+import org.hibernate.sql.ast.spi.query.expression.QueryLiteral;
+import org.hibernate.sql.ast.spi.query.from.NamedTableReference;
+import org.hibernate.sql.ast.spi.query.from.TableGroup;
+import org.hibernate.sql.ast.spi.query.from.TableReference;
+import org.hibernate.sql.ast.spi.query.from.TableReferenceJoin;
+import org.hibernate.sql.ast.spi.query.from.UnionTableReference;
+import org.hibernate.sql.ast.spi.query.insert.ConflictClause;
+import org.hibernate.sql.ast.spi.query.insert.InsertSelectStatement;
+import org.hibernate.sql.ast.spi.query.insert.Values;
+import org.hibernate.sql.ast.spi.query.predicate.ComparisonPredicate;
+import org.hibernate.sql.ast.spi.query.predicate.Predicate;
+import org.hibernate.sql.ast.spi.query.select.QuerySpec;
+import org.hibernate.sql.ast.spi.query.select.SelectStatement;
+import org.hibernate.sql.ast.spi.query.select.SortSpecification;
+import org.hibernate.sql.ast.spi.query.update.Assignment;
+import org.hibernate.sql.ast.spi.query.update.UpdateStatement;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.internal.SqlTypedMappingJdbcParameter;
@@ -170,7 +172,7 @@ public class TableBasedInsertHandler extends AbstractMutationHandler implements 
 
 		final var additionalInsertValues = sqmConverter.visitInsertionTargetPaths(
 				(assignable, columnReferences) -> {
-					final var pathInterpretation = (SqmPathInterpretation<?>) assignable;
+					final var pathInterpretation = (PathInterpretation<?>) assignable;
 					final var columns =
 							entityTable.findTemporaryTableColumns( entityDescriptor,
 									pathInterpretation.getExpressionType() );
@@ -309,7 +311,7 @@ public class TableBasedInsertHandler extends AbstractMutationHandler implements 
 		boolean assignsId = false;
 		for ( var assignment : targetPathColumns ) {
 			assignsId = assignsId
-						|| assignment.getAssignable() instanceof SqmPathInterpretation<?> pathInterpretation
+						|| assignment.getAssignable() instanceof PathInterpretation<?> pathInterpretation
 								&& isId( pathInterpretation.getExpressionType() );
 		}
 
@@ -584,7 +586,7 @@ public class TableBasedInsertHandler extends AbstractMutationHandler implements 
 							) )
 					);
 			temporaryTableIdentitySelect =
-					sqlAstTranslatorFactory.buildSelectTranslator( getSessionFactory(), selectStatement )
+					sqlAstTranslatorFactory.buildTranslator( new SqlAstTranslationRequest.Select( getSessionFactory(), selectStatement ) )
 							.translate( null, executionContext.getQueryOptions() );
 			temporaryTableIdUpdate = null;
 			temporaryTableRowNumberSelectSql = null;
@@ -660,7 +662,7 @@ public class TableBasedInsertHandler extends AbstractMutationHandler implements 
 					);
 
 					temporaryTableIdUpdate =
-							sqlAstTranslatorFactory.buildMutationTranslator( getSessionFactory(), updateStatement )
+							sqlAstTranslatorFactory.buildTranslator( new SqlAstTranslationRequest.QueryMutation( getSessionFactory(), updateStatement ) )
 									.translate( null, executionContext.getQueryOptions() );
 					temporaryTableRowNumberSelectSql =
 							createInsertedRowNumbersSelectSql( entityTable, executionContext );
@@ -714,7 +716,7 @@ public class TableBasedInsertHandler extends AbstractMutationHandler implements 
 		}
 
 		rootTableInsert =
-				sqlAstTranslatorFactory.buildMutationTranslator( getSessionFactory(), insertStatement )
+				sqlAstTranslatorFactory.buildTranslator( new SqlAstTranslationRequest.QueryMutation( getSessionFactory(), insertStatement ) )
 						.translate( null, executionContext.getQueryOptions() );
 
 		if ( !assignsId && generator.generatedOnExecution() ) {
@@ -763,7 +765,7 @@ public class TableBasedInsertHandler extends AbstractMutationHandler implements 
 			);
 
 			temporaryTableIdentityUpdate =
-					sqlAstTranslatorFactory.buildMutationTranslator( getSessionFactory(), updateStatement )
+					sqlAstTranslatorFactory.buildTranslator( new SqlAstTranslationRequest.QueryMutation( getSessionFactory(), updateStatement ) )
 							.translate( null, executionContext.getQueryOptions() );
 		}
 		else {
@@ -876,7 +878,7 @@ public class TableBasedInsertHandler extends AbstractMutationHandler implements 
 		}
 		return getSessionFactory().getJdbcServices()
 				.getJdbcEnvironment().getSqlAstTranslatorFactory()
-				.buildMutationTranslator( getSessionFactory(), insertStatement )
+				.buildTranslator( new SqlAstTranslationRequest.QueryMutation( getSessionFactory(), insertStatement ) )
 				.translate( null, executionContext.getQueryOptions() );
 	}
 
@@ -897,7 +899,7 @@ public class TableBasedInsertHandler extends AbstractMutationHandler implements 
 				insertStatement.addTargetColumnReferences( assignable.getColumnReferences() );
 				final var columns = entityTable.findTemporaryTableColumns(
 						getEntityDescriptor().getEntityPersister(),
-						( (SqmPathInterpretation<?>) assignable ).getExpressionType()
+						( (PathInterpretation<?>) assignable ).getExpressionType()
 				);
 				for ( var temporaryTableColumn : columns ) {
 					insertStatement.getSourceSelectStatement()

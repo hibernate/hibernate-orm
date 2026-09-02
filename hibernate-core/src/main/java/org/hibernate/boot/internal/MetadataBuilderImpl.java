@@ -61,7 +61,8 @@ import org.hibernate.cfg.JpaComplianceSettings;
 import org.hibernate.cfg.MappingSettings;
 import org.hibernate.context.spi.MultiTenancy;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.TimeZoneSupport;
+import org.hibernate.dialect.array.spi.ArraySupport;
+import org.hibernate.dialect.type.spi.TimeZoneSupport;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.metamodel.CollectionClassification;
@@ -1025,7 +1026,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 	}
 
 	private static WrapperArrayHandling pickWrapperArrayHandling(Dialect dialect) {
-		if ( dialect.supportsStandardArrays()
+		if ( dialect.getArraySupport().supports( ArraySupport.Capability.STANDARD_ARRAY )
 			&& ( dialect.getPreferredSqlTypeCodeForArray() == SqlTypes.ARRAY
 				|| dialect.getPreferredSqlTypeCodeForArray() == SqlTypes.SQLXML ) ) {
 			return WrapperArrayHandling.ALLOW;

@@ -4,6 +4,7 @@
  */
 package org.hibernate.tool.reveng.hbm2x.OtherCfg2HbmTest;
 
+
 import org.hibernate.boot.Metadata;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.tool.reveng.api.export.Exporter;

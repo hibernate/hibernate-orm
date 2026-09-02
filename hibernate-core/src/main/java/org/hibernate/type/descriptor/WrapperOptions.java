@@ -53,10 +53,10 @@ public interface WrapperOptions {
 	 *
 	 * @return {@code true}/{@code false}
 	 *
-	 * @see org.hibernate.dialect.Dialect#useInputStreamToInsertBlob()
+	 * @see org.hibernate.dialect.lob.spi.LobSupport#useInputStreamToInsertBlob()
 	 */
 	default boolean useStreamForLobBinding() {
-		return getDialect().useInputStreamToInsertBlob();
+		return getDialect().getLobSupport().useInputStreamToInsertBlob();
 	}
 
 	/**
@@ -84,7 +84,7 @@ public interface WrapperOptions {
 	 * @return The LOB creator
 	 *
 	 * @see org.hibernate.cfg.JdbcSettings#NON_CONTEXTUAL_LOB_CREATION
-	 * @see org.hibernate.dialect.Dialect#getDefaultNonContextualLobCreation()
+	 * @see org.hibernate.dialect.Dialect#getDefaultProperties()
 	 */
 	@Nonnull
 	default LobCreator getLobCreator() {

@@ -14,13 +14,15 @@ import org.hibernate.type.descriptor.java.JavaType;
 /**
  * @author Steve Ebersole
  */
+@org.hibernate.SPI({ org.hibernate.SPI.Role.USE, org.hibernate.SPI.Role.IMPLEMENT })
 public abstract class AbstractFetchParent implements FetchParent {
 	private final NavigablePath navigablePath;
 
-	private ImmutableFetchList fetches = ImmutableFetchList.EMPTY;
+	private FetchList fetches = ImmutableFetchList.EMPTY;
 	private boolean hasJoinFetches;
 	private boolean containsCollectionFetches;
 
+	@org.hibernate.SPI(org.hibernate.SPI.Role.IMPLEMENT)
 	public AbstractFetchParent(NavigablePath navigablePath) {
 		this.navigablePath = navigablePath;
 	}
@@ -28,6 +30,7 @@ public abstract class AbstractFetchParent implements FetchParent {
 	/*
 	 * Used by Hibernate Reactive
 	 */
+	@org.hibernate.SPI(org.hibernate.SPI.Role.IMPLEMENT)
 	public AbstractFetchParent(AbstractFetchParent original) {
 		navigablePath = original.navigablePath;
 		fetches = original.fetches;
@@ -40,7 +43,7 @@ public abstract class AbstractFetchParent implements FetchParent {
 		resetFetches( creationState.visitFetches( fetchParent ) );
 	}
 
-	protected void resetFetches(ImmutableFetchList newFetches) {
+	protected void resetFetches(FetchList newFetches) {
 		this.fetches = newFetches;
 		this.hasJoinFetches = newFetches.hasJoinFetches();
 		this.containsCollectionFetches = newFetches.containsCollectionFetches();
@@ -64,7 +67,7 @@ public abstract class AbstractFetchParent implements FetchParent {
 	}
 
 	@Override
-	public ImmutableFetchList getFetches() {
+	public FetchList getFetches() {
 		return fetches;
 	}
 

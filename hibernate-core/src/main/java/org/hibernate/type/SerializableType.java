@@ -4,6 +4,8 @@
  */
 package org.hibernate.type;
 
+import org.hibernate.SPI;
+
 import java.io.Serializable;
 
 import org.hibernate.type.descriptor.java.JavaType;
@@ -26,6 +28,7 @@ import org.hibernate.type.descriptor.jdbc.VarbinaryJdbcType;
  * @author Gavin King
  * @author Steve Ebersole
  */
+@SPI
 public class SerializableType<T extends Serializable> extends AbstractSingleColumnStandardBasicType<T> {
 	public static final SerializableType<Serializable> INSTANCE = new SerializableType<>( Serializable.class );
 

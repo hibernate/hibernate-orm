@@ -29,13 +29,14 @@ import org.hibernate.query.Query;
 import org.hibernate.query.internal.SelectionQueryImpl;
 import org.hibernate.query.sqm.sql.spi.SqmTranslation;
 import org.hibernate.query.sqm.sql.internal.StandardSqmTranslator;
+import org.hibernate.query.sqm.sql.spi.SqmTranslationRequest;
 import org.hibernate.query.sqm.tree.spi.select.SqmSelectStatement;
-import org.hibernate.sql.ast.tree.from.FromClause;
-import org.hibernate.sql.ast.tree.from.LazyTableGroup;
-import org.hibernate.sql.ast.tree.from.StandardVirtualTableGroup;
-import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.from.TableGroupJoin;
-import org.hibernate.sql.ast.tree.select.SelectStatement;
+import org.hibernate.sql.ast.spi.query.from.FromClause;
+import org.hibernate.sql.ast.spi.query.from.LazyTableGroup;
+import org.hibernate.sql.ast.spi.query.from.StandardVirtualTableGroup;
+import org.hibernate.sql.ast.spi.query.from.TableGroup;
+import org.hibernate.sql.ast.spi.query.from.TableGroupJoin;
+import org.hibernate.sql.ast.spi.query.select.SelectStatement;
 import org.hibernate.sql.results.graph.BiDirectionalFetch;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.Fetch;
@@ -399,7 +400,7 @@ public class CriteriaEntityGraphTest implements SessionFactoryScopeAware {
 
 		final SqmSelectStatement<T> sqmStatement = hqlQuery.getSqmStatement();
 
-		final StandardSqmTranslator<SelectStatement> sqmConverter = new StandardSqmTranslator<>(
+		final StandardSqmTranslator<SelectStatement> sqmConverter = new StandardSqmTranslator<>( new SqmTranslationRequest.Select(
 				sqmStatement,
 				hqlQuery.getQueryOptions(),
 				hqlQuery.getDomainParameterXref(),
@@ -407,7 +408,7 @@ public class CriteriaEntityGraphTest implements SessionFactoryScopeAware {
 				loadQueryInfluencers,
 				session.getSessionFactory().getSqlTranslationEngine(),
 				true
-		);
+		) );
 
 		final SqmTranslation<SelectStatement> sqmInterpretation = sqmConverter.translate();
 		return sqmInterpretation.getSqlAst();

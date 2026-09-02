@@ -4,6 +4,9 @@
  */
 package org.hibernate.spatial.dialect.mysql;
 
+import org.hibernate.SPI;
+
+
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -34,6 +37,7 @@ import org.geolatte.geom.codec.Wkt;
  *
  * @author Karel Maesen, Geovise BVBA
  */
+@SPI
 public class MySQLGeometryJdbcType implements JdbcType {
 
 	/**

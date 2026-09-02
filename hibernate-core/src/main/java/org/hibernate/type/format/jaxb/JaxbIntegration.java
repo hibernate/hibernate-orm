@@ -4,8 +4,11 @@
  */
 package org.hibernate.type.format.jaxb;
 
+import org.hibernate.Internal;
+
 import org.hibernate.type.format.FormatMapper;
 
+@Internal
 public class JaxbIntegration {
 
 	private static final boolean JAXB_XML_AVAILABLE = ableToLoadJakartaJaxb();

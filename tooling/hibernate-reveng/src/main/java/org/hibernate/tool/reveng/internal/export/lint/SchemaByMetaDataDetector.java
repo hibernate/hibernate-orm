@@ -13,6 +13,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.generator.Generator;
 import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
@@ -58,6 +59,7 @@ public class SchemaByMetaDataDetector extends RelationalModelDetector {
 	private TableSelectorStrategy tableSelector;
 
 	private Dialect dialect;
+	private JdbcEnvironment jdbcEnvironment;
 
 	private MappingContext mapping;
 
@@ -73,6 +75,7 @@ public class SchemaByMetaDataDetector extends RelationalModelDetector {
 		JdbcServices jdbcServices = serviceRegistry.getService(JdbcServices.class);
 		if (jdbcServices != null) {
 			dialect = jdbcServices.getDialect();
+			jdbcEnvironment = jdbcServices.getJdbcEnvironment();
 		}
 
 		tableSelector = new TableSelectorStrategy(
@@ -100,7 +103,10 @@ public class SchemaByMetaDataDetector extends RelationalModelDetector {
 
 		Set<?> sequences = Collections.EMPTY_SET;
 		if(dialect.getSequenceSupport().supportsSequences()) {
-			sequences = sequenceCollector.readSequences(dialect.getQuerySequencesString());
+			sequences = sequenceCollector.readSequences(
+					dialect.getSequenceInformationExtractor(),
+					jdbcEnvironment
+			);
 		}
 
 		// TODO: move this check into something that could check per class or collection instead.

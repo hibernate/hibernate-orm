@@ -71,7 +71,7 @@ public class DiscriminatorColumnSecondPass implements SecondPass {
 	}
 
 	private String checkConstraint(PersistentClass rootClass, Column column) {
-		return dialect.getCheckCondition(
+		return dialect.getEnumSupport().getCheckCondition(
 				column.getQuotedName( dialect ),
 				discriminatorValues( rootClass ),
 				column.getType().getJdbcType()

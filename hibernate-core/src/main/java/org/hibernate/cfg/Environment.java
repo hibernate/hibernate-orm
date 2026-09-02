@@ -4,6 +4,7 @@
  */
 package org.hibernate.cfg;
 
+
 import java.io.IOException;
 import java.util.Properties;
 

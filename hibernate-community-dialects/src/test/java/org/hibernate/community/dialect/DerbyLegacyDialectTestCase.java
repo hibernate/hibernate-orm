@@ -5,7 +5,7 @@
 package org.hibernate.community.dialect;
 
 import org.hibernate.dialect.DatabaseVersion;
-import org.hibernate.orm.test.dialect.LimitQueryOptions;
+import org.hibernate.dialect.pagination.spi.PaginationRequest;
 import org.hibernate.query.spi.Limit;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -85,7 +85,8 @@ public class DerbyLegacyDialectTestCase {
 
 	private String withLimit(String sql, Limit limit) {
 		return new DerbyLegacyDialect( DatabaseVersion.make( 10, 5 ) ).getLimitHandler()
-				.processSql( sql, -1, null, new LimitQueryOptions( limit ) );
+				.processSql( new PaginationRequest( sql, limit.getFirstRow(), limit.getMaxRows(), -1, null ) )
+				.sql();
 	}
 
 	private Limit toRowSelection(Integer firstRow, Integer maxRows) {

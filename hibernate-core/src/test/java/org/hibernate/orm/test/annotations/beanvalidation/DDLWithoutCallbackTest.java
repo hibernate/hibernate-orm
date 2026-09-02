@@ -115,7 +115,7 @@ class DDLWithoutCallbackTest {
 					fail( "invalid object should not be validated" );
 				}
 				else if ( cause instanceof org.hibernate.exception.ConstraintViolationException ) {
-					if ( getDialect().supportsColumnCheck() ) {
+					if ( getDialect().getCheckConstraintSupport().supports( org.hibernate.dialect.constraint.spi.CheckConstraintPlacement.ANONYMOUS_COLUMN ) ) {
 						// expected
 					}
 					else {

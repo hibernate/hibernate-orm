@@ -4,6 +4,8 @@
  */
 package org.hibernate.type;
 
+import org.hibernate.SPI;
+
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -28,6 +30,7 @@ import static org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer.UNFETCH
  * @author Gavin King
  */
 @AllowReflection
+@SPI
 public class ArrayType extends CollectionType {
 
 	private final Class<?> elementClass;

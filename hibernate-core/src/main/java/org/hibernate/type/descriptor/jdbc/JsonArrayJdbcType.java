@@ -9,6 +9,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import org.hibernate.SPI;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
@@ -19,13 +20,17 @@ import org.hibernate.type.descriptor.java.spi.UnknownBasicJavaType;
 import org.hibernate.type.descriptor.jdbc.spi.JsonGeneratingVisitor;
 import org.hibernate.type.format.StringJsonDocumentWriter;
 
-/**
- * Specialized type mapping for {@code JSON_ARRAY} and the JSON ARRAY SQL data type.
- *
- * @author Christian Beikov
- */
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.USE;
+
+/// JDBC descriptor for `JSON_ARRAY` and the JSON array SQL data type.
+///
+/// @author Christian Beikov
+@SPI({ USE, IMPLEMENT })
 public class JsonArrayJdbcType extends ArrayJdbcType {
 
+	/// Create a JSON array descriptor for the supplied element descriptor.
+	@SPI(IMPLEMENT)
 	public JsonArrayJdbcType(JdbcType elementJdbcType) {
 		super( elementJdbcType );
 	}

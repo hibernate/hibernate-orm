@@ -13,12 +13,12 @@ import org.hibernate.query.sqm.produce.function.SetReturningFunctionTypeResolver
 import org.hibernate.query.sqm.sql.spi.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.spi.SqmTypedNode;
 import org.hibernate.query.sqm.tree.spi.expression.SqmXmlTableFunction;
-import org.hibernate.sql.ast.tree.SqlAstNode;
-import org.hibernate.sql.ast.tree.expression.XmlTableColumnDefinition;
-import org.hibernate.sql.ast.tree.expression.XmlTableColumnsClause;
-import org.hibernate.sql.ast.tree.expression.XmlTableOrdinalityColumnDefinition;
-import org.hibernate.sql.ast.tree.expression.XmlTableQueryColumnDefinition;
-import org.hibernate.sql.ast.tree.expression.XmlTableValueColumnDefinition;
+import org.hibernate.sql.ast.spi.SqlAstNode;
+import org.hibernate.sql.ast.spi.query.expression.XmlTableColumnDefinition;
+import org.hibernate.sql.ast.spi.query.expression.XmlTableColumnsClause;
+import org.hibernate.sql.ast.spi.query.expression.XmlTableOrdinalityColumnDefinition;
+import org.hibernate.sql.ast.spi.query.expression.XmlTableQueryColumnDefinition;
+import org.hibernate.sql.ast.spi.query.expression.XmlTableValueColumnDefinition;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -38,6 +38,7 @@ public class XmlTableSetReturningFunctionTypeResolver implements SetReturningFun
 	}
 
 	@Override
+	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	public SelectableMapping[] resolveFunctionReturnType(
 			List<? extends SqlAstNode> arguments,
 			String tableIdentifierVariable,
@@ -59,6 +60,7 @@ public class XmlTableSetReturningFunctionTypeResolver implements SetReturningFun
 		return selectableMappings.toArray( new SelectableMapping[0] );
 	}
 
+	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	protected void addSelectableMappings(List<SelectableMapping> selectableMappings, XmlTableColumnsClause columnsClause, SqmToSqlAstConverter converter) {
 		for ( XmlTableColumnDefinition columnDefinition : columnsClause.getColumnDefinitions() ) {
 			if ( columnDefinition instanceof XmlTableQueryColumnDefinition definition ) {
@@ -75,6 +77,7 @@ public class XmlTableSetReturningFunctionTypeResolver implements SetReturningFun
 		}
 	}
 
+	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	protected void addSelectableMappings(List<SelectableMapping> selectableMappings, XmlTableOrdinalityColumnDefinition definition, SqmToSqlAstConverter converter) {
 		addSelectableMapping(
 				selectableMappings,
@@ -83,6 +86,7 @@ public class XmlTableSetReturningFunctionTypeResolver implements SetReturningFun
 				converter );
 	}
 
+	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	protected void addSelectableMappings(List<SelectableMapping> selectableMappings, XmlTableValueColumnDefinition definition, SqmToSqlAstConverter converter) {
 		addSelectableMapping(
 				selectableMappings,
@@ -91,6 +95,7 @@ public class XmlTableSetReturningFunctionTypeResolver implements SetReturningFun
 				converter );
 	}
 
+	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	protected void addSelectableMappings(List<SelectableMapping> selectableMappings, XmlTableQueryColumnDefinition definition, SqmToSqlAstConverter converter) {
 		addSelectableMapping(
 				selectableMappings,
@@ -100,6 +105,7 @@ public class XmlTableSetReturningFunctionTypeResolver implements SetReturningFun
 				converter );
 	}
 
+	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	protected void addSelectableMapping(List<SelectableMapping> selectableMappings, String name, JdbcMapping type, SqmToSqlAstConverter converter) {
 		selectableMappings.add( new SelectableMappingImpl(
 				"",

@@ -10,7 +10,7 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.spi.query.from.TableGroup;
 import org.hibernate.sql.results.graph.AbstractFetchParent;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
@@ -28,6 +28,7 @@ import jakarta.annotation.Nullable;
  *
  * @author Steve Ebersole
  */
+@org.hibernate.SPI({ org.hibernate.SPI.Role.USE, org.hibernate.SPI.Role.IMPLEMENT })
 public abstract class AbstractEntityResultGraphNode extends AbstractFetchParent implements EntityResultGraphNode {
 	private @Nullable Fetch identifierFetch;
 	private BasicFetch<?> discriminatorFetch;
@@ -35,6 +36,7 @@ public abstract class AbstractEntityResultGraphNode extends AbstractFetchParent 
 	private @Nullable DomainResult<?> auditChangesetIdResult;
 	private final EntityValuedModelPart fetchContainer;
 
+	@org.hibernate.SPI(org.hibernate.SPI.Role.IMPLEMENT)
 	public AbstractEntityResultGraphNode(EntityValuedModelPart referencedModelPart, NavigablePath navigablePath) {
 		super( navigablePath );
 		this.fetchContainer = referencedModelPart;

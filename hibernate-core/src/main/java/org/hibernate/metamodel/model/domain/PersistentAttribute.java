@@ -4,6 +4,10 @@
  */
 package org.hibernate.metamodel.model.domain;
 
+import org.hibernate.SPI;
+
+import static org.hibernate.SPI.Role.USE;
+
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.metamodel.Attribute;
@@ -22,6 +26,7 @@ public interface PersistentAttribute<D,J> extends Attribute<D,J> {
 	ManagedDomainType<D> getDeclaringType();
 
 	@Nonnull
+	@SPI(USE)
 	JavaType<J> getAttributeJavaType();
 
 	/**

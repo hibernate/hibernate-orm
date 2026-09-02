@@ -4,6 +4,12 @@
  */
 package org.hibernate.usertype;
 
+import org.hibernate.SPI;
+
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.SUPPLY;
+import static org.hibernate.SPI.Role.USE;
+
 import java.util.Iterator;
 import java.util.Map;
 
@@ -17,10 +23,13 @@ import org.hibernate.persister.collection.CollectionPersister;
  * A custom type for mapping user-written classes which implement {@link PersistentCollection}.
  *
  * @see PersistentCollection
+ * @see org.hibernate.annotations.CollectionType#type()
+ * @see org.hibernate.annotations.CollectionTypeRegistration#type()
  *
  * @author Gavin King
  * @author Steve Ebersole
  */
+@SPI({ USE, IMPLEMENT, SUPPLY })
 public interface UserCollectionType {
 	/**
 	 * The classification mapped by this custom type

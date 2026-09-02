@@ -7,7 +7,7 @@ package org.hibernate.query.results.internal;
 import jakarta.annotation.Nullable;
 import org.hibernate.LockMode;
 import org.hibernate.query.results.spi.ResultSetMapping;
-import org.hibernate.sql.ast.spi.SqlSelection;
+import org.hibernate.sql.ast.spi.query.select.SqlSelection;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.jdbc.internal.StandardJdbcValuesMapping;
 

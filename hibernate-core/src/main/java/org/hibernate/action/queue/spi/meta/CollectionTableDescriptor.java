@@ -6,7 +6,7 @@ package org.hibernate.action.queue.spi.meta;
 
 import org.hibernate.Incubating;
 import org.hibernate.metamodel.model.domain.NavigableRole;
-import org.hibernate.sql.model.TableMapping.MutationDetails;
+import org.hibernate.sql.spi.mutation.TableMapping.MutationDetails;
 
 import java.io.Serializable;
 

@@ -26,7 +26,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.AuditMapping;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.mutation.EntityAuditSupport;
-import org.hibernate.sql.model.MutationOperation;
+import org.hibernate.sql.spi.mutation.MutationOperation;
 import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.type.Type;
 
@@ -54,6 +54,7 @@ import org.hibernate.type.Type;
 /// @author Steve Ebersole
 /// @since 8.0
 @Incubating
+@org.hibernate.Internal
 public class CollectionAuditSupport {
 
 	/// A resolved collection audit mutation operation.

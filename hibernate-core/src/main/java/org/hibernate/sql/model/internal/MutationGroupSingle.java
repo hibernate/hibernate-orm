@@ -7,11 +7,11 @@ package org.hibernate.sql.model.internal;
 import java.util.Locale;
 import java.util.function.BiConsumer;
 
-import org.hibernate.sql.model.MutationOperation;
-import org.hibernate.sql.model.MutationTarget;
-import org.hibernate.sql.model.MutationType;
-import org.hibernate.sql.model.ast.MutationGroup;
-import org.hibernate.sql.model.ast.TableMutation;
+import org.hibernate.sql.spi.mutation.MutationOperation;
+import org.hibernate.sql.spi.mutation.MutationTarget;
+import org.hibernate.sql.spi.mutation.MutationType;
+import org.hibernate.sql.ast.spi.model.MutationGroup;
+import org.hibernate.sql.ast.spi.model.TableMutation;
 
 /**
  * MutationGroup implementation for cases where we have a
@@ -21,12 +21,12 @@ import org.hibernate.sql.model.ast.TableMutation;
  */
 public class MutationGroupSingle implements MutationGroup {
 	private final MutationType mutationType;
-	private final MutationTarget<?,?> mutationTarget;
+	private final MutationTarget mutationTarget;
 	private final TableMutation<?> tableMutation;
 
 	public MutationGroupSingle(
 			MutationType mutationType,
-			MutationTarget<?,?> mutationTarget,
+			MutationTarget mutationTarget,
 			TableMutation<?> tableMutation) {
 		this.mutationType = mutationType;
 		this.mutationTarget = mutationTarget;
@@ -39,7 +39,7 @@ public class MutationGroupSingle implements MutationGroup {
 	}
 
 	@Override
-	public MutationTarget<?,?> getMutationTarget() {
+	public MutationTarget getMutationTarget() {
 		return mutationTarget;
 	}
 

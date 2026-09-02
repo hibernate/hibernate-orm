@@ -13,8 +13,8 @@ import org.hibernate.LockMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.spi.SqlAstCreationContext;
-import org.hibernate.sql.ast.spi.SqlSelection;
+import org.hibernate.sql.ast.spi.creation.SqlAstCreationContext;
+import org.hibernate.sql.ast.spi.query.select.SqlSelection;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
@@ -32,7 +32,7 @@ import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingResolution;
 
 import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_INT_ARRAY;
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
-import static org.hibernate.sql.results.ResultsLogger.RESULTS_MESSAGE_LOGGER;
+import static org.hibernate.sql.results.internal.ResultsLogger.RESULTS_MESSAGE_LOGGER;
 
 /**
  * @author Steve Ebersole

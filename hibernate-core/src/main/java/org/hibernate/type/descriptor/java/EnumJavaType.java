@@ -4,6 +4,8 @@
  */
 package org.hibernate.type.descriptor.java;
 
+import java.util.Arrays;
+
 import java.util.Set;
 
 import org.hibernate.boot.model.process.internal.EnumeratedValueConverter;
@@ -270,10 +272,14 @@ public class EnumJavaType<T extends Enum<T>> extends AbstractClassJavaType<T> {
 		}
 		else if ( jdbcType.isInteger() ) {
 			int max = getJavaTypeClass().getEnumConstants().length - 1;
-			return dialect.getCheckCondition( columnName, 0, max );
+			return dialect.getEnumSupport().getCheckCondition( columnName, 0, max );
 		}
 		else if ( jdbcType.isString() ) {
-			return dialect.getCheckCondition( columnName, getJavaTypeClass() );
+			return dialect.getEnumSupport().getCheckCondition(
+					columnName,
+					Arrays.asList( org.hibernate.type.descriptor.converter.internal.EnumHelper.getEnumeratedValues( getJavaTypeClass() ) ),
+					jdbcType
+			);
 		}
 		else {
 			return null;
@@ -286,7 +292,7 @@ public class EnumJavaType<T extends Enum<T>> extends AbstractClassJavaType<T> {
 			BasicValueConverter<T, ?> converter,
 			Dialect dialect) {
 		final Set<?> valueSet = valueSet( jdbcType, converter );
-		return valueSet == null ? null : dialect.getCheckCondition( columnName, valueSet, jdbcType );
+		return valueSet == null ? null : dialect.getEnumSupport().getCheckCondition( columnName, valueSet, jdbcType );
 	}
 
 	private <R> Set<R> valueSet(JdbcType jdbcType, BasicValueConverter<T,R> converter) {

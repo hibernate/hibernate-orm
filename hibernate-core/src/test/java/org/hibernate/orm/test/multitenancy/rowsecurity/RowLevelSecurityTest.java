@@ -27,8 +27,8 @@ import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SpannerPostgreSQLDialect;
-import org.hibernate.dialect.rowsecurity.DB2RowLevelSecurity;
-import org.hibernate.dialect.rowsecurity.SQLServerRowLevelSecurity;
+import org.hibernate.dialect.rowsecurity.internal.DB2RowLevelSecurity;
+import org.hibernate.dialect.rowsecurity.internal.SQLServerRowLevelSecurity;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 
@@ -56,9 +56,7 @@ class RowLevelSecurityTest {
 					metadata.getEntityBinding( Document.class.getName() ).getTable();
 			final var context =
 					SqlStringGenerationContextImpl.forTests( metadata.getDatabase().getJdbcEnvironment() );
-			final List<String> commands = table.getInitCommands( context ).stream()
-					.flatMap( command -> Arrays.stream( command.initCommands() ) )
-					.toList();
+			final List<String> commands = auxiliaryCreateCommands( metadata, context, false );
 
 			final String predicate = "tenant_id = cast(nullif(current_setting('hibernate.tenant_id', true), '') as uuid)"
 					+ " or coalesce(cast(nullif(current_setting('hibernate.tenant_id_root', true), '') as boolean), false)";
@@ -88,9 +86,7 @@ class RowLevelSecurityTest {
 					metadata.getEntityBinding( StringDocument.class.getName() ).getTable();
 			final var context =
 					SqlStringGenerationContextImpl.forTests( metadata.getDatabase().getJdbcEnvironment() );
-			final List<String> commands = table.getInitCommands( context ).stream()
-					.flatMap( command -> Arrays.stream( command.initCommands() ) )
-					.toList();
+			final List<String> commands = auxiliaryCreateCommands( metadata, context, false );
 
 			final String predicate = "tenant_id = cast(current_user as varchar(255))";
 			assertThat( commands ).containsExactly(
@@ -118,12 +114,8 @@ class RowLevelSecurityTest {
 					metadata.getEntityBinding( StringDocument.class.getName() ).getTable();
 			final var context =
 					SqlStringGenerationContextImpl.forTests( metadata.getDatabase().getJdbcEnvironment() );
-			final List<String> auxiliaryCommands = metadata.getDatabase().getAuxiliaryDatabaseObjects().stream()
-					.flatMap( object -> Arrays.stream( object.sqlCreateStrings( context ) ) )
-					.toList();
-			final List<String> commands = table.getInitCommands( context ).stream()
-					.flatMap( command -> Arrays.stream( command.initCommands() ) )
-					.toList();
+			final List<String> auxiliaryCommands = auxiliaryCreateCommands( metadata, context, true );
+			final List<String> commands = auxiliaryCreateCommands( metadata, context, false );
 
 			assertThat( auxiliaryCommands ).containsExactly(
 					"create or replace variable hibernate.tenant_id varchar(255)",
@@ -158,11 +150,9 @@ class RowLevelSecurityTest {
 					metadata.getEntityBinding( StringDocument.class.getName() ).getTable();
 			final var context =
 					SqlStringGenerationContextImpl.forTests( metadata.getDatabase().getJdbcEnvironment() );
-			final List<String> commands = table.getInitCommands( context ).stream()
-					.flatMap( command -> Arrays.stream( command.initCommands() ) )
-					.toList();
+			final List<String> commands = auxiliaryCreateCommands( metadata, context, false );
 
-			assertThat( metadata.getDatabase().getAuxiliaryDatabaseObjects() ).isEmpty();
+			assertThat( auxiliaryCreateCommands( metadata, context, true ) ).isEmpty();
 			final String predicate = "tenant_id = cast(current_user as varchar(255))";
 			assertThat( commands ).containsExactly(
 					"create or replace permission "
@@ -213,9 +203,7 @@ class RowLevelSecurityTest {
 					metadata.getEntityBinding( Document.class.getName() ).getTable();
 			final var context =
 					SqlStringGenerationContextImpl.forTests( metadata.getDatabase().getJdbcEnvironment() );
-			final List<String> commands = table.getInitCommands( context ).stream()
-					.flatMap( command -> Arrays.stream( command.initCommands() ) )
-					.toList();
+			final List<String> commands = auxiliaryCreateCommands( metadata, context, false );
 
 			final String predicate = "tenant_id = varchar_bit_format(hibernate.tenant_id,"
 					+ " 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx')"
@@ -320,6 +308,46 @@ class RowLevelSecurityTest {
 	}
 
 	@Test
+	void sqlServerUsesExplicitMappedSchemaForSiblingObjectsAndTable() {
+		final StandardServiceRegistry registry = ServiceRegistryUtil.serviceRegistryBuilder()
+				.applySetting( DIALECT, SQLServer2016Dialect.class )
+				.build();
+		try {
+			final var metadata = new MetadataSources( registry )
+					.addAnnotatedClass( SchemaStringDocument.class )
+					.buildMetadata();
+			final org.hibernate.mapping.Table table =
+					metadata.getEntityBinding( SchemaStringDocument.class.getName() ).getTable();
+			final var context =
+					SqlStringGenerationContextImpl.forTests( metadata.getDatabase().getJdbcEnvironment() );
+			final List<String> commands = metadata.getDatabase().getAuxiliaryDatabaseObjects().stream()
+					.flatMap( object -> Arrays.stream( object.sqlCreateStrings( context ) ) )
+					.toList();
+
+			final String policyName = "tenant_schema." + sqlServerObjectBaseName( table, context );
+			final String functionName = policyName + "_predicate";
+			assertThat( commands ).containsExactly(
+					"create function " + functionName + "(@tenant_id varchar(255))"
+							+ " returns table with schemabinding as"
+							+ " return select 1 as hibernate_tenant_isolation_result where "
+							+ "@tenant_id = cast(session_context(N'hibernate.tenant_id') as varchar(255))"
+							+ " or cast(session_context(N'hibernate.tenant_id_root') as bit) = 1",
+					"create security policy " + policyName
+							+ " add filter predicate " + functionName + "(tenant_id)"
+							+ " on tenant_schema.document,"
+							+ " add block predicate " + functionName + "(tenant_id)"
+							+ " on tenant_schema.document after insert,"
+							+ " add block predicate " + functionName + "(tenant_id)"
+							+ " on tenant_schema.document after update"
+							+ " with (state = on)"
+			);
+		}
+		finally {
+			StandardServiceRegistryBuilder.destroy( registry );
+		}
+	}
+
+	@Test
 	void spannerPostgreSqlDoesNotInheritPostgreSqlRowLevelSecurity() {
 		assertThat( new SpannerPostgreSQLDialect().getRowLevelSecurity().supportsRowLevelSecurity() )
 				.isFalse();
@@ -338,9 +366,7 @@ class RowLevelSecurityTest {
 					metadata.getEntityBinding( Document.class.getName() ).getTable();
 			final var context =
 					SqlStringGenerationContextImpl.forTests( metadata.getDatabase().getJdbcEnvironment() );
-			final List<String> commands = table.getInitCommands( context ).stream()
-					.flatMap( command -> Arrays.stream( command.initCommands() ) )
-					.toList();
+			final List<String> commands = auxiliaryCreateCommands( metadata, context, false );
 
 			final String predicate = "tenant_id = cast(nullif(substring(current_setting('application_name', true)"
 					+ " from '^hibernate_orm_rls:[^:]*:(.*)$'), '') as uuid)"
@@ -371,9 +397,7 @@ class RowLevelSecurityTest {
 					metadata.getEntityBinding( StringDocument.class.getName() ).getTable();
 			final var context =
 					SqlStringGenerationContextImpl.forTests( metadata.getDatabase().getJdbcEnvironment() );
-			final List<String> commands = table.getInitCommands( context ).stream()
-					.flatMap( command -> Arrays.stream( command.initCommands() ) )
-					.toList();
+			final List<String> commands = auxiliaryCreateCommands( metadata, context, false );
 
 			final String predicate = "tenant_id = cast(current_user as varchar(255))";
 			assertThat( commands ).containsExactly(
@@ -391,6 +415,16 @@ class RowLevelSecurityTest {
 	private static String db2PermissionName(org.hibernate.mapping.Table table, SqlStringGenerationContext context) {
 		return DB2RowLevelSecurity.TENANT_ISOLATION_PERMISSION + "_"
 			+ NamingHelper.INSTANCE.hashedName( table.getQualifiedName( context ) );
+	}
+
+	private static List<String> auxiliaryCreateCommands(
+			org.hibernate.boot.Metadata metadata,
+			SqlStringGenerationContext context,
+			boolean beforeTables) {
+		return metadata.getDatabase().getAuxiliaryDatabaseObjects().stream()
+				.filter( object -> object.beforeTablesOnCreation() == beforeTables )
+				.flatMap( object -> Arrays.stream( object.sqlCreateStrings( context ) ) )
+				.toList();
 	}
 
 	private static String sqlServerObjectBaseName(org.hibernate.mapping.Table table, SqlStringGenerationContext context) {
@@ -438,6 +472,19 @@ class RowLevelSecurityTest {
 	@Entity(name = "RlsStringDocument")
 	@Table(name = "document")
 	static class StringDocument {
+		@Id
+		String id;
+
+		@TenantId
+		@Column(name = "tenant_id", nullable = false)
+		String tenantId;
+
+		String title;
+	}
+
+	@Entity(name = "RlsSchemaStringDocument")
+	@Table(name = "document", schema = "tenant_schema")
+	static class SchemaStringDocument {
 		@Id
 		String id;
 

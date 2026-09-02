@@ -13,7 +13,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.ResultListTransformer;
 import org.hibernate.sql.exec.spi.ExecutionContext;
-import org.hibernate.sql.results.internal.RowProcessingStateStandardImpl;
+import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.sql.results.jdbc.spi.JdbcValues;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
@@ -143,7 +143,7 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 			SharedSessionContractImplementor session,
 			JdbcValuesSourceProcessingOptions processingOptions,
 			JdbcValuesSourceProcessingState jdbcValuesSourceProcessingState,
-			RowProcessingStateStandardImpl rowProcessingState,
+			RowProcessingState rowProcessingState,
 			RowReader<R> rowReader) {
 		rowReader.startLoading( rowProcessingState );
 
@@ -221,7 +221,7 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 	}
 
 	private int readRows(
-			RowProcessingStateStandardImpl rowProcessingState,
+			RowProcessingState rowProcessingState,
 			RowReader<R> rowReader,
 			boolean isEntityResultType,
 			Results<R> results) {
@@ -240,7 +240,7 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 	}
 
 	private static <R> int read(
-			RowProcessingStateStandardImpl rowProcessingState,
+			RowProcessingState rowProcessingState,
 			RowReader<R> rowReader,
 			Results<R> results) {
 		int readRows = 0;
@@ -253,7 +253,7 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 	}
 
 	private static <R> int readUniqueAssert(
-			RowProcessingStateStandardImpl rowProcessingState,
+			RowProcessingState rowProcessingState,
 			RowReader<R> rowReader,
 			Results<R> results) {
 		int readRows = 0;
@@ -274,7 +274,7 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 	}
 
 	private static <R> int readUnique(
-			RowProcessingStateStandardImpl rowProcessingState,
+			RowProcessingState rowProcessingState,
 			RowReader<R> rowReader,
 			Results<R> results) {
 		int readRows = 0;

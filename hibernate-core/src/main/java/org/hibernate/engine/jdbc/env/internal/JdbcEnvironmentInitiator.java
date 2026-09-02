@@ -181,7 +181,7 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 						.getDatabaseConnectionInfo( environment.getDialect() )
 				: registry.requireService( ConnectionProvider.class )
 						.getDatabaseConnectionInfo( environment.getDialect(),
-								environment.getExtractedDatabaseMetaData() );
+								environment.getJdbcMetadata().getExtractedDatabaseMetaData() );
 	}
 
 	private DatabaseConnectionInfo buildInfo(Map<String, Object> configurationValues, JdbcEnvironment environment) {
@@ -216,7 +216,6 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 				null,
 				DatabaseVersion.NO_VERSION,
 				DatabaseVersion.NO_VERSION,
-				null,
 				configurationValues
 		);
 		return getJdbcEnvironmentWithExplicitConfiguration( configurationValues, registry, dialectFactory, dialectResolutionInfo );
@@ -377,7 +376,6 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 										metadata.getDriverName(),
 										metadata.getDriverMajorVersion(),
 										metadata.getDriverMinorVersion(),
-										metadata.getSQLKeywords(),
 										configurationValues
 								);
 								return new JdbcEnvironmentImpl(
@@ -543,7 +541,6 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 		private final String driverName;
 		private final int driverMajorVersion;
 		private final int driverMinorVersion;
-		private final String sqlKeywords;
 		private final Map<String, Object> configurationValues;
 
 		public DialectResolutionInfoImpl(
@@ -556,7 +553,6 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 				String driverName,
 				int driverMajorVersion,
 				int driverMinorVersion,
-				String sqlKeywords,
 				Map<String, Object> configurationValues) {
 			this.databaseMetadata = databaseMetadata;
 			this.databaseName = databaseName;
@@ -567,12 +563,7 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 			this.driverName = driverName;
 			this.driverMajorVersion = driverMajorVersion;
 			this.driverMinorVersion = driverMinorVersion;
-			this.sqlKeywords = sqlKeywords;
 			this.configurationValues = configurationValues;
-		}
-
-		public String getSQLKeywords() {
-			return sqlKeywords;
 		}
 
 		@Override

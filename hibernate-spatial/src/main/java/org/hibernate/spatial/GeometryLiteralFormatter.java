@@ -4,9 +4,11 @@
  */
 package org.hibernate.spatial;
 
+import org.hibernate.SPI;
+
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.sql.ast.spi.SqlAppender;
+import org.hibernate.sql.spi.SqlAppender;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
@@ -14,6 +16,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 import org.geolatte.geom.Geometry;
 import org.geolatte.geom.codec.Wkt;
 
+@SPI
 public class GeometryLiteralFormatter<T> implements JdbcLiteralFormatter<T> {
 
 	protected final JavaType<T> javaType;

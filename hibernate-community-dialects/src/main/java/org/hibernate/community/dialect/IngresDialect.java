@@ -4,68 +4,77 @@
  */
 package org.hibernate.community.dialect;
 
+import org.hibernate.dialect.temporaltype.spi.TemporalOperationSupport;
+import org.hibernate.dialect.temporaltype.spi.TemporalOperationSupports;
+
+import org.hibernate.dialect.temporaltype.spi.TemporalFormatSupport;
+
+import org.hibernate.dialect.temporaltype.spi.CurrentTemporalSupport;
+
+import org.hibernate.SPI;
+import static org.hibernate.SPI.Role.USE;
+
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.SUPPLY;
+import org.hibernate.dialect.type.spi.TypeSizingProfile;
+
+import org.hibernate.dialect.mutation.spi.MultiTableMutationSupport;
+import org.hibernate.dialect.function.spi.TupleCountSupport;
+import org.hibernate.dialect.function.spi.WindowFunctionSupport;
+
 import java.sql.Types;
 
 import jakarta.persistence.TemporalType;
 import org.hibernate.LockOptions;
 import org.hibernate.boot.model.FunctionContributions;
-import org.hibernate.community.dialect.identity.Ingres10IdentityColumnSupport;
-import org.hibernate.community.dialect.identity.Ingres9IdentityColumnSupport;
+import org.hibernate.community.dialect.identity.internal.Ingres10IdentityColumnSupport;
+import org.hibernate.community.dialect.identity.internal.Ingres9IdentityColumnSupport;
 import org.hibernate.community.dialect.pagination.FirstLimitHandler;
 import org.hibernate.community.dialect.pagination.IngresLimitHandler;
 import org.hibernate.community.dialect.sequence.IngresLegacySequenceSupport;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.MySQLDialect;
-import org.hibernate.dialect.TimeZoneSupport;
+import org.hibernate.dialect.type.spi.TimeZoneSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.dialect.identity.IdentityColumnSupport;
-import org.hibernate.dialect.lock.internal.NoLockingSupport;
+import org.hibernate.dialect.identity.spi.IdentityColumnSupport;
 import org.hibernate.dialect.lock.spi.LockingSupport;
-import org.hibernate.dialect.pagination.LimitHandler;
-import org.hibernate.dialect.sequence.ANSISequenceSupport;
-import org.hibernate.dialect.sequence.SequenceSupport;
-import org.hibernate.community.dialect.temptable.IngresGlobalTemporaryTableStrategy;
-import org.hibernate.dialect.temptable.TemporaryTableKind;
-import org.hibernate.dialect.temptable.TemporaryTableStrategy;
+import org.hibernate.dialect.lock.spi.StandardLockingClauseStrategies;
+import org.hibernate.dialect.lock.spi.StandardLockingSupports;
+import org.hibernate.dialect.pagination.spi.LimitHandler;
+import org.hibernate.dialect.sequence.spi.SequenceSupport;
+import org.hibernate.dialect.schema.spi.ColumnDefinitionRequest;
+import org.hibernate.dialect.schema.spi.ConstraintDropMode;
+import org.hibernate.dialect.schema.spi.SchemaDropSupport;
+import org.hibernate.community.dialect.temptable.internal.IngresGlobalTemporaryTableStrategy;
+import org.hibernate.dialect.temptable.spi.TemporaryTableStrategy;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
-import org.hibernate.engine.spi.LoadQueryInfluencers;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.query.common.FetchClauseType;
+import org.hibernate.dialect.sql.ast.spi.FetchClauseSupport;
 import org.hibernate.query.common.TemporalUnit;
-import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.query.spi.QueryParameterBindings;
-import org.hibernate.dialect.type.IntervalType;
-import org.hibernate.query.sqm.internal.DomainParameterXref;
-import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableInsertStrategy;
-import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableMutationStrategy;
-import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
-import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
-import org.hibernate.query.sqm.sql.spi.SqmTranslator;
-import org.hibernate.query.sqm.sql.spi.SqmTranslatorFactory;
-import org.hibernate.query.sqm.sql.spi.StandardSqmTranslatorFactory;
-import org.hibernate.query.sqm.tree.spi.select.SqmSelectStatement;
-import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.SqlAstTranslatorFactory;
-import org.hibernate.sql.ast.spi.LockingClauseStrategy;
-import org.hibernate.sql.ast.spi.SqlAppender;
-import org.hibernate.sql.ast.spi.SqlAstCreationContext;
-import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
-import org.hibernate.sql.ast.tree.Statement;
-import org.hibernate.sql.ast.tree.select.QuerySpec;
-import org.hibernate.sql.ast.tree.select.SelectStatement;
+import org.hibernate.dialect.temporaltype.spi.IntervalType;
+import org.hibernate.query.sqm.SetOperator;
+import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslatorFactory;
+import org.hibernate.dialect.sql.ast.spi.SyntheticTableGroupSupport;
+import org.hibernate.dialect.sql.ast.spi.RowValueSupport;
+import org.hibernate.dialect.sql.ast.spi.SingleRowTableSupport;
+import org.hibernate.dialect.sql.ast.spi.SetOperationSupport;
+import org.hibernate.dialect.sql.ast.spi.SubquerySupport;
+import org.hibernate.dialect.lock.spi.LockingClauseStrategy;
+import org.hibernate.sql.spi.SqlAppender;
+import org.hibernate.dialect.sql.ast.spi.StandardSqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.Statement;
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
+import org.hibernate.sql.ast.spi.query.select.QuerySpec;
 import org.hibernate.sql.exec.spi.JdbcOperation;
-import org.hibernate.tool.schema.extract.internal.SequenceNameExtractorImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
+import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractors;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
-import static org.hibernate.sql.ast.internal.NonLockingClauseStrategy.NON_CLAUSE_STRATEGY;
 import static org.hibernate.type.SqlTypes.BINARY;
 import static org.hibernate.type.SqlTypes.BLOB;
 import static org.hibernate.type.SqlTypes.BOOLEAN;
@@ -100,7 +109,35 @@ import static org.hibernate.type.SqlTypes.VARBINARY;
  * @author Max Rydahl Andersen
  * @author Raymond Fan
  */
-public class IngresDialect extends Dialect {
+public class IngresDialect extends Dialect implements CurrentTemporalSupport, TemporalFormatSupport, TemporalOperationSupport {
+	private SchemaDropSupport schemaDropSupport;
+
+
+	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
+	public TemporalOperationSupport getTemporalOperationSupport() {
+		return this;
+	}
+
+	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
+	public TemporalFormatSupport getTemporalFormatSupport() {
+		return this;
+	}
+
+	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
+	public CurrentTemporalSupport getCurrentTemporalSupport() {
+		return this;
+	}
+	private final TypeSizingProfile typeSizingProfile = TypeSizingProfile.builder( super.getTypeSizingProfile() )
+			.defaultDecimalPrecision( 39 )
+			.maxVarcharLength( 32_000 ).maxVarcharCapacity( 32_000 )
+			.maxNVarcharLength( 16_000 ).maxNVarcharCapacity( 16_000 )
+			.maxVarbinaryLength( 32_000 ).maxVarbinaryCapacity( 32_000 )
+			.build();
+
+	@Override public TypeSizingProfile getTypeSizingProfile() { return typeSizingProfile; }
 
 	private static final DatabaseVersion DEFAULT_VERSION = DatabaseVersion.make( 9, 2 );
 
@@ -113,7 +150,6 @@ public class IngresDialect extends Dialect {
 
 	public IngresDialect(DialectResolutionInfo info) {
 		this( info.makeCopyOrDefault( DEFAULT_VERSION ) );
-		registerKeywords( info );
 	}
 
 	/**
@@ -123,7 +159,7 @@ public class IngresDialect extends Dialect {
 		super( version );
 		if ( getVersion().isSameOrAfter( 9, 3 ) ) {
 			limitHandler = IngresLimitHandler.INSTANCE;
-			sequenceSupport = ANSISequenceSupport.INSTANCE;
+			sequenceSupport = org.hibernate.dialect.sequence.spi.SequenceSupports.ansi();
 		}
 		else {
 			limitHandler = FirstLimitHandler.INSTANCE;
@@ -132,6 +168,7 @@ public class IngresDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	protected String columnType(int sqlTypeCode) {
 		//TODO: should we be using nchar/nvarchar/long nvarchar
 		//      here? I think Ingres char/varchar types don't
@@ -169,7 +206,9 @@ public class IngresDialect extends Dialect {
 	}
 
 	@Override
-	public boolean getDefaultUseGetGeneratedKeys() {
+	@SPI({ IMPLEMENT, SUPPLY })
+	protected void contributeDefaultProperties(java.util.Properties properties) {
+		super.contributeDefaultProperties( properties );
 		// Ingres driver supports getGeneratedKeys but only in the following
 		// form:
 		// The Ingres DBMS returns only a single table key or a single object
@@ -180,24 +219,11 @@ public class IngresDialect extends Dialect {
 		// ignored and getGeneratedKeys() returns a result-set containing no
 		// rows, a single row with one column, or a single row with two columns.
 		// Ingres JDBC Driver returns table and object keys as BINARY values.
-		return false;
+		properties.setProperty( org.hibernate.cfg.AvailableSettings.USE_GET_GENERATED_KEYS, "false" );
 	}
 
 	@Override
-	public int getMaxVarcharLength() {
-		// the maximum possible (configurable) value for
-		// both varchar and varbyte
-		return 32_000;
-	}
-
-	@Override
-	public int getMaxNVarcharLength() {
-		// the maximum possible (configurable) value for
-		// nvarchar
-		return 16_000;
-	}
-
-	@Override
+	@SPI({ USE, IMPLEMENT })
 	public JdbcType resolveSqlTypeDescriptor(
 			String columnTypeName,
 			int jdbcTypeCode,
@@ -217,11 +243,13 @@ public class IngresDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public int getPreferredSqlTypeCodeForBoolean() {
 		return getVersion().isBefore( 10 ) ? Types.BIT : Types.BOOLEAN;
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public void appendBooleanValueString(SqlAppender appender, boolean bool) {
 		if ( getVersion().isBefore( 10 ) ) {
 			appender.appendSql( bool ? '1' : '0' );
@@ -233,12 +261,7 @@ public class IngresDialect extends Dialect {
 
 
 	@Override
-	public int getDefaultDecimalPrecision() {
-		//the maximum
-		return 39;
-	}
-
-	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
 		super.initializeFunctionRegistry(functionContributions);
 
@@ -296,93 +319,94 @@ public class IngresDialect extends Dialect {
 	}
 
 	@Override
-	public SqmTranslatorFactory getSqmTranslatorFactory() {
-		return new StandardSqmTranslatorFactory() {
-			@Override
-			public SqmTranslator<SelectStatement> createSelectTranslator(
-					SqmSelectStatement<?> sqmSelectStatement,
-					QueryOptions queryOptions,
-					DomainParameterXref domainParameterXref,
-					QueryParameterBindings domainParameterBindings,
-					LoadQueryInfluencers loadQueryInfluencers,
-					SqlAstCreationContext creationContext,
-					boolean deduplicateSelectionItems) {
-				return new IngresSqmToSqlAstConverter<>(
-						sqmSelectStatement,
-						queryOptions,
-						domainParameterXref,
-						domainParameterBindings,
-						loadQueryInfluencers,
-						creationContext,
-						deduplicateSelectionItems
-				);
-			}
-		};
+	public SyntheticTableGroupSupport getSyntheticTableGroupSupport() {
+		return SyntheticTableGroupSupport.SELECT_ONE_FOR_LITERALS;
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public SqlAstTranslatorFactory getSqlAstTranslatorFactory() {
 		return new StandardSqlAstTranslatorFactory() {
 			@Override
-			protected <T extends JdbcOperation> SqlAstTranslator<T> buildTranslator(
-					SessionFactoryImplementor sessionFactory, Statement statement) {
-				return new IngresSqlAstTranslator<>( sessionFactory, statement );
+			protected <S extends Statement, T extends JdbcOperation> SqlAstTranslator<T> createTranslator(
+					SqlAstTranslationRequest<S, T> request) {
+				return new IngresSqlAstTranslator<>( request );
 			}
 		};
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
 		return "timestampadd(?1,?2,?3)";
 
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
 		return "timestampdiff(?1,?2,?3)";
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public TimeZoneSupport getTimeZoneSupport() {
 		return TimeZoneSupport.NATIVE;
 	}
 
 	@Override
-	public String getSelectGUIDString() {
-		return "select uuid_to_char(uuid_create())";
+	@SPI({ IMPLEMENT, SUPPLY })
+	public synchronized SchemaDropSupport getSchemaDropSupport() {
+		if ( schemaDropSupport == null ) {
+			schemaDropSupport = new SchemaDropSupport( java.util.List.of(), ConstraintDropMode.IMPLICIT, "" );
+		}
+		return schemaDropSupport;
 	}
 
 	@Override
-	public boolean dropConstraints() {
-		return false;
-	}
-
-	@Override
-	public String getNullColumnString() {
-		return " with null";
+	@SPI({ USE, IMPLEMENT })
+	public void appendDefinition(org.hibernate.sql.spi.SqlAppender appender, ColumnDefinitionRequest request) {
+		super.appendDefinition( appender, request );
+		if ( request.nullable() ) {
+			appender.appendSql( " with null" );
+		}
 	}
 
 	// SEQUENCE support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public SequenceSupport getSequenceSupport() {
 		return sequenceSupport;
 	}
 
-	@Override
-	public String getQuerySequencesString() {
-		return getVersion().isBefore( 9, 3 )
-				? "select seq_name from iisequence"
-				: "select seq_name from iisequences";
+	private static final SequenceInformationExtractor LEGACY_SEQUENCE_INFORMATION_EXTRACTOR =
+			sequenceNameExtractor( "select seq_name from iisequence" );
+	private static final SequenceInformationExtractor SEQUENCE_INFORMATION_EXTRACTOR =
+			sequenceNameExtractor( "select seq_name from iisequences" );
+
+	private static SequenceInformationExtractor sequenceNameExtractor(String sql) {
+		return SequenceInformationExtractors.builder( sql )
+				.sequenceNameColumn( 1 )
+				.withoutCatalog()
+				.withoutSchema()
+				.withoutStartValue()
+				.withoutMinimumValue()
+				.withoutMaximumValue()
+				.withoutIncrementValue()
+				.build();
 	}
 
 	@Override
 	public SequenceInformationExtractor getSequenceInformationExtractor() {
-		return SequenceNameExtractorImpl.INSTANCE;
+		return getVersion().isBefore( 9, 3 )
+				? LEGACY_SEQUENCE_INFORMATION_EXTRACTOR
+				: SEQUENCE_INFORMATION_EXTRACTOR;
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String getLowercaseFunction() {
 		return "lowercase";
 	}
@@ -410,54 +434,19 @@ public class IngresDialect extends Dialect {
 	@Override
 	public LockingClauseStrategy getLockingClauseStrategy(QuerySpec querySpec, LockOptions lockOptions) {
 		// Ingres does not support the FOR UPDATE clause
-		return NON_CLAUSE_STRATEGY;
+		return StandardLockingClauseStrategies.none();
 	}
 
 	@Override
 	public LockingSupport getLockingSupport() {
-		return NoLockingSupport.NO_LOCKING_SUPPORT;
-	}
-
-	/**
-	 * {@code FOR UPDATE} only supported for cursors
-	 *
-	 * @return the empty string
-	 */
-	@Override
-	public String getForUpdateString() {
-		return "";
+		return StandardLockingSupports.none();
 	}
 
 
-	// current timestamp support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
-	public boolean isCurrentTimestampSelectStringCallable() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsCurrentTimestampSelection() {
-		return getVersion().isSameOrAfter( 9, 3 );
-	}
-
-	@Override
-	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(
-			EntityMappingType rootEntityDescriptor,
-			RuntimeModelCreationContext runtimeModelCreationContext) {
-		return new GlobalTemporaryTableMutationStrategy( rootEntityDescriptor, runtimeModelCreationContext );
-	}
-
-	@Override
-	public SqmMultiTableInsertStrategy getFallbackSqmInsertStrategy(
-			EntityMappingType rootEntityDescriptor,
-			RuntimeModelCreationContext runtimeModelCreationContext) {
-		return new GlobalTemporaryTableInsertStrategy( rootEntityDescriptor, runtimeModelCreationContext );
-	}
-
-	@Override
-	public TemporaryTableKind getSupportedTemporaryTableKind() {
-		return TemporaryTableKind.GLOBAL;
+	public MultiTableMutationSupport getMultiTableMutationSupport() {
+		return MultiTableMutationSupport.GLOBAL_TEMPORARY_TABLE;
 	}
 
 	@Override
@@ -465,119 +454,82 @@ public class IngresDialect extends Dialect {
 		return IngresGlobalTemporaryTableStrategy.INSTANCE;
 	}
 
-	@Override
-	public String getTemporaryTableCreateOptions() {
-		return IngresGlobalTemporaryTableStrategy.INSTANCE.getTemporaryTableCreateOptions();
-	}
-
-	@Override
-	public String getTemporaryTableCreateCommand() {
-		return IngresGlobalTemporaryTableStrategy.INSTANCE.getTemporaryTableCreateCommand();
-	}
-
 	// union subclass support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
-	public boolean supportsUnionAll() {
-		return getVersion().isSameOrAfter( 9, 3 );
-	}
-
-	@Override
-	public boolean supportsUnionInSubquery() {
+	public SetOperationSupport getSetOperationSupport() {
 		// At least not according to HHH-3637
-		return false;
+		return SetOperationSupport.builder()
+				.operator( SetOperator.UNION_ALL, getVersion().isSameOrAfter( 9, 3 ) )
+				.operator( SetOperator.INTERSECT_ALL, false )
+				.operator( SetOperator.EXCEPT_ALL, false )
+				.capability( SetOperationSupport.Capability.UNION_IN_SUBQUERY, false )
+				.build();
 	}
 
 	@Override
-	public boolean supportsSubqueryInSelect() {
-		// At least according to HHH-4961
-		return getVersion().isSameOrAfter( 10 );
+	public SubquerySupport getSubquerySupport() {
+		return SubquerySupport.builder()
+				.feature( SubquerySupport.Feature.SELECT_LIST, getVersion().isSameOrAfter( 10 ) )
+				.feature( SubquerySupport.Feature.ORDER_BY, false )
+				.feature( SubquerySupport.Feature.IN_PREDICATE_LHS, false )
+				.build();
 	}
 
 	@Override
-	public boolean supportsOrderByInSubquery() {
-		// This is just a guess
-		return false;
+	public WindowFunctionSupport getWindowFunctionSupport() {
+		return getVersion().isBefore( 10, 2 )
+				? WindowFunctionSupport.NONE
+				: WindowFunctionSupport.builder()
+						.features( WindowFunctionSupport.Feature.WINDOW_FUNCTIONS )
+						.build();
 	}
-
-	@Override
-	public boolean supportsWindowFunctions() {
-		return getVersion().isSameOrAfter( 10, 2 );
-	}
-// Informational metadata ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-	@Override
-	public boolean doesReadCommittedCauseWritersToBlockReaders() {
-		return getVersion().isSameOrAfter( 9, 3 );
-	}
-
-	@Override
-	public boolean doesRepeatableReadCauseReadersToBlockWriters() {
-		return getVersion().isSameOrAfter( 9, 3 );
-	}
-
 	// Overridden informational metadata ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
-	public boolean supportsSubselectAsInPredicateLHS() {
-		return false;
+	public TupleCountSupport getTupleCountSupport() {
+		return TupleCountSupport.NONE;
 	}
 
 	@Override
-	public boolean supportsExpectedLobUsagePattern() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsTupleDistinctCounts() {
-		return false;
-	}
-
-	@Override
-	public void appendDatetimeFormat(SqlAppender appender, String format) {
+	@SPI({ USE, IMPLEMENT })
+	public void appendFormat(SqlAppender appender, String format) {
 		appender.appendSql( MySQLDialect.datetimeFormat( format ).result() );
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String translateExtractField(TemporalUnit unit) {
 		switch ( unit ) {
 			case DAY_OF_MONTH: return "day";
 			case DAY_OF_YEAR: return "doy";
 			case DAY_OF_WEEK: return "dow";
 			case WEEK: return "iso_week";
-			default: return super.translateExtractField( unit );
+			default: return TemporalOperationSupports.standard().translateExtractField( unit );
 		}
 	}
 
 	@Override
-	public boolean supportsFetchClause(FetchClauseType type) {
-		return getVersion().isSameOrAfter( 9, 3 );
+	@SPI({ USE, IMPLEMENT, SUPPLY })
+	public FetchClauseSupport getFetchClauseSupport() {
+		return getVersion().isSameOrAfter( 9, 3 )
+				? FetchClauseSupport.ALL
+				: FetchClauseSupport.NONE;
 	}
 
 	@Override
-	public String getDual() {
-		return "(select 0)";
+	public SingleRowTableSupport getSingleRowTableSupport() {
+		final String tableExpression = "(select 0)";
+		return SingleRowTableSupport.builder( super.getSingleRowTableSupport() )
+				.tableExpression( tableExpression )
+				// This is only necessary if the query has a where clause.
+				.selectOnlyFromClause( " from " + tableExpression + " dual" )
+				.build();
 	}
 
 	@Override
-	public String getFromDualForSelectOnly() {
-		//this is only necessary if the query has a where clause
-		return " from " + getDual() + " dual";
-	}
-
-	@Override
-	public boolean supportsRowValueConstructorSyntax() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsRowValueConstructorSyntaxInInList() {
-		return false;
+	public RowValueSupport getRowValueSupport() {
+		return RowValueSupport.NONE;
 	}
 
 }

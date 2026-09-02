@@ -6,22 +6,26 @@ package org.hibernate.dialect.function.json;
 
 import java.util.List;
 
+import org.hibernate.SPI;
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.function.FunctionKind;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
-import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.spi.SqlAppender;
-import org.hibernate.sql.ast.tree.SqlAstNode;
-import org.hibernate.sql.ast.tree.expression.JsonNullBehavior;
+import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
+import org.hibernate.sql.spi.SqlAppender;
+import org.hibernate.sql.ast.spi.SqlAstNode;
+import org.hibernate.sql.ast.spi.query.expression.JsonNullBehavior;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.spi.TypeConfiguration;
 
-/**
- * Standard json_array function.
- */
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.USE;
+
+/// Subclassable descriptor for the standard `json_array` function.
+@SPI({ USE, IMPLEMENT })
 public class JsonArrayFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 
+	@SPI(IMPLEMENT)
 	public JsonArrayFunction(TypeConfiguration typeConfiguration) {
 		super(
 				"json_array",

@@ -80,7 +80,7 @@ public class CharacterJavaType extends AbstractClassJavaType<Character> implemen
 				case 1:
 					return string.charAt( 0 );
 				case 0:
-					if ( options.getDialect().stripsTrailingSpacesFromChar() ) {
+					if ( options.getDialect().getStringValueSemantics().stripsCharTrailingSpaces() ) {
 						// we previously stored char values in char(1) columns on MySQL
 						// but MySQL strips trailing spaces from the value when read
 						return ' ';

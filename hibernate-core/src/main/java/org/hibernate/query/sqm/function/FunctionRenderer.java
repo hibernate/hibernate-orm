@@ -6,24 +6,28 @@ package org.hibernate.query.sqm.function;
 
 import java.util.List;
 
+import org.hibernate.SPI;
 import org.hibernate.metamodel.model.domain.ReturnableType;
-import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.spi.SqlAppender;
-import org.hibernate.sql.ast.tree.SqlAstNode;
-import org.hibernate.sql.ast.tree.predicate.Predicate;
-import org.hibernate.sql.ast.tree.select.SortSpecification;
+import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
+import org.hibernate.sql.spi.SqlAppender;
+import org.hibernate.sql.ast.spi.SqlAstNode;
+import org.hibernate.sql.ast.spi.query.predicate.Predicate;
+import org.hibernate.sql.ast.spi.query.select.SortSpecification;
 
-/**
- * Support for {@link SqmFunctionDescriptor}s that ultimately want
- * to perform SQL rendering themselves. This is a protocol passed
- * from the {@link AbstractSqmSelfRenderingFunctionDescriptor}
- * along to its {@link SelfRenderingSqmFunction} and ultimately to
- * the {@link SelfRenderingFunctionSqlAstExpression} which calls it
- * to finally render SQL.
- *
- * @author Steve Ebersole
- * @since 6.4
- */
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.USE;
+
+/// Renders the SQL AST representation of a self-rendering
+/// [SqmFunctionDescriptor].
+///
+/// Implement this contract as part of a custom self-rendering descriptor. It
+/// is passed through [SelfRenderingSqmFunction] to
+/// [SelfRenderingFunctionSqlAstExpression] and is not supplied independently
+/// to Hibernate.
+///
+/// @author Steve Ebersole
+/// @since 6.4
+@SPI({ USE, IMPLEMENT })
 @FunctionalInterface
 public interface FunctionRenderer {
 	/**

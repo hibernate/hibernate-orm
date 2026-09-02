@@ -6,7 +6,7 @@ package org.hibernate.orm.test.persister.entity;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.dialect.temptable.TemporaryTable;
+import org.hibernate.dialect.temptable.internal.TemporaryTable;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableInsertStrategy;
@@ -28,7 +28,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.SecondaryTable;
 import jakarta.persistence.Table;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @RequiresDialect(H2Dialect.class)
@@ -66,10 +66,7 @@ public class TemporaryTableSchemaTest {
 		else {
 			temporaryTable = null;
 		}
-		if ( temporaryTable == null ) {
-			assertFalse( sessionFactory.getJdbcServices().getDialect().supportsTemporaryTables() );
-			return;
-		}
+		assertNotNull( temporaryTable );
 		assertTrue(
 				temporaryTable.getQualifiedTableName().startsWith( "CUSTOM_SCHEMA" ),
 				"Formula should not contain {} characters"

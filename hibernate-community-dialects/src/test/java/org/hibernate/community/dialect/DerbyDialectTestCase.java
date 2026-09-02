@@ -9,7 +9,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
-import org.hibernate.orm.test.dialect.LimitQueryOptions;
+import org.hibernate.dialect.pagination.spi.PaginationRequest;
 import org.hibernate.query.spi.Limit;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -102,7 +102,9 @@ public class DerbyDialectTestCase {
 	}
 
 	private String withLimit(String sql, Limit limit) {
-		return new DerbyDialect().getLimitHandler().processSql( sql, -1, null, new LimitQueryOptions( limit ) );
+		return new DerbyDialect().getLimitHandler()
+				.processSql( new PaginationRequest( sql, limit.getFirstRow(), limit.getMaxRows(), -1, null ) )
+				.sql();
 	}
 
 	private Limit toRowSelection(Integer firstRow, Integer maxRows) {

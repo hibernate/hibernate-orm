@@ -41,6 +41,7 @@ import java.util.List;
 import java.util.TreeSet;
 
 import static org.hibernate.cfg.MappingSettings.DEFAULT_LIST_SEMANTICS;
+import static org.hibernate.dialect.sql.ast.spi.SubquerySupport.Feature.MUTATION_TARGET_REFERENCE;
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -685,7 +686,7 @@ public class BulkManipulationTest {
 
 			// one-to-many test
 			// many-to-many test
-			if ( session.getDialect().supportsSubqueryOnMutatingTable() ) {
+			if ( session.getDialect().getSubquerySupport().supports( MUTATION_TARGET_REFERENCE ) ) {
 				hql = """
 						update SimpleEntityWithAssociation e \
 						set e.name = 'updated' \
@@ -1020,7 +1021,7 @@ public class BulkManipulationTest {
 					.executeUpdate();
 			assertEquals( 1, count, "incorrect delete count" );
 
-			if ( session.getDialect().supportsSubqueryOnMutatingTable() ) {
+			if ( session.getDialect().getSubquerySupport().supports( MUTATION_TARGET_REFERENCE ) ) {
 				count = session.createMutationQuery( "delete from User u where u not in (select u from User u)" ).executeUpdate();
 				assertEquals( 0, count );
 			}

@@ -10,16 +10,17 @@ import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.DiscriminatorValue;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.sql.model.MutationOperation;
-import org.hibernate.sql.model.ast.builder.AbstractTableUpdateBuilder;
-import org.hibernate.sql.model.ast.builder.TableMergeBuilder;
-import org.hibernate.sql.model.ast.builder.TableUpdateBuilder;
+import org.hibernate.sql.spi.mutation.MutationOperation;
+import org.hibernate.sql.ast.spi.model.builder.AbstractTableUpdateBuilder;
+import org.hibernate.sql.ast.internal.model.builder.TableMergeBuilder;
+import org.hibernate.sql.ast.spi.model.builder.TableUpdateBuilder;
 
 /**
  * Specialized {@link UpdateCoordinator} for {@code merge into}.
  *
  * @author Gavin King
  */
+@org.hibernate.Internal
 public class MergeCoordinatorStandard extends UpdateCoordinatorStandard {
 
 	public MergeCoordinatorStandard(EntityPersister entityPersister, SessionFactoryImplementor factory) {

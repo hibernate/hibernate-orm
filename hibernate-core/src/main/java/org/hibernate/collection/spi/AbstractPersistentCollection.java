@@ -20,6 +20,7 @@ import java.util.UUID;
 import org.hibernate.AssertionFailure;
 import org.hibernate.audit.AuditLog;
 import org.hibernate.HibernateException;
+import org.hibernate.Internal;
 import org.hibernate.LazyInitializationException;
 import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -1287,10 +1288,12 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 		E getOrphan();
 	}
 
+	@Internal
 	protected interface ValueDelayedOperation<E> extends DelayedOperation<E> {
 		void replace(CollectionPersister collectionPersister, Map<Object,Object> copyCache);
 	}
 
+	@Internal
 	protected abstract class AbstractValueDelayedOperation implements ValueDelayedOperation<E> {
 		private E addedValue;
 		private final E orphan;

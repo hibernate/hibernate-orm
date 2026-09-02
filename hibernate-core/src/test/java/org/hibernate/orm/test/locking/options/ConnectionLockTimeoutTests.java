@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.locking.options;
 
+
 import jakarta.persistence.Timeout;
 import org.hibernate.Timeouts;
 import org.hibernate.JDBCException;

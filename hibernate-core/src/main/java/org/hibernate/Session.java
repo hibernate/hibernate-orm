@@ -4,6 +4,7 @@
  */
 package org.hibernate;
 
+
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.CacheRetrieveMode;
@@ -510,8 +511,9 @@ public interface Session extends SharedSessionContract, EntityManager {
 	/// setting a batch size depends on whether a SQL array may be used to pass the list of
 	/// identifiers to the database:
 	///
-	///   - for databases which
-	///     [support standard SQL arrays][org.hibernate.dialect.Dialect#supportsStandardArrays],
+	///   - for databases whose array-support profile selects the
+	///     [ARRAY][org.hibernate.dialect.array.spi.ArraySupport.MultiValuedParameterStrategy#ARRAY]
+	///     multi-valued parameter strategy,
 	/// 	a smaller batch size might be extremely inefficient compared to a very large batch
 	///     size or no batching at all, but
 	///   - on the other hand, for databases with no SQL array type, a large batch size results
@@ -548,7 +550,9 @@ public interface Session extends SharedSessionContract, EntityManager {
 	/// size depends on whether a SQL array may be used to pass the list of identifiers to the
 	/// database:
 	///
-	///   - for databases which [support standard SQL arrays][org.hibernate.dialect.Dialect#supportsStandardArrays]
+	///   - for databases whose array-support profile selects the
+	///     [ARRAY][org.hibernate.dialect.array.spi.ArraySupport.MultiValuedParameterStrategy#ARRAY]
+	///     multi-valued parameter strategy,
 	///     a smaller batch size might be extremely inefficient
 	///     compared to a very large batch size or no batching at all, but
 	///   - on the other hand, for databases with no SQL array type, a large batch size results

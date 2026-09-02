@@ -6,6 +6,7 @@ package org.hibernate.metamodel.mapping;
 
 import jakarta.annotation.Nullable;
 import org.hibernate.engine.jdbc.Size;
+import org.hibernate.metamodel.mapping.internal.MutableSelectableMapping;
 
 import java.util.function.BiConsumer;
 import java.util.function.IntFunction;
@@ -15,6 +16,7 @@ import java.util.function.IntFunction;
  *
  * @author Steve Ebersole
  */
+@org.hibernate.SPI({ org.hibernate.SPI.Role.USE, org.hibernate.SPI.Role.IMPLEMENT })
 @FunctionalInterface
 public interface SelectableConsumer {
 	/**
@@ -185,116 +187,6 @@ public interface SelectableConsumer {
 		final SelectableMappingIterator mutableSelectableMapping = new SelectableMappingIterator( tableName, base, columnNames );
 		mutableSelectableMapping.forEach( this::accept );
 	}
-
-	class MutableSelectableMapping implements SelectableMapping {
-		private final String tableName;
-		private final JdbcMappingContainer base;
-		private final String[] columnNames;
-
-		private int index;
-
-		public MutableSelectableMapping(String tableName, JdbcMappingContainer base, String[] columnNames) {
-			this.tableName = tableName;
-			this.base = base;
-			this.columnNames = columnNames;
-
-			assert base.getJdbcTypeCount() == columnNames.length;
-		}
-
-		private void forEach(BiConsumer<Integer,SelectableMapping> consumer) {
-			for ( index = 0; index < columnNames.length; index++ ) {
-				consumer.accept( index, this );
-			}
-		}
-
-		@Override
-		public String getContainingTableExpression() {
-			return tableName;
-		}
-
-		@Override
-		public String getSelectionExpression() {
-			return columnNames[index];
-		}
-
-		@Override
-		public JdbcMapping getJdbcMapping() {
-			return base.getJdbcMapping( index );
-		}
-
-		@Override
-		public boolean isFormula() {
-			return false;
-		}
-
-		@Override
-		public boolean isNullable() {
-			return false;
-		}
-
-		@Override
-		public boolean isInsertable() {
-			// we insert keys
-			return true;
-		}
-
-		@Override
-		public boolean isUpdateable() {
-			// we never update keys
-			return false;
-		}
-
-		@Override
-		public boolean isPartitioned() {
-			return false;
-		}
-
-		@Override
-		public @Nullable Long getLength() {
-			// we could probably use the details from `base`, but
-			// this method should really never be called on this object
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public @Nullable Integer getArrayLength() {
-			// we could probably use the details from `base`, but
-			// this method should really never be called on this object
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public @Nullable Integer getPrecision() {
-			// we could probably use the details from `base`, but
-			// this method should really never be called on this object
-			return null;
-		}
-
-		@Override
-		public @Nullable Integer getScale() {
-			// we could probably use the details from `base`, but
-			// this method should really never be called on this object
-			return null;
-		}
-
-		@Override
-		public @Nullable Integer getTemporalPrecision() {
-			// we could probably use the details from `base`, but
-			// this method should really never be called on this object
-			return null;
-		}
-
-		@Override
-		public @Nullable String getCustomReadExpression() {
-			return null;
-		}
-
-		@Override
-		public @Nullable String getCustomWriteExpression() {
-			return null;
-		}
-	}
-
 
 
 	/**

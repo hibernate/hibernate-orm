@@ -5,7 +5,7 @@
 package org.hibernate.community.dialect.sequence;
 
 import org.hibernate.MappingException;
-import org.hibernate.dialect.sequence.SequenceSupport;
+import org.hibernate.dialect.sequence.spi.SequenceSupport;
 
 /**
  * Sequence support for {@link org.hibernate.dialect.PostgreSQLDialect}.

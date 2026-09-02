@@ -10,7 +10,7 @@ import org.hibernate.action.queue.internal.constraint.UniqueConstraint;
 import org.hibernate.action.queue.spi.plan.FlushOperation;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.sql.model.ValuesAnalysis;
+import org.hibernate.sql.spi.mutation.ValuesAnalysis;
 
 import java.sql.SQLException;
 

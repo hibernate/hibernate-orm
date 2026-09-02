@@ -4,18 +4,19 @@
  */
 package org.hibernate.query.sqm.function;
 
+
 import java.util.List;
 import java.util.Locale;
 
 import org.hibernate.Incubating;
-import org.hibernate.query.sqm.tuple.internal.AnonymousTupleTableGroupProducer;
+import org.hibernate.sql.ast.spi.query.SetReturningFunctionType;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.FunctionArgumentTypeResolver;
 import org.hibernate.query.sqm.produce.function.SetReturningFunctionTypeResolver;
-import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
-import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.spi.SqlAppender;
-import org.hibernate.sql.ast.tree.SqlAstNode;
+import org.hibernate.sql.ast.spi.translation.SqlAstNodeRenderingMode;
+import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
+import org.hibernate.sql.spi.SqlAppender;
+import org.hibernate.sql.ast.spi.SqlAstNode;
 
 import jakarta.annotation.Nullable;
 
@@ -67,7 +68,7 @@ public class NamedSqmSetReturningFunctionDescriptor
 	public void render(
 			SqlAppender sqlAppender,
 			List<? extends SqlAstNode> sqlAstArguments,
-			AnonymousTupleTableGroupProducer returnType,
+			SetReturningFunctionType returnType,
 			String tableIdentifierVariable,
 			SqlAstTranslator<?> translator) {
 		translator.renderNamedSetReturningFunction( functionName, sqlAstArguments, returnType, tableIdentifierVariable, argumentRenderingMode );

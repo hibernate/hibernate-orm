@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.mapping.basic;
 
+import org.hibernate.dialect.array.spi.ArraySupport;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Lob;
@@ -13,7 +14,7 @@ import org.hibernate.annotations.JavaType;
 import org.hibernate.annotations.Nationalized;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.NationalizationSupport;
+import org.hibernate.dialect.type.spi.NationalizationSupport;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
@@ -69,7 +70,7 @@ public class CharacterArrayNationalizedMappingTests {
 		{
 			final BasicAttributeMapping attributeMapping = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("wrapperNVarchar");
 			final JdbcMapping jdbcMapping = attributeMapping.getJdbcMapping();
-			if ( dialect.supportsStandardArrays() ) {
+			if ( dialect.getArraySupport().supports( ArraySupport.Capability.STANDARD_ARRAY ) ) {
 				assertThat( jdbcMapping.getJdbcType(), instanceOf( ArrayJdbcType.class ) );
 				assertThat(
 						( (ArrayJdbcType) jdbcMapping.getJdbcType() ).getElementJdbcType(),

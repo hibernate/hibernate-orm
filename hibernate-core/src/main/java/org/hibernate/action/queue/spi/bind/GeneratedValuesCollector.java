@@ -7,6 +7,7 @@ package org.hibernate.action.queue.spi.bind;
 import jakarta.annotation.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.action.queue.spi.meta.TableDescriptor;
+import org.hibernate.dialect.generated.spi.GeneratedValuesSupport;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.generator.EventType;
 import org.hibernate.generator.values.GeneratedValues;
@@ -37,8 +38,9 @@ public final class GeneratedValuesCollector {
 			EntityPersister entityPersister,
 			SessionFactoryImplementor sessionFactory) {
 		var dialect = sessionFactory.getJdbcServices().getDialect();
-		var supportsRowId = dialect.supportsInsertReturning()
-				&& dialect.supportsInsertReturningRowId()
+		var generatedValuesSupport = dialect.getGeneratedValuesSupport();
+		var supportsRowId = generatedValuesSupport.supports( GeneratedValuesSupport.Capability.INSERT_RETURNING )
+				&& generatedValuesSupport.supports( GeneratedValuesSupport.Capability.INSERT_RETURNING_ROW_ID )
 				&& noCustomSql( entityPersister, EventType.INSERT );
 		return forTiming( entityPersister, EventType.INSERT, supportsRowId );
 	}

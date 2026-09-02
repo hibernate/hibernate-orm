@@ -13,7 +13,7 @@ import static org.hibernate.type.SqlTypes.ORDINAL_ENUM;
  * as {@link jakarta.persistence.EnumType#ORDINAL}.
  *
  * @see org.hibernate.type.SqlTypes#ORDINAL_ENUM
- * @see org.hibernate.dialect.MySQLDialect#getEnumTypeDeclaration(String, String[])
+ * @see org.hibernate.dialect.MySQLDialect#getEnumSupport()
  */
 public class OrdinalEnumJdbcType extends EnumJdbcType {
 

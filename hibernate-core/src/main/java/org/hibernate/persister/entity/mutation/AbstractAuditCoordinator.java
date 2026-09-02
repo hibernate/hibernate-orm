@@ -6,6 +6,7 @@ package org.hibernate.persister.entity.mutation;
 
 import java.sql.SQLException;
 
+import org.hibernate.Internal;
 import org.hibernate.audit.ModificationType;
 import org.hibernate.audit.spi.AuditWriter;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
@@ -25,6 +26,7 @@ import org.hibernate.sql.model.MutationOperationGroup;
  * there is one audit table; for JOINED there is one per entity table.
  * The static operation group is cached for reuse.
  */
+@Internal
 abstract class AbstractAuditCoordinator extends AbstractMutationCoordinator implements AuditWriter {
 	protected final BasicBatchKey auditBatchKey;
 	protected final boolean[] auditedPropertyMask;

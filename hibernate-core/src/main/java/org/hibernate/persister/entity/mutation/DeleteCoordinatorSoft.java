@@ -8,16 +8,17 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.SoftDeleteMapping;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
-import org.hibernate.sql.model.MutationOperation;
+import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
+import org.hibernate.sql.spi.mutation.MutationOperation;
 import org.hibernate.sql.model.MutationOperationGroup;
-import org.hibernate.sql.model.ast.builder.TableUpdateBuilderStandard;
+import org.hibernate.sql.ast.spi.model.builder.TableUpdateBuilderStandard;
 
 /**
  * DeleteCoordinator for soft-deletes
  *
  * @author Steve Ebersole
  */
+@org.hibernate.Internal
 public class DeleteCoordinatorSoft extends AbstractDeleteCoordinator {
 	public DeleteCoordinatorSoft(EntityPersister entityPersister, SessionFactoryImplementor factory) {
 		super( entityPersister, factory );

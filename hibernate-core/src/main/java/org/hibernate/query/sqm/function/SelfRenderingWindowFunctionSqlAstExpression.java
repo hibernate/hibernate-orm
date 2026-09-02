@@ -9,11 +9,11 @@ import java.util.List;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.model.domain.ReturnableType;
-import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.spi.SqlAppender;
-import org.hibernate.sql.ast.tree.SqlAstNode;
-import org.hibernate.sql.ast.tree.expression.WindowFunctionExpression;
-import org.hibernate.sql.ast.tree.predicate.Predicate;
+import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
+import org.hibernate.sql.spi.SqlAppender;
+import org.hibernate.sql.ast.spi.SqlAstNode;
+import org.hibernate.sql.ast.spi.query.expression.WindowFunctionExpression;
+import org.hibernate.sql.ast.spi.query.predicate.Predicate;
 
 /**
  * Representation of a window function call in the SQL AST for impls that know how to
@@ -28,6 +28,7 @@ public class SelfRenderingWindowFunctionSqlAstExpression<T> extends SelfRenderin
 	private final Boolean respectNulls;
 	private final Boolean fromFirst;
 
+	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	public SelfRenderingWindowFunctionSqlAstExpression(
 			String functionName,
 			FunctionRenderer renderer,

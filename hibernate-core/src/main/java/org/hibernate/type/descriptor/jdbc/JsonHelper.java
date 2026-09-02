@@ -20,7 +20,7 @@ import jakarta.annotation.Nullable;
 import org.hibernate.Internal;
 import org.hibernate.internal.build.AllowReflection;
 import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.internal.util.collections.StandardStack;
+import org.hibernate.spi.StandardStack;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;

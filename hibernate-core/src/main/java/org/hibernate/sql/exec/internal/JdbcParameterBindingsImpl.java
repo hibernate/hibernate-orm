@@ -18,7 +18,7 @@ import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.sql.spi.ParameterOccurrence;
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
+import org.hibernate.sql.ast.spi.query.expression.JdbcParameter;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.exec.spi.JdbcParameterBinding;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
@@ -51,7 +51,9 @@ public class JdbcParameterBindingsImpl implements JdbcParameterBindings {
 			bindingMap = new IdentityHashMap<>( parameterOccurrences.size() );
 
 			final boolean paddingEnabled = factory.getSessionFactoryOptions().inClauseParameterPaddingEnabled();
-			final int inExprLimit = factory.getJdbcServices().getDialect().getParameterCountLimit();
+			final int inExprLimit = factory.getJdbcServices().getDialect()
+					.getParameterLimits()
+					.inExpressionCountLimit();
 
 			for ( var occurrence : parameterOccurrences ) {
 				final var parameter = occurrence.parameter();

@@ -53,7 +53,7 @@ public class LobCreationHelper {
 				return NONE;
 			}
 
-			if ( !dialect.supportsJdbcConnectionLobCreation( databaseMetaData ) ) {
+			if ( !dialect.getLobSupport().supportsJdbcConnectionLobCreation( databaseMetaData ) ) {
 				LOB_MESSAGE_LOGGER.nonContextualLobCreationDialect();
 				return NONE;
 			}

@@ -15,6 +15,7 @@ import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentImpl;
 import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
+import org.hibernate.engine.jdbc.env.spi.JdbcMetadata;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
@@ -22,7 +23,7 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.ServiceRegistryAwareService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.Stoppable;
-import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
+import org.hibernate.sql.spi.ParameterMarkerStrategy;
 
 import org.hibernate.testing.env.ConnectionProviderBuilder;
 import org.jspecify.annotations.NonNull;
@@ -110,8 +111,15 @@ public class BasicTestingJdbcServiceImpl implements JdbcServices, ServiceRegistr
 		return jdbcEnvironment.getSqlExceptionHelper();
 	}
 
+	@Override
+	public JdbcMetadata getJdbcMetadata() {
+		return jdbcEnvironment.getJdbcMetadata();
+	}
+
+	@Deprecated(since = "8.0")
+	@Override
 	public ExtractedDatabaseMetaData getExtractedMetaDataSupport() {
-		return jdbcEnvironment.getExtractedDatabaseMetaData();
+		return jdbcEnvironment.getJdbcMetadata().getExtractedDatabaseMetaData();
 	}
 
 	@Override

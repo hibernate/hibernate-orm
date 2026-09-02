@@ -9,7 +9,7 @@ import jakarta.persistence.Timeout;
 import org.hibernate.PessimisticLockException;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.SybaseASEDialect;
-import org.hibernate.dialect.lock.PessimisticEntityLockException;
+import org.hibernate.dialect.lock.internal.PessimisticEntityLockException;
 import org.hibernate.jpa.SpecHints;
 import org.hibernate.testing.orm.AsyncExecutor;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;

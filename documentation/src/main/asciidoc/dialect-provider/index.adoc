@@ -1,0 +1,1141 @@
+:shared-attributes-dir: {doc-main-dir}/asciidoc/shared
+:html-meta-canonical-link: https://docs.hibernate.org/stable/orm/dialect-provider/
+:provider-fixture-dir: {root-project-dir}/tooling/hibernate-dialect-provider/src/providerFixtureTest/java/org/example/orm/dialect
+:provider-fixture-main-dir: {root-project-dir}/tooling/hibernate-dialect-provider/src/providerFixture/java/org/example/orm/dialect
+:provider-fixture-resources-dir: {root-project-dir}/tooling/hibernate-dialect-provider/src/providerFixture/resources
+
+include::{shared-attributes-dir}/common-attributes.adoc[]
+include::{shared-attributes-dir}/url-attributes.adoc[]
+include::{shared-attributes-dir}/filesystem-attributes.adoc[]
+include::{shared-attributes-dir}/renderer-attributes.adoc[]
+
+= Dialect Provider Guide
+:toc2:
+:toclevels: 3
+:sectanchors:
+
+This guide is for authors who publish a SQL Dialect independently of Hibernate
+ORM. The link:{doc-dialect-url}[Dialect guide] catalogs available Dialects;
+this guide explains how to implement, package, and verify one. Read the
+link:{doc-spi-url}[SPI and Service Provider Guide] first for the meaning of
+`USE`, `IMPLEMENT`, and `SUPPLY`.
+
+== Provider project setup
+
+Compile against the normal `org.hibernate.orm:hibernate-core` artifact. Do not
+depend on `hibernate-testing` or Hibernate's test classes. Keep the provider in
+its own artifact and publish an explicit Hibernate compatibility range.
+
+For Gradle builds, apply the provider tooling plugin alongside the Java plugin:
+
+[source,groovy,subs="attributes+"]
+----
+plugins {
+    id("java-library")
+    id("org.hibernate.orm.dialect-provider") version "{hibernate-version}"
+}
+
+dependencies {
+    compileOnly("org.hibernate.orm:hibernate-core:{hibernate-version}")
+}
+
+hibernateDialectProvider {
+    providerPackages.add("com.acme.hibernate.dialect")
+    contractProfiles.add("com.acme.hibernate.dialect.AcmeDialectContractProfile")
+}
+----
+
+The plugin resolves the classification metadata for the Hibernate `X.Y`
+release family, validates the normal provider jar, creates the
+`dialectProviderTest` source set, aligns the exact-version test kit with Core,
+and generates the small JUnit bridge for the explicitly named profile. Put
+provider-authored tests in `src/dialectProviderTest/java`.
+
+[NOTE]
+====
+The Gradle plugin is convenience tooling, not part of the Dialect SPI. Maven,
+Ant, and other builds should depend directly on the exact-version
+`org.hibernate.orm:hibernate-dialect-testkit`, configure JUnit Jupiter, and
+write the small `@TestFactory` bridge shown below. Static external-provider
+boundary validation is Gradle-only in this release. The test kit never scans
+for or discovers profiles.
+====
+
+== Dialect construction and selection
+
+Extend `org.hibernate.dialect.Dialect` or a base class explicitly classified
+for `IMPLEMENT`. A no-argument constructor should select the provider's minimum
+supported database version. A metadata-aware constructor should copy or default
+the `DialectResolutionInfo` version before inherited registration begins.
+
+`Dialect#getVersion()` is the immutable version captured during construction.
+Keep minimum-version resolution construction-safe: it must not read subclass
+fields before the superclass constructor has completed.
+
+Applications may select a Dialect explicitly with `hibernate.dialect`.
+
+[[dialect-provider-selection-and-resolution]]
+=== Explicit names and automatic resolution
+
+Prefer automatic resolution when the database and driver metadata reliably
+identify the provider's database. Implement `DialectResolver`, return the
+provider Dialect for recognized `DialectResolutionInfo`, and return `null` to
+let the next resolver try. Register the implementation as a Java service:
+
+[source,java,indent=0]
+----
+include::{provider-fixture-main-dir}/ExampleDialectResolver.java[tags=dialect-resolver]
+----
+
+.`META-INF/services/org.hibernate.engine.jdbc.dialect.spi.DialectResolver`
+[source,text,indent=0]
+----
+include::{provider-fixture-resources-dir}/META-INF/services/org.hibernate.engine.jdbc.dialect.spi.DialectResolver[]
+----
+
+Applications may instead list resolver class names in
+`hibernate.dialect_resolvers`. Explicitly configured resolvers run in their
+configured order, then service-loaded resolvers run in discovery order, and
+Hibernate's standard resolver runs last. The first non-null Dialect wins. An
+ordinary resolver exception is logged and resolution continues, while a JDBC
+connection exception propagates.
+
+Use `DialectSelector` only when the provider offers an explicit short name for
+`hibernate.dialect`. It maps the configured text, unchanged, to a Dialect class
+without constructing a Dialect. Return `null` for any unrecognized name so the
+next selector and then Hibernate's standard selector may try it:
+
+[source,java,indent=0]
+----
+include::{provider-fixture-main-dir}/ExampleDialectSelector.java[tags=dialect-selector]
+----
+
+.`META-INF/services/org.hibernate.boot.registry.selector.spi.DialectSelector`
+[source,text,indent=0]
+----
+include::{provider-fixture-resources-dir}/META-INF/services/org.hibernate.boot.registry.selector.spi.DialectSelector[]
+----
+
+Choose provider short names which are unlikely to collide. The first matching
+service wins, but Java service-provider ordering across independent artifacts
+is not a portable conflict-resolution mechanism. The test kit deliberately
+does not discover resolvers or selectors; a `DialectContractProfile` creates
+the exact Dialect under test.
+
+[WARNING]
+====
+Implement only the public `DialectResolver` or `DialectSelector` contract.
+`org.hibernate.boot.registry.selector.internal.LazyServiceResolver` is an
+internal Core adapter with no release-family compatibility guarantee and must
+not appear in provider code or signatures.
+====
+
+== Strategy-oriented architecture
+
+The link:{doc-javadoc-url}org/hibernate/dialect/Dialect.html[`Dialect`] is the
+provider's composition root. It captures the database version and resolved
+configuration, and supplies focused collaborators to Hibernate's type, query,
+JDBC, and schema subsystems. A strategy describes one coherent database
+variation; it is not a smaller name for an arbitrary group of Dialect methods.
+
+=== Dialect as composition root
+
+Prefer contracts under `org.hibernate.dialect.<feature>.spi` to copying
+Hibernate implementation code into a provider. Hibernate implementations in a
+matching `.internal` package are not provider contracts, even when their Java
+visibility permits an import.
+
+Read both sides of a strategy relationship:
+
+* the strategy type states whether providers may use or implement it;
+* the Dialect method states how the strategy is supplied;
+* reciprocal `@see` links connect the two declarations;
+* `IMPLEMENT` does not imply `SUPPLY`, and `SUPPLY` does not imply discovery.
+
+A supplied object should normally be stable for the Dialect's lifetime and
+immutable or thread-safe. A shared constant is appropriate for behavior which
+does not depend on database version or provider configuration. Use a per-Dialect
+instance when the strategy captures resolved state. A Dialect may implement a
+strategy directly and return `this` when the strategy contract permits it.
+
+Do not generalize the non-null rule. Some supply points deliberately return
+`null` to select Hibernate's standard behavior or to report that a native form
+is unavailable. Follow the exact contract of each method.
+
+=== Choosing an extension level
+
+Use the narrowest supported extension which expresses the database behavior:
+
+. Return a named standard constant or immutable profile.
+. Construct a profile with its supported builder or factory.
+. Compose or implement the focused strategy.
+. Override a narrowly classified rendering hook when its contract explicitly
+  supports provider implementation.
+. Supply a custom SQL AST translator only when the variation changes SQL tree
+  structure or rendering control flow in a way the focused strategies cannot
+  express.
+
+Do not replace a translator to change a single capability, and do not override
+adjacent strategies merely because one consumer happens to use them together.
+Independent capability answers allow Hibernate to compose the same database
+rules in schema tooling, mutation planning, SQL AST translation, and tests.
+
+=== Family and implementation bases
+
+A concrete selectable Dialect is not automatically a supported superclass.
+Extend `Dialect` or a family base whose Javadoc declares `IMPLEMENT`. For
+example, a Sybase-derived provider uses `AbstractSybaseDialect`, while
+`SybaseDialect` remains the concrete maintained Dialect selected by
+applications:
+
+[source,java,indent=0]
+----
+include::{provider-fixture-main-dir}/ExampleSybaseDialect.java[tags=sybase-family-base]
+----
+
+The family base preserves the maintained implementation and exposes the
+audited Dialect override surface. Choose the version constructor when the
+provider already knows its database version and the resolution-info constructor
+when bootstrap metadata determines it. Do not infer an implementation contract
+from package placement or Java visibility alone.
+
+=== Identifier, metadata, and literal strategies
+
+See the link:{doc-javadoc-url}org/hibernate/dialect/identifier/spi/package-summary.html[identifier SPI],
+link:{doc-javadoc-url}org/hibernate/dialect/literal/spi/package-summary.html[literal SPI],
+and link:{doc-javadoc-url}org/hibernate/dialect/jdbc/spi/package-summary.html[JDBC strategy SPI]
+for the complete contracts.
+
+[cols="23,30,25,22",options="header"]
+|===
+|Concern |Primary contract |Dialect supply point |Provider guidance
+
+|Identifier rendering and limits
+|`IdentifierSupport`
+|`getIdentifierSupport()`
+|Describe quoting and identifier-length rules independently from JDBC metadata.
+
+|Identifier normalization
+|`IdentifierHelperBuildRequest`
+|`buildIdentifierHelper(...)`
+|Refine the supplied builder and use `JdbcMetadata` availability explicitly.
+
+|Keyword behavior
+|`KeywordSupport`, `KeywordRegistration`
+|`getKeywordSupport()`, `contributeKeywords(...)`
+|Use the strategy for keyword policy and the callback for registration lifecycle.
+
+|Literal rendering
+|`LiteralSupport`
+|`getLiteralSupport()`
+|Implement only database-specific literal forms and delegate the remainder.
+
+|Metadata correction
+|`JdbcMetadataOverrides`
+|`getJdbcMetadataOverrides()`
+|Override unreliable driver answers without pretending that metadata was read.
+
+|Parameter limits and markers
+|`ParameterLimits`, `ParameterMarkerStrategy`
+|`getParameterLimits()`, `getNativeParameterMarkerStrategy()`
+|Keep driver-sensitive marker selection consistent with the configured driver.
+
+|String-value semantics
+|`StringValueSemantics`
+|`getStringValueSemantics()`
+|Describe empty-string, trailing-space, and comparison behavior as one profile.
+
+|Result-column aliases
+|`ColumnAliasExtractor`
+|`getColumnAliasExtractor()`
+|Choose name- or label-based extraction according to reliable driver behavior.
+|===
+
+[[dialect-provider-delegating-identifier-helper]]
+==== Decorating identifier helpers
+
+Prefer configuring the `IdentifierHelperBuilder` carried by
+`IdentifierHelperBuildRequest`. It already represents global quoting,
+automatic keyword quoting, identifier casing, namespace support, and common
+automatic-quoting rules. The inherited `buildIdentifierHelper()` initializes
+identifier casing, keywords, and namespace support from the request. Invoke it
+before replacing any of those values with authoritative provider settings,
+then build the final helper from the same builder. Settings which the inherited
+implementation does not initialize may be applied before invoking it.
+
+When builder configuration cannot express one database rule, decorate the
+configured result with `DelegatingIdentifierHelper`. Do not implement
+`IdentifierHelper` directly. The interface is a `USE + SUPPLY` runtime result,
+while the delegating base is the supported `IMPLEMENT` contract and shields a
+provider from newly added forwarding operations.
+
+Each forwarding operation is independent. If custom normalization must affect
+the three `toIdentifier()` entry points, override those entry points as well as
+`normalizeQuoting()`. Call `super` for ordinary forwarding and retain only the
+returned helper as the decorator's delegate; do not retain the build request,
+builder, or metadata view.
+
+This provider-owned decorator quotes an otherwise legal identifier beginning
+with `provider_`:
+
+[source,java,indent=0]
+----
+include::{provider-fixture-main-dir}/ExampleIdentifierHelper.java[tags=identifier-helper-decorator]
+----
+
+The Dialect applies automatic-quoting settings not initialized by the inherited
+implementation and wraps its result:
+
+[source,java,indent=0]
+----
+include::{provider-fixture-main-dir}/ExampleDialect.java[tags=identifier-helper-build]
+----
+
+==== Composing datetime literals
+
+`LiteralSupport` owns the complete SQL representation of date, time, and
+timestamp literals. A provider implementation is therefore responsible for
+database-specific introducers, delimiters, casts, and escape syntax. The
+link:{doc-javadoc-url}org/hibernate/dialect/literal/spi/StandardDateTimeLiteralRendering.html[`StandardDateTimeLiteralRendering`]
+utility supplies just the standard date or time value between those
+database-specific elements.
+
+For example, a database which requires its own timestamp introducer but accepts
+the standard value representation may compose the two concerns:
+
+[source,java]
+----
+@Override
+public void appendDateTimeLiteral(
+        SqlAppender appender,
+        TemporalAccessor temporalAccessor,
+        TemporalType precision,
+        TimeZone jdbcTimeZone) {
+    appender.appendSql( "vendor_timestamp '" );
+    StandardDateTimeLiteralRendering.appendAsTimestampWithMicros(
+            appender,
+            temporalAccessor,
+            getTemporalValueSemantics().supportsLiteralOffset(),
+            jdbcTimeZone,
+            ZeroOffsetLiteralStyle.NUMERIC_OFFSET
+    );
+    appender.appendSql( '\'' );
+}
+----
+
+Choose the zero-offset spelling explicitly: `UTC_DESIGNATOR` emits `Z`, while
+`NUMERIC_OFFSET` emits `+00:00`. Nonzero offsets retain their numeric value.
+Use the overload matching the database's fractional-second precision, and use
+the local-time variants only when the literal syntax intentionally excludes an
+offset. Providers should not import the internal `DateTimeUtils`; the public
+utility is the supported composition boundary.
+
+JDBC metadata is authoritative only when it is accessible and trustworthy.
+Metadata-free bootstrap must obtain every required fallback from the Dialect.
+Keyword contribution is therefore a lifecycle operation, while identifier and
+metadata support objects are stable strategies.
+
+[NOTE]
+====
+The aggregate-column, locking, row-level-security, temporal-table, and SQL AST
+extension families are incubating. Their contracts may change within an
+`X.Y` release family and are excluded from the corresponding SPI compatibility
+guarantee. Check the generated Javadoc for `@Incubating` before depending on a
+strategy, request, result, or SQL AST contract.
+====
+
+=== Type and temporal strategies
+
+See the link:{doc-javadoc-url}org/hibernate/dialect/type/spi/package-summary.html[type SPI],
+link:{doc-javadoc-url}org/hibernate/dialect/temporaltype/spi/package-summary.html[temporal-type SPI],
+link:{doc-javadoc-url}org/hibernate/dialect/temporal/spi/package-summary.html[temporal-table SPI],
+link:{doc-javadoc-url}org/hibernate/dialect/array/spi/package-summary.html[array SPI],
+and link:{doc-javadoc-url}org/hibernate/dialect/lob/spi/package-summary.html[LOB SPI]
+for the complete contracts.
+
+[cols="23,30,25,22",options="header"]
+|===
+|Concern |Primary contract |Dialect supply point |Provider guidance
+
+|Physical type capacities
+|`TypeSizingProfile`
+|`getTypeSizingProfile()`
+|Report supported capacities and precision defaults; use `UNSUPPORTED` only as documented.
+
+|Runtime size resolution
+|`SizeStrategy`
+|`getSizeStrategy()`
+|Customize mapped-size calculation without changing the physical capability profile.
+
+|Enum declarations and checks
+|`EnumSupport`
+|`getEnumSupport()`
+|Keep enum DDL, casts, declarations, and value checks in one strategy; distinguish textual and ordinal DDL when their relational representations differ.
+
+|Array types and literals
+|`ArraySupport`
+|`getArraySupport()`
+|Describe native array behavior; separate it from aggregate-column support.
+
+|LOB behavior
+|`LobSupport`
+|`getLobSupport()`
+|Coordinate LOB type classification, materialization, binding, and merge behavior.
+
+|Untyped null binding
+|`ObjectNullBindingStrategy`
+|`getObjectNullBindingStrategy()`
+|Choose the complete binding policy instead of independent Boolean answers.
+
+|Nationalized and zoned types
+|`NationalizationSupport`, `TimeZoneSupport`
+|`getNationalizationSupport()`, `getTimeZoneSupport()`
+|Report type-system behavior, not temporal literal syntax.
+
+|Current date and time
+|`CurrentTemporalSupport`
+|`getCurrentTemporalSupport()`
+|Supply current temporal expressions and database-side timestamp retrieval; report whether the timestamp expression uses standard `current_timestamp` syntax.
+
+|Temporal formatting
+|`TemporalFormatSupport`
+|`getTemporalFormatSupport()`
+|Translate format patterns without absorbing arithmetic or value semantics.
+
+|Temporal arithmetic
+|`TemporalOperationSupport`
+|`getTemporalOperationSupport()`
+|Own timestamp add/diff patterns and other operation grammar.
+
+|Temporal values
+|`TemporalValueSemantics`
+|`getTemporalValueSemantics()`
+|Describe precision loss, rounding, and offset preservation.
+
+|System-versioned tables
+|`TemporalTableSupport`
+|`getTemporalTableSupport()`
+|Keep temporal-table DDL and historical-query behavior separate from temporal types.
+|===
+
+Physical type sizing, runtime size calculation, and type registration are
+different stages. `registerColumnTypes()`, `contributeTypes()`, and
+`initializeFunctionRegistry()` remain lifecycle callbacks, not strategy
+objects. Resolve version and provider configuration before inherited type
+registration so those callbacks and all supplied strategies observe one state.
+
+When textual and ordinal named finite-domain types require different DDL,
+override `EnumSupport#getCreateOrdinalTypeCommands()`. Its default delegates to
+`getCreateTypeCommands()` and is therefore appropriate only when both mappings
+use the same database representation.
+
+If `CurrentTemporalSupport#currentTimestamp()` returns a database-specific
+expression instead of the standard `current_timestamp` function, also override
+`usesStandardCurrentTimestampFunction()` to return `false`.
+
+=== Implementing and contributing Java/JDBC types
+
+A custom basic mapping normally pairs a
+link:{doc-javadoc-url}org/hibernate/type/descriptor/java/JavaType.html[`JavaType`]
+with a
+link:{doc-javadoc-url}org/hibernate/type/descriptor/jdbc/JdbcType.html[`JdbcType`].
+The Java descriptor owns Java-side equality, wrapping, unwrapping, mutability,
+and its JDBC recommendation. The JDBC descriptor owns type codes, binding,
+extraction, and optional SQL-literal formatting. Keep those responsibilities
+separate even when both descriptors are implemented by the same provider.
+
+The principal provider contracts are:
+
+[cols="28,29,43",options="header"]
+|===
+|Concern |Contract or base |Guidance
+
+|Java value semantics
+|`JavaType`, `BasicJavaType`, `AbstractJavaType`, `AbstractClassJavaType`
+|Implement a descriptor or extend the narrowest base whose defaults match the value.
+
+|Mutability
+|`MutabilityPlan`, `MutableMutabilityPlan`
+|Supply the plan from `JavaType#getMutabilityPlan()`; make immutable plans reusable.
+
+|JDBC access
+|`JdbcType`, `BasicBinder`, `BasicExtractor`
+|Supply a binder and extractor from the descriptor. Conversion belongs outside those operations.
+
+|Parameterized JDBC types
+|`JdbcTypeConstructor`
+|Resolve a descriptor from the element JDBC type and the supplied mapping context.
+
+|Aggregate and structured values
+|`AggregateJdbcType`, `StructuredJdbcType`
+|Treat the registered instance as a prototype and supply the mapping-specific descriptor from `resolveAggregateJdbcType(...)`.
+
+|Bootstrap registration
+|`TypeContributor`, `TypeContributions`
+|Register descriptors during metadata bootstrap and never retain the lifecycle-scoped contributions object.
+|===
+
+For independently reusable types, expose a `TypeContributor` as a Java service
+or register it programmatically. A contributor may register both sides of the
+pair and any parameterized constructor in one callback:
+
+[source,java]
+----
+public final class ProviderTypeContributor implements TypeContributor {
+    @Override
+    public void contribute(
+            TypeContributions contributions,
+            ServiceRegistry serviceRegistry) {
+        contributions.contributeJavaType( ProviderJavaType.INSTANCE );
+        contributions.contributeJdbcType( ProviderJdbcType.INSTANCE );
+        contributions.contributeJdbcTypeConstructor(
+                ProviderJdbcTypeConstructor.INSTANCE
+        );
+    }
+}
+----
+
+A Dialect may perform database-specific registration from
+`contributeTypes(...)` using the same callbacks. Invoke inherited registration
+before adding or replacing descriptors unless the Dialect deliberately owns
+the complete inherited type set. Resolve version and driver configuration
+before that inherited call.
+
+For PostgreSQL component-format structured values, extend
+`org.hibernate.dialect.type.spi.AbstractPostgreSQLStructJdbcType`. Use its
+runtime-model constructor for a mapped aggregate; Hibernate resolves the
+boot-model attribute ordering without exposing the boot mapping as a provider
+dependency. Implement only the driver binding, extraction, and write-expression
+variation owned by the provider.
+
+Focused facilities cover common composition needs without exposing their Core
+implementations:
+
+* `DB2JdbcTypes` supplies stable stock descriptors, including the seven Java
+  temporal descriptors with DB2's null-safe typed-`getObject` behavior;
+* `LobDataExtraction` materializes a binary stream or CLOB using Hibernate's
+  standard closing and exception-conversion behavior. It closes the consumed
+  stream or reader, but the caller remains responsible for freeing the JDBC
+  locator; and
+* `EnumRelationalValues` returns enum names or converter-produced relational
+  strings in declaration order. Sort the returned fresh array only when the
+  database declaration requires it.
+
+Do not import `.internal` descriptor implementations or utilities merely to
+obtain stock behavior. An internal class may change between releases without
+the `X.Y` SPI compatibility expectations described in the SPI and Service
+Provider Guide.
+
+=== Schema and DDL strategies
+
+See the link:{doc-javadoc-url}org/hibernate/dialect/schema/spi/package-summary.html[schema SPI],
+link:{doc-javadoc-url}org/hibernate/dialect/constraint/spi/package-summary.html[constraint SPI],
+link:{doc-javadoc-url}org/hibernate/dialect/namespace/spi/package-summary.html[namespace SPI],
+link:{doc-javadoc-url}org/hibernate/dialect/identity/spi/package-summary.html[identity SPI],
+link:{doc-javadoc-url}org/hibernate/dialect/sequence/spi/package-summary.html[sequence SPI],
+and link:{doc-javadoc-url}org/hibernate/dialect/temptable/spi/package-summary.html[temporary-table SPI]
+for the complete contracts.
+
+[cols="23,30,25,22",options="header"]
+|===
+|Concern |Primary contract |Dialect supply point |Provider guidance
+
+|Catalog and schema lifecycle
+|`NamespaceSupport`
+|`getNamespaceSupport()`
+|Render create/drop commands without conflating qualification or catalog separators.
+
+|Conditional DDL
+|`IfExistsSupport`
+|`getIfExistsSupport()`
+|Describe placement independently for each supported database object.
+
+|Table alteration and creation
+|`AlterTableSupport`, `TableCreationSupport`
+|`getAlterTableSupport()`, `getTableCreationSupport()`
+|Return focused fragments and plans which exporters compose.
+
+|Column definitions
+|`ColumnDefinitionSupport`
+|`getColumnDefinitionSupport()`
+|Own column declaration ordering, nullability, defaults, and generated clauses.
+
+|Indexes and constraints
+|`IndexDdlSupport`, `ConstraintControlSupport`
+|`getIndexDdlSupport()`, `getConstraintControlSupport()`
+|Keep index grammar separate from runtime enable/disable commands.
+
+|Truncation and schema drop
+|`TruncateSupport`, `SchemaDropSupport`
+|`getTruncateSupport()`, `getSchemaDropSupport()`
+|Preserve command ordering and multi-command results.
+
+|Foreign keys and checks
+|`ForeignKeySupport`, `CheckConstraintSupport`
+|`getForeignKeySupport()`, `getCheckConstraintSupport()`
+|Render focused constraint fragments consumed by schema exporters.
+
+|Database-object comments
+|`SchemaCommentSupport`
+|`getSchemaCommentSupport()`
+|Handle schema-object comments only, not SQL query comments.
+
+|Identity and sequences
+|`IdentityColumnSupport`, `SequenceSupport`
+|`getIdentityColumnSupport()`, `getSequenceSupport()`
+|Keep value generation and DDL/extraction behavior consistent.
+
+|Complete object commands
+|`Exporter`, `TableMigrator`, `TableCleaner`
+|the `get...Exporter()`, `getTableMigrator()`, and `getTableCleaner()` methods
+|Use exporters for complete commands and support strategies for focused pieces.
+
+|Temporary-table lifecycle
+|`TemporaryTableStrategy`, `TemporaryTableExporter`
+|persistent/local/global strategy methods and `getTemporaryTableExporter()`
+|Make the selected strategy kind, lifecycle commands, and exporter agree.
+|===
+
+`NameQualifierSupport`, `getCatalogSeparator()`, and `NamespaceSupport` are
+related but independent. The first describes which qualifiers are supported,
+the second supplies metadata-free catalog punctuation, and the third owns
+catalog/schema creation and removal.
+
+=== Query-shape strategies
+
+Query strategies describe independent pieces of database grammar. They remain
+Dialect capabilities even when the SQL AST translator is their primary
+consumer.
+
+See the link:{doc-javadoc-url}org/hibernate/dialect/sql/ast/spi/package-summary.html[Dialect SQL AST SPI],
+link:{doc-javadoc-url}org/hibernate/dialect/function/spi/package-summary.html[function SPI],
+link:{doc-javadoc-url}org/hibernate/dialect/aggregate/spi/package-summary.html[aggregate SPI],
+and link:{doc-javadoc-url}org/hibernate/dialect/queryhint/spi/package-summary.html[query-hint SPI]
+for the complete contracts.
+
+[cols="23,30,25,22",options="header"]
+|===
+|Concern |Primary contract |Dialect supply point |Provider guidance
+
+|Predicates and row values
+|`PredicateSupport`, `RowValueSupport`
+|`getPredicateSupport()`, `getRowValueSupport()`
+|Describe placement and tuple grammar independently.
+
+|Aggregate and window syntax
+|`TupleCountSupport`, `ExpressionCoercionSupport`, `WindowFunctionSupport`
+|the corresponding `get...Support()` methods
+|Report exact function forms without creating an aggregate catch-all.
+
+|Set operations and subqueries
+|`SetOperationSupport`, `SubquerySupport`
+|`getSetOperationSupport()`, `getSubquerySupport()`
+|Represent each placement restriction explicitly.
+
+|Ordering and grouping
+|`NullOrderingSupport`, `FunctionalDependencyAnalysisSupport`
+|`getNullOrderingSupport()`, `getFunctionalDependencyAnalysisSupport()`
+|Separate null precedence from group-by functional-dependency rules.
+
+|Tableless and synthetic roots
+|`SingleRowTableSupport`, `SyntheticTableGroupSupport`
+|`getSingleRowTableSupport()`, `getSyntheticTableGroupSupport()`
+|Use a synthetic root only for the query shapes which require one.
+
+|Common table expressions
+|`CteSupport`
+|`getCteSupport()`
+|Describe placement, recursion, materialization, and mutation capabilities.
+
+|DML grammar
+|`MutationSyntaxSupport`, `DmlTargetColumnQualifierSupport`
+|`getMutationSyntaxSupport()`, `getDmlTargetColumnQualifierSupport()`
+|Keep mutation syntax separate from bulk-mutation execution planning.
+
+|Values and fetch clauses
+|`ValuesListSupport`, `FetchClauseSupport`
+|`getValuesListSupport()`, `getFetchClauseSupport()`
+|Report context support for `values` independently of list cardinality; an unsupported context is emulated even for one row.
+
+|Query hints
+|`QueryHintPlacement`
+|`getQueryHintPlacement()`
+|Coordinate placement with the retained focused hint-rendering methods.
+|===
+
+Prefer a named standard profile for a standard database rule:
+
+[source,java,indent=0]
+----
+include::{provider-fixture-main-dir}/ExampleDialect.java[tags=standard-strategy-profile]
+----
+
+Use builders and immutable value profiles when several independent features
+must be stated together:
+
+[source,java,indent=0]
+----
+include::{provider-fixture-main-dir}/ExampleDialect.java[tags=built-query-strategies]
+----
+
+`SyntheticTableGroupSupport` is the canonical example of this architecture. A
+focused capability replaced database-specific SQM converters which existed
+only to add a synthetic table root for literal grouping or ordering.
+
+[[dialect-provider-function-contracts]]
+=== Function contribution and descriptor contracts
+
+Function registration is a bootstrap lifecycle, not a long-lived strategy.
+A Dialect contributes its database-specific function set from
+`initializeFunctionRegistry(FunctionContributions)`. A library or application
+which contributes functions independently of a Dialect implements
+`FunctionContributor` and supplies it through Java service loading,
+`Configuration#registerFunctionContributor()`, or
+`MetadataBuilder#applyFunctions()`.
+
+Both callbacks receive a boot-scoped `FunctionContributions`. Use it to obtain
+the `SqmFunctionRegistry`, `TypeConfiguration`, and services, complete all
+registrations before returning, and retain neither the contribution context nor
+the mutable registry. Independent contributors execute in ascending ordinal
+order before the Dialect callback. A later registration under the same key
+replaces an earlier one.
+
+Choose the smallest supported extension level which expresses the function:
+
+[cols="28,33,39",options="header"]
+|===
+|Need |Contract |Provider guidance
+
+|A stock Hibernate definition or database variant
+|`CommonFunctionFactory`
+|Construct it inside the callback, invoke the required stock methods, and
+discard it before returning. The factory supports use, not subclassing or
+supply.
+
+|A simple provider-defined named or pattern function
+|`SqmFunctionRegistry` descriptor builders
+|Configure validation, return-type inference, argument-type inference, and
+rendering through a builder, then register immediately.
+
+|Custom SQM generation
+|`SqmFunctionDescriptor` or `AbstractSqmFunctionDescriptor`
+|Implement a reusable descriptor and register its stable instance through a
+descriptor-accepting supply point.
+
+|Custom self-rendering SQL
+|`FunctionRenderer` or `AbstractSqmSelfRenderingFunctionDescriptor`
+|Own SQL AST rendering in the descriptor. Use a supported focused Dialect
+function base when its existing behavior is the intended starting point.
+|===
+
+For example, a Dialect may combine a stock definition, a simple pattern, and a
+provider-owned descriptor in the same callback:
+
+[source,java]
+----
+@Override
+public void initializeFunctionRegistry(FunctionContributions contributions) {
+    super.initializeFunctionRegistry( contributions );
+
+    new CommonFunctionFactory( contributions ).cot();
+    contributions.getFunctionRegistry()
+            .patternDescriptorBuilder( "provider_concat", "(?1 || ?2)" )
+            .setExactArgumentCount( 2 )
+            .register();
+    contributions.getFunctionRegistry().register(
+            "provider_self_rendering",
+            new ProviderSelfRenderingFunctionDescriptor()
+    );
+}
+----
+
+The selected general, array, and JSON descriptor bases are supported where
+their Javadocs declare `IMPLEMENT`; the package as a whole is not an
+implementation contract. `CommonFunctionFactory` is a supported catalog of
+stock registrations for the current Hibernate `X.Y` release family. Adding a
+stock method is compatible, while removing or incompatibly changing an
+existing stock method is not. Its instances are callback-local helpers and are
+never supplied to Hibernate.
+
+See the link:{doc-javadoc-url}org/hibernate/boot/model/FunctionContributor.html[`FunctionContributor`],
+link:{doc-javadoc-url}org/hibernate/query/sqm/function/SqmFunctionDescriptor.html[`SqmFunctionDescriptor`],
+link:{doc-javadoc-url}org/hibernate/query/sqm/function/SqmFunctionRegistry.html[`SqmFunctionRegistry`],
+and link:{doc-javadoc-url}org/hibernate/dialect/function/CommonFunctionFactory.html[`CommonFunctionFactory`]
+contracts for exact roles, constructors, and supply points.
+
+=== Execution, locking, and mutation strategies
+
+See the link:{doc-javadoc-url}org/hibernate/dialect/lock/spi/package-summary.html[locking SPI],
+link:{doc-javadoc-url}org/hibernate/dialect/pagination/spi/package-summary.html[pagination SPI],
+link:{doc-javadoc-url}org/hibernate/dialect/mutation/spi/package-summary.html[bulk-mutation SPI],
+link:{doc-javadoc-url}org/hibernate/dialect/generated/spi/package-summary.html[generated-values SPI],
+link:{doc-javadoc-url}org/hibernate/dialect/rowid/spi/package-summary.html[row-id SPI],
+and link:{doc-javadoc-url}org/hibernate/dialect/rowsecurity/spi/package-summary.html[row-security SPI]
+for the complete contracts.
+[cols="23,30,25,22",options="header"]
+|===
+|Concern |Primary contract |Dialect supply point |Provider guidance
+
+|Pagination
+|`LimitHandler`
+|`getLimitHandler()`
+|Use a standard handler or implement the request/result contract for custom SQL and JDBC instructions.
+
+|Query locking
+|`LockingSupport`, `LockingClauseStrategy`
+|`getLockingSupport()`, `getLockingClauseStrategy(...)`
+|Use the stable profile for capabilities and the per-request strategy for clause selection.
+
+|Entity locking
+|`EntityLockingStrategyFactory`
+|`getEntityLockingStrategyFactory()`
+|Create a strategy for the supplied request without retaining bootstrap state.
+
+|Bulk mutation fallback
+|`MultiTableMutationSupport`
+|`getMultiTableMutationSupport()`
+|Choose CTE or temporary/persistent-table handling separately for operation families.
+
+|Generated values and row locators
+|`GeneratedValuesSupport`, `RowIdSupport`
+|`getGeneratedValuesSupport()`, `getRowIdSupport()`
+|Coordinate SQL expressions, retrieval, JDBC typing, and physical declaration; return `RowIdSupports.none()` when a variant lacks an inherited row locator.
+
+|Row-level security
+|`RowLevelSecurity`
+|`getRowLevelSecurity()`
+|Keep tenant predicates and supporting DDL in one coherent strategy.
+
+|Callable statements and cursors
+|`CallableStatementSupport`, `RefCursorSupportFactory`
+|`getCallableStatementSupport()`, `getRefCursorSupportFactory()`
+|Separate callable syntax from cursor registration/extraction lifecycle.
+
+|Multi-key loading
+|`MultiKeyLoadSizingStrategy`
+|`getMultiKeyLoadSizingStrategy()`, `getBatchLoadSizingStrategy()`
+|Respect parameter limits when choosing batch sizes.
+|===
+
+A custom focused implementation may still be a stable singleton:
+
+[source,java,indent=0]
+----
+include::{provider-fixture-main-dir}/ExampleDialect.java[tags=custom-locking-strategy]
+----
+
+==== Choosing a locking profile
+
+`Dialect#getLockingSupport()` supplies one cohesive, stable profile for the
+Dialect lifetime. Its metadata, clause renderer, table-hint renderer,
+completed-SQL rewriter, follow-on policy, and connection-timeout strategy must
+describe the same database behavior. The profile and all reusable components
+must be immutable or thread-safe; per-query target collection belongs to the
+`LockingClauseStrategy` created for that translation.
+
+Choose the narrowest supported approach:
+
+* Use a named `StandardLockingSupports` factory when extending a maintained
+  database family. These factories preserve Hibernate's version thresholds and
+  coordinated syntax and timeout behavior.
+* Use `StandardLockingSupports.simple(...)` when every timeout has one
+  classification, or `parameterized(...)` when wait, no-wait, and skip-locked
+  differ. These factories return the SPI interface and do not expose the
+  Hibernate-owned implementation.
+* Implement `LockingSupport` only when the database requires behavior which
+  cannot be expressed by those profiles, such as custom table hints, raw-SQL
+  placement, or follow-on policy. Keep the implementation provider-owned and
+  return stable components.
+
+A follow-on policy reports whether follow-on locking is required; it does not
+guarantee that a particular execution plan supplies the actions needed to
+perform it. For completed or raw SQL without those actions, `ALLOW` proceeds
+without Hibernate-applied pessimistic locking, `FORCE` fails, and `DISALLOW`
+fails when either the policy or SQL-rewrite outcome requires follow-on locking.
+`IGNORE` likewise proceeds without Hibernate-applied locking when follow-on is
+required.
+
+For statement-clause translation, use
+`StandardLockingClauseStrategies.none()` when locking is expressed elsewhere.
+Use `standard(...)` to combine a provider-owned `LockingClauseRenderer` with
+Hibernate's standard root and join target collection. A custom strategy is
+appropriate only when target collection itself differs.
+
+A provider-owned connection-timeout strategy should use
+`ConnectionLockTimeoutOperations` for query and command execution so it
+participates in Hibernate's SQL logging, statement observation, resource
+closing, and exception conversion. MySQL-compatible providers may use
+`StandardConnectionLockTimeoutStrategies.mysql(waitForeverValue)` when their
+only variation is the value representing an effectively unbounded wait.
+
+=== Cross-strategy consistency
+
+Focused strategies remain independent, but some combinations must describe one
+valid database configuration.
+
+[cols="35,65",options="header"]
+|===
+|Supplied behavior |Must agree with
+
+|Multi-table mutation profile
+|The selected CTE and local/global/persistent temporary-table capabilities.
+
+|Temporary-table strategy
+|The temporary-table exporter and its create, drop, truncate, and lifecycle commands.
+
+|Temporal-table support
+|Type sizing and check-constraint support used to build its DDL profile.
+
+|Identifier helper
+|Identifier, keyword, and JDBC metadata behavior.
+
+|Native parameter markers
+|Resolved driver/version behavior and parameter limits.
+
+|Schema exporters
+|The focused schema, constraint, comment, and `IF EXISTS` strategies they compose.
+
+|SQL AST translator
+|Every focused capability consulted by the standard translation pipeline.
+|===
+
+For example, the fixture's asymmetric bulk-mutation profile selects a local
+temporary table for one operation family, so the Dialect supplies the matching
+local strategy:
+
+[source,java,indent=0]
+----
+include::{provider-fixture-main-dir}/ExampleDialect.java[tags=local-temporary-table-strategy]
+----
+
+When a complete built-in vendor profile matches the provider's database, use
+`TemporaryTableStrategies.db2Global()`, `hsqlLocal()`, `mysqlLocal()`,
+`oracleLocal()`, or `sqlServerLocal()`. These accessors return the public
+`TemporaryTableStrategy` contract; do not depend on the concrete class or its
+identity. Implement a provider-owned strategy when any naming, DDL, column, or
+lifecycle answer differs.
+
+A CTE selection likewise requires the appropriate non-query CTE feature.
+Configured global or entity-specific custom mutation strategies retain their
+documented precedence over the Dialect fallback profile.
+
+== SQL AST translation and the global HQL/SQM boundary
+
+`Dialect#getSqlAstTranslatorFactory()` is the only general translator factory
+supplied by a Dialect. Returning `null` selects
+link:{doc-javadoc-url}org/hibernate/dialect/sql/ast/spi/StandardSqlAstTranslatorFactory.html[`StandardSqlAstTranslatorFactory`].
+A custom factory should normally extend that standard factory, remain reusable
+and thread-safe, retain no translation request, and create a fresh single-use
+translator for every request.
+
+[source,java,indent=0]
+----
+include::{provider-fixture-main-dir}/ExampleDialect.java[tags=sql-ast-translator-factory]
+----
+
+Override a focused strategy first when the variation is declarative. Supply a
+translator subclass only when rendering requires structural behavior or
+control flow which the focused strategies cannot express. A custom translator
+must still honor every applicable strategy supplied by its Dialect.
+
+Translator subclasses may call
+`getVersionSeedMapping(Expression)` to recognize Hibernate's generated version
+seed and obtain its public mapping, or
+`isParameterInterpretation(Expression)` when behavior must distinguish an SQM
+parameter interpretation from an ordinary JDBC parameter. Both methods are
+final provider operations, not override points. To append an expression to a
+`SelectClause` without constructing an internal selection implementation, call
+`addSqlSelection(Expression)`.
+
+=== Provider expressions and full-MERGE translators
+
+For a provider-owned SQL AST expression, extend
+link:{doc-javadoc-url}org/hibernate/dialect/sql/ast/spi/AbstractSelfRenderingExpression.html[`AbstractSelfRenderingExpression`]
+instead of directly implementing the low-level `SelfRenderingExpression`
+protocol. Supply the nullable mapping type once; the base retains it, owns final
+visitor dispatch, and leaves one rendering callback to the provider:
+
+[source,java,indent=0]
+----
+include::{provider-fixture-main-dir}/ExampleSelfRenderingExpression.java[tags=self-rendering-expression]
+----
+
+For databases whose optional-table mutations use a full insert/update/delete
+`MERGE`, extend
+link:{doc-javadoc-url}org/hibernate/dialect/sql/ast/spi/SqlAstTranslatorWithMerge.html[`SqlAstTranslatorWithMerge`].
+Override the smallest protected `renderMerge...` callback which expresses the
+grammar difference:
+
+[source,java,indent=0]
+----
+include::{provider-fixture-main-dir}/ExampleMergeSqlAstTranslator.java[tags=full-merge-translator]
+----
+
+`createMergeOperation()` is final because Hibernate owns SQL collection,
+parameter ordering, expectation selection, and operation construction. The
+full-MERGE base does not imply that the adjacent `SqlAstTranslatorWithUpsert`
+is a supported provider base.
+
+`Dialect#getHqlTranslator()` and `Dialect#getSqmTranslatorFactory()` no longer
+exist. HQL parsing and general SQM conversion are query-engine-wide concerns,
+not Dialect supply points. Framework integrations which intentionally replace
+them use the global settings `hibernate.query.hql.translator` and
+`hibernate.query.sqm.translator`, exposed downstream by
+link:{doc-javadoc-url}org/hibernate/query/spi/QueryEngineOptions.html[`QueryEngineOptions#getCustomHqlTranslator()` and `getCustomSqmTranslatorFactory()`].
+
+There is no service-loaded or Dialect-level fallback for those global
+translators. The standalone fixture's `ExampleSqmTranslatorFactory` verifies
+the global request-based integration contract; `ExampleDialect` does not
+supply it.
+
+== A database-free contract profile
+
+`org.hibernate.orm:hibernate-dialect-testkit` boots a fixed mapping model with
+JDBC metadata access disabled. The profile supplies a fresh Dialect, its expected
+version, optional safe settings, and applicability decisions for optional
+contracts.
+
+[source,java,indent=0]
+----
+include::{provider-fixture-dir}/ExampleDialectContractProfile.java[tags=profile]
+----
+
+Profile names must be stable and nonblank. `createDialect()` must return a new
+instance on every call. Settings must not select a different Dialect, request
+JDBC metadata, provide a connection, or execute schema commands.
+
+== Running the generic suite
+
+With the Gradle plugin, name each provider-owned profile in
+`hibernateDialectProvider.contractProfiles`. The generated bridge constructs
+profiles in declared order and calls `DialectTestKit.contractTests(profile)`;
+it does not generate the profile itself and is never packaged in the provider
+jar. Run the complete provider verification with:
+
+[source,shell]
+----
+./gradlew verifyDialectProvider
+----
+
+The constituent tasks are `validateDialectProviderBoundaries` and
+`dialectProviderTest`. Boundary reports are written to
+`build/reports/hibernate-dialect-provider/boundary-validation.txt` and
+`boundary-validation.json`. Set `attachToCheck = false` only when another
+lifecycle task deliberately invokes `verifyDialectProvider`.
+
+An `INTERNAL_TARGET` finding is a warning: it identifies a dependency with no
+release-to-release compatibility guarantee, but does not fail validation by
+default. A `MISSING_IMPLEMENT_ROLE` finding is an error because the provider is
+extending, implementing, or overriding a declaration which Hibernate does not
+support as a provider extension point. Set `warningsAsErrors = true` when a
+provider wants internal-use warnings to fail its build. Strict mode changes
+only the build outcome; reports continue to identify those findings as
+`WARNING`.
+
+A provider-owned SPI contract may extend or implement a Hibernate API contract,
+or redeclare one of its methods. The validator recognizes provider SPI by an
+`spi` package component or a direct `@SPI` annotation. This source-sensitive
+allowance lets a provider compose its own supported contract from Hibernate's
+stable API; it does not make the Hibernate API an implementation extension
+point for ordinary provider classes. Extending, implementing, or overriding a
+Hibernate SPI still requires the target contract to declare `IMPLEMENT`.
+
+=== Reviewing internal-use warnings
+
+An internal-use warning is never a compatibility promise. It means the
+provider has chosen to depend on an implementation detail which may change in
+any release. The preferred response is to migrate to a documented API or SPI
+and make the warning disappear.
+
+Hibernate's community Dialects are checked with the same provider-boundary
+engine. Their remaining internal-use warnings stay visible in the generated
+report and carry the same lack of compatibility guarantees. The published
+Gradle plugin intentionally has no allowlist or suppression mechanism.
+
+Common supported migrations include:
+
+* use `org.hibernate.jdbc.spi.JdbcExceptionHelper` to inspect a JDBC exception
+  chain instead of importing the former internal utility;
+* select complete vendor profiles through
+  `TemporaryTableStrategies` instead of importing vendor implementations from
+  `org.hibernate.dialect.temptable.internal`; and
+* use the focused translator operations described below instead of naming
+  internal SQL AST expression or selection implementations.
+
+For Maven, Ant, or intentionally manual test-kit use, expose one
+provider-owned JUnit test factory:
+
+[source,java,indent=0]
+----
+include::{provider-fixture-dir}/ManualDialectContractTestExample.java[tags=contract-suite]
+----
+
+The required contracts cover connectionless bootstrap, basic select and DML
+translation, identifier and literal rendering, JDBC parameter order, tableless
+and synthetic roots, and schema DDL. Optional contracts cover pagination,
+locking, temporary tables, and multi-table mutation. A required contract cannot
+be skipped. Mark an optional contract inapplicable only with a nonblank reason.
+
+These tests verify internal consistency and provider integration. They do not
+certify SQL by executing it against a database. Keep live-database and container
+tests in the provider's own test matrix.
+
+== Provider-specific assertions
+
+Use `DialectTestKit.openContext(profile)` for behavior unique to the provider:
+
+[source,java,indent=0]
+----
+include::{provider-fixture-dir}/ExampleDialectContractTest.java[tags=provider-assertion]
+----
+
+The context is thread-confined and must be closed. `translate()` accepts named
+parameters, optional pagination, and a whole-query lock mode. Results are
+immutable and include every generated statement and JDBC parameter position.
+Positional HQL parameters and alias-specific lock modes are intentionally
+outside this initial contract.
+
+== Packaging and compatibility workflow
+
+Before publishing a provider release:
+
+. compile against the oldest and newest supported Hibernate versions;
+. run the generic contract profile on each version;
+. run provider-specific SQL assertions;
+. run the provider's live database matrix;
+. inspect deprecation, incubation, SPI, and migration reports;
+. document the exact Hibernate and database versions supported.
+
+Do not shade Hibernate Core, expose `.internal` types in provider signatures, or
+copy Hibernate implementation classes into the provider artifact.
+
+The Gradle validator reads
+`https://docs.hibernate.org/orm/X.Y/metadata/classifications.json.gz`, where
+`X.Y` is the resolved Core family. It authenticates the gzip bytes with the
+adjacent SHA-256 file. Use `classificationMetadataFile` for an unpublished
+family or an online-independent build, and populate the Gradle cache online
+before using `--offline`. A plugin/Core family mismatch is an error; exact
+maintenance versions within one family need not be identical.
+
+== Troubleshooting
+
+Connection requested during profile boot:: Remove metadata-dependent settings
+and resolve provider configuration before inherited type registration.
+Unknown HQL entity:: Use the fixed `ContractEntity` model in test-kit requests;
+provider mappings are not installed in the generic context.
+Parameter order mismatch:: Inspect `GeneratedParameter.jdbcPosition()` rather
+than counting `?` characters; a Dialect may expand or add internal binders.
+Unexpected SQL family:: Identify the supplying Dialect method and test the
+focused strategy before replacing a translator.
+`INTERNAL_TARGET` warning:: Replace the upstream `.internal` dependency with a documented
+API/SPI contract; moving provider code into a package named `internal` does not
+change ownership. The warning means the dependency has no compatibility
+guarantee across releases.
+`MISSING_IMPLEMENT_ROLE` error:: Extend, implement, or override a Hibernate SPI only when it
+is classified with `IMPLEMENT`. A provider SPI may compose a Hibernate API,
+but an ordinary provider implementation may not treat API visibility as
+subclassing or implementation permission.
+Offline metadata miss:: Run once online or configure
+`classificationMetadataFile` with a locally generated or mirrored family file.
+Live database accepts different SQL:: Keep the database result as the final
+authority and add a focused provider assertion plus a live integration test.

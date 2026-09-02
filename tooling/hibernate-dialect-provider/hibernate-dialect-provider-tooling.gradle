@@ -1,0 +1,218 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
+import org.apache.tools.ant.filters.ReplaceTokens
+
+plugins {
+	id "java-gradle-plugin"
+	id "local.module"
+	id "local.javadoc"
+	alias(libs.plugins.pluginPublish)
+	id "maven-publish"
+	alias(libs.plugins.spotless)
+}
+
+description = "Gradle tooling and compatibility fixture for external Hibernate ORM Dialect providers"
+
+sourceSets {
+	providerFixture
+	providerFixtureTest
+}
+
+def generatedProviderFixtureTests = layout.buildDirectory.dir("generated/sources/providerFixtureTest/java")
+sourceSets.providerFixtureTest.java.srcDir generatedProviderFixtureTests
+
+configurations {
+	providerFixtureTestImplementation.extendsFrom testImplementation
+	providerFixtureTestRuntimeOnly.extendsFrom testRuntimeOnly
+	providerFixtureElements {
+		canBeConsumed = true
+		canBeResolved = false
+		transitive = false
+		attributes {
+			attribute( Category.CATEGORY_ATTRIBUTE, objects.named( Category, Category.LIBRARY ) )
+			attribute( Usage.USAGE_ATTRIBUTE, objects.named( Usage, Usage.JAVA_RUNTIME ) )
+			attribute( LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE, objects.named( LibraryElements, LibraryElements.JAR ) )
+		}
+	}
+}
+
+dependencies {
+	implementation gradleApi()
+	implementation libs.asm
+	implementation libs.jandex
+	implementation libs.jakarta.jsonBind
+	implementation libs.jakarta.jsonApi
+	runtimeOnly libs.jakarta.yasson
+
+	testImplementation gradleTestKit()
+	testImplementation libs.test.junitJupiterApi
+	testRuntimeOnly libs.test.junitJupiterEngine
+	testRuntimeOnly libs.test.junitJupiterLauncher
+
+	// Compile the provider exactly as an external artifact: against Core's
+	// ordinary consumable API, without Core test output.
+	providerFixtureCompileOnly project(path: ":hibernate-core", configuration: "apiElements")
+
+	providerFixtureTestImplementation sourceSets.providerFixture.output
+	providerFixtureTestCompileOnly project(path: ":hibernate-core", configuration: "apiElements")
+	providerFixtureTestCompileOnly project(path: ":hibernate-dialect-testkit", configuration: "apiElements")
+	providerFixtureTestImplementation libs.test.junitJupiterApi
+	providerFixtureTestRuntimeOnly project(path: ":hibernate-core", configuration: "runtimeElements")
+	providerFixtureTestRuntimeOnly project(path: ":hibernate-dialect-testkit", configuration: "runtimeElements")
+	providerFixtureTestRuntimeOnly libs.test.junitJupiterEngine
+	providerFixtureTestRuntimeOnly libs.test.junitJupiterLauncher
+}
+
+gradlePlugin {
+	website = "https://hibernate.org/orm/"
+	vcsUrl = "https://github.com/hibernate/hibernate-orm"
+	testSourceSets sourceSets.test
+	plugins {
+		dialectProviderPlugin {
+			id = "org.hibernate.orm.dialect-provider"
+			implementationClass = "org.hibernate.orm.tooling.dialectprovider.HibernateDialectProviderPlugin"
+			displayName = "Hibernate ORM Dialect provider tooling"
+			description = "Validates external Hibernate ORM Dialect providers and runs their database-free contract profiles"
+			tags = ["hibernate", "orm", "dialect", "provider", "validation"]
+		}
+	}
+}
+
+publishing {
+	repositories {
+		maven {
+			name = "localPluginRepository"
+			url = layout.buildDirectory.dir( "local-plugin-repository" )
+		}
+	}
+}
+
+def providerFixtureJarTask = tasks.register("providerFixtureJar", Jar) {
+	archiveClassifier = "provider-fixture"
+	from sourceSets.providerFixture.output
+	preserveFileTimestamps = false
+	reproducibleFileOrder = true
+}
+
+artifacts {
+	providerFixtureElements providerFixtureJarTask
+}
+
+def providerFixtureTestTask = tasks.register("providerFixtureTest", Test) {
+	description = "Runs the external Dialect-provider fixture tests"
+	group = "verification"
+	testClassesDirs = sourceSets.providerFixtureTest.output.classesDirs
+	classpath = sourceSets.providerFixtureTest.runtimeClasspath
+	useJUnitPlatform()
+}
+
+def generateDialectProviderContractTestsTask = tasks.register("generateDialectProviderContractTests", JavaExec) {
+	description = "Generates the embedded fixture's test-kit bridge using the published tooling engine"
+	group = "verification"
+	dependsOn tasks.classes
+	classpath = sourceSets.main.runtimeClasspath
+	mainClass = "org.hibernate.orm.tooling.dialectprovider.internal.ProviderBoundaryRunner"
+	args "generate", generatedProviderFixtureTests.get().asFile.absolutePath,
+			"org.example.orm.dialect.ExampleDialectContractProfile"
+	outputs.dir generatedProviderFixtureTests
+}
+
+tasks.compileProviderFixtureTestJava.dependsOn generateDialectProviderContractTestsTask
+
+def validateDialectProviderBoundariesTask = tasks.register("validateDialectProviderBoundaries", JavaExec) {
+	description = "Validates the embedded provider fixture using the published tooling engine"
+	group = "verification"
+	dependsOn providerFixtureJarTask
+	dependsOn ":hibernate-core:jar"
+	dependsOn ":documentation:generateClassificationMetadata"
+	classpath = sourceSets.main.runtimeClasspath
+	mainClass = "org.hibernate.orm.tooling.dialectprovider.internal.ProviderBoundaryRunner"
+	doFirst {
+		args "validate",
+				"--metadata", project( ":documentation" ).layout.buildDirectory.file( "orm/reports/classifications.json.gz" ).get().asFile.absolutePath,
+				"--provider-package", "org.example.orm.dialect",
+				"--text-report", layout.buildDirectory.file( "reports/hibernate-dialect-provider/boundary-validation.txt" ).get().asFile.absolutePath,
+				"--json-report", layout.buildDirectory.file( "reports/hibernate-dialect-provider/boundary-validation.json" ).get().asFile.absolutePath,
+				"--provider", providerFixtureJarTask.get().archiveFile.get().asFile.absolutePath,
+				"--upstream", project( ":hibernate-core" ).tasks.named( "jar", Jar ).get().archiveFile.get().asFile.absolutePath
+	}
+}
+
+tasks.register("verifyDialectProvider") {
+	description = "Runs boundary validation and contract tests for the embedded provider fixture"
+	group = "verification"
+	dependsOn validateDialectProviderBoundariesTask, providerFixtureTestTask
+}
+
+test {
+	useJUnitPlatform()
+}
+
+tasks.named("check") {
+	dependsOn providerFixtureTestTask, validateDialectProviderBoundariesTask
+}
+
+tasks.withType(AbstractArchiveTask).configureEach {
+	preserveFileTimestamps = false
+	reproducibleFileOrder = true
+}
+
+tasks.withType(JavaCompile).configureEach {
+	options.encoding = "UTF-8"
+}
+
+spotless {
+	enforceCheck = false
+	java {
+		licenseHeaderFile rootProject.file("shared/config/spotless/license.java")
+		removeUnusedImports()
+		leadingSpacesToTabs(4)
+		trimTrailingWhitespace()
+		endWithNewline()
+	}
+}
+
+tasks.withType(JavaCompile).configureEach {
+	dependsOn tasks.spotlessJavaApply
+}
+
+processResources {
+	inputs.property("hibernate-version", getVersion())
+	inputs.property("junit-jupiter-version", libs.versions.junitJupiter.get())
+	inputs.property("junit-platform-version", libs.versions.junitJupiterLauncher.get())
+	filter(ReplaceTokens, tokens: [
+			hibernateVersion: getVersion(),
+			junitJupiterVersion: libs.versions.junitJupiter.get(),
+			junitPlatformVersion: libs.versions.junitJupiterLauncher.get()
+	])
+}
+
+tasks.register("releaseGradlePluginPerform") {
+	group = "release-perform"
+	description = "Publishes the Dialect-provider Gradle plugin to the Plugin Portal"
+	dependsOn tasks.publishPlugins
+}
+
+tasks.publish.enabled = !ormBuildDetails.hibernateVersion.isSnapshot
+tasks.publishPlugins.enabled = !ormBuildDetails.hibernateVersion.isSnapshot
+
+def preparePluginPublicationTestTask = tasks.register( "preparePluginPublicationTest", Sync ) {
+	from layout.projectDirectory.dir( "src/pluginPublicationTest" )
+	into layout.buildDirectory.dir( "plugin-publication-test" )
+}
+
+tasks.register( "verifyLocalPluginPublication", GradleBuild ) {
+	group = "verification"
+	description = "Resolves and applies the published plugin marker from the isolated local repository"
+	dependsOn tasks.publishAllPublicationsToLocalPluginRepositoryRepository
+	dependsOn preparePluginPublicationTestTask
+	dir = layout.buildDirectory.dir( "plugin-publication-test" ).get().asFile
+	tasks = ["verifyPluginApplication"]
+	startParameter.projectProperties = [
+			pluginRepository: layout.buildDirectory.dir( "local-plugin-repository" ).get().asFile.toURI().toString(),
+			providerVersion: getVersion().toString()
+	]
+	startParameter.refreshDependencies = true
+}

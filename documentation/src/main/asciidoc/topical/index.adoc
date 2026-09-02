@@ -54,7 +54,8 @@ See the link:{doc-user-guide-url}#tooling[Tooling Guide] for information on:
 
 == Integrator Guides
 * The xref:registries/index.adoc#registries-guide[Service Registries Guide] discusses Hibernate Service and ServiceRegistry contracts.
-* Others coming soon
+* The link:{doc-spi-url}[Hibernate ORM SPI and Service Provider Guide] explains provider roles, lifecycle, packaging, and compatibility.
+* The link:{doc-dialect-provider-url}[Dialect Provider Guide] is the end-to-end guide for maintaining an external SQL Dialect.
 
 
 [[support]]
@@ -97,5 +98,4 @@ See the definitive set of link:{report-incubating-url}[incubations].
 2. `@Remove`
 
 See the definitive set of link:{report-deprecation-url}[deprecations].
-
 

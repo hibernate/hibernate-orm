@@ -11,6 +11,7 @@ ext {
             'hibernate-c3p0',
             'hibernate-community-dialects',
             'hibernate-core',
+            'hibernate-dialect-testkit',
             'hibernate-envers',
             'hibernate-graalvm',
             'hibernate-hikaricp',

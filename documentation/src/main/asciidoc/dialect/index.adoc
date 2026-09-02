@@ -13,6 +13,11 @@ include::{shared-attributes-dir}/renderer-attributes.adoc[]
 
 A dialect is a class that provides information about the specifics of a database and translators for the SQL dialect of the database.
 
+This guide catalogs available Dialects. Authors and maintainers of external
+Dialect implementations should use the link:{doc-dialect-provider-url}[Dialect Provider Guide].
+The link:{doc-spi-url}[SPI and Service Provider Guide] defines the general
+provider-role and compatibility model used by that guide.
+
 == Supported dialects
 
 Hibernate ORM supports a wide range of dialects out of the box.

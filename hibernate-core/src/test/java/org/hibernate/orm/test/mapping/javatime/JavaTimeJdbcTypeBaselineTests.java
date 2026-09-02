@@ -32,7 +32,8 @@ import jakarta.persistence.Table;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Tests for "direct" JDBC handling of {@linkplain java.time Java Time} types.
+ * Tests the legacy JDBC handling of {@linkplain java.time Java Time} types when
+ * {@value MappingSettings#JAVA_TIME_USE_DIRECT_JDBC} is explicitly disabled.
  *
  * @author Steve Ebersole
  */

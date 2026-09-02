@@ -196,6 +196,14 @@ public class OsonDocumentWriter implements JsonDocumentWriter {
 			case SqlTypes.NAMED_ENUM:
 				generator.write( javaType.toString( (T)value ) );
 				break;
+			case SqlTypes.LOCAL_DATE:
+			case SqlTypes.LOCAL_TIME:
+			case SqlTypes.LOCAL_DATE_TIME:
+			case SqlTypes.OFFSET_TIME:
+			case SqlTypes.OFFSET_DATE_TIME:
+			case SqlTypes.ZONED_DATE_TIME:
+				generator.write( javaType.toString( (T)value ) );
+				break;
 			case SqlTypes.DATE:
 				DATE dd = new DATE(javaType.unwrap( (T)value,java.sql.Date.class,options ));
 				OracleJsonDate jsonDate = new OracleJsonDateImpl(dd.shareBytes());

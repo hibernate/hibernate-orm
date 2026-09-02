@@ -313,6 +313,16 @@ public class StringJsonDocumentWriter extends StringJsonDocument implements Json
 				appender.endEscaping();
 				appender.append( StringJsonDocumentMarker.QUOTE.getMarkerCharacter() );
 				break;
+			case SqlTypes.LOCAL_DATE:
+			case SqlTypes.LOCAL_TIME:
+			case SqlTypes.LOCAL_DATE_TIME:
+			case SqlTypes.OFFSET_TIME:
+			case SqlTypes.OFFSET_DATE_TIME:
+			case SqlTypes.ZONED_DATE_TIME:
+				appender.append( StringJsonDocumentMarker.QUOTE.getMarkerCharacter() );
+				javaType.appendEncodedString( appender, (T) value );
+				appender.append( StringJsonDocumentMarker.QUOTE.getMarkerCharacter() );
+				break;
 			case SqlTypes.DATE:
 				appender.append( StringJsonDocumentMarker.QUOTE.getMarkerCharacter() );
 				JdbcDateJavaType.INSTANCE.appendEncodedString(

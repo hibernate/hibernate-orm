@@ -21,7 +21,7 @@ micrometer = "1.17.1"
 ant = "1.10.17"
 graalvm = "25.2.4"
 commonsCollections = "4.6.0"
-freemarker = "2.3.34"
+freemarker = "2.3.35"
 eclipseJdtCore = "3.46.0"
 
 # Jakarta Libs

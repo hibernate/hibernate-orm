@@ -1,0 +1,297 @@
+:shared-attributes-dir: {doc-main-dir}/asciidoc/shared
+:html-meta-canonical-link: https://docs.hibernate.org/stable/orm/spi/
+
+include::{shared-attributes-dir}/common-attributes.adoc[]
+include::{shared-attributes-dir}/url-attributes.adoc[]
+include::{shared-attributes-dir}/filesystem-attributes.adoc[]
+include::{shared-attributes-dir}/renderer-attributes.adoc[]
+
+= Hibernate ORM SPI and Service Provider Guide
+:toc2:
+:toclevels: 3
+:sectanchors:
+
+Hibernate projects classify their contracts in one of 3 ways -
+
+* application API
+* service-provider interface (SPI)
+* internal implementation
+
+This guide focuses on SPI classification.
+Hibernate ORM integrates with independently released libraries: Dialects, cache implementations, connection pools, event integrations, and other service providers.
+These integration points are is considered an SPI.
+
+
+[NOTE]
+====
+If the concept of an SPI is unfamiliar, have a look at
+link:https://en.wikipedia.org/wiki/Service_provider_interface[Service provider interface].
+
+Hibernate's
+link:https://hibernate.org/support/compatibility-policy/#compatibility-api-spi[API and SPI compatibility policy] has additional information about the compatibility implications of these classifications in Hibernate projects.
+====
+
+Package placement is the primary convention for declaring SPI: a contract defined in (or sub-package of) a package named `.spi` is an SPI.
+The `@SPI` annotation is used to define exceptions or more precise roles.
+
+
+[[roles]]
+== SPI Roles
+
+An `.spi` package implies the basic `USE` role. `@SPI` makes one or more
+provider roles explicit for a package, type, or member. No role implies
+another.
+
+`USE`:: Provider code may name the contract in source and binary signatures
+and, where the corresponding member is exposed, reference, invoke, or
+instantiate it while implementing an integration. `USE` does not authorize
+implementation, subclassing, overriding, or supply.
+`IMPLEMENT`:: Provider code may implement the interface, extend the class, or
+override the method represented by the contract. For an implementable class,
+the provider surface includes exposed public and protected overridable instance
+methods. Supported constructors are classified separately.
+`SUPPLY`:: Provider code may make an implementation, instance, or value
+available to Hibernate through a documented supply point. `SUPPLY` does not by
+itself authorize provider implementation or use of the supplied contract.
+
+A `SUPPLY` classification is not discovery. It says what may be supplied, while
+the reciprocal `@see` links identify where it is supplied. Discovery might use
+a configuration property, a service registry, Java service loading, a bootstrap
+callback, or an explicit method. Do not add `META-INF/services` merely because
+a contract has the `SUPPLY` role.
+
+== Reading a provider contract
+
+Start at the documented integration entry point, then follow its parameter,
+return-type, and `@see` links. Check all of the following:
+
+* whether package classification or an explicit annotation supplies the role
+  you need for the type and exact member;
+* whether the package is an `.spi` package or an unsupported `.internal`
+  package;
+* ownership, lifecycle, mutability, and thread-safety requirements;
+* whether the contract is `@Incubating` or deprecated;
+* the version named by `@since` and the Hibernate version range supported by
+  your provider.
+
+Public visibility alone is not a support promise. A public internal type may be
+needed by Hibernate modules while remaining unsuitable for provider exposure.
+
+[[annotation-class-selection]]
+== Annotation-driven selection
+
+An application-facing annotation may select an SPI implementation with a
+member shaped as `Class<? extends Contract>`. The annotation and its member
+remain API; the selected contract remains SPI. This relationship is
+classification-safe because the annotation exposes only the provider's class
+token and does not make the provider contract part of ordinary application
+behavior.
+
+Do not annotate such an annotation member with `@SPI`: that would reclassify
+the member itself and narrow its API compatibility promise. Instead, classify
+the selected contract with the roles it actually supports. A genuine supplier
+selector normally selects a contract with `IMPLEMENT` and `SUPPLY`; a predicate
+such as a test annotation's `dialect()` member merely names a class for
+matching and does not imply supply.
+
+This exception does not permit an annotation to select an internal type, and
+it does not apply to normal method signatures or lower-bounded class tokens.
+
+[[type-system-contracts]]
+== Type-system extension contracts
+
+Hibernate's type system is an SPI even where historical package names do not
+end in `.spi`. The exact packages `org.hibernate.type.descriptor`,
+`org.hibernate.type.descriptor.java`, `org.hibernate.type.descriptor.jdbc`,
+`org.hibernate.type.format`, and `org.hibernate.usertype` are explicitly
+classified SPI packages. In the mixed `org.hibernate.type` package, the
+runtime type contracts, registries, mapping implementations, and provider base
+classes are classified individually.
+
+Use these roles to choose an extension point:
+
+* implement and supply `JavaType`, `BasicJavaType`, `JdbcType`, and
+  `MutabilityPlan` for compositional basic-value mappings;
+* implement and supply `BasicType` only when the combined runtime mapping
+  contract is required;
+* implement and supply `UserType`, `CompositeUserType`, or
+  `UserCollectionType` for their documented custom-type models;
+* implement and supply `FormatMapper` to integrate another JSON or XML binding
+  library; and
+* use `BasicTypeRegistry`, `TypeContributions`, or the documented annotation
+  selectors to register the result.
+
+The `org.hibernate.type` package remains mixed. Constants, configuration
+enums, converters, `StandardBasicTypes`, and `BasicTypeReference` remain
+application API. Component-model implementations and query-parameter fallback
+types are internal. Do not infer a role from that package name alone; inspect
+the declaration's classification.
+
+The reusable Java-time JDBC base is
+`org.hibernate.type.descriptor.jdbc.spi.AbstractJavaTimeJdbcType`. Extend it
+only for drivers which natively exchange the corresponding Java time class
+through JDBC `getObject()` and `setObject()`.
+
+[[runtime-mapping-result-contracts]]
+== Runtime mapping and SQL-result contracts
+
+The runtime mapping metamodel in `org.hibernate.metamodel.mapping` is a
+provider-use SPI even though its historical package name does not end in
+`.spi`. It describes the resolved mapping of entities, attributes, and values
+to relational structures. Providers may inspect these contracts while
+contributing types, SQL translation, and result handling. Implement a mapping
+interface only when it explicitly declares `IMPLEMENT`; the package-wide
+classification otherwise promises `USE` only.
+
+`BasicType` implementations inherit the implementable `MappingType`,
+`BasicValuedMapping`, `ValueMapping`, `MappingModelExpressible`, `Bindable`,
+`SqlExpressible`, `JdbcMappingContainer`, and `JdbcMapping` contracts. A
+Dialect method which only needs SQL type sizing may instead receive the
+narrower `SqlTypedMapping`. Do not import mapping classes from an `.internal`
+subpackage or retain bootstrap-scoped mapping state.
+
+The SQL-result SPI has four stages:
+
+[source,text]
+----
+result producer or builder
+    -> DomainResult / Fetch
+        -> DomainResultAssembler
+            -> Initializer
+----
+
+`DomainResultCreationState` and `AssemblerCreationState` provide the scoped
+environment for building those stages. Use them during the callback and do not
+retain them. A custom result-set integration normally implements a
+`ResultBuilder`, `FetchBuilder`, or `JdbcValuesMappingProducer`; it should
+compose the public graph interfaces instead of constructing classes from a
+result `.internal` package.
+
+`FetchParent#getFetches()` exposes `FetchList`, not Hibernate's internal list
+implementation. Custom fetches should report delayed timing and table-group
+availability accurately. An eager collection fetch must also override
+`Fetch#isCollectionFetch()` so nested collection accounting remains correct.
+
+A custom `ResultsConsumer` receives `RowProcessingState`. Use its navigation,
+row-reading, and completion operations without casting to Hibernate's standard
+implementation. The state belongs to one execution and must not be retained.
+
+The JDBC mapping-producer lifecycle begins with the service
+`JdbcValuesMappingProducerProvider`, which supplies a
+`JdbcValuesMappingProducer`, then a `JdbcValuesMapping`, and finally a
+`JdbcValuesMappingResolution`. Register a custom provider through the service
+registry and keep each produced mapping immutable after resolution.
+
+== Dependency direction and internal collaborators
+
+A Hibernate Core SPI implementation may use Core internal implementation
+details. The boundary rule is about exposure: a supported provider signature
+must not force external code to name an internal type. Internal types may still
+appear behind the implementation of a supported contract.
+
+Provider artifacts should compile against normal published Hibernate artifacts,
+not Core class directories, Core test output, or `hibernate-testing`. Keep the
+provider's runtime dependency range explicit and test each supported Hibernate
+line in CI.
+
+== Lifecycle
+
+Assume a supplied strategy may be shared across sessions and threads unless its
+contract says otherwise. Prefer immutable implementations. Do not retain
+bootstrap-only objects past their documented lifetime, and do not open JDBC
+connections from metadata-free callbacks.
+
+[[compatibility]]
+== Source and binary compatibility
+
+Hibernate's support commitment for a non-incubating SPI is scoped to one `X.Y`
+release family. For example, a provider compiled against an earlier `8.0.y`
+release should remain compatible with later `8.0.z` releases. Compatibility
+between `8.0` and `8.1` is desirable but is not guaranteed. This is a narrower
+commitment than Hibernate's application API compatibility.
+
+Hibernate's non-incubating application API has the wider major-release
+compatibility horizon. For example, API migration compatibility is evaluated
+between `8.0` and `8.1`, while adopting `9.0` begins a new API compatibility
+line. SPI and API therefore use the same classification metadata without using
+the same release horizon.
+
+Both source and binary compatibility matter:
+
+* source compatibility means existing provider source recompiles without a
+  required change;
+* binary compatibility means an already-compiled provider continues to link
+  and run without linkage failures;
+* behavioral compatibility means Hibernate continues to honor the documented
+  role, lifecycle, and semantics of the contract.
+
+Evaluate a change against every role carried by the affected contract. A
+method addition which is harmless to a `USE`-only consumer might break a
+provider implementing the same type.
+
+[[compatibility-add]]
+=== Adding members
+
+New members of a `USE`-only contract are normally additive when they introduce
+no overload ambiguity or other source or binary incompatibility. An
+`IMPLEMENT` contract must not gain a new abstract method or other mandatory
+implementation obligation within its `X.Y` family. A default interface method
+or concrete class method is not automatically safe: inherited-method
+collisions, provider overrides, return types, and linkage must be reviewed.
+
+A new optional `SUPPLY` point may be added. A maintenance release must not make
+an existing provider supply a new value or implement a newly required
+capability. Providers which use a member introduced in a later maintenance
+release must declare that later release as their minimum version.
+
+[[compatibility-remove-change]]
+=== Removing or changing members
+
+Within an `X.Y` family, do not remove or rename a supported member, reduce its
+accessibility, change its descriptor incompatibly, or remove an applicable SPI
+role. For an `IMPLEMENT` contract, do not make an overridable member final or
+otherwise shrink the supported subclass surface. For a `SUPPLY` contract, do
+not remove its documented supply point or incompatibly change the value
+Hibernate accepts.
+
+Compatibility also follows stability annotations:
+
+* stable SPI follows the `X.Y` compatibility commitment;
+* `@Incubating` SPI is supported for experimentation but may change as the
+  design is refined;
+* deprecated SPI carries a migration path and removal horizon;
+* internal code has no provider compatibility guarantee.
+
+Compile and run provider contract tests against each maintenance release in
+every supported `X.Y` family. Compilation finds source drift; running both old
+and freshly compiled provider binaries finds linkage, lifecycle, and behavioral
+drift. Treat adoption of a different `X.Y` family as an explicit compatibility
+and migration exercise.
+
+== Validation and troubleshooting
+
+Hibernate's build produces classification and SPI inventories and validates
+provider boundaries. When diagnosing a provider failure:
+
+. confirm the exact role on the contract and its supply point;
+. check for an internal type in a public provider signature;
+. reproduce against the assembled Hibernate artifact;
+. separate connectionless bootstrap failures from live-database behavior;
+. reduce SQL failures to a single strategy family before overriding another
+  Dialect hook.
+
+The explicitly invoked `validateMigrationCompatibility` task compares a
+reviewed release baseline with the current build. The classification metadata
+selects the API or SPI promise and, for SPI, its effective roles. The matching
+compiled artifacts supply Java declaration facts such as descriptors,
+visibility, inheritance, default methods, generic signatures, constants,
+records, and sealed classes. Definite source or binary regressions fail the
+task. Context-dependent changes remain visible as `REVIEW` diagnostics instead
+of being silently accepted. Incubating declarations are outside both stable
+compatibility guarantees.
+
+Dialect providers should continue with the
+link:{doc-dialect-provider-url}[Dialect Provider Guide], whose Gradle tooling
+applies this general role model to provider bytecode and reports unsupported
+internal linkage (`INTERNAL_TARGET`) and implementation points
+(`MISSING_IMPLEMENT_ROLE`).

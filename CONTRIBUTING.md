@@ -48,6 +48,7 @@ guides for additional details.
 	For features/enhancements, the tests should demonstrate that the feature works as intended.  
     	In both cases, be sure to incorporate your tests into the project to protect against possible regressions.
 * If applicable, documentation should be updated to reflect the introduced changes
+* Changes which add, expose, reclassify, move, or incompatibly modify API, SPI, or internal contracts must follow the [Classification Tooling Guide](classification-tooling.adoc).
 * The code compiles and the tests pass (`./gradlew clean build`)
 
 For documentation contributions, mainly to respect the project code style, especially in regards 

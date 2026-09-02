@@ -6,13 +6,13 @@ package org.hibernate.query.results.internal;
 
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.SelectableMapping;
-import org.hibernate.metamodel.mapping.internal.SingleAttributeIdentifierMapping;
-import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.from.TableReference;
+import org.hibernate.metamodel.mapping.SingleAttributeIdentifierMapping;
+import org.hibernate.sql.ast.spi.query.expression.Expression;
+import org.hibernate.sql.ast.spi.query.from.TableReference;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 
-import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnReferenceKey;
+import static org.hibernate.sql.ast.spi.creation.SqlExpressionResolver.createColumnReferenceKey;
 
 /**
  * @author Steve Ebersole

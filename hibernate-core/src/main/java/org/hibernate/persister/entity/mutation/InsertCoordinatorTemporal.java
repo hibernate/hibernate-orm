@@ -16,6 +16,7 @@ import org.hibernate.sql.model.MutationOperationGroup;
 /**
  * @author Gavin King
  */
+@org.hibernate.Internal
 public class InsertCoordinatorTemporal extends InsertCoordinatorStandard {
 	private final TemporalMapping temporalMapping;
 

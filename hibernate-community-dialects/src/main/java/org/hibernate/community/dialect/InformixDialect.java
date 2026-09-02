@@ -4,100 +4,130 @@
  */
 package org.hibernate.community.dialect;
 
-import java.sql.DatabaseMetaData;
+import org.hibernate.dialect.temporaltype.spi.TemporalValueSemantics;
+
+import org.hibernate.dialect.temporaltype.spi.CurrentTimestampSelection;
+
+import org.hibernate.dialect.temporaltype.spi.TemporalOperationSupport;
+
+import org.hibernate.dialect.temporaltype.spi.TemporalFormatSupport;
+
+import org.hibernate.dialect.temporaltype.spi.CurrentTemporalSupport;
+
+import org.hibernate.SPI;
+
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.SUPPLY;
+import static org.hibernate.SPI.Role.USE;
+import org.hibernate.dialect.type.spi.StandardDdlTypes;
+
+import org.hibernate.dialect.type.spi.TypeSizingProfile;
+
+import org.hibernate.dialect.mutation.spi.MultiTableMutationSupport;
+import org.hibernate.dialect.function.spi.TupleCountSupport;
+import org.hibernate.dialect.function.spi.WindowFunctionSupport;
+
+import org.hibernate.dialect.sql.ast.spi.CteSupport;
+import org.hibernate.dialect.sql.ast.spi.NullOrderingSupport;
+import org.hibernate.dialect.sql.ast.spi.RowValueSupport;
+import org.hibernate.dialect.sql.ast.spi.SingleRowTableSupport;
+import org.hibernate.dialect.sql.ast.spi.SetOperationSupport;
+import org.hibernate.dialect.sql.ast.spi.ValuesListSupport;
+import org.hibernate.dialect.sql.ast.spi.SubquerySupport;
+
 import java.sql.SQLException;
 import java.sql.Types;
 import java.time.temporal.TemporalAccessor;
 import java.util.Date;
+import java.util.List;
 import java.util.TimeZone;
 
-import jakarta.annotation.Nullable;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.community.dialect.function.InformixRegexpLikeFunction;
-import org.hibernate.community.dialect.identity.InformixIdentityColumnSupport;
+import org.hibernate.community.dialect.identity.internal.InformixIdentityColumnSupport;
 import org.hibernate.community.dialect.pagination.FirstLimitHandler;
 import org.hibernate.community.dialect.pagination.SkipFirstLimitHandler;
 import org.hibernate.community.dialect.sequence.InformixSequenceSupport;
-import org.hibernate.community.dialect.sequence.SequenceInformationExtractorInformixDatabaseImpl;
 import org.hibernate.community.dialect.unique.InformixUniqueDelegate;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
-import org.hibernate.dialect.NullOrdering;
-import org.hibernate.dialect.Replacer;
-import org.hibernate.dialect.SelectItemReferenceStrategy;
+import org.hibernate.metamodel.mapping.SqlTypedMapping;
+import org.hibernate.dialect.lob.spi.LobSupport;
+import org.hibernate.dialect.lob.spi.LobSupports;
+import org.hibernate.dialect.schema.spi.ExistenceCheckPlacement;
+import org.hibernate.dialect.type.spi.UserDefinedTypeDdlSupport;
+import org.hibernate.dialect.sql.ast.spi.DmlTargetColumnQualifierSupport;
+import org.hibernate.dialect.sql.ast.spi.NullOrdering;
+import org.hibernate.dialect.function.spi.Replacer;
 import org.hibernate.dialect.function.CountFunction;
 import org.hibernate.dialect.function.InsertSubstringOverlayEmulation;
 import org.hibernate.dialect.function.TruncFunction;
 import org.hibernate.dialect.function.TrimFunction;
-import org.hibernate.community.dialect.temptable.InformixLocalTemporaryTableStrategy;
-import org.hibernate.dialect.temptable.TemporaryTableStrategy;
+import org.hibernate.community.dialect.temptable.internal.InformixLocalTemporaryTableStrategy;
+import org.hibernate.dialect.temptable.spi.TemporaryTableStrategy;
 import org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
-import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
+import org.hibernate.dialect.identifier.spi.IdentifierHelperBuildRequest;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
-import org.hibernate.mapping.CheckConstraint;
+import org.hibernate.mapping.UserDefinedType;
 import org.hibernate.query.sqm.CastType;
-import org.hibernate.dialect.type.IntervalType;
+import org.hibernate.query.sqm.SetOperator;
+import org.hibernate.dialect.temporaltype.spi.IntervalType;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
 import org.hibernate.type.BasicType;
 import org.hibernate.dialect.lock.spi.LockingSupport;
+import org.hibernate.dialect.namespace.spi.NamespaceSupport;
 import org.hibernate.type.descriptor.jdbc.VarcharUUIDJdbcType;
 import org.hibernate.dialect.function.CaseLeastGreatestEmulation;
 import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.dialect.identity.IdentityColumnSupport;
-import org.hibernate.dialect.pagination.LimitHandler;
-import org.hibernate.dialect.sequence.SequenceSupport;
-import org.hibernate.dialect.temptable.TemporaryTableKind;
-import org.hibernate.dialect.unique.UniqueDelegate;
+import org.hibernate.dialect.identity.spi.IdentityColumnSupport;
+import org.hibernate.dialect.pagination.spi.LimitHandler;
+import org.hibernate.dialect.sequence.spi.SequenceSupport;
+import org.hibernate.dialect.schema.spi.AlterColumnTypeRequest;
+import org.hibernate.dialect.schema.spi.ConstraintControlMode;
+import org.hibernate.dialect.schema.spi.ConstraintControlRequest;
+import org.hibernate.dialect.schema.spi.ConstraintDropMode;
+import org.hibernate.dialect.schema.spi.ExistenceCheckPlacement;
+import org.hibernate.dialect.schema.spi.IfExistsSupport;
+import org.hibernate.dialect.schema.spi.SchemaDropSupport;
+import org.hibernate.dialect.schema.spi.TruncateRequest;
+import org.hibernate.dialect.unique.spi.UniqueDelegate;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
-import org.hibernate.engine.spi.LoadQueryInfluencers;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
-import org.hibernate.internal.util.JdbcExceptionHelper;
+import org.hibernate.jdbc.spi.JdbcExceptionHelper;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.PrimaryKey;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UniqueKey;
-import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.common.TemporalUnit;
-import org.hibernate.query.sqm.internal.DomainParameterXref;
-import org.hibernate.query.sqm.mutation.spi.AfterUseAction;
-import org.hibernate.query.sqm.mutation.spi.BeforeUseAction;
-import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableInsertStrategy;
-import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableMutationStrategy;
-import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
-import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
-import org.hibernate.query.sqm.sql.spi.SqmTranslator;
-import org.hibernate.query.sqm.sql.spi.SqmTranslatorFactory;
-import org.hibernate.query.sqm.sql.spi.StandardSqmTranslatorFactory;
-import org.hibernate.query.sqm.tree.spi.select.SqmSelectStatement;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
-import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.SqlAstTranslatorFactory;
-import org.hibernate.sql.ast.spi.SqlAppender;
-import org.hibernate.sql.ast.spi.SqlAstCreationContext;
-import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
-import org.hibernate.sql.ast.tree.Statement;
-import org.hibernate.sql.ast.tree.select.SelectStatement;
+import org.hibernate.sql.ast.spi.translation.SqlAstNodeRenderingMode;
+import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslatorFactory;
+import org.hibernate.dialect.sql.ast.spi.SyntheticTableGroupSupport;
+import org.hibernate.sql.spi.SqlAppender;
+import org.hibernate.dialect.sql.ast.spi.StandardSqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.Statement;
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
-import org.hibernate.tool.schema.internal.StandardForeignKeyExporter;
-import org.hibernate.tool.schema.internal.StandardTableExporter;
+import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractors;
+import org.hibernate.tool.schema.extract.spi.ExtractionContext;
+import org.hibernate.tool.schema.extract.spi.ForeignKeyMetadataPolicy;
+import org.hibernate.tool.schema.extract.spi.InformationExtractor;
+import org.hibernate.tool.schema.extract.spi.InformationExtractors;
+import org.hibernate.tool.schema.spi.StandardForeignKeyExporter;
+import org.hibernate.tool.schema.spi.StandardTableExporter;
 import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.StandardBasicTypes;
@@ -105,16 +135,16 @@ import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
 import org.hibernate.type.descriptor.jdbc.ObjectNullAsBinaryTypeJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.DdlType;
-import org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType;
-import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
+import org.hibernate.tool.schema.spi.StandardUserDefinedTypeExporter;
+import org.hibernate.tool.schema.spi.Exporter;
 
 import jakarta.persistence.TemporalType;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
-import static org.hibernate.internal.util.JdbcExceptionHelper.extractErrorCode;
-import static org.hibernate.internal.util.StringHelper.isBlank;
+import static org.hibernate.jdbc.spi.JdbcExceptionHelper.extractErrorCode;
+import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.StringHelper.unroot;
 import static org.hibernate.query.common.TemporalUnit.DAY;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.STRING;
@@ -133,10 +163,10 @@ import static org.hibernate.type.SqlTypes.TINYINT;
 import static org.hibernate.type.SqlTypes.UUID;
 import static org.hibernate.type.SqlTypes.VARBINARY;
 import static org.hibernate.type.SqlTypes.VARCHAR;
-import static org.hibernate.type.descriptor.DateTimeUtils.appendAsDate;
-import static org.hibernate.type.descriptor.DateTimeUtils.appendAsLocalTime;
-import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTime;
-import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMillis;
+import static org.hibernate.dialect.literal.spi.StandardDateTimeLiteralRendering.appendAsDate;
+import static org.hibernate.dialect.literal.spi.StandardDateTimeLiteralRendering.appendAsLocalTime;
+import static org.hibernate.dialect.literal.spi.StandardDateTimeLiteralRendering.appendAsTime;
+import static org.hibernate.dialect.literal.spi.StandardDateTimeLiteralRendering.appendAsTimestampWithMillis;
 
 /**
  * Dialect for Informix 7.31.UD3 with Informix
@@ -144,20 +174,60 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithM
  *
  * @author Steve Molitor
  */
-public class InformixDialect extends Dialect {
+public class InformixDialect extends Dialect implements CurrentTemporalSupport, TemporalFormatSupport, TemporalOperationSupport {
+	private IfExistsSupport ifExistsSupport;
+	private SchemaDropSupport schemaDropSupport;
+
+
+	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
+	public TemporalOperationSupport getTemporalOperationSupport() {
+		return this;
+	}
+
+	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
+	public TemporalFormatSupport getTemporalFormatSupport() {
+		return this;
+	}
+
+	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
+	public CurrentTemporalSupport getCurrentTemporalSupport() {
+		return this;
+	}
+	private static final NamespaceSupport NAMESPACE_SUPPORT = new CommunityNamespaceSupport(
+			false,
+			CommunityNamespaceSupport::unsupportedCatalog,
+			CommunityNamespaceSupport::unsupportedCatalog,
+			true,
+			name -> new String[] { "create schema authorization " + name },
+			name -> new String[] { "" }
+	);
+	private final TypeSizingProfile typeSizingProfile = TypeSizingProfile.builder( super.getTypeSizingProfile() )
+			.defaultDecimalPrecision( 32 ).defaultTimestampPrecision( 3 )
+			.floatPrecision( 8 ).doublePrecision( 16 )
+			.maxVarcharLength( 32_739 ).maxVarcharCapacity( 32_739 )
+			.maxNVarcharLength( 32_739 ).maxNVarcharCapacity( 32_739 )
+			.maxVarbinaryLength( TypeSizingProfile.UNSUPPORTED )
+			.maxVarbinaryCapacity( TypeSizingProfile.UNSUPPORTED )
+			.build();
+
+	@Override public TypeSizingProfile getTypeSizingProfile() { return typeSizingProfile; }
 
 	private static final DatabaseVersion DEFAULT_VERSION = DatabaseVersion.make( 7, 0 );
 
 	private final UniqueDelegate uniqueDelegate;
 	private final LimitHandler limitHandler;
 	private final SequenceSupport sequenceSupport;
-	private final StandardForeignKeyExporter foreignKeyExporter = new StandardForeignKeyExporter( this ) {
+	private final StandardForeignKeyExporter standardForeignKeyExporter = new StandardForeignKeyExporter( this );
+	private final Exporter<ForeignKey> foreignKeyExporter = new Exporter<>() {
 		@Override
 		public String[] getSqlCreateStrings(
 				ForeignKey foreignKey,
 				Metadata metadata,
 				SqlStringGenerationContext context) {
-			final String[] results = super.getSqlCreateStrings( foreignKey, metadata, context );
+			final String[] results = standardForeignKeyExporter.getSqlCreateStrings( foreignKey, metadata, context );
 			for ( int i = 0; i < results.length; i++ ) {
 				final String result = results[i];
 				if ( result.contains( " on delete " ) ) {
@@ -168,6 +238,14 @@ public class InformixDialect extends Dialect {
 				}
 			}
 			return results;
+		}
+
+		@Override
+		public String[] getSqlDropStrings(
+				ForeignKey foreignKey,
+				Metadata metadata,
+				SqlStringGenerationContext context) {
+			return standardForeignKeyExporter.getSqlDropStrings( foreignKey, metadata, context );
 		}
 	};
 	private final StandardTableExporter informixTableExporter = new StandardTableExporter( this ) {
@@ -183,7 +261,7 @@ public class InformixDialect extends Dialect {
 				else {
 					constraint.append(", ");
 				}
-				constraint.append( column.getQuotedName( dialect ) );
+				constraint.append( column.getQuotedName( dialect() ) );
 			}
 			constraint.append( ')' );
 			final UniqueKey orderingUniqueKey = key.getOrderingUniqueKey();
@@ -195,10 +273,19 @@ public class InformixDialect extends Dialect {
 			return constraint.toString();
 		}
 	};
+	private final Exporter<UserDefinedType> userDefinedTypeExporter = new StandardUserDefinedTypeExporter(
+			this,
+			new UserDefinedTypeDdlSupport(
+					"",
+					"",
+					getVersion().isSameOrAfter( 11, 70 )
+							? ExistenceCheckPlacement.BEFORE_NAME
+							: ExistenceCheckPlacement.NONE
+			)
+	);
 
 	public InformixDialect(DialectResolutionInfo info) {
 		this( info.makeCopyOrDefault( DEFAULT_VERSION ) );
-		registerKeywords( info );
 	}
 
 	public InformixDialect() {
@@ -224,6 +311,7 @@ public class InformixDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	protected String columnType(int sqlTypeCode) {
 		switch ( sqlTypeCode ) {
 			case TINYINT:
@@ -255,6 +343,7 @@ public class InformixDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	protected void registerColumnTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.registerColumnTypes( typeContributions, serviceRegistry );
 		final DdlTypeRegistry ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
@@ -263,82 +352,40 @@ public class InformixDialect extends Dialect {
 		//float(n) and just always defaults to
 		//double precision.
 		ddlTypeRegistry.addDescriptor(
-				CapacityDependentDdlType.builder( FLOAT, "float", this )
+				StandardDdlTypes.builder( FLOAT, "float", this )
 						.withTypeCapacity( 8, "smallfloat" )
 						.build()
 		);
 
 		ddlTypeRegistry.addDescriptor(
-				CapacityDependentDdlType.builder( VARCHAR, columnType( LONG32VARCHAR ), "lvarchar",this )
+				StandardDdlTypes.builder( VARCHAR, columnType( LONG32VARCHAR ), this ).castTypeName( "lvarchar" )
 						.withTypeCapacity( 255, "varchar($l)" )
-						.withTypeCapacity( getMaxVarcharLength(), columnType( VARCHAR ) )
+						.withTypeCapacity( getTypeSizingProfile().maxVarcharLength(), columnType( VARCHAR ) )
 						.build()
 		);
 		ddlTypeRegistry.addDescriptor(
-				CapacityDependentDdlType.builder( NVARCHAR, columnType( LONG32NVARCHAR ), "nvarchar(255)", this )
+				StandardDdlTypes.builder( NVARCHAR, columnType( LONG32NVARCHAR ), this ).castTypeName( "nvarchar(255)" )
 						.withTypeCapacity( 255, "nvarchar($l)" )
-						.withTypeCapacity( getMaxNVarcharLength(), columnType( NVARCHAR ) )
+						.withTypeCapacity( getTypeSizingProfile().maxNVarcharLength(), columnType( NVARCHAR ) )
 						.build()
 		);
-		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( UUID, "char(36)", this ) );
+		ddlTypeRegistry.addDescriptor( StandardDdlTypes.simple( UUID, "char(36)", this ) );
 	}
 
 	@Override
-	public boolean useMaterializedLobWhenCapacityExceeded() {
-		return false;
+	@SPI({ IMPLEMENT, SUPPLY })
+	public LobSupport getLobSupport() {
+		return LobSupports.noCapacityPromotion();
 	}
 
 	@Override
-	public int getMaxVarbinaryLength() {
-		//there's no varbinary type, only byte
-		return -1;
+	@SPI({ IMPLEMENT, SUPPLY })
+	public TemporalValueSemantics getTemporalValueSemantics() {
+		return TemporalValueSemantics.TRUNCATING;
 	}
 
 	@Override
-	public int getMaxVarcharLength() {
-		//the maximum length of an lvarchar
-		return 32_739;
-	}
-
-	@Override
-	public int getDefaultDecimalPrecision() {
-		//the maximum
-		return 32;
-	}
-
-	@Override
-	public int getDefaultTimestampPrecision() {
-		//the maximum is 5, but default to 3
-		//because Informix defaults to milliseconds
-		return 3;
-	}
-
-	@Override
-	public boolean doesRoundTemporalOnOverflow() {
-		return false;
-	}
-
-	@Override
-	public int getFloatPrecision() {
-		return 8;
-	}
-
-	@Override
-	public int getDoublePrecision() {
-		return 16;
-	}
-
-	@Override
-	public boolean doesReadCommittedCauseWritersToBlockReaders() {
-		return true;
-	}
-
-	@Override
-	public SelectItemReferenceStrategy getGroupBySelectItemReferenceStrategy() {
-		return SelectItemReferenceStrategy.POSITION;
-	}
-
-	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
 		super.initializeFunctionRegistry(functionContributions);
 
@@ -400,7 +447,7 @@ public class InformixDialect extends Dialect {
 				.setArgumentListSignature( "(STRING string, STRING pattern)" )
 				.register();
 
-		if ( supportsWindowFunctions() ) {
+		if ( getWindowFunctionSupport().supports( WindowFunctionSupport.Feature.WINDOW_FUNCTIONS ) ) {
 			functionFactory.windowFunctions();
 			functionFactory.hypotheticalOrderedSetAggregates_windowEmulation();
 		}
@@ -453,37 +500,18 @@ public class InformixDialect extends Dialect {
 	}
 
 	@Override
-	public SqmTranslatorFactory getSqmTranslatorFactory() {
-		return new StandardSqmTranslatorFactory() {
-			@Override
-			public SqmTranslator<SelectStatement> createSelectTranslator(
-					SqmSelectStatement<?> sqmSelectStatement,
-					QueryOptions queryOptions,
-					DomainParameterXref domainParameterXref,
-					QueryParameterBindings domainParameterBindings,
-					LoadQueryInfluencers loadQueryInfluencers,
-					SqlAstCreationContext creationContext,
-					boolean deduplicateSelectionItems) {
-				return new InformixSqmToSqlAstConverter<>(
-						sqmSelectStatement,
-						queryOptions,
-						domainParameterXref,
-						domainParameterBindings,
-						loadQueryInfluencers,
-						creationContext,
-						deduplicateSelectionItems
-				);
-			}
-		};
+	public SyntheticTableGroupSupport getSyntheticTableGroupSupport() {
+		return SyntheticTableGroupSupport.SELECT_ONE_FOR_LITERALS;
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public SqlAstTranslatorFactory getSqlAstTranslatorFactory() {
 		return new StandardSqlAstTranslatorFactory() {
 			@Override
-			protected <T extends JdbcOperation> SqlAstTranslator<T> buildTranslator(
-					SessionFactoryImplementor sessionFactory, Statement statement) {
-				return new InformixSqlAstTranslator<>( sessionFactory, statement );
+			protected <S extends Statement, T extends JdbcOperation> SqlAstTranslator<T> createTranslator(
+					SqlAstTranslationRequest<S, T> request) {
+				return new InformixSqlAstTranslator<>( request );
 			}
 		};
 	}
@@ -506,6 +534,7 @@ public class InformixDialect extends Dialect {
 	 * {@link TemporalUnit#DAY_OF_WEEK}.
 	 */
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String extractPattern(TemporalUnit unit) {
 		return switch ( unit ) {
 			case SECOND -> getVersion().isBefore( 11, 70 )
@@ -521,7 +550,8 @@ public class InformixDialect extends Dialect {
 	}
 
 	@Override
-	public String getAddColumnString() {
+	@SPI({ USE, IMPLEMENT })
+	public String addColumnPrefix() {
 		return "add";
 	}
 
@@ -531,34 +561,26 @@ public class InformixDialect extends Dialect {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public String getAddForeignKeyConstraintString(
-			String constraintName,
-			String[] foreignKey,
-			String referencedTable,
-			String[] primaryKey,
-			boolean referencesPrimaryKey) {
+	@SPI({ USE, IMPLEMENT })
+	public String renderAddConstraint(
+			org.hibernate.dialect.constraint.spi.ForeignKeyConstraintRequest request) {
+		if ( request.isExplicitDefinition() ) {
+			return "add constraint " + request.explicitDefinition()
+					+ " constraint " + request.constraintName();
+		}
 		final StringBuilder result = new StringBuilder( 30 )
-				.append( " add constraint foreign key (" )
-				.append( String.join( ", ", foreignKey ) )
+				.append( "add constraint foreign key (" )
+				.append( String.join( ", ", request.sourceColumnNames() ) )
 				.append( ") references " )
-				.append( referencedTable );
+				.append( request.referencedTableName() );
 
-		if ( !referencesPrimaryKey ) {
+		if ( !request.referencesPrimaryKey() ) {
 			result.append( " (" )
-					.append( String.join( ", ", primaryKey ) )
+					.append( String.join( ", ", request.targetColumnNames() ) )
 					.append( ')' );
 		}
 
-		result.append( " constraint " ).append( constraintName );
-
-		return result.toString();
-	}
-
-	public String getAddForeignKeyConstraintString(
-			String constraintName,
-			String foreignKeyDefinition) {
-		return " add constraint " + foreignKeyDefinition
-				+ " constraint " + constraintName;
+		return result.append( " constraint " ).append( request.constraintName() ).toString();
 	}
 
 	public Exporter<ForeignKey> getForeignKeyExporter() {
@@ -568,56 +590,52 @@ public class InformixDialect extends Dialect {
 		return foreignKeyExporter;
 	}
 
-	/**
-	 * Informix constraint name must be at the end.
-	 * <p>
-	 * {@inheritDoc}
-	 */
 	@Override
-	public String getAddPrimaryKeyConstraintString(String constraintName) {
-		return " add constraint primary key constraint " + constraintName + " ";
+	@SPI({ USE, IMPLEMENT })
+	public String alterColumnType(AlterColumnTypeRequest request) {
+		return "modify (" + request.columnName() + " " + request.columnDefinition() + ")";
 	}
 
 	@Override
-	public String getAlterColumnTypeString(String columnName, String columnType, String columnDefinition) {
-		return "modify (" + columnName + " " + columnDefinition + ")";
-	}
-
-	@Override
-	public boolean supportsAlterColumnType() {
-		return true;
-	}
-
-	@Override
-	public String getTruncateTableStatement(String tableName) {
+	@SPI({ USE, IMPLEMENT })
+	public List<String> renderCommands(TruncateRequest request) {
 		// Use delete instead of truncate, because truncate will fail if another connection still holds a lock
 		// https://www.ibm.com/docs/en/informix-servers/12.10.0?topic=statement-restrictions-truncate
-		return "delete from " + tableName;
+		return request.tableNames().stream().map( name -> "delete from " + name ).toList();
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public SequenceSupport getSequenceSupport() {
 		return sequenceSupport;
 	}
 
-	@Override
-	public String getQuerySequencesString() {
-		return "select systables.tabname as sequence_name,syssequences.* from syssequences join systables on syssequences.tabid=systables.tabid where tabtype='Q'";
-	}
+	private static final SequenceInformationExtractor SEQUENCE_INFORMATION_EXTRACTOR =
+			SequenceInformationExtractors.builder(
+					"select systables.tabname as sequence_name,syssequences.* from syssequences join systables on syssequences.tabid=systables.tabid where tabtype='Q'"
+			)
+			.withoutCatalog()
+			.withoutSchema()
+			.startValueColumn( "start_val" )
+			.minimumValueColumn( "min_val" )
+			.maximumValueColumn( "max_val" )
+			.incrementValueColumn( "inc_val" )
+			.build();
 
 	@Override
 	public SequenceInformationExtractor getSequenceInformationExtractor() {
-		return SequenceInformationExtractorInformixDatabaseImpl.INSTANCE;
+		return SEQUENCE_INFORMATION_EXTRACTOR;
 	}
 
 	@Override
-	public NullOrdering getNullOrdering() {
-		return NullOrdering.SMALLEST;
-	}
-
-	@Override
-	public boolean supportsNullPrecedence() {
-		return getVersion().isSameOrAfter( 12, 10 );
+	public NullOrderingSupport getNullOrderingSupport() {
+		return NullOrderingSupport.builder( super.getNullOrderingSupport() )
+				.defaultOrdering( NullOrdering.SMALLEST )
+				.capability(
+						NullOrderingSupport.Capability.NULLS_FIRST_LAST,
+						getVersion().isSameOrAfter( 12, 10 )
+				)
+				.build();
 	}
 
 	@Override
@@ -631,86 +649,101 @@ public class InformixDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsIfExistsBeforeTableName() {
-		return getVersion().isSameOrAfter( 11, 70 );
+	@SPI({ IMPLEMENT, SUPPLY })
+	public synchronized IfExistsSupport getIfExistsSupport() {
+		final var placement = getVersion().isSameOrAfter( 11, 70 )
+				? ExistenceCheckPlacement.BEFORE_NAME
+				: ExistenceCheckPlacement.NONE;
+		if ( ifExistsSupport == null ) {
+			ifExistsSupport = new IfExistsSupport(
+				ExistenceCheckPlacement.NONE,
+				placement,
+				placement,
+				ExistenceCheckPlacement.NONE
+		);
+		}
+		return ifExistsSupport;
 	}
 
 	@Override
-	public boolean supportsIfExistsBeforeTypeName() {
-		return getVersion().isSameOrAfter( 11, 70 );
-	}
-
-	@Override
-	public boolean supportsIfExistsBeforeConstraintName() {
-		return getVersion().isSameOrAfter( 11, 70 );
-	}
-
-	@Override
-	public boolean supportsNamedColumnCheck() {
+	@SPI({ USE, IMPLEMENT })
+	public boolean supports(org.hibernate.dialect.constraint.spi.CheckConstraintPlacement placement) {
 		// It seems the constraint name is ignored on column level
-		return false;
+		return placement != org.hibernate.dialect.constraint.spi.CheckConstraintPlacement.NAMED_COLUMN;
 	}
 
 	@Override
-	public String getCheckConstraintString(CheckConstraint checkConstraint) {
-		final String constraintName = checkConstraint.getName();
-		final String constraint = " check (" + checkConstraint.getConstraint() + ")";
-		final String constraintWithName =
-				isBlank( constraintName )
-						? constraint
-						: constraint + " constraint " + constraintName;
-		return appendCheckConstraintOptions( checkConstraint, constraintWithName );
+	@SPI({ USE, IMPLEMENT })
+	public String render(org.hibernate.dialect.constraint.spi.CheckConstraintRenderRequest request) {
+		final String constraint = "check (" + request.expression() + ")";
+		final String named = request.name() == null
+				? constraint
+				: constraint + " constraint " + request.name();
+		return isNotEmpty( request.options() ) ? named + " " + request.options() : named;
 	}
 
 	@Override
-	public String getCascadeConstraintsString() {
-		return getVersion().isSameOrAfter( 12, 10 )
-				? " cascade"
-				: "";
+	@SPI({ IMPLEMENT, SUPPLY })
+	public synchronized SchemaDropSupport getSchemaDropSupport() {
+		final boolean cascade = getVersion().isSameOrAfter( 12, 10 );
+		if ( schemaDropSupport == null ) {
+			schemaDropSupport = new SchemaDropSupport(
+				List.of(),
+				cascade ? ConstraintDropMode.IMPLICIT : ConstraintDropMode.EXPLICIT,
+				cascade ? " cascade" : ""
+		);
+		}
+		return schemaDropSupport;
 	}
 
 	@Override
-	public boolean dropConstraints() {
-		return !getVersion().isSameOrAfter( 12, 10 );
+	@SPI({ USE, IMPLEMENT })
+	public ConstraintControlMode constraintControlMode() {
+		return ConstraintControlMode.PER_CONSTRAINT;
 	}
 
 	@Override
-	public boolean canDisableConstraints() {
-		return true;
+	@SPI({ USE, IMPLEMENT })
+	public List<String> disableConstraintCommands(ConstraintControlRequest request) {
+		return List.of( "set constraints " + request.constraintName() + " disabled" );
 	}
 
 	@Override
-	public String getDisableConstraintStatement(String tableName, String name) {
-		return "set constraints " + name + " disabled";
+	@SPI({ USE, IMPLEMENT })
+	public List<String> enableConstraintCommands(ConstraintControlRequest request) {
+		return List.of( "set constraints " + request.constraintName() + " enabled" );
 	}
 
 	@Override
-	public String getEnableConstraintStatement(String tableName, String name) {
-		return "set constraints " + name + " enabled";
+	public SubquerySupport getSubquerySupport() {
+		return SubquerySupport.builder()
+				.feature( SubquerySupport.Feature.ORDER_BY, false )
+				.feature( SubquerySupport.Feature.LATERAL, getVersion().isSameOrAfter( 12, 10 ) )
+				.feature( SubquerySupport.Feature.MUTATION_TARGET_REFERENCE, getVersion().isAfter( 11, 50 ) )
+				.build();
 	}
 
 	@Override
-	public boolean supportsOrderByInSubquery() {
-		// This is just a guess
-		return false;
+	public WindowFunctionSupport getWindowFunctionSupport() {
+		return getVersion().isBefore( 12, 10 )
+				? WindowFunctionSupport.NONE
+				: WindowFunctionSupport.builder()
+						.features(
+								WindowFunctionSupport.Feature.WINDOW_FUNCTIONS,
+								WindowFunctionSupport.Feature.PARTITION_BY,
+								WindowFunctionSupport.Feature.ROWS_FRAME,
+								WindowFunctionSupport.Feature.RANGE_FRAME
+						)
+						.build();
 	}
 
 	@Override
-	public boolean supportsWindowFunctions() {
-		return getVersion().isSameOrAfter( 12, 10 );
+	public ValuesListSupport getValuesListSupport() {
+		return ValuesListSupport.NONE;
 	}
 
 	@Override
-	public boolean supportsLateral() {
-		return getVersion().isSameOrAfter( 12, 10 );
-	}
-
-	@Override
-	public boolean supportsValuesListForInsert() {
-		return false;
-	}
-
-	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
 		return (exception, message, sql) -> switch ( extractErrorCode( exception ) ) {
 			case -239, -268 ->
@@ -744,6 +777,7 @@ public class InformixDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public ViolatedConstraintNameExtractor getViolatedConstraintNameExtractor() {
 		return EXTRACTOR;
 	}
@@ -791,33 +825,15 @@ public class InformixDialect extends Dialect {
 			} );
 
 	@Override
-	public boolean supportsCurrentTimestampSelection() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsLobValueChangePropagation() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsUnboundedLobLocatorMaterialization() {
-		return false;
-	}
-
-	@Override
-	public boolean isCurrentTimestampSelectStringCallable() {
-		return false;
-	}
-
-	@Override
-	public String getCurrentTimestampSelectString() {
-		return getVersion().isBefore( 12, 10 )
+	@SPI({ USE, IMPLEMENT })
+	public CurrentTimestampSelection getCurrentTimestampSelection() {
+		return CurrentTimestampSelection.prepared( getVersion().isBefore( 12, 10 )
 				? "select sysdate from informix.systables where tabid=1"
-				: "select sysdate";
+				: "select sysdate" );
 	}
 
 	@Override @SuppressWarnings("deprecation")
+	@SPI({ USE, IMPLEMENT })
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
 		return intervalType != null ? "(?2 + ?3)" : "(?3 + " + intervalPattern( unit, temporalType ) + ")";
 	}
@@ -837,7 +853,8 @@ public class InformixDialect extends Dialect {
 	}
 
 	@Override
-	public long getFractionalSecondPrecisionInNanos() {
+	@SPI({ USE, IMPLEMENT })
+	public long fractionalSecondPrecisionInNanos() {
 		// since we do computations with intervals,
 		// may as well just use seconds as the NATIVE
 		// precision, do minimize conversion factors
@@ -848,6 +865,7 @@ public class InformixDialect extends Dialect {
 	}
 
 	@Override @SuppressWarnings("deprecation")
+	@SPI({ USE, IMPLEMENT })
 	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
 		if ( unit == null ) {
 			return "(?3-?2)";
@@ -877,6 +895,7 @@ public class InformixDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String castPattern(CastType from, CastType to) {
 		if ( from == CastType.BOOLEAN ) {
 			switch ( to ) {
@@ -897,32 +916,20 @@ public class InformixDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public void appendBinaryLiteral(SqlAppender appender, byte[] bytes) {
 		throw new UnsupportedOperationException( "Informix does not support binary literals" );
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public String getCatalogSeparator() {
 		return ":";
 	}
 
 	@Override
-	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(
-			EntityMappingType rootEntityDescriptor,
-			RuntimeModelCreationContext runtimeModelCreationContext) {
-		return new LocalTemporaryTableMutationStrategy( rootEntityDescriptor, runtimeModelCreationContext );
-	}
-
-	@Override
-	public SqmMultiTableInsertStrategy getFallbackSqmInsertStrategy(
-			EntityMappingType rootEntityDescriptor,
-			RuntimeModelCreationContext runtimeModelCreationContext) {
-		return new LocalTemporaryTableInsertStrategy( rootEntityDescriptor, runtimeModelCreationContext );
-	}
-
-	@Override
-	public TemporaryTableKind getSupportedTemporaryTableKind() {
-		return TemporaryTableKind.LOCAL;
+	public MultiTableMutationSupport getMultiTableMutationSupport() {
+		return MultiTableMutationSupport.LOCAL_TEMPORARY_TABLE;
 	}
 
 	@Override
@@ -931,51 +938,28 @@ public class InformixDialect extends Dialect {
 	}
 
 	@Override
-	public String getTemporaryTableCreateOptions() {
-		return InformixLocalTemporaryTableStrategy.INSTANCE.getTemporaryTableCreateOptions();
+	@SPI({ IMPLEMENT, SUPPLY })
+	public NamespaceSupport getNamespaceSupport() {
+		return NAMESPACE_SUPPORT;
 	}
 
 	@Override
-	public String getTemporaryTableCreateCommand() {
-		return InformixLocalTemporaryTableStrategy.INSTANCE.getTemporaryTableCreateCommand();
-	}
-
-	@Override
-	public AfterUseAction getTemporaryTableAfterUseAction() {
-		return InformixLocalTemporaryTableStrategy.INSTANCE.getTemporaryTableAfterUseAction();
-	}
-
-	@Override
-	public BeforeUseAction getTemporaryTableBeforeUseAction() {
-		return InformixLocalTemporaryTableStrategy.INSTANCE.getTemporaryTableBeforeUseAction();
-	}
-
-	@Override
-	public String[] getCreateSchemaCommand(String schemaName) {
-		return new String[] { "create schema authorization " + schemaName };
-	}
-
-	@Override
-	public String[] getDropSchemaCommand(String schemaName) {
-		return new String[] { "" };
-	}
-
-	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public NameQualifierSupport getNameQualifierSupport() {
 		return NameQualifierSupport.BOTH;
 	}
 
 	@Override
-	public boolean useCrossReferenceForeignKeys(){
-		return true;
+	@SPI({ IMPLEMENT, SUPPLY })
+	public InformationExtractor getInformationExtractor(ExtractionContext extractionContext) {
+		return InformationExtractors.jdbcMetadata(
+				extractionContext,
+				ForeignKeyMetadataPolicy.importedKeysAndCrossReference( "%" )
+		);
 	}
 
 	@Override
-	public String getCrossReferenceParentTableFilter(){
-		return "%";
-	}
-
-	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public UniqueDelegate getUniqueDelegate() {
 		return uniqueDelegate;
 	}
@@ -991,6 +975,13 @@ public class InformixDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT, SUPPLY })
+	public Exporter<UserDefinedType> getUserDefinedTypeExporter() {
+		return userDefinedTypeExporter;
+	}
+
+	@Override
+	@SPI({ USE, IMPLEMENT })
 	public void appendBooleanValueString(SqlAppender appender, boolean bool) {
 		appender.appendSql( "cast(" );
 		appender.appendSql( bool ? "'t'" : "'f'" );
@@ -998,11 +989,13 @@ public class InformixDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String currentDate() {
 		return "today";
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String currentTime() {
 		// means 'current hour to fraction(3)'
 		// but note that subsecond precision
@@ -1011,6 +1004,7 @@ public class InformixDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String currentTimestamp() {
 		// means 'current year to fraction(3)'
 		// but note that subsecond precision
@@ -1019,14 +1013,10 @@ public class InformixDialect extends Dialect {
 	}
 
 	@Override
-	public void appendDatetimeFormat(SqlAppender appender, String format) {
+	@SPI({ USE, IMPLEMENT })
+	public void appendFormat(SqlAppender appender, String format) {
 		//Informix' own variation of MySQL
 		appender.appendSql( datetimeFormat( format ).result() );
-	}
-
-	@Override
-	public boolean supportsStandardCurrentTimestampFunction() {
-		return false;
 	}
 
 	public static Replacer datetimeFormat(String format) {
@@ -1082,6 +1072,7 @@ public class InformixDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public void appendDateTimeLiteral(
 			SqlAppender appender,
 			TemporalAccessor temporalAccessor,
@@ -1094,11 +1085,11 @@ public class InformixDialect extends Dialect {
 				appender.appendSql( ") year to day" );
 				break;
 			case TIME:
-				appendAsTime( appender, temporalAccessor, supportsTemporalLiteralOffset(), jdbcTimeZone );
+				appendAsTime( appender, temporalAccessor, getTemporalValueSemantics().supportsLiteralOffset(), jdbcTimeZone );
 				appender.appendSql( ") hour to second" ); // we ignore the milliseconds
 				break;
 			case TIMESTAMP:
-				appendAsTimestampWithMillis( appender, temporalAccessor, supportsTemporalLiteralOffset(), jdbcTimeZone );
+				appendAsTimestampWithMillis( appender, temporalAccessor, getTemporalValueSemantics().supportsLiteralOffset(), jdbcTimeZone );
 				appender.appendSql( ") year to fraction" );
 				break;
 			default:
@@ -1107,6 +1098,7 @@ public class InformixDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public void appendDateTimeLiteral(SqlAppender appender, Date date, TemporalType precision, TimeZone jdbcTimeZone) {
 		appender.append( "datetime (" );
 		switch ( precision ) {
@@ -1128,7 +1120,9 @@ public class InformixDialect extends Dialect {
 	}
 
 	@Override
-	public String getSelectClauseNullString(int sqlType, TypeConfiguration typeConfiguration) {
+	@SPI({ USE, IMPLEMENT })
+	public String getSelectClauseNullString(SqlTypedMapping sqlTypeMapping, TypeConfiguration typeConfiguration) {
+		final int sqlType = sqlTypeMapping.getJdbcMapping().getJdbcType().getDdlTypeCode();
 		final var ddlTypeRegistry = typeConfiguration.getDdlTypeRegistry();
 		final DdlType descriptor = typeConfiguration.getDdlTypeRegistry().getDescriptor( sqlType );
 		final String castType =
@@ -1141,16 +1135,13 @@ public class InformixDialect extends Dialect {
 	}
 
 	@Override
-	public String getNoColumnsInsertString() {
-		return "values (0)";
-	}
-
-	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public boolean supportsNationalizedMethods(){
 		return false;
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.contributeTypes( typeContributions, serviceRegistry );
 		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration().getJdbcTypeRegistry();
@@ -1170,13 +1161,14 @@ public class InformixDialect extends Dialect {
 	}
 
 	@Override
-	public String getDual() {
-		return "(select 0 from systables where tabid=1)";
-	}
-
-	@Override
-	public String getFromDualForSelectOnly() {
-		return getVersion().isBefore( 12,10 ) ?	" from " + getDual() + " dual" : "";
+	public SingleRowTableSupport getSingleRowTableSupport() {
+		final String tableExpression = "(select 0 from systables where tabid=1)";
+		return SingleRowTableSupport.builder( super.getSingleRowTableSupport() )
+				.tableExpression( tableExpression )
+				.selectOnlyFromClause(
+						getVersion().isBefore( 12, 10 ) ? " from " + tableExpression + " dual" : ""
+				)
+				.build();
 	}
 
 	@Override
@@ -1185,55 +1177,54 @@ public class InformixDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsIntersect(){
-		return getVersion().isSameOrAfter( 12,10 );
-	}
-
-	public boolean supportsSubqueryOnMutatingTable() {
-		//tested on version 11.50, 14.10
-		return getVersion().isAfter( 11, 50);
-	}
-
-	@Override
-	public boolean supportsRowValueConstructorSyntax() {
-		return false;
+	public SetOperationSupport getSetOperationSupport() {
+		return SetOperationSupport.builder()
+				.operator( SetOperator.INTERSECT, getVersion().isSameOrAfter( 12, 10 ) )
+				.operator( SetOperator.INTERSECT_ALL, false )
+				.operator( SetOperator.EXCEPT, getVersion().isSameOrAfter( 12, 10 ) )
+				.operator( SetOperator.EXCEPT_ALL, false )
+				.build();
 	}
 
 	@Override
-	public boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
-		return false;
+	public RowValueSupport getRowValueSupport() {
+		return RowValueSupport.NONE;
 	}
 
 	@Override
-	public boolean supportsRowValueConstructorSyntaxInInList() {
-		return false;
+	public TupleCountSupport getTupleCountSupport() {
+		return TupleCountSupport.NONE;
 	}
 
 	@Override
-	public boolean supportsTupleDistinctCounts() {
-		return false;
+	public CteSupport getCteSupport() {
+		return CteSupport.builder()
+				.placement(
+						getVersion().isSameOrAfter( 14, 10 )
+								? CteSupport.Placement.NESTED
+								: CteSupport.Placement.NONE
+				)
+				.build();
 	}
 
 	@Override
-	public boolean supportsWithClause() {
-		return getVersion().isSameOrAfter( 14,10 );
-	}
-
-	@Override
-	public boolean requiresColumnListInCreateView() {
+	@SPI({ USE, IMPLEMENT })
+	public boolean requiresViewColumnList() {
 		return true;
 	}
 
 	@Override
-	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, @Nullable DatabaseMetaData metadata)
-			throws SQLException {
-		if ( metadata == null ) {
+	@SPI({ USE, IMPLEMENT, SUPPLY })
+	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuildRequest request) {
+		final var builder = request.builder();
+		if ( !request.jdbcMetadata().isJdbcMetadataAccessible() ) {
 			builder.setUnquotedCaseStrategy( IdentifierCaseStrategy.LOWER );
 		}
-		return super.buildIdentifierHelper( builder, metadata );
+		return super.buildIdentifierHelper( request );
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT, SUPPLY })
 	public DmlTargetColumnQualifierSupport getDmlTargetColumnQualifierSupport() {
 		return getVersion().isSameOrAfter( 12,10 )
 				? DmlTargetColumnQualifierSupport.TABLE_ALIAS

@@ -19,7 +19,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 import java.util.Objects;
 
 import static org.hibernate.query.results.internal.ResultsHelper.jdbcPositionToValuesArrayPosition;
-import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnReferenceKey;
+import static org.hibernate.sql.ast.spi.creation.SqlExpressionResolver.createColumnReferenceKey;
 
 /**
  * A ResultBuilder for explicitly converted scalar results

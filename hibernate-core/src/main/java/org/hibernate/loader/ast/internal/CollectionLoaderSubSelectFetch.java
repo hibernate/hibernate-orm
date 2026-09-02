@@ -4,6 +4,8 @@
  */
 package org.hibernate.loader.ast.internal;
 
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
+
 import java.util.List;
 
 import org.hibernate.LockOptions;
@@ -16,8 +18,8 @@ import org.hibernate.internal.util.NullnessUtil;
 import org.hibernate.loader.ast.spi.CollectionLoader;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
-import org.hibernate.sql.ast.tree.select.SelectStatement;
+import org.hibernate.sql.ast.spi.creation.SqlAliasBaseManager;
+import org.hibernate.sql.ast.spi.query.select.SelectStatement;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.internal.ResultsHelper;
 import org.hibernate.sql.results.internal.RowTransformerStandardImpl;
@@ -111,7 +113,7 @@ public class CollectionLoaderSubSelectFetch implements CollectionLoader {
 
 		final var jdbcSelect =
 				jdbcServices.getJdbcEnvironment()
-						.getSqlAstTranslatorFactory().buildSelectTranslator( sessionFactory, sqlAst )
+						.getSqlAstTranslatorFactory().buildTranslator( new SqlAstTranslationRequest.Select( sessionFactory, sqlAst ) )
 						.translate( subselect.getLoadingJdbcParameterBindings(), QueryOptions.NONE );
 
 		final var subSelectFetchableKeysHandler = SubselectFetch.createRegistrationHandler(

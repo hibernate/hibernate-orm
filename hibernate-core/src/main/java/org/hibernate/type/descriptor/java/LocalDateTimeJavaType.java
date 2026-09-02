@@ -174,7 +174,7 @@ public class LocalDateTimeJavaType extends AbstractTemporalJavaType<LocalDateTim
 
 	@Override
 	public int getDefaultSqlPrecision(Dialect dialect, JdbcType jdbcType) {
-		return dialect.getDefaultTimestampPrecision();
+		return dialect.getTypeSizingProfile().defaultTimestampPrecision();
 	}
 
 	@Override

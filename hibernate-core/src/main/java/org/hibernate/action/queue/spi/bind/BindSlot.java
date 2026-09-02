@@ -6,11 +6,11 @@ package org.hibernate.action.queue.spi.bind;
 
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.sql.model.jdbc.JdbcValueDescriptor;
+import org.hibernate.sql.spi.mutation.jdbc.JdbcValueDescriptor;
 
 /// A single JDBC parameter slot in a mutation statement.
 ///
-/// Each slot corresponds to one [org.hibernate.sql.model.ast.ColumnValueParameter]
+/// Each slot corresponds to one [org.hibernate.sql.ast.spi.model.ColumnValueParameter]
 /// in the mutation operation's ordered parameter list.  The slot keeps the
 /// stable array index used by [JdbcValueBindings], the JDBC parameter position
 /// used when binding the statement, and the descriptor information needed by

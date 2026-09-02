@@ -7,11 +7,11 @@ package org.hibernate.query.sqm.function;
 import java.util.List;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.query.sqm.tuple.internal.AnonymousTupleTableGroupProducer;
-import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.spi.SqlAppender;
-import org.hibernate.sql.ast.tree.SqlAstNode;
-import org.hibernate.sql.ast.tree.from.FunctionTableGroup;
+import org.hibernate.sql.ast.spi.query.SetReturningFunctionType;
+import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
+import org.hibernate.sql.spi.SqlAppender;
+import org.hibernate.sql.ast.spi.SqlAstNode;
+import org.hibernate.sql.ast.spi.query.from.FunctionTableGroup;
 
 /**
  * Support for {@link SqmSetReturningFunctionDescriptor}s that ultimately want
@@ -29,7 +29,7 @@ public interface SetReturningFunctionRenderer {
 	void render(
 			SqlAppender sqlAppender,
 			List<? extends SqlAstNode> sqlAstArguments,
-			AnonymousTupleTableGroupProducer tupleType,
+			SetReturningFunctionType tupleType,
 			String tableIdentifierVariable,
 			SqlAstTranslator<?> walker);
 

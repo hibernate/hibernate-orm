@@ -9,9 +9,9 @@ import java.util.List;
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
-import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.spi.SqlAppender;
-import org.hibernate.sql.ast.tree.SqlAstNode;
+import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
+import org.hibernate.sql.spi.SqlAppender;
+import org.hibernate.sql.ast.spi.SqlAstNode;
 
 public class SDOMethodDescriptor extends OracleSpatialFunction {
 

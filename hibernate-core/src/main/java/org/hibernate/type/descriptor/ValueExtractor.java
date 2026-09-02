@@ -8,17 +8,25 @@ import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-/**
- * Contract for extracting values from a JDBC {@link ResultSet} or
- * from output the parameters of a {@link CallableStatement}.
- *
- * @apiNote Extractors, as well as {@linkplain ValueBinder binders}, should never apply
- * {@linkplain org.hibernate.type.descriptor.converter.spi.BasicValueConverter conversions}.
- * Instead, callers of the extractor are expected to coordinate between the extraction and
- * conversion.
- *
- * @author Steve Ebersole
- */
+import org.hibernate.SPI;
+
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.SUPPLY;
+import static org.hibernate.SPI.Role.USE;
+
+/// Extracts values from a JDBC [ResultSet] or the output parameters of a
+/// [CallableStatement].
+///
+/// Providers normally supply an extractor from
+/// [org.hibernate.type.descriptor.jdbc.JdbcType#getExtractor(org.hibernate.type.descriptor.java.JavaType)].
+/// An extractor must perform JDBC extraction only. It must not apply a
+/// [org.hibernate.type.descriptor.converter.spi.BasicValueConverter]; the
+/// caller coordinates conversion after extraction.
+///
+/// @param <X> the Java value type produced by this extractor
+/// @author Steve Ebersole
+/// @see org.hibernate.type.descriptor.jdbc.JdbcType#getExtractor(org.hibernate.type.descriptor.java.JavaType)
+@SPI({ USE, IMPLEMENT, SUPPLY })
 public interface ValueExtractor<X> {
 	/**
 	 * Extract value from result set

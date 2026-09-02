@@ -31,16 +31,16 @@ import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.filter.FilterAliasGenerator;
 import org.hibernate.persister.filter.internal.DynamicFilterAliasGenerator;
 import org.hibernate.persister.state.spi.StateManagement;
-import org.hibernate.sql.ast.SqlAstJoinType;
-import org.hibernate.sql.ast.tree.from.NamedTableReference;
-import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.from.TableReference;
-import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
-import org.hibernate.sql.ast.tree.from.UnknownTableReferenceException;
-import org.hibernate.sql.model.ast.builder.MutationGroupBuilder;
-import org.hibernate.sql.model.ast.builder.TableDeleteBuilder;
-import org.hibernate.sql.model.ast.builder.TableInsertBuilder;
-import org.hibernate.sql.model.ast.builder.TableMutationBuilder;
+import org.hibernate.sql.ast.spi.query.from.SqlAstJoinType;
+import org.hibernate.sql.ast.spi.query.from.NamedTableReference;
+import org.hibernate.sql.ast.spi.query.from.TableGroup;
+import org.hibernate.sql.ast.spi.query.from.TableReference;
+import org.hibernate.sql.ast.spi.query.from.TableReferenceJoin;
+import org.hibernate.sql.ast.spi.query.from.UnknownTableReferenceException;
+import org.hibernate.sql.ast.spi.model.builder.MutationGroupBuilder;
+import org.hibernate.sql.ast.spi.model.builder.TableDeleteBuilder;
+import org.hibernate.sql.ast.spi.model.builder.TableInsertBuilder;
+import org.hibernate.sql.ast.spi.model.builder.TableMutationBuilder;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.StandardBasicTypes;
@@ -243,7 +243,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			keyColumns.add( keyCols );
 //			keyColumnReaders.add( keyColReaders );
 //			keyColumnReaderTemplates.add( keyColReaderTemplates );
-			cascadeDeletes.add( key.isCascadeDeleteEnabled() && dialect.supportsCascadeDelete() );
+			cascadeDeletes.add( key.isCascadeDeleteEnabled() && dialect.getForeignKeySupport().supportsOnDeleteAction( org.hibernate.annotations.OnDeleteAction.CASCADE ) );
 		}
 
 		//Span of the tableNames directly mapped by this entity and super-classes, if any
@@ -279,7 +279,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			keyColumns.add( keyCols );
 //			keyColumnReaders.add( keyColReaders );
 //			keyColumnReaderTemplates.add( keyColReaderTemplates );
-			cascadeDeletes.add( key.isCascadeDeleteEnabled() && dialect.supportsCascadeDelete() );
+			cascadeDeletes.add( key.isCascadeDeleteEnabled() && dialect.getForeignKeySupport().supportsOnDeleteAction( org.hibernate.annotations.OnDeleteAction.CASCADE ) );
 		}
 
 		hasDuplicateTables = new HashSet<>( tableNames ).size() == tableNames.size();

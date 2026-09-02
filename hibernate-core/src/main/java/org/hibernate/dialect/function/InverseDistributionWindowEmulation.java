@@ -20,12 +20,12 @@ import org.hibernate.query.sqm.tree.spi.SqmTypedNode;
 import org.hibernate.query.sqm.tree.spi.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.spi.select.SqmOrderByClause;
 import org.hibernate.query.sqm.tree.spi.select.SqmSortSpecification;
-import org.hibernate.sql.ast.Clause;
-import org.hibernate.sql.ast.tree.SqlAstNode;
-import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.Over;
-import org.hibernate.sql.ast.tree.predicate.Predicate;
-import org.hibernate.sql.ast.tree.select.SortSpecification;
+import org.hibernate.sql.ast.spi.translation.Clause;
+import org.hibernate.sql.ast.spi.SqlAstNode;
+import org.hibernate.sql.ast.spi.query.expression.Expression;
+import org.hibernate.sql.ast.spi.query.expression.Over;
+import org.hibernate.sql.ast.spi.query.predicate.Predicate;
+import org.hibernate.sql.ast.spi.query.select.SortSpecification;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**

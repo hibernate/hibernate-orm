@@ -14,7 +14,7 @@ import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectablePath;
 import org.hibernate.metamodel.mapping.internal.SelectableMappingImpl;
 import org.hibernate.metamodel.model.domain.ReturnableType;
-import org.hibernate.query.sqm.tuple.internal.AnonymousTupleTableGroupProducer;
+import org.hibernate.sql.ast.spi.query.SetReturningFunctionType;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.sqm.function.FunctionRenderer;
@@ -25,36 +25,36 @@ import org.hibernate.query.sqm.tree.spi.SqmTypedNode;
 import org.hibernate.query.sqm.tree.spi.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.spi.expression.SqmJsonTableFunction;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.SqlAstJoinType;
-import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.spi.SqlAppender;
-import org.hibernate.sql.ast.tree.SqlAstNode;
-import org.hibernate.sql.ast.tree.cte.CteContainer;
-import org.hibernate.sql.ast.tree.expression.CastTarget;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
-import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.JsonPathPassingClause;
-import org.hibernate.sql.ast.tree.expression.JsonQueryEmptyBehavior;
-import org.hibernate.sql.ast.tree.expression.JsonQueryWrapMode;
-import org.hibernate.sql.ast.tree.expression.JsonTableColumnDefinition;
-import org.hibernate.sql.ast.tree.expression.JsonTableColumnsClause;
-import org.hibernate.sql.ast.tree.expression.JsonTableErrorBehavior;
-import org.hibernate.sql.ast.tree.expression.JsonTableExistsColumnDefinition;
-import org.hibernate.sql.ast.tree.expression.JsonTableNestedColumnDefinition;
-import org.hibernate.sql.ast.tree.expression.JsonTableOrdinalityColumnDefinition;
-import org.hibernate.sql.ast.tree.expression.JsonTableQueryColumnDefinition;
-import org.hibernate.sql.ast.tree.expression.JsonTableValueColumnDefinition;
-import org.hibernate.sql.ast.tree.expression.JsonValueEmptyBehavior;
-import org.hibernate.sql.ast.tree.expression.Literal;
-import org.hibernate.sql.ast.tree.expression.QueryTransformer;
-import org.hibernate.sql.ast.tree.expression.SelfRenderingExpression;
-import org.hibernate.sql.ast.tree.from.FunctionTableGroup;
-import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.from.TableGroupJoin;
-import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
-import org.hibernate.sql.ast.tree.predicate.Predicate;
-import org.hibernate.sql.ast.tree.predicate.PredicateContainer;
-import org.hibernate.sql.ast.tree.select.QuerySpec;
+import org.hibernate.sql.ast.spi.query.from.SqlAstJoinType;
+import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
+import org.hibernate.sql.spi.SqlAppender;
+import org.hibernate.sql.ast.spi.SqlAstNode;
+import org.hibernate.sql.ast.spi.query.cte.CteContainer;
+import org.hibernate.sql.ast.spi.query.expression.CastTarget;
+import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
+import org.hibernate.sql.ast.spi.query.expression.Expression;
+import org.hibernate.sql.ast.spi.query.expression.JsonPathPassingClause;
+import org.hibernate.sql.ast.spi.query.expression.JsonQueryEmptyBehavior;
+import org.hibernate.sql.ast.spi.query.expression.JsonQueryWrapMode;
+import org.hibernate.sql.ast.spi.query.expression.JsonTableColumnDefinition;
+import org.hibernate.sql.ast.spi.query.expression.JsonTableColumnsClause;
+import org.hibernate.sql.ast.spi.query.expression.JsonTableErrorBehavior;
+import org.hibernate.sql.ast.spi.query.expression.JsonTableExistsColumnDefinition;
+import org.hibernate.sql.ast.spi.query.expression.JsonTableNestedColumnDefinition;
+import org.hibernate.sql.ast.spi.query.expression.JsonTableOrdinalityColumnDefinition;
+import org.hibernate.sql.ast.spi.query.expression.JsonTableQueryColumnDefinition;
+import org.hibernate.sql.ast.spi.query.expression.JsonTableValueColumnDefinition;
+import org.hibernate.sql.ast.spi.query.expression.JsonValueEmptyBehavior;
+import org.hibernate.sql.ast.spi.query.expression.Literal;
+import org.hibernate.sql.ast.spi.query.expression.QueryTransformer;
+import org.hibernate.sql.ast.spi.query.expression.SelfRenderingExpression;
+import org.hibernate.sql.ast.spi.query.from.FunctionTableGroup;
+import org.hibernate.sql.ast.spi.query.from.TableGroup;
+import org.hibernate.sql.ast.spi.query.from.TableGroupJoin;
+import org.hibernate.sql.ast.spi.query.predicate.ComparisonPredicate;
+import org.hibernate.sql.ast.spi.query.predicate.Predicate;
+import org.hibernate.sql.ast.spi.query.predicate.PredicateContainer;
+import org.hibernate.sql.ast.spi.query.select.QuerySpec;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -425,7 +425,7 @@ public class H2JsonTableFunction extends JsonTableFunction {
 	protected void renderJsonTable(
 			SqlAppender sqlAppender,
 			JsonTableArguments arguments,
-			AnonymousTupleTableGroupProducer tupleType,
+			SetReturningFunctionType tupleType,
 			String tableIdentifierVariable,
 			SqlAstTranslator<?> walker) {
 		if ( arguments.errorBehavior() == JsonTableErrorBehavior.NULL ) {

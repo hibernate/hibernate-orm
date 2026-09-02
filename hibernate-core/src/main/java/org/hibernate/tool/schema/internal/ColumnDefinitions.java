@@ -8,9 +8,16 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.naming.NamingHelper;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.constraint.spi.CheckConstraintPlacement;
+import org.hibernate.dialect.constraint.spi.CheckConstraintRenderRequest;
+import org.hibernate.dialect.schema.spi.CommentPlacement;
+import org.hibernate.dialect.schema.spi.CommentRequest;
+import org.hibernate.dialect.schema.spi.CommentTarget;
+import org.hibernate.dialect.schema.spi.ColumnDefinitionRequest;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Table;
+import org.hibernate.sql.spi.StringBuilderSqlAppender;
 import org.hibernate.tool.schema.extract.spi.ColumnInformation;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
@@ -23,9 +30,13 @@ import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.type.SqlTypes.isNumericOrDecimal;
 import static org.hibernate.type.SqlTypes.isStringType;
 
-class ColumnDefinitions {
+public class ColumnDefinitions {
 
-	static boolean hasMatchingType(Column column, ColumnInformation columnInformation, Metadata metadata, Dialect dialect) {
+	public static boolean hasMatchingType(
+			Column column,
+			ColumnInformation columnInformation,
+			Metadata metadata,
+			Dialect dialect) {
 		final boolean typesMatch = dialect.equivalentTypes( column.getSqlTypeCode( metadata ), columnInformation.getTypeCode() )
 				|| normalize( stripArgs( column.getSqlType( metadata ) ) ).equals( normalize( columnInformation.getTypeName() ) );
 		if ( typesMatch ) {
@@ -45,7 +56,11 @@ class ColumnDefinitions {
 		}
 	}
 
-	static boolean hasMatchingLength(Column column, ColumnInformation columnInformation, Metadata metadata, Dialect dialect) {
+	public static boolean hasMatchingLength(
+			Column column,
+			ColumnInformation columnInformation,
+			Metadata metadata,
+			Dialect dialect) {
 		if ( !column.getSqlType( metadata ).contains("(") ) {
 			// the DDL type does not explicitly specify a length,
 			// and so we do not require an exact match
@@ -80,7 +95,7 @@ class ColumnDefinitions {
 		}
 	}
 
-	static String getFullColumnDeclaration(
+	public static String getFullColumnDeclaration(
 			Column column,
 			Table table,
 			Metadata metadata,
@@ -92,14 +107,14 @@ class ColumnDefinitions {
 	}
 
 
-	static String getColumnDefinition(Column column, Metadata metadata, Dialect dialect) {
+	public static String getColumnDefinition(Column column, Metadata metadata, Dialect dialect) {
 		final StringBuilder definition = new StringBuilder();
 		appendColumnDefinition( definition, column, metadata, dialect );
 		appendComment( definition, column, dialect );
 		return definition.toString();
 	}
 
-	static void appendColumn(
+	public static void appendColumn(
 			StringBuilder statement,
 			Column column,
 			Table table,
@@ -138,7 +153,8 @@ class ColumnDefinitions {
 			definition.append( dialect.getUniqueDelegate().getColumnDefinitionUniquenessFragment( column, context ) );
 		}
 
-		if ( dialect.supportsColumnCheck() ) {
+		final var checkSupport = dialect.getCheckConstraintSupport();
+		if ( checkSupport.supports( CheckConstraintPlacement.ANONYMOUS_COLUMN ) ) {
 			final var checkConstraints = column.getCheckConstraints();
 			boolean hasAnonymousConstraints = false;
 			for ( var constraint : checkConstraints ) {
@@ -157,22 +173,32 @@ class ColumnDefinitions {
 				definition.append( ')' );
 			}
 
-			if ( !dialect.supportsTableCheck() ) {
+			if ( !checkSupport.supports( CheckConstraintPlacement.TABLE ) ) {
 				// When table check constraints are not supported, try to render all named constraints
 				for ( var constraint : checkConstraints ) {
 					if ( constraint.isNamed() ) {
-						definition.append( constraint.constraintString( dialect ) );
+						definition.append( ' ' ).append( checkSupport.render( new CheckConstraintRenderRequest(
+								CheckConstraintPlacement.NAMED_COLUMN,
+								constraint.getName(),
+								constraint.getConstraint(),
+								constraint.getOptions()
+						) ) );
 					}
 				}
 			}
-			else if ( !hasAnonymousConstraints && dialect.supportsNamedColumnCheck() ) {
+			else if ( !hasAnonymousConstraints && checkSupport.supports( CheckConstraintPlacement.NAMED_COLUMN ) ) {
 				// Otherwise only render the first named constraint as column constraint if there are no anonymous
 				// constraints and named column check constraint are supported, because some database don't like
 				// multiple check clauses.
 				// Note that the TableExporter will take care of named constraints then
 				for ( var constraint : checkConstraints ) {
 					if ( constraint.isNamed() ) {
-						definition.append( constraint.constraintString( dialect ) );
+						definition.append( ' ' ).append( checkSupport.render( new CheckConstraintRenderRequest(
+								CheckConstraintPlacement.NAMED_COLUMN,
+								constraint.getName(),
+								constraint.getConstraint(),
+								constraint.getOptions()
+						) ) );
 						break;
 					}
 				}
@@ -183,7 +209,14 @@ class ColumnDefinitions {
 	private static void appendComment(StringBuilder definition, Column column, Dialect dialect) {
 		final String columnComment = column.getComment();
 		if ( columnComment != null ) {
-			definition.append( dialect.getColumnComment( columnComment ) );
+			final var support = dialect.getSchemaCommentSupport();
+			if ( support.placement( CommentTarget.TABLE_COLUMN ) == CommentPlacement.INLINE ) {
+				definition.append( support.render( new CommentRequest(
+						CommentTarget.TABLE_COLUMN,
+						column.getQuotedName( dialect ),
+						columnComment
+				) ) );
+			}
 		}
 	}
 
@@ -208,46 +241,17 @@ class ColumnDefinitions {
 		}
 		else {
 			final String columnType = column.getSqlType( metadata );
-			if ( column.getGeneratedAs() == null || dialect.hasDataTypeBeforeGeneratedAs() ) {
-				definition.append( ' ' ).append( columnType );
-			}
-
 			final String collation = column.getCollation();
-			if ( collation != null ) {
-				definition.append(" collate ").append( dialect.quoteCollation( collation ) );
-			}
-
-			final boolean requiresNotNullBeforeDefault = dialect.requiresNotNullBeforeDefault();
-			if ( requiresNotNullBeforeDefault ) {
-				if ( column.isNullable() ) {
-					definition.append( dialect.getNullColumnString( columnType ) );
-				}
-				else {
-					definition.append( " not null" );
-				}
-			}
-
-			final String defaultValue = column.getDefaultValue();
-			if ( defaultValue != null ) {
-				definition.append( " default " ).append( dialect.getColumnDefaultString( defaultValue ) );
-			}
-
-			final String generatedAs = column.getGeneratedAs();
-			if ( generatedAs != null) {
-				definition.append( dialect.generatedAs( generatedAs ) );
-				if ( !dialect.supportsNotNullAfterGeneratedAs() ) {
-					return;
-				}
-			}
-
-			if ( !requiresNotNullBeforeDefault ) {
-				if ( column.isNullable() ) {
-					definition.append( dialect.getNullColumnString( columnType ) );
-				}
-				else {
-					definition.append( " not null" );
-				}
-			}
+			dialect.getColumnDefinitionSupport().appendDefinition(
+					new StringBuilderSqlAppender( definition ),
+					new ColumnDefinitionRequest(
+							columnType,
+							collation == null ? null : dialect.getIdentifierSupport().quoteCollation( collation ),
+							column.isNullable(),
+							column.getDefaultValue(),
+							column.getGeneratedAs()
+					)
+			);
 		}
 	}
 

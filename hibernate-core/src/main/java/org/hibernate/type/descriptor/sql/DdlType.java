@@ -27,6 +27,7 @@ import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
  *
  * @author Christian Beikov
  */
+@org.hibernate.SPI({ org.hibernate.SPI.Role.USE, org.hibernate.SPI.Role.IMPLEMENT })
 public interface DdlType extends Serializable {
 
 	/**
@@ -58,7 +59,8 @@ public interface DdlType extends Serializable {
 	 *
 	 * @see JavaType#getDefaultSqlScale(Dialect, JdbcType)
 	 * @see JavaType#getDefaultSqlPrecision(Dialect, JdbcType)
-	 * @see Dialect#getMaxVarcharLength()
+	 * @see Dialect#getTypeSizingProfile()
+	 * @see org.hibernate.dialect.type.spi.TypeSizingProfile#maxVarcharLength()
 	 *
 	 * @return The SQL type name
 	 *

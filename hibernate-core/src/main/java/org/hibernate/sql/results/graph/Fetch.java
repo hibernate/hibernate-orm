@@ -13,9 +13,13 @@ import org.hibernate.spi.NavigablePath;
  * producer for the {@link DomainResultAssembler} for this result as well
  * as any {@link Initializer} instances needed
  *
+ * @see Fetchable#generateFetch(FetchParent, NavigablePath, FetchTiming, boolean, String, DomainResultCreationState)
+ * @see org.hibernate.query.results.spi.FetchBuilder#buildFetch(FetchParent, NavigablePath, org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata, DomainResultCreationState)
+ *
  * @author Steve Ebersole
  */
 @Incubating
+@org.hibernate.SPI({ org.hibernate.SPI.Role.USE, org.hibernate.SPI.Role.IMPLEMENT, org.hibernate.SPI.Role.SUPPLY })
 public interface Fetch extends DomainResultGraphNode {
 	/**
 	 * Get the property path to this fetch
@@ -60,6 +64,16 @@ public interface Fetch extends DomainResultGraphNode {
 	 */
 	boolean hasTableGroup();
 
+	/// Whether this fetch represents an eagerly fetched collection.
+	///
+	/// Provider implementations which model an eager collection fetch must
+	/// override this method so fetch-list collection accounting remains correct.
+	///
+	/// @since 8.0
+	default boolean isCollectionFetch() {
+		return false;
+	}
+
 	@Override
 	default boolean containsAnyNonScalarResults() {
 		return true;
@@ -67,7 +81,10 @@ public interface Fetch extends DomainResultGraphNode {
 
 	/**
 	 * Create the assembler for this fetch
+	 *
+	 * @see DomainResultAssembler
 	 */
+	@org.hibernate.SPI(org.hibernate.SPI.Role.SUPPLY)
 	DomainResultAssembler<?> createAssembler(
 			InitializerParent<?> parent,
 			AssemblerCreationState creationState);

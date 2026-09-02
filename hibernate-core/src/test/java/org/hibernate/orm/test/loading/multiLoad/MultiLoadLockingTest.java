@@ -11,11 +11,14 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Version;
 import org.hibernate.LockMode;
+import org.hibernate.Timeouts;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.lock.spi.LockingClauseRequest;
+import org.hibernate.dialect.lock.spi.PessimisticLockKind;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -154,10 +157,10 @@ public class MultiLoadLockingTest {
 	@Test
 	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsSelectLocking.class )
 	void testMultiLoadSimpleIdEntityPessimisticReadLock(SessionFactoryScope scope) {
-		final String lockString = scope.getSessionFactory()
-				.getJdbcServices()
-				.getDialect()
-				.getForUpdateString( LockMode.PESSIMISTIC_READ, -1 );
+		final String lockString = lockClause(
+				scope.getSessionFactory().getJdbcServices().getDialect(),
+				PessimisticLockKind.SHARE
+		);
 
 		// test byMultipleIds
 		scope.inTransaction( session -> {
@@ -193,10 +196,10 @@ public class MultiLoadLockingTest {
 	@Test
 	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsSelectLocking.class )
 	void testMultiLoadCompositeIdEntityPessimisticReadLockAlreadyInSession(SessionFactoryScope scope) {
-		final String lockString = scope.getSessionFactory()
-				.getJdbcServices()
-				.getDialect()
-				.getForUpdateString( LockMode.PESSIMISTIC_READ, -1 );
+		final String lockString = lockClause(
+				scope.getSessionFactory().getJdbcServices().getDialect(),
+				PessimisticLockKind.SHARE
+		);
 
 		scope.inTransaction( session -> {
 			EntityWithAggregateId entityInL1C = session
@@ -253,7 +256,7 @@ public class MultiLoadLockingTest {
 		final Integer userInL2CId = userIds.get(0);
 		final Integer userInL1CId = userIds.get(1);
 		Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();
-		String lockString = dialect.getForUpdateString(LockMode.PESSIMISTIC_WRITE, -1 );
+		String lockString = lockClause( dialect, PessimisticLockKind.UPDATE );
 
 		scope.inTransaction( session -> {
 			User userInL2C = session.find(User.class, userInL2CId);
@@ -362,6 +365,12 @@ public class MultiLoadLockingTest {
 			assertEquals(userList.size(), usersLoaded.size());
 			usersLoaded.forEach(user -> assertEquals(LockMode.OPTIMISTIC_FORCE_INCREMENT, session.getCurrentLockMode(user)) );
 		} );
+	}
+
+	private static String lockClause(Dialect dialect, PessimisticLockKind lockKind) {
+		return dialect.getLockingSupport().getLockingClauseRenderer().render(
+				new LockingClauseRequest( lockKind, Timeouts.WAIT_FOREVER, List.of() )
+		);
 	}
 
 	private void checkStatement(int stmtCount, String lockString) {

@@ -4,8 +4,8 @@
  */
 package org.hibernate.orm.test.dialect;
 
-import org.hibernate.dialect.pagination.AbstractLimitHandler;
-import org.hibernate.dialect.pagination.LimitLimitHandler;
+import org.hibernate.dialect.pagination.spi.AbstractLimitHandler;
+import org.hibernate.dialect.pagination.spi.LimitLimitHandler;
 
 /**
  * @author Yanming Zhou

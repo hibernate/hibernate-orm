@@ -4,40 +4,46 @@
  */
 package org.hibernate.community.dialect;
 
-import java.sql.DatabaseMetaData;
+import org.hibernate.SPI;
+import static org.hibernate.SPI.Role.USE;
+
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.SUPPLY;
+import org.hibernate.dialect.type.spi.TypeSizingProfile;
+
+import org.hibernate.dialect.mutation.spi.MultiTableMutationSupport;
 import java.sql.Types;
 
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.community.dialect.sequence.MaxDBSequenceSupport;
-import org.hibernate.community.dialect.sequence.SequenceInformationExtractorSAPDBDatabaseImpl;
 import org.hibernate.dialect.AbstractTransactSQLDialect;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.lob.spi.LobSupport;
+import org.hibernate.dialect.lob.spi.LobSupports;
 import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.dialect.lock.internal.LockingSupportSimple;
 import org.hibernate.dialect.lock.spi.LockingSupport;
-import org.hibernate.dialect.pagination.LimitHandler;
-import org.hibernate.dialect.pagination.LimitLimitHandler;
-import org.hibernate.dialect.sequence.SequenceSupport;
-import org.hibernate.community.dialect.temptable.MaxDBLocalTemporaryTableStrategy;
-import org.hibernate.dialect.temptable.TemporaryTableKind;
-import org.hibernate.dialect.temptable.TemporaryTableStrategy;
+import org.hibernate.dialect.lock.spi.StandardLockingSupports;
+import org.hibernate.dialect.pagination.spi.LimitHandler;
+import org.hibernate.dialect.pagination.spi.LimitLimitHandler;
+import org.hibernate.dialect.sequence.spi.SequenceSupport;
+import org.hibernate.dialect.schema.spi.ColumnDefinitionRequest;
+import org.hibernate.dialect.schema.spi.ConstraintDropMode;
+import org.hibernate.dialect.schema.spi.SchemaDropSupport;
+import org.hibernate.community.dialect.temptable.internal.MaxDBLocalTemporaryTableStrategy;
+import org.hibernate.dialect.temptable.spi.TemporaryTableStrategy;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.query.sqm.TrimSpec;
-import org.hibernate.query.sqm.mutation.spi.AfterUseAction;
-import org.hibernate.query.sqm.mutation.spi.BeforeUseAction;
-import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableInsertStrategy;
-import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableMutationStrategy;
-import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
-import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
-import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.SqlAstTranslatorFactory;
-import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
-import org.hibernate.sql.ast.tree.Statement;
+import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslatorFactory;
+import org.hibernate.dialect.sql.ast.spi.RowValueSupport;
+import org.hibernate.dialect.sql.ast.spi.SingleRowTableSupport;
+import org.hibernate.dialect.sql.ast.spi.SubquerySupport;
+import org.hibernate.dialect.sql.ast.spi.StandardSqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.Statement;
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
+import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractors;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -62,6 +68,14 @@ import static org.hibernate.type.SqlTypes.VARBINARY;
  * @author Brad Clow
  */
 public class MaxDBDialect extends Dialect {
+	private SchemaDropSupport schemaDropSupport;
+
+	private final TypeSizingProfile typeSizingProfile = TypeSizingProfile.builder( super.getTypeSizingProfile() )
+			.maxVarbinaryLength( TypeSizingProfile.UNSUPPORTED )
+			.maxVarbinaryCapacity( TypeSizingProfile.UNSUPPORTED )
+			.build();
+
+	@Override public TypeSizingProfile getTypeSizingProfile() { return typeSizingProfile; }
 
 	public MaxDBDialect() {
 		super( ZERO_VERSION );
@@ -72,6 +86,7 @@ public class MaxDBDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	protected String columnType(int sqlTypeCode) {
 		switch ( sqlTypeCode ) {
 			case TINYINT:
@@ -96,12 +111,7 @@ public class MaxDBDialect extends Dialect {
 	}
 
 	@Override
-	public int getMaxVarbinaryLength() {
-		// there's no varbinary type
-		return -1;
-	}
-
-	@Override
+	@SPI({ USE, IMPLEMENT })
 	public JdbcType resolveSqlTypeDescriptor(
 			String columnTypeName,
 			int jdbcTypeCode,
@@ -125,8 +135,10 @@ public class MaxDBDialect extends Dialect {
 	}
 
 	@Override
-	public int getDefaultStatementBatchSize() {
-		return 15;
+	@SPI({ IMPLEMENT, SUPPLY })
+	protected void contributeDefaultProperties(java.util.Properties properties) {
+		super.contributeDefaultProperties( properties );
+		properties.setProperty( org.hibernate.cfg.AvailableSettings.STATEMENT_BATCH_SIZE, Integer.toString( 15 ) );
 	}
 
 	@Override
@@ -135,6 +147,7 @@ public class MaxDBDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
 		super.initializeFunctionRegistry(functionContributions);
 
@@ -192,108 +205,107 @@ public class MaxDBDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public SqlAstTranslatorFactory getSqlAstTranslatorFactory() {
 		return new StandardSqlAstTranslatorFactory() {
 			@Override
-			protected <T extends JdbcOperation> SqlAstTranslator<T> buildTranslator(
-					SessionFactoryImplementor sessionFactory, Statement statement) {
-				return new MaxDBSqlAstTranslator<>( sessionFactory, statement );
+			protected <S extends Statement, T extends JdbcOperation> SqlAstTranslator<T> createTranslator(
+					SqlAstTranslationRequest<S, T> request) {
+				return new MaxDBSqlAstTranslator<>( request );
 			}
 		};
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String trimPattern(TrimSpec specification, boolean isWhitespace) {
 		return AbstractTransactSQLDialect.replaceLtrimRtrim( specification, isWhitespace );
 	}
 
 	@Override
-	public boolean dropConstraints() {
-		return false;
+	@SPI({ IMPLEMENT, SUPPLY })
+	public synchronized SchemaDropSupport getSchemaDropSupport() {
+		if ( schemaDropSupport == null ) {
+			schemaDropSupport = new SchemaDropSupport( java.util.List.of(), ConstraintDropMode.IMPLICIT, "" );
+		}
+		return schemaDropSupport;
 	}
 
 	@Override
-	public String getAddColumnString() {
+	@SPI({ USE, IMPLEMENT })
+	public String addColumnPrefix() {
 		return "add";
 	}
 
 	@Override
-	public String getAddForeignKeyConstraintString(
-			String constraintName,
-			String[] foreignKey,
-			String referencedTable,
-			String[] primaryKey,
-			boolean referencesPrimaryKey) {
+	@SPI({ USE, IMPLEMENT })
+	public String renderAddConstraint(
+			org.hibernate.dialect.constraint.spi.ForeignKeyConstraintRequest request) {
+		if ( request.isExplicitDefinition() ) {
+			return request.explicitDefinition();
+		}
 		final StringBuilder res = new StringBuilder( 30 )
 				.append( " foreign key " )
-				.append( constraintName )
+				.append( request.constraintName() )
 				.append( " (" )
-				.append( String.join( ", ", foreignKey ) )
+				.append( String.join( ", ", request.sourceColumnNames() ) )
 				.append( ") references " )
-				.append( referencedTable );
+				.append( request.referencedTableName() );
 
-		if ( !referencesPrimaryKey ) {
+		if ( !request.referencesPrimaryKey() ) {
 			res.append( " (" )
-					.append( String.join( ", ", primaryKey ) )
+					.append( String.join( ", ", request.targetColumnNames() ) )
 					.append( ')' );
 		}
 
-		return res.toString();
-	}
-
-	public String getAddForeignKeyConstraintString(
-			String constraintName,
-			String foreignKeyDefinition) {
-		return foreignKeyDefinition;
+		return res.toString().stripLeading();
 	}
 
 	@Override
-	public String getAddPrimaryKeyConstraintString(String constraintName) {
-		return " primary key ";
-	}
-
-	@Override
-	public String getNullColumnString() {
-		return " null";
+	@SPI({ USE, IMPLEMENT })
+	public void appendDefinition(org.hibernate.sql.spi.SqlAppender appender, ColumnDefinitionRequest request) {
+		super.appendDefinition( appender, request );
+		if ( request.nullable() ) {
+			appender.appendSql( " null" );
+		}
 	}
 
 	@Override
 	public LockingSupport getLockingSupport() {
-		return LockingSupportSimple.STANDARD_SUPPORT;
+		return StandardLockingSupports.standard();
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public SequenceSupport getSequenceSupport() {
 		return MaxDBSequenceSupport.INSTANCE;
 	}
 
-	@Override
-	public String getQuerySequencesString() {
-		return "select * from domain.sequences";
-	}
+	private static final SequenceInformationExtractor SEQUENCE_INFORMATION_EXTRACTOR =
+			SequenceInformationExtractors.builder( "select * from domain.sequences" )
+					.withoutCatalog()
+					.schemaColumn( "schemaname" )
+					.withoutStartValue()
+					.minimumValueColumn( "min_value" )
+					.maximumValueColumn( "max_value" )
+					.incrementValueColumn( "increment_by" )
+					.build();
 
 	@Override
 	public SequenceInformationExtractor getSequenceInformationExtractor() {
-		return SequenceInformationExtractorSAPDBDatabaseImpl.INSTANCE;
+		return SEQUENCE_INFORMATION_EXTRACTOR;
 	}
 
 	@Override
-	public boolean supportsOffsetInSubquery() {
-		return true;
+	public SubquerySupport getSubquerySupport() {
+		return SubquerySupport.builder()
+				.feature( SubquerySupport.Feature.OFFSET, true )
+				.build();
 	}
 
 	@Override
-	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(
-			EntityMappingType rootEntityDescriptor,
-			RuntimeModelCreationContext runtimeModelCreationContext) {
-		return new LocalTemporaryTableMutationStrategy( rootEntityDescriptor, runtimeModelCreationContext );
-	}
-
-	@Override
-	public SqmMultiTableInsertStrategy getFallbackSqmInsertStrategy(
-			EntityMappingType rootEntityDescriptor,
-			RuntimeModelCreationContext runtimeModelCreationContext) {
-		return new LocalTemporaryTableInsertStrategy( rootEntityDescriptor, runtimeModelCreationContext );
+	public MultiTableMutationSupport getMultiTableMutationSupport() {
+		return MultiTableMutationSupport.LOCAL_TEMPORARY_TABLE;
 	}
 
 	@Override
@@ -302,53 +314,23 @@ public class MaxDBDialect extends Dialect {
 	}
 
 	@Override
-	public BeforeUseAction getTemporaryTableBeforeUseAction() {
-		return MaxDBLocalTemporaryTableStrategy.INSTANCE.getTemporaryTableBeforeUseAction();
+	@SPI({ IMPLEMENT, SUPPLY })
+	public LobSupport getLobSupport() {
+		return LobSupports.noContextualCreation();
 	}
 
 	@Override
-	public AfterUseAction getTemporaryTableAfterUseAction() {
-		return MaxDBLocalTemporaryTableStrategy.INSTANCE.getTemporaryTableAfterUseAction();
+	public SingleRowTableSupport getSingleRowTableSupport() {
+		final String tableExpression = "dual";
+		return SingleRowTableSupport.builder( super.getSingleRowTableSupport() )
+				.tableExpression( tableExpression )
+				.selectOnlyFromClause( " from " + tableExpression )
+				.build();
 	}
 
 	@Override
-	public TemporaryTableKind getSupportedTemporaryTableKind() {
-		return TemporaryTableKind.LOCAL;
-	}
-
-	@Override
-	public String getTemporaryTableCreateOptions() {
-		return MaxDBLocalTemporaryTableStrategy.INSTANCE.getTemporaryTableCreateOptions();
-	}
-
-	@Override
-	public boolean supportsJdbcConnectionLobCreation(DatabaseMetaData databaseMetaData) {
-		return false;
-	}
-
-	@Override
-	public String getDual() {
-		return "dual";
-	}
-
-	@Override
-	public String getFromDualForSelectOnly() {
-		return " from " + getDual();
-	}
-
-	@Override
-	public boolean supportsRowValueConstructorSyntax() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsRowValueConstructorSyntaxInInList() {
-		return false;
+	public RowValueSupport getRowValueSupport() {
+		return RowValueSupport.NONE;
 	}
 
 }

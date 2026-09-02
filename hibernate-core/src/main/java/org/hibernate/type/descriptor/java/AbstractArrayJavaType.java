@@ -4,6 +4,7 @@
  */
 package org.hibernate.type.descriptor.java;
 
+import org.hibernate.SPI;
 import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.build.AllowReflection;
@@ -21,13 +22,24 @@ import org.hibernate.type.spi.TypeConfiguration;
 
 
 import static org.hibernate.internal.util.ReflectHelper.arrayClass;
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.USE;
 
+/// Base Java descriptor for a basic array stored in one relational value.
+///
+/// @param <T> the represented array type
+/// @param <E> the element type
+/// @author Steve Ebersole
 @AllowReflection
+@SPI({ USE, IMPLEMENT })
 public abstract class AbstractArrayJavaType<T, E> extends AbstractClassJavaType<T>
 		implements BasicPluralJavaType<E> {
 
 	private final JavaType<E> componentJavaType;
 
+	/// Create an array descriptor from its array class, element descriptor, and
+	/// mutability semantics.
+	@SPI(IMPLEMENT)
 	public AbstractArrayJavaType(Class<T> clazz, JavaType<E> baseDescriptor, MutabilityPlan<T> mutabilityPlan) {
 		super( clazz, mutabilityPlan );
 		this.componentJavaType = baseDescriptor;

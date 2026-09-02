@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import org.hibernate.internal.util.collections.Stack;
+import org.hibernate.spi.Stack;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.query.sqm.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.spi.SqmVisitableNode;
@@ -16,12 +16,12 @@ import org.hibernate.query.sqm.tree.spi.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.spi.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.spi.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.spi.select.SqmQueryPart;
-import org.hibernate.sql.ast.SqlAstJoinType;
-import org.hibernate.sql.ast.spi.SqlAstCreationState;
-import org.hibernate.sql.ast.Clause;
-import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.QueryTransformer;
-import org.hibernate.sql.ast.tree.predicate.Predicate;
+import org.hibernate.sql.ast.spi.query.from.SqlAstJoinType;
+import org.hibernate.sql.ast.spi.creation.SqlAstCreationState;
+import org.hibernate.sql.ast.spi.translation.Clause;
+import org.hibernate.sql.ast.spi.query.expression.Expression;
+import org.hibernate.sql.ast.spi.query.expression.QueryTransformer;
+import org.hibernate.sql.ast.spi.query.predicate.Predicate;
 
 import jakarta.annotation.Nullable;
 

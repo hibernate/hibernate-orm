@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
-import org.hibernate.internal.util.IndexedConsumer;
+import org.hibernate.spi.IndexedConsumer;
 import org.hibernate.internal.util.MutableInteger;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
@@ -18,6 +18,7 @@ import org.hibernate.metamodel.mapping.ModelPartContainer;
  *
  * @author Steve Ebersole
  */
+@org.hibernate.SPI({ org.hibernate.SPI.Role.USE, org.hibernate.SPI.Role.IMPLEMENT })
 public interface FetchableContainer extends ModelPartContainer {
 
 	/**

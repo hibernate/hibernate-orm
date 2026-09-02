@@ -16,6 +16,7 @@ import java.util.Set;
 import java.util.function.Function;
 
 import org.hibernate.HibernateException;
+import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.annotations.OnDeleteAction;
@@ -62,6 +63,7 @@ import static org.hibernate.internal.util.collections.CollectionHelper.toSmallSe
 /**
  * Runtime metadata used by {@link AbstractEntityPersister}.
  */
+@Internal
 abstract class BaseEntityPersister implements Serializable {
 
 	public static final int NO_VERSION_INDX = -66;
@@ -224,7 +226,7 @@ abstract class BaseEntityPersister implements Serializable {
 		boolean foundPostUpdateGeneratedValues = false;
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-		final boolean supportsCascadeDelete = creationContext.getDialect().supportsCascadeDelete();
+		final boolean supportsCascadeDelete = creationContext.getDialect().getForeignKeySupport().supportsOnDeleteAction( org.hibernate.annotations.OnDeleteAction.CASCADE );
 
 		int tempVersionProperty = NO_VERSION_INDX;
 		boolean foundCascade = false;

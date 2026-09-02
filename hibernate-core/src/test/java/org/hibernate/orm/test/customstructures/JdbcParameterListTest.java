@@ -4,7 +4,7 @@
  */
 package org.hibernate.orm.test.customstructures;
 
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
+import org.hibernate.sql.ast.spi.query.expression.JdbcParameter;
 import org.hibernate.sql.exec.internal.JdbcParameterImpl;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
 import org.junit.jupiter.api.Test;

@@ -8,6 +8,7 @@ import org.hamcrest.MatcherAssert;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.DialectTestSupport;
 import org.hibernate.testing.orm.junit.DomainModelScope;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -61,7 +62,7 @@ public class SchemaCreationTest {
 			statement = statement.toLowerCase();
 			MatcherAssert.assertThat(
 					"Should not try to create the unique constraint for the non existing table element",
-					statement.matches( dialect.getAlterTableString( "element" ) ), is( false ) );
+					statement.matches( DialectTestSupport.alterTableCommand( dialect, "element" ) ), is( false ) );
 			String varchar255 = metadata.getTypeConfiguration().getDdlTypeRegistry()
 					.getTypeName( Types.VARCHAR, Size.length( 255 ), null );
 			isUniqueConstraintCreated = isUniqueConstraintCreated

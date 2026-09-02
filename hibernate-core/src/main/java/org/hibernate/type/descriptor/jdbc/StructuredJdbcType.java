@@ -5,12 +5,20 @@
 package org.hibernate.type.descriptor.jdbc;
 
 import org.hibernate.Incubating;
-import org.hibernate.type.SqlTypes;
+import org.hibernate.SPI;
 
-/**
- * Descriptor for aggregate handling like {@link SqlTypes#STRUCT STRUCT}, {@link SqlTypes#JSON JSON} and {@link SqlTypes#SQLXML SQLXML}.
- */
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.SUPPLY;
+import static org.hibernate.SPI.Role.USE;
+
+/// An aggregate [JdbcType] represented by a named SQL structured type.
+///
+/// Mapping-specific instances are supplied by
+/// [AggregateJdbcType#resolveAggregateJdbcType(org.hibernate.metamodel.mapping.EmbeddableMappingType, String, org.hibernate.metamodel.spi.RuntimeModelCreationContext)].
+///
+/// @see AggregateJdbcType#resolveAggregateJdbcType(org.hibernate.metamodel.mapping.EmbeddableMappingType, String, org.hibernate.metamodel.spi.RuntimeModelCreationContext)
 @Incubating
+@SPI({ USE, IMPLEMENT, SUPPLY })
 public interface StructuredJdbcType extends AggregateJdbcType, SqlTypedJdbcType {
 
 	String getStructTypeName();

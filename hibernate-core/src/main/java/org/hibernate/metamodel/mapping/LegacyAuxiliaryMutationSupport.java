@@ -6,7 +6,7 @@ package org.hibernate.metamodel.mapping;
 
 import org.hibernate.Incubating;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.sql.model.ast.builder.MutationGroupBuilder;
+import org.hibernate.sql.ast.spi.model.builder.MutationGroupBuilder;
 
 /// Optional legacy mutation support for an [AuxiliaryMapping].
 ///

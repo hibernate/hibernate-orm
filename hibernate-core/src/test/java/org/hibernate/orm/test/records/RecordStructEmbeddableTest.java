@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.records;
 
+
 import java.util.List;
 
 import org.hibernate.annotations.Struct;

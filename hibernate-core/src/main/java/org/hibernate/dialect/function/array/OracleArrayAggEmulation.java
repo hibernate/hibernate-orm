@@ -13,14 +13,14 @@ import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescript
 import org.hibernate.query.sqm.function.FunctionKind;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
-import org.hibernate.sql.ast.Clause;
-import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.spi.SqlAppender;
-import org.hibernate.sql.ast.tree.SqlAstNode;
-import org.hibernate.sql.ast.tree.expression.Distinct;
-import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.predicate.Predicate;
-import org.hibernate.sql.ast.tree.select.SortSpecification;
+import org.hibernate.sql.ast.spi.translation.Clause;
+import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
+import org.hibernate.sql.spi.SqlAppender;
+import org.hibernate.sql.ast.spi.SqlAstNode;
+import org.hibernate.sql.ast.spi.query.expression.Distinct;
+import org.hibernate.sql.ast.spi.query.expression.Expression;
+import org.hibernate.sql.ast.spi.query.predicate.Predicate;
+import org.hibernate.sql.ast.spi.query.select.SortSpecification;
 import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.SqlTypes;
 

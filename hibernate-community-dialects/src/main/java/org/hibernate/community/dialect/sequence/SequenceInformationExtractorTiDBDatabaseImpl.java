@@ -4,25 +4,32 @@
  */
 package org.hibernate.community.dialect.sequence;
 
-import org.hibernate.boot.model.relational.QualifiedSequenceName;
-import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
-import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorLegacyImpl;
-import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;
-import org.hibernate.tool.schema.extract.internal.SequenceInformationImpl;
-import org.hibernate.tool.schema.extract.spi.ExtractionContext;
-import org.hibernate.tool.schema.extract.spi.SequenceInformation;
-
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SequenceInformationExtractorTiDBDatabaseImpl extends SequenceInformationExtractorLegacyImpl {
-	/**
-	 * Singleton access
-	 */
-	public static final SequenceInformationExtractorTiDBDatabaseImpl INSTANCE = new SequenceInformationExtractorTiDBDatabaseImpl();
+import org.hibernate.Internal;
+import org.hibernate.boot.model.relational.QualifiedSequenceName;
+import org.hibernate.tool.schema.extract.spi.ExtractionContext;
+import org.hibernate.tool.schema.extract.spi.SequenceInformation;
+import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
+import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractors;
+
+/// Extract TiDB sequence metadata using its two-stage discovery protocol.
+///
+/// Retain [#INSTANCE] instead of constructing an extractor for each metadata
+/// request.
+///
+/// @author Steve Ebersole
+/// @since 8.0
+@Internal
+public final class SequenceInformationExtractorTiDBDatabaseImpl implements SequenceInformationExtractor {
+	private static final String LOOKUP_SQL =
+			"SELECT sequence_name FROM information_schema.sequences WHERE sequence_schema = database()";
+	public static final SequenceInformationExtractor INSTANCE =
+			new SequenceInformationExtractorTiDBDatabaseImpl( LOOKUP_SQL );
 
 	// SQL to get metadata from individual sequence
 	private static final String SQL_SEQUENCE_QUERY = "SELECT " +
@@ -35,17 +42,15 @@ public class SequenceInformationExtractorTiDBDatabaseImpl extends SequenceInform
 
 	private static final String UNION_ALL =
 			"UNION ALL ";
+	private final String lookupSql;
+
+	private SequenceInformationExtractorTiDBDatabaseImpl(String lookupSql) {
+		this.lookupSql = lookupSql;
+	}
 
 	@Override
 	public Iterable<SequenceInformation> extractMetadata(ExtractionContext extractionContext) throws SQLException {
-		final String lookupSql = extractionContext.getJdbcEnvironment().getDialect().getQuerySequencesString();
-
-		// *should* never happen, but to be safe in the interest of performance...
-		if (lookupSql == null) {
-			return SequenceInformationExtractorNoOpImpl.INSTANCE.extractMetadata(extractionContext);
-		}
-
-		final IdentifierHelper identifierHelper = extractionContext.getJdbcEnvironment().getIdentifierHelper();
+		final var identifierHelper = extractionContext.getJdbcEnvironment().getIdentifierHelper();
 
 		final List<SequenceInformation> sequenceInformationList = new ArrayList<>();
 		final List<String> sequenceNames = new ArrayList<>();
@@ -55,7 +60,7 @@ public class SequenceInformationExtractorTiDBDatabaseImpl extends SequenceInform
 				final ResultSet resultSet = statement.executeQuery( lookupSql )
 		) {
 			while ( resultSet.next() ) {
-				sequenceNames.add( resultSetSequenceName( resultSet ) );
+				sequenceNames.add( resultSet.getString( "sequence_name" ) );
 			}
 		}
 
@@ -75,43 +80,22 @@ public class SequenceInformationExtractorTiDBDatabaseImpl extends SequenceInform
 			) {
 
 				while ( resultSet.next() ) {
-					SequenceInformation sequenceInformation = new SequenceInformationImpl(
+					sequenceInformationList.add( SequenceInformationExtractors.information(
 							new QualifiedSequenceName(
 									null,
 									null,
-									identifierHelper.toIdentifier(
-											resultSetSequenceName(resultSet)
-									)
+									identifierHelper.toIdentifier( resultSet.getString( "sequence_name" ) )
 							),
-							resultSetStartValueSize(resultSet),
-							resultSetMinValue(resultSet),
-							resultSetMaxValue(resultSet),
-							resultSetIncrementValue(resultSet)
-					);
-
-					sequenceInformationList.add(sequenceInformation);
+							resultSet.getLong( "start_value" ),
+							resultSet.getLong( "minimum_value" ),
+							resultSet.getLong( "maximum_value" ),
+							resultSet.getLong( "increment" )
+					) );
 				}
 
 			}
 		}
 
 		return sequenceInformationList;
-	}
-
-	protected String sequenceNameColumn() {
-		return "sequence_name";
-	}
-
-	protected String sequenceIncrementColumn() {
-		return "increment";
-	}
-
-	protected String resultSetSequenceName(ResultSet resultSet) throws SQLException {
-		return resultSet.getString( sequenceNameColumn() );
-	}
-
-	protected Number resultSetIncrementValue(ResultSet resultSet) throws SQLException {
-		String column = sequenceIncrementColumn();
-		return column != null ? resultSet.getLong( column ) : null;
 	}
 }

@@ -4,6 +4,8 @@
  */
 package org.hibernate.type;
 
+import org.hibernate.SPI;
+
 import org.hibernate.metamodel.CollectionClassification;
 
 import static org.hibernate.internal.util.collections.CollectionHelper.linkedMap;
@@ -12,6 +14,7 @@ import static org.hibernate.internal.util.collections.CollectionHelper.linkedMap
 /**
  * A specialization of the map type, with (resultset-based) ordering.
  */
+@SPI
 public class OrderedMapType extends MapType {
 
 	public OrderedMapType(String role, String propertyRef) {

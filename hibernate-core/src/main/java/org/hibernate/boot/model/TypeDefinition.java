@@ -4,6 +4,8 @@
  */
 package org.hibernate.boot.model;
 
+import org.hibernate.Internal;
+
 import java.io.Serializable;
 import java.sql.Types;
 import java.util.Arrays;
@@ -94,6 +96,7 @@ public class TypeDefinition implements Serializable {
 		return parameters;
 	}
 
+	@Internal
 	public BasicValue.Resolution<?> resolve(
 			Map<?,?> localConfigParameters,
 			MetadataBuildingContext context,
@@ -101,6 +104,7 @@ public class TypeDefinition implements Serializable {
 		return resolve( localConfigParameters, null, context, indicators );
 	}
 
+	@Internal
 	public BasicValue.Resolution<?> resolve(
 			Map<?,?> localConfigParameters,
 			// TODO: why is this parameter ignored??

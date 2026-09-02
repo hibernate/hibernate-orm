@@ -4,124 +4,94 @@
  */
 package org.hibernate.engine.jdbc.env.spi;
 
+import org.hibernate.SPI;
 import org.hibernate.boot.model.naming.Identifier;
-import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.identifier.spi.IdentifierHelperBuildRequest;
+import org.hibernate.dialect.identifier.spi.IdentifierSupport;
 
-/**
- * Helper for handling {@link Identifier} instances.
- *
- * @author Steve Ebersole
- */
+import static org.hibernate.SPI.Role.SUPPLY;
+import static org.hibernate.SPI.Role.USE;
+
+/// Handles configured database identifiers at runtime.
+///
+/// A Dialect provider uses this helper after Hibernate has applied identifier
+/// casing, keyword, quoting, and namespace configuration. Configure the
+/// boot-scoped builder received by
+/// [IdentifierSupport#buildIdentifierHelper(IdentifierHelperBuildRequest)]
+/// before invoking the inherited build operation. When builder configuration
+/// cannot express a database rule, decorate the resulting helper with
+/// [org.hibernate.dialect.identifier.spi.DelegatingIdentifierHelper]. Do not
+/// implement this interface directly as a provider contract.
+///
+/// @author Steve Ebersole
+/// @see IdentifierSupport#buildIdentifierHelper(IdentifierHelperBuildRequest)
+@SPI({ USE, SUPPLY })
 public interface IdentifierHelper {
-	/**
-	 * Essentially quotes the identifier if it needs to be.  Useful to apply global quoting,
-	 * as well as reserved word quoting after calls to naming strategies.
-	 *
-	 * @param identifier The identifier for which to normalize quoting.
-	 *
-	 * @return The quoting-normalized Identifier.
-	 */
+	/// Quote the identifier when required by the configured global, reserved-word,
+	/// or database-specific policy.
+	///
+	/// @param identifier the identifier to normalize
+	/// @return the quoting-normalized identifier
 	Identifier normalizeQuoting(Identifier identifier);
 
-	/**
-	 * Generate an Identifier instance from its simple name as obtained from mapping
-	 * information.
-	 * <p>
-	 * Note that Identifiers returned from here may be implicitly quoted based on
-	 * 'globally quoted identifiers' or based on reserved words.
-	 *
-	 * @param text The text form of a name as obtained from mapping information.
-	 *
-	 * @return The identifier form of the name.
-	 */
+	/// Create an identifier from mapping text, applying configured implicit
+	/// quoting when necessary.
+	///
+	/// @param text the name obtained from mapping information
+	/// @return the identifier form of the name
 	Identifier toIdentifier(String text);
 
-	/**
-	 * Generate an Identifier instance from its simple name as obtained from mapping
-	 * information.  Additionally, this form takes a boolean indicating whether to
-	 * explicitly quote the Identifier.
-	 * <p>
-	 * Note that Identifiers returned from here may be implicitly quoted based on
-	 * 'globally quoted identifiers' or based on reserved words.
-	 *
-	 * @param text The text form of a name as obtained from mapping information.
-	 * @param quoted Is the identifier to be quoted explicitly.
-	 *
-	 * @return The identifier form of the name.
-	 */
+	/// Create an identifier from mapping text, honoring explicit quoting and then
+	/// applying configured implicit quoting when necessary.
+	///
+	/// @param text the name obtained from mapping information
+	/// @param quoted whether the identifier is explicitly quoted
+	/// @return the identifier form of the name
 	Identifier toIdentifier(String text, boolean quoted);
 
-	/**
-	 * Generate an Identifier instance from its simple name as obtained from mapping
-	 * information.  Additionally, this form takes a boolean indicating whether to
-	 * explicitly quote the Identifier.
-	 * <p>
-	 * Note that Identifiers returned from here may be implicitly quoted based on
-	 * 'globally quoted identifiers' or based on reserved words.
-	 *
-	 * @param text The text form of a name as obtained from mapping information.
-	 * @param quoted Is the identifier to be quoted explicitly.
-	 * @param isExplicit Whether the name is explicitly set
-	 * @return The identifier form of the name.
-	 */
+	/// Create an identifier from mapping text while retaining whether the mapping
+	/// supplied the name explicitly.
+	///
+	/// @param text the name obtained from mapping information
+	/// @param quoted whether the identifier is explicitly quoted
+	/// @param isExplicit whether the mapping supplied the name explicitly
+	/// @return the identifier form of the name
 	Identifier toIdentifier(String text, boolean quoted, boolean isExplicit);
 
-	/**
-	 * Intended only for use in handling quoting requirements for {@code column-definition}
-	 * as defined by {@link jakarta.persistence.Column#columnDefinition()},
-	 * {@link jakarta.persistence.JoinColumn#columnDefinition}, etc.  This method should not
-	 * be called in any other scenario.
-	 * <p>
-	 * This method is needed to account for that fact that the JPA spec says that {@code column-definition}
-	 * should be quoted of global-identifier-quoting is requested.  Again, this is needed for spec
-	 * compliance.  TBH, I can not think of a argument why column-definitions should ever be *globally* quoted,
-	 * but the spec is the spec.  In fact the default implementation allows applications to opt-out of
-	 * global-identifier-quoting affecting column-definitions.
-	 *
-	 * @param text The text to be (possibly) quoted
-	 *
-	 * @return The identifier form
-	 *
-	 * @see AvailableSettings#GLOBALLY_QUOTED_IDENTIFIERS_SKIP_COLUMN_DEFINITIONS
-	 */
+	/// Apply global quoting to a `column-definition` fragment as required by
+	/// Jakarta Persistence. Do not use this operation for ordinary identifiers.
+	///
+	/// Applications may exclude column definitions from global quoting through
+	/// [org.hibernate.cfg.MappingSettings#GLOBALLY_QUOTED_IDENTIFIERS_SKIP_COLUMN_DEFINITIONS].
+	///
+	/// @param text the text to quote when global policy requires it
+	/// @return the identifier form
 	Identifier applyGlobalQuoting(String text);
 
-	/**
-	 * Check whether the given word represents a reserved word.
-	 *
-	 * @param word The word to check
-	 *
-	 * @return {@code true} if the given word represents a reserved word; {@code false} otherwise.
-	 */
+	/// Determine whether the configured environment treats a word as reserved.
+	///
+	/// @param word the word to check
+	/// @return `true` when the word is reserved
 	boolean isReservedWord(String word);
 
-	/**
-	 * Render the Identifier representation of a catalog name into the String form needed
-	 * in {@link java.sql.DatabaseMetaData} calls.
-	 *
-	 * @param catalogIdentifier The Identifier representation of a catalog name
-	 *
-	 * @return The String representation of the given catalog name
-	 */
+	/// Render a catalog identifier for `java.sql.DatabaseMetaData` calls.
+	///
+	/// @param catalogIdentifier the catalog identifier, or `null` for the
+	/// configured current-catalog behavior
+	/// @return the JDBC metadata catalog name
 	String toMetaDataCatalogName(Identifier catalogIdentifier);
 
-	/**
-	 * Render the Identifier representation of a schema name into the String form needed
-	 * in {@link java.sql.DatabaseMetaData} calls.
-	 *
-	 * @param schemaIdentifier The Identifier representation of a schema name
-	 *
-	 * @return The String representation of the given schema name
-	 */
+	/// Render a schema identifier for `java.sql.DatabaseMetaData` calls.
+	///
+	/// @param schemaIdentifier the schema identifier, or `null` for the
+	/// configured current-schema behavior
+	/// @return the JDBC metadata schema name
 	String toMetaDataSchemaName(Identifier schemaIdentifier);
 
-	/**
-	 * Render the Identifier representation of an object name (table, sequence, etc) into the
-	 * String form needed in {@link java.sql.DatabaseMetaData} calls.
-	 *
-	 * @param identifier The Identifier representation of an object name
-	 *
-	 * @return The String representation of the given object name
-	 */
+	/// Render a required database-object identifier for
+	/// `java.sql.DatabaseMetaData` calls.
+	///
+	/// @param identifier the required object identifier
+	/// @return the JDBC metadata object name
 	String toMetaDataObjectName(Identifier identifier);
 }

@@ -45,15 +45,16 @@ import org.hibernate.metamodel.mapping.TableDetails;
 import org.hibernate.metamodel.mapping.internal.SqlTypedMappingImpl;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.state.spi.StateManagement;
+import org.hibernate.query.sqm.SetOperator;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.spi.SqlAliasBase;
-import org.hibernate.sql.ast.spi.SqlAstCreationState;
-import org.hibernate.sql.ast.tree.from.NamedTableReference;
-import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.from.UnionTableGroup;
-import org.hibernate.sql.ast.tree.from.UnionTableReference;
-import org.hibernate.sql.ast.tree.from.UnknownTableReferenceException;
-import org.hibernate.sql.ast.tree.predicate.Predicate;
+import org.hibernate.sql.ast.spi.creation.SqlAliasBase;
+import org.hibernate.sql.ast.spi.creation.SqlAstCreationState;
+import org.hibernate.sql.ast.spi.query.from.NamedTableReference;
+import org.hibernate.sql.ast.spi.query.from.TableGroup;
+import org.hibernate.sql.ast.spi.query.from.UnionTableGroup;
+import org.hibernate.sql.ast.spi.query.from.UnionTableReference;
+import org.hibernate.sql.ast.spi.query.from.UnknownTableReferenceException;
+import org.hibernate.sql.ast.spi.query.predicate.Predicate;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.StandardBasicTypes;
 
@@ -516,7 +517,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 					//TODO: move to .sql package!!
 					if ( subquery.length() > 1 ) {
 						subquery.append( " union " );
-						if ( dialect.supportsUnionAll() ) {
+						if ( dialect.getSetOperationSupport().supports( SetOperator.UNION_ALL ) ) {
 							subquery.append( "all " );
 						}
 					}
@@ -616,7 +617,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 			if ( tablesToUnion.contains( subclassTableName ) ) {
 				if ( unionSubquery.length() > 1 ) {
 					unionSubquery.append(" union ");
-					if ( dialect.supportsUnionAll() ) {
+					if ( dialect.getSetOperationSupport().supports( SetOperator.UNION_ALL ) ) {
 						unionSubquery.append("all ");
 					}
 				}

@@ -35,7 +35,7 @@ public class NaturalIdUniqueConstraintNameTest {
 		var table = metadata.getEntityBinding( City1.class.getName() )
 				.getTable();
 
-		if (metadata.getDatabase().getDialect().supportsUniqueConstraints()) {
+		if (metadata.getDatabase().getDialect().getUniqueDelegate().representation( new org.hibernate.dialect.unique.spi.UniqueKeyRepresentationRequest( false, false, false ) ) == org.hibernate.dialect.unique.spi.UniqueKeyRepresentation.CONSTRAINT) {
 			var uniqueKeys = table.getUniqueKeys();
 
 			// The unique key should not be duplicated for NaturalID + UniqueConstraint.
@@ -65,7 +65,7 @@ public class NaturalIdUniqueConstraintNameTest {
 		var table = metadata.getEntityBinding( City1.class.getName() )
 				.getTable();
 
-		if (metadata.getDatabase().getDialect().supportsUniqueConstraints()) {
+		if (metadata.getDatabase().getDialect().getUniqueDelegate().representation( new org.hibernate.dialect.unique.spi.UniqueKeyRepresentationRequest( false, false, false ) ) == org.hibernate.dialect.unique.spi.UniqueKeyRepresentation.CONSTRAINT) {
 			var uniqueKeys = table.getUniqueKeys();
 
 			// The unique key should not be duplicated for NaturalID + UniqueConstraint.

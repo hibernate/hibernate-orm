@@ -327,6 +327,7 @@ public class StandardServiceRegistryBuilder {
 	 *
 	 * @return this, for method chaining
 	 */
+	@org.hibernate.SPI(org.hibernate.SPI.Role.SUPPLY)
 	public <T extends Service> StandardServiceRegistryBuilder addService(Class<T> serviceRole, T service) {
 		providedServices.add( new ProvidedService<>( serviceRole, service ) );
 		return this;

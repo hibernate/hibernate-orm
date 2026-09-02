@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.query.sqm.tree.spi.expression.SqmParameter;
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
+import org.hibernate.sql.ast.spi.query.expression.JdbcParameter;
 
 /**
  * Access to the mapping between an SqmParameter and all of its JDBC parameters

@@ -57,7 +57,7 @@ import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.model.domain.internal.ArrayTupleType;
 import org.hibernate.query.internal.QueryHelper;
 import org.hibernate.query.sqm.BinaryArithmeticOperator;
-import org.hibernate.dialect.type.IntervalType;
+import org.hibernate.dialect.temporaltype.spi.IntervalType;
 import org.hibernate.query.sqm.spi.SqmExpressible;
 import org.hibernate.query.sqm.tree.spi.SqmTypedNode;
 import org.hibernate.query.sqm.tree.spi.expression.SqmParameter;
@@ -949,7 +949,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		return getSqlIntervalType( descriptor.getDefaultSqlTypeCode() );
 	}
 
-	protected static @Nullable IntervalType getSqlIntervalType(int jdbcTypeCode) {
+	private static @Nullable IntervalType getSqlIntervalType(int jdbcTypeCode) {
 		return jdbcTypeCode == SqlTypes.INTERVAL_SECOND ? IntervalType.SECOND : null;
 	}
 

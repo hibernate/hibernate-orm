@@ -11,9 +11,9 @@ import java.util.function.Consumer;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.query.results.spi.ResultSetMapping;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.tree.from.AbstractTableGroup;
-import org.hibernate.sql.ast.tree.from.TableReference;
-import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
+import org.hibernate.sql.ast.spi.query.from.AbstractTableGroup;
+import org.hibernate.sql.ast.spi.query.from.TableReference;
+import org.hibernate.sql.ast.spi.query.from.TableReferenceJoin;
 
 /**
  * TableGroup implementation used while building

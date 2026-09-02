@@ -24,15 +24,15 @@ import org.hibernate.metamodel.mapping.AuditMapping;
 import org.hibernate.metamodel.mapping.DiscriminatorValue;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
-import org.hibernate.sql.model.MutationOperation;
-import org.hibernate.sql.model.MutationType;
-import org.hibernate.sql.model.ast.MutationGroup;
-import org.hibernate.sql.model.ast.ColumnValueBinding;
-import org.hibernate.sql.model.ast.ColumnWriteFragment;
-import org.hibernate.sql.model.ast.TableMutation;
-import org.hibernate.sql.model.ast.builder.TableInsertBuilderStandard;
-import org.hibernate.sql.model.ast.builder.TableUpdateBuilderStandard;
+import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
+import org.hibernate.sql.spi.mutation.MutationOperation;
+import org.hibernate.sql.spi.mutation.MutationType;
+import org.hibernate.sql.ast.spi.model.MutationGroup;
+import org.hibernate.sql.ast.spi.model.ColumnValueBinding;
+import org.hibernate.sql.ast.spi.model.ColumnWriteFragment;
+import org.hibernate.sql.ast.spi.model.TableMutation;
+import org.hibernate.sql.ast.spi.model.builder.TableInsertBuilderStandard;
+import org.hibernate.sql.ast.spi.model.builder.TableUpdateBuilderStandard;
 import org.hibernate.sql.model.internal.MutationGroupSingle;
 import org.hibernate.sql.model.internal.MutationGroupStandard;
 
@@ -63,6 +63,7 @@ import static org.hibernate.persister.entity.mutation.InsertCoordinatorStandard.
 /// @author Steve Ebersole
 /// @since 8.0
 @Incubating
+@org.hibernate.Internal
 public class EntityAuditSupport {
 
 	/// A resolved per-table audit mutation operation.
@@ -129,7 +130,7 @@ public class EntityAuditSupport {
 		this.useServerTransactionTimestamps =
 				factory.getChangesetCoordinator().useServerTimestamp( factory.getJdbcServices().getDialect() );
 		this.currentTimestampFunctionName = useServerTransactionTimestamps
-				? factory.getJdbcServices().getDialect().currentTimestamp()
+				? factory.getJdbcServices().getDialect().getCurrentTemporalSupport().currentTimestamp()
 				: null;
 		this.staticAuditInsertMutationGroup = entityPersister.isDynamicInsert()
 				? null

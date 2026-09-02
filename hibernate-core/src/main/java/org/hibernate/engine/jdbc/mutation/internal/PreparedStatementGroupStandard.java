@@ -19,10 +19,10 @@ import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.MutationStatementPreparer;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.values.GeneratedValuesMutationDelegate;
-import org.hibernate.sql.model.MutationTarget;
-import org.hibernate.sql.model.MutationType;
-import org.hibernate.sql.model.PreparableMutationOperation;
-import org.hibernate.sql.model.TableMapping;
+import org.hibernate.sql.spi.mutation.MutationTarget;
+import org.hibernate.sql.spi.mutation.MutationType;
+import org.hibernate.sql.spi.mutation.jdbc.PreparableMutationOperation;
+import org.hibernate.sql.spi.mutation.TableMapping;
 
 /**
  * A group of {@link PreparedStatementDetails} references related to multi-table
@@ -32,7 +32,7 @@ import org.hibernate.sql.model.TableMapping;
  */
 public class PreparedStatementGroupStandard extends AbstractPreparedStatementGroup {
 	private final MutationType mutationType;
-	private final MutationTarget<?,?> mutationTarget;
+	private final MutationTarget mutationTarget;
 	private final List<PreparableMutationOperation> jdbcMutations;
 
 	private final SortedMap<String, PreparedStatementDetails> statementMap;
@@ -40,7 +40,7 @@ public class PreparedStatementGroupStandard extends AbstractPreparedStatementGro
 
 	public PreparedStatementGroupStandard(
 			MutationType mutationType,
-			MutationTarget<?,?> mutationTarget,
+			MutationTarget mutationTarget,
 			GeneratedValuesMutationDelegate generatedValuesDelegate,
 			List<PreparableMutationOperation> jdbcMutations,
 			SharedSessionContractImplementor session) {

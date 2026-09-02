@@ -4,6 +4,12 @@
  */
 package org.hibernate.usertype;
 
+import org.hibernate.SPI;
+
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.SUPPLY;
+import static org.hibernate.SPI.Role.USE;
+
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -258,9 +264,18 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
  *
  * @see org.hibernate.annotations.Type
  * @see org.hibernate.annotations.TypeRegistration
+ * @see org.hibernate.annotations.Type#value()
+ * @see org.hibernate.annotations.TypeRegistration#userType()
+ * @see org.hibernate.annotations.CollectionIdType#value()
+ * @see org.hibernate.annotations.MapKeyType#value()
+ * @see org.hibernate.boot.model.TypeContributions#contributeType(UserType)
+ * @see org.hibernate.boot.model.TypeContributions#contributeType(UserType, String...)
+ * @see org.hibernate.type.BasicTypeRegistry#register(UserType, String...)
+ * @see org.hibernate.boot.MetadataBuilder#applyBasicType(UserType, String...)
  *
  * @author Gavin King
  */
+@SPI({ USE, IMPLEMENT, SUPPLY })
 public interface UserType<J> {
 
 	/**

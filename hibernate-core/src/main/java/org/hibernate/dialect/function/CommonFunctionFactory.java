@@ -8,6 +8,7 @@ import java.util.Date;
 import java.util.Arrays;
 
 import jakarta.annotation.Nullable;
+import org.hibernate.SPI;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.dialect.Dialect;
 
@@ -46,7 +47,7 @@ import org.hibernate.query.sqm.produce.function.FunctionParameterType;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
-import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
+import org.hibernate.sql.ast.spi.translation.SqlAstNodeRenderingMode;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.SqlTypes;
@@ -57,16 +58,32 @@ import static org.hibernate.query.sqm.produce.function.FunctionParameterType.*;
 import static org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE;
 import static org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers.IMPLIED_RESULT_TYPE;
 import static org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers.useArgType;
-import static org.hibernate.sql.ast.SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER;
+import static org.hibernate.sql.ast.spi.translation.SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER;
 
-/**
- * Enumeratoes common function template definitions.
- * Centralized for easier use from dialects.
- *
- * @author Steve Ebersole
- * @author Gavin King
- * @author Yoobin Yoon
- */
+/// Registers Hibernate's stock HQL function definitions and database-specific
+/// variants with a boot-scoped function registry.
+///
+/// Construct this helper inside
+/// [org.hibernate.dialect.Dialect#initializeFunctionRegistry(FunctionContributions)]
+/// or [org.hibernate.boot.model.FunctionContributor#contributeFunctions] and
+/// invoke the methods for the functions supported by the database. Discard the
+/// helper before the callback returns; it retains the mutable registry and type
+/// configuration supplied for bootstrap.
+///
+/// Use this factory for stock definitions, use
+/// [SqmFunctionRegistry] builders for simple provider-defined named or pattern
+/// functions, and implement
+/// [org.hibernate.query.sqm.function.SqmFunctionDescriptor] when custom SQM
+/// generation or SQL rendering is required.
+///
+/// This class is supported for construction and use, not subclassing. Each
+/// method immediately registers its documented function or family into the
+/// captured registry, replacing an existing descriptor with the same key.
+///
+/// @author Steve Ebersole
+/// @author Gavin King
+/// @author Yoobin Yoon
+@SPI
 public class CommonFunctionFactory {
 
 	private final BasicType<Boolean> booleanType;

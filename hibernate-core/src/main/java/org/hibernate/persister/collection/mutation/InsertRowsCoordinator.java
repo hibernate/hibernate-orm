@@ -25,6 +25,7 @@ import org.hibernate.persister.collection.CollectionPersister;
  *
  * @author Steve Ebersole
  */
+@org.hibernate.SPI({ org.hibernate.SPI.Role.USE, org.hibernate.SPI.Role.IMPLEMENT })
 public interface InsertRowsCoordinator extends CollectionOperationCoordinator {
 	/**
 	 * Perform the creation.

@@ -8,7 +8,7 @@ import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
-import org.hibernate.sql.ast.tree.select.SelectStatement;
+import org.hibernate.sql.ast.spi.query.select.SelectStatement;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
 import org.hibernate.sql.results.internal.RowTransformerArrayImpl;
 import org.hibernate.sql.results.spi.RowTransformer;

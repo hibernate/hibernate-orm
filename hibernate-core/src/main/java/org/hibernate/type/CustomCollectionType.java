@@ -4,6 +4,8 @@
  */
 package org.hibernate.type;
 
+import org.hibernate.SPI;
+
 import java.util.Iterator;
 import java.util.Map;
 
@@ -23,6 +25,7 @@ import org.hibernate.usertype.UserCollectionType;
  * @see UserCollectionType
  * @author Gavin King
  */
+@SPI
 public class CustomCollectionType extends CollectionType {
 
 	private final UserCollectionType userType;

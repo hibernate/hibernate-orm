@@ -4,6 +4,8 @@
  */
 package org.hibernate.spatial.dialect.db2;
 
+import org.hibernate.SPI;
+
 import java.sql.CallableStatement;
 import java.sql.Clob;
 import java.sql.PreparedStatement;
@@ -29,6 +31,7 @@ import org.geolatte.geom.codec.db.db2.Db2ClobEncoder;
  * <p>
  * Created by Karel Maesen, Geovise BVBA, and David Adler, Adtech Geospatial
  */
+@SPI
 public class DB2GeometryType implements JdbcType {
 
 

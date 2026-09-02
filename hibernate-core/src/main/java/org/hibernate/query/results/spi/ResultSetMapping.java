@@ -9,6 +9,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.named.spi.NamedResultSetMappingMemento;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
+import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducerProvider;
 
 import java.util.List;
 import java.util.function.BiConsumer;
@@ -36,10 +37,12 @@ import java.util.function.Consumer;
  * @see NativeQuery
  * @see org.hibernate.procedure.ProcedureCall
  * @see jakarta.persistence.StoredProcedureQuery
+ * @see JdbcValuesMappingProducerProvider#buildResultSetMapping(String, boolean, SessionFactoryImplementor)
  *
  * @author Steve Ebersole
  */
 @Incubating
+@org.hibernate.SPI({ org.hibernate.SPI.Role.USE, org.hibernate.SPI.Role.IMPLEMENT, org.hibernate.SPI.Role.SUPPLY })
 public interface ResultSetMapping extends JdbcValuesMappingProducer {
 	/**
 	 * An identifier for the mapping
@@ -78,12 +81,18 @@ public interface ResultSetMapping extends JdbcValuesMappingProducer {
 
 	/**
 	 * Add a builder
+	 *
+	 * @see ResultBuilder
 	 */
+	@org.hibernate.SPI(org.hibernate.SPI.Role.SUPPLY)
 	void addResultBuilder(ResultBuilder resultBuilder);
 
 	/**
 	 * Add a legacy fetch builder
+	 *
+	 * @see LegacyFetchBuilder
 	 */
+	@org.hibernate.SPI(org.hibernate.SPI.Role.SUPPLY)
 	void addLegacyFetchBuilder(LegacyFetchBuilder fetchBuilder);
 
 	/**

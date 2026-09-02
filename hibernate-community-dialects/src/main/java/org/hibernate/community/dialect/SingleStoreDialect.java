@@ -4,8 +4,42 @@
  */
 package org.hibernate.community.dialect;
 
+import org.hibernate.dialect.identifier.spi.KeywordRegistration;
+
+import org.hibernate.dialect.temporaltype.spi.TemporalValueSemantics;
+
+import org.hibernate.dialect.temporaltype.spi.CurrentTimestampSelection;
+
+import org.hibernate.dialect.temporaltype.spi.TemporalOperationSupport;
+
+import org.hibernate.dialect.temporaltype.spi.TemporalFormatSupport;
+
+import org.hibernate.dialect.temporaltype.spi.CurrentTemporalSupport;
+
+import org.hibernate.SPI;
+import static org.hibernate.SPI.Role.USE;
+
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.SUPPLY;
+import org.hibernate.dialect.type.spi.DdlTypeBuilder;
+
+import org.hibernate.dialect.type.spi.StandardDdlTypes;
+
+import org.hibernate.dialect.type.spi.TypeSizingProfile;
+
+import org.hibernate.dialect.mutation.spi.MultiTableMutationSupport;
+import org.hibernate.dialect.sql.ast.spi.CteSupport;
+import org.hibernate.dialect.sql.ast.spi.NullOrderingSupport;
+import org.hibernate.dialect.sql.ast.spi.MutationKind;
+import org.hibernate.dialect.sql.ast.spi.MutationSyntaxCapability;
+import org.hibernate.dialect.sql.ast.spi.MutationSyntaxSupport;
+import org.hibernate.dialect.sql.ast.spi.PredicateSupport;
+import org.hibernate.dialect.sql.ast.spi.RowValueSupport;
+import org.hibernate.dialect.sql.ast.spi.SingleRowTableSupport;
+import org.hibernate.dialect.sql.ast.spi.SetOperationSupport;
+import org.hibernate.dialect.sql.ast.spi.SubquerySupport;
+
 import jakarta.persistence.TemporalType;
-import jakarta.persistence.Timeout;
 import org.hibernate.Length;
 import org.hibernate.PessimisticLockException;
 import org.hibernate.boot.Metadata;
@@ -28,68 +62,72 @@ import org.hibernate.community.dialect.function.json.SingleStoreJsonSetFunction;
 import org.hibernate.community.dialect.function.json.SingleStoreJsonValueFunction;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
-import org.hibernate.dialect.FunctionalDependencyAnalysisSupport;
-import org.hibernate.dialect.FunctionalDependencyAnalysisSupportImpl;
-import org.hibernate.dialect.NullOrdering;
-import org.hibernate.dialect.Replacer;
-import org.hibernate.dialect.RowLockStrategy;
-import org.hibernate.dialect.SelectItemReferenceStrategy;
+import org.hibernate.dialect.jdbc.spi.ParameterLimits;
+import org.hibernate.dialect.sql.ast.spi.DmlTargetColumnQualifierSupport;
+import org.hibernate.dialect.aggregate.spi.FunctionalDependencyAnalysisSupport;
+import org.hibernate.dialect.sql.ast.spi.NullOrdering;
+import org.hibernate.dialect.function.spi.Replacer;
+import org.hibernate.dialect.function.spi.WindowFunctionSupport;
+import org.hibernate.dialect.lock.spi.RowLockStrategy;
 import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.dialect.identity.IdentityColumnSupport;
-import org.hibernate.dialect.identity.MySQLIdentityColumnSupport;
+import org.hibernate.community.dialect.identity.internal.MySQLIdentityColumnSupport;
+import org.hibernate.dialect.identity.spi.IdentityColumnSupport;
 import org.hibernate.dialect.lock.PessimisticLockStyle;
-import org.hibernate.dialect.lock.internal.LockingSupportParameterized;
 import org.hibernate.dialect.lock.spi.LockTimeoutType;
 import org.hibernate.dialect.lock.spi.LockingSupport;
+import org.hibernate.dialect.lock.spi.StandardLockingSupports;
+import org.hibernate.dialect.namespace.spi.NamespaceSupport;
+import org.hibernate.dialect.namespace.spi.NamespaceSupports;
+import org.hibernate.dialect.schema.spi.ColumnDefinitionRequest;
+import org.hibernate.dialect.schema.spi.ConstraintDropMode;
+import org.hibernate.dialect.schema.spi.ExistenceCheckPlacement;
+import org.hibernate.dialect.schema.spi.IfExistsSupport;
+import org.hibernate.dialect.schema.spi.IndexNameQualification;
+import org.hibernate.dialect.schema.spi.SchemaDropSupport;
+import org.hibernate.dialect.schema.spi.TableCreationKind;
 import org.hibernate.dialect.lock.spi.OuterJoinLockingType;
-import org.hibernate.dialect.pagination.LimitHandler;
-import org.hibernate.dialect.pagination.LimitLimitHandler;
-import org.hibernate.community.dialect.temptable.SingleStoreLocalTemporaryTableStrategy;
-import org.hibernate.dialect.temptable.TemporaryTableKind;
-import org.hibernate.dialect.temptable.TemporaryTableStrategy;
-import org.hibernate.dialect.unique.UniqueDelegate;
+import org.hibernate.dialect.lob.spi.LobSupport;
+import org.hibernate.dialect.lob.spi.LobSupports;
+import org.hibernate.dialect.pagination.spi.LimitHandler;
+import org.hibernate.dialect.pagination.spi.LimitLimitHandler;
+import org.hibernate.community.dialect.temptable.internal.SingleStoreLocalTemporaryTableStrategy;
+import org.hibernate.dialect.temptable.spi.TemporaryTableStrategy;
+import org.hibernate.dialect.type.spi.SizeStrategy;
+import org.hibernate.dialect.type.spi.StandardSizeStrategy;
+import org.hibernate.dialect.type.spi.EnumSupport;
+import org.hibernate.dialect.type.spi.EnumSupports;
+import org.hibernate.dialect.unique.spi.UniqueDelegate;
+import org.hibernate.dialect.unique.spi.UniqueDelegates;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
-import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
+import org.hibernate.dialect.identifier.spi.IdentifierHelperBuildRequest;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.engine.jdbc.env.spi.SchemaNameResolver;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
-import org.hibernate.internal.util.JdbcExceptionHelper;
+import org.hibernate.jdbc.spi.JdbcExceptionHelper;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
-import org.hibernate.mapping.Column;
 import org.hibernate.mapping.ForeignKey;
-import org.hibernate.mapping.Table;
-import org.hibernate.mapping.UniqueKey;
-import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.CastType;
-import org.hibernate.dialect.type.IntervalType;
+import org.hibernate.query.sqm.SetOperator;
+import org.hibernate.dialect.temporaltype.spi.IntervalType;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
-import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableInsertStrategy;
-import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableMutationStrategy;
-import org.hibernate.query.sqm.mutation.spi.AfterUseAction;
-import org.hibernate.query.sqm.mutation.spi.BeforeUseAction;
-import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
-import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.query.sqm.produce.function.FunctionParameterType;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.SqlAstTranslatorFactory;
-import org.hibernate.sql.ast.spi.SqlAppender;
-import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
-import org.hibernate.sql.ast.tree.Statement;
+import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslatorFactory;
+import org.hibernate.sql.spi.SqlAppender;
+import org.hibernate.dialect.sql.ast.spi.StandardSqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.Statement;
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.BasicTypeRegistry;
@@ -102,23 +140,16 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.NullJdbcType;
 import org.hibernate.type.descriptor.jdbc.OrdinalEnumJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
-import org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType;
-import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
-import org.hibernate.type.descriptor.sql.internal.NativeEnumDdlTypeImpl;
-import org.hibernate.type.descriptor.sql.internal.NativeOrdinalEnumDdlTypeImpl;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import java.sql.CallableStatement;
-import java.sql.DatabaseMetaData;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.sql.Types;
 import java.time.ZonedDateTime;
 import java.time.temporal.TemporalAccessor;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.TimeZone;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
@@ -148,10 +179,11 @@ import static org.hibernate.type.SqlTypes.TIME_WITH_TIMEZONE;
 import static org.hibernate.type.SqlTypes.TINYINT;
 import static org.hibernate.type.SqlTypes.VARBINARY;
 import static org.hibernate.type.SqlTypes.VARCHAR;
-import static org.hibernate.type.descriptor.DateTimeUtils.appendAsDate;
-import static org.hibernate.type.descriptor.DateTimeUtils.appendAsLocalTime;
-import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMicros;
-import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMillis;
+import static org.hibernate.dialect.literal.spi.StandardDateTimeLiteralRendering.appendAsDate;
+import static org.hibernate.dialect.literal.spi.StandardDateTimeLiteralRendering.appendAsLocalTime;
+import static org.hibernate.dialect.literal.spi.StandardDateTimeLiteralRendering.appendAsTimestampWithMicros;
+import static org.hibernate.dialect.literal.spi.StandardDateTimeLiteralRendering.appendAsTimestampWithMillis;
+import static org.hibernate.dialect.literal.spi.ZeroOffsetLiteralStyle.NUMERIC_OFFSET;
 
 /**
  * An SQL dialect for SingleStore.
@@ -162,7 +194,7 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithM
  *   <li>SingleStore supports two table types: COLUMNSTORE and ROWSTORE. Explicit table type can be configured by setting 'hibernate.dialect.singlestore.table_type' property. Refer to {@link SingleStoreTableType} for details.</li>
  *   <li>SingleStore has a random order for SELECT queries, which may impact the predictability of query results.</li>
  *   <li>SingleStore does not support foreign keys and referential integrity, which could affect the design of your database schema.</li>
- *   <li>The SingleStore dialect ignores unique key constraints. See {@link DoNothingUniqueDelegate} for more information.</li>
+ *   <li>The SingleStore dialect ignores unique key constraints. See {@link UniqueDelegates#none()} for more information.</li>
  *   <li>SingleStore does not support zoned timestamps, which might require adjustments to how you handle time-related data.</li>
  *   <li>Updating primary keys in SingleStore is restricted because every primary key is also a unique key and shard key.</li>
  *   <li>SingleStore does not support the ALL/ANY clause in SQL queries.</li>
@@ -173,24 +205,47 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithM
  *
  * @author Oleksandr Yeliseiev
  */
-public class SingleStoreDialect extends Dialect {
+public class SingleStoreDialect extends Dialect implements CurrentTemporalSupport, TemporalFormatSupport, TemporalOperationSupport {
+	private IfExistsSupport ifExistsSupport;
+	private SchemaDropSupport schemaDropSupport;
+
+
+	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
+	public TemporalOperationSupport getTemporalOperationSupport() {
+		return this;
+	}
+
+	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
+	public TemporalFormatSupport getTemporalFormatSupport() {
+		return this;
+	}
+
+	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
+	public CurrentTemporalSupport getCurrentTemporalSupport() {
+		return this;
+	}
+	private final TypeSizingProfile typeSizingProfile = TypeSizingProfile.builder( super.getTypeSizingProfile() )
+			.defaultDecimalPrecision( 65 ).defaultLobLength( Length.LONG32 ).floatPrecision( 23 )
+			.maxVarcharLength( 21_844 ).maxVarcharCapacity( 21_844 )
+			.maxNVarcharLength( 21_844 ).maxNVarcharCapacity( 21_844 )
+			.maxVarbinaryLength( 65_533 ).maxVarbinaryCapacity( 65_533 )
+			.build();
+
+	@Override public TypeSizingProfile getTypeSizingProfile() { return typeSizingProfile; }
 
 	private static final int PARAM_LIST_SIZE_LIMIT = 1_048_576;
+	private static final String[] NO_COMMANDS = new String[0];
 	private static final EmptyExporter NOOP_EXPORTER = new EmptyExporter();
-	private static final UniqueDelegate NOOP_UNIQUE_DELEGATE = new DoNothingUniqueDelegate();
+	private static final UniqueDelegate NOOP_UNIQUE_DELEGATE = UniqueDelegates.none();
 	private static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 8, 0 );
 
 	private final SingleStoreTableType explicitTableType;
 	private final boolean isForUpdateLockingEnabled;
 
-	private final LockingSupport lockingSupport = new LockingSupportParameterized(
-			PessimisticLockStyle.NONE,
-			RowLockStrategy.NONE,
-			LockTimeoutType.NONE,
-			LockTimeoutType.NONE,
-			LockTimeoutType.NONE,
-			OuterJoinLockingType.UNSUPPORTED
-	);
+	private final LockingSupport lockingSupport;
 
 	public SingleStoreDialect() {
 		this( MINIMUM_VERSION, null, false );
@@ -198,7 +253,6 @@ public class SingleStoreDialect extends Dialect {
 
 	public SingleStoreDialect(DialectResolutionInfo info) {
 		this( createVersion( info ), getTableType( info ), getUpdateForEnabled( info ) );
-		registerKeywords( info );
 	}
 
 	public SingleStoreDialect(
@@ -206,6 +260,14 @@ public class SingleStoreDialect extends Dialect {
 		super( version );
 		this.explicitTableType = explicitTableType;
 		this.isForUpdateLockingEnabled = isForUpdateLockingEnabled;
+		this.lockingSupport = StandardLockingSupports.parameterized(
+				isForUpdateLockingEnabled ? PessimisticLockStyle.CLAUSE : PessimisticLockStyle.NONE,
+				RowLockStrategy.NONE,
+				LockTimeoutType.NONE,
+				LockTimeoutType.NONE,
+				LockTimeoutType.NONE,
+				OuterJoinLockingType.UNSUPPORTED
+		);
 	}
 
 	private static DatabaseVersion createVersion(DialectResolutionInfo info) {
@@ -239,7 +301,7 @@ public class SingleStoreDialect extends Dialect {
 		);
 	}
 
-	private final SizeStrategy sizeStrategy = new SizeStrategyImpl() {
+	private final SizeStrategy sizeStrategy = new StandardSizeStrategy( this ) {
 		@Override
 		public Size resolveSize(
 				JdbcType jdbcType, JavaType<?> javaType, Integer precision, Integer scale, Long length) {
@@ -256,7 +318,7 @@ public class SingleStoreDialect extends Dialect {
 							javaType,
 							precision,
 							scale,
-							length == null ? getDefaultLobLength() : length
+							length == null ? getTypeSizingProfile().defaultLobLength() : length
 					);
 				default:
 					return super.resolveSize( jdbcType, javaType, precision, scale, length );
@@ -265,16 +327,19 @@ public class SingleStoreDialect extends Dialect {
 	};
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	protected DatabaseVersion getMinimumSupportedVersion() {
 		return MINIMUM_VERSION;
 	}
 
 	@Override
-	public boolean useMaterializedLobWhenCapacityExceeded() {
-		return false;
+	@SPI({ IMPLEMENT, SUPPLY })
+	public LobSupport getLobSupport() {
+		return LobSupports.noCapacityPromotion();
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String extractPattern(TemporalUnit unit) {
 		return switch ( unit ) {
 			case SECOND -> "(second(?2)+microsecond(?2)/1e6)";
@@ -288,6 +353,7 @@ public class SingleStoreDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
 		if ( temporalType == TemporalType.TIME ) {
 			switch ( unit ) {
@@ -314,6 +380,7 @@ public class SingleStoreDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
 		String fromType = fromTemporalType == TemporalType.TIME ? "to_timestamp(?2, 'HH24:MI:SS.FF6')" : "?2";
 		String toType = toTemporalType == TemporalType.TIME ? "to_timestamp(?3, 'HH24:MI:SS.FF6')" : "?3";
@@ -325,6 +392,7 @@ public class SingleStoreDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public void appendDateTimeLiteral(
 			SqlAppender appender, TemporalAccessor temporalAccessor, TemporalType precision, TimeZone jdbcTimeZone) {
 		switch ( precision ) {
@@ -346,9 +414,9 @@ public class SingleStoreDialect extends Dialect {
 				appendAsTimestampWithMicros(
 						appender,
 						temporalAccessor,
-						supportsTemporalLiteralOffset(),
+						getTemporalValueSemantics().supportsLiteralOffset(),
 						jdbcTimeZone,
-						false
+						NUMERIC_OFFSET
 				);
 				appender.appendSql( "')" );
 				break;
@@ -358,6 +426,7 @@ public class SingleStoreDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public void appendDateTimeLiteral(SqlAppender appender, Date date, TemporalType precision, TimeZone jdbcTimeZone) {
 		switch ( precision ) {
 			case DATE:
@@ -381,6 +450,7 @@ public class SingleStoreDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public void appendDateTimeLiteral(
 			SqlAppender appender, Calendar calendar, TemporalType precision, TimeZone jdbcTimeZone) {
 		switch ( precision ) {
@@ -404,30 +474,21 @@ public class SingleStoreDialect extends Dialect {
 		}
 	}
 
-	@Override
-	public SelectItemReferenceStrategy getGroupBySelectItemReferenceStrategy() {
-		return SelectItemReferenceStrategy.POSITION;
-	}
-
 	//Creating an index on an ENUM column on columnstore tables is not supported.
 	@Override
-	public String getEnumTypeDeclaration(String name, String[] values) {
-		StringBuilder type = new StringBuilder();
-		type.append( "enum (" );
-		String separator = "";
-		for ( String value : values ) {
-			type.append( separator ).append( '\'' ).append( value ).append( '\'' );
-			separator = ",";
-		}
-		return type.append( ')' ).toString();
+	@SPI({ IMPLEMENT, SUPPLY })
+	public EnumSupport getEnumSupport() {
+		return EnumSupports.inline();
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String getQueryHintString(String query, String hints) {
-		return addUseIndexQueryHint( query, hints );
+		return org.hibernate.dialect.queryhint.spi.QueryHints.addUseIndexHint( query, hints );
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public ViolatedConstraintNameExtractor getViolatedConstraintNameExtractor() {
 		return EXTRACTOR;
 	}
@@ -444,103 +505,82 @@ public class SingleStoreDialect extends Dialect {
 			} );
 
 	@Override
-	public boolean qualifyIndexName() {
-		return false;
+	@SPI({ USE, IMPLEMENT })
+	public IndexNameQualification nameQualification() {
+		return IndexNameQualification.UNQUALIFIED;
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	protected void registerColumnTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.registerColumnTypes( typeContributions, serviceRegistry );
 		final DdlTypeRegistry ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
-		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "json", this ) );
+		ddlTypeRegistry.addDescriptor( StandardDdlTypes.simple( JSON, "json", this ) );
 
 		final int maxTinyLobLen = 225;
 		final int maxLobLen = 65_535;
 		final int maxMediumLobLen = 16_777_215;
 
-		final CapacityDependentDdlType.Builder varcharBuilder = CapacityDependentDdlType.builder(
-				VARCHAR,
-				CapacityDependentDdlType.LobKind.BIGGEST_LOB,
-				columnType( CLOB ),
-				columnType( CHAR ),
-				castType( CHAR ),
-				this
-		).withTypeCapacity( getMaxVarcharLength(), "varchar($l)" ).withTypeCapacity( maxMediumLobLen, "mediumtext" );
-		if ( getMaxVarcharLength() < maxLobLen ) {
+		final DdlTypeBuilder varcharBuilder = StandardDdlTypes.builder( VARCHAR, columnType( CLOB ), this )
+				.lobKind( DdlTypeBuilder.LobKind.BIGGEST )
+				.castTypeNamePattern( columnType( CHAR ) )
+				.castTypeName( castType( CHAR ) )
+				.withTypeCapacity( getTypeSizingProfile().maxVarcharLength(), "varchar($l)" )
+				.withTypeCapacity( maxMediumLobLen, "mediumtext" );
+		if ( getTypeSizingProfile().maxVarcharLength() < maxLobLen ) {
 			varcharBuilder.withTypeCapacity( maxLobLen, "text" );
 		}
 		ddlTypeRegistry.addDescriptor( varcharBuilder.build() );
 
 		// SingleStore doesn't support nchar/nvarchar/ntext
-		final CapacityDependentDdlType.Builder nvarcharBuilder = CapacityDependentDdlType.builder(
-				NVARCHAR,
-				CapacityDependentDdlType.LobKind.BIGGEST_LOB,
-				columnType( NCLOB ),
-				columnType( NCHAR ),
-				castType( NCHAR ),
-				this
-		).withTypeCapacity( getMaxVarcharLength(), "varchar($l) character set utf8" ).withTypeCapacity(
+		final DdlTypeBuilder nvarcharBuilder = StandardDdlTypes.builder( NVARCHAR, columnType( NCLOB ), this )
+				.lobKind( DdlTypeBuilder.LobKind.BIGGEST )
+				.castTypeNamePattern( columnType( NCHAR ) )
+				.castTypeName( castType( NCHAR ) )
+				.withTypeCapacity( getTypeSizingProfile().maxVarcharLength(), "varchar($l) character set utf8" ).withTypeCapacity(
 				maxMediumLobLen,
 				"mediumtext character set utf8"
 		);
-		if ( getMaxVarcharLength() < maxLobLen ) {
+		if ( getTypeSizingProfile().maxVarcharLength() < maxLobLen ) {
 			nvarcharBuilder.withTypeCapacity( maxLobLen, "text character set utf8" );
 		}
 		ddlTypeRegistry.addDescriptor( nvarcharBuilder.build() );
 
-		final CapacityDependentDdlType.Builder varbinaryBuilder = CapacityDependentDdlType.builder(
-				VARBINARY,
-				CapacityDependentDdlType.LobKind.BIGGEST_LOB,
-				columnType( BLOB ),
-				columnType( BINARY ),
-				castType( BINARY ),
-				this
-		).withTypeCapacity( getMaxVarbinaryLength(), "varbinary($l)" ).withTypeCapacity(
+		final DdlTypeBuilder varbinaryBuilder = StandardDdlTypes.builder( VARBINARY, columnType( BLOB ), this )
+				.lobKind( DdlTypeBuilder.LobKind.BIGGEST )
+				.castTypeNamePattern( columnType( BINARY ) )
+				.castTypeName( castType( BINARY ) )
+				.withTypeCapacity( getTypeSizingProfile().maxVarbinaryLength(), "varbinary($l)" ).withTypeCapacity(
 				maxMediumLobLen,
 				"mediumblob"
 		);
-		if ( getMaxVarbinaryLength() < maxLobLen ) {
+		if ( getTypeSizingProfile().maxVarbinaryLength() < maxLobLen ) {
 			varbinaryBuilder.withTypeCapacity( maxLobLen, "blob" );
 		}
 		ddlTypeRegistry.addDescriptor( varbinaryBuilder.build() );
 
-		ddlTypeRegistry.addDescriptor( new DdlTypeImpl(
+		ddlTypeRegistry.addDescriptor( StandardDdlTypes.simple(
 				LONG32VARBINARY,
 				columnType( BLOB ),
 				castType( BINARY ),
 				this
 		) );
-		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( LONG32VARCHAR, columnType( CLOB ), castType( CHAR ), this ) );
-		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( LONG32NVARCHAR, columnType( CLOB ), castType( CHAR ), this ) );
+		ddlTypeRegistry.addDescriptor( StandardDdlTypes.simple( LONG32VARCHAR, columnType( CLOB ), castType( CHAR ), this ) );
+		ddlTypeRegistry.addDescriptor( StandardDdlTypes.simple( LONG32NVARCHAR, columnType( CLOB ), castType( CHAR ), this ) );
 
-		ddlTypeRegistry.addDescriptor( CapacityDependentDdlType.builder(
-						BLOB,
-						columnType( BLOB ),
-						castType( BINARY ),
-						this
-				)
+		ddlTypeRegistry.addDescriptor( StandardDdlTypes.builder( BLOB, columnType( BLOB ), this ).castTypeName( castType( BINARY ) )
 				.withTypeCapacity( maxTinyLobLen, "tinyblob" )
 				.withTypeCapacity( maxMediumLobLen, "mediumblob" )
 				.withTypeCapacity( maxLobLen, "blob" )
 				.build() );
 
-		ddlTypeRegistry.addDescriptor( CapacityDependentDdlType.builder(
-						CLOB,
-						columnType( CLOB ),
-						castType( CHAR ),
-						this
-				)
+		ddlTypeRegistry.addDescriptor( StandardDdlTypes.builder( CLOB, columnType( CLOB ), this ).castTypeName( castType( CHAR ) )
 				.withTypeCapacity( maxTinyLobLen, "tinytext" )
 				.withTypeCapacity( maxMediumLobLen, "mediumtext" )
 				.withTypeCapacity( maxLobLen, "text" )
 				.build() );
 
-		ddlTypeRegistry.addDescriptor( CapacityDependentDdlType.builder(
-						NCLOB,
-						columnType( NCLOB ),
-						castType( NCHAR ),
-						this
-				)
+		ddlTypeRegistry.addDescriptor( StandardDdlTypes.builder( NCLOB, columnType( NCLOB ), this ).castTypeName( castType( NCHAR ) )
 				.withTypeCapacity(
 						maxTinyLobLen,
 						"tinytext character set utf8"
@@ -549,11 +589,12 @@ public class SingleStoreDialect extends Dialect {
 				.withTypeCapacity( maxLobLen, "text character set utf8" )
 				.build() );
 
-		ddlTypeRegistry.addDescriptor( new NativeEnumDdlTypeImpl( this ) );
-		ddlTypeRegistry.addDescriptor( new NativeOrdinalEnumDdlTypeImpl( this ) );
+		ddlTypeRegistry.addDescriptor( StandardDdlTypes.nativeEnum( this ) );
+		ddlTypeRegistry.addDescriptor( StandardDdlTypes.nativeOrdinalEnum( this ) );
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
 		super.initializeFunctionRegistry( functionContributions );
 		CommonFunctionFactory commonFunctionFactory = new CommonFunctionFactory( functionContributions );
@@ -645,7 +686,8 @@ public class SingleStoreDialect extends Dialect {
 
 
 	@Override
-	public String getCreateTableString() {
+	@SPI({ USE, IMPLEMENT })
+	public String createTableCommand(TableCreationKind kind) {
 		return explicitTableType == null ? "create table" : String.format(
 				"create %s table",
 				explicitTableType.name().toLowerCase()
@@ -653,6 +695,7 @@ public class SingleStoreDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.contributeTypes( typeContributions, serviceRegistry );
 
@@ -673,6 +716,7 @@ public class SingleStoreDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public JdbcType resolveSqlTypeDescriptor(
 			String columnTypeName, int jdbcTypeCode, int precision, int scale, JdbcTypeRegistry jdbcTypeRegistry) {
 		switch ( jdbcTypeCode ) {
@@ -688,6 +732,7 @@ public class SingleStoreDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	protected String columnType(int sqlTypeCode) {
 		return switch ( sqlTypeCode ) {
 			case BOOLEAN -> "bit";
@@ -708,6 +753,7 @@ public class SingleStoreDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String castPattern(CastType from, CastType to) {
 		if ( CastType.FLOAT == to || CastType.DOUBLE == to || CastType.OTHER == to ) {
 			return "?1 :> ?2";
@@ -716,11 +762,13 @@ public class SingleStoreDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public int getPreferredSqlTypeCodeForBoolean() {
 		return Types.BIT;
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	protected String castType(int sqlTypeCode) {
 		return switch ( sqlTypeCode ) {
 			//special case for casting to Boolean
@@ -739,27 +787,19 @@ public class SingleStoreDialect extends Dialect {
 	}
 
 	@Override
-	public int getFloatPrecision() {
-		//the maximum precision for 4 bytes
-		return 23;
-	}
-
-	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String currentTimestamp() {
 		return "current_timestamp(6)";
 	}
 
 	@Override
-	public long getFractionalSecondPrecisionInNanos() {
+	@SPI({ USE, IMPLEMENT })
+	public long fractionalSecondPrecisionInNanos() {
 		return 1_000; //microseconds
 	}
 
 	@Override
-	public long getDefaultLobLength() {
-		return Length.LONG32;
-	}
-
-	@Override
+	@SPI({ USE, IMPLEMENT })
 	public int resolveSqlTypeLength(
 			String columnTypeName, int jdbcTypeCode, int precision, int scale, int displaySize) {
 		if ( jdbcTypeCode == Types.CHAR && precision <= 4 ) {
@@ -771,88 +811,96 @@ public class SingleStoreDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public SqlAstTranslatorFactory getSqlAstTranslatorFactory() {
 		return new StandardSqlAstTranslatorFactory() {
 			@Override
-			protected <T extends JdbcOperation> SqlAstTranslator<T> buildTranslator(
-					SessionFactoryImplementor sessionFactory, Statement statement) {
-				return new SingleStoreSqlAstTranslator<>( sessionFactory, statement, SingleStoreDialect.this );
+			protected <S extends Statement, T extends JdbcOperation> SqlAstTranslator<T> createTranslator(
+					SqlAstTranslationRequest<S, T> request) {
+				return new SingleStoreSqlAstTranslator<>( request, SingleStoreDialect.this );
 			}
 		};
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public SchemaNameResolver getSchemaNameResolver() {
 		return (connection, dialect) -> "";
 	}
 
 	@Override
-	public int getInExpressionCountLimit() {
-		return PARAM_LIST_SIZE_LIMIT;
+	public ParameterLimits getParameterLimits() {
+		return ParameterLimits.of( PARAM_LIST_SIZE_LIMIT );
 	}
 
 	/**
 	 * The biggest size value that can be supplied as argument
 	 */
 	@Override
-	public int getMaxVarbinaryLength() {
-		return 65_533;
-	}
-
-	@Override
-	public int getMaxVarcharLength() {
-		return 21_844;
-	}
-
-	@Override
-	public String getNullColumnString(String columnType) {
-		if ( columnType.regionMatches( true, 0, "timestamp", 0, "timestamp".length() ) ) {
-			return " null";
+	@SPI({ USE, IMPLEMENT })
+	public void appendDefinition(SqlAppender appender, ColumnDefinitionRequest request) {
+		super.appendDefinition( appender, request );
+		if ( request.nullable()
+				&& request.sqlType().regionMatches( true, 0, "timestamp", 0, "timestamp".length() ) ) {
+			appender.appendSql( " null" );
 		}
-		return super.getNullColumnString( columnType );
 	}
 
 	/**
 	 * Feature 'Check constraints' is not supported by SingleStore.
 	 */
 	@Override
-	public boolean supportsColumnCheck() {
-		return false;
-	}
-
-	/**
-	 * Feature 'Check constraints' is not supported by SingleStore.
-	 */
-	public boolean supportsTableCheck() {
+	@SPI({ USE, IMPLEMENT })
+	public boolean supports(org.hibernate.dialect.constraint.spi.CheckConstraintPlacement placement) {
 		return false;
 	}
 
 	@Override
-	public int getDefaultDecimalPrecision() {
-		return 65;
+	@SPI({ IMPLEMENT, SUPPLY })
+	public TemporalValueSemantics getTemporalValueSemantics() {
+		return TemporalValueSemantics.TRUNCATING;
 	}
 
 	@Override
-	public boolean doesRoundTemporalOnOverflow() {
-		return false;
+	public WindowFunctionSupport getWindowFunctionSupport() {
+		return WindowFunctionSupport.builder()
+				.features(
+						WindowFunctionSupport.Feature.WINDOW_FUNCTIONS,
+						WindowFunctionSupport.Feature.PARTITION_BY,
+						WindowFunctionSupport.Feature.ROWS_FRAME,
+						WindowFunctionSupport.Feature.RANGE_FRAME
+				)
+				.build();
 	}
 
 	@Override
-	public boolean supportsWindowFunctions() {
-		return true;
+	public CteSupport getCteSupport() {
+		return CteSupport.builder()
+				.placement( CteSupport.Placement.TOP_LEVEL )
+				.recursiveFeatures( CteSupport.RecursiveFeature.RECURSIVE )
+				.mutationFeatures( CteSupport.MutationFeature.NON_QUERY )
+				.build();
 	}
 
 	@Override
-	public boolean supportsRecursiveCTE() {
-		return true;
+	public SetOperationSupport getSetOperationSupport() {
+		return SetOperationSupport.builder()
+				.operator( SetOperator.INTERSECT_ALL, false )
+				.operator( SetOperator.EXCEPT_ALL, false )
+				.build();
 	}
 
 	@Override
-	public boolean dropConstraints() {
-		return false;
+	@SPI({ IMPLEMENT, SUPPLY })
+	public synchronized SchemaDropSupport getSchemaDropSupport() {
+		if ( schemaDropSupport == null ) {
+			schemaDropSupport = new SchemaDropSupport( List.of(), ConstraintDropMode.IMPLICIT, "" );
+		}
+		return schemaDropSupport;
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public void appendLiteral(SqlAppender appender, String literal) {
 		appender.appendSql( '\'' );
 		for ( int i = 0; i < literal.length(); i++ ) {
@@ -869,7 +917,8 @@ public class SingleStoreDialect extends Dialect {
 	}
 
 	@Override
-	public void appendDatetimeFormat(SqlAppender appender, String format) {
+	@SPI({ USE, IMPLEMENT })
+	public void appendFormat(SqlAppender appender, String format) {
 		appender.appendSql( datetimeFormat( format ).result() );
 	}
 
@@ -942,28 +991,8 @@ public class SingleStoreDialect extends Dialect {
 	}
 
 	@Override
-	public String getDropForeignKeyString() {
-		throw new UnsupportedOperationException(
-				"SingleStore does not support foreign keys and referential integrity" );
-	}
-
-	@Override
-	public String getDropUniqueKeyString() {
-		return "drop index";
-	}
-
-	@Override
-	public String getAlterColumnTypeString(String columnName, String columnType, String columnDefinition) {
-		// no way to change just the column type, leaving other attributes intact
-		return "modify column " + columnName + " " + columnDefinition.trim();
-	}
-
-	/**
-	 * SingleStore doesn't support modifying column type on columnstore tables.
-	 * It only supports modifying column type on rowstore table.
-	 */
-	@Override
-	public boolean supportsAlterColumnType() {
+	@SPI({ USE, IMPLEMENT })
+	public boolean supportsAlterTableConstraints() {
 		return false;
 	}
 
@@ -974,94 +1003,54 @@ public class SingleStoreDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public char closeQuote() {
 		return '`';
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public char openQuote() {
 		return '`';
 	}
 
 	@Override
-	public boolean canCreateCatalog() {
-		return true;
+	@SPI({ IMPLEMENT, SUPPLY })
+	public NamespaceSupport getNamespaceSupport() {
+		return NamespaceSupports.catalogsAsDatabases();
 	}
 
 	@Override
-	public String[] getCreateCatalogCommand(String catalogName) {
-		return new String[] {"create database " + catalogName};
+	@SPI({ IMPLEMENT, SUPPLY })
+	public synchronized IfExistsSupport getIfExistsSupport() {
+		if ( ifExistsSupport == null ) {
+			ifExistsSupport = new IfExistsSupport(
+				ExistenceCheckPlacement.NONE,
+				ExistenceCheckPlacement.BEFORE_NAME,
+				ExistenceCheckPlacement.NONE,
+				ExistenceCheckPlacement.NONE
+		);
+		}
+		return ifExistsSupport;
 	}
 
 	@Override
-	public String[] getDropCatalogCommand(String catalogName) {
-		return new String[] {"drop database " + catalogName};
+	@SPI({ IMPLEMENT, SUPPLY })
+	public org.hibernate.dialect.schema.spi.SchemaCommentSupport getSchemaCommentSupport() {
+		return org.hibernate.dialect.schema.spi.SchemaCommentSupports.mysqlInline();
 	}
 
 	@Override
-	public boolean canCreateSchema() {
-		return false;
+	public NullOrderingSupport getNullOrderingSupport() {
+		return NullOrderingSupport.builder( super.getNullOrderingSupport() )
+				.defaultOrdering( NullOrdering.SMALLEST )
+				.capability( NullOrderingSupport.Capability.NULLS_FIRST_LAST, false )
+				.build();
 	}
 
 	@Override
-	public String[] getCreateSchemaCommand(String schemaName) {
-		throw new UnsupportedOperationException(
-				"SingleStore does not support dropping creating/dropping schemas in the JDBC sense" );
-	}
-
-	@Override
-	public String[] getDropSchemaCommand(String schemaName) {
-		throw new UnsupportedOperationException(
-				"SingleStore does not support dropping creating/dropping schemas in the JDBC sense" );
-	}
-
-	@Override
-	public boolean supportsIfExistsBeforeTableName() {
-		return true;
-	}
-
-	@Override
-	public String getSelectGUIDString() {
-		return "select uuid()";
-	}
-
-	@Override
-	public boolean supportsCommentOn() {
-		return true;
-	}
-
-	@Override
-	public String getTableComment(String comment) {
-		return " comment='" + comment + "'";
-	}
-
-	@Override
-	public String getColumnComment(String comment) {
-		return " comment '" + comment + "'";
-	}
-
-	@Override
-	public NullOrdering getNullOrdering() {
-		return NullOrdering.SMALLEST;
-	}
-
-	@Override
-	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(
-			EntityMappingType rootEntityDescriptor,
-			RuntimeModelCreationContext runtimeModelCreationContext) {
-		return new LocalTemporaryTableMutationStrategy( rootEntityDescriptor, runtimeModelCreationContext );
-	}
-
-	@Override
-	public SqmMultiTableInsertStrategy getFallbackSqmInsertStrategy(
-			EntityMappingType rootEntityDescriptor,
-			RuntimeModelCreationContext runtimeModelCreationContext) {
-		return new LocalTemporaryTableInsertStrategy( rootEntityDescriptor, runtimeModelCreationContext );
-	}
-
-	@Override
-	public TemporaryTableKind getSupportedTemporaryTableKind() {
-		return TemporaryTableKind.LOCAL;
+	public MultiTableMutationSupport getMultiTableMutationSupport() {
+		return MultiTableMutationSupport.LOCAL_TEMPORARY_TABLE;
 	}
 
 	@Override
@@ -1070,82 +1059,28 @@ public class SingleStoreDialect extends Dialect {
 	}
 
 	@Override
-	public String getTemporaryTableCreateCommand() {
-		return SingleStoreLocalTemporaryTableStrategy.INSTANCE.getTemporaryTableCreateCommand();
-	}
-
-	@Override
-	public String getTemporaryTableDropCommand() {
-		return SingleStoreLocalTemporaryTableStrategy.INSTANCE.getTemporaryTableDropCommand();
-	}
-
-	@Override
-	public AfterUseAction getTemporaryTableAfterUseAction() {
-		return SingleStoreLocalTemporaryTableStrategy.INSTANCE.getTemporaryTableAfterUseAction();
-	}
-
-	@Override
-	public BeforeUseAction getTemporaryTableBeforeUseAction() {
-		return SingleStoreLocalTemporaryTableStrategy.INSTANCE.getTemporaryTableBeforeUseAction();
-	}
-
-	@Override
+	@SPI({ USE, IMPLEMENT })
 	public int getMaxAliasLength() {
 		return 64;
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public int getMaxIdentifierLength() {
 		return 64;
 	}
 
 	@Override
-	public boolean supportsIsTrue() {
-		return true;
+	public PredicateSupport getPredicateSupport() {
+		return PredicateSupport.builder( super.getPredicateSupport() )
+				.capability( PredicateSupport.Capability.TRUTHNESS, true )
+				.build();
 	}
 
 	@Override
-	public boolean supportsCurrentTimestampSelection() {
-		return true;
-	}
-
-	@Override
-	public boolean isCurrentTimestampSelectStringCallable() {
-		return false;
-	}
-
-	@Override
-	public String getCurrentTimestampSelectString() {
-		return "select now()";
-	}
-
-	@Override
-	public int registerResultSetOutParameter(CallableStatement statement, int col) throws SQLException {
-		throw new UnsupportedOperationException( "SingleStore does not support resultsets via stored procedures." );
-	}
-
-	@Override
-	public ResultSet getResultSet(CallableStatement ps) throws SQLException {
-		boolean isResultSet = ps.execute();
-		while ( !isResultSet && ps.getUpdateCount() != -1 ) {
-			isResultSet = ps.getMoreResults();
-		}
-		return ps.getResultSet();
-	}
-
-	@Override
-	public boolean supportsNullPrecedence() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsLobValueChangePropagation() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsSubqueryOnMutatingTable() {
-		return false;
+	@SPI({ USE, IMPLEMENT })
+	public CurrentTimestampSelection getCurrentTimestampSelection() {
+		return CurrentTimestampSelection.prepared( "select now()" );
 	}
 
 	@Override
@@ -1154,6 +1089,7 @@ public class SingleStoreDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
 		return (sqlException, message, sql) -> {
 			switch ( sqlException.getErrorCode() ) {
@@ -1189,100 +1125,60 @@ public class SingleStoreDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public NameQualifierSupport getNameQualifierSupport() {
 		return NameQualifierSupport.CATALOG;
 	}
 
 	@Override
-	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, DatabaseMetaData metadata)
-			throws SQLException {
+	@SPI({ USE, IMPLEMENT, SUPPLY })
+	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuildRequest request) {
+		final var builder = request.builder();
 		builder.setUnquotedCaseStrategy( IdentifierCaseStrategy.MIXED );
 		builder.setQuotedCaseStrategy( IdentifierCaseStrategy.MIXED );
-		return super.buildIdentifierHelper( builder, metadata );
-	}
-
-	@Override
-	public String getAddForeignKeyConstraintString(
-			String constraintName,
-			String[] foreignKey,
-			String referencedTable,
-			String[] primaryKey,
-			boolean referencesPrimaryKey) {
-		throw new UnsupportedOperationException(
-				"SingleStore does not support foreign keys and referential integrity." );
-	}
-
-	@Override
-	public String getAddForeignKeyConstraintString(String constraintName, String foreignKeyDefinition) {
-		throw new UnsupportedOperationException(
-				"SingleStore does not support foreign keys and referential integrity." );
-	}
-
-	@Override
-	public String getAddPrimaryKeyConstraintString(String constraintName) {
-		throw new UnsupportedOperationException( "SingleStore does not support altering primary key." );
-	}
-
-	@Override
-	public String getWriteLockString(String aliases, Timeout timeout) {
-		return getForUpdateString( aliases );
-	}
-
-	@Override
-	public String getWriteLockString(String aliases, int timeout) {
-		return getForUpdateString( aliases );
-	}
-
-	@Override
-	public String getForUpdateSkipLockedString(String aliases) {
-		return getForUpdateString();
-	}
-
-	@Override
-	public String getForUpdateNowaitString(String aliases) {
-		return getForUpdateString();
+		return super.buildIdentifierHelper( request );
 	}
 
 
+
+
+
+
+
 	@Override
-	public String getForUpdateString() {
-		return isForUpdateLockingEnabled ? super.getForUpdateString() : "";
+	public SubquerySupport getSubquerySupport() {
+		return SubquerySupport.builder()
+				.feature( SubquerySupport.Feature.OFFSET, true )
+				.feature( SubquerySupport.Feature.NESTED_CORRELATION, false )
+				.feature( SubquerySupport.Feature.MUTATION_TARGET_REFERENCE, false )
+				.build();
 	}
 
 	@Override
-	public boolean supportsOffsetInSubquery() {
-		return true;
+	@SPI({ USE, IMPLEMENT, SUPPLY })
+	protected void contributeKeywords(KeywordRegistration registration) {
+		super.contributeKeywords( registration );
+		registration.registerKeyword( "key" );
 	}
 
 	@Override
-	public boolean supportsPartitionBy() {
-		return true;
-	}
-
-	@Override
-	protected void registerDefaultKeywords() {
-		super.registerDefaultKeywords();
-		registerKeyword( "key" );
-	}
-
-	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public FunctionalDependencyAnalysisSupport getFunctionalDependencyAnalysisSupport() {
-		return FunctionalDependencyAnalysisSupportImpl.TABLE_GROUP;
+		return FunctionalDependencyAnalysisSupport.TABLE_GROUP;
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT, SUPPLY })
 	public DmlTargetColumnQualifierSupport getDmlTargetColumnQualifierSupport() {
 		return DmlTargetColumnQualifierSupport.TABLE_ALIAS;
 	}
 
 	@Override
-	public boolean supportsFromClauseInUpdate() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsCircularCascadeDeleteConstraints() {
-		return false;
+	public MutationSyntaxSupport getMutationSyntaxSupport() {
+		return MutationSyntaxSupport.builder()
+				.capability( MutationKind.UPDATE, MutationSyntaxCapability.FROM_CLAUSE )
+				.capability( MutationKind.DELETE, MutationSyntaxCapability.JOIN )
+				.build();
 	}
 
 	@Override
@@ -1291,18 +1187,15 @@ public class SingleStoreDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public boolean isJdbcLogWarningsEnabledByDefault() {
 		return false;
 	}
 
 	@Override
-	public boolean supportsCascadeDelete() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsNonQueryWithCTE() {
-		return true;
+	@SPI({ USE, IMPLEMENT })
+	public boolean supportsOnDeleteAction(org.hibernate.annotations.OnDeleteAction action) {
+		return action == org.hibernate.annotations.OnDeleteAction.NO_ACTION;
 	}
 
 	@Override
@@ -1319,6 +1212,7 @@ public class SingleStoreDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public UniqueDelegate getUniqueDelegate() {
 		return NOOP_UNIQUE_DELEGATE;
 	}
@@ -1330,45 +1224,12 @@ public class SingleStoreDialect extends Dialect {
 
 		@Override
 		public String[] getSqlCreateStrings(T exportable, Metadata metadata, SqlStringGenerationContext context) {
-			return ArrayHelper.EMPTY_STRING_ARRAY;
+			return NO_COMMANDS;
 		}
 
 		@Override
 		public String[] getSqlDropStrings(T exportable, Metadata metadata, SqlStringGenerationContext context) {
-			return ArrayHelper.EMPTY_STRING_ARRAY;
-		}
-	}
-
-	/**
-	 * Because of hibernate requires that entity tables have primary key separate unique keys are restricted.
-	 * SingleStore restrictions:
-	 * - Primary key in SingleStore table is unique key and shard key
-	 * - SingleStore table allows only single shard key
-	 * - SingleStore unique keys must contain all columns of the shard key: <a href="https://docs.singlestore.com/docs/unique-key-restrictions">Unique Key restrictions</a>.
-	 * - Shard key fields cannot be updated (or altered) so they must be fields that never change
-	 */
-	static class DoNothingUniqueDelegate implements UniqueDelegate {
-
-		@Override
-		public String getColumnDefinitionUniquenessFragment(Column column, SqlStringGenerationContext context) {
-			return "";
-		}
-
-		@Override
-		public String getTableCreationUniqueConstraintsFragment(Table table, SqlStringGenerationContext context) {
-			return "";
-		}
-
-		@Override
-		public String getAlterTableToAddUniqueKeyCommand(
-				UniqueKey uniqueKey, Metadata metadata, SqlStringGenerationContext context) {
-			return "";
-		}
-
-		@Override
-		public String getAlterTableToDropUniqueKeyCommand(
-				UniqueKey uniqueKey, Metadata metadata, SqlStringGenerationContext context) {
-			return "";
+			return NO_COMMANDS;
 		}
 	}
 
@@ -1410,38 +1271,15 @@ public class SingleStoreDialect extends Dialect {
 	public static final String SINGLE_STORE_FOR_UPDATE_LOCK_ENABLED = "hibernate.dialect.singlestore.for_update_lock_enabled";
 
 	@Override
-	public String getDual() {
-		return "dual";
+	public SingleRowTableSupport getSingleRowTableSupport() {
+		return SingleRowTableSupport.builder( super.getSingleRowTableSupport() )
+				.tableExpression( "dual" )
+				.build();
 	}
 
 	@Override
-	public boolean supportsJoinsInDelete() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsNestedSubqueryCorrelation() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsRowValueConstructorSyntax() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsWithClauseInSubquery() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsRowValueConstructorSyntaxInInList() {
-		return false;
+	public RowValueSupport getRowValueSupport() {
+		return RowValueSupport.NONE;
 	}
 
 }

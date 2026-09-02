@@ -4,6 +4,11 @@
  */
 package org.hibernate.usertype;
 
+import org.hibernate.SPI;
+
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.USE;
+
 import org.hibernate.HibernateException;
 
 /**
@@ -11,6 +16,7 @@ import org.hibernate.HibernateException;
  *
  * @author Gavin King
  */
+@SPI({ USE, IMPLEMENT })
 public interface EnhancedUserType<J> extends UserType<J> {
 
 	/**

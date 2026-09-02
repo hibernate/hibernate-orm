@@ -4,6 +4,8 @@
  */
 package org.hibernate.dialect;
 
+
+
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 
 /**
@@ -21,6 +23,5 @@ public class AzureSQLServerDialect extends SQLServerDialect {
 
 	public AzureSQLServerDialect(DialectResolutionInfo info) {
 		this();
-		registerKeywords( info );
 	}
 }

@@ -6,7 +6,7 @@ package org.hibernate.orm.test.notfound;
 
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
-import org.hibernate.sql.ast.SqlAstJoinType;
+import org.hibernate.sql.ast.spi.query.from.SqlAstJoinType;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jdbc.SQLStatementInspector;

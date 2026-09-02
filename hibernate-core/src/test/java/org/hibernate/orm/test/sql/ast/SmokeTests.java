@@ -14,17 +14,18 @@ import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.sql.spi.SqmTranslation;
 import org.hibernate.query.sqm.sql.internal.StandardSqmTranslator;
+import org.hibernate.query.sqm.sql.spi.SqmTranslationRequest;
 import org.hibernate.query.sqm.tree.spi.select.SqmSelectStatement;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.spi.SqlSelection;
-import org.hibernate.sql.ast.spi.StandardSqlAstTranslator;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
-import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.from.FromClause;
-import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.select.SelectClause;
-import org.hibernate.sql.ast.tree.select.SelectStatement;
-import org.hibernate.sql.exec.internal.JdbcOperationQuerySelect;
+import org.hibernate.sql.ast.spi.query.select.SqlSelection;
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
+import org.hibernate.dialect.sql.ast.spi.StandardSqlAstTranslator;
+import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
+import org.hibernate.sql.ast.spi.query.expression.Expression;
+import org.hibernate.sql.ast.spi.query.from.FromClause;
+import org.hibernate.sql.ast.spi.query.from.TableGroup;
+import org.hibernate.sql.ast.spi.query.select.SelectClause;
+import org.hibernate.sql.ast.spi.query.select.SelectStatement;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.basic.BasicResult;
@@ -89,9 +90,8 @@ public class SmokeTests {
 			assertThat( sqlSelection.getValuesArrayPosition(), is( 0 ) );
 			assertThat( sqlSelection.getJdbcValueExtractor(), notNullValue() );
 
-			final JdbcOperationQuerySelect jdbcSelectOperation = new StandardSqlAstTranslator<JdbcOperationQuerySelect>(
-					session.getSessionFactory(),
-					sqlAst
+			final var jdbcSelectOperation = new StandardSqlAstTranslator<>(
+					new SqlAstTranslationRequest.Select( session.getSessionFactory(), sqlAst )
 			).translate( null, QueryOptions.NONE );
 
 			assertThat(
@@ -109,7 +109,7 @@ public class SmokeTests {
 					final SelectionQueryImpl<Gender> hqlQuery = (SelectionQueryImpl<Gender>) query;
 					final SqmSelectStatement<Gender> sqmStatement = (SqmSelectStatement<Gender>) hqlQuery.getSqmStatement();
 
-					final StandardSqmTranslator<SelectStatement> sqmConverter = new StandardSqmTranslator<>(
+					final StandardSqmTranslator<SelectStatement> sqmConverter = new StandardSqmTranslator<>( new SqmTranslationRequest.Select(
 							sqmStatement,
 							hqlQuery.getQueryOptions(),
 							hqlQuery.unwrap( DomainParameterXref.class ),
@@ -117,7 +117,7 @@ public class SmokeTests {
 							session.getLoadQueryInfluencers(),
 							scope.getSessionFactory().getSqlTranslationEngine(),
 							true
-					);
+					) );
 
 					final SqmTranslation<SelectStatement> sqmInterpretation = sqmConverter.translate();
 					final SelectStatement sqlAst = sqmInterpretation.getSqlAst();
@@ -177,9 +177,8 @@ public class SmokeTests {
 
 					assertThat( resultAssembler, instanceOf( BasicResultAssembler.class ) );
 
-					final JdbcOperationQuerySelect jdbcSelectOperation = new StandardSqlAstTranslator<JdbcOperationQuerySelect>(
-							session.getSessionFactory(),
-							sqlAst
+					final var jdbcSelectOperation = new StandardSqlAstTranslator<>(
+							new SqlAstTranslationRequest.Select( session.getSessionFactory(), sqlAst )
 					).translate( null, QueryOptions.NONE );
 
 					assertThat(

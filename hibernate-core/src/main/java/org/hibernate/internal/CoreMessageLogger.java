@@ -4,6 +4,7 @@
  */
 package org.hibernate.internal;
 
+
 import java.io.IOException;
 import java.io.Serializable;
 import java.lang.invoke.MethodHandles;

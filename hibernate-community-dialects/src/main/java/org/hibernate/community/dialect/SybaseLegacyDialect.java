@@ -4,60 +4,71 @@
  */
 package org.hibernate.community.dialect;
 
+import org.hibernate.dialect.temporaltype.spi.TemporalOperationSupport;
+import org.hibernate.dialect.temporaltype.spi.TemporalOperationSupports;
+
+import org.hibernate.dialect.temporaltype.spi.TemporalFormatSupport;
+
+import org.hibernate.dialect.temporaltype.spi.CurrentTemporalSupport;
+
+import org.hibernate.SPI;
+import static org.hibernate.SPI.Role.USE;
+
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.SUPPLY;
+
+import org.hibernate.dialect.sql.ast.spi.CteSupport;
+import org.hibernate.dialect.sql.ast.spi.NullOrderingSupport;
+import org.hibernate.dialect.sql.ast.spi.MutationKind;
+import org.hibernate.dialect.sql.ast.spi.MutationSyntaxCapability;
+import org.hibernate.dialect.sql.ast.spi.MutationSyntaxSupport;
+import org.hibernate.dialect.sql.ast.spi.RowValueSupport;
+import org.hibernate.dialect.sql.ast.spi.ValuesListSupport;
+
 import jakarta.persistence.TemporalType;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.AbstractTransactSQLDialect;
 import org.hibernate.dialect.DatabaseVersion;
-import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
-import org.hibernate.dialect.NationalizationSupport;
-import org.hibernate.dialect.SybaseDriverKind;
-import org.hibernate.dialect.type.SybaseJtdsJsonAsStringArrayJdbcTypeConstructor;
-import org.hibernate.dialect.type.SybaseJtdsJsonAsStringJdbcType;
-import org.hibernate.dialect.type.SybaseJtdsLongNVarcharJdbcType;
-import org.hibernate.dialect.type.SybaseJtdsNCharJdbcType;
-import org.hibernate.dialect.type.SybaseJtdsNClobJdbcType;
-import org.hibernate.dialect.type.SybaseJtdsNVarcharJdbcType;
-import org.hibernate.dialect.type.SybaseJtdsXmlAsStringArrayJdbcTypeConstructor;
-import org.hibernate.dialect.type.SybaseJtdsXmlAsStringJdbcType;
+import org.hibernate.dialect.sql.ast.spi.DmlTargetColumnQualifierSupport;
+import org.hibernate.dialect.type.spi.NationalizationSupport;
+import org.hibernate.dialect.jdbc.spi.SybaseDriverKind;
+import org.hibernate.dialect.jdbc.spi.JdbcMetadataOverrides;
+import org.hibernate.dialect.jdbc.spi.ParameterLimits;
+import org.hibernate.dialect.type.spi.SybaseJdbcTypes;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.CountFunction;
 import org.hibernate.dialect.function.IntegralTimestampaddFunction;
 import org.hibernate.dialect.function.SybaseTruncFunction;
-import org.hibernate.dialect.lock.internal.TransactSQLLockingSupport;
 import org.hibernate.dialect.lock.spi.LockingSupport;
-import org.hibernate.dialect.unique.SkipNullableUniqueDelegate;
-import org.hibernate.dialect.unique.UniqueDelegate;
+import org.hibernate.dialect.lock.spi.StandardLockingSupports;
+import org.hibernate.dialect.namespace.spi.NamespaceSupport;
+import org.hibernate.dialect.namespace.spi.NamespaceSupports;
+import org.hibernate.dialect.schema.spi.ColumnDefinitionRequest;
+import org.hibernate.dialect.unique.spi.UniqueDelegates;
+import org.hibernate.dialect.unique.spi.UniqueDelegate;
+import org.hibernate.dialect.type.spi.SizeStrategy;
+import org.hibernate.dialect.type.spi.StandardSizeStrategy;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
-import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
+import org.hibernate.dialect.identifier.spi.IdentifierHelperBuildRequest;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
-import org.hibernate.engine.spi.LoadQueryInfluencers;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.procedure.internal.JTDSCallableStatementSupport;
-import org.hibernate.procedure.internal.SybaseCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
+import org.hibernate.procedure.spi.CallableStatementSupports;
 import org.hibernate.query.common.TemporalUnit;
-import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.sqm.CastType;
-import org.hibernate.dialect.type.IntervalType;
-import org.hibernate.query.sqm.internal.DomainParameterXref;
-import org.hibernate.query.sqm.sql.spi.SqmTranslator;
-import org.hibernate.query.sqm.sql.spi.SqmTranslatorFactory;
-import org.hibernate.query.sqm.sql.spi.StandardSqmTranslatorFactory;
-import org.hibernate.query.sqm.tree.spi.select.SqmSelectStatement;
+import org.hibernate.dialect.temporaltype.spi.IntervalType;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
-import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.SqlAstTranslatorFactory;
-import org.hibernate.sql.ast.spi.SqlAppender;
-import org.hibernate.sql.ast.spi.SqlAstCreationContext;
-import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
-import org.hibernate.sql.ast.tree.Statement;
-import org.hibernate.sql.ast.tree.select.SelectStatement;
+import org.hibernate.sql.ast.spi.translation.SqlAstNodeRenderingMode;
+import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslatorFactory;
+import org.hibernate.dialect.sql.ast.spi.SyntheticTableGroupSupport;
+import org.hibernate.sql.spi.SqlAppender;
+import org.hibernate.dialect.sql.ast.spi.StandardSqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.Statement;
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.NullType;
@@ -70,18 +81,16 @@ import org.hibernate.type.descriptor.jdbc.ObjectNullAsBinaryTypeJdbcType;
 import org.hibernate.type.descriptor.jdbc.TinyIntAsSmallIntJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
-import java.sql.DatabaseMetaData;
-import java.sql.SQLException;
 import java.sql.Types;
 import java.time.temporal.TemporalAccessor;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
 
-import static org.hibernate.type.descriptor.DateTimeUtils.appendAsDate;
-import static org.hibernate.type.descriptor.DateTimeUtils.appendAsLocalTime;
-import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTime;
-import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMillis;
+import static org.hibernate.dialect.literal.spi.StandardDateTimeLiteralRendering.appendAsDate;
+import static org.hibernate.dialect.literal.spi.StandardDateTimeLiteralRendering.appendAsLocalTime;
+import static org.hibernate.dialect.literal.spi.StandardDateTimeLiteralRendering.appendAsTime;
+import static org.hibernate.dialect.literal.spi.StandardDateTimeLiteralRendering.appendAsTimestampWithMillis;
 
 
 /**
@@ -89,17 +98,36 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithM
  *
  * @author Brett Meyer
  */
-public class SybaseLegacyDialect extends AbstractTransactSQLDialect {
+public class SybaseLegacyDialect extends AbstractTransactSQLDialect implements CurrentTemporalSupport, TemporalFormatSupport, TemporalOperationSupport {
+
+	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
+	public TemporalOperationSupport getTemporalOperationSupport() {
+		return this;
+	}
+
+	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
+	public TemporalFormatSupport getTemporalFormatSupport() {
+		return this;
+	}
+
+	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
+	public CurrentTemporalSupport getCurrentTemporalSupport() {
+		return this;
+	}
 
 	//All Sybase dialects share an IN list size limit.
 	private static final int PARAM_LIST_SIZE_LIMIT = 250000;
-	private final UniqueDelegate uniqueDelegate = new SkipNullableUniqueDelegate(this);
+	private final UniqueDelegate uniqueDelegate = UniqueDelegates.skipNullable( this );
 	private final SybaseDriverKind driverKind;
+	private final JdbcMetadataOverrides jdbcMetadataOverrides;
 
 	@Deprecated(forRemoval = true)
 	protected final boolean jtdsDriver;
 
-	private final SizeStrategy sizeStrategy = new SizeStrategyImpl() {
+	private final SizeStrategy sizeStrategy = new StandardSizeStrategy( this ) {
 		@Override
 		public Size resolveSize(
 				JdbcType jdbcType,
@@ -116,7 +144,7 @@ public class SybaseLegacyDialect extends AbstractTransactSQLDialect {
 							javaType,
 							precision,
 							scale,
-							length == null ? getDefaultLobLength() : length
+							length == null ? getTypeSizingProfile().defaultLobLength() : length
 					);
 				case Types.FLOAT:
 					// Sybase ASE allows FLOAT with a precision up to 48
@@ -135,12 +163,14 @@ public class SybaseLegacyDialect extends AbstractTransactSQLDialect {
 	public SybaseLegacyDialect(DatabaseVersion version) {
 		super(version);
 		this.driverKind = SybaseDriverKind.OTHER;
+		this.jdbcMetadataOverrides = jdbcMetadataOverrides( driverKind );
 		this.jtdsDriver = true;
 	}
 
 	public SybaseLegacyDialect(DialectResolutionInfo info) {
 		super(info);
 		this.driverKind = SybaseDriverKind.determineKind( info );
+		this.jdbcMetadataOverrides = jdbcMetadataOverrides( driverKind );
 		this.jtdsDriver = driverKind == SybaseDriverKind.JTDS;
 	}
 
@@ -149,6 +179,7 @@ public class SybaseLegacyDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public JdbcType resolveSqlTypeDescriptor(
 			String columnTypeName,
 			int jdbcTypeCode,
@@ -172,6 +203,7 @@ public class SybaseLegacyDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public int resolveSqlTypeLength(
 			String columnTypeName,
 			int jdbcTypeCode,
@@ -190,37 +222,18 @@ public class SybaseLegacyDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
-	public SqmTranslatorFactory getSqmTranslatorFactory() {
-		return new StandardSqmTranslatorFactory() {
-			@Override
-			public SqmTranslator<SelectStatement> createSelectTranslator(
-					SqmSelectStatement<?> sqmSelectStatement,
-					QueryOptions queryOptions,
-					DomainParameterXref domainParameterXref,
-					QueryParameterBindings domainParameterBindings,
-					LoadQueryInfluencers loadQueryInfluencers,
-					SqlAstCreationContext creationContext,
-					boolean deduplicateSelectionItems) {
-				return new SybaseLegacySqmToSqlAstConverter<>(
-						sqmSelectStatement,
-						queryOptions,
-						domainParameterXref,
-						domainParameterBindings,
-						loadQueryInfluencers,
-						creationContext,
-						deduplicateSelectionItems
-				);
-			}
-		};
+	public SyntheticTableGroupSupport getSyntheticTableGroupSupport() {
+		return SyntheticTableGroupSupport.SELECT_ONE_FOR_LITERALS;
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public SqlAstTranslatorFactory getSqlAstTranslatorFactory() {
 		return new StandardSqlAstTranslatorFactory() {
 			@Override
-			protected <T extends JdbcOperation> SqlAstTranslator<T> buildTranslator(
-					SessionFactoryImplementor sessionFactory, Statement statement) {
-				return new SybaseLegacySqlAstTranslator<>( sessionFactory, statement );
+			protected <S extends Statement, T extends JdbcOperation> SqlAstTranslator<T> createTranslator(
+					SqlAstTranslationRequest<S, T> request) {
+				return new SybaseLegacySqlAstTranslator<>( request );
 			}
 		};
 	}
@@ -231,16 +244,19 @@ public class SybaseLegacyDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
-	public boolean supportsNullPrecedence() {
-		return false;
+	public NullOrderingSupport getNullOrderingSupport() {
+		return NullOrderingSupport.builder( super.getNullOrderingSupport() )
+				.capability( NullOrderingSupport.Capability.NULLS_FIRST_LAST, false )
+				.build();
 	}
 
 	@Override
-	public int getInExpressionCountLimit() {
-		return PARAM_LIST_SIZE_LIMIT;
+	public ParameterLimits getParameterLimits() {
+		return ParameterLimits.of( PARAM_LIST_SIZE_LIMIT );
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.contributeTypes(typeContributions, serviceRegistry);
 		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration()
@@ -253,14 +269,14 @@ public class SybaseLegacyDialect extends AbstractTransactSQLDialect {
 
 			// Need to register specialized JdbcType instances for jTDS because it throws an AbstractMethodError
 			// when invoking nationalized methods and requires binding through UTF-16LE bytes
-			jdbcTypeRegistry.addDescriptor( SybaseJtdsNClobJdbcType.JTDS_INSTANCE );
-			jdbcTypeRegistry.addDescriptor( SybaseJtdsNCharJdbcType.JTDS_INSTANCE );
-			jdbcTypeRegistry.addDescriptor( SybaseJtdsNVarcharJdbcType.JTDS_INSTANCE );
-			jdbcTypeRegistry.addDescriptor( SybaseJtdsLongNVarcharJdbcType.JTDS_INSTANCE );
-			jdbcTypeRegistry.addDescriptor( SybaseJtdsJsonAsStringJdbcType.JTDS_INSTANCE );
-			jdbcTypeRegistry.addDescriptor( SybaseJtdsXmlAsStringJdbcType.JTDS_INSTANCE );
-			jdbcTypeRegistry.addTypeConstructor( SybaseJtdsJsonAsStringArrayJdbcTypeConstructor.INSTANCE );
-			jdbcTypeRegistry.addTypeConstructor( SybaseJtdsXmlAsStringArrayJdbcTypeConstructor.INSTANCE );
+			jdbcTypeRegistry.addDescriptor( SybaseJdbcTypes.jtdsNClob() );
+			jdbcTypeRegistry.addDescriptor( SybaseJdbcTypes.jtdsNChar() );
+			jdbcTypeRegistry.addDescriptor( SybaseJdbcTypes.jtdsNVarchar() );
+			jdbcTypeRegistry.addDescriptor( SybaseJdbcTypes.jtdsLongNVarchar() );
+			jdbcTypeRegistry.addDescriptor( SybaseJdbcTypes.jtdsJson() );
+			jdbcTypeRegistry.addDescriptor( SybaseJdbcTypes.jtdsXml() );
+			jdbcTypeRegistry.addTypeConstructor( SybaseJdbcTypes.jtdsJsonArrayConstructor() );
+			jdbcTypeRegistry.addTypeConstructor( SybaseJdbcTypes.jtdsXmlArrayConstructor() );
 		}
 		else {
 			// jConnect driver only conditionally supports getClob/getNClob depending on a server setting. See
@@ -297,16 +313,18 @@ public class SybaseLegacyDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public LockingSupport getLockingSupport() {
-		return TransactSQLLockingSupport.SYBASE;
+		return StandardLockingSupports.sybase();
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public NationalizationSupport getNationalizationSupport() {
 		// At least the jTDS driver doesn't support this
 		return driverKind == SybaseDriverKind.JTDS ? NationalizationSupport.IMPLICIT : super.getNationalizationSupport();
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
 		super.initializeFunctionRegistry(functionContributions);
 
@@ -357,27 +375,28 @@ public class SybaseLegacyDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
-	public String getNullColumnString() {
-		return " null";
+	@SPI({ USE, IMPLEMENT })
+	public void appendDefinition(SqlAppender appender, ColumnDefinitionRequest request) {
+		super.appendDefinition( appender, request );
+		if ( request.nullable() ) {
+			appender.appendSql( " null" );
+		}
 	}
 
 	@Override
-	public boolean canCreateSchema() {
-		// As far as I can tell, it does not
-		return false;
+	@SPI({ IMPLEMENT, SUPPLY })
+	public NamespaceSupport getNamespaceSupport() {
+		return NamespaceSupports.none();
 	}
 
 	@Override
-	public String getCurrentSchemaCommand() {
-		return "select db_name()";
-	}
-
-	@Override
+	@SPI({ USE, IMPLEMENT })
 	public int getMaxIdentifierLength() {
 		return 128;
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String castPattern(CastType from, CastType to) {
 		if ( to == CastType.STRING ) {
 			switch ( from ) {
@@ -395,6 +414,7 @@ public class SybaseLegacyDialect extends AbstractTransactSQLDialect {
 	/* Something odd is going on with the jConnect driver when using JDBC escape syntax, so let's use native functions */
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public void appendDateTimeLiteral(
 			SqlAppender appender,
 			TemporalAccessor temporalAccessor,
@@ -408,12 +428,12 @@ public class SybaseLegacyDialect extends AbstractTransactSQLDialect {
 				break;
 			case TIME:
 				appender.appendSql( "convert(time,'" );
-				appendAsTime( appender, temporalAccessor, supportsTemporalLiteralOffset(), jdbcTimeZone );
+				appendAsTime( appender, temporalAccessor, getTemporalValueSemantics().supportsLiteralOffset(), jdbcTimeZone );
 				appender.appendSql( "',8)" );
 				break;
 			case TIMESTAMP:
 				appender.appendSql( "convert(datetime,'" );
-				appendAsTimestampWithMillis( appender, temporalAccessor, supportsTemporalLiteralOffset(), jdbcTimeZone );
+				appendAsTimestampWithMillis( appender, temporalAccessor, getTemporalValueSemantics().supportsLiteralOffset(), jdbcTimeZone );
 				appender.appendSql( "',140)" );
 				break;
 			default:
@@ -422,6 +442,7 @@ public class SybaseLegacyDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public void appendDateTimeLiteral(SqlAppender appender, Date date, TemporalType precision, TimeZone jdbcTimeZone) {
 		switch ( precision ) {
 			case DATE:
@@ -445,6 +466,7 @@ public class SybaseLegacyDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public void appendDateTimeLiteral(
 			SqlAppender appender,
 			Calendar calendar,
@@ -472,58 +494,61 @@ public class SybaseLegacyDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String translateExtractField(TemporalUnit unit) {
 		switch ( unit ) {
 			case WEEK: return "calweekofyear"; //the ISO week number I think
-			default: return super.translateExtractField(unit);
+			default: return TemporalOperationSupports.standard().translateExtractField(unit);
 		}
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String extractPattern(TemporalUnit unit) {
 		//TODO!!
 		return "datepart(?1,?2)";
 	}
 
 	@Override
-	public boolean supportsFractionalTimestampArithmetic() {
-		return false;
-	}
-
-	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
 		//TODO!!
 		return "dateadd(?1,?2,?3)";
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
 		//TODO!!
 		return "datediff(?1,?2,?3)";
 	}
 
 	@Override
-	public void appendDatetimeFormat(SqlAppender appender, String format) {
+	@SPI({ USE, IMPLEMENT })
+	public void appendFormat(SqlAppender appender, String format) {
 		throw new UnsupportedOperationException( "format() function not supported on Sybase");
 	}
 
 	@Override
-	public boolean supportsStandardCurrentTimestampFunction() {
-		return false;
+	@SPI({ USE, IMPLEMENT })
+	public String currentTimestamp() {
+		return "getdate()";
 	}
 
 	@Override
-	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, DatabaseMetaData metadata)
-			throws SQLException {
-		if ( metadata == null ) {
+	@SPI({ USE, IMPLEMENT, SUPPLY })
+	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuildRequest request) {
+		final var builder = request.builder();
+		if ( !request.jdbcMetadata().isJdbcMetadataAccessible() ) {
 			builder.setUnquotedCaseStrategy( IdentifierCaseStrategy.MIXED );
 			builder.setQuotedCaseStrategy( IdentifierCaseStrategy.MIXED );
 		}
 
-		return super.buildIdentifierHelper( builder, metadata );
+		return super.buildIdentifierHelper( request );
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public NameQualifierSupport getNameQualifierSupport() {
 		// No support for schemas: https://userapps.support.sap.com/sap/support/knowledge/en/2591730
 		// Authorization schemas seem to be something different: https://infocenter.sybase.com/help/index.jsp?topic=/com.sybase.infocenter.dc36272.1550/html/commands/X48762.htm
@@ -531,49 +556,57 @@ public class SybaseLegacyDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public UniqueDelegate getUniqueDelegate() {
 		return uniqueDelegate;
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public CallableStatementSupport getCallableStatementSupport() {
-		return driverKind == SybaseDriverKind.JTDS ? JTDSCallableStatementSupport.INSTANCE : SybaseCallableStatementSupport.INSTANCE;
+		return driverKind == SybaseDriverKind.JTDS
+				? CallableStatementSupports.jtds()
+				: CallableStatementSupports.sybase();
 	}
 
 	@Override
-	public boolean supportsNamedParameters(DatabaseMetaData databaseMetaData) throws SQLException {
-		// Only the jTDS driver supports named parameters properly
-		return driverKind == SybaseDriverKind.JTDS && super.supportsNamedParameters( databaseMetaData );
+	@SPI({ IMPLEMENT, SUPPLY })
+	public JdbcMetadataOverrides getJdbcMetadataOverrides() {
+		return jdbcMetadataOverrides;
+	}
+
+	private static JdbcMetadataOverrides jdbcMetadataOverrides(SybaseDriverKind driverKind) {
+		return driverKind == SybaseDriverKind.JTDS
+				? JdbcMetadataOverrides.STANDARD
+				: JdbcMetadataOverrides.builder()
+						.namedParameterSupport( JdbcMetadataOverrides.SupportOverride.UNSUPPORTED )
+						.build();
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT, SUPPLY })
 	public DmlTargetColumnQualifierSupport getDmlTargetColumnQualifierSupport() {
 		return DmlTargetColumnQualifierSupport.TABLE_ALIAS;
 	}
 
 	@Override
-	public boolean supportsFromClauseInUpdate() {
-		return true;
+	public ValuesListSupport getValuesListSupport() {
+		return ValuesListSupport.NONE;
 	}
 
 	@Override
-	public boolean supportsRowValueConstructorSyntax() {
-		return false;
+	public MutationSyntaxSupport getMutationSyntaxSupport() {
+		return MutationSyntaxSupport.of( MutationKind.UPDATE, MutationSyntaxCapability.FROM_CLAUSE );
 	}
 
 	@Override
-	public boolean supportsWithClause() {
-		return false;
+	public RowValueSupport getRowValueSupport() {
+		return RowValueSupport.NONE;
 	}
 
 	@Override
-	public boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsRowValueConstructorSyntaxInInList() {
-		return false;
+	public CteSupport getCteSupport() {
+		return CteSupport.NONE;
 	}
 
 }

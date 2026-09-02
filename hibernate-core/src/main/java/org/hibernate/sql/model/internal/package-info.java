@@ -5,9 +5,9 @@
 
 /**
  * Concrete implementations of
- * {@link org.hibernate.sql.model.ast.MutationGroup},
- * {@link org.hibernate.sql.model.MutationOperation}, and
- * {@link org.hibernate.sql.model.ast.TableMutation}.
+ * {@link org.hibernate.sql.ast.spi.model.MutationGroup},
+ * {@link org.hibernate.sql.spi.mutation.MutationOperation}, and
+ * {@link org.hibernate.sql.ast.spi.model.TableMutation}.
  *
  * @author Steve Ebersole
  */

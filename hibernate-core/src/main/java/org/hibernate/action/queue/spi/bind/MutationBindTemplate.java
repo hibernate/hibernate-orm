@@ -6,8 +6,8 @@ package org.hibernate.action.queue.spi.bind;
 
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.jdbc.mutation.internal.JdbcValueDescriptorImpl;
-import org.hibernate.sql.model.PreparableMutationOperation;
-import org.hibernate.sql.model.ast.ColumnValueParameter;
+import org.hibernate.sql.spi.mutation.jdbc.PreparableMutationOperation;
+import org.hibernate.sql.ast.spi.model.ColumnValueParameter;
 
 import java.util.EnumMap;
 import java.util.HashMap;

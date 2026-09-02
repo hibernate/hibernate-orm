@@ -10,7 +10,6 @@ import java.util.Set;
 
 import org.hibernate.QueryException;
 import org.hibernate.dialect.function.xml.HANAXmlTableFunction;
-import org.hibernate.sql.ast.tree.predicate.PredicateContainer;
 import org.hibernate.type.descriptor.jdbc.XmlHelper;
 import org.hibernate.dialect.function.json.ExpressionTypeHelper;
 import org.hibernate.dialect.function.json.HANAJsonValueFunction;
@@ -26,33 +25,34 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.metamodel.mapping.ValuedModelPart;
 import org.hibernate.metamodel.mapping.internal.EmbeddedCollectionPart;
-import org.hibernate.query.sqm.tuple.internal.AnonymousTupleTableGroupProducer;
+import org.hibernate.sql.ast.spi.query.SetReturningFunctionType;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.sqm.function.SelfRenderingSqmSetReturningFunction;
 import org.hibernate.query.sqm.sql.spi.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.spi.SqmTypedNode;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.SqlAstTranslator;
+import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
 import org.hibernate.sql.ast.internal.ColumnQualifierCollectorSqlAstWalker;
-import org.hibernate.sql.ast.spi.FromClauseAccess;
-import org.hibernate.sql.ast.spi.SqlAppender;
-import org.hibernate.sql.ast.tree.SqlAstNode;
-import org.hibernate.sql.ast.tree.cte.CteColumn;
-import org.hibernate.sql.ast.tree.cte.CteStatement;
-import org.hibernate.sql.ast.tree.cte.CteTable;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
-import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.SelfRenderingExpression;
-import org.hibernate.sql.ast.tree.expression.SqlTuple;
-import org.hibernate.sql.ast.tree.from.FunctionTableGroup;
-import org.hibernate.sql.ast.tree.from.StandardTableGroup;
-import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.from.TableGroupProducer;
-import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
-import org.hibernate.sql.ast.tree.predicate.NullnessPredicate;
-import org.hibernate.sql.ast.tree.select.QuerySpec;
-import org.hibernate.sql.ast.tree.select.SelectStatement;
+import org.hibernate.sql.ast.spi.creation.FromClauseAccess;
+import org.hibernate.sql.ast.spi.SqlAstNode;
+import org.hibernate.sql.ast.spi.query.cte.CteColumn;
+import org.hibernate.sql.ast.spi.query.cte.CteStatement;
+import org.hibernate.sql.ast.spi.query.cte.CteTable;
+import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
+import org.hibernate.sql.ast.spi.query.expression.Expression;
+import org.hibernate.sql.ast.spi.query.expression.SelfRenderingExpression;
+import org.hibernate.sql.ast.spi.query.expression.SqlTuple;
+import org.hibernate.sql.ast.spi.query.from.FunctionTableGroup;
+import org.hibernate.sql.ast.spi.query.from.StandardTableGroup;
+import org.hibernate.sql.ast.spi.query.from.TableGroup;
+import org.hibernate.sql.ast.spi.query.from.TableGroupProducer;
+import org.hibernate.sql.ast.spi.query.predicate.ComparisonPredicate;
+import org.hibernate.sql.ast.spi.query.predicate.NullnessPredicate;
+import org.hibernate.sql.ast.spi.query.predicate.PredicateContainer;
+import org.hibernate.sql.ast.spi.query.select.QuerySpec;
+import org.hibernate.sql.ast.spi.query.select.SelectStatement;
+import org.hibernate.sql.spi.SqlAppender;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.SqlTypes;
@@ -310,12 +310,13 @@ public class HANAUnnestFunction extends UnnestFunction {
 	}
 
 	@Override
+	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	protected void renderXmlTable(
 			SqlAppender sqlAppender,
 			Expression array,
 			BasicPluralType<?, ?> pluralType,
 			@Nullable SqlTypedMapping sqlTypedMapping,
-			AnonymousTupleTableGroupProducer tupleType,
+			SetReturningFunctionType tupleType,
 			String tableIdentifierVariable,
 			SqlAstTranslator<?> walker) {
 		final XmlHelper.CollectionTags collectionTags = XmlHelper.determineCollectionTags(
@@ -349,7 +350,7 @@ public class HANAUnnestFunction extends UnnestFunction {
 		else {
 			offset = 0;
 		}
-		if ( tupleType.findSubPart( CollectionPart.Nature.ELEMENT.getName(), null ) == null ) {
+		if ( tupleType.findSubPart( CollectionPart.Nature.ELEMENT.getName() ) == null ) {
 			tupleType.forEachSelectable( offset, (selectionIndex, selectableMapping) -> {
 				if ( selectionIndex == 0 ) {
 					sqlAppender.append( ' ' );
@@ -452,6 +453,7 @@ public class HANAUnnestFunction extends UnnestFunction {
 	}
 
 	@Override
+	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	protected String getDdlType(SqlTypedMapping sqlTypedMapping, int containerSqlTypeCode, SqlAstTranslator<?> translator) {
 		final String ddlType = super.getDdlType( sqlTypedMapping, containerSqlTypeCode, translator );
 		if ( containerSqlTypeCode == SqlTypes.JSON_ARRAY ) {
@@ -466,12 +468,13 @@ public class HANAUnnestFunction extends UnnestFunction {
 	}
 
 	@Override
+	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	protected void renderJsonTable(
 			SqlAppender sqlAppender,
 			Expression array,
 			BasicPluralType<?, ?> pluralType,
 			@Nullable SqlTypedMapping sqlTypedMapping,
-			AnonymousTupleTableGroupProducer tupleType,
+			SetReturningFunctionType tupleType,
 			String tableIdentifierVariable,
 			SqlAstTranslator<?> walker) {
 		sqlAppender.appendSql( "json_table(" );

@@ -12,7 +12,7 @@ import org.hibernate.generator.EventType;
 import org.hibernate.generator.values.AbstractGeneratedValuesMutationDelegate;
 import org.hibernate.generator.values.GeneratedValues;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.sql.model.PreparableMutationOperation;
+import org.hibernate.sql.spi.mutation.jdbc.PreparableMutationOperation;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -31,6 +31,7 @@ public abstract class AbstractReturningDelegate
 		extends AbstractGeneratedValuesMutationDelegate
 		implements InsertGeneratedIdentifierDelegate {
 
+	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	public AbstractReturningDelegate(
 			EntityPersister persister,
 			EventType timing,

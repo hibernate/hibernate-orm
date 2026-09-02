@@ -10,5 +10,6 @@ package org.hibernate.metamodel.mapping;
  *
  * @author Steve Ebersole
  */
+@org.hibernate.SPI({ org.hibernate.SPI.Role.USE, org.hibernate.SPI.Role.IMPLEMENT })
 public interface NonTransientException {
 }

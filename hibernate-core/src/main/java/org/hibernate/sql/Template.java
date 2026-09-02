@@ -158,7 +158,9 @@ public final class Template {
 		//      function did not respect this concept and resulted in code which was fragile and unmaintainable. If
 		//      lookahead is truly necessary, use lookPastBlankTokens() with the pre-tokenized list.
 
-		final String symbols = PUNCTUATION + WHITESPACE + dialect.openQuote() + dialect.closeQuote();
+		final var identifierSupport = dialect.getIdentifierSupport();
+		final String symbols = PUNCTUATION + WHITESPACE
+				+ identifierSupport.openQuote() + identifierSupport.closeQuote();
 
 		// Tokenize the entire SQL string once into a list so that lookahead is O(1) indexed
 		// access rather than the O(N) re-scan that StringTokenizer.countTokens() performs.
@@ -201,17 +203,17 @@ public final class Template {
 				if ( "`".equals(token) ) {
 					isOpenQuote = !quotedIdentifier;
 					token = lcToken = isOpenQuote
-							? Character.toString( dialect.openQuote() )
-							: Character.toString( dialect.closeQuote() );
+							? Character.toString( identifierSupport.openQuote() )
+							: Character.toString( identifierSupport.closeQuote() );
 					quotedIdentifier = isOpenQuote;
 					isQuoteCharacter = true;
 				}
-				else if ( !quotedIdentifier && dialect.openQuote()==token.charAt(0) ) {
+				else if ( !quotedIdentifier && identifierSupport.openQuote()==token.charAt(0) ) {
 					isOpenQuote = true;
 					quotedIdentifier = true;
 					isQuoteCharacter = true;
 				}
-				else if ( quotedIdentifier && dialect.closeQuote()==token.charAt(0) ) {
+				else if ( quotedIdentifier && identifierSupport.closeQuote()==token.charAt(0) ) {
 					quotedIdentifier = false;
 					isQuoteCharacter = true;
 					isOpenQuote = false;
@@ -305,7 +307,7 @@ public final class Template {
 				afterCurrent = true;
 			}
 			else if ( isBoolean( lcToken ) ) {
-				processedToken = dialect.toBooleanValueString( parseBoolean( token ) );
+				processedToken = dialect.getLiteralSupport().toBooleanValueString( parseBoolean( token ) );
 			}
 			else if ( isFunctionCall( nextToken, tokens, nextIndex ) ) {
 				if ( FUNCTION_WITH_FROM_KEYWORDS.contains( lcToken ) ) {

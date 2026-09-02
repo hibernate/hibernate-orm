@@ -9,17 +9,14 @@ import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Locale;
 import java.util.StringTokenizer;
 import java.util.regex.Pattern;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.loader.internal.AliasConstantsHelper;
 
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 
-import static java.lang.Character.isDigit;
 import static java.lang.Character.isJavaIdentifierPart;
 import static java.lang.Character.isLetter;
 import static java.lang.Character.isWhitespace;
@@ -27,7 +24,6 @@ import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_STRING_A
 
 public final class StringHelper {
 
-	private static final int ALIAS_TRUNCATE_LENGTH = 10;
 	public static final String WHITESPACE = " \n\r\f\t";
 	public static final String[] EMPTY_STRINGS = EMPTY_STRING_ARRAY;
 
@@ -645,78 +641,6 @@ public final class StringHelper {
 		return string.length() <= length ? string : string.substring( 0, length );
 	}
 
-	/**
-	 * @deprecated No longer used
-	 */
-	@Deprecated(since = "7", forRemoval = true)
-	public static String generateAlias(String description) {
-		return generateAliasRoot( description ) + '_';
-	}
-
-	/**
-	 * Generate a nice alias for the given class name or collection role name and unique integer. Subclasses of
-	 * Loader do <em>not</em> have to use aliases of this form.
-	 *
-	 * @param description The base name (usually an entity-name or collection-role)
-	 * @param unique A uniquing value
-	 *
-	 * @return an alias of the form <samp>foo1_</samp>
-	 *
-	 * @deprecated No longer used
-	 */
-	@Deprecated(since = "7", forRemoval = true)
-	public static String generateAlias(String description, int unique) {
-		return generateAliasRoot( description )
-				+ AliasConstantsHelper.get( unique );
-	}
-
-	/**
-	 * Generates a root alias by truncating the "root name" defined by
-	 * the incoming description and removing/modifying any non-valid
-	 * alias characters.
-	 *
-	 * @param description The root name from which to generate a root alias.
-	 *
-	 * @return The generated root alias.
-	 *
-	 * @deprecated No longer used
-	 */
-	@Deprecated(since = "7", forRemoval = true)
-	private static String generateAliasRoot(String description) {
-		String result = truncate( unqualifyEntityName( description ), ALIAS_TRUNCATE_LENGTH )
-				.toLowerCase( Locale.ROOT )
-				.replace( '/', '_' ) // entityNames may now include slashes for the representations
-				.replace( '$', '_' ); //classname may be an inner class
-		result = cleanAlias( result );
-		return isDigit( result.charAt( result.length() - 1 ) ) ? result + "x" : result; //ick!
-	}
-
-	/**
-	 * Clean the generated alias by removing any non-alpha characters from the
-	 * beginning.
-	 *
-	 * @param alias The generated alias to be cleaned.
-	 *
-	 * @return The cleaned alias, stripped of any leading non-alpha characters.
-	 *
-	 * @deprecated No longer used
-	 */
-	@Deprecated(since = "7", forRemoval = true)
-	private static String cleanAlias(String alias) {
-		final char[] chars = alias.toCharArray();
-		// shortcut check...
-		if ( !isLetter( chars[0] ) ) {
-			for ( int i = 1; i < chars.length; i++ ) {
-				// as soon as we encounter our first letter, return the substring
-				// from that position
-				if ( isLetter( chars[i] ) ) {
-					return alias.substring( i );
-				}
-			}
-		}
-		return alias;
-	}
-
 	public static String unqualifyEntityName(String entityName) {
 		final String result = unqualify( entityName );
 		final int slashPos = result.indexOf( '/' );
@@ -773,7 +697,8 @@ public final class StringHelper {
 			final char first = name.charAt( 0 );
 			final char last = name.charAt( name.length() - 1 );
 			return first == last && ( first == '`' || first == '"' )
-				|| first == dialect.openQuote() && last == dialect.closeQuote();
+				|| first == dialect.getIdentifierSupport().openQuote()
+						&& last == dialect.getIdentifierSupport().closeQuote();
 		}
 	}
 

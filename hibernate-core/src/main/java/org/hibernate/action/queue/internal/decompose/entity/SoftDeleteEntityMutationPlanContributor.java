@@ -18,12 +18,12 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.SoftDeleteMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.UnionSubclassEntityPersister;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
-import org.hibernate.sql.model.ast.MutatingTableReference;
-import org.hibernate.sql.model.ast.TableMutation;
-import org.hibernate.sql.model.ast.TableUpdate;
-import org.hibernate.sql.model.ast.builder.TableUpdateBuilder;
-import org.hibernate.sql.model.ast.builder.TableUpdateBuilderStandard;
+import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
+import org.hibernate.sql.ast.spi.model.MutatingTableReference;
+import org.hibernate.sql.ast.spi.model.TableMutation;
+import org.hibernate.sql.ast.spi.model.TableUpdate;
+import org.hibernate.sql.ast.spi.model.builder.TableUpdateBuilder;
+import org.hibernate.sql.ast.spi.model.builder.TableUpdateBuilderStandard;
 
 /// Graph mutation plan contributor for soft-delete entity deletes.
 ///

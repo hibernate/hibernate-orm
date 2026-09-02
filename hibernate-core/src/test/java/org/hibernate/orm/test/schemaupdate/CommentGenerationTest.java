@@ -57,11 +57,19 @@ public class CommentGenerationTest {
 					.execute( EnumSet.of( TargetType.SCRIPT ), metadata );
 
 			String fileContent = new String( Files.readAllBytes( output.toPath() ) );
-			String commentFragment = metadata.getDatabase().getDialect().getColumnComment( "This is a column comment" );
-			if ( commentFragment.isEmpty() ) {
+			final var dialect = metadata.getDatabase().getDialect();
+			final var support = dialect.getSchemaCommentSupport();
+			if ( support.placement( org.hibernate.dialect.schema.spi.CommentTarget.TABLE_COLUMN )
+					== org.hibernate.dialect.schema.spi.CommentPlacement.STATEMENT ) {
 				assertThat( fileContent.contains( "comment on column version.description " ), is( true ) );
 			}
-			else {
+			else if ( support.placement( org.hibernate.dialect.schema.spi.CommentTarget.TABLE_COLUMN )
+					== org.hibernate.dialect.schema.spi.CommentPlacement.INLINE ) {
+				final String commentFragment = support.render( new org.hibernate.dialect.schema.spi.CommentRequest(
+						org.hibernate.dialect.schema.spi.CommentTarget.TABLE_COLUMN,
+						"description",
+						"This is a column comment"
+				) );
 				assertThat( fileContent.contains( commentFragment ), is( true ) );
 			}
 		}

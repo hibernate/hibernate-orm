@@ -12,7 +12,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.Bindable;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
+import org.hibernate.sql.ast.spi.query.expression.JdbcParameter;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -24,7 +24,7 @@ import static org.hibernate.type.internal.BindingTypeHelper.resolveBindType;
  * @apiNote "Externalized" because some JDBC parameter values are
  * intrinsically part of the parameter itself, and we do not need to
  * locate a JdbcParameterBinding.  E.g., consider a
- * {@link org.hibernate.sql.ast.tree.expression.LiteralAsParameter}
+ * {@link org.hibernate.sql.ast.spi.query.expression.LiteralAsParameter}
  * which encapsulates the literal value inside itself - to create the
  * binder and actually perform the binding is only dependent on the
  * LiteralParameter

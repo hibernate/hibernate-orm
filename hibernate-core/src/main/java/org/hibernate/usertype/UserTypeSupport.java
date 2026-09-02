@@ -4,6 +4,11 @@
  */
 package org.hibernate.usertype;
 
+import org.hibernate.SPI;
+
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.USE;
+
 import java.util.function.BiConsumer;
 
 import org.hibernate.type.descriptor.java.BasicJavaType;
@@ -14,12 +19,14 @@ import org.hibernate.type.spi.TypeConfigurationAware;
 /**
  * @author Steve Ebersole
  */
+@SPI({ USE, IMPLEMENT })
 public class UserTypeSupport<T> extends BaseUserTypeSupport<T> implements TypeConfigurationAware {
 	private final Class<T> returnedClass;
 	private final int jdbcTypeCode;
 
 	private TypeConfiguration typeConfiguration;
 
+	@SPI(IMPLEMENT)
 	public UserTypeSupport(Class<T> returnedClass, int jdbcTypeCode) {
 		this.returnedClass = returnedClass;
 		this.jdbcTypeCode = jdbcTypeCode;

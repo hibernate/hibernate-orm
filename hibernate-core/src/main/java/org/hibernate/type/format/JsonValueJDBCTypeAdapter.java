@@ -4,6 +4,11 @@
  */
 package org.hibernate.type.format;
 
+import org.hibernate.SPI;
+
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.USE;
+
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -14,6 +19,7 @@ import java.sql.SQLException;
  * Adapter for JSON value on given JDBC types.
  * @author emmanuel Jannetti
  */
+@SPI({ USE, IMPLEMENT })
 public interface JsonValueJDBCTypeAdapter {
 	/**
 	 * Gets an Object out of a JSON document reader according to a given types.

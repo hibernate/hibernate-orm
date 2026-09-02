@@ -6,7 +6,7 @@ package org.hibernate.community.dialect;
 
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.orm.test.dialect.LimitQueryOptions;
+import org.hibernate.dialect.pagination.spi.PaginationRequest;
 import org.hibernate.query.spi.Limit;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.type.SqlTypes;
@@ -98,7 +98,15 @@ public class AltibaseDialectTestCase {
 	}
 
 	private String withLimit(String sql, Limit limit) {
-		return dialect.getLimitHandler().processSql( sql, -1, null, new LimitQueryOptions( limit ) );
+		return dialect.getLimitHandler().processSql(
+				new PaginationRequest(
+						sql,
+						limit == null ? null : limit.getFirstRow(),
+						limit == null ? null : limit.getMaxRows(),
+						-1,
+						null
+				)
+		).sql();
 	}
 
 	private TypeConfiguration typeConfigurationFor(Dialect dialect) {

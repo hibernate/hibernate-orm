@@ -5,7 +5,7 @@
 package org.hibernate.metamodel.mapping;
 
 import org.hibernate.Incubating;
-import org.hibernate.internal.util.IndexedConsumer;
+import org.hibernate.spi.IndexedConsumer;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
@@ -49,6 +49,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
  *
  * @author Steve Ebersole
  */
+@org.hibernate.SPI({ org.hibernate.SPI.Role.USE, org.hibernate.SPI.Role.IMPLEMENT })
 public interface JdbcMapping extends MappingType, JdbcMappingContainer {
 	/**
 	 * The descriptor for the Java type represented by this

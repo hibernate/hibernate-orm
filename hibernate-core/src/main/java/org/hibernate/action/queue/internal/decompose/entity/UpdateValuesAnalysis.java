@@ -9,7 +9,7 @@ import org.hibernate.action.queue.spi.decompose.entity.GraphEntityMutationTarget
 import org.hibernate.action.queue.spi.meta.EntityTableDescriptor;
 import org.hibernate.persister.entity.mutation.AttributeAnalysis;
 import org.hibernate.persister.entity.mutation.TableSet;
-import org.hibernate.sql.model.TableMapping;
+import org.hibernate.sql.spi.mutation.TableMapping;
 
 import java.util.BitSet;
 import java.util.List;

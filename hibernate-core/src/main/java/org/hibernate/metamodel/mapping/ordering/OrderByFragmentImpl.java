@@ -4,12 +4,14 @@
  */
 package org.hibernate.metamodel.mapping.ordering;
 
+import org.hibernate.metamodel.mapping.ordering.spi.OrderByFragment;
+
 import java.util.List;
 
 import org.hibernate.metamodel.mapping.ordering.ast.OrderingSpecification;
-import org.hibernate.sql.ast.spi.SqlAstCreationState;
-import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.select.QuerySpec;
+import org.hibernate.sql.ast.spi.creation.SqlAstCreationState;
+import org.hibernate.sql.ast.spi.query.from.TableGroup;
+import org.hibernate.sql.ast.spi.query.select.QuerySpec;
 
 /**
  * @author Steve Ebersole

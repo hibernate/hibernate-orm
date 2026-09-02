@@ -4,6 +4,8 @@
  */
 package org.hibernate.loader.ast.internal;
 
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
+
 import jakarta.annotation.Nonnull;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
@@ -13,8 +15,8 @@ import org.hibernate.engine.spi.SubselectFetch;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.query.spi.QueryOptionsAdapter;
-import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
-import org.hibernate.sql.ast.tree.select.SelectStatement;
+import org.hibernate.sql.ast.spi.creation.SqlAliasBaseManager;
+import org.hibernate.sql.ast.spi.query.select.SelectStatement;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
@@ -86,7 +88,7 @@ public class MultiNaturalIdLoadingBatcher {
 
 		this.jdbcSelect =
 				sessionFactory.getJdbcServices().getJdbcEnvironment().getSqlAstTranslatorFactory()
-						.buildSelectTranslator( sessionFactory, sqlSelect )
+						.buildTranslator( new SqlAstTranslationRequest.Select( sessionFactory, sqlSelect ) )
 						.translate( null, new QueryOptionsAdapter() {
 							@Override
 							@Nonnull

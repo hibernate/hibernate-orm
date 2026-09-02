@@ -11,10 +11,11 @@ import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
+import org.hibernate.engine.jdbc.env.spi.JdbcMetadata;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
-import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
+import org.hibernate.sql.spi.ParameterMarkerStrategy;
 import org.hibernate.sql.exec.spi.JdbcMutationExecutor;
 import org.hibernate.sql.exec.spi.JdbcSelectExecutor;
 
@@ -47,6 +48,11 @@ public final class PersistenceUnitJdbcServices implements JdbcServices {
 	@Override
 	public Dialect getDialect() {
 		return delegate.getDialect();
+	}
+
+	@Override
+	public JdbcMetadata getJdbcMetadata() {
+		return jdbcEnvironment.getJdbcMetadata();
 	}
 
 	@Override

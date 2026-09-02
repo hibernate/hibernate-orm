@@ -12,7 +12,7 @@ import jakarta.persistence.Table;
 import org.hibernate.annotations.Nationalized;
 import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.NationalizationSupport;
+import org.hibernate.dialect.type.spi.NationalizationSupport;
 import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;

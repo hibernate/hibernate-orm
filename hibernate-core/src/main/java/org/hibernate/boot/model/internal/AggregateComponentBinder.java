@@ -5,6 +5,7 @@
 package org.hibernate.boot.model.internal;
 
 
+
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.Struct;
 import org.hibernate.boot.model.relational.QualifiedName;

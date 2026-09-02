@@ -9,10 +9,10 @@ import java.util.function.Consumer;
 
 import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.util.IndexedConsumer;
+import org.hibernate.spi.IndexedConsumer;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.spi.SqlSelection;
-import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.spi.query.select.SqlSelection;
+import org.hibernate.sql.ast.spi.query.from.TableGroup;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.FetchableContainer;
@@ -53,6 +53,7 @@ public interface EntityValuedModelPart extends FetchableContainer {
 	}
 
 	@Override
+	@org.hibernate.SPI(org.hibernate.SPI.Role.SUPPLY)
 	default <T> DomainResult<T> createDomainResult(
 			NavigablePath navigablePath,
 			TableGroup tableGroup,

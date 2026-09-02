@@ -6,9 +6,9 @@ package org.hibernate.sql.ast.internal;
 
 import org.hibernate.metamodel.mapping.internal.EmbeddedCollectionPart;
 import org.hibernate.query.sqm.tree.spi.predicate.SqmPredicate;
-import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.from.TableGroupJoin;
-import org.hibernate.sql.ast.tree.from.VirtualTableGroup;
+import org.hibernate.sql.ast.spi.query.from.TableGroup;
+import org.hibernate.sql.ast.spi.query.from.TableGroupJoin;
+import org.hibernate.sql.ast.spi.query.from.VirtualTableGroup;
 
 public class TableGroupJoinHelper {
 
@@ -16,7 +16,7 @@ public class TableGroupJoinHelper {
 	 * Determine the {@link TableGroupJoin} to which a custom {@code ON} clause predicate should be applied to.
 	 * This is supposed to be called right after construction of a {@link TableGroupJoin}.
 	 * This should also be called after a {@link SqmPredicate} is translated to a
-	 * {@link org.hibernate.sql.ast.tree.predicate.Predicate}, because that translation might cause nested joins to be
+	 * {@link org.hibernate.sql.ast.spi.query.predicate.Predicate}, because that translation might cause nested joins to be
 	 * added to the table group of the join.
 	 */
 	public static TableGroupJoin determineJoinForPredicateApply(TableGroupJoin mainTableGroupJoin) {

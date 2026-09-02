@@ -7,13 +7,14 @@ package org.hibernate.dialect.function.array;
 import jakarta.annotation.Nullable;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.type.descriptor.jdbc.XmlHelper;
-import org.hibernate.dialect.aggregate.AggregateSupport;
+import org.hibernate.dialect.aggregate.spi.AggregateSupport;
+import org.hibernate.dialect.aggregate.spi.AggregateComponentReadRequest;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
-import org.hibernate.query.sqm.tuple.internal.AnonymousTupleTableGroupProducer;
-import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.spi.SqlAppender;
-import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.spi.query.SetReturningFunctionType;
+import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
+import org.hibernate.sql.spi.SqlAppender;
+import org.hibernate.sql.ast.spi.query.expression.Expression;
 import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.java.BasicPluralJavaType;
@@ -32,12 +33,13 @@ public class PostgreSQLUnnestFunction extends UnnestFunction {
 	}
 
 	@Override
+	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	protected void renderJsonTable(
 			SqlAppender sqlAppender,
 			Expression array,
 			BasicPluralType<?, ?> pluralType,
 			@Nullable SqlTypedMapping sqlTypedMapping,
-			AnonymousTupleTableGroupProducer tupleType,
+			SetReturningFunctionType tupleType,
 			String tableIdentifierVariable,
 			SqlAstTranslator<?> walker) {
 		if ( supportsJsonTable ) {
@@ -70,19 +72,21 @@ public class PostgreSQLUnnestFunction extends UnnestFunction {
 				}
 				else {
 					sqlAppender.append( aggregateSupport.aggregateComponentCustomReadExpression(
-							"",
-							"",
-							"t.v",
-							selectableMapping.getSelectableName(),
-							SqlTypes.JSON,
-							selectableMapping,
-							walker.getSessionFactory().getTypeConfiguration()
+							new AggregateComponentReadRequest(
+									"",
+									"",
+									"t.v",
+									selectableMapping.getSelectableName(),
+									SqlTypes.JSON,
+									selectableMapping,
+									walker.getSessionFactory().getTypeConfiguration()
+							)
 					) );
 				}
 				sqlAppender.append( " as " );
 				sqlAppender.append( selectableMapping.getSelectionExpression() );
 			} );
-			final ModelPart elementPart = tupleType.findSubPart( CollectionPart.Nature.ELEMENT.getName(), null );
+			final ModelPart elementPart = tupleType.findSubPart( CollectionPart.Nature.ELEMENT.getName() );
 			if ( elementPart != null && elementPart.getSingleJdbcMapping().getJdbcType().isStringLike() ) {
 				sqlAppender.appendSql( " from jsonb_array_elements_text(" );
 			}
@@ -91,7 +95,7 @@ public class PostgreSQLUnnestFunction extends UnnestFunction {
 			}
 			array.accept( walker );
 			sqlAppender.appendSql( ')' );
-			if ( tupleType.findSubPart( CollectionPart.Nature.INDEX.getName(), null ) != null ) {
+			if ( tupleType.findSubPart( CollectionPart.Nature.INDEX.getName() ) != null ) {
 				sqlAppender.appendSql( " with ordinality t(v,i))" );
 			}
 			else {
@@ -100,12 +104,13 @@ public class PostgreSQLUnnestFunction extends UnnestFunction {
 		}
 	}
 
+	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	protected void renderXmlTable(
 			SqlAppender sqlAppender,
 			Expression array,
 			BasicPluralType<?, ?> pluralType,
 			@Nullable SqlTypedMapping sqlTypedMapping,
-			AnonymousTupleTableGroupProducer tupleType,
+			SetReturningFunctionType tupleType,
 			String tableIdentifierVariable,
 			SqlAstTranslator<?> walker) {
 		final XmlHelper.CollectionTags collectionTags = XmlHelper.determineCollectionTags(

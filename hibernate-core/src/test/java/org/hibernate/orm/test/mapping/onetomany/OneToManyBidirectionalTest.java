@@ -15,7 +15,7 @@ import jakarta.persistence.Table;
 
 import org.hibernate.Hibernate;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.sql.ast.SqlAstJoinType;
+import org.hibernate.sql.ast.spi.query.from.SqlAstJoinType;
 import org.hibernate.stat.Statistics;
 
 import org.hibernate.testing.jdbc.SQLStatementInspector;

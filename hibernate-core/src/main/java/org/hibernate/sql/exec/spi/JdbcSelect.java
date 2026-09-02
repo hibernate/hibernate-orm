@@ -6,7 +6,7 @@ package org.hibernate.sql.exec.spi;
 
 import jakarta.annotation.Nullable;
 import org.hibernate.Incubating;
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
+import org.hibernate.sql.ast.spi.query.expression.JdbcParameter;
 import org.hibernate.sql.exec.internal.lock.LoadedValuesCollectorFactory;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
 
@@ -20,7 +20,23 @@ import java.sql.Connection;
 @Incubating
 public interface JdbcSelect extends PrimaryOperation, CacheableJdbcOperation {
 	JdbcValuesMappingProducer getJdbcValuesMappingProducer();
-	JdbcLockStrategy getLockStrategy();
+
+	/// Which stage owns pessimistic locking for this execution plan.
+	///
+	/// Consumers must honor this disposition instead of inferring locking from
+	/// the SQL string.
+	///
+	/// @since 8.0
+	JdbcLockingApplication getLockingApplication();
+
+	/// Which stage owns pagination for this execution plan.
+	///
+	/// Consumers must honor this disposition instead of inferring pagination
+	/// from limit parameters or the SQL string.
+	///
+	/// @since 8.0
+	JdbcPaginationApplication getPaginationApplication();
+
 	boolean usesLimitParameters();
 	JdbcParameter getLimitParameter();
 	int getRowsToSkip();

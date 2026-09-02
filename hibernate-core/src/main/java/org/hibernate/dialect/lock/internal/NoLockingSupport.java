@@ -8,6 +8,7 @@ import jakarta.persistence.Timeout;
 import org.hibernate.dialect.lock.PessimisticLockStyle;
 import org.hibernate.dialect.lock.spi.ConnectionLockTimeoutStrategy;
 import org.hibernate.dialect.lock.spi.LockTimeoutType;
+import org.hibernate.dialect.lock.spi.LockingClauseRenderer;
 import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.lock.spi.OuterJoinLockingType;
 
@@ -20,6 +21,11 @@ public class NoLockingSupport implements LockingSupport, LockingSupport.Metadata
 	@Override
 	public Metadata getMetadata() {
 		return this;
+	}
+
+	@Override
+	public LockingClauseRenderer getLockingClauseRenderer() {
+		return LockingClauseRenderer.NO_OP;
 	}
 
 	@Override

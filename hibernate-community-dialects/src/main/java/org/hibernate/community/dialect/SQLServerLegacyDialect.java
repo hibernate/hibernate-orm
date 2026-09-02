@@ -4,11 +4,39 @@
  */
 package org.hibernate.community.dialect;
 
+import org.hibernate.dialect.identifier.spi.KeywordRegistration;
+
+import org.hibernate.dialect.temporaltype.spi.CurrentTimestampSelection;
+
+import org.hibernate.dialect.temporaltype.spi.TemporalOperationSupport;
+import org.hibernate.dialect.temporaltype.spi.TemporalOperationSupports;
+
+import org.hibernate.dialect.temporaltype.spi.TemporalFormatSupport;
+
+import org.hibernate.dialect.temporaltype.spi.CurrentTemporalSupport;
+
+import org.hibernate.SPI;
+import static org.hibernate.SPI.Role.USE;
+
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.SUPPLY;
+import org.hibernate.dialect.type.spi.StandardDdlTypes;
+
+import org.hibernate.dialect.type.spi.TypeSizingProfile;
+
+import org.hibernate.dialect.sql.ast.spi.CteSupport;
+import org.hibernate.dialect.sql.ast.spi.NullOrderingSupport;
+import org.hibernate.dialect.sql.ast.spi.MutationKind;
+import org.hibernate.dialect.sql.ast.spi.MutationSyntaxCapability;
+import org.hibernate.dialect.sql.ast.spi.MutationSyntaxSupport;
+import org.hibernate.dialect.sql.ast.spi.PredicateSupport;
+import org.hibernate.dialect.sql.ast.spi.RowValueSupport;
+import org.hibernate.dialect.sql.ast.spi.SetOperationSupport;
+import org.hibernate.dialect.sql.ast.spi.ValuesListSupport;
+import org.hibernate.dialect.sql.ast.spi.SubquerySupport;
+
 import jakarta.persistence.TemporalType;
-import jakarta.persistence.Timeout;
 import org.hibernate.Length;
-import org.hibernate.LockMode;
-import org.hibernate.LockOptions;
 import org.hibernate.QueryTimeoutException;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.FunctionContributions;
@@ -20,69 +48,72 @@ import org.hibernate.community.dialect.pagination.SQLServer2005LimitHandler;
 import org.hibernate.dialect.AbstractTransactSQLDialect;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
-import org.hibernate.dialect.Replacer;
-import org.hibernate.dialect.RowLockStrategy;
-import org.hibernate.dialect.TimeZoneSupport;
-import org.hibernate.dialect.aggregate.AggregateSupport;
-import org.hibernate.dialect.aggregate.SQLServerAggregateSupport;
+import org.hibernate.dialect.jdbc.spi.ParameterLimits;
+import org.hibernate.dialect.sql.ast.spi.DmlTargetColumnQualifierSupport;
+import org.hibernate.dialect.function.spi.Replacer;
+import org.hibernate.dialect.type.spi.TimeZoneSupport;
+import org.hibernate.dialect.aggregate.spi.AggregateSupport;
+import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.dialect.function.spi.WindowFunctionSupport;
 import org.hibernate.dialect.function.CountFunction;
 import org.hibernate.dialect.function.SQLServerFormatEmulation;
 import org.hibernate.dialect.function.SqlServerConvertTruncFunction;
-import org.hibernate.dialect.identity.IdentityColumnSupport;
-import org.hibernate.dialect.identity.SQLServerIdentityColumnSupport;
-import org.hibernate.dialect.lock.PessimisticLockStyle;
-import org.hibernate.dialect.lock.internal.TransactSQLLockingSupport;
-import org.hibernate.dialect.lock.spi.LockTimeoutType;
+import org.hibernate.community.dialect.identity.internal.SQLServerIdentityColumnSupport;
+import org.hibernate.dialect.identity.spi.IdentityColumnSupport;
 import org.hibernate.dialect.lock.spi.LockingSupport;
-import org.hibernate.dialect.lock.spi.OuterJoinLockingType;
-import org.hibernate.dialect.pagination.LimitHandler;
-import org.hibernate.dialect.pagination.SQLServer2012LimitHandler;
-import org.hibernate.dialect.pagination.TopLimitHandler;
-import org.hibernate.dialect.sequence.NoSequenceSupport;
-import org.hibernate.dialect.sequence.SQLServer16SequenceSupport;
-import org.hibernate.dialect.sequence.SQLServerSequenceSupport;
-import org.hibernate.dialect.sequence.SequenceSupport;
-import org.hibernate.dialect.temptable.SQLServerLocalTemporaryTableStrategy;
-import org.hibernate.dialect.temptable.TemporaryTableStrategy;
-import org.hibernate.dialect.type.SQLServerCastingXmlArrayJdbcTypeConstructor;
-import org.hibernate.dialect.type.SQLServerCastingXmlJdbcType;
-import org.hibernate.dialect.unique.AlterTableUniqueIndexDelegate;
-import org.hibernate.dialect.unique.SkipNullableUniqueDelegate;
-import org.hibernate.dialect.unique.UniqueDelegate;
+import org.hibernate.dialect.lock.spi.StandardLockingSupports;
+import org.hibernate.dialect.namespace.spi.NamespaceSupport;
+import org.hibernate.dialect.namespace.spi.NamespaceSupports;
+import org.hibernate.dialect.schema.spi.ColumnDefinitionRequest;
+import org.hibernate.dialect.schema.spi.ExistenceCheckPlacement;
+import org.hibernate.dialect.schema.spi.IfExistsSupport;
+import org.hibernate.dialect.schema.spi.IndexDdlRequest;
+import org.hibernate.dialect.pagination.spi.LimitHandler;
+import org.hibernate.dialect.pagination.spi.SQLServer2012LimitHandler;
+import org.hibernate.dialect.pagination.spi.TopLimitHandler;
+import org.hibernate.community.dialect.sequence.CommunitySequenceSupports;
+import org.hibernate.dialect.sequence.spi.SequenceSupport;
+import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
+import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractors;
+import org.hibernate.dialect.temptable.spi.TemporaryTableStrategies;
+import org.hibernate.dialect.temptable.spi.TemporaryTableStrategy;
+import org.hibernate.dialect.type.spi.SQLServerJdbcTypes;
+import org.hibernate.dialect.type.spi.SizeStrategy;
+import org.hibernate.dialect.type.spi.StandardSizeStrategy;
+import org.hibernate.dialect.unique.spi.UniqueDelegates;
+import org.hibernate.dialect.unique.spi.UniqueDelegate;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
-import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
+import org.hibernate.dialect.identifier.spi.IdentifierHelperBuildRequest;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
-import org.hibernate.internal.util.JdbcExceptionHelper;
+import org.hibernate.jdbc.spi.JdbcExceptionHelper;
 import org.hibernate.mapping.AggregateColumn;
-import org.hibernate.mapping.CheckConstraint;
-import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Table;
-import org.hibernate.query.common.FetchClauseType;
+import org.hibernate.dialect.sql.ast.spi.FetchClauseSupport;
 import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.CastType;
-import org.hibernate.dialect.type.IntervalType;
+import org.hibernate.query.sqm.SetOperator;
+import org.hibernate.dialect.temporaltype.spi.IntervalType;
 import org.hibernate.query.sqm.TrimSpec;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
-import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.SqlAstTranslatorFactory;
-import org.hibernate.sql.ast.spi.SqlAppender;
-import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
-import org.hibernate.sql.ast.tree.Statement;
+import org.hibernate.sql.ast.spi.translation.SqlAstNodeRenderingMode;
+import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslatorFactory;
+import org.hibernate.sql.spi.SqlAppender;
+import org.hibernate.dialect.sql.ast.spi.StandardSqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.Statement;
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
 import org.hibernate.sql.exec.spi.JdbcOperation;
-import org.hibernate.tool.schema.internal.StandardSequenceExporter;
-import org.hibernate.tool.schema.internal.StandardTableExporter;
+import org.hibernate.tool.schema.spi.StandardSequenceExporter;
+import org.hibernate.tool.schema.spi.StandardTableExporter;
 import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
@@ -94,21 +125,15 @@ import org.hibernate.type.descriptor.jdbc.TimestampUtcAsJdbcTimestampJdbcType;
 import org.hibernate.type.descriptor.jdbc.TinyIntAsSmallIntJdbcType;
 import org.hibernate.type.descriptor.jdbc.UUIDJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
-import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 
-import java.sql.DatabaseMetaData;
-import java.sql.SQLException;
 import java.sql.Types;
 import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.List;
 import java.util.TimeZone;
 
-import static org.hibernate.Timeouts.NO_WAIT_MILLI;
-import static org.hibernate.Timeouts.SKIP_LOCKED_MILLI;
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.internal.util.StringHelper.isBlank;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
@@ -135,17 +160,46 @@ import static org.hibernate.type.SqlTypes.UUID;
 import static org.hibernate.type.SqlTypes.VARBINARY;
 import static org.hibernate.type.SqlTypes.VARCHAR;
 import static org.hibernate.type.SqlTypes.XML_ARRAY;
-import static org.hibernate.type.descriptor.DateTimeUtils.appendAsDate;
-import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTime;
-import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMicros;
-import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMillis;
+import static org.hibernate.dialect.literal.spi.StandardDateTimeLiteralRendering.appendAsDate;
+import static org.hibernate.dialect.literal.spi.StandardDateTimeLiteralRendering.appendAsLocalTime;
+import static org.hibernate.dialect.literal.spi.StandardDateTimeLiteralRendering.appendAsTime;
+import static org.hibernate.dialect.literal.spi.StandardDateTimeLiteralRendering.appendAsTimestampWithMicros;
+import static org.hibernate.dialect.literal.spi.StandardDateTimeLiteralRendering.appendAsTimestampWithMillis;
 
 /**
  * A dialect for Microsoft SQL Server 2000 and above
  *
  * @author Gavin King
  */
-public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
+public class SQLServerLegacyDialect extends AbstractTransactSQLDialect implements CurrentTemporalSupport, TemporalFormatSupport, TemporalOperationSupport {
+	private IfExistsSupport ifExistsSupport;
+
+
+	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
+	public TemporalOperationSupport getTemporalOperationSupport() {
+		return this;
+	}
+
+	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
+	public TemporalFormatSupport getTemporalFormatSupport() {
+		return this;
+	}
+
+	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
+	public CurrentTemporalSupport getCurrentTemporalSupport() {
+		return this;
+	}
+	private final TypeSizingProfile typeSizingProfile = TypeSizingProfile.builder( super.getTypeSizingProfile() )
+			.defaultTimestampPrecision( 7 ).defaultLobLength( Length.LONG32 )
+			.maxVarcharLength( 8000 ).maxVarcharCapacity( 8000 )
+			.maxNVarcharLength( 4000 ).maxNVarcharCapacity( 4000 )
+			.maxVarbinaryLength( 8000 ).maxVarbinaryCapacity( 8000 )
+			.build();
+
+	@Override public TypeSizingProfile getTypeSizingProfile() { return typeSizingProfile; }
 	private static final int PARAM_LIST_SIZE_LIMIT = 2100;
 	// See microsoft.sql.Types.GEOMETRY
 	private static final int GEOMETRY_TYPE_CODE = -157;
@@ -155,7 +209,7 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 	private final StandardSequenceExporter exporter;
 	private final UniqueDelegate uniqueDelegate;
 
-	private final SizeStrategy sizeStrategy = new SizeStrategyImpl() {
+	private final SizeStrategy sizeStrategy = new StandardSizeStrategy( this ) {
 		@Override
 		public Size resolveSize(
 				JdbcType jdbcType,
@@ -172,7 +226,7 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 							javaType,
 							precision,
 							scale,
-							length == null ? getDefaultLobLength() : length
+							length == null ? getTypeSizingProfile().defaultLobLength() : length
 					);
 				default:
 					return super.resolveSize( jdbcType, javaType, precision, scale, length );
@@ -213,16 +267,7 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 	}
 
 	protected LockingSupport buildLockingSupport() {
-		final boolean sameOrAfter9 = getVersion().isSameOrAfter( 9 );
-		return new TransactSQLLockingSupport(
-				PessimisticLockStyle.TABLE_HINT,
-				LockTimeoutType.CONNECTION,
-				sameOrAfter9 ? LockTimeoutType.QUERY : LockTimeoutType.NONE,
-				sameOrAfter9 ? LockTimeoutType.QUERY : LockTimeoutType.NONE,
-				RowLockStrategy.TABLE,
-				OuterJoinLockingType.IDENTIFIED,
-				TransactSQLLockingSupport.SQLServerImpl.IMPL
-		);
+		return StandardLockingSupports.sqlServer( getVersion() );
 	}
 
 	private StandardSequenceExporter createSequenceExporter(DatabaseVersion version) {
@@ -232,19 +277,21 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 	private UniqueDelegate createUniqueDelgate(DatabaseVersion version) {
 		return version.isSameOrAfter(10)
 				//use 'create unique nonclustered index ... where ...'
-				? new AlterTableUniqueIndexDelegate(this)
+				? UniqueDelegates.nullableIndex( this )
 				//ignore unique keys on nullable columns in versions before 2008
-				: new SkipNullableUniqueDelegate(this);
+				: UniqueDelegates.skipNullable( this );
 	}
 
 	@Override
-	protected void registerDefaultKeywords() {
-		super.registerDefaultKeywords();
-		registerKeyword( "top" );
-		registerKeyword( "key" );
+	@SPI({ USE, IMPLEMENT, SUPPLY })
+	protected void contributeKeywords(KeywordRegistration registration) {
+		super.contributeKeywords( registration );
+		registration.registerKeyword( "top" );
+		registration.registerKeyword( "key" );
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	protected String columnType(int sqlTypeCode) {
 		// there is no 'double' type in SQL server
 		// but 'float' is double precision by default
@@ -280,6 +327,7 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	protected String castType(int sqlTypeCode) {
 		if ( getVersion().isSameOrAfter( 9 ) ) {
 			switch ( sqlTypeCode ) {
@@ -301,23 +349,26 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	protected void registerColumnTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.registerColumnTypes( typeContributions, serviceRegistry );
 		final DdlTypeRegistry ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
 		if ( getVersion().isSameOrAfter( 10 ) ) {
-			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOMETRY, "geometry", this ) );
-			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOGRAPHY, "geography", this ) );
+			ddlTypeRegistry.addDescriptor( StandardDdlTypes.simple( GEOMETRY, "geometry", this ) );
+			ddlTypeRegistry.addDescriptor( StandardDdlTypes.simple( GEOGRAPHY, "geography", this ) );
 		}
-		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( SQLXML, "xml", this ) );
-		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( UUID, "uniqueidentifier", this ) );
+		ddlTypeRegistry.addDescriptor( StandardDdlTypes.simple( SQLXML, "xml", this ) );
+		ddlTypeRegistry.addDescriptor( StandardDdlTypes.simple( UUID, "uniqueidentifier", this ) );
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public int getPreferredSqlTypeCodeForArray() {
 		return XML_ARRAY;
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public JdbcType resolveSqlTypeDescriptor(
 			String columnTypeName,
 			int jdbcTypeCode,
@@ -343,34 +394,19 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
-	public int getMaxVarcharLength() {
-		return 8000;
-	}
-
-	@Override
-	public int getMaxNVarcharLength() {
-		return 4000;
-	}
-
-	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public TimeZoneSupport getTimeZoneSupport() {
 		return getVersion().isSameOrAfter( 10 ) ? TimeZoneSupport.NATIVE : TimeZoneSupport.NONE;
 	}
 
 	@Override
-	public long getDefaultLobLength() {
-		// this is essentially the only legal length for
-		// a "lob" in SQL Server, i.e. the value of MAX
-		// (caveat: for NVARCHAR it is half this value)
-		return Length.LONG32;
-	}
-
-	@Override
+	@SPI({ USE, IMPLEMENT })
 	public int getMaxIdentifierLength() {
 		return 128;
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.contributeTypes( typeContributions, serviceRegistry );
 
@@ -381,12 +417,13 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 				Types.TINYINT,
 				TinyIntAsSmallIntJdbcType.INSTANCE
 		);
-		typeContributions.contributeJdbcType( SQLServerCastingXmlJdbcType.INSTANCE );
+		typeContributions.contributeJdbcType( SQLServerJdbcTypes.castingXml() );
 		typeContributions.contributeJdbcType( UUIDJdbcType.INSTANCE );
-		typeContributions.contributeJdbcTypeConstructor( SQLServerCastingXmlArrayJdbcTypeConstructor.INSTANCE );
+		typeContributions.contributeJdbcTypeConstructor( SQLServerJdbcTypes.castingXmlArrayConstructor() );
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
 		super.initializeFunctionRegistry(functionContributions);
 
@@ -517,7 +554,7 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 					new SqlServerConvertTruncFunction( functionContributions.getTypeConfiguration() )
 			);
 			functionContributions.getFunctionRegistry().registerAlternateKey( "truncate", "trunc" );
-			if ( supportsRecursiveCTE() ) {
+			if ( getCteSupport().supports( CteSupport.RecursiveFeature.RECURSIVE ) ) {
 				functionFactory.generateSeries_recursive( getMaximumSeriesSize(), false, false );
 			}
 		}
@@ -542,6 +579,7 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String trimPattern(TrimSpec specification, boolean isWhitespace) {
 		if ( getVersion().isSameOrAfter( 16 ) ) {
 			switch ( specification ) {
@@ -564,19 +602,21 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public SqlAstTranslatorFactory getSqlAstTranslatorFactory() {
 		return new StandardSqlAstTranslatorFactory() {
 			@Override
-			protected <T extends JdbcOperation> SqlAstTranslator<T> buildTranslator(
-					SessionFactoryImplementor sessionFactory, Statement statement) {
-				return new SQLServerLegacySqlAstTranslator<>( sessionFactory, statement );
+			protected <S extends Statement, T extends JdbcOperation> SqlAstTranslator<T> createTranslator(
+					SqlAstTranslationRequest<S, T> request) {
+				return new SQLServerLegacySqlAstTranslator<>( request );
 			}
 		};
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public AggregateSupport getAggregateSupport() {
-		return SQLServerAggregateSupport.valueOf( this );
+		return new SQLServerDialect( getVersion() ).getAggregateSupport();
 	}
 
 	@Override
@@ -585,6 +625,7 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String castPattern(CastType from, CastType to) {
 		if ( to == CastType.STRING ) {
 			switch ( from ) {
@@ -601,42 +642,42 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String currentTimestamp() {
 		return "sysdatetime()";
 	}
 
 	@Override
-	public IdentifierHelper buildIdentifierHelper(
-			IdentifierHelperBuilder builder, DatabaseMetaData metadata) throws SQLException {
+	@SPI({ USE, IMPLEMENT, SUPPLY })
+	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuildRequest request) {
+		final var builder = request.builder();
 
-		if ( metadata == null ) {
+		if ( !request.jdbcMetadata().isJdbcMetadataAccessible() ) {
 			// TODO: if DatabaseMetaData != null, unquoted case strategy is set to IdentifierCaseStrategy.UPPER
 			//       Check to see if this setting is correct.
 			builder.setUnquotedCaseStrategy( IdentifierCaseStrategy.MIXED );
 			builder.setQuotedCaseStrategy( IdentifierCaseStrategy.MIXED );
 		}
 
-		return super.buildIdentifierHelper( builder, metadata );
+		return super.buildIdentifierHelper( request );
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String currentTime() {
 		return "convert(time,getdate())";
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String currentDate() {
 		return "convert(date,getdate())";
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String currentTimestampWithTimeZone() {
 		return "sysdatetimeoffset()";
-	}
-
-	@Override
-	public String getNoColumnsInsertString() {
-		return "default values";
 	}
 
 	@Override
@@ -655,42 +696,42 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
-	public boolean supportsValuesList() {
-		return getVersion().isSameOrAfter( 10 );
+	public ValuesListSupport getValuesListSupport() {
+		return getVersion().isSameOrAfter( 10 ) ? ValuesListSupport.STANDARD : ValuesListSupport.INSERT_ONLY;
 	}
 
 	@Override
-	public boolean supportsDistinctFromPredicate() {
-		return getVersion().isSameOrAfter( 16 );
+	public PredicateSupport getPredicateSupport() {
+		return PredicateSupport.builder( super.getPredicateSupport() )
+				.capability( PredicateSupport.Capability.DISTINCT_FROM, getVersion().isSameOrAfter( 16 ) )
+				.build();
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public char closeQuote() {
 		return ']';
 	}
 
 	@Override
-	public String getCurrentSchemaCommand() {
-		return "select schema_name()";
-	}
-
-	@Override
-	public boolean supportsIfExistsBeforeTableName() {
-		if ( getVersion().isSameOrAfter( 16 ) ) {
-			return true;
+	@SPI({ IMPLEMENT, SUPPLY })
+	public synchronized IfExistsSupport getIfExistsSupport() {
+		final var placement = getVersion().isSameOrAfter( 16 )
+				? ExistenceCheckPlacement.BEFORE_NAME
+				: ExistenceCheckPlacement.NONE;
+		if ( ifExistsSupport == null ) {
+			ifExistsSupport = new IfExistsSupport(
+				ExistenceCheckPlacement.NONE,
+				placement,
+				placement,
+				ExistenceCheckPlacement.NONE
+		);
 		}
-		return super.supportsIfExistsBeforeTableName();
+		return ifExistsSupport;
 	}
 
 	@Override
-	public boolean supportsIfExistsBeforeConstraintName() {
-		if ( getVersion().isSameOrAfter( 16 ) ) {
-			return true;
-		}
-		return super.supportsIfExistsBeforeConstraintName();
-	}
-
-	@Override
+	@SPI({ USE, IMPLEMENT })
 	public char openQuote() {
 		return '[';
 	}
@@ -700,40 +741,6 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 		return lockingSupport;
 	}
 
-	@Override
-	public String appendLockHint(LockOptions lockOptions, String tableName) {
-		if ( getVersion().isSameOrAfter( 9 ) ) {
-			final LockMode lockMode = lockOptions.getLockMode();
-			final Timeout timeout = lockOptions.getTimeout();
-			final int timeoutMillis = timeout.milliseconds();
-
-			final String writeLockStr = timeoutMillis == SKIP_LOCKED_MILLI ? "updlock" : "updlock,holdlock";
-			final String readLockStr = timeoutMillis == SKIP_LOCKED_MILLI ? "updlock" : "holdlock";
-
-			final String noWaitStr = timeoutMillis == NO_WAIT_MILLI ? ",nowait" : "";
-			final String skipLockStr = timeoutMillis == SKIP_LOCKED_MILLI ? ",readpast" : "";
-
-			return switch ( lockMode ) {
-				case PESSIMISTIC_WRITE, WRITE ->
-						tableName + " with (" + writeLockStr + ",rowlock" + noWaitStr + skipLockStr + ")";
-				case PESSIMISTIC_READ ->
-						tableName + " with (" + readLockStr + ",rowlock" + noWaitStr + skipLockStr + ")";
-				case UPGRADE_SKIPLOCKED -> tableName + " with (updlock,rowlock,readpast" + noWaitStr + ")";
-				case UPGRADE_NOWAIT -> tableName + " with (updlock,holdlock,rowlock,nowait)";
-				default -> tableName;
-			};
-		}
-		else {
-			return switch ( lockOptions.getLockMode() ) {
-				case UPGRADE_NOWAIT, PESSIMISTIC_WRITE, WRITE -> tableName + " with (updlock,rowlock)";
-				case PESSIMISTIC_READ -> tableName + " with (holdlock,rowlock)";
-				case UPGRADE_SKIPLOCKED -> tableName + " with (updlock,rowlock,readpast)";
-				default -> tableName;
-			};
-		}
-	}
-
-
 	/**
 	 * The current_timestamp is more accurate, but only known to be supported in SQL Server 7.0 and later and
 	 * Sybase not known to support it at all
@@ -741,46 +748,16 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public String getCurrentTimestampSelectString() {
-		return "select current_timestamp";
+	@SPI({ USE, IMPLEMENT })
+	public CurrentTimestampSelection getCurrentTimestampSelection() {
+		return CurrentTimestampSelection.prepared( "select current_timestamp" );
 	}
 
 	// Overridden informational metadata ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
-	public boolean supportsResultSetPositionQueryMethodsOnForwardOnlyCursor() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsCircularCascadeDeleteConstraints() {
-		// SQL Server (at least up through 2005) does not support defining
-		// cascade delete constraints which can circle back to the mutating
-		// table
-		return false;
-	}
-
-	@Override
-	public boolean supportsLobValueChangePropagation() {
-		// note: at least my local SQL Server 2005 Express shows this not working...
-		return false;
-	}
-
-	@Override
-	public boolean doesReadCommittedCauseWritersToBlockReaders() {
-		// here assume SQLServer2005 using snapshot isolation, which does not have this problem
-		return false;
-	}
-
-	@Override
-	public boolean doesRepeatableReadCauseReadersToBlockWriters() {
-		// here assume SQLServer2005 using snapshot isolation, which does not have this problem
-		return false;
-	}
-
-	@Override
-	public int getInExpressionCountLimit() {
-		return PARAM_LIST_SIZE_LIMIT;
+	public ParameterLimits getParameterLimits() {
+		return ParameterLimits.of( PARAM_LIST_SIZE_LIMIT );
 	}
 
 	@Override
@@ -789,33 +766,44 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
-	public boolean supportsNonQueryWithCTE() {
-		return getVersion().isSameOrAfter( 9 );
+	public CteSupport getCteSupport() {
+		final CteSupport.Builder builder = CteSupport.builder()
+				.placement( CteSupport.Placement.TOP_LEVEL )
+				.requiresRecursiveKeyword( false );
+		if ( getVersion().isSameOrAfter( 9 ) ) {
+			builder.recursiveFeatures( CteSupport.RecursiveFeature.RECURSIVE )
+					.mutationFeatures( CteSupport.MutationFeature.NON_QUERY );
+		}
+		return builder.build();
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public SequenceSupport getSequenceSupport() {
 		if ( getVersion().isBefore( 11 ) ) {
-			return NoSequenceSupport.INSTANCE;
+			return org.hibernate.dialect.sequence.spi.SequenceSupports.none();
 		}
 		else if ( getVersion().isSameOrAfter( 16 ) ) {
-			return SQLServer16SequenceSupport.INSTANCE;
+			return CommunitySequenceSupports.sqlServer16();
 		}
 		else {
-			return SQLServerSequenceSupport.INSTANCE;
+			return CommunitySequenceSupports.sqlServer();
 		}
 	}
 
+	// The upper-case name works on both case-sensitive and case-insensitive collations.
+	private static final SequenceInformationExtractor SEQUENCE_INFORMATION_EXTRACTOR =
+			SequenceInformationExtractors.builder( "select * from INFORMATION_SCHEMA.SEQUENCES" ).build();
+
 	@Override
-	public String getQuerySequencesString() {
+	public SequenceInformationExtractor getSequenceInformationExtractor() {
 		return getVersion().isBefore( 11 )
-				? super.getQuerySequencesString() //null
-				// The upper-case name should work on both case-sensitive
-				// and case-insensitive collations.
-				: "select * from INFORMATION_SCHEMA.SEQUENCES";
+				? SequenceInformationExtractors.none()
+				: SEQUENCE_INFORMATION_EXTRACTOR;
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String getQueryHintString(String sql, String hints) {
 		if ( getVersion().isBefore( 11 ) ) {
 			return super.getQueryHintString( sql, hints );
@@ -841,35 +829,41 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
-	public boolean supportsNullPrecedence() {
-		return false;
+	public NullOrderingSupport getNullOrderingSupport() {
+		return NullOrderingSupport.builder( super.getNullOrderingSupport() )
+				.capability( NullOrderingSupport.Capability.NULLS_FIRST_LAST, false )
+				.build();
 	}
 
 	@Override
-	public boolean supportsOffsetInSubquery() {
-		return true;
+	public SubquerySupport getSubquerySupport() {
+		return SubquerySupport.builder( super.getSubquerySupport() )
+				.feature( SubquerySupport.Feature.OFFSET, true )
+				.feature( SubquerySupport.Feature.LATERAL, getVersion().isSameOrAfter( 9 ) )
+				.build();
 	}
 
 	@Override
-	public boolean supportsWindowFunctions() {
-		return true;
+	public WindowFunctionSupport getWindowFunctionSupport() {
+		return WindowFunctionSupport.builder()
+				.features(
+						WindowFunctionSupport.Feature.WINDOW_FUNCTIONS,
+						WindowFunctionSupport.Feature.PARTITION_BY,
+						WindowFunctionSupport.Feature.ROWS_FRAME,
+						WindowFunctionSupport.Feature.RANGE_FRAME
+				)
+				.build();
 	}
 
 	@Override
-	public boolean supportsLateral() {
-		return getVersion().isSameOrAfter( 9 );
-	}
-
-	@Override
-	public boolean supportsRecursiveCTE() {
-		return getVersion().isSameOrAfter( 9 );
-	}
-
-	@Override
-	public boolean supportsFetchClause(FetchClauseType type) {
-		return getVersion().isSameOrAfter( 11 );
+	@SPI({ USE, IMPLEMENT, SUPPLY })
+	public FetchClauseSupport getFetchClauseSupport() {
+		return getVersion().isSameOrAfter( 11 )
+				? FetchClauseSupport.ALL
+				: FetchClauseSupport.NONE;
 	}
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public ViolatedConstraintNameExtractor getViolatedConstraintNameExtractor() {
 		return new TemplatedViolatedConstraintNameExtractor(
 				sqle -> {
@@ -885,6 +879,7 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
 		if ( getVersion().isBefore( 9 ) ) {
 			return super.buildSQLExceptionConversionDelegate(); //null
@@ -921,17 +916,14 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
-	public int getDefaultTimestampPrecision() {
-		return 7;
-	}
-
-	@Override
-	public long getFractionalSecondPrecisionInNanos() {
+	@SPI({ USE, IMPLEMENT })
+	public long fractionalSecondPrecisionInNanos() {
 //		return 100; // 1/10th microsecond
 		return 1; // Even though SQL Server only supports 1/10th microsecond precision, use nanosecond scale for easier computation
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String extractPattern(TemporalUnit unit) {
 		switch (unit) {
 			case TIMEZONE_HOUR:
@@ -959,6 +951,7 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
 		// dateadd() supports only especially small magnitudes
 		// since it casts its argument to int (and unfortunately
@@ -977,6 +970,7 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
 		if ( unit == TemporalUnit.NATIVE ) {//use microsecond as the "native" precision
 			return "datediff_big(nanosecond,?2,?3)";
@@ -991,27 +985,30 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String translateDurationField(TemporalUnit unit) {
 		//use nanosecond as the "native" precision
 		if ( unit == TemporalUnit.NATIVE ) {
 			return "nanosecond";
 		}
 
-		return super.translateDurationField( unit );
+		return TemporalOperationSupports.standard().translateDurationField( unit );
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String translateExtractField(TemporalUnit unit) {
 		switch ( unit ) {
 			//the ISO week number (behavior of "week" depends on a system property)
 			case WEEK: return "isowk";
 			case OFFSET: return "tz";
-			default: return super.translateExtractField(unit);
+			default: return TemporalOperationSupports.standard().translateExtractField(unit);
 		}
 	}
 
 	@Override
-	public void appendDatetimeFormat(SqlAppender appender, String format) {
+	@SPI({ USE, IMPLEMENT })
+	public void appendFormat(SqlAppender appender, String format) {
 		appender.appendSql( datetimeFormat(format).result() );
 	}
 
@@ -1054,12 +1051,14 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public void appendBinaryLiteral(SqlAppender appender, byte[] bytes) {
 		appender.appendSql( "0x" );
 		PrimitiveByteArrayJavaType.INSTANCE.appendString( appender, bytes );
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public void appendUUIDLiteral(SqlAppender appender, java.util.UUID literal) {
 		appender.appendSql( "cast('" );
 		appender.appendSql( literal.toString() );
@@ -1067,6 +1066,7 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public void appendDateTimeLiteral(
 			SqlAppender appender,
 			TemporalAccessor temporalAccessor,
@@ -1081,14 +1081,14 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 			case TIME:
 				//needed because the {t ... } JDBC is just buggy
 				appender.appendSql( "cast('" );
-				appendAsTime( appender, temporalAccessor, supportsTemporalLiteralOffset(), jdbcTimeZone );
+				appendAsTime( appender, temporalAccessor, getTemporalValueSemantics().supportsLiteralOffset(), jdbcTimeZone );
 				appender.appendSql( "' as time)" );
 				break;
 			case TIMESTAMP:
 				appender.appendSql( "cast('" );
 
 				//needed because the {ts ... } JDBC escape chokes on microseconds
-				if ( supportsTemporalLiteralOffset() && temporalAccessor.isSupported( ChronoField.OFFSET_SECONDS ) ) {
+				if ( getTemporalValueSemantics().supportsLiteralOffset() && temporalAccessor.isSupported( ChronoField.OFFSET_SECONDS ) ) {
 					appendAsTimestampWithMicros( appender, temporalAccessor, true, jdbcTimeZone );
 					appender.appendSql( "' as datetimeoffset)" );
 				}
@@ -1103,6 +1103,7 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public void appendDateTimeLiteral(SqlAppender appender, Date date, TemporalType precision, TimeZone jdbcTimeZone) {
 		switch ( precision ) {
 			case DATE:
@@ -1113,7 +1114,7 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 			case TIME:
 				//needed because the {t ... } JDBC is just buggy
 				appender.appendSql( "cast('" );
-				appendAsTime( appender, date );
+				appendAsLocalTime( appender, date );
 				appender.appendSql( "' as time)" );
 				break;
 			case TIMESTAMP:
@@ -1127,6 +1128,7 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public void appendDateTimeLiteral(
 			SqlAppender appender,
 			Calendar calendar,
@@ -1141,7 +1143,7 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 			case TIME:
 				//needed because the {t ... } JDBC is just buggy
 				appender.appendSql( "cast('" );
-				appendAsTime( appender, calendar );
+				appendAsLocalTime( appender, calendar );
 				appender.appendSql( "' as time)" );
 				break;
 			case TIMESTAMP:
@@ -1156,37 +1158,32 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public TemporaryTableStrategy getLocalTemporaryTableStrategy() {
-		return SQLServerLocalTemporaryTableStrategy.INSTANCE;
+		return TemporaryTableStrategies.sqlServerLocal();
 	}
 
 	@Override
-	public String getCreateTemporaryTableColumnAnnotation(int sqlTypeCode) {
-		return SQLServerLocalTemporaryTableStrategy.INSTANCE.getCreateTemporaryTableColumnAnnotation( sqlTypeCode );
+	@SPI({ IMPLEMENT, SUPPLY })
+	public NamespaceSupport getNamespaceSupport() {
+		return NamespaceSupports.standard( false, getVersion().isSameOrAfter( 13 ) );
 	}
 
 	@Override
-	public String[] getDropSchemaCommand(String schemaName) {
-		if ( getVersion().isSameOrAfter( 13 ) ) {
-			return new String[] { "drop schema if exists " + schemaName };
-		}
-		return super.getDropSchemaCommand( schemaName );
-	}
-
-	@Override
-	public String getCreateIndexString(boolean unique) {
+	@SPI({ USE, IMPLEMENT })
+	public String createCommand(IndexDdlRequest request) {
 		// we only create unique indexes, as opposed to unique constraints,
 		// when the column is nullable, so safe to infer unique => nullable
-		return unique ? "create unique nonclustered index" : "create index";
+		return request.unique() ? "create unique nonclustered index" : "create index";
 	}
 
 	@Override
-	public String getCreateIndexTail(boolean unique, List<Column> columns) {
-		if (unique) {
+	@SPI({ USE, IMPLEMENT })
+	public String createTail(IndexDdlRequest request) {
+		if ( request.unique() ) {
 			StringBuilder tail = new StringBuilder();
-			for ( Column column : columns ) {
-				if ( column.isNullable() ) {
+			for ( var column : request.columns() ) {
+				if ( column.nullable() ) {
 					tail.append( tail.length() == 0 ? " where " : " and " )
-						.append( column.getQuotedName( this ) )
+						.append( column.expression() )
 						.append( " is not null" );
 				}
 			}
@@ -1198,11 +1195,13 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public NameQualifierSupport getNameQualifierSupport() {
 		return NameQualifierSupport.BOTH;
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public UniqueDelegate getUniqueDelegate() {
 		return uniqueDelegate;
 	}
@@ -1236,89 +1235,73 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
-	public String generatedAs(String generatedAs) {
-		return " as (" + generatedAs + ") persisted";
+	@SPI({ USE, IMPLEMENT })
+	public void appendDefinition(SqlAppender appender, ColumnDefinitionRequest request) {
+		if ( request.generatedExpression() == null ) {
+			appender.appendSql( ' ' );
+			appender.appendSql( request.sqlType() );
+		}
+		if ( request.renderedCollation() != null ) {
+			appender.appendSql( " collate " );
+			appender.appendSql( request.renderedCollation() );
+		}
+		if ( request.defaultExpression() != null ) {
+			appender.appendSql( " default " );
+			appender.appendSql( request.defaultExpression() );
+		}
+		if ( request.generatedExpression() != null ) {
+			appender.appendSql( " as (" );
+			appender.appendSql( request.generatedExpression() );
+			appender.appendSql( ") persisted" );
+		}
+		if ( !request.nullable() ) {
+			appender.appendSql( " not null" );
+		}
 	}
 
 	@Override
-	public boolean hasDataTypeBeforeGeneratedAs() {
-		return false;
-	}
-
-	// disabled foreign key constraints still prevent 'truncate table'
-	// (these would help if we used 'delete' instead of 'truncate')
-
-//	@Override
-//	public String getDisableConstraintStatement(String tableName, String name) {
-//		return "alter table " + tableName + " nocheck constraint " + name;
-//	}
-//
-//	@Override
-//	public String getEnableConstraintStatement(String tableName, String name) {
-//		return "alter table " + tableName + " with check check constraint " + name;
-//	}
-
-	@Override
+	@SPI({ USE, IMPLEMENT, SUPPLY })
 	public DmlTargetColumnQualifierSupport getDmlTargetColumnQualifierSupport() {
 		return DmlTargetColumnQualifierSupport.TABLE_ALIAS;
 	}
 
 	@Override
-	public boolean supportsFromClauseInUpdate() {
-		return true;
+	public MutationSyntaxSupport getMutationSyntaxSupport() {
+		return MutationSyntaxSupport.builder()
+				.capability( MutationKind.UPDATE, MutationSyntaxCapability.FROM_CLAUSE )
+				.capability( MutationKind.DELETE, MutationSyntaxCapability.JOIN )
+				.build();
 	}
 
 	@Override
-	public String getCheckConstraintString(CheckConstraint checkConstraint) {
+	@SPI({ USE, IMPLEMENT })
+	public String render(org.hibernate.dialect.constraint.spi.CheckConstraintRenderRequest request) {
 		// The only useful option is 'NOT FOR REPLICATION'
 		// and it comes before the constraint expression
-		final String constraintName = checkConstraint.getName();
+		final String constraintName = request.name();
 		final String checkWithName =
 				isBlank( constraintName )
-						? " check"
-						: " constraint " + constraintName + " check";
-		return appendCheckConstraintOptions( checkConstraint, checkWithName )
-			+ " (" + checkConstraint.getConstraint() + ")";
+						? "check"
+						: "constraint " + constraintName + " check";
+		return (isNotEmpty( request.options() ) ? checkWithName + " " + request.options() : checkWithName)
+				+ " (" + request.expression() + ")";
 	}
 
 	@Override
-	public String appendCheckConstraintOptions(CheckConstraint checkConstraint, String sqlCheckConstraint) {
-		return isNotEmpty( checkConstraint.getOptions() )
-				? sqlCheckConstraint + " " + checkConstraint.getOptions()
-				: sqlCheckConstraint;
-	}
-
-	@Override
-	public boolean supportsJoinsInDelete() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsSimpleQueryGrouping() {
+	public SetOperationSupport getSetOperationSupport() {
 		// SQL Server is quite strict i.e. it requires `select ... union all select * from (select ...)`
 		// rather than `select ... union all (select ...)` because parenthesis followed by select
 		// is always treated as a subquery, which is not supported in a set operation
-		return false;
+		return SetOperationSupport.builder()
+				.operator( SetOperator.INTERSECT_ALL, false )
+				.operator( SetOperator.EXCEPT_ALL, false )
+				.capability( SetOperationSupport.Capability.SIMPLE_QUERY_GROUPING, false )
+				.build();
 	}
 
 	@Override
-	public boolean supportsRowValueConstructorSyntax() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsWithClauseInSubquery() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsRowValueConstructorSyntaxInInList() {
-		return false;
+	public RowValueSupport getRowValueSupport() {
+		return RowValueSupport.NONE;
 	}
 
 }

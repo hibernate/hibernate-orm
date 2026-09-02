@@ -8,7 +8,7 @@ import org.hibernate.Incubating;
 import org.hibernate.query.sqm.function.NamedSqmSetReturningFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.function.SqmSetReturningFunctionDescriptor;
-import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
+import org.hibernate.sql.ast.spi.translation.SqlAstNodeRenderingMode;
 
 /**
  * @since 7.0

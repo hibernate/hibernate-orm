@@ -9,7 +9,7 @@ import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
 import org.hibernate.engine.jdbc.mutation.spi.BindingGroup;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.SelectableMapping;
-import org.hibernate.sql.model.TableMapping;
+import org.hibernate.sql.spi.mutation.TableMapping;
 
 /**
  * The JDBC values for a mutation
@@ -17,6 +17,7 @@ import org.hibernate.sql.model.TableMapping;
  * @author Steve Ebersole
  */
 @Incubating
+@org.hibernate.SPI({ org.hibernate.SPI.Role.USE, org.hibernate.SPI.Role.IMPLEMENT })
 public interface JdbcValueBindings {
 	/**
 	 * Get the bindings for the specific table, or {@code null}

@@ -12,7 +12,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.collection.AbstractCollectionPersister;
 import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.sql.model.MutationType;
+import org.hibernate.sql.spi.mutation.MutationType;
 
 import java.util.Iterator;
 

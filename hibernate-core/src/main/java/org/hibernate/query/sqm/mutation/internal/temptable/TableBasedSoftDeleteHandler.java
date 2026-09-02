@@ -4,9 +4,11 @@
  */
 package org.hibernate.query.sqm.mutation.internal.temptable;
 
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
+
 import jakarta.annotation.Nullable;
-import org.hibernate.dialect.temptable.TemporaryTable;
-import org.hibernate.dialect.temptable.TemporaryTableStrategy;
+import org.hibernate.dialect.temptable.internal.TemporaryTable;
+import org.hibernate.dialect.temptable.spi.TemporaryTableStrategy;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.MutableObject;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -22,23 +24,24 @@ import org.hibernate.query.sqm.internal.SqmUtil;
 import org.hibernate.query.sqm.mutation.internal.AbstractMutationHandler;
 import org.hibernate.query.sqm.mutation.internal.DeleteHandler;
 import org.hibernate.query.sqm.mutation.internal.MultiTableSqmMutationConverter;
+import static org.hibernate.dialect.sql.ast.spi.SubquerySupport.Feature.MUTATION_TARGET_REFERENCE;
 import static org.hibernate.query.sqm.mutation.internal.SqmMutationStrategyHelper.softDeleteTargets;
 import org.hibernate.query.sqm.mutation.spi.AfterUseAction;
 import org.hibernate.query.sqm.spi.SqmParameterMappingModelResolutionAccess;
 import org.hibernate.query.sqm.tree.spi.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.spi.expression.SqmParameter;
-import org.hibernate.sql.ast.tree.delete.DeleteStatement;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
-import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
-import org.hibernate.sql.ast.tree.expression.SqlTuple;
-import org.hibernate.sql.ast.tree.from.NamedTableReference;
-import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
-import org.hibernate.sql.ast.tree.predicate.InSubQueryPredicate;
-import org.hibernate.sql.ast.tree.predicate.PredicateCollector;
-import org.hibernate.sql.ast.tree.select.QuerySpec;
-import org.hibernate.sql.ast.tree.update.UpdateStatement;
+import org.hibernate.sql.ast.spi.query.delete.DeleteStatement;
+import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
+import org.hibernate.sql.ast.spi.query.expression.Expression;
+import org.hibernate.sql.ast.spi.query.expression.JdbcParameter;
+import org.hibernate.sql.ast.spi.query.expression.SqlTuple;
+import org.hibernate.sql.ast.spi.query.from.NamedTableReference;
+import org.hibernate.sql.ast.spi.query.from.TableGroup;
+import org.hibernate.sql.ast.spi.query.insert.InsertSelectStatement;
+import org.hibernate.sql.ast.spi.query.predicate.InSubQueryPredicate;
+import org.hibernate.sql.ast.spi.query.predicate.PredicateCollector;
+import org.hibernate.sql.ast.spi.query.select.QuerySpec;
+import org.hibernate.sql.ast.spi.query.update.UpdateStatement;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.internal.SqlTypedMappingJdbcParameter;
@@ -190,8 +193,8 @@ public class TableBasedSoftDeleteHandler
 						|| targetEntityDescriptor != rootEntityDescriptor
 						|| targetEntityDescriptor.getEntityPersister() instanceof UnionSubclassEntityPersister;
 		if ( needsSubQuery ) {
-			if ( getSessionFactory().getJdbcServices().getDialect()
-					.supportsSubqueryOnMutatingTable() ) {
+			if ( getSessionFactory().getJdbcServices().getDialect().getSubquerySupport()
+					.supports( MUTATION_TARGET_REFERENCE ) ) {
 				this.idTableInsert = null;
 				this.softDeletes = createDeletesWithSubQuery(
 						targetEntityDescriptor,
@@ -259,7 +262,7 @@ public class TableBasedSoftDeleteHandler
 							new InSubQueryPredicate( idExpression, idTableIdentifierSubQuery, false ) );
 			softDeleteMutations.add( factory.getJdbcServices().getJdbcEnvironment()
 					.getSqlAstTranslatorFactory()
-					.buildMutationTranslator( factory, updateStatement )
+					.buildTranslator( new SqlAstTranslationRequest.QueryMutation( factory, updateStatement ) )
 					.translate( JdbcParameterBindings.NO_BINDINGS, executionContext.getQueryOptions() ) );
 		}
 		return softDeleteMutations;
@@ -326,7 +329,7 @@ public class TableBasedSoftDeleteHandler
 							new InSubQueryPredicate( idExpression, matchingIdSubQuery, false ) );
 
 			softDeleteMutations.add( factory.getJdbcServices().getJdbcEnvironment().getSqlAstTranslatorFactory()
-					.buildMutationTranslator( factory, updateStatement )
+					.buildTranslator( new SqlAstTranslationRequest.QueryMutation( factory, updateStatement ) )
 					.translate( jdbcParameterBindings, executionContext.getQueryOptions() ) );
 		}
 		return softDeleteMutations;
@@ -348,7 +351,7 @@ public class TableBasedSoftDeleteHandler
 
 		final var factory = executionContext.getSession().getFactory();
 		return factory.getJdbcServices().getJdbcEnvironment().getSqlAstTranslatorFactory()
-				.buildMutationTranslator( factory, updateStatement )
+				.buildTranslator( new SqlAstTranslationRequest.QueryMutation( factory, updateStatement ) )
 				.translate( jdbcParameterBindings, executionContext.getQueryOptions() );
 	}
 

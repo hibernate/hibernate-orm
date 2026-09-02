@@ -18,7 +18,7 @@ import static org.hibernate.type.SqlTypes.NAMED_ORDINAL_ENUM;
  * one that often <em>cannot</em> be treated as a {@code int}.
  *
  * @see org.hibernate.type.SqlTypes#NAMED_ORDINAL_ENUM
- * @see Dialect#getEnumTypeDeclaration(Class)
+ * @see Dialect#getEnumSupport()
  *
  * @author Gavin King
  */
@@ -26,7 +26,7 @@ public class NamedNativeOrdinalEnumDdlTypeImpl implements DdlType {
 
 	private static final String[] ENUM_KEYWORD = {"enum"};
 
-	public NamedNativeOrdinalEnumDdlTypeImpl(Dialect dialect) {
+	public NamedNativeOrdinalEnumDdlTypeImpl() {
 	}
 
 	@Override

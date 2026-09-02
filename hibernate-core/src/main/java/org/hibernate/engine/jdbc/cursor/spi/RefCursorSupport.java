@@ -7,52 +7,33 @@ package org.hibernate.engine.jdbc.cursor.spi;
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
 
+import org.hibernate.SPI;
 import org.hibernate.service.Service;
 
-/**
- * Contract for JDBC REF_CURSOR support.
- *
- * @author Steve Ebersole
- *
- * @since 4.3
- */
+import static org.hibernate.SPI.Role.IMPLEMENT;
+
+/// Perform JDBC REF_CURSOR registration and extraction as one coherent
+/// strategy.
+///
+/// Implement both positional and named operations with matching registration
+/// and extraction behavior. Convert JDBC failures through the
+/// [RefCursorSupportCreationContext] received by the factory, do not retain a
+/// statement, and prefer a stock factory from [RefCursorSupports] where its
+/// behavior matches the driver.
+///
+/// @since 4.3
+/// @author Steve Ebersole
+@SPI(IMPLEMENT)
 public interface RefCursorSupport extends Service {
-	/**
-	 * Register a parameter capable of returning a {@link ResultSet} *by position*.
-	 *
-	 * @param statement The callable statement.
-	 * @param position The bind position at which to register the output param.
-	 */
+	/// Register a positional parameter which returns a [ResultSet].
 	void registerRefCursorParameter(CallableStatement statement, int position);
 
-	/**
-	 * Register a parameter capable of returning a {@link ResultSet} *by name*.
-	 *
-	 * @param statement The callable statement.
-	 * @param name The parameter name (for drivers which support named parameters).
-	 */
+	/// Register a named parameter which returns a [ResultSet].
 	void registerRefCursorParameter(CallableStatement statement, String name);
 
-	/**
-	 * Given a callable statement previously processed by {@link #registerRefCursorParameter(CallableStatement, int)},
-	 * extract the {@link ResultSet}.
-	 *
-	 *
-	 * @param statement The callable statement.
-	 * @param position The bind position at which to register the output param.
-	 *
-	 * @return The extracted result set.
-	 */
+	/// Extract the result registered at the given position.
 	ResultSet getResultSet(CallableStatement statement, int position);
 
-	/**
-	 * Given a callable statement previously processed by {@link #registerRefCursorParameter(CallableStatement, String)},
-	 * extract the {@link ResultSet}.
-	 *
-	 * @param statement The callable statement.
-	 * @param name The parameter name (for drivers which support named parameters).
-	 *
-	 * @return The extracted result set.
-	 */
+	/// Extract the result registered under the given name.
 	ResultSet getResultSet(CallableStatement statement, String name);
 }

@@ -129,6 +129,6 @@ public class DbVersionTest {
 			timestamp = new Timestamp( timestamp.getTime() );
 		}
 
-		return truncateToPrecision( timestamp, dialect.getDefaultTimestampPrecision() );
+		return truncateToPrecision( timestamp, dialect.getTypeSizingProfile().defaultTimestampPrecision() );
 	}
 }

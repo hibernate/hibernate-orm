@@ -10,9 +10,10 @@ import org.hibernate.query.sqm.sql.spi.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.spi.domain.SqmPluralPartSelectionPath;
 import org.hibernate.query.sqm.tree.spi.domain.SqmPluralValuedSimplePath;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.SqlAstWalker;
-import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.spi.SqlAstWalker;
+import org.hibernate.sql.ast.spi.query.PathInterpretation;
+import org.hibernate.sql.ast.spi.query.expression.Expression;
+import org.hibernate.sql.ast.spi.query.from.TableGroup;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.collection.internal.DetachedCollectionDomainResult;
@@ -22,7 +23,7 @@ import org.hibernate.sql.results.graph.collection.internal.DetachedCollectionDom
  */
 public class PluralValuedSimplePathInterpretation<T> extends AbstractSqmPathInterpretation<T> {
 
-	public static SqmPathInterpretation<?> from(SqmPluralValuedSimplePath<?> sqmPath, SqmToSqlAstConverter converter) {
+	public static PathInterpretation<?> from(SqmPluralValuedSimplePath<?> sqmPath, SqmToSqlAstConverter converter) {
 		final var tableGroup =
 				converter.getFromClauseAccess()
 						.findTableGroup( sqmPath.getLhs().getNavigablePath() );

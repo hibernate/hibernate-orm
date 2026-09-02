@@ -20,6 +20,11 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.OneToOne;
+import jakarta.persistence.PessimisticLockScope;
+
+import java.util.Map;
+
+import static org.hibernate.jpa.SpecHints.HINT_SPEC_LOCK_SCOPE;
 
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -121,6 +126,20 @@ public class LockRefreshReferencedTest {
 	public void testFindWithLockMode(EntityManagerFactoryScope scope) {
 		scope.inTransaction(session -> {
 			var mainEntity = session.find( MainEntity.class, 0L, LockModeType.PESSIMISTIC_WRITE );
+			assertThat( session.getLockMode( mainEntity ) ).isEqualTo( LockModeType.PESSIMISTIC_WRITE );
+		} );
+	}
+
+	@Test
+	public void testFindWithLockModeAndFetchedScope(EntityManagerFactoryScope scope) {
+		scope.inTransaction(session -> {
+			var mainEntity = session.find(
+					MainEntity.class,
+					0L,
+					LockModeType.PESSIMISTIC_WRITE,
+					Map.of( HINT_SPEC_LOCK_SCOPE, PessimisticLockScope.FETCHED )
+			);
+			assertThat( session.getLockMode( mainEntity ) ).isEqualTo( LockModeType.PESSIMISTIC_WRITE );
 			assertThat( session.getLockMode( mainEntity.referencedEager() ) ).isEqualTo( LockModeType.PESSIMISTIC_WRITE );
 		} );
 	}

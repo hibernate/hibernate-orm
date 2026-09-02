@@ -60,7 +60,7 @@ import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
+import org.hibernate.engine.jdbc.env.spi.JdbcMetadata;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.internal.StatisticalLoggingSessionEventListener;
 import org.hibernate.internal.EmptyInterceptor;
@@ -509,9 +509,9 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 			autoEvictCollectionCache = false;
 		}
 
-		final var meta = jdbcServices.getExtractedMetaDataSupport();
+		final var meta = jdbcServices.getJdbcMetadata();
 
-		jdbcBatchSize = disallowBatchUpdates( dialect, meta ) ? 0
+		jdbcBatchSize = disallowBatchUpdates( meta ) ? 0
 				: getInt( STATEMENT_BATCH_SIZE, settings, 1 );
 
 		scrollableResultSetsEnabled =
@@ -666,9 +666,8 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		return name == null ? null : strategySelector.selectStrategyImplementor( SessionEventListener.class, name );
 	}
 
-	private static boolean disallowBatchUpdates(Dialect dialect, ExtractedDatabaseMetaData meta) {
-		final Boolean dialectAnswer = dialect.supportsBatchUpdates();
-		return dialectAnswer != null ? !dialectAnswer : !meta.supportsBatchUpdates();
+	private static boolean disallowBatchUpdates(JdbcMetadata metadata) {
+		return !metadata.supportsBatchUpdates();
 	}
 
 	private static boolean hasStrategyConstructorSignature(Class<?>[] parameterTypes) {

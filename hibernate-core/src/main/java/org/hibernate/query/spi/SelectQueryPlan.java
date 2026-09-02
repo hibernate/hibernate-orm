@@ -37,6 +37,7 @@ public interface SelectQueryPlan<R> extends QueryPlan {
 	 *
 	 * @since 6.4
 	 */
+	@org.hibernate.SPI(org.hibernate.SPI.Role.SUPPLY)
 	<T> T executeQuery(DomainQueryExecutionContext executionContext, ResultsConsumer<T, R> resultsConsumer);
 	/**
 	 * Perform (execute) the query returning a List

@@ -16,6 +16,7 @@ import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.GeneratorCreationContext;
+import org.hibernate.query.sqm.SetOperator;
 
 import static org.hibernate.id.IdentifierGeneratorHelper.extractLong;
 import static org.hibernate.id.IdentifierGeneratorHelper.makeIntegralValue;
@@ -111,7 +112,7 @@ public class IncrementGenerator implements IdentifierGenerator {
 			final var dialect = context.getDialect();
 			if ( i < physicalTableNames.size() - 1 ) {
 				union.append( " union " );
-				if ( dialect.supportsUnionAll() ) {
+				if ( dialect.getSetOperationSupport().supports( SetOperator.UNION_ALL ) ) {
 					union.append( "all " );
 				}
 			}

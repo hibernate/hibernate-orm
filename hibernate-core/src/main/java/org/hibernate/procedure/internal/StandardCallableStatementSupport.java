@@ -5,15 +5,19 @@
 package org.hibernate.procedure.internal;
 
 import org.hibernate.QueryException;
+import org.hibernate.Internal;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.procedure.spi.CallableStatementSupport;
 import org.hibernate.procedure.spi.FunctionReturnImplementor;
+import org.hibernate.procedure.spi.NamedCallableParameterRenderer;
 import org.hibernate.procedure.spi.ProcedureCallImplementor;
 import org.hibernate.procedure.spi.ProcedureParameterImplementor;
 import org.hibernate.query.spi.ProcedureParameterMetadataImplementor;
 import org.hibernate.sql.exec.internal.JdbcCallImpl;
 import org.hibernate.sql.exec.spi.JdbcCallParameterRegistration;
 import org.hibernate.sql.exec.spi.JdbcOperationQueryCall;
+import org.hibernate.sql.spi.StringBuilderSqlAppender;
 
 import jakarta.persistence.ParameterMode;
 
@@ -22,23 +26,18 @@ import jakarta.persistence.ParameterMode;
  *
  * @author Steve Ebersole
  */
-public class StandardCallableStatementSupport extends AbstractStandardCallableStatementSupport {
-	/**
-	 * Singleton access - without REF_CURSOR support
-	 */
-	public static final StandardCallableStatementSupport NO_REF_CURSOR_INSTANCE = new StandardCallableStatementSupport( false );
-
-	/**
-	 * Singleton access - with REF CURSOR support
-	 */
-	public static final StandardCallableStatementSupport REF_CURSOR_INSTANCE = new StandardCallableStatementSupport( true );
-
+@Internal
+public final class StandardCallableStatementSupport implements CallableStatementSupport {
 	private final boolean supportsRefCursors;
 	private final boolean implicitReturn;
+	private final NamedCallableParameterRenderer namedParameterRenderer;
 
-	public StandardCallableStatementSupport(boolean supportsRefCursors) {
+	public StandardCallableStatementSupport(
+			boolean supportsRefCursors,
+			NamedCallableParameterRenderer namedParameterRenderer) {
 		this.supportsRefCursors = supportsRefCursors;
 		this.implicitReturn = !supportsRefCursors;
+		this.namedParameterRenderer = namedParameterRenderer;
 	}
 
 	@Override
@@ -85,9 +84,9 @@ public class StandardCallableStatementSupport extends AbstractStandardCallableSt
 						procedureCall
 				);
 				if ( parameter.getName() != null
-						&& session.getJdbcServices().getExtractedMetaDataSupport().supportsNamedParameters()
+						&& session.getJdbcServices().getJdbcMetadata().supportsNamedParameters()
 						&& session.getFactory().getSessionFactoryOptions().isPassProcedureParameterNames() ) {
-					appendNameParameter( buffer, parameter, registration );
+					appendNameParameter( buffer, parameter );
 				}
 				else {
 					buffer.append( "?" );
@@ -103,11 +102,10 @@ public class StandardCallableStatementSupport extends AbstractStandardCallableSt
 		return builder.buildJdbcCall();
 	}
 
-	protected void appendNameParameter(
+	private void appendNameParameter(
 			StringBuilder buffer,
-			ProcedureParameterImplementor<?> parameter,
-			JdbcCallParameterRegistration registration) {
-		buffer.append( '?' );
+			ProcedureParameterImplementor<?> parameter) {
+		namedParameterRenderer.render( new StringBuilderSqlAppender( buffer ), parameter.getName() );
 	}
 
 	private void verifyRefCursorSupport(Dialect dialect) {

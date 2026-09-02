@@ -34,12 +34,12 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.persister.collection.BasicCollectionPersister;
 import org.hibernate.persister.entity.mutation.TemporalMutationHelper;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
-import org.hibernate.sql.model.MutationOperation;
-import org.hibernate.sql.model.ast.MutatingTableReference;
-import org.hibernate.sql.model.ast.builder.TableDeleteBuilderStandard;
-import org.hibernate.sql.model.ast.builder.TableInsertBuilderStandard;
-import org.hibernate.sql.model.ast.builder.TableUpdateBuilderStandard;
+import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
+import org.hibernate.sql.spi.mutation.MutationOperation;
+import org.hibernate.sql.ast.spi.model.MutatingTableReference;
+import org.hibernate.sql.ast.spi.model.builder.TableDeleteBuilderStandard;
+import org.hibernate.sql.ast.spi.model.builder.TableInsertBuilderStandard;
+import org.hibernate.sql.ast.spi.model.builder.TableUpdateBuilderStandard;
 
 import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.ArrayList;

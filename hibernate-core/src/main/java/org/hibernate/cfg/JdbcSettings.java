@@ -4,6 +4,7 @@
  */
 package org.hibernate.cfg;
 
+
 import java.util.Calendar;
 
 import org.hibernate.Incubating;
@@ -13,7 +14,7 @@ import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
 import org.hibernate.query.Query;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
-import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
+import org.hibernate.sql.spi.ParameterMarkerStrategy;
 
 /**
  * Settings related to JDBC, Connections, pools, Dialects, and so on.

@@ -6,19 +6,25 @@ package org.hibernate.tool.schema.extract.spi;
 
 import jakarta.annotation.Nullable;
 import org.hibernate.Incubating;
+import org.hibernate.SPI;
 import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.dialect.Dialect;
 
-/**
- * Contract for extracting information about objects in the database schema(s).  To an extent, the contract largely
- * mirrors parts of the JDBC {@link java.sql.DatabaseMetaData} contract.  THe intention is to insulate callers
- * from {@link java.sql.DatabaseMetaData} since on many databases there are better ways to get information from
- * the meta schema.
- *
- * @apiNote Concepts here taken largely from the {@code MetaDataDialect} class in Hibernate Tools.
- *
- * @author Steve Ebersole
- */
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.SUPPLY;
+import static org.hibernate.SPI.Role.USE;
+
+/// Extracts information about objects in database schemas.
+///
+/// Implement this contract when standard JDBC metadata and the stock profiles
+/// in [InformationExtractors] do not match the database. An extractor is bound
+/// to the [ExtractionContext] used to create it; do not cache it across
+/// contexts or retain JDBC resources after an operation completes.
+///
+/// @author Steve Ebersole
+/// @see Dialect#getInformationExtractor(ExtractionContext)
 @Incubating
+@SPI({ USE, IMPLEMENT, SUPPLY })
 public interface InformationExtractor {
 
 	/**

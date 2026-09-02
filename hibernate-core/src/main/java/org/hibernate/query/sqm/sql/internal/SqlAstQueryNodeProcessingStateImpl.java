@@ -7,12 +7,12 @@ package org.hibernate.query.sqm.sql.internal;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import org.hibernate.sql.ast.Clause;
-import org.hibernate.sql.ast.spi.SqlAstCreationState;
-import org.hibernate.sql.ast.spi.SqlAstProcessingState;
-import org.hibernate.sql.ast.spi.SqlExpressionResolver;
-import org.hibernate.sql.ast.tree.from.FromClause;
-import org.hibernate.sql.ast.tree.predicate.Predicate;
+import org.hibernate.sql.ast.spi.translation.Clause;
+import org.hibernate.sql.ast.spi.creation.SqlAstCreationState;
+import org.hibernate.sql.ast.spi.creation.SqlAstProcessingState;
+import org.hibernate.sql.ast.spi.creation.SqlExpressionResolver;
+import org.hibernate.sql.ast.spi.query.from.FromClause;
+import org.hibernate.sql.ast.spi.query.predicate.Predicate;
 
 public class SqlAstQueryNodeProcessingStateImpl
 		extends AbstractSqlAstQueryNodeProcessingStateImpl {

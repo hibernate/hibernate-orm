@@ -4,8 +4,8 @@
  */
 package org.hibernate.metamodel.mapping;
 
-import org.hibernate.sql.ast.tree.from.TableGroupJoinProducer;
-import org.hibernate.sql.ast.tree.predicate.Predicate;
+import org.hibernate.sql.ast.spi.query.from.TableGroupJoinProducer;
+import org.hibernate.sql.ast.spi.query.predicate.Predicate;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.FetchableContainer;
 

@@ -4,6 +4,7 @@
  */
 package org.hibernate.engine.jdbc;
 
+
 import java.io.InputStream;
 import java.io.Reader;
 import java.sql.Blob;
@@ -112,7 +113,7 @@ public interface LobCreator {
 	 *
 	 * @apiNote This is needed for Oracle
 	 *
-	 * @see org.hibernate.dialect.Dialect#useConnectionToCreateLob
+	 * @see org.hibernate.dialect.lob.spi.LobSupport#useConnectionToCreateLob()
 	 *
 	 * @since 7.0
 	 */
@@ -126,7 +127,7 @@ public interface LobCreator {
 	 *
 	 * @apiNote This is needed for Oracle
 	 *
-	 * @see org.hibernate.dialect.Dialect#useConnectionToCreateLob
+	 * @see org.hibernate.dialect.lob.spi.LobSupport#useConnectionToCreateLob()
 	 *
 	 * @since 7.0
 	 */
@@ -140,7 +141,7 @@ public interface LobCreator {
 	 *
 	 * @apiNote This is needed for Oracle
 	 *
-	 * @see org.hibernate.dialect.Dialect#useConnectionToCreateLob
+	 * @see org.hibernate.dialect.lob.spi.LobSupport#useConnectionToCreateLob()
 	 *
 	 * @since 7.0
 	 */

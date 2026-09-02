@@ -9,11 +9,11 @@ import java.util.function.IntFunction;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.spi.SqlAstCreationState;
-import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.from.TableGroupProducer;
-import org.hibernate.sql.ast.tree.from.TableReference;
-import org.hibernate.sql.ast.tree.predicate.Predicate;
+import org.hibernate.sql.ast.spi.creation.SqlAstCreationState;
+import org.hibernate.sql.ast.spi.query.from.TableGroup;
+import org.hibernate.sql.ast.spi.query.from.TableGroupProducer;
+import org.hibernate.sql.ast.spi.query.from.TableReference;
+import org.hibernate.sql.ast.spi.query.predicate.Predicate;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.FetchParent;
@@ -78,6 +78,7 @@ public interface ForeignKeyDescriptor extends VirtualModelPart, ValuedModelPart 
 	 * Create a DomainResult for the referring-side of the fk
 	 * The table group must be the one containing the target.
 	 */
+	@org.hibernate.SPI(org.hibernate.SPI.Role.SUPPLY)
 	DomainResult<?> createKeyDomainResult(
 			NavigablePath navigablePath,
 			TableGroup targetTableGroup,
@@ -89,6 +90,7 @@ public interface ForeignKeyDescriptor extends VirtualModelPart, ValuedModelPart 
 	 * The table group must be the one containing the target.
 	 * The {@link Nature} is the association side of the foreign key i.e. {@link Association#getSideNature()}.
 	 */
+	@org.hibernate.SPI(org.hibernate.SPI.Role.SUPPLY)
 	DomainResult<?> createKeyDomainResult(
 			NavigablePath navigablePath,
 			TableGroup targetTableGroup,
@@ -100,6 +102,7 @@ public interface ForeignKeyDescriptor extends VirtualModelPart, ValuedModelPart 
 	 * Create a DomainResult for the target-side of the fk
 	 * The table group must be the one containing the target
 	 */
+	@org.hibernate.SPI(org.hibernate.SPI.Role.SUPPLY)
 	DomainResult<?> createTargetDomainResult(
 			NavigablePath navigablePath,
 			TableGroup targetTableGroup,
@@ -111,6 +114,7 @@ public interface ForeignKeyDescriptor extends VirtualModelPart, ValuedModelPart 
 	 * The table group must be the one containing the target.
 	 */
 	@Override
+	@org.hibernate.SPI(org.hibernate.SPI.Role.SUPPLY)
 	<T> DomainResult<T> createDomainResult(
 			NavigablePath navigablePath,
 			TableGroup targetTableGroup,
@@ -167,6 +171,7 @@ public interface ForeignKeyDescriptor extends VirtualModelPart, ValuedModelPart 
 	/**
 	 * Return a copy of this foreign key descriptor with the selectable mappings as provided by the given accessor.
 	 */
+	@org.hibernate.Internal
 	ForeignKeyDescriptor withKeySelectionMapping(
 			ManagedMappingType declaringType,
 			TableGroupProducer declaringTableGroupProducer,

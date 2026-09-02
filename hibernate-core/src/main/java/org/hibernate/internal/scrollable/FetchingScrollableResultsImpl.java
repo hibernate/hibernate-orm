@@ -7,7 +7,7 @@ package org.hibernate.internal.scrollable;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.sql.results.internal.RowProcessingStateStandardImpl;
+import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.sql.results.jdbc.spi.JdbcValues;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
@@ -30,7 +30,7 @@ public class FetchingScrollableResultsImpl<R> extends AbstractScrollableResults<
 			JdbcValues jdbcValues,
 			JdbcValuesSourceProcessingOptions processingOptions,
 			JdbcValuesSourceProcessingState jdbcValuesSourceProcessingState,
-			RowProcessingStateStandardImpl rowProcessingState,
+			RowProcessingState rowProcessingState,
 			RowReader<R> rowReader,
 			SharedSessionContractImplementor persistenceContext) {
 		super(

@@ -12,7 +12,7 @@ import org.hibernate.action.queue.spi.meta.TableDescriptor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.jdbc.TooManyRowsAffectedException;
-import org.hibernate.sql.model.MutationTarget;
+import org.hibernate.sql.spi.mutation.MutationTarget;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
 import java.util.Locale;
@@ -26,7 +26,7 @@ public class Checkers {
 			Expectation expectation,
 			int affectedRowCount,
 			int batchPosition,
-			MutationTarget<?,?> mutationTarget,
+			MutationTarget mutationTarget,
 			TableDescriptor mutatingTable,
 			Object id,
 			String sqlString,

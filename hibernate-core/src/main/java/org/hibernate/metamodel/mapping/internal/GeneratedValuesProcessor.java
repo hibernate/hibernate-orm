@@ -4,6 +4,8 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
+
 import org.hibernate.Incubating;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
@@ -21,8 +23,8 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
-import org.hibernate.sql.ast.tree.select.SelectStatement;
+import org.hibernate.sql.ast.spi.creation.SqlAliasBaseManager;
+import org.hibernate.sql.ast.spi.query.select.SelectStatement;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
@@ -88,7 +90,7 @@ public class GeneratedValuesProcessor {
 			);
 			jdbcSelect =
 					sessionFactory.getJdbcServices().getJdbcEnvironment().getSqlAstTranslatorFactory()
-							.buildSelectTranslator( sessionFactory, selectStatement )
+							.buildTranslator( new SqlAstTranslationRequest.Select( sessionFactory, selectStatement ) )
 							.translate( JdbcParameterBindings.NO_BINDINGS, QueryOptions.NONE );
 			jdbcParameters = builder.build();
 		}

@@ -9,6 +9,7 @@ import java.util.function.Consumer;
 import org.hibernate.Incubating;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.model.domain.NavigableRole;
+import org.hibernate.sql.spi.mutation.TableMapping;
 
 /**
  * Mutation target contract for the legacy (sequential) action queue.
@@ -19,7 +20,9 @@ import org.hibernate.metamodel.model.domain.NavigableRole;
  * @author Steve Ebersole
  */
 @Incubating
-public interface LegacyMutationTarget<T extends TableMapping> {
+@org.hibernate.SPI({ org.hibernate.SPI.Role.USE, org.hibernate.SPI.Role.IMPLEMENT })
+public interface LegacyMutationTarget<T extends TableMapping>
+		extends org.hibernate.sql.spi.mutation.MutationTarget {
 	/**
 	 * The model role of this target
 	 */

@@ -14,8 +14,8 @@ import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.query.sqm.tree.spi.cte.SqmCteStatement;
 import org.hibernate.query.sqm.tree.spi.cte.SqmCteTable;
-import org.hibernate.sql.ast.spi.FromClauseAccess;
-import org.hibernate.sql.ast.tree.cte.CteColumn;
+import org.hibernate.sql.ast.spi.creation.FromClauseAccess;
+import org.hibernate.sql.ast.spi.query.cte.CteColumn;
 import org.hibernate.type.BasicType;
 
 /**

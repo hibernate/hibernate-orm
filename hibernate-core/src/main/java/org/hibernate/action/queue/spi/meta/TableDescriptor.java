@@ -5,7 +5,7 @@
 package org.hibernate.action.queue.spi.meta;
 
 import org.hibernate.Incubating;
-import org.hibernate.sql.model.TableMapping;
+import org.hibernate.sql.spi.mutation.TableMapping;
 
 /// Details about a table in the domain model, used to creation mutation
 /// operations in the graph-based ActionQueue implementation.

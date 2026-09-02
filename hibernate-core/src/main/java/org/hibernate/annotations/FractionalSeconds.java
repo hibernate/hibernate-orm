@@ -4,6 +4,7 @@
  */
 package org.hibernate.annotations;
 
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
@@ -20,7 +21,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * @apiNote The presence or absence of this annotation implies different semantics for time
  * versus timestamp based values.  By default, time values are stored without fractional seconds
  * whereas timestamp values are stored with a precision based on the
- * {@linkplain org.hibernate.dialect.Dialect#getDefaultTimestampPrecision Dialect default}
+ * {@linkplain org.hibernate.dialect.type.spi.TypeSizingProfile#defaultTimestampPrecision()
+ * Dialect default}
  *
  * @see java.time.Instant
  * @see java.time.LocalDateTime

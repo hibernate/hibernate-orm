@@ -53,6 +53,7 @@ public class DefaultFetchProfile extends FetchProfile {
 	}
 
 	@Override
+	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	public boolean hasSubselectLoadableCollectionsEnabled(EntityPersister persister) {
 		final AttributeMappingsList attributeMappings = persister.getAttributeMappings();
 		for ( int i = 0; i < attributeMappings.size(); i++ ) {

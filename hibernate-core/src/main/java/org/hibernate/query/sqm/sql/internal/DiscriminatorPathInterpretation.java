@@ -16,17 +16,18 @@ import org.hibernate.metamodel.model.domain.internal.EmbeddedDiscriminatorSqmPat
 import org.hibernate.metamodel.model.domain.internal.EntityDiscriminatorSqmPath;
 import org.hibernate.query.sqm.sql.spi.SqmToSqlAstConverter;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.SqlAstWalker;
-import org.hibernate.sql.ast.spi.SqlAstCreationState;
-import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.spi.SqlAstWalker;
+import org.hibernate.sql.ast.spi.creation.SqlAstCreationState;
+import org.hibernate.sql.ast.spi.query.PathInterpretation;
+import org.hibernate.sql.ast.spi.query.expression.Expression;
+import org.hibernate.sql.ast.spi.query.from.TableGroup;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 
 import static org.hibernate.query.sqm.internal.SqmMappingModelHelper.resolveMappingModelExpressible;
 
 /**
- * SqmPathInterpretation and DomainResultProducer implementation for entity discriminator
+ * PathInterpretation and DomainResultProducer implementation for entity discriminator
  *
  * @author Steve Ebersole
  */
@@ -55,7 +56,7 @@ public class DiscriminatorPathInterpretation<T> extends AbstractSqmPathInterpret
 				.resolveSqlExpression( navigablePath, jdbcMappingToUse, tableGroup, sqlAstCreationState );
 	}
 
-	public static SqmPathInterpretation<?> from(
+	public static PathInterpretation<?> from(
 			DiscriminatorSqmPath<?> path,
 			SqmToSqlAstConverter converter) {
 

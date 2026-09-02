@@ -4,6 +4,11 @@
  */
 package org.hibernate.type;
 
+import org.hibernate.SPI;
+
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.USE;
+
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
@@ -15,10 +20,12 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
  * @author Steve Ebersole
  */
 @SuppressWarnings("unused")
+@SPI({ USE, IMPLEMENT })
 public class StandardBasicTypeTemplate<J> extends AbstractSingleColumnStandardBasicType<J> {
 	private final String name;
 	private final String[] registrationKeys;
 
+	@SPI(IMPLEMENT)
 	public StandardBasicTypeTemplate(
 			JdbcType jdbcType,
 			JavaType<J> javaType,

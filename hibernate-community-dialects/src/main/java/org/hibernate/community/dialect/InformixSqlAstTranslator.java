@@ -6,35 +6,43 @@ package org.hibernate.community.dialect;
 
 import java.util.List;
 
+import org.hibernate.Internal;
 import org.hibernate.Locking;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.SPI;
+import org.hibernate.dialect.sql.ast.spi.DerivedTableRenderingSupport;
+import org.hibernate.dialect.sql.ast.spi.PaginationRenderingPlan;
+import org.hibernate.dialect.sql.ast.spi.PaginationRenderingSupport;
+import org.hibernate.dialect.sql.ast.spi.QueryMutationRenderingSupport;
+import org.hibernate.dialect.sql.ast.spi.StandardQueryMutationRenderingSupport;
+import org.hibernate.dialect.sql.ast.spi.SelectItemReferenceStrategy;
+import org.hibernate.dialect.sql.ast.spi.StandardDerivedTableRenderingSupport;
 import org.hibernate.query.IllegalQueryOperationException;
+import org.hibernate.query.common.FetchClauseType;
 import org.hibernate.query.sqm.ComparisonOperator;
-import org.hibernate.query.sqm.sql.internal.SqmParameterInterpretation;
-import org.hibernate.sql.ast.Clause;
-import org.hibernate.sql.ast.spi.LockingClauseStrategy;
-import org.hibernate.sql.ast.spi.SqlAstTranslatorWithMerge;
-import org.hibernate.sql.ast.spi.SqlSelection;
-import org.hibernate.sql.ast.tree.Statement;
-import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
-import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
-import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
-import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.FunctionExpression;
-import org.hibernate.sql.ast.tree.expression.Literal;
-import org.hibernate.sql.ast.tree.expression.SqlTuple;
-import org.hibernate.sql.ast.tree.expression.Summarization;
-import org.hibernate.sql.ast.tree.from.NamedTableReference;
-import org.hibernate.sql.ast.tree.from.ValuesTableReference;
-import org.hibernate.sql.ast.tree.insert.ConflictClause;
-import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
-import org.hibernate.sql.ast.tree.select.QueryGroup;
-import org.hibernate.sql.ast.tree.select.QueryPart;
-import org.hibernate.sql.ast.tree.select.QuerySpec;
-import org.hibernate.sql.ast.tree.select.SelectClause;
-import org.hibernate.sql.ast.tree.update.UpdateStatement;
+import org.hibernate.sql.ast.spi.translation.Clause;
+import org.hibernate.dialect.lock.spi.LockingClauseStrategy;
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslatorWithMerge;
+import org.hibernate.sql.ast.spi.query.select.SqlSelection;
+import org.hibernate.sql.ast.spi.Statement;
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
+import org.hibernate.dialect.function.spi.WindowFunctionSupport;
+import org.hibernate.dialect.sql.ast.spi.InsertConflictRenderingSupport;
+import org.hibernate.dialect.sql.ast.spi.StandardInsertConflictRenderingSupport;
+import org.hibernate.sql.ast.spi.query.expression.BinaryArithmeticExpression;
+import org.hibernate.sql.ast.spi.query.expression.CaseSearchedExpression;
+import org.hibernate.sql.ast.spi.query.expression.CaseSimpleExpression;
+import org.hibernate.sql.ast.spi.query.expression.Expression;
+import org.hibernate.sql.ast.spi.query.expression.FunctionExpression;
+import org.hibernate.sql.ast.spi.query.expression.Literal;
+import org.hibernate.sql.ast.spi.query.expression.SqlTuple;
+import org.hibernate.sql.ast.spi.query.expression.Summarization;
+import org.hibernate.sql.ast.spi.query.from.NamedTableReference;
+import org.hibernate.sql.ast.spi.query.select.QueryGroup;
+import org.hibernate.sql.ast.spi.query.select.QueryPart;
+import org.hibernate.sql.ast.spi.query.select.QuerySpec;
+import org.hibernate.sql.ast.spi.query.select.SelectClause;
 import org.hibernate.sql.exec.spi.JdbcOperation;
-import org.hibernate.sql.model.internal.TableInsertStandard;
+import org.hibernate.sql.ast.spi.model.TableInsertStandard;
 
 /**
  * A SQL AST translator for Informix.
@@ -43,8 +51,14 @@ import org.hibernate.sql.model.internal.TableInsertStandard;
  */
 public class InformixSqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslatorWithMerge<T> {
 
-	public InformixSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
-		super( sessionFactory, statement );
+	public InformixSqlAstTranslator(SqlAstTranslationRequest<? extends Statement, T> request) {
+		super( request );
+	}
+
+	@Override
+	@SPI({ SPI.Role.IMPLEMENT, SPI.Role.SUPPLY })
+	protected SelectItemReferenceStrategy getGroupBySelectItemReferenceStrategy() {
+		return SelectItemReferenceStrategy.POSITION;
 	}
 
 	@Override
@@ -53,30 +67,33 @@ public class InformixSqlAstTranslator<T extends JdbcOperation> extends SqlAstTra
 		visitFromClause( querySpec.getFromClause() );
 		if ( !hasFrom( querySpec.getFromClause() )
 				&& hasWhere( querySpec.getWhereClauseRestrictions() )
-				&& getDialect().getFromDualForSelectOnly().isBlank() ) {
+				&& getDialect().getSingleRowTableSupport().getSelectOnlyFromClause().isBlank() ) {
 			append( " from " );
-			append( getDual() );
+			append( getSingleRowTableExpression() );
 		}
 		visitWhereClause( querySpec.getWhereClauseRestrictions() );
-		visitGroupByClause( querySpec, getDialect().getGroupBySelectItemReferenceStrategy() );
+		visitGroupByClause( querySpec, getGroupBySelectItemReferenceStrategy() );
 		visitHavingClause( querySpec );
 		visitOrderBy( querySpec.getSortSpecifications() );
 		visitOffsetFetchClause( querySpec );
 	}
 
 	@Override
-	public void visitSelectClause(SelectClause selectClause) {
-		getClauseStack().push( Clause.SELECT );
-
-		try {
-			appendSql( "select " );
-			visitSqlSelections( selectClause );
-			renderVirtualSelections( selectClause );
+	protected void renderSelectClause(SelectClause selectClause) {
+		appendSql( "select " );
+		final QuerySpec querySpec = (QuerySpec) getQueryPartStack().getCurrent();
+		final PaginationRenderingPlan plan = determinePaginationRenderingPlan( querySpec );
+		if ( plan instanceof PaginationRenderingPlan.SkipFirst ) {
+			renderSkipFirstClause( querySpec );
 		}
-		finally {
-			getClauseStack().pop();
+		else if ( plan instanceof PaginationRenderingPlan.First ) {
+			renderFirstClause( querySpec );
 		}
-
+		if ( selectClause.isDistinct() ) {
+			appendSql( "distinct " );
+		}
+		super.renderSelectItems( selectClause );
+		renderVirtualSelections( selectClause );
 	}
 
 	@Override
@@ -85,25 +102,22 @@ public class InformixSqlAstTranslator<T extends JdbcOperation> extends SqlAstTra
 	}
 
 	@Override
-	protected void visitSqlSelections(SelectClause selectClause) {
-		final QuerySpec querySpec = (QuerySpec) getQueryPartStack().getCurrent();
-		if ( isRowsOnlyFetchClauseType( querySpec ) ) {
-			if ( supportsSkipFirstClause() ) {
-				renderSkipFirstClause( querySpec );
+	protected PaginationRenderingSupport getPaginationRenderingSupport() {
+		return request -> {
+			if ( request.hasFetch() && request.fetchClauseType() != FetchClauseType.ROWS_ONLY ) {
+				if ( getDialect().getWindowFunctionSupport()
+						.supports( WindowFunctionSupport.Feature.WINDOW_FUNCTIONS ) ) {
+					return new PaginationRenderingPlan.Window( true );
+				}
+				throw new IllegalArgumentException( "Can't emulate non-ROWS fetch clause without window functions" );
 			}
-			else {
-				renderFirstClause( querySpec );
+			if ( request.queryPart() instanceof QueryGroup ) {
+				return new PaginationRenderingPlan.FirstSkip();
 			}
-		}
-		if ( selectClause.isDistinct() ) {
-			appendSql( "distinct " );
-		}
-		super.visitSqlSelections( selectClause );
-	}
-
-	@Override
-	protected boolean needsRowsToSkip() {
-		return !supportsSkipFirstClause();
+			return supportsSkipFirstClause()
+					? new PaginationRenderingPlan.SkipFirst()
+					: new PaginationRenderingPlan.First();
+		};
 	}
 
 	@Override
@@ -140,7 +154,7 @@ public class InformixSqlAstTranslator<T extends JdbcOperation> extends SqlAstTra
 		if ( !queryPart.isRoot() && queryPart.getOffsetClauseExpression() != null ) {
 			throw new IllegalArgumentException( "Can't emulate offset clause in subquery" );
 		}
-		// We use 'select first n' on Informix, so nothing to do here
+		super.visitOffsetFetchClause( queryPart );
 	}
 
 	@Override
@@ -208,59 +222,19 @@ public class InformixSqlAstTranslator<T extends JdbcOperation> extends SqlAstTra
 	}
 
 	@Override
-	protected void visitConflictClause(ConflictClause conflictClause) {
-		if ( conflictClause != null ) {
-			if ( conflictClause.isDoUpdate() && conflictClause.getConstraintName() != null ) {
-				throw new IllegalQueryOperationException( "Insert conflict 'do update' clause with constraint name is not supported" );
-			}
-		}
+	@Internal
+	protected InsertConflictRenderingSupport getInsertConflictRenderingSupport() {
+		return StandardInsertConflictRenderingSupport.MERGE;
 	}
 
 	@Override
-	protected void visitInsertStatementOnly(InsertSelectStatement statement) {
-		if ( statement.getConflictClause() == null || statement.getConflictClause().isDoNothing() ) {
-			// Render plain insert statement and possibly run into unique constraint violation
-			super.visitInsertStatementOnly( statement );
-		}
-		else {
-			visitInsertStatementEmulateMerge( statement );
-		}
-	}
-
-	@Override
-	public void visitValuesTableReference(ValuesTableReference tableReference) {
-		emulateValuesTableReferenceColumnAliasing( tableReference );
-	}
-
-	protected boolean shouldEmulateFetchClause(QueryPart queryPart) {
-		// Check if current query part is already row numbering to avoid infinite recursion
-		return useOffsetFetchClause( queryPart ) && getQueryPartForRowNumbering() != queryPart
-			&& getDialect().supportsWindowFunctions() && !isRowsOnlyFetchClauseType( queryPart );
-	}
-
-	@Override
-	public void visitQueryGroup(QueryGroup queryGroup) {
-		if ( shouldEmulateFetchClause( queryGroup ) ) {
-			emulateFetchOffsetWithWindowFunctions( queryGroup, true );
-		}
-		else {
-			super.visitQueryGroup( queryGroup );
-		}
-	}
-
-	@Override
-	public void visitQuerySpec(QuerySpec querySpec) {
-		if ( shouldEmulateFetchClause( querySpec ) ) {
-			emulateFetchOffsetWithWindowFunctions( querySpec, true );
-		}
-		else {
-			super.visitQuerySpec( querySpec );
-		}
+	protected DerivedTableRenderingSupport getDerivedTableRenderingSupport() {
+		return StandardDerivedTableRenderingSupport.VALUES_SELECT_LIST;
 	}
 
 	@Override
 	protected void visitArithmeticOperand(Expression expression) {
-		if ( expression instanceof SqmParameterInterpretation
+		if ( isParameterInterpretation( expression )
 				&& expression.getExpressionType() != null
 				&& expression.getExpressionType().getJdbcTypeCount() == 1 ) {
 			final String castType =
@@ -332,13 +306,8 @@ public class InformixSqlAstTranslator<T extends JdbcOperation> extends SqlAstTra
 	}
 
 	@Override
-	protected void visitUpdateStatementOnly(UpdateStatement statement) {
-		if ( hasNonTrivialFromClause( statement.getFromClause() ) ) {
-			visitUpdateStatementEmulateMerge( statement );
-		}
-		else {
-			super.visitUpdateStatementOnly( statement );
-		}
+	protected QueryMutationRenderingSupport getQueryMutationRenderingSupport() {
+		return StandardQueryMutationRenderingSupport.MERGE;
 	}
 
 	@Override

@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.sqm.mutation.internal.cte;
 
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
+
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
@@ -28,26 +30,26 @@ import org.hibernate.query.sqm.tree.spi.SqmDeleteOrUpdateStatement;
 import org.hibernate.query.sqm.tree.spi.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.spi.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.spi.expression.SqmStar;
-import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.tree.cte.CteColumn;
-import org.hibernate.sql.ast.tree.cte.CteContainer;
-import org.hibernate.sql.ast.tree.cte.CteMaterialization;
-import org.hibernate.sql.ast.tree.cte.CteStatement;
-import org.hibernate.sql.ast.tree.cte.CteTable;
-import org.hibernate.sql.ast.tree.cte.CteTableGroup;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
-import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
-import org.hibernate.sql.ast.tree.expression.SqlTuple;
-import org.hibernate.sql.ast.tree.from.NamedTableReference;
-import org.hibernate.sql.ast.tree.from.TableReference;
-import org.hibernate.sql.ast.tree.from.UnionTableReference;
-import org.hibernate.sql.ast.tree.predicate.InSubQueryPredicate;
-import org.hibernate.sql.ast.tree.predicate.Junction;
-import org.hibernate.sql.ast.tree.predicate.Predicate;
-import org.hibernate.sql.ast.tree.select.QuerySpec;
-import org.hibernate.sql.ast.tree.select.SelectClause;
-import org.hibernate.sql.ast.tree.select.SelectStatement;
+import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
+import org.hibernate.sql.ast.spi.query.cte.CteColumn;
+import org.hibernate.sql.ast.spi.query.cte.CteContainer;
+import org.hibernate.sql.ast.spi.query.cte.CteMaterialization;
+import org.hibernate.sql.ast.spi.query.cte.CteStatement;
+import org.hibernate.sql.ast.spi.query.cte.CteTable;
+import org.hibernate.sql.ast.spi.query.cte.CteTableGroup;
+import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
+import org.hibernate.sql.ast.spi.query.expression.Expression;
+import org.hibernate.sql.ast.spi.query.expression.JdbcParameter;
+import org.hibernate.sql.ast.spi.query.expression.SqlTuple;
+import org.hibernate.sql.ast.spi.query.from.NamedTableReference;
+import org.hibernate.sql.ast.spi.query.from.TableReference;
+import org.hibernate.sql.ast.spi.query.from.UnionTableReference;
+import org.hibernate.sql.ast.spi.query.predicate.InSubQueryPredicate;
+import org.hibernate.sql.ast.spi.query.predicate.Junction;
+import org.hibernate.sql.ast.spi.query.predicate.Predicate;
+import org.hibernate.sql.ast.spi.query.select.QuerySpec;
+import org.hibernate.sql.ast.spi.query.select.SelectClause;
+import org.hibernate.sql.ast.spi.query.select.SelectStatement;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
 import org.hibernate.sql.exec.spi.JdbcSelect;
@@ -142,7 +144,7 @@ public abstract class AbstractCteMutationHandler extends AbstractMutationHandler
 		final JdbcServices jdbcServices = factory.getJdbcServices();
 		final SqlAstTranslator<JdbcSelect> translator = jdbcServices.getJdbcEnvironment()
 				.getSqlAstTranslatorFactory()
-				.buildSelectTranslator( factory, statement );
+				.buildTranslator( new SqlAstTranslationRequest.Select( factory, statement ) );
 
 		final Expression count = createCountStar( factory, sqmConverter );
 		domainResults.add(

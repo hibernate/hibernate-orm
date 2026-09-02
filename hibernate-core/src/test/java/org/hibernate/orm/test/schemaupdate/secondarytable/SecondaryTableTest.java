@@ -22,6 +22,7 @@ import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.TargetType;
 
 import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.hibernate.testing.DialectTestSupport;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.AfterEach;
@@ -78,7 +79,8 @@ public class SecondaryTableTest {
 			String tableName) throws Exception {
 		final String[] fileContent = new String( Files.readAllBytes( output.toPath() ) ).toLowerCase()
 				.split( System.lineSeparator() );
-		final String createTable = metadata.getDatabase().getDialect().getCreateTableString().toUpperCase( Locale.ROOT ) + " ";
+		final String createTable = DialectTestSupport.createTableCommand( metadata.getDatabase().getDialect() )
+				.toUpperCase( Locale.ROOT ) + " ";
 		for ( final String s : fileContent ) {
 			final String statement = s.toUpperCase( Locale.ROOT );
 			if ( statement.contains( createTable + tableName.toUpperCase( Locale.ROOT ) ) ) {

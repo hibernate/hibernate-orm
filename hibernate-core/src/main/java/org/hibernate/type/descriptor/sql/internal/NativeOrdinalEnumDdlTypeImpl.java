@@ -19,7 +19,7 @@ import static org.hibernate.type.SqlTypes.ORDINAL_ENUM;
  * may be treated as {@code int} for most purposes.
  *
  * @see org.hibernate.type.SqlTypes#ORDINAL_ENUM
- * @see Dialect#getEnumTypeDeclaration(Class)
+ * @see Dialect#getEnumSupport()
  */
 
 public class NativeOrdinalEnumDdlTypeImpl implements DdlType {
@@ -39,7 +39,7 @@ public class NativeOrdinalEnumDdlTypeImpl implements DdlType {
 	public String getTypeName(Size columnSize, Type type, DdlTypeRegistry ddlTypeRegistry) {
 		return type == null
 				? "int"
-				: dialect.getEnumTypeDeclaration(
+				: dialect.getEnumSupport().getTypeDeclaration(
 						type.getReturnedClass().getSimpleName(),
 						EnumHelper.getEnumeratedValues( type )
 				);

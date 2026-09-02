@@ -4,6 +4,8 @@
  */
 package org.hibernate.type;
 
+import org.hibernate.SPI;
+
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -16,6 +18,7 @@ import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.persister.collection.CollectionPersister;
 
 
+@SPI
 public class MapType extends CollectionType {
 
 	public MapType(String role, String propertyRef) {

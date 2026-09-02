@@ -18,13 +18,14 @@ import org.hibernate.query.sqm.sql.spi.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.spi.domain.SqmBasicValuedSimplePath;
 import org.hibernate.query.sqm.tree.spi.domain.SqmTreatedPath;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.SqlAstWalker;
-import org.hibernate.sql.ast.spi.SqlAstCreationContext;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
-import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.SqlSelectionExpression;
-import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.update.Assignable;
+import org.hibernate.sql.ast.spi.SqlAstWalker;
+import org.hibernate.sql.ast.spi.creation.SqlAstCreationContext;
+import org.hibernate.sql.ast.spi.result.DomainResultProducer;
+import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
+import org.hibernate.sql.ast.spi.query.expression.Expression;
+import org.hibernate.sql.ast.spi.query.expression.SqlSelectionExpression;
+import org.hibernate.sql.ast.spi.query.from.TableGroup;
+import org.hibernate.sql.ast.spi.query.update.Assignable;
 
 import jakarta.annotation.Nullable;
 

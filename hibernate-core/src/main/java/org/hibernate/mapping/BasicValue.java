@@ -19,6 +19,7 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.Incubating;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
+import org.hibernate.SPI;
 import org.hibernate.boot.model.internal.Constructors;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.service.ServiceRegistry;
@@ -63,6 +64,9 @@ import org.hibernate.type.descriptor.java.BasicPluralJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.java.spi.JsonJavaType;
+
+import static org.hibernate.SPI.Role.SUPPLY;
+import static org.hibernate.SPI.Role.USE;
 import org.hibernate.type.descriptor.java.spi.RegistryHelper;
 import org.hibernate.type.descriptor.java.spi.XmlJavaType;
 import org.hibernate.type.descriptor.jdbc.BooleanJdbcType;
@@ -212,14 +216,17 @@ public class BasicValue extends SimpleValue
 		super.setJpaAttributeConverterDescriptor( descriptor );
 	}
 
+	@SPI(SUPPLY)
 	public void setExplicitJavaTypeAccess(Function<TypeConfiguration, BasicJavaType<?>> explicitJavaTypeAccess) {
 		this.explicitJavaTypeAccess = explicitJavaTypeAccess;
 	}
 
+	@SPI(SUPPLY)
 	public void setExplicitJdbcTypeAccess(Function<TypeConfiguration, JdbcType> jdbcTypeAccess) {
 		this.explicitJdbcTypeAccess = jdbcTypeAccess;
 	}
 
+	@SPI(SUPPLY)
 	public void setExplicitMutabilityPlanAccess(Function<TypeConfiguration, MutabilityPlan<?>> explicitMutabilityPlanAccess) {
 		this.explicitMutabilityPlanAccess = explicitMutabilityPlanAccess;
 	}
@@ -228,14 +235,17 @@ public class BasicValue extends SimpleValue
 		this.implicitJavaTypeAccess = implicitJavaTypeAccess;
 	}
 
+	@SPI(USE)
 	public Function<TypeConfiguration, BasicJavaType<?>> getExplicitJavaTypeAccess() {
 		return explicitJavaTypeAccess;
 	}
 
+	@SPI(USE)
 	public Function<TypeConfiguration, JdbcType> getExplicitJdbcTypeAccess() {
 		return explicitJdbcTypeAccess;
 	}
 
+	@SPI(USE)
 	public Function<TypeConfiguration, MutabilityPlan<?>> getExplicitMutabilityPlanAccess() {
 		return explicitMutabilityPlanAccess;
 	}
@@ -416,7 +426,7 @@ public class BasicValue extends SimpleValue
 //			column.setSpecializedTypeDeclaration( declaration );
 //		}
 
-		if ( dialect.supportsColumnCheck() ) {
+		if ( dialect.getCheckConstraintSupport().supports( org.hibernate.dialect.constraint.spi.CheckConstraintPlacement.ANONYMOUS_COLUMN ) ) {
 			final String checkCondition =
 					resolution.getLegacyResolvedBasicType()
 							.getCheckCondition( column.getQuotedName( dialect ), dialect );
@@ -434,6 +444,7 @@ public class BasicValue extends SimpleValue
 		this.aggregateColumn = aggregateColumn;
 	}
 
+	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	public SelectablePath createSelectablePath(String selectableName) {
 		return aggregateColumn != null
 				? aggregateColumn.getSelectablePath().append( selectableName )
@@ -1310,6 +1321,7 @@ public class BasicValue extends SimpleValue
 	 * Resolved form of {@link BasicValue} as part of interpreting the
 	 * boot-time model into the run-time model
 	 */
+	@SPI(USE)
 	public interface Resolution<J> {
 		/**
 		 * The BasicType resolved using the pre-6.0 rules.  This is temporarily

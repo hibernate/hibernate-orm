@@ -6,24 +6,28 @@ package org.hibernate.dialect.function.array;
 
 import java.util.List;
 
+import org.hibernate.SPI;
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
-import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.spi.SqlAppender;
-import org.hibernate.sql.ast.tree.SqlAstNode;
+import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
+import org.hibernate.sql.spi.SqlAppender;
+import org.hibernate.sql.ast.spi.SqlAstNode;
 
-/**
- * Concatenation function for arrays.
- */
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.USE;
+
+/// Subclassable descriptor for concatenating arrays.
+@SPI({ USE, IMPLEMENT })
 public class ArrayConcatFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 
 	private final String prefix;
 	private final String separator;
 	private final String suffix;
 
+	@SPI(IMPLEMENT)
 	public ArrayConcatFunction(String prefix, String separator, String suffix) {
 		super(
 				"array_concat",

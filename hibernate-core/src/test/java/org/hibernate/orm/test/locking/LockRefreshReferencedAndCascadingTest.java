@@ -19,6 +19,11 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.OneToOne;
+import jakarta.persistence.PessimisticLockScope;
+
+import java.util.Map;
+
+import static org.hibernate.jpa.SpecHints.HINT_SPEC_LOCK_SCOPE;
 
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -76,7 +81,6 @@ public class LockRefreshReferencedAndCascadingTest {
 			assertEquals( "lazy", lazyReference.status() );
 			assertEquals( "eager", eagerReference.status() );
 			assertEquals( LockModeType.PESSIMISTIC_WRITE, entityManager.getLockMode( lazyReference ) );
-			assertEquals( LockModeType.PESSIMISTIC_WRITE, entityManager.getLockMode( lazyReference.getAnotherReferencedEntity() ) );
 			assertEquals( LockModeType.PESSIMISTIC_WRITE, entityManager.getLockMode( eagerReference ) );
 		} );
 	}
@@ -139,6 +143,32 @@ public class LockRefreshReferencedAndCascadingTest {
 			var anotherReferencedEntity = lazyReference.getAnotherReferencedEntity();
 			assertTrue( Hibernate.isInitialized( anotherReferencedEntity ) );
 
+			assertEquals( LockModeType.PESSIMISTIC_WRITE, entityManager.getLockMode( m ) );
+		} );
+	}
+
+	@Test
+	public void testRefreshLockModeAndFetchedScope(EntityManagerFactoryScope scope) {
+		scope.inTransaction(entityManager -> {
+			var m = entityManager.find( MainEntity.class, 0L );
+			assertNotNull( m );
+			var lazyReference = m.referencedLazy();
+			var eagerReference = m.referencedEager();
+			assertNotNull( lazyReference );
+			assertNotNull( eagerReference );
+			assertFalse( Hibernate.isInitialized( lazyReference ) );
+
+			entityManager.refresh(
+					m,
+					LockModeType.PESSIMISTIC_WRITE,
+					Map.of( HINT_SPEC_LOCK_SCOPE, PessimisticLockScope.FETCHED )
+			);
+
+			assertTrue( Hibernate.isInitialized( lazyReference ) );
+			var anotherReferencedEntity = lazyReference.getAnotherReferencedEntity();
+			assertTrue( Hibernate.isInitialized( anotherReferencedEntity ) );
+
+			assertEquals( LockModeType.PESSIMISTIC_WRITE, entityManager.getLockMode( m ) );
 			assertEquals( LockModeType.PESSIMISTIC_WRITE, entityManager.getLockMode( lazyReference ) );
 			assertEquals(
 					LockModeType.PESSIMISTIC_WRITE,
@@ -151,6 +181,20 @@ public class LockRefreshReferencedAndCascadingTest {
 	public void testFindWithLockMode(EntityManagerFactoryScope scope) {
 		scope.inTransaction(session -> {
 			var mainEntity = session.find( MainEntity.class, 0L, LockModeType.PESSIMISTIC_WRITE );
+			assertThat( session.getLockMode( mainEntity ) ).isEqualTo( LockModeType.PESSIMISTIC_WRITE );
+		} );
+	}
+
+	@Test
+	public void testFindWithLockModeAndFetchedScope(EntityManagerFactoryScope scope) {
+		scope.inTransaction(session -> {
+			var mainEntity = session.find(
+					MainEntity.class,
+					0L,
+					LockModeType.PESSIMISTIC_WRITE,
+					Map.of( HINT_SPEC_LOCK_SCOPE, PessimisticLockScope.FETCHED )
+			);
+			assertThat( session.getLockMode( mainEntity ) ).isEqualTo( LockModeType.PESSIMISTIC_WRITE );
 			assertThat( session.getLockMode( mainEntity.referencedEager() ) ).isEqualTo( LockModeType.PESSIMISTIC_WRITE );
 		} );
 	}

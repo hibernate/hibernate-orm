@@ -7,15 +7,16 @@ package org.hibernate.query.sqm.mutation.internal;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.dialect.function.spi.WindowFunctionSupport;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.SortDirection;
 import org.hibernate.query.sqm.function.SelfRenderingWindowFunctionSqlAstExpression;
-import org.hibernate.sql.ast.spi.SqlSelection;
-import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.Over;
-import org.hibernate.sql.ast.tree.expression.SqlSelectionExpression;
-import org.hibernate.sql.ast.tree.select.QuerySpec;
-import org.hibernate.sql.ast.tree.select.SortSpecification;
+import org.hibernate.sql.ast.spi.query.select.SqlSelection;
+import org.hibernate.sql.ast.spi.query.expression.Expression;
+import org.hibernate.sql.ast.spi.query.expression.Over;
+import org.hibernate.sql.ast.spi.query.expression.SqlSelectionExpression;
+import org.hibernate.sql.ast.spi.query.select.QuerySpec;
+import org.hibernate.sql.ast.spi.query.select.SortSpecification;
 import org.hibernate.type.BasicType;
 
 import static java.util.Collections.emptyList;
@@ -39,7 +40,8 @@ public final class SqmInsertStrategyHelper {
 		final Expression functionExpression;
 		final List<SortSpecification> orderList;
 		if ( querySpec.getSelectClause().isDistinct() ) {
-			assert sessionFactory.getJdbcServices().getDialect().supportsWindowFunctions();
+			assert sessionFactory.getJdbcServices().getDialect().getWindowFunctionSupport()
+					.supports( WindowFunctionSupport.Feature.WINDOW_FUNCTIONS );
 			functionExpression = new SelfRenderingWindowFunctionSqlAstExpression<>(
 					"dense_rank",
 					(appender, args, returnType, walker) -> appender.appendSql( "dense_rank()" ),

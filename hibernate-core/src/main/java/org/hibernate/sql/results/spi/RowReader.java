@@ -17,6 +17,7 @@ import jakarta.annotation.Nullable;
  *
  * @author Steve Ebersole
  */
+@org.hibernate.SPI({ org.hibernate.SPI.Role.USE, org.hibernate.SPI.Role.IMPLEMENT })
 public interface RowReader<R> {
 	/**
 	 * The type actually returned from this reader's {@link #readRow} call,

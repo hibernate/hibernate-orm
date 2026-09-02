@@ -22,12 +22,12 @@ import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.query.sqm.produce.function.internal.PatternRenderer;
-import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.spi.SqlAppender;
-import org.hibernate.sql.ast.tree.SqlAstNode;
-import org.hibernate.sql.ast.tree.expression.CastTarget;
-import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.QueryLiteral;
+import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
+import org.hibernate.sql.spi.SqlAppender;
+import org.hibernate.sql.ast.spi.SqlAstNode;
+import org.hibernate.sql.ast.spi.query.expression.CastTarget;
+import org.hibernate.sql.ast.spi.query.expression.Expression;
+import org.hibernate.sql.ast.spi.query.expression.QueryLiteral;
 import org.hibernate.type.BasicType;
 
 /**
@@ -115,7 +115,7 @@ public class CastFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 				(FunctionRenderer) functionRegistry.findFunctionDescriptor( "concat" );
 		final FunctionRenderer arrayToStringDescriptor =
 				(FunctionRenderer) functionRegistry.findFunctionDescriptor( "array_to_string" );
-		final boolean caseWhen = dialect.isEmptyStringTreatedAsNull();
+		final boolean caseWhen = dialect.getStringValueSemantics().treatsEmptyStringAsNull();
 		if ( caseWhen ) {
 			sqlAppender.append( "case when " );
 			arrayArgument.accept( walker );

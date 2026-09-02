@@ -11,7 +11,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.tool.schema.spi.SchemaManagementTool;
 
@@ -33,8 +32,7 @@ public class SchemaManagementToolInitiator implements StandardServiceInitiator<S
 							if ( discovered != null ) {
 								return discovered;
 							}
-							return registry.requireService( JdbcServices.class ).getDialect()
-									.getFallbackSchemaManagementTool( configurationValues, registry );
+							return new HibernateSchemaManagementTool();
 						} );
 	}
 

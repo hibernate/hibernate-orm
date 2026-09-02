@@ -9,10 +9,14 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import org.hamcrest.MatcherAssert;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.schema.spi.CommentPlacement;
+import org.hibernate.dialect.schema.spi.CommentRequest;
+import org.hibernate.dialect.schema.spi.CommentTarget;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.DialectTestSupport;
 import org.hibernate.testing.orm.junit.DomainModelScope;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -59,14 +63,15 @@ public class TableCommentTest {
 		createSchema( modelScope, output);
 
 		var dialect = factoryScope.getSessionFactory().getJdbcServices().getDialect();
+		final var commentPlacement = dialect.getSchemaCommentSupport().placement( CommentTarget.TABLE );
 
 		final List<String> sqlLines = Files.readAllLines( output.toPath(), Charset.defaultCharset() );
-		boolean found = false;
+		boolean found = commentPlacement == CommentPlacement.NONE;
 		final String tableName = getTableName( factoryScope );
 		for ( String sqlStatement : sqlLines ) {
 			if ( sqlStatement.toLowerCase()
 					.equals( "comment on table " + tableName.toLowerCase() + " is 'comment snippet';" ) ) {
-				if ( dialect.supportsCommentOn() ) {
+				if ( commentPlacement != CommentPlacement.NONE ) {
 					found = true;
 				}
 				else {
@@ -74,7 +79,7 @@ public class TableCommentTest {
 				}
 			}
 			if ( containsCommentInCreateTableStatement( sqlStatement, dialect ) ) {
-				if ( dialect.supportsCommentOn() || dialect.getTableComment( "comment snippet" ).isEmpty() ) {
+				if ( commentPlacement == CommentPlacement.INLINE ) {
 					found = true;
 				}
 				else {
@@ -87,8 +92,15 @@ public class TableCommentTest {
 	}
 
 	private boolean containsCommentInCreateTableStatement(String sqlStatement, Dialect dialect) {
-		return sqlStatement.toLowerCase().contains( dialect.getCreateTableString() )
-				&& sqlStatement.toLowerCase().contains( dialect.getTableComment( "comment snippet" ).toLowerCase() );
+		return sqlStatement.toLowerCase().contains( DialectTestSupport.createTableCommand( dialect ) )
+				&& dialect.getSchemaCommentSupport().placement( CommentTarget.TABLE ) == CommentPlacement.INLINE
+				&& sqlStatement.toLowerCase().contains( dialect.getSchemaCommentSupport().render(
+						new CommentRequest(
+								CommentTarget.TABLE,
+								"table_with_comment",
+								"comment snippet"
+						)
+				).toLowerCase() );
 	}
 
 	@Entity(name = "TableWithComment")

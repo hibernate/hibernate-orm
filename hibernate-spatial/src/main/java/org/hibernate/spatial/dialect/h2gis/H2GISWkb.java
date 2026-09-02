@@ -5,6 +5,7 @@
 package org.hibernate.spatial.dialect.h2gis;
 
 
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;

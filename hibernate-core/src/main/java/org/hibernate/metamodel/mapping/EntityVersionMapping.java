@@ -24,6 +24,7 @@ public interface EntityVersionMapping extends BasicValuedModelPart {
 	/**
 	 * The attribute marked as the version
 	 */
+	@org.hibernate.Internal
 	BasicAttributeMapping getVersionAttribute();
 
 	/**

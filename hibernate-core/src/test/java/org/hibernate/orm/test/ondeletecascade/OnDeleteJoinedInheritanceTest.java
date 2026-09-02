@@ -53,7 +53,7 @@ class OnDeleteJoinedInheritanceTest {
 			em.remove( b );
 			em.remove( c );
 		} );
-		inspector.assertExecutedCount( scope.getDialect().supportsCascadeDelete() ? 4 : 6 );
+		inspector.assertExecutedCount( scope.getDialect().getForeignKeySupport().supportsOnDeleteAction( org.hibernate.annotations.OnDeleteAction.CASCADE ) ? 4 : 6 );
 
 		scope.inTransaction( em -> {
 			assertEquals( 0,

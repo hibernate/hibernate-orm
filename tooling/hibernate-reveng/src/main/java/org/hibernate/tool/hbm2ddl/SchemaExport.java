@@ -385,7 +385,7 @@ public class SchemaExport {
 		}
 	}
 
-	public static void execute(CommandLineArgs commandLineArgs) throws Exception {
+	private static void execute(CommandLineArgs commandLineArgs) throws Exception {
 		StandardServiceRegistry serviceRegistry = buildStandardServiceRegistry( commandLineArgs );
 		try {
 			final MetadataImplementor metadata = buildMetadata( commandLineArgs, serviceRegistry );

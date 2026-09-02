@@ -64,10 +64,12 @@ public class DdlTypeHelper {
 		return getTypeName( (JdbcMappingContainer) type, size, typeConfiguration );
 	}
 
+	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	public static String getTypeName(JdbcMappingContainer type, TypeConfiguration typeConfiguration) {
 		return getTypeName( type, Size.nil(), typeConfiguration );
 	}
 
+	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	public static String getTypeName(JdbcMappingContainer type, Size size, TypeConfiguration typeConfiguration) {
 		if ( type instanceof SqlTypedMapping sqlTypedMapping ) {
 			return getTypeName( sqlTypedMapping, typeConfiguration );
@@ -104,10 +106,12 @@ public class DdlTypeHelper {
 		return getCastTypeName( (JdbcMappingContainer) type, size, typeConfiguration );
 	}
 
+	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	public static String getCastTypeName(JdbcMappingContainer type, TypeConfiguration typeConfiguration) {
 		return getCastTypeName( type, Size.nil(), typeConfiguration );
 	}
 
+	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	public static String getCastTypeName(JdbcMappingContainer type, Size size, TypeConfiguration typeConfiguration) {
 		if ( type instanceof SqlTypedMapping sqlTypedMapping ) {
 			return getCastTypeName( sqlTypedMapping, typeConfiguration );
@@ -143,6 +147,7 @@ public class DdlTypeHelper {
 		return ddlType == null ? ddlTypeRegistry.getDescriptor( SqlTypes.INTEGER ) : ddlType;
 	}
 
+	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	public static String getTypeName(SqlTypedMapping castTarget, TypeConfiguration typeConfiguration) {
 		final var expressionType = (BasicType<?>) castTarget.getJdbcMapping();
 		final var ddlTypeRegistry = typeConfiguration.getDdlTypeRegistry();
@@ -150,6 +155,7 @@ public class DdlTypeHelper {
 				.getTypeName( castTarget.toSize(), expressionType, ddlTypeRegistry );
 	}
 
+	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	public static String getCastTypeName(SqlTypedMapping castTarget, TypeConfiguration typeConfiguration) {
 		final var expressionType = (BasicType<?>) castTarget.getJdbcMapping();
 		final var ddlTypeRegistry = typeConfiguration.getDdlTypeRegistry();
@@ -163,6 +169,7 @@ public class DdlTypeHelper {
 	 * or {@code xmltable()}, in positions where LOB types ({@code CLOB},
 	 * {@code NCLOB}, {@code BLOB}) are not accepted.
 	 */
+	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	public static String getNarrowCastTypeName(SqlTypedMapping castTarget, TypeConfiguration typeConfiguration) {
 		final var expressionType = (BasicType<?>) castTarget.getJdbcMapping();
 		final var ddlTypeRegistry = typeConfiguration.getDdlTypeRegistry();

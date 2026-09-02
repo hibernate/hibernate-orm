@@ -29,9 +29,11 @@ public class CapacityDependentDdlType extends DdlTypeImpl {
 	private CapacityDependentDdlType(Builder builder) {
 		super(
 				builder.sqlTypeCode,
+				builder.lobKind == LobKind.ALL_LOB,
 				builder.typeNamePattern,
 				builder.castTypeNamePattern,
 				builder.castTypeName,
+				builder.narrowCastTypeName,
 				builder.dialect
 		);
 		this.lobKind = builder.lobKind;
@@ -166,9 +168,10 @@ public class CapacityDependentDdlType extends DdlTypeImpl {
 		private final String typeNamePattern;
 		private final String castTypeNamePattern;
 		private final String castTypeName;
+		private String narrowCastTypeName;
 		private final Dialect dialect;
 		private final List<TypeEntry> typeEntries;
-		private final Function<Integer,String> parameterizedCastTypeName;
+		private Function<Integer,String> parameterizedCastTypeName;
 
 		private Builder(
 				int sqlTypeCode,
@@ -183,6 +186,7 @@ public class CapacityDependentDdlType extends DdlTypeImpl {
 			this.castTypeNamePattern = castTypeNamePattern;
 			this.parameterizedCastTypeName = null;
 			this.castTypeName = castTypeName;
+			this.narrowCastTypeName = castTypeName;
 			this.dialect = dialect;
 			this.typeEntries = new ArrayList<>();
 		}
@@ -200,12 +204,23 @@ public class CapacityDependentDdlType extends DdlTypeImpl {
 			this.castTypeNamePattern = null;
 			this.parameterizedCastTypeName = parameterizedCastTypeName;
 			this.castTypeName = castTypeName;
+			this.narrowCastTypeName = castTypeName;
 			this.dialect = dialect;
 			this.typeEntries = new ArrayList<>();
 		}
 
 		public Builder withTypeCapacity(long capacity, String typeNamePattern) {
 			typeEntries.add( new TypeEntry( capacity, typeNamePattern ) );
+			return this;
+		}
+
+		public Builder withNarrowCastTypeName(String narrowCastTypeName) {
+			this.narrowCastTypeName = narrowCastTypeName;
+			return this;
+		}
+
+		public Builder withParameterizedCastTypeName(Function<Integer, String> parameterizedCastTypeName) {
+			this.parameterizedCastTypeName = parameterizedCastTypeName;
 			return this;
 		}
 
@@ -217,7 +232,7 @@ public class CapacityDependentDdlType extends DdlTypeImpl {
 						public String getCastTypeName(Size columnSize, SqlExpressible type, DdlTypeRegistry ddlTypeRegistry) {
 							return columnSize.getLength() == null
 									? super.getCastTypeName( columnSize, type, ddlTypeRegistry )
-									: parameterizedCastTypeName.apply( columnSize.getLength().intValue() );
+									: parameterizedCastTypeName.apply( Math.toIntExact( columnSize.getLength() ) );
 						}
 					};
 		}

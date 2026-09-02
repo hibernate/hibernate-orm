@@ -4,6 +4,11 @@
  */
 package org.hibernate.type;
 
+import org.hibernate.SPI;
+
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.USE;
+
 import java.io.Serializable;
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
@@ -39,6 +44,7 @@ import jakarta.annotation.Nullable;
  * @author Steve Ebersole
  * @author Brett Meyer
  */
+@SPI({ USE, IMPLEMENT })
 public abstract class AbstractStandardBasicType<T>
 		implements BasicType<T>, ProcedureParameterExtractionAware<T>, ProcedureParameterNamedBinder<T> {
 
@@ -53,6 +59,7 @@ public abstract class AbstractStandardBasicType<T>
 	private final MutabilityPlan<T> mutabilityPlan;
 	private final Comparator<T> javatypeComparator;
 
+	@SPI(IMPLEMENT)
 	public AbstractStandardBasicType(JdbcType jdbcType, JavaType<T> javaType) {
 		this.jdbcType = jdbcType;
 		this.javaType = javaType;

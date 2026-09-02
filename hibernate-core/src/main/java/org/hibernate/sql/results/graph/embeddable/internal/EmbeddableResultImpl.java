@@ -13,10 +13,10 @@ import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.SqlAstJoinType;
-import org.hibernate.sql.ast.spi.SqlAstCreationState;
-import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.predicate.NullnessPredicate;
+import org.hibernate.sql.ast.spi.query.from.SqlAstJoinType;
+import org.hibernate.sql.ast.spi.creation.SqlAstCreationState;
+import org.hibernate.sql.ast.spi.query.from.TableGroup;
+import org.hibernate.sql.ast.spi.query.predicate.NullnessPredicate;
 import org.hibernate.sql.results.graph.AbstractFetchParent;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -151,7 +151,7 @@ public class EmbeddableResultImpl<T> extends AbstractFetchParent implements Embe
 		}
 	}
 
-	private ImmutableFetchList withoutCollectionFetches(ImmutableFetchList fetches) {
+	private org.hibernate.sql.results.graph.FetchList withoutCollectionFetches(org.hibernate.sql.results.graph.FetchList fetches) {
 		if ( collectionLoadingAttributes.length == 0 ) {
 			return fetches;
 		}
@@ -187,7 +187,7 @@ public class EmbeddableResultImpl<T> extends AbstractFetchParent implements Embe
 		}
 	}
 
-	private static boolean determineIfContainedAnyScalars(ImmutableFetchList fetches) {
+	private static boolean determineIfContainedAnyScalars(org.hibernate.sql.results.graph.FetchList fetches) {
 		for ( var fetch : fetches ) {
 			if ( fetch.containsAnyNonScalarResults() ) {
 				return true;

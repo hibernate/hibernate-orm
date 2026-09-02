@@ -22,4 +22,7 @@
  * @see org.hibernate.type.descriptor.java.JavaType
  * @see org.hibernate.type.descriptor.java.MutabilityPlan
  */
+@SPI
 package org.hibernate.type.descriptor.java;
+
+import org.hibernate.SPI;

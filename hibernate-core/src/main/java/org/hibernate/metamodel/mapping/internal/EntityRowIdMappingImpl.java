@@ -11,15 +11,15 @@ import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.util.IndexedConsumer;
+import org.hibernate.spi.IndexedConsumer;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityRowIdMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.spi.SqlSelection;
-import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.spi.query.select.SqlSelection;
+import org.hibernate.sql.ast.spi.query.from.TableGroup;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
@@ -44,7 +44,7 @@ public class EntityRowIdMappingImpl implements EntityRowIdMapping {
 		this.declaringType = declaringType;
 		final SessionFactoryImplementor factory = declaringType.getEntityPersister().getFactory();
 		this.rowIdType = factory.getTypeConfiguration().getBasicTypeRegistry()
-				.resolve( Object.class, factory.getJdbcServices().getDialect().rowIdSqlType() );
+				.resolve( Object.class, factory.getJdbcServices().getDialect().getRowIdSupport().sqlTypeCode() );
 	}
 
 	@Override

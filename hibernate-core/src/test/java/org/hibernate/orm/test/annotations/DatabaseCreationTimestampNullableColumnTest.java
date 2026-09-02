@@ -16,8 +16,8 @@ import org.hibernate.generator.EventType;
 import org.hibernate.generator.EventTypeSets;
 import org.hibernate.generator.OnExecutionGenerator;
 
-import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
@@ -96,7 +96,7 @@ public class DatabaseCreationTimestampNullableColumnTest {
 
 		@Override
 		public String[] getReferencedColumnValues(Dialect dialect) {
-			return new String[] { dialect.currentTimestamp() };
+			return new String[] { dialect.getCurrentTemporalSupport().currentTimestamp() };
 		}
 	}
 

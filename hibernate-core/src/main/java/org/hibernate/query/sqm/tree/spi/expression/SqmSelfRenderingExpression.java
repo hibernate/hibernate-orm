@@ -12,7 +12,7 @@ import org.hibernate.query.sqm.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.spi.SqmBindableType;
 import org.hibernate.query.sqm.tree.spi.SqmCopyContext;
 import org.hibernate.query.sqm.tree.spi.SqmRenderContext;
-import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.spi.query.expression.Expression;
 
 /**
  * @author Steve Ebersole

@@ -60,7 +60,7 @@ public class FractionalSecondsTests {
 		final MetadataImplementor domainModel = scope.getDomainModel();
 
 		final Dialect dialect = domainModel.getDatabase().getDialect();
-		final int defaultPrecision = dialect.getDefaultTimestampPrecision();
+		final int defaultPrecision = dialect.getTypeSizingProfile().defaultTimestampPrecision();
 
 		final PersistentClass entityBinding = scope.getEntityBinding( TestEntity.class );
 		checkPrecision( "theInstant", defaultPrecision, entityBinding, domainModel );
@@ -104,7 +104,7 @@ public class FractionalSecondsTests {
 	void testUsage(SessionFactoryScope scope) {
 		final Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();
 		final Instant start;
-		if ( dialect.getDefaultTimestampPrecision() == 6 ) {
+		if ( dialect.getTypeSizingProfile().defaultTimestampPrecision() == 6 ) {
 			start = Instant.now().truncatedTo( ChronoUnit.MICROS );
 		}
 		else {
@@ -138,7 +138,7 @@ public class FractionalSecondsTests {
 	void testUsage0(SessionFactoryScope scope) {
 		final Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();
 		final Instant start;
-		if ( dialect.getDefaultTimestampPrecision() == 6 ) {
+		if ( dialect.getTypeSizingProfile().defaultTimestampPrecision() == 6 ) {
 			start = Instant.now().truncatedTo( ChronoUnit.MICROS );
 		}
 		else {
@@ -171,7 +171,7 @@ public class FractionalSecondsTests {
 	void testUsage3(SessionFactoryScope scope) {
 		final Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();
 		final Instant start;
-		if ( dialect.getDefaultTimestampPrecision() == 6 ) {
+		if ( dialect.getTypeSizingProfile().defaultTimestampPrecision() == 6 ) {
 			start = Instant.now().truncatedTo( ChronoUnit.MICROS );
 		}
 		else {
@@ -207,7 +207,7 @@ public class FractionalSecondsTests {
 	void testUsage9(SessionFactoryScope scope) {
 		final Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();
 		final Instant start;
-		if ( dialect.getDefaultTimestampPrecision() == 6 ) {
+		if ( dialect.getTypeSizingProfile().defaultTimestampPrecision() == 6 ) {
 			start = Instant.now().truncatedTo( ChronoUnit.MICROS );
 		}
 		else {

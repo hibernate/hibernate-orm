@@ -10,6 +10,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import org.hibernate.SPI;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.type.SqlTypes;
@@ -21,12 +22,15 @@ import org.hibernate.type.descriptor.jdbc.spi.JsonGeneratingVisitor;
 import org.hibernate.type.format.StringJsonDocumentReader;
 import org.hibernate.type.format.StringJsonDocumentWriter;
 
-/**
- * Specialized type mapping for {@code JSON} and the JSON SQL data type.
- *
- * @author Christian Beikov
- * @author Emmanuel Jannetti
- */
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.USE;
+
+/// JDBC descriptor for `JSON` and the JSON SQL data type. Provider subclasses
+/// may refine serialization while retaining aggregate mapping semantics.
+///
+/// @author Christian Beikov
+/// @author Emmanuel Jannetti
+@SPI({ USE, IMPLEMENT })
 public class JsonJdbcType implements AggregateJdbcType {
 	/**
 	 * Singleton access
@@ -35,6 +39,8 @@ public class JsonJdbcType implements AggregateJdbcType {
 
 	private final EmbeddableMappingType embeddableMappingType;
 
+	/// Create a prototype or mapping-specific JSON descriptor.
+	@SPI(IMPLEMENT)
 	protected JsonJdbcType(EmbeddableMappingType embeddableMappingType) {
 		this.embeddableMappingType = embeddableMappingType;
 	}

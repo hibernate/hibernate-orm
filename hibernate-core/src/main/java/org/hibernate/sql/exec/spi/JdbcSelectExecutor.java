@@ -43,6 +43,7 @@ public interface JdbcSelectExecutor {
 	/**
 	 * @since 6.6
 	 */
+	@org.hibernate.SPI(org.hibernate.SPI.Role.SUPPLY)
 	<T, R> T executeQuery(
 			JdbcSelect jdbcSelect,
 			JdbcParameterBindings jdbcParameterBindings,
@@ -55,6 +56,7 @@ public interface JdbcSelectExecutor {
 	/**
 	 * @since 6.6
 	 */
+	@org.hibernate.SPI(org.hibernate.SPI.Role.SUPPLY)
 	default <T, R> T executeQuery(
 			JdbcSelect jdbcSelect,
 			JdbcParameterBindings jdbcParameterBindings,
@@ -78,6 +80,7 @@ public interface JdbcSelectExecutor {
 	/**
 	 * @since 6.6
 	 */
+	@org.hibernate.SPI(org.hibernate.SPI.Role.SUPPLY)
 	default <T, R> T executeQuery(
 			JdbcSelect jdbcSelect,
 			JdbcParameterBindings jdbcParameterBindings,

@@ -5,7 +5,7 @@
 package org.hibernate.engine.jdbc.mutation.spi;
 
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
-import org.hibernate.sql.model.jdbc.JdbcValueDescriptor;
+import org.hibernate.sql.spi.mutation.jdbc.JdbcValueDescriptor;
 
 /// Provides access to details needed while binding
 /// @author Steve Ebersole

@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.produce.function;
 
+
 import java.util.List;
 import java.util.Locale;
 import java.util.function.Supplier;
@@ -15,8 +16,8 @@ import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.sqm.spi.SqmExpressible;
 import org.hibernate.query.sqm.sql.spi.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.spi.SqmTypedNode;
-import org.hibernate.sql.ast.tree.SqlAstNode;
-import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.spi.SqlAstNode;
+import org.hibernate.sql.ast.spi.query.expression.Expression;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -248,6 +249,7 @@ public class StandardFunctionReturnTypeResolvers {
 //		}
 //	}
 
+	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	public static BasicValuedMapping extractArgumentValuedMapping(List<? extends SqlAstNode> arguments, int position) {
 		final SqlAstNode specifiedArgument = arguments.get( position-1 );
 		final var specifiedArgType =

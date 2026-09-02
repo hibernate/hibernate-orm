@@ -10,20 +10,20 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectablePath;
 import org.hibernate.metamodel.mapping.internal.SelectableMappingImpl;
-import org.hibernate.query.sqm.tuple.internal.AnonymousTupleTableGroupProducer;
+import org.hibernate.sql.ast.spi.query.SetReturningFunctionType;
 import org.hibernate.query.sqm.sql.spi.SqmToSqlAstConverter;
 import org.hibernate.sql.Template;
-import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
-import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.spi.SqlAppender;
-import org.hibernate.sql.ast.tree.SqlAstNode;
-import org.hibernate.sql.ast.tree.expression.CastTarget;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
-import org.hibernate.sql.ast.tree.expression.Literal;
-import org.hibernate.sql.ast.tree.expression.XmlTableColumnDefinition;
-import org.hibernate.sql.ast.tree.expression.XmlTableOrdinalityColumnDefinition;
-import org.hibernate.sql.ast.tree.expression.XmlTableQueryColumnDefinition;
-import org.hibernate.sql.ast.tree.expression.XmlTableValueColumnDefinition;
+import org.hibernate.sql.ast.spi.translation.SqlAstNodeRenderingMode;
+import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
+import org.hibernate.sql.spi.SqlAppender;
+import org.hibernate.sql.ast.spi.SqlAstNode;
+import org.hibernate.sql.ast.spi.query.expression.CastTarget;
+import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
+import org.hibernate.sql.ast.spi.query.expression.Literal;
+import org.hibernate.sql.ast.spi.query.expression.XmlTableColumnDefinition;
+import org.hibernate.sql.ast.spi.query.expression.XmlTableOrdinalityColumnDefinition;
+import org.hibernate.sql.ast.spi.query.expression.XmlTableQueryColumnDefinition;
+import org.hibernate.sql.ast.spi.query.expression.XmlTableValueColumnDefinition;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
@@ -46,7 +46,7 @@ public class SybaseASEXmlTableFunction extends XmlTableFunction {
 	}
 
 	@Override
-	protected void renderXmlTable(SqlAppender sqlAppender, XmlTableArguments arguments, AnonymousTupleTableGroupProducer tupleType, String tableIdentifierVariable, SqlAstTranslator<?> walker) {
+	protected void renderXmlTable(SqlAppender sqlAppender, XmlTableArguments arguments, SetReturningFunctionType tupleType, String tableIdentifierVariable, SqlAstTranslator<?> walker) {
 		sqlAppender.appendSql( "xmltable(" );
 		walker.render( arguments.xpath(), SqlAstNodeRenderingMode.INLINE_PARAMETERS );
 		sqlAppender.appendSql( " passing " );
@@ -207,6 +207,7 @@ public class SybaseASEXmlTableFunction extends XmlTableFunction {
 		}
 	}
 
+	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	public static boolean isBoolean(JdbcMapping type) {
 		return switch ( type.getCastType() ) {
 			case BOOLEAN, TF_BOOLEAN, YN_BOOLEAN, INTEGER_BOOLEAN -> true;

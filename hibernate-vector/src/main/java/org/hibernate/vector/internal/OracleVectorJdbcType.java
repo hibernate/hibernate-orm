@@ -4,7 +4,7 @@
  */
 package org.hibernate.vector.internal;
 
-import org.hibernate.dialect.OracleTypes;
+import org.hibernate.dialect.jdbc.spi.OracleTypes;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 

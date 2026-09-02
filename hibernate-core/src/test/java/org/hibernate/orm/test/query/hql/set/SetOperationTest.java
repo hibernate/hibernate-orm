@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.query.hql.set;
 
+
 import java.util.List;
 
 import org.hibernate.community.dialect.FirebirdDialect;

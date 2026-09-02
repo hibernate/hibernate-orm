@@ -19,8 +19,8 @@ import org.hibernate.exception.spi.ConversionContext;
 
 import jakarta.annotation.Nullable;
 
-import static org.hibernate.internal.util.JdbcExceptionHelper.determineSqlStateClassCode;
-import static org.hibernate.internal.util.JdbcExceptionHelper.extractSqlState;
+import static org.hibernate.jdbc.spi.JdbcExceptionHelper.determineSqlStateClassCode;
+import static org.hibernate.jdbc.spi.JdbcExceptionHelper.extractSqlState;
 
 /**
  * A {@link org.hibernate.exception.spi.SQLExceptionConverter} implementation which performs conversion based

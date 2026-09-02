@@ -4,6 +4,7 @@
  */
 package org.hibernate.dialect;
 
+
 import java.util.Objects;
 
 /**

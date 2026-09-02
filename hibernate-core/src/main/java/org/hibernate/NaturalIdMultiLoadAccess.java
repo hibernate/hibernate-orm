@@ -4,6 +4,7 @@
  */
 package org.hibernate;
 
+
 import jakarta.persistence.EntityGraph;
 
 import jakarta.persistence.PessimisticLockScope;

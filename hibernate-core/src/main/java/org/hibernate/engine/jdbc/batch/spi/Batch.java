@@ -21,7 +21,7 @@ import org.hibernate.Incubating;
 /// when the active batch changes.
 ///
 /// @see org.hibernate.engine.jdbc.spi.JdbcCoordinator#getGroupedBatch(BatchKey, Integer, java.util.function.Supplier)
-/// @see org.hibernate.engine.jdbc.spi.JdbcCoordinator#getSingleStatementBatch(BatchKey, Integer, org.hibernate.sql.model.PreparableMutationOperation)
+/// @see org.hibernate.engine.jdbc.spi.JdbcCoordinator#getSingleStatementBatch(BatchKey, Integer, org.hibernate.sql.spi.mutation.jdbc.PreparableMutationOperation)
 ///
 /// @author Steve Ebersole
 @Incubating

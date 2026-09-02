@@ -4,52 +4,41 @@
  */
 package org.hibernate.community.dialect;
 
-import java.util.List;
-
+import org.hibernate.Internal;
 import org.hibernate.MappingException;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.util.collections.Stack;
-import org.hibernate.metamodel.mapping.CollectionPart;
-import org.hibernate.metamodel.mapping.ModelPart;
-import org.hibernate.query.IllegalQueryOperationException;
-import org.hibernate.query.sqm.tuple.internal.AnonymousTupleTableGroupProducer;
+import org.hibernate.dialect.sql.ast.spi.DerivedTableRenderingSupport;
+import org.hibernate.dialect.sql.ast.spi.PaginationRenderingPlan;
+import org.hibernate.dialect.sql.ast.spi.PaginationRenderingSupport;
+import org.hibernate.dialect.sql.ast.spi.QueryMutationRenderingSupport;
+import org.hibernate.dialect.sql.ast.spi.StandardQueryMutationRenderingSupport;
+import org.hibernate.dialect.sql.ast.spi.StandardDerivedTableRenderingSupport;
+import org.hibernate.dialect.sql.ast.spi.SetReturningFunctionRenderingSupport;
+import org.hibernate.dialect.sql.ast.spi.StandardSetReturningFunctionRenderingSupport;
+import org.hibernate.query.common.FetchClauseType;
 import org.hibernate.query.sqm.ComparisonOperator;
-import org.hibernate.sql.ast.Clause;
-import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
-import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
-import org.hibernate.sql.ast.tree.SqlAstNode;
-import org.hibernate.sql.ast.tree.Statement;
-import org.hibernate.sql.ast.tree.cte.CteStatement;
-import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
-import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.Literal;
-import org.hibernate.sql.ast.tree.expression.Summarization;
-import org.hibernate.sql.ast.tree.from.DerivedTableReference;
-import org.hibernate.sql.ast.tree.from.FunctionTableReference;
-import org.hibernate.sql.ast.tree.from.NamedTableReference;
-import org.hibernate.sql.ast.tree.from.QueryPartTableReference;
-import org.hibernate.sql.ast.tree.from.ValuesTableReference;
-import org.hibernate.sql.ast.tree.insert.ConflictClause;
-import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
-import org.hibernate.sql.ast.tree.insert.Values;
-import org.hibernate.sql.ast.tree.select.QueryGroup;
-import org.hibernate.sql.ast.tree.select.QueryPart;
-import org.hibernate.sql.ast.tree.select.QuerySpec;
-import org.hibernate.sql.ast.tree.update.UpdateStatement;
+import org.hibernate.sql.ast.spi.translation.Clause;
+import org.hibernate.sql.ast.spi.translation.SqlAstNodeRenderingMode;
+import org.hibernate.dialect.sql.ast.spi.AbstractSqlAstTranslator;
+import org.hibernate.sql.ast.spi.Statement;
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
+import org.hibernate.dialect.sql.ast.spi.InsertConflictRenderingSupport;
+import org.hibernate.dialect.sql.ast.spi.StandardInsertConflictRenderingSupport;
+import org.hibernate.sql.ast.spi.query.expression.BinaryArithmeticExpression;
+import org.hibernate.sql.ast.spi.query.expression.Expression;
+import org.hibernate.sql.ast.spi.query.expression.Literal;
+import org.hibernate.sql.ast.spi.query.expression.Summarization;
+import org.hibernate.sql.ast.spi.query.from.NamedTableReference;
+import org.hibernate.sql.ast.spi.query.update.UpdateStatement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
-import org.hibernate.sql.model.internal.TableInsertStandard;
-
-import static org.hibernate.dialect.sql.ast.SybaseASESqlAstTranslator.isLob;
+import org.hibernate.sql.ast.spi.model.TableInsertStandard;
 
 /**
  * An SQL AST translator for the Legacy HANA dialect.
  */
 public class HANALegacySqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstTranslator<T> {
 
-	private boolean inLateral;
-
-	public HANALegacySqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
-		super( sessionFactory, statement );
+	public HANALegacySqlAstTranslator(SqlAstTranslationRequest<? extends Statement, T> request) {
+		super( request );
 	}
 
 	@Override
@@ -76,25 +65,16 @@ public class HANALegacySqlAstTranslator<T extends JdbcOperation> extends Abstrac
 	}
 
 	@Override
-	protected void visitInsertStatementOnly(InsertSelectStatement statement) {
-		if ( statement.getConflictClause() == null || statement.getConflictClause().isDoNothing() ) {
-			// Render plain insert statement and possibly run into unique constraint violation
-			super.visitInsertStatementOnly( statement );
-		}
-		else {
-			visitInsertStatementEmulateMerge( statement );
-		}
+	@Internal
+	protected InsertConflictRenderingSupport getInsertConflictRenderingSupport() {
+		return StandardInsertConflictRenderingSupport.MERGE;
 	}
 
 	@Override
-	protected void visitUpdateStatementOnly(UpdateStatement statement) {
-		// HANA Cloud does not support the FROM clause in UPDATE statements
-		if ( isHanaCloud() && hasNonTrivialFromClause( statement.getFromClause() ) ) {
-			visitUpdateStatementEmulateMerge( statement );
-		}
-		else {
-			super.visitUpdateStatementOnly( statement );
-		}
+	protected QueryMutationRenderingSupport getQueryMutationRenderingSupport() {
+		return isHanaCloud()
+				? StandardQueryMutationRenderingSupport.MERGE
+				: StandardQueryMutationRenderingSupport.STANDARD;
 	}
 
 	@Override
@@ -105,14 +85,7 @@ public class HANALegacySqlAstTranslator<T extends JdbcOperation> extends Abstrac
 		}
 		else {
 			appendSql( "update" );
-			final Stack<Clause> clauseStack = getClauseStack();
-			try {
-				clauseStack.push( Clause.UPDATE );
-				renderTableReferenceIdentificationVariable( updateStatement.getTargetTable() );
-			}
-			finally {
-				clauseStack.pop();
-			}
+			renderTableReferenceIdentificationVariable( updateStatement.getTargetTable() );
 		}
 	}
 
@@ -139,96 +112,21 @@ public class HANALegacySqlAstTranslator<T extends JdbcOperation> extends Abstrac
 	}
 
 	@Override
-	protected void visitConflictClause(ConflictClause conflictClause) {
-		if ( conflictClause != null ) {
-			if ( conflictClause.isDoUpdate() && conflictClause.getConstraintName() != null ) {
-				throw new IllegalQueryOperationException( "Insert conflict 'do update' clause with constraint name is not supported" );
-			}
-		}
-	}
-
-	protected boolean shouldEmulateFetchClause(QueryPart queryPart) {
-		// HANA only supports the LIMIT + OFFSET syntax but also window functions
-		// Check if current query part is already row numbering to avoid infinite recursion
-		return useOffsetFetchClause( queryPart ) && getQueryPartForRowNumbering() != queryPart
-				&& !isRowsOnlyFetchClauseType( queryPart );
+	protected PaginationRenderingSupport getPaginationRenderingSupport() {
+		return request -> request.fetchClauseType() != null
+				&& request.fetchClauseType() != FetchClauseType.ROWS_ONLY
+				? new PaginationRenderingPlan.Window( true )
+				: new PaginationRenderingPlan.LimitOffset();
 	}
 
 	@Override
-	protected boolean isCorrelated(CteStatement cteStatement) {
-		// Report false here, because apparently HANA does not need the "lateral" keyword to correlate a from clause subquery in a subquery
-		return false;
+	protected DerivedTableRenderingSupport getDerivedTableRenderingSupport() {
+		return StandardDerivedTableRenderingSupport.HANA;
 	}
 
 	@Override
-	public void visitQueryGroup(QueryGroup queryGroup) {
-		if ( shouldEmulateFetchClause( queryGroup ) ) {
-			emulateFetchOffsetWithWindowFunctions( queryGroup, true );
-		}
-		else {
-			super.visitQueryGroup( queryGroup );
-		}
-	}
-
-	@Override
-	public void visitQuerySpec(QuerySpec querySpec) {
-		if ( shouldEmulateFetchClause( querySpec ) ) {
-			emulateFetchOffsetWithWindowFunctions( querySpec, true );
-		}
-		else {
-			super.visitQuerySpec( querySpec );
-		}
-	}
-
-	@Override
-	public void visitQueryPartTableReference(QueryPartTableReference tableReference) {
-		if ( tableReference.isLateral() && !inLateral ) {
-			inLateral = true;
-			emulateQueryPartTableReferenceColumnAliasing( tableReference );
-			inLateral = false;
-		}
-		else {
-			emulateQueryPartTableReferenceColumnAliasing( tableReference );
-		}
-	}
-
-	@Override
-	protected void renderDerivedTableReference(DerivedTableReference tableReference) {
-		if ( tableReference instanceof FunctionTableReference && tableReference.isLateral() ) {
-			// No need for a lateral keyword for functions
-			tableReference.accept( this );
-		}
-		else {
-			super.renderDerivedTableReference( tableReference );
-		}
-	}
-
-	@Override
-	public void renderNamedSetReturningFunction(String functionName, List<? extends SqlAstNode> sqlAstArguments, AnonymousTupleTableGroupProducer tupleType, String tableIdentifierVariable, SqlAstNodeRenderingMode argumentRenderingMode) {
-		final ModelPart ordinalitySubPart = tupleType.findSubPart( CollectionPart.Nature.INDEX.getName(), null );
-		if ( ordinalitySubPart != null ) {
-			appendSql( "(select t.*, row_number() over() " );
-			appendSql( ordinalitySubPart.asBasicValuedModelPart().getSelectionExpression() );
-			appendSql( " from " );
-			renderSimpleNamedFunction( functionName, sqlAstArguments, argumentRenderingMode );
-			append( " t)" );
-		}
-		else {
-			super.renderNamedSetReturningFunction( functionName, sqlAstArguments, tupleType, tableIdentifierVariable, argumentRenderingMode );
-		}
-	}
-
-	@Override
-	protected SqlAstNodeRenderingMode getParameterRenderingMode() {
-		// HANA does not support parameters in lateral subqueries for some reason, so inline all the parameters in this case
-		return inLateral ? SqlAstNodeRenderingMode.INLINE_ALL_PARAMETERS : super.getParameterRenderingMode();
-	}
-
-	@Override
-	public void visitOffsetFetchClause(QueryPart queryPart) {
-		if ( !isRowNumberingCurrentQueryPart() ) {
-			renderLimitOffsetClause( queryPart );
-		}
+	protected SetReturningFunctionRenderingSupport getSetReturningFunctionRenderingSupport() {
+		return StandardSetReturningFunctionRenderingSupport.HANA;
 	}
 
 	@Override
@@ -317,13 +215,4 @@ public class HANALegacySqlAstTranslator<T extends JdbcOperation> extends Abstrac
 		);
 	}
 
-	@Override
-	protected void visitValuesList(List<Values> valuesList) {
-		visitValuesListEmulateSelectUnion( valuesList );
-	}
-
-	@Override
-	public void visitValuesTableReference(ValuesTableReference tableReference) {
-		emulateValuesTableReferenceColumnAliasing( tableReference );
-	}
 }

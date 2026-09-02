@@ -5,7 +5,7 @@
 package org.hibernate.query.sqm.tree.spi;
 
 import org.hibernate.query.common.JoinType;
-import org.hibernate.sql.ast.SqlAstJoinType;
+import org.hibernate.sql.ast.spi.query.from.SqlAstJoinType;
 
 /**
  * Represents a canonical join type.

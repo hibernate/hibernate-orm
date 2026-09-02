@@ -24,20 +24,20 @@ import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
 import org.hibernate.query.sqm.sql.spi.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.spi.SqmTypedNode;
-import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.spi.SqlAppender;
-import org.hibernate.sql.ast.spi.StringBuilderSqlAppender;
-import org.hibernate.sql.ast.tree.SqlAstNode;
-import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
-import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
-import org.hibernate.sql.ast.tree.expression.DurationUnit;
-import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.Format;
-import org.hibernate.sql.ast.tree.expression.QueryLiteral;
-import org.hibernate.sql.ast.tree.expression.SqlTuple;
-import org.hibernate.sql.ast.tree.expression.SqlTupleContainer;
-import org.hibernate.sql.ast.tree.predicate.BetweenPredicate;
-import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
+import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
+import org.hibernate.sql.spi.SqlAppender;
+import org.hibernate.sql.spi.StringBuilderSqlAppender;
+import org.hibernate.sql.ast.spi.SqlAstNode;
+import org.hibernate.sql.ast.spi.query.expression.BinaryArithmeticExpression;
+import org.hibernate.sql.ast.spi.query.expression.CaseSearchedExpression;
+import org.hibernate.sql.ast.spi.query.expression.DurationUnit;
+import org.hibernate.sql.ast.spi.query.expression.Expression;
+import org.hibernate.sql.ast.spi.query.expression.Format;
+import org.hibernate.sql.ast.spi.query.expression.QueryLiteral;
+import org.hibernate.sql.ast.spi.query.expression.SqlTuple;
+import org.hibernate.sql.ast.spi.query.expression.SqlTupleContainer;
+import org.hibernate.sql.ast.spi.query.predicate.BetweenPredicate;
+import org.hibernate.sql.ast.spi.query.predicate.ComparisonPredicate;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
@@ -227,7 +227,7 @@ public class FormatFunction extends AbstractSqmFunctionDescriptor implements Fun
 					final StringBuilderSqlAppender sqlAppender = new StringBuilderSqlAppender( sb );
 					final String delimiter;
 					if ( supportsPatternLiterals ) {
-						dialect.appendDatetimeFormat( sqlAppender, "'a'" );
+						dialect.getTemporalFormatSupport().appendFormat( sqlAppender, "'a'" );
 						delimiter = sb.substring( 0, sb.indexOf( "a" ) ).replace( "''", "'" );
 					}
 					else {
@@ -259,7 +259,7 @@ public class FormatFunction extends AbstractSqmFunctionDescriptor implements Fun
 										continue;
 									}
 									sb.setLength( 0 );
-									dialect.appendDatetimeFormat( sqlAppender, smallParts[l] );
+									dialect.getTemporalFormatSupport().appendFormat( sqlAppender, smallParts[l] );
 									final String formatPart = sb.toString();
 									if ( supportsPatternLiterals ) {
 										formatExpression = concat(
@@ -345,7 +345,7 @@ public class FormatFunction extends AbstractSqmFunctionDescriptor implements Fun
 							final String formatLiteralPart;
 							if ( supportsPatternLiterals ) {
 								sb.setLength( 0 );
-								dialect.appendDatetimeFormat( sqlAppender, "'" + chunks[i + 1] + "'" );
+								dialect.getTemporalFormatSupport().appendFormat( sqlAppender, "'" + chunks[i + 1] + "'" );
 								formatLiteralPart = sb.toString().replace( "''", "'" );
 							}
 							else {

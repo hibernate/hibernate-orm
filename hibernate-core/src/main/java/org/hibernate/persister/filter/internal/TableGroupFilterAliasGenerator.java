@@ -5,7 +5,7 @@
 package org.hibernate.persister.filter.internal;
 
 import org.hibernate.persister.filter.FilterAliasGenerator;
-import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.spi.query.from.TableGroup;
 
 /**
  * @author Rob Worsnop

@@ -4,9 +4,12 @@
  */
 package org.hibernate.procedure.internal;
 
+
 import java.util.List;
 
+import org.hibernate.Internal;
 import org.hibernate.QueryException;
+import org.hibernate.procedure.spi.CallableStatementSupport;
 import org.hibernate.procedure.spi.FunctionReturnImplementor;
 import org.hibernate.procedure.spi.ProcedureCallImplementor;
 import org.hibernate.procedure.spi.ProcedureParameterImplementor;
@@ -22,9 +25,13 @@ import jakarta.persistence.ParameterMode;
  * Apparently, jTDS doesn't like the JDBC standard named parameter notation with the ':' prefix,
  * and instead requires that we render this as `@param=?`.
  */
-public class JTDSCallableStatementSupport extends AbstractStandardCallableStatementSupport {
+@Internal
+public final class JTDSCallableStatementSupport implements CallableStatementSupport {
 
 	public static final JTDSCallableStatementSupport INSTANCE = new JTDSCallableStatementSupport();
+
+	private JTDSCallableStatementSupport() {
+	}
 
 	@Override
 	public JdbcOperationQueryCall interpretCall(ProcedureCallImplementor procedureCall) {

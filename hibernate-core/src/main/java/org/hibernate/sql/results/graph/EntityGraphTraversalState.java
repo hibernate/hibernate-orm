@@ -15,20 +15,26 @@ import org.hibernate.graph.spi.GraphImplementor;
  * @author Nathan Xu
  */
 @Incubating
+@org.hibernate.SPI({ org.hibernate.SPI.Role.USE, org.hibernate.SPI.Role.IMPLEMENT })
 public interface EntityGraphTraversalState {
 
 	/**
 	 * Details of a particular traversal within the entity graph
 	 */
+	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	class TraversalResult {
 		private final GraphImplementor<?> previousContext;
 		private final FetchStrategy fetchStrategy;
 		private final org.hibernate.engine.spi.FetchOptions fetchOptions;
 
+		/// Creates traversal state which uses the default fetch options.
+		@org.hibernate.SPI(org.hibernate.SPI.Role.IMPLEMENT)
 		public TraversalResult(GraphImplementor<?> previousContext, FetchStrategy fetchStrategy) {
 			this( previousContext, fetchStrategy, org.hibernate.engine.spi.FetchOptions.NONE );
 		}
 
+		/// Creates traversal state with explicit fetch options.
+		@org.hibernate.SPI(org.hibernate.SPI.Role.IMPLEMENT)
 		public TraversalResult(
 				GraphImplementor<?> previousContext,
 				FetchStrategy fetchStrategy,
@@ -51,10 +57,13 @@ public interface EntityGraphTraversalState {
 		}
 	}
 
+	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	class FetchStrategy {
 		private final FetchTiming fetchTiming;
 		private final boolean joined;
 
+		/// Creates the fetch timing and join decision for one traversal.
+		@org.hibernate.SPI(org.hibernate.SPI.Role.IMPLEMENT)
 		public FetchStrategy(FetchTiming fetchTiming, boolean joined) {
 			assert fetchTiming != null;
 			this.fetchTiming = fetchTiming;

@@ -4,6 +4,8 @@
  */
 package org.hibernate.type.format.jackson;
 
+import org.hibernate.SPI;
+
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -27,6 +29,7 @@ import java.util.List;
  * @author Emmanuel Jannetti
  * @author Bidyadhar Mohanty
  */
+@SPI
 public final class JacksonOsonFormatMapper extends AbstractJsonFormatMapper {
 
 	public static final String SHORT_NAME = "jackson-oson";

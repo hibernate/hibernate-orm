@@ -7,6 +7,7 @@ package org.hibernate.orm.test.dialect;
 import java.sql.Types;
 
 import org.hibernate.dialect.DB2Dialect;
+import org.hibernate.dialect.pagination.spi.PaginationRequest;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.query.spi.Limit;
 import org.hibernate.testing.orm.junit.RequiresDialect;
@@ -82,7 +83,15 @@ public class DB2DialectTestCase {
 		Limit rowSelection = new Limit();
 		rowSelection.setFirstRow(1);
 		rowSelection.setMaxRows(Integer.MAX_VALUE);
-		String sql = dialect.getLimitHandler().processSql( "select a.id from tbl_a a order by a.id", -1, null, new LimitQueryOptions( rowSelection ) );
+		String sql = dialect.getLimitHandler().processSql(
+				new PaginationRequest(
+						"select a.id from tbl_a a order by a.id",
+						rowSelection.getFirstRow(),
+						rowSelection.getMaxRows(),
+						-1,
+						null
+				)
+		).sql();
 		assertTrue(
 				sql.contains("fetch next ? rows only"),
 				"Integer overflow for max rows in: " + sql

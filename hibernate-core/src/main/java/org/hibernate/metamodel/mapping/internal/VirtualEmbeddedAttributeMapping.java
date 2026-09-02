@@ -14,7 +14,7 @@ import org.hibernate.metamodel.mapping.SelectableMappings;
 import org.hibernate.metamodel.mapping.VirtualModelPart;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.property.access.spi.PropertyAccess;
-import org.hibernate.sql.ast.tree.from.TableGroupProducer;
+import org.hibernate.sql.ast.spi.query.from.TableGroupProducer;
 
 /**
  * @author Christian Beikov

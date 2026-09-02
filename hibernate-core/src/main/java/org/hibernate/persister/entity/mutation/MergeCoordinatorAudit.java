@@ -19,6 +19,7 @@ import org.hibernate.persister.entity.EntityPersister;
  * the upsert is an insert ({@code ADD}), otherwise it is an
  * update ({@code MOD}).
  */
+@org.hibernate.Internal
 public class MergeCoordinatorAudit extends UpdateCoordinatorAudit {
 	public MergeCoordinatorAudit(
 			EntityPersister entityPersister,

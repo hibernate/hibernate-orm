@@ -7,39 +7,44 @@ package org.hibernate.community.dialect;
 import java.util.List;
 import java.util.function.Consumer;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.util.collections.Stack;
+import org.hibernate.Internal;
+import org.hibernate.dialect.sql.ast.spi.DerivedTableRenderingSupport;
+import org.hibernate.dialect.sql.ast.spi.PaginationRenderingPlan;
+import org.hibernate.dialect.sql.ast.spi.PaginationRenderingSupport;
+import org.hibernate.dialect.sql.ast.spi.QueryMutationRenderingSupport;
+import org.hibernate.dialect.sql.ast.spi.StandardQueryMutationRenderingSupport;
+import org.hibernate.dialect.sql.ast.spi.StandardDerivedTableRenderingSupport;
+import org.hibernate.query.common.FetchClauseType;
 import org.hibernate.query.sqm.ComparisonOperator;
-import org.hibernate.sql.ast.Clause;
-import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
-import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
-import org.hibernate.sql.ast.spi.SqlAppender;
-import org.hibernate.sql.ast.spi.SqlSelection;
-import org.hibernate.sql.ast.tree.Statement;
-import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
-import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
-import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
-import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.FunctionExpression;
-import org.hibernate.sql.ast.tree.expression.JdbcLiteral;
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
-import org.hibernate.sql.ast.tree.expression.Literal;
-import org.hibernate.sql.ast.tree.expression.QueryLiteral;
-import org.hibernate.sql.ast.tree.expression.SelfRenderingExpression;
-import org.hibernate.sql.ast.tree.expression.SqlTuple;
-import org.hibernate.sql.ast.tree.expression.Summarization;
-import org.hibernate.sql.ast.tree.from.NamedTableReference;
-import org.hibernate.sql.ast.tree.from.ValuesTableReference;
-import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
-import org.hibernate.sql.ast.tree.predicate.BooleanExpressionPredicate;
-import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
-import org.hibernate.sql.ast.tree.predicate.InListPredicate;
-import org.hibernate.sql.ast.tree.predicate.SelfRenderingPredicate;
-import org.hibernate.sql.ast.tree.select.QueryGroup;
-import org.hibernate.sql.ast.tree.select.QueryPart;
-import org.hibernate.sql.ast.tree.select.QuerySpec;
-import org.hibernate.sql.ast.tree.select.SelectClause;
-import org.hibernate.sql.ast.tree.update.UpdateStatement;
+import org.hibernate.sql.ast.spi.translation.Clause;
+import org.hibernate.sql.ast.spi.translation.SqlAstNodeRenderingMode;
+import org.hibernate.dialect.sql.ast.spi.AbstractSqlAstTranslator;
+import org.hibernate.sql.spi.SqlAppender;
+import org.hibernate.sql.ast.spi.query.select.SqlSelection;
+import org.hibernate.sql.ast.spi.Statement;
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
+import org.hibernate.dialect.sql.ast.spi.InsertConflictRenderingSupport;
+import org.hibernate.dialect.sql.ast.spi.StandardInsertConflictRenderingSupport;
+import org.hibernate.sql.ast.spi.query.expression.BinaryArithmeticExpression;
+import org.hibernate.sql.ast.spi.query.expression.CaseSearchedExpression;
+import org.hibernate.sql.ast.spi.query.expression.CaseSimpleExpression;
+import org.hibernate.sql.ast.spi.query.expression.Expression;
+import org.hibernate.sql.ast.spi.query.expression.FunctionExpression;
+import org.hibernate.sql.ast.spi.query.expression.JdbcLiteral;
+import org.hibernate.sql.ast.spi.query.expression.JdbcParameter;
+import org.hibernate.sql.ast.spi.query.expression.Literal;
+import org.hibernate.sql.ast.spi.query.expression.QueryLiteral;
+import org.hibernate.sql.ast.spi.query.expression.SelfRenderingExpression;
+import org.hibernate.sql.ast.spi.query.expression.SqlTuple;
+import org.hibernate.sql.ast.spi.query.expression.Summarization;
+import org.hibernate.sql.ast.spi.query.from.NamedTableReference;
+import org.hibernate.sql.ast.spi.query.predicate.BooleanExpressionPredicate;
+import org.hibernate.sql.ast.spi.query.predicate.ComparisonPredicate;
+import org.hibernate.sql.ast.spi.query.predicate.InListPredicate;
+import org.hibernate.sql.ast.spi.query.predicate.SelfRenderingPredicate;
+import org.hibernate.sql.ast.spi.query.select.QuerySpec;
+import org.hibernate.sql.ast.spi.query.select.SelectClause;
+import org.hibernate.sql.ast.spi.model.TableInsertStandard;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 
 /**
@@ -51,29 +56,25 @@ public class FirebirdSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 
 	private boolean inFunction;
 
-	public FirebirdSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
-		super( sessionFactory, statement );
+	public FirebirdSqlAstTranslator(SqlAstTranslationRequest<? extends Statement, T> request) {
+		super( request );
 	}
 
 	@Override
-	protected void visitInsertStatementOnly(InsertSelectStatement statement) {
-		if ( statement.getConflictClause() == null || statement.getConflictClause().isDoNothing() ) {
-			// Render plain insert statement and possibly run into unique constraint violation
-			super.visitInsertStatementOnly( statement );
-		}
-		else {
-			visitInsertStatementEmulateMerge( statement );
-		}
+	protected void renderInsertIntoNoColumns(TableInsertStandard tableInsert) {
+		renderIntoIntoAndTable( tableInsert );
+		appendSql( "default values" );
 	}
 
 	@Override
-	protected void visitUpdateStatementOnly(UpdateStatement statement) {
-		if ( hasNonTrivialFromClause( statement.getFromClause() ) ) {
-			visitUpdateStatementEmulateMerge( statement );
-		}
-		else {
-			super.visitUpdateStatementOnly( statement );
-		}
+	@Internal
+	protected InsertConflictRenderingSupport getInsertConflictRenderingSupport() {
+		return StandardInsertConflictRenderingSupport.MERGE;
+	}
+
+	@Override
+	protected QueryMutationRenderingSupport getQueryMutationRenderingSupport() {
+		return StandardQueryMutationRenderingSupport.MERGE;
 	}
 
 	@Override
@@ -145,69 +146,30 @@ public class FirebirdSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 		}
 	}
 
-	protected boolean shouldEmulateFetchClause(QueryPart queryPart) {
-		// Percent fetches or ties fetches aren't supported in Firebird
-		// Before 3.0 there was also no support for window functions
-		// Check if current query part is already row numbering to avoid infinite recursion
-		return useOffsetFetchClause( queryPart ) && getQueryPartForRowNumbering() != queryPart
-				&& getDialect().getVersion().isSameOrAfter( 3 ) && !isRowsOnlyFetchClauseType( queryPart );
+	@Override
+	protected PaginationRenderingSupport getPaginationRenderingSupport() {
+		if ( getDialect().getVersion().isBefore( 3 ) ) {
+			return request -> new PaginationRenderingPlan.FirstSkip();
+		}
+		return request -> request.fetchClauseType() != null
+				&& request.fetchClauseType() != FetchClauseType.ROWS_ONLY
+				? new PaginationRenderingPlan.Window( true )
+				: new PaginationRenderingPlan.OffsetFetch( true );
 	}
 
+	// overridden due to renderSelectItems
 	@Override
-	public void visitQueryGroup(QueryGroup queryGroup) {
-		if ( shouldEmulateFetchClause( queryGroup ) ) {
-			emulateFetchOffsetWithWindowFunctions( queryGroup, true );
-		}
-		else {
-			super.visitQueryGroup( queryGroup );
-		}
-	}
-
-	@Override
-	public void visitQuerySpec(QuerySpec querySpec) {
-		if ( shouldEmulateFetchClause( querySpec ) ) {
-			emulateFetchOffsetWithWindowFunctions( querySpec, true );
-		}
-		else {
-			super.visitQuerySpec( querySpec );
-		}
-	}
-
-	// overridden due to visitSqlSelections
-	@Override
-	public void visitSelectClause(SelectClause selectClause) {
-		Stack<Clause> clauseStack = getClauseStack();
-		clauseStack.push( Clause.SELECT );
-
-		try {
-			appendSql( "select " );
-			visitSqlSelections( selectClause );
-			renderVirtualSelections( selectClause );
-		}
-		finally {
-			clauseStack.pop();
-		}
-	}
-
-	@Override
-	protected void visitSqlSelections(SelectClause selectClause) {
-		if ( !supportsOffsetFetchClause() ) {
+	protected void renderSelectClause(SelectClause selectClause) {
+		appendSql( "select " );
+		if ( determinePaginationRenderingPlan( getQueryPartStack().getCurrent() )
+				instanceof PaginationRenderingPlan.FirstSkip ) {
 			renderFirstSkipClause( (QuerySpec) getQueryPartStack().getCurrent() );
 		}
 		if ( selectClause.isDistinct() ) {
 			appendSql( "distinct " );
 		}
-		super.visitSqlSelections( selectClause );
-	}
-
-	@Override
-	public void visitOffsetFetchClause(QueryPart queryPart) {
-		if ( supportsOffsetFetchClause() ) {
-			// Firebird only supports a FIRST and SKIP clause before 3.0 which is handled in visitSqlSelections
-			if ( !isRowNumberingCurrentQueryPart() ) {
-				renderOffsetFetchClause( queryPart, true );
-			}
-		}
+		super.renderSelectItems( selectClause );
+		renderVirtualSelections( selectClause );
 	}
 
 	@Override
@@ -262,12 +224,8 @@ public class FirebirdSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	}
 
 	@Override
-	public void visitValuesTableReference(ValuesTableReference tableReference) {
-		emulateValuesTableReferenceColumnAliasing( tableReference );
-	}
-
-	private boolean supportsOffsetFetchClause() {
-		return getDialect().getVersion().isSameOrAfter( 3 );
+	protected DerivedTableRenderingSupport getDerivedTableRenderingSupport() {
+		return StandardDerivedTableRenderingSupport.VALUES_SELECT_LIST;
 	}
 
 	@Override

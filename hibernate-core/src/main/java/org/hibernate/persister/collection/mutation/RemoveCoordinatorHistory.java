@@ -13,9 +13,9 @@ import org.hibernate.engine.jdbc.mutation.spi.MutationExecutorService;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.model.MutationOperationGroup;
-import org.hibernate.sql.model.MutationType;
-import org.hibernate.sql.model.ast.MutatingTableReference;
-import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
+import org.hibernate.sql.spi.mutation.MutationType;
+import org.hibernate.sql.ast.spi.model.MutatingTableReference;
+import org.hibernate.sql.spi.mutation.jdbc.JdbcMutationOperation;
 
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
 import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.singleOperation;

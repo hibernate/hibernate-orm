@@ -5,8 +5,8 @@
 package org.hibernate.orm.test.dialect;
 
 import org.hibernate.dialect.DB2Dialect;
-import org.hibernate.dialect.pagination.AbstractLimitHandler;
-import org.hibernate.dialect.pagination.DB2LimitHandler;
+import org.hibernate.dialect.pagination.spi.AbstractLimitHandler;
+import org.hibernate.dialect.pagination.spi.DB2LimitHandler;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 
 /**

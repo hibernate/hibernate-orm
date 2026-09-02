@@ -4,6 +4,11 @@
  */
 package org.hibernate.usertype;
 
+import org.hibernate.SPI;
+
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.USE;
+
 import java.util.Properties;
 import java.util.function.BiConsumer;
 
@@ -21,6 +26,7 @@ import org.hibernate.type.spi.TypeConfigurationAware;
  *
  * @see Type
  */
+@SPI({ USE, IMPLEMENT })
 public class UserTypeLegacyBridge
 		extends BaseUserTypeSupport<Object>
 		implements ParameterizedType, TypeConfigurationAware {
@@ -29,9 +35,11 @@ public class UserTypeLegacyBridge
 	private TypeConfiguration typeConfiguration;
 	private String hbmStyleTypeName;
 
+	@SPI(IMPLEMENT)
 	public UserTypeLegacyBridge() {
 	}
 
+	@SPI(IMPLEMENT)
 	public UserTypeLegacyBridge(String hbmStyleTypeName) {
 		this.hbmStyleTypeName = hbmStyleTypeName;
 	}

@@ -10,13 +10,13 @@ import org.hibernate.type.descriptor.jdbc.XmlHelper;
 import org.hibernate.dialect.function.UnnestSetReturningFunctionTypeResolver;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
-import org.hibernate.query.sqm.tuple.internal.AnonymousTupleTableGroupProducer;
+import org.hibernate.sql.ast.spi.query.SetReturningFunctionType;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingSetReturningFunctionDescriptor;
 import org.hibernate.query.sqm.produce.function.SetReturningFunctionTypeResolver;
-import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.spi.SqlAppender;
-import org.hibernate.sql.ast.tree.SqlAstNode;
-import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
+import org.hibernate.sql.spi.SqlAppender;
+import org.hibernate.sql.ast.spi.SqlAstNode;
+import org.hibernate.sql.ast.spi.query.expression.Expression;
 import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.java.BasicPluralJavaType;
@@ -56,7 +56,7 @@ public class UnnestFunction extends AbstractSqmSelfRenderingSetReturningFunction
 	public void render(
 			SqlAppender sqlAppender,
 			List<? extends SqlAstNode> sqlAstArguments,
-			AnonymousTupleTableGroupProducer tupleType,
+			SetReturningFunctionType tupleType,
 			String tableIdentifierVariable,
 			SqlAstTranslator<?> walker) {
 		final Expression array = (Expression) sqlAstArguments.get( 0 );
@@ -75,16 +75,18 @@ public class UnnestFunction extends AbstractSqmSelfRenderingSetReturningFunction
 		}
 	}
 
+	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	protected String getDdlType(SqlTypedMapping sqlTypedMapping, int containerSqlTypeCode, SqlAstTranslator<?> translator) {
 		return DdlTypeHelper.getTypeName( sqlTypedMapping, translator.getSessionFactory().getTypeConfiguration() );
 	}
 
+	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	protected void renderJsonTable(
 			SqlAppender sqlAppender,
 			Expression array,
 			BasicPluralType<?, ?> pluralType,
 			@Nullable SqlTypedMapping sqlTypedMapping,
-			AnonymousTupleTableGroupProducer tupleType,
+			SetReturningFunctionType tupleType,
 			String tableIdentifierVariable,
 			SqlAstTranslator<?> walker) {
 		sqlAppender.appendSql( "json_table(" );
@@ -94,8 +96,8 @@ public class UnnestFunction extends AbstractSqmSelfRenderingSetReturningFunction
 		sqlAppender.appendSql( ')' );
 	}
 
-	protected void renderJsonTableColumns(SqlAppender sqlAppender, AnonymousTupleTableGroupProducer tupleType, SqlAstTranslator<?> walker, boolean errorOnError) {
-		if ( tupleType.findSubPart( CollectionPart.Nature.ELEMENT.getName(), null ) == null ) {
+	protected void renderJsonTableColumns(SqlAppender sqlAppender, SetReturningFunctionType tupleType, SqlAstTranslator<?> walker, boolean errorOnError) {
+		if ( tupleType.findSubPart( CollectionPart.Nature.ELEMENT.getName() ) == null ) {
 			tupleType.forEachSelectable( 0, (selectionIndex, selectableMapping) -> {
 				if ( selectionIndex == 0 ) {
 					sqlAppender.append( '(' );
@@ -150,12 +152,13 @@ public class UnnestFunction extends AbstractSqmSelfRenderingSetReturningFunction
 		sqlAppender.appendSql( ')' );
 	}
 
+	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	protected void renderXmlTable(
 			SqlAppender sqlAppender,
 			Expression array,
 			BasicPluralType<?, ?> pluralType,
 			@Nullable SqlTypedMapping sqlTypedMapping,
-			AnonymousTupleTableGroupProducer tupleType,
+			SetReturningFunctionType tupleType,
 			String tableIdentifierVariable,
 			SqlAstTranslator<?> walker) {
 		final XmlHelper.CollectionTags collectionTags = XmlHelper.determineCollectionTags(
@@ -173,8 +176,8 @@ public class UnnestFunction extends AbstractSqmSelfRenderingSetReturningFunction
 		sqlAppender.appendSql( ')' );
 	}
 
-	protected void renderXmlTableColumns(SqlAppender sqlAppender, AnonymousTupleTableGroupProducer tupleType, SqlAstTranslator<?> walker) {
-		if ( tupleType.findSubPart( CollectionPart.Nature.ELEMENT.getName(), null ) == null ) {
+	protected void renderXmlTableColumns(SqlAppender sqlAppender, SetReturningFunctionType tupleType, SqlAstTranslator<?> walker) {
+		if ( tupleType.findSubPart( CollectionPart.Nature.ELEMENT.getName() ) == null ) {
 			tupleType.forEachSelectable( 0, (selectionIndex, selectableMapping) -> {
 				if ( selectionIndex == 0 ) {
 					sqlAppender.append( ' ' );
@@ -219,18 +222,19 @@ public class UnnestFunction extends AbstractSqmSelfRenderingSetReturningFunction
 		}
 	}
 
+	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	protected void renderUnnest(
 			SqlAppender sqlAppender,
 			Expression array,
 			BasicPluralType<?, ?> pluralType,
 			@Nullable SqlTypedMapping sqlTypedMapping,
-			AnonymousTupleTableGroupProducer tupleType,
+			SetReturningFunctionType tupleType,
 			String tableIdentifierVariable,
 			SqlAstTranslator<?> walker) {
 		sqlAppender.appendSql( "unnest(" );
 		array.accept( walker );
 		sqlAppender.appendSql( ')' );
-		if ( tupleType.findSubPart( CollectionPart.Nature.INDEX.getName(), null ) != null ) {
+		if ( tupleType.findSubPart( CollectionPart.Nature.INDEX.getName() ) != null ) {
 			sqlAppender.append( " with ordinality" );
 		}
 	}

@@ -7,6 +7,7 @@ package org.hibernate.query.spi;
 import java.util.Map;
 
 import jakarta.annotation.Nonnull;
+import org.hibernate.SPI;
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
@@ -30,17 +31,21 @@ public interface QueryEngineOptions {
 	 * @see org.hibernate.query.hql
 	 *
 	 * @see org.hibernate.cfg.QuerySettings#SEMANTIC_QUERY_PRODUCER
+	 * @see HqlTranslator
 	 */
+	@SPI(SPI.Role.SUPPLY)
 	HqlTranslator getCustomHqlTranslator();
 
 	/**
 	 * Factory for translators transforming an SQM tree into a different form.
 	 * For standard ORM implementations this will generally be some form of SQL tree.
 	 *
-	 * @see org.hibernate.sql.ast.tree
+	 * @see org.hibernate.sql.ast.spi.query
 	 *
 	 * @see org.hibernate.cfg.QuerySettings#SEMANTIC_QUERY_TRANSLATOR
+	 * @see SqmTranslatorFactory
 	 */
+	@SPI(SPI.Role.SUPPLY)
 	SqmTranslatorFactory getCustomSqmTranslatorFactory();
 
 	/**

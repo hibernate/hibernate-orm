@@ -4,11 +4,11 @@
  */
 package org.hibernate.query.sqm.mutation.internal.temptable;
 
-import org.hibernate.persister.internal.SqlFragmentPredicate;
+import org.hibernate.sql.ast.spi.query.predicate.SqlFragmentPredicate;
 import org.hibernate.sql.ast.spi.AbstractSqlAstWalker;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
-import org.hibernate.sql.ast.tree.predicate.FilterPredicate;
-import org.hibernate.sql.ast.tree.select.SelectStatement;
+import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
+import org.hibernate.sql.ast.spi.query.predicate.FilterPredicate;
+import org.hibernate.sql.ast.spi.query.select.SelectStatement;
 
 /**
  * Visitor to determine if all visited column references use the same qualifier.

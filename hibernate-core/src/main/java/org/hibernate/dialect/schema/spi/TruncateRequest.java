@@ -1,0 +1,23 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
+package org.hibernate.dialect.schema.spi;
+
+import java.util.List;
+
+import org.hibernate.SPI;
+
+import static java.util.Objects.requireNonNull;
+import static org.hibernate.SPI.Role.USE;
+
+/// Provides the ordered rendered table names for truncation.
+///
+/// @author Steve Ebersole
+/// @since 8.0
+@SPI(USE)
+public record TruncateRequest(List<String> tableNames) {
+	public TruncateRequest {
+		tableNames = List.copyOf( requireNonNull( tableNames ) );
+	}
+}

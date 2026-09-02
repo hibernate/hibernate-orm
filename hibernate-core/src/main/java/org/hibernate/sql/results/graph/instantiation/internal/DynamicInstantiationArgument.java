@@ -4,8 +4,8 @@
  */
 package org.hibernate.sql.results.graph.instantiation.internal;
 
-import org.hibernate.query.sqm.sql.spi.BaseSqmToSqlAstConverter;
-import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
+import org.hibernate.query.sqm.sql.internal.SqmAliasedNodeCollector;
+import org.hibernate.sql.ast.spi.result.DomainResultProducer;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 
 /**
@@ -28,9 +28,9 @@ public class DynamicInstantiationArgument<T> {
 		final var sqlExpressionResolver =
 				creationState.getSqlAstCreationState().getCurrentProcessingState()
 						.getSqlExpressionResolver();
-		if ( sqlExpressionResolver instanceof BaseSqmToSqlAstConverter.SqmAliasedNodeCollector ) {
+		if ( sqlExpressionResolver instanceof SqmAliasedNodeCollector ) {
 			if ( !( argumentResultProducer instanceof DynamicInstantiation<?> ) ) {
-				( (BaseSqmToSqlAstConverter.SqmAliasedNodeCollector) sqlExpressionResolver ).next();
+				( (SqmAliasedNodeCollector) sqlExpressionResolver ).next();
 			}
 		}
 		return new ArgumentDomainResult<>( argumentResultProducer.createDomainResult( alias, creationState ) );

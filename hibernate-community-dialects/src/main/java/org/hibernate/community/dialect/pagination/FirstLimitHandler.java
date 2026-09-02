@@ -4,10 +4,9 @@
  */
 package org.hibernate.community.dialect.pagination;
 
-import org.hibernate.dialect.pagination.AbstractNoOffsetLimitHandler;
-import org.hibernate.dialect.pagination.LimitHandler;
-import org.hibernate.query.spi.Limit;
-import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
+import org.hibernate.dialect.pagination.spi.AbstractNoOffsetLimitHandler;
+import org.hibernate.dialect.pagination.spi.LimitHandler;
+import org.hibernate.dialect.pagination.spi.PaginationRequest;
 
 /**
  * A {@link LimitHandler} for older versions of Informix, Ingres,
@@ -25,13 +24,10 @@ public class FirstLimitHandler extends AbstractNoOffsetLimitHandler {
 	}
 
 	@Override
-	protected String limitClause() {
-		return " first ?";
-	}
-
-	@Override
-	protected String limitClause(int jdbcParameterCount, ParameterMarkerStrategy parameterMarkerStrategy) {
-		return " first " + parameterMarkerStrategy.createMarker( 1, null ) + " rows only";
+	protected String limitClause(PaginationRequest request) {
+		return request.usesStandardParameterMarkers()
+				? " first ?"
+				: " first " + request.parameterMarker( 1 ) + " rows only";
 	}
 
 	@Override
@@ -45,12 +41,7 @@ public class FirstLimitHandler extends AbstractNoOffsetLimitHandler {
 	}
 
 	@Override
-	public boolean processSqlMutatesState() {
-		return false;
-	}
-
-	@Override
-	public int getParameterPositionStart(Limit limit) {
-		return hasMaxRows( limit ) && supportsVariableLimit() ? 2 : 1;
+	public int parameterPositionStart(PaginationRequest request) {
+		return request.hasMaxRows() && supportsVariableLimit() ? 2 : 1;
 	}
 }

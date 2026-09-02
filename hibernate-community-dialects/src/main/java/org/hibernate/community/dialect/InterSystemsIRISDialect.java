@@ -4,45 +4,80 @@
  */
 package org.hibernate.community.dialect;
 
+import org.hibernate.dialect.identifier.spi.KeywordRegistration;
+
+import org.hibernate.dialect.schema.spi.ConstraintDropMode;
+import org.hibernate.dialect.schema.spi.IndexNameQualification;
+import org.hibernate.dialect.schema.spi.SchemaDropSupport;
+
+import org.hibernate.dialect.temporaltype.spi.CurrentTimestampSelection;
+
+import org.hibernate.dialect.temporaltype.spi.TemporalOperationSupport;
+import org.hibernate.dialect.temporaltype.spi.TemporalOperationSupports;
+
+import org.hibernate.dialect.temporaltype.spi.TemporalFormatSupport;
+
+import org.hibernate.dialect.temporaltype.spi.CurrentTemporalSupport;
+
+import org.hibernate.SPI;
+import static org.hibernate.SPI.Role.USE;
+
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.SUPPLY;
+import org.hibernate.dialect.type.spi.TypeSizingProfile;
+
+import org.hibernate.dialect.mutation.spi.MultiTableMutationSupport;
+import org.hibernate.dialect.function.spi.ExpressionCoercionSupport;
+import org.hibernate.dialect.function.spi.TupleCountSupport;
+import org.hibernate.dialect.function.spi.WindowFunctionSupport;
+
+import org.hibernate.dialect.sql.ast.spi.CteSupport;
+import org.hibernate.dialect.sql.ast.spi.NullOrderingSupport;
+import org.hibernate.dialect.sql.ast.spi.MutationKind;
+import org.hibernate.dialect.sql.ast.spi.MutationSyntaxCapability;
+import org.hibernate.dialect.sql.ast.spi.MutationSyntaxSupport;
+import org.hibernate.dialect.sql.ast.spi.RowValueSupport;
+import org.hibernate.dialect.sql.ast.spi.SingleRowTableSupport;
+import org.hibernate.dialect.sql.ast.spi.ValuesListSupport;
+import org.hibernate.dialect.sql.ast.spi.SubquerySupport;
+
 import jakarta.persistence.TemporalType;
-import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.ScrollMode;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.cfg.Environment;
 import org.hibernate.community.dialect.function.InterSystemsIRISLogFunction;
-import org.hibernate.community.dialect.identity.InterSystemsIRISIdentityColumnSupport;
+import org.hibernate.community.dialect.identity.internal.InterSystemsIRISIdentityColumnSupport;
 import org.hibernate.community.dialect.pagination.InterSystemsIRISLimitHandler;
+import org.hibernate.community.dialect.temptable.internal.InterSystemsIRISGlobalTemporaryTableStrategy;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
-import org.hibernate.dialect.NationalizationSupport;
-import org.hibernate.dialect.Replacer;
+import org.hibernate.dialect.lob.spi.LobSupport;
+import org.hibernate.dialect.lob.spi.LobSupports;
+import org.hibernate.dialect.jdbc.spi.ParameterLimits;
+import org.hibernate.dialect.sql.ast.spi.DmlTargetColumnQualifierSupport;
+import org.hibernate.dialect.type.spi.NationalizationSupport;
+import org.hibernate.dialect.function.spi.Replacer;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.ExtractFunction;
 import org.hibernate.dialect.function.LengthFunction;
 import org.hibernate.dialect.function.TruncFunction;
-import org.hibernate.dialect.identity.IdentityColumnSupport;
-import org.hibernate.dialect.lock.LockingStrategy;
-import org.hibernate.dialect.lock.OptimisticForceIncrementLockingStrategy;
-import org.hibernate.dialect.lock.OptimisticLockingStrategy;
-import org.hibernate.dialect.lock.PessimisticForceIncrementLockingStrategy;
-import org.hibernate.dialect.lock.PessimisticReadSelectLockingStrategy;
-import org.hibernate.dialect.lock.PessimisticReadUpdateLockingStrategy;
-import org.hibernate.dialect.lock.PessimisticWriteSelectLockingStrategy;
-import org.hibernate.dialect.lock.PessimisticWriteUpdateLockingStrategy;
-import org.hibernate.dialect.lock.SelectLockingStrategy;
-import org.hibernate.dialect.lock.UpdateLockingStrategy;
-import org.hibernate.dialect.lock.internal.NoLockingSupport;
+import org.hibernate.dialect.identity.spi.IdentityColumnSupport;
+import org.hibernate.dialect.lock.spi.EntityLockingStrategies;
+import org.hibernate.dialect.lock.spi.EntityLockingStrategyFactory;
+import org.hibernate.dialect.lock.spi.EntityLockingStrategyKind;
 import org.hibernate.dialect.lock.spi.LockingSupport;
-import org.hibernate.dialect.pagination.LimitHandler;
-import org.hibernate.dialect.temptable.TemporaryTableKind;
+import org.hibernate.dialect.lock.spi.StandardLockingClauseStrategies;
+import org.hibernate.dialect.lock.spi.StandardLockingSupports;
+import org.hibernate.dialect.namespace.spi.NamespaceSupport;
+import org.hibernate.dialect.namespace.spi.NamespaceSupports;
+import org.hibernate.dialect.pagination.spi.LimitHandler;
+import org.hibernate.dialect.temptable.spi.TemporaryTableStrategy;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
-import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.dialect.identifier.spi.IdentifierHelperBuildRequest;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.DataException;
 import org.hibernate.exception.LockAcquisitionException;
@@ -51,42 +86,29 @@ import org.hibernate.exception.SQLGrammarException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
-import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.query.common.FetchClauseType;
+import org.hibernate.dialect.sql.ast.spi.FetchClauseSupport;
 import org.hibernate.query.common.TemporalUnit;
-import org.hibernate.dialect.type.IntervalType;
-import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableInsertStrategy;
-import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableMutationStrategy;
-import org.hibernate.query.sqm.mutation.spi.AfterUseAction;
-import org.hibernate.query.sqm.mutation.spi.BeforeUseAction;
-import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
-import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
+import org.hibernate.dialect.temporaltype.spi.IntervalType;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.SqlAstTranslatorFactory;
-import org.hibernate.sql.ast.spi.LockingClauseStrategy;
-import org.hibernate.sql.ast.spi.SqlAppender;
-import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
-import org.hibernate.sql.ast.tree.Statement;
-import org.hibernate.sql.ast.tree.select.QuerySpec;
+import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslatorFactory;
+import org.hibernate.dialect.lock.spi.LockingClauseStrategy;
+import org.hibernate.sql.spi.SqlAppender;
+import org.hibernate.dialect.sql.ast.spi.StandardSqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.Statement;
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
+import org.hibernate.sql.ast.spi.query.select.QuerySpec;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
-import java.sql.CallableStatement;
-import java.sql.DatabaseMetaData;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.sql.Types;
 import java.time.temporal.TemporalAccessor;
 import java.util.TimeZone;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
-import static org.hibernate.sql.ast.internal.NonLockingClauseStrategy.NON_CLAUSE_STRATEGY;
 import static org.hibernate.type.SqlTypes.BIT;
 import static org.hibernate.type.SqlTypes.BLOB;
 import static org.hibernate.type.SqlTypes.CLOB;
@@ -96,16 +118,49 @@ import static org.hibernate.type.SqlTypes.LONG32VARCHAR;
 import static org.hibernate.type.SqlTypes.NCLOB;
 import static org.hibernate.type.SqlTypes.TIMESTAMP;
 import static org.hibernate.type.SqlTypes.TIMESTAMP_UTC;
-import static org.hibernate.type.descriptor.DateTimeUtils.appendAsDate;
-import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTime;
-import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithNanos;
+import static org.hibernate.dialect.literal.spi.StandardDateTimeLiteralRendering.appendAsDate;
+import static org.hibernate.dialect.literal.spi.StandardDateTimeLiteralRendering.appendAsTime;
+import static org.hibernate.dialect.literal.spi.StandardDateTimeLiteralRendering.appendAsTimestampWithNanos;
 
 
 /**
  * A Hibernate dialect for InterSystems IRIS
  * intended for  Hibernate 7.1+  and jdk 1.8+
  */
-public class InterSystemsIRISDialect extends Dialect {
+public class InterSystemsIRISDialect extends Dialect implements CurrentTemporalSupport, TemporalFormatSupport, TemporalOperationSupport {
+	private SchemaDropSupport schemaDropSupport;
+
+
+	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
+	public TemporalOperationSupport getTemporalOperationSupport() {
+		return this;
+	}
+
+	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
+	public TemporalFormatSupport getTemporalFormatSupport() {
+		return this;
+	}
+
+	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
+	public CurrentTemporalSupport getCurrentTemporalSupport() {
+		return this;
+	}
+	private static final EntityLockingStrategyFactory ENTITY_LOCKING_STRATEGY_FACTORY = request -> switch ( request.lockMode() ) {
+		case PESSIMISTIC_READ, PESSIMISTIC_WRITE -> request.createStrategy(
+				request.target().versioned() ? EntityLockingStrategyKind.UPDATE : EntityLockingStrategyKind.SELECT
+		);
+		default -> EntityLockingStrategies.standard().createStrategy( request );
+	};
+	private final TypeSizingProfile typeSizingProfile = TypeSizingProfile.builder( super.getTypeSizingProfile() )
+			.maxVarcharLength( 32_767 ).maxVarcharCapacity( 32_767 )
+			.maxNVarcharLength( 32_767 ).maxNVarcharCapacity( 32_767 )
+			.maxVarbinaryLength( 32_767 ).maxVarbinaryCapacity( 32_767 )
+			.build();
+
+	@Override public TypeSizingProfile getTypeSizingProfile() { return typeSizingProfile; }
 
 	private static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 2025, 3 );
 
@@ -122,6 +177,7 @@ public class InterSystemsIRISDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	protected DatabaseVersion getMinimumSupportedVersion() {
 		return MINIMUM_VERSION;
 	}
@@ -130,6 +186,7 @@ public class InterSystemsIRISDialect extends Dialect {
 	 * Register SQL Functions
 	 */
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
 		super.initializeFunctionRegistry( functionContributions );
 		final var typeConfiguration = functionContributions.getTypeConfiguration();
@@ -199,11 +256,13 @@ public class InterSystemsIRISDialect extends Dialect {
 
 
 	@Override
-	protected void initDefaultProperties() {
-		getDefaultProperties().setProperty( Environment.USE_SQL_COMMENTS, "false" );
+	@SPI({ IMPLEMENT, SUPPLY })
+	protected void contributeDefaultProperties(java.util.Properties properties) {
+		properties.setProperty( Environment.USE_SQL_COMMENTS, "false" );
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.contributeTypes( typeContributions, serviceRegistry );
 		JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration().getJdbcTypeRegistry();
@@ -213,6 +272,7 @@ public class InterSystemsIRISDialect extends Dialect {
 
 	//sql type to column type mapping
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	protected String columnType(int sqlTypeCode) {
 		switch (sqlTypeCode) {
 			case BOOLEAN:
@@ -234,35 +294,40 @@ public class InterSystemsIRISDialect extends Dialect {
 
 
 	@Override
-	public boolean supportsSubselectAsInPredicateLHS() {
-		return false;
-	}
-
-	public boolean supportsSubqueryOnMutatingTable() {
-		return false;
+	public SubquerySupport getSubquerySupport() {
+		return SubquerySupport.builder()
+				.feature( SubquerySupport.Feature.EXISTS_IN_SELECT, false )
+				.feature( SubquerySupport.Feature.ORDER_BY, false )
+				.feature( SubquerySupport.Feature.MUTATION_TARGET_REFERENCE, false )
+				.feature( SubquerySupport.Feature.IN_PREDICATE_LHS, false )
+				.feature( SubquerySupport.Feature.LATERAL, true )
+				.build();
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public NationalizationSupport getNationalizationSupport() {
 		return NationalizationSupport.IMPLICIT;
 	}
 
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public SqlAstTranslatorFactory getSqlAstTranslatorFactory() {
 		return new StandardSqlAstTranslatorFactory() {
 			@Override
-			protected <T extends JdbcOperation> SqlAstTranslator<T> buildTranslator(
-					SessionFactoryImplementor sessionFactory, Statement statement) {
-				return new InterSystemsIRISSqlAstTranslator<>( sessionFactory, statement );
+			protected <S extends Statement, T extends JdbcOperation> SqlAstTranslator<T> createTranslator(
+					SqlAstTranslationRequest<S, T> request) {
+				return new InterSystemsIRISSqlAstTranslator<>( request );
 			}
 		};
 	}
 
 
 	@Override
-	protected void registerDefaultKeywords() {
-		super.registerDefaultKeywords();
+	@SPI({ USE, IMPLEMENT, SUPPLY })
+	protected void contributeKeywords(KeywordRegistration registration) {
+		super.contributeKeywords( registration );
 		String[] irisExtraKeywords = {
 				"ASSERTION","AVG","BIT","BIT_LENGTH","CHARACTER_LENGTH",
 				"CHAR_LENGTH","COALESCE","CONNECTION","CONSTRAINTS","CONVERT","COUNT","DEFERRABLE","DEFERRED","DESCRIPTOR","DIAGNOSTICS",
@@ -275,85 +340,61 @@ public class InterSystemsIRISDialect extends Dialect {
 		};
 
 		for ( String kw : irisExtraKeywords ) {
-			registerKeyword( kw );
+			registration.registerKeyword( kw );
 		}
 	}
 
 	// DDL support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
-	public boolean hasAlterTable() {
+	@SPI({ USE, IMPLEMENT })
+	public boolean supportsAlterTableConstraints() {
 		// Does this dialect support the ALTER TABLE syntax?
 		return true;
 	}
 
 	@Override
-	public boolean qualifyIndexName() {
-		return false;
+	@SPI({ USE, IMPLEMENT })
+	public IndexNameQualification nameQualification() {
+		return IndexNameQualification.UNQUALIFIED;
 	}
 
 	@Override
-	public boolean dropConstraints() {
+	@SPI({ IMPLEMENT, SUPPLY })
+	public synchronized SchemaDropSupport getSchemaDropSupport() {
+		if ( schemaDropSupport == null ) {
+			schemaDropSupport = new SchemaDropSupport( java.util.List.of(), ConstraintDropMode.EXPLICIT, "" );
+		}
+		return schemaDropSupport;
+	}
+
+	@Override
+	@SPI({ USE, IMPLEMENT })
+	public boolean supportsOnDeleteAction(org.hibernate.annotations.OnDeleteAction action) {
 		return true;
 	}
 
 	@Override
-	public boolean supportsCascadeDelete() {
+	@SPI({ USE, IMPLEMENT })
+	public boolean requiresSelfReferentialForeignKeyNullification() {
 		return true;
 	}
 
 	@Override
-	public boolean hasSelfReferentialForeignKeyBug() {
-		return true;
-	}
-
-	@Override
-	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(
-			EntityMappingType rootEntityDescriptor,
-			RuntimeModelCreationContext runtimeModelCreationContext) {
-
-		return new GlobalTemporaryTableMutationStrategy( rootEntityDescriptor, runtimeModelCreationContext );
+	public MultiTableMutationSupport getMultiTableMutationSupport() {
+		return MultiTableMutationSupport.GLOBAL_TEMPORARY_TABLE;
 	}
 
 
 	@Override
-	public boolean canCreateSchema() {
-		return false;
+	@SPI({ IMPLEMENT, SUPPLY })
+	public NamespaceSupport getNamespaceSupport() {
+		return NamespaceSupports.none();
 	}
 
 	@Override
-	public SqmMultiTableInsertStrategy getFallbackSqmInsertStrategy(
-			EntityMappingType rootEntityDescriptor,
-			RuntimeModelCreationContext runtimeModelCreationContext) {
-
-		return new GlobalTemporaryTableInsertStrategy( rootEntityDescriptor, runtimeModelCreationContext );
-	}
-
-
-	@Override
-	public TemporaryTableKind getSupportedTemporaryTableKind() {
-		return TemporaryTableKind.GLOBAL;
-	}
-
-	@Override
-	public String getTemporaryTableCreateCommand() {
-		return "create global temporary table if not exists";
-	}
-
-	@Override
-	public String getTemporaryTableDropCommand() {
-		return "drop table";
-	}
-
-	@Override
-	public AfterUseAction getTemporaryTableAfterUseAction() {
-		return AfterUseAction.CLEAN;
-	}
-
-
-	@Override
-	public BeforeUseAction getTemporaryTableBeforeUseAction() {
-		return BeforeUseAction.CREATE;
+	public TemporaryTableStrategy getGlobalTemporaryTableStrategy() {
+		return InterSystemsIRISGlobalTemporaryTableStrategy.INSTANCE;
 	}
 
 
@@ -365,61 +406,27 @@ public class InterSystemsIRISDialect extends Dialect {
 
 
 	@Override
-	public boolean supportsOuterJoinForUpdate() {
-		return false;
-	}
-
-	@Override
-	public LockingStrategy getLockingStrategy(EntityPersister lockable, LockMode lockMode) {
-
-		// Just to make some tests happy, but InterSystems IRIS doesn't really support this.
-		// need to use READ_COMMITTED as isolation level
-
-		//InterSystemsIRIS does not current support "SELECT ... FOR UPDATE" syntax...
-		// Set your transaction mode to READ_COMMITTED before using
-		if ( lockMode == LockMode.PESSIMISTIC_FORCE_INCREMENT ) {
-			return new PessimisticForceIncrementLockingStrategy( lockable, lockMode );
-		}
-		else if ( lockMode == LockMode.PESSIMISTIC_WRITE ) {
-			return lockable.isVersioned()
-					? new PessimisticWriteUpdateLockingStrategy( lockable, lockMode )
-					: new PessimisticWriteSelectLockingStrategy( lockable, lockMode );
-		}
-		else if ( lockMode == LockMode.PESSIMISTIC_READ ) {
-			return lockable.isVersioned()
-					? new PessimisticReadUpdateLockingStrategy( lockable, lockMode )
-					: new PessimisticReadSelectLockingStrategy( lockable, lockMode );
-		}
-		else if ( lockMode == LockMode.OPTIMISTIC ) {
-			return new OptimisticLockingStrategy( lockable, lockMode );
-		}
-		else if ( lockMode == LockMode.OPTIMISTIC_FORCE_INCREMENT ) {
-			return new OptimisticForceIncrementLockingStrategy( lockable, lockMode );
-		}
-		else if ( lockMode.greaterThan( LockMode.READ ) ) {
-			return new UpdateLockingStrategy( lockable, lockMode );
-		}
-		else {
-			return new SelectLockingStrategy( lockable, lockMode );
-		}
+	@SPI({ IMPLEMENT, SUPPLY })
+	public EntityLockingStrategyFactory getEntityLockingStrategyFactory() {
+		return ENTITY_LOCKING_STRATEGY_FACTORY;
 	}
 
 
 	// The syntax used to add a foreign key constraint to a table.
 	@Override
-	public String getAddForeignKeyConstraintString(
-			String constraintName,
-			String[] foreignKey,
-			String referencedTable,
-			String[] primaryKey,
-			boolean referencesPrimaryKey) {
-		final String cols = String.join( ", ", foreignKey );
-		final String referencedCols = String.join( ", ", primaryKey );
+	@SPI({ USE, IMPLEMENT })
+	public String renderAddConstraint(
+			org.hibernate.dialect.constraint.spi.ForeignKeyConstraintRequest request) {
+		if ( request.isExplicitDefinition() ) {
+			return super.renderAddConstraint( request );
+		}
+		final String cols = String.join( ", ", request.sourceColumnNames() );
+		final String referencedCols = String.join( ", ", request.targetColumnNames() );
 		return String.format(
-				" add constraint %s foreign key (%s) references %s (%s)",
-				constraintName,
+				"add constraint %s foreign key (%s) references %s (%s)",
+				request.constraintName(),
 				cols,
-				referencedTable,
+				request.referencedTableName(),
 				referencedCols
 		);
 	}
@@ -433,33 +440,11 @@ public class InterSystemsIRISDialect extends Dialect {
 	}
 
 
-	// callable statement support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-	@Override
-	public int registerResultSetOutParameter(CallableStatement statement, int col) throws SQLException {
-		return col;
-	}
-
-	@Override
-	public ResultSet getResultSet(CallableStatement ps) throws SQLException {
-		boolean isResultSet = ps.execute();
-		while ( !isResultSet && ps.getUpdateCount() != -1 ) {
-			isResultSet = ps.getMoreResults();
-		}
-		return ps.getResultSet();
-	}
-
 
 	// miscellaneous support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
-	public String getNoColumnsInsertString() {
-		// The keyword used to insert a row without specifying
-		// any column values
-		return " default values";
-	}
-
-	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
 		return (sqlException, message, sql) -> {
 			switch ( sqlException.getErrorCode() ) {
@@ -493,6 +478,7 @@ public class InterSystemsIRISDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public ViolatedConstraintNameExtractor getViolatedConstraintNameExtractor() {
 		return EXTRACTOR;
 	}
@@ -505,127 +491,74 @@ public class InterSystemsIRISDialect extends Dialect {
 			new TemplatedViolatedConstraintNameExtractor( sqle -> extractUsingTemplate( "(", ")", sqle.getMessage() ) );
 
 	@Override
-	public boolean supportsColumnCheck() {
+	@SPI({ USE, IMPLEMENT })
+	public boolean supports(org.hibernate.dialect.constraint.spi.CheckConstraintPlacement placement) {
 		return false;
 	}
 
 	@Override
-	public boolean supportsTupleDistinctCounts() {
-		return false;
+	public TupleCountSupport getTupleCountSupport() {
+		return TupleCountSupport.NONE;
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT, SUPPLY })
 	public ScrollMode defaultScrollMode() {
 		return super.defaultScrollMode();
 	}
 
 	@Override
-	public boolean supportsExistsInSelect() {
-		return false;
-	}
-
-	@Override
-	public IdentifierHelper buildIdentifierHelper(
-			IdentifierHelperBuilder builder, DatabaseMetaData dbMetaData) throws SQLException {
-		if ( dbMetaData == null ) {
+	@SPI({ USE, IMPLEMENT, SUPPLY })
+	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuildRequest request) {
+		final var builder = request.builder();
+		if ( !request.jdbcMetadata().isJdbcMetadataAccessible() ) {
 			builder.setUnquotedCaseStrategy( IdentifierCaseStrategy.MIXED );
 			builder.setQuotedCaseStrategy( IdentifierCaseStrategy.MIXED );
 		}
-		else {
-			builder.applyIdentifierCasing( dbMetaData );
-		}
-
-		builder.applyReservedWords( getKeywords() );
-		builder.setNameQualifierSupport( getNameQualifierSupport() );
 		builder.setAutoQuoteKeywords( true );
-		return super.buildIdentifierHelper( builder, dbMetaData );
+		return super.buildIdentifierHelper( request );
 	}
 
 
 	@Override
-	public boolean supportsNullPrecedence() {
-		return false;
+	public NullOrderingSupport getNullOrderingSupport() {
+		return NullOrderingSupport.builder( super.getNullOrderingSupport() )
+				.capability( NullOrderingSupport.Capability.NULLS_FIRST_LAST, false )
+				.build();
 	}
 
 	@Override
-	public boolean supportsLockTimeouts() {
-		return false;
-	}
-
-
-	@Override
-	public boolean supportsFetchClause(FetchClauseType type) {
-		return type == FetchClauseType.ROWS_ONLY;
+	@SPI({ USE, IMPLEMENT, SUPPLY })
+	public FetchClauseSupport getFetchClauseSupport() {
+		return FetchClauseSupport.ROWS_ONLY;
 	}
 
 	@Override
-	public boolean supportsLobValueChangePropagation() {
-		return false;
+	@SPI({ IMPLEMENT, SUPPLY })
+	public LobSupport getLobSupport() {
+		return LobSupports.nonStreaming();
 	}
 
 	@Override
-	public boolean supportsCurrentTimestampSelection() {
-		return true;
+	@SPI({ USE, IMPLEMENT })
+	public CurrentTimestampSelection getCurrentTimestampSelection() {
+		return CurrentTimestampSelection.prepared( "SELECT CURRENT_TIMESTAMP" );
 	}
 
 	@Override
-	public String getCurrentTimestampSelectString() {
-		return "SELECT CURRENT_TIMESTAMP";
+	public ValuesListSupport getValuesListSupport() {
+		return ValuesListSupport.NONE;
 	}
 
 	@Override
-	public boolean isCurrentTimestampSelectStringCallable() {
-		return false;
+	public RowValueSupport getRowValueSupport() {
+		return RowValueSupport.NONE;
 	}
 
-	@Override
-	public boolean supportsValuesListForInsert() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsRowValueConstructorSyntax() {
-		return false;
-	}
-
-
-	@Override
-	public boolean supportsRowValueConstructorSyntaxInInList() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsRowValueConstructorGtLtSyntax() {
-		return false;
-	}
-
-	@Override
-	public int getMaxVarcharLength() {
-		return 32767;
-	}
-
-	@Override
-	public boolean supportsOrderByInSubquery() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsLateral() {
-		return true;
-	}
-
-	@Override
-	public String getForUpdateString() {
-		return "";
-	}
 
 	@SuppressWarnings("deprecation")
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
 		switch (unit) {
 			case YEAR:      return "{fn TIMESTAMPADD(SQL_TSI_YEAR, ?2, ?3)}";
@@ -649,6 +582,7 @@ public class InterSystemsIRISDialect extends Dialect {
 
 	@SuppressWarnings("deprecation")
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String timestampdiffPattern(TemporalUnit unit,
 									TemporalType fromTemporalType,
 									TemporalType toTemporalType) {
@@ -682,27 +616,24 @@ public class InterSystemsIRISDialect extends Dialect {
 		}
 	}
 	@Override
-	public long getFractionalSecondPrecisionInNanos() {
+	@SPI({ USE, IMPLEMENT })
+	public long fractionalSecondPrecisionInNanos() {
 		return 1_000L; //default to nanoseconds for now
 	}
 
 	@Override
-	public boolean supportsTableCheck() {
-		return false;
-	}
-
-	@Override
 	public LockingClauseStrategy getLockingClauseStrategy(QuerySpec querySpec, LockOptions lockOptions) {
-		return NON_CLAUSE_STRATEGY;
+		return StandardLockingClauseStrategies.none();
 	}
 
 	@Override
 	public LockingSupport getLockingSupport() {
-		return NoLockingSupport.NO_LOCKING_SUPPORT;
+		return StandardLockingSupports.none();
 	}
 
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public void appendDateTimeLiteral(
 			SqlAppender appender,
 			TemporalAccessor temporalAccessor,
@@ -716,12 +647,12 @@ public class InterSystemsIRISDialect extends Dialect {
 				break;
 			case TIME:
 				appender.appendSql( "'" );
-				appendAsTime( appender, temporalAccessor, supportsTemporalLiteralOffset(), jdbcTimeZone );
+				appendAsTime( appender, temporalAccessor, getTemporalValueSemantics().supportsLiteralOffset(), jdbcTimeZone );
 				appender.appendSql( "'" );
 				break;
 			case TIMESTAMP:
 				appender.appendSql( "'" );
-				appendAsTimestampWithNanos( appender, temporalAccessor, supportsTemporalLiteralOffset(), jdbcTimeZone );
+				appendAsTimestampWithNanos( appender, temporalAccessor, getTemporalValueSemantics().supportsLiteralOffset(), jdbcTimeZone );
 				appender.appendSql( "'" );
 				break;
 			default:
@@ -730,7 +661,8 @@ public class InterSystemsIRISDialect extends Dialect {
 	}
 
 	@Override
-	public void appendDatetimeFormat(SqlAppender appender, String format) {
+	@SPI({ USE, IMPLEMENT })
+	public void appendFormat(SqlAppender appender, String format) {
 		appender.appendSql( datetimeFormat( format ).result() );
 	}
 
@@ -817,6 +749,7 @@ public class InterSystemsIRISDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String extractPattern(TemporalUnit unit) {
 		switch (unit) {
 			case DAY_OF_YEAR:
@@ -849,32 +782,37 @@ public class InterSystemsIRISDialect extends Dialect {
 			case TIMEZONE_MINUTE:
 				return null;
 			default:
-				return super.extractPattern( unit );
+				return TemporalOperationSupports.standard().extractPattern( unit );
 		}
 	}
 
 
 	@Override
-	public boolean requiresFloatCastingOfIntegerDivision() {
-		return true;
+	public ExpressionCoercionSupport getExpressionCoercionSupport() {
+		return ExpressionCoercionSupport.builder()
+				.requirements( ExpressionCoercionSupport.Requirement.CAST_INTEGER_DIVISION_TO_FLOAT )
+				.build();
 	}
 
 	@Override
-	public boolean supportsWithClauseInSubquery() {
-		return false;
+	public CteSupport getCteSupport() {
+		return CteSupport.builder()
+				.placement( CteSupport.Placement.TOP_LEVEL )
+				.build();
 	}
 
 	@Override
-	public boolean supportsWindowFunctions() {
-		return true;
+	public WindowFunctionSupport getWindowFunctionSupport() {
+		return WindowFunctionSupport.builder()
+				.features(
+						WindowFunctionSupport.Feature.WINDOW_FUNCTIONS,
+						WindowFunctionSupport.Feature.PARTITION_BY
+				)
+				.build();
 	}
 
 	@Override
-	public boolean useInputStreamToInsertBlob() {
-		return false;
-	}
-
-	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String translateExtractField(TemporalUnit unit) {
 		return switch (unit) {
 			case DAY_OF_MONTH -> "DAYOFMONTH";
@@ -882,32 +820,36 @@ public class InterSystemsIRISDialect extends Dialect {
 			case DAY_OF_WEEK -> "DAYOFWEEK ";
 			case EPOCH -> "TO_POSIXTIME";
 			case DATE -> "DATE";
-			default -> super.translateExtractField( unit );
+			default -> TemporalOperationSupports.standard().translateExtractField( unit );
 		};
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public int getPreferredSqlTypeCodeForBoolean() {
 		return Types.BIT;
 	}
 
 
 	@Override
-	public String getDual() {
-		return "(select 1)";
+	public SingleRowTableSupport getSingleRowTableSupport() {
+		return SingleRowTableSupport.builder( super.getSingleRowTableSupport() )
+				.tableExpression( "(select 1)" )
+				.build();
 	}
 
 	@Override
-	public int getInExpressionCountLimit() {
-		return 900;
+	public ParameterLimits getParameterLimits() {
+		return ParameterLimits.of( 900 );
 	}
 
 	@Override
-	public boolean supportsFromClauseInUpdate() {
-		return true;
+	public MutationSyntaxSupport getMutationSyntaxSupport() {
+		return MutationSyntaxSupport.of( MutationKind.UPDATE, MutationSyntaxCapability.FROM_CLAUSE );
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT, SUPPLY })
 	public DmlTargetColumnQualifierSupport getDmlTargetColumnQualifierSupport() {
 		return DmlTargetColumnQualifierSupport.TABLE_ALIAS;
 	}

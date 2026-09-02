@@ -4,6 +4,11 @@
  */
 package org.hibernate.usertype;
 
+import org.hibernate.SPI;
+
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.USE;
+
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -20,7 +25,12 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 /**
  * @author Steve Ebersole
  */
+@SPI({ USE, IMPLEMENT })
 public abstract class BaseUserTypeSupport<T> implements UserType<T> {
+	@SPI(IMPLEMENT)
+	public BaseUserTypeSupport() {
+	}
+
 	private BasicJavaType<T> javaType;
 	private JdbcType jdbcType;
 

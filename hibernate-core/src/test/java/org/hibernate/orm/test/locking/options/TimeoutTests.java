@@ -4,15 +4,23 @@
  */
 package org.hibernate.orm.test.locking.options;
 
+import java.util.List;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.Timeout;
 import org.hibernate.LockOptions;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.RowLockStrategy;
 import org.hibernate.dialect.lock.PessimisticLockStyle;
+import org.hibernate.dialect.lock.spi.LockingClauseRequest;
+import org.hibernate.dialect.lock.internal.TableLockHintRendererSupport;
+import org.hibernate.dialect.lock.spi.LockingClauseRequest.ColumnTarget;
+import org.hibernate.dialect.lock.spi.LockingClauseRequest.TableTarget;
+import org.hibernate.dialect.lock.spi.LockingClauseRequest.Target;
 import org.hibernate.dialect.lock.spi.LockingSupport;
+import org.hibernate.dialect.lock.spi.PessimisticLockKind;
+import org.hibernate.dialect.lock.spi.RowLockStrategy;
 import org.hibernate.jpa.SpecHints;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
@@ -87,19 +95,21 @@ public class TimeoutTests {
 
 		if ( pessimisticLockStyle == PessimisticLockStyle.TABLE_HINT ) {
 			// T-SQL
-			return dialect.appendLockHint( lockOptions, "l1_0" );
+			return TableLockHintRendererSupport.renderTableReference(
+					dialect.getLockingSupport(),
+					lockOptions,
+					"l1_0"
+			);
 		}
 		else {
-			if ( pessimisticLockStyle == PessimisticLockStyle.NONE || rowLockStrategy == RowLockStrategy.NONE ) {
-				return dialect.getWriteLockString( lockOptions.getTimeout() );
-			}
-			else if ( rowLockStrategy == RowLockStrategy.TABLE ) {
-				return dialect.getWriteLockString( "l1_0", lockOptions.getTimeout() );
-			}
-			else {
-				assert rowLockStrategy == RowLockStrategy.COLUMN;
-				return dialect.getWriteLockString( "l1_0.id", lockOptions.getTimeout() );
-			}
+			final List<Target> targets = switch ( rowLockStrategy ) {
+				case NONE -> List.of();
+				case TABLE -> List.of( new TableTarget( "l1_0" ) );
+				case COLUMN -> List.of( new ColumnTarget( "l1_0", "id" ) );
+			};
+			return dialect.getLockingSupport().getLockingClauseRenderer().render(
+					new LockingClauseRequest( PessimisticLockKind.UPDATE, lockOptions.getTimeout(), targets )
+			);
 		}
 	}
 

@@ -13,13 +13,13 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.AuditMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.internal.OneToManyCollectionPart;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
+import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
 import org.hibernate.sql.model.MutationOperationGroup;
-import org.hibernate.sql.model.MutationType;
-import org.hibernate.sql.model.ast.ColumnValueBinding;
-import org.hibernate.sql.model.ast.ColumnWriteFragment;
-import org.hibernate.sql.model.ast.builder.TableInsertBuilderStandard;
-import org.hibernate.sql.model.ast.builder.TableUpdateBuilderStandard;
+import org.hibernate.sql.spi.mutation.MutationType;
+import org.hibernate.sql.ast.spi.model.ColumnValueBinding;
+import org.hibernate.sql.ast.spi.model.ColumnWriteFragment;
+import org.hibernate.sql.ast.spi.model.builder.TableInsertBuilderStandard;
+import org.hibernate.sql.ast.spi.model.builder.TableUpdateBuilderStandard;
 
 import static org.hibernate.audit.AuditStrategy.VALIDITY;
 import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.singleOperation;
@@ -72,7 +72,7 @@ public final class AuditCollectionHelper {
 				sessionFactory.getChangesetCoordinator()
 						.useServerTimestamp( dialect );
 		this.currentTimestampFunctionName = useServerTransactionTimestamps
-				? dialect.currentTimestamp()
+				? dialect.getCurrentTemporalSupport().currentTimestamp()
 				: null;
 	}
 

@@ -4,6 +4,7 @@
  */
 package org.hibernate.community.dialect.functional.cache;
 
+
 import org.hibernate.LockMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.community.dialect.CacheDialect;

@@ -4,6 +4,7 @@
  */
 package org.hibernate.tool.reveng.hbm2x.Hbm2CfgTest;
 
+
 import jakarta.annotation.Nonnull;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;

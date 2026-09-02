@@ -4,6 +4,8 @@
  */
 package org.hibernate.type;
 
+import org.hibernate.SPI;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -40,12 +42,14 @@ import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
 import static org.hibernate.internal.util.type.PrimitiveWrappers.canonicalize;
+import static org.hibernate.SPI.Role.SUPPLY;
 
 /**
  * A registry of {@link BasicType} instances
  *
  * @author Steve Ebersole
  */
+@SPI
 public class BasicTypeRegistry implements Serializable {
 
 	private final TypeConfiguration typeConfiguration;
@@ -364,14 +368,17 @@ public class BasicTypeRegistry implements Serializable {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Mutations
 
+	@SPI(SUPPLY)
 	public void register(BasicType<?> type) {
 		register( type, type.getRegistrationKeys() );
 	}
 
+	@SPI(SUPPLY)
 	public void register(BasicType<?> type, String key) {
 		register( type, new String[]{ key } );
 	}
 
+	@SPI(SUPPLY)
 	public void register(BasicType<?> type, String... keys) {
 		if ( ! isPrimed() ) {
 			throw new IllegalStateException( "BasicTypeRegistry not yet primed. Calls to `#register` not valid until after primed" );
@@ -390,6 +397,7 @@ public class BasicTypeRegistry implements Serializable {
 		}
 	}
 
+	@SPI(SUPPLY)
 	public <T> CustomType<T> register(UserType<T> type, String... keys) {
 		final var customType = new CustomType<>( type, keys, typeConfiguration );
 		register( customType );

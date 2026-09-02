@@ -23,10 +23,10 @@ import org.hibernate.query.sqm.tree.spi.expression.SqmOrderedSetAggregateFunctio
 import org.hibernate.query.sqm.tree.spi.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.spi.select.SqmOrderByClause;
 import org.hibernate.query.sqm.tree.spi.select.SqmSortSpecification;
-import org.hibernate.sql.ast.Clause;
-import org.hibernate.sql.ast.tree.SqlAstNode;
-import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.select.SortSpecification;
+import org.hibernate.sql.ast.spi.translation.Clause;
+import org.hibernate.sql.ast.spi.SqlAstNode;
+import org.hibernate.sql.ast.spi.query.expression.Expression;
+import org.hibernate.sql.ast.spi.query.select.SortSpecification;
 
 /**
  * @author Christian Beikov

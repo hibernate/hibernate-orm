@@ -4,6 +4,8 @@
  */
 package org.hibernate.persister.entity.mutation;
 
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -11,7 +13,6 @@ import java.util.function.Supplier;
 
 import jakarta.annotation.Nullable;
 import org.hibernate.HibernateException;
-import org.hibernate.Internal;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
@@ -35,18 +36,18 @@ import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.sql.model.MutationOperation;
+import org.hibernate.sql.spi.mutation.MutationOperation;
 import org.hibernate.sql.model.MutationOperationGroup;
-import org.hibernate.sql.model.MutationType;
-import org.hibernate.sql.model.ast.MutatingTableReference;
-import org.hibernate.sql.model.ast.builder.AbstractTableUpdateBuilder;
-import org.hibernate.sql.model.ast.builder.MutationGroupBuilder;
-import org.hibernate.sql.model.ast.builder.TableMutationBuilder;
-import org.hibernate.sql.model.ast.builder.TableUpdateBuilder;
-import org.hibernate.sql.model.ast.builder.TableUpdateBuilderSkipped;
-import org.hibernate.sql.model.ast.builder.TableUpdateBuilderStandard;
+import org.hibernate.sql.spi.mutation.MutationType;
+import org.hibernate.sql.ast.spi.model.MutatingTableReference;
+import org.hibernate.sql.ast.spi.model.builder.AbstractTableUpdateBuilder;
+import org.hibernate.sql.ast.spi.model.builder.MutationGroupBuilder;
+import org.hibernate.sql.ast.spi.model.builder.TableMutationBuilder;
+import org.hibernate.sql.ast.spi.model.builder.TableUpdateBuilder;
+import org.hibernate.sql.ast.internal.model.builder.TableUpdateBuilderSkipped;
+import org.hibernate.sql.ast.spi.model.builder.TableUpdateBuilderStandard;
 import org.hibernate.sql.model.internal.MutationOperationGroupFactory;
-import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
+import org.hibernate.sql.spi.mutation.jdbc.JdbcMutationOperation;
 
 import static org.hibernate.engine.OptimisticLockStyle.DIRTY;
 import static org.hibernate.engine.internal.Versioning.isVersionIncrementRequired;
@@ -65,6 +66,7 @@ import static org.hibernate.internal.util.collections.CollectionHelper.arrayList
  *
  * @author Steve Ebersole
  */
+@org.hibernate.Internal
 public class UpdateCoordinatorStandard extends AbstractMutationCoordinator implements UpdateCoordinator {
 
 	private final MutationOperationGroup staticUpdateGroup;
@@ -1642,7 +1644,6 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			return dirty;
 		}
 
-		@Internal
 		@Override
 		public void markDirty(boolean certain) {
 			if ( certain ) {
@@ -1795,7 +1796,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 					.getJdbcServices()
 					.getJdbcEnvironment()
 					.getSqlAstTranslatorFactory()
-					.buildModelMutationTranslator( updateBuilder.buildMutation(), factory() )
+					.buildTranslator( new SqlAstTranslationRequest.ModelMutation<>( factory(), updateBuilder.buildMutation() ) )
 					.translate( null, MutationQueryOptions.INSTANCE );
 
 			return MutationOperationGroupFactory.singleOperation( MutationType.UPDATE, entityPersister(), jdbcMutation );

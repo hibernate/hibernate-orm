@@ -14,7 +14,7 @@ import org.hibernate.query.sqm.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.spi.SqmCopyContext;
 import org.hibernate.query.sqm.tree.spi.SqmRenderContext;
 import org.hibernate.query.sqm.tree.spi.select.SqmSelectableNode;
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
+import org.hibernate.sql.ast.spi.query.expression.JdbcParameter;
 
 import static org.hibernate.query.sqm.tree.spi.expression.SqmExpressionHelper.toSqmType;
 

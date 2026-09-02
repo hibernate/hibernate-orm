@@ -4,10 +4,9 @@
  */
 package org.hibernate.community.dialect.pagination;
 
-import org.hibernate.dialect.pagination.AbstractSimpleLimitHandler;
-import org.hibernate.dialect.pagination.LimitHandler;
-import org.hibernate.query.spi.Limit;
-import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
+import org.hibernate.dialect.pagination.spi.AbstractSimpleLimitHandler;
+import org.hibernate.dialect.pagination.spi.LimitHandler;
+import org.hibernate.dialect.pagination.spi.PaginationRequest;
 
 /**
  * A {@link LimitHandler} for TimesTen, which uses {@code ROWS n},
@@ -42,15 +41,10 @@ public class TimesTenLimitHandler extends AbstractSimpleLimitHandler {
 	}
 
 	@Override
-	protected String limitClause(boolean hasFirstRow) {
-		return hasFirstRow ? " rows ? to ?" : " first ?";
-	}
-
-	@Override
-	protected String limitClause(boolean hasFirstRow, int jdbcParameterCount, ParameterMarkerStrategy parameterMarkerStrategy) {
-		final String firstParameter = parameterMarkerStrategy.createMarker( 1, null );
+	protected String limitClause(boolean hasFirstRow, PaginationRequest request) {
+		final String firstParameter = request.parameterMarker( 1 );
 		if ( hasFirstRow ) {
-			return " rows " + firstParameter + " to " + parameterMarkerStrategy.createMarker( 2, null );
+			return " rows " + firstParameter + " to " + request.parameterMarker( 2 );
 		}
 		else {
 			return " first " + firstParameter;
@@ -58,14 +52,14 @@ public class TimesTenLimitHandler extends AbstractSimpleLimitHandler {
 	}
 
 	@Override
-	protected String offsetOnlyClause(int jdbcParameterCount, ParameterMarkerStrategy parameterMarkerStrategy) {
-		return " rows " + parameterMarkerStrategy.createMarker( 1, null ) + " to " + Integer.MAX_VALUE;
+	protected String offsetOnlyClause(PaginationRequest request) {
+		return " rows " + request.parameterMarker( 1 ) + " to " + Integer.MAX_VALUE;
 	}
 
 	@Override
-	public int getParameterPositionStart(Limit limit) {
-		return hasMaxRows( limit )
-				? hasFirstRow( limit ) ? 3 : 2
-				: hasFirstRow( limit ) ? 2 : 1;
+	public int parameterPositionStart(PaginationRequest request) {
+		return request.hasMaxRows()
+				? request.hasFirstRow() ? 3 : 2
+				: request.hasFirstRow() ? 2 : 1;
 	}
 }

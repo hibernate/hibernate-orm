@@ -10,7 +10,7 @@ import jakarta.persistence.Table;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.AbstractTransactSQLDialect;
-import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
+import org.hibernate.dialect.sql.ast.spi.DmlTargetColumnQualifierSupport;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.dialect.SybaseDialect;

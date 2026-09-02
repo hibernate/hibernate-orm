@@ -6,6 +6,7 @@ package org.hibernate.query.spi;
 
 import org.hibernate.Incubating;
 import org.hibernate.Internal;
+import org.hibernate.SPI;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.query.spi.NativeQueryInterpreter;
@@ -47,8 +48,24 @@ public interface QueryEngine extends BindingContext {
 
 	NamedObjectRepository getNamedObjectRepository();
 
+	/**
+	 * The global HQL translator selected from the explicit query-engine option or
+	 * Hibernate's standard implementation.
+	 *
+	 * @see QueryEngineOptions#getCustomHqlTranslator()
+	 * @see HqlTranslator
+	 */
+	@SPI({ SPI.Role.USE, SPI.Role.SUPPLY })
 	HqlTranslator getHqlTranslator();
 
+	/**
+	 * The global SQM translator factory selected from the explicit query-engine
+	 * option or Hibernate's standard implementation.
+	 *
+	 * @see QueryEngineOptions#getCustomSqmTranslatorFactory()
+	 * @see SqmTranslatorFactory
+	 */
+	@SPI({ SPI.Role.USE, SPI.Role.SUPPLY })
 	SqmTranslatorFactory getSqmTranslatorFactory();
 
 	/**

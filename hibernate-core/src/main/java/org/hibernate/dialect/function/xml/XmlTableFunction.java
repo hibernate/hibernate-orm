@@ -5,7 +5,7 @@
 package org.hibernate.dialect.function.xml;
 
 import jakarta.annotation.Nullable;
-import org.hibernate.query.sqm.tuple.internal.AnonymousTupleTableGroupProducer;
+import org.hibernate.sql.ast.spi.query.SetReturningFunctionType;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingSetReturningFunctionDescriptor;
 import org.hibernate.query.sqm.function.SelfRenderingSqmSetReturningFunction;
@@ -17,17 +17,17 @@ import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeReso
 import org.hibernate.query.sqm.tree.spi.SqmTypedNode;
 import org.hibernate.query.sqm.tree.spi.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.spi.expression.SqmXmlTableFunction;
-import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
-import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.spi.SqlAppender;
-import org.hibernate.sql.ast.tree.SqlAstNode;
-import org.hibernate.sql.ast.tree.expression.CastTarget;
-import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.XmlTableColumnDefinition;
-import org.hibernate.sql.ast.tree.expression.XmlTableColumnsClause;
-import org.hibernate.sql.ast.tree.expression.XmlTableOrdinalityColumnDefinition;
-import org.hibernate.sql.ast.tree.expression.XmlTableQueryColumnDefinition;
-import org.hibernate.sql.ast.tree.expression.XmlTableValueColumnDefinition;
+import org.hibernate.sql.ast.spi.translation.SqlAstNodeRenderingMode;
+import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
+import org.hibernate.sql.spi.SqlAppender;
+import org.hibernate.sql.ast.spi.SqlAstNode;
+import org.hibernate.sql.ast.spi.query.expression.CastTarget;
+import org.hibernate.sql.ast.spi.query.expression.Expression;
+import org.hibernate.sql.ast.spi.query.expression.XmlTableColumnDefinition;
+import org.hibernate.sql.ast.spi.query.expression.XmlTableColumnsClause;
+import org.hibernate.sql.ast.spi.query.expression.XmlTableOrdinalityColumnDefinition;
+import org.hibernate.sql.ast.spi.query.expression.XmlTableQueryColumnDefinition;
+import org.hibernate.sql.ast.spi.query.expression.XmlTableValueColumnDefinition;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import java.util.List;
@@ -84,7 +84,7 @@ public class XmlTableFunction extends AbstractSqmSelfRenderingSetReturningFuncti
 	public void render(
 			SqlAppender sqlAppender,
 			List<? extends SqlAstNode> sqlAstArguments,
-			AnonymousTupleTableGroupProducer tupleType,
+			SetReturningFunctionType tupleType,
 			String tableIdentifierVariable,
 			SqlAstTranslator<?> walker) {
 		renderXmlTable( sqlAppender, XmlTableArguments.extract( sqlAstArguments ), tupleType, tableIdentifierVariable, walker );
@@ -93,7 +93,7 @@ public class XmlTableFunction extends AbstractSqmSelfRenderingSetReturningFuncti
 	protected void renderXmlTable(
 			SqlAppender sqlAppender,
 			XmlTableArguments arguments,
-			AnonymousTupleTableGroupProducer tupleType,
+			SetReturningFunctionType tupleType,
 			String tableIdentifierVariable,
 			SqlAstTranslator<?> walker) {
 		sqlAppender.appendSql( "xmltable(" );

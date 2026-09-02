@@ -25,7 +25,7 @@ import org.hibernate.internal.util.OptionsHelper;
 import org.hibernate.id.BulkInsertionCapableIdentifierGenerator;
 import org.hibernate.id.OptimizableGenerator;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
-import org.hibernate.metamodel.mapping.internal.SingleAttributeIdentifierMapping;
+import org.hibernate.metamodel.mapping.SingleAttributeIdentifierMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.IllegalSelectQueryException;
 import jakarta.persistence.QueryFlushMode;
@@ -326,26 +326,9 @@ public class MutationQueryImpl<T>
 					persister.getSqmMultiTableInsertStrategy()
 			);
 		}
-		else if ( sqmInsert instanceof SqmInsertValuesStatement<?> insertValues
-				&& insertValues.getValuesList().size() != 1
-				&& !getSessionFactory().getJdbcServices().getDialect().supportsValuesListForInsert() ) {
-			return buildAggregateInsertQueryPlan( insertValues );
-		}
 		else {
 			return new SimpleNonSelectQueryPlan( sqmInsert, domainParameterXref );
 		}
-	}
-
-	private NonSelectQueryPlan buildAggregateInsertQueryPlan(SqmInsertValuesStatement<?> insertValues) {
-		// Split insert-values queries if the dialect doesn't support values lists
-		final var valuesList = insertValues.getValuesList();
-		final var planParts = new NonSelectQueryPlan[valuesList.size()];
-		for ( int i = 0; i < valuesList.size(); i++ ) {
-			final var subInsert = insertValues.copyWithoutValues( simpleContext() );
-			subInsert.values( valuesList.get( i ) );
-			planParts[i] = new SimpleNonSelectQueryPlan( subInsert, domainParameterXref );
-		}
-		return new AggregatedNonSelectQueryPlanImpl( planParts );
 	}
 
 	private boolean useMultiTableInsert(EntityPersister persister, SqmInsertStatement<?> sqmInsert) {

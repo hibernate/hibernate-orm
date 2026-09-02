@@ -15,10 +15,10 @@ import org.hibernate.generator.EventType;
 import org.hibernate.generator.values.GeneratedValues;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.sql.model.PreparableMutationOperation;
-import org.hibernate.sql.model.ast.builder.TableInsertBuilderStandard;
-import org.hibernate.sql.model.ast.builder.TableMutationBuilder;
-import org.hibernate.sql.model.ast.builder.TableUpdateBuilderStandard;
+import org.hibernate.sql.spi.mutation.jdbc.PreparableMutationOperation;
+import org.hibernate.sql.ast.spi.model.builder.TableInsertBuilderStandard;
+import org.hibernate.sql.ast.spi.model.builder.TableMutationBuilder;
+import org.hibernate.sql.ast.spi.model.builder.TableUpdateBuilderStandard;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -44,6 +44,7 @@ import static org.hibernate.internal.util.StringHelper.unquote;
 public class GetGeneratedKeysDelegate extends AbstractReturningDelegate {
 	private final String[] columnNames;
 
+	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	public GetGeneratedKeysDelegate(
 			EntityPersister persister,
 			boolean inferredKeys,
@@ -56,7 +57,7 @@ public class GetGeneratedKeysDelegate extends AbstractReturningDelegate {
 		else {
 			final var resultBuilders = jdbcValuesMappingProducer.getResultBuilders();
 			final List<String> columnNamesList = new ArrayList<>( resultBuilders.size() );
-			final boolean unquote = dialect().unquoteGetGeneratedKeys();
+			final boolean unquote = dialect().getGeneratedValuesSupport().unquoteGeneratedKeyColumnNames();
 			for ( var resultBuilder : resultBuilders ) {
 				final String columnName =
 						getActualGeneratedModelPart( resultBuilder.getModelPart() )

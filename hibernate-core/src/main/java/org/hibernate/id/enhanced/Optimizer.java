@@ -7,7 +7,7 @@ package org.hibernate.id.enhanced;
 import jakarta.annotation.Nullable;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.spi.query.expression.Expression;
 
 import java.io.Serializable;
 

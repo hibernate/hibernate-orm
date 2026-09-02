@@ -4,13 +4,10 @@
  */
 package org.hibernate.community.dialect.pagination;
 
-import jakarta.annotation.Nullable;
-import org.hibernate.dialect.pagination.AbstractLimitHandler;
-import org.hibernate.dialect.pagination.LimitHandler;
-import org.hibernate.query.spi.Limit;
-import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.sql.ast.internal.ParameterMarkerStrategyStandard;
-import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
+import org.hibernate.dialect.pagination.spi.AbstractLimitHandler;
+import org.hibernate.dialect.pagination.spi.LimitHandler;
+import org.hibernate.dialect.pagination.spi.PaginationRequest;
+import org.hibernate.dialect.pagination.spi.PaginationResult;
 
 /**
  * A {@link LimitHandler} for Firebird 2.5 and older which supports the syntax
@@ -21,26 +18,17 @@ public class FirstSkipLimitHandler extends AbstractLimitHandler {
 	public static final FirstSkipLimitHandler INSTANCE = new FirstSkipLimitHandler();
 
 	@Override
-	public String processSql(String sql, Limit limit) {
-		return processSql( sql, -1, null, limit );
-	}
-
-	@Override
-	public String processSql(String sql, int jdbcParameterCount, @Nullable ParameterMarkerStrategy parameterMarkerStrategy, QueryOptions queryOptions) {
-		return processSql( sql, jdbcParameterCount, parameterMarkerStrategy, queryOptions.getLimit() );
-	}
-
-	private String processSql(String sql, int jdbcParameterCount, @Nullable ParameterMarkerStrategy parameterMarkerStrategy, Limit limit) {
-		boolean hasFirstRow = hasFirstRow( limit );
-		boolean hasMaxRows = hasMaxRows( limit );
+	public PaginationResult processSql(PaginationRequest request) {
+		boolean hasFirstRow = request.hasFirstRow();
+		boolean hasMaxRows = request.hasMaxRows();
 
 		if ( !hasFirstRow && !hasMaxRows ) {
-			return sql;
+			return PaginationResult.unchanged( request.sql() );
 		}
 
 		StringBuilder skipFirst = new StringBuilder();
 
-		if ( ParameterMarkerStrategyStandard.isStandardRenderer( parameterMarkerStrategy ) ) {
+		if ( request.usesStandardParameterMarkers() ) {
 			if ( hasMaxRows ) {
 				skipFirst.append( " first ?" );
 			}
@@ -49,18 +37,18 @@ public class FirstSkipLimitHandler extends AbstractLimitHandler {
 			}
 		}
 		else {
-			String marker = parameterMarkerStrategy.createMarker( jdbcParameterCount + 1, null );
+			String marker = request.parameterMarker( request.jdbcParameterCount() + 1 );
 			if ( hasMaxRows ) {
 				skipFirst.append( " first " );
 				skipFirst.append( marker );
-				marker = parameterMarkerStrategy.createMarker( jdbcParameterCount + 2, null );
+				marker = request.parameterMarker( request.jdbcParameterCount() + 2 );
 			}
 			if ( hasFirstRow ) {
 				skipFirst.append( " skip " );
 				skipFirst.append( marker );
 			}
 		}
-		return insertAfterSelect( skipFirst.toString(), sql );
+		return result( request, insertAfterSelect( skipFirst.toString(), request.sql() ) );
 	}
 
 	@Override
@@ -84,15 +72,10 @@ public class FirstSkipLimitHandler extends AbstractLimitHandler {
 	}
 
 	@Override
-	public boolean processSqlMutatesState() {
-		return false;
-	}
-
-	@Override
-	public int getParameterPositionStart(Limit limit) {
-		return hasMaxRows( limit )
-				? hasFirstRow( limit ) ? 3 : 2
-				: hasFirstRow( limit ) ? 2 : 1;
+	public int parameterPositionStart(PaginationRequest request) {
+		return request.hasMaxRows()
+				? request.hasFirstRow() ? 3 : 2
+				: request.hasFirstRow() ? 2 : 1;
 	}
 
 }

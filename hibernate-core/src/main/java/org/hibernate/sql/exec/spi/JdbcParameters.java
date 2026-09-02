@@ -8,7 +8,7 @@ import java.util.Collection;
 import java.util.Set;
 import java.util.function.Consumer;
 
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
+import org.hibernate.sql.ast.spi.query.expression.JdbcParameter;
 
 /**
  * The collection

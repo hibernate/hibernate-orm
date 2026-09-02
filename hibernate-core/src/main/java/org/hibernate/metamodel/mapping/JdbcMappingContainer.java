@@ -4,11 +4,12 @@
  */
 package org.hibernate.metamodel.mapping;
 
-import org.hibernate.internal.util.IndexedConsumer;
+import org.hibernate.spi.IndexedConsumer;
 
 /**
  * Container for one-or-more JdbcMappings
  */
+@org.hibernate.SPI({ org.hibernate.SPI.Role.USE, org.hibernate.SPI.Role.IMPLEMENT })
 public interface JdbcMappingContainer {
 	/**
 	 * The number of JDBC mappings

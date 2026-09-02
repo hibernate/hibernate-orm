@@ -4,6 +4,7 @@
  */
 package org.hibernate.tool.reveng.hbm2x.hbm2hbmxml.TypeParamsTest;
 
+
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.tool.reveng.api.export.Exporter;
 import org.hibernate.tool.reveng.api.export.ExporterConstants;

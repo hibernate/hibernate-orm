@@ -13,9 +13,9 @@ import org.hibernate.engine.jdbc.mutation.spi.BindingGroup;
 import org.hibernate.engine.jdbc.mutation.spi.JdbcValueBindingsImplementor;
 import org.hibernate.engine.jdbc.mutation.spi.JdbcValueDescriptorAccess;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.sql.model.MutationTarget;
-import org.hibernate.sql.model.MutationType;
-import org.hibernate.sql.model.TableMapping;
+import org.hibernate.sql.spi.mutation.MutationTarget;
+import org.hibernate.sql.spi.mutation.MutationType;
+import org.hibernate.sql.spi.mutation.TableMapping;
 
 import java.sql.SQLException;
 import java.util.HashMap;
@@ -27,7 +27,7 @@ import java.util.Map;
  */
 public class JdbcValueBindingsImpl implements JdbcValueBindingsImplementor {
 	private final MutationType mutationType;
-	private final MutationTarget<?,?> mutationTarget;
+	private final MutationTarget mutationTarget;
 	private final JdbcValueDescriptorAccess jdbcValueDescriptorAccess;
 	private final SharedSessionContractImplementor session;
 
@@ -35,7 +35,7 @@ public class JdbcValueBindingsImpl implements JdbcValueBindingsImplementor {
 
 	public JdbcValueBindingsImpl(
 			MutationType mutationType,
-			MutationTarget<?,?> mutationTarget,
+			MutationTarget mutationTarget,
 			JdbcValueDescriptorAccess jdbcValueDescriptorAccess,
 			SharedSessionContractImplementor session) {
 		this.mutationType = mutationType;

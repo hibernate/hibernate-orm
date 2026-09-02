@@ -4,23 +4,25 @@
  */
 package org.hibernate.query.sqm.function;
 
+import org.hibernate.SPI;
+
 import java.util.List;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.util.IndexedConsumer;
+import org.hibernate.spi.IndexedConsumer;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.mapping.SqlExpressible;
-import org.hibernate.sql.ast.spi.SqlAstCreationState;
+import org.hibernate.sql.ast.spi.creation.SqlAstCreationState;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.metamodel.model.domain.ReturnableType;
-import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
-import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.spi.SqlAppender;
-import org.hibernate.sql.ast.spi.SqlSelection;
-import org.hibernate.sql.ast.tree.SqlAstNode;
-import org.hibernate.sql.ast.tree.expression.FunctionExpression;
-import org.hibernate.sql.ast.tree.expression.SelfRenderingExpression;
+import org.hibernate.sql.ast.spi.result.DomainResultProducer;
+import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
+import org.hibernate.sql.spi.SqlAppender;
+import org.hibernate.sql.ast.spi.query.select.SqlSelection;
+import org.hibernate.sql.ast.spi.SqlAstNode;
+import org.hibernate.sql.ast.spi.query.expression.FunctionExpression;
+import org.hibernate.sql.ast.spi.query.expression.SelfRenderingExpression;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.basic.BasicResult;
@@ -36,6 +38,7 @@ import jakarta.annotation.Nullable;
  *
  * @author Steve Ebersole
  */
+@SPI
 public class SelfRenderingFunctionSqlAstExpression<T>
 		implements SelfRenderingExpression, SqlExpressible, DomainResultProducer<T>, FunctionExpression {
 	private final String functionName;

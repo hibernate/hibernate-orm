@@ -6,7 +6,7 @@ package org.hibernate.community.dialect;
 
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.orm.test.dialect.LimitQueryOptions;
+import org.hibernate.dialect.pagination.spi.PaginationRequest;
 import org.hibernate.query.spi.Limit;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -70,7 +70,9 @@ public class SQLServer2012DialectTestCase {
 	}
 
 	private String withLimit(String sql, Limit limit) {
-		return dialect.getLimitHandler().processSql( sql, -1, null, new LimitQueryOptions( limit ) );
+		return dialect.getLimitHandler().processSql(
+				new PaginationRequest( sql, limit.getFirstRow(), limit.getMaxRows(), -1, null )
+		).sql();
 	}
 
 	private Limit toRowSelection(Integer firstRow, Integer maxRows) {

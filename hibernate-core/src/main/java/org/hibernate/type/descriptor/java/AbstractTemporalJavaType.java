@@ -8,23 +8,37 @@ import java.util.Comparator;
 
 import jakarta.persistence.TemporalType;
 
+import org.hibernate.SPI;
 import org.hibernate.type.spi.TypeConfiguration;
 
-/**
- * @author Steve Ebersole
- */
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.USE;
+
+/// Base Java descriptor for temporal values with precision-specific
+/// resolution hooks.
+///
+/// @param <T> the represented temporal value type
+/// @author Steve Ebersole
+@SPI({ USE, IMPLEMENT })
 public abstract class AbstractTemporalJavaType<T>
 		extends AbstractClassJavaType<T>
 		implements TemporalJavaType<T> {
 
+	/// Initialize an immutable temporal descriptor.
+	@SPI(IMPLEMENT)
 	protected AbstractTemporalJavaType(Class<T> type) {
 		super( type );
 	}
 
+	/// Initialize a temporal descriptor with explicit mutability semantics.
+	@SPI(IMPLEMENT)
 	protected AbstractTemporalJavaType(Class<T> type, MutabilityPlan<T> mutabilityPlan) {
 		super( type, mutabilityPlan );
 	}
 
+	/// Initialize a temporal descriptor with explicit mutability and comparison
+	/// semantics.
+	@SPI(IMPLEMENT)
 	public AbstractTemporalJavaType(
 			Class<T> type,
 			MutabilityPlan<T> mutabilityPlan,

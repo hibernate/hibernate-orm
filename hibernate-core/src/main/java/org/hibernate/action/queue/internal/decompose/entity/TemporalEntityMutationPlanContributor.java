@@ -20,10 +20,10 @@ import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.metamodel.mapping.TemporalMapping;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
-import org.hibernate.sql.model.MutationOperation;
-import org.hibernate.sql.model.ast.MutatingTableReference;
-import org.hibernate.sql.model.ast.builder.TableUpdateBuilderStandard;
+import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
+import org.hibernate.sql.spi.mutation.MutationOperation;
+import org.hibernate.sql.ast.spi.model.MutatingTableReference;
+import org.hibernate.sql.ast.spi.model.builder.TableUpdateBuilderStandard;
 
 import static org.hibernate.generator.EventType.UPDATE;
 

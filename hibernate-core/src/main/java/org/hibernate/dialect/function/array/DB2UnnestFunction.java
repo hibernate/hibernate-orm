@@ -14,16 +14,16 @@ import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
-import org.hibernate.query.sqm.tuple.internal.AnonymousTupleTableGroupProducer;
+import org.hibernate.sql.ast.spi.query.SetReturningFunctionType;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.function.SelfRenderingSqmSetReturningFunction;
 import org.hibernate.query.sqm.sql.spi.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.spi.SqmTypedNode;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.spi.SqlAppender;
-import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
+import org.hibernate.sql.spi.SqlAppender;
+import org.hibernate.sql.ast.spi.query.expression.Expression;
+import org.hibernate.sql.ast.spi.query.from.TableGroup;
 import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -67,16 +67,17 @@ public class DB2UnnestFunction extends UnnestFunction {
 	}
 
 	@Override
+	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	protected void renderJsonTable(
 			SqlAppender sqlAppender,
 			Expression array,
 			BasicPluralType<?, ?> pluralType,
 			@Nullable SqlTypedMapping sqlTypedMapping,
-			AnonymousTupleTableGroupProducer tupleType,
+			SetReturningFunctionType tupleType,
 			String tableIdentifierVariable,
 			SqlAstTranslator<?> walker) {
 		sqlAppender.appendSql( "lateral(select " );
-		final ModelPart elementPart = tupleType.findSubPart( CollectionPart.Nature.ELEMENT.getName(), null );
+		final ModelPart elementPart = tupleType.findSubPart( CollectionPart.Nature.ELEMENT.getName() );
 		if ( elementPart == null ) {
 			sqlAppender.append( "t.*" );
 		}
@@ -113,7 +114,7 @@ public class DB2UnnestFunction extends UnnestFunction {
 
 			sqlAppender.append( elementMapping.getSelectionExpression() );
 		}
-		final ModelPart indexPart = tupleType.findSubPart( CollectionPart.Nature.INDEX.getName(), null );
+		final ModelPart indexPart = tupleType.findSubPart( CollectionPart.Nature.INDEX.getName() );
 		if ( indexPart != null ) {
 			sqlAppender.appendSql( ",i.i " );
 			sqlAppender.append( indexPart.asBasicValuedModelPart().getSelectionExpression() );

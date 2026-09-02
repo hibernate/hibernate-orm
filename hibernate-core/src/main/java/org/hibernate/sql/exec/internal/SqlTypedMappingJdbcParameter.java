@@ -6,7 +6,7 @@ package org.hibernate.sql.exec.internal;
 
 import jakarta.annotation.Nullable;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
-import org.hibernate.sql.ast.tree.expression.SqlTypedExpression;
+import org.hibernate.sql.ast.spi.query.expression.SqlTypedExpression;
 
 /**
  * @author Steve Ebersole

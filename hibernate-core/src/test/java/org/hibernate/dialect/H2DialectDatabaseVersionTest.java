@@ -4,6 +4,7 @@
  */
 package org.hibernate.dialect;
 
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.Map;
@@ -73,11 +74,6 @@ public class H2DialectDatabaseVersionTest {
 		@Override
 		public int getDriverMinorVersion() {
 			return 2;
-		}
-
-		@Override
-		public String getSQLKeywords() {
-			return "";
 		}
 
 		@Override

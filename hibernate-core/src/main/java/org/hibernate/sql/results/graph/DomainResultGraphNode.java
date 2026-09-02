@@ -20,6 +20,7 @@ import org.hibernate.type.descriptor.java.JavaType;
  * @author Steve Ebersole
  */
 @Incubating
+@org.hibernate.SPI({ org.hibernate.SPI.Role.USE, org.hibernate.SPI.Role.IMPLEMENT })
 public interface DomainResultGraphNode {
 	/**
 	 * Does this node contain any non-scalar (sub-)results?

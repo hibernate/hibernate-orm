@@ -10,6 +10,7 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.hibernate.SPI;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
@@ -27,6 +28,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 import jakarta.annotation.Nullable;
 
 import static org.hibernate.type.descriptor.JdbcTypeNameMapper.isStandardTypeCode;
+import static org.hibernate.SPI.Role.SUPPLY;
 
 /**
  * A registry mapping {@link org.hibernate.type.SqlTypes JDBC type codes}
@@ -64,7 +66,9 @@ public class JdbcTypeRegistry implements JdbcTypeBaseline.BaselineTarget, Serial
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// baseline descriptors
 
+	/// @see JdbcType
 	@Override
+	@SPI(SUPPLY)
 	public void addDescriptor(JdbcType jdbcType) {
 		final var previous = descriptorMap.put( jdbcType.getDefaultSqlTypeCode(), jdbcType );
 //		if ( previous != null && previous != jdbcType ) {
@@ -72,7 +76,9 @@ public class JdbcTypeRegistry implements JdbcTypeBaseline.BaselineTarget, Serial
 //		}
 	}
 
+	/// @see JdbcType
 	@Override
+	@SPI(SUPPLY)
 	public void addDescriptor(int typeCode, JdbcType jdbcType) {
 		final var previous = descriptorMap.put( typeCode, jdbcType );
 //		if ( previous != null && previous != jdbcType ) {
@@ -80,10 +86,14 @@ public class JdbcTypeRegistry implements JdbcTypeBaseline.BaselineTarget, Serial
 //		}
 	}
 
+	/// @see JdbcType
+	@SPI(SUPPLY)
 	public void addDescriptorIfAbsent(JdbcType jdbcType) {
 		descriptorMap.putIfAbsent( jdbcType.getDefaultSqlTypeCode(), jdbcType );
 	}
 
+	/// @see JdbcType
+	@SPI(SUPPLY)
 	public void addDescriptorIfAbsent(int typeCode, JdbcType jdbcType) {
 		descriptorMap.putIfAbsent( typeCode, jdbcType );
 	}
@@ -312,18 +322,26 @@ public class JdbcTypeRegistry implements JdbcTypeBaseline.BaselineTarget, Serial
 		return descriptorConstructorMap.get( jdbcTypeCode );
 	}
 
+	/// @see JdbcTypeConstructor
+	@SPI(SUPPLY)
 	public void addTypeConstructor(int jdbcTypeCode, JdbcTypeConstructor jdbcTypeConstructor) {
 		descriptorConstructorMap.put( jdbcTypeCode, jdbcTypeConstructor );
 	}
 
+	/// @see JdbcTypeConstructor
+	@SPI(SUPPLY)
 	public void addTypeConstructor(JdbcTypeConstructor jdbcTypeConstructor) {
 		addTypeConstructor( jdbcTypeConstructor.getDefaultSqlTypeCode(), jdbcTypeConstructor );
 	}
 
+	/// @see JdbcTypeConstructor
+	@SPI(SUPPLY)
 	public void addTypeConstructorIfAbsent(int jdbcTypeCode, JdbcTypeConstructor jdbcTypeConstructor) {
 		descriptorConstructorMap.putIfAbsent( jdbcTypeCode, jdbcTypeConstructor );
 	}
 
+	/// @see JdbcTypeConstructor
+	@SPI(SUPPLY)
 	public void addTypeConstructorIfAbsent(JdbcTypeConstructor jdbcTypeConstructor) {
 		addTypeConstructorIfAbsent( jdbcTypeConstructor.getDefaultSqlTypeCode(), jdbcTypeConstructor );
 	}

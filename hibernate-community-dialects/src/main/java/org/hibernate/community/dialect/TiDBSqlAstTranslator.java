@@ -4,42 +4,39 @@
  */
 package org.hibernate.community.dialect;
 
-import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
-import org.hibernate.dialect.sql.ast.SqlAstTranslatorWithOnDuplicateKeyUpdate;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.util.collections.Stack;
+import org.hibernate.Internal;
+import org.hibernate.dialect.sql.ast.spi.DmlTargetColumnQualifierSupport;
+import org.hibernate.dialect.sql.ast.spi.DerivedTableRenderingSupport;
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslatorWithOnDuplicateKeyUpdate;
+import org.hibernate.dialect.sql.ast.spi.PaginationRenderingPlan;
+import org.hibernate.dialect.sql.ast.spi.PaginationRenderingSupport;
+import org.hibernate.dialect.sql.ast.spi.StandardDerivedTableRenderingSupport;
 import org.hibernate.query.sqm.ComparisonOperator;
-import org.hibernate.sql.ast.Clause;
-import org.hibernate.sql.ast.spi.FullJoinEmulation;
-import org.hibernate.sql.ast.tree.MutationStatement;
-import org.hibernate.sql.ast.tree.Statement;
-import org.hibernate.sql.ast.tree.delete.DeleteStatement;
-import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
-import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.Literal;
-import org.hibernate.sql.ast.tree.expression.Summarization;
-import org.hibernate.sql.ast.tree.from.DerivedTableReference;
-import org.hibernate.sql.ast.tree.from.NamedTableReference;
-import org.hibernate.sql.ast.tree.from.QueryPartTableReference;
-import org.hibernate.sql.ast.tree.from.ValuesTableReference;
-import org.hibernate.sql.ast.tree.insert.ConflictClause;
-import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
-import org.hibernate.sql.ast.tree.predicate.BooleanExpressionPredicate;
-import org.hibernate.sql.ast.tree.predicate.LikePredicate;
-import org.hibernate.sql.ast.tree.select.QueryGroup;
-import org.hibernate.sql.ast.tree.select.QueryPart;
-import org.hibernate.sql.ast.tree.select.QuerySpec;
-import org.hibernate.sql.ast.tree.select.SelectStatement;
-import org.hibernate.sql.ast.tree.update.UpdateStatement;
-import org.hibernate.sql.exec.internal.JdbcOperationQueryInsertImpl;
+import org.hibernate.query.common.FetchClauseType;
+import org.hibernate.sql.ast.spi.translation.Clause;
+import org.hibernate.dialect.sql.ast.spi.FullJoinEmulation;
+import org.hibernate.sql.ast.spi.query.MutationStatement;
+import org.hibernate.sql.ast.spi.Statement;
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
+import org.hibernate.dialect.function.spi.WindowFunctionSupport;
+import org.hibernate.dialect.sql.ast.spi.InsertConflictRenderingSupport;
+import org.hibernate.dialect.sql.ast.spi.StandardInsertConflictRenderingSupport;
+import org.hibernate.sql.ast.spi.query.delete.DeleteStatement;
+import org.hibernate.sql.ast.spi.query.expression.BinaryArithmeticExpression;
+import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
+import org.hibernate.sql.ast.spi.query.expression.Expression;
+import org.hibernate.sql.ast.spi.query.expression.Literal;
+import org.hibernate.sql.ast.spi.query.expression.Summarization;
+import org.hibernate.sql.ast.spi.query.from.NamedTableReference;
+import org.hibernate.sql.ast.spi.query.insert.InsertSelectStatement;
+import org.hibernate.sql.ast.spi.query.predicate.BooleanExpressionPredicate;
+import org.hibernate.sql.ast.spi.query.predicate.LikePredicate;
+import org.hibernate.sql.ast.spi.query.select.QuerySpec;
+import org.hibernate.sql.ast.spi.query.update.UpdateStatement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
-import org.hibernate.sql.exec.spi.JdbcOperationQueryInsert;
-import org.hibernate.sql.model.ast.ColumnValueBinding;
+import org.hibernate.sql.ast.spi.model.ColumnValueBinding;
 
 import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * A SQL AST translator for TiDB.
@@ -52,8 +49,8 @@ public class TiDBSqlAstTranslator<T extends JdbcOperation> extends SqlAstTransla
 	private final TiDBDialect dialect;
 	private final ArrayDeque<FullJoinEmulation> fullJoinEmulations = new ArrayDeque<>();
 
-	public TiDBSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement, TiDBDialect dialect) {
-		super( sessionFactory, statement );
+	public TiDBSqlAstTranslator(SqlAstTranslationRequest<? extends Statement, T> request, TiDBDialect dialect) {
+		super( request );
 		this.dialect = dialect;
 		this.fullJoinEmulations.push( new FullJoinEmulation( this ) );
 	}
@@ -77,67 +74,21 @@ public class TiDBSqlAstTranslator<T extends JdbcOperation> extends SqlAstTransla
 	}
 
 	@Override
-	protected void visitInsertSource(InsertSelectStatement statement) {
-		if ( statement.getSourceSelectStatement() != null ) {
-			if ( statement.getConflictClause() != null ) {
-				final List<ColumnReference> targetColumnReferences = statement.getTargetColumns();
-				final List<String> columnNames = new ArrayList<>( targetColumnReferences.size() );
-				for ( ColumnReference targetColumnReference : targetColumnReferences ) {
-					columnNames.add( targetColumnReference.getColumnExpression() );
-				}
-				appendSql( "select * from " );
-				emulateQueryPartTableReferenceColumnAliasing(
-						new QueryPartTableReference(
-								new SelectStatement( statement.getSourceSelectStatement() ),
-								"excluded",
-								columnNames,
-								false,
-								getSessionFactory()
-						)
-				);
-			}
-			else {
-				statement.getSourceSelectStatement().accept( this );
-			}
-		}
-		else {
-			visitValuesList( statement.getValuesList() );
-		}
-	}
-
-	@Override
-	public void visitColumnReference(ColumnReference columnReference) {
-		final Statement currentStatement;
-		if ( "excluded".equals( columnReference.getQualifier() )
-				&& ( currentStatement = getStatementStack().getCurrent() ) instanceof InsertSelectStatement
-				&& ( (InsertSelectStatement) currentStatement ).getSourceSelectStatement() == null ) {
-			// Accessing the excluded row for an insert-values statement in the conflict clause requires the values qualifier
-			appendSql( "values(" );
-			columnReference.appendReadExpression( this, null );
-			append( ')' );
-		}
-		else {
-			super.visitColumnReference( columnReference );
-		}
+	@Internal
+	protected InsertConflictRenderingSupport getInsertConflictRenderingSupport() {
+		return StandardInsertConflictRenderingSupport.ON_DUPLICATE_KEY_VALUES_FUNCTION;
 	}
 
 	@Override
 	protected void renderDeleteClause(DeleteStatement statement) {
 		appendSql( "delete" );
-		final Stack<Clause> clauseStack = getClauseStack();
-		try {
-			clauseStack.push( Clause.DELETE );
-			renderTableReferenceIdentificationVariable( statement.getTargetTable() );
-			if ( statement.getFromClause().getRoots().isEmpty() ) {
-				appendSql( " from " );
-				renderDmlTargetTableExpression( statement.getTargetTable() );
-			}
-			else {
-				visitFromClause( statement.getFromClause() );
-			}
+		renderTableReferenceIdentificationVariable( statement.getTargetTable() );
+		if ( statement.getFromClause().getRoots().isEmpty() ) {
+			appendSql( " from " );
+			renderDmlTargetTableExpression( statement.getTargetTable() );
 		}
-		finally {
-			clauseStack.pop();
+		else {
+			visitFromClause( statement.getFromClause() );
 		}
 	}
 
@@ -158,23 +109,6 @@ public class TiDBSqlAstTranslator<T extends JdbcOperation> extends SqlAstTransla
 		if ( getClauseStack().getCurrent() != Clause.INSERT ) {
 			renderTableReferenceIdentificationVariable( tableReference );
 		}
-	}
-
-	@Override
-	protected JdbcOperationQueryInsert translateInsert(InsertSelectStatement sqlAst) {
-		visitInsertStatement( sqlAst );
-
-		return new JdbcOperationQueryInsertImpl(
-				getSql(),
-				getParameterBinders(),
-				getAffectedTableNames(),
-				getUniqueConstraintNameThatMayFail(sqlAst)
-		);
-	}
-
-	@Override
-	protected void visitConflictClause(ConflictClause conflictClause) {
-		visitOnDuplicateKeyConflictClause( conflictClause );
 	}
 
 	@Override
@@ -217,20 +151,16 @@ public class TiDBSqlAstTranslator<T extends JdbcOperation> extends SqlAstTransla
 		}
 	}
 
-	protected boolean shouldEmulateFetchClause(QueryPart queryPart) {
-		// Check if current query part is already row numbering to avoid infinite recursion
-		return useOffsetFetchClause( queryPart ) && getQueryPartForRowNumbering() != queryPart
-				&& dialect.supportsWindowFunctions() && !isRowsOnlyFetchClauseType( queryPart );
-	}
-
 	@Override
-	public void visitQueryGroup(QueryGroup queryGroup) {
-		if ( shouldEmulateFetchClause( queryGroup ) ) {
-			emulateFetchOffsetWithWindowFunctions( queryGroup, true );
-		}
-		else {
-			super.visitQueryGroup( queryGroup );
-		}
+	protected PaginationRenderingSupport getPaginationRenderingSupport() {
+		return request -> currentFullJoinEmulationHelper().isFullJoinEmulationQueryPart( request.queryPart() )
+				? new PaginationRenderingPlan.None()
+				: request.hasFetch()
+						&& request.fetchClauseType() != FetchClauseType.ROWS_ONLY
+						&& dialect.getWindowFunctionSupport()
+								.supports( WindowFunctionSupport.Feature.WINDOW_FUNCTIONS )
+								? new PaginationRenderingPlan.Window( true )
+								: new PaginationRenderingPlan.CombinedLimit();
 	}
 
 	@Override
@@ -246,12 +176,7 @@ public class TiDBSqlAstTranslator<T extends JdbcOperation> extends SqlAstTransla
 			final var currentHelper = currentFullJoinEmulationHelper();
 			if ( !currentHelper.renderFullJoinEmulationBranchIfNeeded( querySpec, super::visitQuerySpec )
 					&& !currentHelper.emulateFullJoinWithUnionIfNeeded( querySpec ) ) {
-				if ( shouldEmulateFetchClause( querySpec ) ) {
-					emulateFetchOffsetWithWindowFunctions( querySpec, true );
-				}
-				else {
-					super.visitQuerySpec( querySpec );
-				}
+				super.visitQuerySpec( querySpec );
 			}
 		}
 		finally {
@@ -262,25 +187,8 @@ public class TiDBSqlAstTranslator<T extends JdbcOperation> extends SqlAstTransla
 	}
 
 	@Override
-	public void visitValuesTableReference(ValuesTableReference tableReference) {
-		emulateValuesTableReferenceColumnAliasing( tableReference );
-	}
-
-	@Override
-	public void visitQueryPartTableReference(QueryPartTableReference tableReference) {
-		emulateQueryPartTableReferenceColumnAliasing( tableReference );
-	}
-
-	@Override
-	protected void renderDerivedTableReferenceIdentificationVariable(DerivedTableReference tableReference) {
-		renderTableReferenceIdentificationVariable( tableReference );
-	}
-
-	@Override
-	public void visitOffsetFetchClause(QueryPart queryPart) {
-		if ( !isRowNumberingCurrentQueryPart() ) {
-			renderCombinedLimitClause( queryPart );
-		}
+	protected DerivedTableRenderingSupport getDerivedTableRenderingSupport() {
+		return StandardDerivedTableRenderingSupport.QUERY_AND_VALUES_SELECT_LIST;
 	}
 
 	@Override
@@ -342,7 +250,7 @@ public class TiDBSqlAstTranslator<T extends JdbcOperation> extends SqlAstTransla
 	}
 
 	@Override
-	public TiDBDialect getDialect() {
+	protected TiDBDialect getDialect() {
 		return dialect;
 	}
 

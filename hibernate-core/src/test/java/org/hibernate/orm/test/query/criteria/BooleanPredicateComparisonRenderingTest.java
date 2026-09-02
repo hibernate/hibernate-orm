@@ -15,8 +15,10 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.query.internal.SelectionQueryImpl;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.sql.internal.StandardSqmTranslator;
+import org.hibernate.query.sqm.sql.spi.SqmTranslationRequest;
 import org.hibernate.query.sqm.tree.spi.select.SqmSelectStatement;
-import org.hibernate.sql.ast.tree.select.SelectStatement;
+import org.hibernate.sql.ast.spi.query.select.SelectStatement;
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -45,7 +47,7 @@ abstract class AbstractBooleanPredicateComparisonRenderingTest {
 		query.where( published.not().equalTo( builder.booleanLiteral( false ) ) );
 
 		final var hibernateQuery = (SelectionQueryImpl<Article>) session.createQuery( query );
-		final var sqmConverter = new StandardSqmTranslator<SelectStatement>(
+		final var sqmConverter = new StandardSqmTranslator<SelectStatement>( new SqmTranslationRequest.Select(
 				(SqmSelectStatement<?>) hibernateQuery.getSqmStatement(),
 				hibernateQuery.getQueryOptions(),
 				hibernateQuery.getDomainParameterXref(),
@@ -53,10 +55,10 @@ abstract class AbstractBooleanPredicateComparisonRenderingTest {
 				session.getLoadQueryInfluencers(),
 				session.getFactory().getSqlTranslationEngine(),
 				true
-		);
+		) );
 		final var sqlAst = sqmConverter.translate().getSqlAst();
 		return session.getFactory().getJdbcServices().getJdbcEnvironment().getSqlAstTranslatorFactory()
-				.buildSelectTranslator( session.getFactory(), sqlAst )
+				.buildTranslator( new SqlAstTranslationRequest.Select( session.getFactory(), sqlAst ) )
 				.translate( null, QueryOptions.NONE )
 				.getSqlString();
 	}

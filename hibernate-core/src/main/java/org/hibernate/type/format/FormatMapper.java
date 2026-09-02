@@ -5,33 +5,33 @@
 package org.hibernate.type.format;
 
 import org.hibernate.Incubating;
+import org.hibernate.SPI;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
 
 import java.io.IOException;
 
-/**
- * A mapper for mapping objects to and from a format.
- * <ul>
- * <li>A {@code FormatMapper} for JSON may be selected using the configuration
- *     property {@value org.hibernate.cfg.AvailableSettings#JSON_FORMAT_MAPPER}.
- * <li>A {@code FormatMapper} for XML may be selected using the configuration
- *     property {@value org.hibernate.cfg.AvailableSettings#XML_FORMAT_MAPPER}.
- * </ul>
- *
- *
- * @see org.hibernate.cfg.AvailableSettings#JSON_FORMAT_MAPPER
- * @see org.hibernate.cfg.AvailableSettings#XML_FORMAT_MAPPER
- *
- * @see org.hibernate.boot.spi.SessionFactoryOptions#getJsonFormatMapper()
- * @see org.hibernate.boot.spi.SessionFactoryOptions#getXmlFormatMapper()
- *
- * @see org.hibernate.type.descriptor.jdbc.JsonJdbcType
- * @see org.hibernate.type.descriptor.jdbc.XmlJdbcType
- *
- * @author Christian Beikov
- */
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.SUPPLY;
+import static org.hibernate.SPI.Role.USE;
+
+/// Maps objects to and from a structured text format.
+///
+/// Implement this contract to integrate another JSON or XML binding library.
+/// Supply a JSON implementation through
+/// [org.hibernate.cfg.AvailableSettings#JSON_FORMAT_MAPPER] and an XML
+/// implementation through [org.hibernate.cfg.AvailableSettings#XML_FORMAT_MAPPER].
+///
+/// @see org.hibernate.cfg.AvailableSettings#JSON_FORMAT_MAPPER
+/// @see org.hibernate.cfg.AvailableSettings#XML_FORMAT_MAPPER
+/// @see org.hibernate.boot.spi.SessionFactoryOptions#getJsonFormatMapper()
+/// @see org.hibernate.boot.spi.SessionFactoryOptions#getXmlFormatMapper()
+/// @see org.hibernate.type.descriptor.jdbc.JsonJdbcType
+/// @see org.hibernate.type.descriptor.jdbc.XmlJdbcType
+///
+/// @author Christian Beikov
 @Incubating
+@SPI({ USE, IMPLEMENT, SUPPLY })
 public interface FormatMapper {
 
 	/**

@@ -18,18 +18,18 @@ import org.hibernate.action.queue.internal.decompose.collection.DecompositionSup
 import org.hibernate.action.queue.spi.meta.EntityTableDescriptor;
 import org.hibernate.action.queue.spi.meta.TableDescriptor;
 import org.hibernate.action.queue.spi.meta.TableDescriptorAsTableMapping;
-import org.hibernate.sql.model.TableMapping;
-import org.hibernate.sql.model.ast.TableDelete;
-import org.hibernate.sql.model.ast.TableMutation;
-import org.hibernate.sql.model.ast.builder.TableDeleteBuilder;
-import org.hibernate.sql.model.ast.builder.TableDeleteBuilderStandard;
+import org.hibernate.sql.spi.mutation.TableMapping;
+import org.hibernate.sql.ast.spi.model.TableDelete;
+import org.hibernate.sql.ast.spi.model.TableMutation;
+import org.hibernate.sql.ast.spi.model.builder.TableDeleteBuilder;
+import org.hibernate.sql.ast.spi.model.builder.TableDeleteBuilderStandard;
 import org.hibernate.action.queue.spi.plan.FlushOperation;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.internal.CacheHelper.CacheLock;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.sql.model.MutationOperation;
+import org.hibernate.sql.spi.mutation.MutationOperation;
 
 import java.util.ArrayList;
 import java.util.Collections;

@@ -11,14 +11,14 @@ import org.hibernate.internal.util.StringHelper;
 /**
  * @author Steve Ebersole
  */
-public class TargetColumnAdapterJaxbColumn implements TargetColumnAdapter {
+class TargetColumnAdapterJaxbColumn implements TargetColumnAdapter {
 	private final JaxbColumnImpl jaxbColumn;
 
-	public TargetColumnAdapterJaxbColumn(ColumnDefaults columnDefaults) {
+	TargetColumnAdapterJaxbColumn(ColumnDefaults columnDefaults) {
 		this( new JaxbColumnImpl(), columnDefaults );
 	}
 
-	public TargetColumnAdapterJaxbColumn(JaxbColumnImpl jaxbColumn, ColumnDefaults columnDefaults) {
+	TargetColumnAdapterJaxbColumn(JaxbColumnImpl jaxbColumn, ColumnDefaults columnDefaults) {
 		this.jaxbColumn = jaxbColumn;
 		this.jaxbColumn.setLength( columnDefaults.getLength() );
 		this.jaxbColumn.setScale( columnDefaults.getScale() );

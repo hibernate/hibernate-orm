@@ -4,47 +4,83 @@
  */
 package org.hibernate.community.dialect;
 
+import org.hibernate.dialect.identifier.spi.KeywordRegistration;
+
+import org.hibernate.dialect.temporaltype.spi.CurrentTimestampSelection;
+
+import org.hibernate.dialect.temporaltype.spi.TemporalOperationSupport;
+
+import org.hibernate.dialect.temporaltype.spi.TemporalFormatSupport;
+
+import org.hibernate.dialect.temporaltype.spi.CurrentTemporalSupport;
+
+import org.hibernate.SPI;
+import static org.hibernate.SPI.Role.USE;
+
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.SUPPLY;
+import org.hibernate.dialect.type.spi.DdlTypeBuilder;
+
+import org.hibernate.dialect.type.spi.StandardDdlTypes;
+
+import org.hibernate.dialect.type.spi.TypeSizingProfile;
+
+import org.hibernate.dialect.function.spi.TupleCountSupport;
+import org.hibernate.dialect.function.spi.WindowFunctionSupport;
+
+import org.hibernate.dialect.sql.ast.spi.CteSupport;
+import org.hibernate.dialect.sql.ast.spi.NullOrderingSupport;
+import org.hibernate.dialect.sql.ast.spi.PredicateSupport;
+import org.hibernate.dialect.sql.ast.spi.RowValueSupport;
+import org.hibernate.dialect.sql.ast.spi.SingleRowTableSupport;
+import org.hibernate.dialect.sql.ast.spi.ValuesListSupport;
+import org.hibernate.dialect.sql.ast.spi.SubquerySupport;
+
 import java.sql.Types;
 
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
-import org.hibernate.community.dialect.identity.CUBRIDIdentityColumnSupport;
+import org.hibernate.community.dialect.identity.internal.CUBRIDIdentityColumnSupport;
 import org.hibernate.community.dialect.sequence.CUBRIDSequenceSupport;
-import org.hibernate.community.dialect.sequence.SequenceInformationExtractorCUBRIDDatabaseImpl;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.NullOrdering;
+import org.hibernate.dialect.sql.ast.spi.NullOrdering;
 import org.hibernate.dialect.OracleDialect;
-import org.hibernate.dialect.TimeZoneSupport;
+import org.hibernate.dialect.type.spi.TimeZoneSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.dialect.identity.IdentityColumnSupport;
+import org.hibernate.dialect.identity.spi.IdentityColumnSupport;
 import org.hibernate.dialect.lock.PessimisticLockStyle;
-import org.hibernate.dialect.lock.internal.LockingSupportSimple;
 import org.hibernate.dialect.lock.spi.ConnectionLockTimeoutStrategy;
 import org.hibernate.dialect.lock.spi.LockTimeoutType;
 import org.hibernate.dialect.lock.spi.LockingSupport;
+import org.hibernate.dialect.lock.spi.RowLockStrategy;
+import org.hibernate.dialect.lock.spi.StandardLockingSupports;
+import org.hibernate.dialect.namespace.spi.NamespaceSupport;
+import org.hibernate.dialect.namespace.spi.NamespaceSupports;
 import org.hibernate.dialect.lock.spi.OuterJoinLockingType;
-import org.hibernate.dialect.pagination.LimitHandler;
-import org.hibernate.dialect.pagination.LimitLimitHandler;
-import org.hibernate.dialect.sequence.SequenceSupport;
+import org.hibernate.dialect.pagination.spi.LimitHandler;
+import org.hibernate.dialect.pagination.spi.LimitLimitHandler;
+import org.hibernate.dialect.sequence.spi.SequenceSupport;
+import org.hibernate.dialect.schema.spi.AlterColumnTypeRequest;
+import org.hibernate.dialect.schema.spi.ExistenceCheckPlacement;
+import org.hibernate.dialect.schema.spi.IfExistsSupport;
+import org.hibernate.dialect.schema.spi.IndexNameQualification;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.SemanticException;
-import org.hibernate.dialect.type.IntervalType;
+import org.hibernate.dialect.temporaltype.spi.IntervalType;
 import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.SqlAstTranslatorFactory;
-import org.hibernate.sql.ast.spi.SqlAppender;
-import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
-import org.hibernate.sql.ast.tree.Statement;
+import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslatorFactory;
+import org.hibernate.sql.spi.SqlAppender;
+import org.hibernate.dialect.sql.ast.spi.StandardSqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.Statement;
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
+import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractors;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
-import org.hibernate.type.descriptor.sql.internal.BinaryFloatDdlType;
-import org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType;
-import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 
 import jakarta.persistence.TemporalType;
@@ -68,7 +104,47 @@ import static org.hibernate.type.SqlTypes.VARBINARY;
  *
  * @author Seok Jeong Il
  */
-public class CUBRIDDialect extends Dialect {
+public class CUBRIDDialect extends Dialect implements CurrentTemporalSupport, TemporalFormatSupport, TemporalOperationSupport {
+	private final org.hibernate.dialect.unique.spi.UniqueDelegate uniqueDelegate =
+			new org.hibernate.dialect.unique.spi.DelegatingUniqueDelegate(
+					org.hibernate.dialect.unique.spi.UniqueDelegates.alterTable( this ) ) {
+		@Override
+		public String getAlterTableToDropUniqueKeyCommand(
+				org.hibernate.mapping.UniqueKey uniqueKey,
+				org.hibernate.boot.Metadata metadata,
+				org.hibernate.boot.model.relational.SqlStringGenerationContext context) {
+			return delegate().getAlterTableToDropUniqueKeyCommand( uniqueKey, metadata, context )
+					.replace( "drop constraint", "drop index" );
+		}
+	};
+	private IfExistsSupport ifExistsSupport;
+
+
+	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
+	public TemporalOperationSupport getTemporalOperationSupport() {
+		return this;
+	}
+
+	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
+	public TemporalFormatSupport getTemporalFormatSupport() {
+		return this;
+	}
+
+	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
+	public CurrentTemporalSupport getCurrentTemporalSupport() {
+		return this;
+	}
+	private final TypeSizingProfile typeSizingProfile = TypeSizingProfile.builder( super.getTypeSizingProfile() )
+			.defaultTimestampPrecision( 3 ).floatPrecision( 21 )
+			.maxVarcharLength( 1_073_741_823 ).maxVarcharCapacity( 1_073_741_823 )
+			.maxNVarcharLength( 1_073_741_823 ).maxNVarcharCapacity( 1_073_741_823 )
+			.maxVarbinaryLength( 1_073_741_823 ).maxVarbinaryCapacity( 1_073_741_823 )
+			.build();
+
+	@Override public TypeSizingProfile getTypeSizingProfile() { return typeSizingProfile; }
 
 	private static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 10, 2 );
 
@@ -84,11 +160,13 @@ public class CUBRIDDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	protected DatabaseVersion getMinimumSupportedVersion() {
 		return MINIMUM_VERSION;
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	protected String columnType(int sqlTypeCode) {
 		return switch ( sqlTypeCode ) {
 			case BOOLEAN -> "bit";
@@ -103,61 +181,59 @@ public class CUBRIDDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	protected void registerColumnTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.registerColumnTypes( typeContributions, serviceRegistry );
 		final DdlTypeRegistry ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
 
-		ddlTypeRegistry.addDescriptor( new BinaryFloatDdlType( this ) );
+		ddlTypeRegistry.addDescriptor( StandardDdlTypes.binaryFloat( this ) );
 
 		//CUBRID has no 'binary' nor 'varbinary', but 'bit' is
 		//intended to be used for binary data (unfortunately the
 		//length parameter is measured in bits, not bytes)
-		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( BINARY, "bit($l)", this ) );
+		ddlTypeRegistry.addDescriptor( StandardDdlTypes.simple( BINARY, "bit($l)", this ) );
 		ddlTypeRegistry.addDescriptor(
-				CapacityDependentDdlType.builder(
-								VARBINARY,
-								CapacityDependentDdlType.LobKind.BIGGEST_LOB,
-								columnType( BLOB ),
-								this
-						)
-						.withTypeCapacity( getMaxVarbinaryLength(), "bit varying($l)" )
+				StandardDdlTypes.builder( VARBINARY, columnType( BLOB ), this )
+						.lobKind( DdlTypeBuilder.LobKind.BIGGEST )
+						.withTypeCapacity( getTypeSizingProfile().maxVarbinaryLength(), "bit varying($l)" )
 						.build()
 		);
 	}
 
 	@Override
-	protected void registerDefaultKeywords() {
-		super.registerDefaultKeywords();
-		registerKeyword( "TYPE" );
-		registerKeyword( "YEAR" );
-		registerKeyword( "MONTH" );
-		registerKeyword( "ALIAS" );
-		registerKeyword( "VALUE" );
-		registerKeyword( "FIRST" );
-		registerKeyword( "ROLE" );
-		registerKeyword( "CLASS" );
-		registerKeyword( "BIT" );
-		registerKeyword( "TIME" );
-		registerKeyword( "QUERY" );
-		registerKeyword( "DATE" );
-		registerKeyword( "USER" );
-		registerKeyword( "ACTION" );
-		registerKeyword( "SYS_USER" );
-		registerKeyword( "ZONE" );
-		registerKeyword( "LANGUAGE" );
-		registerKeyword( "DICTIONARY" );
-		registerKeyword( "DATA" );
-		registerKeyword( "TEST" );
-		registerKeyword( "SUPERCLASS" );
-		registerKeyword( "SECTION" );
-		registerKeyword( "LOWER" );
-		registerKeyword( "LIST" );
-		registerKeyword( "OID" );
-		registerKeyword( "DAY" );
-		registerKeyword( "IF" );
-		registerKeyword( "ATTRIBUTE" );
-		registerKeyword( "STRING" );
-		registerKeyword( "SEARCH" );
+	@SPI({ USE, IMPLEMENT, SUPPLY })
+	protected void contributeKeywords(KeywordRegistration registration) {
+		super.contributeKeywords( registration );
+		registration.registerKeyword( "TYPE" );
+		registration.registerKeyword( "YEAR" );
+		registration.registerKeyword( "MONTH" );
+		registration.registerKeyword( "ALIAS" );
+		registration.registerKeyword( "VALUE" );
+		registration.registerKeyword( "FIRST" );
+		registration.registerKeyword( "ROLE" );
+		registration.registerKeyword( "CLASS" );
+		registration.registerKeyword( "BIT" );
+		registration.registerKeyword( "TIME" );
+		registration.registerKeyword( "QUERY" );
+		registration.registerKeyword( "DATE" );
+		registration.registerKeyword( "USER" );
+		registration.registerKeyword( "ACTION" );
+		registration.registerKeyword( "SYS_USER" );
+		registration.registerKeyword( "ZONE" );
+		registration.registerKeyword( "LANGUAGE" );
+		registration.registerKeyword( "DICTIONARY" );
+		registration.registerKeyword( "DATA" );
+		registration.registerKeyword( "TEST" );
+		registration.registerKeyword( "SUPERCLASS" );
+		registration.registerKeyword( "SECTION" );
+		registration.registerKeyword( "LOWER" );
+		registration.registerKeyword( "LIST" );
+		registration.registerKeyword( "OID" );
+		registration.registerKeyword( "DAY" );
+		registration.registerKeyword( "IF" );
+		registration.registerKeyword( "ATTRIBUTE" );
+		registration.registerKeyword( "STRING" );
+		registration.registerKeyword( "SEARCH" );
 	}
 
 	public CUBRIDDialect(DialectResolutionInfo info) {
@@ -165,22 +241,14 @@ public class CUBRIDDialect extends Dialect {
 	}
 
 	@Override
-	public int getDefaultStatementBatchSize() {
-		return 15;
+	@SPI({ IMPLEMENT, SUPPLY })
+	protected void contributeDefaultProperties(java.util.Properties properties) {
+		super.contributeDefaultProperties( properties );
+		properties.setProperty( org.hibernate.cfg.AvailableSettings.STATEMENT_BATCH_SIZE, Integer.toString( 15 ) );
 	}
 
 	@Override
-	public int getMaxVarcharLength() {
-		return 1_073_741_823;
-	}
-
-	@Override
-	public int getMaxVarbinaryLength() {
-		//note that the length of BIT VARYING in CUBRID is actually in bits
-		return 1_073_741_823;
-	}
-
-	@Override
+	@SPI({ USE, IMPLEMENT })
 	public JdbcType resolveSqlTypeDescriptor(
 			String columnTypeName,
 			int jdbcTypeCode,
@@ -200,6 +268,7 @@ public class CUBRIDDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public int getPreferredSqlTypeCodeForBoolean() {
 		return Types.BIT;
 	}
@@ -207,16 +276,7 @@ public class CUBRIDDialect extends Dialect {
 	//not used for anything right now, but it
 	//could be used for timestamp literal format
 	@Override
-	public int getDefaultTimestampPrecision() {
-		return 3;
-	}
-
-	@Override
-	public int getFloatPrecision() {
-		return 21; // -> 7 decimal digits
-	}
-
-	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
 		super.initializeFunctionRegistry(functionContributions);
 
@@ -276,62 +336,79 @@ public class CUBRIDDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsColumnCheck() {
+	@SPI({ USE, IMPLEMENT })
+	public boolean supports(org.hibernate.dialect.constraint.spi.CheckConstraintPlacement placement) {
 		return false;
 	}
 
 	@Override
-	public boolean supportsTableCheck() {
-		return false;
-	}
-
-	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public SequenceSupport getSequenceSupport() {
 		return CUBRIDSequenceSupport.INSTANCE;
 	}
 
 	@Override
-	public String getDropForeignKeyString() {
-		return "drop foreign key";
+	@SPI({ USE, IMPLEMENT })
+	public String renderDropConstraint(
+			org.hibernate.dialect.constraint.spi.ForeignKeyDropRequest request) {
+		return switch ( request.ifExistsPlacement() ) {
+			case NONE -> "drop foreign key " + request.constraintName();
+			case BEFORE_NAME -> "drop foreign key if exists " + request.constraintName();
+			case AFTER_NAME -> "drop foreign key " + request.constraintName() + " if exists";
+		};
 	}
 
 	@Override
-	public String getDropUniqueKeyString() {
-		return "drop index";
+	@SPI({ IMPLEMENT, SUPPLY })
+	public org.hibernate.dialect.unique.spi.UniqueDelegate getUniqueDelegate() {
+		return uniqueDelegate;
 	}
 
 	@Override
-	public boolean qualifyIndexName() {
-		return false;
+	@SPI({ USE, IMPLEMENT })
+	public IndexNameQualification nameQualification() {
+		return IndexNameQualification.UNQUALIFIED;
 	}
 
 	@Override
-	public boolean supportsExistsInSelect() {
-		return false;
+	public SubquerySupport getSubquerySupport() {
+		return SubquerySupport.builder()
+				.feature( SubquerySupport.Feature.EXISTS_IN_SELECT, false )
+				.feature( SubquerySupport.Feature.OFFSET, true )
+				.build();
 	}
 
-	@Override
-	public String getQuerySequencesString() {
-		return "select * from db_serial";
-	}
+	private static final SequenceInformationExtractor SEQUENCE_INFORMATION_EXTRACTOR =
+			SequenceInformationExtractors.builder( "select * from db_serial" )
+					.withoutCatalog()
+					.withoutSchema()
+					.sequenceNameColumn( "name" )
+					.startValueColumn( "started" )
+					.minimumValueColumn( "min_val" )
+					.maximumValueColumn( "max_val" )
+					.incrementValueColumn( "increment_val" )
+					.build();
 
 	@Override
 	public SequenceInformationExtractor getSequenceInformationExtractor() {
-		return SequenceInformationExtractorCUBRIDDatabaseImpl.INSTANCE;
+		return SEQUENCE_INFORMATION_EXTRACTOR;
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public char openQuote() {
 		return '[';
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public char closeQuote() {
 		return ']';
 	}
 
-	private static final LockingSupport LOCKING_SUPPORT = new LockingSupportSimple(
+	private static final LockingSupport LOCKING_SUPPORT = StandardLockingSupports.simple(
 			PessimisticLockStyle.CLAUSE,
+			RowLockStrategy.NONE,
 			LockTimeoutType.NONE,
 			OuterJoinLockingType.FULL,
 			ConnectionLockTimeoutStrategy.NONE
@@ -343,115 +420,96 @@ public class CUBRIDDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsCurrentTimestampSelection() {
-		return true;
+	@SPI({ USE, IMPLEMENT })
+	public CurrentTimestampSelection getCurrentTimestampSelection() {
+		return CurrentTimestampSelection.prepared( "select now()" );
 	}
 
 	@Override
-	public String getCurrentTimestampSelectString() {
-		return "select now()";
+	@SPI({ IMPLEMENT, SUPPLY })
+	public synchronized IfExistsSupport getIfExistsSupport() {
+		if ( ifExistsSupport == null ) {
+			ifExistsSupport = new IfExistsSupport(
+				ExistenceCheckPlacement.NONE,
+				ExistenceCheckPlacement.BEFORE_NAME,
+				ExistenceCheckPlacement.NONE,
+				ExistenceCheckPlacement.NONE
+		);
+		}
+		return ifExistsSupport;
 	}
 
 	@Override
-	public boolean isCurrentTimestampSelectStringCallable() {
-		return false;
+	public TupleCountSupport getTupleCountSupport() {
+		return TupleCountSupport.NONE;
 	}
 
 	@Override
-	public boolean supportsIfExistsBeforeTableName() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsTupleDistinctCounts() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsOffsetInSubquery() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsTemporaryTables() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsWindowFunctions() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsWindowFrames() {
+	public WindowFunctionSupport getWindowFunctionSupport() {
 		// CUBRID has window functions but no 'over' frame clause (rows/range)
-		return false;
+		return WindowFunctionSupport.builder()
+				.features(
+						WindowFunctionSupport.Feature.WINDOW_FUNCTIONS,
+						WindowFunctionSupport.Feature.PARTITION_BY
+				)
+				.build();
 	}
 
 	@Override
-	public boolean supportsWithClauseInSubquery() {
-		return true;
+	public CteSupport getCteSupport() {
+		return CteSupport.builder()
+				.placement( CteSupport.Placement.SUBQUERY )
+				.recursiveFeatures( CteSupport.RecursiveFeature.RECURSIVE )
+				.mutationFeatures( CteSupport.MutationFeature.NON_QUERY )
+				.build();
 	}
 
 	@Override
-	public boolean supportsNestedWithClause() {
-		//pinned false: derives from supportsWithClauseInSubquery(), but CUBRID rejects a with clause nested in another CTE
-		return false;
+	public PredicateSupport getPredicateSupport() {
+		return PredicateSupport.builder( super.getPredicateSupport() )
+				.capability( PredicateSupport.Capability.TRUTHNESS, true )
+				.build();
 	}
 
 	@Override
-	public boolean supportsRecursiveCTE() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsNonQueryWithCTE() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsIsTrue() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsValuesList() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsAlterColumnType() {
-		return true;
+	public ValuesListSupport getValuesListSupport() {
+		return ValuesListSupport.STANDARD;
 	}
 
 	//CUBRID cannot change only the column type, so emit the full column definition
 	@Override
-	public String getAlterColumnTypeString(String columnName, String columnType, String columnDefinition) {
-		return "modify column " + columnName + " " + columnDefinition.trim();
+	@SPI({ USE, IMPLEMENT })
+	public String alterColumnType(AlterColumnTypeRequest request) {
+		return "modify column " + request.columnName() + " " + request.columnDefinition().trim();
 	}
 
 	@Override
-	public boolean canCreateSchema() {
-		return false;
+	@SPI({ IMPLEMENT, SUPPLY })
+	public NamespaceSupport getNamespaceSupport() {
+		return NamespaceSupports.none();
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public int getMaxIdentifierLength() {
 		return 254;
 	}
 
 	@Override
-	public NullOrdering getNullOrdering() {
-		return NullOrdering.SMALLEST;
+	public NullOrderingSupport getNullOrderingSupport() {
+		return NullOrderingSupport.builder( super.getNullOrderingSupport() )
+				.defaultOrdering( NullOrdering.SMALLEST )
+				.build();
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public SqlAstTranslatorFactory getSqlAstTranslatorFactory() {
 		return new StandardSqlAstTranslatorFactory() {
 			@Override
-			protected <T extends JdbcOperation> SqlAstTranslator<T> buildTranslator(
-					SessionFactoryImplementor sessionFactory, Statement statement) {
-				return new CUBRIDSqlAstTranslator<>( sessionFactory, statement );
+			protected <S extends Statement, T extends JdbcOperation> SqlAstTranslator<T> createTranslator(
+					SqlAstTranslationRequest<S, T> request) {
+				return new CUBRIDSqlAstTranslator<>( request );
 			}
 		};
 	}
@@ -467,12 +525,8 @@ public class CUBRIDDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsPartitionBy() {
-		return true;
-	}
-
-	@Override
-	public void appendDatetimeFormat(SqlAppender appender, String format) {
+	@SPI({ USE, IMPLEMENT })
+	public void appendFormat(SqlAppender appender, String format) {
 		//I do not know if CUBRID supports FM, but it
 		//seems that it does pad by default, so it needs it!
 		appender.appendSql(
@@ -488,7 +542,8 @@ public class CUBRIDDialect extends Dialect {
 	}
 
 	@Override
-	public long getFractionalSecondPrecisionInNanos() {
+	@SPI({ USE, IMPLEMENT })
+	public long fractionalSecondPrecisionInNanos() {
 		return 1_000_000; //milliseconds
 	}
 
@@ -507,6 +562,7 @@ public class CUBRIDDialect extends Dialect {
 	 * redefined to include milliseconds.
 	 */
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String extractPattern(TemporalUnit unit) {
 		return switch (unit) {
 			case SECOND -> "(second(?2)+extract(millisecond from ?2)/1e3)";
@@ -519,11 +575,13 @@ public class CUBRIDDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public TimeZoneSupport getTimeZoneSupport() {
 		return TimeZoneSupport.NATIVE;
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
 		return switch (unit) {
 			case NANOSECOND -> "adddate(?3,interval (?2)/1e6 millisecond)";
@@ -533,6 +591,7 @@ public class CUBRIDDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
 		StringBuilder pattern = new StringBuilder();
 		switch ( unit ) {
@@ -596,40 +655,23 @@ public class CUBRIDDialect extends Dialect {
 	}
 
 	@Override
-	public String getDual() {
+	public SingleRowTableSupport getSingleRowTableSupport() {
 		//TODO: is this really needed?
 		//TODO: would "from table({0})" be better?
-		return "db_root";
+		final String tableExpression = "db_root";
+		return SingleRowTableSupport.builder( super.getSingleRowTableSupport() )
+				.tableExpression( tableExpression )
+				.selectOnlyFromClause( " from " + tableExpression )
+				.build();
 	}
 
 	@Override
-	public String getFromDualForSelectOnly() {
-		return " from " + getDual();
-	}
-
-	@Override
-	public boolean supportsRowValueConstructorSyntax() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsRowValueConstructorGtLtSyntax() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsRowValueConstructorSyntaxInInList() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsRowValueConstructorSyntaxInInSubQuery() {
-		return false;
+	public RowValueSupport getRowValueSupport() {
+		return RowValueSupport.builder( super.getRowValueSupport() )
+				.feature( RowValueSupport.Feature.ORDERING_COMPARISON, false )
+				.feature( RowValueSupport.Feature.IN_SUBQUERY, false )
+				.feature( RowValueSupport.Feature.QUANTIFIED_COMPARISON, false )
+				.build();
 	}
 
 }

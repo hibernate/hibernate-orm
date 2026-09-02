@@ -4,6 +4,7 @@
  */
 package org.hibernate.dialect;
 
+
 import org.hibernate.Internal;
 import org.hibernate.internal.log.SubSystemLogging;
 

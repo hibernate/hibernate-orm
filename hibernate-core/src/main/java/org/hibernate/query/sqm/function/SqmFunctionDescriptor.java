@@ -5,6 +5,7 @@
 package org.hibernate.query.sqm.function;
 
 import jakarta.annotation.Nullable;
+import org.hibernate.SPI;
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
@@ -16,75 +17,35 @@ import java.util.List;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.SUPPLY;
+import static org.hibernate.SPI.Role.USE;
 
-/**
- * A factory for SQM nodes representing invocations of a certain
- * named function.
- * <p>
- * When a function call is encountered in the text of an HQL query,
- * a {@code SqmFunctionDescriptor} for the given name is obtained
- * from the {@link SqmFunctionRegistry}, and the
- * {@link #generateSqmExpression} method is called with SQM nodes
- * representing the invocation arguments. It is the responsibility
- * of the {@code SqmFunctionDescriptor} to produce a subtree of SQM
- * nodes representing the function invocation.
- * <p>
- * The resulting subtree might be quite complex, since the
- * {@code SqmFunctionDescriptor} is permitted to perform syntactic
- * de-sugaring. On the other hand, {@link #generateSqmExpression}
- * returns {@link SelfRenderingSqmFunction}, which is an object
- * that is permitted to take over the logic of producing the
- * SQL AST subtree, so de-sugaring may also be performed there.
- * <p>
- * User-written function descriptors may be contributed via a
- * {@link org.hibernate.boot.model.FunctionContributor} or by
- * calling {@link org.hibernate.cfg.Configuration#addSqlFunction}.
- * The {@link SqmFunctionRegistry} exposes methods which simplify
- * the definition of a function, including
- * {@link SqmFunctionRegistry#namedDescriptorBuilder(String)} and
- * {@link SqmFunctionRegistry#patternAggregateDescriptorBuilder(String, String)}.
- * <p>
- * For example, this code registers a function named {@code prefixes()}:
- * <pre>
- * Configuration config = ... ;
- * config.addSqlFunction("prefixes",
- *         new SqmFunctionDescriptor() {
- *             &#064;Override
- *             public &lt;T&gt; SelfRenderingSqmFunction&lt;T&gt; generateSqmExpression(
- *                     List&lt;? extends SqmTypedNode&lt;?&gt;&gt; arguments,
- *                     ReturnableType&lt;T&gt; impliedResultType,
- *                     QueryEngine queryEngine) {
- *                 final SqmFunctionRegistry registry = queryEngine.getSqmFunctionRegistry();
- *                 final TypeConfiguration types = queryEngine.getTypeConfiguration();
- *                 return registry.patternDescriptorBuilder("prefix", "(left(?1, character_length(?2)) = ?2)" )
- *                         .setExactArgumentCount(2)
- *                         .setParameterTypes(FunctionParameterType.STRING, FunctionParameterType.STRING)
- *                         .setInvariantType(types.standardBasicTypeForJavaType(Boolean.class))
- *                         .descriptor()
- *                         .generateSqmExpression(arguments, impliedResultType, queryEngine);
- *             }
- *
- *             &#064;Override
- *             public ArgumentsValidator getArgumentsValidator() {
- *                 return new ArgumentTypesValidator(
- *                         StandardArgumentsValidators.exactly(2),
- *                         FunctionParameterType.STRING, FunctionParameterType.STRING
- *                 );
- *             }
- *         }
- * );
- * </pre>
- * The function may be called like this: {@code prefixes('Hibernate',book.title)}.
- *
- * @see org.hibernate.query.sqm.function.SqmFunctionRegistry
- * @see org.hibernate.cfg.Configuration#addSqlFunction
- * @see org.hibernate.boot.MetadataBuilder#applySqlFunction
- * @see org.hibernate.boot.model.FunctionContributor
- *
- * @author David Channon
- * @author Steve Ebersole
- * @author Gavin King
- */
+/// Produces SQM nodes for invocations of a named HQL function.
+///
+/// Hibernate obtains a descriptor from the [SqmFunctionRegistry] and invokes
+/// [#generateSqmExpression] with the SQM arguments and implied result type. A
+/// custom descriptor may desugar the invocation into other SQM nodes or return
+/// a [SelfRenderingSqmFunction] which owns SQL AST rendering.
+///
+/// Prefer registry builders for simple named or pattern functions. Implement a
+/// descriptor when custom validation, SQM generation, type inference, or SQL
+/// rendering is required, and register it during function bootstrap. A
+/// registered descriptor must be safe for reuse and must not retain the
+/// boot-scoped contribution callback or mutable registry.
+///
+/// @see SqmFunctionRegistry#register(String, SqmFunctionDescriptor)
+/// @see SqmFunctionRegistry#wrapInJdbcEscape(String, SqmFunctionDescriptor)
+/// @see org.hibernate.cfg.Configuration#addSqlFunction(String, SqmFunctionDescriptor)
+/// @see org.hibernate.boot.MetadataBuilder#applySqlFunction(String, SqmFunctionDescriptor)
+/// @see org.hibernate.boot.SessionFactoryBuilder#applySqlFunction(String, SqmFunctionDescriptor)
+/// @see org.hibernate.boot.model.FunctionContributor
+/// @see org.hibernate.dialect.Dialect#initializeFunctionRegistry(org.hibernate.boot.model.FunctionContributions)
+///
+/// @author David Channon
+/// @author Steve Ebersole
+/// @author Gavin King
+@SPI({ USE, IMPLEMENT, SUPPLY })
 public interface SqmFunctionDescriptor {
 	/**
 	 * Instantiate this template with the given arguments and

@@ -8,8 +8,8 @@ import java.util.Locale;
 
 import org.hibernate.sql.model.EntityMutationOperationGroup;
 import org.hibernate.persister.entity.mutation.EntityMutationTarget;
-import org.hibernate.sql.model.MutationOperation;
-import org.hibernate.sql.model.MutationType;
+import org.hibernate.sql.spi.mutation.MutationOperation;
+import org.hibernate.sql.spi.mutation.MutationType;
 
 public class EntityMutationOperationGroupStandard implements EntityMutationOperationGroup {
 

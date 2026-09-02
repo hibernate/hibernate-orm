@@ -158,7 +158,7 @@ public class FloatJavaType extends AbstractClassJavaType<Float> implements Primi
 		return jdbcType.isFloat()
 				// this is usually the number of *binary* digits
 				// in a single-precision FP number
-				? dialect.getFloatPrecision()
+				? dialect.getTypeSizingProfile().floatPrecision()
 				// this is the number of decimal digits in a Java float
 				: 8;
 	}

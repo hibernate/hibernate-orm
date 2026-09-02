@@ -4,6 +4,7 @@
  */
 package org.hibernate.dialect;
 
+
 /**
  * Details about the underlying database, as understood by a Dialect.
  *

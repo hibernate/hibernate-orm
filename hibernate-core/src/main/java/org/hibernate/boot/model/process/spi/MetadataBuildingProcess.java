@@ -4,6 +4,7 @@
  */
 package org.hibernate.boot.model.process.spi;
 
+
 import java.io.InputStream;
 import java.sql.Types;
 import java.time.Duration;
@@ -753,7 +754,7 @@ public class MetadataBuildingProcess {
 				options.getServiceRegistry()
 						.requireService( JdbcServices.class )
 						.getDialect();
-		dialect.contribute( typeContributions, options.getServiceRegistry() );
+		dialect.contributeTypes( typeContributions, options.getServiceRegistry() );
 
 		// add TypeContributor contributed types.
 		for ( var typeContributor : sortedTypeContributors( classLoaderService ) ) {

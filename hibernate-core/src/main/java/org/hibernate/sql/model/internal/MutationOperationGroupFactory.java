@@ -5,11 +5,11 @@
 package org.hibernate.sql.model.internal;
 
 import org.hibernate.persister.entity.mutation.EntityMutationTarget;
-import org.hibernate.sql.model.MutationOperation;
+import org.hibernate.sql.spi.mutation.MutationOperation;
 import org.hibernate.sql.model.MutationOperationGroup;
-import org.hibernate.sql.model.MutationTarget;
-import org.hibernate.sql.model.MutationType;
-import org.hibernate.sql.model.ast.MutationGroup;
+import org.hibernate.sql.spi.mutation.MutationTarget;
+import org.hibernate.sql.spi.mutation.MutationType;
+import org.hibernate.sql.ast.spi.model.MutationGroup;
 
 public final class MutationOperationGroupFactory {
 

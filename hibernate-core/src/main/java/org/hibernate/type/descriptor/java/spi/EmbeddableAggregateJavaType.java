@@ -4,6 +4,7 @@
  */
 package org.hibernate.type.descriptor.java.spi;
 
+
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.AbstractClassJavaType;

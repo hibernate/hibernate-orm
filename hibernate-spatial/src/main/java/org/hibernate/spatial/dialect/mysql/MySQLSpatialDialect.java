@@ -4,6 +4,7 @@
  */
 package org.hibernate.spatial.dialect.mysql;
 
+
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.spatial.SpatialDialect;
 

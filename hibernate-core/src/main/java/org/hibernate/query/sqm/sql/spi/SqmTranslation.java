@@ -9,10 +9,10 @@ import java.util.Map;
 
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.query.sqm.tree.spi.expression.SqmParameter;
-import org.hibernate.sql.ast.spi.FromClauseAccess;
-import org.hibernate.sql.ast.spi.SqlExpressionResolver;
-import org.hibernate.sql.ast.tree.Statement;
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
+import org.hibernate.sql.ast.spi.creation.FromClauseAccess;
+import org.hibernate.sql.ast.spi.creation.SqlExpressionResolver;
+import org.hibernate.sql.ast.spi.Statement;
+import org.hibernate.sql.ast.spi.query.expression.JdbcParameter;
 
 /**
  * Information obtained from the interpretation of an SqmStatement

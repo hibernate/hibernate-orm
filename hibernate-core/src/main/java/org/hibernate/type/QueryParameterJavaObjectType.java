@@ -4,6 +4,9 @@
  */
 package org.hibernate.type;
 
+import org.hibernate.Internal;
+
+@Internal
 public class QueryParameterJavaObjectType extends JavaObjectType {
 
 	public static final QueryParameterJavaObjectType INSTANCE = new QueryParameterJavaObjectType();

@@ -4,14 +4,16 @@
  */
 package org.hibernate.dialect.lock.internal;
 
+import jakarta.persistence.Timeout;
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
+
 import jakarta.persistence.PessimisticLockScope;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.dialect.lock.LockingStrategy;
-import org.hibernate.dialect.lock.LockingStrategyException;
-import org.hibernate.dialect.lock.PessimisticEntityLockException;
+import org.hibernate.dialect.lock.spi.LockingStrategy;
+import org.hibernate.dialect.lock.spi.LockingStrategyException;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.exception.LockTimeoutException;
@@ -22,12 +24,12 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.sqm.mutation.internal.SqmMutationStrategyHelper;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.spi.SimpleFromClauseAccessImpl;
-import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
-import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
-import org.hibernate.sql.ast.tree.select.QuerySpec;
-import org.hibernate.sql.ast.tree.select.SelectStatement;
+import org.hibernate.sql.ast.spi.creation.SimpleFromClauseAccessImpl;
+import org.hibernate.sql.ast.spi.creation.SqlAliasBaseManager;
+import org.hibernate.sql.ast.spi.query.from.TableGroup;
+import org.hibernate.sql.ast.spi.query.predicate.ComparisonPredicate;
+import org.hibernate.sql.ast.spi.query.select.QuerySpec;
+import org.hibernate.sql.ast.spi.query.select.SelectStatement;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.internal.SqlTypedMappingJdbcParameter;
@@ -64,14 +66,14 @@ public class SqlAstBasedLockingStrategy implements LockingStrategy {
 			Object id,
 			Object version,
 			Object object,
-			int timeout,
+			Timeout timeout,
 			SharedSessionContractImplementor session)
 				throws StaleObjectStateException, LockingStrategyException {
 		final var factory = session.getFactory();
 
 		final var lockOptions = new LockOptions( lockMode );
 		lockOptions.setScope( lockScope );
-		lockOptions.setTimeOut( timeout );
+		lockOptions.setTimeOut( timeout.milliseconds() );
 
 		final var entityPath = new NavigablePath( entityToLock.getRootPathName() );
 
@@ -160,7 +162,7 @@ public class SqlAstBasedLockingStrategy implements LockingStrategy {
 		final var selectStatement = new SelectStatement( rootQuerySpec, List.of( idResult ) );
 		final JdbcSelect selectOperation =
 				session.getDialect().getSqlAstTranslatorFactory()
-						.buildSelectTranslator( factory, selectStatement )
+						.buildTranslator( new SqlAstTranslationRequest.Select( factory, selectStatement ) )
 						.translate( jdbcParameterBindings, sqlAstCreationState );
 
 		final var lockingExecutionContext = new LockingExecutionContext( session );

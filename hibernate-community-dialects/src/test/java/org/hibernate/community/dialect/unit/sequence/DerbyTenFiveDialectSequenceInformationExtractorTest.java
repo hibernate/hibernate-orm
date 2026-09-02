@@ -8,8 +8,6 @@ import org.hibernate.community.dialect.DerbyLegacyDialect;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.orm.test.dialect.unit.sequence.AbstractSequenceInformationExtractorTest;
-import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;
-import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 
@@ -25,13 +23,13 @@ public class DerbyTenFiveDialectSequenceInformationExtractorTest extends Abstrac
 	}
 
 	@Override
-	public String expectedQuerySequencesString() {
-		return null;
+	public boolean expectsSequenceMetadata() {
+		return false;
 	}
 
 	@Override
-	public Class<? extends SequenceInformationExtractor> expectedSequenceInformationExtractor() {
-		return SequenceInformationExtractorNoOpImpl.class;
+	public String expectedQuerySequencesString() {
+		return null;
 	}
 
 }

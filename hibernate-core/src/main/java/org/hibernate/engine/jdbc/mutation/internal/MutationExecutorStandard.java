@@ -26,14 +26,14 @@ import org.hibernate.generator.values.GeneratedValues;
 import org.hibernate.generator.values.GeneratedValuesMutationDelegate;
 import org.hibernate.persister.entity.mutation.EntityMutationTarget;
 import org.hibernate.sql.model.EntityMutationOperationGroup;
-import org.hibernate.sql.model.MutationOperation;
+import org.hibernate.sql.spi.mutation.MutationOperation;
 import org.hibernate.sql.model.MutationOperationGroup;
-import org.hibernate.sql.model.MutationType;
-import org.hibernate.sql.model.PreparableMutationOperation;
-import org.hibernate.sql.model.SelfExecutingUpdateOperation;
-import org.hibernate.sql.model.TableMapping;
-import org.hibernate.sql.model.ValuesAnalysis;
-import org.hibernate.sql.model.jdbc.JdbcValueDescriptor;
+import org.hibernate.sql.spi.mutation.MutationType;
+import org.hibernate.sql.spi.mutation.jdbc.PreparableMutationOperation;
+import org.hibernate.sql.spi.mutation.SelfExecutingUpdateOperation;
+import org.hibernate.sql.spi.mutation.TableMapping;
+import org.hibernate.sql.spi.mutation.ValuesAnalysis;
+import org.hibernate.sql.spi.mutation.jdbc.JdbcValueDescriptor;
 
 import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
 

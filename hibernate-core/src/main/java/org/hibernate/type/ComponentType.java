@@ -4,6 +4,8 @@
  */
 package org.hibernate.type;
 
+import org.hibernate.Internal;
+
 import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.sql.CallableStatement;
@@ -43,6 +45,7 @@ import static org.hibernate.metamodel.mapping.EntityDiscriminatorMapping.DISCRIM
  *
  * @author Gavin King
  */
+@Internal
 public class ComponentType extends AbstractType
 		implements CompositeTypeImplementor, ProcedureParameterExtractionAware {
 	private final Class<?> componentClass;
@@ -88,7 +91,7 @@ public class ComponentType extends AbstractType
 		final boolean supportsCascadeDelete =
 				component.getBuildingContext().getMetadataCollector()
 						.getDatabase().getDialect()
-						.supportsCascadeDelete();
+						.getForeignKeySupport().supportsOnDeleteAction( org.hibernate.annotations.OnDeleteAction.CASCADE );
 
 		int i = 0;
 		for ( var property : component.getProperties() ) {

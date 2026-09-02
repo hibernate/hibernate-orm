@@ -8,10 +8,14 @@ import java.util.Map;
 
 import jakarta.annotation.Nonnull;
 import org.hibernate.HibernateException;
+import org.hibernate.action.queue.spi.QueueType;
 import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.engine.jdbc.mutation.spi.MutationExecutorService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
+
+import static org.hibernate.action.internal.ActionLogging.ACTION_LOGGER;
+import static org.hibernate.cfg.FlushSettings.FLUSH_QUEUE_TYPE;
 
 /**
  * Initiator for the {@link MutationExecutorService} service
@@ -42,11 +46,14 @@ public class MutationExecutorServiceInitiator implements StandardServiceInitiato
 
 		if ( custom == null ) {
 			final MutationExecutorService discovered = discover( classLoaderService );
-			return discovered != null
-					? discovered
-					: createStandardService( configurationValues );
+			if ( discovered != null ) {
+				warnIfUnused( discovered, configurationValues );
+				return discovered;
+			}
+			return createStandardService( configurationValues );
 		}
 		else if ( custom instanceof MutationExecutorService mutationExecutorService ) {
+			warnIfUnused( mutationExecutorService, configurationValues );
 			return mutationExecutorService;
 		}
 		else {
@@ -60,7 +67,9 @@ public class MutationExecutorServiceInitiator implements StandardServiceInitiato
 			}
 
 			try {
-				return customImplClass.getConstructor().newInstance();
+				final MutationExecutorService service = customImplClass.getConstructor().newInstance();
+				warnIfUnused( service, configurationValues );
+				return service;
 			}
 			catch (NoSuchMethodException e) {
 				throw new HibernateException(
@@ -71,6 +80,14 @@ public class MutationExecutorServiceInitiator implements StandardServiceInitiato
 				throw new HibernateException(
 						"Unable to instantiate custom MutationExecutorService : " + customImplClass.getName(), e );
 			}
+		}
+	}
+
+	private static void warnIfUnused(
+			MutationExecutorService service,
+			Map<String, Object> configurationValues) {
+		if ( QueueType.fromSetting( configurationValues.get( FLUSH_QUEUE_TYPE ) ) == QueueType.GRAPH ) {
+			ACTION_LOGGER.customMutationExecutorServiceUnused( service.getClass().getName() );
 		}
 	}
 

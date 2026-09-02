@@ -4,6 +4,8 @@
  */
 package org.hibernate.type;
 
+import org.hibernate.SPI;
+
 import java.util.Objects;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -20,6 +22,7 @@ import static java.lang.Character.toUpperCase;
  * @author Jordan Gigov
  * @author Christian Beikov
  */
+@SPI
 public final class BasicArrayType<T,E>
 		extends AbstractSingleColumnStandardBasicType<T>
 		implements AdjustableBasicType<T>, BasicPluralType<T, E> {

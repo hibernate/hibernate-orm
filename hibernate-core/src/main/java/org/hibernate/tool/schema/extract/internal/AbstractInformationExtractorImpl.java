@@ -31,6 +31,7 @@ import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.tool.schema.extract.internal.ForeignKeyInformationImpl.ColumnReferenceMappingImpl;
 import org.hibernate.tool.schema.extract.spi.ColumnInformation;
 import org.hibernate.tool.schema.extract.spi.ExtractionContext;
+import org.hibernate.tool.schema.extract.spi.ForeignKeyMetadataPolicy;
 import org.hibernate.tool.schema.extract.spi.ForeignKeyInformation;
 import org.hibernate.tool.schema.extract.spi.IndexInformation;
 import org.hibernate.tool.schema.extract.spi.InformationExtractor;
@@ -69,10 +70,18 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 
 	private String currentCatalogFilter;
 	private String currentSchemaFilter;
+	private final ForeignKeyMetadataPolicy foreignKeyMetadataPolicy;
 
 
 	public AbstractInformationExtractorImpl(ExtractionContext extractionContext) {
+		this( extractionContext, ForeignKeyMetadataPolicy.importedKeysOnly() );
+	}
+
+	public AbstractInformationExtractorImpl(
+			ExtractionContext extractionContext,
+			ForeignKeyMetadataPolicy foreignKeyMetadataPolicy) {
 		this.extractionContext = extractionContext;
+		this.foreignKeyMetadataPolicy = foreignKeyMetadataPolicy;
 		final var configService =
 				extractionContext.getServiceRegistry()
 						.requireService( ConfigurationService.class );
@@ -1462,12 +1471,12 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 						process( tableInformation, resultSet, builders );
 						return null;
 					} );
-			final var dialect = getJdbcEnvironment().getDialect();
-			if ( dialect.useCrossReferenceForeignKeys() ) {
+			if ( foreignKeyMetadataPolicy.mode()
+					== ForeignKeyMetadataPolicy.Mode.IMPORTED_KEYS_AND_CROSS_REFERENCE ) {
 				processCrossReferenceResultSet(
 						null,
 						null,
-						dialect.getCrossReferenceParentTableFilter(),
+						foreignKeyMetadataPolicy.crossReferenceParentTableFilter(),
 						catalogFilter,
 						schemaFilter,
 						table,

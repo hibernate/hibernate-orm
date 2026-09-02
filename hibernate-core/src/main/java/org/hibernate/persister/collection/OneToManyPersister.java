@@ -4,6 +4,8 @@
  */
 package org.hibernate.persister.collection;
 
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
+
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
@@ -38,19 +40,19 @@ import org.hibernate.persister.collection.mutation.WriteIndexCoordinatorStandard
 import org.hibernate.persister.entity.UnionSubclassEntityPersister;
 import org.hibernate.persister.filter.FilterAliasGenerator;
 import org.hibernate.persister.state.spi.StateManagement;
-import org.hibernate.sql.ast.spi.SqlAstCreationState;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
-import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.predicate.Predicate;
-import org.hibernate.sql.model.ast.ColumnValueBinding;
-import org.hibernate.sql.model.ast.ColumnValueParameterList;
-import org.hibernate.sql.model.ast.ColumnWriteFragment;
-import org.hibernate.sql.model.ast.MutatingTableReference;
-import org.hibernate.sql.model.ast.RestrictedTableMutation;
-import org.hibernate.sql.model.ast.TableUpdate;
-import org.hibernate.sql.model.ast.builder.TableUpdateBuilderStandard;
-import org.hibernate.sql.model.internal.TableUpdateStandard;
-import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
+import org.hibernate.sql.ast.spi.creation.SqlAstCreationState;
+import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
+import org.hibernate.sql.ast.spi.query.from.TableGroup;
+import org.hibernate.sql.ast.spi.query.predicate.Predicate;
+import org.hibernate.sql.ast.spi.model.ColumnValueBinding;
+import org.hibernate.sql.ast.spi.model.ColumnValueParameterList;
+import org.hibernate.sql.ast.spi.model.ColumnWriteFragment;
+import org.hibernate.sql.ast.spi.model.MutatingTableReference;
+import org.hibernate.sql.ast.spi.model.RestrictedTableMutation;
+import org.hibernate.sql.ast.spi.model.TableUpdate;
+import org.hibernate.sql.ast.spi.model.builder.TableUpdateBuilderStandard;
+import org.hibernate.sql.ast.spi.model.TableUpdateStandard;
+import org.hibernate.sql.spi.mutation.jdbc.JdbcMutationOperation;
 
 import java.util.Iterator;
 import java.util.List;
@@ -59,7 +61,7 @@ import java.util.function.Consumer;
 import static org.hibernate.internal.util.collections.ArrayHelper.isAnyTrue;
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 import static org.hibernate.persister.collection.mutation.RowMutationOperations.DEFAULT_RESTRICTOR;
-import static org.hibernate.sql.model.ast.builder.TableUpdateBuilder.NULL;
+import static org.hibernate.sql.ast.spi.model.builder.TableUpdateBuilder.NULL;
 
 /**
  * A {@link CollectionPersister} for {@linkplain jakarta.persistence.OneToMany
@@ -379,13 +381,13 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 
 	private JdbcMutationOperation generateDeleteRowOperation(MutatingTableReference tableReference) {
 		return getSqlAstTranslatorFactory()
-				.buildModelMutationTranslator( generateDeleteRowAst( tableReference ), getFactory() )
+				.buildTranslator( new SqlAstTranslationRequest.ModelMutation<>( getFactory(), generateDeleteRowAst( tableReference ) ) )
 				.translate( null, MutationQueryOptions.INSTANCE );
 	}
 
 	public RestrictedTableMutation<JdbcMutationOperation> generateDeleteRowAst(MutatingTableReference tableReference) {
 		// note that custom SQL delete row details are handled by CollectionRowUpdateBuilder
-		final var updateBuilder = new org.hibernate.sql.model.ast.builder.CollectionRowDeleteByUpdateSetNullBuilder(
+		final var updateBuilder = new org.hibernate.sql.ast.internal.model.builder.CollectionRowDeleteByUpdateSetNullBuilder(
 				this,
 				tableReference,
 				getFactory(),

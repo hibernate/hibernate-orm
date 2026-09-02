@@ -6,7 +6,7 @@ package org.hibernate.community.dialect.sequence;
 
 import org.hibernate.MappingException;
 import org.hibernate.community.dialect.TiDBDialect;
-import org.hibernate.dialect.sequence.SequenceSupport;
+import org.hibernate.dialect.sequence.spi.SequenceSupport;
 
 /**
  * Sequence support for {@link TiDBDialect}.

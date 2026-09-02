@@ -7,27 +7,29 @@ package org.hibernate.community.dialect;
 import java.util.List;
 import java.util.function.Consumer;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.util.collections.Stack;
+import org.hibernate.dialect.sql.ast.spi.PaginationRenderingPlan;
+import org.hibernate.dialect.sql.ast.spi.PaginationRenderingSupport;
+import org.hibernate.dialect.sql.ast.spi.QueryMutationRenderingSupport;
+import org.hibernate.dialect.sql.ast.spi.StandardQueryMutationRenderingSupport;
 import org.hibernate.query.sqm.ComparisonOperator;
-import org.hibernate.sql.ast.Clause;
-import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
-import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
-import org.hibernate.sql.ast.spi.SqlSelection;
-import org.hibernate.sql.ast.tree.Statement;
-import org.hibernate.sql.ast.tree.delete.DeleteStatement;
-import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
-import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
-import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.Literal;
-import org.hibernate.sql.ast.tree.expression.SqlTuple;
-import org.hibernate.sql.ast.tree.expression.Summarization;
-import org.hibernate.sql.ast.tree.from.NamedTableReference;
-import org.hibernate.sql.ast.tree.predicate.BooleanExpressionPredicate;
-import org.hibernate.sql.ast.tree.predicate.InListPredicate;
-import org.hibernate.sql.ast.tree.select.QueryPart;
-import org.hibernate.sql.ast.tree.update.Assignment;
-import org.hibernate.sql.ast.tree.update.UpdateStatement;
+import org.hibernate.sql.ast.spi.translation.Clause;
+import org.hibernate.sql.ast.spi.translation.SqlAstNodeRenderingMode;
+import org.hibernate.dialect.sql.ast.spi.AbstractSqlAstTranslator;
+import org.hibernate.sql.ast.spi.query.select.SqlSelection;
+import org.hibernate.sql.ast.spi.Statement;
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
+import org.hibernate.sql.ast.spi.query.expression.CaseSearchedExpression;
+import org.hibernate.sql.ast.spi.query.expression.CaseSimpleExpression;
+import org.hibernate.sql.ast.spi.query.expression.Expression;
+import org.hibernate.sql.ast.spi.query.expression.Literal;
+import org.hibernate.sql.ast.spi.query.expression.SqlTuple;
+import org.hibernate.sql.ast.spi.query.expression.Summarization;
+import org.hibernate.sql.ast.spi.query.from.NamedTableReference;
+import org.hibernate.sql.ast.spi.query.predicate.BooleanExpressionPredicate;
+import org.hibernate.sql.ast.spi.query.predicate.InListPredicate;
+import org.hibernate.sql.ast.spi.query.select.QueryPart;
+import org.hibernate.sql.ast.spi.query.update.Assignment;
+import org.hibernate.sql.ast.spi.query.update.UpdateStatement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 
 /**
@@ -37,63 +39,25 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
  */
 public class DerbyLegacySqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstTranslator<T> {
 
-	public DerbyLegacySqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
-		super( sessionFactory, statement );
+	public DerbyLegacySqlAstTranslator(SqlAstTranslationRequest<? extends Statement, T> request) {
+		super( request );
 	}
 
 	@Override
-	protected void visitDeleteStatementOnly(DeleteStatement statement) {
-		if ( hasNonTrivialFromClause( statement.getFromClause() ) ) {
-			appendSql( "delete from " );
-			final Stack<Clause> clauseStack = getClauseStack();
-			try {
-				clauseStack.push( Clause.DELETE );
-				super.renderDmlTargetTableExpression( statement.getTargetTable() );
-				append( " dml_target_" );
-			}
-			finally {
-				clauseStack.pop();
-			}
-			visitWhereClause( determineWhereClauseRestrictionWithJoinEmulation( statement, "dml_target_" ) );
-			visitReturningColumns( statement.getReturningColumns() );
-		}
-		else {
-			super.visitDeleteStatementOnly( statement );
-		}
+	protected QueryMutationRenderingSupport getQueryMutationRenderingSupport() {
+		return StandardQueryMutationRenderingSupport.withTargetAliasedScalarSubquery( "dml_target_" );
 	}
 
 	@Override
-	protected void visitUpdateStatementOnly(UpdateStatement statement) {
-		if ( hasNonTrivialFromClause( statement.getFromClause() ) ) {
-			appendSql( "update " );
-			final Stack<Clause> clauseStack = getClauseStack();
-			try {
-				clauseStack.push( Clause.UPDATE );
-				super.renderDmlTargetTableExpression( statement.getTargetTable() );
-				append( " dml_target_" );
-			}
-			finally {
-				clauseStack.pop();
-			}
-			renderSetClause( statement.getAssignments() );
-			visitWhereClause( determineWhereClauseRestrictionWithJoinEmulation( statement, "dml_target_" ) );
-			visitReturningColumns( statement.getReturningColumns() );
-		}
-		else {
-			super.visitUpdateStatementOnly( statement );
-		}
-	}
-
-	@Override
-	protected void visitSetAssignment(Assignment assignment) {
+	protected void renderSetAssignment(Assignment assignment) {
 		final Statement currentStatement = getStatementStack().getCurrent();
 		final UpdateStatement statement;
 		if ( currentStatement instanceof UpdateStatement
 				&& hasNonTrivialFromClause( ( statement = (UpdateStatement) currentStatement ).getFromClause() ) ) {
-			visitSetAssignmentEmulateJoin( assignment, statement );
+			renderSetAssignmentEmulateJoin( assignment, statement );
 		}
 		else {
-			super.visitSetAssignment( assignment );
+			super.renderSetAssignment( assignment );
 		}
 	}
 
@@ -175,15 +139,20 @@ public class DerbyLegacySqlAstTranslator<T extends JdbcOperation> extends Abstra
 	}
 
 	@Override
+	protected PaginationRenderingSupport getPaginationRenderingSupport() {
+		return request -> supportsOffsetFetchClause()
+				? new PaginationRenderingPlan.OffsetFetch( true )
+				: new PaginationRenderingPlan.None();
+	}
+
+	@Override
 	public void visitOffsetFetchClause(QueryPart queryPart) {
 		// Derby only supports the OFFSET and FETCH clause with ROWS
 		assertRowsOnlyFetchClauseType( queryPart );
-		if ( supportsOffsetFetchClause() ) {
-			renderOffsetFetchClause( queryPart, true );
-		}
-		else if ( !getClauseStack().isEmpty() ) {
+		if ( !supportsOffsetFetchClause() && !getClauseStack().isEmpty() ) {
 			throw new IllegalArgumentException( "Can't render offset and fetch clause for subquery" );
 		}
+		super.visitOffsetFetchClause( queryPart );
 	}
 
 	@Override
@@ -261,16 +230,6 @@ public class DerbyLegacySqlAstTranslator<T extends JdbcOperation> extends Abstra
 		else {
 			super.visitInListPredicate( inListPredicate );
 		}
-	}
-
-	@Override
-	protected boolean needsRowsToSkip() {
-		return !supportsOffsetFetchClause();
-	}
-
-	@Override
-	protected boolean needsMaxRows() {
-		return !supportsOffsetFetchClause();
 	}
 
 	private boolean supportsParameterOffsetFetchExpression() {

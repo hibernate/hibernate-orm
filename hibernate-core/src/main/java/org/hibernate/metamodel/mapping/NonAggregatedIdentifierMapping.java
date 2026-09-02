@@ -5,7 +5,7 @@
 package org.hibernate.metamodel.mapping;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.util.IndexedConsumer;
+import org.hibernate.spi.IndexedConsumer;
 import org.hibernate.metamodel.mapping.internal.IdClassEmbeddable;
 import org.hibernate.metamodel.mapping.internal.VirtualIdEmbeddable;
 import org.hibernate.sql.results.graph.FetchOptions;
@@ -31,11 +31,13 @@ public interface NonAggregatedIdentifierMapping extends CompositeIdentifierMappi
 	/**
 	 * The virtual-id representation of this id mapping
 	 */
+	@org.hibernate.Internal
 	VirtualIdEmbeddable getVirtualIdEmbeddable();
 
 	/**
 	 * The id-class representation of this id mapping
 	 */
+	@org.hibernate.Internal
 	IdClassEmbeddable getIdClassEmbeddable();
 
 	/**

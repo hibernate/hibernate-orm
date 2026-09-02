@@ -17,6 +17,7 @@ import org.hibernate.sql.exec.spi.ExecutionContext;
  *
  * @author Steve Ebersole
  */
+@org.hibernate.SPI({ org.hibernate.SPI.Role.USE, org.hibernate.SPI.Role.IMPLEMENT })
 public interface LoadingCollectionEntry {
 	/**
 	 * The descriptor for the collection being loaded

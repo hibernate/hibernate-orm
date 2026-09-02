@@ -12,6 +12,7 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.junit.jupiter.api.Test;
 
 import static org.hibernate.Hibernate.getLobHelper;
@@ -65,7 +66,8 @@ public class MixedTest {
 		Long did = doc.getId();
 		Long d2id = doc2.getId();
 
-		if ( !scope.getSessionFactory().getJdbcServices().getDialect().supportsExpectedLobUsagePattern() ) {
+		if ( !new DialectFeatureChecks.SupportsExpectedLobUsagePattern().apply(
+				scope.getSessionFactory().getJdbcServices().getDialect() ) ) {
 			SkipLog.reportSkip( "database/driver does not support expected LOB usage pattern", "LOB support" );
 			return;
 		}

@@ -7,12 +7,23 @@ package org.hibernate.sql.model;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 
+import org.hibernate.SPI;
+import org.hibernate.sql.spi.mutation.MutationOperation;
+import org.hibernate.sql.spi.mutation.MutationType;
+
+import static org.hibernate.SPI.Role.USE;
+
 /**
  * Group of {@link MutationOperation} references for a specific
  * logical operation (target + type)
  *
  * @author Steve Ebersole
+ *
+ * @deprecated This contract is used only by the legacy action queue. The graph-based
+ * action queue decomposes mutations into individual flush operations.
  */
+@Deprecated(since = "8.0", forRemoval = true)
+@SPI(USE)
 public interface MutationOperationGroup {
 
 	/**
@@ -23,7 +34,7 @@ public interface MutationOperationGroup {
 	/**
 	 * The model-part being mutated
 	 */
-	MutationTarget getMutationTarget();
+	org.hibernate.sql.spi.mutation.MutationTarget getMutationTarget();
 
 	/**
 	 * Number of operations in this group

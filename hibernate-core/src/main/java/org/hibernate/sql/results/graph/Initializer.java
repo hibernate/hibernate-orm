@@ -21,9 +21,14 @@ import jakarta.annotation.Nullable;
  * composite state.  Each step is performed on each initializer
  * before starting the next step.
  *
+ * @see FetchParent#createInitializer(InitializerParent, AssemblerCreationState)
+ * @see InitializerProducer#createInitializer(FetchParent, InitializerParent, AssemblerCreationState)
+ * @see DomainResultAssembler#getInitializer()
+ *
  * @author Steve Ebersole
  */
 @Incubating
+@org.hibernate.SPI({ org.hibernate.SPI.Role.USE, org.hibernate.SPI.Role.IMPLEMENT, org.hibernate.SPI.Role.SUPPLY })
 public interface Initializer<Data extends InitializerData> {
 
 	Initializer<?>[] EMPTY_ARRAY = new Initializer<?>[0];

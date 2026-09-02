@@ -13,6 +13,7 @@ import java.util.List;
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.generated.spi.GeneratedValuesSupport;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.EventType;
 import org.hibernate.generator.values.GeneratedValueBasicResultBuilder;
@@ -33,7 +34,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.results.internal.TableGroupImpl;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.tree.from.NamedTableReference;
+import org.hibernate.sql.ast.spi.query.from.NamedTableReference;
 import org.hibernate.sql.exec.internal.BaseExecutionContext;
 import org.hibernate.sql.results.internal.ResultsHelper;
 import org.hibernate.sql.results.internal.RowProcessingStateStandardImpl;
@@ -49,8 +50,8 @@ import static java.util.Collections.unmodifiableList;
 import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.internal.NaturalIdHelper.getNaturalIdPropertyNames;
 import static org.hibernate.pretty.MessageHelper.infoString;
-import static org.hibernate.sql.model.MutationType.INSERT;
-import static org.hibernate.sql.model.MutationType.UPDATE;
+import static org.hibernate.sql.spi.mutation.MutationType.INSERT;
+import static org.hibernate.sql.spi.mutation.MutationType.UPDATE;
 import static org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions.NO_OPTIONS;
 
 /**
@@ -290,8 +291,8 @@ public class GeneratedValuesHelper {
 	/**
 	 * Creates the {@link GeneratedValuesMutationDelegate delegate} used to retrieve
 	 * {@linkplain org.hibernate.generator.OnExecutionGenerator database generated values} on
-	 * mutation execution through e.g. {@link Dialect#supportsInsertReturning() insert ... returning}
-	 * syntax or the JDBC {@link Dialect#supportsInsertReturningGeneratedKeys() getGeneratedKeys()} API.
+	 * mutation execution through native returning or arbitrary JDBC generated
+	 * keys declared by {@link Dialect#getGeneratedValuesSupport()}.
 	 * <p>
 	 * If the current {@link Dialect} doesn't support any of the available delegates this method returns {@code null}.
 	 */
@@ -308,9 +309,10 @@ public class GeneratedValuesHelper {
 				timing == EventType.INSERT
 						&& persister.getRowIdMapping() != null;
 		final var dialect = factory.getJdbcServices().getDialect();
+		final var generatedValuesSupport = dialect.getGeneratedValuesSupport();
 		if ( hasRowId
-				&& dialect.supportsInsertReturning()
-				&& dialect.supportsInsertReturningRowId()
+				&& generatedValuesSupport.supports( GeneratedValuesSupport.Capability.INSERT_RETURNING )
+				&& generatedValuesSupport.supports( GeneratedValuesSupport.Capability.INSERT_RETURNING_ROW_ID )
 				&& noCustomSql( persister, timing ) ) {
 			// Special case for RowId on INSERT, since GetGeneratedKeysDelegate doesn't support it
 			// make InsertReturningDelegate the preferred method if the dialect supports it
@@ -320,7 +322,7 @@ public class GeneratedValuesHelper {
 			return null;
 		}
 		else if ( !hasFormula
-				&& dialect.supportsInsertReturningGeneratedKeys()
+				&& generatedValuesSupport.supports( GeneratedValuesSupport.Capability.ARBITRARY_GENERATED_KEYS )
 				&& factory.getSessionFactoryOptions().isGetGeneratedKeysEnabled() ) {
 			return new GetGeneratedKeysDelegate( persister, false, timing );
 		}
@@ -442,9 +444,12 @@ public class GeneratedValuesHelper {
 	}
 
 	private static boolean supportsReturning(Dialect dialect, EventType timing) {
-		return timing == EventType.INSERT
-				? dialect.supportsInsertReturning()
-				: dialect.supportsUpdateReturning();
+		final var generatedValuesSupport = dialect.getGeneratedValuesSupport();
+		return generatedValuesSupport.supports(
+				timing == EventType.INSERT
+						? GeneratedValuesSupport.Capability.INSERT_RETURNING
+						: GeneratedValuesSupport.Capability.UPDATE_RETURNING
+		);
 	}
 
 	public static boolean noCustomSql(EntityPersister persister, EventType timing) {

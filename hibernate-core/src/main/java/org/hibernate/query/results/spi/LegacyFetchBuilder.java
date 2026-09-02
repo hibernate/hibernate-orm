@@ -6,14 +6,16 @@ package org.hibernate.query.results.spi;
 
 import org.hibernate.sql.results.graph.Fetchable;
 
-/**
- * Specialized FetchBuilder implementations which handle building fetches defined via:<ul>
- *     <li>{@code hbm.xml} definitions</li>
- *     <li>calls to {@link org.hibernate.query.NativeQuery#addFetch}, and friends</li>
- * </ul>
- *
- * @author Steve Ebersole
- */
+/// Builds a fetch defined by legacy `hbm.xml` mappings or by calls to
+/// [org.hibernate.query.NativeQuery#addFetch] and related methods.
+///
+/// Supply an implementation through
+/// [ResultSetMapping#addLegacyFetchBuilder(LegacyFetchBuilder)].
+///
+/// @see ResultSetMapping#addLegacyFetchBuilder(LegacyFetchBuilder)
+///
+/// @author Steve Ebersole
+@org.hibernate.SPI({ org.hibernate.SPI.Role.USE, org.hibernate.SPI.Role.IMPLEMENT, org.hibernate.SPI.Role.SUPPLY })
 public interface LegacyFetchBuilder extends FetchBuilder {
 	/**
 	 * The table-alias associated with the fetch modeled by this builder.

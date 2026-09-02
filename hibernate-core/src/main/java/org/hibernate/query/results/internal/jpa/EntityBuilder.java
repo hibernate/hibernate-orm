@@ -17,7 +17,7 @@ import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.NonAggregatedIdentifierMapping;
-import org.hibernate.metamodel.mapping.internal.SingleAttributeIdentifierMapping;
+import org.hibernate.metamodel.mapping.SingleAttributeIdentifierMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.results.internal.complete.CompleteFetchBuilderBasicPart;
 import org.hibernate.query.results.internal.complete.CompleteFetchBuilderEmbeddableValuedModelPart;

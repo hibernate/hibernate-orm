@@ -6,16 +6,19 @@ package org.hibernate.dialect.function.array;
 
 import java.util.List;
 
+import org.hibernate.SPI;
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
-import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.spi.SqlAppender;
-import org.hibernate.sql.ast.tree.SqlAstNode;
+import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
+import org.hibernate.sql.spi.SqlAppender;
+import org.hibernate.sql.ast.spi.SqlAstNode;
 
-/**
- * Concatenation function for array and an element.
- */
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.USE;
+
+/// Subclassable descriptor for concatenating an array and an element.
+@SPI({ USE, IMPLEMENT })
 public class ArrayConcatElementFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 
 	private final String prefix;
@@ -23,6 +26,7 @@ public class ArrayConcatElementFunction extends AbstractSqmSelfRenderingFunction
 	private final String suffix;
 	protected final boolean prepend;
 
+	@SPI(IMPLEMENT)
 	public ArrayConcatElementFunction(String prefix, String separator, String suffix, boolean prepend) {
 		super(
 				"array_" + ( prepend ? "prepend" : "append" ),

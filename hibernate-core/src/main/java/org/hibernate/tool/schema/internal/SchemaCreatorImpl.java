@@ -246,13 +246,13 @@ public class SchemaCreatorImpl extends AbstractSchemaPopulator implements Schema
 			SqlStringGenerationContext context,
 			Set<String> exportIdentifiers,
 			GenerationTarget[] targets) {
+		final var exporter = new StandardAuxiliaryDatabaseObjectExporter( dialect );
 		for ( var auxiliaryDatabaseObject : metadata.getDatabase().getAuxiliaryDatabaseObjects() ) {
 			if ( auxiliaryDatabaseObject.appliesToDialect( dialect )
 					&& !auxiliaryDatabaseObject.beforeTablesOnCreation() ) {
 				checkExportIdentifier( auxiliaryDatabaseObject, exportIdentifiers );
 				applySqlStrings(
-						dialect.getAuxiliaryDatabaseObjectExporter()
-								.getSqlCreateStrings( auxiliaryDatabaseObject, metadata, context ),
+						exporter.getSqlCreateStrings( auxiliaryDatabaseObject, metadata, context ),
 						formatter,
 						options,
 						targets
@@ -356,6 +356,7 @@ public class SchemaCreatorImpl extends AbstractSchemaPopulator implements Schema
 			Set<String> exportIdentifiers,
 			GenerationTarget[] targets,
 			Namespace namespace) {
+		final var uniqueKeyExporter = new StandardUniqueKeyExporter( dialect );
 		for ( var table : namespace.getTables() ) {
 			if ( table.isPhysicalTable()
 					&& schemaFilter.includeTable( table )
@@ -374,7 +375,7 @@ public class SchemaCreatorImpl extends AbstractSchemaPopulator implements Schema
 				for ( var uniqueKey : table.getUniqueKeys().values() ) {
 					checkExportIdentifier( uniqueKey, exportIdentifiers );
 					applySqlStrings(
-							dialect.getUniqueKeyExporter().getSqlCreateStrings( uniqueKey, metadata, context ),
+							uniqueKeyExporter.getSqlCreateStrings( uniqueKey, metadata, context ),
 							formatter,
 							options,
 							targets
@@ -458,13 +459,13 @@ public class SchemaCreatorImpl extends AbstractSchemaPopulator implements Schema
 			SqlStringGenerationContext context,
 			Set<String> exportIdentifiers,
 			GenerationTarget[] targets) {
+		final var exporter = new StandardAuxiliaryDatabaseObjectExporter( dialect );
 		for ( var auxiliaryDatabaseObject : metadata.getDatabase().getAuxiliaryDatabaseObjects() ) {
 			if ( auxiliaryDatabaseObject.beforeTablesOnCreation()
 					&& auxiliaryDatabaseObject.appliesToDialect( dialect ) ) {
 				checkExportIdentifier( auxiliaryDatabaseObject, exportIdentifiers );
 				applySqlStrings(
-						dialect.getAuxiliaryDatabaseObjectExporter()
-								.getSqlCreateStrings( auxiliaryDatabaseObject, metadata, context ),
+						exporter.getSqlCreateStrings( auxiliaryDatabaseObject, metadata, context ),
 						formatter,
 						options,
 						targets
@@ -505,8 +506,9 @@ public class SchemaCreatorImpl extends AbstractSchemaPopulator implements Schema
 			SqlStringGenerationContext context,
 			GenerationTarget[] targets) {
 		final boolean manageNamespaces = options.shouldManageNamespaces();
-		final boolean tryToCreateCatalogs = manageNamespaces && dialect.canCreateCatalog();
-		final boolean tryToCreateSchemas = manageNamespaces && dialect.canCreateSchema();
+		final var namespaceSupport = dialect.getNamespaceSupport();
+		final boolean tryToCreateCatalogs = manageNamespaces && namespaceSupport.canCreateCatalog();
+		final boolean tryToCreateSchemas = manageNamespaces && namespaceSupport.canCreateSchema();
 		// first, create each catalog/schema
 		if ( tryToCreateCatalogs || tryToCreateSchemas ) {
 			Set<Identifier> exportedCatalogs = new HashSet<>();
@@ -520,7 +522,7 @@ public class SchemaCreatorImpl extends AbstractSchemaPopulator implements Schema
 						final Identifier catalogPhysicalName = context.catalogWithDefault( physicalName.catalog() );
 						if ( catalogPhysicalName != null && !exportedCatalogs.contains( catalogLogicalName ) ) {
 							applySqlStrings(
-									dialect.getCreateCatalogCommand( catalogPhysicalName.render( dialect ) ),
+									namespaceSupport.getCreateCatalogCommands( catalogPhysicalName.render( dialect ) ),
 									formatter,
 									options,
 									targets
@@ -533,7 +535,7 @@ public class SchemaCreatorImpl extends AbstractSchemaPopulator implements Schema
 						final Identifier schemaPhysicalName = context.schemaWithDefault( physicalName.schema() );
 						if ( schemaPhysicalName != null ) {
 							applySqlStrings(
-									dialect.getCreateSchemaCommand( schemaPhysicalName.render( dialect ) ),
+									namespaceSupport.getCreateSchemaCommands( schemaPhysicalName.render( dialect ) ),
 									formatter,
 									options,
 									targets

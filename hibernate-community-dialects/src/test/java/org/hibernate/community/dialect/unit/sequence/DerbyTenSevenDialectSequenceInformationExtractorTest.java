@@ -8,8 +8,6 @@ import org.hibernate.community.dialect.DerbyLegacyDialect;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.orm.test.dialect.unit.sequence.AbstractSequenceInformationExtractorTest;
-import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorLegacyImpl;
-import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 
@@ -24,12 +22,12 @@ public class DerbyTenSevenDialectSequenceInformationExtractorTest extends Abstra
 	}
 
 	@Override
-	public String expectedQuerySequencesString() {
-		return "select sys.sysschemas.schemaname as sequence_schema,sys.syssequences.* from sys.syssequences left join sys.sysschemas on sys.syssequences.schemaid=sys.sysschemas.schemaid";
+	public boolean expectsSequenceMetadata() {
+		return true;
 	}
 
 	@Override
-	public Class<? extends SequenceInformationExtractor> expectedSequenceInformationExtractor() {
-		return SequenceInformationExtractorLegacyImpl.class;
+	public String expectedQuerySequencesString() {
+		return "select sys.sysschemas.schemaname as sequence_schema,sys.syssequences.* from sys.syssequences left join sys.sysschemas on sys.syssequences.schemaid=sys.sysschemas.schemaid";
 	}
 }

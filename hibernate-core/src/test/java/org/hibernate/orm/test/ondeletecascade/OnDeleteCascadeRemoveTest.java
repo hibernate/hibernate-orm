@@ -60,7 +60,7 @@ class OnDeleteCascadeRemoveTest {
 		EntityStatistics entityStatistics = statistics.getEntityStatistics( Child.class.getName() );
 		assertEquals( 1L, entityStatistics.getDeleteCount() );
 		assertEquals( 1L, entityStatistics.getCacheRemoveCount() );
-		inspector.assertExecutedCount( scope.getDialect().supportsCascadeDelete() ? 5 : 6 );
+		inspector.assertExecutedCount( scope.getDialect().getForeignKeySupport().supportsOnDeleteAction( org.hibernate.annotations.OnDeleteAction.CASCADE ) ? 5 : 6 );
 		long children =
 				scope.fromTransaction( em -> em.createQuery( "select count(*) from CascadeChild", Long.class )
 						.getSingleResult() );
@@ -95,7 +95,7 @@ class OnDeleteCascadeRemoveTest {
 		EntityStatistics entityStatistics = statistics.getEntityStatistics( Child.class.getName() );
 		assertEquals( 1L, entityStatistics.getDeleteCount() );
 		assertEquals( 1L, entityStatistics.getCacheRemoveCount() );
-		inspector.assertExecutedCount( scope.getDialect().supportsCascadeDelete() ? 5 : 6 );
+		inspector.assertExecutedCount( scope.getDialect().getForeignKeySupport().supportsOnDeleteAction( org.hibernate.annotations.OnDeleteAction.CASCADE ) ? 5 : 6 );
 		long children =
 				scope.fromTransaction( em -> em.createQuery( "select count(*) from CascadeChild", Long.class )
 						.getSingleResult() );

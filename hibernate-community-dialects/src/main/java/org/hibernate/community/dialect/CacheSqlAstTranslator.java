@@ -7,18 +7,20 @@ package org.hibernate.community.dialect;
 import java.util.List;
 
 import org.hibernate.Locking;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.dialect.sql.ast.spi.PaginationRenderingSupport;
+import org.hibernate.dialect.sql.ast.spi.StandardPaginationRenderingSupport;
 import org.hibernate.query.sqm.ComparisonOperator;
-import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
-import org.hibernate.sql.ast.spi.SqlSelection;
-import org.hibernate.sql.ast.tree.Statement;
-import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.Literal;
-import org.hibernate.sql.ast.tree.expression.SqlTuple;
-import org.hibernate.sql.ast.tree.expression.Summarization;
-import org.hibernate.sql.ast.tree.select.QueryPart;
-import org.hibernate.sql.ast.tree.select.QuerySpec;
-import org.hibernate.sql.ast.tree.select.SelectClause;
+import org.hibernate.dialect.sql.ast.spi.AbstractSqlAstTranslator;
+import org.hibernate.sql.ast.spi.query.select.SqlSelection;
+import org.hibernate.sql.ast.spi.Statement;
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
+import org.hibernate.sql.ast.spi.query.expression.Expression;
+import org.hibernate.sql.ast.spi.query.expression.Literal;
+import org.hibernate.sql.ast.spi.query.expression.SqlTuple;
+import org.hibernate.sql.ast.spi.query.expression.Summarization;
+import org.hibernate.sql.ast.spi.query.select.QueryPart;
+import org.hibernate.sql.ast.spi.query.select.QuerySpec;
+import org.hibernate.sql.ast.spi.model.TableInsertStandard;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 
 /**
@@ -28,8 +30,14 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
  */
 public class CacheSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstTranslator<T> {
 
-	public CacheSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
-		super( sessionFactory, statement );
+	public CacheSqlAstTranslator(SqlAstTranslationRequest<? extends Statement, T> request) {
+		super( request );
+	}
+
+	@Override
+	protected void renderInsertIntoNoColumns(TableInsertStandard tableInsert) {
+		renderIntoIntoAndTable( tableInsert );
+		appendSql( "default values" );
 	}
 
 	@Override
@@ -40,14 +48,8 @@ public class CacheSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 	}
 
 	@Override
-	protected boolean needsRowsToSkip() {
-		return true;
-	}
-
-	@Override
-	protected void visitSqlSelections(SelectClause selectClause) {
-		renderTopClause( (QuerySpec) getQueryPartStack().getCurrent(), true, true );
-		super.visitSqlSelections( selectClause );
+	protected PaginationRenderingSupport getPaginationRenderingSupport() {
+		return StandardPaginationRenderingSupport.TOP_WITH_OFFSET;
 	}
 
 	@Override

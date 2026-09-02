@@ -133,6 +133,7 @@ public class NativeGenerator
 	}
 
 	@Override
+	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	public InsertGeneratedIdentifierDelegate getGeneratedIdentifierDelegate(EntityPersister persister) {
 		return ((OnExecutionGenerator) dialectNativeGenerator).getGeneratedIdentifierDelegate(persister);
 	}

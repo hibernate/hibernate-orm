@@ -24,4 +24,7 @@
  *          basic types}. Contrariwise, {@code CompositeUserType} has been
  *          redesigned and is now more powerful and much easier to use.
  */
+@SPI
 package org.hibernate.usertype;
+
+import org.hibernate.SPI;

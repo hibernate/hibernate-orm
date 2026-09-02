@@ -4,15 +4,19 @@
  */
 package org.hibernate.dialect.function.array;
 
+import org.hibernate.SPI;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 
-/**
- * Encapsulates the validator, return type and argument type resolvers for the array_remove functions.
- * Subclasses only have to implement the rendering.
- */
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.USE;
+
+/// Base descriptor for `array_remove`, providing validation and type resolution
+/// while subclasses implement database-specific rendering.
+@SPI({ USE, IMPLEMENT })
 public abstract class AbstractArrayRemoveFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 
+	@SPI(IMPLEMENT)
 	public AbstractArrayRemoveFunction() {
 		super(
 				"array_remove",

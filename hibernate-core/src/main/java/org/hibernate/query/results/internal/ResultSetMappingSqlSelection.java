@@ -9,10 +9,10 @@ import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.query.results.spi.ResultSetMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
-import org.hibernate.sql.ast.SqlAstWalker;
-import org.hibernate.sql.ast.spi.SqlExpressionAccess;
-import org.hibernate.sql.ast.spi.SqlSelection;
-import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.spi.SqlAstWalker;
+import org.hibernate.sql.ast.spi.creation.SqlExpressionAccess;
+import org.hibernate.sql.ast.spi.query.select.SqlSelection;
+import org.hibernate.sql.ast.spi.query.expression.Expression;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 import org.hibernate.type.descriptor.ValueExtractor;
 

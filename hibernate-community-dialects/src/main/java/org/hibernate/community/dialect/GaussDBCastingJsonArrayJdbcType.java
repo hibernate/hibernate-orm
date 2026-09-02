@@ -7,7 +7,7 @@ package org.hibernate.community.dialect;
 import jakarta.annotation.Nullable;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
-import org.hibernate.sql.ast.spi.SqlAppender;
+import org.hibernate.sql.spi.SqlAppender;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JsonArrayJdbcType;
 

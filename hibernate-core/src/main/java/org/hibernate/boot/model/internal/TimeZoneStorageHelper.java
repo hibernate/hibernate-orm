@@ -4,6 +4,7 @@
  */
 package org.hibernate.boot.model.internal;
 
+
 import java.time.OffsetDateTime;
 import java.time.OffsetTime;
 import java.time.ZonedDateTime;
@@ -19,7 +20,7 @@ import org.hibernate.usertype.internal.OffsetTimeCompositeUserType;
 import org.hibernate.usertype.internal.ZonedDateTimeCompositeUserType;
 
 import static org.hibernate.type.TimeZoneStorageStrategy.COLUMN;
-import static org.hibernate.dialect.TimeZoneSupport.NATIVE;
+import static org.hibernate.dialect.type.spi.TimeZoneSupport.NATIVE;
 
 public class TimeZoneStorageHelper {
 

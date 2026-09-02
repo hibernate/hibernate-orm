@@ -35,9 +35,9 @@ import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.collection.mutation.RowMutationOperations;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.sql.ast.spi.SqlAstCreationState;
-import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.predicate.Predicate;
+import org.hibernate.sql.ast.spi.creation.SqlAstCreationState;
+import org.hibernate.sql.ast.spi.query.from.TableGroup;
+import org.hibernate.sql.ast.spi.query.predicate.Predicate;
 import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.Type;
@@ -90,6 +90,7 @@ import org.hibernate.type.Type;
  *
  * @author Gavin King
  */
+@org.hibernate.SPI({ org.hibernate.SPI.Role.USE, org.hibernate.SPI.Role.IMPLEMENT })
 public interface CollectionPersister extends Restrictable {
 	/**
 	 * The NavigableRole for this collection.
@@ -109,6 +110,7 @@ public interface CollectionPersister extends Restrictable {
 	}
 
 	/// Decomposes a prepared collection mutation into graph-native operations.
+	@org.hibernate.Internal
 	void decompose(
 			PreparedCollectionMutation mutation,
 			int ordinalBase,

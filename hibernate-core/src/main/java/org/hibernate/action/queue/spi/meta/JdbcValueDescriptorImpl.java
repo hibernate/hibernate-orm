@@ -7,7 +7,7 @@ package org.hibernate.action.queue.spi.meta;
 import org.hibernate.Incubating;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.sql.model.jdbc.JdbcValueDescriptor;
+import org.hibernate.sql.spi.mutation.jdbc.JdbcValueDescriptor;
 
 /// Implementation of [JdbcValueDescriptor].
 ///

@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.batch;
 
+import static org.hibernate.loader.ast.internal.MultiKeyLoadHelper.supportsSqlArrayType;
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.List;
@@ -104,7 +105,7 @@ public class BatchAndEmbeddedIdIdAndLazyCollectionTest {
 					}
 					statementInspector.assertExecutedCount( 2 );
 
-					if ( scope.getSessionFactory().getJdbcServices().getDialect().useArrayForMultiValuedParameters() ) {
+					if ( supportsSqlArrayType( scope.getSessionFactory().getJdbcServices().getDialect() ) ) {
 						Assertions.assertThat( statementInspector.getSqlQueries().get( 0 ) ).containsOnlyOnce( "?" );
 						Assertions.assertThat( statementInspector.getSqlQueries().get( 1 ) ).containsOnlyOnce( "?" );
 					}

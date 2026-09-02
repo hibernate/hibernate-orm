@@ -37,7 +37,7 @@ import static org.hibernate.loader.internal.CacheLoadHelper.PersistenceContextEn
 import static org.hibernate.loader.internal.CacheLoadHelper.PersistenceContextEntry.EntityStatus.REMOVED_ENTITY_MARKER;
 import static org.hibernate.loader.ast.internal.LoaderHelper.upgradeLock;
 import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
-import static org.hibernate.sql.results.LoadingLogger.LOADING_LOGGER;
+import static org.hibernate.sql.results.internal.LoadingLogger.LOADING_LOGGER;
 import static org.hibernate.stat.internal.StatsHelper.getRootEntityRole;
 
 /**

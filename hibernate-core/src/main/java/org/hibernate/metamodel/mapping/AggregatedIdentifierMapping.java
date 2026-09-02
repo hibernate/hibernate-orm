@@ -4,8 +4,6 @@
  */
 package org.hibernate.metamodel.mapping;
 
-import org.hibernate.metamodel.mapping.internal.SingleAttributeIdentifierMapping;
-
 /**
  * An "aggregated" composite identifier, which is another way to say that the
  * identifier is represented as an {@linkplain jakarta.persistence.EmbeddedId embeddable}.

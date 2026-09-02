@@ -113,8 +113,9 @@ public class StrategySelectorBuilder {
 		final var strategySelector = new StrategySelectorImpl( classLoaderService );
 
 		// build the baseline...
-		strategySelector.registerStrategyLazily( Dialect.class,
-				new AggregatedDialectSelector( classLoaderService.loadJavaServices( DialectSelector.class ) ) );
+		final var dialectSelector =
+				new AggregatedDialectSelector( classLoaderService.loadJavaServices( DialectSelector.class ) );
+		strategySelector.registerStrategyLazily( Dialect.class, dialectSelector::resolve );
 		strategySelector.registerStrategyLazily( JtaPlatform.class, new DefaultJtaPlatformSelector() );
 		addTransactionCoordinatorBuilders( strategySelector );
 		addSqmMultiTableInsertStrategies( strategySelector );

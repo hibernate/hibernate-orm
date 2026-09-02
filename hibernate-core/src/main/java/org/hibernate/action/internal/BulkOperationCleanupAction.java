@@ -24,7 +24,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.sqm.tree.spi.SqmDmlStatement;
-import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
+import org.hibernate.sql.ast.spi.query.insert.InsertSelectStatement;
 
 import static java.util.Collections.addAll;
 import static org.hibernate.engine.internal.CacheHelper.usingCache;

@@ -16,7 +16,6 @@ import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.spi.EntityIdentifierNavigablePath;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 
 /**
  * Contract for things that can be the parent of a fetch
@@ -24,6 +23,7 @@ import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
  * @author Steve Ebersole
  */
 @Incubating
+@org.hibernate.SPI({ org.hibernate.SPI.Role.USE, org.hibernate.SPI.Role.IMPLEMENT })
 public interface FetchParent extends DomainResultGraphNode {
 	/**
 	 * This parent's mapping type
@@ -85,7 +85,7 @@ public interface FetchParent extends DomainResultGraphNode {
 	/**
 	 * Retrieve the fetches owned by this fetch source.
 	 */
-	ImmutableFetchList getFetches();
+	FetchList getFetches();
 
 	Fetch findFetch(Fetchable fetchable);
 
@@ -104,12 +104,14 @@ public interface FetchParent extends DomainResultGraphNode {
 		}
 	}
 
+	@org.hibernate.SPI(org.hibernate.SPI.Role.SUPPLY)
 	Initializer<?> createInitializer(InitializerParent<?> parent, AssemblerCreationState creationState);
 
 	default FetchParent getRoot() {
 		return this instanceof Fetch fetch ? fetch.getFetchParent().getRoot() : this;
 	}
 
+	@org.hibernate.SPI(org.hibernate.SPI.Role.SUPPLY)
 	default Fetch generateFetchableFetch(
 			Fetchable fetchable,
 			NavigablePath fetchablePath,

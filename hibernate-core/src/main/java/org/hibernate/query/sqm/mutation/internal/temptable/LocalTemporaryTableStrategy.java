@@ -5,8 +5,8 @@
 package org.hibernate.query.sqm.mutation.internal.temptable;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.temptable.TemporaryTable;
-import org.hibernate.dialect.temptable.TemporaryTableStrategy;
+import org.hibernate.dialect.temptable.internal.TemporaryTable;
+import org.hibernate.dialect.temptable.spi.TemporaryTableStrategy;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;

@@ -4,6 +4,8 @@
  */
 package org.hibernate.type;
 
+import org.hibernate.Internal;
+
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -20,6 +22,7 @@ import java.util.Map;
  *
  * @since 6.3
  */
+@Internal
 public class UserComponentType<T> extends ComponentType {
 
 	private final CompositeUserType<T> compositeUserType;

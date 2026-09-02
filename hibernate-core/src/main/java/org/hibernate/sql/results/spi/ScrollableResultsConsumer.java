@@ -14,7 +14,7 @@ import org.hibernate.sql.results.graph.entity.EntityResult;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMapping;
 import org.hibernate.sql.results.jdbc.spi.JdbcValues;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
-import org.hibernate.sql.results.internal.RowProcessingStateStandardImpl;
+import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
 
 /**
@@ -41,7 +41,7 @@ public class ScrollableResultsConsumer<R> implements ResultsConsumer<ScrollableR
 			SharedSessionContractImplementor session,
 			JdbcValuesSourceProcessingOptions processingOptions,
 			JdbcValuesSourceProcessingState jdbcValuesSourceProcessingState,
-			RowProcessingStateStandardImpl rowProcessingState,
+			RowProcessingState rowProcessingState,
 			RowReader<R> rowReader) {
 		rowReader.startLoading( rowProcessingState );
 		final var scrollableResults =

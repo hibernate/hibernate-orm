@@ -4,6 +4,8 @@
  */
 package org.hibernate.loader.ast.internal;
 
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
+
 
 import org.hibernate.LockOptions;
 import org.hibernate.collection.spi.PersistentCollection;
@@ -20,9 +22,9 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.metamodel.mapping.internal.SqlTypedMappingImpl;
 import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
-import org.hibernate.sql.ast.tree.select.SelectStatement;
+import org.hibernate.sql.ast.spi.creation.SqlAliasBaseManager;
+import org.hibernate.sql.ast.spi.query.expression.JdbcParameter;
+import org.hibernate.sql.ast.spi.query.select.SelectStatement;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.internal.SqlTypedMappingJdbcParameter;
@@ -108,7 +110,7 @@ public class CollectionBatchLoaderArrayParam
 		jdbcSelectOperation = getSessionFactory().getJdbcServices()
 				.getJdbcEnvironment()
 				.getSqlAstTranslatorFactory()
-				.buildSelectTranslator( getSessionFactory(), sqlSelect )
+				.buildTranslator( new SqlAstTranslationRequest.Select( getSessionFactory(), sqlSelect ) )
 				.translate( JdbcParameterBindings.NO_BINDINGS, QueryOptions.NONE );
 	}
 

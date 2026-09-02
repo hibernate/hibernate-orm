@@ -6,7 +6,7 @@ package org.hibernate.sql.results.spi;
 
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.PersistenceContext;
-import org.hibernate.internal.util.collections.StandardStack;
+import org.hibernate.spi.StandardStack;
 import org.hibernate.sql.results.graph.collection.LoadingCollectionEntry;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
 

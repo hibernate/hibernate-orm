@@ -4,6 +4,7 @@
  */
 package org.hibernate.annotations;
 
+
 import org.hibernate.Incubating;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.TimeZoneStorageStrategy;
@@ -71,7 +72,7 @@ public enum TimeZoneStorageType {
 	 * SQL column type.
 	 * <p>
 	 * Error if {@link Dialect#getTimeZoneSupport()} is not
-	 * {@link org.hibernate.dialect.TimeZoneSupport#NATIVE}.
+	 * {@link org.hibernate.dialect.type.spi.TimeZoneSupport#NATIVE}.
 	 */
 	NATIVE,
 	/**
@@ -105,7 +106,7 @@ public enum TimeZoneStorageType {
 	/**
 	 * Stores the time zone either with {@link #NATIVE} if
 	 * {@link Dialect#getTimeZoneSupport()} is
-	 * {@link org.hibernate.dialect.TimeZoneSupport#NATIVE},
+	 * {@link org.hibernate.dialect.type.spi.TimeZoneSupport#NATIVE},
 	 * otherwise uses the {@link #COLUMN} strategy.
 	 * <p>
 	 * This option automatically picks an appropriate strategy
@@ -117,7 +118,7 @@ public enum TimeZoneStorageType {
 	/**
 	 * Stores the time zone either with {@link #NATIVE} if
 	 * {@link Dialect#getTimeZoneSupport()} is
-	 * {@link org.hibernate.dialect.TimeZoneSupport#NATIVE},
+	 * {@link org.hibernate.dialect.type.spi.TimeZoneSupport#NATIVE},
 	 * otherwise uses the {@link #NORMALIZE_UTC} strategy.
 	 * <p>
 	 * This option automatically picks an appropriate strategy

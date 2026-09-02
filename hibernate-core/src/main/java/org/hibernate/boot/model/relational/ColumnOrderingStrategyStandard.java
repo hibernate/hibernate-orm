@@ -9,8 +9,9 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 
+import org.hibernate.SPI;
 import org.hibernate.boot.Metadata;
-import org.hibernate.dialect.temptable.TemporaryTableColumn;
+import org.hibernate.dialect.temptable.spi.TemporaryTableColumnDescriptor;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Constraint;
@@ -25,11 +26,19 @@ import static org.hibernate.type.SqlTypes.*;
  * Standard implementation that orders columns by size and name following roughly this ordering:
  * {@code order by max(physicalSizeBytes, 4), physicalSizeBytes > 2048, name}
  */
+@SPI({ SPI.Role.USE, SPI.Role.IMPLEMENT })
 public class ColumnOrderingStrategyStandard implements ColumnOrderingStrategy {
 	public static final ColumnOrderingStrategyStandard INSTANCE = new ColumnOrderingStrategyStandard();
 
 	//needed for converting precision from decimal to binary digits
 	private static final double DECIMAL_TO_BYTES_QUOTIENT = ( log( 10 ) / log( 2 ) ) * 8;
+
+	/**
+	 * Creates the standard strategy or a base for a custom strategy.
+	 */
+	@SPI({ SPI.Role.USE, SPI.Role.IMPLEMENT })
+	public ColumnOrderingStrategyStandard() {
+	}
 
 	@Override
 	public List<Column> orderTableColumns(Table table, Metadata metadata) {
@@ -56,7 +65,9 @@ public class ColumnOrderingStrategyStandard implements ColumnOrderingStrategy {
 	}
 
 	@Override
-	public void orderTemporaryTableColumns(List<TemporaryTableColumn> temporaryTableColumns, Metadata metadata) {
+	public <C extends TemporaryTableColumnDescriptor> void orderTemporaryTableColumns(
+			List<C> temporaryTableColumns,
+			Metadata metadata) {
 		temporaryTableColumns.sort( new TemporaryTableColumnComparator( metadata ) );
 	}
 
@@ -69,6 +80,7 @@ public class ColumnOrderingStrategyStandard implements ColumnOrderingStrategy {
 	protected static class ColumnComparator implements Comparator<Column> {
 		private final Metadata metadata;
 
+		@SPI(SPI.Role.IMPLEMENT)
 		protected ColumnComparator(Metadata metadata) {
 			this.metadata = metadata;
 		}
@@ -98,15 +110,16 @@ public class ColumnOrderingStrategyStandard implements ColumnOrderingStrategy {
 		}
 	}
 
-	protected static class TemporaryTableColumnComparator implements Comparator<TemporaryTableColumn> {
+	protected static class TemporaryTableColumnComparator implements Comparator<TemporaryTableColumnDescriptor> {
 		private final Metadata metadata;
 
+		@SPI(SPI.Role.IMPLEMENT)
 		protected TemporaryTableColumnComparator(Metadata metadata) {
 			this.metadata = metadata;
 		}
 
 		@Override
-		public int compare(TemporaryTableColumn o1, TemporaryTableColumn o2) {
+		public int compare(TemporaryTableColumnDescriptor o1, TemporaryTableColumnDescriptor o2) {
 			final int physicalSizeInBytes1 = physicalSizeInBytes(
 					o1.getJdbcMapping().getJdbcType().getDefaultSqlTypeCode(),
 					o1.getSize(),
@@ -152,7 +165,7 @@ public class ColumnOrderingStrategyStandard implements ColumnOrderingStrategy {
 			case NUMERIC:
 			case DECIMAL:
 				if ( columnSize.getPrecision() == null ) {
-					precision = metadata.getDatabase().getDialect().getDefaultDecimalPrecision();
+					precision = metadata.getDatabase().getDialect().getTypeSizingProfile().defaultDecimalPrecision();
 				}
 				else {
 					precision = columnSize.getPrecision();
@@ -171,7 +184,7 @@ public class ColumnOrderingStrategyStandard implements ColumnOrderingStrategy {
 					length = columnSize.getLength();
 				}
 				if ( length == Size.DEFAULT_LENGTH ) {
-					return metadata.getDatabase().getDialect().getMaxVarcharLength();
+					return metadata.getDatabase().getDialect().getTypeSizingProfile().maxVarcharLength();
 				}
 				return (int) length;
 			case LONGNVARCHAR:
@@ -183,7 +196,7 @@ public class ColumnOrderingStrategyStandard implements ColumnOrderingStrategy {
 					length = columnSize.getLength();
 				}
 				if ( length == Size.DEFAULT_LENGTH ) {
-					return metadata.getDatabase().getDialect().getMaxNVarcharLength();
+					return metadata.getDatabase().getDialect().getTypeSizingProfile().maxNVarcharLength();
 				}
 				return (int) length;
 			case BINARY:
@@ -197,7 +210,7 @@ public class ColumnOrderingStrategyStandard implements ColumnOrderingStrategy {
 					length = columnSize.getLength();
 				}
 				if ( length == Size.DEFAULT_LENGTH ) {
-					return metadata.getDatabase().getDialect().getMaxVarbinaryLength();
+					return metadata.getDatabase().getDialect().getTypeSizingProfile().maxVarbinaryLength();
 				}
 				return (int) length;
 			case DATE:

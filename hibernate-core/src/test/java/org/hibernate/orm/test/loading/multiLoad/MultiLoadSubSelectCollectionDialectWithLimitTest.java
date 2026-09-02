@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.loading.multiLoad;
 
+import org.hibernate.dialect.array.spi.ArraySupport;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,6 +17,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.jdbc.spi.ParameterLimits;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -77,8 +79,8 @@ public class MultiLoadSubSelectCollectionDialectWithLimitTest {
 		}
 
 		@Override
-		public int getInExpressionCountLimit() {
-			return 50;
+		public ParameterLimits getParameterLimits() {
+			return ParameterLimits.of( 50 );
 		}
 	}
 
@@ -115,7 +117,7 @@ public class MultiLoadSubSelectCollectionDialectWithLimitTest {
 			assertEquals( 56, list.size() );
 
 			// None of the collections should be loaded yet
-			if ( dialect.useArrayForMultiValuedParameters() ) {
+			if ( usesArrayParameters( dialect ) ) {
 				assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
 			}
 			else {
@@ -131,7 +133,7 @@ public class MultiLoadSubSelectCollectionDialectWithLimitTest {
 			Hibernate.initialize( list.get( 0 ).children );
 
 			// exactly how depends on whether the Dialect supports use of SQL ARRAY
-			if ( dialect.useArrayForMultiValuedParameters() ) {
+			if ( usesArrayParameters( dialect ) ) {
 				assertThat( Hibernate.isInitialized( list.get( 0 ).children ) ).isTrue();
 				assertThat( Hibernate.isInitialized( list.get( 50 ).children ) ).isTrue();
 				assertThat( Hibernate.isInitialized( list.get( 52 ).children ) ).isTrue();
@@ -158,6 +160,11 @@ public class MultiLoadSubSelectCollectionDialectWithLimitTest {
 				}
 			}
 		} );
+	}
+
+	private static boolean usesArrayParameters(org.hibernate.dialect.Dialect dialect) {
+		return dialect.getArraySupport().getMultiValuedParameterStrategy()
+				== ArraySupport.MultiValuedParameterStrategy.ARRAY;
 	}
 
 	private List<Integer> ids(int count) {

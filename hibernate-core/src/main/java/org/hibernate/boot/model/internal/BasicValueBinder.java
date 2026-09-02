@@ -33,7 +33,7 @@ import org.hibernate.boot.spi.AccessType;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.NationalizationSupport;
+import org.hibernate.dialect.type.spi.NationalizationSupport;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Component;

@@ -48,7 +48,7 @@ public class JDBCTimeZoneZonedTest {
 			nowOffset = OffsetDateTime.now().withOffsetSameInstant( ZoneOffset.ofHours(3) )
 					.with( ChronoField.NANO_OF_SECOND, 0L );
 		}
-		else if ( dialect.getDefaultTimestampPrecision() == 6 ) {
+		else if ( dialect.getTypeSizingProfile().defaultTimestampPrecision() == 6 ) {
 			nowZoned = ZonedDateTime.now().withZoneSameInstant( ZoneId.of("CET") ).truncatedTo( ChronoUnit.MICROS );
 			nowOffset = OffsetDateTime.now().withOffsetSameInstant( ZoneOffset.ofHours(3) ).truncatedTo( ChronoUnit.MICROS );
 		}

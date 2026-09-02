@@ -76,7 +76,7 @@ public class QueryEngineImpl implements QueryEngine {
 		bindingContext = context;
 		typeConfiguration = metadata.getTypeConfiguration();
 		sqmFunctionRegistry = createFunctionRegistry( serviceRegistry, metadata, options, dialect );
-		sqmTranslatorFactory = resolveSqmTranslatorFactory( options, dialect );
+		sqmTranslatorFactory = resolveSqmTranslatorFactory( options );
 		namedObjectRepository = metadata.buildNamedQueryRepository();
 		interpretationCache = buildInterpretationCache( serviceRegistry, properties );
 		nativeQueryInterpreter = serviceRegistry.getService( NativeQueryInterpreter.class );
@@ -85,7 +85,7 @@ public class QueryEngineImpl implements QueryEngine {
 		// create the NodeBuilder, but then we need the NodeBuilder to create the HqlTranslator
 		// and that's only because we're using the NodeBuilder as the SqmCreationContext
 		nodeBuilder = createCriteriaBuilder( context, this, options, serviceRegistry, options.getUuid(), name );
-		hqlTranslator = resolveHqlTranslator( options, dialect, nodeBuilder );
+		hqlTranslator = resolveHqlTranslator( options, nodeBuilder );
 	}
 
 	private static SqmCriteriaNodeBuilder createCriteriaBuilder(
@@ -97,30 +97,19 @@ public class QueryEngineImpl implements QueryEngine {
 
 	private static HqlTranslator resolveHqlTranslator(
 			QueryEngineOptions options,
-			Dialect dialect,
 			SqmCreationContext sqmCreationContext) {
 		final var customHqlTranslator = options.getCustomHqlTranslator();
 		if ( customHqlTranslator != null ) {
 			return customHqlTranslator;
 		}
-		final var hqlTranslator = dialect.getHqlTranslator();
-		if ( hqlTranslator != null ) {
-			return hqlTranslator;
-		}
 		return new StandardHqlTranslator( sqmCreationContext,
 				new SqmCreationOptionsStandard( options ) );
 	}
 
-	private static SqmTranslatorFactory resolveSqmTranslatorFactory(
-			QueryEngineOptions runtimeOptions,
-			Dialect dialect) {
+	private static SqmTranslatorFactory resolveSqmTranslatorFactory(QueryEngineOptions runtimeOptions) {
 		final var customSqmTranslatorFactory = runtimeOptions.getCustomSqmTranslatorFactory();
 		if ( customSqmTranslatorFactory != null ) {
 			return customSqmTranslatorFactory;
-		}
-		final var sqmTranslatorFactory1 = dialect.getSqmTranslatorFactory();
-		if ( sqmTranslatorFactory1 != null ) {
-			return sqmTranslatorFactory1;
 		}
 		return new StandardSqmTranslatorFactory();
 	}

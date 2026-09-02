@@ -4,6 +4,7 @@
  */
 package org.hibernate.spatial.dialect.postgis;
 
+
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;

@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.query.hql;
 
+
 import org.hamcrest.Matchers;
 
 import org.hibernate.HibernateException;
@@ -1170,7 +1171,9 @@ public class FunctionTests {
 	}
 
 	@Test
-	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsTruncateWithCast.class )
+	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Altibase does not truncate values via cast")
+	@SkipForDialect(dialectClass = FirebirdDialect.class, reason = "Firebird does not truncate values via cast")
+	@SkipForDialect(dialectClass = SpannerDialect.class, reason = "Spanner does not truncate values via cast")
 	public void testCastFunctionWithLength(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -1196,7 +1199,9 @@ public class FunctionTests {
 	}
 
 	@Test
-	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsTruncateWithCast.class, comment = "Dialect does not support truncate with cast" )
+	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Altibase does not truncate values via cast")
+	@SkipForDialect(dialectClass = FirebirdDialect.class, reason = "Firebird does not truncate values via cast")
+	@SkipForDialect(dialectClass = SpannerDialect.class, reason = "Spanner does not truncate values via cast")
 	@SkipForDialect(dialectClass = DerbyDialect.class, reason = "Derby doesn't support casting to binary types")
 	@SkipForDialect(dialectClass = PostgreSQLDialect.class, reason = "PostgreSQL bytea doesn't have a length")
 	@SkipForDialect(dialectClass = PostgresPlusDialect.class, reason = "PostgresPlus bytea doesn't have a length")

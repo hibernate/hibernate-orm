@@ -24,19 +24,21 @@ import org.hibernate.query.sqm.spi.SqmParameterMappingModelResolutionAccess;
 import org.hibernate.query.sqm.sql.spi.SqmTranslation;
 import org.hibernate.query.sqm.sql.spi.SqmTranslator;
 import org.hibernate.query.sqm.sql.spi.SqmTranslatorFactory;
+import org.hibernate.query.sqm.sql.spi.SqmTranslationRequest;
 import org.hibernate.query.sqm.tree.spi.SqmStatement;
 import org.hibernate.query.sqm.tree.spi.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.spi.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.spi.insert.SqmInsertStatement;
 import org.hibernate.query.sqm.tree.spi.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.spi.update.SqmUpdateStatement;
-import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.SqlAstTranslatorFactory;
-import org.hibernate.sql.ast.tree.Statement;
-import org.hibernate.sql.ast.tree.delete.DeleteStatement;
-import org.hibernate.sql.ast.tree.insert.InsertStatement;
-import org.hibernate.sql.ast.tree.select.SelectStatement;
-import org.hibernate.sql.ast.tree.update.UpdateStatement;
+import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslatorFactory;
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
+import org.hibernate.sql.ast.spi.Statement;
+import org.hibernate.sql.ast.spi.query.delete.DeleteStatement;
+import org.hibernate.sql.ast.spi.query.insert.InsertStatement;
+import org.hibernate.sql.ast.spi.query.select.SelectStatement;
+import org.hibernate.sql.ast.spi.query.update.UpdateStatement;
 import org.hibernate.sql.exec.internal.JdbcOperationQueryDelete;
 import org.hibernate.sql.exec.internal.JdbcOperationQueryUpdate;
 import org.hibernate.sql.exec.spi.JdbcOperation;
@@ -203,13 +205,15 @@ public class HqlHelper {
 				QueryParameterBindingsImpl parameterBindings) {
 			final SqmTranslatorFactory sqmTranslatorFactory = sessionFactory.getQueryEngine().getSqmTranslatorFactory();
 			return sqmTranslatorFactory.createSelectTranslator(
-					(SqmSelectStatement<R>) hqlInterpretation.getSqmStatement(),
-					QueryOptions.NONE,
-					hqlInterpretation.getDomainParameterXref(),
-					parameterBindings,
-					new LoadQueryInfluencers( sessionFactory),
-					sessionFactory.getSqlTranslationEngine(),
-					true
+					new SqmTranslationRequest.Select(
+							(SqmSelectStatement<R>) hqlInterpretation.getSqmStatement(),
+							QueryOptions.NONE,
+							hqlInterpretation.getDomainParameterXref(),
+							parameterBindings,
+							new LoadQueryInfluencers( sessionFactory ),
+							sessionFactory.getSqlTranslationEngine(),
+							true
+					)
 			);
 		}
 
@@ -220,7 +224,9 @@ public class HqlHelper {
 					.getJdbcServices()
 					.getJdbcEnvironment()
 					.getSqlAstTranslatorFactory();
-			return sqlAstTranslatorFactory.buildSelectTranslator( sessionFactory, sqmTranslation.getSqlAst() );
+			return sqlAstTranslatorFactory.buildTranslator(
+					new SqlAstTranslationRequest.Select( sessionFactory, sqmTranslation.getSqlAst() )
+			);
 		}
 	}
 
@@ -236,12 +242,14 @@ public class HqlHelper {
 			final SqmTranslatorFactory sqmTranslatorFactory = sessionFactory.getQueryEngine().getSqmTranslatorFactory();
 			//noinspection unchecked
 			return (SqmTranslator<DeleteStatement>) sqmTranslatorFactory.createMutationTranslator(
-					(SqmDeleteStatement<?>) hqlInterpretation.getSqmStatement(),
-					QueryOptions.NONE,
-					hqlInterpretation.getDomainParameterXref(),
-					parameterBindings,
-					new LoadQueryInfluencers(sessionFactory),
-					sessionFactory.getSqlTranslationEngine()
+					new SqmTranslationRequest.Mutation(
+							(SqmDeleteStatement<?>) hqlInterpretation.getSqmStatement(),
+							QueryOptions.NONE,
+							hqlInterpretation.getDomainParameterXref(),
+							parameterBindings,
+							new LoadQueryInfluencers( sessionFactory ),
+							sessionFactory.getSqlTranslationEngine()
+					)
 			);
 		}
 
@@ -252,9 +260,8 @@ public class HqlHelper {
 					.getJdbcEnvironment()
 					.getSqlAstTranslatorFactory();
 			//noinspection unchecked
-			return (SqlAstTranslator<JdbcOperationQueryDelete>) sqlAstTranslatorFactory.buildMutationTranslator(
-					sessionFactory,
-					sqmTranslation.getSqlAst()
+			return (SqlAstTranslator<JdbcOperationQueryDelete>) (SqlAstTranslator<?>) sqlAstTranslatorFactory.buildTranslator(
+					new SqlAstTranslationRequest.QueryMutation( sessionFactory, sqmTranslation.getSqlAst() )
 			);
 		}
 	}
@@ -271,12 +278,14 @@ public class HqlHelper {
 			final SqmTranslatorFactory sqmTranslatorFactory = sessionFactory.getQueryEngine().getSqmTranslatorFactory();
 			//noinspection unchecked
 			return (SqmTranslator<UpdateStatement>) sqmTranslatorFactory.createMutationTranslator(
-					(SqmUpdateStatement<?>) hqlInterpretation.getSqmStatement(),
-					QueryOptions.NONE,
-					hqlInterpretation.getDomainParameterXref(),
-					parameterBindings,
-					new LoadQueryInfluencers(sessionFactory),
-					sessionFactory.getSqlTranslationEngine()
+					new SqmTranslationRequest.Mutation(
+							(SqmUpdateStatement<?>) hqlInterpretation.getSqmStatement(),
+							QueryOptions.NONE,
+							hqlInterpretation.getDomainParameterXref(),
+							parameterBindings,
+							new LoadQueryInfluencers( sessionFactory ),
+							sessionFactory.getSqlTranslationEngine()
+					)
 			);
 		}
 
@@ -287,9 +296,8 @@ public class HqlHelper {
 					.getJdbcEnvironment()
 					.getSqlAstTranslatorFactory();
 			//noinspection unchecked
-			return (SqlAstTranslator<JdbcOperationQueryUpdate>) sqlAstTranslatorFactory.buildMutationTranslator(
-					sessionFactory,
-					sqmTranslation.getSqlAst()
+			return (SqlAstTranslator<JdbcOperationQueryUpdate>) (SqlAstTranslator<?>) sqlAstTranslatorFactory.buildTranslator(
+					new SqlAstTranslationRequest.QueryMutation( sessionFactory, sqmTranslation.getSqlAst() )
 			);
 		}
 	}
@@ -306,12 +314,14 @@ public class HqlHelper {
 			final SqmTranslatorFactory sqmTranslatorFactory = sessionFactory.getQueryEngine().getSqmTranslatorFactory();
 			//noinspection unchecked
 			return (SqmTranslator<InsertStatement>) sqmTranslatorFactory.createMutationTranslator(
-					(SqmInsertStatement<?>) hqlInterpretation.getSqmStatement(),
-					QueryOptions.NONE,
-					hqlInterpretation.getDomainParameterXref(),
-					parameterBindings,
-					new LoadQueryInfluencers(sessionFactory),
-					sessionFactory.getSqlTranslationEngine()
+					new SqmTranslationRequest.Mutation(
+							(SqmInsertStatement<?>) hqlInterpretation.getSqmStatement(),
+							QueryOptions.NONE,
+							hqlInterpretation.getDomainParameterXref(),
+							parameterBindings,
+							new LoadQueryInfluencers( sessionFactory ),
+							sessionFactory.getSqlTranslationEngine()
+					)
 			);
 		}
 
@@ -322,9 +332,8 @@ public class HqlHelper {
 					.getJdbcEnvironment()
 					.getSqlAstTranslatorFactory();
 			//noinspection unchecked
-			return (SqlAstTranslator<JdbcOperationQueryInsert>) sqlAstTranslatorFactory.buildMutationTranslator(
-					sessionFactory,
-					sqmTranslation.getSqlAst()
+			return (SqlAstTranslator<JdbcOperationQueryInsert>) (SqlAstTranslator<?>) sqlAstTranslatorFactory.buildTranslator(
+					new SqlAstTranslationRequest.QueryMutation( sessionFactory, sqmTranslation.getSqlAst() )
 			);
 		}
 	}

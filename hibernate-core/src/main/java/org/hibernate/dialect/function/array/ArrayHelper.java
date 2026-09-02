@@ -4,8 +4,8 @@
  */
 package org.hibernate.dialect.function.array;
 
-import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.FunctionExpression;
+import org.hibernate.sql.ast.spi.query.expression.Expression;
+import org.hibernate.sql.ast.spi.query.expression.FunctionExpression;
 
 public class ArrayHelper {
 	public static boolean isNullable(Expression expression) {

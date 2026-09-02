@@ -4,7 +4,7 @@
  */
 package org.hibernate.persister.collection.mutation;
 
-import org.hibernate.sql.model.TableMapping;
+import org.hibernate.sql.spi.mutation.TableMapping;
 
 /**
  * @author Steve Ebersole
@@ -97,6 +97,7 @@ public class CollectionTableMapping implements TableMapping {
 	}
 
 	@Override
+	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	public KeyDetails getKeyDetails() {
 		// todo (tuple-cleanup) : implement this
 		return null;

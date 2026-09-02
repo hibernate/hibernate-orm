@@ -4,8 +4,12 @@
  */
 package org.hibernate.engine.jdbc.batch.internal;
 
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.function.Consumer;
 
 import org.hibernate.HibernateException;
 import org.hibernate.StaleStateException;
@@ -46,6 +50,7 @@ public class BatchImpl implements Batch {
 	private int batchPosition;
 	private boolean batchExecuted;
 	private StaleStateMapper[] staleStateMappers;
+	private List<Consumer<Object>> generatedKeyConsumers;
 
 	public BatchImpl(
 			BatchKey key,
@@ -98,6 +103,17 @@ public class BatchImpl implements Batch {
 			}
 			staleStateMappers[batchPosition] = staleStateMapper;
 		}
+		addToBatch( jdbcValueBindings, inclusionChecker );
+	}
+
+	@Override
+	public void addToBatch(
+			JdbcValueBindings jdbcValueBindings, TableInclusionChecker inclusionChecker,
+			Consumer<Object> generatedKeyConsumer) {
+		if ( generatedKeyConsumers == null ) {
+			generatedKeyConsumers = new ArrayList<>( batchSizeToUse );
+		}
+		generatedKeyConsumers.add( generatedKeyConsumer );
 		addToBatch( jdbcValueBindings, inclusionChecker );
 	}
 
@@ -266,6 +282,7 @@ public class BatchImpl implements Batch {
 								eventHandler.jdbcExecuteBatchEnd();
 							}
 							checkRowCounts( rowCounts, statementDetails );
+							dispatchGeneratedKeys( statement, sql );
 						}
 						else {
 							statement.executeBatch();
@@ -286,6 +303,32 @@ public class BatchImpl implements Batch {
 		finally {
 			jdbcCoordinator.afterStatementExecution();
 			batchPosition = 0;
+			generatedKeyConsumers = null;
+		}
+	}
+
+	private void dispatchGeneratedKeys(java.sql.PreparedStatement statement, String sql) throws SQLException {
+		if ( generatedKeyConsumers == null || generatedKeyConsumers.isEmpty() ) {
+			return;
+		}
+		final int expected = generatedKeyConsumers.size();
+		try ( ResultSet keys = statement.getGeneratedKeys() ) {
+			if ( keys == null ) {
+				throw new HibernateException(
+						"The database returned no generated keys for batched insert: " + sql );
+			}
+			int i = 0;
+			while ( keys.next() ) {
+				if ( i >= expected ) {
+					throw new HibernateException(
+							"More generated keys than batched rows for insert: " + sql );
+				}
+				generatedKeyConsumers.get( i++ ).accept( keys.getObject( 1 ) );
+			}
+			if ( i != expected ) {
+				throw new HibernateException(
+						"Expected " + expected + " generated keys but got " + i + " for insert: " + sql );
+			}
 		}
 	}
 

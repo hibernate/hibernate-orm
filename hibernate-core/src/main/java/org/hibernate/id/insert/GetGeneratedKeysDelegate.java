@@ -65,6 +65,11 @@ public class GetGeneratedKeysDelegate extends AbstractReturningDelegate {
 	}
 
 	@Override
+	public boolean supportsBatching() {
+		return dialect().supportsBatchInsertReturningGeneratedKeys();
+	}
+
+	@Override
 	public TableMutationBuilder<?> createTableMutationBuilder(
 			Expectation expectation,
 			SessionFactoryImplementor factory) {

@@ -4,6 +4,8 @@
  */
 package org.hibernate.type.format.jaxb;
 
+import org.hibernate.SPI;
+
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.lang.reflect.Array;
@@ -23,7 +25,7 @@ import org.hibernate.type.descriptor.jdbc.XmlHelper;
 import org.hibernate.internal.build.AllowReflection;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.sql.ast.spi.StringBuilderSqlAppender;
+import org.hibernate.sql.spi.StringBuilderSqlAppender;
 import org.hibernate.type.descriptor.java.JavaTypeHelper;
 import org.hibernate.type.format.FormatMapper;
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -44,6 +46,7 @@ import org.w3c.dom.Node;
 /**
  * @author Christian Beikov
  */
+@SPI
 public final class JaxbXmlFormatMapper implements FormatMapper {
 
 	public static final String SHORT_NAME = "jaxb";

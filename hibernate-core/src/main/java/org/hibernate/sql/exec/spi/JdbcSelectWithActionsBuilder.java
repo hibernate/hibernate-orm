@@ -4,12 +4,13 @@
  */
 package org.hibernate.sql.exec.spi;
 
+
 import org.hibernate.Incubating;
 import org.hibernate.LockOptions;
 import org.hibernate.dialect.lock.spi.LockTimeoutType;
 import org.hibernate.dialect.lock.spi.LockingSupport;
-import org.hibernate.sql.ast.spi.LockingClauseStrategy;
-import org.hibernate.sql.ast.tree.select.QuerySpec;
+import org.hibernate.dialect.lock.spi.LockingClauseStrategy;
+import org.hibernate.sql.ast.spi.query.select.QuerySpec;
 import org.hibernate.sql.exec.internal.lock.LoadedValuesCollectorFactory;
 
 

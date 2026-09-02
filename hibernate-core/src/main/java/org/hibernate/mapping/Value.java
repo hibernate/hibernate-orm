@@ -81,6 +81,7 @@ public interface Value extends Serializable {
 	Type getType() throws MappingException;
 
 	@Incubating
+	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	default JdbcMapping getSelectableType(MappingContext mappingContext, int index) throws MappingException {
 		return getType( mappingContext, getType(), index );
 	}

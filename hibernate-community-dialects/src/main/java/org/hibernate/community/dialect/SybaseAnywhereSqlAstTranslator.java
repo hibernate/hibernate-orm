@@ -7,26 +7,24 @@ package org.hibernate.community.dialect;
 import java.util.List;
 import java.util.function.Consumer;
 
-import org.hibernate.LockMode;
-import org.hibernate.dialect.sql.ast.SybaseSqlAstTranslator;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.dialect.sql.ast.spi.PaginationRenderingSupport;
+import org.hibernate.dialect.sql.ast.spi.StandardPaginationRenderingSupport;
 import org.hibernate.query.sqm.ComparisonOperator;
-import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
-import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
-import org.hibernate.sql.ast.spi.SqlSelection;
-import org.hibernate.sql.ast.tree.Statement;
-import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
-import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
-import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
-import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.Literal;
-import org.hibernate.sql.ast.tree.expression.SqlTuple;
-import org.hibernate.sql.ast.tree.expression.Summarization;
-import org.hibernate.sql.ast.tree.from.NamedTableReference;
-import org.hibernate.sql.ast.tree.from.UnionTableReference;
-import org.hibernate.sql.ast.tree.select.QueryPart;
-import org.hibernate.sql.ast.tree.select.QuerySpec;
-import org.hibernate.sql.ast.tree.select.SelectClause;
+import org.hibernate.sql.ast.spi.translation.SqlAstNodeRenderingMode;
+import org.hibernate.dialect.sql.ast.spi.AbstractSqlAstTranslator;
+import org.hibernate.sql.ast.spi.query.select.SqlSelection;
+import org.hibernate.sql.ast.spi.Statement;
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
+import org.hibernate.sql.ast.spi.query.expression.BinaryArithmeticExpression;
+import org.hibernate.sql.ast.spi.query.expression.CaseSearchedExpression;
+import org.hibernate.sql.ast.spi.query.expression.CaseSimpleExpression;
+import org.hibernate.sql.ast.spi.query.expression.Expression;
+import org.hibernate.sql.ast.spi.query.expression.Literal;
+import org.hibernate.sql.ast.spi.query.expression.SqlTuple;
+import org.hibernate.sql.ast.spi.query.expression.Summarization;
+import org.hibernate.sql.ast.spi.query.select.QueryPart;
+import org.hibernate.sql.ast.spi.query.select.QuerySpec;
+import org.hibernate.sql.ast.spi.model.TableInsertStandard;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 
 /**
@@ -36,10 +34,14 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
  */
 public class SybaseAnywhereSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstTranslator<T> {
 
-	private static final String UNION_ALL = " union all ";
+	public SybaseAnywhereSqlAstTranslator(SqlAstTranslationRequest<? extends Statement, T> request) {
+		super( request );
+	}
 
-	public SybaseAnywhereSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
-		super( sessionFactory, statement );
+	@Override
+	protected void renderInsertIntoNoColumns(TableInsertStandard tableInsert) {
+		renderIntoIntoAndTable( tableInsert );
+		appendSql( "values (default)" );
 	}
 
 	// Sybase Anywhere does not allow CASE expressions where all result arms contain plain parameters.
@@ -95,47 +97,6 @@ public class SybaseAnywhereSqlAstTranslator<T extends JdbcOperation> extends Abs
 	}
 
 	@Override
-	protected boolean renderNamedTableReference(NamedTableReference tableReference, LockMode lockMode) {
-		if ( getDialect().getVersion().isBefore( 10 ) ) {
-			final String tableExpression = tableReference.getTableExpression();
-			if ( tableReference instanceof UnionTableReference && lockMode != LockMode.NONE && tableExpression.charAt( 0 ) == '(' ) {
-				// SQL Server requires to push down the lock hint to the actual table names
-				int searchIndex = 0;
-				int unionIndex;
-				while ( ( unionIndex = tableExpression.indexOf( UNION_ALL, searchIndex ) ) != -1 ) {
-					append( tableExpression, searchIndex, unionIndex );
-					renderLockHint( lockMode );
-					appendSql( UNION_ALL );
-					searchIndex = unionIndex + UNION_ALL.length();
-				}
-				append( tableExpression, searchIndex, tableExpression.length() - 1 );
-				renderLockHint( lockMode );
-				appendSql( " )" );
-
-				registerAffectedTable( tableReference );
-				renderTableReferenceIdentificationVariable( tableReference );
-			}
-			else {
-				super.renderNamedTableReference( tableReference, lockMode );
-				renderLockHint( lockMode );
-			}
-			// Just always return true because SQL Server doesn't support the FOR UPDATE clause
-			return true;
-		}
-		super.renderNamedTableReference( tableReference, lockMode );
-		return false;
-	}
-
-	private void renderLockHint(LockMode lockMode) {
-		append( SybaseSqlAstTranslator.determineLockHint( lockMode ) );
-	}
-
-	@Override
-	protected boolean needsRowsToSkip() {
-		return getDialect().getVersion().isBefore( 9 );
-	}
-
-	@Override
 	protected void renderFetchPlusOffsetExpression(
 			Expression fetchClauseExpression,
 			Expression offsetClauseExpression,
@@ -144,14 +105,10 @@ public class SybaseAnywhereSqlAstTranslator<T extends JdbcOperation> extends Abs
 	}
 
 	@Override
-	protected void visitSqlSelections(SelectClause selectClause) {
-		if ( getDialect().getVersion().isBefore( 9 ) ) {
-			renderTopClause( (QuerySpec) getQueryPartStack().getCurrent(), true, true );
-		}
-		else {
-			renderTopStartAtClause( (QuerySpec) getQueryPartStack().getCurrent() );
-		}
-		super.visitSqlSelections( selectClause );
+	protected PaginationRenderingSupport getPaginationRenderingSupport() {
+		return getDialect().getVersion().isBefore( 9 )
+				? StandardPaginationRenderingSupport.TOP_WITH_OFFSET
+				: StandardPaginationRenderingSupport.TOP_START_AT;
 	}
 
 	@Override
@@ -173,6 +130,7 @@ public class SybaseAnywhereSqlAstTranslator<T extends JdbcOperation> extends Abs
 				&& useOffsetFetchClause( queryPart ) && queryPart.getOffsetClauseExpression() != null ) {
 			throw new IllegalArgumentException( "Can't emulate offset clause in subquery" );
 		}
+		super.visitOffsetFetchClause( queryPart );
 	}
 
 	@Override

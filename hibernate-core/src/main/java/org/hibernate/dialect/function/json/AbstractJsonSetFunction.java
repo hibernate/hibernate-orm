@@ -4,6 +4,7 @@
  */
 package org.hibernate.dialect.function.json;
 
+import org.hibernate.SPI;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.function.FunctionKind;
 import org.hibernate.query.sqm.produce.function.ArgumentTypesValidator;
@@ -13,11 +14,14 @@ import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolv
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.spi.TypeConfiguration;
 
-/**
- * Standard json_set function.
- */
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.USE;
+
+/// Subclassable descriptor for the standard `json_set` function.
+@SPI({ USE, IMPLEMENT })
 public abstract class AbstractJsonSetFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 
+	@SPI(IMPLEMENT)
 	public AbstractJsonSetFunction(TypeConfiguration typeConfiguration) {
 		super(
 				"json_set",

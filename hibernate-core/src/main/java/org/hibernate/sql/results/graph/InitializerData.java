@@ -11,11 +11,13 @@ import jakarta.annotation.Nullable;
 
 import static java.util.Objects.requireNonNull;
 
+@org.hibernate.SPI({ org.hibernate.SPI.Role.USE, org.hibernate.SPI.Role.IMPLEMENT })
 public abstract class InitializerData {
 	protected final RowProcessingState rowProcessingState;
 	protected Initializer.State state = Initializer.State.UNINITIALIZED;
 	protected @Nullable Object instance;
 
+	@org.hibernate.SPI(org.hibernate.SPI.Role.IMPLEMENT)
 	public InitializerData(RowProcessingState rowProcessingState) {
 		this.rowProcessingState = rowProcessingState;
 	}
@@ -23,6 +25,7 @@ public abstract class InitializerData {
 	/*
 	 * Used by Hibernate Reactive
 	 */
+	@org.hibernate.SPI(org.hibernate.SPI.Role.IMPLEMENT)
 	public InitializerData(InitializerData original) {
 		requireNonNull( original );
 		this.rowProcessingState = original.rowProcessingState;

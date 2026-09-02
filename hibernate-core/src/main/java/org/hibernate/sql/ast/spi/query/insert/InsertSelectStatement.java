@@ -1,0 +1,120 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
+package org.hibernate.sql.ast.spi.query.insert;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.function.BiConsumer;
+
+import org.hibernate.sql.ast.spi.SqlAstWalker;
+import org.hibernate.sql.ast.spi.query.AbstractMutationStatement;
+import org.hibernate.sql.ast.spi.query.cte.CteContainer;
+import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
+import org.hibernate.sql.ast.spi.query.from.NamedTableReference;
+import org.hibernate.sql.ast.spi.query.select.QueryPart;
+import org.hibernate.sql.spi.mutation.MutationTarget;
+
+/**
+ * todo (6.2) - Would much prefer to split insert-values and
+ * 		insert-select into individual contracts - something like
+ * 		`InsertStatement` and `InsertSelectStatement` e.g.
+ * 		Would help alleviate much of the duplication in handling
+ * 		between inserts from SQM and those from model mutation
+ *
+ * @author Steve Ebersole
+ */
+public class InsertSelectStatement extends AbstractMutationStatement implements InsertStatement {
+
+	public static final String DEFAULT_ALIAS = "to_insert_";
+	private List<ColumnReference> targetColumnReferences;
+	private QueryPart sourceSelectStatement;
+	private List<Values> valuesList = new ArrayList<>();
+	private ConflictClause conflictClause;
+
+	public InsertSelectStatement(NamedTableReference targetTable, MutationTarget mutationTarget) {
+		this( null, targetTable, mutationTarget, Collections.emptyList() );
+	}
+
+	public InsertSelectStatement(NamedTableReference targetTable, List<ColumnReference> returningColumns) {
+		this( null, targetTable, null, returningColumns );
+	}
+
+	public InsertSelectStatement(
+			CteContainer cteContainer,
+			NamedTableReference targetTable,
+			MutationTarget mutationTarget,
+			List<ColumnReference> returningColumns) {
+		super( cteContainer, targetTable, mutationTarget, returningColumns );
+	}
+
+	@Override
+	public List<ColumnReference> getTargetColumns() {
+		return targetColumnReferences == null ? Collections.emptyList() : targetColumnReferences;
+	}
+
+	@Override
+	public void forEachTargetColumn(BiConsumer<Integer, ColumnReference> consumer) {
+		if ( targetColumnReferences == null ) {
+			return;
+		}
+
+		for ( int i = 0; i < targetColumnReferences.size(); i++ ) {
+			consumer.accept( i, targetColumnReferences.get( i ) );
+		}
+	}
+
+	public void addTargetColumnReference(ColumnReference reference) {
+		if ( targetColumnReferences == null ) {
+			targetColumnReferences = new ArrayList<>();
+		}
+		targetColumnReferences.add( reference );
+	}
+
+	public void addTargetColumnReferences(ColumnReference... references) {
+		if ( targetColumnReferences == null ) {
+			targetColumnReferences = new ArrayList<>();
+		}
+
+		Collections.addAll( this.targetColumnReferences, references );
+	}
+
+	public void addTargetColumnReferences(List<ColumnReference> references) {
+		if ( targetColumnReferences == null ) {
+			targetColumnReferences = new ArrayList<>();
+		}
+
+		this.targetColumnReferences.addAll( references );
+	}
+
+	public QueryPart getSourceSelectStatement() {
+		return sourceSelectStatement;
+	}
+
+	public void setSourceSelectStatement(QueryPart sourceSelectStatement) {
+		this.sourceSelectStatement = sourceSelectStatement;
+	}
+
+	public List<Values> getValuesList() {
+		return valuesList;
+	}
+
+	public void setValuesList(List<Values> valuesList) {
+		this.valuesList = valuesList;
+	}
+
+	public ConflictClause getConflictClause() {
+		return conflictClause;
+	}
+
+	public void setConflictClause(ConflictClause conflictClause) {
+		this.conflictClause = conflictClause;
+	}
+
+	@Override
+	public void accept(SqlAstWalker walker) {
+		walker.visitInsertStatement( this );
+	}
+}

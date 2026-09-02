@@ -4,30 +4,45 @@
  */
 package org.hibernate.dialect;
 
+import org.hibernate.dialect.temporaltype.spi.TemporalOperationSupport;
 
-import org.hibernate.dialect.identity.DB2zIdentityColumnSupport;
-import org.hibernate.dialect.identity.IdentityColumnSupport;
+import org.hibernate.dialect.rowid.spi.RowIdSupport;
+import org.hibernate.dialect.rowid.spi.RowIdSupports;
+
+import org.hibernate.SPI;
+import static org.hibernate.SPI.Role.USE;
+
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.SUPPLY;
+
+import org.hibernate.dialect.type.spi.TimeZoneSupport;
+
+
+import org.hibernate.dialect.identity.internal.DB2zIdentityColumnSupport;
+import org.hibernate.dialect.identity.spi.IdentityColumnSupport;
+import org.hibernate.dialect.schema.spi.IndexDdlRequest;
 import org.hibernate.dialect.lock.internal.DB2LockingSupport;
 import org.hibernate.dialect.lock.spi.LockingSupport;
-import org.hibernate.dialect.pagination.LimitHandler;
-import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
-import org.hibernate.dialect.sequence.DB2zSequenceSupport;
-import org.hibernate.dialect.sequence.SequenceSupport;
-import org.hibernate.dialect.sql.ast.DB2zSqlAstTranslator;
+import org.hibernate.dialect.pagination.spi.LimitHandler;
+import org.hibernate.dialect.pagination.spi.OffsetFetchLimitHandler;
+import org.hibernate.dialect.sequence.internal.DB2zSequenceSupport;
+import org.hibernate.dialect.sequence.spi.SequenceSupport;
+import org.hibernate.dialect.sql.ast.internal.DB2zSqlAstTranslator;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.mapping.Column;
-import org.hibernate.dialect.type.IntervalType;
+import org.hibernate.dialect.temporaltype.spi.IntervalType;
 import org.hibernate.query.common.TemporalUnit;
-import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.SqlAstTranslatorFactory;
-import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
-import org.hibernate.sql.ast.tree.Statement;
+import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslatorFactory;
+import org.hibernate.dialect.sql.ast.spi.StandardSqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.Statement;
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
+import org.hibernate.dialect.sql.ast.spi.ValuesListSupport;
 import org.hibernate.sql.exec.spi.JdbcOperation;
+import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
+import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractors;
 
 import jakarta.persistence.TemporalType;
 
-import java.util.List;
 
 import static org.hibernate.type.SqlTypes.ROWID;
 import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
@@ -42,14 +57,30 @@ import static org.hibernate.type.SqlTypes.TIME_WITH_TIMEZONE;
  *
  * @author Christian Beikov
  */
-public class DB2zDialect extends DB2Dialect {
+public class DB2zDialect extends DB2Dialect implements TemporalOperationSupport {
+
+	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
+	public TemporalOperationSupport getTemporalOperationSupport() {
+		return this;
+	}
 
 	private final static DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 12, 1 );
 	public final static DatabaseVersion DB2_LUW_VERSION = DB2Dialect.MINIMUM_VERSION;
+	private static final SequenceInformationExtractor SEQUENCE_INFORMATION_EXTRACTOR =
+			SequenceInformationExtractors.builder(
+					"select case when seqtype='A' then seqschema else schema end as seqschema, case when seqtype='A' then seqname else name end as seqname, start, minvalue, maxvalue, increment from sysibm.syssequences"
+			)
+					.sequenceNameColumn( "seqname" )
+					.withoutCatalog()
+					.schemaColumn( "seqschema" )
+					.startValueColumn( "start" )
+					.minimumValueColumn( "minvalue" )
+					.maximumValueColumn( "maxvalue" )
+					.build();
 
 	public DB2zDialect(DialectResolutionInfo info) {
 		this( info.makeCopyOrDefault( MINIMUM_VERSION ) );
-		registerKeywords( info );
 	}
 
 	public DB2zDialect() {
@@ -66,11 +97,13 @@ public class DB2zDialect extends DB2Dialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	protected DatabaseVersion getMinimumSupportedVersion() {
 		return MINIMUM_VERSION;
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	protected String columnType(int sqlTypeCode) {
 		return switch ( sqlTypeCode ) {
 			// See https://www.ibm.com/support/knowledgecenter/SSEPEK_10.0.0/wnew/src/tpc/db2z_10_timestamptimezone.html
@@ -85,35 +118,34 @@ public class DB2zDialect extends DB2Dialect {
 	}
 
 	@Override
-	public boolean supportsIfExistsBeforeTableName() {
-		return false;
-	}
-
-	@Override
-	public String getCreateIndexString(boolean unique) {
+	@SPI({ USE, IMPLEMENT })
+	public String createCommand(IndexDdlRequest request) {
 		// we only create unique indexes, as opposed to unique constraints,
 		// when the column is nullable, so safe to infer unique => nullable
-		return unique ? "create unique where not null index" : "create index";
+		return request.unique() ? "create unique where not null index" : "create index";
 	}
 
 	@Override
-	public String getCreateIndexTail(boolean unique, List<Column> columns) {
+	@SPI({ USE, IMPLEMENT })
+	public String createTail(IndexDdlRequest request) {
 		return "";
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public TimeZoneSupport getTimeZoneSupport() {
 		return TimeZoneSupport.NATIVE;
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public SequenceSupport getSequenceSupport() {
-		return DB2zSequenceSupport.INSTANCE;
+		return DB2zSequenceSupport.getInstance();
 	}
 
 	@Override
-	public String getQuerySequencesString() {
-		return "select case when seqtype='A' then seqschema else schema end as seqschema, case when seqtype='A' then seqname else name end as seqname, start, minvalue, maxvalue, increment from sysibm.syssequences";
+	public SequenceInformationExtractor getSequenceInformationExtractor() {
+		return SEQUENCE_INFORMATION_EXTRACTOR;
 	}
 
 	@Override
@@ -127,6 +159,7 @@ public class DB2zDialect extends DB2Dialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
 		final var pattern = new StringBuilder();
 		pattern.append("add_");
@@ -179,34 +212,26 @@ public class DB2zDialect extends DB2Dialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public SqlAstTranslatorFactory getSqlAstTranslatorFactory() {
 		return new StandardSqlAstTranslatorFactory() {
 			@Override
-			protected <T extends JdbcOperation> SqlAstTranslator<T> buildTranslator(
-					SessionFactoryImplementor sessionFactory, Statement statement) {
-				return new DB2zSqlAstTranslator<>( sessionFactory, statement, getVersion() );
+			protected <S extends Statement, T extends JdbcOperation> SqlAstTranslator<T> createTranslator(
+					SqlAstTranslationRequest<S, T> request) {
+				return new DB2zSqlAstTranslator<>( request, getVersion() );
 			}
 		};
 	}
 
 	@Override
-	public String rowId(String rowId) {
-		return rowId;
+	@SPI({ IMPLEMENT, SUPPLY })
+	public RowIdSupport getRowIdSupport() {
+		return RowIdSupports.requestedName( null, ROWID, " rowid not null generated always" );
 	}
 
 	@Override
-	public int rowIdSqlType() {
-		return ROWID;
-	}
-
-	@Override
-	public String getRowIdColumnString(String rowId) {
-		return rowId( rowId ) + " rowid not null generated always";
-	}
-
-	@Override
-	public boolean supportsValuesList() {
+	public ValuesListSupport getValuesListSupport() {
 		// DB2 z/OS has a VALUES statement, but that doesn't support multiple values
-		return false;
+		return ValuesListSupport.INSERT_ONLY;
 	}
 }

@@ -4,6 +4,8 @@
  */
 package org.hibernate.loader.ast.internal;
 
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
+
 
 import org.hibernate.LockOptions;
 import org.hibernate.ObjectNotFoundException;
@@ -15,8 +17,8 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
-import org.hibernate.sql.ast.tree.select.SelectStatement;
+import org.hibernate.sql.ast.spi.creation.SqlAliasBaseManager;
+import org.hibernate.sql.ast.spi.query.select.SelectStatement;
 import org.hibernate.sql.exec.internal.BaseExecutionContext;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
@@ -71,7 +73,7 @@ public class EntityConcreteTypeLoader {
 
 		final var jdbcSelect =
 				jdbcServices.getJdbcEnvironment().getSqlAstTranslatorFactory()
-						.buildSelectTranslator( factory, sqlSelect )
+						.buildTranslator( new SqlAstTranslationRequest.Select( factory, sqlSelect ) )
 						.translate( bindings, QueryOptions.NONE );
 		final var results =
 				jdbcServices.getJdbcSelectExecutor()

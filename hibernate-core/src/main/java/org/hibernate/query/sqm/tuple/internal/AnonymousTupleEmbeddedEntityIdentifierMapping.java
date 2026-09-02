@@ -13,7 +13,7 @@ import org.hibernate.event.spi.MergeContext;
 import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
-import org.hibernate.metamodel.mapping.internal.SingleAttributeIdentifierMapping;
+import org.hibernate.metamodel.mapping.SingleAttributeIdentifierMapping;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.sqm.spi.SqmExpressible;

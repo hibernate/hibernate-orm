@@ -19,7 +19,8 @@ import static org.hibernate.internal.util.StringHelper.root;
 /**
  * @author Gavin King
  */
-@SuppressWarnings("nullness")
+@SuppressWarnings({ "nullness", "NullAway" })
+@org.hibernate.Internal
 public abstract class MockCollectionPersister implements CollectionPersister, Joinable {
 
 	private final String role;

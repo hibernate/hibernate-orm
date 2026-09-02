@@ -9,16 +9,22 @@ import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
+import org.hibernate.SPI;
 import org.hibernate.type.descriptor.JdbcBindingLogging;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
 
-/**
- * Convenience base implementation of {@link ValueBinder}
- *
- * @author Steve Ebersole
- */
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.USE;
+
+/// Convenience base for a [ValueBinder] which centralizes null handling and
+/// JDBC binding diagnostics. Subclasses implement the non-null indexed and
+/// named binding operations.
+///
+/// @param <J> the bound Java value type
+/// @author Steve Ebersole
+@SPI({ USE, IMPLEMENT })
 public abstract class BasicBinder<J> implements ValueBinder<J>, Serializable {
 
 	private final JavaType<J> javaType;
@@ -32,6 +38,8 @@ public abstract class BasicBinder<J> implements ValueBinder<J>, Serializable {
 		return jdbcType;
 	}
 
+	/// Create a binder for the paired Java and JDBC descriptors.
+	@SPI(IMPLEMENT)
 	public BasicBinder(JavaType<J> javaType, JdbcType jdbcType) {
 		this.javaType = javaType;
 		this.jdbcType = jdbcType;

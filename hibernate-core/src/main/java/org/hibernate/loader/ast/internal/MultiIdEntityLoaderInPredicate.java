@@ -4,6 +4,8 @@
  */
 package org.hibernate.loader.ast.internal;
 
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
+
 import java.util.List;
 
 import jakarta.annotation.Nonnull;
@@ -16,8 +18,8 @@ import org.hibernate.loader.ast.spi.MultiIdLoadOptions;
 import org.hibernate.loader.ast.spi.MultiKeyLoadSizingStrategy;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.spi.QueryOptionsAdapter;
-import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
-import org.hibernate.sql.ast.tree.select.SelectStatement;
+import org.hibernate.sql.ast.spi.creation.SqlAliasBaseManager;
+import org.hibernate.sql.ast.spi.query.select.SelectStatement;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
@@ -135,7 +137,7 @@ public class MultiIdEntityLoaderInPredicate<T> extends AbstractMultiIdEntityLoad
 		assert offset == jdbcParameters.size();
 
 		return getJdbcSelectExecutor().list(
-				getSqlAstTranslatorFactory().buildSelectTranslator( getSessionFactory(), sqlAst )
+				getSqlAstTranslatorFactory().buildTranslator( new SqlAstTranslationRequest.Select( getSessionFactory(), sqlAst ) )
 						.translate( jdbcParameterBindings, new QueryOptionsAdapter() {
 							@Override
 							@Nonnull

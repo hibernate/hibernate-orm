@@ -27,6 +27,7 @@ import org.hibernate.Locking;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.UnknownProfileException;
+import org.hibernate.dialect.function.spi.WindowFunctionSupport;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.GraphSemantic;
@@ -91,6 +92,7 @@ import java.util.function.BooleanSupplier;
 import static java.lang.Boolean.TRUE;
 import static org.hibernate.Timeouts.WAIT_FOREVER_MILLI;
 import static org.hibernate.cfg.QuerySettings.FAIL_ON_PAGINATION_OVER_COLLECTION_FETCH;
+import static org.hibernate.dialect.sql.ast.spi.SubquerySupport.Feature.OFFSET;
 import static org.hibernate.query.KeyedPage.KeyInterpretation.KEY_OF_FIRST_ON_NEXT_PAGE;
 import static org.hibernate.query.internal.QueryLogging.QUERY_MESSAGE_LOGGER;
 import static org.hibernate.query.common.FetchClauseType.PERCENT_ONLY;
@@ -1367,7 +1369,7 @@ public class SelectionQueryImpl<R>
 			return false;
 		}
 		final var sessionFactory = getSessionFactory();
-		if ( !sessionFactory.getJdbcServices().getDialect().supportsOffsetInSubquery() ) {
+		if ( !sessionFactory.getJdbcServices().getDialect().getSubquerySupport().supports( OFFSET ) ) {
 			return false;
 		}
 		final var queryPart = getSqmStatement().getQueryPart();
@@ -1384,8 +1386,9 @@ public class SelectionQueryImpl<R>
 		final var fetchClauseType = spec.getFetchClauseType();
 		if ( fetchClauseType == PERCENT_ONLY || fetchClauseType == PERCENT_WITH_TIES ) {
 			final var dialect = sessionFactory.getJdbcServices().getDialect();
-			if ( !dialect.supportsFetchClause( PERCENT_ONLY )
-					&& !dialect.supportsWindowFunctions() ) {
+			if ( !dialect.getFetchClauseSupport().supports( PERCENT_ONLY )
+					&& !dialect.getWindowFunctionSupport()
+							.supports( WindowFunctionSupport.Feature.WINDOW_FUNCTIONS ) ) {
 				return false;
 			}
 		}

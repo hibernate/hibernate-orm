@@ -22,7 +22,7 @@ import java.util.TimeZone;
 
 import org.hibernate.Internal;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.sql.ast.spi.SqlAppender;
+import org.hibernate.sql.spi.SqlAppender;
 
 import static java.time.format.DateTimeFormatter.ISO_LOCAL_DATE;
 import static java.time.format.DateTimeFormatter.ISO_LOCAL_TIME;
@@ -431,11 +431,11 @@ public final class DateTimeUtils {
 	 * than what is supported by a column, which is to round the excess fractions.
 	 */
 	public static <T extends Temporal> T adjustToDefaultPrecision(T temporal, Dialect d) {
-		return adjustToPrecision( temporal, d.getDefaultTimestampPrecision(), d );
+		return adjustToPrecision( temporal, d.getTypeSizingProfile().defaultTimestampPrecision(), d );
 	}
 
 	public static <T extends Temporal> T adjustToPrecision(T temporal, int precision, Dialect dialect) {
-		return dialect.doesRoundTemporalOnOverflow()
+		return dialect.getTemporalValueSemantics().roundsOnOverflow()
 				? roundToSecondPrecision( temporal, precision )
 				: truncateToPrecision( temporal, precision );
 	}
@@ -460,7 +460,7 @@ public final class DateTimeUtils {
 	 */
 	@Deprecated(forRemoval = true, since = "6.6.1")
 	public static <T extends Temporal> T roundToDefaultPrecision(T temporal, Dialect d) {
-		final int defaultTimestampPrecision = d.getDefaultTimestampPrecision();
+		final int defaultTimestampPrecision = d.getTypeSizingProfile().defaultTimestampPrecision();
 		if ( defaultTimestampPrecision >= 9 || !temporal.isSupported( ChronoField.NANO_OF_SECOND ) ) {
 			return temporal;
 		}

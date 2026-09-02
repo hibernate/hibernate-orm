@@ -20,6 +20,7 @@ import org.hibernate.metamodel.model.domain.NavigableRole;
  * @author Steve Ebersole
  */
 @Incubating
+@org.hibernate.SPI({ org.hibernate.SPI.Role.USE, org.hibernate.SPI.Role.IMPLEMENT })
 public interface GraphMutationTarget<TD extends TableDescriptor> {
 	/**
 	 * The model role of this target

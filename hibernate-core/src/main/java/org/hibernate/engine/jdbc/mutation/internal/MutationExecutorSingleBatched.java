@@ -9,8 +9,8 @@ import org.hibernate.engine.jdbc.batch.spi.GroupedBatch;
 import org.hibernate.engine.jdbc.batch.spi.StaleStateMapper;
 import org.hibernate.engine.jdbc.mutation.TableInclusionChecker;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.sql.model.PreparableMutationOperation;
-import org.hibernate.sql.model.ValuesAnalysis;
+import org.hibernate.sql.spi.mutation.jdbc.PreparableMutationOperation;
+import org.hibernate.sql.spi.mutation.ValuesAnalysis;
 
 /**
  * @author Steve Ebersole

@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.sql;
 
+
 import java.sql.CallableStatement;
 import java.sql.SQLException;
 import java.sql.Statement;

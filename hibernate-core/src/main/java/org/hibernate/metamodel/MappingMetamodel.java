@@ -17,7 +17,7 @@ import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.sqm.spi.SqmExpressible;
-import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.spi.query.from.TableGroup;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import jakarta.persistence.metamodel.Metamodel;
@@ -30,6 +30,7 @@ import jakarta.persistence.metamodel.Metamodel;
  * @author Steve Ebersole
  */
 @Incubating
+@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 public interface MappingMetamodel extends Metamodel {
 	/**
 	 * The {@link TypeConfiguration} this metamodel is associated with
@@ -74,6 +75,7 @@ public interface MappingMetamodel extends Metamodel {
 	 *
 	 * @see #findEntityDescriptor
 	 */
+	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	EmbeddableValuedModelPart getEmbeddableValuedModelPart(NavigableRole role);
 
 

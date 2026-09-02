@@ -4,8 +4,7 @@
  */
 package org.hibernate.dialect.lock;
 
-import org.hibernate.LockOptions;
-import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.lock.spi.TableLockHintRenderer;
 
 /**
  * Indicates how a dialect supports acquiring pessimistic locks
@@ -30,7 +29,7 @@ public enum PessimisticLockStyle {
 	 * table locking hints, associated with the table references in the
 	 * {@code FROM} clause.
 	 *
-	 * @see Dialect#appendLockHint(LockOptions, String)
+	 * @see TableLockHintRenderer
 	 */
 	TABLE_HINT
 }

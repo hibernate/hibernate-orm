@@ -4,82 +4,127 @@
  */
 package org.hibernate.community.dialect;
 
+import org.hibernate.dialect.temporaltype.spi.TemporalValueSemantics;
+
+import org.hibernate.dialect.temporaltype.spi.CurrentTimestampSelection;
+
+import org.hibernate.dialect.temporaltype.spi.TemporalOperationSupport;
+import org.hibernate.dialect.temporaltype.spi.TemporalOperationSupports;
+
+import org.hibernate.dialect.temporaltype.spi.TemporalFormatSupport;
+
+import org.hibernate.dialect.temporaltype.spi.CurrentTemporalSupport;
+
+import org.hibernate.SPI;
+
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.SUPPLY;
+import static org.hibernate.SPI.Role.USE;
+
+import org.hibernate.dialect.type.spi.StandardDdlTypes;
+
+import org.hibernate.dialect.type.spi.TypeSizingProfile;
+import org.hibernate.dialect.type.spi.EnumSupport;
+import org.hibernate.dialect.type.spi.EnumSupports;
+import org.hibernate.dialect.type.spi.ObjectNullBindingStrategy;
+import org.hibernate.dialect.type.spi.UserDefinedTypeDdlSupport;
+import org.hibernate.dialect.lob.spi.LobSupport;
+import org.hibernate.dialect.lob.spi.LobSupports;
+import org.hibernate.dialect.schema.spi.ExistenceCheckPlacement;
+
+import org.hibernate.dialect.mutation.spi.MultiTableMutationSupport;
+import org.hibernate.dialect.array.spi.ArraySupport;
+import org.hibernate.dialect.function.spi.TupleCountSupport;
+import org.hibernate.dialect.function.spi.WindowFunctionSupport;
+import org.hibernate.dialect.sql.ast.spi.CteSupport;
+import org.hibernate.dialect.sql.ast.spi.MutationKind;
+import org.hibernate.dialect.sql.ast.spi.MutationSyntaxCapability;
+import org.hibernate.dialect.sql.ast.spi.MutationSyntaxSupport;
+import org.hibernate.dialect.sql.ast.spi.PredicateSupport;
+import org.hibernate.dialect.sql.ast.spi.ValuesListSupport;
+import org.hibernate.dialect.sql.ast.spi.SubquerySupport;
+
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.TemporalType;
-import jakarta.persistence.Timeout;
 import jakarta.annotation.Nullable;
 import org.hibernate.Length;
-import org.hibernate.LockMode;
-import org.hibernate.LockOptions;
 import org.hibernate.QueryTimeoutException;
-import org.hibernate.Timeouts;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
-import org.hibernate.community.dialect.identity.GaussDBIdentityColumnSupport;
+import org.hibernate.community.dialect.internal.GaussDBRefCursorSupportFactory;
+import org.hibernate.community.dialect.identity.internal.GaussDBIdentityColumnSupport;
 import org.hibernate.community.dialect.lock.internal.GaussDBLockingSupport;
 import org.hibernate.community.dialect.sequence.GaussDBSequenceSupport;
-import org.hibernate.dialect.BooleanDecoder;
+import org.hibernate.dialect.type.spi.BooleanDecoder;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.DatabaseVersion;
-import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
-import org.hibernate.dialect.FunctionalDependencyAnalysisSupport;
-import org.hibernate.dialect.FunctionalDependencyAnalysisSupportImpl;
-import org.hibernate.dialect.NationalizationSupport;
-import org.hibernate.dialect.RowLockStrategy;
-import org.hibernate.dialect.SelectItemReferenceStrategy;
-import org.hibernate.dialect.TimeZoneSupport;
-import org.hibernate.dialect.aggregate.AggregateSupport;
-import org.hibernate.dialect.identity.IdentityColumnSupport;
+import org.hibernate.dialect.sql.ast.spi.DmlTargetColumnQualifierSupport;
+import org.hibernate.dialect.aggregate.spi.FunctionalDependencyAnalysisSupport;
+import org.hibernate.dialect.type.spi.NationalizationSupport;
+import org.hibernate.dialect.type.spi.TimeZoneSupport;
+import org.hibernate.dialect.aggregate.spi.AggregateSupport;
+import org.hibernate.dialect.identity.spi.IdentityColumnSupport;
+import org.hibernate.dialect.generated.spi.GeneratedValuesSupport;
 import org.hibernate.dialect.lock.spi.LockingSupport;
-import org.hibernate.dialect.pagination.LimitHandler;
-import org.hibernate.dialect.pagination.LimitLimitHandler;
-import org.hibernate.dialect.sequence.SequenceSupport;
-import org.hibernate.dialect.unique.CreateTableUniqueDelegate;
-import org.hibernate.dialect.unique.UniqueDelegate;
+import org.hibernate.dialect.pagination.spi.LimitHandler;
+import org.hibernate.dialect.pagination.spi.LimitLimitHandler;
+import org.hibernate.dialect.sequence.spi.SequenceSupport;
+import org.hibernate.dialect.schema.spi.AlterColumnTypeRequest;
+import org.hibernate.dialect.schema.spi.ConstraintDropMode;
+import org.hibernate.dialect.schema.spi.ExistenceCheckPlacement;
+import org.hibernate.dialect.schema.spi.IfExistsSupport;
+import org.hibernate.dialect.queryhint.spi.QueryHintPlacement;
+import org.hibernate.dialect.schema.spi.IndexNameQualification;
+import org.hibernate.dialect.schema.spi.SchemaDropSupport;
+import org.hibernate.dialect.schema.spi.TruncateMode;
+import org.hibernate.dialect.schema.spi.TruncateRequest;
+import org.hibernate.dialect.unique.spi.UniqueDelegates;
+import org.hibernate.dialect.unique.spi.UniqueDelegate;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
+import org.hibernate.engine.jdbc.cursor.spi.RefCursorSupportFactory;
+import org.hibernate.engine.jdbc.cursor.spi.RefCursorSupports;
 import org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
-import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
+import org.hibernate.dialect.identifier.spi.IdentifierHelperBuildRequest;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
-import org.hibernate.internal.util.JdbcExceptionHelper;
+import org.hibernate.jdbc.spi.JdbcExceptionHelper;
 import org.hibernate.mapping.AggregateColumn;
 import org.hibernate.mapping.Table;
-import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.persister.entity.mutation.EntityMutationTarget;
+import org.hibernate.mapping.UserDefinedType;
+import org.hibernate.metamodel.mapping.SqlExpressible;
+import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.procedure.spi.CallableStatementSupport;
+import org.hibernate.procedure.spi.CallableStatementSupports;
 import org.hibernate.query.SemanticException;
-import org.hibernate.query.common.FetchClauseType;
+import org.hibernate.dialect.sql.ast.spi.FetchClauseSupport;
 import org.hibernate.query.common.TemporalUnit;
-import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.CastType;
-import org.hibernate.dialect.type.IntervalType;
-import org.hibernate.query.sqm.mutation.internal.cte.CteInsertStrategy;
-import org.hibernate.query.sqm.mutation.internal.cte.CteMutationStrategy;
-import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
-import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
+import org.hibernate.dialect.temporaltype.spi.IntervalType;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.SqlAstTranslatorFactory;
-import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
-import org.hibernate.sql.ast.spi.SqlAppender;
-import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
-import org.hibernate.sql.ast.tree.Statement;
+import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslatorFactory;
+import org.hibernate.sql.spi.ParameterMarkerStrategy;
+import org.hibernate.sql.spi.SqlAppender;
+import org.hibernate.dialect.sql.ast.spi.StandardSqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.Statement;
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
 import org.hibernate.sql.exec.spi.JdbcOperation;
-import org.hibernate.sql.model.MutationOperation;
-import org.hibernate.sql.model.internal.OptionalTableUpdate;
-import org.hibernate.sql.model.jdbc.OptionalTableUpdateOperation;
-import org.hibernate.tool.schema.extract.internal.InformationExtractorPostgreSQLImpl;
+import org.hibernate.sql.spi.mutation.MutationOperation;
+import org.hibernate.dialect.sql.ast.spi.OptionalTableUpdateOperationRequest;
+import org.hibernate.sql.spi.mutation.jdbc.OptionalTableUpdateOperation;
 import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
 import org.hibernate.tool.schema.extract.spi.ExtractionContext;
 import org.hibernate.tool.schema.extract.spi.InformationExtractor;
-import org.hibernate.tool.schema.internal.StandardTableExporter;
+import org.hibernate.tool.schema.extract.spi.InformationExtractors;
+import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
+import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractors;
+import org.hibernate.tool.schema.spi.StandardTableExporter;
+import org.hibernate.tool.schema.spi.StandardUserDefinedTypeExporter;
 import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
@@ -90,26 +135,15 @@ import org.hibernate.type.descriptor.jdbc.ObjectNullAsBinaryTypeJdbcType;
 import org.hibernate.type.descriptor.jdbc.SqlTypedJdbcType;
 import org.hibernate.type.descriptor.jdbc.XmlJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
-import org.hibernate.type.descriptor.sql.internal.ArrayDdlTypeImpl;
-import org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType;
-import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
-import org.hibernate.type.descriptor.sql.internal.NamedNativeEnumDdlTypeImpl;
-import org.hibernate.type.descriptor.sql.internal.NamedNativeOrdinalEnumDdlTypeImpl;
-import org.hibernate.type.descriptor.sql.internal.Scale6IntervalSecondDdlType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import java.sql.CallableStatement;
-import java.sql.DatabaseMetaData;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.sql.Types;
 import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.TimeZone;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
@@ -140,11 +174,11 @@ import static org.hibernate.type.SqlTypes.TINYINT;
 import static org.hibernate.type.SqlTypes.UUID;
 import static org.hibernate.type.SqlTypes.VARBINARY;
 import static org.hibernate.type.SqlTypes.VARCHAR;
-import static org.hibernate.type.descriptor.DateTimeUtils.appendAsDate;
-import static org.hibernate.type.descriptor.DateTimeUtils.appendAsLocalTime;
-import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTime;
-import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMicros;
-import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMillis;
+import static org.hibernate.dialect.literal.spi.StandardDateTimeLiteralRendering.appendAsDate;
+import static org.hibernate.dialect.literal.spi.StandardDateTimeLiteralRendering.appendAsLocalTime;
+import static org.hibernate.dialect.literal.spi.StandardDateTimeLiteralRendering.appendAsTime;
+import static org.hibernate.dialect.literal.spi.StandardDateTimeLiteralRendering.appendAsTimestampWithMicros;
+import static org.hibernate.dialect.literal.spi.StandardDateTimeLiteralRendering.appendAsTimestampWithMillis;
 
 /**
  * A {@linkplain Dialect SQL dialect} for GaussDB V2.0-8.201 and above.
@@ -157,10 +191,54 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithM
  *
  * Notes: Original code of this class is based on PostgreSQLDialect.
  */
-public class GaussDBDialect extends Dialect {
-	protected final static DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 2 );
+public class GaussDBDialect extends Dialect implements CurrentTemporalSupport, TemporalFormatSupport, TemporalOperationSupport {
+	private IfExistsSupport ifExistsSupport;
+	private SchemaDropSupport schemaDropSupport;
 
-	private final UniqueDelegate uniqueDelegate = new CreateTableUniqueDelegate(this);
+
+	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
+	public TemporalOperationSupport getTemporalOperationSupport() {
+		return this;
+	}
+
+	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
+	public TemporalFormatSupport getTemporalFormatSupport() {
+		return this;
+	}
+
+	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
+	public CurrentTemporalSupport getCurrentTemporalSupport() {
+		return this;
+	}
+	private final TypeSizingProfile typeSizingProfile = TypeSizingProfile.builder( super.getTypeSizingProfile() )
+			.defaultIntervalSecondScale( 6 )
+			.maxVarcharLength( 10_485_760 ).maxVarcharCapacity( 1_073_741_727 )
+			.maxNVarcharLength( 10_485_760 ).maxNVarcharCapacity( 10_485_760 )
+			.maxVarbinaryLength( Length.LONG32 ).maxVarbinaryCapacity( Length.LONG32 )
+			.build();
+
+	@Override public TypeSizingProfile getTypeSizingProfile() { return typeSizingProfile; }
+	private static final ArraySupport ARRAY_SUPPORT = ArraySupport.builder()
+			.capabilities( ArraySupport.Capability.STANDARD_ARRAY )
+			.multiValuedParameterStrategy( ArraySupport.MultiValuedParameterStrategy.ARRAY )
+			.build();
+
+	protected final static DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 2 );
+	private static final CallableStatementSupport CALLABLE_STATEMENT_SUPPORT =
+			CallableStatementSupports.builder()
+					.supportsRefCursors( true )
+					.namedParameterRenderer( (sqlAppender, parameterName) -> {
+						sqlAppender.appendSql( parameterName );
+						sqlAppender.appendSql( " => ?" );
+					} )
+					.build();
+	private static final RefCursorSupportFactory REF_CURSOR_SUPPORT_FACTORY =
+			RefCursorSupports.metadataSelected( GaussDBRefCursorSupportFactory.INSTANCE );
+
+	private final UniqueDelegate uniqueDelegate = UniqueDelegates.createTable( this );
 	private final StandardTableExporter gaussDBTableExporter = new StandardTableExporter( this ) {
 		@Override
 		protected void applyAggregateColumnCheck(StringBuilder buf, AggregateColumn aggregateColumn) {
@@ -172,6 +250,10 @@ public class GaussDBDialect extends Dialect {
 			super.applyAggregateColumnCheck( buf, aggregateColumn );
 		}
 	};
+	private final Exporter<UserDefinedType> userDefinedTypeExporter = new StandardUserDefinedTypeExporter(
+			this,
+			new UserDefinedTypeDdlSupport( "", "", ExistenceCheckPlacement.BEFORE_NAME )
+	);
 
 	private final OptionalTableUpdateStrategy optionalTableUpdateStrategy;
 
@@ -181,7 +263,6 @@ public class GaussDBDialect extends Dialect {
 
 	public GaussDBDialect(DialectResolutionInfo info) {
 		this( info.makeCopyOrDefault( MINIMUM_VERSION ));
-		registerKeywords( info );
 	}
 
 	public GaussDBDialect(DatabaseVersion version) {
@@ -196,16 +277,21 @@ public class GaussDBDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	protected DatabaseVersion getMinimumSupportedVersion() {
 		return MINIMUM_VERSION;
 	}
 
 	@Override
-	public boolean getDefaultNonContextualLobCreation() {
-		return true;
+	@SPI({ IMPLEMENT, SUPPLY })
+	protected void contributeDefaultProperties(java.util.Properties properties) {
+		super.contributeDefaultProperties( properties );
+		properties.setProperty( org.hibernate.cfg.AvailableSettings.NON_CONTEXTUAL_LOB_CREATION, "true" );
+		properties.setProperty( org.hibernate.cfg.AvailableSettings.STATEMENT_BATCH_SIZE, "15" );
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	protected String columnType(int sqlTypeCode) {
 		return switch (sqlTypeCode) {
 			// no tinyint
@@ -227,14 +313,7 @@ public class GaussDBDialect extends Dialect {
 	}
 
 	@Override
-	protected boolean isLob(int sqlTypeCode) {
-		return switch ( sqlTypeCode ) {
-			case LONG32VARCHAR, LONG32NVARCHAR, LONG32VARBINARY -> false;
-			default -> super.isLob( sqlTypeCode );
-		};
-	}
-
-	@Override
+	@SPI({ USE, IMPLEMENT })
 	protected String castType(int sqlTypeCode) {
 		return switch (sqlTypeCode) {
 			case CHAR, NCHAR, VARCHAR, NVARCHAR -> "varchar";
@@ -246,60 +325,40 @@ public class GaussDBDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	protected void registerColumnTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.registerColumnTypes( typeContributions, serviceRegistry );
 		final DdlTypeRegistry ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
 
 		// We need to configure that the array type uses the raw element type for casts
-		ddlTypeRegistry.addDescriptor( new ArrayDdlTypeImpl( this, true ) );
+		ddlTypeRegistry.addDescriptor( StandardDdlTypes.standardArray( this, true ) );
 
 		// Register this type to be able to support Float[]
 		// The issue is that the JDBC driver can't handle createArrayOf( "float(24)", ... )
 		// It requires the use of "real" or "float4"
 		// Alternatively we could introduce a new API in Dialect for creating such base names
 		ddlTypeRegistry.addDescriptor(
-				CapacityDependentDdlType.builder( FLOAT, columnType( FLOAT ), castType( FLOAT ), this )
+				StandardDdlTypes.builder( FLOAT, columnType( FLOAT ), this ).castTypeName( castType( FLOAT ) )
 						.withTypeCapacity( 24, "float4" )
 						.build()
 		);
 
-		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( SQLXML, "xml", this ) );
-		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( UUID, "uuid", this ) );
-		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( INET, "inet", this ) );
-		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOMETRY, "geometry", this ) );
-		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOGRAPHY, "geography", this ) );
-		ddlTypeRegistry.addDescriptor( new Scale6IntervalSecondDdlType( this ) );
+		ddlTypeRegistry.addDescriptor( StandardDdlTypes.simple( SQLXML, "xml", this ) );
+		ddlTypeRegistry.addDescriptor( StandardDdlTypes.simple( UUID, "uuid", this ) );
+		ddlTypeRegistry.addDescriptor( StandardDdlTypes.simple( INET, "inet", this ) );
+		ddlTypeRegistry.addDescriptor( StandardDdlTypes.simple( GEOMETRY, "geometry", this ) );
+		ddlTypeRegistry.addDescriptor( StandardDdlTypes.simple( GEOGRAPHY, "geography", this ) );
+		ddlTypeRegistry.addDescriptor( StandardDdlTypes.scale6IntervalSecond( this ) );
 
 		// Prefer jsonb if possible
-		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "jsonb", this ) );
+		ddlTypeRegistry.addDescriptor( StandardDdlTypes.simple( JSON, "jsonb", this ) );
 
-		ddlTypeRegistry.addDescriptor( new NamedNativeEnumDdlTypeImpl( this ) );
-		ddlTypeRegistry.addDescriptor( new NamedNativeOrdinalEnumDdlTypeImpl( this ) );
+		ddlTypeRegistry.addDescriptor( StandardDdlTypes.namedNativeEnum() );
+		ddlTypeRegistry.addDescriptor( StandardDdlTypes.namedNativeOrdinalEnum() );
 	}
 
 	@Override
-	public int getMaxVarcharLength() {
-		return 10_485_760;
-	}
-
-	@Override
-	public int getMaxVarcharCapacity() {
-		// 1GB-85-4 according to GaussDB docs
-		return 1_073_741_727;
-	}
-
-	@Override
-	public int getMaxVarbinaryLength() {
-		//has no varbinary-like type
-		return Length.LONG32;
-	}
-
-	@Override
-	public int getDefaultStatementBatchSize() {
-		return 15;
-	}
-
-	@Override
+	@SPI({ USE, IMPLEMENT })
 	public JdbcType resolveSqlTypeDescriptor(
 			String columnTypeName,
 			int jdbcTypeCode,
@@ -378,6 +437,7 @@ public class GaussDBDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	protected Integer resolveSqlTypeCode(String columnTypeName, TypeConfiguration typeConfiguration) {
 		return switch (columnTypeName) {
 			case "bool" -> Types.BOOLEAN;
@@ -391,47 +451,25 @@ public class GaussDBDialect extends Dialect {
 	}
 
 	@Override
-	public String getEnumTypeDeclaration(String name, String[] values) {
-		return name;
+	@SPI({ IMPLEMENT, SUPPLY })
+	public EnumSupport getEnumSupport() {
+		return EnumSupports.postgresql();
 	}
 
 	@Override
-	public String[] getCreateEnumTypeCommand(String name, String[] values) {
-		StringBuilder type = new StringBuilder();
-		type.append( "create type " )
-				.append( name )
-				.append( " as enum (" );
-		String separator = "";
-		for ( String value : values ) {
-			type.append( separator ).append('\'').append( value ).append('\'');
-			separator = ",";
-		}
-		type.append( ')' );
-		String cast1 = "create cast (varchar as " +
-				name +
-				") with inout as implicit";
-		String cast2 = "create cast (" +
-				name +
-				" as varchar) with inout as implicit";
-		return new String[] { type.toString(), cast1, cast2 };
-	}
-
-	@Override
-	public String[] getDropEnumTypeCommand(String name) {
-		return new String[] { "drop type if exists " + name + " cascade" };
-	}
-
-	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String currentTime() {
 		return "localtime";
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String currentTimestamp() {
 		return "localtimestamp";
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String currentTimestampWithTimeZone() {
 		return "current_timestamp";
 	}
@@ -443,14 +481,16 @@ public class GaussDBDialect extends Dialect {
 	 * {@code (extract(dow,arg)+1))}.
 	 */
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String extractPattern(TemporalUnit unit) {
 		return switch (unit) {
-			case DAY_OF_WEEK -> "(" + super.extractPattern( unit ) + "+1)";
-			default -> super.extractPattern(unit);
+			case DAY_OF_WEEK -> "(" + TemporalOperationSupports.standard().extractPattern( unit ) + "+1)";
+			default -> TemporalOperationSupports.standard().extractPattern(unit);
 		};
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String castPattern(CastType from, CastType to) {
 		if ( from == CastType.STRING && to == CastType.BOOLEAN ) {
 			return "cast(?1 as ?2)";
@@ -488,11 +528,13 @@ public class GaussDBDialect extends Dialect {
 	 * {@code timestampdiff()}.
 	 */
 	@Override
-	public long getFractionalSecondPrecisionInNanos() {
+	@SPI({ USE, IMPLEMENT })
+	public long fractionalSecondPrecisionInNanos() {
 		return 1_000_000_000; //seconds
 	}
 
 	@Override @SuppressWarnings("deprecation")
+	@SPI({ USE, IMPLEMENT })
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
 		return intervalType != null
 				? "(?2+?3)"
@@ -510,6 +552,7 @@ public class GaussDBDialect extends Dialect {
 	}
 
 	@Override @SuppressWarnings("deprecation")
+	@SPI({ USE, IMPLEMENT })
 	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
 		if ( unit == null ) {
 			return "(?3-?2)";
@@ -530,11 +573,13 @@ public class GaussDBDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public TimeZoneSupport getTimeZoneSupport() {
 		return TimeZoneSupport.NORMALIZE;
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
 		super.initializeFunctionRegistry(functionContributions);
 
@@ -548,6 +593,7 @@ public class GaussDBDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public NameQualifierSupport getNameQualifierSupport() {
 		// This method is overridden so the correct value will be returned when
 		// DatabaseMetaData is not available.
@@ -555,85 +601,77 @@ public class GaussDBDialect extends Dialect {
 	}
 
 	@Override
-	public String getCurrentSchemaCommand() {
-		return "select current_schema()";
+	public PredicateSupport getPredicateSupport() {
+		return PredicateSupport.builder( super.getPredicateSupport() )
+				.caseInsensitiveLikeOperator( "ilike" )
+				.capabilities(
+						PredicateSupport.Capability.DISTINCT_FROM,
+						PredicateSupport.Capability.TRUTHNESS
+				)
+				.build();
 	}
 
 	@Override
-	public boolean supportsDistinctFromPredicate() {
-		return true;
+	@SPI({ IMPLEMENT, SUPPLY })
+	public synchronized IfExistsSupport getIfExistsSupport() {
+		if ( ifExistsSupport == null ) {
+			ifExistsSupport = new IfExistsSupport(
+				ExistenceCheckPlacement.BEFORE_NAME,
+				ExistenceCheckPlacement.BEFORE_NAME,
+				ExistenceCheckPlacement.BEFORE_NAME,
+				ExistenceCheckPlacement.NONE
+		);
+		}
+		return ifExistsSupport;
 	}
 
 	@Override
-	public boolean supportsIfExistsBeforeTableName() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsIfExistsBeforeTypeName() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsIfExistsBeforeConstraintName() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsIfExistsAfterAlterTable() {
-		return true;
-	}
-
-	@Override
-	public String getBeforeDropStatement() {
-		// NOTICE: table "nonexistent" does not exist, skipping
-		// as a JDBC SQLWarning
-		return "set client_min_messages = WARNING";
-	}
-
-	@Override
-	public String getAlterColumnTypeString(String columnName, String columnType, String columnDefinition) {
+	@SPI({ USE, IMPLEMENT })
+	public String alterColumnType(AlterColumnTypeRequest request) {
 		// would need multiple statements to 'set not null'/'drop not null', 'set default'/'drop default', 'set generated', etc
-		return "alter column " + columnName + " set data type " + columnType;
+		return "alter column " + request.columnName() + " set data type " + request.columnType();
 	}
 
 	@Override
-	public boolean supportsAlterColumnType() {
-		return true;
+	public ValuesListSupport getValuesListSupport() {
+		return ValuesListSupport.STANDARD;
 	}
 
 	@Override
-	public boolean supportsValuesList() {
-		return true;
+	public CteSupport getCteSupport() {
+		return CteSupport.builder()
+				.mutationFeatures(
+						CteSupport.MutationFeature.NON_QUERY,
+						CteSupport.MutationFeature.INSERT_CONFLICT
+				)
+				.build();
 	}
 
 	@Override
-	public boolean supportsPartitionBy() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsNonQueryWithCTE() {
-		return true;
-	}
-	@Override
-	public boolean supportsConflictClauseForInsertCTE() {
-		return true;
-	}
-
-	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public SequenceSupport getSequenceSupport() {
 		return GaussDBSequenceSupport.INSTANCE;
 	}
 
 	@Override
-	public String getCascadeConstraintsString() {
-		return " cascade";
+	@SPI({ IMPLEMENT, SUPPLY })
+	public synchronized SchemaDropSupport getSchemaDropSupport() {
+		if ( schemaDropSupport == null ) {
+			schemaDropSupport = new SchemaDropSupport(
+				List.of( "set client_min_messages = WARNING" ),
+				ConstraintDropMode.EXPLICIT,
+				" cascade"
+		);
+		}
+		return schemaDropSupport;
 	}
 
+	private static final SequenceInformationExtractor SEQUENCE_INFORMATION_EXTRACTOR =
+			SequenceInformationExtractors.builder( "select * from information_schema.sequences" ).build();
+
 	@Override
-	public String getQuerySequencesString() {
-		return "select * from information_schema.sequences";
+	public SequenceInformationExtractor getSequenceInformationExtractor() {
+		return SEQUENCE_INFORMATION_EXTRACTOR;
 	}
 
 	@Override
@@ -641,50 +679,7 @@ public class GaussDBDialect extends Dialect {
 		return LimitLimitHandler.INSTANCE;
 	}
 
-	@Override
-	public String getForUpdateString(String aliases) {
-		return getForUpdateString() + " of " + aliases;
-	}
 
-	@Override
-	public String getForUpdateString(String aliases, LockOptions lockOptions) {
-		// parent's implementation for (aliases, lockOptions) ignores aliases
-		if ( aliases.isEmpty() ) {
-			LockMode lockMode = lockOptions.getLockMode();
-			for ( Map.Entry<String, LockMode> entry : lockOptions.getAliasSpecificLocks() ) {
-				// seek the highest lock mode
-				if ( entry.getValue().greaterThan(lockMode) ) {
-					aliases = entry.getKey();
-				}
-			}
-		}
-		LockMode lockMode = lockOptions.getAliasSpecificLockMode( aliases );
-		if ( lockMode == null ) {
-			lockMode = lockOptions.getLockMode();
-		}
-		return switch (lockMode) {
-			case PESSIMISTIC_READ -> getReadLockString( aliases, lockOptions.getTimeOut() );
-			case PESSIMISTIC_WRITE -> getWriteLockString( aliases, lockOptions.getTimeOut() );
-			case UPGRADE_NOWAIT, PESSIMISTIC_FORCE_INCREMENT -> getForUpdateNowaitString( aliases );
-			case UPGRADE_SKIPLOCKED -> getForUpdateSkipLockedString( aliases );
-			default -> "";
-		};
-	}
-
-	@Override
-	public String getNoColumnsInsertString() {
-		return "default values";
-	}
-
-	@Override
-	public String getCaseInsensitiveLike(){
-		return "ilike";
-	}
-
-	@Override
-	public boolean supportsCaseInsensitiveLike() {
-		return true;
-	}
 
 	@Override
 	public GenerationType getNativeValueGenerationStrategy() {
@@ -692,109 +687,85 @@ public class GaussDBDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsOuterJoinForUpdate() {
-		return false;
+	@SPI({ IMPLEMENT, SUPPLY })
+	public LobSupport getLobSupport() {
+		return LobSupports.postgresql();
 	}
 
 	@Override
-	public boolean useInputStreamToInsertBlob() {
-		return false;
+	@SPI({ USE, IMPLEMENT })
+	public String getSelectClauseNullString(SqlTypedMapping sqlTypeMapping, TypeConfiguration typeConfiguration) {
+		final var ddlTypeRegistry = typeConfiguration.getDdlTypeRegistry();
+		final var jdbcMapping = sqlTypeMapping.getJdbcMapping();
+		final String castTypeName = ddlTypeRegistry.getDescriptor( jdbcMapping.getJdbcType().getDdlTypeCode() )
+				.getCastTypeName( sqlTypeMapping.toSize(), (SqlExpressible) jdbcMapping, ddlTypeRegistry );
+		return "cast(null as " + castTypeName + ")";
 	}
 
 	@Override
-	public boolean useConnectionToCreateLob() {
-		return false;
-	}
-
-	@Override
-	public String getSelectClauseNullString(int sqlType, TypeConfiguration typeConfiguration) {
-		// TODO: adapt this to handle named enum types!
-		return "cast(null as " + typeConfiguration.getDdlTypeRegistry().getRawTypeName( sqlType ) + ")";
-	}
-
-	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String quoteCollation(String collation) {
 		return '\"' + collation + '\"';
 	}
 
 	@Override
-	public boolean supportsCommentOn() {
-		return true;
+	@SPI({ IMPLEMENT, SUPPLY })
+	public org.hibernate.dialect.schema.spi.SchemaCommentSupport getSchemaCommentSupport() {
+		return org.hibernate.dialect.schema.spi.SchemaCommentSupports.commentOn();
 	}
 
 	@Override
-	public boolean supportsCurrentTimestampSelection() {
-		return true;
+	@SPI({ USE, IMPLEMENT })
+	public CurrentTimestampSelection getCurrentTimestampSelection() {
+		return CurrentTimestampSelection.prepared( "select now()" );
 	}
 
 	@Override
-	public boolean isCurrentTimestampSelectStringCallable() {
-		return false;
+	public TupleCountSupport getTupleCountSupport() {
+		return TupleCountSupport.builder()
+				.nonDistinctSyntax( TupleCountSupport.Syntax.PARENTHESIZED_TUPLE )
+				.distinctSyntax( TupleCountSupport.Syntax.PARENTHESIZED_TUPLE )
+				.build();
 	}
 
 	@Override
-	public String getCurrentTimestampSelectString() {
-		return "select now()";
-	}
-
-	@Override
-	public boolean supportsTupleCounts() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsIsTrue() {
-		return true;
-	}
-
-	@Override
-	public boolean requiresParensForTupleDistinctCounts() {
-		return true;
-	}
-
-	@Override
+	@SPI({ USE, IMPLEMENT })
 	public void appendBooleanValueString(SqlAppender appender, boolean bool) {
 		appender.appendSql( bool );
 	}
 
 	@Override
-	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, DatabaseMetaData dbMetaData)
-			throws SQLException {
+	@SPI({ USE, IMPLEMENT, SUPPLY })
+	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuildRequest request) {
+		final var builder = request.builder();
 
-		if ( dbMetaData == null ) {
+		if ( !request.jdbcMetadata().isJdbcMetadataAccessible() ) {
 			builder.setUnquotedCaseStrategy( IdentifierCaseStrategy.LOWER );
 			builder.setQuotedCaseStrategy( IdentifierCaseStrategy.MIXED );
 		}
 
-		return super.buildIdentifierHelper( builder, dbMetaData );
+		return super.buildIdentifierHelper( request );
 	}
 
 	@Override
-	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(
-			EntityMappingType rootEntityDescriptor,
-			RuntimeModelCreationContext runtimeModelCreationContext) {
-		return new CteMutationStrategy( rootEntityDescriptor, runtimeModelCreationContext );
+	public MultiTableMutationSupport getMultiTableMutationSupport() {
+		return MultiTableMutationSupport.CTE;
 	}
 
 	@Override
-	public SqmMultiTableInsertStrategy getFallbackSqmInsertStrategy(
-			EntityMappingType rootEntityDescriptor,
-			RuntimeModelCreationContext runtimeModelCreationContext) {
-		return new CteInsertStrategy( rootEntityDescriptor, runtimeModelCreationContext );
-	}
-
-	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public SqlAstTranslatorFactory getSqlAstTranslatorFactory() {
 		return new StandardSqlAstTranslatorFactory() {
 			@Override
-			protected <T extends JdbcOperation> SqlAstTranslator<T> buildTranslator(
-					SessionFactoryImplementor sessionFactory, Statement statement) {
-				return new GaussDBSqlAstTranslator<>( sessionFactory, statement );
+			protected <S extends Statement, T extends JdbcOperation> SqlAstTranslator<T> createTranslator(
+					SqlAstTranslationRequest<S, T> request) {
+				return new GaussDBSqlAstTranslator<>( request );
 			}
 		};
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public ViolatedConstraintNameExtractor getViolatedConstraintNameExtractor() {
 		return EXTRACTOR;
 	}
@@ -840,6 +811,7 @@ public class GaussDBDialect extends Dialect {
 			} );
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
 		return (sqlException, message, sql) -> {
 			final String sqlState = JdbcExceptionHelper.extractSqlState( sqlException );
@@ -859,57 +831,24 @@ public class GaussDBDialect extends Dialect {
 		};
 	}
 
-	@Override
-	public int registerResultSetOutParameter(CallableStatement statement, int col) throws SQLException {
-		// Register the type of the out param - GaussDB uses Types.OTHER
-		statement.registerOutParameter( col++, Types.OTHER );
-		return col;
-	}
-
-	@Override
-	public ResultSet getResultSet(CallableStatement ps) throws SQLException {
-		ps.execute();
-		return (ResultSet) ps.getObject( 1 );
-	}
-
 	// Overridden informational metadata ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
-	public boolean supportsLobValueChangePropagation() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsUnboundedLobLocatorMaterialization() {
-		return false;
-	}
-
-	@Override
-	public SelectItemReferenceStrategy getGroupBySelectItemReferenceStrategy() {
-		return SelectItemReferenceStrategy.POSITION;
-	}
-
-	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public CallableStatementSupport getCallableStatementSupport() {
-		return GaussDBCallableStatementSupport.INSTANCE;
+		return CALLABLE_STATEMENT_SUPPORT;
 	}
 
 	@Override
-	public ResultSet getResultSet(CallableStatement statement, int position) throws SQLException {
-		if ( position != 1 ) {
-			throw new UnsupportedOperationException( "GaussDB only supports REF_CURSOR parameters as the first parameter" );
-		}
-		return (ResultSet) statement.getObject( 1 );
+	@SPI({ IMPLEMENT, SUPPLY })
+	public RefCursorSupportFactory getRefCursorSupportFactory() {
+		return REF_CURSOR_SUPPORT_FACTORY;
 	}
 
 	@Override
-	public ResultSet getResultSet(CallableStatement statement, String name) throws SQLException {
-		throw new UnsupportedOperationException( "GaussDB only supports accessing REF_CURSOR parameters by position" );
-	}
-
-	@Override
-	public boolean qualifyIndexName() {
-		return false;
+	@SPI({ USE, IMPLEMENT })
+	public IndexNameQualification nameQualification() {
+		return IndexNameQualification.UNQUALIFIED;
 	}
 
 	@Override
@@ -918,64 +857,54 @@ public class GaussDBDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsExpectedLobUsagePattern() {
-		return false;
-	}
-
-	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public NationalizationSupport getNationalizationSupport() {
 		return NationalizationSupport.IMPLICIT;
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public int getMaxIdentifierLength() {
 		return 63;
 	}
 
 	@Override
-	public boolean supportsStandardArrays() {
-		return true;
+	public ArraySupport getArraySupport() {
+		return ARRAY_SUPPORT;
 	}
 
 	@Override
-	public boolean supportsJdbcConnectionLobCreation(DatabaseMetaData databaseMetaData) {
-		return false;
+	@SPI({ IMPLEMENT, SUPPLY })
+	public TemporalValueSemantics getTemporalValueSemantics() {
+		return TemporalValueSemantics.OFFSET_LITERALS;
 	}
 
 	@Override
-	public boolean supportsMaterializedLobAccess() {
-		// Prefer using text and bytea over oid (LOB), because oid is very restricted.
-		// If someone really wants a type bigger than 1GB, they should ask for it by using @Lob explicitly
-		return false;
-	}
-
-	@Override
-	public boolean supportsTemporalLiteralOffset() {
-		return true;
-	}
-
-	@Override
-	public void appendDatetimeFormat(SqlAppender appender, String format) {
+	@SPI({ USE, IMPLEMENT })
+	public void appendFormat(SqlAppender appender, String format) {
 		throw new UnsupportedOperationException( "GaussDB not support datetime format yet" );
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String translateExtractField(TemporalUnit unit) {
 		return switch (unit) {
 			//WEEK means the ISO week number
 			case DAY_OF_MONTH -> "day";
 			case DAY_OF_YEAR -> "doy";
 			case DAY_OF_WEEK -> "dow";
-			default -> super.translateExtractField( unit );
+			default -> TemporalOperationSupports.standard().translateExtractField( unit );
 		};
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public AggregateSupport getAggregateSupport() {
 		return null;
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public void appendBinaryLiteral(SqlAppender appender, byte[] bytes) {
 		appender.appendSql( "bytea '\\x" );
 		PrimitiveByteArrayJavaType.INSTANCE.appendString( appender, bytes );
@@ -983,6 +912,7 @@ public class GaussDBDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public void appendDateTimeLiteral(
 			SqlAppender appender,
 			TemporalAccessor temporalAccessor,
@@ -996,7 +926,7 @@ public class GaussDBDialect extends Dialect {
 				appender.appendSql( '\'' );
 				break;
 			case TIME:
-				if ( supportsTemporalLiteralOffset() && temporalAccessor.isSupported( ChronoField.OFFSET_SECONDS ) ) {
+				if ( getTemporalValueSemantics().supportsLiteralOffset() && temporalAccessor.isSupported( ChronoField.OFFSET_SECONDS ) ) {
 					appender.appendSql( "time with time zone '" );
 					appendAsTime( appender, temporalAccessor, true, jdbcTimeZone );
 				}
@@ -1007,7 +937,7 @@ public class GaussDBDialect extends Dialect {
 				appender.appendSql( '\'' );
 				break;
 			case TIMESTAMP:
-				if ( supportsTemporalLiteralOffset() && temporalAccessor.isSupported( ChronoField.OFFSET_SECONDS ) ) {
+				if ( getTemporalValueSemantics().supportsLiteralOffset() && temporalAccessor.isSupported( ChronoField.OFFSET_SECONDS ) ) {
 					appender.appendSql( "timestamp with time zone '" );
 					appendAsTimestampWithMicros( appender, temporalAccessor, true, jdbcTimeZone );
 					appender.appendSql( '\'' );
@@ -1024,6 +954,7 @@ public class GaussDBDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public void appendDateTimeLiteral(
 			SqlAppender appender,
 			Date date,
@@ -1052,6 +983,7 @@ public class GaussDBDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public void appendDateTimeLiteral(
 			SqlAppender appender,
 			Calendar calendar,
@@ -1079,149 +1011,58 @@ public class GaussDBDialect extends Dialect {
 		}
 	}
 
-	private String withTimeout(String lockString, Timeout timeout) {
-		return switch (timeout.milliseconds()) {
-			case Timeouts.NO_WAIT_MILLI -> supportsNoWait() ? lockString + " nowait" : lockString;
-			case Timeouts.SKIP_LOCKED_MILLI -> supportsSkipLocked() ? lockString + " skip locked" : lockString;
-			default -> lockString;
-		};
-	}
 
-	@Override
-	public String getWriteLockString(Timeout timeout) {
-		return withTimeout( getForUpdateString(), timeout );
-	}
 
-	@Override
-	public String getWriteLockString(String aliases, Timeout timeout) {
-		return withTimeout( getForUpdateString( aliases ), timeout );
-	}
 
-	@Override
-	public String getReadLockString(Timeout timeout) {
-		return withTimeout(" for share", timeout );
-	}
 
-	@Override
-	public String getReadLockString(String aliases, Timeout timeout) {
-		return withTimeout(" for share of " + aliases, timeout );
-	}
 
-	private String withTimeout(String lockString, int timeout) {
-		return switch (timeout) {
-			case Timeouts.NO_WAIT_MILLI -> supportsNoWait() ? lockString + " nowait" : lockString;
-			case Timeouts.SKIP_LOCKED_MILLI -> supportsSkipLocked() ? lockString + " skip locked" : lockString;
-			default -> lockString;
-		};
-	}
 
-	@Override
-	public String getWriteLockString(int timeout) {
-		return withTimeout( getForUpdateString(), timeout );
-	}
 
-	@Override
-	public String getWriteLockString(String aliases, int timeout) {
-		return withTimeout( getForUpdateString( aliases ), timeout );
-	}
 
-	@Override
-	public String getReadLockString(int timeout) {
-		return withTimeout(" for share", timeout );
-	}
 
-	@Override
-	public String getReadLockString(String aliases, int timeout) {
-		return withTimeout(" for share of " + aliases, timeout );
-	}
 
 	@Override
 	public LockingSupport getLockingSupport() {
 		return GaussDBLockingSupport.LOCKING_SUPPORT;
 	}
 
+
+
+
+
 	@Override
-	public String getForUpdateNowaitString() {
-		return supportsNoWait()
-				? " for update nowait"
-				: getForUpdateString();
+	public GeneratedValuesSupport getGeneratedValuesSupport() {
+		return GeneratedValuesSupport.builder( super.getGeneratedValuesSupport() )
+				.enable(
+						GeneratedValuesSupport.Capability.INSERT_RETURNING,
+						GeneratedValuesSupport.Capability.UPDATE_RETURNING,
+						GeneratedValuesSupport.Capability.INSERT_RETURNING_ROW_ID
+				)
+				.build();
 	}
 
 	@Override
-	public String getForUpdateNowaitString(String aliases) {
-		return supportsNoWait()
-				? " for update of " + aliases + " nowait"
-				: getForUpdateString(aliases);
+	public SubquerySupport getSubquerySupport() {
+		return SubquerySupport.builder()
+				.feature( SubquerySupport.Feature.OFFSET, true )
+				.feature( SubquerySupport.Feature.LATERAL, false )
+				.feature( SubquerySupport.Feature.ORDER_BY, false )
+				.build();
 	}
 
 	@Override
-	public String getForUpdateSkipLockedString() {
-		return supportsSkipLocked()
-				? " for update skip locked"
-				: getForUpdateString();
+	public WindowFunctionSupport getWindowFunctionSupport() {
+		return WindowFunctionSupport.builder()
+				.features( WindowFunctionSupport.Feature.values() )
+				.build();
 	}
 
 	@Override
-	public String getForUpdateSkipLockedString(String aliases) {
-		return supportsSkipLocked()
-				? " for update of " + aliases + " skip locked"
-				: getForUpdateString( aliases );
+	@SPI({ USE, IMPLEMENT, SUPPLY })
+	public FetchClauseSupport getFetchClauseSupport() {
+		return FetchClauseSupport.NONE;
 	}
 
-	@Override
-	public boolean supportsNoWait() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsWait() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsSkipLocked() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsInsertReturning() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsOffsetInSubquery() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsWindowFunctions() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsLateral() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsRecursiveCTE() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsOrderByInSubquery() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsFetchClause(FetchClauseType type) {
-		return false;
-	}
-
-	@Override
-	public String getForUpdateString() {
-		return " for update";
-	}
 
 	@Override
 	public boolean supportsFilterClause() {
@@ -1229,16 +1070,13 @@ public class GaussDBDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public FunctionalDependencyAnalysisSupport getFunctionalDependencyAnalysisSupport() {
-		return FunctionalDependencyAnalysisSupportImpl.TABLE_REFERENCE;
+		return FunctionalDependencyAnalysisSupport.TABLE_REFERENCE;
 	}
 
 	@Override
-	public RowLockStrategy getWriteRowLockStrategy() {
-		return RowLockStrategy.TABLE;
-	}
-
-	@Override
+	@SPI(IMPLEMENT)
 	public void augmentRecognizedTableTypes(List<String> tableTypesList) {
 		super.augmentRecognizedTableTypes( tableTypesList );
 		tableTypesList.add( "MATERIALIZED VIEW" );
@@ -1246,6 +1084,7 @@ public class GaussDBDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.contributeTypes(typeContributions, serviceRegistry);
 		contributeGaussDBTypes( typeContributions);
@@ -1291,6 +1130,7 @@ public class GaussDBDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public UniqueDelegate getUniqueDelegate() {
 		return uniqueDelegate;
 	}
@@ -1300,60 +1140,62 @@ public class GaussDBDialect extends Dialect {
 		return gaussDBTableExporter;
 	}
 
+	@Override
+	@SPI({ USE, IMPLEMENT, SUPPLY })
+	public Exporter<UserDefinedType> getUserDefinedTypeExporter() {
+		return userDefinedTypeExporter;
+	}
+
 	/**
 	 * @return {@code true}, but only because we can "batch" truncate
 	 */
 	@Override
-	public boolean canBatchTruncate() {
-		return true;
+	@SPI({ USE, IMPLEMENT })
+	public TruncateMode truncateMode() {
+		return TruncateMode.MULTI_TABLE;
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
+	public List<String> renderCommands(TruncateRequest request) {
+		return request.tableNames().isEmpty()
+				? List.of()
+				: List.of( "truncate table " + String.join( ", ", request.tableNames() ) );
+	}
+
+	@Override
+	@SPI(IMPLEMENT)
 	public String getQueryHintString(String sql, String hints) {
 		return "/*+ " + hints + " */ " + sql;
 	}
 
 	@Override
-	public String addSqlHintOrComment(String sql, QueryOptions queryOptions, boolean commentsEnabled) {
-		// GaussDB's extension pg_hint_plan needs the hint to be the first comment
-		if ( commentsEnabled && queryOptions.getComment() != null ) {
-			sql = prependComment( sql, queryOptions.getComment() );
-		}
-		if ( queryOptions.getDatabaseHints() != null && !queryOptions.getDatabaseHints().isEmpty() ) {
-			sql = getQueryHintString( sql, queryOptions.getDatabaseHints() );
-		}
-		return sql;
+	@SPI({ IMPLEMENT, SUPPLY })
+	public QueryHintPlacement getQueryHintPlacement() {
+		return QueryHintPlacement.BEFORE_COMMENT;
 	}
 
 	@FunctionalInterface
 	private interface OptionalTableUpdateStrategy {
-		MutationOperation buildMutationOperation(
-				EntityMutationTarget mutationTarget,
-				OptionalTableUpdate optionalTableUpdate,
-				SessionFactoryImplementor factory);
+		MutationOperation buildMutationOperation(OptionalTableUpdateOperationRequest request);
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT, SUPPLY })
 	public MutationOperation createOptionalTableUpdateOperation(
-			EntityMutationTarget mutationTarget,
-			OptionalTableUpdate optionalTableUpdate,
-			SessionFactoryImplementor factory) {
-		return optionalTableUpdateStrategy.buildMutationOperation( mutationTarget, optionalTableUpdate, factory );
+			OptionalTableUpdateOperationRequest request) {
+		return optionalTableUpdateStrategy.buildMutationOperation( request );
 	}
 
-	private static MutationOperation usingMerge(
-			EntityMutationTarget mutationTarget,
-			OptionalTableUpdate optionalTableUpdate,
-			SessionFactoryImplementor factory) {
-		final GaussDBSqlAstTranslator<?> translator = new GaussDBSqlAstTranslator<>( factory, optionalTableUpdate );
+	private static MutationOperation usingMerge(OptionalTableUpdateOperationRequest request) {
+		final var optionalTableUpdate = request.update();
+		final var factory = request.sessionFactory();
+		final GaussDBSqlAstTranslator<?> translator = new GaussDBSqlAstTranslator<>( new SqlAstTranslationRequest.ModelMutation<>( factory, optionalTableUpdate ) );
 		return translator.createMergeOperation( optionalTableUpdate );
 	}
 
-	private static MutationOperation withoutMerge(
-			EntityMutationTarget mutationTarget,
-			OptionalTableUpdate optionalTableUpdate,
-			SessionFactoryImplementor factory) {
-		return new OptionalTableUpdateOperation( mutationTarget, optionalTableUpdate, factory );
+	private static MutationOperation withoutMerge(OptionalTableUpdateOperationRequest request) {
+		return new OptionalTableUpdateOperation( request.mutationTarget(), request.update() );
 	}
 
 	private static class NativeParameterMarkers implements ParameterMarkerStrategy {
@@ -1369,28 +1211,25 @@ public class GaussDBDialect extends Dialect {
 	}
 
 	@Override
-	public int getDefaultIntervalSecondScale() {
-		// The maximum scale for `interval second` is 6 unfortunately
-		return 6;
-	}
-
-	@Override
+	@SPI({ USE, IMPLEMENT, SUPPLY })
 	public DmlTargetColumnQualifierSupport getDmlTargetColumnQualifierSupport() {
 		return DmlTargetColumnQualifierSupport.TABLE_ALIAS;
 	}
 
 	@Override
-	public boolean supportsFromClauseInUpdate() {
-		return true;
+	public MutationSyntaxSupport getMutationSyntaxSupport() {
+		return MutationSyntaxSupport.of( MutationKind.UPDATE, MutationSyntaxCapability.FROM_CLAUSE );
 	}
 
 	@Override
-	public boolean supportsBindingNullSqlTypeForSetNull() {
-		return true;
+	@SPI({ IMPLEMENT, SUPPLY })
+	public ObjectNullBindingStrategy getObjectNullBindingStrategy() {
+		return ObjectNullBindingStrategy.SET_NULL_WITH_NULL_TYPE;
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public InformationExtractor getInformationExtractor(ExtractionContext extractionContext) {
-		return new InformationExtractorPostgreSQLImpl( extractionContext );
+		return InformationExtractors.postgresql( extractionContext );
 	}
 }

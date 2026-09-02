@@ -67,6 +67,6 @@ public class DialectResolverSet implements DialectResolver {
 	}
 
 	public void addDiscoveredResolvers(Collection<DialectResolver> resolvers) {
-		this.resolvers.addAll( 0, resolvers );
+		this.resolvers.addAll( resolvers );
 	}
 }

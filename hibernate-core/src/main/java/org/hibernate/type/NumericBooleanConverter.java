@@ -4,6 +4,10 @@
  */
 package org.hibernate.type;
 
+import org.hibernate.SPI;
+
+import static org.hibernate.SPI.Role.USE;
+
 import org.hibernate.type.descriptor.java.BooleanJavaType;
 import org.hibernate.type.descriptor.java.IntegerJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -57,11 +61,13 @@ public class NumericBooleanConverter implements StandardBooleanConverter<Integer
 	}
 
 	@Override
+	@SPI(USE)
 	public JavaType<Boolean> getDomainJavaType() {
 		return BooleanJavaType.INSTANCE;
 	}
 
 	@Override
+	@SPI(USE)
 	public JavaType<Integer> getRelationalJavaType() {
 		return IntegerJavaType.INSTANCE;
 	}

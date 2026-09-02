@@ -4,39 +4,104 @@
  */
 package org.hibernate.dialect;
 
+import org.hibernate.dialect.identifier.spi.KeywordRegistration;
+
+import org.hibernate.dialect.temporaltype.spi.TemporalValueSemantics;
+
+import org.hibernate.dialect.temporaltype.spi.CurrentTimestampSelection;
+
+import org.hibernate.dialect.temporaltype.spi.TemporalOperationSupport;
+
+import org.hibernate.dialect.temporaltype.spi.TemporalFormatSupport;
+
+import org.hibernate.dialect.temporaltype.spi.CurrentTemporalSupport;
+
+import org.hibernate.dialect.type.spi.DdlTypeBuilder;
+
+import org.hibernate.dialect.type.spi.StandardDdlTypes;
+
+import org.hibernate.dialect.type.spi.TypeSizingProfile;
+import org.hibernate.dialect.type.spi.EnumSupport;
+import org.hibernate.dialect.type.spi.EnumSupports;
+import org.hibernate.dialect.type.spi.ObjectNullBindingStrategy;
+import org.hibernate.dialect.type.spi.StringValueSemantics;
+import org.hibernate.dialect.lob.spi.LobSupport;
+import org.hibernate.dialect.lob.spi.LobSupports;
+
+import org.hibernate.dialect.mutation.spi.MultiTableMutationSupport;
+
+
+import org.hibernate.dialect.function.spi.Replacer;
+
+import org.hibernate.dialect.schema.spi.MyISAMStorageEngine;
+
+import org.hibernate.dialect.schema.spi.InnoDBStorageEngine;
+
+import org.hibernate.dialect.schema.spi.MySQLStorageEngine;
+
+import org.hibernate.dialect.jdbc.spi.MySQLServerConfiguration;
+
+import org.hibernate.dialect.aggregate.spi.FunctionalDependencyAnalysisSupport;
+
+import org.hibernate.dialect.sql.ast.spi.NullOrdering;
+
+
+import org.hibernate.dialect.sql.ast.spi.DmlTargetColumnQualifierSupport;
+
+import org.hibernate.dialect.sql.ast.spi.CteSupport;
+import org.hibernate.dialect.sql.ast.spi.MutationKind;
+import org.hibernate.dialect.sql.ast.spi.MutationSyntaxCapability;
+import org.hibernate.dialect.sql.ast.spi.MutationSyntaxSupport;
+import org.hibernate.dialect.sql.ast.spi.PredicateSupport;
+import org.hibernate.dialect.sql.ast.spi.NullOrderingSupport;
+import org.hibernate.dialect.sql.ast.spi.RowValueSupport;
+import org.hibernate.dialect.sql.ast.spi.SingleRowTableSupport;
+import org.hibernate.dialect.sql.ast.spi.SetOperationSupport;
+import org.hibernate.dialect.sql.ast.spi.SubquerySupport;
+
 import jakarta.persistence.TemporalType;
-import jakarta.persistence.Timeout;
 import org.hibernate.Length;
 import org.hibernate.QueryTimeoutException;
-import org.hibernate.Timeouts;
+import org.hibernate.SPI;
+import static org.hibernate.SPI.Role.USE;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.aggregate.AggregateSupport;
-import org.hibernate.dialect.aggregate.MySQLAggregateSupport;
+import org.hibernate.dialect.aggregate.spi.AggregateSupport;
+import org.hibernate.dialect.aggregate.internal.MySQLAggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.dialect.identity.IdentityColumnSupport;
-import org.hibernate.dialect.identity.MySQLIdentityColumnSupport;
+import org.hibernate.dialect.function.spi.WindowFunctionSupport;
+import org.hibernate.dialect.identity.internal.MySQLIdentityColumnSupport;
+import org.hibernate.dialect.identity.spi.IdentityColumnSupport;
 import org.hibernate.dialect.lock.spi.LockingSupport;
-import org.hibernate.dialect.pagination.LimitHandler;
-import org.hibernate.dialect.pagination.LimitLimitHandler;
-import org.hibernate.dialect.sequence.NoSequenceSupport;
-import org.hibernate.dialect.sequence.SequenceSupport;
-import org.hibernate.dialect.sql.ast.MySQLSqlAstTranslator;
-import org.hibernate.dialect.temporal.MySQLTemporalTableSupport;
-import org.hibernate.dialect.temporal.TemporalTableSupport;
-import org.hibernate.dialect.temptable.MySQLLocalTemporaryTableStrategy;
-import org.hibernate.dialect.temptable.TemporaryTableKind;
-import org.hibernate.dialect.temptable.TemporaryTableStrategy;
-import org.hibernate.dialect.type.MySQLCastingJsonArrayJdbcTypeConstructor;
-import org.hibernate.dialect.type.MySQLCastingJsonJdbcType;
+import org.hibernate.dialect.namespace.spi.NamespaceSupport;
+import org.hibernate.dialect.namespace.spi.NamespaceSupports;
+import org.hibernate.dialect.schema.spi.AlterColumnTypeRequest;
+import org.hibernate.dialect.schema.spi.ColumnDefinitionRequest;
+import org.hibernate.dialect.schema.spi.ConstraintControlMode;
+import org.hibernate.dialect.schema.spi.ConstraintDropMode;
+import org.hibernate.dialect.schema.spi.ExistenceCheckPlacement;
+import org.hibernate.dialect.schema.spi.IfExistsSupport;
+import org.hibernate.dialect.schema.spi.IndexNameQualification;
+import org.hibernate.dialect.schema.spi.SchemaDropSupport;
+import org.hibernate.dialect.pagination.spi.LimitHandler;
+import org.hibernate.dialect.pagination.spi.LimitLimitHandler;
+import org.hibernate.dialect.sequence.internal.NoSequenceSupport;
+import org.hibernate.dialect.sequence.spi.SequenceSupport;
+import org.hibernate.dialect.sql.ast.internal.MySQLSqlAstTranslator;
+import org.hibernate.dialect.temporal.spi.TemporalTableSupport;
+import org.hibernate.dialect.temporal.spi.TemporalTableSupports;
+import org.hibernate.dialect.temptable.spi.TemporaryTableStrategies;
+import org.hibernate.dialect.temptable.spi.TemporaryTableStrategy;
+import org.hibernate.dialect.type.spi.MySQLJdbcTypes;
+import org.hibernate.dialect.type.spi.SizeStrategy;
+import org.hibernate.dialect.type.spi.StandardSizeStrategy;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
-import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
+import org.hibernate.dialect.identifier.spi.IdentifierHelperBuildRequest;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.ConstraintViolationException.ConstraintKind;
 import org.hibernate.exception.LockAcquisitionException;
@@ -44,33 +109,24 @@ import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
-import org.hibernate.mapping.CheckConstraint;
-import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.mapping.SqlExpressible;
-import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.persister.entity.mutation.EntityMutationTarget;
 import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.CastType;
-import org.hibernate.dialect.type.IntervalType;
-import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableInsertStrategy;
-import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableMutationStrategy;
-import org.hibernate.query.sqm.mutation.spi.AfterUseAction;
-import org.hibernate.query.sqm.mutation.spi.BeforeUseAction;
-import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
-import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
+import org.hibernate.query.sqm.SetOperator;
+import org.hibernate.dialect.temporaltype.spi.IntervalType;
 import org.hibernate.query.sqm.produce.function.FunctionParameterType;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.SqlAstTranslatorFactory;
-import org.hibernate.sql.ast.spi.SqlAppender;
-import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
-import org.hibernate.sql.ast.tree.Statement;
+import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslatorFactory;
+import org.hibernate.sql.spi.SqlAppender;
+import org.hibernate.dialect.sql.ast.spi.StandardSqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.Statement;
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
 import org.hibernate.sql.exec.spi.JdbcOperation;
-import org.hibernate.sql.model.MutationOperation;
-import org.hibernate.sql.model.internal.OptionalTableUpdate;
-import org.hibernate.tool.schema.extract.internal.InformationExtractorMySQLImpl;
+import org.hibernate.sql.spi.mutation.MutationOperation;
+import org.hibernate.dialect.sql.ast.spi.OptionalTableUpdateOperationRequest;
 import org.hibernate.tool.schema.extract.spi.ExtractionContext;
 import org.hibernate.tool.schema.extract.spi.InformationExtractor;
+import org.hibernate.tool.schema.extract.spi.InformationExtractors;
 import org.hibernate.type.NullType;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
@@ -80,29 +136,23 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.NullJdbcType;
 import org.hibernate.type.descriptor.jdbc.OrdinalEnumJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
-import org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType;
-import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
-import org.hibernate.type.descriptor.sql.internal.NativeEnumDdlTypeImpl;
-import org.hibernate.type.descriptor.sql.internal.NativeOrdinalEnumDdlTypeImpl;
-import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 
-import java.sql.CallableStatement;
-import java.sql.DatabaseMetaData;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.sql.Types;
 import java.time.ZonedDateTime;
 import java.time.temporal.TemporalAccessor;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
 
 import static java.lang.Integer.parseInt;
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.SUPPLY;
 import static org.hibernate.cfg.SchemaToolingSettings.STORAGE_ENGINE;
 import static org.hibernate.dialect.lock.internal.MySQLLockingSupport.MYSQL_LOCKING_SUPPORT;
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
-import static org.hibernate.internal.util.JdbcExceptionHelper.extractSqlState;
+import static org.hibernate.jdbc.spi.JdbcExceptionHelper.extractSqlState;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.StringHelper.split;
 import static org.hibernate.type.SqlTypes.BIGINT;
@@ -132,20 +182,60 @@ import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
 import static org.hibernate.type.SqlTypes.TINYINT;
 import static org.hibernate.type.SqlTypes.VARBINARY;
 import static org.hibernate.type.SqlTypes.VARCHAR;
-import static org.hibernate.type.descriptor.DateTimeUtils.appendAsDate;
-import static org.hibernate.type.descriptor.DateTimeUtils.appendAsLocalTime;
-import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMicros;
-import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMillis;
+import static org.hibernate.dialect.literal.spi.StandardDateTimeLiteralRendering.appendAsDate;
+import static org.hibernate.dialect.literal.spi.StandardDateTimeLiteralRendering.appendAsLocalTime;
+import static org.hibernate.dialect.literal.spi.StandardDateTimeLiteralRendering.appendAsTimestampWithMicros;
+import static org.hibernate.dialect.literal.spi.StandardDateTimeLiteralRendering.appendAsTimestampWithMillis;
+import static org.hibernate.dialect.literal.spi.ZeroOffsetLiteralStyle.NUMERIC_OFFSET;
 
-/**
- * A {@linkplain Dialect SQL dialect} for MySQL 8 and above.
- * <p>
- * Please refer to the
- * <a href="https://dev.mysql.com/doc/refman/9.1/en/">MySQL documentation</a>.
- *
- * @author Gavin King
- */
-public class MySQLDialect extends Dialect {
+/// A {@linkplain Dialect SQL dialect} for MySQL 8 and above.
+///
+/// Please refer to the
+/// <a href="https://dev.mysql.com/doc/refman/9.1/en/">MySQL documentation</a>.
+///
+/// This class is also the supported family base for provider Dialects derived
+/// from MySQL. Provider subclasses must invoke a constructor classified
+/// {@link SPI.Role#IMPLEMENT IMPLEMENT}. The generated SPI inventory identifies
+/// the constructors and members covered by this type-level implementation
+/// contract; unclassified implementation details are not provider extension
+/// points.
+///
+/// @author Gavin King
+/// @since 8.0
+@SPI({ USE, IMPLEMENT })
+public class MySQLDialect extends Dialect implements CurrentTemporalSupport, TemporalFormatSupport, TemporalOperationSupport {
+	private final org.hibernate.dialect.unique.spi.UniqueDelegate uniqueDelegate =
+			new org.hibernate.dialect.unique.spi.DelegatingUniqueDelegate(
+					org.hibernate.dialect.unique.spi.UniqueDelegates.alterTable( this ) ) {
+		@Override
+		public String getAlterTableToDropUniqueKeyCommand(
+				org.hibernate.mapping.UniqueKey uniqueKey,
+				org.hibernate.boot.Metadata metadata,
+				org.hibernate.boot.model.relational.SqlStringGenerationContext context) {
+			return delegate().getAlterTableToDropUniqueKeyCommand( uniqueKey, metadata, context )
+					.replace( "drop constraint", "drop index" );
+		}
+	};
+	private IfExistsSupport ifExistsSupport;
+
+
+	@Override
+	@SPI(IMPLEMENT)
+	public TemporalOperationSupport getTemporalOperationSupport() {
+		return this;
+	}
+
+	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
+	public TemporalFormatSupport getTemporalFormatSupport() {
+		return this;
+	}
+
+	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
+	public CurrentTemporalSupport getCurrentTemporalSupport() {
+		return this;
+	}
 
 	private static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 8 );
 
@@ -155,8 +245,9 @@ public class MySQLDialect extends Dialect {
 	private static final int MAX_CHAR_SIZE = (1 << 30) - 1;
 
 	private final MySQLStorageEngine storageEngine;
+	private final SchemaDropSupport schemaDropSupport;
 
-	private final SizeStrategy sizeStrategy = new SizeStrategyImpl() {
+	private final SizeStrategy sizeStrategy = new StandardSizeStrategy( this ) {
 		@Override
 		public Size resolveSize(
 				JdbcType jdbcType,
@@ -189,7 +280,7 @@ public class MySQLDialect extends Dialect {
 							javaType,
 							precision,
 							scale,
-							length == null ? getDefaultLobLength() : length
+							length == null ? getTypeSizingProfile().defaultLobLength() : length
 					);
 				default:
 					return super.resolveSize( jdbcType, javaType, precision, scale, length );
@@ -199,41 +290,57 @@ public class MySQLDialect extends Dialect {
 
 	private final int maxVarcharLength;
 	private final int maxVarbinaryLength;
+	private final TypeSizingProfile typeSizingProfile;
 
 	private final boolean noBackslashEscapesEnabled;
 
+	@SPI( IMPLEMENT )
 	public MySQLDialect() {
 		this( MINIMUM_VERSION );
 	}
 
+	@SPI( IMPLEMENT )
 	public MySQLDialect(DatabaseVersion version) {
-		this( version, 4 );
+		this(
+				version,
+				new MySQLServerConfiguration(
+						4,
+						false,
+						Environment.getProperties().getProperty( STORAGE_ENGINE )
+				)
+		);
 	}
 
-	public MySQLDialect(DatabaseVersion version, int bytesPerCharacter) {
-		this( version, bytesPerCharacter, false );
-	}
-
+	@SPI( IMPLEMENT )
 	public MySQLDialect(DatabaseVersion version, MySQLServerConfiguration serverConfiguration) {
 		super( version );
 		maxVarcharLength = maxVarcharLength( getMySQLVersion(), serverConfiguration.getBytesPerCharacter() ); //conservative assumption
 		maxVarbinaryLength = maxVarbinaryLength( getMySQLVersion() );
+		typeSizingProfile = TypeSizingProfile.builder( super.getTypeSizingProfile() )
+				.defaultLobLength( Length.LONG32 )
+				.floatPrecision( 23 )
+				.maxVarcharLength( maxVarcharLength ).maxVarcharCapacity( maxVarcharLength )
+				.maxNVarcharLength( maxVarcharLength ).maxNVarcharCapacity( maxVarcharLength )
+				.maxVarbinaryLength( maxVarbinaryLength ).maxVarbinaryCapacity( maxVarbinaryLength )
+				.build();
 		noBackslashEscapesEnabled = serverConfiguration.isNoBackslashEscapesEnabled();
 		storageEngine = createStorageEngine( serverConfiguration.getConfiguredStorageEngine() );
+		schemaDropSupport = new SchemaDropSupport(
+				List.of(),
+				storageEngine.dropConstraints() ? ConstraintDropMode.EXPLICIT : ConstraintDropMode.IMPLICIT,
+				""
+		);
 	}
 
-	public MySQLDialect(DatabaseVersion version, int bytesPerCharacter, boolean noBackslashEscapes) {
-		super( version );
-		maxVarcharLength = maxVarcharLength( getMySQLVersion(), bytesPerCharacter ); //conservative assumption
-		maxVarbinaryLength = maxVarbinaryLength( getMySQLVersion() );
-		noBackslashEscapesEnabled = noBackslashEscapes;
-		storageEngine = createStorageEngine( Environment.getProperties().getProperty( STORAGE_ENGINE ) );
-	}
-
+	@SPI( IMPLEMENT )
 	public MySQLDialect(DialectResolutionInfo info) {
 		this( createVersion( info, MINIMUM_VERSION ),
 				MySQLServerConfiguration.fromDialectResolutionInfo( info ) );
-		registerKeywords( info );
+	}
+
+	@Override
+	public TypeSizingProfile getTypeSizingProfile() {
+		return typeSizingProfile;
 	}
 
 	protected static DatabaseVersion createVersion(DialectResolutionInfo info, DatabaseVersion defaultVersion) {
@@ -256,6 +363,7 @@ public class MySQLDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	protected DatabaseVersion getMinimumSupportedVersion() {
 		return MINIMUM_VERSION;
 	}
@@ -272,6 +380,7 @@ public class MySQLDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	protected String columnType(int sqlTypeCode) {
 		return switch (sqlTypeCode) {
 			// HHH-6935: Don't use "boolean" i.e. tinyint(1) due to JDBC ResultSetMetaData
@@ -298,28 +407,26 @@ public class MySQLDialect extends Dialect {
 		};
 	}
 
-	/**
-	 * MySQL strips any trailing space character from a
-	 * value stored in a column of type {@code char(n)}.
-	 * @return {@code true}
-	 */
 	@Override
-	public boolean stripsTrailingSpacesFromChar() {
-		return true;
+	@SPI({ IMPLEMENT, SUPPLY })
+	public LobSupport getLobSupport() {
+		return LobSupports.noCapacityPromotion();
 	}
 
 	@Override
-	public boolean useMaterializedLobWhenCapacityExceeded() {
-		// MySQL has no real concept of LOBs, so we can just use longtext/longblob with the materialized JDBC APIs
-		return false;
+	@SPI({ IMPLEMENT, SUPPLY })
+	public StringValueSemantics getStringValueSemantics() {
+		return StringValueSemantics.CHAR_TRAILING_SPACES_STRIPPED;
 	}
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public void appendBooleanValueString(SqlAppender appender, boolean bool) {
 		// Use the true/false constants since these evaluate to true/false literals in JSON functions
 		appender.appendSql( bool );
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	protected String castType(int sqlTypeCode) {
 		return switch (sqlTypeCode) {
 			// special case for casting to Boolean
@@ -343,15 +450,16 @@ public class MySQLDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	protected void registerColumnTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.registerColumnTypes( typeContributions, serviceRegistry );
 		final var ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
 
 		// MySQL 5.7 brings JSON native support with a dedicated datatype
 		// https://dev.mysql.com/doc/refman/5.7/en/json.html
-		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "json", this ) );
+		ddlTypeRegistry.addDescriptor( StandardDdlTypes.simple( JSON, "json", this ) );
 
-		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOMETRY, "geometry", this ) );
+		ddlTypeRegistry.addDescriptor( StandardDdlTypes.simple( GEOMETRY, "geometry", this ) );
 
 		// MySQL has approximately one million text and blob types. We have
 		// already registered longtext + longblob via the regular method,
@@ -361,27 +469,22 @@ public class MySQLDialect extends Dialect {
 		final int maxLobLen = 65_535;
 		final int maxMediumLobLen = 16_777_215;
 
-		ddlTypeRegistry.addDescriptor( new DdlTypeImpl(
-				CHAR,
-				false,
-				columnType( CHAR ),
-				"char($l)",
-				castType( CHAR ),
-				this
-		) );
+		ddlTypeRegistry.addDescriptor(
+				StandardDdlTypes.builder( CHAR, columnType( CHAR ), this )
+						.lobKind( DdlTypeBuilder.LobKind.NONE )
+						.castTypeNamePattern( "char($l)" )
+						.castTypeName( castType( CHAR ) )
+						.build()
+		);
 
 		final var varcharBuilder =
-				CapacityDependentDdlType.builder(
-								VARCHAR,
-								CapacityDependentDdlType.LobKind.BIGGEST_LOB,
-								columnType( CLOB ),
-								this::charCastType,
-								castType( CHAR ),
-								this
-						)
-						.withTypeCapacity( getMaxVarcharLength(), "varchar($l)" )
+				StandardDdlTypes.builder( VARCHAR, columnType( CLOB ), this )
+						.lobKind( DdlTypeBuilder.LobKind.BIGGEST )
+						.parameterizedCastTypeName( this::charCastType )
+						.castTypeName( castType( CHAR ) )
+						.withTypeCapacity( getTypeSizingProfile().maxVarcharLength(), "varchar($l)" )
 						.withTypeCapacity( maxMediumLobLen, "mediumtext" );
-		if ( getMaxVarcharLength() < maxLobLen ) {
+		if ( getTypeSizingProfile().maxVarcharLength() < maxLobLen ) {
 			varcharBuilder.withTypeCapacity( maxLobLen, "text" );
 		}
 		ddlTypeRegistry.addDescriptor( varcharBuilder.build() );
@@ -389,47 +492,38 @@ public class MySQLDialect extends Dialect {
 		// do not use nchar/nvarchar/ntext because these
 		// types use a deprecated character set on MySQL 8
 		final var nvarcharBuilder =
-				CapacityDependentDdlType.builder(
-								NVARCHAR,
-								CapacityDependentDdlType.LobKind.BIGGEST_LOB,
-								columnType( NCLOB ),
-								this::charCastType,
-								castType( NCHAR ),
-								this
-						)
-						.withTypeCapacity( getMaxVarcharLength(), "varchar($l) character set utf8mb4" )
+				StandardDdlTypes.builder( NVARCHAR, columnType( NCLOB ), this )
+						.lobKind( DdlTypeBuilder.LobKind.BIGGEST )
+						.parameterizedCastTypeName( this::charCastType )
+						.castTypeName( castType( NCHAR ) )
+						.withTypeCapacity( getTypeSizingProfile().maxVarcharLength(), "varchar($l) character set utf8mb4" )
 						.withTypeCapacity( maxMediumLobLen, "mediumtext character set utf8mb4" );
-		if ( getMaxVarcharLength() < maxLobLen ) {
+		if ( getTypeSizingProfile().maxVarcharLength() < maxLobLen ) {
 			nvarcharBuilder.withTypeCapacity( maxLobLen, "text character set utf8mb4" );
 		}
 		ddlTypeRegistry.addDescriptor( nvarcharBuilder.build() );
 
 		final var varbinaryBuilder =
-				CapacityDependentDdlType.builder(
-								VARBINARY,
-								CapacityDependentDdlType.LobKind.BIGGEST_LOB,
-								columnType( BLOB ),
-								columnType( BINARY ),
-								castType( BINARY ),
-								this
-						)
-						.withTypeCapacity( getMaxVarbinaryLength(), "varbinary($l)" )
+				StandardDdlTypes.builder( VARBINARY, columnType( BLOB ), this )
+						.lobKind( DdlTypeBuilder.LobKind.BIGGEST )
+						.castTypeNamePattern( columnType( BINARY ) )
+						.castTypeName( castType( BINARY ) )
+						.withTypeCapacity( getTypeSizingProfile().maxVarbinaryLength(), "varbinary($l)" )
 						.withTypeCapacity( maxMediumLobLen, "mediumblob" );
-		if ( getMaxVarbinaryLength() < maxLobLen ) {
+		if ( getTypeSizingProfile().maxVarbinaryLength() < maxLobLen ) {
 			varbinaryBuilder.withTypeCapacity( maxLobLen, "blob" );
 		}
 		ddlTypeRegistry.addDescriptor( varbinaryBuilder.build() );
 
-		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( LONG32VARBINARY,
+		ddlTypeRegistry.addDescriptor( StandardDdlTypes.simple( LONG32VARBINARY,
 				columnType( BLOB ), castType( BINARY ), this ) );
-		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( LONG32VARCHAR,
+		ddlTypeRegistry.addDescriptor( StandardDdlTypes.simple( LONG32VARCHAR,
 				columnType( CLOB ), castType( CHAR ), this ) );
-		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( LONG32NVARCHAR,
+		ddlTypeRegistry.addDescriptor( StandardDdlTypes.simple( LONG32NVARCHAR,
 				columnType( CLOB ), castType( CHAR ), this ) );
 
 		ddlTypeRegistry.addDescriptor(
-				CapacityDependentDdlType.builder( BLOB,
-								columnType( BLOB ), castType( BINARY ), this )
+				StandardDdlTypes.builder( BLOB, columnType( BLOB ), this ).castTypeName( castType( BINARY ) )
 						.withTypeCapacity( maxTinyLobLen, "tinyblob" )
 						.withTypeCapacity( maxMediumLobLen, "mediumblob" )
 						.withTypeCapacity( maxLobLen, "blob" )
@@ -437,8 +531,7 @@ public class MySQLDialect extends Dialect {
 		);
 
 		ddlTypeRegistry.addDescriptor(
-				CapacityDependentDdlType.builder( CLOB,
-								columnType( CLOB ),  castType( CHAR ), this )
+				StandardDdlTypes.builder( CLOB, columnType( CLOB ), this ).castTypeName( castType( CHAR ) )
 						.withTypeCapacity( maxTinyLobLen, "tinytext" )
 						.withTypeCapacity( maxMediumLobLen, "mediumtext" )
 						.withTypeCapacity( maxLobLen, "text" )
@@ -446,22 +539,15 @@ public class MySQLDialect extends Dialect {
 		);
 
 		ddlTypeRegistry.addDescriptor(
-				CapacityDependentDdlType.builder( NCLOB,
-								columnType( NCLOB ), castType( NCHAR ), this )
+				StandardDdlTypes.builder( NCLOB, columnType( NCLOB ), this ).castTypeName( castType( NCHAR ) )
 						.withTypeCapacity( maxTinyLobLen, "tinytext character set utf8mb4" )
 						.withTypeCapacity( maxMediumLobLen, "mediumtext character set utf8mb4" )
 						.withTypeCapacity( maxLobLen, "text character set utf8mb4" )
 						.build()
 		);
 
-		ddlTypeRegistry.addDescriptor( new NativeEnumDdlTypeImpl( this ) {
-			@Override
-			public String getCastTypeName(Size columnSize, SqlExpressible type, DdlTypeRegistry ddlTypeRegistry) {
-				final Long length = columnSize.getLength();
-				return length == null ? "char" : charCastType( length.intValue() );
-			}
-		} );
-		ddlTypeRegistry.addDescriptor( new NativeOrdinalEnumDdlTypeImpl( this ) );
+		ddlTypeRegistry.addDescriptor( StandardDdlTypes.nativeEnum( this, "char", this::charCastType ) );
+		ddlTypeRegistry.addDescriptor( StandardDdlTypes.nativeOrdinalEnum( this ) );
 	}
 
 	private String charCastType(int length) {
@@ -469,6 +555,7 @@ public class MySQLDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public AggregateSupport getAggregateSupport() {
 		return MySQLAggregateSupport.forMySQL( this );
 	}
@@ -486,28 +573,21 @@ public class MySQLDialect extends Dialect {
 		};
 	}
 
-	@Override
-	public int getMaxVarcharLength() {
-		return maxVarcharLength;
-	}
-
-	@Override
-	public int getMaxVarbinaryLength() {
-		return maxVarbinaryLength;
-	}
-
 	public boolean isNoBackslashEscapesEnabled() {
 		return noBackslashEscapesEnabled;
 	}
 
 	@Override
-	public String getNullColumnString(String columnType) {
+	@SPI({ USE, IMPLEMENT })
+	public void appendDefinition(SqlAppender appender, ColumnDefinitionRequest request) {
+		super.appendDefinition( appender, request );
 		// Good job MySQL https://dev.mysql.com/doc/refman/8.0/en/timestamp-initialization.html
 		// If the explicit_defaults_for_timestamp system variable is enabled, TIMESTAMP columns
 		// permit NULL values only if declared with the NULL attribute.
-		return columnType.regionMatches( true, 0, "timestamp", 0, "timestamp".length() )
-				? " null"
-				: super.getNullColumnString( columnType );
+		if ( request.nullable()
+				&& request.sqlType().regionMatches( true, 0, "timestamp", 0, "timestamp".length() ) ) {
+			appender.appendSql( " null" );
+		}
 	}
 
 	public DatabaseVersion getMySQLVersion() {
@@ -520,11 +600,7 @@ public class MySQLDialect extends Dialect {
 	}
 
 	@Override
-	public long getDefaultLobLength() {
-		return Length.LONG32;
-	}
-
-	@Override
+	@SPI({ USE, IMPLEMENT })
 	public JdbcType resolveSqlTypeDescriptor(
 			String columnTypeName,
 			int jdbcTypeCode,
@@ -550,6 +626,7 @@ public class MySQLDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public int resolveSqlTypeLength(
 			String columnTypeName,
 			int jdbcTypeCode,
@@ -562,22 +639,19 @@ public class MySQLDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public int getPreferredSqlTypeCodeForBoolean() {
 		return Types.BIT;
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public int getPreferredSqlTypeCodeForArray() {
 		return SqlTypes.JSON_ARRAY;
 	}
 
-//	@Override
-//	public int getDefaultDecimalPrecision() {
-//		//this is the maximum, but I guess it's too high
-//		return 65;
-//	}
-
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
 		super.initializeFunctionRegistry(functionContributions);
 
@@ -671,7 +745,7 @@ public class MySQLDialect extends Dialect {
 		functionFactory.regexpLike_regexp();
 		functionFactory.regexpLike();
 
-		if ( supportsRecursiveCTE() ) {
+		if ( getCteSupport().supports( CteSupport.RecursiveFeature.RECURSIVE ) ) {
 			functionFactory.generateSeries_recursive( getMaximumSeriesSize(), false, false );
 		}
 
@@ -709,13 +783,14 @@ public class MySQLDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.contributeTypes( typeContributions, serviceRegistry );
 
 		final var jdbcTypeRegistry = typeContributions.getTypeConfiguration().getJdbcTypeRegistry();
 
-		jdbcTypeRegistry.addDescriptorIfAbsent( SqlTypes.JSON, MySQLCastingJsonJdbcType.INSTANCE );
-		jdbcTypeRegistry.addTypeConstructorIfAbsent( MySQLCastingJsonArrayJdbcTypeConstructor.INSTANCE );
+		jdbcTypeRegistry.addDescriptorIfAbsent( SqlTypes.JSON, MySQLJdbcTypes.castingJson() );
+		jdbcTypeRegistry.addTypeConstructorIfAbsent( MySQLJdbcTypes.castingJsonArrayConstructor() );
 
 		// MySQL requires a custom binder for binding untyped nulls with the NULL type
 		typeContributions.contributeJdbcType( NullJdbcType.INSTANCE );
@@ -735,17 +810,19 @@ public class MySQLDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public SqlAstTranslatorFactory getSqlAstTranslatorFactory() {
 		return new StandardSqlAstTranslatorFactory() {
 			@Override
-			protected <T extends JdbcOperation> SqlAstTranslator<T> buildTranslator(
-					SessionFactoryImplementor sessionFactory, Statement statement) {
-				return new MySQLSqlAstTranslator<>( sessionFactory, statement, MySQLDialect.this );
+			protected <S extends Statement, T extends JdbcOperation> SqlAstTranslator<T> createTranslator(
+					SqlAstTranslationRequest<S, T> request) {
+				return new MySQLSqlAstTranslator<>( request, MySQLDialect.this );
 			}
 		};
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String castPattern(CastType from, CastType to) {
 		if ( to == CastType.INTEGER_BOOLEAN ) {
 			switch ( from ) {
@@ -773,17 +850,11 @@ public class MySQLDialect extends Dialect {
 				.register();
 	}
 
-	@Override
-	public int getFloatPrecision() {
-		//according to MySQL docs, this is
-		//the maximum precision for 4 bytes
-		return 23;
-	}
-
 	/**
 	 * MySQL 5.7 precision defaults to seconds, but microseconds is better
 	 */
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String currentTimestamp() {
 		return "current_timestamp(6)";
 	}
@@ -802,7 +873,8 @@ public class MySQLDialect extends Dialect {
 	 * and the highest precision for a {@code timestamp}.
 	 */
 	@Override
-	public long getFractionalSecondPrecisionInNanos() {
+	@SPI({ USE, IMPLEMENT })
+	public long fractionalSecondPrecisionInNanos() {
 		return 1_000; //microseconds
 	}
 
@@ -821,6 +893,7 @@ public class MySQLDialect extends Dialect {
 	 * redefined to include microseconds.
 	 */
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String extractPattern(TemporalUnit unit) {
 		return switch (unit) {
 			case SECOND -> "(second(?2)+microsecond(?2)/1e6)";
@@ -835,6 +908,7 @@ public class MySQLDialect extends Dialect {
 	}
 
 	@Override @SuppressWarnings("deprecation")
+	@SPI({ USE, IMPLEMENT })
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
 		return switch (unit) {
 			case NANOSECOND -> "timestampadd(microsecond,(?2)/1e3,?3)";
@@ -844,6 +918,7 @@ public class MySQLDialect extends Dialect {
 	}
 
 	@Override @SuppressWarnings("deprecation")
+	@SPI({ USE, IMPLEMENT })
 	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
 		return switch (unit) {
 			case NANOSECOND -> "timestampdiff(microsecond,?2,?3)*1e3";
@@ -853,11 +928,15 @@ public class MySQLDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsTemporalLiteralOffset() {
-		return getMySQLVersion().isSameOrAfter(8,0,19);
+	@SPI({ IMPLEMENT, SUPPLY })
+	public TemporalValueSemantics getTemporalValueSemantics() {
+		return getMySQLVersion().isSameOrAfter( 8, 0, 19 )
+				? TemporalValueSemantics.OFFSET_LITERALS
+				: TemporalValueSemantics.STANDARD;
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public void appendDateTimeLiteral(
 			SqlAppender appender,
 			TemporalAccessor temporalAccessor,
@@ -880,7 +959,13 @@ public class MySQLDialect extends Dialect {
 					temporalAccessor = zonedDateTime.toOffsetDateTime();
 				}
 				appender.appendSql( "timestamp '" );
-				appendAsTimestampWithMicros( appender, temporalAccessor, supportsTemporalLiteralOffset(), jdbcTimeZone, false );
+				appendAsTimestampWithMicros(
+						appender,
+						temporalAccessor,
+						getTemporalValueSemantics().supportsLiteralOffset(),
+						jdbcTimeZone,
+						NUMERIC_OFFSET
+				);
 				appender.appendSql( '\'' );
 				break;
 			default:
@@ -889,6 +974,7 @@ public class MySQLDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public void appendDateTimeLiteral(
 			SqlAppender appender,
 			Date date,
@@ -917,6 +1003,7 @@ public class MySQLDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public void appendDateTimeLiteral(
 			SqlAppender appender,
 			Calendar calendar,
@@ -945,40 +1032,34 @@ public class MySQLDialect extends Dialect {
 	}
 
 	@Override
-	public SelectItemReferenceStrategy getGroupBySelectItemReferenceStrategy() {
-		return SelectItemReferenceStrategy.POSITION;
+	@SPI({ USE, IMPLEMENT })
+	public boolean supports(org.hibernate.dialect.constraint.spi.CheckConstraintPlacement placement) {
+		return placement == org.hibernate.dialect.constraint.spi.CheckConstraintPlacement.TABLE
+				|| getMySQLVersion().isSameOrAfter( 8, 0, 16 );
 	}
 
 	@Override
-	public boolean supportsColumnCheck() {
-		return getMySQLVersion().isSameOrAfter( 8, 0, 16 );
+	@SPI({ IMPLEMENT, SUPPLY })
+	public EnumSupport getEnumSupport() {
+		return EnumSupports.inline();
 	}
 
 	@Override
-	public String getEnumTypeDeclaration(String name, String[] values) {
-		final var type = new StringBuilder();
-		type.append( "enum (" );
-		String separator = "";
-		for ( String value : values ) {
-			type.append( separator ).append('\'').append( value ).append('\'');
-			separator = ",";
-		}
-		return type.append( ')' ).toString();
-	}
-
-	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String getQueryHintString(String query, String hints) {
-		return addUseIndexQueryHint( query, hints );
+		return org.hibernate.dialect.queryhint.spi.QueryHints.addUseIndexHint( query, hints );
 	}
 
 	/**
 	 * No support for sequences.
 	 */
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public SequenceSupport getSequenceSupport() {
-		return NoSequenceSupport.INSTANCE;
+		return NoSequenceSupport.getInstance();
 	}
 
+	@SPI({ IMPLEMENT, SUPPLY })
 	public ViolatedConstraintNameExtractor getViolatedConstraintNameExtractor() {
 		return EXTRACTOR;
 	}
@@ -994,47 +1075,51 @@ public class MySQLDialect extends Dialect {
 			} );
 
 	@Override
-	public boolean qualifyIndexName() {
-		return false;
+	@SPI({ USE, IMPLEMENT })
+	public IndexNameQualification nameQualification() {
+		return IndexNameQualification.UNQUALIFIED;
 	}
 
 	@Override
-	public String getAddForeignKeyConstraintString(
-			String constraintName,
-			String[] foreignKey,
-			String referencedTable,
-			String[] primaryKey,
-			boolean referencesPrimaryKey) {
-		final String cols = String.join( ", ", foreignKey );
-		final String referencedCols = String.join( ", ", primaryKey );
+	@SPI({ USE, IMPLEMENT })
+	public String renderAddConstraint(
+			org.hibernate.dialect.constraint.spi.ForeignKeyConstraintRequest request) {
+		if ( request.isExplicitDefinition() ) {
+			return super.renderAddConstraint( request );
+		}
+		final String cols = String.join( ", ", request.sourceColumnNames() );
+		final String referencedCols = String.join( ", ", request.targetColumnNames() );
 		return String.format(
-				" add constraint %s foreign key (%s) references %s (%s)",
-				constraintName,
+				"add constraint %s foreign key (%s) references %s (%s)",
+				request.constraintName(),
 				cols,
-				referencedTable,
+				request.referencedTableName(),
 				referencedCols
 		);
 	}
 
 	@Override
-	public String getDropForeignKeyString() {
-		return "drop foreign key";
+	@SPI({ USE, IMPLEMENT })
+	public String renderDropConstraint(
+			org.hibernate.dialect.constraint.spi.ForeignKeyDropRequest request) {
+		return switch ( request.ifExistsPlacement() ) {
+			case NONE -> "drop foreign key " + request.constraintName();
+			case BEFORE_NAME -> "drop foreign key if exists " + request.constraintName();
+			case AFTER_NAME -> "drop foreign key " + request.constraintName() + " if exists";
+		};
 	}
 
 	@Override
-	public String getDropUniqueKeyString() {
-		return "drop index";
+	@SPI({ IMPLEMENT, SUPPLY })
+	public org.hibernate.dialect.unique.spi.UniqueDelegate getUniqueDelegate() {
+		return uniqueDelegate;
 	}
 
 	@Override
-	public String getAlterColumnTypeString(String columnName, String columnType, String columnDefinition) {
+	@SPI({ USE, IMPLEMENT })
+	public String alterColumnType(AlterColumnTypeRequest request) {
 		// no way to change just the column type, leaving other attributes intact
-		return "modify column " + columnName + " " + columnDefinition.trim();
-	}
-
-	@Override
-	public boolean supportsAlterColumnType() {
-		return true;
+		return "modify column " + request.columnName() + " " + request.columnDefinition().trim();
 	}
 
 	@Override
@@ -1044,209 +1129,105 @@ public class MySQLDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public char closeQuote() {
 		return '`';
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public char openQuote() {
 		return '`';
 	}
 
-	/**
-	 * Here we interpret "catalog" as a MySQL database.
-	 *
-	 * @return {@code true}
-	 */
+	/// Treat MySQL databases as catalogs for namespace lifecycle operations.
+	///
+	/// Although MySQL accepts `create schema` as a synonym for `create database`,
+	/// Hibernate follows the JDBC driver's catalog model because
+	/// [java.sql.DatabaseMetaData#supportsSchemasInDataManipulation()] returns false.
 	@Override
-	public boolean canCreateCatalog() {
-		return true;
+	@SPI({ IMPLEMENT, SUPPLY })
+	public NamespaceSupport getNamespaceSupport() {
+		return NamespaceSupports.catalogsAsDatabases();
 	}
 
 	@Override
-	public String[] getCreateCatalogCommand(String catalogName) {
-		return new String[] { "create database " + catalogName };
+	@SPI({ IMPLEMENT, SUPPLY })
+	public synchronized IfExistsSupport getIfExistsSupport() {
+		if ( ifExistsSupport == null ) {
+			ifExistsSupport = new IfExistsSupport(
+				ExistenceCheckPlacement.NONE,
+				ExistenceCheckPlacement.BEFORE_NAME,
+				ExistenceCheckPlacement.NONE,
+				ExistenceCheckPlacement.NONE
+		);
+		}
+		return ifExistsSupport;
 	}
 
 	@Override
-	public String[] getDropCatalogCommand(String catalogName) {
-		return new String[] { "drop database " + catalogName };
-	}
-
-	/**
-	 * MySQL does support the {@code create schema} command, but
-	 * it's a synonym for {@code create database}. Hibernate has
-	 * always treated a MySQL database as a
-	 * {@linkplain #canCreateCatalog catalog}, which is consistent
-	 * with how the JDBC driver itself views the situation, since
-	 * {@link DatabaseMetaData#supportsSchemasInDataManipulation()}
-	 * returns {@code false} on MySQL.
-	 *
-	 * @return {@code false}
-	 */
-	@Override
-	public boolean canCreateSchema() {
-		return false;
-	}
-
-	@Override
-	public String[] getCreateSchemaCommand(String schemaName) {
-		throw new UnsupportedOperationException( "MySQL does not support dropping creating/dropping schemas in the JDBC sense" );
-	}
-
-	@Override
-	public String[] getDropSchemaCommand(String schemaName) {
-		throw new UnsupportedOperationException( "MySQL does not support dropping creating/dropping schemas in the JDBC sense" );
-	}
-
-	@Override
-	public boolean supportsIfExistsBeforeTableName() {
-		return true;
-	}
-
-	@Override
-	public String getSelectGUIDString() {
-		return "select uuid()";
-	}
-
-	@Override
-	public boolean supportsPartitionBy() {
-		return true;
-	}
-
-	@Override
+	@SPI({ USE, IMPLEMENT })
 	public boolean addPartitionKeyToPrimaryKey() {
 		return true;
 	}
 
 	@Override
-	public boolean supportsCommentOn() {
-		return true;
+	@SPI({ IMPLEMENT, SUPPLY })
+	public org.hibernate.dialect.schema.spi.SchemaCommentSupport getSchemaCommentSupport() {
+		return org.hibernate.dialect.schema.spi.SchemaCommentSupports.mysqlInline();
 	}
 
 	@Override
-	public String getTableComment(String comment) {
-		return " comment='" + comment + "'";
+	public NullOrderingSupport getNullOrderingSupport() {
+		return NullOrderingSupport.builder( super.getNullOrderingSupport() )
+				.defaultOrdering( NullOrdering.SMALLEST )
+				.capability( NullOrderingSupport.Capability.NULLS_FIRST_LAST, false )
+				.build();
 	}
 
 	@Override
-	public String getColumnComment(String comment) {
-		return " comment '" + comment + "'";
-	}
-
-	@Override
-	public NullOrdering getNullOrdering() {
-		return NullOrdering.SMALLEST;
-	}
-
-	@Override
-	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(
-			EntityMappingType rootEntityDescriptor,
-			RuntimeModelCreationContext runtimeModelCreationContext) {
-		return new LocalTemporaryTableMutationStrategy( rootEntityDescriptor, runtimeModelCreationContext );
-	}
-
-	@Override
-	public SqmMultiTableInsertStrategy getFallbackSqmInsertStrategy(
-			EntityMappingType rootEntityDescriptor,
-			RuntimeModelCreationContext runtimeModelCreationContext) {
-		return new LocalTemporaryTableInsertStrategy( rootEntityDescriptor, runtimeModelCreationContext );
+	public MultiTableMutationSupport getMultiTableMutationSupport() {
+		return MultiTableMutationSupport.LOCAL_TEMPORARY_TABLE;
 	}
 
 	@Override
 	public TemporaryTableStrategy getLocalTemporaryTableStrategy() {
-		return MySQLLocalTemporaryTableStrategy.INSTANCE;
+		return TemporaryTableStrategies.mysqlLocal();
 	}
 
 	@Override
-	public TemporaryTableKind getSupportedTemporaryTableKind() {
-		return TemporaryTableKind.LOCAL;
-	}
-
-	@Override
-	public String getTemporaryTableCreateCommand() {
-		return MySQLLocalTemporaryTableStrategy.INSTANCE.getTemporaryTableCreateCommand();
-	}
-
-	@Override
-	public String getTemporaryTableDropCommand() {
-		return MySQLLocalTemporaryTableStrategy.INSTANCE.getTemporaryTableDropCommand();
-	}
-
-	@Override
-	public AfterUseAction getTemporaryTableAfterUseAction() {
-		return MySQLLocalTemporaryTableStrategy.INSTANCE.getTemporaryTableAfterUseAction();
-	}
-
-	@Override
-	public BeforeUseAction getTemporaryTableBeforeUseAction() {
-		return MySQLLocalTemporaryTableStrategy.INSTANCE.getTemporaryTableBeforeUseAction();
-	}
-
-	@Override
+	@SPI({ USE, IMPLEMENT })
 	public int getMaxAliasLength() {
 		// Max alias length is 256, but Hibernate needs to add "uniqueing info" so we account for that
 		return 246;
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public int getMaxIdentifierLength() {
 		return 64;
 	}
 
 	@Override
-	public boolean supportsIsTrue() {
-		return true;
+	public PredicateSupport getPredicateSupport() {
+		return PredicateSupport.builder( super.getPredicateSupport() )
+				.capabilities(
+						PredicateSupport.Capability.DISTINCT_FROM,
+						PredicateSupport.Capability.TRUTHNESS
+				)
+				.build();
 	}
 
 	@Override
-	public boolean supportsCurrentTimestampSelection() {
-		return true;
-	}
-
-	@Override
-	public boolean isCurrentTimestampSelectStringCallable() {
-		return false;
-	}
-
-	@Override
-	public String getCurrentTimestampSelectString() {
-		return "select now()";
-	}
-
-	@Override
-	public int registerResultSetOutParameter(CallableStatement statement, int col) throws SQLException {
-		return col;
-	}
-
-	@Override
-	public ResultSet getResultSet(CallableStatement ps) throws SQLException {
-		boolean isResultSet = ps.execute();
-		while ( !isResultSet && ps.getUpdateCount() != -1 ) {
-			isResultSet = ps.getMoreResults();
-		}
-		return ps.getResultSet();
-	}
-
-	@Override
-	public boolean supportsNullPrecedence() {
-		return false;
+	@SPI({ USE, IMPLEMENT })
+	public CurrentTimestampSelection getCurrentTimestampSelection() {
+		return CurrentTimestampSelection.prepared( "select now()" );
 	}
 
 	// Overridden informational metadata ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
-	public boolean supportsLobValueChangePropagation() {
-		// note: at least my local MySQL 5.1 install shows this not working...
-		return false;
-	}
-
-	@Override
-	public boolean supportsSubqueryOnMutatingTable() {
-		return false;
-	}
-
-	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
 		return (sqlException, message, sql) -> {
 			switch ( sqlException.getErrorCode() ) {
@@ -1292,18 +1273,20 @@ public class MySQLDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public NameQualifierSupport getNameQualifierSupport() {
 		return NameQualifierSupport.CATALOG;
 	}
 
 	@Override
-	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, DatabaseMetaData metadata)
-			throws SQLException {
-		if ( metadata == null ) {
+	@SPI({ USE, IMPLEMENT, SUPPLY })
+	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuildRequest request) {
+		final var builder = request.builder();
+		if ( !request.jdbcMetadata().isJdbcMetadataAccessible() ) {
 			builder.setUnquotedCaseStrategy( IdentifierCaseStrategy.MIXED );
 			builder.setQuotedCaseStrategy( IdentifierCaseStrategy.MIXED );
 		}
-		return super.buildIdentifierHelper( builder, metadata );
+		return super.buildIdentifierHelper( request );
 	}
 
 	@Override
@@ -1312,35 +1295,45 @@ public class MySQLDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public boolean isJdbcLogWarningsEnabledByDefault() {
 		return false;
 	}
 
 	@Override
-	public boolean supportsCascadeDelete() {
-		return storageEngine.supportsCascadeDelete();
+	@SPI({ USE, IMPLEMENT })
+	public boolean supportsOnDeleteAction(org.hibernate.annotations.OnDeleteAction action) {
+		return storageEngine.supportsOnDeleteAction( action );
 	}
 
 	@Override
-	public String getTableTypeString() {
+	@SPI({ USE, IMPLEMENT })
+	public String tableCreationOptions() {
 		return storageEngine.getTableTypeString( "engine" );
 	}
 
 	@Override
-	public boolean hasSelfReferentialForeignKeyBug() {
-		return storageEngine.hasSelfReferentialForeignKeyBug();
+	@SPI({ USE, IMPLEMENT })
+	public boolean requiresSelfReferentialForeignKeyNullification() {
+		return storageEngine.requiresSelfReferentialForeignKeyNullification();
 	}
 
 	@Override
-	public boolean dropConstraints() {
-		return storageEngine.dropConstraints();
+	@SPI({ IMPLEMENT, SUPPLY })
+	public SchemaDropSupport getSchemaDropSupport() {
+		return schemaDropSupport;
 	}
 
+	/// Select the storage engine used when none is explicitly configured.
+	///
+	/// @since 8.0
+	@SPI({ IMPLEMENT, SUPPLY })
 	protected MySQLStorageEngine getDefaultMySQLStorageEngine() {
 		return InnoDBStorageEngine.INSTANCE;
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public void appendLiteral(SqlAppender appender, String literal) {
 		appender.appendSql( '\'' );
 		for ( int i = 0; i < literal.length(); i++ ) {
@@ -1362,7 +1355,8 @@ public class MySQLDialect extends Dialect {
 	}
 
 	@Override
-	public void appendDatetimeFormat(SqlAppender appender, String format) {
+	@SPI({ USE, IMPLEMENT })
+	public void appendFormat(SqlAppender appender, String format) {
 		appender.appendSql( datetimeFormat( format ).result() );
 	}
 
@@ -1435,143 +1429,80 @@ public class MySQLDialect extends Dialect {
 				.replace("S", "%f");
 	}
 
-	private String withTimeout(String lockString, Timeout timeout) {
-		return switch (timeout.milliseconds()) {
-			case Timeouts.NO_WAIT_MILLI -> supportsNoWait() ? lockString + " nowait" : lockString;
-			case Timeouts.SKIP_LOCKED_MILLI -> supportsSkipLocked() ? lockString + " skip locked" : lockString;
-			case Timeouts.WAIT_FOREVER_MILLI -> lockString;
-			default -> supportsWait() ? lockString + " wait " + Timeouts.getTimeoutInSeconds( timeout ) : lockString;
-		};
-	}
 
-	@Override
-	public String getWriteLockString(Timeout timeout) {
-		return withTimeout( getForUpdateString(), timeout );
-	}
 
-	@Override
-	public String getWriteLockString(String aliases, Timeout timeout) {
-		return withTimeout( getForUpdateString( aliases ), timeout );
-	}
 
-	@Override
-	public String getReadLockString(Timeout timeout) {
-		return withTimeout( supportsForShare() ? " for share" : " lock in share mode", timeout );
-	}
 
-	@Override
-	public String getReadLockString(String aliases, Timeout timeout) {
-		if ( supportsAliasLocks() && supportsForShare() ) {
-			return withTimeout( " for share of " + aliases, timeout );
-		}
-		else {
-			// fall back to locking all aliases
-			return getReadLockString( timeout );
-		}
-	}
 
-	private String withTimeout(String lockString, int timeout) {
-		return switch (timeout) {
-			case Timeouts.NO_WAIT_MILLI -> supportsNoWait() ? lockString + " nowait" : lockString;
-			case Timeouts.SKIP_LOCKED_MILLI -> supportsSkipLocked() ? lockString + " skip locked" : lockString;
-			case Timeouts.WAIT_FOREVER_MILLI -> lockString;
-			default -> supportsWait() ? lockString + " wait " + getTimeoutInSeconds( timeout ) : lockString;
-		};
-	}
 
-	@Override
-	public String getWriteLockString(int timeout) {
-		return withTimeout( getForUpdateString(), timeout );
-	}
 
-	@Override
-	public String getWriteLockString(String aliases, int timeout) {
-		return withTimeout( getForUpdateString( aliases ), timeout );
-	}
 
-	@Override
-	public String getReadLockString(int timeout) {
-		return withTimeout( supportsForShare() ? " for share" : " lock in share mode", timeout );
-	}
 
-	@Override
-	public String getReadLockString(String aliases, int timeout) {
-		if ( supportsAliasLocks() && supportsForShare() ) {
-			return withTimeout( " for share of " + aliases, timeout );
-		}
-		else {
-			// fall back to locking all aliases
-			return getReadLockString( timeout );
-		}
-	}
 
-	@Override
-	public String getForUpdateSkipLockedString() {
-		return supportsSkipLocked()
-				? " for update skip locked"
-				: getForUpdateString();
-	}
 
-	@Override
-	public String getForUpdateSkipLockedString(String aliases) {
-		return supportsSkipLocked() && supportsAliasLocks()
-				? getForUpdateString( aliases ) + " skip locked"
-				// fall back to skip locking all aliases
-				: getForUpdateSkipLockedString();
-	}
 
 	@Override
 	public LockingSupport getLockingSupport() {
 		return MYSQL_LOCKING_SUPPORT;
 	}
 
+
+
+
 	@Override
-	public String getForUpdateNowaitString() {
-		return supportsNoWait()
-				? " for update nowait"
-				: getForUpdateString();
+	@SPI({ IMPLEMENT, SUPPLY })
+	public SubquerySupport getSubquerySupport() {
+		return SubquerySupport.builder()
+				.feature( SubquerySupport.Feature.OFFSET, true )
+				.feature( SubquerySupport.Feature.LATERAL, getMySQLVersion().isSameOrAfter( 8, 0, 14 ) )
+				.feature( SubquerySupport.Feature.NESTED_CORRELATION, false )
+				.feature( SubquerySupport.Feature.MUTATION_TARGET_REFERENCE, false )
+				.build();
 	}
 
 	@Override
-	public String getForUpdateNowaitString(String aliases) {
-		return supportsNoWait() && supportsAliasLocks()
-				? getForUpdateString( aliases ) + " nowait"
-				// fall back to nowait locking all aliases
-				: getForUpdateNowaitString();
+	public WindowFunctionSupport getWindowFunctionSupport() {
+		return getMySQLVersion().isBefore( 8, 0, 2 )
+				? WindowFunctionSupport.NONE
+				: WindowFunctionSupport.builder()
+						.features(
+								WindowFunctionSupport.Feature.WINDOW_FUNCTIONS,
+								WindowFunctionSupport.Feature.PARTITION_BY,
+								WindowFunctionSupport.Feature.ROWS_FRAME,
+								WindowFunctionSupport.Feature.RANGE_FRAME
+						)
+						.build();
 	}
 
 	@Override
-	public String getForUpdateString(String aliases) {
-		return supportsAliasLocks()
-				? " for update of " + aliases
-				// fall back to locking all aliases
-				: getForUpdateString();
+	public CteSupport getCteSupport() {
+		return CteSupport.builder()
+				.recursiveFeature(
+						CteSupport.RecursiveFeature.RECURSIVE,
+						getMySQLVersion().isSameOrAfter( 8, 0, 14 )
+				)
+				.build();
 	}
 
 	@Override
-	public boolean supportsOffsetInSubquery() {
-		return true;
+	@SPI({ IMPLEMENT, SUPPLY })
+	public SetOperationSupport getSetOperationSupport() {
+		if ( getMySQLVersion().isSameOrAfter( 8, 0, 31 ) ) {
+			return SetOperationSupport.STANDARD;
+		}
+		return SetOperationSupport.builder()
+				.operator( SetOperator.INTERSECT, false )
+				.operator( SetOperator.INTERSECT_ALL, false )
+				.operator( SetOperator.EXCEPT, false )
+				.operator( SetOperator.EXCEPT_ALL, false )
+				.build();
 	}
 
 	@Override
-	public boolean supportsWindowFunctions() {
-		return getMySQLVersion().isSameOrAfter( 8, 0, 2 );
-	}
-
-	@Override
-	public boolean supportsLateral() {
-		return getMySQLVersion().isSameOrAfter( 8, 0, 14 );
-	}
-
-	@Override
-	public boolean supportsRecursiveCTE() {
-		return getMySQLVersion().isSameOrAfter( 8, 0, 14 );
-	}
-
-	@Override
-	protected void registerDefaultKeywords() {
-		super.registerDefaultKeywords();
-		registerKeyword( "key" );
+	@SPI({ USE, IMPLEMENT, SUPPLY })
+	protected void contributeKeywords(KeywordRegistration registration) {
+		super.contributeKeywords( registration );
+		registration.registerKeyword( "key" );
 	}
 
 	protected boolean supportsForShare() {
@@ -1583,89 +1514,96 @@ public class MySQLDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public FunctionalDependencyAnalysisSupport getFunctionalDependencyAnalysisSupport() {
-		return FunctionalDependencyAnalysisSupportImpl.TABLE_GROUP;
+		return FunctionalDependencyAnalysisSupport.TABLE_GROUP;
 	}
 
 	@Override
-	public boolean canDisableConstraints() {
-		return true;
+	@SPI({ USE, IMPLEMENT })
+	public ConstraintControlMode constraintControlMode() {
+		return ConstraintControlMode.GLOBAL;
 	}
 
 	@Override
-	public String getDisableConstraintsStatement() {
-		return "set foreign_key_checks = 0";
+	@SPI({ USE, IMPLEMENT })
+	public List<String> disableCommands() {
+		return List.of( "set foreign_key_checks = 0" );
 	}
 
 	@Override
-	public String getEnableConstraintsStatement() {
-		return "set foreign_key_checks = 1";
+	@SPI({ USE, IMPLEMENT })
+	public List<String> enableCommands() {
+		return List.of( "set foreign_key_checks = 1" );
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT, SUPPLY })
 	public DmlTargetColumnQualifierSupport getDmlTargetColumnQualifierSupport() {
 		return DmlTargetColumnQualifierSupport.TABLE_ALIAS;
 	}
 
 	@Override
-	public boolean supportsFromClauseInUpdate() {
-		return true;
+	public MutationSyntaxSupport getMutationSyntaxSupport() {
+		return MutationSyntaxSupport.builder()
+				.capability( MutationKind.UPDATE, MutationSyntaxCapability.FROM_CLAUSE )
+				.capability( MutationKind.DELETE, MutationSyntaxCapability.JOIN )
+				.build();
 	}
 
 	@Override
-	public String appendCheckConstraintOptions(CheckConstraint checkConstraint, String sqlCheckConstraint) {
-		return isNotEmpty( checkConstraint.getOptions() )
-				? sqlCheckConstraint + " " + checkConstraint.getOptions()
-				: sqlCheckConstraint;
+	@SPI({ USE, IMPLEMENT })
+	public String render(org.hibernate.dialect.constraint.spi.CheckConstraintRenderRequest request) {
+		final String rendered = super.render( request );
+		return isNotEmpty( request.options() ) ? rendered + " " + request.options() : rendered;
 	}
 
 	@Override
-	public boolean supportsBindingNullSqlTypeForSetNull() {
-		return true;
+	@SPI({ IMPLEMENT, SUPPLY })
+	public ObjectNullBindingStrategy getObjectNullBindingStrategy() {
+		return ObjectNullBindingStrategy.SET_NULL_WITH_NULL_TYPE;
 	}
 
 	@Override
-	public String getDual() {
-		return "dual";
+	public SingleRowTableSupport getSingleRowTableSupport() {
+		return SingleRowTableSupport.builder( super.getSingleRowTableSupport() )
+				.tableExpression( "dual" )
+				.build();
 	}
 
 	@Override
-	public boolean supportsDistinctFromPredicate() {
-		// It supports a proprietary operator
-		return true;
+	@SPI({ IMPLEMENT, SUPPLY })
+	public RowValueSupport getRowValueSupport() {
+		return RowValueSupport.builder( super.getRowValueSupport() )
+				.feature( RowValueSupport.Feature.QUANTIFIED_COMPARISON, false )
+				.build();
 	}
 
 	@Override
-	public boolean supportsJoinsInDelete() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsNestedSubqueryCorrelation() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
-		return false;
-	}
-
-	@Override
-	public MutationOperation createOptionalTableUpdateOperation(EntityMutationTarget mutationTarget, OptionalTableUpdate optionalTableUpdate, SessionFactoryImplementor factory) {
+	@SPI({ USE, IMPLEMENT, SUPPLY })
+	public MutationOperation createOptionalTableUpdateOperation(OptionalTableUpdateOperationRequest request) {
+		final var optionalTableUpdate = request.update();
 		if ( optionalTableUpdate.getNumberOfOptimisticLockBindings() == 0 ) {
-			final MySQLSqlAstTranslator<?> translator = new MySQLSqlAstTranslator<>( factory, optionalTableUpdate, MySQLDialect.this );
+			final MySQLSqlAstTranslator<?> translator = new MySQLSqlAstTranslator<>( new SqlAstTranslationRequest.ModelMutation<>( request.sessionFactory(), optionalTableUpdate ), MySQLDialect.this );
 			return translator.createMergeOperation( optionalTableUpdate );
 		}
-		return super.createOptionalTableUpdateOperation( mutationTarget, optionalTableUpdate, factory );
+		return super.createOptionalTableUpdateOperation( request );
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public InformationExtractor getInformationExtractor(ExtractionContext extractionContext) {
-		return new InformationExtractorMySQLImpl( extractionContext );
+		return InformationExtractors.mysql( extractionContext );
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public TemporalTableSupport getTemporalTableSupport() {
-		return new MySQLTemporalTableSupport( this );
+		return TemporalTableSupports.mysql(
+				getTypeSizingProfile().defaultTimestampPrecision(),
+				getCheckConstraintSupport().supports(
+						org.hibernate.dialect.constraint.spi.CheckConstraintPlacement.TABLE
+				)
+		);
 	}
 }

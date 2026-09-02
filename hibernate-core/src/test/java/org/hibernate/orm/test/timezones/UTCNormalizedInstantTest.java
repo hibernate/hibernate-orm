@@ -40,7 +40,7 @@ public class UTCNormalizedInstantTest {
 			// Sybase has 1/300th sec precision
 			instant = Instant.now().with( ChronoField.NANO_OF_SECOND, 0L );
 		}
-		else if ( dialect.getDefaultTimestampPrecision() == 6 ) {
+		else if ( dialect.getTypeSizingProfile().defaultTimestampPrecision() == 6 ) {
 			instant = Instant.now().truncatedTo( ChronoUnit.MICROS );
 		}
 		else {
@@ -79,7 +79,7 @@ public class UTCNormalizedInstantTest {
 			// Sybase has 1/300th sec precision
 			instant = Instant.now().with( ChronoField.NANO_OF_SECOND, 0L );
 		}
-		else if ( dialect.getDefaultTimestampPrecision() == 6 ) {
+		else if ( dialect.getTypeSizingProfile().defaultTimestampPrecision() == 6 ) {
 			instant = Instant.now().truncatedTo( ChronoUnit.MICROS );
 		}
 		else {

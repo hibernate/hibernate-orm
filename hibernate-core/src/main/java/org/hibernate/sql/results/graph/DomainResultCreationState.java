@@ -18,12 +18,11 @@ import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.spi.EntityIdentifierNavigablePath;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
-import org.hibernate.sql.ast.spi.SqlAstCreationState;
+import org.hibernate.sql.ast.spi.creation.SqlAliasBaseManager;
+import org.hibernate.sql.ast.spi.creation.SqlAstCreationState;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableResultGraphNode;
 import org.hibernate.sql.results.graph.entity.EntityResultGraphNode;
-import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 
 import static org.hibernate.query.results.internal.ResultsHelper.attributeName;
 
@@ -34,6 +33,7 @@ import static org.hibernate.query.results.internal.ResultsHelper.attributeName;
  * @author Steve Ebersole
  */
 @Incubating
+@org.hibernate.SPI({ org.hibernate.SPI.Role.USE, org.hibernate.SPI.Role.IMPLEMENT })
 public interface DomainResultCreationState {
 	/**
 	 * Whether forcing the selection of the identifier is
@@ -175,9 +175,9 @@ public interface DomainResultCreationState {
 	 * 		are built/accessed.  Comes down to how we'd know whether to join fetch or select fetch.  Simply pass
 	 * 		along FetchStyle?
 	*/
-	ImmutableFetchList visitFetches(FetchParent fetchParent);
+	FetchList visitFetches(FetchParent fetchParent);
 
-	default ImmutableFetchList visitNestedFetches(FetchParent fetchParent) {
+	default FetchList visitNestedFetches(FetchParent fetchParent) {
 		return withNestedFetchParent( fetchParent, this::visitFetches );
 	}
 

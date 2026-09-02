@@ -8,8 +8,11 @@ import jakarta.persistence.Timeout;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.lock.spi.ConnectionLockTimeoutStrategy;
 import org.hibernate.dialect.lock.spi.LockTimeoutType;
+import org.hibernate.dialect.lock.spi.LockingClauseRenderer;
+import org.hibernate.dialect.lock.spi.LockingClauseRequest;
 import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.lock.spi.OuterJoinLockingType;
+import org.hibernate.dialect.lock.spi.PessimisticLockKind;
 
 import static org.hibernate.Timeouts.NO_WAIT_MILLI;
 import static org.hibernate.Timeouts.SKIP_LOCKED_MILLI;
@@ -23,7 +26,7 @@ import static org.hibernate.dialect.lock.spi.LockTimeoutType.QUERY;
  *
  * @author Steve Ebersole
  */
-public class MariaDBLockingSupport implements LockingSupport, LockingSupport.Metadata {
+public class MariaDBLockingSupport implements LockingSupport, LockingSupport.Metadata, LockingClauseRenderer {
 	private final LockTimeoutType skipLockedType;
 	private final LockTimeoutType noWaitType;
 	private final LockTimeoutType waitType;
@@ -48,6 +51,33 @@ public class MariaDBLockingSupport implements LockingSupport, LockingSupport.Met
 	@Override
 	public Metadata getMetadata() {
 		return this;
+	}
+
+	@Override
+	public LockingClauseRenderer getLockingClauseRenderer() {
+		return this;
+	}
+
+	@Override
+	public String render(LockingClauseRequest request) {
+		final StringBuilder fragment = new StringBuilder(
+				request.lockKind() == PessimisticLockKind.SHARE
+						? " lock in share mode"
+						: " for update"
+		);
+		switch ( request.timeout().milliseconds() ) {
+			case NO_WAIT_MILLI -> {
+				if ( noWaitType == QUERY ) {
+					fragment.append( " nowait" );
+				}
+			}
+			case SKIP_LOCKED_MILLI -> {
+				if ( skipLockedType == QUERY ) {
+					fragment.append( " skip locked" );
+				}
+			}
+		}
+		return fragment.toString();
 	}
 
 	@Override

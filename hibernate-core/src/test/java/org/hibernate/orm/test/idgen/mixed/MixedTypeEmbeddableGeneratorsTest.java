@@ -67,7 +67,7 @@ class MixedTypeEmbeddableGeneratorsTest {
 		} );
 
 		assertEquals( "insert into Event (created,updated,name,id) values (%s,?,?,?)"
-						.formatted( getDialect( scope ).currentTimestamp() ),
+						.formatted( getDialect( scope ).getCurrentTemporalSupport().currentTimestamp() ),
 				statementInspector.getSqlQueries().get( 0 ) );
 
 		final LocalDateTime[] timestamps = scope.fromTransaction( session -> {

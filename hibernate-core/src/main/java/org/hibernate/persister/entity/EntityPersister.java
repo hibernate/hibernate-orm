@@ -51,11 +51,11 @@ import org.hibernate.persister.filter.internal.TableGroupFilterAliasGenerator;
 import org.hibernate.persister.walking.spi.AttributeSource;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
-import org.hibernate.sql.ast.spi.SqlAliasStemHelper;
-import org.hibernate.sql.ast.tree.from.RootTableGroupProducer;
-import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
-import org.hibernate.sql.ast.tree.select.SelectStatement;
+import org.hibernate.sql.ast.spi.creation.SqlAliasStemHelper;
+import org.hibernate.sql.ast.spi.query.from.RootTableGroupProducer;
+import org.hibernate.sql.ast.spi.query.from.TableGroup;
+import org.hibernate.sql.ast.spi.query.insert.InsertSelectStatement;
+import org.hibernate.sql.ast.spi.query.select.SelectStatement;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.VersionJavaType;
@@ -117,6 +117,7 @@ import static org.hibernate.internal.util.StringHelper.unqualifyEntityName;
  * @see org.hibernate.persister.spi.PersisterFactory
  * @see org.hibernate.persister.spi.PersisterClassResolver
  */
+@org.hibernate.SPI({ org.hibernate.SPI.Role.USE, org.hibernate.SPI.Role.IMPLEMENT })
 public interface EntityPersister extends EntityMappingType, EntityMutationTarget, RootTableGroupProducer, AttributeSource {
 
 	/**
@@ -1402,8 +1403,8 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 * @deprecated Only ever used from places where we really want to use<ul>
 	 *     <li>{@link SelectStatement} (select generator)</li>
 	 *     <li>{@link InsertSelectStatement}</li>
-	 *     <li>{@link org.hibernate.sql.ast.tree.update.UpdateStatement}</li>
-	 *     <li>{@link org.hibernate.sql.ast.tree.delete.DeleteStatement}</li>
+	 *     <li>{@link org.hibernate.sql.ast.spi.query.update.UpdateStatement}</li>
+	 *     <li>{@link org.hibernate.sql.ast.spi.query.delete.DeleteStatement}</li>
 	 * </ul>
 	 */
 	@Deprecated( since = "6.2" )

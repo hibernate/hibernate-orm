@@ -4,7 +4,12 @@
  */
 package org.hibernate.query.sqm.mutation.internal.cte;
 
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
+
 import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.dialect.sql.ast.spi.CteSupport;
+import org.hibernate.dialect.sql.ast.spi.MutationKind;
+import org.hibernate.dialect.sql.ast.spi.MutationSyntaxCapability;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -14,7 +19,7 @@ import org.hibernate.id.OptimizableGenerator;
 import org.hibernate.id.enhanced.Optimizer;
 import org.hibernate.internal.util.MutableObject;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.internal.util.collections.Stack;
+import org.hibernate.spi.Stack;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.mapping.SqlExpressible;
@@ -37,8 +42,8 @@ import org.hibernate.query.sqm.mutation.internal.MultiTableSqmMutationConverter;
 import org.hibernate.query.sqm.mutation.internal.SqmInsertStrategyHelper;
 import org.hibernate.query.sqm.mutation.internal.SqmMutationStrategyHelper;
 import org.hibernate.query.sqm.spi.SqmParameterMappingModelResolutionAccess;
-import org.hibernate.query.sqm.sql.spi.BaseSqmToSqlAstConverter;
-import org.hibernate.query.sqm.sql.internal.SqmPathInterpretation;
+import org.hibernate.query.sqm.sql.internal.AdditionalInsertValues;
+import org.hibernate.sql.ast.spi.query.PathInterpretation;
 import org.hibernate.query.sqm.tree.spi.domain.SqmPath;
 import org.hibernate.query.sqm.tree.spi.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.spi.expression.SqmParameter;
@@ -50,47 +55,47 @@ import org.hibernate.query.sqm.tree.spi.insert.SqmInsertStatement;
 import org.hibernate.query.sqm.tree.spi.insert.SqmInsertValuesStatement;
 import org.hibernate.query.sqm.tree.spi.insert.SqmValues;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.SqlAstJoinType;
-import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.spi.SqlAstProcessingState;
-import org.hibernate.sql.ast.tree.Statement;
-import org.hibernate.sql.ast.tree.cte.CteColumn;
-import org.hibernate.sql.ast.tree.cte.CteContainer;
-import org.hibernate.sql.ast.tree.cte.CteMaterialization;
-import org.hibernate.sql.ast.tree.cte.CteStatement;
-import org.hibernate.sql.ast.tree.cte.CteTable;
-import org.hibernate.sql.ast.tree.cte.CteTableGroup;
-import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
-import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.QueryLiteral;
-import org.hibernate.sql.ast.tree.expression.SelfRenderingSqlFragmentExpression;
-import org.hibernate.sql.ast.tree.expression.SqlTuple;
-import org.hibernate.sql.ast.tree.expression.Star;
-import org.hibernate.sql.ast.tree.from.DerivedTableReference;
-import org.hibernate.sql.ast.tree.from.FromClause;
-import org.hibernate.sql.ast.tree.from.NamedTableReference;
-import org.hibernate.sql.ast.tree.from.QueryPartTableGroup;
-import org.hibernate.sql.ast.tree.from.StandardTableGroup;
-import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.from.TableGroupJoin;
-import org.hibernate.sql.ast.tree.from.TableReference;
-import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
-import org.hibernate.sql.ast.tree.from.UnionTableReference;
-import org.hibernate.sql.ast.tree.from.ValuesTableGroup;
-import org.hibernate.sql.ast.tree.insert.ConflictClause;
-import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
-import org.hibernate.sql.ast.tree.insert.Values;
-import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
-import org.hibernate.sql.ast.tree.predicate.ExistsPredicate;
-import org.hibernate.sql.ast.tree.predicate.Predicate;
-import org.hibernate.sql.ast.tree.select.QueryGroup;
-import org.hibernate.sql.ast.tree.select.QueryPart;
-import org.hibernate.sql.ast.tree.select.QuerySpec;
-import org.hibernate.sql.ast.tree.select.SelectStatement;
-import org.hibernate.sql.ast.tree.select.SortSpecification;
-import org.hibernate.sql.ast.tree.update.Assignment;
-import org.hibernate.sql.ast.tree.update.UpdateStatement;
+import org.hibernate.sql.ast.spi.query.from.SqlAstJoinType;
+import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
+import org.hibernate.sql.ast.spi.creation.SqlAstProcessingState;
+import org.hibernate.sql.ast.spi.Statement;
+import org.hibernate.sql.ast.spi.query.cte.CteColumn;
+import org.hibernate.sql.ast.spi.query.cte.CteContainer;
+import org.hibernate.sql.ast.spi.query.cte.CteMaterialization;
+import org.hibernate.sql.ast.spi.query.cte.CteStatement;
+import org.hibernate.sql.ast.spi.query.cte.CteTable;
+import org.hibernate.sql.ast.spi.query.cte.CteTableGroup;
+import org.hibernate.sql.ast.spi.query.expression.BinaryArithmeticExpression;
+import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
+import org.hibernate.sql.ast.spi.query.expression.Expression;
+import org.hibernate.sql.ast.spi.query.expression.QueryLiteral;
+import org.hibernate.sql.ast.spi.query.expression.SelfRenderingSqlFragmentExpression;
+import org.hibernate.sql.ast.spi.query.expression.SqlTuple;
+import org.hibernate.sql.ast.spi.query.expression.Star;
+import org.hibernate.sql.ast.spi.query.from.DerivedTableReference;
+import org.hibernate.sql.ast.spi.query.from.FromClause;
+import org.hibernate.sql.ast.spi.query.from.NamedTableReference;
+import org.hibernate.sql.ast.spi.query.from.QueryPartTableGroup;
+import org.hibernate.sql.ast.spi.query.from.StandardTableGroup;
+import org.hibernate.sql.ast.spi.query.from.TableGroup;
+import org.hibernate.sql.ast.spi.query.from.TableGroupJoin;
+import org.hibernate.sql.ast.spi.query.from.TableReference;
+import org.hibernate.sql.ast.spi.query.from.TableReferenceJoin;
+import org.hibernate.sql.ast.spi.query.from.UnionTableReference;
+import org.hibernate.sql.ast.spi.query.from.ValuesTableGroup;
+import org.hibernate.sql.ast.spi.query.insert.ConflictClause;
+import org.hibernate.sql.ast.spi.query.insert.InsertSelectStatement;
+import org.hibernate.sql.ast.spi.query.insert.Values;
+import org.hibernate.sql.ast.spi.query.predicate.ComparisonPredicate;
+import org.hibernate.sql.ast.spi.query.predicate.ExistsPredicate;
+import org.hibernate.sql.ast.spi.query.predicate.Predicate;
+import org.hibernate.sql.ast.spi.query.select.QueryGroup;
+import org.hibernate.sql.ast.spi.query.select.QueryPart;
+import org.hibernate.sql.ast.spi.query.select.QuerySpec;
+import org.hibernate.sql.ast.spi.query.select.SelectStatement;
+import org.hibernate.sql.ast.spi.query.select.SortSpecification;
+import org.hibernate.sql.ast.spi.query.update.Assignment;
+import org.hibernate.sql.ast.spi.query.update.UpdateStatement;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
 import org.hibernate.sql.exec.spi.JdbcSelect;
@@ -165,9 +170,9 @@ public class CteInsertHandler implements InsertHandler {
 		final List<Map.Entry<List<CteColumn>, Assignment>> targetPathColumns = new ArrayList<>( size );
 		final List<CteColumn> targetPathCteColumns = new ArrayList<>( size );
 
-		final BaseSqmToSqlAstConverter.AdditionalInsertValues additionalInsertValues = sqmConverter.visitInsertionTargetPaths(
+		final AdditionalInsertValues additionalInsertValues = sqmConverter.visitInsertionTargetPaths(
 				(assignable, columnReferences) -> {
-					final SqmPathInterpretation<?> pathInterpretation = (SqmPathInterpretation<?>) assignable;
+					final PathInterpretation<?> pathInterpretation = (PathInterpretation<?>) assignable;
 					final List<CteColumn> columns = cteTable.findCteColumns( pathInterpretation.getExpressionType() );
 					targetPathCteColumns.addAll( columns );
 					targetPathColumns.add(
@@ -554,7 +559,7 @@ public class CteInsertHandler implements InsertHandler {
 		final JdbcServices jdbcServices = factory.getJdbcServices();
 		final SqlAstTranslator<JdbcSelect> translator = jdbcServices.getJdbcEnvironment()
 				.getSqlAstTranslatorFactory()
-				.buildSelectTranslator( factory, statement );
+				.buildTranslator( new SqlAstTranslationRequest.Select( factory, statement ) );
 
 		this.domainParameterXref = domainParameterXref;
 		this.jdbcParamsXref = SqmUtil.generateJdbcParamsXref( domainParameterXref, sqmConverter );
@@ -1052,7 +1057,8 @@ public class CteInsertHandler implements InsertHandler {
 			ConflictClause conflictClause,
 			CteContainer statement) {
 		final SessionFactoryImplementor sessionFactory = entityDescriptor.getFactory();
-		if ( sessionFactory.getJdbcServices().getDialect().supportsConflictClauseForInsertCTE() ) {
+		if ( sessionFactory.getJdbcServices().getDialect().getCteSupport()
+				.supports( CteSupport.MutationFeature.INSERT_CONFLICT ) ) {
 			insertStatement.setConflictClause( conflictClause );
 			statement.addCteStatement( new CteStatement( dmlResultCte, insertStatement ) );
 		}
@@ -1131,7 +1137,10 @@ public class CteInsertHandler implements InsertHandler {
 				);
 
 				final UpdateStatement updateStatement;
-				if ( sessionFactory.getJdbcServices().getDialect().supportsFromClauseInUpdate() ) {
+				if ( sessionFactory.getJdbcServices()
+						.getDialect()
+						.getMutationSyntaxSupport()
+						.supports( MutationKind.UPDATE, MutationSyntaxCapability.FROM_CLAUSE ) ) {
 					final FromClause fromClause = new FromClause( 1 );
 					final TableGroup updateTableGroup = new StandardTableGroup(
 							false,

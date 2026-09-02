@@ -17,9 +17,9 @@ import org.hibernate.engine.jdbc.mutation.internal.PreparedStatementGroupSingleT
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.jdbc.Expectation;
-import org.hibernate.sql.model.PreparableMutationOperation;
-import org.hibernate.sql.model.TableMapping;
-import org.hibernate.sql.model.jdbc.JdbcInsertMutation;
+import org.hibernate.sql.spi.mutation.jdbc.PreparableMutationOperation;
+import org.hibernate.sql.spi.mutation.TableMapping;
+import org.hibernate.sql.spi.mutation.jdbc.JdbcInsertMutation;
 
 import static java.util.Collections.emptyList;
 import static org.hibernate.engine.jdbc.batch.JdbcBatchLogging.BATCH_MESSAGE_LOGGER;

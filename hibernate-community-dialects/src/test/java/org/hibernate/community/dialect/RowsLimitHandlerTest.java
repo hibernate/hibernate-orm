@@ -5,7 +5,7 @@
 package org.hibernate.community.dialect;
 
 import org.hibernate.community.dialect.pagination.RowsLimitHandler;
-import org.hibernate.dialect.pagination.AbstractLimitHandler;
+import org.hibernate.dialect.pagination.spi.AbstractLimitHandler;
 import org.hibernate.orm.test.dialect.AbstractLimitHandlerTest;
 
 /**

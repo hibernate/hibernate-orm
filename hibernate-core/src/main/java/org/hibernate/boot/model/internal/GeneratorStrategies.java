@@ -10,7 +10,6 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.generator.Generator;
 import org.hibernate.id.ForeignGenerator;
-import org.hibernate.id.GUIDGenerator;
 import org.hibernate.id.IdentityGenerator;
 import org.hibernate.id.IncrementGenerator;
 import org.hibernate.id.SelectGenerator;
@@ -20,6 +19,7 @@ import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.models.spi.TypeDetails;
 
+import java.util.Objects;
 import java.util.UUID;
 
 /**
@@ -72,9 +72,10 @@ public class GeneratorStrategies {
 	 */
 	public static Class<? extends Generator> generatorClass(String strategy, SimpleValue idValue) {
 		if ( "native".equals(strategy) ) {
-			strategy =
+			return nativeGeneratorClass(
 					idValue.getMetadata().getDatabase().getDialect()
-							.getNativeIdentifierGeneratorStrategy();
+							.getNativeValueGenerationStrategy()
+			);
 		}
 		switch (strategy) {
 			case "assigned":
@@ -98,8 +99,6 @@ public class GeneratorStrategies {
 				return UUIDGenerator.class;
 			case "select":
 				return SelectGenerator.class;
-			case "guid":
-				return GUIDGenerator.class;
 		}
 		final Class<? extends Generator> clazz =
 				idValue.getBuildingContext().getBootstrapContext()
@@ -115,7 +114,7 @@ public class GeneratorStrategies {
 
 	public static Class<? extends Generator> mapLegacyNamedGenerator(String strategy, Dialect dialect) {
 		if ( "native".equals(strategy) ) {
-			strategy = dialect.getNativeIdentifierGeneratorStrategy();
+			return nativeGeneratorClass( dialect.getNativeValueGenerationStrategy() );
 		}
 		switch (strategy) {
 			case "assigned":
@@ -139,11 +138,21 @@ public class GeneratorStrategies {
 				return UUIDGenerator.class;
 			case "select":
 				return SelectGenerator.class;
-			case "guid":
-				return GUIDGenerator.class;
 		}
 
 		return null;
+	}
+
+	private static Class<? extends Generator> nativeGeneratorClass(GenerationType generationType) {
+		return switch ( Objects.requireNonNull(
+				generationType,
+				"Dialect#getNativeValueGenerationStrategy() returned null"
+		) ) {
+			case IDENTITY -> IdentityGenerator.class;
+			case SEQUENCE, AUTO -> SequenceStyleGenerator.class;
+			case TABLE -> org.hibernate.id.enhanced.TableGenerator.class;
+			case UUID -> UUIDGenerator.class;
+		};
 	}
 
 	public static Class<? extends Generator> mapLegacyNamedGenerator(String strategy, MetadataBuildingContext buildingContext) {

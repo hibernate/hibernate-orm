@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.produce.function;
 
+
 import java.lang.reflect.Type;
 import java.util.List;
 
@@ -19,8 +20,8 @@ import org.hibernate.query.sqm.tree.spi.expression.SqmDurationUnit;
 import org.hibernate.query.sqm.tree.spi.expression.SqmExtractUnit;
 import org.hibernate.query.sqm.tree.spi.expression.SqmLiteralNull;
 import org.hibernate.query.sqm.tree.spi.expression.SqmTrimSpecification;
-import org.hibernate.sql.ast.tree.SqlAstNode;
-import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.spi.SqlAstNode;
+import org.hibernate.sql.ast.spi.query.expression.Expression;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -196,6 +197,7 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 	/**
 	 * We can't validate some expressions involving parameters / unknown functions.
 	 */
+	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	public static boolean isUnknownExpressionType(JdbcMappingContainer expressionType) {
 		return expressionType instanceof JavaObjectType
 			|| expressionType instanceof BasicType<?> basicType

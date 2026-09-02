@@ -5,12 +5,12 @@
 package org.hibernate.dialect.function.json;
 
 import org.hibernate.metamodel.model.domain.ReturnableType;
-import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.spi.SqlAppender;
-import org.hibernate.sql.ast.tree.expression.JsonPathPassingClause;
-import org.hibernate.sql.ast.tree.expression.JsonQueryEmptyBehavior;
-import org.hibernate.sql.ast.tree.expression.JsonQueryErrorBehavior;
-import org.hibernate.sql.ast.tree.expression.JsonQueryWrapMode;
+import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
+import org.hibernate.sql.spi.SqlAppender;
+import org.hibernate.sql.ast.spi.query.expression.JsonPathPassingClause;
+import org.hibernate.sql.ast.spi.query.expression.JsonQueryEmptyBehavior;
+import org.hibernate.sql.ast.spi.query.expression.JsonQueryErrorBehavior;
+import org.hibernate.sql.ast.spi.query.expression.JsonQueryWrapMode;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**

@@ -4,6 +4,8 @@
  */
 package org.hibernate.type;
 
+import org.hibernate.SPI;
+
 import org.hibernate.MappingException;
 
 /**
@@ -18,6 +20,7 @@ import org.hibernate.MappingException;
  *
  * @since 7.0
  */
+@SPI
 public interface MappingContext {
 	Type getIdentifierType(String className) throws MappingException;
 

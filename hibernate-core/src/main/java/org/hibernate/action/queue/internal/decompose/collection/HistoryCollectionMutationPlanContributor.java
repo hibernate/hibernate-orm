@@ -19,11 +19,12 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.TemporalMapping;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.mutation.TemporalMutationHelper;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
-import org.hibernate.sql.model.MutationOperation;
-import org.hibernate.sql.model.MutationType;
-import org.hibernate.sql.model.ast.MutatingTableReference;
-import org.hibernate.sql.model.ast.builder.TableInsertBuilderStandard;
+import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
+import org.hibernate.sql.spi.mutation.MutationOperation;
+import org.hibernate.sql.spi.mutation.MutationType;
+import org.hibernate.sql.spi.mutation.TableMapping.MutationDetails;
+import org.hibernate.sql.ast.spi.model.MutatingTableReference;
+import org.hibernate.sql.ast.spi.model.builder.TableInsertBuilderStandard;
 
 import static org.hibernate.action.queue.internal.decompose.collection.CollectionOrdinalSupport.Slot;
 import static org.hibernate.action.queue.internal.decompose.collection.CollectionOrdinalSupport.calculateOrdinal;
@@ -124,7 +125,7 @@ public class HistoryCollectionMutationPlanContributor implements CollectionMutat
 				tableDescriptor.isSelfReferential(),
 				tableDescriptor.hasUniqueConstraints(),
 				tableDescriptor.cascadeDeleteEnabled(),
-				new org.hibernate.sql.model.TableMapping.MutationDetails(
+				new MutationDetails(
 						MutationType.INSERT,
 						tableDescriptor.insertDetails().getExpectation(),
 						null,

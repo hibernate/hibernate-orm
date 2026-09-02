@@ -7,6 +7,7 @@ package org.hibernate.query.sqm.function;
 import java.util.List;
 
 import jakarta.annotation.Nullable;
+import org.hibernate.SPI;
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
@@ -19,25 +20,37 @@ import org.hibernate.query.sqm.tree.spi.SqmTypedNode;
 import org.hibernate.query.sqm.tree.spi.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.spi.select.SqmOrderByClause;
 
-/**
- * @author Steve Ebersole
- */
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.USE;
+
+/// Base descriptor for custom SQM function generation.
+///
+/// Subclasses implement [#generateSqmFunctionExpression] and may override the
+/// aggregate, ordered-set aggregate, or window generation hooks. Prefer
+/// [AbstractSqmSelfRenderingFunctionDescriptor] when the function directly
+/// renders its SQL representation.
+///
+/// @author Steve Ebersole
+@SPI({ USE, IMPLEMENT })
 public abstract class AbstractSqmFunctionDescriptor implements SqmFunctionDescriptor {
 	private final ArgumentsValidator argumentsValidator;
 	private final FunctionReturnTypeResolver returnTypeResolver;
 	private final FunctionArgumentTypeResolver functionArgumentTypeResolver;
 	private final String name;
 
+	@SPI(IMPLEMENT)
 	public AbstractSqmFunctionDescriptor(String name) {
 		this( name, null, null, null );
 	}
 
+	@SPI(IMPLEMENT)
 	public AbstractSqmFunctionDescriptor(
 			String name,
 			@Nullable ArgumentsValidator argumentsValidator) {
 		this( name, argumentsValidator, null, null );
 	}
 
+	@SPI(IMPLEMENT)
 	public AbstractSqmFunctionDescriptor(
 			String name,
 			@Nullable ArgumentsValidator argumentsValidator,
@@ -45,6 +58,7 @@ public abstract class AbstractSqmFunctionDescriptor implements SqmFunctionDescri
 		this( name, argumentsValidator, null, argumentTypeResolver );
 	}
 
+	@SPI(IMPLEMENT)
 	public AbstractSqmFunctionDescriptor(
 			String name,
 			@Nullable ArgumentsValidator argumentsValidator,

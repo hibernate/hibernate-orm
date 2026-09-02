@@ -79,6 +79,7 @@ import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
  * @author Gail Badner
  * @author Anton Marsden
  */
+@Internal
 public class ActionQueueLegacy implements org.hibernate.action.queue.spi.ActionQueue {
 
 	private final SessionImplementor session;

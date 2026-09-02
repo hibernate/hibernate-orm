@@ -9,10 +9,10 @@ import java.util.function.BiConsumer;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.domain.NavigableRole;
-import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
+import org.hibernate.sql.ast.spi.result.DomainResultProducer;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.spi.SqlSelection;
-import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.spi.query.select.SqlSelection;
+import org.hibernate.sql.ast.spi.query.from.TableGroup;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -81,6 +81,7 @@ public interface ModelPart extends MappingModelExpressible {
 	boolean hasPartitionedSelectionMapping();
 
 	/// Create a [DomainResult] for a specific reference to this [ModelPart].
+	@org.hibernate.SPI(org.hibernate.SPI.Role.SUPPLY)
 	<T> DomainResult<T> createDomainResult(
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
@@ -189,6 +190,7 @@ public interface ModelPart extends MappingModelExpressible {
 	}
 
 	/// Functional interface for consuming the JDBC values.
+	@org.hibernate.SPI({ org.hibernate.SPI.Role.USE, org.hibernate.SPI.Role.IMPLEMENT })
 	@FunctionalInterface
 	interface JdbcValueConsumer extends JdbcValueBiConsumer<Object, Object> {
 		@Override
@@ -201,6 +203,7 @@ public interface ModelPart extends MappingModelExpressible {
 	}
 
 	/// Functional interface for consuming the JDBC values, along with two values of type `X` and `Y`.
+	@org.hibernate.SPI({ org.hibernate.SPI.Role.USE, org.hibernate.SPI.Role.IMPLEMENT })
 	@FunctionalInterface
 	interface JdbcValueBiConsumer<X, Y> {
 		/// Consume a JDBC-level jdbcValue.  The JDBC jdbcMapping descriptor is also passed in

@@ -33,7 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  * triggered by SELECT ... FOR UPDATE ... SKIP LOCKED on a table with a LOB column
  * when the dialect generates {@code lob(col) query as value} DDL (Oracle 23+).
  *
- * @see OracleDialect#supportsValueLOBAccess()
+ * @see OracleDialect#getLobSupport()
  */
 @RequiresDialect(OracleDialect.class)
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSkipLocked.class)

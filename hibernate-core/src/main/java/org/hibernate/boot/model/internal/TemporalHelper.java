@@ -12,10 +12,12 @@ import org.hibernate.annotations.Temporal;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.relational.Database;
+import org.hibernate.boot.model.relational.NamedAuxiliaryDatabaseObject;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.temporal.TemporalTableStrategy;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.temporal.spi.TemporalTableAuxiliaryObject;
+import org.hibernate.dialect.temporal.spi.TemporalTableDdlRequest;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.CheckConstraint;
 import org.hibernate.mapping.Column;
@@ -28,12 +30,14 @@ import org.hibernate.persister.state.internal.HistoryStateManagement;
 import org.hibernate.persister.state.internal.NativeTemporalStateManagement;
 import org.hibernate.persister.state.internal.TemporalStateManagement;
 import org.hibernate.temporal.spi.ChangesetCoordinator;
+import org.hibernate.temporal.TemporalTableStrategy;
 
 import static org.hibernate.cfg.StateManagementSettings.TEMPORAL_TABLE_STRATEGY;
 import static org.hibernate.temporal.TemporalTableStrategy.AUTO;
 import static org.hibernate.temporal.TemporalTableStrategy.NATIVE;
 import static org.hibernate.temporal.TemporalTableStrategy.SINGLE_TABLE;
 import static org.hibernate.internal.util.StringHelper.isBlank;
+import static java.util.Collections.emptySet;
 
 /**
  * Helper for dealing with {@link org.hibernate.annotations.Temporal}.
@@ -93,7 +97,15 @@ public class TemporalHelper {
 				context
 		);
 		addTemporalCheckConstraint( temporalTable, rowStartColumn, rowEndColumn, context );
-		addAuxiliaryObjects( temporalTable, partitioned, currentPartitionName, historyPartitionName, context );
+		addAuxiliaryObjects(
+				temporalTable,
+				rowStartColumn,
+				rowEndColumn,
+				partitioned,
+				currentPartitionName,
+				historyPartitionName,
+				context
+		);
 		addSecondPass( target, context );
 	}
 
@@ -259,37 +271,84 @@ public class TemporalHelper {
 		final var dialect = context.getMetadataCollector().getDatabase().getDialect();
 		final var strategy = context.getTemporalTableStrategy();
 		final var temporalTableSupport = dialect.getTemporalTableSupport();
-		table.setExtraDeclarations( temporalTableSupport.getExtraTemporalTableDeclarations(
+		final var request = temporalTableDdlRequest(
+				table,
+				startingColumn,
+				rowEndColumn,
+				partitioned,
+				currentPartitionName,
+				historyPartitionName,
 				strategy,
-				startingColumn.getQuotedName( dialect ),
-				rowEndColumn.getQuotedName( dialect ),
-				partitioned
-		) );
+				dialect
+		);
+		table.setExtraDeclarations( temporalTableSupport.getExtraTemporalTableDeclarations( request ) );
 		table.setOptions( appendOption( table.getOptions(),
-				temporalTableSupport.getTemporalTableOptions(
-						strategy,
-						rowEndColumn.getQuotedName( dialect ),
-						partitioned,
-						currentPartitionName,
-						historyPartitionName
-				) ) );
+				temporalTableSupport.getTemporalTableOptions( request ) ) );
 	}
 
 	private static void addAuxiliaryObjects(
 			Table table,
+			Column rowStartColumn,
+			Column rowEndColumn,
 			boolean partitioned,
 			String currentPartitionName,
 			String historyPartitionName,
 			MetadataBuildingContext context) {
 		final var database = context.getMetadataCollector().getDatabase();
-		database.getDialect().getTemporalTableSupport()
-				.addTemporalTableAuxiliaryObjects(
-						context.getTemporalTableStrategy(),
-						table, database,
-						partitioned,
-						currentPartitionName,
-						historyPartitionName
-				);
+		final var dialect = database.getDialect();
+		final var request = temporalTableDdlRequest(
+				table,
+				rowStartColumn,
+				rowEndColumn,
+				partitioned,
+				currentPartitionName,
+				historyPartitionName,
+				context.getTemporalTableStrategy(),
+				dialect
+		);
+		for ( var descriptor : dialect.getTemporalTableSupport().getTemporalTableAuxiliaryObjects( request ) ) {
+			database.addAuxiliaryDatabaseObject( new NamedAuxiliaryDatabaseObject(
+					temporalAuxiliaryExportIdentifier( request, descriptor ),
+					database.getDefaultNamespace(),
+					descriptor.createCommands().toArray( String[]::new ),
+					descriptor.dropCommands().toArray( String[]::new ),
+					emptySet(),
+					descriptor.beforeTables()
+			) );
+		}
+	}
+
+	static String temporalAuxiliaryExportIdentifier(
+			TemporalTableDdlRequest request,
+			TemporalTableAuxiliaryObject descriptor) {
+		return switch ( descriptor.scope() ) {
+			case DATABASE -> descriptor.exportIdentifier();
+			case TABLE -> request.tableName() + ':' + descriptor.exportIdentifier();
+		};
+	}
+
+	private static TemporalTableDdlRequest temporalTableDdlRequest(
+			Table table,
+			Column rowStartColumn,
+			Column rowEndColumn,
+			boolean partitioned,
+			String currentPartitionName,
+			String historyPartitionName,
+			TemporalTableStrategy strategy,
+			Dialect dialect) {
+		return new TemporalTableDdlRequest(
+				strategy,
+				table.getQuotedName( dialect ),
+				rowStartColumn.getQuotedName( dialect ),
+				rowEndColumn.getQuotedName( dialect ),
+				partitioned,
+				renderPartitionName( currentPartitionName, dialect ),
+				renderPartitionName( historyPartitionName, dialect )
+		);
+	}
+
+	private static String renderPartitionName(String partitionName, Dialect dialect) {
+		return partitionName == null ? null : Identifier.toIdentifier( partitionName ).render( dialect );
 	}
 
 	private static Column createTemporalColumn(

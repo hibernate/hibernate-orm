@@ -6,8 +6,8 @@ package org.hibernate.orm.test.util;
 
 import java.util.NoSuchElementException;
 
-import org.hibernate.internal.util.collections.Stack;
-import org.hibernate.internal.util.collections.StandardStack;
+import org.hibernate.spi.Stack;
+import org.hibernate.spi.StandardStack;
 
 import org.junit.jupiter.api.Test;
 

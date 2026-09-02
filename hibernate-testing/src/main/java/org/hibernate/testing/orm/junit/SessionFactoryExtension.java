@@ -209,7 +209,7 @@ public class SessionFactoryExtension
 		final HashMap<String,Object> settings = new HashMap<>( baseProperties );
 		settings.put( AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION, Action.CREATE_DROP );
 		if ( createSecondarySchemas ) {
-			if ( !( model.getDatabase().getDialect().canCreateSchema() ) ) {
+			if ( !( model.getDatabase().getDialect().getNamespaceSupport().canCreateSchema() ) ) {
 				throw new UnsupportedOperationException(
 						model.getDatabase().getDialect() + " does not support schema creation" );
 			}

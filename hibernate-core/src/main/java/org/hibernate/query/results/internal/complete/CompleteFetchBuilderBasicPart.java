@@ -24,7 +24,7 @@ import java.util.Objects;
 
 import static org.hibernate.query.results.internal.ResultsHelper.impl;
 import static org.hibernate.query.results.internal.ResultsHelper.jdbcPositionToValuesArrayPosition;
-import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnReferenceKey;
+import static org.hibernate.sql.ast.spi.creation.SqlExpressionResolver.createColumnReferenceKey;
 
 /**
  * @author Steve Ebersole

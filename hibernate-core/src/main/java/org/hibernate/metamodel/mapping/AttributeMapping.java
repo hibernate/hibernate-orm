@@ -109,6 +109,7 @@ public interface AttributeMapping
 	 *
 	 * @return EmbeddedAttributeMapping if this is an instance of EmbeddedAttributeMapping otherwise {@code null}
 	 */
+	@org.hibernate.Internal
 	default EmbeddedAttributeMapping asEmbeddedAttributeMapping(){
 		return null;
 	}

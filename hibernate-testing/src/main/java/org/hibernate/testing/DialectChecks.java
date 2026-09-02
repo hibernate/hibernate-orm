@@ -4,17 +4,26 @@
  */
 package org.hibernate.testing;
 
+import org.hibernate.Timeouts;
 import org.hibernate.community.dialect.FirebirdDialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.DB2Dialect;
+import org.hibernate.dialect.function.spi.WindowFunctionSupport;
 import org.hibernate.community.dialect.DerbyDialect;
+import org.hibernate.dialect.sql.ast.spi.CteSupport;
+import org.hibernate.dialect.sql.ast.spi.ValuesListSupport;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
+import org.hibernate.dialect.array.spi.ArraySupport;
+import org.hibernate.dialect.sql.ast.spi.DmlTargetColumnQualifierSupport;
+import org.hibernate.dialect.sql.ast.spi.SetOperationSupport;
 import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.MySQLDialect;
-import org.hibernate.dialect.NationalizationSupport;
+import org.hibernate.dialect.lock.spi.LockTimeoutType;
+import org.hibernate.dialect.sql.ast.spi.SubquerySupport;
+import org.hibernate.dialect.type.spi.NationalizationSupport;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.community.dialect.TiDBDialect;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 
 /**
  * Container class for different implementation of the {@link DialectCheck} interface.
@@ -31,13 +40,13 @@ abstract public class DialectChecks {
 
 	public static class SupportsExpectedLobUsagePattern implements DialectCheck {
 		public boolean isMatch(Dialect dialect) {
-			return dialect.supportsExpectedLobUsagePattern();
+			return supportsExpectedLobUsage( dialect );
 		}
 	}
 
 	public static class UsesInputStreamToInsertBlob implements DialectCheck {
 		public boolean isMatch(Dialect dialect) {
-			return dialect.useInputStreamToInsertBlob();
+			return dialect.getLobSupport().useInputStreamToInsertBlob();
 		}
 	}
 
@@ -54,37 +63,41 @@ abstract public class DialectChecks {
 
 	public static class SupportsColumnCheck implements DialectCheck {
 		public boolean isMatch(Dialect dialect) {
-			return dialect.supportsColumnCheck();
+			return dialect.getCheckConstraintSupport().supports( org.hibernate.dialect.constraint.spi.CheckConstraintPlacement.ANONYMOUS_COLUMN );
 		}
 	}
 
 	public static class SupportsResultSetPositioningOnForwardOnlyCursorCheck implements DialectCheck {
 		public boolean isMatch(Dialect dialect) {
-			return dialect.supportsResultSetPositionQueryMethodsOnForwardOnlyCursor();
+			return DialectTestSupport.supportsResultSetPositioningOnForwardOnlyCursor( dialect );
 		}
 	}
 
 	public static class SupportsCascadeDeleteCheck implements DialectCheck {
 		public boolean isMatch(Dialect dialect) {
-			return dialect.supportsCascadeDelete();
+			return dialect.getForeignKeySupport().supportsOnDeleteAction( org.hibernate.annotations.OnDeleteAction.CASCADE );
 		}
 	}
 
 	public static class SupportsCircularCascadeDeleteCheck implements DialectCheck {
 		public boolean isMatch(Dialect dialect) {
-			return dialect.supportsCircularCascadeDeleteConstraints();
+			return switch ( dialect.getClass().getSimpleName() ) {
+				case "SQLServerDialect", "SQLServerLegacyDialect", "SpannerDialect",
+						"TeradataDialect", "SingleStoreDialect", "TimesTenDialect" -> false;
+				default -> true;
+			};
 		}
 	}
 
 	public static class SupportsUnboundedLobLocatorMaterializationCheck implements DialectCheck {
 		public boolean isMatch(Dialect dialect) {
-			return dialect.supportsExpectedLobUsagePattern() && dialect.supportsUnboundedLobLocatorMaterialization();
+			return supportsExpectedLobUsage( dialect ) && supportsUnboundedLobMaterialization( dialect );
 		}
 	}
 
 	public static class SupportSubqueryAsLeftHandSideInPredicate implements DialectCheck {
 		public boolean isMatch(Dialect dialect) {
-			return dialect.supportsSubselectAsInPredicateLHS();
+			return dialect.getSubquerySupport().supports( SubquerySupport.Feature.IN_PREDICATE_LHS );
 		}
 	}
 
@@ -102,7 +115,7 @@ abstract public class DialectChecks {
 
 	public static class HasSelfReferentialForeignKeyBugCheck implements DialectCheck {
 		public boolean isMatch(Dialect dialect) {
-			return dialect.hasSelfReferentialForeignKeyBug();
+			return dialect.getForeignKeySupport().requiresSelfReferentialForeignKeyNullification();
 		}
 	}
 
@@ -117,49 +130,50 @@ abstract public class DialectChecks {
 
 	public static class DoesReadCommittedCauseWritersToBlockReadersCheck implements DialectCheck {
 		public boolean isMatch(Dialect dialect) {
-			return dialect.doesReadCommittedCauseWritersToBlockReaders();
+			return DialectTestSupport.doesReadCommittedCauseWritersToBlockReaders( dialect );
 		}
 	}
 
 	public static class DoesReadCommittedNotCauseWritersToBlockReadersCheck implements DialectCheck {
 		public boolean isMatch(Dialect dialect) {
-			return ! dialect.doesReadCommittedCauseWritersToBlockReaders();
+			return ! DialectTestSupport.doesReadCommittedCauseWritersToBlockReaders( dialect );
 		}
 	}
 
 	public static class DoesRepeatableReadCauseReadersToBlockWritersCheck implements DialectCheck {
 		public boolean isMatch(Dialect dialect) {
-			return dialect.doesRepeatableReadCauseReadersToBlockWriters();
+			return DialectTestSupport.doesRepeatableReadCauseReadersToBlockWriters( dialect );
 		}
 	}
 
 	public static class DoesRepeatableReadNotCauseReadersToBlockWritersCheck implements DialectCheck {
 		public boolean isMatch(Dialect dialect) {
-			return ! dialect.doesRepeatableReadCauseReadersToBlockWriters();
+			return ! DialectTestSupport.doesRepeatableReadCauseReadersToBlockWriters( dialect );
 		}
 	}
 
 	public static class SupportsExistsInSelectCheck implements DialectCheck {
 		public boolean isMatch(Dialect dialect) {
-			return dialect.supportsExistsInSelect();
+			return dialect.getSubquerySupport().supports( SubquerySupport.Feature.EXISTS_IN_SELECT );
 		}
 	}
 
 	public static class SupportsLobValueChangePropagation implements DialectCheck {
 		public boolean isMatch(Dialect dialect) {
-			return dialect.supportsLobValueChangePropagation();
+			return supportsLobLocatorMutation( dialect );
 		}
 	}
 
 	public static class SupportsLockTimeouts implements DialectCheck {
 		public boolean isMatch(Dialect dialect) {
-			return dialect.supportsLockTimeouts();
+			return dialect.getLockingSupport().getMetadata().getLockTimeoutType( Timeouts.ONE_SECOND )
+					== LockTimeoutType.QUERY;
 		}
 	}
 
 	public static class SupportsSkipLocked implements DialectCheck {
 		public boolean isMatch(Dialect dialect) {
-			return dialect.supportsSkipLocked();
+			return dialect.getLockingSupport().getMetadata().supportsSkipLocked();
 		}
 	}
 
@@ -172,49 +186,52 @@ abstract public class DialectChecks {
 
 	public static class SupportSchemaCreation implements DialectCheck {
 		public boolean isMatch(Dialect dialect) {
-			return dialect.canCreateSchema();
+			return dialect.getNamespaceSupport().canCreateSchema();
 		}
 	}
 
 	public static class SupportCatalogCreation implements DialectCheck {
 		public boolean isMatch(Dialect dialect) {
-			return dialect.canCreateCatalog();
+			return dialect.getNamespaceSupport().canCreateCatalog();
 		}
 	}
 
 	public static class DoesNotSupportFollowOnLocking implements DialectCheck {
 		public boolean isMatch(Dialect dialect) {
-			return !dialect.useFollowOnLocking( null, null );
+			return !dialect.getLockingSupport().getFollowOnLockingPolicy().useFollowOnLocking(
+					DialectFeatureChecks.followOnLockingProbe()
+			);
 		}
 	}
 
 	public static class SupportPartitionBy implements DialectCheck {
 		public boolean isMatch(Dialect dialect) {
-			return dialect.supportsPartitionBy();
+			return dialect.getWindowFunctionSupport()
+					.supports( WindowFunctionSupport.Feature.PARTITION_BY );
 		}
 	}
 
 	public static class SupportNoWait implements DialectCheck {
 		public boolean isMatch(Dialect dialect) {
-			return dialect.supportsNoWait();
+			return dialect.getLockingSupport().getMetadata().supportsNoWait();
 		}
 	}
 
 	public static class SupportWait implements DialectCheck {
 		public boolean isMatch(Dialect dialect) {
-			return dialect.supportsWait();
+			return dialect.getLockingSupport().getMetadata().supportsWait();
 		}
 	}
 
 	public static class SupportDropConstraints implements DialectCheck {
 		public boolean isMatch(Dialect dialect) {
-			return dialect.dropConstraints();
+			return DialectTestSupport.dropsConstraintsExplicitly( dialect );
 		}
 	}
 
 	public static class ForceLobAsLastValue implements DialectCheck {
 		public boolean isMatch(Dialect dialect) {
-			return dialect.forceLobAsLastValue();
+			return dialect.getLobSupport().forceLobAsLastValue();
 		}
 	}
 
@@ -223,12 +240,6 @@ abstract public class DialectChecks {
 			return !( dialect instanceof DB2Dialect
 					|| dialect instanceof DerbyDialect
 					|| dialect instanceof FirebirdDialect );
-		}
-	}
-
-	public static class SupportsNoColumnInsert implements DialectCheck {
-		public boolean isMatch(Dialect dialect) {
-			return dialect.supportsNoColumnsInsert();
 		}
 	}
 
@@ -254,13 +265,14 @@ abstract public class DialectChecks {
 
 	public static class SupportsUnionInSubquery implements DialectCheck {
 		public boolean isMatch(Dialect dialect) {
-			return dialect.supportsUnionInSubquery();
+			return dialect.getSetOperationSupport()
+					.supports( SetOperationSupport.Capability.UNION_IN_SUBQUERY );
 		}
 	}
 
 	public static class SupportsSubqueryInSelect implements DialectCheck {
 		public boolean isMatch(Dialect dialect) {
-			return dialect.supportsSubqueryInSelect();
+			return dialect.getSubquerySupport().supports( SubquerySupport.Feature.SELECT_LIST );
 		}
 	}
 
@@ -278,19 +290,19 @@ abstract public class DialectChecks {
 
 	public static class SupportsValuesListForInsert implements DialectCheck {
 		public boolean isMatch(Dialect dialect) {
-			return dialect.supportsValuesListForInsert();
+			return dialect.getValuesListSupport().supports( ValuesListSupport.Context.INSERT );
 		}
 	}
 
 	public static class SupportsArrayDataTypes implements DialectCheck {
 		public boolean isMatch(Dialect dialect) {
-			return dialect.supportsStandardArrays();
+			return dialect.getArraySupport().supports( ArraySupport.Capability.STANDARD_ARRAY );
 		}
 	}
 
 	public static class SupportsOrderByInCorrelatedSubquery implements DialectCheck {
 		public boolean isMatch(Dialect dialect) {
-			return dialect.supportsOrderByInSubquery()
+			return dialect.getSubquerySupport().supports( SubquerySupport.Feature.ORDER_BY )
 					// For some reason, HANA doesn't support order by in correlated subqueries...
 					&& !( dialect instanceof HANADialect );
 		}
@@ -305,15 +317,67 @@ abstract public class DialectChecks {
 
 	public static class SupportsRecursiveCtes implements DialectCheck {
 		public boolean isMatch(Dialect dialect) {
-			return dialect.supportsRecursiveCTE();
+			return dialect.getCteSupport().supports( CteSupport.RecursiveFeature.RECURSIVE );
 		}
 	}
 
 	public static class SupportsRowId implements DialectCheck {
 		@Override
 		public boolean isMatch(Dialect dialect) {
-			return dialect.rowId("") != null;
+			return dialect.getRowIdSupport().isSupported();
 		}
+	}
+
+	private static boolean supportsExpectedLobUsage(Dialect dialect) {
+		return !isDialectFamily(
+				dialect,
+				"HANADialect",
+				"HANALegacyDialect",
+				"GaussDBDialect",
+				"IngresDialect"
+		) && !( isDialectFamily( dialect, "SybaseASELegacyDialect" )
+				&& dialect.getVersion().isBefore( 15, 7 ) );
+	}
+
+	private static boolean supportsLobLocatorMutation(Dialect dialect) {
+		return !isDialectFamily(
+				dialect,
+				"CockroachDialect", "CockroachLegacyDialect",
+				"DB2Dialect", "DB2LegacyDialect",
+				"DerbyDialect", "DerbyLegacyDialect",
+				"FirebirdDialect", "GaussDBDialect",
+				"H2Dialect", "H2LegacyDialect",
+				"HSQLDialect", "HSQLLegacyDialect",
+				"InformixDialect", "InterSystemsIRISDialect",
+				"MySQLDialect", "MySQLLegacyDialect",
+				"PostgreSQLDialect", "PostgreSQLLegacyDialect",
+				"SQLServerDialect", "SQLServerLegacyDialect",
+				"SingleStoreDialect", "SpannerDialect",
+				"SybaseASEDialect", "SybaseASELegacyDialect",
+				"TeradataDialect"
+		);
+	}
+
+	private static boolean supportsUnboundedLobMaterialization(Dialect dialect) {
+		return !isDialectFamily(
+				dialect,
+				"AltibaseDialect", "DerbyDialect", "DerbyLegacyDialect",
+				"FirebirdDialect", "GaussDBDialect",
+				"HANADialect", "HANALegacyDialect",
+				"InformixDialect", "PostgreSQLDialect",
+				"PostgreSQLLegacyDialect", "TeradataDialect"
+		);
+	}
+
+	private static boolean isDialectFamily(Dialect dialect, String... familyNames) {
+		for ( Class<?> type = dialect.getClass(); type != null; type = type.getSuperclass() ) {
+			for ( String familyName : familyNames ) {
+				if ( type.getSimpleName().equals( familyName ) ) {
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 
 	public static class SupportsDmlTargetColumnQualifier implements DialectCheck {

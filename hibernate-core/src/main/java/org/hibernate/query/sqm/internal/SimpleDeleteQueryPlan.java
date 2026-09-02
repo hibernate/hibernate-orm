@@ -4,7 +4,7 @@
  */
 package org.hibernate.query.sqm.internal;
 
-import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
+import org.hibernate.dialect.sql.ast.spi.DmlTargetColumnQualifierSupport;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.MutableObject;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
@@ -18,17 +18,17 @@ import org.hibernate.query.sqm.sql.spi.StandardSqmTranslation;
 import org.hibernate.query.sqm.tree.spi.SqmDmlStatement;
 import org.hibernate.query.sqm.tree.spi.delete.SqmDeleteStatement;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.tree.AbstractUpdateOrDeleteStatement;
-import org.hibernate.sql.ast.tree.MutationStatement;
-import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.from.MutatingTableReferenceGroupWrapper;
-import org.hibernate.sql.ast.tree.from.NamedTableReference;
-import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.predicate.InSubQueryPredicate;
-import org.hibernate.sql.ast.tree.predicate.Predicate;
-import org.hibernate.sql.ast.tree.select.QuerySpec;
-import org.hibernate.sql.ast.tree.update.Assignment;
-import org.hibernate.sql.ast.tree.update.UpdateStatement;
+import org.hibernate.sql.ast.spi.query.AbstractUpdateOrDeleteStatement;
+import org.hibernate.sql.ast.spi.query.MutationStatement;
+import org.hibernate.sql.ast.spi.query.expression.Expression;
+import org.hibernate.sql.ast.spi.query.from.MutatingTableReferenceGroupWrapper;
+import org.hibernate.sql.ast.spi.query.from.NamedTableReference;
+import org.hibernate.sql.ast.spi.query.from.TableGroup;
+import org.hibernate.sql.ast.spi.query.predicate.InSubQueryPredicate;
+import org.hibernate.sql.ast.spi.query.predicate.Predicate;
+import org.hibernate.sql.ast.spi.query.select.QuerySpec;
+import org.hibernate.sql.ast.spi.query.update.Assignment;
+import org.hibernate.sql.ast.spi.query.update.UpdateStatement;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcMutationExecutor;
 import org.hibernate.sql.exec.spi.JdbcOperationQueryMutation;

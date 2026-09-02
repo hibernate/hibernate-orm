@@ -17,26 +17,26 @@ import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.sqm.function.SelfRenderingAggregateFunctionSqlAstExpression;
 import org.hibernate.query.sqm.sql.spi.SqmToSqlAstConverter;
-import org.hibernate.query.sqm.sql.internal.SqmPathInterpretation;
-import org.hibernate.sql.ast.spi.ExpressionReplacementWalker;
-import org.hibernate.sql.ast.spi.SqlSelection;
-import org.hibernate.sql.ast.tree.SqlAstNode;
-import org.hibernate.sql.ast.tree.cte.CteContainer;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
-import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
-import org.hibernate.sql.ast.tree.expression.Literal;
-import org.hibernate.sql.ast.tree.expression.Over;
-import org.hibernate.sql.ast.tree.expression.QueryTransformer;
-import org.hibernate.sql.ast.tree.expression.SqlSelectionExpression;
-import org.hibernate.sql.ast.tree.expression.SqlTuple;
-import org.hibernate.sql.ast.tree.from.QueryPartTableGroup;
-import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
-import org.hibernate.sql.ast.tree.predicate.Predicate;
-import org.hibernate.sql.ast.tree.select.QuerySpec;
-import org.hibernate.sql.ast.tree.select.SelectClause;
-import org.hibernate.sql.ast.tree.select.SelectStatement;
-import org.hibernate.sql.ast.tree.select.SortSpecification;
+import org.hibernate.sql.ast.spi.query.PathInterpretation;
+import org.hibernate.sql.ast.spi.transform.ExpressionReplacementWalker;
+import org.hibernate.sql.ast.spi.query.select.SqlSelection;
+import org.hibernate.sql.ast.spi.SqlAstNode;
+import org.hibernate.sql.ast.spi.query.cte.CteContainer;
+import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
+import org.hibernate.sql.ast.spi.query.expression.Expression;
+import org.hibernate.sql.ast.spi.query.expression.JdbcParameter;
+import org.hibernate.sql.ast.spi.query.expression.Literal;
+import org.hibernate.sql.ast.spi.query.expression.Over;
+import org.hibernate.sql.ast.spi.query.expression.QueryTransformer;
+import org.hibernate.sql.ast.spi.query.expression.SqlSelectionExpression;
+import org.hibernate.sql.ast.spi.query.expression.SqlTuple;
+import org.hibernate.sql.ast.spi.query.from.QueryPartTableGroup;
+import org.hibernate.sql.ast.spi.query.predicate.ComparisonPredicate;
+import org.hibernate.sql.ast.spi.query.predicate.Predicate;
+import org.hibernate.sql.ast.spi.query.select.QuerySpec;
+import org.hibernate.sql.ast.spi.query.select.SelectClause;
+import org.hibernate.sql.ast.spi.query.select.SelectStatement;
+import org.hibernate.sql.ast.spi.query.select.SortSpecification;
 import org.hibernate.sql.results.internal.ResolvedSqlSelection;
 import org.hibernate.type.BasicType;
 
@@ -165,7 +165,7 @@ public class AggregateWindowEmulationQueryTransformer implements QueryTransforme
 				realExpression = selection.getExpression();
 			}
 			else {
-				if ( groupByClauseExpression instanceof SqmPathInterpretation<?> pathInterpretation ) {
+				if ( groupByClauseExpression instanceof PathInterpretation<?> pathInterpretation ) {
 					realExpression = pathInterpretation.getSqlExpression();
 				}
 				else {
@@ -225,7 +225,7 @@ public class AggregateWindowEmulationQueryTransformer implements QueryTransforme
 					}
 					else if ( !(expression instanceof Predicate) ) {
 						final Expression realExpression;
-						if ( expression instanceof SqmPathInterpretation<?> pathInterpretation ) {
+						if ( expression instanceof PathInterpretation<?> pathInterpretation ) {
 							realExpression = pathInterpretation.getSqlExpression();
 						}
 						else {
@@ -286,7 +286,7 @@ public class AggregateWindowEmulationQueryTransformer implements QueryTransforme
 				}
 				else {
 					final Expression realExpression;
-					if ( sortExpression instanceof SqmPathInterpretation<?> pathInterpretation ) {
+					if ( sortExpression instanceof PathInterpretation<?> pathInterpretation ) {
 						realExpression = pathInterpretation.getSqlExpression();
 					}
 					else {

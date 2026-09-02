@@ -54,7 +54,7 @@ import org.hibernate.query.spi.SelectionQueryImplementor;
 import org.hibernate.query.sqm.spi.SqmBindableType;
 import org.hibernate.procedure.ResultSetOutput;
 import org.hibernate.procedure.UpdateCountOutput;
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
+import org.hibernate.sql.ast.spi.query.expression.JdbcParameter;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.spi.JdbcCallParameterRegistration;

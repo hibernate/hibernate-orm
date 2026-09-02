@@ -441,7 +441,7 @@ public class ForeignKeyModelBuilderTest {
 		SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
 		var constraintModel = sessionFactory.getMappingMetamodel().getConstraintModel();
 
-		if (!sessionFactory.getJdbcServices().getDialect().supportsUniqueConstraints()) {
+		if (sessionFactory.getJdbcServices().getDialect().getUniqueDelegate().representation( new org.hibernate.dialect.unique.spi.UniqueKeyRepresentationRequest( false, false, false ) ) != org.hibernate.dialect.unique.spi.UniqueKeyRepresentation.CONSTRAINT) {
 			return;
 		}
 

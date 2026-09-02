@@ -11,17 +11,17 @@ import org.hibernate.metamodel.mapping.ordering.TranslationContext;
 import org.hibernate.persister.collection.AbstractCollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.SortDirection;
-import org.hibernate.sql.ast.spi.SqlAstCreationState;
-import org.hibernate.sql.ast.spi.SqlExpressionResolver;
-import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.from.TableReference;
-import org.hibernate.sql.ast.tree.select.QuerySpec;
-import org.hibernate.sql.ast.tree.select.SortSpecification;
+import org.hibernate.sql.ast.spi.creation.SqlAstCreationState;
+import org.hibernate.sql.ast.spi.creation.SqlExpressionResolver;
+import org.hibernate.sql.ast.spi.query.expression.Expression;
+import org.hibernate.sql.ast.spi.query.from.TableGroup;
+import org.hibernate.sql.ast.spi.query.from.TableReference;
+import org.hibernate.sql.ast.spi.query.select.QuerySpec;
+import org.hibernate.sql.ast.spi.query.select.SortSpecification;
 import org.hibernate.type.NullType;
 
 import static org.hibernate.internal.util.collections.ArrayHelper.contains;
-import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnReferenceKey;
+import static org.hibernate.sql.ast.spi.creation.SqlExpressionResolver.createColumnReferenceKey;
 
 /**
  * Represents a column-reference used in an order-by fragment
@@ -58,7 +58,7 @@ public class ColumnReference implements OrderingExpression, SequencePart {
 		final SqlExpressionResolver sqlExpressionResolver = creationState.getSqlExpressionResolver();
 		return sqlExpressionResolver.resolveSqlExpression(
 				createColumnReferenceKey( tableReference, columnExpression, NullType.INSTANCE ),
-				sqlAstProcessingState -> new org.hibernate.sql.ast.tree.expression.ColumnReference(
+				sqlAstProcessingState -> new org.hibernate.sql.ast.spi.query.expression.ColumnReference(
 						tableReference,
 						columnExpression,
 						isColumnExpressionFormula,

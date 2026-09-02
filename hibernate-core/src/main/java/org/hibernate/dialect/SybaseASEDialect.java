@@ -4,25 +4,51 @@
  */
 package org.hibernate.dialect;
 
+import org.hibernate.dialect.identifier.spi.KeywordRegistration;
+
+import org.hibernate.dialect.temporaltype.spi.TemporalOperationSupport;
+
+import org.hibernate.dialect.temporaltype.spi.CurrentTemporalSupport;
+
+import org.hibernate.SPI;
+import static org.hibernate.SPI.Role.USE;
+
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.SUPPLY;
+import org.hibernate.dialect.type.spi.StandardDdlTypes;
+
+import org.hibernate.dialect.type.spi.TypeSizingProfile;
+
+
+
+import org.hibernate.dialect.jdbc.spi.SybaseDriverKind;
+
+import org.hibernate.dialect.sql.ast.spi.MutationKind;
+import org.hibernate.dialect.sql.ast.spi.MutationSyntaxCapability;
+import org.hibernate.dialect.sql.ast.spi.MutationSyntaxSupport;
+import org.hibernate.dialect.sql.ast.spi.PredicateSupport;
+import org.hibernate.dialect.sql.ast.spi.SetOperationSupport;
+import org.hibernate.dialect.sql.ast.spi.SingleRowTableSupport;
+import org.hibernate.dialect.sql.ast.spi.SubquerySupport;
+import org.hibernate.dialect.sql.ast.spi.ValuesListSupport;
+
 import jakarta.persistence.TemporalType;
 import org.hibernate.Length;
-import org.hibernate.LockMode;
-import org.hibernate.LockOptions;
 import org.hibernate.QueryTimeoutException;
-import org.hibernate.Timeouts;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
-import org.hibernate.dialect.aggregate.AggregateSupport;
-import org.hibernate.dialect.aggregate.SybaseASEAggregateSupport;
+import org.hibernate.dialect.aggregate.spi.AggregateSupport;
+import org.hibernate.dialect.aggregate.internal.SybaseASEAggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.lock.internal.TransactSQLLockingSupport;
 import org.hibernate.dialect.lock.spi.LockingSupport;
-import org.hibernate.dialect.pagination.LimitHandler;
-import org.hibernate.dialect.pagination.TopLimitHandler;
-import org.hibernate.dialect.sql.ast.SybaseASESqlAstTranslator;
+import org.hibernate.dialect.pagination.spi.LimitHandler;
+import org.hibernate.dialect.pagination.spi.TopLimitHandler;
+import org.hibernate.dialect.sql.ast.internal.SybaseASESqlAstTranslator;
+import org.hibernate.dialect.type.spi.SizeStrategy;
+import org.hibernate.dialect.type.spi.StandardSizeStrategy;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.ConstraintViolationException.ConstraintKind;
 import org.hibernate.exception.LockTimeoutException;
@@ -30,18 +56,19 @@ import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.query.common.TemporalUnit;
-import org.hibernate.dialect.type.IntervalType;
+import org.hibernate.query.sqm.SetOperator;
+import org.hibernate.dialect.temporaltype.spi.IntervalType;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.SqlAstTranslatorFactory;
-import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
-import org.hibernate.sql.ast.tree.Statement;
+import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslatorFactory;
+import org.hibernate.dialect.sql.ast.spi.StandardSqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.Statement;
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.TimestampJdbcType;
 import org.hibernate.type.descriptor.jdbc.TinyIntJdbcType;
-import org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType;
 
 import java.sql.SQLException;
 import java.sql.Types;
@@ -49,8 +76,8 @@ import java.sql.Types;
 import static org.hibernate.cfg.DialectSpecificSettings.SYBASE_ANSI_NULL;
 import static org.hibernate.cfg.DialectSpecificSettings.SYBASE_PAGE_SIZE;
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
-import static org.hibernate.internal.util.JdbcExceptionHelper.extractErrorCode;
-import static org.hibernate.internal.util.JdbcExceptionHelper.extractSqlState;
+import static org.hibernate.jdbc.spi.JdbcExceptionHelper.extractErrorCode;
+import static org.hibernate.jdbc.spi.JdbcExceptionHelper.extractSqlState;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getInt;
 import static org.hibernate.type.SqlTypes.BOOLEAN;
@@ -64,13 +91,25 @@ import static org.hibernate.type.SqlTypes.XML_ARRAY;
 /**
  * A {@linkplain Dialect SQL dialect} for Sybase Adaptive Server Enterprise 16 and above.
  */
-public class SybaseASEDialect extends SybaseDialect {
+public class SybaseASEDialect extends SybaseDialect implements CurrentTemporalSupport, TemporalOperationSupport {
+
+	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
+	public TemporalOperationSupport getTemporalOperationSupport() {
+		return this;
+	}
+
+	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
+	public CurrentTemporalSupport getCurrentTemporalSupport() {
+		return this;
+	}
 
 	private static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 16, 0 );
 
 	public static final int MAX_PAGE_SIZE = 16_384;
 
-	private final SizeStrategy sizeStrategy = new SizeStrategyImpl() {
+	private final SizeStrategy sizeStrategy = new StandardSizeStrategy( this ) {
 		@Override
 		public Size resolveSize(
 				JdbcType jdbcType,
@@ -87,7 +126,7 @@ public class SybaseASEDialect extends SybaseDialect {
 							javaType,
 							precision,
 							scale,
-							length == null ? getDefaultLobLength() : length
+							length == null ? getTypeSizingProfile().defaultLobLength() : length
 					);
 				case Types.FLOAT:
 					// Sybase ASE allows FLOAT with a precision up to 48
@@ -101,6 +140,7 @@ public class SybaseASEDialect extends SybaseDialect {
 
 	private final boolean ansiNull;
 	private final int pageSize;
+	private final TypeSizingProfile typeSizingProfile;
 
 	public SybaseASEDialect() {
 		this( MINIMUM_VERSION );
@@ -110,15 +150,34 @@ public class SybaseASEDialect extends SybaseDialect {
 		super(version);
 		ansiNull = false;
 		pageSize = MAX_PAGE_SIZE;
+		typeSizingProfile = createTypeSizingProfile( pageSize );
 	}
 
 	public SybaseASEDialect(DialectResolutionInfo info) {
 		super(info);
 		ansiNull = isAnsiNull( info );
 		pageSize = pageSize( info );
+		typeSizingProfile = createTypeSizingProfile( pageSize );
+	}
+
+	private static TypeSizingProfile createTypeSizingProfile(int pageSize) {
+		return TypeSizingProfile.builder()
+				.defaultLobLength( Length.LONG32 )
+				.floatPrecision( 15 )
+				.doublePrecision( 48 )
+				.maxVarcharLength( pageSize ).maxVarcharCapacity( pageSize )
+				.maxNVarcharLength( pageSize ).maxNVarcharCapacity( pageSize )
+				.maxVarbinaryLength( pageSize ).maxVarbinaryCapacity( pageSize )
+				.build();
 	}
 
 	@Override
+	public TypeSizingProfile getTypeSizingProfile() {
+		return typeSizingProfile;
+	}
+
+	@Override
+	@SPI({ USE, IMPLEMENT })
 	public DatabaseVersion determineDatabaseVersion(DialectResolutionInfo info) {
 		if ( SybaseDriverKind.determineKind( info ) == SybaseDriverKind.JTDS
 			&& info.getDatabaseMinorVersion() != DatabaseVersion.NO_VERSION ) {
@@ -134,6 +193,7 @@ public class SybaseASEDialect extends SybaseDialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	protected String columnType(int sqlTypeCode) {
 		return switch ( sqlTypeCode ) {
 			// On Sybase ASE, the 'bit' type cannot be null,
@@ -150,6 +210,7 @@ public class SybaseASEDialect extends SybaseDialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	protected void registerColumnTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.registerColumnTypes( typeContributions, serviceRegistry );
 		final var ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
@@ -158,17 +219,17 @@ public class SybaseASEDialect extends SybaseDialect {
 		// But with jTDS we can't use them as the driver can't handle the types
 		if ( getDriverKind() != SybaseDriverKind.JTDS ) {
 			ddlTypeRegistry.addDescriptor(
-					CapacityDependentDdlType.builder( TIME, "bigtime", "bigtime", this )
+					StandardDdlTypes.builder( TIME, "bigtime", this ).castTypeName( "bigtime" )
 							.withTypeCapacity( 3, "time" )
 							.build()
 			);
 			ddlTypeRegistry.addDescriptor(
-					CapacityDependentDdlType.builder( TIMESTAMP, "bigdatetime", "bigdatetime", this )
+					StandardDdlTypes.builder( TIMESTAMP, "bigdatetime", this ).castTypeName( "bigdatetime" )
 							.withTypeCapacity( 3, "datetime" )
 							.build()
 			);
 			ddlTypeRegistry.addDescriptor(
-					CapacityDependentDdlType.builder( TIMESTAMP_WITH_TIMEZONE, "bigdatetime", "bigdatetime", this )
+					StandardDdlTypes.builder( TIMESTAMP_WITH_TIMEZONE, "bigdatetime", this ).castTypeName( "bigdatetime" )
 							.withTypeCapacity( 3, "datetime" )
 							.build()
 			);
@@ -176,22 +237,13 @@ public class SybaseASEDialect extends SybaseDialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public int getPreferredSqlTypeCodeForArray() {
 		return XML_ARRAY;
 	}
 
 	@Override
-	public int getMaxVarcharLength() {
-		// the maximum length of a VARCHAR or VARBINARY
-		// column depends on the page size and ASE version
-		// and is actually a limit on the whole row length,
-		// not the individual column length -- anyway, the
-		// largest possible page size is 16k, so that's a
-		// hard upper limit
-		return pageSize;
-	}
-
-	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
 		super.initializeFunctionRegistry( functionContributions );
 
@@ -209,11 +261,6 @@ public class SybaseASEDialect extends SybaseDialect {
 		// The maximum possible value for replicating an XML tag, so that the resulting string stays below the 16K limit
 		// https://infocenter.sybase.com/help/index.jsp?topic=/com.sybase.infocenter.dc32300.1570/html/sqlug/sqlug31.htm
 		return 4094;
-	}
-
-	@Override
-	public long getDefaultLobLength() {
-		return Length.LONG32;
 	}
 
 	private static boolean isAnsiNull(DialectResolutionInfo info) {
@@ -257,53 +304,37 @@ public class SybaseASEDialect extends SybaseDialect {
 	}
 
 	@Override
-	public int getFloatPrecision() {
-		return 15;
-	}
-
-	@Override
-	public int getDoublePrecision() {
-		return 48;
-	}
-
-	@Override
 	public SizeStrategy getSizeStrategy() {
 		return sizeStrategy;
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public SqlAstTranslatorFactory getSqlAstTranslatorFactory() {
 		return new StandardSqlAstTranslatorFactory() {
 			@Override
-			protected <T extends JdbcOperation> SqlAstTranslator<T> buildTranslator(
-					SessionFactoryImplementor sessionFactory, Statement statement) {
-				return new SybaseASESqlAstTranslator<>( sessionFactory, statement );
+			protected <S extends Statement, T extends JdbcOperation> SqlAstTranslator<T> createTranslator(
+					SqlAstTranslationRequest<S, T> request) {
+				return new SybaseASESqlAstTranslator<>( request );
 			}
 		};
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public AggregateSupport getAggregateSupport() {
 		return SybaseASEAggregateSupport.valueOf( this );
 	}
 
-	/**
-	 * The Sybase ASE {@code BIT} type does not allow
-	 * null values, so we don't use it.
-	 *
-	 * @return false
-	 */
 	@Override
-	public boolean supportsBitType() {
-		return false;
+	public PredicateSupport getPredicateSupport() {
+		return PredicateSupport.builder( super.getPredicateSupport() )
+				.capability( PredicateSupport.Capability.DISTINCT_FROM, getVersion().isSameOrAfter( 16, 3 ) )
+				.build();
 	}
 
 	@Override
-	public boolean supportsDistinctFromPredicate() {
-		return getVersion().isSameOrAfter( 16, 3 );
-	}
-
-	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.contributeTypes( typeContributions, serviceRegistry );
 
@@ -313,16 +344,19 @@ public class SybaseASEDialect extends SybaseDialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String currentDate() {
 		return "current_date()";
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String currentTime() {
 		return "current_time()";
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String currentTimestamp() {
 		return "current_bigdatetime()";
 	}
@@ -337,11 +371,13 @@ public class SybaseASEDialect extends SybaseDialect {
 	 * unit of precision.
 	 */
 	@Override
-	public long getFractionalSecondPrecisionInNanos() {
+	@SPI({ USE, IMPLEMENT })
+	public long fractionalSecondPrecisionInNanos() {
 		return 1_000_000;
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
 		switch ( unit ) {
 			case NANOSECOND:
@@ -356,6 +392,7 @@ public class SybaseASEDialect extends SybaseDialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
 		return switch ( unit ) {
 			case NANOSECOND ->
@@ -369,241 +406,245 @@ public class SybaseASEDialect extends SybaseDialect {
 	}
 
 	@Override
-	protected void registerDefaultKeywords() {
-		super.registerDefaultKeywords();
-		registerKeyword( "add" );
-		registerKeyword( "all" );
-		registerKeyword( "alter" );
-		registerKeyword( "and" );
-		registerKeyword( "any" );
-		registerKeyword( "arith_overflow" );
-		registerKeyword( "as" );
-		registerKeyword( "asc" );
-		registerKeyword( "at" );
-		registerKeyword( "authorization" );
-		registerKeyword( "avg" );
-		registerKeyword( "begin" );
-		registerKeyword( "between" );
-		registerKeyword( "break" );
-		registerKeyword( "browse" );
-		registerKeyword( "bulk" );
-		registerKeyword( "by" );
-		registerKeyword( "cascade" );
-		registerKeyword( "case" );
-		registerKeyword( "char_convert" );
-		registerKeyword( "check" );
-		registerKeyword( "checkpoint" );
-		registerKeyword( "close" );
-		registerKeyword( "clustered" );
-		registerKeyword( "coalesce" );
-		registerKeyword( "commit" );
-		registerKeyword( "compute" );
-		registerKeyword( "confirm" );
-		registerKeyword( "connect" );
-		registerKeyword( "constraint" );
-		registerKeyword( "continue" );
-		registerKeyword( "controlrow" );
-		registerKeyword( "convert" );
-		registerKeyword( "count" );
-		registerKeyword( "count_big" );
-		registerKeyword( "create" );
-		registerKeyword( "current" );
-		registerKeyword( "cursor" );
-		registerKeyword( "database" );
-		registerKeyword( "dbcc" );
-		registerKeyword( "deallocate" );
-		registerKeyword( "declare" );
-		registerKeyword( "decrypt" );
-		registerKeyword( "default" );
-		registerKeyword( "delete" );
-		registerKeyword( "desc" );
-		registerKeyword( "determnistic" );
-		registerKeyword( "disk" );
-		registerKeyword( "distinct" );
-		registerKeyword( "drop" );
-		registerKeyword( "dummy" );
-		registerKeyword( "dump" );
-		registerKeyword( "else" );
-		registerKeyword( "encrypt" );
-		registerKeyword( "end" );
-		registerKeyword( "endtran" );
-		registerKeyword( "errlvl" );
-		registerKeyword( "errordata" );
-		registerKeyword( "errorexit" );
-		registerKeyword( "escape" );
-		registerKeyword( "except" );
-		registerKeyword( "exclusive" );
-		registerKeyword( "exec" );
-		registerKeyword( "execute" );
-		registerKeyword( "exist" );
-		registerKeyword( "exit" );
-		registerKeyword( "exp_row_size" );
-		registerKeyword( "external" );
-		registerKeyword( "fetch" );
-		registerKeyword( "fillfactor" );
-		registerKeyword( "for" );
-		registerKeyword( "foreign" );
-		registerKeyword( "from" );
-		registerKeyword( "goto" );
-		registerKeyword( "grant" );
-		registerKeyword( "group" );
-		registerKeyword( "having" );
-		registerKeyword( "holdlock" );
-		registerKeyword( "identity" );
-		registerKeyword( "identity_gap" );
-		registerKeyword( "identity_start" );
-		registerKeyword( "if" );
-		registerKeyword( "in" );
-		registerKeyword( "index" );
-		registerKeyword( "inout" );
-		registerKeyword( "insensitive" );
-		registerKeyword( "insert" );
-		registerKeyword( "install" );
-		registerKeyword( "intersect" );
-		registerKeyword( "into" );
-		registerKeyword( "is" );
-		registerKeyword( "isolation" );
-		registerKeyword( "jar" );
-		registerKeyword( "join" );
-		registerKeyword( "key" );
-		registerKeyword( "kill" );
-		registerKeyword( "level" );
-		registerKeyword( "like" );
-		registerKeyword( "lineno" );
-		registerKeyword( "load" );
-		registerKeyword( "lock" );
-		registerKeyword( "materialized" );
-		registerKeyword( "max" );
-		registerKeyword( "max_rows_per_page" );
-		registerKeyword( "min" );
-		registerKeyword( "mirror" );
-		registerKeyword( "mirrorexit" );
-		registerKeyword( "modify" );
-		registerKeyword( "national" );
-		registerKeyword( "new" );
-		registerKeyword( "noholdlock" );
-		registerKeyword( "nonclustered" );
-		registerKeyword( "nonscrollable" );
-		registerKeyword( "non_sensitive" );
-		registerKeyword( "not" );
-		registerKeyword( "null" );
-		registerKeyword( "nullif" );
-		registerKeyword( "numeric_truncation" );
-		registerKeyword( "of" );
-		registerKeyword( "off" );
-		registerKeyword( "offsets" );
-		registerKeyword( "on" );
-		registerKeyword( "once" );
-		registerKeyword( "online" );
-		registerKeyword( "only" );
-		registerKeyword( "open" );
-		registerKeyword( "option" );
-		registerKeyword( "or" );
-		registerKeyword( "order" );
-		registerKeyword( "out" );
-		registerKeyword( "output" );
-		registerKeyword( "over" );
-		registerKeyword( "artition" );
-		registerKeyword( "perm" );
-		registerKeyword( "permanent" );
-		registerKeyword( "plan" );
-		registerKeyword( "prepare" );
-		registerKeyword( "primary" );
-		registerKeyword( "print" );
-		registerKeyword( "privileges" );
-		registerKeyword( "proc" );
-		registerKeyword( "procedure" );
-		registerKeyword( "processexit" );
-		registerKeyword( "proxy_table" );
-		registerKeyword( "public" );
-		registerKeyword( "quiesce" );
-		registerKeyword( "raiserror" );
-		registerKeyword( "read" );
-		registerKeyword( "readpast" );
-		registerKeyword( "readtext" );
-		registerKeyword( "reconfigure" );
-		registerKeyword( "references" );
-		registerKeyword( "remove" );
-		registerKeyword( "reorg" );
-		registerKeyword( "replace" );
-		registerKeyword( "replication" );
-		registerKeyword( "reservepagegap" );
-		registerKeyword( "return" );
-		registerKeyword( "returns" );
-		registerKeyword( "revoke" );
-		registerKeyword( "role" );
-		registerKeyword( "rollback" );
-		registerKeyword( "rowcount" );
-		registerKeyword( "rows" );
-		registerKeyword( "rule" );
-		registerKeyword( "save" );
-		registerKeyword( "schema" );
-		registerKeyword( "scroll" );
-		registerKeyword( "scrollable" );
-		registerKeyword( "select" );
-		registerKeyword( "semi_sensitive" );
-		registerKeyword( "set" );
-		registerKeyword( "setuser" );
-		registerKeyword( "shared" );
-		registerKeyword( "shutdown" );
-		registerKeyword( "some" );
-		registerKeyword( "statistics" );
-		registerKeyword( "stringsize" );
-		registerKeyword( "stripe" );
-		registerKeyword( "sum" );
-		registerKeyword( "syb_identity" );
-		registerKeyword( "syb_restree" );
-		registerKeyword( "syb_terminate" );
-		registerKeyword( "top" );
-		registerKeyword( "table" );
-		registerKeyword( "temp" );
-		registerKeyword( "temporary" );
-		registerKeyword( "textsize" );
-		registerKeyword( "to" );
-		registerKeyword( "tracefile" );
-		registerKeyword( "tran" );
-		registerKeyword( "transaction" );
-		registerKeyword( "trigger" );
-		registerKeyword( "truncate" );
-		registerKeyword( "tsequal" );
-		registerKeyword( "union" );
-		registerKeyword( "unique" );
-		registerKeyword( "unpartition" );
-		registerKeyword( "update" );
-		registerKeyword( "use" );
-		registerKeyword( "user" );
-		registerKeyword( "user_option" );
-		registerKeyword( "using" );
-		registerKeyword( "values" );
-		registerKeyword( "varying" );
-		registerKeyword( "view" );
-		registerKeyword( "waitfor" );
-		registerKeyword( "when" );
-		registerKeyword( "where" );
-		registerKeyword( "while" );
-		registerKeyword( "with" );
-		registerKeyword( "work" );
-		registerKeyword( "writetext" );
-		registerKeyword( "xmlextract" );
-		registerKeyword( "xmlparse" );
-		registerKeyword( "xmltest" );
-		registerKeyword( "xmlvalidate" );
+	@SPI({ USE, IMPLEMENT, SUPPLY })
+	protected void contributeKeywords(KeywordRegistration registration) {
+		super.contributeKeywords( registration );
+		registration.registerKeyword( "add" );
+		registration.registerKeyword( "all" );
+		registration.registerKeyword( "alter" );
+		registration.registerKeyword( "and" );
+		registration.registerKeyword( "any" );
+		registration.registerKeyword( "arith_overflow" );
+		registration.registerKeyword( "as" );
+		registration.registerKeyword( "asc" );
+		registration.registerKeyword( "at" );
+		registration.registerKeyword( "authorization" );
+		registration.registerKeyword( "avg" );
+		registration.registerKeyword( "begin" );
+		registration.registerKeyword( "between" );
+		registration.registerKeyword( "break" );
+		registration.registerKeyword( "browse" );
+		registration.registerKeyword( "bulk" );
+		registration.registerKeyword( "by" );
+		registration.registerKeyword( "cascade" );
+		registration.registerKeyword( "case" );
+		registration.registerKeyword( "char_convert" );
+		registration.registerKeyword( "check" );
+		registration.registerKeyword( "checkpoint" );
+		registration.registerKeyword( "close" );
+		registration.registerKeyword( "clustered" );
+		registration.registerKeyword( "coalesce" );
+		registration.registerKeyword( "commit" );
+		registration.registerKeyword( "compute" );
+		registration.registerKeyword( "confirm" );
+		registration.registerKeyword( "connect" );
+		registration.registerKeyword( "constraint" );
+		registration.registerKeyword( "continue" );
+		registration.registerKeyword( "controlrow" );
+		registration.registerKeyword( "convert" );
+		registration.registerKeyword( "count" );
+		registration.registerKeyword( "count_big" );
+		registration.registerKeyword( "create" );
+		registration.registerKeyword( "current" );
+		registration.registerKeyword( "cursor" );
+		registration.registerKeyword( "database" );
+		registration.registerKeyword( "dbcc" );
+		registration.registerKeyword( "deallocate" );
+		registration.registerKeyword( "declare" );
+		registration.registerKeyword( "decrypt" );
+		registration.registerKeyword( "default" );
+		registration.registerKeyword( "delete" );
+		registration.registerKeyword( "desc" );
+		registration.registerKeyword( "determnistic" );
+		registration.registerKeyword( "disk" );
+		registration.registerKeyword( "distinct" );
+		registration.registerKeyword( "drop" );
+		registration.registerKeyword( "dummy" );
+		registration.registerKeyword( "dump" );
+		registration.registerKeyword( "else" );
+		registration.registerKeyword( "encrypt" );
+		registration.registerKeyword( "end" );
+		registration.registerKeyword( "endtran" );
+		registration.registerKeyword( "errlvl" );
+		registration.registerKeyword( "errordata" );
+		registration.registerKeyword( "errorexit" );
+		registration.registerKeyword( "escape" );
+		registration.registerKeyword( "except" );
+		registration.registerKeyword( "exclusive" );
+		registration.registerKeyword( "exec" );
+		registration.registerKeyword( "execute" );
+		registration.registerKeyword( "exist" );
+		registration.registerKeyword( "exit" );
+		registration.registerKeyword( "exp_row_size" );
+		registration.registerKeyword( "external" );
+		registration.registerKeyword( "fetch" );
+		registration.registerKeyword( "fillfactor" );
+		registration.registerKeyword( "for" );
+		registration.registerKeyword( "foreign" );
+		registration.registerKeyword( "from" );
+		registration.registerKeyword( "goto" );
+		registration.registerKeyword( "grant" );
+		registration.registerKeyword( "group" );
+		registration.registerKeyword( "having" );
+		registration.registerKeyword( "holdlock" );
+		registration.registerKeyword( "identity" );
+		registration.registerKeyword( "identity_gap" );
+		registration.registerKeyword( "identity_start" );
+		registration.registerKeyword( "if" );
+		registration.registerKeyword( "in" );
+		registration.registerKeyword( "index" );
+		registration.registerKeyword( "inout" );
+		registration.registerKeyword( "insensitive" );
+		registration.registerKeyword( "insert" );
+		registration.registerKeyword( "install" );
+		registration.registerKeyword( "intersect" );
+		registration.registerKeyword( "into" );
+		registration.registerKeyword( "is" );
+		registration.registerKeyword( "isolation" );
+		registration.registerKeyword( "jar" );
+		registration.registerKeyword( "join" );
+		registration.registerKeyword( "key" );
+		registration.registerKeyword( "kill" );
+		registration.registerKeyword( "level" );
+		registration.registerKeyword( "like" );
+		registration.registerKeyword( "lineno" );
+		registration.registerKeyword( "load" );
+		registration.registerKeyword( "lock" );
+		registration.registerKeyword( "materialized" );
+		registration.registerKeyword( "max" );
+		registration.registerKeyword( "max_rows_per_page" );
+		registration.registerKeyword( "min" );
+		registration.registerKeyword( "mirror" );
+		registration.registerKeyword( "mirrorexit" );
+		registration.registerKeyword( "modify" );
+		registration.registerKeyword( "national" );
+		registration.registerKeyword( "new" );
+		registration.registerKeyword( "noholdlock" );
+		registration.registerKeyword( "nonclustered" );
+		registration.registerKeyword( "nonscrollable" );
+		registration.registerKeyword( "non_sensitive" );
+		registration.registerKeyword( "not" );
+		registration.registerKeyword( "null" );
+		registration.registerKeyword( "nullif" );
+		registration.registerKeyword( "numeric_truncation" );
+		registration.registerKeyword( "of" );
+		registration.registerKeyword( "off" );
+		registration.registerKeyword( "offsets" );
+		registration.registerKeyword( "on" );
+		registration.registerKeyword( "once" );
+		registration.registerKeyword( "online" );
+		registration.registerKeyword( "only" );
+		registration.registerKeyword( "open" );
+		registration.registerKeyword( "option" );
+		registration.registerKeyword( "or" );
+		registration.registerKeyword( "order" );
+		registration.registerKeyword( "out" );
+		registration.registerKeyword( "output" );
+		registration.registerKeyword( "over" );
+		registration.registerKeyword( "artition" );
+		registration.registerKeyword( "perm" );
+		registration.registerKeyword( "permanent" );
+		registration.registerKeyword( "plan" );
+		registration.registerKeyword( "prepare" );
+		registration.registerKeyword( "primary" );
+		registration.registerKeyword( "print" );
+		registration.registerKeyword( "privileges" );
+		registration.registerKeyword( "proc" );
+		registration.registerKeyword( "procedure" );
+		registration.registerKeyword( "processexit" );
+		registration.registerKeyword( "proxy_table" );
+		registration.registerKeyword( "public" );
+		registration.registerKeyword( "quiesce" );
+		registration.registerKeyword( "raiserror" );
+		registration.registerKeyword( "read" );
+		registration.registerKeyword( "readpast" );
+		registration.registerKeyword( "readtext" );
+		registration.registerKeyword( "reconfigure" );
+		registration.registerKeyword( "references" );
+		registration.registerKeyword( "remove" );
+		registration.registerKeyword( "reorg" );
+		registration.registerKeyword( "replace" );
+		registration.registerKeyword( "replication" );
+		registration.registerKeyword( "reservepagegap" );
+		registration.registerKeyword( "return" );
+		registration.registerKeyword( "returns" );
+		registration.registerKeyword( "revoke" );
+		registration.registerKeyword( "role" );
+		registration.registerKeyword( "rollback" );
+		registration.registerKeyword( "rowcount" );
+		registration.registerKeyword( "rows" );
+		registration.registerKeyword( "rule" );
+		registration.registerKeyword( "save" );
+		registration.registerKeyword( "schema" );
+		registration.registerKeyword( "scroll" );
+		registration.registerKeyword( "scrollable" );
+		registration.registerKeyword( "select" );
+		registration.registerKeyword( "semi_sensitive" );
+		registration.registerKeyword( "set" );
+		registration.registerKeyword( "setuser" );
+		registration.registerKeyword( "shared" );
+		registration.registerKeyword( "shutdown" );
+		registration.registerKeyword( "some" );
+		registration.registerKeyword( "statistics" );
+		registration.registerKeyword( "stringsize" );
+		registration.registerKeyword( "stripe" );
+		registration.registerKeyword( "sum" );
+		registration.registerKeyword( "syb_identity" );
+		registration.registerKeyword( "syb_restree" );
+		registration.registerKeyword( "syb_terminate" );
+		registration.registerKeyword( "top" );
+		registration.registerKeyword( "table" );
+		registration.registerKeyword( "temp" );
+		registration.registerKeyword( "temporary" );
+		registration.registerKeyword( "textsize" );
+		registration.registerKeyword( "to" );
+		registration.registerKeyword( "tracefile" );
+		registration.registerKeyword( "tran" );
+		registration.registerKeyword( "transaction" );
+		registration.registerKeyword( "trigger" );
+		registration.registerKeyword( "truncate" );
+		registration.registerKeyword( "tsequal" );
+		registration.registerKeyword( "union" );
+		registration.registerKeyword( "unique" );
+		registration.registerKeyword( "unpartition" );
+		registration.registerKeyword( "update" );
+		registration.registerKeyword( "use" );
+		registration.registerKeyword( "user" );
+		registration.registerKeyword( "user_option" );
+		registration.registerKeyword( "using" );
+		registration.registerKeyword( "values" );
+		registration.registerKeyword( "varying" );
+		registration.registerKeyword( "view" );
+		registration.registerKeyword( "waitfor" );
+		registration.registerKeyword( "when" );
+		registration.registerKeyword( "where" );
+		registration.registerKeyword( "while" );
+		registration.registerKeyword( "with" );
+		registration.registerKeyword( "work" );
+		registration.registerKeyword( "writetext" );
+		registration.registerKeyword( "xmlextract" );
+		registration.registerKeyword( "xmlparse" );
+		registration.registerKeyword( "xmltest" );
+		registration.registerKeyword( "xmlvalidate" );
 	}
 
 // Overridden informational metadata ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
 	@Override
-	public boolean supportsCascadeDelete() {
-		return false;
+	@SPI({ USE, IMPLEMENT })
+	public boolean supportsOnDeleteAction(org.hibernate.annotations.OnDeleteAction action) {
+		return action == org.hibernate.annotations.OnDeleteAction.NO_ACTION;
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public int getMaxAliasLength() {
 		return 30;
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public int getMaxIdentifierLength() {
 		return 255;
 	}
@@ -614,41 +655,29 @@ public class SybaseASEDialect extends SybaseDialect {
 	}
 
 	@Override
-	public boolean supportsOrderByInSubquery() {
-		return false;
+	public SubquerySupport getSubquerySupport() {
+		return SubquerySupport.builder( super.getSubquerySupport() )
+				.feature( SubquerySupport.Feature.ORDER_BY, false )
+				.build();
 	}
 
 	@Override
-	public boolean supportsUnionInSubquery() {
+	public SetOperationSupport getSetOperationSupport() {
 		// At least not according to HHH-3637
-		return false;
+		return SetOperationSupport.builder()
+				.operator( SetOperator.INTERSECT, false )
+				.operator( SetOperator.INTERSECT_ALL, false )
+				.operator( SetOperator.EXCEPT_ALL, false )
+				.capability( SetOperationSupport.Capability.UNION_IN_SUBQUERY, false )
+				.build();
 	}
 
 	@Override
-	public boolean supportsPartitionBy() {
-		return false;
-	}
-
-	@Override
-	public String getTableTypeString() {
+	@SPI({ USE, IMPLEMENT })
+	public String tableCreationOptions() {
 		//HHH-7298 I don't know if this would break something or cause
 		//some side effects, but it is required to use 'select for update'
 		return " lock datarows";
-	}
-
-	@Override
-	public boolean supportsLobValueChangePropagation() {
-		return false;
-	}
-
-	@Override
-	public String appendLockHint(LockOptions mode, String tableName) {
-		final String lockHint = super.appendLockHint( mode, tableName );
-		if ( !mode.getLockMode().greaterThan( LockMode.READ )
-				&& mode.getTimeout().milliseconds() == Timeouts.SKIP_LOCKED_MILLI ) {
-			return lockHint + " readpast";
-		}
-		return lockHint;
 	}
 
 	@Override
@@ -668,6 +697,7 @@ public class SybaseASEDialect extends SybaseDialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public ViolatedConstraintNameExtractor getViolatedConstraintNameExtractor() {
 		return EXTRACTOR;
 	}
@@ -699,6 +729,7 @@ public class SybaseASEDialect extends SybaseDialect {
 			} );
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
 		return (sqlException, message, sql) -> {
 			final String sqlState = extractSqlState( sqlException );
@@ -768,19 +799,23 @@ public class SybaseASEDialect extends SybaseDialect {
 	}
 
 	@Override
-	public String getDual() {
-		return "(select 1 c1)";
+	public SingleRowTableSupport getSingleRowTableSupport() {
+		return SingleRowTableSupport.builder( super.getSingleRowTableSupport() )
+				.tableExpression( "(select 1 c1)" )
+				.build();
 	}
 
 	@Override
-	public boolean supportsIntersect() {
-		// At least the version that
-		return false;
+	public ValuesListSupport getValuesListSupport() {
+		return ValuesListSupport.NONE;
 	}
 
 	@Override
-	public boolean supportsJoinsInDelete() {
-		return true;
+	public MutationSyntaxSupport getMutationSyntaxSupport() {
+		return MutationSyntaxSupport.builder()
+				.capability( MutationKind.UPDATE, MutationSyntaxCapability.FROM_CLAUSE )
+				.capability( MutationKind.DELETE, MutationSyntaxCapability.JOIN )
+				.build();
 	}
 
 	@Override

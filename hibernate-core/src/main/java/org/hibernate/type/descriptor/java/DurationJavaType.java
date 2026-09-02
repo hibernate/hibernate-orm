@@ -168,14 +168,14 @@ public class DurationJavaType extends AbstractClassJavaType<Duration> {
 			// except for cosmological applications. Thirty
 			// millennia in both timelike directions should be
 			// sufficient time for most businesses!
-			return Math.min( 21, dialect.getDefaultDecimalPrecision() );
+			return Math.min( 21, dialect.getTypeSizingProfile().defaultDecimalPrecision() );
 		}
 	}
 
 	@Override
 	public int getDefaultSqlScale(Dialect dialect, JdbcType jdbcType) {
 		return jdbcType.getDdlTypeCode() == SqlTypes.INTERVAL_SECOND
-				? dialect.getDefaultIntervalSecondScale()
+				? dialect.getTypeSizingProfile().defaultIntervalSecondScale()
 				: 0; // For non-interval types, we use the type numeric(21)
 
 	}

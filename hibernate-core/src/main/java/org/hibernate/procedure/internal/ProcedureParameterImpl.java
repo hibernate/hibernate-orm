@@ -7,7 +7,7 @@ package org.hibernate.procedure.internal;
 import java.util.Locale;
 import java.util.Objects;
 
-import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
+import org.hibernate.engine.jdbc.env.spi.JdbcMetadata;
 import org.hibernate.procedure.ParameterTypeException;
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.procedure.spi.ParameterStrategy;
@@ -120,9 +120,7 @@ class ProcedureParameterImpl<T> extends AbstractQueryParameter<T> implements Pro
 		final JdbcParameterBinder parameterBinder;
 		final JdbcCallRefCursorExtractorImpl refCursorExtractor;
 		final JdbcCallParameterExtractorImpl<T> parameterExtractor;
-		final var databaseMetaData =
-				session.getFactory().getJdbcServices().getJdbcEnvironment()
-						.getExtractedDatabaseMetaData();
+		final var jdbcMetadata = session.getFactory().getJdbcServices().getJdbcMetadata();
 		final boolean passProcedureParameterNames =
 				session.getFactory().getSessionFactoryOptions()
 						.isPassProcedureParameterNames();
@@ -130,7 +128,7 @@ class ProcedureParameterImpl<T> extends AbstractQueryParameter<T> implements Pro
 			case REF_CURSOR:
 				jdbcParamName =
 						name != null
-							&& databaseMetaData.supportsNamedParameters()
+							&& jdbcMetadata.supportsNamedParameters()
 							&& passProcedureParameterNames
 								? name
 								: null;
@@ -139,21 +137,21 @@ class ProcedureParameterImpl<T> extends AbstractQueryParameter<T> implements Pro
 				parameterExtractor = null;
 				break;
 			case IN:
-				jdbcParamName = getJdbcParamName( procedureCall, isNamed, passProcedureParameterNames, typeToUse, databaseMetaData );
+				jdbcParamName = getJdbcParamName( procedureCall, isNamed, passProcedureParameterNames, typeToUse, jdbcMetadata );
 				validateBindableType( typeToUse, startIndex );
 				parameterBinder = getParameterBinder( typeToUse, jdbcParamName );
 				parameterExtractor = null;
 				refCursorExtractor = null;
 				break;
 			case INOUT:
-				jdbcParamName = getJdbcParamName( procedureCall, isNamed, passProcedureParameterNames, typeToUse, databaseMetaData );
+				jdbcParamName = getJdbcParamName( procedureCall, isNamed, passProcedureParameterNames, typeToUse, jdbcMetadata );
 				validateBindableType( typeToUse, startIndex );
 				parameterBinder = getParameterBinder( typeToUse, jdbcParamName );
 				parameterExtractor = new JdbcCallParameterExtractorImpl<>( procedureCall.getProcedureName(), jdbcParamName, startIndex, typeToUse );
 				refCursorExtractor = null;
 				break;
 			default:
-				jdbcParamName = getJdbcParamName( procedureCall, isNamed, passProcedureParameterNames, typeToUse, databaseMetaData );
+				jdbcParamName = getJdbcParamName( procedureCall, isNamed, passProcedureParameterNames, typeToUse, jdbcMetadata );
 				validateBindableType( typeToUse, startIndex );
 				parameterBinder = null;
 				parameterExtractor = new JdbcCallParameterExtractorImpl<>( procedureCall.getProcedureName(), jdbcParamName, startIndex, typeToUse );
@@ -190,9 +188,9 @@ class ProcedureParameterImpl<T> extends AbstractQueryParameter<T> implements Pro
 			boolean isNamed,
 			boolean passProcedureParameterNames,
 			OutputableType<T> typeToUse,
-			ExtractedDatabaseMetaData databaseMetaData) {
+			JdbcMetadata jdbcMetadata) {
 		return isNamed && passProcedureParameterNames
-			&& canDoNameParameterBinding( typeToUse, procedureCall, databaseMetaData )
+			&& canDoNameParameterBinding( typeToUse, procedureCall, jdbcMetadata )
 				? name
 				: null;
 	}
@@ -232,9 +230,9 @@ class ProcedureParameterImpl<T> extends AbstractQueryParameter<T> implements Pro
 	private boolean canDoNameParameterBinding(
 			BindableType<?> hibernateType,
 			ProcedureCallImplementor procedureCall,
-			ExtractedDatabaseMetaData databaseMetaData) {
+			JdbcMetadata jdbcMetadata) {
 		return procedureCall.getFunctionReturn() == null
-			&& databaseMetaData.supportsNamedParameters()
+			&& jdbcMetadata.supportsNamedParameters()
 			&& hibernateType instanceof ProcedureParameterNamedBinder<?> binder
 			&& binder.canDoSetting();
 	}

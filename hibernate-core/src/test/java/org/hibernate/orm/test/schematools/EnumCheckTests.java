@@ -14,11 +14,11 @@ import jakarta.persistence.Table;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.JdbcSettings;
+import org.hibernate.cfg.SchemaToolingSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.orm.test.tool.schema.ExecutionOptionsTestImpl;
-import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
@@ -52,7 +52,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.hibernate.dialect.SimpleDatabaseVersion.ZERO_VERSION;
 
 /**
- * Tests for {@link Dialect#getFallbackSchemaManagementTool}
+ * Tests explicit schema-management-tool selection for enum checks.
  *
  * @author Steve Ebersole
  */
@@ -60,10 +60,16 @@ import static org.hibernate.dialect.SimpleDatabaseVersion.ZERO_VERSION;
 @JiraKey("HHH-16670")
 @BaseUnitTest
 @ServiceRegistry(
-		settingProviders = @SettingProvider(
-				settingName = JdbcSettings.DIALECT,
-				provider = EnumCheckTests.CustomDialectConfigProvider.class
-		)
+		settingProviders = {
+				@SettingProvider(
+						settingName = JdbcSettings.DIALECT,
+						provider = EnumCheckTests.CustomDialectConfigProvider.class
+				),
+				@SettingProvider(
+						settingName = SchemaToolingSettings.SCHEMA_MANAGEMENT_TOOL,
+						provider = EnumCheckTests.SchemaManagementToolConfigProvider.class
+				)
+		}
 )
 @DomainModel( annotatedClasses = EnumCheckTests.SimpleEntity.class )
 @RequiresDialect(
@@ -149,14 +155,17 @@ public class EnumCheckTests {
 		}
 	}
 
+	public static class SchemaManagementToolConfigProvider
+			implements SettingProvider.Provider<Class<SchemaManagementToolImpl>> {
+		@Override
+		public Class<SchemaManagementToolImpl> getSetting() {
+			return SchemaManagementToolImpl.class;
+		}
+	}
+
 	public static class CustomDialect extends Dialect {
 		public CustomDialect() {
 			super( ZERO_VERSION );
-		}
-
-		@Override
-		public SchemaManagementTool getFallbackSchemaManagementTool(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
-			return new SchemaManagementToolImpl();
 		}
 	}
 

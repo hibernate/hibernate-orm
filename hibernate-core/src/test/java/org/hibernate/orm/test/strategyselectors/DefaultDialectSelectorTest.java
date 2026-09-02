@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.strategyselectors;
 
+
 import org.hibernate.boot.registry.selector.internal.DefaultDialectSelector;
 import org.hibernate.dialect.*;
 

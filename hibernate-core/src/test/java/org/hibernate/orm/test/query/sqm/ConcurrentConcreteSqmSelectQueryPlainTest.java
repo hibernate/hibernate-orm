@@ -9,17 +9,12 @@ import jakarta.persistence.Id;
 import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.MySQLDialect;
-import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.query.Query;
-import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.sqm.internal.ConcreteSqmSelectQueryPlan;
-import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.sql.spi.SqmTranslator;
+import org.hibernate.query.sqm.sql.spi.SqmTranslationRequest;
 import org.hibernate.query.sqm.sql.spi.StandardSqmTranslatorFactory;
-import org.hibernate.query.sqm.tree.spi.select.SqmSelectStatement;
-import org.hibernate.sql.ast.spi.SqlAstCreationContext;
-import org.hibernate.sql.ast.tree.select.SelectStatement;
+import org.hibernate.sql.ast.spi.query.select.SelectStatement;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialect;
@@ -142,9 +137,7 @@ public class ConcurrentConcreteSqmSelectQueryPlainTest {
 	public static class DelayingStandardSqmTranslatorFactory extends StandardSqmTranslatorFactory {
 
 		@Override
-		public SqmTranslator<SelectStatement> createSelectTranslator(SqmSelectStatement<?> sqmSelectStatement, QueryOptions queryOptions,
-																	DomainParameterXref domainParameterXref, QueryParameterBindings domainParameterBindings, LoadQueryInfluencers loadQueryInfluencers,
-																	SqlAstCreationContext creationContext, boolean deduplicateSelectionItems) {
+		public SqmTranslator<SelectStatement> createSelectTranslator(SqmTranslationRequest.Select request) {
 
 			try {
 				Thread.sleep( 2000L ); // delay to trigger double-lock checking by concurrent queries
@@ -153,9 +146,7 @@ public class ConcurrentConcreteSqmSelectQueryPlainTest {
 				fail( "sleep interrupted: createSelectTranslator", ex );
 			}
 
-			return super.createSelectTranslator( sqmSelectStatement, queryOptions, domainParameterXref,
-					domainParameterBindings, loadQueryInfluencers, creationContext,
-					deduplicateSelectionItems );
+			return super.createSelectTranslator( request );
 		}
 
 	}

@@ -20,8 +20,8 @@ import org.hibernate.query.sqm.tree.spi.SqmTypedNode;
 import org.hibernate.query.sqm.tree.spi.expression.SqmDistinct;
 import org.hibernate.query.sqm.tree.spi.expression.SqmWindowFunction;
 import org.hibernate.query.sqm.tree.spi.predicate.SqmPredicate;
-import org.hibernate.sql.ast.tree.SqlAstNode;
-import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.spi.SqlAstNode;
+import org.hibernate.sql.ast.spi.query.expression.Expression;
 
 /**
  * @author Christian Beikov

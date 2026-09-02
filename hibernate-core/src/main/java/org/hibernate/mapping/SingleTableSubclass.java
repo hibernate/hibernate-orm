@@ -48,7 +48,7 @@ public final class SingleTableSubclass extends Subclass {
 	public void createConstraints(MetadataBuildingContext context) {
 		if ( !isAbstract() ) {
 			final var dialect = context.getMetadataCollector().getDatabase().getDialect();
-			if ( dialect.supportsTableCheck() ) {
+			if ( dialect.getCheckConstraintSupport().supports( org.hibernate.dialect.constraint.spi.CheckConstraintPlacement.TABLE ) ) {
 				final var discriminator = getDiscriminator();
 				final var selectables = discriminator.getSelectables();
 				if ( selectables.size() == 1 ) {

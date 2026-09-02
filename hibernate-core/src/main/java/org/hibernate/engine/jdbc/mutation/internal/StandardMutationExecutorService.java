@@ -16,10 +16,10 @@ import org.hibernate.engine.jdbc.mutation.spi.JdbcValueDescriptorAccess;
 import org.hibernate.engine.jdbc.mutation.spi.MutationExecutorService;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.config.ConfigurationHelper;
-import org.hibernate.sql.model.MutationOperation;
+import org.hibernate.sql.spi.mutation.MutationOperation;
 import org.hibernate.sql.model.MutationOperationGroup;
-import org.hibernate.sql.model.PreparableMutationOperation;
-import org.hibernate.sql.model.SelfExecutingUpdateOperation;
+import org.hibernate.sql.spi.mutation.jdbc.PreparableMutationOperation;
+import org.hibernate.sql.spi.mutation.SelfExecutingUpdateOperation;
 
 /**
  * Standard {@link MutationExecutorService} implementation

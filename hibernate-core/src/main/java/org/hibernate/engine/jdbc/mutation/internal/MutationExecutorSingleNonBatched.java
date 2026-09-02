@@ -9,8 +9,8 @@ import org.hibernate.engine.jdbc.mutation.TableInclusionChecker;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.values.GeneratedValues;
 import org.hibernate.generator.values.GeneratedValuesMutationDelegate;
-import org.hibernate.sql.model.PreparableMutationOperation;
-import org.hibernate.sql.model.ValuesAnalysis;
+import org.hibernate.sql.spi.mutation.jdbc.PreparableMutationOperation;
+import org.hibernate.sql.spi.mutation.ValuesAnalysis;
 
 /**
  * @author Steve Ebersole

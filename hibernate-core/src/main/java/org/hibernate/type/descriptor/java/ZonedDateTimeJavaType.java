@@ -200,7 +200,7 @@ public class ZonedDateTimeJavaType extends AbstractTemporalJavaType<ZonedDateTim
 
 	@Override
 	public int getDefaultSqlPrecision(Dialect dialect, JdbcType jdbcType) {
-		return dialect.getDefaultTimestampPrecision();
+		return dialect.getTypeSizingProfile().defaultTimestampPrecision();
 	}
 
 	@Override

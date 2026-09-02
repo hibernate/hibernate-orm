@@ -6,9 +6,9 @@ package org.hibernate.dialect.function.json;
 
 
 import org.hibernate.metamodel.model.domain.ReturnableType;
-import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.spi.SqlAppender;
-import org.hibernate.sql.ast.tree.expression.CastTarget;
+import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
+import org.hibernate.sql.spi.SqlAppender;
+import org.hibernate.sql.ast.spi.query.expression.CastTarget;
 import org.hibernate.type.spi.TypeConfiguration;
 
 public class SpannerJsonValueFunction extends JsonValueFunction {

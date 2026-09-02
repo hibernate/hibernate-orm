@@ -7,49 +7,37 @@ package org.hibernate.type.descriptor.java;
 import java.io.Serializable;
 
 import org.hibernate.SharedSessionContract;
+import org.hibernate.SPI;
 
 import jakarta.annotation.Nullable;
 
-/**
- * Describes the mutability aspects of a given Java type.
- * <p>
- * Mutable values require special handling that is not necessary for
- * immutable values:
- * <ul>
- * <li>a mutable value must be {@linkplain #deepCopy(Object) cloned} when
- *     taking a "snapshot" of the state of an entity for dirty-checking,
- *     and
- * <li>a mutable value requires more careful handling when the entity is
- *     {@linkplain #disassemble(Object, SharedSessionContract) disassembled}
- *     for storage in destructured form in the second-level cache.
- * </ul>
- * <p>
- * Neither is a requirement for correctness when dealing with an immutable
- * object. But there might be other reasons why an immutable object requires
- * custom implementations of {@link #disassemble} and {@link #assemble}.
- * <p>
- * For example:
- * <ul>
- * <li>if the object is not serializable, we might convert it to a serializable
- *     format,
- * <li>if the object holds a reference to an entity, we must replace that
- *     reference with an identifier, or
- * <li>if the object holds a reference to some heavyweight resource, we must
- *     release it.
- * </ul>
- * <p>
- * For an immutable type, it's not usually necessary to do anything special
- * in {@link #deepCopy}. The method can simply return its argument.
- *
- * @apiNote The term "mutability" refers to the fact that, in general,
- *          the aspects of the Java type described by this contract are
- *          determined by whether the Java type has any mutable internal
- *          state.
- *
- * @author Steve Ebersole
- *
- * @see org.hibernate.annotations.Mutability
- */
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.SUPPLY;
+import static org.hibernate.SPI.Role.USE;
+
+/// Describes the mutability semantics of a Java type.
+///
+/// Mutable values must be [#deepCopy(Object) copied] for dirty-checking
+/// snapshots and carefully [#disassemble(Object, SharedSessionContract)
+/// disassembled] for second-level caching. Immutable values may normally
+/// return themselves from `deepCopy()`, but may still need a custom cache
+/// representation when they are not serializable or retain entities or
+/// heavyweight resources.
+///
+/// Supply a reusable plan from [JavaType#getMutabilityPlan()]. A plan must not
+/// retain a session passed to `disassemble()` or `assemble()`.
+///
+/// @param <T> the planned Java value type
+///
+/// @see org.hibernate.annotations.Mutability
+/// @see org.hibernate.annotations.CollectionIdMutability#value()
+/// @see org.hibernate.annotations.MapKeyMutability#value()
+/// @see org.hibernate.annotations.Mutability#value()
+/// @see org.hibernate.mapping.BasicValue#setExplicitMutabilityPlanAccess(java.util.function.Function)
+/// @see JavaType#getMutabilityPlan()
+///
+/// @author Steve Ebersole
+@SPI({ USE, IMPLEMENT, SUPPLY })
 public interface MutabilityPlan<T> extends Serializable {
 	/**
 	 * Can the internal state of instances of {@code T} be changed?

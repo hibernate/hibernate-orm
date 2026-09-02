@@ -8,8 +8,8 @@ import jakarta.persistence.NamedNativeQuery;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.query.results.spi.ResultBuilder;
 import org.hibernate.query.results.internal.ResultSetMappingSqlSelection;
-import org.hibernate.sql.ast.spi.SqlExpressionResolver;
-import org.hibernate.sql.ast.spi.SqlSelection;
+import org.hibernate.sql.ast.spi.creation.SqlExpressionResolver;
+import org.hibernate.sql.ast.spi.query.select.SqlSelection;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.basic.BasicResult;
@@ -17,7 +17,7 @@ import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnReferenceKey;
+import static org.hibernate.sql.ast.spi.creation.SqlExpressionResolver.createColumnReferenceKey;
 
 /**
  * ResultBuilder for handling {@link NamedNativeQuery#resultClass()} when the

@@ -6,6 +6,7 @@ package org.hibernate.query.sqm.mutation.internal.cte;
 
 import java.util.Locale;
 
+import org.hibernate.dialect.sql.ast.spi.CteSupport;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.MutableObject;
@@ -20,7 +21,7 @@ import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.query.sqm.tree.spi.SqmDeleteOrUpdateStatement;
 import org.hibernate.query.sqm.tree.spi.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.spi.update.SqmUpdateStatement;
-import org.hibernate.sql.ast.tree.cte.CteTable;
+import org.hibernate.sql.ast.spi.query.cte.CteTable;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 
 /// [SqmMultiTableMutationStrategy] implementation using SQL's modifiable CTE (Common Table Expression)
@@ -68,7 +69,7 @@ public class CteMutationStrategy implements SqmMultiTableMutationStrategy {
 
 		final Dialect dialect = runtimeModelCreationContext.getDialect();
 
-		if ( !dialect.supportsNonQueryWithCTE() ) {
+		if ( !dialect.getCteSupport().supports( CteSupport.MutationFeature.NON_QUERY ) ) {
 			throw new UnsupportedOperationException(
 					getClass().getSimpleName() +
 							" can only be used with Dialects that support CTE that can take UPDATE or DELETE statements as well"

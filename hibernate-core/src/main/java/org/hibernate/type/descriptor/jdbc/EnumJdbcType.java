@@ -25,7 +25,7 @@ import static org.hibernate.type.SqlTypes.VARCHAR;
  * as {@link jakarta.persistence.EnumType#STRING}.
  *
  * @see org.hibernate.type.SqlTypes#ENUM
- * @see org.hibernate.dialect.MySQLDialect#getEnumTypeDeclaration(String, String[])
+ * @see org.hibernate.dialect.MySQLDialect#getEnumSupport()
  *
  * @author Gavin King
  */

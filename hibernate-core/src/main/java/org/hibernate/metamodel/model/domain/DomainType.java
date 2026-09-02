@@ -4,6 +4,10 @@
  */
 package org.hibernate.metamodel.model.domain;
 
+import org.hibernate.SPI;
+
+import static org.hibernate.SPI.Role.USE;
+
 import jakarta.annotation.Nonnull;
 import org.hibernate.query.sqm.spi.SqmExpressible;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -31,6 +35,7 @@ public interface DomainType<J> {
 	/**
 	 * The {@link JavaType} representing this domain type.
 	 */
+	@SPI(USE)
 	JavaType<J> getExpressibleJavaType();
 
 	/**

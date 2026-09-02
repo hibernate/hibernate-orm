@@ -20,35 +20,35 @@ import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.query.SortDirection;
 import org.hibernate.query.sqm.sql.spi.SqmToSqlAstConverter;
 import org.hibernate.sql.ast.spi.AbstractSqlAstWalker;
-import org.hibernate.sql.ast.spi.ExpressionReplacementWalker;
-import org.hibernate.sql.ast.spi.SqlSelection;
-import org.hibernate.sql.ast.tree.SqlAstNode;
-import org.hibernate.sql.ast.tree.cte.CteContainer;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
-import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.QueryLiteral;
-import org.hibernate.sql.ast.tree.expression.QueryTransformer;
-import org.hibernate.sql.ast.tree.expression.SqlSelectionExpression;
-import org.hibernate.sql.ast.tree.from.LazyTableGroup;
-import org.hibernate.sql.ast.tree.from.VirtualTableGroup;
-import org.hibernate.sql.ast.tree.predicate.ExistsPredicate;
-import org.hibernate.sql.ast.tree.from.AbstractTableGroup;
-import org.hibernate.sql.ast.tree.from.CollectionTableGroup;
-import org.hibernate.sql.ast.tree.from.NamedTableReference;
-import org.hibernate.sql.ast.tree.from.PluralTableGroup;
-import org.hibernate.sql.ast.tree.from.QueryPartTableGroup;
-import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.from.TableGroupJoin;
-import org.hibernate.sql.ast.tree.from.TableGroupJoinProducer;
-import org.hibernate.sql.ast.tree.select.QuerySpec;
-import org.hibernate.sql.ast.tree.select.SelectStatement;
-import org.hibernate.sql.ast.tree.select.SortSpecification;
+import org.hibernate.sql.ast.spi.transform.ExpressionReplacementWalker;
+import org.hibernate.sql.ast.spi.query.select.SqlSelection;
+import org.hibernate.sql.ast.spi.SqlAstNode;
+import org.hibernate.sql.ast.spi.query.cte.CteContainer;
+import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
+import org.hibernate.sql.ast.spi.query.expression.Expression;
+import org.hibernate.sql.ast.spi.query.expression.QueryLiteral;
+import org.hibernate.sql.ast.spi.query.expression.QueryTransformer;
+import org.hibernate.sql.ast.spi.query.expression.SqlSelectionExpression;
+import org.hibernate.sql.ast.spi.query.from.LazyTableGroup;
+import org.hibernate.sql.ast.spi.query.from.VirtualTableGroup;
+import org.hibernate.sql.ast.spi.query.predicate.ExistsPredicate;
+import org.hibernate.sql.ast.spi.query.from.AbstractTableGroup;
+import org.hibernate.sql.ast.spi.query.from.CollectionTableGroup;
+import org.hibernate.sql.ast.spi.query.from.NamedTableReference;
+import org.hibernate.sql.ast.spi.query.from.PluralTableGroup;
+import org.hibernate.sql.ast.spi.query.from.QueryPartTableGroup;
+import org.hibernate.sql.ast.spi.query.from.TableGroup;
+import org.hibernate.sql.ast.spi.query.from.TableGroupJoin;
+import org.hibernate.sql.ast.spi.query.from.TableGroupJoinProducer;
+import org.hibernate.sql.ast.spi.query.select.QuerySpec;
+import org.hibernate.sql.ast.spi.query.select.SelectStatement;
+import org.hibernate.sql.ast.spi.query.select.SortSpecification;
 import org.hibernate.sql.results.internal.ResolvedSqlSelection;
 import org.hibernate.type.BasicType;
 
 import static java.util.Collections.emptyList;
 import static org.hibernate.metamodel.mapping.EntityDiscriminatorMapping.DISCRIMINATOR_ROLE_NAME;
-import static org.hibernate.sql.ast.SqlAstJoinType.*;
+import static org.hibernate.sql.ast.spi.query.from.SqlAstJoinType.*;
 
 /**
  * Deals with many-valued join fetches in a query with pagination or a limit.
@@ -304,7 +304,7 @@ public class CollectionFetchPaginationQueryTransformer implements QueryTransform
 
 	private static boolean canUseCollectionTableOnlyExists(
 			CollectionTableGroup collectionTableGroup,
-			org.hibernate.sql.ast.tree.predicate.Predicate joinPredicate) {
+			org.hibernate.sql.ast.spi.query.predicate.Predicate joinPredicate) {
 		final var pluralAttribute = collectionTableGroup.getModelPart();
 		if ( !pluralAttribute.getCollectionDescriptor().isManyToMany() ) {
 			return false;

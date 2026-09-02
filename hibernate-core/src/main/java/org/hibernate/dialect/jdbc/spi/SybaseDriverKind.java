@@ -1,0 +1,30 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
+package org.hibernate.dialect.jdbc.spi;
+
+import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
+
+/**
+ *
+ * @author Christian Beikov
+ */
+public enum SybaseDriverKind {
+	JCONNECT,
+	JTDS,
+	OTHER;
+
+	public static SybaseDriverKind determineKind(DialectResolutionInfo dialectResolutionInfo) {
+		final String driverName = dialectResolutionInfo.getDriverName();
+		// By default, we assume OTHER
+		if ( driverName == null ) {
+			return OTHER;
+		}
+		return switch ( driverName ) {
+			case "jConnect (TM) for JDBC (TM)" -> JCONNECT;
+			case "jTDS Type 4 JDBC Driver for MS SQL Server and Sybase" -> JTDS;
+			default -> OTHER;
+		};
+	}
+}

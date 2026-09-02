@@ -9,7 +9,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.generator.values.GeneratedValuesMutationDelegate;
 import org.hibernate.persister.entity.EntityPersister;
 
-import org.hibernate.sql.model.MutationType;
+import org.hibernate.sql.spi.mutation.MutationType;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
@@ -158,7 +158,7 @@ public class RowIdUpdateAndDeleteTest {
 	private void checkUpdateQuery(SQLStatementInspector inspector, SessionFactoryScope scope, boolean sameTransaction) {
 		final Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();
 		final boolean shouldUsePrimaryKey;
-		if ( dialect.rowId( "" ) == null ) {
+		if ( !dialect.getRowIdSupport().isSupported() ) {
 			shouldUsePrimaryKey = true;
 		}
 		else {

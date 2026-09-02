@@ -1,0 +1,35 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
+package org.hibernate.dialect.pagination.spi;
+
+import org.hibernate.SPI;
+
+/**
+ * A {@link LimitHandler} for DB2 11.1 which supports the
+ * ANSI SQL standard syntax {@code FETCH FIRST m ROWS ONLY}
+ * and {@code OFFSET n ROWS FETCH NEXT m ROWS ONLY},
+ * with the only wrinkle being that this clause comes
+ * after the {@code FOR UPDATE} and other similar clauses.
+ *
+ * @author Gavin King
+ * @since 8.0
+ */
+@SPI
+public final class DB2LimitHandler extends OffsetFetchLimitHandler {
+
+	public static final DB2LimitHandler INSTANCE = new DB2LimitHandler();
+
+	private DB2LimitHandler() {
+		super(true);
+	}
+
+	@Override
+	protected String insert(String offsetFetch, String sql) {
+		//on DB2, offset/fetch comes after all the
+		//various "for update"ish clauses
+		//see https://www.ibm.com/support/knowledgecenter/SSEPGG_11.1.0/com.ibm.db2.luw.sql.ref.doc/doc/r0000879.html
+		return super.insertAtEnd( offsetFetch, sql );
+	}
+}

@@ -4,6 +4,8 @@
  */
 package org.hibernate.type;
 
+import org.hibernate.Internal;
+import org.hibernate.SPI;
 import org.hibernate.cascade.spi.CascadePoint;
 
 /**
@@ -12,6 +14,7 @@ import org.hibernate.cascade.spi.CascadePoint;
  * @author Gavin King
  * @author Steve Ebersole
  */
+@SPI
 public enum ForeignKeyDirection {
 	/**
 	 * A foreign key from child to parent
@@ -42,5 +45,6 @@ public enum ForeignKeyDirection {
 	 *
 	 * @see org.hibernate.cascade.internal.Cascade
 	 */
+	@Internal
 	public abstract boolean cascadeNow(CascadePoint cascadePoint);
 }

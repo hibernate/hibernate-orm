@@ -10,6 +10,23 @@ public final class QuotingHelper {
 	private QuotingHelper() { /* static methods only - hide constructor */
 	}
 
+	public static boolean isIdentifierQuote(char character) {
+		return character == '`' || character == '"' || character == '[';
+	}
+
+	public static char getClosingIdentifierQuote(char openingQuote) {
+		return switch ( openingQuote ) {
+			case '`' -> '`';
+			case '"' -> '"';
+			case '[' -> ']';
+			default -> throw new IllegalArgumentException( "Not an identifier quote: " + openingQuote );
+		};
+	}
+
+	public static boolean isClosingIdentifierQuote(char character) {
+		return character == '`' || character == '"' || character == ']';
+	}
+
 	public static String unquoteIdentifier(String text) {
 		final int end = text.length() - 1;
 		assert text.charAt( 0 ) == '`' && text.charAt( end ) == '`';

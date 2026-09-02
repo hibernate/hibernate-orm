@@ -4,6 +4,8 @@
  */
 package org.hibernate.loader.ast.internal;
 
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
+
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.SubselectFetch;
@@ -11,8 +13,8 @@ import org.hibernate.loader.ast.spi.EntityLoader;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
-import org.hibernate.sql.ast.tree.select.SelectStatement;
+import org.hibernate.sql.ast.spi.creation.SqlAliasBaseManager;
+import org.hibernate.sql.ast.spi.query.select.SelectStatement;
 import org.hibernate.sql.results.internal.RowTransformerStandardImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 
@@ -59,7 +61,7 @@ public class EntityLoaderSubSelectFetch implements EntityLoader {
 		final var jdbcSelect =
 				jdbcServices.getJdbcEnvironment()
 						.getSqlAstTranslatorFactory()
-						.buildSelectTranslator( sessionFactory, sqlAst )
+						.buildTranslator( new SqlAstTranslationRequest.Select( sessionFactory, sqlAst ) )
 						.translate( subselect.getLoadingJdbcParameterBindings(), QueryOptions.NONE );
 
 		final var subSelectFetchableKeysHandler = SubselectFetch.createRegistrationHandler(

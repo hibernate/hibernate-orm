@@ -21,7 +21,6 @@ import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorLegacyImpl;
 import org.hibernate.tool.schema.extract.spi.ExtractionContext;
 import org.hibernate.tool.schema.extract.spi.SequenceInformation;
 
@@ -103,7 +102,7 @@ public class SQLServerDialectSequenceInformationTest {
 			}
 
 			JdbcEnvironment jdbcEnvironment = new JdbcEnvironmentImpl( connection.getMetaData(), dialect, bootstrapJdbcConnectionAccess );
-			Iterable<SequenceInformation> sequenceInformations = SequenceInformationExtractorLegacyImpl.INSTANCE.extractMetadata(
+			Iterable<SequenceInformation> sequenceInformations = dialect.getSequenceInformationExtractor().extractMetadata(
 					new ExtractionContext.EmptyExtractionContext() {
 						@Override
 						public Connection getJdbcConnection() {

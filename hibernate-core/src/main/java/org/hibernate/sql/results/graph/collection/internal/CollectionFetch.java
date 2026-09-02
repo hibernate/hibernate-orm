@@ -68,7 +68,7 @@ public abstract class CollectionFetch implements FetchParent, Fetch, Initializer
 	}
 
 	@Override
-	public ImmutableFetchList getFetches() {
+	public org.hibernate.sql.results.graph.FetchList getFetches() {
 		return ImmutableFetchList.EMPTY;
 	}
 

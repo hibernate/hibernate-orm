@@ -14,7 +14,7 @@ import java.time.temporal.ChronoUnit;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.SybaseDialect;
-import org.hibernate.dialect.TimeZoneSupport;
+import org.hibernate.dialect.type.spi.TimeZoneSupport;
 import org.hibernate.type.descriptor.DateTimeUtils;
 
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -43,7 +43,7 @@ public class DefaultZonedTest {
 			nowOffset = OffsetDateTime.now().withOffsetSameInstant( ZoneOffset.ofHours(3) )
 					.with( ChronoField.NANO_OF_SECOND, 0L );
 		}
-		else if ( dialect.getDefaultTimestampPrecision() == 6 ) {
+		else if ( dialect.getTypeSizingProfile().defaultTimestampPrecision() == 6 ) {
 			nowZoned = ZonedDateTime.now().withZoneSameInstant( ZoneId.of("CET") ).truncatedTo( ChronoUnit.MICROS );
 			nowOffset = OffsetDateTime.now().withOffsetSameInstant( ZoneOffset.ofHours(3) ).truncatedTo( ChronoUnit.MICROS );
 		}

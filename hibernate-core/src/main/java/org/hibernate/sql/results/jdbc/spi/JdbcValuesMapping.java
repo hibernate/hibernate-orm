@@ -9,7 +9,7 @@ import java.util.List;
 import org.hibernate.LockMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.sql.results.graph.DomainResult;
-import org.hibernate.sql.ast.spi.SqlSelection;
+import org.hibernate.sql.ast.spi.query.select.SqlSelection;
 
 /**
  * The "resolved" form of {@link JdbcValuesMappingProducer} providing access
@@ -17,9 +17,11 @@ import org.hibernate.sql.ast.spi.SqlSelection;
  * domain results ({@link DomainResult}) descriptors.
  *
  * @see JdbcValuesMappingProducer#resolve
+ * @see JdbcValuesMappingProducer#resolve(JdbcValuesMetadata, org.hibernate.engine.spi.LoadQueryInfluencers, SessionFactoryImplementor)
  *
  * @author Steve Ebersole
  */
+@org.hibernate.SPI({ org.hibernate.SPI.Role.USE, org.hibernate.SPI.Role.IMPLEMENT, org.hibernate.SPI.Role.SUPPLY })
 public interface JdbcValuesMapping {
 	/**
 	 * The JDBC selection descriptors.  Used to read ResultSet values and build
@@ -41,6 +43,10 @@ public interface JdbcValuesMapping {
 
 	List<DomainResult<?>> getDomainResults();
 
+	/// Resolves and supplies the assembler and initializer plan.
+	///
+	/// @see JdbcValuesMappingResolution
+	@org.hibernate.SPI(org.hibernate.SPI.Role.SUPPLY)
 	JdbcValuesMappingResolution resolveAssemblers(SessionFactoryImplementor sessionFactory);
 
 	LockMode determineDefaultLockMode(String alias, LockMode defaultLockMode);

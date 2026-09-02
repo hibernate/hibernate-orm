@@ -11,7 +11,7 @@ import java.util.Set;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.sql.ast.spi.SqlSelection;
+import org.hibernate.sql.ast.spi.query.select.SqlSelection;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMapping;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;

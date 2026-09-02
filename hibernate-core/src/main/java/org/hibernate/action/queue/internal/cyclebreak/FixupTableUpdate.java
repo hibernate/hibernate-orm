@@ -10,8 +10,8 @@ import org.hibernate.action.queue.spi.meta.EntityTableDescriptor;
 import org.hibernate.action.queue.spi.meta.TableDescriptor;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.sql.model.PreparableMutationOperation;
-import org.hibernate.sql.model.jdbc.JdbcValueDescriptor;
+import org.hibernate.sql.spi.mutation.jdbc.PreparableMutationOperation;
+import org.hibernate.sql.spi.mutation.jdbc.JdbcValueDescriptor;
 
 import java.util.HashMap;
 import java.util.List;

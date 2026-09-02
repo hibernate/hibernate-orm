@@ -10,7 +10,7 @@ import java.util.Map;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.internal.util.IndexedConsumer;
+import org.hibernate.spi.IndexedConsumer;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;

@@ -13,23 +13,24 @@ import org.hibernate.FetchMethod;
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.LockMode;
+import org.hibernate.SPI;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.function.TimestampaddFunction;
 import org.hibernate.dialect.function.TimestampdiffFunction;
+import org.hibernate.dialect.function.spi.WindowFunctionSupport;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.FetchOptions;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.generator.Generator;
 import org.hibernate.id.BulkInsertionCapableIdentifierGenerator;
 import org.hibernate.id.CompositeNestedGeneratedValueGenerator;
 import org.hibernate.id.OptimizableGenerator;
 import org.hibernate.id.enhanced.Optimizer;
-import org.hibernate.internal.util.collections.Stack;
-import org.hibernate.internal.util.collections.StandardStack;
+import org.hibernate.spi.Stack;
+import org.hibernate.spi.StandardStack;
 import org.hibernate.loader.MultipleBagFetchException;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.MappingMetamodel;
@@ -68,7 +69,7 @@ import org.hibernate.metamodel.mapping.internal.ManyToManyCollectionPart;
 import org.hibernate.metamodel.mapping.internal.OneToManyCollectionPart;
 import org.hibernate.metamodel.mapping.internal.SqlTypedMappingImpl;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
-import org.hibernate.metamodel.mapping.ordering.OrderByFragment;
+import org.hibernate.metamodel.mapping.ordering.spi.OrderByFragment;
 import org.hibernate.metamodel.model.domain.AnyMappingDomainType;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
@@ -114,18 +115,18 @@ import org.hibernate.query.sqm.function.SelfRenderingAggregateFunctionSqlAstExpr
 import org.hibernate.query.sqm.function.SelfRenderingFunctionSqlAstExpression;
 import org.hibernate.query.sqm.function.SelfRenderingSqmFunction;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
-import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.internal.SqmPathVisitor;
 import org.hibernate.query.sqm.produce.function.internal.PatternRenderer;
 import org.hibernate.query.sqm.spi.BaseSemanticQueryWalker;
 import org.hibernate.query.sqm.spi.SqmCreationHelper;
 import org.hibernate.query.sqm.sql.internal.AnyDiscriminatorPathInterpretation;
+import org.hibernate.query.sqm.sql.internal.AdditionalInsertValues;
 import org.hibernate.query.sqm.sql.internal.AsWrappedExpression;
 import org.hibernate.query.sqm.sql.internal.BasicValuedPathInterpretation;
 import org.hibernate.query.sqm.sql.internal.CollectionFetchPaginationQueryTransformer;
 import org.hibernate.query.sqm.sql.internal.DiscriminatedAssociationPathInterpretation;
 import org.hibernate.query.sqm.sql.internal.DiscriminatorPathInterpretation;
-import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
+import org.hibernate.sql.ast.spi.result.DomainResultProducer;
 import org.hibernate.query.sqm.sql.internal.EmbeddableValuedExpression;
 import org.hibernate.query.sqm.sql.internal.EmbeddableValuedPathInterpretation;
 import org.hibernate.query.sqm.sql.internal.EntityValuedPathInterpretation;
@@ -134,9 +135,10 @@ import org.hibernate.query.sqm.sql.internal.PluralValuedSimplePathInterpretation
 import org.hibernate.query.sqm.sql.internal.SqlAstProcessingStateImpl;
 import org.hibernate.query.sqm.sql.internal.SqlAstQueryNodeProcessingStateImpl;
 import org.hibernate.query.sqm.sql.internal.SqlAstQueryPartProcessingStateImpl;
+import org.hibernate.query.sqm.sql.internal.SqmAliasedNodeCollector;
 import org.hibernate.query.sqm.sql.internal.SqmMapEntryResult;
 import org.hibernate.query.sqm.sql.internal.SqmParameterInterpretation;
-import org.hibernate.query.sqm.sql.internal.SqmPathInterpretation;
+import org.hibernate.sql.ast.spi.query.PathInterpretation;
 import org.hibernate.query.sqm.tree.spi.SqmDmlStatement;
 import org.hibernate.query.sqm.tree.spi.SqmJoinType;
 import org.hibernate.query.sqm.tree.spi.SqmStatement;
@@ -265,117 +267,116 @@ import org.hibernate.query.sqm.tree.spi.select.SqmSortSpecification;
 import org.hibernate.query.sqm.tree.spi.select.SqmSubQuery;
 import org.hibernate.query.sqm.tree.spi.update.SqmSetClause;
 import org.hibernate.query.sqm.tree.spi.update.SqmUpdateStatement;
+import org.hibernate.dialect.sql.ast.spi.SyntheticTableGroupDescriptor;
+import org.hibernate.dialect.sql.ast.spi.SyntheticTableGroupSupport;
 import org.hibernate.query.sqm.tuple.internal.AnonymousTupleEntityValuedModelPart;
 import org.hibernate.query.sqm.tuple.internal.AnonymousTupleTableGroupProducer;
 import org.hibernate.query.sqm.tuple.internal.AnonymousTupleType;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.Clause;
-import org.hibernate.sql.ast.SqlAstJoinType;
-import org.hibernate.sql.ast.SqlTreeCreationException;
-import org.hibernate.sql.ast.SqlTreeCreationLogger;
-import org.hibernate.sql.ast.spi.FromClauseAccess;
-import org.hibernate.sql.ast.spi.SqlAliasBaseConstant;
-import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
-import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
-import org.hibernate.sql.ast.spi.SqlAstCreationContext;
-import org.hibernate.sql.ast.spi.SqlAstCreationState;
-import org.hibernate.sql.ast.spi.SqlAstProcessingState;
-import org.hibernate.sql.ast.spi.SqlAstQueryNodeProcessingState;
-import org.hibernate.sql.ast.spi.SqlAstQueryPartProcessingState;
-import org.hibernate.sql.ast.spi.SqlExpressionResolver;
-import org.hibernate.sql.ast.spi.SqlSelection;
-import org.hibernate.sql.ast.tree.Statement;
-import org.hibernate.sql.ast.tree.cte.CteColumn;
-import org.hibernate.sql.ast.tree.cte.CteContainer;
-import org.hibernate.sql.ast.tree.cte.CteObject;
-import org.hibernate.sql.ast.tree.cte.CteStatement;
-import org.hibernate.sql.ast.tree.cte.CteTable;
-import org.hibernate.sql.ast.tree.cte.CteTableGroup;
-import org.hibernate.sql.ast.tree.cte.SearchClauseSpecification;
-import org.hibernate.sql.ast.tree.delete.DeleteStatement;
-import org.hibernate.sql.ast.tree.expression.AliasedExpression;
-import org.hibernate.sql.ast.tree.expression.Any;
-import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
-import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
-import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
-import org.hibernate.sql.ast.tree.expression.CastTarget;
-import org.hibernate.sql.ast.tree.expression.Collation;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
-import org.hibernate.sql.ast.tree.expression.Distinct;
-import org.hibernate.sql.ast.tree.expression.Duration;
-import org.hibernate.sql.ast.tree.expression.DurationUnit;
-import org.hibernate.sql.ast.tree.expression.EmbeddableTypeLiteral;
-import org.hibernate.sql.ast.tree.expression.EntityTypeLiteral;
-import org.hibernate.sql.ast.tree.expression.Every;
-import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.ExtractUnit;
-import org.hibernate.sql.ast.tree.expression.Format;
-import org.hibernate.sql.ast.tree.expression.JdbcLiteral;
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
-import org.hibernate.sql.ast.tree.expression.Literal;
-import org.hibernate.sql.ast.tree.expression.ModifiedSubQueryExpression;
-import org.hibernate.sql.ast.tree.expression.Over;
-import org.hibernate.sql.ast.tree.expression.Overflow;
-import org.hibernate.sql.ast.tree.expression.QueryLiteral;
-import org.hibernate.sql.ast.tree.expression.QueryTransformer;
-import org.hibernate.sql.ast.tree.expression.SelfRenderingExpression;
-import org.hibernate.sql.ast.tree.expression.SelfRenderingSqlFragmentExpression;
-import org.hibernate.sql.ast.tree.expression.SqlSelectionExpression;
-import org.hibernate.sql.ast.tree.expression.SqlTuple;
-import org.hibernate.sql.ast.tree.expression.SqlTupleContainer;
-import org.hibernate.sql.ast.tree.expression.Star;
-import org.hibernate.sql.ast.tree.expression.Summarization;
-import org.hibernate.sql.ast.tree.expression.TrimSpecification;
-import org.hibernate.sql.ast.tree.expression.UnaryOperation;
-import org.hibernate.sql.ast.tree.expression.UnparsedNumericLiteral;
-import org.hibernate.sql.ast.tree.from.CorrelatedPluralTableGroup;
-import org.hibernate.sql.ast.tree.from.CorrelatedTableGroup;
-import org.hibernate.sql.ast.tree.from.EmbeddableFunctionTableGroup;
-import org.hibernate.sql.ast.tree.from.FromClause;
-import org.hibernate.sql.ast.tree.from.FunctionTableGroup;
-import org.hibernate.sql.ast.tree.from.NamedTableReference;
-import org.hibernate.sql.ast.tree.from.PluralTableGroup;
-import org.hibernate.sql.ast.tree.from.QueryPartTableGroup;
-import org.hibernate.sql.ast.tree.from.QueryPartTableReference;
-import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.from.TableGroupJoin;
-import org.hibernate.sql.ast.tree.from.TableGroupJoinProducer;
-import org.hibernate.sql.ast.tree.insert.ConflictClause;
-import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
-import org.hibernate.sql.ast.tree.insert.InsertStatement;
-import org.hibernate.sql.ast.tree.insert.Values;
-import org.hibernate.sql.ast.tree.predicate.BetweenPredicate;
-import org.hibernate.sql.ast.tree.predicate.BooleanExpressionPredicate;
-import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
-import org.hibernate.sql.ast.tree.predicate.ExistsPredicate;
-import org.hibernate.sql.ast.tree.predicate.GroupedPredicate;
-import org.hibernate.sql.ast.tree.predicate.InListPredicate;
-import org.hibernate.sql.ast.tree.predicate.InSubQueryPredicate;
-import org.hibernate.sql.ast.tree.predicate.Junction;
-import org.hibernate.sql.ast.tree.predicate.LikePredicate;
-import org.hibernate.sql.ast.tree.predicate.NegatedPredicate;
-import org.hibernate.sql.ast.tree.predicate.NullnessPredicate;
-import org.hibernate.sql.ast.tree.predicate.Predicate;
-import org.hibernate.sql.ast.tree.predicate.SelfRenderingPredicate;
-import org.hibernate.sql.ast.tree.predicate.ThruthnessPredicate;
-import org.hibernate.sql.ast.tree.select.QueryGroup;
-import org.hibernate.sql.ast.tree.select.QueryPart;
-import org.hibernate.sql.ast.tree.select.QuerySpec;
-import org.hibernate.sql.ast.tree.select.SelectClause;
-import org.hibernate.sql.ast.tree.select.SelectStatement;
-import org.hibernate.sql.ast.tree.select.SortSpecification;
-import org.hibernate.sql.ast.tree.update.Assignable;
-import org.hibernate.sql.ast.tree.update.Assignment;
-import org.hibernate.sql.ast.tree.update.UpdateStatement;
-import org.hibernate.sql.exec.internal.AbstractJdbcParameter;
+import org.hibernate.sql.ast.spi.translation.Clause;
+import org.hibernate.sql.ast.spi.query.from.SqlAstJoinType;
+import org.hibernate.sql.ast.spi.creation.SqlTreeCreationException;
+import org.hibernate.sql.ast.internal.SqlTreeCreationLogger;
+import org.hibernate.sql.ast.spi.creation.FromClauseAccess;
+import org.hibernate.sql.ast.spi.creation.SqlAliasBaseConstant;
+import org.hibernate.sql.ast.spi.creation.SqlAliasBaseGenerator;
+import org.hibernate.sql.ast.spi.creation.SqlAliasBaseManager;
+import org.hibernate.sql.ast.spi.creation.SqlAstCreationContext;
+import org.hibernate.sql.ast.spi.creation.SqlAstCreationState;
+import org.hibernate.sql.ast.spi.creation.SqlAstProcessingState;
+import org.hibernate.sql.ast.spi.creation.SqlAstQueryNodeProcessingState;
+import org.hibernate.sql.ast.spi.creation.SqlAstQueryPartProcessingState;
+import org.hibernate.sql.ast.spi.creation.SqlExpressionResolver;
+import org.hibernate.sql.ast.spi.query.select.SqlSelection;
+import org.hibernate.sql.ast.spi.Statement;
+import org.hibernate.sql.ast.spi.query.cte.CteColumn;
+import org.hibernate.sql.ast.spi.query.cte.CteContainer;
+import org.hibernate.sql.ast.spi.query.cte.CteObject;
+import org.hibernate.sql.ast.spi.query.cte.CteStatement;
+import org.hibernate.sql.ast.spi.query.cte.CteTable;
+import org.hibernate.sql.ast.spi.query.cte.CteTableGroup;
+import org.hibernate.sql.ast.spi.query.cte.SearchClauseSpecification;
+import org.hibernate.sql.ast.spi.query.delete.DeleteStatement;
+import org.hibernate.sql.ast.spi.query.expression.AliasedExpression;
+import org.hibernate.sql.ast.spi.query.expression.Any;
+import org.hibernate.sql.ast.spi.query.expression.BinaryArithmeticExpression;
+import org.hibernate.sql.ast.spi.query.expression.CaseSearchedExpression;
+import org.hibernate.sql.ast.spi.query.expression.CaseSimpleExpression;
+import org.hibernate.sql.ast.spi.query.expression.CastTarget;
+import org.hibernate.sql.ast.spi.query.expression.Collation;
+import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
+import org.hibernate.sql.ast.spi.query.expression.Distinct;
+import org.hibernate.sql.ast.spi.query.expression.Duration;
+import org.hibernate.sql.ast.spi.query.expression.DurationUnit;
+import org.hibernate.sql.ast.spi.query.expression.EmbeddableTypeLiteral;
+import org.hibernate.sql.ast.spi.query.expression.EntityTypeLiteral;
+import org.hibernate.sql.ast.spi.query.expression.Every;
+import org.hibernate.sql.ast.spi.query.expression.Expression;
+import org.hibernate.sql.ast.spi.query.expression.ExtractUnit;
+import org.hibernate.sql.ast.spi.query.expression.Format;
+import org.hibernate.sql.ast.spi.query.expression.JdbcLiteral;
+import org.hibernate.sql.ast.spi.query.expression.JdbcParameter;
+import org.hibernate.sql.ast.spi.query.expression.Literal;
+import org.hibernate.sql.ast.spi.query.expression.ModifiedSubQueryExpression;
+import org.hibernate.sql.ast.spi.query.expression.Over;
+import org.hibernate.sql.ast.spi.query.expression.Overflow;
+import org.hibernate.sql.ast.spi.query.expression.QueryLiteral;
+import org.hibernate.sql.ast.spi.query.expression.QueryTransformer;
+import org.hibernate.sql.ast.spi.query.expression.SelfRenderingExpression;
+import org.hibernate.sql.ast.spi.query.expression.SqlSelectionExpression;
+import org.hibernate.sql.ast.spi.query.expression.SqlTuple;
+import org.hibernate.sql.ast.spi.query.expression.SqlTupleContainer;
+import org.hibernate.sql.ast.spi.query.expression.Star;
+import org.hibernate.sql.ast.spi.query.expression.Summarization;
+import org.hibernate.sql.ast.spi.query.expression.TrimSpecification;
+import org.hibernate.sql.ast.spi.query.expression.UnaryOperation;
+import org.hibernate.sql.ast.spi.query.expression.UnparsedNumericLiteral;
+import org.hibernate.sql.ast.spi.query.from.CorrelatedPluralTableGroup;
+import org.hibernate.sql.ast.spi.query.from.CorrelatedTableGroup;
+import org.hibernate.sql.ast.spi.query.from.EmbeddableFunctionTableGroup;
+import org.hibernate.sql.ast.spi.query.from.FromClause;
+import org.hibernate.sql.ast.spi.query.from.FunctionTableGroup;
+import org.hibernate.sql.ast.spi.query.from.NamedTableReference;
+import org.hibernate.sql.ast.spi.query.from.PluralTableGroup;
+import org.hibernate.sql.ast.spi.query.from.QueryPartTableGroup;
+import org.hibernate.sql.ast.spi.query.from.QueryPartTableReference;
+import org.hibernate.sql.ast.spi.query.from.StandardTableGroup;
+import org.hibernate.sql.ast.spi.query.from.TableGroup;
+import org.hibernate.sql.ast.spi.query.from.TableGroupJoin;
+import org.hibernate.sql.ast.spi.query.from.TableGroupJoinProducer;
+import org.hibernate.sql.ast.spi.query.insert.ConflictClause;
+import org.hibernate.sql.ast.spi.query.insert.InsertSelectStatement;
+import org.hibernate.sql.ast.spi.query.insert.InsertStatement;
+import org.hibernate.sql.ast.spi.query.insert.Values;
+import org.hibernate.sql.ast.spi.query.predicate.BetweenPredicate;
+import org.hibernate.sql.ast.spi.query.predicate.BooleanExpressionPredicate;
+import org.hibernate.sql.ast.spi.query.predicate.ComparisonPredicate;
+import org.hibernate.sql.ast.spi.query.predicate.ExistsPredicate;
+import org.hibernate.sql.ast.spi.query.predicate.GroupedPredicate;
+import org.hibernate.sql.ast.spi.query.predicate.InListPredicate;
+import org.hibernate.sql.ast.spi.query.predicate.InSubQueryPredicate;
+import org.hibernate.sql.ast.spi.query.predicate.Junction;
+import org.hibernate.sql.ast.spi.query.predicate.LikePredicate;
+import org.hibernate.sql.ast.spi.query.predicate.NegatedPredicate;
+import org.hibernate.sql.ast.spi.query.predicate.NullnessPredicate;
+import org.hibernate.sql.ast.spi.query.predicate.Predicate;
+import org.hibernate.sql.ast.spi.query.predicate.SelfRenderingPredicate;
+import org.hibernate.sql.ast.spi.query.predicate.ThruthnessPredicate;
+import org.hibernate.sql.ast.spi.query.select.QueryGroup;
+import org.hibernate.sql.ast.spi.query.select.QueryPart;
+import org.hibernate.sql.ast.spi.query.select.QuerySpec;
+import org.hibernate.sql.ast.spi.query.select.SelectClause;
+import org.hibernate.sql.ast.spi.query.select.SelectStatement;
+import org.hibernate.sql.ast.spi.query.select.SortSpecification;
+import org.hibernate.sql.ast.spi.query.update.Assignable;
+import org.hibernate.sql.ast.spi.query.update.Assignment;
+import org.hibernate.sql.ast.spi.query.update.UpdateStatement;
 import org.hibernate.sql.exec.internal.JdbcParameterImpl;
 import org.hibernate.sql.exec.internal.JdbcParametersImpl;
 import org.hibernate.sql.exec.internal.LimitJdbcParameter;
 import org.hibernate.sql.exec.internal.OffsetJdbcParameter;
 import org.hibernate.sql.exec.internal.SqlTypedMappingJdbcParameter;
 import org.hibernate.sql.exec.internal.VersionTypeSeedParameterSpecification;
-import org.hibernate.sql.exec.spi.ExecutionContext;
-import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcParameters;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
@@ -406,8 +407,6 @@ import org.hibernate.usertype.UserVersionType;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -433,7 +432,8 @@ import static java.util.Collections.singleton;
 import static java.util.Collections.singletonList;
 import static org.hibernate.boot.model.internal.AuditHelper.isFetchableAuditExcluded;
 import static org.hibernate.boot.model.process.internal.InferredBasicValueResolver.resolveSqlTypeIndicators;
-import static org.hibernate.generator.EventType.INSERT;
+import static org.hibernate.dialect.sql.ast.spi.SubquerySupport.Feature.LATERAL;
+import static org.hibernate.dialect.sql.ast.spi.SubquerySupport.Feature.OFFSET;
 import static org.hibernate.internal.util.NullnessHelper.coalesceSuppliedValues;
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.metamodel.mapping.EntityDiscriminatorMapping.DISCRIMINATOR_ROLE_NAME;
@@ -443,23 +443,32 @@ import static org.hibernate.query.common.TemporalUnit.NANOSECOND;
 import static org.hibernate.query.common.TemporalUnit.NATIVE;
 import static org.hibernate.query.common.TemporalUnit.SECOND;
 import static org.hibernate.query.sqm.BinaryArithmeticOperator.ADD;
+import static org.hibernate.SPI.Role.IMPLEMENT;
 import static org.hibernate.query.sqm.BinaryArithmeticOperator.MULTIPLY;
 import static org.hibernate.query.sqm.BinaryArithmeticOperator.SUBTRACT;
 import static org.hibernate.query.sqm.UnaryArithmeticOperator.UNARY_MINUS;
 import static org.hibernate.query.sqm.internal.SqmMappingModelHelper.resolveExplicitTreatTarget;
 import static org.hibernate.query.sqm.internal.SqmMappingModelHelper.resolveMappingModelExpressible;
 import static org.hibernate.query.sqm.internal.SqmUtil.isFkOptimizationAllowed;
-import static org.hibernate.query.sqm.mutation.internal.SqmInsertStrategyHelper.createRowNumberingExpression;
 import static org.hibernate.query.sqm.sql.spi.AggregateColumnAssignmentHandler.forEntityDescriptor;
 import static org.hibernate.sql.ast.internal.TableGroupJoinHelper.determineJoinForPredicateApply;
-import static org.hibernate.sql.ast.spi.SqlAstTreeHelper.combinePredicates;
+import static org.hibernate.sql.ast.spi.query.SqlAstTreeHelper.combinePredicates;
 import static org.hibernate.type.spi.TypeConfiguration.getSqlTemporalType;
 import static org.hibernate.type.spi.TypeConfiguration.isDuration;
 import static org.hibernate.usertype.internal.AbstractTimeZoneStorageCompositeUserType.ZONE_OFFSET_NAME;
 
-/**
- * @author Steve Ebersole
- */
+/// Supported base for provider-defined SQM-to-SQL-AST translators.
+///
+/// Subclasses receive all translation input through [SqmTranslationRequest]
+/// and should override only focused visitation behavior. A converter is
+/// stateful, translates exactly one request, and must never be cached or shared.
+/// Database-specific differences which can be expressed as a focused Dialect
+/// capability should use that capability instead of a converter subclass.
+///
+/// @param <T> the produced SQL AST statement type
+///
+/// @author Steve Ebersole
+@SPI(IMPLEMENT)
 public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends BaseSemanticQueryWalker
 		implements SqmTranslator<T>, DomainResultCreationState, JdbcTypeIndicators {
 
@@ -471,10 +480,11 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	private final QueryOptions queryOptions;
 	private final LoadQueryInfluencers loadQueryInfluencers;
+	private final SyntheticTableGroupSupport syntheticTableGroupSupport;
 
 	private final Map<SqmParameter<?>, List<List<JdbcParameter>>> jdbcParamsBySqmParam = new IdentityHashMap<>();
 	private final JdbcParameters jdbcParameters = new JdbcParametersImpl();
-	private final DomainParameterXref domainParameterXref;
+	private final SqmParameterMapping parameterMapping;
 	private final QueryParameterBindings domainParameterBindings;
 	private final Map<SqmParameter<?>, MappingModelExpressible<?>> sqmParameterMappingModelTypes = new LinkedHashMap<>();
 	private final Map<JpaCriteriaParameter<?>, SqmJpaCriteriaParameterWrapper<?>> jpaCriteriaParamResolutions;
@@ -497,6 +507,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	private Map<String, String> cteNameMapping;
 	private boolean containsCollectionFetches;
 	private boolean trackSelectionsForGroup;
+	private SyntheticTableGroupDescriptor syntheticTableGroupDescriptor;
 
 	// Captures the list of SqlSelection for a navigable path.
 	// The map will only contain entries for order by elements of a QueryGroup, that refer to an attribute name
@@ -539,21 +550,15 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	private final HashMap<MetadataKey<?, ?>, Object> metadata = new HashMap<>();
 	private final MappingMetamodel domainModel;
 
-	public BaseSqmToSqlAstConverter(
-			SqlAstCreationContext creationContext,
-			SqmStatement<?> statement,
-			QueryOptions queryOptions,
-			LoadQueryInfluencers loadQueryInfluencers,
-			DomainParameterXref domainParameterXref,
-			QueryParameterBindings domainParameterBindings,
-			boolean deduplicateSelectionItems) {
+	@SPI(IMPLEMENT)
+	protected BaseSqmToSqlAstConverter(SqmTranslationRequest<?> request) {
 		this.inferrableTypeAccessStack.push( () -> null );
-		this.creationContext = creationContext;
+		this.creationContext = request.creationContext();
 		this.jpaQueryComplianceEnabled = creationContext.isJpaQueryComplianceEnabled();
 
-		this.statement = statement;
+		this.statement = request.statement();
 		this.currentSqmStatement = statement;
-		this.deduplicateSelectionItems = deduplicateSelectionItems;
+		this.deduplicateSelectionItems = request.deduplicateSelectionItems();
 
 		if ( statement instanceof SqmSelectStatement<?> selectStatement ) {
 			// NOTE: note the difference here between `JpaSelection#getSelectionItems`
@@ -581,19 +586,23 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			if ( selectStatement.getQueryPart() instanceof SqmQueryGroup<?> ) {
 				this.deduplicateSelectionItems = false;
 			}
-			this.entityGraphTraversalState = entityGraphTraversalState( creationContext, queryOptions );
+			this.entityGraphTraversalState = entityGraphTraversalState( creationContext, request.queryOptions() );
 		}
 		else {
 			this.domainResults = null;
 			this.entityGraphTraversalState = null;
 		}
 
-		this.queryOptions = queryOptions;
-		this.loadQueryInfluencers = loadQueryInfluencers;
-		this.domainParameterXref = domainParameterXref;
-		this.domainParameterBindings = domainParameterBindings;
+		this.queryOptions = request.queryOptions();
+		this.loadQueryInfluencers = request.loadQueryInfluencers();
+		this.syntheticTableGroupSupport = creationContext.getSessionFactory()
+				.getJdbcServices()
+				.getDialect()
+				.getSyntheticTableGroupSupport();
+		this.parameterMapping = request.parameterMapping();
+		this.domainParameterBindings = request.parameterBindings();
 		this.jpaCriteriaParamResolutions =
-				domainParameterXref.getParameterResolutions()
+				parameterMapping.getParameterResolutions()
 						.getJpaCriteriaParamResolutions();
 		this.domainModel = creationContext.getMappingMetamodel();
 	}
@@ -692,7 +701,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		return processingState.getInflightQueryPart();
 	}
 
-	protected SqmAliasedNodeCollector currentSqlSelectionCollector() {
+	private SqmAliasedNodeCollector currentSqlSelectionCollector() {
 		return (SqmAliasedNodeCollector) getCurrentProcessingState().getSqlExpressionResolver();
 	}
 
@@ -987,11 +996,11 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				forEntityDescriptor( entityDescriptor, setClause.getAssignments().size() );
 
 		for ( var sqmAssignment : setClause.getAssignments() ) {
-			final SqmPathInterpretation<?> assignedPathInterpretation;
+			final PathInterpretation<?> assignedPathInterpretation;
 			try {
 				currentClauseStack.push( Clause.SET );
 				assignedPathInterpretation =
-						(SqmPathInterpretation<?>)
+						(PathInterpretation<?>)
 								sqmAssignment.getTargetPath().accept( this );
 			}
 			finally {
@@ -1076,7 +1085,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	private void addAssignments(
 			Expression valueExpression,
-			SqmPathInterpretation<?> assignedPathInterpretation,
+			PathInterpretation<?> assignedPathInterpretation,
 			List<ColumnReference> targetColumnReferences,
 			ArrayList<Assignment> assignments,
 			AggregateColumnAssignmentHandler aggregateColumnAssignmentHandler) {
@@ -1396,6 +1405,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		return new ConflictClause( sqmConflictClause.getConstraintName(), constraintColumnNames, assignments, predicate );
 	}
 
+	@Internal
 	public AdditionalInsertValues visitInsertionTargetPaths(
 			BiConsumer<Assignable, List<ColumnReference>> targetColumnReferenceConsumer,
 			SqmInsertStatement<?> sqmStatement,
@@ -1490,7 +1500,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					// If the dialect does not support window functions, we don't need the id column in the temporary table insert
 					// because we will make use of the special "rn_" column that is auto-incremented and serves as temporary identifier for a row,
 					// which is needed to control the generation of proper identifier values with the generator afterward
-					addIdColumn = getDialect().supportsWindowFunctions();
+					addIdColumn = getDialect().getWindowFunctionSupport()
+							.supports( WindowFunctionSupport.Feature.WINDOW_FUNCTIONS );
 				}
 				else {
 					// If the generator supports bulk insertion and the optimizer uses an increment size of 1,
@@ -1519,130 +1530,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				identifierGenerator,
 				identifierMapping
 		);
-	}
-
-	public static class AdditionalInsertValues {
-		private final Expression versionExpression;
-		private final Expression discriminatorExpression;
-		private final Generator identifierGenerator;
-		private final BasicEntityIdentifierMapping identifierMapping;
-		private Expression identifierGeneratorParameter;
-		private SqlSelection versionSelection;
-		private SqlSelection discriminatorSelection;
-		private SqlSelection identifierSelection;
-
-		public AdditionalInsertValues(
-				Expression versionExpression,
-				Expression discriminatorExpression,
-				Generator identifierGenerator,
-				BasicEntityIdentifierMapping identifierMapping) {
-			this.versionExpression = versionExpression;
-			this.discriminatorExpression = discriminatorExpression;
-			this.identifierGenerator = identifierGenerator;
-			this.identifierMapping = identifierMapping;
-		}
-
-		public void applyValues(Values values) {
-			final List<Expression> expressions = values.getExpressions();
-			if ( versionExpression != null ) {
-				expressions.add( versionExpression );
-			}
-			if ( discriminatorExpression != null ) {
-				expressions.add( discriminatorExpression );
-			}
-			if ( identifierGenerator != null && !identifierGenerator.generatedOnExecution() ) {
-				if ( identifierGeneratorParameter == null ) {
-					identifierGeneratorParameter =
-							new IdGeneratorParameter( identifierMapping,
-									(BeforeExecutionGenerator) identifierGenerator );
-				}
-				expressions.add( identifierGeneratorParameter );
-			}
-		}
-
-		/**
-		 * Returns true if the identifier can't be applied directly and needs to be generated separately.
-		 * As a replacement for the identifier, the special row_number column should be filled.
-		 */
-		public boolean applySelections(QuerySpec querySpec, SessionFactoryImplementor sessionFactory) {
-			final var selectClause = querySpec.getSelectClause();
-			if ( versionExpression != null ) {
-				if ( versionSelection == null ) {
-					// The position is irrelevant as this is only needed for insert
-					versionSelection = new SqlSelectionImpl( versionExpression );
-				}
-				selectClause.addSqlSelection( versionSelection );
-			}
-			if ( discriminatorExpression != null ) {
-				if ( discriminatorSelection == null ) {
-					// The position is irrelevant as this is only needed for insert
-					discriminatorSelection = new SqlSelectionImpl( discriminatorExpression );
-				}
-				selectClause.addSqlSelection( discriminatorSelection );
-			}
-			if ( identifierGenerator != null ) {
-				if ( identifierSelection == null ) {
-					if ( !( identifierGenerator instanceof BulkInsertionCapableIdentifierGenerator bulkInsertionCapableGenerator ) ) {
-						throw new SemanticException(
-								"SQM INSERT-SELECT without bulk insertion capable identifier generator: " + identifierGenerator );
-					}
-					if ( identifierGenerator instanceof OptimizableGenerator optimizableGenerator ) {
-						final var optimizer = optimizableGenerator.getOptimizer();
-						if ( optimizer != null && optimizer.getIncrementSize() > 1
-								|| !bulkInsertionCapableGenerator.supportsBulkInsertionIdentifierGeneration() ) {
-							// This is a special case where we have a sequence with an optimizer
-							// or a table based identifier generator
-							if ( !sessionFactory.getJdbcServices().getDialect().supportsWindowFunctions() ) {
-								return false;
-							}
-							else {
-								identifierSelection =
-										new SqlSelectionImpl( createRowNumberingExpression( querySpec, sessionFactory ) );
-								selectClause.addSqlSelection( identifierSelection );
-								return true;
-							}
-						}
-					}
-					final String fragment =
-							bulkInsertionCapableGenerator.determineBulkInsertionIdentifierGenerationSelectFragment(
-									sessionFactory.getSqlStringGenerationContext()
-							);
-					// The position is irrelevant as this is only needed for insert
-					identifierSelection = new SqlSelectionImpl( new SelfRenderingSqlFragmentExpression( fragment ) );
-				}
-				selectClause.addSqlSelection( identifierSelection );
-			}
-			return requiresRowNumberIntermediate();
-		}
-
-		public boolean requiresRowNumberIntermediate() {
-			return identifierSelection != null
-				&& !( identifierSelection.getExpression() instanceof SelfRenderingSqlFragmentExpression );
-		}
-	}
-
-	private static class IdGeneratorParameter extends AbstractJdbcParameter {
-
-		private final BeforeExecutionGenerator generator;
-
-		public IdGeneratorParameter(BasicEntityIdentifierMapping identifierMapping, BeforeExecutionGenerator generator) {
-			super( identifierMapping.getJdbcMapping() );
-			this.generator = generator;
-		}
-
-		@Override
-		public void bindParameterValue(
-				PreparedStatement statement,
-				int startPosition,
-				JdbcParameterBindings jdbcParamBindings,
-				ExecutionContext executionContext) throws SQLException {
-			getJdbcMapping().getJdbcValueBinder().bind(
-					statement,
-					generator.generate( executionContext.getSession(), null, null, INSERT ),
-					startPosition,
-					executionContext.getSession()
-			);
-		}
 	}
 
 	@Override
@@ -1687,6 +1574,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	@Override
+	@Internal
 	public DynamicInstantiation<?> visitDynamicInstantiation(SqmDynamicInstantiation<?> sqmDynamicInstantiation) {
 		final var instantiationTarget = sqmDynamicInstantiation.getInstantiationTarget();
 		final var dynamicInstantiation =
@@ -1773,14 +1661,16 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 								);
 
 								// Before visiting the second query part, setup the CteStatement and register it
-								final var cteTable = new CteTable(
-										cteName,
-										sqmCteTable.resolveTableGroupProducer(
+								final var tableGroupProducer = sqmCteTable.resolveTableGroupProducer(
 												cteName,
 												newQueryParts.get( 0 ).getFirstQuerySpec()
 														.getSelectClause().getSqlSelections(),
 												lastPoppedFromClauseIndex
-										)
+								);
+								final var cteTable = new CteTable(
+										cteName,
+										tableGroupProducer,
+										tableGroupProducer.determineCteColumns()
 								);
 
 								final var cteStatement = new CteStatement(
@@ -1815,13 +1705,15 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			}
 		}
 		final var statement = visitSelectStatement( selectStatement );
-		final var cteTable = new CteTable(
-				cteName,
-				sqmCteTable.resolveTableGroupProducer(
+		final var tableGroupProducer = sqmCteTable.resolveTableGroupProducer(
 						cteName,
 						statement.getQuerySpec().getSelectClause().getSqlSelections(),
 						lastPoppedFromClauseIndex
-				)
+		);
+		final var cteTable = new CteTable(
+				cteName,
+				tableGroupProducer,
+				tableGroupProducer.determineCteColumns()
 		);
 
 		final var cteStatement = new CteStatement(
@@ -2082,6 +1974,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final var processingState = createProcessingState( sqmQuerySpec, sqlQuerySpec );
 
 		final boolean originalDeduplicateSelectionItems = deduplicateSelectionItems;
+		final var originalSyntheticTableGroupDescriptor = syntheticTableGroupDescriptor;
+		syntheticTableGroupDescriptor = null;
 		sqmQueryPartStack.push( sqmQuerySpec );
 		// In sub-queries, we can never deduplicate the selection items as that might change semantics
 		deduplicateSelectionItems = false;
@@ -2089,7 +1983,24 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		queryTransformers.push( new ArrayList<>() );
 
 		try {
-			return querySpec( sqmQuerySpec, sqlQuerySpec, topLevel, processingState );
+			final var querySpec = querySpec( sqmQuerySpec, sqlQuerySpec, topLevel, processingState );
+			if ( syntheticTableGroupDescriptor != null ) {
+				querySpec.getFromClause().addRoot(
+						new StandardTableGroup(
+								true,
+								null,
+								null,
+								null,
+								new NamedTableReference(
+										syntheticTableGroupDescriptor.tableExpression(),
+										syntheticTableGroupDescriptor.identificationVariable()
+								),
+								null,
+								getSessionFactory()
+						)
+				);
+			}
+			return querySpec;
 		}
 		finally {
 			if ( additionalRestrictions != null ) {
@@ -2101,6 +2012,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			queryTransformers.pop();
 			sqmQueryPartStack.pop();
 			deduplicateSelectionItems = originalDeduplicateSelectionItems;
+			syntheticTableGroupDescriptor = originalSyntheticTableGroupDescriptor;
 		}
 	}
 
@@ -2275,7 +2187,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		if ( queryOptions.isLimitInMemoryEnabled() == TRUE ) {
 			return false;
 		}
-		else if ( !getDialect().supportsOffsetInSubquery() ) {
+		else if ( !getDialect().getSubquerySupport().supports( OFFSET ) ) {
 			return false;
 		}
 		else {
@@ -2323,8 +2235,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	private boolean canRenderPercentFetchInSubquery() {
 		final var dialect = getDialect();
-		return dialect.supportsFetchClause( FetchClauseType.PERCENT_ONLY )
-			|| dialect.supportsWindowFunctions();
+		return dialect.getFetchClauseSupport().supports( FetchClauseType.PERCENT_ONLY )
+			|| dialect.getWindowFunctionSupport().supports( WindowFunctionSupport.Feature.WINDOW_FUNCTIONS );
 	}
 
 	private static boolean hasPluralFetchOnSomeRoot(FromClause fromClause) {
@@ -2659,9 +2571,22 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			sqmPosition = -1;
 			path = null;
 		}
-		return sqmPosition != -1
+		final var expression = sqmPosition != -1
 				? selectionExpressions( path, sqmPosition )
 				: (Expression) groupByClauseExpression.accept( this );
+		final var descriptor = syntheticTableGroupSupport.resolveSyntheticTableGroup(
+				currentClauseStack.getCurrent(),
+				expression
+		);
+		if ( descriptor != null ) {
+			if ( syntheticTableGroupDescriptor != null && !syntheticTableGroupDescriptor.equals( descriptor ) ) {
+				throw new IllegalStateException(
+						"SyntheticTableGroupSupport returned incompatible descriptors for one query specification"
+				);
+			}
+			syntheticTableGroupDescriptor = descriptor;
+		}
+		return expression;
 	}
 
 	private Expression selectionExpressions(NavigablePath path, int sqmPosition) {
@@ -3225,8 +3150,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				navigablePath,
 				sqlAliasBase,
 				tableGroupProducer,
-				new NamedTableReference( cteName, identifierVariable ),
-				tableGroupProducer.getCompatibleTableExpressions()
+				new NamedTableReference( cteName, identifierVariable )
 		);
 	}
 
@@ -4868,7 +4792,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	private Expression extractEpoch(Expression intervalExpression) {
 		final var intType = getTypeConfiguration().getBasicTypeForJavaType( Integer.class );
-		final var patternRenderer = new PatternRenderer( getDialect().extractPattern( EPOCH ) );
+		final var patternRenderer = new PatternRenderer(
+				getDialect().getTemporalOperationSupport().extractPattern( EPOCH )
+		);
 		return new SelfRenderingFunctionSqlAstExpression<>(
 				"extract",
 				(sqlAppender, sqlAstArguments, returnType, walker) ->
@@ -4925,6 +4851,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	@Override
+	@Internal
 	public Expression visitAnyDiscriminatorTypeExpression(AnyDiscriminatorSqmPath<?> sqmPath) {
 		return withTreatRestriction(
 				prepareReusablePath(
@@ -4999,7 +4926,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			boolean index,
 			String functionName) {
 		// Try to create a lateral sub-query join if possible which allows the re-use of the expression
-		return getDialect().supportsLateral()
+		return getDialect().getSubquerySupport().supports( LATERAL )
 				? createLateralJoinExpression( pluralPartPath, index, functionName )
 				: createCorrelatedAggregateSubQuery( pluralPartPath, index, functionName );
 	}
@@ -5961,7 +5888,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	private Predicate createTreatTypeRestriction(
-			SqmPathInterpretation<?> typeExpression,
+			PathInterpretation<?> typeExpression,
 			Set<String> subtypeNames,
 			boolean allowNulls,
 			boolean entity) {
@@ -5990,7 +5917,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		return discriminatorPredicate;
 	}
 
-	private Expression getTypeLiteral(SqmPathInterpretation<?> typeExpression, String typeName, boolean entity) {
+	private Expression getTypeLiteral(PathInterpretation<?> typeExpression, String typeName, boolean entity) {
 		if ( entity ) {
 			if ( typeExpression instanceof AnyDiscriminatorPathInterpretation<?> ) {
 				final var discriminatorMapping = (DiscriminatorMapping) typeExpression.getExpressionType();
@@ -6357,7 +6284,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				.computeIfAbsent( sqmParameter, k -> new ArrayList<>( 1 ) )
 				.add( jdbcParametersForSqm );
 
-		final var queryParameter = domainParameterXref.getQueryParameter( sqmParameter );
+		final var queryParameter = parameterMapping.getQueryParameter( sqmParameter );
 		final QueryParameterBinding binding = domainParameterBindings.getBinding( queryParameter );
 		binding.setType( valueMapping );
 		return new SqmParameterInterpretation( jdbcParametersForSqm, valueMapping );
@@ -6365,7 +6292,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	protected Expression consumeSqmParameter(SqmParameter<?> sqmParameter) {
 		if ( sqmParameter.allowMultiValuedBinding() ) {
-			final var domainParam = domainParameterXref.getQueryParameter( sqmParameter );
+			final var domainParam = parameterMapping.getQueryParameter( sqmParameter );
 			final var domainParamBinding = domainParameterBindings.getBinding( domainParam );
 			return !domainParamBinding.isMultiValued()
 					? consumeSingleSqmParameter( sqmParameter )
@@ -6389,7 +6316,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			}
 			else {
 				sqmParamToConsume = sqmParameter.copy();
-				domainParameterXref.addExpansion( domainParam, sqmParameter, sqmParamToConsume );
+				parameterMapping.addExpansion( domainParam, sqmParameter, sqmParamToConsume );
 			}
 			expressions.add( consumeSingleSqmParameter( sqmParamToConsume ) );
 		}
@@ -6549,7 +6476,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	protected MappingModelExpressible<?> determineValueMapping(SqmParameter<?> sqmParameter) {
 //		LOG.tracef( "Determining mapping-model type for SqmParameter: %s", sqmParameter );
-		final var queryParameter = domainParameterXref.getQueryParameter( sqmParameter );
+		final var queryParameter = parameterMapping.getQueryParameter( sqmParameter );
 		final var binding = domainParameterBindings.getBinding( queryParameter );
 		final boolean bindingTypeExplicit = binding.getExplicitTemporalPrecision() != null;
 		BindableType<?> paramType = binding.getBindType();
@@ -6748,7 +6675,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				// For numeric and decimal parameter types we must determine the precision/scale of the value.
 				// When we need to cast the parameter later, it is necessary to know the size to avoid truncation.
 				final var binding = domainParameterBindings.getBinding(
-						domainParameterXref.getQueryParameter( expression )
+						parameterMapping.getQueryParameter( expression )
 				);
 				return sqlTypedMapping( binding, basicType );
 			}
@@ -8703,7 +8630,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	private InListPredicate processInSingleHqlParameter(SqmInListPredicate<?> sqmPredicate, SqmParameter<?> sqmParameter) {
-		final var domainParam = domainParameterXref.getQueryParameter( sqmParameter );
+		final var domainParam = parameterMapping.getQueryParameter( sqmParameter );
 		final var domainParamBinding = domainParameterBindings.getBinding( domainParam );
 		// triggers normal processing
 		return domainParamBinding.isMultiValued()
@@ -8716,7 +8643,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			JpaCriteriaParameter<?> jpaCriteriaParameter) {
 		assert jpaCriteriaParameter.allowsMultiValuedBinding();
 		final var sqmWrapper = jpaCriteriaParamResolutions.get( jpaCriteriaParameter );
-		final var domainParam = domainParameterXref.getQueryParameter( sqmWrapper );
+		final var domainParam = parameterMapping.getQueryParameter( sqmWrapper );
 		final var domainParamBinding = domainParameterBindings.getBinding( domainParam );
 		return domainParamBinding.isMultiValued()
 				? processInSingleParameter( sqmPredicate, sqmWrapper, domainParam, domainParamBinding )
@@ -8757,7 +8684,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				iterator.next();
 				// for each bind value create an "expansion"
 				final var sqmParamToConsume = sqmParameter.copy();
-				domainParameterXref.addExpansion( domainParam, sqmParameter, sqmParamToConsume );
+				parameterMapping.addExpansion( domainParam, sqmParameter, sqmParamToConsume );
 				inListPredicate.addExpression( consumeSingleSqmParameter( sqmParamToConsume ) );
 			}
 			return inListPredicate;
@@ -9123,6 +9050,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	@Override
+	@Internal
 	public ImmutableFetchList visitFetches(FetchParent fetchParent) {
 		final var referencedMappingContainer = fetchParent.getReferencedMappingContainer();
 		final int keySize = referencedMappingContainer.getNumberOfKeyFetchables();
@@ -9293,13 +9221,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		return fetchOptions == null ? FetchOptions.NONE : fetchOptions.getOrDefault( fetchablePath, FetchOptions.NONE );
 	}
 
-	@Internal
-	public interface SqmAliasedNodeCollector {
-		void next();
-		List<SqlSelection> getSelections(int position);
-	}
-
-	protected static class DelegatingSqmAliasedNodeCollector
+	private static class DelegatingSqmAliasedNodeCollector
 			implements SqlExpressionResolver, SqmAliasedNodeCollector {
 
 		private final SqlExpressionResolver delegate;
@@ -9338,7 +9260,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 	}
 
-	protected static class SqmAliasedNodePositionTracker implements SqlExpressionResolver, SqmAliasedNodeCollector {
+	private static class SqmAliasedNodePositionTracker implements SqlExpressionResolver, SqmAliasedNodeCollector {
 		private final SqlExpressionResolver delegate;
 		private final List<SqlSelection>[] sqlSelectionsForSqmSelection;
 		private int index = -1;
@@ -9423,7 +9345,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	@Override
 	public List<Expression> expandSelfRenderingFunctionMultiValueParameter(SqmParameter<?> sqmParameter) {
 		assert sqmParameter.allowMultiValuedBinding();
-		final var domainParam = domainParameterXref.getQueryParameter( sqmParameter );
+		final var domainParam = parameterMapping.getQueryParameter( sqmParameter );
 		final var domainParamBinding = domainParameterBindings.getBinding( domainParam );
 
 		final var bindValues = domainParamBinding.getBindValues();
@@ -9440,7 +9362,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			}
 			else {
 				sqmParamToConsume = sqmParameter.copy();
-				domainParameterXref.addExpansion( domainParam, sqmParameter, sqmParamToConsume );
+				parameterMapping.addExpansion( domainParam, sqmParameter, sqmParamToConsume );
 			}
 			result.add( consumeSingleSqmParameter( sqmParamToConsume ) );
 		}

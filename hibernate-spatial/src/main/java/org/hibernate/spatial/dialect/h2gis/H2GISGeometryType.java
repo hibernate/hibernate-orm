@@ -4,6 +4,9 @@
  */
 package org.hibernate.spatial.dialect.h2gis;
 
+import org.hibernate.SPI;
+
+
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -29,6 +32,7 @@ import org.geolatte.geom.codec.Wkt;
  *
  * @author Karel Maesen, Geovise BVBA
  */
+@SPI
 public class H2GISGeometryType implements JdbcType {
 
 	/**

@@ -8,6 +8,8 @@ import jakarta.persistence.Timeout;
 import org.hibernate.Timeouts;
 import org.hibernate.dialect.lock.spi.ConnectionLockTimeoutStrategy;
 import org.hibernate.dialect.lock.spi.LockTimeoutType;
+import org.hibernate.dialect.lock.spi.LockingClauseRenderer;
+import org.hibernate.dialect.lock.spi.LockingClauseRequest;
 import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.lock.spi.OuterJoinLockingType;
 
@@ -20,7 +22,7 @@ import static org.hibernate.dialect.lock.spi.LockTimeoutType.QUERY;
  *
  * @author Steve Ebersole
  */
-public class H2LockingSupport implements LockingSupport, LockingSupport.Metadata {
+public class H2LockingSupport implements LockingSupport, LockingSupport.Metadata, LockingClauseRenderer {
 	public static final H2LockingSupport LEGACY_INSTANCE = new H2LockingSupport( false );
 	public static final H2LockingSupport INSTANCE = new H2LockingSupport( true );
 
@@ -36,6 +38,26 @@ public class H2LockingSupport implements LockingSupport, LockingSupport.Metadata
 	}
 
 	@Override
+	public LockingClauseRenderer getLockingClauseRenderer() {
+		return this;
+	}
+
+	@Override
+	public String render(LockingClauseRequest request) {
+		final StringBuilder fragment = new StringBuilder( " for update" );
+		if ( supportsForUpdateOptions ) {
+			switch ( request.timeout().milliseconds() ) {
+				case NO_WAIT_MILLI -> fragment.append( " nowait" );
+				case SKIP_LOCKED_MILLI -> fragment.append( " skip locked" );
+				case Timeouts.WAIT_FOREVER_MILLI -> {
+				}
+				default -> fragment.append( " wait " ).append( Timeouts.getTimeoutInSeconds( request.timeout() ) );
+			}
+		}
+		return fragment.toString();
+	}
+
+	@Override
 	public OuterJoinLockingType getOuterJoinLockingType() {
 		return OuterJoinLockingType.IGNORED;
 	}
@@ -46,7 +68,7 @@ public class H2LockingSupport implements LockingSupport, LockingSupport.Metadata
 			case NO_WAIT_MILLI -> supportsForUpdateOptions ? QUERY : LockTimeoutType.NONE;
 			case SKIP_LOCKED_MILLI -> supportsForUpdateOptions ? QUERY : LockTimeoutType.NONE;
 			case Timeouts.WAIT_FOREVER_MILLI -> LockTimeoutType.QUERY;
-			default -> LockTimeoutType.NONE;
+			default -> supportsForUpdateOptions ? QUERY : LockTimeoutType.NONE;
 		};
 	}
 

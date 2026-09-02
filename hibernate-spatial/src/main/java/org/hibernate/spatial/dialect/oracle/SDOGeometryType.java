@@ -4,6 +4,8 @@
  */
 package org.hibernate.spatial.dialect.oracle;
 
+import org.hibernate.SPI;
+
 import java.sql.Types;
 
 import org.hibernate.type.SqlTypes;
@@ -20,6 +22,7 @@ import org.geolatte.geom.codec.db.oracle.OracleJDBCTypeFactory;
  *
  * @author Karel Maesen, Geovise BVBA
  */
+@SPI
 public class SDOGeometryType implements JdbcType {
 
 	private final OracleJDBCTypeFactory typeFactory;

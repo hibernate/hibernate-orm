@@ -18,8 +18,8 @@ import org.hibernate.action.queue.spi.bind.PostExecutionCallback;
 import org.hibernate.action.queue.spi.bind.PreExecutionCallback;
 import org.hibernate.action.queue.spi.meta.TableDescriptor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.sql.model.MutationOperation;
-import org.hibernate.sql.model.ValuesAnalysis;
+import org.hibernate.sql.spi.mutation.MutationOperation;
+import org.hibernate.sql.spi.mutation.ValuesAnalysis;
 
 import java.sql.SQLException;
 import java.util.LinkedHashMap;

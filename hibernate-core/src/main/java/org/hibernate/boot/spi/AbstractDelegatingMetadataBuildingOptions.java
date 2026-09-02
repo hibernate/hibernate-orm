@@ -16,7 +16,7 @@ import org.hibernate.boot.model.relational.ColumnOrderingStrategy;
 import org.hibernate.boot.models.xml.spi.PersistenceUnitMetadata;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.cache.spi.access.AccessType;
-import org.hibernate.dialect.TimeZoneSupport;
+import org.hibernate.dialect.type.spi.TimeZoneSupport;
 import org.hibernate.type.WrapperArrayHandling;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.CompositeUserType;

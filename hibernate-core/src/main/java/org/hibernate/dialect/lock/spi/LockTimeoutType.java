@@ -4,6 +4,7 @@
  */
 package org.hibernate.dialect.lock.spi;
 
+
 /**
  * The way, if any, that a Dialect supports specifying lock timeouts.
  *

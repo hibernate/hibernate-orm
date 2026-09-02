@@ -38,7 +38,7 @@
  * SQL AST tree. This process is described
  * {@linkplain org.hibernate.query.hql here}, and is handled by a
  * {@link org.hibernate.query.sqm.sql.internal.StandardSqmTranslator}
- * and a {@link org.hibernate.sql.ast.SqlAstTranslator}.
+ * and a {@link org.hibernate.sql.ast.spi.translation.SqlAstTranslator}.
  *
  * @apiNote This entire package is in an incubating state.
  */

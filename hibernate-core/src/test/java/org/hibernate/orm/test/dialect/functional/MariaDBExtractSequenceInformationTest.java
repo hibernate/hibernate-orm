@@ -18,7 +18,6 @@ import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorMariaDBDatabaseImpl;
 import org.hibernate.tool.schema.extract.spi.ExtractionContext;
 import org.hibernate.tool.schema.extract.spi.SequenceInformation;
 
@@ -80,7 +79,9 @@ public class MariaDBExtractSequenceInformationTest {
 		try {
 			JdbcEnvironment jdbcEnvironment = ssr.getService( JdbcEnvironment.class );
 
-			Iterable<SequenceInformation> sequenceInformations = SequenceInformationExtractorMariaDBDatabaseImpl.INSTANCE.extractMetadata(
+			Iterable<SequenceInformation> sequenceInformations = jdbcEnvironment.getDialect()
+					.getSequenceInformationExtractor()
+					.extractMetadata(
 					new ExtractionContext.EmptyExtractionContext() {
 						@Override
 						public Connection getJdbcConnection() {

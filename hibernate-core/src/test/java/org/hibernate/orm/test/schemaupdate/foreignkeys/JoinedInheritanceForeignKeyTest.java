@@ -20,6 +20,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.DialectTestSupport;
 import org.hibernate.testing.orm.junit.DomainModelScope;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -104,7 +105,7 @@ public class JoinedInheritanceForeignKeyTest {
 				IdentifierHelper identifierHelper = jdbcEnv.getIdentifierHelper();
 				UnaryOperator<String> asIdentifier = identifier -> identifierHelper.toIdentifier( identifier )
 						.render( dialect );
-				return dialect.getAlterTableString( asIdentifier.apply( tableName ) )
+				return DialectTestSupport.alterTableCommand( dialect, asIdentifier.apply( tableName ) )
 					+ " add constraint " + asIdentifier.apply( fkConstraintName )
 					+ " foreign key (" + asIdentifier.apply( fkColumnName ) + ") references " + asIdentifier.apply(
 						referenceTableName );

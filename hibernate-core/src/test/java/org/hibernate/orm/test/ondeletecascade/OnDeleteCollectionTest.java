@@ -55,7 +55,7 @@ class OnDeleteCollectionTest {
 			em.remove( a );
 			assertFalse( Hibernate.isInitialized( a.bs ) );
 		} );
-		inspector.assertExecutedCount( scope.getDialect().supportsCascadeDelete() ? 2 : 3 );
+		inspector.assertExecutedCount( scope.getDialect().getForeignKeySupport().supportsOnDeleteAction( org.hibernate.annotations.OnDeleteAction.CASCADE ) ? 2 : 3 );
 
 		scope.inTransaction( em -> {
 			assertEquals( 0,
@@ -84,7 +84,7 @@ class OnDeleteCollectionTest {
 
 		scope.inTransaction( em -> {
 			em.createQuery( "delete from A" ).executeUpdate();
-			inspector.assertExecutedCount( scope.getDialect().supportsCascadeDelete() ? 1 : 2 );
+			inspector.assertExecutedCount( scope.getDialect().getForeignKeySupport().supportsOnDeleteAction( org.hibernate.annotations.OnDeleteAction.CASCADE ) ? 1 : 2 );
 		} );
 		inspector.clear();
 

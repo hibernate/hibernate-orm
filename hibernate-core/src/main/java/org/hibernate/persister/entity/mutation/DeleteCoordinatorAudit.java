@@ -4,6 +4,7 @@
  */
 package org.hibernate.persister.entity.mutation;
 
+import org.hibernate.Internal;
 import org.hibernate.audit.ModificationType;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -14,6 +15,7 @@ import org.hibernate.sql.model.MutationOperationGroup;
 /**
  * Delete coordinator for audited entities.
  */
+@Internal
 public class DeleteCoordinatorAudit extends AbstractAuditCoordinator implements DeleteCoordinator {
 	private final DeleteCoordinator currentDeleteCoordinator;
 

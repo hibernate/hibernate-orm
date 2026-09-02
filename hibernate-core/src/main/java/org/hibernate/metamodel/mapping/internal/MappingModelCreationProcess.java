@@ -17,7 +17,7 @@ import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 
-import static org.hibernate.metamodel.mapping.MappingModelCreationLogging.MAPPING_MODEL_CREATION_MESSAGE_LOGGER;
+import static org.hibernate.metamodel.mapping.internal.MappingModelCreationLogging.MAPPING_MODEL_CREATION_MESSAGE_LOGGER;
 
 /**
  * @author Steve Ebersole

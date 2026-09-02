@@ -146,7 +146,7 @@ public abstract class AbstractSchemaBasedMultiTenancyTest<T extends MultiTenantC
 	@JiraKey(value = "HHH-16310")
 	public void testJdbcMetadataAccessible() {
 		assertThat( ((ExtractedDatabaseMetaDataImpl) sessionFactory.getJdbcServices().getJdbcEnvironment()
-				.getExtractedDatabaseMetaData()).isJdbcMetadataAccessible() )
+				.getJdbcMetadata().getExtractedDatabaseMetaData()).isJdbcMetadataAccessible() )
 				.isTrue();
 	}
 

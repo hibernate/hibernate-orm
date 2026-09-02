@@ -12,8 +12,8 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.TemporalMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.model.MutationOperationGroup;
-import org.hibernate.sql.model.MutationType;
-import org.hibernate.sql.model.ast.builder.TableUpdateBuilderStandard;
+import org.hibernate.sql.spi.mutation.MutationType;
+import org.hibernate.sql.ast.spi.model.builder.TableUpdateBuilderStandard;
 import org.hibernate.sql.model.internal.MutationGroupSingle;
 
 import static org.hibernate.persister.entity.mutation.AbstractTemporalUpdateCoordinator.applyTemporalEnding;
@@ -26,6 +26,7 @@ import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.sin
  *
  * @author Gavin King
  */
+@org.hibernate.Internal
 public class DeleteCoordinatorHistory
 		extends AbstractMutationCoordinator
 		implements DeleteCoordinator {

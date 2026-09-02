@@ -8,7 +8,7 @@ import java.util.List;
 
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.sql.spi.NativeQueryImplementor;
-import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
+import org.hibernate.sql.spi.ParameterMarkerStrategy;
 import org.hibernate.type.descriptor.jdbc.IntegerJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 

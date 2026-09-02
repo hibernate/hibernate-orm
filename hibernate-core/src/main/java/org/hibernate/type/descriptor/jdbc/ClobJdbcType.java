@@ -11,6 +11,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
+import org.hibernate.SPI;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.engine.jdbc.CharacterStream;
 import org.hibernate.type.descriptor.ValueBinder;
@@ -18,14 +19,21 @@ import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
 
-/**
- * Descriptor for {@link Types#CLOB CLOB} handling.
- *
- * @author Steve Ebersole
- * @author Gail Badner
- * @author Loïc Lefèvre
- */
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.USE;
+
+/// Base JDBC descriptor for [Types#CLOB] handling.
+///
+/// @author Steve Ebersole
+/// @author Gail Badner
+/// @author Loïc Lefèvre
+@SPI({ USE, IMPLEMENT })
 public abstract class ClobJdbcType implements AdjustableJdbcType {
+	/// Constructor for provider subclasses.
+	@SPI(IMPLEMENT)
+	protected ClobJdbcType() {
+	}
+
 	@Override
 	public int getJdbcTypeCode() {
 		return Types.CLOB;
@@ -80,12 +88,14 @@ public abstract class ClobJdbcType implements AdjustableJdbcType {
 
 	@Override
 	public String getExtraCreateTableInfo(JavaType<?> javaType, String columnName, String tableName, Database database) {
-		if( javaType.getJavaTypeClass() != Clob.class && database.getDialect().supportsValueLOBAccess() ) {
-			return database.getDialect().getValueLOBFragmentForExtraCreateTableInfo(columnName);
+		if ( javaType.getJavaTypeClass() != Clob.class ) {
+			final String fragment = database.getDialect().getLobSupport()
+					.getValueLobFragmentForExtraCreateTableInfo( columnName );
+			if ( fragment != null ) {
+				return fragment;
+			}
 		}
-		else {
-			return AdjustableJdbcType.super.getExtraCreateTableInfo( javaType, columnName, tableName, database );
-		}
+		return AdjustableJdbcType.super.getExtraCreateTableInfo( javaType, columnName, tableName, database );
 	}
 
 	public static final ClobJdbcType DEFAULT = new ClobJdbcType() {

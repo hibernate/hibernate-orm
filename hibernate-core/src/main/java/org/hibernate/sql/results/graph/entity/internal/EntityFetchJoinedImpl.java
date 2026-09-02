@@ -12,7 +12,7 @@ import org.hibernate.engine.spi.FetchOptions;
 import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.spi.query.from.TableGroup;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
@@ -26,7 +26,6 @@ import org.hibernate.sql.results.graph.InitializerProducer;
 import org.hibernate.sql.results.graph.entity.EntityFetch;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
 import org.hibernate.sql.results.graph.entity.EntityValuedFetchable;
-import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 
 /**
  * @author Andrea Boriero
@@ -193,7 +192,7 @@ public class EntityFetchJoinedImpl implements EntityFetch, FetchParent, Initiali
 	}
 
 	@Override
-	public ImmutableFetchList getFetches() {
+	public org.hibernate.sql.results.graph.FetchList getFetches() {
 		return entityResult.getFetches();
 	}
 

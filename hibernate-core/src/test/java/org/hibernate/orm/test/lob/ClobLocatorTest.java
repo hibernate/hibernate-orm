@@ -73,7 +73,8 @@ public class ClobLocatorTest {
 		);
 
 		// test mutation via setting the new clob data...
-		if ( scope.getSessionFactory().getJdbcServices().getDialect().supportsLobValueChangePropagation() ) {
+		if ( new DialectFeatureChecks.SupportsLobValueChangePropagation().apply(
+				scope.getSessionFactory().getJdbcServices().getDialect() ) ) {
 			scope.inTransaction(
 					session -> {
 						try {

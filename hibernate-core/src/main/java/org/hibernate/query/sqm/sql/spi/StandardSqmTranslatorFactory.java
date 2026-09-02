@@ -4,60 +4,37 @@
  */
 package org.hibernate.query.sqm.sql.spi;
 
-import org.hibernate.engine.spi.LoadQueryInfluencers;
-import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.query.spi.QueryParameterBindings;
-import org.hibernate.query.sqm.internal.DomainParameterXref;
+import org.hibernate.SPI;
 import org.hibernate.query.sqm.sql.internal.StandardSqmTranslator;
-import org.hibernate.query.sqm.tree.spi.SqmDmlStatement;
-import org.hibernate.query.sqm.tree.spi.select.SqmSelectStatement;
-import org.hibernate.sql.ast.spi.SqlAstCreationContext;
-import org.hibernate.sql.ast.tree.MutationStatement;
-import org.hibernate.sql.ast.tree.select.SelectStatement;
+import org.hibernate.sql.ast.spi.query.MutationStatement;
+import org.hibernate.sql.ast.spi.query.select.SelectStatement;
 
-/**
- * Standard implementation of the SqmTranslatorFactory
- *
- * @author Steve Ebersole
- */
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.USE;
+
+/// Standard [SqmTranslatorFactory] and reusable base for global integrations.
+///
+/// Subclasses may override either creation method but must preserve the
+/// factory's single-use translator lifecycle and the request's statement type.
+/// Database-specific query structure belongs in focused Dialect strategies.
+///
+/// @author Steve Ebersole
+@SPI({ USE, IMPLEMENT })
 public class StandardSqmTranslatorFactory implements SqmTranslatorFactory {
+	/// Create the standard stateless factory.
+	@SPI(IMPLEMENT)
+	public StandardSqmTranslatorFactory() {
+	}
 
 	@Override
 	public SqmTranslator<SelectStatement> createSelectTranslator(
-			SqmSelectStatement<?> sqmSelectStatement,
-			QueryOptions queryOptions,
-			DomainParameterXref domainParameterXref,
-			QueryParameterBindings domainParameterBindings,
-			LoadQueryInfluencers loadQueryInfluencers,
-			SqlAstCreationContext creationContext,
-			boolean deduplicateSelectionItems) {
-		return new StandardSqmTranslator<>(
-				sqmSelectStatement,
-				queryOptions,
-				domainParameterXref,
-				domainParameterBindings,
-				loadQueryInfluencers,
-				creationContext,
-				deduplicateSelectionItems
-		);
+			SqmTranslationRequest.Select request) {
+		return new StandardSqmTranslator<>( request );
 	}
 
 	@Override
 	public SqmTranslator<? extends MutationStatement> createMutationTranslator(
-			SqmDmlStatement<?> sqmDmlStatement,
-			QueryOptions queryOptions,
-			DomainParameterXref domainParameterXref,
-			QueryParameterBindings domainParameterBindings,
-			LoadQueryInfluencers loadQueryInfluencers,
-			SqlAstCreationContext creationContext) {
-		return new StandardSqmTranslator<>(
-				sqmDmlStatement,
-				queryOptions,
-				domainParameterXref,
-				domainParameterBindings,
-				loadQueryInfluencers,
-				creationContext,
-				false
-		);
+			SqmTranslationRequest.Mutation request) {
+		return new StandardSqmTranslator<>( request );
 	}
 }

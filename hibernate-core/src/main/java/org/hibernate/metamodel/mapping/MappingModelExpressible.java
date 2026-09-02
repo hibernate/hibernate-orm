@@ -14,5 +14,6 @@ package org.hibernate.metamodel.mapping;
  * @author Steve Ebersole
  * @author Andrea Boriero
  */
+@org.hibernate.SPI({ org.hibernate.SPI.Role.USE, org.hibernate.SPI.Role.IMPLEMENT })
 public interface MappingModelExpressible<T> extends Bindable {
 }

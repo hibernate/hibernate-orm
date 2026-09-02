@@ -12,6 +12,7 @@ import org.hibernate.CacheMode;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.sql.ast.spi.RowValueSupport;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.loader.ast.internal.MultiKeyLoadHelper;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
@@ -196,7 +197,7 @@ class MultiNaturalIdLoadTest {
 	}
 
 	private void verify( Dialect dialect, SQLStatementInspector statementInspector ) {
-		if ( dialect.supportsRowValueConstructorSyntaxInInList() ) {
+		if ( dialect.getRowValueSupport().supports( RowValueSupport.Feature.IN_LIST ) ) {
 			Matcher m = p.matcher( statementInspector.getSqlQueries().get( 0 ) );
 			int paramCount = 0;
 			while ( m.find() ) {

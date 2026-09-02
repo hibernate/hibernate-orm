@@ -4,6 +4,8 @@
  */
 package org.hibernate.type;
 
+import org.hibernate.SPI;
+
 import java.io.Serializable;
 import java.util.Arrays;
 
@@ -21,6 +23,7 @@ import static org.hibernate.engine.internal.ForeignKeys.getEntityIdentifierIfNot
  *
  * @author Gavin King
  */
+@SPI
 public class ManyToOneType extends EntityType {
 	private final String propertyName;
 	private final boolean ignoreNotFound;

@@ -4,6 +4,8 @@
  */
 package org.hibernate.persister.collection;
 
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
+
 import jakarta.persistence.metamodel.PluralAttribute;
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
@@ -79,35 +81,35 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.filter.FilterAliasGenerator;
 import org.hibernate.persister.filter.internal.FilterHelper;
-import org.hibernate.persister.internal.SqlFragmentPredicate;
+import org.hibernate.sql.ast.spi.query.predicate.SqlFragmentPredicate;
 import org.hibernate.query.named.spi.NamedQueryMemento;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.Alias;
 import org.hibernate.sql.SimpleSelect;
 import org.hibernate.sql.Template;
-import org.hibernate.sql.ast.SqlAstTranslatorFactory;
-import org.hibernate.sql.ast.spi.SimpleFromClauseAccessImpl;
-import org.hibernate.sql.ast.spi.SqlAliasBaseConstant;
-import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
-import org.hibernate.sql.ast.spi.SqlAstCreationState;
-import org.hibernate.sql.ast.spi.SqlSelection;
-import org.hibernate.sql.ast.tree.expression.AliasedExpression;
-import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.from.TableReference;
-import org.hibernate.sql.ast.tree.predicate.Predicate;
-import org.hibernate.sql.ast.tree.select.QuerySpec;
-import org.hibernate.sql.ast.tree.select.SelectStatement;
-import org.hibernate.sql.model.MutationType;
-import org.hibernate.sql.model.TableMapping.MutationDetails;
-import org.hibernate.sql.model.ast.ColumnValueBinding;
-import org.hibernate.sql.model.ast.ColumnValueParameterList;
-import org.hibernate.sql.model.ast.ColumnWriteFragment;
-import org.hibernate.sql.model.ast.MutatingTableReference;
-import org.hibernate.sql.model.ast.RestrictedTableMutation;
-import org.hibernate.sql.model.internal.TableDeleteStandard;
-import org.hibernate.sql.model.jdbc.JdbcDeleteMutation;
-import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.creation.SimpleFromClauseAccessImpl;
+import org.hibernate.sql.ast.spi.creation.SqlAliasBaseConstant;
+import org.hibernate.sql.ast.spi.creation.SqlAliasBaseManager;
+import org.hibernate.sql.ast.spi.creation.SqlAstCreationState;
+import org.hibernate.sql.ast.spi.query.select.SqlSelection;
+import org.hibernate.sql.ast.spi.query.expression.AliasedExpression;
+import org.hibernate.sql.ast.spi.query.from.TableGroup;
+import org.hibernate.sql.ast.spi.query.from.TableReference;
+import org.hibernate.sql.ast.spi.query.predicate.Predicate;
+import org.hibernate.sql.ast.spi.query.select.QuerySpec;
+import org.hibernate.sql.ast.spi.query.select.SelectStatement;
+import org.hibernate.sql.spi.mutation.MutationType;
+import org.hibernate.sql.spi.mutation.TableMapping.MutationDetails;
+import org.hibernate.sql.ast.spi.model.ColumnValueBinding;
+import org.hibernate.sql.ast.spi.model.ColumnValueParameterList;
+import org.hibernate.sql.ast.spi.model.ColumnWriteFragment;
+import org.hibernate.sql.ast.spi.model.MutatingTableReference;
+import org.hibernate.sql.ast.spi.model.RestrictedTableMutation;
+import org.hibernate.sql.ast.spi.model.TableDeleteStandard;
+import org.hibernate.sql.spi.mutation.jdbc.JdbcDeleteMutation;
+import org.hibernate.sql.spi.mutation.jdbc.JdbcMutationOperation;
 import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.type.AnyType;
@@ -508,7 +510,7 @@ public abstract class AbstractCollectionPersister
 
 		cascadeDeleteEnabled =
 				key.isCascadeDeleteEnabled()
-				&& creationContext.getDialect().supportsCascadeDelete();
+				&& creationContext.getDialect().getForeignKeySupport().supportsOnDeleteAction( org.hibernate.annotations.OnDeleteAction.CASCADE );
 	}
 
 	private FilterHelper manyToManyFilterHelper(Collection collection, RuntimeModelCreationContext context) {
@@ -1016,7 +1018,7 @@ public abstract class AbstractCollectionPersister
 
 		final String sql =
 				getSqlAstTranslatorFactory()
-						.buildSelectTranslator( getFactory(), new SelectStatement( rootQuerySpec ) )
+						.buildTranslator( new SqlAstTranslationRequest.Select( getFactory(), new SelectStatement( rootQuerySpec ) ) )
 						.translate( null, QueryOptions.NONE )
 						.getSqlString();
 		final int fromIndex = sql.lastIndexOf( " from" );
@@ -1813,7 +1815,7 @@ public abstract class AbstractCollectionPersister
 
 	private JdbcMutationOperation buildGeneratedDeleteAllOperation(MutatingTableReference tableReference) {
 		return getSqlAstTranslatorFactory()
-				.buildModelMutationTranslator( generateDeleteAllAst( tableReference ), getFactory() )
+				.buildTranslator( new SqlAstTranslationRequest.ModelMutation<>( getFactory(), generateDeleteAllAst( tableReference ) ) )
 				.translate( null, MutationQueryOptions.INSTANCE );
 	}
 

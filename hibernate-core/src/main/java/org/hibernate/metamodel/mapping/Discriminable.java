@@ -6,9 +6,9 @@ package org.hibernate.metamodel.mapping;
 
 import java.util.function.Consumer;
 
-import org.hibernate.sql.ast.spi.SqlAstCreationState;
-import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.predicate.Predicate;
+import org.hibernate.sql.ast.spi.creation.SqlAstCreationState;
+import org.hibernate.sql.ast.spi.query.from.TableGroup;
+import org.hibernate.sql.ast.spi.query.predicate.Predicate;
 
 /**
  * Anything that has a discriminator associated with it.

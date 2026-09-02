@@ -12,7 +12,7 @@ import java.time.ZonedDateTime;
 import java.util.Calendar;
 
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
+import org.hibernate.sql.ast.spi.query.expression.JdbcParameter;
 import org.hibernate.type.BindableType;
 import org.hibernate.type.BindingContext;
 import org.hibernate.type.NullType;

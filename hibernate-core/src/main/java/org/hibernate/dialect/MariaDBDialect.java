@@ -4,29 +4,52 @@
  */
 package org.hibernate.dialect;
 
-import org.hibernate.Incubating;
+import org.hibernate.dialect.temporaltype.spi.TemporalValueSemantics;
+
+import org.hibernate.SPI;
+import static org.hibernate.SPI.Role.USE;
+
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.SUPPLY;
+
+
+import org.hibernate.dialect.type.spi.StandardDdlTypes;
+
+import org.hibernate.dialect.jdbc.spi.MySQLServerConfiguration;
+
+import org.hibernate.dialect.type.spi.NationalizationSupport;
+
+import org.hibernate.dialect.aggregate.spi.FunctionalDependencyAnalysisSupport;
+
+import org.hibernate.dialect.sql.ast.spi.CteSupport;
+import org.hibernate.dialect.sql.ast.spi.SetOperationSupport;
+import org.hibernate.dialect.sql.ast.spi.SubquerySupport;
+
 import org.hibernate.QueryTimeoutException;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
-import org.hibernate.dialect.aggregate.AggregateSupport;
-import org.hibernate.dialect.aggregate.MySQLAggregateSupport;
+import org.hibernate.dialect.aggregate.spi.AggregateSupport;
+import org.hibernate.dialect.aggregate.internal.MySQLAggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.dialect.identity.IdentityColumnSupport;
-import org.hibernate.dialect.identity.MariaDBIdentityColumnSupport;
+import org.hibernate.dialect.function.spi.WindowFunctionSupport;
+import org.hibernate.dialect.generated.spi.GeneratedValuesSupport;
+import org.hibernate.dialect.identity.internal.MariaDBIdentityColumnSupport;
+import org.hibernate.dialect.identity.spi.IdentityColumnSupport;
 import org.hibernate.dialect.lock.internal.MariaDBLockingSupport;
 import org.hibernate.dialect.lock.spi.LockingSupport;
-import org.hibernate.dialect.sequence.MariaDBSequenceSupport;
-import org.hibernate.dialect.sequence.SequenceSupport;
-import org.hibernate.dialect.sql.ast.MariaDBSqlAstTranslator;
-import org.hibernate.dialect.temporal.MariaDBTemporalTableSupport;
-import org.hibernate.dialect.temporal.TemporalTableSupport;
-import org.hibernate.dialect.type.MariaDBCastingJsonArrayJdbcTypeConstructor;
-import org.hibernate.dialect.type.MariaDBCastingJsonJdbcType;
+import org.hibernate.dialect.sequence.internal.MariaDBSequenceSupport;
+import org.hibernate.dialect.sequence.spi.SequenceSupport;
+import org.hibernate.dialect.schema.spi.ColumnDefinitionRequest;
+import org.hibernate.dialect.schema.spi.ExistenceCheckPlacement;
+import org.hibernate.dialect.schema.spi.IfExistsSupport;
+import org.hibernate.dialect.sql.ast.internal.MariaDBSqlAstTranslator;
+import org.hibernate.dialect.temporal.internal.MariaDBTemporalTableSupport;
+import org.hibernate.dialect.temporal.spi.TemporalTableSupport;
+import org.hibernate.dialect.type.spi.MariaDBJdbcTypes;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
-import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.dialect.identifier.spi.IdentifierHelperBuildRequest;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.ConstraintViolationException.ConstraintKind;
 import org.hibernate.exception.LockAcquisitionException;
@@ -35,31 +58,30 @@ import org.hibernate.exception.SnapshotIsolationException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
-import org.hibernate.persister.entity.mutation.EntityMutationTarget;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.SqlAstTranslatorFactory;
-import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
-import org.hibernate.sql.ast.tree.Statement;
+import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslatorFactory;
+import org.hibernate.dialect.sql.ast.spi.StandardSqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.Statement;
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
 import org.hibernate.sql.exec.spi.JdbcOperation;
-import org.hibernate.sql.model.MutationOperation;
-import org.hibernate.sql.model.internal.OptionalTableUpdate;
+import org.hibernate.sql.spi.mutation.MutationOperation;
+import org.hibernate.sql.spi.SqlAppender;
+import org.hibernate.dialect.sql.ast.spi.OptionalTableUpdateOperationRequest;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorMariaDBDatabaseImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
+import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractors;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.VarcharUUIDJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
-import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
 
-import java.sql.DatabaseMetaData;
-import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Set;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
-import static org.hibernate.internal.util.JdbcExceptionHelper.extractSqlState;
+import static org.hibernate.jdbc.spi.JdbcExceptionHelper.extractSqlState;
 import static org.hibernate.type.SqlTypes.GEOMETRY;
 import static org.hibernate.type.SqlTypes.OTHER;
 import static org.hibernate.type.SqlTypes.UUID;
@@ -73,6 +95,8 @@ import static org.hibernate.type.StandardBasicTypes.BOOLEAN;
  * @author Gavin King
  */
 public class MariaDBDialect extends MySQLDialect {
+	private IfExistsSupport ifExistsSupport;
+
 	private static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 10, 6 );
 	private static final DatabaseVersion MYSQL57 = DatabaseVersion.make( 5, 7 );
 	private static final Set<String> GEOMETRY_TYPE_NAMES = Set.of(
@@ -100,7 +124,6 @@ public class MariaDBDialect extends MySQLDialect {
 	public MariaDBDialect(DialectResolutionInfo info) {
 		super( createVersion( info, MINIMUM_VERSION ), MySQLServerConfiguration.fromDialectResolutionInfo( info ) );
 		lockingSupport = new MariaDBLockingSupport( getVersion() );
-		registerKeywords( info );
 	}
 
 	@Override
@@ -109,16 +132,19 @@ public class MariaDBDialect extends MySQLDialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	protected DatabaseVersion getMinimumSupportedVersion() {
 		return MINIMUM_VERSION;
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public NationalizationSupport getNationalizationSupport() {
 		return NationalizationSupport.IMPLICIT;
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
 		super.initializeFunctionRegistry( functionContributions );
 
@@ -148,29 +174,31 @@ public class MariaDBDialect extends MySQLDialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	protected void registerColumnTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.registerColumnTypes( typeContributions, serviceRegistry );
 		final var ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
 		if ( getVersion().isSameOrAfter( 10, 7 ) ) {
-			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( UUID, "uuid", this ) );
+			ddlTypeRegistry.addDescriptor( StandardDdlTypes.simple( UUID, "uuid", this ) );
 		}
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public AggregateSupport getAggregateSupport() {
 		return MySQLAggregateSupport.forMariaDB( this );
 	}
 
 	@Override
-	protected void registerKeyword(String word) {
+	@SPI( IMPLEMENT )
+	public boolean acceptsJdbcKeyword(String word) {
 		// The MariaDB driver reports that "STRING" is a keyword, but
 		// it's not a reserved word, and a column may be named STRING
-		if ( !"string".equalsIgnoreCase(word) ) {
-			super.registerKeyword(word);
-		}
+		return !"string".equalsIgnoreCase( word );
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public JdbcType resolveSqlTypeDescriptor(
 			String columnTypeName,
 			int jdbcTypeCode,
@@ -193,11 +221,12 @@ public class MariaDBDialect extends MySQLDialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		final var jdbcTypeRegistry = typeContributions.getTypeConfiguration().getJdbcTypeRegistry();
 		// Make sure we register the JSON type descriptor before calling super, because MariaDB needs special casting
-		jdbcTypeRegistry.addDescriptorIfAbsent( SqlTypes.JSON, MariaDBCastingJsonJdbcType.INSTANCE );
-		jdbcTypeRegistry.addTypeConstructorIfAbsent( MariaDBCastingJsonArrayJdbcTypeConstructor.INSTANCE );
+		jdbcTypeRegistry.addDescriptorIfAbsent( SqlTypes.JSON, MariaDBJdbcTypes.castingJson() );
+		jdbcTypeRegistry.addTypeConstructorIfAbsent( MariaDBJdbcTypes.castingJsonArrayConstructor() );
 
 		super.contributeTypes( typeContributions, serviceRegistry );
 		if ( getVersion().isSameOrAfter( 10, 7 ) ) {
@@ -206,6 +235,7 @@ public class MariaDBDialect extends MySQLDialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String castPattern(CastType from, CastType to) {
 		return to == CastType.JSON
 				? "json_extract(?1,'$')"
@@ -213,80 +243,82 @@ public class MariaDBDialect extends MySQLDialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public SqlAstTranslatorFactory getSqlAstTranslatorFactory() {
 		return new StandardSqlAstTranslatorFactory() {
 			@Override
-			protected <T extends JdbcOperation> SqlAstTranslator<T> buildTranslator(
-					SessionFactoryImplementor sessionFactory, Statement statement) {
-				return new MariaDBSqlAstTranslator<>( sessionFactory, statement, MariaDBDialect.this );
+			protected <S extends Statement, T extends JdbcOperation> SqlAstTranslator<T> createTranslator(
+					SqlAstTranslationRequest<S, T> request) {
+				return new MariaDBSqlAstTranslator<>( request, MariaDBDialect.this );
 			}
 		};
 	}
 
 	@Override
-	public boolean supportsWindowFunctions() {
-		return true;
+	public WindowFunctionSupport getWindowFunctionSupport() {
+		return WindowFunctionSupport.builder()
+				.features(
+						WindowFunctionSupport.Feature.WINDOW_FUNCTIONS,
+						WindowFunctionSupport.Feature.PARTITION_BY,
+						WindowFunctionSupport.Feature.ROWS_FRAME,
+						WindowFunctionSupport.Feature.RANGE_FRAME
+				)
+				.build();
 	}
 
 	@Override
-	public boolean supportsLateral() {
+	public SubquerySupport getSubquerySupport() {
 		// See https://jira.mariadb.org/browse/MDEV-19078
-		return false;
+		return SubquerySupport.builder( super.getSubquerySupport() )
+				.feature( SubquerySupport.Feature.LATERAL, false )
+				.build();
 	}
 
 	@Override
-	public boolean supportsRecursiveCTE() {
-		return true;
+	public CteSupport getCteSupport() {
+		return CteSupport.builder( super.getCteSupport() )
+				.placement( CteSupport.Placement.TOP_LEVEL )
+				.recursiveFeatures( CteSupport.RecursiveFeature.RECURSIVE )
+				.build();
 	}
 
 	@Override
-	public boolean supportsColumnCheck() {
-		return true;
+	@SPI({ USE, IMPLEMENT })
+	public boolean supports(org.hibernate.dialect.constraint.spi.CheckConstraintPlacement placement) {
+		return placement != org.hibernate.dialect.constraint.spi.CheckConstraintPlacement.NAMED_COLUMN;
 	}
 
 	@Override
-	public boolean supportsNamedColumnCheck() {
-		return false;
+	@SPI({ IMPLEMENT, SUPPLY })
+	public TemporalValueSemantics getTemporalValueSemantics() {
+		return TemporalValueSemantics.TRUNCATING;
 	}
 
 	@Override
-	public boolean doesRoundTemporalOnOverflow() {
-		// See https://jira.mariadb.org/browse/MDEV-16991
-		return false;
+	@SPI({ IMPLEMENT, SUPPLY })
+	public synchronized IfExistsSupport getIfExistsSupport() {
+		if ( ifExistsSupport == null ) {
+			ifExistsSupport = new IfExistsSupport(
+				ExistenceCheckPlacement.BEFORE_NAME,
+				ExistenceCheckPlacement.BEFORE_NAME,
+				ExistenceCheckPlacement.BEFORE_NAME,
+				ExistenceCheckPlacement.BEFORE_NAME
+		);
+		}
+		return ifExistsSupport;
 	}
 
 	@Override
-	public boolean supportsIfExistsBeforeConstraintName() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsIfExistsAfterAlterTable() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsIfExistsBeforeIndexName() {
-		return true;
-	}
-
-	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public SequenceSupport getSequenceSupport() {
-		return MariaDBSequenceSupport.INSTANCE;
-	}
-
-	@Override
-	public String getQuerySequencesString() {
-		return getSequenceSupport().supportsSequences()
-				? "select table_name from information_schema.TABLES where table_schema=database() and table_type='SEQUENCE'"
-				: super.getQuerySequencesString(); //fancy way to write "null"
+		return MariaDBSequenceSupport.getInstance();
 	}
 
 	@Override
 	public SequenceInformationExtractor getSequenceInformationExtractor() {
 		return getSequenceSupport().supportsSequences()
 				? SequenceInformationExtractorMariaDBDatabaseImpl.INSTANCE
-				: super.getSequenceInformationExtractor();
+				: SequenceInformationExtractors.none();
 	}
 
 	@Override
@@ -311,13 +343,13 @@ public class MariaDBDialect extends MySQLDialect {
 	 *         {@code insert ... returning} even though MySQL does not
 	 */
 	@Override
-	public boolean supportsInsertReturning() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsUpdateReturning() {
-		return false;
+	public GeneratedValuesSupport getGeneratedValuesSupport() {
+		return GeneratedValuesSupport.builder( super.getGeneratedValuesSupport() )
+				.enable(
+						GeneratedValuesSupport.Capability.INSERT_RETURNING,
+						GeneratedValuesSupport.Capability.INSERT_RETURNING_ROW_ID
+				)
+				.build();
 	}
 
 	@Override
@@ -326,21 +358,25 @@ public class MariaDBDialect extends MySQLDialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public FunctionalDependencyAnalysisSupport getFunctionalDependencyAnalysisSupport() {
-		return FunctionalDependencyAnalysisSupportImpl.TABLE_GROUP_AND_CONSTANTS;
+		return FunctionalDependencyAnalysisSupport.TABLE_GROUP_AND_CONSTANTS;
 	}
 
 	@Override
-	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, DatabaseMetaData metadata)
-			throws SQLException {
+	@SPI({ USE, IMPLEMENT, SUPPLY })
+	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuildRequest request) {
+		final var builder = request.builder();
+		super.buildIdentifierHelper( request );
 
-		// some MariaDB drivers does not return case strategy info
+		// Some MariaDB drivers do not return useful case strategy information
 		builder.setUnquotedCaseStrategy( IdentifierCaseStrategy.MIXED );
 		builder.setQuotedCaseStrategy( IdentifierCaseStrategy.MIXED );
 
-		return super.buildIdentifierHelper( builder, metadata );
+		return builder.build();
 	}
 
+	@SPI({ IMPLEMENT, SUPPLY })
 	public ViolatedConstraintNameExtractor getViolatedConstraintNameExtractor() {
 		return EXTRACTOR;
 	}
@@ -356,6 +392,7 @@ public class MariaDBDialect extends MySQLDialect {
 			} );
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
 		return (sqlException, message, sql) -> {
 			switch ( sqlException.getErrorCode() ) {
@@ -405,6 +442,7 @@ public class MariaDBDialect extends MySQLDialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public boolean equivalentTypes(int typeCode1, int typeCode2) {
 		return typeCode1 == Types.LONGVARCHAR && typeCode2 == SqlTypes.JSON
 			|| typeCode1 == SqlTypes.JSON && typeCode2 == Types.LONGVARCHAR
@@ -412,45 +450,62 @@ public class MariaDBDialect extends MySQLDialect {
 	}
 
 	@Override
-	public boolean supportsIntersect() {
-		return true;
+	public SetOperationSupport getSetOperationSupport() {
+		return SetOperationSupport.builder()
+				.capability( SetOperationSupport.Capability.DUPLICATE_SELECT_ITEMS, false )
+				.build();
 	}
 
 	@Override
-	@Incubating
-	public boolean supportsDuplicateSelectItemsInQueryGroup() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsWithClauseInSubquery() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsNotNullAfterGeneratedAs() {
-		return false;
-	}
-
-	@Override
-	public MutationOperation createOptionalTableUpdateOperation(EntityMutationTarget mutationTarget, OptionalTableUpdate optionalTableUpdate, SessionFactoryImplementor factory) {
+	@SPI({ USE, IMPLEMENT, SUPPLY })
+	public MutationOperation createOptionalTableUpdateOperation(OptionalTableUpdateOperationRequest request) {
+		final var optionalTableUpdate = request.update();
 		if ( optionalTableUpdate.getNumberOfOptimisticLockBindings() == 0 ) {
-			return new MariaDBSqlAstTranslator<>( factory, optionalTableUpdate, this )
+			return new MariaDBSqlAstTranslator<>( new SqlAstTranslationRequest.ModelMutation<>( request.sessionFactory(), optionalTableUpdate ), this )
 					.createMergeOperation( optionalTableUpdate );
 		}
 		else {
-			return super.createOptionalTableUpdateOperation( mutationTarget, optionalTableUpdate, factory );
+			return super.createOptionalTableUpdateOperation( request );
 		}
 	}
 
 	@Override
-	public String generatedAs(String generatedAs) {
-		return generatedAs.startsWith( "row " )
-				? " generated always as " + generatedAs
-				: super.generatedAs( generatedAs );
+	@SPI({ USE, IMPLEMENT })
+	public void appendDefinition(SqlAppender appender, ColumnDefinitionRequest request) {
+		appender.appendSql( ' ' );
+		appender.appendSql( request.sqlType() );
+		if ( request.renderedCollation() != null ) {
+			appender.appendSql( " collate " );
+			appender.appendSql( request.renderedCollation() );
+		}
+		if ( request.defaultExpression() != null ) {
+			appender.appendSql( " default " );
+			appender.appendSql( request.defaultExpression() );
+		}
+		if ( request.generatedExpression() != null ) {
+			if ( request.generatedExpression().startsWith( "row " ) ) {
+				appender.appendSql( " generated always as " );
+				appender.appendSql( request.generatedExpression() );
+			}
+			else {
+				appender.appendSql( " generated always as (" );
+				appender.appendSql( request.generatedExpression() );
+				appender.appendSql( ") stored" );
+			}
+			return;
+		}
+		if ( request.nullable() ) {
+			if ( request.sqlType().regionMatches( true, 0, "timestamp", 0, "timestamp".length() ) ) {
+				appender.appendSql( " null" );
+			}
+		}
+		else {
+			appender.appendSql( " not null" );
+		}
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public TemporalTableSupport getTemporalTableSupport() {
 		return new MariaDBTemporalTableSupport( this );
 	}

@@ -13,6 +13,7 @@ import org.hibernate.AnnotationException;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Namespace;
+import org.hibernate.boot.model.relational.NamedAuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -28,6 +29,14 @@ import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.UserDefinedObjectType;
 import org.hibernate.mapping.Value;
+import org.hibernate.mapping.UserDefinedArrayType;
+import org.hibernate.dialect.aggregate.internal.AggregateColumnDescriptorAdapter;
+import org.hibernate.dialect.aggregate.spi.AggregateAuxiliaryObjectRequest;
+import org.hibernate.dialect.aggregate.spi.AggregateComponentAssignmentRequest;
+import org.hibernate.dialect.aggregate.spi.AggregateComponentReadRequest;
+import org.hibernate.dialect.aggregate.spi.AggregateCustomWriteRequest;
+import org.hibernate.dialect.aggregate.spi.AggregateSqlAuxiliaryObject;
+import org.hibernate.dialect.aggregate.spi.AggregateUserDefinedArrayType;
 import org.hibernate.metamodel.internal.EmbeddableHelper;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.sql.Template;
@@ -114,70 +123,117 @@ public class AggregateComponentSecondPass implements SecondPass {
 		final String aggregateAssignmentExpression =
 				aggregateColumn.getAggregateAssignmentExpressionTemplate( dialect )
 						.replace( Template.TEMPLATE + ".", "" );
+		final Namespace auxiliaryNamespace = database.getDefaultNamespace();
+		final var aggregateDescriptor = AggregateColumnDescriptorAdapter.aggregate(
+				aggregateColumn,
+				auxiliaryNamespace
+		);
+		final var componentDescriptors = AggregateColumnDescriptorAdapter.descriptors(
+				aggregatedColumns,
+				auxiliaryNamespace
+		);
+		final boolean legacyXmlFormat = context.getBuildingOptions().isXmlFormatMapperLegacyFormatEnabled();
 		if ( addAuxiliaryObjects ) {
-			aggregateSupport.aggregateAuxiliaryDatabaseObjects(
-					database.getDefaultNamespace(),
-					aggregateReadExpression,
-					aggregateColumn,
-					aggregatedColumns
-			).forEach( database::addAuxiliaryDatabaseObject );
+			for ( var auxiliary : aggregateSupport.aggregateAuxiliaryObjects(
+					new AggregateAuxiliaryObjectRequest(
+							aggregateReadExpression,
+							aggregateDescriptor,
+							componentDescriptors,
+							typeConfiguration,
+							legacyXmlFormat
+					) ) ) {
+				if ( auxiliary instanceof AggregateSqlAuxiliaryObject sqlObject ) {
+					database.addAuxiliaryDatabaseObject( new NamedAuxiliaryDatabaseObject(
+							sqlObject.exportIdentifier(),
+							auxiliaryNamespace,
+							sqlObject.createCommands().toArray( String[]::new ),
+							sqlObject.dropCommands().toArray( String[]::new ),
+							sqlObject.dialectScopes(),
+							sqlObject.beforeTables()
+					) );
+				}
+				else if ( auxiliary instanceof AggregateUserDefinedArrayType arrayDescriptor ) {
+					final UserDefinedArrayType arrayType = auxiliaryNamespace.createUserDefinedArrayType(
+							Identifier.toIdentifier( arrayDescriptor.typeName() ),
+							name -> new UserDefinedArrayType( "orm", auxiliaryNamespace, name )
+					);
+					arrayType.setArraySqlTypeCode( arrayDescriptor.arraySqlTypeCode() );
+					arrayType.setArrayLength( arrayDescriptor.arrayLength() );
+					arrayType.setElementTypeName( arrayDescriptor.elementTypeName() );
+					arrayType.setElementSqlTypeCode( arrayDescriptor.elementSqlTypeCode() );
+					arrayType.setElementDdlTypeCode( arrayDescriptor.elementDdlTypeCode() );
+				}
+			}
 		}
 		// Hook for the dialect for allowing to flush the whole aggregate
 		aggregateColumn.setCustomWrite(
-				aggregateSupport.aggregateCustomWriteExpression(
-						aggregateColumn,
-						aggregatedColumns
-				)
+				aggregateSupport.aggregateCustomWriteExpression( new AggregateCustomWriteRequest(
+						aggregateDescriptor,
+						componentDescriptors,
+						typeConfiguration
+				) )
 		);
 
 		// The following determines the custom read/write expression and write expression for aggregatedColumns
 		for ( var subColumn : aggregatedColumns ) {
 			final String selectableExpression = subColumn.getText( dialect );
 			final String customReadExpression;
+			final int aggregateTypeCode = effectiveAggregateTypeCode( aggregateColumn );
+			final var columnMapping = AggregateColumnDescriptorAdapter.mapping( subColumn );
 			final String assignmentExpression = aggregateSupport.aggregateComponentAssignmentExpression(
-					aggregateAssignmentExpression,
-					selectableExpression,
-					aggregateColumn,
-					subColumn
-			);
+					new AggregateComponentAssignmentRequest(
+							aggregateAssignmentExpression,
+							selectableExpression,
+							aggregateTypeCode,
+							columnMapping,
+							typeConfiguration
+					) );
 
 			if ( subColumn.getCustomReadExpression() == null ) {
 				if ( subColumn.isFormula() ) {
-					customReadExpression = aggregateSupport.aggregateComponentCustomReadExpression(
+					customReadExpression = aggregateSupport.aggregateComponentCustomReadExpression( new AggregateComponentReadRequest(
 							subColumn.getTemplate( dialect, typeConfiguration ),
 							Template.TEMPLATE + ".",
 							aggregateReadTemplate,
 							"",
-							aggregateColumn,
-							subColumn
-					);
+							aggregateTypeCode,
+							columnMapping,
+							typeConfiguration
+					) );
 				}
 				else {
-					customReadExpression = aggregateSupport.aggregateComponentCustomReadExpression(
+					customReadExpression = aggregateSupport.aggregateComponentCustomReadExpression( new AggregateComponentReadRequest(
 							"",
 							"",
 							aggregateReadTemplate,
 							selectableExpression,
-							aggregateColumn,
-							subColumn
-					);
+							aggregateTypeCode,
+							columnMapping,
+							typeConfiguration
+					) );
 				}
 			}
 			else {
-				customReadExpression = aggregateSupport.aggregateComponentCustomReadExpression(
+				customReadExpression = aggregateSupport.aggregateComponentCustomReadExpression( new AggregateComponentReadRequest(
 						subColumn.getCustomReadExpression(),
 						Template.TEMPLATE + ".",
 						aggregateReadTemplate,
 						"",
-						aggregateColumn,
-						subColumn
-				);
+						aggregateTypeCode,
+						columnMapping,
+						typeConfiguration
+				) );
 			}
 			subColumn.setAssignmentExpression( assignmentExpression );
 			subColumn.setCustomRead( customReadExpression );
 		}
 
 		propertyHolder.getTable().getColumns().removeAll( aggregatedColumns );
+	}
+
+	private static int effectiveAggregateTypeCode(AggregateColumn aggregateColumn) {
+		final int jdbcTypeCode = aggregateColumn.getType().getJdbcType().getDefaultSqlTypeCode();
+		return jdbcTypeCode == SqlTypes.ARRAY ? aggregateColumn.getTypeCode() : jdbcTypeCode;
 	}
 
 	private static void validateComponent(Component component, String basePath, boolean inArray) {

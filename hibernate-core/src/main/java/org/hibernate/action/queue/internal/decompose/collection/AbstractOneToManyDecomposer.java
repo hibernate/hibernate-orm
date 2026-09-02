@@ -20,14 +20,14 @@ import org.hibernate.collection.spi.CollectionChangeSet;
 import org.hibernate.collection.spi.CollectionMutationInterpretation;
 import org.hibernate.collection.spi.PhysicalCollectionMutation;
 import org.hibernate.jdbc.Expectation;
-import org.hibernate.sql.model.MutationOperation;
-import org.hibernate.sql.model.ast.ColumnValueBinding;
-import org.hibernate.sql.model.ast.ColumnValueParameterList;
-import org.hibernate.sql.model.ast.ColumnWriteFragment;
-import org.hibernate.sql.model.ast.MutatingTableReference;
-import org.hibernate.sql.model.ast.builder.CollectionRowDeleteByUpdateSetNullBuilder;
-import org.hibernate.sql.model.ast.builder.TableUpdateBuilderStandard;
-import org.hibernate.sql.model.internal.TableUpdateCustomSql;
+import org.hibernate.sql.spi.mutation.MutationOperation;
+import org.hibernate.sql.ast.spi.model.ColumnValueBinding;
+import org.hibernate.sql.ast.spi.model.ColumnValueParameterList;
+import org.hibernate.sql.ast.spi.model.ColumnWriteFragment;
+import org.hibernate.sql.ast.spi.model.MutatingTableReference;
+import org.hibernate.sql.ast.internal.model.builder.CollectionRowDeleteByUpdateSetNullBuilder;
+import org.hibernate.sql.ast.spi.model.builder.TableUpdateBuilderStandard;
+import org.hibernate.sql.ast.spi.model.TableUpdateCustomSql;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -36,8 +36,8 @@ import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
 import org.hibernate.persister.collection.mutation.CollectionTableMapping;
 import org.hibernate.persister.collection.OneToManyPersister;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
-import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
-import org.hibernate.sql.model.jdbc.JdbcValueDescriptor;
+import org.hibernate.sql.spi.mutation.jdbc.JdbcMutationOperation;
+import org.hibernate.sql.spi.mutation.jdbc.JdbcValueDescriptor;
 
 import java.util.ArrayList;
 import java.util.AbstractMap.SimpleImmutableEntry;
@@ -49,7 +49,7 @@ import java.util.function.Consumer;
 import static org.hibernate.action.queue.internal.decompose.collection.CollectionOrdinalSupport.Slot;
 import static org.hibernate.action.queue.internal.decompose.collection.CollectionOrdinalSupport.calculateOrdinal;
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
-import static org.hibernate.sql.model.ast.builder.TableMutationBuilder.NULL;
+import static org.hibernate.sql.ast.spi.model.builder.TableMutationBuilder.NULL;
 
 /// @author Steve Ebersole
 public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer {
@@ -858,17 +858,17 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 			}
 
 			@Override
-			public org.hibernate.sql.model.MutationType getMutationType() {
+			public org.hibernate.sql.spi.mutation.MutationType getMutationType() {
 				return jdbcOperation.getMutationType();
 			}
 
 			@Override
-			public org.hibernate.sql.model.MutationTarget<?, ?> getMutationTarget() {
+			public org.hibernate.sql.spi.mutation.MutationTarget getMutationTarget() {
 				return jdbcOperation.getMutationTarget();
 			}
 
 			@Override
-			public org.hibernate.sql.model.TableMapping getTableDetails() {
+			public org.hibernate.sql.spi.mutation.TableMapping getTableDetails() {
 				return jdbcOperation.getTableDetails();
 			}
 

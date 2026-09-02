@@ -29,22 +29,22 @@ import org.hibernate.query.sqm.produce.function.SetReturningFunctionTypeResolver
 import org.hibernate.query.sqm.sql.spi.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.spi.SqmCopyContext;
 import org.hibernate.query.sqm.tree.spi.SqmTypedNode;
-import org.hibernate.sql.ast.tree.SqlAstNode;
-import org.hibernate.sql.ast.tree.expression.JsonExistsErrorBehavior;
-import org.hibernate.sql.ast.tree.expression.JsonPathPassingClause;
-import org.hibernate.sql.ast.tree.expression.JsonQueryEmptyBehavior;
-import org.hibernate.sql.ast.tree.expression.JsonQueryErrorBehavior;
-import org.hibernate.sql.ast.tree.expression.JsonQueryWrapMode;
-import org.hibernate.sql.ast.tree.expression.JsonTableColumnDefinition;
-import org.hibernate.sql.ast.tree.expression.JsonTableColumnsClause;
-import org.hibernate.sql.ast.tree.expression.JsonTableErrorBehavior;
-import org.hibernate.sql.ast.tree.expression.JsonTableExistsColumnDefinition;
-import org.hibernate.sql.ast.tree.expression.JsonTableNestedColumnDefinition;
-import org.hibernate.sql.ast.tree.expression.JsonTableOrdinalityColumnDefinition;
-import org.hibernate.sql.ast.tree.expression.JsonTableQueryColumnDefinition;
-import org.hibernate.sql.ast.tree.expression.JsonTableValueColumnDefinition;
-import org.hibernate.sql.ast.tree.expression.JsonValueEmptyBehavior;
-import org.hibernate.sql.ast.tree.expression.JsonValueErrorBehavior;
+import org.hibernate.sql.ast.spi.SqlAstNode;
+import org.hibernate.sql.ast.spi.query.expression.JsonExistsErrorBehavior;
+import org.hibernate.sql.ast.spi.query.expression.JsonPathPassingClause;
+import org.hibernate.sql.ast.spi.query.expression.JsonQueryEmptyBehavior;
+import org.hibernate.sql.ast.spi.query.expression.JsonQueryErrorBehavior;
+import org.hibernate.sql.ast.spi.query.expression.JsonQueryWrapMode;
+import org.hibernate.sql.ast.spi.query.expression.JsonTableColumnDefinition;
+import org.hibernate.sql.ast.spi.query.expression.JsonTableColumnsClause;
+import org.hibernate.sql.ast.spi.query.expression.JsonTableErrorBehavior;
+import org.hibernate.sql.ast.spi.query.expression.JsonTableExistsColumnDefinition;
+import org.hibernate.sql.ast.spi.query.expression.JsonTableNestedColumnDefinition;
+import org.hibernate.sql.ast.spi.query.expression.JsonTableOrdinalityColumnDefinition;
+import org.hibernate.sql.ast.spi.query.expression.JsonTableQueryColumnDefinition;
+import org.hibernate.sql.ast.spi.query.expression.JsonTableValueColumnDefinition;
+import org.hibernate.sql.ast.spi.query.expression.JsonValueEmptyBehavior;
+import org.hibernate.sql.ast.spi.query.expression.JsonValueErrorBehavior;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.SqlTypes;
 
@@ -126,7 +126,7 @@ public class SqmJsonTableFunction<T> extends SelfRenderingSqmSetReturningFunctio
 
 	@Override
 	public JpaJsonTableFunction passing(String parameterName, Expression<?> expression) {
-		if ( columns.jsonPath == null ) {
+		if ( columns.nestedColumns.jsonPath == null ) {
 			throw new IllegalStateException( "Can't pass parameter '" + parameterName + "', because json_table has no JSON path" );
 		}
 		if ( passingExpressions == null ) {
@@ -203,9 +203,9 @@ public class SqmJsonTableFunction<T> extends SelfRenderingSqmSetReturningFunctio
 		if ( passingExpressions == null || passingExpressions.isEmpty() ) {
 			return null;
 		}
-		final HashMap<String, org.hibernate.sql.ast.tree.expression.Expression> converted = new HashMap<>( passingExpressions.size() );
+		final HashMap<String, org.hibernate.sql.ast.spi.query.expression.Expression> converted = new HashMap<>( passingExpressions.size() );
 		for ( Map.Entry<String, SqmExpression<?>> entry : passingExpressions.entrySet() ) {
-			converted.put( entry.getKey(), (org.hibernate.sql.ast.tree.expression.Expression) entry.getValue().accept( walker ) );
+			converted.put( entry.getKey(), (org.hibernate.sql.ast.spi.query.expression.Expression) entry.getValue().accept( walker ) );
 		}
 		return new JsonPathPassingClause( converted );
 	}
@@ -741,14 +741,14 @@ public class SqmJsonTableFunction<T> extends SelfRenderingSqmSetReturningFunctio
 		public JsonTableColumnDefinition convertToSqlAst(SqmToSqlAstConverter walker) {
 			return new JsonTableValueColumnDefinition(
 					name,
-					(org.hibernate.sql.ast.tree.expression.CastTarget) type.accept( walker ),
+					(org.hibernate.sql.ast.spi.query.expression.CastTarget) type.accept( walker ),
 					jsonPath,
 					switch ( errorBehavior ) {
 						case UNSPECIFIED -> null;
 						case NULL -> JsonValueErrorBehavior.NULL;
 						case ERROR -> JsonValueErrorBehavior.ERROR;
 						case DEFAULT -> JsonValueErrorBehavior.defaultOnError(
-								(org.hibernate.sql.ast.tree.expression.Expression)
+								(org.hibernate.sql.ast.spi.query.expression.Expression)
 										castNonNull( errorDefaultExpression ).accept( walker )
 						);
 					},
@@ -757,7 +757,7 @@ public class SqmJsonTableFunction<T> extends SelfRenderingSqmSetReturningFunctio
 						case NULL -> JsonValueEmptyBehavior.NULL;
 						case ERROR -> JsonValueEmptyBehavior.ERROR;
 						case DEFAULT -> JsonValueEmptyBehavior.defaultOnEmpty(
-								(org.hibernate.sql.ast.tree.expression.Expression)
+								(org.hibernate.sql.ast.spi.query.expression.Expression)
 										castNonNull( emptyDefaultExpression ).accept( walker )
 						);
 					}
@@ -962,7 +962,7 @@ public class SqmJsonTableFunction<T> extends SelfRenderingSqmSetReturningFunctio
 		}
 	}
 
-	static sealed class NestedColumns implements ColumnDefinition, JpaJsonTableColumnsNode {
+	static final class NestedColumns implements ColumnDefinition, JpaJsonTableColumnsNode {
 		protected final String jsonPath;
 		protected final SqmJsonTableFunction<?> table;
 		protected final ArrayList<ColumnDefinition> columnDefinitions;
@@ -1145,14 +1145,19 @@ public class SqmJsonTableFunction<T> extends SelfRenderingSqmSetReturningFunctio
 		}
 	}
 
-	public static final class Columns extends NestedColumns implements SqmTypedNode<Object> {
+	public static final class Columns implements SqmTypedNode<Object>, JpaJsonTableColumnsNode {
+		private final SqmJsonTableFunction<?> table;
+		private final ArrayList<ColumnDefinition> columnDefinitions;
+		private final NestedColumns nestedColumns;
 
 		public Columns(SqmJsonTableFunction<?> table) {
-			super( "", table );
+			this( table, new ArrayList<>() );
 		}
 
 		private Columns(SqmJsonTableFunction<?> table, ArrayList<ColumnDefinition> columnDefinitions) {
-			super( "", table, columnDefinitions );
+			this.table = table;
+			this.columnDefinitions = columnDefinitions;
+			this.nestedColumns = new NestedColumns( "", table, columnDefinitions );
 		}
 
 		public AnonymousTupleType<?> createTupleType() {
@@ -1178,6 +1183,75 @@ public class SqmJsonTableFunction<T> extends SelfRenderingSqmSetReturningFunctio
 			return new Columns( castNonNull( context.getCopy( table ) ), definitions );
 		}
 
+		public int populateTupleType(int offset, String[] componentNames, SqmExpressible<?>[] componentTypes) {
+			return nestedColumns.populateTupleType( offset, componentNames, componentTypes );
+		}
+
+		public JsonTableColumnDefinition convertToSqlAst(SqmToSqlAstConverter walker) {
+			return nestedColumns.convertToSqlAst( walker );
+		}
+
+		@Override
+		public JpaJsonExistsNode existsColumn(String columnName) {
+			return nestedColumns.existsColumn( columnName );
+		}
+
+		@Override
+		public JpaJsonExistsNode existsColumn(String columnName, @Nullable String jsonPath) {
+			return nestedColumns.existsColumn( columnName, jsonPath );
+		}
+
+		@Override
+		public JpaJsonQueryNode queryColumn(String columnName) {
+			return nestedColumns.queryColumn( columnName );
+		}
+
+		@Override
+		public JpaJsonQueryNode queryColumn(String columnName, @Nullable String jsonPath) {
+			return nestedColumns.queryColumn( columnName, jsonPath );
+		}
+
+		@Override
+		public <X> JpaJsonValueNode<X> valueColumn(String columnName, Class<X> type) {
+			return nestedColumns.valueColumn( columnName, type );
+		}
+
+		@Override
+		public <X> JpaJsonValueNode<X> valueColumn(String columnName, Class<X> type, @Nullable String jsonPath) {
+			return nestedColumns.valueColumn( columnName, type, jsonPath );
+		}
+
+		@Override
+		public <X> JpaJsonValueNode<X> valueColumn(String columnName, JpaCastTarget<X> type) {
+			return nestedColumns.valueColumn( columnName, type );
+		}
+
+		@Override
+		public <X> JpaJsonValueNode<X> valueColumn(
+				String columnName,
+				JpaCastTarget<X> type,
+				@Nullable String jsonPath) {
+			return nestedColumns.valueColumn( columnName, type, jsonPath );
+		}
+
+		@Override
+		public JpaJsonTableColumnsNode nested(String jsonPath) {
+			return nestedColumns.nested( jsonPath );
+		}
+
+		@Override
+		public JpaJsonTableColumnsNode ordinalityColumn(String columnName) {
+			nestedColumns.ordinalityColumn( columnName );
+			return this;
+		}
+
+		@Override
+		@SuppressWarnings("unchecked")
+		public <X> X accept(SemanticQueryWalker<X> walker) {
+			nestedColumns.accept( walker );
+			return (X) this;
+		}
+
 		@Override
 		public @Nullable SqmBindableType<Object> getNodeType() {
 			return null;
@@ -1190,7 +1264,29 @@ public class SqmJsonTableFunction<T> extends SelfRenderingSqmSetReturningFunctio
 
 		@Override
 		public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
-			appendColumnsToHqlString( hql, context );
+			nestedColumns.appendColumnsToHqlString( hql, context );
+		}
+
+		@Override
+		public boolean equals(@Nullable Object object) {
+			return object instanceof Columns that
+				&& nestedColumns.equals( that.nestedColumns );
+		}
+
+		@Override
+		public int hashCode() {
+			return nestedColumns.hashCode();
+		}
+
+		@Override
+		public boolean isCompatible(Object object) {
+			return object instanceof Columns that
+				&& nestedColumns.isCompatible( that.nestedColumns );
+		}
+
+		@Override
+		public int cacheHashCode() {
+			return nestedColumns.cacheHashCode();
 		}
 	}
 }

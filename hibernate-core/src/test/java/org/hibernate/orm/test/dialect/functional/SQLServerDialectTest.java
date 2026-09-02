@@ -21,7 +21,7 @@ import org.hibernate.LockOptions;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.SQLServerDialect;
-import org.hibernate.dialect.lock.PessimisticEntityLockException;
+import org.hibernate.dialect.lock.internal.PessimisticEntityLockException;
 import org.hibernate.exception.LockTimeoutException;
 
 import org.hibernate.testing.orm.junit.RequiresDialect;

@@ -6,7 +6,6 @@ package org.hibernate.cfg;
 
 import org.hibernate.Incubating;
 import org.hibernate.audit.AuditStrategy;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.temporal.TemporalTableStrategy;
 import org.hibernate.temporal.spi.ChangesetCoordinator;
 import org.hibernate.temporal.spi.ChangesetIdentifierSupplier;
@@ -43,7 +42,7 @@ public interface StateManagementSettings {
 
 	/**
 	 * Use transaction timestamps supplied by the database server's
-	 * {@link Dialect#currentTimestamp() current_timestamp} function
+	 * {@link org.hibernate.dialect.temporaltype.spi.CurrentTemporalSupport#currentTimestamp() current_timestamp} function
 	 * instead of {@link java.time.Instant#now()} to initialize the
 	 * effectivity columns for
 	 * {@linkplain org.hibernate.annotations.Temporal temporal data}

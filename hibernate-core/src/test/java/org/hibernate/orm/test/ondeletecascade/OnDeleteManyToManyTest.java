@@ -58,7 +58,7 @@ class OnDeleteManyToManyTest {
 			em.remove( a );
 			assertFalse( Hibernate.isInitialized( a.bs ) );
 		} );
-		inspector.assertExecutedCount( scope.getDialect().supportsCascadeDelete() ? 2 : 3 );
+		inspector.assertExecutedCount( scope.getDialect().getForeignKeySupport().supportsOnDeleteAction( org.hibernate.annotations.OnDeleteAction.CASCADE ) ? 2 : 3 );
 
 		scope.inTransaction( em -> {
 			assertEquals( 1,

@@ -4,6 +4,9 @@
  */
 package org.hibernate.spatial.dialect.sqlserver;
 
+import org.hibernate.SPI;
+
+
 import org.hibernate.spatial.GeometryLiteralFormatter;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -17,6 +20,7 @@ import org.geolatte.geom.codec.Wkt;
  * @author Karel Maesen, Geovise BVBA
  * creation-date: 8/23/11
  */
+@SPI
 public class SqlServerGeometryType extends AbstractSqlServerGISType {
 
 	/**

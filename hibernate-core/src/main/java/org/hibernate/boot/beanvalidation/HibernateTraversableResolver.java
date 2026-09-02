@@ -33,6 +33,7 @@ import jakarta.validation.TraversableResolver;
 public class HibernateTraversableResolver implements TraversableResolver {
 	private final Map<Class<?>, Set<String>> associationsPerEntityClass = new HashMap<>();
 
+	@org.hibernate.Internal
 	public void addPersister(EntityPersister persister, SessionFactoryImplementor factory) {
 		final var javaTypeClass = persister.getEntityMappingType().getMappedJavaType().getJavaTypeClass();
 		final Set<String> associations = new HashSet<>();

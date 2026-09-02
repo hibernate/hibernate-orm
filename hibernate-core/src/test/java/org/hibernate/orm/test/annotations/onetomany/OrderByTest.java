@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.annotations.onetomany;
 
+
 import jakarta.persistence.criteria.Nulls;
 import org.hibernate.Hibernate;
 import org.hibernate.cfg.AvailableSettings;

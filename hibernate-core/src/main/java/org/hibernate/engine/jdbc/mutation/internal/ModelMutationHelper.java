@@ -19,9 +19,9 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.values.GeneratedValuesMutationDelegate;
 import org.hibernate.jdbc.TooManyRowsAffectedException;
-import org.hibernate.sql.model.MutationTarget;
-import org.hibernate.sql.model.MutationType;
-import org.hibernate.sql.model.PreparableMutationOperation;
+import org.hibernate.sql.spi.mutation.MutationTarget;
+import org.hibernate.sql.spi.mutation.MutationType;
+import org.hibernate.sql.spi.mutation.jdbc.PreparableMutationOperation;
 
 import static org.hibernate.engine.jdbc.mutation.internal.PreparedStatementGroupNone.GROUP_OF_NONE;
 
@@ -50,7 +50,7 @@ public class ModelMutationHelper {
 			PreparedStatementDetails statementDetails,
 			int affectedRowCount,
 			int batchPosition,
-			MutationTarget<?,?> mutationTarget,
+			MutationTarget mutationTarget,
 			Object id,
 			SessionFactoryImplementor sessionFactory) {
 		try {
@@ -91,7 +91,7 @@ public class ModelMutationHelper {
 
 	public static PreparedStatementGroup toPreparedStatementGroup(
 			MutationType mutationType,
-			MutationTarget<?,?> mutationTarget,
+			MutationTarget mutationTarget,
 			GeneratedValuesMutationDelegate delegate,
 			List<PreparableMutationOperation> mutations,
 			SharedSessionContractImplementor session) {

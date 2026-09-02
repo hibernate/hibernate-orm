@@ -19,6 +19,8 @@ import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.unique.spi.UniqueKeyRepresentation;
+import org.hibernate.dialect.unique.spi.UniqueKeyRepresentationRequest;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.Index;
@@ -174,8 +176,14 @@ class IndexBinder {
 			}
 		}
 		final var dialect = getDialect();
-		if ( unique && !hasFormula && dialect.supportsUniqueConstraints()
-				&& isEmpty( type ) && isEmpty( using ) ) {
+		final var representation = dialect.getUniqueDelegate().representation(
+				new UniqueKeyRepresentationRequest(
+						hasFormula,
+						!isEmpty( type ),
+						!isEmpty( using )
+				)
+		);
+		if ( unique && representation == UniqueKeyRepresentation.CONSTRAINT ) {
 			final String keyName = getImplicitNamingStrategy().determineUniqueKeyName( source ).render( dialect );
 			final UniqueKey uniqueKey = table.getOrCreateUniqueKey( keyName );
 			uniqueKey.setExplicit( true );

@@ -8,8 +8,8 @@ import java.time.ZonedDateTime;
 
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.jdbc.internal.AbstractJavaTimeJdbcType;
 import org.hibernate.type.descriptor.jdbc.internal.JdbcLiteralFormatterTemporal;
+import org.hibernate.type.descriptor.jdbc.spi.AbstractJavaTimeJdbcType;
 
 import jakarta.persistence.TemporalType;
 

@@ -23,6 +23,7 @@ import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.hibernate.testing.DialectTestSupport;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
@@ -79,6 +80,9 @@ public class ElementCollectionSetNullableUniqueKeyTest {
 				.containsPattern( "\"?book_isbn\"?\\s+[^,]*\\bnot\\s+null\\b" )
 				.doesNotContainPattern( "\\bprimary\\s+key\\b" );
 		assertTrue( hasUniqueTupleDefinition( commands, "book_topics", "book_isbn", "topics" ) );
+		if ( dialect.getUniqueDelegate().supportsNullsNotDistinct() ) {
+			assertTrue( hasNullsNotDistinctUniqueTupleDefinition( commands, "book_topics", "book_isbn", "topics" ) );
+		}
 
 		final String commentsTableCreateCommand = findCreateTableCommand( dialect, commands, "book_comments" );
 		assertNotNull( commentsTableCreateCommand );
@@ -95,7 +99,7 @@ public class ElementCollectionSetNullableUniqueKeyTest {
 	}
 
 	private static String findCreateTableCommand(Dialect dialect, List<String> commands, String tableName) {
-		final String createTableString = dialect.getCreateTableString().toLowerCase( Locale.ROOT );
+		final String createTableString = DialectTestSupport.createTableCommand( dialect ).toLowerCase( Locale.ROOT );
 		for ( String command : commands ) {
 			final String lowerCaseCommand = command.toLowerCase( Locale.ROOT );
 			if ( lowerCaseCommand.contains( createTableString ) && lowerCaseCommand.contains( tableName ) ) {
@@ -120,6 +124,24 @@ public class ElementCollectionSetNullableUniqueKeyTest {
 			if ( lowerCaseCommand.contains( tableName )
 					&& ( lowerCaseCommand.matches( ".*" + uniqueConstraintPattern + ".*" )
 						|| lowerCaseCommand.matches( ".*" + uniqueIndexPattern + ".*" ) ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private static boolean hasNullsNotDistinctUniqueTupleDefinition(
+			List<String> commands,
+			String tableName,
+			String firstColumn,
+			String secondColumn) {
+		final String uniqueConstraintPattern = "\\bunique\\s+nulls\\s+not\\s+distinct\\s*\\(\\s*"
+				+ columnPattern( firstColumn ) + "\\s*,\\s*" + columnPattern( secondColumn ) + "\\s*\\)";
+
+		for ( String command : commands ) {
+			final String lowerCaseCommand = command.toLowerCase( Locale.ROOT );
+			if ( lowerCaseCommand.contains( tableName )
+					&& lowerCaseCommand.matches( ".*" + uniqueConstraintPattern + ".*" ) ) {
 				return true;
 			}
 		}

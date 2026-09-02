@@ -4,6 +4,8 @@
  */
 package org.hibernate.type.format.jackson;
 
+import org.hibernate.SPI;
+
 import java.io.IOException;
 import java.lang.reflect.Array;
 import java.lang.reflect.ParameterizedType;
@@ -44,6 +46,7 @@ import org.hibernate.type.internal.ParameterizedTypeImpl;
  * @author Christian Beikov
  * @author Emmanuel Jannetti
  */
+@SPI
 public final class JacksonXmlFormatMapper implements FormatMapper {
 
 	public static final String SHORT_NAME = "jackson-xml";

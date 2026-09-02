@@ -119,7 +119,7 @@ import org.hibernate.temporal.spi.ChangesetCoordinator;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 import org.hibernate.service.spi.SessionFactoryServiceRegistryFactory;
-import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
+import org.hibernate.sql.spi.ParameterMarkerStrategy;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducerProvider;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.type.descriptor.WrapperOptions;

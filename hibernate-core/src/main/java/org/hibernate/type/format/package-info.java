@@ -11,6 +11,8 @@
  * @see org.hibernate.type.format.FormatMapper
  */
 @Incubating
+@SPI
 package org.hibernate.type.format;
 
 import org.hibernate.Incubating;
+import org.hibernate.SPI;

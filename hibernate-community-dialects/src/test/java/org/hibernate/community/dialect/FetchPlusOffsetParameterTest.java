@@ -8,17 +8,19 @@ import java.util.List;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.dialect.sql.ast.H2SqlAstTranslator;
+import org.hibernate.dialect.sql.ast.internal.H2SqlAstTranslator;
+import org.hibernate.dialect.sql.ast.spi.PaginationRenderingSupport;
+import org.hibernate.dialect.sql.ast.spi.StandardPaginationRenderingSupport;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.common.FetchClauseType;
-import org.hibernate.sql.ast.Clause;
-import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.SqlAstTranslatorFactory;
-import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
-import org.hibernate.sql.ast.tree.Statement;
-import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.select.QueryPart;
+import org.hibernate.sql.ast.spi.translation.Clause;
+import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslatorFactory;
+import org.hibernate.dialect.sql.ast.spi.StandardSqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.Statement;
+import org.hibernate.sql.ast.spi.query.expression.Expression;
+import org.hibernate.sql.ast.spi.query.select.QueryPart;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -110,15 +112,19 @@ public class FetchPlusOffsetParameterTest {
 		public SqlAstTranslatorFactory getSqlAstTranslatorFactory() {
 			return new StandardSqlAstTranslatorFactory() {
 				@Override
-				protected <T extends JdbcOperation> SqlAstTranslator<T> buildTranslator(
-						SessionFactoryImplementor sessionFactory, Statement statement) {
-					return new H2SqlAstTranslator<>( sessionFactory, statement ) {
+				protected <S extends Statement, O extends JdbcOperation> SqlAstTranslator<O> createTranslator(
+						SqlAstTranslationRequest<S, O> request) {
+					return new H2SqlAstTranslator<>( request ) {
+						@Override
+						protected PaginationRenderingSupport getPaginationRenderingSupport() {
+							return StandardPaginationRenderingSupport.OFFSET_FETCH;
+						}
+
 						@Override
 						public void visitOffsetFetchClause(QueryPart queryPart) {
 							final Expression offsetClauseExpression;
 							final Expression fetchClauseExpression;
 							if ( queryPart.isRoot() && hasLimit() ) {
-								prepareLimitOffsetParameters();
 								offsetClauseExpression = getOffsetParameter();
 								fetchClauseExpression = getLimitParameter();
 							}

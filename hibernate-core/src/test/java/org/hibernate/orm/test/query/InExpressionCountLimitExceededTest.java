@@ -13,6 +13,7 @@ import java.util.List;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.jdbc.spi.ParameterLimits;
 import org.hibernate.query.Query;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -50,8 +51,8 @@ public class InExpressionCountLimitExceededTest {
 
 	public static class TestDialect extends H2Dialect {
 		@Override
-		public int getInExpressionCountLimit() {
-			return 15;
+		public ParameterLimits getParameterLimits() {
+			return ParameterLimits.of( 15 );
 		}
 	}
 

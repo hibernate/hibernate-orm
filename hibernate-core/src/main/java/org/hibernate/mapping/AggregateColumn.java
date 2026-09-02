@@ -5,6 +5,9 @@
 package org.hibernate.mapping;
 
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.aggregate.internal.AggregateColumnDescriptorAdapter;
+import org.hibernate.dialect.aggregate.spi.AggregateComponentAssignmentRequest;
+import org.hibernate.dialect.aggregate.spi.AggregateComponentReadRequest;
 import org.hibernate.metamodel.mapping.SelectablePath;
 import org.hibernate.sql.Template;
 
@@ -53,6 +56,7 @@ public final class AggregateColumn extends Column {
 		return component;
 	}
 
+	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	public SelectablePath getSelectablePath() {
 		return getSelectablePath( component );
 	}
@@ -80,12 +84,15 @@ public final class AggregateColumn extends Column {
 				? getRootAggregateSelectableExpression( aggregateColumn, simpleAggregateName )
 				: dialect.getAggregateSupport()
 						.aggregateComponentCustomReadExpression(
-								"",
-								"",
-								getAggregateReadExpressionTemplate( dialect, parent.getComponent() ),
-								simpleAggregateName,
-								parent,
-								aggregateColumn
+								new AggregateComponentReadRequest(
+										"",
+										"",
+										getAggregateReadExpressionTemplate( dialect, parent.getComponent() ),
+										simpleAggregateName,
+										AggregateColumnDescriptorAdapter.effectiveSqlTypeCode( parent ),
+										AggregateColumnDescriptorAdapter.mapping( aggregateColumn ),
+										aggregateColumn.getComponent().getMetadata().getTypeConfiguration()
+								)
 						);
 	}
 
@@ -112,10 +119,13 @@ public final class AggregateColumn extends Column {
 				? Template.TEMPLATE + "." + simpleAggregateName
 				: dialect.getAggregateSupport()
 						.aggregateComponentAssignmentExpression(
-								getAggregateAssignmentExpressionTemplate( dialect, parent.getComponent() ),
-								simpleAggregateName,
-								parent,
-								aggregateColumn
+								new AggregateComponentAssignmentRequest(
+										getAggregateAssignmentExpressionTemplate( dialect, parent.getComponent() ),
+										simpleAggregateName,
+										AggregateColumnDescriptorAdapter.effectiveSqlTypeCode( parent ),
+										AggregateColumnDescriptorAdapter.mapping( aggregateColumn ),
+										aggregateColumn.getComponent().getMetadata().getTypeConfiguration()
+								)
 						);
 	}
 

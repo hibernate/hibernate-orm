@@ -11,7 +11,7 @@ import org.hibernate.StaleObjectStateException;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.MySQLDialect;
-import org.hibernate.dialect.lock.OptimisticEntityLockException;
+import org.hibernate.dialect.lock.internal.OptimisticEntityLockException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;

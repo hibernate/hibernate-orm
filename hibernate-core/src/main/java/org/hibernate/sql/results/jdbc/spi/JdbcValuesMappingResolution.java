@@ -15,6 +15,7 @@ import org.hibernate.sql.results.graph.Initializer;
  *
  * @see JdbcValuesMapping#resolveAssemblers(SessionFactoryImplementor)
  */
+@org.hibernate.SPI({ org.hibernate.SPI.Role.USE, org.hibernate.SPI.Role.IMPLEMENT, org.hibernate.SPI.Role.SUPPLY })
 public interface JdbcValuesMappingResolution {
 
 	DomainResultAssembler<?>[] getDomainResultAssemblers();

@@ -6,7 +6,7 @@ package org.hibernate.query.sql.spi;
 
 import org.hibernate.Incubating;
 import org.hibernate.query.sqm.spi.NodeBuilder;
-import org.hibernate.sql.ast.spi.SqlAstCreationContext;
+import org.hibernate.sql.ast.spi.creation.SqlAstCreationContext;
 
 import java.util.Set;
 

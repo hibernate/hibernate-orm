@@ -34,7 +34,8 @@ public class MySQLStorageEngineTest {
 
 	@Test
 	public void testDefaultStorage() {
-		assertThat( new MySQLDialect().getTableTypeString() ).isEqualTo( " engine=InnoDB" );
+		assertThat( new MySQLDialect().getTableCreationSupport().tableCreationOptions() )
+				.isEqualTo( " engine=InnoDB" );
 	}
 
 	@Test
@@ -45,7 +46,8 @@ public class MySQLStorageEngineTest {
 		assertThat( systemProperties ).isNotNull();
 		final Object previousValue = systemProperties.setProperty( AvailableSettings.STORAGE_ENGINE, "myisam" );
 		try {
-			assertThat( new MySQLDialect().getTableTypeString() ).isEqualTo( " engine=MyISAM" );
+			assertThat( new MySQLDialect().getTableCreationSupport().tableCreationOptions() )
+					.isEqualTo( " engine=MyISAM" );
 		}
 		finally {
 			if ( previousValue != null ) {
@@ -63,7 +65,7 @@ public class MySQLStorageEngineTest {
 	@DomainModel(annotatedClasses = {TestEntity.class})
 	public void testOverrideStorageWithConfigurationProperties(SessionFactoryScope scope) {
 		Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();
-		assertThat( dialect.getTableTypeString() ).isEqualTo( " engine=MyISAM" );
+		assertThat( dialect.getTableCreationSupport().tableCreationOptions() ).isEqualTo( " engine=MyISAM" );
 	}
 
 	@Test
@@ -84,7 +86,7 @@ public class MySQLStorageEngineTest {
 							DatabaseVersion.NO_VERSION,
 							DatabaseVersion.NO_VERSION,
 							configurationValues ) );
-			assertThat( dialect.getTableTypeString() ).isEqualTo( " engine=InnoDB" );
+			assertThat( dialect.getTableCreationSupport().tableCreationOptions() ).isEqualTo( " engine=InnoDB" );
 		}
 		finally {
 			if ( previousValue != null ) {

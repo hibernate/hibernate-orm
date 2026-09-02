@@ -8,12 +8,15 @@ import jakarta.persistence.Timeout;
 import org.hibernate.HibernateException;
 import org.hibernate.Timeouts;
 import org.hibernate.dialect.DatabaseVersion;
-import org.hibernate.dialect.RowLockStrategy;
+import org.hibernate.dialect.lock.spi.RowLockStrategy;
 import org.hibernate.dialect.lock.PessimisticLockStyle;
 import org.hibernate.dialect.lock.spi.ConnectionLockTimeoutStrategy;
 import org.hibernate.dialect.lock.spi.LockTimeoutType;
 import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.lock.spi.OuterJoinLockingType;
+import org.hibernate.dialect.lock.spi.PessimisticLockKind;
+import org.hibernate.dialect.lock.spi.TableLockHintRenderer;
+import org.hibernate.dialect.lock.spi.TableLockHintRequest;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 import java.sql.Connection;
@@ -31,7 +34,8 @@ public class TransactSQLLockingSupport extends LockingSupportParameterized {
 			LockTimeoutType.QUERY,
 			RowLockStrategy.TABLE,
 			OuterJoinLockingType.IDENTIFIED,
-			SQLServerImpl.IMPL
+			SQLServerImpl.IMPL,
+			TransactSQLLockingSupport::renderSqlServerTableLockHint
 	);
 
 	public static final LockingSupport SYBASE = new TransactSQLLockingSupport(
@@ -41,7 +45,8 @@ public class TransactSQLLockingSupport extends LockingSupportParameterized {
 			LockTimeoutType.NONE,
 			RowLockStrategy.TABLE,
 			OuterJoinLockingType.IDENTIFIED,
-			SybaseImpl.IMPL
+			SybaseImpl.IMPL,
+			TransactSQLLockingSupport::renderSybaseTableLockHint
 	);
 
 	public static final LockingSupport SYBASE_ASE = new TransactSQLLockingSupport(
@@ -51,7 +56,8 @@ public class TransactSQLLockingSupport extends LockingSupportParameterized {
 			LockTimeoutType.QUERY,
 			RowLockStrategy.TABLE,
 			OuterJoinLockingType.IDENTIFIED,
-			SybaseImpl.IMPL
+			SybaseImpl.IMPL,
+			TransactSQLLockingSupport::renderSybaseAseTableLockHint
 	);
 
 	public static final LockingSupport SYBASE_LEGACY = new TransactSQLLockingSupport(
@@ -61,7 +67,8 @@ public class TransactSQLLockingSupport extends LockingSupportParameterized {
 			LockTimeoutType.NONE,
 			RowLockStrategy.TABLE,
 			OuterJoinLockingType.IDENTIFIED,
-			SybaseImpl.IMPL
+			SybaseImpl.IMPL,
+			TransactSQLLockingSupport::renderSybaseAseTableLockHint
 	);
 
 	public static LockingSupport forSybaseAnywhere(DatabaseVersion version) {
@@ -76,11 +83,15 @@ public class TransactSQLLockingSupport extends LockingSupportParameterized {
 						? RowLockStrategy.COLUMN
 						: RowLockStrategy.TABLE,
 				OuterJoinLockingType.IDENTIFIED,
-				SybaseImpl.IMPL
+				SybaseImpl.IMPL,
+				version.isBefore( 10 )
+						? TransactSQLLockingSupport::renderSybaseTableLockHint
+						: TableLockHintRenderer.NONE
 		);
 	}
 
 	private final ConnectionLockTimeoutStrategy connectionLockTimeoutStrategy;
+	private final TableLockHintRenderer tableLockHintRenderer;
 
 	public TransactSQLLockingSupport(
 			PessimisticLockStyle pessimisticLockStyle,
@@ -89,7 +100,8 @@ public class TransactSQLLockingSupport extends LockingSupportParameterized {
 			LockTimeoutType skipLocked,
 			RowLockStrategy rowLockStrategy,
 			OuterJoinLockingType outerJoinLockingType,
-			ConnectionLockTimeoutStrategy connectionLockTimeoutStrategy) {
+			ConnectionLockTimeoutStrategy connectionLockTimeoutStrategy,
+			TableLockHintRenderer tableLockHintRenderer) {
 		super(
 				pessimisticLockStyle,
 				rowLockStrategy,
@@ -99,11 +111,63 @@ public class TransactSQLLockingSupport extends LockingSupportParameterized {
 				outerJoinLockingType
 		);
 		this.connectionLockTimeoutStrategy = connectionLockTimeoutStrategy;
+		this.tableLockHintRenderer = tableLockHintRenderer;
+	}
+
+	@Override
+	public TableLockHintRenderer getTableLockHintRenderer() {
+		return tableLockHintRenderer;
 	}
 
 	@Override
 	public ConnectionLockTimeoutStrategy getConnectionLockTimeoutStrategy() {
 		return connectionLockTimeoutStrategy;
+	}
+
+	public static TableLockHintRenderer sqlServerTableLockHintRenderer(DatabaseVersion version) {
+		return version.isSameOrAfter( 9 )
+				? TransactSQLLockingSupport::renderSqlServerTableLockHint
+				: TransactSQLLockingSupport::renderLegacySqlServerTableLockHint;
+	}
+
+	private static String renderSqlServerTableLockHint(TableLockHintRequest request) {
+		final int timeout = request.timeout().milliseconds();
+		return switch ( request.lockKind() ) {
+			case UPDATE -> switch ( timeout ) {
+				case Timeouts.SKIP_LOCKED_MILLI -> " with (updlock,rowlock,readpast)";
+				case Timeouts.NO_WAIT_MILLI -> " with (updlock,holdlock,rowlock,nowait)";
+				default -> " with (updlock,holdlock,rowlock)";
+			};
+			case SHARE -> switch ( timeout ) {
+				case Timeouts.SKIP_LOCKED_MILLI -> " with (updlock,rowlock,readpast)";
+				case Timeouts.NO_WAIT_MILLI -> " with (holdlock,rowlock,nowait)";
+				default -> " with (holdlock,rowlock)";
+			};
+			case NONE -> "";
+		};
+	}
+
+	private static String renderLegacySqlServerTableLockHint(TableLockHintRequest request) {
+		return switch ( request.lockKind() ) {
+			case UPDATE -> request.timeout().milliseconds() == Timeouts.SKIP_LOCKED_MILLI
+					? " with (updlock,rowlock,readpast)"
+					: " with (updlock,rowlock)";
+			case SHARE -> " with (holdlock,rowlock)";
+			case NONE -> "";
+		};
+	}
+
+	private static String renderSybaseAseTableLockHint(TableLockHintRequest request) {
+		if ( request.lockKind() == PessimisticLockKind.NONE ) {
+			return "";
+		}
+		return request.timeout().milliseconds() == Timeouts.SKIP_LOCKED_MILLI
+				? " holdlock readpast"
+				: " holdlock";
+	}
+
+	private static String renderSybaseTableLockHint(TableLockHintRequest request) {
+		return request.lockKind() == PessimisticLockKind.NONE ? "" : " holdlock";
 	}
 
 	public static class SQLServerImpl implements ConnectionLockTimeoutStrategy {

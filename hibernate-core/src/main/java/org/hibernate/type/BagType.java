@@ -4,6 +4,8 @@
  */
 package org.hibernate.type;
 
+import org.hibernate.SPI;
+
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -14,6 +16,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.persister.collection.CollectionPersister;
 
+@SPI
 public class BagType extends CollectionType {
 
 	public BagType(String role, String propertyRef) {

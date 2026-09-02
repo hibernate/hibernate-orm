@@ -4,6 +4,9 @@
  */
 package org.hibernate.sql.exec.internal.lock;
 
+
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
+
 import org.hibernate.AssertionFailure;
 import org.hibernate.ScrollMode;
 import org.hibernate.engine.spi.EntityKey;
@@ -16,17 +19,17 @@ import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.UnionSubclassEntityPersister;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
-import org.hibernate.sql.ast.tree.expression.SqlTuple;
-import org.hibernate.sql.ast.tree.from.NamedTableReference;
-import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.from.TableReference;
-import org.hibernate.sql.ast.tree.from.UnionTableGroup;
-import org.hibernate.sql.ast.tree.from.UnionTableReference;
-import org.hibernate.sql.ast.tree.predicate.InListPredicate;
-import org.hibernate.sql.ast.tree.select.QuerySpec;
-import org.hibernate.sql.ast.tree.select.SelectStatement;
+import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
+import org.hibernate.sql.ast.spi.query.expression.JdbcParameter;
+import org.hibernate.sql.ast.spi.query.expression.SqlTuple;
+import org.hibernate.sql.ast.spi.query.from.NamedTableReference;
+import org.hibernate.sql.ast.spi.query.from.TableGroup;
+import org.hibernate.sql.ast.spi.query.from.TableReference;
+import org.hibernate.sql.ast.spi.query.from.UnionTableGroup;
+import org.hibernate.sql.ast.spi.query.from.UnionTableReference;
+import org.hibernate.sql.ast.spi.query.predicate.InListPredicate;
+import org.hibernate.sql.ast.spi.query.select.QuerySpec;
+import org.hibernate.sql.ast.spi.query.select.SelectStatement;
 import org.hibernate.sql.exec.internal.BaseExecutionContext;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
@@ -176,7 +179,7 @@ public class TableLock {
 	}
 
 	public void applyKeyRestrictions(List<EntityKey> entityKeys, SharedSessionContractImplementor session) {
-		// todo (JdbcOperation) : Consider leveraging approach based on Dialect#useArrayForMultiValuedParameters
+		// todo (JdbcOperation) : Consider the ArraySupport multi-valued parameter strategy
 		if ( entityMappingType.getIdentifierMapping().getJdbcTypeCount() == 1 ) {
 			applySimpleKeyRestriction( entityKeys, session );
 		}
@@ -245,7 +248,7 @@ public class TableLock {
 				jdbcServices.getJdbcSelectExecutor()
 						.executeQuery(
 								jdbcServices.getDialect().getSqlAstTranslatorFactory()
-										.buildSelectTranslator( sessionFactory, selectStatement )
+										.buildTranslator( new SqlAstTranslationRequest.Select( sessionFactory, selectStatement ) )
 										.translate( jdbcParameterBindings, lockingQueryOptions ),
 								jdbcParameterBindings,
 								// IMPORTANT: we need a "clean" ExecutionContext to not further apply locking

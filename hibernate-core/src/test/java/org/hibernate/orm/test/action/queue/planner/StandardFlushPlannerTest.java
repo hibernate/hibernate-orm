@@ -24,11 +24,11 @@ import org.hibernate.action.queue.internal.plan.StandardFlushPlanner;
 import org.hibernate.action.queue.internal.plan.UnbreakableUniqueCycleException;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.sql.model.MutationOperation;
-import org.hibernate.sql.model.MutationTarget;
-import org.hibernate.sql.model.MutationType;
-import org.hibernate.sql.model.TableMapping;
-import org.hibernate.sql.model.jdbc.JdbcValueDescriptor;
+import org.hibernate.sql.spi.mutation.MutationOperation;
+import org.hibernate.sql.spi.mutation.MutationTarget;
+import org.hibernate.sql.spi.mutation.MutationType;
+import org.hibernate.sql.spi.mutation.TableMapping;
+import org.hibernate.sql.spi.mutation.jdbc.JdbcValueDescriptor;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -747,7 +747,7 @@ public class StandardFlushPlannerTest {
 		}
 
 		@Override
-		public MutationTarget<?, ?> getMutationTarget() {
+		public MutationTarget getMutationTarget() {
 			return null;
 		}
 

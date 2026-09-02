@@ -44,10 +44,10 @@ public class LazyManyToManyNonUniqueIdNotFoundWhereTest {
 		factoryScope.inTransaction( session -> session.doWork( connection -> {
 			final Dialect dialect = session.getDialect();
 			try (final Statement statement = connection.createStatement()) {
-				statement.executeUpdate( dialect.getDropTableString( "MATERIAL_RATINGS" ) );
-				statement.executeUpdate( dialect.getDropTableString( "BUILDING_RATINGS" ) );
-				statement.executeUpdate( dialect.getDropTableString( "ASSOCIATION_TABLE" ) );
-				statement.executeUpdate( dialect.getDropTableString( "MAIN_TABLE" ) );
+				statement.executeUpdate( org.hibernate.testing.DialectTestSupport.dropTableCommand( dialect, "MATERIAL_RATINGS" ) );
+				statement.executeUpdate( org.hibernate.testing.DialectTestSupport.dropTableCommand( dialect, "BUILDING_RATINGS" ) );
+				statement.executeUpdate( org.hibernate.testing.DialectTestSupport.dropTableCommand( dialect, "ASSOCIATION_TABLE" ) );
+				statement.executeUpdate( org.hibernate.testing.DialectTestSupport.dropTableCommand( dialect, "MAIN_TABLE" ) );
 
 				statement.executeUpdate( """
 						create table MAIN_TABLE(

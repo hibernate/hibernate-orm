@@ -16,6 +16,7 @@ import org.hibernate.metamodel.mapping.ModelPart;
  * @author Marco Belladelli
  * @see org.hibernate.generator.OnExecutionGenerator
  */
+@org.hibernate.SPI({ org.hibernate.SPI.Role.USE, org.hibernate.SPI.Role.IMPLEMENT })
 public interface GeneratedValues {
 	/**
 	 * Register a generated value for the corresponding {@link ModelPart}

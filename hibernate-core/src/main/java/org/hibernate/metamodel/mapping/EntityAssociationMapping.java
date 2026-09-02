@@ -6,7 +6,7 @@ package org.hibernate.metamodel.mapping;
 
 import java.util.Set;
 
-import org.hibernate.sql.ast.tree.from.TableGroupJoinProducer;
+import org.hibernate.sql.ast.spi.query.from.TableGroupJoinProducer;
 
 /**
  * Commonality between `many-to-one`, `one-to-one` and `any`, as well as entity-valued collection elements and map-keys

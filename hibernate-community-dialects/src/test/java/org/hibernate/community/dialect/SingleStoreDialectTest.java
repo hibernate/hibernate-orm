@@ -4,6 +4,7 @@
  */
 package org.hibernate.community.dialect;
 
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;

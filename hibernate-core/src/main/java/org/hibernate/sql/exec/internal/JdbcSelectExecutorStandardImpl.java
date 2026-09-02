@@ -15,6 +15,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.TupleTransformer;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
+import org.hibernate.sql.exec.spi.JdbcLockingApplication;
 import org.hibernate.sql.exec.spi.JdbcSelectExecutor;
 import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.results.internal.ResultsHelper;
@@ -350,6 +351,9 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 				queryIdentifier,
 				executionContext,
 				resultSetAccess,
+				resultSetAccess instanceof DeferredResultSetAccess deferredResultSetAccess
+						&& deferredResultSetAccess.getLockingApplication() == JdbcLockingApplication.FOLLOW_ON
+						&& jdbcSelect.getLoadedValuesCollectorFactory() != null,
 				cachedResults,
 				queryResultsCacheKey,
 				mappingProducer,
@@ -376,6 +380,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 			String queryIdentifier,
 			ExecutionContext executionContext,
 			ResultSetAccess resultSetAccess,
+			boolean usesFollowOnLocking,
 			List<?> cachedResults,
 			QueryKey queryResultsCacheKey,
 			JdbcValuesMappingProducer mappingProducer,
@@ -420,7 +425,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 				queryResultsCacheKey,
 				queryIdentifier,
 				executionContext.getQueryOptions(),
-				false,
+				usesFollowOnLocking,
 				jdbcValuesMapping,
 				metadataForCache,
 				executionContext

@@ -6,7 +6,7 @@ package org.hibernate.loader.ast.spi;
 
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.metamodel.mapping.ModelPart;
-import org.hibernate.sql.ast.tree.from.RootTableGroupProducer;
+import org.hibernate.sql.ast.spi.query.from.RootTableGroupProducer;
 
 /**
  * Common details for things that can be loaded by a {@linkplain Loader loader} - generally

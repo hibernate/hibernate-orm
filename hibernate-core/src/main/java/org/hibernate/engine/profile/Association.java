@@ -22,6 +22,7 @@ public class Association {
 	 * @param owner The entity owning the association
 	 * @param associationPath The path of the association, from the entity
 	 */
+	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	public Association(EntityPersister owner, String associationPath) {
 		this.owner = owner;
 		this.associationPath = associationPath;
@@ -31,6 +32,7 @@ public class Association {
 	/**
 	 * The persister of the owning entity.
 	 */
+	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	public EntityPersister getOwner() {
 		return owner;
 	}

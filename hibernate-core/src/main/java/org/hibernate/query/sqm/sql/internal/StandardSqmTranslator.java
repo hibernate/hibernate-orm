@@ -4,14 +4,9 @@
  */
 package org.hibernate.query.sqm.sql.internal;
 
-import org.hibernate.engine.spi.LoadQueryInfluencers;
-import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.query.spi.QueryParameterBindings;
-import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.sql.spi.BaseSqmToSqlAstConverter;
-import org.hibernate.query.sqm.tree.spi.SqmStatement;
-import org.hibernate.sql.ast.spi.SqlAstCreationContext;
-import org.hibernate.sql.ast.tree.Statement;
+import org.hibernate.query.sqm.sql.spi.SqmTranslationRequest;
+import org.hibernate.sql.ast.spi.Statement;
 
 /**
  * The standard translator for SQM to SQL ASTs.
@@ -20,22 +15,7 @@ import org.hibernate.sql.ast.tree.Statement;
  */
 public class StandardSqmTranslator<T extends Statement> extends BaseSqmToSqlAstConverter<T> {
 
-	public StandardSqmTranslator(
-			SqmStatement<?> statement,
-			QueryOptions queryOptions,
-			DomainParameterXref domainParameterXref,
-			QueryParameterBindings domainParameterBindings,
-			LoadQueryInfluencers fetchInfluencers,
-			SqlAstCreationContext creationContext,
-			boolean deduplicateSelectionItems) {
-		super(
-				creationContext,
-				statement,
-				queryOptions,
-				fetchInfluencers,
-				domainParameterXref,
-				domainParameterBindings,
-				deduplicateSelectionItems
-		);
+	public StandardSqmTranslator(SqmTranslationRequest<?> request) {
+		super( request );
 	}
 }

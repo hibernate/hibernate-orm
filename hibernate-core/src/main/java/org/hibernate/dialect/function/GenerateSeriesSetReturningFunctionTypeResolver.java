@@ -20,8 +20,8 @@ import org.hibernate.query.sqm.spi.SqmExpressible;
 import org.hibernate.query.sqm.produce.function.SetReturningFunctionTypeResolver;
 import org.hibernate.query.sqm.sql.spi.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.spi.SqmTypedNode;
-import org.hibernate.sql.ast.tree.SqlAstNode;
-import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.spi.SqlAstNode;
+import org.hibernate.sql.ast.spi.query.expression.Expression;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import java.util.List;
@@ -60,6 +60,7 @@ public class GenerateSeriesSetReturningFunctionTypeResolver implements SetReturn
 	}
 
 	@Override
+	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	public SelectableMapping[] resolveFunctionReturnType(
 			List<? extends SqlAstNode> arguments,
 			String tableIdentifierVariable,

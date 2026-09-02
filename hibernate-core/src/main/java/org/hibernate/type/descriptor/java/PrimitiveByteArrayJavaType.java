@@ -17,8 +17,8 @@ import org.hibernate.engine.jdbc.BinaryStream;
 import org.hibernate.engine.jdbc.internal.ArrayBackedBinaryStream;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.compare.RowVersionComparator;
-import org.hibernate.sql.ast.spi.SqlAppender;
-import org.hibernate.sql.ast.spi.StringBuilderSqlAppender;
+import org.hibernate.sql.spi.SqlAppender;
+import org.hibernate.sql.spi.StringBuilderSqlAppender;
 import org.hibernate.type.descriptor.WrapperOptions;
 
 /**

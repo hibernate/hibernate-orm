@@ -6,8 +6,9 @@ package org.hibernate.boot.model.relational;
 
 import java.util.List;
 
+import org.hibernate.SPI;
 import org.hibernate.boot.Metadata;
-import org.hibernate.dialect.temptable.TemporaryTableColumn;
+import org.hibernate.dialect.temptable.spi.TemporaryTableColumnDescriptor;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Constraint;
 import org.hibernate.mapping.Table;
@@ -16,8 +17,16 @@ import org.hibernate.mapping.UserDefinedObjectType;
 /**
  * A no-op implementation.
  */
+@SPI
 public class ColumnOrderingStrategyLegacy implements ColumnOrderingStrategy {
 	public static final ColumnOrderingStrategyLegacy INSTANCE = new ColumnOrderingStrategyLegacy();
+
+	/**
+	 * Creates the legacy no-op strategy.
+	 */
+	@SPI
+	public ColumnOrderingStrategyLegacy() {
+	}
 
 	@Override
 	public List<Column> orderTableColumns(Table table, Metadata metadata) {
@@ -35,6 +44,8 @@ public class ColumnOrderingStrategyLegacy implements ColumnOrderingStrategy {
 	}
 
 	@Override
-	public void orderTemporaryTableColumns(List<TemporaryTableColumn> temporaryTableColumns, Metadata metadata) {
+	public <C extends TemporaryTableColumnDescriptor> void orderTemporaryTableColumns(
+			List<C> temporaryTableColumns,
+			Metadata metadata) {
 	}
 }

@@ -21,8 +21,8 @@ import org.hibernate.query.sqm.tuple.internal.AnonymousTupleType;
 import org.hibernate.query.sqm.tuple.internal.CteTupleTableGroupProducer;
 import org.hibernate.query.sqm.spi.SqmPathSource;
 import org.hibernate.query.sqm.tree.spi.select.SqmSelectQuery;
-import org.hibernate.sql.ast.spi.FromClauseAccess;
-import org.hibernate.sql.ast.spi.SqlSelection;
+import org.hibernate.sql.ast.spi.creation.FromClauseAccess;
+import org.hibernate.sql.ast.spi.query.select.SqlSelection;
 import org.hibernate.type.BasicType;
 
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;

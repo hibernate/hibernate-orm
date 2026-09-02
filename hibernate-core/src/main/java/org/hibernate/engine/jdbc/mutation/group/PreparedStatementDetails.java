@@ -10,7 +10,7 @@ import java.sql.PreparedStatement;
 import org.hibernate.Incubating;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.jdbc.Expectation;
-import org.hibernate.sql.model.TableMapping;
+import org.hibernate.sql.spi.mutation.TableMapping;
 
 /**
  * Descriptor for details about a {@link PreparedStatement}

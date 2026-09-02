@@ -70,7 +70,7 @@ public class BlobLocatorTest {
 		} );
 
 		// test mutation via setting the new clob data...
-		if ( dialect.supportsLobValueChangePropagation() ) {
+		if ( new DialectFeatureChecks.SupportsLobValueChangePropagation().apply( dialect ) ) {
 			factoryScope.inTransaction( (s) -> {
 				try {
 					var entity = s.find( LobHolder.class, id, LockMode.PESSIMISTIC_WRITE );

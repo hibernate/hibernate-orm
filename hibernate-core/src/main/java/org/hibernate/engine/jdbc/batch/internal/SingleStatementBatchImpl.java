@@ -17,7 +17,7 @@ import org.hibernate.engine.jdbc.batch.spi.SingleStatementBatch;
 import org.hibernate.engine.jdbc.batch.spi.StatementBinder;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.sql.model.PreparableMutationOperation;
+import org.hibernate.sql.spi.mutation.jdbc.PreparableMutationOperation;
 
 import static java.util.Objects.requireNonNull;
 import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_LOGGER;

@@ -12,7 +12,7 @@ import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.type.BasicType;
 
 /**
- * A {@link org.hibernate.sql.ast.tree.expression.JdbcParameter} which
+ * A {@link org.hibernate.sql.ast.spi.query.expression.JdbcParameter} which
  * binds the value of the max rows from the {@code QueryOptions} limit
  * of the current execution.
  */

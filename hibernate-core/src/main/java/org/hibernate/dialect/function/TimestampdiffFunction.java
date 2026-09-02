@@ -23,12 +23,12 @@ import org.hibernate.query.sqm.produce.function.internal.PatternRenderer;
 import org.hibernate.query.sqm.sql.spi.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.spi.SqmTypedNode;
 import org.hibernate.query.sqm.tree.spi.expression.SqmDurationUnit;
-import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
-import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.spi.SqlAppender;
-import org.hibernate.sql.ast.tree.SqlAstNode;
-import org.hibernate.sql.ast.tree.expression.DurationUnit;
-import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.spi.translation.SqlAstNodeRenderingMode;
+import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
+import org.hibernate.sql.spi.SqlAppender;
+import org.hibernate.sql.ast.spi.SqlAstNode;
+import org.hibernate.sql.ast.spi.query.expression.DurationUnit;
+import org.hibernate.sql.ast.spi.query.expression.Expression;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -45,7 +45,7 @@ import static org.hibernate.type.spi.TypeConfiguration.getSqlTemporalType;
  * The {@code timestampdiff()} or {@code datediff()} function has a funny
  * syntax which accepts a {@link TemporalUnit} as the first argument, and
  * the actual set of accepted units varies widely. This class uses
- * {@link Dialect#timestampdiffPattern(TemporalUnit, TemporalType, TemporalType)}
+ * {@link org.hibernate.dialect.temporaltype.spi.TemporalOperationSupport#timestampdiffPattern(TemporalUnit, TemporalType, TemporalType)}
  * to abstract these differences.
  *
  * @author Gavin King
@@ -94,7 +94,10 @@ public class TimestampdiffFunction
 	private PatternRenderer patternRenderer(TemporalUnit unit, Expression from, Expression to) {
 		TemporalType lhsTemporalType = getSqlTemporalType( from.getExpressionType() );
 		TemporalType rhsTemporalType = getSqlTemporalType( to.getExpressionType() );
-		return new PatternRenderer( dialect.timestampdiffPattern( unit, lhsTemporalType, rhsTemporalType ), renderingModes );
+		return new PatternRenderer(
+				dialect.getTemporalOperationSupport().timestampdiffPattern( unit, lhsTemporalType, rhsTemporalType ),
+				renderingModes
+		);
 	}
 
 	public SelfRenderingFunctionSqlAstExpression expression(

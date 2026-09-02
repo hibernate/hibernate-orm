@@ -15,17 +15,21 @@ import static org.hibernate.generator.values.internal.GeneratedValuesHelper.crea
 /**
  * @author Marco Belladelli
  */
+@org.hibernate.SPI({ org.hibernate.SPI.Role.USE, org.hibernate.SPI.Role.IMPLEMENT })
 public abstract class AbstractGeneratedValuesMutationDelegate implements GeneratedValuesMutationDelegate {
 	protected final EntityPersister persister;
 	private final EventType timing;
 	private final boolean supportsArbitraryValues;
 	private final boolean supportsRowId;
+	@org.hibernate.Internal
 	protected final GeneratedValuesMappingProducer jdbcValuesMappingProducer;
 
+	@org.hibernate.SPI(org.hibernate.SPI.Role.IMPLEMENT)
 	public AbstractGeneratedValuesMutationDelegate(EntityPersister persister, EventType timing) {
 		this( persister, timing, true, true );
 	}
 
+	@org.hibernate.SPI(org.hibernate.SPI.Role.IMPLEMENT)
 	public AbstractGeneratedValuesMutationDelegate(
 			EntityPersister persister,
 			EventType timing,

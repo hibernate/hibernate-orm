@@ -4,26 +4,22 @@
  */
 package org.hibernate.query.common;
 
-/**
- * The kind of fetch to use for the {@code FETCH} clause.
- *
- * @author Christian Beikov
- */
+/// The form of SQL `fetch` clause requested by query translation.
+///
+/// Treat the four forms independently when describing database support. In
+/// particular, ordinary row-count support does not imply percent or ties
+/// support.
+///
+/// @see org.hibernate.dialect.sql.ast.spi.FetchClauseSupport
+///
+/// @author Christian Beikov
 public enum FetchClauseType {
-	/**
-	 * Exact row count like for {@code LIMIT} clause or {@code FETCH FIRST n ROWS ONLY}.
-	 */
+	/// Exact row count such as `limit` or `fetch first n rows only`.
 	ROWS_ONLY,
-	/**
-	 * Also fetches ties if the last value is not unique {@code FETCH FIRST n ROWS WITH TIES}.
-	 */
+	/// Row count which also fetches ties when the last value is not unique.
 	ROWS_WITH_TIES,
-	/**
-	 * Row count in percent {@code FETCH FIRST n PERCENT ROWS ONLY}.
-	 */
+	/// Row count expressed as a percentage.
 	PERCENT_ONLY,
-	/**
-	 * Also fetches ties if the last value is not unique {@code FETCH FIRST n PERCENT ROWS WITH TIES}.
-	 */
+	/// Percentage which also fetches ties when the last value is not unique.
 	PERCENT_WITH_TIES
 }

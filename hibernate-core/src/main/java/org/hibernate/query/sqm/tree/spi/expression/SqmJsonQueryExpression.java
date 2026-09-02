@@ -21,12 +21,12 @@ import org.hibernate.query.sqm.sql.spi.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.spi.SqmCopyContext;
 import org.hibernate.query.sqm.tree.spi.SqmRenderContext;
 import org.hibernate.query.sqm.tree.spi.SqmTypedNode;
-import org.hibernate.sql.ast.tree.SqlAstNode;
-import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.JsonPathPassingClause;
-import org.hibernate.sql.ast.tree.expression.JsonQueryEmptyBehavior;
-import org.hibernate.sql.ast.tree.expression.JsonQueryErrorBehavior;
-import org.hibernate.sql.ast.tree.expression.JsonQueryWrapMode;
+import org.hibernate.sql.ast.spi.SqlAstNode;
+import org.hibernate.sql.ast.spi.query.expression.Expression;
+import org.hibernate.sql.ast.spi.query.expression.JsonPathPassingClause;
+import org.hibernate.sql.ast.spi.query.expression.JsonQueryEmptyBehavior;
+import org.hibernate.sql.ast.spi.query.expression.JsonQueryErrorBehavior;
+import org.hibernate.sql.ast.spi.query.expression.JsonQueryWrapMode;
 
 import jakarta.annotation.Nullable;
 

@@ -60,7 +60,8 @@ public class LengthTest {
 				.getMappingMetamodel()
 				.getEntityDescriptor( WithLongStrings.class )
 				.findAttributeMapping( "long32" );
-		if ( dialect.useMaterializedLobWhenCapacityExceeded() && Length.LONG32 > dialect.getMaxVarcharCapacity() ) {
+		if ( dialect.getLobSupport().useMaterializedLobWhenCapacityExceeded()
+				&& Length.LONG32 > dialect.getTypeSizingProfile().maxVarcharCapacity() ) {
 			assertEquals( SqlTypes.CLOB, mapping.getJdbcMapping().getJdbcType().getJdbcTypeCode() );
 		}
 		else {

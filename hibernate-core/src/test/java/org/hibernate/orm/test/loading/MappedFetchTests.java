@@ -22,19 +22,19 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.loader.ast.internal.LoaderSelectBuilder;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
-import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.from.TableGroupJoin;
-import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
-import org.hibernate.sql.ast.tree.select.QuerySpec;
-import org.hibernate.sql.ast.tree.select.SelectStatement;
+import org.hibernate.sql.ast.spi.creation.SqlAliasBaseManager;
+import org.hibernate.sql.ast.spi.query.from.TableGroup;
+import org.hibernate.sql.ast.spi.query.from.TableGroupJoin;
+import org.hibernate.sql.ast.spi.query.predicate.ComparisonPredicate;
+import org.hibernate.sql.ast.spi.query.select.QuerySpec;
+import org.hibernate.sql.ast.spi.query.select.SelectStatement;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.graph.collection.internal.DelayedCollectionFetch;
 import org.hibernate.sql.results.graph.collection.internal.EagerCollectionFetch;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.entity.EntityResult;
 import org.hibernate.sql.results.graph.Fetch;
-import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
+import org.hibernate.sql.results.graph.FetchList;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -85,7 +85,7 @@ public class MappedFetchTests {
 		assertThat( domainResult, instanceOf( EntityResult.class ) );
 
 		final EntityResult<?> entityResult = (EntityResult<?>) domainResult;
-		final ImmutableFetchList fetches = entityResult.getFetches();
+		final FetchList fetches = entityResult.getFetches();
 
 		// name + both lists
 		assertThat( fetches.size(), is( 3 ) );

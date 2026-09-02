@@ -52,7 +52,7 @@ public class OnDeleteOneToManyJoinTableTest {
 			em.remove( p );
 			assertFalse( Hibernate.isInitialized( p.children ) );
 		} );
-		inspector.assertExecutedCount( scope.getDialect().supportsCascadeDelete() ? 2 : 3 );
+		inspector.assertExecutedCount( scope.getDialect().getForeignKeySupport().supportsOnDeleteAction( org.hibernate.annotations.OnDeleteAction.CASCADE ) ? 2 : 3 );
 		scope.inTransaction( em -> {
 			assertNotNull( em.find( Child.class, child.id ) );
 		} );

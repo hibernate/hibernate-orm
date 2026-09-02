@@ -11,6 +11,8 @@ import java.util.stream.Stream;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.jdbc.spi.ParameterLimits;
+import org.hibernate.query.NativeQuery;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
@@ -90,6 +92,23 @@ public class MaxInExpressionParameterPaddingTest {
 		appendInClause( expectedInClause, 8 );
 
 		assertThat( statementInspector.getSqlQueries().get( 0 ) ).endsWith( expectedInClause.toString() );
+	}
+
+	@Test
+	public void testNativeExpansionAndBindingUseTheInExpressionLimit(EntityManagerFactoryScope scope) {
+		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		statementInspector.clear();
+
+		scope.inTransaction( entityManager -> entityManager
+				.createNativeQuery( "select * from Person where id in (:ids)", Person.class )
+				.unwrap( NativeQuery.class )
+				.setParameterList( "ids", integerRangeList( 0, 5 ) )
+				.getResultList() );
+
+		assertThat( statementInspector.getSqlQueries() )
+				.singleElement()
+				.asString()
+				.contains( "where id in (?,?,?,?,?,?,?,?)" );
 	}
 
 	static Stream<Arguments> testInClauseParameterPaddingUpToLimit() {
@@ -230,8 +249,8 @@ public class MaxInExpressionParameterPaddingTest {
 		}
 
 		@Override
-		public int getInExpressionCountLimit() {
-			return MAX_COUNT;
+		public ParameterLimits getParameterLimits() {
+			return new ParameterLimits( MAX_COUNT, 2 );
 		}
 	}
 

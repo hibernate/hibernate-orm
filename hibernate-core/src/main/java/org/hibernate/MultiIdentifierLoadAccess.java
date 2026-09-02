@@ -4,6 +4,7 @@
  */
 package org.hibernate;
 
+
 import java.util.List;
 
 import jakarta.persistence.EntityGraph;

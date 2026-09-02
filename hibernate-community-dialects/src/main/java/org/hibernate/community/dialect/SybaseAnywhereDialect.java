@@ -4,30 +4,45 @@
  */
 package org.hibernate.community.dialect;
 
+import org.hibernate.dialect.schema.spi.ConstraintDropMode;
+import org.hibernate.dialect.schema.spi.SchemaDropSupport;
+
+import org.hibernate.dialect.temporaltype.spi.CurrentTemporalSupport;
+
+import org.hibernate.SPI;
+import static org.hibernate.SPI.Role.USE;
+
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.SUPPLY;
+import org.hibernate.dialect.type.spi.TypeSizingProfile;
+
+
 
 import org.hibernate.Length;
-import org.hibernate.LockOptions;
 import org.hibernate.boot.model.FunctionContributions;
-import org.hibernate.community.dialect.identity.SybaseAnywhereIdentityColumnSupport;
+import org.hibernate.community.dialect.identity.internal.SybaseAnywhereIdentityColumnSupport;
+import org.hibernate.dialect.AbstractSybaseDialect;
 import org.hibernate.dialect.DatabaseVersion;
-import org.hibernate.dialect.SybaseDialect;
-import org.hibernate.dialect.TimeZoneSupport;
+import org.hibernate.dialect.lob.spi.LobSupport;
+import org.hibernate.dialect.lob.spi.LobSupports;
+import org.hibernate.dialect.type.spi.TimeZoneSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.dialect.identity.IdentityColumnSupport;
-import org.hibernate.dialect.lock.internal.TransactSQLLockingSupport;
+import org.hibernate.dialect.function.spi.WindowFunctionSupport;
+import org.hibernate.dialect.identity.spi.IdentityColumnSupport;
 import org.hibernate.dialect.lock.spi.LockingSupport;
-import org.hibernate.dialect.pagination.LimitHandler;
-import org.hibernate.dialect.pagination.TopLimitHandler;
+import org.hibernate.dialect.lock.spi.StandardLockingSupports;
+import org.hibernate.dialect.pagination.spi.LimitHandler;
+import org.hibernate.dialect.pagination.spi.TopLimitHandler;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.sql.ForUpdateFragment;
-import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.SqlAstTranslatorFactory;
-import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
-import org.hibernate.sql.ast.tree.Statement;
+import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslatorFactory;
+import org.hibernate.dialect.sql.ast.spi.SubquerySupport;
+import org.hibernate.dialect.sql.ast.spi.SingleRowTableSupport;
+import org.hibernate.dialect.sql.ast.spi.StandardSqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.Statement;
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 
-import java.util.Map;
 
 import static org.hibernate.type.SqlTypes.DATE;
 import static org.hibernate.type.SqlTypes.LONG32NVARCHAR;
@@ -43,7 +58,22 @@ import static org.hibernate.type.SqlTypes.TIME_WITH_TIMEZONE;
  * SQL Dialect for Sybase/SQL Anywhere
  * (Tested on ASA 8.x)
  */
-public class SybaseAnywhereDialect extends SybaseDialect {
+public class SybaseAnywhereDialect extends AbstractSybaseDialect implements CurrentTemporalSupport {
+	private SchemaDropSupport schemaDropSupport;
+
+
+	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
+	public CurrentTemporalSupport getCurrentTemporalSupport() {
+		return this;
+	}
+	private final TypeSizingProfile typeSizingProfile = TypeSizingProfile.builder( super.getTypeSizingProfile() )
+			.maxVarcharLength( Length.LONG16 ).maxVarcharCapacity( Length.LONG16 )
+			.maxNVarcharLength( Length.LONG16 ).maxNVarcharCapacity( Length.LONG16 )
+			.maxVarbinaryLength( Length.LONG16 ).maxVarbinaryCapacity( Length.LONG16 )
+			.build();
+
+	@Override public TypeSizingProfile getTypeSizingProfile() { return typeSizingProfile; }
 	private final LockingSupport lockingSupport;
 
 	public SybaseAnywhereDialect() {
@@ -52,15 +82,16 @@ public class SybaseAnywhereDialect extends SybaseDialect {
 
 	public SybaseAnywhereDialect(DialectResolutionInfo info) {
 		super(info);
-		lockingSupport = TransactSQLLockingSupport.forSybaseAnywhere( getVersion() );
+		lockingSupport = StandardLockingSupports.sybaseAnywhere( getVersion() );
 	}
 
 	public SybaseAnywhereDialect(DatabaseVersion version) {
 		super(version);
-		lockingSupport = TransactSQLLockingSupport.forSybaseAnywhere( getVersion() );
+		lockingSupport = StandardLockingSupports.sybaseAnywhere( getVersion() );
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	protected String columnType(int sqlTypeCode) {
 		return switch ( sqlTypeCode ) {
 			case DATE -> "date";
@@ -77,65 +108,56 @@ public class SybaseAnywhereDialect extends SybaseDialect {
 	}
 
 	@Override
-	public boolean useMaterializedLobWhenCapacityExceeded() {
-		return false;
+	@SPI({ IMPLEMENT, SUPPLY })
+	public LobSupport getLobSupport() {
+		return LobSupports.noCapacityPromotion();
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
 		super.initializeFunctionRegistry(functionContributions);
 		final CommonFunctionFactory functionFactory = new CommonFunctionFactory(functionContributions);
 		functionFactory.listagg_list( "varchar" );
-		if ( getVersion().isSameOrAfter( 12 ) ) {
+		if ( getWindowFunctionSupport().supports( WindowFunctionSupport.Feature.WINDOW_FUNCTIONS ) ) {
 			functionFactory.windowFunctions();
 		}
 	}
 
 	@Override
-	public int getMaxVarcharLength() {
-		return Length.LONG16;
-	}
-
-	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public SqlAstTranslatorFactory getSqlAstTranslatorFactory() {
 		return new StandardSqlAstTranslatorFactory() {
 			@Override
-			protected <T extends JdbcOperation> SqlAstTranslator<T> buildTranslator(
-					SessionFactoryImplementor sessionFactory, Statement statement) {
-				return new SybaseAnywhereSqlAstTranslator<>( sessionFactory, statement );
+			protected <S extends Statement, T extends JdbcOperation> SqlAstTranslator<T> createTranslator(
+					SqlAstTranslationRequest<S, T> request) {
+				return new SybaseAnywhereSqlAstTranslator<>( request );
 			}
 		};
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public TimeZoneSupport getTimeZoneSupport() {
 		return TimeZoneSupport.NATIVE;
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String currentDate() {
 		return "current date";
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String currentTime() {
 		return "current time";
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String currentTimestamp() {
 		return "current timestamp";
-	}
-
-	/**
-	 * Sybase Anywhere syntax would require a "DEFAULT" for each column specified,
-	 * but I suppose Hibernate use this syntax only with tables with just 1 column
-	 * <p>
-	 * {@inheritDoc}
-	 */
-	@Override
-	public String getNoColumnsInsertString() {
-		return "values (default)";
 	}
 
 	/**
@@ -147,18 +169,33 @@ public class SybaseAnywhereDialect extends SybaseDialect {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public boolean dropConstraints() {
-		return false;
+	@SPI({ IMPLEMENT, SUPPLY })
+	public synchronized SchemaDropSupport getSchemaDropSupport() {
+		if ( schemaDropSupport == null ) {
+			schemaDropSupport = new SchemaDropSupport( java.util.List.of(), ConstraintDropMode.IMPLICIT, "" );
+		}
+		return schemaDropSupport;
 	}
 
 	@Override
-	public boolean supportsWindowFunctions() {
-		return getVersion().isSameOrAfter( 12 );
+	public WindowFunctionSupport getWindowFunctionSupport() {
+		return getVersion().isBefore( 9 )
+				? WindowFunctionSupport.NONE
+				: WindowFunctionSupport.builder()
+						.features(
+								WindowFunctionSupport.Feature.WINDOW_FUNCTIONS,
+								WindowFunctionSupport.Feature.PARTITION_BY,
+								WindowFunctionSupport.Feature.ROWS_FRAME,
+								WindowFunctionSupport.Feature.RANGE_FRAME
+						)
+						.build();
 	}
 
 	@Override
-	public boolean supportsLateral() {
-		return getVersion().isSameOrAfter( 10 );
+	public SubquerySupport getSubquerySupport() {
+		return SubquerySupport.builder( super.getSubquerySupport() )
+				.feature( SubquerySupport.Feature.LATERAL, getVersion().isSameOrAfter( 10 ) )
+				.build();
 	}
 
 	@Override
@@ -172,30 +209,6 @@ public class SybaseAnywhereDialect extends SybaseDialect {
 	}
 
 	@Override
-	public String getForUpdateString() {
-		return getVersion().isBefore( 10 ) ? "" : " for update";
-	}
-
-	@Override
-	public String getForUpdateString(String aliases) {
-		return getVersion().isBefore( 10 )
-				? ""
-				: getForUpdateString() + " of " + aliases;
-	}
-
-	@Override
-	public String appendLockHint(LockOptions mode, String tableName) {
-		return getVersion().isBefore( 10 ) ? super.appendLockHint( mode, tableName ) : tableName;
-	}
-
-	@Override
-	public String applyLocksToSql(String sql, LockOptions aliasedLockOptions, Map<String, String[]> keyColumnNames) {
-		return getVersion().isBefore( 10 )
-				? super.applyLocksToSql( sql, aliasedLockOptions, keyColumnNames )
-				: sql + new ForUpdateFragment( this, aliasedLockOptions, keyColumnNames ).toFragmentString();
-	}
-
-	@Override
 	public LimitHandler getLimitHandler() {
 		//TODO: support 'TOP ? START AT ?'
 		//Note: Sybase Anywhere also supports LIMIT OFFSET,
@@ -205,13 +218,12 @@ public class SybaseAnywhereDialect extends SybaseDialect {
 	}
 
 	@Override
-	public String getDual() {
-		return "sys.dummy";
-	}
-
-	@Override
-	public String getFromDualForSelectOnly() {
-		return " from " + getDual();
+	public SingleRowTableSupport getSingleRowTableSupport() {
+		final String tableExpression = "sys.dummy";
+		return SingleRowTableSupport.builder( super.getSingleRowTableSupport() )
+				.tableExpression( tableExpression )
+				.selectOnlyFromClause( " from " + tableExpression )
+				.build();
 	}
 
 }

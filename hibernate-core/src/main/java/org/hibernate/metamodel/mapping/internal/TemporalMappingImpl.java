@@ -6,6 +6,7 @@ package org.hibernate.metamodel.mapping.internal;
 
 import jakarta.annotation.Nonnull;
 import org.hibernate.mapping.Column;
+import org.hibernate.dialect.temporal.spi.TemporalRestrictionRequest;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.temporal.TemporalTableStrategy;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
@@ -20,27 +21,27 @@ import org.hibernate.metamodel.mapping.TemporalMapping;
 import org.hibernate.persister.entity.EntityNameUse;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
-import org.hibernate.sql.ast.spi.SqlAstCreationState;
-import org.hibernate.sql.ast.spi.SqlExpressionResolver;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
-import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.SelfRenderingSqlFragmentExpression;
-import org.hibernate.sql.ast.tree.from.LazyTableGroup;
-import org.hibernate.sql.ast.tree.from.NamedTableReference;
-import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.from.TableGroupJoin;
-import org.hibernate.sql.ast.tree.from.TableReference;
-import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
-import org.hibernate.sql.ast.tree.predicate.Junction;
-import org.hibernate.sql.ast.tree.predicate.NullnessPredicate;
-import org.hibernate.sql.ast.tree.predicate.Predicate;
-import org.hibernate.sql.model.ast.ColumnValueBinding;
-import org.hibernate.sql.model.ast.ColumnValueParameter;
-import org.hibernate.sql.model.ast.ColumnWriteFragment;
+import org.hibernate.sql.ast.spi.creation.SqlAliasBaseGenerator;
+import org.hibernate.sql.ast.spi.creation.SqlAstCreationState;
+import org.hibernate.sql.ast.spi.creation.SqlExpressionResolver;
+import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
+import org.hibernate.sql.ast.spi.query.expression.Expression;
+import org.hibernate.sql.ast.spi.query.expression.SelfRenderingSqlFragmentExpression;
+import org.hibernate.sql.ast.spi.query.from.LazyTableGroup;
+import org.hibernate.sql.ast.spi.query.from.NamedTableReference;
+import org.hibernate.sql.ast.spi.query.from.TableGroup;
+import org.hibernate.sql.ast.spi.query.from.TableGroupJoin;
+import org.hibernate.sql.ast.spi.query.from.TableReference;
+import org.hibernate.sql.ast.spi.query.predicate.ComparisonPredicate;
+import org.hibernate.sql.ast.spi.query.predicate.Junction;
+import org.hibernate.sql.ast.spi.query.predicate.NullnessPredicate;
+import org.hibernate.sql.ast.spi.query.predicate.Predicate;
+import org.hibernate.sql.ast.spi.model.ColumnValueBinding;
+import org.hibernate.sql.ast.spi.model.ColumnValueParameter;
+import org.hibernate.sql.ast.spi.model.ColumnWriteFragment;
 import org.hibernate.sql.exec.internal.TemporalJdbcParameter;
-import org.hibernate.sql.model.ast.builder.MutationGroupBuilder;
-import org.hibernate.sql.model.ast.builder.TableInsertBuilder;
+import org.hibernate.sql.ast.spi.model.builder.MutationGroupBuilder;
+import org.hibernate.sql.ast.spi.model.builder.TableInsertBuilder;
 
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -98,7 +99,7 @@ public class TemporalMappingImpl implements TemporalMapping, LegacyAuxiliaryMuta
 		if ( creationContext.getSessionFactory()
 				.getChangesetCoordinator()
 				.useServerTimestamp( dialect ) ) {
-			currentTimestampFunctionName = dialect.currentTimestamp();
+			currentTimestampFunctionName = dialect.getCurrentTemporalSupport().currentTimestamp();
 			currentTimestampExpression =
 					new SelfRenderingSqlFragmentExpression( currentTimestampFunctionName, jdbcMapping );
 		}
@@ -352,14 +353,23 @@ public class TemporalMappingImpl implements TemporalMapping, LegacyAuxiliaryMuta
 	private static boolean useTemporalRestriction(LoadQueryInfluencers influencers) {
 		return !influencers.isAllRevisions()
 			&& influencers.getSessionFactory().getJdbcServices().getDialect().getTemporalTableSupport()
-						.useTemporalRestriction( influencers );
+						.useTemporalRestriction( temporalRestrictionRequest( influencers ) );
 	}
 
 	private boolean useTemporalRestriction(SqlAstCreationState creationState) {
 		final var influencers = creationState.getLoadQueryInfluencers();
 		return !influencers.isAllRevisions()
 			&& creationState.getCreationContext().getDialect().getTemporalTableSupport()
-						.useTemporalRestriction( influencers );
+						.useTemporalRestriction( temporalRestrictionRequest( influencers ) );
+	}
+
+	private static TemporalRestrictionRequest temporalRestrictionRequest(LoadQueryInfluencers influencers) {
+		final var sessionFactory = influencers.getSessionFactory();
+		return new TemporalRestrictionRequest(
+				sessionFactory.getSessionFactoryOptions().getTemporalTableStrategy(),
+				influencers.getTemporalIdentifier() != null,
+				sessionFactory.getChangesetCoordinator().isIdentifierTypeInstant()
+		);
 	}
 
 	@Override

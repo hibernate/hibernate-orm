@@ -8,12 +8,15 @@ import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.HashSet;
+import java.util.Locale;
+import java.util.Set;
 
 import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
-import org.hibernate.engine.jdbc.cursor.internal.StandardRefCursorSupport;
 import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
+import org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.env.spi.SQLStateType;
 import org.hibernate.tool.schema.extract.spi.ExtractionContext;
@@ -22,7 +25,11 @@ import org.hibernate.tool.schema.extract.spi.SequenceInformation;
 import static java.sql.ResultSet.TYPE_SCROLL_INSENSITIVE;
 import static java.util.Collections.emptyList;
 import static java.util.stream.StreamSupport.stream;
+import static org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy.LOWER;
+import static org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy.MIXED;
+import static org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy.UPPER;
 import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_LOGGER;
+import static org.hibernate.internal.util.StringHelper.splitAtCommas;
 import static org.hibernate.engine.jdbc.env.spi.SQLStateType.interpretReportedSQLStateType;
 
 /**
@@ -39,6 +46,9 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 	private final boolean supportsCatalogs;
 	private final String connectionCatalogName;
 	private final String connectionSchemaName;
+	private final IdentifierCaseStrategy unquotedIdentifierCaseStrategy;
+	private final IdentifierCaseStrategy quotedIdentifierCaseStrategy;
+	private final Set<String> sqlKeywords;
 
 	private final String databaseProductName;
 	private final String databaseProductVersion;
@@ -55,6 +65,7 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 	private final int defaultTransactionIsolation;
 	private final String url;
 	private final String driver;
+	private final int driverMajorVersion;
 	private final boolean jdbcMetadataAccessible;
 	private final int defaultFetchSize;
 
@@ -69,6 +80,9 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 		jdbcMetadataAccessible = false;
 		connectionSchemaName = null;
 		connectionCatalogName = null;
+		unquotedIdentifierCaseStrategy = UPPER;
+		quotedIdentifierCaseStrategy = MIXED;
+		sqlKeywords = Set.of();
 		supportsSchemas = true;
 		supportsCatalogs = true;
 		databaseProductName = null;
@@ -83,6 +97,7 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 		sqlStateType = null;
 		url = null;
 		driver = null;
+		driverMajorVersion = -1;
 		defaultTransactionIsolation = 0;
 		transactionIsolation = 0;
 		defaultFetchSize = -1;
@@ -102,18 +117,22 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 		supportsCatalogs = metaData.supportsCatalogsInDataManipulation();
 		connectionSchemaName = dialect.getSchemaNameResolver().resolveSchemaName( connection, dialect );
 		connectionCatalogName = connection.getCatalog();
+		unquotedIdentifierCaseStrategy = unquotedIdentifierCaseStrategy( metaData );
+		quotedIdentifierCaseStrategy = quotedIdentifierCaseStrategy( metaData );
+		sqlKeywords = sqlKeywords( metaData.getSQLKeywords() );
 		databaseProductName = metaData.getDatabaseProductName();
 		databaseProductVersion = metaData.getDatabaseProductVersion();
-		supportsRefCursors = StandardRefCursorSupport.supportsRefCursors( metaData );
-		supportsNamedParameters = dialect.supportsNamedParameters( metaData );
+		supportsRefCursors = reportedRefCursorSupport( metaData );
+		supportsNamedParameters = reportedNamedParameterSupport( metaData );
 		supportsScrollableResults = metaData.supportsResultSetType( TYPE_SCROLL_INSENSITIVE );
 		supportsGetGeneratedKeys = metaData.supportsGetGeneratedKeys();
-		supportsBatchUpdates = metaData.supportsBatchUpdates();
+		supportsBatchUpdates = reportedBatchUpdateSupport( metaData );
 		supportsDataDefinitionInTransaction = !metaData.dataDefinitionIgnoredInTransactions();
 		doesDataDefinitionCauseTransactionCommit = metaData.dataDefinitionCausesTransactionCommit();
 		sqlStateType = interpretReportedSQLStateType( metaData.getSQLStateType() );
 		url = metaData.getURL();
-		driver = metaData.getDriverName();
+		driver = driverName( metaData );
+		driverMajorVersion = driverMajorVersion( metaData, driver );
 		defaultTransactionIsolation = metaData.getDefaultTransactionIsolation();
 		transactionIsolation = connection.getTransactionIsolation();
 		defaultFetchSize = defaultFetchSize( connection );
@@ -185,6 +204,21 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 	}
 
 	@Override
+	public IdentifierCaseStrategy getUnquotedIdentifierCaseStrategy() {
+		return unquotedIdentifierCaseStrategy;
+	}
+
+	@Override
+	public IdentifierCaseStrategy getQuotedIdentifierCaseStrategy() {
+		return quotedIdentifierCaseStrategy;
+	}
+
+	@Override
+	public Set<String> getSqlKeywords() {
+		return sqlKeywords;
+	}
+
+	@Override
 	public String getDatabaseProductName() {
 		return databaseProductName;
 	}
@@ -202,6 +236,10 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 	@Override
 	public String getDriver() {
 		return driver;
+	}
+
+	int getDriverMajorVersion() {
+		return driverMajorVersion;
 	}
 
 	@Override
@@ -237,6 +275,7 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 	}
 
 	// For tests
+	@Override
 	public boolean isJdbcMetadataAccessible() {
 		return jdbcMetadataAccessible;
 	}
@@ -247,6 +286,97 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 		}
 		catch (SQLException ignore) {
 			return  -1;
+		}
+	}
+
+	private static IdentifierCaseStrategy unquotedIdentifierCaseStrategy(DatabaseMetaData metadata)
+			throws SQLException {
+		final boolean lower = metadata.storesLowerCaseIdentifiers();
+		final boolean upper = metadata.storesUpperCaseIdentifiers();
+		final boolean mixed = metadata.storesMixedCaseIdentifiers();
+		final int affirmativeCount = ( lower ? 1 : 0 ) + ( upper ? 1 : 0 ) + ( mixed ? 1 : 0 );
+		if ( affirmativeCount == 0 ) {
+			JDBC_LOGGER.trace( "JDBC driver metadata reported database stores unquoted identifiers in neither upper, lower nor mixed case" );
+			return UPPER;
+		}
+		if ( affirmativeCount > 1 ) {
+			JDBC_LOGGER.trace( "JDBC driver metadata reported database stores unquoted identifiers in more than one case" );
+		}
+		return upper ? UPPER : lower ? LOWER : MIXED;
+	}
+
+	private static IdentifierCaseStrategy quotedIdentifierCaseStrategy(DatabaseMetaData metadata)
+			throws SQLException {
+		final boolean lower = metadata.storesLowerCaseQuotedIdentifiers();
+		final boolean upper = metadata.storesUpperCaseQuotedIdentifiers();
+		final boolean mixed = metadata.storesMixedCaseQuotedIdentifiers();
+		final int affirmativeCount = ( lower ? 1 : 0 ) + ( upper ? 1 : 0 ) + ( mixed ? 1 : 0 );
+		if ( affirmativeCount == 0 ) {
+			JDBC_LOGGER.trace( "JDBC driver metadata reported database stores quoted identifiers in neither upper, lower nor mixed case" );
+			return MIXED;
+		}
+		if ( affirmativeCount > 1 ) {
+			JDBC_LOGGER.trace( "JDBC driver metadata reported database stores quoted identifiers in more than one case" );
+		}
+		return mixed ? MIXED : lower ? LOWER : UPPER;
+	}
+
+	private static Set<String> sqlKeywords(String keywordList) {
+		final var keywords = new HashSet<String>();
+		for ( String keyword : splitAtCommas( keywordList ) ) {
+			final String normalized = keyword.trim().toLowerCase( Locale.ROOT );
+			if ( !normalized.isEmpty() ) {
+				keywords.add( normalized );
+			}
+		}
+		return Set.copyOf( keywords );
+	}
+
+	private static boolean reportedNamedParameterSupport(DatabaseMetaData metadata) {
+		try {
+			return metadata.supportsNamedParameters();
+		}
+		catch (Exception ignore) {
+			return false;
+		}
+	}
+
+	private static boolean reportedBatchUpdateSupport(DatabaseMetaData metadata) {
+		try {
+			return metadata.supportsBatchUpdates();
+		}
+		catch (Exception ignore) {
+			return true;
+		}
+	}
+
+	private static boolean reportedRefCursorSupport(DatabaseMetaData metadata) {
+		try {
+			return metadata.supportsRefCursors();
+		}
+		catch (Exception ignore) {
+			return false;
+		}
+	}
+
+	private static String driverName(DatabaseMetaData metadata) {
+		try {
+			return metadata.getDriverName();
+		}
+		catch (Exception ignore) {
+			return null;
+		}
+	}
+
+	private static int driverMajorVersion(DatabaseMetaData metadata, String driverName) {
+		if ( !"Oracle JDBC driver".equals( driverName ) ) {
+			return -1;
+		}
+		try {
+			return metadata.getDriverMajorVersion();
+		}
+		catch (Exception ignore) {
+			return -1;
 		}
 	}
 

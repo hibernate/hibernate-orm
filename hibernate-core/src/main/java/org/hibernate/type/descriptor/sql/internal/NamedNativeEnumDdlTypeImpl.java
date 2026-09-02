@@ -18,7 +18,7 @@ import static org.hibernate.type.SqlTypes.NAMED_ENUM;
  * one that often <em>cannot</em> be treated as a {@code varchar}.
  *
  * @see org.hibernate.type.SqlTypes#NAMED_ENUM
- * @see Dialect#getEnumTypeDeclaration(Class)
+ * @see Dialect#getEnumSupport()
  *
  * @author Gavin King
  */
@@ -26,7 +26,7 @@ public class NamedNativeEnumDdlTypeImpl implements DdlType {
 
 	private static final String[] ENUM_KEYWORD = {"enum"};
 
-	public NamedNativeEnumDdlTypeImpl(Dialect dialect) {
+	public NamedNativeEnumDdlTypeImpl() {
 	}
 
 	@Override

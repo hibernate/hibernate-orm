@@ -13,7 +13,7 @@ import org.hibernate.generator.EventType;
 import org.hibernate.generator.OnExecutionGenerator;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.sql.model.ast.builder.AssigningTableMutationBuilder;
+import org.hibernate.sql.ast.spi.model.builder.AssigningTableMutationBuilder;
 
 ;
 

@@ -20,7 +20,7 @@ import org.hibernate.engine.jdbc.mutation.TableInclusionChecker;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementGroup;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.sql.model.PreparableMutationOperation;
+import org.hibernate.sql.spi.mutation.jdbc.PreparableMutationOperation;
 
 import org.hibernate.testing.orm.junit.SettingProvider;
 

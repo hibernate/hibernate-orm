@@ -4,6 +4,12 @@
  */
 package org.hibernate.usertype;
 
+import org.hibernate.SPI;
+
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.SUPPLY;
+import static org.hibernate.SPI.Role.USE;
+
 import java.io.Serializable;
 
 import org.hibernate.HibernateException;
@@ -139,8 +145,13 @@ import org.hibernate.metamodel.spi.ValueAccess;
  *
  * @see org.hibernate.annotations.CompositeType
  * @see org.hibernate.annotations.CompositeTypeRegistration
+ * @see org.hibernate.annotations.CompositeType#value()
+ * @see org.hibernate.annotations.CompositeTypeRegistration#userType()
+ * @see org.hibernate.annotations.MapKeyCompositeType#value()
+ * @see org.hibernate.boot.model.TypeContributions#contributeType(CompositeUserType)
  */
 @Incubating
+@SPI({ USE, IMPLEMENT, SUPPLY })
 public interface CompositeUserType<J> extends EmbeddableInstantiator {
 
 	/**

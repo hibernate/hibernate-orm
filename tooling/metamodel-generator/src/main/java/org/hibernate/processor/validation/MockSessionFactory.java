@@ -4,11 +4,14 @@
  */
 package org.hibernate.processor.validation;
 
+import org.hibernate.Internal;
+
 import jakarta.annotation.Nonnull;
 import jakarta.persistence.metamodel.Bindable;
 import jakarta.annotation.Nullable;
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EntityNameResolver;
+import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.audit.AuditStrategy;
@@ -142,7 +145,8 @@ import static java.util.Collections.singletonList;
 /**
  * @author Gavin King
  */
-@SuppressWarnings({"nullness", "initialization"})
+@SuppressWarnings({ "nullness", "initialization", "NullAway" })
+@Internal
 public abstract class MockSessionFactory
 		implements SessionFactoryImplementor, SessionFactoryOptions, QueryEngine, FunctionContributions,
 		MetadataBuildingOptions, MetadataBuildingContext, RuntimeModelCreationContext, BootstrapContext,
@@ -542,11 +546,13 @@ public abstract class MockSessionFactory
 	}
 
 	@Override
+	@Internal
 	public HqlTranslator getHqlTranslator() {
 		return new StandardHqlTranslator(nodeBuilder, new SqmCreationOptions() {});
 	}
 
 	@Override
+	@Internal
 	public SqmTranslatorFactory getSqmTranslatorFactory() {
 		return new StandardSqmTranslatorFactory();
 	}

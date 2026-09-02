@@ -11,7 +11,7 @@ import org.hibernate.MappingException;
 import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.util.IndexedConsumer;
+import org.hibernate.spi.IndexedConsumer;
 import org.hibernate.loader.ast.internal.CompoundNaturalIdLoader;
 import org.hibernate.loader.ast.internal.MultiNaturalIdLoaderInPredicate;
 import org.hibernate.loader.ast.spi.MultiNaturalIdLoader;
@@ -31,8 +31,8 @@ import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.GetterFieldImpl;
 import org.hibernate.property.access.spi.GetterMethodImpl;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.spi.SqlSelection;
-import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.spi.query.select.SqlSelection;
+import org.hibernate.sql.ast.spi.query.from.TableGroup;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
@@ -43,7 +43,6 @@ import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.FetchableContainer;
 import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.InitializerParent;
-import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -553,7 +552,7 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 		private final CompoundNaturalIdMapping naturalIdMapping;
 		private final JavaType<Object[]> arrayJtd;
 
-		private final ImmutableFetchList fetches;
+		private final org.hibernate.sql.results.graph.FetchList fetches;
 		private final boolean hasJoinFetches;
 		private final boolean containsCollectionFetches;
 
@@ -619,7 +618,7 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 		}
 
 		@Override
-		public ImmutableFetchList getFetches() {
+		public org.hibernate.sql.results.graph.FetchList getFetches() {
 			return fetches;
 		}
 
@@ -644,7 +643,7 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 		private final JavaType<Object[]> jtd;
 		private final DomainResultAssembler<?>[] subAssemblers;
 
-		private AssemblerImpl(ImmutableFetchList fetches, JavaType<Object[]> jtd, AssemblerCreationState creationState) {
+		private AssemblerImpl(org.hibernate.sql.results.graph.FetchList fetches, JavaType<Object[]> jtd, AssemblerCreationState creationState) {
 			this.jtd = jtd;
 			this.subAssemblers = new DomainResultAssembler[fetches.size()];
 			int i = 0;

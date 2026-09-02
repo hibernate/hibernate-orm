@@ -20,6 +20,7 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.schema.spi.ExistenceCheckPlacement;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
@@ -152,7 +153,8 @@ public class SchemaDropToOutputScriptTest {
 	}
 
 	public String getDropMyEntityTable() {
-		if ( metadata.getDatabase().getDialect().supportsIfExistsBeforeTableName() ) {
+		if ( metadata.getDatabase().getDialect().getIfExistsSupport().dropTablePlacement()
+				== ExistenceCheckPlacement.BEFORE_NAME ) {
 			return "drop table if exists MyEntity";
 		}
 		else {
@@ -161,7 +163,8 @@ public class SchemaDropToOutputScriptTest {
 	}
 
 	public String getDropMySecondEntityTable() {
-		if ( metadata.getDatabase().getDialect().supportsIfExistsBeforeTableName() ) {
+		if ( metadata.getDatabase().getDialect().getIfExistsSupport().dropTablePlacement()
+				== ExistenceCheckPlacement.BEFORE_NAME ) {
 			return "drop table if exists MySecondEntity";
 		}
 		else {

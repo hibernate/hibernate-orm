@@ -4,6 +4,11 @@
  */
 package org.hibernate.type;
 
+import org.hibernate.SPI;
+
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.USE;
+
 import java.sql.CallableStatement;
 import java.sql.SQLException;
 
@@ -16,6 +21,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
  *
  * @author Andrea Boriero
  */
+@SPI({ USE, IMPLEMENT })
 public interface ProcedureParameterNamedBinder<J> {
 
 	/**

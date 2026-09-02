@@ -14,11 +14,11 @@ import org.hibernate.jdbc.Expectation;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.exec.internal.JdbcParameterImpl;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
-import org.hibernate.sql.model.MutationTarget;
-import org.hibernate.sql.model.MutationType;
-import org.hibernate.sql.model.PreparableMutationOperation;
-import org.hibernate.sql.model.TableMapping;
-import org.hibernate.sql.model.jdbc.JdbcValueDescriptor;
+import org.hibernate.sql.spi.mutation.MutationTarget;
+import org.hibernate.sql.spi.mutation.MutationType;
+import org.hibernate.sql.spi.mutation.jdbc.PreparableMutationOperation;
+import org.hibernate.sql.spi.mutation.TableMapping;
+import org.hibernate.sql.spi.mutation.jdbc.JdbcValueDescriptor;
 
 import java.util.List;
 import java.util.Map;
@@ -69,7 +69,7 @@ public class FixupJdbcUpdate implements PreparableMutationOperation {
 	}
 
 	@Override
-	public MutationTarget<?,?> getMutationTarget() {
+	public MutationTarget getMutationTarget() {
 		return entityPersister;
 	}
 

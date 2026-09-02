@@ -16,6 +16,7 @@ import org.hibernate.spi.NavigablePath;
  *
  * @author Steve Ebersole
  */
+@org.hibernate.SPI({ org.hibernate.SPI.Role.USE, org.hibernate.SPI.Role.IMPLEMENT })
 public interface EntityValuedFetchable extends Fetchable, EntityValuedModelPart {
 	@Override
 	EntityFetch generateFetch(

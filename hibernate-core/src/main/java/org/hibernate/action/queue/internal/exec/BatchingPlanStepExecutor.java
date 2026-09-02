@@ -17,8 +17,8 @@ import org.hibernate.engine.jdbc.batch.spi.SingleStatementBatch;
 import org.hibernate.engine.jdbc.batch.spi.BatchObserver;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.exception.ConstraintViolationException;
-import org.hibernate.sql.model.PreparableMutationOperation;
-import org.hibernate.sql.model.SelfExecutingUpdateOperation;
+import org.hibernate.sql.spi.mutation.jdbc.PreparableMutationOperation;
+import org.hibernate.sql.spi.mutation.SelfExecutingUpdateOperation;
 
 import java.util.function.Consumer;
 

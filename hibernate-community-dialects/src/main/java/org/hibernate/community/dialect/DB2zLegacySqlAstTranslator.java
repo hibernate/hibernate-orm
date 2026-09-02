@@ -4,14 +4,18 @@
  */
 package org.hibernate.community.dialect;
 
+import org.hibernate.Internal;
 import org.hibernate.dialect.DatabaseVersion;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.dialect.sql.ast.spi.DerivedTableRenderingSupport;
+import org.hibernate.dialect.sql.ast.spi.PaginationRenderingRequest;
+import org.hibernate.dialect.sql.ast.spi.ReturningRenderingSupport;
+import org.hibernate.dialect.sql.ast.spi.StandardDerivedTableRenderingSupport;
+import org.hibernate.dialect.sql.ast.spi.StandardReturningRenderingSupport;
 import org.hibernate.query.sqm.ComparisonOperator;
-import org.hibernate.sql.ast.tree.Statement;
-import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.Literal;
-import org.hibernate.sql.ast.tree.from.QueryPartTableReference;
-import org.hibernate.sql.ast.tree.select.QueryPart;
+import org.hibernate.sql.ast.spi.Statement;
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
+import org.hibernate.sql.ast.spi.query.expression.Expression;
+import org.hibernate.sql.ast.spi.query.expression.Literal;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 
 import static org.hibernate.community.dialect.DB2zLegacyDialect.DB2_LUW_VERSION9;
@@ -26,25 +30,23 @@ public class DB2zLegacySqlAstTranslator<T extends JdbcOperation> extends DB2Lega
 
 	private final DatabaseVersion version;
 
-	public DB2zLegacySqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement, DatabaseVersion version) {
-		super( sessionFactory, statement );
+	public DB2zLegacySqlAstTranslator(SqlAstTranslationRequest<? extends Statement, T> request, DatabaseVersion version) {
+		super( request );
 		this.version = version;
 	}
 
 	@Override
-	protected boolean shouldEmulateFetchClause(QueryPart queryPart) {
-		// Percent fetches or ties fetches aren't supported in DB2 z/OS
-		// Also, variable limit isn't supported before 12.0
-		return getQueryPartForRowNumbering() != queryPart && (
-				useOffsetFetchClause( queryPart ) && !isRowsOnlyFetchClauseType( queryPart )
-						|| version.isBefore(12) && queryPart.isRoot() && hasLimit()
-						|| version.isBefore(12) && queryPart.getFetchClauseExpression() != null && !( queryPart.getFetchClauseExpression() instanceof Literal )
-		);
+	protected boolean requiresWindowPaginationForVariableLimit(PaginationRenderingRequest request) {
+		final var queryPart = request.queryPart();
+		return version.isBefore( 12 )
+				&& ( request.usesQueryOptionsLimit()
+						|| queryPart.getFetchClauseExpression() != null
+								&& !( queryPart.getFetchClauseExpression() instanceof Literal ) );
 	}
 
 	@Override
 	protected boolean supportsOffsetClause() {
-		return version.isSameOrAfter(12);
+		return version.isSameOrAfter( 12 );
 	}
 
 	@Override
@@ -54,16 +56,14 @@ public class DB2zLegacySqlAstTranslator<T extends JdbcOperation> extends DB2Lega
 	}
 
 	@Override
-	public void visitQueryPartTableReference(QueryPartTableReference tableReference) {
-		// DB2 z/OS we need the "table" qualifier for table valued functions or lateral sub-queries
-		append( "table " );
-		super.visitQueryPartTableReference( tableReference );
+	protected DerivedTableRenderingSupport getDerivedTableRenderingSupport() {
+		return StandardDerivedTableRenderingSupport.DB2_ZOS;
 	}
 
 	@Override
-	protected String getNewTableChangeModifier() {
-		// On DB2 zOS, `final` also sees the trigger data
-		return "final";
+	@Internal
+	protected ReturningRenderingSupport getReturningRenderingSupport() {
+		return StandardReturningRenderingSupport.DB2_ZOS;
 	}
 
 	@Override

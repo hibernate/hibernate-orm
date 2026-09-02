@@ -67,6 +67,7 @@ public interface CustomEntityDirtinessStrategy {
 	 *
 	 * @return {@code true} indicates the dirty check can be done; {@code false} indicates it cannot.
 	 */
+	@SPI(SPI.Role.USE)
 	boolean canDirtyCheck(Object entity, EntityPersister persister, Session session);
 
 	/**
@@ -79,6 +80,7 @@ public interface CustomEntityDirtinessStrategy {
 	 *
 	 * @return {@code true} indicates the entity is dirty; {@code false} indicates the entity is not dirty.
 	 */
+	@SPI(SPI.Role.USE)
 	boolean isDirty(Object entity, EntityPersister persister, Session session);
 
 	/**
@@ -89,6 +91,7 @@ public interface CustomEntityDirtinessStrategy {
 	 * @param persister The persister corresponding to the given entity
 	 * @param session The session from which this call originates.
 	 */
+	@SPI(SPI.Role.USE)
 	void resetDirty(Object entity, EntityPersister persister, Session session);
 
 	/**
@@ -101,6 +104,7 @@ public interface CustomEntityDirtinessStrategy {
 	 * @param session The session from which this call originates.
 	 * @param dirtyCheckContext The callback context
 	 */
+	@SPI(SPI.Role.USE)
 	void findDirty(Object entity, EntityPersister persister, Session session, DirtyCheckContext dirtyCheckContext);
 
 	/**
@@ -146,6 +150,7 @@ public interface CustomEntityDirtinessStrategy {
 		 *
 		 * @return The entity persister.
 		 */
+		@SPI(SPI.Role.USE)
 		EntityPersister getContainingPersister();
 
 		/**

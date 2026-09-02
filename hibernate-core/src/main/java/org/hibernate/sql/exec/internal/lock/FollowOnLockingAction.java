@@ -15,6 +15,7 @@ import org.hibernate.engine.spi.EffectiveEntityGraph;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.GraphSemantic;
+import org.hibernate.internal.OptimisticLockHelper;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
@@ -23,9 +24,9 @@ import org.hibernate.persister.entity.UnionSubclassEntityPersister;
 import org.hibernate.query.internal.QueryOptionsImpl;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.mutation.internal.SqmMutationStrategyHelper;
-import org.hibernate.sql.ast.spi.LockingClauseStrategy;
-import org.hibernate.sql.ast.tree.from.FromClause;
-import org.hibernate.sql.ast.tree.select.QuerySpec;
+import org.hibernate.dialect.lock.spi.LockingClauseStrategy;
+import org.hibernate.sql.ast.spi.query.from.FromClause;
+import org.hibernate.sql.ast.spi.query.select.QuerySpec;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcSelectWithActionsBuilder;
 import org.hibernate.sql.exec.spi.LoadedValuesCollector;
@@ -124,6 +125,18 @@ public class FollowOnLockingAction implements PostAction {
 
 				tableLocks.forEach( (s, tableLock) ->
 						tableLock.performActions( entityDetailsMap, lockingOptions, session ) );
+				entityDetailsMap.values().forEach( entityDetails -> {
+					if ( lockMode == LockMode.PESSIMISTIC_FORCE_INCREMENT ) {
+						OptimisticLockHelper.forceVersionIncrement(
+								entityDetails.instance(),
+								entityDetails.entry(),
+								session
+						);
+					}
+					else {
+						entityDetails.entry().setLockMode( lockMode );
+					}
+				} );
 			} );
 		}
 		finally {

@@ -7,8 +7,8 @@ package org.hibernate.engine.jdbc.mutation.internal;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
-import org.hibernate.sql.model.ast.ColumnValueParameter;
-import org.hibernate.sql.model.jdbc.JdbcValueDescriptor;
+import org.hibernate.sql.ast.spi.model.ColumnValueParameter;
+import org.hibernate.sql.spi.mutation.jdbc.JdbcValueDescriptor;
 
 import static java.util.Locale.ROOT;
 

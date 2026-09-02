@@ -9,21 +9,29 @@ import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import org.hibernate.SPI;
 import org.hibernate.type.descriptor.JdbcExtractingLogging;
 import org.hibernate.type.descriptor.JdbcTypeNameMapper;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
 
-/**
- * Convenience base implementation of {@link ValueExtractor}
- *
- * @author Steve Ebersole
- */
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.USE;
+
+/// Convenience base for a [ValueExtractor] which centralizes null handling and
+/// JDBC extraction diagnostics. Subclasses implement the result-set, indexed
+/// callable, and named callable extraction operations.
+///
+/// @param <J> the extracted Java value type
+/// @author Steve Ebersole
+@SPI({ USE, IMPLEMENT })
 public abstract class BasicExtractor<J> implements ValueExtractor<J>, Serializable {
 	private final JavaType<J> javaType;
 	private final JdbcType jdbcType;
 
+	/// Create an extractor for the paired Java and JDBC descriptors.
+	@SPI(IMPLEMENT)
 	public BasicExtractor(JavaType<J> javaType, JdbcType jdbcType) {
 		this.javaType = javaType;
 		this.jdbcType = jdbcType;

@@ -12,5 +12,6 @@ package org.hibernate.query.results.spi;
  *
  * @author Steve Ebersole
  */
+@org.hibernate.SPI({ org.hibernate.SPI.Role.USE, org.hibernate.SPI.Role.IMPLEMENT })
 public interface GraphNodeBuilder {
 }

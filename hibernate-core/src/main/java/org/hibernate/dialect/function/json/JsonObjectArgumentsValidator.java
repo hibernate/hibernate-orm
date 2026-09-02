@@ -13,9 +13,9 @@ import org.hibernate.query.sqm.produce.function.FunctionArgumentException;
 import org.hibernate.query.sqm.produce.function.FunctionParameterType;
 import org.hibernate.query.sqm.tree.spi.SqmTypedNode;
 import org.hibernate.query.sqm.tree.spi.expression.SqmJsonNullBehavior;
-import org.hibernate.sql.ast.tree.SqlAstNode;
-import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.JsonNullBehavior;
+import org.hibernate.sql.ast.spi.SqlAstNode;
+import org.hibernate.sql.ast.spi.query.expression.Expression;
+import org.hibernate.sql.ast.spi.query.expression.JsonNullBehavior;
 
 import static org.hibernate.query.sqm.produce.function.ArgumentTypesValidator.checkArgumentType;
 import static org.hibernate.query.sqm.produce.function.ArgumentTypesValidator.isUnknownExpressionType;

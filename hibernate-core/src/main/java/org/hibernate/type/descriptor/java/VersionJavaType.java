@@ -4,14 +4,19 @@
  */
 package org.hibernate.type.descriptor.java;
 
+import org.hibernate.SPI;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.WrapperOptions;
 
-/**
- * Additional contract for types which may be used to version (and optimistic lock) data.
- *
- * @author Christian Beikov
- */
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.USE;
+
+/// Additional Java-type contract for values used to version and
+/// optimistically lock data.
+///
+/// @param <T> the represented version value type
+/// @author Christian Beikov
+@SPI({ USE, IMPLEMENT })
 public interface VersionJavaType<T> extends JavaType<T> {
 	/**
 	 * Generate an initial version.

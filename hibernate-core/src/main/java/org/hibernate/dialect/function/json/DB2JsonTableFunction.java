@@ -7,7 +7,7 @@ package org.hibernate.dialect.function.json;
 import jakarta.annotation.Nullable;
 import org.hibernate.QueryException;
 import org.hibernate.dialect.function.CteGenerateSeriesFunction;
-import org.hibernate.query.sqm.tuple.internal.AnonymousTupleTableGroupProducer;
+import org.hibernate.sql.ast.spi.query.SetReturningFunctionType;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.function.SelfRenderingSqmSetReturningFunction;
 import org.hibernate.query.sqm.sql.spi.SqmToSqlAstConverter;
@@ -15,28 +15,28 @@ import org.hibernate.query.sqm.tree.spi.SqmTypedNode;
 import org.hibernate.query.sqm.tree.spi.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.spi.expression.SqmJsonTableFunction;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.spi.SqlAppender;
-import org.hibernate.sql.ast.tree.cte.CteContainer;
-import org.hibernate.sql.ast.tree.expression.CastTarget;
-import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.JsonExistsErrorBehavior;
-import org.hibernate.sql.ast.tree.expression.JsonPathPassingClause;
-import org.hibernate.sql.ast.tree.expression.JsonTableColumnDefinition;
-import org.hibernate.sql.ast.tree.expression.JsonTableColumnsClause;
-import org.hibernate.sql.ast.tree.expression.JsonTableErrorBehavior;
-import org.hibernate.sql.ast.tree.expression.JsonTableExistsColumnDefinition;
-import org.hibernate.sql.ast.tree.expression.JsonTableNestedColumnDefinition;
-import org.hibernate.sql.ast.tree.expression.JsonTableOrdinalityColumnDefinition;
-import org.hibernate.sql.ast.tree.expression.JsonTableQueryColumnDefinition;
-import org.hibernate.sql.ast.tree.expression.JsonTableValueColumnDefinition;
-import org.hibernate.sql.ast.tree.expression.JsonValueEmptyBehavior;
-import org.hibernate.sql.ast.tree.expression.JsonValueErrorBehavior;
-import org.hibernate.sql.ast.tree.expression.Literal;
-import org.hibernate.sql.ast.tree.expression.QueryTransformer;
-import org.hibernate.sql.ast.tree.from.FunctionTableGroup;
-import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.select.QuerySpec;
+import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
+import org.hibernate.sql.spi.SqlAppender;
+import org.hibernate.sql.ast.spi.query.cte.CteContainer;
+import org.hibernate.sql.ast.spi.query.expression.CastTarget;
+import org.hibernate.sql.ast.spi.query.expression.Expression;
+import org.hibernate.sql.ast.spi.query.expression.JsonExistsErrorBehavior;
+import org.hibernate.sql.ast.spi.query.expression.JsonPathPassingClause;
+import org.hibernate.sql.ast.spi.query.expression.JsonTableColumnDefinition;
+import org.hibernate.sql.ast.spi.query.expression.JsonTableColumnsClause;
+import org.hibernate.sql.ast.spi.query.expression.JsonTableErrorBehavior;
+import org.hibernate.sql.ast.spi.query.expression.JsonTableExistsColumnDefinition;
+import org.hibernate.sql.ast.spi.query.expression.JsonTableNestedColumnDefinition;
+import org.hibernate.sql.ast.spi.query.expression.JsonTableOrdinalityColumnDefinition;
+import org.hibernate.sql.ast.spi.query.expression.JsonTableQueryColumnDefinition;
+import org.hibernate.sql.ast.spi.query.expression.JsonTableValueColumnDefinition;
+import org.hibernate.sql.ast.spi.query.expression.JsonValueEmptyBehavior;
+import org.hibernate.sql.ast.spi.query.expression.JsonValueErrorBehavior;
+import org.hibernate.sql.ast.spi.query.expression.Literal;
+import org.hibernate.sql.ast.spi.query.expression.QueryTransformer;
+import org.hibernate.sql.ast.spi.query.from.FunctionTableGroup;
+import org.hibernate.sql.ast.spi.query.from.TableGroup;
+import org.hibernate.sql.ast.spi.query.select.QuerySpec;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -92,7 +92,7 @@ public class DB2JsonTableFunction extends JsonTableFunction {
 	protected void renderJsonTable(
 			SqlAppender sqlAppender,
 			JsonTableArguments arguments,
-			AnonymousTupleTableGroupProducer tupleType,
+			SetReturningFunctionType tupleType,
 			String tableIdentifierVariable,
 			SqlAstTranslator<?> walker) {
 		if ( arguments.errorBehavior() == JsonTableErrorBehavior.NULL ) {

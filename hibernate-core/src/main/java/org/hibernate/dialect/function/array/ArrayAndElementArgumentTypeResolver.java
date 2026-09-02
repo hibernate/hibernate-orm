@@ -34,6 +34,7 @@ public class ArrayAndElementArgumentTypeResolver implements AbstractFunctionArgu
 	}
 
 	@Override
+	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	public @Nullable MappingModelExpressible<?> resolveFunctionArgumentType(List<? extends SqmTypedNode<?>> arguments, int argumentIndex, SqmToSqlAstConverter converter) {
 		if ( argumentIndex == arrayIndex ) {
 			for ( int elementIndex : elementIndexes ) {

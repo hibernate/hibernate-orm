@@ -6,13 +6,13 @@ package org.hibernate.dialect.function;
 
 import jakarta.annotation.Nullable;
 import org.hibernate.metamodel.mapping.CollectionPart;
-import org.hibernate.query.sqm.tuple.internal.AnonymousTupleTableGroupProducer;
+import org.hibernate.sql.ast.spi.query.SetReturningFunctionType;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingSetReturningFunctionDescriptor;
 import org.hibernate.query.sqm.produce.function.SetReturningFunctionTypeResolver;
-import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.spi.SqlAppender;
-import org.hibernate.sql.ast.tree.SqlAstNode;
-import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
+import org.hibernate.sql.spi.SqlAppender;
+import org.hibernate.sql.ast.spi.SqlAstNode;
+import org.hibernate.sql.ast.spi.query.expression.Expression;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -58,7 +58,7 @@ public class GenerateSeriesFunction extends AbstractSqmSelfRenderingSetReturning
 	public void render(
 			SqlAppender sqlAppender,
 			List<? extends SqlAstNode> sqlAstArguments,
-			AnonymousTupleTableGroupProducer tupleType,
+			SetReturningFunctionType tupleType,
 			String tableIdentifierVariable,
 			SqlAstTranslator<?> walker) {
 		final Expression start = (Expression) sqlAstArguments.get( 0 );
@@ -72,7 +72,7 @@ public class GenerateSeriesFunction extends AbstractSqmSelfRenderingSetReturning
 			Expression start,
 			Expression stop,
 			@Nullable Expression step,
-			AnonymousTupleTableGroupProducer tupleType,
+			SetReturningFunctionType tupleType,
 			String tableIdentifierVariable,
 			SqlAstTranslator<?> walker) {
 		final JdbcType boundType = start.getExpressionType().getSingleJdbcMapping().getJdbcType();
@@ -96,7 +96,7 @@ public class GenerateSeriesFunction extends AbstractSqmSelfRenderingSetReturning
 			step.accept( walker );
 		}
 		sqlAppender.appendSql( ')' );
-		if ( tupleType.findSubPart( CollectionPart.Nature.INDEX.getName(), null ) != null ) {
+		if ( tupleType.findSubPart( CollectionPart.Nature.INDEX.getName() ) != null ) {
 			sqlAppender.append( " with ordinality" );
 		}
 	}

@@ -51,7 +51,7 @@ public class QuoteGlobalTest {
 	@Test
 	@JiraKey(value = "HHH-7890")
 	public void testQuotedUniqueConstraint(SessionFactoryScope scope) {
-		if ( scope.getSessionFactory().getJdbcServices().getDialect().supportsUniqueConstraints() ) {
+		if ( scope.getSessionFactory().getJdbcServices().getDialect().getUniqueDelegate().representation( new org.hibernate.dialect.unique.spi.UniqueKeyRepresentationRequest( false, false, false ) ) == org.hibernate.dialect.unique.spi.UniqueKeyRepresentation.CONSTRAINT ) {
 			for ( UniqueKey uk :
 					scope.getMetadataImplementor().getEntityBinding( Person.class.getName() )
 							.getTable().getUniqueKeys().values() ) {

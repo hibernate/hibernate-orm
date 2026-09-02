@@ -4,6 +4,11 @@
  */
 package org.hibernate.type;
 
+import org.hibernate.SPI;
+
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.USE;
+
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
@@ -17,10 +22,12 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
  *
  * @author Steve Ebersole
  */
+@SPI({ USE, IMPLEMENT })
 public abstract class AbstractSingleColumnStandardBasicType<T>
 		extends AbstractStandardBasicType<T>
 		implements Type {
 
+	@SPI(IMPLEMENT)
 	public AbstractSingleColumnStandardBasicType(JdbcType jdbcType, JavaType<T> javaType) {
 		super( jdbcType, javaType );
 	}

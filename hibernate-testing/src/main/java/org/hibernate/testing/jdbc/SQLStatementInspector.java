@@ -10,7 +10,7 @@ import java.util.Locale;
 
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
-import org.hibernate.sql.ast.SqlAstJoinType;
+import org.hibernate.sql.ast.spi.query.from.SqlAstJoinType;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;

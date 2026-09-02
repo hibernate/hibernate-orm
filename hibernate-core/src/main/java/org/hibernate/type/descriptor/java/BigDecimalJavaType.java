@@ -128,7 +128,7 @@ public class BigDecimalJavaType extends AbstractClassJavaType<BigDecimal> {
 
 	@Override
 	public int getDefaultSqlPrecision(Dialect dialect, JdbcType jdbcType) {
-		return dialect.getDefaultDecimalPrecision();
+		return dialect.getTypeSizingProfile().defaultDecimalPrecision();
 	}
 
 	@Override

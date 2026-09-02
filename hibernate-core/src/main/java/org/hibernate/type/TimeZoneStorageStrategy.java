@@ -4,6 +4,7 @@
  */
 package org.hibernate.type;
 
+
 import org.hibernate.Incubating;
 
 /**
@@ -14,7 +15,7 @@ import org.hibernate.Incubating;
  * @author Andrea Boriero
  *
  * @see org.hibernate.annotations.TimeZoneStorageType
- * @see org.hibernate.dialect.TimeZoneSupport
+ * @see org.hibernate.dialect.type.spi.TimeZoneSupport
  */
 @Incubating
 public enum TimeZoneStorageStrategy {

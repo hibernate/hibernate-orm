@@ -4,6 +4,8 @@
  */
 package org.hibernate.type.format.jackson;
 
+import org.hibernate.SPI;
+
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.format.AbstractJsonFormatMapper;
@@ -23,6 +25,7 @@ import java.util.List;
  * @author Yanming Zhou
  * @author Nick Rayburn
  */
+@SPI
 public final class Jackson3JsonFormatMapper extends AbstractJsonFormatMapper {
 
 	public static final String SHORT_NAME = "jackson3";

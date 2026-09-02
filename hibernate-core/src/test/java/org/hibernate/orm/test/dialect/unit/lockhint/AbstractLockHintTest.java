@@ -9,6 +9,7 @@ import java.util.HashMap;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.lock.internal.LockingSqlRewriterSupport;
 import org.hibernate.internal.util.StringHelper;
 
 import org.junit.jupiter.api.AfterEach;
@@ -66,7 +67,12 @@ public abstract class AbstractLockHintTest {
 		public void verify() {
 			final HashMap<String, String[]> aliasMap = new HashMap<>();
 			aliasMap.put( aliasToLock, new String[] { "id" } );
-			String actualProcessedSql = dialect.applyLocksToSql( rawSql, lockOptions( aliasToLock ), aliasMap );
+			String actualProcessedSql = LockingSqlRewriterSupport.rewrite(
+					dialect.getLockingSupport(),
+					rawSql,
+					lockOptions( aliasToLock ),
+					aliasMap
+			).sql();
 			assertEquals( expectedProcessedSql, actualProcessedSql );
 		}
 	}

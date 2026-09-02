@@ -4,12 +4,20 @@
  */
 package org.hibernate.property.access.spi;
 
-/**
- * Describes a strategy for accessing a persistent attribute,
- * for example: field, JavaBean-style property, or whatever.
- * <p>
- * Acts as a factory for {@link PropertyAccess} instances.
- */
+import org.hibernate.SPI;
+
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.SUPPLY;
+import static org.hibernate.SPI.Role.USE;
+
+/// Creates [PropertyAccess] instances for persistent attributes using field,
+/// JavaBeans-style property, or another access mechanism.
+///
+/// Implement a strategy to provide a custom access mechanism and select it
+/// with [org.hibernate.annotations.AttributeAccessor#strategy()].
+///
+/// @see org.hibernate.annotations.AttributeAccessor#strategy()
+@SPI({ USE, IMPLEMENT, SUPPLY })
 public interface PropertyAccessStrategy {
 	/**
 	 * Build a {@link PropertyAccess} for the indicated property

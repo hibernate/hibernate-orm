@@ -4,6 +4,8 @@
  */
 package org.hibernate.type;
 
+import org.hibernate.SPI;
+
 import java.util.Comparator;
 import java.util.TreeSet;
 
@@ -13,6 +15,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.persister.collection.CollectionPersister;
 
+@SPI
 public class SortedSetType extends SetType {
 
 	private final Comparator<?> comparator;

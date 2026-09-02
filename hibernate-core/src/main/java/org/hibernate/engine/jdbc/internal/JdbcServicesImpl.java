@@ -14,13 +14,14 @@ import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator;
 import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
+import org.hibernate.engine.jdbc.env.spi.JdbcMetadata;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.ServiceRegistryAwareService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
-import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
+import org.hibernate.sql.spi.ParameterMarkerStrategy;
 
 /**
  * Standard implementation of the {@link JdbcServices} contract
@@ -85,9 +86,16 @@ public class JdbcServicesImpl implements JdbcServices, ServiceRegistryAwareServi
 	}
 
 	@Override
+	public JdbcMetadata getJdbcMetadata() {
+		assert jdbcEnvironment != null : "JdbcEnvironment was not found";
+		return jdbcEnvironment.getJdbcMetadata();
+	}
+
+	@Deprecated(since = "8.0")
+	@Override
 	public ExtractedDatabaseMetaData getExtractedMetaDataSupport() {
 		assert jdbcEnvironment != null : "JdbcEnvironment was not found";
-		return jdbcEnvironment.getExtractedDatabaseMetaData();
+		return jdbcEnvironment.getJdbcMetadata().getExtractedDatabaseMetaData();
 	}
 
 	@Override

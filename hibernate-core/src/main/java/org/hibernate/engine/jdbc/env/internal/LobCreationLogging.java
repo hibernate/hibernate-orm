@@ -4,6 +4,7 @@
  */
 package org.hibernate.engine.jdbc.env.internal;
 
+
 import org.hibernate.Internal;
 import org.hibernate.boot.BootLogging;
 import org.hibernate.engine.jdbc.JdbcLogging;

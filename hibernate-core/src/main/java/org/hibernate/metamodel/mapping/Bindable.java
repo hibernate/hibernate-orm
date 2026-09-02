@@ -7,7 +7,7 @@ package org.hibernate.metamodel.mapping;
 import org.hibernate.Incubating;
 import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.util.IndexedConsumer;
+import org.hibernate.spi.IndexedConsumer;
 
 /**
  * Contract for things at the domain mapping level that can be bound
@@ -16,6 +16,7 @@ import org.hibernate.internal.util.IndexedConsumer;
  * @author Steve Ebersole
  */
 @Incubating
+@org.hibernate.SPI({ org.hibernate.SPI.Role.USE, org.hibernate.SPI.Role.IMPLEMENT })
 public interface Bindable extends JdbcMappingContainer {
 
 	/**
@@ -199,6 +200,7 @@ public interface Bindable extends JdbcMappingContainer {
 	/**
 	 * Functional interface for consuming the JDBC values.
 	 */
+	@org.hibernate.SPI({ org.hibernate.SPI.Role.USE, org.hibernate.SPI.Role.IMPLEMENT })
 	@FunctionalInterface
 	interface JdbcValuesConsumer extends JdbcValuesBiConsumer<Object, Object> {
 		@Override
@@ -215,6 +217,7 @@ public interface Bindable extends JdbcMappingContainer {
 	/**
 	 * Functional interface for consuming the JDBC values, along with two values of type {@code X} and {@code Y}.
 	 */
+	@org.hibernate.SPI({ org.hibernate.SPI.Role.USE, org.hibernate.SPI.Role.IMPLEMENT })
 	@FunctionalInterface
 	interface JdbcValuesBiConsumer<X, Y> {
 		/**

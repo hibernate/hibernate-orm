@@ -6,11 +6,14 @@ package org.hibernate.community.dialect;
 
 import jakarta.persistence.Timeout;
 import org.hibernate.HibernateException;
+import org.hibernate.Internal;
 import org.hibernate.Timeouts;
-import org.hibernate.dialect.RowLockStrategy;
-import org.hibernate.dialect.lock.internal.Helper;
+import org.hibernate.dialect.lock.spi.RowLockStrategy;
 import org.hibernate.dialect.lock.spi.ConnectionLockTimeoutStrategy;
+import org.hibernate.dialect.lock.spi.ConnectionLockTimeoutOperations;
 import org.hibernate.dialect.lock.spi.LockTimeoutType;
+import org.hibernate.dialect.lock.spi.LockingClauseRenderer;
+import org.hibernate.dialect.lock.spi.LockingClauseRequest;
 import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.lock.spi.OuterJoinLockingType;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -21,7 +24,9 @@ import static org.hibernate.Timeouts.NO_WAIT_MILLI;
 import static org.hibernate.Timeouts.SKIP_LOCKED_MILLI;
 import static org.hibernate.Timeouts.WAIT_FOREVER_MILLI;
 
-public class InformixLockingSupport implements LockingSupport, LockingSupport.Metadata, ConnectionLockTimeoutStrategy {
+@Internal
+public class InformixLockingSupport
+		implements LockingSupport, LockingSupport.Metadata, ConnectionLockTimeoutStrategy, LockingClauseRenderer {
 	public static final LockingSupport LOCKING_SUPPORT = new InformixLockingSupport();
 
 	public InformixLockingSupport() {
@@ -30,6 +35,16 @@ public class InformixLockingSupport implements LockingSupport, LockingSupport.Me
 	@Override
 	public Metadata getMetadata() {
 		return this;
+	}
+
+	@Override
+	public LockingClauseRenderer getLockingClauseRenderer() {
+		return this;
+	}
+
+	@Override
+	public String render(LockingClauseRequest request) {
+		return " for update";
 	}
 
 	@Override
@@ -63,7 +78,7 @@ public class InformixLockingSupport implements LockingSupport, LockingSupport.Me
 
 	@Override
 	public Timeout getLockTimeout(Connection connection, SessionFactoryImplementor factory) {
-		return Helper.getLockTimeout(
+		return ConnectionLockTimeoutOperations.query(
 				"select scs_lockmode from sysmaster:syssqlcurses where scs_sessionid = dbinfo('sessionid')",
 				(resultSet) -> {
 					final int seconds = resultSet.getInt( 1 );
@@ -85,21 +100,21 @@ public class InformixLockingSupport implements LockingSupport, LockingSupport.Me
 			throw new HibernateException( "Connection lock-timeout does not accept skip-locked" );
 		}
 		if ( milliseconds == WAIT_FOREVER_MILLI ) {
-			Helper.setLockTimeout(
+			ConnectionLockTimeoutOperations.execute(
 					"set lock mode to wait",
 					connection,
 					factory
 			);
 		}
 		else if ( milliseconds == NO_WAIT_MILLI ) {
-			Helper.setLockTimeout(
+			ConnectionLockTimeoutOperations.execute(
 					"set lock mode to not wait",
 					connection,
 					factory
 			);
 		}
 		else {
-			Helper.setLockTimeout(
+			ConnectionLockTimeoutOperations.execute(
 					(int) Math.ceil( (double) milliseconds / 1000),
 					"set lock mode to wait %s",
 					connection,

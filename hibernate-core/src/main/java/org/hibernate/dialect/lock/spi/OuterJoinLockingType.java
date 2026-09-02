@@ -4,6 +4,8 @@
  */
 package org.hibernate.dialect.lock.spi;
 
+
+
 import org.hibernate.Incubating;
 
 /**
@@ -47,8 +49,8 @@ public enum OuterJoinLockingType {
 	/**
 	 * Applying locks to joined rows is supported.  Which table rows are locked can be controlled
 	 * per table reference, generally via one of:<ul>
-	 *     <li>{@linkplain org.hibernate.dialect.RowLockStrategy#TABLE}
-	 *     <li>{@linkplain org.hibernate.dialect.RowLockStrategy#COLUMN}
+	 *     <li>{@linkplain org.hibernate.dialect.lock.spi.RowLockStrategy#TABLE}
+	 *     <li>{@linkplain org.hibernate.dialect.lock.spi.RowLockStrategy#COLUMN}
 	 *     <li>{@linkplain org.hibernate.dialect.lock.PessimisticLockStyle#TABLE_HINT}
 	 * </ul>
 	 */

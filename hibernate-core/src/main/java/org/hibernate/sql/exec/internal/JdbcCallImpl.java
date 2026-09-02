@@ -11,7 +11,7 @@ import java.util.Set;
 
 import org.hibernate.HibernateException;
 import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
+import org.hibernate.sql.ast.spi.query.expression.JdbcParameter;
 import org.hibernate.sql.exec.spi.JdbcCallFunctionReturn;
 import org.hibernate.sql.exec.spi.JdbcCallParameterExtractor;
 import org.hibernate.sql.exec.spi.JdbcCallParameterRegistration;

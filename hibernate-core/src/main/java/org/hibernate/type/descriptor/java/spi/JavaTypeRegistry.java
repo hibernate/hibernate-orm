@@ -5,6 +5,7 @@
 package org.hibernate.type.descriptor.java.spi;
 
 import org.hibernate.Internal;
+import org.hibernate.SPI;
 import org.hibernate.type.descriptor.java.ArrayJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
@@ -22,6 +23,7 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import static org.hibernate.internal.util.type.PrimitiveWrappers.canonicalize;
+import static org.hibernate.SPI.Role.SUPPLY;
 
 
 /**
@@ -78,6 +80,8 @@ public class JavaTypeRegistry implements JavaTypeBaseline.BaselineTarget, Serial
 		descriptorsByTypeName.values().forEach( consumer );
 	}
 
+	/// @see JavaType
+	@SPI(SUPPLY)
 	public void addDescriptor(JavaType<?> descriptor) {
 		final var javaType = descriptor.getJavaType();
 		final var old = descriptorsByTypeName.put( javaType.getTypeName(), descriptor );
@@ -110,6 +114,8 @@ public class JavaTypeRegistry implements JavaTypeBaseline.BaselineTarget, Serial
 		return cached == null ? null : checkCached( javaClass, cached );
 	}
 
+	/// @see JavaType
+	@SPI(SUPPLY)
 	public <J> JavaType<J> resolveDescriptor(Class<? extends J> javaType, Supplier<JavaType<J>> creator) {
 		final String javaTypeName = javaType.getTypeName();
 		final var cached = descriptorsByTypeName.get( javaTypeName );
@@ -152,6 +158,8 @@ public class JavaTypeRegistry implements JavaTypeBaseline.BaselineTarget, Serial
 		return resolveDescriptor( javaType, JavaTypeRegistry::createMutabilityPlan );
 	}
 
+	/// @see JavaType
+	@SPI(SUPPLY)
 	public <J> JavaType<J> resolveDescriptor(JavaType<J> javaType) {
 		return resolveDescriptor( javaType.getJavaTypeClass(), () -> javaType );
 	}

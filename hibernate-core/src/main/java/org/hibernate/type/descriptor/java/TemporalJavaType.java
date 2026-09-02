@@ -7,16 +7,20 @@ package org.hibernate.type.descriptor.java;
 import java.sql.Types;
 
 import org.hibernate.Incubating;
+import org.hibernate.SPI;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import jakarta.persistence.TemporalType;
 
-/**
- * Specialized JavaType for temporal types.
- *
- * @author Steve Ebersole
- */
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.USE;
+
+/// Specialized [JavaType] for temporal values and precision resolution.
+///
+/// @param <T> the represented temporal value type
+/// @author Steve Ebersole
 @Incubating
+@SPI({ USE, IMPLEMENT })
 public interface TemporalJavaType<T> extends BasicJavaType<T> {
 
 	static int resolveJdbcTypeCode(

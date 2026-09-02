@@ -8,9 +8,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
-import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.SqlTuple;
+import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
+import org.hibernate.sql.ast.spi.query.expression.Expression;
+import org.hibernate.sql.ast.spi.query.expression.SqlTuple;
 
 /**
  * @author Steve Ebersole

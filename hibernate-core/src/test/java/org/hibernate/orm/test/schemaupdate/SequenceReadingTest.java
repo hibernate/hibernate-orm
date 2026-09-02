@@ -19,8 +19,8 @@ import org.hibernate.testing.orm.junit.ServiceRegistryProducer;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 import org.hibernate.tool.schema.TargetType;
-import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
+import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractors;
 import org.junit.jupiter.api.Test;
 
 import java.util.EnumSet;
@@ -28,7 +28,7 @@ import java.util.EnumSet;
 import static org.hibernate.cfg.JdbcSettings.DIALECT;
 
 /**
- * Regression test fr a bug in org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl
+ * Regression test for sequence metadata extraction disabled by the Dialect.
  *
  * @author Steve Ebersole
  *
@@ -71,12 +71,7 @@ public class SequenceReadingTest implements ServiceRegistryProducer {
 	public static class MyExtendedH2Dialect extends H2Dialect {
 		@Override
 		public SequenceInformationExtractor getSequenceInformationExtractor() {
-			return SequenceInformationExtractorNoOpImpl.INSTANCE;
-		}
-
-		@Override
-		public String getQuerySequencesString() {
-			return null;
+			return SequenceInformationExtractors.none();
 		}
 	}
 

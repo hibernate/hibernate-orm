@@ -10,6 +10,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.UUID;
 
+import org.hibernate.SPI;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
@@ -17,17 +18,24 @@ import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.internal.JdbcLiteralFormatterUUIDData;
 
-/**
- * Specialized type mapping for {@link UUID} and the UUID SQL data type.
- *
- * @author Steve Ebersole
- * @author David Driscoll
- */
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.USE;
+
+/// JDBC descriptor for [UUID] and the UUID SQL data type.
+///
+/// @author Steve Ebersole
+/// @author David Driscoll
+@SPI({ USE, IMPLEMENT })
 public class UUIDJdbcType implements JdbcType {
 	/**
 	 * Singleton access
 	 */
 	public static final UUIDJdbcType INSTANCE = new UUIDJdbcType();
+
+	/// Constructor for provider subclasses.
+	@SPI(IMPLEMENT)
+	public UUIDJdbcType() {
+	}
 
 	@Override
 	public int getJdbcTypeCode() {

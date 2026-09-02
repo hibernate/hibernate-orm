@@ -20,8 +20,10 @@ import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.aggregate.internal.AggregateCastTypeSizingSupport;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.loader.internal.AliasConstantsHelper;
+import org.hibernate.internal.util.QuotingHelper;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.sql.Template;
 import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
@@ -115,6 +117,7 @@ public sealed class Column
 		this.value = value;
 	}
 
+	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	public JdbcMapping getType() {
 		return getValue().getSelectableType( getMetadataCollector(), getTypeIndex() );
 	}
@@ -172,11 +175,11 @@ public sealed class Column
 	}
 
 	private static boolean isOpenQuote(char ch) {
-		return Dialect.QUOTE.indexOf( ch ) > -1;
+		return QuotingHelper.isIdentifierQuote( ch );
 	}
 
 	private static boolean isCloseQuote(char ch) {
-		return Dialect.CLOSED_QUOTE.indexOf( ch ) > -1;
+		return QuotingHelper.isClosingIdentifierQuote( ch );
 	}
 
 	/**
@@ -191,7 +194,7 @@ public sealed class Column
 	 */
 	public String getQuotedName(Dialect dialect) {
 		return safeInterning( quoted
-				? dialect.openQuote() + name + dialect.closeQuote()
+				? dialect.getIdentifierSupport().openQuote() + name + dialect.getIdentifierSupport().closeQuote()
 				: name );
 	}
 
@@ -216,12 +219,12 @@ public sealed class Column
 
 	private @Nonnull String qualifyAlias(Dialect dialect, String suffix, String alias) {
 		final int suffixLength = suffix.length();
-		final int maxAliasLength = dialect.getMaxAliasLength();
+		final int maxAliasLength = dialect.getIdentifierSupport().getMaxAliasLength();
 		final int freeLength = maxAliasLength - suffixLength;
 		final boolean useRawName =
 				name.length() <= freeLength
 				&& !quoted
-				&& !name.equalsIgnoreCase( dialect.rowId(null) );
+				&& !name.equalsIgnoreCase( dialect.getRowIdSupport().resolveExpression( null ) );
 		if ( !useRawName ) {
 			if ( suffixLength >= maxAliasLength ) {
 				throw new MappingException(
@@ -326,7 +329,8 @@ public sealed class Column
 				sqlTypeName = descriptor.getTypeName( size, type, ddlTypeRegistry );
 				sqlTypeLob = descriptor.isLob( size );
 				// TODO: this is rubbish (could not find another way)
-				if ( dialect.getAggregateSupport().useLengthsInCasts() ) {
+				if ( dialect.getAggregateSupport() instanceof AggregateCastTypeSizingSupport sizingSupport
+						&& sizingSupport.useLengthsInCasts() ) {
 					length = size.getLength();
 				}
 			}

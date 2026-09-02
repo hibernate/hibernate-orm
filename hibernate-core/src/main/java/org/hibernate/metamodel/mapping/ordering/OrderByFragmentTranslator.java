@@ -13,6 +13,7 @@ import org.hibernate.QueryException;
 import org.hibernate.grammars.ordering.OrderingLexer;
 import org.hibernate.grammars.ordering.OrderingParser;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.metamodel.mapping.ordering.spi.OrderByFragment;
 import org.hibernate.metamodel.mapping.ordering.ast.ParseTreeVisitor;
 
 

@@ -4,6 +4,7 @@
  */
 package org.hibernate.persister.entity.mutation;
 
+import org.hibernate.Internal;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
@@ -22,6 +23,7 @@ import org.hibernate.sql.model.MutationOperationGroup;
  *
  * @author Gavin King
  */
+@Internal
 public class UpdateCoordinatorTemporal extends AbstractTemporalUpdateCoordinator {
 	private final TemporalMapping temporalMapping;
 	private final MutationOperationGroup endingUpdateGroup;

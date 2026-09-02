@@ -13,6 +13,7 @@ See also:
 * `design/sql-ast.adoc`
 * `design/sql-ast-model.adoc`
 * `design/sql-ast-sources.adoc`
+* `classification-tooling.adoc`
 
 == What a SQL AST translator does
 

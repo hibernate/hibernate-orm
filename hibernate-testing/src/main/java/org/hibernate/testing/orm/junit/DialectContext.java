@@ -115,7 +115,7 @@ public final class DialectContext {
 
 	public static void awaitTimestampTick() {
 		final Dialect dialect = getDialect();
-		final long sleepMillis = switch ( dialect.getDefaultTimestampPrecision() ) {
+		final long sleepMillis = switch ( dialect.getTypeSizingProfile().defaultTimestampPrecision() ) {
 			case 0 -> 1_000;
 			case 1 -> 100;
 			case 2 -> 10;

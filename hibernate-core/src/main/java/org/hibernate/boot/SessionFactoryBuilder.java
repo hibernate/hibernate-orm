@@ -4,6 +4,7 @@
  */
 package org.hibernate.boot;
 
+import org.hibernate.SPI;
 import java.util.function.Supplier;
 
 import org.hibernate.CustomEntityDirtinessStrategy;
@@ -666,17 +667,16 @@ public interface SessionFactoryBuilder {
 	 */
 	SessionFactoryBuilder applySqlComments(boolean enabled);
 
-	/**
-	 * Register a {@link SqmFunctionDescriptor SQL function} with the underlying
-	 * {@link org.hibernate.query.sqm.function.SqmFunctionRegistry}.
-	 *
-	 * @param registrationName The function name to register it under
-	 * @param functionDescriptor The {@link SqmFunctionDescriptor}
-	 *
-	 * @return {@code this}, for method chaining
-	 */
+	/// Supply a [SqmFunctionDescriptor] to the underlying
+	/// [org.hibernate.query.sqm.function.SqmFunctionRegistry].
+	///
+	/// @param registrationName the function name to register it under
+	/// @param functionDescriptor the descriptor
+	/// @return `this` for method chaining
+	/// @see SqmFunctionDescriptor
 	// Ultimately I would like this to move to {@link MetadataBuilder} in conjunction with allowing mappings to reference SQLFunctions.
 	// today mappings can only name SQL functions directly, not through the SQLFunctionRegistry indirection
+	@SPI(SPI.Role.SUPPLY)
 	SessionFactoryBuilder applySqlFunction(String registrationName, SqmFunctionDescriptor functionDescriptor);
 
 	/**

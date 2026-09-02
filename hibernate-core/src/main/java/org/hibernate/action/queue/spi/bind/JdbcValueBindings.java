@@ -13,7 +13,7 @@ import org.hibernate.engine.jdbc.mutation.spi.BindingGroup;
 import org.hibernate.engine.jdbc.mutation.spi.JdbcValueDescriptorAccess;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.SelectableMapping;
-import org.hibernate.sql.model.PreparableMutationOperation;
+import org.hibernate.sql.spi.mutation.jdbc.PreparableMutationOperation;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;

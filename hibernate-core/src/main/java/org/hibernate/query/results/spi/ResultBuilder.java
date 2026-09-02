@@ -12,27 +12,29 @@ import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 
 import java.util.function.BiConsumer;
 
-/**
- * Responsible for building a single {@link DomainResult}.
- * Given the following HQL for illustration,
- * <pre>
- *     select b from Book b join fetch b.authors
- * </pre>
- * we have a single result : `Book(b)`
- *
- * @see FetchBuilder
- *
- * @author Steve Ebersole
- */
+/// Builds one [DomainResult] for a native-query result-set mapping.
+///
+/// Given `select b from Book b join fetch b.authors`, the result builder
+/// produces the single `Book(b)` result. Implement this contract when a
+/// provider needs a custom result shape, and register the instance through
+/// [ResultSetMapping#addResultBuilder(ResultBuilder)].
+///
+/// @see FetchBuilder
+/// @see ResultSetMapping#addResultBuilder(ResultBuilder)
+///
+/// @author Steve Ebersole
 @Incubating
+@org.hibernate.SPI({ org.hibernate.SPI.Role.USE, org.hibernate.SPI.Role.IMPLEMENT, org.hibernate.SPI.Role.SUPPLY })
 public interface ResultBuilder extends GraphNodeBuilder {
-	/**
-	 * Build a result
-	 *
-	 * @param jdbcResultsMetadata The JDBC values and metadata
-	 * @param resultPosition The position in the domain results for the result to be built
-	 * @param domainResultCreationState Access to useful stuff
-	 */
+	/// Builds and supplies one domain result.
+	///
+	/// @see FetchBuilder
+	/// @see DomainResult
+	///
+	/// @param jdbcResultsMetadata the JDBC values and metadata
+	/// @param resultPosition the position in the domain results for the result to be built
+	/// @param domainResultCreationState access to result-graph creation services
+	@org.hibernate.SPI(org.hibernate.SPI.Role.SUPPLY)
 	DomainResult<?> buildResult(
 			JdbcValuesMetadata jdbcResultsMetadata,
 			int resultPosition,
@@ -47,6 +49,7 @@ public interface ResultBuilder extends GraphNodeBuilder {
 
 	ResultBuilder cacheKeyInstance();
 
+	@org.hibernate.SPI(org.hibernate.SPI.Role.SUPPLY)
 	default void visitFetchBuilders(BiConsumer<Fetchable, FetchBuilder> consumer) {
 	}
 }

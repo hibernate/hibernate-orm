@@ -10,7 +10,7 @@ import org.hibernate.query.results.spi.ResultBuilder;
 import org.hibernate.query.results.internal.DomainResultCreationStateImpl;
 import org.hibernate.query.results.internal.ResultSetMappingSqlSelection;
 import org.hibernate.resource.beans.spi.ManagedBean;
-import org.hibernate.sql.ast.spi.SqlSelection;
+import org.hibernate.sql.ast.spi.query.select.SqlSelection;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
@@ -22,7 +22,7 @@ import java.util.Objects;
 
 import static org.hibernate.query.results.internal.ResultsHelper.impl;
 import static org.hibernate.query.results.internal.ResultsHelper.jdbcPositionToValuesArrayPosition;
-import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnReferenceKey;
+import static org.hibernate.sql.ast.spi.creation.SqlExpressionResolver.createColumnReferenceKey;
 
 /**
  * ResultBuilder for scalar results defined via:<ul>

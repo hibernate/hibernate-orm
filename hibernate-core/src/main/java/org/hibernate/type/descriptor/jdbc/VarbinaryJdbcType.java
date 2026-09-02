@@ -85,8 +85,8 @@ public class VarbinaryJdbcType implements AdjustableJdbcType {
 	protected boolean shouldUseMaterializedLob(JdbcTypeIndicators indicators) {
 		final Dialect dialect = indicators.getDialect();
 		final long length = indicators.getColumnLength();
-		final long maxLength = dialect.getMaxVarbinaryCapacity();
-		return length > maxLength && dialect.useMaterializedLobWhenCapacityExceeded();
+		final long maxLength = dialect.getTypeSizingProfile().maxVarbinaryCapacity();
+		return length > maxLength && dialect.getLobSupport().useMaterializedLobWhenCapacityExceeded();
 	}
 
 	public <X> ValueBinder<X> getBinder(final JavaType<X> javaType) {

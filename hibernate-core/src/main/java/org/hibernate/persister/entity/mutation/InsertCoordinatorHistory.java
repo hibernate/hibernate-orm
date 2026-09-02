@@ -20,10 +20,10 @@ import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.TemporalMapping;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
+import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
 import org.hibernate.sql.model.MutationOperationGroup;
-import org.hibernate.sql.model.MutationType;
-import org.hibernate.sql.model.ast.builder.TableInsertBuilderStandard;
+import org.hibernate.sql.spi.mutation.MutationType;
+import org.hibernate.sql.ast.spi.model.builder.TableInsertBuilderStandard;
 import org.hibernate.sql.model.internal.MutationGroupSingle;
 
 import static org.hibernate.persister.entity.mutation.InsertCoordinatorStandard.getPropertiesToInsert;
@@ -36,6 +36,7 @@ import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.sin
  *
  * @author Gavin King
  */
+@org.hibernate.Internal
 public class InsertCoordinatorHistory extends AbstractMutationCoordinator implements InsertCoordinator {
 	private final InsertCoordinator currentInsertCoordinator;
 	private final EntityTableMapping identifierTableMapping;

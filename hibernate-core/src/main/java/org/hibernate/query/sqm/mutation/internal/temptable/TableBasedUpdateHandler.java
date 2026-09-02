@@ -4,9 +4,11 @@
  */
 package org.hibernate.query.sqm.mutation.internal.temptable;
 
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
+
 import jakarta.annotation.Nullable;
-import org.hibernate.dialect.temptable.TemporaryTable;
-import org.hibernate.dialect.temptable.TemporaryTableStrategy;
+import org.hibernate.dialect.temptable.internal.TemporaryTable;
+import org.hibernate.dialect.temptable.spi.TemporaryTableStrategy;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.MutableObject;
@@ -31,28 +33,28 @@ import org.hibernate.query.sqm.mutation.spi.AfterUseAction;
 import org.hibernate.query.sqm.spi.SqmParameterMappingModelResolutionAccess;
 import org.hibernate.query.sqm.tree.spi.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.spi.update.SqmUpdateStatement;
-import org.hibernate.sql.ast.SqlAstTranslatorFactory;
-import org.hibernate.sql.ast.spi.SqlSelection;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
-import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
-import org.hibernate.sql.ast.tree.expression.QueryLiteral;
-import org.hibernate.sql.ast.tree.expression.SqlTuple;
-import org.hibernate.sql.ast.tree.from.NamedTableReference;
-import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.from.TableReference;
-import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
-import org.hibernate.sql.ast.tree.from.UnionTableReference;
-import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
-import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
-import org.hibernate.sql.ast.tree.predicate.ExistsPredicate;
-import org.hibernate.sql.ast.tree.predicate.InSubQueryPredicate;
-import org.hibernate.sql.ast.tree.predicate.Predicate;
-import org.hibernate.sql.ast.tree.predicate.PredicateCollector;
-import org.hibernate.sql.ast.tree.select.QuerySpec;
-import org.hibernate.sql.ast.tree.select.SelectClause;
-import org.hibernate.sql.ast.tree.update.Assignment;
-import org.hibernate.sql.ast.tree.update.UpdateStatement;
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.query.select.SqlSelection;
+import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
+import org.hibernate.sql.ast.spi.query.expression.Expression;
+import org.hibernate.sql.ast.spi.query.expression.JdbcParameter;
+import org.hibernate.sql.ast.spi.query.expression.QueryLiteral;
+import org.hibernate.sql.ast.spi.query.expression.SqlTuple;
+import org.hibernate.sql.ast.spi.query.from.NamedTableReference;
+import org.hibernate.sql.ast.spi.query.from.TableGroup;
+import org.hibernate.sql.ast.spi.query.from.TableReference;
+import org.hibernate.sql.ast.spi.query.from.TableReferenceJoin;
+import org.hibernate.sql.ast.spi.query.from.UnionTableReference;
+import org.hibernate.sql.ast.spi.query.insert.InsertSelectStatement;
+import org.hibernate.sql.ast.spi.query.predicate.ComparisonPredicate;
+import org.hibernate.sql.ast.spi.query.predicate.ExistsPredicate;
+import org.hibernate.sql.ast.spi.query.predicate.InSubQueryPredicate;
+import org.hibernate.sql.ast.spi.query.predicate.Predicate;
+import org.hibernate.sql.ast.spi.query.predicate.PredicateCollector;
+import org.hibernate.sql.ast.spi.query.select.QuerySpec;
+import org.hibernate.sql.ast.spi.query.select.SelectClause;
+import org.hibernate.sql.ast.spi.query.update.Assignment;
+import org.hibernate.sql.ast.spi.query.update.UpdateStatement;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
 import org.hibernate.sql.exec.internal.SqlTypedMappingJdbcParameter;
 import org.hibernate.sql.exec.spi.ExecutionContext;
@@ -79,7 +81,7 @@ import static org.hibernate.query.sqm.mutation.internal.temptable.ExecuteWithTem
 import static org.hibernate.query.sqm.mutation.internal.temptable.ExecuteWithTemporaryTableHelper.performAfterTemporaryTableUseActions;
 import static org.hibernate.query.sqm.mutation.internal.temptable.ExecuteWithTemporaryTableHelper.performBeforeTemporaryTableUseActions;
 import static org.hibernate.query.sqm.mutation.internal.temptable.ExecuteWithTemporaryTableHelper.saveIntoTemporaryTable;
-import static org.hibernate.sql.ast.tree.predicate.Predicate.combinePredicates;
+import static org.hibernate.sql.ast.spi.query.predicate.Predicate.combinePredicates;
 
 /**
 * @author Steve Ebersole
@@ -507,7 +509,7 @@ public class TableBasedUpdateHandler
 		insertSqlAst.addTargetColumnReferences( targetColumnReferences.toArray( new ColumnReference[0] ) );
 		insertSqlAst.setSourceSelectStatement( insertSourceSelectQuerySpec );
 
-		return sqlAstTranslatorFactory.buildMutationTranslator( sessionFactory, insertSqlAst )
+		return sqlAstTranslatorFactory.buildTranslator( new SqlAstTranslationRequest.QueryMutation( sessionFactory, insertSqlAst ) )
 				.translate( firstJdbcParameterBindings, executionContext.getQueryOptions() );
 	}
 
@@ -571,7 +573,7 @@ public class TableBasedUpdateHandler
 		final var sqlAst =
 				new UpdateStatement( dmlTableReference, assignments,
 						new InSubQueryPredicate( keyExpression, idTableSubQuery, false ) );
-		return sqlAstTranslatorFactory.buildMutationTranslator( executionContext.getSession().getFactory(), sqlAst )
+		return sqlAstTranslatorFactory.buildTranslator( new SqlAstTranslationRequest.QueryMutation( executionContext.getSession().getFactory(), sqlAst ) )
 				.translate( firstJdbcParameterBindings, executionContext.getQueryOptions() );
 	}
 

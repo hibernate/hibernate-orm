@@ -8,17 +8,18 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.model.MutationOperationGroup;
-import org.hibernate.sql.model.MutationType;
-import org.hibernate.sql.model.ast.builder.MutationGroupBuilder;
-import org.hibernate.sql.model.ast.builder.TableDeleteBuilder;
-import org.hibernate.sql.model.ast.builder.TableDeleteBuilderSkipped;
-import org.hibernate.sql.model.ast.builder.TableDeleteBuilderStandard;
+import org.hibernate.sql.spi.mutation.MutationType;
+import org.hibernate.sql.ast.spi.model.builder.MutationGroupBuilder;
+import org.hibernate.sql.ast.spi.model.builder.TableDeleteBuilder;
+import org.hibernate.sql.ast.internal.model.builder.TableDeleteBuilderSkipped;
+import org.hibernate.sql.ast.spi.model.builder.TableDeleteBuilderStandard;
 
 /**
  * Coordinates standard deleting of an entity.
  *
  * @author Steve Ebersole
  */
+@org.hibernate.Internal
 public class DeleteCoordinatorStandard extends AbstractDeleteCoordinator {
 
 	public DeleteCoordinatorStandard(EntityPersister entityPersister, SessionFactoryImplementor factory) {

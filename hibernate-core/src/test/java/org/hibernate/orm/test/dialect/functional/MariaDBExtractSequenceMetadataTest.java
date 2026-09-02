@@ -60,7 +60,7 @@ public class MariaDBExtractSequenceMetadataTest {
 	public void testHibernateLaunchedSuccessfully() {
 		JdbcEnvironment jdbcEnvironment = ServiceRegistryBuilder.buildServiceRegistry( Environment.getProperties() )
 				.getService( JdbcEnvironment.class );
-		Assertions.assertFalse( jdbcEnvironment.getExtractedDatabaseMetaData().getSequenceInformationList().isEmpty() );
+		Assertions.assertFalse( jdbcEnvironment.getJdbcMetadata().getSequenceInformationList().isEmpty() );
 	}
 
 	@AfterAll

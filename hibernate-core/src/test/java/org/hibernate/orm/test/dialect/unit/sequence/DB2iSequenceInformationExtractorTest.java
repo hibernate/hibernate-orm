@@ -7,8 +7,6 @@ package org.hibernate.orm.test.dialect.unit.sequence;
 import org.hibernate.dialect.DB2iDialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.testing.orm.junit.RequiresDialect;
-import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;
-import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 
@@ -26,12 +24,12 @@ public class DB2iSequenceInformationExtractorTest extends AbstractSequenceInform
 	}
 
 	@Override
-	public String expectedQuerySequencesString() {
-		return null;
+	public boolean expectsSequenceMetadata() {
+		return false;
 	}
 
 	@Override
-	public Class<? extends SequenceInformationExtractor> expectedSequenceInformationExtractor() {
-		return SequenceInformationExtractorNoOpImpl.class;
+	public String expectedQuerySequencesString() {
+		return null;
 	}
 }

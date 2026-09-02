@@ -13,6 +13,7 @@ import java.sql.Types;
 
 import jakarta.annotation.Nonnull;
 import org.hibernate.HibernateException;
+import org.hibernate.SPI;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.build.AllowReflection;
@@ -32,19 +33,24 @@ import org.hibernate.type.spi.TypeConfiguration;
 
 import static java.lang.reflect.Array.get;
 import static java.lang.reflect.Array.getLength;
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.USE;
 import static org.hibernate.type.descriptor.jdbc.StructHelper.instantiate;
 
-/**
- * Descriptor for {@link Types#ARRAY ARRAY} handling.
- *
- * @author Christian Beikov
- * @author Jordan Gigov
- */
+/// JDBC descriptor for [Types#ARRAY] values. Provider subclasses may refine
+/// binding, extraction, literal, or aggregate behavior while retaining the
+/// supplied element descriptor.
+///
+/// @author Christian Beikov
+/// @author Jordan Gigov
 @AllowReflection // See https://hibernate.atlassian.net/browse/HHH-16809
+@SPI({ USE, IMPLEMENT })
 public class ArrayJdbcType implements JdbcType {
 
 	private final JdbcType elementJdbcType;
 
+	/// Create an array descriptor for the supplied element descriptor.
+	@SPI(IMPLEMENT)
 	public ArrayJdbcType(JdbcType elementJdbcType) {
 		this.elementJdbcType = elementJdbcType;
 	}

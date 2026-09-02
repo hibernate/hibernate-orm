@@ -37,6 +37,7 @@ import static org.hibernate.Hibernate.isInitialized;
  * descriptive JSON output, that is more appropriate for representing
  * complex data structures for displaying purposes.
  */
+@org.hibernate.Internal
 public class DescriptiveJsonGeneratingVisitor extends JsonGeneratingVisitor {
 
 	private Map<String, IdentitySet<Object>> circularityTracker;

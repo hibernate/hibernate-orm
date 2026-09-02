@@ -4,13 +4,12 @@
  */
 package org.hibernate.orm.test.dialect;
 
-import org.hibernate.dialect.pagination.LimitHandler;
-import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
+import org.hibernate.dialect.pagination.spi.LimitHandler;
+import org.hibernate.dialect.pagination.spi.OffsetFetchLimitHandler;
+import org.hibernate.dialect.pagination.spi.PaginationRequest;
 import org.hibernate.query.spi.Limit;
 import org.junit.jupiter.api.Test;
 
-import static org.hibernate.dialect.pagination.AbstractLimitHandler.hasFirstRow;
-import static org.hibernate.dialect.pagination.AbstractLimitHandler.hasMaxRows;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
@@ -41,8 +40,13 @@ public abstract class AbstractLimitHandlerTest {
 	}
 
 	protected void assertGenerateExpectedSql(String expected, String sql) {
-		assertEquals( expected, getLimitHandler().processSql( sql, 0, null,
-				new LimitQueryOptions( AbstractLimitHandlerTest.this.getLimit() ) ) );
+		final Limit limit = getLimit();
+		assertEquals(
+				expected,
+				getLimitHandler().processSql(
+						new PaginationRequest( sql, limit.getFirstRow(), limit.getMaxRows(), 0, null )
+				).sql()
+		);
 	}
 
 	protected abstract LimitHandler getLimitHandler();
@@ -56,14 +60,14 @@ public abstract class AbstractLimitHandlerTest {
 		if (handler instanceof OffsetFetchLimitHandler) {
 			OffsetFetchLimitHandler oflh = (OffsetFetchLimitHandler) handler;
 			Limit limit = getLimit();
-			if (hasFirstRow(limit) && hasMaxRows(limit)) {
+			if ( limit.getFirstRow() != null && limit.getMaxRows() != null ) {
 				return " offset " + (oflh.supportsVariableLimit() ? "?" : String.valueOf(limit.getFirstRow()))
 						+ " rows fetch next " + (oflh.supportsVariableLimit() ? "?" : String.valueOf(limit.getMaxRows())) + " rows only";
 			}
-			else if (hasFirstRow(limit)) {
+			else if ( limit.getFirstRow() != null ) {
 				return " offset " + (oflh.supportsVariableLimit() ? "?" : String.valueOf(limit.getFirstRow())) + " rows";
 			}
-			else if (hasMaxRows(limit)) {
+			else if ( limit.getMaxRows() != null ) {
 				return " fetch first " + (oflh.supportsVariableLimit() ? "?" : String.valueOf(limit.getMaxRows())) + " rows only";
 			}
 			else {

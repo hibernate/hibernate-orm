@@ -4,33 +4,83 @@
  */
 package org.hibernate.dialect;
 
+import org.hibernate.dialect.identifier.spi.KeywordRegistration;
+
+import org.hibernate.dialect.temporaltype.spi.TemporalValueSemantics;
+
+import org.hibernate.dialect.temporaltype.spi.CurrentTimestampSelection;
+
+import org.hibernate.dialect.temporaltype.spi.TemporalOperationSupport;
+
+import org.hibernate.dialect.temporaltype.spi.TemporalFormatSupport;
+
+import org.hibernate.dialect.temporaltype.spi.CurrentTemporalSupport;
+
+import org.hibernate.dialect.lob.spi.LobSupport;
+import org.hibernate.dialect.lob.spi.LobSupports;
+
+import org.hibernate.SPI;
+import static org.hibernate.SPI.Role.USE;
+
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.SUPPLY;
+
+import org.hibernate.dialect.type.spi.DdlTypeBuilder;
+
+import org.hibernate.dialect.type.spi.StandardDdlTypes;
+
+import org.hibernate.dialect.type.spi.TypeSizingProfile;
+
+import org.hibernate.dialect.mutation.spi.MultiTableMutationSupport;
+
+
+import org.hibernate.dialect.jdbc.spi.HANAServerConfiguration;
+
+import org.hibernate.dialect.sql.ast.spi.NullOrdering;
+
+import org.hibernate.dialect.sql.ast.spi.DmlTargetColumnQualifierSupport;
+
+import org.hibernate.dialect.sql.ast.spi.CteSupport;
+import org.hibernate.dialect.sql.ast.spi.MutationKind;
+import org.hibernate.dialect.sql.ast.spi.MutationSyntaxCapability;
+import org.hibernate.dialect.sql.ast.spi.MutationSyntaxSupport;
+import org.hibernate.dialect.sql.ast.spi.NullOrderingSupport;
+import org.hibernate.dialect.sql.ast.spi.RowValueSupport;
+import org.hibernate.dialect.sql.ast.spi.SingleRowTableSupport;
+import org.hibernate.dialect.sql.ast.spi.SubquerySupport;
+import org.hibernate.dialect.sql.ast.spi.ValuesListSupport;
+
 import jakarta.persistence.TemporalType;
-import jakarta.persistence.Timeout;
-import org.hibernate.LockMode;
-import org.hibernate.LockOptions;
 import org.hibernate.ScrollMode;
-import org.hibernate.Timeouts;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
-import org.hibernate.dialect.aggregate.AggregateSupport;
-import org.hibernate.dialect.aggregate.HANAAggregateSupport;
+import org.hibernate.dialect.aggregate.spi.AggregateSupport;
+import org.hibernate.dialect.aggregate.internal.HANAAggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.dialect.function.spi.WindowFunctionSupport;
 import org.hibernate.dialect.function.IntegralTimestampaddFunction;
-import org.hibernate.dialect.identity.HANAIdentityColumnSupport;
-import org.hibernate.dialect.identity.IdentityColumnSupport;
+import org.hibernate.dialect.identifier.spi.DelegatingIdentifierHelper;
+import org.hibernate.dialect.identity.internal.HANAIdentityColumnSupport;
+import org.hibernate.dialect.identity.spi.IdentityColumnSupport;
 import org.hibernate.dialect.lock.internal.HANALockingSupport;
 import org.hibernate.dialect.lock.spi.LockingSupport;
-import org.hibernate.dialect.pagination.LimitHandler;
-import org.hibernate.dialect.pagination.LimitOffsetLimitHandler;
-import org.hibernate.dialect.sequence.HANASequenceSupport;
-import org.hibernate.dialect.sequence.SequenceSupport;
-import org.hibernate.dialect.sql.ast.HANASqlAstTranslator;
-import org.hibernate.dialect.temptable.HANAGlobalTemporaryTableStrategy;
-import org.hibernate.dialect.temptable.TemporaryTableKind;
-import org.hibernate.dialect.temptable.TemporaryTableStrategy;
+import org.hibernate.dialect.namespace.spi.NamespaceSupport;
+import org.hibernate.dialect.namespace.spi.NamespaceSupports;
+import org.hibernate.dialect.schema.spi.AlterColumnTypeRequest;
+import org.hibernate.dialect.schema.spi.ColumnDefinitionRequest;
+import org.hibernate.dialect.schema.spi.ConstraintDropMode;
+import org.hibernate.dialect.schema.spi.SchemaDropSupport;
+import org.hibernate.dialect.schema.spi.TableCreationKind;
+import org.hibernate.dialect.pagination.spi.LimitHandler;
+import org.hibernate.dialect.pagination.spi.LimitOffsetLimitHandler;
+import org.hibernate.dialect.sequence.internal.HANASequenceSupport;
+import org.hibernate.dialect.sequence.spi.SequenceSupport;
+import org.hibernate.dialect.sql.ast.internal.HANASqlAstTranslator;
+import org.hibernate.dialect.temptable.spi.StandardGlobalTemporaryTableStrategy;
+import org.hibernate.dialect.temptable.spi.TemporaryTableStrategy;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.BinaryStream;
@@ -39,11 +89,12 @@ import org.hibernate.engine.jdbc.CharacterStream;
 import org.hibernate.engine.jdbc.ClobImplementer;
 import org.hibernate.engine.jdbc.NClobImplementer;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
+import org.hibernate.engine.jdbc.cursor.spi.RefCursorSupportFactory;
+import org.hibernate.engine.jdbc.cursor.spi.RefCursorSupports;
 import org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
-import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
+import org.hibernate.dialect.identifier.spi.IdentifierHelperBuildRequest;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.ConstraintViolationException.ConstraintKind;
 import org.hibernate.exception.LockAcquisitionException;
@@ -53,28 +104,24 @@ import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.mapping.Table;
-import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.procedure.internal.StandardCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
+import org.hibernate.procedure.spi.CallableStatementSupports;
 import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.CastType;
-import org.hibernate.dialect.type.IntervalType;
-import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableInsertStrategy;
-import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableMutationStrategy;
-import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
-import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
+import org.hibernate.dialect.temporaltype.spi.IntervalType;
 import org.hibernate.query.sqm.produce.function.FunctionParameterType;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
-import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.SqlAstTranslatorFactory;
-import org.hibernate.sql.ast.spi.SqlAppender;
-import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.translation.SqlAstNodeRenderingMode;
+import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslatorFactory;
+import org.hibernate.sql.spi.SqlAppender;
+import org.hibernate.dialect.sql.ast.spi.StandardSqlAstTranslatorFactory;
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
+import org.hibernate.sql.ast.spi.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
-import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorHANADatabaseImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
-import org.hibernate.tool.schema.internal.StandardTableExporter;
+import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractors;
+import org.hibernate.tool.schema.spi.StandardTableExporter;
 import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
@@ -94,8 +141,6 @@ import org.hibernate.type.descriptor.jdbc.NClobJdbcType;
 import org.hibernate.type.descriptor.jdbc.NVarcharJdbcType;
 import org.hibernate.type.descriptor.jdbc.NumericJdbcType;
 import org.hibernate.type.descriptor.jdbc.TinyIntAsSmallIntJdbcType;
-import org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType;
-import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
 import org.hibernate.type.internal.BasicTypeImpl;
 
 import java.io.ByteArrayInputStream;
@@ -113,7 +158,6 @@ import java.nio.charset.StandardCharsets;
 import java.sql.Blob;
 import java.sql.CallableStatement;
 import java.sql.Clob;
-import java.sql.DatabaseMetaData;
 import java.sql.NClob;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -131,9 +175,9 @@ import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static org.hibernate.dialect.HANAServerConfiguration.MAX_LOB_PREFETCH_SIZE_DEFAULT_VALUE;
+import static org.hibernate.dialect.jdbc.spi.HANAServerConfiguration.MAX_LOB_PREFETCH_SIZE_DEFAULT_VALUE;
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
-import static org.hibernate.internal.util.JdbcExceptionHelper.extractErrorCode;
+import static org.hibernate.jdbc.spi.JdbcExceptionHelper.extractErrorCode;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.ANY;
 import static org.hibernate.type.SqlTypes.BINARY;
 import static org.hibernate.type.SqlTypes.BOOLEAN;
@@ -159,11 +203,12 @@ import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_END;
 import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_START_DATE;
 import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_START_TIME;
 import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_START_TIMESTAMP;
-import static org.hibernate.type.descriptor.DateTimeUtils.appendAsDate;
-import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTime;
-import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMicros;
-import static org.hibernate.type.descriptor.java.DataHelper.extractBytes;
-import static org.hibernate.type.descriptor.java.DataHelper.extractString;
+import static org.hibernate.dialect.literal.spi.StandardDateTimeLiteralRendering.appendAsDate;
+import static org.hibernate.dialect.literal.spi.StandardDateTimeLiteralRendering.appendAsLocalTime;
+import static org.hibernate.dialect.literal.spi.StandardDateTimeLiteralRendering.appendAsTime;
+import static org.hibernate.dialect.literal.spi.StandardDateTimeLiteralRendering.appendAsTimestampWithMicros;
+import static org.hibernate.dialect.lob.spi.LobDataExtraction.extractBytes;
+import static org.hibernate.dialect.lob.spi.LobDataExtraction.extractString;
 
 /**
  * An SQL dialect for the SAP HANA Platform and Cloud.
@@ -178,13 +223,45 @@ import static org.hibernate.type.descriptor.java.DataHelper.extractString;
  * @author Andrew Clemons
  * @author Jonathan Bregler
  */
-public class HANADialect extends Dialect {
+public class HANADialect extends Dialect implements CurrentTemporalSupport, TemporalFormatSupport, TemporalOperationSupport {
+	private SchemaDropSupport schemaDropSupport;
+
+
+	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
+	public TemporalOperationSupport getTemporalOperationSupport() {
+		return this;
+	}
+
+	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
+	public TemporalFormatSupport getTemporalFormatSupport() {
+		return this;
+	}
+
+	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
+	public CurrentTemporalSupport getCurrentTemporalSupport() {
+		return this;
+	}
+	private static final RefCursorSupportFactory REF_CURSOR_SUPPORT_FACTORY = RefCursorSupports.hana();
+	private final TypeSizingProfile typeSizingProfile = TypeSizingProfile.builder( super.getTypeSizingProfile() )
+			.defaultTimestampPrecision( 7 )
+			.defaultDecimalPrecision( 34 )
+			.maxVarcharLength( 5000 ).maxVarcharCapacity( 5000 )
+			.maxNVarcharLength( 5000 ).maxNVarcharCapacity( 5000 )
+			.maxVarbinaryLength( 5000 ).maxVarbinaryCapacity( 5000 )
+			.build();
+
+	@Override
+	public TypeSizingProfile getTypeSizingProfile() {
+		return typeSizingProfile;
+	}
 
 	static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 2, 0, 50 );
 
 	public HANADialect(DialectResolutionInfo info) {
 		this( HANAServerConfiguration.fromDialectResolutionInfo( info ), true );
-		registerKeywords( info );
 	}
 
 	public HANADialect() {
@@ -208,11 +285,13 @@ public class HANADialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	protected DatabaseVersion getMinimumSupportedVersion() {
 		return MINIMUM_VERSION;
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public DatabaseVersion determineDatabaseVersion(DialectResolutionInfo info) {
 		return HANAServerConfiguration.determineDatabaseVersion( info );
 	}
@@ -230,6 +309,15 @@ public class HANADialect extends Dialect {
 	private static final Boolean USE_LEGACY_BOOLEAN_TYPE_DEFAULT_VALUE = Boolean.FALSE;
 	private static final Boolean TREAT_DOUBLE_TYPED_FIELDS_AS_DECIMAL_DEFAULT_VALUE = Boolean.FALSE;
 	private static final String SQL_IGNORE_LOCKED = " ignore locked";
+	private static final SequenceInformationExtractor SEQUENCE_INFORMATION_EXTRACTOR =
+			SequenceInformationExtractors.builder( "select * from sys.sequences" )
+					.withoutCatalog()
+					.schemaColumn( "schema_name" )
+					.startValueColumn( "start_number" )
+					.minimumValueColumn( "min_value" )
+					.maximumValueColumn( "max_value" )
+					.incrementValueColumn( "increment_by" )
+					.build();
 
 	private final int maxLobPrefetchSize;
 
@@ -246,7 +334,11 @@ public class HANADialect extends Dialect {
 		@Override
 		public String[] getSqlCreateStrings(Table table, Metadata metadata, SqlStringGenerationContext context) {
 			String[] sqlCreateStrings = super.getSqlCreateStrings( table, metadata, context );
-			return quoteTypeIfNecessary( table, sqlCreateStrings, getCreateTableString() );
+			return quoteTypeIfNecessary(
+					table,
+					sqlCreateStrings,
+					getTableCreationSupport().createTableCommand( TableCreationKind.STANDARD )
+			);
 		}
 
 		@Override
@@ -279,37 +371,6 @@ public class HANADialect extends Dialect {
 	};
 
 
-	@Override
-	public void contribute(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
-		// This is the best hook for consuming dialect configuration that we have for now,
-		// since this method is called very early in the bootstrap process
-		final var configurationService = serviceRegistry.requireService( ConfigurationService.class );
-
-		this.defaultTableTypeColumn = configurationService.getSetting(
-				USE_DEFAULT_TABLE_TYPE_COLUMN,
-				StandardConverters.BOOLEAN,
-				this.defaultTableTypeColumn
-		);
-		if ( supportsAsciiStringTypes() ) {
-			this.useUnicodeStringTypes = configurationService.getSetting(
-					USE_UNICODE_STRING_TYPES_PARAMETER_NAME,
-					StandardConverters.BOOLEAN,
-					useUnicodeStringTypesDefault()
-			);
-		}
-		this.useLegacyBooleanType = configurationService.getSetting(
-				USE_LEGACY_BOOLEAN_TYPE_PARAMETER_NAME,
-				StandardConverters.BOOLEAN,
-				USE_LEGACY_BOOLEAN_TYPE_DEFAULT_VALUE
-		);
-		this.treatDoubleTypedFieldsAsDecimal = configurationService.getSetting(
-				TREAT_DOUBLE_TYPED_FIELDS_AS_DECIMAL_PARAMETER_NAME,
-				StandardConverters.BOOLEAN,
-				TREAT_DOUBLE_TYPED_FIELDS_AS_DECIMAL_DEFAULT_VALUE
-		);
-		super.contribute( typeContributions, serviceRegistry );
-	}
-
 	protected boolean isDefaultTableTypeColumn() {
 		return defaultTableTypeColumn;
 	}
@@ -319,6 +380,7 @@ public class HANADialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	protected String columnType(int sqlTypeCode) {
 		switch ( sqlTypeCode ) {
 			case BOOLEAN:
@@ -355,34 +417,35 @@ public class HANADialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	protected void registerColumnTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.registerColumnTypes( typeContributions, serviceRegistry );
 		final var ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
 
 		// varbinary max length 5000
 		ddlTypeRegistry.addDescriptor(
-				CapacityDependentDdlType.builder( BINARY, CapacityDependentDdlType.LobKind.BIGGEST_LOB, "blob", this )
-						.withTypeCapacity( getMaxVarbinaryLength(), "varbinary($l)" )
+				StandardDdlTypes.builder( BINARY, "blob", this )
+						.lobKind( DdlTypeBuilder.LobKind.BIGGEST )
+						.withTypeCapacity( getTypeSizingProfile().maxVarbinaryLength(), "varbinary($l)" )
 						.build()
 		);
 
-		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOMETRY, "st_geometry", this ) );
-		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( POINT, "st_point", this ) );
+		ddlTypeRegistry.addDescriptor( StandardDdlTypes.simple( GEOMETRY, "st_geometry", this ) );
+		ddlTypeRegistry.addDescriptor( StandardDdlTypes.simple( POINT, "st_point", this ) );
 	}
 
 	@Override
-	public boolean getDefaultNonContextualLobCreation() {
+	@SPI({ IMPLEMENT, SUPPLY })
+	protected void contributeDefaultProperties(java.util.Properties properties) {
+		super.contributeDefaultProperties( properties );
 		// createBlob() and createClob() are not supported by the HANA JDBC driver
-		return true;
-	}
-
-	@Override
-	public boolean getDefaultUseGetGeneratedKeys() {
+		properties.setProperty( org.hibernate.cfg.AvailableSettings.NON_CONTEXTUAL_LOB_CREATION, "true" );
 		// getGeneratedKeys() is not supported by the HANA JDBC driver
-		return false;
+		properties.setProperty( org.hibernate.cfg.AvailableSettings.USE_GET_GENERATED_KEYS, "false" );
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String castPattern(CastType from, CastType to) {
 		if ( to == CastType.BOOLEAN ) {
 			switch ( from ) {
@@ -400,37 +463,13 @@ public class HANADialect extends Dialect {
 	}
 
 	@Override
-	public int getDefaultTimestampPrecision() {
-		return 7;
-	}
-
-	@Override
-	public int getDefaultDecimalPrecision() {
-		//the maximum on HANA
-		return 34;
-	}
-
-	@Override
-	public int getMaxVarcharLength() {
-		return 5000;
-	}
-
-	@Override
-	public int getMaxNVarcharLength() {
-		return 5000;
-	}
-
-	@Override
-	public int getMaxVarbinaryLength() {
-		return 5000;
-	}
-
-	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public int getPreferredSqlTypeCodeForArray() {
 		return SqlTypes.XML_ARRAY;
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
 		super.initializeFunctionRegistry( functionContributions );
 		final var typeConfiguration = functionContributions.getTypeConfiguration();
@@ -541,17 +580,19 @@ public class HANADialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public SqlAstTranslatorFactory getSqlAstTranslatorFactory() {
 		return new StandardSqlAstTranslatorFactory() {
 			@Override
-			protected <T extends JdbcOperation> SqlAstTranslator<T> buildTranslator(
-					SessionFactoryImplementor sessionFactory, org.hibernate.sql.ast.tree.Statement statement) {
-				return new HANASqlAstTranslator<>( sessionFactory, statement );
+			protected <S extends Statement, T extends JdbcOperation> SqlAstTranslator<T> createTranslator(
+					SqlAstTranslationRequest<S, T> request) {
+				return new HANASqlAstTranslator<>( request );
 			}
 		};
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public AggregateSupport getAggregateSupport() {
 		return HANAAggregateSupport.valueOf( this );
 	}
@@ -574,6 +615,7 @@ public class HANADialect extends Dialect {
 	 * {@link TemporalUnit#DAY_OF_YEAR}.
 	 */
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String extractPattern(TemporalUnit unit) {
 		switch (unit) {
 			case DAY_OF_WEEK:
@@ -594,6 +636,7 @@ public class HANADialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
 		return (sqlException, message, sql) ->
 				switch ( extractErrorCode( sqlException ) ) {
@@ -639,6 +682,7 @@ public class HANADialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public ViolatedConstraintNameExtractor getViolatedConstraintNameExtractor() {
 		return new TemplatedViolatedConstraintNameExtractor( sqlException ->
 				switch ( extractErrorCode( sqlException ) ) {
@@ -655,193 +699,165 @@ public class HANADialect extends Dialect {
 	}
 
 	@Override
-	public String getCreateTableString() {
+	@SPI({ USE, IMPLEMENT })
+	public String createTableCommand(TableCreationKind kind) {
 		return isDefaultTableTypeColumn() ? "create column table" : "create row table";
 	}
 
 	@Override
-	public String getAddColumnString() {
+	@SPI({ USE, IMPLEMENT })
+	public String addColumnPrefix() {
 		return "add (";
 	}
 
 	@Override
-	public String getAddColumnSuffixString() {
+	@SPI({ USE, IMPLEMENT })
+	public String addColumnSuffix() {
 		return ")";
 	}
 
 	@Override
-	public String getCascadeConstraintsString() {
-		return " cascade";
-	}
-
-	@Override
-	public String getCurrentTimestampSelectString() {
-		return "select current_timestamp from sys.dummy";
-	}
-
-	@Override
-	public String getForUpdateString(final String aliases) {
-		return getForUpdateString() + " of " + aliases;
-	}
-
-	@Override
-	public String getForUpdateString(final String aliases, final LockOptions lockOptions) {
-		final LockMode lockMode = lockOptions.getLockMode();
-
-		// not sure why this is sometimes empty
-		if ( aliases == null || aliases.isEmpty() ) {
-			return getForUpdateString( lockOptions );
+	@SPI({ IMPLEMENT, SUPPLY })
+	public synchronized SchemaDropSupport getSchemaDropSupport() {
+		if ( schemaDropSupport == null ) {
+			schemaDropSupport = new SchemaDropSupport( List.of(), ConstraintDropMode.IMPLICIT, " cascade" );
 		}
-
-		return getForUpdateString( aliases, lockMode, lockOptions.getTimeout() );
-	}
-
-	private String getForUpdateString(String aliases, LockMode lockMode, Timeout timeout) {
-		return switch ( lockMode ) {
-			case PESSIMISTIC_READ -> getReadLockString( aliases, timeout );
-			case PESSIMISTIC_WRITE -> getWriteLockString( aliases, timeout );
-			case UPGRADE_NOWAIT, PESSIMISTIC_FORCE_INCREMENT -> getForUpdateNowaitString( aliases );
-			case UPGRADE_SKIPLOCKED -> getForUpdateSkipLockedString( aliases );
-			default -> "";
-		};
+		return schemaDropSupport;
 	}
 
 	@Override
-	public String getForUpdateNowaitString() {
-		return getForUpdateString() + " nowait";
+	@SPI({ USE, IMPLEMENT })
+	public CurrentTimestampSelection getCurrentTimestampSelection() {
+		return CurrentTimestampSelection.prepared( "select current_timestamp from sys.dummy" );
 	}
 
-	@Override
-	public String getQuerySequencesString() {
-		return "select * from sys.sequences";
-	}
+
+
+
 
 	@Override
 	public SequenceInformationExtractor getSequenceInformationExtractor() {
-		return SequenceInformationExtractorHANADatabaseImpl.INSTANCE;
+		return SEQUENCE_INFORMATION_EXTRACTOR;
 	}
 
 	@Override
-	public boolean isCurrentTimestampSelectStringCallable() {
-		return false;
-	}
-
-	@Override
-	protected void registerDefaultKeywords() {
-		super.registerDefaultKeywords();
+	@SPI({ USE, IMPLEMENT, SUPPLY })
+	protected void contributeKeywords(KeywordRegistration registration) {
+		super.contributeKeywords( registration );
 		// https://help.sap.com/docs/SAP_HANA_PLATFORM/4fe29514fd584807ac9f2a04f6754767/28bcd6af3eb6437892719f7c27a8a285.html?locale=en-US
-		registerKeyword( "all" );
-		registerKeyword( "alter" );
-		registerKeyword( "as" );
-		registerKeyword( "before" );
-		registerKeyword( "begin" );
-		registerKeyword( "both" );
-		registerKeyword( "case" );
-		registerKeyword( "char" );
-		registerKeyword( "condition" );
-		registerKeyword( "connect" );
-		registerKeyword( "cross" );
-		registerKeyword( "cube" );
-		registerKeyword( "current_connection" );
-		registerKeyword( "current_date" );
-		registerKeyword( "current_schema" );
-		registerKeyword( "current_time" );
-		registerKeyword( "current_timestamp" );
-		registerKeyword( "current_transaction_isolation_level" );
-		registerKeyword( "current_user" );
-		registerKeyword( "current_utcdate" );
-		registerKeyword( "current_utctime" );
-		registerKeyword( "current_utctimestamp" );
-		registerKeyword( "currval" );
-		registerKeyword( "cursor" );
-		registerKeyword( "declare" );
-		registerKeyword( "deferred" );
-		registerKeyword( "distinct" );
-		registerKeyword( "else" );
-		registerKeyword( "elseif" );
-		registerKeyword( "end" );
-		registerKeyword( "except" );
-		registerKeyword( "exception" );
-		registerKeyword( "exec" );
-		registerKeyword( "false" );
-		registerKeyword( "for" );
-		registerKeyword( "from" );
-		registerKeyword( "full" );
-		registerKeyword( "group" );
-		registerKeyword( "having" );
-		registerKeyword( "if" );
-		registerKeyword( "in" );
-		registerKeyword( "inner" );
-		registerKeyword( "inout" );
-		registerKeyword( "intersect" );
-		registerKeyword( "into" );
-		registerKeyword( "is" );
-		registerKeyword( "join" );
-		registerKeyword( "lateral" );
-		registerKeyword( "leading" );
-		registerKeyword( "left" );
-		registerKeyword( "limit" );
-		registerKeyword( "loop" );
-		registerKeyword( "minus" );
-		registerKeyword( "natural" );
-		registerKeyword( "nchar" );
-		registerKeyword( "nextval" );
-		registerKeyword( "null" );
-		registerKeyword( "on" );
-		registerKeyword( "order" );
-		registerKeyword( "out" );
-		registerKeyword( "prior" );
-		registerKeyword( "return" );
-		registerKeyword( "returns" );
-		registerKeyword( "reverse" );
-		registerKeyword( "right" );
-		registerKeyword( "rollup" );
-		registerKeyword( "rowid" );
-		registerKeyword( "select" );
-		registerKeyword( "session_user" );
-		registerKeyword( "set" );
-		registerKeyword( "sql" );
-		registerKeyword( "start" );
-		registerKeyword( "sysuuid" );
-		registerKeyword( "tablesample" );
-		registerKeyword( "top" );
-		registerKeyword( "trailing" );
-		registerKeyword( "true" );
-		registerKeyword( "union" );
-		registerKeyword( "unknown" );
-		registerKeyword( "using" );
-		registerKeyword( "utctimestamp" );
-		registerKeyword( "values" );
-		registerKeyword( "when" );
-		registerKeyword( "where" );
-		registerKeyword( "while" );
-		registerKeyword( "with" );
+		registration.registerKeyword( "all" );
+		registration.registerKeyword( "alter" );
+		registration.registerKeyword( "as" );
+		registration.registerKeyword( "before" );
+		registration.registerKeyword( "begin" );
+		registration.registerKeyword( "both" );
+		registration.registerKeyword( "case" );
+		registration.registerKeyword( "char" );
+		registration.registerKeyword( "condition" );
+		registration.registerKeyword( "connect" );
+		registration.registerKeyword( "cross" );
+		registration.registerKeyword( "cube" );
+		registration.registerKeyword( "current_connection" );
+		registration.registerKeyword( "current_date" );
+		registration.registerKeyword( "current_schema" );
+		registration.registerKeyword( "current_time" );
+		registration.registerKeyword( "current_timestamp" );
+		registration.registerKeyword( "current_transaction_isolation_level" );
+		registration.registerKeyword( "current_user" );
+		registration.registerKeyword( "current_utcdate" );
+		registration.registerKeyword( "current_utctime" );
+		registration.registerKeyword( "current_utctimestamp" );
+		registration.registerKeyword( "currval" );
+		registration.registerKeyword( "cursor" );
+		registration.registerKeyword( "declare" );
+		registration.registerKeyword( "deferred" );
+		registration.registerKeyword( "distinct" );
+		registration.registerKeyword( "else" );
+		registration.registerKeyword( "elseif" );
+		registration.registerKeyword( "end" );
+		registration.registerKeyword( "except" );
+		registration.registerKeyword( "exception" );
+		registration.registerKeyword( "exec" );
+		registration.registerKeyword( "false" );
+		registration.registerKeyword( "for" );
+		registration.registerKeyword( "from" );
+		registration.registerKeyword( "full" );
+		registration.registerKeyword( "group" );
+		registration.registerKeyword( "having" );
+		registration.registerKeyword( "if" );
+		registration.registerKeyword( "in" );
+		registration.registerKeyword( "inner" );
+		registration.registerKeyword( "inout" );
+		registration.registerKeyword( "intersect" );
+		registration.registerKeyword( "into" );
+		registration.registerKeyword( "is" );
+		registration.registerKeyword( "join" );
+		registration.registerKeyword( "lateral" );
+		registration.registerKeyword( "leading" );
+		registration.registerKeyword( "left" );
+		registration.registerKeyword( "limit" );
+		registration.registerKeyword( "loop" );
+		registration.registerKeyword( "minus" );
+		registration.registerKeyword( "natural" );
+		registration.registerKeyword( "nchar" );
+		registration.registerKeyword( "nextval" );
+		registration.registerKeyword( "null" );
+		registration.registerKeyword( "on" );
+		registration.registerKeyword( "order" );
+		registration.registerKeyword( "out" );
+		registration.registerKeyword( "prior" );
+		registration.registerKeyword( "return" );
+		registration.registerKeyword( "returns" );
+		registration.registerKeyword( "reverse" );
+		registration.registerKeyword( "right" );
+		registration.registerKeyword( "rollup" );
+		registration.registerKeyword( "rowid" );
+		registration.registerKeyword( "select" );
+		registration.registerKeyword( "session_user" );
+		registration.registerKeyword( "set" );
+		registration.registerKeyword( "sql" );
+		registration.registerKeyword( "start" );
+		registration.registerKeyword( "sysuuid" );
+		registration.registerKeyword( "tablesample" );
+		registration.registerKeyword( "top" );
+		registration.registerKeyword( "trailing" );
+		registration.registerKeyword( "true" );
+		registration.registerKeyword( "union" );
+		registration.registerKeyword( "unknown" );
+		registration.registerKeyword( "using" );
+		registration.registerKeyword( "utctimestamp" );
+		registration.registerKeyword( "values" );
+		registration.registerKeyword( "when" );
+		registration.registerKeyword( "where" );
+		registration.registerKeyword( "while" );
+		registration.registerKeyword( "with" );
 		if ( isCloud() ) {
 			// https://help.sap.com/docs/hana-cloud-database/sap-hana-cloud-sap-hana-database-sql-reference-guide/reserved-words
-			registerKeyword( "array" );
-			registerKeyword( "at" );
-			registerKeyword( "authorization" );
-			registerKeyword( "between" );
-			registerKeyword( "by" );
-			registerKeyword( "collate" );
-			registerKeyword( "empty" );
-			registerKeyword( "filter" );
-			registerKeyword( "grouping" );
-			registerKeyword( "no" );
-			registerKeyword( "not" );
-			registerKeyword( "of" );
-			registerKeyword( "over" );
-			registerKeyword( "recursive" );
-			registerKeyword( "row" );
-			registerKeyword( "table" );
-			registerKeyword( "to" );
-			registerKeyword( "unnest" );
-			registerKeyword( "window" );
-			registerKeyword( "within" );
+			registration.registerKeyword( "array" );
+			registration.registerKeyword( "at" );
+			registration.registerKeyword( "authorization" );
+			registration.registerKeyword( "between" );
+			registration.registerKeyword( "by" );
+			registration.registerKeyword( "collate" );
+			registration.registerKeyword( "empty" );
+			registration.registerKeyword( "filter" );
+			registration.registerKeyword( "grouping" );
+			registration.registerKeyword( "no" );
+			registration.registerKeyword( "not" );
+			registration.registerKeyword( "of" );
+			registration.registerKeyword( "over" );
+			registration.registerKeyword( "recursive" );
+			registration.registerKeyword( "row" );
+			registration.registerKeyword( "table" );
+			registration.registerKeyword( "to" );
+			registration.registerKeyword( "unnest" );
+			registration.registerKeyword( "window" );
+			registration.registerKeyword( "within" );
 		}
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT, SUPPLY })
 	public ScrollMode defaultScrollMode() {
 		return ScrollMode.FORWARD_ONLY;
 	}
@@ -850,53 +866,45 @@ public class HANADialect extends Dialect {
 	 * HANA currently does not support check constraints.
 	 */
 	@Override
-	public boolean supportsColumnCheck() {
-		return false;
+	@SPI({ USE, IMPLEMENT })
+	public boolean supports(org.hibernate.dialect.constraint.spi.CheckConstraintPlacement placement) {
+		return placement == org.hibernate.dialect.constraint.spi.CheckConstraintPlacement.TABLE;
 	}
 
 	@Override
-	public boolean supportsCurrentTimestampSelection() {
-		return true;
+	@SPI({ IMPLEMENT, SUPPLY })
+	public TemporalValueSemantics getTemporalValueSemantics() {
+		return TemporalValueSemantics.TRUNCATING;
 	}
 
 	@Override
-	public boolean doesRoundTemporalOnOverflow() {
-		// HANA does truncation
-		return false;
+	public SubquerySupport getSubquerySupport() {
+		return SubquerySupport.builder()
+				.feature( SubquerySupport.Feature.EXISTS_IN_SELECT, false )
+				.features( SubquerySupport.Feature.OFFSET, SubquerySupport.Feature.LATERAL )
+				.build();
 	}
 
 	@Override
-	public boolean supportsExistsInSelect() {
-		return false;
+	@SPI({ IMPLEMENT, SUPPLY })
+	public LobSupport getLobSupport() {
+		return LobSupports.noContextualCreation();
 	}
 
 	@Override
-	public boolean supportsExpectedLobUsagePattern() {
-		// http://scn.sap.com/thread/3221812
-		return false;
-	}
-
-	@Override
-	public boolean supportsUnboundedLobLocatorMaterialization() {
-		return false;
-	}
-
-	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public SequenceSupport getSequenceSupport() {
-		return HANASequenceSupport.INSTANCE;
+		return HANASequenceSupport.getInstance();
 	}
 
 	@Override
-	public boolean dropConstraints() {
-		return false;
-	}
-
-	@Override
+	@SPI({ USE, IMPLEMENT })
 	public int getMaxAliasLength() {
 		return 128;
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public int getMaxIdentifierLength() {
 		return 127;
 	}
@@ -907,45 +915,24 @@ public class HANADialect extends Dialect {
 	}
 
 	@Override
-	public String getSelectGUIDString() {
-		return "select sysuuid from sys.dummy";
-	}
-
-	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public NameQualifierSupport getNameQualifierSupport() {
 		return NameQualifierSupport.SCHEMA;
 	}
 
 	@Override
-	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, DatabaseMetaData metadata)
-			throws SQLException {
+	@SPI({ USE, IMPLEMENT, SUPPLY })
+	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuildRequest request) {
+		final var builder = request.builder();
 		/*
 		 * HANA-specific extensions
 		 */
 		builder.setQuotedCaseStrategy( IdentifierCaseStrategy.MIXED );
 		builder.setUnquotedCaseStrategy( IdentifierCaseStrategy.UPPER );
 
-		final IdentifierHelper identifierHelper = super.buildIdentifierHelper( builder, metadata );
+		final IdentifierHelper identifierHelper = super.buildIdentifierHelper( request );
 
-		return new IdentifierHelper() {
-
-			private final IdentifierHelper helper = identifierHelper;
-
-			@Override
-			public String toMetaDataSchemaName(Identifier schemaIdentifier) {
-				return this.helper.toMetaDataSchemaName( schemaIdentifier );
-			}
-
-			@Override
-			public String toMetaDataObjectName(Identifier identifier) {
-				return this.helper.toMetaDataObjectName( identifier );
-			}
-
-			@Override
-			public String toMetaDataCatalogName(Identifier catalogIdentifier) {
-				return this.helper.toMetaDataCatalogName( catalogIdentifier );
-			}
-
+		return new DelegatingIdentifierHelper( identifierHelper ) {
 			@Override
 			public Identifier toIdentifier(String text) {
 				return normalizeQuoting( Identifier.toIdentifier( text ) );
@@ -963,7 +950,7 @@ public class HANADialect extends Dialect {
 
 			@Override
 			public Identifier normalizeQuoting(Identifier identifier) {
-				Identifier normalizedIdentifier = this.helper.normalizeQuoting( identifier );
+				Identifier normalizedIdentifier = super.normalizeQuoting( identifier );
 
 				if ( normalizedIdentifier == null ) {
 					return null;
@@ -976,110 +963,68 @@ public class HANADialect extends Dialect {
 
 				return normalizedIdentifier;
 			}
-
-			@Override
-			public boolean isReservedWord(String word) {
-				return this.helper.isReservedWord( word );
-			}
-
-			@Override
-			public Identifier applyGlobalQuoting(String text) {
-				return this.helper.applyGlobalQuoting( text );
-			}
 		};
 	}
 
 	@Override
-	public String getCurrentSchemaCommand() {
-		return "select current_schema from sys.dummy";
+	@SPI({ IMPLEMENT, SUPPLY })
+	public NamespaceSupport getNamespaceSupport() {
+		return NamespaceSupports.standard( true, true );
 	}
+
+
+
+
+
+
+
+
+
 
 	@Override
-	public String getForUpdateNowaitString(String aliases) {
-		return getForUpdateString( aliases ) + " nowait";
-	}
-
-	@Override
-	public String getReadLockString(Timeout timeout) {
-		return getWriteLockString( timeout );
-	}
-
-	@Override
-	public String getForUpdateString(Timeout timeout) {
-		return withTimeout( getForUpdateString(), timeout.milliseconds() );
-	}
-
-	@Override
-	public String getReadLockString(String aliases, Timeout timeout) {
-		return getWriteLockString( aliases, timeout );
-	}
-
-	@Override
-	public String getWriteLockString(String aliases, Timeout timeout) {
-		return withTimeout( getForUpdateString( aliases ), timeout.milliseconds() );
-	}
-
-	@Override
-	public String getReadLockString(int timeout) {
-		return getWriteLockString( timeout );
-	}
-
-	@Override
-	public String getReadLockString(String aliases, int timeout) {
-		return getWriteLockString( aliases, timeout );
-	}
-
-	@Override
-	public String getWriteLockString(String aliases, int timeout) {
-		return withTimeout( getForUpdateString( aliases ), timeout );
-	}
-
-	private String withTimeout(String lockString, int timeout) {
-		return switch (timeout) {
-			case Timeouts.NO_WAIT_MILLI -> supportsNoWait() ? lockString + " nowait" : lockString;
-			case Timeouts.SKIP_LOCKED_MILLI -> supportsSkipLocked() ? lockString + SQL_IGNORE_LOCKED : lockString;
-			case Timeouts.WAIT_FOREVER_MILLI -> lockString;
-			default -> supportsWait() ? lockString + " wait " + getTimeoutInSeconds( timeout ) : lockString;
-		};
-	}
-
-	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String getQueryHintString(String query, List<String> hints) {
 		return query + " with hint (" + String.join( ",", hints ) + ")";
 	}
 
 	@Override
-	public String getTableComment(String comment) {
-		return " comment '" + comment + "'";
+	@SPI({ IMPLEMENT, SUPPLY })
+	public org.hibernate.dialect.schema.spi.SchemaCommentSupport getSchemaCommentSupport() {
+		return org.hibernate.dialect.schema.spi.SchemaCommentSupports.hanaInline();
 	}
 
 	@Override
-	public String getColumnComment(String comment) {
-		return " comment '" + comment + "'";
+	@SPI({ USE, IMPLEMENT })
+	public String alterColumnType(AlterColumnTypeRequest request) {
+		return "alter (" + request.columnName() + " " + request.columnType() + ")";
 	}
 
 	@Override
-	public boolean supportsCommentOn() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsPartitionBy() {
-		return true;
-	}
-
-	@Override
-	public String getAlterColumnTypeString(String columnName, String columnType, String columnDefinition) {
-		return "alter (" + columnName + " " + columnType + ")";
-	}
-
-	@Override
-	public boolean supportsAlterColumnType() {
-		return true;
-	}
-
-	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
+		final var configurationService = serviceRegistry.requireService( ConfigurationService.class );
+		this.defaultTableTypeColumn = configurationService.getSetting(
+				USE_DEFAULT_TABLE_TYPE_COLUMN,
+				StandardConverters.BOOLEAN,
+				this.defaultTableTypeColumn
+		);
+		if ( supportsAsciiStringTypes() ) {
+			this.useUnicodeStringTypes = configurationService.getSetting(
+					USE_UNICODE_STRING_TYPES_PARAMETER_NAME,
+					StandardConverters.BOOLEAN,
+					useUnicodeStringTypesDefault()
+			);
+		}
+		this.useLegacyBooleanType = configurationService.getSetting(
+				USE_LEGACY_BOOLEAN_TYPE_PARAMETER_NAME,
+				StandardConverters.BOOLEAN,
+				USE_LEGACY_BOOLEAN_TYPE_DEFAULT_VALUE
+		);
+		this.treatDoubleTypedFieldsAsDecimal = configurationService.getSetting(
+				TREAT_DOUBLE_TYPED_FIELDS_AS_DECIMAL_PARAMETER_NAME,
+				StandardConverters.BOOLEAN,
+				TREAT_DOUBLE_TYPED_FIELDS_AS_DECIMAL_DEFAULT_VALUE
+		);
 		super.contributeTypes( typeContributions, serviceRegistry );
 
 		final var typeConfiguration = typeContributions.getTypeConfiguration();
@@ -1117,6 +1062,7 @@ public class HANADialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public void appendBooleanValueString(SqlAppender appender, boolean bool) {
 		if ( this.useLegacyBooleanType ) {
 			appender.appendSql( bool ? '1' : '0' );
@@ -1142,75 +1088,51 @@ public class HANADialect extends Dialect {
 	 * callable statement.
 	 */
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public CallableStatementSupport getCallableStatementSupport() {
-		return StandardCallableStatementSupport.REF_CURSOR_INSTANCE;
+		return CallableStatementSupports.standardWithRefCursors();
 	}
 
 	@Override
-	public int registerResultSetOutParameter(CallableStatement statement, int position) throws SQLException {
-		// Result set (TABLE) OUT parameters don't need to be registered
-		return position;
+	@SPI({ IMPLEMENT, SUPPLY })
+	public RefCursorSupportFactory getRefCursorSupportFactory() {
+		return REF_CURSOR_SUPPORT_FACTORY;
 	}
 
 	@Override
-	public int registerResultSetOutParameter(CallableStatement statement, String name) throws SQLException {
-		// Result set (TABLE) OUT parameters don't need to be registered
-		return 0;
+	public WindowFunctionSupport getWindowFunctionSupport() {
+		return WindowFunctionSupport.builder()
+				.features(
+						WindowFunctionSupport.Feature.WINDOW_FUNCTIONS,
+						WindowFunctionSupport.Feature.PARTITION_BY,
+						WindowFunctionSupport.Feature.ROWS_FRAME,
+						WindowFunctionSupport.Feature.RANGE_FRAME
+				)
+				.build();
 	}
 
 	@Override
-	public boolean supportsOffsetInSubquery() {
-		return true;
+	public NullOrderingSupport getNullOrderingSupport() {
+		return NullOrderingSupport.builder( super.getNullOrderingSupport() )
+				.defaultOrdering( NullOrdering.SMALLEST )
+				.build();
 	}
 
 	@Override
-	public boolean supportsWindowFunctions() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsLateral() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsJdbcConnectionLobCreation(DatabaseMetaData databaseMetaData) {
-		return false;
-	}
-
-	@Override
-	public boolean supportsNoColumnsInsert() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsOrderByInSubquery() {
-		// Seems to work, though I don't know as of which version
-		return true;
-	}
-
-	@Override
-	public NullOrdering getNullOrdering() {
-		return NullOrdering.SMALLEST;
-	}
-
-	@Override
-	public void appendDatetimeFormat(SqlAppender appender, String format) {
+	@SPI({ USE, IMPLEMENT })
+	public void appendFormat(SqlAppender appender, String format) {
 		//I don't think HANA needs FM
 		appender.appendSql( OracleDialect.datetimeFormat( format, false, false ).result() );
 	}
 
 	@Override
-	public boolean supportsFractionalTimestampArithmetic() {
-		return false;
-	}
-
-	@Override
-	public long getFractionalSecondPrecisionInNanos() {
+	@SPI({ USE, IMPLEMENT })
+	public long fractionalSecondPrecisionInNanos() {
 		return 100;
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
 		switch (unit) {
 			case NANOSECOND:
@@ -1256,6 +1178,7 @@ public class HANADialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
 		switch (unit) {
 			case NANOSECOND:
@@ -1286,6 +1209,7 @@ public class HANADialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public void appendDateTimeLiteral(
 			SqlAppender appender,
 			TemporalAccessor temporalAccessor,
@@ -1299,12 +1223,12 @@ public class HANADialect extends Dialect {
 				break;
 			case TIME:
 				appender.appendSql( JDBC_ESCAPE_START_TIME );
-				appendAsTime( appender, temporalAccessor, supportsTemporalLiteralOffset(), jdbcTimeZone );
+				appendAsTime( appender, temporalAccessor, getTemporalValueSemantics().supportsLiteralOffset(), jdbcTimeZone );
 				appender.appendSql( JDBC_ESCAPE_END );
 				break;
 			case TIMESTAMP:
 				appender.appendSql( JDBC_ESCAPE_START_TIMESTAMP );
-				appendAsTimestampWithMicros( appender, temporalAccessor, supportsTemporalLiteralOffset(), jdbcTimeZone );
+				appendAsTimestampWithMicros( appender, temporalAccessor, getTemporalValueSemantics().supportsLiteralOffset(), jdbcTimeZone );
 				appender.appendSql( JDBC_ESCAPE_END );
 				break;
 			default:
@@ -1313,6 +1237,7 @@ public class HANADialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public void appendDateTimeLiteral(SqlAppender appender, Date date, TemporalType precision, TimeZone jdbcTimeZone) {
 		switch ( precision ) {
 			case DATE:
@@ -1322,7 +1247,7 @@ public class HANADialect extends Dialect {
 				break;
 			case TIME:
 				appender.appendSql( JDBC_ESCAPE_START_TIME );
-				appendAsTime( appender, date );
+				appendAsLocalTime( appender, date );
 				appender.appendSql( JDBC_ESCAPE_END );
 				break;
 			case TIMESTAMP:
@@ -1336,8 +1261,26 @@ public class HANADialect extends Dialect {
 	}
 
 	@Override
-	public String generatedAs(String generatedAs) {
-		return " generated always as (" + generatedAs + ")";
+	@SPI({ USE, IMPLEMENT })
+	public void appendDefinition(SqlAppender appender, ColumnDefinitionRequest request) {
+		appender.appendSql( ' ' );
+		appender.appendSql( request.sqlType() );
+		if ( request.renderedCollation() != null ) {
+			appender.appendSql( " collate " );
+			appender.appendSql( request.renderedCollation() );
+		}
+		if ( request.defaultExpression() != null ) {
+			appender.appendSql( " default " );
+			appender.appendSql( request.defaultExpression() );
+		}
+		if ( request.generatedExpression() != null ) {
+			appender.appendSql( " generated always as (" );
+			appender.appendSql( request.generatedExpression() );
+			appender.appendSql( ')' );
+		}
+		if ( !request.nullable() ) {
+			appender.appendSql( " not null" );
+		}
 	}
 
 	public boolean isUseUnicodeStringTypes() {
@@ -1945,89 +1888,59 @@ public class HANADialect extends Dialect {
 	}
 
 	@Override
-	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(
-			EntityMappingType entityDescriptor,
-			RuntimeModelCreationContext runtimeModelCreationContext) {
-		return new GlobalTemporaryTableMutationStrategy( entityDescriptor, runtimeModelCreationContext );
-	}
-
-	@Override
-	public SqmMultiTableInsertStrategy getFallbackSqmInsertStrategy(
-			EntityMappingType entityDescriptor,
-			RuntimeModelCreationContext runtimeModelCreationContext) {
-		return new GlobalTemporaryTableInsertStrategy( entityDescriptor, runtimeModelCreationContext );
-	}
-
-	@Override
-	public TemporaryTableKind getSupportedTemporaryTableKind() {
-		return TemporaryTableKind.GLOBAL;
+	public MultiTableMutationSupport getMultiTableMutationSupport() {
+		return MultiTableMutationSupport.GLOBAL_TEMPORARY_TABLE;
 	}
 
 	@Override
 	public TemporaryTableStrategy getGlobalTemporaryTableStrategy() {
-		return HANAGlobalTemporaryTableStrategy.INSTANCE;
+		return StandardGlobalTemporaryTableStrategy.INSTANCE;
 	}
 
 	@Override
-	public String getTemporaryTableCreateOptions() {
-		return HANAGlobalTemporaryTableStrategy.INSTANCE.getTemporaryTableCreateOptions();
-	}
-
-	@Override
-	public String getTemporaryTableCreateCommand() {
-		return HANAGlobalTemporaryTableStrategy.INSTANCE.getTemporaryTableCreateCommand();
-	}
-
-	@Override
-	public String getTemporaryTableTruncateCommand() {
-		return HANAGlobalTemporaryTableStrategy.INSTANCE.getTemporaryTableTruncateCommand();
-	}
-
-	@Override
+	@SPI({ USE, IMPLEMENT, SUPPLY })
 	public DmlTargetColumnQualifierSupport getDmlTargetColumnQualifierSupport() {
 		return DmlTargetColumnQualifierSupport.TABLE_ALIAS;
 	}
 
 	@Override
-	public String getForUpdateSkipLockedString() {
-		return supportsSkipLocked() ? getForUpdateString() + SQL_IGNORE_LOCKED : getForUpdateString();
+	public ValuesListSupport getValuesListSupport() {
+		return ValuesListSupport.NONE;
 	}
 
 	@Override
-	public String getForUpdateSkipLockedString(String aliases) {
-		return supportsSkipLocked() ?
-				getForUpdateString(aliases) + SQL_IGNORE_LOCKED : getForUpdateString(aliases);
+	public MutationSyntaxSupport getMutationSyntaxSupport() {
+		return isCloud()
+				? MutationSyntaxSupport.NONE
+				: MutationSyntaxSupport.of( MutationKind.UPDATE, MutationSyntaxCapability.FROM_CLAUSE );
+	}
+
+
+
+
+	@Override
+	public SingleRowTableSupport getSingleRowTableSupport() {
+		final String tableExpression = "sys.dummy";
+		return SingleRowTableSupport.builder( super.getSingleRowTableSupport() )
+				.tableExpression( tableExpression )
+				.selectOnlyFromClause( " from " + tableExpression )
+				.build();
 	}
 
 	@Override
-	public String getForUpdateString(LockMode lockMode) {
-		return super.getForUpdateString(lockMode);
+	public RowValueSupport getRowValueSupport() {
+		return RowValueSupport.builder( super.getRowValueSupport() )
+				.feature( RowValueSupport.Feature.ORDERING_COMPARISON, false )
+				.feature( RowValueSupport.Feature.QUANTIFIED_COMPARISON, false )
+				.build();
 	}
 
 	@Override
-	public String getDual() {
-		return "sys.dummy";
-	}
-
-	@Override
-	public String getFromDualForSelectOnly() {
-		return " from " + getDual();
-	}
-
-	@Override
-	public boolean supportsRowValueConstructorGtLtSyntax() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsWithClauseInSubquery() {
-		// HANA doesn't seem to support correlation, so we just report false here for simplicity
-		return false;
-	}
-
-	@Override
-	public boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
-		return false;
+	public CteSupport getCteSupport() {
+		// HANA doesn't seem to support correlation, so report top-level support only
+		return CteSupport.builder()
+				.placement( CteSupport.Placement.TOP_LEVEL )
+				.build();
 	}
 
 }

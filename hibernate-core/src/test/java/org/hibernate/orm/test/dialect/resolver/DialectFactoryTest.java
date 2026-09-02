@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.dialect.resolver;
 
+
 import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;

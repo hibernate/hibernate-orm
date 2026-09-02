@@ -11,7 +11,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.dialect.aggregate.AggregateSupport;
+import org.hibernate.dialect.aggregate.spi.AggregateSupport;
+import org.hibernate.dialect.aggregate.spi.AggregateWriteExpressionRenderer;
+import org.hibernate.dialect.aggregate.spi.AggregateWriteRendererRequest;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
@@ -19,10 +21,10 @@ import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectablePath;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.sql.ast.tree.expression.AggregateColumnWriteExpression;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
-import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.update.Assignment;
+import org.hibernate.sql.ast.spi.query.expression.AggregateColumnWriteExpression;
+import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
+import org.hibernate.sql.ast.spi.query.expression.Expression;
+import org.hibernate.sql.ast.spi.query.update.Assignment;
 import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -119,10 +121,12 @@ public class AggregateColumnAssignmentHandler {
 				consumedPositions.set( assignmentPosition );
 			}
 
-			final AggregateSupport.WriteExpressionRenderer writeExpression = aggregateSupport.aggregateCustomWriteExpressionRenderer(
-					aggregateMapping,
-					columnMappings,
-					typeConfiguration
+			final AggregateWriteExpressionRenderer writeExpression = aggregateSupport.aggregateCustomWriteExpressionRenderer(
+					new AggregateWriteRendererRequest(
+							aggregateMapping,
+							List.of( columnMappings ),
+							typeConfiguration
+					)
 			);
 			aggregateAssignments.add(
 					new Assignment(

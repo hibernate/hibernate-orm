@@ -1,0 +1,37 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
+package org.hibernate.sql.ast.spi.query;
+
+import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.query.sqm.sql.spi.SqmToSqlAstConverter;
+import org.hibernate.spi.NavigablePath;
+import org.hibernate.query.sqm.tree.spi.domain.SqmPath;
+import org.hibernate.sql.ast.spi.result.DomainResultProducer;
+import org.hibernate.sql.ast.spi.query.expression.Expression;
+
+import jakarta.annotation.Nullable;
+
+/**
+ * Interpretation of a {@link SqmPath} as part of the translation to SQL AST.  We need specialized handling
+ * for path interpretations because it can (and likely) contains multiple SqlExpressions (entity to its columns, e.g.)
+ *
+ * @see SqmToSqlAstConverter
+ *
+ * @author Steve Ebersole
+ */
+public interface PathInterpretation<T> extends Expression, DomainResultProducer<T> {
+	NavigablePath getNavigablePath();
+
+	@Override
+	ModelPart getExpressionType();
+
+	default Expression getSqlExpression() {
+		return this;
+	}
+
+	default @Nullable String getAffectedTableName() {
+		return null;
+	}
+}

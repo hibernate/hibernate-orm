@@ -14,6 +14,7 @@ import org.hibernate.sql.results.graph.FetchParent;
  *
  * @author Steve Ebersole
  */
+@org.hibernate.SPI({ org.hibernate.SPI.Role.USE, org.hibernate.SPI.Role.IMPLEMENT })
 public interface EntityFetch extends EntityResultGraphNode, Fetch {
 	@Override
 	default boolean containsAnyNonScalarResults() {

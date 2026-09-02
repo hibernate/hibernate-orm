@@ -6,7 +6,7 @@ package org.hibernate.sql.results.graph;
 
 import org.hibernate.Incubating;
 import org.hibernate.engine.FetchTiming;
-import org.hibernate.internal.util.IndexedConsumer;
+import org.hibernate.spi.IndexedConsumer;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
@@ -20,6 +20,7 @@ import org.hibernate.spi.NavigablePath;
  * @author Steve Ebersole
  */
 @Incubating
+@org.hibernate.SPI({ org.hibernate.SPI.Role.USE, org.hibernate.SPI.Role.IMPLEMENT })
 public interface Fetchable extends ModelPart {
 	/**
 	 * The name of the fetchable.  This is the part's "local name".
@@ -51,6 +52,7 @@ public interface Fetchable extends ModelPart {
 	 *
 	 * @return The Fetch representing the circularity; {@code null} indicates the fetch is not circular
 	 */
+	@org.hibernate.SPI(org.hibernate.SPI.Role.SUPPLY)
 	default Fetch resolveCircularFetch(
 			NavigablePath fetchablePath,
 			FetchParent fetchParent,
@@ -66,6 +68,7 @@ public interface Fetchable extends ModelPart {
 	 * @param fetchablePath The overall path within the graph
 	 * @param fetchTiming The requested fetch timing
 	 */
+	@org.hibernate.SPI(org.hibernate.SPI.Role.SUPPLY)
 	Fetch generateFetch(
 			FetchParent fetchParent,
 			NavigablePath fetchablePath,

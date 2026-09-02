@@ -4,12 +4,12 @@
  */
 package org.hibernate.dialect.function.json;
 
-import org.hibernate.dialect.aggregate.DB2AggregateSupport;
+import org.hibernate.dialect.aggregate.internal.DB2AggregateSupport;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.spi.SqlAppender;
-import org.hibernate.sql.ast.tree.SqlAstNode;
-import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
+import org.hibernate.sql.spi.SqlAppender;
+import org.hibernate.sql.ast.spi.SqlAstNode;
+import org.hibernate.sql.ast.spi.query.expression.Expression;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**

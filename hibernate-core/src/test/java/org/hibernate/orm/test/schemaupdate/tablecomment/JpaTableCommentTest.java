@@ -19,6 +19,7 @@ import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.TargetType;
 
 import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.hibernate.testing.DialectTestSupport;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
@@ -104,10 +105,11 @@ public class JpaTableCommentTest {
 		final String[] fileContent = new String( Files.readAllBytes( output.toPath() ) ).toLowerCase()
 				.split( System.lineSeparator() );
 		final Dialect dialect = metadata.getDatabase().getDialect();
-		final String createTable = dialect.getCreateTableString().toUpperCase( Locale.ROOT ) + " ";
+		final String createTable = DialectTestSupport.createTableCommand( dialect ).toUpperCase( Locale.ROOT ) + " ";
 		for ( final String s : fileContent ) {
 			final String statement = s.toUpperCase( Locale.ROOT );
-			if ( !dialect.getTableComment( "" ).isEmpty() ) {
+			if ( dialect.getSchemaCommentSupport().placement( org.hibernate.dialect.schema.spi.CommentTarget.TABLE )
+					== org.hibernate.dialect.schema.spi.CommentPlacement.INLINE ) {
 				if ( statement.contains( createTable + tableName.toUpperCase( Locale.ROOT ) ) ) {
 					if ( statement.contains( comment.toUpperCase( Locale.ROOT ) ) ) {
 						return true;

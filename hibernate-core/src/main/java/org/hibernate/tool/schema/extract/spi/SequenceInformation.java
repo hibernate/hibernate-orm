@@ -4,13 +4,16 @@
  */
 package org.hibernate.tool.schema.extract.spi;
 
+import org.hibernate.SPI;
 import org.hibernate.boot.model.relational.QualifiedSequenceName;
 
-/**
- * Access to information about existing sequences.
- *
- * @author Steve Ebersole
- */
+import static org.hibernate.SPI.Role.USE;
+
+/// Read-only information extracted for an existing database sequence.
+///
+/// @since 8.0
+/// @author Steve Ebersole
+@SPI(USE)
 public interface SequenceInformation {
 
 	/**

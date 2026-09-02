@@ -32,6 +32,7 @@ import org.hibernate.ScrollableResults;
 import org.hibernate.UnknownProfileException;
 import org.hibernate.engine.query.spi.NativeQueryInterpreter;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.dialect.pagination.spi.PaginationRequest;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.internal.util.OptionsHelper;
 import org.hibernate.jpa.spi.NativeQueryArrayTransformer;
@@ -1128,16 +1129,21 @@ public class NativeQueryImpl<R>
 
 	private int parameterStartPosition() {
 		final var jdbcServices = getSessionFactory().getJdbcServices();
-		if ( !isStandardRenderer( jdbcServices.getParameterMarkerStrategy() )
-				&& hasLimit( getQueryOptions().getLimit() ) ) {
+		final var limit = getQueryOptions().getLimit();
+		if ( !isStandardRenderer( jdbcServices.getParameterMarkerStrategy() ) && hasLimit( limit ) ) {
 			final var limitHandler = jdbcServices.getDialect().getLimitHandler();
-			if ( limitHandler.processSqlMutatesState() ) {
-				limitHandler.processSql( sqlString, -1, null, getQueryOptions() );
-			}
 			// A non-standard parameter marker strategy is in use, and the limit handler wants to bind parameters
 			// before the main parameters. This requires recording the start position in the cache key
 			// because the generated SQL depends on this information
-			return limitHandler.getParameterPositionStart( getQueryOptions().getLimit() );
+			return limitHandler.parameterPositionStart(
+					new PaginationRequest(
+							sqlString,
+							limit.getFirstRow(),
+							limit.getMaxRows(),
+							-1,
+							null
+					)
+			);
 		}
 		else {
 			return 1;

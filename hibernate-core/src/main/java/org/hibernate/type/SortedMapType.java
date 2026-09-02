@@ -4,6 +4,8 @@
  */
 package org.hibernate.type;
 
+import org.hibernate.SPI;
+
 import java.util.Comparator;
 import java.util.TreeMap;
 
@@ -14,6 +16,7 @@ import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.persister.collection.CollectionPersister;
 
 
+@SPI
 public class SortedMapType extends MapType {
 
 	private final Comparator<?> comparator;

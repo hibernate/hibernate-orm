@@ -7,10 +7,10 @@ package org.hibernate.dialect.function.array;
 import org.hibernate.type.descriptor.jdbc.XmlHelper;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
-import org.hibernate.query.sqm.tuple.internal.AnonymousTupleTableGroupProducer;
-import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.spi.SqlAppender;
-import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.spi.query.SetReturningFunctionType;
+import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
+import org.hibernate.sql.spi.SqlAppender;
+import org.hibernate.sql.ast.spi.query.expression.Expression;
 import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.java.BasicPluralJavaType;
@@ -29,6 +29,7 @@ public class SybaseASEUnnestFunction extends UnnestFunction {
 	}
 
 	@Override
+	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	protected String getDdlType(SqlTypedMapping sqlTypedMapping, int containerSqlTypeCode, SqlAstTranslator<?> translator) {
 		// Sybase ASE refuses TEXT/UNITEXT/IMAGE in the columns clause of
 		// xmltable(), and also in ORDER BY / UNION select lists (which the
@@ -39,12 +40,13 @@ public class SybaseASEUnnestFunction extends UnnestFunction {
 	}
 
 	@Override
+	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	protected void renderXmlTable(
 			SqlAppender sqlAppender,
 			Expression array,
 			BasicPluralType<?, ?> pluralType,
 			@Nullable SqlTypedMapping sqlTypedMapping,
-			AnonymousTupleTableGroupProducer tupleType,
+			SetReturningFunctionType tupleType,
 			String tableIdentifierVariable,
 			SqlAstTranslator<?> walker) {
 		final XmlHelper.CollectionTags collectionTags = XmlHelper.determineCollectionTags(
@@ -58,7 +60,7 @@ public class SybaseASEUnnestFunction extends UnnestFunction {
 		array.accept( walker );
 		sqlAppender.appendSql( " columns" );
 
-		if ( tupleType.findSubPart( CollectionPart.Nature.ELEMENT.getName(), null ) == null ) {
+		if ( tupleType.findSubPart( CollectionPart.Nature.ELEMENT.getName() ) == null ) {
 			tupleType.forEachSelectable( 0, (selectionIndex, selectableMapping) -> {
 				if ( selectionIndex == 0 ) {
 					sqlAppender.append( ' ' );

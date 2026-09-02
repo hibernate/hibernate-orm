@@ -7,7 +7,7 @@ package org.hibernate.query.sqm.tree.spi.select;
 import jakarta.annotation.Nullable;
 import org.hibernate.query.sqm.spi.SqmBindableType;
 import org.hibernate.query.sqm.tree.spi.SqmTypedNode;
-import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
+import org.hibernate.sql.ast.spi.result.DomainResultProducer;
 
 /**
  * Models any aliased expression.  E.g. `select exp as e ...`

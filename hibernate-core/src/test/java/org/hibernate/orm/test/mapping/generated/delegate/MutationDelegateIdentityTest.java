@@ -22,7 +22,7 @@ import org.hibernate.id.insert.AbstractSelectingDelegate;
 import org.hibernate.id.insert.UniqueKeySelectingDelegate;
 import org.hibernate.persister.entity.EntityPersister;
 
-import org.hibernate.sql.model.MutationType;
+import org.hibernate.sql.spi.mutation.MutationType;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.logger.Triggerable;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
@@ -169,7 +169,7 @@ public class MutationDelegateIdentityTest {
 			);
 
 			final boolean shouldHaveRowId = delegate != null && delegate.supportsRowId()
-					&& scope.getSessionFactory().getJdbcServices().getDialect().rowId( "" ) != null;
+					&& scope.getSessionFactory().getJdbcServices().getDialect().getRowIdSupport().isSupported();
 			if ( shouldHaveRowId ) {
 				// assert row-id was populated in entity entry
 				final PersistenceContext pc = session.getPersistenceContextInternal();
@@ -225,7 +225,7 @@ public class MutationDelegateIdentityTest {
 			}
 
 			final boolean shouldHaveRowId = delegate != null && delegate.supportsRowId()
-					&& scope.getSessionFactory().getJdbcServices().getDialect().rowId( "" ) != null;
+					&& scope.getSessionFactory().getJdbcServices().getDialect().getRowIdSupport().isSupported();
 			if ( shouldHaveRowId ) {
 				// assert row-id was populated in entity entry
 				final PersistenceContext pc = session.getPersistenceContextInternal();

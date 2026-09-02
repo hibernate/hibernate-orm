@@ -4,6 +4,7 @@
  */
 package org.hibernate.cfg;
 
+
 /**
  * Settings used as fallback to configure aspects of specific {@link org.hibernate.dialect.Dialect}s
  * when the boot process does not have access to a {@link java.sql.DatabaseMetaData} object or

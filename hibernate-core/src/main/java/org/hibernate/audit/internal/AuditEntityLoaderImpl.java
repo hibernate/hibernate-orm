@@ -4,6 +4,8 @@
  */
 package org.hibernate.audit.internal;
 
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
+
 import org.hibernate.LockOptions;
 import org.hibernate.audit.AuditLog;
 import org.hibernate.audit.ModificationType;
@@ -15,11 +17,11 @@ import org.hibernate.loader.ast.internal.LoaderSelectBuilder;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
-import org.hibernate.sql.ast.tree.expression.JdbcLiteral;
-import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
-import org.hibernate.sql.ast.tree.select.SelectStatement;
+import org.hibernate.sql.ast.spi.creation.SqlAliasBaseManager;
+import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
+import org.hibernate.sql.ast.spi.query.expression.JdbcLiteral;
+import org.hibernate.sql.ast.spi.query.predicate.ComparisonPredicate;
+import org.hibernate.sql.ast.spi.query.select.SelectStatement;
 import org.hibernate.sql.exec.internal.BaseExecutionContext;
 import org.hibernate.sql.exec.internal.CallbackImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
@@ -128,7 +130,7 @@ public class AuditEntityLoaderImpl implements AuditEntityLoader {
 	private static JdbcSelect translate(SelectStatement sqlAst, SessionFactoryImplementor sessionFactory) {
 		return sessionFactory.getJdbcServices().getJdbcEnvironment()
 				.getSqlAstTranslatorFactory()
-				.buildSelectTranslator( sessionFactory, sqlAst )
+				.buildTranslator( new SqlAstTranslationRequest.Select( sessionFactory, sqlAst ) )
 				.translate( null, QueryOptions.NONE );
 	}
 

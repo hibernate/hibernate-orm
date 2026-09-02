@@ -8,12 +8,12 @@ import java.util.List;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
-import org.hibernate.sql.model.ast.LogicalTableUpdate;
-import org.hibernate.sql.model.ast.MutatingTableReference;
-import org.hibernate.sql.model.ast.builder.AbstractTableUpdateBuilder;
-import org.hibernate.sql.model.internal.TableUpdateStandard;
-import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
+import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
+import org.hibernate.sql.ast.spi.model.LogicalTableUpdate;
+import org.hibernate.sql.ast.spi.model.MutatingTableReference;
+import org.hibernate.sql.ast.spi.model.builder.AbstractTableUpdateBuilder;
+import org.hibernate.sql.ast.spi.model.TableUpdateStandard;
+import org.hibernate.sql.spi.mutation.jdbc.JdbcMutationOperation;
 
 /**
  * @author Marco Belladelli

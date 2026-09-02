@@ -6,7 +6,7 @@ package org.hibernate.persister.entity.mutation;
 
 import java.util.BitSet;
 
-import org.hibernate.sql.model.TableMapping;
+import org.hibernate.sql.spi.mutation.TableMapping;
 
 import static java.util.Arrays.copyOf;
 
@@ -16,7 +16,7 @@ import static java.util.Arrays.copyOf;
  * they are updated within the scope of a particular persister.
  * This makes it possible to store a set of them as a bitset,
  * which is typically more efficient than using a {@link java.util.Set}.
- * These table ids come from {@link org.hibernate.sql.model.TableMapping#relativePosition}.
+ * These table ids come from {@link org.hibernate.sql.spi.mutation.TableMapping#relativePosition}.
  * <p>N.B. Make sure to not store TableMappings from different
  * persisters, as their unique identifiers will overlap:
  * we'll only verify a mismatch if assertions are enabled.</p>

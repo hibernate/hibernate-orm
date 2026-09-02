@@ -4,52 +4,66 @@
  */
 package org.hibernate.community.dialect;
 
+import org.hibernate.dialect.identifier.spi.KeywordRegistration;
+
+import org.hibernate.dialect.temporaltype.spi.TemporalOperationSupport;
+
+import org.hibernate.SPI;
+
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.SUPPLY;
+import static org.hibernate.SPI.Role.USE;
+import org.hibernate.dialect.type.spi.TypeSizingProfile;
+
+import org.hibernate.dialect.mutation.spi.MultiTableMutationSupport;
+import org.hibernate.dialect.function.spi.TupleCountSupport;
+import org.hibernate.dialect.function.spi.WindowFunctionSupport;
+
 import org.hibernate.LockOptions;
-import org.hibernate.Timeouts;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.QualifiedNameImpl;
 import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
-import org.hibernate.community.dialect.identity.Teradata14IdentityColumnSupport;
+import org.hibernate.community.dialect.identity.internal.Teradata14IdentityColumnSupport;
 import org.hibernate.community.dialect.lock.internal.TeradataLockingSupport;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.RowLockStrategy;
+import org.hibernate.metamodel.mapping.SqlTypedMapping;
+import org.hibernate.dialect.lob.spi.LobSupport;
+import org.hibernate.dialect.lob.spi.LobSupports;
+import org.hibernate.dialect.jdbc.spi.ParameterLimits;
+import org.hibernate.dialect.lock.spi.RowLockStrategy;
 import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.dialect.identity.IdentityColumnSupport;
+import org.hibernate.dialect.identity.spi.IdentityColumnSupport;
 import org.hibernate.dialect.lock.spi.LockingSupport;
-import org.hibernate.dialect.pagination.LimitHandler;
-import org.hibernate.dialect.pagination.TopLimitHandler;
-import org.hibernate.dialect.temptable.TemporaryTableKind;
-import org.hibernate.dialect.temptable.TemporaryTableStrategy;
-import org.hibernate.community.dialect.temptable.TeradataGlobalTemporaryTableStrategy;
+import org.hibernate.dialect.pagination.spi.LimitHandler;
+import org.hibernate.dialect.schema.spi.TableCreationKind;
+import org.hibernate.dialect.schema.spi.IndexNameQualification;
+import org.hibernate.dialect.schema.spi.TruncateRequest;
+import org.hibernate.dialect.pagination.spi.TopLimitHandler;
+import org.hibernate.dialect.temptable.spi.TemporaryTableStrategy;
+import org.hibernate.community.dialect.temptable.internal.TeradataGlobalTemporaryTableStrategy;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.mapping.Index;
-import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.query.common.TemporalUnit;
-import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.dialect.type.IntervalType;
-import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableInsertStrategy;
-import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableMutationStrategy;
-import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
-import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
+import org.hibernate.dialect.temporaltype.spi.IntervalType;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ForUpdateFragment;
-import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.SqlAstTranslatorFactory;
-import org.hibernate.sql.ast.internal.NonLockingClauseStrategy;
-import org.hibernate.sql.ast.internal.PessimisticLockKind;
-import org.hibernate.sql.ast.spi.LockingClauseStrategy;
-import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
-import org.hibernate.sql.ast.tree.Statement;
+import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslatorFactory;
+import org.hibernate.dialect.sql.ast.spi.RowValueSupport;
+import org.hibernate.dialect.sql.ast.spi.SubquerySupport;
+import org.hibernate.dialect.lock.spi.PessimisticLockKind;
+import org.hibernate.dialect.lock.spi.LockingClauseStrategy;
+import org.hibernate.dialect.lock.spi.StandardLockingClauseStrategies;
+import org.hibernate.dialect.sql.ast.spi.StandardSqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.Statement;
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
 import org.hibernate.sql.exec.spi.JdbcOperation;
-import org.hibernate.tool.schema.internal.StandardIndexExporter;
+import org.hibernate.tool.schema.spi.StandardIndexExporter;
 import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
@@ -60,11 +74,8 @@ import org.hibernate.type.spi.TypeConfiguration;
 
 import jakarta.persistence.TemporalType;
 
-import java.sql.CallableStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.sql.Types;
-import java.util.Map;
+import java.util.List;
 import java.util.Set;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
@@ -80,7 +91,21 @@ import static org.hibernate.type.SqlTypes.VARBINARY;
  *
  * @author Jay Nance
  */
-public class TeradataDialect extends Dialect {
+public class TeradataDialect extends Dialect implements TemporalOperationSupport {
+
+	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
+	public TemporalOperationSupport getTemporalOperationSupport() {
+		return this;
+	}
+	private final TypeSizingProfile typeSizingProfile = TypeSizingProfile.builder( super.getTypeSizingProfile() )
+			.defaultDecimalPrecision( getVersion().isBefore( 14 ) ? 18 : 38 )
+			.maxVarcharLength( 32_000 ).maxVarcharCapacity( 32_000 )
+			.maxNVarcharLength( 32_000 ).maxNVarcharCapacity( 32_000 )
+			.maxVarbinaryLength( 64_000 ).maxVarbinaryCapacity( 64_000 )
+			.build();
+
+	@Override public TypeSizingProfile getTypeSizingProfile() { return typeSizingProfile; }
 
 	private static final DatabaseVersion DEFAULT_VERSION = DatabaseVersion.make( 12, 0 );
 
@@ -88,7 +113,6 @@ public class TeradataDialect extends Dialect {
 
 	public TeradataDialect(DialectResolutionInfo info) {
 		this( info.makeCopyOrDefault( DEFAULT_VERSION ) );
-		registerKeywords( info );
 	}
 
 	public TeradataDialect() {
@@ -97,27 +121,30 @@ public class TeradataDialect extends Dialect {
 
 	public TeradataDialect(DatabaseVersion version) {
 		super( version );
+		lockingSupport = new TeradataLockingSupport( version.isSameOrAfter( 14 ) );
 	}
 
 	@Override
-	protected void registerDefaultKeywords() {
-		super.registerDefaultKeywords();
-		registerKeyword( "password" );
-		registerKeyword( "type" );
-		registerKeyword( "title" );
-		registerKeyword( "year" );
-		registerKeyword( "month" );
-		registerKeyword( "summary" );
-		registerKeyword( "alias" );
-		registerKeyword( "value" );
-		registerKeyword( "first" );
-		registerKeyword( "role" );
-		registerKeyword( "account" );
-		registerKeyword( "class" );
-		registerKeyword( "title" );
+	@SPI({ USE, IMPLEMENT, SUPPLY })
+	protected void contributeKeywords(KeywordRegistration registration) {
+		super.contributeKeywords( registration );
+		registration.registerKeyword( "password" );
+		registration.registerKeyword( "type" );
+		registration.registerKeyword( "title" );
+		registration.registerKeyword( "year" );
+		registration.registerKeyword( "month" );
+		registration.registerKeyword( "summary" );
+		registration.registerKeyword( "alias" );
+		registration.registerKeyword( "value" );
+		registration.registerKeyword( "first" );
+		registration.registerKeyword( "role" );
+		registration.registerKeyword( "account" );
+		registration.registerKeyword( "class" );
+		registration.registerKeyword( "title" );
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	protected String columnType(int sqlTypeCode) {
 		return switch ( sqlTypeCode ) {
 			case BOOLEAN,TINYINT -> "byteint";
@@ -130,33 +157,21 @@ public class TeradataDialect extends Dialect {
 	}
 
 	@Override
-	public int getDefaultStatementBatchSize() {
-		return getVersion().isBefore( 14 )
-				? 0 : 15;
+	@SPI({ IMPLEMENT, SUPPLY })
+	protected void contributeDefaultProperties(java.util.Properties properties) {
+		super.contributeDefaultProperties( properties );
+		properties.setProperty( org.hibernate.cfg.AvailableSettings.STATEMENT_BATCH_SIZE, Integer.toString( getVersion().isBefore( 14 )
+				? 0 : 15 ) );
 	}
 
 	@Override
-	public boolean useInputStreamToInsertBlob() {
-		return getVersion().isSameOrAfter( 14 );
+	@SPI({ IMPLEMENT, SUPPLY })
+	public LobSupport getLobSupport() {
+		return LobSupports.nonStreaming();
 	}
 
 	@Override
-	public boolean useConnectionToCreateLob() {
-		return false;
-	}
-
-	@Override
-	public int getMaxVarcharLength() {
-		//for the unicode server character set
-		return 32_000;
-	}
-
-	@Override
-	public int getMaxVarbinaryLength() {
-		return 64_000;
-	}
-
-	@Override
+	@SPI({ USE, IMPLEMENT })
 	public JdbcType resolveSqlTypeDescriptor(
 			String columnTypeName, int jdbcTypeCode,
 			int precision,
@@ -181,33 +196,32 @@ public class TeradataDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public SqlAstTranslatorFactory getSqlAstTranslatorFactory() {
 		return new StandardSqlAstTranslatorFactory() {
 			@Override
-			protected <T extends JdbcOperation> SqlAstTranslator<T> buildTranslator(
-					SessionFactoryImplementor sessionFactory, Statement statement) {
-				return new TeradataSqlAstTranslator<>( sessionFactory, statement );
+			protected <S extends Statement, T extends JdbcOperation> SqlAstTranslator<T> createTranslator(
+					SqlAstTranslationRequest<S, T> request) {
+				return new TeradataSqlAstTranslator<>( request );
 			}
 		};
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public int getPreferredSqlTypeCodeForBoolean() {
 		return Types.BIT;
 	}
 
 	@Override
-	public int getDefaultDecimalPrecision() {
-		return getVersion().isBefore( 14 ) ? 18 : 38;
-	}
-
-	@Override
-	public long getFractionalSecondPrecisionInNanos() {
+	@SPI({ USE, IMPLEMENT })
+	public long fractionalSecondPrecisionInNanos() {
 		// Do duration arithmetic in a seconds, but
 		// with the fractional part
 		return 1_000_000_000; //seconds!!
 	}
 
+	@SPI({ USE, IMPLEMENT })
 	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
 		StringBuilder pattern = new StringBuilder();
 		//TODO: TOTALLY UNTESTED CODE!
@@ -243,6 +257,7 @@ public class TeradataDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
 		//TODO: TOTALLY UNTESTED CODE!
 		switch ( unit ) {
@@ -260,6 +275,7 @@ public class TeradataDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
 		super.initializeFunctionRegistry(functionContributions);
 		final BasicTypeRegistry basicTypeRegistry = functionContributions.getTypeConfiguration().getBasicTypeRegistry();
@@ -304,38 +320,16 @@ public class TeradataDialect extends Dialect {
 		functionFactory.hypotheticalOrderedSetAggregates();
 	}
 
-	/**
-	 * Does this dialect support the {@code FOR UPDATE} syntax?
-	 *
-	 * @return empty string ... Teradata does not support {@code FOR UPDATE} syntax
-	 */
+
 	@Override
-	public String getForUpdateString() {
-		return "";
+	@SPI({ USE, IMPLEMENT })
+	public String addColumnPrefix() {
+		return getVersion().isBefore( 14 ) ? super.addColumnPrefix() : "add";
 	}
 
 	@Override
-	public String getAddColumnString() {
-		return getVersion().isBefore( 14 ) ? super.getAddColumnString() : "add";
-	}
-
-	@Override
-	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(
-			EntityMappingType rootEntityDescriptor,
-			RuntimeModelCreationContext runtimeModelCreationContext) {
-		return new GlobalTemporaryTableMutationStrategy( rootEntityDescriptor, runtimeModelCreationContext );
-	}
-
-	@Override
-	public SqmMultiTableInsertStrategy getFallbackSqmInsertStrategy(
-			EntityMappingType rootEntityDescriptor,
-			RuntimeModelCreationContext runtimeModelCreationContext) {
-		return new GlobalTemporaryTableInsertStrategy( rootEntityDescriptor, runtimeModelCreationContext );
-	}
-
-	@Override
-	public TemporaryTableKind getSupportedTemporaryTableKind() {
-		return TemporaryTableKind.GLOBAL;
+	public MultiTableMutationSupport getMultiTableMutationSupport() {
+		return MultiTableMutationSupport.GLOBAL_TEMPORARY_TABLE;
 	}
 
 	@Override
@@ -344,54 +338,54 @@ public class TeradataDialect extends Dialect {
 	}
 
 	@Override
-	public String getTemporaryTableCreateOptions() {
-		return TeradataGlobalTemporaryTableStrategy.INSTANCE.getTemporaryTableCreateOptions();
-	}
-
-	@Override
+	@SPI({ USE, IMPLEMENT })
 	public int getMaxAliasLength() {
 		// Max identifier length is 30, but Hibernate needs to add "uniqueing info" so we account for that
 		return 20;
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public int getMaxIdentifierLength() {
 		return 30;
 	}
 
 	@Override
-	public boolean supportsCascadeDelete() {
-		return false;
+	@SPI({ USE, IMPLEMENT })
+	public boolean supportsOnDeleteAction(org.hibernate.annotations.OnDeleteAction action) {
+		return action == org.hibernate.annotations.OnDeleteAction.NO_ACTION;
 	}
 
 	@Override
-	public boolean supportsCircularCascadeDeleteConstraints() {
-		return false;
+	public TupleCountSupport getTupleCountSupport() {
+		return TupleCountSupport.NONE;
 	}
 
 	@Override
-	public boolean supportsTupleDistinctCounts() {
-		return false;
+	public SubquerySupport getSubquerySupport() {
+		return SubquerySupport.builder()
+				.feature( SubquerySupport.Feature.EXISTS_IN_SELECT, false )
+				.feature( SubquerySupport.Feature.ORDER_BY, false )
+				.build();
 	}
 
 	@Override
-	public boolean supportsExistsInSelect() {
-		return false;
+	public WindowFunctionSupport getWindowFunctionSupport() {
+		return getVersion().isBefore( 16, 10 )
+				? WindowFunctionSupport.NONE
+				: WindowFunctionSupport.builder()
+						.features(
+								WindowFunctionSupport.Feature.WINDOW_FUNCTIONS,
+								WindowFunctionSupport.Feature.PARTITION_BY,
+								WindowFunctionSupport.Feature.ROWS_FRAME
+						)
+						.build();
 	}
 
 	@Override
-	public boolean supportsOrderByInSubquery() {
-		// This is just a guess
-		return false;
-	}
-
-	@Override
-	public boolean supportsWindowFunctions() {
-		return getVersion().isSameOrAfter( 16, 10 );
-	}
-
-	@Override
-	public String getSelectClauseNullString(int sqlType, TypeConfiguration typeConfiguration) {
+	@SPI({ USE, IMPLEMENT })
+	public String getSelectClauseNullString(SqlTypedMapping sqlTypeMapping, TypeConfiguration typeConfiguration) {
+		final int sqlType = sqlTypeMapping.getJdbcMapping().getJdbcType().getDdlTypeCode();
 		String v = "null";
 
 		switch ( sqlType ) {
@@ -438,57 +432,18 @@ public class TeradataDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsUnboundedLobLocatorMaterialization() {
-		return false;
+	@SPI({ USE, IMPLEMENT })
+	public String createTableCommand(TableCreationKind kind) {
+		return kind == TableCreationKind.MULTISET ? "create multiset table " : super.createTableCommand( kind );
 	}
 
 	@Override
-	public String getCreateMultisetTableString() {
-		return "create multiset table ";
+	public ParameterLimits getParameterLimits() {
+		return ParameterLimits.of( PARAM_LIST_SIZE_LIMIT );
 	}
 
 	@Override
-	public boolean supportsLobValueChangePropagation() {
-		return false;
-	}
-
-	@Override
-	public boolean doesReadCommittedCauseWritersToBlockReaders() {
-		return true;
-	}
-
-	@Override
-	public boolean doesRepeatableReadCauseReadersToBlockWriters() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsBindAsCallableArgument() {
-		return false;
-	}
-
-	@Override
-	public int getInExpressionCountLimit() {
-		return PARAM_LIST_SIZE_LIMIT;
-	}
-
-	@Override
-	public int registerResultSetOutParameter(CallableStatement statement, int col) throws SQLException {
-		statement.registerOutParameter( col, Types.REF );
-		col++;
-		return col;
-	}
-
-	@Override
-	public ResultSet getResultSet(CallableStatement cs) throws SQLException {
-		boolean isResultSet = cs.execute();
-		while ( !isResultSet && cs.getUpdateCount() != -1 ) {
-			isResultSet = cs.getMoreResults();
-		}
-		return cs.getResultSet();
-	}
-
-	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public ViolatedConstraintNameExtractor getViolatedConstraintNameExtractor() {
 		return getVersion().isBefore( 14 ) ? super.getViolatedConstraintNameExtractor() : EXTRACTOR;
 	}
@@ -519,7 +474,7 @@ public class TeradataDialect extends Dialect {
 				return constraintName;
 			} );
 
-	private final LockingSupport lockingSupport = new TeradataLockingSupport();
+	private final LockingSupport lockingSupport;
 
 	@Override
 	public LockingSupport getLockingSupport() {
@@ -533,7 +488,7 @@ public class TeradataDialect extends Dialect {
 			LockOptions lockOptions,
 			Set<NavigablePath> rootPathsForLocking) {
 		if ( getVersion().isBefore( 14 ) ) {
-			return NonLockingClauseStrategy.NON_CLAUSE_STRATEGY;
+			return StandardLockingClauseStrategies.none();
 		}
 		// we'll reuse the StandardLockingClauseStrategy for the collecting
 		// aspect and just handle the special rendering in the SQL AST translator
@@ -541,43 +496,17 @@ public class TeradataDialect extends Dialect {
 	}
 
 	@Override
-	public boolean useFollowOnLocking(String sql, QueryOptions queryOptions) {
-		return getVersion().isSameOrAfter( 14 );
-	}
-
-	@Override
-	public String getWriteLockString(int timeout) {
-		if ( getVersion().isBefore( 14 ) ) {
-			return super.getWriteLockString( timeout );
-		}
-		String sMsg = " Locking row for write ";
-		if ( timeout == Timeouts.NO_WAIT_MILLI ) {
-			return sMsg + " nowait ";
-		}
-		return sMsg;
-	}
-
-	@Override
-	public String getReadLockString(int timeout) {
-		if ( getVersion().isBefore( 14 ) ) {
-			return super.getReadLockString( timeout );
-		}
-		String sMsg = " Locking row for read  ";
-		if ( timeout == Timeouts.NO_WAIT_MILLI ) {
-			return sMsg + " nowait ";
-		}
-		return sMsg;
-	}
-
-	@Override
 	public Exporter<Index> getIndexExporter() {
 		return new TeradataIndexExporter(this);
 	}
 
-	private static class TeradataIndexExporter extends StandardIndexExporter implements Exporter<Index> {
+	private static final class TeradataIndexExporter implements Exporter<Index> {
+		private final Dialect dialect;
+		private final StandardIndexExporter standardExporter;
 
 		private TeradataIndexExporter(Dialect dialect) {
-			super(dialect);
+			this.dialect = dialect;
+			this.standardExporter = new StandardIndexExporter( dialect );
 		}
 
 		@Override
@@ -586,7 +515,7 @@ public class TeradataDialect extends Dialect {
 			final String tableName = context.format( qualifiedTableName );
 
 			final String indexNameForCreation;
-			if ( getDialect().qualifyIndexName() ) {
+			if ( dialect.getIndexDdlSupport().nameQualification() == IndexNameQualification.QUALIFIED ) {
 				indexNameForCreation = context.format(
 						new QualifiedNameImpl(
 								qualifiedTableName.getCatalogName(),
@@ -608,13 +537,18 @@ public class TeradataDialect extends Dialect {
 				else {
 					columnList.append( ", " );
 				}
-				columnList.append( selectable.getText( getDialect() ) );
+				columnList.append( selectable.getText( dialect ) );
 			}
 
 			return new String[] {
 					"create index " + indexNameForCreation
 							+ "(" + columnList + ") on " + tableName
 			};
+		}
+
+		@Override
+		public String[] getSqlDropStrings(Index index, Metadata metadata, SqlStringGenerationContext context) {
+			return standardExporter.getSqlDropStrings( index, metadata, context );
 		}
 	}
 
@@ -626,38 +560,22 @@ public class TeradataDialect extends Dialect {
 	}
 
 	@Override
-	public String applyLocksToSql(String sql, LockOptions aliasedLockOptions, Map<String, String[]> keyColumnNames) {
-		return getVersion().isBefore( 14 )
-				? super.applyLocksToSql( sql, aliasedLockOptions, keyColumnNames )
-				: new ForUpdateFragment( this, aliasedLockOptions, keyColumnNames ).toFragmentString() + " " + sql;
-	}
-
-	@Override
 	public LimitHandler getLimitHandler() {
 		return new TopLimitHandler( false );
 	}
 
 	@Override
-	public boolean supportsRowValueConstructorSyntax() {
-		return false;
+	public RowValueSupport getRowValueSupport() {
+		return RowValueSupport.NONE;
 	}
 
 	/**
 	 * Teradata uses the syntax {@code DELETE FROM <tablename> ALL instead of TRUNCATE <tablename>}
-	 * @param tableName the name of the table
+	 * @param request the truncate request
+	 * @return the commands which implement the truncate request
 	 */
-	public String getTruncateTableStatement(String tableName) {
-		return "delete from " + tableName + " all";
-	}
-
-	@Override
-	public boolean supportsRowValueConstructorSyntaxInInList() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
-		return false;
+	public List<String> renderCommands(TruncateRequest request) {
+		return request.tableNames().stream().map( name -> "delete from " + name + " all" ).toList();
 	}
 
 }

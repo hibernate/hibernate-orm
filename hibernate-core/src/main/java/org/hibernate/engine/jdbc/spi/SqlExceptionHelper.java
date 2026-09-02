@@ -27,8 +27,8 @@ import org.jboss.logging.Logger.Level;
  */
 public class SqlExceptionHelper {
 
-	private final boolean logWarnings;
-	private final boolean logErrors;
+	private volatile boolean logWarnings;
+	private volatile boolean logErrors;
 
 	private static final SQLExceptionConverter DEFAULT_CONVERTER =
 			new StandardSQLExceptionConverter( new SQLStateConversionDelegate( () -> e -> null ) );
@@ -66,6 +66,14 @@ public class SqlExceptionHelper {
 	public SqlExceptionHelper(SQLExceptionConverter sqlExceptionConverter, boolean logWarnings, boolean logErrors) {
 		this.sqlExceptionConverter = sqlExceptionConverter;
 		this.logWarnings = logWarnings;
+		this.logErrors = logErrors;
+	}
+
+	public void setLogWarnings(boolean logWarnings) {
+		this.logWarnings = logWarnings;
+	}
+
+	public void setLogErrors(boolean logErrors) {
 		this.logErrors = logErrors;
 	}
 

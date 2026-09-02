@@ -388,7 +388,7 @@ public interface JdbcSettings extends C3p0Settings, AgroalSettings, HikariCPSett
 	String SHOW_SQL = "hibernate.show_sql";
 
 	/**
-	 * Enables formatting of SQL logged to the console.
+	 * Enables formatting of SQL logged/shown.
 	 *
 	 * @settingDefault {@code false}
 	 */

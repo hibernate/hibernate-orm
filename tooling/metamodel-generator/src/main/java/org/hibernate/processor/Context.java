@@ -696,11 +696,6 @@ public final class Context {
 					}
 
 					@Override
-					public String getSQLKeywords() {
-						return "";
-					}
-
-					@Override
 					public int getDatabaseMajorVersion() {
 						return majorVersion;
 					}

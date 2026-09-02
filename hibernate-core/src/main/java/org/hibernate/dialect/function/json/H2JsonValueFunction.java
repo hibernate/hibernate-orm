@@ -10,13 +10,13 @@ import org.hibernate.QueryException;
 import org.hibernate.internal.util.QuotingHelper;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.model.domain.ReturnableType;
-import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.spi.SqlAppender;
-import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.JsonPathPassingClause;
-import org.hibernate.sql.ast.tree.expression.JsonValueEmptyBehavior;
-import org.hibernate.sql.ast.tree.expression.JsonValueErrorBehavior;
-import org.hibernate.sql.ast.tree.expression.Literal;
+import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
+import org.hibernate.sql.spi.SqlAppender;
+import org.hibernate.sql.ast.spi.query.expression.Expression;
+import org.hibernate.sql.ast.spi.query.expression.JsonPathPassingClause;
+import org.hibernate.sql.ast.spi.query.expression.JsonValueEmptyBehavior;
+import org.hibernate.sql.ast.spi.query.expression.JsonValueErrorBehavior;
+import org.hibernate.sql.ast.spi.query.expression.Literal;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import jakarta.annotation.Nullable;
@@ -99,6 +99,7 @@ public class H2JsonValueFunction extends JsonValueFunction {
 		}
 	}
 
+	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	public static boolean needsHexDecoding(JdbcMapping jdbcMapping) {
 		return switch ( jdbcMapping.getJdbcType().getDefaultSqlTypeCode() ) {
 			case BINARY, VARBINARY, LONG32VARBINARY -> true;

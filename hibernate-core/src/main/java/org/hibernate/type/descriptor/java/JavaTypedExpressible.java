@@ -10,6 +10,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 /**
  * Contract for something that has an associated JavaType
  */
+@org.hibernate.SPI({ org.hibernate.SPI.Role.USE, org.hibernate.SPI.Role.IMPLEMENT })
 public interface JavaTypedExpressible<T> {
 	JavaType<T> getExpressibleJavaType();
 

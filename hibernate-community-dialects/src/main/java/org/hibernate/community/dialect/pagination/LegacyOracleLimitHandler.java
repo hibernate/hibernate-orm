@@ -4,14 +4,11 @@
  */
 package org.hibernate.community.dialect.pagination;
 
-import jakarta.annotation.Nullable;
 import org.hibernate.dialect.DatabaseVersion;
-import org.hibernate.dialect.pagination.AbstractLimitHandler;
-import org.hibernate.dialect.pagination.LimitHandler;
-import org.hibernate.query.spi.Limit;
-import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.sql.ast.internal.ParameterMarkerStrategyStandard;
-import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
+import org.hibernate.dialect.pagination.spi.AbstractLimitHandler;
+import org.hibernate.dialect.pagination.spi.LimitHandler;
+import org.hibernate.dialect.pagination.spi.PaginationRequest;
+import org.hibernate.dialect.pagination.spi.PaginationResult;
 
 import java.util.regex.Matcher;
 
@@ -26,18 +23,12 @@ public class LegacyOracleLimitHandler extends AbstractLimitHandler {
 	}
 
 	@Override
-	public String processSql(String sql, Limit limit) {
-		return processSql( sql, -1, limit, null );
-	}
-
-	@Override
-	public String processSql(String sql, int jdbcParameterCount, @Nullable ParameterMarkerStrategy parameterMarkerStrategy, QueryOptions queryOptions) {
-		return processSql( sql, jdbcParameterCount, queryOptions.getLimit(), parameterMarkerStrategy );
-	}
-
-	private String processSql(String sql, int jdbcParameterCount, @Nullable Limit limit, @Nullable ParameterMarkerStrategy parameterMarkerStrategy) {
-		final boolean hasOffset = hasFirstRow( limit );
-		sql = sql.trim();
+	public PaginationResult processSql(PaginationRequest request) {
+		if ( request.isEmpty() ) {
+			return PaginationResult.unchanged( request.sql() );
+		}
+		final boolean hasOffset = request.hasFirstRow();
+		String sql = request.sql().trim();
 
 		String forUpdateClause = null;
 		Matcher forUpdateMatcher = getForUpdatePattern().matcher( sql );
@@ -49,7 +40,7 @@ public class LegacyOracleLimitHandler extends AbstractLimitHandler {
 		}
 
 		final StringBuilder pagingSelect = new StringBuilder( sql.length() + 100 );
-		if ( ParameterMarkerStrategyStandard.isStandardRenderer( parameterMarkerStrategy ) ) {
+		if ( request.usesStandardParameterMarkers() ) {
 			if ( hasOffset ) {
 				pagingSelect.append( "select * from (select row_.*,rownum rownum_ from (" ).append( sql );
 				if ( version.isBefore( 9 ) ) {
@@ -64,9 +55,9 @@ public class LegacyOracleLimitHandler extends AbstractLimitHandler {
 			}
 		}
 		else {
-			final String firstParameter = parameterMarkerStrategy.createMarker( jdbcParameterCount + 1, null );
+			final String firstParameter = request.parameterMarker( request.jdbcParameterCount() + 1 );
 			if ( hasOffset ) {
-				final String secondParameter = parameterMarkerStrategy.createMarker( jdbcParameterCount + 2, null );
+				final String secondParameter = request.parameterMarker( request.jdbcParameterCount() + 2 );
 				pagingSelect.append( "select * from (select row_.*,rownum rownum_ from (" ).append( sql );
 				if ( version.isBefore( 9 ) ) {
 					pagingSelect.append( ") row_) where rownum_<=" );
@@ -91,7 +82,7 @@ public class LegacyOracleLimitHandler extends AbstractLimitHandler {
 			pagingSelect.append( forUpdateClause );
 		}
 
-		return pagingSelect.toString();
+		return result( request, pagingSelect.toString() );
 	}
 
 	@Override
@@ -119,8 +110,4 @@ public class LegacyOracleLimitHandler extends AbstractLimitHandler {
 		return true;
 	}
 
-	@Override
-	public boolean processSqlMutatesState() {
-		return false;
-	}
 }

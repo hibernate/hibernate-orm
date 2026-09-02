@@ -22,7 +22,6 @@ import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.graph.entity.EntityResult;
 import org.hibernate.sql.results.graph.entity.internal.EntityAssembler;
 import org.hibernate.sql.results.graph.entity.internal.EntityInitializerImpl;
-import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
@@ -34,7 +33,7 @@ public class EntityResultImpl<E> implements EntityResult<E>, InitializerProducer
 
 	private final Fetch identifierFetch;
 	private final BasicFetch<?> discriminatorFetch;
-	private final ImmutableFetchList fetches;
+	private final org.hibernate.sql.results.graph.FetchList fetches;
 	private final boolean hasJoinFetches;
 	private final boolean containsCollectionFetches;
 
@@ -98,7 +97,7 @@ public class EntityResultImpl<E> implements EntityResult<E>, InitializerProducer
 	}
 
 	@Override
-	public ImmutableFetchList getFetches() {
+	public org.hibernate.sql.results.graph.FetchList getFetches() {
 		return fetches;
 	}
 

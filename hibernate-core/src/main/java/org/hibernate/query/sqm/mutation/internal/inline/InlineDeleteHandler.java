@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.sqm.mutation.internal.inline;
 
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
+
 import jakarta.annotation.Nullable;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -22,15 +24,15 @@ import org.hibernate.query.sqm.mutation.internal.MatchingIdSelectionHelper;
 import static org.hibernate.query.sqm.mutation.internal.SqmMutationStrategyHelper.softDeleteTargets;
 import org.hibernate.query.sqm.mutation.internal.SqmMutationStrategyHelper;
 import org.hibernate.query.sqm.tree.spi.delete.SqmDeleteStatement;
-import org.hibernate.sql.ast.SqlAstTranslatorFactory;
-import org.hibernate.sql.ast.tree.AbstractUpdateOrDeleteStatement;
-import org.hibernate.sql.ast.tree.MutationStatement;
-import org.hibernate.sql.ast.tree.delete.DeleteStatement;
-import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.from.NamedTableReference;
-import org.hibernate.sql.ast.tree.predicate.Predicate;
-import org.hibernate.sql.ast.tree.update.Assignment;
-import org.hibernate.sql.ast.tree.update.UpdateStatement;
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.query.AbstractUpdateOrDeleteStatement;
+import org.hibernate.sql.ast.spi.query.MutationStatement;
+import org.hibernate.sql.ast.spi.query.delete.DeleteStatement;
+import org.hibernate.sql.ast.spi.query.expression.Expression;
+import org.hibernate.sql.ast.spi.query.from.NamedTableReference;
+import org.hibernate.sql.ast.spi.query.predicate.Predicate;
+import org.hibernate.sql.ast.spi.query.update.Assignment;
+import org.hibernate.sql.ast.spi.query.update.UpdateStatement;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcMutationExecutor;
 import org.hibernate.sql.exec.spi.JdbcOperationQueryMutation;
@@ -238,7 +240,7 @@ public class InlineDeleteHandler extends AbstractInlineHandler implements Delete
 		}
 		final SessionFactoryImplementor sessionFactory = executionContext.getSession().getFactory();
 		final SqlAstTranslatorFactory sqlAstTranslatorFactory = sessionFactory.getJdbcServices().getJdbcEnvironment().getSqlAstTranslatorFactory();
-		return sqlAstTranslatorFactory.buildMutationTranslator( sessionFactory, statement )
+		return sqlAstTranslatorFactory.buildTranslator( new SqlAstTranslationRequest.QueryMutation( sessionFactory, statement ) )
 				.translate( JdbcParameterBindings.NO_BINDINGS, executionContext.getQueryOptions() );
 	}
 

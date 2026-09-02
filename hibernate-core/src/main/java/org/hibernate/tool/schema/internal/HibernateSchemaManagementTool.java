@@ -344,11 +344,6 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 						}
 
 						@Override
-						public String getSQLKeywords() {
-							return "";
-						}
-
-						@Override
 						public Map<String, Object> getConfigurationValues() {
 							return configurationValues;
 						}

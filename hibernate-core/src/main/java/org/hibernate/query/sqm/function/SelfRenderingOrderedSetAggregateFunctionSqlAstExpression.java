@@ -9,12 +9,12 @@ import java.util.List;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.model.domain.ReturnableType;
-import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.spi.SqlAppender;
-import org.hibernate.sql.ast.tree.SqlAstNode;
-import org.hibernate.sql.ast.tree.expression.OrderedSetAggregateFunctionExpression;
-import org.hibernate.sql.ast.tree.predicate.Predicate;
-import org.hibernate.sql.ast.tree.select.SortSpecification;
+import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
+import org.hibernate.sql.spi.SqlAppender;
+import org.hibernate.sql.ast.spi.SqlAstNode;
+import org.hibernate.sql.ast.spi.query.expression.OrderedSetAggregateFunctionExpression;
+import org.hibernate.sql.ast.spi.query.predicate.Predicate;
+import org.hibernate.sql.ast.spi.query.select.SortSpecification;
 
 /**
  * Representation of an aggregate function call in the SQL AST for impls that know how to
@@ -28,6 +28,7 @@ public class SelfRenderingOrderedSetAggregateFunctionSqlAstExpression<T>
 
 	private final List<SortSpecification> withinGroup;
 
+	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	public SelfRenderingOrderedSetAggregateFunctionSqlAstExpression(
 			String functionName,
 			FunctionRenderer renderer,

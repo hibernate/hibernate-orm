@@ -10,10 +10,10 @@ import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.ModelPart;
-import org.hibernate.sql.model.MutationOperation;
-import org.hibernate.sql.model.TableMapping;
-import org.hibernate.sql.model.ast.MutatingTableReference;
-import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
+import org.hibernate.sql.spi.mutation.MutationOperation;
+import org.hibernate.sql.spi.mutation.TableMapping;
+import org.hibernate.sql.ast.spi.model.MutatingTableReference;
+import org.hibernate.sql.spi.mutation.jdbc.JdbcMutationOperation;
 
 import static org.hibernate.internal.util.NullnessHelper.areSameNullness;
 
@@ -25,10 +25,13 @@ import static org.hibernate.internal.util.NullnessHelper.areSameNullness;
  *
  * @author Steve Ebersole
  */
+
 public class RowMutationOperations {
+	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	public static final ModelPart.JdbcValueBiConsumer<JdbcValueBindings, Object> DEFAULT_RESTRICTOR = (valueIndex, jdbcValueBindings, o, value, jdbcValueMapping) -> {
 		jdbcValueBindings.bindValue( value, jdbcValueMapping, ParameterUsage.RESTRICT );
 	};
+	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	public static final ModelPart.JdbcValueBiConsumer<JdbcValueBindings, Object> DEFAULT_VALUE_SETTER = (valueIndex, jdbcValueBindings, o, value, jdbcValueMapping) -> {
 		jdbcValueBindings.bindValue( value, jdbcValueMapping, ParameterUsage.SET );
 	};

@@ -9,6 +9,7 @@ import java.io.Reader;
 import java.io.Writer;
 import java.net.URL;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.Map;
 
 import org.hibernate.boot.Metadata;
@@ -203,6 +204,16 @@ public class Helper {
 			for ( String sqlString : sqlStrings ) {
 				applySqlString( sqlString, formatter, options, targets );
 			}
+		}
+	}
+
+	public static void applySqlStrings(
+			List<String> sqlStrings,
+			Formatter formatter,
+			ExecutionOptions options,
+			GenerationTarget... targets) {
+		for ( String sqlString : sqlStrings ) {
+			applySqlString( sqlString, formatter, options, targets );
 		}
 	}
 

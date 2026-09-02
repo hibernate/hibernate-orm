@@ -9,13 +9,12 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 import jakarta.annotation.Nullable;
-import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.type.AbstractPostgreSQLStructJdbcType;
+import org.hibernate.dialect.type.spi.AbstractPostgreSQLStructJdbcType;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.sql.ast.spi.SqlAppender;
+import org.hibernate.sql.spi.SqlAppender;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -32,14 +31,14 @@ public class GaussDBStructuredJdbcType extends AbstractPostgreSQLStructJdbcType 
 
 	public static final GaussDBStructuredJdbcType INSTANCE = new GaussDBStructuredJdbcType();
 	public GaussDBStructuredJdbcType() {
-		this( null, null, null );
+		super();
 	}
 
 	private GaussDBStructuredJdbcType(
 			EmbeddableMappingType embeddableMappingType,
 			String typeName,
-			int[] orderMapping) {
-		super( embeddableMappingType, typeName, orderMapping );
+			RuntimeModelCreationContext creationContext) {
+		super( embeddableMappingType, typeName, creationContext );
 	}
 
 	@Override
@@ -50,11 +49,7 @@ public class GaussDBStructuredJdbcType extends AbstractPostgreSQLStructJdbcType 
 		return new GaussDBStructuredJdbcType(
 				mappingType,
 				sqlType,
-				creationContext.getBootModel()
-						.getDatabase()
-						.getDefaultNamespace()
-						.locateUserDefinedType( Identifier.toIdentifier( sqlType ) )
-						.getOrderMapping()
+				creationContext
 		);
 	}
 

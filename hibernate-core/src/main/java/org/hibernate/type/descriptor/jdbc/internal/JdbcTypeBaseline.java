@@ -4,6 +4,7 @@
  */
 package org.hibernate.type.descriptor.jdbc.internal;
 
+
 import java.sql.Types;
 
 import org.hibernate.type.SqlTypes;

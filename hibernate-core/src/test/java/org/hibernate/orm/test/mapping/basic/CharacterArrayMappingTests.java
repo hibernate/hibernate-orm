@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.mapping.basic;
 
+import org.hibernate.dialect.array.spi.ArraySupport;
 import java.sql.Types;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -62,7 +63,7 @@ public class CharacterArrayMappingTests {
 		{
 			final BasicAttributeMapping attributeMapping = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("wrapper");
 			final JdbcMapping jdbcMapping = attributeMapping.getJdbcMapping();
-			if ( dialect.supportsStandardArrays() ) {
+			if ( dialect.getArraySupport().supports( ArraySupport.Capability.STANDARD_ARRAY ) ) {
 				assertThat( jdbcMapping.getJdbcType(), instanceOf( ArrayJdbcType.class ) );
 				assertThat(
 						( (ArrayJdbcType) jdbcMapping.getJdbcType() ).getElementJdbcType(),

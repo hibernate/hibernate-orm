@@ -21,8 +21,8 @@ import org.hibernate.query.sqm.sql.spi.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.spi.SqmCopyContext;
 import org.hibernate.query.sqm.tree.spi.SqmTypedNode;
 import org.hibernate.query.sqm.tree.spi.expression.SqmFunction;
-import org.hibernate.sql.ast.tree.SqlAstNode;
-import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.spi.SqlAstNode;
+import org.hibernate.sql.ast.spi.query.expression.Expression;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import jakarta.annotation.Nullable;
@@ -200,6 +200,7 @@ public class SelfRenderingSqmFunction<T> extends SqmFunction<T> {
 		);
 	}
 
+	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	protected MappingModelExpressible<?> getMappingModelExpressible(
 			SqmToSqlAstConverter walker,
 			ReturnableType<?> resultType,

@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm;
 
+
 /**
  * Defines the set of basic types which should be
  * accepted by the {@code cast()} function on every

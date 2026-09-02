@@ -1,0 +1,80 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
+package org.hibernate.sql.ast.spi.query.expression;
+
+import jakarta.annotation.Nullable;
+import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.mapping.JdbcMappingContainer;
+import org.hibernate.metamodel.mapping.SqlTypedMapping;
+import org.hibernate.sql.ast.spi.SqlAstWalker;
+import org.hibernate.sql.ast.spi.SqlAstNode;
+
+/**
+ * @author Gavin King
+ */
+public class CastTarget implements Expression, SqlAstNode, SqlTypedMapping {
+	private final JdbcMapping type;
+	private final @Nullable Long length;
+	private final @Nullable Integer arrayLength;
+	private final @Nullable Integer precision;
+	private final @Nullable Integer scale;
+
+	public CastTarget(JdbcMapping type) {
+		this( type, null, null, null, null );
+	}
+
+	public CastTarget(JdbcMapping type, @Nullable Long length, @Nullable Integer precision, @Nullable Integer scale) {
+		this( type, length, null, precision, scale );
+	}
+
+	public CastTarget(JdbcMapping type, @Nullable Long length, @Nullable Integer arrayLength, @Nullable Integer precision, @Nullable Integer scale) {
+		this.type = type;
+		this.length = length;
+		this.arrayLength = arrayLength;
+		this.precision = precision;
+		this.scale = scale;
+	}
+
+	@Override
+	public JdbcMapping getJdbcMapping() {
+		return type;
+	}
+
+	@Override
+	public @Nullable Long getLength() {
+		return length;
+	}
+
+	@Override
+	public @Nullable Integer getArrayLength() {
+		return arrayLength;
+	}
+
+	@Override
+	public @Nullable Integer getPrecision() {
+		return precision;
+	}
+
+	@Override
+	public @Nullable Integer getTemporalPrecision() {
+		return null;
+	}
+
+	@Override
+	public @Nullable Integer getScale() {
+		return scale;
+	}
+
+	@Override
+	public JdbcMappingContainer getExpressionType() {
+		return type;
+	}
+
+	@Override
+	public void accept(SqlAstWalker sqlTreeWalker) {
+		sqlTreeWalker.visitCastTarget( this );
+	}
+
+}

@@ -4,6 +4,7 @@
  */
 package org.hibernate.spatial.predicate;
 
+
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Expression;
 

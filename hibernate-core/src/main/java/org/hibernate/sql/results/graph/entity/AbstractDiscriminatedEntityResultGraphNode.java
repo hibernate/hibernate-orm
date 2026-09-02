@@ -11,11 +11,12 @@ import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.DomainResultGraphNode;
 import org.hibernate.sql.results.graph.Fetch;
+import org.hibernate.sql.results.graph.FetchList;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.Fetchable;
-import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 import org.hibernate.type.descriptor.java.JavaType;
 
+@org.hibernate.SPI({ org.hibernate.SPI.Role.USE, org.hibernate.SPI.Role.IMPLEMENT })
 public abstract class AbstractDiscriminatedEntityResultGraphNode implements DomainResultGraphNode, FetchParent {
 	private final NavigablePath navigablePath;
 
@@ -24,8 +25,9 @@ public abstract class AbstractDiscriminatedEntityResultGraphNode implements Doma
 
 	private Fetch discriminatorValueFetch;
 	private Fetch keyValueFetch;
-	private ImmutableFetchList fetches;
+	private FetchList fetches;
 
+	@org.hibernate.SPI(org.hibernate.SPI.Role.IMPLEMENT)
 	public AbstractDiscriminatedEntityResultGraphNode(
 			NavigablePath navigablePath,
 			DiscriminatedAssociationModelPart graphedPart,
@@ -81,7 +83,7 @@ public abstract class AbstractDiscriminatedEntityResultGraphNode implements Doma
 	}
 
 	@Override
-	public ImmutableFetchList getFetches() {
+	public FetchList getFetches() {
 		return fetches;
 	}
 

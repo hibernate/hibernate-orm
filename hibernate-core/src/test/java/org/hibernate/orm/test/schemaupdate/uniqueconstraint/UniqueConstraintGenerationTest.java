@@ -6,12 +6,13 @@ package org.hibernate.orm.test.schemaupdate.uniqueconstraint;
 
 import org.hamcrest.MatcherAssert;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.unique.AlterTableUniqueDelegate;
-import org.hibernate.dialect.unique.AlterTableUniqueIndexDelegate;
-import org.hibernate.dialect.unique.CreateTableUniqueDelegate;
-import org.hibernate.dialect.unique.SkipNullableUniqueDelegate;
+import org.hibernate.dialect.unique.internal.AlterTableUniqueDelegate;
+import org.hibernate.dialect.unique.internal.AlterTableUniqueIndexDelegate;
+import org.hibernate.dialect.unique.internal.CreateTableUniqueDelegate;
+import org.hibernate.dialect.unique.internal.SkipNullableUniqueDelegate;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.DialectTestSupport;
 import org.hibernate.testing.orm.junit.DomainModelScope;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -84,15 +85,16 @@ public class UniqueConstraintGenerationTest {
 			Dialect dialect,
 			File scriptFile) throws IOException {
 		final String regex;
-		if ( !dialect.supportsUniqueConstraints() ) {
-			regex = dialect.getCreateIndexString( true ) + " .* on " + tableName + " \\(" + columnName +"\\);";
+		if ( dialect.getUniqueDelegate().representation( new org.hibernate.dialect.unique.spi.UniqueKeyRepresentationRequest( false, false, false ) ) != org.hibernate.dialect.unique.spi.UniqueKeyRepresentation.CONSTRAINT ) {
+			regex = DialectTestSupport.createIndexCommand( dialect, true ) + " .* on " + tableName + " \\(" + columnName +"\\);";
 		}
 		else if ( dialect.getUniqueDelegate() instanceof CreateTableUniqueDelegate ) {
-			regex = dialect.getCreateTableString() + " " + tableName + " .* " + columnName + " .+ unique.*\\)"
-					+ dialect.getTableTypeString().toLowerCase() + ";";
+			regex = DialectTestSupport.createTableCommand( dialect ) + " " + tableName + " .* " + columnName + " .+ unique.*\\)"
+					+ DialectTestSupport.tableCreationOptions( dialect ).toLowerCase() + ";";
 		}
 		else if ( dialect.getUniqueDelegate() instanceof AlterTableUniqueDelegate) {
-			regex = dialect.getAlterTableString( tableName ) + " add constraint uk.* unique \\(" + columnName + "\\);";
+			regex = DialectTestSupport.alterTableCommand( dialect, tableName )
+					+ " add constraint uk.* unique \\(" + columnName + "\\);";
 		}
 		else {
 			return true;

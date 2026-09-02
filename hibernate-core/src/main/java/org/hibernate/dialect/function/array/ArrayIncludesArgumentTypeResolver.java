@@ -22,6 +22,7 @@ public class ArrayIncludesArgumentTypeResolver implements AbstractFunctionArgume
 	public static final FunctionArgumentTypeResolver INSTANCE = new ArrayIncludesArgumentTypeResolver();
 
 	@Override
+	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	public @Nullable MappingModelExpressible<?> resolveFunctionArgumentType(List<? extends SqmTypedNode<?>> arguments, int argumentIndex, SqmToSqlAstConverter converter) {
 		if ( argumentIndex == 0 ) {
 			final SqmTypedNode<?> node = arguments.get( 1 );

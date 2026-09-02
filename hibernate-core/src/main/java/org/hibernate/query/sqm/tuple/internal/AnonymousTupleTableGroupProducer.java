@@ -15,7 +15,7 @@ import java.util.function.Consumer;
 import org.hibernate.Incubating;
 import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.util.IndexedConsumer;
+import org.hibernate.spi.IndexedConsumer;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
@@ -31,7 +31,7 @@ import org.hibernate.metamodel.mapping.NonAggregatedIdentifierMapping;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
-import org.hibernate.metamodel.mapping.internal.SingleAttributeIdentifierMapping;
+import org.hibernate.metamodel.mapping.SingleAttributeIdentifierMapping;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
@@ -40,12 +40,13 @@ import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.query.sqm.spi.SqmExpressible;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.spi.FromClauseAccess;
-import org.hibernate.sql.ast.spi.SqlSelection;
-import org.hibernate.sql.ast.tree.from.LazyTableGroup;
-import org.hibernate.sql.ast.tree.from.PluralTableGroup;
-import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.from.TableGroupProducer;
+import org.hibernate.sql.ast.spi.creation.FromClauseAccess;
+import org.hibernate.sql.ast.spi.query.select.SqlSelection;
+import org.hibernate.sql.ast.spi.query.SetReturningFunctionType;
+import org.hibernate.sql.ast.spi.query.from.LazyTableGroup;
+import org.hibernate.sql.ast.spi.query.from.PluralTableGroup;
+import org.hibernate.sql.ast.spi.query.from.TableGroup;
+import org.hibernate.sql.ast.spi.query.from.TableGroupProducer;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.type.BasicType;
@@ -60,7 +61,7 @@ import org.hibernate.type.descriptor.java.JavaType;
  * @author Christian Beikov
  */
 @Incubating
-public class AnonymousTupleTableGroupProducer implements TableGroupProducer, MappingType {
+public class AnonymousTupleTableGroupProducer implements TableGroupProducer, MappingType, SetReturningFunctionType {
 
 	private final String aliasStem;
 	private final JavaType<?> javaTypeDescriptor;
@@ -263,6 +264,11 @@ public class AnonymousTupleTableGroupProducer implements TableGroupProducer, Map
 		return columnNames;
 	}
 
+	@Override
+	public boolean containsTableReference(String tableExpression) {
+		return compatibleTableExpressions.contains( tableExpression );
+	}
+
 	public Set<String> getCompatibleTableExpressions() {
 		return compatibleTableExpressions;
 	}
@@ -294,6 +300,11 @@ public class AnonymousTupleTableGroupProducer implements TableGroupProducer, Map
 
 	@Override
 	public ModelPart findSubPart(String name, EntityMappingType treatTargetType) {
+		return findSubPart( name );
+	}
+
+	@Override
+	public ModelPart findSubPart(String name) {
 		return modelParts.get( name );
 	}
 

@@ -6,7 +6,7 @@ package org.hibernate.query.internal;
 
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
-import org.hibernate.dialect.NullOrdering;
+import org.hibernate.dialect.sql.ast.spi.NullOrdering;
 import org.hibernate.query.SortDirection;
 
 import jakarta.persistence.criteria.Nulls;

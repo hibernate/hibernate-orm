@@ -4,7 +4,7 @@
  */
 package org.hibernate.engine.jdbc.mutation;
 
-import org.hibernate.sql.model.TableMapping;
+import org.hibernate.sql.spi.mutation.TableMapping;
 
 /**
  * Used to check if a table should be included in the current execution

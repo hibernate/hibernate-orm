@@ -4,6 +4,7 @@
  */
 package org.hibernate.tool.reveng.test.utils;
 
+
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.cfg.AvailableSettings;

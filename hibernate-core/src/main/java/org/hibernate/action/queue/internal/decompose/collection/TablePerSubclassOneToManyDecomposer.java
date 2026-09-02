@@ -93,17 +93,17 @@ public class TablePerSubclassOneToManyDecomposer extends AbstractOneToManyDecomp
 			}
 
 			@Override
-			public org.hibernate.sql.model.TableMapping.MutationDetails insertDetails() {
+			public org.hibernate.sql.spi.mutation.TableMapping.MutationDetails insertDetails() {
 				return tableDescriptor.insertDetails();
 			}
 
 			@Override
-			public org.hibernate.sql.model.TableMapping.MutationDetails updateDetails() {
+			public org.hibernate.sql.spi.mutation.TableMapping.MutationDetails updateDetails() {
 				return tableDescriptor.updateDetails();
 			}
 
 			@Override
-			public org.hibernate.sql.model.TableMapping.MutationDetails deleteDetails() {
+			public org.hibernate.sql.spi.mutation.TableMapping.MutationDetails deleteDetails() {
 				return tableDescriptor.deleteDetails();
 			}
 

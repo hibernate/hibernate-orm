@@ -14,8 +14,8 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.EventType;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.sql.model.ast.builder.TableInsertBuilderStandard;
-import org.hibernate.sql.model.ast.builder.TableMutationBuilder;
+import org.hibernate.sql.ast.spi.model.builder.TableInsertBuilderStandard;
+import org.hibernate.sql.ast.spi.model.builder.TableMutationBuilder;
 import org.hibernate.type.Type;
 
 import static org.hibernate.generator.values.internal.GeneratedValuesHelper.getActualGeneratedModelPart;
@@ -32,6 +32,7 @@ public class UniqueKeySelectingDelegate extends AbstractSelectingDelegate {
 
 	private final String selectString;
 
+	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	public UniqueKeySelectingDelegate(
 			EntityPersister persister,
 			String[] uniqueKeyPropertyNames,

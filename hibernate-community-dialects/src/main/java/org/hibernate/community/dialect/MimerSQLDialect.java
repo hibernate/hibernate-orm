@@ -4,36 +4,60 @@
  */
 package org.hibernate.community.dialect;
 
+import org.hibernate.dialect.schema.spi.ConstraintDropMode;
+import org.hibernate.dialect.schema.spi.SchemaDropSupport;
+
+import org.hibernate.dialect.temporaltype.spi.TemporalOperationSupport;
+import org.hibernate.dialect.temporaltype.spi.TemporalOperationSupports;
+
+import org.hibernate.dialect.temporaltype.spi.TemporalFormatSupport;
+
+import org.hibernate.dialect.temporaltype.spi.CurrentTemporalSupport;
+
+import org.hibernate.SPI;
+import static org.hibernate.SPI.Role.USE;
+
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.SUPPLY;
+import org.hibernate.dialect.type.spi.DdlTypeBuilder;
+
+import org.hibernate.dialect.type.spi.StandardDdlTypes;
+
+import org.hibernate.dialect.type.spi.TypeSizingProfile;
+
 import jakarta.persistence.TemporalType;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
-import org.hibernate.community.dialect.identity.MimerSQLIdentityColumnSupport;
+import org.hibernate.community.dialect.identity.internal.MimerSQLIdentityColumnSupport;
 import org.hibernate.community.dialect.sequence.MimerSequenceSupport;
-import org.hibernate.community.dialect.sequence.SequenceInformationExtractorMimerSQLDatabaseImpl;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.lob.spi.LobSupport;
+import org.hibernate.dialect.lob.spi.LobSupports;
 import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.dialect.identity.IdentityColumnSupport;
-import org.hibernate.dialect.lock.internal.LockingSupportSimple;
+import org.hibernate.dialect.identity.spi.IdentityColumnSupport;
 import org.hibernate.dialect.lock.spi.LockingSupport;
-import org.hibernate.dialect.pagination.LimitHandler;
-import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
-import org.hibernate.dialect.sequence.SequenceSupport;
+import org.hibernate.dialect.lock.spi.StandardLockingSupports;
+import org.hibernate.dialect.pagination.spi.LimitHandler;
+import org.hibernate.dialect.pagination.spi.OffsetFetchLimitHandler;
+import org.hibernate.dialect.sequence.spi.SequenceSupport;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.common.TemporalUnit;
-import org.hibernate.dialect.type.IntervalType;
+import org.hibernate.dialect.temporaltype.spi.IntervalType;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.SqlAstTranslatorFactory;
-import org.hibernate.sql.ast.spi.SqlAppender;
-import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
-import org.hibernate.sql.ast.tree.Statement;
+import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslatorFactory;
+import org.hibernate.dialect.sql.ast.spi.RowValueSupport;
+import org.hibernate.dialect.sql.ast.spi.SingleRowTableSupport;
+import org.hibernate.dialect.sql.ast.spi.SubquerySupport;
+import org.hibernate.sql.spi.SqlAppender;
+import org.hibernate.dialect.sql.ast.spi.StandardSqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.Statement;
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
-import org.hibernate.type.descriptor.sql.internal.BinaryFloatDdlType;
-import org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType;
+import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractors;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 
 import static org.hibernate.dialect.SimpleDatabaseVersion.ZERO_VERSION;
@@ -56,7 +80,34 @@ import static org.hibernate.type.SqlTypes.VARCHAR;
  * @author Fredrik lund
  * @author Gavin King
  */
-public class MimerSQLDialect extends Dialect {
+public class MimerSQLDialect extends Dialect implements CurrentTemporalSupport, TemporalFormatSupport, TemporalOperationSupport {
+	private SchemaDropSupport schemaDropSupport;
+
+
+	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
+	public TemporalOperationSupport getTemporalOperationSupport() {
+		return this;
+	}
+
+	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
+	public TemporalFormatSupport getTemporalFormatSupport() {
+		return this;
+	}
+
+	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
+	public CurrentTemporalSupport getCurrentTemporalSupport() {
+		return this;
+	}
+	private final TypeSizingProfile typeSizingProfile = TypeSizingProfile.builder( super.getTypeSizingProfile() )
+			.maxVarcharLength( 15_000 ).maxVarcharCapacity( 15_000 )
+			.maxNVarcharLength( 5000 ).maxNVarcharCapacity( 5000 )
+			.maxVarbinaryLength( 15_000 ).maxVarbinaryCapacity( 15_000 )
+			.build();
+
+	@Override public TypeSizingProfile getTypeSizingProfile() { return typeSizingProfile; }
 
 	// KNOWN LIMITATIONS:
 
@@ -68,7 +119,7 @@ public class MimerSQLDialect extends Dialect {
 	//   in a cast or function call
 
 	public MimerSQLDialect() {
-		super( DatabaseVersion.make( 11 ) );
+		super( ZERO_VERSION );
 	}
 
 	public MimerSQLDialect(DialectResolutionInfo info) {
@@ -76,6 +127,7 @@ public class MimerSQLDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	protected String columnType(int sqlTypeCode) {
 		switch ( sqlTypeCode ) {
 			//no 'tinyint', so use integer with 3 decimal digits
@@ -102,62 +154,42 @@ public class MimerSQLDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	protected void registerColumnTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.registerColumnTypes( typeContributions, serviceRegistry );
 		final DdlTypeRegistry ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
 
 		//precision of a Mimer 'float(p)' represents
 		//decimal digits instead of binary digits
-		ddlTypeRegistry.addDescriptor( new BinaryFloatDdlType( this ) );
+		ddlTypeRegistry.addDescriptor( StandardDdlTypes.binaryFloat( this ) );
 
 		//Mimer CHARs are ASCII!!
 		ddlTypeRegistry.addDescriptor(
-				CapacityDependentDdlType.builder(
-								VARCHAR,
-								isLob( LONG32VARCHAR ) ?
-										CapacityDependentDdlType.LobKind.BIGGEST_LOB :
-										CapacityDependentDdlType.LobKind.NONE,
-								columnType( LONG32VARCHAR ),
-								"nvarchar(" + getMaxNVarcharLength() + ")",
-								this
-						)
-						.withTypeCapacity( getMaxNVarcharLength(), columnType( VARCHAR ) )
+				StandardDdlTypes.builder( VARCHAR, columnType( LONG32VARCHAR ), this )
+						.lobKind( getLobSupport().isLobType( LONG32VARCHAR )
+								? DdlTypeBuilder.LobKind.BIGGEST
+								: DdlTypeBuilder.LobKind.NONE )
+						.castTypeName( "nvarchar(" + getTypeSizingProfile().maxNVarcharLength() + ")" )
+						.withTypeCapacity( getTypeSizingProfile().maxNVarcharLength(), columnType( VARCHAR ) )
 						.build()
 		);
 	}
 
-//	@Override
-//	public int getDefaultDecimalPrecision() {
-//		//the maximum, but I guess it's too high
-//		return 45;
-//	}
-
 	@Override
-	public int getMaxVarbinaryLength() {
-		return 15000;
-	}
-
-	@Override
-	public int getMaxVarcharLength() {
-		return 15000;
-	}
-
-	@Override
-	public int getMaxNVarcharLength() {
-		return 5000;
-	}
-
-	@Override
-	public DatabaseVersion getVersion() {
+	@SPI({ USE, IMPLEMENT })
+	public DatabaseVersion determineDatabaseVersion(DialectResolutionInfo info) {
 		return ZERO_VERSION;
 	}
 
 	@Override
-	public int getDefaultStatementBatchSize() {
-		return 50;
+	@SPI({ IMPLEMENT, SUPPLY })
+	protected void contributeDefaultProperties(java.util.Properties properties) {
+		super.contributeDefaultProperties( properties );
+		properties.setProperty( org.hibernate.cfg.AvailableSettings.STATEMENT_BATCH_SIZE, Integer.toString( 50 ) );
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
 		super.initializeFunctionRegistry(functionContributions);
 
@@ -175,22 +207,25 @@ public class MimerSQLDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public SqlAstTranslatorFactory getSqlAstTranslatorFactory() {
 		return new StandardSqlAstTranslatorFactory() {
 			@Override
-			protected <T extends JdbcOperation> SqlAstTranslator<T> buildTranslator(
-					SessionFactoryImplementor sessionFactory, Statement statement) {
-				return new MimerSQLSqlAstTranslator<>( sessionFactory, statement );
+			protected <S extends Statement, T extends JdbcOperation> SqlAstTranslator<T> createTranslator(
+					SqlAstTranslationRequest<S, T> request) {
+				return new MimerSQLSqlAstTranslator<>( request );
 			}
 		};
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String currentTimestamp() {
 		return "localtimestamp";
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String currentTime() {
 		return "localtime";
 	}
@@ -208,6 +243,7 @@ public class MimerSQLDialect extends Dialect {
 	 * {@link TemporalUnit#DAY_OF_YEAR}.
 	 */
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String extractPattern(TemporalUnit unit) {
 		switch (unit) {
 			case WEEK:
@@ -219,10 +255,11 @@ public class MimerSQLDialect extends Dialect {
 			case DAY_OF_MONTH:
 				return "day(?2)";
 			default:
-				return super.extractPattern(unit);
+				return TemporalOperationSupports.standard().extractPattern(unit);
 		}
 	}
 
+	@SPI({ USE, IMPLEMENT })
 	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
 		StringBuilder pattern = new StringBuilder();
 		pattern.append("cast((?3-?2) ");
@@ -269,6 +306,7 @@ public class MimerSQLDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
 		switch ( unit ) {
 			case NATIVE:
@@ -284,28 +322,29 @@ public class MimerSQLDialect extends Dialect {
 	}
 
 	@Override
-	public boolean dropConstraints() {
-		return false;
+	@SPI({ IMPLEMENT, SUPPLY })
+	public synchronized SchemaDropSupport getSchemaDropSupport() {
+		if ( schemaDropSupport == null ) {
+			schemaDropSupport = new SchemaDropSupport( java.util.List.of(), ConstraintDropMode.IMPLICIT, " cascade" );
+		}
+		return schemaDropSupport;
 	}
 
 	@Override
-	public String getCascadeConstraintsString() {
-		return " cascade";
-	}
-
-	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public SequenceSupport getSequenceSupport() {
 		return MimerSequenceSupport.INSTANCE;
 	}
 
-	@Override
-	public String getQuerySequencesString() {
-		return "select * from information_schema.ext_sequences";
-	}
+	private static final SequenceInformationExtractor SEQUENCE_INFORMATION_EXTRACTOR =
+			SequenceInformationExtractors.builder( "select * from information_schema.ext_sequences" )
+					.startValueColumn( "initial_value" )
+					.withoutMinimumValue()
+					.build();
 
 	@Override
 	public SequenceInformationExtractor getSequenceInformationExtractor() {
-		return SequenceInformationExtractorMimerSQLDatabaseImpl.INSTANCE;
+		return SEQUENCE_INFORMATION_EXTRACTOR;
 	}
 
 	@Override
@@ -315,27 +354,26 @@ public class MimerSQLDialect extends Dialect {
 
 	@Override
 	public LockingSupport getLockingSupport() {
-		return LockingSupportSimple.NO_OUTER_JOIN;
+		return StandardLockingSupports.standardWithoutOuterJoinLocking();
 	}
 
 	@Override
-	public boolean supportsOffsetInSubquery() {
-		return true;
+	public SubquerySupport getSubquerySupport() {
+		return SubquerySupport.builder()
+				.feature( SubquerySupport.Feature.OFFSET, true )
+				.build();
 	}
 
 	@Override
-	public void appendDatetimeFormat(SqlAppender appender, String format) {
+	@SPI({ USE, IMPLEMENT })
+	public void appendFormat(SqlAppender appender, String format) {
 		throw new UnsupportedOperationException("format() function not supported on Mimer SQL");
 	}
 
 	@Override
-	public boolean useInputStreamToInsertBlob() {
-		return false;
-	}
-
-	@Override
-	public boolean useConnectionToCreateLob() {
-		return false;
+	@SPI({ IMPLEMENT, SUPPLY })
+	public LobSupport getLobSupport() {
+		return LobSupports.nonStreaming();
 	}
 
 	@Override
@@ -344,23 +382,16 @@ public class MimerSQLDialect extends Dialect {
 	}
 
 	@Override
-	public String getFromDualForSelectOnly() {
-		return " from " + getDual();
+	public SingleRowTableSupport getSingleRowTableSupport() {
+		final var inherited = super.getSingleRowTableSupport();
+		return SingleRowTableSupport.builder( inherited )
+				.selectOnlyFromClause( " from " + inherited.getTableExpression() )
+				.build();
 	}
 
 	@Override
-	public boolean supportsRowValueConstructorSyntax() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsRowValueConstructorSyntaxInInList() {
-		return false;
+	public RowValueSupport getRowValueSupport() {
+		return RowValueSupport.NONE;
 	}
 
 }

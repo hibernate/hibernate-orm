@@ -4,8 +4,11 @@
  */
 package org.hibernate.query.common;
 
+import org.hibernate.SPI;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.query.SemanticException;
+
+import static org.hibernate.SPI.Role.USE;
 
 /**
  * A temporal field type which can occur as an argument
@@ -27,12 +30,13 @@ import org.hibernate.query.SemanticException;
  * second argument (date, time, or timestamp), and
  * according to capabilities of the database platform.
  *
- * @see Dialect#extractPattern(TemporalUnit)
+	 * @see org.hibernate.dialect.temporaltype.spi.TemporalOperationSupport#extractPattern(TemporalUnit)
  * @see org.hibernate.query.criteria.HibernateCriteriaBuilder#duration(long, TemporalUnit)
  * @see org.hibernate.query.criteria.HibernateCriteriaBuilder#durationByUnit(TemporalUnit, jakarta.persistence.criteria.Expression)
  *
  * @author Gavin King
  */
+@SPI(USE)
 public enum TemporalUnit {
 	/**
 	 * Calendar year.
@@ -166,7 +170,7 @@ public enum TemporalUnit {
 	 * unit that the database understands. On some platforms this
 	 * is also used to avoid numeric overflow.
 	 *
-	 * @see Dialect#getFractionalSecondPrecisionInNanos()
+	 * @see org.hibernate.dialect.temporaltype.spi.TemporalOperationSupport#fractionalSecondPrecisionInNanos()
 	 */
 	NATIVE;
 
@@ -253,12 +257,32 @@ public enum TemporalUnit {
 			case NANOSECOND:
 				break;
 			case NATIVE:
-				factor *= dialect.getFractionalSecondPrecisionInNanos();
+				factor *= nativeFractionalSecondPrecision( dialect );
 				break;
 			default:
 				throw new SemanticException("Inconvertible unit " + this);
 		}
 		return factor;
+	}
+
+	private static long nativeFractionalSecondPrecision(Dialect dialect) {
+		final long precision = dialect.getTemporalOperationSupport().fractionalSecondPrecisionInNanos();
+		if ( precision < 1 || precision > 1_000_000_000 ) {
+			throw new IllegalArgumentException(
+					"Native fractional-second precision must be between 1 and 1,000,000,000 nanoseconds: "
+							+ precision
+			);
+		}
+		long remaining = precision;
+		while ( remaining % 10 == 0 ) {
+			remaining /= 10;
+		}
+		if ( remaining != 1 ) {
+			throw new IllegalArgumentException(
+					"Native fractional-second precision must be a power of ten nanoseconds: " + precision
+			);
+		}
+		return precision;
 	}
 
 	/**

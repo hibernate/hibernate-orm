@@ -4,8 +4,8 @@
  */
 package org.hibernate.persister.collection.mutation;
 
-import org.hibernate.sql.model.ast.MutatingTableReference;
-import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
+import org.hibernate.sql.ast.spi.model.MutatingTableReference;
+import org.hibernate.sql.spi.mutation.jdbc.JdbcMutationOperation;
 
 /**
  * Callback for producing a {@link JdbcMutationOperation} given

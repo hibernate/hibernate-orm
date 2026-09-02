@@ -7,7 +7,7 @@ package org.hibernate.action.queue.spi.meta;
 import org.hibernate.Incubating;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.metamodel.mapping.AttributeMapping;
-import org.hibernate.sql.model.TableMapping;
+import org.hibernate.sql.spi.mutation.TableMapping;
 
 import java.io.Serializable;
 import java.util.Collection;

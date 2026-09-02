@@ -4,6 +4,7 @@
  */
 package org.hibernate.vector.internal;
 
+
 import jakarta.annotation.Nullable;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.metamodel.mapping.JdbcMapping;

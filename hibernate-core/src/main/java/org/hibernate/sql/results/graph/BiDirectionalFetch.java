@@ -39,6 +39,7 @@ import org.hibernate.spi.NavigablePath;
 /// 		`oa`:: The paths `p.address` and `p.address.owner.address` (aliased as `oa`) are again the same table reference
 ///
 /// @author Steve Ebersole
+@org.hibernate.SPI({ org.hibernate.SPI.Role.USE, org.hibernate.SPI.Role.IMPLEMENT })
 public interface BiDirectionalFetch extends Fetch {
 	/// The NavigablePath for the DomainResult or Fetch that this Fetch refers to.
 	/// For `o`, the referenced path is `p`.  For `oa`, it's `p.address`

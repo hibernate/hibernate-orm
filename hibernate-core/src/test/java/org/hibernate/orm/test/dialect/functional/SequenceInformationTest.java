@@ -103,7 +103,7 @@ public class SequenceInformationTest extends
 
 	private SequenceInformation sequenceInformation(String sequenceName) {
 		List<SequenceInformation> sequenceInformationList = entityManagerFactory().unwrap(
-						SessionFactoryImplementor.class ).getJdbcServices().getExtractedMetaDataSupport()
+						SessionFactoryImplementor.class ).getJdbcServices().getJdbcMetadata()
 				.getSequenceInformationList();
 
 		return sequenceInformationList.stream().filter(

@@ -11,7 +11,7 @@ import org.hibernate.Hibernate;
 import org.hibernate.cache.spi.SecondLevelCacheLogger;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.sql.exec.SqlExecLogger;
-import org.hibernate.sql.results.ResultsLogger;
+import org.hibernate.sql.results.internal.ResultsLogger;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
 import org.hibernate.testing.orm.junit.DomainModel;

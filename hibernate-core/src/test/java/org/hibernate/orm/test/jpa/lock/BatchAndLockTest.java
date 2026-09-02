@@ -7,9 +7,12 @@ package org.hibernate.orm.test.jpa.lock;
 import java.util.List;
 
 import org.hibernate.Hibernate;
+import org.hibernate.Timeouts;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.lock.spi.LockingClauseRequest;
+import org.hibernate.dialect.lock.spi.PessimisticLockKind;
 import org.hibernate.engine.spi.SessionImplementor;
 
 import org.hibernate.testing.jdbc.SQLStatementInspector;
@@ -348,7 +351,7 @@ public class BatchAndLockTest {
 		assertThat( sqlQueries.size() ).isEqualTo( 1 );
 
 		statementInspector.assertIsSelect( 0 );
-		assertThat( sqlQueries.get( 0 ) ).contains( getDialect( scope ).getReadLockString( -1 ) );
+		assertThat( sqlQueries.get( 0 ) ).contains( renderLockClause( getDialect( scope ), PessimisticLockKind.SHARE ) );
 	}
 
 	@Test
@@ -387,7 +390,7 @@ public class BatchAndLockTest {
 		assertThat( sqlQueries.size() ).isEqualTo( 1 );
 
 		statementInspector.assertIsSelect( 0 );
-		assertThat( sqlQueries.get( 0 ) ).contains( getDialect( scope ).getWriteLockString( -1 ) );
+		assertThat( sqlQueries.get( 0 ) ).contains( renderLockClause( getDialect( scope ), PessimisticLockKind.UPDATE ) );
 	}
 
 	@Test
@@ -445,12 +448,16 @@ public class BatchAndLockTest {
 
 	public void assertDoesNotContainLocks(String query, SessionFactoryScope scope) {
 		Dialect dialect = getDialect( scope );
-		String writeLockString = dialect.getWriteLockString( -1 );
-		String readLockString = dialect.getReadLockString( -1 );
-		String forUpdateString = dialect.getForUpdateString();
+		String writeLockString = renderLockClause( dialect, PessimisticLockKind.UPDATE );
+		String readLockString = renderLockClause( dialect, PessimisticLockKind.SHARE );
 		assertThat( query ).doesNotContain( writeLockString );
 		assertThat( query ).doesNotContain( readLockString );
-		assertThat( query ).doesNotContain( forUpdateString );
+	}
+
+	private static String renderLockClause(Dialect dialect, PessimisticLockKind lockKind) {
+		return dialect.getLockingSupport().getLockingClauseRenderer().render(
+				new LockingClauseRequest( lockKind, Timeouts.WAIT_FOREVER, List.of() )
+		);
 	}
 
 	private static void assertVersionIsUpdated(SQLStatementInspector statementInspector, int queryNumber) {

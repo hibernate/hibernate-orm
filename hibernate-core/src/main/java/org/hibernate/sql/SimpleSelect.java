@@ -8,10 +8,12 @@ import org.hibernate.Internal;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.lock.internal.LockingSqlRewriterSupport;
+import org.hibernate.dialect.lock.internal.TableLockHintRendererSupport;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.sql.ast.internal.ParameterMarkerStrategyStandard;
-import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
+import org.hibernate.sql.spi.ParameterMarkerStrategy;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -179,15 +181,20 @@ public class SimpleSelect implements RestrictionRenderingContext {
 		applyOrderBy( buf );
 
 		final String selectString = (lockOptions != null)
-				? dialect.applyLocksToSql( buf.toString(), lockOptions, null )
+				? LockingSqlRewriterSupport.rewrite(
+						dialect.getLockingSupport(),
+						buf.toString(),
+						lockOptions,
+						null
+				).sql()
 				: buf.toString();
 
-		return dialect.transformSelectString( selectString );
+		return selectString;
 	}
 
 	private void applyComment(StringBuilder buf) {
 		if ( comment != null ) {
-			buf.append( "/* " ).append( Dialect.escapeComment( comment ) ).append( " */ " );
+			buf.append( "/* " ).append( org.hibernate.sql.spi.SqlComments.escape( comment ) ).append( " */ " );
 		}
 	}
 
@@ -214,7 +221,11 @@ public class SimpleSelect implements RestrictionRenderingContext {
 	}
 
 	private void applyFromClause(StringBuilder buf) {
-		buf.append( " from " ).append( dialect.appendLockHint( lockOptions, tableName ) );
+		buf.append( " from " ).append( TableLockHintRendererSupport.renderTableReference(
+				dialect.getLockingSupport(),
+				lockOptions,
+				tableName
+		) );
 		if ( tableName.charAt( 0 ) == '(' ) {
 			buf.append( " r" );
 		}

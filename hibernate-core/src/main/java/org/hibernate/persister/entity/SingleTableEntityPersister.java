@@ -26,12 +26,12 @@ import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.filter.FilterAliasGenerator;
 import org.hibernate.persister.filter.internal.DynamicFilterAliasGenerator;
 import org.hibernate.persister.state.spi.StateManagement;
-import org.hibernate.sql.ast.tree.from.NamedTableReference;
-import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.model.ast.builder.MutationGroupBuilder;
-import org.hibernate.sql.model.ast.builder.TableDeleteBuilder;
-import org.hibernate.sql.model.ast.builder.TableInsertBuilder;
-import org.hibernate.sql.model.ast.builder.TableMutationBuilder;
+import org.hibernate.sql.ast.spi.query.from.NamedTableReference;
+import org.hibernate.sql.ast.spi.query.from.TableGroup;
+import org.hibernate.sql.ast.spi.model.builder.MutationGroupBuilder;
+import org.hibernate.sql.ast.spi.model.builder.TableDeleteBuilder;
+import org.hibernate.sql.ast.spi.model.builder.TableInsertBuilder;
+import org.hibernate.sql.ast.spi.model.builder.TableMutationBuilder;
 import org.hibernate.type.BasicType;
 
 import static java.util.function.Function.identity;
@@ -152,7 +152,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 					|| indexOf( qualifiedTableNames, j, qualifiedTableNames[j] ) != -1;
 			isInverseTable[j] = join.isInverse();
 			isNullableTable[j] = join.isOptional();
-			cascadeDeleteEnabled[j] = join.getKey().isCascadeDeleteEnabled() && dialect.supportsCascadeDelete();
+			cascadeDeleteEnabled[j] = join.getKey().isCascadeDeleteEnabled() && dialect.getForeignKeySupport().supportsOnDeleteAction( org.hibernate.annotations.OnDeleteAction.CASCADE );
 
 			keyColumnNames[j] = new String[join.getKey().getColumnSpan()];
 

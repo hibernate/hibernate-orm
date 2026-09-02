@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.function.spi.TupleCountSupport;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
@@ -20,21 +21,21 @@ import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.query.sqm.produce.function.internal.PatternRenderer;
 import org.hibernate.query.sqm.sql.internal.AbstractSqmPathInterpretation;
-import org.hibernate.sql.ast.Clause;
-import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
-import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.spi.SqlAppender;
-import org.hibernate.sql.ast.tree.SqlAstNode;
-import org.hibernate.sql.ast.tree.expression.Distinct;
-import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.QueryLiteral;
-import org.hibernate.sql.ast.tree.expression.SqlTuple;
-import org.hibernate.sql.ast.tree.expression.SqlTupleContainer;
-import org.hibernate.sql.ast.tree.expression.Star;
-import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.from.TableGroupJoin;
-import org.hibernate.sql.ast.tree.predicate.Predicate;
-import org.hibernate.sql.ast.tree.select.QuerySpec;
+import org.hibernate.sql.ast.spi.translation.Clause;
+import org.hibernate.sql.ast.spi.translation.SqlAstNodeRenderingMode;
+import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
+import org.hibernate.sql.spi.SqlAppender;
+import org.hibernate.sql.ast.spi.SqlAstNode;
+import org.hibernate.sql.ast.spi.query.expression.Distinct;
+import org.hibernate.sql.ast.spi.query.expression.Expression;
+import org.hibernate.sql.ast.spi.query.expression.QueryLiteral;
+import org.hibernate.sql.ast.spi.query.expression.SqlTuple;
+import org.hibernate.sql.ast.spi.query.expression.SqlTupleContainer;
+import org.hibernate.sql.ast.spi.query.expression.Star;
+import org.hibernate.sql.ast.spi.query.from.TableGroup;
+import org.hibernate.sql.ast.spi.query.from.TableGroupJoin;
+import org.hibernate.sql.ast.spi.query.predicate.Predicate;
+import org.hibernate.sql.ast.spi.query.select.QuerySpec;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -180,6 +181,7 @@ public class CountFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 		sqlAppender.appendSql( countFunctionName );
 		sqlAppender.appendSql( '(' );
 		final SqlTuple tuple;
+		final TupleCountSupport tupleCountSupport = dialect.getTupleCountSupport();
 		if ( arg instanceof Distinct distinct ) {
 			sqlAppender.appendSql( "distinct " );
 			final Expression distinctArg = distinct.getExpression();
@@ -196,7 +198,7 @@ public class CountFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 					);
 				}
 				// Emulate tuple distinct count
-				else if ( !dialect.supportsTupleDistinctCounts() ) {
+				else if ( tupleCountSupport.getDistinctSyntax() == TupleCountSupport.Syntax.UNSUPPORTED ) {
 					// see https://hibernate.atlassian.net/browse/HHH-11042 details about this implementation
 					// The idea is to concat all tuple elements, separated by a character that can't appear in the string
 					// We choose to map this to the NUL character i.e. \0 with the ASCII code 0
@@ -281,7 +283,7 @@ public class CountFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 							caseWrapper,
 							tuple,
 							expressions,
-							dialect.requiresParensForTupleDistinctCounts()
+							tupleCountSupport.getDistinctSyntax()
 					);
 				}
 			}
@@ -306,7 +308,7 @@ public class CountFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 					renderSimpleArgument( sqlAppender, filter, translator, caseWrapper, expressions.get( 0 ) );
 				}
 				// Emulate the tuple count with a case when expression
-				else if ( !dialect.supportsTupleCounts() ) {
+				else if ( tupleCountSupport.getNonDistinctSyntax() == TupleCountSupport.Syntax.UNSUPPORTED ) {
 					sqlAppender.appendSql( "case when " );
 					if ( caseWrapper ) {
 						translator.getCurrentClauseStack().push( Clause.WHERE );
@@ -332,7 +334,7 @@ public class CountFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 							caseWrapper,
 							tuple,
 							expressions,
-							dialect.requiresParensForTupleCounts()
+							tupleCountSupport.getNonDistinctSyntax()
 					);
 				}
 			}
@@ -357,7 +359,8 @@ public class CountFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 			boolean caseWrapper,
 			SqlTuple tuple,
 			List<? extends Expression> expressions,
-			boolean requiresParenthesis) {
+			TupleCountSupport.Syntax syntax) {
+		final boolean requiresParenthesis = syntax == TupleCountSupport.Syntax.PARENTHESIZED_TUPLE;
 		if ( caseWrapper ) {
 			// Add the case wrapper as first element instead of wrapping everything.
 			// Rendering "Star" will result in `case when FILTER then 1 else null end`

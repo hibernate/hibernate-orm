@@ -4,6 +4,10 @@
  */
 package org.hibernate.query.criteria;
 
+import org.hibernate.SPI;
+
+import static org.hibernate.SPI.Role.USE;
+
 import jakarta.persistence.TupleElement;
 import jakarta.annotation.Nullable;
 
@@ -19,6 +23,7 @@ public interface JpaTupleElement<T> extends TupleElement<T>, JpaCriteriaNode {
 	/**
 	 * Return the Java type of this tuple element.
 	 */
+	@SPI(USE)
 	@Nullable JavaType<T> getJavaTypeDescriptor();
 
 	@Override

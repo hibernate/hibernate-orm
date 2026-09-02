@@ -120,11 +120,6 @@ public class TestingDialectResolutionInfo implements DialectResolutionInfo {
 	}
 
 	@Override
-	public String getSQLKeywords() {
-		return "";
-	}
-
-	@Override
 	public String toString() {
 		return getMajor() + "." + getMinor();
 	}

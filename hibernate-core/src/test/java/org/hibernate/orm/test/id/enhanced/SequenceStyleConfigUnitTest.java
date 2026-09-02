@@ -15,8 +15,8 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.dialect.sequence.ANSISequenceSupport;
-import org.hibernate.dialect.sequence.SequenceSupport;
+import org.hibernate.dialect.sequence.spi.ANSISequenceSupport;
+import org.hibernate.dialect.sequence.spi.SequenceSupport;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.id.OptimizableGenerator;
@@ -425,7 +425,7 @@ public class SequenceStyleConfigUnitTest {
 	public static class PooledSequenceDialect extends SequenceDialect {
 		@Override
 		public SequenceSupport getSequenceSupport() {
-			return ANSISequenceSupport.INSTANCE;
+			return org.hibernate.dialect.sequence.spi.SequenceSupports.ansi();
 		}
 	}
 

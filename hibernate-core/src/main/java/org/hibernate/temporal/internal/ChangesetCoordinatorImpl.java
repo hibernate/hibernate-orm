@@ -58,7 +58,7 @@ public class ChangesetCoordinatorImpl
 				);
 			}
 			final var dialect = serviceRegistry.requireService( JdbcServices.class ).getDialect();
-			identifierSupplier = dialect.isCurrentTimestampStable()
+			identifierSupplier = dialect.getCurrentTemporalSupport().isCurrentTimestampStable()
 					? null
 					: new CurrentTimestampChangesetIdentifierSupplier();
 			identifierValueType = Instant.class;
@@ -104,7 +104,7 @@ public class ChangesetCoordinatorImpl
 			// "unstable" across calls in a given
 			// transaction, we need to cache it in the
 			// session across calls to the database
-			&& dialect.isCurrentTimestampStable();
+			&& dialect.getCurrentTemporalSupport().isCurrentTimestampStable();
 	}
 
 	private ChangesetIdentifierSupplier<?> resolveSupplier(

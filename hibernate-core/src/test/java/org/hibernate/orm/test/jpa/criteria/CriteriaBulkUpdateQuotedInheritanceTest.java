@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.jpa.criteria;
 
+
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.PostgreSQLDialect;
 
@@ -30,7 +31,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Note: to reproduce the bug use a Dialect with {@link org.hibernate.query.sqm.mutation.internal.cte.CteMutationStrategy CTE}
- * multi table mutation strategy support (e.g. {@link org.hibernate.dialect.PostgreSQLDialect#getFallbackSqmMutationStrategy PostgreSQLDialect})
+ * multi table mutation strategy support (e.g. {@link org.hibernate.dialect.PostgreSQLDialect#getMultiTableMutationSupport PostgreSQLDialect})
  *
  * @author Marco Belladelli
  */

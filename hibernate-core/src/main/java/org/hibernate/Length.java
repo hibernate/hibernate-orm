@@ -4,6 +4,7 @@
  */
 package org.hibernate;
 
+
 /**
  * Defines a list of useful constant values that may be used
  * to specify long column lengths in the JPA
@@ -105,7 +106,8 @@ public final class Length {
 	 * The default length for a LOB column, on databases
 	 * where LOB columns have a length.
 	 *
-	 * @see org.hibernate.dialect.Dialect#getDefaultLobLength
+	 * @see org.hibernate.dialect.Dialect#getTypeSizingProfile()
+	 * @see org.hibernate.dialect.type.spi.TypeSizingProfile#defaultLobLength()
 	 *
 	 * @see org.hibernate.type.SqlTypes#CLOB
 	 * @see org.hibernate.type.SqlTypes#BLOB

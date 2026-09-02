@@ -4,6 +4,7 @@
  */
 package org.hibernate.dialect;
 
+
 import java.util.Map;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.testing.orm.junit.RequiresDialect;
@@ -78,11 +79,6 @@ public class MySQLDialectDatabaseVersionTest {
 		@Override
 		public int getDriverMinorVersion() {
 			return 3;
-		}
-
-		@Override
-		public String getSQLKeywords() {
-			return "";
 		}
 
 		@Override

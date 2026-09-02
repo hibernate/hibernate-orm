@@ -61,7 +61,7 @@ public interface ChangesetCoordinator extends Service {
 	 * parameter, and we don't need to cache its value in the session.
 	 *
 	 * @see StateManagementSettings#USE_SERVER_TRANSACTION_TIMESTAMPS
-	 * @see Dialect#isCurrentTimestampStable()
+	 * @see org.hibernate.dialect.temporaltype.spi.CurrentTemporalSupport#isCurrentTimestampStable()
 	 */
 	boolean useServerTimestamp(Dialect dialect);
 

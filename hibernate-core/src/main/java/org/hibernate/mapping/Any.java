@@ -184,10 +184,12 @@ public class Any extends SimpleValue {
 		metaMapping.setTypeName( type );
 	}
 
+	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	public Map<DiscriminatorValue,String> getMetaValues() {
 		return metaValueToEntityNameMap;
 	}
 
+	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	public void setMetaValues(Map<DiscriminatorValue,String> metaValueToEntityNameMap) {
 		this.metaValueToEntityNameMap = metaValueToEntityNameMap;
 	}
@@ -268,6 +270,7 @@ public class Any extends SimpleValue {
 		}
 	}
 
+	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	public void setDiscriminatorValueMappings(Map<DiscriminatorValue, Class<?>> discriminatorValueMappings) {
 		metaValueToEntityNameMap = new HashMap<>();
 		discriminatorValueMappings.forEach( (value, entity) -> metaValueToEntityNameMap.put( value, entity.getName() ) );

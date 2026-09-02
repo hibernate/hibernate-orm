@@ -4,6 +4,29 @@
  */
 package org.hibernate.community.dialect;
 
+import org.hibernate.dialect.schema.spi.ConstraintDropMode;
+import org.hibernate.dialect.schema.spi.ExistenceCheckPlacement;
+import org.hibernate.dialect.schema.spi.IfExistsSupport;
+import org.hibernate.dialect.schema.spi.IndexNameQualification;
+import org.hibernate.dialect.schema.spi.SchemaDropSupport;
+
+import org.hibernate.dialect.temporaltype.spi.TemporalOperationSupport;
+import org.hibernate.dialect.temporaltype.spi.TemporalOperationSupports;
+
+import org.hibernate.dialect.temporaltype.spi.TemporalFormatSupport;
+
+import org.hibernate.dialect.temporaltype.spi.CurrentTemporalSupport;
+
+import org.hibernate.SPI;
+import static org.hibernate.SPI.Role.USE;
+
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.SUPPLY;
+import org.hibernate.dialect.type.spi.TypeSizingProfile;
+
+import org.hibernate.dialect.function.spi.TupleCountSupport;
+import org.hibernate.dialect.function.spi.WindowFunctionSupport;
+
 import jakarta.persistence.TemporalType;
 import org.hibernate.LockOptions;
 import org.hibernate.ScrollMode;
@@ -11,45 +34,51 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
-import org.hibernate.community.dialect.identity.SQLiteIdentityColumnSupport;
+import org.hibernate.community.dialect.identity.internal.SQLiteIdentityColumnSupport;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.NationalizationSupport;
-import org.hibernate.dialect.NullOrdering;
-import org.hibernate.dialect.Replacer;
+import org.hibernate.dialect.jdbc.spi.ParameterLimits;
+import org.hibernate.dialect.type.spi.NationalizationSupport;
+import org.hibernate.dialect.sql.ast.spi.NullOrdering;
+import org.hibernate.dialect.sql.ast.spi.NullOrderingSupport;
+import org.hibernate.dialect.function.spi.Replacer;
 import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.dialect.identity.IdentityColumnSupport;
-import org.hibernate.dialect.lock.internal.NoLockingSupport;
+import org.hibernate.dialect.identity.spi.IdentityColumnSupport;
 import org.hibernate.dialect.lock.spi.LockingSupport;
-import org.hibernate.dialect.pagination.LimitHandler;
-import org.hibernate.dialect.pagination.LimitOffsetLimitHandler;
-import org.hibernate.dialect.unique.AlterTableUniqueDelegate;
-import org.hibernate.dialect.unique.UniqueDelegate;
+import org.hibernate.dialect.lock.spi.StandardLockingClauseStrategies;
+import org.hibernate.dialect.lock.spi.StandardLockingSupports;
+import org.hibernate.dialect.namespace.spi.NamespaceSupport;
+import org.hibernate.dialect.namespace.spi.NamespaceSupports;
+import org.hibernate.dialect.pagination.spi.LimitHandler;
+import org.hibernate.dialect.pagination.spi.LimitOffsetLimitHandler;
+import org.hibernate.dialect.unique.spi.DelegatingUniqueDelegate;
+import org.hibernate.dialect.unique.spi.UniqueDelegates;
+import org.hibernate.dialect.unique.spi.UniqueDelegate;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.DataException;
 import org.hibernate.exception.JDBCConnectionException;
 import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
-import org.hibernate.internal.util.JdbcExceptionHelper;
+import org.hibernate.jdbc.spi.JdbcExceptionHelper;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.UniqueKey;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.common.TemporalUnit;
-import org.hibernate.dialect.type.IntervalType;
+import org.hibernate.dialect.temporaltype.spi.IntervalType;
 import org.hibernate.query.sqm.TrimSpec;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
-import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.SqlAstTranslatorFactory;
-import org.hibernate.sql.ast.spi.LockingClauseStrategy;
-import org.hibernate.sql.ast.spi.SqlAppender;
-import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
-import org.hibernate.sql.ast.tree.Statement;
-import org.hibernate.sql.ast.tree.select.QuerySpec;
+import org.hibernate.sql.ast.spi.translation.SqlAstNodeRenderingMode;
+import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslatorFactory;
+import org.hibernate.dialect.lock.spi.LockingClauseStrategy;
+import org.hibernate.sql.spi.SqlAppender;
+import org.hibernate.dialect.sql.ast.spi.StandardSqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.Statement;
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
+import org.hibernate.sql.ast.spi.query.select.QuerySpec;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
@@ -75,7 +104,6 @@ import static org.hibernate.query.sqm.produce.function.FunctionParameterType.INT
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.NUMERIC;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.STRING;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.TEMPORAL;
-import static org.hibernate.sql.ast.internal.NonLockingClauseStrategy.NON_CLAUSE_STRATEGY;
 import static org.hibernate.type.SqlTypes.BINARY;
 import static org.hibernate.type.SqlTypes.CHAR;
 import static org.hibernate.type.SqlTypes.DECIMAL;
@@ -85,17 +113,45 @@ import static org.hibernate.type.SqlTypes.TIMESTAMP;
 import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
 import static org.hibernate.type.SqlTypes.TIME_WITH_TIMEZONE;
 import static org.hibernate.type.SqlTypes.VARBINARY;
-import static org.hibernate.type.descriptor.DateTimeUtils.appendAsDate;
-import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTime;
-import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMillis;
-import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithNanos;
+import static org.hibernate.dialect.literal.spi.StandardDateTimeLiteralRendering.appendAsDate;
+import static org.hibernate.dialect.literal.spi.StandardDateTimeLiteralRendering.appendAsLocalTime;
+import static org.hibernate.dialect.literal.spi.StandardDateTimeLiteralRendering.appendAsTime;
+import static org.hibernate.dialect.literal.spi.StandardDateTimeLiteralRendering.appendAsTimestampWithMillis;
+import static org.hibernate.dialect.literal.spi.StandardDateTimeLiteralRendering.appendAsTimestampWithNanos;
 
 /**
  * An SQL dialect for SQLite.
  *
  * @author Christian Beikov
  */
-public class SQLiteDialect extends Dialect {
+public class SQLiteDialect extends Dialect implements CurrentTemporalSupport, TemporalFormatSupport, TemporalOperationSupport {
+	private IfExistsSupport ifExistsSupport;
+	private SchemaDropSupport schemaDropSupport;
+
+
+	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
+	public TemporalOperationSupport getTemporalOperationSupport() {
+		return this;
+	}
+
+	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
+	public TemporalFormatSupport getTemporalFormatSupport() {
+		return this;
+	}
+
+	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
+	public CurrentTemporalSupport getCurrentTemporalSupport() {
+		return this;
+	}
+	private final TypeSizingProfile typeSizingProfile = TypeSizingProfile.builder( super.getTypeSizingProfile() )
+			.maxVarbinaryLength( TypeSizingProfile.UNSUPPORTED )
+			.maxVarbinaryCapacity( TypeSizingProfile.UNSUPPORTED )
+			.build();
+
+	@Override public TypeSizingProfile getTypeSizingProfile() { return typeSizingProfile; }
 
 	private static final DatabaseVersion DEFAULT_VERSION = DatabaseVersion.make( 2, 0 );
 
@@ -103,7 +159,6 @@ public class SQLiteDialect extends Dialect {
 
 	public SQLiteDialect(DialectResolutionInfo info) {
 		this( info.makeCopyOrDefault( DEFAULT_VERSION ) );
-		registerKeywords( info );
 	}
 
 	public SQLiteDialect() {
@@ -112,10 +167,11 @@ public class SQLiteDialect extends Dialect {
 
 	public SQLiteDialect(DatabaseVersion version) {
 		super( version );
-		uniqueDelegate = new SQLiteUniqueDelegate( this );
+		uniqueDelegate = new SQLiteUniqueDelegate( UniqueDelegates.alterTable( this ) );
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	protected String columnType(int sqlTypeCode) {
 		return switch ( sqlTypeCode ) {
 			case DECIMAL -> getVersion().isBefore( 3 ) ? columnType( SqlTypes.NUMERIC ) : super.columnType( sqlTypeCode );
@@ -130,15 +186,9 @@ public class SQLiteDialect extends Dialect {
 		};
 	}
 
-	@Override
-	public int getMaxVarbinaryLength() {
-		//no varbinary type
-		return -1;
-	}
-
-	private static class SQLiteUniqueDelegate extends AlterTableUniqueDelegate {
-		public SQLiteUniqueDelegate(Dialect dialect) {
-			super( dialect );
+	private static class SQLiteUniqueDelegate extends DelegatingUniqueDelegate {
+		public SQLiteUniqueDelegate(UniqueDelegate delegate) {
+			super( delegate );
 		}
 		@Override
 		public String getColumnDefinitionUniquenessFragment(Column column, SqlStringGenerationContext context) {
@@ -160,6 +210,7 @@ public class SQLiteDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public UniqueDelegate getUniqueDelegate() {
 		return uniqueDelegate;
 	}
@@ -171,6 +222,7 @@ public class SQLiteDialect extends Dialect {
 	 * {@code (extract(dow,arg)+1))}.
 	 */
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String extractPattern(TemporalUnit unit) {
 		return switch ( unit ) {
 			case SECOND -> "cast(strftime('%S.%f',?2) as double)";
@@ -184,11 +236,12 @@ public class SQLiteDialect extends Dialect {
 			case EPOCH -> "strftime('%s',?2)";
 			// Thanks https://stackoverflow.com/questions/15082584/sqlite-return-wrong-week-number-for-2013
 			case WEEK -> "((strftime('%j',date(?2,'-3 days','weekday 4'))-1)/7+1)";
-			default -> super.extractPattern(unit);
+			default -> TemporalOperationSupports.standard().extractPattern(unit);
 		};
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
 		final String function = temporalType == TemporalType.DATE ? "date" : "datetime";
 		switch ( unit ) {
@@ -205,6 +258,7 @@ public class SQLiteDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
 		final StringBuilder pattern = new StringBuilder();
 		switch ( unit ) {
@@ -259,6 +313,7 @@ public class SQLiteDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
 		super.initializeFunctionRegistry(functionContributions);
 
@@ -336,6 +391,7 @@ public class SQLiteDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String trimPattern(TrimSpec specification, boolean isWhitespace) {
 		switch ( specification ) {
 			case BOTH:
@@ -360,6 +416,7 @@ public class SQLiteDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.contributeTypes( typeContributions, serviceRegistry );
 		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration()
@@ -375,47 +432,45 @@ public class SQLiteDialect extends Dialect {
 
 	@Override
 	public LockingSupport getLockingSupport() {
-		return NoLockingSupport.NO_LOCKING_SUPPORT;
+		return StandardLockingSupports.none();
 	}
 
 	@Override
 	public LockingClauseStrategy getLockingClauseStrategy(QuerySpec querySpec, LockOptions lockOptions) {
 		// SQLite does not support the FOR UPDATE clause
-		return NON_CLAUSE_STRATEGY;
+		return StandardLockingClauseStrategies.none();
 	}
 
-	@Override
-	public String getForUpdateString() {
-		return "";
-	}
 
 	@Override
-	public boolean supportsNullPrecedence() {
-		return getVersion().isSameOrAfter( 3, 3 );
-	}
-
-	@Override
-	public NullOrdering getNullOrdering() {
-		return NullOrdering.SMALLEST;
+	public NullOrderingSupport getNullOrderingSupport() {
+		return NullOrderingSupport.builder( super.getNullOrderingSupport() )
+				.defaultOrdering( NullOrdering.SMALLEST )
+				.capability(
+						NullOrderingSupport.Capability.NULLS_FIRST_LAST,
+						getVersion().isSameOrAfter( 3, 3 )
+				)
+				.build();
 	}
 
 	/**
 	 * Generated keys are not supported by the (standard) Xerial driver (9/2022).
-	 *
-	 * @return false
 	 */
 	@Override
-	public boolean getDefaultUseGetGeneratedKeys() {
-		return false;
+	@SPI({ IMPLEMENT, SUPPLY })
+	protected void contributeDefaultProperties(java.util.Properties properties) {
+		super.contributeDefaultProperties( properties );
+		properties.setProperty( org.hibernate.cfg.AvailableSettings.USE_GET_GENERATED_KEYS, "false" );
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public SqlAstTranslatorFactory getSqlAstTranslatorFactory() {
 		return new StandardSqlAstTranslatorFactory() {
 			@Override
-			protected <T extends JdbcOperation> SqlAstTranslator<T> buildTranslator(
-					SessionFactoryImplementor sessionFactory, Statement statement) {
-				return new SQLiteSqlAstTranslator<>( sessionFactory, statement );
+			protected <S extends Statement, T extends JdbcOperation> SqlAstTranslator<T> createTranslator(
+					SqlAstTranslationRequest<S, T> request) {
+				return new SQLiteSqlAstTranslator<>( request );
 			}
 		};
 	}
@@ -434,6 +489,7 @@ public class SQLiteDialect extends Dialect {
 	private static final int SQLITE_NOTADB = 26;
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public ViolatedConstraintNameExtractor getViolatedConstraintNameExtractor() {
 		return EXTRACTOR;
 	}
@@ -448,6 +504,7 @@ public class SQLiteDialect extends Dialect {
 			} );
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
 		return (sqlException, message, sql) -> {
 			final int errorCode = JdbcExceptionHelper.extractErrorCode( sqlException );
@@ -472,80 +529,83 @@ public class SQLiteDialect extends Dialect {
 	// DDL support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
-	public boolean canCreateSchema() {
-		return false;
+	@SPI({ IMPLEMENT, SUPPLY })
+	public NamespaceSupport getNamespaceSupport() {
+		return NamespaceSupports.none();
 	}
 
 	@Override
-	public boolean hasAlterTable() {
+	@SPI({ USE, IMPLEMENT })
+	public boolean supportsAlterTableConstraints() {
 		// As specified in NHibernate dialect
 		return false;
 	}
 
 	@Override
-	public boolean dropConstraints() {
-		return false;
+	@SPI({ IMPLEMENT, SUPPLY })
+	public synchronized SchemaDropSupport getSchemaDropSupport() {
+		if ( schemaDropSupport == null ) {
+			schemaDropSupport = new SchemaDropSupport( java.util.List.of(), ConstraintDropMode.IMPLICIT, "" );
+		}
+		return schemaDropSupport;
 	}
 
 	@Override
-	public boolean qualifyIndexName() {
-		return false;
+	@SPI({ USE, IMPLEMENT })
+	public IndexNameQualification nameQualification() {
+		return IndexNameQualification.UNQUALIFIED;
 	}
 
 	@Override
-	public String getDropForeignKeyString() {
-		throw new UnsupportedOperationException( "No drop foreign key syntax supported by SQLiteDialect" );
+	@SPI({ IMPLEMENT, SUPPLY })
+	public org.hibernate.dialect.schema.spi.SchemaCommentSupport getSchemaCommentSupport() {
+		return org.hibernate.dialect.schema.spi.SchemaCommentSupports.commentOn();
 	}
 
 	@Override
-	public String getAddForeignKeyConstraintString(
-			String constraintName,
-			String[] foreignKey,
-			String referencedTable,
-			String[] primaryKey,
-			boolean referencesPrimaryKey) {
-		throw new UnsupportedOperationException( "No add foreign key syntax supported by SQLiteDialect" );
+	@SPI({ IMPLEMENT, SUPPLY })
+	public synchronized IfExistsSupport getIfExistsSupport() {
+		if ( ifExistsSupport == null ) {
+			ifExistsSupport = new IfExistsSupport(
+				ExistenceCheckPlacement.NONE,
+				ExistenceCheckPlacement.BEFORE_NAME,
+				ExistenceCheckPlacement.NONE,
+				ExistenceCheckPlacement.NONE
+		);
+		}
+		return ifExistsSupport;
 	}
 
 	@Override
-	public String getAddPrimaryKeyConstraintString(String constraintName) {
-		throw new UnsupportedOperationException( "No add primary key syntax supported by SQLiteDialect" );
+	public TupleCountSupport getTupleCountSupport() {
+		return TupleCountSupport.NONE;
 	}
 
 	@Override
-	public boolean supportsCommentOn() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsIfExistsBeforeTableName() {
-		return true;
-	}
-
-	@Override
-	public boolean doesReadCommittedCauseWritersToBlockReaders() {
-		// TODO Validate (WAL mode...)
-		return true;
-	}
-
-	@Override
-	public boolean doesRepeatableReadCauseReadersToBlockWriters() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsTupleDistinctCounts() {
-		return false;
-	}
-
-	public int getInExpressionCountLimit() {
+	public ParameterLimits getParameterLimits() {
 		// Compile/runtime time option: http://sqlite.org/limits.html#max_variable_number
-		return 1000;
+		return ParameterLimits.of( 1000 );
 	}
 
 	@Override
-	public boolean supportsWindowFunctions() {
-		return true;
+	public WindowFunctionSupport getWindowFunctionSupport() {
+		if ( getVersion().isBefore( 3, 25 ) ) {
+			return WindowFunctionSupport.NONE;
+		}
+		final WindowFunctionSupport.Builder builder = WindowFunctionSupport.builder()
+				.features(
+						WindowFunctionSupport.Feature.WINDOW_FUNCTIONS,
+						WindowFunctionSupport.Feature.PARTITION_BY,
+						WindowFunctionSupport.Feature.ROWS_FRAME,
+						WindowFunctionSupport.Feature.RANGE_FRAME
+				);
+		if ( getVersion().isSameOrAfter( 3, 28 ) ) {
+			builder.features(
+					WindowFunctionSupport.Feature.GROUPS_FRAME,
+					WindowFunctionSupport.Feature.FRAME_EXCLUSION
+			);
+		}
+		return builder.build();
 	}
 
 	@Override
@@ -554,42 +614,38 @@ public class SQLiteDialect extends Dialect {
 	}
 
 	@Override
-	public String getSelectGUIDString() {
-		return "select hex(randomblob(16))";
-	}
-
-	@Override
+	@SPI({ USE, IMPLEMENT, SUPPLY })
 	public ScrollMode defaultScrollMode() {
 		return ScrollMode.FORWARD_ONLY;
 	}
 
 	@Override
-	public String getNoColumnsInsertString() {
-		return "default values";
-	}
-
-	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public NationalizationSupport getNationalizationSupport() {
 		return NationalizationSupport.IMPLICIT;
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String currentDate() {
 		return "date('now')";
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String currentTime() {
 		return "time('now')";
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String currentTimestamp() {
 		return "datetime('now')";
 	}
 
 	@Override
-	public void appendDatetimeFormat(SqlAppender appender, String format) {
+	@SPI({ USE, IMPLEMENT })
+	public void appendFormat(SqlAppender appender, String format) {
 		appender.appendSql( datetimeFormat( format ).result() );
 	}
 
@@ -646,12 +702,14 @@ public class SQLiteDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String translateExtractField(TemporalUnit unit) {
 		// All units should be handled in extractPattern so we should never hit this method
 		throw new UnsupportedOperationException( "Unsupported unit: " + unit );
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public void appendDateTimeLiteral(
 			SqlAppender appender,
 			TemporalAccessor temporalAccessor,
@@ -665,12 +723,12 @@ public class SQLiteDialect extends Dialect {
 				break;
 			case TIME:
 				appender.appendSql( "time(" );
-				appendAsTime( appender, temporalAccessor, supportsTemporalLiteralOffset(), jdbcTimeZone );
+				appendAsTime( appender, temporalAccessor, getTemporalValueSemantics().supportsLiteralOffset(), jdbcTimeZone );
 				appender.appendSql( ')' );
 				break;
 			case TIMESTAMP:
 				appender.appendSql( "datetime(" );
-				appendAsTimestampWithNanos( appender, temporalAccessor, supportsTemporalLiteralOffset(), jdbcTimeZone );
+				appendAsTimestampWithNanos( appender, temporalAccessor, getTemporalValueSemantics().supportsLiteralOffset(), jdbcTimeZone );
 				appender.appendSql( ')' );
 				break;
 			default:
@@ -679,6 +737,7 @@ public class SQLiteDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public void appendDateTimeLiteral(SqlAppender appender, Date date, TemporalType precision, TimeZone jdbcTimeZone) {
 		switch ( precision ) {
 			case DATE:
@@ -688,7 +747,7 @@ public class SQLiteDialect extends Dialect {
 				break;
 			case TIME:
 				appender.appendSql( "time(" );
-				appendAsTime( appender, date );
+				appendAsLocalTime( appender, date );
 				appender.appendSql( ')' );
 				break;
 			case TIMESTAMP:
@@ -702,6 +761,7 @@ public class SQLiteDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public void appendDateTimeLiteral(
 			SqlAppender appender,
 			Calendar calendar,
@@ -715,7 +775,7 @@ public class SQLiteDialect extends Dialect {
 				break;
 			case TIME:
 				appender.appendSql( "time(" );
-				appendAsTime( appender, calendar );
+				appendAsLocalTime( appender, calendar );
 				appender.appendSql( ')' );
 				break;
 			case TIMESTAMP:

@@ -10,14 +10,14 @@ import jakarta.annotation.Nullable;
 import org.hibernate.QueryException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.metamodel.model.domain.ReturnableType;
-import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
-import org.hibernate.sql.ast.spi.SqlAppender;
-import org.hibernate.sql.ast.tree.expression.CastTarget;
-import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.JsonPathPassingClause;
-import org.hibernate.sql.ast.tree.expression.JsonValueEmptyBehavior;
-import org.hibernate.sql.ast.tree.expression.JsonValueErrorBehavior;
+import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
+import org.hibernate.dialect.sql.ast.spi.AbstractSqlAstTranslator;
+import org.hibernate.sql.spi.SqlAppender;
+import org.hibernate.sql.ast.spi.query.expression.CastTarget;
+import org.hibernate.sql.ast.spi.query.expression.Expression;
+import org.hibernate.sql.ast.spi.query.expression.JsonPathPassingClause;
+import org.hibernate.sql.ast.spi.query.expression.JsonValueEmptyBehavior;
+import org.hibernate.sql.ast.spi.query.expression.JsonValueErrorBehavior;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -92,7 +92,7 @@ public class CockroachDBJsonValueFunction extends JsonValueFunction {
 		for ( JsonPathHelper.JsonPathElement jsonPathElement : jsonPathElements ) {
 			sqlAppender.appendSql( separator );
 			if ( jsonPathElement instanceof JsonPathHelper.JsonAttribute attribute ) {
-				dialect.appendLiteral( sqlAppender, attribute.attribute() );
+				dialect.getLiteralSupport().appendLiteral( sqlAppender, attribute.attribute() );
 			}
 			else if ( jsonPathElement instanceof JsonPathHelper.JsonParameterIndexAccess ) {
 				assert jsonPathPassingClause != null;

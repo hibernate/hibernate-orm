@@ -4,6 +4,11 @@
  */
 package org.hibernate.type.format;
 
+import org.hibernate.SPI;
+
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.USE;
+
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -12,7 +17,12 @@ import java.lang.reflect.Type;
 /**
  * @author Yanming Zhou
  */
+@SPI({ USE, IMPLEMENT })
 public abstract class AbstractJsonFormatMapper implements FormatMapper {
+	@SPI(IMPLEMENT)
+	public AbstractJsonFormatMapper() {
+	}
+
 
 	@SuppressWarnings("unchecked")
 	@Override

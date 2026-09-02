@@ -13,14 +13,14 @@ import org.hibernate.query.sqm.produce.function.SetReturningFunctionTypeResolver
 import org.hibernate.query.sqm.sql.spi.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.spi.SqmTypedNode;
 import org.hibernate.query.sqm.tree.spi.expression.SqmJsonTableFunction;
-import org.hibernate.sql.ast.tree.SqlAstNode;
-import org.hibernate.sql.ast.tree.expression.JsonTableColumnDefinition;
-import org.hibernate.sql.ast.tree.expression.JsonTableColumnsClause;
-import org.hibernate.sql.ast.tree.expression.JsonTableExistsColumnDefinition;
-import org.hibernate.sql.ast.tree.expression.JsonTableNestedColumnDefinition;
-import org.hibernate.sql.ast.tree.expression.JsonTableOrdinalityColumnDefinition;
-import org.hibernate.sql.ast.tree.expression.JsonTableQueryColumnDefinition;
-import org.hibernate.sql.ast.tree.expression.JsonTableValueColumnDefinition;
+import org.hibernate.sql.ast.spi.SqlAstNode;
+import org.hibernate.sql.ast.spi.query.expression.JsonTableColumnDefinition;
+import org.hibernate.sql.ast.spi.query.expression.JsonTableColumnsClause;
+import org.hibernate.sql.ast.spi.query.expression.JsonTableExistsColumnDefinition;
+import org.hibernate.sql.ast.spi.query.expression.JsonTableNestedColumnDefinition;
+import org.hibernate.sql.ast.spi.query.expression.JsonTableOrdinalityColumnDefinition;
+import org.hibernate.sql.ast.spi.query.expression.JsonTableQueryColumnDefinition;
+import org.hibernate.sql.ast.spi.query.expression.JsonTableValueColumnDefinition;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -40,6 +40,7 @@ public class JsonTableSetReturningFunctionTypeResolver implements SetReturningFu
 	}
 
 	@Override
+	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	public SelectableMapping[] resolveFunctionReturnType(
 			List<? extends SqlAstNode> arguments,
 			String tableIdentifierVariable,
@@ -61,10 +62,12 @@ public class JsonTableSetReturningFunctionTypeResolver implements SetReturningFu
 		return selectableMappings.toArray( new SelectableMapping[0] );
 	}
 
+	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	protected void addSelectableMappings(List<SelectableMapping> selectableMappings, JsonTableNestedColumnDefinition columnDefinition, SqmToSqlAstConverter converter) {
 		addSelectableMappings( selectableMappings, columnDefinition.columns(), converter );
 	}
 
+	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	protected void addSelectableMappings(List<SelectableMapping> selectableMappings, JsonTableColumnsClause columnsClause, SqmToSqlAstConverter converter) {
 		for ( JsonTableColumnDefinition columnDefinition : columnsClause.getColumnDefinitions() ) {
 			if ( columnDefinition instanceof JsonTableExistsColumnDefinition definition ) {
@@ -85,6 +88,7 @@ public class JsonTableSetReturningFunctionTypeResolver implements SetReturningFu
 		}
 	}
 
+	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	protected void addSelectableMappings(List<SelectableMapping> selectableMappings, JsonTableOrdinalityColumnDefinition definition, SqmToSqlAstConverter converter) {
 		addSelectableMapping(
 				selectableMappings,
@@ -94,6 +98,7 @@ public class JsonTableSetReturningFunctionTypeResolver implements SetReturningFu
 		);
 	}
 
+	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	protected void addSelectableMappings(List<SelectableMapping> selectableMappings, JsonTableValueColumnDefinition definition, SqmToSqlAstConverter converter) {
 		addSelectableMapping(
 				selectableMappings,
@@ -103,6 +108,7 @@ public class JsonTableSetReturningFunctionTypeResolver implements SetReturningFu
 		);
 	}
 
+	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	protected void addSelectableMappings(List<SelectableMapping> selectableMappings, JsonTableQueryColumnDefinition definition, SqmToSqlAstConverter converter) {
 		addSelectableMapping(
 				selectableMappings,
@@ -113,6 +119,7 @@ public class JsonTableSetReturningFunctionTypeResolver implements SetReturningFu
 		);
 	}
 
+	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	protected void addSelectableMappings(List<SelectableMapping> selectableMappings, JsonTableExistsColumnDefinition definition, SqmToSqlAstConverter converter) {
 		addSelectableMapping(
 				selectableMappings,
@@ -122,6 +129,7 @@ public class JsonTableSetReturningFunctionTypeResolver implements SetReturningFu
 		);
 	}
 
+	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	protected void addSelectableMapping(List<SelectableMapping> selectableMappings, String name, JdbcMapping type, SqmToSqlAstConverter converter) {
 		selectableMappings.add( new SelectableMappingImpl(
 				"",

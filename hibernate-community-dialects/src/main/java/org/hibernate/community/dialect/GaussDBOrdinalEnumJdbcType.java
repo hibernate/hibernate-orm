@@ -19,8 +19,7 @@ import static org.hibernate.type.SqlTypes.NAMED_ORDINAL_ENUM;
  * </pre>
  *
  * @see org.hibernate.type.SqlTypes#NAMED_ORDINAL_ENUM
- * @see GaussDBDialect#getEnumTypeDeclaration(String, String[])
- * @see GaussDBDialect#getCreateEnumTypeCommand(String, String[])
+ * @see GaussDBDialect#getEnumSupport()
  *
  * @author liubao
  *

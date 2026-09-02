@@ -9,6 +9,7 @@ import org.hibernate.query.internal.QueryParameterIdentifiedImpl;
 import org.hibernate.query.internal.QueryParameterNamedImpl;
 import org.hibernate.query.internal.QueryParameterPositionalImpl;
 import org.hibernate.query.spi.QueryParameterImplementor;
+import org.hibernate.query.sqm.sql.spi.SqmParameterMapping;
 import org.hibernate.query.sqm.tree.spi.SqmStatement;
 import org.hibernate.query.sqm.tree.spi.expression.JpaCriteriaParameter;
 import org.hibernate.query.sqm.tree.spi.expression.SqmJpaCriteriaParameterWrapper;
@@ -29,7 +30,7 @@ import static java.util.Collections.emptyList;
  *
  * @author Steve Ebersole
  */
-public class DomainParameterXref {
+public class DomainParameterXref implements SqmParameterMapping {
 
 	public static final DomainParameterXref EMPTY = new DomainParameterXref();
 

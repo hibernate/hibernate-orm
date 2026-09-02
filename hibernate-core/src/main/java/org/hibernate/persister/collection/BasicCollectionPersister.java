@@ -4,6 +4,8 @@
  */
 package org.hibernate.persister.collection;
 
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
+
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
@@ -30,18 +32,18 @@ import org.hibernate.persister.collection.mutation.UpdateRowsCoordinator;
 import org.hibernate.persister.filter.FilterAliasGenerator;
 import org.hibernate.persister.filter.internal.StaticFilterAliasGenerator;
 import org.hibernate.persister.state.spi.StateManagement;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
-import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.model.ast.ColumnValueBinding;
-import org.hibernate.sql.model.ast.ColumnValueParameterList;
-import org.hibernate.sql.model.ast.MutatingTableReference;
-import org.hibernate.sql.model.ast.RestrictedTableMutation;
-import org.hibernate.sql.model.ast.TableMutation;
-import org.hibernate.sql.model.ast.builder.CollectionRowDeleteBuilder;
-import org.hibernate.sql.model.ast.builder.TableInsertBuilderStandard;
-import org.hibernate.sql.model.ast.builder.TableUpdateBuilderStandard;
-import org.hibernate.sql.model.internal.TableUpdateStandard;
-import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
+import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
+import org.hibernate.sql.ast.spi.query.from.TableGroup;
+import org.hibernate.sql.ast.spi.model.ColumnValueBinding;
+import org.hibernate.sql.ast.spi.model.ColumnValueParameterList;
+import org.hibernate.sql.ast.spi.model.MutatingTableReference;
+import org.hibernate.sql.ast.spi.model.RestrictedTableMutation;
+import org.hibernate.sql.ast.spi.model.TableMutation;
+import org.hibernate.sql.ast.internal.model.builder.CollectionRowDeleteBuilder;
+import org.hibernate.sql.ast.spi.model.builder.TableInsertBuilderStandard;
+import org.hibernate.sql.ast.spi.model.builder.TableUpdateBuilderStandard;
+import org.hibernate.sql.ast.spi.model.TableUpdateStandard;
+import org.hibernate.sql.spi.mutation.jdbc.JdbcMutationOperation;
 import org.hibernate.type.EntityType;
 
 import java.util.List;
@@ -336,7 +338,7 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 
 	private JdbcMutationOperation buildGeneratedInsertRowOperation(MutatingTableReference tableReference) {
 		return getSqlAstTranslatorFactory()
-				.buildModelMutationTranslator( generateInsertRowAst( tableReference ), getFactory() )
+				.buildTranslator( new SqlAstTranslationRequest.ModelMutation<>( getFactory(), generateInsertRowAst( tableReference ) ) )
 				.translate( null, MutationQueryOptions.INSTANCE );
 	}
 
@@ -440,7 +442,7 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 
 	private JdbcMutationOperation generateUpdateRowOperation(MutatingTableReference tableReference) {
 		return getSqlAstTranslatorFactory()
-				.buildModelMutationTranslator( generateUpdateRowAst( tableReference ), getFactory() )
+				.buildTranslator( new SqlAstTranslationRequest.ModelMutation<>( getFactory(), generateUpdateRowAst( tableReference ) ) )
 				.translate( null, MutationQueryOptions.INSTANCE );
 	}
 
@@ -564,7 +566,7 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 
 	private JdbcMutationOperation generateDeleteRowOperation(MutatingTableReference tableReference) {
 		return getSqlAstTranslatorFactory()
-				.buildModelMutationTranslator( generateDeleteRowAst( tableReference ), getFactory() )
+				.buildTranslator( new SqlAstTranslationRequest.ModelMutation<>( getFactory(), generateDeleteRowAst( tableReference ) ) )
 				.translate( null, MutationQueryOptions.INSTANCE );
 	}
 

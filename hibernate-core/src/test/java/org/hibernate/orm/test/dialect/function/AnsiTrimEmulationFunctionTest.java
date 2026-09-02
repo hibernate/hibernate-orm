@@ -17,14 +17,17 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.sqm.TrimSpec;
-import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.spi.SqlAppender;
-import org.hibernate.sql.ast.spi.StandardSqlAstTranslator;
-import org.hibernate.sql.ast.tree.SqlAstNode;
-import org.hibernate.sql.ast.tree.expression.QueryLiteral;
-import org.hibernate.sql.ast.tree.expression.SelfRenderingExpression;
-import org.hibernate.sql.ast.tree.expression.TrimSpecification;
-import org.hibernate.sql.exec.spi.JdbcOperation;
+import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
+import org.hibernate.sql.spi.SqlAppender;
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
+import org.hibernate.dialect.sql.ast.spi.StandardSqlAstTranslator;
+import org.hibernate.sql.ast.spi.SqlAstNode;
+import org.hibernate.sql.ast.spi.query.expression.QueryLiteral;
+import org.hibernate.sql.ast.spi.query.expression.SelfRenderingExpression;
+import org.hibernate.sql.ast.spi.query.expression.TrimSpecification;
+import org.hibernate.sql.ast.spi.query.select.QuerySpec;
+import org.hibernate.sql.ast.spi.query.select.SelectStatement;
+import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.type.descriptor.java.CharacterJavaType;
 import org.hibernate.type.descriptor.jdbc.CharJdbcType;
 import org.hibernate.type.internal.BasicTypeImpl;
@@ -124,9 +127,8 @@ public class AnsiTrimEmulationFunctionTest  {
 		Mockito.doReturn( jdbcServices ).when( factory ).getJdbcServices();
 		Mockito.doReturn( registry ).when( factory ).getServiceRegistry();
 		Mockito.doReturn( dialect ).when( jdbcServices ).getDialect();
-		StandardSqlAstTranslator<JdbcOperation> walker = new StandardSqlAstTranslator<>(
-				factory,
-				null
+		TestingSqlAstTranslator walker = new TestingSqlAstTranslator(
+				new SqlAstTranslationRequest.Select( factory, new SelectStatement( new QuerySpec( true ) ) )
 		);
 		List<SqlAstNode> sqlAstArguments = new ArrayList<>();
 		sqlAstArguments.add( new TrimSpecification( trimSpec ) );
@@ -144,7 +146,17 @@ public class AnsiTrimEmulationFunctionTest  {
 			}
 		} );
 		function.render( walker, sqlAstArguments, (ReturnableType<?>) null, walker );
-		return walker.getSql();
+		return walker.getRenderedSql();
+	}
+
+	private static class TestingSqlAstTranslator extends StandardSqlAstTranslator<JdbcSelect> {
+		private TestingSqlAstTranslator(SqlAstTranslationRequest.Select request) {
+			super( request );
+		}
+
+		private String getRenderedSql() {
+			return getSql();
+		}
 	}
 
 }

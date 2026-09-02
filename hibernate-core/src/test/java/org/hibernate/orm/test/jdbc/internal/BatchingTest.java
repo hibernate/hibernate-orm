@@ -16,8 +16,8 @@ import org.hibernate.engine.jdbc.mutation.spi.JdbcValueDescriptorAccess;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.orm.test.common.JournalingBatchObserver;
-import org.hibernate.sql.model.MutationType;
-import org.hibernate.sql.model.jdbc.JdbcValueDescriptor;
+import org.hibernate.sql.spi.mutation.MutationType;
+import org.hibernate.sql.spi.mutation.jdbc.JdbcValueDescriptor;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -239,7 +239,10 @@ public class BatchingTest implements BatchKey {
 
 			// set up some tables to use
 			Statement statement = jdbcCoordinator.getStatementPreparer().createStatement();
-			String dropSql = dialect.getDropTableString( "SANDBOX_JDBC_TST" );
+			String dropSql = org.hibernate.testing.DialectTestSupport.dropTableCommand(
+					dialect,
+					"SANDBOX_JDBC_TST"
+			);
 			try {
 				jdbcCoordinator.getResultSetReturn().execute( statement, dropSql );
 			}
@@ -263,7 +266,10 @@ public class BatchingTest implements BatchKey {
 	void cleanupTest(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( (session) -> session.doWork( connection -> {
 			try ( Statement stmnt = connection.createStatement() ) {
-				stmnt.execute( session.getDialect().getDropTableString( "SANDBOX_JDBC_TST" ) );
+				stmnt.execute( org.hibernate.testing.DialectTestSupport.dropTableCommand(
+						session.getDialect(),
+						"SANDBOX_JDBC_TST"
+				) );
 			}
 		} ) );
 	}

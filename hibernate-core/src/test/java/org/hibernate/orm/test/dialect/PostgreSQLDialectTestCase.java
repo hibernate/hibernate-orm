@@ -6,13 +6,12 @@ package org.hibernate.orm.test.dialect;
 
 import org.hibernate.JDBCException;
 import org.hibernate.Length;
-import org.hibernate.LockMode;
-import org.hibernate.LockOptions;
 import org.hibernate.PessimisticLockException;
 import org.hibernate.QueryTimeoutException;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
+import org.hibernate.engine.jdbc.cursor.spi.RefCursorSupportCreationContext;
 import org.hibernate.metamodel.mapping.internal.SqlTypedMappingImpl;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
@@ -74,23 +73,6 @@ public class PostgreSQLDialectTestCase {
 		assertInstanceOf( QueryTimeoutException.class, exception );
 	}
 
-	/**
-	 * Tests that getForUpdateString(String aliases, LockOptions lockOptions) will return a String
-	 * that will effect the SELECT ... FOR UPDATE OF tableAlias1, ..., tableAliasN
-	 */
-	@JiraKey( value = "HHH-5654" )
-	@Test
-	public void testGetForUpdateStringWithAliasesAndLockOptions() {
-		PostgreSQLDialect dialect = new PostgreSQLDialect();
-		LockOptions lockOptions = new LockOptions( LockMode.PESSIMISTIC_WRITE );
-
-		String forUpdateClause = dialect.getForUpdateString("tableAlias1", lockOptions);
-		assertEquals( " for no key update of tableAlias1", forUpdateClause );
-
-		forUpdateClause = dialect.getForUpdateString("tableAlias1,tableAlias2", lockOptions);
-		assertEquals(" for no key update of tableAlias1,tableAlias2", forUpdateClause);
-	}
-
 	@Test
 	public void testExtractConstraintName() {
 		PostgreSQLDialect dialect = new PostgreSQLDialect();
@@ -106,7 +88,19 @@ public class PostgreSQLDialectTestCase {
 	public void testMessageException() {
 		PostgreSQLDialect dialect = new PostgreSQLDialect();
 		try {
-			dialect.getResultSet( Mockito.mock( CallableStatement.class), "abc" );
+			dialect.getRefCursorSupportFactory()
+					.createRefCursorSupport( new RefCursorSupportCreationContext() {
+						@Override
+						public boolean supportsStandardRefCursors() {
+							return false;
+						}
+
+						@Override
+						public JDBCException convert(SQLException exception, String message) {
+							return new JDBCException( message, exception );
+						}
+					} )
+					.getResultSet( Mockito.mock( CallableStatement.class), "abc" );
 			fail( "Expected UnsupportedOperationException" );
 		}
 		catch (Exception e) {
@@ -116,14 +110,20 @@ public class PostgreSQLDialectTestCase {
 	}
 
 	/**
-	 * Tests that getAlterTableString() will make use of IF EXISTS syntax
+	 * Tests that alter-table support makes use of IF EXISTS syntax.
 	 */
 	@Test
 	@JiraKey( value = "HHH-11647" )
-	public void testGetAlterTableString() {
+	public void testAlterTableCommand() {
 		PostgreSQLDialect dialect = new PostgreSQLDialect();
 
-		assertEquals("alter table if exists table_name", dialect.getAlterTableString( "table_name" ));
+		assertEquals(
+				"alter table if exists table_name",
+				dialect.getAlterTableSupport().alterTableCommand(
+						"table_name",
+						dialect.getIfExistsSupport().alterTablePlacement()
+				)
+		);
 	}
 
 	@Test
@@ -140,7 +140,7 @@ public class PostgreSQLDialectTestCase {
 				typeConfiguration,
 				functionRegistry
 		);
-		dialect.contribute( typeContributions, typeConfiguration.getServiceRegistry() );
+		dialect.contributeTypes( typeContributions, typeConfiguration.getServiceRegistry() );
 		dialect.initializeFunctionRegistry( functionContributions );
 		final String varcharNullString = dialect.getSelectClauseNullString(
 				new SqlTypedMappingImpl( typeConfiguration.getBasicTypeForJavaType( String.class ) ),

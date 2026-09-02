@@ -5,6 +5,7 @@
 package org.hibernate.spatial.dialect.oracle;
 
 
+
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.spatial.SpatialDialect;

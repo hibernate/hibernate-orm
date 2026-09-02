@@ -10,8 +10,8 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.tree.from.TableReference;
-import org.hibernate.sql.model.TableMapping;
+import org.hibernate.sql.ast.spi.query.from.TableReference;
+import org.hibernate.sql.spi.mutation.TableMapping;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 

@@ -4,6 +4,11 @@
  */
 package org.hibernate.usertype;
 
+import org.hibernate.SPI;
+
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.USE;
+
 import org.hibernate.Incubating;
 
 import java.lang.annotation.Annotation;
@@ -40,6 +45,7 @@ import java.lang.annotation.Annotation;
  * @since 7.3
  */
 @Incubating
+@SPI({ USE, IMPLEMENT })
 public interface AnnotationBasedUserType<A extends Annotation, J> extends UserType<J> {
 	/**
 	 * Initializes this generation strategy for the given annotation instance.

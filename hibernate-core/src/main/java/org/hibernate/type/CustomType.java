@@ -4,6 +4,8 @@
  */
 package org.hibernate.type;
 
+import org.hibernate.SPI;
+
 import java.io.Serializable;
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
@@ -47,6 +49,7 @@ import static org.hibernate.type.descriptor.converter.internal.ConverterHelper.c
  * @author Gavin King
  * @author Steve Ebersole
  */
+@SPI
 public class CustomType<J>
 		extends AbstractType
 		implements ConvertedBasicType<J>, ProcedureParameterNamedBinder<J>, ProcedureParameterExtractionAware<J> {

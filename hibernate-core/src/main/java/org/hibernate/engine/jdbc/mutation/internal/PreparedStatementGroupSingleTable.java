@@ -10,8 +10,8 @@ import java.util.function.Predicate;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.values.GeneratedValuesMutationDelegate;
-import org.hibernate.sql.model.PreparableMutationOperation;
-import org.hibernate.sql.model.TableMapping;
+import org.hibernate.sql.spi.mutation.jdbc.PreparableMutationOperation;
+import org.hibernate.sql.spi.mutation.TableMapping;
 
 /**
  * {@link org.hibernate.engine.jdbc.mutation.group.PreparedStatementGroup}

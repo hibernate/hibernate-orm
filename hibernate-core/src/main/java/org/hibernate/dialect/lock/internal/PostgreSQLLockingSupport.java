@@ -7,11 +7,14 @@ package org.hibernate.dialect.lock.internal;
 import jakarta.persistence.Timeout;
 import org.hibernate.HibernateException;
 import org.hibernate.Timeouts;
-import org.hibernate.dialect.RowLockStrategy;
+import org.hibernate.dialect.lock.spi.RowLockStrategy;
 import org.hibernate.dialect.lock.spi.ConnectionLockTimeoutStrategy;
 import org.hibernate.dialect.lock.spi.LockTimeoutType;
+import org.hibernate.dialect.lock.spi.LockingClauseRenderer;
+import org.hibernate.dialect.lock.spi.LockingClauseRequest;
 import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.lock.spi.OuterJoinLockingType;
+import org.hibernate.dialect.lock.spi.PessimisticLockKind;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 import java.sql.Connection;
@@ -24,7 +27,8 @@ import static org.hibernate.dialect.lock.spi.LockTimeoutType.QUERY;
 /**
  * @author Steve Ebersole
  */
-public class PostgreSQLLockingSupport implements LockingSupport, LockingSupport.Metadata, ConnectionLockTimeoutStrategy {
+public class PostgreSQLLockingSupport
+		implements LockingSupport, LockingSupport.Metadata, ConnectionLockTimeoutStrategy, LockingClauseRenderer {
 	public static final LockingSupport LOCKING_SUPPORT = new PostgreSQLLockingSupport();
 	private final boolean supportsNoWait;
 	private final boolean supportsSkipLocked;
@@ -41,6 +45,38 @@ public class PostgreSQLLockingSupport implements LockingSupport, LockingSupport.
 	@Override
 	public Metadata getMetadata() {
 		return this;
+	}
+
+	@Override
+	public LockingClauseRenderer getLockingClauseRenderer() {
+		return this;
+	}
+
+	@Override
+	public String render(LockingClauseRequest request) {
+		final StringBuilder fragment = new StringBuilder(
+				request.lockKind() == PessimisticLockKind.SHARE
+						? " for share"
+						: " for no key update"
+		);
+		if ( !request.targets().isEmpty() ) {
+			fragment.append( " of " );
+			LockingClauseRendererSupport.appendTargets( fragment, request.targets() );
+		}
+
+		switch ( request.timeout().milliseconds() ) {
+			case NO_WAIT_MILLI -> {
+				if ( supportsNoWait ) {
+					fragment.append( " nowait" );
+				}
+			}
+			case SKIP_LOCKED_MILLI -> {
+				if ( supportsSkipLocked ) {
+					fragment.append( " skip locked" );
+				}
+			}
+		}
+		return fragment.toString();
 	}
 
 	@Override

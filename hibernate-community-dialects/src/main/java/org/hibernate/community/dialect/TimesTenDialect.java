@@ -4,49 +4,59 @@
  */
 package org.hibernate.community.dialect;
 
+import org.hibernate.dialect.temporaltype.spi.CurrentTimestampSelection;
+
+import org.hibernate.dialect.temporaltype.spi.TemporalOperationSupport;
+
+import org.hibernate.dialect.temporaltype.spi.CurrentTemporalSupport;
+
+import org.hibernate.SPI;
+
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.SUPPLY;
+import static org.hibernate.SPI.Role.USE;
+import org.hibernate.dialect.type.spi.TypeSizingProfile;
+
+import org.hibernate.dialect.mutation.spi.MultiTableMutationSupport;
+import org.hibernate.dialect.function.spi.TupleCountSupport;
+
 import java.sql.Types;
 
-import jakarta.persistence.PessimisticLockScope;
-import jakarta.persistence.Timeout;
-import org.hibernate.LockMode;
-import org.hibernate.Timeouts;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.community.dialect.pagination.TimesTenLimitHandler;
-import org.hibernate.community.dialect.sequence.SequenceInformationExtractorTimesTenDatabaseImpl;
 import org.hibernate.community.dialect.sequence.TimesTenSequenceSupport;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.BooleanDecoder;
+import org.hibernate.metamodel.mapping.SqlTypedMapping;
+import org.hibernate.dialect.type.spi.BooleanDecoder;
+import org.hibernate.dialect.type.spi.StringValueSemantics;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.OracleTruncFunction;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
-import org.hibernate.dialect.lock.LockingStrategy;
-import org.hibernate.dialect.lock.PessimisticReadUpdateLockingStrategy;
-import org.hibernate.dialect.lock.PessimisticWriteUpdateLockingStrategy;
+import org.hibernate.dialect.lock.spi.EntityLockingStrategies;
+import org.hibernate.dialect.lock.spi.EntityLockingStrategyFactory;
 import org.hibernate.dialect.lock.spi.LockingSupport;
-import org.hibernate.dialect.pagination.LimitHandler;
-import org.hibernate.dialect.sequence.SequenceSupport;
-import org.hibernate.dialect.temptable.StandardGlobalTemporaryTableStrategy;
-import org.hibernate.dialect.temptable.TemporaryTableKind;
-import org.hibernate.dialect.temptable.TemporaryTableStrategy;
+import org.hibernate.dialect.lock.spi.StandardLockingSupports;
+import org.hibernate.dialect.pagination.spi.LimitHandler;
+import org.hibernate.dialect.sequence.spi.SequenceSupport;
+import org.hibernate.dialect.schema.spi.IndexNameQualification;
+import org.hibernate.dialect.temptable.spi.StandardGlobalTemporaryTableStrategy;
+import org.hibernate.dialect.temptable.spi.TemporaryTableStrategy;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.sqm.CastType;
-import org.hibernate.dialect.type.IntervalType;
+import org.hibernate.dialect.temporaltype.spi.IntervalType;
 import org.hibernate.query.common.TemporalUnit;
-import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableInsertStrategy;
-import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableMutationStrategy;
-import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
-import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
-import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.SqlAstTranslatorFactory;
-import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
-import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
-import org.hibernate.sql.ast.tree.Statement;
+import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslatorFactory;
+import org.hibernate.dialect.sql.ast.spi.RowValueSupport;
+import org.hibernate.dialect.sql.ast.spi.SingleRowTableSupport;
+import org.hibernate.dialect.sql.ast.spi.SubquerySupport;
+import org.hibernate.sql.ast.spi.translation.SqlAstNodeRenderingMode;
+import org.hibernate.dialect.sql.ast.spi.StandardSqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.Statement;
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
+import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractors;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -63,7 +73,6 @@ import java.util.Date;
 import jakarta.persistence.TemporalType;
 
 import static org.hibernate.dialect.SimpleDatabaseVersion.ZERO_VERSION;
-import static org.hibernate.dialect.lock.internal.TimesTenLockingSupport.TIMES_TEN_LOCKING_SUPPORT;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.INTEGER;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.STRING;
 
@@ -81,7 +90,27 @@ import static org.hibernate.query.sqm.produce.function.FunctionParameterType.STR
  *
  * @author Sherry Listgarten, Max Andersen, Chris Jenkins
  */
-public class TimesTenDialect extends Dialect {
+public class TimesTenDialect extends Dialect implements CurrentTemporalSupport, TemporalOperationSupport {
+
+	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
+	public TemporalOperationSupport getTemporalOperationSupport() {
+		return this;
+	}
+
+	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
+	public CurrentTemporalSupport getCurrentTemporalSupport() {
+		return this;
+	}
+	private final TypeSizingProfile typeSizingProfile = TypeSizingProfile.builder( super.getTypeSizingProfile() )
+			.defaultDecimalPrecision( 40 )
+			.maxVarcharLength( 4_194_304 ).maxVarcharCapacity( 4_194_304 )
+			.maxNVarcharLength( 4_194_304 ).maxNVarcharCapacity( 4_194_304 )
+			.maxVarbinaryLength( 4_194_304 ).maxVarbinaryCapacity( 4_194_304 )
+			.build();
+
+	@Override public TypeSizingProfile getTypeSizingProfile() { return typeSizingProfile; }
 
 	public TimesTenDialect() {
 		super( ZERO_VERSION );
@@ -92,6 +121,7 @@ public class TimesTenDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	protected String columnType(int sqlTypeCode) {
 		return switch ( sqlTypeCode ) {
 			//Note: these are the correct type mappings
@@ -121,11 +151,14 @@ public class TimesTenDialect extends Dialect {
 	}
 
 	@Override
-	public int getDefaultStatementBatchSize() {
-		return 15;
+	@SPI({ IMPLEMENT, SUPPLY })
+	protected void contributeDefaultProperties(java.util.Properties properties) {
+		super.contributeDefaultProperties( properties );
+		properties.setProperty( org.hibernate.cfg.AvailableSettings.STATEMENT_BATCH_SIZE, Integer.toString( 15 ) );
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public JdbcType resolveSqlTypeDescriptor(
 			String columnTypeName,
 			int jdbcTypeCode,
@@ -145,17 +178,13 @@ public class TimesTenDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public int getPreferredSqlTypeCodeForBoolean() {
 		return Types.BIT;
 	}
 
 	@Override
-	public int getDefaultDecimalPrecision() {
-		//the maximum
-		return 40;
-	}
-
-	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
 		super.initializeFunctionRegistry(functionContributions);
 
@@ -258,17 +287,19 @@ public class TimesTenDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public SqlAstTranslatorFactory getSqlAstTranslatorFactory() {
 		return new StandardSqlAstTranslatorFactory() {
 			@Override
-			protected <T extends JdbcOperation> SqlAstTranslator<T> buildTranslator(
-					SessionFactoryImplementor sessionFactory, Statement statement) {
-				return new TimesTenSqlAstTranslator<>( sessionFactory, statement );
+			protected <S extends Statement, T extends JdbcOperation> SqlAstTranslator<T> createTranslator(
+					SqlAstTranslationRequest<S, T> request) {
+				return new TimesTenSqlAstTranslator<>( request );
 			}
 		};
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
 		return switch (unit) {
 			case NANOSECOND, NATIVE -> "timestampadd(sql_tsi_frac_second,?2,?3)";
@@ -277,6 +308,7 @@ public class TimesTenDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
 		return switch (unit) {
 			case NANOSECOND, NATIVE -> "timestampdiff(sql_tsi_frac_second,?2,?3)";
@@ -285,116 +317,68 @@ public class TimesTenDialect extends Dialect {
 	}
 
 	@Override
-	public boolean qualifyIndexName() {
-		return false;
+	@SPI({ USE, IMPLEMENT })
+	public IndexNameQualification nameQualification() {
+		return IndexNameQualification.UNQUALIFIED;
 	}
 
 	@Override
-	public String getAddColumnString() {
+	@SPI({ USE, IMPLEMENT })
+	public String addColumnPrefix() {
 		return "add";
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public SequenceSupport getSequenceSupport() {
 		return TimesTenSequenceSupport.INSTANCE;
 	}
 
-	@Override
-	public String getQuerySequencesString() {
-		return "select name from sys.sequences";
-	}
+	private static final SequenceInformationExtractor SEQUENCE_INFORMATION_EXTRACTOR =
+			SequenceInformationExtractors.builder( "select name from sys.sequences" )
+					.sequenceNameColumn( "name" )
+					.withoutCatalog()
+					.withoutSchema()
+					.withoutStartValue()
+					.minimumValueColumn( "minval" )
+					.maximumValueColumn( "maxval" )
+					.build();
 
 	@Override
 	public SequenceInformationExtractor getSequenceInformationExtractor() {
-		return SequenceInformationExtractorTimesTenDatabaseImpl.INSTANCE;
+		return SEQUENCE_INFORMATION_EXTRACTOR;
 	}
 
 	@Override
 	public LockingSupport getLockingSupport() {
-		return TIMES_TEN_LOCKING_SUPPORT;
+		return StandardLockingSupports.timesTen();
 	}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 	@Override
-	public String getForUpdateString(String aliases) {
-		return " for update of " + aliases;
-	}
-
-	@Override
-	public String getForUpdateNowaitString() {
-		return " for update nowait";
-	}
-
-	@Override
-	public String getWriteLockString(Timeout timeout) {
-		return withTimeout( getForUpdateString(), timeout );
-	}
-
-	@Override
-	public String getWriteLockString(String aliases, Timeout timeout) {
-		return withTimeout( getForUpdateString(aliases), timeout );
-	}
-
-	@Override
-	public String getReadLockString(Timeout timeout) {
-		return getWriteLockString( timeout );
-	}
-
-	@Override
-	public String getReadLockString(String aliases, Timeout timeout) {
-		return getWriteLockString( aliases, timeout );
-	}
-
-
-	private String withTimeout(String lockString, Timeout timeout) {
-		return switch ( timeout.milliseconds() ) {
-			case Timeouts.NO_WAIT_MILLI -> supportsNoWait() ? lockString + " nowait" : lockString;
-			case Timeouts.SKIP_LOCKED_MILLI, Timeouts.WAIT_FOREVER_MILLI -> lockString;
-			default -> supportsWait() ? lockString + " wait " + Timeouts.getTimeoutInSeconds( timeout ) : lockString;
-		};
-	}
-
-	@Override
-	public String getWriteLockString(int timeout) {
-		return withTimeout( getForUpdateString(), timeout );
-	}
-
-	@Override
-	public String getWriteLockString(String aliases, int timeout) {
-		return withTimeout( getForUpdateString(aliases), timeout );
-	}
-
-	@Override
-	public String getReadLockString(int timeout) {
-		return getWriteLockString( timeout );
-	}
-
-	@Override
-	public String getReadLockString(String aliases, int timeout) {
-		return getWriteLockString( aliases, timeout );
-	}
-
-
-	private String withTimeout(String lockString, int timeout) {
-		return switch ( timeout ) {
-			case Timeouts.NO_WAIT_MILLI -> supportsNoWait() ? lockString + " nowait" : lockString;
-			case Timeouts.SKIP_LOCKED_MILLI, Timeouts.WAIT_FOREVER_MILLI -> lockString;
-			default -> supportsWait() ? lockString + " wait " + getTimeoutInSeconds( timeout ) : lockString;
-		};
-	}
-
-	@Override
-	public boolean supportsColumnCheck() {
+	@SPI({ USE, IMPLEMENT })
+	public boolean supports(org.hibernate.dialect.constraint.spi.CheckConstraintPlacement placement) {
 		return false;
 	}
 
 	@Override
-	public boolean supportsTableCheck() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsOffsetInSubquery() {
-		return true;
+	public SubquerySupport getSubquerySupport() {
+		return SubquerySupport.builder()
+				.feature( SubquerySupport.Feature.OFFSET, true )
+				.build();
 	}
 
 	@Override
@@ -403,18 +387,9 @@ public class TimesTenDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsCurrentTimestampSelection() {
-		return true;
-	}
-
-	@Override
-	public String getCurrentTimestampSelectString() {
-		return "select sysdate from sys.dual";
-	}
-
-	@Override
-	public boolean isCurrentTimestampSelectStringCallable() {
-		return false;
+	@SPI({ USE, IMPLEMENT })
+	public CurrentTimestampSelection getCurrentTimestampSelection() {
+		return CurrentTimestampSelection.prepared( "select sysdate from sys.dual" );
 	}
 
 	@Override
@@ -423,22 +398,8 @@ public class TimesTenDialect extends Dialect {
 	}
 
 	@Override
-	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(
-			EntityMappingType rootEntityDescriptor,
-			RuntimeModelCreationContext runtimeModelCreationContext) {
-		return new GlobalTemporaryTableMutationStrategy( rootEntityDescriptor, runtimeModelCreationContext );
-	}
-
-	@Override
-	public SqmMultiTableInsertStrategy getFallbackSqmInsertStrategy(
-			EntityMappingType rootEntityDescriptor,
-			RuntimeModelCreationContext runtimeModelCreationContext) {
-		return new GlobalTemporaryTableInsertStrategy( rootEntityDescriptor, runtimeModelCreationContext );
-	}
-
-	@Override
-	public TemporaryTableKind getSupportedTemporaryTableKind() {
-		return TemporaryTableKind.GLOBAL;
+	public MultiTableMutationSupport getMultiTableMutationSupport() {
+		return MultiTableMutationSupport.GLOBAL_TEMPORARY_TABLE;
 	}
 
 	@Override
@@ -447,40 +408,29 @@ public class TimesTenDialect extends Dialect {
 	}
 
 	@Override
-	public String getTemporaryTableCreateOptions() {
-		return StandardGlobalTemporaryTableStrategy.INSTANCE.getTemporaryTableCreateOptions();
+	@SPI({ IMPLEMENT, SUPPLY })
+	public EntityLockingStrategyFactory getEntityLockingStrategyFactory() {
+		// TimesTen has no known variation of a "SELECT ... FOR UPDATE" syntax.
+		return EntityLockingStrategies.pessimisticUpdate();
 	}
 
 	@Override
-	protected LockingStrategy buildPessimisticWriteStrategy(EntityPersister lockable, LockMode lockMode, PessimisticLockScope lockScope) {
-		// TimesTen has no known variation of a "SELECT ... FOR UPDATE" syntax...
-		return new PessimisticWriteUpdateLockingStrategy( lockable, lockMode );
-	}
-
-	@Override
-	protected LockingStrategy buildPessimisticReadStrategy(EntityPersister lockable, LockMode lockMode, PessimisticLockScope lockScope) {
-		// TimesTen has no known variation of a "SELECT ... FOR UPDATE" syntax...
-		return new PessimisticReadUpdateLockingStrategy( lockable, lockMode );
-	}
-
-	@Override
+	@SPI({ USE, IMPLEMENT })
 	public int getMaxAliasLength() {
 		// Max identifier length is 30, but Hibernate needs to add "uniqueing info" so we account for that
 		return 20;
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public int getMaxIdentifierLength() {
 		return 30;
 	}
 
 	@Override
-	public boolean supportsCircularCascadeDeleteConstraints() {
-		return false;
-	}
-
-	@Override
-	public String getSelectClauseNullString(int sqlType, TypeConfiguration typeConfiguration) {
+	@SPI({ USE, IMPLEMENT })
+	public String getSelectClauseNullString(SqlTypedMapping sqlTypeMapping, TypeConfiguration typeConfiguration) {
+		final int sqlType = sqlTypeMapping.getJdbcMapping().getJdbcType().getDdlTypeCode();
 		switch (sqlType) {
 			case Types.VARCHAR:
 			case Types.CHAR:
@@ -498,58 +448,44 @@ public class TimesTenDialect extends Dialect {
 	}
 
 	@Override
-	public String getNativeIdentifierGeneratorStrategy() {
-		return "sequence";
-	}
-
-	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String currentDate() {
 		return "sysdate";
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String currentTime() {
 		return "sysdate";
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String currentTimestamp() {
 		return "sysdate";
 	}
 
 	@Override
-	public int getMaxVarcharLength() {
-		// 1 to 4,194,304 bytes according to TimesTen Doc
-		return 4194304;
+	@SPI({ IMPLEMENT, SUPPLY })
+	public StringValueSemantics getStringValueSemantics() {
+		return StringValueSemantics.EMPTY_STRING_AS_NULL;
 	}
 
 	@Override
-	public int getMaxVarbinaryLength() {
-		// 1 to 4,194,304 bytes according to TimesTen Doc
-		return 4194304;
+	public TupleCountSupport getTupleCountSupport() {
+		return TupleCountSupport.NONE;
 	}
 
 	@Override
-	public boolean isEmptyStringTreatedAsNull() {
-		return true;
+	public SingleRowTableSupport getSingleRowTableSupport() {
+		return SingleRowTableSupport.builder( super.getSingleRowTableSupport() )
+				.tableExpression( "dual" )
+				.selectOnlyFromClause( " from dual" )
+				.build();
 	}
 
 	@Override
-	public boolean supportsTupleDistinctCounts() {
-		return false;
-	}
-
-	@Override
-	public String getDual() {
-		return "dual";
-	}
-
-	@Override
-	public String getFromDualForSelectOnly() {
-		return " from dual";
-	}
-
-	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String castPattern(CastType from, CastType to) {
 		String result;
 		switch ( to ) {
@@ -598,18 +534,8 @@ public class TimesTenDialect extends Dialect {
 
 
 	@Override
-	public boolean supportsRowValueConstructorSyntax() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsRowValueConstructorSyntaxInInList() {
-		return false;
+	public RowValueSupport getRowValueSupport() {
+		return RowValueSupport.NONE;
 	}
 
 }

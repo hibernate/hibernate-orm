@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.jpa.query;
 
+
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.Query;
 import org.hibernate.LockMode;

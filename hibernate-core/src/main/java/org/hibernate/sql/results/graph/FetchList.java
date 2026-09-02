@@ -10,11 +10,9 @@ import java.util.stream.StreamSupport;
 
 import org.hibernate.Incubating;
 import org.hibernate.engine.FetchTiming;
-import org.hibernate.internal.util.IndexedConsumer;
+import org.hibernate.spi.IndexedConsumer;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
-import org.hibernate.sql.results.graph.collection.internal.EagerCollectionFetch;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableResultGraphNode;
-import org.hibernate.sql.results.graph.entity.internal.AbstractNonJoinedEntityFetch;
 
 /**
  * This is essentially a List of Fetch(es), but exposing
@@ -31,6 +29,7 @@ import org.hibernate.sql.results.graph.entity.internal.AbstractNonJoinedEntityFe
  * @since 6.2
  */
 @Incubating
+@org.hibernate.SPI({ org.hibernate.SPI.Role.USE, org.hibernate.SPI.Role.IMPLEMENT })
 public interface FetchList extends Iterable<Fetch> {
 
 	int size();
@@ -49,7 +48,7 @@ public interface FetchList extends Iterable<Fetch> {
 
 	default boolean hasJoinFetches() {
 		for ( Fetch fetch : this ) {
-			if ( fetch instanceof BasicFetch<?> || fetch instanceof AbstractNonJoinedEntityFetch || fetch.getTiming() == FetchTiming.DELAYED ) {
+			if ( fetch instanceof BasicFetch<?> || !fetch.hasTableGroup() || fetch.getTiming() == FetchTiming.DELAYED ) {
 				// That's fine
 			}
 			else if ( fetch instanceof EmbeddableResultGraphNode embeddableResultGraphNode ) {
@@ -67,7 +66,7 @@ public interface FetchList extends Iterable<Fetch> {
 
 	default boolean containsCollectionFetches() {
 		for ( Fetch fetch : this ) {
-			if ( fetch instanceof EagerCollectionFetch ) {
+			if ( fetch.isCollectionFetch() ) {
 				return true;
 			}
 			else if ( fetch.asFetchParent() != null && fetch.asFetchParent().containsCollectionFetches() ) {
@@ -80,7 +79,7 @@ public interface FetchList extends Iterable<Fetch> {
 	default int getCollectionFetchesCount() {
 		int collectionFetchesCount = 0;
 		for ( Fetch fetch : this ) {
-			if ( fetch instanceof EagerCollectionFetch ) {
+			if ( fetch.isCollectionFetch() ) {
 				collectionFetchesCount++;
 			}
 			else {

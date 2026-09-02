@@ -14,7 +14,7 @@ import java.util.function.Consumer;
 
 import jakarta.annotation.Nullable;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
-import org.hibernate.sql.model.jdbc.JdbcValueDescriptor;
+import org.hibernate.sql.spi.mutation.jdbc.JdbcValueDescriptor;
 
 /**
  * Group of all parameter {@linkplain #getBindings() bindings} for a table.

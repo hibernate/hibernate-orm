@@ -6,9 +6,9 @@ package org.hibernate.community.dialect.pagination;
 
 import java.util.regex.Pattern;
 
-import org.hibernate.dialect.pagination.AbstractSimpleLimitHandler;
-import org.hibernate.dialect.pagination.LimitHandler;
-import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
+import org.hibernate.dialect.pagination.spi.AbstractSimpleLimitHandler;
+import org.hibernate.dialect.pagination.spi.LimitHandler;
+import org.hibernate.dialect.pagination.spi.PaginationRequest;
 
 import static java.util.regex.Pattern.CASE_INSENSITIVE;
 import static java.util.regex.Pattern.compile;
@@ -26,15 +26,10 @@ public class RowsLimitHandler extends AbstractSimpleLimitHandler {
 	public static final RowsLimitHandler INSTANCE = new RowsLimitHandler();
 
 	@Override
-	protected String limitClause(boolean hasFirstRow) {
-		return hasFirstRow ? " rows ? to ?" : " rows ?";
-	}
-
-	@Override
-	protected String limitClause(boolean hasFirstRow, int jdbcParameterCount, ParameterMarkerStrategy parameterMarkerStrategy) {
-		final String firstParameter = parameterMarkerStrategy.createMarker( jdbcParameterCount + 1, null );
+	protected String limitClause(boolean hasFirstRow, PaginationRequest request) {
+		final String firstParameter = request.parameterMarker( request.jdbcParameterCount() + 1 );
 		if ( hasFirstRow ) {
-			return " rows " + firstParameter + " to " + parameterMarkerStrategy.createMarker( jdbcParameterCount + 2, null );
+			return " rows " + firstParameter + " to " + request.parameterMarker( request.jdbcParameterCount() + 2 );
 		}
 		else {
 			return " rows " + firstParameter;
@@ -42,13 +37,8 @@ public class RowsLimitHandler extends AbstractSimpleLimitHandler {
 	}
 
 	@Override
-	protected String offsetOnlyClause() {
-		return " rows ? to " + Integer.MAX_VALUE;
-	}
-
-	@Override
-	protected String offsetOnlyClause(int jdbcParameterCount, ParameterMarkerStrategy parameterMarkerStrategy) {
-		return " rows " + parameterMarkerStrategy.createMarker( jdbcParameterCount + 1, null ) + " to " + Integer.MAX_VALUE;
+	protected String offsetOnlyClause(PaginationRequest request) {
+		return " rows " + request.parameterMarker( request.jdbcParameterCount() + 1 ) + " to " + Integer.MAX_VALUE;
 	}
 
 	@Override
@@ -74,8 +64,4 @@ public class RowsLimitHandler extends AbstractSimpleLimitHandler {
 		return true;
 	}
 
-	@Override
-	public boolean processSqlMutatesState() {
-		return false;
-	}
 }

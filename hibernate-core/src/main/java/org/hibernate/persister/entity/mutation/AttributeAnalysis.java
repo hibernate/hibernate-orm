@@ -18,6 +18,7 @@ public interface AttributeAnalysis {
 	/**
 	 * The attribute analyzed here
 	 */
+	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	AttributeMapping getAttribute();
 
 	/**

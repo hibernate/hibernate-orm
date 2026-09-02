@@ -4,6 +4,7 @@
  */
 package org.hibernate.spatial.dialect.sqlserver;
 
+
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.spatial.SpatialDialect;
 

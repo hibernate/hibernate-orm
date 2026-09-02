@@ -4,6 +4,11 @@
  */
 package org.hibernate.type;
 
+import org.hibernate.SPI;
+
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.USE;
+
 import org.hibernate.MappingException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.entity.Joinable;
@@ -13,6 +18,7 @@ import org.hibernate.persister.entity.Joinable;
  * @see org.hibernate.cascade.internal.Cascade
  * @author Gavin King
  */
+@SPI({ USE, IMPLEMENT })
 public interface AssociationType extends Type {
 
 	/**

@@ -4,8 +4,11 @@
  */
 package org.hibernate.type.format.jakartajson;
 
+import org.hibernate.Internal;
+
 import org.hibernate.type.format.FormatMapper;
 
+@Internal
 public final class JakartaJsonIntegration {
 
 	// Implementation note: we rely on the following two fields to be folded as constants

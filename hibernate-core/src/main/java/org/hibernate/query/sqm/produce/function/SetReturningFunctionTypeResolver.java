@@ -11,7 +11,7 @@ import org.hibernate.query.sqm.tuple.internal.AnonymousTupleType;
 import org.hibernate.query.sqm.produce.function.internal.SetReturningFunctionTypeResolverBuilder;
 import org.hibernate.query.sqm.sql.spi.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.spi.SqmTypedNode;
-import org.hibernate.sql.ast.tree.SqlAstNode;
+import org.hibernate.sql.ast.spi.SqlAstNode;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeReference;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -38,6 +38,7 @@ public interface SetReturningFunctionTypeResolver {
 	 *
 	 * @return The resolved JdbcMapping.
 	 */
+	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	SelectableMapping[] resolveFunctionReturnType(
 			List<? extends SqlAstNode> arguments,
 			String tableIdentifierVariable,

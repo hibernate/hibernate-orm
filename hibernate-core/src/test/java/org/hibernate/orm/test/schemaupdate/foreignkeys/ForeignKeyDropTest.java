@@ -13,6 +13,7 @@ import org.hamcrest.MatcherAssert;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.hibernate.testing.DialectTestSupport;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
@@ -82,16 +83,13 @@ public class ForeignKeyDropTest {
 			File scriptFile,
 			Dialect dialect) throws IOException {
 		boolean matches = false;
-		String regex = dialect.getAlterTableString( tableName );
-		regex += " " + dialect.getDropForeignKeyString() + " ";
-
-		if ( dialect.supportsIfExistsBeforeConstraintName() ) {
-			regex += "if exists ";
-		}
-		regex += "fk(.)*";
-		if ( dialect.supportsIfExistsAfterConstraintName() ) {
-			regex += " if exists";
-		}
+		String regex = DialectTestSupport.alterTableCommand( dialect, tableName ) + " "
+				+ dialect.getForeignKeySupport().renderDropConstraint(
+						new org.hibernate.dialect.constraint.spi.ForeignKeyDropRequest(
+								"fk(.)*",
+								dialect.getIfExistsSupport().dropConstraintPlacement()
+						)
+				);
 
 		return isMatching( matches, regex.toLowerCase(), scriptFile );
 	}

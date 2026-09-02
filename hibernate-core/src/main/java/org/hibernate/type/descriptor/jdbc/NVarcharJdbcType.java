@@ -89,9 +89,9 @@ public class NVarcharJdbcType implements AdjustableJdbcType {
 		final Dialect dialect = indicators.getDialect();
 		final long length = indicators.getColumnLength();
 		final long maxLength = indicators.isNationalized() ?
-				dialect.getMaxNVarcharCapacity() :
-				dialect.getMaxVarcharCapacity();
-		return length > maxLength && dialect.useMaterializedLobWhenCapacityExceeded();
+				dialect.getTypeSizingProfile().maxNVarcharCapacity() :
+				dialect.getTypeSizingProfile().maxVarcharCapacity();
+		return length > maxLength && dialect.getLobSupport().useMaterializedLobWhenCapacityExceeded();
 	}
 
 	@Override

@@ -4,6 +4,8 @@
  */
 package org.hibernate.type;
 
+import org.hibernate.SPI;
+
 import java.util.ArrayList;
 
 import org.hibernate.HibernateException;
@@ -13,6 +15,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.persister.collection.CollectionPersister;
 
+@SPI
 public class IdentifierBagType extends CollectionType {
 
 	public IdentifierBagType(String role, String propertyRef) {

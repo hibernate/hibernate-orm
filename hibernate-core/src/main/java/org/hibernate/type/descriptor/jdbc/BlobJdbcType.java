@@ -84,12 +84,14 @@ public abstract class BlobJdbcType implements JdbcType {
 
 	@Override
 	public String getExtraCreateTableInfo(JavaType<?> javaType, String columnName, String tableName, Database database) {
-		if( javaType.getJavaTypeClass() != Blob.class && database.getDialect().supportsValueLOBAccess() ) {
-			return database.getDialect().getValueLOBFragmentForExtraCreateTableInfo(columnName);
+		if ( javaType.getJavaTypeClass() != Blob.class ) {
+			final String fragment = database.getDialect().getLobSupport()
+					.getValueLobFragmentForExtraCreateTableInfo( columnName );
+			if ( fragment != null ) {
+				return fragment;
+			}
 		}
-		else {
-			return JdbcType.super.getExtraCreateTableInfo( javaType, columnName, tableName, database );
-		}
+		return JdbcType.super.getExtraCreateTableInfo( javaType, columnName, tableName, database );
 	}
 
 	public static final BlobJdbcType DEFAULT = new BlobJdbcType() {

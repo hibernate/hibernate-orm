@@ -13,11 +13,11 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.sql.model.MutationOperation;
+import org.hibernate.sql.spi.mutation.MutationOperation;
 import org.hibernate.sql.model.MutationOperationGroup;
-import org.hibernate.sql.model.MutationType;
-import org.hibernate.sql.model.ast.builder.RestrictedTableMutationBuilder;
-import org.hibernate.sql.model.ast.builder.TableUpdateBuilderStandard;
+import org.hibernate.sql.spi.mutation.MutationType;
+import org.hibernate.sql.ast.spi.model.builder.RestrictedTableMutationBuilder;
+import org.hibernate.sql.ast.spi.model.builder.TableUpdateBuilderStandard;
 import org.hibernate.sql.model.internal.MutationGroupSingle;
 
 import java.util.function.Function;
@@ -30,6 +30,7 @@ import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.sin
  *
  * @author Steve Ebersole
  */
+@org.hibernate.Internal
 public abstract class AbstractDeleteCoordinator
 		extends AbstractMutationCoordinator
 		implements DeleteCoordinator {

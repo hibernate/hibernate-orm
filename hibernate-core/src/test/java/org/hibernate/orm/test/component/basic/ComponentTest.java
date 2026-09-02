@@ -67,7 +67,8 @@ public class ComponentTest extends BaseSessionFactoryFunctionalTest {
 		Component component = ( Component ) personProperty.getValue();
 		Formula f = ( Formula ) component.getProperty( "yob" ).getValue().getSelectables().get( 0 );
 
-		String pattern = metadata.getDatabase().getJdbcEnvironment().getDialect().extractPattern( TemporalUnit.YEAR );
+		String pattern = metadata.getDatabase().getJdbcEnvironment().getDialect()
+				.getTemporalOperationSupport().extractPattern( TemporalUnit.YEAR );
 		String formula = pattern.replace( "?1", "YEAR" ).replace( "?2", "dob" );
 		f.setFormula( formula );
 		return metadata;

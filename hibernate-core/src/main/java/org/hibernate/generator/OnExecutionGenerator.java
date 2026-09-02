@@ -6,6 +6,7 @@ package org.hibernate.generator;
 
 import org.hibernate.Incubating;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.generated.spi.GeneratedValuesSupport;
 import org.hibernate.id.insert.GetGeneratedKeysDelegate;
 import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
 import org.hibernate.id.insert.InsertReturningDelegate;
@@ -161,9 +162,9 @@ public interface OnExecutionGenerator extends Generator {
 	 * <p>
 	 * We need one of the following things:
 	 * <ul>
-	 *     <li>a database which supports some form of {@link Dialect#supportsInsertReturning()
-	 *         insert ... returning} syntax, or can do the same thing using the JDBC
-	 *         {@link Dialect#supportsInsertReturningGeneratedKeys() getGeneratedKeys()} API, or
+	 *     <li>a database whose {@link Dialect#getGeneratedValuesSupport()
+	 *         generated-values profile} supports native insert returning or arbitrary
+	 *         JDBC generated keys, or
 	 *     <li>a second unique key of the entity, that is, a property annotated
 	 *         {@link org.hibernate.annotations.NaturalId @NaturalId}.
 	 * </ul>
@@ -175,14 +176,17 @@ public interface OnExecutionGenerator extends Generator {
 	 * identity columns is the reason why this layer-breaking method exists.
 	 */
 	@Incubating
+	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	default InsertGeneratedIdentifierDelegate getGeneratedIdentifierDelegate(EntityPersister persister) {
 		final var factory = persister.getFactory();
 		final var dialect = factory.getJdbcServices().getDialect();
-		if ( dialect.supportsInsertReturningGeneratedKeys()
+		final var generatedValuesSupport = dialect.getGeneratedValuesSupport();
+		if ( generatedValuesSupport.supports( GeneratedValuesSupport.Capability.ARBITRARY_GENERATED_KEYS )
 				&& factory.getSessionFactoryOptions().isGetGeneratedKeysEnabled() ) {
 			return new GetGeneratedKeysDelegate( persister, false, INSERT );
 		}
-		else if ( dialect.supportsInsertReturning() && noCustomSql( persister, INSERT ) ) {
+		else if ( generatedValuesSupport.supports( GeneratedValuesSupport.Capability.INSERT_RETURNING )
+				&& noCustomSql( persister, INSERT ) ) {
 			return new InsertReturningDelegate( persister, INSERT );
 		}
 		else {
@@ -200,6 +204,7 @@ public interface OnExecutionGenerator extends Generator {
 	 * property, if there is one.
 	 */
 	@Incubating
+	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	default String[] getUniqueKeyPropertyNames(EntityPersister persister) {
 		return getNaturalIdPropertyNames( persister );
 	}

@@ -264,7 +264,7 @@ public final class ForeignKeys {
 			// case we definitely need to nullify
 			if ( object == self ) {
 				return isEarlyInsert
-					|| isDelete && hasSelfReferentialForeignKeyBug();
+					|| isDelete && requiresSelfReferentialForeignKeyNullification();
 			}
 
 			// Check if this entity is being inserted in the current flush
@@ -284,9 +284,9 @@ public final class ForeignKeys {
 					: entityEntry.isNullifiable( isEarlyInsert, session );
 		}
 
-		private boolean hasSelfReferentialForeignKeyBug() {
+		private boolean requiresSelfReferentialForeignKeyNullification() {
 			return session.getFactory().getJdbcServices().getDialect()
-					.hasSelfReferentialForeignKeyBug();
+					.getForeignKeySupport().requiresSelfReferentialForeignKeyNullification();
 		}
 	}
 

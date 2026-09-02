@@ -7,7 +7,7 @@ package org.hibernate.internal.scrollable;
 import org.hibernate.HibernateException;
 import org.hibernate.ScrollableResults;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.sql.results.internal.RowProcessingStateStandardImpl;
+import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.sql.results.jdbc.spi.JdbcValues;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
@@ -23,7 +23,7 @@ public abstract class AbstractScrollableResults<R> implements ScrollableResults<
 	private final JdbcValues jdbcValues;
 	private final JdbcValuesSourceProcessingOptions processingOptions;
 	private final JdbcValuesSourceProcessingState jdbcValuesSourceProcessingState;
-	private final RowProcessingStateStandardImpl rowProcessingState;
+	private final RowProcessingState rowProcessingState;
 	private final RowReader<R> rowReader;
 	private final SharedSessionContractImplementor persistenceContext;
 
@@ -33,7 +33,7 @@ public abstract class AbstractScrollableResults<R> implements ScrollableResults<
 			JdbcValues jdbcValues,
 			JdbcValuesSourceProcessingOptions processingOptions,
 			JdbcValuesSourceProcessingState jdbcValuesSourceProcessingState,
-			RowProcessingStateStandardImpl rowProcessingState,
+			RowProcessingState rowProcessingState,
 			RowReader<R> rowReader,
 			SharedSessionContractImplementor persistenceContext) {
 		this.jdbcValues = jdbcValues;
@@ -66,7 +66,7 @@ public abstract class AbstractScrollableResults<R> implements ScrollableResults<
 		return jdbcValuesSourceProcessingState;
 	}
 
-	protected RowProcessingStateStandardImpl getRowProcessingState() {
+	protected RowProcessingState getRowProcessingState() {
 		return rowProcessingState;
 	}
 

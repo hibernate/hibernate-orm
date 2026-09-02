@@ -9,9 +9,9 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 import org.hibernate.Filter;
-import org.hibernate.sql.ast.spi.SqlAstCreationState;
-import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.predicate.Predicate;
+import org.hibernate.sql.ast.spi.creation.SqlAstCreationState;
+import org.hibernate.sql.ast.spi.query.from.TableGroup;
+import org.hibernate.sql.ast.spi.query.predicate.Predicate;
 
 /**
  * Things that can have {@link org.hibernate.annotations.SQLRestriction},

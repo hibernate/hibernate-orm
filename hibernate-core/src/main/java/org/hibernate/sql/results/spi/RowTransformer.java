@@ -14,6 +14,7 @@ import org.hibernate.Incubating;
  * @author Steve Ebersole
  */
 @Incubating
+@org.hibernate.SPI({ org.hibernate.SPI.Role.USE, org.hibernate.SPI.Role.IMPLEMENT })
 public interface RowTransformer<T> {
 	/**
 	 * Transform the "raw" row values into the ultimate query result (for a row)

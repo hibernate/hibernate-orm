@@ -6,8 +6,8 @@ package org.hibernate.metamodel.mapping;
 
 
 import org.hibernate.Incubating;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
-import org.hibernate.sql.model.ast.ColumnValueBinding;
+import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
+import org.hibernate.sql.ast.spi.model.ColumnValueBinding;
 
 /**
  * Metadata about temporal columns for entities enabled for temporal history.

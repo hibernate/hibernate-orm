@@ -9,9 +9,9 @@ import java.util.List;
 
 import org.hibernate.Internal;
 import org.hibernate.internal.log.SubSystemLogging;
-import org.hibernate.internal.util.collections.Stack;
-import org.hibernate.internal.util.collections.StandardStack;
-import org.hibernate.sql.results.ResultsLogger;
+import org.hibernate.spi.Stack;
+import org.hibernate.spi.StandardStack;
+import org.hibernate.sql.results.internal.ResultsLogger;
 
 import org.jboss.logging.Logger;
 

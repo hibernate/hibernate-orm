@@ -7,12 +7,14 @@ package org.hibernate.orm.test.schemaupdate.uniqueconstraint;
 import org.hamcrest.MatcherAssert;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.unique.AlterTableUniqueDelegate;
-import org.hibernate.dialect.unique.AlterTableUniqueIndexDelegate;
-import org.hibernate.dialect.unique.SkipNullableUniqueDelegate;
+import org.hibernate.dialect.unique.internal.AlterTableUniqueDelegate;
+import org.hibernate.dialect.unique.internal.AlterTableUniqueIndexDelegate;
+import org.hibernate.dialect.unique.internal.SkipNullableUniqueDelegate;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.DialectTestSupport;
+import org.hibernate.dialect.schema.spi.ExistenceCheckPlacement;
 import org.hibernate.testing.orm.junit.DomainModelScope;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -137,16 +139,16 @@ public class UniqueConstraintDropTest {
 			String tableName,
 			Dialect dialect,
 			File scriptFile) throws IOException {
-		if ( !dialect.supportsUniqueConstraints() ) {
+		if ( dialect.getUniqueDelegate().representation( new org.hibernate.dialect.unique.spi.UniqueKeyRepresentationRequest( false, false, false ) ) != org.hibernate.dialect.unique.spi.UniqueKeyRepresentation.CONSTRAINT ) {
 			return isMatching( "drop index( if exists)? " + tableName + ".uk.*", scriptFile );
 		}
 
-		String regex = dialect.getAlterTableString( tableName ) + ' ' + dialect.getDropUniqueKeyString();
-		if ( dialect.supportsIfExistsBeforeConstraintName() ) {
+		String regex = DialectTestSupport.alterTableCommand( dialect, tableName ) + " (drop constraint|drop index)";
+		if ( dialect.getIfExistsSupport().dropConstraintPlacement() == ExistenceCheckPlacement.BEFORE_NAME ) {
 			regex += " if exists";
 		}
 		regex += " uk.*";
-		if ( dialect.supportsIfExistsAfterConstraintName() ) {
+		if ( dialect.getIfExistsSupport().dropConstraintPlacement() == ExistenceCheckPlacement.AFTER_NAME ) {
 			regex += " if exists";
 		}
 		regex += ";";

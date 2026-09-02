@@ -3,7 +3,8 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql;
-import org.hibernate.dialect.Dialect;
+
+import org.hibernate.internal.util.QuotingHelper;
 
 /**
  * An alias generator for SQL identifiers.
@@ -35,10 +36,10 @@ public final class Alias {
 
 	public String toAliasString(String sqlIdentifier) {
 		char begin = sqlIdentifier.charAt(0);
-		int quoteType = Dialect.QUOTE.indexOf(begin);
+		int quoteType = QuotingHelper.isIdentifierQuote( begin ) ? 0 : -1;
 		String unquoted = getUnquotedAliasString(sqlIdentifier, quoteType);
 		if ( quoteType >= 0 ) {
-			char endQuote = Dialect.CLOSED_QUOTE.charAt(quoteType);
+			char endQuote = QuotingHelper.getClosingIdentifierQuote( begin );
 			return begin + unquoted + endQuote;
 		}
 		else {
@@ -52,7 +53,7 @@ public final class Alias {
 
 	private String getUnquotedAliasString(String sqlIdentifier) {
 		char begin = sqlIdentifier.charAt(0);
-		int quoteType = Dialect.QUOTE.indexOf(begin);
+		int quoteType = QuotingHelper.isIdentifierQuote( begin ) ? 0 : -1;
 		return getUnquotedAliasString(sqlIdentifier, quoteType);
 	}
 

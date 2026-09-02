@@ -48,9 +48,9 @@ import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableS
 import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.PersistentTableStrategy;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
-import org.hibernate.sql.model.MutationOperation;
+import org.hibernate.sql.spi.mutation.MutationOperation;
 import org.hibernate.sql.model.MutationOperationGroup;
-import org.hibernate.sql.model.PreparableMutationOperation;
+import org.hibernate.sql.spi.mutation.jdbc.PreparableMutationOperation;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModelFunctionalTesting;
 import org.hibernate.testing.orm.junit.DomainModelProducer;
@@ -607,20 +607,21 @@ public class DefaultCatalogAndSchemaTest
 	private void verifyDDLCreateCatalogOrSchema(String sql) {
 		final SessionFactoryImplementor sessionFactory = factoryScope.getSessionFactory();
 		final Dialect dialect = sessionFactory.getJdbcServices().getDialect();
+		final var namespaceSupport = dialect.getNamespaceSupport();
 
-		if ( sessionFactory.getJdbcServices().getDialect().canCreateCatalog() ) {
-			assertThat( sql ).contains( dialect.getCreateCatalogCommand( EXPLICIT_CATALOG ) );
-			assertThat( sql ).contains( dialect.getCreateCatalogCommand( IMPLICIT_FILE_LEVEL_CATALOG ) );
+		if ( namespaceSupport.canCreateCatalog() ) {
+			assertThat( sql ).contains( namespaceSupport.getCreateCatalogCommands( EXPLICIT_CATALOG ) );
+			assertThat( sql ).contains( namespaceSupport.getCreateCatalogCommands( IMPLICIT_FILE_LEVEL_CATALOG ) );
 			if ( options.expectedDefaultCatalog != null ) {
-				assertThat( sql ).contains( dialect.getCreateCatalogCommand( options.expectedDefaultCatalog ) );
+				assertThat( sql ).contains( namespaceSupport.getCreateCatalogCommands( options.expectedDefaultCatalog ) );
 			}
 		}
 
-		if ( sessionFactory.getJdbcServices().getDialect().canCreateSchema() ) {
-			assertThat( sql ).contains( dialect.getCreateSchemaCommand( EXPLICIT_SCHEMA ) );
-			assertThat( sql ).contains( dialect.getCreateSchemaCommand( IMPLICIT_FILE_LEVEL_SCHEMA ) );
+		if ( namespaceSupport.canCreateSchema() ) {
+			assertThat( sql ).contains( namespaceSupport.getCreateSchemaCommands( EXPLICIT_SCHEMA ) );
+			assertThat( sql ).contains( namespaceSupport.getCreateSchemaCommands( IMPLICIT_FILE_LEVEL_SCHEMA ) );
 			if ( options.expectedDefaultSchema != null ) {
-				assertThat( sql ).contains( dialect.getCreateSchemaCommand( options.expectedDefaultSchema ) );
+				assertThat( sql ).contains( namespaceSupport.getCreateSchemaCommands( options.expectedDefaultSchema ) );
 			}
 		}
 	}
@@ -628,20 +629,21 @@ public class DefaultCatalogAndSchemaTest
 	private void verifyDDLDropCatalogOrSchema(String sql) {
 		final SessionFactoryImplementor sessionFactory = factoryScope.getSessionFactory();
 		final Dialect dialect = sessionFactory.getJdbcServices().getDialect();
+		final var namespaceSupport = dialect.getNamespaceSupport();
 
-		if ( sessionFactory.getJdbcServices().getDialect().canCreateCatalog() ) {
-			assertThat( sql ).contains( dialect.getDropCatalogCommand( EXPLICIT_CATALOG ) );
-			assertThat( sql ).contains( dialect.getDropCatalogCommand( IMPLICIT_FILE_LEVEL_CATALOG ) );
+		if ( namespaceSupport.canCreateCatalog() ) {
+			assertThat( sql ).contains( namespaceSupport.getDropCatalogCommands( EXPLICIT_CATALOG ) );
+			assertThat( sql ).contains( namespaceSupport.getDropCatalogCommands( IMPLICIT_FILE_LEVEL_CATALOG ) );
 			if ( options.expectedDefaultCatalog != null ) {
-				assertThat( sql ).contains( dialect.getDropCatalogCommand( options.expectedDefaultCatalog ) );
+				assertThat( sql ).contains( namespaceSupport.getDropCatalogCommands( options.expectedDefaultCatalog ) );
 			}
 		}
 
-		if ( sessionFactory.getJdbcServices().getDialect().canCreateSchema() ) {
-			assertThat( sql ).contains( dialect.getDropSchemaCommand( EXPLICIT_SCHEMA ) );
-			assertThat( sql ).contains( dialect.getDropSchemaCommand( IMPLICIT_FILE_LEVEL_SCHEMA ) );
+		if ( namespaceSupport.canCreateSchema() ) {
+			assertThat( sql ).contains( namespaceSupport.getDropSchemaCommands( EXPLICIT_SCHEMA ) );
+			assertThat( sql ).contains( namespaceSupport.getDropSchemaCommands( IMPLICIT_FILE_LEVEL_SCHEMA ) );
 			if ( options.expectedDefaultSchema != null ) {
-				assertThat( sql ).contains( dialect.getDropSchemaCommand( options.expectedDefaultSchema ) );
+				assertThat( sql ).contains( namespaceSupport.getDropSchemaCommands( options.expectedDefaultSchema ) );
 			}
 		}
 	}

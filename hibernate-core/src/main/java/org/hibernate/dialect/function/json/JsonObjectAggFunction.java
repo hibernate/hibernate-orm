@@ -7,32 +7,36 @@ package org.hibernate.dialect.function.json;
 import java.util.List;
 
 import org.hibernate.QueryException;
+import org.hibernate.SPI;
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.function.FunctionKind;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
-import org.hibernate.sql.ast.Clause;
-import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.spi.SqlAppender;
-import org.hibernate.sql.ast.tree.SqlAstNode;
-import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.JsonNullBehavior;
-import org.hibernate.sql.ast.tree.expression.JsonObjectAggUniqueKeysBehavior;
-import org.hibernate.sql.ast.tree.predicate.Predicate;
+import org.hibernate.sql.ast.spi.translation.Clause;
+import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
+import org.hibernate.sql.spi.SqlAppender;
+import org.hibernate.sql.ast.spi.SqlAstNode;
+import org.hibernate.sql.ast.spi.query.expression.Expression;
+import org.hibernate.sql.ast.spi.query.expression.JsonNullBehavior;
+import org.hibernate.sql.ast.spi.query.expression.JsonObjectAggUniqueKeysBehavior;
+import org.hibernate.sql.ast.spi.query.predicate.Predicate;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import jakarta.annotation.Nullable;
 
-/**
- * Standard json_objectagg function.
- */
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.USE;
+
+/// Subclassable descriptor for the standard `json_objectagg` function.
+@SPI({ USE, IMPLEMENT })
 public class JsonObjectAggFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 
 	protected final String valueSeparator;
 	protected final boolean supportsFilter;
 
+	@SPI(IMPLEMENT)
 	public JsonObjectAggFunction(String valueSeparator, boolean supportsFilter, TypeConfiguration typeConfiguration) {
 		super(
 				"json_objectagg",

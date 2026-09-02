@@ -12,7 +12,7 @@ import org.hibernate.query.sqm.tree.spi.SqmCopyContext;
 import org.hibernate.query.sqm.tree.spi.SqmTypedNode;
 import org.hibernate.query.sqm.tree.spi.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.spi.expression.SqmFunction;
-import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.spi.query.expression.Expression;
 
 import java.util.List;
 
@@ -33,6 +33,7 @@ public interface FunctionArgumentTypeResolver {
 	 * @deprecated Use {@link #resolveFunctionArgumentType(List, int, SqmToSqlAstConverter)} instead
 	 */
 	@Deprecated(forRemoval = true, since = "7.0")
+	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	@Nullable MappingModelExpressible<?> resolveFunctionArgumentType(
 			SqmFunction<?> function,
 			int argumentIndex,
@@ -48,6 +49,7 @@ public interface FunctionArgumentTypeResolver {
 	 * @return The resolved type.
 	 * @since 7.0
 	 */
+	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	default @Nullable MappingModelExpressible<?> resolveFunctionArgumentType(
 			List<? extends SqmTypedNode<?>> arguments,
 			int argumentIndex,

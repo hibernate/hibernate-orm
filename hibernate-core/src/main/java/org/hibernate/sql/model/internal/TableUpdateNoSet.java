@@ -9,18 +9,18 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import org.hibernate.jdbc.Expectation;
-import org.hibernate.sql.ast.SqlAstWalker;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
+import org.hibernate.sql.ast.spi.SqlAstWalker;
+import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
-import org.hibernate.sql.model.MutationOperation;
-import org.hibernate.sql.model.MutationTarget;
-import org.hibernate.sql.model.TableMapping;
-import org.hibernate.sql.model.ast.AbstractRestrictedTableMutation;
-import org.hibernate.sql.model.ast.ColumnValueBinding;
-import org.hibernate.sql.model.ast.ColumnValueParameter;
-import org.hibernate.sql.model.ast.MutatingTableReference;
-import org.hibernate.sql.model.ast.TableUpdate;
-import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
+import org.hibernate.sql.spi.mutation.MutationOperation;
+import org.hibernate.sql.spi.mutation.MutationTarget;
+import org.hibernate.sql.spi.mutation.TableMapping;
+import org.hibernate.sql.ast.spi.model.AbstractRestrictedTableMutation;
+import org.hibernate.sql.ast.spi.model.ColumnValueBinding;
+import org.hibernate.sql.ast.spi.model.ColumnValueParameter;
+import org.hibernate.sql.ast.spi.model.MutatingTableReference;
+import org.hibernate.sql.ast.spi.model.TableUpdate;
+import org.hibernate.sql.spi.mutation.jdbc.JdbcMutationOperation;
 
 import static java.util.Collections.emptyList;
 
@@ -32,7 +32,7 @@ import static java.util.Collections.emptyList;
 public class TableUpdateNoSet
 		extends AbstractRestrictedTableMutation<MutationOperation>
 		implements TableUpdate<MutationOperation> {
-	public TableUpdateNoSet(MutatingTableReference mutatingTable, MutationTarget<?,?> mutationTarget) {
+	public TableUpdateNoSet(MutatingTableReference mutatingTable, MutationTarget mutationTarget) {
 		super(
 				mutatingTable,
 				mutationTarget,

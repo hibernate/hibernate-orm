@@ -3,6 +3,11 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.usertype;
+
+import org.hibernate.SPI;
+
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.USE;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 /**
@@ -11,6 +16,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
  *
  * @author Steve Ebersole
  */
+@SPI({ USE, IMPLEMENT })
 public interface LoggableUserType {
 	/**
 	 * Generate a loggable string representation of the collection (value).

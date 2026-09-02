@@ -4,6 +4,11 @@
  */
 package org.hibernate.type;
 
+import org.hibernate.SPI;
+
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.USE;
+
 import java.io.Serializable;
 import java.util.Map;
 import java.util.Objects;
@@ -17,7 +22,12 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
  *
  * @author Gavin King
  */
+@SPI({ USE, IMPLEMENT })
 public abstract class AbstractType implements Type {
+	@SPI(IMPLEMENT)
+	public AbstractType() {
+	}
+
 
 	@Override
 	public boolean isAssociationType() {

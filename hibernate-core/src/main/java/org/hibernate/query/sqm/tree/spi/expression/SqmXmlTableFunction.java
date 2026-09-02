@@ -25,13 +25,13 @@ import org.hibernate.query.sqm.produce.function.SetReturningFunctionTypeResolver
 import org.hibernate.query.sqm.sql.spi.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.spi.SqmCopyContext;
 import org.hibernate.query.sqm.tree.spi.SqmTypedNode;
-import org.hibernate.sql.ast.tree.SqlAstNode;
-import org.hibernate.sql.ast.tree.expression.CastTarget;
-import org.hibernate.sql.ast.tree.expression.XmlTableColumnDefinition;
-import org.hibernate.sql.ast.tree.expression.XmlTableColumnsClause;
-import org.hibernate.sql.ast.tree.expression.XmlTableOrdinalityColumnDefinition;
-import org.hibernate.sql.ast.tree.expression.XmlTableQueryColumnDefinition;
-import org.hibernate.sql.ast.tree.expression.XmlTableValueColumnDefinition;
+import org.hibernate.sql.ast.spi.SqlAstNode;
+import org.hibernate.sql.ast.spi.query.expression.CastTarget;
+import org.hibernate.sql.ast.spi.query.expression.XmlTableColumnDefinition;
+import org.hibernate.sql.ast.spi.query.expression.XmlTableColumnsClause;
+import org.hibernate.sql.ast.spi.query.expression.XmlTableOrdinalityColumnDefinition;
+import org.hibernate.sql.ast.spi.query.expression.XmlTableQueryColumnDefinition;
+import org.hibernate.sql.ast.spi.query.expression.XmlTableValueColumnDefinition;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.SqlTypes;
 
@@ -271,7 +271,7 @@ public class SqmXmlTableFunction<T> extends SelfRenderingSqmSetReturningFunction
 					xpath,
 					defaultExpression == null
 							? null
-							: (org.hibernate.sql.ast.tree.expression.Expression) defaultExpression.accept( walker )
+							: (org.hibernate.sql.ast.spi.query.expression.Expression) defaultExpression.accept( walker )
 			);
 		}
 
@@ -375,7 +375,7 @@ public class SqmXmlTableFunction<T> extends SelfRenderingSqmSetReturningFunction
 					xpath,
 					defaultExpression == null
 							? null
-							: (org.hibernate.sql.ast.tree.expression.Expression) defaultExpression.accept( walker )
+							: (org.hibernate.sql.ast.spi.query.expression.Expression) defaultExpression.accept( walker )
 			);
 		}
 

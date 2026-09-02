@@ -4,6 +4,8 @@
  */
 package org.hibernate.loader.ast.internal;
 
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
+
 import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.List;
@@ -25,8 +27,8 @@ import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.metamodel.mapping.internal.SqlTypedMappingImpl;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryOptionsAdapter;
-import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
+import org.hibernate.sql.ast.spi.creation.SqlAliasBaseManager;
+import org.hibernate.sql.ast.spi.query.expression.JdbcParameter;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.internal.SqlTypedMappingJdbcParameter;
@@ -117,7 +119,7 @@ public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoade
 
 		final var sqlAstTranslator =
 				getSqlAstTranslatorFactory()
-						.buildSelectTranslator( getSessionFactory(), sqlAst );
+						.buildTranslator( new SqlAstTranslationRequest.Select( getSessionFactory(), sqlAst ) );
 		final var jdbcOperation =
 				sqlAstTranslator.translate(
 						NO_BINDINGS,
@@ -172,7 +174,7 @@ public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoade
 				);
 
 		final var jdbcSelectOperation =
-				getSqlAstTranslatorFactory().buildSelectTranslator( getSessionFactory(), sqlAst )
+				getSqlAstTranslatorFactory().buildTranslator( new SqlAstTranslationRequest.Select( getSessionFactory(), sqlAst ) )
 						.translate( NO_BINDINGS, QueryOptions.NONE );
 
 		final List<E> databaseResults = loadByArrayParameter(

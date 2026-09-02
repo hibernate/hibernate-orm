@@ -8,6 +8,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.SPI;
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
@@ -18,14 +19,14 @@ import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
 import org.hibernate.query.sqm.tree.spi.SqmTypedNode;
 import org.hibernate.query.sqm.tree.spi.expression.SqmJsonValueExpression;
-import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.spi.SqlAppender;
-import org.hibernate.sql.ast.tree.SqlAstNode;
-import org.hibernate.sql.ast.tree.expression.CastTarget;
-import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.JsonPathPassingClause;
-import org.hibernate.sql.ast.tree.expression.JsonValueEmptyBehavior;
-import org.hibernate.sql.ast.tree.expression.JsonValueErrorBehavior;
+import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
+import org.hibernate.sql.spi.SqlAppender;
+import org.hibernate.sql.ast.spi.SqlAstNode;
+import org.hibernate.sql.ast.spi.query.expression.CastTarget;
+import org.hibernate.sql.ast.spi.query.expression.Expression;
+import org.hibernate.sql.ast.spi.query.expression.JsonPathPassingClause;
+import org.hibernate.sql.ast.spi.query.expression.JsonValueEmptyBehavior;
+import org.hibernate.sql.ast.spi.query.expression.JsonValueErrorBehavior;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import jakarta.annotation.Nullable;
@@ -34,15 +35,17 @@ import static org.hibernate.query.sqm.produce.function.FunctionParameterType.ANY
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.IMPLICIT_JSON;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.JSON;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.STRING;
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.USE;
 
-/**
- * Standard json_value function.
- */
+/// Subclassable descriptor for the standard `json_value` function.
+@SPI({ USE, IMPLEMENT })
 public class JsonValueFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 
 	protected final boolean supportsJsonPathExpression;
 	protected final boolean supportsJsonPathPassingClause;
 
+	@SPI(IMPLEMENT)
 	public JsonValueFunction(
 			TypeConfiguration typeConfiguration,
 			boolean supportsJsonPathExpression,

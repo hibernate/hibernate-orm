@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.sqm.internal;
 
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
+
 import jakarta.annotation.Nullable;
 import org.hibernate.action.internal.BulkOperationCleanupAction;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
@@ -12,9 +14,10 @@ import org.hibernate.query.spi.NonSelectQueryPlan;
 import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.sqm.spi.SqmParameterMappingModelResolutionAccess;
 import org.hibernate.query.sqm.sql.spi.SqmTranslation;
+import org.hibernate.query.sqm.sql.spi.SqmTranslationRequest;
 import org.hibernate.query.sqm.tree.spi.SqmDmlStatement;
 import org.hibernate.query.sqm.tree.spi.expression.SqmParameter;
-import org.hibernate.sql.ast.tree.MutationStatement;
+import org.hibernate.sql.ast.spi.query.MutationStatement;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcOperationQueryMutation;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
@@ -97,12 +100,14 @@ public class SimpleNonSelectQueryPlan implements NonSelectQueryPlan {
 		final var sessionFactory = executionContext.getSession().getFactory();
 		return sessionFactory.getQueryEngine().getSqmTranslatorFactory()
 						.createMutationTranslator(
-								sqm,
-								executionContext.getQueryOptions(),
-								domainParameterXref,
-								executionContext.getQueryParameterBindings(),
-								executionContext.getSession().getLoadQueryInfluencers(),
-								sessionFactory.getSqlTranslationEngine()
+								new SqmTranslationRequest.Mutation(
+										sqm,
+										executionContext.getQueryOptions(),
+										domainParameterXref,
+										executionContext.getQueryParameterBindings(),
+										executionContext.getSession().getLoadQueryInfluencers(),
+										sessionFactory.getSqlTranslationEngine()
+								)
 						)
 						.translate();
 	}
@@ -209,7 +214,7 @@ public class SimpleNonSelectQueryPlan implements NonSelectQueryPlan {
 		final var sessionFactory = executionContext.getSession().getFactory();
 		final var mutationTranslator =
 				sessionFactory.getJdbcServices().getJdbcEnvironment().getSqlAstTranslatorFactory()
-						.buildMutationTranslator( sessionFactory, mutationStatement );
+						.buildTranslator( new SqlAstTranslationRequest.QueryMutation( sessionFactory, mutationStatement ) );
 		return new Interpretation(
 				new CacheableSqmInterpretation<>(
 						mutationStatement,

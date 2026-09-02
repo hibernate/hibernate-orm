@@ -15,8 +15,8 @@ import org.hibernate.action.queue.spi.meta.EntityTableDescriptor;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.sql.model.GraphMutationTarget;
-import org.hibernate.sql.model.ast.builder.TableDeleteBuilder;
-import org.hibernate.sql.model.ast.builder.TableInsertBuilder;
+import org.hibernate.sql.ast.spi.model.builder.TableDeleteBuilder;
+import org.hibernate.sql.ast.spi.model.builder.TableInsertBuilder;
 
 /// Entity-specific mutation target for the graph-based action queue.
 ///

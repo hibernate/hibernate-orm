@@ -302,6 +302,7 @@ public class FunctionNameAsColumnTest {
 	}
 
 	private static boolean dialectUsesParenForCurrentDate(SessionFactoryScope factoryScope) {
-		return factoryScope.getSessionFactory().getJdbcServices().getDialect().currentDate().contains( "(" );
+		return factoryScope.getSessionFactory().getJdbcServices().getDialect()
+				.getCurrentTemporalSupport().currentDate().contains( "(" );
 	}
 }

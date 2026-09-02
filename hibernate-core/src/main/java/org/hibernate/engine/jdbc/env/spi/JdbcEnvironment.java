@@ -8,7 +8,7 @@ import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.service.Service;
-import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslatorFactory;
 
 /**
  * Initial look at this concept we keep talking about with merging information from {@link java.sql.DatabaseMetaData}
@@ -26,12 +26,22 @@ public interface JdbcEnvironment extends Service {
 
 	SqlAstTranslatorFactory getSqlAstTranslatorFactory();
 
-	/**
-	 * Access to the bits of information we pulled off the JDBC {@link java.sql.DatabaseMetaData} (that did not get
-	 * "interpreted" into the helpers/delegates available here).
-	 *
-	 * @return The values extracted from JDBC DatabaseMetaData
-	 */
+	/// Obtain the stable effective JDBC metadata view for this environment.
+	///
+	/// Use this view for runtime support decisions. Access its raw snapshot only
+	/// when diagnostics, reporting, or an integration contract specifically
+	/// requires driver observations.
+	///
+	/// @since 8.0
+	JdbcMetadata getJdbcMetadata();
+
+	/// Obtain the raw JDBC driver and bootstrap-connection observations.
+	///
+	/// @return the values extracted from JDBC `DatabaseMetaData`
+	/// @deprecated Use [#getJdbcMetadata()] for effective runtime decisions. For
+	/// intentional raw access, use
+	/// `getJdbcMetadata().getExtractedDatabaseMetaData()`.
+	@Deprecated(since = "8.0")
 	ExtractedDatabaseMetaData getExtractedDatabaseMetaData();
 
 	/**

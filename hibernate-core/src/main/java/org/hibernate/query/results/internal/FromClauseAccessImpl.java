@@ -9,8 +9,8 @@ import java.util.Map;
 
 import org.hibernate.query.results.spi.ResultSetMapping;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.spi.FromClauseAccess;
-import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.spi.creation.FromClauseAccess;
+import org.hibernate.sql.ast.spi.query.from.TableGroup;
 
 import jakarta.annotation.Nullable;
 

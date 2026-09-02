@@ -6,8 +6,8 @@ package org.hibernate.community.dialect.pagination;
 
 import java.util.regex.Pattern;
 
-import org.hibernate.dialect.pagination.LimitHandler;
-import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
+import org.hibernate.dialect.pagination.spi.LimitHandler;
+import org.hibernate.dialect.pagination.spi.OffsetFetchLimitHandler;
 
 /**
  * A {@link LimitHandler} for Apache Derby, which

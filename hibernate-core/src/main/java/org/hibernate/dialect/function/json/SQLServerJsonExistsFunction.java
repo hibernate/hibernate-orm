@@ -9,10 +9,10 @@ import java.util.List;
 import org.hibernate.AssertionFailure;
 import org.hibernate.QueryException;
 import org.hibernate.metamodel.model.domain.ReturnableType;
-import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.spi.SqlAppender;
-import org.hibernate.sql.ast.tree.expression.JsonExistsErrorBehavior;
-import org.hibernate.sql.ast.tree.expression.JsonPathPassingClause;
+import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
+import org.hibernate.sql.spi.SqlAppender;
+import org.hibernate.sql.ast.spi.query.expression.JsonExistsErrorBehavior;
+import org.hibernate.sql.ast.spi.query.expression.JsonPathPassingClause;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**

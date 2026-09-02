@@ -44,7 +44,7 @@ public class ClockHelper {
 	public static Clock forPrecision(Integer precision, SessionFactoryImplementor factory, int maxPrecision) {
 		final int resolvedPrecision =
 				precision == null
-						? factory.getJdbcServices().getDialect().getDefaultTimestampPrecision()
+						? factory.getJdbcServices().getDialect().getTypeSizingProfile().defaultTimestampPrecision()
 						: precision;
 		final var baseClock = (Clock)
 				factory.getProperties().get( CurrentTimestampGeneration.CLOCK_SETTING_NAME );

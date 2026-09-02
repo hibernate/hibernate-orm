@@ -4,6 +4,8 @@
  */
 package org.hibernate.type;
 
+import org.hibernate.SPI;
+
 import org.hibernate.type.descriptor.java.ObjectJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -12,6 +14,7 @@ import org.hibernate.type.descriptor.jdbc.ObjectJdbcType;
 /**
  * @author Steve Ebersole
  */
+@SPI
 public class JavaObjectType extends AbstractSingleColumnStandardBasicType<Object> {
 	/**
 	 * Singleton access

@@ -4,6 +4,7 @@
  */
 package org.hibernate.query;
 
+
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.AttributeConverter;

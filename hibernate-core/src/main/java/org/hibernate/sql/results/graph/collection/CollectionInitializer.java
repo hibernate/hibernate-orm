@@ -19,6 +19,7 @@ import jakarta.annotation.Nullable;
  *
  * @author Steve Ebersole
  */
+@org.hibernate.SPI({ org.hibernate.SPI.Role.USE, org.hibernate.SPI.Role.IMPLEMENT })
 public interface CollectionInitializer<Data extends InitializerData> extends InitializerParent<Data> {
 	@Override
 	PluralAttributeMapping getInitializedPart();

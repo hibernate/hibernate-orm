@@ -4,6 +4,11 @@
  */
 package org.hibernate.spatial.dialect.postgis;
 
+import org.hibernate.SPI;
+
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.USE;
+
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -14,7 +19,7 @@ import jakarta.annotation.Nullable;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.spatial.GeometryLiteralFormatter;
-import org.hibernate.sql.ast.spi.SqlAppender;
+import org.hibernate.sql.spi.SqlAppender;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -37,13 +42,14 @@ import org.geolatte.geom.codec.WktEncoder;
  *
  * @author Karel Maesen, Geovise BVBA
  */
+@SPI({ USE, IMPLEMENT })
 public abstract class AbstractCastingPostGISJdbcType implements JdbcType {
-
-	private final Wkb.Dialect wkbDialect;
-
-	AbstractCastingPostGISJdbcType(Wkb.Dialect dialect) {
+	@SPI(IMPLEMENT)
+	protected AbstractCastingPostGISJdbcType(Wkb.Dialect dialect) {
 		wkbDialect = dialect;
 	}
+
+	private final Wkb.Dialect wkbDialect;
 
 	@Override
 	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaType<T> javaType) {

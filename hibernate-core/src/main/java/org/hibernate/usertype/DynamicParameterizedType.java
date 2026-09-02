@@ -4,6 +4,11 @@
  */
 package org.hibernate.usertype;
 
+import org.hibernate.SPI;
+
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.USE;
+
 import org.hibernate.Incubating;
 
 import java.lang.annotation.Annotation;
@@ -24,6 +29,7 @@ import java.util.Properties;
  * use {@link ParameterizedType} for now.
  */
 @Deprecated(since = "7.0", forRemoval = true)
+@SPI({ USE, IMPLEMENT })
 public interface DynamicParameterizedType extends ParameterizedType {
 	String PARAMETER_TYPE = "org.hibernate.type.ParameterType";
 

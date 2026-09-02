@@ -23,9 +23,9 @@
  *     Model) defined in {@link org.hibernate.query.sqm}.
  * <li>Next, {@link org.hibernate.query.sqm.sql.internal.StandardSqmTranslator}
  *     transforms the SQM tree and produces a SQL AST, an instance of
- *     the syntax tree defined by {@link org.hibernate.sql.ast.tree}.
+ *     the syntax tree defined by {@link org.hibernate.sql.ast.spi.query}.
  * <li>Finally, a SQL dialect-specific implementation of
- *     {@link org.hibernate.sql.ast.SqlAstTranslator} produces an
+ *     {@link org.hibernate.sql.ast.spi.translation.SqlAstTranslator} produces an
  *     executable SQL statement.
  * </ul>
  *

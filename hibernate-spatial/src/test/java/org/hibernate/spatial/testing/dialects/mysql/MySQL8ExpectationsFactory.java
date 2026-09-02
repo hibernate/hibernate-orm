@@ -4,6 +4,7 @@
  */
 package org.hibernate.spatial.testing.dialects.mysql;
 
+
 import org.hibernate.spatial.testing.AbstractExpectationsFactory;
 import org.hibernate.spatial.testing.NativeSQLStatement;
 

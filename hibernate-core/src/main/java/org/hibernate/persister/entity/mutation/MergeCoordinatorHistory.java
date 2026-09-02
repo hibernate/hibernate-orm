@@ -15,6 +15,7 @@ import org.hibernate.persister.entity.EntityPersister;
  *
  * @author Gavin King
  */
+@org.hibernate.Internal
 public class MergeCoordinatorHistory extends UpdateCoordinatorHistory {
 	public MergeCoordinatorHistory(
 			EntityPersister entityPersister,

@@ -12,7 +12,7 @@ import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.query.sqm.mutation.internal.SqmMutationStrategyHelper;
-import org.hibernate.sql.ast.tree.select.QuerySpec;
+import org.hibernate.sql.ast.spi.query.select.QuerySpec;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcSelectWithActionsBuilder;
 import org.hibernate.sql.exec.spi.LoadedValuesCollector;

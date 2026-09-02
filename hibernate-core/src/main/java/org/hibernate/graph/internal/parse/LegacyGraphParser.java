@@ -13,8 +13,8 @@ import org.hibernate.graph.spi.AttributeNodeImplementor;
 import org.hibernate.graph.spi.GraphParserEntityNameResolver;
 import org.hibernate.graph.spi.GraphImplementor;
 import org.hibernate.graph.spi.SubGraphImplementor;
-import org.hibernate.internal.util.collections.Stack;
-import org.hibernate.internal.util.collections.StandardStack;
+import org.hibernate.spi.Stack;
+import org.hibernate.spi.StandardStack;
 
 import static org.hibernate.graph.internal.GraphParserLogging.PARSING_LOGGER;
 import static org.hibernate.internal.util.StringHelper.repeat;

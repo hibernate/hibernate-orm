@@ -4,7 +4,7 @@
  */
 package org.hibernate.type.format;
 
-import org.hibernate.internal.util.collections.StandardStack;
+import org.hibernate.spi.StandardStack;
 
 /**
  * base class for JSON document String reader
@@ -27,7 +27,7 @@ public abstract class StringJsonDocument {
 		ARRAY // we are piling array values
 	}
 	// Stack of current processing states
-	protected final StandardStack<JsonProcessingState> processingStates = new StandardStack<>();
+	final StandardStack<JsonProcessingState> processingStates = new StandardStack<>();
 
 
 

@@ -4,6 +4,8 @@
  */
 package org.hibernate.dialect.function;
 
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
+
 import jakarta.annotation.Nullable;
 import org.hibernate.internal.util.NullnessHelper;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
@@ -15,7 +17,7 @@ import org.hibernate.metamodel.mapping.SelectablePath;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.metamodel.mapping.internal.SelectableMappingImpl;
 import org.hibernate.metamodel.model.domain.ReturnableType;
-import org.hibernate.query.sqm.tuple.internal.AnonymousTupleTableGroupProducer;
+import org.hibernate.sql.ast.spi.query.SetReturningFunctionType;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.BinaryArithmeticOperator;
 import org.hibernate.query.sqm.ComparisonOperator;
@@ -25,29 +27,29 @@ import org.hibernate.query.sqm.produce.function.SetReturningFunctionTypeResolver
 import org.hibernate.query.sqm.sql.spi.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.spi.expression.NumericTypeCategory;
 import org.hibernate.sql.Template;
-import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.spi.SqlAppender;
-import org.hibernate.sql.ast.spi.SqlAstCreationContext;
-import org.hibernate.sql.ast.tree.SqlAstNode;
-import org.hibernate.sql.ast.tree.cte.CteContainer;
-import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
-import org.hibernate.sql.ast.tree.expression.CastTarget;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
-import org.hibernate.sql.ast.tree.expression.DurationUnit;
-import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.Literal;
-import org.hibernate.sql.ast.tree.expression.QueryLiteral;
-import org.hibernate.sql.ast.tree.expression.QueryTransformer;
-import org.hibernate.sql.ast.tree.expression.SelfRenderingSqlFragmentExpression;
-import org.hibernate.sql.ast.tree.expression.UnparsedNumericLiteral;
-import org.hibernate.sql.ast.tree.from.FunctionTableGroup;
-import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
-import org.hibernate.sql.ast.tree.predicate.Junction;
-import org.hibernate.sql.ast.tree.predicate.Predicate;
-import org.hibernate.sql.ast.tree.predicate.PredicateContainer;
-import org.hibernate.sql.ast.tree.select.QuerySpec;
-import org.hibernate.sql.ast.tree.select.SelectStatement;
+import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
+import org.hibernate.sql.spi.SqlAppender;
+import org.hibernate.sql.ast.spi.creation.SqlAstCreationContext;
+import org.hibernate.sql.ast.spi.SqlAstNode;
+import org.hibernate.sql.ast.spi.query.cte.CteContainer;
+import org.hibernate.sql.ast.spi.query.expression.BinaryArithmeticExpression;
+import org.hibernate.sql.ast.spi.query.expression.CastTarget;
+import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
+import org.hibernate.sql.ast.spi.query.expression.DurationUnit;
+import org.hibernate.sql.ast.spi.query.expression.Expression;
+import org.hibernate.sql.ast.spi.query.expression.Literal;
+import org.hibernate.sql.ast.spi.query.expression.QueryLiteral;
+import org.hibernate.sql.ast.spi.query.expression.QueryTransformer;
+import org.hibernate.sql.ast.spi.query.expression.SelfRenderingSqlFragmentExpression;
+import org.hibernate.sql.ast.spi.query.expression.UnparsedNumericLiteral;
+import org.hibernate.sql.ast.spi.query.from.FunctionTableGroup;
+import org.hibernate.sql.ast.spi.query.from.TableGroup;
+import org.hibernate.sql.ast.spi.query.predicate.ComparisonPredicate;
+import org.hibernate.sql.ast.spi.query.predicate.Junction;
+import org.hibernate.sql.ast.spi.query.predicate.Predicate;
+import org.hibernate.sql.ast.spi.query.predicate.PredicateContainer;
+import org.hibernate.sql.ast.spi.query.select.QuerySpec;
+import org.hibernate.sql.ast.spi.query.select.SelectStatement;
 import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.type.BasicType;
@@ -87,7 +89,7 @@ public abstract class NumberSeriesGenerateSeriesFunction extends GenerateSeriesF
 			Expression start,
 			Expression stop,
 			@Nullable Expression step,
-			AnonymousTupleTableGroupProducer tupleType,
+			SetReturningFunctionType tupleType,
 			String tableIdentifierVariable,
 			SqlAstTranslator<?> walker);
 
@@ -105,7 +107,7 @@ public abstract class NumberSeriesGenerateSeriesFunction extends GenerateSeriesF
 	}
 
 	public static Expression add(Expression left, Expression right, SqmToSqlAstConverter converter) {
-		if ( right instanceof org.hibernate.sql.ast.tree.expression.Duration duration ) {
+		if ( right instanceof org.hibernate.sql.ast.spi.query.expression.Duration duration ) {
 			final BasicType<?> nodeType = (BasicType<?>) left.getExpressionType().getSingleJdbcMapping();
 			final FunctionRenderer timestampadd = (FunctionRenderer) converter.getCreationContext()
 					.getSqmFunctionRegistry().findFunctionDescriptor( "timestampadd" );
@@ -136,8 +138,8 @@ public abstract class NumberSeriesGenerateSeriesFunction extends GenerateSeriesF
 	}
 
 	public static Expression multiply(Expression left, Expression multiplier) {
-		if ( left instanceof org.hibernate.sql.ast.tree.expression.Duration duration ) {
-			return new org.hibernate.sql.ast.tree.expression.Duration(
+		if ( left instanceof org.hibernate.sql.ast.spi.query.expression.Duration duration ) {
+			return new org.hibernate.sql.ast.spi.query.expression.Duration(
 					multiply( duration.getMagnitude(), multiplier ),
 					duration.getUnit(),
 					duration.getExpressionType()
@@ -328,6 +330,7 @@ public abstract class NumberSeriesGenerateSeriesFunction extends GenerateSeriesF
 			super( defaultValueColumnName, defaultIndexSelectionExpression );
 		}
 
+		@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 		protected SelectableMapping[] resolveIterationVariableBasedFunctionReturnType(
 				List<? extends SqlAstNode> arguments,
 				String tableIdentifierVariable,
@@ -374,7 +377,7 @@ public abstract class NumberSeriesGenerateSeriesFunction extends GenerateSeriesF
 			final String stepExpression = getStepExpression( explicitStep, tableIdentifierVariable, converter );
 			final String customReadExpression;
 			if ( type.getJdbcType().isTemporal() ) {
-				final org.hibernate.sql.ast.tree.expression.Duration step = (org.hibernate.sql.ast.tree.expression.Duration) explicitStep;
+				final org.hibernate.sql.ast.spi.query.expression.Duration step = (org.hibernate.sql.ast.spi.query.expression.Duration) explicitStep;
 				customReadExpression = timestampadd( startExpression, stepExpression, type, step, converter );
 			}
 			else {
@@ -436,7 +439,7 @@ public abstract class NumberSeriesGenerateSeriesFunction extends GenerateSeriesF
 			return returnType;
 		}
 
-		private static String timestampadd(String startExpression, String stepExpression, JdbcMapping type, org.hibernate.sql.ast.tree.expression.Duration duration, SqmToSqlAstConverter converter) {
+		private static String timestampadd(String startExpression, String stepExpression, JdbcMapping type, org.hibernate.sql.ast.spi.query.expression.Duration duration, SqmToSqlAstConverter converter) {
 			final SqlAstCreationContext creationContext = converter.getCreationContext();
 
 			final FunctionRenderer renderer = (FunctionRenderer) creationContext.getSqmFunctionRegistry()
@@ -457,7 +460,7 @@ public abstract class NumberSeriesGenerateSeriesFunction extends GenerateSeriesF
 			) );
 			final SqlAstTranslator<JdbcSelect> translator =
 					creationContext.getDialect().getSqlAstTranslatorFactory()
-							.buildSelectTranslator( creationContext.getSessionFactory(), new SelectStatement( fakeQuery ) );
+							.buildTranslator( new SqlAstTranslationRequest.Select( creationContext.getSessionFactory(), new SelectStatement( fakeQuery ) ) );
 			final JdbcSelect operation = translator.translate( null, QueryOptions.NONE );
 			final String sqlString = operation.getSqlString();
 			assert sqlString.startsWith( "select " );

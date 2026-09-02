@@ -194,6 +194,6 @@ public class BlobJavaType extends AbstractClassJavaType<Blob> {
 
 	@Override
 	public long getDefaultSqlLength(Dialect dialect, JdbcType jdbcType) {
-		return dialect.getDefaultLobLength();
+		return dialect.getTypeSizingProfile().defaultLobLength();
 	}
 }

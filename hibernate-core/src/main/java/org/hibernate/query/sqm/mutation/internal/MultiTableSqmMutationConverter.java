@@ -6,22 +6,24 @@ package org.hibernate.query.sqm.mutation.internal;
 
 import jakarta.annotation.Nullable;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
-import org.hibernate.internal.util.collections.Stack;
+import org.hibernate.spi.Stack;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.sql.spi.BaseSqmToSqlAstConverter;
+import org.hibernate.query.sqm.sql.spi.SqmTranslationRequest;
 import org.hibernate.query.sqm.sql.internal.SqlAstProcessingStateImpl;
+import org.hibernate.query.sqm.tree.spi.SqmDmlStatement;
 import org.hibernate.query.sqm.tree.spi.SqmStatement;
 import org.hibernate.query.sqm.tree.spi.from.SqmRoot;
 import org.hibernate.query.sqm.tree.spi.predicate.SqmWhereClause;
-import org.hibernate.sql.ast.spi.SqlAstCreationContext;
-import org.hibernate.sql.ast.spi.SqlAstProcessingState;
-import org.hibernate.sql.ast.spi.SqlAstTreeHelper;
-import org.hibernate.sql.ast.tree.Statement;
-import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.predicate.Predicate;
+import org.hibernate.sql.ast.spi.creation.SqlAstCreationContext;
+import org.hibernate.sql.ast.spi.creation.SqlAstProcessingState;
+import org.hibernate.sql.ast.spi.query.SqlAstTreeHelper;
+import org.hibernate.sql.ast.spi.Statement;
+import org.hibernate.sql.ast.spi.query.from.TableGroup;
+import org.hibernate.sql.ast.spi.query.predicate.Predicate;
 
 /**
  * Specialized BaseSqmToSqlAstConverter implementation used during conversion
@@ -38,7 +40,7 @@ public class MultiTableSqmMutationConverter extends BaseSqmToSqlAstConverter<Sta
 
 	public MultiTableSqmMutationConverter(
 			EntityMappingType mutatingEntityDescriptor,
-			SqmStatement<?> statement,
+			SqmDmlStatement<?> statement,
 			SqmRoot<?> sqmRoot,
 			DomainParameterXref domainParameterXref,
 			QueryOptions queryOptions,
@@ -60,7 +62,7 @@ public class MultiTableSqmMutationConverter extends BaseSqmToSqlAstConverter<Sta
 
 	public MultiTableSqmMutationConverter(
 			EntityMappingType mutatingEntityDescriptor,
-			SqmStatement<?> statement,
+			SqmDmlStatement<?> statement,
 			SqmRoot<?> sqmRoot,
 			String sourceAlias,
 			DomainParameterXref domainParameterXref,
@@ -69,13 +71,14 @@ public class MultiTableSqmMutationConverter extends BaseSqmToSqlAstConverter<Sta
 			QueryParameterBindings domainParameterBindings,
 			SqlAstCreationContext creationContext) {
 		super(
-				creationContext,
-				statement,
-				queryOptions,
-				loadQueryInfluencers,
-				domainParameterXref,
-				domainParameterBindings,
-				false
+				new SqmTranslationRequest.Mutation(
+						statement,
+						queryOptions,
+						domainParameterXref,
+						domainParameterBindings,
+						loadQueryInfluencers,
+						creationContext
+				)
 		);
 		this.mutatingEntityDescriptor = mutatingEntityDescriptor;
 

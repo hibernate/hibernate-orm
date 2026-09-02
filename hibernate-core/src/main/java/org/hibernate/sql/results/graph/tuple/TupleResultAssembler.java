@@ -4,7 +4,7 @@
  */
 package org.hibernate.sql.results.graph.tuple;
 
-import org.hibernate.sql.results.ResultsLogger;
+import org.hibernate.sql.results.internal.ResultsLogger;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.type.descriptor.java.JavaType;

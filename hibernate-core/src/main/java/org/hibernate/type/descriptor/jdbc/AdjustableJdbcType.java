@@ -4,19 +4,24 @@
  */
 package org.hibernate.type.descriptor.jdbc;
 
+import org.hibernate.SPI;
 import org.hibernate.type.descriptor.java.JavaType;
 
-/**
- * Extension contract for JdbcType implementations that understand how to
- * adjust themselves relative to where/how they are used (e.g. accounting
- * for LOB, nationalized, primitive/wrapper, etc).
- *
- * @author Christian Beikov
- */
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.SUPPLY;
+import static org.hibernate.SPI.Role.USE;
+
+/// A [JdbcType] which may select a more appropriate descriptor for a specific
+/// mapping context, including LOB, nationalized, or primitive/wrapper use.
+///
+/// @author Christian Beikov
+/// @see #resolveIndicatedType(JdbcTypeIndicators, JavaType)
+@SPI({ USE, IMPLEMENT })
 public interface AdjustableJdbcType extends JdbcType {
 
-	/**
-	 * Perform the adjustment
-	 */
+	/// Resolve and supply the descriptor to use for the indicated mapping.
+	///
+	/// @see JdbcType
+	@SPI(SUPPLY)
 	JdbcType resolveIndicatedType(JdbcTypeIndicators indicators, JavaType<?> domainJtd);
 }

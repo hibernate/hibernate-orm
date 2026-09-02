@@ -12,11 +12,12 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
+import org.hibernate.engine.jdbc.env.spi.JdbcMetadata;
 import org.hibernate.engine.jdbc.env.spi.LobCreatorBuilder;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.engine.jdbc.env.spi.QualifiedObjectNameFormatter;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
-import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslatorFactory;
 
 import static java.util.Objects.requireNonNull;
 
@@ -52,6 +53,11 @@ public final class PersistenceUnitJdbcEnvironment implements JdbcEnvironment {
 	@Override
 	public SqlAstTranslatorFactory getSqlAstTranslatorFactory() {
 		return delegate.getSqlAstTranslatorFactory();
+	}
+
+	@Override
+	public JdbcMetadata getJdbcMetadata() {
+		return delegate.getJdbcMetadata();
 	}
 
 	@Override

@@ -9,13 +9,14 @@ import org.hibernate.jdbc.Expectation;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.ModelPart;
-import org.hibernate.sql.model.TableMapping;
+import org.hibernate.sql.spi.mutation.TableMapping;
 
 import java.util.List;
 
 /**
  * @author Steve Ebersole
  */
+@org.hibernate.SPI({ org.hibernate.SPI.Role.USE, org.hibernate.SPI.Role.IMPLEMENT })
 public interface EntityTableMapping extends TableMapping {
 	static EntityTableMappingImpl.KeyMapping createKeyMapping(List<EntityTableMappingImpl.KeyColumn> keyColumns, ModelPart identifierPart) {
 		if ( identifierPart instanceof EmbeddableValuedModelPart embeddedModelPart ) {

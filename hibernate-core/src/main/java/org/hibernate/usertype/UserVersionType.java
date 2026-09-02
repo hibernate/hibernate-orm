@@ -4,6 +4,11 @@
  */
 package org.hibernate.usertype;
 
+import org.hibernate.SPI;
+
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.USE;
+
 import java.util.Comparator;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -14,6 +19,7 @@ import org.hibernate.type.descriptor.WrapperOptions;
  *
  * @author Gavin King
  */
+@SPI({ USE, IMPLEMENT })
 public interface UserVersionType<T> extends UserType<T>, Comparator<T> {
 	/**
 	 * Generate an initial version.

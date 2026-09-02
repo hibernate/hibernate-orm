@@ -1,0 +1,238 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
+package org.hibernate.dialect.sql.ast.spi;
+
+
+import java.util.List;
+
+import org.hibernate.jdbc.Expectation;
+import org.hibernate.sql.ast.spi.Statement;
+import org.hibernate.sql.exec.spi.JdbcOperation;
+import org.hibernate.sql.spi.mutation.MutationOperation;
+import org.hibernate.sql.ast.spi.model.ColumnValueBinding;
+import org.hibernate.sql.ast.spi.model.OptionalTableUpdate;
+import org.hibernate.sql.spi.mutation.jdbc.DeleteOrUpsertOperation;
+import org.hibernate.sql.spi.mutation.jdbc.UpsertOperation;
+
+/**
+ * Base SqlAstTranslator for translators which support an insert-or-update (UPSERT) command
+ *
+ * @author Steve Ebersole
+ */
+public class SqlAstTranslatorWithUpsert<T extends JdbcOperation> extends AbstractSqlAstTranslator<T> {
+	protected SqlAstTranslatorWithUpsert(SqlAstTranslationRequest<? extends Statement, T> request) {
+		super( request );
+	}
+
+	/**
+	 * Create the MutationOperation for performing the DELETE or UPSERT
+	 */
+	public MutationOperation createMergeOperation(OptionalTableUpdate optionalTableUpdate) {
+		renderUpsertStatement( optionalTableUpdate );
+
+		final UpsertOperation upsertOperation = new UpsertOperation(
+				optionalTableUpdate.getMutatingTable().getTableMapping(),
+				optionalTableUpdate.getMutationTarget(),
+				getSql(),
+				// Without value bindings, the upsert may have an update count of 0
+				expectation( optionalTableUpdate ),
+				getParameterBinders()
+		);
+
+		return new DeleteOrUpsertOperation(
+				upsertOperation,
+				optionalTableUpdate
+		);
+	}
+
+	private static Expectation expectation(OptionalTableUpdate optionalTableUpdate) {
+		return optionalTableUpdate.getValueBindings().stream()
+					.anyMatch( ColumnValueBinding::isAttributeUpdatable )
+				? new Expectation.RowCount()
+				// Without updatable bindings, the merge affects 0 rows when matched
+				: new Expectation.OptionalRowCount();
+	}
+
+	protected void renderUpsertStatement(OptionalTableUpdate optionalTableUpdate) {
+		// template:
+		//
+		// merge into [table] as t
+		// using values([bindings]) as s ([column-names])
+		// on t.[key] = s.[key]
+		// when not matched
+		// 		then insert ...
+		// when matched
+		//		then update ...
+
+		renderMergeInto( optionalTableUpdate );
+		appendSql( " " );
+		renderMergeUsing( optionalTableUpdate );
+		appendSql( " " );
+		renderMergeOn( optionalTableUpdate );
+		appendSql( " " );
+		renderMergeInsert( optionalTableUpdate );
+		appendSql( " " );
+		renderMergeUpdate( optionalTableUpdate );
+	}
+
+	protected void renderMergeInto(OptionalTableUpdate optionalTableUpdate) {
+		appendSql( "merge into " );
+		renderMergeTarget( optionalTableUpdate );
+	}
+
+	private void renderMergeTarget(OptionalTableUpdate optionalTableUpdate) {
+		appendSql( optionalTableUpdate.getMutatingTable().getTableName() );
+		renderMergeTargetAlias();
+	}
+
+	protected void renderMergeTargetAlias() {
+		appendSql( " as t" );
+	}
+
+	protected void renderMergeUsing(OptionalTableUpdate optionalTableUpdate) {
+		appendSql( "using " );
+
+		renderMergeSource( optionalTableUpdate );
+	}
+
+	protected boolean wrapMergeSourceExpression() {
+		return true;
+	}
+
+	protected void renderMergeSource(OptionalTableUpdate optionalTableUpdate) {
+		if ( wrapMergeSourceExpression() ) {
+			appendSql( " (" );
+		}
+
+		final List<ColumnValueBinding> valueBindings = optionalTableUpdate.getValueBindings();
+		final List<ColumnValueBinding> keyBindings = optionalTableUpdate.getKeyBindings();
+
+		final StringBuilder columnList = new StringBuilder();
+
+		appendSql( " values (" );
+
+		for ( int i = 0; i < keyBindings.size(); i++ ) {
+			if ( i > 0 ) {
+				appendSql( ", " );
+				columnList.append( ", " );
+			}
+			final ColumnValueBinding keyBinding = keyBindings.get( i );
+			columnList.append( keyBinding.getColumnReference().getColumnExpression() );
+			renderColumnWrite( keyBinding );
+		}
+		for ( int i = 0; i < valueBindings.size(); i++ ) {
+			appendSql( ", " );
+			columnList.append( ", " );
+			final ColumnValueBinding valueBinding = valueBindings.get( i );
+			columnList.append( valueBinding.getColumnReference().getColumnExpression() );
+			renderColumnWrite( valueBinding );
+		}
+
+		appendSql( ") " );
+
+		if ( wrapMergeSourceExpression() ) {
+			appendSql( ") " );
+		}
+
+		renderMergeSourceAlias();
+
+		appendSql( "(" );
+		appendSql( columnList.toString() );
+		appendSql( ")" );
+	}
+
+	protected void renderMergeSourceAlias() {
+		appendSql( " as s" );
+	}
+
+	protected void renderMergeOn(OptionalTableUpdate optionalTableUpdate) {
+		appendSql( "on (" );
+
+		final List<ColumnValueBinding> keyBindings = optionalTableUpdate.getKeyBindings();
+		for ( int i = 0; i < keyBindings.size(); i++ ) {
+			final ColumnValueBinding keyBinding = keyBindings.get( i );
+			if ( i > 0 ) {
+				appendSql( " and " );
+			}
+			keyBinding.getColumnReference().appendReadExpression( this, "t" );
+			appendSql( "=" );
+			keyBinding.getColumnReference().appendReadExpression( this, "s" );
+		}
+		// todo : optimistic locks?
+
+		appendSql( ")" );
+	}
+
+	protected void renderMergeInsert(OptionalTableUpdate optionalTableUpdate) {
+		final List<ColumnValueBinding> valueBindings = optionalTableUpdate.getValueBindings();
+		final List<ColumnValueBinding> keyBindings = optionalTableUpdate.getKeyBindings();
+
+		final StringBuilder valuesList = new StringBuilder();
+
+		appendSql( "when not matched then insert (" );
+		for ( int i = 0; i < keyBindings.size(); i++ ) {
+			if ( i > 0 ) {
+				appendSql( ", " );
+				valuesList.append( ", " );
+			}
+			final ColumnValueBinding keyBinding = keyBindings.get( i );
+			appendSql( keyBinding.getColumnReference().getColumnExpression() );
+			keyBinding.getColumnReference().appendReadExpression( "s", valuesList::append );
+		}
+		for ( int i = 0; i < valueBindings.size(); i++ ) {
+			final ColumnValueBinding valueBinding = valueBindings.get( i );
+			if ( valueBinding.isAttributeInsertable() ) {
+				appendSql( ", " );
+				valuesList.append( ", " );
+				appendSql( valueBinding.getColumnReference().getColumnExpression() );
+				valueBinding.getColumnReference().appendReadExpression( "s", valuesList::append );
+			}
+		}
+
+		appendSql( ") values (" );
+		appendSql( valuesList.toString() );
+		appendSql( ")" );
+	}
+
+	protected void renderMergeUpdate(OptionalTableUpdate optionalTableUpdate) {
+		final List<ColumnValueBinding> valueBindings = optionalTableUpdate.getValueBindings();
+		final List<ColumnValueBinding> optimisticLockBindings = optionalTableUpdate.getOptimisticLockBindings();
+
+		if ( valueBindings.stream().anyMatch( ColumnValueBinding::isAttributeUpdatable ) ) {
+			appendSql( "when matched then update set " );
+			boolean first = true;
+			for ( int i = 0; i < valueBindings.size(); i++ ) {
+				final ColumnValueBinding binding = valueBindings.get( i );
+				if ( binding.isAttributeUpdatable() ) {
+					if ( first ) {
+						first = false;
+					}
+					else {
+						appendSql( ", " );
+					}
+					binding.getColumnReference().appendColumnForWrite( this, "t" );
+					appendSql( "=" );
+					binding.getColumnReference().appendColumnForWrite( this, "s" );
+				}
+			}
+			renderMatchedWhere( optimisticLockBindings );
+		}
+	}
+
+	private void renderMatchedWhere(List<ColumnValueBinding> optimisticLockBindings) {
+		if ( !optimisticLockBindings.isEmpty() ) {
+			appendSql( " where " );
+			for (int i = 0; i < optimisticLockBindings.size(); i++) {
+				final ColumnValueBinding binding = optimisticLockBindings.get( i );
+				if ( i>0 ) {
+					appendSql(" and ");
+				}
+				binding.getColumnReference().appendColumnForWrite( this, "t" );
+				appendSql("=");
+				binding.getValueExpression().accept( this );
+			}
+		}
+	}
+}

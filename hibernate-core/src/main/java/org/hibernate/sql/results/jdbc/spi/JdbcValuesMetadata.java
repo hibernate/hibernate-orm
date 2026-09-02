@@ -12,6 +12,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  * Access to information about the underlying JDBC values
  * such as type, position, column name, etc
  */
+@org.hibernate.SPI({ org.hibernate.SPI.Role.USE, org.hibernate.SPI.Role.IMPLEMENT })
 public interface JdbcValuesMetadata {
 	/**
 	 * Number of values in the underlying result

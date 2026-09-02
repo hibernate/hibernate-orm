@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.sqm.mutation.internal;
 
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiConsumer;
@@ -46,13 +48,13 @@ import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.UnionSubclassEntityPersister;
 import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.sql.ast.tree.AbstractUpdateOrDeleteStatement;
-import org.hibernate.sql.ast.tree.delete.DeleteStatement;
-import org.hibernate.sql.ast.tree.from.NamedTableReference;
-import org.hibernate.sql.ast.tree.from.TableReference;
-import org.hibernate.sql.ast.tree.predicate.Predicate;
-import org.hibernate.sql.ast.tree.update.Assignment;
-import org.hibernate.sql.ast.tree.update.UpdateStatement;
+import org.hibernate.sql.ast.spi.query.AbstractUpdateOrDeleteStatement;
+import org.hibernate.sql.ast.spi.query.delete.DeleteStatement;
+import org.hibernate.sql.ast.spi.query.from.NamedTableReference;
+import org.hibernate.sql.ast.spi.query.from.TableReference;
+import org.hibernate.sql.ast.spi.query.predicate.Predicate;
+import org.hibernate.sql.ast.spi.query.update.Assignment;
+import org.hibernate.sql.ast.spi.query.update.UpdateStatement;
 import org.hibernate.sql.exec.spi.JdbcOperationQueryMutation;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 
@@ -212,7 +214,7 @@ public class SqmMutationStrategyHelper {
 		jdbcOperationConsumer.accept(
 			jdbcServices.getJdbcEnvironment()
 				.getSqlAstTranslatorFactory()
-				.buildMutationTranslator( sessionFactory, sqlAst )
+				.buildTranslator( new SqlAstTranslationRequest.QueryMutation( sessionFactory, sqlAst ) )
 				.translate( jdbcParameterBindings, queryOptions )
 		);
 	}

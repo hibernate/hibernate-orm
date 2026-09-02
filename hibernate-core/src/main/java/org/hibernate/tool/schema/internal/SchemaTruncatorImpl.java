@@ -11,6 +11,8 @@ import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.schema.spi.ConstraintControlMode;
+import org.hibernate.dialect.schema.spi.TruncateMode;
 import org.hibernate.engine.jdbc.internal.FormatStyle;
 import org.hibernate.engine.jdbc.internal.Formatter;
 import org.hibernate.mapping.Table;
@@ -29,7 +31,6 @@ import java.util.List;
 import java.util.Set;
 
 import static org.hibernate.internal.util.collections.CollectionHelper.setOfSize;
-import static org.hibernate.tool.schema.internal.Helper.applySqlString;
 import static org.hibernate.tool.schema.internal.Helper.applySqlStrings;
 import static org.hibernate.tool.schema.internal.Helper.createSqlStringGenerationContext;
 import static org.hibernate.tool.schema.internal.Helper.interpretFormattingEnabled;
@@ -118,7 +119,7 @@ public class SchemaTruncatorImpl extends AbstractSchemaPopulator implements Sche
 			if ( schemaFilter.includeNamespace( namespace ) ) {
 				disableConstraints( namespace, metadata, formatter, options, schemaFilter, context,
 						contributableInclusionFilter, targets );
-				applySqlString( dialect.getTableCleaner().getSqlBeforeString(), formatter, options, targets );
+				applySqlStrings( dialect.getTableCleaner().getSqlBeforeStrings(), formatter, options, targets );
 
 				// now it's safe to drop the tables
 				final List<Table> tablesToTruncate = new ArrayList<>( namespace.getTables().size() );
@@ -141,7 +142,7 @@ public class SchemaTruncatorImpl extends AbstractSchemaPopulator implements Sche
 					}
 				}
 
-				applySqlString( dialect.getTableCleaner().getSqlAfterString(), formatter, options, targets );
+				applySqlStrings( dialect.getTableCleaner().getSqlAfterStrings(), formatter, options, targets );
 				enableConstraints( namespace, metadata, formatter, options, schemaFilter, context,
 						contributableInclusionFilter, targets );
 			}
@@ -167,16 +168,17 @@ public class SchemaTruncatorImpl extends AbstractSchemaPopulator implements Sche
 					&& schemaFilter.includeTable( table )
 					&& contributableInclusionFilter.matches( table ) ) {
 				for ( var foreignKey : table.getForeignKeyCollection() ) {
-					if ( dialect.canDisableConstraints() ) {
-						applySqlString(
+					if ( dialect.getTableCleaner().constraintControlMode() == ConstraintControlMode.PER_CONSTRAINT ) {
+						applySqlStrings(
 								dialect.getTableCleaner()
-										.getSqlDisableConstraintString( foreignKey, metadata, context ),
+										.getSqlDisableConstraintStrings( foreignKey, metadata, context ),
 								formatter,
 								options,
 								targets
 						);
 					}
-					else if ( !dialect.canBatchTruncate() ) {
+					else if ( dialect.getTableCleaner().constraintControlMode() == ConstraintControlMode.NONE
+							&& dialect.getTableCleaner().truncateMode() == TruncateMode.PER_TABLE ) {
 						applySqlStrings(
 								dialect.getForeignKeyExporter()
 										.getSqlDropStrings( foreignKey, metadata, context ),
@@ -205,15 +207,16 @@ public class SchemaTruncatorImpl extends AbstractSchemaPopulator implements Sche
 					&& schemaFilter.includeTable( table )
 					&& contributableInclusionFilter.matches( table ) ) {
 				for ( var foreignKey : table.getForeignKeyCollection() ) {
-					if ( dialect.canDisableConstraints() ) {
-						applySqlString(
-								dialect.getTableCleaner().getSqlEnableConstraintString( foreignKey, metadata, context ),
+					if ( dialect.getTableCleaner().constraintControlMode() == ConstraintControlMode.PER_CONSTRAINT ) {
+						applySqlStrings(
+								dialect.getTableCleaner().getSqlEnableConstraintStrings( foreignKey, metadata, context ),
 								formatter,
 								options,
 								targets
 						);
 					}
-					else if ( !dialect.canBatchTruncate() ) {
+					else if ( dialect.getTableCleaner().constraintControlMode() == ConstraintControlMode.NONE
+							&& dialect.getTableCleaner().truncateMode() == TruncateMode.PER_TABLE ) {
 						applySqlStrings(
 								dialect.getForeignKeyExporter().getSqlCreateStrings( foreignKey, metadata, context ),
 								formatter,

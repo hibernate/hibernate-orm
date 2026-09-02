@@ -8,8 +8,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.hibernate.sql.ast.spi.AbstractSqlAstWalker;
-import org.hibernate.sql.ast.tree.SqlAstNode;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
+import org.hibernate.sql.ast.spi.SqlAstNode;
+import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
 
 public class ColumnQualifierCollectorSqlAstWalker extends AbstractSqlAstWalker {
 

@@ -14,7 +14,7 @@ import org.hibernate.action.queue.spi.bind.PostExecutionCallback;
 import org.hibernate.action.queue.spi.decompose.DecompositionContext;
 import org.hibernate.engine.internal.ForeignKeys;
 import org.hibernate.engine.internal.Nullability;
-import org.hibernate.sql.model.ast.TableInsert;
+import org.hibernate.sql.ast.spi.model.TableInsert;
 import org.hibernate.action.queue.spi.plan.FlushOperation;
 import org.hibernate.action.queue.internal.support.Helper;
 import org.hibernate.engine.spi.SessionFactoryImplementor;

@@ -11,6 +11,7 @@ import org.hibernate.metamodel.mapping.NonTransientException;
  * Indicated a problem with a mapping.  Usually this is a problem with a combination
  * of mapping constructs.
  */
+@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 public class UnsupportedMappingException extends HibernateException implements NonTransientException {
 	public UnsupportedMappingException(String message) {
 		super( message );

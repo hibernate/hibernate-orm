@@ -6,6 +6,7 @@ package org.hibernate.dialect.function.array;
 
 import java.util.List;
 
+import org.hibernate.SPI;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.type.BindingContext;
@@ -15,18 +16,23 @@ import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.FunctionArgumentException;
 import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
 import org.hibernate.query.sqm.tree.spi.SqmTypedNode;
-import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.spi.SqlAppender;
-import org.hibernate.sql.ast.tree.SqlAstNode;
-import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
+import org.hibernate.sql.spi.SqlAppender;
+import org.hibernate.sql.ast.spi.SqlAstNode;
+import org.hibernate.sql.ast.spi.query.expression.Expression;
 import org.hibernate.type.BottomType;
 
 import static org.hibernate.query.sqm.internal.TypecheckUtil.areTypesComparable;
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.USE;
 
+/// Subclassable descriptor for array constructor expressions.
+@SPI({ USE, IMPLEMENT })
 public class ArrayConstructorFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 
 	private final boolean withKeyword;
 
+	@SPI(IMPLEMENT)
 	public ArrayConstructorFunction(boolean list, boolean withKeyword) {
 		super(
 				"array" + ( list ? "_list" : "" ),

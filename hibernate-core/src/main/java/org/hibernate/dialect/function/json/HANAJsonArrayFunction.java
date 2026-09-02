@@ -7,14 +7,14 @@ package org.hibernate.dialect.function.json;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.dialect.aggregate.HANAAggregateSupport;
+import org.hibernate.dialect.aggregate.internal.HANAAggregateSupport;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.model.domain.ReturnableType;
-import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.spi.SqlAppender;
-import org.hibernate.sql.ast.tree.SqlAstNode;
-import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.JsonNullBehavior;
+import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
+import org.hibernate.sql.spi.SqlAppender;
+import org.hibernate.sql.ast.spi.SqlAstNode;
+import org.hibernate.sql.ast.spi.query.expression.Expression;
+import org.hibernate.sql.ast.spi.query.expression.JsonNullBehavior;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import static org.hibernate.internal.util.NumberHelper.digitCount;

@@ -18,6 +18,7 @@ import static org.hibernate.engine.internal.CacheHelper.addBasicValueToCacheKey;
  *
  * @author Steve Ebersole
  */
+@org.hibernate.SPI({ org.hibernate.SPI.Role.USE, org.hibernate.SPI.Role.IMPLEMENT })
 public interface BasicValuedMapping extends ValueMapping, SqlExpressible {
 
 	@Override

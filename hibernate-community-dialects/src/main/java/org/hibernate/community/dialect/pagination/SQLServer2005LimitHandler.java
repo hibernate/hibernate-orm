@@ -4,21 +4,16 @@
  */
 package org.hibernate.community.dialect.pagination;
 
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import jakarta.annotation.Nullable;
-import org.hibernate.dialect.pagination.AbstractLimitHandler;
-import org.hibernate.dialect.pagination.LimitHandler;
-import org.hibernate.internal.util.StringHelper;
-import org.hibernate.query.spi.Limit;
-import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.sql.ast.internal.ParameterMarkerStrategyStandard;
-import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
+import org.hibernate.dialect.pagination.spi.AbstractLimitHandler;
+import org.hibernate.dialect.pagination.spi.LimitHandler;
+import org.hibernate.dialect.pagination.spi.PaginationJdbcInstructions;
+import org.hibernate.dialect.pagination.spi.PaginationRequest;
+import org.hibernate.dialect.pagination.spi.PaginationResult;
 
 import static java.util.regex.Pattern.CASE_INSENSITIVE;
 import static java.util.regex.Pattern.compile;
@@ -32,9 +27,6 @@ import static java.util.regex.Pattern.compile;
  * @author Gavin King
  */
 public class SQLServer2005LimitHandler extends AbstractLimitHandler {
-
-	// records whether top() was added to the query
-	private boolean topAdded;
 
 	@Override
 	public final boolean supportsLimit() {
@@ -83,17 +75,11 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 	 * @return A new SQL statement
 	 */
 	@Override
-	public String processSql(String sql, Limit limit) {
-		return processSql( sql, -1, null, limit );
-	}
-
-	@Override
-	public String processSql(String sql, int jdbcParameterCount, @Nullable ParameterMarkerStrategy parameterMarkerStrategy, QueryOptions queryOptions) {
-		return processSql( sql, jdbcParameterCount, parameterMarkerStrategy, queryOptions.getLimit() );
-	}
-
-	private String processSql(String sql, int jdbcParameterCount, @Nullable ParameterMarkerStrategy parameterMarkerStrategy, @Nullable Limit limit) {
-		sql = sql.trim();
+	public PaginationResult processSql(PaginationRequest request) {
+		if ( request.isEmpty() ) {
+			return PaginationResult.unchanged( request.sql() );
+		}
+		String sql = request.sql().trim();
 		if ( sql.endsWith(";") ) {
 			sql = sql.substring( 0, sql.length()-1 );
 		}
@@ -104,19 +90,19 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 
 		boolean hasCommonTables = Keyword.WITH.occursAt( sql, 0 );
 		boolean hasOrderBy = Keyword.ORDER_BY.rootOffset( sql ) > 0;
-		boolean hasFirstRow = hasFirstRow( limit );
+		boolean hasFirstRow = request.hasFirstRow();
+		boolean topAdded = !hasFirstRow || hasOrderBy;
 
 		final StringBuilder result = new StringBuilder( sql );
 
 		if ( !hasFirstRow || hasOrderBy ) {
-			if ( ParameterMarkerStrategyStandard.isStandardRenderer( parameterMarkerStrategy ) ) {
+			if ( request.usesStandardParameterMarkers() ) {
 				result.insert( afterSelectOffset, " top(?)" );
 			}
 			else {
-				final String parameterMarker = parameterMarkerStrategy.createMarker( 1, null );
+				final String parameterMarker = request.parameterMarker( 1 );
 				result.insert( afterSelectOffset, " top(" + parameterMarker + ")" );
 			}
-			topAdded = true;
 		}
 
 		if ( hasFirstRow ) {
@@ -129,35 +115,39 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 					+ " query_ as (select row_.*,row_number() over (order by current_timestamp) as rownumber_ from (" )
 					.append( ") row_) select " ).append( aliases )
 					.append( " from query_ where rownumber_>=" );
-			if ( ParameterMarkerStrategyStandard.isStandardRenderer( parameterMarkerStrategy ) ) {
+			if ( request.usesStandardParameterMarkers() ) {
 				result.append( "? and rownumber_<?" );
 			}
 			else {
-				final int firstPosition = jdbcParameterCount + 1 + ( topAdded ? 1 : 0 );
-				result.append( parameterMarkerStrategy.createMarker( firstPosition, null ) );
+				final int firstPosition = request.jdbcParameterCount() + 1 + ( topAdded ? 1 : 0 );
+				result.append( request.parameterMarker( firstPosition ) );
 				result.append( " and rownumber_<" );
-				result.append( parameterMarkerStrategy.createMarker( firstPosition + 1, null ) );
+				result.append( request.parameterMarker( firstPosition + 1 ) );
 			}
 		}
 
-		return result.toString();
+		final List<Integer> start = topAdded
+				? List.of( maxOrLimit( request ) - 1 )
+				: List.of();
+		final List<Integer> end = hasFirstRow
+				? List.of( getFirstRow( request ), maxOrLimit( request ) )
+				: List.of();
+		return new PaginationResult(
+				result.toString(),
+				new PaginationJdbcInstructions( start, end, null, 0 )
+		);
 	}
 
 	@Override
-	public int bindLimitParametersAtStartOfQuery(Limit limit, PreparedStatement statement, int index) throws SQLException {
-		if ( topAdded ) {
-			// bind parameter to top(?)
-			statement.setInt( index, getMaxOrLimit( limit ) - 1 );
-			return 1;
-		}
-		return 0;
+	public int parameterPositionStart(PaginationRequest request) {
+		return !request.isEmpty()
+				&& ( !request.hasFirstRow() || Keyword.ORDER_BY.rootOffset( request.sql() ) > 0 )
+				? 2
+				: 1;
 	}
 
-	@Override
-	public int bindLimitParametersAtEndOfQuery(Limit limit, PreparedStatement statement, int index) throws SQLException {
-		return hasFirstRow( limit )
-				? super.bindLimitParametersAtEndOfQuery( limit, statement, index )
-				: 0;
+	private int maxOrLimit(PaginationRequest request) {
+		return request.hasMaxRows() ? getMaxOrLimit( request ) : Integer.MAX_VALUE;
 	}
 
 	/**
@@ -194,7 +184,7 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 					int aliasIndex = getAliasIndex( expression );
 					if ( aliasIndex == -1 ) {
 						//no alias found, need to generate and insert it!
-						alias = StringHelper.generateAlias( "col", unique++ );
+						alias = generateAlias( unique++ );
 						int diff = result.length() - sql.length();
 						if ( result.charAt( nextOffset + diff - 1 ) == ' ' ) {
 							diff--;
@@ -222,6 +212,10 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 		while ( offset < fromOffset );
 
 		return String.join( ",", aliases );
+	}
+
+	private static String generateAlias(int unique) {
+		return "col" + unique + '_';
 	}
 
 	private int getAliasIndex(String sql) {

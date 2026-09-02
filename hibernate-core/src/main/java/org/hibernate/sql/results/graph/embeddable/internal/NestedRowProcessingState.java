@@ -53,6 +53,61 @@ public class NestedRowProcessingState extends BaseExecutionContext implements Ro
 	// -- delegate the rest
 
 	@Override
+	public boolean next() {
+		return processingState.next();
+	}
+
+	@Override
+	public boolean previous() {
+		return processingState.previous();
+	}
+
+	@Override
+	public boolean scroll(int numberOfRows) {
+		return processingState.scroll( numberOfRows );
+	}
+
+	@Override
+	public boolean position(int position) {
+		return processingState.position( position );
+	}
+
+	@Override
+	public int getPosition() {
+		return processingState.getPosition();
+	}
+
+	@Override
+	public void beforeFirst() {
+		processingState.beforeFirst();
+	}
+
+	@Override
+	public boolean first() {
+		return processingState.first();
+	}
+
+	@Override
+	public boolean last() {
+		return processingState.last();
+	}
+
+	@Override
+	public void afterLast() {
+		processingState.afterLast();
+	}
+
+	@Override
+	public boolean isFirst() {
+		return processingState.isFirst();
+	}
+
+	@Override
+	public boolean isLast() {
+		return processingState.isLast();
+	}
+
+	@Override
 	public <T extends InitializerData> T getInitializerData(int initializerId) {
 		return processingState.getInitializerData( initializerId );
 	}

@@ -6,7 +6,7 @@ package org.hibernate.orm.test.dialect.unit;
 
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.HANADialect;
-import org.hibernate.dialect.HANAServerConfiguration;
+import org.hibernate.dialect.jdbc.spi.HANAServerConfiguration;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.junit.jupiter.api.Test;
 

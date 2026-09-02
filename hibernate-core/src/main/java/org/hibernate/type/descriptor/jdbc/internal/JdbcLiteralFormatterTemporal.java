@@ -9,7 +9,7 @@ import java.util.TimeZone;
 import jakarta.persistence.TemporalType;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.sql.ast.spi.SqlAppender;
+import org.hibernate.sql.spi.SqlAppender;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.spi.BasicJdbcLiteralFormatter;
@@ -33,16 +33,21 @@ public class JdbcLiteralFormatterTemporal<T> extends BasicJdbcLiteralFormatter<T
 		final TimeZone jdbcTimeZone = getJdbcTimeZone( options );
 		// for performance reasons, avoid conversions if we can
 		if ( value instanceof java.util.Date date ) {
-			dialect.appendDateTimeLiteral( appender, date, precision, jdbcTimeZone );
+			dialect.getLiteralSupport().appendDateTimeLiteral( appender, date, precision, jdbcTimeZone );
 		}
 		else if ( value instanceof java.util.Calendar calendar ) {
-			dialect.appendDateTimeLiteral( appender, calendar, precision, jdbcTimeZone );
+			dialect.getLiteralSupport().appendDateTimeLiteral( appender, calendar, precision, jdbcTimeZone );
 		}
 		else if ( value instanceof TemporalAccessor temporalAccessor ) {
-			dialect.appendDateTimeLiteral( appender, temporalAccessor, precision, jdbcTimeZone );
+			dialect.getLiteralSupport().appendDateTimeLiteral( appender, temporalAccessor, precision, jdbcTimeZone );
 		}
 		else {
-			dialect.appendDateTimeLiteral( appender, unwrap( value, options ), precision, jdbcTimeZone );
+			dialect.getLiteralSupport().appendDateTimeLiteral(
+					appender,
+					unwrap( value, options ),
+					precision,
+					jdbcTimeZone
+			);
 		}
 	}
 

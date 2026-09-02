@@ -5,12 +5,16 @@
 package org.hibernate.dialect.lock.internal;
 
 import jakarta.persistence.Timeout;
+import org.hibernate.Timeouts;
 import org.hibernate.dialect.DatabaseVersion;
-import org.hibernate.dialect.RowLockStrategy;
 import org.hibernate.dialect.lock.spi.ConnectionLockTimeoutStrategy;
+import org.hibernate.dialect.lock.spi.FollowOnLockingPolicy;
 import org.hibernate.dialect.lock.spi.LockTimeoutType;
+import org.hibernate.dialect.lock.spi.LockingClauseRenderer;
+import org.hibernate.dialect.lock.spi.LockingClauseRequest;
 import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.lock.spi.OuterJoinLockingType;
+import org.hibernate.dialect.lock.spi.RowLockStrategy;
 
 import static org.hibernate.Timeouts.NO_WAIT_MILLI;
 import static org.hibernate.Timeouts.SKIP_LOCKED_MILLI;
@@ -23,7 +27,7 @@ import static org.hibernate.dialect.lock.spi.LockTimeoutType.QUERY;
  *
  * @author Steve Ebersole
  */
-public class OracleLockingSupport implements LockingSupport, LockingSupport.Metadata {
+public class OracleLockingSupport implements LockingSupport, LockingSupport.Metadata, LockingClauseRenderer {
 	public static final OracleLockingSupport ORACLE_LOCKING_SUPPORT = new OracleLockingSupport();
 
 	private final boolean supportsNoWait;
@@ -42,6 +46,49 @@ public class OracleLockingSupport implements LockingSupport, LockingSupport.Meta
 	@Override
 	public Metadata getMetadata() {
 		return this;
+	}
+
+	@Override
+	public LockingClauseRenderer getLockingClauseRenderer() {
+		return this;
+	}
+
+	@Override
+	public FollowOnLockingPolicy getFollowOnLockingPolicy() {
+		return request -> {
+			final var shape = request.statementShape();
+			final var pagination = request.pagination();
+			return shape.distinct()
+					|| shape.grouped()
+					|| shape.setOperation()
+					|| pagination.limited() && ( shape.ordered() || pagination.offset() );
+		};
+	}
+
+	@Override
+	public String render(LockingClauseRequest request) {
+		final StringBuilder fragment = new StringBuilder( " for update" );
+		if ( !request.targets().isEmpty() ) {
+			fragment.append( " of " );
+			LockingClauseRendererSupport.appendTargets( fragment, request.targets() );
+		}
+
+		switch ( request.timeout().milliseconds() ) {
+			case NO_WAIT_MILLI -> {
+				if ( supportsNoWait ) {
+					fragment.append( " nowait" );
+				}
+			}
+			case SKIP_LOCKED_MILLI -> {
+				if ( supportsSkipLocked ) {
+					fragment.append( " skip locked" );
+				}
+			}
+			case WAIT_FOREVER_MILLI -> {
+			}
+			default -> fragment.append( " wait " ).append( Timeouts.getTimeoutInSeconds( request.timeout() ) );
+		}
+		return fragment.toString();
 	}
 
 	@Override

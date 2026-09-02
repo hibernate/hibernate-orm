@@ -5,7 +5,7 @@
 package org.hibernate.dialect.function.json;
 
 import jakarta.annotation.Nullable;
-import org.hibernate.query.sqm.tuple.internal.AnonymousTupleTableGroupProducer;
+import org.hibernate.sql.ast.spi.query.SetReturningFunctionType;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingSetReturningFunctionDescriptor;
 import org.hibernate.query.sqm.function.SelfRenderingSqmSetReturningFunction;
@@ -17,23 +17,23 @@ import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeReso
 import org.hibernate.query.sqm.tree.spi.SqmTypedNode;
 import org.hibernate.query.sqm.tree.spi.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.spi.expression.SqmJsonTableFunction;
-import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.spi.SqlAppender;
-import org.hibernate.sql.ast.tree.SqlAstNode;
-import org.hibernate.sql.ast.tree.expression.CastTarget;
-import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.JsonExistsErrorBehavior;
-import org.hibernate.sql.ast.tree.expression.JsonPathPassingClause;
-import org.hibernate.sql.ast.tree.expression.JsonTableColumnDefinition;
-import org.hibernate.sql.ast.tree.expression.JsonTableColumnsClause;
-import org.hibernate.sql.ast.tree.expression.JsonTableErrorBehavior;
-import org.hibernate.sql.ast.tree.expression.JsonTableExistsColumnDefinition;
-import org.hibernate.sql.ast.tree.expression.JsonTableNestedColumnDefinition;
-import org.hibernate.sql.ast.tree.expression.JsonTableOrdinalityColumnDefinition;
-import org.hibernate.sql.ast.tree.expression.JsonTableQueryColumnDefinition;
-import org.hibernate.sql.ast.tree.expression.JsonTableValueColumnDefinition;
-import org.hibernate.sql.ast.tree.expression.JsonValueEmptyBehavior;
-import org.hibernate.sql.ast.tree.expression.JsonValueErrorBehavior;
+import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
+import org.hibernate.sql.spi.SqlAppender;
+import org.hibernate.sql.ast.spi.SqlAstNode;
+import org.hibernate.sql.ast.spi.query.expression.CastTarget;
+import org.hibernate.sql.ast.spi.query.expression.Expression;
+import org.hibernate.sql.ast.spi.query.expression.JsonExistsErrorBehavior;
+import org.hibernate.sql.ast.spi.query.expression.JsonPathPassingClause;
+import org.hibernate.sql.ast.spi.query.expression.JsonTableColumnDefinition;
+import org.hibernate.sql.ast.spi.query.expression.JsonTableColumnsClause;
+import org.hibernate.sql.ast.spi.query.expression.JsonTableErrorBehavior;
+import org.hibernate.sql.ast.spi.query.expression.JsonTableExistsColumnDefinition;
+import org.hibernate.sql.ast.spi.query.expression.JsonTableNestedColumnDefinition;
+import org.hibernate.sql.ast.spi.query.expression.JsonTableOrdinalityColumnDefinition;
+import org.hibernate.sql.ast.spi.query.expression.JsonTableQueryColumnDefinition;
+import org.hibernate.sql.ast.spi.query.expression.JsonTableValueColumnDefinition;
+import org.hibernate.sql.ast.spi.query.expression.JsonValueEmptyBehavior;
+import org.hibernate.sql.ast.spi.query.expression.JsonValueErrorBehavior;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -89,7 +89,7 @@ public class JsonTableFunction extends AbstractSqmSelfRenderingSetReturningFunct
 	public void render(
 			SqlAppender sqlAppender,
 			List<? extends SqlAstNode> sqlAstArguments,
-			AnonymousTupleTableGroupProducer tupleType,
+			SetReturningFunctionType tupleType,
 			String tableIdentifierVariable,
 			SqlAstTranslator<?> walker) {
 		renderJsonTable( sqlAppender, JsonTableArguments.extract( sqlAstArguments ), tupleType, tableIdentifierVariable, walker );
@@ -98,7 +98,7 @@ public class JsonTableFunction extends AbstractSqmSelfRenderingSetReturningFunct
 	protected void renderJsonTable(
 			SqlAppender sqlAppender,
 			JsonTableArguments arguments,
-			AnonymousTupleTableGroupProducer tupleType,
+			SetReturningFunctionType tupleType,
 			String tableIdentifierVariable,
 			SqlAstTranslator<?> walker) {
 		sqlAppender.appendSql( "json_table(" );

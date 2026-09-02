@@ -10,9 +10,9 @@ import org.hibernate.engine.jdbc.mutation.TableInclusionChecker;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
 import org.hibernate.engine.jdbc.mutation.spi.JdbcValueDescriptorAccess;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.sql.model.SelfExecutingUpdateOperation;
-import org.hibernate.sql.model.ValuesAnalysis;
-import org.hibernate.sql.model.jdbc.JdbcValueDescriptor;
+import org.hibernate.sql.spi.mutation.SelfExecutingUpdateOperation;
+import org.hibernate.sql.spi.mutation.ValuesAnalysis;
+import org.hibernate.sql.spi.mutation.jdbc.JdbcValueDescriptor;
 
 /**
  * @author Steve Ebersole

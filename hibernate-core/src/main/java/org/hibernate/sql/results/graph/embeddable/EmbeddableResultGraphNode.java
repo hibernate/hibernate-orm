@@ -13,6 +13,7 @@ import org.hibernate.sql.results.graph.FetchParent;
 /**
  * @author Steve Ebersole
  */
+@org.hibernate.SPI({ org.hibernate.SPI.Role.USE, org.hibernate.SPI.Role.IMPLEMENT })
 public interface EmbeddableResultGraphNode extends DomainResultGraphNode, FetchParent {
 	@Override
 	default NavigablePath getNavigablePath() {

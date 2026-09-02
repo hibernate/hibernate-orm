@@ -4,6 +4,11 @@
  */
 package org.hibernate.type.format;
 
+import org.hibernate.SPI;
+
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.USE;
+
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -79,6 +84,7 @@ import java.util.Iterator;
  *
  * @author Emmanuel Jannetti
  */
+@SPI({ USE, IMPLEMENT })
 public interface JsonDocumentReader extends Iterator<JsonDocumentItemType> {
 	default void forEachRemaining() {
 		throw new UnsupportedOperationException("forEachRemaining");

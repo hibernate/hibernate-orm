@@ -18,10 +18,10 @@ import org.hibernate.metamodel.mapping.Restrictable;
 import org.hibernate.persister.entity.EntityNameUse;
 import org.hibernate.persister.filter.FilterAliasGenerator;
 import org.hibernate.sql.Template;
-import org.hibernate.sql.ast.spi.SqlAstCreationState;
-import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.predicate.FilterPredicate;
-import org.hibernate.sql.ast.tree.predicate.Predicate;
+import org.hibernate.sql.ast.spi.creation.SqlAstCreationState;
+import org.hibernate.sql.ast.spi.query.from.TableGroup;
+import org.hibernate.sql.ast.spi.query.predicate.FilterPredicate;
+import org.hibernate.sql.ast.spi.query.predicate.Predicate;
 
 import static org.hibernate.internal.FilterImpl.MARKER;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;

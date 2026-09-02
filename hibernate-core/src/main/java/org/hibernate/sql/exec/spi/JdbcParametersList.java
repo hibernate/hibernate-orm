@@ -6,7 +6,7 @@ package org.hibernate.sql.exec.spi;
 
 import java.util.List;
 
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
+import org.hibernate.sql.ast.spi.query.expression.JdbcParameter;
 
 /**
  * Conceptually similar to a List of JdbcParameters, but exposing a

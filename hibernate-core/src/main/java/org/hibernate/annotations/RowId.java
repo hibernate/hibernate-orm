@@ -4,6 +4,7 @@
  */
 package org.hibernate.annotations;
 
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
@@ -22,7 +23,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *
  * @author Steve Ebersole
  *
- * @see org.hibernate.dialect.Dialect#rowId
+ * @see org.hibernate.dialect.Dialect#getRowIdSupport()
  */
 @Target(TYPE)
 @Retention(RUNTIME)
@@ -36,8 +37,8 @@ public @interface RowId {
 	 * and on those databases, this annotation member is ignored.
 	 *
 	 * @apiNote Previously, this annotation member was required. But the
-	 *          name of the column it is now usually determined by calling
-	 *          {@link org.hibernate.dialect.Dialect#rowId}, and so this
+	 *          name of the column is now usually resolved by the
+	 *          {@linkplain org.hibernate.dialect.Dialect#getRowIdSupport() row-id support strategy}, and so this
 	 *          member is now usually ignored. The exception is for certain
 	 *          flavors of DB2.
 	 */

@@ -4,7 +4,11 @@
  */
 package org.hibernate.loader.ast.spi;
 
+import org.hibernate.SPI;
 import org.hibernate.dialect.Dialect;
+
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.SUPPLY;
 
 /**
  * Strategy for determining an optimal size for loading by multiple keys.  The
@@ -18,13 +22,16 @@ import org.hibernate.dialect.Dialect;
  * supports it.
  *
  * @see Dialect#getMultiKeyLoadSizingStrategy()
+ * @see Dialect#getBatchLoadSizingStrategy()
  * @see org.hibernate.annotations.BatchSize
  * @see org.hibernate.Session#byMultipleIds
  * @see org.hibernate.Session#byMultipleNaturalId
  *
  * @author Steve Ebersole
+ * @since 8.0
  */
 @FunctionalInterface
+@SPI({ IMPLEMENT, SUPPLY })
 public interface MultiKeyLoadSizingStrategy {
 	/**
 	 * Determine the optimal batch size (number of key values) to load at a time.

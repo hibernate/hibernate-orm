@@ -4,6 +4,8 @@
  */
 package org.hibernate.type;
 
+import org.hibernate.Internal;
+
 import java.lang.reflect.Method;
 
 import org.hibernate.mapping.Component;
@@ -11,6 +13,7 @@ import org.hibernate.mapping.Component;
 /**
  * @author Gavin King
  */
+@Internal
 public class EmbeddedComponentType extends ComponentType {
 
 	public EmbeddedComponentType(Component component, int[] originalPropertyOrder) {

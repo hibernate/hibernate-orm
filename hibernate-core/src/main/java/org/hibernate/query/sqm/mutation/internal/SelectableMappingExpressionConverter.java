@@ -14,8 +14,8 @@ import org.hibernate.query.sqm.tree.spi.expression.SqmSelfRenderingExpression;
 import org.hibernate.query.sqm.tree.spi.from.SqmFrom;
 import org.hibernate.query.sqm.tree.spi.select.SqmSelection;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.spi.query.expression.Expression;
+import org.hibernate.sql.ast.spi.query.from.TableGroup;
 
 /**
  * A function for producing an {@link Expression} from a {@link NavigablePath} for a {@link TableGroup} and {@link SelectableMapping}.

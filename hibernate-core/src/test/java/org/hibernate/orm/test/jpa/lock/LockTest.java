@@ -36,7 +36,7 @@ import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SQLServerDialect;
 
 import org.hibernate.dialect.SybaseASEDialect;
-import org.hibernate.dialect.lock.PessimisticEntityLockException;
+import org.hibernate.dialect.lock.internal.PessimisticEntityLockException;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryBasedFunctionalTest;
 import org.hibernate.testing.orm.junit.RequiresDialect;

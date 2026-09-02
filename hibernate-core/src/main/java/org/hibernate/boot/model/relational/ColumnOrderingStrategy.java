@@ -7,8 +7,9 @@ package org.hibernate.boot.model.relational;
 import java.util.List;
 
 import org.hibernate.Incubating;
+import org.hibernate.SPI;
 import org.hibernate.boot.Metadata;
-import org.hibernate.dialect.temptable.TemporaryTableColumn;
+import org.hibernate.dialect.temptable.spi.TemporaryTableColumnDescriptor;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Constraint;
 import org.hibernate.mapping.Table;
@@ -26,6 +27,7 @@ import org.hibernate.mapping.UserDefinedObjectType;
  * @see org.hibernate.cfg.AvailableSettings#COLUMN_ORDERING_STRATEGY
  */
 @Incubating
+@SPI({ SPI.Role.USE, SPI.Role.IMPLEMENT, SPI.Role.SUPPLY })
 public interface ColumnOrderingStrategy {
 
 	/**
@@ -49,5 +51,7 @@ public interface ColumnOrderingStrategy {
 	/**
 	 * Orders the columns of the temporary table.
 	 */
-	void orderTemporaryTableColumns(List<TemporaryTableColumn> temporaryTableColumns, Metadata metadata);
+	<C extends TemporaryTableColumnDescriptor> void orderTemporaryTableColumns(
+			List<C> temporaryTableColumns,
+			Metadata metadata);
 }

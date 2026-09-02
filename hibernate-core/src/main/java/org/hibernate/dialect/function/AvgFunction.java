@@ -23,15 +23,15 @@ import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
 import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
 import org.hibernate.query.sqm.sql.spi.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.spi.SqmTypedNode;
-import org.hibernate.sql.ast.Clause;
-import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
-import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.spi.SqlAppender;
-import org.hibernate.sql.ast.tree.SqlAstNode;
-import org.hibernate.sql.ast.tree.expression.CastTarget;
-import org.hibernate.sql.ast.tree.expression.Distinct;
-import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.predicate.Predicate;
+import org.hibernate.sql.ast.spi.translation.Clause;
+import org.hibernate.sql.ast.spi.translation.SqlAstNodeRenderingMode;
+import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
+import org.hibernate.sql.spi.SqlAppender;
+import org.hibernate.sql.ast.spi.SqlAstNode;
+import org.hibernate.sql.ast.spi.query.expression.CastTarget;
+import org.hibernate.sql.ast.spi.query.expression.Distinct;
+import org.hibernate.sql.ast.spi.query.expression.Expression;
+import org.hibernate.sql.ast.spi.query.predicate.Predicate;
 import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.StandardBasicTypes;
@@ -222,6 +222,7 @@ public class AvgFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 		}
 
 		@Override
+		@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 		public BasicValuedMapping resolveFunctionReturnType(
 				Supplier<BasicValuedMapping> impliedTypeAccess,
 				List<? extends SqlAstNode> arguments) {
@@ -239,6 +240,7 @@ public class AvgFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 		}
 
 		@Override
+		@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 		public ReturnableType<?> resolveFunctionReturnType(
 				ReturnableType<?> impliedType,
 				@Nullable SqmToSqlAstConverter converter,

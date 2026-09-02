@@ -4,90 +4,114 @@
  */
 package org.hibernate.community.dialect;
 
+import org.hibernate.dialect.temporaltype.spi.TemporalValueSemantics;
+
+import org.hibernate.dialect.temporaltype.spi.CurrentTimestampSelection;
+
+import org.hibernate.dialect.temporaltype.spi.TemporalOperationSupport;
+import org.hibernate.dialect.temporaltype.spi.TemporalOperationSupports;
+
+import org.hibernate.dialect.temporaltype.spi.TemporalFormatSupport;
+
+import org.hibernate.dialect.temporaltype.spi.CurrentTemporalSupport;
+
+import org.hibernate.SPI;
+import static org.hibernate.SPI.Role.USE;
+
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.SUPPLY;
+import org.hibernate.dialect.type.spi.StandardDdlTypes;
+
+import org.hibernate.dialect.type.spi.TypeSizingProfile;
+
+import org.hibernate.dialect.mutation.spi.MultiTableMutationSupport;
+import org.hibernate.dialect.function.spi.TupleCountSupport;
+import org.hibernate.dialect.function.spi.WindowFunctionSupport;
+
+import org.hibernate.dialect.sql.ast.spi.CteSupport;
+import org.hibernate.dialect.sql.ast.spi.NullOrderingSupport;
+import org.hibernate.dialect.sql.ast.spi.PredicateSupport;
+import org.hibernate.dialect.sql.ast.spi.RowValueSupport;
+import org.hibernate.dialect.sql.ast.spi.SingleRowTableSupport;
+import org.hibernate.dialect.sql.ast.spi.SetOperationSupport;
+import org.hibernate.dialect.sql.ast.spi.ValuesListSupport;
+import org.hibernate.dialect.sql.ast.spi.SubquerySupport;
+
 import jakarta.persistence.TemporalType;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
-import org.hibernate.community.dialect.identity.FirebirdIdentityColumnSupport;
+import org.hibernate.community.dialect.identity.internal.FirebirdIdentityColumnSupport;
+import org.hibernate.community.dialect.lock.internal.FirebirdLockingSupport;
 import org.hibernate.community.dialect.pagination.FirstSkipLimitHandler;
 import org.hibernate.community.dialect.sequence.FirebirdSequenceSupport;
 import org.hibernate.community.dialect.sequence.InterbaseSequenceSupport;
-import org.hibernate.community.dialect.sequence.SequenceInformationExtractorFirebirdDatabaseImpl;
-import org.hibernate.dialect.BooleanDecoder;
+import org.hibernate.dialect.type.spi.BooleanDecoder;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
-import org.hibernate.dialect.NationalizationSupport;
-import org.hibernate.dialect.NullOrdering;
-import org.hibernate.dialect.TimeZoneSupport;
+import org.hibernate.dialect.jdbc.spi.ParameterLimits;
+import org.hibernate.dialect.sql.ast.spi.DmlTargetColumnQualifierSupport;
+import org.hibernate.dialect.type.spi.NationalizationSupport;
+import org.hibernate.dialect.sql.ast.spi.NullOrdering;
+import org.hibernate.dialect.type.spi.TimeZoneSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.HypotheticalSetWindowEmulation;
-import org.hibernate.dialect.identity.IdentityColumnSupport;
-import org.hibernate.dialect.lock.internal.LockingSupportSimple;
+import org.hibernate.dialect.identity.spi.IdentityColumnSupport;
 import org.hibernate.dialect.lock.spi.LockingSupport;
-import org.hibernate.dialect.pagination.LimitHandler;
-import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
-import org.hibernate.dialect.sequence.SequenceSupport;
-import org.hibernate.dialect.temptable.StandardGlobalTemporaryTableStrategy;
-import org.hibernate.dialect.temptable.TemporaryTableKind;
-import org.hibernate.dialect.temptable.TemporaryTableStrategy;
+import org.hibernate.dialect.namespace.spi.NamespaceSupport;
+import org.hibernate.dialect.namespace.spi.NamespaceSupports;
+import org.hibernate.dialect.schema.spi.ColumnDefinitionRequest;
+import org.hibernate.dialect.schema.spi.IndexNameQualification;
+import org.hibernate.dialect.schema.spi.TruncateRequest;
+import org.hibernate.dialect.pagination.spi.LimitHandler;
+import org.hibernate.dialect.pagination.spi.OffsetFetchLimitHandler;
+import org.hibernate.dialect.sequence.spi.SequenceSupport;
+import org.hibernate.dialect.temptable.spi.StandardGlobalTemporaryTableStrategy;
+import org.hibernate.dialect.temptable.spi.TemporaryTableStrategy;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
-import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.dialect.identifier.spi.IdentifierHelperBuildRequest;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
-import org.hibernate.internal.util.JdbcExceptionHelper;
+import org.hibernate.jdbc.spi.JdbcExceptionHelper;
 import org.hibernate.mapping.Index;
-import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.query.common.FetchClauseType;
+import org.hibernate.dialect.sql.ast.spi.FetchClauseSupport;
 import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.CastType;
-import org.hibernate.dialect.type.IntervalType;
+import org.hibernate.query.sqm.SetOperator;
+import org.hibernate.dialect.temporaltype.spi.IntervalType;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
-import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableInsertStrategy;
-import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableMutationStrategy;
-import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
-import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
-import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.SqlAstTranslatorFactory;
-import org.hibernate.sql.ast.spi.SqlAppender;
-import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
-import org.hibernate.sql.ast.tree.Statement;
+import org.hibernate.sql.ast.spi.translation.SqlAstNodeRenderingMode;
+import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslatorFactory;
+import org.hibernate.sql.spi.SqlAppender;
+import org.hibernate.dialect.sql.ast.spi.StandardSqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.Statement;
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
 import org.hibernate.sql.exec.spi.JdbcOperation;
-import org.hibernate.tool.schema.extract.internal.SequenceNameExtractorImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
-import org.hibernate.tool.schema.internal.StandardIndexExporter;
+import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractors;
+import org.hibernate.tool.schema.spi.StandardIndexExporter;
 import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.descriptor.DateTimeUtils;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
-import org.hibernate.type.descriptor.sql.internal.BinaryFloatDdlType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import java.sql.DatabaseMetaData;
-import java.sql.SQLException;
 import java.sql.Types;
-import java.time.Instant;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeFormatterBuilder;
-import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.Locale;
+import java.util.List;
 import java.util.TimeZone;
 import java.util.UUID;
 import java.util.regex.Matcher;
@@ -106,9 +130,11 @@ import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
 import static org.hibernate.type.SqlTypes.TIME_WITH_TIMEZONE;
 import static org.hibernate.type.SqlTypes.TINYINT;
 import static org.hibernate.type.SqlTypes.VARBINARY;
-import static org.hibernate.type.descriptor.DateTimeUtils.appendAsDate;
-import static org.hibernate.type.descriptor.DateTimeUtils.appendAsLocalTime;
-import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMillis;
+import static org.hibernate.dialect.literal.spi.StandardDateTimeLiteralRendering.appendAsDate;
+import static org.hibernate.dialect.literal.spi.StandardDateTimeLiteralRendering.appendAsLocalTime;
+import static org.hibernate.dialect.literal.spi.StandardDateTimeLiteralRendering.appendAsTime;
+import static org.hibernate.dialect.literal.spi.StandardDateTimeLiteralRendering.appendAsTimestampWithMillis;
+import static org.hibernate.dialect.literal.spi.ZeroOffsetLiteralStyle.NUMERIC_OFFSET;
 
 /**
  * An SQL dialect for Firebird 2.0 and above.
@@ -117,9 +143,38 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithM
  * @author Gavin King
  * @author Mark Rotteveel
  */
-public class FirebirdDialect extends Dialect {
+public class FirebirdDialect extends Dialect implements CurrentTemporalSupport, TemporalFormatSupport, TemporalOperationSupport {
+
+	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
+	public TemporalOperationSupport getTemporalOperationSupport() {
+		return this;
+	}
+
+	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
+	public TemporalFormatSupport getTemporalFormatSupport() {
+		return this;
+	}
+
+	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
+	public CurrentTemporalSupport getCurrentTemporalSupport() {
+		return this;
+	}
+	private final TypeSizingProfile typeSizingProfile = TypeSizingProfile.builder( super.getTypeSizingProfile() )
+			.defaultDecimalPrecision( getVersion().isBefore( 4, 0 ) ? 18 : 38 )
+			.defaultTimestampPrecision( 3 )
+			.floatPrecision( getVersion().isBefore( 4, 0 ) ? 21 : 24 )
+			.maxVarcharLength( 8191 ).maxVarcharCapacity( 8191 )
+			.maxNVarcharLength( 8191 ).maxNVarcharCapacity( 8191 )
+			.maxVarbinaryLength( 32_765 ).maxVarbinaryCapacity( 32_765 )
+			.build();
+
+	@Override public TypeSizingProfile getTypeSizingProfile() { return typeSizingProfile; }
 
 	private static final DatabaseVersion DEFAULT_VERSION = DatabaseVersion.make( 3 );
+	private final LockingSupport lockingSupport;
 
 	@SuppressWarnings("unused")
 	public FirebirdDialect() {
@@ -128,7 +183,6 @@ public class FirebirdDialect extends Dialect {
 
 	public FirebirdDialect(DialectResolutionInfo info) {
 		this( info.makeCopyOrDefault( DEFAULT_VERSION ) );
-		registerKeywords( info );
 	}
 
 	// KNOWN LIMITATIONS:
@@ -141,9 +195,11 @@ public class FirebirdDialect extends Dialect {
 
 	public FirebirdDialect(DatabaseVersion version) {
 		super( version );
+		lockingSupport = new FirebirdLockingSupport( version );
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	protected String columnType(int sqlTypeCode) {
 		return switch ( sqlTypeCode ) {
 			//'boolean' type introduced in 3.0
@@ -166,6 +222,7 @@ public class FirebirdDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	protected void registerColumnTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.registerColumnTypes( typeContributions, serviceRegistry );
 		final DdlTypeRegistry ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
@@ -173,7 +230,7 @@ public class FirebirdDialect extends Dialect {
 		if ( getVersion().isBefore( 4, 0 ) ) {
 			//precision of a Firebird 3 and earlier 'float(p)' represents
 			//decimal digits instead of binary digits
-			ddlTypeRegistry.addDescriptor( new BinaryFloatDdlType( this ) );
+			ddlTypeRegistry.addDescriptor( StandardDdlTypes.binaryFloat( this ) );
 		}
 
 		// Note: according to the documentation, Firebird has
@@ -186,43 +243,38 @@ public class FirebirdDialect extends Dialect {
 	}
 
 	@Override
-	public int getMaxVarcharLength() {
-		// Single byte character sets can be 32_765
-		// characters, but assume use of UTF8
-		return 8_191;
+	@SPI({ IMPLEMENT, SUPPLY })
+	protected void contributeDefaultProperties(java.util.Properties properties) {
+		super.contributeDefaultProperties( properties );
+		properties.setProperty( org.hibernate.cfg.AvailableSettings.STATEMENT_BATCH_SIZE, Integer.toString( 0 ) );
 	}
 
 	@Override
-	public int getMaxVarbinaryLength() {
-		return 32_765;
-	}
-
-	@Override
-	public int getDefaultStatementBatchSize() {
-		return 0;
-	}
-
-	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public TimeZoneSupport getTimeZoneSupport() {
 		return getVersion().isSameOrAfter( 4, 0 ) ? TimeZoneSupport.NATIVE : TimeZoneSupport.NONE;
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String currentTime() {
 		return getVersion().isSameOrAfter( 4 ) ? "localtime" : "current_time";
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String currentTimestamp() {
 		return getVersion().isSameOrAfter( 4 ) ? "localtimestamp" : "current_timestamp";
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String currentTimestampWithTimeZone() {
 		return "current_timestamp";
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public JdbcType resolveSqlTypeDescriptor(
 			String columnTypeName,
 			int jdbcTypeCode,
@@ -242,6 +294,7 @@ public class FirebirdDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public int getPreferredSqlTypeCodeForBoolean() {
 		return getVersion().isBefore( 3, 0 )
 				? Types.BIT
@@ -249,21 +302,8 @@ public class FirebirdDialect extends Dialect {
 	}
 
 	@Override
-	public int getFloatPrecision() {
-		return getVersion().isBefore( 4, 0 )
-				? 21 // -> 7 decimal digits (actually 24, but needed for Dialect#binaryToDecimalPrecision(int,size))
-				: 24;
-	}
-
-	@Override
-	public int getDefaultTimestampPrecision() {
-		// Formally, Firebird has a (fixed) precision of 4 (100 microseconds),
-		// but things like CURRENT_TIMESTAMP produce values with a maximum of 3, so report that
-		return 3;
-	}
-
-	@Override
-	public long getFractionalSecondPrecisionInNanos() {
+	@SPI({ USE, IMPLEMENT })
+	public long fractionalSecondPrecisionInNanos() {
 		// Formally, Firebird can store values with 100 microsecond precision (100_000 nanoseconds).
 		// However, some functions (e.g. CURRENT_TIMESTAMP) will only return values with millisecond precision
 		// So, we report millisecond precision
@@ -271,12 +311,15 @@ public class FirebirdDialect extends Dialect {
 	}
 
 	@Override
-	public boolean doesRoundTemporalOnOverflow() {
-		// Driver truncates parameter values with a higher precision to 100 microseconds (precision of 4)
-		return false;
+	@SPI({ IMPLEMENT, SUPPLY })
+	public TemporalValueSemantics getTemporalValueSemantics() {
+		return getVersion().isSameOrAfter( 4, 0 )
+				? TemporalValueSemantics.TRUNCATING_WITH_OFFSET_LITERALS
+				: TemporalValueSemantics.TRUNCATING;
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
 		super.initializeFunctionRegistry(functionContributions);
 
@@ -412,19 +455,15 @@ public class FirebirdDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public SqlAstTranslatorFactory getSqlAstTranslatorFactory() {
 		return new StandardSqlAstTranslatorFactory() {
 			@Override
-			protected <T extends JdbcOperation> SqlAstTranslator<T> buildTranslator(
-					SessionFactoryImplementor sessionFactory, Statement statement) {
-				return new FirebirdSqlAstTranslator<>( sessionFactory, statement );
+			protected <S extends Statement, T extends JdbcOperation> SqlAstTranslator<T> createTranslator(
+					SqlAstTranslationRequest<S, T> request) {
+				return new FirebirdSqlAstTranslator<>( request );
 			}
 		};
-	}
-
-	@Override
-	public boolean supportsTruncateWithCast(){
-		return false;
 	}
 
 	/**
@@ -432,6 +471,7 @@ public class FirebirdDialect extends Dialect {
 	 * type, so...
 	 */
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String castPattern(CastType from, CastType to) {
 		String result;
 		switch ( to ) {
@@ -492,16 +532,18 @@ public class FirebirdDialect extends Dialect {
 	 * here we adjust the result by generating {@code (extract(unit,arg)+1))}.
 	 */
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String extractPattern(TemporalUnit unit) {
 		return switch ( unit ) {
-			case DAY_OF_WEEK, DAY_OF_YEAR -> "(" + super.extractPattern( unit ) + "+1)";
+			case DAY_OF_WEEK, DAY_OF_YEAR -> "(" + TemporalOperationSupports.standard().extractPattern( unit ) + "+1)";
 			case QUARTER -> "((extract(month from ?2)+2)/3)";
 			case EPOCH -> "datediff(second from timestamp '1970-01-01 00:00:00' to ?2)";
-			default -> super.extractPattern( unit );
+			default -> TemporalOperationSupports.standard().extractPattern( unit );
 		};
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
 		return switch ( unit ) {
 			case NATIVE -> "dateadd((?2) millisecond to ?3)";
@@ -513,6 +555,7 @@ public class FirebirdDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
 		return switch ( unit ) {
 			case NATIVE -> "datediff(millisecond from ?2 to ?3)";
@@ -524,38 +567,27 @@ public class FirebirdDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsTemporalLiteralOffset() {
-		return getVersion().isSameOrAfter( 4, 0 );
-	}
-
-	@Override
-	public int getDefaultDecimalPrecision() {
-		return getVersion().isBefore( 4, 0 ) ? 18 : 38;
-	}
-
-	@Override
-	public String getAddColumnString() {
+	@SPI({ USE, IMPLEMENT })
+	public String addColumnPrefix() {
 		return "add";
 	}
 
 	@Override
-	public String getNoColumnsInsertString() {
-		return "default values";
-	}
-
-	@Override
+	@SPI({ USE, IMPLEMENT })
 	public int getMaxAliasLength() {
 		return getVersion().isBefore( 4, 0 ) ? 20 : 52;
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public int getMaxIdentifierLength() {
 		return getVersion().isBefore( 4 ) ? 31 : 63;
 	}
 
-	public IdentifierHelper buildIdentifierHelper(
-			IdentifierHelperBuilder builder,
-			DatabaseMetaData metadata) throws SQLException {
+	@Override
+	@SPI({ USE, IMPLEMENT, SUPPLY })
+	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuildRequest request) {
+		final var builder = request.builder();
 		// Any use of keywords as identifiers will result in token unknown error, so enable auto quote always
 		builder.setAutoQuoteKeywords( true );
 		builder.setAutoQuoteInitialUnderscore( true );
@@ -577,70 +609,53 @@ public class FirebirdDialect extends Dialect {
 					"POSITION", "SUM", "TRIM", "UPPER" );
 		}
 
-		return super.buildIdentifierHelper( builder, metadata );
+		return super.buildIdentifierHelper( request );
 	}
 
 	@Override
-	public boolean canCreateSchema() {
-		return false;
+	@SPI({ IMPLEMENT, SUPPLY })
+	public NamespaceSupport getNamespaceSupport() {
+		return NamespaceSupports.none();
 	}
 
 	@Override
-	public String[] getCreateSchemaCommand(String schemaName) {
-		throw new UnsupportedOperationException( "No create schema syntax supported by " + getClass().getName() );
-	}
-
-	@Override
-	public String[] getDropSchemaCommand(String schemaName) {
-		throw new UnsupportedOperationException( "No drop schema syntax supported by " + getClass().getName() );
-	}
-
-	@Override
-	public boolean qualifyIndexName() {
-		return false;
+	@SPI({ USE, IMPLEMENT })
+	public IndexNameQualification nameQualification() {
+		return IndexNameQualification.UNQUALIFIED;
 
 	}
 
 	@Override
-	public boolean supportsCommentOn() {
-		return getVersion().isSameOrAfter( 2, 0 );
+	@SPI({ IMPLEMENT, SUPPLY })
+	public org.hibernate.dialect.schema.spi.SchemaCommentSupport getSchemaCommentSupport() {
+		return getVersion().isSameOrAfter( 2, 0 )
+				? org.hibernate.dialect.schema.spi.SchemaCommentSupports.commentOn()
+				: org.hibernate.dialect.schema.spi.SchemaCommentSupports.none();
 	}
 
 	@Override
-	public boolean supportsLobValueChangePropagation() {
-		// May need changes in Jaybird for this to work
-		return false;
+	public TupleCountSupport getTupleCountSupport() {
+		return TupleCountSupport.NONE;
 	}
 
 	@Override
-	public boolean supportsUnboundedLobLocatorMaterialization() {
-		// Blob ids are only guaranteed to work in the same transaction
-		return false;
-	}
-
-	@Override
-	public boolean supportsTupleDistinctCounts() {
-		return false;
-	}
-
-	@Override
-	public int getInExpressionCountLimit() {
+	public ParameterLimits getParameterLimits() {
 		// see https://firebirdsql.org/file/documentation/html/en/refdocs/fblangref25/firebird-25-language-reference.html#fblangref25-commons-in
 		// and https://firebirdsql.org/file/documentation/html/en/refdocs/fblangref50/firebird-50-language-reference.html#fblangref50-commons-in
-		return getVersion().isBefore( 5 ) ? 1500 : 65535;
+		return ParameterLimits.of( getVersion().isBefore( 5 ) ? 1500 : 65535 );
 	}
 
 	@Override
-	public boolean supportsExistsInSelect() {
-		return getVersion().isSameOrAfter( 3, 0 );
+	public SubquerySupport getSubquerySupport() {
+		return SubquerySupport.builder()
+				.feature( SubquerySupport.Feature.EXISTS_IN_SELECT, getVersion().isSameOrAfter( 3, 0 ) )
+				.feature( SubquerySupport.Feature.OFFSET, true )
+				.feature( SubquerySupport.Feature.LATERAL, getVersion().isSameOrAfter( 4, 0 ) )
+				.build();
 	}
 
 	@Override
-	public boolean supportsPartitionBy() {
-		return getVersion().isSameOrAfter( 3, 0 );
-	}
-
-	@Override
+	@SPI({ USE, IMPLEMENT })
 	public void appendBooleanValueString(SqlAppender appender, boolean bool) {
 		//'boolean' type introduced in 3.0
 		if ( getVersion().isBefore( 3 ) ) {
@@ -659,6 +674,7 @@ public class FirebirdDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public SequenceSupport getSequenceSupport() {
 		DatabaseVersion version = getVersion();
 		if ( version.isSameOrAfter( 4 ) ) {
@@ -675,38 +691,40 @@ public class FirebirdDialect extends Dialect {
 		}
 	}
 
-	@Override
-	public String getQuerySequencesString() {
-		return getVersion().isBefore( 3, 0 )
-				? "select rdb$generator_name from rdb$generators"
-				// Note: Firebird 3 has an 'off by increment' bug (fixed in Firebird 4), see
-				// http://tracker.firebirdsql.org/browse/CORE-6084
-				: "select rdb$generator_name,rdb$initial_value,rdb$generator_increment from rdb$generators where coalesce(rdb$system_flag,0)=0";
-	}
+	private static final SequenceInformationExtractor LEGACY_SEQUENCE_INFORMATION_EXTRACTOR =
+			SequenceInformationExtractors.builder( "select rdb$generator_name from rdb$generators" )
+					.sequenceNameColumn( 1 )
+					.withoutCatalog()
+					.withoutSchema()
+					.withoutStartValue()
+					.withoutMinimumValue()
+					.withoutMaximumValue()
+					.withoutIncrementValue()
+					.build();
+
+	// Firebird 3 has an 'off by increment' bug, fixed in Firebird 4.
+	private static final SequenceInformationExtractor SEQUENCE_INFORMATION_EXTRACTOR =
+			SequenceInformationExtractors.builder(
+					"select rdb$generator_name,rdb$initial_value,rdb$generator_increment from rdb$generators where coalesce(rdb$system_flag,0)=0"
+			)
+			.sequenceNameColumn( "rdb$generator_name" )
+			.withoutCatalog()
+			.withoutSchema()
+			.startValueColumn( "rdb$initial_value" )
+			.withoutMinimumValue()
+			.withoutMaximumValue()
+			.incrementValueColumn( "rdb$generator_increment" )
+			.build();
 
 	@Override
 	public SequenceInformationExtractor getSequenceInformationExtractor() {
 		return getVersion().isBefore( 3, 0 )
-				? SequenceNameExtractorImpl.INSTANCE
-				: SequenceInformationExtractorFirebirdDatabaseImpl.INSTANCE;
+				? LEGACY_SEQUENCE_INFORMATION_EXTRACTOR
+				: SEQUENCE_INFORMATION_EXTRACTOR;
 	}
 
-	@Override
-	public String getForUpdateString() {
-		// locking only happens on fetch
-		// ('for update' would force Firebird to return a single row per fetch)
-		return " with lock";
-	}
 
-	@Override
-	public String getForUpdateSkipLockedString() {
-		return getVersion().isSameOrAfter( 5 ) ? " with lock skip locked" : " with lock";
-	}
 
-	@Override
-	public String getForUpdateSkipLockedString(String aliases) {
-		return getForUpdateSkipLockedString();
-	}
 
 	@Override
 	public LimitHandler getLimitHandler() {
@@ -716,110 +734,125 @@ public class FirebirdDialect extends Dialect {
 	}
 
 	@Override
-	public String getSelectGUIDString() {
-		return getVersion().isBefore( 2, 1 )
-				? super.getSelectGUIDString()
-				: "select uuid_to_char(gen_uuid()) from rdb$database";
-	}
-
-	@Override
 	public LockingSupport getLockingSupport() {
-		return LockingSupportSimple.NO_OUTER_JOIN;
+		return lockingSupport;
 	}
 
 	@Override
-	public boolean supportsCurrentTimestampSelection() {
-		return true;
+	@SPI({ USE, IMPLEMENT })
+	public CurrentTimestampSelection getCurrentTimestampSelection() {
+		return CurrentTimestampSelection.prepared( "select current_timestamp from rdb$database" );
 	}
 
 	@Override
-	public String getCurrentTimestampSelectString() {
-		return "select current_timestamp from rdb$database";
+	public NullOrderingSupport getNullOrderingSupport() {
+		return NullOrderingSupport.builder( super.getNullOrderingSupport() )
+				.defaultOrdering(
+						getVersion().isSameOrAfter( 2, 0 ) ? NullOrdering.SMALLEST : NullOrdering.LAST
+				)
+				.capability(
+						NullOrderingSupport.Capability.NULLS_FIRST_LAST,
+						getVersion().isSameOrAfter( 1, 5 )
+				)
+				.build();
 	}
 
 	@Override
-	public boolean isCurrentTimestampSelectStringCallable() {
-		return false;
+	@SPI({ USE, IMPLEMENT, SUPPLY })
+	public FetchClauseSupport getFetchClauseSupport() {
+		return getVersion().isSameOrAfter( 3 )
+				? FetchClauseSupport.ROWS_ONLY
+				: FetchClauseSupport.NONE;
 	}
 
 	@Override
-	public NullOrdering getNullOrdering() {
-		return getVersion().isSameOrAfter( 2, 0 ) ? NullOrdering.SMALLEST : NullOrdering.LAST;
+	public ValuesListSupport getValuesListSupport() {
+		return ValuesListSupport.NONE;
 	}
 
 	@Override
-	public boolean supportsNullPrecedence() {
-		return getVersion().isSameOrAfter( 1, 5 );
+	public WindowFunctionSupport getWindowFunctionSupport() {
+		if ( getVersion().isBefore( 3 ) ) {
+			return WindowFunctionSupport.NONE;
+		}
+		final WindowFunctionSupport.Builder builder = WindowFunctionSupport.builder()
+				.features(
+						WindowFunctionSupport.Feature.WINDOW_FUNCTIONS,
+						WindowFunctionSupport.Feature.PARTITION_BY
+				);
+		if ( getVersion().isSameOrAfter( 4 ) ) {
+			builder.features(
+					WindowFunctionSupport.Feature.ROWS_FRAME,
+					WindowFunctionSupport.Feature.RANGE_FRAME
+			);
+		}
+		return builder.build();
 	}
 
 	@Override
-	public boolean supportsOffsetInSubquery() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsFetchClause(FetchClauseType type) {
-		return type == FetchClauseType.ROWS_ONLY && getVersion().isSameOrAfter( 3 );
-	}
-
-	@Override
-	public boolean supportsValuesListForInsert() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsWindowFunctions() {
-		return getVersion().isSameOrAfter( 3, 0 );
-	}
-
-	@Override
-	public boolean supportsLateral() {
-		return getVersion().isSameOrAfter( 4, 0 );
-	}
-
-	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public NationalizationSupport getNationalizationSupport() {
 		return NationalizationSupport.IMPLICIT;
 	}
 
 	@Override
-	public boolean supportsDistinctFromPredicate() {
-		return true;
+	public PredicateSupport getPredicateSupport() {
+		return PredicateSupport.builder( super.getPredicateSupport() )
+				.capability( PredicateSupport.Capability.DISTINCT_FROM, true )
+				.capability(
+						PredicateSupport.Capability.EXPRESSION_PLACEMENT,
+						getVersion().isSameOrAfter( 3 )
+				)
+				.build();
 	}
 
 	@Override
-	public boolean supportsRecursiveCTE() {
-		// Since Firebird 2.1
-		return true;
+	public CteSupport getCteSupport() {
+		// Recursive CTEs are supported since Firebird 2.1
+		return CteSupport.builder()
+				.placement( CteSupport.Placement.SUBQUERY )
+				.recursiveFeatures( CteSupport.RecursiveFeature.RECURSIVE )
+				.build();
 	}
 
 	@Override
-	protected boolean supportsPredicateAsExpression() {
-		return getVersion().isSameOrAfter( 3 );
+	@SPI({ USE, IMPLEMENT })
+	public void appendDefinition(SqlAppender appender, ColumnDefinitionRequest request) {
+		if ( request.generatedExpression() == null ) {
+			appender.appendSql( ' ' );
+			appender.appendSql( request.sqlType() );
+		}
+		if ( request.renderedCollation() != null ) {
+			appender.appendSql( " collate " );
+			appender.appendSql( request.renderedCollation() );
+		}
+		if ( request.defaultExpression() != null ) {
+			appender.appendSql( " default " );
+			appender.appendSql( request.defaultExpression() );
+		}
+		if ( request.generatedExpression() != null ) {
+			appender.appendSql( " generated always as (" );
+			appender.appendSql( request.generatedExpression() );
+			appender.appendSql( ')' );
+		}
+		if ( !request.nullable() ) {
+			appender.appendSql( " not null" );
+		}
 	}
 
 	@Override
-	public String generatedAs(String generatedAs) {
-		return " generated always as (" + generatedAs + ")";
-	}
-
-	@Override
-	public boolean hasDataTypeBeforeGeneratedAs() {
-		// data type is optional
-		return false;
-	}
-
-	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String translateExtractField(TemporalUnit unit) {
 		return switch ( unit ) {
 			case DAY_OF_MONTH -> "day";
 			case DAY_OF_YEAR -> "yearday";
 			case DAY_OF_WEEK -> "weekday";
-			default -> super.translateExtractField( unit );
+			default -> TemporalOperationSupports.standard().translateExtractField( unit );
 		};
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public void appendDateTimeLiteral(
 			SqlAppender appender,
 			TemporalAccessor temporalAccessor,
@@ -833,12 +866,24 @@ public class FirebirdDialect extends Dialect {
 				break;
 			case TIME:
 				appender.appendSql( "time '" );
-				FirebirdDateTimeUtils.appendAsTime( appender, temporalAccessor, supportsTemporalLiteralOffset(), jdbcTimeZone );
+				appendAsTime(
+						appender,
+						temporalAccessor,
+						getTemporalValueSemantics().supportsLiteralOffset(),
+						jdbcTimeZone,
+						NUMERIC_OFFSET
+				);
 				appender.appendSql( '\'' );
 				break;
 			case TIMESTAMP:
 				appender.appendSql( "timestamp '" );
-				FirebirdDateTimeUtils.appendAsTimestampWithMillis( appender, temporalAccessor, supportsTemporalLiteralOffset(), jdbcTimeZone );
+				appendAsTimestampWithMillis(
+						appender,
+						temporalAccessor,
+						getTemporalValueSemantics().supportsLiteralOffset(),
+						jdbcTimeZone,
+						NUMERIC_OFFSET
+				);
 				appender.appendSql( '\'' );
 				break;
 			default:
@@ -846,6 +891,8 @@ public class FirebirdDialect extends Dialect {
 		}
 	}
 
+	@Override
+	@SPI({ USE, IMPLEMENT })
 	public void appendDateTimeLiteral(SqlAppender appender, Date date, TemporalType precision, TimeZone jdbcTimeZone) {
 		switch ( precision ) {
 			case DATE:
@@ -868,6 +915,8 @@ public class FirebirdDialect extends Dialect {
 		}
 	}
 
+	@Override
+	@SPI({ USE, IMPLEMENT })
 	public void appendDateTimeLiteral(
 			SqlAppender appender,
 			Calendar calendar,
@@ -895,11 +944,13 @@ public class FirebirdDialect extends Dialect {
 	}
 
 	@Override
-	public void appendDatetimeFormat(SqlAppender appender, String format) {
+	@SPI({ USE, IMPLEMENT })
+	public void appendFormat(SqlAppender appender, String format) {
 		throw new UnsupportedOperationException( "format() function not supported on Firebird" );
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public void appendUUIDLiteral(SqlAppender appender, UUID literal) {
 		appender.appendSql( "char_to_uuid('" );
 		appender.appendSql( literal.toString() );
@@ -907,6 +958,7 @@ public class FirebirdDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public ViolatedConstraintNameExtractor getViolatedConstraintNameExtractor() {
 		return EXTRACTOR;
 	}
@@ -934,6 +986,7 @@ public class FirebirdDialect extends Dialect {
 	};
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
 		return (sqlException, message, sql) -> {
 			final int errorCode = JdbcExceptionHelper.extractErrorCode( sqlException );
@@ -1019,32 +1072,15 @@ public class FirebirdDialect extends Dialect {
 	}
 
 	@Override
-	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(EntityMappingType entityDescriptor, RuntimeModelCreationContext runtimeModelCreationContext) {
-		return getVersion().isBefore( 2,1  )
-				? super.getFallbackSqmMutationStrategy( entityDescriptor, runtimeModelCreationContext )
-				: new GlobalTemporaryTableMutationStrategy( entityDescriptor, runtimeModelCreationContext );
-	}
-
-	@Override
-	public SqmMultiTableInsertStrategy getFallbackSqmInsertStrategy(EntityMappingType entityDescriptor, RuntimeModelCreationContext runtimeModelCreationContext) {
+	public MultiTableMutationSupport getMultiTableMutationSupport() {
 		return getVersion().isBefore( 2, 1 )
-				? super.getFallbackSqmInsertStrategy( entityDescriptor, runtimeModelCreationContext )
-				: new GlobalTemporaryTableInsertStrategy( entityDescriptor, runtimeModelCreationContext );
-	}
-
-	@Override
-	public TemporaryTableKind getSupportedTemporaryTableKind() {
-		return TemporaryTableKind.GLOBAL;
+				? super.getMultiTableMutationSupport()
+				: MultiTableMutationSupport.GLOBAL_TEMPORARY_TABLE;
 	}
 
 	@Override
 	public TemporaryTableStrategy getGlobalTemporaryTableStrategy() {
 		return StandardGlobalTemporaryTableStrategy.INSTANCE;
-	}
-
-	@Override
-	public String getTemporaryTableCreateOptions() {
-		return StandardGlobalTemporaryTableStrategy.INSTANCE.getTemporaryTableCreateOptions();
 	}
 
 	private final FirebirdIndexExporter indexExporter = new FirebirdIndexExporter( this );
@@ -1054,16 +1090,18 @@ public class FirebirdDialect extends Dialect {
 		return indexExporter;
 	}
 
-	private static class FirebirdIndexExporter extends StandardIndexExporter {
+	private static final class FirebirdIndexExporter implements Exporter<Index> {
+		private final Dialect dialect;
+		private final StandardIndexExporter standardExporter;
 
 		public FirebirdIndexExporter(Dialect dialect) {
-			super( dialect );
+			this.dialect = dialect;
+			this.standardExporter = new StandardIndexExporter( dialect );
 		}
 
 		@Override
 		public String[] getSqlCreateStrings(Index index, Metadata metadata, SqlStringGenerationContext context) {
 			final String tableName = context.format( index.getTable().getQualifiedTableName() );
-			final Dialect dialect = getDialect();
 			final String indexNameForCreation = index.getQuotedName( dialect );
 			// In firebird the index is only sortable on top-level, not per column, use the first column to decide
 			final String sortOrder = index.getSelectableOrderMap().getOrDefault( index.getSelectables().get( 0 ), "asc" );
@@ -1088,111 +1126,52 @@ public class FirebirdDialect extends Dialect {
 
 			return new String[] { buf.toString() };
 		}
-	}
 
-	private static final class FirebirdDateTimeUtils {
-
-		// Default formatting of DateTimeUtils renders UTC as Z, while Firebird expects +00:00
-
-		private static final DateTimeFormatter OFFSET_TIME = new DateTimeFormatterBuilder()
-				.parseCaseInsensitive()
-				.append( DateTimeUtils.DATE_TIME_FORMATTER_TIME )
-				.parseLenient()
-				.appendOffset( "+HH:MM", "+00:00" )
-				.parseStrict()
-				.toFormatter( Locale.ENGLISH );
-
-		private static final DateTimeFormatter OFFSET_DATE_TIME_MILLIS = new DateTimeFormatterBuilder()
-				.parseCaseInsensitive()
-				.append( DateTimeUtils.DATE_TIME_FORMATTER_TIMESTAMP_WITH_MILLIS )
-				.parseLenient()
-				.appendOffset( "+HH:MM", "+00:00" )
-				.parseStrict()
-				.toFormatter( Locale.ENGLISH );
-
-		private static void appendAsTime(
-				SqlAppender appender,
-				TemporalAccessor temporalAccessor,
-				boolean supportsOffset,
-				TimeZone jdbcTimeZone) {
-			if ( supportsOffset && temporalAccessor.isSupported( ChronoField.OFFSET_SECONDS ) ) {
-				OFFSET_TIME.formatTo( temporalAccessor, appender );
-			}
-			else {
-				DateTimeUtils.appendAsTime( appender, temporalAccessor, supportsOffset, jdbcTimeZone );
-			}
+		@Override
+		public String[] getSqlDropStrings(Index index, Metadata metadata, SqlStringGenerationContext context) {
+			return standardExporter.getSqlDropStrings( index, metadata, context );
 		}
-
-		public static void appendAsTimestampWithMillis(
-				SqlAppender appender,
-				TemporalAccessor temporalAccessor,
-				boolean supportsOffset,
-				TimeZone jdbcTimeZone) {
-			if ( supportsOffset && temporalAccessor.isSupported( ChronoField.OFFSET_SECONDS ) ) {
-				OFFSET_DATE_TIME_MILLIS.formatTo( temporalAccessor, appender );
-			}
-			else if ( supportsOffset && temporalAccessor instanceof Instant ) {
-				OFFSET_DATE_TIME_MILLIS.formatTo(
-						( (Instant) temporalAccessor ).atZone( jdbcTimeZone.toZoneId() ),
-						appender
-				);
-			}
-			else {
-				DateTimeUtils.appendAsTimestampWithMillis( appender, temporalAccessor, supportsOffset, jdbcTimeZone );
-			}
-		}
-
 	}
 
 	@Override
-	public String getDual() {
-		return "rdb$database";
+	public SingleRowTableSupport getSingleRowTableSupport() {
+		final String tableExpression = "rdb$database";
+		return SingleRowTableSupport.builder( super.getSingleRowTableSupport() )
+				.tableExpression( tableExpression )
+				.selectOnlyFromClause( " from " + tableExpression )
+				.build();
 	}
 
 	@Override
-	public String getFromDualForSelectOnly() {
-		return " from " + getDual();
-	}
-
-	@Override
-	public boolean supportsIntersect() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsSimpleQueryGrouping() {
+	public SetOperationSupport getSetOperationSupport() {
 		// Firebird 4 and earlier are quite strict i.e. it requires `select ... union all select * from (select ...)`
 		// rather than `select ... union all (select ...)`
-		return getVersion().isSameOrAfter( 5 );
+		return SetOperationSupport.builder()
+				.operator( SetOperator.INTERSECT, false )
+				.operator( SetOperator.INTERSECT_ALL, false )
+				.operator( SetOperator.EXCEPT, false )
+				.operator( SetOperator.EXCEPT_ALL, false )
+				.capability(
+						SetOperationSupport.Capability.SIMPLE_QUERY_GROUPING,
+						getVersion().isSameOrAfter( 5 )
+				)
+				.build();
 	}
 
 	@Override
-	public boolean supportsRowValueConstructorSyntax() {
-		return false;
+	public RowValueSupport getRowValueSupport() {
+		return RowValueSupport.NONE;
 	}
 
 	@Override
-	public boolean supportsNestedWithClause() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsRowValueConstructorSyntaxInInList() {
-		return false;
-	}
-
-	@Override
-	public String getTruncateTableStatement(String tableName) {
+	@SPI({ USE, IMPLEMENT })
+	public List<String> renderCommands(TruncateRequest request) {
 		// Firebird doesn't have truncate table; https://github.com/FirebirdSQL/firebird/issues/2892
-		return "delete from " + tableName;
+		return request.tableNames().stream().map( name -> "delete from " + name ).toList();
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT, SUPPLY })
 	public DmlTargetColumnQualifierSupport getDmlTargetColumnQualifierSupport() {
 		return DmlTargetColumnQualifierSupport.TABLE_ALIAS;
 	}

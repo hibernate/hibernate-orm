@@ -199,7 +199,7 @@ public class InstantJavaType extends AbstractTemporalJavaType<Instant>
 
 	@Override
 	public int getDefaultSqlPrecision(Dialect dialect, JdbcType jdbcType) {
-		return dialect.getDefaultTimestampPrecision();
+		return dialect.getTypeSizingProfile().defaultTimestampPrecision();
 	}
 
 	@Override

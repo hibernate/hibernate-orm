@@ -4,6 +4,8 @@
  */
 package org.hibernate.type;
 
+import org.hibernate.SPI;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,6 +17,7 @@ import org.hibernate.persister.collection.CollectionPersister;
 
 import static org.hibernate.metamodel.CollectionClassification.LIST;
 
+@SPI
 public class ListType extends CollectionType {
 
 	public ListType(String role, String propertyRef) {

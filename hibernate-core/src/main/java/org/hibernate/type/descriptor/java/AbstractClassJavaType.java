@@ -9,42 +9,32 @@ import java.util.Comparator;
 import java.util.Objects;
 
 import org.hibernate.HibernateException;
+import org.hibernate.SPI;
 import org.hibernate.internal.util.compare.ComparableComparator;
 
-/**
- * Abstract adapter for {@link JavaType Java type descriptors}.
- *
- * @apiNote This abstract descriptor implements {@link BasicJavaType}
- * because we currently only categorize basic {@link JavaType}s, where
- * "basic" is meant in the sense of the JPA specification, that is,
- * {@link jakarta.persistence.metamodel.Type.PersistenceType#BASIC}.
- *
- *
- * @author Steve Ebersole
- */
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.USE;
+
+/// Base adapter for a basic [JavaType] represented by a [Class].
+///
+/// @param <T> the represented Java value type
+/// @author Steve Ebersole
+@SPI({ USE, IMPLEMENT })
 public abstract class AbstractClassJavaType<T> implements BasicJavaType<T>, Serializable {
 	private final Class<T> type;
 	private final MutabilityPlan<T> mutabilityPlan;
 	private final Comparator<T> comparator;
 
-	/**
-	 * Initialize a type descriptor for the given type.  Assumed immutable.
-	 *
-	 * @param type The Java type.
-	 *
-	 * @see #AbstractClassJavaType(Class, MutabilityPlan)
-	 */
+	/// Initialize an immutable descriptor for the given Java class.
+	/// @see #AbstractClassJavaType(Class, MutabilityPlan)
+	@SPI(IMPLEMENT)
 	protected AbstractClassJavaType(Class<T> type) {
 		this( type, ImmutableMutabilityPlan.instance() );
 	}
 
-	/**
-	 * Initialize a type descriptor for the given type and mutability plan.
-	 *
-	 * @param type The Java type.
-	 * @param mutabilityPlan The plan for handling mutability aspects of the java type.
-	 */
+	/// Initialize a descriptor with explicit mutability semantics.
 	@SuppressWarnings("unchecked")
+	@SPI(IMPLEMENT)
 	protected AbstractClassJavaType(Class<T> type, MutabilityPlan<T> mutabilityPlan) {
 		this(
 				type,
@@ -55,13 +45,8 @@ public abstract class AbstractClassJavaType<T> implements BasicJavaType<T>, Seri
 		);
 	}
 
-	/**
-	 * Initialize a type descriptor for the given type, mutability plan and comparator.
-	 *
-	 * @param type The Java type.
-	 * @param mutabilityPlan The plan for handling mutability aspects of the java type.
-	 * @param comparator The comparator for handling comparison of values
-	 */
+	/// Initialize a descriptor with explicit mutability and comparison semantics.
+	@SPI(IMPLEMENT)
 	protected AbstractClassJavaType(
 			Class<T> type,
 			MutabilityPlan<T> mutabilityPlan,

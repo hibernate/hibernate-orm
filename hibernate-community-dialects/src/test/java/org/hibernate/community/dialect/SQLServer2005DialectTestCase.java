@@ -7,7 +7,7 @@ package org.hibernate.community.dialect;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.dialect.DatabaseVersion;
-import org.hibernate.orm.test.dialect.LimitQueryOptions;
+import org.hibernate.dialect.pagination.spi.PaginationRequest;
 import org.hibernate.query.spi.Limit;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -16,6 +16,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.util.Locale;
+import java.util.stream.IntStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hibernate.Timeouts.NO_WAIT;
@@ -50,6 +51,35 @@ public class SQLServer2005DialectTestCase {
 						" select f53245 from query_ where rownumber_>=? and rownumber_<?";
 		assertThat( withLimit( input, toRowSelection( 10, 15 ) ).toLowerCase( Locale.ROOT ) )
 				.isEqualTo( expected );
+	}
+
+	@Test
+	public void testImmutableParameterInstructionsAcrossSqlShapes() {
+		final var handler = dialect.getLimitHandler();
+		final var ordered = handler.processSql(
+				new PaginationRequest(
+						"select id from person order by id",
+						10,
+						15,
+						0,
+						null
+				)
+		);
+		final var unordered = handler.processSql(
+				new PaginationRequest( "select id from person", 10, 15, 0, null )
+		);
+		final var orderedAgain = handler.processSql(
+				new PaginationRequest( "select id from person order by id", 10, 15, 0, null )
+		);
+
+		assertThat( ordered.jdbcInstructions().parametersAtStart() ).containsExactly( 25 );
+		assertThat( ordered.jdbcInstructions().parametersAtEnd() ).containsExactly( 11, 26 );
+		assertThat( unordered.jdbcInstructions().parametersAtStart() ).isEmpty();
+		assertThat( unordered.jdbcInstructions().parametersAtEnd() ).containsExactly( 11, 26 );
+		assertThat( orderedAgain ).isEqualTo( ordered );
+		assertThat( handler.parameterPositionStart(
+				new PaginationRequest( "select id from person order by id", 10, 15, -1, null )
+		) ).isEqualTo( 2 );
 	}
 
 	@Test
@@ -105,6 +135,19 @@ public class SQLServer2005DialectTestCase {
 						"select column1 as col0_, column2 as col1_, column3 as col2_, column4 as col3_ from table1) row_) " +
 						"select col0_,col1_,col2_,col3_ from query_ where rownumber_>=? and rownumber_<?";
 		assertThat( withLimit( notAliasedSQL, toRowSelection( 3, 5 ) ) ).isEqualTo( expected );
+	}
+
+	@Test
+	public void testAliasGenerationBeyondFormerAliasPool() {
+		final String columns = IntStream.range( 0, 42 )
+				.mapToObj( index -> "column" + index )
+				.collect( java.util.stream.Collectors.joining( ", " ) );
+		final String limited = withLimit( "select " + columns + " from table1", toRowSelection( 3, 5 ) );
+
+		assertThat( limited ).contains( "column0 as col0_" );
+		assertThat( limited ).contains( "column41 as col41_" );
+		assertThat( limited ).contains( "select col0_,col1_" );
+		assertThat( limited ).contains( ",col40_,col41_ from query_" );
 	}
 
 	@Test
@@ -433,145 +476,147 @@ public class SQLServer2005DialectTestCase {
 
 	@Test
 	@JiraKey(value = "HHH-9635")
-	public void testAppendLockHintReadPastLocking() {
+	public void testTableLockHintReadPastLocking() {
 		final String expectedLockHint = "tab1 with (updlock,rowlock,readpast)";
 
 		LockOptions lockOptions = new LockOptions( LockMode.UPGRADE_SKIPLOCKED );
-		String lockHint = dialect.appendLockHint( lockOptions, "tab1" );
+		String lockHint = LockingTestSupport.renderTableReference( dialect, lockOptions, "tab1" );
 
 		assertThat( lockHint ).isEqualTo( expectedLockHint );
 	}
 
 	@Test
 	@JiraKey(value = "HHH-9635")
-	public void testAppendLockHintReadPastLockingNoTimeOut() {
-		final String expectedLockHint = "tab1 with (updlock,rowlock,readpast,nowait)";
+	public void testTableLockHintReadPastLockingNoTimeOut() {
+		final String expectedLockHint = "tab1 with (updlock,rowlock,readpast)";
 
 		LockOptions lockOptions = new LockOptions( LockMode.UPGRADE_SKIPLOCKED )
 				.setTimeout( NO_WAIT );
-		String lockHint = dialect.appendLockHint( lockOptions, "tab1" );
+		String lockHint = LockingTestSupport.renderTableReference( dialect, lockOptions, "tab1" );
 
 		assertThat( lockHint ).isEqualTo( expectedLockHint );
 	}
 
 	@Test
 	@JiraKey(value = "HHH-9635")
-	public void testAppendLockHintPessimisticRead() {
+	public void testTableLockHintPessimisticRead() {
 		final String expectedLockHint = "tab1 with (holdlock,rowlock)";
 
 		LockOptions lockOptions = new LockOptions( LockMode.PESSIMISTIC_READ );
-		String lockHint = dialect.appendLockHint( lockOptions, "tab1" );
+		String lockHint = LockingTestSupport.renderTableReference( dialect, lockOptions, "tab1" );
 
 		assertThat( lockHint ).isEqualTo( expectedLockHint );
 	}
 
 	@Test
 	@JiraKey(value = "HHH-9635")
-	public void testAppendLockHintPessimisticReadNoTimeOut() {
+	public void testTableLockHintPessimisticReadNoTimeOut() {
 		final String expectedLockHint = "tab1 with (holdlock,rowlock,nowait)";
 
 		LockOptions lockOptions = new LockOptions( LockMode.PESSIMISTIC_READ )
 				.setTimeout( NO_WAIT );
-		String lockHint = dialect.appendLockHint( lockOptions, "tab1" );
+		String lockHint = LockingTestSupport.renderTableReference( dialect, lockOptions, "tab1" );
 
 		assertThat( lockHint ).isEqualTo( expectedLockHint );
 	}
 
 	@Test
 	@JiraKey(value = "HHH-9635")
-	public void testAppendLockHintWrite() {
+	public void testTableLockHintWrite() {
 		final String expectedLockHint = "tab1 with (updlock,holdlock,rowlock)";
 
 		LockOptions lockOptions = new LockOptions( LockMode.WRITE );
-		String lockHint = dialect.appendLockHint( lockOptions, "tab1" );
+		String lockHint = LockingTestSupport.renderTableReference( dialect, lockOptions, "tab1" );
 
 		assertThat( lockHint ).isEqualTo( expectedLockHint );
 	}
 
 	@Test
 	@JiraKey(value = "HHH-9635")
-	public void testAppendLockHintWriteWithNoTimeOut() {
+	public void testTableLockHintWriteWithNoTimeOut() {
 		final String expectedLockHint = "tab1 with (updlock,holdlock,rowlock,nowait)";
 
 		LockOptions lockOptions = new LockOptions( LockMode.WRITE )
 				.setTimeout( NO_WAIT );
 
-		String lockHint = dialect.appendLockHint( lockOptions, "tab1" );
+		String lockHint = LockingTestSupport.renderTableReference( dialect, lockOptions, "tab1" );
 
 		assertThat( lockHint ).isEqualTo( expectedLockHint );
 	}
 
 	@Test
 	@JiraKey(value = "HHH-9635")
-	public void testAppendLockHintUpgradeNoWait() {
+	public void testTableLockHintUpgradeNoWait() {
 		final String expectedLockHint = "tab1 with (updlock,holdlock,rowlock,nowait)";
 
 		LockOptions lockOptions = new LockOptions( LockMode.UPGRADE_NOWAIT );
-		String lockHint = dialect.appendLockHint( lockOptions, "tab1" );
+		String lockHint = LockingTestSupport.renderTableReference( dialect, lockOptions, "tab1" );
 
 		assertThat( lockHint ).isEqualTo( expectedLockHint );
 	}
 
 	@Test
 	@JiraKey(value = "HHH-9635")
-	public void testAppendLockHintUpgradeNoWaitNoTimeout() {
+	public void testTableLockHintUpgradeNoWaitNoTimeout() {
 		final String expectedLockHint = "tab1 with (updlock,holdlock,rowlock,nowait)";
 
 		LockOptions lockOptions = new LockOptions( LockMode.UPGRADE_NOWAIT )
 				.setTimeout( NO_WAIT );
-		String lockHint = dialect.appendLockHint( lockOptions, "tab1" );
+		String lockHint = LockingTestSupport.renderTableReference( dialect, lockOptions, "tab1" );
 
 		assertThat( lockHint ).isEqualTo( expectedLockHint );
 	}
 
 	@Test
 	@JiraKey(value = "HHH-9635")
-	public void testAppendLockHintUpgrade() {
+	public void testTableLockHintUpgrade() {
 		final String expectedLockHint = "tab1 with (updlock,holdlock,rowlock)";
 
 		LockOptions lockOptions = new LockOptions( LockMode.PESSIMISTIC_WRITE );
-		String lockHint = dialect.appendLockHint( lockOptions, "tab1" );
+		String lockHint = LockingTestSupport.renderTableReference( dialect, lockOptions, "tab1" );
 
 		assertThat( lockHint ).isEqualTo( expectedLockHint );
 	}
 
 	@Test
 	@JiraKey(value = "HHH-9635")
-	public void testAppendLockHintUpgradeNoTimeout() {
+	public void testTableLockHintUpgradeNoTimeout() {
 		final String expectedLockHint = "tab1 with (updlock,holdlock,rowlock,nowait)";
 
 		LockOptions lockOptions = new LockOptions( LockMode.PESSIMISTIC_WRITE )
 				.setTimeout( NO_WAIT );
-		String lockHint = dialect.appendLockHint( lockOptions, "tab1" );
+		String lockHint = LockingTestSupport.renderTableReference( dialect, lockOptions, "tab1" );
 
 		assertThat( lockHint ).isEqualTo( expectedLockHint );
 	}
 
 	@Test
 	@JiraKey(value = "HHH-9635")
-	public void testAppendLockHintPessimisticWrite() {
+	public void testTableLockHintPessimisticWrite() {
 		final String expectedLockHint = "tab1 with (updlock,holdlock,rowlock)";
 
 		LockOptions lockOptions = new LockOptions( LockMode.PESSIMISTIC_WRITE );
-		String lockHint = dialect.appendLockHint( lockOptions, "tab1" );
+		String lockHint = LockingTestSupport.renderTableReference( dialect, lockOptions, "tab1" );
 
 		assertThat( lockHint ).isEqualTo( expectedLockHint );
 	}
 
 	@Test
 	@JiraKey(value = "HHH-9635")
-	public void testAppendLockHintPessimisticWriteNoTimeOut() {
+	public void testTableLockHintPessimisticWriteNoTimeOut() {
 		final String expectedLockHint = "tab1 with (updlock,holdlock,rowlock,nowait)";
 
 		LockOptions lockOptions = new LockOptions( LockMode.PESSIMISTIC_WRITE )
 				.setTimeout( NO_WAIT );
-		String lockHint = dialect.appendLockHint( lockOptions, "tab1" );
+		String lockHint = LockingTestSupport.renderTableReference( dialect, lockOptions, "tab1" );
 
 		assertThat( lockHint ).isEqualTo( expectedLockHint );
 	}
 
 	private String withLimit(String sql, Limit limit) {
-		return dialect.getLimitHandler().processSql( sql, -1, null, new LimitQueryOptions( limit ) );
+		return dialect.getLimitHandler().processSql(
+				new PaginationRequest( sql, limit.getFirstRow(), limit.getMaxRows(), -1, null )
+		).sql();
 	}
 
 	private Limit toRowSelection(Integer firstRow, Integer maxRows) {

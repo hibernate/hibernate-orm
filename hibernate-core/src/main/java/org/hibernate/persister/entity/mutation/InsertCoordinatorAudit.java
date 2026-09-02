@@ -4,6 +4,7 @@
  */
 package org.hibernate.persister.entity.mutation;
 
+import org.hibernate.Internal;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -15,6 +16,7 @@ import org.hibernate.sql.model.MutationOperationGroup;
 /**
  * Insert coordinator for audited entities.
  */
+@Internal
 public class InsertCoordinatorAudit extends AbstractAuditCoordinator implements InsertCoordinator {
 	private final InsertCoordinator currentInsertCoordinator;
 

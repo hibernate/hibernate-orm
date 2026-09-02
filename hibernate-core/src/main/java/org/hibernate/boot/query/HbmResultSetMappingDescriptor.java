@@ -6,6 +6,7 @@ package org.hibernate.boot.query;
 
 import jakarta.annotation.Nonnull;
 import org.hibernate.AssertionFailure;
+import org.hibernate.Internal;
 import org.hibernate.Remove;
 import org.hibernate.LockMode;
 import org.hibernate.MappingException;
@@ -281,6 +282,7 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 		FetchParentMemento resolveParentMemento(ResultSetMappingResolutionContext resolutionContext);
 	}
 
+	@Internal
 	public static class HbmFetchParentMemento implements FetchParentMemento {
 		private final NavigablePath navigablePath;
 		private final FetchableContainer fetchableContainer;

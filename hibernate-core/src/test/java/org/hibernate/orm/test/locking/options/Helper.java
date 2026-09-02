@@ -8,14 +8,22 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.Timeouts;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.RowLockStrategy;
 import org.hibernate.dialect.lock.PessimisticLockStyle;
+import org.hibernate.dialect.lock.spi.LockingClauseRequest;
+import org.hibernate.dialect.lock.internal.TableLockHintRendererSupport;
+import org.hibernate.dialect.lock.spi.LockingClauseRequest.ColumnTarget;
+import org.hibernate.dialect.lock.spi.LockingClauseRequest.TableTarget;
+import org.hibernate.dialect.lock.spi.LockingClauseRequest.Target;
 import org.hibernate.dialect.lock.spi.LockingSupport;
+import org.hibernate.dialect.lock.spi.PessimisticLockKind;
+import org.hibernate.dialect.lock.spi.RowLockStrategy;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.transaction.TransactionUtil;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -184,42 +192,25 @@ public class Helper {
 		final PessimisticLockStyle pessimisticLockStyle = lockingMetadata.getPessimisticLockStyle();
 
 		if ( pessimisticLockStyle == PessimisticLockStyle.CLAUSE ) {
-			final String aliases;
+			final List<Target> targets = new ArrayList<>();
 			final RowLockStrategy rowLockStrategy = lockingMetadata.getReadRowLockStrategy();
-			if ( rowLockStrategy == RowLockStrategy.NONE ) {
-				aliases = "";
-			}
-			else if ( rowLockStrategy == RowLockStrategy.TABLE ) {
-				final StringBuilder buffer = new StringBuilder();
-				boolean firstPass = true;
+			if ( rowLockStrategy == RowLockStrategy.TABLE ) {
 				for ( TableInformation table : tablesFetched ) {
-					if ( firstPass ) {
-						firstPass = false;
-					}
-					else {
-						buffer.append( "," );
-					}
-					buffer.append( expectingFollowOn ? "tbl" : table.getTableAlias() );
+					targets.add( new TableTarget( expectingFollowOn ? "tbl" : table.getTableAlias() ) );
 				}
-				aliases = buffer.toString();
 			}
-			else {
-				assert rowLockStrategy == RowLockStrategy.COLUMN;
-				final StringBuilder buffer = new StringBuilder();
-				boolean firstPass = true;
+			else if ( rowLockStrategy == RowLockStrategy.COLUMN ) {
 				for ( TableInformation table : tablesFetched ) {
-					if ( firstPass ) {
-						firstPass = false;
-					}
-					else {
-						buffer.append( "," );
-					}
-					buffer.append( expectingFollowOn ? table.getKeyColumnReference( "tbl") : table.getKeyColumnReference() );
+					targets.add( new ColumnTarget(
+							expectingFollowOn ? "tbl" : table.getTableAlias(),
+							table.getKeyColumnName()
+					) );
 				}
-				aliases = buffer.toString();
 			}
 
-			final String writeLockString = dialect.getWriteLockString( aliases, Timeouts.WAIT_FOREVER );
+			final String writeLockString = dialect.getLockingSupport().getLockingClauseRenderer().render(
+					new LockingClauseRequest( PessimisticLockKind.UPDATE, Timeouts.WAIT_FOREVER, targets )
+			);
 			assertThat( sql ).endsWith( writeLockString );
 		}
 		else {
@@ -227,7 +218,11 @@ public class Helper {
 			final LockOptions lockOptions = new LockOptions( LockMode.PESSIMISTIC_WRITE );
 			for ( TableInformation table : tablesFetched ) {
 				final String tableAlias = expectingFollowOn ? "tbl" : table.getTableAlias();
-				final String booksTableReference = dialect.appendLockHint( lockOptions, tableAlias );
+				final String booksTableReference = TableLockHintRendererSupport.renderTableReference(
+						dialect.getLockingSupport(),
+						lockOptions,
+						tableAlias
+				);
 				assertThat( sql ).contains( booksTableReference );
 			}
 		}

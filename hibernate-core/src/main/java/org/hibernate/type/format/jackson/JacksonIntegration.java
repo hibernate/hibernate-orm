@@ -4,6 +4,8 @@
  */
 package org.hibernate.type.format.jackson;
 
+import org.hibernate.Internal;
+
 import java.util.List;
 
 import com.fasterxml.jackson.databind.Module;
@@ -15,6 +17,7 @@ import tools.jackson.databind.cfg.MapperBuilder;
 import org.hibernate.type.format.FormatMapper;
 import org.hibernate.type.format.FormatMapperCreationContext;
 
+@Internal
 public final class JacksonIntegration {
 
 	// Implementation note: we rely on the following fields to be folded as constants

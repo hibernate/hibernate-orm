@@ -15,6 +15,7 @@ import org.hibernate.boot.model.naming.DatabaseIdentifier;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.tool.schema.extract.spi.ExtractionContext;
+import org.hibernate.tool.schema.extract.spi.ForeignKeyMetadataPolicy;
 import org.hibernate.tool.schema.extract.spi.TableInformation;
 
 import static java.lang.Boolean.FALSE;
@@ -33,6 +34,12 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl extends AbstractInform
 
 	public InformationExtractorJdbcDatabaseMetaDataImpl(ExtractionContext extractionContext) {
 		super( extractionContext );
+	}
+
+	public InformationExtractorJdbcDatabaseMetaDataImpl(
+			ExtractionContext extractionContext,
+			ForeignKeyMetadataPolicy foreignKeyMetadataPolicy) {
+		super( extractionContext, foreignKeyMetadataPolicy );
 	}
 
 	protected DatabaseMetaData getJdbcDatabaseMetaData() {

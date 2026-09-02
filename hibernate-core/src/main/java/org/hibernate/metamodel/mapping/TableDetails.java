@@ -7,7 +7,7 @@ package org.hibernate.metamodel.mapping;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.tree.from.TableReference;
+import org.hibernate.sql.ast.spi.query.from.TableReference;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 
@@ -57,6 +57,7 @@ public interface TableDetails {
 		KeyColumn getKeyColumn(int position);
 
 
+		@org.hibernate.SPI({ org.hibernate.SPI.Role.USE, org.hibernate.SPI.Role.IMPLEMENT })
 		@FunctionalInterface
 		interface KeyValueConsumer {
 			void consume(Object jdbcValue, KeyColumn columnMapping);
@@ -78,6 +79,7 @@ public interface TableDetails {
 		/**
 		 * Create a DomainResult for selecting and retrieving the key.
 		 */
+		@org.hibernate.SPI(org.hibernate.SPI.Role.SUPPLY)
 		<K> DomainResult<K> createDomainResult(
 				NavigablePath navigablePath,
 				TableReference tableReference,
@@ -100,6 +102,7 @@ public interface TableDetails {
 		JdbcMapping getJdbcMapping();
 	}
 
+	@org.hibernate.SPI({ org.hibernate.SPI.Role.USE, org.hibernate.SPI.Role.IMPLEMENT })
 	@FunctionalInterface
 	interface KeyColumnConsumer {
 		/**

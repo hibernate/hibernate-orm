@@ -55,7 +55,7 @@ public class LazyOneToManyNonUniqueIdWhereTest {
 		factoryScope.inTransaction( session -> session.doWork(  connection -> {
 			var dialect = session.getDialect();
 			try ( Statement statement = connection.createStatement() ) {
-				statement.executeUpdate( dialect.getDropTableString( "MAIN_TABLE" ) );
+				statement.executeUpdate( org.hibernate.testing.DialectTestSupport.dropTableCommand( dialect, "MAIN_TABLE" ) );
 				statement.executeUpdate( """
 						create table MAIN_TABLE(
 							ID integer not null,

@@ -7,7 +7,8 @@ package org.hibernate.dialect.function.array;
 import java.util.Arrays;
 import java.util.List;
 
-import org.hibernate.dialect.aggregate.AggregateSupport;
+import org.hibernate.dialect.aggregate.spi.AggregateSupport;
+import org.hibernate.dialect.aggregate.spi.AggregateComponentReadRequest;
 import org.hibernate.dialect.function.UnnestSetReturningFunctionTypeResolver;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -19,7 +20,7 @@ import org.hibernate.metamodel.mapping.SelectablePath;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.metamodel.mapping.internal.SelectableMappingImpl;
 import org.hibernate.metamodel.mapping.internal.SqlTypedMappingImpl;
-import org.hibernate.query.sqm.tuple.internal.AnonymousTupleTableGroupProducer;
+import org.hibernate.sql.ast.spi.query.SetReturningFunctionType;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.sqm.function.SelfRenderingSqmSetReturningFunction;
@@ -27,20 +28,20 @@ import org.hibernate.query.sqm.sql.spi.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.spi.SqmTypedNode;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.Template;
-import org.hibernate.sql.ast.SqlAstJoinType;
-import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.spi.FromClauseAccess;
-import org.hibernate.sql.ast.spi.SqlAppender;
-import org.hibernate.sql.ast.tree.SqlAstNode;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
-import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.SelfRenderingExpression;
-import org.hibernate.sql.ast.tree.from.FunctionTableGroup;
-import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
-import org.hibernate.sql.ast.tree.predicate.Junction;
-import org.hibernate.sql.ast.tree.predicate.NullnessPredicate;
-import org.hibernate.sql.ast.tree.predicate.PredicateContainer;
+import org.hibernate.sql.ast.spi.creation.FromClauseAccess;
+import org.hibernate.sql.ast.spi.SqlAstNode;
+import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
+import org.hibernate.sql.ast.spi.query.expression.Expression;
+import org.hibernate.sql.ast.spi.query.expression.SelfRenderingExpression;
+import org.hibernate.sql.ast.spi.query.from.FunctionTableGroup;
+import org.hibernate.sql.ast.spi.query.from.SqlAstJoinType;
+import org.hibernate.sql.ast.spi.query.from.TableGroup;
+import org.hibernate.sql.ast.spi.query.predicate.ComparisonPredicate;
+import org.hibernate.sql.ast.spi.query.predicate.Junction;
+import org.hibernate.sql.ast.spi.query.predicate.NullnessPredicate;
+import org.hibernate.sql.ast.spi.query.predicate.PredicateContainer;
+import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
+import org.hibernate.sql.spi.SqlAppender;
 import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.SqlTypes;
@@ -178,24 +179,26 @@ public class H2UnnestFunction extends UnnestFunction {
 	}
 
 	@Override
+	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	protected void renderJsonTable(
 			SqlAppender sqlAppender,
 			Expression array,
 			BasicPluralType<?, ?> pluralType,
 			@Nullable SqlTypedMapping sqlTypedMapping,
-			AnonymousTupleTableGroupProducer tupleType,
+			SetReturningFunctionType tupleType,
 			String tableIdentifierVariable,
 			SqlAstTranslator<?> walker) {
 		renderUnnest( sqlAppender, array, pluralType, sqlTypedMapping, tupleType, tableIdentifierVariable, walker );
 	}
 
 	@Override
+	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	protected void renderUnnest(
 			SqlAppender sqlAppender,
 			Expression array,
 			BasicPluralType<?, ?> pluralType,
 			@Nullable SqlTypedMapping sqlTypedMapping,
-			AnonymousTupleTableGroupProducer tupleType,
+			SetReturningFunctionType tupleType,
 			String tableIdentifierVariable,
 			SqlAstTranslator<?> walker) {
 		final ColumnReference columnReference = array.getColumnReference();
@@ -209,6 +212,7 @@ public class H2UnnestFunction extends UnnestFunction {
 		}
 	}
 
+	@org.hibernate.Internal
 	private static class H2UnnestSetReturningFunctionTypeResolver extends UnnestSetReturningFunctionTypeResolver {
 
 		public H2UnnestSetReturningFunctionTypeResolver() {
@@ -329,20 +333,22 @@ public class H2UnnestFunction extends UnnestFunction {
 					final String readExpression;
 					if ( pluralSqlTypeCode == SqlTypes.JSON_ARRAY || pluralSqlTypeCode == SqlTypes.XML_ARRAY ) {
 						readExpression = aggregateSupport.aggregateComponentCustomReadExpression(
-								"",
-								"",
-								"",
-								elementReadExpression,
-								pluralSqlTypeCode,
-								new SqlTypedMappingImpl(
-										typedMapping.getLength(),
-										null,
-										typedMapping.getPrecision(),
-										typedMapping.getScale(),
-										typedMapping.getTemporalPrecision(),
-										elementType
-								),
-								typeConfiguration
+								new AggregateComponentReadRequest(
+										"",
+										"",
+										"",
+										elementReadExpression,
+										pluralSqlTypeCode,
+										new SqlTypedMappingImpl(
+												typedMapping.getLength(),
+												null,
+												typedMapping.getPrecision(),
+												typedMapping.getScale(),
+												typedMapping.getTemporalPrecision(),
+												elementType
+										),
+										typeConfiguration
+								)
 						);
 					}
 					else {
@@ -377,20 +383,22 @@ public class H2UnnestFunction extends UnnestFunction {
 					final String readExpression;
 					if ( pluralSqlTypeCode == SqlTypes.JSON_ARRAY || pluralSqlTypeCode == SqlTypes.XML_ARRAY ) {
 						readExpression = aggregateSupport.aggregateComponentCustomReadExpression(
-								"",
-								"",
-								"",
-								elementReadExpression,
-								pluralSqlTypeCode,
-								new SqlTypedMappingImpl(
-										null,
-										null,
-										null,
-										null,
-										null,
-										elementType
-								),
-								typeConfiguration
+								new AggregateComponentReadRequest(
+										"",
+										"",
+										"",
+										elementReadExpression,
+										pluralSqlTypeCode,
+										new SqlTypedMappingImpl(
+												null,
+												null,
+												null,
+												null,
+												null,
+												elementType
+										),
+										typeConfiguration
+								)
 						);
 					}
 					else {

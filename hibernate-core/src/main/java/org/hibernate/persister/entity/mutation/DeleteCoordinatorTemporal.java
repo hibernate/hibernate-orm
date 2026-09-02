@@ -12,7 +12,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.TemporalMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.model.MutationOperationGroup;
-import org.hibernate.sql.model.ast.builder.TableUpdateBuilderStandard;
+import org.hibernate.sql.ast.spi.model.builder.TableUpdateBuilderStandard;
 
 import static org.hibernate.persister.entity.mutation.AbstractTemporalUpdateCoordinator.applyTemporalEnding;
 
@@ -23,6 +23,7 @@ import static org.hibernate.persister.entity.mutation.AbstractTemporalUpdateCoor
  *
  * @author Gavin King
  */
+@org.hibernate.Internal
 public class DeleteCoordinatorTemporal extends AbstractDeleteCoordinator {
 	private final TemporalMapping temporalMapping;
 

@@ -41,7 +41,7 @@ import org.hibernate.query.sql.spi.SqlTranslationEngine;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.temporal.spi.ChangesetCoordinator;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
-import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
+import org.hibernate.sql.spi.ParameterMarkerStrategy;
 import org.hibernate.sql.exec.internal.JdbcSelectWithActions;
 import org.hibernate.sql.exec.spi.JdbcSelectWithActionsBuilder;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducerProvider;

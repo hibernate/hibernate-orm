@@ -5,6 +5,7 @@
 package org.hibernate.loader.ast.internal;
 
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.array.spi.ArraySupport;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.type.BasicType;
@@ -20,7 +21,8 @@ public class MultiKeyLoadHelper {
 	}
 
 	public static boolean supportsSqlArrayType(Dialect dialect) {
-		return dialect.useArrayForMultiValuedParameters();
+		return dialect.getArraySupport().getMultiValuedParameterStrategy()
+				== ArraySupport.MultiValuedParameterStrategy.ARRAY;
 	}
 
 	public static JdbcMapping resolveArrayJdbcMapping(

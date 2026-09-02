@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.batch;
 
+import static org.hibernate.loader.ast.internal.MultiKeyLoadHelper.supportsSqlArrayType;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
@@ -78,7 +79,7 @@ public class BatchAndUserTypeIdCollectionTest {
 			list.get( 0 ).getChildren().size();
 			assertThat( sqlCollector.getSqlQueries() ).hasSize( 2 );
 			assertThat( sqlCollector.getSqlQueries().get( 0 ) ).doesNotContain( "?" );
-			if ( scope.getSessionFactory().getJdbcServices().getDialect().useArrayForMultiValuedParameters() ) {
+			if ( supportsSqlArrayType( scope.getSessionFactory().getJdbcServices().getDialect() ) ) {
 				assertThat( sqlCollector.getSqlQueries().get( 1 ) ).containsOnlyOnce( "?" );
 			}
 			else {

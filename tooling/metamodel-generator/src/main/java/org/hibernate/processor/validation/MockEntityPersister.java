@@ -32,6 +32,7 @@ import static java.util.Collections.emptyMap;
  * @author Gavin King
  */
 @SuppressWarnings("NullAway")
+@org.hibernate.Internal
 public abstract class MockEntityPersister implements EntityPersister, Joinable {
 
 	private static final String[] ID_COLUMN = {"id"};

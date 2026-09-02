@@ -70,10 +70,10 @@ public class SQLSelectTest {
 			session.doWork( connection -> {
 				try (Statement statement = connection.createStatement()) {
 					statement.executeUpdate( String.format( "ALTER TABLE person %s valid %s",
-							dialect.getAddColumnString(),
+							dialect.getAlterTableSupport().addColumnPrefix(),
 							ddlTypeRegistry.getTypeName( Types.BOOLEAN, dialect ) ) );
 					statement.executeUpdate( String.format( "ALTER TABLE Person_phones %s valid %s",
-							dialect.getAddColumnString(),
+							dialect.getAlterTableSupport().addColumnPrefix(),
 							ddlTypeRegistry.getTypeName( Types.BOOLEAN, dialect ) ) );
 				}
 			} );

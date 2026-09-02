@@ -90,7 +90,7 @@ public class DatabaseValueGenerationTest {
 
 		@Override
 		public String[] getReferencedColumnValues(Dialect dialect) {
-			return new String[] { dialect.currentTimestamp() };
+			return new String[] { dialect.getCurrentTemporalSupport().currentTimestamp() };
 		}
 	}
 	//end::mapping-database-generated-value-example[]

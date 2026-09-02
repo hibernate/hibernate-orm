@@ -7,7 +7,7 @@ package org.hibernate.action.queue.internal.exec;
 import org.hibernate.action.queue.spi.plan.FlushOperation;
 import org.hibernate.action.queue.spi.bind.GroupedRowBindPlan;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.sql.model.PreparableMutationOperation;
+import org.hibernate.sql.spi.mutation.jdbc.PreparableMutationOperation;
 
 /// @author Steve Ebersole
 public class StandardPlanStepExecutor extends AbstractStepExecutor {

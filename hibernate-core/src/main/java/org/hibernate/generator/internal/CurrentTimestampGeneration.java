@@ -54,7 +54,8 @@ import static org.hibernate.generator.EventTypeSets.fromArray;
 
 /**
  * Value generation strategy which produces a timestamp using the database
- * {@link Dialect#currentTimestamp() current_timestamp} function or the JVM
+ * {@link org.hibernate.dialect.temporaltype.spi.CurrentTemporalSupport#currentTimestamp() current_timestamp}
+ * function or the JVM
  * {@linkplain java.time.Clock#instant() current instant}.
  * <p>
  * Underlies the {@link CurrentTimestamp}, {@link CreationTimestamp}, and
@@ -231,14 +232,21 @@ public class CurrentTimestampGeneration implements BeforeExecutionGenerator, OnE
 
 	@Override
 	public String[] getReferencedColumnValues(Dialect dialect) {
-		return new String[] { dialect.currentTimestamp() };
+		return new String[] { dialect.getCurrentTemporalSupport().currentTimestamp() };
 	}
 
 	static Timestamp getCurrentTimestamp(SharedSessionContractImplementor session) {
 		final var dialect = session.getJdbcServices().getJdbcEnvironment().getDialect();
+		final var selection = dialect.getCurrentTemporalSupport().getCurrentTimestampSelection();
+		if ( selection == null ) {
+			throw new UnsupportedOperationException(
+					"Dialect '" + dialect.getClass().getName()
+							+ "' does not support database-side current timestamp selection"
+			);
+		}
 		return getCurrentTimestampFromDatabase(
-				dialect.getCurrentTimestampSelectString(),
-				dialect.isCurrentTimestampSelectStringCallable(),
+				selection.command(),
+				selection.callable(),
 				session
 		);
 	}

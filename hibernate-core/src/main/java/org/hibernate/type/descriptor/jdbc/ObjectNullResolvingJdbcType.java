@@ -14,6 +14,10 @@ import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
 
+import static org.hibernate.dialect.type.spi.ObjectNullBindingStrategy.SET_NULL;
+import static org.hibernate.dialect.type.spi.ObjectNullBindingStrategy.SET_NULL_WITH_NULL_TYPE;
+import static org.hibernate.dialect.type.spi.ObjectNullBindingStrategy.SET_OBJECT;
+
 /**
  * Descriptor for binding objects, but binding nulls with the resolved parameter type
  *
@@ -40,26 +44,20 @@ public class ObjectNullResolvingJdbcType extends ObjectJdbcType {
 			@Override
 			protected void doBindNull(PreparedStatement st, int index, WrapperOptions options)
 					throws SQLException {
-				if ( options.getDialect().supportsBindingNullForSetObject() ) {
-					st.setObject( index, null );
-				}
-				else {
-					final int sqlType = options.getDialect().supportsBindingNullSqlTypeForSetNull() ? Types.NULL
-							: st.getParameterMetaData().getParameterType( index );
-					st.setNull( index, sqlType );
+				switch ( options.getDialect().getObjectNullBindingStrategy() ) {
+					case SET_OBJECT -> st.setObject( index, null );
+					case SET_NULL_WITH_NULL_TYPE -> st.setNull( index, Types.NULL );
+					case SET_NULL -> st.setNull( index, st.getParameterMetaData().getParameterType( index ) );
 				}
 			}
 
 			@Override
 			protected void doBindNull(CallableStatement st, String name, WrapperOptions options)
 					throws SQLException {
-				if ( options.getDialect().supportsBindingNullForSetObject() ) {
-					st.setObject( name, null );
-				}
-				else {
-					final int sqlType = options.getDialect().supportsBindingNullSqlTypeForSetNull() ? Types.NULL
-							: Types.JAVA_OBJECT;
-					st.setNull( name, sqlType );
+				switch ( options.getDialect().getObjectNullBindingStrategy() ) {
+					case SET_OBJECT -> st.setObject( name, null );
+					case SET_NULL_WITH_NULL_TYPE -> st.setNull( name, Types.NULL );
+					case SET_NULL -> st.setNull( name, Types.JAVA_OBJECT );
 				}
 			}
 

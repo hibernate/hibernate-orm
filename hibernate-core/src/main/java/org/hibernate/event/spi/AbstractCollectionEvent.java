@@ -124,6 +124,7 @@ public abstract class AbstractCollectionEvent extends AbstractSessionEvent {
 		return ownerEntityName;
 	}
 
+	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	protected static @Nullable CollectionPersister getLoadedCollectionPersister(@Nonnull PersistentCollection<?> collection, @Nonnull EventSource source) {
 		final var entry = source.getPersistenceContextInternal().getCollectionEntry( collection );
 		return entry == null ? null : entry.getLoadedPersister();
@@ -142,6 +143,7 @@ public abstract class AbstractCollectionEvent extends AbstractSessionEvent {
 		return ownerEntry == null ? null : ownerEntry.getId();
 	}
 
+	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	protected static @Nullable String getAffectedOwnerEntityName(
 			@Nullable CollectionPersister collectionPersister,
 			@Nullable Object affectedOwner,

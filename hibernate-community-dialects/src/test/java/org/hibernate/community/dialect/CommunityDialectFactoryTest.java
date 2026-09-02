@@ -57,6 +57,8 @@ public class CommunityDialectFactoryTest {
 		testDetermination( "INGRES", IngresDialect.class, resolver );
 		testDetermination( "Adaptive Server Anywhere", SybaseAnywhereDialect.class, resolver );
 		testDetermination( "Informix Dynamic Server", InformixDialect.class, resolver );
+		assertThat( resolver.resolveDialect( TestingDialectResolutionInfo.forDatabaseInfo( "Unknown Database", -9999, -9999 ) ) )
+				.isNull();
 	}
 
 	private void testDetermination(String databaseName, Class expected, DialectResolver resolver) {

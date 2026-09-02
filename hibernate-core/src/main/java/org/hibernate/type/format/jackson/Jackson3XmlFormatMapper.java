@@ -4,6 +4,8 @@
  */
 package org.hibernate.type.format.jackson;
 
+import org.hibernate.SPI;
+
 import com.fasterxml.jackson.annotation.JsonRootName;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -43,6 +45,7 @@ import java.util.Map;
  * @author Emmanuel Jannetti
  * @author Nick Rayburn
  */
+@SPI
 public final class Jackson3XmlFormatMapper implements FormatMapper {
 
 	public static final String SHORT_NAME = "jackson3-xml";

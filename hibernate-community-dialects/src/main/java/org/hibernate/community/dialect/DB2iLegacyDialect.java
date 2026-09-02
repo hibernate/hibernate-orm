@@ -4,34 +4,42 @@
  */
 package org.hibernate.community.dialect;
 
+import org.hibernate.SPI;
+
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.USE;
+import static org.hibernate.SPI.Role.SUPPLY;
+import org.hibernate.dialect.sql.ast.spi.CteSupport;
+import org.hibernate.dialect.sql.ast.spi.SubquerySupport;
+import org.hibernate.dialect.sql.ast.spi.PredicateSupport;
+
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.DB2SubstringFunction;
-import org.hibernate.dialect.identity.DB2IdentityColumnSupport;
-import org.hibernate.dialect.identity.DB2zIdentityColumnSupport;
-import org.hibernate.dialect.identity.IdentityColumnSupport;
-import org.hibernate.dialect.lock.internal.DB2LockingSupport;
+import org.hibernate.community.dialect.identity.internal.DB2IdentityColumnSupport;
+import org.hibernate.community.dialect.identity.internal.DB2zIdentityColumnSupport;
+import org.hibernate.dialect.identity.spi.IdentityColumnSupport;
+import org.hibernate.dialect.schema.spi.IndexDdlRequest;
 import org.hibernate.dialect.lock.spi.LockingSupport;
-import org.hibernate.dialect.pagination.FetchLimitHandler;
-import org.hibernate.dialect.pagination.LegacyDB2LimitHandler;
-import org.hibernate.dialect.pagination.LimitHandler;
-import org.hibernate.dialect.sequence.DB2iSequenceSupport;
-import org.hibernate.dialect.sequence.NoSequenceSupport;
-import org.hibernate.dialect.sequence.SequenceSupport;
-import org.hibernate.dialect.unique.AlterTableUniqueIndexDelegate;
-import org.hibernate.dialect.unique.SkipNullableUniqueDelegate;
-import org.hibernate.dialect.unique.UniqueDelegate;
+import org.hibernate.dialect.lock.spi.StandardLockingSupports;
+import org.hibernate.dialect.pagination.spi.FetchLimitHandler;
+import org.hibernate.dialect.pagination.spi.LegacyDB2LimitHandler;
+import org.hibernate.dialect.pagination.spi.LimitHandler;
+import org.hibernate.community.dialect.sequence.LegacyDB2SequenceSupport;
+import org.hibernate.dialect.sequence.spi.SequenceSupport;
+import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
+import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractors;
+import org.hibernate.dialect.unique.spi.UniqueDelegates;
+import org.hibernate.dialect.unique.spi.UniqueDelegate;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.mapping.Column;
-import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.SqlAstTranslatorFactory;
-import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
-import org.hibernate.sql.ast.tree.Statement;
+import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslatorFactory;
+import org.hibernate.dialect.sql.ast.spi.StandardSqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.Statement;
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 
-import java.util.List;
 
 /**
  * An SQL dialect for DB2 for iSeries previously known as DB2/400.
@@ -47,7 +55,6 @@ public class DB2iLegacyDialect extends DB2LegacyDialect {
 
 	public DB2iLegacyDialect(DialectResolutionInfo info) {
 		this( info.makeCopyOrDefault( DEFAULT_VERSION ) );
-		registerKeywords( info );
 	}
 
 	public DB2iLegacyDialect() {
@@ -60,10 +67,11 @@ public class DB2iLegacyDialect extends DB2LegacyDialect {
 
 	@Override
 	protected LockingSupport buildLockingSupport() {
-		return DB2LockingSupport.forDB2i();
+		return StandardLockingSupports.legacyDb2i();
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
 		super.initializeFunctionRegistry( functionContributions );
 		// DB2 for i doesn't allow code units: https://www.ibm.com/docs/en/i/7.1.0?topic=functions-substring
@@ -88,51 +96,67 @@ public class DB2iLegacyDialect extends DB2LegacyDialect {
 	}
 
 	@Override
+	@SPI(IMPLEMENT)
 	protected UniqueDelegate createUniqueDelegate() {
 		//TODO: when was 'create unique where not null index' really first introduced?
 		return getVersion().isSameOrAfter(7, 1)
 				//use 'create unique where not null index'
-				? new AlterTableUniqueIndexDelegate(this)
+				? UniqueDelegates.nullableIndex( this )
 				//ignore unique keys on nullable columns in earlier versions
-				: new SkipNullableUniqueDelegate(this);
+				: UniqueDelegates.skipNullable( this );
 	}
 
 	@Override
-	public String getCreateIndexString(boolean unique) {
+	@SPI({ USE, IMPLEMENT })
+	public String createCommand(IndexDdlRequest request) {
 		// we only create unique indexes, as opposed to unique constraints,
 		// when the column is nullable, so safe to infer unique => nullable
-		return unique ? "create unique where not null index" : "create index";
+		return request.unique() ? "create unique where not null index" : "create index";
 	}
 
 	@Override
-	public String getCreateIndexTail(boolean unique, List<Column> columns) {
+	@SPI({ USE, IMPLEMENT })
+	public String createTail(IndexDdlRequest request) {
 		return "";
 	}
 
 	@Override
-	public boolean supportsDistinctFromPredicate() {
-		return true;
+	public PredicateSupport getPredicateSupport() {
+		return PredicateSupport.builder( super.getPredicateSupport() )
+				.capability( PredicateSupport.Capability.DISTINCT_FROM, true )
+				.build();
 	}
 
 	/**
 	 * No support for sequences.
 	 */
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public SequenceSupport getSequenceSupport() {
 		return getVersion().isSameOrAfter(7, 3)
-				? DB2iSequenceSupport.INSTANCE : NoSequenceSupport.INSTANCE;
+				? LegacyDB2SequenceSupport.INSTANCE
+				: org.hibernate.dialect.sequence.spi.SequenceSupports.none();
 	}
 
+	private static final SequenceInformationExtractor SEQUENCE_INFORMATION_EXTRACTOR =
+			SequenceInformationExtractors.builder(
+					"select distinct sequence_schema as seqschema, sequence_name as seqname, START, minimum_value as minvalue, maximum_value as maxvalue, increment from qsys2.syssequences "
+							+ "where current_schema='*LIBL' and sequence_schema in (select schema_name from qsys2.library_list_info) "
+							+ "or sequence_schema=current_schema"
+			)
+			.sequenceNameColumn( "seqname" )
+			.withoutCatalog()
+			.schemaColumn( "seqschema" )
+			.startValueColumn( "start" )
+			.minimumValueColumn( "minvalue" )
+			.maximumValueColumn( "maxvalue" )
+			.build();
+
 	@Override
-	public String getQuerySequencesString() {
-		if ( getVersion().isSameOrAfter(7,3) ) {
-			return "select distinct sequence_schema as seqschema, sequence_name as seqname, START, minimum_value as minvalue, maximum_value as maxvalue, increment from qsys2.syssequences " +
-					"where current_schema='*LIBL' and sequence_schema in (select schema_name from qsys2.library_list_info) " +
-					"or sequence_schema=current_schema";
-		}
-		else {
-			return null;
-		}
+	public SequenceInformationExtractor getSequenceInformationExtractor() {
+		return getVersion().isSameOrAfter( 7, 3 )
+				? SEQUENCE_INFORMATION_EXTRACTOR
+				: SequenceInformationExtractors.none();
 	}
 
 	@Override
@@ -149,23 +173,31 @@ public class DB2iLegacyDialect extends DB2LegacyDialect {
 	}
 
 	@Override
-	public boolean supportsLateral() {
-		return getVersion().isSameOrAfter( 7, 1 );
+	public SubquerySupport getSubquerySupport() {
+		return SubquerySupport.builder( super.getSubquerySupport() )
+				.feature( SubquerySupport.Feature.LATERAL, getVersion().isSameOrAfter( 7, 1 ) )
+				.build();
 	}
 
 	@Override
-	public boolean supportsRecursiveCTE() {
-		return getVersion().isSameOrAfter( 7, 1 );
+	public CteSupport getCteSupport() {
+		return CteSupport.builder( super.getCteSupport() )
+				.recursiveFeature(
+						CteSupport.RecursiveFeature.RECURSIVE,
+						getVersion().isSameOrAfter( 7, 1 )
+				)
+				.build();
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public SqlAstTranslatorFactory getSqlAstTranslatorFactory() {
 		return new StandardSqlAstTranslatorFactory() {
 
 			@Override
-			protected <T extends JdbcOperation> SqlAstTranslator<T> buildTranslator(
-					SessionFactoryImplementor sessionFactory, Statement statement) {
-				return new DB2iLegacySqlAstTranslator<>( sessionFactory, statement, getVersion() );
+			protected <S extends Statement, T extends JdbcOperation> SqlAstTranslator<T> createTranslator(
+					SqlAstTranslationRequest<S, T> request) {
+				return new DB2iLegacySqlAstTranslator<>( request, getVersion() );
 			}
 		};
 	}

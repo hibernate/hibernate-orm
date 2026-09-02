@@ -4,8 +4,42 @@
  */
 package org.hibernate.dialect;
 
+import org.hibernate.dialect.temporaltype.spi.TemporalOperationSupport;
+
+import org.hibernate.dialect.temporaltype.spi.CurrentTemporalSupport;
+
+import org.hibernate.SPI;
+import static org.hibernate.SPI.Role.USE;
+
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.SUPPLY;
+
+import org.hibernate.dialect.type.spi.StandardDdlTypes;
+
+import org.hibernate.dialect.type.spi.TypeSizingProfile;
+import org.hibernate.dialect.type.spi.EnumSupport;
+import org.hibernate.dialect.type.internal.SpannerPostgreSQLEnumSupport;
+
+import org.hibernate.dialect.mutation.spi.MultiTableMutationSupport;
+import org.hibernate.dialect.jdbc.spi.ParameterLimits;
+
+import org.hibernate.dialect.schema.internal.SpannerPostgreSQLTableExporter;
+
+import org.hibernate.dialect.function.spi.Replacer;
+
+import org.hibernate.dialect.lock.spi.RowLockStrategy;
+
+import org.hibernate.dialect.aggregate.spi.FunctionalDependencyAnalysisSupport;
+
+import org.hibernate.dialect.sql.ast.spi.CteSupport;
+import org.hibernate.dialect.sql.ast.spi.MutationSyntaxSupport;
+import org.hibernate.dialect.sql.ast.spi.PredicateSupport;
+import org.hibernate.dialect.sql.ast.spi.RowValueSupport;
+import org.hibernate.dialect.sql.ast.spi.SingleRowTableSupport;
+import org.hibernate.dialect.sql.ast.spi.SubquerySupport;
+import org.hibernate.dialect.sql.ast.spi.ValuesListSupport;
+
 import jakarta.persistence.TemporalType;
-import jakarta.persistence.Timeout;
 import jakarta.annotation.Nullable;
 import org.hibernate.LockOptions;
 import org.hibernate.JDBCException;
@@ -14,9 +48,9 @@ import org.hibernate.Timeouts;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.dialect.aggregate.SpannerPostgreSQLAggregateSupport;
-import org.hibernate.dialect.sequence.SpannerPostgreSQLSequenceSupport;
-import org.hibernate.dialect.sql.ast.SpannerPostgreSQLSqlAstTranslator;
+import org.hibernate.dialect.aggregate.internal.SpannerPostgreSQLAggregateSupport;
+import org.hibernate.dialect.sequence.internal.SpannerPostgreSQLSequenceSupport;
+import org.hibernate.dialect.sql.ast.internal.SpannerPostgreSQLSqlAstTranslator;
 import org.hibernate.dialect.function.CountFunction;
 import org.hibernate.dialect.function.InsertSubstringOverlayEmulation;
 import org.hibernate.dialect.function.array.ArrayContainsOperatorFunction;
@@ -24,8 +58,10 @@ import org.hibernate.dialect.function.array.ArrayIncludesOperatorFunction;
 import org.hibernate.dialect.function.json.SpannerPostgreSQLJsonArrayFunction;
 import org.hibernate.dialect.function.json.SpannerPostgreSQLJsonObjectFunction;
 import org.hibernate.query.sqm.CastType;
-import org.hibernate.dialect.aggregate.AggregateSupport;
+import org.hibernate.dialect.aggregate.spi.AggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.dialect.function.spi.TupleCountSupport;
+import org.hibernate.dialect.function.spi.WindowFunctionSupport;
 import org.hibernate.dialect.function.SpannerConcatFunction;
 import org.hibernate.dialect.function.array.SpannerPostgreSQLArrayConcatElementFunction;
 import org.hibernate.dialect.function.array.SpannerPostgreSQLArrayTrimEmulation;
@@ -41,62 +77,58 @@ import org.hibernate.dialect.lock.spi.ConnectionLockTimeoutStrategy;
 import org.hibernate.dialect.lock.spi.LockTimeoutType;
 import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.lock.spi.OuterJoinLockingType;
-import org.hibernate.dialect.pagination.LimitHandler;
-import org.hibernate.dialect.pagination.LimitOffsetLimitHandler;
-import org.hibernate.dialect.rowsecurity.NoRowLevelSecurity;
-import org.hibernate.dialect.rowsecurity.RowLevelSecurity;
-import org.hibernate.dialect.sequence.SequenceSupport;
-import org.hibernate.dialect.temptable.PersistentTemporaryTableStrategy;
-import org.hibernate.dialect.temptable.TemporaryTableStrategy;
-import org.hibernate.dialect.type.PostgreSQLArrayJdbcTypeConstructor;
-import org.hibernate.dialect.type.PostgreSQLCastingJsonArrayJdbcTypeConstructor;
-import org.hibernate.dialect.type.PostgreSQLCastingJsonJdbcType;
-import org.hibernate.dialect.type.PostgreSQLUUIDJdbcType;
-import org.hibernate.dialect.unique.AlterTableUniqueIndexDelegate;
-import org.hibernate.dialect.unique.UniqueDelegate;
-import org.hibernate.sql.ast.spi.SqlAppender;
-import org.hibernate.sql.ast.SqlAstTranslator;
+import org.hibernate.dialect.pagination.spi.LimitHandler;
+import org.hibernate.dialect.pagination.spi.LimitOffsetLimitHandler;
+import org.hibernate.dialect.rowsecurity.spi.RowLevelSecurity;
+import org.hibernate.dialect.rowid.spi.RowIdSupport;
+import org.hibernate.dialect.rowid.spi.RowIdSupports;
+import org.hibernate.dialect.schema.spi.ConstraintDropMode;
+import org.hibernate.dialect.schema.spi.ExistenceCheckPlacement;
+import org.hibernate.dialect.schema.spi.IfExistsSupport;
+import org.hibernate.dialect.schema.spi.SchemaDropSupport;
+import org.hibernate.dialect.schema.spi.TruncateMode;
+import org.hibernate.dialect.schema.spi.TruncateRequest;
+import org.hibernate.dialect.rowsecurity.spi.RowLevelSecurityStrategies;
+import org.hibernate.dialect.sequence.spi.SequenceSupport;
+import org.hibernate.dialect.temptable.spi.PersistentTemporaryTableStrategy;
+import org.hibernate.dialect.temptable.spi.TemporaryTableStrategy;
+import org.hibernate.dialect.type.spi.PostgreSQLJdbcTypes;
+import org.hibernate.dialect.unique.spi.UniqueDelegates;
+import org.hibernate.dialect.unique.spi.UniqueDelegate;
+import org.hibernate.sql.spi.SqlAppender;
+import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
 
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.SQLGrammarException;
-import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
-import org.hibernate.procedure.internal.StandardCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
-import org.hibernate.query.common.FetchClauseType;
+import org.hibernate.procedure.spi.CallableStatementSupports;
+import org.hibernate.dialect.sql.ast.spi.FetchClauseSupport;
 import org.hibernate.query.common.TemporalUnit;
-import org.hibernate.dialect.type.IntervalType;
-import org.hibernate.query.sqm.mutation.internal.temptable.PersistentTableInsertStrategy;
-import org.hibernate.query.sqm.mutation.internal.temptable.PersistentTableMutationStrategy;
-import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
-import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
+import org.hibernate.dialect.temporaltype.spi.IntervalType;
 import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
-import org.hibernate.sql.ast.SqlAstTranslatorFactory;
-import org.hibernate.sql.ast.spi.LockingClauseStrategy;
-import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
-import org.hibernate.sql.ast.tree.Statement;
-import org.hibernate.sql.ast.tree.select.QuerySpec;
+import org.hibernate.sql.ast.spi.translation.SqlAstNodeRenderingMode;
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslatorFactory;
+import org.hibernate.dialect.lock.spi.LockingClauseStrategy;
+import org.hibernate.dialect.sql.ast.spi.StandardSqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.Statement;
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
+import org.hibernate.sql.ast.spi.query.select.QuerySpec;
 import org.hibernate.sql.exec.spi.JdbcOperation;
-import org.hibernate.tool.schema.extract.internal.InformationExtractorJdbcDatabaseMetaDataImpl;
 import org.hibernate.tool.schema.extract.spi.ExtractionContext;
 import org.hibernate.tool.schema.extract.spi.InformationExtractor;
-import org.hibernate.tool.schema.internal.StandardTableExporter;
+import org.hibernate.tool.schema.extract.spi.InformationExtractors;
+import org.hibernate.tool.schema.spi.StandardTableExporter;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
 import org.hibernate.type.descriptor.jdbc.SpannerLocalDateTimeJdbcType;
 import org.hibernate.type.descriptor.jdbc.SpannerLocalTimeJdbcType;
 import org.hibernate.type.descriptor.jdbc.SpannerTimeJdbcType;
-import org.hibernate.type.descriptor.sql.internal.ArrayDdlTypeImpl;
-import org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType;
-import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import java.sql.SQLException;
@@ -111,9 +143,10 @@ import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.TimeZone;
 
-import static org.hibernate.sql.ast.internal.NonLockingClauseStrategy.NON_CLAUSE_STRATEGY;
+import static org.hibernate.dialect.lock.internal.NonLockingClauseStrategy.NON_CLAUSE_STRATEGY;
 import static org.hibernate.type.SqlTypes.BIGINT;
 import static org.hibernate.type.SqlTypes.BLOB;
 import static org.hibernate.type.SqlTypes.CHAR;
@@ -134,9 +167,34 @@ import static org.hibernate.type.SqlTypes.TINYINT;
 import static org.hibernate.type.SqlTypes.UUID;
 import static org.hibernate.type.SqlTypes.VARCHAR;
 
-public class SpannerPostgreSQLDialect extends PostgreSQLDialect {
+public class SpannerPostgreSQLDialect extends PostgreSQLDialect implements CurrentTemporalSupport, TemporalOperationSupport {
+	private IfExistsSupport ifExistsSupport;
+	private SchemaDropSupport schemaDropSupport;
 
-	private final UniqueDelegate SPANNER_UNIQUE_DELEGATE = new AlterTableUniqueIndexDelegate( this );
+
+	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
+	public TemporalOperationSupport getTemporalOperationSupport() {
+		return this;
+	}
+
+	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
+	public CurrentTemporalSupport getCurrentTemporalSupport() {
+		return this;
+	}
+	private final TypeSizingProfile typeSizingProfile = TypeSizingProfile.builder( super.getTypeSizingProfile() )
+			.maxVarcharLength( 2_621_440 )
+			.maxNVarcharLength( 2_621_440 ).maxNVarcharCapacity( 2_621_440 )
+			.maxVarbinaryLength( 10_485_760 ).maxVarbinaryCapacity( 10_485_760 )
+			.build();
+
+	@Override
+	public TypeSizingProfile getTypeSizingProfile() {
+		return typeSizingProfile;
+	}
+
+	private final UniqueDelegate SPANNER_UNIQUE_DELEGATE = UniqueDelegates.alwaysIndex( this );
 	private final StandardTableExporter SPANNER_TABLE_EXPORTER = new SpannerPostgreSQLTableExporter( this );
 	private final SequenceSupport SPANNER_SEQUENCE_SUPPORT = new SpannerPostgreSQLSequenceSupport(this);
 
@@ -174,6 +232,7 @@ public class SpannerPostgreSQLDialect extends PostgreSQLDialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
 		super.initializeFunctionRegistry( functionContributions );
 
@@ -298,12 +357,14 @@ public class SpannerPostgreSQLDialect extends PostgreSQLDialect {
 	}
 
 	@Override
-	protected void initDefaultProperties() {
-		super.initDefaultProperties();
-		getDefaultProperties().setProperty( AvailableSettings.PREFERRED_POOLED_OPTIMIZER, "none" );
+	@SPI({ IMPLEMENT, SUPPLY })
+	protected void contributeDefaultProperties(java.util.Properties properties) {
+		super.contributeDefaultProperties( properties );
+		properties.setProperty( AvailableSettings.PREFERRED_POOLED_OPTIMIZER, "none" );
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String getArrayTypeName(String javaElementTypeName, String elementTypeName, Integer maxLength) {
 		if ( elementTypeName != null && elementTypeName.equals( "varchar" ) ) {
 			elementTypeName = "text";
@@ -317,18 +378,21 @@ public class SpannerPostgreSQLDialect extends PostgreSQLDialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public UniqueDelegate getUniqueDelegate() {
 		return SPANNER_UNIQUE_DELEGATE;
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public SequenceSupport getSequenceSupport() {
 		return SPANNER_SEQUENCE_SUPPORT;
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public RowLevelSecurity getRowLevelSecurity() {
-		return NoRowLevelSecurity.INSTANCE;
+		return RowLevelSecurityStrategies.none();
 	}
 
 	@Override
@@ -337,87 +401,13 @@ public class SpannerPostgreSQLDialect extends PostgreSQLDialect {
 	}
 
 	@Override
-	public String getCheckCondition(String columnName, String[] values) {
-		final StringBuilder check = new StringBuilder();
-		check.append("(");
-		String separator = "";
-		boolean nullIsValid = false;
-		for (String value : values) {
-			if (value == null) {
-				nullIsValid = true;
-				continue;
-			}
-			check.append(separator).append(columnName).append("='").append(value).append("'");
-			separator = " or ";
-		}
-		check.append(")");
-		if (nullIsValid) {
-			check.append(" or ").append(columnName).append(" is null");
-		}
-		return check.toString();
+	@SPI({ IMPLEMENT, SUPPLY })
+	public EnumSupport getEnumSupport() {
+		return SpannerPostgreSQLEnumSupport.INSTANCE;
 	}
 
 	@Override
-	public String getCheckCondition(String columnName, Long[] values) {
-		final StringBuilder check = new StringBuilder();
-		check.append("(");
-		String separator = "";
-		boolean nullIsValid = false;
-		for (Long value : values) {
-			if (value == null) {
-				nullIsValid = true;
-				continue;
-			}
-			check.append(separator).append(columnName).append("=").append(value);
-			separator = " or ";
-		}
-		check.append(")");
-		if (nullIsValid) {
-			check.append(" or ").append(columnName).append(" is null");
-		}
-		return check.toString();
-	}
-
-	@Override
-	public String getCheckCondition(String columnName, java.util.Collection<?> valueSet,
-			org.hibernate.type.descriptor.jdbc.JdbcType jdbcType) {
-		final boolean isCharacterJdbcType = org.hibernate.type.SqlTypes.isCharacterType(jdbcType.getJdbcTypeCode());
-
-		final StringBuilder check = new StringBuilder();
-		check.append("(");
-		String separator = "";
-		boolean nullIsValid = false;
-		for (Object value : valueSet) {
-			if (value == null) {
-				nullIsValid = true;
-				continue;
-			}
-			check.append(separator).append(columnName).append("=");
-			if (isCharacterJdbcType) {
-				check.append("'").append(String.valueOf(value).replace("'", "''")).append("'");
-			}
-			else {
-				check.append(value);
-			}
-			separator = " or ";
-		}
-		check.append(")");
-		if (nullIsValid) {
-			check.append(" or ").append(columnName).append(" is null");
-		}
-		return check.toString();
-	}
-
-	// @Override
-	// public String getCheckCondition(String columnName, long[] values) {
-	// final Long[] boxedValues = new Long[values.length];
-	// for (int i = 0; i < values.length; i++) {
-	// boxedValues[i] = values[i];
-	// }
-	// return getCheckCondition(columnName, boxedValues);
-	// }
-
-	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public AggregateSupport getAggregateSupport() {
 		return SpannerPostgreSQLAggregateSupport.INSTANCE;
 	}
@@ -428,6 +418,7 @@ public class SpannerPostgreSQLDialect extends PostgreSQLDialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	protected Integer resolveSqlTypeCode(String columnTypeName, TypeConfiguration typeConfiguration) {
 		return switch (columnTypeName) {
 			case "character varying" -> Types.VARCHAR;
@@ -439,83 +430,24 @@ public class SpannerPostgreSQLDialect extends PostgreSQLDialect {
 	}
 
 	@Override
-	public boolean supportsFetchClause(FetchClauseType type) {
-		return false;
+	@SPI({ USE, IMPLEMENT, SUPPLY })
+	public FetchClauseSupport getFetchClauseSupport() {
+		return FetchClauseSupport.NONE;
 	}
 
-	@Override
-	public String getForUpdateString() {
-		return " for update";
-	}
 
-	@Override
-	public String getForUpdateString(String aliases) {
-		return getForUpdateString();
-	}
 
-	@Override
-	public String getWriteLockString(int timeout) {
-		validateSpannerLockTimeout( timeout );
-		return getForUpdateString();
-	}
 
-	@Override
-	public String getWriteLockString(String aliases, int timeout) {
-		return getWriteLockString( timeout );
-	}
 
-	@Override
-	public String getWriteLockString(Timeout timeout) {
-		return getWriteLockString( timeout.milliseconds() );
-	}
 
-	@Override
-	public String getWriteLockString(String aliases, Timeout timeout) {
-		return getWriteLockString( aliases, timeout.milliseconds() );
-	}
 
-	@Override
-	public String getReadLockString(int timeout) {
-		validateSpannerLockTimeout( timeout );
-		return getForUpdateString();
-	}
 
-	@Override
-	public String getReadLockString(Timeout timeout) {
-		return getWriteLockString( timeout.milliseconds() );
-	}
 
-	@Override
-	public String getReadLockString(String aliases, Timeout timeout) {
-		return getWriteLockString( timeout.milliseconds() );
-	}
 
-	@Override
-	public String getReadLockString(String aliases, int timeout) {
-		return getWriteLockString( timeout );
-	}
 
-	@Override
-	public String getForUpdateNowaitString() {
-		throw new UnsupportedOperationException(
-				"Spanner doesn't support for-update with no-wait timeout" );
-	}
 
-	@Override
-	public String getForUpdateNowaitString(String aliases) {
-		return getForUpdateNowaitString();
-	}
 
-	@Override
-	public String getForUpdateSkipLockedString() {
-		throw new UnsupportedOperationException(
-				"Spanner doesn't support for-update with skip locked timeout" );
-	}
 
-	@Override
-	public String getForUpdateSkipLockedString(String aliases) {
-		return getForUpdateSkipLockedString();
-	}
 
 	@Override
 	public LockingClauseStrategy getLockingClauseStrategy(
@@ -540,6 +472,7 @@ public class SpannerPostgreSQLDialect extends PostgreSQLDialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.contributeTypes( typeContributions, serviceRegistry );
 
@@ -559,8 +492,9 @@ public class SpannerPostgreSQLDialect extends PostgreSQLDialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public FunctionalDependencyAnalysisSupport getFunctionalDependencyAnalysisSupport() {
-		return FunctionalDependencyAnalysisSupportImpl.NONE;
+		return FunctionalDependencyAnalysisSupport.NONE;
 	}
 
 	@Override
@@ -573,21 +507,23 @@ public class SpannerPostgreSQLDialect extends PostgreSQLDialect {
 		jdbcTypeRegistry.addDescriptor( SpannerTimeJdbcType.INSTANCE );
 		jdbcTypeRegistry.addDescriptor( Types.BLOB, BlobJdbcType.BLOB_BINDING );
 		jdbcTypeRegistry.addDescriptor( Types.CLOB, ClobJdbcType.CLOB_BINDING );
-		jdbcTypeRegistry.addDescriptor( PostgreSQLUUIDJdbcType.INSTANCE );
+		jdbcTypeRegistry.addDescriptor( PostgreSQLJdbcTypes.uuid() );
 
 		// Replace the standard array constructor
-		jdbcTypeRegistry.addTypeConstructor( PostgreSQLArrayJdbcTypeConstructor.INSTANCE );
+		jdbcTypeRegistry.addTypeConstructor( PostgreSQLJdbcTypes.arrayConstructor() );
 
-		jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingJsonJdbcType.JSONB_INSTANCE );
-		jdbcTypeRegistry.addTypeConstructorIfAbsent( PostgreSQLCastingJsonArrayJdbcTypeConstructor.JSONB_INSTANCE );
+		jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLJdbcTypes.castingJsonb() );
+		jdbcTypeRegistry.addTypeConstructorIfAbsent( PostgreSQLJdbcTypes.castingJsonbArrayConstructor() );
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public SqlAstTranslatorFactory getSqlAstTranslatorFactory() {
 		return new StandardSqlAstTranslatorFactory() {
 			@Override
-			protected <T extends JdbcOperation> SqlAstTranslator<T> buildTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
-				return new SpannerPostgreSQLSqlAstTranslator<T>( sessionFactory, statement );
+			protected <S extends Statement, T extends JdbcOperation> SqlAstTranslator<T> createTranslator(
+					SqlAstTranslationRequest<S, T> request) {
+				return new SpannerPostgreSQLSqlAstTranslator<T>( request );
 			}
 		};
 	}
@@ -597,12 +533,12 @@ public class SpannerPostgreSQLDialect extends PostgreSQLDialect {
 		final var ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
 
 		// We need to configure that the array type uses the raw element type for casts
-		ddlTypeRegistry.addDescriptor( new ArrayDdlTypeImpl( this, true ) );
-		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( UUID, "uuid", this ) );
-		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "jsonb", this ) );
+		ddlTypeRegistry.addDescriptor( StandardDdlTypes.standardArray( this, true ) );
+		ddlTypeRegistry.addDescriptor( StandardDdlTypes.simple( UUID, "uuid", this ) );
+		ddlTypeRegistry.addDescriptor( StandardDdlTypes.simple( JSON, "jsonb", this ) );
 
 		ddlTypeRegistry.addDescriptor(
-				CapacityDependentDdlType.builder( FLOAT, columnType( FLOAT ), castType( FLOAT ), this )
+				StandardDdlTypes.builder( FLOAT, columnType( FLOAT ), this ).castTypeName( castType( FLOAT ) )
 						.withTypeCapacity( 24, "real" )
 						.withTypeCapacity( 53, "double precision" )
 						.build()
@@ -610,6 +546,7 @@ public class SpannerPostgreSQLDialect extends PostgreSQLDialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public void appendDateTimeLiteral(
 			SqlAppender appender,
 			TemporalAccessor temporalAccessor,
@@ -640,6 +577,7 @@ public class SpannerPostgreSQLDialect extends PostgreSQLDialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public void appendDateTimeLiteral(
 			SqlAppender appender,
 			Date date,
@@ -652,6 +590,8 @@ public class SpannerPostgreSQLDialect extends PostgreSQLDialect {
 		super.appendDateTimeLiteral( appender, date, precision, jdbcTimeZone );
 	}
 
+	@Override
+	@SPI({ USE, IMPLEMENT })
 	public void appendDateTimeLiteral(
 			SqlAppender appender,
 			Calendar calendar,
@@ -666,6 +606,7 @@ public class SpannerPostgreSQLDialect extends PostgreSQLDialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	protected String castType(int sqlTypeCode) {
 		return switch (sqlTypeCode) {
 			case TIME, TIME_UTC, TIMESTAMP, TIMESTAMP_UTC -> columnType(TIMESTAMP_WITH_TIMEZONE);
@@ -674,6 +615,7 @@ public class SpannerPostgreSQLDialect extends PostgreSQLDialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
 		final String temporal = temporalType == TemporalType.DATE ? "cast(?3 as " + castType(TIMESTAMP) + ")" : "?3";
 		return intervalType != null
@@ -682,6 +624,7 @@ public class SpannerPostgreSQLDialect extends PostgreSQLDialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
 		final String pattern = switch (unit) {
 			case YEAR -> "extract(year from ?3)-extract(year from ?2)";
@@ -704,6 +647,7 @@ public class SpannerPostgreSQLDialect extends PostgreSQLDialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String castPattern(CastType from, CastType to) {
 		if (from == CastType.STRING && to == CastType.TIME) {
 			return "cast('1970-01-01 ' || ?1 as timestamp with time zone)";
@@ -732,6 +676,7 @@ public class SpannerPostgreSQLDialect extends PostgreSQLDialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	protected String columnType(int sqlTypeCode) {
 		return switch (sqlTypeCode) {
 			// Spanner doesn't support precision with the timestamp
@@ -749,16 +694,23 @@ public class SpannerPostgreSQLDialect extends PostgreSQLDialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT, SUPPLY })
 	public ScrollMode defaultScrollMode() {
 		return ScrollMode.FORWARD_ONLY;
 	}
 
 	@Override
-	public boolean supportsTupleCounts() {
-		return false;
+	public TupleCountSupport getTupleCountSupport() {
+		return TupleCountSupport.NONE;
 	}
 
 	@Override
+	public WindowFunctionSupport getWindowFunctionSupport() {
+		return WindowFunctionSupport.NONE;
+	}
+
+	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public boolean supportsUserDefinedTypes() {
 		return false;
 	}
@@ -769,184 +721,138 @@ public class SpannerPostgreSQLDialect extends PostgreSQLDialect {
 	}
 
 	@Override
-	public boolean supportsRecursiveCycleUsingClause() {
-		return false;
+	public RowValueSupport getRowValueSupport() {
+		return RowValueSupport.builder( super.getRowValueSupport() )
+				.feature( RowValueSupport.Feature.ROW_CONSTRUCTOR, false )
+				.feature( RowValueSupport.Feature.ORDERING_COMPARISON, false )
+				.feature( RowValueSupport.Feature.DISTINCTNESS_COMPARISON, false )
+				.feature( RowValueSupport.Feature.EQUALITY_COMPARISON, false )
+				.feature( RowValueSupport.Feature.IN_SUBQUERY, false )
+				.feature( RowValueSupport.Feature.QUANTIFIED_COMPARISON, false )
+				.build();
 	}
 
 	@Override
-	public boolean supportsRecursiveSearchClause() {
-		return false;
+	public ValuesListSupport getValuesListSupport() {
+		return ValuesListSupport.INSERT_ONLY;
 	}
 
 	@Override
-	public boolean supportsUniqueConstraints() {
-		return false;
+	public PredicateSupport getPredicateSupport() {
+		return PredicateSupport.builder( super.getPredicateSupport() )
+				.noCaseInsensitiveLikeOperator()
+				.capability( PredicateSupport.Capability.DISTINCT_FROM, false )
+				.build();
 	}
 
 	@Override
-	public boolean supportsRowValueConstructorGtLtSyntax() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsRowValueConstructorSyntax() {
-		return false;
-	}
-
-	// ALL subqueries with operators other than <>/!= are not supported
-	@Override
-	public boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsValuesList() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsRowValueConstructorSyntaxInInSubQuery() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsCaseInsensitiveLike() {
-		return false;
-	}
-
-	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String currentTimestamp() {
 		return currentTimestampWithTimeZone();
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String currentTime() {
 		return currentTimestampWithTimeZone();
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String currentLocalTimestamp() {
 		return currentTimestampWithTimeZone();
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String currentLocalTime() {
 		return currentTimestampWithTimeZone();
 	}
 
 	@Override
-	public boolean supportsLateral() {
-		return false;
+	public SubquerySupport getSubquerySupport() {
+		return SubquerySupport.builder( super.getSubquerySupport() )
+				.feature( SubquerySupport.Feature.LATERAL, false )
+				.build();
 	}
 
 	@Override
-	public boolean supportsFromClauseInUpdate() {
-		return false;
+	public MutationSyntaxSupport getMutationSyntaxSupport() {
+		return MutationSyntaxSupport.NONE;
 	}
 
 	@Override
-	public int getMaxVarcharLength() {
-		return 2_621_440;
+	public ParameterLimits getParameterLimits() {
+		return ParameterLimits.of( 100 );
 	}
 
 	@Override
-	public int getMaxVarbinaryLength() {
-		//max is equivalent 10 MiB
-		return 10_485_760;
-	}
-
-	@Override
-	public String getCurrentSchemaCommand() {
-		return "";
-	}
-
-	@Override
-	public boolean supportsCommentOn() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsWindowFunctions() {
-		return false;
-	}
-
-	@Override
-	public int getInExpressionCountLimit() {
-		return 100;
-	}
-
-	@Override
-	public String getAddForeignKeyConstraintString(
-			String constraintName,
-			String[] foreignKey,
-			String referencedTable,
-			String[] primaryKey,
-			boolean referencesPrimaryKey) {
+	@SPI({ USE, IMPLEMENT })
+	public String renderAddConstraint(
+			org.hibernate.dialect.constraint.spi.ForeignKeyConstraintRequest request) {
 		// Cloud Spanner requires the referenced columns to specified in all cases, including
-		// if the foreign key is referencing the primary key of the referenced table. Setting referencesPrimaryKey to
-		// false will add all the referenced columns.
-		return super.getAddForeignKeyConstraintString( constraintName, foreignKey, referencedTable, primaryKey, false );
+		// if the foreign key references the primary key of the referenced table.
+		return request.isExplicitDefinition()
+				? super.renderAddConstraint( request )
+				: super.renderAddConstraint( new org.hibernate.dialect.constraint.spi.ForeignKeyConstraintRequest(
+						request.constraintName(),
+						request.sourceColumnNames(),
+						request.referencedTableName(),
+						request.targetColumnNames(),
+						false,
+						null
+				) );
 	}
 
 	@Override
-	public boolean canBatchTruncate() {
-		return false;
+	@SPI({ USE, IMPLEMENT })
+	public TruncateMode truncateMode() {
+		return TruncateMode.PER_TABLE;
 	}
 
 	@Override
-	public String rowId(String rowId) {
-		return null;
+	@SPI({ USE, IMPLEMENT })
+	public List<String> renderCommands(TruncateRequest request) {
+		return request.tableNames().stream().map( name -> "delete from " + name ).toList();
 	}
 
 	@Override
-	public boolean supportsRowConstructor() {
-		return false;
+	@SPI({ IMPLEMENT, SUPPLY })
+	public synchronized SchemaDropSupport getSchemaDropSupport() {
+		if ( schemaDropSupport == null ) {
+			schemaDropSupport = new SchemaDropSupport( List.of(), ConstraintDropMode.EXPLICIT, "" );
+		}
+		return schemaDropSupport;
 	}
 
 	@Override
-	public String getTruncateTableStatement(String tableName) {
-		return "delete from " + tableName;
-	}
-
-	@Override
-	public String getBeforeDropStatement() {
-		return null;
-	}
-
-	@Override
-	public String getCascadeConstraintsString() {
-		return "";
-	}
-
-	@Override
-	public boolean supportsIfExistsBeforeConstraintName() {
-		return false;
+	@SPI({ IMPLEMENT, SUPPLY })
+	public synchronized IfExistsSupport getIfExistsSupport() {
+		if ( ifExistsSupport == null ) {
+			ifExistsSupport = new IfExistsSupport(
+				ExistenceCheckPlacement.BEFORE_NAME,
+				ExistenceCheckPlacement.BEFORE_NAME,
+				ExistenceCheckPlacement.NONE,
+				ExistenceCheckPlacement.BEFORE_NAME
+		);
+		}
+		return ifExistsSupport;
 	}
 
 
 	@Override
-	public boolean supportsDistinctFromPredicate() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsPartitionBy() {
-		return false;
-	}
-
-	@Override
+	@SPI({ USE, IMPLEMENT })
 	public boolean addPartitionKeyToPrimaryKey() {
 		return false;
 	}
 
 	@Override
-	public String getDual() {
-		return "unnest(ARRAY[1])";
-	}
-
-	@Override
-	public String getFromDualForSelectOnly() {
-		return " from " + getDual() + " dual";
+	public SingleRowTableSupport getSingleRowTableSupport() {
+		final String tableExpression = "unnest(ARRAY[1])";
+		return SingleRowTableSupport.builder( super.getSingleRowTableSupport() )
+				.tableExpression( tableExpression )
+				.selectOnlyFromClause( " from " + tableExpression + " dual" )
+				.build();
 	}
 
 	public Replacer datetimeFormat(String format) {
@@ -977,44 +883,29 @@ public class SpannerPostgreSQLDialect extends PostgreSQLDialect {
 	}
 
 	@Override
-	public boolean supportsRecursiveCTE() {
-		return false;
-	}
-
-	public boolean supportsWithClauseInSubquery() {
-		return false;
-	}
-
-	public boolean supportsNestedWithClause() {
-		return false;
-	}
-
-	public boolean supportsCteHeaderColumnList() {
-		return false;
+	public CteSupport getCteSupport() {
+		return CteSupport.builder( super.getCteSupport() )
+				.placement( CteSupport.Placement.TOP_LEVEL )
+				.recursiveFeatures()
+				.supportsCteHeaderColumnList( false )
+				.build();
 	}
 
 	@Override
-	public boolean supportsTupleDistinctCounts() {
-		return false;
-	}
-
-	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public InformationExtractor getInformationExtractor(ExtractionContext extractionContext) {
-		return new InformationExtractorJdbcDatabaseMetaDataImpl( extractionContext );
+		return InformationExtractors.jdbcMetadata( extractionContext );
 	}
 
 	@Override
-	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(
-			EntityMappingType rootEntityDescriptor,
-			RuntimeModelCreationContext runtimeModelCreationContext) {
-		return new PersistentTableMutationStrategy( rootEntityDescriptor, runtimeModelCreationContext );
+	public MultiTableMutationSupport getMultiTableMutationSupport() {
+		return MultiTableMutationSupport.PERSISTENT_TABLE;
 	}
 
 	@Override
-	public SqmMultiTableInsertStrategy getFallbackSqmInsertStrategy(
-			EntityMappingType rootEntityDescriptor,
-			RuntimeModelCreationContext runtimeModelCreationContext) {
-		return new PersistentTableInsertStrategy( rootEntityDescriptor, runtimeModelCreationContext );
+	@SPI({ IMPLEMENT, SUPPLY })
+	public RowIdSupport getRowIdSupport() {
+		return RowIdSupports.none();
 	}
 
 	@Override
@@ -1033,6 +924,7 @@ public class SpannerPostgreSQLDialect extends PostgreSQLDialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
 		return this::handleConstraintViolatedException;
 	}
@@ -1081,8 +973,9 @@ public class SpannerPostgreSQLDialect extends PostgreSQLDialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public CallableStatementSupport getCallableStatementSupport() {
-		return StandardCallableStatementSupport.NO_REF_CURSOR_INSTANCE;
+		return CallableStatementSupports.standard();
 	}
 
 	public boolean useIntegerForPrimaryKey() {

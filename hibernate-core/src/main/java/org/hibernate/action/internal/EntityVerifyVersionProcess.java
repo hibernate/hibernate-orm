@@ -6,7 +6,7 @@ package org.hibernate.action.internal;
 
 import jakarta.annotation.Nonnull;
 import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
-import org.hibernate.dialect.lock.OptimisticEntityLockException;
+import org.hibernate.dialect.lock.internal.OptimisticEntityLockException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 import static org.hibernate.pretty.MessageHelper.infoString;

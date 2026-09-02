@@ -8,11 +8,14 @@ import jakarta.persistence.Timeout;
 import org.hibernate.HibernateException;
 import org.hibernate.Timeouts;
 import org.hibernate.dialect.DatabaseVersion;
-import org.hibernate.dialect.RowLockStrategy;
 import org.hibernate.dialect.lock.spi.ConnectionLockTimeoutStrategy;
 import org.hibernate.dialect.lock.spi.LockTimeoutType;
+import org.hibernate.dialect.lock.spi.LockingClauseRenderer;
+import org.hibernate.dialect.lock.spi.LockingClauseRequest;
 import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.lock.spi.OuterJoinLockingType;
+import org.hibernate.dialect.lock.spi.PessimisticLockKind;
+import org.hibernate.dialect.lock.spi.RowLockStrategy;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 import java.sql.Connection;
@@ -28,7 +31,7 @@ import static org.hibernate.dialect.lock.spi.LockTimeoutType.QUERY;
  *
  * @author Steve Ebersole
  */
-public class MySQLLockingSupport implements LockingSupport, LockingSupport.Metadata {
+public class MySQLLockingSupport implements LockingSupport, LockingSupport.Metadata, LockingClauseRenderer {
 	public static final ConnectionLockTimeoutStrategy MYSQL_CONN_LOCK_TIMEOUT_STRATEGY = new ConnectionLockTimeoutStrategyImpl();
 	public static final LockingSupport MYSQL_LOCKING_SUPPORT = new MySQLLockingSupport();
 
@@ -45,6 +48,33 @@ public class MySQLLockingSupport implements LockingSupport, LockingSupport.Metad
 	@Override
 	public Metadata getMetadata() {
 		return this;
+	}
+
+	@Override
+	public LockingClauseRenderer getLockingClauseRenderer() {
+		return this;
+	}
+
+	@Override
+	public String render(LockingClauseRequest request) {
+		final boolean share = request.lockKind() == PessimisticLockKind.SHARE;
+		final StringBuilder fragment = new StringBuilder(
+				share
+						? laterThanVersion8 ? " for share" : " lock in share mode"
+						: " for update"
+		);
+		if ( laterThanVersion8 && !request.targets().isEmpty() ) {
+			fragment.append( " of " );
+			LockingClauseRendererSupport.appendTargets( fragment, request.targets() );
+		}
+
+		if ( laterThanVersion8 ) {
+			switch ( request.timeout().milliseconds() ) {
+				case NO_WAIT_MILLI -> fragment.append( " nowait" );
+				case SKIP_LOCKED_MILLI -> fragment.append( " skip locked" );
+			}
+		}
+		return fragment.toString();
 	}
 
 	@Override

@@ -4,6 +4,8 @@
  */
 package org.hibernate.type.format.jackson;
 
+import org.hibernate.SPI;
+
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.Module;
@@ -23,6 +25,7 @@ import java.util.List;
  * @author Christian Beikov
  * @author Yanming Zhou
  */
+@SPI
 public final class JacksonJsonFormatMapper extends AbstractJsonFormatMapper {
 
 	public static final String SHORT_NAME = "jackson";

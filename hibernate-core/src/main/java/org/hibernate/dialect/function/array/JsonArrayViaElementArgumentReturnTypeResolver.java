@@ -13,7 +13,7 @@ import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
 import org.hibernate.query.sqm.sql.spi.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.spi.SqmTypedNode;
-import org.hibernate.sql.ast.tree.SqlAstNode;
+import org.hibernate.sql.ast.spi.SqlAstNode;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.java.BasicPluralJavaType;
@@ -34,6 +34,7 @@ public class JsonArrayViaElementArgumentReturnTypeResolver implements FunctionRe
 	}
 
 	@Override
+	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	public ReturnableType<?> resolveFunctionReturnType(
 			ReturnableType<?> impliedType,
 			@Nullable SqmToSqlAstConverter converter,
@@ -69,6 +70,7 @@ public class JsonArrayViaElementArgumentReturnTypeResolver implements FunctionRe
 	}
 
 	@Override
+	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	public BasicValuedMapping resolveFunctionReturnType(
 			Supplier<BasicValuedMapping> impliedTypeAccess,
 			List<? extends SqlAstNode> arguments) {

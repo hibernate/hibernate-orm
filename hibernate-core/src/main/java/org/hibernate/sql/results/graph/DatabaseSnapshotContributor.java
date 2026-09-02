@@ -5,7 +5,7 @@
 package org.hibernate.sql.results.graph;
 
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.spi.query.from.TableGroup;
 
 /**
  * Contract for model-parts which contribute to their container's
@@ -13,6 +13,7 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
  *
  * @author Steve Ebersole
  */
+@org.hibernate.SPI({ org.hibernate.SPI.Role.USE, org.hibernate.SPI.Role.IMPLEMENT })
 public interface DatabaseSnapshotContributor extends Fetchable {
 
 	/**
@@ -20,6 +21,7 @@ public interface DatabaseSnapshotContributor extends Fetchable {
 	 * <p>
 	 * By default, simply use {@link #createDomainResult}
 	 */
+	@org.hibernate.SPI(org.hibernate.SPI.Role.SUPPLY)
 	default <T> DomainResult<T> createSnapshotDomainResult(
 			NavigablePath navigablePath,
 			TableGroup parentTableGroup,

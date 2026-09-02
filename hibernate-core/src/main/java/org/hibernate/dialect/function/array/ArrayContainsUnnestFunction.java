@@ -6,22 +6,26 @@ package org.hibernate.dialect.function.array;
 
 import java.util.List;
 
+import org.hibernate.SPI;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.model.domain.ReturnableType;
-import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
-import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.spi.SqlAppender;
-import org.hibernate.sql.ast.tree.SqlAstNode;
-import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.spi.translation.SqlAstNodeRenderingMode;
+import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
+import org.hibernate.sql.spi.SqlAppender;
+import org.hibernate.sql.ast.spi.SqlAstNode;
+import org.hibernate.sql.ast.spi.query.expression.Expression;
 import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.spi.TypeConfiguration;
 
-/**
- * Implement the array contains function by using {@code unnest}.
- */
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.USE;
+
+/// Subclassable `array_contains` descriptor implemented using `unnest`.
+@SPI({ USE, IMPLEMENT })
 public class ArrayContainsUnnestFunction extends AbstractArrayContainsFunction {
 
+	@SPI(IMPLEMENT)
 	public ArrayContainsUnnestFunction(boolean nullable, TypeConfiguration typeConfiguration) {
 		super( nullable, typeConfiguration );
 	}
@@ -37,7 +41,7 @@ public class ArrayContainsUnnestFunction extends AbstractArrayContainsFunction {
 		final JdbcMappingContainer needleTypeContainer = needleExpression.getExpressionType();
 		final JdbcMapping needleType = needleTypeContainer == null ? null : needleTypeContainer.getSingleJdbcMapping();
 		if ( needleType == null || needleType instanceof BasicPluralType<?, ?> ) {
-			LOG.deprecatedArrayContainsWithArray();
+			warnAboutArrayContainsWithArrayArgument();
 			sqlAppender.append( '(' );
 			if ( ArrayHelper.isNullable( haystackExpression ) ) {
 				walker.render( haystackExpression, SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );

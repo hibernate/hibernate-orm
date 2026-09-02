@@ -54,7 +54,7 @@ public class SQLServerMetaDataDialect extends JDBCMetaDataDialect {
 						boolean bool = tableRs.getBoolean("hasIdentity");
 						if(string!=null) {
 							if(string.equalsIgnoreCase("uniqueidentifier")){
-								element.put("HIBERNATE_STRATEGY", "guid");
+								element.put("HIBERNATE_STRATEGY", org.hibernate.id.uuid.UuidGenerator.class.getName());
 							}
 							else if(bool){
 								element.put("HIBERNATE_STRATEGY", "identity");

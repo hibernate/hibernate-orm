@@ -4,8 +4,11 @@
  */
 package org.hibernate.query.sqm.mutation.internal;
 
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
+
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.dialect.lock.spi.OuterJoinLockingType;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -26,6 +29,7 @@ import org.hibernate.query.sqm.internal.SqmUtil;
 import org.hibernate.query.sqm.spi.SqmParameterMappingModelResolutionAccess;
 import org.hibernate.query.sqm.sql.spi.SqmTranslation;
 import org.hibernate.query.sqm.sql.spi.SqmTranslator;
+import org.hibernate.query.sqm.sql.spi.SqmTranslationRequest;
 import org.hibernate.query.sqm.sql.internal.SqlAstQueryPartProcessingStateImpl;
 import org.hibernate.query.sqm.tree.spi.SqmDeleteOrUpdateStatement;
 import org.hibernate.query.sqm.tree.spi.delete.SqmDeleteStatement;
@@ -34,12 +38,12 @@ import org.hibernate.query.sqm.tree.spi.from.SqmFromClause;
 import org.hibernate.query.sqm.tree.spi.select.SqmQuerySpec;
 import org.hibernate.query.sqm.tree.spi.select.SqmSelectClause;
 import org.hibernate.query.sqm.tree.spi.select.SqmSelectStatement;
-import org.hibernate.sql.ast.SqlAstJoinType;
-import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.predicate.Predicate;
-import org.hibernate.sql.ast.tree.select.QuerySpec;
-import org.hibernate.sql.ast.tree.select.SelectStatement;
+import org.hibernate.sql.ast.spi.query.from.SqlAstJoinType;
+import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
+import org.hibernate.sql.ast.spi.query.from.TableGroup;
+import org.hibernate.sql.ast.spi.query.predicate.Predicate;
+import org.hibernate.sql.ast.spi.query.select.QuerySpec;
+import org.hibernate.sql.ast.spi.query.select.SelectStatement;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
 import org.hibernate.sql.exec.spi.JdbcSelect;
@@ -203,20 +207,22 @@ public class MatchingIdSelectionHelper {
 		final SqmTranslator<SelectStatement> translator = factory.getQueryEngine()
 				.getSqmTranslatorFactory()
 				.createSelectTranslator(
-						sqmSelectStatement,
-						executionContext.getQueryOptions(),
-						domainParameterXref,
-						executionContext.getQueryParameterBindings(),
-						executionContext.getSession().getLoadQueryInfluencers(),
-						factory.getSqlTranslationEngine(),
-						true
+						new SqmTranslationRequest.Select(
+								sqmSelectStatement,
+								executionContext.getQueryOptions(),
+								domainParameterXref,
+								executionContext.getQueryParameterBindings(),
+								executionContext.getSession().getLoadQueryInfluencers(),
+								factory.getSqlTranslationEngine(),
+								true
+						)
 				);
 		final SqmTranslation<SelectStatement> translation = translator.translate();
 		final JdbcServices jdbcServices = factory.getJdbcServices();
 		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
 		final SqlAstTranslator<JdbcSelect> sqlAstSelectTranslator = jdbcEnvironment
 				.getSqlAstTranslatorFactory()
-				.buildSelectTranslator( factory, translation.getSqlAst() );
+				.buildTranslator( new SqlAstTranslationRequest.Select( factory, translation.getSqlAst() ) );
 
 		final Map<QueryParameterImplementor<?>, Map<SqmParameter<?>, List<JdbcParametersList>>> jdbcParamsXref =
 				SqmUtil.generateJdbcParamsXref( domainParameterXref, translator );
@@ -239,7 +245,8 @@ public class MatchingIdSelectionHelper {
 		// Acquire a WRITE lock for the rows that are about to be modified
 		lockOptions.setLockMode( LockMode.WRITE );
 		// Visit the table joins and reset the lock mode if we encounter OUTER joins that are not supported
-		if ( !jdbcEnvironment.getDialect().supportsOuterJoinForUpdate() ) {
+		if ( jdbcEnvironment.getDialect().getLockingSupport().getMetadata().getOuterJoinLockingType()
+				== OuterJoinLockingType.UNSUPPORTED ) {
 			translation.getSqlAst().getQuerySpec().getFromClause().visitTableJoins(
 					tableJoin -> {
 						if ( tableJoin.isInitialized() && tableJoin.getJoinType() != SqlAstJoinType.INNER ) {

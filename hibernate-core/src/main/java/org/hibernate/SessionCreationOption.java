@@ -4,6 +4,7 @@
  */
 package org.hibernate;
 
+
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityAgent;
 import org.hibernate.engine.creation.CommonBuilder;

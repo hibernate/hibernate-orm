@@ -4,6 +4,11 @@
  */
 package org.hibernate.usertype;
 
+import org.hibernate.SPI;
+
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.USE;
+
 import java.util.Properties;
 
 /**
@@ -54,6 +59,7 @@ import java.util.Properties;
  *
  * @author Michael Gloegl
  */
+@SPI({ USE, IMPLEMENT })
 public interface ParameterizedType {
 	/**
 	 * Called by Hibernate to pass the parameters

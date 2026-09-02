@@ -4,6 +4,11 @@
  */
 package org.hibernate.type;
 
+import org.hibernate.SPI;
+
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.USE;
+
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.AdjustableJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -14,6 +19,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
  * adjust themselves relative to where/how they're used by, for example, accounting
  * for LOB, nationalized, primitive/wrapper, etc.
  */
+@SPI({ USE, IMPLEMENT })
 public interface AdjustableBasicType<J> extends BasicType<J> {
 	/**
 	 * Perform the adjustment

@@ -7,13 +7,23 @@ package org.hibernate.type.descriptor.java;
 import java.io.Serializable;
 
 import org.hibernate.SharedSessionContract;
+import org.hibernate.SPI;
 
-/**
- * Mutability plan for mutable objects
- *
- * @author Steve Ebersole
- */
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.USE;
+
+/// Base mutability plan for mutable values. Subclasses implement the non-null
+/// deep-copy operation; this base handles nulls and cache assembly/disassembly.
+///
+/// @param <T> the planned Java value type
+/// @author Steve Ebersole
+@SPI({ USE, IMPLEMENT })
 public abstract class MutableMutabilityPlan<T> implements MutabilityPlan<T> {
+
+	/// Constructor for provider subclasses.
+	@SPI(IMPLEMENT)
+	protected MutableMutabilityPlan() {
+	}
 
 	public static <T> MutableMutabilityPlan<T> instance() {
 		//noinspection unchecked

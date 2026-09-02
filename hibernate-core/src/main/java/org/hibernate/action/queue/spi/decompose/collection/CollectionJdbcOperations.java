@@ -9,7 +9,7 @@ import org.hibernate.action.queue.spi.bind.JdbcValueBindings;
 import org.hibernate.action.queue.spi.meta.TableDescriptor;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.sql.model.MutationOperation;
+import org.hibernate.sql.spi.mutation.MutationOperation;
 
 /// Manages standard MutationOperation, as well as parameter binding details, for collection mutations.
 /// Built by collection persisters for use in decomposers.

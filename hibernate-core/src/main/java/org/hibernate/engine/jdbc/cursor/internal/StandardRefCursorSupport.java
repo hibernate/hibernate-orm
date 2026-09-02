@@ -5,50 +5,41 @@
 package org.hibernate.engine.jdbc.cursor.internal;
 
 import java.sql.CallableStatement;
-import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.jdbc.cursor.spi.RefCursorSupport;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.engine.jdbc.cursor.spi.RefCursorSupportCreationContext;
 
-import org.jboss.logging.Logger;
+/// Standard JDBC REF_CURSOR registration and typed extraction.
+///
+/// @author Steve Ebersole
+public final class StandardRefCursorSupport implements RefCursorSupport {
+	private final RefCursorSupportCreationContext creationContext;
 
-/**
- * Standard implementation of {@link RefCursorSupport}
- *
- * @author Steve Ebersole
- */
-public class StandardRefCursorSupport implements RefCursorSupport {
-	private static final Logger LOG = Logger.getLogger( StandardRefCursorSupport.class );
-
-	private final JdbcServices jdbcServices;
-
-	public StandardRefCursorSupport(JdbcServices jdbcServices) {
-		this.jdbcServices = jdbcServices;
+	public StandardRefCursorSupport(RefCursorSupportCreationContext creationContext) {
+		this.creationContext = creationContext;
 	}
 
 	@Override
 	public void registerRefCursorParameter(CallableStatement statement, int position) {
 		try {
-			statement.registerOutParameter( position, refCursorTypeCode() );
+			statement.registerOutParameter( position, Types.REF_CURSOR );
 		}
 		catch (SQLException e) {
-			throw jdbcServices.getSqlExceptionHelper()
-					.convert( e, "Error registering REF_CURSOR parameter [" + position + "]" );
+			throw creationContext.convert( e, "Error registering REF_CURSOR parameter [" + position + "]" );
 		}
 	}
 
 	@Override
 	public void registerRefCursorParameter(CallableStatement statement, String name) {
 		try {
-			statement.registerOutParameter( name, refCursorTypeCode() );
+			statement.registerOutParameter( name, Types.REF_CURSOR );
 		}
 		catch (SQLException e) {
-			throw jdbcServices.getSqlExceptionHelper()
-					.convert( e, "Error registering REF_CURSOR parameter [" + name + "]" );
+			throw creationContext.convert( e, "Error registering REF_CURSOR parameter [" + name + "]" );
 		}
 	}
 
@@ -71,34 +62,4 @@ public class StandardRefCursorSupport implements RefCursorSupport {
 			throw new HibernateException( "Unexpected error extracting REF_CURSOR parameter [" + name + "]", e );
 		}
 	}
-
-	/**
-	 * Does this JDBC metadata indicate that the driver defines REF_CURSOR support?
-	 *
-	 * @param meta The JDBC metadata
-	 *
-	 * @return {@code true} if the metadata indicates that the driver defines REF_CURSOR support
-	 */
-	public static boolean supportsRefCursors(DatabaseMetaData meta) {
-		try {
-			final boolean mightSupportIt = meta.supportsRefCursors();
-			// Some databases cheat and don't actually support it correctly: add some additional checks.
-			if ( mightSupportIt ) {
-				if ( "Oracle JDBC driver".equals( meta.getDriverName() )
-						&& meta.getDriverMajorVersion() < 19 ) {
-					return false;
-				}
-			}
-			return mightSupportIt;
-		}
-		catch (Exception throwable) {
-			// If the driver is not compatible with the Java 8 contract, the method might not exit.
-			return false;
-		}
-	}
-
-	private int refCursorTypeCode() {
-		return Types.REF_CURSOR;
-	}
-
 }

@@ -4,6 +4,7 @@
  */
 package org.hibernate.spatial.dialect.postgis;
 
+
 import org.hibernate.type.SqlTypes;
 
 import org.geolatte.geom.codec.Wkb;

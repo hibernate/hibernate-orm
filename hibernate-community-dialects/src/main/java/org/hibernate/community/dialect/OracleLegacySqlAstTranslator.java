@@ -7,64 +7,62 @@ package org.hibernate.community.dialect;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.Internal;
 import org.hibernate.Locking;
-import org.hibernate.dialect.type.OracleArrayJdbcType;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.util.collections.Stack;
-import org.hibernate.metamodel.mapping.CollectionPart;
+import org.hibernate.dialect.sql.ast.spi.DerivedTableRenderingSupport;
+import org.hibernate.dialect.sql.ast.spi.PaginationRenderingPlan;
+import org.hibernate.dialect.sql.ast.spi.PaginationRenderingSupport;
+import org.hibernate.dialect.sql.ast.spi.QueryMutationRenderingSupport;
+import org.hibernate.dialect.sql.ast.spi.StandardQueryMutationRenderingSupport;
+import org.hibernate.dialect.sql.ast.spi.StandardDerivedTableRenderingSupport;
+import org.hibernate.dialect.sql.ast.spi.SetReturningFunctionRenderingSupport;
+import org.hibernate.dialect.sql.ast.spi.StandardSetReturningFunctionRenderingSupport;
+import org.hibernate.spi.Stack;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
-import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.query.IllegalQueryOperationException;
-import org.hibernate.query.sqm.tuple.internal.AnonymousTupleTableGroupProducer;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.common.FetchClauseType;
 import org.hibernate.query.common.FrameExclusion;
 import org.hibernate.query.common.FrameKind;
-import org.hibernate.query.sqm.sql.internal.SqmPathInterpretation;
-import org.hibernate.sql.ast.Clause;
-import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
-import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
-import org.hibernate.sql.ast.spi.SqlSelection;
-import org.hibernate.sql.ast.tree.SqlAstNode;
-import org.hibernate.sql.ast.tree.Statement;
-import org.hibernate.sql.ast.tree.cte.CteMaterialization;
-import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
-import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.FunctionExpression;
-import org.hibernate.sql.ast.tree.expression.Literal;
-import org.hibernate.sql.ast.tree.expression.Over;
-import org.hibernate.sql.ast.tree.expression.SqlTuple;
-import org.hibernate.sql.ast.tree.expression.SqlTupleContainer;
-import org.hibernate.sql.ast.tree.expression.Summarization;
-import org.hibernate.sql.ast.tree.from.DerivedTableReference;
-import org.hibernate.sql.ast.tree.from.FromClause;
-import org.hibernate.sql.ast.tree.from.FunctionTableReference;
-import org.hibernate.sql.ast.tree.from.NamedTableReference;
-import org.hibernate.sql.ast.tree.from.QueryPartTableReference;
-import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.from.UnionTableGroup;
-import org.hibernate.sql.ast.tree.from.ValuesTableReference;
-import org.hibernate.sql.ast.tree.insert.ConflictClause;
-import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
-import org.hibernate.sql.ast.tree.insert.Values;
-import org.hibernate.sql.ast.tree.predicate.InSubQueryPredicate;
-import org.hibernate.sql.ast.tree.predicate.Predicate;
-import org.hibernate.sql.ast.tree.select.QueryGroup;
-import org.hibernate.sql.ast.tree.select.QueryPart;
-import org.hibernate.sql.ast.tree.select.QuerySpec;
-import org.hibernate.sql.ast.tree.select.SelectClause;
-import org.hibernate.sql.ast.tree.select.SelectStatement;
-import org.hibernate.sql.ast.tree.select.SortSpecification;
-import org.hibernate.sql.ast.tree.update.Assignable;
-import org.hibernate.sql.ast.tree.update.Assignment;
-import org.hibernate.sql.ast.tree.update.UpdateStatement;
+import org.hibernate.sql.ast.spi.translation.Clause;
+import org.hibernate.sql.ast.spi.translation.SqlAstNodeRenderingMode;
+import org.hibernate.dialect.sql.ast.spi.AbstractSqlAstTranslator;
+import org.hibernate.sql.ast.spi.query.select.SqlSelection;
+import org.hibernate.sql.ast.spi.Statement;
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
+import org.hibernate.dialect.sql.ast.spi.InsertConflictRenderingSupport;
+import org.hibernate.dialect.sql.ast.spi.StandardInsertConflictRenderingSupport;
+import org.hibernate.sql.ast.spi.query.cte.CteMaterialization;
+import org.hibernate.sql.ast.spi.query.cte.CteStatement;
+import org.hibernate.sql.ast.spi.query.expression.CaseSearchedExpression;
+import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
+import org.hibernate.sql.ast.spi.query.expression.Expression;
+import org.hibernate.sql.ast.spi.query.expression.FunctionExpression;
+import org.hibernate.sql.ast.spi.query.expression.Literal;
+import org.hibernate.sql.ast.spi.query.expression.Over;
+import org.hibernate.sql.ast.spi.query.expression.SqlTuple;
+import org.hibernate.sql.ast.spi.query.expression.SqlTupleContainer;
+import org.hibernate.sql.ast.spi.query.expression.Summarization;
+import org.hibernate.sql.ast.spi.query.from.FromClause;
+import org.hibernate.sql.ast.spi.query.from.NamedTableReference;
+import org.hibernate.sql.ast.spi.query.from.TableGroup;
+import org.hibernate.sql.ast.spi.query.from.UnionTableGroup;
+import org.hibernate.sql.ast.spi.query.insert.InsertSelectStatement;
+import org.hibernate.sql.ast.spi.query.predicate.InSubQueryPredicate;
+import org.hibernate.sql.ast.spi.query.predicate.Predicate;
+import org.hibernate.sql.ast.spi.query.select.QueryGroup;
+import org.hibernate.sql.ast.spi.query.select.QueryPart;
+import org.hibernate.sql.ast.spi.query.select.QuerySpec;
+import org.hibernate.sql.ast.spi.query.select.SelectClause;
+import org.hibernate.sql.ast.spi.query.select.SelectStatement;
+import org.hibernate.sql.ast.spi.query.select.SortSpecification;
+import org.hibernate.sql.ast.spi.query.update.Assignment;
 import org.hibernate.sql.exec.spi.JdbcOperation;
-import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.type.SqlTypes;
+import org.hibernate.type.descriptor.jdbc.SqlTypedJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 /**
@@ -74,32 +72,19 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
  */
 public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstTranslator<T> {
 
-	public OracleLegacySqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
-		super( sessionFactory, statement );
+	public OracleLegacySqlAstTranslator(SqlAstTranslationRequest<? extends Statement, T> request) {
+		super( request );
 	}
 
 	@Override
-	protected void visitInsertStatementOnly(InsertSelectStatement statement) {
-		if ( statement.getConflictClause() == null || statement.getConflictClause().isDoNothing() ) {
-			// Render plain insert statement and possibly run into unique constraint violation
-			super.visitInsertStatementOnly( statement );
-		}
-		else {
-			visitInsertStatementEmulateMerge( statement );
-		}
+	@Internal
+	protected InsertConflictRenderingSupport getInsertConflictRenderingSupport() {
+		return StandardInsertConflictRenderingSupport.MERGE;
 	}
 
 	@Override
-	protected void visitUpdateStatementOnly(UpdateStatement statement) {
-		if ( hasNonTrivialFromClause( statement.getFromClause() ) ) {
-			visitUpdateStatementEmulateInlineView( statement );
-		}
-		else {
-			renderUpdateClause( statement );
-			renderSetClause( statement.getAssignments() );
-			visitWhereClause( statement.getRestriction() );
-			visitReturningColumns( statement.getReturningColumns() );
-		}
+	protected QueryMutationRenderingSupport getQueryMutationRenderingSupport() {
+		return StandardQueryMutationRenderingSupport.INLINE_VIEW;
 	}
 
 	@Override
@@ -118,27 +103,10 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 	}
 
 	@Override
-	protected void visitConflictClause(ConflictClause conflictClause) {
-		if ( conflictClause != null ) {
-			if ( conflictClause.isDoUpdate() && conflictClause.getConstraintName() != null ) {
-				throw new IllegalQueryOperationException( "Insert conflict 'do update' clause with constraint name is not supported" );
-			}
+	protected void renderCteSelectHint(CteStatement cte) {
+		if ( cte.getMaterialization() == CteMaterialization.MATERIALIZED ) {
+			appendSql( "/*+ materialize */ " );
 		}
-	}
-
-	@Override
-	protected boolean needsRecursiveKeywordInWithClause() {
-		return false;
-	}
-
-	@Override
-	public void visitSqlSelection(SqlSelection sqlSelection) {
-		if ( getCurrentCteStatement() != null ) {
-			if ( getCurrentCteStatement().getMaterialization() == CteMaterialization.MATERIALIZED ) {
-				appendSql( "/*+ materialize */ " );
-			}
-		}
-		super.visitSqlSelection( sqlSelection );
 	}
 
 	@Override
@@ -207,22 +175,21 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 		return !queryPart.hasOffsetOrFetchClause();
 	}
 
-	protected boolean shouldEmulateFetchClause(QueryPart queryPart) {
-		// Check if current query part is already row numbering to avoid infinite recursion
-		if ( getQueryPartForRowNumbering() == queryPart ) {
-			return false;
-		}
-		final boolean hasLimit = queryPart.isRoot() && hasLimit() || queryPart.getFetchClauseExpression() != null
-				|| queryPart.getOffsetClauseExpression() != null;
-		if ( !hasLimit ) {
-			return false;
-		}
-		// Even if Oracle supports the OFFSET/FETCH clause, there are conditions where we still want to use the ROWNUM pagination
-		if ( supportsOffsetFetchClause() ) {
-			// Workaround an Oracle bug, segmentation fault for insert queries with a plain query group and fetch clause
-			return queryPart instanceof QueryGroup && getClauseStack().isEmpty() && getStatement() instanceof InsertSelectStatement;
-		}
-		return true;
+	@Override
+	protected PaginationRenderingSupport getPaginationRenderingSupport() {
+		return request -> {
+			if ( !request.hasOffset() && !request.hasFetch() ) {
+				return new PaginationRenderingPlan.OffsetFetch( true );
+			}
+			if ( !supportsOffsetFetchClause()
+					// Work around an Oracle segmentation fault for insert queries with a plain query group and fetch clause.
+					|| request.queryPart() instanceof QueryGroup
+							&& getClauseStack().isEmpty()
+							&& getStatement() instanceof InsertSelectStatement ) {
+				return new PaginationRenderingPlan.Window( true );
+			}
+			return new PaginationRenderingPlan.OffsetFetch( true );
+		};
 	}
 
 	@Override
@@ -231,7 +198,7 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 		// as that is part of the row numbering window function already, by which we then order by in the outer query
 		final QueryPart queryPartForRowNumbering = getQueryPartForRowNumbering();
 		if ( queryPartForRowNumbering == null ) {
-			renderOrderBy( true, sortSpecifications );
+			renderOrderByClause( sortSpecifications );
 		}
 		else {
 			// This logic is tightly coupled to #emulateFetchOffsetWithWindowFunctions and #getFetchClauseTypeForRowNumbering
@@ -244,7 +211,7 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 					if ( hasGroupingOrDistinct( querySpec ) || querySpec.getFromClause().hasJoins() ) {
 						// When the query spec has joins, a group by, having or distinct clause,
 						// we just need to render the order by clause, because the query is wrapped
-						renderOrderBy( true, sortSpecifications );
+						renderOrderByClause( sortSpecifications );
 					}
 					else {
 						// Otherwise we need to render the ROWNUM pagination predicate in here
@@ -269,7 +236,7 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 						finally {
 							clauseStack.pop();
 						}
-						renderOrderBy( true, sortSpecifications );
+						renderOrderByClause( sortSpecifications );
 						visitForUpdateClause( querySpec );
 					}
 				}
@@ -284,76 +251,13 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 	}
 
 	@Override
-	protected void visitValuesList(List<Values> valuesList) {
-		if ( valuesList.size() < 2 ) {
-			visitValuesListStandard( valuesList );
-		}
-		else {
-			// Oracle doesn't support a multi-values insert
-			// So we render a select union emulation instead
-			visitValuesListEmulateSelectUnion( valuesList );
-		}
+	protected DerivedTableRenderingSupport getDerivedTableRenderingSupport() {
+		return StandardDerivedTableRenderingSupport.ORACLE;
 	}
 
 	@Override
-	public void visitValuesTableReference(ValuesTableReference tableReference) {
-		emulateValuesTableReferenceColumnAliasing( tableReference );
-	}
-
-	@Override
-	public void visitQueryPartTableReference(QueryPartTableReference tableReference) {
-		emulateQueryPartTableReferenceColumnAliasing( tableReference );
-	}
-
-	@Override
-	public void visitFunctionTableReference(FunctionTableReference tableReference) {
-		tableReference.getFunctionExpression().accept( this );
-		if ( !tableReference.rendersIdentifierVariable() ) {
-			renderDerivedTableReferenceIdentificationVariable( tableReference );
-		}
-	}
-
-	@Override
-	public void renderNamedSetReturningFunction(String functionName, List<? extends SqlAstNode> sqlAstArguments, AnonymousTupleTableGroupProducer tupleType, String tableIdentifierVariable, SqlAstNodeRenderingMode argumentRenderingMode) {
-		final ModelPart ordinalitySubPart = tupleType.findSubPart( CollectionPart.Nature.INDEX.getName(), null );
-		if ( ordinalitySubPart != null ) {
-			appendSql( "lateral (select t.*, rownum " );
-			appendSql( ordinalitySubPart.asBasicValuedModelPart().getSelectionExpression() );
-			appendSql( " from table(" );
-			renderSimpleNamedFunction( functionName, sqlAstArguments, argumentRenderingMode );
-			append( ") t)" );
-		}
-		else {
-			appendSql( "table(" );
-			super.renderNamedSetReturningFunction( functionName, sqlAstArguments, tupleType, tableIdentifierVariable, argumentRenderingMode );
-			append( ')' );
-		}
-	}
-
-	@Override
-	protected void renderDerivedTableReference(DerivedTableReference tableReference) {
-		if ( tableReference instanceof FunctionTableReference && tableReference.isLateral() ) {
-			// No need for a lateral keyword for functions
-			tableReference.accept( this );
-		}
-		else {
-			super.renderDerivedTableReference( tableReference );
-		}
-	}
-
-	@Override
-	protected void renderDerivedTableReferenceIdentificationVariable(DerivedTableReference tableReference) {
-		renderTableReferenceIdentificationVariable( tableReference );
-	}
-
-	@Override
-	public void visitQueryGroup(QueryGroup queryGroup) {
-		if ( shouldEmulateFetchClause( queryGroup ) ) {
-			emulateFetchOffsetWithWindowFunctions( queryGroup, true );
-		}
-		else {
-			super.visitQueryGroup( queryGroup );
-		}
+	protected SetReturningFunctionRenderingSupport getSetReturningFunctionRenderingSupport() {
+		return StandardSetReturningFunctionRenderingSupport.ORACLE;
 	}
 
 	@Override
@@ -363,7 +267,6 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 		final Expression fetchExpression;
 		final FetchClauseType fetchClauseType;
 		if ( querySpec.isRoot() && hasLimit() ) {
-			prepareLimitOffsetParameters();
 			offsetExpression = getOffsetParameter();
 			fetchExpression = getLimitParameter();
 			fetchClauseType = FetchClauseType.ROWS_ONLY;
@@ -373,47 +276,21 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 			fetchExpression = querySpec.getFetchClauseExpression();
 			fetchClauseType = querySpec.getFetchClauseType();
 		}
-		if ( shouldEmulateFetchClause( querySpec ) ) {
-			if ( identifierMappingForLockingWrapper == null ) {
-				emulateFetchOffsetWithWindowFunctions(
-						querySpec,
-						offsetExpression,
-						fetchExpression,
-						fetchClauseType,
-						true
-				);
-			}
-			else {
-				super.visitQuerySpec(
-						createLockingWrapper(
-								querySpec,
-								offsetExpression,
-								fetchExpression,
-								fetchClauseType,
-								identifierMappingForLockingWrapper
-						)
-				);
-				// Render the for update clause for the original query spec, because the locking wrapper is marked as non-root
-				visitForUpdateClause( querySpec );
-			}
+		if ( identifierMappingForLockingWrapper == null ) {
+			super.visitQuerySpec( querySpec );
 		}
 		else {
-			if ( identifierMappingForLockingWrapper == null ) {
-				super.visitQuerySpec( querySpec );
-			}
-			else {
-				super.visitQuerySpec(
-						createLockingWrapper(
-								querySpec,
-								offsetExpression,
-								fetchExpression,
-								fetchClauseType,
-								identifierMappingForLockingWrapper
-						)
-				);
-				// Render the for update clause for the original query spec, because the locking wrapper is marked as non-root
-				visitForUpdateClause( querySpec );
-			}
+			super.visitQuerySpec(
+					createLockingWrapper(
+							querySpec,
+							offsetExpression,
+							fetchExpression,
+							fetchClauseType,
+							identifierMappingForLockingWrapper
+					)
+			);
+			// Render the for update clause for the original query spec, because the locking wrapper is marked as non-root
+			visitForUpdateClause( querySpec );
 		}
 	}
 
@@ -441,7 +318,7 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 		}
 		final QuerySpec subquery = new QuerySpec( false, 1 );
 		for ( ColumnReference idColumnReference : idColumnReferences ) {
-			subquery.getSelectClause().addSqlSelection( new SqlSelectionImpl( idColumnReference ) );
+			subquery.getSelectClause().addSqlSelection( idColumnReference );
 		}
 		subquery.getFromClause().addRoot( rootTableGroup );
 		subquery.applyPredicate( querySpec.getWhereClauseRestrictions() );
@@ -600,7 +477,7 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 				appendSql( ')' );
 				break;
 			case SqlTypes.ARRAY:
-				final String arrayTypeName = ( (OracleArrayJdbcType) jdbcType ).getSqlTypeName();
+				final String arrayTypeName = ( (SqlTypedJdbcType) jdbcType ).getSqlTypeName();
 				switch ( operator ) {
 					case DISTINCT_FROM:
 					case NOT_DISTINCT_FROM:
@@ -690,7 +567,7 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 	}
 
 	private boolean supportsOffsetFetchClause() {
-		return getDialect().supportsFetchClause( FetchClauseType.ROWS_ONLY );
+		return getDialect().getFetchClauseSupport().supports( FetchClauseType.ROWS_ONLY );
 	}
 
 	@Override
@@ -717,14 +594,7 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 	}
 
 	@Override
-	protected void visitSetAssignment(Assignment assignment) {
-		final Assignable assignable = assignment.getAssignable();
-		if ( assignable instanceof SqmPathInterpretation<?> ) {
-			final String affectedTableName = ( (SqmPathInterpretation<?>) assignable ).getAffectedTableName();
-			if ( affectedTableName != null ) {
-				addAffectedTableName( affectedTableName );
-			}
-		}
+	protected void renderSetAssignment(Assignment assignment) {
 		final List<ColumnReference> columnReferences = assignment.getAssignable().getColumnReferences();
 		final Expression assignedValue = assignment.getAssignedValue();
 		if ( columnReferences.size() == 1 ) {

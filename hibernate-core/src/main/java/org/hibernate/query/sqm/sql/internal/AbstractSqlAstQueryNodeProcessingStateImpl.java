@@ -11,12 +11,12 @@ import java.util.function.Supplier;
 
 import org.hibernate.query.sqm.tree.spi.domain.SqmTreatedPath;
 import org.hibernate.query.sqm.tree.spi.from.SqmFrom;
-import org.hibernate.sql.ast.Clause;
-import org.hibernate.sql.ast.spi.SqlAstCreationState;
-import org.hibernate.sql.ast.spi.SqlAstProcessingState;
-import org.hibernate.sql.ast.spi.SqlAstQueryNodeProcessingState;
-import org.hibernate.sql.ast.spi.SqlAstQueryPartProcessingState;
-import org.hibernate.sql.ast.spi.SqlExpressionResolver;
+import org.hibernate.sql.ast.spi.translation.Clause;
+import org.hibernate.sql.ast.spi.creation.SqlAstCreationState;
+import org.hibernate.sql.ast.spi.creation.SqlAstProcessingState;
+import org.hibernate.sql.ast.spi.creation.SqlAstQueryNodeProcessingState;
+import org.hibernate.sql.ast.spi.creation.SqlAstQueryPartProcessingState;
+import org.hibernate.sql.ast.spi.creation.SqlExpressionResolver;
 
 public abstract class AbstractSqlAstQueryNodeProcessingStateImpl
 		extends SqlAstProcessingStateImpl

@@ -10,7 +10,7 @@ import java.util.Set;
 
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.ConcreteProxy;
-import org.hibernate.sql.ast.SqlAstJoinType;
+import org.hibernate.sql.ast.spi.query.from.SqlAstJoinType;
 
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;

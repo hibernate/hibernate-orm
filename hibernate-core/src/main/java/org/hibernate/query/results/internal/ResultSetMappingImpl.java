@@ -12,7 +12,7 @@ import org.hibernate.query.named.spi.NamedResultSetMappingMemento;
 import org.hibernate.query.results.spi.LegacyFetchBuilder;
 import org.hibernate.query.results.spi.ResultBuilder;
 import org.hibernate.query.results.spi.ResultSetMapping;
-import org.hibernate.sql.ast.spi.SqlSelection;
+import org.hibernate.sql.ast.spi.query.select.SqlSelection;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.basic.BasicResult;

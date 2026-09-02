@@ -4,6 +4,8 @@
  */
 package org.hibernate.type.format.jakartajson;
 
+import org.hibernate.SPI;
+
 import org.hibernate.type.format.AbstractJsonFormatMapper;
 
 import jakarta.json.bind.Jsonb;
@@ -17,6 +19,7 @@ import java.lang.reflect.Type;
  * @author Yanming Zhou
  * @author Emmanuel Jannetti
  */
+@SPI
 public final class JsonBJsonFormatMapper extends AbstractJsonFormatMapper {
 
 	public static final String SHORT_NAME = "jsonb";

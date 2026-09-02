@@ -4,6 +4,10 @@
  */
 package org.hibernate.query.sqm.tree.spi.domain;
 
+import org.hibernate.SPI;
+
+import static org.hibernate.SPI.Role.USE;
+
 import jakarta.annotation.Nullable;
 import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.Expression;
@@ -273,6 +277,7 @@ public class SqmPluralValuedSimplePath<C> extends AbstractSqmSimplePath<C> imple
 		return new SqmMemberOfPredicate( (SqmExpression<?>) elem, this, false, nodeBuilder() );
 	}
 
+	@SPI(USE)
 	protected static class PluralAttributeCollectionType<C> implements SqmBindableType<C> {
 		private final JavaType<C> javaType;
 

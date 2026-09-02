@@ -4,13 +4,30 @@
  */
 package org.hibernate.event.spi;
 
+import org.hibernate.SPI;
 import org.hibernate.persister.entity.EntityPersister;
+
 import jakarta.annotation.Nonnull;
 
-/**
- * @author Andrea Boriero
- */
-interface PostActionEventListener {
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.USE;
+
+/// Shared contract for listeners notified after an entity insert, update,
+/// delete, or upsert action.
+///
+/// Implement this contract through one of the specialized post-action listener
+/// interfaces. Override [#requiresPostCommitHandling(EntityPersister)] only
+/// when the listener needs Hibernate to register an after-transaction callback
+/// for the affected entity.
+///
+/// @see PostInsertEventListener
+/// @see PostUpdateEventListener
+/// @see PostDeleteEventListener
+/// @see PostUpsertEventListener
+///
+/// @author Andrea Boriero
+@SPI({ USE, IMPLEMENT })
+public interface PostActionEventListener {
 
 	/**
 	 * Does this listener require that after transaction hooks be registered?

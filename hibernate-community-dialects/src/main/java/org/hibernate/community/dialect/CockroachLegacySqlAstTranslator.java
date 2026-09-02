@@ -4,40 +4,45 @@
  */
 package org.hibernate.community.dialect;
 
+import org.hibernate.Internal;
 import org.hibernate.Locking;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.sql.ast.Clause;
-import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
-import org.hibernate.sql.ast.tree.Statement;
-import org.hibernate.sql.ast.tree.cte.CteMaterialization;
-import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
-import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.Literal;
-import org.hibernate.sql.ast.tree.expression.Summarization;
-import org.hibernate.sql.ast.tree.from.NamedTableReference;
-import org.hibernate.sql.ast.tree.from.TableReference;
-import org.hibernate.sql.ast.tree.insert.ConflictClause;
-import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
-import org.hibernate.sql.ast.tree.predicate.BooleanExpressionPredicate;
-import org.hibernate.sql.ast.tree.predicate.InArrayPredicate;
-import org.hibernate.sql.ast.tree.predicate.LikePredicate;
-import org.hibernate.sql.ast.tree.select.QueryGroup;
-import org.hibernate.sql.ast.tree.select.QueryPart;
-import org.hibernate.sql.ast.tree.select.QuerySpec;
-import org.hibernate.sql.ast.tree.update.UpdateStatement;
-import org.hibernate.sql.exec.internal.JdbcOperationQueryInsertImpl;
+import org.hibernate.dialect.sql.ast.spi.PaginationRenderingPlan;
+import org.hibernate.dialect.sql.ast.spi.PaginationRenderingSupport;
+import org.hibernate.dialect.sql.ast.spi.InsertConflictRenderingSupport;
+import org.hibernate.dialect.sql.ast.spi.StandardInsertConflictRenderingSupport;
+import org.hibernate.query.common.FetchClauseType;
+import org.hibernate.dialect.sql.ast.spi.PostgreSQLFamilySqlAstTranslator;
+import org.hibernate.sql.ast.spi.Statement;
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
+import org.hibernate.sql.ast.spi.query.cte.CteMaterialization;
+import org.hibernate.sql.ast.spi.query.expression.BinaryArithmeticExpression;
+import org.hibernate.sql.ast.spi.query.expression.Expression;
+import org.hibernate.sql.ast.spi.query.expression.Literal;
+import org.hibernate.sql.ast.spi.query.expression.Summarization;
+import org.hibernate.sql.ast.spi.query.from.NamedTableReference;
+import org.hibernate.sql.ast.spi.query.predicate.BooleanExpressionPredicate;
+import org.hibernate.sql.ast.spi.query.predicate.InArrayPredicate;
+import org.hibernate.sql.ast.spi.query.predicate.LikePredicate;
+import org.hibernate.sql.ast.spi.query.select.QuerySpec;
+import org.hibernate.sql.ast.spi.query.update.UpdateStatement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
-import org.hibernate.sql.exec.spi.JdbcOperationQueryInsert;
+import org.hibernate.sql.ast.spi.model.TableInsertStandard;
 
 /**
  * A SQL AST translator for Cockroach.
  *
  * @author Christian Beikov
  */
-public class CockroachLegacySqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstTranslator<T> {
+public class CockroachLegacySqlAstTranslator<T extends JdbcOperation> extends PostgreSQLFamilySqlAstTranslator<T> {
 
-	public CockroachLegacySqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
-		super( sessionFactory, statement );
+	public CockroachLegacySqlAstTranslator(SqlAstTranslationRequest<? extends Statement, T> request) {
+		super( request );
+	}
+
+	@Override
+	protected void renderInsertIntoNoColumns(TableInsertStandard tableInsert) {
+		renderIntoIntoAndTable( tableInsert );
+		appendSql( "default values" );
 	}
 
 	@Override
@@ -49,31 +54,9 @@ public class CockroachLegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 	}
 
 	@Override
-	protected JdbcOperationQueryInsert translateInsert(InsertSelectStatement sqlAst) {
-		visitInsertStatement( sqlAst );
-
-		return new JdbcOperationQueryInsertImpl(
-				getSql(),
-				getParameterBinders(),
-				getAffectedTableNames(),
-				null
-		);
-	}
-
-	@Override
-	protected void renderTableReferenceIdentificationVariable(TableReference tableReference) {
-		final String identificationVariable = tableReference.getIdentificationVariable();
-		if ( identificationVariable != null ) {
-			final Clause currentClause = getClauseStack().getCurrent();
-			if ( currentClause == Clause.INSERT ) {
-				// PostgreSQL requires the "as" keyword for inserts
-				appendSql( " as " );
-			}
-			else {
-				append( WHITESPACE );
-			}
-			append( tableReference.getIdentificationVariable() );
-		}
+	@Internal
+	protected InsertConflictRenderingSupport getInsertConflictRenderingSupport() {
+		return StandardInsertConflictRenderingSupport.STANDARD;
 	}
 
 	@Override
@@ -91,11 +74,6 @@ public class CockroachLegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 	@Override
 	protected void renderFromClauseAfterUpdateSet(UpdateStatement statement) {
 		renderFromClauseJoiningDmlTargetReference( statement );
-	}
-
-	@Override
-	protected void visitConflictClause(ConflictClause conflictClause) {
-		visitStandardConflictClause( conflictClause );
 	}
 
 	@Override
@@ -141,37 +119,12 @@ public class CockroachLegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 		return super.determineLockingStrategy( querySpec, followOnLocking );
 	}
 
-	protected boolean shouldEmulateFetchClause(QueryPart queryPart) {
-		// Check if current query part is already row numbering to avoid infinite recursion
-		return useOffsetFetchClause( queryPart ) && getQueryPartForRowNumbering() != queryPart
-				&& !isRowsOnlyFetchClauseType( queryPart );
-	}
-
 	@Override
-	public void visitQueryGroup(QueryGroup queryGroup) {
-		if ( shouldEmulateFetchClause( queryGroup ) ) {
-			emulateFetchOffsetWithWindowFunctions( queryGroup, true );
-		}
-		else {
-			super.visitQueryGroup( queryGroup );
-		}
-	}
-
-	@Override
-	public void visitQuerySpec(QuerySpec querySpec) {
-		if ( shouldEmulateFetchClause( querySpec ) ) {
-			emulateFetchOffsetWithWindowFunctions( querySpec, true );
-		}
-		else {
-			super.visitQuerySpec( querySpec );
-		}
-	}
-
-	@Override
-	public void visitOffsetFetchClause(QueryPart queryPart) {
-		if ( !isRowNumberingCurrentQueryPart() ) {
-			renderLimitOffsetClause( queryPart );
-		}
+	protected PaginationRenderingSupport getPaginationRenderingSupport() {
+		return request -> request.fetchClauseType() != null
+				&& request.fetchClauseType() != FetchClauseType.ROWS_ONLY
+				? new PaginationRenderingPlan.Window( true )
+				: new PaginationRenderingPlan.LimitOffset();
 	}
 
 	@Override
@@ -202,7 +155,7 @@ public class CockroachLegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 		}
 		else {
 			appendSql( WHITESPACE );
-			appendSql( getDialect().getCaseInsensitiveLike() );
+			appendSql( getDialect().getPredicateSupport().getCaseInsensitiveLikeOperator().orElseThrow() );
 			appendSql( WHITESPACE );
 		}
 		likePredicate.getPattern().accept( this );

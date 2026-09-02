@@ -4,6 +4,10 @@
  */
 package org.hibernate.metamodel.model.domain;
 
+import org.hibernate.SPI;
+
+import static org.hibernate.SPI.Role.USE;
+
 import java.util.Set;
 
 
@@ -119,6 +123,7 @@ public interface JpaMetamodel extends Metamodel {
 
 	<E extends Enum<E>> E enumValue(EnumJavaType<E> enumType, String enumValueName);
 
+	@SPI(USE)
 	JavaType<?> getJavaConstantType(String className, String fieldName);
 
 	@Nullable

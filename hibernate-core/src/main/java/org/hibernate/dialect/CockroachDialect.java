@@ -4,48 +4,93 @@
  */
 package org.hibernate.dialect;
 
+import org.hibernate.dialect.temporaltype.spi.TemporalValueSemantics;
+
+import org.hibernate.dialect.temporaltype.spi.CurrentTimestampSelection;
+
+import org.hibernate.dialect.temporaltype.spi.TemporalOperationSupport;
+import org.hibernate.dialect.temporaltype.spi.TemporalOperationSupports;
+
+import org.hibernate.dialect.temporaltype.spi.TemporalFormatSupport;
+
+import org.hibernate.dialect.temporaltype.spi.CurrentTemporalSupport;
+
+import org.hibernate.dialect.lob.spi.LobSupport;
+import org.hibernate.dialect.lob.spi.LobSupports;
+
+import org.hibernate.SPI;
+import static org.hibernate.SPI.Role.USE;
+
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.SUPPLY;
+import org.hibernate.dialect.type.spi.StandardDdlTypes;
+
+import org.hibernate.dialect.type.spi.TypeSizingProfile;
+
+
+
+import org.hibernate.dialect.array.spi.ArraySupport;
+import org.hibernate.dialect.jdbc.spi.PostgreSQLDriverKind;
+
+import org.hibernate.dialect.type.spi.TimeZoneSupport;
+
+import org.hibernate.dialect.type.spi.NationalizationSupport;
+
+import org.hibernate.dialect.aggregate.spi.FunctionalDependencyAnalysisSupport;
+
+import org.hibernate.dialect.sql.ast.spi.NullOrdering;
+
+import org.hibernate.dialect.sql.ast.spi.DmlTargetColumnQualifierSupport;
+
+import org.hibernate.dialect.sql.ast.spi.CteSupport;
+import org.hibernate.dialect.sql.ast.spi.MutationKind;
+import org.hibernate.dialect.sql.ast.spi.MutationSyntaxCapability;
+import org.hibernate.dialect.sql.ast.spi.MutationSyntaxSupport;
+import org.hibernate.dialect.sql.ast.spi.PredicateSupport;
+import org.hibernate.dialect.sql.ast.spi.NullOrderingSupport;
+import org.hibernate.dialect.sql.ast.spi.RowValueSupport;
+import org.hibernate.dialect.sql.ast.spi.SubquerySupport;
+import org.hibernate.dialect.sql.ast.spi.ValuesListSupport;
+
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.TemporalType;
-import jakarta.persistence.Timeout;
 import jakarta.annotation.Nullable;
-import org.hibernate.LockMode;
-import org.hibernate.LockOptions;
 import org.hibernate.QueryTimeoutException;
-import org.hibernate.Timeouts;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
-import org.hibernate.dialect.aggregate.AggregateSupport;
-import org.hibernate.dialect.aggregate.CockroachDBAggregateSupport;
+import org.hibernate.dialect.aggregate.spi.AggregateSupport;
+import org.hibernate.dialect.aggregate.internal.CockroachDBAggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.dialect.function.spi.WindowFunctionSupport;
+import org.hibernate.dialect.function.spi.TupleCountSupport;
 import org.hibernate.dialect.function.FormatFunction;
 import org.hibernate.dialect.function.PostgreSQLTruncFunction;
-import org.hibernate.dialect.identity.CockroachDBIdentityColumnSupport;
-import org.hibernate.dialect.identity.IdentityColumnSupport;
+import org.hibernate.dialect.generated.spi.GeneratedValuesSupport;
+import org.hibernate.dialect.identity.internal.CockroachDBIdentityColumnSupport;
+import org.hibernate.dialect.identity.spi.IdentityColumnSupport;
 import org.hibernate.dialect.lock.internal.CockroachLockingSupport;
 import org.hibernate.dialect.lock.spi.LockingSupport;
-import org.hibernate.dialect.pagination.LimitHandler;
-import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
-import org.hibernate.dialect.rowsecurity.CockroachRowLevelSecurity;
-import org.hibernate.dialect.rowsecurity.NoRowLevelSecurity;
-import org.hibernate.dialect.rowsecurity.RowLevelSecurity;
-import org.hibernate.dialect.sequence.PostgreSQLSequenceSupport;
-import org.hibernate.dialect.sequence.SequenceSupport;
-import org.hibernate.dialect.sql.ast.CockroachSqlAstTranslator;
-import org.hibernate.dialect.type.PgJdbcHelper;
-import org.hibernate.dialect.type.PostgreSQLArrayJdbcTypeConstructor;
-import org.hibernate.dialect.type.PostgreSQLCastingInetJdbcType;
-import org.hibernate.dialect.type.PostgreSQLCastingIntervalSecondJdbcType;
-import org.hibernate.dialect.type.PostgreSQLCastingJsonArrayJdbcTypeConstructor;
-import org.hibernate.dialect.type.PostgreSQLCastingJsonJdbcType;
-import org.hibernate.dialect.type.PostgreSQLEnumJdbcType;
-import org.hibernate.dialect.type.PostgreSQLOrdinalEnumJdbcType;
-import org.hibernate.dialect.type.PostgreSQLUUIDJdbcType;
+import org.hibernate.dialect.namespace.spi.NamespaceSupport;
+import org.hibernate.dialect.namespace.spi.NamespaceSupports;
+import org.hibernate.dialect.pagination.spi.LimitHandler;
+import org.hibernate.dialect.schema.spi.AlterColumnTypeRequest;
+import org.hibernate.dialect.schema.spi.ExistenceCheckPlacement;
+import org.hibernate.dialect.schema.spi.IfExistsSupport;
+import org.hibernate.dialect.schema.spi.IndexNameQualification;
+import org.hibernate.dialect.schema.spi.SchemaDropSupport;
+import org.hibernate.dialect.pagination.spi.OffsetFetchLimitHandler;
+import org.hibernate.dialect.rowsecurity.internal.CockroachRowLevelSecurity;
+import org.hibernate.dialect.rowsecurity.spi.RowLevelSecurity;
+import org.hibernate.dialect.rowsecurity.spi.RowLevelSecurityStrategies;
+import org.hibernate.dialect.sequence.internal.PostgreSQLSequenceSupport;
+import org.hibernate.dialect.sequence.spi.SequenceSupport;
+import org.hibernate.dialect.sql.ast.internal.CockroachSqlAstTranslator;
+import org.hibernate.dialect.type.spi.PostgreSQLJdbcTypes;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
-import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
+import org.hibernate.dialect.identifier.spi.IdentifierHelperBuildRequest;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.TransactionSerializationException;
@@ -53,25 +98,27 @@ import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.util.config.ConfigurationHelper;
-import org.hibernate.persister.entity.mutation.EntityMutationTarget;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.common.TemporalUnit;
-import org.hibernate.dialect.type.IntervalType;
+import org.hibernate.dialect.temporaltype.spi.IntervalType;
 import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.SqlAstTranslatorFactory;
-import org.hibernate.sql.ast.spi.SqlAppender;
-import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
-import org.hibernate.sql.ast.tree.Statement;
+import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslatorFactory;
+import org.hibernate.sql.spi.SqlAppender;
+import org.hibernate.dialect.sql.ast.spi.StandardSqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.Statement;
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
 import org.hibernate.sql.exec.spi.JdbcOperation;
-import org.hibernate.sql.model.MutationOperation;
-import org.hibernate.sql.model.internal.OptionalTableUpdate;
-import org.hibernate.sql.model.jdbc.OptionalTableUpdateWithUpsertOperation;
-import org.hibernate.tool.schema.extract.internal.InformationExtractorPostgreSQLImpl;
+import org.hibernate.sql.spi.mutation.MutationOperation;
+import org.hibernate.dialect.sql.ast.spi.OptionalTableUpdateOperationRequest;
+import org.hibernate.sql.spi.mutation.jdbc.OptionalTableUpdateWithUpsertOperation;
 import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
 import org.hibernate.tool.schema.extract.spi.ExtractionContext;
 import org.hibernate.tool.schema.extract.spi.InformationExtractor;
+import org.hibernate.tool.schema.extract.spi.InformationExtractors;
+import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
+import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractors;
 import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
@@ -79,13 +126,8 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.ObjectNullAsBinaryTypeJdbcType;
 import org.hibernate.type.descriptor.jdbc.UUIDJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
-import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
-import org.hibernate.type.descriptor.sql.internal.NamedNativeEnumDdlTypeImpl;
-import org.hibernate.type.descriptor.sql.internal.NamedNativeOrdinalEnumDdlTypeImpl;
-import org.hibernate.type.descriptor.sql.internal.Scale6IntervalSecondDdlType;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.time.temporal.ChronoField;
@@ -99,7 +141,7 @@ import java.util.regex.Pattern;
 import static java.lang.Integer.parseInt;
 import static org.hibernate.cfg.DialectSpecificSettings.COCKROACH_VERSION_STRING;
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
-import static org.hibernate.internal.util.JdbcExceptionHelper.extractSqlState;
+import static org.hibernate.jdbc.spi.JdbcExceptionHelper.extractSqlState;
 import static org.hibernate.internal.util.StringHelper.split;
 import static org.hibernate.query.common.TemporalUnit.DAY;
 import static org.hibernate.query.common.TemporalUnit.EPOCH;
@@ -130,11 +172,11 @@ import static org.hibernate.type.SqlTypes.TINYINT;
 import static org.hibernate.type.SqlTypes.UUID;
 import static org.hibernate.type.SqlTypes.VARBINARY;
 import static org.hibernate.type.SqlTypes.VARCHAR;
-import static org.hibernate.type.descriptor.DateTimeUtils.appendAsDate;
-import static org.hibernate.type.descriptor.DateTimeUtils.appendAsLocalTime;
-import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTime;
-import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMicros;
-import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMillis;
+import static org.hibernate.dialect.literal.spi.StandardDateTimeLiteralRendering.appendAsDate;
+import static org.hibernate.dialect.literal.spi.StandardDateTimeLiteralRendering.appendAsLocalTime;
+import static org.hibernate.dialect.literal.spi.StandardDateTimeLiteralRendering.appendAsTime;
+import static org.hibernate.dialect.literal.spi.StandardDateTimeLiteralRendering.appendAsTimestampWithMicros;
+import static org.hibernate.dialect.literal.spi.StandardDateTimeLiteralRendering.appendAsTimestampWithMillis;
 
 /**
  * A {@linkplain Dialect SQL dialect} for CockroachDB 23.2 and above.
@@ -142,7 +184,36 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithM
  * @author Gavin King
  * @author Yoobin Yoon
  */
-public class CockroachDialect extends Dialect {
+public class CockroachDialect extends Dialect implements CurrentTemporalSupport, TemporalFormatSupport, TemporalOperationSupport {
+	private IfExistsSupport ifExistsSupport;
+	private SchemaDropSupport schemaDropSupport;
+
+
+	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
+	public TemporalOperationSupport getTemporalOperationSupport() {
+		return this;
+	}
+
+	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
+	public TemporalFormatSupport getTemporalFormatSupport() {
+		return this;
+	}
+
+	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
+	public CurrentTemporalSupport getCurrentTemporalSupport() {
+		return this;
+	}
+	private final TypeSizingProfile typeSizingProfile = TypeSizingProfile.builder( super.getTypeSizingProfile() )
+			.defaultIntervalSecondScale( 6 )
+			.build();
+
+	@Override
+	public TypeSizingProfile getTypeSizingProfile() {
+		return typeSizingProfile;
+	}
 
 	// KNOWN LIMITATIONS:
 	// * no support for java.sql.Clob
@@ -160,7 +231,6 @@ public class CockroachDialect extends Dialect {
 
 	public CockroachDialect(DialectResolutionInfo info) {
 		this( fetchDataBaseVersion( info ), PostgreSQLDriverKind.determineKind( info ) );
-		registerKeywords( info );
 	}
 
 	public CockroachDialect(DialectResolutionInfo info, String versionString) {
@@ -170,7 +240,6 @@ public class CockroachDialect extends Dialect {
 						: parseVersion( versionString ),
 				PostgreSQLDriverKind.determineKind( info )
 		);
-		registerKeywords( info );
 	}
 
 	public CockroachDialect(DatabaseVersion version) {
@@ -184,6 +253,7 @@ public class CockroachDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public DatabaseVersion determineDatabaseVersion(DialectResolutionInfo info) {
 		return fetchDataBaseVersion( info );
 	}
@@ -227,11 +297,13 @@ public class CockroachDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	protected DatabaseVersion getMinimumSupportedVersion() {
 		return MINIMUM_VERSION;
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	protected String columnType(int sqlTypeCode) {
 		return switch (sqlTypeCode) {
 			case TINYINT -> "smallint"; // no tinyint
@@ -250,6 +322,7 @@ public class CockroachDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	protected String castType(int sqlTypeCode) {
 		return switch (sqlTypeCode) {
 			case CHAR, NCHAR, VARCHAR, NVARCHAR, LONG32VARCHAR, LONG32NVARCHAR -> "string";
@@ -259,28 +332,30 @@ public class CockroachDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	protected void registerColumnTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.registerColumnTypes( typeContributions, serviceRegistry );
 
 		final var ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
 
-		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( UUID, "uuid", this ) );
+		ddlTypeRegistry.addDescriptor( StandardDdlTypes.simple( UUID, "uuid", this ) );
 
 		// The following DDL types require that the PGobject class is usable/visible,
 		// or that a special JDBC type implementation exists, that supports wrapping read/write expressions
-		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOMETRY, "geometry", this ) );
-		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOGRAPHY, "geography", this ) );
-		ddlTypeRegistry.addDescriptor( new Scale6IntervalSecondDdlType( this ) );
+		ddlTypeRegistry.addDescriptor( StandardDdlTypes.simple( GEOMETRY, "geometry", this ) );
+		ddlTypeRegistry.addDescriptor( StandardDdlTypes.simple( GEOGRAPHY, "geography", this ) );
+		ddlTypeRegistry.addDescriptor( StandardDdlTypes.scale6IntervalSecond( this ) );
 
 		// Prefer jsonb if possible
-		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( INET, "inet", this ) );
-		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "jsonb", this ) );
+		ddlTypeRegistry.addDescriptor( StandardDdlTypes.simple( INET, "inet", this ) );
+		ddlTypeRegistry.addDescriptor( StandardDdlTypes.simple( JSON, "jsonb", this ) );
 
-		ddlTypeRegistry.addDescriptor( new NamedNativeEnumDdlTypeImpl( this ) );
-		ddlTypeRegistry.addDescriptor( new NamedNativeOrdinalEnumDdlTypeImpl( this ) );
+		ddlTypeRegistry.addDescriptor( StandardDdlTypes.namedNativeEnum() );
+		ddlTypeRegistry.addDescriptor( StandardDdlTypes.namedNativeOrdinalEnum() );
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public JdbcType resolveSqlTypeDescriptor(
 			String columnTypeName,
 			int jdbcTypeCode,
@@ -344,6 +419,7 @@ public class CockroachDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	protected Integer resolveSqlTypeCode(String columnTypeName, TypeConfiguration typeConfiguration) {
 		return switch (columnTypeName) {
 			case "bool" -> Types.BOOLEAN;
@@ -357,6 +433,7 @@ public class CockroachDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public boolean equivalentTypes(int typeCode1, int typeCode2) {
 		switch ( typeCode1 ) {
 			// On CockroachDB, we use the same DDL type, so treat the types as equivalent
@@ -371,6 +448,7 @@ public class CockroachDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.contributeTypes( typeContributions, serviceRegistry );
 		contributeCockroachTypes( typeContributions, serviceRegistry );
@@ -382,28 +460,28 @@ public class CockroachDialect extends Dialect {
 		// Don't use this type due to https://github.com/pgjdbc/pgjdbc/issues/2862
 		//jdbcTypeRegistry.addDescriptor( TimestampUtcAsOffsetDateTimeJdbcType.INSTANCE );
 		if ( driverKind == PostgreSQLDriverKind.PG_JDBC ) {
-			jdbcTypeRegistry.addDescriptor( PostgreSQLEnumJdbcType.INSTANCE );
-			jdbcTypeRegistry.addDescriptor( PostgreSQLOrdinalEnumJdbcType.INSTANCE );
-			jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLUUIDJdbcType.INSTANCE );
-			if ( PgJdbcHelper.isUsable( serviceRegistry ) ) {
-				jdbcTypeRegistry.addDescriptorIfAbsent( PgJdbcHelper.getIntervalJdbcType( serviceRegistry ) );
-				jdbcTypeRegistry.addDescriptorIfAbsent( PgJdbcHelper.getInetJdbcType( serviceRegistry ) );
-				jdbcTypeRegistry.addDescriptorIfAbsent( PgJdbcHelper.getJsonbJdbcType( serviceRegistry ) );
-				jdbcTypeRegistry.addTypeConstructorIfAbsent( PgJdbcHelper.getJsonbArrayJdbcType( serviceRegistry ) );
+			jdbcTypeRegistry.addDescriptor( PostgreSQLJdbcTypes.enumType() );
+			jdbcTypeRegistry.addDescriptor( PostgreSQLJdbcTypes.ordinalEnumType() );
+			jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLJdbcTypes.uuid() );
+			if ( PostgreSQLJdbcTypes.isDriverUsable( serviceRegistry ) ) {
+				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLJdbcTypes.driverIntervalSecond( serviceRegistry ) );
+				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLJdbcTypes.driverInet( serviceRegistry ) );
+				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLJdbcTypes.driverJsonb( serviceRegistry ) );
+				jdbcTypeRegistry.addTypeConstructorIfAbsent( PostgreSQLJdbcTypes.driverJsonbArrayConstructor( serviceRegistry ) );
 			}
 			else {
-				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingIntervalSecondJdbcType.INSTANCE );
-				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingInetJdbcType.INSTANCE );
-				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingJsonJdbcType.JSONB_INSTANCE );
-				jdbcTypeRegistry.addTypeConstructorIfAbsent( PostgreSQLCastingJsonArrayJdbcTypeConstructor.JSONB_INSTANCE );
+				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLJdbcTypes.castingIntervalSecond() );
+				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLJdbcTypes.castingInet() );
+				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLJdbcTypes.castingJsonb() );
+				jdbcTypeRegistry.addTypeConstructorIfAbsent( PostgreSQLJdbcTypes.castingJsonbArrayConstructor() );
 			}
 		}
 		else {
 			jdbcTypeRegistry.addDescriptorIfAbsent( UUIDJdbcType.INSTANCE );
-			jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingInetJdbcType.INSTANCE );
-			jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingIntervalSecondJdbcType.INSTANCE );
-			jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingJsonJdbcType.JSONB_INSTANCE );
-			jdbcTypeRegistry.addTypeConstructorIfAbsent( PostgreSQLCastingJsonArrayJdbcTypeConstructor.JSONB_INSTANCE );
+			jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLJdbcTypes.castingInet() );
+			jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLJdbcTypes.castingIntervalSecond() );
+			jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLJdbcTypes.castingJsonb() );
+			jdbcTypeRegistry.addTypeConstructorIfAbsent( PostgreSQLJdbcTypes.castingJsonbArrayConstructor() );
 		}
 
 		// Force Blob binding to byte[] for CockroachDB
@@ -425,10 +503,11 @@ public class CockroachDialect extends Dialect {
 		);
 
 		// Replace the standard array constructor
-		jdbcTypeRegistry.addTypeConstructor( PostgreSQLArrayJdbcTypeConstructor.INSTANCE );
+		jdbcTypeRegistry.addTypeConstructor( PostgreSQLJdbcTypes.arrayConstructor() );
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
 		super.initializeFunctionRegistry( functionContributions );
 
@@ -557,68 +636,68 @@ public class CockroachDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public TimeZoneSupport getTimeZoneSupport() {
 		return TimeZoneSupport.NORMALIZE;
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public void appendBooleanValueString(SqlAppender appender, boolean bool) {
 		appender.appendSql( bool );
 	}
 
 	@Override
-	public String getCascadeConstraintsString() {
-		return " cascade";
+	@SPI({ IMPLEMENT, SUPPLY })
+	public synchronized SchemaDropSupport getSchemaDropSupport() {
+		if ( schemaDropSupport == null ) {
+			schemaDropSupport = new SchemaDropSupport(
+				List.of(),
+				org.hibernate.dialect.schema.spi.ConstraintDropMode.EXPLICIT,
+				" cascade"
+		);
+		}
+		return schemaDropSupport;
 	}
 
 	@Override
-	public boolean supportsCurrentTimestampSelection() {
-		return true;
+	@SPI({ USE, IMPLEMENT })
+	public CurrentTimestampSelection getCurrentTimestampSelection() {
+		return CurrentTimestampSelection.prepared( "select now()" );
 	}
 
 	@Override
-	public boolean isCurrentTimestampSelectStringCallable() {
-		return false;
-	}
-
-	@Override
-	public String getCurrentTimestampSelectString() {
-		return "select now()";
-	}
-
-	@Override
+	@SPI({ USE, IMPLEMENT })
 	public boolean isCurrentTimestampStable() {
 		return true;
 	}
 
 	@Override
-	public boolean supportsDistinctFromPredicate() {
-		return true;
+	public PredicateSupport getPredicateSupport() {
+		return PredicateSupport.builder( super.getPredicateSupport() )
+				.caseInsensitiveLikeOperator( "ilike" )
+				.capability( PredicateSupport.Capability.DISTINCT_FROM, true )
+				.build();
 	}
 
 	@Override
-	public boolean supportsIfExistsBeforeTableName() {
-		return true;
+	@SPI({ IMPLEMENT, SUPPLY })
+	public synchronized IfExistsSupport getIfExistsSupport() {
+		if ( ifExistsSupport == null ) {
+			ifExistsSupport = new IfExistsSupport(
+				ExistenceCheckPlacement.BEFORE_NAME,
+				ExistenceCheckPlacement.BEFORE_NAME,
+				ExistenceCheckPlacement.BEFORE_NAME,
+				ExistenceCheckPlacement.BEFORE_NAME
+		);
+		}
+		return ifExistsSupport;
 	}
 
 	@Override
-	public boolean supportsIfExistsBeforeConstraintName() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsIfExistsAfterAlterTable() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsIfExistsBeforeIndexName() {
-		return true;
-	}
-
-	@Override
-	public boolean qualifyIndexName() {
-		return false;
+	@SPI({ USE, IMPLEMENT })
+	public IndexNameQualification nameQualification() {
+		return IndexNameQualification.UNQUALIFIED;
 	}
 
 	@Override
@@ -627,76 +706,44 @@ public class CockroachDialect extends Dialect {
 	}
 
 	@Override
-	public String getAlterColumnTypeString(String columnName, String columnType, String columnDefinition) {
+	@SPI({ USE, IMPLEMENT })
+	public String alterColumnType(AlterColumnTypeRequest request) {
 		// would need multiple statements to 'set not null'/'drop not null', 'set default'/'drop default', 'set generated', etc
-		return "alter column " + columnName + " set data type " + columnType;
+		return "alter column " + request.columnName() + " set data type " + request.columnType();
 	}
 
 	@Override
-	public boolean supportsAlterColumnType() {
-		return true;
+	public ValuesListSupport getValuesListSupport() {
+		return ValuesListSupport.STANDARD;
 	}
 
 	@Override
-	public boolean supportsValuesList() {
-		return true;
+	public CteSupport getCteSupport() {
+		return CteSupport.builder()
+				.recursiveFeatures( CteSupport.RecursiveFeature.RECURSIVE )
+				.mutationFeatures(
+						CteSupport.MutationFeature.NON_QUERY,
+						CteSupport.MutationFeature.INSERT_CONFLICT
+				)
+				.build();
 	}
 
 	@Override
-	public boolean supportsPartitionBy() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsNonQueryWithCTE() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsRecursiveCTE() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsConflictClauseForInsertCTE() {
-		return true;
-	}
-
-	@Override
-	public String getNoColumnsInsertString() {
-		return "default values";
-	}
-
-	@Override
-	public String getCaseInsensitiveLike(){
-		return "ilike";
-	}
-
-	@Override
-	public boolean supportsCaseInsensitiveLike() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsNullPrecedence() {
+	public NullOrderingSupport getNullOrderingSupport() {
 		// Not yet implemented:
 		// https://www.cockroachlabs.com/docs/v20.2/null-handling.html#nulls-and-sorting
-		return false;
+		return NullOrderingSupport.builder( super.getNullOrderingSupport() )
+				.defaultOrdering( NullOrdering.SMALLEST )
+				.capability( NullOrderingSupport.Capability.NULLS_FIRST_LAST, false )
+				.build();
 	}
 
 	@Override
-	public NullOrdering getNullOrdering() {
-		return NullOrdering.SMALLEST;
-	}
-
-	@Override
-	public boolean supportsTupleCounts() {
-		return true;
-	}
-
-	@Override
-	public boolean requiresParensForTupleDistinctCounts() {
-		return true;
+	public TupleCountSupport getTupleCountSupport() {
+		return TupleCountSupport.builder()
+				.nonDistinctSyntax( TupleCountSupport.Syntax.PARENTHESIZED_TUPLE )
+				.distinctSyntax( TupleCountSupport.Syntax.PARENTHESIZED_TUPLE )
+				.build();
 	}
 
 	@Override
@@ -705,73 +752,80 @@ public class CockroachDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public SequenceSupport getSequenceSupport() {
-		return PostgreSQLSequenceSupport.INSTANCE;
+		return PostgreSQLSequenceSupport.getInstance();
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public RowLevelSecurity getRowLevelSecurity() {
 		return getVersion().isSameOrAfter( 25, 2 )
 				? CockroachRowLevelSecurity.INSTANCE
-				: NoRowLevelSecurity.INSTANCE;
+				: RowLevelSecurityStrategies.none();
+	}
+
+	private static final SequenceInformationExtractor SEQUENCE_INFORMATION_EXTRACTOR =
+			SequenceInformationExtractors.builder(
+					"select sequence_name,sequence_schema,sequence_catalog,start_value,minimum_value,maximum_value,increment from information_schema.sequences"
+			).build();
+
+	@Override
+	public SequenceInformationExtractor getSequenceInformationExtractor() {
+		return SEQUENCE_INFORMATION_EXTRACTOR;
 	}
 
 	@Override
-	public String getQuerySequencesString() {
-		return "select sequence_name,sequence_schema,sequence_catalog,start_value,minimum_value,maximum_value,increment from information_schema.sequences";
-	}
-
-	@Override
-	public boolean supportsLobValueChangePropagation() {
-		return false;
-	}
-
-	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public SqlAstTranslatorFactory getSqlAstTranslatorFactory() {
 		return new StandardSqlAstTranslatorFactory() {
 			@Override
-			protected <T extends JdbcOperation> SqlAstTranslator<T> buildTranslator(
-					SessionFactoryImplementor sessionFactory, Statement statement) {
-				return new CockroachSqlAstTranslator<>( sessionFactory, statement );
+			protected <S extends Statement, T extends JdbcOperation> SqlAstTranslator<T> createTranslator(
+					SqlAstTranslationRequest<S, T> request) {
+				return new CockroachSqlAstTranslator<>( request );
 			}
 		};
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT, SUPPLY })
 	public MutationOperation createOptionalTableUpdateOperation(
-			EntityMutationTarget mutationTarget,
-			OptionalTableUpdate optionalTableUpdate,
-			SessionFactoryImplementor factory) {
-		return new OptionalTableUpdateWithUpsertOperation( mutationTarget, optionalTableUpdate, factory );
+			OptionalTableUpdateOperationRequest request) {
+		return new OptionalTableUpdateWithUpsertOperation( request.update(), request.versionedTarget() );
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public NationalizationSupport getNationalizationSupport() {
 		// TEXT / STRING inherently support nationalized data
 		return NationalizationSupport.IMPLICIT;
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public AggregateSupport getAggregateSupport() {
 		return CockroachDBAggregateSupport.valueOf( this );
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public int getMaxIdentifierLength() {
 		return 63;
 	}
 
 	@Override
-	public boolean supportsStandardArrays() {
-		return true;
+	public ArraySupport getArraySupport() {
+		return ArraySupport.STANDARD;
 	}
 
 	@Override
-	public boolean supportsTemporalLiteralOffset() {
-		return true;
+	@SPI({ IMPLEMENT, SUPPLY })
+	public TemporalValueSemantics getTemporalValueSemantics() {
+		return TemporalValueSemantics.OFFSET_LITERALS;
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public void appendDateTimeLiteral(
 			SqlAppender appender,
 			TemporalAccessor temporalAccessor,
@@ -785,7 +839,7 @@ public class CockroachDialect extends Dialect {
 				appender.appendSql( '\'' );
 				break;
 			case TIME:
-				if ( supportsTemporalLiteralOffset() && temporalAccessor.isSupported( ChronoField.OFFSET_SECONDS ) ) {
+				if ( getTemporalValueSemantics().supportsLiteralOffset() && temporalAccessor.isSupported( ChronoField.OFFSET_SECONDS ) ) {
 					appender.appendSql( "time with time zone '" );
 					appendAsTime( appender, temporalAccessor, true, jdbcTimeZone );
 				}
@@ -796,7 +850,7 @@ public class CockroachDialect extends Dialect {
 				appender.appendSql( '\'' );
 				break;
 			case TIMESTAMP:
-				if ( supportsTemporalLiteralOffset() && temporalAccessor.isSupported( ChronoField.OFFSET_SECONDS ) ) {
+				if ( getTemporalValueSemantics().supportsLiteralOffset() && temporalAccessor.isSupported( ChronoField.OFFSET_SECONDS ) ) {
 					appender.appendSql( "timestamp with time zone '" );
 					appendAsTimestampWithMicros( appender, temporalAccessor, true, jdbcTimeZone );
 					appender.appendSql( '\'' );
@@ -813,6 +867,7 @@ public class CockroachDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public void appendDateTimeLiteral(
 			SqlAppender appender,
 			Date date,
@@ -841,6 +896,7 @@ public class CockroachDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public void appendDateTimeLiteral(
 			SqlAppender appender,
 			Calendar calendar,
@@ -875,20 +931,22 @@ public class CockroachDialect extends Dialect {
 	 * {@code (extract(dayofweek,arg)+1))}.
 	 */
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String extractPattern(TemporalUnit unit) {
 		return switch (unit) {
-			case DAY_OF_WEEK -> "(" + super.extractPattern( unit ) + "+1)";
-			default -> super.extractPattern( unit );
+			case DAY_OF_WEEK -> "(" + TemporalOperationSupports.standard().extractPattern( unit ) + "+1)";
+			default -> TemporalOperationSupports.standard().extractPattern( unit );
 		};
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String translateExtractField(TemporalUnit unit) {
 		return switch (unit) {
 			case DAY_OF_MONTH -> "day";
 			case DAY_OF_YEAR -> "dayofyear";
 			case DAY_OF_WEEK -> "dayofweek";
-			default -> super.translateExtractField( unit );
+			default -> TemporalOperationSupports.standard().translateExtractField( unit );
 		};
 	}
 
@@ -897,11 +955,13 @@ public class CockroachDialect extends Dialect {
 	 * and the highest precision for a {@code timestamp}.
 	 */
 	@Override
-	public long getFractionalSecondPrecisionInNanos() {
+	@SPI({ USE, IMPLEMENT })
+	public long fractionalSecondPrecisionInNanos() {
 		return 1_000; //microseconds
 	}
 
 	@Override @SuppressWarnings("deprecation")
+	@SPI({ USE, IMPLEMENT })
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
 		return intervalType != null
 				? "(?2+?3)"
@@ -919,6 +979,7 @@ public class CockroachDialect extends Dialect {
 	}
 
 	@Override @SuppressWarnings("deprecation")
+	@SPI({ USE, IMPLEMENT })
 	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
 		if ( unit == null ) {
 			return "(?3-?2)";
@@ -958,14 +1019,16 @@ public class CockroachDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String translateDurationField(TemporalUnit unit) {
 		return unit==NATIVE
 				? "microsecond"
-				: super.translateDurationField( unit );
+				: TemporalOperationSupports.standard().translateDurationField( unit );
 	}
 
 	@Override
-	public void appendDatetimeFormat(SqlAppender appender, String format) {
+	@SPI({ USE, IMPLEMENT })
+	public void appendFormat(SqlAppender appender, String format) {
 		appender.appendSql( SpannerDialect.datetimeFormat( format ).result() );
 	}
 
@@ -979,128 +1042,58 @@ public class CockroachDialect extends Dialect {
 		return CockroachLockingSupport.COCKROACH_LOCKING_SUPPORT;
 	}
 
-	@Override
-	public String getForUpdateString(String aliases) {
-		return getForUpdateString() + " of " + aliases;
-	}
+
+
+
+
+
+
+
+
+
+
+
+
 
 	@Override
-	public String getForUpdateString(LockOptions lockOptions) {
-		return super.getForUpdateString( lockOptions );
-	}
-
-	@Override
-	public String getForUpdateString(String aliases, LockOptions lockOptions) {
-		final LockMode lockMode = lockOptions.getLockMode();
-		return switch (lockMode) {
-			case PESSIMISTIC_READ -> getReadLockString( aliases, lockOptions.getTimeout() );
-			case PESSIMISTIC_WRITE -> getWriteLockString( aliases, lockOptions.getTimeout() );
-			case UPGRADE_NOWAIT, PESSIMISTIC_FORCE_INCREMENT -> getForUpdateNowaitString( aliases );
-			case UPGRADE_SKIPLOCKED -> getForUpdateSkipLockedString( aliases );
-			default -> "";
-		};
-	}
-
-	private String withTimeout(String lockString, Timeout timeout) {
-		return withTimeout( lockString, timeout.milliseconds() );
-	}
-
-	private String withTimeout(String lockString, int timeout) {
-		// todo (db-locking) : see notes on `#supportsNoWait` and `#supportsSkipLocked`.
-		//  	not sure why we call those here.
-		return switch (timeout) {
-			case Timeouts.NO_WAIT_MILLI -> supportsNoWait() ? lockString + " nowait" : lockString;
-			case Timeouts.SKIP_LOCKED_MILLI -> supportsSkipLocked() ? lockString + " skip locked" : lockString;
-			default -> lockString;
-		};
+	@SPI({ IMPLEMENT, SUPPLY })
+	public LobSupport getLobSupport() {
+		return LobSupports.nonStreaming();
 	}
 
 	@Override
-	public String getWriteLockString(Timeout timeout) {
-		return withTimeout( getForUpdateString(), timeout );
+	public SubquerySupport getSubquerySupport() {
+		return SubquerySupport.builder()
+				.features( SubquerySupport.Feature.OFFSET, SubquerySupport.Feature.LATERAL )
+				.build();
 	}
 
 	@Override
-	public String getWriteLockString(String aliases, Timeout timeout) {
-		return withTimeout( getForUpdateString( aliases ), timeout );
+	public GeneratedValuesSupport getGeneratedValuesSupport() {
+		return GeneratedValuesSupport.builder( super.getGeneratedValuesSupport() )
+				.enable(
+						GeneratedValuesSupport.Capability.INSERT_RETURNING,
+						GeneratedValuesSupport.Capability.UPDATE_RETURNING,
+						GeneratedValuesSupport.Capability.INSERT_RETURNING_ROW_ID
+				)
+				.build();
 	}
 
 	@Override
-	public String getReadLockString(Timeout timeout) {
-		return withTimeout( " for share", timeout );
+	public WindowFunctionSupport getWindowFunctionSupport() {
+		return WindowFunctionSupport.builder()
+				.features( WindowFunctionSupport.Feature.values() )
+				.build();
 	}
 
 	@Override
-	public String getReadLockString(String aliases, Timeout timeout) {
-		return withTimeout( " for share of " + aliases, timeout );
-	}
-
-	@Override
-	public String getForUpdateNowaitString() {
-		return supportsNoWait()
-				? getForUpdateString() + " nowait"
-				: getForUpdateString();
-	}
-
-	@Override
-	public String getForUpdateNowaitString(String aliases) {
-		return supportsNoWait()
-				? getForUpdateString( aliases ) + " nowait"
-				: getForUpdateString( aliases );
-	}
-
-	@Override
-	public String getForUpdateSkipLockedString() {
-		return supportsSkipLocked()
-				? getForUpdateString() + " skip locked"
-				: getForUpdateString();
-	}
-
-	@Override
-	public String getForUpdateSkipLockedString(String aliases) {
-		return supportsSkipLocked()
-				? getForUpdateString( aliases ) + " skip locked"
-				: getForUpdateString( aliases );
-	}
-
-	@Override
-	public boolean useInputStreamToInsertBlob() {
-		// PG-JDBC treats setBinaryStream()/setCharacterStream() calls like bytea/varchar, which are not LOBs,
-		// so disable stream bindings for this dialect completely
-		return false;
-	}
-
-	@Override
-	public boolean useConnectionToCreateLob() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsOffsetInSubquery() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsInsertReturning() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsWindowFunctions() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsLateral() {
-		return true;
-	}
-
-	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public FunctionalDependencyAnalysisSupport getFunctionalDependencyAnalysisSupport() {
-		return FunctionalDependencyAnalysisSupportImpl.TABLE_REFERENCE;
+		return FunctionalDependencyAnalysisSupport.TABLE_REFERENCE;
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public NameQualifierSupport getNameQualifierSupport() {
 		// This method is overridden so the correct value will be returned when
 		// DatabaseMetaData is not available.
@@ -1108,18 +1101,20 @@ public class CockroachDialect extends Dialect {
 	}
 
 	@Override
-	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, DatabaseMetaData metadata)
-			throws SQLException {
+	@SPI({ USE, IMPLEMENT, SUPPLY })
+	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuildRequest request) {
+		final var builder = request.builder();
 
-		if ( metadata == null ) {
+		if ( !request.jdbcMetadata().isJdbcMetadataAccessible() ) {
 			builder.setUnquotedCaseStrategy( IdentifierCaseStrategy.LOWER );
 			builder.setQuotedCaseStrategy( IdentifierCaseStrategy.MIXED );
 		}
 
-		return super.buildIdentifierHelper( builder, metadata );
+		return super.buildIdentifierHelper( request );
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public ViolatedConstraintNameExtractor getViolatedConstraintNameExtractor() {
 		return EXTRACTOR;
 	}
@@ -1143,6 +1138,7 @@ public class CockroachDialect extends Dialect {
 			} );
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
 		return (sqlException, message, sql) -> {
 			final String sqlState = extractSqlState( sqlException );
@@ -1189,96 +1185,50 @@ public class CockroachDialect extends Dialect {
 	 * @return the query with hints added
 	 */
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String getQueryHintString(String query, List<String> hintList) {
 		return new CockroachDialectQueryHints(query, hintList).getQueryHintString();
 	}
 
 	@Override
-	public int getDefaultIntervalSecondScale() {
-		// The maximum scale for `interval second` is 6 unfortunately
-		return 6;
-	}
-
-
-// CockroachDB doesn't support this by default. See sql.multiple_modifications_of_table.enabled
-//
-//	@Override
-//	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(
-//			EntityMappingType rootEntityDescriptor,
-//			RuntimeModelCreationContext runtimeModelCreationContext) {
-//		return new CteMutationStrategy( rootEntityDescriptor, runtimeModelCreationContext );
-//	}
-//
-//	@Override
-//	public SqmMultiTableInsertStrategy getFallbackSqmInsertStrategy(
-//			EntityMappingType rootEntityDescriptor,
-//			RuntimeModelCreationContext runtimeModelCreationContext) {
-//		return new CteInsertStrategy( rootEntityDescriptor, runtimeModelCreationContext );
-//	}
-
-	@Override
+	@SPI({ USE, IMPLEMENT, SUPPLY })
 	public DmlTargetColumnQualifierSupport getDmlTargetColumnQualifierSupport() {
 		return DmlTargetColumnQualifierSupport.TABLE_ALIAS;
 	}
 
 	@Override
-	public boolean supportsFromClauseInUpdate() {
-		return true;
+	public MutationSyntaxSupport getMutationSyntaxSupport() {
+		return MutationSyntaxSupport.of( MutationKind.UPDATE, MutationSyntaxCapability.FROM_CLAUSE );
 	}
 
 	@Override
-	public boolean supportsRowConstructor() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsArrayConstructor() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
-		return false;
+	public RowValueSupport getRowValueSupport() {
+		return RowValueSupport.builder( super.getRowValueSupport() )
+				.feature( RowValueSupport.Feature.ROW_CONSTRUCTOR, true )
+				.feature( RowValueSupport.Feature.QUANTIFIED_COMPARISON, false )
+				.build();
 	}
 
 
-	@Override
-	public String getWriteLockString(int timeout) {
-		return withTimeout( getForUpdateString(), timeout );
-	}
+
+
+
 
 	@Override
-	public String getWriteLockString(String aliases, int timeout) {
-		return withTimeout( getForUpdateString( aliases ), timeout );
-	}
-
-	@Override
-	public String getReadLockString(int timeout) {
-		return withTimeout( " for share", timeout );
-	}
-
-	@Override
-	public String getReadLockString(String aliases, int timeout) {
-		return withTimeout( " for share of " + aliases, timeout );
-	}
-
-	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public InformationExtractor getInformationExtractor(ExtractionContext extractionContext) {
-		return new InformationExtractorPostgreSQLImpl( extractionContext );
+		return InformationExtractors.postgresql( extractionContext );
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public boolean causesRollback(SQLException sqlException) {
 		return true;
 	}
 
 	@Override
-	public boolean supportsSchemaIfNotExists() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsSchemaIfExists() {
-		return true;
+	@SPI({ IMPLEMENT, SUPPLY })
+	public NamespaceSupport getNamespaceSupport() {
+		return NamespaceSupports.standard( true, true );
 	}
 }

@@ -11,6 +11,7 @@ import java.util.List;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.dialect.generated.spi.GeneratedValuesSupport;
 import org.hibernate.generator.EventType;
 import org.hibernate.generator.values.GeneratedValues;
 import org.hibernate.generator.values.GeneratedValuesMutationDelegate;
@@ -18,9 +19,9 @@ import org.hibernate.generator.values.internal.TableUpdateReturningBuilder;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
-import org.hibernate.sql.model.ast.MutatingTableReference;
-import org.hibernate.sql.model.ast.builder.TableMutationBuilder;
+import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
+import org.hibernate.sql.ast.spi.model.MutatingTableReference;
+import org.hibernate.sql.ast.spi.model.builder.TableMutationBuilder;
 
 import static java.sql.Statement.NO_GENERATED_KEYS;
 import static org.hibernate.generator.values.internal.GeneratedValuesHelper.getActualGeneratedModelPart;
@@ -39,10 +40,12 @@ public class InsertReturningDelegate extends AbstractReturningDelegate {
 	private final MutatingTableReference tableReference;
 	private final List<ColumnReference> generatedColumns;
 
+	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	public InsertReturningDelegate(EntityPersister persister, EventType timing) {
 		super( persister, timing, true,
 				persister.getFactory().getJdbcServices().getDialect()
-						.supportsInsertReturningRowId() );
+						.getGeneratedValuesSupport()
+						.supports( GeneratedValuesSupport.Capability.INSERT_RETURNING_ROW_ID ) );
 		tableReference = new MutatingTableReference( persister.getIdentifierTableMapping() );
 		final var resultBuilders = jdbcValuesMappingProducer.getResultBuilders();
 		generatedColumns = new ArrayList<>( resultBuilders.size() );

@@ -4,13 +4,16 @@
  */
 package org.hibernate.query.sqm.mutation.internal.temptable;
 
+
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
+
 import org.hibernate.LockMode;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.temptable.TemporaryTable;
-import org.hibernate.dialect.temptable.TemporaryTableHelper;
-import org.hibernate.dialect.temptable.TemporaryTableHelper.TemporaryTableCreationWork;
-import org.hibernate.dialect.temptable.TemporaryTableHelper.TemporaryTableDropWork;
-import org.hibernate.dialect.temptable.TemporaryTableStrategy;
+import org.hibernate.dialect.temptable.internal.TemporaryTable;
+import org.hibernate.dialect.lock.spi.OuterJoinLockingType;
+import org.hibernate.dialect.temptable.internal.TemporaryTableHelper;
+import org.hibernate.dialect.temptable.internal.TemporaryTableHelper.TemporaryTableCreationWork;
+import org.hibernate.dialect.temptable.internal.TemporaryTableHelper.TemporaryTableDropWork;
+import org.hibernate.dialect.temptable.spi.TemporaryTableStrategy;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.jdbc.AbstractReturningWork;
 import org.hibernate.jdbc.AbstractWork;
@@ -23,16 +26,16 @@ import org.hibernate.query.sqm.mutation.spi.AfterUseAction;
 import org.hibernate.query.sqm.mutation.spi.BeforeUseAction;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.SimpleSelect;
-import org.hibernate.sql.ast.SqlAstJoinType;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
-import org.hibernate.sql.ast.tree.from.NamedTableReference;
-import org.hibernate.sql.ast.tree.from.StandardTableGroup;
-import org.hibernate.sql.ast.tree.from.TableReference;
-import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
-import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
-import org.hibernate.sql.ast.tree.predicate.Predicate;
-import org.hibernate.sql.ast.tree.select.QuerySpec;
+import org.hibernate.sql.ast.spi.query.from.SqlAstJoinType;
+import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
+import org.hibernate.sql.ast.spi.query.expression.JdbcParameter;
+import org.hibernate.sql.ast.spi.query.from.NamedTableReference;
+import org.hibernate.sql.ast.spi.query.from.StandardTableGroup;
+import org.hibernate.sql.ast.spi.query.from.TableReference;
+import org.hibernate.sql.ast.spi.query.insert.InsertSelectStatement;
+import org.hibernate.sql.ast.spi.query.predicate.ComparisonPredicate;
+import org.hibernate.sql.ast.spi.query.predicate.Predicate;
+import org.hibernate.sql.ast.spi.query.select.QuerySpec;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcOperationQueryMutation;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
@@ -44,8 +47,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.function.Function;
 
-import static org.hibernate.dialect.TempTableDdlTransactionHandling.ISOLATE_AND_TRANSACT;
-import static org.hibernate.dialect.TempTableDdlTransactionHandling.NONE;
 
 /**
  * @author Steve Ebersole
@@ -132,7 +133,8 @@ public final class ExecuteWithTemporaryTableHelper {
 		// Visit the table joins and reset the lock mode if we encounter OUTER joins that are not supported
 		final var sourceSelectStatement = temporaryTableInsert.getSourceSelectStatement();
 		if ( sourceSelectStatement != null
-			&& !jdbcEnvironment.getDialect().supportsOuterJoinForUpdate() ) {
+				&& jdbcEnvironment.getDialect().getLockingSupport().getMetadata().getOuterJoinLockingType()
+						== OuterJoinLockingType.UNSUPPORTED ) {
 			sourceSelectStatement.visitQuerySpecs( querySpec -> {
 				querySpec.getFromClause().visitTableJoins( tableJoin -> {
 					if ( tableJoin.isInitialized()
@@ -146,7 +148,7 @@ public final class ExecuteWithTemporaryTableHelper {
 		return new CacheableSqmInterpretation<>(
 				temporaryTableInsert,
 				jdbcEnvironment.getSqlAstTranslatorFactory()
-						.buildMutationTranslator( factory, temporaryTableInsert )
+						.buildTranslator( new SqlAstTranslationRequest.QueryMutation( factory, temporaryTableInsert ) )
 						.translate( jdbcParameterBindings, executionContext.getQueryOptions() ),
 				Map.of(),
 				Map.of()
@@ -297,7 +299,7 @@ public final class ExecuteWithTemporaryTableHelper {
 		final var factory = executionContext.getSession().getFactory();
 		final var dialect = factory.getJdbcServices().getDialect();
 		return beforeUseAction == BeforeUseAction.CREATE
-			&& doWork( executionContext, dialect,
+			&& doWork( executionContext,
 				new TemporaryTableCreationWork( temporaryTable, factory ) );
 	}
 
@@ -399,43 +401,20 @@ public final class ExecuteWithTemporaryTableHelper {
 				);
 				break;
 			case DROP:
-				doWork( executionContext, dialect,
+				doWork( executionContext,
 						new TemporaryTableDropWork( temporaryTable, factory ) );
 		}
 	}
 
 	private static <T> T doWork(
-			ExecutionContext executionContext, Dialect dialect,
+			ExecutionContext executionContext,
 			AbstractReturningWork<T> temporaryTableCreationWork) {
-		final var ddlTransactionHandling = dialect.getTemporaryTableDdlTransactionHandling();
-		if ( ddlTransactionHandling == NONE ) {
-			return executionContext.getSession().doReturningWork( temporaryTableCreationWork );
-		}
-		else {
-			// this branch is obsolete, since
-			// dialect.getTemporaryTableDdlTransactionHandling()
-			// now always returns NONE
-			return executionContext.getSession().getJdbcCoordinator().getJdbcSessionOwner()
-					.getTransactionCoordinator().createIsolationDelegate()
-					.delegateWork( temporaryTableCreationWork,
-							ddlTransactionHandling == ISOLATE_AND_TRANSACT );
-		}
+		return executionContext.getSession().doReturningWork( temporaryTableCreationWork );
 	}
+
 	private static void doWork(
-			ExecutionContext executionContext, Dialect dialect,
+			ExecutionContext executionContext,
 			AbstractWork temporaryTableDropWork) {
-		final var ddlTransactionHandling = dialect.getTemporaryTableDdlTransactionHandling();
-		if ( ddlTransactionHandling == NONE ) {
-			executionContext.getSession().doWork( temporaryTableDropWork );
-		}
-		else {
-			// this branch is obsolete, since
-			// dialect.getTemporaryTableDdlTransactionHandling()
-			// now always returns NONE
-			executionContext.getSession().getJdbcCoordinator().getJdbcSessionOwner()
-					.getTransactionCoordinator().createIsolationDelegate()
-					.delegateWork( temporaryTableDropWork,
-							ddlTransactionHandling == ISOLATE_AND_TRANSACT );
-		}
+		executionContext.getSession().doWork( temporaryTableDropWork );
 	}
 }

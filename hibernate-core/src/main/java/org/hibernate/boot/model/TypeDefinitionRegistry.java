@@ -4,6 +4,8 @@
  */
 package org.hibernate.boot.model;
 
+import org.hibernate.Internal;
+
 import java.util.Map;
 
 import org.hibernate.type.descriptor.java.BasicJavaType;
@@ -21,6 +23,7 @@ public interface TypeDefinitionRegistry {
 	}
 
 	TypeDefinition resolve(String typeName);
+	@Internal
 	TypeDefinition resolveAutoApplied(BasicJavaType<?> jtd);
 
 	TypeDefinitionRegistry register(TypeDefinition typeDefinition);

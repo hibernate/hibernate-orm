@@ -5,7 +5,7 @@
 package org.hibernate.community.dialect;
 
 import org.hibernate.engine.jdbc.Size;
-import org.hibernate.orm.test.dialect.LimitQueryOptions;
+import org.hibernate.dialect.pagination.spi.PaginationRequest;
 import org.hibernate.query.spi.Limit;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -71,8 +71,15 @@ public class DB2LegacyDialectTestCase {
 		Limit rowSelection = new Limit();
 		rowSelection.setFirstRow( 1 );
 		rowSelection.setMaxRows( Integer.MAX_VALUE );
-		String sql = dialect.getLimitHandler().processSql( "select a.id from tbl_a a order by a.id", -1, null,
-				new LimitQueryOptions( rowSelection ) );
+		String sql = dialect.getLimitHandler().processSql(
+				new PaginationRequest(
+						"select a.id from tbl_a a order by a.id",
+						rowSelection.getFirstRow(),
+						rowSelection.getMaxRows(),
+						-1,
+						null
+				)
+		).sql();
 		assertThat( sql ).describedAs( "Integer overflow for max rows in: " + sql )
 				.contains( "fetch first 2147483647 rows only" );
 	}

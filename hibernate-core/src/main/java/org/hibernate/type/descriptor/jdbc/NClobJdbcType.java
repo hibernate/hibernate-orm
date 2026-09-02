@@ -12,6 +12,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
+import org.hibernate.SPI;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.engine.jdbc.CharacterStream;
 import org.hibernate.type.descriptor.ValueBinder;
@@ -19,14 +20,21 @@ import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
 
-/**
- * Descriptor for {@link Types#NCLOB NCLOB} handling.
- *
- * @author Steve Ebersole
- * @author Gail Badner
- * @author Loïc Lefèvre
- */
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.USE;
+
+/// Base JDBC descriptor for [Types#NCLOB] handling.
+///
+/// @author Steve Ebersole
+/// @author Gail Badner
+/// @author Loïc Lefèvre
+@SPI({ USE, IMPLEMENT })
 public abstract class NClobJdbcType implements JdbcType {
+	/// Constructor for provider subclasses.
+	@SPI(IMPLEMENT)
+	protected NClobJdbcType() {
+	}
+
 	@Override
 	public int getJdbcTypeCode() {
 		return Types.NCLOB;
@@ -88,12 +96,14 @@ public abstract class NClobJdbcType implements JdbcType {
 
 	@Override
 	public String getExtraCreateTableInfo(JavaType<?> javaType, String columnName, String tableName, Database database) {
-		if( javaType.getJavaTypeClass() != Clob.class && javaType.getJavaTypeClass() != NClob.class && database.getDialect().supportsValueLOBAccess() ) {
-			return database.getDialect().getValueLOBFragmentForExtraCreateTableInfo(columnName);
+		if ( javaType.getJavaTypeClass() != Clob.class && javaType.getJavaTypeClass() != NClob.class ) {
+			final String fragment = database.getDialect().getLobSupport()
+					.getValueLobFragmentForExtraCreateTableInfo( columnName );
+			if ( fragment != null ) {
+				return fragment;
+			}
 		}
-		else {
-			return JdbcType.super.getExtraCreateTableInfo( javaType, columnName, tableName, database );
-		}
+		return JdbcType.super.getExtraCreateTableInfo( javaType, columnName, tableName, database );
 	}
 
 	public static final NClobJdbcType DEFAULT = new NClobJdbcType() {

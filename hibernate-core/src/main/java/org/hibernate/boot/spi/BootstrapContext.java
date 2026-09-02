@@ -4,6 +4,7 @@
  */
 package org.hibernate.boot.spi;
 
+
 import java.util.Collection;
 import java.util.Map;
 

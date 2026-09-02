@@ -45,7 +45,7 @@ import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.bytecode.enhance.spi.interceptor.SessionAssociationMarkers;
 import org.hibernate.cache.spi.CacheTransactionSynchronization;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.rowsecurity.RowLevelSecurity;
+import org.hibernate.dialect.rowsecurity.spi.RowLevelSecurity;
 import org.hibernate.engine.creation.internal.ParentSessionObserver;
 import org.hibernate.engine.creation.internal.SessionCreationOptions;
 import org.hibernate.engine.creation.internal.SharedSessionBuilderImpl;
@@ -164,7 +164,7 @@ import static org.hibernate.cfg.CacheSettings.JAKARTA_SHARED_CACHE_STORE_MODE;
 import static org.hibernate.cfg.CacheSettings.JPA_SHARED_CACHE_RETRIEVE_MODE;
 import static org.hibernate.cfg.CacheSettings.JPA_SHARED_CACHE_STORE_MODE;
 import static org.hibernate.cfg.MultiTenancySettings.MULTI_TENANT_RLS_ENABLED;
-import static org.hibernate.dialect.rowsecurity.RowLevelSecurity.TenantIdentifierSource.DATABASE_USER;
+import static org.hibernate.dialect.rowsecurity.spi.TenantIdentifierSource.DATABASE_USER;
 import static org.hibernate.internal.SessionLogging.SESSION_LOGGER;
 import static org.hibernate.internal.util.ArgumentsHelper.bindReferenceArguments;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
@@ -1560,7 +1560,7 @@ abstract class AbstractSharedSessionContract
 
 	@Override
 	public boolean useStreamForLobBinding() {
-		return getDialect().useInputStreamToInsertBlob();
+		return getDialect().getLobSupport().useInputStreamToInsertBlob();
 	}
 
 	@Override

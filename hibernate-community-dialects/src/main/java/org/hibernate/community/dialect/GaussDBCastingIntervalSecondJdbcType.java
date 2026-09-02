@@ -12,13 +12,12 @@ import java.sql.SQLException;
 
 import jakarta.annotation.Nullable;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.sql.ast.spi.AbstractSelfRenderingExpression;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.metamodel.mapping.JdbcMappingContainer;
-import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.spi.SqlAppender;
-import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.SelfRenderingExpression;
+import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
+import org.hibernate.sql.spi.SqlAppender;
+import org.hibernate.sql.ast.spi.query.expression.Expression;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
@@ -58,7 +57,7 @@ public class GaussDBCastingIntervalSecondJdbcType implements AdjustableJdbcType 
 
 	@Override
 	public Expression wrapTopLevelSelectionExpression(Expression expression) {
-		return new SelfRenderingExpression() {
+		return new AbstractSelfRenderingExpression( expression.getExpressionType() ) {
 			@Override
 			public void renderToSql(
 					SqlAppender sqlAppender,
@@ -67,11 +66,6 @@ public class GaussDBCastingIntervalSecondJdbcType implements AdjustableJdbcType 
 				sqlAppender.append( "extract(epoch from " );
 				expression.accept( walker );
 				sqlAppender.append( ')' );
-			}
-
-			@Override
-			public JdbcMappingContainer getExpressionType() {
-				return expression.getExpressionType();
 			}
 		};
 	}

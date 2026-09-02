@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.subclassProxyInterface;
 
+
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;

@@ -11,17 +11,17 @@ import java.util.function.Consumer;
 import org.hibernate.Filter;
 import org.hibernate.Incubating;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
-import org.hibernate.internal.util.IndexedConsumer;
+import org.hibernate.spi.IndexedConsumer;
 import org.hibernate.loader.ast.spi.Loadable;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
-import org.hibernate.metamodel.mapping.ordering.OrderByFragment;
+import org.hibernate.metamodel.mapping.ordering.spi.OrderByFragment;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.spi.SqlAstCreationState;
-import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
-import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.from.TableGroupJoinProducer;
-import org.hibernate.sql.ast.tree.predicate.Predicate;
+import org.hibernate.sql.ast.spi.creation.SqlAstCreationState;
+import org.hibernate.sql.ast.spi.creation.SqlAliasBaseGenerator;
+import org.hibernate.sql.ast.spi.query.from.TableGroup;
+import org.hibernate.sql.ast.spi.query.from.TableGroupJoinProducer;
+import org.hibernate.sql.ast.spi.query.predicate.Predicate;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetchable;
@@ -45,6 +45,7 @@ public interface PluralAttributeMapping
 	@Override
 	CollectionMappingType<?> getMappedType();
 
+	@org.hibernate.SPI({ org.hibernate.SPI.Role.USE, org.hibernate.SPI.Role.IMPLEMENT })
 	@FunctionalInterface
 	interface PredicateConsumer {
 		void applyPredicate(Predicate predicate);
@@ -158,6 +159,7 @@ public interface PluralAttributeMapping
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Override
+	@org.hibernate.SPI(org.hibernate.SPI.Role.SUPPLY)
 	default <T> DomainResult<T> createSnapshotDomainResult(
 			NavigablePath navigablePath,
 			TableGroup parentTableGroup,
@@ -168,6 +170,7 @@ public interface PluralAttributeMapping
 
 	String getSeparateCollectionTable();
 
+	@org.hibernate.Internal
 	boolean isBidirectionalAttributeName(NavigablePath fetchablePath, ToOneAttributeMapping modelPart);
 
 	@Override

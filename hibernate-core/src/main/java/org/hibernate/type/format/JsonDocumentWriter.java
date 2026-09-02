@@ -4,6 +4,11 @@
  */
 package org.hibernate.type.format;
 
+import org.hibernate.SPI;
+
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.USE;
+
 
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -17,6 +22,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
  * @author Emmanuel Jannetti
  */
 
+@SPI({ USE, IMPLEMENT })
 public interface JsonDocumentWriter {
 	/**
 	 * Starts a new JSON Objects.

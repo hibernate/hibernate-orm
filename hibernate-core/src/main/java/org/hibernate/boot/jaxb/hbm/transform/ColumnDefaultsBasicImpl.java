@@ -7,7 +7,7 @@ package org.hibernate.boot.jaxb.hbm.transform;
 /**
  * @author Steve Ebersole
  */
-public class ColumnDefaultsBasicImpl implements ColumnDefaults {
+class ColumnDefaultsBasicImpl implements ColumnDefaults {
 	/**
 	 * Singleton access
 	 */

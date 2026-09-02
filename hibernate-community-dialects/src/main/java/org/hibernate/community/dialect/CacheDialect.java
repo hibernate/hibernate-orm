@@ -4,60 +4,70 @@
  */
 package org.hibernate.community.dialect;
 
+import org.hibernate.dialect.temporaltype.spi.TemporalOperationSupport;
+
+import org.hibernate.dialect.temporaltype.spi.TemporalFormatSupport;
+
+import org.hibernate.SPI;
+import static org.hibernate.SPI.Role.USE;
+
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.SUPPLY;
+import org.hibernate.dialect.type.spi.TypeSizingProfile;
+
 import jakarta.persistence.GenerationType;
-import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.TemporalType;
-import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.cfg.Environment;
-import org.hibernate.community.dialect.identity.CacheIdentityColumnSupport;
+import org.hibernate.community.dialect.identity.internal.CacheIdentityColumnSupport;
 import org.hibernate.community.dialect.sequence.CacheSequenceSupport;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.SimpleDatabaseVersion;
 import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.dialect.identity.IdentityColumnSupport;
-import org.hibernate.dialect.lock.LockingStrategy;
-import org.hibernate.dialect.lock.PessimisticReadUpdateLockingStrategy;
-import org.hibernate.dialect.lock.PessimisticWriteUpdateLockingStrategy;
-import org.hibernate.dialect.lock.internal.NoLockingSupport;
+import org.hibernate.dialect.identity.spi.IdentityColumnSupport;
+import org.hibernate.dialect.lock.spi.EntityLockingStrategies;
+import org.hibernate.dialect.lock.spi.EntityLockingStrategyFactory;
 import org.hibernate.dialect.lock.spi.LockingSupport;
-import org.hibernate.dialect.pagination.LimitHandler;
-import org.hibernate.dialect.pagination.TopLimitHandler;
-import org.hibernate.dialect.sequence.SequenceSupport;
+import org.hibernate.dialect.lock.spi.StandardLockingClauseStrategies;
+import org.hibernate.dialect.lock.spi.StandardLockingSupports;
+import org.hibernate.dialect.pagination.spi.LimitHandler;
+import org.hibernate.dialect.pagination.spi.TopLimitHandler;
+import org.hibernate.dialect.sequence.spi.SequenceSupport;
+import org.hibernate.dialect.schema.spi.ColumnDefinitionRequest;
+import org.hibernate.dialect.schema.spi.IndexNameQualification;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.DataException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
-import org.hibernate.internal.util.JdbcExceptionHelper;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.jdbc.spi.JdbcExceptionHelper;
 import org.hibernate.query.common.TemporalUnit;
-import org.hibernate.dialect.type.IntervalType;
-import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.SqlAstTranslatorFactory;
-import org.hibernate.sql.ast.spi.LockingClauseStrategy;
-import org.hibernate.sql.ast.spi.SqlAppender;
-import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
-import org.hibernate.sql.ast.tree.Statement;
-import org.hibernate.sql.ast.tree.select.QuerySpec;
+import org.hibernate.dialect.temporaltype.spi.IntervalType;
+import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslatorFactory;
+import org.hibernate.dialect.sql.ast.spi.RowValueSupport;
+import org.hibernate.dialect.sql.ast.spi.SubquerySupport;
+import org.hibernate.dialect.lock.spi.LockingClauseStrategy;
+import org.hibernate.sql.spi.SqlAppender;
+import org.hibernate.dialect.sql.ast.spi.StandardSqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.Statement;
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
+import org.hibernate.sql.ast.spi.query.select.QuerySpec;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
+import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
+import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractors;
 
-import java.sql.CallableStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.sql.Types;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.INTEGER;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.STRING;
-import static org.hibernate.sql.ast.internal.NonLockingClauseStrategy.NON_CLAUSE_STRATEGY;
 import static org.hibernate.type.SqlTypes.BLOB;
 import static org.hibernate.type.SqlTypes.BOOLEAN;
 import static org.hibernate.type.SqlTypes.CLOB;
@@ -69,7 +79,24 @@ import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
  *
  * @author Jonathan Levinson
  */
-public class CacheDialect extends Dialect {
+public class CacheDialect extends Dialect implements TemporalFormatSupport, TemporalOperationSupport {
+
+	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
+	public TemporalOperationSupport getTemporalOperationSupport() {
+		return this;
+	}
+
+	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
+	public TemporalFormatSupport getTemporalFormatSupport() {
+		return this;
+	}
+	private final TypeSizingProfile typeSizingProfile = TypeSizingProfile.builder( super.getTypeSizingProfile() )
+			.defaultDecimalPrecision( 19 )
+			.build();
+
+	@Override public TypeSizingProfile getTypeSizingProfile() { return typeSizingProfile; }
 
 	public CacheDialect() {
 		super( SimpleDatabaseVersion.ZERO_VERSION );
@@ -80,6 +107,7 @@ public class CacheDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	protected String columnType(int sqlTypeCode) {
 		// Note: For object <-> SQL datatype mappings see:
 		// Configuration Manager > Advanced > SQL > System DDL Datatype Mappings
@@ -94,14 +122,11 @@ public class CacheDialect extends Dialect {
 	}
 
 	@Override
-	protected void initDefaultProperties() {
-		super.initDefaultProperties();
-		getDefaultProperties().setProperty( Environment.USE_SQL_COMMENTS, "false" );
-	}
-
-	@Override
-	public int getDefaultStatementBatchSize() {
-		return 15;
+	@SPI({ IMPLEMENT, SUPPLY })
+	protected void contributeDefaultProperties(java.util.Properties properties) {
+		super.contributeDefaultProperties( properties );
+		properties.setProperty( Environment.USE_SQL_COMMENTS, "false" );
+		properties.setProperty( Environment.STATEMENT_BATCH_SIZE, "15" );
 	}
 
 	private static void useJdbcEscape(FunctionContributions queryEngine, String name) {
@@ -113,6 +138,7 @@ public class CacheDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public JdbcType resolveSqlTypeDescriptor(
 			String columnTypeName,
 			int jdbcTypeCode,
@@ -132,17 +158,13 @@ public class CacheDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public int getPreferredSqlTypeCodeForBoolean() {
 		return Types.BIT;
 	}
 
 	@Override
-	public int getDefaultDecimalPrecision() {
-		//the largest *meaningful* value
-		return 19;
-	}
-
-	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
 		super.initializeFunctionRegistry(functionContributions);
 
@@ -216,11 +238,13 @@ public class CacheDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String extractPattern(TemporalUnit unit) {
 		return "datepart(?1,?2)";
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
 		return switch (unit) {
 			case NANOSECOND, NATIVE -> "dateadd(millisecond,(?2)/1e6,?3)";
@@ -229,6 +253,7 @@ public class CacheDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ USE, IMPLEMENT })
 	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
 		return switch (unit) {
 			case NANOSECOND, NATIVE -> "datediff(millisecond,?2,?3)*1e6";
@@ -239,37 +264,39 @@ public class CacheDialect extends Dialect {
 	// DDL support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
-	public boolean qualifyIndexName() {
+	@SPI({ USE, IMPLEMENT })
+	public IndexNameQualification nameQualification() {
 		// Do we need to qualify index names with the schema name?
-		return false;
+		return IndexNameQualification.UNQUALIFIED;
 	}
 
 	@Override
 	@SuppressWarnings("StringBufferReplaceableByString")
-	public String getAddForeignKeyConstraintString(
-			String constraintName,
-			String[] foreignKey,
-			String referencedTable,
-			String[] primaryKey,
-			boolean referencesPrimaryKey) {
+	@SPI({ USE, IMPLEMENT })
+	public String renderAddConstraint(
+			org.hibernate.dialect.constraint.spi.ForeignKeyConstraintRequest request) {
+		if ( request.isExplicitDefinition() ) {
+			return super.renderAddConstraint( request );
+		}
 		// The syntax used to add a foreign key constraint to a table.
 		return new StringBuilder( 300 )
-				.append( " ADD CONSTRAINT " )
-				.append( constraintName )
+				.append( "ADD CONSTRAINT " )
+				.append( request.constraintName() )
 				.append( " FOREIGN KEY " )
-				.append( constraintName )
+				.append( request.constraintName() )
 				.append( " (" )
-				.append( String.join( ", ", foreignKey ) )
+				.append( String.join( ", ", request.sourceColumnNames() ) )
 				.append( ") REFERENCES " )
-				.append( referencedTable )
+				.append( request.referencedTableName() )
 				.append( " (" )
-				.append( String.join( ", ", primaryKey ) )
-				.append( ") " )
+				.append( String.join( ", ", request.targetColumnNames() ) )
+				.append( ')' )
 				.toString();
 	}
 
 	@Override
-	public boolean hasSelfReferentialForeignKeyBug() {
+	@SPI({ USE, IMPLEMENT })
+	public boolean requiresSelfReferentialForeignKeyNullification() {
 		return true;
 	}
 
@@ -288,12 +315,25 @@ public class CacheDialect extends Dialect {
 	// SEQUENCE support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public SequenceSupport getSequenceSupport() {
 		return CacheSequenceSupport.INSTANCE;
 	}
 
-	public String getQuerySequencesString() {
-		return "select name from InterSystems.Sequences";
+	private static final SequenceInformationExtractor SEQUENCE_INFORMATION_EXTRACTOR =
+			SequenceInformationExtractors.builder( "select name from InterSystems.Sequences" )
+					.sequenceNameColumn( 1 )
+					.withoutCatalog()
+					.withoutSchema()
+					.withoutStartValue()
+					.withoutMinimumValue()
+					.withoutMaximumValue()
+					.withoutIncrementValue()
+					.build();
+
+	@Override
+	public SequenceInformationExtractor getSequenceInformationExtractor() {
+		return SEQUENCE_INFORMATION_EXTRACTOR;
 	}
 
 	// lock acquisition support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -301,35 +341,29 @@ public class CacheDialect extends Dialect {
 
 	@Override
 	public LockingSupport getLockingSupport() {
-		return NoLockingSupport.NO_LOCKING_SUPPORT;
+		return StandardLockingSupports.none();
 	}
 
 	@Override
 	public LockingClauseStrategy getLockingClauseStrategy(QuerySpec querySpec, LockOptions lockOptions) {
-		return NON_CLAUSE_STRATEGY;
+		return StandardLockingClauseStrategies.none();
 	}
 
 	@Override
-	protected LockingStrategy buildPessimisticWriteStrategy(EntityPersister lockable, LockMode lockMode, PessimisticLockScope lockScope) {
-		// InterSystems Cache' does not current support "SELECT ... FOR UPDATE" syntax...
-		// Set your transaction mode to READ_COMMITTED before using
-		return new PessimisticWriteUpdateLockingStrategy( lockable, lockMode );
+	@SPI({ IMPLEMENT, SUPPLY })
+	public EntityLockingStrategyFactory getEntityLockingStrategyFactory() {
+		// InterSystems Cache does not support "SELECT ... FOR UPDATE" syntax.
+		return EntityLockingStrategies.pessimisticUpdate();
 	}
 
 	@Override
-	protected LockingStrategy buildPessimisticReadStrategy(EntityPersister lockable, LockMode lockMode, PessimisticLockScope lockScope) {
-		// InterSystems Cache' does not current support "SELECT ... FOR UPDATE" syntax...
-		// Set your transaction mode to READ_COMMITTED before using
-		return new PessimisticReadUpdateLockingStrategy( lockable, lockMode );
-	}
-
-	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public SqlAstTranslatorFactory getSqlAstTranslatorFactory() {
 		return new StandardSqlAstTranslatorFactory() {
 			@Override
-			protected <T extends JdbcOperation> SqlAstTranslator<T> buildTranslator(
-					SessionFactoryImplementor sessionFactory, Statement statement) {
-				return new CacheSqlAstTranslator<>( sessionFactory, statement );
+			protected <S extends Statement, T extends JdbcOperation> SqlAstTranslator<T> createTranslator(
+					SqlAstTranslationRequest<S, T> request) {
+				return new CacheSqlAstTranslator<>( request );
 			}
 		};
 	}
@@ -341,35 +375,20 @@ public class CacheDialect extends Dialect {
 		return TopLimitHandler.INSTANCE;
 	}
 
-	// callable statement support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-	@Override
-	public int registerResultSetOutParameter(CallableStatement statement, int col) {
-		return col;
-	}
-
-	@Override
-	public ResultSet getResultSet(CallableStatement ps) throws SQLException {
-		ps.execute();
-		return (ResultSet) ps.getObject( 1 );
-	}
-
 	// miscellaneous support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
-	public String getNullColumnString() {
+	@SPI({ USE, IMPLEMENT })
+	public void appendDefinition(org.hibernate.sql.spi.SqlAppender appender, ColumnDefinitionRequest request) {
 		// The keyword used to specify a nullable column.
-		return " null";
+		super.appendDefinition( appender, request );
+		if ( request.nullable() ) {
+			appender.appendSql( " null" );
+		}
 	}
 
 	@Override
-	public String getNoColumnsInsertString() {
-		// The keyword used to insert a row without specifying
-		// any column values
-		return " default values";
-	}
-
-	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
 		return (sqlException, message, sql) -> {
 			String sqlStateClassCode = JdbcExceptionHelper.extractSqlStateClassCode( sqlException );
@@ -391,6 +410,7 @@ public class CacheDialect extends Dialect {
 	}
 
 	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public ViolatedConstraintNameExtractor getViolatedConstraintNameExtractor() {
 		return EXTRACTOR;
 	}
@@ -404,35 +424,22 @@ public class CacheDialect extends Dialect {
 	// Overridden informational metadata ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
-	public boolean supportsOrderByInSubquery() {
-		// This is just a guess
-		return false;
+	public SubquerySupport getSubquerySupport() {
+		return SubquerySupport.builder()
+				.feature( SubquerySupport.Feature.ORDER_BY, false )
+				.build();
 	}
 
 	@Override
-	public boolean supportsResultSetPositionQueryMethodsOnForwardOnlyCursor() {
-		return false;
-	}
-
-	@Override
-	public void appendDatetimeFormat(SqlAppender appender, String format) {
+	@SPI({ USE, IMPLEMENT })
+	public void appendFormat(SqlAppender appender, String format) {
 		//I don't think Cache needs FM
 		appender.appendSql( OracleDialect.datetimeFormat( format, false, false ).result() );
 	}
 
 	@Override
-	public boolean supportsRowValueConstructorSyntax() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsRowValueConstructorSyntaxInInList() {
-		return false;
+	public RowValueSupport getRowValueSupport() {
+		return RowValueSupport.NONE;
 	}
 
 }

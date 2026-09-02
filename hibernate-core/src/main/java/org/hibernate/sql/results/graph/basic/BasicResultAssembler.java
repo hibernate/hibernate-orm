@@ -9,7 +9,7 @@ import java.util.Locale;
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
-import org.hibernate.sql.ast.spi.SqlSelection;
+import org.hibernate.sql.ast.spi.query.select.SqlSelection;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.type.descriptor.java.JavaType;

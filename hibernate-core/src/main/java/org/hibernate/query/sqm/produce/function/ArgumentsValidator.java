@@ -6,7 +6,7 @@ package org.hibernate.query.sqm.produce.function;
 
 import org.hibernate.type.BindingContext;
 import org.hibernate.query.sqm.tree.spi.SqmTypedNode;
-import org.hibernate.sql.ast.tree.SqlAstNode;
+import org.hibernate.sql.ast.spi.SqlAstNode;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import java.util.List;

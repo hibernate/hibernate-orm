@@ -9,11 +9,11 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.produce.function.internal.PatternRenderer;
-import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.spi.SqlAppender;
-import org.hibernate.sql.ast.tree.SqlAstNode;
-import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.ExtractUnit;
+import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
+import org.hibernate.sql.spi.SqlAppender;
+import org.hibernate.sql.ast.spi.SqlAstNode;
+import org.hibernate.sql.ast.spi.query.expression.Expression;
+import org.hibernate.sql.ast.spi.query.expression.ExtractUnit;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import java.util.List;
@@ -48,6 +48,6 @@ public class SpannerExtractFunction extends ExtractFunction {
 					? "unix_seconds(timestamp(?2))"
 					: "unix_seconds(?2)";
 		}
-		return dialect.extractPattern( field.getUnit() );
+		return dialect.getTemporalOperationSupport().extractPattern( field.getUnit() );
 	}
 }

@@ -20,15 +20,22 @@ import org.hibernate.query.results.spi.ResultSetMapping;
  * procedure-call queries where not all JDBC types are known and we need the
  * JDBC {@link java.sql.ResultSetMetaData} to determine the types
  *
+ * @see JdbcValuesMappingProducerProvider#buildMappingProducer(org.hibernate.sql.ast.spi.query.select.SelectStatement, SessionFactoryImplementor)
+ * @see JdbcValuesMappingProducerProvider#buildResultSetMapping(String, boolean, SessionFactoryImplementor)
+ *
  * @author Steve Ebersole
  */
 @Incubating
+@org.hibernate.SPI({ org.hibernate.SPI.Role.USE, org.hibernate.SPI.Role.IMPLEMENT, org.hibernate.SPI.Role.SUPPLY })
 public interface JdbcValuesMappingProducer {
 	/**
 	 * Resolve the JdbcValuesMapping.  This involves resolving the
 	 * {@link org.hibernate.sql.results.graph.DomainResult} and
 	 * {@link org.hibernate.sql.results.graph.Fetch}
+	 *
+	 * @see JdbcValuesMapping
 	 */
+	@org.hibernate.SPI(org.hibernate.SPI.Role.SUPPLY)
 	JdbcValuesMapping resolve(
 			JdbcValuesMetadata jdbcResultsMetadata,
 			LoadQueryInfluencers loadQueryInfluencers,

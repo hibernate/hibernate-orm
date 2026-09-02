@@ -46,7 +46,7 @@ public class LobCreatorBuilderImpl implements LobCreatorBuilder {
 			Dialect dialect,
 			Map<String,Object> configValues,
 			Connection jdbcConnection) {
-		return new LobCreatorBuilderImpl( dialect.useConnectionToCreateLob(),
+		return new LobCreatorBuilderImpl( dialect.getLobSupport().useConnectionToCreateLob(),
 				getSupportedContextualLobTypes( dialect, configValues, jdbcConnection ) );
 	}
 
@@ -57,7 +57,7 @@ public class LobCreatorBuilderImpl implements LobCreatorBuilder {
 	 */
 	public static LobCreatorBuilderImpl makeLobCreatorBuilder(Dialect dialect) {
 		LOB_MESSAGE_LOGGER.disablingContextualLOBCreationSinceConnectionNull();
-		return new LobCreatorBuilderImpl( dialect.useConnectionToCreateLob(), NONE );
+		return new LobCreatorBuilderImpl( dialect.getLobSupport().useConnectionToCreateLob(), NONE );
 	}
 
 	/**

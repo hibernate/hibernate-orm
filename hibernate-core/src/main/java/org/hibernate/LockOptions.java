@@ -4,6 +4,7 @@
  */
 package org.hibernate;
 
+
 import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.Timeout;
 
@@ -40,8 +41,9 @@ import static java.util.Collections.emptySet;
  * only to a certain query alias}.
  * <p>
  * Finally, the use of follow-on locking may be force enabled or disabled,
- * overriding the {@linkplain org.hibernate.dialect.Dialect#useFollowOnLocking
- * default behavior of the SQL dialect} by passing a non-null argument
+ * overriding the default behavior of the SQL dialect's
+ * {@linkplain org.hibernate.dialect.lock.spi.FollowOnLockingPolicy follow-on locking policy}
+ * by passing a non-null argument
  * to {@link #setFollowOnLocking(Boolean)}.
  *
  * @deprecated
@@ -413,7 +415,7 @@ public class LockOptions implements Serializable {
 	 *
 	 * @see Locking.FollowOn#asLegacyValue()
 	 * @see org.hibernate.jpa.HibernateHints#HINT_FOLLOW_ON_LOCKING
-	 * @see org.hibernate.dialect.Dialect#useFollowOnLocking(String, org.hibernate.query.spi.QueryOptions)
+	 * @see org.hibernate.dialect.lock.spi.FollowOnLockingPolicy
 	 *
 	 * @deprecated Use {@linkplain #getFollowOnStrategy()} instead.
 	 */
@@ -432,7 +434,7 @@ public class LockOptions implements Serializable {
 	 *
 	 * @see org.hibernate.Locking.FollowOn#fromLegacyValue
 	 * @see org.hibernate.jpa.HibernateHints#HINT_FOLLOW_ON_LOCKING
-	 * @see org.hibernate.dialect.Dialect#useFollowOnLocking(String, org.hibernate.query.spi.QueryOptions)
+	 * @see org.hibernate.dialect.lock.spi.FollowOnLockingPolicy
 	 *
 	 * @deprecated Use {@linkplain #setFollowOnStrategy} instead.
 	 */

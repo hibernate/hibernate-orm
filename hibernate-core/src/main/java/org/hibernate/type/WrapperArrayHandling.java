@@ -4,6 +4,7 @@
  */
 package org.hibernate.type;
 
+
 import java.util.Locale;
 
 import org.hibernate.cfg.AvailableSettings;

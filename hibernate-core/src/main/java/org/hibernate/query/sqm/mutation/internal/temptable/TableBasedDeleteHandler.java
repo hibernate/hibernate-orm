@@ -4,9 +4,11 @@
  */
 package org.hibernate.query.sqm.mutation.internal.temptable;
 
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
+
 import jakarta.annotation.Nullable;
-import org.hibernate.dialect.temptable.TemporaryTable;
-import org.hibernate.dialect.temptable.TemporaryTableStrategy;
+import org.hibernate.dialect.temptable.internal.TemporaryTable;
+import org.hibernate.dialect.temptable.spi.TemporaryTableStrategy;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.MutableObject;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
@@ -27,19 +29,19 @@ import org.hibernate.query.sqm.spi.SqmParameterMappingModelResolutionAccess;
 import org.hibernate.query.sqm.tree.spi.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.spi.expression.SqmParameter;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.spi.SqlExpressionResolver;
-import org.hibernate.sql.ast.tree.delete.DeleteStatement;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
-import org.hibernate.sql.ast.tree.expression.SqlTuple;
-import org.hibernate.sql.ast.tree.from.MutatingTableReferenceGroupWrapper;
-import org.hibernate.sql.ast.tree.from.NamedTableReference;
-import org.hibernate.sql.ast.tree.from.UnionTableReference;
-import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
-import org.hibernate.sql.ast.tree.predicate.InSubQueryPredicate;
-import org.hibernate.sql.ast.tree.predicate.Predicate;
-import org.hibernate.sql.ast.tree.predicate.PredicateCollector;
-import org.hibernate.sql.ast.tree.select.QuerySpec;
+import org.hibernate.sql.ast.spi.creation.SqlExpressionResolver;
+import org.hibernate.sql.ast.spi.query.delete.DeleteStatement;
+import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
+import org.hibernate.sql.ast.spi.query.expression.JdbcParameter;
+import org.hibernate.sql.ast.spi.query.expression.SqlTuple;
+import org.hibernate.sql.ast.spi.query.from.MutatingTableReferenceGroupWrapper;
+import org.hibernate.sql.ast.spi.query.from.NamedTableReference;
+import org.hibernate.sql.ast.spi.query.from.UnionTableReference;
+import org.hibernate.sql.ast.spi.query.insert.InsertSelectStatement;
+import org.hibernate.sql.ast.spi.query.predicate.InSubQueryPredicate;
+import org.hibernate.sql.ast.spi.query.predicate.Predicate;
+import org.hibernate.sql.ast.spi.query.predicate.PredicateCollector;
+import org.hibernate.sql.ast.spi.query.select.QuerySpec;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.internal.SqlTypedMappingJdbcParameter;
@@ -416,7 +418,7 @@ public class TableBasedDeleteHandler
 
 		final var factory = executionContext.getSession().getFactory();
 		return factory.getJdbcServices().getJdbcEnvironment().getSqlAstTranslatorFactory()
-				.buildMutationTranslator( factory, new DeleteStatement( targetTable, predicate ) )
+				.buildTranslator( new SqlAstTranslationRequest.QueryMutation( factory, new DeleteStatement( targetTable, predicate ) ) )
 				.translate( JdbcParameterBindings.NO_BINDINGS, executionContext.getQueryOptions() );
 	}
 
@@ -428,7 +430,7 @@ public class TableBasedDeleteHandler
 			ExecutionContext executionContext) {
 		final var factory = executionContext.getSession().getFactory();
 		return factory.getJdbcServices().getJdbcEnvironment().getSqlAstTranslatorFactory()
-				.buildMutationTranslator( factory, new DeleteStatement( rootTableReference, predicate ) )
+				.buildTranslator( new SqlAstTranslationRequest.QueryMutation( factory, new DeleteStatement( rootTableReference, predicate ) ) )
 				.translate( jdbcParameterBindings, executionContext.getQueryOptions() );
 	}
 
@@ -452,7 +454,7 @@ public class TableBasedDeleteHandler
 								matchingIdSubQuerySpec, deleteTableReference ) );
 		final var factory = executionContext.getSession().getFactory();
 		return factory.getJdbcServices().getJdbcEnvironment().getSqlAstTranslatorFactory()
-				.buildMutationTranslator( factory, sqlAstDelete )
+				.buildTranslator( new SqlAstTranslationRequest.QueryMutation( factory, sqlAstDelete ) )
 				.translate( jdbcParameterBindings, executionContext.getQueryOptions() );
 	}
 

@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.mapping.basic;
 
+
 import java.sql.Types;
 
 import org.hibernate.boot.model.FunctionContributions;

@@ -1,6 +1,6 @@
 services:
   oracle:
-    image: ${DB_IMAGE_ORACLE_23:-docker.io/gvenzl/oracle-free:23@sha256:e2763af84ecc345d48e4e3fe7999d0b7bb57885b6e0166051acd5f62e27eb605}
+    image: ${DB_IMAGE_ORACLE_23:-docker.io/gvenzl/oracle-free:23@sha256:7ed34d0ade89c91a553c9cbe9d42457c758fa29a762aaaa3137541ff30a2d1cb}
     container_name: oracle
     ports:
       - "1521:1521"

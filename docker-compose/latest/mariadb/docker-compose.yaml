@@ -1,6 +1,6 @@
 services:
   mariadb:
-    image: ${MARIADB_IMAGE:-docker.io/library/mariadb:12.3@sha256:628f228f0fd5913a220438693576b29b6fe4dc1fa0a1298c0e98579fae28635f}
+    image: ${MARIADB_IMAGE:-docker.io/library/mariadb:12.3@sha256:dd9b303aed4f4890ed09f766d8ca9ddfd176c0c6f6267feff53b3192ec65a979}
     container_name: mariadb
     environment:
       MARIADB_USER: hibernate_orm_test

@@ -25,6 +25,7 @@ import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.type.descriptor.jdbc.JavaTimeJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.LocalDateJdbcType;
@@ -37,7 +38,6 @@ import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -51,7 +51,7 @@ import static org.hibernate.type.descriptor.DateTimeUtils.adjustToDefaultPrecisi
 import static org.hibernate.type.descriptor.DateTimeUtils.adjustToPrecision;
 
 /**
- * Tests for "direct" JDBC handling of {@linkplain java.time Java Time} types.
+ * Tests the default, direct JDBC handling of {@linkplain java.time Java Time} types.
  *
  * @author Steve Ebersole
  */

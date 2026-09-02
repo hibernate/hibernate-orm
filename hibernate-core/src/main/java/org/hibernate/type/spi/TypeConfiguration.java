@@ -930,11 +930,13 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	@SuppressWarnings("deprecation")
 	protected static @Nullable TemporalType getSqlTemporalType(int jdbcTypeCode) {
 		return switch ( jdbcTypeCode ) {
-			case SqlTypes.TIMESTAMP, SqlTypes.TIMESTAMP_WITH_TIMEZONE, SqlTypes.TIMESTAMP_UTC
+			case SqlTypes.TIMESTAMP, SqlTypes.TIMESTAMP_WITH_TIMEZONE, SqlTypes.TIMESTAMP_UTC,
+					SqlTypes.LOCAL_DATE_TIME, SqlTypes.OFFSET_DATE_TIME, SqlTypes.ZONED_DATE_TIME
 					-> TemporalType.TIMESTAMP;
-			case SqlTypes.TIME, SqlTypes.TIME_WITH_TIMEZONE, SqlTypes.TIME_UTC
+			case SqlTypes.TIME, SqlTypes.TIME_WITH_TIMEZONE, SqlTypes.TIME_UTC,
+					SqlTypes.LOCAL_TIME, SqlTypes.OFFSET_TIME
 					-> TemporalType.TIME;
-			case SqlTypes.DATE
+			case SqlTypes.DATE, SqlTypes.LOCAL_DATE
 					-> TemporalType.DATE;
 			default -> null;
 		};

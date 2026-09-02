@@ -76,6 +76,7 @@ public class DatabaseTimeZoneMultiTenancyTest {
 		//end::multitenacy-hibernate-timezone-configuration-registerConnectionProvider-call-example[]
 
 		Map<String, Object> settings = new HashMap<>();
+		settings.put( AvailableSettings.JAVA_TIME_USE_DIRECT_JDBC, false );
 
 		settings.put(
 				AvailableSettings.MULTI_TENANT_CONNECTION_PROVIDER,

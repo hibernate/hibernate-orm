@@ -2,6 +2,7 @@
 
 # Main Libs
 antlr = "4.13.2"
+asm = "9.9.1"
 # WARNING: When upgrading to a version of bytebuddy that supports a new bytecode version,
 # make sure to remove the now unnecessary net.bytebuddy.experimental=true in relevant CI jobs (Jenkinsfile).
 byteBuddy = "1.18.12"
@@ -146,6 +147,7 @@ taskTree = "4.0.2"
 # Libs
 antlr = { group = "org.antlr", name = "antlr4", version.ref = "antlr" }
 antlrRuntime = { group = "org.antlr", name = "antlr4-runtime", version.ref = "antlr" }
+asm = { group = "org.ow2.asm", name = "asm", version.ref = "asm" }
 byteBuddy = { group = "net.bytebuddy", name = "byte-buddy", version.ref = "byteBuddy" }
 byteBuddyAgent = { group = "net.bytebuddy", name = "byte-buddy-agent", version.ref = "byteBuddy" }
 logging = { group = "org.jboss.logging", name = "jboss-logging", version.ref = "jbossLogging" }

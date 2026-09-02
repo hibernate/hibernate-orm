@@ -1,0 +1,780 @@
+= Hibernate ORM Classification Tooling Guide
+:toc:
+:sectanchors:
+
+This guide is for Hibernate ORM developers, reviewers, and release maintainers
+working in the Hibernate ORM repository. It explains how to generate, inspect,
+and validate Hibernate's API, SPI, and internal classifications and how those
+classifications select the contracts covered by migration compatibility
+analysis.
+
+External service-provider authors should instead begin with the link:documentation/src/main/asciidoc/spi/index.adoc[Hibernate ORM SPI and Service Provider Guide].
+External Dialect providers should also read the link:documentation/src/main/asciidoc/dialect-provider/index.adoc[Dialect Provider Guide].
+
+== Classification model
+
+In a valid classification model, every retained Hibernate-owned declaration
+resolves to one of three mutually exclusive categories:
+
+API:: Application-facing contracts supported for ordinary application use.
+SPI:: Service-provider contracts supported for integrations independently
+released from Hibernate ORM.
+Internal:: Hibernate implementation details without a compatibility promise to
+applications or providers.
+
+Package placement supplies the primary conventions. A package named `spi` and
+its subpackages imply SPI `USE`, while a package named `internal` and its
+subpackages imply internal classification. Declaration and package annotations
+classify exceptions and provide more precise semantics.
+
+An SPI declaration may have one or more independent roles:
+
+`USE`:: Provider code may name and use the contract where its members are
+exposed.
+`IMPLEMENT`:: Provider code may implement, extend, or override the classified
+contract.
+`SUPPLY`:: Provider code may supply an implementation, instance, or value
+through a documented Hibernate supply point.
+
+The roles are independent. Do not add `USE` merely because Java requires a
+provider to name a type while implementing or supplying it. For example,
+`DerivedTableRenderingSupport` is `IMPLEMENT` without `USE`: subclassing or
+overriding the hook is supported, but invoking the hook as a provider API is
+not implied. `SqlAstTranslatorFactory` is `IMPLEMENT` and `SUPPLY` without
+`USE`: a provider may implement the factory and return it through the
+documented Dialect supply point, while direct operational use of the factory is
+not part of that promise. A member classified only `SUPPLY`, such as a registry
+registration method, promises the act of supplying the value; it does not
+automatically promise unrelated reads or invocation of the supplied contract.
+
+Incubation, deprecation, and scheduled removal are lifecycle classifications.
+They are recorded alongside API, SPI, or internal category; they do not replace
+it. Public Java visibility is likewise not a support classification.
+
+The classifier derives its model from compiled declarations, signatures,
+package conventions, and annotations. It does not classify a declaration merely
+because another supported declaration references it.
+
+== Tooling architecture
+
+[source,text]
+----
+compiled repository artifacts
+        |
+        v
+aggregated Jandex index
+        |
+        v
+classifications.json
+        |
+        +--> classifications.json.gz
+        |
+        +--> human classification and lifecycle reports
+        |
+        +--> classification validation
+        |
+        +--> SPI role and shape validation
+        |
+        +--> provider-boundary validation
+        |
+        +--> API and SPI migration compatibility validation
+----
+
+`documentation/target/orm/reports/classifications.json` is the canonical local
+classification model. The compressed `classifications.json.gz` is a
+deterministic encoding of the same supported tooling contract and is the form
+published for a release family.
+
+Human reports and validators consume this canonical model. They do not
+independently reinterpret Jandex metadata or reclassify declarations.
+
+== Task overview
+
+[cols="2,3,3,2",options="header"]
+|===
+|Task
+|Purpose
+|Primary output
+|Normal lifecycle
+
+|`:documentation:generateClassificationMetadata`
+|Generate the canonical classification model
+|`classifications.json` and `classifications.json.gz`
+|Explicit; dependency of reports and validators
+
+|`:documentation:generateClassificationReports`
+|Generate all human classification and lifecycle projections
+|`internal.txt`, `incubating.txt`, `deprecated.txt`, and `removal.txt`
+|Explicit; included in broader report generation
+
+|`:documentation:validateClassifications`
+|Validate API, SPI, and internal category integrity and dependency direction
+|`classification-validation.txt`
+|Explicit; not part of `check`
+
+|`:documentation:validateSpi`
+|Validate SPI roles and implementation-point structure
+|`spi-validation.txt`
+|Explicit; not part of `check`
+
+|`:documentation:validateDialectProviderBoundaries`
+|Validate compiled repository provider fixtures against supported Hibernate boundaries
+|Text and JSON provider-boundary reports
+|Explicit; not part of `check`
+
+|`:documentation:validateMigrationCompatibility`
+|Validate API and role-sensitive SPI migration compatibility
+|`migration-compatibility-validation.txt`
+|Explicit; required before release metadata staging
+
+|`:documentation:generateMigrationReview`
+|Generate a non-gating API/SPI review for Migration Guide preparation
+|`migration-review.txt`
+|Explicit; not part of `check`
+|===
+
+The validation task names are intentionally not symmetrical. `validateSpi`
+checks structural semantics unique to SPI roles. API has no corresponding role
+system, so API category rules are part of `validateClassifications`. API and SPI
+source and binary compatibility are both handled by
+`validateMigrationCompatibility`.
+
+== Generating classification metadata
+
+Run:
+
+[source,shell]
+----
+./gradlew :documentation:generateClassificationMetadata
+----
+
+The task builds the aggregate index, classifies retained declarations, and
+records both the Hibernate release family and exact source version. It writes:
+
+[source,text]
+----
+documentation/target/orm/reports/classifications.json
+documentation/target/orm/reports/classifications.json.gz
+----
+
+Generate fresh metadata when:
+
+* classification annotations or classified packages change;
+* a supported signature changes;
+* a public declaration is added, moved, or removed;
+* SPI roles change; or
+* a report or validator needs to be evaluated against the current checkout.
+
+The uncompressed document is intended for local tools and inspection. Release
+publication uses the compressed document.
+
+=== Classification schema negotiation
+
+The root `schema` value identifies the classification contract and
+`schemaVersion` identifies its wire format. Readers must validate both values
+before interpreting declarations. The current tooling accepts exactly the
+schema versions it implements and fails closed for an unknown name or version;
+it must never silently reinterpret, downgrade, or partially consume an unknown
+document.
+
+The wire format records stable declaration identifiers, effective categories
+and SPI roles, classification origins, effective lifecycle states, structural
+facts needed by validation, artifact provenance, and references to other
+Hibernate-owned declarations. Stable identifiers already contain declaration
+descriptors, so display signatures and package names are not repeated.
+References to external Java types are intentionally omitted: classification
+validation cannot classify them, while migration compatibility analyzes the
+selected artifacts directly. Directly declared SPI roles and classification
+status are derived from classification origins; lifecycle-origin provenance is
+not part of the published contract.
+
+The family URL is rolling metadata for an `X.Y` line, so a schema transition
+within that family requires staged reader and writer changes. First publish a
+reader which accepts both the existing and proposed formats. Only a later
+release may publish the new format, after every supported consumer in that
+family can read it. A new family may establish a new required schema directly.
+Changes which only add ignorable fields should still retain the existing
+version only when old readers remain semantically correct without those
+fields. Otherwise increment the schema version and follow the staged
+transition.
+
+When a selected baseline uses an unsupported schema, use tooling which
+explicitly supports that schema or implement and test the required reader. Do
+not hand-edit published metadata or substitute metadata from another release
+family.
+
+== Generating human reports
+
+Run:
+
+[source,shell]
+----
+./gradlew :documentation:generateClassificationReports
+----
+
+The task depends on metadata generation, parses the canonical document once,
+and writes:
+
+[source,text]
+----
+documentation/target/orm/reports/internal.txt
+documentation/target/orm/reports/incubating.txt
+documentation/target/orm/reports/deprecated.txt
+documentation/target/orm/reports/removal.txt
+----
+
+The following aliases all invoke that same multi-output task:
+
+* `generateInternalsReport`
+* `generateIncubationReport`
+* `generateDeprecationReport`
+* `generateRemovalReport`
+
+An alias is a convenience for discoverability. It does not generate or parse
+one report independently.
+
+Use `internal.txt` to confirm that a dependency really targets unsupported
+implementation detail. The canonical JSON is the complete source for API and
+SPI categories and roles; no separate API- or SPI-only projection is a
+supported tooling contract.
+
+== Classification validation
+
+Run:
+
+[source,shell]
+----
+./gradlew :documentation:validateClassifications
+----
+
+This validates category-wide invariants for API, SPI, and internal
+declarations:
+
+* one unambiguous effective classification;
+* supported category dependency direction;
+* valid reachability from category roots;
+* classification of every retained Hibernate declaration; and
+* platform-to-provider and provider-to-platform artifact direction when
+  provider artifacts are configured as inputs.
+
+The task depends on fresh classification metadata and writes:
+
+[source,text]
+----
+documentation/target/orm/reports/classification-validation.txt
+----
+
+Every unallowlisted error fails the task. A malformed allowlist or an unused
+allowlist entry also fails the task.
+
+== SPI validation
+
+Run the complete SPI validation path with:
+
+[source,shell]
+----
+./gradlew :documentation:validateSpi
+----
+
+`validateSpi` depends on `validateClassifications` and then checks semantics
+specific to the SPI role model, including:
+
+* roles used on valid declaration kinds;
+* `IMPLEMENT` classes which can actually be subclassed;
+* `IMPLEMENT` methods which can actually be overridden;
+* supported subclass constructors.
+
+Supply lifecycle documentation is a provider-contract review requirement, not
+a bytecode classification rule. Source and binary migration compatibility is
+validated separately by `validateMigrationCompatibility`.
+
+It writes:
+
+[source,text]
+----
+documentation/target/orm/reports/spi-validation.txt
+----
+
+When classification validation has already been run and its findings have been
+reviewed, focused SPI triage may exclude the dependency:
+
+[source,shell]
+----
+./gradlew :documentation:validateSpi -x :documentation:validateClassifications
+----
+
+This exclusion is not complete verification. Do not use it to hide an
+unreviewed classification failure.
+
+`validateSpi` does not mean "perform every SPI compatibility check." Source and
+binary migration compatibility requires old and current artifacts and belongs
+to `validateMigrationCompatibility`.
+
+== Dialect-provider boundary validation
+
+Run:
+
+[source,shell]
+----
+./gradlew :documentation:validateDialectProviderBoundaries
+----
+
+The repository configures this task with compiled community Dialects, the
+standalone provider fixture, Hibernate Core as the upstream artifact, and the
+provider-tooling validation engine. It writes:
+
+[source,text]
+----
+documentation/target/orm/reports/dialect-provider-boundary-validation.txt
+documentation/target/orm/reports/dialect-provider-boundary-validation.json
+----
+
+The two principal provider causes are:
+
+`INTERNAL_TARGET`:: Provider bytecode references a Hibernate internal. This is
+a warning: the dependency may compile and run, but it carries no compatibility
+guarantee and should be replaced with a supported contract where possible.
+`MISSING_IMPLEMENT_ROLE`:: Provider bytecode implements, extends, or overrides a
+declaration not classified `IMPLEMENT`. This is an error because Java
+visibility alone does not define a supported provider implementation point.
+
+The repository task and the external Dialect-provider Gradle plugin apply the
+same boundary model to different provider inputs. This guide documents the
+repository task; provider projects should follow the Dialect Provider Guide.
+
+== API and SPI migration compatibility
+
+`validateMigrationCompatibility` combines:
+
+* baseline classification metadata;
+* current classification metadata;
+* baseline compiled artifacts; and
+* current compiled artifacts.
+
+Classification metadata selects the supported API and SPI surfaces. Compiled
+artifacts supply Java declaration facts such as descriptors, visibility,
+inheritance, default methods, generic signatures, constants, records, and
+sealed classes.
+
+=== Compatibility artifact scope
+
+Classification reporting intentionally covers more modules than migration
+compatibility. The resolvable `migrationCompatibilityArtifacts` Gradle
+configuration defines the latter scope explicitly. Its currently approved ORM
+modules are:
+
+* `hibernate-core`;
+* `hibernate-envers`;
+* `hibernate-jcache`;
+* `hibernate-micrometer`; and
+* `hibernate-spatial`.
+
+The configuration is non-transitive. The independently versioned
+`org.hibernate.models:hibernate-models` artifact is also included explicitly
+because it owns declarations exposed by the supported ORM surface. The Ant and
+Maven plugins, annotation processor, reverse-engineering tooling, Dialect
+testkit, and community Dialects remain available to classification reports but
+are deliberately outside migration compatibility enforcement.
+
+The generated manifest is the intersection of this configuration and the
+artifacts which own API or SPI declarations. Both baseline and current
+bytecode analysis, classification comparison, and cross-major migration review
+use that same manifest-defined scope. Add an artifact to the configuration
+only after deciding that its API and SPI carry the corresponding Hibernate ORM
+compatibility promises.
+
+The compatibility horizons differ:
+
+API:: Stable API compatibility is enforced while the baseline and current
+versions have the same major version. For example, an `8.0` baseline is
+applicable to API compatibility in `8.1`.
+SPI:: Stable SPI compatibility is enforced only while the baseline and current
+versions are in the same `X.Y` family. For example, an `8.1.0` baseline is
+applicable to `8.1.1`, but the `8.0` SPI promise is not imposed on `8.1`.
+
+Incubating declarations are excluded from both stable compatibility promises.
+The same analysis run reports its surfaces separately as
+`API_COMPATIBILITY_REGRESSION` and `SPI_COMPATIBILITY_REGRESSION`.
+
+Migration diagnostics have two severities:
+
+`ERROR`:: A definite source or binary incompatibility under the applicable
+classification, role, and release horizon.
+`REVIEW`:: A context-dependent Java change which requires human review and must
+not be silently treated as compatible.
+
+=== Baseline selection and resolution
+
+Run compatibility validation with:
+
+[source,shell]
+----
+./gradlew :documentation:validateMigrationCompatibility
+----
+
+The typed `migrationCompatibility` Gradle extension owns baseline selection.
+Its `baselineFamily` and `reviewFamily` properties use `X.Y` values. The
+calculated compatibility baseline is:
+
+[cols="2,2,3",options="header"]
+|===
+|Current version
+|Default baseline
+|Compatibility horizon
+
+|Initial `X.0.0`
+|None
+|A new major begins both horizons
+
+|Initial `X.Y.0`, where `Y > 0`
+|`X.(Y-1)`
+|API only across minor families
+
+|Maintenance `X.Y.Z`, where `Z > 0`
+|`X.Y`
+|API and SPI within the family
+|===
+
+Qualifiers such as `SNAPSHOT`, `CR1`, or `Final` do not change this
+calculation. `reviewFamily` normally follows the calculated baseline, but it
+is independent. A new major may explicitly compare with the last maintained
+family of the preceding major for Migration Guide review:
+
+[source,groovy]
+----
+migrationCompatibility {
+    reviewFamily = "8.1"
+}
+----
+
+Hibernate does not infer that cross-major review family from a mutable site
+index.
+
+Family metadata is resolved from:
+
+[source,text]
+----
+https://docs.hibernate.org/orm/X.Y/metadata/classifications.json.gz
+https://docs.hibernate.org/orm/X.Y/metadata/classifications.json.gz.sha256
+----
+
+The resolver verifies the SHA-256 sidecar, family, schema, exact source
+version, and artifact manifest. It uses a family-scoped Gradle cache, honors
+offline and refresh-dependencies modes, and resolves the manifest's exact
+artifact coordinates through the repositories configured for the build.
+Modules which did not exist in the selected baseline are naturally absent.
+Mixed ORM versions, missing artifacts, duplicate coordinates, and manifest
+mismatches are configuration failures.
+
+Repository or release work may select a mirror or local authenticated input:
+
+[source,groovy]
+----
+migrationCompatibility {
+    classificationMetadataBaseUrl = "https://repository.example/hibernate-orm"
+    baselineClassificationMetadataFile = layout.projectDirectory.file("reviewed-baseline.json.gz")
+    reviewClassificationMetadataFile = layout.projectDirectory.file("reviewed-review-input.json.gz")
+}
+----
+
+A local file replaces network resolution only for its corresponding input and
+must still match the selected family.
+
+The first publication of a family with no previous metadata is a guarded seed
+operation. Set `bootstrapBaseline = true` only for that publication. Bootstrap
+succeeds only when the family endpoint is absent, is rejected if an established
+baseline or validated cache exists, and is reported as `NOT_APPLICABLE` rather
+than as a compatibility pass. Remove the setting immediately after the seed.
+
+The task is intentionally not a dependency of `check`. Run it explicitly, in
+scheduled compatibility CI, and before staging published classification
+metadata. Release staging depends on it so an established rolling family
+baseline is never replaced before validation succeeds.
+
+=== Cross-major migration review
+
+Generate the advisory report with:
+
+[source,shell]
+----
+./gradlew :documentation:generateMigrationReview
+----
+
+The report compares the selected `reviewFamily` independently of compatibility
+horizons. It lists API/SPI additions and removals, classification and role
+changes, lifecycle changes, Java declaration changes, and removals lacking
+prior deprecation. Findings never fail the task; invalid or unresolved inputs
+do. Its heading explicitly states that migration review is not compatibility
+enforcement.
+
+
+== Semantic validation causes
+
+Classification and SPI validation report semantic names rather than opaque
+numeric identifiers. Each cause below is derived by the registered repository
+tasks from the canonical model.
+
+[cols="3,2,1,5",options="header"]
+|===
+|Cause
+|Validator
+|Severity
+|Meaning and usual direction
+
+|`CONFLICTING_CLASSIFICATION`
+|Classification
+|Error
+|Conflicting evidence resolves a declaration to more than one category; remove or narrow the conflicting evidence.
+
+|`FORBIDDEN_CATEGORY_DEPENDENCY`
+|Classification
+|Error
+|A supported signature crosses a forbidden category boundary; expose an appropriately classified contract instead.
+
+|`INVALID_CATEGORY_REACHABILITY`
+|Classification
+|Error
+|A declaration is reachable only through a less-supported category; provide a valid category root or remove the exposure.
+
+|`UNCLASSIFIED_HIBERNATE_DECLARATION`
+|Classification
+|Error
+|A retained Hibernate declaration has no effective category; classify it or remove it from the supported surface.
+
+|`INVALID_SPI_ROLE_DECLARATION`
+|SPI
+|Error
+|An SPI role is empty or invalid for its declaration target; correct the role declaration.
+
+|`INVALID_SPI_IMPLEMENTATION_POINT`
+|SPI
+|Error
+|An `IMPLEMENT` declaration cannot actually be implemented, extended, or overridden; fix its Java shape or remove the role.
+
+|===
+
+== Reading a validation report
+
+A classification or SPI diagnostic contains:
+
+Cause and severity:: Why the validation failed and whether it fails the task.
+Source and target:: The exact declarations participating in the finding.
+Categories:: The effective category of each declaration.
+Edge:: The signature or dependency relationship crossing the boundary, when
+the cause describes a relationship.
+Roles:: Effective SPI roles involved in the finding.
+Message:: The immediate invariant which was violated.
+Path:: The shortest useful path from the relevant classification root.
+Allowlist:: Whether an exact migration exception matched.
+Remediation:: The normal direction for resolving the cause.
+
+To decide whether a finding was introduced by a change:
+
+. generate metadata from the current checkout;
+. search the complete report for the changed declarations and packages;
+. compare the report with the target branch or an appropriate CI artifact;
+. identify added and removed findings by their complete diagnostic identity;
+. record new findings separately from any existing repository backlog.
+
+A nonzero validator exit does not prove that the current patch introduced every
+reported finding. Conversely, the existence of a backlog does not permit a new
+finding to be dismissed as pre-existing. Do not put backlog counts in durable
+instructions because they change as the repository is repaired.
+
+== Validation allowlist
+
+The shared repository allowlist is:
+
+[source,text]
+----
+gradle/classification-validation-allowlist.json
+----
+
+The current schema version is 2. Each entry uses `cause`, not a legacy rule
+identifier, and includes:
+
+* `cause`
+* `element`
+* `target`
+* `edgeKind`
+* `owner`
+* `reason`
+* `removalRelease`
+
+Cause, element, target, and edge kind form the exact diagnostic identity.
+Matching must not allow a new finding to consume an unrelated historical
+exception.
+
+Malformed entries fail validation. Entries for diagnostics which no longer
+exist also fail as unused so that the allowlist shrinks as migrations are
+completed.
+
+An allowlist entry is a temporary migration control, not an approval of the
+underlying dependency. Every entry needs an accountable owner, a concrete
+reason, and an intended removal release. Never add entries merely to make a new
+regression pass.
+
+== Developer workflows
+
+=== Adding or exposing a declaration
+
+. Decide whether the declaration is API, SPI, or internal.
+. For SPI, decide the exact `USE`, `IMPLEMENT`, and `SUPPLY` roles independently.
+. Add lifecycle classification where applicable.
+. Review every type exposed by the supported signature.
+. For every `SUPPLY` contract, document lifecycle and add reciprocal `@see`
+  links to every supply point.
+. Run focused compilation and tests first.
+. Generate classification reports.
+. Run classification and SPI validation as applicable.
+. Inspect the exact declaration and all change-local dependency paths.
+. Evaluate migration compatibility when an existing supported contract changed.
+
+=== Moving or reclassifying a declaration
+
+Review all of the following independently:
+
+* source and binary linkage;
+* category and package-classification changes;
+* API compatibility within the current major version;
+* SPI compatibility within the current `X.Y` family;
+* deprecated bridges or migration paths;
+* downstream provider exposure; and
+* Migration Guide impact.
+
+A Java-compatible change may still introduce a forbidden API, SPI, or internal
+dependency. A classification-safe signature may still be source- or
+binary-incompatible. Existing supported contracts require both analyses.
+
+=== Changing SPI roles
+
+Removing a role is a compatibility change. Adding `IMPLEMENT` expands the
+supported subclass or override surface and requires a genuinely implementable
+Java shape. Adding `SUPPLY` requires a documented supply mechanism and
+lifecycle. `USE` never implies either implementation or supply.
+
+=== Recording SPI changes in the Migration Guide
+
+Every intentional incompatible change to a stable SPI contract, removal of an
+SPI role, or reclassification which narrows provider use belongs under
+`Changes to SPI` in `migration-guide.adoc`. The entry must identify:
+
+* the affected declaration and its previous category and roles;
+* the source or binary behavior which changed;
+* which provider action (`USE`, `IMPLEMENT`, or `SUPPLY`) is affected; and
+* the replacement contract or exact provider migration, including when no
+  replacement exists.
+
+Do not hide SPI migration information in a feature-specific or API subsection.
+Corresponding application-facing changes belong under `Changes to API`.
+`validateMigrationCompatibility` detects Java and classification changes, but
+it cannot decide whether the prose gives providers enough information; review
+the report and the Migration Guide together.
+
+=== Changing a provider-facing contract
+
+Run, in this order:
+
+. focused tests for the affected feature;
+. `generateClassificationReports`;
+. `validateClassifications`;
+. `validateSpi`;
+. `validateDialectProviderBoundaries` when Dialect providers are affected; and
+. migration compatibility validation when changing an existing stable contract
+  and an approved baseline is available.
+
+== Execution and CI policy
+
+The classification and compatibility validators are intentionally not part of
+ordinary `check`. They aggregate many repository artifacts, and migration
+analysis additionally resolves and compares a reviewed baseline. Run focused
+tests before these repository-wide tasks.
+
+`generateReports` is broader than classification reporting: it also generates
+logging and Dialect reports. Prefer the focused classification task during
+classification development.
+
+Contributors should run the applicable explicit validators and identify
+change-local findings. Reviewers should verify category, role, dependency path,
+and the scope of any allowlist entry. Maintainers own baseline selection, CI
+activation, and release publication.
+
+The `.github/workflows/classification-validation.yml` workflow runs these
+repository-wide checks nightly and on manual dispatch. It is deliberately
+separate from ordinary pull-request CI and from the Gradle `check` lifecycle.
+While the reviewed repository backlog remains, the workflow is advisory: it
+records each task's exit status and uploads the generated reports without
+turning a known backlog into a permanently failing CI signal.
+
+Promoting the scheduled workflow to blocking enforcement requires every
+remaining error to be fixed or represented by an exact, reviewed allowlist
+entry. Promotion must reject new diagnostics by their complete identity; a
+count-only threshold is not acceptable. `validateMigrationCompatibility`
+additionally requires the selected family's metadata to have been seeded at
+the documentation site. Release staging remains independently gated by that
+task even while the scheduled aggregate workflow is advisory.
+
+== Release metadata
+
+Generate the checksum for published metadata with:
+
+[source,shell]
+----
+./gradlew :documentation:generateClassificationMetadataChecksum
+----
+
+This writes:
+
+[source,text]
+----
+documentation/target/orm/reports/classifications.json.gz.sha256
+----
+
+Release assembly stages `classifications.json.gz` and its SHA-256 sidecar under
+the family-specific documentation site's `metadata` directory. One published
+family document is the supported resolver target; patch-level metadata URLs
+are not the compatibility contract.
+
+Updating a compatibility baseline is an explicit reviewed action. It must not
+be an automatic consequence of a failed migration check.
+
+== Troubleshooting
+
+Missing or stale `classifications.json`:: Run
+`:documentation:generateClassificationMetadata`, or invoke the desired report
+or validator and allow its task dependency to regenerate the model.
+Invalid allowlist schema:: Use schema version 2 and semantic `cause` values.
+Do not translate old identifiers implicitly.
+Unused allowlist entry:: Remove the entry after confirming that its exact
+diagnostic has been repaired.
+Classification failure blocks focused SPI work:: Review the classification
+report first. Use the `-x` SPI-triage command only after that review.
+Unresolved or conflicting metadata:: Correct the classification evidence. A
+compatibility baseline containing unresolved declarations is invalid.
+Missing compatibility baseline metadata:: Publish the selected family's
+reviewed metadata and checksum, or use the guarded bootstrap process for its
+first publication. Do not invent or substitute an unreviewed baseline.
+Missing compatibility baseline artifacts:: Metadata alone cannot determine
+Java source and binary linkage. Resolve the matching compiled baseline artifact
+set.
+Baseline is newer than the current build:: Select an older applicable baseline;
+reverse migration comparison is rejected.
+Classification schema mismatch:: Use metadata supported by the current tooling
+or perform an explicitly reviewed schema migration.
+Unexpected `INTERNAL_TARGET`:: Replace the dependency with a supported API or
+SPI contract where possible. The warning is an explicit absence of
+compatibility guarantees.
+Unexpected `MISSING_IMPLEMENT_ROLE`:: Do not implement, extend, or override a
+declaration unless it is classified `IMPLEMENT`.
+Failed task does not show diagnostics in the console:: Open the task's report
+under `documentation/target/orm/reports/`; validators intentionally keep the
+complete deterministic diagnostic set there.
+
+== Related information
+
+* link:CONTRIBUTING.md[Contributing to Hibernate ORM]
+* link:MAINTAINERS.md[Hibernate ORM Maintainer Guide]
+* link:documentation/src/main/asciidoc/spi/index.adoc[Hibernate ORM SPI and Service Provider Guide source]
+* link:documentation/src/main/asciidoc/dialect-provider/index.adoc[Dialect Provider Guide source]
+* link:https://hibernate.org/support/compatibility-policy/[Hibernate compatibility policy]
+* link:gradle/classification-validation-allowlist.json[Classification validation allowlist]

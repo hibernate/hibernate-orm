@@ -15,6 +15,8 @@ include::./common-attributes.adoc[]
 :doc-javadoc-url: {doc-version-base-url}/javadocs/
 :doc-topical-url: {doc-version-base-url}/topical/html_single/
 :doc-dialect-url: {doc-version-base-url}/dialect/
+:doc-spi-url: {doc-version-base-url}/spi/
+:doc-dialect-provider-url: {doc-version-base-url}/dialect-provider/
 
 :report-deprecation-url: {doc-version-base-url}/deprecated/deprecating.txt
 :report-incubating-url: {doc-version-base-url}/incubating/incubating.txt

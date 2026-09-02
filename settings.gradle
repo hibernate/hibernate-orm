@@ -116,6 +116,7 @@ buildCache {
 
 include 'hibernate-core'
 include 'hibernate-testing'
+include 'hibernate-dialect-testkit'
 
 include 'hibernate-envers'
 include 'hibernate-spatial'
@@ -135,6 +136,9 @@ include 'hibernate-jcache'
 include 'hibernate-micrometer'
 include 'hibernate-graalvm'
 include 'hibernate-integrationtest-java-modules'
+
+include 'hibernate-dialect-provider-tooling'
+project(':hibernate-dialect-provider-tooling').projectDir = new File(rootProject.projectDir, "tooling/hibernate-dialect-provider")
 
 include 'local-build-asciidoctor-extensions'
 

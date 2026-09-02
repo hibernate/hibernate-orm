@@ -1,0 +1,22 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
+
+plugins {
+	id "local.publishing-java-module"
+}
+
+description = "A provider-oriented contract test kit for Hibernate ORM Dialects"
+
+dependencies {
+	api project( ':hibernate-core' )
+	api libs.test.junitJupiterApi
+
+	testRuntimeOnly libs.test.junitJupiterEngine
+	testRuntimeOnly libs.test.junitJupiterLauncher
+}
+
+test {
+	useJUnitPlatform()
+}

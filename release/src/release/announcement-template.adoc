@@ -62,9 +62,9 @@ For additional details, see:
 See also the following resources related to supported APIs:
 
 - the https://hibernate.org/community/compatibility-policy/[compatibility policy]
-- the link:{docs-url}/incubating/incubating.txt[incubating API report] (`@Incubating`)
-- the link:{docs-url}/deprecated/deprecated.txt[deprecated API report] (`@Deprecated` + `@Remove`)
-- the link:{docs-url}/internals/internal.txt[internal API report] (internal packages, `@Internal`)
+- the link:{docs-url}/incubating/incubating.txt[incubating elements report] (`@Incubating`)
+- the link:{docs-url}/deprecated/deprecated.txt[deprecated elements report] (`@Deprecated`)
+- the link:{docs-url}/removal/removal.txt[removal elements report] (`@Remove`)
+- the link:{docs-url}/internals/internal.txt[internal elements report] (internal packages, `@Internal`)
 
 Visit the https://hibernate.org/community/[website] for details on getting in touch with us.
-

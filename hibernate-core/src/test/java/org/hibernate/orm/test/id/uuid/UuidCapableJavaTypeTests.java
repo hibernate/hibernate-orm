@@ -23,6 +23,7 @@ import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.AbstractClassJavaType;
+import org.hibernate.type.descriptor.java.UUIDJavaType;
 import org.hibernate.type.descriptor.java.UuidCapableJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
@@ -205,6 +206,9 @@ public class UuidCapableJavaTypeTests {
 			if ( String.class.isAssignableFrom( type ) ) {
 				return (X) value.uuid.toString();
 			}
+			if ( byte[].class.isAssignableFrom( type ) ) {
+				return (X) UUIDJavaType.ToBytesTransformer.INSTANCE.transform( value.uuid );
+			}
 			throw unknownUnwrap( type );
 		}
 
@@ -221,6 +225,9 @@ public class UuidCapableJavaTypeTests {
 			}
 			if ( value instanceof String string ) {
 				return new CustomUuid( UUID.fromString( string ) );
+			}
+			if ( value instanceof byte[] bytes ) {
+				return new CustomUuid( UUIDJavaType.ToBytesTransformer.INSTANCE.parse( bytes ) );
 			}
 			throw new HibernateException( "Unknown UUID representation: " + value.getClass().getName() );
 		}

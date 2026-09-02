@@ -19,7 +19,6 @@ import jakarta.persistence.PersistenceException;
 import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.RefreshOption;
 import jakarta.persistence.Timeout;
-import jakarta.persistence.TransactionRequiredException;
 import jakarta.persistence.metamodel.EntityType;
 import org.hibernate.*;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
@@ -2595,10 +2594,6 @@ public class SessionImpl
 	@Nonnull
 	public LockModeType getLockMode(@Nonnull Object entity) {
 		checkOpen();
-
-		if ( !isTransactionInProgress() ) {
-			throw new TransactionRequiredException( "No active transaction" );
-		}
 
 		//noinspection ConstantValue
 		if ( entity == null ) {

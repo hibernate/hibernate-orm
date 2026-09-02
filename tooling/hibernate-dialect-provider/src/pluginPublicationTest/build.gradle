@@ -1,0 +1,11 @@
+plugins {
+	id "java-library"
+	id "org.hibernate.orm.dialect-provider"
+}
+
+tasks.register( "verifyPluginApplication" ) {
+	doLast {
+		assert project.extensions.findByName( "hibernateDialectProvider" ) != null
+		assert project.tasks.findByName( "verifyDialectProvider" ) != null
+	}
+}

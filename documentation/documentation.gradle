@@ -38,6 +38,10 @@ def jpaVersion = ormBuildDetails.jpaVersion
 
 defaultTasks 'buildDocs'
 
+migrationCompatibility {
+	bootstrapBaseline = true
+}
+
 configurations {
 	// hibernate-ant -> hibernate-reveng -> google-java-format -> guava
 	// guava publishes JRE/Android variants that Gradle's reportAggregation
@@ -45,10 +49,14 @@ configurations {
 	reportAggregation {
 		exclude group: 'com.google.guava', module: 'guava'
 	}
+	migrationCompatibilityArtifacts
+	dialectProviderValidationEngine
+	dialectProviderValidationUpstream
 
 	core
 
 	testing
+	dialectTestkit
 
 	envers
 	spatial
@@ -69,6 +77,7 @@ configurations {
 
 		extendsFrom core
 		extendsFrom testing
+		extendsFrom dialectTestkit
 		extendsFrom envers
 		extendsFrom spatial
 		extendsFrom agroal
@@ -131,6 +140,7 @@ dependencies {
 	reportAggregation project( ':hibernate-agroal' )
 	reportAggregation project( ':hibernate-c3p0' )
 	reportAggregation project( ':hibernate-core' )
+	reportAggregation project( ':hibernate-dialect-testkit' )
 	reportAggregation project(':hibernate-envers')
 	reportAggregation project(':hibernate-graalvm')
 	reportAggregation project(':hibernate-hikaricp')
@@ -142,8 +152,19 @@ dependencies {
 	reportAggregation project(':hibernate-processor')
     reportAggregation project(':hibernate-community-dialects')
 
+	migrationCompatibilityArtifacts project( ':hibernate-core' )
+	migrationCompatibilityArtifacts project( ':hibernate-envers' )
+	migrationCompatibilityArtifacts project( ':hibernate-jcache' )
+	migrationCompatibilityArtifacts project( ':hibernate-micrometer' )
+	migrationCompatibilityArtifacts project( ':hibernate-spatial' )
+	migrationCompatibilityArtifacts libs.hibernateModels
+
     dialectReportSources project( ':hibernate-core' )
     communityDialectReportSources project( ':hibernate-community-dialects' )
+    dialectProviderValidationSources project( ':hibernate-community-dialects' )
+    dialectProviderValidationSources project( path: ':hibernate-dialect-provider-tooling', configuration: 'providerFixtureElements' )
+	dialectProviderValidationUpstream project( path: ':hibernate-core', configuration: 'runtimeElements' )
+	dialectProviderValidationEngine project( path: ':hibernate-dialect-provider-tooling', configuration: 'runtimeElements' )
 
 	core project( ':hibernate-core' )
 	javadocSources project( path: ':hibernate-core', configuration: 'javadocSources' )
@@ -152,6 +173,8 @@ dependencies {
 	javadocSources project( path: ':hibernate-envers', configuration: 'javadocSources' )
 
 	testing project( ':hibernate-testing' )
+	dialectTestkit project( ':hibernate-dialect-testkit' )
+	javadocSources project( path: ':hibernate-dialect-testkit', configuration: 'javadocSources' )
 
 	spatial project( ':hibernate-spatial' )
 	javadocSources project( path: ':hibernate-spatial', configuration: 'javadocSources' )
@@ -182,6 +205,28 @@ dependencies {
 	javadocClasspath libs.jackson3Xml
 	javadocClasspath libs.jdbc.oracle
 	javadocClasspath libs.jdbc.oracleJdbcJacksonOsonExtension
+}
+
+tasks.named( "validateDialectProviderBoundaries" ) {
+	providerPackagePrefixes.set( [
+			"org.hibernate.community.",
+			"org.example.orm.dialect."
+	] )
+}
+
+def generateClassificationMetadataChecksumTask = tasks.register( "generateClassificationMetadataChecksum" ) {
+	group = "documentation"
+	description = "Generates the SHA-256 sidecar for published classification metadata"
+	dependsOn tasks.named( "generateClassificationMetadata" )
+	def metadataFile = layout.buildDirectory.file( "orm/reports/classifications.json.gz" )
+	def checksumFile = layout.buildDirectory.file( "orm/reports/classifications.json.gz.sha256" )
+	inputs.file metadataFile
+	outputs.file checksumFile
+	doLast {
+		def bytes = metadataFile.get().asFile.bytes
+		def digest = java.security.MessageDigest.getInstance( "SHA-256" ).digest( bytes ).encodeHex().toString()
+		checksumFile.get().asFile.text = "${digest}  classifications.json.gz\n"
+	}
 }
 
 
@@ -937,6 +982,48 @@ def renderDialectGuideTask = tasks.register( 'renderDialectGuide', AsciidoctorTa
     }
 }
 
+// SPI and provider guides ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+def renderSpiGuideTask = tasks.register( 'renderSpiGuide', AsciidoctorTask ) { task ->
+    group = "Documentation"
+    description = 'Renders the SPI and Service Provider guide in HTML format.'
+    inputs.property "hibernate-version", hibernateVersion
+
+    sourceDir = file( 'src/main/asciidoc/spi' )
+    sources 'index.adoc'
+    outputDir = layout.buildDirectory.dir( 'asciidoc/spi' )
+
+    resources {
+        from(project.layout.buildDirectory.dir("unpacked-theme").get()
+                .dir("hibernate-asciidoctor-theme").dir("asciidoc")) {
+            include 'css/**'
+            include 'images/**'
+            include 'script/**'
+        }
+    }
+}
+
+def renderDialectProviderGuideTask = tasks.register( 'renderDialectProviderGuide', AsciidoctorTask ) { task ->
+    group = "Documentation"
+    description = 'Renders the Dialect Provider guide in HTML format.'
+    inputs.property "hibernate-version", hibernateVersion
+    dependsOn ':hibernate-dialect-provider-tooling:compileProviderFixtureJava'
+    dependsOn ':hibernate-dialect-provider-tooling:compileProviderFixtureTestJava'
+
+    sourceDir = file( 'src/main/asciidoc/dialect-provider' )
+    sources 'index.adoc'
+    outputDir = layout.buildDirectory.dir( 'asciidoc/dialect-provider' )
+
+    resources {
+        from(project.layout.buildDirectory.dir("unpacked-theme").get()
+                .dir("hibernate-asciidoctor-theme").dir("asciidoc")) {
+            include 'css/**'
+            include 'images/**'
+            include 'script/**'
+        }
+    }
+}
+
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // ORM Reports
 
@@ -983,6 +1070,8 @@ def buildDocsTask = tasks.register( 'buildDocs' ) { task ->
 	task.dependsOn renderIntegrationGuidesTask
 	task.dependsOn renderTopicalGuidesTask
     task.dependsOn renderDialectGuideTask
+	task.dependsOn renderSpiGuideTask
+	task.dependsOn renderDialectProviderGuideTask
 	task.dependsOn generateReportsTask
 	task.dependsOn renderMigrationGuideTask
 	task.dependsOn renderWhatsNewTask

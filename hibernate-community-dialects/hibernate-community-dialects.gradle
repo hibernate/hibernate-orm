@@ -14,6 +14,7 @@ dependencies {
     api project( ':hibernate-core' )
 
     testImplementation project( ':hibernate-testing' )
+    testImplementation project( ':hibernate-dialect-testkit' )
     testImplementation project( path: ':hibernate-core', configuration: 'tests' )
 }
 

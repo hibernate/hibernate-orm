@@ -12,6 +12,7 @@ dependencies {
         api "org.hibernate:hibernate-core:$version"
         api project( ":hibernate-testing" )
         api "org.hibernate:hibernate-testing:$version"
+        api project( ":hibernate-dialect-testkit" )
 
         api project( ":hibernate-envers" )
         api "org.hibernate:hibernate-envers:$version"

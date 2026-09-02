@@ -1,0 +1,13 @@
+pluginManagement {
+	repositories {
+		maven {
+			url = uri( providers.gradleProperty( "pluginRepository" ).get() )
+		}
+		gradlePluginPortal()
+	}
+	plugins {
+		id "org.hibernate.orm.dialect-provider" version providers.gradleProperty( "providerVersion" ).get()
+	}
+}
+
+rootProject.name = "published-dialect-provider-plugin-consumer"

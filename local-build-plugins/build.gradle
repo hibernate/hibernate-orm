@@ -26,6 +26,7 @@ dependencies {
     implementation libs.jakarta.basicjaxbPlugins
 
 	implementation libs.jandex
+	implementation libs.asm
     implementation libs.jakarta.jsonApi
     implementation libs.jakarta.jsonBind
     implementation libs.jakarta.yasson
@@ -38,6 +39,10 @@ dependencies {
 	implementation libs.maven.resolverBasic
 	implementation libs.maven.resolverHttp
     implementation libs.buildscript.slf4jSimple
+
+	testImplementation libs.test.junitJupiterApi
+	testRuntimeOnly libs.test.junitJupiterEngine
+	testRuntimeOnly libs.test.junitJupiterLauncher
 }
 
 tasks.compileJava {
@@ -108,3 +113,7 @@ spotless {
 	}
 }
 tasks.compileJava.dependsOn tasks.spotlessJavaApply
+
+tasks.test {
+	useJUnitPlatform()
+}

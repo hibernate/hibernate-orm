@@ -1,0 +1,11 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
+package org.hibernate.dialect.internal;
+
+/// Upstream internal hierarchy fixture.
+///
+/// @author Steve Ebersole
+public interface InternalContract {
+}

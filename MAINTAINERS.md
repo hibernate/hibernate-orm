@@ -8,6 +8,12 @@ i.e. anybody with direct push access to the git repository.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md).
 
+## Classification and compatibility tooling
+
+See the [Classification Tooling Guide](classification-tooling.adoc) for the repository tasks which generate and validate API, SPI, and internal classifications, validate provider boundaries, and analyze API and SPI migration compatibility.
+
+Maintainers own compatibility-baseline selection and activation of the explicit compatibility checks in CI. API compatibility is evaluated within a major version, while SPI compatibility is evaluated within an `X.Y` release family. Release maintainers are also responsible for publishing the family classification metadata and its checksum through the documented release workflow.
+
 ## <a id="ci"></a> Continuous integration
 
 Continuous integration is split across two platforms:

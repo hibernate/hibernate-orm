@@ -71,6 +71,21 @@ hibernate.flush.queue.type=legacy
 
 
 
+[[addjustable-settings]]
+== AdjustableSettings
+
+`SessionFactory` now exposes the new `AvailableSettings` contract as a way to adjust a limited set of settings at runtime.
+
+[source,java]
+.AvailableSettings example
+----
+SessionFactory factory = ...;
+AvailableSettings adjuster = factory.getAvailableSettings();
+adjuster.setShowSql(true);
+----
+
+
+
 [[procedure-outputs]]
 == Improvements to ProcedureCall
 

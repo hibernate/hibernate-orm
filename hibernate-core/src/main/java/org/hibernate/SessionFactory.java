@@ -23,6 +23,7 @@ import org.hibernate.graph.internal.RootGraphImpl;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.relational.SchemaManager;
+import org.hibernate.settings.AdjustableSettings;
 import org.hibernate.stat.Statistics;
 
 import javax.naming.Referenceable;
@@ -162,6 +163,14 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	 */
 	@Nonnull
 	SessionBuilder withOptions();
+
+	/**
+	 * Access to runtime adjustment of a discrete set of Hibernate settings.
+	 *
+	 * @since 8.0
+	 */
+	@Incubating @Nonnull
+	AdjustableSettings getAdjustableSettings();
 
 	/**
 	 * Open a {@link Session}.

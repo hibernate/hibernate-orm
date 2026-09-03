@@ -22,12 +22,16 @@ import org.hibernate.sql.ast.spi.model.TableMutation;
 
 import static org.hibernate.SPI.Role.IMPLEMENT;
 
-/**
- * Base support for TableMutationBuilder implementations
- *
- * @author Steve Ebersole
- */
-@SPI( IMPLEMENT )
+/// Base for provider-owned [TableMutationBuilder] implementations.
+///
+/// Extend this class to collect JDBC parameters and column bindings for one
+/// table mutation. Choose the constructor accepting a [TableMapping] when the
+/// builder should create the mutating table reference, or supply an existing
+/// [MutatingTableReference] when reference identity must be preserved.
+///
+/// @since 8.0
+/// @author Steve Ebersole
+@SPI(IMPLEMENT)
 public abstract class AbstractTableMutationBuilder<M extends TableMutation<?>> implements TableMutationBuilder<M> {
 	private final SessionFactoryImplementor sessionFactory;
 
@@ -37,6 +41,8 @@ public abstract class AbstractTableMutationBuilder<M extends TableMutation<?>> i
 	private final MutatingTableReference mutatingTable;
 	private final ColumnValueParameterList parameters;
 
+	/// Create a builder which owns a new reference to `table`.
+	@SPI(IMPLEMENT)
 	public AbstractTableMutationBuilder(
 			MutationType mutationType,
 			MutationTarget mutationTarget,
@@ -45,6 +51,8 @@ public abstract class AbstractTableMutationBuilder<M extends TableMutation<?>> i
 		this( mutationType, mutationTarget, new MutatingTableReference( table ), sessionFactory );
 	}
 
+	/// Create a builder using the supplied mutating-table reference.
+	@SPI(IMPLEMENT)
 	public AbstractTableMutationBuilder(
 			MutationType mutationType,
 			MutationTarget mutationTarget,

@@ -16,6 +16,7 @@ import jakarta.persistence.Table;
 import org.hibernate.HibernateException;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.TypeContributor;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -179,6 +180,11 @@ public class UuidCapableJavaTypeTests {
 		@Override
 		public JdbcType getRecommendedJdbcType(JdbcTypeIndicators indicators) {
 			return indicators.getJdbcType( indicators.getPreferredSqlTypeCodeForUuid() );
+		}
+
+		@Override
+		public long getDefaultSqlLength(Dialect dialect, JdbcType jdbcType) {
+			return UUIDJavaType.INSTANCE.getDefaultSqlLength( dialect, jdbcType );
 		}
 
 		@Override

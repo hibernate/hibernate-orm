@@ -5,7 +5,6 @@
 package org.hibernate.sql.results.graph.entity.internal;
 
 import org.hibernate.engine.FetchTiming;
-import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -13,6 +12,7 @@ import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
+import org.hibernate.sql.results.graph.entity.EntityValuedFetchable;
 
 /**
  * @author Andrea Boriero
@@ -21,7 +21,7 @@ import org.hibernate.sql.results.graph.entity.EntityInitializer;
 public class EntityDelayedFetchImpl extends AbstractNonJoinedEntityFetch {
 	public EntityDelayedFetchImpl(
 			FetchParent fetchParent,
-			ToOneAttributeMapping fetchedAttribute,
+			EntityValuedFetchable fetchedAttribute,
 			NavigablePath navigablePath,
 			DomainResult<?> keyResult,
 			boolean selectByUniqueKey,

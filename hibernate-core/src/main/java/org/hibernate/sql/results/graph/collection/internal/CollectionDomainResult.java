@@ -4,40 +4,44 @@
  */
 package org.hibernate.sql.results.graph.collection.internal;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.LockMode;
 import org.hibernate.collection.spi.CollectionInitializerProducer;
 import org.hibernate.collection.spi.CollectionSemantics;
+import org.hibernate.engine.FetchTiming;
+import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.results.graph.AbstractFetchParent;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
-import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.FetchableContainer;
 import org.hibernate.sql.results.graph.InitializerParent;
 import org.hibernate.sql.results.graph.InitializerProducer;
 import org.hibernate.sql.results.graph.collection.CollectionInitializer;
 import org.hibernate.sql.results.graph.collection.CollectionResultGraphNode;
-import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
-import org.hibernate.type.descriptor.java.JavaType;
+
+import java.util.BitSet;
 
 /**
  * @author Steve Ebersole
  */
-public class CollectionDomainResult implements DomainResult, CollectionResultGraphNode, FetchParent,
+public class CollectionDomainResult extends AbstractFetchParent implements DomainResult, CollectionResultGraphNode,
 		InitializerProducer<CollectionDomainResult> {
-	private final NavigablePath loadingPath;
 	private final PluralAttributeMapping loadingAttribute;
 
 	private final String resultVariable;
 	private final TableGroup tableGroup;
 
 	private final DomainResult fkResult;
+
+	private final @Nullable Fetch identifierFetch;
 
 	private final CollectionInitializerProducer initializerProducer;
 
@@ -47,7 +51,7 @@ public class CollectionDomainResult implements DomainResult, CollectionResultGra
 			String resultVariable,
 			TableGroup tableGroup,
 			DomainResultCreationState creationState) {
-		this.loadingPath = loadingPath;
+		super( loadingPath );
 		this.loadingAttribute = loadingAttribute;
 		this.resultVariable = resultVariable;
 		this.tableGroup = tableGroup;
@@ -60,15 +64,58 @@ public class CollectionDomainResult implements DomainResult, CollectionResultGra
 				creationState
 		);
 
+		if ( loadingAttribute.getIdentifierDescriptor() != null ) {
+			identifierFetch = generateFetchableFetch(
+					loadingAttribute.getIdentifierDescriptor(),
+					loadingPath.append( CollectionPart.Nature.ID.getName() ),
+					FetchTiming.IMMEDIATE,
+					true,
+					null,
+					creationState
+			);
+		}
+		else {
+			identifierFetch = null;
+		}
+
+		resetFetches( creationState.visitFetches( this ) );
+
+		final Fetch indexFetch;
+		final Fetch elementFetch;
+		if ( loadingAttribute.getIndexDescriptor() != null ) {
+			assert getFetches().size() == 2;
+			indexFetch = getFetches().get( loadingAttribute.getIndexDescriptor() );
+			elementFetch = getFetches().get( loadingAttribute.getElementDescriptor() );
+		}
+		else {
+			if ( !getFetches().isEmpty() ) { // might be empty due to fetch depth limit
+				assert getFetches().size() == 1;
+				indexFetch = null;
+				elementFetch = getFetches().get( loadingAttribute.getElementDescriptor() );
+			}
+			else {
+				indexFetch = null;
+				elementFetch = null;
+			}
+		}
+
 		final CollectionSemantics<?,?> collectionSemantics = loadingAttribute.getCollectionDescriptor().getCollectionSemantics();
 		initializerProducer = collectionSemantics.createInitializerProducer(
-				loadingPath,
 				loadingAttribute,
-				this,
-				true,
-				null,
-				creationState
+				identifierFetch,
+				indexFetch,
+				elementFetch
 		);
+	}
+
+	@Override
+	public void afterInitialize(FetchParent fetchParent, DomainResultCreationState creationState) {
+		// No-op
+	}
+
+	@Override
+	public FetchableContainer getFetchContainer() {
+		return loadingAttribute;
 	}
 
 	@Override
@@ -79,11 +126,6 @@ public class CollectionDomainResult implements DomainResult, CollectionResultGra
 	@Override
 	public boolean containsAnyNonScalarResults() {
 		return true;
-	}
-
-	@Override
-	public JavaType<?> getResultJavaType() {
-		return loadingAttribute.getJavaType();
 	}
 
 	@Override
@@ -104,7 +146,7 @@ public class CollectionDomainResult implements DomainResult, CollectionResultGra
 	@Override
 	public CollectionInitializer<?> createInitializer(InitializerParent<?> parent, AssemblerCreationState creationState) {
 		return initializerProducer.produceInitializer(
-				loadingPath,
+				getNavigablePath(),
 				loadingAttribute,
 				parent,
 				LockMode.READ,
@@ -116,38 +158,19 @@ public class CollectionDomainResult implements DomainResult, CollectionResultGra
 	}
 
 	@Override
-	public FetchableContainer getReferencedMappingContainer() {
-		return loadingAttribute;
-	}
-
-	@Override
 	public FetchableContainer getReferencedMappingType() {
 		return getReferencedMappingContainer();
 	}
 
 	@Override
-	public NavigablePath getNavigablePath() {
-		return loadingPath;
-	}
-
-	@Override
-	public ImmutableFetchList getFetches() {
-		return ImmutableFetchList.EMPTY;
-	}
-
-	@Override
-	public Fetch findFetch(Fetchable fetchable) {
-		return null;
-	}
-
-	@Override
-	public boolean hasJoinFetches() {
-		return false;
-	}
-
-	@Override
-	public boolean containsCollectionFetches() {
-		return false;
+	public void collectValueIndexesToCache(BitSet valueIndexes) {
+		if ( identifierFetch != null ) {
+			identifierFetch.collectValueIndexesToCache( valueIndexes );
+		}
+		if ( !loadingAttribute.getCollectionDescriptor().useShallowQueryCacheLayout() ) {
+			fkResult.collectValueIndexesToCache( valueIndexes );
+			super.collectValueIndexesToCache( valueIndexes );
+		}
 	}
 
 }

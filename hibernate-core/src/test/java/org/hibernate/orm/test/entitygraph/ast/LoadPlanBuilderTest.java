@@ -14,6 +14,7 @@ import org.hibernate.loader.ast.internal.CollectionLoaderSingleKey;
 import org.hibernate.loader.ast.internal.SingleIdEntityLoaderStandardImpl;
 import org.hibernate.loader.ast.internal.SingleIdLoadPlan;
 import org.hibernate.loader.ast.spi.CascadingFetchProfile;
+import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -144,7 +145,12 @@ public class LoadPlanBuilderTest {
 
 		DomainResultGraphPrinter.logDomainResultGraph( loader.getSqlAst().getDomainResultDescriptors() );
 
-		assertThat( domainResult.getFetches() ).isEmpty();
+		assertThat( domainResult.getFetches() ).hasSize( 1 );
+
+		final Fetch elementFetch = domainResult.getFetches().get( messages.getElementDescriptor() );
+		assertThat( elementFetch ).isNotNull();
+		assertThat( elementFetch.getFetchedMapping().getFetchableName() ).isEqualTo( CollectionPart.Nature.ELEMENT.getName() );
+		assertThat( elementFetch.getTiming() ).isEqualTo( FetchTiming.IMMEDIATE );
 	}
 
 	@Entity( name = "Message" )

@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import org.hibernate.FetchMode;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -33,7 +34,6 @@ import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableReference;
-import org.hibernate.sql.ast.tree.from.TableGroupJoinProducer;
 import org.hibernate.sql.ast.tree.from.StandardVirtualTableGroup;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
@@ -55,6 +55,8 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.MetaType;
 import org.hibernate.type.descriptor.java.JavaType;
 
+import static org.hibernate.internal.util.NullnessHelper.coalesce;
+import static org.hibernate.metamodel.mapping.internal.FetchOptionsHelper.determineJoinStyleFetchTiming;
 import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper.getSelectablePath;
 import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper.getTableIdentifierExpression;
 import static org.hibernate.query.sqm.ComparisonOperator.EQUAL;
@@ -144,14 +146,22 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 				keyType
 		);
 
+		final FetchStyle fetchStyle = switch ( coalesce( bootValueMapping.getFetchMode(), FetchMode.DEFAULT ) ) {
+			case JOIN -> FetchStyle.JOIN;
+			case SELECT -> FetchStyle.SELECT;
+			case DEFAULT -> bootValueMapping.isLazy() ? FetchStyle.SELECT : FetchStyle.JOIN;
+		};
 		return new DiscriminatedAssociationMapping(
 				declaringModelPart,
 				discriminatorPart,
 				keyPart,
 				baseAssociationJtd,
-				bootValueMapping.isLazy()
-						? FetchTiming.DELAYED
-						: FetchTiming.IMMEDIATE,
+				fetchStyle,
+				fetchStyle == FetchStyle.JOIN
+						? determineJoinStyleFetchTiming( bootValueMapping.isLazy(), containerRole.getFullPath() )
+						: bootValueMapping.isLazy()
+								? FetchTiming.DELAYED
+								: FetchTiming.IMMEDIATE,
 				sessionFactory
 		);
 	}
@@ -160,6 +170,7 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 	private final AnyDiscriminatorPart discriminatorPart;
 	private final BasicValuedModelPart keyPart;
 	private final JavaType<?> baseAssociationJtd;
+	private final FetchStyle fetchStyle;
 	private final FetchTiming fetchTiming;
 	private final SessionFactoryImplementor sessionFactory;
 	private AssociationKey associationKey;
@@ -169,12 +180,14 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 			AnyDiscriminatorPart discriminatorPart,
 			BasicValuedModelPart keyPart,
 			JavaType<?> baseAssociationJtd,
+			FetchStyle fetchStyle,
 			FetchTiming fetchTiming,
 			SessionFactoryImplementor sessionFactory) {
 		this.modelPart = modelPart;
 		this.discriminatorPart = discriminatorPart;
 		this.keyPart = keyPart;
 		this.baseAssociationJtd = baseAssociationJtd;
+		this.fetchStyle = fetchStyle;
 		this.fetchTiming = fetchTiming;
 		this.sessionFactory = sessionFactory;
 	}
@@ -345,7 +358,7 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 
 	@Override
 	public FetchStyle getStyle() {
-		return fetchTiming == FetchTiming.IMMEDIATE ? FetchStyle.JOIN : FetchStyle.SELECT;
+		return fetchStyle;
 	}
 
 	@Override
@@ -561,7 +574,7 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 				fetchablePath,
 				navigablePath -> {
 					final TableGroup parentTableGroup = fromClauseAccess.getTableGroup( fetchParent.getNavigablePath() );
-					final TableGroupJoin tableGroupJoin = ( (TableGroupJoinProducer) modelPart ).createTableGroupJoin(
+					final TableGroupJoin tableGroupJoin = modelPart.createTableGroupJoin(
 							navigablePath,
 							parentTableGroup,
 							resultVariable,

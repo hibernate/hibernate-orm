@@ -31,6 +31,9 @@ public class StandardSequenceExporter implements Exporter<Sequence> {
 	private final Dialect dialect;
 
 	/// Create a standard sequence exporter owned by `dialect`.
+	///
+	/// @since 8.0
+	@SPI(IMPLEMENT)
 	public StandardSequenceExporter(Dialect dialect) {
 		if ( dialect == null ) {
 			throw new IllegalArgumentException( "dialect must not be null" );

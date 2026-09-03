@@ -45,6 +45,8 @@ public class StandardSizeStrategy implements SizeStrategy {
 	/// invokes no overridable Dialect or strategy method.
 	///
 	/// @param dialect the non-null supplying Dialect
+	/// @since 8.0
+	@SPI(IMPLEMENT)
 	public StandardSizeStrategy(Dialect dialect) {
 		if ( dialect == null ) {
 			throw new IllegalArgumentException( "dialect must not be null" );

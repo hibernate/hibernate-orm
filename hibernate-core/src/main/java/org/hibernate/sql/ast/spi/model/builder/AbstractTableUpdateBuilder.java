@@ -22,12 +22,14 @@ import org.hibernate.sql.ast.spi.model.TableUpdate;
 
 import static org.hibernate.SPI.Role.IMPLEMENT;
 
-/**
- * Base support for TableUpdateBuilder implementations
- *
- * @author Steve Ebersole
- */
-@SPI( IMPLEMENT )
+/// Base for provider-owned [TableUpdateBuilder] implementations.
+///
+/// Extend this class to customize construction of an update operation while
+/// retaining standard assignment, restriction, and LOB-ordering behavior.
+///
+/// @since 8.0
+/// @author Steve Ebersole
+@SPI(IMPLEMENT)
 public abstract class AbstractTableUpdateBuilder<O extends MutationOperation>
 		extends AbstractRestrictedTableMutationBuilder<O, RestrictedTableMutation<O>>
 		implements TableUpdateBuilder<O> {
@@ -37,6 +39,8 @@ public abstract class AbstractTableUpdateBuilder<O extends MutationOperation>
 
 	private String sqlComment;
 
+	/// Create an update builder which owns a new reference to `tableMapping`.
+	@SPI(IMPLEMENT)
 	public AbstractTableUpdateBuilder(
 			MutationTarget mutationTarget,
 			TableMapping tableMapping,
@@ -45,6 +49,8 @@ public abstract class AbstractTableUpdateBuilder<O extends MutationOperation>
 		this.sqlComment = "update for " + mutationTarget.getRolePath();
 	}
 
+	/// Create an update builder using the supplied mutating-table reference.
+	@SPI(IMPLEMENT)
 	public AbstractTableUpdateBuilder(
 			MutationTarget mutationTarget,
 			MutatingTableReference tableReference,

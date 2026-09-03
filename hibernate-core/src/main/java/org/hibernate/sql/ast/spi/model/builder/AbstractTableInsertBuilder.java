@@ -20,12 +20,14 @@ import org.hibernate.sql.ast.spi.model.TableInsert;
 
 import static org.hibernate.SPI.Role.IMPLEMENT;
 
-/**
- * Base support for TableInsertBuilder implementations
- *
- * @author Steve Ebersole
- */
-@SPI( IMPLEMENT )
+/// Base for provider-owned [TableInsertBuilder] implementations.
+///
+/// Extend this class to customize construction of an insert operation while
+/// retaining standard parameter, assignment, and LOB-ordering behavior.
+///
+/// @since 8.0
+/// @author Steve Ebersole
+@SPI(IMPLEMENT)
 public abstract class AbstractTableInsertBuilder
 		extends AbstractTableMutationBuilder<TableInsert>
 		implements TableInsertBuilder {
@@ -34,6 +36,8 @@ public abstract class AbstractTableInsertBuilder
 
 	private String sqlComment;
 
+	/// Create an insert builder which owns a new reference to `table`.
+	@SPI(IMPLEMENT)
 	public AbstractTableInsertBuilder(
 			MutationTarget mutationTarget,
 			TableMapping table,
@@ -42,6 +46,8 @@ public abstract class AbstractTableInsertBuilder
 		this.sqlComment = "insert for " + mutationTarget.getRolePath();
 	}
 
+	/// Create an insert builder using the supplied mutating-table reference.
+	@SPI(IMPLEMENT)
 	public AbstractTableInsertBuilder(
 			MutationTarget mutationTarget,
 			MutatingTableReference tableReference,

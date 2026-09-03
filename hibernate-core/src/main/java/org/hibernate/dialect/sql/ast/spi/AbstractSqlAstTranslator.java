@@ -189,18 +189,15 @@ import org.hibernate.sql.ast.spi.query.update.Assignment;
 import org.hibernate.sql.ast.spi.query.update.UpdateStatement;
 import org.hibernate.sql.exec.ExecutionException;
 import org.hibernate.sql.exec.internal.AbstractJdbcParameter;
-import org.hibernate.sql.exec.internal.JdbcOperationQueryDelete;
-import org.hibernate.sql.exec.internal.JdbcOperationQueryInsertImpl;
-import org.hibernate.sql.exec.internal.JdbcOperationQuerySelect;
-import org.hibernate.sql.exec.internal.JdbcOperationQueryUpdate;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
 import org.hibernate.sql.exec.internal.SqlTypedMappingJdbcParameter;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcLockingApplication;
 import org.hibernate.sql.exec.spi.JdbcPaginationApplication;
 import org.hibernate.sql.exec.spi.JdbcOperation;
+import org.hibernate.sql.exec.spi.JdbcOperations;
 import org.hibernate.sql.exec.internal.VersionTypeSeedParameterSpecification;
-import org.hibernate.sql.exec.spi.JdbcOperationQueryInsert;
+import org.hibernate.sql.exec.spi.JdbcOperationQueryMutation;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.exec.spi.JdbcParameterBinding;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
@@ -224,7 +221,6 @@ import org.hibernate.sql.ast.spi.model.TableInsertStandard;
 import org.hibernate.sql.ast.spi.model.TableUpdateCustomSql;
 import org.hibernate.sql.ast.spi.model.TableUpdateStandard;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
-import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
@@ -286,10 +282,11 @@ import static org.hibernate.SPI.Role.USE;
 ///
 /// This class owns the single-use translation lifecycle, SQL buffer, parameter
 /// bindings, traversal stacks, and other mutable rendering context. A custom
-/// Dialect translator should extend this class, or a supported database-family
-/// subclass, instead of implementing
-/// [org.hibernate.sql.ast.spi.translation.SqlAstTranslator] or
-/// [org.hibernate.sql.ast.spi.SqlAstWalker] directly.
+/// Dialect which renders SQL should extend this class, or a supported
+/// database-family subclass. A JDBC driver with a fundamentally different
+/// command language may instead implement
+/// [org.hibernate.sql.ast.spi.translation.SqlAstTranslator] directly, normally
+/// on top of [org.hibernate.sql.ast.spi.AbstractSqlAstWalker].
 ///
 /// Prefer the focused `get...Support()` composition hooks when a difference can
 /// be expressed as selection of an immutable rendering plan. Override a
@@ -907,40 +904,42 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 	}
 
-	private JdbcOperationQueryDelete translateDelete(DeleteStatement sqlAst) {
+	private JdbcOperationQueryMutation translateDelete(DeleteStatement sqlAst) {
 		visitDeleteStatement( sqlAst );
 
-		return new JdbcOperationQueryDelete(
-				getSql(),
-				getParameterBinders(),
-				getAffectedTableNames(),
-				getAppliedParameterBindings()
-		);
+		return queryMutationBuilder().build();
 	}
 
-	private JdbcOperationQueryUpdate translateUpdate(UpdateStatement sqlAst) {
+	private JdbcOperationQueryMutation translateUpdate(UpdateStatement sqlAst) {
 		visitUpdateStatement( sqlAst );
 
-		return new JdbcOperationQueryUpdate(
-				getSql(),
-				getParameterBinders(),
-				getAffectedTableNames(),
-				getAppliedParameterBindings()
-		);
+		return queryMutationBuilder().build();
 	}
 
-	private JdbcOperationQueryInsert translateInsert(InsertSelectStatement sqlAst) {
+	private JdbcOperationQueryMutation translateInsert(InsertSelectStatement sqlAst) {
 		final InsertConflictRenderingPlan conflictPlan = determineInsertConflictPlan( sqlAst );
 		visitInsertStatement( sqlAst, conflictPlan );
 
-		return new JdbcOperationQueryInsertImpl(
-				getSql(),
-				getParameterBinders(),
-				getAffectedTableNames(),
-				conflictPlan instanceof InsertConflictRenderingPlan.ConstraintViolation
-						? determineUniqueConstraintNameThatMayFail( sqlAst )
-						: null
-		);
+		final JdbcOperations.QueryMutationBuilder builder = queryMutationBuilder();
+		if ( conflictPlan instanceof InsertConflictRenderingPlan.ConstraintViolation ) {
+			builder.uniqueConstraintNameThatMayFail( determineUniqueConstraintNameThatMayFail( sqlAst ) );
+		}
+		return builder.build();
+	}
+
+	private JdbcOperations.QueryMutationBuilder queryMutationBuilder() {
+		return JdbcOperations.queryMutation( queryMutationRequest() )
+				.command( getSql() )
+				.parameterBinders( getParameterBinders() )
+				.affectedQuerySpaces( getAffectedTableNames() )
+				.appliedParameterBindings( getAppliedParameterBindings() );
+	}
+
+	private SqlAstTranslationRequest.QueryMutation queryMutationRequest() {
+		if ( getTranslationRequest() instanceof SqlAstTranslationRequest.QueryMutation request ) {
+			return request;
+		}
+		throw new AssertionFailure( "Query mutation statement used with a non-query-mutation request" );
 	}
 
 	protected String determineUniqueConstraintNameThatMayFail(InsertSelectStatement sqlAst) {
@@ -968,20 +967,23 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		visitSelectStatement( selectStatement );
 
 		final int rowsToSkip;
-		final JdbcOperationQuerySelect jdbcSelect = new JdbcOperationQuerySelect(
-				getSql(),
-				getParameterBinders(),
-				buildJdbcValuesMappingProducer( selectStatement ),
-				getAffectedTableNames(),
-				rowsToSkip = getRowsToSkip( selectStatement, getJdbcParameterBindings(), paginationPlan ),
-				getMaxRows( selectStatement, getJdbcParameterBindings(), rowsToSkip, paginationPlan ),
-				getAppliedParameterBindings(),
-				getJdbcLockingApplication( lockOptions ),
-				getJdbcPaginationApplication( selectStatement, paginationPlan ),
-				getOffsetParameter(),
-				getLimitParameter(),
-				scrollExecution
-		);
+		final JdbcSelect jdbcSelect = JdbcOperations.select( selectRequest() )
+				.command( getSql() )
+				.parameterBinders( getParameterBinders() )
+				.affectedQuerySpaces( getAffectedTableNames() )
+				.rowsToSkip( rowsToSkip = getRowsToSkip(
+						selectStatement,
+						getJdbcParameterBindings(),
+						paginationPlan
+				) )
+				.maxRows( getMaxRows( selectStatement, getJdbcParameterBindings(), rowsToSkip, paginationPlan ) )
+				.appliedParameterBindings( getAppliedParameterBindings() )
+				.lockingApplication( getJdbcLockingApplication( lockOptions ) )
+				.paginationApplication( getJdbcPaginationApplication( selectStatement, paginationPlan ) )
+				.offsetParameter( getOffsetParameter() )
+				.limitParameter( getLimitParameter() )
+				.scrollExecution( scrollExecution )
+				.build();
 
 		if ( lockOptions == null || !lockOptions.getLockMode().isPessimistic() ) {
 			return jdbcSelect;
@@ -1017,9 +1019,11 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				: JdbcPaginationApplication.RENDERED;
 	}
 
-	private JdbcValuesMappingProducer buildJdbcValuesMappingProducer(SelectStatement selectStatement) {
-		return getSessionFactory().getJdbcValuesMappingProducerProvider()
-				.buildMappingProducer( selectStatement, getSessionFactory() );
+	private SqlAstTranslationRequest.Select selectRequest() {
+		if ( getTranslationRequest() instanceof SqlAstTranslationRequest.Select request ) {
+			return request;
+		}
+		throw new AssertionFailure( "Select statement used with a non-select request" );
 	}
 
 	private int getRowsToSkip(

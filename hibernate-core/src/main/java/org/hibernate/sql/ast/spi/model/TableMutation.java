@@ -7,6 +7,7 @@ package org.hibernate.sql.ast.spi.model;
 import java.util.List;
 import java.util.function.Consumer;
 
+import org.hibernate.SPI;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.sql.ast.spi.Statement;
@@ -81,9 +82,17 @@ public interface TableMutation<O extends MutationOperation> extends Statement {
 
 	O createMutationOperation(ValuesAnalysis valuesAnalysis, SessionFactoryImplementor sessionFactory);
 
-	/**
-	 * A {@link org.hibernate.sql.ast.spi.translation.SqlAstTranslator} callback to create
-	 * an appropriate mutation using the translated sql and parameter binders.
-	 */
+	/// Create the mapping-model mutation operation represented by the translated
+	/// JDBC command and binders.
+	///
+	/// A direct
+	/// [org.hibernate.sql.ast.spi.translation.SqlAstTranslator] must use this
+	/// method for a
+	/// [org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest.ModelMutation]
+	/// instead of the query-operation builders in
+	/// [org.hibernate.sql.exec.spi.JdbcOperations].
+	///
+	/// @since 8.0
+	@SPI(SPI.Role.USE)
 	O createMutationOperation(String sql, List<JdbcParameterBinder> parameterBinders);
 }

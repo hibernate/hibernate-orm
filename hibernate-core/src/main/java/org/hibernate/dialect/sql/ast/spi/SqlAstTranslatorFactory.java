@@ -16,11 +16,14 @@ import static org.hibernate.SPI.Role.SUPPLY;
 /// Factory supplied by a Dialect for creating single-use SQL AST translators.
 ///
 /// Implementors should normally extend [StandardSqlAstTranslatorFactory] and
-/// override its typed creation hook, returning a translator derived from
-/// [AbstractSqlAstTranslator] or an appropriate supported family base. A
-/// factory may inspect the [SqlAstTranslationRequest] subtype, but must preserve
-/// its statement-to-JDBC-operation type relationship and must not retain the
-/// request.
+/// override its typed creation hook. Return a translator derived from
+/// [AbstractSqlAstTranslator], or an appropriate supported family base, when
+/// rendering SQL. For a fundamentally different JDBC command language, the
+/// factory may instead return a direct
+/// [org.hibernate.sql.ast.spi.translation.SqlAstTranslator] implementation,
+/// normally based on [org.hibernate.sql.ast.spi.AbstractSqlAstWalker]. A factory
+/// may inspect the [SqlAstTranslationRequest] subtype, but must preserve its
+/// statement-to-JDBC-operation type relationship and must not retain the request.
 ///
 /// Hibernate may reuse a factory for the lifetime of the Dialect, so a supplied
 /// factory should be stateless or otherwise safe for concurrent use. Each
@@ -35,6 +38,7 @@ public interface SqlAstTranslatorFactory {
 	///
 	/// @param request complete translation input; never `null`
 	/// @return a non-null translator compatible with the request's result type
+	@SPI({ IMPLEMENT, SUPPLY })
 	<S extends Statement, O extends JdbcOperation>
 	SqlAstTranslator<O> buildTranslator(SqlAstTranslationRequest<S, O> request);
 }

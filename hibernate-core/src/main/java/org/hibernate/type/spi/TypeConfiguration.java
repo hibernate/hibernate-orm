@@ -83,6 +83,7 @@ import org.hibernate.type.internal.ParameterizedTypeImpl;
 
 import jakarta.persistence.TemporalType;
 
+import static org.hibernate.cfg.MappingSettings.JAVA_TIME_USE_DIRECT_JDBC_DEFAULT;
 import static org.hibernate.id.uuid.LocalObjectUuidHelper.generateLocalObjectUuid;
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.internal.util.type.PrimitiveWrappers.canonicalize;
@@ -134,12 +135,16 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	private final transient Map<Integer, Set<String>> jdbcToHibernateTypeContributionMap = new HashMap<>();
 
 	public TypeConfiguration() {
+		this( JAVA_TIME_USE_DIRECT_JDBC_DEFAULT );
+	}
+
+	public TypeConfiguration(boolean javaTimeUseDirectJdbc) {
 		scope = new Scope( this );
 		javaTypeRegistry = new JavaTypeRegistry( this );
 		jdbcTypeRegistry = new JdbcTypeRegistry( this );
 		ddlTypeRegistry = new DdlTypeRegistry( this );
 		basicTypeRegistry = new BasicTypeRegistry( this );
-		StandardBasicTypes.prime( this );
+		StandardBasicTypes.prime( this, javaTimeUseDirectJdbc );
 	}
 
 	public String getUuid() {

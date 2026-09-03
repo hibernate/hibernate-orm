@@ -48,20 +48,22 @@ public class JavaTimeJdbcTypeBaselineTests {
 	void testMappings(DomainModelScope scope) {
 		final PersistentClass entityBinding = scope.getEntityBinding( EntityWithJavaTimeValues.class );
 
-		checkAttribute( entityBinding, "theLocalDate", DateJdbcType.class );
-		checkAttribute( entityBinding, "theLocalDateTime", TimestampJdbcType.class );
-		checkAttribute( entityBinding, "theLocalTime", TimeJdbcType.class );
+		checkAttribute( entityBinding, "theLocalDate", DateJdbcType.class, "LocalDate" );
+		checkAttribute( entityBinding, "theLocalDateTime", TimestampJdbcType.class, "LocalDateTime" );
+		checkAttribute( entityBinding, "theLocalTime", TimeJdbcType.class, "LocalTime" );
 	}
 
 	private void checkAttribute(
 			PersistentClass entityBinding,
 			String attributeName,
-			Class<?> expectedJdbcTypeDescriptorType) {
+			Class<?> expectedJdbcTypeDescriptorType,
+			String expectedTypeName) {
 		final Property property = entityBinding.getProperty( attributeName );
 		final BasicValue value = (BasicValue) property.getValue();
 		final BasicValue.Resolution<?> resolution = value.resolve();
 		final JdbcType jdbcType = resolution.getJdbcType();
 		assertThat( jdbcType ).isInstanceOf( expectedJdbcTypeDescriptorType );
+		assertThat( resolution.getLegacyResolvedBasicType().getName() ).isEqualTo( expectedTypeName );
 	}
 
 	@Entity(name="EntityWithJavaTimeValues")

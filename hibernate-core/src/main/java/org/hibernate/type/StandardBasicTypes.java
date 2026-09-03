@@ -31,6 +31,8 @@ import java.util.UUID;
 import jakarta.persistence.TemporalType;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import static org.hibernate.cfg.MappingSettings.JAVA_TIME_USE_DIRECT_JDBC_DEFAULT;
+
 /**
  * References to common instances of {@link BasicTypeReference}.
  *
@@ -844,6 +846,10 @@ public final class StandardBasicTypes {
 
 
 	public static void prime(TypeConfiguration typeConfiguration) {
+		prime( typeConfiguration, JAVA_TIME_USE_DIRECT_JDBC_DEFAULT );
+	}
+
+	public static void prime(TypeConfiguration typeConfiguration, boolean javaTimeUseDirectJdbc) {
 		BasicTypeRegistry basicTypeRegistry = typeConfiguration.getBasicTypeRegistry();
 
 		if ( basicTypeRegistry.isPrimed() ) {
@@ -1108,6 +1114,24 @@ public final class StandardBasicTypes {
 
 		//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// date / time data
+		final BasicTypeReference<LocalDateTime> localDateTimeType = javaTimeUseDirectJdbc
+				? javaTimeType( LOCAL_DATE_TIME, SqlTypes.LOCAL_DATE_TIME )
+				: LOCAL_DATE_TIME;
+		final BasicTypeReference<LocalDate> localDateType = javaTimeUseDirectJdbc
+				? javaTimeType( LOCAL_DATE, SqlTypes.LOCAL_DATE )
+				: LOCAL_DATE;
+		final BasicTypeReference<LocalTime> localTimeType = javaTimeUseDirectJdbc
+				? javaTimeType( LOCAL_TIME, SqlTypes.LOCAL_TIME )
+				: LOCAL_TIME;
+		final BasicTypeReference<OffsetDateTime> offsetDateTimeType = javaTimeUseDirectJdbc
+				? javaTimeType( OFFSET_DATE_TIME, SqlTypes.OFFSET_DATE_TIME )
+				: OFFSET_DATE_TIME;
+		final BasicTypeReference<OffsetTime> offsetTimeType = javaTimeUseDirectJdbc
+				? javaTimeType( OFFSET_TIME, SqlTypes.OFFSET_TIME )
+				: OFFSET_TIME;
+		final BasicTypeReference<ZonedDateTime> zonedDateTimeType = javaTimeUseDirectJdbc
+				? javaTimeType( ZONED_DATE_TIME, SqlTypes.ZONED_DATE_TIME )
+				: ZONED_DATE_TIME;
 
 		handle(
 				DURATION,
@@ -1117,28 +1141,28 @@ public final class StandardBasicTypes {
 		);
 
 		handle(
-				LOCAL_DATE_TIME,
+				localDateTimeType,
 				"org.hibernate.type.LocalDateTimeType",
 				basicTypeRegistry,
 				LocalDateTime.class.getSimpleName(), LocalDateTime.class.getName()
 		);
 
 		handle(
-				LOCAL_DATE,
+				localDateType,
 				"org.hibernate.type.LocalDateType",
 				basicTypeRegistry,
 				LocalDate.class.getSimpleName(), LocalDate.class.getName()
 		);
 
 		handle(
-				LOCAL_TIME,
+				localTimeType,
 				"org.hibernate.type.LocalTimeType",
 				basicTypeRegistry,
 				LocalTime.class.getSimpleName(), LocalTime.class.getName()
 		);
 
 		handle(
-				OFFSET_DATE_TIME,
+				offsetDateTimeType,
 				"org.hibernate.type.OffsetDateTimeType",
 				basicTypeRegistry,
 				OffsetDateTime.class.getSimpleName(), OffsetDateTime.class.getName()
@@ -1159,7 +1183,7 @@ public final class StandardBasicTypes {
 		);
 
 		handle(
-				OFFSET_TIME,
+				offsetTimeType,
 				"org.hibernate.type.OffsetTimeType",
 				basicTypeRegistry,
 				OffsetTime.class.getSimpleName(), OffsetTime.class.getName()
@@ -1187,7 +1211,7 @@ public final class StandardBasicTypes {
 		);
 
 		handle(
-				ZONED_DATE_TIME,
+				zonedDateTimeType,
 				"org.hibernate.type.ZonedDateTimeType",
 				basicTypeRegistry,
 				ZonedDateTime.class.getSimpleName(), ZonedDateTime.class.getName()
@@ -1461,6 +1485,16 @@ public final class StandardBasicTypes {
 		handle( serializableImmutableType, null, basicTypeRegistry, serializableImmutableType.getName() );
 
 		basicTypeRegistry.primed();
+	}
+
+	private static <T> BasicTypeReference<T> javaTimeType(
+			BasicTypeReference<T> standardType,
+			int directJdbcTypeCode) {
+		return new BasicTypeReference<>(
+				standardType.getName(),
+				standardType.getJavaType(),
+				directJdbcTypeCode
+		);
 	}
 
 	private static void handle(

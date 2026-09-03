@@ -9,6 +9,12 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
+import java.time.OffsetTime;
+import java.time.ZonedDateTime;
 import java.util.UUID;
 
 import org.hibernate.HibernateException;
@@ -17,6 +23,7 @@ import org.hibernate.type.AbstractSingleColumnStandardBasicType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.CustomType;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.StringJavaType;
 import org.hibernate.type.descriptor.java.UUIDJavaType;
@@ -42,6 +49,42 @@ import static org.junit.jupiter.api.Assertions.assertSame;
  */
 @BaseUnitTest
 public class BasicTypeRegistryTest {
+	@Test
+	public void testLegacyJavaTimeTypePriming() {
+		final BasicTypeRegistry registry = new TypeConfiguration( false ).getBasicTypeRegistry();
+
+		assertJavaTimeType( registry, LocalDate.class, "LocalDate", SqlTypes.DATE );
+		assertJavaTimeType( registry, LocalDateTime.class, "LocalDateTime", SqlTypes.TIMESTAMP );
+		assertJavaTimeType( registry, LocalTime.class, "LocalTime", SqlTypes.TIME );
+		assertJavaTimeType( registry, OffsetDateTime.class, "OffsetDateTime", SqlTypes.TIMESTAMP_WITH_TIMEZONE );
+		assertJavaTimeType( registry, OffsetTime.class, "OffsetTime", SqlTypes.TIME_WITH_TIMEZONE );
+		assertJavaTimeType( registry, ZonedDateTime.class, "ZonedDateTime", SqlTypes.TIMESTAMP_WITH_TIMEZONE );
+	}
+
+	@Test
+	public void testDirectJavaTimeTypePriming() {
+		final BasicTypeRegistry registry = new TypeConfiguration( true ).getBasicTypeRegistry();
+
+		assertJavaTimeType( registry, LocalDate.class, "LocalDate", SqlTypes.LOCAL_DATE );
+		assertJavaTimeType( registry, LocalDateTime.class, "LocalDateTime", SqlTypes.LOCAL_DATE_TIME );
+		assertJavaTimeType( registry, LocalTime.class, "LocalTime", SqlTypes.LOCAL_TIME );
+		assertJavaTimeType( registry, OffsetDateTime.class, "OffsetDateTime", SqlTypes.OFFSET_DATE_TIME );
+		assertJavaTimeType( registry, OffsetTime.class, "OffsetTime", SqlTypes.OFFSET_TIME );
+		assertJavaTimeType( registry, ZonedDateTime.class, "ZonedDateTime", SqlTypes.ZONED_DATE_TIME );
+	}
+
+	private <T> void assertJavaTimeType(
+			BasicTypeRegistry registry,
+			Class<T> javaType,
+			String typeName,
+			int jdbcTypeCode) {
+		final BasicType<T> registeredType = registry.getRegisteredType( javaType );
+		assertNotNull( registeredType );
+		assertEquals( typeName, registeredType.getName() );
+		assertEquals( jdbcTypeCode, registeredType.getJdbcType().getJdbcTypeCode() );
+		assertSame( registeredType, registry.getRegisteredType( typeName ) );
+	}
+
 	@Test
 	public void testOverriding() {
 		TypeConfiguration typeConfiguration = new TypeConfiguration();

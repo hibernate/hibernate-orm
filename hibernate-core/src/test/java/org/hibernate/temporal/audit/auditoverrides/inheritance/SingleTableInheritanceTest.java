@@ -35,8 +35,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @DomainModel(annotatedClasses = {
 		SingleTableInheritanceTest.SingleInheritanceBase.class,
 		SingleTableInheritanceTest.SingleInheritanceSub.class,
-//		SingleTableInheritanceTest.EntityWithExcludedProperty.class,
-//		SingleTableInheritanceTest.EntityThatOverridesTheProperty3.class,
+		SingleTableInheritanceTest.EntityWithExcludedProperty.class,
+		SingleTableInheritanceTest.EntityThatOverridesTheProperty3.class,
 })
 @ServiceRegistry(settings = @Setting(name = StateManagementSettings.CHANGESET_ID_SUPPLIER,
 		value = "org.hibernate.temporal.audit.AuditEntityTest$TxIdSupplier"))
@@ -70,6 +70,8 @@ public class SingleTableInheritanceTest {
 		@Audited.Excluded
 		String str1;
 
+		String str2;
+
 	}
 	@MappedSuperclass
 	@Audited.Overrides( @Audited.Override(name = "str1", isAudited = false) )
@@ -90,6 +92,10 @@ public class SingleTableInheritanceTest {
 
 	}
 	@MappedSuperclass
+	@Audited.Overrides(
+			{@Audited.Override(name = "str2", isAudited = false)} // <-- exclusion of str2
+	)
+
 	static class LowerSecondMSCThatDoesNothing extends UpperSecondMSCThatRevokesTheExclusion{
 
 	}
@@ -102,17 +108,19 @@ public class SingleTableInheritanceTest {
 		var tables = domainModelScope.getDomainModel().collectTableMappings();
 		assertTable( tables, "SingleInheritanceBase_AUD", table -> {
 			assertTrue( table.containsColumn( new Column( "str1" ) ) );
-			//assertTrue( table.containsColumn( new Column( "str2" ) ) );
+			assertTrue( table.containsColumn( new Column( "str2" ) ) );
 		} );
 		scope.inTransaction( s -> {
 			var baseEntity = new SingleInheritanceBase();
 			baseEntity.id = 0;
 			baseEntity.str1 = "v";
+			baseEntity.str2 = "w";
 			s.persist( baseEntity );
 
 			var subEntity = new SingleInheritanceSub();
 			subEntity.id = 1;
 			subEntity.str1 = "v";
+			subEntity.str2 = "w";
 			s.persist( subEntity );
 		} );
 
@@ -121,9 +129,11 @@ public class SingleTableInheritanceTest {
 					.openStatelessSession();
 			var auditedBase = statelessSession.createSelectionQuery("from SingleInheritanceBase b where Type(b) = SingleInheritanceBase", SingleInheritanceBase.class).getSingleResult();
 			assertNull( auditedBase.str1 );
+			assertNotNull( auditedBase.str2 );
 
 			var auditedSub = statelessSession.createSelectionQuery("from SingleInheritanceSub", SingleInheritanceSub.class).getSingleResult();
 			assertNotNull( auditedSub.str1 );
+			assertNull( auditedSub.str2 );
 		} );
 	}
 
@@ -158,7 +168,7 @@ public class SingleTableInheritanceTest {
 	@Test
 	public void entityUnderTwoMSCes5(DomainModelScope domainModelScope) {
 		var tables = domainModelScope.getDomainModel().collectTableMappings();
-		assertTable( tables, "Base_AUD", table -> {
+		assertTable( tables, "EntityWithExcludedProperty_AUD", table -> {
 			assertFalse( table.containsColumn( new Column( "str1" ) ) );
 		} );
 	}

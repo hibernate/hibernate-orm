@@ -8,6 +8,7 @@ import java.io.StringWriter;
 import java.util.List;
 import java.util.Locale;
 
+import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.HibernatePersistenceConfiguration;
@@ -99,8 +100,12 @@ public class PersistenceConfigurationTests {
 		final var createScript = new StringWriter();
 		final var cfg = new PersistenceConfiguration( "emf-schema-management-actions" );
 		TestingDatabaseInfo.forEachSetting( cfg::property );
+		// NOTE : Using Persistence.ConnectionProperties.JDBC_URL means that this setting gets overridden
+		// 		by the URL from the environment under JdbcSettings.URL during "normalizing settings".
+		//		So use JdbcSettings.URL directly.  Without this, the table is left in the schema afterward
+		//		which causes problems for other tests in the suite.
 		cfg.property(
-						JDBC_URL,
+						JdbcSettings.URL,
 						"jdbc:h2:mem:db_persistence_configuration_schema_management;"
 								+ "DB_CLOSE_DELAY=-1;LOCK_TIMEOUT=10000;DB_CLOSE_ON_EXIT=FALSE"
 				)

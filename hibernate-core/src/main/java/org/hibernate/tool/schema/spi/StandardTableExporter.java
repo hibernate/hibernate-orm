@@ -68,6 +68,9 @@ public class StandardTableExporter implements Exporter<Table> {
 	private final Dialect dialect;
 
 	/// Create a standard table exporter owned by `dialect`.
+	///
+	/// @since 8.0
+	@SPI(IMPLEMENT)
 	public StandardTableExporter(Dialect dialect) {
 		if ( dialect == null ) {
 			throw new IllegalArgumentException( "dialect must not be null" );

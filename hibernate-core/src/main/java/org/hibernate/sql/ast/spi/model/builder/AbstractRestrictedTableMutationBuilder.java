@@ -19,13 +19,17 @@ import org.hibernate.sql.ast.spi.model.RestrictedTableMutation;
 
 import static org.hibernate.SPI.Role.IMPLEMENT;
 
-/**
- * Specialization of TableMutationBuilder for mutations which contain a
- * restriction.
- *
- * @author Steve Ebersole
- */
-@SPI( IMPLEMENT )
+/// Base for provider-owned table-mutation builders which collect key and
+/// optimistic-lock restrictions.
+///
+/// Extend this class for update or delete forms whose command restricts the
+/// affected rows. Choose the constructor accepting a [TableMapping] when the
+/// builder should create the mutating table reference, or supply an existing
+/// [MutatingTableReference] when reference identity must be preserved.
+///
+/// @since 8.0
+/// @author Steve Ebersole
+@SPI(IMPLEMENT)
 public abstract class AbstractRestrictedTableMutationBuilder<O extends MutationOperation, M extends RestrictedTableMutation<O>>
 		extends AbstractTableMutationBuilder<M>
 		implements RestrictedTableMutationBuilder<O, M> {
@@ -33,6 +37,8 @@ public abstract class AbstractRestrictedTableMutationBuilder<O extends MutationO
 	private final ColumnValueBindingList keyRestrictionBindings;
 	private final ColumnValueBindingList optimisticLockBindings;
 
+	/// Create a restricted builder which owns a new reference to `table`.
+	@SPI(IMPLEMENT)
 	public AbstractRestrictedTableMutationBuilder(
 			MutationType mutationType,
 			MutationTarget mutationTarget,
@@ -43,6 +49,8 @@ public abstract class AbstractRestrictedTableMutationBuilder<O extends MutationO
 		this.optimisticLockBindings = new ColumnValueBindingList( getMutatingTable(), getParameters(), ParameterUsage.RESTRICT );
 	}
 
+	/// Create a restricted builder using the supplied mutating-table reference.
+	@SPI(IMPLEMENT)
 	public AbstractRestrictedTableMutationBuilder(
 			MutationType mutationType,
 			MutationTarget mutationTarget,

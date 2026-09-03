@@ -32,13 +32,16 @@ import org.hibernate.mapping.Stateful;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.TableOwner;
 import org.hibernate.mapping.UnionSubclass;
+import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.persister.state.internal.AuditStateManagement;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
+import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.Fetchable;
+import org.hibernate.sql.results.graph.entity.EntityResultGraphNode;
 import org.hibernate.temporal.spi.ChangesetCoordinator;
 
 import java.lang.annotation.Annotation;
@@ -402,7 +405,7 @@ public final class AuditHelper {
 		} );
 	}
 
-	private static HashMap<String, Audited.Override> getOverridesMap(PersistentClass pc, ModelsContext modelsContext) {
+	public static HashMap<String, Audited.Override> getOverridesMap(PersistentClass pc, ModelsContext modelsContext) {
 		var persistendClassToScan = pc;
 		var overridesMap = new HashMap<String, Audited.Override>();
 		while ( persistendClassToScan != null ) {
@@ -986,20 +989,41 @@ public final class AuditHelper {
 	 * current context is loading from an audit table. Returns
 	 * {@code false} immediately when there is no temporal identifier
 	 * (the common case for non-audit queries).
+	 * <p>
+	 * The exclusion mask is looked up on the persister of the entity
+	 * actually being loaded at {@code fetchParent} (which, for an
+	 * inherited property, may have its own audit override further
+	 * down the hierarchy), not on the persister of the type that
+	 * merely declares the property.
 	 */
-	public static boolean isFetchableAuditExcluded(Fetchable fetchable, LoadQueryInfluencers influencers) {
+	public static boolean isFetchableAuditExcluded(
+			Fetchable fetchable, FetchParent fetchParent, LoadQueryInfluencers influencers) {
 		if ( influencers.getTemporalIdentifier() == null ) {
 			return false;
 		}
 		final var attr = fetchable.asAttributeMapping();
-		if ( attr != null
-				&& attr.getStateArrayPosition() >= 0
-				&& attr.getDeclaringType() instanceof EntityMappingType entityMappingType ) {
-			final var persister = entityMappingType.getEntityPersister();
-			return persister.getAuditMapping() != null
-					&& persister.isPropertyAuditedExcluded( attr.getStateArrayPosition() );
+		if ( attr != null && attr.getStateArrayPosition() >= 0 ) {
+			final var entityMappingType = currentlyLoadingEntityMappingType( fetchParent, attr );
+			if ( entityMappingType != null ) {
+				final var persister = entityMappingType.getEntityPersister();
+				return persister.getAuditMapping() != null
+						&& persister.isPropertyAuditedExcluded( attr.getStateArrayPosition() );
+			}
 		}
 		return false;
+	}
+
+	/**
+	 * The {@linkplain EntityMappingType mapping type} of the entity actually
+	 * being loaded at {@code fetchParent}, falling back to the type declaring
+	 * {@code attr} when {@code fetchParent} isn't itself an entity (e.g. a
+	 * fetch nested inside an embeddable).
+	 */
+	private static EntityMappingType currentlyLoadingEntityMappingType(FetchParent fetchParent, AttributeMapping attr) {
+		if ( fetchParent instanceof EntityResultGraphNode entityResultGraphNode ) {
+			return entityResultGraphNode.getReferencedMappingContainer();
+		}
+		return attr.getDeclaringType() instanceof EntityMappingType entityMappingType ? entityMappingType : null;
 	}
 
 	public static AuditStrategy determineAuditStrategy(Map<String, Object> configurationSettings) {

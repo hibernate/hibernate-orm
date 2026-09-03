@@ -316,6 +316,7 @@ import org.hibernate.sql.ast.spi.query.expression.ExtractUnit;
 import org.hibernate.sql.ast.spi.query.expression.Format;
 import org.hibernate.sql.ast.spi.query.expression.JdbcLiteral;
 import org.hibernate.sql.ast.spi.query.expression.JdbcParameter;
+import org.hibernate.sql.ast.spi.query.expression.JdbcParameterFactory;
 import org.hibernate.sql.ast.spi.query.expression.Literal;
 import org.hibernate.sql.ast.spi.query.expression.ModifiedSubQueryExpression;
 import org.hibernate.sql.ast.spi.query.expression.Over;
@@ -373,8 +374,6 @@ import org.hibernate.sql.ast.spi.query.update.Assignment;
 import org.hibernate.sql.ast.spi.query.update.UpdateStatement;
 import org.hibernate.sql.exec.internal.JdbcParameterImpl;
 import org.hibernate.sql.exec.internal.JdbcParametersImpl;
-import org.hibernate.sql.exec.internal.LimitJdbcParameter;
-import org.hibernate.sql.exec.internal.OffsetJdbcParameter;
 import org.hibernate.sql.exec.internal.SqlTypedMappingJdbcParameter;
 import org.hibernate.sql.exec.internal.VersionTypeSeedParameterSpecification;
 import org.hibernate.sql.exec.spi.JdbcParameters;
@@ -2341,15 +2340,14 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	private void applyQueryOptionsOffsetAndFetch(QueryPart sqlQueryPart) {
 		final var limit = queryOptions.peekOriginalLimit();
 		if ( limit != null && !limit.isEmpty() ) {
-			final var integerType = getTypeConfiguration().getBasicTypeForJavaType( Integer.class );
 			// Always emit both parameters so the cached plan works for any combination of
 			// setFirstResult/setMaxResults values; the parameter binders default firstRow
 			// to 0 and maxRows to Integer.MAX_VALUE when the corresponding option is not set.
 			sqlQueryPart.setOffsetClauseExpression(
-					new OffsetJdbcParameter( integerType )
+					JdbcParameterFactory.queryOffset( getTypeConfiguration() )
 			);
 			sqlQueryPart.setFetchClauseExpression(
-					new LimitJdbcParameter( integerType ),
+					JdbcParameterFactory.queryLimit( getTypeConfiguration() ),
 					FetchClauseType.ROWS_ONLY
 			);
 		}

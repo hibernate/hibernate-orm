@@ -164,13 +164,25 @@ public final class JdbcOperations {
 			return this;
 		}
 
-		/// Identify a rendered offset parameter, if any.
+		/// Identify the parameter rendered for the query offset, if any.
+		///
+		/// Create the standard query-options-backed parameter with
+		/// [org.hibernate.sql.ast.spi.query.expression.JdbcParameterFactory#queryOffset(org.hibernate.type.spi.TypeConfiguration)].
+		/// Its parameter binder must occur in [#parameterBinders] at the
+		/// corresponding command-placeholder position, and this must be the same
+		/// parameter instance whose placeholder was rendered.
 		public SelectBuilder offsetParameter(JdbcParameter offsetParameter) {
 			this.offsetParameter = offsetParameter;
 			return this;
 		}
 
-		/// Identify a rendered limit parameter, if any.
+		/// Identify the parameter rendered for the query limit, if any.
+		///
+		/// Create the standard query-options-backed parameter with
+		/// [org.hibernate.sql.ast.spi.query.expression.JdbcParameterFactory#queryLimit(org.hibernate.type.spi.TypeConfiguration)].
+		/// Its parameter binder must occur in [#parameterBinders] at the
+		/// corresponding command-placeholder position, and this must be the same
+		/// parameter instance whose placeholder was rendered.
 		public SelectBuilder limitParameter(JdbcParameter limitParameter) {
 			this.limitParameter = limitParameter;
 			return this;

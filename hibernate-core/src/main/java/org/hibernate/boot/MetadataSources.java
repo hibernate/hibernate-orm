@@ -79,6 +79,7 @@ public class MetadataSources implements Serializable {
 	private LinkedHashSet<Class<?>> annotatedClasses;
 	private LinkedHashSet<String> annotatedClassNames;
 	private LinkedHashSet<String> annotatedPackages;
+	private LinkedHashSet<Module> annotatedModules;
 
 	private Map<String,Class<?>> extraQueryImports;
 
@@ -137,6 +138,10 @@ public class MetadataSources implements Serializable {
 
 	public Collection<String> getAnnotatedPackages() {
 		return annotatedPackages == null ? emptySet() : annotatedPackages;
+	}
+
+	public Collection<Module> getAnnotatedModules() {
+		return annotatedModules == null ? emptySet() : annotatedModules;
 	}
 
 	public Collection<Class<?>> getAnnotatedClasses() {
@@ -324,6 +329,24 @@ public class MetadataSources implements Serializable {
 	 */
 	public MetadataSources addPackage(Package packageRef) {
 		addPackageInternal( packageRef.getName() );
+		return this;
+	}
+
+	/**
+	 * Read module-level metadata.
+	 *
+	 * @param module The module to process for annotations
+	 *
+	 * @return this (for method chaining)
+	 */
+	public MetadataSources addModule(Module module) {
+		if ( module == null ) {
+			throw new IllegalArgumentException( "The specified module cannot be null" );
+		}
+		if ( annotatedModules == null ) {
+			annotatedModules = new LinkedHashSet<>();
+		}
+		annotatedModules.add( module );
 		return this;
 	}
 

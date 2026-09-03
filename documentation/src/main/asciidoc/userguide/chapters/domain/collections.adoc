@@ -278,6 +278,10 @@ include::{example-dir-collection}/classification/bag/EntityWithBagAsList.java[ta
 Specifically, the usage of `@Bag` forces the classification as BAG.  Even though the `names` attribute is defined
 as `List`, Hibernate will treat it using the BAG semantics.
 
+`@Bag` can also be placed on a class, `package-info.java`, or `module-info.java` to apply BAG semantics
+to all `List` attributes within that scope.  Conversely, `@List` can be used at the same levels
+to force LIST semantics (i.e., an ordered, indexed list).
+
 Additionally, as discussed in <<collection-list>>, the `hibernate.mapping.default_list_semantics` setting
 is available to have Hibernate interpret a `List` with no `@OrderColumn` and no `@ListIndexBase` as a BAG.
 

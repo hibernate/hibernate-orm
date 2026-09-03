@@ -58,6 +58,14 @@ public interface ManagedResources {
 	Collection<String> getAnnotatedPackageNames();
 
 	/**
+	 * Informational access to any known annotated modules (modules with a {@code module-info.class}
+	 * file that Hibernate has been told about).  Changes to made to the returned list have no effect.
+	 *
+	 * @return The list of known annotated modules.
+	 */
+	Collection<Module> getAnnotatedModules();
+
+	/**
 	 * Informational access to binding for all known XML mapping files.  Changes to made to the returned
 	 * list have no effect.
 	 *

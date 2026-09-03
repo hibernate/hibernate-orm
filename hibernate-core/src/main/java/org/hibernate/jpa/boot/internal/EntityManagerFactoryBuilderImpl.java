@@ -212,6 +212,9 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 
 		scanningResult.discoveredPackages().forEach( metadataSources::addPackage );
 
+		scanningResult.discoveredModules().forEach( moduleName ->
+				ModuleLayer.boot().findModule( moduleName ).ifPresent( metadataSources::addModule ) );
+
 		scanningResult.discoveredClasses().forEach( metadataSources::addAnnotatedClassName );
 
 		scanningResult.mappingFiles().forEach( (mappingFileUri) -> {

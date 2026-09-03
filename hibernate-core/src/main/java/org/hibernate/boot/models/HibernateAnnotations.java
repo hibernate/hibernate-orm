@@ -113,7 +113,7 @@ public interface HibernateAnnotations {
 	OrmAnnotationDescriptor<Bag, BagAnnotation> BAG = new OrmAnnotationDescriptor<>(
 			Bag.class,
 			BagAnnotation.class,
-			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.ANNOTATION ),
+			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.CLASS, Kind.PACKAGE, Kind.MODULE, Kind.ANNOTATION ),
 			false
 	);
 	OrmAnnotationDescriptor<BatchSize, BatchSizeAnnotation> BATCH_SIZE = new OrmAnnotationDescriptor<>(
@@ -204,13 +204,13 @@ public interface HibernateAnnotations {
 	OrmAnnotationDescriptor<CollectionTypeRegistrations, CollectionTypeRegistrationsAnnotation> COLLECTION_TYPE_REGISTRATIONS = new OrmAnnotationDescriptor<>(
 			CollectionTypeRegistrations.class,
 			CollectionTypeRegistrationsAnnotation.class,
-			EnumSet.of( Kind.CLASS, Kind.ANNOTATION ),
+			EnumSet.of( Kind.CLASS, Kind.ANNOTATION, Kind.PACKAGE, Kind.MODULE ),
 			false
 	);
 	OrmAnnotationDescriptor<CollectionTypeRegistration, CollectionTypeRegistrationAnnotation> COLLECTION_TYPE_REGISTRATION = new OrmAnnotationDescriptor<>(
 			CollectionTypeRegistration.class,
 			CollectionTypeRegistrationAnnotation.class,
-			EnumSet.of( Kind.CLASS, Kind.ANNOTATION, Kind.PACKAGE ),
+			EnumSet.of( Kind.CLASS, Kind.ANNOTATION, Kind.PACKAGE, Kind.MODULE ),
 			false,
 			COLLECTION_TYPE_REGISTRATIONS
 	);
@@ -242,13 +242,13 @@ public interface HibernateAnnotations {
 	OrmAnnotationDescriptor<CompositeTypeRegistrations, CompositeTypeRegistrationsAnnotation> COMPOSITE_TYPE_REGISTRATIONS = new OrmAnnotationDescriptor<>(
 			CompositeTypeRegistrations.class,
 			CompositeTypeRegistrationsAnnotation.class,
-			EnumSet.of( Kind.CLASS, Kind.ANNOTATION, Kind.PACKAGE ),
+			EnumSet.of( Kind.CLASS, Kind.ANNOTATION, Kind.PACKAGE, Kind.MODULE ),
 			false
 	);
 	OrmAnnotationDescriptor<CompositeTypeRegistration, CompositeTypeRegistrationAnnotation> COMPOSITE_TYPE_REGISTRATION = new OrmAnnotationDescriptor<>(
 			CompositeTypeRegistration.class,
 			CompositeTypeRegistrationAnnotation.class,
-			EnumSet.of( Kind.CLASS, Kind.ANNOTATION, Kind.PACKAGE ),
+			EnumSet.of( Kind.CLASS, Kind.ANNOTATION, Kind.PACKAGE, Kind.MODULE ),
 			false,
 			COMPOSITE_TYPE_REGISTRATIONS
 	);
@@ -261,13 +261,13 @@ public interface HibernateAnnotations {
 	OrmAnnotationDescriptor<ConverterRegistrations, ConverterRegistrationsAnnotation> CONVERTER_REGISTRATIONS = new OrmAnnotationDescriptor<>(
 			ConverterRegistrations.class,
 			ConverterRegistrationsAnnotation.class,
-			EnumSet.of( Kind.CLASS, Kind.ANNOTATION, Kind.PACKAGE ),
+			EnumSet.of( Kind.CLASS, Kind.ANNOTATION, Kind.PACKAGE, Kind.MODULE ),
 			false
 	);
 	OrmAnnotationDescriptor<ConverterRegistration, ConverterRegistrationAnnotation> CONVERTER_REGISTRATION = new OrmAnnotationDescriptor<>(
 			ConverterRegistration.class,
 			ConverterRegistrationAnnotation.class,
-			EnumSet.of( Kind.CLASS, Kind.ANNOTATION, Kind.PACKAGE ),
+			EnumSet.of( Kind.CLASS, Kind.ANNOTATION, Kind.PACKAGE, Kind.MODULE ),
 			false,
 			CONVERTER_REGISTRATIONS
 	);
@@ -281,6 +281,12 @@ public interface HibernateAnnotations {
 			CurrentTimestamp.class,
 			CurrentTimestampAnnotation.class,
 			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.ANNOTATION ),
+			false
+	);
+	OrmAnnotationDescriptor<DefaultSchema, DefaultSchemaAnnotation> DEFAULT_SCHEMA = new OrmAnnotationDescriptor<>(
+			DefaultSchema.class,
+			DefaultSchemaAnnotation.class,
+			EnumSet.of( Kind.CLASS, Kind.PACKAGE, Kind.MODULE ),
 			false
 	);
 	OrmAnnotationDescriptor<DiscriminatorFormula, DiscriminatorFormulaAnnotation> DISCRIMINATOR_FORMULA = new OrmAnnotationDescriptor<>(
@@ -316,13 +322,13 @@ public interface HibernateAnnotations {
 	OrmAnnotationDescriptor<EmbeddableInstantiatorRegistrations, EmbeddableInstantiatorRegistrationsAnnotation> EMBEDDABLE_INSTANTIATOR_REGISTRATIONS = new OrmAnnotationDescriptor<>(
 			EmbeddableInstantiatorRegistrations.class,
 			EmbeddableInstantiatorRegistrationsAnnotation.class,
-			EnumSet.of( Kind.CLASS, Kind.ANNOTATION, Kind.PACKAGE ),
+			EnumSet.of( Kind.CLASS, Kind.ANNOTATION, Kind.PACKAGE, Kind.MODULE ),
 			false
 	);
 	OrmAnnotationDescriptor<EmbeddableInstantiatorRegistration, EmbeddableInstantiatorRegistrationAnnotation> EMBEDDABLE_INSTANTIATOR_REGISTRATION = new OrmAnnotationDescriptor<>(
 			EmbeddableInstantiatorRegistration.class,
 			EmbeddableInstantiatorRegistrationAnnotation.class,
-			EnumSet.of( Kind.CLASS, Kind.ANNOTATION, Kind.PACKAGE ),
+			EnumSet.of( Kind.CLASS, Kind.ANNOTATION, Kind.PACKAGE, Kind.MODULE ),
 			false,
 			EMBEDDABLE_INSTANTIATOR_REGISTRATIONS
 	);
@@ -347,13 +353,13 @@ public interface HibernateAnnotations {
 	OrmAnnotationDescriptor<FetchProfiles, FetchProfilesAnnotation> FETCH_PROFILES = new OrmAnnotationDescriptor<>(
 			FetchProfiles.class,
 			FetchProfilesAnnotation.class,
-			EnumSet.of( Kind.CLASS, Kind.PACKAGE ),
+			EnumSet.of( Kind.CLASS, Kind.PACKAGE, Kind.MODULE ),
 			false
 	);
 	OrmAnnotationDescriptor<FetchProfile, FetchProfileAnnotation> FETCH_PROFILE = new OrmAnnotationDescriptor<>(
 			FetchProfile.class,
 			FetchProfileAnnotation.class,
-			EnumSet.of( Kind.CLASS, Kind.PACKAGE ),
+			EnumSet.of( Kind.CLASS, Kind.PACKAGE, Kind.MODULE ),
 			false,
 			FETCH_PROFILES
 	);
@@ -373,13 +379,13 @@ public interface HibernateAnnotations {
 	OrmAnnotationDescriptor<FilterDefs, FilterDefsAnnotation> FILTER_DEFS = new OrmAnnotationDescriptor<>(
 			FilterDefs.class,
 			FilterDefsAnnotation.class,
-			EnumSet.of( Kind.CLASS, Kind.PACKAGE ),
+			EnumSet.of( Kind.CLASS, Kind.PACKAGE, Kind.MODULE ),
 			false
 	);
 	OrmAnnotationDescriptor<FilterDef, FilterDefAnnotation> FILTER_DEF = new OrmAnnotationDescriptor<>(
 			FilterDef.class,
 			FilterDefAnnotation.class,
-			EnumSet.of( Kind.CLASS, Kind.PACKAGE ),
+			EnumSet.of( Kind.CLASS, Kind.PACKAGE, Kind.MODULE ),
 			false,
 			FILTER_DEFS
 	);
@@ -423,7 +429,7 @@ public interface HibernateAnnotations {
 	OrmAnnotationDescriptor<GenericGenerator, GenericGeneratorAnnotation> GENERIC_GENERATOR = new OrmAnnotationDescriptor<>(
 			GenericGenerator.class,
 			GenericGeneratorAnnotation.class,
-			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.CLASS, Kind.PACKAGE ),
+			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.CLASS, Kind.PACKAGE, Kind.MODULE ),
 			false
 	);
 	OrmAnnotationDescriptor<HQLSelect, HQLSelectAnnotation> HQL_SELECT = new OrmAnnotationDescriptor<>(
@@ -465,13 +471,13 @@ public interface HibernateAnnotations {
 	OrmAnnotationDescriptor<JavaTypeRegistrations, JavaTypeRegistrationsAnnotation> JAVA_TYPE_REGISTRATIONS = new OrmAnnotationDescriptor<>(
 			JavaTypeRegistrations.class,
 			JavaTypeRegistrationsAnnotation.class,
-			EnumSet.of( Kind.CLASS, Kind.ANNOTATION, Kind.PACKAGE ),
+			EnumSet.of( Kind.CLASS, Kind.ANNOTATION, Kind.PACKAGE, Kind.MODULE ),
 			true
 	);
 	OrmAnnotationDescriptor<JavaTypeRegistration, JavaTypeRegistrationAnnotation> JAVA_TYPE_REGISTRATION = new OrmAnnotationDescriptor<>(
 			JavaTypeRegistration.class,
 			JavaTypeRegistrationAnnotation.class,
-			EnumSet.of( Kind.CLASS, Kind.ANNOTATION, Kind.PACKAGE ),
+			EnumSet.of( Kind.CLASS, Kind.ANNOTATION, Kind.PACKAGE, Kind.MODULE ),
 			true,
 			JAVA_TYPE_REGISTRATIONS
 	);
@@ -490,13 +496,13 @@ public interface HibernateAnnotations {
 	OrmAnnotationDescriptor<JdbcTypeRegistrations, JdbcTypeRegistrationsAnnotation> JDBC_TYPE_REGISTRATIONS = new OrmAnnotationDescriptor<>(
 			JdbcTypeRegistrations.class,
 			JdbcTypeRegistrationsAnnotation.class,
-			EnumSet.of( Kind.CLASS, Kind.PACKAGE ),
+			EnumSet.of( Kind.CLASS, Kind.PACKAGE, Kind.MODULE ),
 			true
 	);
 	OrmAnnotationDescriptor<JdbcTypeRegistration, JdbcTypeRegistrationAnnotation> JDBC_TYPE_REGISTRATION = new OrmAnnotationDescriptor<>(
 			JdbcTypeRegistration.class,
 			JdbcTypeRegistrationAnnotation.class,
-			EnumSet.of( Kind.CLASS, Kind.PACKAGE ),
+			EnumSet.of( Kind.CLASS, Kind.PACKAGE, Kind.MODULE ),
 			true,
 			JDBC_TYPE_REGISTRATIONS
 	);
@@ -549,6 +555,12 @@ public interface HibernateAnnotations {
 			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.ANNOTATION ),
 			true
 	);
+	OrmAnnotationDescriptor<List, ListAnnotation> LIST = new OrmAnnotationDescriptor<>(
+			List.class,
+			ListAnnotation.class,
+			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.CLASS, Kind.PACKAGE, Kind.MODULE, Kind.ANNOTATION ),
+			false
+	);
 	OrmAnnotationDescriptor<ManyToAny, ManyToAnyAnnotation> MANY_TO_ANY = new OrmAnnotationDescriptor<>(
 			ManyToAny.class,
 			ManyToAnyAnnotation.class,
@@ -600,39 +612,39 @@ public interface HibernateAnnotations {
 	OrmAnnotationDescriptor<NamedEntityGraphs, NamedEntityGraphsAnnotation> NAMED_ENTITY_GRAPHS = new OrmAnnotationDescriptor<>(
 			NamedEntityGraphs.class,
 			NamedEntityGraphsAnnotation.class,
-			EnumSet.of( Kind.CLASS, Kind.ANNOTATION, Kind.PACKAGE ),
+			EnumSet.of( Kind.CLASS, Kind.ANNOTATION, Kind.PACKAGE, Kind.MODULE ),
 			false
 	);
 	OrmAnnotationDescriptor<NamedEntityGraph, NamedEntityGraphAnnotation> NAMED_ENTITY_GRAPH = new OrmAnnotationDescriptor<>(
 			NamedEntityGraph.class,
 			NamedEntityGraphAnnotation.class,
-			EnumSet.of( Kind.CLASS, Kind.PACKAGE ),
+			EnumSet.of( Kind.CLASS, Kind.PACKAGE, Kind.MODULE ),
 			false,
 			NAMED_ENTITY_GRAPHS
 	);
 	OrmAnnotationDescriptor<NamedNativeQueries, NamedNativeQueriesAnnotation> NAMED_NATIVE_QUERIES = new OrmAnnotationDescriptor<>(
 			NamedNativeQueries.class,
 			NamedNativeQueriesAnnotation.class,
-			EnumSet.of( Kind.CLASS, Kind.PACKAGE ),
+			EnumSet.of( Kind.CLASS, Kind.PACKAGE, Kind.MODULE ),
 			false
 	);
 	OrmAnnotationDescriptor<NamedNativeQuery, NamedNativeQueryAnnotation> NAMED_NATIVE_QUERY = new OrmAnnotationDescriptor<>(
 			NamedNativeQuery.class,
 			NamedNativeQueryAnnotation.class,
-			EnumSet.of( Kind.CLASS, Kind.PACKAGE ),
+			EnumSet.of( Kind.CLASS, Kind.PACKAGE, Kind.MODULE ),
 			false,
 			NAMED_NATIVE_QUERIES
 	);
 	OrmAnnotationDescriptor<NamedQueries, NamedQueriesAnnotation> NAMED_QUERIES = new OrmAnnotationDescriptor<>(
 			NamedQueries.class,
 			NamedQueriesAnnotation.class,
-			EnumSet.of( Kind.CLASS, Kind.PACKAGE ),
+			EnumSet.of( Kind.CLASS, Kind.PACKAGE, Kind.MODULE ),
 			false
 	);
 	OrmAnnotationDescriptor<NamedQuery, NamedQueryAnnotation> NAMED_QUERY = new OrmAnnotationDescriptor<>(
 			NamedQuery.class,
 			NamedQueryAnnotation.class,
-			EnumSet.of( Kind.CLASS, Kind.PACKAGE ),
+			EnumSet.of( Kind.CLASS, Kind.PACKAGE, Kind.MODULE ),
 			false,
 			NAMED_QUERIES
 	);
@@ -645,7 +657,7 @@ public interface HibernateAnnotations {
 	OrmAnnotationDescriptor<NativeGenerator, NativeGeneratorAnnotation> NATIVE_GENERATOR = new OrmAnnotationDescriptor<>(
 			NativeGenerator.class,
 			NativeGeneratorAnnotation.class,
-			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.CLASS, Kind.PACKAGE ),
+			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.CLASS, Kind.PACKAGE, Kind.MODULE ),
 			false
 	);
 	OrmAnnotationDescriptor<NaturalId, NaturalIdAnnotation> NATURAL_ID = new OrmAnnotationDescriptor<>(
@@ -925,13 +937,13 @@ public interface HibernateAnnotations {
 	OrmAnnotationDescriptor<TypeRegistrations, TypeRegistrationsAnnotation> TYPE_REGISTRATIONS = new OrmAnnotationDescriptor<>(
 			TypeRegistrations.class,
 			TypeRegistrationsAnnotation.class,
-			EnumSet.of( Kind.CLASS, Kind.ANNOTATION, Kind.PACKAGE ),
+			EnumSet.of( Kind.CLASS, Kind.ANNOTATION, Kind.PACKAGE, Kind.MODULE ),
 			false
 	);
 	OrmAnnotationDescriptor<TypeRegistration, TypeRegistrationAnnotation> TYPE_REGISTRATION = new OrmAnnotationDescriptor<>(
 			TypeRegistration.class,
 			TypeRegistrationAnnotation.class,
-			EnumSet.of( Kind.CLASS, Kind.ANNOTATION, Kind.PACKAGE ),
+			EnumSet.of( Kind.CLASS, Kind.ANNOTATION, Kind.PACKAGE, Kind.MODULE ),
 			false,
 			TYPE_REGISTRATIONS
 	);

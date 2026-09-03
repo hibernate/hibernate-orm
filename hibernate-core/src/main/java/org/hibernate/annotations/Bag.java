@@ -10,6 +10,9 @@ import java.lang.annotation.Target;
 import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.ElementType.MODULE;
+import static java.lang.annotation.ElementType.PACKAGE;
+import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /// Specifies that an attribute of type [java.util.List] is semantically a
@@ -22,11 +25,14 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 /// However, its use is still encouraged, since the explicit annotation serves
 /// as useful documentation.
 ///
+/// When placed on a type, {@code package-info.java}, or {@code module-info.java},
+/// applies to all [java.util.List] attributes of entities in that scope.
+///
 /// @apiNote This annotation causes an exception if the attribute is also annotated
 /// [jakarta.persistence.OrderColumn] or [ListIndexBase].
 ///
 /// @author Steve Ebersole
-@Target({METHOD, FIELD, ANNOTATION_TYPE})
+@Target({METHOD, FIELD, TYPE, PACKAGE, MODULE, ANNOTATION_TYPE})
 @Retention(RUNTIME)
 public @interface Bag {
 }

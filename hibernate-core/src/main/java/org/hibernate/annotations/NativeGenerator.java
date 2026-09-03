@@ -15,6 +15,7 @@ import jakarta.persistence.TableGenerator;
 
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.ElementType.MODULE;
 import static java.lang.annotation.ElementType.PACKAGE;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
@@ -25,7 +26,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * @since 7.0
  * @author Steve Ebersole
  */
-@Target({METHOD, FIELD, TYPE, PACKAGE})
+@Target({METHOD, FIELD, TYPE, PACKAGE, MODULE})
 @Retention(RUNTIME)
 @IdGeneratorType(org.hibernate.id.NativeGenerator.class)
 @Incubating

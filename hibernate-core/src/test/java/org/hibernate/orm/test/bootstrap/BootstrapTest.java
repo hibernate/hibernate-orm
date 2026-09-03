@@ -133,6 +133,11 @@ public class BootstrapTest {
 		// Read package-level metadata.
 		sources.addPackage("hibernate.example");
 
+		// Read module-level metadata from a named module.
+		// Only needed when scanning is not available;
+		// in container environments, modules are auto-discovered.
+		sources.addModule(getClass().getModule());
+
 		// Adds the named JPA orm.xml resource as a source: which performs the
 		// classpath lookup and parses the XML
 		sources.addResource("org/hibernate/example/Product.orm.xml");
@@ -279,6 +284,11 @@ public class BootstrapTest {
 
 			// Read package-level metadata.
 			sources.addPackage(MyEntity.class.getPackage());
+
+			// Read module-level metadata from a named module.
+			// Only needed when scanning is not available;
+			// in container environments, modules are auto-discovered.
+			sources.addModule(getClass().getModule());
 
 			// Adds the named hbm.xml resource as a source: which performs the
 			// classpath lookup and parses the XML

@@ -37,6 +37,7 @@ import org.hibernate.annotations.CacheLayout;
 import org.hibernate.annotations.Check;
 import org.hibernate.annotations.Checks;
 import org.hibernate.annotations.ConcreteProxy;
+import org.hibernate.annotations.DefaultSchema;
 import org.hibernate.annotations.DiscriminatorFormula;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
@@ -130,6 +131,7 @@ import static org.hibernate.boot.model.internal.AnnotatedClassType.MAPPED_SUPERC
 import static org.hibernate.boot.model.internal.AnnotatedDiscriminatorColumn.DEFAULT_DISCRIMINATOR_COLUMN_NAME;
 import static org.hibernate.boot.model.internal.AnnotatedDiscriminatorColumn.buildDiscriminatorColumn;
 import static org.hibernate.boot.model.internal.AnnotatedJoinColumn.buildInheritanceJoinColumn;
+import static org.hibernate.boot.model.internal.BinderHelper.extractFromModule;
 import static org.hibernate.boot.model.internal.BinderHelper.extractFromPackage;
 import static org.hibernate.boot.model.internal.BinderHelper.getMappedSuperclassOrNull;
 import static org.hibernate.boot.model.internal.BinderHelper.getPath;
@@ -392,7 +394,12 @@ public class EntityBinder {
 			classToCheck = classToCheck.getSuperClass();
 		}
 
-		return extractFromPackage( annotationClass, classDetails, context );
+		final var fromPackage = extractFromPackage( annotationClass, classDetails, context );
+		if ( fromPackage != null ) {
+			return fromPackage;
+		}
+
+		return extractFromModule( annotationClass, classDetails, context );
 	}
 
 	private void handleCheckConstraints() {
@@ -824,9 +831,9 @@ public class EntityBinder {
 	}
 
 	private void handleClassTable(InheritanceState inheritanceState, PersistentClass superEntity) {
-		final String schema;
+		String schema;
 		final String table;
-		final String catalog;
+		String catalog;
 		final UniqueConstraint[] uniqueConstraints;
 		final var tableAnnotation =
 				annotatedClass.getAnnotationUsage( jakarta.persistence.Table.class, modelsContext() );
@@ -842,6 +849,18 @@ public class EntityBinder {
 			table = "";
 			catalog = "";
 			uniqueConstraints = new UniqueConstraint[0];
+		}
+
+		if ( isBlank( schema ) || isBlank( catalog ) ) {
+			final var defaultSchema = extract( DefaultSchema.class, annotatedClass, context );
+			if ( defaultSchema != null ) {
+				if ( isBlank( schema ) ) {
+					schema = defaultSchema.schema();
+				}
+				if ( isBlank( catalog ) ) {
+					catalog = defaultSchema.catalog();
+				}
+			}
 		}
 
 		if ( inheritanceState.hasTable() ) {

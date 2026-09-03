@@ -12,6 +12,7 @@ import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.usertype.UserCollectionType;
 
 import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
+import static java.lang.annotation.ElementType.MODULE;
 import static java.lang.annotation.ElementType.PACKAGE;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
@@ -26,7 +27,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *
  * @author Steve Ebersole
  */
-@Target({TYPE, PACKAGE, ANNOTATION_TYPE})
+@Target({TYPE, PACKAGE, MODULE, ANNOTATION_TYPE})
 @Retention(RUNTIME)
 @Repeatable( CollectionTypeRegistrations.class )
 public @interface CollectionTypeRegistration {

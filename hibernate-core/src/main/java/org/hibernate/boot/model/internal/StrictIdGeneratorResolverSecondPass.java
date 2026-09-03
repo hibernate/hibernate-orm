@@ -4,8 +4,6 @@
  */
 package org.hibernate.boot.model.internal;
 
-import java.util.UUID;
-
 import org.hibernate.boot.models.annotations.internal.SequenceGeneratorJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.TableGeneratorJpaAnnotation;
 import org.hibernate.boot.models.spi.GlobalRegistrations;
@@ -211,9 +209,7 @@ public class StrictIdGeneratorResolverSecondPass extends AbstractEntityIdGenerat
 		}
 
 		// Implicit handling of UUID generation
-		final var idMemberType = idMember.getType();
-		if ( idMemberType.isImplementor( UUID.class )
-			|| idMemberType.isImplementor( String.class ) ) {
+		if ( GeneratorAnnotationHelper.prefersUuidGeneration( idMember, buildingContext ) ) {
 			handleUuidStrategy(
 					idValue,
 					idMember,

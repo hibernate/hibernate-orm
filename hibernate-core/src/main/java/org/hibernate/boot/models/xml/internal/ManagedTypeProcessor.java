@@ -304,6 +304,12 @@ public class ManagedTypeProcessor {
 				xmlDocumentContext
 		);
 
+		XmlAnnotationHelper.applyOnDelete(
+				jaxbEntity,
+				classDetails,
+				xmlDocumentContext
+		);
+
 		XmlAnnotationHelper.applyTableGenerator(
 				jaxbEntity.getTableGenerator(),
 				classDetails,

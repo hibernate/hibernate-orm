@@ -26,6 +26,8 @@ import java.util.Collection;
 import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
@@ -117,9 +119,11 @@ public class SingleTableInheritanceTest {
 		scope.inTransaction( s -> {
 			var statelessSession = s.getSessionFactory().withStatelessOptions().atChangeset( AuditLog.ALL_CHANGESETS )
 					.openStatelessSession();
-			var auditedSub = statelessSession.createSelectionQuery("from SingleInheritanceSub", Object.class).getSingleResult();
+			var auditedBase = statelessSession.createSelectionQuery("from SingleInheritanceBase b where Type(b) = SingleInheritanceBase", SingleInheritanceBase.class).getSingleResult();
+			assertNull( auditedBase.str1 );
 
-			var auditedBase = statelessSession.createSelectionQuery("from SingleInheritanceBase b where Type(b) = SingleInheritanceBase", Object.class).getSingleResult();
+			var auditedSub = statelessSession.createSelectionQuery("from SingleInheritanceSub", SingleInheritanceSub.class).getSingleResult();
+			assertNotNull( auditedSub.str1 );
 		} );
 	}
 

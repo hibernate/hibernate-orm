@@ -9,6 +9,9 @@
  * executed via the corresponding executor -
  * either {@linkplain org.hibernate.sql.exec.spi.JdbcSelectExecutor}
  * or {@linkplain org.hibernate.sql.exec.spi.JdbcMutationExecutor}.
+ * Provider-owned SQL AST translators create query operations through
+ * {@link org.hibernate.sql.exec.spi.JdbcOperations}, which keeps the concrete
+ * operation implementations internal to Hibernate.
  * <p>
  * For operations that return {@link java.sql.ResultSet}s, be sure to see
  * {@link org.hibernate.sql.results} which provides support for processing results

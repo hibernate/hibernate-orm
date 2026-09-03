@@ -11,6 +11,7 @@ import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 
 import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.SUPPLY;
 import static org.hibernate.SPI.Role.USE;
 
 /// Standard [SqlAstTranslatorFactory] and supported base for custom factories.
@@ -23,6 +24,10 @@ import static org.hibernate.SPI.Role.USE;
 /// @author Steve Ebersole
 @SPI({ USE, IMPLEMENT })
 public class StandardSqlAstTranslatorFactory implements SqlAstTranslatorFactory {
+	/// Create a reusable, stateless translator factory.
+	@SPI(IMPLEMENT)
+	public StandardSqlAstTranslatorFactory() {
+	}
 
 	@Override
 	public final <S extends Statement, O extends JdbcOperation> SqlAstTranslator<O> buildTranslator(
@@ -36,6 +41,7 @@ public class StandardSqlAstTranslatorFactory implements SqlAstTranslatorFactory 
 	/// implementation. They must not cache or reuse the returned translator.
 	///
 	/// @return a fresh translator compatible with the request's result type
+	@SPI({ IMPLEMENT, SUPPLY })
 	protected <S extends Statement, O extends JdbcOperation> SqlAstTranslator<O> createTranslator(
 			SqlAstTranslationRequest<S, O> request) {
 		return new StandardSqlAstTranslator<>( request );

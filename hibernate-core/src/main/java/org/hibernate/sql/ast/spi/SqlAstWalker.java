@@ -82,22 +82,23 @@ import org.hibernate.sql.ast.spi.model.TableInsertStandard;
 import org.hibernate.sql.ast.spi.model.TableUpdateCustomSql;
 import org.hibernate.sql.ast.spi.model.TableUpdateStandard;
 
+import static org.hibernate.SPI.Role.IMPLEMENT;
 import static org.hibernate.SPI.Role.USE;
 
 /// Visitor callbacks for traversing the SQL AST.
 ///
-/// This is a `USE` contract: SQL AST nodes call these methods from
-/// [SqlAstNode#accept]. Dialect providers may invoke walker methods when
-/// composing traversal, but should not implement this interface directly.
-/// Custom SQL rendering belongs in a supported
-/// [org.hibernate.dialect.sql.ast.spi.AbstractSqlAstTranslator] subclass, which
-/// supplies traversal state and audited override points.
+/// SQL AST nodes call these methods from [SqlAstNode#accept]. Implement this
+/// interface directly only when every callback is intentionally owned by the
+/// provider. Most providers should extend either
+/// [AbstractSqlAstWalker] for a structurally different command language or
+/// [org.hibernate.dialect.sql.ast.spi.AbstractSqlAstTranslator] for custom SQL
+/// rendering.
 ///
 /// @since 8.0
 /// @author Steve Ebersole
 /// @author Andrea Boriero
 @Incubating
-@SPI(USE)
+@SPI({ USE, IMPLEMENT })
 public interface SqlAstWalker {
 
 	void visitSelectStatement(SelectStatement statement);

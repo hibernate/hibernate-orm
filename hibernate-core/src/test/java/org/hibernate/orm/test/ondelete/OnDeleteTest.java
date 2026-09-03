@@ -20,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * @author Gavin King
  */
-@DomainModel(xmlMappings = "org/hibernate/orm/test/ondelete/Person.hbm.xml")
+@DomainModel(xmlMappings = "org/hibernate/orm/test/ondelete/Person.orm.xml")
 @SessionFactory(generateStatistics = true)
 public class OnDeleteTest {
 

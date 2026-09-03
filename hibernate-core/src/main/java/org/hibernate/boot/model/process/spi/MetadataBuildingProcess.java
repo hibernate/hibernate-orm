@@ -59,6 +59,7 @@ import org.hibernate.boot.spi.AdditionalMappingContributor;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.EffectiveMappingDefaults;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
+import org.hibernate.boot.spi.JpaOrmXmlPersistenceUnitDefaultAware;
 import org.hibernate.boot.spi.MappingDefaults;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.boot.spi.MetadataImplementor;
@@ -174,6 +175,10 @@ public class MetadataBuildingProcess {
 				bootstrapContext,
 				options.getMappingDefaults()
 		);
+
+		// use any persistence-unit-defaults defined in orm.xml
+		( (JpaOrmXmlPersistenceUnitDefaultAware) options )
+				.apply( domainModelSource.getPersistenceUnitMetadata() );
 
 		final var rootMetadataBuildingContext = new MetadataBuildingContextRootImpl(
 				"orm",

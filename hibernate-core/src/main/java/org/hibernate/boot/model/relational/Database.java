@@ -14,15 +14,20 @@ import java.util.TreeMap;
 import jakarta.annotation.Nullable;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
+import org.hibernate.boot.model.relational.internal.PersistenceUnitJdbcEnvironment;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.service.UnknownServiceException;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import static java.util.Collections.emptyList;
+import static org.hibernate.cfg.MappingSettings.GLOBALLY_QUOTED_IDENTIFIERS_SKIP_COLUMN_DEFINITIONS;
+import static org.hibernate.engine.config.spi.StandardConverters.BOOLEAN;
 
 /**
  * @author Steve Ebersole
@@ -45,8 +50,14 @@ public class Database {
 	}
 
 	public Database(MetadataBuildingOptions buildingOptions, JdbcEnvironment jdbcEnvironment) {
-		this.jdbcEnvironment = jdbcEnvironment;
 		serviceRegistry = buildingOptions.getServiceRegistry();
+		this.jdbcEnvironment = jdbcEnvironment == null
+				? null
+				: new PersistenceUnitJdbcEnvironment(
+						jdbcEnvironment,
+						buildingOptions.getMappingDefaults()::shouldImplicitlyQuoteIdentifiers,
+						globallyQuoteIdentifiersSkipColumnDefinitions( serviceRegistry )
+				);
 		typeConfiguration = buildingOptions.getTypeConfiguration();
 		physicalNamingStrategy = buildingOptions.getPhysicalNamingStrategy();
 		dialect = determineDialect( buildingOptions );
@@ -55,6 +66,21 @@ public class Database {
 				toIdentifier( buildingOptions.getMappingDefaults().getImplicitCatalogName() ),
 				toIdentifier( buildingOptions.getMappingDefaults().getImplicitSchemaName() )
 		);
+	}
+
+	private static boolean globallyQuoteIdentifiersSkipColumnDefinitions(ServiceRegistry serviceRegistry) {
+		try {
+			final var configurationService = serviceRegistry.getService( ConfigurationService.class );
+			return configurationService != null
+				&& configurationService.getSetting(
+						GLOBALLY_QUOTED_IDENTIFIERS_SKIP_COLUMN_DEFINITIONS,
+						BOOLEAN,
+						false
+				);
+		}
+		catch (UnknownServiceException ignored) {
+			return false;
+		}
 	}
 
 	private void setImplicitNamespaceName(Identifier catalogName, Identifier schemaName) {

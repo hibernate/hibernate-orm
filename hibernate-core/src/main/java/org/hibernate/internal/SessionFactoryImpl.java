@@ -62,6 +62,7 @@ import org.hibernate.engine.creation.spi.SessionBuilderImplementor;
 import org.hibernate.engine.jdbc.batch.spi.BatchBuilder;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
+import org.hibernate.engine.jdbc.internal.PersistenceUnitJdbcServices;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.profile.FetchProfile;
 import org.hibernate.engine.spi.FilterDefinition;
@@ -262,7 +263,10 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		jndiName = determineJndiName( name, options, serviceRegistry );
 		uuid = options.getUuid();
 
-		jdbcServices = serviceRegistry.requireService( JdbcServices.class );
+		jdbcServices = new PersistenceUnitJdbcServices(
+				serviceRegistry.requireService( JdbcServices.class ),
+				bootMetamodel.getDatabase().getJdbcEnvironment()
+		);
 
 		settings = getMaskedSettings( options, serviceRegistry );
 		SESSION_FACTORY_LOGGER.instantiatingFactory( uuid, settings );

@@ -26,7 +26,7 @@ public class BagInitializerProducer implements CollectionInitializerProducer {
 
 	public BagInitializerProducer(
 			PluralAttributeMapping bagDescriptor,
-			Fetch collectionIdFetch,
+			@Nullable Fetch collectionIdFetch,
 			Fetch elementFetch) {
 		this.bagDescriptor = bagDescriptor;
 

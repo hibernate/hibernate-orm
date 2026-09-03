@@ -90,4 +90,14 @@ public interface CollectionPart extends ValuedModelPart, Fetchable, JavaTypedExp
 	default ModelPart getInclusionCheckPart() {
 		return this;
 	}
+
+	@Override
+	default int getFetchableKey() {
+		return switch ( getNature() ) {
+			case ID -> -1;
+			case INDEX -> 0;
+			case ELEMENT -> !getCollectionAttribute().getCollectionDescriptor().hasIndex() ? 0 : 1;
+		};
+	}
+
 }

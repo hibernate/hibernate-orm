@@ -61,6 +61,16 @@ hibernate.flush.queue.type=legacy
 `org.hibernate.cfg.FlushSettings` defines a number of new settings for controlling the graph-based flush coordination.
 
 
+[[uuid-capable-java-type]]
+== UuidCapableJavaType
+
+`UuidCapableJavaType` is a new capability in the `JavaType` SPI family which makes it easier to hook non-`java.util.UUID` UUID types into id/value generation.  It defines 2 hooks -
+
+* A value-transformer to transform between the custom UUID values and `java.util.UUID`.
+* Whether the `UuidCapableJavaType` should be applied in `jakarta.persistence.GenerationType#AUTO` cases.
+
+
+
 [[procedure-outputs]]
 == Improvements to ProcedureCall
 

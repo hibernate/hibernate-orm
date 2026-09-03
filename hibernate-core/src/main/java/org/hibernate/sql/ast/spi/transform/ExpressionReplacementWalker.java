@@ -94,11 +94,15 @@ import org.hibernate.sql.ast.spi.model.TableInsertStandard;
 import org.hibernate.sql.ast.spi.model.TableUpdateCustomSql;
 import org.hibernate.sql.ast.spi.model.TableUpdateStandard;
 
-/**
- * A walker that allows to replace expressions.
- *
- * @author Christian Beikov
- */
+/// Base walker for replacing expressions in an SQL AST.
+///
+/// Extend this class and override [#replaceExpression] to substitute selected
+/// nodes. Override [#isLeafExpression] only when the provider's expression type
+/// must be treated as an indivisible node during traversal.
+///
+/// @since 8.0
+/// @author Steve Ebersole
+/// @author Christian Beikov
 @SPI({ SPI.Role.USE, SPI.Role.IMPLEMENT })
 public class ExpressionReplacementWalker implements SqlAstWalker {
 
@@ -107,6 +111,11 @@ public class ExpressionReplacementWalker implements SqlAstWalker {
 	 * we use a heap variable to transfer the return value.
 	 */
 	private SqlAstNode returnedNode;
+
+	/// Create a stateless expression-replacement walker.
+	@SPI(SPI.Role.IMPLEMENT)
+	public ExpressionReplacementWalker() {
+	}
 
 	public final <X extends SqlAstNode> X replaceExpressions(X expression) {
 		final var newExpression = replaceExpression( expression );

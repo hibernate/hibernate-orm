@@ -27,6 +27,7 @@ public class IdentityColumnSupportBase implements IdentityColumnSupport {
 	/// Construct identity support initialized with the conservative defaults.
 	///
 	/// @since 8.0
+	@SPI(IMPLEMENT)
 	public IdentityColumnSupportBase() {
 	}
 

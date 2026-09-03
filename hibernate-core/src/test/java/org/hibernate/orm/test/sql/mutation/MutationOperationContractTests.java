@@ -10,6 +10,8 @@ import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.dialect.sql.ast.spi.OptionalTableUpdateOperationRequest;
+import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.sql.ast.spi.SqlAstWalker;
 import org.hibernate.sql.ast.spi.model.ColumnValueParameter;
 import org.hibernate.sql.ast.spi.model.OptionalTableUpdate;
 import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
@@ -25,6 +27,7 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatNullPointerException;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /// Tests the immutable request and operation-state guarantees exposed by the
@@ -71,6 +74,30 @@ public class MutationOperationContractTests {
 		binders.clear();
 		assertThat( operation.getParameterBinders() ).hasSize( 1 );
 		assertThat( operation.getParameterBinders().get( 0 ) ).isSameAs( parameter );
+	}
+
+	@Test
+	void columnValueParameterDeclaresItsProviderFacingMethods() throws NoSuchMethodException {
+		assertThat( ColumnValueParameter.class.getDeclaredMethod( "accept", SqlAstWalker.class ).getDeclaringClass() )
+				.isEqualTo( ColumnValueParameter.class );
+		assertThat( ColumnValueParameter.class.getDeclaredMethod( "getParameterBinder" ).getDeclaringClass() )
+				.isEqualTo( ColumnValueParameter.class );
+		assertThat( ColumnValueParameter.class.getDeclaredMethod( "getParameterId" ).getDeclaringClass() )
+				.isEqualTo( ColumnValueParameter.class );
+		assertThat( ColumnValueParameter.class.getDeclaredMethod( "getJdbcMapping" ).getDeclaringClass() )
+				.isEqualTo( ColumnValueParameter.class );
+
+		final JdbcMapping jdbcMapping = mock( JdbcMapping.class );
+		final ColumnReference columnReference = mock( ColumnReference.class );
+		when( columnReference.getJdbcMapping() ).thenReturn( jdbcMapping );
+		final ColumnValueParameter parameter = new ColumnValueParameter( columnReference );
+		final SqlAstWalker sqlAstWalker = mock( SqlAstWalker.class );
+
+		assertThat( parameter.getParameterBinder() ).isSameAs( parameter );
+		assertThat( parameter.getParameterId() ).isNull();
+		assertThat( parameter.getJdbcMapping() ).isSameAs( jdbcMapping );
+		parameter.accept( sqlAstWalker );
+		verify( sqlAstWalker ).visitParameter( parameter );
 	}
 
 	@Test

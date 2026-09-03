@@ -122,6 +122,7 @@ import org.hibernate.sql.ast.spi.query.expression.Format;
 import org.hibernate.sql.ast.spi.query.expression.FunctionExpression;
 import org.hibernate.sql.ast.spi.query.expression.JdbcLiteral;
 import org.hibernate.sql.ast.spi.query.expression.JdbcParameter;
+import org.hibernate.sql.ast.spi.query.expression.JdbcParameterFactory;
 import org.hibernate.sql.ast.spi.query.expression.Literal;
 import org.hibernate.sql.ast.spi.query.expression.LiteralAsParameter;
 import org.hibernate.sql.ast.spi.query.expression.ModifiedSubQueryExpression;
@@ -188,8 +189,9 @@ import org.hibernate.sql.ast.spi.query.update.Assignable;
 import org.hibernate.sql.ast.spi.query.update.Assignment;
 import org.hibernate.sql.ast.spi.query.update.UpdateStatement;
 import org.hibernate.sql.exec.ExecutionException;
-import org.hibernate.sql.exec.internal.AbstractJdbcParameter;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
+import org.hibernate.sql.exec.internal.LimitJdbcParameter;
+import org.hibernate.sql.exec.internal.OffsetJdbcParameter;
 import org.hibernate.sql.exec.internal.SqlTypedMappingJdbcParameter;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcLockingApplication;
@@ -1079,18 +1081,10 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	private void prepareLimitOffsetParameters() {
 		final Limit limit = getLimit();
 		if ( limit.getFirstRow() != null ) {
-			setOffsetParameter(
-					new OffsetJdbcParameter(
-							sessionFactory.getTypeConfiguration().getBasicTypeForJavaType( Integer.class )
-					)
-			);
+			setOffsetParameter( JdbcParameterFactory.queryOffset( sessionFactory.getTypeConfiguration() ) );
 		}
 		if ( limit.getMaxRows() != null ) {
-			setLimitParameter(
-					new LimitJdbcParameter(
-							sessionFactory.getTypeConfiguration().getBasicTypeForJavaType( Integer.class )
-					)
-			);
+			setLimitParameter( JdbcParameterFactory.queryLimit( sessionFactory.getTypeConfiguration() ) );
 		}
 	}
 
@@ -1101,50 +1095,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 		else {
 			renderCasted( valueExpression );
-		}
-	}
-
-	private static class OffsetJdbcParameter extends AbstractJdbcParameter {
-
-		public OffsetJdbcParameter(BasicType<Integer> type) {
-			super( type );
-		}
-
-		@Override
-		public void bindParameterValue(
-				PreparedStatement statement,
-				int startPosition,
-				JdbcParameterBindings jdbcParamBindings,
-				ExecutionContext executionContext) throws SQLException {
-			//noinspection unchecked
-			getJdbcMapping().getJdbcValueBinder().bind(
-					statement,
-					executionContext.getQueryOptions().getLimit().getFirstRow(),
-					startPosition,
-					executionContext.getSession()
-			);
-		}
-	}
-
-	private static class LimitJdbcParameter extends AbstractJdbcParameter {
-
-		public LimitJdbcParameter(BasicType<Integer> type) {
-			super( type );
-		}
-
-		@Override
-		public void bindParameterValue(
-				PreparedStatement statement,
-				int startPosition,
-				JdbcParameterBindings jdbcParamBindings,
-				ExecutionContext executionContext) throws SQLException {
-			//noinspection unchecked
-			getJdbcMapping().getJdbcValueBinder().bind(
-					statement,
-					executionContext.getQueryOptions().getLimit().getMaxRows(),
-					startPosition,
-					executionContext.getSession()
-			);
 		}
 	}
 

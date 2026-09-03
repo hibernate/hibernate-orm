@@ -10,6 +10,7 @@ import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.Table;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.annotations.Audited;
+import org.hibernate.audit.AuditLog;
 import org.hibernate.cfg.StateManagementSettings;
 import org.hibernate.mapping.Column;
 import org.hibernate.temporal.spi.ChangesetIdentifierSupplier;
@@ -17,6 +18,7 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Test;
 
@@ -29,10 +31,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SessionFactory
 @DomainModel(annotatedClasses = {
-		SingleTableInheritanceTest.EntityThatInheritsAnExcludedProperty.class,
-		SingleTableInheritanceTest.EntityThatInheritsTheRevokedProperty.class,
-		SingleTableInheritanceTest.EntityWithExcludedProperty.class,
-		SingleTableInheritanceTest.EntityThatOverridesTheProperty3.class,
+		SingleTableInheritanceTest.SingleInheritanceBase.class,
+		SingleTableInheritanceTest.SingleInheritanceSub.class,
+//		SingleTableInheritanceTest.EntityWithExcludedProperty.class,
+//		SingleTableInheritanceTest.EntityThatOverridesTheProperty3.class,
 })
 @ServiceRegistry(settings = @Setting(name = StateManagementSettings.CHANGESET_ID_SUPPLIER,
 		value = "org.hibernate.temporal.audit.AuditEntityTest$TxIdSupplier"))
@@ -73,29 +75,51 @@ public class SingleTableInheritanceTest {
 
 
 	}
-	@Entity
-	@Table(name = "EntityThatInheritsAnExcludedProperty")
-	static class EntityThatInheritsAnExcludedProperty extends LowerMSCThatExcludesTheProperty {
+	@Entity(name = "SingleInheritanceBase")
+	@Table
+	static class SingleInheritanceBase extends LowerMSCThatExcludesTheProperty {
 
 	}
 	@MappedSuperclass
-	@Audited.Overrides(@Audited.Override(name = "str1", isAudited = true)) // <-- revocation of str1
-	static class UpperSecondMSCThatRevokesTheExclusion extends EntityThatInheritsAnExcludedProperty {
+	@Audited.Overrides(
+			{@Audited.Override(name = "str1", isAudited = true)} // <-- revocation of str1
+	)
+	static class UpperSecondMSCThatRevokesTheExclusion extends SingleInheritanceBase {
 
 	}
 	@MappedSuperclass
 	static class LowerSecondMSCThatDoesNothing extends UpperSecondMSCThatRevokesTheExclusion{
 
 	}
-	@Entity
-	static class EntityThatInheritsTheRevokedProperty extends LowerSecondMSCThatDoesNothing {
+	@Entity(name = "SingleInheritanceSub")
+	static class SingleInheritanceSub extends LowerSecondMSCThatDoesNothing {
 
 	}
 	@Test
-	public void twoGroups(DomainModelScope domainModelScope) {
+	public void twoGroups(DomainModelScope domainModelScope, SessionFactoryScope scope) {
 		var tables = domainModelScope.getDomainModel().collectTableMappings();
-		assertTable( tables, "EntityThatInheritsAnExcludedProperty_AUD", table -> {
+		assertTable( tables, "SingleInheritanceBase_AUD", table -> {
 			assertTrue( table.containsColumn( new Column( "str1" ) ) );
+			//assertTrue( table.containsColumn( new Column( "str2" ) ) );
+		} );
+		scope.inTransaction( s -> {
+			var baseEntity = new SingleInheritanceBase();
+			baseEntity.id = 0;
+			baseEntity.str1 = "v";
+			s.persist( baseEntity );
+
+			var subEntity = new SingleInheritanceSub();
+			subEntity.id = 1;
+			subEntity.str1 = "v";
+			s.persist( subEntity );
+		} );
+
+		scope.inTransaction( s -> {
+			var statelessSession = s.getSessionFactory().withStatelessOptions().atChangeset( AuditLog.ALL_CHANGESETS )
+					.openStatelessSession();
+			var auditedSub = statelessSession.createSelectionQuery("from SingleInheritanceSub", Object.class).getSingleResult();
+
+			var auditedBase = statelessSession.createSelectionQuery("from SingleInheritanceBase b where Type(b) = SingleInheritanceBase", Object.class).getSingleResult();
 		} );
 	}
 
@@ -130,7 +154,7 @@ public class SingleTableInheritanceTest {
 	@Test
 	public void entityUnderTwoMSCes5(DomainModelScope domainModelScope) {
 		var tables = domainModelScope.getDomainModel().collectTableMappings();
-		assertTable( tables, "EntityWithExcludedProperty_AUD", table -> {
+		assertTable( tables, "Base_AUD", table -> {
 			assertFalse( table.containsColumn( new Column( "str1" ) ) );
 		} );
 	}

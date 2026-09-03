@@ -938,6 +938,35 @@ translator subclass only when rendering requires structural behavior or
 control flow which the focused strategies cannot express. A custom translator
 must still honor every applicable strategy supplied by its Dialect.
 
+For a JDBC driver whose command language is fundamentally different from SQL,
+the factory may instead return a direct `SqlAstTranslator` implementation. Use
+`AbstractSqlAstWalker` as the structural traversal base and own the command
+representation explicitly. This is appropriate, for example, for a document
+database exposed through a JDBC driver; the generated command text need only be
+understood by that driver.
+
+[source,java,indent=0]
+----
+include::{provider-fixture-main-dir}/ExampleDirectSqlAstTranslator.java[tags=direct-sql-ast-translator]
+----
+
+Direct translators should create their executable query descriptions with
+link:{doc-javadoc-url}org/hibernate/sql/exec/spi/JdbcOperations.html[`JdbcOperations`].
+Its typed `select()` and `queryMutation()` builders return only SPI interfaces
+and hide Hibernate's operation implementations. Supply parameter binders in
+command-placeholder order, and identify affected relational tables or their
+backend-equivalent query spaces so cache invalidation remains correct.
+
+[NOTE]
+====
+`SqlAstTranslationRequest.ModelMutation` is deliberately not accepted by
+either `JdbcOperations` builder. It represents mapping-model work originating
+from flush, not a query-language mutation. After translating its
+`TableMutation`, call `TableMutation#createMutationOperation(command,
+parameterBinders)` so the mapping model retains ownership of the concrete
+operation, expectation, callable state, and table metadata.
+====
+
 Translator subclasses may call
 `getVersionSeedMapping(Expression)` to recognize Hibernate's generated version
 seed and obtain its public mapping, or

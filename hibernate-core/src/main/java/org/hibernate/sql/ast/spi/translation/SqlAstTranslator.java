@@ -21,17 +21,32 @@ import org.hibernate.sql.ast.spi.query.select.QueryPart;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 
+import static org.hibernate.SPI.Role.IMPLEMENT;
+import static org.hibernate.SPI.Role.SUPPLY;
+import static org.hibernate.SPI.Role.USE;
+
 /// Translates one [#getSqlAst SQL AST] and produces a [JdbcOperation].
 ///
 /// Translators are created by a
 /// [org.hibernate.dialect.sql.ast.spi.SqlAstTranslatorFactory] for a single
-/// translation and are not reusable. Dialect providers should extend
-/// [org.hibernate.dialect.sql.ast.spi.AbstractSqlAstTranslator], or a supported
-/// family subclass, instead of implementing this interface directly. That base
-/// owns mutable rendering state and exposes the supported customization hooks.
+/// translation and are not reusable. Extend
+/// [org.hibernate.dialect.sql.ast.spi.AbstractSqlAstTranslator] for custom SQL
+/// rendering. Implement this contract directly, normally on top of
+/// [org.hibernate.sql.ast.spi.AbstractSqlAstWalker], when the JDBC driver uses
+/// a fundamentally different command language.
+///
+/// Direct implementations should create query operations with
+/// [org.hibernate.sql.exec.spi.JdbcOperations]. A
+/// [org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest.ModelMutation]
+/// is not a query operation; create its result through
+/// [org.hibernate.sql.ast.spi.model.TableMutation#createMutationOperation(String, List)].
 ///
 /// @since 8.0
 /// @author Steve Ebersole
+/// @see org.hibernate.dialect.sql.ast.spi.SqlAstTranslatorFactory#buildTranslator
+/// @see org.hibernate.dialect.sql.ast.spi.StandardSqlAstTranslatorFactory#createTranslator
+@Incubating
+@SPI({ USE, IMPLEMENT, SUPPLY })
 public interface SqlAstTranslator<T extends JdbcOperation> extends SqlAstWalker {
 	/// Perform this translator's one translation.
 	///
@@ -39,6 +54,7 @@ public interface SqlAstTranslator<T extends JdbcOperation> extends SqlAstWalker 
 	/// and JDBC binding
 	/// @param queryOptions execution options which affect translation
 	/// @return the JDBC operation produced from this translator's SQL AST
+	@SPI({ IMPLEMENT, SUPPLY })
 	T translate(JdbcParameterBindings jdbcParameterBindings, QueryOptions queryOptions);
 
 	/// The SQL AST assigned to this translator.

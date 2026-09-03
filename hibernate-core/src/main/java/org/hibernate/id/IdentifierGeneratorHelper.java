@@ -16,8 +16,11 @@ import org.hibernate.Internal;
 import org.hibernate.Session;
 import org.hibernate.StatelessSession;
 import org.hibernate.TransientObjectException;
+import org.hibernate.boot.model.relational.QualifiedName;
+import org.hibernate.boot.model.relational.QualifiedNameParser;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.enhanced.ImplicitDatabaseObjectNamingStrategy;
 import org.hibernate.id.enhanced.StandardNamingStrategy;
@@ -175,6 +178,16 @@ public final class IdentifierGeneratorHelper {
 		);
 		return serviceRegistry.requireService( StrategySelector.class )
 				.resolveStrategy( ImplicitDatabaseObjectNamingStrategy.class, namingStrategySetting );
+	}
+
+	public static QualifiedName normalizeQualifiedName(
+			QualifiedName qualifiedName,
+			IdentifierHelper identifierHelper) {
+		return new QualifiedNameParser.NameParts(
+				identifierHelper.normalizeQuoting( qualifiedName.getCatalogName() ),
+				identifierHelper.normalizeQuoting( qualifiedName.getSchemaName() ),
+				identifierHelper.normalizeQuoting( qualifiedName.getObjectName() )
+		);
 	}
 
 	/**

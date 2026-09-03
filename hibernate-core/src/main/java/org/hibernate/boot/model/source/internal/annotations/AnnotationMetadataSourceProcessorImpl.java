@@ -18,7 +18,6 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.model.process.spi.ManagedResources;
 import org.hibernate.boot.model.source.spi.MetadataSourceProcessor;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.boot.spi.JpaOrmXmlPersistenceUnitDefaultAware;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.mapping.FetchProfile;
 import org.hibernate.mapping.MetadataSource;
@@ -112,10 +111,6 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 
 	@Override
 	public void prepare() {
-		// use any persistence-unit-defaults defined in orm.xml
-		( (JpaOrmXmlPersistenceUnitDefaultAware) rootMetadataBuildingContext.getBuildingOptions() )
-				.apply( domainModelSource.getPersistenceUnitMetadata() );
-
 		final var defaults = rootMetadataBuildingContext.getBuildingOptions().getMappingDefaults();
 		rootMetadataBuildingContext.getMetadataCollector().getDatabase()
 				.adjustDefaultNamespace( defaults.getImplicitCatalogName(), defaults.getImplicitSchemaName() );

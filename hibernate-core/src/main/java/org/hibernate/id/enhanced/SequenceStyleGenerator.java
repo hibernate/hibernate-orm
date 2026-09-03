@@ -36,6 +36,7 @@ import jakarta.persistence.SequenceGenerator;
 import static java.util.Collections.singleton;
 import static org.hibernate.cfg.MappingSettings.SEQUENCE_INCREMENT_SIZE_MISMATCH_STRATEGY;
 import static org.hibernate.id.IdentifierGeneratorHelper.getNamingStrategy;
+import static org.hibernate.id.IdentifierGeneratorHelper.normalizeQualifiedName;
 import static org.hibernate.id.enhanced.OptimizerFactory.determineImplicitOptimizerName;
 import static org.hibernate.id.enhanced.SequenceGeneratorLogger.SEQUENCE_GENERATOR_LOGGER;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
@@ -191,13 +192,16 @@ public class SequenceStyleGenerator
 	@Override
 	public void configure(GeneratorCreationContext creationContext, Properties parameters) throws MappingException {
 		final var serviceRegistry = creationContext.getServiceRegistry();
-		final var jdbcEnvironment = serviceRegistry.requireService( JdbcEnvironment.class );
+		final var jdbcEnvironment = creationContext.getDatabase().getJdbcEnvironment();
 		final var dialect = jdbcEnvironment.getDialect();
 
 		identifierType = creationContext.getType();
 		table = creationContext.getValue().getTable();
 
-		final var sequenceName = determineSequenceName( parameters, jdbcEnvironment, serviceRegistry );
+		final var sequenceName = normalizeQualifiedName(
+				determineSequenceName( parameters, jdbcEnvironment, serviceRegistry ),
+				jdbcEnvironment.getIdentifierHelper()
+		);
 		final int initialValue = determineInitialValue( parameters );
 		int incrementSize = determineIncrementSize( parameters );
 		final var optimizationStrategy = determineOptimizationStrategy( parameters, incrementSize );
@@ -383,7 +387,6 @@ public class SequenceStyleGenerator
 					.determineSequenceName( catalog, schema, params, serviceRegistry );
 		}
 	}
-
 
 	/**
 	 * Determine the name of the column used to store the generator value in

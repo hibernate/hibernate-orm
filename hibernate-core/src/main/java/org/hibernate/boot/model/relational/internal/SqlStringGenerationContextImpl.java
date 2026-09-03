@@ -75,14 +75,20 @@ public class SqlStringGenerationContextImpl
 			String defaultCatalog,
 			String defaultSchema,
 			boolean forMigration) {
+		final var databaseJdbcEnvironment = database.getJdbcEnvironment();
 		final var implicitNamespaceName = database.getPhysicalImplicitNamespaceName();
-		final var identifierHelper = jdbcEnvironment.getIdentifierHelper();
-		final var nameQualifierSupport = jdbcEnvironment.getNameQualifierSupport();
+		final var identifierHelper = databaseJdbcEnvironment.getIdentifierHelper();
+		final var nameQualifierSupport = databaseJdbcEnvironment.getNameQualifierSupport();
 		final Identifier actualDefaultCatalog =
 				actualDefaultCatalog( defaultCatalog, nameQualifierSupport, identifierHelper, implicitNamespaceName );
 		final Identifier actualDefaultSchema =
 				actualDefaultSchema( defaultSchema, nameQualifierSupport, identifierHelper, implicitNamespaceName );
-		return new SqlStringGenerationContextImpl( jdbcEnvironment, actualDefaultCatalog, actualDefaultSchema, forMigration );
+		return new SqlStringGenerationContextImpl(
+				databaseJdbcEnvironment,
+				actualDefaultCatalog,
+				actualDefaultSchema,
+				forMigration
+		);
 	}
 
 	private static Identifier actualDefaultSchema(String defaultSchema, NameQualifierSupport nameQualifierSupport, IdentifierHelper identifierHelper, Namespace.Name implicitNamespaceName) {

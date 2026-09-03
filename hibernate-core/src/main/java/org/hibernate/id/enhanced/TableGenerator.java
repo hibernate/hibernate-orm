@@ -49,10 +49,11 @@ import static org.hibernate.cfg.MappingSettings.TABLE_GENERATOR_STORE_LAST_USED;
 import static org.hibernate.engine.config.spi.StandardConverters.BOOLEAN;
 import static org.hibernate.id.IdentifierGeneratorHelper.bindLong;
 import static org.hibernate.id.IdentifierGeneratorHelper.extractLong;
+import static org.hibernate.id.IdentifierGeneratorHelper.getNamingStrategy;
+import static org.hibernate.id.IdentifierGeneratorHelper.normalizeQualifiedName;
 import static org.hibernate.id.enhanced.ResyncHelper.getCurrentTableValue;
 import static org.hibernate.id.enhanced.ResyncHelper.getMaxPrimaryKey;
 import static org.hibernate.id.enhanced.TableGeneratorLogger.TABLE_GENERATOR_LOGGER;
-import static org.hibernate.id.IdentifierGeneratorHelper.getNamingStrategy;
 import static org.hibernate.id.enhanced.OptimizerFactory.determineImplicitOptimizerName;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.isNotBlank;
@@ -339,9 +340,12 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 
 		table = creationContext.getValue().getTable();
 
-		final var jdbcEnvironment = serviceRegistry.requireService( JdbcEnvironment.class );
+		final var jdbcEnvironment = creationContext.getDatabase().getJdbcEnvironment();
 
-		qualifiedTableName = determineGeneratorTableName( parameters, jdbcEnvironment, serviceRegistry );
+		qualifiedTableName = normalizeQualifiedName(
+				determineGeneratorTableName( parameters, jdbcEnvironment, serviceRegistry ),
+				jdbcEnvironment.getIdentifierHelper()
+		);
 		segmentColumnName = determineSegmentColumnName( parameters, jdbcEnvironment );
 		valueColumnName = determineValueColumnName( parameters, jdbcEnvironment );
 

@@ -957,6 +957,19 @@ and hide Hibernate's operation implementations. Supply parameter binders in
 command-placeholder order, and identify affected relational tables or their
 backend-equivalent query spaces so cache invalidation remains correct.
 
+When a translated command renders query-options-backed pagination placeholders,
+create them with
+link:{doc-javadoc-url}org/hibernate/sql/ast/spi/query/expression/JdbcParameterFactory.html[`JdbcParameterFactory`].
+Its query-limit and query-offset factories produce parameters whose binders read
+the original `QueryOptions` instead of ordinary `JdbcParameterBindings`. Add each
+binder in command-placeholder order and pass the same parameter instance to the
+corresponding `JdbcOperations.SelectBuilder` pagination method. The overloads
+accepting `TypeConfiguration` resolve Hibernate's persistence-unit-scoped
+`Integer` basic type; use the `BasicType<Integer>` overload only when that type
+has already been resolved from the current persistence unit. For other
+execution-context-backed values, `custom()` creates a parameter expression from
+a JDBC mapping and provider-owned binder without exposing Hibernate internals.
+
 [NOTE]
 ====
 `SqlAstTranslationRequest.ModelMutation` is deliberately not accepted by

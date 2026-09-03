@@ -846,7 +846,7 @@ public class LoaderSelectBuilder {
 			LoaderSqlAstCreationState creationState,
 			ImmutableFetchList.Builder fetches) {
 		return (fetchable, isKeyFetchable, isABag) -> {
-			if ( !fetchable.isSelectable() || isFetchableAuditExcluded( fetchable, loadQueryInfluencers ) ) {
+			if ( !fetchable.isSelectable() || isFetchableAuditExcluded( fetchable, fetchParent, loadQueryInfluencers ) ) {
 				return;
 			}
 

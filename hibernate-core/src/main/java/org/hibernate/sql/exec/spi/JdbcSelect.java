@@ -4,20 +4,28 @@
  */
 package org.hibernate.sql.exec.spi;
 
+import java.sql.Connection;
+
 import jakarta.annotation.Nullable;
 import org.hibernate.Incubating;
+import org.hibernate.SPI;
 import org.hibernate.sql.ast.spi.query.expression.JdbcParameter;
 import org.hibernate.sql.exec.internal.lock.LoadedValuesCollectorFactory;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
 
-import java.sql.Connection;
+import static org.hibernate.SPI.Role.SUPPLY;
+import static org.hibernate.SPI.Role.USE;
 
-/**
- * Primary operation which is a {@code SELECT} performed via JDBC.
- *
- * @author Steve Ebersole
- */
+/// Primary selection operation performed through JDBC.
+///
+/// Create this operation with [JdbcOperations#select] when implementing a
+/// custom SQL AST translator. Do not implement this interface directly.
+///
+/// @since 8.0
+/// @author Steve Ebersole
+/// @see org.hibernate.sql.ast.spi.translation.SqlAstTranslator#translate
 @Incubating
+@SPI({ USE, SUPPLY })
 public interface JdbcSelect extends PrimaryOperation, CacheableJdbcOperation {
 	JdbcValuesMappingProducer getJdbcValuesMappingProducer();
 

@@ -90,13 +90,27 @@ import org.hibernate.sql.ast.spi.model.TableInsertStandard;
 import org.hibernate.sql.ast.spi.model.TableUpdateCustomSql;
 import org.hibernate.sql.ast.spi.model.TableUpdateStandard;
 
-/**
- * A simple walker that checks for aggregate functions.
- *
- * @author Christian Beikov
- */
+/// Base for provider-owned SQL AST traversal.
+///
+/// Query callbacks perform structural traversal by default. Override the nodes
+/// which contribute to the provider's command representation, delegating to the
+/// superclass when traversal of their children is still required.
+///
+/// Mapping-model mutation callbacks are not uniformly traversable: the base
+/// supports standard inserts and rejects custom SQL, update, optional-update,
+/// and delete forms. A direct
+/// [org.hibernate.sql.ast.spi.translation.SqlAstTranslator] must override every
+/// such form it accepts.
+///
+/// @since 8.0
+/// @author Steve Ebersole
+/// @author Christian Beikov
 @SPI({ SPI.Role.USE, SPI.Role.IMPLEMENT })
 public class AbstractSqlAstWalker implements SqlAstWalker {
+	/// Create a walker with no traversal state.
+	@SPI(SPI.Role.IMPLEMENT)
+	public AbstractSqlAstWalker() {
+	}
 
 	@Override
 	public void visitAny(Any any) {
@@ -423,7 +437,7 @@ public class AbstractSqlAstWalker implements SqlAstWalker {
 
 	@Override
 	public void visitSqlSelectionExpression(SqlSelectionExpression expression) {
-		expression.accept( this );
+		expression.getSelection().getExpression().accept( this );
 	}
 
 	@Override

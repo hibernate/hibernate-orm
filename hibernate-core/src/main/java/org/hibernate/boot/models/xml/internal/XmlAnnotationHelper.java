@@ -20,6 +20,7 @@ import jakarta.persistence.UniqueConstraint;
 import jakarta.annotation.Nullable;
 import org.hibernate.AnnotationException;
 import org.hibernate.annotations.NotFoundAction;
+import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.annotations.OptimisticLockType;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.SecondaryRow;
@@ -114,6 +115,7 @@ import org.hibernate.boot.models.annotations.internal.JdbcTypeAnnotation;
 import org.hibernate.boot.models.annotations.internal.JdbcTypeCodeAnnotation;
 import org.hibernate.boot.models.annotations.internal.NaturalIdCacheAnnotation;
 import org.hibernate.boot.models.annotations.internal.NotFoundAnnotation;
+import org.hibernate.boot.models.annotations.internal.OnDeleteAnnotation;
 import org.hibernate.boot.models.annotations.internal.OptimisticLockingAnnotation;
 import org.hibernate.boot.models.annotations.internal.ParameterAnnotation;
 import org.hibernate.boot.models.annotations.internal.PrimaryKeyJoinColumnJpaAnnotation;
@@ -186,6 +188,7 @@ import static java.lang.Boolean.TRUE;
 import static java.util.Collections.emptyList;
 import static org.hibernate.boot.models.HibernateAnnotations.FILTER;
 import static org.hibernate.boot.models.HibernateAnnotations.FILTER_JOIN_TABLE;
+import static org.hibernate.boot.models.HibernateAnnotations.ON_DELETE;
 import static org.hibernate.boot.models.HibernateAnnotations.PARAMETER;
 import static org.hibernate.boot.models.HibernateAnnotations.SECONDARY_ROW;
 import static org.hibernate.boot.models.HibernateAnnotations.SECONDARY_ROWS;
@@ -1939,6 +1942,20 @@ public class XmlAnnotationHelper {
 			columns[i] = column;
 		}
 		columnsAnn.value( columns );
+	}
+
+	public static void applyOnDelete(
+			JaxbEntityImpl jaxbEntity,
+			MutableClassDetails classDetails,
+			XmlDocumentContext xmlDocumentContext) {
+		final OnDeleteAction onDeleteAction = jaxbEntity.getOnDelete();
+		if ( onDeleteAction != null ) {
+			final OnDeleteAnnotation onDelete = (OnDeleteAnnotation) classDetails.applyAnnotationUsage(
+					ON_DELETE,
+					xmlDocumentContext.getModelBuildingContext()
+			);
+			onDelete.action( onDeleteAction );
+		}
 	}
 
 	public static void applyCollectionClassification(

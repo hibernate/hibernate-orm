@@ -17,6 +17,7 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.ClassLoaderAccess;
+import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.jpa.internal.MutableJpaComplianceImpl;
@@ -100,7 +101,9 @@ public class BootstrapContextImpl implements BootstrapContext {
 
 		representationStrategySelector = ManagedTypeRepresentationResolverStandard.INSTANCE;
 
-		typeConfiguration = new TypeConfiguration();
+		typeConfiguration = new TypeConfiguration(
+				MetadataBuildingContext.isPreferJavaTimeJdbcTypesEnabled( configService )
+		);
 		beanInstanceProducer = new TypeBeanInstanceProducer( configService, serviceRegistry );
 		sqmFunctionRegistry = new SqmFunctionRegistry();
 

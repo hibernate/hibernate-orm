@@ -68,20 +68,22 @@ public class GlobalJavaTimeJdbcTypeTests {
 	void testMappings(DomainModelScope scope) {
 		final PersistentClass entityBinding = scope.getEntityBinding( EntityWithJavaTimeValues.class );
 
-		checkAttribute( entityBinding, "theLocalDate", LocalDateJdbcType.class );
-		checkAttribute( entityBinding, "theLocalDateTime", LocalDateTimeJdbcType.class );
-		checkAttribute( entityBinding, "theLocalTime", LocalTimeJdbcType.class );
+		checkAttribute( entityBinding, "theLocalDate", LocalDateJdbcType.class, "LocalDate" );
+		checkAttribute( entityBinding, "theLocalDateTime", LocalDateTimeJdbcType.class, "LocalDateTime" );
+		checkAttribute( entityBinding, "theLocalTime", LocalTimeJdbcType.class, "LocalTime" );
 	}
 
 	private void checkAttribute(
 			PersistentClass entityBinding,
 			String attributeName,
-			Class<? extends JavaTimeJdbcType> expectedJdbcTypeDescriptorType) {
+			Class<? extends JavaTimeJdbcType> expectedJdbcTypeDescriptorType,
+			String expectedTypeName) {
 		final Property property = entityBinding.getProperty( attributeName );
 		final BasicValue value = (BasicValue) property.getValue();
 		final BasicValue.Resolution<?> resolution = value.resolve();
 		final JdbcType jdbcType = resolution.getJdbcType();
 		assertThat( jdbcType ).isInstanceOf( expectedJdbcTypeDescriptorType );
+		assertThat( resolution.getLegacyResolvedBasicType().getName() ).isEqualTo( expectedTypeName );
 	}
 
 	@Test

@@ -113,7 +113,7 @@ public interface HibernateAnnotations {
 	OrmAnnotationDescriptor<Bag, BagAnnotation> BAG = new OrmAnnotationDescriptor<>(
 			Bag.class,
 			BagAnnotation.class,
-			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.ANNOTATION ),
+			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.CLASS, Kind.PACKAGE, Kind.ANNOTATION ),
 			false
 	);
 	OrmAnnotationDescriptor<BatchSize, BatchSizeAnnotation> BATCH_SIZE = new OrmAnnotationDescriptor<>(

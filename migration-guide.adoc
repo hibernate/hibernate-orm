@@ -220,6 +220,10 @@ Code still using `@GenericGenerator` must adapt to its reworked definition.
 
 The venerable `@OptimisticLock` annotation was deprecated in favor of the new JPA-standard `@ExcludedFromVersioning` annotation.
 
+=== Fixed delimited-identifiers in XML mappings
+
+Previous versions of Hibernate did not respect the `<delimited-identifiers>` element of `orm.xml`.
+This is now fixed.
 
 [[hibernate-processor]]
 == Changes to Hibernate Processor

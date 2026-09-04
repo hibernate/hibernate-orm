@@ -10,6 +10,7 @@ import org.hibernate.orm.test.softdelete.MappingVerifier;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.type.SqlTypes;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -66,6 +67,13 @@ public class MappingTests {
 				"reversed_yes_no_entity",
 				'N'
 		);
+	}
+
+	Object booleanTrueValue(SessionFactoryScope scope) {
+		return switch ( scope.getSessionFactory().getJdbcServices().getDialect().getPreferredSqlTypeCodeForBoolean() ) {
+			case SqlTypes.BIT, SqlTypes.BOOLEAN -> Boolean.TRUE;
+			default -> 1;
+		};
 	}
 
 }

@@ -35,7 +35,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 @RequiresDialect(MySQLDialect.class)
 @RequiresDialect(SQLServerDialect.class)
 @RequiresDialect(PostgreSQLDialect.class)
-@RequiresDialect(value = DB2Dialect.class, majorVersion = 11)
+@RequiresDialect(value = DB2Dialect.class, majorVersion = 11, matchSubTypes = false, comment = "DB2 z/OS might assume EBCDIC instead of UTF-8 as encoding for string literals, which will make this test fail")
 @RequiresDialect(OracleDialect.class)
 public class CustomSqlRestrictionOverridesTest {
 	@Test

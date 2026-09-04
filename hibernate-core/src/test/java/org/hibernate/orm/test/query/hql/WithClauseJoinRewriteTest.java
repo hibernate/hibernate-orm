@@ -4,6 +4,8 @@
  */
 package org.hibernate.orm.test.query.hql;
 
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 
@@ -79,6 +81,7 @@ public class WithClauseJoinRewriteTest {
 		}
 
 		@ManyToMany(fetch = FetchType.LAZY, cascade = {})
+		@JoinTable(joinColumns = @JoinColumn(name = "config_id"))
 		public Set<ConfigurationObject> getUses () {
 			return uses;
 		}

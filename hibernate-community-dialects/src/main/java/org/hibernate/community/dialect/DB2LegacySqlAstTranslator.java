@@ -231,6 +231,10 @@ public class DB2LegacySqlAstTranslator<T extends JdbcOperation> extends Abstract
 		return getDB2Version().isSameOrAfter( 11, 1 );
 	}
 
+	protected boolean supportsOffsetClause(QueryPart queryPart) {
+		return supportsOffsetClause();
+	}
+
 	@Override
 	public void visitQueryPartTableReference(QueryPartTableReference tableReference) {
 		final boolean oldLateral = inLateral;
@@ -293,7 +297,7 @@ public class DB2LegacySqlAstTranslator<T extends JdbcOperation> extends Abstract
 	public void visitQueryGroup(QueryGroup queryGroup) {
 		final boolean emulateFetchClause = shouldEmulateFetchClause( queryGroup );
 		if ( emulateFetchClause ||
-				getQueryPartForRowNumbering() != queryGroup && !supportsOffsetClause() && hasOffset( queryGroup ) ) {
+				getQueryPartForRowNumbering() != queryGroup && !supportsOffsetClause( queryGroup ) && hasOffset( queryGroup ) ) {
 			emulateFetchOffsetWithWindowFunctions( queryGroup, true );
 		}
 		else {
@@ -305,7 +309,7 @@ public class DB2LegacySqlAstTranslator<T extends JdbcOperation> extends Abstract
 	public void visitQuerySpec(QuerySpec querySpec) {
 		final boolean emulateFetchClause = shouldEmulateFetchClause( querySpec );
 		if ( emulateFetchClause ||
-				getQueryPartForRowNumbering() != querySpec && !supportsOffsetClause() && hasOffset( querySpec ) ) {
+				getQueryPartForRowNumbering() != querySpec && !supportsOffsetClause( querySpec ) && hasOffset( querySpec ) ) {
 			emulateFetchOffsetWithWindowFunctions( querySpec, true );
 		}
 		else {
@@ -316,7 +320,7 @@ public class DB2LegacySqlAstTranslator<T extends JdbcOperation> extends Abstract
 	@Override
 	public void visitOffsetFetchClause(QueryPart queryPart) {
 		if ( !isRowNumberingCurrentQueryPart() ) {
-			if ( supportsOffsetClause() || !hasOffset( queryPart ) ) {
+			if ( supportsOffsetClause( queryPart ) || !hasOffset( queryPart ) ) {
 				renderOffsetFetchClause( queryPart, true );
 			}
 			else if ( queryPart.isRoot() && hasLimit() ) {

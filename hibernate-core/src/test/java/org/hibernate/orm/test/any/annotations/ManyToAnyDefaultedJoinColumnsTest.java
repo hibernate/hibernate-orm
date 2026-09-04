@@ -9,6 +9,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.Table;
 import org.hibernate.annotations.AnyDiscriminatorImplicitValues;
@@ -43,6 +44,7 @@ class ManyToAnyDefaultedJoinColumnsTest {
 		@ManyToAny(cascade = CascadeType.PERSIST)
 		@JoinTable(name = "PARENT_CHILD")
 		@AnyKeyJavaClass( String.class )
+		@JoinColumn(name = "PARENT_ID")
 		@Column(name = "CHILD_TYPE")
 		@AnyDiscriminatorImplicitValues
 		Set<Object> children;

@@ -1679,7 +1679,6 @@ public class HQLTest {
 
 	@Test
 	@SkipForDialect(dialectClass = SQLServerDialect.class)
-	@SkipForDialect(dialectClass = DerbyDialect.class, reason = "Comparisons between 'DATE' and 'TIMESTAMP' are not supported")
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsTimestampWithDateComparison.class)
 	public void test_hql_current_date_function_example(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( entityManager -> {
@@ -1957,7 +1956,6 @@ public class HQLTest {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = DerbyDialect.class, reason = "Comparisons between 'DATE' and 'TIMESTAMP' are not supported")
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsTimestampWithDateComparison.class)
 	public void test_hql_collection_expressions_example_8(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( entityManager -> {

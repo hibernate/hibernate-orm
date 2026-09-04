@@ -5,6 +5,7 @@
 package org.hibernate.query.sqm.mutation.internal;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
@@ -350,10 +351,17 @@ public class SqmMutationStrategyHelper {
 				targetAttributeName = toOne.getReferencedPropertyName();
 				targetValue = targetEntity.getReferencedProperty( toOne.getReferencedPropertyName() ).getValue();
 			}
+			// Attribute paths come from the target, but the columns must be this association's foreign key
+			final Iterator<Selectable> keySelectables = toOne.getVirtualSelectables().iterator();
 			forEachSelectableMapping(
 					prefix + "_" + targetAttributeName,
 					targetValue,
-					consumer
+					(attributePath, targetColumn) -> {
+						// Selectable could be either a Column or a Formula, but we only want to pass Columns to the consumer
+						if ( keySelectables.next() instanceof Column keyColumn ) {
+							consumer.accept( attributePath, keyColumn );
+						}
+					}
 			);
 		}
 		else if ( value instanceof Any any ) {

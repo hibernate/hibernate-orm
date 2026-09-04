@@ -28,6 +28,7 @@ import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.SelectablePath;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.spi.NavigablePath;
+import org.hibernate.spi.TreatedNavigablePath;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -403,6 +404,29 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 
 	public static NavigablePath concreteEntityPath(NavigablePath associationPath, EntityMappingType entityMappingType) {
 		return associationPath.treatAs( entityMappingType.getEntityName() );
+	}
+
+	/**
+	 * Resolve the {@link TableGroup} exposing the table which holds the discriminator and key
+	 * columns of the any-valued mapping reached through the given path, that is, the table group
+	 * of the entity declaring it.
+	 * <p>
+	 * When the association is reached through an implicit {@code treat()} - as happens when join
+	 * fetching an {@code @Any} whose target entity declares another {@code @Any} - the declaring
+	 * table is only exposed by the table group registered under the treated path, while
+	 * {@link NavigablePath#getParent()} deliberately skips over the {@code treat()}.
+	 *
+	 * @param anyPath the path of the any-valued mapping itself
+	 */
+	static TableGroup resolveDeclaringTableGroup(NavigablePath anyPath, FromClauseAccess fromClauseAccess) {
+		final var realParent = anyPath.getRealParent();
+		if ( realParent instanceof TreatedNavigablePath ) {
+			final var treatedTableGroup = fromClauseAccess.findTableGroup( realParent );
+			if ( treatedTableGroup != null ) {
+				return treatedTableGroup;
+			}
+		}
+		return fromClauseAccess.getTableGroup( anyPath.getParent() );
 	}
 
 	TableGroup createRootTableGroupJoin(

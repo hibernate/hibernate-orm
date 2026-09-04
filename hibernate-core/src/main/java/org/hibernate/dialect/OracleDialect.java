@@ -263,6 +263,12 @@ public class OracleDialect extends Dialect {
 		this.driverMajorVersion = serverConfiguration.getDriverMajorVersion();
 	}
 
+	@Override
+	protected void registerDefaultKeywords() {
+		super.registerDefaultKeywords();
+		registerKeyword( "sysdate" );
+	}
+
 	public boolean isAutonomous() {
 		return autonomous;
 	}

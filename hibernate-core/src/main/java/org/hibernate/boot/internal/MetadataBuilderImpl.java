@@ -525,6 +525,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 			implicitListClassification = configService.getSetting(
 					DEFAULT_LIST_SEMANTICS,
 					value -> {
+						DEPRECATION_LOGGER.deprecatedSetting( DEFAULT_LIST_SEMANTICS );
 						final var classification = CollectionClassification.interpretSetting( value );
 						if ( classification != CollectionClassification.LIST
 							&& classification != CollectionClassification.BAG ) {

@@ -41,7 +41,8 @@ import org.hibernate.metamodel.mapping.internal.DiscriminatorTypeImpl;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.persister.entity.DiscriminatorHelper;
 import org.hibernate.models.spi.ClassDetails;
-import org.hibernate.property.access.spi.Setter;
+import org.hibernate.property.access.spi.PropertyAccessorService;
+import org.hibernate.property.access.spi.PropertyValueAccessor;
 import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.CompositeType;
@@ -715,7 +716,7 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 	@Override
 	public Generator createGenerator(Dialect dialect, RootClass rootClass, Property property, GeneratorSettings defaults) {
 		return getCustomIdGeneratorCreator().isAssigned()
-				? GeneratorBinder.buildIdentifierGenerator( this, dialect, rootClass, defaults )
+				? GeneratorBinder.buildIdentifierGenerator( getServiceRegistry().requireService( PropertyAccessorService.class ), this, dialect, rootClass, defaults )
 				: super.createGenerator( dialect, rootClass, property, defaults );
 	}
 
@@ -766,17 +767,17 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 
 	public static class ValueGenerationPlan implements GenerationPlan {
 		private final BeforeExecutionGenerator generator;
-		private final Setter injector;
+		private final PropertyValueAccessor injector;
 		private final int propertyIndex;
 
-		public ValueGenerationPlan(BeforeExecutionGenerator generator, Setter injector, int propertyIndex) {
+		public ValueGenerationPlan(BeforeExecutionGenerator generator, PropertyValueAccessor injector, int propertyIndex) {
 			this.generator = generator;
 			this.injector = injector;
 			this.propertyIndex = propertyIndex;
 		}
 
 		@Override
-		public Setter getInjector() {
+		public PropertyValueAccessor getInjector() {
 			return injector;
 		}
 

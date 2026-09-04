@@ -5,7 +5,6 @@
 package org.hibernate.metamodel.spi;
 
 import org.hibernate.Incubating;
-import org.hibernate.bytecode.spi.ReflectionOptimizer;
 
 /**
  * Describes the representation of a particular embeddable type.
@@ -26,11 +25,4 @@ public interface EmbeddableRepresentationStrategy extends ManagedTypeRepresentat
 	default EmbeddableInstantiator getInstantiatorForClass(String className) {
 		return getInstantiator();
 	}
-
-	/**
-	 * The reflection optimizer to use for this embeddable.
-	 *
-	 * https://hibernate.atlassian.net/browse/HHH-14952
-	 */
-	ReflectionOptimizer getReflectionOptimizer();
 }

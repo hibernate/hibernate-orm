@@ -4,8 +4,10 @@
  */
 package org.hibernate.orm.test.property;
 
+import org.hibernate.accessor.HibernateAccessorFactory;
 import org.hibernate.property.access.internal.PropertyAccessStrategyMapImpl;
 import org.hibernate.property.access.spi.PropertyAccess;
+import org.hibernate.property.access.spi.PropertyAccessorService;
 import org.hibernate.property.access.spi.Setter;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.junit.jupiter.api.Test;
@@ -35,7 +37,7 @@ public class PropertyAccessStrategyMapTest {
 	public void testNonMap() {
 		final var accessStrategy = PropertyAccessStrategyMapImpl.INSTANCE;
 		IllegalArgumentException exception = assertThrows( IllegalArgumentException.class, () ->
-				accessStrategy.buildPropertyAccess( Date.class, "time", true )
+				accessStrategy.buildPropertyAccess( TestPropertyAccessorService.INSTANCE, Date.class, "time", true )
 		);
 		assertThat( exception.getMessage() ).isEqualTo(
 				"Expecting class: [java.util.Map], but containerJavaType is of type: [java.util.Date] for propertyName: [time]"
@@ -48,7 +50,8 @@ public class PropertyAccessStrategyMapTest {
 		final String value = "testValue";
 
 		final var accessStrategy = PropertyAccessStrategyMapImpl.INSTANCE;
-		final PropertyAccess access = accessStrategy.buildPropertyAccess( clazz, key, true );
+		final PropertyAccess access = accessStrategy.buildPropertyAccess( TestPropertyAccessorService.INSTANCE, clazz,
+				key, true );
 
 		final HashMap<String, String> map = new HashMap<>();
 
@@ -57,5 +60,14 @@ public class PropertyAccessStrategyMapTest {
 		setter.set( map, value );
 		assertThat( map.get( key ) ).isEqualTo( value );
 		assertThat( access.getGetter().get( map ) ).isEqualTo( value );
+	}
+
+	private static class TestPropertyAccessorService implements PropertyAccessorService {
+		static final PropertyAccessorService INSTANCE = new TestPropertyAccessorService();
+
+		@Override
+		public HibernateAccessorFactory hibernateAccessorFactory() {
+			return HibernateAccessorFactory.reflection();
+		}
 	}
 }

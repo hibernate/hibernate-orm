@@ -6,7 +6,6 @@ package org.hibernate.bytecode.enhance.internal.bytebuddy;
 
 import jakarta.persistence.Transient;
 import net.bytebuddy.asm.Advice;
-import net.bytebuddy.description.NamedElement;
 import net.bytebuddy.description.annotation.AnnotationDescription;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.modifier.FieldPersistence;
@@ -26,14 +25,14 @@ import net.bytebuddy.implementation.bytecode.ByteCodeAppender;
 import net.bytebuddy.jar.asm.Opcodes;
 import net.bytebuddy.jar.asm.Type;
 import net.bytebuddy.matcher.ElementMatcher;
-import net.bytebuddy.matcher.ElementMatchers;
 import org.hibernate.bytecode.enhance.internal.tracker.CompositeOwnerTracker;
 import org.hibernate.bytecode.enhance.internal.tracker.DirtyTracker;
 import org.hibernate.bytecode.enhance.spi.CollectionTracker;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.bytecode.enhance.spi.interceptor.BytecodeLazyAttributeInterceptor;
 import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
-import org.hibernate.bytecode.spi.ReflectionOptimizer;
+import org.hibernate.accessor.HibernateAccessorValueReader;
+import org.hibernate.accessor.HibernateAccessorValueWriter;
 import org.hibernate.engine.spi.CompositeOwner;
 import org.hibernate.engine.spi.CompositeTracker;
 import org.hibernate.engine.spi.EntityEntry;
@@ -98,16 +97,13 @@ public final class EnhancerImplConstants {
 	final TypeDefinition Type_Array_Object = TypeDescription.ForLoadedType.of( Object[].class );
 	final TypeDefinition TypeLazyAttributeLoadingInterceptor = TypeDescription.ForLoadedType.of(
 			LazyAttributeLoadingInterceptor.class );
+	final TypeDefinition TypeBytecodeLazyAttributeInterceptor = TypeDescription.ForLoadedType.of(
+			BytecodeLazyAttributeInterceptor.class );
 	final TypeDefinition TypeCompositeOwnerTracker = TypeDescription.ForLoadedType.of( CompositeOwnerTracker.class );
-	public final TypeDefinition TypeInstantiationOptimizer = TypeDescription.ForLoadedType.of(
-			ReflectionOptimizer.InstantiationOptimizer.class );
 
 	//Careful with the following types being used: the ByteBuddy receiver often supports overloading, and using
 	//one of the other specific types in the declaration might lead to unexpectedly invoking a different method.
 	final List<TypeDefinition> INTERFACES_for_PersistentAttributeInterceptor = List.of( TypePersistentAttributeInterceptor );
-	public final Collection<? extends TypeDefinition> INTERFACES_for_AccessOptimizer = List.of(
-			TypeDescription.ForLoadedType.of( ReflectionOptimizer.AccessOptimizer.class )
-	);
 	public final Collection<? extends TypeDefinition> INTERFACES_for_SelfDirtinessTracker = List.of(
 			TypeDescription.ForLoadedType.of( SelfDirtinessTracker.class )
 	);
@@ -136,10 +132,6 @@ public final class EnhancerImplConstants {
 
 	//Frequently used ElementMatchers:
 	final ElementMatcher.Junction<MethodDescription> DEFAULT_FINALIZER = isDefaultFinalizer();
-	public final ElementMatcher.Junction<NamedElement> newInstanceMethodName = ElementMatchers.named( "newInstance" );
-	public final ElementMatcher.Junction<NamedElement> getPropertyValuesMethodName = ElementMatchers.named(	"getPropertyValues" );
-	public final ElementMatcher.Junction<NamedElement> setPropertyValuesMethodName = ElementMatchers.named(	"setPropertyValues" );
-	public final ElementMatcher.Junction<NamedElement> getPropertyNamesMethodName = ElementMatchers.named( "getPropertyNames" );
 
 	//Frequently used types for field definitions:
 	final TypeDescription.Generic DirtyTrackerTypeDescription = TypeDefinition.Sort.describe( DirtyTracker.class );
@@ -154,6 +146,14 @@ public final class EnhancerImplConstants {
 			LazyAttributeLoadingInterceptor.class );
 	final String internalName_PersistentAttributeInterceptor = Type.getInternalName(
 			PersistentAttributeInterceptor.class );
+	final String internalName_HibernateAccessorValueReader = Type.getInternalName(
+			HibernateAccessorValueReader.class );
+	final String internalName_HibernateAccessorValueWriter = Type.getInternalName(
+			HibernateAccessorValueWriter.class );
+	final String descriptor_HibernateAccessorValueReader = Type.getDescriptor(
+			HibernateAccessorValueReader.class );
+	final String descriptor_HibernateAccessorValueWriter = Type.getDescriptor(
+			HibernateAccessorValueWriter.class );
 
 	//Method Descriptors:
 	final String methodDescriptor_SetOwner = Type.getMethodDescriptor(
@@ -171,6 +171,15 @@ public final class EnhancerImplConstants {
 	final String methodDescriptor_isAttributeLoaded = Type.getMethodDescriptor(
 			Type.getType( boolean.class ),
 			Type.getType( String.class )
+	);
+	final String methodDescriptor_ValueReader_get = Type.getMethodDescriptor(
+			Type.getType( Object.class ),
+			Type.getType( Object.class )
+	);
+	final String methodDescriptor_ValueWriter_set = Type.getMethodDescriptor(
+			Type.getType( void.class ),
+			Type.getType( Object.class ),
+			Type.getType( Object.class )
 	);
 
 	//Others :

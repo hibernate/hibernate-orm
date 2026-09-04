@@ -4,8 +4,8 @@
  */
 package org.hibernate.metamodel.internal;
 
-import org.hibernate.bytecode.spi.ReflectionOptimizer.InstantiationOptimizer;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.accessor.HibernateAccessorInstantiator;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -16,19 +16,19 @@ import org.hibernate.type.descriptor.java.JavaType;
  * @author Steve Ebersole
  */
 public class EntityInstantiatorPojoOptimized extends AbstractEntityInstantiatorPojo {
-	private final InstantiationOptimizer instantiationOptimizer;
+	private final HibernateAccessorInstantiator<?> instantiator;
 
 	public EntityInstantiatorPojoOptimized(
 			EntityPersister persister,
 			PersistentClass persistentClass,
 			JavaType<?> javaType,
-			InstantiationOptimizer instantiationOptimizer) {
+			HibernateAccessorInstantiator<?> instantiator) {
 		super( persister, persistentClass, javaType );
-		this.instantiationOptimizer = instantiationOptimizer;
+		this.instantiator = instantiator;
 	}
 
 	@Override
 	public Object instantiate() {
-		return applyInterception( instantiationOptimizer.newInstance() );
+		return applyInterception( instantiator.create() );
 	}
 }

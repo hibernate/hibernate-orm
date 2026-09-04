@@ -14,6 +14,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.mapping.Property;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBasicImpl;
 import org.hibernate.property.access.spi.PropertyAccess;
+import org.hibernate.property.access.spi.PropertyAccessorService;
 import org.hibernate.service.ServiceRegistry;
 
 import org.hibernate.testing.ServiceRegistryBuilder;
@@ -93,8 +94,8 @@ public class AttributeAccessorTest {
 
 	public static class BasicAttributeAccessor extends PropertyAccessStrategyBasicImpl {
 		@Override
-		public PropertyAccess buildPropertyAccess(Class<?> containerJavaType, String propertyName, boolean setterRequired) {
-			return super.buildPropertyAccess( containerJavaType, propertyName, setterRequired );
+		public PropertyAccess buildPropertyAccess(PropertyAccessorService propertyAccessorService, Class<?> containerJavaType, String propertyName, boolean setterRequired) {
+			return super.buildPropertyAccess( propertyAccessorService, containerJavaType, propertyName, setterRequired );
 		}
 	}
 }

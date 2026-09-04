@@ -27,6 +27,8 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.hibernate.community.dialect.CUBRIDDialect;
 
 @AuditedTest
 @SessionFactory
@@ -47,6 +49,7 @@ class AuditSecondaryTableTest {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = CUBRIDDialect.class, reason = "CUBRID does not support the subquery-in-join SQL emitted for audit queries")
 	void testWriteAndPointInTimeRead(SessionFactoryScope scope) {
 		currentTxId = 0;
 
@@ -135,6 +138,7 @@ class AuditSecondaryTableTest {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = CUBRIDDialect.class, reason = "CUBRID does not support the subquery-in-join SQL emitted for audit queries")
 	void testAssociationOnSecondaryTable(SessionFactoryScope scope) {
 		currentTxId = 200;
 

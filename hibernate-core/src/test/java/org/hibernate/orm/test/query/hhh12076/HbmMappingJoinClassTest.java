@@ -6,6 +6,8 @@ package org.hibernate.orm.test.query.hhh12076;
 
 import java.util.List;
 
+import org.hibernate.community.dialect.CUBRIDDialect;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -67,6 +69,7 @@ public class HbmMappingJoinClassTest {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = CUBRIDDialect.class, reason = "CUBRID has no parenthesized joined table, and this outer join of a nested group cannot be flattened without changing which rows are null-extended")
 	public void testClassExpressionInOnClause(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			List<SettlementTask> results = session.createQuery(

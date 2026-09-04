@@ -7,6 +7,7 @@ package org.hibernate.orm.test.hql;
 import jakarta.persistence.NamedNativeStatement;
 import junit.framework.AssertionFailedError;
 import org.hibernate.QueryException;
+import org.hibernate.community.dialect.CUBRIDDialect;
 import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.AbstractTransactSQLDialect;
 import org.hibernate.dialect.CockroachDialect;
@@ -1052,6 +1053,7 @@ public class BulkManipulationTest {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = CUBRIDDialect.class, reason = "CUBRID treats 'rootclass' as a DBA-only system-class name, so the test's root table cannot be created")
 	public void testDeleteOnJoinedSubclass(SessionFactoryScope factoryScope) {
 		TestData data = new TestData();
 		data.prepare( factoryScope);

@@ -41,4 +41,11 @@ public final class CUBRIDSequenceSupport implements SequenceSupport {
 	public String getDropSequenceString(String sequenceName) {
 		return "drop serial " + sequenceName;
 	}
+
+	@Override
+	public String getRestartSequenceString(String sequenceName, long startWith) {
+		//the default 'alter sequence ... restart with' is a syntax error.
+		//'alter serial ... start with' is the CUBRID-native reset.
+		return "alter serial " + sequenceName + " start with " + startWith;
+	}
 }

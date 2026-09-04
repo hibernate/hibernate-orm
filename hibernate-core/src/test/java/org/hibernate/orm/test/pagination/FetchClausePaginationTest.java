@@ -6,6 +6,7 @@ package org.hibernate.orm.test.pagination;
 
 import java.util.List;
 
+import org.hibernate.community.dialect.CUBRIDDialect;
 import org.hibernate.community.dialect.DerbyDialect;
 
 import org.hibernate.testing.orm.domain.StandardDomainModel;
@@ -66,6 +67,7 @@ public class FetchClausePaginationTest {
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsWithTies.class)
 	@SkipForDialect(dialectClass = DerbyDialect.class, reason = "Derby only supports row_number, but this requires the dense_rank window function")
+	@SkipForDialect(dialectClass = CUBRIDDialect.class, reason = "CUBRID has window functions but no OVER frame clause, which the WITH TIES emulation needs")
 	public void testFetchWithTies(SessionFactoryScope scope) {
 		scope.inSession(
 				session -> {

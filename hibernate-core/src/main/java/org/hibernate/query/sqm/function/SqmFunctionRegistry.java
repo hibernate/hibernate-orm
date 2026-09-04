@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.function;
 
+import java.util.HashSet;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
@@ -576,6 +577,30 @@ public class SqmFunctionRegistry {
 		//		 functionMap directly in performing this operation
 		functionMap.forEach( registryToOverly::register );
 		alternateKeyMap.forEach( registryToOverly::registerAlternateKey );
+	}
+
+	/**
+	 * Retains only the functions whose names are in the provided set,
+	 * removing all other registrations. Alternate keys (aliases) are
+	 * retained if their target function is in the retained set.
+	 * <p>
+	 * This allows frameworks to prune unused dialect-specific function
+	 * registrations after {@link org.hibernate.dialect.Dialect#initializeFunctionRegistry}
+	 * has populated the full registry, reducing startup overhead.
+	 *
+	 * @param functionNames the function names to retain (compared case-insensitively)
+	 */
+	public void retainOnly(Set<String> functionNames) {
+		functionMap.retainAll( functionNames );
+		setReturningFunctionMap.retainAll( functionNames );
+		// Retain alternate keys whose target function survived pruning
+		final var keysToRemove = new HashSet<String>();
+		alternateKeyMap.forEach( (alias, target) -> {
+			if ( !functionMap.containsKey( target ) && !setReturningFunctionMap.containsKey( target ) ) {
+				keysToRemove.add( alias );
+			}
+		} );
+		keysToRemove.forEach( alternateKeyMap::remove );
 	}
 
 	public void close() {

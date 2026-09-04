@@ -18,3 +18,16 @@ IMPORTANT: If migrating from earlier versions, be sure to also check out the lin
 Schema management DDL now uses `CREATE SCHEMA IF NOT EXISTS` and `DROP SCHEMA IF EXISTS` for dialects which support these clauses, avoiding warnings when a schema already exists or has already been dropped.
 
 Supported dialects: PostgreSQL, CockroachDB, H2, HSQLDB, SAP HANA, and SQL Server (DROP only, version 13+).
+
+[[function-registry-pruning]]
+== Function registry pruning
+
+`SqmFunctionRegistry` now exposes a `retainOnly(Set<String>)` method that removes
+all registered functions not in the provided set. This enables frameworks to prune
+unused dialect-specific function registrations after `initializeFunctionRegistry()`
+completes, reducing startup allocation and class loading overhead.
+
+For `PostgreSQLDialect`, approximately 175 functions are registered during startup.
+Applications that use only a subset of these in HQL queries can benefit from pruning
+the unused entries. Alternate keys (aliases) are retained automatically when their
+target function is in the retained set.

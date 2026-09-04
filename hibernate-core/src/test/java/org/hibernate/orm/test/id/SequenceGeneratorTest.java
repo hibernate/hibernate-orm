@@ -20,7 +20,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @DomainModel(
-		xmlMappings = "org/hibernate/orm/test/id/Person.hbm.xml"
+		xmlMappings = "org/hibernate/orm/test/id/Person.mapping.xml"
 )
 @SessionFactory(useCollectingStatementInspector = true)
 public class SequenceGeneratorTest {

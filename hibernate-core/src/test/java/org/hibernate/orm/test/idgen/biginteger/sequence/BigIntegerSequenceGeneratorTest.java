@@ -17,7 +17,7 @@ import org.junit.jupiter.api.Test;
  * @author Steve Ebersole
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
-@DomainModel(xmlMappings = "org/hibernate/orm/test/idgen/biginteger/sequence/Mapping.hbm.xml")
+@DomainModel(xmlMappings = "org/hibernate/orm/test/idgen/biginteger/sequence/Mapping.orm.xml")
 @SessionFactory
 @RequiresDialectFeature( feature = DialectFeatureChecks.SupportsSequences.class )
 @RequiresDialectFeature( feature = DialectFeatureChecks.SupportsNumericPrimaryKey.class )

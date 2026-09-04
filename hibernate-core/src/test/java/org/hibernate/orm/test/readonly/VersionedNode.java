@@ -3,21 +3,44 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.readonly;
+
 import java.util.HashSet;
 import java.util.Set;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import jakarta.persistence.Version;
+
+import org.hibernate.annotations.OptimisticLock;
 
 /**
  * VersionedNode
  *
  * @author Gail Badner
  */
+@Entity
+@Table(name = "V_NODE")
 public class VersionedNode {
+	@Id
+	@Column(name = "ID")
 	private String id;
+	@Column(name = "NAME")
 	private String name;
+	@Version
+	@Column(name = "VERS")
 	private long version;
 
+	@ManyToOne(fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.DETACH, CascadeType.REMOVE})
 	private VersionedNode parent;
-	private Set children = new HashSet();
+	@OneToMany(mappedBy = "parent", cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.DETACH, CascadeType.REMOVE})
+	@OptimisticLock(excluded = false)
+	private Set<VersionedNode> children = new HashSet<>();
 
 	public VersionedNode() {
 	}

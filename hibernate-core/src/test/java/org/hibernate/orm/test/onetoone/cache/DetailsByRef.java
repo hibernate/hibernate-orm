@@ -4,4 +4,28 @@
  */
 package org.hibernate.orm.test.onetoone.cache;
 
-public class DetailsByRef extends Details {}
+public class DetailsByRef extends Details {
+
+	private int id;
+	private Person person;
+
+	@Override
+	public int getId() {
+		return id;
+	}
+
+	@Override
+	public void setId(int id) {
+		this.id = id;
+	}
+
+	@Override
+	public Person getPerson() {
+		return person;
+	}
+
+	@Override
+	public void setPerson(Person person) {
+		this.person = person;
+	}
+}

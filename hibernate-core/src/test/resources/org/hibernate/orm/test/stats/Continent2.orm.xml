@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 version="8.0">
+
+    <entity class="org.hibernate.orm.test.stats.Continent"
+            access="PROPERTY" metadata-complete="true">
+        <table name="tbl_continent"/>
+        <attributes>
+            <id name="id">
+                <generated-value/>
+            </id>
+            <basic name="name"/>
+            <one-to-many name="countries"
+                         target-entity="org.hibernate.orm.test.stats.Country"
+                         classification="SET">
+                <join-column name="country_id"/>
+            </one-to-many>
+        </attributes>
+    </entity>
+
+    <entity class="org.hibernate.orm.test.stats.Country"
+            access="PROPERTY" metadata-complete="true">
+        <table name="tbl_country"/>
+        <attributes>
+            <id name="id">
+                <generated-value/>
+            </id>
+            <basic name="name"/>
+        </attributes>
+    </entity>
+
+</entity-mappings>

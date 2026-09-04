@@ -263,7 +263,7 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 						() -> session.internalLoad(
 								entityName,
 								data.entityIdentifier,
-								true,
+								!toOneMapping.isLazy(),
 								toOneMapping.isInternalLoadNullable()
 						)
 				);

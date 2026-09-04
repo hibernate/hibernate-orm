@@ -130,9 +130,15 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 			BytecodeProvider bytecodeProvider,
 			RuntimeModelCreationContext creationContext) {
 		if ( entityPersister.isAbstract() && bootDescriptor.isConcreteProxy() ) {
-			// The entity class is abstract, but the hierarchy always
-			// gets entities loaded/proxied using their concrete type.
-			// So we do not need proxies for this entity class.
+			// For abstract @ConcreteProxy entities, we still need to create a ProxyFactory
+			// to support lazy associations. Even though the entity class is abstract,
+			// ByteBuddy can create a proxy subclass. When the proxy is initialized,
+			// it will resolve to the correct concrete type based on the discriminator.
+			// Without bytecode enhancement, lazy associations require a proxy to avoid
+			// eager loading.
+			if ( proxyJavaType != null && entityPersister.isLazy() ) {
+				return createProxyFactory( bootDescriptor, bytecodeProvider, creationContext );
+			}
 			return null;
 		}
 		else if ( entityPersister.getBytecodeEnhancementMetadata().isEnhancedForLazyLoading()

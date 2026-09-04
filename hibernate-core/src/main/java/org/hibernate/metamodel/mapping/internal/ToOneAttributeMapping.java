@@ -2493,7 +2493,9 @@ public class ToOneAttributeMapping
 				primaryTableReference,
 				true,
 				sqlAliasBase,
-				getEntityMappingType().getRootEntityDescriptor()::containsTableReference,
+				tableExpression ->
+						getEntityMappingType().getRootEntityDescriptor().containsTableReference( tableExpression )
+								|| getEntityMappingType().containsTableReference( tableExpression ),
 				(tableExpression, tg) -> getEntityMappingType().createTableReferenceJoin(
 						tableExpression,
 						sqlAliasBase,

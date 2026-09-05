@@ -14,6 +14,7 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.sql.ast.SqlAstWalker;
+import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.SqlTypedExpression;
 
 /**
@@ -30,6 +31,7 @@ public class ColumnWriteFragment implements SqlTypedExpression {
 	private final String fragment;
 	private final List<ColumnValueParameter> parameters;
 	private final SelectableMapping selectableMapping;
+	private final Expression expression;
 
 	public ColumnWriteFragment(String fragment, SelectableMapping selectableMapping) {
 		this( fragment, Collections.emptyList(), selectableMapping );
@@ -44,6 +46,17 @@ public class ColumnWriteFragment implements SqlTypedExpression {
 		this.fragment = fragment;
 		this.parameters = parameters;
 		this.selectableMapping = selectableMapping;
+		this.expression = null;
+	}
+
+	public ColumnWriteFragment(
+			List<ColumnValueParameter> parameters,
+			SelectableMapping selectableMapping,
+			Expression expression) {
+		this.fragment = null;
+		this.parameters = parameters;
+		this.selectableMapping = selectableMapping;
+		this.expression = expression;
 	}
 
 	public String getFragment() {
@@ -66,23 +79,29 @@ public class ColumnWriteFragment implements SqlTypedExpression {
 
 	@Override
 	public void accept(SqlAstWalker sqlTreeWalker) {
-		sqlTreeWalker.visitColumnWriteFragment( this );
+		if ( expression == null ) {
+			sqlTreeWalker.visitColumnWriteFragment( this );
+		}
+		else {
+			expression.accept( sqlTreeWalker );
+		}
 	}
 
 	@Override
 	public String toString() {
+		final Object renderedExpression = expression == null ? fragment : expression;
 		return switch ( parameters.size() ) {
 			case 0 -> String.format(
 					Locale.ROOT,
 					"ColumnWriteFragment(%s)@%s",
-					fragment,
+					renderedExpression,
 					hashCode()
 			);
 			case 1 -> String.format(
 					Locale.ROOT,
 					"ColumnWriteFragment(%s = %s (%s))@%s",
 					parameters.get( 0 ).getColumnReference().getColumnExpression(),
-					fragment,
+					renderedExpression,
 					parameters.get( 0 ).getUsage(),
 					hashCode()
 			);
@@ -90,7 +109,7 @@ public class ColumnWriteFragment implements SqlTypedExpression {
 					Locale.ROOT,
 					"ColumnWriteFragment(%s = %s (%s))@%s",
 					parameters,
-					fragment,
+					renderedExpression,
 					parameters.get( 0 ).getUsage(),
 					hashCode()
 			);

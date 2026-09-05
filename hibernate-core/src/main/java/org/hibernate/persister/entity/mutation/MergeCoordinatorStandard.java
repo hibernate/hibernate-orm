@@ -121,6 +121,7 @@ public class MergeCoordinatorStandard extends UpdateCoordinatorStandard {
 			boolean restrictToTemporalExcluded,
 			Object rowId,
 			boolean forceDynamicUpdate,
+			boolean databaseDirtinessCheck,
 			SharedSessionContractImplementor session) {
 		final var updateValuesAnalysis = super.analyzeUpdateValues(
 				entity,
@@ -134,6 +135,7 @@ public class MergeCoordinatorStandard extends UpdateCoordinatorStandard {
 				restrictToTemporalExcluded,
 				rowId,
 				forceDynamicUpdate,
+				databaseDirtinessCheck,
 				session
 		);
 		if ( oldValues == null ) {

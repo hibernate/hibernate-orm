@@ -10,17 +10,19 @@ import org.hibernate.action.queue.spi.meta.TableDescriptor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.generator.EventType;
 import org.hibernate.generator.values.GeneratedValues;
-import org.hibernate.generator.values.internal.GeneratedValuesHelper;
 import org.hibernate.generator.values.internal.GeneratedValuesImpl;
+import org.hibernate.generator.values.internal.GeneratedValuesMappingProducer;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.persister.entity.EntityPersister;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
+import static org.hibernate.generator.values.internal.GeneratedValuesHelper.getActualGeneratedModelParts;
 import static org.hibernate.generator.values.internal.GeneratedValuesHelper.noCustomSql;
+import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
 
 /// Used from [org.hibernate.action.queue.internal.decompose.entity.EntityInsertBindPlan]
 /// and [org.hibernate.action.queue.internal.decompose.entity.EntityUpdateBindPlan] to aggregate
@@ -36,8 +38,8 @@ public final class GeneratedValuesCollector {
 	public static @Nullable GeneratedValuesCollector forInsert(
 			EntityPersister entityPersister,
 			SessionFactoryImplementor sessionFactory) {
-		var dialect = sessionFactory.getJdbcServices().getDialect();
-		var supportsRowId = dialect.supportsInsertReturning()
+		final var dialect = sessionFactory.getJdbcServices().getDialect();
+		final var supportsRowId = dialect.supportsInsertReturning()
 				&& dialect.supportsInsertReturningRowId()
 				&& noCustomSql( entityPersister, EventType.INSERT );
 		return forTiming( entityPersister, EventType.INSERT, supportsRowId );
@@ -46,6 +48,18 @@ public final class GeneratedValuesCollector {
 	public static @Nullable GeneratedValuesCollector forUpdate(
 			EntityPersister entityPersister,
 			SessionFactoryImplementor sessionFactory) {
+		final var updateDelegate = entityPersister.getUpdateDelegate();
+		if ( updateDelegate != null
+				&& updateDelegate.getGeneratedValuesMappingProducer()
+						instanceof GeneratedValuesMappingProducer mappingProducer ) {
+			final List<BasicValuedModelPart> list = new ArrayList<>();
+			for ( var resultBuilder : mappingProducer.getResultBuilders() ) {
+				list.add( resultBuilder.getModelPart() );
+			}
+			return isEmpty( list )
+					? null
+					: new GeneratedValuesCollector( EventType.UPDATE, entityPersister, list );
+		}
 		return forTiming( entityPersister, EventType.UPDATE, false );
 	}
 
@@ -53,14 +67,9 @@ public final class GeneratedValuesCollector {
 			EntityPersister entityPersister,
 			EventType timing,
 			boolean supportsRowId) {
-		final List<? extends ModelPart> generatedModelParts = GeneratedValuesHelper.getActualGeneratedModelParts(
-				entityPersister,
-				timing,
-				true,
-				supportsRowId
-		);
-
-		return CollectionHelper.isEmpty( generatedModelParts )
+		final var generatedModelParts =
+				getActualGeneratedModelParts( entityPersister, timing, true, supportsRowId );
+		return isEmpty( generatedModelParts )
 				? null
 				: new GeneratedValuesCollector( timing, entityPersister, generatedModelParts );
 	}

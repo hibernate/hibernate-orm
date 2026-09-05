@@ -11,11 +11,13 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.EventType;
 import org.hibernate.generator.values.AbstractGeneratedValuesMutationDelegate;
 import org.hibernate.generator.values.GeneratedValues;
+import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.model.PreparableMutationOperation;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.List;
 
 import static org.hibernate.pretty.MessageHelper.infoString;
 
@@ -37,6 +39,15 @@ public abstract class AbstractReturningDelegate
 			boolean supportsArbitraryValues,
 			boolean supportsRowId) {
 		super( persister, timing, supportsArbitraryValues, supportsRowId );
+	}
+
+	public AbstractReturningDelegate(
+			EntityPersister persister,
+			EventType timing,
+			boolean supportsArbitraryValues,
+			boolean supportsRowId,
+			List<? extends ModelPart> generatedProperties) {
+		super( persister, timing, supportsArbitraryValues, supportsRowId, generatedProperties );
 	}
 
 	@Override

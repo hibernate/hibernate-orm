@@ -13,6 +13,7 @@ import org.hibernate.sql.model.PreparableMutationOperation;
 import org.hibernate.sql.model.jdbc.JdbcValueDescriptor;
 
 import java.util.Locale;
+import java.util.function.Consumer;
 
 /**
  * @author Steve Ebersole
@@ -56,6 +57,22 @@ public abstract class AbstractSingleMutationExecutor extends AbstractMutationExe
 		assert mutationOperation.getTableDetails().containsTableName( tableName )
 				: String.format( Locale.ROOT, "table names did not match : `%s` & `%s`", tableName, mutationOperation.getTableDetails().getTableName()  );
 		return mutationOperation.findValueDescriptor( columnName, usage );
+	}
+
+	@Override
+	public int forEachValueDescriptor(
+			String tableName,
+			String columnName,
+			ParameterUsage usage,
+			Consumer<JdbcValueDescriptor> consumer) {
+		assert mutationOperation.getTableDetails().containsTableName( tableName )
+				: String.format( Locale.ROOT, "table names did not match : `%s` & `%s`", tableName, mutationOperation.getTableDetails().getTableName() );
+		return mutationOperation.forEachValueDescriptor(
+				mutationOperation.getTableDetails().getTableName(),
+				columnName,
+				usage,
+				consumer
+		);
 	}
 
 	@Override

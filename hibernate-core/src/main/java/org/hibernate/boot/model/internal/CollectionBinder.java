@@ -145,6 +145,7 @@ import static org.hibernate.boot.model.internal.AnnotatedColumn.buildColumnFromN
 import static org.hibernate.boot.model.internal.AnnotatedColumn.buildFormulaFromAnnotation;
 import static org.hibernate.boot.model.internal.AnnotatedJoinColumns.buildJoinColumnsWithDefaultColumnSuffix;
 import static org.hibernate.boot.model.internal.AnnotatedJoinColumns.buildJoinTableJoinColumns;
+import static org.hibernate.boot.model.internal.AuditHelper.isEffectivelyExcluded;
 import static org.hibernate.boot.model.internal.BasicValueBinder.Kind.COLLECTION_ELEMENT;
 import static org.hibernate.boot.model.internal.BinderHelper.aggregateCascadeTypes;
 import static org.hibernate.boot.model.internal.BinderHelper.buildAnyValue;
@@ -1656,13 +1657,21 @@ public abstract class CollectionBinder {
 		// to track collection membership changes (same approach as @ManyToMany / @JoinTable)
 		if ( !collection.isInverse() ) {
 			final var audited = extract( Audited.class, property, buildingContext );
-			if ( audited != null && !property.hasDirectAnnotationUsage( Audited.Excluded.class ) ) {
+			var isExcludedAtDeclaration = property.hasDirectAnnotationUsage( Audited.Excluded.class );
+			if ( audited != null && !isEffectivelyExcluded( modelsContext(), collection.getOwner(),
+					property.getName(), isExcludedAtDeclaration ) ) {
+				var lowestOverride = AuditHelper.extractLowestCollectionTableAuditOverrideFromHierarchy(
+						propertyHolder.getPersistentClass(),
+						buildingContext.getBootstrapContext().getModelsContext(),
+						propertyName
+				);
 				AuditHelper.bindOneToManyAuditTable(
 						extract( Audited.Table.class, property, buildingContext ),
 						collection,
 						oneToMany.getReferencedEntityName(),
 						extract( Audited.CollectionTable.class, property, buildingContext ),
-						buildingContext
+						buildingContext,
+						lowestOverride
 				);
 			}
 		}
@@ -2547,12 +2556,19 @@ public abstract class CollectionBinder {
 		if ( collection.isInverse() ) {
 			return;
 		}
+		//Unidirectional @OneToMany w/o @JoinColumn and @ElementCollection
 		final var audited = extract( Audited.class, property, buildingContext );
-		if ( audited != null && !property.hasDirectAnnotationUsage( Audited.Excluded.class ) ) {
+		var isExcludedAtDeclaration = property.hasDirectAnnotationUsage( Audited.Excluded.class );
+		if ( audited != null && !isEffectivelyExcluded( modelsContext(), collection.getOwner(),
+				property.getName(), isExcludedAtDeclaration ) ) {
+			var lowestOverride = AuditHelper.extractLowestCollectionTableAuditOverrideFromHierarchy(
+					propertyHolder.getPersistentClass(),
+					buildingContext.getBootstrapContext().getModelsContext(), propertyName );
 			AuditHelper.bindAuditTable(
 					extract( Audited.Table.class, property, buildingContext ),
 					collection,
-					buildingContext
+					buildingContext,
+					lowestOverride
 			);
 		}
 	}

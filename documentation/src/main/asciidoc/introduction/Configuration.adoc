@@ -613,27 +613,21 @@ Alternatively, you can configure SQL Server to use the UTF-8 enabled collation `
 [[datetime-jdbc]]
 === Date and time types and JDBC
 
-By default, Hibernate handles date and time types defined by `java.time` by:
+Hibernate highly recommends that applications use `java.time` types to represent temporal-related values.
+When `java.time` types are used, Hibernate will by default use those types directly at the JDBC boundary.
+JDBC drivers are required to directly support `java.time` types since Java 8 (JDBC 4.2).
 
-- converting `java.time` types to JDBC date/time types defined in `java.sql` when sending data to the database, and
-- reading `java.sql` types from JDBC and then converting them to `java.time` types when retrieving data from the database.
+[NOTE]
+====
+This is a change since version 8.0.  Previous versions, by default, would perform a conversion between
+`java.time` and `java.sql` date/time types and use the `java.sql` types at the JDBC boundary.
 
-This works best when the database server time zone agrees with JVM system time zone.
+This change in behavior can have subtle impacts on legacy applications migrating to 8.0.
+Set `hibernate.type.java_time_use_direct_jdbc` to `false` to retain the legacy behavior.
+====
 
-TIP: We therefore recommend setting things up so that the database server and the JVM agree on the same time zone. **Hint:** when in doubt, UTC is quite a nice time zone.
+When `java.sql` date/time types are used (either in the model or by disabling
+`hibernate.type.java_time_use_direct_jdbc`) it is important to make sure that
+database server time zone agrees with JVM system time zone.  This is achieved using
+the `hibernate.jdbc.time_zone` setting.
 
-There are two system configuration properties which influence this behavior:
-
-.Settings for JDBC date/time handling
-[%breakable,cols="35,~"]
-|===
-| Configuration property name           | Purpose
-
-| link:{doc-javadoc-url}org/hibernate/cfg/JdbcSettings.html#JDBC_TIME_ZONE[`hibernate.jdbc.time_zone`]          | Use an explicit time zone when interacting with JDBC
-| link:{doc-javadoc-url}org/hibernate/cfg/MappingSettings.html#JAVA_TIME_USE_DIRECT_JDBC[`hibernate.type.java_time_use_direct_jdbc`] | Read and write `java.time` types directly to and from JDBC
-|===
-
-You may set `hibernate.jdbc.time_zone` to the time zone of the database server if for some reason the JVM needs to operate in a different time zone.
-We do not recommend this approach.
-
-On the other hand, we would love to recommend the use of `hibernate.type.java_time_use_direct_jdbc`, but this option is still experimental for now, and does result in some subtle differences in behavior which might affect legacy programs using Hibernate.

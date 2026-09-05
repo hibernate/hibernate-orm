@@ -4,17 +4,18 @@
  */
 package org.hibernate.orm.test.mapping.basic;
 
-import java.sql.Types;
 import java.time.LocalTime;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.type.SqlTypes;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -33,15 +34,19 @@ public class LocalTimeMappingTests {
 
 	@Test
 	public void verifyMappings(SessionFactoryScope scope) {
-		final MappingMetamodelImplementor mappingMetamodel = scope.getSessionFactory()
-				.getRuntimeMetamodels()
-				.getMappingMetamodel();
+		final SessionFactoryImplementor sf = scope.getSessionFactory();
+
+		final MappingMetamodelImplementor mappingMetamodel = sf.getRuntimeMetamodels().getMappingMetamodel();
 		final EntityPersister entityDescriptor = mappingMetamodel.findEntityDescriptor(EntityWithLocalTime.class);
 
 		final BasicAttributeMapping duration = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("localTime");
 		final JdbcMapping jdbcMapping = duration.getJdbcMapping();
 		assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(LocalTime.class));
-		assertThat( jdbcMapping.getJdbcType().getJdbcTypeCode(), equalTo( Types.TIME));
+
+		final int expectedJdbcType = sf.getSessionFactoryOptions().isPreferJavaTimeJdbcTypesEnabled()
+				? SqlTypes.LOCAL_TIME
+				: SqlTypes.TIME;
+		assertThat( jdbcMapping.getJdbcType().getJdbcTypeCode(), equalTo( expectedJdbcType ) );
 
 		scope.inTransaction(
 				(session) -> {

@@ -249,12 +249,19 @@ public interface MappingSettings {
 	 * See {@linkplain #PREFERRED_INSTANT_JDBC_TYPE}, {@linkplain org.hibernate.type.SqlTypes#INSTANT} and
 	 * {@linkplain org.hibernate.type.descriptor.jdbc.InstantJdbcType}.
 	 *
-	 * @settingDefault false
+	 * @settingDefault {@value #JAVA_TIME_USE_DIRECT_JDBC_DEFAULT}
 	 *
 	 * @since 6.5
 	 */
 	@Incubating
 	String JAVA_TIME_USE_DIRECT_JDBC = "hibernate.type.java_time_use_direct_jdbc";
+
+	/**
+	 * The default value for {@link #JAVA_TIME_USE_DIRECT_JDBC}.
+	 *
+	 * @since 8.0
+	 */
+	boolean JAVA_TIME_USE_DIRECT_JDBC_DEFAULT = true;
 
 	/**
 	 * Indicates that named SQL {@code enum} types should be used by default instead

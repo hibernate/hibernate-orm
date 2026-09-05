@@ -24,6 +24,8 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import static org.hibernate.type.descriptor.java.SqlDateTimeHelper.toLocalDateTime;
+
 /**
  * Java type descriptor for the Java {@link Instant} type.
  *
@@ -175,7 +177,7 @@ public class InstantJavaType extends AbstractTemporalJavaType<Instant>
 			 * - around 1905, both methods are equally valid, so we don't really care which one is used.
 			 */
 			if ( timestamp.getYear() < 5 ) { // Timestamp year 0 is 1900
-				return timestamp.toLocalDateTime().atZone( ZoneId.systemDefault() ).toInstant();
+				return toLocalDateTime( timestamp ).atZone( ZoneId.systemDefault() ).toInstant();
 			}
 			else {
 				return timestamp.toInstant();

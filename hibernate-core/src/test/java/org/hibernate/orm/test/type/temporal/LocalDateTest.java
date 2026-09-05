@@ -109,6 +109,19 @@ public class LocalDateTest extends AbstractJavaTimeTypeTests<LocalDate, LocalDat
 				.add( 2018, 3, 25, ZONE_PARIS )
 				.add( 2018, 9, 30, ZONE_AUCKLAND )
 				.add( 2018, 8, 12, ZONE_SANTIAGO ) // DST start: 00:00 => 01:00
+				// HHH-14256 / JDK-8249280: Confirm workaround for broken LocalDate/LocalDateTime conversion for BCE dates
+				.withForcedJdbcTimezone( "UTC", b -> b
+						.add( 0, 3, 15, ZONE_GMT )
+						.add( -1, 11, 3, ZONE_GMT )
+						.add( -100, 6, 20, ZONE_GMT )
+				)
+				// Ensure behaviour for 2 AD fast path cutoff in SqlDateTimeHelper
+				.withForcedJdbcTimezone( "UTC", b -> b
+						.add( 1, 12, 1, ZONE_GMT )
+						.add( 1, 12, 31, ZONE_GMT )
+						.add( 2, 1, 1, ZONE_GMT )
+						.add( 1, 1, 31, ZONE_GMT )
+				)
 				.build();
 	}
 

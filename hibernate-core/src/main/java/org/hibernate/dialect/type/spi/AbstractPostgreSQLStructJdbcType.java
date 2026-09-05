@@ -26,6 +26,8 @@ import org.hibernate.type.descriptor.jdbc.BasicExtractor;
 import org.hibernate.type.descriptor.jdbc.StructAttributeValues;
 import org.hibernate.type.descriptor.jdbc.StructHelper;
 import org.hibernate.type.descriptor.jdbc.StructuredJdbcType;
+import org.hibernate.type.descriptor.jdbc.spi.AggregateJdbcValueOrder;
+import org.hibernate.type.descriptor.jdbc.spi.AggregateJdbcValues;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import java.sql.CallableStatement;
@@ -97,6 +99,7 @@ public abstract class AbstractPostgreSQLStructJdbcType implements StructuredJdbc
 	private final String typeName;
 	private final int[] orderMapping;
 	private final int[] inverseOrderMapping;
+	private final AggregateJdbcValueOrder valueOrder;
 	private final EmbeddableMappingType embeddableMappingType;
 
 	/// Create the unresolved descriptor used for reading untyped values.
@@ -129,14 +132,16 @@ public abstract class AbstractPostgreSQLStructJdbcType implements StructuredJdbc
 			int[] orderMapping) {
 		this.typeName = typeName;
 		this.embeddableMappingType = embeddableMappingType;
-		this.orderMapping = orderMapping;
+		this.orderMapping = orderMapping == null ? null : orderMapping.clone();
 		if ( orderMapping == null ) {
 			this.inverseOrderMapping = null;
+			this.valueOrder = AggregateJdbcValueOrder.identity();
 		}
 		else {
-			final int[] inverseOrderMapping = new int[orderMapping.length];
-			for ( int i = 0; i < orderMapping.length; i++ ) {
-				inverseOrderMapping[orderMapping[i]] = i;
+			this.valueOrder = AggregateJdbcValueOrder.physicalOrder( this.orderMapping );
+			final int[] inverseOrderMapping = new int[this.orderMapping.length];
+			for ( int i = 0; i < this.orderMapping.length; i++ ) {
+				inverseOrderMapping[this.orderMapping[i]] = i;
 			}
 			this.inverseOrderMapping = inverseOrderMapping;
 		}
@@ -1154,7 +1159,7 @@ public abstract class AbstractPostgreSQLStructJdbcType implements StructuredJdbc
 		serializeJdbcValuesTo(
 				appender,
 				options,
-				StructHelper.getJdbcValues( embeddableMappingType, orderMapping, domainValue, options ),
+				AggregateJdbcValues.fromDomainValue( embeddableMappingType, domainValue, valueOrder, options ),
 				separator
 		);
 	}

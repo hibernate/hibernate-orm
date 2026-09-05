@@ -418,6 +418,21 @@ it.
 
 This section describes changes in behavior that applications should be aware of.
 
+[[java-time-direct-jdbc-default]]
+=== Direct JDBC handling of `java.time` values
+
+Hibernate now directly uses `java.time` types by default at the JDBC boundary when
+`java.time` types are used in the domain model.  Historically, Hibernate would convert the
+`java.time` values to/from `java.sql` values and use those `java.sql` types at the JDBC boundary.
+
+Direct support for  `java.time` values has been required by the JDBC specification since version
+4.2 (Java 8).
+
+Applications which require the previous behavior may set
+`hibernate.type.java_time_use_direct_jdbc` to `false`.
+
+
+
 [[collection-remove-create-callback-order]]
 === Collection remove/create callback order
 

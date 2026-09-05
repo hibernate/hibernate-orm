@@ -4,21 +4,24 @@
  */
 package org.hibernate.orm.test.mapping.basic;
 
-import java.sql.Types;
 import java.time.OffsetDateTime;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.type.SqlTypes;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
+
+import org.hamcrest.Matcher;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
@@ -33,15 +36,19 @@ public class OffsetDateTimeMappingTests {
 
 	@Test
 	public void verifyMappings(SessionFactoryScope scope) {
-		final MappingMetamodelImplementor mappingMetamodel = scope.getSessionFactory()
-				.getRuntimeMetamodels()
-				.getMappingMetamodel();
+		final SessionFactoryImplementor sf = scope.getSessionFactory();
+
+		final MappingMetamodelImplementor mappingMetamodel = sf.getRuntimeMetamodels().getMappingMetamodel();
 		final EntityPersister entityDescriptor = mappingMetamodel.findEntityDescriptor(EntityWithOffsetDateTime.class);
 
 		final BasicAttributeMapping attributeMapping = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("offsetDateTime");
 		final JdbcMapping jdbcMapping = attributeMapping.getJdbcMapping();
 		assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(OffsetDateTime.class));
-		assertThat( jdbcMapping.getJdbcType().getJdbcTypeCode(), isOneOf( Types.TIMESTAMP, Types.TIMESTAMP_WITH_TIMEZONE));
+
+		final Matcher<Integer> expectedJdbcType = sf.getSessionFactoryOptions().isPreferJavaTimeJdbcTypesEnabled()
+				? equalTo( SqlTypes.OFFSET_DATE_TIME )
+				: isOneOf( SqlTypes.TIMESTAMP, SqlTypes.TIMESTAMP_WITH_TIMEZONE );
+		assertThat( jdbcMapping.getJdbcType().getJdbcTypeCode(), expectedJdbcType );
 
 		scope.inTransaction(
 				(session) -> {

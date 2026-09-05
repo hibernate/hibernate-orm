@@ -16,6 +16,7 @@ import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.ServiceRegistry;
 
 import static org.hibernate.cfg.MappingSettings.JAVA_TIME_USE_DIRECT_JDBC;
+import static org.hibernate.cfg.MappingSettings.JAVA_TIME_USE_DIRECT_JDBC_DEFAULT;
 import static org.hibernate.cfg.MappingSettings.PREFER_LOCALE_LANGUAGE_TAG;
 import static org.hibernate.cfg.MappingSettings.PREFER_NATIVE_ENUM_TYPES;
 import static org.hibernate.audit.AuditStrategy.DEFAULT;
@@ -135,7 +136,11 @@ public interface MetadataBuildingContext {
 
 	@Remove
 	static boolean isPreferJavaTimeJdbcTypesEnabled(ConfigurationService configurationService) {
-		return getBoolean( JAVA_TIME_USE_DIRECT_JDBC, configurationService.getSettings() );
+		return getBoolean(
+				JAVA_TIME_USE_DIRECT_JDBC,
+				configurationService.getSettings(),
+				JAVA_TIME_USE_DIRECT_JDBC_DEFAULT
+		);
 	}
 
 	@Remove

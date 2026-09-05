@@ -17,8 +17,9 @@ import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
- * Special array contains function that also applies a cast to the element argument. PostgreSQL needs this,
- * because by default it assumes a {@code text[]}, which is not compatible with {@code varchar[]}.
+ * Special array contains implementation that uses the PostgreSQL {@code = any()} operator
+ * for scalar needles. Using {@code = any()} instead of {@code @> cast(array[?] as ...)}
+ * avoids incompatibilities between {@code text[]} and {@code varchar[]}.
  */
 public class ArrayContainsOperatorFunction extends ArrayContainsUnnestFunction {
 
@@ -56,29 +57,11 @@ public class ArrayContainsOperatorFunction extends ArrayContainsUnnestFunction {
 				sqlAppender.append( ") is not null" );
 			}
 			else {
+				needleExpression.accept( walker );
+				sqlAppender.append( "=any(" );
 				haystackExpression.accept( walker );
-				sqlAppender.append( "@>" );
-				if ( needsArrayCasting( needleExpression ) ) {
-					sqlAppender.append( "cast(array[" );
-					needleExpression.accept( walker );
-					sqlAppender.append( "] as " );
-					sqlAppender.append( DdlTypeHelper.getCastTypeName(
-							haystackExpression.getExpressionType(),
-							walker.getSessionFactory().getTypeConfiguration()
-					) );
-					sqlAppender.append( ')' );
-				}
-				else {
-					sqlAppender.append( "array[" );
-					needleExpression.accept( walker );
-					sqlAppender.append( ']' );
-				}
+				sqlAppender.append( ')' );
 			}
 		}
-	}
-
-	private static boolean needsArrayCasting(Expression elementExpression) {
-		// PostgreSQL doesn't do implicit conversion between text[] and varchar[], so we need casting
-		return elementExpression.getExpressionType().getSingleJdbcMapping().getJdbcType().isString();
 	}
 }

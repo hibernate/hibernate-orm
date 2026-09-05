@@ -877,6 +877,7 @@ public class ToOneAttributeMapping
 		// Otherwise we need to join to the associated entity table(s)
 		final boolean forceJoin = hasNotFoundAction()
 				|| entityMappingType.getSoftDeleteMapping() != null
+				|| entityMappingType.hasWhereRestrictions()
 				|| cardinality == ONE_TO_ONE && isNullable();
 		canUseParentTableGroup = ! forceJoin
 				&& sideNature == ForeignKeyDescriptor.Nature.KEY

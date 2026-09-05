@@ -55,7 +55,7 @@ public abstract class EntityAction
 			@Nonnull EntityPersister persister) {
 		assert session != null;
 		assert persister != null;
-		this.entityName = persister.getEntityName();
+		entityName = persister.getEntityName();
 		this.id = id;
 		this.instance = instance;
 		this.session = session;
@@ -195,7 +195,7 @@ public abstract class EntityAction
 	 */
 	@Override
 	public void afterDeserialize(@Nullable EventSource session) {
-		if ( this.session != null || this.persister != null ) {
+		if ( this.session != null || persister != null ) {
 			throw new IllegalStateException( "already attached to a session." );
 		}
 		// IMPL NOTE: non-flushed changes code calls this method with session == null...
@@ -205,9 +205,9 @@ public abstract class EntityAction
 			final var resolvedPersister =
 					session.getFactory().getMappingMetamodel()
 							.getEntityDescriptor( entityName );
-			this.persister = resolvedPersister;
+			persister = resolvedPersister;
 			assert id != null;
-			this.instance =
+			instance =
 					session.getPersistenceContext()
 							.getEntity( session.generateEntityKey( id, resolvedPersister ) );
 		}

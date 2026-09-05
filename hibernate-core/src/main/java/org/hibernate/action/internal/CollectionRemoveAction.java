@@ -102,7 +102,7 @@ public final class CollectionRemoveAction extends CollectionAction {
 		this.affectedOwner = affectedOwner;
 		// Get the owner ID from the entity entry at action creation time
 		final var ownerEntry = session.getPersistenceContextInternal().getEntry( affectedOwner );
-		this.affectedOwnerId = ownerEntry != null ? ownerEntry.getId() : null;
+		affectedOwnerId = ownerEntry != null ? ownerEntry.getId() : null;
 	}
 
 	/**

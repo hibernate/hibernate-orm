@@ -73,6 +73,6 @@ public class DelayedPostInsertIdentifier
 
 	@Override
 	public int compareTo(@Nonnull DelayedPostInsertIdentifier that) {
-		return Long.compare( this.identifier, that.identifier );
+		return Long.compare( identifier, that.identifier );
 	}
 }

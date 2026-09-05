@@ -69,7 +69,7 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 				session
 		);
 		this.isDelayed = isDelayed;
-		this.delayedEntityKey = useDelayedIdentifier ? generateDelayedEntityKey() : null;
+		delayedEntityKey = useDelayedIdentifier ? generateDelayedEntityKey() : null;
 	}
 
 	@Nonnull

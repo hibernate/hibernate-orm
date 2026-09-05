@@ -74,7 +74,7 @@ public abstract class CollectionAction implements ComparableExecutable {
 		this.persister = persister;
 		this.session = session;
 		this.key = key;
-		this.collectionRole = persister.getRole();
+		collectionRole = persister.getRole();
 		this.collection = collection;
 		this.lifecyclePrepared = lifecyclePrepared;
 		this.interpretation = interpretation;
@@ -145,7 +145,7 @@ public abstract class CollectionAction implements ComparableExecutable {
 		// guard against NullPointerException
 		if ( session != null ) {
 			this.session = session;
-			this.persister = session.getFactory().getMappingMetamodel().getCollectionDescriptor( collectionRole );
+			persister = session.getFactory().getMappingMetamodel().getCollectionDescriptor( collectionRole );
 		}
 	}
 

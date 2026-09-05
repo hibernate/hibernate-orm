@@ -42,10 +42,10 @@ public final class CollectionRecreateAction extends CollectionAction {
 		assert collection != null;
 		// Capture the owner at action creation time so it's available when the post-event
 		// fires (which may be after the collection owner reference has been cleared)
-		this.affectedOwner = collection.getOwner();
+		affectedOwner = collection.getOwner();
 		// Also capture the owner ID from the entity entry at action creation time
 		final var ownerEntry = session.getPersistenceContextInternal().getEntry( affectedOwner );
-		this.affectedOwnerId = ownerEntry != null ? ownerEntry.getId() : null;
+		affectedOwnerId = ownerEntry != null ? ownerEntry.getId() : null;
 	}
 
 	/// Creates the legacy lowering of an already-prepared semantic mutation.

@@ -468,7 +468,7 @@ The principal provider contracts are:
 
 |Aggregate and structured values
 |`AggregateJdbcType`, `StructuredJdbcType`
-|Treat the registered instance as a prototype and supply the mapping-specific descriptor from `resolveAggregateJdbcType(...)`.
+|Treat the registered instance as a prototype, supply the mapping-specific descriptor from `resolveAggregateJdbcType(...)`, and use `AggregateJdbcValues` instead of internal struct helpers.
 
 |Bootstrap registration
 |`TypeContributor`, `TypeContributions`
@@ -507,6 +507,42 @@ runtime-model constructor for a mapped aggregate; Hibernate resolves the
 boot-model attribute ordering without exposing the boot mapping as a provider
 dependency. Implement only the driver binding, extraction, and write-expression
 variation owned by the provider.
+
+==== Aggregate JDBC values and native containers
+
+`AggregateJdbcType` separates a mapped aggregate from the single native value
+bound to or extracted from the JDBC driver. A provider implementing a custom
+aggregate or structured type owns the encoding of that native container. For
+example, a document-oriented driver might encode an `Object[]` as a native
+document and decode that document back into component values.
+
+`AggregateJdbcValues` owns the Hibernate mapping work on either side of that
+provider codec. Use `fromDomainValue(...)` before encoding a native value, use
+`toLogicalJdbcValues(...)` to implement
+`AggregateJdbcType#extractJdbcValues(...)`, and use `toDomainValue(...)` when a
+JDBC extractor must return the mapped embeddable value:
+
+[source,java,indent=0]
+----
+include::{provider-fixture-main-dir}/ExampleStructuredJdbcType.java[tags=aggregate-jdbc-values]
+----
+
+The no-order overloads use Hibernate's logical mapping order. If the native
+container has a different physical order, create an immutable
+`AggregateJdbcValueOrder` with the logical value found at each physical
+position. Thus `physicalOrder(2, 0, 1)` transforms logical values `[A, B, C]`
+to physical values `[C, A, B]`. The order is validated as a complete
+permutation and its inverse is calculated once.
+
+[IMPORTANT]
+====
+Decode the provider-specific container before calling `AggregateJdbcValues`,
+and normalize driver-specific scalar anomalies as part of that decoding. The
+facade handles mapping conversion, nested aggregates, discriminators, and
+ordering; it does not understand arbitrary native document formats. Do not use
+the internal `StructHelper` or expose `StructAttributeValues` from provider
+code.
+====
 
 Focused facilities cover common composition needs without exposing their Core
 implementations:

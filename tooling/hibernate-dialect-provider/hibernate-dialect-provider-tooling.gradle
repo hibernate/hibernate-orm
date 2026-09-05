@@ -59,6 +59,7 @@ dependencies {
 	providerFixtureTestCompileOnly project(path: ":hibernate-core", configuration: "apiElements")
 	providerFixtureTestCompileOnly project(path: ":hibernate-dialect-testkit", configuration: "apiElements")
 	providerFixtureTestImplementation libs.test.junitJupiterApi
+	providerFixtureTestImplementation libs.test.mockito
 	providerFixtureTestRuntimeOnly project(path: ":hibernate-core", configuration: "runtimeElements")
 	providerFixtureTestRuntimeOnly project(path: ":hibernate-dialect-testkit", configuration: "runtimeElements")
 	providerFixtureTestRuntimeOnly libs.test.junitJupiterEngine

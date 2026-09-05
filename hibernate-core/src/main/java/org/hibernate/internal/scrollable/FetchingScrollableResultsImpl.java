@@ -279,6 +279,11 @@ public class FetchingScrollableResultsImpl<R> extends AbstractScrollableResults<
 
 	@Override
 	public boolean setRowNumber(int rowNumber) {
+		if ( rowNumber == 0 ) {
+			// there is no row 0: position before the first row, like ResultSet#absolute(0)
+			beforeFirst();
+			return false;
+		}
 		if ( rowNumber == 1 ) {
 			return first();
 		}

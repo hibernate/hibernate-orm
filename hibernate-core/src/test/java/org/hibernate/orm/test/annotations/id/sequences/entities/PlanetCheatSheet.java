@@ -14,7 +14,7 @@ import jakarta.persistence.Id;
  * Test entity for enum type as id.
  *
  * @author Hardy Ferentschik
- * @see ANN-744
+ * @see <a href="https://hibernate.atlassian.net/browse/ANN-744">ANN-744</a>
  */
 @Entity
 public class PlanetCheatSheet {

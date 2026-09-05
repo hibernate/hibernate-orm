@@ -31,8 +31,6 @@ import static org.hibernate.cfg.JdbcSettings.DIALECT;
  * Regression test for sequence metadata extraction disabled by the Dialect.
  *
  * @author Steve Ebersole
- *
- * @see
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
 @JiraKey( value = "HHH-9745" )

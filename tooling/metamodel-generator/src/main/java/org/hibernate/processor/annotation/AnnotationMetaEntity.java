@@ -103,6 +103,7 @@ import static org.hibernate.processor.util.TypeUtils.getInheritedAnnotationMirro
 import static org.hibernate.processor.util.TypeUtils.hasAnnotation;
 import static org.hibernate.processor.util.TypeUtils.isInheritedAnnotation;
 import static org.hibernate.processor.util.TypeUtils.implementsInterface;
+import static org.hibernate.processor.util.TypeUtils.isAnnotationMirrorOfType;
 import static org.hibernate.processor.util.TypeUtils.isPluralAttribute;
 import static org.hibernate.processor.util.TypeUtils.primitiveClassMatchesKind;
 import static org.hibernate.processor.util.TypeUtils.propertyName;
@@ -3330,7 +3331,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						context.addNonnullAnnotation(),
 						jakartaDataRepository,
 						fullReturnType( method ),
-						hasAnnotation( method, NULLABLE )
+						hasNullableAnnotation( method )
 				)
 		);
 	}
@@ -3727,7 +3728,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 							context.addNonnullAnnotation(),
 							jakartaDataRepository,
 							fullReturnType( method ),
-							hasAnnotation( method, NULLABLE )
+							hasNullableAnnotation( method )
 					)
 			);
 		}
@@ -3751,7 +3752,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 							context.addNonnullAnnotation(),
 							jakartaDataRepository,
 							fullReturnType( method ),
-							hasAnnotation( method, NULLABLE )
+							hasNullableAnnotation( method )
 					)
 			);
 		}
@@ -3810,7 +3811,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 									context.addNonnullAnnotation(),
 									jakartaDataRepository,
 									fullReturnType( method ),
-									hasAnnotation( method, NULLABLE )
+									hasNullableAnnotation( method )
 							)
 					);
 					break;
@@ -3831,7 +3832,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 									context.addNonnullAnnotation(),
 									jakartaDataRepository,
 									fullReturnType( method ),
-									hasAnnotation( method, NULLABLE )
+									hasNullableAnnotation( method )
 							)
 					);
 					break;
@@ -3856,7 +3857,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 									context.addNonnullAnnotation(),
 									jakartaDataRepository,
 									fullReturnType( method ),
-									hasAnnotation( method, NULLABLE )
+									hasNullableAnnotation( method )
 							)
 					);
 					break;
@@ -4491,7 +4492,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						context.addNonnullAnnotation(),
 						jakartaDataRepository,
 						fullReturnType( method ),
-						hasAnnotation( method, NULLABLE )
+						hasNullableAnnotation( method )
 					);
 		putMember( attribute.getPropertyName() + paramTypes, attribute );
 	}
@@ -5548,6 +5549,23 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			}
 		}
 		return true;
+	}
+
+	private static boolean hasNullableAnnotation(ExecutableElement method) {
+		return hasAnnotation( method, NULLABLE )
+			|| hasAnnotation( method, JETBRAINS_NULLABLE )
+			|| hasJspecifyNullableAnnotation( method );
+	}
+
+	// org.jspecify.annotations.Nullable is @Target(TYPE_USE), so on a method
+	// it's attached to the return type, not to the method element itself.
+	private static boolean hasJspecifyNullableAnnotation(ExecutableElement method) {
+		for ( var mirror : method.getReturnType().getAnnotationMirrors() ) {
+			if ( isAnnotationMirrorOfType( mirror, JSPECIFY_NULLABLE ) ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private void checkParameters(

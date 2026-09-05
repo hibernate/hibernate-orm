@@ -363,6 +363,12 @@ public class OracleDialect extends Dialect implements CurrentTemporalSupport, Te
 		return typeSizingProfile;
 	}
 
+	@Override
+	protected void registerDefaultKeywords() {
+		super.registerDefaultKeywords();
+		registerKeyword( "sysdate" );
+	}
+
 	public boolean isAutonomous() {
 		return autonomous;
 	}

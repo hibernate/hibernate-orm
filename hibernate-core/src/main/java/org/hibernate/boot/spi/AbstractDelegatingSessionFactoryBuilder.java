@@ -205,13 +205,13 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends SessionF
 	}
 
 	@Override
-	public SessionFactoryBuilder applyTenantSchemaMapper(TenantSchemaMapper<?> mapper) {
+	public T applyTenantSchemaMapper(TenantSchemaMapper<?> mapper) {
 		delegate.applyTenantSchemaMapper( mapper );
 		return getThis();
 	}
 
 	@Override
-	public SessionFactoryBuilder applyTenantCredentialsMapper(TenantCredentialsMapper<?> mapper) {
+	public T applyTenantCredentialsMapper(TenantCredentialsMapper<?> mapper) {
 		delegate.applyTenantCredentialsMapper( mapper );
 		return getThis();
 	}
@@ -375,9 +375,9 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends SessionF
 	}
 
 	@Override
-	public SessionFactoryBuilder applyStatementObserver(StatementObserver statementObserver) {
+	public T applyStatementObserver(StatementObserver statementObserver) {
 		delegate.applyStatementObserver( statementObserver );
-		return this;
+		return getThis();
 	}
 
 	@Override
@@ -405,13 +405,13 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends SessionF
 	}
 
 	@Override
-	public SessionFactoryBuilder applyTemporalTableStrategy(TemporalTableStrategy strategy) {
+	public T applyTemporalTableStrategy(TemporalTableStrategy strategy) {
 		delegate.applyTemporalTableStrategy( strategy );
 		return getThis();
 	}
 
 	@Override
-	public SessionFactoryBuilder applyAuditStrategy(AuditStrategy strategy) {
+	public T applyAuditStrategy(AuditStrategy strategy) {
 		delegate.applyAuditStrategy( strategy );
 		return getThis();
 	}

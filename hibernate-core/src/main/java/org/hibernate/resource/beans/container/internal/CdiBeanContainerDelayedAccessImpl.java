@@ -31,7 +31,7 @@ public class CdiBeanContainerDelayedAccessImpl extends AbstractCdiBeanContainer 
 			Class<B> beanType,
 			BeanLifecycleStrategy lifecycleStrategy,
 			BeanInstanceProducer fallbackProducer) {
-		return new BeanImpl<>( beanType, lifecycleStrategy, fallbackProducer );
+		return new DelayedBeanImpl<>( beanType, lifecycleStrategy, fallbackProducer, this);
 	}
 
 	@Override
@@ -40,93 +40,6 @@ public class CdiBeanContainerDelayedAccessImpl extends AbstractCdiBeanContainer 
 			Class<B> beanType,
 			BeanLifecycleStrategy lifecycleStrategy,
 			BeanInstanceProducer fallbackProducer) {
-		return new NamedBeanImpl<>( name, beanType, lifecycleStrategy, fallbackProducer );
-	}
-
-	private class BeanImpl<B> implements ContainedBeanImplementor<B> {
-		private final Class<B> beanType;
-		private final BeanLifecycleStrategy lifecycleStrategy;
-		private final BeanInstanceProducer fallbackProducer;
-
-		private ContainedBeanImplementor<B> delegateBean;
-
-		private BeanImpl(
-				Class<B> beanType,
-				BeanLifecycleStrategy lifecycleStrategy,
-				BeanInstanceProducer fallbackProducer) {
-			this.beanType = beanType;
-			this.lifecycleStrategy = lifecycleStrategy;
-			this.fallbackProducer = fallbackProducer;
-		}
-
-		@Override
-		public Class<B> getBeanClass() {
-			return beanType;
-		}
-
-		@Override
-		public void initialize() {
-			if ( delegateBean == null ) {
-				delegateBean = lifecycleStrategy.createBean( beanType, fallbackProducer, CdiBeanContainerDelayedAccessImpl.this );
-			}
-		}
-
-		@Override
-		public B getBeanInstance() {
-			if ( delegateBean == null ) {
-				initialize();
-			}
-			return delegateBean.getBeanInstance();
-		}
-
-		@Override
-		public void release() {
-			delegateBean.release();
-		}
-	}
-
-	private class NamedBeanImpl<B> implements ContainedBeanImplementor<B> {
-		private final String name;
-		private final Class<B> beanType;
-		private final BeanLifecycleStrategy lifecycleStrategy;
-		private final BeanInstanceProducer fallbackProducer;
-
-		private ContainedBeanImplementor<B> delegateBean;
-
-		private NamedBeanImpl(
-				String name,
-				Class<B> beanType,
-				BeanLifecycleStrategy lifecycleStrategy,
-				BeanInstanceProducer fallbackProducer) {
-			this.name = name;
-			this.beanType = beanType;
-			this.lifecycleStrategy = lifecycleStrategy;
-			this.fallbackProducer = fallbackProducer;
-		}
-
-		@Override
-		public Class<B> getBeanClass() {
-			return beanType;
-		}
-
-		@Override
-		public void initialize() {
-			if ( delegateBean == null ) {
-				delegateBean = lifecycleStrategy.createBean( name, beanType, fallbackProducer, CdiBeanContainerDelayedAccessImpl.this );
-			}
-		}
-
-		@Override
-		public B getBeanInstance() {
-			if ( delegateBean == null ) {
-				initialize();
-			}
-			return delegateBean.getBeanInstance();
-		}
-
-		@Override
-		public void release() {
-			delegateBean.release();
-		}
+		return new NamedDelayedBeanImpl<>( name, beanType, lifecycleStrategy, fallbackProducer, this);
 	}
 }

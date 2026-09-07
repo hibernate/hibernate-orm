@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="org.hibernate.orm.test.boot.jaxb.mapping">
+
+	<class name="EntityWithQueries">
+		<id name="id">
+			<generator class="assigned" />
+		</id>
+		<property name="name"/>
+		
+		<!-- HQL query inside class -->
+		<query name="findByName">from EntityWithQueries where name = :name</query>
+		
+		<!-- SQL query inside class -->
+		<sql-query name="findAll">
+			<return alias="e" class="EntityWithQueries"/>
+			select {e.*} from EntityWithQueries e
+		</sql-query>
+	</class>
+
+</hibernate-mapping>

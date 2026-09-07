@@ -28,7 +28,9 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 /**
  * @author Gavin King
  */
-@DomainModel(annotatedClasses = {Document.class, Paper.class})
+@DomainModel(
+		xmlMappings = "org/hibernate/orm/test/stateless/Document.orm.xml"
+)
 @SessionFactory
 public class StatelessSessionTest {
 

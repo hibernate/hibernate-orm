@@ -7,6 +7,7 @@ package org.hibernate.orm.test.stateless;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.HANADialect;
 import org.hibernate.query.NativeQuery;
@@ -27,10 +28,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * @author stliu
  */
-@DomainModel(annotatedClasses = {Contact.class, Org.class, Country.class})
+@DomainModel(
+		xmlMappings = "org/hibernate/orm/test/stateless/Contact.orm.xml"
+)
 @SessionFactory
 @ServiceRegistry(
-		settings = @Setting(name = Environment.MAX_FETCH_DEPTH, value = "1")
+		settings = {@Setting(name = Environment.MAX_FETCH_DEPTH, value = "1"),
+		@Setting( name = AvailableSettings.TRANSFORM_HBM_XML, value = "true") }
 )
 public class StatelessSessionQueryTest {
 

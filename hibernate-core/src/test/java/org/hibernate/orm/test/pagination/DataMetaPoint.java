@@ -4,24 +4,11 @@
  */
 package org.hibernate.orm.test.pagination;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.ManyToOne;
-
-import org.hibernate.annotations.DynamicUpdate;
-
 /**
  * @author Piotr Findeisen
  */
-@Entity
-@DynamicUpdate
 public class DataMetaPoint {
-	@Id
-	@GeneratedValue
 	private long id;
-	@ManyToOne(fetch = FetchType.LAZY)
 	private DataPoint dataPoint;
 	private String meta;
 

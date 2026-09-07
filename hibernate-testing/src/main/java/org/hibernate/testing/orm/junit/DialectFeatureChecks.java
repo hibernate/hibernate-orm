@@ -1126,12 +1126,6 @@ abstract public class DialectFeatureChecks {
 		}
 	}
 
-	public static class SupportsTableWithoutPrimaryKey implements DialectFeatureCheck {
-		public boolean apply(Dialect dialect) {
-			return !(dialect instanceof SpannerPostgreSQLDialect || dialect instanceof SpannerDialect);
-		}
-	}
-
 	public static class SupportsVarSampFunction implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return definesFunction( dialect, "var_samp" );

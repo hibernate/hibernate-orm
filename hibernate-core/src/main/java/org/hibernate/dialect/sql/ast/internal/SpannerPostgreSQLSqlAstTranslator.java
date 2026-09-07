@@ -115,8 +115,11 @@ public class SpannerPostgreSQLSqlAstTranslator<T extends JdbcOperation> extends 
 
 	@Override
 	protected void renderComparison(Expression lhs, ComparisonOperator operator, Expression rhs) {
-		if ( operator == ComparisonOperator.DISTINCT_FROM || operator == ComparisonOperator.NOT_DISTINCT_FROM ) {
-			renderComparisonEmulateCase( lhs, operator, rhs );
+		if ( ( operator == ComparisonOperator.DISTINCT_FROM || operator == ComparisonOperator.NOT_DISTINCT_FROM )
+				&& isNullLiteral( lhs ) && isNullLiteral( rhs ) ) {
+			appendSql( "cast(null as int) " );
+			appendSql( operator.sqlText() );
+			appendSql( " cast(null as int)" );
 			return;
 		}
 		if ( rhs instanceof Every every ) {
@@ -174,5 +177,9 @@ public class SpannerPostgreSQLSqlAstTranslator<T extends JdbcOperation> extends 
 			appendSql( UnaryArithmeticOperator.UNARY_MINUS.getOperatorChar() );
 		}
 		unaryOperationExpression.getOperand().accept( this );
+	}
+
+	private static boolean isNullLiteral(Expression expression) {
+		return expression instanceof Literal literal && literal.getLiteralValue() == null;
 	}
 }

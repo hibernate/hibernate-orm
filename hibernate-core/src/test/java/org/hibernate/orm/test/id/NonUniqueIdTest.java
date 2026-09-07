@@ -10,12 +10,12 @@ import jakarta.persistence.Table;
 
 import org.hibernate.HibernateException;
 
-import org.hibernate.testing.orm.junit.DialectFeatureChecks;
-import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -29,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 		annotatedClasses = NonUniqueIdTest.Category.class
 )
 @SessionFactory
-@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsTableWithoutPrimaryKey.class )
+@SkipForDialect(dialectClass = SpannerDialect.class, reason = "Spanner GoogleSQL does not support varchar in raw DDL")
 public class NonUniqueIdTest {
 
 	@BeforeAll

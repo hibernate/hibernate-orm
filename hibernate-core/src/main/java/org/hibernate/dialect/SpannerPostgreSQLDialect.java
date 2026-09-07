@@ -741,7 +741,6 @@ public class SpannerPostgreSQLDialect extends PostgreSQLDialect implements Curre
 	public PredicateSupport getPredicateSupport() {
 		return PredicateSupport.builder( super.getPredicateSupport() )
 				.noCaseInsensitiveLikeOperator()
-				.capability( PredicateSupport.Capability.DISTINCT_FROM, false )
 				.build();
 	}
 

@@ -19,8 +19,6 @@ dependencies {
     implementation libs.jandex
     implementation libs.hibernateModels
 
-    compileOnly libs.ant
-
     annotationProcessor project( ':hibernate-processor' )
     compileOnly libs.jakarta.annotation
 

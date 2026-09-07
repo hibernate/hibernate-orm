@@ -178,6 +178,7 @@ public class PredicateSupportTests {
 		assertProfile(
 				new SpannerPostgreSQLDialect().getPredicateSupport(),
 				null,
+				PredicateSupport.Capability.DISTINCT_FROM,
 				PredicateSupport.Capability.TRUTHNESS,
 				PredicateSupport.Capability.EXPRESSION_PLACEMENT
 		);

@@ -3,9 +3,7 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.envers.integration.strategy;
-import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 
-import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 
 
 import java.sql.Types;
@@ -18,6 +16,8 @@ import java.util.Set;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
 
+import org.hibernate.dialect.SpannerDialect;
+import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.envers.configuration.EnversSettings;
@@ -33,6 +33,7 @@ import org.hibernate.testing.orm.junit.BeforeClassTemplate;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 
 import org.junit.jupiter.api.Test;
 
@@ -46,7 +47,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  *
  * @author Erik-Berndt Scheper
  */
-@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsTableWithoutPrimaryKey.class)
 @EnversTest(auditStrategies = ValidityAuditStrategy.class)
 @Jpa(
 		annotatedClasses = {
@@ -60,6 +60,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 				@Setting(name = EnversSettings.AUDIT_STRATEGY_VALIDITY_REVEND_TIMESTAMP_FIELD_NAME, value = "REVEND_TIMESTAMP")
 		}
 )
+@SkipForDialect(dialectClass = SpannerDialect.class, reason = "Spanner emulator does not support TableGenerator concurrency")
+@SkipForDialect(dialectClass = SpannerPostgreSQLDialect.class, reason = "Spanner emulator does not support TableGenerator concurrency")
 public class ValidityAuditStrategyRevEndTestCustomRevEnt {
 	private final String revendTimestampColumName = "REVEND_TIMESTAMP";
 

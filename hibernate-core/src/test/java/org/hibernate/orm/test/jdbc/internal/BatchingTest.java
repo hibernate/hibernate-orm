@@ -6,6 +6,7 @@ package org.hibernate.orm.test.jdbc.internal;
 
 import java.sql.Statement;
 
+import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.jdbc.batch.internal.BatchBuilderImpl;
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
@@ -18,10 +19,9 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.orm.test.common.JournalingBatchObserver;
 import org.hibernate.sql.spi.mutation.MutationType;
 import org.hibernate.sql.spi.mutation.jdbc.JdbcValueDescriptor;
-import org.hibernate.testing.orm.junit.DialectFeatureChecks;
-import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.type.StandardBasicTypes;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
@@ -35,7 +35,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Brett Meyer
  */
 @SessionFactory
-@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsTableWithoutPrimaryKey.class )
+@SkipForDialect(dialectClass = SpannerDialect.class, reason = "Spanner GoogleSQL does not support varchar in raw DDL")
 public class BatchingTest implements BatchKey {
 	private final String SANDBOX_TBL = "SANDBOX_JDBC_TST";
 

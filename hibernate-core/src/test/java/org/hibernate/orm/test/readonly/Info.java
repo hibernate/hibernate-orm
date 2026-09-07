@@ -4,17 +4,13 @@
  */
 package org.hibernate.orm.test.readonly;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
 
 /**
+ * todo: describe Info
+ *
  * @author Steve Ebersole, Gail Badner (adapted this from "proxy" tests version)
  */
-@Entity
 public class Info {
-	@Id
-	@GeneratedValue
 	private Long id;
 	private String details;
 

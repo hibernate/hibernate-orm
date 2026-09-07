@@ -285,14 +285,10 @@ public class ToOneAttributeMapping
 
 		sqlAliasStem = SqlAliasStemHelper.INSTANCE.generateStemFromAttributeName( name );
 		isNullable = bootValue.isNullable();
-		// Check both bytecode enhancement metadata AND the fetch timing from the mapping.
-		// For @ConcreteProxy entities, lazy loading should work even without bytecode
-		// enhancement, so we also check if the fetch timing is DELAYED (lazy).
 		isLazy = navigableRole.getParent().getParent() == null
-					&& (declaringEntityPersister.getBytecodeEnhancementMetadata()
+					&& declaringEntityPersister.getBytecodeEnhancementMetadata()
 							.getLazyAttributesMetadata()
-							.isLazyAttribute( name )
-						|| mappedFetchTiming == FetchTiming.DELAYED);
+							.isLazyAttribute( name );
 		referencedPropertyName = bootValue.getReferencedPropertyName();
 		unwrapProxy = bootValue.isUnwrapProxy();
 		this.entityMappingType = entityMappingType;

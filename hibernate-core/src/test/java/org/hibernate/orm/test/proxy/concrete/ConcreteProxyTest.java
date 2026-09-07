@@ -52,7 +52,11 @@ import static org.hamcrest.Matchers.is;
 				ConcreteProxyTest.UnionBase.class,
 				ConcreteProxyTest.UnionChild1.class,
 				ConcreteProxyTest.UnionSubChild1.class,
-				ConcreteProxyTest.UnionChild2.class
+				ConcreteProxyTest.UnionChild2.class,
+				ConcreteProxyTest.AbstractSingleTableParent.class,
+				ConcreteProxyTest.AbstractSingleTableBase.class,
+				ConcreteProxyTest.AbstractSingleTableChild1.class,
+				ConcreteProxyTest.AbstractSingleTableChild2.class
 		}
 )
 @SessionFactory(
@@ -60,6 +64,38 @@ import static org.hamcrest.Matchers.is;
 )
 @BytecodeEnhanced(runNotEnhancedAsWell = true)
 public class ConcreteProxyTest {
+
+	@Test
+	public void testAbstractSingleTable(SessionFactoryScope scope) {
+		final SQLStatementInspector inspector = scope.getStatementInspector( SQLStatementInspector.class );
+		inspector.clear();
+		// test find and association with abstract @ConcreteProxy base
+		scope.inSession( session -> {
+			final AbstractSingleTableParent parent1 = session.find( AbstractSingleTableParent.class, 1L );
+			assertThat( Hibernate.isInitialized( parent1.getAbstractSingle() ), is( false ) );
+			assertThat( parent1.getAbstractSingle(), instanceOf( AbstractSingleTableChild1.class ) );
+			final AbstractSingleTableChild1 proxy = (AbstractSingleTableChild1) parent1.getAbstractSingle();
+			assertThat( Hibernate.isInitialized( proxy ), is( false ) );
+			inspector.assertExecutedCount( 1 );
+			inspector.assertNumberOfJoins( 0, SqlAstJoinType.LEFT, 1 );
+			inspector.assertNumberOfOccurrenceInQueryNoSpace( 0, "disc_col", 1 );
+		} );
+		inspector.clear();
+		// test query and association with abstract @ConcreteProxy base
+		scope.inSession( session -> {
+			final AbstractSingleTableParent parent2 = session.createQuery(
+					"from AbstractSingleTableParent where id = 2",
+					AbstractSingleTableParent.class
+			).getSingleResult();
+			assertThat( Hibernate.isInitialized( parent2.getAbstractSingle() ), is( false ) );
+			assertThat( parent2.getAbstractSingle(), instanceOf( AbstractSingleTableChild2.class ) );
+			final AbstractSingleTableChild2 proxy = (AbstractSingleTableChild2) parent2.getAbstractSingle();
+			assertThat( Hibernate.isInitialized( proxy ), is( false ) );
+			inspector.assertExecutedCount( 1 );
+			inspector.assertNumberOfJoins( 0, SqlAstJoinType.LEFT, 1 );
+			inspector.assertNumberOfOccurrenceInQueryNoSpace( 0, "disc_col", 1 );
+		} );
+	}
 
 	@Test
 	public void testSingleTable(SessionFactoryScope scope) {
@@ -266,6 +302,9 @@ public class ConcreteProxyTest {
 			session.persist( new JoinedParent( 2L, new JoinedChild2( 2L, 2 ) ) );
 			session.persist( new JoinedDiscParent( 2L, new JoinedDiscChild2( 2L, 2 ) ) );
 			session.persist( new UnionParent( 2L, new UnionChild2( 2L, 2 ) ) );
+			// Test data for abstract @ConcreteProxy entities (HHH-20827)
+			session.persist( new AbstractSingleTableParent( 1L, new AbstractSingleTableChild1( 1L, "child1" ) ) );
+			session.persist( new AbstractSingleTableParent( 2L, new AbstractSingleTableChild2( 2L, 2 ) ) );
 		} );
 	}
 
@@ -583,6 +622,71 @@ public class ConcreteProxyTest {
 		}
 
 		public UnionChild2(Long id, Integer child2Prop) {
+			super( id );
+			this.child2Prop = child2Prop;
+		}
+	}
+
+	// Test for HHH-20827: Abstract @ConcreteProxy entities with lazy ManyToOne
+
+	@Entity(name = "AbstractSingleTableParent")
+	public static class AbstractSingleTableParent {
+		@Id
+		private Long id;
+
+		@ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
+		private AbstractSingleTableBase abstractSingle;
+
+		public AbstractSingleTableParent() {
+		}
+
+		public AbstractSingleTableParent(Long id, AbstractSingleTableBase abstractSingle) {
+			this.id = id;
+			this.abstractSingle = abstractSingle;
+		}
+
+		public AbstractSingleTableBase getAbstractSingle() {
+			return abstractSingle;
+		}
+	}
+
+	@Entity(name = "AbstractSingleTableBase")
+	@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+	@DiscriminatorColumn(name = "disc_col")
+	@ConcreteProxy
+	public abstract static class AbstractSingleTableBase {
+		@Id
+		private Long id;
+
+		public AbstractSingleTableBase() {
+		}
+
+		public AbstractSingleTableBase(Long id) {
+			this.id = id;
+		}
+	}
+
+	@Entity(name = "AbstractSingleTableChild1")
+	public static class AbstractSingleTableChild1 extends AbstractSingleTableBase {
+		private String child1Prop;
+
+		public AbstractSingleTableChild1() {
+		}
+
+		public AbstractSingleTableChild1(Long id, String child1Prop) {
+			super( id );
+			this.child1Prop = child1Prop;
+		}
+	}
+
+	@Entity(name = "AbstractSingleTableChild2")
+	public static class AbstractSingleTableChild2 extends AbstractSingleTableBase {
+		private Integer child2Prop;
+
+		public AbstractSingleTableChild2() {
+		}
+
+		public AbstractSingleTableChild2(Long id, Integer child2Prop) {
 			super( id );
 			this.child2Prop = child2Prop;
 		}

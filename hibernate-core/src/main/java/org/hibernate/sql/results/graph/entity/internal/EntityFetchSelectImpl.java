@@ -36,7 +36,7 @@ public class EntityFetchSelectImpl extends AbstractNonJoinedEntityFetch {
 				fetchedAttribute,
 				fetchParent,
 				keyResult,
-				fetchedAttribute.getEntityMappingType().getEntityPersister().isConcreteProxy(),
+				fetchedAttribute.getEntityMappingType().isConcreteProxy() && fetchedAttribute.getEntityMappingType().hasSubclasses(),
 				selectByUniqueKey,
 				creationState
 		);

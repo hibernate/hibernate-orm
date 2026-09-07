@@ -4,22 +4,13 @@
  */
 package org.hibernate.orm.test.stateless.fetching;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.ManyToOne;
 
 /**
  * @author Steve Ebersole
  */
-@Entity
 public class Resource {
-	@Id
-	@GeneratedValue
 	private Long id;
 	private String name;
-	@ManyToOne(fetch = FetchType.LAZY)
 	private User owner;
 
 	public Resource() {

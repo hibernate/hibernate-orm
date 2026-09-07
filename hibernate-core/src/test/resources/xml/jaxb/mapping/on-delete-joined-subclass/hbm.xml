@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<hibernate-mapping package="org.hibernate.orm.test.ondelete.joined">
+    <class name="Parent">
+        <id name="id" type="long">
+            <generator class="identity"/>
+        </id>
+        <property name="name"/>
+        
+        <joined-subclass name="Child" table="Child">
+            <key column="parent_id" on-delete="cascade"/>
+            <property name="childData"/>
+        </joined-subclass>
+    </class>
+</hibernate-mapping>

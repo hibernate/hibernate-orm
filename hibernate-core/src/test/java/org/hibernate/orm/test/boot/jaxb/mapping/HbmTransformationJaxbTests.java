@@ -12,6 +12,7 @@ import java.util.function.Consumer;
 import javax.xml.stream.XMLEventFactory;
 import javax.xml.stream.XMLEventReader;
 
+import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.SourceType;
@@ -2059,6 +2060,30 @@ public class HbmTransformationJaxbTests {
 			assertThat( elementCollection.getCollectionType().getParameters() )
 					.as( "collection-type should include typedef parameters" )
 					.hasSize( 1 );
+		} );
+	}
+
+	@Test
+	@JiraKey( "HHH-20834" )
+	public void testJoinedSubclassOnDeleteTransformation(ServiceRegistryScope scope) {
+		transformAndVerify( "xml/jaxb/mapping/on-delete-joined-subclass/hbm.xml", scope, transformed -> {
+			assertThat( transformed.getEntities() ).hasSize( 2 );
+
+			final JaxbEntityImpl childEntity = transformed.getEntities().stream()
+					.filter( e -> "Child".equals( e.getClazz() ) )
+					.findFirst()
+					.orElseThrow();
+
+			assertThat( childEntity.getPrimaryKeyJoinColumns() )
+					.as( "Child entity should have primary-key-join-column" )
+					.hasSize( 1 );
+
+			assertThat( childEntity.getPrimaryKeyJoinColumns().get( 0 ).getName() )
+					.isEqualTo( "parent_id" );
+
+			assertThat( childEntity.getOnDelete() )
+					.as( "joined-subclass with key on-delete='cascade' should have on-delete at entity level" )
+					.isEqualTo( OnDeleteAction.CASCADE );
 		} );
 	}
 

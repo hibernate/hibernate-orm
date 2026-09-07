@@ -18,8 +18,6 @@ dependencies {
     implementation libs.hcann
     implementation libs.jandex
 
-    compileOnly libs.ant
-
     annotationProcessor project( ':hibernate-jpamodelgen' )
     compileOnly jakartaLibs.annotation
 

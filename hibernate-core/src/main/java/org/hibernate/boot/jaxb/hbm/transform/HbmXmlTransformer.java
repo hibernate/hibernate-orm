@@ -1099,12 +1099,12 @@ public class HbmXmlTransformer {
 		}
 
 		for ( var hbmQuery : hbmClass.getQuery() ) {
-			final String name = mappingEntity.getName() + "." + hbmQuery.getName();
+			final String name = entityInfo.getPersistentClass().getEntityName() + "." + hbmQuery.getName();
 			mappingEntity.getNamedQueries().add( transformNamedQuery( hbmQuery, name ) );
 		}
 
 		for ( var hbmQuery : hbmClass.getSqlQuery() ) {
-			final String name = mappingEntity.getName() + "." + hbmQuery.getName();
+			final String name = entityInfo.getPersistentClass().getEntityName() + "." + hbmQuery.getName();
 			if ( hbmQuery.isCallable() ) {
 				mappingEntity.getNamedStoredProcedureQueries().add( transformNamedStoredProcedureQuery( hbmQuery, name ) );
 			}

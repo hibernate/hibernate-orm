@@ -4,30 +4,15 @@
  */
 package org.hibernate.orm.test.jpa.naturalid;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-import jakarta.persistence.Version;
-
-import org.hibernate.annotations.NaturalId;
 
 /**
  * @author Steve Ebersole
  */
-@Entity
-@Table(name = "IMM_NAT_ID_USER")
 public class User implements java.io.Serializable {
-	@Id
-	@GeneratedValue
+
 	private Integer myUserId;
-	@Version
 	private Integer version;
-	@NaturalId
-	@Column(length = 10)
 	private String userName;
-	@Column(name = "\"password\"", nullable = false, length = 15)
 	private String password;
 	private String email;
 

@@ -34,7 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @author Steve Ebersole
  */
 @DomainModel(
-		annotatedClasses = {User.class, Group.class}
+		xmlMappings = "org/hibernate/orm/test/manytomany/batchload/UserGroupBatchLoad.orm.xml"
 )
 @SessionFactory(generateStatistics = true)
 @ServiceRegistry(

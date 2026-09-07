@@ -17,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * @author Vlad Mihalcea
  */
 @DomainModel(
-		annotatedClasses = Person.class
+		xmlMappings = "/org/hibernate/orm/test/mapping/converted/enums/Person.orm.xml"
 )
 @SessionFactory
 public class EnumExplicitTypeTest {

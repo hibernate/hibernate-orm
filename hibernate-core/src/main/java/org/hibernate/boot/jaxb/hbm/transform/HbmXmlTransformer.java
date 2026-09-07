@@ -1214,6 +1214,12 @@ public class HbmXmlTransformer {
 		final var key = hbmSubclass.getKey();
 		if ( key != null ) {
 			transferKeyColumns( key, subclassEntity.getPrimaryKeyJoinColumns() );
+
+			// Transfer on-delete from key to entity level
+			final OnDeleteAction onDeleteAction = interpretOnDeleteAction( key.getOnDelete() );
+			if ( onDeleteAction != null && onDeleteAction != OnDeleteAction.NO_ACTION ) {
+				subclassEntity.setOnDelete( onDeleteAction );
+			}
 		}
 
 		if ( !hbmSubclass.getJoinedSubclass().isEmpty() ) {
@@ -2817,6 +2823,16 @@ public class HbmXmlTransformer {
 		return switch ( hbmNotFound ) {
 			case EXCEPTION -> NotFoundAction.EXCEPTION;
 			case IGNORE -> NotFoundAction.IGNORE;
+		};
+	}
+
+	private OnDeleteAction interpretOnDeleteAction(JaxbHbmOnDeleteEnum hbmOnDelete) {
+		if ( hbmOnDelete == null ) {
+			return null;
+		}
+		return switch ( hbmOnDelete ) {
+			case CASCADE -> OnDeleteAction.CASCADE;
+			case NOACTION -> OnDeleteAction.NO_ACTION;
 		};
 	}
 

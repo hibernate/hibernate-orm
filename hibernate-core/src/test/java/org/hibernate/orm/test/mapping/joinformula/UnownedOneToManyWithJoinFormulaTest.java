@@ -70,7 +70,7 @@ public class UnownedOneToManyWithJoinFormulaTest {
 		} );
 	}
 	@Entity
-	@Table(name = "groups")
+	@Table(name = "groups_tbl")
 	public static class Group {
 		@Id
 		@Column(name = "id")

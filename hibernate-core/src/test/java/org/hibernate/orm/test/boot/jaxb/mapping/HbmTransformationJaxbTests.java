@@ -2061,4 +2061,82 @@ public class HbmTransformationJaxbTests {
 					.hasSize( 1 );
 		} );
 	}
+
+	@Test
+	@JiraKey( "HHH-20845" )
+	public void testNamedQueryWithFullyQualifiedEntityName(ServiceRegistryScope scope) {
+		transformAndVerify( "xml/jaxb/mapping/named-query-in-class/simple-name.hbm.xml", scope, transformed -> {
+			assertThat( transformed.getEntities() ).hasSize( 1 );
+
+			final JaxbEntityImpl entity = transformed.getEntities().get( 0 );
+			assertThat( entity.getClazz() ).isEqualTo( "org.hibernate.orm.test.boot.jaxb.mapping.SimpleEntity" );
+
+			assertThat( entity.getNamedQueries() )
+					.as( "Named query defined in <class> should be transformed" )
+					.hasSize( 1 );
+
+			final var namedQuery = entity.getNamedQueries().get( 0 );
+			assertThat( namedQuery.getName() )
+					.as( "Named query should be prefixed with fully qualified entity name" )
+					.isEqualTo( "org.hibernate.orm.test.boot.jaxb.mapping.SimpleEntity.findAll" );
+			assertThat( namedQuery.getQuery() ).isEqualTo( "from SimpleEntity" );
+		} );
+	}
+
+	@Test
+	@JiraKey( "HHH-20845" )
+	public void testNamedQueryAtRootLevelWithoutPrefix(ServiceRegistryScope scope) {
+		transformAndVerify( "xml/jaxb/mapping/named-query-in-class/package-name.hbm.xml", scope, transformed -> {
+			assertThat( transformed.getEntities() ).hasSize( 1 );
+
+			final JaxbEntityImpl entity = transformed.getEntities().get( 0 );
+			assertThat( entity.getClazz() ).isEqualTo( "PackageEntity" );
+
+			assertThat( entity.getNamedQueries() )
+					.as( "Entity should not have named queries when query is defined at root level" )
+					.isEmpty();
+
+			assertThat( transformed.getNamedQueries() )
+					.as( "Named query defined at root level should be in the root element" )
+					.hasSize( 1 );
+
+			final var namedQuery = transformed.getNamedQueries().get( 0 );
+			assertThat( namedQuery.getName() )
+					.as( "Named query at root level should NOT be prefixed with entity name" )
+					.isEqualTo( "findAllPackageEntities" );
+			assertThat( namedQuery.getQuery() ).isEqualTo( "from PackageEntity" );
+		} );
+	}
+
+	@Test
+	@JiraKey( "HHH-20845" )
+	public void testNamedQueriesInsideClassWithHqlAndSql(ServiceRegistryScope scope) {
+		transformAndVerify( "xml/jaxb/mapping/named-query-in-class/with-sql-query.hbm.xml", scope, transformed -> {
+			assertThat( transformed.getEntities() ).hasSize( 1 );
+
+			final JaxbEntityImpl entity = transformed.getEntities().get( 0 );
+			assertThat( entity.getClazz() ).isEqualTo( "EntityWithQueries" );
+
+			// Check HQL query
+			assertThat( entity.getNamedQueries() )
+					.as( "HQL query defined in <class> should be transformed" )
+					.hasSize( 1 );
+
+			final var hqlQuery = entity.getNamedQueries().get( 0 );
+			assertThat( hqlQuery.getName() )
+					.as( "HQL query should be prefixed with fully qualified entity name" )
+					.isEqualTo( "org.hibernate.orm.test.boot.jaxb.mapping.EntityWithQueries.findByName" );
+			assertThat( hqlQuery.getQuery() ).isEqualTo( "from EntityWithQueries where name = :name" );
+
+			// Check SQL query
+			assertThat( entity.getNamedNativeQueries() )
+					.as( "SQL query defined in <class> should be transformed" )
+					.hasSize( 1 );
+
+			final var sqlQuery = entity.getNamedNativeQueries().get( 0 );
+			assertThat( sqlQuery.getName() )
+					.as( "SQL query should be prefixed with fully qualified entity name" )
+					.isEqualTo( "org.hibernate.orm.test.boot.jaxb.mapping.EntityWithQueries.findAll" );
+		} );
+	}
 }

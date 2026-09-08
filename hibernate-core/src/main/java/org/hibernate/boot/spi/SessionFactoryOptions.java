@@ -36,6 +36,7 @@ import org.hibernate.cache.spi.TimestampsCache;
 import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.spi.QueryEngineOptions;
@@ -685,8 +686,35 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	TimeZoneStorageStrategy getDefaultTimeZoneStorageStrategy();
 
 	/**
+	 * Determines whether direct JDBC access using the exact Java Time class is
+	 * enabled by configuration and supported by the Dialect and JDBC driver.
+	 *
+	 * @param javaTimeType the exact Java class to be used at the JDBC boundary
+	 *
+	 * @since 8.0
 	 * @see org.hibernate.cfg.MappingSettings#JAVA_TIME_USE_DIRECT_JDBC
 	 */
+	default boolean isDirectJavaTimeJdbcAccessEnabled(Class<?> javaTimeType) {
+		return isPreferJavaTimeJdbcTypesEnabled()
+				&& getServiceRegistry().requireService( JdbcServices.class )
+						.getDialect()
+						.getDirectJavaTimeJdbcSupport()
+						.supports( javaTimeType );
+	}
+
+	/**
+	 * Returns the resolved value of
+	 * {@value org.hibernate.cfg.MappingSettings#JAVA_TIME_USE_DIRECT_JDBC}, after
+	 * configuration conversion and defaulting, but before accounting for Dialect
+	 * or JDBC-driver capabilities.
+	 * <p>
+	 * Code selecting a JDBC mapping should instead use
+	 * {@link #isDirectJavaTimeJdbcAccessEnabled(Class)}.
+	 *
+	 * @deprecated Use {@link #isDirectJavaTimeJdbcAccessEnabled(Class)} when
+	 * determining whether direct JDBC access should be used for a Java Time type.
+	 */
+	@Deprecated(since = "8.0")
 	boolean isPreferJavaTimeJdbcTypesEnabled();
 
 	/**

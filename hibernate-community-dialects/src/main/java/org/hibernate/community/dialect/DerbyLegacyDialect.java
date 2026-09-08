@@ -4,6 +4,8 @@
  */
 package org.hibernate.community.dialect;
 
+import org.hibernate.dialect.type.spi.DirectJavaTimeJdbcSupport;
+import org.hibernate.dialect.type.spi.DirectJavaTimeJdbcSupports;
 import org.hibernate.dialect.identifier.spi.KeywordRegistration;
 
 import org.hibernate.dialect.temporaltype.spi.CurrentTimestampSelection;
@@ -140,6 +142,11 @@ import static org.hibernate.type.SqlTypes.VARCHAR;
  *
  */
 public class DerbyLegacyDialect extends Dialect implements CurrentTemporalSupport, TemporalFormatSupport, TemporalOperationSupport {
+
+	@Override
+	public DirectJavaTimeJdbcSupport getDirectJavaTimeJdbcSupport() {
+		return DirectJavaTimeJdbcSupports.none();
+	}
 
 	@Override
 	@SPI({ IMPLEMENT, SUPPLY })

@@ -22,6 +22,7 @@ import org.hibernate.query.sqm.sql.spi.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.spi.SqmTypedNode;
 import org.hibernate.sql.ast.spi.SqlAstNode;
 import org.hibernate.sql.ast.spi.query.expression.Expression;
+import org.hibernate.type.descriptor.jdbc.JavaTimeJdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import java.util.List;
@@ -73,9 +74,15 @@ public class GenerateSeriesSetReturningFunctionTypeResolver implements SetReturn
 				start.getExpressionType(),
 				stop.getExpressionType()
 		);
-		final JdbcMapping type = expressionType.getSingleJdbcMapping();
+		JdbcMapping type = expressionType.getSingleJdbcMapping();
 		if ( type == null ) {
 			throw new IllegalArgumentException( "Couldn't determine types of arguments to function 'generate_series'" );
+		}
+		if ( type.getJdbcType() instanceof JavaTimeJdbcType ) {
+			type = converter.getCreationContext()
+					.getTypeConfiguration()
+					.getBasicTypeRegistry()
+					.resolve( type.getJavaTypeDescriptor(), type.getJdbcType().getDdlTypeCode() );
 		}
 
 		final SelectableMapping indexMapping = withOrdinality ? new SelectableMappingImpl(

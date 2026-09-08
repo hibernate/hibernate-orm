@@ -17,6 +17,7 @@ import org.hibernate.type.descriptor.java.OffsetDateTimeJavaType;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.JavaTimeJdbcType;
 import org.hibernate.type.descriptor.jdbc.StructAttributeValues;
 import org.hibernate.type.descriptor.jdbc.StructHelper;
 
@@ -44,6 +45,10 @@ public class StringJsonValueJDBCTypeAdapter implements JsonValueJDBCTypeAdapter 
 			throws SQLException {
 
 		String string = source.getStringValue();
+
+		if ( jdbcType instanceof JavaTimeJdbcType ) {
+			return JavaTimeJdbcType.fromEncodedString( jdbcJavaType, string, 0, string.length() );
+		}
 
 		switch ( jdbcType.getDefaultSqlTypeCode() ) {
 			case SqlTypes.BINARY:

@@ -49,7 +49,15 @@ public class ReflectiveTypeTests {
 	} )
 	@DomainModel(xmlMappings = "mappings/models/hbm/type/basics.xml")
 	void testBasicsXml(DomainModelScope scope) {
-		scope.withHierarchy( EntityOfBasics.class, this::verify );
+		final var typeConfiguration = scope.getDomainModel().getTypeConfiguration();
+		final int preferredInstantJdbcTypeCode = typeConfiguration
+				.getCurrentBaseSqlTypeIndicators()
+				.getPreferredSqlTypeCodeForInstant();
+		final int expectedInstantJdbcTypeCode = typeConfiguration
+				.getJdbcTypeRegistry()
+				.getDescriptor( preferredInstantJdbcTypeCode )
+				.getJdbcTypeCode();
+		scope.withHierarchy( EntityOfBasics.class, rootClass -> verify( rootClass, expectedInstantJdbcTypeCode ) );
 	}
 
 	@Test
@@ -59,7 +67,7 @@ public class ReflectiveTypeTests {
 		scope.withHierarchy( EntityWithElementCollections.class, this::verifyElementCollections );
 	}
 
-	private void verify(RootClass rootClass) {
+	private void verify(RootClass rootClass, int expectedInstantJdbcTypeCode) {
 		verify( (BasicType<?>) rootClass.getIdentifier().getType(), IntegerJavaType.class, SqlTypes.INTEGER );
 		verify( rootClass, "theBoolean", BooleanJavaType.class, SqlTypes.BOOLEAN );
 		verify( rootClass, "theString", StringJavaType.class, SqlTypes.VARCHAR );
@@ -69,7 +77,7 @@ public class ReflectiveTypeTests {
 		verify( rootClass, "theDouble", DoubleJavaType.class, SqlTypes.DOUBLE );
 		verify( rootClass, "theUrl", UrlJavaType.class, SqlTypes.VARCHAR );
 		verify( rootClass, "theClob", ClobJavaType.class, SqlTypes.CLOB );
-		verify( rootClass, "theInstant", InstantJavaType.class, SqlTypes.INSTANT );
+		verify( rootClass, "theInstant", InstantJavaType.class, expectedInstantJdbcTypeCode );
 		verify( rootClass, "theDate", DateJavaType.class, SqlTypes.DATE );
 		verify( rootClass, "theTime", DateJavaType.class, SqlTypes.TIME );
 		verify( rootClass, "theTimestamp", DateJavaType.class, SqlTypes.TIMESTAMP );

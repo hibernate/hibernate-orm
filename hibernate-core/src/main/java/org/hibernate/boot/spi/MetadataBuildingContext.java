@@ -12,10 +12,12 @@ import org.hibernate.boot.model.naming.ObjectNameNormalizer;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.temporal.TemporalTableStrategy;
 import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.ServiceRegistry;
 
 import static org.hibernate.cfg.MappingSettings.JAVA_TIME_USE_DIRECT_JDBC;
+import static org.hibernate.cfg.MappingSettings.JAVA_TIME_USE_DIRECT_JDBC_DEFAULT;
 import static org.hibernate.cfg.MappingSettings.PREFER_LOCALE_LANGUAGE_TAG;
 import static org.hibernate.cfg.MappingSettings.PREFER_NATIVE_ENUM_TYPES;
 import static org.hibernate.audit.AuditStrategy.DEFAULT;
@@ -100,6 +102,37 @@ public interface MetadataBuildingContext {
 		return ConfigurationHelper.getPreferredSqlTypeCodeForArray( getRegistry() );
 	}
 
+	/**
+	 * Determines whether direct JDBC access using the exact Java Time class is
+	 * enabled by configuration and supported by the Dialect and JDBC driver.
+	 *
+	 * @param javaTimeType the exact Java class to be used at the JDBC boundary
+	 *
+	 * @since 8.0
+	 */
+	@Incubating
+	@Remove
+	default boolean isDirectJavaTimeJdbcAccessEnabled(Class<?> javaTimeType) {
+		return isPreferJavaTimeJdbcTypesEnabled()
+				&& getRegistry().requireService( JdbcServices.class )
+						.getDialect()
+						.getDirectJavaTimeJdbcSupport()
+						.supports( javaTimeType );
+	}
+
+	/**
+	 * Returns the resolved value of
+	 * {@value org.hibernate.cfg.MappingSettings#JAVA_TIME_USE_DIRECT_JDBC}, after
+	 * configuration conversion and defaulting, but before accounting for Dialect
+	 * or JDBC-driver capabilities.
+	 * <p>
+	 * Code selecting a JDBC mapping should instead use
+	 * {@link #isDirectJavaTimeJdbcAccessEnabled(Class)}.
+	 *
+	 * @deprecated Use {@link #isDirectJavaTimeJdbcAccessEnabled(Class)} when
+	 * determining whether direct JDBC access should be used for a Java Time type.
+	 */
+	@Deprecated(since = "8.0")
 	@Incubating
 	@Remove
 	default boolean isPreferJavaTimeJdbcTypesEnabled() {
@@ -135,7 +168,11 @@ public interface MetadataBuildingContext {
 
 	@Remove
 	static boolean isPreferJavaTimeJdbcTypesEnabled(ConfigurationService configurationService) {
-		return getBoolean( JAVA_TIME_USE_DIRECT_JDBC, configurationService.getSettings() );
+		return getBoolean(
+				JAVA_TIME_USE_DIRECT_JDBC,
+				configurationService.getSettings(),
+				JAVA_TIME_USE_DIRECT_JDBC_DEFAULT
+		);
 	}
 
 	@Remove

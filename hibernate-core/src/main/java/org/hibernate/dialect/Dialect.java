@@ -6,6 +6,8 @@ package org.hibernate.dialect;
 
 
 import org.hibernate.dialect.type.spi.DdlTypeBuilder;
+import org.hibernate.dialect.type.spi.DirectJavaTimeJdbcSupport;
+import org.hibernate.dialect.type.spi.DirectJavaTimeJdbcSupports;
 import org.hibernate.dialect.type.spi.EnumSupport;
 import org.hibernate.dialect.type.spi.EnumSupports;
 import org.hibernate.dialect.type.spi.ObjectNullBindingStrategy;
@@ -751,6 +753,19 @@ public abstract class Dialect implements ConversionContext, AlterTableSupport,
 	@SPI({ IMPLEMENT, SUPPLY })
 	public EnumSupport getEnumSupport() {
 		return EnumSupports.standard();
+	}
+
+	/// Supply direct JDBC access capabilities for Java Time classes. Return one
+	/// stable, non-null, thread-safe implementation.
+	///
+	/// @return the direct Java Time JDBC support for this Dialect and driver
+	///
+	/// @see DirectJavaTimeJdbcSupport
+	///
+	/// @since 8.0
+	@SPI({ IMPLEMENT, SUPPLY })
+	public DirectJavaTimeJdbcSupport getDirectJavaTimeJdbcSupport() {
+		return DirectJavaTimeJdbcSupports.jdbc42();
 	}
 
 	/*

@@ -16,6 +16,8 @@ import org.hibernate.dialect.temporaltype.spi.TemporalFormatSupport;
 import org.hibernate.dialect.temporaltype.spi.CurrentTemporalSupport;
 
 import org.hibernate.dialect.type.spi.StandardDdlTypes;
+import org.hibernate.dialect.type.spi.DirectJavaTimeJdbcSupport;
+import org.hibernate.dialect.type.spi.DirectJavaTimeJdbcSupports;
 
 import org.hibernate.dialect.type.spi.TypeSizingProfile;
 import org.hibernate.dialect.type.spi.EnumSupport;
@@ -157,6 +159,9 @@ import org.hibernate.type.spi.TypeConfiguration;
 
 import java.sql.SQLException;
 import java.sql.Types;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
 import java.util.Calendar;
@@ -223,6 +228,14 @@ import static org.hibernate.dialect.literal.spi.StandardDateTimeLiteralRendering
 /// @since 8.0
 @SPI({ USE, IMPLEMENT })
 public class PostgreSQLDialect extends Dialect implements CurrentTemporalSupport, TemporalFormatSupport, TemporalOperationSupport {
+	private static final DirectJavaTimeJdbcSupport DIRECT_JAVA_TIME_JDBC_SUPPORT =
+			DirectJavaTimeJdbcSupports.of( LocalDate.class, LocalTime.class, LocalDateTime.class );
+
+	@Override
+	public DirectJavaTimeJdbcSupport getDirectJavaTimeJdbcSupport() {
+		return DIRECT_JAVA_TIME_JDBC_SUPPORT;
+	}
+
 	private IfExistsSupport ifExistsSupport;
 	private SchemaDropSupport schemaDropSupport;
 

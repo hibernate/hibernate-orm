@@ -12,6 +12,7 @@ import java.util.function.Supplier;
 
 import jakarta.annotation.Nonnull;
 import org.hibernate.Incubating;
+import org.hibernate.Internal;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
@@ -449,10 +450,24 @@ public final class ConfigurationHelper {
 
 	@Incubating
 	public static synchronized int getPreferredSqlTypeCodeForInstant(ServiceRegistry serviceRegistry) {
-		final Integer explicitSetting =
-				getConfiguredTypeCode( serviceRegistry, PREFERRED_INSTANT_JDBC_TYPE );
-		return explicitSetting != null ? explicitSetting : SqlTypes.TIMESTAMP_UTC;
+		final Integer explicitSetting = getExplicitPreferredSqlTypeCodeForInstant( serviceRegistry );
+		if ( explicitSetting == null ) {
+			return SqlTypes.TIMESTAMP_UTC;
+		}
+		if ( explicitSetting == SqlTypes.INSTANT
+				&& !serviceRegistry.requireService( JdbcServices.class )
+						.getDialect()
+						.getDirectJavaTimeJdbcSupport()
+						.supports( java.time.Instant.class ) ) {
+			return SqlTypes.TIMESTAMP_UTC;
+		}
+		return explicitSetting;
+	}
 
+	@Incubating
+	@Internal
+	public static synchronized Integer getExplicitPreferredSqlTypeCodeForInstant(ServiceRegistry serviceRegistry) {
+		return getConfiguredTypeCode( serviceRegistry, PREFERRED_INSTANT_JDBC_TYPE );
 	}
 
 	@Incubating

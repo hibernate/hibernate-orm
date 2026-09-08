@@ -46,6 +46,8 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.BasicTypeRegistration;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.type.spi.DirectJavaTimeJdbcSupport;
+import org.hibernate.dialect.type.spi.DirectJavaTimeJdbcSupports;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.SessionFactoryRegistry;
 import org.hibernate.jpa.spi.JpaCompliance;
@@ -83,7 +85,10 @@ import org.hibernate.type.internal.ParameterizedTypeImpl;
 
 import jakarta.persistence.TemporalType;
 
+import static org.hibernate.cfg.MappingSettings.JAVA_TIME_USE_DIRECT_JDBC_DEFAULT;
 import static org.hibernate.id.uuid.LocalObjectUuidHelper.generateLocalObjectUuid;
+import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
+import static org.hibernate.internal.util.config.ConfigurationHelper.getExplicitPreferredSqlTypeCodeForInstant;
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.internal.util.type.PrimitiveWrappers.canonicalize;
 import static org.hibernate.query.sqm.internal.TypecheckUtil.isNumberArray;
@@ -132,14 +137,25 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	private final transient BasicTypeRegistry basicTypeRegistry;
 
 	private final transient Map<Integer, Set<String>> jdbcToHibernateTypeContributionMap = new HashMap<>();
+	private final transient Set<Class<?>> loggedDirectJavaTimeJdbcFallbacks = ConcurrentHashMap.newKeySet();
 
 	public TypeConfiguration() {
+		this( JAVA_TIME_USE_DIRECT_JDBC_DEFAULT, DirectJavaTimeJdbcSupports.jdbc42() );
+	}
+
+	public TypeConfiguration(boolean javaTimeUseDirectJdbc) {
+		this( javaTimeUseDirectJdbc, DirectJavaTimeJdbcSupports.jdbc42() );
+	}
+
+	public TypeConfiguration(
+			boolean javaTimeUseDirectJdbc,
+			DirectJavaTimeJdbcSupport directJavaTimeJdbcSupport) {
 		scope = new Scope( this );
 		javaTypeRegistry = new JavaTypeRegistry( this );
 		jdbcTypeRegistry = new JdbcTypeRegistry( this );
 		ddlTypeRegistry = new DdlTypeRegistry( this );
 		basicTypeRegistry = new BasicTypeRegistry( this );
-		StandardBasicTypes.prime( this );
+		StandardBasicTypes.prime( this, javaTimeUseDirectJdbc, directJavaTimeJdbcSupport );
 	}
 
 	public String getUuid() {
@@ -168,6 +184,62 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 
 	public Map<Integer, Set<String>> getJdbcToHibernateTypeContributionMap() {
 		return jdbcToHibernateTypeContributionMap;
+	}
+
+	/// Logs a Dialect-driven fallback from inferred direct Java Time JDBC access.
+	/// Each fallback capability is logged at most once by this type configuration.
+	@Internal
+	public void logDirectJavaTimeJdbcFallback(
+			Class<?> mappedJavaTimeType,
+			@Nullable Class<?> directFallbackType) {
+		final Class<?> fallbackKey = mappedJavaTimeType == OffsetTime.class
+				? OffsetDateTime.class
+				: mappedJavaTimeType;
+		if ( !loggedDirectJavaTimeJdbcFallbacks.add( fallbackKey ) ) {
+			return;
+		}
+
+		final String dialect = getCurrentBaseSqlTypeIndicators().getDialect().getClass().getName();
+		if ( fallbackKey == LocalDate.class ) {
+			CORE_LOGGER.nonCompliantDirectJavaTimeJdbcAccess( dialect, "LocalDate", "java.sql.Date" );
+		}
+		else if ( fallbackKey == LocalTime.class ) {
+			CORE_LOGGER.nonCompliantDirectJavaTimeJdbcAccess( dialect, "LocalTime", "java.sql.Time" );
+		}
+		else if ( fallbackKey == LocalDateTime.class ) {
+			CORE_LOGGER.nonCompliantDirectJavaTimeJdbcAccess( dialect, "LocalDateTime", "java.sql.Timestamp" );
+		}
+		else if ( fallbackKey == OffsetDateTime.class ) {
+			CORE_LOGGER.nonCompliantDirectJavaTimeJdbcAccess(
+					dialect,
+					"OffsetTime/OffsetDateTime",
+					"java.sql.Time/java.sql.Timestamp"
+			);
+		}
+		else if ( fallbackKey == ZonedDateTime.class ) {
+			CORE_LOGGER.unsupportedDirectJavaTimeJdbcAccess(
+					dialect,
+					"ZonedDateTime",
+					directFallbackType == OffsetDateTime.class
+							? "convert values to [java.time.OffsetDateTime] for direct JDBC access"
+							: "fall back to error-prone conversions to [java.sql.Timestamp]"
+			);
+		}
+	}
+
+	/// Logs the fallback from an explicitly preferred direct `Instant` JDBC type
+	/// when the Dialect does not support it.
+	@Internal
+	public void logDirectInstantJdbcFallback() {
+		if ( Integer.valueOf( SqlTypes.INSTANT )
+				.equals( getExplicitPreferredSqlTypeCodeForInstant( scope.getServiceRegistry() ) )
+				&& loggedDirectJavaTimeJdbcFallbacks.add( Instant.class ) ) {
+			CORE_LOGGER.unsupportedDirectJavaTimeJdbcAccess(
+					getCurrentBaseSqlTypeIndicators().getDialect().getClass().getName(),
+					"Instant",
+					"fall back to [TIMESTAMP_UTC] handling"
+			);
+		}
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -421,6 +493,14 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		}
 
 		@Override
+		public boolean isDirectJavaTimeJdbcAccessEnabled(Class<?> javaTimeType) {
+			return sessionFactory == null
+					? metadataBuildingContext.isDirectJavaTimeJdbcAccessEnabled( javaTimeType )
+					: sessionFactory.getSessionFactoryOptions().isDirectJavaTimeJdbcAccessEnabled( javaTimeType );
+		}
+
+		@Override
+		@Deprecated(since = "8.0")
 		public boolean isPreferJavaTimeJdbcTypesEnabled() {
 			return sessionFactory == null
 					? metadataBuildingContext.isPreferJavaTimeJdbcTypesEnabled()
@@ -930,11 +1010,13 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	@SuppressWarnings("deprecation")
 	protected static @Nullable TemporalType getSqlTemporalType(int jdbcTypeCode) {
 		return switch ( jdbcTypeCode ) {
-			case SqlTypes.TIMESTAMP, SqlTypes.TIMESTAMP_WITH_TIMEZONE, SqlTypes.TIMESTAMP_UTC
+			case SqlTypes.TIMESTAMP, SqlTypes.TIMESTAMP_WITH_TIMEZONE, SqlTypes.TIMESTAMP_UTC,
+					SqlTypes.LOCAL_DATE_TIME, SqlTypes.OFFSET_DATE_TIME, SqlTypes.ZONED_DATE_TIME
 					-> TemporalType.TIMESTAMP;
-			case SqlTypes.TIME, SqlTypes.TIME_WITH_TIMEZONE, SqlTypes.TIME_UTC
+			case SqlTypes.TIME, SqlTypes.TIME_WITH_TIMEZONE, SqlTypes.TIME_UTC,
+					SqlTypes.LOCAL_TIME, SqlTypes.OFFSET_TIME
 					-> TemporalType.TIME;
-			case SqlTypes.DATE
+			case SqlTypes.DATE, SqlTypes.LOCAL_DATE
 					-> TemporalType.DATE;
 			default -> null;
 		};

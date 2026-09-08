@@ -1281,6 +1281,12 @@ public class BasicValue extends SimpleValue
 	}
 
 	@Override
+	public boolean isDirectJavaTimeJdbcAccessEnabled(Class<?> javaTimeType) {
+		return getBuildingContext().isDirectJavaTimeJdbcAccessEnabled( javaTimeType );
+	}
+
+	@Override
+	@Deprecated(since = "8.0")
 	public boolean isPreferJavaTimeJdbcTypesEnabled() {
 		return getBuildingContext().isPreferJavaTimeJdbcTypesEnabled();
 	}

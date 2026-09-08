@@ -14,6 +14,7 @@ import org.hibernate.audit.AuditLogFactory;
 import org.hibernate.audit.ChangesetListener;
 
 import org.hibernate.testing.orm.junit.AuditedTest;
+import org.hibernate.testing.orm.junit.DialectContext;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -193,7 +194,7 @@ class AuditChangelogTest {
 	}
 
 	@Test
-	void testFindByInstant(SessionFactoryScope scope) throws InterruptedException {
+	void testFindByInstant(SessionFactoryScope scope) {
 		scope.getSessionFactory().inTransaction( session -> {
 			var entity = new MyEntity();
 			entity.id = 20L;
@@ -201,7 +202,7 @@ class AuditChangelogTest {
 			session.persist( entity );
 		} );
 
-		Thread.sleep( 50 );
+		DialectContext.awaitHistoryTimestampTick();
 
 		try (var auditLog = AuditLogFactory.create( scope.getSessionFactory() )) {
 			final var entity = auditLog.find( MyEntity.class, 20L, Instant.now() );
@@ -240,7 +241,7 @@ class AuditChangelogTest {
 	}
 
 	@Test
-	void testGetChangesetIdForDate(SessionFactoryScope scope) throws InterruptedException {
+	void testGetChangesetIdForDate(SessionFactoryScope scope) {
 		scope.getSessionFactory().inTransaction( session -> {
 			var entity = new MyEntity();
 			entity.id = 40L;
@@ -248,7 +249,7 @@ class AuditChangelogTest {
 			session.persist( entity );
 		} );
 
-		Thread.sleep( 50 );
+		DialectContext.awaitHistoryTimestampTick();
 
 		try (var auditLog = AuditLogFactory.create( scope.getSessionFactory() )) {
 			final var txId = auditLog.getChangesetId( Instant.now() );

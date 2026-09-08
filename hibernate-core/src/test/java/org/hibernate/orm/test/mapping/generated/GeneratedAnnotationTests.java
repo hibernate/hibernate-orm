@@ -6,7 +6,6 @@ package org.hibernate.orm.test.mapping.generated;
 
 import java.time.Instant;
 
-import org.hibernate.HibernateError;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.Generated;
 import org.hibernate.dialect.SpannerPostgreSQLDialect;
@@ -27,6 +26,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hibernate.testing.orm.junit.DialectContext.awaitServerTimestampTick;
 
 /**
  * @author Steve Ebersole
@@ -79,12 +79,10 @@ public class GeneratedAnnotationTests {
 		created.name = "changed";
 
 		//We need to wait a little to make sure the timestamps produced are different
-		waitALittle();
+		awaitServerTimestampTick( scope );
 
 		// then changing
-		final AuditedEntity merged = scope.fromTransaction( (session) -> {
-			return (AuditedEntity) session.merge( created );
-		} );
+		final AuditedEntity merged = scope.fromTransaction( (session) -> session.merge( created ) );
 
 		assertThat( merged ).isNotNull();
 		assertThat( merged.createdAt ).isNotNull();
@@ -92,12 +90,10 @@ public class GeneratedAnnotationTests {
 		assertThat( merged.lastUpdatedAt ).isNotEqualTo( merged.createdAt );
 
 		//We need to wait a little to make sure the timestamps produced are different
-		waitALittle();
+		awaitServerTimestampTick( scope );
 
 		// lastly, make sure we can load it..
-		final AuditedEntity loaded = scope.fromTransaction( (session) -> {
-			return session.get( AuditedEntity.class, 1 );
-		} );
+		final AuditedEntity loaded = scope.fromTransaction( (session) -> session.get( AuditedEntity.class, 1 ) );
 
 		assertThat( loaded ).isNotNull();
 		assertThat( loaded.createdAt ).isEqualTo( merged.createdAt );
@@ -123,15 +119,6 @@ public class GeneratedAnnotationTests {
 		public AuditedEntity(Integer id, String name) {
 			this.id = id;
 			this.name = name;
-		}
-	}
-
-	private static void waitALittle() {
-		try {
-			Thread.sleep( 10 );
-		}
-		catch (InterruptedException e) {
-			throw new HibernateError( "Unexpected wakeup from test sleep" );
 		}
 	}
 }

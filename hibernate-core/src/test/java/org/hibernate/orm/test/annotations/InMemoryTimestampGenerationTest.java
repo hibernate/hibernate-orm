@@ -12,6 +12,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.SourceType;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.generator.internal.CurrentTimestampGeneration;
+import org.hibernate.testing.orm.junit.DialectContext;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.Jpa;
@@ -21,7 +22,6 @@ import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
 
-import static java.lang.Thread.sleep;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -40,7 +40,7 @@ public class InMemoryTimestampGenerationTest {
 	}
 
 	@Test
-	public void test(EntityManagerFactoryScope scope) throws InterruptedException {
+	public void test(EntityManagerFactoryScope scope) {
 		scope.inTransaction( entityManager -> {
 			Person person = new Person();
 			person.setId( 1L );
@@ -55,7 +55,7 @@ public class InMemoryTimestampGenerationTest {
 		} );
 
 		clock.tick();
-		sleep( 1 );
+		DialectContext.awaitTimestampTick();
 
 		scope.inTransaction( entityManager -> {
 			final Person person = entityManager.find( Person.class, 1L );

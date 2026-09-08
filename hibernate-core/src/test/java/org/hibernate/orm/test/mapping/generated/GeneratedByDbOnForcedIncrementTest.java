@@ -19,19 +19,20 @@ import java.time.LocalDateTime;
 import java.util.Set;
 
 import static org.hibernate.annotations.SourceType.DB;
+import static org.hibernate.testing.orm.junit.DialectContext.awaitServerTimestampTick;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Jpa(annotatedClasses = GeneratedByDbOnForcedIncrementTest.WithUpdateTimestamp.class)
 @SkipForDialect(dialectClass = InformixDialect.class,
 		reason = "JDBC driver returns timestamp with seconds precision")
 class GeneratedByDbOnForcedIncrementTest {
-	@Test void test(EntityManagerFactoryScope scope) throws InterruptedException {
+	@Test void test(EntityManagerFactoryScope scope) {
 		var persisted = scope.fromTransaction( em -> {
 			var entity = new WithUpdateTimestamp();
 			em.persist( entity );
 			return entity;
 		} );
-		Thread.sleep( 100 );
+		awaitServerTimestampTick( scope );
 		var updated = scope.fromTransaction( em -> {
 			var entity = em.find( WithUpdateTimestamp.class, 0L );
 			entity.names.add( "Gavin" );

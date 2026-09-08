@@ -47,7 +47,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @SkipForDialect(dialectClass = MariaDBDialect.class, majorVersion = 10, minorVersion = 11, versionMatchMode = VersionMatchMode.OLDER, reason = "See https://jira.mariadb.org/browse/MDEV-39230")
 class TemporalEntityHistoryTest {
 
-	@Test void test(SessionFactoryScope scope) throws InterruptedException {
+	@Test void test(SessionFactoryScope scope) {
 		scope.getSessionFactory().inTransaction(
 				session -> {
 					TemporalEntity4 entity = new TemporalEntity4();
@@ -213,7 +213,7 @@ class TemporalEntityHistoryTest {
 		}
 	}
 
-	@Test void testStateless(SessionFactoryScope scope) throws InterruptedException {
+	@Test void testStateless(SessionFactoryScope scope) {
 		scope.getSessionFactory().inStatelessTransaction(
 				session -> {
 					TemporalEntity4 entity = new TemporalEntity4();
@@ -273,7 +273,7 @@ class TemporalEntityHistoryTest {
 	}
 
 
-	@Test void testCollections(SessionFactoryScope scope) throws InterruptedException {
+	@Test void testCollections(SessionFactoryScope scope) {
 		scope.inTransaction( s -> {
 			TemporalEntity4 entity = new TemporalEntity4();
 			entity.id = 3L;

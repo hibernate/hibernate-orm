@@ -26,6 +26,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 
+import static org.hibernate.testing.orm.junit.DialectContext.awaitServerTimestampTick;
+
 @SuppressWarnings("JUnitMalformedDeclaration")
 @Jpa(annotatedClasses = DatabaseTimestampsColumnTest.Person.class)
 public class DatabaseTimestampsColumnTest {
@@ -120,7 +122,7 @@ public class DatabaseTimestampsColumnTest {
 					Date timestamp = person.getTimestamp();
 					Assertions.assertNotNull(timestamp);
 
-					try { Thread.sleep(1_000); } catch (InterruptedException ie) {};
+					awaitServerTimestampTick( entityManager );
 
 					entityManager.getTransaction().begin();
 					person.setName("Jane Doe");

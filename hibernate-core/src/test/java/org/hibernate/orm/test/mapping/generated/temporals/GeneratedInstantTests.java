@@ -6,7 +6,6 @@ package org.hibernate.orm.test.mapping.generated.temporals;
 
 import java.time.Instant;
 
-import org.hibernate.HibernateError;
 import org.hibernate.annotations.CurrentTimestamp;
 import org.hibernate.generator.EventType;
 
@@ -22,6 +21,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hibernate.testing.orm.junit.DialectContext.awaitServerTimestampTick;
 
 /**
  * @author Steve Ebersole
@@ -49,12 +49,10 @@ public class GeneratedInstantTests {
 		created.name = "first";
 
 		//We need to wait a little to make sure the timestamps produced are different
-		waitALittle();
+		awaitServerTimestampTick( scope );
 
 		// then changing
-		final GeneratedInstantEntity merged = scope.fromTransaction( (session) -> {
-			return (GeneratedInstantEntity) session.merge( created );
-		} );
+		final GeneratedInstantEntity merged = scope.fromTransaction( (session) -> session.merge( created ) );
 
 		assertThat( merged ).isNotNull();
 		assertThat( merged.createdAt ).isNotNull();
@@ -69,12 +67,10 @@ public class GeneratedInstantTests {
 //		assertThat( merged.updatedAt2 ).isNotEqualTo( created.updatedAt2 );
 
 		//We need to wait a little to make sure the timestamps produced are different
-		waitALittle();
+		awaitServerTimestampTick( scope );
 
 		// lastly, make sure we can load it..
-		final GeneratedInstantEntity loaded = scope.fromTransaction( (session) -> {
-			return session.get( GeneratedInstantEntity.class, 1 );
-		} );
+		final GeneratedInstantEntity loaded = scope.fromTransaction( (session) -> session.get( GeneratedInstantEntity.class, 1 ) );
 
 		assertThat( loaded ).isNotNull();
 
@@ -115,15 +111,6 @@ public class GeneratedInstantTests {
 		public GeneratedInstantEntity(Integer id, String name) {
 			this.id = id;
 			this.name = name;
-		}
-	}
-
-	private static void waitALittle() {
-		try {
-			Thread.sleep( 10 );
-		}
-		catch (InterruptedException e) {
-			throw new HibernateError( "Unexpected wakeup from test sleep" );
 		}
 	}
 }

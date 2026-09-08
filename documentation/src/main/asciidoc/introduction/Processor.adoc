@@ -83,27 +83,27 @@ public abstract class Book_ {
 	/**
 	 * Static metamodel for attribute {@link org.example.Book#isbn}
 	 **/
-    public static volatile SingularAttribute<Book, String> isbn;
+    public static volatile TextAttribute<Book> isbn;
 
     /**
      * Static metamodel for attribute {@link org.example.Book#text}
      **/
-    public static volatile SingularAttribute<Book, String> text;
+    public static volatile TextAttribute<Book> text;
 
     /**
      * Static metamodel for attribute {@link org.example.Book#title}
      **/
-    public static volatile SingularAttribute<Book, String> title;
+    public static volatile TextAttribute<Book> title;
 
     /**
      * Static metamodel for attribute {@link org.example.Book#type}
      **/
-    public static volatile SingularAttribute<Book, Type> type;
+    public static volatile ComparableAttribute<Book, Type> type;
 
     /**
      * Static metamodel for attribute {@link org.example.Book#publicationDate}
      **/
-    public static volatile SingularAttribute<Book, LocalDate> publicationDate;
+    public static volatile TemporalAttribute<Book, LocalDate> publicationDate;
 
     /**
      * Static metamodel for attribute {@link org.example.Book#publisher}

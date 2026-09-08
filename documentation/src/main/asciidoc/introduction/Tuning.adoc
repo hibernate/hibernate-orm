@@ -204,7 +204,7 @@ Consider the following code:
 [source,java]
 ----
 List<Book> books =
-        entityAgent.createQuery("from Book order by isbn")
+        entityManager.createQuery("from Book order by isbn")
             .ofType(Book.class)
             .getResultList();
 books.forEach(book -> book.getAuthors().forEach(author -> out.println(book.title + " by " + author.name)));
@@ -412,7 +412,7 @@ Here's how we can ask for join fetching in HQL:
 [source,java]
 ----
 List<Book> booksWithJoinFetchedAuthors =
-        entityAgent.createQuery("from Book join fetch authors order by isbn")
+        entityAgent.createQuery("from Book left join fetch authors order by isbn")
             .ofType(Book.class)
             .getResultList();
 ----
@@ -424,7 +424,7 @@ And this is the same query, written using the criteria API:
 var builder = sessionFactory.getCriteriaBuilder();
 var query = builder.createQuery(Book.class);
 var book = query.from(Book.class);
-book.fetch(Book_.authors);
+book.fetch(Book_.authors, JoinType.LEFT);
 query.select(book);
 query.orderBy(builder.asc(book.get(Book_.isbn)));
 List<Book> booksWithJoinFetchedAuthors =
@@ -895,7 +895,7 @@ A Hibernate link:{doc-javadoc-url}/org/hibernate/CacheMode.html[`CacheMode`] pac
 | `IGNORE` | `CacheRetrieveMode.BYPASS`, `CacheStoreMode.BYPASS`
 | `GET` | `CacheRetrieveMode.USE`, `CacheStoreMode.BYPASS`
 | `PUT` | `CacheRetrieveMode.BYPASS`, `CacheStoreMode.USE`
-| `REFRESH` | `CacheRetrieveMode.REFRESH`, `CacheStoreMode.BYPASS`
+| `REFRESH` | `CacheRetrieveMode.BYPASS`, `CacheStoreMode.REFRESH`
 | `REFRESH_SESSION` | none
 |===
 
@@ -1013,7 +1013,7 @@ To insert many entities at once, use `insert ... select`:
 entityAgent.createStatement(
         """
         insert into OrderQueue (id, isbn, quantity, customerId)
-            select o.id, i.quantity, i.book.isbn, o.customer.id
+            select o.id, i.book.isbn, i.quantity, o.customer.id
             from Order o join o.items i
             where o.status = PENDING
         """

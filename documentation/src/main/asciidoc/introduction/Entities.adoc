@@ -959,7 +959,7 @@ On the other hand, there are no perfectly natural mappings for `Instant` and `Du
 By default:
 
 - `Duration` is mapped to a column of type `NUMERIC(21)` holding the length of the duration in nanoseconds, and
-- `Instant` is mapped to a column of type `TIMESTAMP` (`DATETIME` on MySQL).
+- `Instant` is mapped to a column of type `TIMESTAMP` (`DATETIME` on MySQL) or TIMESTAMP WITH TIME ZONE, depending on the database.
 
 Fortunately, these mappings can be modified by specifying the `JdbcType`.
 
@@ -1078,9 +1078,6 @@ JPA provides an `@Embedded` annotation to identify an attribute of an entity tha
 This annotation is completely optional, and so we don't usually use it.
 ====
 
-On the other hand a reference to an embeddable type is _never_ polymorphic.
-One `@Embeddable` class `F` may inherit a second `@Embeddable` class `R`, but an attribute of type `R` will always refer to an instance of that concrete class `R`, never to an instance of `F`.
-
 Usually, embeddable types are stored in a "flattened" format.
 Their attributes map columns of the table of their parent entity.
 Later, in <<mapping-embeddables>>, we'll see a couple of different options.
@@ -1089,6 +1086,8 @@ An attribute of embeddable type represents a relationship between a Java object 
 We can think of it as a whole/part relationship.
 The embeddable object belongs to the entity, and can't be shared with other entity instances.
 And it exists for only as long as its parent entity exists.
+
+Since Hibernate 6.6, an embedded attribute whose declared type is an embeddable class with embeddable subclasses is fully polymorphic.
 
 Next we'll discuss a different kind of relationship: a relationship between Java objects which each have their own distinct persistent identity and persistence lifecycle.
 
@@ -1639,12 +1638,9 @@ For example, the Java array types `String[]`, `UUID[]`, `double[]`, `BigDecimal[
 // .Not every database has an `ARRAY` type
 ====
 Now for the gotcha: not every database has a SQL `ARRAY` type, and some that _do_ have an `ARRAY` type don't allow it to be used as a column type.
-
-In particular, neither DB2 nor SQL Server have array-typed columns.
-On these databases, Hibernate falls back to something much worse: it uses Java serialization to encode the array to a binary representation, and stores the binary stream in a `VARBINARY` column.
-Quite clearly, this is terrible.
-You can ask Hibernate to do something _slightly_ less terrible by annotating the attribute `@JdbcTypeCode(SqlTypes.JSON)`, so that the array is serialized to JSON instead of binary format.
-But at this point it's better to just admit defeat and use an `@ElementCollection` instead.
+In particular, neither Db2 nor SQL Server have array-typed columns.
+On these databases, Hibernate falls back to something quite a bit worse:
+the array value is encoded to XML and stored in an XML-typed column.
 ====
 
 Alternatively, we could store this array or list in a separate table.
@@ -1678,6 +1674,7 @@ class Event {
     Long id;
     ...
     @ElementCollection
+    @OrderColumn
     List<DayOfWeek> daysOfWeek;  // stored in a dedicated table
     ...
 }

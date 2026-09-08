@@ -714,7 +714,7 @@ List<Book> books = query.setMaxResults(MAX_RESULTS).getResultList();
 | `setMaxResults()` | Set a limit on the number of results returned by a query | &#10004;
 | `setFirstResult()` | Set an offset on the results returned by a query | &#10004;
 | `setPage()` | Set the limit and offset by specifying a `Page` object | &#10006;
-| `getResultCount()` | Determine how many results the query would return in the absence of any limit or offset | &#10006;
+| `getResultCount()` | Determine how many results the query would return in the absence of any limit or offset | &#10004;
 |===
 
 // It's quite common for pagination to be combined with the need to order query results by a field that's determined at runtime.
@@ -817,7 +817,7 @@ This works just as well with queries written in SQL:
 record BookInfo(String isbn, String title, int pages) {}
 
 List<BookInfo> resultList =
-        entityAgent.createNativeQuery("select title, isbn, pages from Book", BookInfo.class)
+        entityAgent.createNativeQuery("select isbn, title, pages from Book", BookInfo.class)
                    .getResultList();
 ----
 

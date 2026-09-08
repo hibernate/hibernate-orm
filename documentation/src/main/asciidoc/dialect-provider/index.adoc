@@ -367,6 +367,11 @@ for the complete contracts.
 |`getSizeStrategy()`
 |Customize mapped-size calculation without changing the physical capability profile.
 
+|Direct Java Time JDBC access
+|`DirectJavaTimeJdbcSupport`
+|`getDirectJavaTimeJdbcSupport()`
+|Report exact Java classes accepted for scalar access and independently inside native JDBC `STRUCT` and `ARRAY` containers.
+
 |Enum declarations and checks
 |`EnumSupport`
 |`getEnumSupport()`
@@ -432,6 +437,58 @@ use the same database representation.
 If `CurrentTemporalSupport#currentTimestamp()` returns a database-specific
 expression instead of the standard `current_timestamp` function, also override
 `usesStandardCurrentTimestampFunction()` to return `false`.
+
+==== Direct Java Time JDBC access
+
+`DirectJavaTimeJdbcSupport` describes whether the Dialect and its selected
+driver exchange an exact `java.time` class directly through JDBC. Scalar
+support covers both `PreparedStatement#setObject()` and typed
+`ResultSet#getObject()`, together with the corresponding callable-statement
+operations. Report a class as supported only when both directions work.
+
+The inherited `Dialect` profile assumes the scalar support required by JDBC
+4.2: `LocalDate`, `LocalTime`, `LocalDateTime`, `OffsetTime`, and
+`OffsetDateTime`. Override `getDirectJavaTimeJdbcSupport()` when a supported
+driver does not implement part of that contract, or when the driver supports
+the additional `ZonedDateTime` or `Instant` classes. Resolve any driver- or
+version-sensitive answer during Dialect construction and return one stable,
+thread-safe profile.
+
+Use `DirectJavaTimeJdbcSupports.none()`, `jdbc42()`, `all()`, or `of(...)`
+instead of depending on an implementation class. The three-set `of(...)`
+overload reports scalar, native JDBC `STRUCT`, and native JDBC `ARRAY` support
+independently:
+
+[source,java,indent=0]
+----
+include::{provider-fixture-main-dir}/ExampleDialect.java[tags=direct-java-time-jdbc-support]
+----
+
+None of the scalar-only profiles infer native-container support: `jdbc42()`,
+`all()`, and the varargs `of(...)` report no direct `STRUCT` or `ARRAY`
+support. Use the three-set overload only when the driver accepts the exact
+class while creating and extracting that container kind.
+
+`OffsetTime` and `OffsetDateTime` are a matched pair within each access path.
+Both must be present in the scalar, `STRUCT`, or `ARRAY` set to enable either
+one for that path; omitting either class disables both. Support for
+`OffsetDateTime` also lets Hibernate represent a mapped `ZonedDateTime` as an
+`OffsetDateTime` when exact `ZonedDateTime` access is unavailable. Claim exact
+`ZonedDateTime` support only when the driver itself exchanges that class.
+
+`Instant` is not enabled merely by
+`hibernate.type.java_time_use_direct_jdbc`. It is considered when the
+application selects `INSTANT` with
+`hibernate.type.preferred_instant_jdbc_type`, and still requires the Dialect
+profile to report `Instant` support.
+
+This strategy describes Java values at the JDBC boundary. Keep it separate
+from `TimeZoneSupport`, which describes database type behavior, and
+`TemporalValueSemantics`, which describes precision adjustment and temporal
+literal offset preservation. If direct access is requested but the profile
+reports it unsupported, Hibernate falls back to the corresponding physical
+representation and logs the known limitation once per Java Time class, with
+the offset pair logged together.
 
 === Implementing and contributing Java/JDBC types
 
@@ -543,6 +600,16 @@ ordering; it does not understand arbitrary native document formats. Do not use
 the internal `StructHelper` or expose `StructAttributeValues` from provider
 code.
 ====
+
+For a provider codec backed by a native JDBC `STRUCT` or `ARRAY`, component
+values produced by `AggregateJdbcValues#fromDomainValue(...)` may use direct
+Java Time classes selected by the mapping. Consult `supportsInStruct()` or
+`supportsInArray()` before passing such a value to the driver. When that
+container path does not support the exact class, use the public
+`JavaTimeJdbcType` physical-type and conversion helpers to obtain the
+representation expected by the corresponding SQL type. These container
+capabilities do not apply to textual JSON, XML, or other provider-defined
+document encodings.
 
 Focused facilities cover common composition needs without exposing their Core
 implementations:

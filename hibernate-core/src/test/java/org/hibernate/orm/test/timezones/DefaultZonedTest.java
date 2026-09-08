@@ -35,7 +35,8 @@ public class DefaultZonedTest {
 	@Test void test(SessionFactoryScope scope) {
 		final ZonedDateTime nowZoned;
 		final OffsetDateTime nowOffset;
-		final Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();
+		final var sessionFactory = scope.getSessionFactory();
+		final Dialect dialect = sessionFactory.getJdbcServices().getDialect();
 		if ( dialect instanceof SybaseDialect ) {
 			// Sybase has 1/300th sec precision
 			nowZoned = ZonedDateTime.now().withZoneSameInstant( ZoneId.of("CET") )
@@ -72,7 +73,10 @@ public class DefaultZonedTest {
 					expected,
 					actual
 			);
-			if ( dialect.getTimeZoneSupport() == TimeZoneSupport.NATIVE ) {
+			final var options = sessionFactory.getSessionFactoryOptions();
+			if ( dialect.getTimeZoneSupport() == TimeZoneSupport.NATIVE
+					|| options.isDirectJavaTimeJdbcAccessEnabled( ZonedDateTime.class )
+					|| options.isDirectJavaTimeJdbcAccessEnabled( OffsetDateTime.class ) ) {
 				assertEquals( nowZoned.toOffsetDateTime().getOffset(), z.zonedDateTime.toOffsetDateTime().getOffset() );
 				assertEquals( nowOffset.getOffset(), z.offsetDateTime.getOffset() );
 			}

@@ -52,6 +52,14 @@ public class DynamicTypingTests {
 				.getTypeConfiguration()
 				.getJdbcTypeRegistry()
 				.getDescriptor( SqlTypes.BOOLEAN );
+		final int preferredInstantJdbcTypeCode = domainModel
+				.getTypeConfiguration()
+				.getCurrentBaseSqlTypeIndicators()
+				.getPreferredSqlTypeCodeForInstant();
+		final JdbcType instantJdbcType = domainModel
+				.getTypeConfiguration()
+				.getJdbcTypeRegistry()
+				.getDescriptor( preferredInstantJdbcTypeCode );
 
 		final RootClass entityBinding = (RootClass) domainModel.getEntityBinding( "TheEntity" );
 		assertThat( entityBinding ).isNotNull();
@@ -62,7 +70,7 @@ public class DynamicTypingTests {
 		verifyBasicAttribute( entityBinding, "theInteger", IntegerJavaType.class, SqlTypes.INTEGER );
 		verifyBasicAttribute( entityBinding, "theUrl", UrlJavaType.class, SqlTypes.VARCHAR, /*HANA Cloud uses UTF8 by default*/ SqlTypes.NVARCHAR );
 		verifyBasicAttribute( entityBinding, "theClob", ClobJavaType.class, SqlTypes.CLOB, /*CockroachDB doesn't support CLOBs*/ SqlTypes.VARCHAR );
-		verifyBasicAttribute( entityBinding, "theInstant", InstantJavaType.class, SqlTypes.INSTANT );
+		verifyBasicAttribute( entityBinding, "theInstant", InstantJavaType.class, instantJdbcType.getJdbcTypeCode() );
 		verifyBasicAttribute( entityBinding, "theDate", JdbcDateJavaType.class, SqlTypes.DATE );
 		verifyBasicAttribute( entityBinding, "theTime", JdbcTimeJavaType.class, SqlTypes.TIME );
 		verifyBasicAttribute( entityBinding, "theTimestamp", JdbcTimestampJavaType.class, SqlTypes.TIMESTAMP );

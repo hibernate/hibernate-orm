@@ -21,6 +21,7 @@ import java.sql.SQLException;
 
 import static org.hibernate.cfg.JdbcSettings.DIALECT;
 import static org.hibernate.cfg.JdbcSettings.JDBC_TIME_ZONE;
+import static org.hibernate.cfg.MappingSettings.JAVA_TIME_USE_DIRECT_JDBC;
 
 /**
  * Test support for handling of temporal values.
@@ -44,6 +45,7 @@ public abstract class AbstractJavaTimeTypeTests<T, E>
 
 	@Override
 	public StandardServiceRegistry produceServiceRegistry(StandardServiceRegistryBuilder builder) {
+		builder.applySetting( JAVA_TIME_USE_DIRECT_JDBC, false );
 		if ( env.hibernateJdbcTimeZone() != null ) {
 			builder.applySetting( JDBC_TIME_ZONE, env.hibernateJdbcTimeZone().getId() );
 		}

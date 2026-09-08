@@ -23,6 +23,7 @@ import org.hibernate.type.descriptor.java.IntegerJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 import org.hibernate.type.descriptor.jdbc.BasicExtractor;
+import org.hibernate.type.descriptor.jdbc.JavaTimeJdbcType;
 import org.hibernate.type.descriptor.jdbc.StructAttributeValues;
 import org.hibernate.type.descriptor.jdbc.StructHelper;
 import org.hibernate.type.descriptor.jdbc.StructuredJdbcType;
@@ -39,6 +40,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.temporal.ChronoField;
@@ -1056,6 +1058,22 @@ public abstract class AbstractPostgreSQLStructJdbcType implements StructuredJdbc
 	}
 
 	private static Object fromString(JdbcMapping jdbcMapping, CharSequence charSequence, int start, int end) {
+		if ( jdbcMapping.getJdbcType() instanceof JavaTimeJdbcType ) {
+			final CharSequence value = CharSequenceHelper.subSequence( charSequence, start, end );
+			final Class<?> javaTypeClass = jdbcMapping.getJdbcJavaType().getJavaTypeClass();
+			if ( javaTypeClass == LocalDateTime.class ) {
+				return LocalDateTime.from( LOCAL_DATE_TIME.parse( value ) );
+			}
+			if ( javaTypeClass == OffsetDateTime.class ) {
+				return OffsetDateTime.from( LOCAL_DATE_TIME.parse( value ) );
+			}
+			if ( javaTypeClass == ZonedDateTime.class ) {
+				return OffsetDateTime.from( LOCAL_DATE_TIME.parse( value ) ).toZonedDateTime();
+			}
+			if ( javaTypeClass == Instant.class ) {
+				return Instant.from( LOCAL_DATE_TIME.parse( value ) );
+			}
+		}
 		return jdbcMapping.getJdbcJavaType().fromEncodedString(
 				charSequence,
 				start,
@@ -1204,6 +1222,15 @@ public abstract class AbstractPostgreSQLStructJdbcType implements StructuredJdbc
 			Object subValue) throws SQLException {
 		//noinspection unchecked
 		final JavaType<Object> jdbcJavaType = (JavaType<Object>) jdbcMapping.getJdbcJavaType();
+		if ( jdbcMapping.getJdbcType() instanceof JavaTimeJdbcType ) {
+			appender.quoteStart();
+			jdbcJavaType.appendEncodedString(
+					appender,
+					jdbcJavaType.unwrap( subValue, jdbcJavaType.getJavaTypeClass(), options )
+			);
+			appender.quoteEnd();
+			return;
+		}
 		switch ( jdbcMapping.getJdbcType().getDefaultSqlTypeCode() ) {
 			case SqlTypes.TINYINT:
 			case SqlTypes.SMALLINT:

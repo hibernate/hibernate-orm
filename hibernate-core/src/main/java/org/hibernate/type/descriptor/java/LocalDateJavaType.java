@@ -17,10 +17,10 @@ import java.util.GregorianCalendar;
 
 import jakarta.persistence.TemporalType;
 
-import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
+import org.hibernate.type.internal.DirectJavaTimeJdbcTypeResolver;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -55,9 +55,11 @@ public class LocalDateJavaType extends AbstractTemporalJavaType<LocalDate> {
 
 	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators context) {
-		return context.isPreferJavaTimeJdbcTypesEnabled()
-				? context.getJdbcType( SqlTypes.LOCAL_DATE )
-				: context.getJdbcType( Types.DATE );
+		final Integer directJdbcTypeCode = DirectJavaTimeJdbcTypeResolver.resolve(
+				LocalDate.class,
+				context
+		);
+		return context.getJdbcType( directJdbcTypeCode == null ? Types.DATE : directJdbcTypeCode );
 	}
 
 	@Override

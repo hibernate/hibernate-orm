@@ -47,7 +47,10 @@ import static org.hamcrest.MatcherAssert.assertThat;
  */
 @DomainModel(annotatedClasses = TimeZoneStorageMappingTests.TimeZoneStorageEntity.class)
 @SessionFactory
-@ServiceRegistry(settings = @Setting( name = AvailableSettings.TIMEZONE_DEFAULT_STORAGE, value = "AUTO"))
+@ServiceRegistry(settings = {
+		@Setting(name = AvailableSettings.TIMEZONE_DEFAULT_STORAGE, value = "AUTO"),
+		@Setting(name = AvailableSettings.JAVA_TIME_USE_DIRECT_JDBC, value = "false")
+})
 public class TimeZoneStorageMappingTests {
 
 	private static final ZoneOffset JVM_TIMEZONE_OFFSET = OffsetDateTime.now().getOffset();

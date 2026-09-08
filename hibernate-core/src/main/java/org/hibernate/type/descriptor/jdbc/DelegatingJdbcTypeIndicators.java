@@ -42,6 +42,12 @@ public class DelegatingJdbcTypeIndicators implements JdbcTypeIndicators {
 	}
 
 	@Override
+	public boolean isDirectJavaTimeJdbcAccessEnabled(Class<?> javaTimeType) {
+		return delegate.isDirectJavaTimeJdbcAccessEnabled( javaTimeType );
+	}
+
+	@Override
+	@Deprecated(since = "8.0")
 	public boolean isPreferJavaTimeJdbcTypesEnabled() {
 		return delegate.isPreferJavaTimeJdbcTypesEnabled();
 	}

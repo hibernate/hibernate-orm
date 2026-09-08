@@ -16,6 +16,8 @@ import org.hibernate.dialect.temporaltype.spi.TemporalFormatSupport;
 import org.hibernate.dialect.temporaltype.spi.CurrentTemporalSupport;
 
 import org.hibernate.dialect.type.spi.StandardDdlTypes;
+import org.hibernate.dialect.type.spi.DirectJavaTimeJdbcSupport;
+import org.hibernate.dialect.type.spi.DirectJavaTimeJdbcSupports;
 
 import org.hibernate.dialect.type.spi.TypeSizingProfile;
 import org.hibernate.dialect.type.spi.UserDefinedTypeDdlSupport;
@@ -184,6 +186,11 @@ import static org.hibernate.dialect.literal.spi.StandardDateTimeLiteralRendering
 /// @author Gavin King
 @SPI({ USE, IMPLEMENT })
 public class DB2Dialect extends Dialect implements CurrentTemporalSupport, TemporalFormatSupport, TemporalOperationSupport {
+
+	@Override
+	public DirectJavaTimeJdbcSupport getDirectJavaTimeJdbcSupport() {
+		return DirectJavaTimeJdbcSupports.none();
+	}
 	private IfExistsSupport ifExistsSupport;
 	private SchemaDropSupport schemaDropSupport;
 

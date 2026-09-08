@@ -241,20 +241,31 @@ public interface MappingSettings {
 	 * Used to set the value across the entire system as opposed to scattered, individual
 	 * {@linkplain org.hibernate.annotations.JdbcTypeCode} and {@linkplain org.hibernate.annotations.JdbcType}
 	 * naming specific {@linkplain JavaTimeJdbcType} implementations.
+	 * The setting is a preference which is applied only when the configured
+	 * {@linkplain org.hibernate.dialect.Dialect Dialect} reports support for the
+	 * Java Time class used at the JDBC boundary.
 	 *
-	 * @implNote JDBC 4.2 does not define support for {@linkplain java.time.Instant}, so
-	 * {@linkplain java.time.Instant} is not included in this.  Some drivers do implement support for this
-	 * even though not explicitly part of the JDBC specification.  To use direct binding and extracting of
+	 * @implNote JDBC 4.2 does not define support for {@linkplain java.time.Instant} or
+	 * {@linkplain java.time.ZonedDateTime}. {@linkplain java.time.Instant} is not included in this setting.
+	 * Some drivers do implement support for it even though it is not part of the JDBC specification.
+	 * To use direct binding and extracting of
 	 * {@linkplain java.time.Instant} references, use {@code hibernate.type.preferred_instant_jdbc_type=INSTANT}.
 	 * See {@linkplain #PREFERRED_INSTANT_JDBC_TYPE}, {@linkplain org.hibernate.type.SqlTypes#INSTANT} and
 	 * {@linkplain org.hibernate.type.descriptor.jdbc.InstantJdbcType}.
 	 *
-	 * @settingDefault false
+	 * @settingDefault {@value #JAVA_TIME_USE_DIRECT_JDBC_DEFAULT}
 	 *
 	 * @since 6.5
 	 */
 	@Incubating
 	String JAVA_TIME_USE_DIRECT_JDBC = "hibernate.type.java_time_use_direct_jdbc";
+
+	/**
+	 * The default value for {@link #JAVA_TIME_USE_DIRECT_JDBC}.
+	 *
+	 * @since 8.0
+	 */
+	boolean JAVA_TIME_USE_DIRECT_JDBC_DEFAULT = true;
 
 	/**
 	 * Indicates that named SQL {@code enum} types should be used by default instead

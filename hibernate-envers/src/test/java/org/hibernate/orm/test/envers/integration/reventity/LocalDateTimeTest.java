@@ -16,12 +16,14 @@ import java.util.Date;
 
 import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.envers.test.entities.reventity.CustomLocalDateTimeRevEntity;
+import org.hibernate.cfg.MappingSettings;
 import org.hibernate.orm.test.envers.entities.StrTestEntity;
 import org.hibernate.testing.envers.junit.EnversTest;
 import org.hibernate.testing.orm.junit.BeforeClassTemplate;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -36,7 +38,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 // TableGenerator uses a separate transaction to allocate identifiers, requiring concurrent transactions.
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsConcurrentTransactions.class)
 @EnversTest
-@Jpa(annotatedClasses = {StrTestEntity.class, CustomLocalDateTimeRevEntity.class})
+@Jpa(
+		annotatedClasses = {StrTestEntity.class, CustomLocalDateTimeRevEntity.class},
+		integrationSettings = @Setting(name = MappingSettings.JAVA_TIME_USE_DIRECT_JDBC, value = "true")
+)
 public class LocalDateTimeTest {
 	private Instant timestampStart;
 	private Instant timestampEnd;

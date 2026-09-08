@@ -22,10 +22,10 @@ import java.util.GregorianCalendar;
 import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
+import org.hibernate.type.internal.DirectJavaTimeJdbcTypeResolver;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import jakarta.persistence.TemporalType;
@@ -79,9 +79,13 @@ public class OffsetDateTimeJavaType extends AbstractTemporalJavaType<OffsetDateT
 
 	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators stdIndicators) {
-		return stdIndicators.isPreferJavaTimeJdbcTypesEnabled()
-				? stdIndicators.getJdbcType( SqlTypes.OFFSET_DATE_TIME )
-				: stdIndicators.getJdbcType( stdIndicators.getDefaultZonedTimestampSqlType() );
+		final Integer directJdbcTypeCode = DirectJavaTimeJdbcTypeResolver.resolve(
+				OffsetDateTime.class,
+				stdIndicators
+		);
+		return stdIndicators.getJdbcType(
+				directJdbcTypeCode == null ? stdIndicators.getDefaultZonedTimestampSqlType() : directJdbcTypeCode
+		);
 	}
 
 	@Override

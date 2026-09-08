@@ -153,6 +153,9 @@ public class XmlHelper {
 			WrapperOptions options,
 			int start,
 			int end) throws SQLException {
+		if ( jdbcType instanceof JavaTimeJdbcType ) {
+			return JavaTimeJdbcType.fromEncodedString( jdbcJavaType, string, start, end );
+		}
 		switch ( jdbcType.getDefaultSqlTypeCode() ) {
 			case SqlTypes.TINYINT:
 			case SqlTypes.SMALLINT:
@@ -818,6 +821,15 @@ public class XmlHelper {
 			WrapperOptions options,
 			JavaType<Object> jdbcJavaType,
 			JdbcType jdbcType) {
+		if ( jdbcType instanceof JavaTimeJdbcType ) {
+			appender.startEscaping();
+			jdbcJavaType.appendEncodedString(
+					appender,
+					jdbcJavaType.unwrap( value, jdbcJavaType.getJavaTypeClass(), options )
+			);
+			appender.endEscaping();
+			return;
+		}
 		switch ( jdbcType.getDefaultSqlTypeCode() ) {
 			case SqlTypes.TINYINT:
 			case SqlTypes.SMALLINT:

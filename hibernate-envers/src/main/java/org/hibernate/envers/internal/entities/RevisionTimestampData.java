@@ -4,6 +4,9 @@
  */
 package org.hibernate.envers.internal.entities;
 
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.Objects;
 
 /**
@@ -13,14 +16,21 @@ import java.util.Objects;
 public class RevisionTimestampData extends PropertyData {
 
 	private final String typeName;
+	private final Class<?> javaType;
 
-	public RevisionTimestampData(String name, String beanName, String accessType, String typeName) {
+	public RevisionTimestampData(
+			String name,
+			String beanName,
+			String accessType,
+			String typeName,
+			Class<?> javaType) {
 		super( name, beanName, accessType );
 		this.typeName = typeName;
+		this.javaType = javaType;
 	}
 
-	public RevisionTimestampData(RevisionTimestampData old, String typeName) {
-		this( old.getName(), old.getBeanName(), old.getAccessType(), typeName );
+	public RevisionTimestampData(RevisionTimestampData old, String typeName, Class<?> javaType) {
+		this( old.getName(), old.getBeanName(), old.getAccessType(), typeName, javaType );
 	}
 
 	public String getTypeName() {
@@ -28,24 +38,22 @@ public class RevisionTimestampData extends PropertyData {
 	}
 
 	public boolean isTimestampDate() {
-		return "date".equals( typeName )
-				|| "time".equals( typeName )
-				|| "timestamp".equals( typeName )
-				|| typeName.contains( "java.util.Date" );
+		return Date.class.isAssignableFrom( javaType );
 	}
 
 	public boolean isTimestampLocalDateTime() {
-		return "LocalDateTime".equals( typeName );
+		return LocalDateTime.class.equals( javaType );
 	}
 
 	public boolean isInstant() {
-		return "instant".equals( typeName );
+		return Instant.class.equals( javaType );
 	}
 
 	@Override
 	public int hashCode() {
 		int result = super.hashCode();
 		result = 31 * result + ( typeName != null ? typeName.hashCode() : 0 );
+		result = 31 * result + ( javaType != null ? javaType.hashCode() : 0 );
 		return result;
 	}
 
@@ -61,6 +69,7 @@ public class RevisionTimestampData extends PropertyData {
 			return false;
 		}
 		RevisionTimestampData that = (RevisionTimestampData) o;
-		return Objects.equals( typeName, that.typeName );
+		return Objects.equals( typeName, that.typeName )
+				&& Objects.equals( javaType, that.javaType );
 	}
 }

@@ -197,6 +197,12 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 	}
 
 	@Override
+	public boolean isDirectJavaTimeJdbcAccessEnabled(Class<?> javaTimeType) {
+		return buildingContext.isDirectJavaTimeJdbcAccessEnabled( javaTimeType );
+	}
+
+	@Override
+	@Deprecated(since = "8.0")
 	public boolean isPreferJavaTimeJdbcTypesEnabled() {
 		return buildingContext.isPreferJavaTimeJdbcTypesEnabled();
 	}

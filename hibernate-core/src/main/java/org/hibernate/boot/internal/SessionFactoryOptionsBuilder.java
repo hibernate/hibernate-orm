@@ -59,6 +59,7 @@ import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.type.spi.DirectJavaTimeJdbcSupport;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.env.spi.JdbcMetadata;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
@@ -215,6 +216,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private final Boolean useOfJdbcNamedParametersEnabled;
 	private boolean namedQueryStartupCheckingEnabled;
 	private final boolean preferJavaTimeJdbcTypes;
+	private final DirectJavaTimeJdbcSupport directJavaTimeJdbcSupport;
 	private final boolean preferNativeEnumTypes;
 	private final boolean preferLocaleLanguageTagEnabled;
 	private final int preferredSqlTypeCodeForBoolean;
@@ -300,6 +302,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		final var jdbcServices = serviceRegistry.requireService( JdbcServices.class );
 
 		final var dialect = jdbcServices.getJdbcEnvironment().getDialect();
+		directJavaTimeJdbcSupport = dialect.getDirectJavaTimeJdbcSupport();
 
 		final Map<String, Object> settings = new HashMap<>();
 		settings.putAll( map( dialect.getDefaultProperties() ) );
@@ -1546,6 +1549,12 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	@Override
+	public boolean isDirectJavaTimeJdbcAccessEnabled(Class<?> javaTimeType) {
+		return preferJavaTimeJdbcTypes && directJavaTimeJdbcSupport.supports( javaTimeType );
+	}
+
+	@Override
+	@Deprecated(since = "8.0")
 	public boolean isPreferJavaTimeJdbcTypesEnabled() {
 		return preferJavaTimeJdbcTypes;
 	}

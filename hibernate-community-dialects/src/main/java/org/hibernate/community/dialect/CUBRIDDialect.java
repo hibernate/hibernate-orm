@@ -138,7 +138,9 @@ public class CUBRIDDialect extends Dialect implements CurrentTemporalSupport, Te
 		return this;
 	}
 	private final TypeSizingProfile typeSizingProfile = TypeSizingProfile.builder( super.getTypeSizingProfile() )
-			.defaultTimestampPrecision( 3 ).floatPrecision( 21 )
+			.defaultTimestampPrecision( 3 )
+			.maxTimestampPrecision( 3 )
+			.floatPrecision( 21 )
 			.maxVarcharLength( 1_073_741_823 ).maxVarcharCapacity( 1_073_741_823 )
 			.maxNVarcharLength( 1_073_741_823 ).maxNVarcharCapacity( 1_073_741_823 )
 			.maxVarbinaryLength( 1_073_741_823 ).maxVarbinaryCapacity( 1_073_741_823 )

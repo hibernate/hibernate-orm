@@ -228,6 +228,7 @@ public class OracleLegacyDialect extends Dialect implements CurrentTemporalSuppo
 			RefCursorSupports.metadataSelected( RefCursorSupports.jdbcType( OracleTypes.CURSOR ) );
 	private final TypeSizingProfile typeSizingProfile = TypeSizingProfile.builder( super.getTypeSizingProfile() )
 			.defaultTimestampPrecision( getVersion().isSameOrAfter( 10 ) ? 9 : 6 )
+			.maxTimestampPrecision( getVersion().isSameOrAfter( 10 ) ? 9 : 6 )
 			.maxVarcharLength( 4000 ).maxVarcharCapacity( 4000 )
 			.maxNVarcharLength( 4000 ).maxNVarcharCapacity( 4000 )
 			.maxVarbinaryLength( 2000 ).maxVarbinaryCapacity( 2000 )

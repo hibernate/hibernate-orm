@@ -168,7 +168,9 @@ public class DerbyDialect extends Dialect implements CurrentTemporalSupport, Tem
 			name -> new String[] { "drop schema " + name + " restrict" }
 	);
 	private final TypeSizingProfile typeSizingProfile = TypeSizingProfile.builder( super.getTypeSizingProfile() )
-			.defaultDecimalPrecision( 31 ).defaultTimestampPrecision( 9 )
+			.defaultDecimalPrecision( 31 )
+			.defaultTimestampPrecision( 9 )
+			.maxTimestampPrecision( 9 )
 			.floatPrecision( 23 ).doublePrecision( 52 )
 			.maxVarcharLength( 32_672 ).maxVarcharCapacity( 32_700 )
 			.maxNVarcharLength( 32_672 ).maxNVarcharCapacity( 32_672 )

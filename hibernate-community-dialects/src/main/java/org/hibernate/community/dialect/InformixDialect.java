@@ -205,7 +205,9 @@ public class InformixDialect extends Dialect implements CurrentTemporalSupport, 
 			name -> new String[] { "" }
 	);
 	private final TypeSizingProfile typeSizingProfile = TypeSizingProfile.builder( super.getTypeSizingProfile() )
-			.defaultDecimalPrecision( 32 ).defaultTimestampPrecision( 3 )
+			.defaultDecimalPrecision( 32 )
+			.defaultTimestampPrecision( 3 )
+			.maxTimestampPrecision( 3 )
 			.floatPrecision( 8 ).doublePrecision( 16 )
 			.maxVarcharLength( 32_739 ).maxVarcharCapacity( 32_739 )
 			.maxNVarcharLength( 32_739 ).maxNVarcharCapacity( 32_739 )

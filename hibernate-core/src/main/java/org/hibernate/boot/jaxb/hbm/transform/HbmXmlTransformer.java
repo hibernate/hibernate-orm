@@ -2751,8 +2751,16 @@ public class HbmXmlTransformer {
 			JaxbAttributesContainer attributes,
 			JaxbHbmManyToOneType hbmManyToOne) {
 		final var propertyInfo = managedTypeInfo.propertyInfoMap().get( hbmManyToOne.getName() );
-		final var jaxbManyToOne = transformManyToOne( hbmManyToOne, propertyInfo );
-		attributes.getManyToOneAttributes().add( jaxbManyToOne );
+
+		// Check if this many-to-one should be treated as one-to-one
+		// (i.e., unique="true" with orphan-removal cascade)
+		if ( Boolean.TRUE.equals( hbmManyToOne.isUnique() ) && isOrphanRemoval( hbmManyToOne.getCascade() ) ) {
+			// Convert to one-to-one instead
+			attributes.getOneToOneAttributes().add( transformManyToOneAsOneToOne( hbmManyToOne, propertyInfo ) );
+		}
+		else {
+			attributes.getManyToOneAttributes().add( transformManyToOne( hbmManyToOne, propertyInfo ) );
+		}
 	}
 
 	private JaxbManyToOneImpl transformManyToOne(JaxbHbmManyToOneType hbmNode, PropertyInfo propertyInfo) {
@@ -2817,6 +2825,75 @@ public class HbmXmlTransformer {
 		}
 
 		return jaxbManyToOne;
+	}
+
+	/**
+	 * Transforms a many-to-one with unique="true" and orphan-removal cascade into a one-to-one.
+	 * This handles the semantic equivalence where a unique many-to-one with orphan removal
+	 * is effectively a one-to-one relationship.
+	 */
+	private JaxbOneToOneImpl transformManyToOneAsOneToOne(JaxbHbmManyToOneType hbmManyToOne, PropertyInfo propertyInfo) {
+		final var oneToOne = new JaxbOneToOneImpl();
+
+		oneToOne.setName( hbmManyToOne.getName() );
+		oneToOne.setOptional( propertyInfo.bootModelProperty().isOptional() );
+
+		if ( isNotEmpty( hbmManyToOne.getEntityName() ) ) {
+			oneToOne.setTargetEntity( hbmManyToOne.getEntityName() );
+		}
+		else {
+			oneToOne.setTargetEntity( hbmManyToOne.getClazz() );
+		}
+
+		transferAccess(
+				hbmManyToOne.getAccess(),
+				oneToOne::setAccess,
+				oneToOne::setAttributeAccessor
+		);
+
+		oneToOne.setCascade( convertCascadeType( hbmManyToOne.getCascade() ) );
+		oneToOne.setOrphanRemoval( isOrphanRemoval( hbmManyToOne.getCascade() ) );
+
+		transferFetchable( hbmManyToOne.getLazy(), hbmManyToOne.getFetch(), hbmManyToOne.getOuterJoin(), true, oneToOne );
+
+		// Handle property-ref (for the inverse side of bidirectional one-to-one)
+		if ( isNotEmpty( hbmManyToOne.getPropertyRef() ) ) {
+			final JaxbPropertyRefImpl propertyRef = new JaxbPropertyRefImpl();
+			propertyRef.setName( hbmManyToOne.getPropertyRef() );
+			oneToOne.setPropertyRef( propertyRef );
+		}
+		else {
+			// Transfer join columns for the owning side
+			final var manyToOneProperty = propertyInfo.bootModelProperty();
+			final var manyToOne = (ManyToOne) manyToOneProperty.getValue();
+			transferColumnsAndFormulas(
+					manyToOne,
+					new ColumnAndFormulaTarget() {
+						@Override
+						public TargetColumnAdapter makeColumnAdapter(ColumnDefaults columnDefaults) {
+							return new TargetColumnAdapterJaxbJoinColumn( columnDefaults );
+						}
+
+						@Override
+						public void addColumn(TargetColumnAdapter column) {
+							oneToOne.getJoinColumnOrJoinFormula()
+									.add( ((TargetColumnAdapterJaxbJoinColumn) column).getTargetColumn() );
+						}
+
+						@Override
+						public void addFormula(String formula) {
+							oneToOne.getJoinColumnOrJoinFormula().add( formula );
+						}
+					},
+					new ColumnDefaultsProperty( manyToOneProperty ),
+					propertyInfo.tableName()
+			);
+		}
+
+		oneToOne.setForeignKey( new JaxbForeignKeyImpl() );
+		oneToOne.getForeignKey().setName( hbmManyToOne.getForeignKey() );
+
+		return oneToOne;
 	}
 
 	private NotFoundAction interpretNotFoundAction(JaxbHbmNotFoundEnum hbmNotFound) {

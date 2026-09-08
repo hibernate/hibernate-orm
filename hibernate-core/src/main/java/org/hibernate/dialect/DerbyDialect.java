@@ -316,6 +316,11 @@ public class DerbyDialect extends Dialect {
 	}
 
 	@Override
+	public int getMaxTimestampPrecision() {
+		return 9;
+	}
+
+	@Override
 	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
 		super.initializeFunctionRegistry(functionContributions);
 

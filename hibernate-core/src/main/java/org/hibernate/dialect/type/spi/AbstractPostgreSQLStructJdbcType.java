@@ -1061,6 +1061,14 @@ public abstract class AbstractPostgreSQLStructJdbcType implements StructuredJdbc
 		if ( jdbcMapping.getJdbcType() instanceof JavaTimeJdbcType ) {
 			final CharSequence value = CharSequenceHelper.subSequence( charSequence, start, end );
 			final Class<?> javaTypeClass = jdbcMapping.getJdbcJavaType().getJavaTypeClass();
+			if ( javaTypeClass == LocalDate.class ) {
+				return JavaTimeJdbcType.fromEncodedString(
+						jdbcMapping.getJdbcJavaType(),
+						charSequence,
+						start,
+						end
+				);
+			}
 			if ( javaTypeClass == LocalDateTime.class ) {
 				return LocalDateTime.from( LOCAL_DATE_TIME.parse( value ) );
 			}

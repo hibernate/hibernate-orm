@@ -5,6 +5,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.Parameter;
 
 import org.hibernate.Incubating;
@@ -30,6 +31,7 @@ public interface ParameterMetadata {
 	 *
 	 * @since 7.0
 	 */
+	@Nonnull
 	Collection<QueryParameter<?>> getParameters();
 
 	/**
@@ -45,7 +47,8 @@ public interface ParameterMetadata {
 	 *
 	 * @see #getQueryParameter(String)
 	 */
-	QueryParameter<?> findQueryParameter(String name);
+	@Nullable
+	QueryParameter<?> findQueryParameter(@Nonnull String name);
 
 	/**
 	 * Get the {@linkplain QueryParameter parameter reference} registered
@@ -55,7 +58,8 @@ public interface ParameterMetadata {
 	 *
 	 * @throws IllegalArgumentException if no parameter is registered under that name
 	 */
-	QueryParameter<?> getQueryParameter(String name);
+	@Nonnull
+	QueryParameter<?> getQueryParameter(@Nonnull String name);
 
 	/**
 	 * Find the {@linkplain QueryParameter parameter reference} registered
@@ -65,6 +69,7 @@ public interface ParameterMetadata {
 	 *
 	 * @see #getQueryParameter(int)
 	 */
+	@Nullable
 	QueryParameter<?> findQueryParameter(int positionLabel);
 
 	/**
@@ -75,6 +80,7 @@ public interface ParameterMetadata {
 	 *
 	 * @throws IllegalArgumentException if no parameter is registered under that position-label
 	 */
+	@Nonnull
 	QueryParameter<?> getQueryParameter(int positionLabel);
 
 	/**
@@ -84,17 +90,19 @@ public interface ParameterMetadata {
 	 * @apiNote According to the spec, only {@link Parameter} references obtained
 	 *          from the provider are valid.
 	 */
-	<P> QueryParameter<P> resolve(Parameter<P> param);
+	@Nonnull
+	<P> QueryParameter<P> resolve(@Nonnull Parameter<P> param);
 
 	/**
 	 * Get the type of the given parameter.
 	 */
-	<T> BindableType<T> getInferredParameterType(QueryParameter<T> parameter);
+	@Nullable
+	<T> BindableType<T> getInferredParameterType(@Nonnull QueryParameter<T> parameter);
 
 	/**
 	 * Is this parameter reference registered in this collection?
 	 */
-	boolean containsReference(QueryParameter<?> parameter);
+	boolean containsReference(@Nonnull QueryParameter<?> parameter);
 
 	@Nonnull
 	Set<? extends QueryParameter<?>> getRegistrations();
@@ -102,7 +110,7 @@ public interface ParameterMetadata {
 	/**
 	 * General purpose visitation using functional
 	 */
-	void visitRegistrations(Consumer<QueryParameter<?>> action);
+	void visitRegistrations(@Nonnull Consumer<QueryParameter<?>> action);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~`
@@ -120,6 +128,7 @@ public interface ParameterMetadata {
 	 *
 	 * @return the parameter names
 	 */
+	@Nonnull
 	Set<String> getNamedParameterNames();
 
 
@@ -138,5 +147,6 @@ public interface ParameterMetadata {
 	 *
 	 * @return the position labels
 	 */
+	@Nonnull
 	Set<Integer> getOrdinalParameterLabels();
 }

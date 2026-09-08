@@ -264,6 +264,11 @@ public class FirebirdDialect extends Dialect {
 	}
 
 	@Override
+	public int getMaxTimestampPrecision() {
+		return 3;
+	}
+
+	@Override
 	public long getFractionalSecondPrecisionInNanos() {
 		// Formally, Firebird can store values with 100 microsecond precision (100_000 nanoseconds).
 		// However, some functions (e.g. CURRENT_TIMESTAMP) will only return values with millisecond precision

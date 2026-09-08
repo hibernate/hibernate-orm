@@ -5585,6 +5585,13 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
+	 * Return the maximum number of decimal fractional-second timestamp digits.
+	 */
+	public int getMaxTimestampPrecision() {
+		return 6;
+	}
+
+	/**
 	 * This is the default scale for a generated column of type
 	 * {@link SqlTypes#INTERVAL_SECOND INTERVAL SECOND} mapped
 	 * to a {@link Duration}.
@@ -5610,6 +5617,14 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 */
 	public boolean doesRoundTemporalOnOverflow() {
 		return true;
+	}
+
+	/**
+	 * Whether reducing temporal precision rounds first to the maximum precision before rounding to the
+	 * actual precision instead of truncating.
+	 */
+	public boolean roundsToMaxPrecisionFirst() {
+		return false;
 	}
 
 	/**

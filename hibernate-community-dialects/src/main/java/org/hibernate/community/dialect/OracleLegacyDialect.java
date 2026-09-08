@@ -1364,6 +1364,11 @@ public class OracleLegacyDialect extends Dialect {
 	}
 
 	@Override
+	public int getMaxTimestampPrecision() {
+		return getVersion().isSameOrAfter( 10 ) ? 9 : 3;
+	}
+
+	@Override
 	public CallableStatementSupport getCallableStatementSupport() {
 		// Oracle supports returning cursors
 		return StandardCallableStatementSupport.REF_CURSOR_INSTANCE;

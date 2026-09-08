@@ -309,6 +309,11 @@ public class InformixDialect extends Dialect {
 	}
 
 	@Override
+	public int getMaxTimestampPrecision() {
+		return 3;
+	}
+
+	@Override
 	public boolean doesRoundTemporalOnOverflow() {
 		return false;
 	}

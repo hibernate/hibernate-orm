@@ -32,7 +32,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @DomainModel(annotatedClasses = UTCNormalizedZonedTest.Zoned.class)
 @SessionFactory
-@ServiceRegistry(settings = @Setting(name = AvailableSettings.TIMEZONE_DEFAULT_STORAGE, value = "NORMALIZE_UTC"))
+@ServiceRegistry(settings = {
+		@Setting(name = AvailableSettings.TIMEZONE_DEFAULT_STORAGE, value = "NORMALIZE_UTC"),
+		@Setting(name = AvailableSettings.JAVA_TIME_USE_DIRECT_JDBC, value = "false")
+})
 public class UTCNormalizedZonedTest {
 
 	@Test void test(SessionFactoryScope scope) {

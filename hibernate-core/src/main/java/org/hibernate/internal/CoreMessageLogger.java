@@ -635,6 +635,19 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(id = 6594, value = "Version unsaved-value [%s]")
 	void versionUnsavedValue(Object value);
 
+	@LogMessage(level = WARN)
+	@Message(id = 6595, value = "The driver/database represented by [%s] is known to not be JDBC 4.2 compliant " +
+			"because it does not implement the required direct JDBC support for Java Time type(s) [%s]. " +
+			"Hibernate will fall back to error-prone conversions to [%s]. " +
+			"Consider filing a bug report with the driver/database developers.")
+	void nonCompliantDirectJavaTimeJdbcAccess(String dialect, String javaTimeTypes, String javaSqlTypes);
+
+	@LogMessage(level = WARN)
+	@Message(id = 6596, value = "The driver/database represented by [%s] is known to not implement direct " +
+			"JDBC support for Java Time type(s) [%s]. Hibernate will %s. " +
+			"Consider filing a feature request for this support with the driver/database developers.")
+	void unsupportedDirectJavaTimeJdbcAccess(String dialect, String javaTimeTypes, String fallback);
+
 	@LogMessage(level = TRACE)
 	@Message(id = 601, value = "Attempting to resolve script source setting: %s")
 	void attemptingToResolveScriptSourceSetting(String scriptSourceSettingString);

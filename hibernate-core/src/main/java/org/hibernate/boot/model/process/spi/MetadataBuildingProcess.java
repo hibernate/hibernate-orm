@@ -78,6 +78,7 @@ import org.hibernate.type.descriptor.java.ByteArrayJavaType;
 import org.hibernate.type.descriptor.java.CharacterArrayJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeConstructor;
+import org.hibernate.type.descriptor.jdbc.JavaTimeJdbcType;
 import org.hibernate.type.descriptor.jdbc.JsonArrayJdbcTypeConstructor;
 import org.hibernate.type.descriptor.jdbc.JsonAsStringArrayJdbcTypeConstructor;
 import org.hibernate.type.descriptor.jdbc.JsonAsStringJdbcType;
@@ -916,16 +917,18 @@ public class MetadataBuildingProcess {
 			JdbcType timestampWithTimeZoneOverride) {
 		final var javaTypeRegistry = typeConfiguration.getJavaTypeRegistry();
 		final var basicTypeRegistry = typeConfiguration.getBasicTypeRegistry();
-		basicTypeRegistry.register(
-				new NamedBasicTypeImpl<>(
-						javaTypeRegistry.resolveDescriptor( OffsetTime.class ),
-						timestampWithTimeZoneOverride,
-						"OffsetTime"
-				),
-				"org.hibernate.type.OffsetTimeType",
-				OffsetTime.class.getSimpleName(),
-				OffsetTime.class.getName()
-		);
+		if ( !( basicTypeRegistry.getRegisteredType( OffsetTime.class ).getJdbcType() instanceof JavaTimeJdbcType ) ) {
+			basicTypeRegistry.register(
+					new NamedBasicTypeImpl<>(
+							javaTypeRegistry.resolveDescriptor( OffsetTime.class ),
+							timestampWithTimeZoneOverride,
+							"OffsetTime"
+					),
+					"org.hibernate.type.OffsetTimeType",
+					OffsetTime.class.getSimpleName(),
+					OffsetTime.class.getName()
+			);
+		}
 	}
 
 	private static void adaptTimestampTypesToDefaultTimeZoneStorage(
@@ -933,26 +936,32 @@ public class MetadataBuildingProcess {
 			JdbcType timestampWithTimeZoneOverride) {
 		final var javaTypeRegistry = typeConfiguration.getJavaTypeRegistry();
 		final var basicTypeRegistry = typeConfiguration.getBasicTypeRegistry();
-		basicTypeRegistry.register(
-				new NamedBasicTypeImpl<>(
-						javaTypeRegistry.resolveDescriptor( OffsetDateTime.class ),
-						timestampWithTimeZoneOverride,
-						"OffsetDateTime"
-				),
-				"org.hibernate.type.OffsetDateTimeType",
-				OffsetDateTime.class.getSimpleName(),
-				OffsetDateTime.class.getName()
-		);
-		basicTypeRegistry.register(
-				new NamedBasicTypeImpl<>(
-						javaTypeRegistry.resolveDescriptor( ZonedDateTime.class ),
-						timestampWithTimeZoneOverride,
-						"ZonedDateTime"
-				),
-				"org.hibernate.type.ZonedDateTimeType",
-				ZonedDateTime.class.getSimpleName(),
-				ZonedDateTime.class.getName()
-		);
+		if ( !( basicTypeRegistry.getRegisteredType( OffsetDateTime.class ).getJdbcType()
+				instanceof JavaTimeJdbcType ) ) {
+			basicTypeRegistry.register(
+					new NamedBasicTypeImpl<>(
+							javaTypeRegistry.resolveDescriptor( OffsetDateTime.class ),
+							timestampWithTimeZoneOverride,
+							"OffsetDateTime"
+					),
+					"org.hibernate.type.OffsetDateTimeType",
+					OffsetDateTime.class.getSimpleName(),
+					OffsetDateTime.class.getName()
+			);
+		}
+		if ( !( basicTypeRegistry.getRegisteredType( ZonedDateTime.class ).getJdbcType()
+				instanceof JavaTimeJdbcType ) ) {
+			basicTypeRegistry.register(
+					new NamedBasicTypeImpl<>(
+							javaTypeRegistry.resolveDescriptor( ZonedDateTime.class ),
+							timestampWithTimeZoneOverride,
+							"ZonedDateTime"
+					),
+					"org.hibernate.type.ZonedDateTimeType",
+					ZonedDateTime.class.getSimpleName(),
+					ZonedDateTime.class.getName()
+			);
+		}
 	}
 
 	private static JdbcType getTimeWithTimeZoneOverride(MetadataBuildingOptions options, JdbcTypeRegistry jdbcTypeRegistry) {

@@ -21,6 +21,8 @@ import static org.hibernate.SPI.Role.IMPLEMENT;
 import static org.hibernate.SPI.Role.SUPPLY;
 import static org.hibernate.SPI.Role.USE;
 import org.hibernate.dialect.type.spi.DdlTypeBuilder;
+import org.hibernate.dialect.type.spi.DirectJavaTimeJdbcSupport;
+import org.hibernate.dialect.type.spi.DirectJavaTimeJdbcSupports;
 
 import org.hibernate.dialect.type.spi.StandardDdlTypes;
 
@@ -141,6 +143,11 @@ import static org.hibernate.type.SqlTypes.VARCHAR;
  *
  */
 public class DerbyDialect extends Dialect implements CurrentTemporalSupport, TemporalFormatSupport, TemporalOperationSupport {
+
+	@Override
+	public DirectJavaTimeJdbcSupport getDirectJavaTimeJdbcSupport() {
+		return DirectJavaTimeJdbcSupports.none();
+	}
 
 	@Override
 	@SPI({ IMPLEMENT, SUPPLY })

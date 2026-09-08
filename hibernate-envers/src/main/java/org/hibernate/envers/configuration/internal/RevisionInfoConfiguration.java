@@ -261,6 +261,7 @@ public class RevisionInfoConfiguration {
 			Class<?> revisionInfoClass,
 			PropertyData revisionInfoTimestampData,
 			String typeName,
+			Class<?> javaType,
 			ServiceRegistry serviceRegistry) {
 		return new RevisionTimestampValueResolver(
 				revisionInfoClass,
@@ -268,7 +269,8 @@ public class RevisionInfoConfiguration {
 						revisionInfoTimestampData.getName(),
 						revisionInfoTimestampData.getBeanName(),
 						revisionInfoTimestampData.getAccessType(),
-						typeName
+						typeName,
+						javaType
 				),
 				serviceRegistry
 		);
@@ -355,12 +357,14 @@ public class RevisionInfoConfiguration {
 				revisionListenerClass = getRevisionListenerClass( revisionEntity.value() );
 
 				final Property timestampProperty = persistentClass.getProperty( revisionInfoTimestampData.getName() );
-				revisionInfoTimestampTypeName = timestampProperty.getType().getName();
+				final var timestampType = timestampProperty.getType();
+				revisionInfoTimestampTypeName = timestampType.getName();
 
 				timestampValueResolver = createRevisionTimestampResolver(
 						revisionInfoClass,
 						revisionInfoTimestampData,
 						revisionInfoTimestampTypeName,
+						timestampType.getReturnedClass(),
 						metadata.getMetadataBuildingOptions().getServiceRegistry()
 				);
 
@@ -410,6 +414,7 @@ public class RevisionInfoConfiguration {
 						revisionInfoClass,
 						revisionInfoTimestampData,
 						revisionInfoTimestampTypeName,
+						Long.TYPE,
 						metadata.getMetadataBuildingOptions().getServiceRegistry()
 				);
 

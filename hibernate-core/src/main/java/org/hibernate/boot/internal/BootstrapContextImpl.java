@@ -4,6 +4,11 @@
  */
 package org.hibernate.boot.internal;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.hibernate.AssertionFailure;
 import org.hibernate.boot.CacheRegionDefinition;
 import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
@@ -17,8 +22,10 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.ClassLoaderAccess;
+import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.jpa.internal.MutableJpaComplianceImpl;
 import org.hibernate.jpa.spi.MutableJpaCompliance;
 import org.hibernate.metamodel.internal.ManagedTypeRepresentationResolverStandard;
@@ -35,11 +42,6 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.internal.BasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
@@ -54,7 +56,7 @@ public class BootstrapContextImpl implements BootstrapContext {
 	private final StandardServiceRegistry serviceRegistry;
 	private final MetadataBuildingOptions metadataBuildingOptions;
 
-	private final TypeConfiguration typeConfiguration;
+	private TypeConfiguration typeConfiguration;
 	private final SqmFunctionRegistry sqmFunctionRegistry;
 	private final MutableJpaCompliance jpaCompliance;
 
@@ -100,7 +102,6 @@ public class BootstrapContextImpl implements BootstrapContext {
 
 		representationStrategySelector = ManagedTypeRepresentationResolverStandard.INSTANCE;
 
-		typeConfiguration = new TypeConfiguration();
 		beanInstanceProducer = new TypeBeanInstanceProducer( configService, serviceRegistry );
 		sqmFunctionRegistry = new SqmFunctionRegistry();
 
@@ -121,7 +122,16 @@ public class BootstrapContextImpl implements BootstrapContext {
 	}
 
 	@Override
-	public TypeConfiguration getTypeConfiguration() {
+	public synchronized TypeConfiguration getTypeConfiguration() {
+		if ( typeConfiguration == null ) {
+			final var dialect = serviceRegistry.requireService( JdbcServices.class ).getDialect();
+			final boolean directJavaTimeJdbcAccessEnabled =
+					MetadataBuildingContext.isPreferJavaTimeJdbcTypesEnabled( configurationService );
+			typeConfiguration = new TypeConfiguration(
+					directJavaTimeJdbcAccessEnabled,
+					dialect.getDirectJavaTimeJdbcSupport()
+			);
+		}
 		return typeConfiguration;
 	}
 

@@ -537,6 +537,12 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
+	public boolean isDirectJavaTimeJdbcAccessEnabled(Class<?> javaTimeType) {
+		return delegate.isDirectJavaTimeJdbcAccessEnabled( javaTimeType );
+	}
+
+	@Override
+	@Deprecated(since = "8.0")
 	public boolean isPreferJavaTimeJdbcTypesEnabled() {
 		return delegate.isPreferJavaTimeJdbcTypesEnabled();
 	}

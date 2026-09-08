@@ -9,27 +9,28 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
+import java.time.temporal.ChronoField;
 import java.time.temporal.ChronoUnit;
 
 import org.hibernate.cfg.MappingSettings;
 import org.hibernate.community.dialect.AltibaseDialect;
-import org.hibernate.dialect.SpannerPostgreSQLDialect;
-import org.hibernate.dialect.DB2Dialect;
-import org.hibernate.community.dialect.DerbyDialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
-import org.hibernate.dialect.SpannerDialect;
+import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.hibernate.type.descriptor.jdbc.JavaTimeJdbcType;
+import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.DateJdbcType;
 import org.hibernate.type.descriptor.jdbc.LocalDateJdbcType;
 import org.hibernate.type.descriptor.jdbc.LocalDateTimeJdbcType;
 import org.hibernate.type.descriptor.jdbc.LocalTimeJdbcType;
+import org.hibernate.type.descriptor.jdbc.TimeJdbcType;
+import org.hibernate.type.descriptor.jdbc.TimestampJdbcType;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
@@ -37,7 +38,6 @@ import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -51,7 +51,7 @@ import static org.hibernate.type.descriptor.DateTimeUtils.adjustToDefaultPrecisi
 import static org.hibernate.type.descriptor.DateTimeUtils.adjustToPrecision;
 
 /**
- * Tests for "direct" JDBC handling of {@linkplain java.time Java Time} types.
+ * Tests the default, direct JDBC handling of {@linkplain java.time Java Time} types.
  *
  * @author Steve Ebersole
  */
@@ -60,28 +60,49 @@ import static org.hibernate.type.descriptor.DateTimeUtils.adjustToPrecision;
 )
 @DomainModel( annotatedClasses = GlobalJavaTimeJdbcTypeTests.EntityWithJavaTimeValues.class )
 @SessionFactory
-@SkipForDialect( dialectClass = SybaseDialect.class, reason = "Sybase drivers do not comply with JDBC 4.2 requirements for support of Java Time objects", matchSubTypes = true )
-@SkipForDialect( dialectClass = DB2Dialect.class, reason = "DB2 drivers do not comply with JDBC 4.2 requirements for support of Java Time objects", matchSubTypes = true )
-@SkipForDialect( dialectClass = DerbyDialect.class, reason = "Derby drivers do not comply with JDBC 4.2 requirements for support of Java Time objects" )
 public class GlobalJavaTimeJdbcTypeTests {
 	@Test
-	void testMappings(DomainModelScope scope) {
+	void testMappings(DomainModelScope scope, SessionFactoryScope sessionFactoryScope) {
 		final PersistentClass entityBinding = scope.getEntityBinding( EntityWithJavaTimeValues.class );
+		final var options = sessionFactoryScope.getSessionFactory().getSessionFactoryOptions();
 
-		checkAttribute( entityBinding, "theLocalDate", LocalDateJdbcType.class );
-		checkAttribute( entityBinding, "theLocalDateTime", LocalDateTimeJdbcType.class );
-		checkAttribute( entityBinding, "theLocalTime", LocalTimeJdbcType.class );
+		checkAttribute(
+				entityBinding,
+				"theLocalDate",
+				options.isDirectJavaTimeJdbcAccessEnabled( LocalDate.class )
+						? LocalDateJdbcType.class
+						: DateJdbcType.class,
+				"LocalDate"
+		);
+		checkAttribute(
+				entityBinding,
+				"theLocalDateTime",
+				options.isDirectJavaTimeJdbcAccessEnabled( LocalDateTime.class )
+						? LocalDateTimeJdbcType.class
+						: TimestampJdbcType.class,
+				"LocalDateTime"
+		);
+		checkAttribute(
+				entityBinding,
+				"theLocalTime",
+				options.isDirectJavaTimeJdbcAccessEnabled( LocalTime.class )
+						? LocalTimeJdbcType.class
+						: TimeJdbcType.class,
+				"LocalTime"
+		);
 	}
 
 	private void checkAttribute(
 			PersistentClass entityBinding,
 			String attributeName,
-			Class<? extends JavaTimeJdbcType> expectedJdbcTypeDescriptorType) {
+			Class<? extends JdbcType> expectedJdbcTypeDescriptorType,
+			String expectedTypeName) {
 		final Property property = entityBinding.getProperty( attributeName );
 		final BasicValue value = (BasicValue) property.getValue();
 		final BasicValue.Resolution<?> resolution = value.resolve();
 		final JdbcType jdbcType = resolution.getJdbcType();
 		assertThat( jdbcType ).isInstanceOf( expectedJdbcTypeDescriptorType );
+		assertThat( resolution.getLegacyResolvedBasicType().getName() ).isEqualTo( expectedTypeName );
 	}
 
 	@Test
@@ -115,10 +136,11 @@ public class GlobalJavaTimeJdbcTypeTests {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = SpannerDialect.class, reason = "Spanner JDBC driver setObject does not accept LocalDateTime")
 	void testLocalDateTime(SessionFactoryScope scope) {
 		final Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();
-		final LocalDateTime start = adjustToDefaultPrecision( LocalDateTime.now(), dialect );
+		final LocalDateTime start = dialect instanceof SybaseDialect
+				? LocalDateTime.now().with( ChronoField.NANO_OF_SECOND, 0L )
+				: adjustToDefaultPrecision( LocalDateTime.now(), dialect );
 
 		scope.inTransaction( (session) -> {
 			final EntityWithJavaTimeValues entity = new EntityWithJavaTimeValues();
@@ -179,7 +201,6 @@ public class GlobalJavaTimeJdbcTypeTests {
 	@SkipForDialect(dialectClass = OracleDialect.class, reason = "Oracle drivers truncate fractional seconds from the LocalTime")
 	@SkipForDialect(dialectClass = HANADialect.class, reason = "HANA time type does not support fractional seconds")
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Altibase drivers truncate fractional seconds from the LocalTime")
-	@SkipForDialect(dialectClass = SpannerDialect.class, reason = "Spanner JDBC driver setObject does not accept LocalTime")
 	void testLocalTime(SessionFactoryScope scope) {
 		final Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();
 		final LocalTime startTime = adjustToPrecision( LocalTime.now(), 0, dialect );

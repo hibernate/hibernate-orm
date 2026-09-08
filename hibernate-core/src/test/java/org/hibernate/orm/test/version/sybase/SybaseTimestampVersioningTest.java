@@ -6,6 +6,7 @@ package org.hibernate.orm.test.version.sybase;
 
 import jakarta.persistence.OptimisticLockException;
 import org.hibernate.dialect.SybaseASEDialect;
+import org.hibernate.testing.orm.junit.DialectContext;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialect;
@@ -17,6 +18,8 @@ import org.hibernate.type.descriptor.jdbc.VarbinaryJdbcType;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+
+import static org.hibernate.testing.orm.junit.DialectContext.awaitServerTimestampTick;
 
 /// @author Steve Ebersole
 @SuppressWarnings("JUnitMalformedDeclaration")
@@ -66,7 +69,7 @@ public class SybaseTimestampVersioningTest {
 			return steve;
 		} );
 
-		sleep();
+		DialectContext.awaitTimestampTick();
 
 		var second = factoryScope.fromTransaction( (s) -> {
 			var steve = s.find( User.class, 1 );
@@ -81,7 +84,7 @@ public class SybaseTimestampVersioningTest {
 		Assertions.assertTrue( PrimitiveByteArrayJavaType.INSTANCE.areEqual( first.getTimestamp(), second.getTimestamp() ),
 				"owner version unexpectedly incremented" );
 
-		sleep();
+		DialectContext.awaitTimestampTick();
 
 		var third = factoryScope.fromTransaction( (s) -> {
 			var steve = s.find( User.class, 1 );
@@ -106,7 +109,7 @@ public class SybaseTimestampVersioningTest {
 			return steve;
 		} );
 
-		sleep();
+		DialectContext.awaitTimestampTick();
 
 		var second = factoryScope.fromTransaction( (s) -> {
 			var steve = s.find( User.class, 1 );
@@ -121,7 +124,7 @@ public class SybaseTimestampVersioningTest {
 				PrimitiveByteArrayJavaType.INSTANCE.areEqual( first.getTimestamp(), second.getTimestamp() ),
 				"owner version was incremented" );
 
-		sleep();
+		DialectContext.awaitTimestampTick();
 
 		var third = factoryScope.fromTransaction( (s) -> {
 			var steve = s.find( User.class, 1 );
@@ -134,17 +137,6 @@ public class SybaseTimestampVersioningTest {
 				"owner version was incremented" );
 	}
 
-	private static void sleep() {
-		sleep( 200 );
-	}
-
-	private static void sleep(long millis) {
-		try {
-			Thread.sleep(millis);
-		}
-		catch (InterruptedException ignored) {
-		}
-	}
 
 	@Test
 	@JiraKey( value = "HHH-10413" )
@@ -163,7 +155,7 @@ public class SybaseTimestampVersioningTest {
 			return user;
 		} );
 
-		sleep( 2000 );
+		awaitServerTimestampTick( factoryScope );
 
 		var second = factoryScope.fromTransaction( (s) -> {
 			var u = s.find( User.class, 1 );

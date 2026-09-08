@@ -24,6 +24,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import static org.hibernate.testing.orm.junit.DialectContext.awaitServerTimestampTick;
+
 /**
  * @author Gail Badner
  */
@@ -56,13 +58,7 @@ public class SybaseTimestampComparisonAnnotationsTest {
 
 		byte[] previousVersion = created.version;
 
-		try {
-			// 2 seconds
-			Thread.sleep(2000);
-		}
-		catch(InterruptedException ex) {
-			Thread.currentThread().interrupt();
-		}
+		awaitServerTimestampTick( factoryScope );
 
 		var merged = factoryScope.fromTransaction( (s) -> {
 			created.name = "x";

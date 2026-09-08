@@ -7,13 +7,11 @@ package org.hibernate.orm.test.mapping.generated;
 import java.time.Instant;
 import java.util.List;
 
-import org.hibernate.HibernateError;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.CurrentTimestamp;
 import org.hibernate.annotations.Generated;
 import org.hibernate.cfg.AvailableSettings;
 
-import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -30,6 +28,7 @@ import jakarta.persistence.Id;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hibernate.generator.EventType.INSERT;
 import static org.hibernate.generator.EventType.UPDATE;
+import static org.hibernate.testing.orm.junit.DialectContext.awaitServerTimestampTick;
 
 /**
  * @author Marco Belladelli
@@ -71,10 +70,10 @@ public class GeneratedAnnotationBatchTest {
 
 	@Test
 	public void testUpdate(SessionFactoryScope scope) {
-		final Instant originalInstant = scope.fromTransaction( session -> session.createQuery(
-				"from GeneratedEntity where id = 1L",
-				GeneratedEntity.class
-		).getSingleResult().getUpdateTimestamp() );
+		//We need to wait a little to make sure the timestamps produced are different
+		awaitServerTimestampTick( scope );
+		final Instant originalInstant = scope.fromSession( session ->
+				session.find( GeneratedEntity.class, 1L ).getUpdateTimestamp() );
 		scope.inTransaction( session -> {
 			final List<GeneratedEntity> entities = session.createQuery(
 					"from GeneratedEntity",
@@ -82,8 +81,6 @@ public class GeneratedAnnotationBatchTest {
 			).getResultList();
 			entities.forEach( ge -> ge.setName( "updated" ) );
 
-			//We need to wait a little to make sure the timestamps produced are different
-			waitALittle( scope );
 			session.flush(); // force update and retrieval of generated values
 
 			entities.forEach( ge -> assertThat( ge.getName() ).isEqualTo( "updated" ) );
@@ -130,16 +127,4 @@ public class GeneratedAnnotationBatchTest {
 		}
 	}
 
-	private static void waitALittle(SessionFactoryScope scope) {
-		boolean waitLonger =
-				// informix clock has low resolution on Mac
-				scope.getSessionFactory().getJdbcServices().getDialect()
-						instanceof InformixDialect;
-		try {
-			Thread.sleep( waitLonger ? 1_200 : 10 );
-		}
-		catch (InterruptedException e) {
-			throw new HibernateError( "Unexpected wakeup from test sleep" );
-		}
-	}
 }

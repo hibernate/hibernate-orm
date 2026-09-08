@@ -16,6 +16,7 @@ import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
 
+import static org.hibernate.testing.orm.junit.DialectContext.awaitServerTimestampTick;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
@@ -45,24 +46,16 @@ public class VersionSourceTest {
 			assertNotNull( person.getVersion() );
 			//end::locking-optimistic-version-timestamp-source-persist-example[]
 		});
-		sleep();
+		awaitServerTimestampTick( scope );
 		scope.inTransaction( entityManager -> {
 			Person person = entityManager.find(Person.class, 1L);
 			person.setFirstName("Jane");
 		});
-		sleep();
+		awaitServerTimestampTick( scope );
 		scope.inTransaction( entityManager -> {
 			Person person = entityManager.find(Person.class, 1L);
 			person.setFirstName("John");
 		});
-	}
-
-	private static void sleep() {
-		try {
-			Thread.sleep(300);
-		}
-		catch (InterruptedException ignored) {
-		}
 	}
 
 	//tag::locking-optimistic-version-timestamp-source-mapping-example[]

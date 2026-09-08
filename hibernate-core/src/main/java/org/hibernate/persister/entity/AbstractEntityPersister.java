@@ -4271,6 +4271,34 @@ public abstract class AbstractEntityPersister
 		naturalIdResolutions.manageLocalResolution( id, naturalId, this, CachedNaturalIdValueSource.UPDATE );
 	}
 
+	/**
+	 * Check if an identifier value indicates an unsaved (transient) entity, considering generator context.
+	 * <p>
+	 * This method wraps the identifier's {@link org.hibernate.engine.spi.UnsavedValueStrategy} with
+	 * generator-awareness to handle mixed-timing generators (HHH-20567). For generators where the timing
+	 * of ID generation varies per-instance, this ensures entities with manually assigned IDs are correctly
+	 * identified as transient.
+	 *
+	 * @param id The identifier value to check
+	 * @param entity The entity instance
+	 * @param session The session
+	 * @return {@code true} if unsaved, {@code false} if saved, {@code null} if inconclusive
+	 */
+	private Boolean isUnsavedIdentifierValue(Object id, Object entity, SharedSessionContractImplementor session) {
+		final org.hibernate.engine.spi.UnsavedValueStrategy baseStrategy = identifierMapping.getUnsavedStrategy();
+		final Generator generator = getGenerator();
+
+		// Wrap with generator-aware strategy if we have a mixed-timing generator
+		if ( generator instanceof org.hibernate.generator.BeforeExecutionGenerator ) {
+			final org.hibernate.engine.spi.GeneratorAwareUnsavedStrategy wrappedStrategy =
+					new org.hibernate.engine.spi.GeneratorAwareUnsavedStrategy( baseStrategy, generator );
+			return wrappedStrategy.isUnsaved( id, entity, session );
+		}
+
+		// Otherwise use the context-aware method (which delegates to base strategy by default)
+		return baseStrategy.isUnsaved( id, entity, session );
+	}
+
 	@Override
 	public Boolean isTransient(Object entity, SharedSessionContractImplementor session) throws HibernateException {
 		final Object id = getIdentifier( entity, session );
@@ -4302,7 +4330,8 @@ public abstract class AbstractEntityPersister
 					}
 					final Generator identifierGenerator = getGenerator();
 					if ( identifierGenerator != null && !( identifierGenerator instanceof ForeignGenerator ) ) {
-						final Boolean unsaved = identifierMapping.getUnsavedStrategy().isUnsaved( id );
+						// Use generator-aware unsaved check for HHH-20567 (mixed-timing generators)
+						final Boolean unsaved = isUnsavedIdentifierValue( id, entity, session );
 						if ( unsaved != null && !unsaved ) {
 							throw new PropertyValueException(
 									"Detached entity with generated id '" + id
@@ -4317,8 +4346,8 @@ public abstract class AbstractEntityPersister
 			}
 		}
 
-		// check the id unsaved-value
-		final Boolean result = identifierMapping.getUnsavedStrategy().isUnsaved( id );
+		// check the id unsaved-value (use generator-aware method for HHH-20567)
+		final Boolean result = isUnsavedIdentifierValue( id, entity, session );
 		if ( result != null ) {
 			return result;
 		}

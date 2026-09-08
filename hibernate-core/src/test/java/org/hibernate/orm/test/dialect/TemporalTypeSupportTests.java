@@ -13,6 +13,7 @@ import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.temporaltype.spi.CurrentTimestampSelection;
 import org.hibernate.dialect.temporaltype.spi.CurrentTemporalSupport;
 import org.hibernate.dialect.temporaltype.spi.CurrentTemporalSupports;
@@ -81,6 +82,11 @@ public class TemporalTypeSupportTests {
 		assertEquals( "select now()", postgres.getCurrentTemporalSupport().getCurrentTimestampSelection().command() );
 		assertEquals( "cast(?3+(?2)*interval '1 day' as timestamp)", postgres.getTemporalOperationSupport()
 				.timestampaddPattern( TemporalUnit.DAY, jakarta.persistence.TemporalType.TIMESTAMP, null ) );
+
+		assertSame(
+				TemporalValueSemantics.ROUND_MAX_WITH_OFFSET_LITERALS,
+				new SQLServerDialect().getTemporalValueSemantics()
+		);
 	}
 
 	@Test

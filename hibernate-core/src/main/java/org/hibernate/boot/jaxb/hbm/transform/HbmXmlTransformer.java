@@ -3049,7 +3049,7 @@ public class HbmXmlTransformer {
 							);
 						}
 					},
-					ColumnDefaultsBasicImpl.INSTANCE,
+					new ColumnDefaultsCollectionKeyImpl( key ),
 //					source.getTable()
 					null
 
@@ -3832,7 +3832,7 @@ public class HbmXmlTransformer {
 
 							}
 						},
-						ColumnDefaultsBasicImpl.INSTANCE,
+						new ColumnDefaultsCollectionKeyImpl( key ),
 						null
 				);
 			}
@@ -4130,7 +4130,7 @@ public class HbmXmlTransformer {
 
 						}
 					},
-					ColumnDefaultsBasicImpl.INSTANCE,
+					new ColumnDefaultsCollectionKeyImpl( key ),
 					bootValue.getKey().getTable().getName()
 			);
 		}

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+        '-//Hibernate/Hibernate Mapping DTD 3.0//EN'
+        'http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd'>
+
+<hibernate-mapping package="org.hibernate.orm.test.orphan.one2one.fk.reversed.bidirectional">
+
+    <!-- Employee is the owning side with a unique many-to-one that has orphan-removal -->
+    <class name="Employee">
+        <id name="id" type="long" column="id">
+            <generator class="increment" />
+        </id>
+        <!-- This many-to-one with unique="true" and cascade="all,delete-orphan" 
+             should be converted to a one-to-one with orphan-removal="true" -->
+        <many-to-one name="info"
+                    column="info_id"
+                    unique="true"
+                    cascade="all,delete-orphan"/>
+    </class>
+
+    <!-- EmployeeInfo is the inverse side -->
+    <class name="EmployeeInfo">
+        <id name="id" type="long" column="id">
+            <generator class="increment" />
+        </id>
+        <!-- This one-to-one references the many-to-one above via property-ref -->
+        <one-to-one name="employee"
+                   property-ref="info"
+                   class="Employee" />
+    </class>
+
+</hibernate-mapping>

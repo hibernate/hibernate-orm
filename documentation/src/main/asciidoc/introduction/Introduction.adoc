@@ -230,7 +230,7 @@ import jakarta.persistence.Id;
 import jakarta.validation.constraints.NotNull;
 
 @Entity
-class Book {
+public class Book {
     @Id
     String isbn;
 
@@ -239,7 +239,7 @@ class Book {
 
     Book() {}
 
-    Book(String isbn, String title) {
+    public Book(String isbn, String title) {
         this.isbn = isbn;
         this.title = title;
     }

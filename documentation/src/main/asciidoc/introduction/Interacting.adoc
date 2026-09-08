@@ -22,7 +22,7 @@ Session session = entityManager.unwrap(Session.class);
 Similarly, every `EntityAgent` is `StatelessSession`:
 [source,java]
 ----
-StatelessSession session = entityManager.unwrap(StatelessSession.class);
+StatelessSession session = entityAgent.unwrap(StatelessSession.class);
 ----
 ====
 
@@ -320,7 +320,7 @@ affecting the database
 | Detect changes made to persistent objects association with the session and synchronize the database state with the state of the session by executing SQL `insert`, `update`, and `delete` statements
 |===
 
-Notice that `persist()` and `remove()` have no immediate effect on the database, and instead simply schedule a command for later execution.
+Notice that `persist()` and `remove()` usually have no immediate effect on the database, and instead simply schedule a command for later execution.
 Also notice that there's no `update()` operation for a stateful session.
 Modifications are automatically detected when the session is <<flush,flushed>>.
 
@@ -1076,7 +1076,7 @@ Therefore, Hibernate uses heuristics.
 The two most useful heuristics are:
 
 1. If the entity has a <<generated-identifiers,generated identifier>>, the value of the id field is inspected: if the value currently assigned to the id field is the default value for the type of the field, then the object is transient; otherwise, the object is detached.
-2. If the entity has a <<version-attributes,version>>, the value of the version field is inspected: if the value currently assigned to the version field is the default value, or a negative number, then the object is transient; otherwise, the object is detached.
+2. If the entity has a <<version-attributes,version>>, the value of the version field is inspected: if the value currently assigned to the version field is null or a negative number, then the object is transient; otherwise, the object is detached.
 
 If the entity has neither a generated id, nor a version, Hibernate usually falls back to just doing something reasonable.
 In extreme cases a `SELECT` query will be issued to determine whether a matching row exists in the database.

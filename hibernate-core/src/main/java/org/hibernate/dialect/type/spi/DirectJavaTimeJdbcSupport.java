@@ -18,8 +18,12 @@ import static org.hibernate.SPI.Role.USE;
 /// `ResultSet.getObject()` and the corresponding callable-statement methods.
 /// Support therefore covers both binding and extraction.
 ///
+/// Support through native JDBC `STRUCT` and `ARRAY` containers is reported
+/// independently because those APIs do not use the ordinary scalar binding and
+/// extraction paths.
+///
 /// [java.time.OffsetTime] and [java.time.OffsetDateTime] are a matched pair:
-/// an implementation must return the same answer for both classes.
+/// each support method must return the same answer for both classes.
 ///
 /// Implementations must be stable and thread-safe.
 ///
@@ -31,4 +35,22 @@ public interface DirectJavaTimeJdbcSupport {
 	/// Whether the exact Java Time class may be used directly at the JDBC boundary.
 	/// Unknown classes are unsupported.
 	boolean supports(Class<?> javaTimeType);
+
+	/// Whether the exact Java Time class may be used directly as a native JDBC
+	/// `STRUCT` attribute, both when creating and extracting the `STRUCT`.
+	///
+	/// This capability is independent of [#supports(Class)]. Unknown classes are
+	/// unsupported.
+	default boolean supportsInStruct(Class<?> javaTimeType) {
+		return false;
+	}
+
+	/// Whether the exact Java Time class may be used directly as a native JDBC
+	/// `ARRAY` element, both when creating and extracting the `ARRAY`.
+	///
+	/// This capability is independent of [#supports(Class)]. Unknown classes are
+	/// unsupported.
+	default boolean supportsInArray(Class<?> javaTimeType) {
+		return false;
+	}
 }

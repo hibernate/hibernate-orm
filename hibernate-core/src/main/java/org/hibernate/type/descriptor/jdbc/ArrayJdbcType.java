@@ -173,6 +173,14 @@ public class ArrayJdbcType implements JdbcType {
 
 	private static Class<?> elementJdbcJavaTypeClass(WrapperOptions options, JdbcType elementJdbcType) {
 		final var typeConfiguration = options.getTypeConfiguration();
+		if ( elementJdbcType instanceof JavaTimeJdbcType javaTimeJdbcType ) {
+			final Class<?> javaTimeType = javaTimeJdbcType.getPreferredJavaTypeClass( options );
+			if ( !options.getDialect()
+					.getDirectJavaTimeJdbcSupport()
+					.supportsInArray( javaTimeType ) ) {
+				return JavaTimeJdbcType.getPhysicalJavaTypeClass( javaTimeJdbcType, options );
+			}
+		}
 		final var preferredJavaTypeClass = elementJdbcType.getPreferredJavaTypeClass( options );
 		return preferredJavaTypeClass != null
 				? preferredJavaTypeClass

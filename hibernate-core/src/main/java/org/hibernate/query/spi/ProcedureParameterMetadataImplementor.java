@@ -6,25 +6,31 @@ package org.hibernate.query.spi;
 
 import java.util.List;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.Parameter;
 import org.hibernate.procedure.spi.ParameterStrategy;
 import org.hibernate.procedure.spi.ProcedureParameterImplementor;
 
 public interface ProcedureParameterMetadataImplementor extends ParameterMetadataImplementor {
 
+	@Nonnull
 	ParameterStrategy getParameterStrategy();
 
 	@Override
-	ProcedureParameterImplementor<?> getQueryParameter(String name);
+	@Nonnull
+	ProcedureParameterImplementor<?> getQueryParameter(@Nonnull String name);
 
 	@Override
+	@Nonnull
 	ProcedureParameterImplementor<?> getQueryParameter(int positionLabel);
 
 	@Override
-	<P> ProcedureParameterImplementor<P> resolve(Parameter<P> parameter);
+	@Nonnull
+	<P> ProcedureParameterImplementor<P> resolve(@Nonnull Parameter<P> parameter);
 
-	void registerParameter(ProcedureParameterImplementor<?> parameter);
+	void registerParameter(@Nonnull ProcedureParameterImplementor<?> parameter);
 
+	@Nonnull
 	List<? extends ProcedureParameterImplementor<?>> getRegistrationsAsList();
 
 }

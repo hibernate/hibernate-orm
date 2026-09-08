@@ -11,10 +11,14 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.Parameter;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.procedure.spi.ParameterStrategy;
+import org.hibernate.query.UnknownParameterException;
 import org.hibernate.type.BindableType;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.internal.QueryParameterBindingsImpl;
@@ -28,17 +32,17 @@ import static java.util.Collections.emptySet;
 import static java.util.Collections.unmodifiableList;
 
 /**
- * Specialized ParameterMetadataImplementor for callable queries implementing
- * expandable parameter registrations
+ * Specialized {@link org.hibernate.query.spi.ParameterMetadataImplementor}
+ * for callable queries implementing expandable parameter registrations.
  *
  * @author Steve Ebersole
  */
 class ProcedureParameterMetadataImpl implements ProcedureParameterMetadataImplementor {
-	private ParameterStrategy parameterStrategy = ParameterStrategy.UNKNOWN;
-	private List<ProcedureParameterImplementor<?>> parameters;
+	private @Nonnull ParameterStrategy parameterStrategy = ParameterStrategy.UNKNOWN;
+	private @Nullable List<ProcedureParameterImplementor<?>> parameters;
 
 	@Override
-	public void registerParameter(ProcedureParameterImplementor<?> parameter) {
+	public void registerParameter(@Nonnull ProcedureParameterImplementor<?> parameter) {
 		if ( parameter.isNamed() ) {
 			if ( parameterStrategy == ParameterStrategy.POSITIONAL ) {
 				throw new IllegalArgumentException( "Cannot mix named parameter with positional parameter registrations" );
@@ -61,20 +65,24 @@ class ProcedureParameterMetadataImpl implements ProcedureParameterMetadataImplem
 	}
 
 	@Override
-	public QueryParameterBindings createBindings(SessionFactoryImplementor sessionFactory) {
+	@Nonnull
+	public QueryParameterBindings createBindings(@Nonnull SessionFactoryImplementor sessionFactory) {
 		return QueryParameterBindingsImpl.from( this, sessionFactory );
 	}
 
 	@Override
-	public void visitParameters(Consumer<QueryParameter<?>> consumer) {
+	public void visitParameters(@Nonnull Consumer<QueryParameter<?>> consumer) {
 		if ( parameters != null ) {
 			parameters.forEach( consumer );
 		}
 	}
 
 	@Override
+	@Nonnull
 	public Collection<QueryParameter<?>> getParameters() {
-		return unmodifiableList( parameters );
+		return parameters == null
+				? emptyList()
+				: unmodifiableList( parameters );
 	}
 
 	@Override
@@ -88,6 +96,7 @@ class ProcedureParameterMetadataImpl implements ProcedureParameterMetadataImplem
 	}
 
 	@Override
+	@Nonnull
 	public Set<String> getNamedParameterNames() {
 		if ( hasNamedParameters() && parameters != null ) {
 			final Set<String> names = new HashSet<>();
@@ -109,18 +118,19 @@ class ProcedureParameterMetadataImpl implements ProcedureParameterMetadataImplem
 	}
 
 	@Override
-	public boolean containsReference(QueryParameter<?> parameter) {
+	public boolean containsReference(@Nonnull QueryParameter<?> parameter) {
 		return parameters != null
 			&& parameters.contains( (ProcedureParameterImplementor<?>) parameter );
 	}
 
 	@Override
+	@Nonnull
 	public ParameterStrategy getParameterStrategy() {
 		return parameterStrategy;
 	}
 
 	@Override
-	public boolean hasAnyMatching(Predicate<QueryParameterImplementor<?>> filter) {
+	public boolean hasAnyMatching(@Nonnull Predicate<QueryParameterImplementor<?>> filter) {
 		if ( parameters == null || parameters.isEmpty() ) {
 			return false;
 		}
@@ -135,7 +145,8 @@ class ProcedureParameterMetadataImpl implements ProcedureParameterMetadataImplem
 	}
 
 	@Override
-	public ProcedureParameterImplementor<?> findQueryParameter(String name) {
+	@Nullable
+	public ProcedureParameterImplementor<?> findQueryParameter(@Nonnull String name) {
 		if ( parameters != null ) {
 			for ( var parameter : parameters ) {
 				if ( name.equals( parameter.getName() ) ) {
@@ -147,7 +158,8 @@ class ProcedureParameterMetadataImpl implements ProcedureParameterMetadataImplem
 	}
 
 	@Override
-	public ProcedureParameterImplementor<?> getQueryParameter(String name) {
+	@Nonnull
+	public ProcedureParameterImplementor<?> getQueryParameter(@Nonnull String name) {
 		final var parameter = findQueryParameter( name );
 		if ( parameter != null ) {
 			return parameter;
@@ -156,6 +168,7 @@ class ProcedureParameterMetadataImpl implements ProcedureParameterMetadataImplem
 	}
 
 	@Override
+	@Nullable
 	public ProcedureParameterImplementor<?> findQueryParameter(int positionLabel) {
 		if ( parameters != null ) {
 			for ( var parameter : parameters ) {
@@ -169,6 +182,7 @@ class ProcedureParameterMetadataImpl implements ProcedureParameterMetadataImplem
 	}
 
 	@Override
+	@Nonnull
 	public ProcedureParameterImplementor<?> getQueryParameter(int positionLabel) {
 		final var queryParameter = findQueryParameter( positionLabel );
 		if ( queryParameter == null ) {
@@ -179,7 +193,8 @@ class ProcedureParameterMetadataImpl implements ProcedureParameterMetadataImplem
 	}
 
 	@Override
-	public <P> ProcedureParameterImplementor<P> resolve(Parameter<P> parameter) {
+	@Nonnull
+	public <P> ProcedureParameterImplementor<P> resolve(@Nonnull Parameter<P> parameter) {
 		if ( parameters != null
 				&& parameter instanceof ProcedureParameterImplementor<P> procedureParam ) {
 			for ( var registered : parameters ) {
@@ -188,27 +203,34 @@ class ProcedureParameterMetadataImpl implements ProcedureParameterMetadataImplem
 				}
 			}
 		}
-		return null;
+		final String errorMessage =
+				"Could not resolve jakarta.persistence.Parameter '"
+				+ parameter + "' to org.hibernate.query.QueryParameter";
+		throw new IllegalArgumentException( errorMessage,
+				new UnknownParameterException( errorMessage ) );
 	}
 
 	@Override
+	@Nonnull
 	public Set<? extends QueryParameter<?>> getRegistrations() {
 		return parameters == null ? emptySet() : new HashSet<>( parameters );
 	}
 
 	@Override
+	@Nonnull
 	public List<? extends ProcedureParameterImplementor<?>> getRegistrationsAsList() {
 		return parameters == null ? emptyList() : parameters;
 	}
 
 	@Override
-	public void visitRegistrations(Consumer<QueryParameter<?>> action) {
+	public void visitRegistrations(@Nonnull Consumer<QueryParameter<?>> action) {
 		if ( parameters != null ) {
 			parameters.forEach( action );
 		}
 	}
 
 	@Override
+	@Nonnull
 	public Set<Integer> getOrdinalParameterLabels() {
 		final Set<Integer> labels = new HashSet<>();
 		visitRegistrations( parameter -> {
@@ -221,7 +243,8 @@ class ProcedureParameterMetadataImpl implements ProcedureParameterMetadataImplem
 	}
 
 	@Override
-	public <T> BindableType<T> getInferredParameterType(QueryParameter<T> parameter) {
+	@Nullable
+	public <T> BindableType<T> getInferredParameterType(@Nonnull QueryParameter<T> parameter) {
 		return null;
 	}
 }

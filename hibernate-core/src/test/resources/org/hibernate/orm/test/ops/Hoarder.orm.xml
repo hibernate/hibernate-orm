@@ -77,7 +77,7 @@
             <one-to-many name="subItemsBackref" target-entity="SubItem" fetch="LAZY" orphan-removal="false" classification="LIST" not-found="EXCEPTION" optimistic-lock="true">
                 <order-column name="indx"/>
                 <mutable>true</mutable>
-                <join-column name="parentItem" unique="false" nullable="true" insertable="true" updatable="true"/>
+                <join-column name="parentItem" unique="false" nullable="false" insertable="true" updatable="true"/>
                 <cascade>
                     <cascade-persist/>
                     <cascade-merge/>

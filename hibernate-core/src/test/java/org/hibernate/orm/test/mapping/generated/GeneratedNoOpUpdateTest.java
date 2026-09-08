@@ -9,10 +9,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-import org.hibernate.HibernateError;
 import org.hibernate.annotations.CurrentTimestamp;
 
-import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
@@ -30,6 +28,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hibernate.testing.orm.junit.DialectContext.awaitServerTimestampTick;
 
 /**
  * @author Marco Belladelli
@@ -79,7 +78,7 @@ public class GeneratedNoOpUpdateTest {
 			assertThat( pizza.getLastUpdated() ).isEqualTo( updatedTime );
 		} );
 
-		waitALittle( scope );
+		awaitServerTimestampTick( scope );
 
 		scope.inTransaction( session -> {
 			final Pizza pizza = session.find( Pizza.class, 1L );
@@ -180,18 +179,5 @@ public class GeneratedNoOpUpdateTest {
 			this.pizza = pizza;
 		}
 
-	}
-
-	private static void waitALittle(SessionFactoryScope scope) {
-		boolean waitLonger =
-				// informix clock has low resolution on Mac
-				scope.getSessionFactory().getJdbcServices().getDialect()
-						instanceof InformixDialect;
-		try {
-			Thread.sleep( waitLonger ? 1_200 : 2 );
-		}
-		catch (InterruptedException e) {
-			throw new HibernateError( "Unexpected wakeup from test sleep" );
-		}
 	}
 }

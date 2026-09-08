@@ -51,7 +51,7 @@ class TemporalEntityTest {
 
 	@Test
 	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsPrimaryKeyUpdate.class )
-	void test(SessionFactoryScope scope) throws InterruptedException {
+	void test(SessionFactoryScope scope) {
 		scope.getSessionFactory().inTransaction(
 				session -> {
 					TemporalEntity1 entity = new TemporalEntity1();
@@ -220,7 +220,7 @@ class TemporalEntityTest {
 		}
 	}
 
-	@Test void testStateless(SessionFactoryScope scope) throws InterruptedException {
+	@Test void testStateless(SessionFactoryScope scope) {
 		scope.getSessionFactory().inStatelessTransaction(
 				session -> {
 					TemporalEntity1 entity = new TemporalEntity1();
@@ -281,7 +281,7 @@ class TemporalEntityTest {
 		}
 	}
 
-	@Test void testCollections(SessionFactoryScope scope) throws InterruptedException {
+	@Test void testCollections(SessionFactoryScope scope) {
 		scope.inTransaction( s -> {
 			TemporalEntity1 entity = new TemporalEntity1();
 			entity.id = 3L;
@@ -360,7 +360,7 @@ class TemporalEntityTest {
 		}
 	}
 
-	@Test void testUpsert(SessionFactoryScope scope) throws InterruptedException {
+	@Test void testUpsert(SessionFactoryScope scope) {
 		scope.inStatelessTransaction( s -> {
 			TemporalEntity1 entity = new TemporalEntity1();
 			entity.id = 7L;

@@ -26,6 +26,7 @@ import org.hibernate.testing.orm.junit.SettingProvider;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hibernate.testing.orm.junit.DialectContext.awaitServerTimestampTick;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @DomainModel(
@@ -44,7 +45,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class MixedTypeEmbeddableGeneratorsTest2 {
 
 	@Test
-	void testMixedTiming(SessionFactoryScope scope) throws InterruptedException {
+	void testMixedTiming(SessionFactoryScope scope) {
 		final var statementInspector = scope.getCollectingStatementInspector();
 
 		statementInspector.clear();
@@ -67,8 +68,7 @@ class MixedTypeEmbeddableGeneratorsTest2 {
 			return new LocalDateTime[] { event.history.created, event.history.updated };
 		} );
 
-		// Sleep a while to let the database clock tick
-		Thread.sleep( 1000 );
+		awaitServerTimestampTick( scope );
 
 		statementInspector.clear();
 		scope.inTransaction( session -> {

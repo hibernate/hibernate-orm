@@ -17,6 +17,8 @@ import org.junit.jupiter.api.Test;
 
 import java.sql.Timestamp;
 
+import static org.hibernate.testing.orm.junit.DialectContext.awaitServerTimestampTick;
+
 /**
  * @author Steve Ebersole
  */
@@ -30,7 +32,7 @@ public class DbVersionTest {
 	}
 
 	@Test
-	public void testCollectionVersion(SessionFactoryScope factoryScope) throws Exception {
+	public void testCollectionVersion(SessionFactoryScope factoryScope) {
 		final var tsJavaType = JdbcTimestampJavaType.INSTANCE;
 		final MutableObject<User> steveRef = new MutableObject<>();
 
@@ -45,9 +47,7 @@ public class DbVersionTest {
 
 		Timestamp steveTimestamp = steveRef.get().getTimestamp();
 
-		// For dialects (Oracle8 for example) which do not return "true
-		// timestamps" sleep for a bit to allow the db date-time increment...
-		Thread.sleep( 1500 );
+		awaitServerTimestampTick( factoryScope );
 
 		factoryScope.inTransaction( (session) -> {
 			var steve = session.find( User.class, 1 );
@@ -61,7 +61,7 @@ public class DbVersionTest {
 				"owner version not incremented" );
 
 		steveTimestamp = steveRef.get().getTimestamp();
-		Thread.sleep( 1500 );
+		awaitServerTimestampTick( factoryScope );
 
 		factoryScope.inTransaction( (session) -> {
 			var steve = session.find( User.class, 1 );
@@ -83,7 +83,7 @@ public class DbVersionTest {
 	}
 
 	@Test
-	public void testCollectionNoVersion(SessionFactoryScope factoryScope) throws Exception {
+	public void testCollectionNoVersion(SessionFactoryScope factoryScope) {
 		final var dialect = factoryScope.getSessionFactory().getJdbcServices().getDialect();
 		final var tsJavaType = JdbcTimestampJavaType.INSTANCE;
 		final MutableObject<User> steveRef = new MutableObject<>();

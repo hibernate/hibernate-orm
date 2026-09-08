@@ -16,6 +16,7 @@ import org.hibernate.Hibernate;
 import org.hibernate.annotations.Temporal;
 import org.hibernate.cfg.StateManagementSettings;
 import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.testing.orm.junit.DialectContext;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -24,7 +25,6 @@ import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Test;
 
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -43,9 +43,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @RequiresDialect(SQLServerDialect.class)
 class TemporalEntitySqlServerNativeTest {
 
-	public static final int PAUSE = 500;
-
-	@Test void test(SessionFactoryScope scope) throws InterruptedException {
+	@Test void test(SessionFactoryScope scope) {
 		scope.getSessionFactory().inTransaction(
 				session -> {
 					TemporalEntity entity = new TemporalEntity();
@@ -59,9 +57,7 @@ class TemporalEntitySqlServerNativeTest {
 					session.persist( child );
 				}
 		);
-		Thread.sleep( PAUSE );
-		var instant = getInstant( scope );
-		Thread.sleep( PAUSE );
+		var instant = DialectContext.awaitServerTimestampTick( scope );
 		scope.getSessionFactory().inTransaction(
 				session -> {
 					TemporalEntity entity = session.find( TemporalEntity.class, 1L );
@@ -74,7 +70,7 @@ class TemporalEntitySqlServerNativeTest {
 					entity.children.get(0).friends.add( friend );
 				}
 		);
-		scope.getSessionFactory().inTransaction(
+		scope.getSessionFactory().inSession(
 				session -> {
 					TemporalEntity entity = session.find( TemporalEntity.class, 1L );
 					assertEquals( "goodbye", entity.text );
@@ -83,7 +79,7 @@ class TemporalEntitySqlServerNativeTest {
 					assertEquals( 1, entity.children.get(0).friends.size() );
 				}
 		);
-		scope.getSessionFactory().inTransaction(
+		scope.getSessionFactory().inSession(
 				session -> {
 					TemporalEntity entity =
 							session.createSelectionQuery( "from TemporalEntity where id=1", TemporalEntity.class )
@@ -91,7 +87,7 @@ class TemporalEntitySqlServerNativeTest {
 					assertEquals( "goodbye", entity.text );
 				}
 		);
-		scope.getSessionFactory().inTransaction(
+		scope.getSessionFactory().inSession(
 				session -> {
 					TemporalEntity entity =
 							session.createSelectionQuery( "from TemporalEntity p left join fetch p.children c where p.id=1", TemporalEntity.class )
@@ -107,68 +103,53 @@ class TemporalEntitySqlServerNativeTest {
 				}
 		);
 		try (var session = scope.getSessionFactory().withOptions().asOf(instant).open()) {
-			session.inTransaction( tx -> {
-				TemporalEntity entity = session.find( TemporalEntity.class, 1L );
-				assertEquals( "hello", entity.text );
-				assertEquals( 1, entity.children.size() );
-				assertEquals( "world", entity.children.get(0).text );
-				assertEquals( 0, entity.children.get(0).friends.size() );
-			} );
+			TemporalEntity entity = session.find( TemporalEntity.class, 1L );
+			assertEquals( "hello", entity.text );
+			assertEquals( 1, entity.children.size() );
+			assertEquals( "world", entity.children.get(0).text );
+			assertEquals( 0, entity.children.get(0).friends.size() );
 		}
 		try (var session = scope.getSessionFactory().withOptions().asOf(instant).open()) {
-			session.inTransaction( tx -> {
-				TemporalEntity entity =
-						session.createSelectionQuery( "from TemporalEntity where id=1", TemporalEntity.class )
-								.getSingleResult();
-				assertEquals( "hello", entity.text );
-			} );
+			TemporalEntity entity =
+					session.createSelectionQuery( "from TemporalEntity where id=1", TemporalEntity.class )
+							.getSingleResult();
+			assertEquals( "hello", entity.text );
 		}
 		try (var session = scope.getSessionFactory().withOptions().asOf(instant).open()) {
-			session.inTransaction( tx -> {
-				TemporalEntity entity =
-						session.createSelectionQuery( "from TemporalEntity p left join fetch p.children c where p.id=1", TemporalEntity.class )
-								.getSingleResult();
-				assertTrue( Hibernate.isInitialized(entity.children) );
-				assertEquals( "hello", entity.text );
-				assertEquals( 1, entity.children.size() );
-				assertEquals( "world", entity.children.get(0).text );
-				var friends =
-						session.createSelectionQuery( "select f from TemporalEntity p join p.children c join c.friends f where p.id=1", TemporalChild.class )
-								.getResultCount();
-				assertEquals( 0, friends );
-			} );
+			TemporalEntity entity =
+					session.createSelectionQuery( "from TemporalEntity p left join fetch p.children c where p.id=1", TemporalEntity.class )
+							.getSingleResult();
+			assertTrue( Hibernate.isInitialized(entity.children) );
+			assertEquals( "hello", entity.text );
+			assertEquals( 1, entity.children.size() );
+			assertEquals( "world", entity.children.get(0).text );
+			var friends =
+					session.createSelectionQuery( "select f from TemporalEntity p join p.children c join c.friends f where p.id=1", TemporalChild.class )
+							.getResultCount();
+			assertEquals( 0, friends );
 		}
-		Thread.sleep( PAUSE );
-		var nextInstant = getInstant( scope );
-		Thread.sleep( PAUSE );
+		var nextInstant = DialectContext.awaitServerTimestampTick( scope );
 		scope.getSessionFactory().inTransaction(
 				session -> {
 					TemporalEntity entity = session.find( TemporalEntity.class, 1L );
 					entity.children.get(0).friends.clear();
 				}
 		);
-		scope.getSessionFactory().inTransaction(
+		scope.getSessionFactory().inSession(
 				session -> {
 					TemporalEntity entity = session.find( TemporalEntity.class, 1L );
 					assertEquals( 0, entity.children.get(0).friends.size() );
 				}
 		);
 		try (var session = scope.getSessionFactory().withOptions().asOf(instant).open()) {
-			scope.getSessionFactory().inTransaction(
-					tx -> {
-						TemporalEntity entity = session.find( TemporalEntity.class, 1L );
-						assertEquals( 0, entity.children.get( 0 ).friends.size() );
-					}
-			);
+			TemporalEntity entity = session.find( TemporalEntity.class, 1L );
+			assertEquals( 0, entity.children.get( 0 ).friends.size() );
 		}
 		try (var session = scope.getSessionFactory().withOptions().asOf(nextInstant).open()) {
-			scope.getSessionFactory().inTransaction(
-					tx -> {
-						TemporalEntity entity = session.find( TemporalEntity.class, 1L );
-						assertEquals( 1, entity.children.get( 0 ).friends.size() );
-					}
-			);
+			TemporalEntity entity = session.find( TemporalEntity.class, 1L );
+			assertEquals( 1, entity.children.get( 0 ).friends.size() );
 		}
+		DialectContext.awaitServerTimestampTick( scope );
 		scope.getSessionFactory().inTransaction(
 				session -> {
 					TemporalEntity entity = session.find( TemporalEntity.class, 1L );
@@ -176,21 +157,19 @@ class TemporalEntitySqlServerNativeTest {
 					session.remove( entity );
 				}
 		);
-		scope.getSessionFactory().inTransaction(
+		scope.getSessionFactory().inSession(
 				session -> {
 					TemporalEntity entity = session.find( TemporalEntity.class, 1L );
 					assertNull( entity );
 				}
 		);
 		try (var session = scope.getSessionFactory().withOptions().asOf(instant).open()) {
-			session.inTransaction( tx -> {
-				TemporalEntity entity = session.find( TemporalEntity.class, 1L );
-				assertEquals( "hello", entity.text );
-			} );
+			TemporalEntity entity = session.find( TemporalEntity.class, 1L );
+			assertEquals( "hello", entity.text );
 		}
 	}
 
-	@Test void testStateless(SessionFactoryScope scope) throws InterruptedException {
+	@Test void testStateless(SessionFactoryScope scope) {
 		scope.getSessionFactory().inStatelessTransaction(
 				session -> {
 					TemporalEntity entity = new TemporalEntity();
@@ -199,9 +178,7 @@ class TemporalEntitySqlServerNativeTest {
 					session.insert( entity );
 				}
 		);
-		Thread.sleep( PAUSE );
-		var instant = getInstant( scope );
-		Thread.sleep( PAUSE );
+		var instant = DialectContext.awaitServerTimestampTick( scope );
 		scope.getSessionFactory().inStatelessTransaction(
 				session -> {
 					TemporalEntity entity = session.get( TemporalEntity.class, 2L );
@@ -209,7 +186,7 @@ class TemporalEntitySqlServerNativeTest {
 					session.update( entity );
 				}
 		);
-		scope.getSessionFactory().inStatelessTransaction(
+		scope.getSessionFactory().inStatelessSession(
 				session -> {
 					TemporalEntity entity = session.get( TemporalEntity.class, 2L );
 					assertEquals( "goodbye", entity.text );
@@ -220,38 +197,30 @@ class TemporalEntitySqlServerNativeTest {
 				}
 		);
 		try (var session = scope.getSessionFactory().withStatelessOptions().asOf(instant).open()) {
-			session.inTransaction( tx -> {
-				TemporalEntity entity = session.get( TemporalEntity.class, 2L );
-				assertEquals( "hello", entity.text );
-				entity =
-						session.createSelectionQuery( "from TemporalEntity where id=2", TemporalEntity.class )
-								.getSingleResult();
-				assertEquals( "hello", entity.text );
-			} );
+			TemporalEntity entity = session.get( TemporalEntity.class, 2L );
+			assertEquals( "hello", entity.text );
+			entity =
+					session.createSelectionQuery( "from TemporalEntity where id=2", TemporalEntity.class )
+							.getSingleResult();
+			assertEquals( "hello", entity.text );
 		}
+		DialectContext.awaitServerTimestampTick( scope );
 		scope.getSessionFactory().inStatelessTransaction(
 				session -> {
 					TemporalEntity entity = session.get( TemporalEntity.class, 2L );
 					session.delete( entity );
 				}
 		);
-		scope.getSessionFactory().inStatelessTransaction(
+		scope.getSessionFactory().inStatelessSession(
 				session -> {
 					assertThatThrownBy( () -> session.get( TemporalEntity.class, 2L ) )
 							.isInstanceOf( EntityNotFoundException.class );
 				}
 		);
 		try (var session = scope.getSessionFactory().withStatelessOptions().asOf(instant).open()) {
-			session.inTransaction( tx -> {
-				TemporalEntity entity = session.get( TemporalEntity.class, 2L );
-				assertEquals( "hello", entity.text );
-			} );
+			TemporalEntity entity = session.get( TemporalEntity.class, 2L );
+			assertEquals( "hello", entity.text );
 		}
-	}
-
-	private static Instant getInstant(SessionFactoryScope scope) {
-		return scope.getSessionFactory().fromSession(
-				s -> s.createSelectionQuery( "select instant", Instant.class ).getSingleResult() );
 	}
 
 	@Temporal(rowStart = "effective_from", rowEnd = "effective_to")

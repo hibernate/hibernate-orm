@@ -25,8 +25,8 @@ import org.junit.jupiter.api.Test;
 import java.time.Instant;
 import java.util.stream.IntStream;
 
-import static java.lang.Thread.sleep;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hibernate.testing.orm.junit.DialectContext.awaitTimestampTick;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -49,7 +49,7 @@ public class InMemoryTimestampGenerationBatchTest {
 	}
 
 	@Test
-	public void test(SessionFactoryScope scope) throws InterruptedException {
+	public void test(SessionFactoryScope scope) {
 		final var statistics = scope.getSessionFactory().getStatistics();
 		scope.inTransaction( session -> {
 			Person person = null;
@@ -71,7 +71,7 @@ public class InMemoryTimestampGenerationBatchTest {
 
 
 		clock.tick();
-		sleep( 1 );
+		awaitTimestampTick();
 
 		scope.inTransaction( session -> {
 			final var persons = session.findMultiple( Person.class,

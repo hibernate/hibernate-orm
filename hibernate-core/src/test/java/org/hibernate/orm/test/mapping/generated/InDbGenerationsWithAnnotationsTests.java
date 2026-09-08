@@ -6,7 +6,6 @@ package org.hibernate.orm.test.mapping.generated;
 
 import java.sql.Timestamp;
 
-import org.hibernate.HibernateError;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.CurrentTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -26,6 +25,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hibernate.testing.orm.junit.DialectContext.awaitServerTimestampTick;
 
 /**
  * Tests for using {@link CreationTimestamp} and {@link UpdateTimestamp}
@@ -55,7 +55,7 @@ public class InDbGenerationsWithAnnotationsTests {
 			saved.name = "changed";
 
 			//We need to wait a little to make sure the timestamps produced are different
-			waitALittle();
+			awaitServerTimestampTick( scope );
 
 			// then changing
 			final AuditedEntity merged = scope.fromTransaction( session, s -> s.merge( saved ) );
@@ -66,7 +66,7 @@ public class InDbGenerationsWithAnnotationsTests {
 			assertThat( merged.lastUpdatedOn ).isNotEqualTo( merged.createdOn );
 
 			//We need to wait a little to make sure the timestamps produced are different
-			waitALittle();
+			awaitServerTimestampTick( scope );
 
 			// lastly, make sure we can load it
 			final AuditedEntity loaded = scope.fromTransaction( session, s -> s.get( AuditedEntity.class, 1 ) );
@@ -104,12 +104,4 @@ public class InDbGenerationsWithAnnotationsTests {
 		}
 	}
 
-	private static void waitALittle() {
-		try {
-			Thread.sleep( 10 );
-		}
-		catch (InterruptedException e) {
-			throw new HibernateError( "Unexpected wakeup from test sleep" );
-		}
-	}
 }

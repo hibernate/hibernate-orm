@@ -867,6 +867,16 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		return 7;
 	}
 
+	@Override
+	public int getMaxTimestampPrecision() {
+		return 7;
+	}
+
+	@Override
+	public boolean roundsToMaxPrecisionFirst() {
+		return true;
+	}
+
 	/**
 	 * Even though SQL Server only supports 1/10th microsecond precision,
 	 * we use nanosecond as the "native" precision for datetime arithmetic

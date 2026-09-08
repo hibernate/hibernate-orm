@@ -5,6 +5,7 @@
 package org.hibernate.type.descriptor.jdbc;
 
 import java.sql.SQLException;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.hibernate.metamodel.mapping.AttributeMapping;
@@ -17,7 +18,9 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.java.ArrayJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.java.LocalDateTimeJavaType;
 import org.junit.jupiter.api.Test;
 
 import static java.util.Arrays.asList;
@@ -26,6 +29,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /// An array of structured elements, where the struct itself contains an array
@@ -68,8 +74,70 @@ class ArrayJdbcTypeStructuredElementTest {
 		assertArrayEquals( new Object[] { 1, 2 }, (Object[]) structValue.get( 0 ) );
 	}
 
+	@Test
+	void convertsStructuredElementsContainingDirectJavaTimeArrays() throws SQLException {
+		final ArrayJavaType<LocalDateTime> directArrayJavaType = spy(
+				new ArrayJavaType<>( LocalDateTimeJavaType.INSTANCE )
+		);
+		final StructJdbcType structJdbcType = new StructJdbcType(
+				directJavaTimeStructMapping( directArrayJavaType ),
+				"test_struct",
+				null
+		);
+		final ExposedArrayJdbcType arrayJdbcType = new ExposedArrayJdbcType( structJdbcType );
+		final LocalDateTime first = LocalDateTime.of( 2024, 2, 29, 12, 34, 56 );
+		final LocalDateTime second = first.plusDays( 1 );
+		final Object[] structPhysicalValues = { arrayOf( new Object[] { first, second } ) };
+		final java.sql.Array arrayOfStructs = arrayOf( new Object[] { struct( structPhysicalValues ) } );
+
+		final BasicExtractor<?> extractor = mock( BasicExtractor.class );
+		final JavaType<Object> arrayJavaType = mock( JavaType.class );
+		doReturn( arrayJavaType ).when( extractor ).getJavaType();
+		when( arrayJavaType.wrap( any(), any() ) ).thenAnswer( invocation -> invocation.getArgument( 0 ) );
+
+		final Object result = arrayJdbcType.extractArray( extractor, arrayOfStructs, options );
+
+		final Object[] domainArray = (Object[]) result;
+		assertEquals( 1, domainArray.length );
+		final List<?> structValue = (List<?>) domainArray[0];
+		assertArrayEquals( new LocalDateTime[] { first, second }, (Object[]) structValue.get( 0 ) );
+		verify( directArrayJavaType, times( 1 ) ).wrap( any(), any() );
+	}
+
 	@SuppressWarnings("unchecked")
 	private EmbeddableMappingType structMapping() throws SQLException {
+		final JavaType<Object> arrayJdbcJavaType = mock( JavaType.class );
+		final ValueBinder<Object> arrayValueBinder = mock( ValueBinder.class );
+		final JavaType<Object> elementJdbcJavaType = mock( JavaType.class );
+		final JdbcType elementJdbcType = mock( JdbcType.class );
+		when( elementJdbcType.getDefaultSqlTypeCode() ).thenReturn( SqlTypes.TIMESTAMP_UTC );
+		when( elementJdbcJavaType.wrap( any(), any() ) ).thenAnswer( invocation -> invocation.getArgument( 0 ) );
+		when( arrayJdbcJavaType.wrap( any(), any() ) ).thenAnswer( invocation -> {
+			final Object value = invocation.getArgument( 0 );
+			return value instanceof java.sql.Array array ? array.getArray() : value;
+		} );
+		when( arrayJdbcJavaType.isInstance( any() ) ).thenReturn( true );
+		when( arrayJdbcJavaType.cast( any() ) ).thenAnswer( invocation -> invocation.getArgument( 0 ) );
+		when( arrayValueBinder.getBindValue( any(), any() ) ).thenAnswer( invocation -> invocation.getArgument( 0 ) );
+		return structMapping( elementJdbcType, elementJdbcJavaType, arrayJdbcJavaType, arrayValueBinder );
+	}
+
+	@SuppressWarnings("unchecked")
+	private EmbeddableMappingType directJavaTimeStructMapping(JavaType<?> arrayJdbcJavaType) throws SQLException {
+		return structMapping(
+				LocalDateTimeJdbcType.INSTANCE,
+				LocalDateTimeJavaType.INSTANCE,
+				arrayJdbcJavaType,
+				mock( ValueBinder.class )
+		);
+	}
+
+	@SuppressWarnings("unchecked")
+	private EmbeddableMappingType structMapping(
+			JdbcType elementJdbcType,
+			JavaType<?> elementJdbcJavaType,
+			JavaType<?> arrayJdbcJavaType,
+			ValueBinder<?> arrayValueBinder) {
 		final EmbeddableMappingType mappingType = mock( EmbeddableMappingType.class );
 		when( mappingType.getJdbcValueCount() ).thenReturn( 1 );
 		when( mappingType.getNumberOfAttributeMappings() ).thenReturn( 1 );
@@ -79,12 +147,8 @@ class ArrayJdbcTypeStructuredElementTest {
 		// wrap unwraps a java.sql.Array, exactly as the array JavaTypes do
 		final AttributeMapping attributeMapping = mock( AttributeMapping.class );
 		final BasicPluralType<Object, Object> arrayMapping = mock( BasicPluralType.class );
-		final JavaType<Object> arrayJdbcJavaType = mock( JavaType.class );
-		final ValueBinder<Object> arrayValueBinder = mock( ValueBinder.class );
 		final JdbcType arrayJdbcType = mock( JdbcType.class );
 		final BasicType<Object> elementType = mock( BasicType.class );
-		final JavaType<Object> elementJdbcJavaType = mock( JavaType.class );
-		final JdbcType elementJdbcType = mock( JdbcType.class );
 
 		when( mappingType.getAttributeMapping( 0 ) ).thenReturn( attributeMapping );
 		when( attributeMapping.getJdbcTypeCount() ).thenReturn( 1 );
@@ -93,21 +157,12 @@ class ArrayJdbcTypeStructuredElementTest {
 		when( arrayJdbcType.getJdbcTypeCode() ).thenReturn( SqlTypes.ARRAY );
 		when( arrayJdbcType.getDefaultSqlTypeCode() ).thenReturn( SqlTypes.ARRAY );
 		when( arrayMapping.getElementType() ).thenReturn( elementType );
-		when( elementType.getJdbcType() ).thenReturn( elementJdbcType );
-		when( elementJdbcType.getDefaultSqlTypeCode() ).thenReturn( SqlTypes.TIMESTAMP_UTC );
+		doReturn( elementJdbcType ).when( elementType ).getJdbcType();
 		doReturn( elementJdbcJavaType ).when( elementType ).getJdbcJavaType();
-		when( elementJdbcJavaType.wrap( any(), any() ) ).thenAnswer( invocation -> invocation.getArgument( 0 ) );
 		when( arrayMapping.convertToRelationalValue( any() ) ).thenAnswer( invocation -> invocation.getArgument( 0 ) );
 		when( arrayMapping.convertToDomainValue( any() ) ).thenAnswer( invocation -> invocation.getArgument( 0 ) );
 		doReturn( arrayJdbcJavaType ).when( arrayMapping ).getJdbcJavaType();
-		when( arrayMapping.getJdbcValueBinder() ).thenReturn( arrayValueBinder );
-		when( arrayJdbcJavaType.wrap( any(), any() ) ).thenAnswer( invocation -> {
-			final Object value = invocation.getArgument( 0 );
-			return value instanceof java.sql.Array array ? array.getArray() : value;
-		} );
-		when( arrayJdbcJavaType.isInstance( any() ) ).thenReturn( true );
-		when( arrayJdbcJavaType.cast( any() ) ).thenAnswer( invocation -> invocation.getArgument( 0 ) );
-		when( arrayValueBinder.getBindValue( any(), any() ) ).thenAnswer( invocation -> invocation.getArgument( 0 ) );
+		doReturn( arrayValueBinder ).when( arrayMapping ).getJdbcValueBinder();
 
 		final EmbeddableRepresentationStrategy representationStrategy = mock( EmbeddableRepresentationStrategy.class );
 		final EmbeddableInstantiator instantiator = mock( EmbeddableInstantiator.class );

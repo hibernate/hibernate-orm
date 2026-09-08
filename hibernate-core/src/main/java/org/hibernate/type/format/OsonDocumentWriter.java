@@ -16,7 +16,6 @@ import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JavaTimeJdbcType;
-import org.hibernate.sql.spi.StringBuilderSqlAppender;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -145,13 +144,7 @@ public class OsonDocumentWriter implements JsonDocumentWriter {
 								JavaType<T> javaType,
 								JdbcType jdbcType,
 								WrapperOptions options) {
-		if ( jdbcType instanceof JavaTimeJdbcType ) {
-			final StringBuilderSqlAppender appender = new StringBuilderSqlAppender();
-			javaType.appendEncodedString( appender, (T) value );
-			generator.write( appender.getStringBuilder().toString() );
-			return;
-		}
-		switch ( jdbcType.getDefaultSqlTypeCode() ) {
+		switch ( JavaTimeJdbcType.getPhysicalJdbcTypeCode( jdbcType ) ) {
 			case SqlTypes.TINYINT:
 			case SqlTypes.SMALLINT:
 			case SqlTypes.INTEGER:

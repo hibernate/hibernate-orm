@@ -21,6 +21,7 @@ import org.hibernate.sql.ast.spi.translation.SqlAstTranslator;
 import org.hibernate.sql.spi.SqlAppender;
 import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.JavaTimeJdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import java.util.LinkedHashMap;
@@ -85,7 +86,7 @@ public class SQLServerAggregateSupport extends AggregateSupportImpl {
 				else {
 					parentJsonPartExpression = aggregateParentReadExpression + ",'$.";
 				}
-				switch ( column.getJdbcMapping().getJdbcType().getDefaultSqlTypeCode() ) {
+				switch ( JavaTimeJdbcType.getPhysicalJdbcTypeCode( column.getJdbcMapping().getJdbcType() ) ) {
 					case JSON:
 					case JSON_ARRAY:
 						return template.replace(
@@ -173,7 +174,7 @@ public class SQLServerAggregateSupport extends AggregateSupportImpl {
 					xmlColumn = aggregateParentReadExpression;
 					parentXmlPartExpression = "/" + XmlHelper.ROOT_TAG;
 				}
-				switch ( column.getJdbcMapping().getJdbcType().getDefaultSqlTypeCode() ) {
+				switch ( JavaTimeJdbcType.getPhysicalJdbcTypeCode( column.getJdbcMapping().getJdbcType() ) ) {
 					case SQLXML:
 						return template.replace(
 								placeholder,
@@ -230,7 +231,7 @@ public class SQLServerAggregateSupport extends AggregateSupportImpl {
 	}
 
 	public void appendJsonWriteExpression(SqlAppender sqlAppender, Runnable renderFunction, JdbcMapping jdbcMapping) {
-		switch ( jdbcMapping.getJdbcType().getDefaultSqlTypeCode() ) {
+		switch ( JavaTimeJdbcType.getPhysicalJdbcTypeCode( jdbcMapping.getJdbcType() ) ) {
 			case BINARY:
 			case VARBINARY:
 			case LONG32VARBINARY:
@@ -280,7 +281,7 @@ public class SQLServerAggregateSupport extends AggregateSupportImpl {
 	}
 
 	private static String xmlCustomWriteExpression(String customWriteExpression, JdbcMapping jdbcMapping) {
-		switch ( jdbcMapping.getJdbcType().getDefaultSqlTypeCode() ) {
+		switch ( JavaTimeJdbcType.getPhysicalJdbcTypeCode( jdbcMapping.getJdbcType() ) ) {
 			case BOOLEAN:
 			case BIT:
 				return "case " + customWriteExpression + " when 1 then 'true' when 0 then 'false' end";

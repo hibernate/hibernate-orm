@@ -4,6 +4,7 @@
  */
 package org.hibernate.type.descriptor.jdbc;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -69,7 +70,13 @@ public interface JavaTimeJdbcType extends JdbcType {
 	 * though Hibernate encodes it using ISO's {@code T} separator.
 	 */
 	static Object fromEncodedString(JavaType<?> javaType, CharSequence string, int start, int end) {
-		if ( javaType.getJavaTypeClass() == LocalDateTime.class
+		final Class<?> javaTypeClass = javaType.getJavaTypeClass();
+		if ( javaTypeClass == LocalDate.class
+				&& end - start > 10
+				&& ( string.charAt( start + 10 ) == ' ' || string.charAt( start + 10 ) == 'T' ) ) {
+			return javaType.fromEncodedString( string, start, start + 10 );
+		}
+		if ( javaTypeClass == LocalDateTime.class
 				&& end - start > 10
 				&& string.charAt( start + 10 ) == ' ' ) {
 			final StringBuilder normalized = new StringBuilder( end - start );

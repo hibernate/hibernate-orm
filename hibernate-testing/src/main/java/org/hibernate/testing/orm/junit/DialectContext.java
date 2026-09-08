@@ -8,11 +8,14 @@ import java.lang.reflect.Constructor;
 import java.sql.Connection;
 import java.sql.Driver;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Properties;
 
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.Environment;
+import org.hibernate.community.dialect.OracleLegacyDialect;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.OracleDialect;
 import org.hibernate.engine.jdbc.dialect.spi.DatabaseMetaDataDialectResolutionInfoAdapter;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.exception.JDBCConnectionException;
@@ -28,6 +31,7 @@ public final class DialectContext {
 
 	private static Class<? extends Dialect> dialectClass;
 	private static Dialect dialect;
+	private static boolean isOracleRac;
 
 	static void initDialectClass() {
 		final Properties properties = Environment.getProperties();
@@ -86,6 +90,19 @@ public final class DialectContext {
 //				}
 //			}
 			dialect = constructor.newInstance( new DatabaseMetaDataDialectResolutionInfoAdapter( connection.getMetaData() ) );
+			boolean isOracleRac = false;
+			if ( dialect instanceof OracleDialect || dialect instanceof OracleLegacyDialect ) {
+				try (Statement statement = connection.createStatement();
+					final var resultSet =
+							statement.executeQuery( "select count(*) from gv$parameter where name='cpu_count'" )) {
+					isOracleRac = resultSet.next()
+						&& resultSet.getLong( 1 ) > 1L;
+				}
+				catch (SQLException ex) {
+					// No-op
+				}
+			}
+			DialectContext.isOracleRac = isOracleRac;
 		}
 		catch (SQLException sqle) {
 			throw new JDBCConnectionException( "Could not connect to database with JDBC URL '"
@@ -111,6 +128,13 @@ public final class DialectContext {
 			init();
 		}
 		return dialect;
+	}
+
+	public static synchronized boolean isOracleRAC() {
+		if (dialect == null) {
+			init();
+		}
+		return isOracleRac;
 	}
 
 	public static void awaitTimestampTick() {

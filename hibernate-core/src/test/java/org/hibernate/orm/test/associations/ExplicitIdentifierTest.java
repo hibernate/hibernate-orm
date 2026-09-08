@@ -40,7 +40,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 		}
 )
 @JiraKey("HHH-14584")
-@RequiresDialectFeature( feature = DialectFeatureChecks.SupportPooledSequences.class )
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportStablePooledSequences.class)
 public class ExplicitIdentifierTest {
 
 	@Test

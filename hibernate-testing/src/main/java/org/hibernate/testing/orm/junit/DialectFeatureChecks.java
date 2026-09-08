@@ -214,6 +214,17 @@ abstract public class DialectFeatureChecks {
 		}
 	}
 
+	public static class SupportStablePooledSequences implements DialectFeatureCheck {
+
+		@Override
+		public boolean apply(Dialect dialect) {
+			return dialect.getSequenceSupport().supportsPooledSequences()
+					// Oracle RAC caches sequence values for every connection when retrieved, so the sequence values
+					// might jump forward by a factor of the amount of current connections to the database => unstable
+					&& (!(dialect instanceof OracleDialect) || !DialectContext.isOracleRAC());
+		}
+	}
+
 	public static class SupportPooledOptimizer implements DialectFeatureCheck {
 		@Override
 		public boolean apply(Dialect dialect) {

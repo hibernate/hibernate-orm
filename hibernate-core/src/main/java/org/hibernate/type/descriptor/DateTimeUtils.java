@@ -456,10 +456,24 @@ public final class DateTimeUtils {
 		return adjustToPrecision( temporal, d.getDefaultTimestampPrecision(), d );
 	}
 
-	public static <T extends Temporal> T adjustToPrecision(T temporal, int precision, Dialect d) {
-		return d.doesRoundTemporalOnOverflow()
-				? roundToSecondPrecision( temporal, precision )
-				: truncateToPrecision( temporal, precision );
+	public static <T extends Temporal> T adjustToPrecision(T temporal, int precision, Dialect dialect) {
+		if ( dialect.doesRoundTemporalOnOverflow() ) {
+			if ( dialect.roundsToMaxPrecisionFirst() ) {
+				final int maximumPrecision = dialect.getMaxTimestampPrecision();
+				return roundToSecondPrecision(
+						maximumPrecision > precision
+							? roundToSecondPrecision( temporal, maximumPrecision )
+							: temporal,
+						precision
+				);
+			}
+			else {
+				return roundToSecondPrecision( temporal, precision );
+			}
+		}
+		else {
+			return truncateToPrecision( temporal, precision );
+		}
 	}
 
 	public static <T extends Temporal> T truncateToPrecision(T temporal, int precision) {
@@ -491,6 +505,10 @@ public final class DateTimeUtils {
 				ChronoField.NANO_OF_SECOND,
 				roundToPrecision( temporal.get( ChronoField.NANO_OF_SECOND ), defaultTimestampPrecision )
 		);
+	}
+
+	public static <T extends Temporal> T doubleRoundToSecondPrecision(T temporal, int maxPrecision, int precision) {
+		return roundToSecondPrecision( roundToSecondPrecision( temporal, maxPrecision ), precision );
 	}
 
 	public static <T extends Temporal> T roundToSecondPrecision(T temporal, int precision) {

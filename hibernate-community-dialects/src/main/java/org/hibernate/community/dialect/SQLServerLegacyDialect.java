@@ -827,6 +827,16 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
+	public int getMaxTimestampPrecision() {
+		return 7;
+	}
+
+	@Override
+	public boolean roundsToMaxPrecisionFirst() {
+		return true;
+	}
+
+	@Override
 	public long getFractionalSecondPrecisionInNanos() {
 //		return 100; // 1/10th microsecond
 		return 1; // Even though SQL Server only supports 1/10th microsecond precision, use nanosecond scale for easier computation

@@ -148,9 +148,9 @@ Sticking to the JPA-standard approach, we would provide a file named `persistenc
 
 [source,xml]
 ----
-<persistence xmlns="http://java.sun.com/xml/ns/persistence"
+<persistence xmlns="https://jakarta.ee/xml/ns/persistence"
              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-             xsi:schemaLocation="http://java.sun.com/xml/ns/persistence https://jakarta.ee/xml/ns/persistence/persistence_4_0.xsd"
+             xsi:schemaLocation="https://jakarta.ee/xml/ns/persistence https://jakarta.ee/xml/ns/persistence/persistence_4_0.xsd"
              version="4.0">
 
     <persistence-unit name="org.hibernate.example">
@@ -451,7 +451,7 @@ a| * If `drop-and-create`, first drop the schema, then export tables, sequences,
 * If `create`, export tables, sequences, and constraints, without attempting to drop them first, and then populate initial data
 * If `create-drop`, drop the schema and recreate it on factory startup;
 additionally, drop the schema on factory shutdown
-* If `drop`, drop the schema on factory shutdown
+* If `drop`, drop the schema on factory startup
 * If `validate`, validate the database schema without changing it
 * If `update`, only export what's missing in the schema, and alter incorrect column types
 * If `populate`, only populate initial data
@@ -565,7 +565,7 @@ We'll have more to say about them in <<naming-strategies>>.
 
 By default, Hibernate never quotes a SQL table or column name in generated SQL when the name contains only alphanumeric characters.
 This behavior is usually much more convenient, especially when working with a legacy schema, since unquoted identifiers aren't case-sensitive, and so Hibernate doesn't need to know or care whether a column is named `NAME`, `name`, or `Name` on the database side.
-On the other hand, any table or column name containing a punctuation character like `$` is automatically quoted by default.
+On the other hand, any table or column name containing a punctuation character, or with an initial `$` is automatically quoted by default.
 
 The following settings enable additional automatic quoting:
 

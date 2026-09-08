@@ -148,10 +148,11 @@ try (var session = factory.createEntityManager(enabledFilter)) {
 Now, any queries executed within the session will have the filter restriction applied.
 Collections annotated `@Filter` will also have their members correctly filtered.
 
-[CAUTION]
+[NOTE]
 ====
-On the other hand, filters are not applied to `@ManyToOne` associations, nor to `find()`.
-This is completely by design and is not in any way a bug.
+On the other hand, by default, filters are not applied to `@ManyToOne` associations, nor to `find()`.
+This is completely by design and is not in any way a mistake.
+The default behavior may be overridden using `@FilterDef(applyToLoadByKey=true)`.
 ====
 
 More than one filter may be enabled in a given session.
@@ -1306,7 +1307,7 @@ We do this by annotating the entity class.
 | link:{doc-javadoc-url}org/hibernate/annotations/DynamicUpdate.html[`@DynamicUpdate`] | Specifies that an `update` statement should be generated each time an entity is modified
 |===
 
-It's important to realize that, while `@DynamicInsert` has no impact on semantics, the more useful `@DynamicUpdate` annotation _does_ have a subtle side effect.
+It's important to realize that, while `@DynamicInsert` usually has no impact on semantics, the more useful `@DynamicUpdate` annotation _does_ have a subtle side effect.
 
 [CAUTION]
 ====
@@ -1400,20 +1401,14 @@ Interception-based change detection is a nice performance optimization with a sl
 - _Without_ the bytecode enhancer, Hibernate keeps a snapshot of the state of each entity after reading from or writing to the database.
 When the session flushes, the snapshot state is compared to the current state of the entity to determine if the entity has been modified.
 Maintaining these snapshots does have an impact on performance.
-- _With_ bytecode enhancement, we may avoid this cost by intercepting writes to the field and recording these modifications as they happen.
+- _With_ bytecode enhancement, we may avoid most of this cost by intercepting writes to the field and recording these modifications as they happen--however, a snapshot is still maintained for any field whose value is itself mutable, for example, for a field of type `byte[]`.
 
 This optimization isn't _completely_ transparent, however.
 
 [CAUTION]
 ====
 Interception-based change detection is less accurate than snapshot-based dirty checking.
-For example, consider this attribute:
-
-[source,java]
-byte[] image;
-
-Interception is able to detect writes to the `image` field, that is, replacement of the whole array.
-It's not able to detect modifications made directly to the _elements_ of the array, and so such modifications may be lost.
+In particular, writes to a field of an enhanced entity from outside the entity class itself are not detected by the enhanced bytecode and might not be made persistent.
 ====
 
 [IMPORTANT]

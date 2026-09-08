@@ -614,8 +614,13 @@ Alternatively, you can configure SQL Server to use the UTF-8 enabled collation `
 === Date and time types and JDBC
 
 Hibernate highly recommends that applications use `java.time` types to represent temporal-related values.
-When `java.time` types are used, Hibernate will by default use those types directly at the JDBC boundary.
+When `java.time` types are used, Hibernate will by default use those types directly at the JDBC boundary
+where the configured Dialect reports that the exact Java class is supported by the driver.
 JDBC drivers are required to directly support `java.time` types since Java 8 (JDBC 4.2).
+
+When the Dialect reports that a requested type is unsupported, Hibernate falls back to the corresponding
+legacy JDBC representation and logs the known driver/database limitation.  This capability is resolved
+separately for each Java Time class, with `OffsetTime` and `OffsetDateTime` treated as a matched pair.
 
 [NOTE]
 ====
@@ -630,4 +635,3 @@ When `java.sql` date/time types are used (either in the model or by disabling
 `hibernate.type.java_time_use_direct_jdbc`) it is important to make sure that
 database server time zone agrees with JVM system time zone.  This is achieved using
 the `hibernate.jdbc.time_zone` setting.
-

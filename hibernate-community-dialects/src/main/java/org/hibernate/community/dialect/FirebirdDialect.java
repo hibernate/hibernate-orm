@@ -252,6 +252,17 @@ public class FirebirdDialect extends Dialect {
 	}
 
 	@Override
+	public int getMaxTimestampPrecision() {
+		return 3;
+	}
+
+	@Override
+	public boolean doesRoundTemporalOnOverflow() {
+		// Driver truncates parameter values with a higher precision to 100 microseconds (precision of 4)
+		return false;
+	}
+
+	@Override
 	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
 		super.initializeFunctionRegistry(functionContributions);
 

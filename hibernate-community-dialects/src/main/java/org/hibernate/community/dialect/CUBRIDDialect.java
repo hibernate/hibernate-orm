@@ -205,6 +205,11 @@ public class CUBRIDDialect extends Dialect {
 	}
 
 	@Override
+	public int getMaxTimestampPrecision() {
+		return 3;
+	}
+
+	@Override
 	public int getFloatPrecision() {
 		return 21; // -> 7 decimal digits
 	}

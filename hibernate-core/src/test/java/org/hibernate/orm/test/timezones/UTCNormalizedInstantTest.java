@@ -6,7 +6,9 @@ import java.util.TimeZone;
 
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseDialect;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.type.descriptor.DateTimeUtils;
 
 import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProviderImpl;
@@ -22,6 +24,7 @@ import jakarta.persistence.Id;
 import static java.sql.Types.TIMESTAMP;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+@SkipForDialect(dialectClass = SQLServerDialect.class, reason = "HHH-20327")
 @DomainModel(annotatedClasses = UTCNormalizedInstantTest.Zoned.class)
 @SessionFactory
 public class UTCNormalizedInstantTest {

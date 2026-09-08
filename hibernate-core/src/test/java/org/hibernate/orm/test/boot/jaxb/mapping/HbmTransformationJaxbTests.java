@@ -2064,6 +2064,43 @@ public class HbmTransformationJaxbTests {
 	}
 
 	@Test
+	@JiraKey( "HHH-20854" )
+	public void testCollectionKeyNotNullPreserved(ServiceRegistryScope scope) {
+		transformAndVerify( "xml/jaxb/mapping/collection-key-not-null/hbm.xml", scope, transformed -> {
+			assertThat( transformed.getEntities() ).hasSize( 1 );
+
+			final JaxbEntityImpl entity = transformed.getEntities().get( 0 );
+			assertThat( entity.getClazz() ).isEqualTo( "SimpleEntity" );
+
+			// Find the element-collection (list with element type)
+			assertThat( entity.getAttributes().getElementCollectionAttributes() )
+					.as( "Should have one element-collection" )
+					.hasSize( 1 );
+
+			final var elementCollection = entity.getAttributes().getElementCollectionAttributes().get( 0 );
+			assertThat( elementCollection.getName() ).isEqualTo( "items" );
+
+			// Verify that the join column has nullable="false" from HBM's not-null="true"
+			assertThat( elementCollection.getCollectionTable() )
+					.as( "Element collection should have collection table" )
+					.isNotNull();
+
+			assertThat( elementCollection.getCollectionTable().getJoinColumns() )
+					.as( "Collection table should have join columns" )
+					.isNotEmpty();
+
+			final var joinColumn = elementCollection.getCollectionTable().getJoinColumns().get( 0 );
+			assertThat( joinColumn.getName() )
+					.as( "Join column should be named parent_id" )
+					.isEqualTo( "parent_id" );
+
+			assertThat( joinColumn.isNullable() )
+					.as( "Join column should be non-nullable (HBM had not-null='true')" )
+					.isFalse();
+		} );
+	}
+
+	@Test
 	@JiraKey( "HHH-20834" )
 	public void testJoinedSubclassOnDeleteTransformation(ServiceRegistryScope scope) {
 		transformAndVerify( "xml/jaxb/mapping/on-delete-joined-subclass/hbm.xml", scope, transformed -> {

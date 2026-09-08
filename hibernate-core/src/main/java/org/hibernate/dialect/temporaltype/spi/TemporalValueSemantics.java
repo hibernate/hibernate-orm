@@ -30,6 +30,8 @@ public record TemporalValueSemantics(
 			new TemporalValueSemantics( PrecisionAdjustment.TRUNCATE, OffsetLiteralSupport.UNSUPPORTED );
 	public static final TemporalValueSemantics OFFSET_LITERALS =
 			new TemporalValueSemantics( PrecisionAdjustment.ROUND, OffsetLiteralSupport.SUPPORTED );
+	public static final TemporalValueSemantics ROUND_MAX_WITH_OFFSET_LITERALS =
+			new TemporalValueSemantics( PrecisionAdjustment.ROUND_MAX, OffsetLiteralSupport.SUPPORTED );
 	public static final TemporalValueSemantics TRUNCATING_WITH_OFFSET_LITERALS =
 			new TemporalValueSemantics( PrecisionAdjustment.TRUNCATE, OffsetLiteralSupport.SUPPORTED );
 

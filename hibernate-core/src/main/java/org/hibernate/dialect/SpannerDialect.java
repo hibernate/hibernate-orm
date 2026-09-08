@@ -4,6 +4,7 @@
  */
 package org.hibernate.dialect;
 
+import java.time.LocalDate;
 import org.hibernate.dialect.temporaltype.spi.TemporalValueSemantics;
 
 import org.hibernate.dialect.temporaltype.spi.CurrentTimestampSelection;
@@ -86,6 +87,8 @@ import org.hibernate.dialect.sequence.spi.SequenceSupport;
 import org.hibernate.dialect.sequence.internal.SpannerSequenceSupport;
 import org.hibernate.dialect.schema.internal.SpannerDialectTableExporter;
 import org.hibernate.dialect.type.spi.SpannerJdbcTypes;
+import org.hibernate.dialect.type.spi.DirectJavaTimeJdbcSupport;
+import org.hibernate.dialect.type.spi.DirectJavaTimeJdbcSupports;
 import org.hibernate.dialect.function.json.SpannerJsonValueFunction;
 import org.hibernate.dialect.function.json.SpannerJsonQueryFunction;
 import org.hibernate.dialect.sql.ast.internal.SpannerSqlAstTranslator;
@@ -188,6 +191,8 @@ import static org.hibernate.dialect.literal.spi.StandardDateTimeLiteralRendering
  * @author Rayudu Abbireddy
  */
 public class SpannerDialect extends Dialect implements CurrentTemporalSupport, TemporalFormatSupport, TemporalOperationSupport {
+	private static final DirectJavaTimeJdbcSupport DIRECT_JAVA_TIME_JDBC_SUPPORT =
+			DirectJavaTimeJdbcSupports.of( LocalDate.class );
 	private IfExistsSupport ifExistsSupport;
 
 
@@ -254,6 +259,11 @@ public class SpannerDialect extends Dialect implements CurrentTemporalSupport, T
 
 	public boolean useIntegerForPrimaryKey() {
 		return useIntegerForPrimaryKey;
+	}
+
+	@Override
+	public DirectJavaTimeJdbcSupport getDirectJavaTimeJdbcSupport() {
+		return DIRECT_JAVA_TIME_JDBC_SUPPORT;
 	}
 
 	@Override

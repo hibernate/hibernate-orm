@@ -463,6 +463,12 @@ public abstract class MockSessionFactory
 	}
 
 	@Override
+	public boolean isDirectJavaTimeJdbcAccessEnabled(Class<?> javaTimeType) {
+		return MetadataBuildingContext.super.isDirectJavaTimeJdbcAccessEnabled( javaTimeType );
+	}
+
+	@Override
+	@Deprecated(since = "8.0")
 	public boolean isPreferJavaTimeJdbcTypesEnabled() {
 		return MetadataBuildingContext.super.isPreferJavaTimeJdbcTypesEnabled();
 	}

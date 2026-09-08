@@ -4,6 +4,7 @@
  */
 package org.hibernate.dialect;
 
+import java.time.LocalDate;
 import org.hibernate.dialect.temporaltype.spi.TemporalOperationSupport;
 
 import org.hibernate.dialect.temporaltype.spi.CurrentTemporalSupport;
@@ -129,6 +130,8 @@ import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
 import org.hibernate.type.descriptor.jdbc.SpannerLocalDateTimeJdbcType;
 import org.hibernate.type.descriptor.jdbc.SpannerLocalTimeJdbcType;
 import org.hibernate.type.descriptor.jdbc.SpannerTimeJdbcType;
+import org.hibernate.dialect.type.spi.DirectJavaTimeJdbcSupport;
+import org.hibernate.dialect.type.spi.DirectJavaTimeJdbcSupports;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import java.sql.SQLException;
@@ -168,6 +171,13 @@ import static org.hibernate.type.SqlTypes.UUID;
 import static org.hibernate.type.SqlTypes.VARCHAR;
 
 public class SpannerPostgreSQLDialect extends PostgreSQLDialect implements CurrentTemporalSupport, TemporalOperationSupport {
+	private static final DirectJavaTimeJdbcSupport DIRECT_JAVA_TIME_JDBC_SUPPORT =
+			DirectJavaTimeJdbcSupports.of( LocalDate.class );
+
+	@Override
+	public DirectJavaTimeJdbcSupport getDirectJavaTimeJdbcSupport() {
+		return DIRECT_JAVA_TIME_JDBC_SUPPORT;
+	}
 	private IfExistsSupport ifExistsSupport;
 	private SchemaDropSupport schemaDropSupport;
 

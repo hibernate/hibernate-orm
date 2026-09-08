@@ -503,8 +503,8 @@ public class SqlTypes {
 	/**
 	 * A type code representing a "virtual mapping" of {@linkplain java.time.Instant}
 	 * as a JDBC type using {@linkplain java.sql.ResultSet#getObject} and
-	 * {@linkplain java.sql.PreparedStatement#setObject} which JDBC requires compliant
-	 * drivers to support.
+	 * {@linkplain java.sql.PreparedStatement#setObject}. JDBC does not require drivers
+	 * to support direct access using {@code Instant}.
 	 *
 	 * @see org.hibernate.type.descriptor.jdbc.InstantJdbcType
 	 */
@@ -563,8 +563,8 @@ public class SqlTypes {
 	/**
 	 * A type code representing a "virtual mapping" of {@linkplain java.time.ZonedDateTime}
 	 * as a JDBC type using {@linkplain java.sql.ResultSet#getObject} and
-	 * {@linkplain java.sql.PreparedStatement#setObject} which JDBC requires compliant
-	 * drivers to support.
+	 * {@linkplain java.sql.PreparedStatement#setObject}. JDBC does not require drivers
+	 * to support direct access using {@code ZonedDateTime}.
 	 *
 	 * @see org.hibernate.type.descriptor.jdbc.ZonedDateTimeJdbcType
 	 */

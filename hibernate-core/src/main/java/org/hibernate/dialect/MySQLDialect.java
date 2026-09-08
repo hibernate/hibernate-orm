@@ -19,6 +19,8 @@ import org.hibernate.dialect.temporaltype.spi.CurrentTemporalSupport;
 import org.hibernate.dialect.type.spi.DdlTypeBuilder;
 
 import org.hibernate.dialect.type.spi.StandardDdlTypes;
+import org.hibernate.dialect.type.spi.DirectJavaTimeJdbcSupport;
+import org.hibernate.dialect.type.spi.DirectJavaTimeJdbcSupports;
 
 import org.hibernate.dialect.type.spi.TypeSizingProfile;
 import org.hibernate.dialect.type.spi.EnumSupport;
@@ -138,6 +140,9 @@ import org.hibernate.type.descriptor.jdbc.OrdinalEnumJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
 import java.sql.Types;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.ZonedDateTime;
 import java.time.temporal.TemporalAccessor;
 import java.util.Calendar;
@@ -204,6 +209,9 @@ import static org.hibernate.dialect.literal.spi.ZeroOffsetLiteralStyle.NUMERIC_O
 /// @since 8.0
 @SPI({ USE, IMPLEMENT })
 public class MySQLDialect extends Dialect implements CurrentTemporalSupport, TemporalFormatSupport, TemporalOperationSupport {
+	private static final DirectJavaTimeJdbcSupport DIRECT_JAVA_TIME_JDBC_SUPPORT =
+			DirectJavaTimeJdbcSupports.of( LocalDate.class, LocalTime.class, LocalDateTime.class );
+
 	private final org.hibernate.dialect.unique.spi.UniqueDelegate uniqueDelegate =
 			new org.hibernate.dialect.unique.spi.DelegatingUniqueDelegate(
 					org.hibernate.dialect.unique.spi.UniqueDelegates.alterTable( this ) ) {
@@ -217,6 +225,11 @@ public class MySQLDialect extends Dialect implements CurrentTemporalSupport, Tem
 		}
 	};
 	private IfExistsSupport ifExistsSupport;
+
+	@Override
+	public DirectJavaTimeJdbcSupport getDirectJavaTimeJdbcSupport() {
+		return DIRECT_JAVA_TIME_JDBC_SUPPORT;
+	}
 
 
 	@Override

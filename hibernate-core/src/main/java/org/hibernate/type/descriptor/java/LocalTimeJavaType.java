@@ -21,10 +21,10 @@ import java.util.GregorianCalendar;
 import jakarta.persistence.TemporalType;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
+import org.hibernate.type.internal.DirectJavaTimeJdbcTypeResolver;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import static org.hibernate.type.descriptor.DateTimeUtils.roundToPrecision;
@@ -61,9 +61,11 @@ public class LocalTimeJavaType extends AbstractTemporalJavaType<LocalTime> {
 
 	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators context) {
-		return context.isPreferJavaTimeJdbcTypesEnabled()
-				? context.getJdbcType( SqlTypes.LOCAL_TIME )
-				: context.getJdbcType( Types.TIME );
+		final Integer directJdbcTypeCode = DirectJavaTimeJdbcTypeResolver.resolve(
+				LocalTime.class,
+				context
+		);
+		return context.getJdbcType( directJdbcTypeCode == null ? Types.TIME : directJdbcTypeCode );
 	}
 
 	@Override

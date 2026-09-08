@@ -68,8 +68,31 @@ public interface JdbcTypeIndicators {
 	}
 
 	/**
+	 * Determines whether direct JDBC access using the exact Java Time class is
+	 * enabled by configuration and supported by the Dialect and JDBC driver.
+	 *
+	 * @param javaTimeType the exact Java class to be used at the JDBC boundary
+	 *
+	 * @since 8.0
 	 * @see org.hibernate.cfg.MappingSettings#JAVA_TIME_USE_DIRECT_JDBC
 	 */
+	default boolean isDirectJavaTimeJdbcAccessEnabled(Class<?> javaTimeType) {
+		return getCurrentBaseSqlTypeIndicators().isDirectJavaTimeJdbcAccessEnabled( javaTimeType );
+	}
+
+	/**
+	 * Returns the resolved value of
+	 * {@value org.hibernate.cfg.MappingSettings#JAVA_TIME_USE_DIRECT_JDBC}, after
+	 * configuration conversion and defaulting, but before accounting for Dialect
+	 * or JDBC-driver capabilities.
+	 * <p>
+	 * Code selecting a JDBC mapping should instead use
+	 * {@link #isDirectJavaTimeJdbcAccessEnabled(Class)}.
+	 *
+	 * @deprecated Use {@link #isDirectJavaTimeJdbcAccessEnabled(Class)} when
+	 * determining whether direct JDBC access should be used for a Java Time type.
+	 */
+	@Deprecated(since = "8.0")
 	default boolean isPreferJavaTimeJdbcTypesEnabled() {
 		return getCurrentBaseSqlTypeIndicators().isPreferJavaTimeJdbcTypesEnabled();
 	}

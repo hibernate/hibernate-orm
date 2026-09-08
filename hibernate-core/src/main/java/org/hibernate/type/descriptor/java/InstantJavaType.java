@@ -74,7 +74,11 @@ public class InstantJavaType extends AbstractTemporalJavaType<Instant>
 
 	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators context) {
-		return context.getJdbcType( context.getPreferredSqlTypeCodeForInstant() );
+		final int preferredSqlTypeCode = context.getPreferredSqlTypeCodeForInstant();
+		if ( preferredSqlTypeCode != org.hibernate.type.SqlTypes.INSTANT ) {
+			context.getTypeConfiguration().logDirectInstantJdbcFallback();
+		}
+		return context.getJdbcType( preferredSqlTypeCode );
 	}
 
 	@Override

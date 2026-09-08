@@ -12,6 +12,8 @@ import org.hibernate.dialect.temporaltype.spi.TemporalFormatSupport;
 import org.hibernate.dialect.temporaltype.spi.CurrentTemporalSupport;
 
 import org.hibernate.dialect.type.spi.StringValueSemantics;
+import org.hibernate.dialect.type.spi.DirectJavaTimeJdbcSupport;
+import org.hibernate.dialect.type.spi.DirectJavaTimeJdbcSupports;
 
 
 
@@ -179,6 +181,13 @@ public class SybaseDialect extends AbstractTransactSQLDialect implements Current
 
 	public SybaseDriverKind getDriverKind() {
 		return driverKind;
+	}
+
+	@Override
+	public DirectJavaTimeJdbcSupport getDirectJavaTimeJdbcSupport() {
+		return driverKind == SybaseDriverKind.JTDS
+				? DirectJavaTimeJdbcSupports.none()
+				: super.getDirectJavaTimeJdbcSupport();
 	}
 
 	@Override

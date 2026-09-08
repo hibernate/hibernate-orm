@@ -19,10 +19,10 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
+import org.hibernate.type.internal.DirectJavaTimeJdbcTypeResolver;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import jakarta.persistence.TemporalType;
@@ -61,9 +61,13 @@ public class OffsetTimeJavaType extends AbstractTemporalJavaType<OffsetTime> {
 
 	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators stdIndicators) {
-		return stdIndicators.isPreferJavaTimeJdbcTypesEnabled()
-				? stdIndicators.getJdbcType( SqlTypes.OFFSET_TIME )
-				: stdIndicators.getJdbcType( stdIndicators.getDefaultZonedTimeSqlType() );
+		final Integer directJdbcTypeCode = DirectJavaTimeJdbcTypeResolver.resolve(
+				OffsetTime.class,
+				stdIndicators
+		);
+		return stdIndicators.getJdbcType(
+				directJdbcTypeCode == null ? stdIndicators.getDefaultZonedTimeSqlType() : directJdbcTypeCode
+		);
 	}
 
 	@Override

@@ -13,6 +13,7 @@ import org.hibernate.type.descriptor.java.JdbcDateJavaType;
 import org.hibernate.type.descriptor.java.JdbcTimeJavaType;
 import org.hibernate.type.descriptor.java.JdbcTimestampJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.JavaTimeJdbcType;
 
 import java.io.OutputStream;
 import java.time.OffsetDateTime;
@@ -262,6 +263,15 @@ public class StringJsonDocumentWriter extends StringJsonDocument implements Json
 			JavaType<T> javaType,
 			JdbcType jdbcType) {
 		assert javaType.isInstance( value );
+
+		if ( jdbcType instanceof JavaTimeJdbcType ) {
+			appender.append( StringJsonDocumentMarker.QUOTE.getMarkerCharacter() );
+			appender.startEscaping();
+			javaType.appendEncodedString( appender, (T) value );
+			appender.endEscaping();
+			appender.append( StringJsonDocumentMarker.QUOTE.getMarkerCharacter() );
+			return;
+		}
 
 		switch ( jdbcType.getDefaultSqlTypeCode() ) {
 			case SqlTypes.TINYINT:

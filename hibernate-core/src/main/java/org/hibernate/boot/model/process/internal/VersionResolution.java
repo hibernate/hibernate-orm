@@ -60,6 +60,12 @@ public class VersionResolution<E> implements BasicValue.Resolution<E> {
 					}
 
 					@Override
+					public boolean isDirectJavaTimeJdbcAccessEnabled(Class<?> javaTimeType) {
+						return context.isDirectJavaTimeJdbcAccessEnabled( javaTimeType );
+					}
+
+					@Override
+					@Deprecated(since = "8.0")
 					public boolean isPreferJavaTimeJdbcTypesEnabled() {
 						return context.isPreferJavaTimeJdbcTypesEnabled();
 					}
@@ -110,7 +116,7 @@ public class VersionResolution<E> implements BasicValue.Resolution<E> {
 		final var basicTypeRegistry = typeConfiguration.getBasicTypeRegistry();
 		final var basicType = basicTypeRegistry.resolve( basicJavaType, recommendedJdbcType );
 		final var legacyType = basicTypeRegistry.getRegisteredType( basicJavaType.getJavaTypeClass() );
-		assert legacyType.getJdbcType().getDefaultSqlTypeCode() == recommendedJdbcType.getDefaultSqlTypeCode();
+		assert legacyType.getJdbcType().getDdlTypeCode() == recommendedJdbcType.getDdlTypeCode();
 
 		return new VersionResolution<>( basicJavaType, recommendedJdbcType, basicType, legacyType );
 	}

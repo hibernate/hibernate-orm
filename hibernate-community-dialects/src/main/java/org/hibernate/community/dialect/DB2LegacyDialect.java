@@ -4,6 +4,8 @@
  */
 package org.hibernate.community.dialect;
 
+import org.hibernate.dialect.type.spi.DirectJavaTimeJdbcSupport;
+import org.hibernate.dialect.type.spi.DirectJavaTimeJdbcSupports;
 import org.hibernate.dialect.identifier.spi.KeywordRegistration;
 
 import org.hibernate.dialect.temporaltype.spi.TemporalValueSemantics;
@@ -175,6 +177,11 @@ import static org.hibernate.dialect.literal.spi.StandardDateTimeLiteralRendering
  * @author Gavin King
  */
 public class DB2LegacyDialect extends Dialect implements CurrentTemporalSupport, TemporalFormatSupport, TemporalOperationSupport {
+
+	@Override
+	public DirectJavaTimeJdbcSupport getDirectJavaTimeJdbcSupport() {
+		return DirectJavaTimeJdbcSupports.none();
+	}
 	private IfExistsSupport ifExistsSupport;
 	private SchemaDropSupport schemaDropSupport;
 

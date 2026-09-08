@@ -88,7 +88,7 @@ public class MaintainedDateTimeLiteralRenderingTest {
 				arguments(
 						new SQLServerDialect(),
 						"SQL Server",
-						"cast('2026-01-02 03:04:05.123456' as datetime2)"
+						"cast('2026-01-02 03:04:05.123456Z' as datetimeoffset)"
 				),
 				arguments( new SpannerDialect(), "Spanner", "TIMESTAMP '2026-01-02 03:04:05.123456789Z'" ),
 				arguments( new SybaseDialect(), "Sybase", "convert(datetime,'2026-01-02 03:04:05.123',140)" )

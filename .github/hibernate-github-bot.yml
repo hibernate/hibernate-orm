@@ -61,9 +61,9 @@ develocity:
         pattern: "s390x"
         replacement: "$0"
       - column: "DB"
-        pattern: "((?:h2|postgres(?:ql)?|pgsql|mysql|mariadb|mssql|tidb|cockroach(?:db)?|oracle|db2|hsqldb|edb|sybase)(?:.*(?=)|.*))(?:)?"
+        pattern: "((?:h2|postgres(?:ql)?|postgis|pgsql|mysql|mariadb|mssql|tidb|cockroach(?:db)?|oracle|db2|hsqldb|edb|sybase|spanner.*)(?:.*(?=)|.*))(?:)?"
         replacement: "$1"
-      - pattern: "main|HEAD|\\d+.\\d+|PR-\\d+"
+      - pattern: "main|HEAD|\\d+.\\d+|PR-\\d+|\\d+/merge"
         replacement: "" # Just remove these tags
     testSummary:
       historyQuery: "tag:CI"

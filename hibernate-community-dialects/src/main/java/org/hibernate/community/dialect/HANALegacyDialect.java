@@ -226,7 +226,9 @@ public class HANALegacyDialect extends Dialect implements CurrentTemporalSupport
 	}
 	private static final RefCursorSupportFactory REF_CURSOR_SUPPORT_FACTORY = RefCursorSupports.hana();
 	private final TypeSizingProfile typeSizingProfile = TypeSizingProfile.builder( super.getTypeSizingProfile() )
-			.defaultTimestampPrecision( 7 ).defaultDecimalPrecision( 34 )
+			.defaultTimestampPrecision( 7 )
+			.maxTimestampPrecision( 7 )
+			.defaultDecimalPrecision( 34 )
 			.maxVarcharLength( 5000 ).maxVarcharCapacity( 5000 )
 			.maxNVarcharLength( 5000 ).maxNVarcharCapacity( 5000 )
 			.maxVarbinaryLength( 5000 ).maxVarbinaryCapacity( 5000 )

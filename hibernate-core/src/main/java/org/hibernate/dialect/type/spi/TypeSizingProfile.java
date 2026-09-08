@@ -46,6 +46,7 @@ public final class TypeSizingProfile {
 	public static final TypeSizingProfile STANDARD = new TypeSizingProfile(
 			38,
 			6,
+			6,
 			9,
 			Size.DEFAULT_LOB_LENGTH,
 			24,
@@ -60,6 +61,7 @@ public final class TypeSizingProfile {
 
 	private final int defaultDecimalPrecision;
 	private final int defaultTimestampPrecision;
+	private final int maxTimestampPrecision;
 	private final int defaultIntervalSecondScale;
 	private final long defaultLobLength;
 	private final int floatPrecision;
@@ -74,6 +76,7 @@ public final class TypeSizingProfile {
 	private TypeSizingProfile(
 			int defaultDecimalPrecision,
 			int defaultTimestampPrecision,
+			int maxTimestampPrecision,
 			int defaultIntervalSecondScale,
 			long defaultLobLength,
 			int floatPrecision,
@@ -86,6 +89,7 @@ public final class TypeSizingProfile {
 			int maxVarbinaryCapacity) {
 		this.defaultDecimalPrecision = positive( "defaultDecimalPrecision", defaultDecimalPrecision );
 		this.defaultTimestampPrecision = nonnegative( "defaultTimestampPrecision", defaultTimestampPrecision );
+		this.maxTimestampPrecision = positive( "maxTimestampPrecision", maxTimestampPrecision );
 		this.defaultIntervalSecondScale = nonnegative( "defaultIntervalSecondScale", defaultIntervalSecondScale );
 		this.defaultLobLength = positive( "defaultLobLength", defaultLobLength );
 		this.floatPrecision = positive( "floatPrecision", floatPrecision );
@@ -158,6 +162,11 @@ public final class TypeSizingProfile {
 		return defaultTimestampPrecision;
 	}
 
+	/// Return the maximum number of decimal fractional-second timestamp digits.
+	public int maxTimestampPrecision() {
+		return maxTimestampPrecision;
+	}
+
 	/// Return the default number of decimal fractional-second interval digits.
 	public int defaultIntervalSecondScale() {
 		return defaultIntervalSecondScale;
@@ -214,6 +223,7 @@ public final class TypeSizingProfile {
 	public static final class Builder {
 		private int defaultDecimalPrecision;
 		private int defaultTimestampPrecision;
+		private int maxTimestampPrecision;
 		private int defaultIntervalSecondScale;
 		private long defaultLobLength;
 		private int floatPrecision;
@@ -228,6 +238,7 @@ public final class TypeSizingProfile {
 		private Builder(TypeSizingProfile base) {
 			defaultDecimalPrecision = base.defaultDecimalPrecision;
 			defaultTimestampPrecision = base.defaultTimestampPrecision;
+			maxTimestampPrecision = base.maxTimestampPrecision;
 			defaultIntervalSecondScale = base.defaultIntervalSecondScale;
 			defaultLobLength = base.defaultLobLength;
 			floatPrecision = base.floatPrecision;
@@ -249,6 +260,12 @@ public final class TypeSizingProfile {
 		/// Set the default number of decimal fractional-second timestamp digits.
 		public Builder defaultTimestampPrecision(int value) {
 			defaultTimestampPrecision = value;
+			return this;
+		}
+
+		/// Set the maximum number of decimal fractional-second timestamp digits.
+		public Builder maxTimestampPrecision(int value) {
+			maxTimestampPrecision = value;
 			return this;
 		}
 
@@ -317,6 +334,7 @@ public final class TypeSizingProfile {
 			return new TypeSizingProfile(
 					defaultDecimalPrecision,
 					defaultTimestampPrecision,
+					maxTimestampPrecision,
 					defaultIntervalSecondScale,
 					defaultLobLength,
 					floatPrecision,

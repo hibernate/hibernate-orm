@@ -20,6 +20,8 @@ import static org.hibernate.SPI.Role.USE;
 
 import static org.hibernate.SPI.Role.IMPLEMENT;
 import static org.hibernate.SPI.Role.SUPPLY;
+
+import org.hibernate.dialect.temporaltype.spi.TemporalValueSemantics;
 import org.hibernate.dialect.type.spi.StandardDdlTypes;
 
 import org.hibernate.dialect.type.spi.TypeSizingProfile;
@@ -189,11 +191,19 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect implement
 
 	@Override
 	@SPI({ IMPLEMENT, SUPPLY })
+	public TemporalValueSemantics getTemporalValueSemantics() {
+		return TemporalValueSemantics.ROUND_MAX;
+	}
+
+	@Override
+	@SPI({ IMPLEMENT, SUPPLY })
 	public CurrentTemporalSupport getCurrentTemporalSupport() {
 		return this;
 	}
 	private final TypeSizingProfile typeSizingProfile = TypeSizingProfile.builder( super.getTypeSizingProfile() )
-			.defaultTimestampPrecision( 7 ).defaultLobLength( Length.LONG32 )
+			.defaultTimestampPrecision( 7 )
+			.maxTimestampPrecision( 7 )
+			.defaultLobLength( Length.LONG32 )
 			.maxVarcharLength( 8000 ).maxVarcharCapacity( 8000 )
 			.maxNVarcharLength( 4000 ).maxNVarcharCapacity( 4000 )
 			.maxVarbinaryLength( 8000 ).maxVarbinaryCapacity( 8000 )

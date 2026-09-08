@@ -352,6 +352,7 @@ public class OracleDialect extends Dialect implements CurrentTemporalSupport, Te
 		final int maxVarbinaryLength = extended ? Length.LONG16 : 2000;
 		return TypeSizingProfile.builder()
 				.defaultTimestampPrecision( 9 )
+				.maxTimestampPrecision( 9 )
 				.maxVarcharLength( maxVarcharLength ).maxVarcharCapacity( maxVarcharLength )
 				.maxNVarcharLength( maxVarcharLength ).maxNVarcharCapacity( maxVarcharLength )
 				.maxVarbinaryLength( maxVarbinaryLength ).maxVarbinaryCapacity( maxVarbinaryLength )

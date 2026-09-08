@@ -165,6 +165,7 @@ public class FirebirdDialect extends Dialect implements CurrentTemporalSupport, 
 	private final TypeSizingProfile typeSizingProfile = TypeSizingProfile.builder( super.getTypeSizingProfile() )
 			.defaultDecimalPrecision( getVersion().isBefore( 4, 0 ) ? 18 : 38 )
 			.defaultTimestampPrecision( 3 )
+			.maxTimestampPrecision( 3 )
 			.floatPrecision( getVersion().isBefore( 4, 0 ) ? 21 : 24 )
 			.maxVarcharLength( 8191 ).maxVarcharCapacity( 8191 )
 			.maxNVarcharLength( 8191 ).maxNVarcharCapacity( 8191 )

@@ -16,6 +16,7 @@ plugins {
 description = "Gradle tooling and compatibility fixture for external Hibernate ORM Dialect providers"
 
 sourceSets {
+	main.java.srcDir rootProject.file("shared/classification/src/main/java")
 	providerFixture
 	providerFixtureTest
 }
@@ -167,6 +168,8 @@ tasks.withType(JavaCompile).configureEach {
 spotless {
 	enforceCheck = false
 	java {
+		// The shared source directory is outside this subproject's formatting scope.
+		target "src/**/*.java"
 		licenseHeaderFile rootProject.file("shared/config/spotless/license.java")
 		removeUnusedImports()
 		leadingSpacesToTabs(4)

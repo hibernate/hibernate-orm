@@ -16,6 +16,7 @@ import com.sun.net.httpserver.HttpServer;
 import org.gradle.api.GradleException;
 import org.gradle.api.Project;
 import org.gradle.testfixtures.ProjectBuilder;
+import org.hibernate.orm.tooling.classification.internal.ClassificationMetadataResolver;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -169,10 +170,10 @@ public class ClassificationMetadataResolutionTest {
 
 	@Test
 	void transientFailureFallsBackToValidatedCacheUnlessRefreshWasExplicit() throws Exception {
-		final byte[] metadata = seedCache();
 		final HttpServer server = failingServer();
 		try {
 			final String baseUrl = "http://127.0.0.1:" + server.getAddress().getPort();
+			final byte[] metadata = seedCache( baseUrl );
 			final ResolveDialectProviderClassificationMetadata ordinary = task( "8.1.2" );
 			ordinary.getClassificationMetadataBaseUrl().set( baseUrl );
 			ordinary.resolve();
@@ -194,6 +195,7 @@ public class ClassificationMetadataResolutionTest {
 		final AtomicInteger metadataRequests = new AtomicInteger();
 		final HttpServer server = server( metadata, checksum( metadata ), metadataRequests );
 		try {
+			seedCache( "http://127.0.0.1:" + server.getAddress().getPort() );
 			final ResolveDialectProviderClassificationMetadata task = task( "8.1.2" );
 			task.getClassificationMetadataBaseUrl().set( "http://127.0.0.1:" + server.getAddress().getPort() );
 			task.resolve();
@@ -211,6 +213,7 @@ public class ClassificationMetadataResolutionTest {
 		final AtomicInteger metadataRequests = new AtomicInteger();
 		final HttpServer server = server( metadata, checksum( metadata ), metadataRequests );
 		try {
+			seedCache( "http://127.0.0.1:" + server.getAddress().getPort() );
 			final ResolveDialectProviderClassificationMetadata task = task( "8.1.2" );
 			task.getClassificationMetadataBaseUrl().set( "http://127.0.0.1:" + server.getAddress().getPort() );
 			task.getRefreshDependencies().set( true );
@@ -293,8 +296,12 @@ public class ClassificationMetadataResolutionTest {
 	}
 
 	private byte[] seedCache() throws Exception {
+		return seedCache( "https://docs.hibernate.org/orm" );
+	}
+
+	private byte[] seedCache(String baseUrl) throws Exception {
 		final byte[] metadata = metadata( "8.1", "8.1.4" ).getBytes( StandardCharsets.UTF_8 );
-		final Path familyCache = temporaryDirectory.resolve( "cache/8.1" );
+		final Path familyCache = ClassificationMetadataResolver.cacheDirectory( temporaryDirectory.resolve( "cache" ), baseUrl, "8.1" );
 		Files.createDirectories( familyCache );
 		Files.write( familyCache.resolve( "classifications.json.gz" ), metadata );
 		Files.writeString(

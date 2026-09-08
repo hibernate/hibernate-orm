@@ -15,6 +15,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -57,10 +58,16 @@ public final class JavaMigrationCompatibilityAnalyzer {
 		final Set<String> includedTypes = includedTypeElementIds == null
 				? null
 				: new TreeSet<>( includedTypeElementIds );
-		final Map<String, TypeShape> baseline = scan( baselineArtifacts, includedTypes );
-		final Map<String, TypeShape> current = scan( currentArtifacts, includedTypes );
+		// Retain dependency shapes for hierarchy resolution, even when only a
+		// subset of declarations belongs to the compatibility surface.
+		final Map<String, TypeShape> baseline = scan( baselineArtifacts, null );
+		final Map<String, TypeShape> current = scan( currentArtifacts, null );
 		final List<Change> changes = new ArrayList<>();
-		for ( TypeShape oldType : baseline.values() ) {
+		final Map<String, String> inheritedDeclarations = new TreeMap<>();
+		for ( TypeShape oldType : new ArrayList<>( baseline.values() ) ) {
+			if ( includedTypes != null && !includedTypes.contains( oldType.elementId ) ) {
+				continue;
+			}
 			final TypeShape newType = current.get( oldType.elementId );
 			if ( newType == null ) {
 				changes.add( change( Cause.TYPE_REMOVED, oldType.elementId, oldType.elementId, oldType.kind, null ) );
@@ -68,10 +75,10 @@ public final class JavaMigrationCompatibilityAnalyzer {
 			}
 			compareType( oldType, newType, changes );
 			compareFields( oldType, newType, changes );
-			compareMethods( oldType, newType, changes );
+			compareMethods( oldType, newType, baseline, current, changes, inheritedDeclarations );
 		}
 		Collections.sort( changes );
-		return new Analysis( changes );
+		return new Analysis( changes, inheritedDeclarations );
 	}
 
 	private static void compareType(TypeShape oldType, TypeShape newType, Collection<Change> changes) {
@@ -159,12 +166,18 @@ public final class JavaMigrationCompatibilityAnalyzer {
 		}
 	}
 
-	private static void compareMethods(TypeShape oldType, TypeShape newType, Collection<Change> changes) {
+	private static void compareMethods(
+			TypeShape oldType, TypeShape newType,
+			Map<String, TypeShape> baseline, Map<String, TypeShape> current,
+			Collection<Change> changes, Map<String, String> inheritedDeclarations) {
 		for ( MethodShape oldMethod : oldType.methods.values() ) {
-			final MethodShape newMethod = newType.methods.get( oldMethod.elementId );
+			final MethodShape newMethod = resolveMethod( newType, oldMethod, current, new HashSet<>() );
 			if ( newMethod == null ) {
 				changes.add( change( oldMethod.constructor ? Cause.CONSTRUCTOR_REMOVED : Cause.METHOD_REMOVED, oldMethod.elementId, oldType.elementId, oldMethod.descriptor, null ) );
 				continue;
+			}
+			if ( !newMethod.elementId.equals( oldMethod.elementId ) ) {
+				inheritedDeclarations.put( oldMethod.elementId, newMethod.elementId );
 			}
 			compareAccess(
 					oldMethod.elementId,
@@ -193,8 +206,20 @@ public final class JavaMigrationCompatibilityAnalyzer {
 				changes.add( change( Cause.VARARGS_CHANGED, oldMethod.elementId, oldType.elementId, Boolean.toString( isVarargs( oldMethod.access ) ), Boolean.toString( isVarargs( newMethod.access ) ) ) );
 			}
 			for ( String exception : newMethod.exceptions ) {
-				if ( !oldMethod.exceptions.contains( exception ) ) {
+				if ( !uncheckedException( exception, current )
+						&& !coveredException( exception, oldMethod.exceptions, current ) ) {
 					changes.add( change( Cause.DECLARED_EXCEPTION_ADDED, oldMethod.elementId, oldType.elementId, null, exception ) );
+				}
+			}
+			for ( String exception : oldMethod.exceptions ) {
+				if ( !uncheckedException( exception, baseline )
+						&& !coveredException( exception, newMethod.exceptions, baseline ) ) {
+					// An unavailable dependency might be an unchecked exception.
+					// Report it for review instead of asserting a definite break.
+					final Certainty certainty = subtype( exception, "java/lang/Throwable", baseline, new HashSet<>() )
+							? Certainty.DEFINITE : Certainty.POTENTIAL;
+					changes.add( new Change( Cause.DECLARED_EXCEPTION_REMOVED, oldMethod.elementId,
+							oldType.elementId, exception, null, certainty ) );
 				}
 			}
 			if ( !Objects.equals( oldMethod.annotationDefault, newMethod.annotationDefault ) ) {
@@ -203,7 +228,7 @@ public final class JavaMigrationCompatibilityAnalyzer {
 		}
 
 		for ( MethodShape newMethod : newType.methods.values() ) {
-			if ( oldType.methods.containsKey( newMethod.elementId ) || newMethod.constructor ) {
+			if ( oldType.methods.containsKey( newMethod.elementId ) || isPrivate( newMethod.access ) ) {
 				continue;
 			}
 			if ( isAbstract( newMethod.access ) ) {
@@ -216,6 +241,83 @@ public final class JavaMigrationCompatibilityAnalyzer {
 				changes.add( change( Cause.OVERLOAD_ADDED, newMethod.elementId, oldType.elementId, null, newMethod.descriptor ) );
 			}
 		}
+	}
+
+	private static MethodShape resolveMethod(
+			TypeShape type, MethodShape original, Map<String, TypeShape> types, Set<String> visited) {
+		if ( type == null || !visited.add( type.elementId ) ) {
+			return null;
+		}
+		final boolean declaringType = type.elementId.equals( "type:" + owner( original.elementId ) );
+		final MethodShape declared = type.methods.get( methodId( className( type.elementId ), original.name, original.descriptor ) );
+		if ( declared != null && (declaringType || !isPrivate( declared.access )
+				&& (visibility( declared.access ) >= 2
+						|| packageName( className( type.elementId ) ).equals( packageName( owner( original.elementId ) ) ))
+				&& !(type.isInterface() && isStatic( declared.access ))) ) {
+			return declared;
+		}
+		if ( original.constructor ) {
+			return null;
+		}
+		final MethodShape superclassMethod = resolveMethod( shape( type.superName, types ), original, types, visited );
+		if ( superclassMethod != null ) {
+			return superclassMethod;
+		}
+		for ( String contract : type.interfaces ) {
+			final MethodShape method = resolveMethod( shape( contract, types ), original, types, visited );
+			if ( method != null ) {
+				return method;
+			}
+		}
+		return null;
+	}
+
+	private static String owner(String elementId) {
+		return elementId.substring( elementId.indexOf( ':' ) + 1, elementId.indexOf( '#' ) );
+	}
+
+	private static String packageName(String className) {
+		return className.substring( 0, Math.max( 0, className.lastIndexOf( '.' ) ) );
+	}
+
+	private static boolean uncheckedException(String exception, Map<String, TypeShape> types) {
+		return subtype( exception, "java/lang/RuntimeException", types, new HashSet<>() )
+				|| subtype( exception, "java/lang/Error", types, new HashSet<>() );
+	}
+
+	private static boolean coveredException(String exception, Set<String> declarations, Map<String, TypeShape> types) {
+		return declarations.stream().anyMatch( declared -> subtype( exception, declared, types, new HashSet<>() ) );
+	}
+
+	private static boolean subtype(String name, String target, Map<String, TypeShape> types, Set<String> visited) {
+		if ( name == null || !visited.add( name ) ) {
+			return false;
+		}
+		if ( name.replace( '/', '.' ).equals( target.replace( '/', '.' ) ) ) {
+			return true;
+		}
+		final TypeShape type = shape( name, types );
+		return type != null && (subtype( type.superName, target, types, visited )
+				|| type.interfaces.stream().anyMatch( contract -> subtype( contract, target, types, visited ) ));
+	}
+
+	private static TypeShape shape(String name, Map<String, TypeShape> types) {
+		if ( name == null ) {
+			return null;
+		}
+		final String id = "type:" + name.replace( '/', '.' );
+		if ( !types.containsKey( id ) && name.startsWith( "java" ) ) {
+			// Read platform declarations without loading or initializing provider classes.
+			try ( InputStream input = ClassLoader.getPlatformClassLoader().getResourceAsStream( name.replace( '.', '/' ) + ".class" ) ) {
+				if ( input != null ) {
+					types.put( id, read( input ) );
+				}
+			}
+			catch (IOException e) {
+				throw new AnalysisException( "Unable to analyze platform type " + name, e );
+			}
+		}
+		return types.get( id );
 	}
 
 	private static void compareAccess(
@@ -387,13 +489,21 @@ public final class JavaMigrationCompatibilityAnalyzer {
 	/// One deterministic comparison result.
 	public static final class Analysis {
 		private final List<Change> changes;
+		private final Map<String, String> inheritedDeclarations;
 
-		private Analysis(Collection<Change> changes) {
+		private Analysis(Collection<Change> changes, Map<String, String> inheritedDeclarations) {
 			this.changes = Collections.unmodifiableList( new ArrayList<>( changes ) );
+			this.inheritedDeclarations = Collections.unmodifiableMap( new TreeMap<>( inheritedDeclarations ) );
 		}
 
 		public List<Change> getChanges() {
 			return changes;
+		}
+
+		/// Current inherited declarations replacing baseline overrides. Policy
+		/// validation must still check their classification and supported roles.
+		public Map<String, String> getInheritedDeclarations() {
+			return inheritedDeclarations;
 		}
 	}
 
@@ -404,13 +514,19 @@ public final class JavaMigrationCompatibilityAnalyzer {
 		private final String ownerId;
 		private final String baselineValue;
 		private final String currentValue;
+		private final Certainty certainty;
 
 		private Change(Cause cause, String elementId, String ownerId, String baselineValue, String currentValue) {
+			this( cause, elementId, ownerId, baselineValue, currentValue, cause.certainty );
+		}
+
+		private Change(Cause cause, String elementId, String ownerId, String baselineValue, String currentValue, Certainty certainty) {
 			this.cause = cause;
 			this.elementId = elementId;
 			this.ownerId = ownerId;
 			this.baselineValue = baselineValue;
 			this.currentValue = currentValue;
+			this.certainty = certainty;
 		}
 
 		public Cause getCause() {
@@ -438,7 +554,7 @@ public final class JavaMigrationCompatibilityAnalyzer {
 		}
 
 		public Certainty getCertainty() {
-			return cause.certainty;
+			return certainty;
 		}
 
 		@Override
@@ -506,6 +622,7 @@ public final class JavaMigrationCompatibilityAnalyzer {
 		OVERLOAD_ADDED( Certainty.POTENTIAL, Impact.SOURCE ),
 		VARARGS_CHANGED( Impact.SOURCE ),
 		DECLARED_EXCEPTION_ADDED( Certainty.POTENTIAL, Impact.SOURCE ),
+		DECLARED_EXCEPTION_REMOVED( Impact.SOURCE ),
 		ANNOTATION_DEFAULT_CHANGED( Certainty.POTENTIAL, Impact.SOURCE, Impact.BEHAVIORAL );
 
 		private final Set<Impact> impacts;

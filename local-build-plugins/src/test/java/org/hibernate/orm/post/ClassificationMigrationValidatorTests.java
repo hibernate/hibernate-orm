@@ -30,6 +30,7 @@ import static org.hibernate.orm.post.ClassificationModel.Role.IMPLEMENT;
 import static org.hibernate.orm.post.ClassificationModel.Role.USE;
 import static org.hibernate.orm.post.JavaMigrationCompatibilityAnalyzer.Cause.ABSTRACT_METHOD_ADDED;
 import static org.hibernate.orm.post.JavaMigrationCompatibilityAnalyzer.Cause.DEFAULT_METHOD_ADDED;
+import static org.hibernate.orm.post.JavaMigrationCompatibilityAnalyzer.Cause.DECLARED_EXCEPTION_REMOVED;
 import static org.hibernate.orm.post.JavaMigrationCompatibilityAnalyzer.Cause.METHOD_REMOVED;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -113,6 +114,62 @@ public class ClassificationMigrationValidatorTests {
 				analysis
 		);
 		assertFalse( useResult.hasFailures() );
+	}
+
+	@Test
+	public void inheritedMethodMustRetainTheOverridesSupportedRoles() throws IOException {
+		final Path baseline = temporaryDirectory.resolve( "inherited-baseline" );
+		final Path current = temporaryDirectory.resolve( "inherited-current" );
+		writeInheritedContract( baseline, true );
+		writeInheritedContract( current, false );
+		final var oldModel = categoryModel( org.hibernate.orm.post.ClassificationModel.Category.SPI, List.of( IMPLEMENT ), true );
+		final var newModel = categoryBuilder( org.hibernate.orm.post.ClassificationModel.Category.SPI, List.of( IMPLEMENT ), false );
+		newModel.declaration( "type:fixture.Parent", TYPE, null,
+				new ClassificationModel.Structure( Modifier.PUBLIC | Modifier.ABSTRACT, true, false ), "fixture" );
+		newModel.declaration( "method:fixture.Parent#operation()", METHOD, "type:fixture.Parent",
+				new ClassificationModel.Structure( Modifier.PUBLIC | Modifier.ABSTRACT, true, false ), "fixture" );
+		classify( newModel, "type:fixture.Parent", org.hibernate.orm.post.ClassificationModel.Category.SPI, List.of( USE ) );
+		classify( newModel, "method:fixture.Parent#operation()", org.hibernate.orm.post.ClassificationModel.Category.SPI, List.of( USE ) );
+		final var analysis = analyze( baseline, current );
+		assertTrue( analysis.getChanges().isEmpty() );
+		final var result = validator.validate( metadata( "8.1", "8.1.0", oldModel ),
+				metadata( "8.1", "8.1.1", newModel.build() ), analysis );
+		assertTrue( result.hasFailures() );
+		assertEquals( SPI_ROLE_REMOVED, result.getDiagnostics().get( 0 ).getFindingCause() );
+	}
+
+	private static void writeInheritedContract(Path root, boolean override) throws IOException {
+		for ( String name : List.of( "Parent", "Contract" ) ) {
+			final ClassWriter writer = new ClassWriter( 0 );
+			writer.visit( Opcodes.V17, Opcodes.ACC_PUBLIC | Opcodes.ACC_ABSTRACT | Opcodes.ACC_INTERFACE,
+					"fixture/" + name, null, "java/lang/Object", name.equals( "Contract" ) ? new String[] { "fixture/Parent" } : null );
+			if ( name.equals( "Parent" ) || override ) {
+				writer.visitMethod( Opcodes.ACC_PUBLIC | Opcodes.ACC_ABSTRACT, "operation", "()V", null, null ).visitEnd();
+			}
+			writer.visitEnd();
+			final Path file = root.resolve( "fixture/" + name + ".class" );
+			Files.createDirectories( file.getParent() );
+			Files.write( file, writer.toByteArray() );
+		}
+	}
+
+	@Test
+	public void removedCheckedExceptionIsEnforcedForApiAndSpiWithinTheirHorizons() throws IOException {
+		final Path baseline = temporaryDirectory.resolve( "throws-baseline" );
+		final Path current = temporaryDirectory.resolve( "throws-current" );
+		writeContract( baseline, true, false, false, new String[] { "java/io/IOException" } );
+		writeContract( current, true, false );
+		final var analysis = analyze( baseline, current );
+		for ( var role : ClassificationModel.Role.values() ) {
+			final var model = categoryModel( org.hibernate.orm.post.ClassificationModel.Category.SPI, List.of( role ), true );
+			final var result = validator.validate( metadata( "8.1", "8.1.0", model ), metadata( "8.1", "8.1.1", model ), analysis );
+			assertDiagnostic( result, SPI, DECLARED_EXCEPTION_REMOVED );
+			assertTrue( result.hasFailures() );
+			assertFalse( validator.validate( metadata( "8.1", "8.1.0", model ), metadata( "8.2", "8.2.0", model ), analysis ).hasFailures() );
+		}
+		final var model = categoryModel( org.hibernate.orm.post.ClassificationModel.Category.API, List.of(), true );
+		assertTrue( validator.validate( metadata( "8.1", "8.1.0", model ), metadata( "8.2", "8.2.0", model ), analysis ).hasFailures() );
+		assertFalse( validator.validate( metadata( "8.1", "8.1.0", model ), metadata( "9.0", "9.0.0", model ), analysis ).hasFailures() );
 	}
 
 	@Test
@@ -343,6 +400,11 @@ public class ClassificationMigrationValidatorTests {
 			boolean operation,
 			boolean required,
 			boolean defaultMethod) throws IOException {
+		writeContract( root, operation, required, defaultMethod, null );
+	}
+
+	private static void writeContract(
+			Path root, boolean operation, boolean required, boolean defaultMethod, String[] exceptions) throws IOException {
 		final ClassWriter writer = new ClassWriter( 0 );
 		writer.visit(
 				Opcodes.V17,
@@ -353,7 +415,7 @@ public class ClassificationMigrationValidatorTests {
 				null
 		);
 		if ( operation ) {
-			writer.visitMethod( Opcodes.ACC_PUBLIC | Opcodes.ACC_ABSTRACT, "operation", "()V", null, null ).visitEnd();
+			writer.visitMethod( Opcodes.ACC_PUBLIC | Opcodes.ACC_ABSTRACT, "operation", "()V", null, exceptions ).visitEnd();
 		}
 		if ( required ) {
 			writer.visitMethod( Opcodes.ACC_PUBLIC | Opcodes.ACC_ABSTRACT, "required", "()V", null, null ).visitEnd();

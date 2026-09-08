@@ -5,17 +5,12 @@
 package org.hibernate.orm.tooling.dialectprovider;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.URI;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.HexFormat;
 import java.util.Locale;
+
+import org.hibernate.orm.tooling.classification.internal.ClassificationMetadataResolver;
 
 import org.gradle.api.DefaultTask;
 import org.gradle.api.GradleException;
@@ -43,6 +38,12 @@ import org.hibernate.orm.tooling.dialectprovider.internal.HibernateVersions;
 /// @since 8.0
 @DisableCachingByDefault(because = "Resolves authenticated remote metadata into a shared conditional cache")
 public abstract class ResolveDialectProviderClassificationMetadata extends DefaultTask {
+	public ResolveDialectProviderClassificationMetadata() {
+		// Remote family documents are mutable. Always check their checksum;
+		// a configured local file still benefits from Gradle input tracking.
+		getOutputs().upToDateWhen( task -> getClassificationMetadataFile().isPresent() );
+	}
+
 	@Input
 	public abstract Property<String> getHibernateVersion();
 
@@ -114,73 +115,18 @@ public abstract class ResolveDialectProviderClassificationMetadata extends Defau
 	}
 
 	private void resolveRemote(String family, Path output) throws IOException {
-		final Path familyCache = getSharedCacheDirectory().get().getAsFile().toPath().resolve( family );
-		final Path cachedMetadata = familyCache.resolve( "classifications.json.gz" );
-		final Path cachedChecksum = familyCache.resolve( "classifications.json.gz.sha256" );
-		if ( getOffline().get() ) {
-			if ( !validCache( cachedMetadata, cachedChecksum, family ) ) {
-				throw new GradleException(
-						"No validated classification metadata is cached for Hibernate ORM " + family
-								+ "; run online or configure classificationMetadataFile"
-				);
-			}
-			Files.copy( cachedMetadata, output, StandardCopyOption.REPLACE_EXISTING );
-			return;
-		}
-
-		final String base = trimSlash( getClassificationMetadataBaseUrl().get() ) + "/" + family + "/metadata/";
 		try {
-			final byte[] checksumBytes = download( URI.create( base + "classifications.json.gz.sha256" ) );
-			final String expected = parseChecksum( new String( checksumBytes, StandardCharsets.UTF_8 ) );
-			if ( !getRefreshDependencies().get()
-					&& Files.isRegularFile( cachedMetadata )
-					&& expected.equals( digest( Files.readAllBytes( cachedMetadata ) ) ) ) {
-				validate( cachedMetadata, family );
-				Files.copy( cachedMetadata, output, StandardCopyOption.REPLACE_EXISTING );
-				return;
-			}
-
-			final byte[] metadataBytes = download( URI.create( base + "classifications.json.gz" ) );
-			final String actual = digest( metadataBytes );
-			if ( !expected.equals( actual ) ) {
-				throw new GradleException(
-						"Classification metadata checksum mismatch for Hibernate ORM " + family
-								+ ": expected " + expected + " but received " + actual
-				);
-			}
-			Files.createDirectories( familyCache );
-			writeAtomically( cachedMetadata, metadataBytes );
-			writeAtomically( cachedChecksum, checksumBytes );
-			validate( cachedMetadata, family );
-			Files.copy( cachedMetadata, output, StandardCopyOption.REPLACE_EXISTING );
+			new ClassificationMetadataResolver(
+					getSharedCacheDirectory().get().getAsFile().toPath(),
+					getClassificationMetadataBaseUrl().get(),
+					family
+			).resolve(
+					output, getOffline().get(), getRefreshDependencies().get(), false,
+					file -> validate( file, family ), message -> getLogger().warn( message )
+			);
 		}
-		catch (IOException e) {
-			if ( !getRefreshDependencies().get() && validCache( cachedMetadata, cachedChecksum, family ) ) {
-				getLogger().warn(
-						"Unable to refresh Hibernate ORM {} classification metadata; using the validated cached copy",
-						family
-				);
-				Files.copy( cachedMetadata, output, StandardCopyOption.REPLACE_EXISTING );
-				return;
-			}
-			throw e;
-		}
-	}
-
-	private static boolean validCache(Path metadata, Path checksum, String family) {
-		if ( !Files.isRegularFile( metadata ) || !Files.isRegularFile( checksum ) ) {
-			return false;
-		}
-		try {
-			final String expected = parseChecksum( Files.readString( checksum, StandardCharsets.UTF_8 ) );
-			if ( !expected.equals( digest( Files.readAllBytes( metadata ) ) ) ) {
-				return false;
-			}
-			validate( metadata, family );
-			return true;
-		}
-		catch (RuntimeException | IOException e) {
-			return false;
+		catch (IllegalArgumentException e) {
+			throw new GradleException( e.getMessage(), e );
 		}
 	}
 
@@ -196,62 +142,8 @@ public abstract class ResolveDialectProviderClassificationMetadata extends Defau
 			throw new GradleException( "Classification metadata does not identify its exact source version" );
 		}
 	}
-
-	private static byte[] download(URI uri) throws IOException {
-		final HttpURLConnection connection = (HttpURLConnection) uri.toURL().openConnection();
-		connection.setConnectTimeout( 10_000 );
-		connection.setReadTimeout( 30_000 );
-		connection.setRequestProperty( "Accept-Encoding", "identity" );
-		final int status = connection.getResponseCode();
-		if ( status < 200 || status >= 300 ) {
-			throw new IOException( "HTTP " + status + " resolving " + uri );
-		}
-		try ( InputStream input = connection.getInputStream() ) {
-			return input.readAllBytes();
-		}
-		finally {
-			connection.disconnect();
-		}
-	}
-
-	private static String parseChecksum(String contents) {
-		final String trimmed = contents.trim();
-		final int separator = trimmed.indexOf( ' ' );
-		final String digest = ( separator < 0 ? trimmed : trimmed.substring( 0, separator ) ).toLowerCase( Locale.ROOT );
-		if ( digest.length() != 64 || !digest.matches( "[0-9a-f]{64}" ) ) {
-			throw new GradleException( "Malformed SHA-256 classification metadata checksum" );
-		}
-		if ( separator >= 0 && !trimmed.substring( separator ).trim().endsWith( "classifications.json.gz" ) ) {
-			throw new GradleException( "Classification metadata checksum names an unexpected file" );
-		}
-		return digest;
-	}
-
-	private static String digest(byte[] bytes) {
-		try {
-			return HexFormat.of().formatHex( MessageDigest.getInstance( "SHA-256" ).digest( bytes ) );
-		}
-		catch (NoSuchAlgorithmException e) {
-			throw new IllegalStateException( "SHA-256 is not available", e );
-		}
-	}
-
-	private static void writeAtomically(Path target, byte[] contents) throws IOException {
-		final Path temporary = target.resolveSibling( target.getFileName() + ".tmp" );
-		Files.write( temporary, contents );
-		try {
-			Files.move( temporary, target, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING );
-		}
-		catch (java.nio.file.AtomicMoveNotSupportedException e) {
-			Files.move( temporary, target, StandardCopyOption.REPLACE_EXISTING );
-		}
-	}
-
 	private static String trimSlash(String value) {
-		int end = value.length();
-		while ( end > 0 && value.charAt( end - 1 ) == '/' ) {
-			end--;
-		}
-		return value.substring( 0, end );
+		return value.replaceAll( "/+$", "" );
 	}
+
 }

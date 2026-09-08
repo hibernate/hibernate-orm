@@ -403,6 +403,22 @@ classification, role, and release horizon.
 `REVIEW`:: A context-dependent Java change which requires human review and must
 not be silently treated as compatible.
 
+The Java analyzer resolves inherited methods before reporting a removed
+declaration. Removing a redundant override does not remove an otherwise
+unchanged inherited callable contract; the inherited declaration must still
+preserve the supported classification and SPI roles. Constructors are never inherited.
+Checked-exception removal or narrowing can break provider overrides and
+callers' catch clauses and is reported as `DECLARED_EXCEPTION_REMOVED`.
+Unchecked-exception declarations do not impose these source requirements.
+If the exception hierarchy is unavailable in the supplied artifacts, removal
+is reported for `REVIEW` rather than assumed to be a definite incompatibility.
+
+When changing the analyzer, exercise both its declaration-level tests and the
+compiled-client/provider fixtures in `CompiledJavaMigrationTests`. The latter
+compile baseline and current artifacts, recompile consumers, and execute old
+client bytecode where binary compatibility is expected. Run the complete
+tooling suite with `./gradlew -p local-build-plugins test`.
+
 === Baseline selection and resolution
 
 Run compatibility validation with:
@@ -459,9 +475,22 @@ https://docs.hibernate.org/orm/X.Y/metadata/classifications.json.gz.sha256
 ----
 
 The resolver verifies the SHA-256 sidecar, family, schema, exact source
-version, and artifact manifest. It uses a family-scoped Gradle cache, honors
+version, and artifact manifest. It uses an origin-and-family-scoped Gradle cache, honors
 offline and refresh-dependencies modes, and resolves the manifest's exact
 artifact coordinates through the repositories configured for the build.
+Online resolution checks the remote checksum on every invocation, even when
+Gradle's local inputs have not changed. Unchanged bytes are reused from the
+validated cache; `--refresh-dependencies` forces a download and disallows stale
+cache fallback. An explicitly configured local metadata file remains eligible
+for Gradle's normal up-to-date checking.
+
+The repository resolver and published provider plugin share their transport
+and cache implementation. Cache entries from different metadata origins are
+never interchangeable, including offline. The earlier family-only cache layout
+is not reused: after upgrading the tooling, resolve once online (or configure a
+local metadata file) before working offline. Concurrent cache writers are
+serialized, and downloaded metadata is validated before replacing a good entry.
+
 Modules which did not exist in the selected baseline are naturally absent.
 Mixed ORM versions, missing artifacts, duplicate coordinates, and manifest
 mismatches are configuration failures.

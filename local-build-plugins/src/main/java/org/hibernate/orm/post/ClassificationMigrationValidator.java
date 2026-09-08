@@ -50,7 +50,7 @@ public final class ClassificationMigrationValidator {
 		final boolean apiEnforced = baselineFamily.major == currentFamily.major;
 		final boolean spiEnforced = baselineFamily.equals( currentFamily );
 		final List<Diagnostic> diagnostics = new ArrayList<>();
-		validateClassificationChanges( baseline, current, apiEnforced, spiEnforced, diagnostics );
+		validateClassificationChanges( baseline, current, javaAnalysis, apiEnforced, spiEnforced, diagnostics );
 		for ( JavaMigrationCompatibilityAnalyzer.Change change : javaAnalysis.getChanges() ) {
 			validateJavaChange( baseline, current, change, apiEnforced, spiEnforced, diagnostics );
 		}
@@ -77,6 +77,7 @@ public final class ClassificationMigrationValidator {
 	private static void validateClassificationChanges(
 			ClassificationMetadata baseline,
 			ClassificationMetadata current,
+			JavaMigrationCompatibilityAnalyzer.Analysis javaAnalysis,
 			boolean apiEnforced,
 			boolean spiEnforced,
 			Collection<Diagnostic> diagnostics) {
@@ -86,7 +87,8 @@ public final class ClassificationMigrationValidator {
 					|| oldElement.getLifecycle().isIncubating() ) {
 				continue;
 			}
-			final ClassificationModel.Element newElement = current.getModel().getElement( oldElement.getId() );
+			final String currentId = javaAnalysis.getInheritedDeclarations().getOrDefault( oldElement.getId(), oldElement.getId() );
+			final ClassificationModel.Element newElement = current.getModel().getElement( currentId );
 			if ( newElement == null ) {
 				continue;
 			}
@@ -234,6 +236,7 @@ public final class ClassificationMigrationValidator {
 			case OVERLOAD_ADDED:
 			case VARARGS_CHANGED:
 			case DECLARED_EXCEPTION_ADDED:
+			case DECLARED_EXCEPTION_REMOVED:
 			case ANNOTATION_DEFAULT_CHANGED:
 				return true;
 			default:
@@ -256,6 +259,7 @@ public final class ClassificationMigrationValidator {
 			case DEFAULT_METHOD_ADDED:
 			case VARARGS_CHANGED:
 			case DECLARED_EXCEPTION_ADDED:
+			case DECLARED_EXCEPTION_REMOVED:
 				return true;
 			default:
 				return false;
@@ -267,6 +271,7 @@ public final class ClassificationMigrationValidator {
 			case RECORD_COMPONENTS_CHANGED:
 			case VARARGS_CHANGED:
 			case DECLARED_EXCEPTION_ADDED:
+			case DECLARED_EXCEPTION_REMOVED:
 			case ANNOTATION_DEFAULT_CHANGED:
 				return true;
 			default:

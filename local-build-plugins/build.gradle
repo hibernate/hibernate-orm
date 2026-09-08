@@ -16,6 +16,9 @@ group = 'org.hibernate.build'
 version = '1.0.0-SNAPSHOT'
 layout.buildDirectory.set(file("target"))
 
+// Shared with the published provider plugin without a build-bootstrap dependency.
+sourceSets.main.java.srcDir("../shared/classification/src/main/java")
+
 dependencies {
 	implementation gradleApi()
 
@@ -104,6 +107,7 @@ spotless {
 	//Don't fail during the check: rather than enforcing guidelines, we use this plugin to fix mistakes automatically.
 	enforceCheck = false
 	java {
+		target "src/**/*.java"
 		targetExclude( "**/target/**/*.java" )
 		licenseHeaderFile project.file("../shared/config/spotless/license.java")
 		removeUnusedImports()

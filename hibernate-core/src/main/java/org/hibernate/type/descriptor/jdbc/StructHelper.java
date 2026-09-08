@@ -60,18 +60,29 @@ public class StructHelper {
 			RawJdbcValueTransformer rawJdbcValueTransformer) throws SQLException {
 		final int numberOfAttributeMappings = embeddableMappingType.getNumberOfAttributeMappings();
 		final int size = numberOfAttributeMappings + ( embeddableMappingType.isPolymorphic() ? 1 : 0 );
+		// Ordering describes JDBC slots, not attributes: a flattened embeddable
+		// contributes several slots to a single attribute.
+		final Object[] logicalJdbcValues;
+		if ( orderMapping == null ) {
+			logicalJdbcValues = rawJdbcValues;
+		}
+		else {
+			logicalJdbcValues = new Object[rawJdbcValues.length];
+			for ( int physicalIndex = 0; physicalIndex < orderMapping.length; physicalIndex++ ) {
+				logicalJdbcValues[orderMapping[physicalIndex]] = rawJdbcValues[physicalIndex];
+			}
+		}
 		final var attributeValues = new StructAttributeValues(
 				numberOfAttributeMappings,
-				orderMapping == null ? rawJdbcValues : null
+				null
 		);
 		int jdbcIndex = 0;
 		for ( int i = 0; i < size; i++ ) {
-			final int attributeIndex = orderMapping == null ? i : orderMapping[i];
 			jdbcIndex += injectAttributeValue(
-					getSubPart( embeddableMappingType, attributeIndex ),
+					getSubPart( embeddableMappingType, i ),
 					attributeValues,
-					attributeIndex,
-					rawJdbcValues,
+					i,
+					logicalJdbcValues,
 					jdbcIndex,
 					options,
 					rawJdbcValueTransformer

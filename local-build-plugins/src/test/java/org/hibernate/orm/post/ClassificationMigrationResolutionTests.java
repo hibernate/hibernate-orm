@@ -12,6 +12,7 @@ import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.util.Collections;
 import java.util.HexFormat;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.jar.JarOutputStream;
 
 import com.sun.net.httpserver.HttpServer;
@@ -37,6 +38,53 @@ import static org.gradle.testkit.runner.TaskOutcome.SUCCESS;
 public class ClassificationMigrationResolutionTests {
 	@TempDir
 	Path temporaryDirectory;
+
+	@Test
+	public void remoteBaselineIsRecheckedOnConsecutiveBuilds() throws Exception {
+		final AtomicReference<byte[]> metadata = new AtomicReference<>(
+				compressedMetadata( "8.0", "8.0.7.Final", Collections.emptyList() ) );
+		final HttpServer server = HttpServer.create( new InetSocketAddress( "127.0.0.1", 0 ), 0 );
+		server.createContext( "/8.0/metadata/classifications.json.gz", exchange -> {
+			final byte[] bytes = metadata.get();
+			exchange.sendResponseHeaders( 200, bytes.length );
+			exchange.getResponseBody().write( bytes );
+			exchange.close();
+		} );
+		server.createContext( "/8.0/metadata/classifications.json.gz.sha256", exchange -> {
+			try {
+				final byte[] checksum = HexFormat.of().formatHex( MessageDigest.getInstance( "SHA-256" ).digest( metadata.get() ) )
+						.getBytes( StandardCharsets.UTF_8 );
+				exchange.sendResponseHeaders( 200, checksum.length );
+				exchange.getResponseBody().write( checksum );
+			}
+			catch (java.security.NoSuchAlgorithmException e) {
+				throw new AssertionError( e );
+			}
+			finally {
+				exchange.close();
+			}
+		} );
+		server.start();
+		try {
+			Files.writeString( temporaryDirectory.resolve( "settings.gradle" ), "" );
+			Files.writeString( temporaryDirectory.resolve( "build.gradle" ),
+					"plugins { id 'org.hibernate.orm.build.reports' }\n"
+							+ "migrationCompatibility { baselineFamily = '8.0'; classificationMetadataBaseUrl = 'http://127.0.0.1:"
+							+ server.getAddress().getPort() + "' }\n"
+							+ "tasks.named('resolveMigrationCompatibilityBaselineMetadata') { sharedCacheDirectory = layout.projectDirectory.dir('cache') }\n" );
+			final String task = "resolveMigrationCompatibilityBaselineMetadata";
+			final GradleRunner runner = GradleRunner.create().withProjectDir( temporaryDirectory.toFile() )
+					.withPluginClasspath().withArguments( task );
+			assertEquals( SUCCESS, runner.build().task( ":" + task ).getOutcome() );
+			metadata.set( compressedMetadata( "8.0", "8.0.8.Final", Collections.emptyList() ) );
+			assertEquals( SUCCESS, runner.build().task( ":" + task ).getOutcome() );
+			assertArrayEquals( metadata.get(), Files.readAllBytes( temporaryDirectory.resolve(
+					"build/orm/migration-compatibility/baseline/classifications.json.gz" ) ) );
+		}
+		finally {
+			server.stop( 0 );
+		}
+	}
 
 	@Test
 	public void resolvesAuthenticatedRemoteMetadata() throws Exception {

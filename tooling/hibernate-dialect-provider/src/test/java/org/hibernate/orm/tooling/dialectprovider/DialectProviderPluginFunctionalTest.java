@@ -5,14 +5,21 @@
 package org.hibernate.orm.tooling.dialectprovider;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Comparator;
+import java.security.MessageDigest;
+import java.util.HexFormat;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.jar.JarOutputStream;
 
 import javax.tools.ToolProvider;
+
+import com.sun.net.httpserver.HttpServer;
 
 import org.gradle.testkit.runner.BuildResult;
 import org.gradle.testkit.runner.GradleRunner;
@@ -52,6 +59,65 @@ public class DialectProviderPluginFunctionalTest {
 
 		final BuildResult second = runner( "check", "--configuration-cache" ).build();
 		assertTrue( second.getOutput().contains( "Reusing configuration cache" ) );
+		assertEquals( TaskOutcome.UP_TO_DATE, second.task( ":resolveDialectProviderClassificationMetadata" ).getOutcome() );
+	}
+
+	@Test
+	void remoteMetadataIsRecheckedOnConsecutiveBuilds() throws Exception {
+		final String version = PluginVersions.hibernateOrm();
+		seedCoreModule( version );
+		writeProviderBuild( version );
+		final AtomicReference<byte[]> document = new AtomicReference<>(
+				Files.readAllBytes( temporaryDirectory.resolve( "classifications.json" ) )
+		);
+		final AtomicInteger downloads = new AtomicInteger();
+		final HttpServer server = HttpServer.create( new InetSocketAddress( "127.0.0.1", 0 ), 0 );
+		final String path = "/" + HibernateVersions.family( version ) + "/metadata/classifications.json.gz";
+		server.createContext( path, exchange -> {
+			downloads.incrementAndGet();
+			final byte[] bytes = document.get();
+			exchange.sendResponseHeaders( 200, bytes.length );
+			exchange.getResponseBody().write( bytes );
+			exchange.close();
+		} );
+		server.createContext( path + ".sha256", exchange -> {
+			try {
+				final byte[] checksum = HexFormat.of().formatHex( MessageDigest.getInstance( "SHA-256" ).digest( document.get() ) )
+						.getBytes( StandardCharsets.UTF_8 );
+				exchange.sendResponseHeaders( 200, checksum.length );
+				exchange.getResponseBody().write( checksum );
+			}
+			catch (java.security.NoSuchAlgorithmException e) {
+				throw new AssertionError( e );
+			}
+			finally {
+				exchange.close();
+			}
+		} );
+		server.start();
+		try {
+			appendBuild( "hibernateDialectProvider { classificationMetadataFile.unset(); classificationMetadataBaseUrl = 'http://127.0.0.1:"
+					+ server.getAddress().getPort() + "' }\n"
+					+ "tasks.named('resolveDialectProviderClassificationMetadata') { sharedCacheDirectory = layout.projectDirectory.dir('cache') }\n" );
+			final String task = "resolveDialectProviderClassificationMetadata";
+			assertEquals( TaskOutcome.SUCCESS, runner( task, "--configuration-cache" ).build().task( ":" + task ).getOutcome() );
+			// Whitespace changes the authenticated bytes without changing their schema.
+			document.set( (new String( document.get(), StandardCharsets.UTF_8 ) + "\n").getBytes( StandardCharsets.UTF_8 ) );
+			final BuildResult second = runner( task, "--configuration-cache" ).build();
+			assertEquals( TaskOutcome.SUCCESS, second.task( ":" + task ).getOutcome() );
+			assertTrue( second.getOutput().contains( "Reusing configuration cache" ) );
+			assertEquals( new String( document.get(), StandardCharsets.UTF_8 ), Files.readString(
+					temporaryDirectory.resolve( "build/hibernate-dialect-provider/metadata/classifications.json.gz" ) ) );
+			assertEquals( 2, downloads.get() );
+			runner( task ).build();
+			assertEquals( 2, downloads.get() );
+			runner( task, "--refresh-dependencies" ).build();
+			runner( task, "--refresh-dependencies" ).build();
+			assertEquals( 4, downloads.get() );
+		}
+		finally {
+			server.stop( 0 );
+		}
 	}
 
 	@Test

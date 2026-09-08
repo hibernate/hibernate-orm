@@ -35,6 +35,7 @@ import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.JavaTimeJdbcType;
 import org.hibernate.type.descriptor.sql.DdlType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -122,7 +123,7 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 						else {
 							parentPartExpression = aggregateParentReadExpression + ",'$.";
 						}
-						switch ( column.getJdbcMapping().getJdbcType().getDefaultSqlTypeCode() ) {
+						switch ( JavaTimeJdbcType.getPhysicalJdbcTypeCode( column.getJdbcMapping().getJdbcType() ) ) {
 							case BIT:
 							case BOOLEAN:
 								//noinspection unchecked
@@ -231,7 +232,7 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 							case ARRAY:
 								final BasicPluralType<?, ?> pluralType = (BasicPluralType<?, ?>) column.getJdbcMapping();
 								final OracleArrayJdbcType jdbcType = (OracleArrayJdbcType) pluralType.getJdbcType();
-								switch ( jdbcType.getElementJdbcType().getDefaultSqlTypeCode() ) {
+								switch ( JavaTimeJdbcType.getPhysicalJdbcTypeCode( jdbcType.getElementJdbcType() ) ) {
 									case BOOLEAN:
 									case DATE:
 									case TIME:
@@ -272,7 +273,7 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 				}
 			case SQLXML:
 			case XML_ARRAY:
-				switch ( column.getJdbcMapping().getJdbcType().getDefaultSqlTypeCode() ) {
+				switch ( JavaTimeJdbcType.getPhysicalJdbcTypeCode( column.getJdbcMapping().getJdbcType() ) ) {
 					case BIT:
 					case BOOLEAN:
 						//noinspection unchecked
@@ -436,7 +437,7 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 			Runnable renderFunction,
 			JdbcMapping jdbcMapping,
 			TypeConfiguration typeConfiguration) {
-		final int sqlTypeCode = jdbcMapping.getJdbcType().getDefaultSqlTypeCode();
+		final int sqlTypeCode = JavaTimeJdbcType.getPhysicalJdbcTypeCode( jdbcMapping.getJdbcType() );
 		switch ( sqlTypeCode ) {
 			case CLOB:
 				sqlAppender.append( "to_clob(" );
@@ -459,7 +460,7 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 			case ARRAY:
 				final BasicPluralType<?, ?> pluralType = (BasicPluralType<?, ?>) jdbcMapping;
 				final OracleArrayJdbcType jdbcType = (OracleArrayJdbcType) pluralType.getJdbcType();
-				switch ( jdbcType.getElementJdbcType().getDefaultSqlTypeCode() ) {
+				switch ( JavaTimeJdbcType.getPhysicalJdbcTypeCode( jdbcType.getElementJdbcType() ) ) {
 					case CLOB:
 						sqlAppender.append( "(select json_arrayagg(to_clob(t.column_value)) from table(" );
 						renderFunction.run();
@@ -547,7 +548,7 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 	}
 
 	private static String xmlCustomWriteExpression(String customWriteExpression, JdbcMapping jdbcMapping, TypeConfiguration typeConfiguration) {
-		final int sqlTypeCode = jdbcMapping.getJdbcType().getDefaultSqlTypeCode();
+		final int sqlTypeCode = JavaTimeJdbcType.getPhysicalJdbcTypeCode( jdbcMapping.getJdbcType() );
 		switch ( sqlTypeCode ) {
 			case UUID:
 				return "regexp_replace(lower(rawtohex(" + customWriteExpression + ")),'^(.{8})(.{4})(.{4})(.{4})(.{12})$','\\1-\\2-\\3-\\4-\\5')";

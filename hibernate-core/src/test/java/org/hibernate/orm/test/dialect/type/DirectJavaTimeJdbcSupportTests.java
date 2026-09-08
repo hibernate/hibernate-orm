@@ -11,6 +11,7 @@ import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.OffsetTime;
 import java.time.ZonedDateTime;
+import java.util.Set;
 
 import org.hibernate.dialect.type.spi.DirectJavaTimeJdbcSupport;
 import org.hibernate.dialect.type.spi.DirectJavaTimeJdbcSupports;
@@ -76,6 +77,35 @@ class DirectJavaTimeJdbcSupportTests {
 	}
 
 	@Test
+	void containerSupportIsConservativeByDefault() {
+		final DirectJavaTimeJdbcSupport support = DirectJavaTimeJdbcSupports.all();
+
+		assertThat( support.supportsInStruct( LocalDate.class ) ).isFalse();
+		assertThat( support.supportsInArray( LocalDate.class ) ).isFalse();
+	}
+
+	@Test
+	void containerCapabilitiesAreIndependent() {
+		final DirectJavaTimeJdbcSupport support = DirectJavaTimeJdbcSupports.of(
+				Set.of( LocalDate.class ),
+				Set.of( LocalDateTime.class ),
+				Set.of( Instant.class )
+		);
+
+		assertThat( support.supports( LocalDate.class ) ).isTrue();
+		assertThat( support.supportsInStruct( LocalDate.class ) ).isFalse();
+		assertThat( support.supportsInArray( LocalDate.class ) ).isFalse();
+
+		assertThat( support.supports( LocalDateTime.class ) ).isFalse();
+		assertThat( support.supportsInStruct( LocalDateTime.class ) ).isTrue();
+		assertThat( support.supportsInArray( LocalDateTime.class ) ).isFalse();
+
+		assertThat( support.supports( Instant.class ) ).isFalse();
+		assertThat( support.supportsInStruct( Instant.class ) ).isFalse();
+		assertThat( support.supportsInArray( Instant.class ) ).isTrue();
+	}
+
+	@Test
 	void offsetTypesAreAMatchedPair() {
 		final DirectJavaTimeJdbcSupport onlyOffsetTime = DirectJavaTimeJdbcSupports.of( OffsetTime.class );
 		final DirectJavaTimeJdbcSupport onlyOffsetDateTime =
@@ -92,9 +122,37 @@ class DirectJavaTimeJdbcSupportTests {
 	}
 
 	@Test
+	void offsetTypesAreAMatchedPairInEachContainer() {
+		final DirectJavaTimeJdbcSupport support = DirectJavaTimeJdbcSupports.of(
+				Set.of(),
+				Set.of( OffsetTime.class, OffsetDateTime.class ),
+				Set.of( OffsetTime.class )
+		);
+
+		assertThat( support.supports( OffsetTime.class ) ).isFalse();
+		assertThat( support.supports( OffsetDateTime.class ) ).isFalse();
+		assertThat( support.supportsInStruct( OffsetTime.class ) ).isTrue();
+		assertThat( support.supportsInStruct( OffsetDateTime.class ) ).isTrue();
+		assertThat( support.supportsInArray( OffsetTime.class ) ).isFalse();
+		assertThat( support.supportsInArray( OffsetDateTime.class ) ).isFalse();
+	}
+
+	@Test
 	void customProfilesRejectUnknownTypes() {
 		assertThatIllegalArgumentException()
 				.isThrownBy( () -> DirectJavaTimeJdbcSupports.of( String.class ) );
+		assertThatIllegalArgumentException()
+				.isThrownBy( () -> DirectJavaTimeJdbcSupports.of(
+						Set.of(),
+						Set.of( String.class ),
+						Set.of()
+				) );
+		assertThatIllegalArgumentException()
+				.isThrownBy( () -> DirectJavaTimeJdbcSupports.of(
+						Set.of(),
+						Set.of(),
+						Set.of( String.class )
+				) );
 	}
 
 	@Test

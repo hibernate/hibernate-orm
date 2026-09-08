@@ -10,6 +10,7 @@ import org.hibernate.dialect.temporaltype.spi.CurrentTimestampSelection;
 
 import org.hibernate.dialect.temporaltype.spi.TemporalOperationSupport;
 import org.hibernate.dialect.temporaltype.spi.TemporalOperationSupports;
+import org.hibernate.dialect.temporaltype.spi.TemporalValueSemantics;
 
 import org.hibernate.dialect.temporaltype.spi.TemporalFormatSupport;
 
@@ -211,7 +212,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect implements Curr
 	@Override
 	@SPI({ IMPLEMENT, SUPPLY })
 	public TemporalValueSemantics getTemporalValueSemantics() {
-		return TemporalValueSemantics.ROUND_MAX;
+		return TemporalValueSemantics.ROUND_MAX_WITH_OFFSET_LITERALS;
 	}
 
 	@Override

@@ -35,7 +35,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class TemporalRoundingTest {
 
 	@Test void test(SessionFactoryScope scope) {
-		final Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();
+		final var sessionFactory = scope.getSessionFactory();
+		final Dialect dialect = sessionFactory.getJdbcServices().getDialect();
 		final ZonedDateTime nowZoned = ZonedDateTime.of( 2026, 5, 19, 17, 5, 33, 87779496, ZoneId.of("CET") );
 		final OffsetDateTime nowOffset = OffsetDateTime.of( 2026, 5, 19, 17, 5, 33, 83231091, ZoneOffset.ofHours(3) );
 		long id = scope.fromTransaction( s-> {
@@ -61,8 +62,20 @@ public class TemporalRoundingTest {
 					expected,
 					actual
 			);
-			assertEquals( systemZone, z.zonedDateTime.getZone() );
-			assertEquals( systemOffset, z.offsetDateTime.getOffset() );
+			final var options = sessionFactory.getSessionFactoryOptions();
+			if ( options.isDirectJavaTimeJdbcAccessEnabled( ZonedDateTime.class )
+					|| options.isDirectJavaTimeJdbcAccessEnabled( OffsetDateTime.class ) ) {
+				assertEquals( nowZoned.getOffset(), z.zonedDateTime.getOffset() );
+			}
+			else {
+				assertEquals( systemZone, z.zonedDateTime.getZone() );
+			}
+			if ( options.isDirectJavaTimeJdbcAccessEnabled( OffsetDateTime.class ) ) {
+				assertEquals( nowOffset.getOffset(), z.offsetDateTime.getOffset() );
+			}
+			else {
+				assertEquals( systemOffset, z.offsetDateTime.getOffset() );
+			}
 		});
 	}
 

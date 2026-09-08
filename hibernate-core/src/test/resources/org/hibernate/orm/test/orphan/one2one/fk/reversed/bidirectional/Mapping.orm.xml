@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping" version="8.0">
+    <description>Converted from Mapping.hbm.xml - many-to-one with unique+orphan-removal to one-to-one</description>
+    <package>org.hibernate.orm.test.orphan.one2one.fk.reversed.bidirectional</package>
+    <attribute-accessor>property</attribute-accessor>
+    <default-cascade>none</default-cascade>
+    <default-lazy>true</default-lazy>
+    
+    <entity class="Employee" metadata-complete="true">
+        <table name="Employee"/>
+        <dynamic-insert>false</dynamic-insert>
+        <dynamic-update>false</dynamic-update>
+        <select-before-update>false</select-before-update>
+        <batch-size>-1</batch-size>
+        <mutable>true</mutable>
+        <optimistic-locking>VERSION</optimistic-locking>
+        <attributes>
+            <id name="id">
+                <column name="id" unique="false" nullable="false" insertable="true" updatable="false"/>
+                <generated-value generator="id-id-generator"/>
+                <generic-generator name="id-id-generator" class="increment"/>
+                <java-type>org.hibernate.type.descriptor.java.LongJavaType</java-type>
+                <jdbc-type>org.hibernate.type.descriptor.jdbc.BigIntJdbcType</jdbc-type>
+            </id>
+            <one-to-one name="info" target-entity="EmployeeInfo" fetch="LAZY" fetch-mode="SELECT" optional="true" orphan-removal="true">
+                <join-column name="info_id" unique="false" nullable="true" insertable="true" updatable="true"/>
+                <foreign-key/>
+                <cascade>
+                    <cascade-all/>
+                    <cascade-remove/>
+                </cascade>
+            </one-to-one>
+        </attributes>
+    </entity>
+    
+    <entity class="EmployeeInfo" metadata-complete="true">
+        <table name="EmployeeInfo"/>
+        <dynamic-insert>false</dynamic-insert>
+        <dynamic-update>false</dynamic-update>
+        <select-before-update>false</select-before-update>
+        <batch-size>-1</batch-size>
+        <mutable>true</mutable>
+        <optimistic-locking>VERSION</optimistic-locking>
+        <attributes>
+            <id name="id">
+                <column name="id" unique="false" nullable="false" insertable="true" updatable="false"/>
+                <generated-value generator="id-id-generator"/>
+                <generic-generator name="id-id-generator" class="increment"/>
+                <java-type>org.hibernate.type.descriptor.java.LongJavaType</java-type>
+                <jdbc-type>org.hibernate.type.descriptor.jdbc.BigIntJdbcType</jdbc-type>
+            </id>
+            <one-to-one name="employee" target-entity="Employee" fetch="EAGER" fetch-mode="JOIN" optional="true" mapped-by="info" orphan-removal="false">
+                <foreign-key/>
+                <cascade/>
+            </one-to-one>
+        </attributes>
+    </entity>
+</entity-mappings>

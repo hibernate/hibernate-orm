@@ -4,20 +4,12 @@
  */
 package org.hibernate.orm.test.orphan.one2one.fk.reversed.bidirectional;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToOne;
 
 /**
  * @author Steve Ebersole
  */
-@Entity
 public class EmployeeInfo {
-	@Id
-	@GeneratedValue
 	private Long id;
-	@OneToOne(mappedBy = "info")
 	private Employee employee;
 
 	public EmployeeInfo() {

@@ -7,10 +7,16 @@ package org.example.orm.dialect;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
+import java.time.OffsetTime;
 import java.time.temporal.TemporalAccessor;
 import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
+import java.util.Set;
 import java.util.TimeZone;
 
 import jakarta.annotation.Nullable;
@@ -98,6 +104,8 @@ import org.hibernate.dialect.temporaltype.spi.TemporalFormatSupport;
 import org.hibernate.dialect.temporaltype.spi.TemporalOperationSupport;
 import org.hibernate.dialect.temporaltype.spi.TemporalValueSemantics;
 import org.hibernate.dialect.type.spi.DdlTypeBuilder;
+import org.hibernate.dialect.type.spi.DirectJavaTimeJdbcSupport;
+import org.hibernate.dialect.type.spi.DirectJavaTimeJdbcSupports;
 import org.hibernate.dialect.type.spi.EnumSupport;
 import org.hibernate.dialect.type.spi.EnumSupports;
 import org.hibernate.dialect.type.spi.H2JdbcTypes;
@@ -653,6 +661,26 @@ public class ExampleDialect extends Dialect {
 	public SizeStrategy getSizeStrategy() {
 		return sizeStrategy;
 	}
+
+	// tag::direct-java-time-jdbc-support[]
+	private static final DirectJavaTimeJdbcSupport DIRECT_JAVA_TIME_JDBC_SUPPORT =
+			DirectJavaTimeJdbcSupports.of(
+					Set.of(
+							LocalDate.class,
+							LocalTime.class,
+							LocalDateTime.class,
+							OffsetTime.class,
+							OffsetDateTime.class
+					),
+					Set.of( LocalDate.class, OffsetTime.class, OffsetDateTime.class ),
+					Set.of( LocalDateTime.class )
+			);
+
+	@Override
+	public DirectJavaTimeJdbcSupport getDirectJavaTimeJdbcSupport() {
+		return DIRECT_JAVA_TIME_JDBC_SUPPORT;
+	}
+	// end::direct-java-time-jdbc-support[]
 
 	@Override
 	public TypeSizingProfile getTypeSizingProfile() {

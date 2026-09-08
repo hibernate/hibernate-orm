@@ -13,7 +13,7 @@ import static org.hibernate.SPI.Role.USE;
 
 /// Supplies immutable stock direct Java Time JDBC support profiles.
 ///
-/// @see StandardDirectJavaTimeJdbcSupport
+/// @see DirectJavaTimeJdbcSupport
 ///
 /// @since 8.0
 /// @author Steve Ebersole

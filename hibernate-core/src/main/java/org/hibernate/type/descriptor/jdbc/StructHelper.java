@@ -358,12 +358,19 @@ public class StructHelper {
 					rawJdbcValueTransformer.transform( rawJdbcValue, options ),
 					options
 			);
-			case SqlTypes.ARRAY -> wrapRawJdbcArray(
-					jdbcMapping,
-					rawJdbcValue,
-					options,
-					rawJdbcValueTransformer
-			);
+			case SqlTypes.ARRAY -> {
+				if ( rawJdbcValue instanceof java.sql.Array ) {
+					yield wrapRawJdbcArray(
+							jdbcMapping,
+							rawJdbcValue,
+							options,
+							rawJdbcValueTransformer
+					);
+				}
+				else {
+					yield rawJdbcValue;
+				}
+			}
 			default -> jdbcMapping.getJdbcJavaType().wrap( rawJdbcValue, options );
 		};
 	}

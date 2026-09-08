@@ -122,11 +122,37 @@ public class StructJdbcType implements StructuredJdbcType {
 				valueOrder,
 				options
 		);
+		normalizeDirectJavaTimeValues( jdbcValues, options );
 		return options.getSession()
 				.getJdbcCoordinator()
 				.getLogicalConnection()
 				.getPhysicalConnection()
 				.createStruct( typeName, jdbcValues );
+	}
+
+	private void normalizeDirectJavaTimeValues(Object[] jdbcValues, WrapperOptions options) {
+		for ( int physicalIndex = 0; physicalIndex < jdbcValues.length; physicalIndex++ ) {
+			final Object jdbcValue = jdbcValues[physicalIndex];
+			if ( jdbcValue == null ) {
+				continue;
+			}
+			final int logicalIndex = orderMapping == null ? physicalIndex : orderMapping[physicalIndex];
+			final var jdbcMapping = embeddableMappingType.getJdbcValueSelectable( logicalIndex ).getJdbcMapping();
+			if ( jdbcMapping.getJdbcType() instanceof JavaTimeJdbcType javaTimeJdbcType ) {
+				final Class<?> javaTimeType = javaTimeJdbcType.getPreferredJavaTypeClass( options );
+				if ( options.getDialect()
+						.getDirectJavaTimeJdbcSupport()
+						.supportsInStruct( javaTimeType ) ) {
+					continue;
+				}
+				jdbcValues[physicalIndex] = JavaTimeJdbcType.toPhysicalJdbcValue(
+						javaTimeJdbcType,
+						jdbcValue,
+						jdbcMapping.getJdbcJavaType(),
+						options
+				);
+			}
+		}
 	}
 
 	@Override

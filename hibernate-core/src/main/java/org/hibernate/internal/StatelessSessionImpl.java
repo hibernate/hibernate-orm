@@ -1707,7 +1707,7 @@ public class StatelessSessionImpl
 		if ( temporaryPersistenceContext.isLoadFinished() ) {
 			temporaryPersistenceContext.clear();
 		}
-		if ( !isTransactionInProgress() ) {
+		if ( !isTransactionInProgress() && !isDelayAfterTransaction() ) {
 			getJdbcCoordinator().afterTransaction();
 		}
 	}

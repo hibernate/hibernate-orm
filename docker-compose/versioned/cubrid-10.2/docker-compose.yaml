@@ -6,6 +6,7 @@ services:
       CUBRID_DB: hibernate_orm
       CUBRID_USER: hibernate_orm_test
       CUBRID_PASSWORD: hibernate_orm_test
+      CUBRID_LOCALE: en_US.utf8
     ports:
       - "33000:33000"
     healthcheck:

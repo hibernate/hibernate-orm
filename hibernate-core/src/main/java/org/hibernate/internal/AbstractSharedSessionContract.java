@@ -225,6 +225,7 @@ abstract class AbstractSharedSessionContract
 	private transient TransactionCoordinator transactionCoordinator;
 	@Nonnull
 	private transient CacheTransactionSynchronization cacheTransactionSynchronization;
+	private transient boolean delayAfterTransaction;
 
 	private final boolean autoJoinTransactions;
 	private final boolean isTransactionCoordinatorShared;
@@ -1194,6 +1195,10 @@ abstract class AbstractSharedSessionContract
 			&& transactionCoordinator.isTransactionActive();
 	}
 
+	protected boolean isDelayAfterTransaction() {
+		return delayAfterTransaction;
+	}
+
 	@Override
 	public Object getCurrentChangesetIdentifier() {
 		if ( currentChangesetId != null ) {
@@ -1204,7 +1209,14 @@ abstract class AbstractSharedSessionContract
 			return currentChangesetId;
 		}
 		else {
-			return generateCurrentChangesetIdentifier();
+			assert !delayAfterTransaction;
+			delayAfterTransaction = true;
+			try {
+				return generateCurrentChangesetIdentifier();
+			}
+			finally {
+				delayAfterTransaction = false;
+			}
 		}
 	}
 

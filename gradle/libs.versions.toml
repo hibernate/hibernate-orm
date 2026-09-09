@@ -2,7 +2,7 @@
 
 # Main Libs
 antlr = "4.13.2"
-asm = "9.9.1"
+asm = "9.10.1"
 # WARNING: When upgrading to a version of bytebuddy that supports a new bytecode version,
 # make sure to remove the now unnecessary net.bytebuddy.experimental=true in relevant CI jobs (Jenkinsfile).
 byteBuddy = "1.18.12"

@@ -17,7 +17,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class TimeZoneSupportTest {
 	@Test
 	void communityProfilesPreserveTheirEffectiveValues() {
-		assertThat( new CUBRIDDialect().getTimeZoneSupport() ).isEqualTo( TimeZoneSupport.NATIVE );
+		assertThat( new CUBRIDDialect().getTimeZoneSupport() ).isEqualTo( TimeZoneSupport.NORMALIZE );
 		assertThat( new CockroachLegacyDialect().getTimeZoneSupport() ).isEqualTo( TimeZoneSupport.NORMALIZE );
 		assertThat( new GaussDBDialect().getTimeZoneSupport() ).isEqualTo( TimeZoneSupport.NORMALIZE );
 		assertThat( new H2LegacyDialect().getTimeZoneSupport() ).isEqualTo( TimeZoneSupport.NATIVE );

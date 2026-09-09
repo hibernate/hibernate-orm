@@ -4,13 +4,6 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-
-/*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
- */
 package org.hibernate.loader.ast.internal;
 
 import java.util.List;
@@ -55,22 +48,36 @@ public class EntityConcreteTypeLoader {
 	public EntityConcreteTypeLoader(EntityMappingType entityDescriptor, SessionFactoryImplementor sessionFactory) {
 		this.entityDescriptor = entityDescriptor;
 		final EntityDiscriminatorMapping discriminatorMapping = entityDescriptor.getDiscriminatorMapping();
-		final JdbcParametersList.Builder jdbcParametersBuilder = JdbcParametersList.newBuilder();
-		sqlSelect = LoaderSelectBuilder.createSelect(
-				entityDescriptor,
-				singletonList( discriminatorMapping ),
-				entityDescriptor.getIdentifierMapping(),
-				null,
-				1,
-				new LoadQueryInfluencers( sessionFactory ),
-				LockOptions.NONE,
-				jdbcParametersBuilder::add,
-				sessionFactory
-		);
-		jdbcParameters = jdbcParametersBuilder.build();
+		if ( discriminatorMapping == null ) {
+			// No discriminator mapping means this is a leaf entity with no subclasses,
+			// so we don't need to query for the concrete type
+			sqlSelect = null;
+			jdbcParameters = null;
+		}
+		else {
+			final JdbcParametersList.Builder jdbcParametersBuilder = JdbcParametersList.newBuilder();
+			sqlSelect = LoaderSelectBuilder.createSelect(
+					entityDescriptor,
+					singletonList( discriminatorMapping ),
+					entityDescriptor.getIdentifierMapping(),
+					null,
+					1,
+					new LoadQueryInfluencers( sessionFactory ),
+					LockOptions.NONE,
+					jdbcParametersBuilder::add,
+					sessionFactory
+			);
+			jdbcParameters = jdbcParametersBuilder.build();
+		}
 	}
 
 	public EntityMappingType getConcreteType(Object id, SharedSessionContractImplementor session) {
+		// If there's no SQL select, this is a leaf entity with no subclasses,
+		// so the concrete type is the entity descriptor itself
+		if ( sqlSelect == null ) {
+			return entityDescriptor;
+		}
+
 		final SessionFactoryImplementor sessionFactory = session.getSessionFactory();
 		final SqlAstTranslatorFactory sqlAstTranslatorFactory = sessionFactory.getJdbcServices()
 				.getJdbcEnvironment()

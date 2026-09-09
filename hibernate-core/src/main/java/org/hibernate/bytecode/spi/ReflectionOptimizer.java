@@ -4,9 +4,15 @@
  */
 package org.hibernate.bytecode.spi;
 
+import org.hibernate.Remove;
+
 /**
  * Represents reflection optimization for a particular class.
+ *
+ * @deprecated Will be removed in 8.0
  */
+@Deprecated(since = "7.4", forRemoval = true)
+@Remove
 public interface ReflectionOptimizer {
 	/**
 	 * Retrieve the optimizer for calling an entity's constructor via reflection.

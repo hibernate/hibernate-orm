@@ -27,7 +27,10 @@ public interface ManagedTypeRepresentationStrategy {
 
 	/**
 	 * The reflection optimizer to use for this embeddable.
+	 *
+	 * @deprecated Will be removed in 8.0
 	 */
+	@Deprecated(since = "7.4", forRemoval = true)
 	ReflectionOptimizer getReflectionOptimizer();
 
 	/**

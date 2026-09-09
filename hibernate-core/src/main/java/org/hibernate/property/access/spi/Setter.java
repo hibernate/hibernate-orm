@@ -15,9 +15,19 @@ import org.hibernate.Remove;
  * @author Gavin King
  * @author Steve Ebersole
  */
-@Remove // Remove/replace with a different SPI that is based on Hibernate Models
+@Deprecated(since = "7.4", forRemoval = true)
+@Remove // replace with a different SPI
 public interface Setter {
 
+	/**
+	 * Set the property value on the given target instance.
+	 *
+	 * @param target The instance containing the property value to be set.
+	 * @param value The value to be set.
+	 *
+	 * @deprecated no longer used
+	 */
+	@Deprecated(since = "7.4", forRemoval = true)
 	void set(Object target, @Nullable Object value);
 
 	/**

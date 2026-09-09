@@ -52,7 +52,7 @@ public class TablePerClassFailing {
 
 	}
 
-	@Entity
+	@Entity(name = "Sub")
 	static class Sub extends Base {
 	}
 

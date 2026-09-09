@@ -711,6 +711,26 @@ Or, for the legacy `byMultipleIds()` API:
 session.byMultipleIds(MyEntity.class).enableSessionCheck(false).multiLoad(ids);
 ----
 
+[[mysql-current-timestamp]]
+=== `@CurrentTimestamp(source = SourceType.DB)` handling for MySQL-like databases
+
+The `MySQLDialect` was using the `now()` function to implement fetching of the current timestamp,
+which returns no fractional seconds. Since the implementations for other databases all at least
+returned values with millisecond precision, the implementation was changed to include the maximum
+precision 6, by using `now(6)`.
+
+The effect of the change is that newly updated/inserted entities that use `@CurrentTimestamp` will
+now assign a value with the configured precision of the column, instead of always truncating the
+fractional seconds.
+
+To revert back to the old behavior, change the column type of the annotated attribute to `datetime(0)`,
+
+[source,sql]
+----
+alter table TBL
+change column COL COL datetime(0);
+----
+
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // XSD changes

@@ -1111,7 +1111,7 @@ public class MySQLLegacyDialect extends Dialect implements CurrentTemporalSuppor
 	@Override
 	@SPI({ USE, IMPLEMENT })
 	public CurrentTimestampSelection getCurrentTimestampSelection() {
-		return CurrentTimestampSelection.prepared( "select now()" );
+		return CurrentTimestampSelection.prepared( "select now(6)" );
 	}
 
 	// Overridden informational metadata ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

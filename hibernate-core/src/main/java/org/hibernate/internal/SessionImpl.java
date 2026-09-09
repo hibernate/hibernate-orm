@@ -514,7 +514,7 @@ public class SessionImpl
 
 	@Override
 	public void afterOperation(boolean success) {
-		if ( !isTransactionInProgress() ) {
+		if ( !isTransactionInProgress() && !isDelayAfterTransaction() ) {
 			getJdbcCoordinator().afterTransaction();
 		}
 	}

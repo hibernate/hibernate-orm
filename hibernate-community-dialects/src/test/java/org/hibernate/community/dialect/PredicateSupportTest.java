@@ -69,10 +69,10 @@ public class PredicateSupportTest {
 				PredicateSupport.Capability.TRUTHNESS,
 				PredicateSupport.Capability.EXPRESSION_PLACEMENT
 		);
+		// CUBRID 11.2 requires a logical expression as the operand of 'is true'
 		assertProfile(
 				new CUBRIDDialect().getPredicateSupport(),
 				null,
-				PredicateSupport.Capability.TRUTHNESS,
 				PredicateSupport.Capability.EXPRESSION_PLACEMENT
 		);
 		assertProfile(

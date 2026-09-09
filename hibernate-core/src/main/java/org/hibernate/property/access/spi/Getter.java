@@ -10,6 +10,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.Map;
 
+import org.hibernate.Remove;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -19,7 +20,11 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *
  * @author Gavin King
  * @author Steve Ebersole
+ *
+ * @deprecated no longer used
  */
+@Deprecated(since = "7.4", forRemoval = true)
+@Remove // replace with a different SPI
 public interface Getter extends Serializable {
 	/**
 	 * Get the property value from the given owner instance.
@@ -27,7 +32,10 @@ public interface Getter extends Serializable {
 	 * @param owner The instance containing the property value to be retrieved.
 	 *
 	 * @return The extracted value.
+	 *
+	 * @deprecated Will be removed in 8.0
 	 */
+	@Deprecated(since = "7.4", forRemoval = true)
 	@Nullable Object get(Object owner);
 
 	/**
@@ -38,7 +46,10 @@ public interface Getter extends Serializable {
 	 * @param session The session from which this request originated.
 	 *
 	 * @return The extracted value.
+	 *
+	 * @deprecated Will be removed in 8.0
 	 */
+	@Deprecated(since = "7.4", forRemoval = true)
 	@Nullable Object getForInsert(Object owner, Map<Object, Object> mergeMap, SharedSessionContractImplementor session);
 
 	/**

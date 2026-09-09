@@ -23,6 +23,9 @@ public interface AuditStrategyContext {
 	/**
 	 * Get the revision info timestamp accessor
 	 * @return the getter for the timestamp attribute on the revision entity
+	 *
+	 * @deprecated Will be replaced by a method that will not return the deprecated {@link Getter} interface
 	 */
+	@Deprecated(forRemoval = true, since = "7.4")
 	Getter getRevisionInfoTimestampAccessor();
 }

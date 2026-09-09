@@ -43,9 +43,9 @@ public interface BytecodeProvider extends Service {
 	 * @param setterNames Names of all property setters to be accessed via reflection.
 	 * @param types The types of all properties to be accessed.
 	 * @return The reflection optimization delegate.
-	 * @deprecated Use {@link #getReflectionOptimizer(Class, Map)} insstead
+	 * @deprecated Will be removed in 8.0
 	 */
-	@Deprecated(forRemoval = true)
+	@Deprecated(since = "7.4", forRemoval = true)
 	ReflectionOptimizer getReflectionOptimizer(Class clazz, String[] getterNames, String[] setterNames, Class[] types);
 
 	/**
@@ -55,7 +55,10 @@ public interface BytecodeProvider extends Service {
 	 * @param clazz The class to be reflected upon.
 	 * @param propertyAccessMap The ordered property access map
 	 * @return The reflection optimization delegate.
+	 *
+	 * @deprecated Will be removed in 8.0
 	 */
+	@Deprecated(since = "7.4", forRemoval = true)
 	@Nullable ReflectionOptimizer getReflectionOptimizer(Class<?> clazz, Map<String, PropertyAccess> propertyAccessMap);
 
 	/**

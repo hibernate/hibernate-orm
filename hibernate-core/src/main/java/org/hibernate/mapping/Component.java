@@ -747,11 +747,16 @@ public class Component extends SimpleValue implements AttributeContainer, MetaAt
 		}
 	}
 
+	@Internal
 	public static class ValueGenerationPlan implements GenerationPlan {
 		private final BeforeExecutionGenerator generator;
 		private final Setter injector;
 		private final int propertyIndex;
 
+		/**
+		 * @deprecated it will be replaced by a different constructor which will no longer require a {@link Setter}
+		 */
+		@Deprecated(since = "7.4", forRemoval = true)
 		public ValueGenerationPlan(BeforeExecutionGenerator generator, Setter injector, int propertyIndex) {
 			this.generator = generator;
 			this.injector = injector;

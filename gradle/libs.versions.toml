@@ -73,7 +73,7 @@ moneta = "1.4.5"
 persistenceTck="4.0.0-SNAPSHOT"
 
 # JDBC Libs
-h2 = "2.4.240"
+h2 = "2.5.250"
 db2 = "12.1.4.0"
 derby = "10.17.1.0"
 firebird = "6.0.5"

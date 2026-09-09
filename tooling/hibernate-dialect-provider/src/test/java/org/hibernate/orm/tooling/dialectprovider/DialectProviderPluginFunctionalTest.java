@@ -532,11 +532,11 @@ public class DialectProviderPluginFunctionalTest {
 						+ "profile.getClass().getSimpleName(), java.util.List.of()); } }\n"
 		);
 		Files.createDirectories( classes );
-		final String junitClasspath = org.junit.jupiter.api.DynamicContainer.class
-				.getProtectionDomain().getCodeSource().getLocation().getPath();
+		final Path junitClasspath = Path.of( org.junit.jupiter.api.DynamicContainer.class
+				.getProtectionDomain().getCodeSource().getLocation().toURI() );
 		final int compilation = ToolProvider.getSystemJavaCompiler().run(
 				null, null, null,
-				"-classpath", junitClasspath,
+				"-classpath", junitClasspath.toString(),
 				"-d", classes.toString(),
 				profile.toString(), kit.toString()
 		);

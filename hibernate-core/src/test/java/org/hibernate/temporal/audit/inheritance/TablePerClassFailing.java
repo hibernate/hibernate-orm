@@ -15,6 +15,7 @@ import org.hibernate.cfg.StateManagementSettings;
 import org.hibernate.temporal.spi.ChangesetIdentifierSupplier;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
+import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -30,6 +31,7 @@ import org.junit.jupiter.api.Test;
 })
 @ServiceRegistry(settings = @Setting(name = StateManagementSettings.CHANGESET_ID_SUPPLIER,
 		value = "org.hibernate.temporal.audit.AuditEntityTest$TxIdSupplier"))
+@Jira( "HHH-20857" )
 public class TablePerClassFailing {
 	private static int currentTxId;
 

@@ -88,8 +88,6 @@ public interface SqlExpressionResolver {
 	 * Convenience form for creating a key from TableReference and SelectableMapping
 	 */
 	static ColumnReferenceKey createColumnReferenceKey(TableReference tableReference, SelectableMapping selectable) {
-		assert tableReference.containsAffectedTableName( selectable.getContainingTableExpression() )
-				: String.format( ROOT, "Expecting tables to match between TableReference (%s) and SelectableMapping (%s)", tableReference.getTableId(), selectable.getContainingTableExpression() );
 		return createColumnReferenceKey( tableReference, selectable.getSelectablePath(), selectable.getJdbcMapping() );
 	}
 

@@ -100,7 +100,10 @@ public class CompositeNestedGeneratedValueGenerator
 		 * Used when the {@link CompositeType} is {@linkplain CompositeType#isMutable() mutable}.
 		 *
 		 * @see #getPropertyIndex()
+		 *
+		 * @deprecated no longer used, it will be replaced by a method that will not return the deprecated {@link Setter} interface
 		 */
+		@Deprecated(since = "7.4", forRemoval = true)
 		Setter getInjector();
 
 		/**

@@ -31,6 +31,9 @@ public interface EmbeddableRepresentationStrategy extends ManagedTypeRepresentat
 	 * The reflection optimizer to use for this embeddable.
 	 *
 	 * https://hibernate.atlassian.net/browse/HHH-14952
+	 *
+	 * @deprecated no longer used
 	 */
+	@Deprecated(since = "7.4", forRemoval = true)
 	ReflectionOptimizer getReflectionOptimizer();
 }

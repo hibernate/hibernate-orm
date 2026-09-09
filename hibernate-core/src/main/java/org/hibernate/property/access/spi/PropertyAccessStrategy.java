@@ -27,6 +27,8 @@ public interface PropertyAccessStrategy {
 	 * @param setterRequired Whether it is an error if we are unable to find a corresponding setter
 	 *
 	 * @return The appropriate PropertyAccess
+	 * @deprecated no longer used
 	 */
+	@Deprecated(since = "7.4", forRemoval = true)
 	PropertyAccess buildPropertyAccess(Class<?> containerJavaType, String propertyName, boolean setterRequired);
 }

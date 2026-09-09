@@ -4,6 +4,7 @@
  */
 package org.hibernate.community.dialect;
 
+import org.hibernate.dialect.identifier.spi.IdentifierHelperBuildRequest;
 import org.hibernate.dialect.identifier.spi.KeywordRegistration;
 
 import org.hibernate.dialect.temporaltype.spi.CurrentTimestampSelection;
@@ -91,6 +92,8 @@ import org.hibernate.dialect.schema.spi.IndexNameQualification;
 import org.hibernate.dialect.jdbc.spi.ParameterLimits;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
+import org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy;
+import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.engine.jdbc.env.spi.SchemaNameResolver;
 import org.hibernate.exception.ConstraintViolationException;
@@ -350,36 +353,171 @@ public class CUBRIDDialect extends Dialect implements CurrentTemporalSupport, Te
 	@SPI({ USE, IMPLEMENT, SUPPLY })
 	protected void contributeKeywords(KeywordRegistration registration) {
 		super.contributeKeywords( registration );
-		registration.registerKeyword( "TYPE" );
-		registration.registerKeyword( "YEAR" );
-		registration.registerKeyword( "MONTH" );
-		registration.registerKeyword( "ALIAS" );
-		registration.registerKeyword( "VALUE" );
-		registration.registerKeyword( "FIRST" );
-		registration.registerKeyword( "ROLE" );
-		registration.registerKeyword( "CLASS" );
-		registration.registerKeyword( "BIT" );
-		registration.registerKeyword( "TIME" );
-		registration.registerKeyword( "QUERY" );
-		registration.registerKeyword( "DATE" );
-		registration.registerKeyword( "USER" );
+		registration.registerKeyword( "ABSOLUTE" );
+		registration.registerKeyword( "ACCESS" );
 		registration.registerKeyword( "ACTION" );
-		registration.registerKeyword( "SYS_USER" );
-		registration.registerKeyword( "ZONE" );
-		registration.registerKeyword( "LANGUAGE" );
-		registration.registerKeyword( "DICTIONARY" );
-		registration.registerKeyword( "DATA" );
-		registration.registerKeyword( "TEST" );
-		registration.registerKeyword( "SUPERCLASS" );
-		registration.registerKeyword( "SECTION" );
-		registration.registerKeyword( "LOWER" );
-		registration.registerKeyword( "LIST" );
-		registration.registerKeyword( "OID" );
-		registration.registerKeyword( "DAY" );
-		registration.registerKeyword( "IF" );
+		registration.registerKeyword( "ADD_MONTHS" );
+		registration.registerKeyword( "AFTER" );
+		registration.registerKeyword( "ALIAS" );
+		registration.registerKeyword( "ASC" );
+		registration.registerKeyword( "ASSERTION" );
+		registration.registerKeyword( "ATTACH" );
 		registration.registerKeyword( "ATTRIBUTE" );
+		registration.registerKeyword( "AVG" );
+		registration.registerKeyword( "BEFORE" );
+		registration.registerKeyword( "BIT" );
+		registration.registerKeyword( "BIT_LENGTH" );
+		registration.registerKeyword( "BOOLEAN" );
+		registration.registerKeyword( "BREADTH" );
+		registration.registerKeyword( "CASCADE" );
+		registration.registerKeyword( "CATALOG" );
+		registration.registerKeyword( "CHANGE" );
+		registration.registerKeyword( "CLASS" );
+		registration.registerKeyword( "CLASSES" );
+		registration.registerKeyword( "COALESCE" );
+		registration.registerKeyword( "CONNECTION" );
+		registration.registerKeyword( "CONNECT_BY_ISCYCLE" );
+		registration.registerKeyword( "CONNECT_BY_ISLEAF" );
+		registration.registerKeyword( "CONNECT_BY_ROOT" );
+		registration.registerKeyword( "CONSTRAINTS" );
+		registration.registerKeyword( "CONVERT" );
+		registration.registerKeyword( "COUNT" );
+		registration.registerKeyword( "CURRENT_DATETIME" );
+		registration.registerKeyword( "DATA" );
+		registration.registerKeyword( "DATABASE" );
+		registration.registerKeyword( "DATETIME" );
+		registration.registerKeyword( "DAY_HOUR" );
+		registration.registerKeyword( "DAY_MILLISECOND" );
+		registration.registerKeyword( "DAY_MINUTE" );
+		registration.registerKeyword( "DAY_SECOND" );
+		registration.registerKeyword( "DEFERRABLE" );
+		registration.registerKeyword( "DEFERRED" );
+		registration.registerKeyword( "DEPTH" );
+		registration.registerKeyword( "DESC" );
+		registration.registerKeyword( "DESCRIPTOR" );
+		registration.registerKeyword( "DIAGNOSTICS" );
+		registration.registerKeyword( "DICTIONARY" );
+		registration.registerKeyword( "DIFFERENCE" );
+		registration.registerKeyword( "DISTINCTROW" );
+		registration.registerKeyword( "DIV" );
+		registration.registerKeyword( "DOMAIN" );
+		registration.registerKeyword( "DUPLICATE" );
+		registration.registerKeyword( "ELSEIF" );
+		registration.registerKeyword( "EQUALS" );
+		registration.registerKeyword( "EVALUATE" );
+		registration.registerKeyword( "EXCEPTION" );
+		registration.registerKeyword( "EXTRACT" );
+		registration.registerKeyword( "FILE" );
+		registration.registerKeyword( "FIRST" );
+		registration.registerKeyword( "FOUND" );
+		registration.registerKeyword( "GENERAL" );
+		registration.registerKeyword( "GO" );
+		registration.registerKeyword( "GOTO" );
+		registration.registerKeyword( "HOUR_MILLISECOND" );
+		registration.registerKeyword( "HOUR_MINUTE" );
+		registration.registerKeyword( "HOUR_SECOND" );
+		registration.registerKeyword( "IGNORE" );
+		registration.registerKeyword( "INDEX" );
+		registration.registerKeyword( "INHERIT" );
+		registration.registerKeyword( "INITIALLY" );
+		registration.registerKeyword( "INTERSECTION" );
+		registration.registerKeyword( "ISOLATION" );
+		registration.registerKeyword( "JSON" );
+		registration.registerKeyword( "KEY" );
+		registration.registerKeyword( "LAST" );
+		registration.registerKeyword( "LESS" );
+		registration.registerKeyword( "LEVEL" );
+		registration.registerKeyword( "LIMIT" );
+		registration.registerKeyword( "LIST" );
+		registration.registerKeyword( "LOCAL_TRANSACTION_ID" );
+		registration.registerKeyword( "LOWER" );
+		registration.registerKeyword( "MAX" );
+		registration.registerKeyword( "MILLISECOND" );
+		registration.registerKeyword( "MIN" );
+		registration.registerKeyword( "MINUTE_MILLISECOND" );
+		registration.registerKeyword( "MINUTE_SECOND" );
+		registration.registerKeyword( "MOD" );
+		registration.registerKeyword( "MODIFY" );
+		registration.registerKeyword( "MULTISET_OF" );
+		registration.registerKeyword( "NA" );
+		registration.registerKeyword( "NAMES" );
+		registration.registerKeyword( "NEXT" );
+		registration.registerKeyword( "NULLIF" );
+		registration.registerKeyword( "OBJECT" );
+		registration.registerKeyword( "OCTET_LENGTH" );
+		registration.registerKeyword( "OFF" );
+		registration.registerKeyword( "OID" );
+		registration.registerKeyword( "OPTIMIZATION" );
+		registration.registerKeyword( "OPTION" );
+		registration.registerKeyword( "PARAMETERS" );
+		registration.registerKeyword( "PARTIAL" );
+		registration.registerKeyword( "POSITION" );
+		registration.registerKeyword( "PRESERVE" );
+		registration.registerKeyword( "PRIOR" );
+		registration.registerKeyword( "PRIVILEGES" );
+		registration.registerKeyword( "QUERY" );
+		registration.registerKeyword( "READ" );
+		registration.registerKeyword( "RELATIVE" );
+		registration.registerKeyword( "RENAME" );
+		registration.registerKeyword( "REPLACE" );
+		registration.registerKeyword( "RESTRICT" );
+		registration.registerKeyword( "ROLE" );
+		registration.registerKeyword( "ROUTINE" );
+		registration.registerKeyword( "ROWNUM" );
+		registration.registerKeyword( "SCHEMA" );
+		registration.registerKeyword( "SECOND_MILLISECOND" );
+		registration.registerKeyword( "SECTION" );
+		registration.registerKeyword( "SEQUENCE" );
+		registration.registerKeyword( "SEQUENCE_OF" );
+		registration.registerKeyword( "SERIALIZABLE" );
+		registration.registerKeyword( "SESSION" );
+		registration.registerKeyword( "SESSION_USER" );
+		registration.registerKeyword( "SETEQ" );
+		registration.registerKeyword( "SET_OF" );
+		registration.registerKeyword( "SHARED" );
+		registration.registerKeyword( "SIBLINGS" );
+		registration.registerKeyword( "SIZE" );
+		registration.registerKeyword( "SQLCODE" );
+		registration.registerKeyword( "SQLERROR" );
+		registration.registerKeyword( "STATISTICS" );
 		registration.registerKeyword( "STRING" );
-		registration.registerKeyword( "SEARCH" );
+		registration.registerKeyword( "SUBCLASS" );
+		registration.registerKeyword( "SUBSET" );
+		registration.registerKeyword( "SUBSETEQ" );
+		registration.registerKeyword( "SUBSTRING" );
+		registration.registerKeyword( "SUM" );
+		registration.registerKeyword( "SUPERCLASS" );
+		registration.registerKeyword( "SUPERSET" );
+		registration.registerKeyword( "SUPERSETEQ" );
+		registration.registerKeyword( "SYSDATE" );
+		registration.registerKeyword( "SYSDATETIME" );
+		registration.registerKeyword( "SYSTIME" );
+		registration.registerKeyword( "SYS_CONNECT_BY_PATH" );
+		registration.registerKeyword( "SYS_DATE" );
+		registration.registerKeyword( "SYS_DATETIME" );
+		registration.registerKeyword( "SYS_TIME" );
+		registration.registerKeyword( "SYS_TIMESTAMP" );
+		registration.registerKeyword( "SYS_USER" );
+		registration.registerKeyword( "TEMPORARY" );
+		registration.registerKeyword( "TEST" );
+		registration.registerKeyword( "TIMEZONE" );
+		registration.registerKeyword( "TRANSACTION" );
+		registration.registerKeyword( "TRANSLATE" );
+		registration.registerKeyword( "TRIM" );
+		registration.registerKeyword( "TRUNCATE" );
+		registration.registerKeyword( "UNDER" );
+		registration.registerKeyword( "UPPER" );
+		registration.registerKeyword( "USAGE" );
+		registration.registerKeyword( "USE" );
+		registration.registerKeyword( "UTIME" );
+		registration.registerKeyword( "VARIABLE" );
+		registration.registerKeyword( "VCLASS" );
+		registration.registerKeyword( "VIEW" );
+		registration.registerKeyword( "WORK" );
+		registration.registerKeyword( "WRITE" );
+		registration.registerKeyword( "XOR" );
+		registration.registerKeyword( "YEAR_MONTH" );
+		registration.registerKeyword( "ZONE" );
 	}
 
 	public CUBRIDDialect(DialectResolutionInfo info) {
@@ -643,18 +781,6 @@ public class CUBRIDDialect extends Dialect implements CurrentTemporalSupport, Te
 				default -> null;
 			} );
 
-	@Override
-	@SPI({ USE, IMPLEMENT })
-	public char openQuote() {
-		return '[';
-	}
-
-	@Override
-	@SPI({ USE, IMPLEMENT })
-	public char closeQuote() {
-		return ']';
-	}
-
 	private static final LockingSupport LOCKING_SUPPORT = StandardLockingSupports.simple(
 			PessimisticLockStyle.CLAUSE,
 			RowLockStrategy.NONE,
@@ -752,7 +878,8 @@ public class CUBRIDDialect extends Dialect implements CurrentTemporalSupport, Te
 	@Override
 	@SPI({ USE, IMPLEMENT })
 	public int getMaxIdentifierLength() {
-		return 254;
+		//the driver metadata reports 254, but CUBRID rejects a class name over 222 bytes
+		return 222;
 	}
 
 	@Override
@@ -1118,6 +1245,24 @@ public class CUBRIDDialect extends Dialect implements CurrentTemporalSupport, Te
 	public DmlTargetColumnQualifierSupport getDmlTargetColumnQualifierSupport() {
 		//a joined DELETE/UPDATE requires the table alias to qualify columns
 		return DmlTargetColumnQualifierSupport.TABLE_ALIAS;
+	}
+
+	@Override
+	@SPI({ USE, IMPLEMENT, SUPPLY })
+	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuildRequest request) {
+		final var builder = request.builder();
+		//must precede super: applyReservedWords() silently discards every word while this flag is false,
+		//and the caller seeds it from a setting that defaults to false
+		builder.setAutoQuoteKeywords( true );
+		builder.setAutoQuoteDollar( true );
+		super.buildIdentifierHelper( request );
+
+		//must follow super: super initializes both strategies from the JDBC metadata, and the casing
+		//CUBRID's DatabaseMetaData reports does not match how it actually stores identifiers
+		builder.setUnquotedCaseStrategy( IdentifierCaseStrategy.LOWER );
+		builder.setQuotedCaseStrategy( IdentifierCaseStrategy.LOWER );
+
+		return builder.build();
 	}
 
 	@Override

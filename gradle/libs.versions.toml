@@ -112,7 +112,7 @@ mavenPlexusXml = "4.2.0"
 #Buildscript
 forbiddenapis = "3.10"
 jsoup = "1.23.2"
-slf4j = "2.0.18"
+slf4j = "2.0.19"
 
 # Asciidocs
 hibernate-asciidoctor-theme = "6.1.3.Final"

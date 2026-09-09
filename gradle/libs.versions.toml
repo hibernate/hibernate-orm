@@ -100,7 +100,7 @@ sybase = "1.3.1"
 teradata = "20.00.00.60"
 altibase = "8.1.0.0.3"
 cubrid = "11.3.2.0053"
-spanner = "2.43.0"
+spanner = "2.44.0"
 
 # Maven
 maven = "3.9.16"

@@ -22,6 +22,7 @@ import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 
 @SessionFactory
@@ -56,21 +57,35 @@ public class TablePerClassFailing {
 
 	@Entity(name = "Sub")
 	static class Sub extends Base {
+		@Audited.Excluded
+		String str2;
 	}
 
 	@Test
 	public void test(DomainModelScope domainModelScope, SessionFactoryScope scope) {
-		scope.inTransaction( s -> {
-			var e = new Base();
-			e.id = 1;
-			e.str1 = "v";
-			s.persist( e );
+		scope.inTransaction( session -> {
+			var b = new Base();
+			b.id = 1;
+			b.str1 = "v";
+			session.persist( b );
+
+			var s = new Sub();
+			s.id = 2;
+			s.str1 = "sub_str1";
+			s.str2 = "sub_str2";
+			session.persist( s );
 		} );
 
 		scope.inTransaction( s -> {
 			var statelessSession = s.getSessionFactory().withStatelessOptions().atChangeset( AuditLog.ALL_CHANGESETS )
 					.openStatelessSession();
-			statelessSession.createSelectionQuery("from Base", Base.class).getSingleResult();
+			var fromBase = statelessSession.createSelectionQuery( "from Base", Base.class ).getResultList();
+			for ( var base : fromBase ) {
+				assertNull( base.str1 );
+				if ( base instanceof Sub sub) {
+					assertNull( sub.str2 );
+				}
+			}
 		} );
 	}
 

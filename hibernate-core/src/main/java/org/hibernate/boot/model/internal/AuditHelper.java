@@ -778,7 +778,7 @@ public final class AuditHelper {
 		return supplier != null ? supplier.getChangelogClass().getName() : null;
 	}
 
-	private static Set<String> resolveExcludedColumns(Iterable<Property> properties) {
+	public static Set<String> resolveExcludedColumns(Iterable<Property> properties) {
 		final Set<String> excluded = new HashSet<>();
 		for ( var property : properties ) {
 			if ( property.isAuditedExcluded() || property instanceof Backref ) {

@@ -25,7 +25,7 @@ import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.NaturalIdMapping;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
-import org.hibernate.accessor.HibernateAccessorFactory;
+import org.hibernate.accessor.AccessorFactory;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.property.access.spi.PropertyAccessorService;
 import org.hibernate.property.access.spi.PropertyValueAccessor;
@@ -827,7 +827,7 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 			AttributeMapping keyAttribute,
 			Function<String, Method> getterMethodAccess,
 			Map<String, RecordComponent> naturalIdClassComponents,
-			HibernateAccessorFactory hibernateAccessorFactory) {
+			AccessorFactory hibernateAccessorFactory) {
 		// first, if the `naturalIdClass` is a record, look for a component
 		final String keyName = keyAttribute.getAttributeName();
 

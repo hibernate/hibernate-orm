@@ -31,8 +31,8 @@ import org.hibernate.bytecode.enhance.spi.CollectionTracker;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.bytecode.enhance.spi.interceptor.BytecodeLazyAttributeInterceptor;
 import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
-import org.hibernate.accessor.HibernateAccessorValueReader;
-import org.hibernate.accessor.HibernateAccessorValueWriter;
+import org.hibernate.accessor.ValueReader;
+import org.hibernate.accessor.ValueWriter;
 import org.hibernate.engine.spi.CompositeOwner;
 import org.hibernate.engine.spi.CompositeTracker;
 import org.hibernate.engine.spi.EntityEntry;
@@ -147,13 +147,13 @@ public final class EnhancerImplConstants {
 	final String internalName_PersistentAttributeInterceptor = Type.getInternalName(
 			PersistentAttributeInterceptor.class );
 	final String internalName_HibernateAccessorValueReader = Type.getInternalName(
-			HibernateAccessorValueReader.class );
+			ValueReader.class );
 	final String internalName_HibernateAccessorValueWriter = Type.getInternalName(
-			HibernateAccessorValueWriter.class );
+			ValueWriter.class );
 	final String descriptor_HibernateAccessorValueReader = Type.getDescriptor(
-			HibernateAccessorValueReader.class );
+			ValueReader.class );
 	final String descriptor_HibernateAccessorValueWriter = Type.getDescriptor(
-			HibernateAccessorValueWriter.class );
+			ValueWriter.class );
 
 	//Method Descriptors:
 	final String methodDescriptor_SetOwner = Type.getMethodDescriptor(

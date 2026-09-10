@@ -12,8 +12,8 @@ import jakarta.annotation.Nullable;
 
 import org.hibernate.Incubating;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.accessor.HibernateAccessorValueReader;
-import org.hibernate.accessor.HibernateAccessorValueWriter;
+import org.hibernate.accessor.ValueReader;
+import org.hibernate.accessor.ValueWriter;
 import org.hibernate.property.access.internal.AccessStrategyHelper;
 import org.hibernate.usertype.CompositeUserType;
 
@@ -27,7 +27,7 @@ import org.hibernate.usertype.CompositeUserType;
  * enabling JIT to inline and specialize.
  *
  * <p>For the {@link Kind#STANDARD} mode, delegates to
- * {@link HibernateAccessorValueReader}/{@link HibernateAccessorValueWriter}
+ * {@link ValueReader}/{@link ValueWriter}
  * from hibernate-accessor — ORM never implements those interfaces.
  */
 @Incubating
@@ -65,8 +65,8 @@ public final class PropertyValueAccessor {
 	private final Kind kind;
 
 	// STANDARD/READ_ONLY mode
-	private final @Nullable HibernateAccessorValueReader<?> reader;
-	private final @Nullable HibernateAccessorValueWriter writer;
+	private final @Nullable ValueReader<?> reader;
+	private final @Nullable ValueWriter writer;
 	private final int enhancementState;
 	private final @Nullable String propertyName;
 
@@ -87,8 +87,8 @@ public final class PropertyValueAccessor {
 	@SuppressWarnings("squid:S107")
 	private PropertyValueAccessor(
 			Kind kind,
-			@Nullable HibernateAccessorValueReader<?> reader,
-			@Nullable HibernateAccessorValueWriter writer,
+			@Nullable ValueReader<?> reader,
+			@Nullable ValueWriter writer,
 			int enhancementState,
 			@Nullable String propertyName,
 			@Nullable String mapKey,
@@ -111,8 +111,8 @@ public final class PropertyValueAccessor {
 	}
 
 	public static PropertyValueAccessor standard(
-			HibernateAccessorValueReader<?> reader,
-			@Nullable HibernateAccessorValueWriter writer,
+			ValueReader<?> reader,
+			@Nullable ValueWriter writer,
 			String propertyName) {
 		if ( writer == null ) {
 			return readonly( reader, propertyName );
@@ -124,7 +124,7 @@ public final class PropertyValueAccessor {
 	}
 
 	public static PropertyValueAccessor readonly(
-			HibernateAccessorValueReader<?> reader,
+			ValueReader<?> reader,
 			String propertyName) {
 		return new PropertyValueAccessor(
 				Kind.READ_ONLY, reader, null, ENHANCEMENT_STATE_NONE, propertyName,
@@ -133,8 +133,8 @@ public final class PropertyValueAccessor {
 	}
 
 	public static PropertyValueAccessor enhanced(
-			HibernateAccessorValueReader<?> reader,
-			@Nullable HibernateAccessorValueWriter writer,
+			ValueReader<?> reader,
+			@Nullable ValueWriter writer,
 			int enhancementState,
 			String propertyName) {
 		return new PropertyValueAccessor(

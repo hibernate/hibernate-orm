@@ -6,8 +6,8 @@ package org.hibernate.property.access.internal;
 
 import jakarta.persistence.AccessType;
 import jakarta.annotation.Nullable;
-import org.hibernate.accessor.HibernateAccessorValueReader;
-import org.hibernate.accessor.HibernateAccessorValueWriter;
+import org.hibernate.accessor.ValueReader;
+import org.hibernate.accessor.ValueWriter;
 import org.hibernate.property.access.spi.EnhancedGetterFieldImpl;
 import org.hibernate.property.access.spi.EnhancedSetterImpl;
 import org.hibernate.property.access.spi.EnhancedSetterMethodImpl;
@@ -84,8 +84,8 @@ public class PropertyAccessEnhancedImpl implements PropertyAccess {
 					);
 				}
 
-				final HibernateAccessorValueReader<?> reader;
-				final HibernateAccessorValueWriter writer;
+				final ValueReader<?> reader;
+				final ValueWriter writer;
 				final int enhancementState;
 
 				if ( classAccessType != null && getAccessType( containerJavaType, propertyName ) == AccessType.FIELD ) {

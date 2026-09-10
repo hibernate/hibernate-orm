@@ -9,8 +9,8 @@ import java.util.function.Supplier;
 
 import org.hibernate.HibernateException;
 import org.hibernate.mapping.Property;
-import org.hibernate.accessor.HibernateAccessorMultiValueReader;
-import org.hibernate.accessor.HibernateAccessorMultiValueWriter;
+import org.hibernate.accessor.MultiValueReader;
+import org.hibernate.accessor.MultiValueWriter;
 import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.metamodel.internal.EmbeddableInstantiatorPojoStandard;
 import org.hibernate.metamodel.internal.EmbeddableInstantiatorRecordIndirecting;
@@ -61,12 +61,12 @@ public class IdClassRepresentationStrategy implements EmbeddableRepresentationSt
 	}
 
 	@Override
-	public HibernateAccessorMultiValueReader getMultiValueReader() {
+	public MultiValueReader getMultiValueReader() {
 		return null;
 	}
 
 	@Override
-	public HibernateAccessorMultiValueWriter getMultiValueWriter() {
+	public MultiValueWriter getMultiValueWriter() {
 		return null;
 	}
 

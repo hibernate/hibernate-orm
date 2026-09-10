@@ -13,8 +13,8 @@ import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
-import org.hibernate.accessor.HibernateAccessorMultiValueReader;
-import org.hibernate.accessor.HibernateAccessorMultiValueWriter;
+import org.hibernate.accessor.MultiValueReader;
+import org.hibernate.accessor.MultiValueWriter;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.property.access.internal.PropertyAccessStrategyMapImpl;
 import org.hibernate.property.access.spi.PropertyAccess;
@@ -47,12 +47,12 @@ public class EmbeddableRepresentationStrategyMap implements EmbeddableRepresenta
 	}
 
 	@Override
-	public HibernateAccessorMultiValueReader getMultiValueReader() {
+	public MultiValueReader getMultiValueReader() {
 		return null;
 	}
 
 	@Override
-	public HibernateAccessorMultiValueWriter getMultiValueWriter() {
+	public MultiValueWriter getMultiValueWriter() {
 		return null;
 	}
 

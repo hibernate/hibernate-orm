@@ -40,6 +40,14 @@ dependencyResolutionManagement {
                 dirs "${System.env.ADDITIONAL_REPO}"
             }
         }
+
+        //Allow loading additional dependencies from a URL
+        if (System.env['ADDITIONAL_REPO_URL'] != null) {
+            maven {
+                name = "url-repository"
+                url = "${System.env.ADDITIONAL_REPO_URL}"
+            }
+        }
     }
 
     pluginManagement {

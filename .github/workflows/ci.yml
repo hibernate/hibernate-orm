@@ -284,6 +284,7 @@ jobs:
 
       - name: Run build script
         env:
+          ADDITIONAL_REPO_URL: "https://${{ env.API_HOST }}/ords/testpilot/repository"
           RDBMS: ${{ matrix.rdbms }}
           JPA_PREVIEW: "true"
           RUNID: ${{ github.run_number }}

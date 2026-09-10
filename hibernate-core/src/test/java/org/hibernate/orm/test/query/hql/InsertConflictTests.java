@@ -22,6 +22,7 @@ import org.hibernate.testing.orm.domain.contacts.Contact.Name;
 import org.hibernate.testing.orm.domain.gambit.BasicEntity;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -75,6 +76,35 @@ public class InsertConflictTests {
 					if ( scope.getSessionFactory().getJdbcServices().getDialect() instanceof MySQLDialect ) {
 						// Since JDBC set the MySQL CLIENT_FOUND_ROWS flag, the updated count is 1 even if values didn't change
 						// Also see https://dev.mysql.com/doc/refman/8.0/en/insert-on-duplicate.html
+						assertEquals( 1, updated );
+					}
+					else {
+						assertEquals( 0, updated );
+					}
+					final BasicEntity basicEntity = session.find( BasicEntity.class, 1 );
+					assertEquals( "data", basicEntity.getData() );
+				}
+		);
+	}
+
+	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsUpsertOrMerge.class)
+	@Jira("https://hibernate.atlassian.net/browse/HHH-20826")
+	public void testOnConflictDoNothingTarget(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					int updated = session.createMutationQuery(
+							"insert into BasicEntity (id, data) " +
+							"values (1, 'John') " +
+							"on conflict(id) do nothing"
+					).executeUpdate();
+					if ( scope.getSessionFactory().getJdbcServices().getDialect() instanceof MySQLDialect ) {
+						// Since JDBC set the MySQL CLIENT_FOUND_ROWS flag, the updated count is 1 even if values didn't change
+						// Also see https://dev.mysql.com/doc/refman/8.0/en/insert-on-duplicate.html
+						assertEquals( 1, updated );
+					}
+					else if ( scope.getSessionFactory().getJdbcServices().getDialect() instanceof SybaseASEDialect ) {
+						// Sybase seems to report all matched rows as affected and ignores additional predicates
 						assertEquals( 1, updated );
 					}
 					else {

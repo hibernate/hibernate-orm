@@ -367,7 +367,9 @@ public class DB2SqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslat
 	@Override
 	protected void visitInsertStatementOnly(InsertSelectStatement statement) {
 		final boolean closeWrapper = renderReturningClause( statement );
-		if ( statement.getConflictClause() == null || statement.getConflictClause().isDoNothing() ) {
+		if ( statement.getConflictClause() == null
+			|| statement.getConflictClause().isDoNothing()
+				&& statement.getConflictClause().getConstraintColumnNames().isEmpty() ) {
 			// Render plain insert statement and possibly run into unique constraint violation
 			super.visitInsertStatementOnly( statement );
 		}

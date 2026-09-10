@@ -65,7 +65,7 @@ public class SqmCteTable<T> extends AnonymousTupleType<T> implements JpaCteCrite
 			String aliasStem,
 			List<SqlSelection> sqlSelections,
 			FromClauseAccess fromClauseAccess) {
-		return new CteTupleTableGroupProducer( this, aliasStem, toSqlTypedMappings( sqlSelections ), fromClauseAccess );
+		return new CteTupleTableGroupProducer( this, aliasStem, toSqlTypedMappings( this, sqlSelections ), fromClauseAccess );
 	}
 
 	@Override

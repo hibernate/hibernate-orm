@@ -382,6 +382,12 @@ public abstract class AbstractHANADialect extends Dialect {
 		return 7;
 	}
 
+	@Override
+	public int getMaxTimestampPrecision() {
+		return 7;
+	}
+
+	@Override
 	public int getDefaultDecimalPrecision() {
 		//the maximum on HANA
 		return 34;

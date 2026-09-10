@@ -12,6 +12,8 @@ import org.hibernate.sql.ast.spi.SqlAstWalker;
 import org.hibernate.sql.ast.spi.query.select.QueryPart;
 import org.hibernate.sql.ast.spi.query.select.SelectStatement;
 
+import static org.hibernate.internal.util.StringHelper.isEmpty;
+
 /**
  * A table reference for a query part.
  *
@@ -51,5 +53,14 @@ public class QueryPartTableReference extends DerivedTableReference {
 		return selectStatement.getQueryPart().queryQuerySpecs(
 			querySpec -> querySpec.getFromClause().queryTableReferences( tableReferenceBooleanFunction )
 		);
+	}
+
+	@Override
+	public boolean containsAffectedTableName(String requestedName) {
+		final Function<TableReference, Boolean> tableReferenceBooleanFunction =
+				tableReference -> tableReference.containsAffectedTableName( requestedName ) ? Boolean.TRUE : null;
+		return isEmpty( requestedName ) || Boolean.TRUE.equals( selectStatement.getQueryPart().queryQuerySpecs(
+				querySpec -> querySpec.getFromClause().queryTableReferences( tableReferenceBooleanFunction )
+		) );
 	}
 }

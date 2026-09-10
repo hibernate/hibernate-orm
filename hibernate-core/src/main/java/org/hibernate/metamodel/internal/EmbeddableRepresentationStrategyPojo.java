@@ -22,9 +22,9 @@ import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.accessor.HibernateAccessorInstantiator;
-import org.hibernate.accessor.HibernateAccessorMultiValueReader;
-import org.hibernate.accessor.HibernateAccessorMultiValueWriter;
+import org.hibernate.accessor.Instantiator;
+import org.hibernate.accessor.MultiValueReader;
+import org.hibernate.accessor.MultiValueWriter;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.PropertyAccessorService;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -43,8 +43,8 @@ public class EmbeddableRepresentationStrategyPojo implements EmbeddableRepresent
 	private final PropertyAccess[] propertyAccesses;
 	private final Map<String, Integer> attributeNameToPositionMap;
 
-	private final @Nullable HibernateAccessorMultiValueReader multiValueReader;
-	private final @Nullable HibernateAccessorMultiValueWriter multiValueWriter;
+	private final @Nullable MultiValueReader multiValueReader;
+	private final @Nullable MultiValueWriter multiValueWriter;
 	private final EmbeddableInstantiator instantiator;
 	private final Map<Object, EmbeddableInstantiator> instantiatorsByDiscriminator;
 	private final Map<String, EmbeddableInstantiator> instantiatorsByClass;
@@ -164,7 +164,7 @@ public class EmbeddableRepresentationStrategyPojo implements EmbeddableRepresent
 			RuntimeModelCreationContext creationContext) {
 		final var accessorService = creationContext.getServiceRegistry()
 				.requireService( PropertyAccessorService.class );
-		final HibernateAccessorInstantiator<?> hibernateInstantiator =
+		final Instantiator<?> hibernateInstantiator =
 				PropertyAccessHelper.resolveInstantiator( embeddableClass, accessorService );
 		if ( hibernateInstantiator != null ) {
 			return new EmbeddableInstantiatorPojoOptimized(
@@ -251,12 +251,12 @@ public class EmbeddableRepresentationStrategyPojo implements EmbeddableRepresent
 	}
 
 	@Override
-	public @Nullable HibernateAccessorMultiValueReader getMultiValueReader() {
+	public @Nullable MultiValueReader getMultiValueReader() {
 		return multiValueReader;
 	}
 
 	@Override
-	public @Nullable HibernateAccessorMultiValueWriter getMultiValueWriter() {
+	public @Nullable MultiValueWriter getMultiValueWriter() {
 		return multiValueWriter;
 	}
 

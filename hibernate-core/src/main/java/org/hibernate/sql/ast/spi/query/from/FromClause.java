@@ -195,22 +195,27 @@ public class FromClause implements SqlAstNode {
 	}
 
 	private <T> T queryTableReferences(TableGroup tableGroup, Function<TableReference, T> action) {
-		final T result = action.apply( tableGroup.getPrimaryTableReference() );
-		if ( result != null ) {
-			return result;
-		}
-		for ( TableReferenceJoin tableReferenceJoin : tableGroup.getTableReferenceJoins() ) {
-			final T nestedResult = action.apply( tableReferenceJoin.getJoinedTableReference() );
+		if ( tableGroup.isInitialized() ) {
+			final T result = action.apply( tableGroup.getPrimaryTableReference() );
+			if ( result != null ) {
+				return result;
+			}
+			for ( TableReferenceJoin tableReferenceJoin : tableGroup.getTableReferenceJoins() ) {
+				final T nestedResult = action.apply( tableReferenceJoin.getJoinedTableReference() );
+				if ( nestedResult != null ) {
+					return nestedResult;
+				}
+			}
+
+			final T nestedResult = queryTableReferences( tableGroup.getTableGroupJoins(), action );
 			if ( nestedResult != null ) {
 				return nestedResult;
 			}
+			return queryTableReferences( tableGroup.getNestedTableGroupJoins(), action );
 		}
-
-		final T nestedResult = queryTableReferences( tableGroup.getTableGroupJoins(), action );
-		if ( nestedResult != null ) {
-			return nestedResult;
+		else {
+			return null;
 		}
-		return queryTableReferences( tableGroup.getNestedTableGroupJoins(), action );
 	}
 
 	private <T> T queryTableReferences(List<TableGroupJoin> tableGroupJoins, Function<TableReference, T> action) {

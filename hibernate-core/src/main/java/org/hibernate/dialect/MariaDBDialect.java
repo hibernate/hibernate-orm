@@ -339,17 +339,22 @@ public class MariaDBDialect extends MySQLDialect {
 	}
 
 	/**
-	 * @return {@code true} for 10.6 and above because Maria supports
-	 *         {@code insert ... returning} even though MySQL does not
+	 * MariaDB supports {@code insert ... returning} since 10.5, and so for
+	 * every version supported by this dialect, even though MySQL does not.
+	 * Single-table {@code update ... returning} was added in 13.0 and is
+	 * enabled for 13.0 and above.
 	 */
 	@Override
 	public GeneratedValuesSupport getGeneratedValuesSupport() {
-		return GeneratedValuesSupport.builder( super.getGeneratedValuesSupport() )
+		final var builder = GeneratedValuesSupport.builder( super.getGeneratedValuesSupport() )
 				.enable(
 						GeneratedValuesSupport.Capability.INSERT_RETURNING,
 						GeneratedValuesSupport.Capability.INSERT_RETURNING_ROW_ID
-				)
-				.build();
+				);
+		if ( getVersion().isSameOrAfter( 13 ) ) {
+			builder.enable( GeneratedValuesSupport.Capability.UPDATE_RETURNING );
+		}
+		return builder.build();
 	}
 
 	@Override

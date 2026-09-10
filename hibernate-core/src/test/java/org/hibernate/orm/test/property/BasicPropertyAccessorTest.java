@@ -4,7 +4,7 @@
  */
 package org.hibernate.orm.test.property;
 
-import org.hibernate.accessor.HibernateAccessorFactory;
+import org.hibernate.accessor.AccessorFactory;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBasicImpl;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.PropertyAccessorService;
@@ -91,8 +91,8 @@ public class BasicPropertyAccessorTest {
 		static final PropertyAccessorService INSTANCE = new TestPropertyAccessorService();
 
 		@Override
-		public HibernateAccessorFactory hibernateAccessorFactory() {
-			return HibernateAccessorFactory.reflection();
+		public AccessorFactory hibernateAccessorFactory() {
+			return AccessorFactory.reflection();
 		}
 	}
 }

@@ -57,10 +57,9 @@ public class TestConsole {
 		}
 	}
 
-	@SuppressWarnings("unchecked")
 	private void printPersons(StringBuilder sb) {
 		List<Person> persons = entityManager.createQuery(
-				"select p from Person p order by p.id").getResultList();
+				"select p from Person p order by p.id", Person.class).getResultList();
 
 		sb.append("Persons:\n");
 		for (Person p : persons) {
@@ -197,7 +196,7 @@ public class TestConsole {
 	@SuppressWarnings("unchecked")
 	private void printAddresses(StringBuilder sb) {
 		List<Address> addresses = entityManager.createQuery(
-				"select a from Address a order by a.id").getResultList();
+				"select a from Address a order by a.id", Address.class).getResultList();
 
 		sb.append("Addresses:\n");
 		for (Address a : addresses) {
@@ -379,8 +378,8 @@ public class TestConsole {
 	}
 
 	private boolean hasData() {
-		return (((Long) entityManager.createQuery("select count(a) from Address a").getSingleResult()) +
-				((Long) entityManager.createQuery("select count(p) from Person p").getSingleResult())) > 0;
+		return ( (entityManager.createQuery("select count(a) from Address a", Long.class).getSingleResult()) +
+				(entityManager.createQuery("select count(p) from Person p", Long.class).getSingleResult()) ) > 0;
 	}
 
 	private void populateTestData() {

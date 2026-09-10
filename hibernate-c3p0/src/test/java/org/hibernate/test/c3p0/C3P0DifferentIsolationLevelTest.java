@@ -37,14 +37,14 @@ import static org.mockito.Mockito.verify;
 		settingProviders = @SettingProvider( settingName = CONNECTION_PROVIDER, provider = C3P0DifferentIsolationLevelTest.ConnectionProviderProvider.class )
 )
 @DomainModel(annotatedClasses = C3P0DifferentIsolationLevelTest.Person.class)
-@SessionFactory(useCollectingStatementInspector = true)
+@SessionFactory(useCollectingStatementObserver = true)
 public class C3P0DifferentIsolationLevelTest {
 
 	private static final C3P0ProxyConnectionProvider connectionProvider = new C3P0ProxyConnectionProvider();
 
 	@Test
 	public void testStoredProcedureOutParameter(SessionFactoryScope factoryScope) throws SQLException {
-		var sqlCollector = factoryScope.getCollectingStatementInspector();
+		var sqlCollector = factoryScope.getCollectingStatementObserver();
 		sqlCollector.clear();
 		connectionProvider.clear();
 

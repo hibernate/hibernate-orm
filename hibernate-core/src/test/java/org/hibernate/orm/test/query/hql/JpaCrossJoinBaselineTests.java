@@ -17,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.fail;
  * @author Steve Ebersole
  */
 @DomainModel( standardModels = StandardDomainModel.RETAIL )
-@SessionFactory( useCollectingStatementInspector = true )
+@SessionFactory( useCollectingStatementObserver = true )
 public class JpaCrossJoinBaselineTests {
 	@Test
 	public void testCrossJoin(SessionFactoryScope scope) {

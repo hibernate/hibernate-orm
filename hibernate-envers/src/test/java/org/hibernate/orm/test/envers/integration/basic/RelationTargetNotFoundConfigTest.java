@@ -73,8 +73,8 @@ public class RelationTargetNotFoundConfigTest {
 		// Simulate the removal of main data table data by removing FooBar1 (an audited entity)
 		scope.inTransaction( em -> {
 			// obviously we assume either there isn't a FK between tables or the users do something like this
-			em.createNativeQuery( "UPDATE Foo Set fooBar_id = NULL WHERE id = 1" ).executeUpdate();
-			em.createNativeQuery( "DELETE FROM FooBar WHERE id = 1" ).executeUpdate();
+			em.createNativeStatement( "UPDATE Foo Set fooBar_id = NULL WHERE id = 1" ).execute();
+			em.createNativeStatement( "DELETE FROM FooBar WHERE id = 1" ).execute();
 		} );
 
 		// This shouldn't fail because the audited entity data is cached in the audit table and exists.
@@ -86,9 +86,7 @@ public class RelationTargetNotFoundConfigTest {
 		} );
 
 		// Simulate the removal of envers data via purge process by removing FooBar2 (an audited entity)
-		scope.inTransaction( em -> {
-			em.createNativeQuery( "DELETE FROM FooBar_AUD WHERE id = 2" ).executeUpdate();
-		} );
+		scope.inTransaction( em -> em.createNativeStatement( "DELETE FROM FooBar_AUD WHERE id = 2" ).execute() );
 
 		// Test querying history record where the reference audit row no longer exists.
 		scope.inEntityManager( em -> {
@@ -102,8 +100,8 @@ public class RelationTargetNotFoundConfigTest {
 		// this simulates the removal of a non-audited entity from the main table
 		scope.inTransaction( em -> {
 			// obviously we assume either there isn't a FK between tables or the users do something like this
-			em.createNativeQuery( "UPDATE Foo SET bar_id = NULL WHERE id = 1" ).executeUpdate();
-			em.createNativeQuery( "DELETE FROM Bar WHERE id = 1" ).executeUpdate();
+			em.createNativeStatement( "UPDATE Foo SET bar_id = NULL WHERE id = 1" ).execute();
+			em.createNativeStatement( "DELETE FROM Bar WHERE id = 1" ).execute();
 		} );
 
 		// Test querying history record where the reference non-audited row no longer exists.

@@ -21,7 +21,7 @@ import jakarta.persistence.Table;
 import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.cfg.QuerySettings;
 
-import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.jdbc.CollectingStatementObserver;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
@@ -60,7 +60,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 		name = QuerySettings.FAIL_ON_PAGINATION_OVER_COLLECTION_FETCH,
 		value = "true"
 ))
-@SessionFactory(useCollectingStatementInspector = true)
+@SessionFactory(useCollectingStatementObserver = true)
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsOffsetInSubquery.class)
 public class CollectionFetchPaginationEdgeCasesTest {
 
@@ -111,7 +111,7 @@ public class CollectionFetchPaginationEdgeCasesTest {
 	 */
 	@Test
 	void chainedPluralFetches(SessionFactoryScope scope) {
-		final SQLStatementInspector sql = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver sql = scope.getCollectingStatementObserver();
 		scope.inTransaction( s -> {
 			sql.clear();
 
@@ -145,7 +145,7 @@ public class CollectionFetchPaginationEdgeCasesTest {
 	 */
 	@Test
 	void orderColumnOnFetchedList(SessionFactoryScope scope) {
-		final SQLStatementInspector sql = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver sql = scope.getCollectingStatementObserver();
 		scope.inTransaction( s -> {
 			sql.clear();
 
@@ -180,7 +180,7 @@ public class CollectionFetchPaginationEdgeCasesTest {
 	 */
 	@Test
 	void nestedPluralUnderSingularFetchPaginates(SessionFactoryScope scope) {
-		final SQLStatementInspector sql = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver sql = scope.getCollectingStatementObserver();
 		scope.inTransaction( s -> {
 			sql.clear();
 
@@ -218,7 +218,7 @@ public class CollectionFetchPaginationEdgeCasesTest {
 	 */
 	@Test
 	void sqlRestrictionOnFetchedCollection(SessionFactoryScope scope) {
-		final SQLStatementInspector sql = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver sql = scope.getCollectingStatementObserver();
 		scope.inTransaction( s -> {
 			sql.clear();
 

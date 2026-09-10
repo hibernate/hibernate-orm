@@ -21,7 +21,7 @@ import org.hibernate.dialect.jdbc.spi.ParameterLimits;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.jdbc.CollectingStatementObserver;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -55,7 +55,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @ServiceRegistry(
 		settingProviders = @SettingProvider( provider = MultiLoadSubSelectCollectionDialectWithLimitTest.TestSettingProvider.class, settingName = AvailableSettings.DIALECT)
 )
-@SessionFactory(generateStatistics = true, useCollectingStatementInspector = true)
+@SessionFactory(generateStatistics = true, useCollectingStatementObserver = true)
 @RequiresDialect( value = H2Dialect.class )
 public class MultiLoadSubSelectCollectionDialectWithLimitTest {
 	public static class TestSettingProvider implements SettingProvider.Provider<String> {
@@ -108,7 +108,7 @@ public class MultiLoadSubSelectCollectionDialectWithLimitTest {
 	@Test
 	@JiraKey(value = "HHH-12740")
 	public void testSubselect(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 		final Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();
 		statementInspector.clear();
 

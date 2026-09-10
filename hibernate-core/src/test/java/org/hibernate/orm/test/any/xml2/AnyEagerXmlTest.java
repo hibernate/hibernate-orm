@@ -5,7 +5,7 @@
 package org.hibernate.orm.test.any.xml2;
 
 import org.hibernate.Hibernate;
-import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.jdbc.CollectingStatementObserver;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -19,7 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 		"org/hibernate/orm/test/any/xml2/NamedAnyContainerEager.xml",
 		"org/hibernate/orm/test/any/xml2/NamedProperties.xml",
 } )
-@SessionFactory(useCollectingStatementInspector = true)
+@SessionFactory(useCollectingStatementObserver = true)
 public class AnyEagerXmlTest {
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
@@ -28,7 +28,7 @@ public class AnyEagerXmlTest {
 
 	@Test
 	public void testFetchEagerAny(SessionFactoryScope scope) {
-		final SQLStatementInspector sqlCollector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver sqlCollector = scope.getCollectingStatementObserver();
 
 		scope.inTransaction( (session) -> {
 			final NamedAnyContainer container = new NamedAnyContainer( 1, "stuff" );
@@ -58,7 +58,7 @@ public class AnyEagerXmlTest {
 
 	@Test
 	public void testFetchEagerManyToAny(SessionFactoryScope scope) {
-		final SQLStatementInspector sqlCollector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver sqlCollector = scope.getCollectingStatementObserver();
 
 		scope.inTransaction( (session) -> {
 			final NamedAnyContainer container = new NamedAnyContainer( 1, "stuff" );

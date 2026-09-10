@@ -9,7 +9,7 @@ import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.SybaseASEDialect;
 
-import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.jdbc.CollectingStatementObserver;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -31,7 +31,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 		settings = @Setting( name = AvailableSettings.JPA_QUERY_COMPLIANCE, value = "true" )
 )
 @DomainModel( standardModels = StandardDomainModel.RETAIL )
-@SessionFactory( useCollectingStatementInspector = true )
+@SessionFactory( useCollectingStatementObserver = true )
 @SkipForDialect(
 		dialectClass = SybaseASEDialect.class,
 		reason = "Sybase Adaptive Server does not support SQL cross-joins; this query resorts to " +
@@ -49,7 +49,7 @@ public class JpaCrossJoinTests {
 	@SkipForDialect( dialectClass = AltibaseDialect.class, reason = "Altibase dialect emulate cross join with inner join")
 	@SkipForDialect(dialectClass = InformixDialect.class, reason = "Informix does not have cross joins")
 	public void test2Roots(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 		statementInspector.clear();
 
 		final String qry = "select i from LineItem i, Order o join o.salesAssociate a on i.quantity = a.id";
@@ -63,7 +63,7 @@ public class JpaCrossJoinTests {
 	@SkipForDialect( dialectClass = AltibaseDialect.class, reason = "Altibase dialect emulate cross join with inner join")
 	@SkipForDialect(dialectClass = InformixDialect.class, reason = "Informix does not have cross joins")
 	public void test2Roots2(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 		statementInspector.clear();
 
 		final String qry = "select i from LineItem i, Order o join o.salesAssociate a on i.product.vendor.name = a.name.familyName";

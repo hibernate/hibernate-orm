@@ -23,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@SessionFactory(useCollectingStatementInspector = true)
+@SessionFactory(useCollectingStatementObserver = true)
 @DomainModel(annotatedClasses = {JoinFetchEagerAnyTest.AnyThing.class,
 		JoinFetchEagerAnyTest.SomeThing.class, JoinFetchEagerAnyTest.SomeOtherThing.class})
 class JoinFetchEagerAnyTest {
@@ -42,7 +42,7 @@ class JoinFetchEagerAnyTest {
 			s.persist( someThing );
 			s.persist( anyThing );
 		} );
-		final var statementInspector = scope.getCollectingStatementInspector();
+		final var statementInspector = scope.getCollectingStatementObserver();
 
 		// join fetch
 		statementInspector.clear();
@@ -102,7 +102,7 @@ class JoinFetchEagerAnyTest {
 			s.persist( otherThing );
 			s.persist( anyThingElse );
 		} );
-		final var statementInspector = scope.getCollectingStatementInspector();
+		final var statementInspector = scope.getCollectingStatementObserver();
 
 		// join fetch
 		statementInspector.clear();

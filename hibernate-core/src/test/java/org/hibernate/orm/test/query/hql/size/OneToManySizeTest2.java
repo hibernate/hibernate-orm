@@ -28,7 +28,7 @@ import static org.junit.Assert.assertTrue;
 @DomainModel(
 		annotatedClasses = { Skill.class, Teacher.class, Student.class }
 )
-@SessionFactory( useCollectingStatementInspector = true )
+@SessionFactory( useCollectingStatementObserver = true )
 public class OneToManySizeTest2 {
 	@Test
 	public void testSize(SessionFactoryScope scope) {

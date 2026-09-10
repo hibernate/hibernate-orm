@@ -33,7 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@SessionFactory(useCollectingStatementInspector = true)
+@SessionFactory(useCollectingStatementObserver = true)
 @DomainModel(annotatedClasses = {
 		JoinFetchAnyWithFilterTest.AnyThing.class,
 		JoinFetchAnyWithFilterTest.FilteredThing.class,

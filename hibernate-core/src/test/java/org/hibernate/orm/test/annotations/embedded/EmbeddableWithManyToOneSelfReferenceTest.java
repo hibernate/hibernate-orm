@@ -4,7 +4,7 @@
  */
 package org.hibernate.orm.test.annotations.embedded;
 
-import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.jdbc.CollectingStatementObserver;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -33,7 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 				EmbeddableWithManyToOneSelfReferenceTest.IntIdEntity.class
 		}
 )
-@SessionFactory(useCollectingStatementInspector = true)
+@SessionFactory(useCollectingStatementObserver = true)
 public class EmbeddableWithManyToOneSelfReferenceTest {
 
 	@BeforeEach
@@ -70,7 +70,7 @@ public class EmbeddableWithManyToOneSelfReferenceTest {
 
 	@Test
 	public void testGet(SessionFactoryScope scope) {
-		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 		statementInspector.clear();
 		scope.inTransaction(
 				session -> {

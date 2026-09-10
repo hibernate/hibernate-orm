@@ -27,7 +27,7 @@ import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.jdbc.CollectingStatementObserver;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
 import org.hibernate.testing.orm.junit.RequiresDialect;
@@ -152,9 +152,9 @@ public class EmbeddedTableTests {
 	@Test
 	@ServiceRegistry
 	@DomainModel(annotatedClasses = {EmbeddedTableTests.Tag.class, EmbeddedTableTests.Post.class})
-	@SessionFactory(useCollectingStatementInspector = true)
+	@SessionFactory(useCollectingStatementObserver = true)
 	void testDatabase(SessionFactoryScope factoryScope) {
-		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
+		final CollectingStatementObserver sqlCollector = factoryScope.getCollectingStatementObserver();
 		sqlCollector.clear();
 
 		factoryScope.inTransaction( (session) -> {

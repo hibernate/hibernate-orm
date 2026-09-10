@@ -29,7 +29,7 @@ import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.internal.ConvertedBasicTypeImpl;
 
-import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.jdbc.CollectingStatementObserver;
 import org.hibernate.testing.orm.junit.BootstrapServiceRegistry;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
@@ -65,7 +65,7 @@ import static org.hamcrest.Matchers.isOneOf;
 		)
 )
 @DomainModel(annotatedClasses = BooleanMappingTests.EntityOfBooleans.class)
-@SessionFactory(useCollectingStatementInspector = true)
+@SessionFactory(useCollectingStatementObserver = true)
 public class BooleanMappingTests {
 	@Test
 	public void verifyMappings(SessionFactoryScope scope) {
@@ -334,7 +334,7 @@ public class BooleanMappingTests {
 	public void testBooleanFunctionAsPredicate(SessionFactoryScope scope) {
 		// Not strictly relevant to boolean mappings, but test that boolean
 		// functions work *as a* predicate after HHH-16182
-		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 		statementInspector.clear();
 
 		scope.inTransaction( (session) -> {
@@ -361,7 +361,7 @@ public class BooleanMappingTests {
 	public void testBooleanFunctionInPredicate(SessionFactoryScope scope) {
 		// Not strictly relevant to boolean mappings, but test that boolean
 		// functions work *in a* predicate after HHH-16182
-		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 		statementInspector.clear();
 
 		scope.inTransaction( (session) -> {

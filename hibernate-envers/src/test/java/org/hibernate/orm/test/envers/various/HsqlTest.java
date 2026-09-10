@@ -130,7 +130,7 @@ public class HsqlTest {
 	}
 
 	private static boolean hasData(EntityManager entityManager) {
-		return (((Long) entityManager.createQuery( "select count(a) from Address a" ).getSingleResult()) +
-				((Long) entityManager.createQuery( "select count(p) from Person p" ).getSingleResult())) > 0;
+		return ( (entityManager.createQuery( "select count(a) from Address a", Long.class ).getSingleResult()) +
+				(entityManager.createQuery( "select count(p) from Person p", Long.class ).getSingleResult()) ) > 0;
 	}
 }

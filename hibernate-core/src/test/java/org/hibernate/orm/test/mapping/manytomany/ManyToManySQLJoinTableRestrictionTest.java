@@ -14,7 +14,7 @@ import org.hibernate.annotations.SQLInsert;
 import org.hibernate.annotations.SQLJoinTableRestriction;
 
 import org.hibernate.cfg.BatchSettings;
-import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.jdbc.CollectingStatementObserver;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -45,7 +45,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 		ManyToManySQLJoinTableRestrictionTest.User.class,
 		ManyToManySQLJoinTableRestrictionTest.ProjectUsers.class,
 } )
-@SessionFactory( useCollectingStatementInspector = true )
+@SessionFactory( useCollectingStatementObserver = true )
 @Jira( "https://hibernate.atlassian.net/browse/HHH-17105" )
 public class ManyToManySQLJoinTableRestrictionTest {
 	@BeforeEach
@@ -82,7 +82,7 @@ public class ManyToManySQLJoinTableRestrictionTest {
 
 	@Test
 	public void testJoinTableRemoveEmptyCollection(SessionFactoryScope scope) {
-		final SQLStatementInspector inspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver inspector = scope.getCollectingStatementObserver();
 		scope.inTransaction( session -> {
 			final Project p1 = session.find( Project.class, "p1" );
 			p1.getManagers().remove( p1.getManagers().iterator().next() );
@@ -100,7 +100,7 @@ public class ManyToManySQLJoinTableRestrictionTest {
 
 	@Test
 	public void testJoinTableRemoveNonEmptyCollection(SessionFactoryScope scope) {
-		final SQLStatementInspector inspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver inspector = scope.getCollectingStatementObserver();
 		scope.inTransaction( session -> {
 			final User user = session.find( User.class, "user2" );
 			final Project p3 = session.find( Project.class, "p3" );
@@ -119,7 +119,7 @@ public class ManyToManySQLJoinTableRestrictionTest {
 
 	@Test
 	public void testJoinTableUpdate(SessionFactoryScope scope) {
-		final SQLStatementInspector inspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver inspector = scope.getCollectingStatementObserver();
 		scope.inTransaction( session -> {
 			final Project p3 = session.find( Project.class, "p3" );
 			assertThat( p3.getOrderedUsers().stream().map( User::getName ) ).containsExactly( "user3", "user2" );

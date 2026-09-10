@@ -49,7 +49,7 @@ import static org.junit.jupiter.api.Assumptions.assumeFalse;
 		FinalFieldTest.BookWithFinalManyToMany.class,
 		FinalFieldTest.EntityWithFinalElementCollection.class
 })
-@SessionFactory(useCollectingStatementInspector = true)
+@SessionFactory(useCollectingStatementObserver = true)
 @BytecodeEnhanced(runNotEnhancedAsWell = true)
 public class FinalFieldTest {
 
@@ -63,7 +63,7 @@ public class FinalFieldTest {
 
 	@Test
 	public void finalFieldNotUpdatable(SessionFactoryScope scope) {
-		var statementInspector = scope.getCollectingStatementInspector();
+		var statementInspector = scope.getCollectingStatementObserver();
 
 		var persistedEntity = new EntityWithFinalField( "foo", "foo".toCharArray() );
 		persistedEntity.setName( "Some name" );
@@ -89,7 +89,7 @@ public class FinalFieldTest {
 
 	@Test
 	public void finalFieldNotDirtyChecked(SessionFactoryScope scope) {
-		var statementInspector = scope.getCollectingStatementInspector();
+		var statementInspector = scope.getCollectingStatementObserver();
 
 		var persistedEntity = new EntityWithFinalField( "foo", "foo".toCharArray() );
 		persistedEntity.setName( "Some name" );

@@ -26,7 +26,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel(annotatedClasses = A.class)
-@SessionFactory(useCollectingStatementInspector = true)
+@SessionFactory(useCollectingStatementObserver = true)
 public class PessimisticWriteLockTimeoutTest {
 	@BeforeEach
 	public void createTestData(SessionFactoryScope factoryScope) {
@@ -46,7 +46,7 @@ public class PessimisticWriteLockTimeoutTest {
 	@RequiresDialect(SQLServerDialect.class)
 	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsNoWait.class )
 	public void testNoWait(SessionFactoryScope factoryScope) {
-		final var sqlCollector = factoryScope.getCollectingStatementInspector();
+		final var sqlCollector = factoryScope.getCollectingStatementObserver();
 		sqlCollector.clear();
 
 		factoryScope.inTransaction( (session) -> {
@@ -65,7 +65,7 @@ public class PessimisticWriteLockTimeoutTest {
 	@RequiresDialect(PostgreSQLDialect.class)
 	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsSkipLocked.class )
 	public void testSkipLocked(SessionFactoryScope factoryScope) {
-		final var sqlCollector = factoryScope.getCollectingStatementInspector();
+		final var sqlCollector = factoryScope.getCollectingStatementObserver();
 		sqlCollector.clear();
 
 		factoryScope.inTransaction( (session) -> {

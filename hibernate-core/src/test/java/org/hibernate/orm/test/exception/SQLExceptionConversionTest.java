@@ -17,7 +17,7 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.SQLGrammarException;
 
-import org.hibernate.testing.SkipForDialect;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -40,8 +40,8 @@ import static org.junit.jupiter.api.Assertions.fail;
 public class SQLExceptionConversionTest {
 
 	@Test
-	@SkipForDialect(value = HANADialect.class, comment = "Hana do not support FK violation checking")
-	@SkipForDialect(value = TiDBDialect.class, comment = "TiDB do not support FK violation checking")
+	@SkipForDialect(dialectClass = HANADialect.class, reason = "Hana do not support FK violation checking")
+	@SkipForDialect(dialectClass = TiDBDialect.class, reason = "TiDB do not support FK violation checking")
 	public void testIntegrityViolation(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 

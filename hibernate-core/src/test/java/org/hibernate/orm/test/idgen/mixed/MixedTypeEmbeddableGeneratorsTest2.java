@@ -35,7 +35,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 				MixedTypeEmbeddableGeneratorsTest2.History.class,
 		}
 )
-@SessionFactory( useCollectingStatementInspector = true )
+@SessionFactory( useCollectingStatementObserver = true )
 @ServiceRegistry(
 		settingProviders = @SettingProvider(
 				settingName = CurrentTimestampGeneration.CLOCK_SETTING_NAME,
@@ -46,7 +46,7 @@ class MixedTypeEmbeddableGeneratorsTest2 {
 
 	@Test
 	void testMixedTiming(SessionFactoryScope scope) {
-		final var statementInspector = scope.getCollectingStatementInspector();
+		final var statementInspector = scope.getCollectingStatementObserver();
 
 		statementInspector.clear();
 		scope.inTransaction( session -> {

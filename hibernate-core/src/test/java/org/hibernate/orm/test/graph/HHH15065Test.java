@@ -10,7 +10,7 @@ import java.util.List;
 
 import org.hibernate.graph.RootGraph;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.jdbc.CollectingStatementObserver;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -27,7 +27,7 @@ import jakarta.persistence.ManyToOne;
 		HHH15065Test.Person.class,
 	}
 )
-@SessionFactory(useCollectingStatementInspector = true)
+@SessionFactory(useCollectingStatementObserver = true)
 class HHH15065Test {
 
 	@Test
@@ -41,7 +41,7 @@ class HHH15065Test {
 				.getResultList();
 		} );
 
-		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 		List<String> sqlQueries = statementInspector.getSqlQueries();
 		assertEquals( 1, sqlQueries.size() );
 		assertEquals( "select b1_0.id,a1_0.id,a1_0.name,ca1_0.id,ca1_0.name,ce1_0.id,ce1_0.name,e1_0.id,e1_0.name" +

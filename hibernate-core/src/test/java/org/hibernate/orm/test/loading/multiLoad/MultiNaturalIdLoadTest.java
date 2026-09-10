@@ -15,7 +15,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.sql.ast.spi.RowValueSupport;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.loader.ast.internal.MultiKeyLoadHelper;
-import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.jdbc.CollectingStatementObserver;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -45,7 +45,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 				MultiNaturalIdLoadTest.CompositeNaturalIdEntity.class
 		}
 )
-@SessionFactory( useCollectingStatementInspector = true )
+@SessionFactory( useCollectingStatementObserver = true )
 class MultiNaturalIdLoadTest {
 
 	private final Pattern p = Pattern.compile( "\\(\\?,\\?\\)" );
@@ -66,6 +66,7 @@ class MultiNaturalIdLoadTest {
 					}
 				}
 		);
+		scope.getCollectingStatementObserver().clear();
 	}
 
 	@AfterEach
@@ -75,10 +76,9 @@ class MultiNaturalIdLoadTest {
 
 	@Test
 	public void testBasicUnorderedMultiLoad(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 		scope.inTransaction(
 				session -> {
-					statementInspector.getSqlQueries().clear();
 
 					List<SimpleNaturalIdEntity> results = session
 							.byMultipleNaturalId( SimpleNaturalIdEntity.class )
@@ -113,10 +113,9 @@ class MultiNaturalIdLoadTest {
 
 	@Test
 	public void testBasicOrderedMultiLoad(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 		scope.inTransaction(
 				session -> {
-					statementInspector.getSqlQueries().clear();
 
 					List<String> ids = List.of("Entity4","Entity2","Entity5","Entity1","Entity3");
 					List<SimpleNaturalIdEntity> results = session
@@ -149,10 +148,9 @@ class MultiNaturalIdLoadTest {
 
 	@Test
 	public void testCompoundNaturalIdUnorderedMultiLoad(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 		scope.inTransaction(
 				session -> {
-					statementInspector.getSqlQueries().clear();
 
 					List<String[]> ids = List.of( new String[]{"Entity1", "1Entity"}, new String[]{"Entity2", "2Entity"}, new String[]{"Entity3", "3Entity"} );
 					List<CompositeNaturalIdEntity> results = session
@@ -175,10 +173,9 @@ class MultiNaturalIdLoadTest {
 
 	@Test
 	public void testCompoundNaturalIdOrderedMultiLoad(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 		scope.inTransaction(
 				session -> {
-					statementInspector.getSqlQueries().clear();
 
 					List<String[]> ids = List.of( new String[]{"Entity4", "4Entity"}, new String[]{"Entity2", "2Entity"}, new String[]{"Entity5", "5Entity"} );
 					List<CompositeNaturalIdEntity> results = session
@@ -196,7 +193,7 @@ class MultiNaturalIdLoadTest {
 		verify( scope.getSessionFactory().getJdbcServices().getDialect(), statementInspector );
 	}
 
-	private void verify( Dialect dialect, SQLStatementInspector statementInspector ) {
+	private void verify( Dialect dialect, CollectingStatementObserver statementInspector ) {
 		if ( dialect.getRowValueSupport().supports( RowValueSupport.Feature.IN_LIST ) ) {
 			Matcher m = p.matcher( statementInspector.getSqlQueries().get( 0 ) );
 			int paramCount = 0;

@@ -15,7 +15,7 @@ import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 
-import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.jdbc.CollectingStatementObserver;
 import org.hibernate.testing.jdbc.SharedDriverManagerTypeCacheClearingIntegrator;
 import org.hibernate.testing.orm.junit.BootstrapServiceRegistry;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -37,7 +37,7 @@ import static org.hamcrest.Matchers.equalTo;
  * Tests for mapping basic collections
  */
 @DomainModel(annotatedClasses = BasicCollectionMappingTests.EntityOfCollections.class)
-@SessionFactory( useCollectingStatementInspector = true )
+@SessionFactory( useCollectingStatementObserver = true )
 // Clear the type cache, otherwise we might run into ORA-21700: object does not exist or is marked for delete
 @BootstrapServiceRegistry(integrators = SharedDriverManagerTypeCacheClearingIntegrator.class)
 public class BasicCollectionMappingTests {
@@ -79,7 +79,7 @@ public class BasicCollectionMappingTests {
 			session.persist( entity );
 		} );
 
-		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 
 		scope.inTransaction( (session) -> {
 			final EntityOfCollections entity = session.get( EntityOfCollections.class, 1 );
@@ -109,7 +109,7 @@ public class BasicCollectionMappingTests {
 	@Test
 	@Jira( "https://hibernate.atlassian.net/browse/HHH-16132" )
 	public void testDirtyCheckingDetached(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 
 		final EntityOfCollections created = scope.fromTransaction( (session) -> {
 			final EntityOfCollections entity = new EntityOfCollections(

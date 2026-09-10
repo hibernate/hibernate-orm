@@ -49,7 +49,7 @@ import static org.junit.jupiter.api.Assertions.fail;
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel(annotatedClasses = {Book.class, Person.class, Publisher.class, Report.class})
-@SessionFactory(useCollectingStatementInspector = true)
+@SessionFactory(useCollectingStatementObserver = true)
 @Jira( "https://hibernate.atlassian.net/browse/HHH-19336" )
 @Jira( "https://hibernate.atlassian.net/browse/HHH-19459" )
 @RequiresDialectFeature( feature = DialectFeatureChecks.SupportsSelectLocking.class )

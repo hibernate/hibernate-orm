@@ -21,7 +21,7 @@ import jakarta.persistence.TypedQuery;
 import org.hibernate.graph.GraphSemantic;
 
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.jdbc.CollectingStatementObserver;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -47,7 +47,7 @@ import static org.hibernate.testing.hamcrest.InitializationCheckMatcher.isNotIni
 				LoadAndFetchGraphTest.EEntity.class
 		}
 )
-@SessionFactory(useCollectingStatementInspector = true)
+@SessionFactory(useCollectingStatementObserver = true)
 @JiraKey(value = "HHH-14097")
 public class LoadAndFetchGraphTest {
 
@@ -167,7 +167,7 @@ public class LoadAndFetchGraphTest {
 
 	@Test
 	void testQueryById(SessionFactoryScope scope) {
-		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 		statementInspector.clear();
 		scope.inTransaction(
 				session -> {
@@ -191,7 +191,7 @@ public class LoadAndFetchGraphTest {
 
 	@Test
 	void testQueryByIdWithLoadGraph(SessionFactoryScope scope) {
-		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 		statementInspector.clear();
 		scope.inTransaction(
 				session -> {
@@ -222,7 +222,7 @@ public class LoadAndFetchGraphTest {
 
 	@Test
 	void testQueryByIdWithFetchGraph(SessionFactoryScope scope) {
-		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 		statementInspector.clear();
 		scope.inTransaction(
 				session -> {
@@ -252,7 +252,7 @@ public class LoadAndFetchGraphTest {
 
 	@Test
 	void testQueryByIdWithFetchGraph2(SessionFactoryScope scope) {
-		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 		statementInspector.clear();
 		scope.inTransaction(
 				session -> {

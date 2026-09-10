@@ -16,7 +16,7 @@ import org.hibernate.property.access.spi.Setter;
 public class BeanReflectionHelper {
 
 	public static final Object[] TEST_VALUES = new Object[] {
-			"hello", new Long(1), new Integer(1), new Date(), new Long(1), new Integer(1), new Object()
+			"hello", Long.valueOf(1), Integer.valueOf(1), new Date(), Long.valueOf(1), Integer.valueOf(1), new Object()
 	};
 
 	private static final String[] getterNames = new String[7];

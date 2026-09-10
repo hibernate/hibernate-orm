@@ -10,7 +10,7 @@ import jakarta.persistence.criteria.Root;
 import org.hibernate.Hibernate;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.jdbc.CollectingStatementObserver;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.NotImplementedYet;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -39,7 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 		}
 )
 @DomainModel(xmlMappings = "/mappings/subselectfetch/parent-child.xml")
-@SessionFactory( useCollectingStatementInspector = true )
+@SessionFactory( useCollectingStatementObserver = true )
 @NotImplementedYet(reason = "SUBSELECT fetch defined in mapping.xml not working - https://hibernate.atlassian.net/browse/HHH-19316")
 public class SubselectFetchTest {
 	@BeforeEach
@@ -94,7 +94,7 @@ public class SubselectFetchTest {
 
 	@Test
 	public void testSubselectFetchHql(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 		statementInspector.clear();
 
 		scope.inTransaction(
@@ -280,7 +280,7 @@ public class SubselectFetchTest {
 
 	@Test
 	void testCriteria(SessionFactoryScope scope) {
-		final SQLStatementInspector sqlCollector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver sqlCollector = scope.getCollectingStatementObserver();
 		sqlCollector.clear();
 		scope.inTransaction( (session) -> {
 			CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
@@ -325,7 +325,7 @@ public class SubselectFetchTest {
 
 	@Test
 	public void testSubselectFetchCriteria(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 		statementInspector.clear();
 
 		scope.inTransaction(

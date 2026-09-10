@@ -39,7 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel(annotatedClasses = IrrelevantEntity.class)
-@SessionFactory(useCollectingStatementInspector = true)
+@SessionFactory(useCollectingStatementObserver = true)
 public class SessionWithSharedConnectionTest {
 	@Test
 	@JiraKey( value = "HHH-7090" )
@@ -166,7 +166,7 @@ public class SessionWithSharedConnectionTest {
 	@Test
 	@JiraKey( value = "HHH-7239" )
 	public void testChildSessionCallsAfterTransactionAction(SessionFactoryScope scope) throws Exception {
-		final var sqlCollector = scope.getCollectingStatementInspector();
+		final var sqlCollector = scope.getCollectingStatementObserver();
 		sqlCollector.clear();
 
 		final var postCommitMessage = "post commit was called";

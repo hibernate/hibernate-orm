@@ -8,7 +8,7 @@ import org.hibernate.community.dialect.FirebirdDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.mapping.Collection;
-import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.jdbc.CollectingStatementObserver;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
 import org.hibernate.testing.orm.junit.FailureExpected;
@@ -29,7 +29,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SkipForDialect(dialectClass = SybaseDialect.class)
 @SkipForDialect(dialectClass = FirebirdDialect.class)
 @DomainModel(xmlMappings = {"mappings/subselectfetch/name.xml", "mappings/subselectfetch/value.xml"})
-@SessionFactory(useCollectingStatementInspector = true)
+@SessionFactory(useCollectingStatementObserver = true)
 @FailureExpected(reason = "https://hibernate.atlassian.net/browse/HHH-19316")
 public class SubselectFetchWithFormulaTest {
 	static void prepareTestData(SessionFactoryScope factoryScope) {
@@ -96,7 +96,7 @@ public class SubselectFetchWithFormulaTest {
 
 		// Now force the subselect fetch and make sure we do not get SQL errors
 		factoryScope.inTransaction( (session) -> {
-			final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
+			final CollectingStatementObserver sqlCollector = factoryScope.getCollectingStatementObserver();
 			final List<Name> names = session.createSelectionQuery( "from Name", Name.class ).list();
 			sqlCollector.clear();
 

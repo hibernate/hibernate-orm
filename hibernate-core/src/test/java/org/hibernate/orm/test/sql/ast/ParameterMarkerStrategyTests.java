@@ -14,7 +14,7 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.sql.spi.ParameterMarkerStrategy;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
-import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.jdbc.CollectingStatementObserver;
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.FailureExpected;
@@ -50,7 +50,7 @@ import static org.hibernate.internal.util.StringHelper.*;
 		ParameterMarkerStrategyTests.EntityWithFilters.class,
 		ParameterMarkerStrategyTests.EntityWithVersion.class
 } )
-@SessionFactory( useCollectingStatementInspector = true )
+@SessionFactory( useCollectingStatementObserver = true )
 @RequiresDialect( H2Dialect.class )
 public class ParameterMarkerStrategyTests {
 	@Test
@@ -58,7 +58,7 @@ public class ParameterMarkerStrategyTests {
 	public void testQueryParams(SessionFactoryScope scope) {
 		final String queryString = "select e from EntityOfBasics e where e.id = :id";
 
-		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 		statementInspector.clear();
 
 		scope.inTransaction( (session) -> {
@@ -73,7 +73,7 @@ public class ParameterMarkerStrategyTests {
 	@Test
 	@Jira( "https://hibernate.atlassian.net/browse/HHH-16260" )
 	public void testFilters(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 		statementInspector.clear();
 
 		scope.inTransaction( (session) -> {
@@ -88,7 +88,7 @@ public class ParameterMarkerStrategyTests {
 	@Test
 	@Jira( "https://hibernate.atlassian.net/browse/HHH-16256" )
 	public void testMutations(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 		statementInspector.clear();
 
 		scope.inTransaction( (session) -> {
@@ -129,7 +129,7 @@ public class ParameterMarkerStrategyTests {
 	@FailureExpected
 	@Jira( "https://hibernate.atlassian.net/browse/HHH-16283" )
 	public void testNativeQuery(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 
 		statementInspector.clear();
 		scope.inTransaction( (session) -> {
@@ -159,7 +159,7 @@ public class ParameterMarkerStrategyTests {
 	public void testQueryParamReuse(SessionFactoryScope scope) {
 		final String queryString = "select e from EntityOfBasics e where e.id = :id and e.id = :id";
 
-		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 		statementInspector.clear();
 
 		scope.inTransaction( (session) -> {

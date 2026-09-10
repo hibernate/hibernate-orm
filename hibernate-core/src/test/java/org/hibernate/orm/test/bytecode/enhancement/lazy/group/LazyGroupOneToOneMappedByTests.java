@@ -16,7 +16,7 @@ import jakarta.persistence.Table;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.LazyGroup;
 import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
-import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.jdbc.CollectingStatementObserver;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -40,14 +40,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 		LazyGroupOneToOneMappedByTests.Employee.class,
 		LazyGroupOneToOneMappedByTests.EmploymentDetails.class
 })
-@SessionFactory(useCollectingStatementInspector = true)
+@SessionFactory(useCollectingStatementObserver = true)
 @BytecodeEnhanced
 @SuppressWarnings("JUnitMalformedDeclaration")
 @JiraKey("HHH-11986")
 public class LazyGroupOneToOneMappedByTests {
 	@Test
 	void testLazyGroupBehavior(SessionFactoryScope factoryScope) {
-		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
+		final CollectingStatementObserver sqlCollector = factoryScope.getCollectingStatementObserver();
 		sqlCollector.clear();
 
 		factoryScope.inTransaction( (session) -> {

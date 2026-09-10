@@ -22,7 +22,7 @@ import org.hibernate.loader.ast.internal.MultiKeyLoadHelper;
 import org.hibernate.stat.Statistics;
 
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.jdbc.CollectingStatementObserver;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -64,7 +64,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 		sharedCacheMode = SharedCacheMode.ENABLE_SELECTIVE,
 		accessType = AccessType.READ_WRITE
 )
-@SessionFactory( useCollectingStatementInspector = true )
+@SessionFactory( useCollectingStatementObserver = true )
 public class MultiLoadTest {
 
 	@BeforeEach
@@ -85,7 +85,7 @@ public class MultiLoadTest {
 
 	@Test
 	public void testBasicMultiLoad(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 		scope.inTransaction(session -> {
 			statementInspector.clear();
 
@@ -111,7 +111,7 @@ public class MultiLoadTest {
 
 	@Test
 	public void testStatelessMultiLoadWithBatchSize(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 		scope.inStatelessTransaction(session -> {
 			statementInspector.clear();
 
@@ -368,7 +368,7 @@ public class MultiLoadTest {
 	@Test
 	@JiraKey(value = "HHH-12944")
 	public void testMultiLoadFrom2ndLevelCache(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 		statementInspector.clear();
 
 		scope.getSessionFactory().getCache().evictAll();
@@ -427,7 +427,7 @@ public class MultiLoadTest {
 	@Test
 	@JiraKey(value = "HHH-12944")
 	public void testUnorderedMultiLoadFrom2ndLevelCache(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 		statementInspector.clear();
 
 		scope.getSessionFactory().getCache().evictAll();
@@ -484,7 +484,7 @@ public class MultiLoadTest {
 	@Test
 	@JiraKey(value = "HHH-12944")
 	public void testOrderedMultiLoadFrom2ndLevelCachePendingDelete(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 		statementInspector.clear();
 
 		scope.inTransaction(session -> {
@@ -521,7 +521,7 @@ public class MultiLoadTest {
 	@Test
 	@JiraKey(value = "HHH-12944")
 	public void testOrderedMultiLoadFrom2ndLevelCachePendingDeleteReturnRemoved(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 		statementInspector.clear();
 
 		scope.inTransaction(session -> {
@@ -563,7 +563,7 @@ public class MultiLoadTest {
 	@Test
 	@JiraKey(value = "HHH-12944")
 	public void testUnorderedMultiLoadFrom2ndLevelCachePendingDelete(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 		statementInspector.clear();
 
 		scope.inTransaction(session -> {
@@ -599,7 +599,7 @@ public class MultiLoadTest {
 	@Test
 	@JiraKey(value = "HHH-12944")
 	public void testUnorderedMultiLoadFrom2ndLevelCachePendingDeleteReturnRemoved(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 		statementInspector.clear();
 
 		scope.inTransaction(session -> {

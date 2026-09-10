@@ -6,7 +6,7 @@ package org.hibernate.orm.test.sql.partition;
 
 import org.hibernate.annotations.PartitionKey;
 
-import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.jdbc.CollectingStatementObserver;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -23,11 +23,11 @@ import jakarta.persistence.Table;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DomainModel( annotatedClasses = PartitionKeyTests.PartitionedEntity.class )
-@SessionFactory( useCollectingStatementInspector = true )
+@SessionFactory( useCollectingStatementObserver = true )
 public class PartitionKeyTests {
 	@Test
 	public void test(SessionFactoryScope scope) {
-		final var inspector = scope.getCollectingStatementInspector();
+		final var inspector = scope.getCollectingStatementObserver();
 
 		// update
 		scope.inTransaction( (session) -> {
@@ -48,7 +48,7 @@ public class PartitionKeyTests {
 
 	@Test
 	public void testStatelessUpdate(SessionFactoryScope scope) {
-		final var inspector = scope.getCollectingStatementInspector();
+		final var inspector = scope.getCollectingStatementObserver();
 
 		try ( var statelessSession = scope.getSessionFactory().openStatelessSession() ) {
 			final var tx = statelessSession.beginTransaction();
@@ -68,7 +68,7 @@ public class PartitionKeyTests {
 		} );
 	}
 
-	private void checkWherePredicate(SQLStatementInspector inspector) {
+	private void checkWherePredicate(CollectingStatementObserver inspector) {
 		assertThat( inspector.getSqlQueries() ).hasSize( 1 );
 		assertThat( inspector.getSqlQueries().get( 0 ) ).contains( "tenant_id=?" );
 	}

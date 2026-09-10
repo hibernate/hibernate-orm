@@ -9,7 +9,7 @@ import org.hibernate.annotations.OptimisticLockType;
 import org.hibernate.annotations.OptimisticLocking;
 import org.hibernate.internal.util.StringHelper;
 
-import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.jdbc.CollectingStatementObserver;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -33,7 +33,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 		DynamicUpdateTests.DirtyJob.class,
 		DynamicUpdateTests.AllJob.class,
 } )
-@SessionFactory( useCollectingStatementInspector = true )
+@SessionFactory( useCollectingStatementObserver = true )
 public class DynamicUpdateTests {
 
 	@Test
@@ -42,7 +42,7 @@ public class DynamicUpdateTests {
 			session.persist( new AttachableJob( 1, "job", "controller-1" ) );
 		} );
 
-		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 
 		scope.inTransaction( (session) -> {
 			final AttachableJob job1 = session.get( AttachableJob.class, 1 );
@@ -68,7 +68,7 @@ public class DynamicUpdateTests {
 			session.persist( new VersionedJob( 1, "job", "controller-1" ) );
 		} );
 
-		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 
 		scope.inTransaction( (session) -> {
 			final VersionedJob job1 = session.get( VersionedJob.class, 1 );
@@ -96,7 +96,7 @@ public class DynamicUpdateTests {
 			session.persist( new DirtyJob( 2, null, "controller-1" ) );
 		} );
 
-		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 
 		scope.inTransaction( (session) -> {
 			final DirtyJob job1 = session.get( DirtyJob.class, 1 );
@@ -133,7 +133,7 @@ public class DynamicUpdateTests {
 			session.persist( new AllJob( 2, null, "controller-1" ) );
 		} );
 
-		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 
 		scope.inTransaction( (session) -> {
 			final AllJob job1 = session.get( AllJob.class, 1 );

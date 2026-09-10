@@ -32,7 +32,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 				IdClassWithOneToOneTest.TaskText.class
 		}
 )
-@SessionFactory(useCollectingStatementInspector = true)
+@SessionFactory(useCollectingStatementObserver = true)
 public class IdClassWithOneToOneTest {
 
 	@BeforeEach

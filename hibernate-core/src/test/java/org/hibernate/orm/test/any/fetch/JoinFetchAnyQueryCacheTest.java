@@ -53,7 +53,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 				@Setting(name = CacheSettings.QUERY_CACHE_LAYOUT, value = "shallow")
 		}
 )
-@SessionFactory(generateStatistics = true, useCollectingStatementInspector = true)
+@SessionFactory(generateStatistics = true, useCollectingStatementObserver = true)
 class JoinFetchAnyQueryCacheTest {
 
 	private static final String CARD_PAYMENT_CURRENCY_PROFILE = "card-payment-currency";
@@ -80,7 +80,7 @@ class JoinFetchAnyQueryCacheTest {
 		} );
 
 		final Statistics statistics = scope.getSessionFactory().getStatistics();
-		final var statementInspector = scope.getCollectingStatementInspector();
+		final var statementInspector = scope.getCollectingStatementObserver();
 
 		statistics.clear();
 		statementInspector.clear();

@@ -30,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@SessionFactory(useCollectingStatementInspector = true)
+@SessionFactory(useCollectingStatementObserver = true)
 @DomainModel(annotatedClasses = {JoinManyToAnyTest.Parent.class,
 		JoinManyToAnyTest.NormalChild.class, JoinManyToAnyTest.SpecialChild.class})
 class JoinManyToAnyTest {
@@ -77,7 +77,7 @@ class JoinManyToAnyTest {
 
 	@Test
 	void testJoin(SessionFactoryScope scope) {
-		final var statementInspector = scope.getCollectingStatementInspector();
+		final var statementInspector = scope.getCollectingStatementObserver();
 		prepareTestData( scope );
 		statementInspector.clear();
 
@@ -110,7 +110,7 @@ class JoinManyToAnyTest {
 
 	@Test
 	void testJoinSelectAssociation(SessionFactoryScope scope) {
-		final var statementInspector = scope.getCollectingStatementInspector();
+		final var statementInspector = scope.getCollectingStatementObserver();
 		prepareTestData( scope );
 		statementInspector.clear();
 
@@ -142,7 +142,7 @@ class JoinManyToAnyTest {
 
 	@Test
 	void testJoinTreat(SessionFactoryScope scope) {
-		final var statementInspector = scope.getCollectingStatementInspector();
+		final var statementInspector = scope.getCollectingStatementObserver();
 		prepareTestData( scope );
 		statementInspector.clear();
 
@@ -169,7 +169,7 @@ class JoinManyToAnyTest {
 
 	@Test
 	void testJoinTreatSelectAssociation(SessionFactoryScope scope) {
-		final var statementInspector = scope.getCollectingStatementInspector();
+		final var statementInspector = scope.getCollectingStatementObserver();
 		prepareTestData( scope );
 		statementInspector.clear();
 

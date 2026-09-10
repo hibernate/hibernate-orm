@@ -10,7 +10,7 @@ import java.util.List;
 import org.hibernate.CacheMode;
 import org.hibernate.Hibernate;
 
-import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.jdbc.CollectingStatementObserver;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -38,7 +38,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 				CascadeRefreshToManyTest.ToOneTarget.class
 		}
 )
-@SessionFactory(useCollectingStatementInspector = true)
+@SessionFactory(useCollectingStatementObserver = true)
 @JiraKey("HHH-18774")
 public class CascadeRefreshToManyTest {
 
@@ -78,7 +78,7 @@ public class CascadeRefreshToManyTest {
 
 	@Test
 	public void refreshInitializedCollectionDoesNotRefreshEachChildIndividually(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 		scope.inTransaction( session -> {
 			final Parent parent = session.find( Parent.class, 1L );
 			Hibernate.initialize( parent.getChildren() );
@@ -101,7 +101,7 @@ public class CascadeRefreshToManyTest {
 
 	@Test
 	public void refreshManyToOneDoesNotRefreshAssociationIndividually(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 		scope.inTransaction( session -> {
 			final ToOneTarget target = session.find( ToOneTarget.class, 1L );
 			final ToOneOwner owner = session.find( ToOneOwner.class, 1L );
@@ -121,7 +121,7 @@ public class CascadeRefreshToManyTest {
 	@Test
 	@Jira("https://hibernate.atlassian.net/browse/HHH-13284")
 	public void refreshToOneViaQuery(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 		scope.inTransaction( session -> {
 			final ToOneTarget target = session.find( ToOneTarget.class, 1L );
 			final ToOneOwner owner = session.find( ToOneOwner.class, 1L );
@@ -143,7 +143,7 @@ public class CascadeRefreshToManyTest {
 	@Test
 	@Jira("https://hibernate.atlassian.net/browse/HHH-13284")
 	public void refreshCollectionViaQuery(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 		scope.inTransaction( session -> {
 			final Parent parent = session.find( Parent.class, 1L );
 			Hibernate.initialize( parent.getChildren() );

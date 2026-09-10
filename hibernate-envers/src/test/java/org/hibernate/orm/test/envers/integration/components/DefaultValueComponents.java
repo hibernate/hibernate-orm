@@ -379,23 +379,26 @@ public class DefaultValueComponents {
 			Integer expectedId,
 			String expectedComp2Str1Rev1, String expectedComp2Str1Rev2) {
 		// Verify that the entity was correctly persisted
-		Long entCount = (Long) em.createQuery(
+		Long entCount = em.createQuery(
 				"select count(s) from DefaultValueComponentTestEntity s where s.id = "
-				+ expectedId.toString()
+				+ expectedId.toString(),
+				Long.class
 		).getSingleResult();
-		Number auditCount = (Number) em.createNativeQuery(
+		Long auditCount = em.createNativeQuery(
 				"select count(id) from DefaultValueComponent_AUD s where s.id = "
-				+ expectedId.toString()
+				+ expectedId.toString(),
+				Long.class
 		).getSingleResult();
-		String comp2Str1Rev1 = (String) em
-				.createNativeQuery(
+		String comp2Str1Rev1 = em.createNativeQuery(
 						"select COMP2_STR1 from DefaultValueComponent_AUD s where REV=1 and s.id = "
-						+ expectedId.toString()
+						+ expectedId.toString(),
+						String.class
 				).getSingleResult();
-		String comp2Str1Rev2 = (String) em
+		String comp2Str1Rev2 = em
 				.createNativeQuery(
 						"select COMP2_STR1 from DefaultValueComponent_AUD s where REV=2 and s.id = "
-						+ expectedId.toString()
+						+ expectedId.toString(),
+						String.class
 				).getSingleResult();
 		assertEquals( Long.valueOf( 1L ), entCount );
 		assertEquals( Integer.valueOf( 2 ), auditCount.intValue() );

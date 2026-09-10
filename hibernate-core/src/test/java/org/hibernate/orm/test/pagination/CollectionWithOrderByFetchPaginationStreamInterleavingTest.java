@@ -12,7 +12,7 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderBy;
 import org.hibernate.ScrollMode;
 import org.hibernate.cfg.QuerySettings;
-import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.jdbc.CollectingStatementObserver;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
@@ -57,7 +57,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 		name = QuerySettings.FAIL_ON_PAGINATION_OVER_COLLECTION_FETCH,
 		value = "true"
 ))
-@SessionFactory(useCollectingStatementInspector = true)
+@SessionFactory(useCollectingStatementObserver = true)
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsOffsetInSubquery.class)
 public class CollectionWithOrderByFetchPaginationStreamInterleavingTest {
 
@@ -91,7 +91,7 @@ public class CollectionWithOrderByFetchPaginationStreamInterleavingTest {
 
 	@Test
 	void streamWithInterleavedOrderedCollectionRows(SessionFactoryScope scope) {
-		final SQLStatementInspector sql = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver sql = scope.getCollectingStatementObserver();
 		scope.inTransaction( s -> {
 			sql.clear();
 
@@ -110,7 +110,7 @@ public class CollectionWithOrderByFetchPaginationStreamInterleavingTest {
 
 	@Test
 	void scrollWithInterleavedOrderedCollectionRows(SessionFactoryScope scope) {
-		final SQLStatementInspector sql = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver sql = scope.getCollectingStatementObserver();
 		scope.inTransaction( s -> {
 			sql.clear();
 
@@ -138,7 +138,7 @@ public class CollectionWithOrderByFetchPaginationStreamInterleavingTest {
 		assertEquals( List.of( 2L, 4L, 6L ), carts.get( 1 ).getLineItems().stream().map( LineItem::getId ).toList() );
 	}
 
-	private static void assertOwnerGroupingOrder(SQLStatementInspector sql) {
+	private static void assertOwnerGroupingOrder(CollectingStatementObserver sql) {
 		assertEquals( 1, sql.getSqlQueries().size() );
 		final String normalizedSql = sql.getSqlQueries().get( 0 )
 				.toLowerCase( Locale.ROOT )

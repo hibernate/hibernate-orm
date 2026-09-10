@@ -15,7 +15,9 @@ import org.hibernate.Incubating;
 import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
+import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
+import org.hibernate.metamodel.mapping.internal.SelectableMappingImpl;
 import org.hibernate.metamodel.mapping.internal.SqlTypedMappingImpl;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
@@ -149,14 +151,37 @@ public class AnonymousTupleType<T>
 		return typeDescriptors;
 	}
 
-	public static SqlTypedMapping[] toSqlTypedMappings(List<SqlSelection> sqlSelections) {
+	public static SqlTypedMapping[] toSqlTypedMappings(TupleType<?> tupleType, List<SqlSelection> sqlSelections) {
 		final SqlTypedMapping[] jdbcMappings = new SqlTypedMapping[sqlSelections.size()];
 		for ( int i = 0; i < sqlSelections.size(); i++ ) {
 			final JdbcMappingContainer expressionType = sqlSelections.get( i ).getExpressionType();
-			jdbcMappings[i] =
-					expressionType instanceof SqlTypedMapping sqlTypedMapping
-							? sqlTypedMapping
-							: new SqlTypedMappingImpl( expressionType.getSingleJdbcMapping() );
+			if ( expressionType instanceof SelectableMapping selectableMapping ) {
+				jdbcMappings[i] = new SelectableMappingImpl(
+						"",
+						tupleType.getComponentName( i ),
+						null,
+						null,
+						null,
+						selectableMapping.getLength(),
+						selectableMapping.getArrayLength(),
+						selectableMapping.getPrecision(),
+						selectableMapping.getScale(),
+						selectableMapping.getTemporalPrecision(),
+						selectableMapping.isLob(),
+						selectableMapping.isNullable(),
+						false,
+						false,
+						false,
+						false,
+						selectableMapping.getJdbcMapping()
+				);
+			}
+			else if ( expressionType instanceof SqlTypedMapping sqlTypedMapping ) {
+				jdbcMappings[i] = sqlTypedMapping;
+			}
+			else {
+				jdbcMappings[i] = new SqlTypedMappingImpl( expressionType.getSingleJdbcMapping() );
+			}
 		}
 		return jdbcMappings;
 	}
@@ -164,7 +189,7 @@ public class AnonymousTupleType<T>
 			String aliasStem,
 			List<SqlSelection> sqlSelections,
 			FromClauseAccess fromClauseAccess) {
-		return resolveTableGroupProducer( aliasStem, toSqlTypedMappings( sqlSelections ), fromClauseAccess );
+		return resolveTableGroupProducer( aliasStem, toSqlTypedMappings( this, sqlSelections ), fromClauseAccess );
 	}
 
 	public AnonymousTupleTableGroupProducer resolveTableGroupProducer(

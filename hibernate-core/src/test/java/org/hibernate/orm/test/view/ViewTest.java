@@ -7,11 +7,13 @@ package org.hibernate.orm.test.view;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import org.hibernate.community.dialect.GaussDBDialect;
 import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
@@ -25,6 +27,9 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 public class ViewTest {
 
 	@Test void test(SessionFactoryScope scope) {
+		// GaussDB M mode CREATE VIEW rejects expression types text (upper(name)) and float8 (sum(quantity));
+		// the @View query is user SQL the dialect cannot rewrite. A mode (PG kernel) allows these types (zero regression).
+		Assumptions.assumeFalse( scope.getSessionFactory().getJdbcServices().getDialect() instanceof GaussDBDialect g && g.isMMode() );
 		UUID id = scope.fromTransaction( s -> {
 			Table t = new Table();
 			t.quantity = 69.0;

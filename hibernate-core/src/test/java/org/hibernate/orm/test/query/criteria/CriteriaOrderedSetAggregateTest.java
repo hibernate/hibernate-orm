@@ -9,6 +9,7 @@ import java.util.Date;
 import java.util.List;
 
 import jakarta.persistence.criteria.Nulls;
+import org.hibernate.community.dialect.GaussDBDialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MySQLDialect;
@@ -283,6 +284,7 @@ public class CriteriaOrderedSetAggregateTest {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsHypotheticalSetFunctions.class)
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "GaussDB does not support hypothetical-set WITHIN GROUP (treats the within-group ORDER BY as a second argument, e.g. 'Function rank(integer,integer) does not exist'); only window (OVER) usage works")
 	public void testHypotheticalSetPercentRank(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
@@ -299,6 +301,7 @@ public class CriteriaOrderedSetAggregateTest {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsHypotheticalSetFunctions.class)
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "GaussDB does not support hypothetical-set WITHIN GROUP (treats the within-group ORDER BY as a second argument, e.g. 'Function rank(integer,integer) does not exist'); only window (OVER) usage works")
 	public void testHypotheticalSetRank(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			HibernateCriteriaBuilder cb = session.getCriteriaBuilder();

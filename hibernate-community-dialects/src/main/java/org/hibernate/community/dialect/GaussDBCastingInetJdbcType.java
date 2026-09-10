@@ -40,9 +40,17 @@ public class GaussDBCastingInetJdbcType implements JdbcType {
 			@Nullable Size size,
 			SqlAppender appender,
 			Dialect dialect) {
-		appender.append( "cast(" );
-		appender.append( writeExpression );
-		appender.append( " as inet)" );
+		if ( dialect instanceof GaussDBDialect g && g.isMMode() ) {
+			// M mode (MySQL-compatible) has no native `inet` type — the column is `varchar(45)` and the
+			// binder uses setString, so emit the raw write expression without a `cast(... as inet)`.
+			// A mode (openGauss PG kernel) keeps the cast to `inet`.
+			appender.append( writeExpression );
+		}
+		else {
+			appender.append( "cast(" );
+			appender.append( writeExpression );
+			appender.append( " as inet)" );
+		}
 	}
 
 	@Override

@@ -139,30 +139,46 @@ public class SharedDriverManagerConnectionProvider extends DriverManagerConnecti
 					final Object connection = c.unwrap( pgConnection );
 					final Object typeInfo = pgConnection.getMethod( "getTypeInfo" ).invoke( connection );
 					final Class<?> typeInfoCacheClass = Class.forName( "org.postgresql.jdbc.TypeInfoCache" );
-					final Field oidToPgNameField = typeInfoCacheClass.getDeclaredField( "oidToPgName" );
-					final Field pgNameToOidField = typeInfoCacheClass.getDeclaredField( "pgNameToOid" );
-					final Field pgNameToSQLTypeField = typeInfoCacheClass.getDeclaredField( "pgNameToSQLType" );
-					final Field oidToSQLTypeField = typeInfoCacheClass.getDeclaredField( "oidToSQLType" );
-					oidToPgNameField.setAccessible( true );
-					pgNameToOidField.setAccessible( true );
-					pgNameToSQLTypeField.setAccessible( true );
-					oidToSQLTypeField.setAccessible( true );
+					// GaussDB's gsjdbc4 driver (based on an older pgjdbc) prefixes the type cache
+					// fields with an underscore and does not expose oidToSQLType, so fall back to
+					// the underscore-prefixed names and treat oidToSQLType as optional.
+					final Field oidToPgNameField = findField( typeInfoCacheClass, "oidToPgName", "_oidToPgName" );
+					final Field pgNameToOidField = findField( typeInfoCacheClass, "pgNameToOid", "_pgNameToOid" );
+					final Field pgNameToSQLTypeField = findField( typeInfoCacheClass, "pgNameToSQLType", "_pgNameToSQLType" );
+					final Field oidToSQLTypeField = findField( typeInfoCacheClass, "oidToSQLType", "_oidToSQLType" );
 					//noinspection unchecked
-					final Map<Integer, String> oidToPgName = (Map<Integer, String>) oidToPgNameField.get( typeInfo );
+					final Map<Integer, String> oidToPgName = oidToPgNameField == null
+							? null
+							: (Map<Integer, String>) getAccessible( oidToPgNameField ).get( typeInfo );
 					//noinspection unchecked
-					final Map<String, Integer> pgNameToOid = (Map<String, Integer>) pgNameToOidField.get( typeInfo );
+					final Map<String, Integer> pgNameToOid = pgNameToOidField == null
+							? null
+							: (Map<String, Integer>) getAccessible( pgNameToOidField ).get( typeInfo );
 					//noinspection unchecked
-					final Map<String, Integer> pgNameToSQLType = (Map<String, Integer>) pgNameToSQLTypeField.get( typeInfo );
+					final Map<String, Integer> pgNameToSQLType = pgNameToSQLTypeField == null
+							? null
+							: (Map<String, Integer>) getAccessible( pgNameToSQLTypeField ).get( typeInfo );
 					//noinspection unchecked
-					final Map<Integer, Integer> oidToSQLType = (Map<Integer, Integer>) oidToSQLTypeField.get( typeInfo );
+					final Map<Integer, Integer> oidToSQLType = oidToSQLTypeField == null
+							? null
+							: (Map<Integer, Integer>) getAccessible( oidToSQLTypeField ).get( typeInfo );
+					if ( pgNameToOid == null ) {
+						return true;
+					}
 					for ( Iterator<Map.Entry<String, Integer>> iter = pgNameToOid.entrySet().iterator(); iter.hasNext(); ) {
 						Map.Entry<String, Integer> entry = iter.next();
 						final String typeName = entry.getKey();
 						if ( !PGJDBC_STANDARD_TYPE_NAMES.contains( typeName ) ) {
 							final Integer oid = entry.getValue();
-							oidToPgName.remove( oid );
-							oidToSQLType.remove( oid );
-							pgNameToSQLType.remove( typeName );
+							if ( oidToPgName != null ) {
+								oidToPgName.remove( oid );
+							}
+							if ( oidToSQLType != null ) {
+								oidToSQLType.remove( oid );
+							}
+							if ( pgNameToSQLType != null ) {
+								pgNameToSQLType.remove( typeName );
+							}
 							iter.remove();
 						}
 					}
@@ -220,6 +236,29 @@ public class SharedDriverManagerConnectionProvider extends DriverManagerConnecti
 
 	private static final Set<String> DRIVER_REQUIRES_NEW_CONNECTION_ON_TIMEZONE_CHANGE = Set.of(
 			"org.h2.Driver", "org.hsqldb.jdbc.JDBCDriver", "org.firebirdsql.jdbc.FBDriver" );
+
+	/**
+	 * Finds a declared field by trying each of the given names in turn.
+	 * Used to stay compatible with pgjdbc variants (e.g. GaussDB's gsjdbc4)
+	 * that rename or omit internal type-cache fields. Returns {@code null}
+	 * when none of the names match.
+	 */
+	private static Field findField(Class<?> type, String... fieldNames) {
+		for ( String fieldName : fieldNames ) {
+			try {
+				return type.getDeclaredField( fieldName );
+			}
+			catch (NoSuchFieldException ignored) {
+				// try the next name
+			}
+		}
+		return null;
+	}
+
+	private static Field getAccessible(Field field) {
+		field.setAccessible( true );
+		return field;
+	}
 
 	public void onDefaultTimeZoneChange() {
 		if ( DRIVER_REQUIRES_NEW_CONNECTION_ON_TIMEZONE_CHANGE.contains( config.driverClassName ) ) {

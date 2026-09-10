@@ -835,6 +835,12 @@ public class NativeSQLQueriesTest {
 	@Test @JiraKey( "HHH-15102" )
 	@SkipForDialect(dialectClass = MySQLDialect.class, matchSubTypes = true)
 	public void testCommentInSQLQuery(SessionFactoryScope scope) {
+		// The native SQL uses "--count(*), effectively" as a line comment, but MySQL (and GaussDB M mode, MySQL kernel)
+		// requires whitespace after "--" to start a comment; without it "effectively" is parsed as a column reference
+		// ("Column effectively does not exist"). Same root cause as the existing MySQLDialect skip (GaussDBDialect is
+		// not a MySQLDialect subtype, so that skip does not apply). A mode (PG kernel) treats "--" as a comment
+		// unconditionally, so M-only skip.
+		org.junit.jupiter.api.Assumptions.assumeFalse( scope.getSessionFactory().getJdbcServices().getDialect() instanceof org.hibernate.community.dialect.GaussDBDialect g && g.isMMode() );
 		scope.inTransaction( s -> s.createNativeQuery( "select sum(1) --count(*), effectively\nfrom ORGANIZATION" ).getSingleResult() );
 	}
 

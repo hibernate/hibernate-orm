@@ -16,6 +16,7 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.community.dialect.DerbyDialect;
+import org.hibernate.community.dialect.GaussDBDialect;
 import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.dialect.SpannerPostgreSQLDialect;
@@ -294,6 +295,7 @@ public abstract class JsonMappingTests {
 			reason = "Blobs are not allowed in this expression")
 	@SkipForDialect( dialectClass = SpannerPostgreSQLDialect.class, reason = "Spanner doesn't support comparing JSONB type")
 	@SkipForDialect( dialectClass = SpannerDialect.class, reason = "Spanner doesn't support comparing JSON type")
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "GaussDB M mode json type has no = operator")
 	public void verifyComparisonWorks(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) -> {

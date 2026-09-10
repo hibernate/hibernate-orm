@@ -83,41 +83,42 @@ public class GaussDBLockingSupport implements LockingSupport, LockingSupport.Met
 		return Helper.getLockTimeout(
 				"select current_setting('lockwait_timeout')",
 				(resultSet) -> {
-					// even though lock_timeout is "in milliseconds", `current_setting`
-					// returns a String form which unfortunately varies depending on
-					// the actual value:
-					//		* for zero (no timeout), "0" is returned
-					//		* for non-zero, `{timeout-in-seconds}s` is returned (e.g. "4s")
-					// so we need to "parse" that form here
+					// Although lockwait_timeout is stored internally in milliseconds, `current_setting`
+					// returns a String in a canonical, human-readable form whose suffix varies by value:
+					//   * "0" for no timeout (WAIT_FOREVER)
+					//   * non-zero values carry a unit suffix, e.g. "500ms", "3s", "1min", "1h", "1d"
+					// Locate the boundary between the digits and the unit, then dispatch on the full
+					// unit string. The previous endsWith("s") branch matched "ms" first, leaving "1m"
+					// for parseInt and throwing NumberFormatException.
 					final String value = resultSet.getString( 1 );
 					if ( "0".equals( value ) ) {
 						return Timeouts.WAIT_FOREVER;
 					}
-					if ( value.endsWith( "min" ) ) {
-						final int minute = getTimeout( value, 3 );
-						return Timeout.milliseconds( minute * 60 * 1000);
-					}
-					else if ( value.endsWith( "s" ) ) {
-						final int seconds  = getTimeout( value, 1 );
-						return Timeout.seconds(seconds);
-					}
-					final int milliseconds  = getTimeout( value, 2 );
-					return Timeout.milliseconds(milliseconds);
+					final int unitStartIndex = findUnitStartIndex( value );
+					final int amount = Integer.parseInt( value, 0, unitStartIndex, 10 );
+					final String unit = unitStartIndex >= value.length() ? "ms" : value.substring( unitStartIndex );
+					return switch ( unit ) {
+						case "ms" -> Timeout.milliseconds( amount );
+						case "s" -> Timeout.seconds( amount );
+						case "min" -> Timeout.seconds( amount * 60 );
+						case "h" -> Timeout.seconds( amount * 3600 );
+						case "d" -> Timeout.seconds( amount * 3600 * 24 );
+						default -> throw new IllegalArgumentException(
+								"Unexpected GaussDB lockwait_timeout format: " + value );
+					};
 				},
 				connection,
 				factory
 		);
 	}
 
-	private static int getTimeout(String value, int unitLength) {
-		final int number;
-		try {
-			number = Integer.parseInt( value.substring( 0, value.length() - unitLength ) );
+	private static int findUnitStartIndex(String value) {
+		for ( int i = value.length() - 1; i >= 0; i-- ) {
+			if ( Character.isDigit( value.charAt( i ) ) ) {
+				return i + 1;
+			}
 		}
-		catch (NumberFormatException e) {
-			throw new RuntimeException( e );
-		}
-		return number;
+		return -1;
 	}
 
 	@Override

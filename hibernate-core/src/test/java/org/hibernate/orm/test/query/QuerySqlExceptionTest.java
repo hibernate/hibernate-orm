@@ -13,6 +13,7 @@ import java.util.List;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.community.dialect.AltibaseDialect;
+import org.hibernate.community.dialect.GaussDBDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
@@ -25,6 +26,7 @@ import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SettingProvider;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -51,6 +53,12 @@ public class QuerySqlExceptionTest {
 
 	@Test
 	public void sqlExceptionOnExecutionWillCloseStatement(EntityManagerFactoryScope scope) {
+		// The test triggers an execution-time SQLException via `select (:param / 2)`, relying on `"foo" / 2`
+		// raising a type error. GaussDB M mode is MySQL-compatible and evaluates `"foo" / 2` to 0.0 without
+		// error, so the trigger never fires. A mode (openGauss PG kernel) is type-strict and raises the error,
+		// so it is not skipped (preserves A-mode zero regression).
+		Assumptions.assumeFalse( scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class )
+				.getJdbcServices().getDialect() instanceof GaussDBDialect g && g.isMMode() );
 		// We need at least one row in the "contacts" table,
 		// otherwise the SELECT below might not even get executed completely
 		// (the DB somehow detects the result will be 0 rows anyway and doesn't bother evaluating parameters).

@@ -72,12 +72,15 @@ public class SubQueryWithCaseTest {
 							.otherwise(isbnJoin.get(SubQueryWithCaseTest_.Isbn_.isbn));
 					subquery.multiselect(
 							sqRoot.get(SubQueryWithCaseTest_.Book_.id).alias("id"),
-							isbnExpr.alias("isbn")
+							// Also add a selection item with an alias, that matches the also selected isbn path
+							// to provoke a potential alias collision
+							sqRoot.get(SubQueryWithCaseTest_.Book_.title).alias("isbn"),
+							isbnExpr.alias("isbn1")
 					);
 					JpaDerivedRoot<Tuple> root = query.from(subquery);
 					query.select(cb.tuple(
 							root.get("id").alias("id"),
-							root.get("isbn").alias("isbn")
+							root.get("isbn1").alias("isbn")
 					)).orderBy(
 							cb.asc(root.get("id"))
 					);
@@ -100,6 +103,7 @@ public class SubQueryWithCaseTest {
 	public static class Book {
 		@Id
 		private int id;
+		private String title;
 
 		@OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
 		@JoinColumn(name = "isbn")

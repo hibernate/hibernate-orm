@@ -2191,7 +2191,7 @@ public class ModelBinder {
 				else {
 					buffer.append( ", " );
 				}
-				buffer.append( cascadeType.name().toLowerCase( Locale.ROOT ) );
+				buffer.append( cascadeType.name().toLowerCase( Locale.ROOT ).replace( '_', '-' ) );
 			}
 			return buffer.toString();
 		}

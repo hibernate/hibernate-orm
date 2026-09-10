@@ -5,7 +5,7 @@
 package org.hibernate.orm.test.bytecode;
 import java.util.Date;
 
-import org.hibernate.accessor.HibernateAccessorFactory;
+import org.hibernate.accessor.AccessorFactory;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBasicImpl;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.PropertyAccess;
@@ -94,8 +94,8 @@ public class BeanReflectionHelper {
 		static final PropertyAccessorService INSTANCE = new TestPropertyAccessorService();
 
 		@Override
-		public HibernateAccessorFactory hibernateAccessorFactory() {
-			return HibernateAccessorFactory.reflection();
+		public AccessorFactory hibernateAccessorFactory() {
+			return AccessorFactory.reflection();
 		}
 	}
 }

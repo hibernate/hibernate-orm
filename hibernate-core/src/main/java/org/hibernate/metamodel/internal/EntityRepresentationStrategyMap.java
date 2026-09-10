@@ -14,8 +14,8 @@ import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.metamodel.spi.EntityInstantiator;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
-import org.hibernate.accessor.HibernateAccessorMultiValueReader;
-import org.hibernate.accessor.HibernateAccessorMultiValueWriter;
+import org.hibernate.accessor.MultiValueReader;
+import org.hibernate.accessor.MultiValueWriter;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.property.access.internal.PropertyAccessStrategyMapImpl;
 import org.hibernate.property.access.spi.PropertyAccess;
@@ -73,12 +73,12 @@ public class EntityRepresentationStrategyMap implements EntityRepresentationStra
 	}
 
 	@Override
-	public HibernateAccessorMultiValueReader getMultiValueReader() {
+	public MultiValueReader getMultiValueReader() {
 		return null;
 	}
 
 	@Override
-	public HibernateAccessorMultiValueWriter getMultiValueWriter() {
+	public MultiValueWriter getMultiValueWriter() {
 		return null;
 	}
 

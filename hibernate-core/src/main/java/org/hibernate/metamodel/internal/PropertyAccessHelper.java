@@ -16,10 +16,10 @@ import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.mapping.Backref;
 import org.hibernate.mapping.IndexBackref;
 import org.hibernate.mapping.Property;
-import org.hibernate.accessor.HibernateAccessorFactory;
-import org.hibernate.accessor.HibernateAccessorInstantiator;
-import org.hibernate.accessor.HibernateAccessorMultiValueReader;
-import org.hibernate.accessor.HibernateAccessorMultiValueWriter;
+import org.hibernate.accessor.AccessorFactory;
+import org.hibernate.accessor.Instantiator;
+import org.hibernate.accessor.MultiValueReader;
+import org.hibernate.accessor.MultiValueWriter;
 import org.hibernate.property.access.internal.PropertyAccessEmbeddedImpl;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
 import org.hibernate.property.access.internal.PropertyAccessStrategyIndexBackRefImpl;
@@ -70,7 +70,7 @@ class PropertyAccessHelper {
 		}
 	}
 
-	static @Nullable HibernateAccessorInstantiator<?> resolveInstantiator(
+	static @Nullable Instantiator<?> resolveInstantiator(
 			Class<?> clazz,
 			PropertyAccessorService accessorService) {
 		if ( clazz.isInterface() || Modifier.isAbstract( clazz.getModifiers() ) ) {
@@ -89,13 +89,13 @@ class PropertyAccessHelper {
 	}
 
 	record MultiValueAccessors(
-			@Nullable HibernateAccessorMultiValueReader reader,
-			@Nullable HibernateAccessorMultiValueWriter writer) {
+			@Nullable MultiValueReader reader,
+			@Nullable MultiValueWriter writer) {
 		static final MultiValueAccessors NONE = new MultiValueAccessors( null, null );
 	}
 
 	static MultiValueAccessors buildMultiValueAccessors(
-			HibernateAccessorFactory factory,
+			AccessorFactory factory,
 			Class<?> clazz,
 			Collection<PropertyAccess> propertyAccesses) {
 		final var getterMembers = extractGetterMembers( propertyAccesses );
@@ -110,8 +110,8 @@ class PropertyAccessHelper {
 		return new MultiValueAccessors( reader, writer );
 	}
 
-	private static @Nullable HibernateAccessorMultiValueReader tryMultiValueReader(
-			HibernateAccessorFactory factory, Class<?> clazz, Member[] members) {
+	private static @Nullable MultiValueReader tryMultiValueReader(
+			AccessorFactory factory, Class<?> clazz, Member[] members) {
 		try {
 			return factory.multiValueReader( clazz, members );
 		}
@@ -120,8 +120,8 @@ class PropertyAccessHelper {
 		}
 	}
 
-	private static @Nullable HibernateAccessorMultiValueWriter tryMultiValueWriter(
-			HibernateAccessorFactory factory, Class<?> clazz, Member[] members) {
+	private static @Nullable MultiValueWriter tryMultiValueWriter(
+			AccessorFactory factory, Class<?> clazz, Member[] members) {
 		try {
 			return factory.multiValueWriter( clazz, members );
 		}

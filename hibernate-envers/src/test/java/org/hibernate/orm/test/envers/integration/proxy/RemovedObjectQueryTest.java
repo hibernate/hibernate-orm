@@ -26,7 +26,7 @@ import org.hibernate.orm.test.envers.entities.onetomany.SetRefEdEntity;
 import org.hibernate.orm.test.envers.entities.onetomany.SetRefIngEntity;
 import org.hibernate.orm.test.envers.integration.manytomany.ternary.TernaryMapEntity;
 import org.hibernate.orm.test.envers.tools.TestTools;
-import org.hibernate.testing.SkipForDialect;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.testing.envers.junit.EnversTest;
 import org.hibernate.testing.orm.junit.BeforeClassTemplate;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
@@ -289,7 +289,7 @@ public class RemovedObjectQueryTest {
 	}
 
 	@Test
-	@SkipForDialect(value = HSQLDialect.class, comment = "No idea why this fails. Looks like a HSQLDB bug")
+	@SkipForDialect(dialectClass = HSQLDialect.class, reason = "No idea why this fails. Looks like a HSQLDB bug")
 	public void testTernaryMap(EntityManagerFactoryScope scope) {
 		scope.inEntityManager( em -> {
 			final TernaryMapEntity ternaryMap = new TernaryMapEntity();

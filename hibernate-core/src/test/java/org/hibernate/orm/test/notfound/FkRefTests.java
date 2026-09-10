@@ -11,7 +11,7 @@ import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.query.sqm.UnknownPathException;
 
-import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.jdbc.CollectingStatementObserver;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -37,14 +37,14 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Steve Ebersole
  */
 @DomainModel( annotatedClasses = { FkRefTests.Coin.class, FkRefTests.Currency.class, FkRefTests.Exchange.class } )
-@SessionFactory( useCollectingStatementInspector = true )
+@SessionFactory( useCollectingStatementObserver = true )
 @JiraKey( "HHH-15099" )
 @JiraKey( "HHH-15106" )
 public class FkRefTests {
 
 	@Test
 	public void testSimplePredicateUse(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 		statementInspector.clear();
 
 		// there is a Coin which has a currency_fk = 1
@@ -90,7 +90,7 @@ public class FkRefTests {
 	 */
 	@Test
 	public void testNullnessPredicateUseBaseline(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 		statementInspector.clear();
 
 		// there is one Coin (id=3) which has a null currency_fk, however its
@@ -109,7 +109,7 @@ public class FkRefTests {
 
 	@Test
 	public void testNullnessPredicateUse1(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 		statementInspector.clear();
 
 		// there is one Coin (id=3) which has a null currency_fk
@@ -149,7 +149,7 @@ public class FkRefTests {
 	 */
 	@Test
 	public void testNullnessPredicateUse2(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 		statementInspector.clear();
 
 		// there is one Coin (id=3) which has a null currency_fk
@@ -181,7 +181,7 @@ public class FkRefTests {
 
 	@Test
 	public void testFkRefDereferenceInvalid(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 		statementInspector.clear();
 
 		scope.inTransaction( (session) -> {
@@ -207,7 +207,7 @@ public class FkRefTests {
 
 	@Test
 	public void testFkRefDereference(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 		statementInspector.clear();
 
 		scope.inTransaction( (session) -> {

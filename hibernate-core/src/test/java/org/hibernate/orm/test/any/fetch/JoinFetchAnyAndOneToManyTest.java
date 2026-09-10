@@ -38,7 +38,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * initializer reuses the previous row and calls {@code resolveFromPreviousRow}
  * on the {@code @Any} initializer rather than re-resolving it from scratch.
  */
-@SessionFactory(useCollectingStatementInspector = true)
+@SessionFactory(useCollectingStatementObserver = true)
 @DomainModel(annotatedClasses = {
 		JoinFetchAnyAndOneToManyTest.Owner.class,
 		JoinFetchAnyAndOneToManyTest.Item.class,
@@ -67,7 +67,7 @@ class JoinFetchAnyAndOneToManyTest {
 			}
 			s.persist( owner );
 		} );
-		final var statementInspector = scope.getCollectingStatementInspector();
+		final var statementInspector = scope.getCollectingStatementObserver();
 
 		statementInspector.clear();
 		scope.inTransaction( s -> {
@@ -114,7 +114,7 @@ class JoinFetchAnyAndOneToManyTest {
 			}
 			s.persist( owner2 );
 		} );
-		final var statementInspector = scope.getCollectingStatementInspector();
+		final var statementInspector = scope.getCollectingStatementObserver();
 
 		statementInspector.clear();
 		scope.inTransaction( s -> {

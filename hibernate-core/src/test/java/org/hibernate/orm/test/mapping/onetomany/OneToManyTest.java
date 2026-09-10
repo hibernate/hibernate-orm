@@ -19,7 +19,7 @@ import org.hibernate.orm.test.mapping.onetomany.OneToManyTest.Card;
 import org.hibernate.orm.test.mapping.onetomany.OneToManyTest.CardField;
 import org.hibernate.orm.test.mapping.onetomany.OneToManyTest.Key;
 
-import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.jdbc.CollectingStatementObserver;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -41,7 +41,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 				Key.class
 		}
 )
-@SessionFactory(useCollectingStatementInspector = true)
+@SessionFactory(useCollectingStatementObserver = true)
 public class OneToManyTest {
 	public static final String CARD_ID = "cardId";
 	public static final String CARD_FIELD_ID = "cardFieldId";
@@ -67,7 +67,7 @@ public class OneToManyTest {
 
 	@Test
 	public void testGet(SessionFactoryScope scope) {
-		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 		statementInspector.clear();
 		scope.inTransaction(
 				session -> {

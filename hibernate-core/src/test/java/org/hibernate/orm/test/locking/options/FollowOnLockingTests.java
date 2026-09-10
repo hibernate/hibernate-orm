@@ -9,7 +9,7 @@ import org.hibernate.Locking;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.lock.PessimisticLockStyle;
 import org.hibernate.jpa.HibernateHints;
-import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.jdbc.CollectingStatementObserver;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
@@ -29,7 +29,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel(annotatedClasses = {Book.class, Person.class, Publisher.class, Report.class})
-@SessionFactory(useCollectingStatementInspector = true)
+@SessionFactory(useCollectingStatementObserver = true)
 @Tag("db-locking")
 @RequiresDialectFeature( feature = DialectFeatureChecks.SupportsSelectLocking.class )
 public class FollowOnLockingTests {
@@ -45,7 +45,7 @@ public class FollowOnLockingTests {
 
 	@Test
 	void testFindBaseline(SessionFactoryScope factoryScope) {
-		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
+		final CollectingStatementObserver sqlCollector = factoryScope.getCollectingStatementObserver();
 
 		factoryScope.inTransaction( (session) -> {
 			sqlCollector.clear();
@@ -58,7 +58,7 @@ public class FollowOnLockingTests {
 
 	@Test
 	void testFindWithForced(SessionFactoryScope factoryScope) {
-		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
+		final CollectingStatementObserver sqlCollector = factoryScope.getCollectingStatementObserver();
 
 		factoryScope.inTransaction( (session) -> {
 			sqlCollector.clear();
@@ -82,7 +82,7 @@ public class FollowOnLockingTests {
 
 	@Test
 	void testFindWithForcedAsHint(SessionFactoryScope factoryScope) {
-		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
+		final CollectingStatementObserver sqlCollector = factoryScope.getCollectingStatementObserver();
 
 		factoryScope.inTransaction( (session) -> {
 			sqlCollector.clear();
@@ -103,7 +103,7 @@ public class FollowOnLockingTests {
 
 	@Test
 	void testFindWithForcedAsHintName(SessionFactoryScope factoryScope) {
-		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
+		final CollectingStatementObserver sqlCollector = factoryScope.getCollectingStatementObserver();
 
 		factoryScope.inTransaction( (session) -> {
 			sqlCollector.clear();
@@ -124,7 +124,7 @@ public class FollowOnLockingTests {
 
 	@Test
 	void testFindWithForcedAsLegacyHint(SessionFactoryScope factoryScope) {
-		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
+		final CollectingStatementObserver sqlCollector = factoryScope.getCollectingStatementObserver();
 
 		factoryScope.inTransaction( (session) -> {
 			sqlCollector.clear();

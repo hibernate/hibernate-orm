@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeFalse;
 
 @DomainModel(annotatedClasses = FinalEmbeddableFieldTest.EntityWithFinalField.class)
-@SessionFactory(useCollectingStatementInspector = true)
+@SessionFactory(useCollectingStatementObserver = true)
 @BytecodeEnhanced(runNotEnhancedAsWell = true)
 public class FinalEmbeddableFieldTest {
 
@@ -38,7 +38,7 @@ public class FinalEmbeddableFieldTest {
 
 	@Test
 	public void finalFieldNotUpdatable(SessionFactoryScope scope) {
-		var statementInspector = scope.getCollectingStatementInspector();
+		var statementInspector = scope.getCollectingStatementObserver();
 
 		var persistedEntity = new EntityWithFinalField( new EmbeddableWithFinalField( "foo", "foo".toCharArray() ) );
 		persistedEntity.setName( "Some name" );
@@ -64,7 +64,7 @@ public class FinalEmbeddableFieldTest {
 
 	@Test
 	public void finalImmutableFieldNotDirtyChecked(SessionFactoryScope scope) {
-		var statementInspector = scope.getCollectingStatementInspector();
+		var statementInspector = scope.getCollectingStatementObserver();
 
 		var persistedEntity = new EntityWithFinalField( new EmbeddableWithFinalField( "foo", "foo".toCharArray() ) );
 		persistedEntity.setName( "Some name" );
@@ -96,7 +96,7 @@ public class FinalEmbeddableFieldTest {
 		assumeFalse( Managed.class.isAssignableFrom( EntityWithFinalField.class ),
 				"https://hibernate.atlassian.net/browse/HHH-20541" );
 
-		var statementInspector = scope.getCollectingStatementInspector();
+		var statementInspector = scope.getCollectingStatementObserver();
 
 		var persistedEntity = new EntityWithFinalField( new EmbeddableWithFinalField( "foo", "foo".toCharArray() ) );
 		persistedEntity.setName( "Some name" );

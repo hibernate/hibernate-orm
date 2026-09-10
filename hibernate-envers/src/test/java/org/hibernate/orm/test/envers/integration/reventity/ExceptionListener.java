@@ -37,7 +37,7 @@ public class ExceptionListener {
 	public void testDataNotPersisted(EntityManagerFactoryScope scope) {
 		// Checking if the entity became persisted
 		scope.inTransaction( em -> {
-			Long count = (Long) em.createQuery( "select count(s) from StrTestEntity s where s.str = 'x'" )
+			Long count = em.createQuery( "select count(s) from StrTestEntity s where s.str = 'x'", Long.class )
 					.getSingleResult();
 			assertEquals( 0L, count );
 		} );

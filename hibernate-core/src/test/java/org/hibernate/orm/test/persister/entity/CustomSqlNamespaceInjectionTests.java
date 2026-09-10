@@ -20,7 +20,7 @@ import org.hibernate.persister.entity.mutation.MutationCoordinator;
 import org.hibernate.sql.spi.mutation.MutationOperation;
 import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.sql.spi.mutation.jdbc.JdbcMutationOperation;
-import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.jdbc.CollectingStatementObserver;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -51,21 +51,21 @@ import static org.hibernate.engine.jdbc.env.spi.NameQualifierSupport.BOTH;
 public class CustomSqlNamespaceInjectionTests {
 	@Test
 	@DomainModel(annotatedClasses = CustomSchemaEntity.class)
-	@SessionFactory(exportSchema = false, useCollectingStatementInspector = true)
+	@SessionFactory(exportSchema = false, useCollectingStatementObserver = true)
 	void testSchemaReplacement(SessionFactoryScope sessionFactoryScope) {
 		verifyReplacements( sessionFactoryScope, CustomSchemaEntity.class, "my_schema.the_table" );
 	}
 
 	@Test
 	@DomainModel(annotatedClasses = CustomCatalogEntity.class)
-	@SessionFactory(exportSchema = false, useCollectingStatementInspector = true)
+	@SessionFactory(exportSchema = false, useCollectingStatementObserver = true)
 	void testCatalogReplacement(SessionFactoryScope sessionFactoryScope) {
 		verifyReplacements( sessionFactoryScope, CustomCatalogEntity.class, "my_catalog.the_table" );
 	}
 
 	@Test
 	@DomainModel(annotatedClasses = CustomDomainEntity.class)
-	@SessionFactory(exportSchema = false, useCollectingStatementInspector = true)
+	@SessionFactory(exportSchema = false, useCollectingStatementObserver = true)
 	void testDomainReplacement(SessionFactoryScope sessionFactoryScope) {
 		verifyReplacements( sessionFactoryScope, CustomDomainEntity.class, "my_catalog.my_schema.the_table" );
 	}
@@ -97,7 +97,7 @@ public class CustomSqlNamespaceInjectionTests {
 	}
 
 	private static void verifySelectSql(SessionFactoryScope sessionFactoryScope, EntityPersister persister, String expectedTableName) {
-		final SQLStatementInspector sqlStatementCollector = sessionFactoryScope.getCollectingStatementInspector();
+		final CollectingStatementObserver sqlStatementCollector = sessionFactoryScope.getCollectingStatementObserver();
 		sqlStatementCollector.clear();
 
 		try {

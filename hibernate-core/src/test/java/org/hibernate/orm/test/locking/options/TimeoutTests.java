@@ -22,7 +22,7 @@ import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.lock.spi.PessimisticLockKind;
 import org.hibernate.dialect.lock.spi.RowLockStrategy;
 import org.hibernate.jpa.SpecHints;
-import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.jdbc.CollectingStatementObserver;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
@@ -43,10 +43,10 @@ public class TimeoutTests {
 
 	@Test
 	@DomainModel(annotatedClasses = TimeoutTests.Lockable.class)
-	@SessionFactory(useCollectingStatementInspector = true)
+	@SessionFactory(useCollectingStatementObserver = true)
 	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsRealQueryLockTimeouts.class )
 	void testArgExecution(SessionFactoryScope factoryScope) {
-		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
+		final CollectingStatementObserver sqlCollector = factoryScope.getCollectingStatementObserver();
 		sqlCollector.clear();
 		factoryScope.inTransaction( (session) -> {
 			try {
@@ -66,10 +66,10 @@ public class TimeoutTests {
 	@Test
 	@ServiceRegistry(settings = @Setting(name = SpecHints.HINT_SPEC_LOCK_TIMEOUT, value = "2000"))
 	@DomainModel(annotatedClasses = TimeoutTests.Lockable.class)
-	@SessionFactory(useCollectingStatementInspector = true)
+	@SessionFactory(useCollectingStatementObserver = true)
 	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsRealQueryLockTimeouts.class )
 	void testFactoryHintExecution(SessionFactoryScope factoryScope) {
-		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
+		final CollectingStatementObserver sqlCollector = factoryScope.getCollectingStatementObserver();
 		sqlCollector.clear();
 		factoryScope.inTransaction( (session) -> {
 			try {

@@ -19,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel(annotatedClasses = {BasicEntity.class, OtherEntity.class})
-@org.hibernate.testing.orm.junit.SessionFactory(useCollectingStatementInspector = true)
+@org.hibernate.testing.orm.junit.SessionFactory(useCollectingStatementObserver = true)
 public class ProjectionSpecificationTest {
 
 	@BeforeAll

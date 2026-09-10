@@ -11,7 +11,7 @@ import org.hibernate.LockMode;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.jpa.HibernateHints;
 import org.hibernate.query.NativeQuery;
-import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.jdbc.CollectingStatementObserver;
 import org.hibernate.testing.orm.domain.gambit.SimpleEntity;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;
@@ -30,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.fail;
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel(annotatedClasses = SimpleEntity.class)
-@SessionFactory(useCollectingStatementInspector = true)
+@SessionFactory(useCollectingStatementObserver = true)
 public class NativeQueryLockingTests {
 	final String QUERY_STRING = "select * from SIMPLE_ENTITY";
 
@@ -58,7 +58,7 @@ public class NativeQueryLockingTests {
 	@Test
 	@RequiresDialect( value = H2Dialect.class, comment = "This has more to do with Query internals than the DB; so avoid Dialect variances in generated SQL" )
 	void testHibernateLockMode(SessionFactoryScope sessions) {
-		final SQLStatementInspector sqlCollector = sessions.getCollectingStatementInspector();
+		final CollectingStatementObserver sqlCollector = sessions.getCollectingStatementObserver();
 		sqlCollector.clear();
 
 		sessions.inTransaction( (session) -> {
@@ -74,7 +74,7 @@ public class NativeQueryLockingTests {
 	@Test
 	@RequiresDialect( value = H2Dialect.class, comment = "This has more to do with Query internals than the DB; so avoid Dialect variances in generated SQL" )
 	void testLockModeHint(SessionFactoryScope sessions) {
-		final SQLStatementInspector sqlCollector = sessions.getCollectingStatementInspector();
+		final CollectingStatementObserver sqlCollector = sessions.getCollectingStatementObserver();
 		sqlCollector.clear();
 
 		sessions.inTransaction( (session) -> {
@@ -90,7 +90,7 @@ public class NativeQueryLockingTests {
 	@Test
 	@RequiresDialect( value = H2Dialect.class, comment = "This has more to do with Query internals than the DB; so avoid Dialect variances in generated SQL" )
 	void testLockModeHintLowercase(SessionFactoryScope sessions) {
-		final SQLStatementInspector sqlCollector = sessions.getCollectingStatementInspector();
+		final CollectingStatementObserver sqlCollector = sessions.getCollectingStatementObserver();
 		sqlCollector.clear();
 
 		sessions.inTransaction( (session) -> {

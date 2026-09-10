@@ -10,7 +10,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 import org.hibernate.cfg.BatchSettings;
-import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.jdbc.CollectingStatementObserver;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.retail.CardPayment;
 import org.hibernate.testing.orm.domain.retail.DomesticVendor;
@@ -39,7 +39,7 @@ public class SimpleStaticInsertTests {
 	@Test
 	@DomainAndFactory
 	public void simpleSingleTableWithSecondaryTableTest(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 		statementInspector.clear();
 
 		scope.inTransaction( (session) -> {
@@ -54,7 +54,7 @@ public class SimpleStaticInsertTests {
 	@Test
 	@DomainAndFactory
 	public void simpleSingleTableWithSecondaryTableTest2(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 		statementInspector.clear();
 
 		scope.inTransaction( (session) -> {
@@ -69,7 +69,7 @@ public class SimpleStaticInsertTests {
 	@Test
 	@DomainAndFactory
 	public void simpleJoinedTest(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 		statementInspector.clear();
 
 		scope.inTransaction( (session) -> {
@@ -88,6 +88,6 @@ public class SimpleStaticInsertTests {
 	@Target({ ElementType.TYPE, ElementType.METHOD})
 	@Retention(RetentionPolicy.RUNTIME)
 	@DomainModel( standardModels = StandardDomainModel.RETAIL )
-	@SessionFactory( useCollectingStatementInspector = true )
+	@SessionFactory( useCollectingStatementObserver = true )
 	@interface DomainAndFactory {}
 }

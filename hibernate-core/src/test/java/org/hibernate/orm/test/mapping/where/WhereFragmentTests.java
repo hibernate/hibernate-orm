@@ -12,7 +12,7 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.jpa.SpecHints;
 
-import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.jdbc.CollectingStatementObserver;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.RequiresDialect;
@@ -51,7 +51,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 		}
 )
 @DomainModel( annotatedClasses = { User.class, UserDetail.class, UserSkill.class } )
-@SessionFactory( useCollectingStatementInspector = true )
+@SessionFactory( useCollectingStatementObserver = true )
 @Jira( "https://hibernate.atlassian.net/browse/HHH-16019" )
 @RequiresDialect( H2Dialect.class )
 public class WhereFragmentTests {
@@ -544,7 +544,7 @@ public class WhereFragmentTests {
 	public void testSubsequentInitialization(SessionFactoryScope scope) {
 		createZurg( scope );
 
-		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 		statementInspector.clear();
 
 		scope.inTransaction( (session) -> {

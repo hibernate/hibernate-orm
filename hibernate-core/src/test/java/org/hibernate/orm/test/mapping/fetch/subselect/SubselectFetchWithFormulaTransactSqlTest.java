@@ -23,7 +23,7 @@ import static org.hibernate.orm.test.mapping.fetch.subselect.SubselectFetchWithF
 @RequiresDialect(SQLServerDialect.class)
 @RequiresDialect(SybaseDialect.class)
 @DomainModel(xmlMappings = {"mappings/subselectfetch/name-tsql.xml", "mappings/subselectfetch/value.xml"})
-@SessionFactory(useCollectingStatementInspector = true)
+@SessionFactory(useCollectingStatementObserver = true)
 @FailureExpected(reason = "https://hibernate.atlassian.net/browse/HHH-19316")
 public class SubselectFetchWithFormulaTransactSqlTest {
 

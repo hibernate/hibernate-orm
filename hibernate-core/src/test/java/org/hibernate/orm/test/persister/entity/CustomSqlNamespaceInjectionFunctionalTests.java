@@ -15,7 +15,7 @@ import org.hibernate.annotations.SQLSelect;
 import org.hibernate.annotations.SQLUpdate;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.jdbc.CollectingStatementObserver;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -33,12 +33,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SuppressWarnings("JUnitMalformedDeclaration")
 @ServiceRegistry(settings = @Setting( name= AvailableSettings.DEFAULT_SCHEMA, value = "my_schema" ) )
 @DomainModel(annotatedClasses = CustomSqlNamespaceInjectionFunctionalTests.CustomEntity.class)
-@SessionFactory(useCollectingStatementInspector = true, createSecondarySchemas = true)
+@SessionFactory(useCollectingStatementObserver = true, createSecondarySchemas = true)
 @RequiresDialect(H2Dialect.class)
 public class CustomSqlNamespaceInjectionFunctionalTests {
 	@Test
 	void testUsage(SessionFactoryScope sessions) {
-		final SQLStatementInspector statementInspector = sessions.getCollectingStatementInspector();
+		final CollectingStatementObserver statementInspector = sessions.getCollectingStatementObserver();
 
 		// create one, verifying the executed INSERT
 		statementInspector.clear();

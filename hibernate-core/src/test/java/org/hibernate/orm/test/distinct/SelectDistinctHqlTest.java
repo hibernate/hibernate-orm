@@ -7,7 +7,7 @@ package org.hibernate.orm.test.distinct;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.jdbc.CollectingStatementObserver;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -33,11 +33,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 @JiraKey(value = "HHH-10965")
 @DomainModel(annotatedClasses = {SelectDistinctHqlTest.Person.class, SelectDistinctHqlTest.Phone.class})
-@SessionFactory(useCollectingStatementInspector = true)
+@SessionFactory(useCollectingStatementObserver = true)
 public class SelectDistinctHqlTest {
 
 	private static final String DISTINCT_NAMED_QUERY = "distinct";
-	private SQLStatementInspector SQLStatementInspector;
+	private CollectingStatementObserver collectingStatementObserver;
 
 	@BeforeEach
 	protected void setup(SessionFactoryScope scope) {
@@ -50,8 +50,8 @@ public class SelectDistinctHqlTest {
 			person.addPhone( new Phone( "028-234-9876" ) );
 		} );
 
-		SQLStatementInspector = scope.getCollectingStatementInspector();
-		SQLStatementInspector.clear();
+		collectingStatementObserver = scope.getCollectingStatementObserver();
+		collectingStatementObserver.clear();
 	}
 
 	@AfterEach
@@ -62,10 +62,9 @@ public class SelectDistinctHqlTest {
 	@Test
 	public void test(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
-			SQLStatementInspector.getSqlQueries().clear();
 			List<Person> persons = session.createQuery( "select distinct p from Person p", Person.class )
 					.getResultList();
-			String sqlQuery = SQLStatementInspector.getSqlQueries().get(0);
+			String sqlQuery = collectingStatementObserver.getSqlQueries().get(0);
 			assertEquals( 1, persons.size() );
 			assertTrue( sqlQuery.contains( " distinct " ) );
 		} );
@@ -78,11 +77,10 @@ public class SelectDistinctHqlTest {
 		} );
 
 		scope.inTransaction( session -> {
-			SQLStatementInspector.getSqlQueries().clear();
 			List<Person> persons = session.createQuery( "select distinct p from Person p left join fetch p.phones ", Person.class )
 					.getResultList();
 			assertEquals( 1, persons.size() );
-			String sqlQuery = SQLStatementInspector.getSqlQueries().get(0);
+			String sqlQuery = collectingStatementObserver.getSqlQueries().get(0);
 			assertTrue( sqlQuery.contains( " distinct " ) );
 		} );
 	}
@@ -91,13 +89,12 @@ public class SelectDistinctHqlTest {
 	@JiraKey(value = "HHH-13780")
 	public void testNamedQueryDistinctPassThroughTrueWhenNotSpecified(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
-			SQLStatementInspector.getSqlQueries().clear();
 			List<Person> persons =
 					session.createNamedQuery( DISTINCT_NAMED_QUERY, Person.class )
 							.setMaxResults( 5 )
 							.getResultList();
 			assertEquals( 1, persons.size() );
-			String sqlQuery = SQLStatementInspector.getSqlQueries().get(0);
+			String sqlQuery = collectingStatementObserver.getSqlQueries().get(0);
 			assertTrue( sqlQuery.contains( " distinct " ) );
 		} );
 	}

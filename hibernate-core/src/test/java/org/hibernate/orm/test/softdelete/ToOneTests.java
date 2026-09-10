@@ -11,7 +11,7 @@ import org.hibernate.annotations.SoftDelete;
 import org.hibernate.annotations.SoftDeleteType;
 import org.hibernate.type.YesNoConverter;
 
-import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.jdbc.CollectingStatementObserver;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -32,7 +32,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel( annotatedClasses = { ToOneTests.Issue.class, ToOneTests.User.class } )
-@SessionFactory(useCollectingStatementInspector = true)
+@SessionFactory(useCollectingStatementObserver = true)
 public class ToOneTests {
 	@BeforeEach
 	void createTestData(SessionFactoryScope scope) {
@@ -65,7 +65,7 @@ public class ToOneTests {
 
 	@Test
 	void basicBaselineTest(SessionFactoryScope scope) {
-		final SQLStatementInspector sqlInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver sqlInspector = scope.getCollectingStatementObserver();
 		sqlInspector.clear();
 
 		scope.inTransaction( (session) -> {
@@ -107,7 +107,7 @@ public class ToOneTests {
 
 	@Test
 	void fkAccessTest(SessionFactoryScope scope) {
-		final SQLStatementInspector sqlInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver sqlInspector = scope.getCollectingStatementObserver();
 		sqlInspector.clear();
 
 		scope.inTransaction( (session) -> {

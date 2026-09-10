@@ -9,7 +9,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.jdbc.CollectingStatementObserver;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -23,13 +23,13 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 @JiraKey( value = "HHH-14201" )
 @DomainModel( annotatedClasses = { JoinOrderTest.EntityA.class, JoinOrderTest.EntityB.class, JoinOrderTest.EntityC.class } )
-@SessionFactory( useCollectingStatementInspector = true )
+@SessionFactory( useCollectingStatementObserver = true )
 public class JoinOrderTest {
 
 	@Test
 	public void testJoinOrder(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
-			final SQLStatementInspector sqlStatementInspector = scope.getCollectingStatementInspector();
+			final CollectingStatementObserver sqlStatementInspector = scope.getCollectingStatementObserver();
 			sqlStatementInspector.clear();
 
 			final String hql = "select 1"

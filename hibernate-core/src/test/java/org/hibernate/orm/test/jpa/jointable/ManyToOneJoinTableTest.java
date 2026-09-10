@@ -8,7 +8,7 @@ import java.util.List;
 
 import org.hibernate.cfg.AvailableSettings;
 
-import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.jdbc.CollectingStatementObserver;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -35,13 +35,13 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 				@Setting(name = AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION, value = "create-drop")
 		}
 )
-@SessionFactory(useCollectingStatementInspector = true)
+@SessionFactory(useCollectingStatementObserver = true)
 public class ManyToOneJoinTableTest {
-	private SQLStatementInspector sqlStatementInspector;
+	private CollectingStatementObserver sqlStatementInspector;
 
 	@BeforeEach
 	public void setup(SessionFactoryScope scope) {
-		sqlStatementInspector = scope.getCollectingStatementInspector();
+		sqlStatementInspector = scope.getCollectingStatementObserver();
 		sqlStatementInspector.clear();
 	}
 
@@ -50,10 +50,10 @@ public class ManyToOneJoinTableTest {
 		final String queryString = "SELECT e.id FROM Person e";
 		scope.inTransaction(
 				session -> {
-					final List<String> sqlQueries = sqlStatementInspector.getSqlQueries();
-					sqlQueries.clear();
+					sqlStatementInspector.clear();
 					session.createQuery( Long.class, queryString ).list();
-					assertThat( sqlQueries.size(), is( 1 ) );
+					final List<String> sqlQueries = sqlStatementInspector.getSqlQueries();
+					assertThat( sqlStatementInspector.getSqlQueries().size(), is( 1 ) );
 					// Ideally, we could detect that *ToOne join tables aren't used, but that requires tracking the uses of properties
 					// Since *ToOne join tables are treated like secondary or subclass/superclass tables, the proper fix will allow many more optimizations
 					String generatedSQl = sqlQueries.get( 0 );

@@ -13,7 +13,7 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import org.hibernate.Hibernate;
 import org.hibernate.LazyInitializationException;
-import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.jdbc.CollectingStatementObserver;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -41,12 +41,12 @@ import static org.junit.jupiter.api.Assertions.fail;
 				PersistOnLazyCollectionTests.Payment.class
 		}
 )
-@SessionFactory(useCollectingStatementInspector = true)
+@SessionFactory(useCollectingStatementObserver = true)
 public class PersistOnLazyCollectionTests {
 
 	@Test
 	public void testMutation(SessionFactoryScope scope) {
-		final SQLStatementInspector sqlCollector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver sqlCollector = scope.getCollectingStatementObserver();
 
 		final Order detached = scope.fromTransaction( (session) -> {
 			sqlCollector.clear();
@@ -77,7 +77,7 @@ public class PersistOnLazyCollectionTests {
 
 	@Test
 	public void testCascadePersist(SessionFactoryScope scope) {
-		final SQLStatementInspector sqlCollector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver sqlCollector = scope.getCollectingStatementObserver();
 
 		final Order detached = scope.fromTransaction( (session) -> {
 			sqlCollector.clear();

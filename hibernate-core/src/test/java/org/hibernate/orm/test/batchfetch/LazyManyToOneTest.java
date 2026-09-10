@@ -10,7 +10,7 @@ import org.hibernate.Hibernate;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.query.Query;
 
-import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.jdbc.CollectingStatementObserver;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -34,7 +34,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 @DomainModel(
 		annotatedClasses = { LazyManyToOneTest.Child.class, LazyManyToOneTest.Parent.class }
 )
-@SessionFactory(useCollectingStatementInspector = true)
+@SessionFactory(useCollectingStatementObserver = true)
 @ServiceRegistry(settings = @Setting(name = AvailableSettings.DEFAULT_BATCH_FETCH_SIZE, value = "2"))
 @JiraKey("HHH-15449")
 public class LazyManyToOneTest {
@@ -63,7 +63,7 @@ public class LazyManyToOneTest {
 
 	@Test
 	public void testGetResultList(SessionFactoryScope scope) {
-		final SQLStatementInspector sqlStatementInterceptor = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver sqlStatementInterceptor = scope.getCollectingStatementObserver();
 		sqlStatementInterceptor.clear();
 		scope.inTransaction(
 				session -> {

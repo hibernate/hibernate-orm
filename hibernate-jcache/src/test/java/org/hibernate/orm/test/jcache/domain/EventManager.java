@@ -13,9 +13,9 @@ import java.util.ListIterator;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 
-import org.hibernate.query.Query;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.query.SelectionQuery;
 
 public class EventManager {
 
@@ -30,7 +30,7 @@ public class EventManager {
 		session.beginTransaction();
 
 		List emailList = new ArrayList();
-		Event event = (Event)session.getReference(Event.class, eventId);
+		Event event = session.getReference(Event.class, eventId);
 		for (Iterator it = event.getParticipants().iterator(); it.hasNext(); ) {
 			Person person = (Person)it.next();
 			emailList.addAll(person.getEmailAddresses());
@@ -85,13 +85,13 @@ public class EventManager {
 		return person.getId();
 	}
 
-	public List listEvents() {
+	public List<Event> listEvents() {
 
 		Session session = sessionFactory.getCurrentSession();
 
 		session.beginTransaction();
 
-		List result = session.createQuery("from Event").setCacheable(true).list();
+		List<Event> result = session.createQuery("from Event", Event.class).setCacheable(true).list();
 
 		session.getTransaction().commit();
 
@@ -101,18 +101,18 @@ public class EventManager {
 	/**
 	 * Call setEntity() on a cacheable query - see FORGE-265
 	 */
-	public List listEventsOfOrganizer(Person organizer) {
+	public List<Event> listEventsOfOrganizer(Person organizer) {
 
 		Session session = sessionFactory.getCurrentSession();
 
 		try {
 			session.beginTransaction();
 
-			Query query = session.createQuery( "from Event ev where ev.organizer = :organizer" );
+			SelectionQuery<Event> query = session.createSelectionQuery( "from Event ev where ev.organizer = :organizer", Event.class );
 
 			query.setCacheable( true );
 			query.setParameter( "organizer", organizer );
-			List result = query.list();
+			List<Event> result = query.list();
 
 			session.getTransaction().commit();
 
@@ -129,7 +129,7 @@ public class EventManager {
 	/**
 	 * Use a Criteria query - see FORGE-247
 	 */
-	public List listEventsWithCriteria() {
+	public List<Event> listEventsWithCriteria() {
 		Session session = sessionFactory.getCurrentSession();
 
 		try {
@@ -139,7 +139,7 @@ public class EventManager {
 			CriteriaQuery<Event> criteria = criteriaBuilder.createQuery( Event.class );
 			criteria.from( Event.class );
 
-			List<Event> result = session.createQuery( criteria ).setCacheable( true ).list();
+			List<Event> result = session.createSelectionQuery( criteria ).setCacheable( true ).list();
 //			List result = session.createCriteria( Event.class )
 //					.setCacheable( true )
 //					.list();
@@ -161,8 +161,8 @@ public class EventManager {
 		Session session = sessionFactory.getCurrentSession();
 		session.beginTransaction();
 
-		Person aPerson = (Person)session.getReference(Person.class, personId);
-		Event anEvent = (Event)session.getReference(Event.class, eventId);
+		Person aPerson = session.getReference(Person.class, personId);
+		Event anEvent = session.getReference(Event.class, eventId);
 
 		aPerson.getEvents().add(anEvent);
 
@@ -173,7 +173,7 @@ public class EventManager {
 		Session session = sessionFactory.getCurrentSession();
 		session.beginTransaction();
 
-		Person aPerson = (Person)session.getReference(Person.class, personId);
+		Person aPerson = session.getReference(Person.class, personId);
 		account.setPerson(aPerson);
 
 		session.persist(account);
@@ -186,7 +186,7 @@ public class EventManager {
 		Session session = sessionFactory.getCurrentSession();
 		session.beginTransaction();
 
-		Account account = (Account)session.getReference(Account.class, accountId);
+		Account account = session.getReference(Account.class, accountId);
 
 		session.getTransaction().commit();
 		return account;
@@ -197,7 +197,7 @@ public class EventManager {
 		Session session = sessionFactory.getCurrentSession();
 		session.beginTransaction();
 
-		Person aPerson = (Person)session.getReference(Person.class, personId);
+		Person aPerson = session.getReference(Person.class, personId);
 
 		// The getEmailAddresses() might trigger a lazy load of the collection
 		aPerson.getEmailAddresses().add(emailAddress);
@@ -210,7 +210,7 @@ public class EventManager {
 		Session session = sessionFactory.getCurrentSession();
 		session.beginTransaction();
 
-		Person aPerson = (Person)session.getReference(Person.class, personId);
+		Person aPerson = session.getReference(Person.class, personId);
 		pN.setPersonId(personId.longValue());
 		aPerson.getPhoneNumbers().add(pN);
 
@@ -222,7 +222,7 @@ public class EventManager {
 		Session session = sessionFactory.getCurrentSession();
 		session.beginTransaction();
 
-		Person aPerson = (Person)session.getReference(Person.class, personId);
+		Person aPerson = session.getReference(Person.class, personId);
 		aPerson.addTalisman(talisman);
 
 		session.getTransaction().commit();
@@ -234,8 +234,8 @@ public class EventManager {
 		session.beginTransaction();
 
 		// delete all existing calendars
-		List calendars = session.createQuery("from HolidayCalendar").setCacheable(true).list();
-		for (ListIterator li = calendars.listIterator(); li.hasNext(); ) {
+		List<HolidayCalendar> calendars = session.createSelectionQuery("from HolidayCalendar", HolidayCalendar.class).setCacheable(true).list();
+		for (ListIterator<HolidayCalendar> li = calendars.listIterator(); li.hasNext(); ) {
 			session.remove(li.next());
 		}
 
@@ -253,10 +253,10 @@ public class EventManager {
 
 		session.beginTransaction();
 
-		List calendars = session.createQuery("from HolidayCalendar").setCacheable(true).list();
+		List<HolidayCalendar> calendars = session.createSelectionQuery("from HolidayCalendar", HolidayCalendar.class).setCacheable(true).list();
 
 		session.getTransaction().commit();
 
-		return calendars.isEmpty() ? null : (HolidayCalendar)calendars.get(0);
+		return calendars.isEmpty() ? null : calendars.get(0);
 	}
 }

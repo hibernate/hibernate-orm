@@ -20,7 +20,7 @@ import org.hibernate.cfg.QuerySettings;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.jpa.HibernateHints;
 
-import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.jdbc.CollectingStatementObserver;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
@@ -60,7 +60,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 		name = QuerySettings.FAIL_ON_PAGINATION_OVER_COLLECTION_FETCH,
 		value = "true"
 ))
-@SessionFactory(useCollectingStatementInspector = true)
+@SessionFactory(useCollectingStatementObserver = true)
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsOffsetInSubquery.class)
 public class CollectionFetchPaginationTest {
 
@@ -94,7 +94,7 @@ public class CollectionFetchPaginationTest {
 
 	@Test
 	void fetchJoinWithMaxResults(SessionFactoryScope scope) {
-		final SQLStatementInspector sql = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver sql = scope.getCollectingStatementObserver();
 		scope.inTransaction( s -> {
 			sql.clear();
 
@@ -117,7 +117,7 @@ public class CollectionFetchPaginationTest {
 
 	@Test
 	void fetchJoinWithInMemoryLimitHint(SessionFactoryScope scope) {
-		final SQLStatementInspector sql = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver sql = scope.getCollectingStatementObserver();
 		scope.inTransaction( s -> {
 			sql.clear();
 
@@ -142,7 +142,7 @@ public class CollectionFetchPaginationTest {
 
 	@Test
 	void fetchJoinWithInMemoryLimitHintAsScroll(SessionFactoryScope scope) {
-		final SQLStatementInspector sql = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver sql = scope.getCollectingStatementObserver();
 		scope.inTransaction( s -> {
 			sql.clear();
 
@@ -173,7 +173,7 @@ public class CollectionFetchPaginationTest {
 
 	@Test
 	void fetchJoinWithExplicitLimitClause(SessionFactoryScope scope) {
-		final SQLStatementInspector sql = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver sql = scope.getCollectingStatementObserver();
 		scope.inTransaction( s -> {
 			sql.clear();
 
@@ -195,7 +195,7 @@ public class CollectionFetchPaginationTest {
 
 	@Test
 	void entityGraphWithCollectionFetchAndMaxResults(SessionFactoryScope scope) {
-		final SQLStatementInspector sql = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver sql = scope.getCollectingStatementObserver();
 		scope.inTransaction( s -> {
 			sql.clear();
 
@@ -264,7 +264,7 @@ public class CollectionFetchPaginationTest {
 	 */
 	@Test
 	void innerFetchJoinWithMaxResults(SessionFactoryScope scope) {
-		final SQLStatementInspector sql = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver sql = scope.getCollectingStatementObserver();
 		scope.inTransaction( s -> {
 			sql.clear();
 
@@ -328,7 +328,7 @@ public class CollectionFetchPaginationTest {
 	 */
 	@Test
 	void fetchJoinWithMaxResultsAsStream(SessionFactoryScope scope) {
-		final SQLStatementInspector sql = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver sql = scope.getCollectingStatementObserver();
 		scope.inTransaction( s -> {
 			sql.clear();
 
@@ -356,7 +356,7 @@ public class CollectionFetchPaginationTest {
 
 	@Test
 	void fetchJoinWithCollectionOrderMaxResultsAsStream(SessionFactoryScope scope) {
-		final SQLStatementInspector sql = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver sql = scope.getCollectingStatementObserver();
 		scope.inTransaction( s -> {
 			sql.clear();
 
@@ -389,7 +389,7 @@ public class CollectionFetchPaginationTest {
 	 */
 	@Test
 	void selectDistinctWithFetchAndLimit(SessionFactoryScope scope) {
-		final SQLStatementInspector sql = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver sql = scope.getCollectingStatementObserver();
 		scope.inTransaction( s -> {
 			sql.clear();
 
@@ -418,7 +418,7 @@ public class CollectionFetchPaginationTest {
 	 */
 	@Test
 	void fetchJoinWithSingularFetchToo(SessionFactoryScope scope) {
-		final SQLStatementInspector sql = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver sql = scope.getCollectingStatementObserver();
 		scope.inTransaction( s -> {
 			sql.clear();
 
@@ -455,7 +455,7 @@ public class CollectionFetchPaginationTest {
 	 */
 	@Test
 	void fetchJoinWithMultipleRoots(SessionFactoryScope scope) {
-		final SQLStatementInspector sql = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver sql = scope.getCollectingStatementObserver();
 		scope.inTransaction( s -> {
 			sql.clear();
 
@@ -481,7 +481,7 @@ public class CollectionFetchPaginationTest {
 
 	@Test
 	void fetchJoinWithMultipleRootsAndPositionalOrderBy(SessionFactoryScope scope) {
-		final SQLStatementInspector sql = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver sql = scope.getCollectingStatementObserver();
 		scope.inTransaction( s -> {
 			sql.clear();
 
@@ -507,7 +507,7 @@ public class CollectionFetchPaginationTest {
 
 	@Test
 	void fetchJoinWithMultipleRootsAndPositionalExpressionOrderBy(SessionFactoryScope scope) {
-		final SQLStatementInspector sql = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver sql = scope.getCollectingStatementObserver();
 		scope.inTransaction( s -> {
 			sql.clear();
 
@@ -538,7 +538,7 @@ public class CollectionFetchPaginationTest {
 	 */
 	@Test
 	void nonFetchJoinPlusFetchJoin(SessionFactoryScope scope) {
-		final SQLStatementInspector sql = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver sql = scope.getCollectingStatementObserver();
 		scope.inTransaction( s -> {
 			sql.clear();
 
@@ -575,7 +575,7 @@ public class CollectionFetchPaginationTest {
 	 */
 	@Test
 	void nonFetchJoinPlusFetchJoin2(SessionFactoryScope scope) {
-		final SQLStatementInspector sql = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver sql = scope.getCollectingStatementObserver();
 		scope.inTransaction( s -> {
 			sql.clear();
 

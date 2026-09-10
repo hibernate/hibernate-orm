@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@SessionFactory(useCollectingStatementInspector = true)
+@SessionFactory(useCollectingStatementObserver = true)
 @DomainModel(annotatedClasses = {JoinFetchManyToAnyTest.Parent.class,
 		JoinFetchManyToAnyTest.NormalChild.class, JoinFetchManyToAnyTest.SpecialChild.class})
 class JoinFetchManyToAnyTest {
@@ -74,7 +74,7 @@ class JoinFetchManyToAnyTest {
 
 	@Test
 	void test(SessionFactoryScope scope) {
-		final var statementInspector = scope.getCollectingStatementInspector();
+		final var statementInspector = scope.getCollectingStatementObserver();
 		scope.inTransaction( s1 -> {
 			final Parent parent = new Parent();
 			final NormalChild normalChild = new NormalChild();

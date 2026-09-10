@@ -17,7 +17,7 @@ import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Fetch;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Root;
-import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.jdbc.CollectingStatementObserver;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -38,7 +38,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 		NestedFetchTest.Order.class,
 		NestedFetchTest.OrderLine.class,
 } )
-@SessionFactory( useCollectingStatementInspector = true )
+@SessionFactory( useCollectingStatementObserver = true )
 @Jira( "https://hibernate.atlassian.net/browse/HHH-16905" )
 public class NestedFetchTest {
 	@BeforeAll
@@ -66,7 +66,7 @@ public class NestedFetchTest {
 
 	@Test
 	public void testNestedFetch(SessionFactoryScope scope) {
-		final SQLStatementInspector sqlCollector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver sqlCollector = scope.getCollectingStatementObserver();
 		sqlCollector.clear();
 
 		final Customer customer = scope.fromTransaction( (session) -> {

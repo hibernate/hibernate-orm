@@ -15,7 +15,7 @@ import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.query.criteria.JpaRoot;
 
-import org.hibernate.testing.SkipForDialect;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.testing.orm.domain.gambit.BasicEntity;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;
@@ -112,7 +112,7 @@ public class BasicCriteriaExecutionTests {
 	// Doing ... where ? = ? ... is only allowed in a few DBs. Since this is useless, we don't bother to emulate this
 	@Test
 	@RequiresDialect(H2Dialect.class)
-	@SkipForDialect(value = DerbyDialect.class, comment = "Derby doesn't support comparing parameters against each other")
+	@SkipForDialect(dialectClass = DerbyDialect.class, reason = "Derby doesn't support comparing parameters against each other")
 	public void testExecutingBasicCriteriaQueryParameterPredicate(SessionFactoryScope scope) {
 		scope.inStatelessTransaction(
 				session -> {
@@ -132,7 +132,7 @@ public class BasicCriteriaExecutionTests {
 	// Doing ... where ? = ? ... is only allowed in a few DBs. Since this is useless, we don't bother to emulate this
 	@Test
 	@RequiresDialect(H2Dialect.class)
-	@SkipForDialect(value = DerbyDialect.class, comment = "Derby doesn't support comparing parameters against each other")
+	@SkipForDialect(dialectClass = DerbyDialect.class, reason = "Derby doesn't support comparing parameters against each other")
 	public void testExecutingBasicCriteriaQueryParameterPredicateInStatelessSession(SessionFactoryScope scope) {
 		scope.inStatelessTransaction(
 				session -> {

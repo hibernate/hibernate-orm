@@ -7,7 +7,7 @@ package org.hibernate.orm.test.id;
 import org.hibernate.dialect.SQLServerDialect;
 
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.jdbc.CollectingStatementObserver;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
@@ -22,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @DomainModel(
 		xmlMappings = "org/hibernate/orm/test/id/Person.hbm.xml"
 )
-@SessionFactory(useCollectingStatementInspector = true)
+@SessionFactory(useCollectingStatementObserver = true)
 public class SequenceGeneratorTest {
 
 
@@ -47,7 +47,7 @@ public class SequenceGeneratorTest {
 		);
 
 		assertTrue( person.getId() > 0 );
-		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 		assertTrue( statementInspector.getSqlQueries()
 							.stream()
 							.filter( sql -> sql.contains( "product_sequence" ) )

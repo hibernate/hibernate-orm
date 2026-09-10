@@ -4,11 +4,11 @@
  */
 package org.hibernate.property.access.spi;
 
-import org.hibernate.accessor.HibernateAccessorFactory;
+import org.hibernate.accessor.AccessorFactory;
 import org.hibernate.service.Service;
 
 /**
- * Service providing access to {@link HibernateAccessorFactory}.
+ * Service providing access to {@link AccessorFactory}.
  *
  * <p>The default implementation wraps the ByteBuddy factory in an ORM-specific
  * delegating factory ({@code OrmHibernateAccessorFactory}) that provides optimized
@@ -21,5 +21,5 @@ import org.hibernate.service.Service;
  */
 public interface PropertyAccessorService extends Service {
 
-	HibernateAccessorFactory hibernateAccessorFactory();
+	AccessorFactory hibernateAccessorFactory();
 }

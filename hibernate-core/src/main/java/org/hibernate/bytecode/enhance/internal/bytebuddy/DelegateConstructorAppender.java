@@ -14,7 +14,7 @@ import net.bytebuddy.jar.asm.Type;
 /**
  * Emits a constructor that calls {@code super()} and then stores each element
  * of the typed array parameter into the corresponding {@code delegate$N}
- * instance field. The array is already typed (e.g. {@code HibernateAccessorValueReader[]})
+ * instance field. The array is already typed (e.g. {@code ValueReader[]})
  * so no per-element casts are needed.
  */
 public class DelegateConstructorAppender implements ByteCodeAppender {

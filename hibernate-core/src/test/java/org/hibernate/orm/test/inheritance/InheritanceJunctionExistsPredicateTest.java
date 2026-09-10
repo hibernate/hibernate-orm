@@ -37,7 +37,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 		InheritanceJunctionExistsPredicateTest.EntityAContainer.class,
 		InheritanceJunctionExistsPredicateTest.EntityBContainer.class,
 } )
-@SessionFactory( useCollectingStatementInspector = true )
+@SessionFactory( useCollectingStatementObserver = true )
 @Jira( "https://hibernate.atlassian.net/browse/HHH-18174" )
 public class InheritanceJunctionExistsPredicateTest {
 	@Test

@@ -98,7 +98,7 @@ public class JoinedInheritancePropertyJoinTest {
 	public void testHibernateUnrelatedPropertyQuery(EntityManagerFactoryScope scope) {
 		final String queryString = "FROM EntityA a Inner Join EntityC c ON a.propA = c.propC Where c.propB = :propB";
 		scope.inEntityManager( em -> {
-			List results = em.createQuery( queryString ).setParameter( "propB", "propB" ).getResultList();
+			List<EntityA> results = em.createQuery( queryString, EntityA.class ).setParameter( "propB", "propB" ).getResultList();
 			assertEquals( 1, results.size() );
 		} );
 	}

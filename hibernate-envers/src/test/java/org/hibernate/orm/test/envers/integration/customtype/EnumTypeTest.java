@@ -41,7 +41,7 @@ public class EnumTypeTest {
 	public void testEnumRepresentation(EntityManagerFactoryScope scope) {
 		scope.inTransaction( entityManager -> {
 			final String qry = "SELECT enum1, enum2 FROM EnumTypeEntity_AUD ORDER BY REV ASC";
-			Object[] results = (Object[]) entityManager.createNativeQuery( qry, "e1_e2" ).getSingleResult();
+			Object[] results = entityManager.createNativeQuery( qry, "e1_e2" ).ofType( Object[].class ).getSingleResult();
 
 			assertNotNull( results );
 			assertEquals( 2, results.length );

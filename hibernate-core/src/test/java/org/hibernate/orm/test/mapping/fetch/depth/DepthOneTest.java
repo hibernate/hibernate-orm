@@ -48,7 +48,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 				DepthOneTest.Group.class
 		}
 )
-@SessionFactory(useCollectingStatementInspector = true)
+@SessionFactory(useCollectingStatementObserver = true)
 @ServiceRegistry(
 		settings = {
 				@Setting(name = AvailableSettings.MAX_FETCH_DEPTH, value = "1"),

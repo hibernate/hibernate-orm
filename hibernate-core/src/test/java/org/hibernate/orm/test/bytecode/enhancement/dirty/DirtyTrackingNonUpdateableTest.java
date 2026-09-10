@@ -39,9 +39,9 @@ public class DirtyTrackingNonUpdateableTest {
 			entityManager.persist( thing );
 
 			entityManager
-			.createQuery( "update thing set special = :s, version = version + 1" )
+			.createMutationQuery( "update thing set special = :s, version = version + 1" )
 			.setParameter( "s", "new" )
-			.executeUpdate();
+			.execute();
 
 			thing.special = "If I'm flush to the DB you get an OptimisticLockException";
 		} );

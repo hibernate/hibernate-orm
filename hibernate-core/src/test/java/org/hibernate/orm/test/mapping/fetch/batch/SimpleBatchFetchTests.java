@@ -12,7 +12,7 @@ import org.hibernate.annotations.BatchSize;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.proxy.HibernateProxy;
 
-import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.jdbc.CollectingStatementObserver;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -37,12 +37,12 @@ import static org.assertj.core.api.Assertions.assertThat;
  * Partially acts as a baseline for SubselectFetchCollectionFromBatchTest
  */
 @DomainModel( annotatedClasses = { SimpleBatchFetchTests.EmployeeGroup.class, SimpleBatchFetchTests.Employee.class } )
-@SessionFactory( useCollectingStatementInspector = true )
+@SessionFactory( useCollectingStatementObserver = true )
 public class SimpleBatchFetchTests {
 
 	@Test
 	public void baselineTest(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 		statementInspector.clear();
 
 		scope.inTransaction( (session) -> {

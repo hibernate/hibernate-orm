@@ -7,7 +7,7 @@ package org.hibernate.orm.test.softdelete.converter;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.orm.test.softdelete.MappingVerifier;
 
-import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.jdbc.CollectingStatementObserver;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -21,7 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel(annotatedClasses = TheEntity.class)
-@SessionFactory( useCollectingStatementInspector = true)
+@SessionFactory( useCollectingStatementObserver = true)
 public class ConvertedSoftDeleteTests {
 	@AfterEach
 	void dropTestData(SessionFactoryScope scope) {
@@ -42,7 +42,7 @@ public class ConvertedSoftDeleteTests {
 
 	@Test
 	void testUsage(SessionFactoryScope scope) {
-		final SQLStatementInspector sqlInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver sqlInspector = scope.getCollectingStatementObserver();
 		sqlInspector.clear();
 
 		scope.inTransaction( (session) -> {

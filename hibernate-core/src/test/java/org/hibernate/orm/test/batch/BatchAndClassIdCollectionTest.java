@@ -46,7 +46,7 @@ import org.assertj.core.api.Assertions;
 		}
 )
 @SessionFactory(
-		useCollectingStatementInspector = true
+		useCollectingStatementObserver = true
 )
 @JiraKey("HHH-17202")
 public class BatchAndClassIdCollectionTest {

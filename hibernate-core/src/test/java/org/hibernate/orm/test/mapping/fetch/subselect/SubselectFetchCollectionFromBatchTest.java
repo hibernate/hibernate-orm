@@ -15,7 +15,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.jdbc.CollectingStatementObserver;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -44,7 +44,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 @ServiceRegistry( settings = @Setting( name = AvailableSettings.GENERATE_STATISTICS, value = "true" ) )
 @DomainModel( annotatedClasses = { SubselectFetchCollectionFromBatchTest.EmployeeGroup.class, SubselectFetchCollectionFromBatchTest.Employee.class } )
-@SessionFactory( useCollectingStatementInspector = true )
+@SessionFactory( useCollectingStatementObserver = true )
 public class SubselectFetchCollectionFromBatchTest {
 
 	@Test
@@ -68,7 +68,7 @@ public class SubselectFetchCollectionFromBatchTest {
 			return new EmployeeGroup[] { group1, group2 };
 		});
 
-		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 		statementInspector.clear();
 
 		scope.inTransaction( (s) -> {

@@ -5,8 +5,8 @@
 package org.hibernate.orm.test.envers.integration.nativequery;
 
 import java.util.List;
-import jakarta.persistence.Query;
 
+import jakarta.persistence.TypedQuery;
 import org.hibernate.testing.envers.junit.EnversTest;
 import org.hibernate.testing.orm.junit.BeforeClassTemplate;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
@@ -26,17 +26,15 @@ public class EntityResultNativeQueryTest {
 
 	@BeforeClassTemplate
 	public void initData(EntityManagerFactoryScope scope) {
-		scope.inTransaction( em -> {
-			em.persist( new SimpleEntity( "Hibernate" ) );
-		} );
+		scope.inTransaction( em -> em.persist( new SimpleEntity( "Hibernate" )) );
 	}
 
 	@Test
 	public void testNativeQueryResultHandling(EntityManagerFactoryScope scope) {
 		scope.inTransaction( em -> {
-			Query query = em.createNativeQuery( "select * from SimpleEntity", SimpleEntity.class );
-			List results = query.getResultList();
-			SimpleEntity result = (SimpleEntity) results.get( 0 );
+			TypedQuery<SimpleEntity> query = em.createNativeQuery( "select * from SimpleEntity", SimpleEntity.class );
+			List<SimpleEntity> results = query.getResultList();
+			SimpleEntity result = results.get( 0 );
 			assertEquals( "Hibernate", result.getStringField() );
 		} );
 	}

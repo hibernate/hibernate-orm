@@ -9,7 +9,7 @@ import java.util.List;
 
 import org.hibernate.Hibernate;
 
-import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.jdbc.CollectingStatementObserver;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -23,7 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Steve Ebersole
  */
 @DomainModel(annotatedClasses = CollectionOwner2.class)
-@SessionFactory(useCollectingStatementInspector = true)
+@SessionFactory(useCollectingStatementObserver = true)
 public class FetchLoadableTests {
 	@BeforeEach
 	void createTestData(SessionFactoryScope scope) {
@@ -63,7 +63,7 @@ public class FetchLoadableTests {
 
 	@Test
 	void testBatchLoading(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 
 		scope.inTransaction( (session) -> {
 			final List<CollectionOwner2> result = session.createQuery(
@@ -92,7 +92,7 @@ public class FetchLoadableTests {
 
 	@Test
 	void testSubSelectLoading(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 
 		scope.inTransaction( (session) -> {
 			final List<CollectionOwner2> result = session.createQuery(

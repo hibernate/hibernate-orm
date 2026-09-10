@@ -19,7 +19,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.lock.spi.LockingClauseRequest;
 import org.hibernate.dialect.lock.spi.PessimisticLockKind;
-import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.jdbc.CollectingStatementObserver;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -51,7 +51,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 			MultiLoadLockingTest.User.class
 		}
 	)
-@SessionFactory(useCollectingStatementInspector = true)
+@SessionFactory(useCollectingStatementObserver = true)
 @ServiceRegistry(
 		settings = {
 				@Setting(name = AvailableSettings.USE_QUERY_CACHE, value = "true"),
@@ -61,7 +61,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @JiraKey(value = "HHH-18992")
 public class MultiLoadLockingTest {
 
-	private SQLStatementInspector sqlStatementInspector;
+	private CollectingStatementObserver sqlStatementInspector;
 
 	private final List<Customer> customerList = List.of(
 			new Customer(1L, "Customer A"),
@@ -135,7 +135,7 @@ public class MultiLoadLockingTest {
 
 	@BeforeEach
 	public void prepareTestDataAndClearL2C(SessionFactoryScope scope) {
-		sqlStatementInspector = scope.getCollectingStatementInspector();
+		sqlStatementInspector = scope.getCollectingStatementObserver();
 
 		scope.inTransaction(session -> {
 			customerList.forEach( session::persist );

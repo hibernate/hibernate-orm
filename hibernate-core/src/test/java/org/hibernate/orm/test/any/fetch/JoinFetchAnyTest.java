@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@SessionFactory(useCollectingStatementInspector = true)
+@SessionFactory(useCollectingStatementObserver = true)
 @DomainModel(annotatedClasses = {JoinFetchAnyTest.AnyThing.class,
 		JoinFetchAnyTest.SomeThing.class, JoinFetchAnyTest.SomeOtherThing.class})
 class JoinFetchAnyTest {
@@ -46,7 +46,7 @@ class JoinFetchAnyTest {
 			s.persist( someThing );
 			s.persist( anyThing );
 		} );
-		final var statementInspector = scope.getCollectingStatementInspector();
+		final var statementInspector = scope.getCollectingStatementObserver();
 
 		// join fetch
 		statementInspector.clear();
@@ -110,7 +110,7 @@ class JoinFetchAnyTest {
 			var emptyThing = new AnyThing();
 			s.persist( emptyThing );
 		} );
-		final var statementInspector = scope.getCollectingStatementInspector();
+		final var statementInspector = scope.getCollectingStatementObserver();
 
 		// join fetch
 		statementInspector.clear();
@@ -169,7 +169,7 @@ class JoinFetchAnyTest {
 			s.persist( someThing );
 			s.persist( anyThing );
 		} );
-		final var statementInspector = scope.getCollectingStatementInspector();
+		final var statementInspector = scope.getCollectingStatementObserver();
 
 		statementInspector.clear();
 		scope.inTransaction( s -> {

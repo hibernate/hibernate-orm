@@ -13,7 +13,7 @@ import org.hibernate.annotations.FetchMode;
 
 import org.hibernate.query.Query;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.jdbc.CollectingStatementObserver;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -39,7 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 				ElementCollectionWithSubselectFetchModeTest.Client.class
 		}
 )
-@SessionFactory(useCollectingStatementInspector = true)
+@SessionFactory(useCollectingStatementObserver = true)
 @JiraKey(value = "HHH-15640")
 public class ElementCollectionWithSubselectFetchModeTest {
 
@@ -60,7 +60,7 @@ public class ElementCollectionWithSubselectFetchModeTest {
 
 	@Test
 	public void testSelect(SessionFactoryScope scope) {
-		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 		statementInspector.clear();
 		scope.inTransaction(
 				session -> {

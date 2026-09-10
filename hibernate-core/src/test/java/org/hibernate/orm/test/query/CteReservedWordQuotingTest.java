@@ -7,7 +7,7 @@ package org.hibernate.orm.test.query;
 import org.hibernate.cfg.MappingSettings;
 import org.hibernate.dialect.Dialect;
 
-import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.jdbc.CollectingStatementObserver;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -25,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @ServiceRegistry(settings = @Setting(name = MappingSettings.KEYWORD_AUTO_QUOTING_ENABLED, value = "true"))
 @DomainModel(standardModels = StandardDomainModel.CONTACTS)
-@SessionFactory(useCollectingStatementInspector = true)
+@SessionFactory(useCollectingStatementObserver = true)
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsRecursiveCtes.class)
 @Jira("https://hibernate.atlassian.net/browse/HHH-20650")
 public class CteReservedWordQuotingTest {
@@ -34,7 +34,7 @@ public class CteReservedWordQuotingTest {
 	public void testReservedWordCteNameIsQuoted(SessionFactoryScope scope) {
 		final Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();
 		final String quotedName = dialect.openQuote() + "element" + dialect.closeQuote();
-		final SQLStatementInspector inspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver inspector = scope.getCollectingStatementObserver();
 		scope.inTransaction( session -> {
 			inspector.clear();
 			session.createQuery(

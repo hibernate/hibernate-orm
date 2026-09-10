@@ -39,7 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 				SubselectTest.EntityC.class,
 		}
 )
-@SessionFactory(useCollectingStatementInspector = true)
+@SessionFactory(useCollectingStatementObserver = true)
 @ServiceRegistry(
 		settings = {
 				@Setting(name = AvailableSettings.DEFAULT_BATCH_FETCH_SIZE, value = "10"),

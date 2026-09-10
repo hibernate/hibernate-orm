@@ -15,7 +15,7 @@ import org.hibernate.orm.test.mapping.mutability.converted.MapConverter;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.descriptor.java.Immutability;
 
-import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.jdbc.CollectingStatementObserver;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -40,7 +40,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 @JiraKey( "HHH-16081" )
 @DomainModel( annotatedClasses = ImmutabilityMapAsBasicTests.TestEntity.class )
-@SessionFactory( useCollectingStatementInspector = true )
+@SessionFactory( useCollectingStatementObserver = true )
 public class ImmutabilityMapAsBasicTests {
 	@Test
 	void verifyMetamodel(DomainModelScope domainModelScope, SessionFactoryScope sessionFactoryScope) {
@@ -65,7 +65,7 @@ public class ImmutabilityMapAsBasicTests {
 	@Test
 	@JiraKey( "HHH-16132" )
 	void testDirtyCheckingManaged(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 
 		// mutate the managed entity state - should not trigger update since it is immutable
 		scope.inTransaction( (session) -> {
@@ -90,7 +90,7 @@ public class ImmutabilityMapAsBasicTests {
 	@Test
 	@JiraKey( "HHH-16132" )
 	void testDirtyCheckingMerge(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 
 		// load a detached reference
 		final TestEntity detached = scope.fromTransaction( (session) -> session.get( TestEntity.class, 1 ) );
@@ -112,7 +112,7 @@ public class ImmutabilityMapAsBasicTests {
 	@Test
 	@JiraKey( "HHH-16132" )
 	void testNotDirtyCheckingManaged(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 
 		// make no changes to a managed entity
 		scope.inTransaction( (session) -> {
@@ -133,7 +133,7 @@ public class ImmutabilityMapAsBasicTests {
 	@Test
 	@JiraKey( "HHH-16132" )
 	void testNotDirtyCheckingMerge(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 
 		// load a detached instance
 		final TestEntity detached = scope.fromTransaction( (session) -> session.get( TestEntity.class, 1 ) );

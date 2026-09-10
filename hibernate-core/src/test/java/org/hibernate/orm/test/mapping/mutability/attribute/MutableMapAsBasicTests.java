@@ -8,7 +8,7 @@ import java.util.Map;
 
 import org.hibernate.orm.test.mapping.mutability.converted.MapConverter;
 
-import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.jdbc.CollectingStatementObserver;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -29,13 +29,13 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 @JiraKey( "HHH-16081" )
 @DomainModel( annotatedClasses = MutableMapAsBasicTests.TestEntity.class )
-@SessionFactory( useCollectingStatementInspector = true )
+@SessionFactory( useCollectingStatementObserver = true )
 public class MutableMapAsBasicTests {
 
 	@Test
 	@JiraKey( "HHH-16132" )
 	void testDirtyChecking(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 
 		// make changes to a managed entity - should trigger update
 		scope.inTransaction( (session) -> {
@@ -61,7 +61,7 @@ public class MutableMapAsBasicTests {
 	@Test
 	@JiraKey( "HHH-16132" )
 	void testNotDirtyChecking(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 
 		// make no changes to a managed entity - should not trigger update
 		scope.inTransaction( (session) -> {

@@ -12,7 +12,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
-import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.jdbc.CollectingStatementObserver;
 import org.hibernate.testing.jta.TestingJtaBootstrap;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -43,12 +43,12 @@ import static org.hibernate.cfg.TransactionSettings.TRANSACTION_COORDINATOR_STRA
 		JCacheTransactionalCacheConcurrencyStrategyTest.Parent.class,
 		JCacheTransactionalCacheConcurrencyStrategyTest.Child.class
 })
-@SessionFactory(useCollectingStatementInspector = true)
+@SessionFactory(useCollectingStatementObserver = true)
 public class JCacheTransactionalCacheConcurrencyStrategyTest {
 
 	@Test
 	public void testTransactional(SessionFactoryScope factoryScope) {
-		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
+		final CollectingStatementObserver sqlCollector = factoryScope.getCollectingStatementObserver();
 
 		factoryScope.inTransaction( (session) -> {
 			Parent parent = new Parent( 1, "first" );

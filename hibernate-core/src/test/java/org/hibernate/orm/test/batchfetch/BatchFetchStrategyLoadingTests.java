@@ -9,7 +9,7 @@ import org.hibernate.annotations.BatchSize;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.loader.ast.internal.MultiKeyLoadHelper;
 
-import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.jdbc.CollectingStatementObserver;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -36,9 +36,9 @@ public class BatchFetchStrategyLoadingTests {
 			BatchFetchStrategyLoadingTests.Thing1.class,
 			BatchFetchStrategyLoadingTests.Thing2.class
 	})
-	@SessionFactory( useCollectingStatementInspector = true )
+	@SessionFactory( useCollectingStatementObserver = true )
 	public void testIt(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 		statementInspector.clear();
 
 		scope.inTransaction( (session) -> {

@@ -6,7 +6,7 @@ package org.hibernate.orm.test.envers.integration.collection;
 
 
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.Query;
+import jakarta.persistence.TypedQuery;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.envers.AuditReaderFactory;
@@ -164,9 +164,9 @@ public class DetachedMultipleCollectionChangeTest {
 
 
 			mce = em.find( MultipleCollectionEntity.class, mceId1 );
-			for ( MultipleCollectionRefEntity1 adres : mce.getRefEntities1() ) {
-				if ( adres.equals( re1_3 ) ) {
-					re1Id3 = adres.getId();
+			for ( MultipleCollectionRefEntity1 adress : mce.getRefEntities1() ) {
+				if ( adress.equals( re1_3 ) ) {
+					re1Id3 = adress.getId();
 				}
 			}
 			for ( MultipleCollectionRefEntity2 partner : mce.getRefEntities2() ) {
@@ -285,9 +285,8 @@ public class DetachedMultipleCollectionChangeTest {
 
 		String query = qryBuilder.toString();
 
-		Query qry = em.createQuery( query );
+		TypedQuery<Object[]> qry = em.createQuery( query, Object[].class );
 
-		@SuppressWarnings("unchecked")
 		List<Object[]> auditJoinTableRows = qry.getResultList();
 		List<AuditJoinTableInfo> result = new ArrayList<AuditJoinTableInfo>( auditJoinTableRows.size() );
 

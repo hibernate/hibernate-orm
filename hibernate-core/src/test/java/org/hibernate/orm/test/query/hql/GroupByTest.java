@@ -8,7 +8,7 @@ import java.time.LocalDate;
 import jakarta.persistence.Tuple;
 
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.jdbc.CollectingStatementObserver;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.contacts.Contact;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -28,7 +28,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 @ServiceRegistry
 @DomainModel(standardModels = StandardDomainModel.CONTACTS)
-@SessionFactory( useCollectingStatementInspector = true )
+@SessionFactory( useCollectingStatementObserver = true )
 public class GroupByTest {
 
 	@Test
@@ -44,7 +44,7 @@ public class GroupByTest {
 	@Test
 	@JiraKey( value = "HHH-9301" )
 	public void testGroupByAliasedBasicPart(SessionFactoryScope scope) {
-		final SQLStatementInspector sqlStatementInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver sqlStatementInspector = scope.getCollectingStatementObserver();
 		sqlStatementInspector.clear();
 
 		scope.inSession( (session) -> {
@@ -65,7 +65,7 @@ public class GroupByTest {
 	@Test
 	@JiraKey( value = "HHH-9301" )
 	public void testGroupByAliasedCompositePart(SessionFactoryScope scope) {
-		final SQLStatementInspector sqlStatementInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver sqlStatementInspector = scope.getCollectingStatementObserver();
 		sqlStatementInspector.clear();
 
 		scope.inTransaction( (session) -> {
@@ -90,7 +90,7 @@ public class GroupByTest {
 	@Test
 	@JiraKey( value = "HHH-9301" )
 	public void testGroupByMultipleAliases(SessionFactoryScope scope) {
-		final SQLStatementInspector sqlStatementInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver sqlStatementInspector = scope.getCollectingStatementObserver();
 		sqlStatementInspector.clear();
 
 		scope.inTransaction( (session) -> {

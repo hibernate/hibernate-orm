@@ -46,8 +46,8 @@ public class BasicSametable {
 	public void initData(EntityManagerFactoryScope scope) {
 		scope.inTransaction( em -> {
 			Session session = em.unwrap( Session.class );
-			session.createNativeQuery( "DROP TABLE children" ).executeUpdate();
-			session.createNativeQuery( "DROP TABLE children_AUD" ).executeUpdate();
+			session.createNativeStatement( "DROP TABLE children" ).execute();
+			session.createNativeStatement( "DROP TABLE children_AUD" ).execute();
 		} );
 
 		// We need first to modify the columns in the middle (join table) to allow null values. Hbm2ddl doesn't seem
@@ -61,19 +61,19 @@ public class BasicSametable {
 					ddlTypeRegistry.getTypeName( Types.INTEGER, scope.getDialect() ),
 					true
 			);
-			session.createNativeQuery(
+			session.createNativeStatement(
 					"CREATE TABLE children ( parent_id " + ddlTypeRegistry.getTypeName( Types.INTEGER, scope.getDialect() ) +
 							", child1_id" + nullableIntegerDefinition +
 							", child2_id" + nullableIntegerDefinition + " )"
-			).executeUpdate();
-			session.createNativeQuery(
+			).execute();
+			session.createNativeStatement(
 					"CREATE TABLE children_AUD ( REV " + ddlTypeRegistry.getTypeName( Types.INTEGER, scope.getDialect() ) + " NOT NULL" +
 							", REVEND " + ddlTypeRegistry.getTypeName( Types.INTEGER, scope.getDialect() ) +
 							", REVTYPE " + ddlTypeRegistry.getTypeName( Types.TINYINT, scope.getDialect() ) +
 							", parent_id " + ddlTypeRegistry.getTypeName( Types.INTEGER, scope.getDialect() ) +
 							", child1_id" + nullableIntegerDefinition +
 							", child2_id" + nullableIntegerDefinition + " )"
-			).executeUpdate();
+			).execute();
 		} );
 
 		ParentEntity p1 = new ParentEntity( "parent_1" );

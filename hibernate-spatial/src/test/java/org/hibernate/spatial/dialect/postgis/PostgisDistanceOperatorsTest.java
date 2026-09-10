@@ -8,7 +8,7 @@ import java.util.List;
 
 import org.hibernate.dialect.PostgreSQLDialect;
 
-import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.jdbc.CollectingStatementObserver;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -39,7 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 @RequiresDialect(PostgreSQLDialect.class)
 @DomainModel(annotatedClasses = { PostgisDistanceOperatorsTest.Neighbor.class })
-@SessionFactory(useCollectingStatementInspector = true)
+@SessionFactory(useCollectingStatementObserver = true)
 public class PostgisDistanceOperatorsTest {
 	public static CoordinateReferenceSystem<C2D> crs = CoordinateReferenceSystems.PROJECTED_2D_METER;
 
@@ -61,7 +61,7 @@ public class PostgisDistanceOperatorsTest {
 
 	@Test
 	public void testDistance2D(SessionFactoryScope scope) {
-		SQLStatementInspector inspector = scope.getCollectingStatementInspector();
+		CollectingStatementObserver inspector = scope.getCollectingStatementObserver();
 		inspector.clear();
 		scope.inTransaction(
 				session -> {
@@ -78,7 +78,7 @@ public class PostgisDistanceOperatorsTest {
 
 	@Test
 	public void testDistance2DBBox(SessionFactoryScope scope) {
-		SQLStatementInspector inspector = scope.getCollectingStatementInspector();
+		CollectingStatementObserver inspector = scope.getCollectingStatementObserver();
 		inspector.clear();
 		scope.inTransaction(
 				session -> {
@@ -95,7 +95,7 @@ public class PostgisDistanceOperatorsTest {
 
 	@Test
 	public void testDistanceNDBBox(SessionFactoryScope scope) {
-		SQLStatementInspector inspector = scope.getCollectingStatementInspector();
+		CollectingStatementObserver inspector = scope.getCollectingStatementObserver();
 		inspector.clear();
 		scope.inTransaction(
 				session -> {
@@ -115,7 +115,7 @@ public class PostgisDistanceOperatorsTest {
 
 	@Test
 	public void testInvalidArguments(SessionFactoryScope scope) {
-		SQLStatementInspector inspector = scope.getCollectingStatementInspector();
+		CollectingStatementObserver inspector = scope.getCollectingStatementObserver();
 		inspector.clear();
 		IllegalArgumentException thrown = assertThrows( IllegalArgumentException.class, () ->
 				scope.inTransaction(

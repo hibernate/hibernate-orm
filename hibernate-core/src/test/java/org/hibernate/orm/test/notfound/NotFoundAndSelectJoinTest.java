@@ -31,7 +31,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 				NotFoundAndSelectJoinTest.Address.class,
 		}
 )
-@SessionFactory(useCollectingStatementInspector = true)
+@SessionFactory(useCollectingStatementObserver = true)
 @JiraKey(value = "HHH-15990")
 public class NotFoundAndSelectJoinTest {
 

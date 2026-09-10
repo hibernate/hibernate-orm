@@ -36,7 +36,7 @@ import static org.assertj.core.api.Assertions.fail;
 public class EnumeratedValueTests {
 
 	@DomainModel(annotatedClasses = Person.class)
-	@SessionFactory(useCollectingStatementInspector = true)
+	@SessionFactory(useCollectingStatementObserver = true)
 	@Test
 	void testBasicUsage(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
@@ -59,7 +59,7 @@ public class EnumeratedValueTests {
 	}
 
 	@DomainModel(annotatedClasses = Person.class)
-	@SessionFactory(useCollectingStatementInspector = true)
+	@SessionFactory(useCollectingStatementObserver = true)
 	@Test
 	void testNulls(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
@@ -83,7 +83,7 @@ public class EnumeratedValueTests {
 	}
 
 	@DomainModel(annotatedClasses = Person.class)
-	@SessionFactory(useCollectingStatementInspector = true)
+	@SessionFactory(useCollectingStatementObserver = true)
 	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsColumnCheck.class )
 	@Test
 	void verifyCheckConstraints(SessionFactoryScope scope) {

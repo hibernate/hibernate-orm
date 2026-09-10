@@ -19,7 +19,7 @@ import org.hibernate.cache.spi.support.DomainDataRegionTemplate;
 import org.hibernate.cfg.CacheSettings;
 import org.hibernate.engine.internal.NaturalIdResolutionsImpl;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.jdbc.CollectingStatementObserver;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
@@ -46,7 +46,7 @@ import static org.hibernate.KeyType.NATURAL;
 		XRefTests.Bookmark.class,
 		XRefTests.Pen.class
 })
-@SessionFactory(useCollectingStatementInspector = true)
+@SessionFactory(useCollectingStatementObserver = true)
 public class XRefTests {
 	public static final String BOOK_ISBN = "123-4567-890";
 	public static final String BOOKMARK_SKU = "98-abc-7654-def";
@@ -54,7 +54,7 @@ public class XRefTests {
 
 	@Test
 	void testLocalResolution(SessionFactoryScope factoryScope) {
-		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
+		final CollectingStatementObserver sqlCollector = factoryScope.getCollectingStatementObserver();
 		sqlCollector.clear();
 
 		factoryScope.inTransaction( (session) -> {
@@ -75,7 +75,7 @@ public class XRefTests {
 
 	@Test
 	void testLocalResolutionWithCache(SessionFactoryScope factoryScope) {
-		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
+		final CollectingStatementObserver sqlCollector = factoryScope.getCollectingStatementObserver();
 		sqlCollector.clear();
 
 		factoryScope.getSessionFactory().getCache().evictAllRegions();
@@ -105,7 +105,7 @@ public class XRefTests {
 
 	@Test
 	void testLocalResolutionWithMutableCache(SessionFactoryScope factoryScope) {
-		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
+		final CollectingStatementObserver sqlCollector = factoryScope.getCollectingStatementObserver();
 		sqlCollector.clear();
 
 		factoryScope.getSessionFactory().getCache().evictAllRegions();
@@ -136,7 +136,7 @@ public class XRefTests {
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsConcurrentTransactions.class)
 	void testCrossRefManagementWithMutation(SessionFactoryScope factoryScope) {
-		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
+		final CollectingStatementObserver sqlCollector = factoryScope.getCollectingStatementObserver();
 		sqlCollector.clear();
 
 		final String updatedSku = "987-123-654";

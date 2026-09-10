@@ -36,7 +36,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 				ToOneWithSubselectFetchModeTests.FetchProfileOverrideBook.class
 		}
 )
-@SessionFactory(useCollectingStatementInspector = true)
+@SessionFactory(useCollectingStatementObserver = true)
 class ToOneWithSubselectFetchModeTests {
 	private static final String FETCH_OVERRIDE_PROFILE = "fetch-override-book-author";
 	private static final String FETCH_PROFILE_OVERRIDE_PROFILE = "fetch-profile-override-book-author";
@@ -65,7 +65,7 @@ class ToOneWithSubselectFetchModeTests {
 
 	@Test
 	void queryWithToOneFetchModeSubselect(SessionFactoryScope scope) {
-		final var inspector = scope.getCollectingStatementInspector();
+		final var inspector = scope.getCollectingStatementObserver();
 		inspector.clear();
 
 		scope.inTransaction( session -> {
@@ -82,7 +82,7 @@ class ToOneWithSubselectFetchModeTests {
 
 	@Test
 	void criteriaQueryWithToOneFetchModeSubselect(SessionFactoryScope scope) {
-		final var inspector = scope.getCollectingStatementInspector();
+		final var inspector = scope.getCollectingStatementObserver();
 		inspector.clear();
 
 		scope.inTransaction( session -> {
@@ -102,7 +102,7 @@ class ToOneWithSubselectFetchModeTests {
 
 	@Test
 	void queryWithToOneFetchOverrideModeSubselect(SessionFactoryScope scope) {
-		final var inspector = scope.getCollectingStatementInspector();
+		final var inspector = scope.getCollectingStatementObserver();
 		inspector.clear();
 
 		scope.inTransaction( session -> {
@@ -120,7 +120,7 @@ class ToOneWithSubselectFetchModeTests {
 
 	@Test
 	void criteriaQueryWithToOneFetchOverrideModeSubselect(SessionFactoryScope scope) {
-		final var inspector = scope.getCollectingStatementInspector();
+		final var inspector = scope.getCollectingStatementObserver();
 		inspector.clear();
 
 		scope.inTransaction( session -> {
@@ -141,7 +141,7 @@ class ToOneWithSubselectFetchModeTests {
 
 	@Test
 	void queryWithToOneFetchProfileOverrideModeSubselect(SessionFactoryScope scope) {
-		final var inspector = scope.getCollectingStatementInspector();
+		final var inspector = scope.getCollectingStatementObserver();
 		inspector.clear();
 
 		scope.inTransaction( session -> {
@@ -159,7 +159,7 @@ class ToOneWithSubselectFetchModeTests {
 
 	@Test
 	void criteriaQueryWithToOneFetchProfileOverrideModeSubselect(SessionFactoryScope scope) {
-		final var inspector = scope.getCollectingStatementInspector();
+		final var inspector = scope.getCollectingStatementObserver();
 		inspector.clear();
 
 		scope.inTransaction( session -> {

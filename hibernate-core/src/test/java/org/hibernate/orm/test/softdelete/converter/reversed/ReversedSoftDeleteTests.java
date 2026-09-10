@@ -8,7 +8,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.orm.test.softdelete.MappingVerifier;
 
-import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.jdbc.CollectingStatementObserver;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -27,7 +27,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SuppressWarnings("JUnitMalformedDeclaration")
 @ServiceRegistry(settings = @Setting(name= AvailableSettings.PREFERRED_BOOLEAN_JDBC_TYPE, value = "CHAR"))
 @DomainModel(annotatedClasses = {TheEntity.class, TheEntity2.class})
-@SessionFactory( useCollectingStatementInspector = true)
+@SessionFactory( useCollectingStatementObserver = true)
 public class ReversedSoftDeleteTests {
 	@AfterEach
 	void dropTestData(SessionFactoryScope scope) {
@@ -53,7 +53,7 @@ public class ReversedSoftDeleteTests {
 
 	@Test
 	void testUsage(SessionFactoryScope scope) {
-		final SQLStatementInspector sqlInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver sqlInspector = scope.getCollectingStatementObserver();
 		sqlInspector.clear();
 
 		scope.inTransaction( (session) -> {
@@ -79,7 +79,7 @@ public class ReversedSoftDeleteTests {
 
 	@Test
 	void testUsage2(SessionFactoryScope scope) {
-		final SQLStatementInspector sqlInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver sqlInspector = scope.getCollectingStatementObserver();
 		sqlInspector.clear();
 
 		scope.inTransaction( (session) -> {

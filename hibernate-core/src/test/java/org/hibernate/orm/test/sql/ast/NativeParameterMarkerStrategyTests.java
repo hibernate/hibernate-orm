@@ -12,7 +12,7 @@ import org.hibernate.sql.spi.ParameterMarkerStrategy;
 import org.hibernate.type.descriptor.jdbc.IntegerJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
-import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.jdbc.CollectingStatementObserver;
 import org.hibernate.testing.orm.junit.DialectContext;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -40,7 +40,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 		impl = NativeParameterMarkerStrategyTests.DialectParameterMarkerStrategy.class
 ) )
 @DomainModel( annotatedClasses = NativeParameterMarkerStrategyTests.Book.class )
-@SessionFactory( useCollectingStatementInspector = true )
+@SessionFactory( useCollectingStatementObserver = true )
 @RequiresDialectFeature( feature = DialectFeatureChecks.SupportsNonStandardNativeParameterRendering.class )
 @Jira( "https://hibernate.atlassian.net/browse/HHH-16283" )
 class NativeParameterMarkerStrategyTests implements SessionFactoryScopeAware {
@@ -62,7 +62,7 @@ class NativeParameterMarkerStrategyTests implements SessionFactoryScopeAware {
 	}
 
 	private SessionFactoryScope scope;
-	private SQLStatementInspector statementInspector;
+	private CollectingStatementObserver statementInspector;
 
 	@Override
 	public void injectSessionFactoryScope(SessionFactoryScope scope) {
@@ -71,7 +71,7 @@ class NativeParameterMarkerStrategyTests implements SessionFactoryScopeAware {
 
 	@BeforeEach
 	void setUp() {
-		statementInspector = scope.getCollectingStatementInspector();
+		statementInspector = scope.getCollectingStatementObserver();
 		statementInspector.clear();
 	}
 

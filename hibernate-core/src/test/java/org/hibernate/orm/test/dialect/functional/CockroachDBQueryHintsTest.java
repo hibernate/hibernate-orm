@@ -9,7 +9,7 @@ import java.util.Set;
 
 import org.hibernate.dialect.CockroachDialect;
 
-import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.jdbc.CollectingStatementObserver;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialect;
@@ -30,7 +30,7 @@ import jakarta.persistence.TypedQuery;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 @RequiresDialect(CockroachDialect.class)
-@SessionFactory(useCollectingStatementInspector = true)
+@SessionFactory(useCollectingStatementObserver = true)
 @DomainModel(annotatedClasses = {
 		SimpleEntity.class, ChildEntity.class
 })
@@ -52,7 +52,7 @@ public class CockroachDBQueryHintsTest {
 
 	@Test
 	public void testIndexHint(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 		statementInspector.clear();
 		scope.inTransaction( session -> {
 			TypedQuery<Integer> query = session.createQuery( "select id from SimpleEntity where id < 3", Integer.class )
@@ -65,7 +65,7 @@ public class CockroachDBQueryHintsTest {
 
 	@Test
 	public void testJoinHint(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 		statementInspector.clear();
 		scope.inTransaction( session -> {
 			TypedQuery<ChildEntity> query = session.createQuery(
@@ -81,7 +81,7 @@ public class CockroachDBQueryHintsTest {
 
 	@Test
 	public void testOuterJoinHint(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 		statementInspector.clear();
 		scope.inTransaction( session -> {
 			TypedQuery<ChildEntity> query = session.createQuery(

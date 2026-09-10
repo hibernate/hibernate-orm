@@ -52,7 +52,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 		name = QuerySettings.FAIL_ON_PAGINATION_OVER_COLLECTION_FETCH,
 		value = "true"
 ))
-@SessionFactory(useCollectingStatementInspector = true)
+@SessionFactory(useCollectingStatementObserver = true)
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsOffsetInSubquery.class)
 public class CollectionFetchPaginationManyToManyTest {
 
@@ -118,7 +118,7 @@ public class CollectionFetchPaginationManyToManyTest {
 
 	@Test
 	void fetchJoinWithMaxResults(SessionFactoryScope scope) {
-		final var sql = scope.getCollectingStatementInspector();
+		final var sql = scope.getCollectingStatementObserver();
 		scope.inTransaction( session -> {
 			sql.clear();
 
@@ -159,7 +159,7 @@ public class CollectionFetchPaginationManyToManyTest {
 
 	@Test
 	void fetchLeftJoinWithMaxResults(SessionFactoryScope scope) {
-		final var sql = scope.getCollectingStatementInspector();
+		final var sql = scope.getCollectingStatementObserver();
 		scope.inTransaction( session -> {
 			sql.clear();
 
@@ -184,7 +184,7 @@ public class CollectionFetchPaginationManyToManyTest {
 
 	@Test
 	void serialFetchJoinWithMaxResults(SessionFactoryScope scope) {
-		final var sql = scope.getCollectingStatementInspector();
+		final var sql = scope.getCollectingStatementObserver();
 		scope.inTransaction( session -> {
 			sql.clear();
 
@@ -211,7 +211,7 @@ public class CollectionFetchPaginationManyToManyTest {
 
 	@Test
 	void parallelLeftFetchJoinWithMaxResults(SessionFactoryScope scope) {
-		final var sql = scope.getCollectingStatementInspector();
+		final var sql = scope.getCollectingStatementObserver();
 		scope.inTransaction( session -> {
 			sql.clear();
 
@@ -241,7 +241,7 @@ public class CollectionFetchPaginationManyToManyTest {
 
 	@Test
 	void parallelInnerFetchJoinWithMaxResults(SessionFactoryScope scope) {
-		final var sql = scope.getCollectingStatementInspector();
+		final var sql = scope.getCollectingStatementObserver();
 		scope.inTransaction( session -> {
 			sql.clear();
 

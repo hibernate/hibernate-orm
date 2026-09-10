@@ -65,7 +65,7 @@ public class BidirectionalOneToOneWithNonAggregateIdTest  {
 	public void testRemovingChild(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					Entity1 e1 = session.byId( Entity1.class ).load( ENTITY_ID );
+					Entity1 e1 = session.find( Entity1.class, ENTITY_ID );
 					Entity2 child = e1.getChild();
 					assertNotNull( child );
 				}

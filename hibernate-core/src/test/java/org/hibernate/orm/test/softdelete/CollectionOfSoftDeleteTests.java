@@ -11,7 +11,7 @@ import java.util.Collection;
 import org.hibernate.annotations.SoftDelete;
 import org.hibernate.type.YesNoConverter;
 
-import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.jdbc.CollectingStatementObserver;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -34,7 +34,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel( annotatedClasses = { CollectionOfSoftDeleteTests.Shelf.class, CollectionOfSoftDeleteTests.Book.class } )
-@SessionFactory(useCollectingStatementInspector = true)
+@SessionFactory(useCollectingStatementObserver = true)
 public class CollectionOfSoftDeleteTests {
 	@BeforeEach
 	void createTestData(SessionFactoryScope scope) {
@@ -62,7 +62,7 @@ public class CollectionOfSoftDeleteTests {
 
 	@Test
 	void testLoading(SessionFactoryScope scope) {
-		final SQLStatementInspector sqlInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver sqlInspector = scope.getCollectingStatementObserver();
 		sqlInspector.clear();
 
 		scope.inTransaction( (session) -> {
@@ -84,7 +84,7 @@ public class CollectionOfSoftDeleteTests {
 
 	@Test
 	void testQueryJoin(SessionFactoryScope scope) {
-		final SQLStatementInspector sqlInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver sqlInspector = scope.getCollectingStatementObserver();
 		sqlInspector.clear();
 
 		scope.inTransaction( (session) -> {

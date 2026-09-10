@@ -15,7 +15,7 @@ import org.hibernate.annotations.SQLDeleteAll;
 import org.hibernate.annotations.SQLUpdate;
 
 import org.hibernate.cfg.BatchSettings;
-import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.jdbc.CollectingStatementObserver;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -47,7 +47,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 		ManyToManyCustomSqlMutationsTest.Project.class,
 		ManyToManyCustomSqlMutationsTest.User.class,
 } )
-@SessionFactory( useCollectingStatementInspector = true )
+@SessionFactory( useCollectingStatementObserver = true )
 @Jira( "https://hibernate.atlassian.net/browse/HHH-17170" )
 public class ManyToManyCustomSqlMutationsTest {
 	@BeforeEach
@@ -76,7 +76,7 @@ public class ManyToManyCustomSqlMutationsTest {
 
 	@Test
 	public void testSQLDelete(SessionFactoryScope scope) {
-		final SQLStatementInspector inspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver inspector = scope.getCollectingStatementObserver();
 		scope.inTransaction( session -> {
 			final Project project = session.find( Project.class, "p1" );
 			project.getMembers().remove( project.getMembers().iterator().next() );
@@ -91,7 +91,7 @@ public class ManyToManyCustomSqlMutationsTest {
 
 	@Test
 	public void testSQLDeleteAll(SessionFactoryScope scope) {
-		final SQLStatementInspector inspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver inspector = scope.getCollectingStatementObserver();
 		scope.inTransaction( session -> {
 			final Project project = session.find( Project.class, "p2" );
 			project.getMembers().remove( project.getMembers().iterator().next() );
@@ -106,7 +106,7 @@ public class ManyToManyCustomSqlMutationsTest {
 
 	@Test
 	public void testSQLUpdate(SessionFactoryScope scope) {
-		final SQLStatementInspector inspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver inspector = scope.getCollectingStatementObserver();
 		scope.inTransaction( session -> {
 			final Project project = session.find( Project.class, "p2" );
 			assertThat( project.getOrderedUsers().stream().map( User::getName ) ).containsExactly( "user2", "user1" );

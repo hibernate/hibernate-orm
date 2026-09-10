@@ -10,7 +10,7 @@ import java.util.Set;
 import org.hibernate.annotations.SQLRestriction;
 
 import org.hibernate.cfg.BatchSettings;
-import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.jdbc.CollectingStatementObserver;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -31,7 +31,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * @author Marco Belladelli
  *
- * @implNote Disabling batching because anytime we are leveraging SQLStatementInspector for
+ * @implNote Disabling batching because anytime we are leveraging CollectingStatementObserver for
  * assertions we need to be aware that batching does not notify about statements within the batch.
  * See <a href="https://hibernate.atlassian.net/browse/HHH-20295">HHH-20295</a>.
  */
@@ -40,7 +40,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 		ElementCollectionSQLRestrictionTest.TaskEntity.class,
 		ElementCollectionSQLRestrictionTest.LocalizedLabel.class,
 } )
-@SessionFactory( useCollectingStatementInspector = true )
+@SessionFactory( useCollectingStatementObserver = true )
 public class ElementCollectionSQLRestrictionTest {
 	@BeforeEach
 	public void setUp(SessionFactoryScope scope) {
@@ -69,7 +69,7 @@ public class ElementCollectionSQLRestrictionTest {
 
 	@Test
 	public void testRemoveEmptyCollection(SessionFactoryScope scope) {
-		final SQLStatementInspector inspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver inspector = scope.getCollectingStatementObserver();
 		scope.inTransaction( session -> {
 			final TaskEntity task = session.find( TaskEntity.class, 1 );
 			assertThat( task.getNames() ).hasSize( 1 );
@@ -88,7 +88,7 @@ public class ElementCollectionSQLRestrictionTest {
 
 	@Test
 	public void testRemoveNonEmptyCollection(SessionFactoryScope scope) {
-		final SQLStatementInspector inspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver inspector = scope.getCollectingStatementObserver();
 		scope.inTransaction( session -> {
 			final TaskEntity task = session.find( TaskEntity.class, 2 );
 			assertThat( task.getNames() ).hasSize( 2 );
@@ -107,7 +107,7 @@ public class ElementCollectionSQLRestrictionTest {
 
 	@Test
 	public void testUpdate(SessionFactoryScope scope) {
-		final SQLStatementInspector inspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver inspector = scope.getCollectingStatementObserver();
 		scope.inTransaction( session -> {
 			final TaskEntity task = session.find( TaskEntity.class, 2 );
 			task.getNames().forEach( n -> n.setLabel( n.getLabel().replace( "test", "updated" ) ) );

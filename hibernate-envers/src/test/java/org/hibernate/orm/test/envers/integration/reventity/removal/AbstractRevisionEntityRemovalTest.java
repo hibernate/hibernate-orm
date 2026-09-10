@@ -71,7 +71,7 @@ public abstract class AbstractRevisionEntityRemovalTest {
 	}
 
 	private int countRecords(jakarta.persistence.EntityManager em, String tableName) {
-		return ((Number) em.createNativeQuery( "SELECT COUNT(*) FROM " + tableName ).getSingleResult()).intValue();
+		return ( em.createNativeQuery( "SELECT COUNT(*) FROM " + tableName, Long.class ).getSingleResult()).intValue();
 	}
 
 	private void removeRevision(EntityManagerFactoryScope scope, Number number) {

@@ -37,11 +37,11 @@ public class ReadWriteExpressionChange {
 	@Test
 	public void shouldRespectWriteExpression(EntityManagerFactoryScope scope) {
 		scope.inEntityManager( em -> {
-			final var resultList = em.createNativeQuery( "select size_in_cm from t_staff_AUD where id =" + id )
+			final var resultList = em.createNativeQuery( "select size_in_cm from t_staff_AUD where id =" + id, Double.class )
 					.getResultList();
 			assertEquals( 1, resultList.size() );
-			Double sizeInCm = (Double) resultList.get( 0 );
-			assertEquals( HEIGHT_CENTIMETERS, sizeInCm.doubleValue(), 0.00000001 );
+			Double sizeInCm = resultList.get( 0 );
+			assertEquals( HEIGHT_CENTIMETERS, sizeInCm, 0.00000001 );
 		} );
 	}
 

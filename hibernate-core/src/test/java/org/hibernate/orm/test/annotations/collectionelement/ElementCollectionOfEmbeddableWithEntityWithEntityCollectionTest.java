@@ -14,7 +14,7 @@ import org.hibernate.orm.test.annotations.collectionelement.ElementCollectionOfE
 import org.hibernate.orm.test.annotations.collectionelement.ElementCollectionOfEmbeddableWithEntityWithEntityCollectionTest.SubPlan;
 
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.jdbc.CollectingStatementObserver;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -44,7 +44,7 @@ import static org.hibernate.annotations.FetchMode.SUBSELECT;
 				Event.class
 		}
 )
-@SessionFactory( useCollectingStatementInspector = true )
+@SessionFactory( useCollectingStatementObserver = true )
 @JiraKey(value = "HHH-15713")
 public class ElementCollectionOfEmbeddableWithEntityWithEntityCollectionTest {
 
@@ -80,7 +80,7 @@ public class ElementCollectionOfEmbeddableWithEntityWithEntityCollectionTest {
 
 	@Test
 	public void testInitializeCollection(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 		statementInspector.clear();
 		scope.inTransaction(
 				session -> {

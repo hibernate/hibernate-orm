@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<hibernate-mapping package="org.hibernate.orm.test.boot.jaxb.mapping.ondeleteelementcollection">
+    <class name="Product">
+        <id name="id" type="long">
+            <generator class="identity"/>
+        </id>
+        <property name="name"/>
+        
+        <set name="tags" table="product_tags">
+            <key column="product_id" on-delete="cascade"/>
+            <element type="string" column="tag"/>
+        </set>
+    </class>
+</hibernate-mapping>

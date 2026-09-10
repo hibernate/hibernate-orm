@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<hibernate-mapping package="org.hibernate.orm.test.boot.jaxb.mapping.ondeletemanytomnay">
+    <class name="Author">
+        <id name="id" type="long">
+            <generator class="identity"/>
+        </id>
+        <property name="name"/>
+        
+        <set name="books" table="author_book">
+            <key column="author_id" on-delete="cascade"/>
+            <many-to-many class="Book" column="book_id"/>
+        </set>
+    </class>
+    
+    <class name="Book">
+        <id name="id" type="long">
+            <generator class="identity"/>
+        </id>
+        <property name="title"/>
+    </class>
+</hibernate-mapping>

@@ -2902,6 +2902,11 @@ public class HbmXmlTransformer {
 		}
 		final var key = source.getKey();
 		if ( key != null ) {
+			// Transfer on-delete from key to element-collection
+			final OnDeleteAction onDeleteAction = interpretOnDeleteAction( key.getOnDelete() );
+			if ( onDeleteAction != null && onDeleteAction != OnDeleteAction.NO_ACTION ) {
+				target.setOnDelete( onDeleteAction );
+			}
 			collectionTable.setForeignKeys( transformForeignKey( key.getForeignKey() ) );
 			transferColumnsAndFormulas(
 					null,
@@ -3560,6 +3565,13 @@ public class HbmXmlTransformer {
 			target.setSqlDeleteAll( jaxbCustomSql );
 			transferCustomSql( hbmAttributeInfo.getSqlDeleteAll(), jaxbCustomSql );
 		}
+		if ( key != null ) {
+			// Transfer on-delete from key to one-to-many
+			final OnDeleteAction onDeleteAction = interpretOnDeleteAction( key.getOnDelete() );
+			if ( onDeleteAction != null && onDeleteAction != OnDeleteAction.NO_ACTION ) {
+				target.setOnDelete( onDeleteAction );
+			}
+		}
 	}
 
 	private String resolveMappedBy(
@@ -3763,6 +3775,15 @@ public class HbmXmlTransformer {
 		}
 
 		if ( key != null ) {
+			final OnDeleteAction onDeleteAction = interpretOnDeleteAction( key.getOnDelete() );
+			if ( onDeleteAction != null && onDeleteAction != OnDeleteAction.NO_ACTION ) {
+				if ( target instanceof JaxbManyToManyImpl jaxbManyToMany ) {
+					jaxbManyToMany.setOnDelete( onDeleteAction );
+				}
+				else if ( target instanceof JaxbManyToOneImpl jaxbManyToOne ) {
+					jaxbManyToOne.setOnDelete( onDeleteAction );
+				}
+			}
 			transferColumnsAndFormulas(
 					propertyInfo,
 					new ColumnAndFormulaSource() {

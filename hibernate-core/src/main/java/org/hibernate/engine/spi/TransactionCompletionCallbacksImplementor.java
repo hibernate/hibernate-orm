@@ -49,4 +49,8 @@ public interface TransactionCompletionCallbacksImplementor extends TransactionCo
 	 * Execute all pending {@link org.hibernate.action.internal.BulkOperationCleanupAction}
 	 */
 	void executePendingBulkOperationCleanUpActions();
+
+	default void clearBeforeTransactionCallbacks(){
+		// default implementation does nothing
+	}
 }

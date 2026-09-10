@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<hibernate-mapping package="org.hibernate.orm.test.boot.jaxb.mapping.ondelete">
+    <class name="Parent">
+        <id name="id" type="long">
+            <generator class="identity"/>
+        </id>
+        <property name="name"/>
+        
+        <set name="children" inverse="true" cascade="all">
+            <key column="parent_id" on-delete="cascade"/>
+            <one-to-many class="Child"/>
+        </set>
+    </class>
+    
+    <class name="Child">
+        <id name="id" type="long">
+            <generator class="identity"/>
+        </id>
+        <property name="childData"/>
+        <many-to-one name="parent" class="Parent" column="parent_id"/>
+    </class>
+</hibernate-mapping>

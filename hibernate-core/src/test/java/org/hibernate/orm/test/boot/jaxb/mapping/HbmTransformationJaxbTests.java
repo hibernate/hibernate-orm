@@ -2164,4 +2164,74 @@ public class HbmTransformationJaxbTests {
 					.isEqualTo( "org.hibernate.orm.test.boot.jaxb.mapping.EntityWithQueries.findAll" );
 		} );
 	}
+
+	@Test
+	@JiraKey( "HHH-20836" )
+	public void testCollectionKeyOnDeleteTransformation(ServiceRegistryScope scope) {
+		transformAndVerify( "xml/jaxb/mapping/on-delete-collection/hbm.xml", scope, transformed -> {
+			assertThat( transformed.getEntities() ).hasSize( 2 );
+
+			final JaxbEntityImpl parentEntity = transformed.getEntities().stream()
+					.filter( e -> "Parent".equals( e.getClazz() ) )
+					.findFirst()
+					.orElseThrow();
+
+			assertThat( parentEntity.getAttributes().getOneToManyAttributes() )
+					.as( "Parent entity should have one-to-many collection" )
+					.hasSize( 1 );
+
+			final JaxbOneToManyImpl childrenCollection = parentEntity.getAttributes().getOneToManyAttributes().get( 0 );
+			assertThat( childrenCollection.getName() ).isEqualTo( "children" );
+
+			assertThat( childrenCollection.getOnDelete() )
+					.as( "collection with key on-delete='cascade' should have on-delete on one-to-many" )
+					.isEqualTo( OnDeleteAction.CASCADE );
+		} );
+	}
+
+	@Test
+	@JiraKey( "HHH-20836" )
+	public void testManyToManyKeyOnDeleteTransformation(ServiceRegistryScope scope) {
+		transformAndVerify( "xml/jaxb/mapping/on-delete-many-to-many/hbm.xml", scope, transformed -> {
+			assertThat( transformed.getEntities() ).hasSize( 2 );
+
+			final JaxbEntityImpl authorEntity = transformed.getEntities().stream()
+					.filter( e -> "Author".equals( e.getClazz() ) )
+					.findFirst()
+					.orElseThrow();
+
+			assertThat( authorEntity.getAttributes().getManyToManyAttributes() )
+					.as( "Author entity should have many-to-many collection" )
+					.hasSize( 1 );
+
+			final JaxbManyToManyImpl booksCollection = authorEntity.getAttributes().getManyToManyAttributes().get( 0 );
+			assertThat( booksCollection.getName() ).isEqualTo( "books" );
+
+			assertThat( booksCollection.getOnDelete() )
+					.as( "many-to-many with key on-delete='cascade' should have on-delete on many-to-many" )
+					.isEqualTo( OnDeleteAction.CASCADE );
+		} );
+	}
+
+	@Test
+	@JiraKey( "HHH-20836" )
+	public void testElementCollectionKeyOnDeleteTransformation(ServiceRegistryScope scope) {
+		transformAndVerify( "xml/jaxb/mapping/on-delete-element-collection/hbm.xml", scope, transformed -> {
+			assertThat( transformed.getEntities() ).hasSize( 1 );
+
+			final JaxbEntityImpl productEntity = transformed.getEntities().get( 0 );
+			assertThat( productEntity.getClazz() ).isEqualTo( "Product" );
+
+			assertThat( productEntity.getAttributes().getElementCollectionAttributes() )
+					.as( "Product entity should have element-collection" )
+					.hasSize( 1 );
+
+			final var tagsCollection = productEntity.getAttributes().getElementCollectionAttributes().get( 0 );
+			assertThat( tagsCollection.getName() ).isEqualTo( "tags" );
+
+			assertThat( tagsCollection.getOnDelete() )
+					.as( "element-collection with key on-delete='cascade' should have on-delete" )
+					.isEqualTo( OnDeleteAction.CASCADE );
+		} );
+	}
 }

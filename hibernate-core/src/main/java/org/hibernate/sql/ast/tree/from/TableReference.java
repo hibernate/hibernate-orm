@@ -57,7 +57,8 @@ public interface TableReference extends SqlAstNode, ColumnReferenceQualifier {
 	}
 
 	default boolean containsAffectedTableName(String requestedName) {
-		return isEmpty( requestedName ) || Boolean.TRUE.equals( visitAffectedTableNames( requestedName::equals ) );
+		return isEmpty( requestedName ) || Boolean.TRUE.equals( visitAffectedTableNames(
+				tableName -> requestedName.equals( tableName ) ? Boolean.TRUE : null ) );
 	}
 
 	Boolean visitAffectedTableNames(Function<String, Boolean> nameCollector);

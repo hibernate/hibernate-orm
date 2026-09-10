@@ -80,7 +80,9 @@ public class HANASqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 
 	@Override
 	protected void visitInsertStatementOnly(InsertSelectStatement statement) {
-		if ( statement.getConflictClause() == null || statement.getConflictClause().isDoNothing() ) {
+		if ( statement.getConflictClause() == null
+			|| statement.getConflictClause().isDoNothing()
+				&& statement.getConflictClause().getConstraintColumnNames().isEmpty() ) {
 			// Render plain insert statement and possibly run into unique constraint violation
 			super.visitInsertStatementOnly( statement );
 		}

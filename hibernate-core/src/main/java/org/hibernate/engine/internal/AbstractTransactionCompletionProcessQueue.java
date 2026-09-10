@@ -35,4 +35,8 @@ abstract class AbstractTransactionCompletionProcessQueue<T extends CompletionCal
 	boolean hasActions() {
 		return !processes.isEmpty();
 	}
+
+	void clear(){
+		processes.clear();
+	}
 }

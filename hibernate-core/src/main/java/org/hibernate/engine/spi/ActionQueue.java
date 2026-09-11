@@ -222,6 +222,7 @@ public class ActionQueue implements TransactionCompletionCallbacks {
 
 		public abstract ExecutableList<?> getActions(ActionQueue instance);
 		public abstract void ensureInitialized(ActionQueue instance);
+
 	}
 
 	/**
@@ -416,17 +417,21 @@ public class ActionQueue implements TransactionCompletionCallbacks {
 		registerCleanupActions( action );
 	}
 
-	private void registerCleanupActions(Executable executable) {
+	private void registerCallbacks(Executable executable) {
 		final var beforeCompletionCallback = executable.getBeforeTransactionCompletionProcess();
 		if ( beforeCompletionCallback != null ) {
 			transactionCompletionCallbacks.registerCallback( beforeCompletionCallback );
 		}
-		if ( getSessionFactoryOptions().isQueryCacheEnabled() ) {
-			invalidateSpaces( executable.getPropertySpaces() );
-		}
 		final var afterCompletionCallback = executable.getAfterTransactionCompletionProcess();
 		if ( afterCompletionCallback != null ) {
 			transactionCompletionCallbacks.registerCallback( afterCompletionCallback );
+		}
+	}
+
+	private void registerCleanupActions(Executable executable) {
+		registerCallbacks( executable );
+		if ( getSessionFactoryOptions().isQueryCacheEnabled() ) {
+			invalidateSpaces( executable.getPropertySpaces() );
 		}
 	}
 
@@ -472,9 +477,7 @@ public class ActionQueue implements TransactionCompletionCallbacks {
 	 * @throws HibernateException error executing queued insertion actions.
 	 */
 	public void executeInserts() throws HibernateException {
-		if ( insertions != null && !insertions.isEmpty() ) {
-			executeActions( insertions );
-		}
+		executeActions( OrderedActions.EntityInsertAction );
 	}
 
 	/**
@@ -502,7 +505,7 @@ public class ActionQueue implements TransactionCompletionCallbacks {
 		}
 
 		for ( var action : ORDERED_OPERATIONS ) {
-			executeActions( action.getActions( this ) );
+			executeActions( action );
 		}
 	}
 
@@ -617,49 +620,6 @@ public class ActionQueue implements TransactionCompletionCallbacks {
 	}
 
 	/**
-	 * Perform {@link Executable#execute()} on each element of the list
-	 *
-	 * @param queue The list of Executable elements to be performed
-	 *
-	 */
-	private <E extends ComparableExecutable> void executeActions(@Nullable ExecutableList<E> queue)
-			throws HibernateException {
-		if ( queue != null && !queue.isEmpty() ) {
-			// todo : consider ways to improve the double iteration of Executables here:
-			//		1) we explicitly iterate list here to perform Executable#execute()
-			//		2) ExecutableList#getQuerySpaces also iterates the Executables to collect query spaces.
-			try {
-				for ( var executable : queue ) {
-					try {
-						executable.execute();
-					}
-					finally {
-						final var beforeCompletionProcess = executable.getBeforeTransactionCompletionProcess();
-						if ( beforeCompletionProcess != null ) {
-							transactionCompletionCallbacks.registerCallback( beforeCompletionProcess );
-						}
-						final var afterCompletionProcess = executable.getAfterTransactionCompletionProcess();
-						if ( afterCompletionProcess != null ) {
-							transactionCompletionCallbacks.registerCallback( afterCompletionProcess );
-						}
-					}
-				}
-			}
-			finally {
-				if ( getSessionFactoryOptions().isQueryCacheEnabled() ) {
-					// Strictly speaking, only a subset of the list may have been processed if a RuntimeException occurs.
-					// We still invalidate all spaces. I don't see this as a big deal - after all, RuntimeExceptions are
-					// unexpected.
-					invalidateSpaces( queue.getQuerySpaces().toArray( new String[0] ) );
-				}
-			}
-
-			queue.clear();
-			session.getJdbcCoordinator().executeBatch();
-		}
-	}
-
-	/**
 	 * @param executable The action to execute
 	 */
 	public <E extends Executable & Comparable<?>> void execute(E executable) {
@@ -668,6 +628,29 @@ public class ActionQueue implements TransactionCompletionCallbacks {
 		}
 		finally {
 			registerCleanupActions( executable );
+		}
+	}
+
+	private void executeActions(OrderedActions actions) {
+		final var queue = actions.getActions( this );
+		if ( queue != null && !queue.isEmpty() ) {
+			try {
+				for ( var executable : queue ) {
+					try {
+						executable.execute();
+					}
+					finally {
+						registerCallbacks( executable );
+					}
+				}
+			}
+			finally {
+				if ( getSessionFactoryOptions().isQueryCacheEnabled() ) {
+					invalidateSpaces( queue.getQuerySpaces().toArray( new String[0] ) );
+				}
+			}
+			queue.clear();
+			session.getJdbcCoordinator().executeBatch();
 		}
 	}
 

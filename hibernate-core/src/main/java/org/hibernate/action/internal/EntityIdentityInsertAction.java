@@ -64,6 +64,12 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 		this.delayedEntityKey = isDelayed ? generateDelayedEntityKey() : null;
 	}
 
+	private static Object getGeneratedId(GeneratedValues generatedValues, EntityPersister persister) {
+		return generatedValues == null
+				? null
+				: generatedValues.getGeneratedValue( persister.getIdentifierMapping() );
+	}
+
 	@Override
 	public void execute() throws HibernateException {
 		nullifyTransientReferencesIfNotAlready();
@@ -77,28 +83,61 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 		// Don't need to lock the cache here, since if someone
 		// else inserted the same pk first, the insert would fail
 
-		if ( !isVeto() ) {
+		if ( isVeto() ) {
+			afterInsert( null );
+		}
+		else {
 			final var eventMonitor = session.getEventMonitor();
 			final var event = eventMonitor.beginEntityInsertEvent();
-			boolean success = false;
 			final Object[] state = getState();
-			final GeneratedValues generatedValues;
-			try {
-				generatedValues = persister.getInsertCoordinator().insert( instance, state, session );
-				generatedId =
-						generatedValues == null
-								? null
-								: generatedValues.getGeneratedValue( persister.getIdentifierMapping() );
-				success = true;
+			final String entityName = persister.getEntityName();
+			if ( canDeferInsert( persister ) ) {
+				// deferred path: enqueue into the batch with a per-slot id consumer;
+				// the post-execute work runs asynchronously when the batch is flushed
+				persister.getInsertCoordinator().insertDeferred(
+						instance,
+						state,
+						id -> {
+							eventMonitor.completeEntityInsertEvent( event, id, entityName, true, session );
+							afterIdentityBatchInsert( id );
+						},
+						session
+				);
 			}
-			finally {
-				eventMonitor.completeEntityInsertEvent( event, generatedId, persister.getEntityName(), success, session );
+			else {
+				boolean success = false;
+				final GeneratedValues generatedValues;
+				try {
+					generatedValues = persister.getInsertCoordinator().insert( instance, state, session );
+					generatedId = getGeneratedId( generatedValues, persister );
+					success = true;
+				}
+				finally {
+					eventMonitor.completeEntityInsertEvent( event, generatedId, entityName, success, session );
+				}
+				afterInsert( generatedValues );
 			}
-			final var persistenceContext = session.getPersistenceContextInternal();
-			if ( persister.getRowIdMapping() != null ) {
-				rowId = generatedValues.getGeneratedValue( persister.getRowIdMapping() );
+		}
+	}
+
+	private boolean canDeferInsert(EntityPersister persister) {
+		return !isEarlyInsert()
+			&& persister.getInsertCoordinator().canBatchGeneratedIdentityInserts();
+	}
+
+	private void afterInsert(GeneratedValues generatedValues) {
+		if ( !isVeto() ) {
+			final var persister = getPersister();
+			final var session = getSession();
+			final Object instance = getInstance();
+			final Object[] state = getState();
+			generatedId = getGeneratedId( generatedValues, persister );
+			final var rowIdMapping = persister.getRowIdMapping();
+			if ( rowIdMapping != null && generatedValues != null ) {
+				rowId = generatedValues.getGeneratedValue( rowIdMapping );
 				if ( rowId != null && isDelayed ) {
-					persistenceContext.replaceEntityEntryRowId( getInstance(), rowId );
+					session.getPersistenceContextInternal()
+							.replaceEntityEntryRowId( instance, rowId );
 				}
 			}
 			if ( generatedId == null && generatedValues != null ) {
@@ -114,12 +153,34 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 			if ( generatedId == null ) {
 				generatedId = persister.getIdentifier( instance, session );
 			}
-			//need to do that here rather than in the save event listener to let
-			//the post insert events to have an id-filled entity when IDENTITY is used (EJB3)
+		}
+		finishExecution();
+	}
+
+	private void afterIdentityBatchInsert(Object generatedId) {
+		if ( !isVeto() ) {
+			this.generatedId = generatedId;
+		}
+		finishExecution();
+	}
+
+	private void finishExecution() {
+		final var persister = getPersister();
+		final var session = getSession();
+
+		if ( !isVeto() ) {
+			final var persistenceContext = session.getPersistenceContextInternal();
+			final Object instance = getInstance();
+			// need to do that here rather than in the save event listener to let
+			// the post insert events to have an id-filled entity when IDENTITY is used
 			persister.setIdentifier( instance, generatedId, session );
 			persistenceContext.registerInsertedKey( persister, generatedId );
 			entityKey = session.generateEntityKey( generatedId, persister );
-			persistenceContext.checkUniqueness( entityKey, getInstance() );
+			persistenceContext.checkUniqueness( entityKey, instance );
+			if ( !isEarlyInsert() ) {
+				addCollectionsByKeyToPersistenceContext( persistenceContext, getState() );
+			}
+			handleNaturalIdPostSaveNotifications( generatedId );
 		}
 
 		//TODO: this bit actually has to be called after all cascades!
@@ -168,7 +229,7 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 	}
 
 	protected void postInsert() {
-		if ( isDelayed ) {
+		if ( isDelayed && generatedId != null ) {
 			getSession().getPersistenceContextInternal()
 					.replaceDelayedEntityIdentityInsertKeys( delayedEntityKey, generatedId );
 		}

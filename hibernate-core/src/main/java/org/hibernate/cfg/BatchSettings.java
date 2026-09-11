@@ -66,6 +66,19 @@ public interface BatchSettings {
 	String ORDER_INSERTS = "hibernate.order_inserts";
 
 	/**
+	 * Allow delayed execution of {@code IDENTITY} inserts inside a transaction when
+	 * the dialect can batch the insert statements and read the generated identifiers
+	 * back via {@link PreparedStatement#getGeneratedKeys()}.
+	 * <p>
+	 * This setting is disabled by default because it changes when identifiers become
+	 * visible to user code: with this setting enabled, the identifier might remain
+	 * {@code null} until flush time.
+	 *
+	 * @settingDefault {@code false}
+	 */
+	String BATCH_IDENTITY_INSERTS = "hibernate.jdbc.batch_identity_inserts";
+
+	/**
 	 * @deprecated Use {@link #BUILDER} instead
 	 */
 	@Deprecated(since="6.4")

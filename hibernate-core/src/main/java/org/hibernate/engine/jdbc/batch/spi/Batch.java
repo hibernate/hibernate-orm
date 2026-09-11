@@ -5,6 +5,7 @@
 package org.hibernate.engine.jdbc.batch.spi;
 
 import java.sql.PreparedStatement;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import org.hibernate.HibernateException;
@@ -56,6 +57,21 @@ public interface Batch {
 	 * of the current part of the batch.
 	 */
 	void addToBatch(JdbcValueBindings jdbcValueBindings, TableInclusionChecker inclusionChecker, StaleStateMapper staleStateMapper);
+
+	/**
+	 * Apply the value bindings to the batch JDBC statements and register a
+	 * per-slot consumer to receive the value produced by
+	 * {@link PreparedStatement#getGeneratedKeys()} after the batch executes.
+	 * <p>
+	 * The consumer is invoked in {@code addBatch} order when the batch is flushed.
+	 * Implementations that do not know how to retrieve generated keys may fail
+	 * at execution time; callers are responsible for ensuring the batch was
+	 * prepared with a delegate that supports generated-key retrieval.
+	 */
+	void addToBatch(
+			JdbcValueBindings jdbcValueBindings,
+			TableInclusionChecker inclusionChecker,
+			Consumer<Object> generatedKeyConsumer);
 
 	@FunctionalInterface
 	interface StaleStateMapper {

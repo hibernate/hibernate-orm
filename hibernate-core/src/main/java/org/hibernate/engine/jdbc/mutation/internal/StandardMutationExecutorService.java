@@ -57,17 +57,19 @@ public class StandardMutationExecutorService implements MutationExecutorService 
 
 			final PreparableMutationOperation jdbcOperation = (PreparableMutationOperation) singleOperation;
 			final BatchKey batchKey = batchKeySupplier.getBatchKey();
+			final var entityGroup = operationGroup.asEntityMutationOperationGroup();
+			final var delegate = entityGroup != null ? entityGroup.getMutationDelegate() : null;
 			if ( jdbcOperation.canBeBatched( batchKey, batchSizeToUse ) ) {
-				return new MutationExecutorSingleBatched( jdbcOperation, batchKey, batchSizeToUse, session );
+				return new MutationExecutorSingleBatched(
+						jdbcOperation,
+						delegate != null && delegate.supportsBatching() ? delegate : null,
+						batchKey,
+						batchSizeToUse,
+						session
+				);
 			}
 
-			return new MutationExecutorSingleNonBatched(
-					jdbcOperation,
-					operationGroup.asEntityMutationOperationGroup() != null ?
-							operationGroup.asEntityMutationOperationGroup().getMutationDelegate() :
-							null,
-					session
-			);
+			return new MutationExecutorSingleNonBatched( jdbcOperation, delegate, session );
 		}
 
 		return new MutationExecutorStandard( operationGroup, batchKeySupplier, batchSizeToUse, session );

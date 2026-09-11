@@ -500,20 +500,24 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 			return tableNameResolver != null ? tableNameResolver.apply( qualifiedName ) : qualifiedName;
 		}
 		else {
+			final var classes =
+					new JoinedList<>( List.of( model ),
+							unmodifiableList( model.getSubclasses() ) );
 			final Set<Column> columns = new LinkedHashSet<>();
-			for ( var table : model.getSubclassTableClosure() ) {
+			for ( var persistentClass : classes ) {
+				final var table = persistentClass.getTable();
 				if ( !table.isAbstractUnionTable() ) {
 					columns.addAll( table.getColumns() );
 				}
 			}
 			final var dialect = factory.getJdbcServices().getDialect();
 			final var subquery = new StringBuilder().append( "(" );
-			final var classes =
-					new JoinedList<>( List.of( model ),
-							unmodifiableList( model.getSubclasses() ) );
+			// A non-null table name resolver means we use auxiliary-table columns for the projection
+			final boolean useAuxiliaryTables = tableNameResolver != null;
 			for ( var persistentClass : classes ) {
 				final var table = persistentClass.getTable();
 				if ( !table.isAbstractUnionTable() ) {
+					final var projectionTable = useAuxiliaryTables ? persistentClass.getAuxiliaryTable() : table;
 					//TODO: move to .sql package!!
 					if ( subquery.length() > 1 ) {
 						subquery.append( " union " );
@@ -523,7 +527,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 					}
 					subquery.append( "select " );
 					for ( var column : columns ) {
-						if ( !table.containsColumn( column ) ) {
+						if ( !projectionTable.containsColumn( column ) ) {
 							subquery.append( getSelectClauseNullString( column, dialect ) )
 									.append( " as " );
 						}

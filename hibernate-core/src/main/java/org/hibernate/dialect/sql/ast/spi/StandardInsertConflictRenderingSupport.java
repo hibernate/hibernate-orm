@@ -57,7 +57,10 @@ public final class StandardInsertConflictRenderingSupport {
 	public static InsertConflictRenderingSupport merge(boolean terminateStatement) {
 		return request -> switch ( action( request ) ) {
 			case NONE -> new InsertConflictRenderingPlan.None();
-			case DO_NOTHING -> new InsertConflictRenderingPlan.ConstraintViolation();
+			case DO_NOTHING -> request.hasConstraintColumns()
+					// Prefer a statement that has fewer chances of producing a constraint violation
+					? new InsertConflictRenderingPlan.Merge( terminateStatement )
+					: new InsertConflictRenderingPlan.ConstraintViolation();
 			case DO_UPDATE -> new InsertConflictRenderingPlan.Merge( terminateStatement );
 		};
 	}

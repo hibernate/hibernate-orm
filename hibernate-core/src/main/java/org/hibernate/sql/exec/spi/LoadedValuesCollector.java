@@ -4,6 +4,7 @@
  */
 package org.hibernate.sql.exec.spi;
 
+import org.hibernate.Incubating;
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -20,6 +21,7 @@ import java.util.List;
  *
  * @author Steve Ebersole
  */
+@Incubating
 public interface LoadedValuesCollector {
 	/**
 	 * Register a loading entity.

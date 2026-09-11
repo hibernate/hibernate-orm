@@ -8,11 +8,14 @@ import java.sql.PreparedStatement;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
+import org.hibernate.Incubating;
+
 /**
  * Executor for model-mutation operations
  *
  * @author Steve Ebersole
  */
+@Incubating
 public interface JdbcMutationExecutor {
 	/**
 	 * Perform the execution

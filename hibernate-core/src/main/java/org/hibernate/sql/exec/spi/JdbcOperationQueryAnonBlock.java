@@ -4,6 +4,7 @@
  */
 package org.hibernate.sql.exec.spi;
 
+import org.hibernate.Incubating;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
 
 /**
@@ -13,6 +14,7 @@ import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
  *
  * @author Steve Ebersole
  */
+@Incubating
 public interface JdbcOperationQueryAnonBlock extends JdbcOperationQuery {
 	/**
 	 * Retrieve the "result set mappings" for processing any ResultSets returned from

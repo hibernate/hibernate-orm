@@ -8,7 +8,6 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 import jakarta.annotation.Nonnull;
-import org.hibernate.Incubating;
 import org.hibernate.SPI;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.sql.exec.internal.AbstractJdbcParameter;
@@ -38,7 +37,6 @@ import static org.hibernate.SPI.Role.USE;
 ///
 /// @since 8.0
 /// @author Steve Ebersole
-@Incubating
 @SPI(USE)
 public final class JdbcParameterFactory {
 	private JdbcParameterFactory() {

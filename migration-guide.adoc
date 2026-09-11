@@ -275,6 +275,19 @@ The annotation processor now propagates security annotations from the `jakarta.a
 
 This section describes changes to contracts (classes, interfaces, methods, etc.) which are considered https://hibernate.org/community/compatibility-policy/#spi[SPI].
 
+[[sql-ast-translator-stability]]
+=== SQL AST and translator changes
+
+The central SQL AST and translator SPIs are no longer incubating, including
+the translator factories and typed requests, `JdbcParameterFactory`, and the
+`JdbcOperations` builders. Their supported SPI roles now carry the normal
+compatibility expectations within an `X.Y` release family. No signatures or
+provider implementation requirements change as part of this stabilization.
+
+`QueryTransformer`, `SqlAstTranslator.renderNamedSetReturningFunction()`, and
+`SetReturningFunctionType` remain incubating. Separate execution, mapping-model
+mutation, and result-processing contracts retain their existing lifecycle status.
+
 
 [[graph-flushing-spi]]
 === Graph-based Flushing

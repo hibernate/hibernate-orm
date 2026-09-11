@@ -24,6 +24,7 @@ import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
 import org.hibernate.property.access.spi.PropertyAccessStrategyResolver;
+import org.hibernate.property.access.spi.PropertyAccessorService;
 import org.hibernate.property.access.spi.Setter;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.generator.internal.GeneratorTypeHelper;
@@ -406,7 +407,8 @@ public class Property implements Serializable, MetaAttributable {
 	}
 
 	private PropertyAccess buildPropertyAccess(Class<?> clazz) {
-		return getPropertyAccessStrategy( clazz ).buildPropertyAccess( clazz, name, true );
+		return getPropertyAccessStrategy( clazz ).buildPropertyAccess(
+				resolveServiceRegistry().requireService( PropertyAccessorService.class ), clazz, name, true );
 	}
 
 	// todo : remove

@@ -8,7 +8,7 @@ import java.util.Set;
 
 import org.hibernate.envers.internal.entities.PropertyData;
 import org.hibernate.envers.internal.tools.ReflectionTools;
-import org.hibernate.property.access.spi.Getter;
+import org.hibernate.property.access.spi.PropertyValueAccessor;
 import org.hibernate.service.ServiceRegistry;
 
 /**
@@ -17,13 +17,13 @@ import org.hibernate.service.ServiceRegistry;
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 public class ModifiedEntityNamesReader {
-	private final Getter modifiedEntityNamesGetter;
+	private final PropertyValueAccessor modifiedEntityNamesGetter;
 
 	public ModifiedEntityNamesReader(
 			Class<?> revisionInfoClass,
 			PropertyData modifiedEntityNamesData,
 			ServiceRegistry serviceRegistry) {
-		modifiedEntityNamesGetter = ReflectionTools.getGetter( revisionInfoClass, modifiedEntityNamesData, serviceRegistry );
+		modifiedEntityNamesGetter = ReflectionTools.getPropertyValueAccessor( revisionInfoClass, modifiedEntityNamesData, serviceRegistry );
 	}
 
 	@SuppressWarnings("unchecked")

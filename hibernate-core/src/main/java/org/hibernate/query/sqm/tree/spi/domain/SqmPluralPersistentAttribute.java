@@ -10,7 +10,7 @@ import org.hibernate.query.sqm.spi.SqmJoinable;
 import org.hibernate.query.sqm.spi.SqmPathSource;
 
 
-@Incubating
+@Incubating(since = "6.2")
 public interface SqmPluralPersistentAttribute<D, C, E>
 		extends PluralPersistentAttribute<D, C, E>, SqmPersistentAttribute<D,C>, SqmJoinable<D,E>, SqmPathSource<E> {
 	@Override

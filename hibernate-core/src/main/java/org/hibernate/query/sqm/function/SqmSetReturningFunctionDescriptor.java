@@ -42,7 +42,7 @@ import org.hibernate.query.sqm.tree.spi.SqmTypedNode;
  *
  * @since 7.0
  */
-@Incubating
+@Incubating(since = "6.2")
 public interface SqmSetReturningFunctionDescriptor {
 
 	/**

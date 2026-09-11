@@ -25,7 +25,7 @@ import org.hibernate.service.ServiceRegistry;
 /// @see SchemaToolingSettings#APPLY_VALIDATION_CONSTRAINTS
 ///
 /// @since 8.0
-@Incubating
+@Incubating(since = "8.0")
 public enum ValidationConstraintDdlInfluence {
 	/// Apply validation constraints to the DDL schema if a Jakarta Validation
 	/// provider is available on the classpath; silently skip otherwise.

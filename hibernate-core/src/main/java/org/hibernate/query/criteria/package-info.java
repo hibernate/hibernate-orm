@@ -44,7 +44,7 @@
  * @see org.hibernate.query.criteria.HibernateCriteriaBuilder#createQuery(java.lang.String, java.lang.Class)
  * @see org.hibernate.query.criteria.CriteriaDefinition
  */
-@Incubating
+@Incubating(since = "6.3")
 package org.hibernate.query.criteria;
 
 import jakarta.persistence.criteria.Subquery;

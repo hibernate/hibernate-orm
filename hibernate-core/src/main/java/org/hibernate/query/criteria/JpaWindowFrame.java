@@ -15,7 +15,7 @@ import jakarta.persistence.criteria.Expression;
  *
  * @author Marco Belladelli
  */
-@Incubating
+@Incubating(since = "6.3")
 public interface JpaWindowFrame {
 	/**
 	 * Get the {@link FrameKind} of this window frame.

@@ -29,7 +29,7 @@ import jakarta.annotation.Nullable;
  *
  * @since 7.0
  */
-@Incubating
+@Incubating(since = "6.2")
 public class SqmXmlElementExpression extends SelfRenderingSqmFunction<String> implements JpaXmlElementExpression {
 
 	public SqmXmlElementExpression(

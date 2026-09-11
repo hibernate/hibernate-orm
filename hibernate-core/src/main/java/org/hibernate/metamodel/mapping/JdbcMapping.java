@@ -83,7 +83,7 @@ public interface JdbcMapping extends MappingType, JdbcMappingContainer {
 	 * The strategy for formatting values of this expressible type to
 	 * a SQL literal.
 	 */
-	@Incubating
+	@Incubating(since = "5.4")
 	default JdbcLiteralFormatter getJdbcLiteralFormatter() {
 		return getJdbcType().getJdbcLiteralFormatter( getMappedJavaType() );
 	}
@@ -93,7 +93,7 @@ public interface JdbcMapping extends MappingType, JdbcMappingContainer {
 		return getJavaTypeDescriptor();
 	}
 
-	@Incubating
+	@Incubating(since = "5.4")
 	default JavaType<?> getJdbcJavaType() {
 		return getJavaTypeDescriptor();
 	}
@@ -102,7 +102,7 @@ public interface JdbcMapping extends MappingType, JdbcMappingContainer {
 	 * Returns the converter that this basic type uses for transforming from the domain type, to the relational type,
 	 * or <code>null</code> if there is no conversion.
 	 */
-	@Incubating
+	@Incubating(since = "5.4")
 	default BasicValueConverter<?,?> getValueConverter() {
 		return null;
 	}

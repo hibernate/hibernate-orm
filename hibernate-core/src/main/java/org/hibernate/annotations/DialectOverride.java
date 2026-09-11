@@ -52,7 +52,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * @since 6.0
  * @author Gavin King
  */
-@Incubating
+@Incubating(since = "6.0")
 public interface DialectOverride {
 
 	/**

@@ -38,7 +38,7 @@ import static org.hibernate.query.common.FrameMode.ROWS;
 /**
  * @author Marco Belladelli
  */
-@Incubating
+@Incubating(since = "6.2")
 public class SqmWindow extends AbstractSqmNode implements JpaWindow, SqmVisitableNode {
 	private final List<SqmExpression<?>> partitions;
 	private final List<SqmSortSpecification> orderList;

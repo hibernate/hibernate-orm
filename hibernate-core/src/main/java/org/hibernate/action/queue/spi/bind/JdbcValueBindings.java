@@ -24,7 +24,7 @@ import java.util.Locale;
 ///
 /// @author Steve Ebersole
 /// @since 8.0
-@Incubating
+@Incubating(since = "8.0", group = "action-queue")
 public class JdbcValueBindings {
 	private final TableDescriptor tableDescriptor;
 	private final JdbcValueDescriptorAccess jdbcValueDescriptorAccess;

@@ -99,7 +99,7 @@ public interface JdbcSessionOwner {
 	 *
 	 * @since 7.1
 	 */
-	@Incubating
+	@Incubating(since = "7.1")
 	void afterObtainConnection(@Nonnull Connection connection) throws SQLException;
 
 	/**
@@ -112,7 +112,7 @@ public interface JdbcSessionOwner {
 	 *
 	 * @since 7.1
 	 */
-	@Incubating
+	@Incubating(since = "7.1")
 	void beforeReleaseConnection(@Nonnull Connection connection) throws SQLException;
 
 	/**

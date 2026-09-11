@@ -23,7 +23,7 @@ import static org.hibernate.SPI.Role.USE;
 ///
 /// @param <T> the element value type
 /// @see org.hibernate.type.descriptor.java.spi.BasicCollectionJavaType
-@Incubating
+@Incubating(since = "6.1")
 @SPI({ USE, IMPLEMENT })
 public interface BasicPluralJavaType<T> extends Serializable {
 	/**

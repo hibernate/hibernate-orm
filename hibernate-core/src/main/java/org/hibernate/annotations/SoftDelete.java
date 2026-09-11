@@ -56,7 +56,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Target({PACKAGE, TYPE, FIELD, METHOD, ANNOTATION_TYPE})
 @Retention(RUNTIME)
 @Documented
-@Incubating
+@Incubating(since = "6.4")
 public @interface SoftDelete {
 	/**
 	 * (Optional) The name of the column.

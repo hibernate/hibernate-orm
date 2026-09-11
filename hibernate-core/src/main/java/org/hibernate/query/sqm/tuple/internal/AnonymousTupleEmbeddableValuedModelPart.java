@@ -11,7 +11,6 @@ import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
-import org.hibernate.Incubating;
 import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
@@ -69,7 +68,6 @@ import static java.util.Objects.requireNonNullElse;
 /**
  * @author Christian Beikov
  */
-@Incubating
 public class AnonymousTupleEmbeddableValuedModelPart implements EmbeddableValuedModelPart, EmbeddableMappingType {
 
 	private static final FetchOptions FETCH_OPTIONS = FetchOptions.valueOf( FetchTiming.IMMEDIATE, FetchStyle.JOIN );

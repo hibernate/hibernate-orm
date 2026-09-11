@@ -20,7 +20,7 @@ import org.hibernate.collection.spi.PersistentCollection;
 ///
 /// @since 8.0
 /// @author Steve Ebersole
-@Incubating
+@Incubating(since = "8.0")
 public interface CollectionFlushActionTracker {
 	/// Was the collection found reachable from a flushed entity during the current flush?
 	///

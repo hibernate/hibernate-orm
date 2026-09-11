@@ -97,7 +97,7 @@ import static org.hibernate.jpa.internal.util.FlushModeTypeHelper.queryFlushMode
  * @author Gavin King
  * @author Steve Ebersole
  */
-@Incubating
+@Incubating(since = "5.2")
 public interface Query<T> extends CommonQueryContract {
 
 	/**

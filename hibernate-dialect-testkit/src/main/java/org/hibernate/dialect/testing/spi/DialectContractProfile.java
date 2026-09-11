@@ -27,7 +27,7 @@ import static org.hibernate.SPI.Role.SUPPLY;
 /// @since 8.0
 /// @see DialectTestKit#contractTests(DialectContractProfile)
 /// @see DialectTestKit#openContext(DialectContractProfile)
-@Incubating
+@Incubating(since = "8.0", group = "dialect-testkit")
 @SPI({ IMPLEMENT, SUPPLY })
 public interface DialectContractProfile {
 	/// A stable, human-readable profile name used for dynamic test reporting.

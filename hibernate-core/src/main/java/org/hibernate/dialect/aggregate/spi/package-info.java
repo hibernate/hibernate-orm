@@ -11,7 +11,7 @@
 ///
 /// @author Steve Ebersole
 /// @since 8.0
-@Incubating
+@Incubating(since = "8.0", group = "aggregate-columns")
 package org.hibernate.dialect.aggregate.spi;
 
 import org.hibernate.Incubating;

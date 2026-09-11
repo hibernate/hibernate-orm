@@ -33,7 +33,7 @@ public interface LogicalConnectionImplementor extends LogicalConnection {
 	@Nonnull
 	PhysicalConnectionHandlingMode getConnectionHandlingMode();
 
-	@Incubating
+	@Incubating(since = "8.0")
 	default @Nonnull ConnectionReleaseMode resolvedConnectionReleaseMode() {
 		return getConnectionHandlingMode().getReleaseMode();
 	}

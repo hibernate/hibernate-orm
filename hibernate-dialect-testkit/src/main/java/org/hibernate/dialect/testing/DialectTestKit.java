@@ -42,7 +42,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 ///
 /// @author Steve Ebersole
 /// @since 8.0
-@Incubating
+@Incubating(since = "8.0", group = "dialect-testkit")
 @SPI(USE)
 public final class DialectTestKit {
 	private DialectTestKit() {

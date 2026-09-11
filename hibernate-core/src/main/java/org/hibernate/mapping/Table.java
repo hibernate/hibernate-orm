@@ -317,7 +317,7 @@ public class Table implements Serializable, ContributableDatabaseObject {
 		return unmodifiableMap( indexes );
 	}
 
-	@Incubating
+	@Incubating(since = "7.0")
 	public Collection<ForeignKey> getForeignKeyCollection() {
 		return unmodifiableCollection( foreignKeys.values() );
 	}

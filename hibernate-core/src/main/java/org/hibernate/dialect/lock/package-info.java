@@ -10,7 +10,7 @@
  *
  * @apiNote Marked incubating as major refactoring and reorganizing expected here during 7.x development.
  */
-@Incubating
+@Incubating(since = "7.1")
 package org.hibernate.dialect.lock;
 
 

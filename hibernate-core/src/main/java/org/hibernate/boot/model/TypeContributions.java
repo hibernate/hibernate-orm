@@ -81,7 +81,7 @@ public interface TypeContributions {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.4")
 	@SPI(SUPPLY)
 	default void contributeType(CompositeUserType<?> type) {
 		// default implementation for backward compatibility
@@ -93,7 +93,7 @@ public interface TypeContributions {
 	 *
 	 * @since 6.2
 	 */
-	@Incubating
+	@Incubating(since = "6.2")
 	@SPI(SUPPLY)
 	default void contributeAttributeConverter(Class<? extends AttributeConverter<?, ?>> converterClass)  {
 		// default implementation for backward compatibility

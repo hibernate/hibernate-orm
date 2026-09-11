@@ -30,7 +30,7 @@ import org.hibernate.sql.ast.spi.query.from.TableGroup;
  *
  * @since 7.0
  */
-@Incubating
+@Incubating(since = "6.2")
 public abstract class SqmSetReturningFunction<T> extends AbstractSqmNode
 		implements SqmVisitableNode, JpaSetReturningFunction<T> {
 	// this function-name is the one used to resolve the descriptor from

@@ -19,7 +19,7 @@ import org.hibernate.type.descriptor.java.JavaType;
  *
  * @author Steve Ebersole
  */
-@Incubating
+@Incubating(since = "6.0", group = "result-processing")
 @org.hibernate.SPI({ org.hibernate.SPI.Role.USE, org.hibernate.SPI.Role.IMPLEMENT })
 public interface DomainResultGraphNode {
 	/**
@@ -32,7 +32,7 @@ public interface DomainResultGraphNode {
 	/**
 	 * Collect the JDBC value indexes used by this domain result that should be cached.
 	 */
-	@Incubating
+	@Incubating(since = "6.0", group = "result-processing")
 	void collectValueIndexesToCache(BitSet valueIndexes);
 
 	// todo (6.0) : result variable (selection alias)?  - even fetches can have alias

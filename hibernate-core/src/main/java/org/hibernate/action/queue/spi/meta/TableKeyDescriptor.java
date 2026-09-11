@@ -18,7 +18,7 @@ import java.util.List;
 ///
 /// @author Steve Ebersole
 /// @since 8.0
-@Incubating
+@Incubating(since = "8.0", group = "action-queue")
 public record TableKeyDescriptor(List<ColumnDescriptor> columns) implements SelectableMappings, Serializable {
 
 	public TableKeyDescriptor {

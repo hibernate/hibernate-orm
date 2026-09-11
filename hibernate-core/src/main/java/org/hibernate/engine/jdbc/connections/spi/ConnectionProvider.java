@@ -58,7 +58,7 @@ public interface ConnectionProvider extends Service, Wrapped {
 	 *
 	 * @since 7.3
 	 */
-	@Incubating
+	@Incubating(since = "7.3")
 	default Connection getConnection(String user, String password) throws SQLException {
 		throw new UnsupportedOperationException(
 				"ConnectionProvider does not support contextual credentials: "
@@ -82,7 +82,7 @@ public interface ConnectionProvider extends Service, Wrapped {
 	 *
 	 * @since 7.2
 	 */
-	@Incubating
+	@Incubating(since = "7.2")
 	default Connection getReadOnlyConnection() throws SQLException {
 		return getConnection();
 	}
@@ -113,7 +113,7 @@ public interface ConnectionProvider extends Service, Wrapped {
 	 *
 	 * @since 7.2
 	 */
-	@Incubating
+	@Incubating(since = "7.2")
 	default void closeReadOnlyConnection(Connection connection) throws SQLException {
 		closeConnection( connection );
 	}
@@ -147,7 +147,7 @@ public interface ConnectionProvider extends Service, Wrapped {
 	 * call {@link org.hibernate.context.spi.MultiTenancy#getTenantSchemaMapper}
 	 * to obtain the {@link org.hibernate.context.spi.TenantSchemaMapper}.
 	 */
-	@Incubating
+	@Incubating(since = "7.2")
 	default boolean handlesConnectionSchema() {
 		return false;
 	}
@@ -159,7 +159,7 @@ public interface ConnectionProvider extends Service, Wrapped {
 	 * @return {@code true} if the connection provider handles this;
 	 *         {@code false} if the client should set the read-only mode
 	 */
-	@Incubating
+	@Incubating(since = "7.2")
 	default boolean handlesConnectionReadOnly() {
 		return false;
 	}

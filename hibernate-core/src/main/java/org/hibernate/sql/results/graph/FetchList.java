@@ -28,7 +28,7 @@ import org.hibernate.sql.results.graph.embeddable.EmbeddableResultGraphNode;
  * not have been possible with a standard generic container.
  * @since 6.2
  */
-@Incubating
+@Incubating(since = "6.0", group = "result-processing")
 @org.hibernate.SPI({ org.hibernate.SPI.Role.USE, org.hibernate.SPI.Role.IMPLEMENT })
 public interface FetchList extends Iterable<Fetch> {
 

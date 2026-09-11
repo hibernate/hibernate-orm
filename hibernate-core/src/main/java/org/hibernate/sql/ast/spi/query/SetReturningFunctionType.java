@@ -14,7 +14,7 @@ import jakarta.annotation.Nullable;
 /// function.
 ///
 /// @author Steve Ebersole
-@Incubating
+@Incubating(since = "6.0")
 public interface SetReturningFunctionType {
 	/// Find a named part of the function result.
 	///

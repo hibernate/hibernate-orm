@@ -15,7 +15,7 @@ import org.hibernate.sql.ast.spi.model.builder.MutationGroupBuilder;
 ///
 /// @author Steve Ebersole
 /// @since 8.0
-@Incubating
+@Incubating(since = "5.4")
 public interface LegacyAuxiliaryMutationSupport {
 	/// Adds auxiliary columns to the legacy entity insert mutation group.
 	void addToInsertGroup(MutationGroupBuilder insertGroupBuilder, EntityPersister persister);

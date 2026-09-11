@@ -27,7 +27,7 @@ import org.hibernate.tool.schema.spi.GeneratorSynchronizer;
  * @since 6.2
  * @author Gavin King
  */
-@Incubating
+@Incubating(since = "6.2")
 public interface SchemaManager extends jakarta.persistence.SchemaManager {
 	/**
 	 * Truncate the database tables mapped by Hibernate entities, reset all associated
@@ -65,7 +65,7 @@ public interface SchemaManager extends jakarta.persistence.SchemaManager {
 	 *
 	 * @since 7.2
 	 */
-	@Incubating
+	@Incubating(since = "8.0")
 	void truncateTable(String tableName);
 
 	/**
@@ -102,7 +102,7 @@ public interface SchemaManager extends jakarta.persistence.SchemaManager {
 	 *
 	 * @since 7.2
 	 */
-	@Incubating
+	@Incubating(since = "8.0")
 	void resynchronizeGenerators();
 
 	/**
@@ -116,7 +116,7 @@ public interface SchemaManager extends jakarta.persistence.SchemaManager {
 	 *
 	 * @since 7.1
 	 */
-	@Incubating
+	@Incubating(since = "8.0")
 	SchemaManager forSchema(String schemaName);
 
 	/**
@@ -126,7 +126,7 @@ public interface SchemaManager extends jakarta.persistence.SchemaManager {
 	 *
 	 * @since 7.1
 	 */
-	@Incubating
+	@Incubating(since = "8.0")
 	SchemaManager forCatalog(String catalogName);
 
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

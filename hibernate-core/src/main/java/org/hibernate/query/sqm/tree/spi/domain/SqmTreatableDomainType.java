@@ -9,7 +9,7 @@ import org.hibernate.Incubating;
 import org.hibernate.metamodel.model.domain.TreatableDomainType;
 import org.hibernate.query.sqm.spi.SqmPathSource;
 
-@Incubating
+@Incubating(since = "6.2")
 public interface SqmTreatableDomainType<T>
 		extends TreatableDomainType<T>, SqmPathSource<T>, SqmManagedDomainType<T> {
 	@Override

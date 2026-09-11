@@ -18,7 +18,7 @@ import org.hibernate.persister.collection.CollectionPersister;
 ///
 /// @since 8.0
 /// @author Steve Ebersole
-@Incubating
+@Incubating(since = "8.0", group = "collection-delta")
 public final class FrozenCollectionRows {
 	private static final int INITIAL_SEGMENT_CAPACITY = 16;
 	private static final int MAX_SEGMENT_CAPACITY = 64;

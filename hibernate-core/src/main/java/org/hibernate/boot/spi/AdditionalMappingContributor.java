@@ -16,7 +16,7 @@ import org.hibernate.service.JavaServiceLoadable;
  *
  * @author Steve Ebersole
  */
-@Incubating
+@Incubating(since = "6.2")
 @JavaServiceLoadable
 public interface AdditionalMappingContributor {
 	/**

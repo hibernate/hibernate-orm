@@ -4,7 +4,6 @@
  */
 package org.hibernate.query.sqm.tuple.internal;
 
-import org.hibernate.Incubating;
 import org.hibernate.engine.spi.IdentifierValue;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.MergeContext;
@@ -19,7 +18,6 @@ import org.hibernate.query.sqm.spi.SqmExpressible;
 /**
  * @author Christian Beikov
  */
-@Incubating
 public class AnonymousTupleBasicEntityIdentifierMapping
 		extends AnonymousTupleBasicValuedModelPart
 		implements BasicEntityIdentifierMapping {

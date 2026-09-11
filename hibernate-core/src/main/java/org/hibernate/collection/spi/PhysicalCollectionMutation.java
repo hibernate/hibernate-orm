@@ -15,7 +15,7 @@ import org.hibernate.Incubating;
 ///
 /// @since 8.0
 /// @author Steve Ebersole
-@Incubating
+@Incubating(since = "8.0", group = "collection-delta")
 public sealed interface PhysicalCollectionMutation {
 	/// The semantic mutation owns no collection-table mutation.
 	record NoWork() implements PhysicalCollectionMutation {

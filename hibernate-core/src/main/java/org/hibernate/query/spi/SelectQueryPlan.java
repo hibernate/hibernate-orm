@@ -30,7 +30,7 @@ import org.hibernate.sql.results.spi.ResultsConsumer;
  *
  * @author Steve Ebersole
  */
-@Incubating
+@Incubating(since = "6.0")
 public interface SelectQueryPlan<R> extends QueryPlan {
 	/**
 	 * Execute the query

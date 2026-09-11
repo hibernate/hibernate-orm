@@ -23,7 +23,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 ///
 /// @author Steve Ebersole
 /// @since 8.0
-@Incubating
+@Incubating(since = "8.0")
 @FunctionalInterface
 public interface BatchedResultChecker {
 	/// Check the result for one row of a JDBC batch.

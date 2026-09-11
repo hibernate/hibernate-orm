@@ -28,7 +28,7 @@ import org.hibernate.type.BindableType;
  *
  * @author Steve Ebersole
  */
-@Incubating
+@Incubating(since = "5.2")
 public interface QueryParameterBinding<T> {
 	/**
 	 * The query parameter associated with this binding.

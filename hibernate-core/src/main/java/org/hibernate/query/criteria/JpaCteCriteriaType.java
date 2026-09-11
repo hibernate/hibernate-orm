@@ -14,7 +14,7 @@ import org.hibernate.metamodel.model.domain.DomainType;
 /**
  * A CTE (common table expression) criteria type.
  */
-@Incubating
+@Incubating(since = "6.3")
 public interface JpaCteCriteriaType<T> extends JpaCriteriaNode {
 
 	/**

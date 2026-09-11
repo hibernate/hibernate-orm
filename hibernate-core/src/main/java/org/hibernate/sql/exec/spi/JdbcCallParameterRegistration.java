@@ -15,7 +15,7 @@ import org.hibernate.sql.exec.internal.JdbcCallRefCursorExtractorImpl;
 /**
  * @author Steve Ebersole
  */
-@Incubating
+@Incubating(since = "6.0", group = "sql-execution")
 public interface JdbcCallParameterRegistration {
 
 	String getName();

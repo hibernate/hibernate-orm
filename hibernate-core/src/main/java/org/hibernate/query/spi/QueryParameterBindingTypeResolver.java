@@ -20,7 +20,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  *
  * @author Steve Ebersole
  */
-@Incubating
+@Incubating(since = "8.0")
 public interface QueryParameterBindingTypeResolver {
 	<T> @Nullable BindableType<? super T> resolveParameterBindType(@Nullable T bindValue);
 	<T> @Nullable BindableType<T> resolveParameterBindType(Class<T> clazz);

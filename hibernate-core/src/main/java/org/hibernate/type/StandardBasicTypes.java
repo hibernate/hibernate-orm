@@ -347,13 +347,12 @@ public final class StandardBasicTypes {
 	// Date / time data
 
 	/**
-	 * The standard Hibernate type for mapping {@link Duration} to JDBC {@link org.hibernate.type.SqlTypes#INTERVAL_SECOND INTERVAL_SECOND}
-	 * or {@link org.hibernate.type.SqlTypes#NUMERIC NUMERIC} as a fallback.
+	 * The standard Hibernate type for mapping {@link Duration} to JDBC {@link org.hibernate.type.SqlTypes#DURATION DURATION}.
 	 */
 	public static final BasicTypeReference<Duration> DURATION = new BasicTypeReference<>(
 			"Duration",
 			Duration.class,
-			SqlTypes.INTERVAL_SECOND
+			SqlTypes.DURATION
 	);
 
 	/**

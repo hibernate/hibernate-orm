@@ -134,7 +134,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Documented
 @Target({PACKAGE, TYPE, FIELD, METHOD, ANNOTATION_TYPE})
 @Retention(RUNTIME)
-@Incubating
+@Incubating(since = "7.4")
 public @interface Temporal {
 	/**
 	 * The name of the column holding the starting timestamp

@@ -9,7 +9,7 @@ import jakarta.annotation.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 
-@Incubating
+@Incubating(since = "6.2")
 public interface SqmManagedDomainType<J> extends ManagedDomainType<J>, SqmDomainType<J> {
 	@Override
 	String getTypeName();

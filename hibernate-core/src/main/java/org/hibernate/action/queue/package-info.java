@@ -2,7 +2,7 @@
 /// encountered as part of the [org.hibernate.action.queue.spi.ActionQueue].
 ///
 /// @author Steve Ebersole
-@Incubating
+@Incubating(since = "8.0", group = "action-queue")
 package org.hibernate.action.queue;
 
 import org.hibernate.Incubating;

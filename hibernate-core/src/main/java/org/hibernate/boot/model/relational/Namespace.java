@@ -159,12 +159,12 @@ public class Namespace {
 		return sequence;
 	}
 
-	@Incubating
+	@Incubating(since = "6.6")
 	public Collection<UserDefinedType> getUserDefinedTypes() {
 		return udts.values();
 	}
 
-	@Incubating
+	@Incubating(since = "6.6")
 	public List<UserDefinedType> getDependencyOrderedUserDefinedTypes() {
 		final var orderedUdts = new LinkedHashMap<Identifier, UserDefinedType>( udts.size() );
 		final var udtDependencies = new HashMap<Identifier, Set<Identifier>>( udts.size() );
@@ -236,7 +236,7 @@ public class Namespace {
 	 *         or null if there is no UDT with the specified
 	 *         UDT name.
 	 */
-	@Incubating
+	@Incubating(since = "6.6")
 	public UserDefinedObjectType locateUserDefinedType(Identifier logicalTypeName) {
 		return (UserDefinedObjectType) udts.get( logicalTypeName );
 	}
@@ -250,7 +250,7 @@ public class Namespace {
 	 *         or null if there is no UDT with the specified
 	 *         UDT name.
 	 */
-	@Incubating
+	@Incubating(since = "6.6")
 	public UserDefinedArrayType locateUserDefinedArrayType(Identifier logicalTypeName) {
 		return (UserDefinedArrayType) udts.get( logicalTypeName );
 	}
@@ -262,7 +262,7 @@ public class Namespace {
 	 *
 	 * @return the created UDT.
 	 */
-	@Incubating
+	@Incubating(since = "6.6")
 	public UserDefinedObjectType createUserDefinedType(Identifier logicalTypeName, Function<Identifier, UserDefinedObjectType> creator) {
 		final UserDefinedType existing = udts.get( logicalTypeName );
 		if ( existing != null ) {
@@ -283,7 +283,7 @@ public class Namespace {
 	 *
 	 * @return the created UDT.
 	 */
-	@Incubating
+	@Incubating(since = "6.6")
 	public UserDefinedArrayType createUserDefinedArrayType(Identifier logicalTypeName, Function<Identifier, UserDefinedArrayType> creator) {
 		final UserDefinedType existing = udts.get( logicalTypeName );
 		if ( existing != null ) {

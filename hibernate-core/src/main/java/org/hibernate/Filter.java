@@ -117,6 +117,6 @@ public interface Filter {
 	 *
 	 * @since 7
 	 */
-	@Incubating
+	@Incubating(since = "7.0")
 	Object getParameterValue(String name);
 }

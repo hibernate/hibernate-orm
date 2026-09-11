@@ -49,7 +49,7 @@ import org.hibernate.persister.state.internal.TemporalStateManagement;
 ///
 /// @author Gavin King
 /// @since 7.4
-@Incubating
+@Incubating(since = "7.4")
 public interface StateManagement {
 
 	/// Creates the auxiliary entity mapping required by this state-management

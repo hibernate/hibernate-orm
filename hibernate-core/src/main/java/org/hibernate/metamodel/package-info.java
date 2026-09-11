@@ -19,7 +19,7 @@
  * </ul>
  * @author Steve Ebersole
  */
-@Incubating
+@Incubating(since = "5.4")
 package org.hibernate.metamodel;
 
 import org.hibernate.Incubating;

@@ -22,7 +22,7 @@ import java.util.Objects;
 /**
  * @author Christian Beikov
  */
-@Incubating
+@Incubating(since = "6.2")
 public class SqmCteRoot<T> extends SqmRoot<T> implements JpaRoot<T> {
 
 	private final SqmCteStatement<T> cte;

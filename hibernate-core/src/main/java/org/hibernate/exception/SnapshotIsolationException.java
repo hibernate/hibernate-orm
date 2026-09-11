@@ -17,7 +17,7 @@ import java.sql.SQLException;
  *
  * @see jakarta.persistence.OptimisticLockException
  */
-@Incubating
+@Incubating(since = "7.0")
 public class SnapshotIsolationException extends JDBCException {
 	public SnapshotIsolationException(String string, SQLException root, String sql) {
 		super( string, root, sql );

@@ -173,7 +173,7 @@ public interface JdbcType extends Serializable {
 	/**
 	 * The Java type class that is preferred by the binder or null.
 	 */
-	@Incubating
+	@Incubating(since = "6.1")
 	default Class<?> getPreferredJavaTypeClass(WrapperOptions options) {
 		return null;
 	}
@@ -197,7 +197,7 @@ public interface JdbcType extends Serializable {
 	 * Wraps the top level selection expression to be able to read values with this JdbcType's ValueExtractor.
 	 * @since 6.2
 	 */
-	@Incubating
+	@Incubating(since = "6.2")
 	default Expression wrapTopLevelSelectionExpression(Expression expression) {
 		return expression;
 	}
@@ -206,7 +206,7 @@ public interface JdbcType extends Serializable {
 	 * Wraps the write expression to be able to write values with this JdbcType's ValueBinder.
 	 * @since 7.2
 	 */
-	@Incubating
+	@Incubating(since = "6.2")
 	default String wrapWriteExpression(String writeExpression, @Nullable Size size, Dialect dialect) {
 		final var wrapped = new StringBuilder( writeExpression.length() );
 		appendWriteExpression( writeExpression, size, new StringBuilderSqlAppender( wrapped ), dialect );
@@ -217,7 +217,7 @@ public interface JdbcType extends Serializable {
 	 * Append the write expression wrapped in a way to be able to write values with this JdbcType's ValueBinder.
 	 * @since 7.2
 	 */
-	@Incubating
+	@Incubating(since = "6.2")
 	default void appendWriteExpression(String writeExpression, @Nullable Size size, SqlAppender appender, Dialect dialect) {
 		appender.appendSql( writeExpression );
 	}
@@ -227,7 +227,7 @@ public interface JdbcType extends Serializable {
 	 * This is used to determine if a parameter expression needs a cast in e.g. a select item context.
 	 * @since 7.2
 	 */
-	@Incubating
+	@Incubating(since = "7.2")
 	default boolean isWriteExpressionTyped(Dialect dialect) {
 		return false;
 	}
@@ -390,7 +390,7 @@ public interface JdbcType extends Serializable {
 	 *
 	 * @since 6.5
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	default void addAuxiliaryDatabaseObjects(
 			JavaType<?> javaType,
 			BasicValueConverter<?, ?> valueConverter,
@@ -399,7 +399,7 @@ public interface JdbcType extends Serializable {
 			JdbcTypeIndicators context) {
 	}
 
-	@Incubating
+	@Incubating(since = "6.3")
 	default String getExtraCreateTableInfo(JavaType<?> javaType, String columnName, String tableName, Database database) {
 		return "";
 	}
@@ -412,7 +412,7 @@ public interface JdbcType extends Serializable {
 	 * @return The cast pattern or null
 	 * @since 7.2
 	 */
-	@Incubating
+	@Incubating(since = "7.2")
 	default @Nullable String castFromPattern(JdbcMapping sourceMapping, @Nullable Size size) {
 		return null;
 	}
@@ -425,12 +425,12 @@ public interface JdbcType extends Serializable {
 	 * @return The cast pattern or null
 	 * @since 7.2
 	 */
-	@Incubating
+	@Incubating(since = "7.2")
 	default @Nullable String castToPattern(JdbcMapping targetJdbcMapping, @Nullable Size size) {
 		return null;
 	}
 
-	@Incubating
+	@Incubating(since = "6.6")
 	default boolean isComparable() {
 		final int code = getDefaultSqlTypeCode();
 		return isCharacterType( code )
@@ -445,53 +445,53 @@ public interface JdbcType extends Serializable {
 			|| code == UUID;
 	}
 
-	@Incubating
+	@Incubating(since = "6.6")
 	default boolean hasDatePart() {
 		return SqlTypes.hasDatePart( getDefaultSqlTypeCode() );
 	}
 
-	@Incubating
+	@Incubating(since = "6.6")
 	default boolean hasTimePart() {
 		return SqlTypes.hasTimePart( getDefaultSqlTypeCode() );
 	}
 
-	@Incubating
+	@Incubating(since = "6.6")
 	default boolean isStringLikeExcludingClob() {
 		final int code = getDefaultSqlTypeCode();
 		return isCharacterType( code ) || isEnumType( code );
 	}
 
-	@Incubating
+	@Incubating(since = "6.6")
 	default boolean isSpatial() {
 		return isSpatialType( getDefaultSqlTypeCode() );
 	}
 
-	@Incubating
+	@Incubating(since = "7.0")
 	default boolean isJson() {
 		return isJsonType( getDefaultSqlTypeCode() );
 	}
 
-	@Incubating
+	@Incubating(since = "7.0")
 	default boolean isImplicitJson() {
 		return isImplicitJsonType( getDefaultSqlTypeCode() );
 	}
 
-	@Incubating
+	@Incubating(since = "7.0")
 	default boolean isXml() {
 		return isXmlType( getDefaultSqlTypeCode() );
 	}
 
-	@Incubating
+	@Incubating(since = "7.0")
 	default boolean isImplicitXml() {
 		return isImplicitXmlType( getDefaultSqlTypeCode() );
 	}
 
-	@Incubating
+	@Incubating(since = "6.6")
 	default boolean isBoolean() {
 		return getDefaultSqlTypeCode() == BOOLEAN;
 	}
 
-	@Incubating
+	@Incubating(since = "6.6")
 	default boolean isSmallInteger() {
 		return isSmallOrTinyInt( getDefaultSqlTypeCode() );
 	}

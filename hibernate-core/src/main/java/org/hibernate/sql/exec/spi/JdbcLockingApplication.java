@@ -16,7 +16,7 @@ import org.hibernate.SPI;
 /// @since 8.0
 /// @author Steve Ebersole
 @SPI
-@Incubating
+@Incubating(since = "6.0", group = "sql-execution")
 public enum JdbcLockingApplication {
 	/// The select does not request pessimistic locking.
 	NONE,

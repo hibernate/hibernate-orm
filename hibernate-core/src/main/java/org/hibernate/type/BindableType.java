@@ -28,7 +28,7 @@ import org.hibernate.query.sqm.spi.SqmBindableType;
  * @author Steve Ebersole
  * @author Gavin King
  */
-@Incubating
+@Incubating(since = "7.0")
 public interface BindableType<J> extends Type<J> {
 	/**
 	 * Resolve this parameter type to the corresponding {@link SqmBindableType}.

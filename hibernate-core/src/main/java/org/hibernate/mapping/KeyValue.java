@@ -37,7 +37,7 @@ public interface KeyValue extends Value {
 
 	boolean isUpdateable();
 
-	@Incubating
+	@Incubating(since = "7.0")
 	@Remove
 	Generator createGenerator(Dialect dialect, RootClass rootClass, Property property, GeneratorSettings defaults);
 }

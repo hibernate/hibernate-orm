@@ -23,7 +23,7 @@ import static org.hibernate.engine.internal.CacheHelper.writingToCache;
 ///
 /// @author Steve Ebersole
 /// @since 8.0
-@Incubating
+@Incubating(since = "8.0", group = "action-queue")
 public class UpdateCacheHandling {
 	public static class CacheUpdate {
 		private final Object cacheKey;

@@ -4,7 +4,6 @@
  */
 package org.hibernate.sql.results.internal;
 
-import org.hibernate.Incubating;
 import org.hibernate.sql.results.spi.RowTransformer;
 
 /**
@@ -14,7 +13,6 @@ import org.hibernate.sql.results.spi.RowTransformer;
  *
  * @author Steve Ebersole
  */
-@Incubating
 public class RowTransformerStandardImpl<T> implements RowTransformer<T> {
 	/**
 	 * Singleton access

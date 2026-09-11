@@ -16,7 +16,7 @@ import static org.hibernate.SPI.Role.USE;
 ///
 /// @author Steve Ebersole
 /// @since 8.0
-@Incubating
+@Incubating(since = "8.0", group = "dialect-testkit")
 @SPI(USE)
 public record GeneratedStatement(String sql, List<GeneratedParameter> parameters) {
 	public GeneratedStatement {

@@ -6,7 +6,6 @@ package org.hibernate.query.sqm.tuple.internal;
 
 import java.util.Set;
 
-import org.hibernate.Incubating;
 import org.hibernate.engine.spi.IdentifierValue;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.MergeContext;
@@ -23,7 +22,6 @@ import jakarta.persistence.metamodel.Attribute;
 /**
  * @author Christian Beikov
  */
-@Incubating
 public class AnonymousTupleEmbeddedEntityIdentifierMapping extends AnonymousTupleEmbeddableValuedModelPart
 		implements CompositeIdentifierMapping, SingleAttributeIdentifierMapping {
 

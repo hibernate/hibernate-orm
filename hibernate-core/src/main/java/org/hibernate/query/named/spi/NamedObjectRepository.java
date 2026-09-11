@@ -34,7 +34,7 @@ import jakarta.persistence.TypedQueryReference;
  *
  * @author Steve Ebersole
  */
-@Incubating
+@Incubating(since = "8.0")
 public interface NamedObjectRepository {
 
 	/**

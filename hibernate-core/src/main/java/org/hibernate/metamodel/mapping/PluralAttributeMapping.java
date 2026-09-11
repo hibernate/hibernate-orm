@@ -75,7 +75,7 @@ public interface PluralAttributeMapping
 	/**
 	 * Mapping for soft-delete support, or {@code null} if soft-delete not defined
 	 */
-	@Incubating
+	@Incubating(since = "5.4")
 	default SoftDeleteMapping getSoftDeleteMapping() {
 		return null;
 	}
@@ -83,7 +83,7 @@ public interface PluralAttributeMapping
 	/**
 	 * Mapping for temporal support, or {@code null} if temporal not defined
 	 */
-	@Incubating
+	@Incubating(since = "5.4")
 	default TemporalMapping getTemporalMapping() {
 		return null;
 	}
@@ -91,7 +91,7 @@ public interface PluralAttributeMapping
 	/**
 	 * Mapping for audit support, or {@code null} if audit not defined
 	 */
-	@Incubating
+	@Incubating(since = "5.4")
 	default AuditMapping getAuditMapping() {
 		return null;
 	}

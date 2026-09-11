@@ -16,7 +16,7 @@ import jakarta.persistence.criteria.Expression;
 /**
  * @since 7.0
  */
-@Incubating
+@Incubating(since = "6.3")
 public interface JpaFunctionJoin<E> extends JpaFunctionFrom<Object, E>, JpaJoin<Object, E> {
 	/**
 	 * Specifies whether the function arguments can refer to previous from node aliases.

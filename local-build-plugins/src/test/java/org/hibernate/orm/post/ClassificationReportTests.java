@@ -85,6 +85,56 @@ public class ClassificationReportTests {
 	}
 
 	@Test
+	public void incubationReviewRollsUpVersionThenGroupWithoutOriginFluff() {
+		final ClassificationModel.Builder builder = ClassificationModel.builder();
+		type( builder, "type:fixture.review.Shared", null, API );
+		incubation( builder, "type:fixture.review.Shared", "7.4", "shared-feature" );
+		incubation( builder, "type:fixture.review.Shared", "8.0", "alpha" );
+		type( builder, "type:fixture.review.GroupA", null, API );
+		incubation( builder, "type:fixture.review.GroupA", "8.0", "alpha" );
+		type( builder, "type:fixture.review.GroupB", null, API );
+		incubation( builder, "type:fixture.review.GroupB", "8.0", "beta" );
+		builder.declaration(
+				"package:fixture.review.packaged",
+				PACKAGE,
+				null,
+				ClassificationModel.Structure.UNKNOWN,
+				"test"
+		);
+		category( builder, "package:fixture.review.packaged", API, DIRECT, "package:fixture.review.packaged" );
+		incubation( builder, "package:fixture.review.packaged", "8.0", "beta" );
+		type( builder, "type:fixture.review.Ungrouped", null, API );
+		incubation( builder, "type:fixture.review.Ungrouped", "8.0", null );
+		type( builder, "type:fixture.review.Later", null, API );
+		incubation( builder, "type:fixture.review.Later", "10.0", null );
+
+		final String review = ClassificationReportsTask.renderIncubationReview(
+				builder.build(),
+				new ClassificationReportRenderer()
+		);
+		assertEquals(
+				"= Incubating review by version and group\n"
+						+ "\n== Since 7.4\n"
+						+ "\n=== Group: shared-feature\n"
+						+ "* fixture.review.Shared\n"
+						+ "\n== Since 8.0\n"
+						+ "\n=== Group: alpha\n"
+						+ "* fixture.review.GroupA\n"
+						+ "* fixture.review.Shared\n"
+						+ "\n=== Group: beta\n"
+						+ "* fixture.review.GroupB\n"
+						+ "* fixture.review.packaged.*\n"
+						+ "\n=== Ungrouped\n"
+						+ "* fixture.review.Ungrouped\n"
+						+ "\n== Since 10.0\n"
+						+ "\n=== Ungrouped\n"
+						+ "* fixture.review.Later\n",
+				review
+		);
+		assertFalse( review.contains( "origin=" ) );
+	}
+
+	@Test
 	public void everyProjectionEntryResolvesToCanonicalRecord() {
 		final ClassificationModel model = model();
 		final ClassificationReportRenderer renderer = new ClassificationReportRenderer();
@@ -149,6 +199,18 @@ public class ClassificationReportTests {
 		reports.generateReports();
 		assertTrue( reports.getInternalsReportFileReference().get().getAsFile().isFile() );
 		assertTrue( reports.getIncubationReportFileReference().get().getAsFile().isFile() );
+		assertEquals(
+				"# All elements considered incubating\n\nfixture.lifecycle.Shared\n",
+				Files.readString( reports.getIncubationReportFileReference().get().getAsFile().toPath() )
+		);
+		assertTrue( reports.getIncubationReviewReportFileReference().get().getAsFile().isFile() );
+		assertEquals(
+				"= Incubating review by version and group\n"
+						+ "\n== Since 8.0\n"
+						+ "\n=== Group: report-fixture\n"
+						+ "* fixture.lifecycle.Shared\n",
+				Files.readString( reports.getIncubationReviewReportFileReference().get().getAsFile().toPath() )
+		);
 		assertTrue( reports.getDeprecationReportFileReference().get().getAsFile().isFile() );
 		assertTrue( reports.getRemovalReportFileReference().get().getAsFile().isFile() );
 
@@ -294,7 +356,29 @@ public class ClassificationReportTests {
 			ClassificationModel.LifecycleState state,
 			ClassificationModel.LifecycleOriginKind kind,
 			String source) {
-		builder.addLifecycleOrigin( id, new ClassificationModel.LifecycleOrigin( state, kind, source ) );
+		builder.addLifecycleOrigin(
+				id,
+				state == INCUBATING
+						? new ClassificationModel.LifecycleOrigin( state, kind, source, "8.0", "report-fixture" )
+						: new ClassificationModel.LifecycleOrigin( state, kind, source )
+		);
+	}
+
+	private static void incubation(
+			ClassificationModel.Builder builder,
+			String id,
+			String since,
+			String group) {
+		builder.addLifecycleOrigin(
+				id,
+				new ClassificationModel.LifecycleOrigin(
+						INCUBATING,
+						ClassificationModel.LifecycleOriginKind.DIRECT,
+						id,
+						since,
+						group
+				)
+		);
 	}
 
 }

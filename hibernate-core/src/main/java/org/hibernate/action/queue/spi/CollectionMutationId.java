@@ -14,7 +14,7 @@ import org.hibernate.Incubating;
 ///
 /// @since 8.0
 /// @author Steve Ebersole
-@Incubating
+@Incubating(since = "8.0", group = "action-queue")
 public record CollectionMutationId(long value) {
 	public CollectionMutationId {
 		if ( value < 0 ) {

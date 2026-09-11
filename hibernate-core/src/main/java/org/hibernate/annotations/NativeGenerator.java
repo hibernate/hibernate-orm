@@ -34,7 +34,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Target({METHOD, FIELD, TYPE, PACKAGE, MODULE})
 @Retention(RUNTIME)
 @IdGeneratorType(org.hibernate.id.NativeGenerator.class)
-@Incubating
+@Incubating(since = "7.0")
 public @interface NativeGenerator {
 	/**
 	 * Configures the sequence generation when the dialect reports

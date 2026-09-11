@@ -38,7 +38,7 @@ import org.hibernate.service.Service;
  *
  * @since 7.4
  */
-@Incubating
+@Incubating(since = "7.4", group = "temporal-versioning")
 public interface ChangesetCoordinator extends Service {
 	/**
 	 * The Java type of the changeset identifiers or timestamps.

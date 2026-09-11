@@ -36,7 +36,7 @@ import static java.util.Collections.emptyMap;
  *
  * @author Gavin King
  */
-@Incubating
+@Incubating(since = "6.0")
 public class PersistentBag<E> extends AbstractPersistentCollection<E> implements List<E> {
 
 	@Serial

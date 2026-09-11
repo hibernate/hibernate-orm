@@ -19,7 +19,7 @@ import java.util.Locale;
 
 /// @author Steve Ebersole
 /// @since 8.0
-@Incubating
+@Incubating(since = "8.0", group = "action-queue")
 public class Checkers {
 
 	public static boolean identifiedResultsCheck(

@@ -369,7 +369,7 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 *
 	 * @see org.hibernate.cfg.CacheSettings#QUERY_CACHE_LAYOUT
 	 */
-	@Incubating
+	@Incubating(since = "6.5")
 	CacheLayout getQueryCacheLayout();
 
 	/**
@@ -651,37 +651,37 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	/**
 	 * @see org.hibernate.cfg.MappingSettings#PREFERRED_BOOLEAN_JDBC_TYPE
 	 */
-	@Incubating
+	@Incubating(since = "6.0")
 	int getPreferredSqlTypeCodeForBoolean();
 
 	/**
 	 * @see org.hibernate.cfg.MappingSettings#PREFERRED_DURATION_JDBC_TYPE
 	 */
-	@Incubating
+	@Incubating(since = "6.0")
 	int getPreferredSqlTypeCodeForDuration();
 
 	/**
 	 * @see org.hibernate.cfg.MappingSettings#PREFERRED_UUID_JDBC_TYPE
 	 */
-	@Incubating
+	@Incubating(since = "6.0")
 	int getPreferredSqlTypeCodeForUuid();
 
 	/**
 	 * @see org.hibernate.cfg.MappingSettings#PREFERRED_INSTANT_JDBC_TYPE
 	 */
-	@Incubating
+	@Incubating(since = "6.0")
 	int getPreferredSqlTypeCodeForInstant();
 
 	/**
 	 * @see org.hibernate.cfg.MappingSettings#PREFERRED_ARRAY_JDBC_TYPE
 	 */
-	@Incubating
+	@Incubating(since = "6.1")
 	int getPreferredSqlTypeCodeForArray();
 
 	/**
 	 * @see org.hibernate.cfg.MappingSettings#TIMEZONE_DEFAULT_STORAGE
 	 */
-	@Incubating
+	@Incubating(since = "6.2")
 	@Nonnull
 	TimeZoneStorageStrategy getDefaultTimeZoneStorageStrategy();
 
@@ -734,7 +734,7 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 *
 	 * @since 6.0
 	 */
-	@Incubating
+	@Incubating(since = "6.2")
 	@Nonnull
 	FormatMapper getJsonFormatMapper();
 
@@ -745,7 +745,7 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 *
 	 * @since 6.0.1
 	 */
-	@Incubating
+	@Incubating(since = "6.2")
 	@Nonnull
 	FormatMapper getXmlFormatMapper();
 
@@ -755,7 +755,7 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 * @since 7.0
 	 * @see org.hibernate.cfg.MappingSettings#XML_FORMAT_MAPPER_LEGACY_FORMAT
 	 */
-	@Incubating
+	@Incubating(since = "7.0")
 	boolean isXmlFormatMapperLegacyFormatEnabled();
 
 	/**
@@ -763,7 +763,7 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.4")
 	@Nonnull
 	default JavaType<Object> getDefaultTenantIdentifierJavaType() {
 		return ObjectJavaType.INSTANCE;

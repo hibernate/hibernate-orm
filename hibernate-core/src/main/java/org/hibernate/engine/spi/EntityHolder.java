@@ -17,7 +17,7 @@ import jakarta.annotation.Nullable;
  *
  * @since 6.4
  */
-@Incubating
+@Incubating(since = "6.4")
 public interface EntityHolder {
 	EntityKey getEntityKey();
 	EntityPersister getDescriptor();

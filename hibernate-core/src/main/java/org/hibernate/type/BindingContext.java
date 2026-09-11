@@ -29,7 +29,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  * @see org.hibernate.query.sqm.produce.function.ArgumentsValidator#validate(java.util.List, String, BindingContext)
  * @see org.hibernate.query.sqm.internal.TypecheckUtil
  */
-@Incubating
+@Incubating(since = "7.0")
 @SPI
 public interface BindingContext {
 	JpaMetamodel getJpaMetamodel();

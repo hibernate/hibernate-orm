@@ -34,7 +34,7 @@ import jakarta.annotation.Nullable;
  *
  * @since 7.0
  */
-@Incubating
+@Incubating(since = "6.2")
 public abstract class AbstractSqmJsonPathExpression<T> extends SelfRenderingSqmFunction<T> {
 
 	private @Nullable Map<String, SqmExpression<?>> passingExpressions;

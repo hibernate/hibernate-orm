@@ -36,7 +36,7 @@ import java.util.List;
  *
  * @since 7.2
  */
-@Incubating
+@Incubating(since = "7.2", group = "query-specifications")
 public interface UpdateSpecification<T> extends MutationSpecification<T> {
 	/**
 	 * Add an assigment to a field or property of the target entity.

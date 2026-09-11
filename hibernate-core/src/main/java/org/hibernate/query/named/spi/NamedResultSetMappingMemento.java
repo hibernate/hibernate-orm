@@ -27,7 +27,7 @@ import org.hibernate.query.results.spi.ResultSetMapping;
  * @author Emmanuel Bernard
  * @author Steve Ebersole
  */
-@Incubating
+@Incubating(since = "8.0")
 public interface NamedResultSetMappingMemento {
 	/**
 	 * The name associated with this memento

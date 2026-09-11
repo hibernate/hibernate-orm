@@ -35,7 +35,7 @@ import static org.hibernate.engine.internal.CacheHelper.writingToCache;
 ///
 /// @author Steve Ebersole
 /// @since 8.0
-@Incubating
+@Incubating(since = "8.0", group = "action-queue")
 public class PostDeleteHandling implements PostExecutionCallback {
 	private final EntityDeleteAction action;
 	private final Object cacheKey;

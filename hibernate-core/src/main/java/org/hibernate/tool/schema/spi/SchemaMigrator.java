@@ -12,7 +12,7 @@ import org.hibernate.boot.Metadata;
  *
  * @author Steve Ebersole
  */
-@Incubating
+@Incubating(since = "5.1")
 public interface SchemaMigrator {
 	/**
 	 * Perform a schema migration (alteration) from the indicated source(s) to the indicated target(s).

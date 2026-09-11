@@ -5,7 +5,6 @@
 package org.hibernate.query.sqm.tuple.internal;
 
 import jakarta.annotation.Nullable;
-import org.hibernate.Incubating;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
@@ -22,7 +21,6 @@ import org.hibernate.type.descriptor.java.JavaType;
 /**
  * @author Christian Beikov
  */
-@Incubating
 public class AnonymousTupleSqmPathSource<J> implements SqmPathSource<J> {
 	private final String localPathName;
 	private final SqmPath<J> path;

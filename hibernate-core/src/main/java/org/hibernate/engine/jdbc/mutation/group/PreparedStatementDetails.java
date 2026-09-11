@@ -17,7 +17,7 @@ import org.hibernate.sql.spi.mutation.TableMapping;
  *
  * @author Steve Ebersole
  */
-@Incubating
+@Incubating(since = "6.2")
 public interface PreparedStatementDetails {
 	/**
 	 * The name of the mutating table

@@ -18,7 +18,7 @@ import org.hibernate.tool.schema.extract.spi.InformationExtractor;
  *
  * @author Gail Badner
  */
-@Incubating
+@Incubating(since = "5.6")
 public interface ExtractionTool {
 
 	ExtractionContext createExtractionContext(

@@ -10,23 +10,24 @@ import java.lang.annotation.Target;
 import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.ElementType.PACKAGE;
+import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /// Specifies that an attribute of type [java.util.List] is semantically a
 /// [bag][org.hibernate.metamodel.CollectionClassification#BAG] - that the order of
 /// the list elements is not significant, and should not be persistent.
 ///
-/// This annotation is not necessary, and has no effect, unless the configuration
-/// property {@value org.hibernate.cfg.AvailableSettings#DEFAULT_LIST_SEMANTICS}
-/// is set to {@link org.hibernate.metamodel.CollectionClassification#LIST}.
-/// However, its use is still encouraged, since the explicit annotation serves
-/// as useful documentation.
+/// This annotation may be applied to a field or property, or to a type or
+/// package descriptor. When applied at the type or package level, it acts as a
+/// default for every {@code List}-typed persistent attribute with no explicit
+/// list index details.
 ///
 /// @apiNote This annotation causes an exception if the attribute is also annotated
 /// [jakarta.persistence.OrderColumn] or [ListIndexBase].
 ///
 /// @author Steve Ebersole
-@Target({METHOD, FIELD, ANNOTATION_TYPE})
+@Target({METHOD, FIELD, TYPE, PACKAGE, ANNOTATION_TYPE})
 @Retention(RUNTIME)
 public @interface Bag {
 }

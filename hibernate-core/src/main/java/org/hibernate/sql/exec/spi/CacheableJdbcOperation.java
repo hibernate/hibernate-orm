@@ -4,6 +4,7 @@
  */
 package org.hibernate.sql.exec.spi;
 
+import org.hibernate.Incubating;
 import org.hibernate.query.spi.QueryOptions;
 
 /**
@@ -12,6 +13,7 @@ import org.hibernate.query.spi.QueryOptions;
  *
  * @author Steve Ebersole
  */
+@Incubating
 public interface CacheableJdbcOperation {
 	/**
 	 * Signals that the SQL depends on the parameter bindings - e.g., due to the need for inlining

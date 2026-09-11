@@ -4,6 +4,7 @@
  */
 package org.hibernate.sql.exec.spi;
 
+import org.hibernate.Incubating;
 import org.hibernate.SPI;
 
 import static org.hibernate.SPI.Role.SUPPLY;
@@ -20,6 +21,7 @@ import static org.hibernate.SPI.Role.USE;
 /// @author Steve Ebersole
 /// @see org.hibernate.sql.ast.spi.translation.SqlAstTranslator#translate
 @SPI({ USE, SUPPLY })
+@Incubating
 public interface JdbcOperationQueryMutation extends JdbcOperationQuery, JdbcMutation {
 
 }

@@ -4,7 +4,6 @@
  */
 package org.hibernate.sql.ast.spi;
 
-import org.hibernate.Incubating;
 import org.hibernate.SPI;
 import org.hibernate.sql.ast.spi.query.predicate.SqlFragmentPredicate;
 import org.hibernate.query.sqm.tree.spi.expression.Conversion;
@@ -97,7 +96,6 @@ import static org.hibernate.SPI.Role.USE;
 /// @since 8.0
 /// @author Steve Ebersole
 /// @author Andrea Boriero
-@Incubating
 @SPI({ USE, IMPLEMENT })
 public interface SqlAstWalker {
 

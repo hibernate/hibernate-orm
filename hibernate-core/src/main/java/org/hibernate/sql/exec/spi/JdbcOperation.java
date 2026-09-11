@@ -7,6 +7,7 @@ package org.hibernate.sql.exec.spi;
 import java.util.List;
 import java.util.Set;
 
+import org.hibernate.Incubating;
 import org.hibernate.SPI;
 
 import static org.hibernate.SPI.Role.SUPPLY;
@@ -29,6 +30,7 @@ import static org.hibernate.SPI.Role.USE;
 /// @see org.hibernate.sql.ast.spi.translation.SqlAstTranslator#translate
 /// @see org.hibernate.sql.ast.spi.model.TableMutation#createMutationOperation(String, List)
 @SPI({ USE, SUPPLY })
+@Incubating
 public interface JdbcOperation {
 	/// The command text to execute through JDBC. This is ordinarily SQL, but may
 	/// use another language understood by the configured JDBC driver.

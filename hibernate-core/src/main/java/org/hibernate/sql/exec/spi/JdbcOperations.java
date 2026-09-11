@@ -11,7 +11,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-import org.hibernate.Incubating;
 import org.hibernate.SPI;
 import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
 import org.hibernate.sql.ast.spi.query.delete.DeleteStatement;
@@ -41,7 +40,6 @@ import static org.hibernate.SPI.Role.USE;
 ///
 /// @since 8.0
 /// @author Steve Ebersole
-@Incubating
 @SPI(USE)
 public final class JdbcOperations {
 	private JdbcOperations() {
@@ -80,7 +78,6 @@ public final class JdbcOperations {
 	///
 	/// @since 8.0
 	/// @author Steve Ebersole
-	@Incubating
 	@SPI(USE)
 	public static final class SelectBuilder {
 		private final SqlAstTranslationRequest.Select request;
@@ -229,7 +226,6 @@ public final class JdbcOperations {
 	///
 	/// @since 8.0
 	/// @author Steve Ebersole
-	@Incubating
 	@SPI(USE)
 	public static final class QueryMutationBuilder {
 		private final SqlAstTranslationRequest.QueryMutation request;

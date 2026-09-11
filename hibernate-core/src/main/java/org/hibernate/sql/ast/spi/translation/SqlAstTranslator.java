@@ -45,7 +45,6 @@ import static org.hibernate.SPI.Role.USE;
 /// @author Steve Ebersole
 /// @see org.hibernate.dialect.sql.ast.spi.SqlAstTranslatorFactory#buildTranslator
 /// @see org.hibernate.dialect.sql.ast.spi.StandardSqlAstTranslatorFactory#createTranslator
-@Incubating
 @SPI({ USE, IMPLEMENT, SUPPLY })
 public interface SqlAstTranslator<T extends JdbcOperation> extends SqlAstWalker {
 	/// Perform this translator's one translation.
@@ -58,7 +57,6 @@ public interface SqlAstTranslator<T extends JdbcOperation> extends SqlAstWalker 
 	T translate(JdbcParameterBindings jdbcParameterBindings, QueryOptions queryOptions);
 
 	/// The SQL AST assigned to this translator.
-	@Incubating
 	Statement getSqlAst();
 
 	/// The SessionFactory whose services are used during translation.

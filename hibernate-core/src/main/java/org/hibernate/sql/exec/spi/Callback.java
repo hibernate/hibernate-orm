@@ -4,6 +4,7 @@
  */
 package org.hibernate.sql.exec.spi;
 
+import org.hibernate.Incubating;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.ast.spi.AfterLoadAction;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -15,6 +16,7 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
  *
  * @author Steve Ebersole
  */
+@Incubating
 public interface Callback {
 	/**
 	 * Register a callback action

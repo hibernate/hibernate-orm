@@ -4,6 +4,7 @@
  */
 package org.hibernate.sql.exec.spi;
 
+import org.hibernate.Incubating;
 import org.hibernate.query.Query;
 import org.hibernate.sql.ast.spi.query.expression.JdbcParameter;
 
@@ -14,6 +15,7 @@ import java.util.Map;
  *
  * @author Steve Ebersole
  */
+@Incubating
 public interface JdbcOperationQuery extends JdbcOperation, CacheableJdbcOperation {
 	/**
 	 * The parameters which were inlined into the query as literals.

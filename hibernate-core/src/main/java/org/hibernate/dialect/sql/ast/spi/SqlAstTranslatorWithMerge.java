@@ -54,7 +54,11 @@ public abstract class SqlAstTranslatorWithMerge<T extends JdbcOperation> extends
 	private static Expectation expectation(OptionalTableUpdate optionalTableUpdate) {
 		return optionalTableUpdate.getValueBindings().stream()
 					.anyMatch( ColumnValueBinding::isAttributeUpdatable )
-				? new Expectation.RowCount()
+				? optionalTableUpdate.getMutatingTable().isOptional()
+					// When the mutating table is optional, we would generate a delete part for the merge statement
+					// which makes the statement non-idempotent and hence not retryable
+					? new Expectation.RowCount()
+					: new Expectation.RetryableRowCount()
 				// Without updatable bindings, the merge affects 0 rows when matched
 				: new Expectation.OptionalRowCount();
 	}

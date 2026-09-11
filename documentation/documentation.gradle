@@ -145,6 +145,7 @@ dependencies {
 	reportAggregation project( ':hibernate-c3p0' )
 	reportAggregation project( ':hibernate-core' )
 	reportAggregation project( ':hibernate-dialect-testkit' )
+	reportAggregation project( ':hibernate-testing' )
 	reportAggregation project(':hibernate-envers')
 	reportAggregation project(':hibernate-graalvm')
 	reportAggregation project(':hibernate-hikaricp')
@@ -154,6 +155,7 @@ dependencies {
 	reportAggregation project(':hibernate-ant')
 	reportAggregation project(':hibernate-maven-plugin')
 	reportAggregation project(':hibernate-processor')
+	reportAggregation project(':hibernate-assistant')
     reportAggregation project(':hibernate-community-dialects')
 
 	migrationCompatibilityArtifacts project( ':hibernate-core' )

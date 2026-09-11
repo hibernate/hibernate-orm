@@ -26,7 +26,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 ///
 /// @author Steve Ebersole
 /// @since 8.0
-@Incubating
+@Incubating(since = "8.0")
 @FunctionalInterface
 public interface StatementBinder {
 	/// Bind parameter values for one row.

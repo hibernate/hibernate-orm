@@ -301,6 +301,6 @@ public interface QuerySettings {
 	 *
 	 * @since 8.0
 	 */
-	@Incubating
+	@Incubating(since = "8.0")
 	String SAFE_MODE_ENABLED = "hibernate.query.safe_mode_enabled";
 }

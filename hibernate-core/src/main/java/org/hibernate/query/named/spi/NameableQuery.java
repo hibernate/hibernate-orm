@@ -19,7 +19,7 @@ import org.hibernate.procedure.spi.NamedCallableQueryMemento;
  *
  * @see NamedQueryMemento
  */
-@Incubating
+@Incubating(since = "8.0")
 public interface NameableQuery {
 	/**
 	 * Convert this query into the memento.

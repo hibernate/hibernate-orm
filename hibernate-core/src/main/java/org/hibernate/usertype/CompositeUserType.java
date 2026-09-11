@@ -150,7 +150,7 @@ import org.hibernate.metamodel.spi.ValueAccess;
  * @see org.hibernate.annotations.MapKeyCompositeType#value()
  * @see org.hibernate.boot.model.TypeContributions#contributeType(CompositeUserType)
  */
-@Incubating
+@Incubating(since = "6.0")
 @SPI({ USE, IMPLEMENT, SUPPLY })
 public interface CompositeUserType<J> extends EmbeddableInstantiator {
 

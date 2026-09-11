@@ -18,7 +18,7 @@ import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
  * A context for execution of SQL statements expressed via
  * SQL AST and JdbcOperation
  */
-@Incubating
+@Incubating(since = "6.0", group = "sql-execution")
 public interface ExecutionContext {
 
 	default boolean isScrollResult(){

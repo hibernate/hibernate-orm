@@ -20,16 +20,16 @@ import static org.hibernate.SPI.Role.IMPLEMENT;
 @SPI( IMPLEMENT )
 public interface AssigningTableMutationBuilder<M extends TableMutation<?>> extends TableMutationBuilder<M> {
 	/// Whether this builder currently contains any assignment bindings.
-	@Incubating
+	@Incubating(since = "6.0", group = "sql-mutation-model")
 	boolean hasAssignmentBindings();
 
 	/// Adds a column assignment defined by the given `columnValueBinding`, which represents a
 	/// [column][ColumnValueBinding#getColumnReference()] and its [assignment][ColumnValueBinding#getValueExpression()] .
-	@Incubating
+	@Incubating(since = "6.0", group = "sql-mutation-model")
 	void addColumnAssignment(ColumnValueBinding columnValueBinding);
 
 	/// Adds a column assignment defined by `columnMapping = {columnMapping.getWriteExpression()}`
-	@Incubating
+	@Incubating(since = "6.0", group = "sql-mutation-model")
 	default void addColumnAssignment(SelectableMapping columnMapping) {
 		// Formulas are read-only computed columns and cannot be included in UPDATE/INSERT statements
 		if ( !columnMapping.isFormula() ) {
@@ -38,7 +38,7 @@ public interface AssigningTableMutationBuilder<M extends TableMutation<?>> exten
 	}
 
 	/// Adds a column assignment defined by `columnMapping = assignment`
-	@Incubating
+	@Incubating(since = "6.0", group = "sql-mutation-model")
 	void addColumnAssignment(SelectableMapping columnMapping, String assignment);
 
 	/// Acts as a [org.hibernate.metamodel.mapping.SelectableConsumer].
@@ -59,7 +59,6 @@ public interface AssigningTableMutationBuilder<M extends TableMutation<?>> exten
 	/// prefer any of the other methods here for adding key restrictions.
 	/// @deprecated Use [#addColumnAssignment(ColumnValueBinding)] instead.
 	@Internal
-	@Incubating
 	@Deprecated(since = "8.0")
 	default void addValueColumn(ColumnValueBinding valueBinding) {
 		addColumnAssignment( valueBinding );

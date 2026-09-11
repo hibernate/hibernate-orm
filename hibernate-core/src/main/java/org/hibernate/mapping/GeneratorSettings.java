@@ -25,7 +25,7 @@ import org.hibernate.dialect.Dialect;
  *
  * @author Gavin King
  */
-@Incubating
+@Incubating(since = "7.0")
 public interface GeneratorSettings {
 	String getDefaultCatalog();
 	String getDefaultSchema();

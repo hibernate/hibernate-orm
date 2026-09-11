@@ -33,7 +33,7 @@ import static org.hibernate.SPI.Role.USE;
 ///
 /// @author Steve Ebersole
 /// @author Christian Beikov
-@Incubating
+@Incubating(since = "8.0")
 @SPI(USE)
 public final class AggregateJdbcValues {
 	private AggregateJdbcValues() {

@@ -9,7 +9,7 @@
  *
  * @since 7
  */
-@Incubating
+@Incubating(since = "7.0")
 package org.hibernate.query.range;
 
 import org.hibernate.Incubating;

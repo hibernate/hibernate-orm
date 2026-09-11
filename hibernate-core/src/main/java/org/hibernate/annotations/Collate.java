@@ -22,7 +22,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *
  * @since 6.3
  */
-@Incubating
+@Incubating(since = "6.3")
 @AttributeBinderType(binder = CollateBinder.class)
 @Target({METHOD, FIELD})
 @Retention(RUNTIME)

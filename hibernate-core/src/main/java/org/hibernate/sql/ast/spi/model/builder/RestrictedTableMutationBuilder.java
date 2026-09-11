@@ -4,7 +4,6 @@
  */
 package org.hibernate.sql.ast.spi.model.builder;
 
-import org.hibernate.Incubating;
 import org.hibernate.Internal;
 import org.hibernate.SPI;
 import org.hibernate.metamodel.mapping.SelectableMapping;
@@ -30,7 +29,7 @@ public interface RestrictedTableMutationBuilder<O extends MutationOperation, M e
 	 * @apiNote Be sure you know what you are doing before using this method.  Generally
 	 * prefer any of the other methods here for adding non-key restrictions.
 	 */
-	@Internal @Incubating
+	@Internal
 	void addNonKeyRestriction(ColumnValueBinding valueBinding);
 
 	/**
@@ -41,7 +40,6 @@ public interface RestrictedTableMutationBuilder<O extends MutationOperation, M e
 	 * prefer any of the other methods here for adding non-key restrictions.
 	 */
 	@Internal
-	@Incubating
 	default void addNonKeyRestriction(SelectableMapping restrictableMapping) {
 		addNonKeyRestriction( restrictableMapping, restrictableMapping.getWriteExpression() );
 	}
@@ -54,7 +52,6 @@ public interface RestrictedTableMutationBuilder<O extends MutationOperation, M e
 	 * prefer any of the other methods here for adding non-key restrictions.
 	 */
 	@Internal
-	@Incubating
 	void addNonKeyRestriction(SelectableMapping restrictableMapping, String restrictionExpression);
 
 	/**

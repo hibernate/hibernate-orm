@@ -12,7 +12,7 @@ import org.hibernate.query.sqm.StrictJpaComplianceViolation;
  *
  * @author Steve Ebersole
  */
-@Incubating
+@Incubating(since = "6.0")
 public interface SqmCreationOptions {
 	/**
 	 * Should we interpret the query strictly according to the JPA specification?  In

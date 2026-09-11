@@ -21,7 +21,7 @@ import org.hibernate.query.specification.internal.DeleteSpecificationImpl;
  *
  * @since 7.2
  */
-@Incubating
+@Incubating(since = "7.2", group = "query-specifications")
 public interface DeleteSpecification<T> extends MutationSpecification<T> {
 	@Nonnull
 	@Override

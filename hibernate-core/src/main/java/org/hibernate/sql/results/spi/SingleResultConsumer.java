@@ -19,7 +19,7 @@ import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
  *
  * @author Gavin King
  */
-@Incubating
+@Incubating(since = "6.0", group = "result-processing")
 public class SingleResultConsumer<T> implements ResultsConsumer<T, T> {
 
 	private static final SingleResultConsumer<?> INSTANCE = new SingleResultConsumer<>();

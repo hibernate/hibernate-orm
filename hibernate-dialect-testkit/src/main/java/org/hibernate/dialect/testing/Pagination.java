@@ -13,7 +13,7 @@ import static org.hibernate.SPI.Role.USE;
 ///
 /// @author Steve Ebersole
 /// @since 8.0
-@Incubating
+@Incubating(since = "8.0", group = "dialect-testkit")
 @SPI(USE)
 public record Pagination(int firstResult, int maxResults) {
 	public Pagination {

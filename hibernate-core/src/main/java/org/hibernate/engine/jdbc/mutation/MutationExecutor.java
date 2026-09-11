@@ -21,7 +21,7 @@ import org.hibernate.sql.spi.mutation.ValuesAnalysis;
  *
  * @author Steve Ebersole
  */
-@Incubating
+@Incubating(since = "6.2")
 public interface MutationExecutor {
 	/**
 	 * Get the delegate to be used to coordinate JDBC parameter binding.

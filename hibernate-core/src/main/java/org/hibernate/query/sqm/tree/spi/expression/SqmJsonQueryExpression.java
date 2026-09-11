@@ -35,7 +35,7 @@ import jakarta.annotation.Nullable;
  *
  * @since 7.0
  */
-@Incubating
+@Incubating(since = "6.2")
 public class SqmJsonQueryExpression extends AbstractSqmJsonPathExpression<String> implements JpaJsonQueryExpression {
 	private WrapMode wrapMode = WrapMode.UNSPECIFIED;
 	private ErrorBehavior errorBehavior = ErrorBehavior.UNSPECIFIED;

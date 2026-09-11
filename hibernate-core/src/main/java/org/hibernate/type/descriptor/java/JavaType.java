@@ -348,7 +348,7 @@ public interface JavaType<T> extends Serializable {
 	 *         possible
 	 * @throws CoercionException if coercion fails
 	 */
-	@Incubating
+	@Incubating(since = "7.2")
 	default @Nullable Object coerce(@Nullable Object value) {
 		return value;
 	}
@@ -362,7 +362,7 @@ public interface JavaType<T> extends Serializable {
 	 *         possible
 	 * @since 8.0
 	 */
-	@Incubating
+	@Incubating(since = "8.0")
 	default @Nullable Object coerceOrNull(@Nonnull Object value) {
 		try {
 			return coerce( value );
@@ -379,7 +379,7 @@ public interface JavaType<T> extends Serializable {
 	 * @since 6.1
 	 */
 	/// @see JavaType
-	@Incubating
+	@Incubating(since = "6.1")
 	@SPI(SUPPLY)
 	default JavaType<T> createJavaType(ParameterizedType parameterizedType, TypeConfiguration typeConfiguration) {
 		return this;
@@ -405,7 +405,7 @@ public interface JavaType<T> extends Serializable {
 	 * @return a check constraint condition or null
 	 * @since 6.2
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	default String getCheckCondition(String columnName, JdbcType jdbcType, BasicValueConverter<T, ?> converter, Dialect dialect) {
 		return null;
 	}

@@ -13,7 +13,7 @@ import org.hibernate.action.queue.spi.CollectionTransition;
 ///
 /// @since 8.0
 /// @author Steve Ebersole
-@Incubating
+@Incubating(since = "8.0", group = "collection-delta")
 public record CollectionMutationInterpretation(
 		@Nonnull CollectionTransition transition,
 		@Nonnull SemanticCollectionChange semanticChange,

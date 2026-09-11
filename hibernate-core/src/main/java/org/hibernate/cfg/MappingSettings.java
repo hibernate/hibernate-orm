@@ -180,7 +180,7 @@ public interface MappingSettings {
 	 *
 	 * @since 6.0
 	 */
-	@Incubating
+	@Incubating(since = "6.2")
 	String PREFERRED_BOOLEAN_JDBC_TYPE = "hibernate.type.preferred_boolean_jdbc_type";
 
 	/**
@@ -196,7 +196,7 @@ public interface MappingSettings {
 	 *
 	 * @since 6.0
 	 */
-	@Incubating
+	@Incubating(since = "6.2")
 	String PREFERRED_UUID_JDBC_TYPE = "hibernate.type.preferred_uuid_jdbc_type";
 
 	/**
@@ -212,7 +212,7 @@ public interface MappingSettings {
 	 *
 	 * @since 6.0
 	 */
-	@Incubating
+	@Incubating(since = "6.2")
 	String PREFERRED_DURATION_JDBC_TYPE = "hibernate.type.preferred_duration_jdbc_type";
 
 	/**
@@ -229,7 +229,7 @@ public interface MappingSettings {
 	 *
 	 * @since 6.0
 	 */
-	@Incubating
+	@Incubating(since = "6.2")
 	String PREFERRED_INSTANT_JDBC_TYPE = "hibernate.type.preferred_instant_jdbc_type";
 
 	/**
@@ -257,7 +257,7 @@ public interface MappingSettings {
 	 *
 	 * @since 6.5
 	 */
-	@Incubating
+	@Incubating(since = "6.5")
 	String JAVA_TIME_USE_DIRECT_JDBC = "hibernate.type.java_time_use_direct_jdbc";
 
 	/**
@@ -287,7 +287,7 @@ public interface MappingSettings {
 	 * @see org.hibernate.dialect.type.spi.PostgreSQLJdbcTypes#enumType()
 	 * @see org.hibernate.dialect.type.spi.OracleJdbcTypes#enumType()
 	 */
-	@Incubating
+	@Incubating(since = "6.5")
 	String PREFER_NATIVE_ENUM_TYPES = "hibernate.type.prefer_native_enum_types";
 
 	/**
@@ -302,7 +302,7 @@ public interface MappingSettings {
 	 *
 	 * @since 7.2
 	 */
-	@Incubating
+	@Incubating(since = "7.2")
 	String PREFER_LOCALE_LANGUAGE_TAG = "hibernate.type.prefer_locale_language_tag";
 
 	/**
@@ -322,7 +322,7 @@ public interface MappingSettings {
 	 *
 	 * @since 6.6
 	 */
-	@Incubating
+	@Incubating(since = "6.6")
 	String PREFERRED_ARRAY_JDBC_TYPE = "hibernate.type.preferred_array_jdbc_type";
 
 	/**
@@ -341,7 +341,7 @@ public interface MappingSettings {
 	 * @since 6.0
 	 * @see org.hibernate.boot.SessionFactoryBuilder#applyJsonFormatMapper(FormatMapper)
 	 */
-	@Incubating
+	@Incubating(since = "6.2")
 	String JSON_FORMAT_MAPPER = "hibernate.type.json_format_mapper";
 
 	/**
@@ -360,7 +360,7 @@ public interface MappingSettings {
 	 * @since 6.0.1
 	 * @see org.hibernate.boot.SessionFactoryBuilder#applyXmlFormatMapper(FormatMapper)
 	 */
-	@Incubating
+	@Incubating(since = "6.2")
 	String XML_FORMAT_MAPPER = "hibernate.type.xml_format_mapper";
 
 	/**
@@ -371,7 +371,7 @@ public interface MappingSettings {
 	 *
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "8.0")
 	String XML_FORMAT_MAPPER_LEGACY_FORMAT = "hibernate.type.xml_format_mapper.legacy_format";
 
 	/**
@@ -384,7 +384,7 @@ public interface MappingSettings {
 	 *
 	 * @since 6.2
 	 */
-	@Incubating
+	@Incubating(since = "6.2")
 	String WRAPPER_ARRAY_HANDLING = "hibernate.type.wrapper_array_handling";
 
 	/**
@@ -462,7 +462,7 @@ public interface MappingSettings {
 	 *
 	 * @see ImplicitDatabaseObjectNamingStrategy
 	 */
-	@Incubating
+	@Incubating(since = "6.2")
 	String ID_DB_STRUCTURE_NAMING_STRATEGY = "hibernate.id.db_structure_naming_strategy";
 
 	/**

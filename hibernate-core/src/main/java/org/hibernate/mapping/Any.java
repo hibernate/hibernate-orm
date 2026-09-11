@@ -202,7 +202,7 @@ public class Any extends SimpleValue {
 	 *
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "7.0")
 	public void setImplicitDiscriminatorValueStrategy(ImplicitDiscriminatorStrategy implicitValueStrategy) {
 		this.implicitValueStrategy = implicitValueStrategy;
 	}

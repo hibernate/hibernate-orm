@@ -19,7 +19,7 @@ import org.hibernate.Incubating;
  *
  * @since 7.4
  */
-@Incubating
+@Incubating(since = "7.4", group = "temporal-versioning")
 public enum TemporalTableStrategy {
 	/**
 	 * Use native ANSI SQL 2011-style temporal tables where they

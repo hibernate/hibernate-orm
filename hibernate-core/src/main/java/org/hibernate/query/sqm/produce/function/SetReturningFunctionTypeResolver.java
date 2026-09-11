@@ -23,7 +23,7 @@ import java.util.List;
  *
  * @since 7.0
  */
-@Incubating
+@Incubating(since = "6.2")
 public interface SetReturningFunctionTypeResolver {
 
 	/**
@@ -58,7 +58,7 @@ public interface SetReturningFunctionTypeResolver {
 	 *
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "6.2")
 	interface Builder {
 
 		/**

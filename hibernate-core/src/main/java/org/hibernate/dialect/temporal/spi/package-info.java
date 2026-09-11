@@ -11,7 +11,7 @@
 ///
 /// @author Steve Ebersole
 /// @since 8.0
-@Incubating
+@Incubating(since = "8.0", group = "temporal-versioning")
 package org.hibernate.dialect.temporal.spi;
 
 import org.hibernate.Incubating;

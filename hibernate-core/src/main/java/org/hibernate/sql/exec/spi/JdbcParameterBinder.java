@@ -15,7 +15,7 @@ import org.hibernate.Incubating;
  * @author Steve Ebersole
  * @author John O'Hara
  */
-@Incubating
+@Incubating(since = "6.0", group = "sql-execution")
 public interface JdbcParameterBinder {
 
 	JdbcParameterBinder NOOP = (statement, startPosition, jdbcParameterBindings, executionContext) -> {};

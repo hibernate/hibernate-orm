@@ -14,7 +14,7 @@ import org.hibernate.Incubating;
  *
  * @since 6.5
  */
-@Incubating
+@Incubating(since = "6.3")
 public interface JpaValues {
 
 	/**

@@ -10,7 +10,7 @@ import org.hibernate.Incubating;
 /**
  * @author Christian Beikov
  */
-@Incubating
+@Incubating(since = "6.3")
 public interface JpaDerivedFrom<T> extends JpaFrom<T,T> {
 
 	/**

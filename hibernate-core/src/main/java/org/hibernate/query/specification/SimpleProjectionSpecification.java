@@ -64,7 +64,7 @@ import org.hibernate.query.specification.internal.SimpleProjectionSpecificationI
  *
  * @author Gavin King
  */
-@Incubating
+@Incubating(since = "7.2", group = "query-specifications")
 public interface SimpleProjectionSpecification<T,X> extends QuerySpecification<T> {
 	/**
 	 * Create a new {@code ProjectionSpecification} which augments the given

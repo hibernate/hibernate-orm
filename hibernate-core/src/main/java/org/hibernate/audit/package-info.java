@@ -27,7 +27,7 @@
  * @see org.hibernate.audit.AuditLog
  * @see org.hibernate.audit.AuditLogFactory
  */
-@Incubating
+@Incubating(since = "7.4")
 package org.hibernate.audit;
 
 import org.hibernate.Incubating;

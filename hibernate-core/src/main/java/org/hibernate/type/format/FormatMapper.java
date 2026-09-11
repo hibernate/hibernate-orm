@@ -30,7 +30,7 @@ import static org.hibernate.SPI.Role.USE;
 /// @see org.hibernate.type.descriptor.jdbc.XmlJdbcType
 ///
 /// @author Christian Beikov
-@Incubating
+@Incubating(since = "6.2")
 @SPI({ USE, IMPLEMENT, SUPPLY })
 public interface FormatMapper {
 

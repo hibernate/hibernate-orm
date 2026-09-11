@@ -24,7 +24,7 @@ import org.hibernate.type.BindableType;
  *
  * @see CommonQueryContract#getParameterMetadata()
  */
-@Incubating
+@Incubating(since = "6.0")
 public interface ParameterMetadata {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~`
 	// General purpose

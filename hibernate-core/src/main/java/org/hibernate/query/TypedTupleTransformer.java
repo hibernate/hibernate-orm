@@ -14,7 +14,7 @@ import org.hibernate.Incubating;
  *
  * @author Steve Ebersole
  */
-@Incubating
+@Incubating(since = "8.0")
 public interface TypedTupleTransformer<T> extends TupleTransformer<T> {
 	/**
 	 * The type resulting from this transformation

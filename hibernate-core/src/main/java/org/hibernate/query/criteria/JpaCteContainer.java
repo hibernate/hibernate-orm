@@ -17,7 +17,7 @@ import jakarta.persistence.criteria.CriteriaQuery;
 /**
  * Common contract for criteria parts that can hold CTEs (common table expressions).
  */
-@Incubating
+@Incubating(since = "6.3")
 public interface JpaCteContainer extends JpaCriteriaNode {
 
 	/**

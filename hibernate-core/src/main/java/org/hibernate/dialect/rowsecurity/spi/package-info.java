@@ -11,7 +11,7 @@
 ///
 /// @author Steve Ebersole
 /// @since 8.0
-@Incubating
+@Incubating(since = "8.0", group = "row-level-security")
 package org.hibernate.dialect.rowsecurity.spi;
 
 import org.hibernate.Incubating;

@@ -27,7 +27,7 @@ import static org.hibernate.boot.model.relational.internal.SqlStringGenerationCo
  *
  * @since 6.2
  */
-@Incubating
+@Incubating(since = "6.2")
 public interface GeneratorCreationContext {
 	/**
 	 * View of the relational database objects (tables, sequences, etc.)

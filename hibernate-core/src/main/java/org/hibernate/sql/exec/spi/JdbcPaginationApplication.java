@@ -17,7 +17,7 @@ import org.hibernate.SPI;
 /// @since 8.0
 /// @author Steve Ebersole
 @SPI
-@Incubating
+@Incubating(since = "6.0", group = "sql-execution")
 public enum JdbcPaginationApplication {
 	/// The plan has no effective limit or offset.
 	NONE,

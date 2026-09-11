@@ -15,7 +15,7 @@ import static org.hibernate.internal.util.NullnessUtil.castNonNull;
  *
  * @author Christian Beikov
  */
-@Incubating
+@Incubating(since = "6.0")
 public class TreatedNavigablePath extends NavigablePath {
 
 	public TreatedNavigablePath(NavigablePath parent, String entityTypeName) {

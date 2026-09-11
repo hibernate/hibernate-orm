@@ -17,7 +17,7 @@ import org.hibernate.query.internal.QueryParameterBindingsImpl;
  *
  * @author Steve Ebersole
  */
-@Incubating
+@Incubating(since = "8.0")
 public interface QueryParameterBindings {
 	/**
 	 * Has binding been done for the given parameter.  Handles

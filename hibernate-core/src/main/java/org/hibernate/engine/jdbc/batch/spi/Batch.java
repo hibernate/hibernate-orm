@@ -24,7 +24,7 @@ import org.hibernate.Incubating;
 /// @see org.hibernate.engine.jdbc.spi.JdbcCoordinator#getSingleStatementBatch(BatchKey, Integer, org.hibernate.sql.spi.mutation.jdbc.PreparableMutationOperation)
 ///
 /// @author Steve Ebersole
-@Incubating
+@Incubating(since = "6.2")
 public interface Batch {
 	/// Retrieve the object used to identify compatible rows for this batch.
 	///

@@ -143,7 +143,7 @@ public interface CommonQueryContract extends jakarta.persistence.Query {
 	 *
 	 * @since 8.0
 	 */
-	@Incubating
+	@Incubating(since = "8.0")
 	FlushMode getEffectiveFlushMode();
 
 	/**

@@ -4,7 +4,6 @@
  */
 package org.hibernate.internal.find;
 
-import org.hibernate.Incubating;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.event.spi.LoadEvent;
@@ -13,7 +12,6 @@ import org.hibernate.event.spi.LoadEventListener;
 /// Context for performing load operations from [stateful sessions][SessionImplementor].
 ///
 /// @author Steve Ebersole
-@Incubating
 public interface StatefulLoadAccessContext extends LoadAccessContext {
 	/**
 	 * The session from which the load originates

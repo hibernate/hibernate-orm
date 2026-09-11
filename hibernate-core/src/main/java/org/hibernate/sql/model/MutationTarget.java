@@ -25,7 +25,7 @@ import org.hibernate.sql.spi.mutation.TableMapping;
  * coordinators or {@link GraphMutationTarget} for graph-based decomposers
  */
 @Deprecated(since = "8.0", forRemoval = true)
-@Incubating
+@Incubating(since = "6.2")
 public interface MutationTarget<T extends TableMapping, TD extends TableDescriptor>
 		extends LegacyMutationTarget<T>, GraphMutationTarget<TD> {
 

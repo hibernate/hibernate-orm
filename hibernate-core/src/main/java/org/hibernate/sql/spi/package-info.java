@@ -8,7 +8,7 @@
 ///
 /// @author Steve Ebersole
 /// @since 8.0
-@Incubating
+@Incubating(since = "8.0")
 package org.hibernate.sql.spi;
 
 import org.hibernate.Incubating;

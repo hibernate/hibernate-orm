@@ -14,7 +14,7 @@
 /// > one.  Care should be taken when making changes in this package to verify with both.
 ///
 /// @author Steve Ebersole
-@Incubating
+@Incubating(since = "6.0", group = "sql-mutation-model")
 package org.hibernate.sql.ast.spi.model;
 
 import org.hibernate.Incubating;

@@ -12,7 +12,7 @@ import org.hibernate.property.access.spi.Getter;
  *
  * @author Chris Cranford
  */
-@Incubating
+@Incubating(since = "8.0")
 public interface AuditStrategyContext {
 	/**
 	 * Get the revision entity class name

@@ -450,7 +450,7 @@ public interface SchemaToolingSettings {
 	///
 	/// @since 8.0
 	/// @see ValidationConstraintDdlInfluence
-	@Incubating
+	@Incubating(since = "8.0")
 	String APPLY_VALIDATION_CONSTRAINTS = "hibernate.tooling.schema.apply_validation_constraints";
 
 	/**

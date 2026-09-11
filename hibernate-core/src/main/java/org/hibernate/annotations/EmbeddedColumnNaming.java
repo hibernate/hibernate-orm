@@ -67,7 +67,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  */
 @Target({METHOD, FIELD})
 @Retention(RUNTIME)
-@Incubating
+@Incubating(since = "7.0")
 public @interface EmbeddedColumnNaming {
 	/**
 	 * The naming pattern.  It is expected to contain a single pattern marker ({@code %})

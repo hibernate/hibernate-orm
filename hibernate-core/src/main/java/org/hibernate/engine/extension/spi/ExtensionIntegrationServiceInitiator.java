@@ -13,7 +13,7 @@ import org.hibernate.service.spi.SessionFactoryServiceInitiatorContext;
 
 import java.util.Set;
 
-@Incubating
+@Incubating(since = "7.4")
 @Remove
 public class ExtensionIntegrationServiceInitiator
 		implements SessionFactoryServiceInitiator<ExtensionIntegrationService> {

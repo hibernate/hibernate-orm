@@ -35,7 +35,7 @@ import jakarta.annotation.Nullable;
  * @since 7.0
  */
 @JavaServiceLoadable
-@Incubating
+@Incubating(since = "7.0")
 public interface EventMonitor {
 	@Nullable DiagnosticEvent beginSessionOpenEvent();
 

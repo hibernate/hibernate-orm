@@ -10,6 +10,25 @@ plugins {
 
 description = 'Support for testing Hibernate ORM functionality'
 
+jar {
+    manifest {
+        attributes(
+                'Import-Package': [
+                        // Temporarily support JTA 1.1 (see base plugin comment)
+                        'javax.transaction;version="[1.1,2)"',
+                        // JDBC driver packages: loaded dynamically via Class.forName() in
+                        // SharedDriverManagerConnectionProvider and BaseCoreFunctionalTestCase
+                        'oracle.*;resolution:=optional',
+                        'com.edb.*;resolution:=optional',
+                        'org.postgresql.*;resolution:=optional',
+                        'org.h2.*;resolution:=optional',
+                        // All other referenced packages are required
+                        '*'
+                ].join(',')
+        )
+    }
+}
+
 dependencies {
     api project( ':hibernate-core' )
     api project( ':hibernate-community-dialects' )

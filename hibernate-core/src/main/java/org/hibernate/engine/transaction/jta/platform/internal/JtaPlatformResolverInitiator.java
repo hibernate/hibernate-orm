@@ -8,7 +8,7 @@ import java.util.Map;
 
 import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
-import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.TransactionSettings;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatformResolver;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
@@ -24,8 +24,8 @@ public class JtaPlatformResolverInitiator implements StandardServiceInitiator<Jt
 
 	@Override
 	public JtaPlatformResolver initiateService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
-		final Object setting = configurationValues.get( AvailableSettings.JTA_PLATFORM_RESOLVER );
-		final JtaPlatformResolver resolver =
+		final Object setting = configurationValues.get( TransactionSettings.JTA_PLATFORM_RESOLVER );
+		final var resolver =
 				registry.requireService( StrategySelector.class )
 						.resolveStrategy( JtaPlatformResolver.class, setting );
 		if ( resolver == null ) {

@@ -20,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * @author Steve Ebersole
  */
 @DomainModel(xmlMappings = {
-		"org/hibernate/orm/test/keymanytoone/bidir/component/EagerCollectionLazyKeyManyToOneMapping.hbm.xml"
+		"org/hibernate/orm/test/keymanytoone/bidir/component/EagerCollectionLazyKeyManyToOneMapping.orm.xml"
 })
 @SessionFactory(generateStatistics = true)
 public class EagerCollectionLazyKeyManyToOneTest {

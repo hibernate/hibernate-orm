@@ -24,7 +24,7 @@ import static org.hibernate.testing.orm.junit.DialectContext.awaitServerTimestam
 /// @author Steve Ebersole
 @SuppressWarnings("JUnitMalformedDeclaration")
 @RequiresDialect(SybaseASEDialect.class)
-@DomainModel(xmlMappings = "org/hibernate/orm/test/version/sybase/User.hbm.xml")
+@DomainModel(annotatedClasses = { User.class, Group.class, Permission.class })
 @SessionFactory
 public class SybaseTimestampVersioningTest {
 	@AfterEach

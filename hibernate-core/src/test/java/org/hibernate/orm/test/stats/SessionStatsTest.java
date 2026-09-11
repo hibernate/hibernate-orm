@@ -25,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel(
-		xmlMappings = "org/hibernate/orm/test/stats/Continent2.hbm.xml"
+		xmlMappings = "org/hibernate/orm/test/stats/Continent2.orm.xml"
 )
 @SessionFactory
 public class SessionStatsTest {

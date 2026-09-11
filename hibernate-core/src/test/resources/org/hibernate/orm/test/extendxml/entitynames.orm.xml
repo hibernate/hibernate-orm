@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping" version="8.0">
+    <attribute-accessor>property</attribute-accessor>
+    <default-cascade>none</default-cascade>
+    <default-lazy>true</default-lazy>
+    <entity name="EntityHasName" metadata-complete="true">
+        <table name="F5_ENTITY_HASNAME"/>
+        <dynamic-insert>false</dynamic-insert>
+        <dynamic-update>false</dynamic-update>
+        <select-before-update>false</select-before-update>
+        <batch-size>-1</batch-size>
+        <lazy>true</lazy>
+        <mutable>true</mutable>
+        <optimistic-locking>VERSION</optimistic-locking>
+        <inheritance strategy="JOINED"/>
+        <attributes>
+            <id name="id">
+                <column name="ID" unique="false" nullable="false" insertable="true" updatable="false"/>
+                <generated-value generator="id-id-generator"/>
+                <generic-generator name="id-id-generator" class="native"/>
+                <java-type>org.hibernate.type.descriptor.java.LongJavaType</java-type>
+                <jdbc-type>org.hibernate.type.descriptor.jdbc.BigIntJdbcType</jdbc-type>
+            </id>
+            <basic name="attrName" fetch="EAGER" optional="true" optimistic-lock="true">
+                <column name="NAME" unique="false" nullable="true"/>
+                <generated>NEVER</generated>
+                <java-type>org.hibernate.type.descriptor.java.StringJavaType</java-type>
+                <jdbc-type>org.hibernate.type.descriptor.jdbc.VarcharJdbcType</jdbc-type>
+            </basic>
+        </attributes>
+    </entity>
+    <entity name="EntityCompany" metadata-complete="true">
+        <extends>EntityHasName</extends>
+        <table name="F5_ENTITY_COMPANY"/>
+        <primary-key-join-column name="REF_ID"/>
+        <dynamic-insert>false</dynamic-insert>
+        <dynamic-update>false</dynamic-update>
+        <select-before-update>false</select-before-update>
+        <batch-size>-1</batch-size>
+        <lazy>true</lazy>
+        <attributes>
+            <many-to-one name="parent" target-entity="EntityHasName" fetch="LAZY" fetch-mode="SELECT" optional="true" not-found="EXCEPTION">
+                <join-column name="parent" unique="false" nullable="true" insertable="true" updatable="true"/>
+                <cascade/>
+            </many-to-one>
+        </attributes>
+    </entity>
+</entity-mappings>

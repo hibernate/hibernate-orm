@@ -1,0 +1,142 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 version="8.0">
+
+    <entity class="org.hibernate.orm.test.immutable.entitywithmutablecollection.Info" access="FIELD"
+            metadata-complete="true">
+        <mutable>false</mutable>
+        <attributes>
+            <id name="id">
+                <generated-value strategy="AUTO"/>
+            </id>
+            <basic name="text"/>
+            <transient name="version"/>
+        </attributes>
+    </entity>
+
+    <entity class="org.hibernate.orm.test.immutable.entitywithmutablecollection.Plan" access="FIELD"
+            metadata-complete="true">
+        <table name="tbl_plan"/>
+        <mutable>false</mutable>
+        <attributes>
+            <id name="id">
+                <generated-value strategy="AUTO"/>
+            </id>
+            <basic name="description">
+                <column nullable="false"/>
+            </basic>
+            <one-to-many name="infos" orphan-removal="true">
+                <join-column name="col_plan"/>
+                <cascade>
+                    <cascade-all/>
+                </cascade>
+            </one-to-many>
+            <many-to-many name="contracts" mapped-by="plans" fetch-mode="JOIN">
+                <cascade>
+                    <cascade-all/>
+                </cascade>
+            </many-to-many>
+            <transient name="version"/>
+            <transient name="owner"/>
+        </attributes>
+    </entity>
+
+    <entity class="org.hibernate.orm.test.immutable.entitywithmutablecollection.Party" access="FIELD"
+            metadata-complete="true">
+        <mutable>false</mutable>
+        <secondary-table name="contract_party" optional="true" owned="true">
+            <primary-key-join-column name="party"/>
+        </secondary-table>
+        <attributes>
+            <id name="id">
+                <generated-value strategy="AUTO"/>
+            </id>
+            <basic name="name">
+                <column nullable="false"/>
+            </basic>
+            <many-to-one name="contract">
+                <join-column table="contract_party" name="contract"/>
+            </many-to-one>
+            <one-to-many name="infos" orphan-removal="true">
+                <join-column name="party"/>
+                <cascade>
+                    <cascade-all/>
+                </cascade>
+            </one-to-many>
+            <transient name="version"/>
+        </attributes>
+    </entity>
+
+    <entity class="org.hibernate.orm.test.immutable.entitywithmutablecollection.Contract" access="FIELD"
+            metadata-complete="true">
+        <mutable>false</mutable>
+        <attributes>
+            <id name="id">
+                <generated-value strategy="AUTO"/>
+            </id>
+            <basic name="customerName">
+                <column nullable="false"/>
+            </basic>
+            <basic name="type">
+                <column name="`type`" nullable="false"/>
+            </basic>
+            <many-to-one name="parent"/>
+            <one-to-many name="variations" mapped-by="contract" orphan-removal="true"
+                         classification="BAG" fetch-mode="JOIN">
+                <order-by>id asc</order-by>
+                <cascade>
+                    <cascade-all/>
+                </cascade>
+            </one-to-many>
+            <one-to-many name="subcontracts" mapped-by="parent" fetch-mode="JOIN">
+                <cascade>
+                    <cascade-all/>
+                </cascade>
+            </one-to-many>
+            <many-to-many name="parties" mapped-by="contract">
+                <cascade>
+                    <cascade-all/>
+                </cascade>
+            </many-to-many>
+            <one-to-many name="infos" orphan-removal="true">
+                <join-column name="contract"/>
+                <cascade>
+                    <cascade-all/>
+                </cascade>
+            </one-to-many>
+            <many-to-many name="plans">
+                <join-table name="plan_contract">
+                    <join-column name="contract"/>
+                    <inverse-join-column name="col_plan"/>
+                </join-table>
+            </many-to-many>
+            <transient name="version"/>
+        </attributes>
+    </entity>
+
+    <entity class="org.hibernate.orm.test.immutable.entitywithmutablecollection.ContractVariation" access="FIELD"
+            metadata-complete="true">
+        <mutable>false</mutable>
+        <attributes>
+            <id name="id">
+                <generated-value strategy="AUTO"/>
+            </id>
+            <basic name="text">
+                <java-type>org.hibernate.type.descriptor.java.StringJavaType</java-type>
+                <jdbc-type>org.hibernate.type.descriptor.jdbc.LongVarcharJdbcType</jdbc-type>
+            </basic>
+            <many-to-one name="contract"/>
+            <one-to-many name="infos" orphan-removal="true">
+                <join-column name="contractvariation"/>
+                <cascade>
+                    <cascade-all/>
+                </cascade>
+            </one-to-many>
+        </attributes>
+    </entity>
+
+</entity-mappings>

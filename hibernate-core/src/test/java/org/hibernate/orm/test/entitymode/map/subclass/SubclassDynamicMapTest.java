@@ -16,7 +16,7 @@ import java.util.HashMap;
  * @author Steve Ebersole
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
-@DomainModel(xmlMappings = "org/hibernate/orm/test/entitymode/map/subclass/Mappings.hbm.xml")
+@DomainModel(xmlMappings = "org/hibernate/orm/test/entitymode/map/subclass/Mappings.orm.xml")
 @SessionFactory
 public class SubclassDynamicMapTest {
 	@AfterEach

@@ -7,13 +7,27 @@ package org.hibernate.orm.test.ops;
 import java.util.HashSet;
 import java.util.Set;
 
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+
 /**
  * @author Gail Badner
  */
+@Entity
 public class Hoarder {
+	@Id
+	@GeneratedValue
 	private Long id;
 	private String name;
+	@ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
 	private Item favoriteItem;
+	@OneToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+	@JoinColumn(name = "HOARDER_ID")
 	private Set<Item> items = new HashSet<Item>();
 
 	public Long getId() {

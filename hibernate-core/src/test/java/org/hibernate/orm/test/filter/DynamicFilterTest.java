@@ -51,13 +51,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 		@Setting(name = DEFAULT_CACHE_CONCURRENCY_STRATEGY, value = DynamicFilterTest.CACHE_ACCESS_STRATEGY)
 })
 @DomainModel(xmlMappings = {
-		"org/hibernate/orm/test/filter/defs.hbm.xml",
-		"org/hibernate/orm/test/filter/LineItem.hbm.xml",
-		"org/hibernate/orm/test/filter/Order.hbm.xml",
-		"org/hibernate/orm/test/filter/Product.hbm.xml",
-		"org/hibernate/orm/test/filter/Salesperson.hbm.xml",
-		"org/hibernate/orm/test/filter/Department.hbm.xml",
-		"org/hibernate/orm/test/filter/Category.hbm.xml"
+		"org/hibernate/orm/test/filter/defs.orm.xml",
+		"org/hibernate/orm/test/filter/LineItem.orm.xml",
+		"org/hibernate/orm/test/filter/Order.orm.xml",
+		"org/hibernate/orm/test/filter/Product.orm.xml",
+		"org/hibernate/orm/test/filter/Salesperson.orm.xml",
+		"org/hibernate/orm/test/filter/Department.orm.xml",
+		"org/hibernate/orm/test/filter/Category.orm.xml"
 })
 @SessionFactory(generateStatistics = true)
 public class DynamicFilterTest {

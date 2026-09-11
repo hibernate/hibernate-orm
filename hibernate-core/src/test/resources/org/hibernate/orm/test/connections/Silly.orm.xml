@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 version="8.0">
+
+    <package>org.hibernate.orm.test.connections</package>
+
+    <filter-def name="nameIsNull" condition="name is null"/>
+
+    <entity class="Silly" metadata-complete="true" access="PROPERTY">
+        <attributes>
+            <id name="id">
+                <generated-value generator="id-generator"/>
+                <generic-generator name="id-generator" class="increment"/>
+            </id>
+            <basic name="name"/>
+            <many-to-one name="other" target-entity="Other">
+                <cascade>
+                    <cascade-all/>
+                </cascade>
+            </many-to-one>
+        </attributes>
+    </entity>
+
+    <entity class="Other" metadata-complete="true" access="PROPERTY">
+        <attributes>
+            <id name="id">
+                <generated-value generator="id-generator"/>
+                <generic-generator name="id-generator" class="increment"/>
+            </id>
+            <basic name="name"/>
+        </attributes>
+    </entity>
+
+</entity-mappings>

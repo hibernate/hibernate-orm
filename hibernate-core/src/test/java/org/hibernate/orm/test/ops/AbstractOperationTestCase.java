@@ -22,11 +22,11 @@ import static org.hamcrest.MatcherAssert.assertThat;
 @SessionFactory(generateStatistics = true)
 @DomainModel(
 		xmlMappings = {
-				"org/hibernate/orm/test/ops/Node.hbm.xml",
-				"org/hibernate/orm/test/ops/Employer.hbm.xml",
-				"org/hibernate/orm/test/ops/OptLockEntity.hbm.xml",
-				"org/hibernate/orm/test/ops/OneToOne.hbm.xml",
-				"org/hibernate/orm/test/ops/Competition.hbm.xml"
+				"org/hibernate/orm/test/ops/Node.orm.xml",
+				"org/hibernate/orm/test/ops/Employer.orm.xml",
+				"org/hibernate/orm/test/ops/OptLockEntity.orm.xml",
+				"org/hibernate/orm/test/ops/OneToOne.orm.xml",
+				"org/hibernate/orm/test/ops/Competition.orm.xml"
 		}
 )
 @ServiceRegistry(

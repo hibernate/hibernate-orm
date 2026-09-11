@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 version="8.0">
+
+    <entity name="Commento" metadata-complete="true">
+        <table name="MARECM"/>
+        <attributes>
+            <id name="mclink">
+                <column name="MCLINK"/>
+                <target>java.lang.Long</target>
+            </id>
+            <basic name="mcompr">
+                <column name="MCOMPR" length="1"/>
+                <target>java.lang.String</target>
+            </basic>
+            <basic name="mcomme">
+                <column name="MCOMME" length="30"/>
+                <target>java.lang.String</target>
+            </basic>
+            <one-to-one name="marelo" target-entity="Marelo" mapped-by="commento">
+            </one-to-one>
+        </attributes>
+    </entity>
+
+</entity-mappings>

@@ -179,8 +179,8 @@ public class SequenceGeneratorIncrementTest {
 	}
 
 	@Test
-	public void testSequenceHbm() throws Exception {
-		buildMetadata( "org/hibernate/orm/test/schemaupdate/idgenerator/sequence.hbm.xml" );
+	public void testSequenceXmlMapping() throws Exception {
+		buildMetadata( "org/hibernate/orm/test/schemaupdate/idgenerator/sequence.orm.xml" );
 
 		createSchema();
 
@@ -189,9 +189,9 @@ public class SequenceGeneratorIncrementTest {
 	}
 
 	@Test
-	public void testSequenceHbmLegacy() throws Exception {
+	public void testSequenceXmlMappingLegacy() throws Exception {
 		buildMetadata(
-				"org/hibernate/orm/test/schemaupdate/idgenerator/sequence.hbm.xml",
+				"org/hibernate/orm/test/schemaupdate/idgenerator/sequence.orm.xml",
 				LegacyNamingStrategy.class.getName()
 		);
 
@@ -205,8 +205,8 @@ public class SequenceGeneratorIncrementTest {
 		buildMetadata( annotatedClass, null, null );
 	}
 
-	private void buildMetadata(String hbm) {
-		buildMetadata( null, hbm, null );
+	private void buildMetadata(String xml) {
+		buildMetadata( null, xml, null );
 	}
 
 
@@ -214,11 +214,11 @@ public class SequenceGeneratorIncrementTest {
 		buildMetadata( annotatedClass, null, namingStrategy );
 	}
 
-	private void buildMetadata(String hbm, String namingStrategy) {
-		buildMetadata( null, hbm, namingStrategy );
+	private void buildMetadata(String xml, String namingStrategy) {
+		buildMetadata( null, xml, namingStrategy );
 	}
 
-	private void buildMetadata(Class annotatedClass, String hbm, String namingStrategy) {
+	private void buildMetadata(Class annotatedClass, String xml, String namingStrategy) {
 		StandardServiceRegistryBuilder standardServiceRegistryBuilder = ServiceRegistryUtil.serviceRegistryBuilder();
 		standardServiceRegistryBuilder.applySetting( AvailableSettings.FORMAT_SQL, "false" );
 
@@ -234,8 +234,8 @@ public class SequenceGeneratorIncrementTest {
 		if ( annotatedClass != null ) {
 			metadataSources.addAnnotatedClass( annotatedClass );
 		}
-		if ( hbm != null ) {
-			metadataSources.addResource( hbm );
+		if ( xml != null ) {
+			metadataSources.addResource( xml );
 		}
 		metadata = (MetadataImplementor) metadataSources.buildMetadata();
 		metadata.orderColumns( false );

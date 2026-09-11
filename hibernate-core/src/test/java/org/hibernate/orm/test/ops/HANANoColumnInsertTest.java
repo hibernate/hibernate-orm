@@ -5,7 +5,9 @@
 package org.hibernate.orm.test.ops;
 
 import org.hibernate.MappingException;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.HANADialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
@@ -24,9 +26,16 @@ import static org.junit.jupiter.api.Assertions.fail;
 public class HANANoColumnInsertTest extends BaseSessionFactoryFunctionalTest {
 
 	@Override
+	protected void applySettings(StandardServiceRegistryBuilder builder) {
+		super.applySettings( builder );
+		builder.applySetting( AvailableSettings.TRANSFORM_HBM_XML, "true" );
+
+	}
+
+	@Override
 	protected String[] getOrmXmlFiles() {
 		return new String[] {
-				"org/hibernate/orm/test/ops/Competition.hbm.xml"
+				"org/hibernate/orm/test/ops/Competition.orm.xml"
 		};
 	}
 

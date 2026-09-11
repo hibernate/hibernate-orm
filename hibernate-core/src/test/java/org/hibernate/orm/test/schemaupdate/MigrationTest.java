@@ -36,8 +36,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class MigrationTest {
 	@Test
 	public void testSimpleColumnAddition(ServiceRegistryScope registryScope) {
-		String resource1 = "org/hibernate/orm/test/schemaupdate/1_Version.hbm.xml";
-		String resource2 = "org/hibernate/orm/test/schemaupdate/2_Version.hbm.xml";
+		String resource1 = "org/hibernate/orm/test/schemaupdate/1_Version.orm.xml";
+		String resource2 = "org/hibernate/orm/test/schemaupdate/2_Version.orm.xml";
 
 		MetadataImplementor v1metadata = (MetadataImplementor) new MetadataSources( registryScope.getRegistry() )
 				.addResource( resource1 )
@@ -80,8 +80,8 @@ public class MigrationTest {
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportAlterColumnType.class)
 	public void testSimpleColumnTypeChange(ServiceRegistryScope registryScope) {
-		String resource1 = "org/hibernate/orm/test/schemaupdate/1_Version.hbm.xml";
-		String resource4 = "org/hibernate/orm/test/schemaupdate/4_Version.hbm.xml";
+		String resource1 = "org/hibernate/orm/test/schemaupdate/1_Version.orm.xml";
+		String resource4 = "org/hibernate/orm/test/schemaupdate/4_Version.orm.xml";
 
 		MetadataImplementor v1metadata = (MetadataImplementor) new MetadataSources( registryScope.getRegistry() )
 				.addResource( resource1 )

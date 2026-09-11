@@ -26,7 +26,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 @JiraKey(value = "HHH-5715")
 @DomainModel(
-		xmlMappings = "org/hibernate/orm/test/pagination/EntryTag.hbm.xml"
+		xmlMappings = "org/hibernate/orm/test/pagination/EntryTag.orm.xml"
 )
 @SessionFactory
 public class DistinctSelectTest {

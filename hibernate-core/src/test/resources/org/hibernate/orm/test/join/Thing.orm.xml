@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 version="8.0">
+
+    <entity class="org.hibernate.orm.test.join.Thing"
+            access="FIELD" metadata-complete="true">
+        <table name="thing"/>
+        <secondary-table name="thing_name" optional="true" owned="true">
+            <primary-key-join-column name="thing_id"/>
+        </secondary-table>
+        <attributes>
+            <id name="id">
+                <column name="thing_id"/>
+                <generated-value/>
+            </id>
+            <basic name="name">
+                <column name="name" table="thing_name"/>
+            </basic>
+            <basic name="nameUpper">
+                <formula>(select upper(tn.name) from thing_name tn where tn.thing_id = thing_id)</formula>
+            </basic>
+            <transient name="salesperson"/>
+            <transient name="comments"/>
+        </attributes>
+    </entity>
+
+</entity-mappings>

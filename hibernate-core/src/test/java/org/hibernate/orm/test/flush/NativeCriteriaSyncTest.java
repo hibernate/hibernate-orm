@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
 @JiraKey("HHH-3813")
-@DomainModel(xmlMappings = "org/hibernate/orm/test/hql/SimpleEntityWithAssociation.hbm.xml")
+@DomainModel(xmlMappings = "org/hibernate/orm/test/hql/SimpleEntityWithAssociation.orm.xml")
 @SessionFactory
 public class NativeCriteriaSyncTest {
 	@AfterEach

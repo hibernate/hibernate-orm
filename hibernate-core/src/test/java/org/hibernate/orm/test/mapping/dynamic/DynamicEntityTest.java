@@ -19,7 +19,7 @@ import org.junit.jupiter.api.Test;
  * @author Vlad Mihalcea
  */
 @Jpa(
-		xmlMappings = {"org/hibernate/orm/test/mapping/dynamic/Book.hbm.xml"},
+		xmlMappings = {"org/hibernate/orm/test/mapping/dynamic/Book.orm.xml"},
 		integrationSettings = {@Setting( name = "hibernate.default_entity_mode", value = "dynamic-map")}
 )
 public class DynamicEntityTest {

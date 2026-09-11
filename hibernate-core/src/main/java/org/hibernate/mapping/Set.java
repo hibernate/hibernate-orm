@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.function.Supplier;
 
 import org.hibernate.MappingException;
+import org.hibernate.annotations.SoftDeleteType;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.ImplicitUniqueKeyNameSource;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -18,6 +19,8 @@ import org.hibernate.type.OrderedSetType;
 import org.hibernate.type.SetType;
 import org.hibernate.type.SortedSetType;
 import org.hibernate.type.MappingContext;
+import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
+import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 import org.hibernate.usertype.UserCollectionType;
 
 /**
@@ -86,7 +89,9 @@ public non-sealed class Set extends Collection {
 			final var collectionTable = getCollectionTable();
 			if ( !collectionTable.hasPrimaryKey()
 					&& collectionTable.getUniqueKeys().isEmpty() ) {
-				boolean useUniqueKey = false;
+				final var softDeleteColumn = getSoftDeleteColumn();
+				final boolean useLiveRowUniqueIndex =
+						softDeleteColumn != null && getSoftDeleteStrategy() != SoftDeleteType.TIMESTAMP;
 				for ( var selectable : getElement().getSelectables() ) {
 					if ( selectable instanceof Column column ) {
 						try {
@@ -97,59 +102,40 @@ public non-sealed class Set extends Collection {
 						catch (MappingException me) {
 							// ignore
 						}
-						if ( column.isNullable() ) {
-							useUniqueKey = true;
-						}
 					}
 				}
-				final Constraint key;
-				if ( useUniqueKey ) {
-					final var uniqueKey = new UniqueKey( collectionTable );
-					uniqueKey.setNullsNotDistinct( true );
-					key = uniqueKey;
+				if ( useLiveRowUniqueIndex ) {
+					createLiveRowUniqueIndex( collectionTable, softDeleteColumn );
 				}
 				else {
-					key = new PrimaryKey( collectionTable );
-				}
-				key.addColumns( getKey() );
-				for ( var selectable : getElement().getSelectables() ) {
-					if ( selectable instanceof Column column ) {
-						key.addColumn( column );
-					}
-				}
-				key.setName( getBuildingContext().getBuildingOptions().getImplicitNamingStrategy()
-						.determineUniqueKeyName( new ImplicitUniqueKeyNameSource() {
-							@Override
-							public Identifier getTableName() {
-								return getTable().getNameIdentifier();
-							}
-
-							@Override
-							public List<Identifier> getColumnNames() {
-								final List<Identifier> list = new ArrayList<>();
-								for ( var c : key.getColumns() ) {
-									list.add( c.getNameIdentifier( getBuildingContext() ) );
-								}
-								return list;
-							}
-
-							@Override
-							public Identifier getUserProvidedIdentifier() {
-								return null;
-							}
-
-							@Override
-							public MetadataBuildingContext getBuildingContext() {
-								return Set.this.getBuildingContext();
-							}
-						} )
-						.render( getMetadata().getDatabase().getDialect() ) );
-				if ( key.getColumnSpan() > getKey().getColumnSpan() ) {
+					final boolean useUniqueKey = getElement().isNullable()
+							|| softDeleteColumn != null && softDeleteColumn.isNullable();
+					final Constraint key;
 					if ( useUniqueKey ) {
-						collectionTable.addUniqueKey( (UniqueKey) key );
+						final var uniqueKey = new UniqueKey( collectionTable );
+						uniqueKey.setNullsNotDistinct( true );
+						key = uniqueKey;
 					}
 					else {
-						collectionTable.setPrimaryKey( (PrimaryKey) key );
+						key = new PrimaryKey( collectionTable );
+					}
+					key.addColumns( getKey() );
+					for ( var selectable : getElement().getSelectables() ) {
+						if ( selectable instanceof Column column ) {
+							key.addColumn( column );
+						}
+					}
+					if ( softDeleteColumn != null ) {
+						key.addColumn( softDeleteColumn );
+					}
+					key.setName( determineUniqueKeyName( key.getColumns() ) );
+					if ( key.getColumnSpan() > getKey().getColumnSpan() ) {
+						if ( useUniqueKey ) {
+							collectionTable.addUniqueKey( (UniqueKey) key );
+						}
+						else {
+							collectionTable.setPrimaryKey( (PrimaryKey) key );
+						}
 					}
 				}
 //				else {
@@ -162,6 +148,79 @@ public non-sealed class Set extends Collection {
 //		else {
 			//create an index on the key columns??
 //		}
+	}
+
+	private void createLiveRowUniqueIndex(Table collectionTable, Column softDeleteColumn) {
+		final List<Column> keyColumns = new ArrayList<>();
+		for ( var selectable : getKey().getSelectables() ) {
+			if ( selectable instanceof Column column ) {
+				keyColumns.add( column );
+			}
+		}
+		for ( var selectable : getElement().getSelectables() ) {
+			if ( selectable instanceof Column column ) {
+				keyColumns.add( column );
+			}
+		}
+		keyColumns.add( softDeleteColumn );
+
+		final var index = collectionTable.getOrCreateIndex( determineUniqueKeyName( keyColumns ) );
+		index.setUnique( true );
+		for ( int i = 0; i < keyColumns.size() - 1; i++ ) {
+			index.addColumn( keyColumns.get( i ) );
+		}
+		index.addColumn( new Formula( liveRowSoftDeleteFormula( softDeleteColumn ) ) );
+	}
+
+	private String liveRowSoftDeleteFormula(Column softDeleteColumn) {
+		final String nonDeletedLiteral = softDeleteNonDeletedLiteral( (BasicValue) softDeleteColumn.getValue() );
+		return "(case when " + softDeleteColumn.getQuotedName( getMetadata().getDatabase().getDialect() )
+				+ " = " + nonDeletedLiteral + " then 1 end)";
+	}
+
+	private String softDeleteNonDeletedLiteral(BasicValue softDeleteValue) {
+		final var resolution = softDeleteValue.resolve();
+		@SuppressWarnings("unchecked")
+		final var converter = (BasicValueConverter<Boolean, ?>) resolution.getValueConverter();
+		final Object nonDeletedValue = converter == null
+				? getSoftDeleteStrategy() == SoftDeleteType.ACTIVE
+						? true
+						: false
+				: converter.toRelationalValue( false );
+		@SuppressWarnings("unchecked")
+		final var literalFormatter =
+				(JdbcLiteralFormatter<Object>) resolution.getJdbcMapping().getJdbcLiteralFormatter();
+		return literalFormatter.toJdbcLiteral( nonDeletedValue, getMetadata().getDatabase().getDialect(), null );
+	}
+
+	private String determineUniqueKeyName(List<Column> columns) {
+		return getBuildingContext().getBuildingOptions().getImplicitNamingStrategy()
+				.determineUniqueKeyName( new ImplicitUniqueKeyNameSource() {
+					@Override
+					public Identifier getTableName() {
+						return getTable().getNameIdentifier();
+					}
+
+					@Override
+					public List<Identifier> getColumnNames() {
+						final List<Identifier> list = new ArrayList<>();
+						for ( var column : columns ) {
+							list.add( column.getNameIdentifier( getBuildingContext() ) );
+						}
+						return list;
+					}
+
+					@Override
+					public Identifier getUserProvidedIdentifier() {
+						return null;
+					}
+
+					@Override
+					public MetadataBuildingContext getBuildingContext() {
+						return Set.this.getBuildingContext();
+					}
+				} )
+				.render( getMetadata().getDatabase().getDialect() );
 	}
 
 	public Object accept(ValueVisitor visitor) {

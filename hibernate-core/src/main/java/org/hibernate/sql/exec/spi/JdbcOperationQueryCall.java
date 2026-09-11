@@ -6,9 +6,12 @@ package org.hibernate.sql.exec.spi;
 
 import java.util.List;
 
+import org.hibernate.Incubating;
+
 /**
  * @author Steve Ebersole
  */
+@Incubating
 public interface JdbcOperationQueryCall extends JdbcOperationQueryAnonBlock {
 	/**
 	 * If the call is a function, returns the function return descriptor

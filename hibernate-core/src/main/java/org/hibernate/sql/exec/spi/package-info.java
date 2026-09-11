@@ -12,6 +12,8 @@
  * Provider-owned SQL AST translators create query operations through
  * {@link org.hibernate.sql.exec.spi.JdbcOperations}, which keeps the concrete
  * operation implementations internal to Hibernate.
+ * The operation builders are stable SPI contracts; other execution contracts
+ * retain their individual {@link org.hibernate.Incubating} status.
  * <p>
  * For operations that return {@link java.sql.ResultSet}s, be sure to see
  * {@link org.hibernate.sql.results} which provides support for processing results
@@ -24,7 +26,4 @@
  * {@linkplain org.hibernate.sql.exec.internal.lock.FollowOnLockingAction}
  * and friends.
  */
-@Incubating
 package org.hibernate.sql.exec.spi;
-
-import org.hibernate.Incubating;

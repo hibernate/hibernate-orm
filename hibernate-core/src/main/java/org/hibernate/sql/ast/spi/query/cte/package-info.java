@@ -36,7 +36,4 @@
 /**
  * Support for common table expressions (CTE) in a SQL tree.
  */
-@Incubating
 package org.hibernate.sql.ast.spi.query.cte;
-
-import org.hibernate.Incubating;

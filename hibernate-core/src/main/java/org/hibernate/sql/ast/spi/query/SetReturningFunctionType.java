@@ -4,6 +4,7 @@
  */
 package org.hibernate.sql.ast.spi.query;
 
+import org.hibernate.Incubating;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 
@@ -13,6 +14,7 @@ import jakarta.annotation.Nullable;
 /// function.
 ///
 /// @author Steve Ebersole
+@Incubating
 public interface SetReturningFunctionType {
 	/// Find a named part of the function result.
 	///

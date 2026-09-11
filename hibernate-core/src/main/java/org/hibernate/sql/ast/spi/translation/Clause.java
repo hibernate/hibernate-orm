@@ -4,14 +4,11 @@
  */
 package org.hibernate.sql.ast.spi.translation;
 
-import org.hibernate.Incubating;
-
 /**
  * Used to indicate which query clause we are currently processing
  *
  * @author Steve Ebersole
  */
-@Incubating
 public enum Clause {
 	/**
 	 * The insert clause

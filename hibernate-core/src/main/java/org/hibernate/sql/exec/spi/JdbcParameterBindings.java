@@ -8,6 +8,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.function.BiConsumer;
 
+import org.hibernate.Incubating;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.Bindable;
@@ -31,6 +32,7 @@ import static org.hibernate.type.internal.BindingTypeHelper.resolveBindType;
  *
  * @author Steve Ebersole
  */
+@Incubating
 public interface JdbcParameterBindings {
 	void addBinding(JdbcParameter parameter, JdbcParameterBinding binding);
 

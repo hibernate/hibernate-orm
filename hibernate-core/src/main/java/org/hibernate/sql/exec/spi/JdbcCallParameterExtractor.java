@@ -6,6 +6,7 @@ package org.hibernate.sql.exec.spi;
 
 import java.sql.CallableStatement;
 
+import org.hibernate.Incubating;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.sql.exec.internal.JdbcCallRefCursorExtractorImpl;
 
@@ -16,6 +17,7 @@ import org.hibernate.sql.exec.internal.JdbcCallRefCursorExtractorImpl;
  *
  * @author Steve Ebersole
  */
+@Incubating
 public interface JdbcCallParameterExtractor<T> {
 	String getParameterName();
 	int getParameterPosition();

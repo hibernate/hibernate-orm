@@ -337,11 +337,19 @@ metadata support objects are stable strategies.
 
 [NOTE]
 ====
-The aggregate-column, locking, row-level-security, temporal-table, and SQL AST
+The aggregate-column, locking, row-level-security, and temporal-table
 extension families are incubating. Their contracts may change within an
 `X.Y` release family and are excluded from the corresponding SPI compatibility
 guarantee. Check the generated Javadoc for `@Incubating` before depending on a
 strategy, request, result, or SQL AST contract.
+
+The central SQL AST and translator contracts, translator factories and requests,
+`JdbcParameterFactory`, and `JdbcOperations` builders are no longer incubating.
+The specialized `SqlAstTranslator.renderNamedSetReturningFunction()` hook and
+`SetReturningFunctionType`, together with the SQM-coupled `QueryTransformer`,
+remain incubating. This does not stabilize the separate execution, mapping-model
+mutation, or result-processing contracts; their individual lifecycle markers
+continue to apply.
 ====
 
 === Type and temporal strategies

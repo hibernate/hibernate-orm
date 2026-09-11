@@ -6,6 +6,8 @@ package org.hibernate.sql.exec.spi;
 
 import java.sql.Statement;
 
+import org.hibernate.Incubating;
+
 /**
  * Access to a JDBC {@linkplain Statement}.
  *
@@ -14,6 +16,7 @@ import java.sql.Statement;
  *
  * @author Steve Ebersole
  */
+@Incubating
 public interface StatementAccess {
 	/**
 	 * Access the JDBC {@linkplain Statement}.

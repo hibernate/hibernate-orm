@@ -8,12 +8,14 @@ import java.util.Collection;
 import java.util.Set;
 import java.util.function.Consumer;
 
+import org.hibernate.Incubating;
 import org.hibernate.sql.ast.spi.query.expression.JdbcParameter;
 
 /**
  * The collection
  * @author Steve Ebersole
  */
+@Incubating
 public interface JdbcParameters {
 	void addParameter(JdbcParameter parameter);
 	void addParameters(Collection<JdbcParameter> parameters);

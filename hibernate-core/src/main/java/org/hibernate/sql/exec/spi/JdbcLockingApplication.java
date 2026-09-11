@@ -4,6 +4,7 @@
  */
 package org.hibernate.sql.exec.spi;
 
+import org.hibernate.Incubating;
 import org.hibernate.SPI;
 
 /// Records which stage owns pessimistic locking for a JDBC select plan.
@@ -15,6 +16,7 @@ import org.hibernate.SPI;
 /// @since 8.0
 /// @author Steve Ebersole
 @SPI
+@Incubating
 public enum JdbcLockingApplication {
 	/// The select does not request pessimistic locking.
 	NONE,

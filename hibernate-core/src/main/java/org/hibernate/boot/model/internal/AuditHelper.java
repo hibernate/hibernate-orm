@@ -274,7 +274,7 @@ public final class AuditHelper {
 				final var subclassAuditTable = createAuditTable(
 						subclass.getTable(),
 						csIdColumnName,
-						resolveExcludedColumns( subclass.getProperties(), subclass, context.getBootstrapContext().getModelsContext() ),
+						resolveExcludedColumns( subclass.getPropertyClosure(), subclass, context.getBootstrapContext().getModelsContext() ),
 						effective != null ? nullIfBlank( effective.schema() ) : null,
 						effective != null ? nullIfBlank( effective.catalog() ) : null,
 						effective != null ? nullIfBlank( effective.name() ) : null,
@@ -1001,10 +1001,17 @@ public final class AuditHelper {
 		if ( influencers.getTemporalIdentifier() == null ) {
 			return false;
 		}
-		final var attr = fetchable.asAttributeMapping();
+		var attr = fetchable.asAttributeMapping();
 		if ( attr != null && attr.getStateArrayPosition() >= 0 ) {
 			final var entityMappingType = currentlyLoadingEntityMappingType( fetchParent, attr );
 			if ( entityMappingType != null ) {
+				attr = entityMappingType.findAttributeMapping( attr.getAttributeName() );
+				//when should this flip?
+				//table per class
+				//
+				if ( attr == null ) {
+					return false;
+				}
 				final var persister = entityMappingType.getEntityPersister();
 				return persister.getAuditMapping() != null
 						&& persister.isPropertyAuditedExcluded( attr.getStateArrayPosition() );

@@ -15,6 +15,7 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
 
+import org.hibernate.StaleStateException;
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
@@ -27,6 +28,7 @@ import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.MutationStatementPreparer;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.persister.entity.mutation.EntityMutationTarget;
@@ -54,6 +56,7 @@ import org.hibernate.sql.model.internal.TableInsertStandard;
 import org.hibernate.sql.model.internal.TableUpdateCustomSql;
 import org.hibernate.sql.model.internal.TableUpdateStandard;
 
+import static org.hibernate.exception.ConstraintViolationException.ConstraintKind.UNIQUE;
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
 
 /**
@@ -109,6 +112,22 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 		return tableMapping;
 	}
 
+	public List<ColumnValueBinding> getValueBindings() {
+		return valueBindings;
+	}
+
+	public List<ColumnValueBinding> getKeyBindings() {
+		return keyBindings;
+	}
+
+	public List<ColumnValueBinding> getOptimisticLockBindings() {
+		return optimisticLockBindings;
+	}
+
+	public List<ColumnValueParameter> getParameters() {
+		return parameters;
+	}
+
 	@Override
 	public JdbcValueDescriptor findValueDescriptor(String columnName, ParameterUsage usage) {
 		for ( int i = 0; i < jdbcValueDescriptors.size(); i++ ) {
@@ -159,14 +178,28 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 							"Upsert update altered no rows - inserting : %s",
 							tableMapping.getTableName()
 					);
-					performInsert( jdbcValueBindings, session );
+					try {
+						performInsert( jdbcValueBindings, session );
+					}
+					catch (ConstraintViolationException cve) {
+						if ( cve.getKind() == UNIQUE ) {
+							// Ignore primary key violation if the insert is composed of just the primary key
+							if ( !valueBindings.isEmpty() ) {
+								// assume it was the primary key constraint which was violated,
+								// due to a new version of the row existing in the database
+								throw new StaleStateException( mutationTarget.getRolePath(), cve );
+							}
+						}
+						else {
+							throw cve;
+						}
+					}
 				}
 			}
 		}
 		finally {
 			jdbcValueBindings.afterStatement( tableMapping );
 		}
-
 	}
 
 	private void performDelete(JdbcValueBindings jdbcValueBindings, SharedSessionContractImplementor session) {
@@ -387,8 +420,7 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 	}
 
 	private void performInsert(JdbcValueBindings jdbcValueBindings, SharedSessionContractImplementor session) {
-		final JdbcInsertMutation jdbcInsert = createJdbcInsert( session );
-
+		final JdbcMutationOperation jdbcInsert = createJdbcOptionalInsert( session );
 		final JdbcCoordinator jdbcCoordinator = session.getJdbcCoordinator();
 		final PreparedStatement insertStatement = createStatementDetails( jdbcInsert, jdbcCoordinator );
 
@@ -428,7 +460,17 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 		}
 	}
 
-	private JdbcInsertMutation createJdbcInsert(SharedSessionContractImplementor session) {
+	/*
+	 * Used by Hibernate Reactive
+	 */
+	protected JdbcMutationOperation createJdbcOptionalInsert(SharedSessionContractImplementor session) {
+		return createJdbcInsert( session );
+	}
+
+	/*
+	 * Used by Hibernate Reactive
+	 */
+	protected JdbcInsertMutation createJdbcInsert(SharedSessionContractImplementor session) {
 		final TableInsert tableInsert;
 		if ( tableMapping.getInsertDetails() != null
 				&& tableMapping.getInsertDetails().getCustomSql() != null ) {

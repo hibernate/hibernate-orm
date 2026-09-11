@@ -10,7 +10,7 @@ import java.util.Set;
 
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.orm.test.entitygraph.EntityGraphBatchSizeTest_.Book_;
-import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.jdbc.CollectingStatementObserver;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -40,7 +40,7 @@ import static org.hibernate.Hibernate.isInitialized;
 				EntityGraphBatchSizeTest.SingleAuthor.class
 		}
 )
-@SessionFactory(useCollectingStatementInspector = true)
+@SessionFactory(useCollectingStatementObserver = true)
 class EntityGraphBatchSizeTest {
 	private static final String NAMED_GRAPH = "Book.with-batch-sizes";
 
@@ -55,7 +55,7 @@ class EntityGraphBatchSizeTest {
 				session.persist( new Book( id, batchedAuthor, singleAuthor ) );
 			}
 		} );
-		scope.getCollectingStatementInspector().clear();
+		scope.getCollectingStatementObserver().clear();
 	}
 
 	@AfterEach
@@ -65,7 +65,7 @@ class EntityGraphBatchSizeTest {
 
 	@Test
 	void programmaticGraphBatchSizeControlsAssociationBatching(SessionFactoryScope scope) {
-		final var inspector = scope.getCollectingStatementInspector();
+		final var inspector = scope.getCollectingStatementObserver();
 
 		scope.inTransaction( session -> {
 			final var graph = session.createEntityGraph( Book.class );
@@ -98,7 +98,7 @@ class EntityGraphBatchSizeTest {
 
 	@Test
 	void fetchAnnotationBatchSizeControlsAssociationBatching(SessionFactoryScope scope) {
-		final var inspector = scope.getCollectingStatementInspector();
+		final var inspector = scope.getCollectingStatementObserver();
 
 		scope.inTransaction( session -> {
 			final var books =
@@ -126,7 +126,7 @@ class EntityGraphBatchSizeTest {
 	}
 
 	private static void assertSelectCount(
-			SQLStatementInspector inspector,
+			CollectingStatementObserver inspector,
 			String tableName,
 			int expectedSelectCount) {
 		final var normalizedTableName = tableName.toLowerCase( Locale.ROOT );

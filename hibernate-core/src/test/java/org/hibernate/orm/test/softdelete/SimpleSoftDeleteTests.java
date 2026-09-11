@@ -14,7 +14,7 @@ import org.hibernate.annotations.SoftDelete;
 import org.hibernate.annotations.SoftDeleteType;
 import org.hibernate.type.YesNoConverter;
 
-import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.jdbc.CollectingStatementObserver;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -34,7 +34,7 @@ import static org.assertj.core.api.Assertions.fail;
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel(annotatedClasses = { SimpleEntity.class, SimpleSoftDeleteTests.BatchLoadable.class })
-@SessionFactory(useCollectingStatementInspector = true)
+@SessionFactory(useCollectingStatementObserver = true)
 public class SimpleSoftDeleteTests {
 	@BeforeEach
 	void createTestData(SessionFactoryScope scope) {
@@ -97,7 +97,7 @@ public class SimpleSoftDeleteTests {
 
 	@Test
 	void testMultiLoading(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 
 		scope.inTransaction( (session) -> {
 			statementInspector.clear();
@@ -114,7 +114,7 @@ public class SimpleSoftDeleteTests {
 
 	@Test
 	void testNaturalIdLoading(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 
 		scope.inTransaction( (session) -> {
 			statementInspector.clear();
@@ -126,7 +126,7 @@ public class SimpleSoftDeleteTests {
 
 	@Test
 	void testBatchLoading(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 
 		scope.inTransaction( (session) -> {
 			statementInspector.clear();
@@ -183,7 +183,7 @@ public class SimpleSoftDeleteTests {
 
 	@Test
 	void testFullDeleteMutationQuery(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 
 		scope.inTransaction( (session) -> {
 			statementInspector.clear();
@@ -195,7 +195,7 @@ public class SimpleSoftDeleteTests {
 
 	@Test
 	void testRestrictedDeleteMutationQuery(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 
 		scope.inTransaction( (session) -> {
 			statementInspector.clear();

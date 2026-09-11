@@ -9,7 +9,7 @@ import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.query.criteria.JpaRoot;
 
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.jdbc.CollectingStatementObserver;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -33,13 +33,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 				ManyToOneJoinReuseTest.BookList.class
 		}
 )
-@SessionFactory(useCollectingStatementInspector = true)
+@SessionFactory(useCollectingStatementObserver = true)
 public class ManyToOneJoinReuseTest {
 
 	@Test
 	@JiraKey(value = "HHH-15648")
 	public void fetchAndImplicitPath(SessionFactoryScope scope) {
-		SQLStatementInspector sqlStatementInterceptor = scope.getCollectingStatementInspector();
+		CollectingStatementObserver sqlStatementInterceptor = scope.getCollectingStatementObserver();
 		scope.inTransaction(
 				session -> {
 					sqlStatementInterceptor.clear();
@@ -63,7 +63,7 @@ public class ManyToOneJoinReuseTest {
 	@Test
 	@JiraKey(value = "HHH-15645")
 	public void joinAndImplicitPath(SessionFactoryScope scope) {
-		SQLStatementInspector sqlStatementInterceptor = scope.getCollectingStatementInspector();
+		CollectingStatementObserver sqlStatementInterceptor = scope.getCollectingStatementObserver();
 		scope.inTransaction(
 				session -> {
 					sqlStatementInterceptor.clear();

@@ -9,7 +9,7 @@ import jakarta.persistence.criteria.CriteriaQuery;
 import org.hibernate.graph.GraphParser;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.RootGraph;
-import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.jdbc.CollectingStatementObserver;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.library.Book;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -23,13 +23,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @JiraKey(value = "HHH-10485")
 @DomainModel( standardModels = StandardDomainModel.LIBRARY )
-@SessionFactory(useCollectingStatementInspector = true)
+@SessionFactory(useCollectingStatementObserver = true)
 @SuppressWarnings("JUnitMalformedDeclaration")
 public class EntityGraphFetchingTest {
 
 	@Test
 	void testWithoutEntityGraph(SessionFactoryScope scope) {
-		final SQLStatementInspector sqlCollector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver sqlCollector = scope.getCollectingStatementObserver();
 		sqlCollector.clear();
 
 		scope.inTransaction( (session) -> {
@@ -47,7 +47,7 @@ public class EntityGraphFetchingTest {
 	@Test
 	@JiraKey(value = "HHH-10485")
 	void testWithEntityGraph(SessionFactoryScope scope) {
-		SQLStatementInspector sqlCollector = scope.getCollectingStatementInspector();
+		CollectingStatementObserver sqlCollector = scope.getCollectingStatementObserver();
 		sqlCollector.clear();
 
 		scope.inTransaction( (session) -> {

@@ -67,8 +67,8 @@ public class InsertedDataTest {
 		inTransaction(
 				sessionFactory,
 				s -> {
-					s.createQuery( "delete CacheableItem" ).executeUpdate();
-					s.createQuery( "delete from CacheableEmbeddedIdItem" ).executeUpdate();
+					s.createMutationQuery( "delete CacheableItem" ).execute();
+					s.createMutationQuery( "delete from CacheableEmbeddedIdItem" ).execute();
 				}
 		);
 		if ( sessionFactory != null ) {

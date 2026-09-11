@@ -6,7 +6,7 @@ package org.hibernate.orm.test.mapping.mappedBy;
 
 import java.util.List;
 
-import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.jdbc.CollectingStatementObserver;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -32,7 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 		IsNullAndMappedByTest.Person.class,
 		IsNullAndMappedByTest.Account.class,
 } )
-@SessionFactory( useCollectingStatementInspector = true )
+@SessionFactory( useCollectingStatementObserver = true )
 @Jira( "https://hibernate.atlassian.net/browse/HHH-17384" )
 public class IsNullAndMappedByTest {
 	@BeforeAll
@@ -65,7 +65,7 @@ public class IsNullAndMappedByTest {
 
 	@Test
 	public void testAssociationDereferenceIsNullInWhereClause(SessionFactoryScope scope) {
-		final SQLStatementInspector inspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver inspector = scope.getCollectingStatementObserver();
 		scope.inTransaction( session -> {
 			inspector.clear();
 
@@ -88,7 +88,7 @@ public class IsNullAndMappedByTest {
 
 	@Test
 	public void testAssociationIsNullInWhereClause(SessionFactoryScope scope) {
-		final SQLStatementInspector inspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver inspector = scope.getCollectingStatementObserver();
 		scope.inTransaction( session -> {
 			inspector.clear();
 
@@ -116,7 +116,7 @@ public class IsNullAndMappedByTest {
 
 	@Test
 	public void testFetchedAssociationIsNullInWhereClause(SessionFactoryScope scope) {
-		final SQLStatementInspector inspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver inspector = scope.getCollectingStatementObserver();
 		scope.inTransaction( session -> {
 			inspector.clear();
 
@@ -143,7 +143,7 @@ public class IsNullAndMappedByTest {
 
 	@Test
 	public void testIsNullInWhereClause3(SessionFactoryScope scope) {
-		final SQLStatementInspector inspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver inspector = scope.getCollectingStatementObserver();
 		scope.inTransaction( session -> {
 			inspector.clear();
 
@@ -163,7 +163,7 @@ public class IsNullAndMappedByTest {
 
 	@Test
 	public void testAssociationEqualsInWhereClause(SessionFactoryScope scope) {
-		final SQLStatementInspector inspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver inspector = scope.getCollectingStatementObserver();
 		scope.inTransaction( session -> {
 			inspector.clear();
 
@@ -225,7 +225,7 @@ public class IsNullAndMappedByTest {
 
 	@Test
 	public void testDelete(SessionFactoryScope scope) {
-		final SQLStatementInspector inspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver inspector = scope.getCollectingStatementObserver();
 		inspector.clear();
 
 		scope.inTransaction( (entityManager) -> {
@@ -240,7 +240,7 @@ public class IsNullAndMappedByTest {
 
 	@Test
 	public void testHqlUpdate(SessionFactoryScope scope) {
-		final SQLStatementInspector inspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver inspector = scope.getCollectingStatementObserver();
 		inspector.clear();
 
 		scope.inTransaction( (entityManager) -> {
@@ -255,7 +255,7 @@ public class IsNullAndMappedByTest {
 
 	@Test
 	public void testHqlUpdateSet(SessionFactoryScope scope) {
-		final SQLStatementInspector inspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver inspector = scope.getCollectingStatementObserver();
 		inspector.clear();
 
 		scope.inTransaction( (entityManager) -> {

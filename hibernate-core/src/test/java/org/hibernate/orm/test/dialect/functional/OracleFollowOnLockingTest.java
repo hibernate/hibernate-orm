@@ -22,7 +22,7 @@ import org.hibernate.Locking;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.jpa.AvailableHints;
 import org.hibernate.query.IllegalQueryOperationException;
-import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.jdbc.CollectingStatementObserver;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialect;
@@ -56,7 +56,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 		OracleFollowOnLockingTest.Customer.class,
 		OracleFollowOnLockingTest.Purchase.class
 })
-@SessionFactory(useCollectingStatementInspector = true)
+@SessionFactory(useCollectingStatementObserver = true)
 public class OracleFollowOnLockingTest {
 	@BeforeEach
 	void createTestData(SessionFactoryScope factoryScope) {
@@ -91,7 +91,7 @@ public class OracleFollowOnLockingTest {
 
 	@Test
 	void testLockAcrossJoin(SessionFactoryScope factoryScope) {
-		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
+		final CollectingStatementObserver sqlCollector = factoryScope.getCollectingStatementObserver();
 
 		factoryScope.inTransaction( (session) -> {
 			sqlCollector.clear();
@@ -114,7 +114,7 @@ public class OracleFollowOnLockingTest {
 
 	@Test
 	public void testPessimisticLockWithMaxResultsThenNoFollowOnLocking(SessionFactoryScope factoryScope) {
-		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
+		final CollectingStatementObserver sqlCollector = factoryScope.getCollectingStatementObserver();
 
 		factoryScope.inTransaction( (session) -> {
 			sqlCollector.clear();
@@ -132,7 +132,7 @@ public class OracleFollowOnLockingTest {
 
 	@Test
 	public void testPessimisticLockWithFirstResultThenFollowOnLocking(SessionFactoryScope factoryScope) {
-		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
+		final CollectingStatementObserver sqlCollector = factoryScope.getCollectingStatementObserver();
 
 		factoryScope.inTransaction( (session) -> {
 			sqlCollector.clear();
@@ -151,7 +151,7 @@ public class OracleFollowOnLockingTest {
 
 	@Test
 	public void testPessimisticLockWithFirstResultAndJoinThenFollowOnLocking(SessionFactoryScope factoryScope) {
-		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
+		final CollectingStatementObserver sqlCollector = factoryScope.getCollectingStatementObserver();
 
 		factoryScope.inTransaction( (session) -> {
 			sqlCollector.clear();
@@ -174,7 +174,7 @@ public class OracleFollowOnLockingTest {
 
 	@Test
 	public void testPessimisticLockWithNamedQueryExplicitlyEnablingFollowOnLockingThenFollowOnLocking(SessionFactoryScope factoryScope) {
-		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
+		final CollectingStatementObserver sqlCollector = factoryScope.getCollectingStatementObserver();
 
 		factoryScope.inTransaction( (session) -> {
 			sqlCollector.clear();
@@ -190,7 +190,7 @@ public class OracleFollowOnLockingTest {
 
 	@Test
 	public void testPessimisticLockWithCountDistinctThenFollowOnLocking(SessionFactoryScope factoryScope) {
-		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
+		final CollectingStatementObserver sqlCollector = factoryScope.getCollectingStatementObserver();
 
 		factoryScope.inTransaction( (session) -> {
 			sqlCollector.clear();
@@ -208,7 +208,7 @@ public class OracleFollowOnLockingTest {
 
 	@Test
 	public void testPessimisticLockWithFirstResultWhileExplicitlyDisablingFollowOnLockingThenFails(SessionFactoryScope factoryScope) {
-		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
+		final CollectingStatementObserver sqlCollector = factoryScope.getCollectingStatementObserver();
 
 		factoryScope.inTransaction( (session) -> {
 			sqlCollector.clear();
@@ -228,7 +228,7 @@ public class OracleFollowOnLockingTest {
 
 	@Test
 	public void testPessimisticLockWithFirstResultAndJoinWhileExplicitlyDisablingFollowOnLockingThenFails(SessionFactoryScope factoryScope) {
-		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
+		final CollectingStatementObserver sqlCollector = factoryScope.getCollectingStatementObserver();
 
 		factoryScope.inTransaction( (session) -> {
 			sqlCollector.clear();
@@ -252,7 +252,7 @@ public class OracleFollowOnLockingTest {
 
 	@Test
 	public void testPessimisticLockWithFirstResultsWhileExplicitlyEnablingFollowOnLockingThenFollowOnLocking(SessionFactoryScope factoryScope) {
-		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
+		final CollectingStatementObserver sqlCollector = factoryScope.getCollectingStatementObserver();
 
 		factoryScope.inTransaction( (session) -> {
 			sqlCollector.clear();
@@ -274,7 +274,7 @@ public class OracleFollowOnLockingTest {
 	@Test
 	@JiraKey(value = "HHH-16433")
 	public void testPessimisticLockWithOrderByThenNoFollowOnLocking(SessionFactoryScope factoryScope) {
-		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
+		final CollectingStatementObserver sqlCollector = factoryScope.getCollectingStatementObserver();
 
 		factoryScope.inTransaction( (session) -> {
 			sqlCollector.clear();
@@ -292,7 +292,7 @@ public class OracleFollowOnLockingTest {
 
 	@Test
 	public void testPessimisticLockWithMaxResultsAndOrderByThenNoFollowOnLocking(SessionFactoryScope factoryScope) {
-		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
+		final CollectingStatementObserver sqlCollector = factoryScope.getCollectingStatementObserver();
 
 		factoryScope.inTransaction( (session) -> {
 			sqlCollector.clear();
@@ -309,7 +309,7 @@ public class OracleFollowOnLockingTest {
 
 	@Test
 	public void testPessimisticLockWithMaxResultsAndOrderByWhileExplicitlyDisablingFollowOnLocking(SessionFactoryScope factoryScope) {
-		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
+		final CollectingStatementObserver sqlCollector = factoryScope.getCollectingStatementObserver();
 
 		factoryScope.inTransaction( (session) -> {
 			sqlCollector.clear();
@@ -329,7 +329,7 @@ public class OracleFollowOnLockingTest {
 
 	@Test
 	public void testPessimisticLockWithMaxResultsAndOrderByWhileExplicitlyEnablingFollowOnLockingThenFollowOnLocking(SessionFactoryScope factoryScope) {
-		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
+		final CollectingStatementObserver sqlCollector = factoryScope.getCollectingStatementObserver();
 
 		factoryScope.inTransaction( (session) -> {
 			sqlCollector.clear();
@@ -349,7 +349,7 @@ public class OracleFollowOnLockingTest {
 
 	@Test
 	public void testPessimisticLockWithDistinctThenFollowOnLocking(SessionFactoryScope factoryScope) {
-		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
+		final CollectingStatementObserver sqlCollector = factoryScope.getCollectingStatementObserver();
 
 		factoryScope.inTransaction( (session) -> {
 			sqlCollector.clear();
@@ -368,7 +368,7 @@ public class OracleFollowOnLockingTest {
 
 	@Test
 	public void testPessimisticLockWithDistinctWhileExplicitlyDisablingFollowOnLockingThenFails(SessionFactoryScope factoryScope) {
-		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
+		final CollectingStatementObserver sqlCollector = factoryScope.getCollectingStatementObserver();
 
 		factoryScope.inTransaction( (session) -> {
 			sqlCollector.clear();
@@ -390,7 +390,7 @@ public class OracleFollowOnLockingTest {
 
 	@Test
 	public void testPessimisticLockWithDistinctWhileExplicitlyEnablingFollowOnLockingThenFollowOnLocking(SessionFactoryScope factoryScope) {
-		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
+		final CollectingStatementObserver sqlCollector = factoryScope.getCollectingStatementObserver();
 
 		factoryScope.inTransaction( (session) -> {
 			sqlCollector.clear();
@@ -411,7 +411,7 @@ public class OracleFollowOnLockingTest {
 
 	@Test
 	public void testPessimisticLockWithGroupByThenFollowOnLocking(SessionFactoryScope factoryScope) {
-		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
+		final CollectingStatementObserver sqlCollector = factoryScope.getCollectingStatementObserver();
 
 		factoryScope.inTransaction( (session) -> {
 			sqlCollector.clear();
@@ -434,7 +434,7 @@ public class OracleFollowOnLockingTest {
 
 	@Test
 	public void testPessimisticLockWithGroupByWhileExplicitlyDisablingFollowOnLockingThenFails(SessionFactoryScope factoryScope) {
-		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
+		final CollectingStatementObserver sqlCollector = factoryScope.getCollectingStatementObserver();
 
 		factoryScope.inTransaction( (session) -> {
 			sqlCollector.clear();
@@ -459,7 +459,7 @@ public class OracleFollowOnLockingTest {
 
 	@Test
 	public void testPessimisticLockWithGroupByWhileExplicitlyEnablingFollowOnLockingThenFollowOnLocking(SessionFactoryScope factoryScope) {
-		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
+		final CollectingStatementObserver sqlCollector = factoryScope.getCollectingStatementObserver();
 
 		factoryScope.inTransaction( (session) -> {
 			sqlCollector.clear();
@@ -483,7 +483,7 @@ public class OracleFollowOnLockingTest {
 
 	@Test
 	public void testPessimisticLockWithUnionThenFollowOnLocking(SessionFactoryScope factoryScope) {
-		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
+		final CollectingStatementObserver sqlCollector = factoryScope.getCollectingStatementObserver();
 
 		factoryScope.inTransaction( (session) -> {
 			sqlCollector.clear();
@@ -509,7 +509,7 @@ public class OracleFollowOnLockingTest {
 
 	@Test
 	public void testPessimisticLockWithUnionWhileExplicitlyDisablingFollowOnLockingThenFails(SessionFactoryScope factoryScope) {
-		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
+		final CollectingStatementObserver sqlCollector = factoryScope.getCollectingStatementObserver();
 
 		factoryScope.inTransaction( (session) -> {
 			sqlCollector.clear();

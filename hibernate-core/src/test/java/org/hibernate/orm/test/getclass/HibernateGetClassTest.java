@@ -6,7 +6,7 @@ package org.hibernate.orm.test.getclass;
 
 import org.hibernate.Hibernate;
 
-import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.jdbc.CollectingStatementObserver;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -30,7 +30,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 				HibernateGetClassTest.TestRegularEntity.class
 		}
 )
-@SessionFactory(useCollectingStatementInspector = true)
+@SessionFactory(useCollectingStatementObserver = true)
 @JiraKey("HHH-15453")
 public class HibernateGetClassTest {
 
@@ -56,7 +56,7 @@ public class HibernateGetClassTest {
 
 	@Test
 	public void testSelectUserWithRole(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 		scope.inSession(
 				session -> {
 					TestEntity e3 = session.find( TestEntity.class, 3 );

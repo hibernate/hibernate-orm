@@ -97,7 +97,7 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 			mouse.setName( "mickey" );
 			em.persist( as );
 			em.persist( mouse );
-			assertEquals( 1, em.createNamedQuery( "allMouse" ).getResultList().size() );
+			assertEquals( 1, em.createNamedQuery( "allMouse", ApplicationServer.class ).getResultList().size() );
 			Lighter lighter = new Lighter();
 			lighter.name = "main";
 			lighter.power = " 250 W";
@@ -129,7 +129,7 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 			mouse.setName( "mickey" );
 			em.persist( as );
 			em.persist( mouse );
-			assertEquals( 1, em.createNamedQuery( "allMouse_1_0" ).getResultList().size() );
+			assertEquals( 1, em.createNamedQuery( "allMouse_1_0", ApplicationServer1.class ).getResultList().size() );
 			Lighter1 lighter = new Lighter1();
 			lighter.name = "main";
 			lighter.power = " 250 W";
@@ -200,7 +200,7 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 			carpet.setCountry( "Turkey" );
 			em.persist( carpet );
 			em.persist( el );
-			assertEquals( 1, em.createNamedQuery( "allCarpet" ).getResultList().size() );
+			assertEquals( 1, em.createNamedQuery( "allCarpet", Carpet.class ).getResultList().size() );
 			assertNotNull( carpet.getId() );
 			em.remove( carpet );
 		} );
@@ -296,7 +296,7 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 		addPackageToClasspath( testPackage );
 
 		Map<String, Object> properties = ServiceRegistryUtil.createBaseSettings();
-		properties.put( AvailableSettings.JPA_JTA_DATASOURCE, null );
+		properties.put( AvailableSettings.JAKARTA_JTA_DATASOURCE, null );
 		Properties p = new Properties();
 		p.load( ConfigHelper.getResourceAsStream( "/overridenpar.properties" ) );
 		//noinspection rawtypes
@@ -358,7 +358,7 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 			assertTrue( em.contains( item ) );
 
 			em.getTransaction().begin();
-			Item item1 = (Item) em.createQuery( "select i from Item i where descr like 'M%'" ).getSingleResult();
+			Item item1 = em.createQuery( "select i from Item i where descr like 'M%'", Item.class ).getSingleResult();
 			assertNotNull( item1 );
 			assertSame( item, item1 );
 			item.setDescr( "Micro$oft wireless mouse" );
@@ -377,7 +377,7 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 			assertSame( item, item1 );
 			assertTrue( em.contains( item ) );
 
-			item1 = (Item) em.createQuery( "select i from Item i where descr like 'M%'" ).getSingleResult();
+			item1 = em.createQuery( "select i from Item i where descr like 'M%'", Item.class ).getSingleResult();
 			assertNotNull( item1 );
 			assertSame( item, item1 );
 			assertTrue( em.contains( item ) );

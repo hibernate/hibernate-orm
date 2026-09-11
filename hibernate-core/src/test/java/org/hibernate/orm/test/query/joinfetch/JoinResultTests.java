@@ -7,7 +7,7 @@ package org.hibernate.orm.test.query.joinfetch;
 import org.hibernate.testing.util.uuid.SafeRandomUUIDGenerator;
 import org.hibernate.internal.util.StringHelper;
 
-import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.jdbc.CollectingStatementObserver;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.retail.Product;
 import org.hibernate.testing.orm.domain.retail.Vendor;
@@ -27,12 +27,12 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Steve Ebersole
  */
 @DomainModel(standardModels = StandardDomainModel.RETAIL)
-@SessionFactory(useCollectingStatementInspector = true)
+@SessionFactory(useCollectingStatementObserver = true)
 @Jira( "https://hibernate.atlassian.net/browse/HHH-16955" )
 public class JoinResultTests {
 	@Test
 	void testSimpleJoin(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 
 		final String query = "from Product join vendor";
 
@@ -85,7 +85,7 @@ public class JoinResultTests {
 
 	@Test
 	void testSimpleCrossJoin(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 
 		final String query = "from Product cross join vendor";
 

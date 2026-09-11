@@ -7,7 +7,7 @@ package org.hibernate.orm.test.notfound;
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
 
-import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.jdbc.CollectingStatementObserver;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -30,7 +30,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 				MutationQueriesAndNotFoundActionTest.Comment.class
 		}
 )
-@SessionFactory( useCollectingStatementInspector = true )
+@SessionFactory( useCollectingStatementObserver = true )
 @JiraKey("HHH-16878")
 public class MutationQueriesAndNotFoundActionTest {
 
@@ -56,7 +56,7 @@ public class MutationQueriesAndNotFoundActionTest {
 
 	@Test
 	public void testUpdate(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 
 		scope.inTransaction(
 				session -> {

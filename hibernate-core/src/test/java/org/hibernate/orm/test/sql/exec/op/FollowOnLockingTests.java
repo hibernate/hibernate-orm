@@ -21,7 +21,7 @@ import jakarta.persistence.SecondaryTable;
 import jakarta.persistence.Table;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.lock.PessimisticLockStyle;
-import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.jdbc.CollectingStatementObserver;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
@@ -52,7 +52,7 @@ import static org.hibernate.Locking.FollowOn.FORCE;
 		FollowOnLockingTests.Team.class,
 		FollowOnLockingTests.Customer.class
 } )
-@SessionFactory(useCollectingStatementInspector = true)
+@SessionFactory(useCollectingStatementObserver = true)
 @RequiresDialectFeature( feature = DialectFeatureChecks.SupportsSelectLocking.class )
 public class FollowOnLockingTests {
 
@@ -63,7 +63,7 @@ public class FollowOnLockingTests {
 	void testSimpleLockScopeCases(SessionFactoryScope factoryScope) {
 		createTeamsData( factoryScope );
 
-		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
+		final CollectingStatementObserver sqlCollector = factoryScope.getCollectingStatementObserver();
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// find()
@@ -174,7 +174,7 @@ public class FollowOnLockingTests {
 	void testCollectionLockScopeCases(SessionFactoryScope factoryScope) {
 		createTeamsData( factoryScope );
 
-		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
+		final CollectingStatementObserver sqlCollector = factoryScope.getCollectingStatementObserver();
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// find()
@@ -300,7 +300,7 @@ public class FollowOnLockingTests {
 	void testToOneCases(SessionFactoryScope factoryScope) {
 		createPostsData( factoryScope );
 
-		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
+		final CollectingStatementObserver sqlCollector = factoryScope.getCollectingStatementObserver();
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// find()
@@ -425,7 +425,7 @@ public class FollowOnLockingTests {
 	void testSecondaryTables(SessionFactoryScope factoryScope) {
 		createCustomersData( factoryScope );
 
-		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
+		final CollectingStatementObserver sqlCollector = factoryScope.getCollectingStatementObserver();
 
 		// #find
 

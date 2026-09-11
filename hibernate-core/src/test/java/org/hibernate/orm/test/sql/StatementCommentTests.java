@@ -7,7 +7,7 @@ package org.hibernate.orm.test.sql;
 import org.hibernate.LockMode;
 import org.hibernate.cfg.AvailableSettings;
 
-import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.jdbc.CollectingStatementObserver;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -31,11 +31,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 		settings = @Setting( name = AvailableSettings.USE_SQL_COMMENTS, value = "true" )
 )
 @DomainModel( annotatedClasses = StatementCommentTests.VersionedEntity.class )
-@SessionFactory( useCollectingStatementInspector = true )
+@SessionFactory( useCollectingStatementObserver = true )
 public class StatementCommentTests {
 	@Test
 	public void testEntityMutationComments(SessionFactoryScope scope) {
-		final SQLStatementInspector inspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver inspector = scope.getCollectingStatementObserver();
 		inspector.clear();
 
 		// insert
@@ -69,7 +69,7 @@ public class StatementCommentTests {
 		checkEntityComments( inspector );
 	}
 
-	private void checkEntityComments(SQLStatementInspector inspector) {
+	private void checkEntityComments(CollectingStatementObserver inspector) {
 		assertThat( inspector.getSqlQueries() ).hasSize( 1 );
 		assertThat( inspector.getSqlQueries().get( 0 ) ).contains( "VersionedEntity */" );
 	}

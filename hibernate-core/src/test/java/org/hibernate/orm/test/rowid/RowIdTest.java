@@ -12,7 +12,7 @@ import jakarta.persistence.Table;
 
 import org.hibernate.annotations.RowId;
 
-import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.jdbc.CollectingStatementObserver;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -28,7 +28,7 @@ import static org.junit.Assert.assertThat;
  * @author Nathan Xu
  */
 @DomainModel( annotatedClasses = RowIdTest.Product.class )
-@SessionFactory(useCollectingStatementInspector = true)
+@SessionFactory(useCollectingStatementObserver = true)
 public class RowIdTest {
 
 	@BeforeEach
@@ -50,7 +50,7 @@ public class RowIdTest {
 					.getRowIdSupport()
 					.resolveExpression( "" );
 
-			SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+			CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 			statementInspector.clear();
 
 			Product product = session.find( Product.class, "1L" );

@@ -6,7 +6,7 @@ package org.hibernate.orm.test.jpa.lock;
 
 import jakarta.persistence.LockModeType;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.jdbc.CollectingStatementObserver;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -20,12 +20,12 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel(annotatedClasses = Lockable.class)
-@SessionFactory(useCollectingStatementInspector = true)
+@SessionFactory(useCollectingStatementObserver = true)
 public class OptimisticLockTests {
 	@Test
 	@JiraKey(value = "HHH-9419")
 	public void testNoVersionCheckAfterRemove(SessionFactoryScope sessions) {
-		final SQLStatementInspector sqlCollector = sessions.getCollectingStatementInspector();
+		final CollectingStatementObserver sqlCollector = sessions.getCollectingStatementObserver();
 		sqlCollector.clear();
 
 		final Lockable created = sessions.fromTransaction( (session) -> {

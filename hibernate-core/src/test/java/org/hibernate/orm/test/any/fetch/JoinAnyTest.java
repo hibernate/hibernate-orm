@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 
-@SessionFactory(useCollectingStatementInspector = true)
+@SessionFactory(useCollectingStatementObserver = true)
 @DomainModel(annotatedClasses = {JoinAnyTest.AnyThing.class,
 		JoinAnyTest.SomeThing.class, JoinAnyTest.SomeOtherThing.class})
 class JoinAnyTest {
@@ -51,7 +51,7 @@ class JoinAnyTest {
 			var emptyThing = new AnyThing();
 			s.persist( emptyThing );
 		} );
-		final var statementInspector = scope.getCollectingStatementInspector();
+		final var statementInspector = scope.getCollectingStatementObserver();
 		statementInspector.clear();
 
 		scope.inTransaction( s -> {
@@ -98,7 +98,7 @@ class JoinAnyTest {
 			var emptyThing = new AnyThing();
 			s.persist( emptyThing );
 		} );
-		final var statementInspector = scope.getCollectingStatementInspector();
+		final var statementInspector = scope.getCollectingStatementObserver();
 		statementInspector.clear();
 
 		scope.inTransaction( s -> {
@@ -132,7 +132,7 @@ class JoinAnyTest {
 			var emptyThing = new AnyThing();
 			s.persist( emptyThing );
 		} );
-		final var statementInspector = scope.getCollectingStatementInspector();
+		final var statementInspector = scope.getCollectingStatementObserver();
 		statementInspector.clear();
 
 		scope.inTransaction( s -> {
@@ -169,7 +169,7 @@ class JoinAnyTest {
 			var emptyThing = new AnyThing();
 			s.persist( emptyThing );
 		} );
-		final var statementInspector = scope.getCollectingStatementInspector();
+		final var statementInspector = scope.getCollectingStatementObserver();
 		statementInspector.clear();
 
 		scope.inTransaction( s -> {

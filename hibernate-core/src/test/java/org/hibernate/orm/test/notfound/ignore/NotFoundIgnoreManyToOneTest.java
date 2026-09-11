@@ -16,7 +16,7 @@ import org.hibernate.ObjectNotFoundException;
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
 
-import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.jdbc.CollectingStatementObserver;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -40,7 +40,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Steve Ebersole
  */
 @DomainModel( annotatedClasses = { NotFoundIgnoreManyToOneTest.Coin.class, NotFoundIgnoreManyToOneTest.Currency.class } )
-@SessionFactory( useCollectingStatementInspector = true )
+@SessionFactory( useCollectingStatementObserver = true )
 public class NotFoundIgnoreManyToOneTest {
 
 	@Test
@@ -76,7 +76,7 @@ public class NotFoundIgnoreManyToOneTest {
 	@Test
 	@JiraKey( "HHH-15060" )
 	public void testGet(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 		statementInspector.clear();
 
 		scope.inTransaction( (session) -> {
@@ -106,7 +106,7 @@ public class NotFoundIgnoreManyToOneTest {
 	@Test
 	@JiraKey( "HHH-15060" )
 	public void testQueryImplicitPathDereferencePredicateBaseline(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 		statementInspector.clear();
 
 		scope.inTransaction( (session) -> {
@@ -124,7 +124,7 @@ public class NotFoundIgnoreManyToOneTest {
 	@Test
 	@JiraKey( "HHH-15060" )
 	public void testQueryImplicitPathDereferencePredicateBaseline2(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 		statementInspector.clear();
 
 		scope.inTransaction( (session) -> {
@@ -147,7 +147,7 @@ public class NotFoundIgnoreManyToOneTest {
 	@Test
 	@JiraKey( "HHH-15060" )
 	public void testQueryImplicitPathDereferencePredicateBaseline3(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 		statementInspector.clear();
 
 		scope.inTransaction( (session) -> {
@@ -180,7 +180,7 @@ public class NotFoundIgnoreManyToOneTest {
 	@Test
 	@JiraKey( "HHH-15060" )
 	public void testQueryImplicitPathDereferencePredicate(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 		statementInspector.clear();
 
 		scope.inTransaction( (session) -> {
@@ -218,7 +218,7 @@ public class NotFoundIgnoreManyToOneTest {
 	@Test
 	@JiraKey( "HHH-15060" )
 	public void testQueryAssociationSelection(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 		statementInspector.clear();
 
 		scope.inTransaction( (session) -> {

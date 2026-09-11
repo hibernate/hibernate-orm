@@ -7,7 +7,7 @@ package org.hibernate.orm.test.softdelete;
 import org.hibernate.annotations.SoftDelete;
 import org.hibernate.query.Query;
 
-import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.jdbc.CollectingStatementObserver;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -36,12 +36,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 		HqlJoinSoftDeletedEntityTests.Organization.class,
 		HqlJoinSoftDeletedEntityTests.OrganizationMember.class
 } )
-@SessionFactory(useCollectingStatementInspector = true)
+@SessionFactory(useCollectingStatementObserver = true)
 public class HqlJoinSoftDeletedEntityTests {
 
 	@BeforeEach
 	void createTestData(SessionFactoryScope scope) {
-		final SQLStatementInspector sqlCollector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver sqlCollector = scope.getCollectingStatementObserver();
 
 		final Long toBeDeletedOrganizationId = scope.fromTransaction( (session) -> {
 			AUser u1 = new AUser();

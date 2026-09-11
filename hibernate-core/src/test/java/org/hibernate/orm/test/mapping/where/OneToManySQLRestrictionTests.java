@@ -12,7 +12,7 @@ import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.jpa.AvailableHints;
 
-import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.jdbc.CollectingStatementObserver;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -30,13 +30,13 @@ import jakarta.persistence.OneToMany;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DomainModel(annotatedClasses = { OneToManySQLRestrictionTests.Parent.class, OneToManySQLRestrictionTests.Child.class })
-@SessionFactory(useCollectingStatementInspector = true)
+@SessionFactory(useCollectingStatementObserver = true)
 @Jira("https://hibernate.atlassian.net/browse/HHH-17854")
 public class OneToManySQLRestrictionTests {
 
 	@Test
 	public void testLoad(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 		statementInspector.clear();
 
 		scope.inTransaction( (session) -> {
@@ -56,7 +56,7 @@ public class OneToManySQLRestrictionTests {
 
 	@Test
 	public void testLoad2(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 		statementInspector.clear();
 
 		scope.inTransaction( (session) -> {
@@ -75,7 +75,7 @@ public class OneToManySQLRestrictionTests {
 
 	@Test
 	public void testLoad3(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 		statementInspector.clear();
 
 		scope.inTransaction( (session) -> {

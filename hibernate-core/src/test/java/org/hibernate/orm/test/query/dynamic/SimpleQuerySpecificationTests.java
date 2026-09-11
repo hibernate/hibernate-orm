@@ -20,7 +20,7 @@ import org.hibernate.query.specification.SelectionSpecification;
 import org.hibernate.query.range.Range;
 import org.hibernate.query.restriction.Path;
 import org.hibernate.query.restriction.Restriction;
-import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.jdbc.CollectingStatementObserver;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -36,11 +36,11 @@ import static org.junit.jupiter.api.Assertions.fail;
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel(annotatedClasses = {BasicEntity.class, OtherEntity.class})
-@org.hibernate.testing.orm.junit.SessionFactory(useCollectingStatementInspector = true)
+@org.hibernate.testing.orm.junit.SessionFactory(useCollectingStatementObserver = true)
 public class SimpleQuerySpecificationTests {
 	@Test
 	void testSimpleSelectionOrder(SessionFactoryScope factoryScope) {
-		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
+		final CollectingStatementObserver sqlCollector = factoryScope.getCollectingStatementObserver();
 
 		factoryScope.inTransaction( (session) -> {
 			sqlCollector.clear();
@@ -57,7 +57,7 @@ public class SimpleQuerySpecificationTests {
 
 	@Test
 	void testSimpleSelectionOrderMultiple(SessionFactoryScope factoryScope) {
-		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
+		final CollectingStatementObserver sqlCollector = factoryScope.getCollectingStatementObserver();
 
 		factoryScope.inTransaction( (session) -> {
 			sqlCollector.clear();
@@ -75,7 +75,7 @@ public class SimpleQuerySpecificationTests {
 
 	@Test
 	void testSimpleSelectionSetOrdering(SessionFactoryScope factoryScope) {
-		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
+		final CollectingStatementObserver sqlCollector = factoryScope.getCollectingStatementObserver();
 
 		factoryScope.inTransaction( (session) -> {
 			sqlCollector.clear();
@@ -92,7 +92,7 @@ public class SimpleQuerySpecificationTests {
 
 	@Test
 	void testSimpleSelectionSetOrderingMultiple(SessionFactoryScope factoryScope) {
-		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
+		final CollectingStatementObserver sqlCollector = factoryScope.getCollectingStatementObserver();
 
 		factoryScope.inTransaction( (session) -> {
 			sqlCollector.clear();
@@ -109,7 +109,7 @@ public class SimpleQuerySpecificationTests {
 
 	@Test
 	void testSimpleSelectionSetOrderingReplace(SessionFactoryScope factoryScope) {
-		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
+		final CollectingStatementObserver sqlCollector = factoryScope.getCollectingStatementObserver();
 
 		factoryScope.inTransaction( (session) -> {
 			sqlCollector.clear();
@@ -140,7 +140,7 @@ public class SimpleQuerySpecificationTests {
 
 	@Test
 	void testSimpleSelectionRestriction(SessionFactoryScope factoryScope) {
-		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
+		final CollectingStatementObserver sqlCollector = factoryScope.getCollectingStatementObserver();
 
 		factoryScope.inTransaction( (session) -> {
 			sqlCollector.clear();
@@ -157,7 +157,7 @@ public class SimpleQuerySpecificationTests {
 
 	@Test
 	void testSimpleMutationRestriction(SessionFactoryScope factoryScope) {
-		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
+		final CollectingStatementObserver sqlCollector = factoryScope.getCollectingStatementObserver();
 
 		factoryScope.inTransaction( (session) -> {
 			sqlCollector.clear();
@@ -177,7 +177,7 @@ public class SimpleQuerySpecificationTests {
 	@Test
 	@JiraKey("HHH-19531")
 	void testSelectionOnSessionProxy(SessionFactoryScope factoryScope) {
-		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
+		final CollectingStatementObserver sqlCollector = factoryScope.getCollectingStatementObserver();
 
 		factoryScope.inTransaction( (session) -> {
 			SessionLazyDelegator sessionProxy = new SessionLazyDelegator() {
@@ -202,7 +202,7 @@ public class SimpleQuerySpecificationTests {
 	@Test
 	@JiraKey("HHH-19531")
 	void testMutationOnSessionProxy(SessionFactoryScope factoryScope) {
-		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
+		final CollectingStatementObserver sqlCollector = factoryScope.getCollectingStatementObserver();
 
 		factoryScope.inTransaction( (session) -> {
 			SessionLazyDelegator sessionProxy = new SessionLazyDelegator() {
@@ -226,7 +226,7 @@ public class SimpleQuerySpecificationTests {
 
 	@Test
 	void testSimpleMutationRestrictionAsReference(SessionFactoryScope factoryScope) {
-		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
+		final CollectingStatementObserver sqlCollector = factoryScope.getCollectingStatementObserver();
 		var deleteBasicEntity = MutationSpecification
 				.create( BasicEntity.class, "delete BasicEntity" )
 				.restrict( Restriction.restrict( BasicEntity_.position, Range.closed( 1, 5 ) ) )
@@ -245,7 +245,7 @@ public class SimpleQuerySpecificationTests {
 
 	@Test
 	void testSimpleMutationRestrictionStatelessAsReference(SessionFactoryScope factoryScope) {
-		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
+		final CollectingStatementObserver sqlCollector = factoryScope.getCollectingStatementObserver();
 		var deleteBasicEntity = MutationSpecification
 				.create( BasicEntity.class, "delete BasicEntity" )
 				.restrict( Restriction.restrict( BasicEntity_.position, Range.closed( 1, 5 ) ) )
@@ -264,7 +264,7 @@ public class SimpleQuerySpecificationTests {
 
 	@Test
 	void testRootEntityForm(SessionFactoryScope factoryScope) {
-		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
+		final CollectingStatementObserver sqlCollector = factoryScope.getCollectingStatementObserver();
 
 		factoryScope.inTransaction( (session) -> {
 			sqlCollector.clear();
@@ -281,7 +281,7 @@ public class SimpleQuerySpecificationTests {
 
 	@Test
 	void testCriteriaForm(SessionFactoryScope factoryScope) {
-		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
+		final CollectingStatementObserver sqlCollector = factoryScope.getCollectingStatementObserver();
 
 		factoryScope.inTransaction( (session) -> {
 			sqlCollector.clear();
@@ -304,7 +304,7 @@ public class SimpleQuerySpecificationTests {
 
 	@Test
 	void testAugmentation(SessionFactoryScope factoryScope) {
-		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
+		final CollectingStatementObserver sqlCollector = factoryScope.getCollectingStatementObserver();
 
 		factoryScope.inTransaction( (session) -> {
 			sqlCollector.clear();
@@ -322,7 +322,7 @@ public class SimpleQuerySpecificationTests {
 
 	@Test
 	void testAugmentationViaCriteriaDefinition(SessionFactoryScope factoryScope) {
-		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
+		final CollectingStatementObserver sqlCollector = factoryScope.getCollectingStatementObserver();
 
 		factoryScope.inTransaction( (session) -> {
 			sqlCollector.clear();
@@ -344,7 +344,7 @@ public class SimpleQuerySpecificationTests {
 	}
 	@Test
 	void testBaseParameters(SessionFactoryScope factoryScope) {
-		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
+		final CollectingStatementObserver sqlCollector = factoryScope.getCollectingStatementObserver();
 
 		factoryScope.inTransaction( (session) -> {
 			sqlCollector.clear();
@@ -407,7 +407,7 @@ public class SimpleQuerySpecificationTests {
 
 	@Test
 	void testUseAsTypedQueryRef(SessionFactoryScope factoryScope) {
-		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
+		final CollectingStatementObserver sqlCollector = factoryScope.getCollectingStatementObserver();
 
 		factoryScope.inTransaction( (session) -> {
 			sqlCollector.clear();

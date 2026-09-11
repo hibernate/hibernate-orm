@@ -4,7 +4,7 @@
  */
 package org.hibernate.orm.test.query;
 
-import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.jdbc.CollectingStatementObserver;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -24,13 +24,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 		ImplicitJoinInSubqueryTest.B.class,
 		ImplicitJoinInSubqueryTest.C.class
 })
-@SessionFactory(useCollectingStatementInspector = true)
+@SessionFactory(useCollectingStatementObserver = true)
 public class ImplicitJoinInSubqueryTest {
 
 	@Test
 	@JiraKey("HHH-16721")
 	public void testImplicitJoinInSubquery(SessionFactoryScope scope) {
-		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 		statementInspector.clear();
 		scope.inTransaction( entityManager -> {
 			entityManager.createSelectionQuery(
@@ -44,7 +44,7 @@ public class ImplicitJoinInSubqueryTest {
 	@Test
 	@JiraKey("HHH-17445")
 	public void testImplicitJoinInSubquery2(SessionFactoryScope scope) {
-		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 		statementInspector.clear();
 		scope.inTransaction(entityManager -> {
 			entityManager.createSelectionQuery(

@@ -12,7 +12,7 @@ import org.hibernate.Locking;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.lock.PessimisticLockStyle;
 import org.hibernate.dialect.lock.internal.TableLockHintRendererSupport;
-import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.jdbc.CollectingStatementObserver;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
@@ -37,7 +37,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel(annotatedClasses = {Article.class, ArticleReview.class})
-@SessionFactory(useCollectingStatementInspector = true)
+@SessionFactory(useCollectingStatementObserver = true)
 @Jira( "https://hibernate.atlassian.net/browse/HHH-20744" )
 @RequiresDialectFeature( feature = DialectFeatureChecks.SupportsSelectLocking.class )
 @Tag("db-locking")
@@ -61,7 +61,7 @@ public class InverseToOneFollowOnLockingTests {
 
 	@Test
 	void testFind(SessionFactoryScope factoryScope) {
-		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
+		final CollectingStatementObserver sqlCollector = factoryScope.getCollectingStatementObserver();
 
 		factoryScope.inTransaction( (session) -> {
 			sqlCollector.clear();
@@ -73,7 +73,7 @@ public class InverseToOneFollowOnLockingTests {
 
 	@Test
 	void testQueryWithJoinFetch(SessionFactoryScope factoryScope) {
-		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
+		final CollectingStatementObserver sqlCollector = factoryScope.getCollectingStatementObserver();
 
 		factoryScope.inTransaction( (session) -> {
 			sqlCollector.clear();
@@ -88,7 +88,7 @@ public class InverseToOneFollowOnLockingTests {
 
 	@Test
 	void testFetchedScopeStillLocksTheAssociatedTable(SessionFactoryScope factoryScope) {
-		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
+		final CollectingStatementObserver sqlCollector = factoryScope.getCollectingStatementObserver();
 
 		factoryScope.inTransaction( (session) -> {
 			sqlCollector.clear();
@@ -114,7 +114,7 @@ public class InverseToOneFollowOnLockingTests {
 		} );
 	}
 
-	private void assertLockedArticlesOnly(SQLStatementInspector sqlCollector, Dialect dialect) {
+	private void assertLockedArticlesOnly(CollectingStatementObserver sqlCollector, Dialect dialect) {
 		if ( usesTableHints( dialect ) ) {
 			// t-sql applies the lock to the initial select as a table hint
 			assertThat( sqlCollector.getSqlQueries() ).hasSize( 1 );
@@ -141,7 +141,7 @@ public class InverseToOneFollowOnLockingTests {
 		);
 	}
 
-	private List<String> followOnStatements(SQLStatementInspector sqlCollector) {
+	private List<String> followOnStatements(CollectingStatementObserver sqlCollector) {
 		final List<String> queries = sqlCollector.getSqlQueries();
 		assertThat( queries ).hasSizeGreaterThan( 1 );
 		return queries.subList( 1, queries.size() );

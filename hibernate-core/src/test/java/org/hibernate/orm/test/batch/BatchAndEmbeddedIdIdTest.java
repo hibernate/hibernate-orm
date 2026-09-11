@@ -51,7 +51,7 @@ import static org.junit.Assert.assertTrue;
 		}
 )
 @SessionFactory(
-		useCollectingStatementInspector = true
+		useCollectingStatementObserver = true
 )
 @JiraKey(value = "HHH-15921")
 public class BatchAndEmbeddedIdIdTest {

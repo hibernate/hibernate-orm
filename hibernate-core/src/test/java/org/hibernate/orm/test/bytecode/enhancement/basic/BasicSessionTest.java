@@ -59,7 +59,7 @@ public class BasicSessionTest {
 			assertNotNull( entities[1].$$_hibernate_getPreviousManagedEntity() );
 			assertNull( entities[1].$$_hibernate_getNextManagedEntity() );
 
-			s.createQuery( "delete MyEntity" ).executeUpdate();
+			s.createMutationQuery( "delete MyEntity" ).execute();
 		} );
 
 		assertNull( entities[0].$$_hibernate_getEntityEntry() );

@@ -9,7 +9,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import org.hibernate.QueryException;
 import org.hibernate.dialect.DB2Dialect;
-import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.jdbc.CollectingStatementObserver;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialect;
@@ -31,7 +31,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 @SuppressWarnings("JUnitMalformedDeclaration")
 @RequiresDialect(DB2Dialect.class)
 @DomainModel(annotatedClasses = DB297SubStringFunctionsTest.AnEntity.class)
-@SessionFactory(useCollectingStatementInspector = true)
+@SessionFactory(useCollectingStatementObserver = true)
 public class DB297SubStringFunctionsTest {
 	@BeforeEach
 	void createTestData(SessionFactoryScope factoryScope) {
@@ -50,7 +50,7 @@ public class DB297SubStringFunctionsTest {
 	@Test
 	@JiraKey( value = "HHH-11957")
 	public void testSubstringWithStringUnits(SessionFactoryScope factoryScope) {
-		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
+		final CollectingStatementObserver sqlCollector = factoryScope.getCollectingStatementObserver();
 		sqlCollector.clear();
 
 		factoryScope.inTransaction( (session) -> {
@@ -69,7 +69,7 @@ public class DB297SubStringFunctionsTest {
 	@Test
 	@JiraKey( value = "HHH-11957")
 	public void testSubstringWithoutStringUnits(SessionFactoryScope factoryScope) {
-		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
+		final CollectingStatementObserver sqlCollector = factoryScope.getCollectingStatementObserver();
 		sqlCollector.clear();
 
 		factoryScope.inTransaction( (session) -> {
@@ -103,7 +103,7 @@ public class DB297SubStringFunctionsTest {
 	@Test
 	@JiraKey( value = "HHH-11957")
 	public void testSubstrWithoutStringUnits(SessionFactoryScope factoryScope) {
-		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
+		final CollectingStatementObserver sqlCollector = factoryScope.getCollectingStatementObserver();
 		sqlCollector.clear();
 
 		factoryScope.inTransaction( (session) -> {

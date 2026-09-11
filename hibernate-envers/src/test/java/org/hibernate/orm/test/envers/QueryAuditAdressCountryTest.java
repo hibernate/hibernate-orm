@@ -14,7 +14,7 @@ import org.hibernate.envers.Audited;
 import org.hibernate.envers.configuration.EnversSettings;
 import org.hibernate.envers.query.AuditEntity;
 
-import org.hibernate.testing.SkipForDialect;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.Setting;
@@ -43,7 +43,7 @@ import static org.junit.Assert.assertEquals;
 })
 public class QueryAuditAdressCountryTest {
 	@Test
-	@SkipForDialect(value = HSQLDialect.class, comment = "No idea why this fails. Looks like a HSQLDB bug")
+	@SkipForDialect(dialectClass = HSQLDialect.class, reason = "No idea why this fails. Looks like a HSQLDB bug")
 	public void test(EntityManagerFactoryScope scope) {
 		scope.inTransaction( entityManager -> {
 			Country country = new Country();

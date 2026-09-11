@@ -57,11 +57,6 @@ public class ReEnhancementTests {
 			public boolean doDirtyCheckingInline() {
 				return true;
 			}
-
-			@Override
-			public boolean doBiDirectionalAssociationManagement() {
-				return false;
-			}
 		};
 		final ByteBuddyState byteBuddyState = new ByteBuddyState();
 		final Enhancer enhancer = new EnhancerImpl( enhancementContext, byteBuddyState );
@@ -83,11 +78,6 @@ public class ReEnhancementTests {
 			@Override
 			public boolean doDirtyCheckingInline() {
 				return false;
-			}
-
-			@Override
-			public boolean doBiDirectionalAssociationManagement() {
-				return true;
 			}
 		};
 		final ByteBuddyState byteBuddyState = new ByteBuddyState();

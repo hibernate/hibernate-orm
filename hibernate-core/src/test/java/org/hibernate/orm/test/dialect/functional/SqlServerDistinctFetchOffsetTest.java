@@ -11,7 +11,7 @@ import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.query.criteria.JpaSubQuery;
 
-import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.jdbc.CollectingStatementObserver;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialect;
@@ -32,7 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * @author Marco Belladelli
  */
 @RequiresDialect(SQLServerDialect.class)
-@SessionFactory(useCollectingStatementInspector = true)
+@SessionFactory(useCollectingStatementObserver = true)
 @DomainModel(annotatedClasses = {
 		SqlServerDistinctFetchOffsetTest.SimpleEntity.class
 })
@@ -52,7 +52,7 @@ public class SqlServerDistinctFetchOffsetTest {
 
 	@Test
 	public void testDistinctTop(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 		statementInspector.clear();
 		testInRoot( scope, true, null );
 		shouldUseNeither( statementInspector );
@@ -60,7 +60,7 @@ public class SqlServerDistinctFetchOffsetTest {
 
 	@Test
 	public void testNotDistinctTop(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 		statementInspector.clear();
 		testInRoot( scope, false, null );
 		shouldUseNeither( statementInspector );
@@ -68,7 +68,7 @@ public class SqlServerDistinctFetchOffsetTest {
 
 	@Test
 	public void testDistinctTopInSubquery(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 		statementInspector.clear();
 		testInSubquery( scope, true, null );
 		shouldUseNeither( statementInspector );
@@ -76,7 +76,7 @@ public class SqlServerDistinctFetchOffsetTest {
 
 	@Test
 	public void testNotDistinctTopInSubquery(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 		statementInspector.clear();
 		testInSubquery( scope, false, null );
 		shouldUseNeither( statementInspector );
@@ -84,7 +84,7 @@ public class SqlServerDistinctFetchOffsetTest {
 
 	@Test
 	public void testDistinctFetchOffset(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 		statementInspector.clear();
 		testInRoot( scope, true, 2 );
 		shouldEmulateFetch( statementInspector );
@@ -92,7 +92,7 @@ public class SqlServerDistinctFetchOffsetTest {
 
 	@Test
 	public void testNotDistinctFetchOffset(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 		statementInspector.clear();
 		testInRoot( scope, false, 2 );
 		shouldUseWorkaround( statementInspector );
@@ -100,7 +100,7 @@ public class SqlServerDistinctFetchOffsetTest {
 
 	@Test
 	public void testDistinctFetchOffsetInSubquery(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 		statementInspector.clear();
 		testInSubquery( scope, true, 2 );
 		shouldEmulateFetch( statementInspector );
@@ -108,22 +108,22 @@ public class SqlServerDistinctFetchOffsetTest {
 
 	@Test
 	public void testNotDistinctFetchOffsetInSubquery(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		final CollectingStatementObserver statementInspector = scope.getCollectingStatementObserver();
 		statementInspector.clear();
 		testInSubquery( scope, false, 2 );
 		shouldUseWorkaround( statementInspector );
 	}
 
-	private void shouldUseNeither(SQLStatementInspector statementInspector) {
+	private void shouldUseNeither(CollectingStatementObserver statementInspector) {
 		assertThat( statementInspector.getSqlQueries().get( 0 ) ).doesNotContain( "(select 0)", "dense_rank()" );
 	}
 
-	private void shouldUseWorkaround(SQLStatementInspector statementInspector) {
+	private void shouldUseWorkaround(CollectingStatementObserver statementInspector) {
 		assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( "(select 0)" );
 		assertThat( statementInspector.getSqlQueries().get( 0 ) ).doesNotContain( "dense_rank()" );
 	}
 
-	private void shouldEmulateFetch(SQLStatementInspector statementInspector) {
+	private void shouldEmulateFetch(CollectingStatementObserver statementInspector) {
 		assertThat( statementInspector.getSqlQueries().get( 0 ) ).doesNotContain( "(select 0)" );
 		assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( "dense_rank()" );
 	}

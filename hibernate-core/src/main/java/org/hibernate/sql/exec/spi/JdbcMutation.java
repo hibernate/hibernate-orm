@@ -4,10 +4,13 @@
  */
 package org.hibernate.sql.exec.spi;
 
+import org.hibernate.Incubating;
+
 /**
  * Primary operation, which is an ({@code INSERT}, {@code UPDATE} or {@code DELETE}) performed via JDBC.
  *
  * @author Steve Ebersole
  */
+@Incubating
 public interface JdbcMutation extends PrimaryOperation {
 }

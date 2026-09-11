@@ -6,7 +6,4 @@
 /**
  * AST nodes representing logical predicates in a SQL tree.
  */
-@Incubating
 package org.hibernate.sql.ast.spi.query.predicate;
-
-import org.hibernate.Incubating;

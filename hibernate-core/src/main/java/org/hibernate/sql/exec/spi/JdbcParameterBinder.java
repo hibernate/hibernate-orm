@@ -7,12 +7,15 @@ package org.hibernate.sql.exec.spi;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
+import org.hibernate.Incubating;
+
 /**
  * Performs parameter value binding to a JDBC PreparedStatement.
  *
  * @author Steve Ebersole
  * @author John O'Hara
  */
+@Incubating
 public interface JdbcParameterBinder {
 
 	JdbcParameterBinder NOOP = (statement, startPosition, jdbcParameterBindings, executionContext) -> {};

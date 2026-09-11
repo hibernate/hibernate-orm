@@ -6,6 +6,7 @@ package org.hibernate.sql.exec.spi;
 
 import java.util.List;
 
+import org.hibernate.Incubating;
 import org.hibernate.sql.ast.spi.query.expression.JdbcParameter;
 
 /**
@@ -14,6 +15,7 @@ import org.hibernate.sql.ast.spi.query.expression.JdbcParameter;
  * Also as nice side effect, avoid any potential type pollution
  * problems during access.
  */
+@Incubating
 public interface JdbcParametersList {
 
 	JdbcParametersList EMPTY = new JdbcParametersListMulti( new JdbcParameter[]{} );

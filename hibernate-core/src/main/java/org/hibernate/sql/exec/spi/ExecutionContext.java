@@ -4,6 +4,7 @@
  */
 package org.hibernate.sql.exec.spi;
 
+import org.hibernate.Incubating;
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
@@ -17,6 +18,7 @@ import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
  * A context for execution of SQL statements expressed via
  * SQL AST and JdbcOperation
  */
+@Incubating
 public interface ExecutionContext {
 
 	default boolean isScrollResult(){

@@ -185,6 +185,36 @@ public interface Expectation {
 	 * Row count checking. A row count is an integer value returned by
 	 * {@link java.sql.PreparedStatement#executeUpdate()} or
 	 * {@link java.sql.Statement#executeBatch()}. The row count is checked
+	 * against an expected value. For example, the expected row count for
+	 * an {@code INSERT} statement is always 1.
+	 *
+	 * @since 8.0
+	 */
+	class RetryableRowCount implements Expectation {
+		public static final RowCount INSTANCE = new RowCount();
+
+		@Override
+		public final void verifyOutcome(int rowCount, PreparedStatement statement, int batchPosition, String sql) {
+			if ( rowCount != CallableStatement.EXECUTE_FAILED ) {
+				if ( batchPosition < 0 ) {
+					checkNonBatched( expectedRowCount(), rowCount, sql );
+				}
+				// Ignore failures to allow a retry
+				else {
+					checkBatched( expectedRowCount(), rowCount, batchPosition, sql );
+				}
+			}
+		}
+
+		protected int expectedRowCount() {
+			return 1;
+		}
+	}
+
+	/**
+	 * Row count checking. A row count is an integer value returned by
+	 * {@link java.sql.PreparedStatement#executeUpdate()} or
+	 * {@link java.sql.Statement#executeBatch()}. The row count is checked
 	 * against an expected value, but is also allowed to be 0.
 	 * For example, the expected row count for an {@code UPSERT} statement is 0 or 1.
 	 */

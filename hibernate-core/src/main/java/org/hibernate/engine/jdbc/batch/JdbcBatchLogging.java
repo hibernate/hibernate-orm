@@ -86,4 +86,8 @@ public interface JdbcBatchLogging extends BasicLogger {
 	@LogMessage(level = TRACE)
 	@Message( "Success of batch update unknown: %s")
 	void batchSuccessUnknown(int batchPosition);
+
+	@LogMessage(level = TRACE)
+	@Message("Retrying partially failed JDBC batch - [%s]")
+	void retryingBatch(String batchKey);
 }

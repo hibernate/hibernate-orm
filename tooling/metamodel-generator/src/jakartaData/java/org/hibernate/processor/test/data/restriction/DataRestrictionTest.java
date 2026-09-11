@@ -4,7 +4,6 @@
  */
 package org.hibernate.processor.test.data.restriction;
 
-import java.io.File;
 import java.util.List;
 import java.util.Locale;
 import java.util.stream.Collectors;
@@ -101,9 +100,9 @@ class DataRestrictionTest {
 		final var compiler = ToolProvider.getSystemJavaCompiler();
 		try ( var fileManager = compiler.getStandardFileManager( diagnostics, Locale.ROOT, defaultCharset() ) ) {
 			final var sourceFiles = List.of(
-					sourceFile( DataRestrictionPublisher.class ),
-					sourceFile( DataRestrictionBook.class ),
-					sourceFile( InvalidDataRestrictionRepository.class )
+					TestUtil.getSourceFile( DataRestrictionPublisher.class ),
+					TestUtil.getSourceFile( DataRestrictionBook.class ),
+					TestUtil.getSourceFile( InvalidDataRestrictionRepository.class )
 			);
 			final var task = compiler.getTask(
 					null,
@@ -159,9 +158,9 @@ class DataRestrictionTest {
 		final var compiler = ToolProvider.getSystemJavaCompiler();
 		try ( var fileManager = compiler.getStandardFileManager( diagnostics, Locale.ROOT, defaultCharset() ) ) {
 			final var sourceFiles = List.of(
-					sourceFile( DataRestrictionPublisher.class ),
-					sourceFile( DataRestrictionBook.class ),
-					sourceFile( InvalidNativeStaticQuery.class )
+					TestUtil.getSourceFile( DataRestrictionPublisher.class ),
+					TestUtil.getSourceFile( DataRestrictionBook.class ),
+					TestUtil.getSourceFile( InvalidNativeStaticQuery.class )
 			);
 			final var task = compiler.getTask(
 					null,
@@ -192,12 +191,5 @@ class DataRestrictionTest {
 		return messages.stream()
 				.filter( message -> message.contains( text ) )
 				.count();
-	}
-
-	private static File sourceFile(Class<?> type) {
-		return new File(
-				TestUtil.getSourceBaseDir( type ),
-				type.getName().replace( '.', File.separatorChar ) + ".java"
-		);
 	}
 }

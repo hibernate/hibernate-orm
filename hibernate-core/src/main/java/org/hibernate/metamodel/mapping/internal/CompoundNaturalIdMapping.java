@@ -209,38 +209,37 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 
 	@Override
 	public void verifyFlushState(Object id, Object[] currentState, Object[] loadedState, SharedSessionContractImplementor session) {
-		if ( !isMutable() ) {
-			final var persistenceContext = session.getPersistenceContextInternal();
-			final var persister = getDeclaringType().getEntityPersister();
+		final var persistenceContext = session.getPersistenceContextInternal();
+		final var persister = getDeclaringType().getEntityPersister();
 
-			final Object[] naturalId = extractNaturalIdFromEntityState( currentState );
-			final Object snapshot = loadedState == null
-					? persistenceContext.getNaturalIdSnapshot( id, persister )
-					: persister.getNaturalIdMapping().extractNaturalIdFromEntityState( loadedState );
-			final Object[] previousNaturalId = (Object[]) snapshot;
-			assert naturalId.length == getNaturalIdAttributes().size();
-			assert previousNaturalId.length == naturalId.length;
+		final Object[] naturalId = extractNaturalIdFromEntityState( currentState );
+		final Object snapshot = loadedState == null
+				? persistenceContext.getNaturalIdSnapshot( id, persister )
+				: persister.getNaturalIdMapping().extractNaturalIdFromEntityState( loadedState );
+		final Object[] previousNaturalId = (Object[]) snapshot;
+		assert naturalId.length == getNaturalIdAttributes().size();
+		assert previousNaturalId.length == naturalId.length;
 
-			for ( int i = 0; i < getNaturalIdAttributes().size(); i++ ) {
-				final var attributeMapping = getNaturalIdAttributes().get( i );
-				if ( !attributeMapping.getAttributeMetadata().isUpdatable() ) {
-					final Object currentValue = naturalId[i];
-					final Object previousValue = previousNaturalId[i];
-					if ( !attributeMapping.areEqual( currentValue, previousValue, session ) ) {
-						throw new HibernateException(
-								String.format(
-										"An immutable attribute [%s] within compound natural identifier of entity %s was altered from `%s` to `%s`",
-										attributeMapping.getAttributeName(),
-										persister.getEntityName(),
-										previousValue,
-										currentValue
-								)
+		for ( int i = 0; i < getNaturalIdAttributes().size(); i++ ) {
+			final var attributeMapping = getNaturalIdAttributes().get( i );
+			if ( !attributeMapping.getAttributeMetadata().isUpdatable() ) {
+				final Object currentValue = naturalId[i];
+				final Object previousValue = previousNaturalId[i];
+				if ( !attributeMapping.areEqual( currentValue, previousValue, session ) ) {
+					throw new HibernateException(
+							String.format(
+									"An immutable attribute [%s] within compound natural identifier of entity %s was altered from `%s` to `%s`",
+									attributeMapping.getAttributeName(),
+									persister.getEntityName(),
+									previousValue,
+									currentValue
+							)
 						);
 					}
 				}
 				// else property is updatable (mutable), there is nothing to check
 			}
-		}
+
 		// otherwise the natural id is mutable (!immutable), no need to do the checks
 	}
 

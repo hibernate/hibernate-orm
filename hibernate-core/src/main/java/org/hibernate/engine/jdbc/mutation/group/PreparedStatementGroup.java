@@ -4,6 +4,7 @@
  */
 package org.hibernate.engine.jdbc.mutation.group;
 
+import java.sql.PreparedStatement;
 import java.util.function.BiConsumer;
 import java.util.function.Predicate;
 
@@ -22,6 +23,12 @@ public interface PreparedStatementGroup {
 	int getNumberOfStatements();
 
 	int getNumberOfActiveStatements();
+
+	/**
+	 * Whether the statement group can be retried in case of an error if the call to
+	 * {@link org.hibernate.jdbc.Expectation#verifyOutcome(int, PreparedStatement, int, String)} succeeds.
+	 */
+	boolean canRetry();
 
 	/**
 	 * Get the single statement details.

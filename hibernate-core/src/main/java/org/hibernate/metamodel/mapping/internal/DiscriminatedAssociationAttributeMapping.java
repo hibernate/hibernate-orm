@@ -42,6 +42,7 @@ import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
+import org.hibernate.sql.results.graph.FetchOptions;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.type.AnyType;
@@ -82,8 +83,9 @@ public class DiscriminatedAssociationAttributeMapping
 				stateArrayPosition,
 				fetchableIndex,
 				attributeMetadata,
-				fetchTiming,
-				fetchTiming == FetchTiming.IMMEDIATE ? FetchStyle.JOIN : FetchStyle.SELECT,
+				// The values are ignored, since getStyle() and getTiming() are delegated to discriminatorMapping
+				FetchTiming.DELAYED,
+				FetchStyle.SELECT,
 				declaringType,
 				propertyAccess
 		);
@@ -118,6 +120,21 @@ public class DiscriminatedAssociationAttributeMapping
 	@Override
 	public Object resolveDiscriminatorForEntityType(EntityMappingType entityMappingType) {
 		return discriminatorMapping.resolveDiscriminatorValueToEntityMapping( entityMappingType );
+	}
+
+	@Override
+	public FetchOptions getMappedFetchOptions() {
+		return discriminatorMapping;
+	}
+
+	@Override
+	public FetchStyle getStyle() {
+		return discriminatorMapping.getStyle();
+	}
+
+	@Override
+	public FetchTiming getTiming() {
+		return discriminatorMapping.getTiming();
 	}
 
 	@Override

@@ -59,7 +59,7 @@ public abstract sealed class ToOne
 
 	@Override
 	public void setFetchMode(FetchMode fetchMode) {
-		this.fetchMode=fetchMode;
+		this.fetchMode = fetchMode;
 	}
 
 	public String getReferencedPropertyName() {
@@ -67,7 +67,7 @@ public abstract sealed class ToOne
 	}
 
 	public void setReferencedPropertyName(String name) {
-		referencedPropertyName = name==null ? null : name.intern();
+		referencedPropertyName = name == null ? null : name.intern();
 	}
 
 	public String getReferencedEntityName() {
@@ -75,8 +75,9 @@ public abstract sealed class ToOne
 	}
 
 	public void setReferencedEntityName(String referencedEntityName) {
-		this.referencedEntityName = referencedEntityName==null ?
-				null : referencedEntityName.intern();
+		this.referencedEntityName = referencedEntityName == null
+				? null
+				: referencedEntityName.intern();
 	}
 
 	public String getPropertyName() {
@@ -84,8 +85,9 @@ public abstract sealed class ToOne
 	}
 
 	public void setPropertyName(String propertyName) {
-		this.propertyName = propertyName==null ?
-				null : propertyName.intern();
+		this.propertyName = propertyName == null
+				? null
+				: propertyName.intern();
 	}
 
 	@Override

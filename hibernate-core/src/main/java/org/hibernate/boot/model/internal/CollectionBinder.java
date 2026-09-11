@@ -2272,11 +2272,8 @@ public abstract class CollectionBinder {
 		final var element = new ManyToOne( buildingContext,  collection.getCollectionTable() );
 		collection.setElement( element );
 		element.setReferencedEntityName( elementType.getName() );
-		//element.setFetchMode( fetchMode );
-		//element.setLazy( fetchMode != FetchMode.JOIN );
-		//make the second join non-lazy
-		element.setFetchMode( FetchMode.JOIN );
-		element.setLazy( false );
+		element.setFetchMode( getCollectionPartFetchMode() );
+		element.setLazy( isCollectionPartLazy() );
 		element.setNotFoundAction( notFoundAction );
 		// as per 11.1.38 of JPA 2.0 spec, default to primary key if no column is specified by @OrderBy.
 		if ( hqlOrderBy != null ) {
@@ -2340,7 +2337,8 @@ public abstract class CollectionBinder {
 				inverseJoinColumns,
 				inferredData,
 				onDeleteAction,
-				property.getDirectAnnotationUsage( ManyToAny.class ).fetch() == LAZY,
+				isCollectionPartLazy(),
+				getCollectionPartFetchMode(),
 				Nullability.NO_CONSTRAINT,
 				propertyHolder,
 				new EntityBinder( buildingContext ),
@@ -2348,6 +2346,16 @@ public abstract class CollectionBinder {
 				buildingContext
 		);
 		collection.setElement( any );
+	}
+
+	protected boolean isCollectionPartLazy() {
+		// Default to false for now
+		return false;
+	}
+
+	protected FetchMode getCollectionPartFetchMode() {
+		// Default to JOIN for now
+		return FetchMode.JOIN;
 	}
 
 	private PropertyData getSpecialMembers(TypeDetails elementClass) {

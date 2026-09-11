@@ -4,6 +4,7 @@
  */
 package org.hibernate.mapping;
 
+import org.hibernate.FetchMode;
 import org.hibernate.Incubating;
 import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -26,7 +27,7 @@ import java.util.function.Consumer;
  *
  * @author Gavin King
  */
-public class Any extends SimpleValue {
+public class Any extends SimpleValue implements Fetchable {
 	// hbm.xml mapping
 	private final MetaValue metaMapping;
 	private final SimpleValue keyMapping;
@@ -38,6 +39,7 @@ public class Any extends SimpleValue {
 	// common
 	private Map<DiscriminatorValue,String> metaValueToEntityNameMap;
 	private ImplicitDiscriminatorStrategy implicitValueStrategy;
+	private FetchMode fetchMode;
 	private boolean lazy = true;
 
 	private AnyType resolvedType;
@@ -203,6 +205,16 @@ public class Any extends SimpleValue {
 	@Incubating
 	public void setImplicitDiscriminatorValueStrategy(ImplicitDiscriminatorStrategy implicitValueStrategy) {
 		this.implicitValueStrategy = implicitValueStrategy;
+	}
+
+	@Override
+	public FetchMode getFetchMode() {
+		return fetchMode;
+	}
+
+	@Override
+	public void setFetchMode(FetchMode fetchMode) {
+		this.fetchMode = fetchMode;
 	}
 
 	public boolean isLazy() {

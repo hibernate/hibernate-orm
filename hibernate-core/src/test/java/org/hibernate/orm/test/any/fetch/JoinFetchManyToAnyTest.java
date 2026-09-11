@@ -91,15 +91,18 @@ class JoinFetchManyToAnyTest {
 			Parent parent = s.createQuery("from Parent", Parent.class).getSingleResult();
 			assertFalse( Hibernate.isInitialized( parent.children ) );
 			assertEquals( 1, statementInspector.getSqlQueries().size() );
+			assertEquals( 0, statementInspector.getNumberOfJoins( 0 ) );
 			assertEquals( 2, parent.children.size() );
 			assertTrue( Hibernate.isInitialized( parent.children ) );
 			assertEquals( 2, statementInspector.getSqlQueries().size() );
+			assertEquals( 2, statementInspector.getNumberOfJoins( 1 ) );
 		});
 		statementInspector.clear();
 		scope.inTransaction(s -> {
 			Parent parent = s.createQuery("from Parent left join fetch children", Parent.class).getSingleResult();
 			assertTrue( Hibernate.isInitialized( parent.children ) );
 			assertEquals( 1, statementInspector.getSqlQueries().size() );
+			assertEquals( 3, statementInspector.getNumberOfJoins( 0 ) );
 			assertEquals( 2, parent.children.size() );
 			assertEquals( 1, statementInspector.getSqlQueries().size() );
 		});
@@ -108,9 +111,11 @@ class JoinFetchManyToAnyTest {
 			Parent parent = s.find(Parent.class, 1L);
 			assertFalse( Hibernate.isInitialized( parent.children ) );
 			assertEquals( 1, statementInspector.getSqlQueries().size() );
+			assertEquals( 0, statementInspector.getNumberOfJoins( 0 ) );
 			assertEquals( 2, parent.children.size() );
 			assertTrue( Hibernate.isInitialized( parent.children ) );
 			assertEquals( 2, statementInspector.getSqlQueries().size() );
+			assertEquals( 2, statementInspector.getNumberOfJoins( 1 ) );
 		});
 		statementInspector.clear();
 		scope.inTransaction(s -> {

@@ -37,7 +37,6 @@ import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.spi.EntityIdentifierNavigablePath;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstJoinType;
-import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SimpleFromClauseAccessImpl;
 import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
@@ -46,7 +45,6 @@ import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
-import org.hibernate.sql.ast.tree.from.PluralTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoinProducer;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
@@ -551,7 +549,6 @@ public class LoaderSelectBuilder {
 				rootTableGroup.addTableGroupJoin( tableGroupJoin );
 				tableGroup = tableGroupJoin.getJoinedGroup();
 				sqlAstCreationState.getFromClauseAccess().registerTableGroup( navigablePath, tableGroup );
-				registerPluralTableGroupParts( sqlAstCreationState.getFromClauseAccess(), tableGroup );
 			}
 			else {
 				tableGroup = rootTableGroup;
@@ -581,7 +578,6 @@ public class LoaderSelectBuilder {
 
 		rootQuerySpec.getFromClause().addRoot( rootTableGroup );
 		sqlAstCreationState.getFromClauseAccess().registerTableGroup( rootNavigablePath, rootTableGroup );
-		registerPluralTableGroupParts( sqlAstCreationState.getFromClauseAccess(), rootTableGroup );
 		return rootTableGroup;
 	}
 
@@ -755,11 +751,9 @@ public class LoaderSelectBuilder {
 		final var processor = createFetchableConsumer( fetchParent, creationState, fetches );
 
 		final var referencedMappingContainer = fetchParent.getReferencedMappingContainer();
-		if ( fetchParent.getNavigablePath().getParent() != null ) {
-			final int size = referencedMappingContainer.getNumberOfKeyFetchables();
-			for ( int i = 0; i < size; i++ ) {
-				processor.accept( referencedMappingContainer.getKeyFetchable( i ), true, false );
-			}
+		final int numberOfKeyFetchables = referencedMappingContainer.getNumberOfKeyFetchables();
+		for ( int i = 0; i < numberOfKeyFetchables; i++ ) {
+			processor.accept( referencedMappingContainer.getKeyFetchable( i ), true, false );
 		}
 
 		final int size = referencedMappingContainer.getNumberOfFetchables();
@@ -1139,19 +1133,6 @@ public class LoaderSelectBuilder {
 		subQuery.applyPredicate( loadingSqlAst.getWhereClauseRestrictions() );
 
 		return subQuery;
-	}
-
-	private void registerPluralTableGroupParts(FromClauseAccess fromClauseAccess, TableGroup tableGroup) {
-		if ( tableGroup instanceof PluralTableGroup pluralTableGroup ) {
-			if ( pluralTableGroup.getElementTableGroup() != null ) {
-				final var elementTableGroup = pluralTableGroup.getElementTableGroup();
-				fromClauseAccess.registerTableGroup( elementTableGroup.getNavigablePath(), elementTableGroup );
-			}
-			if ( pluralTableGroup.getIndexTableGroup() != null ) {
-				final var indexTableGroup = pluralTableGroup.getIndexTableGroup();
-				fromClauseAccess.registerTableGroup( indexTableGroup.getNavigablePath(), indexTableGroup );
-			}
-		}
 	}
 
 	/**

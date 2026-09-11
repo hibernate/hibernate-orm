@@ -615,6 +615,8 @@ sybase_setup() {
         echo "go"
         echo "exec sp_configure 'heap memory per user', 0, '64K'"
         echo "go"
+        echo "exec sp_configure 'wait on uncommitted insert', 1"
+        echo "go"
         echo "sp_dboption tempdb, 'ddl in tran', true"
         echo "go"
     } | $CONTAINER_CLI exec -i sybase bash -c "source /opt/sybase/SYBASE.sh; /opt/sybase/OCS-16_0/bin/isql -Usa -P myPassword -S MYSYBASE"

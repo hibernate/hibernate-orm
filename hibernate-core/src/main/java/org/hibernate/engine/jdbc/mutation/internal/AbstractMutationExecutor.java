@@ -15,11 +15,13 @@ import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.jdbc.mutation.TableInclusionChecker;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.generator.values.GeneratedValues;
 import org.hibernate.persister.entity.mutation.EntityTableMappingImpl;
 import org.hibernate.sql.spi.mutation.ValuesAnalysis;
 
 import static org.hibernate.engine.jdbc.mutation.internal.ModelMutationHelper.checkResults;
+import static org.hibernate.exception.ConstraintViolationException.ConstraintKind.UNIQUE;
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
 
 /**
@@ -151,6 +153,36 @@ public abstract class AbstractMutationExecutor implements MutationExecutor {
 			}
 
 			checkResults( resultChecker, statementDetails, affectedRowCount, -1 );
+		}
+		catch (ConstraintViolationException cve) {
+			if ( cve.getKind() == UNIQUE ) {
+				// Assume this is a primary key violation
+				try {
+					// If this check does not throw an error, the statement must be retried
+					resultChecker.checkResult( statementDetails, java.sql.Statement.EXECUTE_FAILED, -1 );
+
+					// In a concurrent insert-or-update scenario, the insert part can fail, so we need to retry the
+					// statement one last time to ensure we write the correct data for this transaction
+					final int affectedRowCount =
+							session.getJdbcCoordinator()
+									.getResultSetReturn()
+									.executeUpdate( statementDetails.getStatement(), statementDetails.getSqlString() );
+
+					if ( affectedRowCount == 0 && tableDetails.isOptional() ) {
+						// the optional table did not have a row
+						return;
+					}
+
+					checkResults( resultChecker, statementDetails, affectedRowCount, -1 );
+				}
+				catch (RuntimeException | SQLException e) {
+					cve.addSuppressed( e );
+					throw cve;
+				}
+			}
+			else {
+				throw cve;
+			}
 		}
 		catch (SQLException e) {
 			throw session.getJdbcServices().getSqlExceptionHelper().convert(

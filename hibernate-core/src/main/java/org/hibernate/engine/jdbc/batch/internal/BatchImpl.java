@@ -6,7 +6,11 @@ package org.hibernate.engine.jdbc.batch.internal;
 
 import jakarta.persistence.EntityExistsException;
 
+import java.sql.BatchUpdateException;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
 
@@ -27,6 +31,7 @@ import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.ConstraintViolationException.ConstraintKind;
+import org.hibernate.sql.spi.mutation.TableMapping;
 
 import static java.util.Objects.requireNonNull;
 import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_LOGGER;
@@ -54,6 +59,9 @@ public class BatchImpl implements GroupedBatch {
 	private int batchPosition;
 	private boolean batchExecuted;
 	private StaleStateMapper[] staleStateMappers;
+	private Binding[] valueBindings;
+
+	private record Binding(JdbcValueBindings jdbcValueBindings, ArrayList<TableMapping> tableMappings) {}
 
 	public BatchImpl(
 			BatchKey key,
@@ -157,7 +165,13 @@ public class BatchImpl implements GroupedBatch {
 						);
 					}
 					finally {
-						jdbcValueBindings.afterStatement( statementDetails.getMutatingTableDetails() );
+						if ( valueBindings == null ) {
+							valueBindings = new Binding[batchSizeToUse];
+						}
+						if ( valueBindings[batchPosition] == null ) {
+							valueBindings[batchPosition] = new Binding( jdbcValueBindings, new ArrayList<>( getStatementGroup().getNumberOfStatements() ) );
+						}
+						valueBindings[batchPosition].tableMappings.add( statementDetails.getMutatingTableDetails() );
 					}
 				}
 			} );
@@ -265,10 +279,12 @@ public class BatchImpl implements GroupedBatch {
 						if ( statementDetails.getMutatingTableDetails().isIdentifierTable() ) {
 							final var eventMonitor = jdbcSessionOwner.getEventMonitor();
 							final var executionEvent = eventMonitor.beginJdbcBatchExecutionEvent();
-							final int[] rowCounts;
 							try {
 								eventHandler.jdbcExecuteBatchStart();
-								rowCounts = statement.executeBatch();
+								checkRowCounts( statement.executeBatch(), statementDetails );
+							}
+							catch (BatchUpdateException batchUpdateException) {
+								maybeRetryBatch( statementDetails, statement, batchUpdateException );
 							}
 							catch (SQLException sqle) {
 								jdbcCoordinator.afterFailedStatementExecution( sqle );
@@ -278,10 +294,14 @@ public class BatchImpl implements GroupedBatch {
 								eventMonitor.completeJdbcBatchExecutionEvent( executionEvent, sql );
 								eventHandler.jdbcExecuteBatchEnd();
 							}
-							checkRowCounts( rowCounts, statementDetails );
 						}
 						else {
-							statement.executeBatch();
+							try {
+								statement.executeBatch();
+							}
+							catch (BatchUpdateException batchUpdateException) {
+								maybeRetryBatch( statementDetails, statement, batchUpdateException );
+							}
 						}
 					}
 					catch (SQLException e) {
@@ -298,8 +318,52 @@ public class BatchImpl implements GroupedBatch {
 		}
 		finally {
 			jdbcCoordinator.afterStatementExecution();
-			clearStaleStateMappers( batchPosition );
+			clearBatchStateUntil( batchPosition );
 			batchPosition = 0;
+		}
+	}
+
+	private void maybeRetryBatch(
+			PreparedStatementDetails statementDetails,
+			PreparedStatement statement,
+			BatchUpdateException batchUpdateException) throws SQLException {
+		// Let the Expectation do the update count checking and decide if a batch error
+		// really is an error, since some statements may legitimately be allowed to fail
+		final int[] updateCounts = batchUpdateException.getUpdateCounts();
+		try {
+			checkRowCounts( updateCounts, statementDetails );
+
+			// Even though a failure happened, we reach this line of code, which means to retry,
+			// but this time, we don't allow another retry and let the exception bubble up
+			final boolean loggerTraceEnabled = BATCH_MESSAGE_LOGGER.isTraceEnabled();
+			if ( loggerTraceEnabled ) {
+				BATCH_MESSAGE_LOGGER.retryingBatch( getKey().toLoggableString() );
+			}
+			statement.clearBatch();
+			int retryBatchPosition = 1;
+			for ( int i = 0; i < updateCounts.length; i++ ) {
+				if ( updateCounts[i] == Statement.EXECUTE_FAILED ) {
+					final String sqlString = statementDetails.getSqlString();
+					sqlStatementLogger.logStatement( sqlString );
+					statementObserver.performingSql( statementDetails.getSqlString(), retryBatchPosition++ );
+					valueBindings[i].jdbcValueBindings.beforeStatement( statementDetails );
+					try {
+						statement.addBatch();
+					}
+					catch (SQLException exception) {
+						throw sqlExceptionHelper.convert(
+								exception,
+								"Could not perform addBatch",
+								sqlString
+						);
+					}
+				}
+			}
+			statement.executeBatch();
+		}
+		catch (RuntimeException e) {
+			batchUpdateException.addSuppressed( e );
+			throw batchUpdateException;
 		}
 	}
 
@@ -313,10 +377,19 @@ public class BatchImpl implements GroupedBatch {
 				: exception;
 	}
 
-	private void clearStaleStateMappers(int batchCount) {
+	private void clearBatchStateUntil(int batchCount) {
 		if ( staleStateMappers != null ) {
 			Arrays.fill( staleStateMappers, 0, batchCount, null );
 		}
+		for ( int i = 0; i < batchCount; i++ ) {
+			final Binding valueBinding = valueBindings[i];
+			if ( valueBinding != null ) {
+				for ( TableMapping tableMapping : valueBinding.tableMappings ) {
+					valueBinding.jdbcValueBindings.afterStatement( tableMapping );
+				}
+			}
+		}
+		Arrays.fill( valueBindings, 0, batchCount, null );
 	}
 
 	private void checkRowCounts(int[] rowCounts, PreparedStatementDetails statementDetails)
@@ -357,6 +430,9 @@ public class BatchImpl implements GroupedBatch {
 			}
 		}
 		releaseStatements();
+		clearBatchStateUntil( batchSizeToUse );
+		staleStateMappers = null;
+		valueBindings = null;
 		observers.clear();
 	}
 

@@ -88,6 +88,30 @@ public class InsertConflictTests {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsUpsertOrMerge.class)
+	public void testOnConflictDoNothingTarget(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					int updated = session.createMutationQuery(
+							"insert into BasicEntity (id, data) " +
+							"values (1, 'John') " +
+							"on conflict(id) do nothing"
+					).executeUpdate();
+					if ( scope.getSessionFactory().getJdbcServices().getDialect() instanceof MySQLDialect ) {
+						// Strange MySQL returns 2 if the conflict action updates a row
+						// Also see https://dev.mysql.com/doc/refman/8.0/en/insert-on-duplicate.html
+						assertEquals( 1, updated );
+					}
+					else {
+						assertEquals( 0, updated );
+					}
+					final BasicEntity basicEntity = session.find( BasicEntity.class, 1 );
+					assertEquals( "data", basicEntity.getData() );
+				}
+		);
+	}
+
+	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsUpsertOrMerge.class)
 	public void testOnConflictDoUpdate(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

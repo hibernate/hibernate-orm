@@ -5,8 +5,9 @@
 package org.hibernate.boot.model.naming;
 
 import org.hibernate.boot.model.source.spi.AttributePath;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.spi.NavigablePath;
+
+import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 
 /**
  * An ImplicitNamingStrategy implementation which uses full composite paths
@@ -23,26 +24,33 @@ public class ImplicitNamingStrategyComponentPathImpl extends ImplicitNamingStrat
 
 	@Override
 	protected String transformAttributePath(AttributePath attributePath) {
-		final StringBuilder sb = new StringBuilder();
-		process( attributePath, sb );
-		return sb.toString();
+		final var name = new StringBuilder();
+		process( attributePath, name );
+		return name.toString();
 	}
 
-	public static void process(AttributePath attributePath, StringBuilder sb) {
-		String property = attributePath.getProperty();
-		final AttributePath parent = attributePath.getParent();
-		if ( parent != null && StringHelper.isNotEmpty( parent.getProperty() ) ) {
-			process( parent, sb );
-			sb.append( '_' );
+	public static void process(AttributePath attributePath, StringBuilder name) {
+		final var parent = attributePath.getParent();
+		if ( parent != null && isNotEmpty( parent.getProperty() ) ) {
+			process( parent, name );
 		}
-		else if ( NavigablePath.IDENTIFIER_MAPPER_PROPERTY.equals( property ) ) {
-			// skip it, do not pass go
-			sb.append( "id" );
-			return;
+		if ( !attributePath.isCollectionElement() ) {
+			if ( !name.isEmpty() ) {
+				name.append( '_' );
+			}
+			final String property = attributePath.getProperty();
+			name.append( isIdentifierMapper( property ) ? "id" : stripAngles( property ) );
 		}
-		property = property.replace( "<", "" );
-		property = property.replace( ">", "" );
+		// else skip synthetic marker for collection elements
+	}
 
-		sb.append( property );
+	private static boolean isIdentifierMapper(String property) {
+		return NavigablePath.IDENTIFIER_MAPPER_PROPERTY.equals( property );
+	}
+
+	private static String stripAngles(String property) {
+		return property
+				.replace( "<", "" )
+				.replace( ">", "" );
 	}
 }

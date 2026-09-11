@@ -97,4 +97,9 @@ public interface CollectionPart extends ValuedModelPart, Fetchable, JavaTypedExp
 	default ModelPart getInclusionCheckPart() {
 		return this;
 	}
+
+	@Override
+	default boolean isReadOnly() {
+		return getCollectionAttribute().isReadOnly();
+	}
 }

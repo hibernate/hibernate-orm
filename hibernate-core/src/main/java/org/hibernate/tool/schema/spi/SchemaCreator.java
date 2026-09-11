@@ -14,7 +14,7 @@ import org.hibernate.boot.Metadata;
  * idea of allowing this to work in ORM (JDBC) as well as in non-JDBC
  * environments (OGM, e.g.) simultaneously.
  */
-@Incubating
+@Incubating(since = "5.1")
 public interface SchemaCreator {
 	/**
 	 * Perform a schema creation from the indicated source(s) to the indicated target(s).

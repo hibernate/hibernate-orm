@@ -51,7 +51,7 @@ import java.util.Collection;
 ///
 /// @since 8.0
 /// @author Steve Ebersole
-@Incubating
+@Incubating(since = "7.1", group = "dialect-locking")
 @SPI({ USE, IMPLEMENT, SUPPLY })
 public interface LockingClauseStrategy {
 	/// Register the given root table group during from-clause traversal.

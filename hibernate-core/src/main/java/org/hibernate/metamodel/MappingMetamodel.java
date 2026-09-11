@@ -29,7 +29,7 @@ import jakarta.persistence.metamodel.Metamodel;
  *
  * @author Steve Ebersole
  */
-@Incubating
+@Incubating(since = "5.4")
 @org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 public interface MappingMetamodel extends Metamodel {
 	/**

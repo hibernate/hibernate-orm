@@ -14,7 +14,7 @@ import org.hibernate.Incubating;
  *
  * @author Steve Ebersole
  */
-@Incubating
+@Incubating(since = "7.1", group = "dialect-locking")
 public enum OuterJoinLockingType {
 	/**
 	 * Locks applied to joins are not supported, generally resulting in an

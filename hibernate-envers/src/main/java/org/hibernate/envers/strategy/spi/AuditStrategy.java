@@ -22,7 +22,7 @@ import org.hibernate.envers.strategy.ValidityAuditStrategy;
  *
  * @author Chris Cranford
  */
-@Incubating
+@Incubating(since = "5.4")
 public interface AuditStrategy {
 
 	// todo (6.0) - cleanup this spi

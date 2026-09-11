@@ -213,7 +213,7 @@ public interface JdbcTypeIndicators {
 	 *
 	 * @since 6.3
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	default Integer getExplicitJdbcTypeCode() {
 		return getPreferredSqlTypeCodeForArray();
 	}
@@ -270,7 +270,7 @@ public interface JdbcTypeIndicators {
 	 * @since 7.0
 	 * @see org.hibernate.cfg.MappingSettings#XML_FORMAT_MAPPER_LEGACY_FORMAT
 	 */
-	@Incubating
+	@Incubating(since = "7.0")
 	default boolean isXmlFormatMapperLegacyFormatEnabled() {
 		return getCurrentBaseSqlTypeIndicators().isXmlFormatMapperLegacyFormatEnabled();
 	}

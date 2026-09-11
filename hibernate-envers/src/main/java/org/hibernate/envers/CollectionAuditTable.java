@@ -16,7 +16,7 @@ import org.hibernate.Incubating;
  *
  * @author Chris Cranford
  */
-@Incubating
+@Incubating(since = "6.0")
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.FIELD, ElementType.METHOD})
 public @interface CollectionAuditTable {

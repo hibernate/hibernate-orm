@@ -6,7 +6,7 @@ package org.hibernate.event.service.spi;
 
 import org.hibernate.Incubating;
 
-@Incubating
+@Incubating(since = "5.4")
 @FunctionalInterface
 public interface EventActionWithParameter<T, U, X> {
 

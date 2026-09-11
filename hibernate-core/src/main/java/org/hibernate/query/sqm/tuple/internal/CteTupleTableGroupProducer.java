@@ -7,7 +7,6 @@ package org.hibernate.query.sqm.tuple.internal;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.Incubating;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
@@ -25,7 +24,6 @@ import org.hibernate.type.BasicType;
  *
  * @author Christian Beikov
  */
-@Incubating
 public class CteTupleTableGroupProducer extends AnonymousTupleTableGroupProducer {
 
 	private final AnonymousTupleBasicValuedModelPart searchModelPart;

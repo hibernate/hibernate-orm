@@ -24,7 +24,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
  *
  * @author Steve Ebersole
  */
-@Incubating
+@Incubating(since = "7.0")
 @SPI({ USE, IMPLEMENT })
 public interface OutputableType<J> extends BindableType<J> {
 	/**

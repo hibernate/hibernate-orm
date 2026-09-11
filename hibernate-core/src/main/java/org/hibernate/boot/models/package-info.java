@@ -13,7 +13,7 @@
  *
  * @author Steve Ebersole
  */
-@Incubating
+@Incubating(since = "7.0", group = "boot-model")
 package org.hibernate.boot.models;
 
 import org.hibernate.Incubating;

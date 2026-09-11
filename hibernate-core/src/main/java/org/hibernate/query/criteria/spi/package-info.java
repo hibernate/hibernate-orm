@@ -7,7 +7,7 @@
  * SPI for extending {@link org.hibernate.query.criteria.HibernateCriteriaBuilder}
  * with additional functionality by registering a {@link org.hibernate.service.Service}.
  */
-@Incubating
+@Incubating(since = "6.3")
 package org.hibernate.query.criteria.spi;
 
 import org.hibernate.Incubating;

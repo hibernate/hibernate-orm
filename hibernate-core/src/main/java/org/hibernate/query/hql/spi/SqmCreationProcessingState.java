@@ -14,7 +14,7 @@ import org.hibernate.query.sqm.tree.spi.SqmQuery;
  *
  * @author Steve Ebersole
  */
-@Incubating
+@Incubating(since = "6.0")
 public interface SqmCreationProcessingState {
 	/**
 	 * The parent processing state.  May be null for the top-level processing.

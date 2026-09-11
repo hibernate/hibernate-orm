@@ -560,7 +560,7 @@ public interface UserType<J> {
 	 *
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "6.1")
 	default AttributeConverter<J, ?> getValueConverter() {
 		return null;
 	}
@@ -575,7 +575,7 @@ public interface UserType<J> {
 	 *
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "7.0")
 	default Boolean isComparable() {
 		return null;
 	}

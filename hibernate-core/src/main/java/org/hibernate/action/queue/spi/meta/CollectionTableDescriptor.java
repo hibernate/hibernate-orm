@@ -14,7 +14,7 @@ import java.io.Serializable;
 ///
 /// @author Steve Ebersole
 /// @since 8.0
-@Incubating
+@Incubating(since = "8.0", group = "action-queue")
 public record CollectionTableDescriptor(
 		String name,
 		NavigableRole navigableRole,

@@ -54,7 +54,7 @@ import java.util.stream.Stream;
 /**
  * @author Steve Ebersole
  */
-@Incubating
+@Incubating(since = "6.0")
 public interface NativeQueryImplementor<R>
 		extends SelectionQueryImplementor<R>, MutationQueryImplementor<R>, NativeQuery<R>, NameableQuery {
 

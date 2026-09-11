@@ -19,7 +19,7 @@ import org.hibernate.dialect.Dialect;
  * @see UserDefinedObjectType
  * @see UserDefinedArrayType
  */
-@Incubating
+@Incubating(since = "6.6")
 public interface UserDefinedType extends Serializable, ContributableDatabaseObject {
 
 	String getQualifiedName(SqlStringGenerationContext context);

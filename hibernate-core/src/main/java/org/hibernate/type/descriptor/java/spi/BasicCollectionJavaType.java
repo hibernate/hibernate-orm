@@ -50,7 +50,7 @@ import static java.lang.reflect.Array.set;
  *
  * @author Christian Beikov
  */
-@Incubating
+@Incubating(since = "6.1")
 @AllowReflection // Needed for arbitrary array wrapping/unwrapping
 public class BasicCollectionJavaType<C extends Collection<E>, E>
 		extends AbstractJavaType<C>

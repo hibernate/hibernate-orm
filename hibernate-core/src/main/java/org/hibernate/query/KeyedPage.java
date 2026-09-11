@@ -65,7 +65,7 @@ import static org.hibernate.query.KeyedPage.KeyInterpretation.NO_KEY;
  *
  * @author Gavin King
  */
-@Incubating
+@Incubating(since = "6.5")
 public class KeyedPage<R> {
 	private final List<Order<? super R>> keyDefinition;
 	private final Page page;

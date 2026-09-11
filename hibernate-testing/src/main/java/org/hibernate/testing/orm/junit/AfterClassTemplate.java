@@ -17,6 +17,6 @@ import java.lang.annotation.Target;
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-@Incubating
+@Incubating(since = "7.2")
 public @interface AfterClassTemplate {
 }

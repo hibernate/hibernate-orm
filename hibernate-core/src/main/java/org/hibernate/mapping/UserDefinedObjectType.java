@@ -17,7 +17,7 @@ import org.hibernate.boot.model.relational.Namespace;
 /**
  * A mapping model object representing a relational database {@linkplain org.hibernate.annotations.Struct UDT}.
  */
-@Incubating
+@Incubating(since = "6.6")
 public class UserDefinedObjectType extends AbstractUserDefinedType {
 
 	private final Map<String, Column> columns = new LinkedHashMap<>();

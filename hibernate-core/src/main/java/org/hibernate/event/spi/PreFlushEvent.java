@@ -16,7 +16,7 @@ import org.hibernate.query.spi.QueryParameterBindings;
  * @author Gavin King
  * @since 7.2
  */
-@Incubating
+@Incubating(since = "7.2")
 public class PreFlushEvent extends AbstractSessionEvent {
 
 	private boolean preFlushRequired;

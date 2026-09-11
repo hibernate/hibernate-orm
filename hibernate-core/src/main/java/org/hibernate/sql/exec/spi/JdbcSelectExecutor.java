@@ -37,7 +37,7 @@ import java.util.Set;
  *
  * @author Steve Ebersole
  */
-@Incubating
+@Incubating(since = "6.0", group = "sql-execution")
 public interface JdbcSelectExecutor {
 
 	/**

@@ -50,7 +50,7 @@ public class EffectiveEntityGraph implements AppliedGraph, Serializable {
 	 * In other words, we may need to add some constructor argument here so
 	 * we want to control what can call it
 	 */
-	@Incubating
+	@Incubating(since = "5.4")
 	public EffectiveEntityGraph() {
 		this( false );
 	}
@@ -58,7 +58,7 @@ public class EffectiveEntityGraph implements AppliedGraph, Serializable {
 	/**
 	 * @implSpec See {@link #EffectiveEntityGraph}
 	 */
-	@Incubating
+	@Incubating(since = "5.4")
 	public EffectiveEntityGraph(boolean allowOverwrite) {
 		this.allowOverwrite = allowOverwrite;
 	}

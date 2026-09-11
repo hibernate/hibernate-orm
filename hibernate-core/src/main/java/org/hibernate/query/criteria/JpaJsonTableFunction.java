@@ -11,7 +11,7 @@ import org.hibernate.Incubating;
  * A special expression for the {@code json_table} function.
  * @since 7.0
  */
-@Incubating
+@Incubating(since = "6.3")
 public interface JpaJsonTableFunction extends JpaJsonTableColumnsNode {
 
 	/**

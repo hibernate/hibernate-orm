@@ -24,7 +24,7 @@ import org.hibernate.type.BindingContext;
  * @author Steve Ebersole
  * @author Gavin King
  */
-@Incubating
+@Incubating(since = "6.0")
 public interface QueryEngine extends BindingContext {
 
 	/**

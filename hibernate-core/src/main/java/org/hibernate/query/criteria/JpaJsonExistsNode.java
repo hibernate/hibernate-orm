@@ -10,7 +10,7 @@ import org.hibernate.Incubating;
  * The base for {@code json_exists} function nodes.
  * @since 7.0
  */
-@Incubating
+@Incubating(since = "6.3")
 public interface JpaJsonExistsNode {
 	/**
 	 * Get the {@link ErrorBehavior} of this json exists expression.

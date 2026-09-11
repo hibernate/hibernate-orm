@@ -12,7 +12,7 @@ import org.hibernate.Incubating;
  * The base for {@code json_value} function nodes.
  * @since 7.0
  */
-@Incubating
+@Incubating(since = "6.3")
 public interface JpaJsonValueNode<T> {
 	/**
 	 * Get the {@link ErrorBehavior} of this json value expression.

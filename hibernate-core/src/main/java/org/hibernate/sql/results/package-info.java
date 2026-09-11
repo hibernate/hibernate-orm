@@ -9,7 +9,7 @@
  * {@link org.hibernate.sql.results.graph.DomainResult} nodes with zero or more
  * {@link org.hibernate.sql.results.graph.Fetch} nodes.
  */
-@Incubating
+@Incubating(since = "6.0")
 package org.hibernate.sql.results;
 
 import org.hibernate.Incubating;

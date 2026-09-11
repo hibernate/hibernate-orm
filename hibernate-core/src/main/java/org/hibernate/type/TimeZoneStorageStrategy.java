@@ -17,7 +17,7 @@ import org.hibernate.Incubating;
  * @see org.hibernate.annotations.TimeZoneStorageType
  * @see org.hibernate.dialect.type.spi.TimeZoneSupport
  */
-@Incubating
+@Incubating(since = "7.0")
 public enum TimeZoneStorageStrategy {
 	/**
 	 * Stores the time zone via the {@code with time zone} SQL types which retain

@@ -19,7 +19,7 @@ import org.hibernate.service.Service;
  * @author Gunnar Morling
  * @author Guillaume Smet
  */
-@Incubating
+@Incubating(since = "6.0")
 public interface NativeQueryInterpreter extends Service {
 	/**
 	 * Parse the given native query and inform the recognizer of all

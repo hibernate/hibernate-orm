@@ -14,7 +14,7 @@ import org.hibernate.envers.configuration.Configuration;
  *
  * @author Chris Cranford
  */
-@Incubating
+@Incubating(since = "5.4")
 public class MappingContext {
 	private final PersistentEntity mapping;
 	private final Configuration configuration;

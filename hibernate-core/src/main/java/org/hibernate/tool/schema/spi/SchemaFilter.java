@@ -15,7 +15,7 @@ import org.hibernate.tool.schema.internal.DefaultSchemaFilter;
  *
  * @since 5.1
  */
-@Incubating
+@Incubating(since = "5.1")
 public interface SchemaFilter {
 	/**
 	 * Should the given namespace (catalog+schema) be included?  If {@code true}, the

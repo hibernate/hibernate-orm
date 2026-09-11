@@ -101,7 +101,7 @@ public interface EventListenerGroup<T> {
 	 *
 	 * @param <U> the kind of event
 	 */
-	@Incubating
+	@Incubating(since = "5.4")
 	<U> void fireLazyEventOnEachListener(Supplier<U> eventSupplier, BiConsumer<T,U> actionOnEvent);
 
 	/**
@@ -111,7 +111,7 @@ public interface EventListenerGroup<T> {
 	 *
 	 * @param <U> the kind of event
 	 */
-	@Incubating
+	@Incubating(since = "5.4")
 	<U> void fireEventOnEachListener(U event, BiConsumer<T,U> actionOnEvent);
 
 	/**
@@ -120,7 +120,7 @@ public interface EventListenerGroup<T> {
 	 * having this additional variant allows using the optimal iteration more extensively and
 	 * reduce allocations.
 	 */
-	@Incubating
+	@Incubating(since = "5.4")
 	<U,X> void fireEventOnEachListener(U event, X param, EventActionWithParameter<T,U,X> actionOnEvent);
 
 	/**
@@ -138,7 +138,7 @@ public interface EventListenerGroup<T> {
 	 * @param <RL> the type of ReactiveListener: each listener of type T will be cast to this type
 	 * @return the composite completion stage of invoking fun(event) on each listener.
 	 */
-	@Incubating
+	@Incubating(since = "5.4")
 	<R, U, RL> CompletionStage<R> fireEventOnEachListener(U event, Function<RL, Function<U, CompletionStage<R>>> fun);
 
 	/**
@@ -157,7 +157,7 @@ public interface EventListenerGroup<T> {
 	 * @param <X> an additional parameter to be passed to the function fun
 	 * @return the composite completion stage of invoking fun(event) on each listener.
 	 */
-	@Incubating
+	@Incubating(since = "5.4")
 	<R, U, RL, X> CompletionStage<R> fireEventOnEachListener(U event, X param, Function<RL, BiFunction<U, X, CompletionStage<R>>> fun);
 
 	/**
@@ -180,7 +180,7 @@ public interface EventListenerGroup<T> {
 	 * @param <RL> the type of ReactiveListener: each listener of type T will be to this type
 	 * @return the composite completion stage of invoking fun(event) on each listener.
 	 */
-	@Incubating
+	@Incubating(since = "5.4")
 	<R, U, RL> CompletionStage<R> fireLazyEventOnEachListener(Supplier<U> eventSupplier, Function<RL, Function<U, CompletionStage<R>>> fun);
 
 }

@@ -95,7 +95,7 @@ public interface Integrator {
 	 *
 	 * @since 8.0
 	 */
-	@Incubating
+	@Incubating(since = "8.0")
 	interface Context {
 		/**
 		 * Access to managed beans using the bootstrap-time CDI access policy.

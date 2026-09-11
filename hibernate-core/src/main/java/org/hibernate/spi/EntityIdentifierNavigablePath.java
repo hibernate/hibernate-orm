@@ -13,7 +13,7 @@ import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
  *
  * @author Andrea Boriero
  */
-@Incubating
+@Incubating(since = "6.0")
 public class EntityIdentifierNavigablePath extends NavigablePath {
 	private final String identifierAttributeName;
 

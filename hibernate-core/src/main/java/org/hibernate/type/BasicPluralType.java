@@ -18,7 +18,7 @@ import org.hibernate.Incubating;
  * @see BasicCollectionType
  * @see BasicArrayType
  */
-@Incubating
+@Incubating(since = "6.1")
 @SPI({ USE, IMPLEMENT })
 public interface BasicPluralType<C, E> extends BasicType<C> {
 	/**

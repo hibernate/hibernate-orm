@@ -33,7 +33,7 @@ import org.hibernate.service.JavaServiceLoadable;
  * @since 7.0
  */
 @JavaServiceLoadable
-@Incubating
+@Incubating(since = "7.0")
 public interface EventMonitor {
 	DiagnosticEvent beginSessionOpenEvent();
 

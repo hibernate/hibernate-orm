@@ -35,7 +35,7 @@ import java.util.List;
 /**
  * @author Christian Beikov
  */
-@Incubating
+@Incubating(since = "6.2")
 public class SqmFunctionJoin<E> extends AbstractSqmJoin<Object, E> implements JpaFunctionJoin<E> {
 	private final SqmSetReturningFunction<E> function;
 	private final boolean lateral;

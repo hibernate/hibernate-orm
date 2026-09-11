@@ -18,6 +18,8 @@ import org.hibernate.envers.RelationTargetNotFoundAction;
 import org.hibernate.envers.internal.entities.PropertyData;
 import org.hibernate.envers.internal.tools.StringTools;
 import org.hibernate.mapping.Value;
+import org.hibernate.models.spi.AnnotationTarget;
+import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
 import org.hibernate.type.Type;
 
@@ -254,6 +256,10 @@ public class PropertyAuditingData {
 	}
 
 	public void addAuditingOverride(AuditOverride annotation) {
+		addAuditingOverride( annotation, null, null );
+	}
+
+	public void addAuditingOverride(AuditOverride annotation, AnnotationTarget annotationTarget, ModelsContext modelsContext) {
 		if ( annotation != null ) {
 			final String overrideName = annotation.name();
 			boolean present = false;
@@ -264,15 +270,22 @@ public class PropertyAuditingData {
 				}
 			}
 			if ( !present ) {
-				auditJoinTableOverrides.add( new AuditOverrideData( annotation ) );
+				auditJoinTableOverrides.add( new AuditOverrideData( annotation, annotationTarget, modelsContext ) );
 			}
 		}
 	}
 
 	public void addAuditingOverrides(AuditOverrides annotationOverrides) {
+		addAuditingOverrides( annotationOverrides, null, null );
+	}
+
+	public void addAuditingOverrides(
+			AuditOverrides annotationOverrides,
+			AnnotationTarget annotationTarget,
+			ModelsContext modelsContext) {
 		if ( annotationOverrides != null ) {
 			for ( AuditOverride annotation : annotationOverrides.value() ) {
-				addAuditingOverride( annotation );
+				addAuditingOverride( annotation, annotationTarget, modelsContext );
 			}
 		}
 	}

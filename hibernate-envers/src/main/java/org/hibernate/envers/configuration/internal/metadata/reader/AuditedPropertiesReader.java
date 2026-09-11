@@ -51,6 +51,7 @@ import static org.hibernate.envers.configuration.internal.ModelsHelper.dynamicFi
 import static org.hibernate.envers.configuration.internal.ModelsHelper.getMember;
 import static org.hibernate.envers.internal.tools.Tools.newHashMap;
 import static org.hibernate.envers.internal.tools.Tools.newHashSet;
+import static org.hibernate.boot.model.internal.DefaultSchemaHelper.defaultSchema;
 import static org.hibernate.internal.util.ReflectHelper.OBJECT_CLASS_NAME;
 
 /**
@@ -83,7 +84,7 @@ public class AuditedPropertiesReader {
 
 	private final Set<MemberDetails> overriddenAuditedProperties;
 	private final Set<MemberDetails> overriddenNotAuditedProperties;
-	private final Map<MemberDetails, AuditJoinTable> overriddenAuditedPropertiesJoinTables;
+	private final Map<MemberDetails, AuditJoinTableData> overriddenAuditedPropertiesJoinTables;
 
 	private final Set<ClassDetails> overriddenAuditedClasses;
 	private final Set<ClassDetails> overriddenNotAuditedClasses;
@@ -197,7 +198,14 @@ public class AuditedPropertiesReader {
 						if ( !overriddenNotAuditedProperties.contains( property ) ) {
 							// If the property has not been marked as not audited by the subclass.
 							overriddenAuditedProperties.add( property );
-							overriddenAuditedPropertiesJoinTables.put( property, auditOverride.auditJoinTable() );
+							overriddenAuditedPropertiesJoinTables.put(
+									property,
+									new AuditJoinTableData(
+											auditOverride.auditJoinTable(),
+											classDetails,
+											metadataBuildingContext.getModelsContext()
+									)
+							);
 						}
 					}
 					else {
@@ -794,14 +802,18 @@ public class AuditedPropertiesReader {
 		// the join-table specified there should have a higher priority in the event the
 		// super-class defines an equivalent @AuditJoinTable at the site/property level.
 
-		final AuditJoinTable overrideJoinTable = overriddenAuditedPropertiesJoinTables.get( memberDetails );
+		final AuditJoinTableData overrideJoinTable = overriddenAuditedPropertiesJoinTables.get( memberDetails );
 		if ( overrideJoinTable != null ) {
-			propertyData.setJoinTable( new AuditJoinTableData( overrideJoinTable ) );
+			propertyData.setJoinTable( overrideJoinTable );
 		}
 		else {
 			final AuditJoinTable propertyJoinTable = memberDetails.getDirectAnnotationUsage( AuditJoinTable.class );
 			if ( propertyJoinTable != null ) {
-				propertyData.setJoinTable( new AuditJoinTableData( propertyJoinTable ) );
+				propertyData.setJoinTable( new AuditJoinTableData(
+						propertyJoinTable,
+						memberDetails,
+						metadataBuildingContext.getModelsContext()
+				) );
 			}
 			else {
 				propertyData.setJoinTable( DEFAULT_AUDIT_JOIN_TABLE );
@@ -812,7 +824,7 @@ public class AuditedPropertiesReader {
 	private void addPropertyCollectionAuditTable(MemberDetails memberDetails, PropertyAuditingData propertyAuditingData) {
 		final CollectionAuditTable collectionAuditTableAnn = memberDetails.getDirectAnnotationUsage( CollectionAuditTable.class );
 		if ( collectionAuditTableAnn != null ) {
-			propertyAuditingData.setCollectionAuditTable( collectionAuditTableAnn );
+			propertyAuditingData.setCollectionAuditTable( withDefaultSchema( collectionAuditTableAnn, memberDetails ) );
 		}
 	}
 
@@ -825,12 +837,49 @@ public class AuditedPropertiesReader {
 	private void addPropertyAuditingOverrides(MemberDetails memberDetails, PropertyAuditingData propertyData) {
 		final AuditOverride annotationOverride = memberDetails.getDirectAnnotationUsage( AuditOverride.class );
 		if ( annotationOverride != null ) {
-			propertyData.addAuditingOverride( annotationOverride );
+			propertyData.addAuditingOverride(
+					annotationOverride,
+					memberDetails,
+					metadataBuildingContext.getModelsContext()
+			);
 		}
 		final AuditOverrides annotationOverrides = memberDetails.getDirectAnnotationUsage( AuditOverrides.class );
 		if ( annotationOverrides != null ) {
-			propertyData.addAuditingOverrides( annotationOverrides );
+			propertyData.addAuditingOverrides(
+					annotationOverrides,
+					memberDetails,
+					metadataBuildingContext.getModelsContext()
+			);
 		}
+	}
+
+	private CollectionAuditTable withDefaultSchema(CollectionAuditTable collectionAuditTable, MemberDetails memberDetails) {
+		final String schema = defaultSchema(
+				collectionAuditTable.schema(),
+				memberDetails,
+				metadataBuildingContext.getModelsContext()
+		);
+		return new CollectionAuditTable() {
+			@Override
+			public String name() {
+				return collectionAuditTable.name();
+			}
+
+			@Override
+			public String schema() {
+				return schema;
+			}
+
+			@Override
+			public String catalog() {
+				return collectionAuditTable.catalog();
+			}
+
+			@Override
+			public Class<? extends Annotation> annotationType() {
+				return collectionAuditTable.annotationType();
+			}
+		};
 	}
 
 	/**

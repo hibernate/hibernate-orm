@@ -87,6 +87,9 @@ dependencies {
 	jakartaDataImplementation "org.hibernate.reactive:hibernate-reactive-core:3.0.1.Final"
 	jakartaDataImplementation "io.quarkus:quarkus-hibernate-orm-panache:3.24.1"
 
+	testImplementation libs.compilation.jetbrainsAnnotations
+	testImplementation libs.compilation.jspecify
+
 	integrationTestImplementation project( ':hibernate-testing' )
 
 	dataIntegrationTestImplementation project( ':hibernate-testing' )

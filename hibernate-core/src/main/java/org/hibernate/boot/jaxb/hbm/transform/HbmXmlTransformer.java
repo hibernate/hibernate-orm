@@ -165,6 +165,7 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbSecondaryTableImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbSingularAssociationAttribute;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbSingularFetchModeImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbSqlResultSetMappingImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbSqlSelectImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbSynchronizedTableImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbTableImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbTransientImpl;
@@ -1051,9 +1052,7 @@ public class HbmXmlTransformer {
 			mappingEntity.getSynchronizeTables().add( synchronizedTable );
 		}
 
-		if ( hbmClass.getLoader() != null ) {
-			handleUnsupported( "<loader/> is not supported in mapping.xsd - use <sql-select/> or <hql-select/> instead" );
-		}
+		transferEntityLoader( hbmClass, mappingEntity );
 
 		if ( !hbmClass.getTuplizer().isEmpty() ) {
 			handleUnsupported( "<tuplizer/> is not supported" );
@@ -1627,6 +1626,11 @@ public class HbmXmlTransformer {
 		final var hbmNativeQueries = hbmXmlBinding.getRoot().getSqlQuery();
 		if ( !hbmNativeQueries.isEmpty() ) {
 			for ( var hbmQuery : hbmNativeQueries ) {
+				// A <sql-query> containing <load-collection> is a collection loader, not a standalone
+				// named query - it is inlined as <sql-select> on the collection that references it.
+				if ( isCollectionLoaderQuery( hbmQuery ) ) {
+					continue;
+				}
 				// A callable <sql-query> maps to a <named-stored-procedure-query>, everything else
 				// maps to a <named-native-query>.
 				if ( hbmQuery.isCallable() ) {
@@ -1639,6 +1643,16 @@ public class HbmXmlTransformer {
 				}
 			}
 		}
+	}
+
+	private static boolean isCollectionLoaderQuery(JaxbHbmNamedNativeQueryType hbmQuery) {
+		for ( Object content : hbmQuery.getContent() ) {
+			if ( content instanceof JAXBElement<?> contentElement
+					&& contentElement.getValue() instanceof JaxbHbmNativeQueryCollectionLoadReturnType ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private JaxbNamedNativeQueryImpl transformNamedNativeQuery(JaxbHbmNamedNativeQueryType hbmQuery, String queryName) {
@@ -3033,6 +3047,107 @@ public class HbmXmlTransformer {
 			);
 			target.setClassification( LimitedCollectionClassification.LIST );
 		}
+
+		transferCollectionLoader( source, target );
+	}
+
+	private void transferEntityLoader(EntityInfo hbmClass, JaxbEntityImpl mappingEntity) {
+		final var loader = hbmClass.getLoader();
+		if ( loader == null || isEmpty( loader.getQueryRef() ) ) {
+			return;
+		}
+		final String queryRef = loader.getQueryRef();
+
+		final var nativeQuery = findNamedNativeQuery( queryRef );
+		if ( nativeQuery != null ) {
+			mappingEntity.setSqlSelect( toSqlSelect( nativeQuery ) );
+			return;
+		}
+
+		final var hqlQuery = findNamedHqlQuery( queryRef );
+		if ( hqlQuery != null ) {
+			mappingEntity.setHqlSelect( extractQueryText( hqlQuery.getContent() ) );
+			return;
+		}
+
+		handleUnsupported(
+				"Entity <loader query-ref=\"%s\"> could not be resolved to a named query",
+				queryRef
+		);
+	}
+
+	private void transferCollectionLoader(PluralAttributeInfo source, JaxbPluralAttribute target) {
+		final var loader = source.getLoader();
+		if ( loader == null || isEmpty( loader.getQueryRef() ) ) {
+			return;
+		}
+		final String queryRef = loader.getQueryRef();
+
+		final var nativeQuery = findNamedNativeQuery( queryRef );
+		if ( nativeQuery != null ) {
+			target.setSqlSelect( toSqlSelect( nativeQuery ) );
+			return;
+		}
+
+		final var hqlQuery = findNamedHqlQuery( queryRef );
+		if ( hqlQuery != null ) {
+			target.setHqlSelect( extractQueryText( hqlQuery.getContent() ) );
+			return;
+		}
+
+		handleUnsupported(
+				"Collection <loader query-ref=\"%s\"> could not be resolved to a named query",
+				queryRef
+		);
+	}
+
+	private JaxbHbmNamedNativeQueryType findNamedNativeQuery(String queryName) {
+		for ( var hbmQuery : hbmXmlBinding.getRoot().getSqlQuery() ) {
+			if ( queryName.equals( hbmQuery.getName() ) ) {
+				return hbmQuery;
+			}
+		}
+		return null;
+	}
+
+	private JaxbHbmNamedQueryType findNamedHqlQuery(String queryName) {
+		for ( var hbmQuery : hbmXmlBinding.getRoot().getQuery() ) {
+			if ( queryName.equals( hbmQuery.getName() ) ) {
+				return hbmQuery;
+			}
+		}
+		return null;
+	}
+
+	private static JaxbSqlSelectImpl toSqlSelect(JaxbHbmNamedNativeQueryType nativeQuery) {
+		final var sqlSelect = new JaxbSqlSelectImpl();
+		for ( Object content : nativeQuery.getContent() ) {
+			if ( content instanceof String sql ) {
+				final String trimmed = sql.trim();
+				if ( !trimmed.isEmpty() ) {
+					sqlSelect.setSql( trimmed );
+				}
+			}
+			else if ( content instanceof JAXBElement<?> element
+					&& element.getValue() instanceof JaxbHbmSynchronizeType hbmSynchronize ) {
+				final var synchronize = new JaxbSynchronizedTableImpl();
+				synchronize.setTable( hbmSynchronize.getTable() );
+				sqlSelect.getSynchronize().add( synchronize );
+			}
+		}
+		return sqlSelect;
+	}
+
+	private static String extractQueryText(List<?> content) {
+		for ( Object element : content ) {
+			if ( element instanceof String queryText ) {
+				final String trimmed = queryText.trim();
+				if ( !trimmed.isEmpty() ) {
+					return trimmed;
+				}
+			}
+		}
+		return null;
 	}
 
 	private void transferCollectionId(JaxbHbmIdBagCollectionType idBag, JaxbPluralAttribute target) {

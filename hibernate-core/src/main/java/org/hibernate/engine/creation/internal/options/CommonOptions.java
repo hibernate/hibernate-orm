@@ -273,6 +273,6 @@ public class CommonOptions {
 			}
 		}
 
-		return null;
+		return options.getInterceptorStrategy().getInterceptorForSession( sessionFactory );
 	}
 }

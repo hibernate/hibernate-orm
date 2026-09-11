@@ -53,10 +53,6 @@ interface AsciiCharacters$ extends AsciiCharacters {
 	public java.util.Optional<ee.jakarta.tck.data.framework.read.only.AsciiCharacter> findByNumericValue(int id);
 
 	@Override
-	@Query("where numericValue between ?1 and ?2")
-	public jakarta.data.page.Page<ee.jakarta.tck.data.framework.read.only.AsciiCharacter> findByNumericValueBetween(int min, int max, jakarta.data.page.PageRequest pagination, jakarta.data.Order<ee.jakarta.tck.data.framework.read.only.AsciiCharacter> order);
-
-	@Override
 	@Query("where numericValue <= ?1 and numericValue >= ?2")
 	public java.util.List<ee.jakarta.tck.data.framework.read.only.AsciiCharacter> findByNumericValueLessThanEqualAndNumericValueGreaterThanEqual(int max, int min);
 

@@ -21,11 +21,6 @@ interface PositiveIntegers$ extends PositiveIntegers {
 	public boolean existsByIdGreaterThan(java.lang.Long number);
 
 	@Override
-	@Query("where floorOfSquareRoot <> ?1 and id < ?2")
-	@OrderBy(value = "numBitsRequired", descending = true)
-	public jakarta.data.page.CursoredPage<ee.jakarta.tck.data.framework.read.only.NaturalNumber> findByFloorOfSquareRootNotAndIdLessThanOrderByNumBitsRequiredDesc(long excludeSqrt, long eclusiveMax, jakarta.data.page.PageRequest pagination, jakarta.data.Order<ee.jakarta.tck.data.framework.read.only.NaturalNumber> order);
-
-	@Override
 	@Query("where isOdd=true and id <= ?1")
 	@OrderBy(value = "id", descending = true)
 	public java.util.List<ee.jakarta.tck.data.framework.read.only.NaturalNumber> findByIsOddTrueAndIdLessThanEqualOrderByIdDesc(long max);

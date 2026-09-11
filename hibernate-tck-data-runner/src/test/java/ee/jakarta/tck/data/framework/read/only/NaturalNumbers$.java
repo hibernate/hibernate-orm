@@ -25,11 +25,6 @@ interface NaturalNumbers$ extends NaturalNumbers {
 	public long countAll();
 
 	@Override
-	@Query("where floorOfSquareRoot = ?1")
-	@OrderBy(value = "id", descending = false)
-	public jakarta.data.page.CursoredPage<ee.jakarta.tck.data.framework.read.only.NaturalNumber> findByFloorOfSquareRootOrderByIdAsc(long sqrtFloor, jakarta.data.page.PageRequest pagination);
-
-	@Override
 	@Query("where id between ?1 and ?2")
 	@OrderBy(value = "numTypeOrdinal", descending = false)
 	public java.util.stream.Stream<ee.jakarta.tck.data.framework.read.only.NaturalNumber> findByIdBetweenOrderByNumTypeOrdinalAsc(long minimum, long maximum, jakarta.data.Order<ee.jakarta.tck.data.framework.read.only.NaturalNumber> sorts);
@@ -48,17 +43,8 @@ interface NaturalNumbers$ extends NaturalNumbers {
 	public jakarta.data.page.Page<ee.jakarta.tck.data.framework.read.only.NaturalNumber> findByIdLessThanOrderByFloorOfSquareRootDesc(long exclusiveMax, jakarta.data.page.PageRequest pagination, jakarta.data.Order<ee.jakarta.tck.data.framework.read.only.NaturalNumber> order);
 
 	@Override
-	@Query("where numType = ?1 and numBitsRequired < ?2")
-	public jakarta.data.page.CursoredPage<ee.jakarta.tck.data.framework.read.only.NaturalNumber> findByNumTypeAndNumBitsRequiredLessThan(ee.jakarta.tck.data.framework.read.only.NaturalNumber.NumberType type, short bitsUnder, jakarta.data.Order<ee.jakarta.tck.data.framework.read.only.NaturalNumber> order, jakarta.data.page.PageRequest pagination);
-
-	@Override
 	@Query("where numType <> ?1")
 	public ee.jakarta.tck.data.framework.read.only.NaturalNumber[] findByNumTypeNot(ee.jakarta.tck.data.framework.read.only.NaturalNumber.NumberType notThisType, jakarta.data.Limit limit, jakarta.data.Order<ee.jakarta.tck.data.framework.read.only.NaturalNumber> sorts);
-
-	@Override
-	@Query("where numType = ?1 and floorOfSquareRoot <= ?2")
-	public jakarta.data.page.Page<ee.jakarta.tck.data.framework.read.only.NaturalNumber> findByNumTypeAndFloorOfSquareRootLessThanEqual(ee.jakarta.tck.data.framework.read.only.NaturalNumber.NumberType type, long maxSqrtFloor, jakarta.data.page.PageRequest pagination, jakarta.data.Sort<ee.jakarta.tck.data.framework.read.only.NaturalNumber> sort);
-
 
 	// TODO; Implement TCK overrides
 }

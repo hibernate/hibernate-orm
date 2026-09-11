@@ -2461,8 +2461,14 @@ public abstract class CollectionBinder {
 		}
 		final var audited = extract( Audited.class, property, buildingContext );
 		if ( audited != null && !property.hasDirectAnnotationUsage( Audited.Excluded.class ) ) {
+			// For collections, only use @Audited.Table if it's directly on the property itself,
+			// not inherited from the owning entity. The entity's @Audited.Table applies only
+			// to the entity's audit table, not to collection audit tables.
+			final var auditTable = property.getDirectAnnotationUsage( Audited.Table.class );
+			final var collectionAuditTable = property.getDirectAnnotationUsage( Audited.CollectionTable.class );
 			AuditHelper.bindAuditTable(
-					extract( Audited.Table.class, property, buildingContext ),
+					auditTable,
+					collectionAuditTable,
 					collection,
 					buildingContext
 			);

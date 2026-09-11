@@ -26,6 +26,7 @@ import org.hibernate.type.internal.DirectJavaTimeJdbcTypeResolver;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import static java.time.format.DateTimeFormatter.ISO_ZONED_DATE_TIME;
+import static org.hibernate.type.descriptor.java.SqlDateTimeHelper.toLocalDateTime;
 
 /**
  * Java type descriptor for the {@link ZonedDateTime} type.
@@ -183,7 +184,7 @@ public class ZonedDateTimeJavaType extends AbstractTemporalJavaType<ZonedDateTim
 			// - around 1905, both methods are equally valid, so we don't really care which
 			//   one is used.
 			return timestamp.getYear() < 5 // Timestamp year 0 is 1900
-					? timestamp.toLocalDateTime().atZone( ZoneId.systemDefault() )
+					? toLocalDateTime( timestamp ).atZone( ZoneId.systemDefault() )
 					: timestamp.toInstant().atZone( ZoneId.systemDefault() );
 		}
 

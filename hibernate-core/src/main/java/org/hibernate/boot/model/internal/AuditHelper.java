@@ -255,7 +255,7 @@ public final class AuditHelper {
 				final var subclassAuditTable = createAuditTable(
 						subclass.getTable(),
 						csIdColumnName,
-						resolveExcludedColumns( subclass.getProperties() ),
+						resolveExcludedColumns( subclass.getPropertyClosure() ),
 						effective != null ? nullIfBlank( effective.schema() ) : null,
 						effective != null ? nullIfBlank( effective.catalog() ) : null,
 						effective != null ? nullIfBlank( effective.name() ) : null,

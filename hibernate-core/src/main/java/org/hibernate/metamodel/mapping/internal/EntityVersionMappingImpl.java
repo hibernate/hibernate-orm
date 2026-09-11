@@ -88,7 +88,7 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 				(VersionJavaType<?>) versionBasicType.getJavaTypeDescriptor(),
 				declaringType.getRepresentationStrategy()
 						.resolvePropertyAccess( bootEntityDescriptor.getVersion() )
-						.getGetter(),
+						.getPropertyValueAccessor(),
 				templateInstanceAccess
 		);
 	}

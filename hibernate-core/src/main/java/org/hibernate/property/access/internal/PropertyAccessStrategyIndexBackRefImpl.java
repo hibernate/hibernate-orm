@@ -13,6 +13,8 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
+import org.hibernate.property.access.spi.PropertyAccessorService;
+import org.hibernate.property.access.spi.PropertyValueAccessor;
 import org.hibernate.property.access.spi.Setter;
 
 import jakarta.annotation.Nullable;
@@ -31,17 +33,19 @@ public class PropertyAccessStrategyIndexBackRefImpl implements PropertyAccessStr
 	}
 
 	@Override
-	public PropertyAccess buildPropertyAccess(Class<?> containerJavaType, String propertyName, boolean setterRequired) {
+	public PropertyAccess buildPropertyAccess(PropertyAccessorService propertyAccessorService, Class<?> containerJavaType, String propertyName, boolean setterRequired) {
 		return new PropertyAccessIndexBackRefImpl( this );
 	}
 
 	private static class PropertyAccessIndexBackRefImpl implements PropertyAccess {
 		private final PropertyAccessStrategyIndexBackRefImpl strategy;
+		private final PropertyValueAccessor propertyValueAccessor;
 		private final GetterImpl getter;
 
 		public PropertyAccessIndexBackRefImpl(PropertyAccessStrategyIndexBackRefImpl strategy) {
 			this.strategy = strategy;
-			this.getter = new GetterImpl( strategy.entityName, strategy.propertyName );
+			this.propertyValueAccessor = PropertyValueAccessor.indexBackRef( strategy.entityName, strategy.propertyName );
+			this.getter = new GetterImpl( propertyValueAccessor );
 		}
 
 		@Override
@@ -58,25 +62,28 @@ public class PropertyAccessStrategyIndexBackRefImpl implements PropertyAccessStr
 		public Setter getSetter() {
 			return SetterImpl.INSTANCE;
 		}
+
+		@Override
+		public PropertyValueAccessor getPropertyValueAccessor() {
+			return propertyValueAccessor;
+		}
 	}
 
 	private static class GetterImpl implements Getter {
-		private final String entityName;
-		private final String propertyName;
+		private final PropertyValueAccessor propertyValueAccessor;
 
-		public GetterImpl(String entityName, String propertyName) {
-			this.entityName = entityName;
-			this.propertyName = propertyName;
+		public GetterImpl(PropertyValueAccessor propertyValueAccessor) {
+			this.propertyValueAccessor = propertyValueAccessor;
 		}
 
 		@Override
 		public Object get(Object owner) {
-			return PropertyAccessStrategyBackRefImpl.UNKNOWN;
+			return propertyValueAccessor.get( owner );
 		}
 
 		@Override
 		public Object getForInsert(Object owner, Map<Object, Object> mergeMap, SharedSessionContractImplementor session) {
-			return session.getPersistenceContextInternal().getIndexInOwner( entityName, propertyName, owner, mergeMap );
+			return propertyValueAccessor.getForInsert( owner, mergeMap, session );
 		}
 
 		@Override

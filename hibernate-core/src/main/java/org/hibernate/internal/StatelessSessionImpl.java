@@ -1080,7 +1080,7 @@ public class StatelessSessionImpl
 				final var descriptor = attribute.asPluralAttributeMapping().getCollectionDescriptor();
 				final Object cacheKey = lockCacheItem( key, descriptor );
 				if ( !descriptor.isInverse() ) {
-					final Object value = attribute.getPropertyAccess().getGetter().get(entity);
+					final Object value = attribute.getPropertyAccess().getPropertyValueAccessor().get(entity);
 					final PersistentCollection<?> collection;
 					if ( value instanceof PersistentCollection<?> persistentCollection ) {
 						if ( !persistentCollection.wasInitialized() ) {

@@ -78,7 +78,7 @@ public interface ManagedMappingType extends MappingType, FetchableContainer {
 	 * Extract a specific attribute value from the entity instance, by position
 	 */
 	default Object getValue(Object instance, int position) {
-		return getAttributeMapping( position ).getPropertyAccess().getGetter().get( instance );
+		return getAttributeMapping( position ).getPropertyAccess().getPropertyValueAccessor().get( instance );
 	}
 
 	/**
@@ -90,7 +90,7 @@ public interface ManagedMappingType extends MappingType, FetchableContainer {
 	 * Inject a specific attribute value into the entity instance, by position
 	 */
 	default void setValue(Object instance, int position, Object value) {
-		getAttributeMapping( position ).getPropertyAccess().getSetter().set( instance, value );
+		getAttributeMapping( position ).getPropertyAccess().getPropertyValueAccessor().set( instance, value );
 	}
 
 	default boolean anyRequiresAggregateColumnWriter() {

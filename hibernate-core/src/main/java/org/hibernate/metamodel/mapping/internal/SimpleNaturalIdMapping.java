@@ -101,7 +101,7 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping
 
 	@Override
 	public Object extractNaturalIdFromEntity(Object entity) {
-		return attribute.getPropertyAccess().getGetter().get( entity );
+		return attribute.getPropertyAccess().getPropertyValueAccessor().get( entity );
 	}
 
 	@Override

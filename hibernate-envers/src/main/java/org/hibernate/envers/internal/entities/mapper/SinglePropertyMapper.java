@@ -4,7 +4,6 @@
  */
 package org.hibernate.envers.internal.entities.mapper;
 
-import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.OracleDialect;
@@ -15,8 +14,7 @@ import org.hibernate.envers.internal.entities.PropertyData;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 import org.hibernate.envers.internal.tools.ReflectionTools;
 import org.hibernate.envers.internal.tools.StringTools;
-import org.hibernate.property.access.spi.Setter;
-import org.hibernate.property.access.spi.SetterFieldImpl;
+import org.hibernate.property.access.spi.PropertyValueAccessor;
 
 import java.io.Serializable;
 import java.util.List;
@@ -102,14 +100,19 @@ public class SinglePropertyMapper extends AbstractPropertyMapper implements Simp
 			map.put( propertyData.getBeanName(), value );
 		}
 		else {
-			final Setter setter = ReflectionTools.getSetter(
+			final PropertyValueAccessor setter = ReflectionTools.getPropertyValueAccessor(
+					obj.getClass(),
+					propertyData,
+					enversService.getServiceRegistry()
+			);
+			final Class<?> setterParamType = ReflectionTools.getType(
 					obj.getClass(),
 					propertyData,
 					enversService.getServiceRegistry()
 			);
 
 			// We only set a null value if the field is not primitive. Otherwise, we leave it intact.
-			if ( value != null || !isPrimitive( setter, propertyData, obj.getClass() ) ) {
+			if ( value != null || !setterParamType.isPrimitive() ) {
 				setter.set( obj, value );
 			}
 		}
@@ -128,26 +131,6 @@ public class SinglePropertyMapper extends AbstractPropertyMapper implements Simp
 		}
 
 		return data.get( propertyData.getName() );
-	}
-
-	private boolean isPrimitive(Setter setter, PropertyData propertyData, Class<?> cls) {
-		if ( cls == null ) {
-			throw new HibernateException( "No field found for property: " + propertyData.getName() );
-		}
-
-		if ( setter instanceof SetterFieldImpl ) {
-			// In a direct setter, getMethod() returns null
-			// Trying to look up the field
-			try {
-				return cls.getDeclaredField( propertyData.getBeanName() ).getType().isPrimitive();
-			}
-			catch (NoSuchFieldException e) {
-				return isPrimitive( setter, propertyData, cls.getSuperclass() );
-			}
-		}
-		else {
-			return setter.getMethod().getParameterTypes()[0].isPrimitive();
-		}
 	}
 
 	@Override

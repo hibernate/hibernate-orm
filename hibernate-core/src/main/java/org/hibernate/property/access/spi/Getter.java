@@ -19,8 +19,6 @@ import jakarta.annotation.Nullable;
  *
  * @author Gavin King
  * @author Steve Ebersole
- *
- * @deprecated no longer used
  */
 @Deprecated(since = "7.4", forRemoval = true)
 @Remove // replace with a different SPI
@@ -31,8 +29,7 @@ public interface Getter {
 	 * @param owner The instance containing the property value to be retrieved.
 	 *
 	 * @return The extracted value.
-	 *
-	 * @deprecated no longer used
+	 * @deprecated Use {@link PropertyAccess#getPropertyValueAccessor()} instead.
 	 */
 	@Deprecated(since = "7.4", forRemoval = true)
 	@Nullable Object get(Object owner);
@@ -45,8 +42,7 @@ public interface Getter {
 	 * @param session The session from which this request originated.
 	 *
 	 * @return The extracted value.
-	 *
-	 * @deprecated no longer used
+	 * @deprecated Use {@link PropertyAccess#getPropertyValueAccessor()} instead.
 	 */
 	@Deprecated(since = "7.4", forRemoval = true)
 	@Nullable Object getForInsert(Object owner, Map<Object, Object> mergeMap, SharedSessionContractImplementor session);

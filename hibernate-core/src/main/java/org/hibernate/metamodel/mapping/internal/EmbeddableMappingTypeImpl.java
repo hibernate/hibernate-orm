@@ -1056,7 +1056,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 							concreteEmbeddableType == null
 								|| !concreteEmbeddableType.declaresAttribute( attributeMapping )
 									? null
-									: attributeMapping.getPropertyAccess().getGetter().get( domainValue );
+									: attributeMapping.getPropertyAccess().getPropertyValueAccessor().get( domainValue );
 					span += attributeMapping.decompose( attributeValue, offset + span, x, y, valueConsumer, session );
 				}
 			}

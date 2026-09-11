@@ -13,6 +13,8 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
+import org.hibernate.property.access.spi.PropertyAccessorService;
+import org.hibernate.property.access.spi.PropertyValueAccessor;
 import org.hibernate.property.access.spi.Setter;
 
 import jakarta.annotation.Nullable;
@@ -29,7 +31,7 @@ public class PropertyAccessStrategyNoopImpl implements PropertyAccessStrategy {
 	public static final PropertyAccessStrategy INSTANCE = new PropertyAccessStrategyNoopImpl();
 
 	@Override
-	public PropertyAccess buildPropertyAccess(Class<?> containerJavaType, String propertyName, boolean setterRequired) {
+	public PropertyAccess buildPropertyAccess(PropertyAccessorService propertyAccessorService, Class<?> containerJavaType, String propertyName, boolean setterRequired) {
 		return PropertyAccessNoopImpl.INSTANCE;
 	}
 
@@ -52,6 +54,11 @@ public class PropertyAccessStrategyNoopImpl implements PropertyAccessStrategy {
 		@Override
 		public Setter getSetter() {
 			return SetterImpl.INSTANCE;
+		}
+
+		@Override
+		public PropertyValueAccessor getPropertyValueAccessor() {
+			return PropertyValueAccessor.noop();
 		}
 	}
 

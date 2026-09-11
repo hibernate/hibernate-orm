@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.sql.exec.spi.ExecutionContext;
@@ -37,6 +38,12 @@ public interface LoadingCollectionEntry {
 	 * The collection instance being loaded
 	 */
 	PersistentCollection<?> getCollectionInstance();
+
+	/**
+	 * The loading owner objects referring to this collection being loaded.
+	 * This is only available for nested join fetches.
+	 */
+	@Nullable Object[] getLoadingOwners();
 
 	/**
 	 * Callback for row loading.  Allows delayed List creation

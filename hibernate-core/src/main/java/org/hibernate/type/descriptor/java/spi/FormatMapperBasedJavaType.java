@@ -24,7 +24,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  * @author Christian Beikov
  * @author Yanming Zhou
  */
-@Incubating
+@Incubating(since = "6.2")
 public abstract class FormatMapperBasedJavaType<T> extends AbstractJavaType<T> implements MutabilityPlan<T> {
 
 	private final TypeConfiguration typeConfiguration;

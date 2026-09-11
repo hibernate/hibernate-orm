@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 ///
 /// @author Steve Ebersole
 /// @since 8.0
-@Incubating
+@Incubating(since = "8.0", group = "action-queue")
 public record TableDescriptorAsTableMapping(
 		TableDescriptor descriptor,
 		int relativePosition,

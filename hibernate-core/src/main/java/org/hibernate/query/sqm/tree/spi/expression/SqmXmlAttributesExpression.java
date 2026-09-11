@@ -28,7 +28,7 @@ import static org.hibernate.internal.util.NullnessUtil.castNonNull;
  *
  * @since 7.0
  */
-@Incubating
+@Incubating(since = "6.2")
 public class SqmXmlAttributesExpression implements SqmTypedNode<Object> {
 
 	private final Map<String, SqmExpression<?>> attributes;

@@ -15,7 +15,7 @@ import org.hibernate.Incubating;
 ///
 /// @since 8.0
 /// @author Steve Ebersole
-@Incubating
+@Incubating(since = "8.0", group = "collection-delta")
 public final class PersistedCollectionSize {
 	private boolean resolved;
 	private int size;

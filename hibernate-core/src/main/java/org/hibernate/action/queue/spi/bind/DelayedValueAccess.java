@@ -14,7 +14,7 @@ import java.util.Locale;
 ///
 /// @author Steve Ebersole
 /// @since 8.0
-@Incubating
+@Incubating(since = "8.0", group = "action-queue")
 public final class DelayedValueAccess {
 	private final String description;
 	private boolean resolved;

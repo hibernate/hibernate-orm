@@ -99,7 +99,7 @@ public interface Transaction extends EntityTransaction {
 	 *
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "7.0")
 	default boolean isInCompletionProcess() {
 		return switch (getStatus()) {
 			case COMMITTING, ROLLING_BACK -> true;
@@ -118,7 +118,7 @@ public interface Transaction extends EntityTransaction {
 	 *
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "7.0")
 	default boolean isComplete() {
 		return switch (getStatus()) {
 			case COMMITTED, ROLLED_BACK, FAILED_COMMIT, FAILED_ROLLBACK -> true;
@@ -134,7 +134,7 @@ public interface Transaction extends EntityTransaction {
 	 *
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "7.0")
 	default boolean wasStarted() {
 		return getStatus() != TransactionStatus.NOT_ACTIVE;
 	}
@@ -147,7 +147,7 @@ public interface Transaction extends EntityTransaction {
 	 *
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "7.0")
 	default boolean wasSuccessful() {
 		return getStatus() == TransactionStatus.COMMITTED;
 	}
@@ -163,7 +163,7 @@ public interface Transaction extends EntityTransaction {
 	 *
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "7.0")
 	default boolean wasFailure() {
 		return switch (getStatus()) {
 			case ROLLED_BACK, FAILED_COMMIT, FAILED_ROLLBACK -> true;
@@ -176,7 +176,7 @@ public interface Transaction extends EntityTransaction {
 	 *
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "7.0")
 	default void runBeforeCompletion(@Nonnull Runnable action) {
 		registerSynchronization( new Synchronization() {
 			@Override
@@ -194,7 +194,7 @@ public interface Transaction extends EntityTransaction {
 	 *
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "7.0")
 	default void runAfterCompletion(@Nonnull Consumer<TransactionStatus> action) {
 		registerSynchronization( new Synchronization() {
 			@Override

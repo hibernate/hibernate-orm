@@ -8,7 +8,6 @@ import java.lang.reflect.Member;
 
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
-import org.hibernate.Incubating;
 import org.hibernate.metamodel.AttributeClassification;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
@@ -25,7 +24,6 @@ import org.hibernate.type.descriptor.java.JavaType;
 /**
  * @author Christian Beikov
  */
-@Incubating
 public class AnonymousTupleSqmAssociationPathSourceNew<O, J>
 		extends AnonymousTupleSqmPathSourceNew<J>
 		implements SqmSingularPersistentAttribute<O, J> {

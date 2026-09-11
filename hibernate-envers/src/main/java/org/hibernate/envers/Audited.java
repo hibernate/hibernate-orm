@@ -45,7 +45,7 @@ public @interface Audited {
 	 * implies that the system should ignore the {@code EntityNotFoundException} errors unless
 	 * the user has explicitly specified the value {@link RelationTargetNotFoundAction#ERROR}.
 	 */
-	@Incubating
+	@Incubating(since = "6.0")
 	RelationTargetNotFoundAction targetNotFoundAction() default RelationTargetNotFoundAction.DEFAULT;
 
 	/**

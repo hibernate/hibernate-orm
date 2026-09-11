@@ -23,7 +23,7 @@ import jakarta.annotation.Nullable;
  * @see org.hibernate.annotations.Audited
  * @since 7.4
  */
-@Incubating
+@Incubating(since = "5.4")
 public interface AuditMapping extends AuxiliaryMapping {
 
 	/**

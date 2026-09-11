@@ -9,7 +9,7 @@ import org.hibernate.Incubating;
 /**
  * Describes the kind of entity name use.
  */
-@Incubating
+@Incubating(since = "6.2")
 public final class EntityNameUse {
 
 	public static final EntityNameUse PROJECTION = new EntityNameUse( UseKind.PROJECTION, true );

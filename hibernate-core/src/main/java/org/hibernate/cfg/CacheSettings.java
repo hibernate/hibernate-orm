@@ -104,7 +104,7 @@ public interface CacheSettings {
 	 * @see org.hibernate.annotations.QueryCacheLayout
 	 * @since 6.5
 	 */
-	@Incubating
+	@Incubating(since = "6.5")
 	String QUERY_CACHE_LAYOUT = "hibernate.cache.query_cache_layout";
 
 	/**

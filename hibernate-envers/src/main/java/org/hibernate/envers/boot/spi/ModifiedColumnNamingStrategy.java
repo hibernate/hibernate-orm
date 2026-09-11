@@ -16,7 +16,7 @@ import org.hibernate.mapping.Value;
  * @author Chris Cranford
  * @since 5.4.7
  */
-@Incubating
+@Incubating(since = "5.4")
 public interface ModifiedColumnNamingStrategy {
 	/**
 	 * Adds modified columns to the audited entity metamodel.

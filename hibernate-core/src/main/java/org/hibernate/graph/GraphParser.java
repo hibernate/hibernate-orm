@@ -90,7 +90,7 @@ public final class GraphParser {
 	 *
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "5.4")
 	public static <T> RootGraph<T> parse(
 			final String rootEntityName,
 			final CharSequence graphText,
@@ -120,7 +120,7 @@ public final class GraphParser {
 	 *
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "5.4")
 	public static <T> RootGraph<T> parse(
 				final CharSequence graphText,
 				final SessionFactory sessionFactory) {

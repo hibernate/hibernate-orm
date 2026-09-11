@@ -28,7 +28,7 @@ import jakarta.annotation.Nullable;
  *
  * @since 7.0
  */
-@Incubating
+@Incubating(since = "6.2")
 public class NamedSqmSetReturningFunctionDescriptor
 		extends AbstractSqmSelfRenderingSetReturningFunctionDescriptor {
 	private final String functionName;

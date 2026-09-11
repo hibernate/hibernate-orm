@@ -10,7 +10,7 @@ import org.hibernate.Incubating;
  * The base for {@code json_query} function nodes.
  * @since 7.0
  */
-@Incubating
+@Incubating(since = "6.3")
 public interface JpaJsonQueryNode {
 	/**
 	 * Get the {@link WrapMode} of this json query expression.

@@ -13,7 +13,7 @@ import jakarta.annotation.Nullable;
 /**
  * Specialized EmbeddableResultGraphNode for cases where we have an actual embeddable class.
  */
-@org.hibernate.Incubating
+@org.hibernate.Incubating(since = "6.0", group = "result-processing")
 @org.hibernate.SPI({ org.hibernate.SPI.Role.USE, org.hibernate.SPI.Role.IMPLEMENT })
 public interface AggregateEmbeddableResultGraphNode extends EmbeddableResultGraphNode {
 	/**

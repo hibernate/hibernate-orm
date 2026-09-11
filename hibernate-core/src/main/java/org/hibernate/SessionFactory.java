@@ -169,7 +169,7 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	 *
 	 * @since 8.0
 	 */
-	@Incubating @Nonnull
+	@Incubating(since = "8.0", group = "adjustable-settings") @Nonnull
 	AdjustableSettings getAdjustableSettings();
 
 	/**
@@ -583,7 +583,7 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	 *
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "7.1")
 	@Nonnull
 	<T> RootGraph<T> parseEntityGraph(@Nonnull String rootEntityName, @Nonnull CharSequence graphText);
 
@@ -600,7 +600,7 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	 *
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "7.1")
 	@Nonnull
 	<T> RootGraph<T> parseEntityGraph(@Nonnull CharSequence graphText);
 
@@ -669,7 +669,7 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	 *
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "7.0")
 	@Nonnull
 	<R> TypedQueryReference<R> addNamedQuery(@Nonnull String name, @Nonnull TypedQuery<R> query);
 

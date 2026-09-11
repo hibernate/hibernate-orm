@@ -79,7 +79,7 @@ import java.util.stream.Stream;
  * @author Gavin King
  * @since 8.0
  */
-@Incubating
+@Incubating(since = "8.0")
 public interface MutationOrSelectionQuery
 		extends StatementOrTypedQuery, Query<Object> {
 

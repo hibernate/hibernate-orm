@@ -17,7 +17,7 @@ import org.hibernate.Incubating;
 ///
 /// @author Steve Ebersole
 /// @since 8.0
-@Incubating
+@Incubating(since = "8.0", group = "collection-delta")
 public interface SnapshotIndexed<K> {
 	/// The element (entity or value) at this position.
 	Object element();

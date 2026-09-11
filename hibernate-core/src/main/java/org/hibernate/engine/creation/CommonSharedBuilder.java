@@ -26,7 +26,7 @@ import java.util.function.UnaryOperator;
 /// @since 7.2
 ///
 /// @author Steve Ebersole
-@Incubating
+@Incubating(since = "7.2")
 public interface CommonSharedBuilder extends CommonBuilder {
 
 	/// Signifies that the connection from the original session should be used to create the new session.

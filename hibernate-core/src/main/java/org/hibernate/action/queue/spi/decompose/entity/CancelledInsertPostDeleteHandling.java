@@ -25,7 +25,7 @@ import org.hibernate.engine.spi.SessionImplementor;
 /// @see EntityDeleteAction
 ///
 /// @since 8.0
-@Incubating
+@Incubating(since = "8.0", group = "action-queue")
 public class CancelledInsertPostDeleteHandling implements PostExecutionCallback {
 	protected final EntityDeleteAction action;
 

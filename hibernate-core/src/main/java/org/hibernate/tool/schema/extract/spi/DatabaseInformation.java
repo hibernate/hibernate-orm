@@ -17,7 +17,7 @@ import org.hibernate.boot.model.relational.QualifiedTableName;
  * @author Teodor Danciu
  * @author Steve Ebersole
  */
-@Incubating
+@Incubating(since = "5.1")
 public interface DatabaseInformation {
 	/**
 	 * Check to see if the given schema already exists.

@@ -143,7 +143,7 @@ import java.util.stream.Stream;
  * @author Steve Ebersole
  * @since 6.0
  */
-@Incubating
+@Incubating(since = "6.0")
 public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	/**
 	 * The type of things returned from the query.
@@ -341,7 +341,7 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 * @see KeyedPage
 	 * @see KeyedResultList
 	 */
-	@Incubating
+	@Incubating(since = "8.0")
 	KeyedResultList<R> getKeyedResultList(KeyedPage<R> page);
 
 
@@ -573,7 +573,7 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 *
 	 * @since 6.3
 	 */
-	@Incubating
+	@Incubating(since = "8.0")
 	SelectionQuery<R> setPage(Page page);
 
 	/**

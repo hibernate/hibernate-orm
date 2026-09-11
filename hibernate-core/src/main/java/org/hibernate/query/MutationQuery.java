@@ -77,7 +77,7 @@ import java.util.Map;
  * @author Steve Ebersole
  * @since 6.0
  */
-@Incubating
+@Incubating(since = "6.0")
 public interface MutationQuery extends CommonQueryContract, Statement {
 	/**
 	 * The HQL or native-SQL string, or {@code null} in the case of a criteria query.

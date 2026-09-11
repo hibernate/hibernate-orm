@@ -13,7 +13,7 @@ import org.hibernate.Incubating;
  *
  * @author Steve Ebersole
  */
-@Incubating
+@Incubating(since = "6.0", group = "result-processing")
 @org.hibernate.SPI({ org.hibernate.SPI.Role.USE, org.hibernate.SPI.Role.IMPLEMENT })
 public interface RowTransformer<T> {
 	/**

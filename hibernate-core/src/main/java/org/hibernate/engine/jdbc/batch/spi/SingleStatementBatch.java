@@ -21,7 +21,7 @@ import org.hibernate.Incubating;
 ///
 /// @author Steve Ebersole
 /// @since 8.0
-@Incubating
+@Incubating(since = "8.0")
 public interface SingleStatementBatch extends Batch {
 	/// Bind and add one row to this batch.
 	///

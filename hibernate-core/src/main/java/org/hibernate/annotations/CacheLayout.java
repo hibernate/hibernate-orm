@@ -17,7 +17,7 @@ import org.hibernate.Incubating;
  * @see QueryCacheLayout
  * @since 6.5
  */
-@Incubating
+@Incubating(since = "6.5")
 public enum CacheLayout {
 	/**
 	 * Uses either {@link #SHALLOW} or {@link #FULL},

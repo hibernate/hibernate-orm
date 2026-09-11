@@ -22,7 +22,7 @@ import org.hibernate.models.spi.ClassDetails;
  *
  * @since 6.2
  */
-@Incubating
+@Incubating(since = "6.2")
 public interface AdditionalMappingContributions {
 	/**
 	 * Contribute a presumably annotated entity class.

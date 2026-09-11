@@ -39,7 +39,7 @@ import static org.hibernate.internal.util.NullnessUtil.castNonNull;
  *
  * @since 7.0
  */
-@Incubating
+@Incubating(since = "6.2")
 public class SqmJsonValueExpression<T> extends AbstractSqmJsonPathExpression<T> implements JpaJsonValueExpression<T> {
 	private ErrorBehavior errorBehavior = ErrorBehavior.UNSPECIFIED;
 	private @Nullable SqmExpression<T> errorDefaultExpression;

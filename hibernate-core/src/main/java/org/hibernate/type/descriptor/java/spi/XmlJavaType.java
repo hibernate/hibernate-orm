@@ -14,7 +14,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.format.FormatMapper;
 import org.hibernate.type.spi.TypeConfiguration;
 
-@Incubating
+@Incubating(since = "6.2")
 public class XmlJavaType<T> extends FormatMapperBasedJavaType<T> {
 
 	public XmlJavaType(

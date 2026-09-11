@@ -13,7 +13,7 @@ import org.hibernate.sql.spi.mutation.jdbc.JdbcValueDescriptor;
 ///
 /// @author Steve Ebersole
 /// @since 8.0
-@Incubating
+@Incubating(since = "8.0", group = "action-queue")
 public class JdbcValueDescriptorImpl implements JdbcValueDescriptor {
 	private final String normalizedColumnName;
 	private final JdbcMapping jdbcMapping;

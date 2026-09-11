@@ -23,7 +23,6 @@ import java.util.TreeMap;
 
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
-import org.hibernate.Incubating;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.collection.spi.AbstractPersistentCollection;
@@ -243,7 +242,7 @@ public abstract class CollectionType extends AbstractType implements Association
 		return false;
 	}
 
-	@Internal @Incubating
+	@Internal
 	public boolean isInverse(SessionFactoryImplementor factory) {
 		return getPersister( factory ).isInverse();
 	}

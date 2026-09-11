@@ -13,7 +13,7 @@ import org.hibernate.Incubating;
  *
  * @author Christian Beikov
  */
-@Incubating
+@Incubating(since = "5.4")
 public interface ValueAccess {
 	/**
 	 * The complete set of values.

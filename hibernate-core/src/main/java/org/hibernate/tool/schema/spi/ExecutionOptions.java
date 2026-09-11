@@ -13,7 +13,7 @@ import org.hibernate.Incubating;
  *
  * @author Steve Ebersole
  */
-@Incubating
+@Incubating(since = "5.1")
 public interface ExecutionOptions {
 	Map<String,Object> getConfigurationValues();
 

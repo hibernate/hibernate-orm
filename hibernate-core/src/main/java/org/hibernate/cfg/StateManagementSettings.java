@@ -18,7 +18,7 @@ import org.hibernate.temporal.spi.ChangesetIdentifierSupplier;
  *
  * @author Gavin King
  */
-@Incubating
+@Incubating(since = "7.4")
 public interface StateManagementSettings {
 	/**
 	 * Specifies the implementation strategy for
@@ -126,6 +126,6 @@ public interface StateManagementSettings {
 	 *
 	 * @since 7.4
 	 */
-	@Incubating
+	@Incubating(since = "8.0")
 	String AUDIT_STRATEGY = "hibernate.audit.strategy";
 }

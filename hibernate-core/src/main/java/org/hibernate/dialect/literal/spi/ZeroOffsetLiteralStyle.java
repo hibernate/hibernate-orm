@@ -17,7 +17,7 @@ import static org.hibernate.SPI.Role.USE;
 ///
 /// @author Steve Ebersole
 /// @since 8.0
-@Incubating
+@Incubating(since = "8.0")
 @SPI(USE)
 public enum ZeroOffsetLiteralStyle {
 	/// Render a zero offset using the UTC designator `Z`.

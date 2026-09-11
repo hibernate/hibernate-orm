@@ -29,7 +29,7 @@ import java.util.List;
  *
  * @since 6.0
  */
-@Incubating
+@Incubating(since = "6.0")
 @FunctionalInterface
 public interface TupleTransformer<T> {
 	/**

@@ -98,7 +98,7 @@ public class DelegatingJdbcTypeIndicators implements JdbcTypeIndicators {
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.4")
 	public Integer getExplicitJdbcTypeCode() {
 		return delegate.getExplicitJdbcTypeCode();
 	}
@@ -120,7 +120,7 @@ public class DelegatingJdbcTypeIndicators implements JdbcTypeIndicators {
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "7.0")
 	public boolean isXmlFormatMapperLegacyFormatEnabled() {
 		return delegate.isXmlFormatMapperLegacyFormatEnabled();
 	}

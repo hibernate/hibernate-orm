@@ -35,6 +35,6 @@ import static java.lang.annotation.RetentionPolicy.CLASS;
  */
 @Target(PARAMETER)
 @Retention(CLASS)
-@Incubating
+@Incubating(since = "6.3")
 public @interface Pattern {
 }

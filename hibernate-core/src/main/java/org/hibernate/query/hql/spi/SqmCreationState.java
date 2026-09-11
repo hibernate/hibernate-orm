@@ -14,7 +14,7 @@ import org.hibernate.query.sqm.tree.spi.cte.SqmCteStatement;
  *
  * @author Steve Ebersole
  */
-@Incubating
+@Incubating(since = "6.0")
 public interface SqmCreationState {
 	/**
 	 * Access to the context of the creation

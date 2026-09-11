@@ -24,7 +24,7 @@ import org.hibernate.query.results.spi.ResultBuilder;
  *
  * @author Steve Ebersole
  */
-@Incubating
+@Incubating(since = "8.0")
 public interface ResultMemento extends ResultMappingMementoNode {
 
 	Class<?> getResultJavaType();

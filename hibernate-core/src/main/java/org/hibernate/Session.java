@@ -1217,7 +1217,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	/// persistence context.
 	///
 	/// @since 7.0
-	@Incubating
+	@Incubating(since = "7.0")
 	@Nonnull
 	Collection<?> getManagedEntities();
 
@@ -1225,7 +1225,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	/// given entity name which belong to this persistence context.
 	///
 	/// @since 7.0
-	@Incubating
+	@Incubating(since = "7.0")
 	@Nonnull
 	Collection<?> getManagedEntities(@Nonnull String entityName);
 
@@ -1234,7 +1234,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	/// not return instances of subtypes of the given entity type.
 	///
 	/// @since 7.0
-	@Incubating
+	@Incubating(since = "7.0")
 	@Nonnull
 	<E> Collection<E> getManagedEntities(@Nonnull Class<E> entityType);
 
@@ -1243,7 +1243,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	/// not return instances of subtypes of the given entity type.
 	///
 	/// @since 7.0
-	@Incubating
+	@Incubating(since = "7.0")
 	@Nonnull
 	<E> Collection<E> getManagedEntities(@Nonnull EntityType<E> entityType);
 

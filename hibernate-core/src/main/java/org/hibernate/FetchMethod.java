@@ -33,7 +33,7 @@ import org.hibernate.annotations.Cache;
  *
  * @since 8.0
  */
-@Incubating
+@Incubating(since = "8.0")
 public enum FetchMethod implements FetchOption {
 	/**
 	 * Use a secondary select to load a single associated entity or

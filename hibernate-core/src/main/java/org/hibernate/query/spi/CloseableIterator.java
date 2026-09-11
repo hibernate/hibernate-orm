@@ -15,7 +15,7 @@ import org.hibernate.Incubating;
  *
  * @since 5.2
  */
-@Incubating
+@Incubating(since = "5.2")
 public interface CloseableIterator<T> extends Iterator<T>, AutoCloseable {
 	@Override
 	void close();

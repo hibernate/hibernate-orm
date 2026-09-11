@@ -30,7 +30,7 @@ import static org.hibernate.SPI.Role.USE;
 /// @see org.hibernate.sql.ast.spi.translation.SqlAstTranslator#translate
 /// @see org.hibernate.sql.ast.spi.model.TableMutation#createMutationOperation(String, List)
 @SPI({ USE, SUPPLY })
-@Incubating
+@Incubating(since = "6.0", group = "sql-execution")
 public interface JdbcOperation {
 	/// The command text to execute through JDBC. This is ordinarily SQL, but may
 	/// use another language understood by the configured JDBC driver.

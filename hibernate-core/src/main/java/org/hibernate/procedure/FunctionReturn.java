@@ -15,7 +15,7 @@ import org.hibernate.Incubating;
  *
  * @since 6.0
  */
-@Incubating
+@Incubating(since = "7.0")
 public interface FunctionReturn<T> extends ProcedureParameter<T> {
 	/**
 	 * The {@linkplain org.hibernate.type.SqlTypes JDBC type code}

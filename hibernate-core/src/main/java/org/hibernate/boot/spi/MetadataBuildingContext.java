@@ -72,31 +72,31 @@ public interface MetadataBuildingContext {
 		return getBootstrapContext().getServiceRegistry();
 	}
 
-	@Incubating
+	@Incubating(since = "6.0")
 	@Remove
 	default int getPreferredSqlTypeCodeForBoolean() {
 		return ConfigurationHelper.getPreferredSqlTypeCodeForBoolean( getRegistry() );
 	}
 
-	@Incubating
+	@Incubating(since = "6.0")
 	@Remove
 	default int getPreferredSqlTypeCodeForDuration() {
 		return ConfigurationHelper.getPreferredSqlTypeCodeForDuration( getRegistry() );
 	}
 
-	@Incubating
+	@Incubating(since = "6.0")
 	@Remove
 	default int getPreferredSqlTypeCodeForUuid() {
 		return ConfigurationHelper.getPreferredSqlTypeCodeForUuid( getRegistry() );
 	}
 
-	@Incubating
+	@Incubating(since = "6.0")
 	@Remove
 	default int getPreferredSqlTypeCodeForInstant() {
 		return ConfigurationHelper.getPreferredSqlTypeCodeForInstant( getRegistry() );
 	}
 
-	@Incubating
+	@Incubating(since = "6.1")
 	@Remove
 	default int getPreferredSqlTypeCodeForArray() {
 		return ConfigurationHelper.getPreferredSqlTypeCodeForArray( getRegistry() );
@@ -110,7 +110,7 @@ public interface MetadataBuildingContext {
 	 *
 	 * @since 8.0
 	 */
-	@Incubating
+	@Incubating(since = "8.0")
 	@Remove
 	default boolean isDirectJavaTimeJdbcAccessEnabled(Class<?> javaTimeType) {
 		return isPreferJavaTimeJdbcTypesEnabled()
@@ -133,19 +133,19 @@ public interface MetadataBuildingContext {
 	 * determining whether direct JDBC access should be used for a Java Time type.
 	 */
 	@Deprecated(since = "8.0")
-	@Incubating
+	@Incubating(since = "6.5")
 	@Remove
 	default boolean isPreferJavaTimeJdbcTypesEnabled() {
 		return isPreferJavaTimeJdbcTypesEnabled( getRegistry() );
 	}
 
-	@Incubating
+	@Incubating(since = "6.5")
 	@Remove
 	default boolean isPreferNativeEnumTypesEnabled() {
 		return isPreferNativeEnumTypesEnabled( getRegistry() );
 	}
 
-	@Incubating
+	@Incubating(since = "7.2")
 	@Remove
 	default boolean isPreferLocaleLanguageTagEnabled() {
 		return isPreferLocaleLanguageTagEnabled( getRegistry() );

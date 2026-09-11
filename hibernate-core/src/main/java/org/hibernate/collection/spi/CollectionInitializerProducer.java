@@ -21,7 +21,7 @@ import org.hibernate.sql.results.graph.collection.CollectionInitializer;
  *
  * @since 6.0
  */
-@Incubating
+@Incubating(since = "6.0")
 @FunctionalInterface
 public interface CollectionInitializerProducer {
 

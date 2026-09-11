@@ -111,7 +111,7 @@ public interface BasicType<T>
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.1")
 	default BasicValueConverter<T, ?> getValueConverter() {
 		return null;
 	}
@@ -168,7 +168,7 @@ public interface BasicType<T>
 	 * @return a check constraint condition or null
 	 * @since 6.2
 	 */
-	@Incubating
+	@Incubating(since = "6.2")
 	default String getCheckCondition(String columnName, Dialect dialect) {
 		String checkCondition = getJdbcType().getCheckCondition(
 				columnName,

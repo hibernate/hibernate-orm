@@ -53,7 +53,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * @since 7.4
  */
 @Documented
-@Incubating
+@Incubating(since = "7.4")
 @Retention(RUNTIME)
 @Target(TYPE)
 public @interface Changelog {

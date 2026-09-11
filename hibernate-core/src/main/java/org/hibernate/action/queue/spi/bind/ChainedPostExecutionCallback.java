@@ -9,7 +9,7 @@ import org.hibernate.engine.spi.SessionImplementor;
 
 /// @author Steve Ebersole
 /// @since 8.0
-@Incubating
+@Incubating(since = "8.0", group = "action-queue")
 public class ChainedPostExecutionCallback implements PostExecutionCallback {
 	private final PostExecutionCallback first;
 	private final PostExecutionCallback second;

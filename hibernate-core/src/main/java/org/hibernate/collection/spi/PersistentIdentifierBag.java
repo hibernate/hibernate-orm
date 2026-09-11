@@ -40,7 +40,7 @@ import static org.hibernate.generator.EventType.INSERT;
  *
  * @author Gavin King
  */
-@Incubating
+@Incubating(since = "6.0")
 public class PersistentIdentifierBag<E> extends AbstractPersistentCollection<E> implements List<E> {
 	/**
 	 * @deprecated Use {@link #bagAsList()} or {@link #collection} instead.

@@ -26,7 +26,7 @@ import org.hibernate.mapping.UserDefinedObjectType;
  * @see org.hibernate.boot.MetadataBuilder#applyColumnOrderingStrategy(ColumnOrderingStrategy)
  * @see org.hibernate.cfg.AvailableSettings#COLUMN_ORDERING_STRATEGY
  */
-@Incubating
+@Incubating(since = "6.2")
 @SPI({ SPI.Role.USE, SPI.Role.IMPLEMENT, SPI.Role.SUPPLY })
 public interface ColumnOrderingStrategy {
 

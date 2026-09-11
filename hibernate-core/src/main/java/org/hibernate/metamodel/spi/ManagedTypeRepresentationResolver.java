@@ -19,7 +19,7 @@ import org.hibernate.persister.entity.EntityPersister;
  * currently need to differentiate between strategy for entity/mapped-superclass
  * versus strategy for embeddables
  */
-@Incubating
+@Incubating(since = "5.4")
 public interface ManagedTypeRepresentationResolver {
 	/**
 	 * Resolve the strategy to use for the given entity

@@ -21,7 +21,7 @@ import java.util.Properties;
  *
  * @since 7.3
  */
-@Incubating
+@Incubating(since = "7.3")
 public interface UserTypeCreationContext {
 	/**
 	 * Access to the {@link MetadataBuildingContext}.

@@ -24,7 +24,7 @@ import static org.hibernate.SPI.Role.USE;
 /// @since 8.0
 /// @author Steve Ebersole
 /// @see org.hibernate.sql.ast.spi.translation.SqlAstTranslator#translate
-@Incubating
+@Incubating(since = "6.0", group = "sql-execution")
 @SPI({ USE, SUPPLY })
 public interface JdbcSelect extends PrimaryOperation, CacheableJdbcOperation {
 	JdbcValuesMappingProducer getJdbcValuesMappingProducer();

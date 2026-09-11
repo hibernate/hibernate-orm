@@ -17,7 +17,7 @@
 /// @implNote Built on top of the `org.hibernate.persister` package.
 /// @author Steve Ebersole
 /// @since 8.0
-@Incubating
+@Incubating(since = "5.4")
 @SPI(SPI.Role.USE)
 package org.hibernate.metamodel.mapping;
 

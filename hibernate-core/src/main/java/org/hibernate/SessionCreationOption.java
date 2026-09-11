@@ -25,7 +25,7 @@ import java.util.Map;
 ///
 /// @since 8.0
 /// @author Steve Ebersole
-@Incubating
+@Incubating(since = "8.0")
 public interface SessionCreationOption {
 	/// Specifies the [tenant id][org.hibernate.annotations.TenantId] which should
 	/// be used when accessing a multi-tenant database.

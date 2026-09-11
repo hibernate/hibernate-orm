@@ -19,7 +19,7 @@ import static org.hibernate.SPI.Role.USE;
 ///
 /// @param <T> the represented temporal value type
 /// @author Steve Ebersole
-@Incubating
+@Incubating(since = "6.0")
 @SPI({ USE, IMPLEMENT })
 public interface TemporalJavaType<T> extends BasicJavaType<T> {
 

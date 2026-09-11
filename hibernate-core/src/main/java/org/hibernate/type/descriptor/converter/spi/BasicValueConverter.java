@@ -22,7 +22,7 @@ import jakarta.annotation.Nullable;
  *
  * @author Steve Ebersole
  */
-@Incubating
+@Incubating(since = "6.2")
 public interface BasicValueConverter<D,R> {
 	/**
 	 * Convert the relational form just retrieved from JDBC ResultSet into

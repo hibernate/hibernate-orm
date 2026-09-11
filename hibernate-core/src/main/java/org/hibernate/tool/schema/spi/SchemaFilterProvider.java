@@ -13,7 +13,7 @@ import org.hibernate.Incubating;
  *
  * @since 5.1
  */
-@Incubating
+@Incubating(since = "8.0")
 public interface SchemaFilterProvider {
 	/**
 	 * Get the filter to be applied to {@link SchemaCreator} processing

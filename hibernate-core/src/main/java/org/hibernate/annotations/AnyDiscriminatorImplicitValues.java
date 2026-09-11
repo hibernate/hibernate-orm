@@ -26,7 +26,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  */
 @Target({METHOD, FIELD, ANNOTATION_TYPE})
 @Retention( RUNTIME )
-@Incubating
+@Incubating(since = "7.0")
 public @interface AnyDiscriminatorImplicitValues {
 	enum Strategy {
 		/**

@@ -27,7 +27,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  */
 @Target(ANNOTATION_TYPE)
 @Retention(RUNTIME)
-@Incubating
+@Incubating(since = "6.2")
 public @interface TypeBinderType {
 	/**
 	 * @return a type which implements {@link TypeBinder}

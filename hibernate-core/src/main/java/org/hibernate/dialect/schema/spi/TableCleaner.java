@@ -29,7 +29,7 @@ import static org.hibernate.SPI.Role.USE;
 /// @author Steve Ebersole
 /// @since 8.0
 /// @see Dialect#getTableCleaner()
-@Incubating
+@Incubating(since = "8.0")
 @SPI({ USE, IMPLEMENT, SUPPLY })
 public interface TableCleaner {
 	ConstraintControlMode constraintControlMode();

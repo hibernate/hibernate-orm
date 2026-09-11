@@ -76,7 +76,7 @@ import static java.lang.annotation.RetentionPolicy.CLASS;
  */
 @Target({PACKAGE, TYPE})
 @Retention(CLASS)
-@Incubating
+@Incubating(since = "6.3")
 public @interface CheckHQL {
 	/**
 	 * A Hibernate {@linkplain Dialect dialect} to use.

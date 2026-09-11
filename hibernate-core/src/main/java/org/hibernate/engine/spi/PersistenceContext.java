@@ -526,14 +526,14 @@ public interface PersistenceContext {
 	 * @param processingState The processing state which initializes the entity if successfully claimed
 	 * @param initializer The initializer to claim the entity instance
 	 */
-	@Incubating
+	@Incubating(since = "6.4")
 	EntityHolder claimEntityHolderIfPossible(
 			EntityKey key,
 			@Nullable Object entity,
 			JdbcValuesSourceProcessingState processingState,
 			EntityInitializer<?> initializer);
 
-	@Incubating
+	@Incubating(since = "6.6")
 	EntityHolder addEntityHolder(EntityKey key, Object entity);
 
 	@Nullable EntityHolder getEntityHolder(EntityKey key);
@@ -542,7 +542,7 @@ public interface PersistenceContext {
 
 	@Nullable EntityHolder removeEntityHolder(EntityKey key);
 
-	@Incubating
+	@Incubating(since = "6.4")
 	void postLoad(JdbcValuesSourceProcessingState processingState, Consumer<EntityHolder> loadedConsumer);
 
 	/**

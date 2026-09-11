@@ -13,7 +13,7 @@ import org.hibernate.engine.spi.SessionImplementor;
 ///
 /// @author Steve Ebersole
 /// @since 8.0
-@Incubating
+@Incubating(since = "8.0", group = "action-queue")
 public interface PostExecutionCallback {
 	/// The callback.
 	void handle(SessionImplementor session);

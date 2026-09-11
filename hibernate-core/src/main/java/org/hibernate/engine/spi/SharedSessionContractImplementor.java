@@ -316,7 +316,7 @@ public interface SharedSessionContractImplementor
 	 *
 	 * @since 7.2
 	 */
-	@Incubating
+	@Incubating(since = "7.2")
 	@Nullable
 	Transaction getCurrentTransaction();
 
@@ -325,7 +325,7 @@ public interface SharedSessionContractImplementor
 	 *
 	 * @since 7.2
 	 */
-	@Incubating
+	@Incubating(since = "7.2")
 	TransactionCompletionCallbacks getTransactionCompletionCallbacks();
 
 	/**
@@ -333,7 +333,7 @@ public interface SharedSessionContractImplementor
 	 *
 	 * @since 7.2
 	 */
-	@Incubating
+	@Incubating(since = "8.0")
 	@Nonnull
 	TransactionCompletionCallbacksImplementor getTransactionCompletionCallbacksImplementor();
 
@@ -343,7 +343,7 @@ public interface SharedSessionContractImplementor
 	 *
 	 * @since 7.4
 	 */
-	@Incubating
+	@Incubating(since = "7.4")
 	AuditWorkQueue getAuditWorkQueue();
 
 	/**
@@ -668,7 +668,7 @@ public interface SharedSessionContractImplementor
 	 *
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "7.0")
 	Object loadFromSecondLevelCache(
 			@Nonnull EntityPersister persister,
 			@Nonnull EntityKey entityKey,
@@ -683,7 +683,7 @@ public interface SharedSessionContractImplementor
 	 * updated to a null session (for detached entities) or updated to
 	 * a different Session.
 	 */
-	@Incubating
+	@Incubating(since = "7.1")
 	@Nonnull
 	SessionAssociationMarkers getSessionAssociationMarkers();
 
@@ -800,7 +800,7 @@ public interface SharedSessionContractImplementor
 	 * if the current session does not yet have the particular storage type attached to this session.
 	 * @param <E> The type of the extension storage.
 	 */
-	@Incubating
+	@Incubating(since = "7.4")
 	<E extends Extension> E getExtension(Class<E> extension);
 
 }

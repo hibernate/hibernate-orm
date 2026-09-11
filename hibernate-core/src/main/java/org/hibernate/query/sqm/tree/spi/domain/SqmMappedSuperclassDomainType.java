@@ -9,7 +9,7 @@ import org.hibernate.Incubating;
 import org.hibernate.metamodel.model.domain.MappedSuperclassDomainType;
 import org.hibernate.query.sqm.spi.SqmPathSource;
 
-@Incubating
+@Incubating(since = "6.2")
 public interface SqmMappedSuperclassDomainType<T>
 		extends MappedSuperclassDomainType<T>, SqmPathSource<T>, SqmManagedDomainType<T> {
 	@Override

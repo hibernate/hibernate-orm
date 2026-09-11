@@ -10,7 +10,7 @@ import org.hibernate.boot.Metadata;
 /**
  * Service delegate for handling schema validations
  */
-@Incubating
+@Incubating(since = "5.1")
 public interface SchemaValidator {
 	/**
 	 * Perform the validation of the schema described by Metadata

@@ -8,7 +8,7 @@ import jakarta.annotation.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 
-@Incubating
+@Incubating(since = "6.2")
 public interface SqmEntityDomainType<E> extends EntityDomainType<E>, SqmTreatableDomainType<E> {
 	@Override
 	default @Nullable SqmDomainType<E> getSqmType() {

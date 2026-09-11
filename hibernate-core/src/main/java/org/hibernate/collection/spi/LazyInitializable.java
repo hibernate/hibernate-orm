@@ -25,7 +25,7 @@ import org.hibernate.Incubating;
  *
  * @author Fabricio Gregorio
  */
-@Incubating
+@Incubating(since = "5.6")
 public interface LazyInitializable {
 
 	/**

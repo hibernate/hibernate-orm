@@ -12,7 +12,7 @@ import org.hibernate.Incubating;
  *
  * @see org.hibernate.bytecode.enhance.spi.EnhancementContext#getUnsupportedEnhancementStrategy
  */
-@Incubating
+@Incubating(since = "6.6")
 public enum UnsupportedEnhancementStrategy {
 
 	/**

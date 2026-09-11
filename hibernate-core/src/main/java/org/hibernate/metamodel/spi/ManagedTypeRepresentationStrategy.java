@@ -18,7 +18,7 @@ import org.hibernate.type.descriptor.java.JavaType;
  *
  * @see org.hibernate.metamodel.spi.ManagedTypeRepresentationResolver
  */
-@Incubating
+@Incubating(since = "5.4")
 public interface ManagedTypeRepresentationStrategy {
 	/**
 	 * The mode represented

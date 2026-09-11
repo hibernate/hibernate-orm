@@ -16,7 +16,7 @@ import java.util.List;
 /// @author Steve Ebersole
 /// @since 8.0
 ///
-@Incubating
+@Incubating(since = "8.0", group = "collection-delta")
 public record CollectionChangeSet(
 		List<Removal> removals,
 		List<Addition> additions,

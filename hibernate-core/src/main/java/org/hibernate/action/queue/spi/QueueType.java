@@ -11,7 +11,7 @@ import org.hibernate.Incubating;
 ///
 /// @author Steve Ebersole
 /// @since 8.0
-@Incubating
+@Incubating(since = "8.0", group = "action-queue")
 public enum QueueType {
 	/// Indicates the [graph-based][org.hibernate.action.queue.internal.GraphBasedActionQueue] ActionQueue
 	/// implementation,	which handles planning automatically based on defined constraints (foreign key dependencies,

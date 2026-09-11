@@ -8,7 +8,5 @@
  *
  * @see org.hibernate.type.descriptor.converter.spi.BasicValueConverter
  */
-@Incubating
-package org.hibernate.type.descriptor.converter.internal;
 
-import org.hibernate.Incubating;
+package org.hibernate.type.descriptor.converter.internal;

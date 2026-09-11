@@ -12,7 +12,7 @@ import java.sql.Connection;
 /**
  * An action to be performed after a {@linkplain PrimaryOperation}.
  */
-@Incubating
+@Incubating(since = "6.0", group = "sql-execution")
 @FunctionalInterface
 public interface PostAction extends SecondaryAction {
 	/**

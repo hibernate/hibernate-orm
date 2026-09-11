@@ -18,7 +18,7 @@ import jakarta.persistence.Converter;
  *
  * @author Steve Ebersole
  */
-@Incubating
+@Incubating(since = "6.0")
 public interface ConverterAutoApplyHandler {
 	/**
 	 * Resolve the auto-applied converter to be applied to a basic attribute described

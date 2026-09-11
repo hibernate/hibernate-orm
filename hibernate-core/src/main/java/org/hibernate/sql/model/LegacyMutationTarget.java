@@ -19,7 +19,7 @@ import org.hibernate.sql.spi.mutation.TableMapping;
  *
  * @author Steve Ebersole
  */
-@Incubating
+@Incubating(since = "6.2")
 @org.hibernate.SPI({ org.hibernate.SPI.Role.USE, org.hibernate.SPI.Role.IMPLEMENT })
 public interface LegacyMutationTarget<T extends TableMapping>
 		extends org.hibernate.sql.spi.mutation.MutationTarget {

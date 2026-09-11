@@ -68,7 +68,7 @@ public interface MultiTenancySettings {
 	 *
 	 * @since 7.1
 	 */
-	@Incubating
+	@Incubating(since = "7.3")
 	String MULTI_TENANT_SCHEMA_MAPPER = "hibernate.multi_tenant.schema_mapper";
 
 	/**
@@ -90,7 +90,7 @@ public interface MultiTenancySettings {
 	 *
 	 * @since 7.3
 	 */
-	@Incubating
+	@Incubating(since = "7.3")
 	String MULTI_TENANT_CREDENTIALS_MAPPER = "hibernate.multi_tenant.credentials_mapper";
 
 	/**
@@ -102,6 +102,6 @@ public interface MultiTenancySettings {
 	 *
 	 * @settingDefault true
 	 */
-	@Incubating
+	@Incubating(since = "8.0")
 	String MULTI_TENANT_RLS_ENABLED = "hibernate.multi_tenant.rls_enabled";
 }

@@ -69,7 +69,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *
  * @see Synchronize
  */
-@Incubating
+@Incubating(since = "6.3")
 @Target(TYPE)
 @Retention(RUNTIME)
 public @interface View {

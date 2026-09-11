@@ -56,7 +56,7 @@ public interface JdbcServices extends Service {
 	 * Obtains the service used for marking SQL parameters
 	 * @return the registered ParameterMarkerStrategy implementation.
 	 */
-	@Incubating
+	@Incubating(since = "6.2")
 	ParameterMarkerStrategy getParameterMarkerStrategy();
 
 	/**

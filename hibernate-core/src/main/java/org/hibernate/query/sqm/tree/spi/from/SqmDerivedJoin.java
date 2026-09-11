@@ -36,7 +36,7 @@ import static org.hibernate.query.sqm.spi.SqmCreationHelper.buildRootNavigablePa
 /**
  * @author Christian Beikov
  */
-@Incubating
+@Incubating(since = "6.2")
 public class SqmDerivedJoin<T> extends AbstractSqmJoin<T, T> implements JpaDerivedJoin<T>, SqmSingularValuedJoin<T, T> {
 	private final SqmSubQuery<T> subQuery;
 	private final boolean lateral;

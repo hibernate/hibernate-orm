@@ -19,7 +19,7 @@ import jakarta.persistence.EntityManager;
 /// @since 8.0
 ///
 /// @author Steve Ebersole
-@Incubating
+@Incubating(since = "8.0")
 public interface StatementObserver extends EntityManager.CreationOption, EntityAgent.CreationOption {
 	/// Callback that the given `sql` is about to be performed.
 	///

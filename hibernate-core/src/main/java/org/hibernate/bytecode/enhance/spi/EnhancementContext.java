@@ -121,7 +121,7 @@ public interface EnhancementContext extends EnhancementOptions {
 	 * @see <a href="https://hibernate.atlassian.net/browse/HHH-16572">HHH-16572</a>
 	 * @see <a href="https://hibernate.atlassian.net/browse/HHH-18833">HHH-18833</a>
 	 */
-	@Incubating
+	@Incubating(since = "6.6")
 	default UnsupportedEnhancementStrategy getUnsupportedEnhancementStrategy() {
 		return UnsupportedEnhancementStrategy.SKIP;
 	}
@@ -131,7 +131,7 @@ public interface EnhancementContext extends EnhancementOptions {
 	 * @return When returning {code null} the default implementation will be used. Only return a different instance if
 	 * you need to override the default implementation.
 	 */
-	@Incubating
+	@Incubating(since = "6.6")
 	default BytecodeProvider getBytecodeProvider() {
 		return null;
 	}

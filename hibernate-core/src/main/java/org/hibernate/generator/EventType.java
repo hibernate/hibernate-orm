@@ -44,6 +44,6 @@ public enum EventType {
 	 * or {@linkplain org.hibernate.LockMode#PESSIMISTIC_FORCE_INCREMENT pessimistic}
 	 * locks which trigger forcing an increment to the {@linkplain jakarta.persistence.Version version}.
 	 */
-	@Incubating
+	@Incubating(since = "7.1")
 	FORCE_INCREMENT
 }

@@ -42,7 +42,7 @@ import org.hibernate.SharedSessionContract;
  *
  * @since 7.4
  */
-@Incubating
+@Incubating(since = "7.4", group = "temporal-versioning")
 public interface ChangesetIdentifierSupplier<T> {
 
 	/**

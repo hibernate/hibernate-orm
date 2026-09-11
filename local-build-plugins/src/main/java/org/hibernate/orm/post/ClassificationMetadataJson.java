@@ -172,6 +172,7 @@ public final class ClassificationMetadataJson {
 		final List<String> lifecycle = lifecycle( element.getLifecycle() );
 		if ( !lifecycle.isEmpty() ) {
 			json.put( "lifecycle", lifecycle );
+			json.put( "lifecycleOrigins", lifecycleOrigins( element.getLifecycle().getOrigins() ) );
 		}
 		json.put( "artifact", element.getArtifact() );
 		json.put( "references", references( element.getReferences() ) );
@@ -216,6 +217,25 @@ public final class ClassificationMetadataJson {
 			states.add( ClassificationModel.LifecycleState.REMOVAL.name() );
 		}
 		return states;
+	}
+
+	private static List<Map<String, Object>> lifecycleOrigins(
+			Collection<ClassificationModel.LifecycleOrigin> origins) {
+		final List<Map<String, Object>> result = new ArrayList<>();
+		for ( ClassificationModel.LifecycleOrigin origin : origins ) {
+			final Map<String, Object> json = new LinkedHashMap<>();
+			json.put( "state", origin.getState().name() );
+			json.put( "kind", origin.getKind().name() );
+			json.put( "sourceElementId", origin.getSourceElementId() );
+			if ( origin.getSince() != null ) {
+				json.put( "since", origin.getSince() );
+			}
+			if ( origin.getGroup() != null ) {
+				json.put( "group", origin.getGroup() );
+			}
+			result.add( json );
+		}
+		return result;
 	}
 
 	private static List<Map<String, Object>> references(Collection<ClassificationModel.Reference> references) {
@@ -292,19 +312,35 @@ public final class ClassificationMetadataJson {
 			);
 		}
 
-		for ( ClassificationModel.LifecycleState state : optionalEnumValues(
-				ClassificationModel.LifecycleState.class,
-				element,
-				"lifecycle"
-		) ) {
-			model.addLifecycleOrigin(
-					elementId,
-					new ClassificationModel.LifecycleOrigin(
-							state,
-							ClassificationModel.LifecycleOriginKind.DIRECT,
-							elementId
-					)
-			);
+		if ( element.containsKey( "lifecycleOrigins" ) ) {
+			for ( Map<String, Object> origin : maps( element, "lifecycleOrigins" ) ) {
+				model.addLifecycleOrigin(
+						elementId,
+						new ClassificationModel.LifecycleOrigin(
+								enumValue( ClassificationModel.LifecycleState.class, origin, "state" ),
+								enumValue( ClassificationModel.LifecycleOriginKind.class, origin, "kind" ),
+								string( origin, "sourceElementId" ),
+								nullableString( origin, "since" ),
+								nullableString( origin, "group" )
+						)
+				);
+			}
+		}
+		else {
+			for ( ClassificationModel.LifecycleState state : optionalEnumValues(
+					ClassificationModel.LifecycleState.class,
+					element,
+					"lifecycle"
+			) ) {
+				model.addLifecycleOrigin(
+						elementId,
+						new ClassificationModel.LifecycleOrigin(
+								state,
+								ClassificationModel.LifecycleOriginKind.DIRECT,
+								elementId
+						)
+				);
+			}
 		}
 
 		for ( Map<String, Object> reference : maps( element, "references" ) ) {

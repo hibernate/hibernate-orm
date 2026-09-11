@@ -11,7 +11,7 @@ import org.hibernate.boot.spi.BootstrapContext;
 /**
  * The creation context for {@link FormatMapper} that is passed as constructor argument to implementations.
  */
-@Incubating
+@Incubating(since = "6.2")
 public interface FormatMapperCreationContext {
 	BootstrapContext getBootstrapContext();
 

@@ -36,7 +36,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *
  * @since 6.2
  */
-@Incubating
+@Incubating(since = "6.2")
 @Target({TYPE, FIELD, METHOD})
 @Retention( RUNTIME )
 public @interface Struct {

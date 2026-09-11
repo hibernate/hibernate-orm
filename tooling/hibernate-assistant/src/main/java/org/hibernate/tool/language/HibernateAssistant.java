@@ -14,7 +14,7 @@ import org.hibernate.query.SelectionQuery;
  * built-in data restrictions to make access to information stored in relational databases
  * as easy as a natural language prompt.
  */
-@Incubating
+@Incubating(since = "7.3")
 public interface HibernateAssistant {
 	/**
 	 * Creates a {@link SelectionQuery} by providing the specified natural language {@code message} to the LLM

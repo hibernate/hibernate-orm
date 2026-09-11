@@ -28,7 +28,7 @@ import java.util.function.BiConsumer;
  *
  * @author Steve Ebersole
  */
-@Incubating
+@Incubating(since = "8.0")
 @org.hibernate.SPI({ org.hibernate.SPI.Role.USE, org.hibernate.SPI.Role.IMPLEMENT, org.hibernate.SPI.Role.SUPPLY })
 public interface FetchBuilder extends GraphNodeBuilder {
 	/// Builds and supplies one fetch node.

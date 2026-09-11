@@ -18,7 +18,7 @@ import java.util.Objects;
  *
  * @since 7.0
  */
-@Incubating
+@Incubating(since = "6.2")
 public class SqmNamedExpression<T> extends AbstractSqmExpression<T> {
 
 	private final SqmExpression<T> expression;

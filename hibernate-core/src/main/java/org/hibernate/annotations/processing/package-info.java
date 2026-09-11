@@ -136,7 +136,7 @@
  * and so the repository is an injectable CDI bean and uses
  * {@code @Nonnull} to indicate required parameters.
  */
-@Incubating
+@Incubating(since = "6.3")
 package org.hibernate.annotations.processing;
 
 import org.hibernate.Incubating;

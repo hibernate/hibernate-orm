@@ -13,7 +13,7 @@ import org.hibernate.metamodel.mapping.AttributeMapping;
  *
  * @author Steve Ebersole
  */
-@Incubating
+@Incubating(since = "6.2")
 public interface AttributeAnalysis {
 	/**
 	 * The attribute analyzed here

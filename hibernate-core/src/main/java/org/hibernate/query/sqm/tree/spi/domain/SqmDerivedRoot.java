@@ -23,7 +23,7 @@ import org.hibernate.spi.NavigablePath;
 /**
  * @author Christian Beikov
  */
-@Incubating
+@Incubating(since = "6.2")
 public class SqmDerivedRoot<T> extends SqmRoot<T> implements JpaDerivedRoot<T> {
 
 	private final SqmSubQuery<T> subQuery;

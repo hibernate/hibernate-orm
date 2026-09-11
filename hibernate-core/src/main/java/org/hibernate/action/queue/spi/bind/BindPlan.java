@@ -18,7 +18,7 @@ import java.sql.SQLException;
 ///
 /// @author Steve Ebersole
 /// @since 8.0
-@Incubating
+@Incubating(since = "8.0", group = "action-queue")
 public interface BindPlan {
 	/// Access to the entity identifier associated with the FlushOperation
 	/// that this BindPlan is associated with.  May be null.

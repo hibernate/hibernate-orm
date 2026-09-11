@@ -15,7 +15,7 @@ import org.hibernate.sql.ast.spi.query.expression.JdbcParameter;
  * The collection
  * @author Steve Ebersole
  */
-@Incubating
+@Incubating(since = "6.0", group = "sql-execution")
 public interface JdbcParameters {
 	void addParameter(JdbcParameter parameter);
 	void addParameters(Collection<JdbcParameter> parameters);

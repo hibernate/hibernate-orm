@@ -38,7 +38,7 @@ import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
  *
  * @author Steve Ebersole
  */
-@Incubating
+@Incubating(since = "6.0")
 public interface PhysicalNamingStrategy {
 	/**
 	 * Determine the physical catalog name from the given logical name

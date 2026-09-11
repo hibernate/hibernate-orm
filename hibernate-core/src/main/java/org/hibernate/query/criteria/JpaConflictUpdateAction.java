@@ -18,7 +18,7 @@ import jakarta.persistence.metamodel.SingularAttribute;
  *
  * @since 6.5
  */
-@Incubating
+@Incubating(since = "6.3")
 public interface JpaConflictUpdateAction<T> {
 
 	/**

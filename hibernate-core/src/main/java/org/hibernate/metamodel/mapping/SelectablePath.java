@@ -17,7 +17,7 @@ import static org.hibernate.internal.util.StringHelper.split;
  *
  * @author Christian Beikov
  */
-@Incubating
+@Incubating(since = "5.4")
 public class SelectablePath implements Serializable, DotIdentifierSequence {
 	private final SelectablePath parent;
 	private final String name;

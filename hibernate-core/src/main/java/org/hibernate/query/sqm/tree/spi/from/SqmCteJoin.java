@@ -30,7 +30,7 @@ import static org.hibernate.query.sqm.spi.SqmCreationHelper.buildRootNavigablePa
 /**
  * @author Christian Beikov
  */
-@Incubating
+@Incubating(since = "6.2")
 public class SqmCteJoin<T> extends AbstractSqmJoin<T, T> implements SqmSingularValuedJoin<T, T> {
 	private final SqmCteStatement<T> cte;
 

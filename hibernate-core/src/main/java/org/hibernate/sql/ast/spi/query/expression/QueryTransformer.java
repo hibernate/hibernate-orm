@@ -12,7 +12,7 @@ import org.hibernate.sql.ast.spi.query.select.QuerySpec;
 /**
  * @author Christian Beikov
  */
-@Incubating
+@Incubating(since = "6.0")
 public interface QueryTransformer {
 
 	QuerySpec transform(

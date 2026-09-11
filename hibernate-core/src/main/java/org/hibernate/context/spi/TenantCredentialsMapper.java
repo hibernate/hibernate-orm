@@ -28,7 +28,7 @@ import org.hibernate.Incubating;
  *
  * @author Gavin King
  */
-@Incubating
+@Incubating(since = "7.3")
 public interface TenantCredentialsMapper<T> {
 	/**
 	 * The name of the database user for data belonging to the tenant

@@ -30,7 +30,7 @@ import static org.hibernate.SPI.Role.USE;
 ///
 /// @since 8.0
 /// @author Steve Ebersole
-@Incubating
+@Incubating(since = "7.1", group = "dialect-locking")
 @SPI(USE)
 public final class ConnectionLockTimeoutOperations {
 	private ConnectionLockTimeoutOperations() {

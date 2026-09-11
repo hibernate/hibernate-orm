@@ -30,7 +30,7 @@ import org.hibernate.type.Type;
  *
  * @author Gavin King
  */
-@Incubating
+@Incubating(since = "6.0")
 public class PersistentList<E> extends AbstractPersistentCollection<E> implements List<E> {
 	protected List<E> list;
 	@Serial

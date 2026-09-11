@@ -168,7 +168,7 @@ public interface Generator extends Serializable {
 	 *
 	 * @since 7.4
 	 */
-	@Incubating
+	@Incubating(since = "7.4")
 	default @Nullable Class<?> getGeneratedType() {
 		return null;
 	}
@@ -213,7 +213,7 @@ public interface Generator extends Serializable {
 		return getEventTypes().contains(UPDATE);
 	}
 
-	@Incubating
+	@Incubating(since = "7.1")
 	default boolean generatesOnForceIncrement() {
 		return getEventTypes().contains(FORCE_INCREMENT);
 	}
@@ -223,7 +223,7 @@ public interface Generator extends Serializable {
 	 *
 	 * @since 8.0
 	 */
-	@Incubating
+	@Incubating(since = "8.0")
 	default boolean requiresIdentityColumn() {
 		return false;
 	}

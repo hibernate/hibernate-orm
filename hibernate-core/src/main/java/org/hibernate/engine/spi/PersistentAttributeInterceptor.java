@@ -19,7 +19,7 @@ import org.hibernate.bytecode.enhance.spi.interceptor.BytecodeLazyAttributeInter
  *
  * @see PersistentAttributeInterceptable
  */
-@Incubating
+@Incubating(since = "5.3")
 @SuppressWarnings("unused")
 public interface PersistentAttributeInterceptor extends InterceptorImplementor {
 	boolean readBoolean(Object obj, String name, boolean oldValue);

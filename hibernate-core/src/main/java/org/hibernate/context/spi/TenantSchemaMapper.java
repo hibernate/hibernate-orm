@@ -18,7 +18,7 @@ import org.hibernate.Incubating;
  *
  * @author Gavin King
  */
-@Incubating
+@Incubating(since = "7.1")
 public interface TenantSchemaMapper<T> {
 	/**
 	 * The name of the database schema for data belonging to the tenant with the

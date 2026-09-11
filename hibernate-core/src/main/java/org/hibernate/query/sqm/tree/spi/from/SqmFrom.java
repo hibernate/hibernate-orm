@@ -156,7 +156,7 @@ public interface SqmFrom<L, R> extends SqmVisitableNode, SqmPath<R>, JpaFrom<L, 
 	@Override
 	<Y> SqmEntityJoin<R, Y> join(@Nonnull Class<Y> entityClass, @Nonnull JoinType joinType);
 
-	@Incubating
+	@Incubating(since = "6.2")
 	boolean hasImplicitlySelectableJoin();
 
 	@Nonnull

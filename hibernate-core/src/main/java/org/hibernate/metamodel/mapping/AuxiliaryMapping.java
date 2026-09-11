@@ -36,7 +36,7 @@ import org.hibernate.sql.ast.spi.query.predicate.Predicate;
 ///
 /// @author Gavin King
 /// @since 7.4
-@Incubating
+@Incubating(since = "5.4")
 public interface AuxiliaryMapping {
 	/// The primary auxiliary table name.
 	///

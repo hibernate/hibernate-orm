@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.Incubating;
 import org.hibernate.action.queue.spi.meta.EntityTableDescriptor;
 import org.hibernate.MappingException;
 import org.hibernate.audit.AuditException;
@@ -62,7 +61,6 @@ import static org.hibernate.persister.entity.mutation.InsertCoordinatorStandard.
 ///
 /// @author Steve Ebersole
 /// @since 8.0
-@Incubating
 @org.hibernate.Internal
 public class EntityAuditSupport {
 

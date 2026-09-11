@@ -13,7 +13,7 @@ import org.hibernate.annotations.ColumnTransformer;
  *
  * @author Christian Beikov
  */
-@Incubating
+@Incubating(since = "5.4")
 public interface SelectableMapping extends SqlTypedMapping {
 	/**
 	 * The name of the table to which this selectable is mapped

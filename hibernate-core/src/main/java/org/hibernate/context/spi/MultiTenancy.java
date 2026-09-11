@@ -29,7 +29,7 @@ import static org.hibernate.cfg.MultiTenancySettings.MULTI_TENANT_SCHEMA_MAPPER;
  *
  * @author Gavin King
  */
-@Incubating
+@Incubating(since = "7.2")
 public class MultiTenancy {
 
 	/**

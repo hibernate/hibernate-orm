@@ -19,7 +19,7 @@ import org.hibernate.service.ServiceRegistry;
  *
  * @since 6
  */
-@Incubating
+@Incubating(since = "6.0")
 public interface ImplicitDatabaseObjectNamingStrategy {
 	String DEF_SEQUENCE = "hibernate_sequence";
 

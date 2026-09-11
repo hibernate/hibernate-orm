@@ -227,13 +227,13 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public JpaValues values(Expression<?>... expressions) {
 		return criteriaBuilder.values( expressions );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public JpaValues values(List<? extends Expression<?>> expressions) {
 		return criteriaBuilder.values( expressions );
 	}
@@ -1689,7 +1689,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public JpaSearchOrder search(
 			JpaCteCriteriaAttribute cteAttribute,
 			SortDirection sortOrder,
@@ -1698,37 +1698,37 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public JpaSearchOrder search(JpaCteCriteriaAttribute cteAttribute, SortDirection sortOrder) {
 		return criteriaBuilder.search( cteAttribute, sortOrder );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public JpaSearchOrder search(JpaCteCriteriaAttribute cteAttribute) {
 		return criteriaBuilder.search( cteAttribute );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public JpaSearchOrder asc(JpaCteCriteriaAttribute x) {
 		return criteriaBuilder.asc( x );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public JpaSearchOrder desc(JpaCteCriteriaAttribute x) {
 		return criteriaBuilder.desc( x );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public JpaSearchOrder asc(JpaCteCriteriaAttribute x, boolean nullsFirst) {
 		return criteriaBuilder.asc( x, nullsFirst );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public JpaSearchOrder desc(JpaCteCriteriaAttribute x, boolean nullsFirst) {
 		return criteriaBuilder.desc( x, nullsFirst );
 	}
@@ -2598,25 +2598,25 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <T> JpaExpression<T[]> arrayAgg(JpaOrder order, Expression<? extends T> argument) {
 		return criteriaBuilder.arrayAgg( order, argument );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <T> JpaExpression<T[]> arrayAgg(JpaOrder order, JpaPredicate filter, Expression<? extends T> argument) {
 		return criteriaBuilder.arrayAgg( order, filter, argument );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <T> JpaExpression<T[]> arrayAgg(JpaOrder order, JpaWindow window, Expression<? extends T> argument) {
 		return criteriaBuilder.arrayAgg( order, window, argument );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <T> JpaExpression<T[]> arrayAgg(
 			JpaOrder order,
 			JpaPredicate filter,
@@ -2626,43 +2626,43 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <T> JpaExpression<T[]> arrayLiteral(T... elements) {
 		return criteriaBuilder.arrayLiteral( elements );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <T> JpaExpression<Integer> arrayLength(Expression<T[]> arrayExpression) {
 		return criteriaBuilder.arrayLength( arrayExpression );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <T> JpaExpression<Integer> arrayPosition(Expression<T[]> arrayExpression, T element) {
 		return criteriaBuilder.arrayPosition( arrayExpression, element );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <T> JpaExpression<Integer> arrayPosition(Expression<T[]> arrayExpression, Expression<T> elementExpression) {
 		return criteriaBuilder.arrayPosition( arrayExpression, elementExpression );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <T> JpaExpression<int[]> arrayPositions(Expression<T[]> arrayExpression, Expression<T> elementExpression) {
 		return criteriaBuilder.arrayPositions( arrayExpression, elementExpression );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <T> JpaExpression<int[]> arrayPositions(Expression<T[]> arrayExpression, T element) {
 		return criteriaBuilder.arrayPositions( arrayExpression, element );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <T> JpaExpression<List<Integer>> arrayPositionsList(
 			Expression<T[]> arrayExpression,
 			Expression<T> elementExpression) {
@@ -2670,67 +2670,67 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <T> JpaExpression<List<Integer>> arrayPositionsList(Expression<T[]> arrayExpression, T element) {
 		return criteriaBuilder.arrayPositionsList( arrayExpression, element );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <T> JpaExpression<T[]> arrayConcat(Expression<T[]> arrayExpression1, Expression<T[]> arrayExpression2) {
 		return criteriaBuilder.arrayConcat( arrayExpression1, arrayExpression2 );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <T> JpaExpression<T[]> arrayConcat(Expression<T[]> arrayExpression1, T[] array2) {
 		return criteriaBuilder.arrayConcat( arrayExpression1, array2 );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <T> JpaExpression<T[]> arrayConcat(T[] array1, Expression<T[]> arrayExpression2) {
 		return criteriaBuilder.arrayConcat( array1, arrayExpression2 );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <T> JpaExpression<T[]> arrayAppend(Expression<T[]> arrayExpression, Expression<T> elementExpression) {
 		return criteriaBuilder.arrayAppend( arrayExpression, elementExpression );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <T> JpaExpression<T[]> arrayAppend(Expression<T[]> arrayExpression, T element) {
 		return criteriaBuilder.arrayAppend( arrayExpression, element );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <T> JpaExpression<T[]> arrayPrepend(Expression<T> elementExpression, Expression<T[]> arrayExpression) {
 		return criteriaBuilder.arrayPrepend( elementExpression, arrayExpression );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <T> JpaExpression<T[]> arrayPrepend(T element, Expression<T[]> arrayExpression) {
 		return criteriaBuilder.arrayPrepend( element, arrayExpression );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <T> JpaExpression<T> arrayGet(Expression<T[]> arrayExpression, Expression<Integer> indexExpression) {
 		return criteriaBuilder.arrayGet( arrayExpression, indexExpression );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <T> JpaExpression<T> arrayGet(Expression<T[]> arrayExpression, Integer index) {
 		return criteriaBuilder.arrayGet( arrayExpression, index );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <T> JpaExpression<T[]> arraySet(
 			Expression<T[]> arrayExpression,
 			Expression<Integer> indexExpression,
@@ -2739,7 +2739,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <T> JpaExpression<T[]> arraySet(
 			Expression<T[]> arrayExpression,
 			Expression<Integer> indexExpression,
@@ -2748,7 +2748,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <T> JpaExpression<T[]> arraySet(
 			Expression<T[]> arrayExpression,
 			Integer index,
@@ -2757,25 +2757,25 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <T> JpaExpression<T[]> arraySet(Expression<T[]> arrayExpression, Integer index, T element) {
 		return criteriaBuilder.arraySet( arrayExpression, index, element );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <T> JpaExpression<T[]> arrayRemove(Expression<T[]> arrayExpression, Expression<T> elementExpression) {
 		return criteriaBuilder.arrayRemove( arrayExpression, elementExpression );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <T> JpaExpression<T[]> arrayRemove(Expression<T[]> arrayExpression, T element) {
 		return criteriaBuilder.arrayRemove( arrayExpression, element );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <T> JpaExpression<T[]> arrayRemoveIndex(
 			Expression<T[]> arrayExpression,
 			Expression<Integer> indexExpression) {
@@ -2783,13 +2783,13 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <T> JpaExpression<T[]> arrayRemoveIndex(Expression<T[]> arrayExpression, Integer index) {
 		return criteriaBuilder.arrayRemoveIndex( arrayExpression, index );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <T> JpaExpression<T[]> arraySlice(
 			Expression<T[]> arrayExpression,
 			Expression<Integer> lowerIndexExpression,
@@ -2798,7 +2798,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <T> JpaExpression<T[]> arraySlice(
 			Expression<T[]> arrayExpression,
 			Expression<Integer> lowerIndexExpression,
@@ -2807,7 +2807,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <T> JpaExpression<T[]> arraySlice(
 			Expression<T[]> arrayExpression,
 			Integer lowerIndex,
@@ -2816,13 +2816,13 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <T> JpaExpression<T[]> arraySlice(Expression<T[]> arrayExpression, Integer lowerIndex, Integer upperIndex) {
 		return criteriaBuilder.arraySlice( arrayExpression, lowerIndex, upperIndex );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <T> JpaExpression<T[]> arrayReplace(
 			Expression<T[]> arrayExpression,
 			Expression<T> oldElementExpression,
@@ -2831,7 +2831,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <T> JpaExpression<T[]> arrayReplace(
 			Expression<T[]> arrayExpression,
 			Expression<T> oldElementExpression,
@@ -2840,7 +2840,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <T> JpaExpression<T[]> arrayReplace(
 			Expression<T[]> arrayExpression,
 			T oldElement,
@@ -2849,13 +2849,13 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <T> JpaExpression<T[]> arrayReplace(Expression<T[]> arrayExpression, T oldElement, T newElement) {
 		return criteriaBuilder.arrayReplace( arrayExpression, oldElement, newElement );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <T> JpaExpression<T[]> arrayTrim(
 			Expression<T[]> arrayExpression,
 			Expression<Integer> elementCountExpression) {
@@ -2863,43 +2863,43 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <T> JpaExpression<T[]> arrayTrim(Expression<T[]> arrayExpression, Integer elementCount) {
 		return criteriaBuilder.arrayTrim( arrayExpression, elementCount );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <T> JpaExpression<T[]> arrayReverse(Expression<T[]> arrayExpression) {
 		return criteriaBuilder.arrayReverse( arrayExpression );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <T> JpaExpression<T[]> arraySort(Expression<T[]> arrayExpression) {
 		return criteriaBuilder.arraySort( arrayExpression );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <T> JpaExpression<T[]> arraySort(Expression<T[]> arrayExpression, boolean descending) {
 		return criteriaBuilder.arraySort( arrayExpression, descending );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <T> JpaExpression<T[]> arraySort(Expression<T[]> arrayExpression, Expression<Boolean> descendingExpression) {
 		return criteriaBuilder.arraySort( arrayExpression, descendingExpression );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <T> JpaExpression<T[]> arraySort(Expression<T[]> arrayExpression, boolean descending, boolean nullsFirst) {
 		return criteriaBuilder.arraySort( arrayExpression, descending, nullsFirst );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <T> JpaExpression<T[]> arraySort(
 			Expression<T[]> arrayExpression,
 			Expression<Boolean> descendingExpression,
@@ -2908,7 +2908,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <T> JpaExpression<T[]> arrayFill(
 			Expression<T> elementExpression,
 			Expression<Integer> elementCountExpression) {
@@ -2916,25 +2916,25 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <T> JpaExpression<T[]> arrayFill(Expression<T> elementExpression, Integer elementCount) {
 		return criteriaBuilder.arrayFill( elementExpression, elementCount );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <T> JpaExpression<T[]> arrayFill(T element, Expression<Integer> elementCountExpression) {
 		return criteriaBuilder.arrayFill( element, elementCountExpression );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <T> JpaExpression<T[]> arrayFill(T element, Integer elementCount) {
 		return criteriaBuilder.arrayFill( element, elementCount );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public JpaExpression<String> arrayToString(
 			Expression<? extends Object[]> arrayExpression,
 			Expression<String> separatorExpression) {
@@ -2942,91 +2942,91 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public JpaExpression<String> arrayToString(Expression<? extends Object[]> arrayExpression, String separator) {
 		return criteriaBuilder.arrayToString( arrayExpression, separator );
 	}
 
-	@Incubating
+	@Incubating(since = "6.3")
 	@Override
 	public JpaExpression<String> arrayToString(Expression<? extends Object[]> arrayExpression, Expression<String> separatorExpression, Expression<String> defaultExpression) {
 		return criteriaBuilder.arrayToString( arrayExpression, separatorExpression, defaultExpression );
 	}
 
-	@Incubating
+	@Incubating(since = "6.3")
 	@Override
 	public JpaExpression<String> arrayToString(Expression<? extends Object[]> arrayExpression, Expression<String> separatorExpression, String defaultValue) {
 		return criteriaBuilder.arrayToString( arrayExpression, separatorExpression, defaultValue );
 	}
 
-	@Incubating
+	@Incubating(since = "6.3")
 	@Override
 	public JpaExpression<String> arrayToString(Expression<? extends Object[]> arrayExpression, String separator, Expression<String> defaultExpression) {
 		return criteriaBuilder.arrayToString( arrayExpression, separator, defaultExpression );
 	}
 
-	@Incubating
+	@Incubating(since = "6.3")
 	@Override
 	public JpaExpression<String> arrayToString(Expression<? extends Object[]> arrayExpression, String separator, String defaultValue) {
 		return criteriaBuilder.arrayToString( arrayExpression, separator, defaultValue );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <T> JpaPredicate arrayContains(Expression<T[]> arrayExpression, Expression<T> elementExpression) {
 		return criteriaBuilder.arrayContains( arrayExpression, elementExpression );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <T> JpaPredicate arrayContains(Expression<T[]> arrayExpression, T element) {
 		return criteriaBuilder.arrayContains( arrayExpression, element );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <T> JpaPredicate arrayContains(T[] array, Expression<T> elementExpression) {
 		return criteriaBuilder.arrayContains( array, elementExpression );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <T> JpaPredicate arrayContainsNullable(Expression<T[]> arrayExpression, Expression<T> elementExpression) {
 		return criteriaBuilder.arrayContainsNullable( arrayExpression, elementExpression );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <T> JpaPredicate arrayContainsNullable(Expression<T[]> arrayExpression, T element) {
 		return criteriaBuilder.arrayContainsNullable( arrayExpression, element );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <T> JpaPredicate arrayContainsNullable(T[] array, Expression<T> elementExpression) {
 		return criteriaBuilder.arrayContainsNullable( array, elementExpression );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <T> JpaPredicate arrayIncludes(Expression<T[]> arrayExpression, Expression<T[]> subArrayExpression) {
 		return criteriaBuilder.arrayIncludes( arrayExpression, subArrayExpression );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <T> JpaPredicate arrayIncludes(Expression<T[]> arrayExpression, T[] subArray) {
 		return criteriaBuilder.arrayIncludes( arrayExpression, subArray );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <T> JpaPredicate arrayIncludes(T[] array, Expression<T[]> subArrayExpression) {
 		return criteriaBuilder.arrayIncludes( array, subArrayExpression );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <T> JpaPredicate arrayIncludesNullable(
 			Expression<T[]> arrayExpression,
 			Expression<T[]> subArrayExpression) {
@@ -3034,67 +3034,67 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <T> JpaPredicate arrayIncludesNullable(Expression<T[]> arrayExpression, T[] subArray) {
 		return criteriaBuilder.arrayIncludesNullable( arrayExpression, subArray );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <T> JpaPredicate arrayIncludesNullable(T[] array, Expression<T[]> subArrayExpression) {
 		return criteriaBuilder.arrayIncludesNullable( array, subArrayExpression );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <T> JpaPredicate arrayIntersects(Expression<T[]> arrayExpression1, Expression<T[]> arrayExpression2) {
 		return criteriaBuilder.arrayIntersects( arrayExpression1, arrayExpression2 );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <T> JpaPredicate arrayIntersects(Expression<T[]> arrayExpression1, T[] array2) {
 		return criteriaBuilder.arrayIntersects( arrayExpression1, array2 );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <T> JpaPredicate arrayIntersects(T[] array1, Expression<T[]> arrayExpression2) {
 		return criteriaBuilder.arrayIntersects( array1, arrayExpression2 );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <T> JpaPredicate arrayIntersectsNullable(Expression<T[]> arrayExpression1, Expression<T[]> arrayExpression2) {
 		return criteriaBuilder.arrayIntersectsNullable( arrayExpression1, arrayExpression2 );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <T> JpaPredicate arrayIntersectsNullable(Expression<T[]> arrayExpression1, T[] array2) {
 		return criteriaBuilder.arrayIntersectsNullable( arrayExpression1, array2 );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <T> JpaPredicate arrayIntersectsNullable(T[] array1, Expression<T[]> arrayExpression2) {
 		return criteriaBuilder.arrayIntersectsNullable( array1, arrayExpression2 );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <E, C extends Collection<E>> JpaExpression<C> collectionLiteral(E... elements) {
 		return criteriaBuilder.collectionLiteral( elements );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public JpaExpression<Integer> collectionLength(Expression<? extends Collection<?>> collectionExpression) {
 		return criteriaBuilder.collectionLength( collectionExpression );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <E> JpaExpression<Integer> collectionPosition(
 			Expression<? extends Collection<? extends E>> collectionExpression,
 			E element) {
@@ -3102,7 +3102,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <E> JpaExpression<Integer> collectionPosition(
 			Expression<? extends Collection<? extends E>> collectionExpression,
 			Expression<E> elementExpression) {
@@ -3110,7 +3110,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <T> JpaExpression<int[]> collectionPositions(
 			Expression<? extends Collection<? super T>> collectionExpression,
 			Expression<T> elementExpression) {
@@ -3118,7 +3118,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <T> JpaExpression<int[]> collectionPositions(
 			Expression<? extends Collection<? super T>> collectionExpression,
 			T element) {
@@ -3126,7 +3126,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <T> JpaExpression<List<Integer>> collectionPositionsList(
 			Expression<? extends Collection<? super T>> collectionExpression,
 			Expression<T> elementExpression) {
@@ -3134,7 +3134,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <T> JpaExpression<List<Integer>> collectionPositionsList(
 			Expression<? extends Collection<? super T>> collectionExpression,
 			T element) {
@@ -3142,7 +3142,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <E, C extends Collection<? super E>> JpaExpression<C> collectionConcat(
 			Expression<C> collectionExpression1,
 			Expression<? extends Collection<? extends E>> collectionExpression2) {
@@ -3150,7 +3150,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <E, C extends Collection<? super E>> JpaExpression<C> collectionConcat(
 			Expression<C> collectionExpression1,
 			Collection<? extends E> collection2) {
@@ -3158,7 +3158,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <E, C extends Collection<? super E>> JpaExpression<C> collectionConcat(
 			C collection1,
 			Expression<? extends Collection<? extends E>> collectionExpression2) {
@@ -3166,7 +3166,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <E, C extends Collection<? super E>> JpaExpression<C> collectionAppend(
 			Expression<C> collectionExpression,
 			Expression<? extends E> elementExpression) {
@@ -3174,7 +3174,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <E, C extends Collection<? super E>> JpaExpression<C> collectionAppend(
 			Expression<C> collectionExpression,
 			E element) {
@@ -3182,7 +3182,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <E, C extends Collection<? super E>> JpaExpression<C> collectionPrepend(
 			Expression<? extends E> elementExpression,
 			Expression<C> collectionExpression) {
@@ -3190,7 +3190,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <E, C extends Collection<? super E>> JpaExpression<C> collectionPrepend(
 			E element,
 			Expression<C> collectionExpression) {
@@ -3198,7 +3198,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <E> JpaExpression<E> collectionGet(
 			Expression<? extends Collection<E>> collectionExpression,
 			Expression<Integer> indexExpression) {
@@ -3206,13 +3206,13 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <E> JpaExpression<E> collectionGet(Expression<? extends Collection<E>> collectionExpression, Integer index) {
 		return criteriaBuilder.collectionGet( collectionExpression, index );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <E, C extends Collection<? super E>> JpaExpression<C> collectionSet(
 			Expression<C> collectionExpression,
 			Expression<Integer> indexExpression,
@@ -3221,7 +3221,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <E, C extends Collection<? super E>> JpaExpression<C> collectionSet(
 			Expression<C> collectionExpression,
 			Expression<Integer> indexExpression,
@@ -3230,7 +3230,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <E, C extends Collection<? super E>> JpaExpression<C> collectionSet(
 			Expression<C> collectionExpression,
 			Integer index,
@@ -3239,7 +3239,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <E, C extends Collection<? super E>> JpaExpression<C> collectionSet(
 			Expression<C> collectionExpression,
 			Integer index,
@@ -3248,7 +3248,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <E, C extends Collection<? super E>> JpaExpression<C> collectionRemove(
 			Expression<C> collectionExpression,
 			Expression<? extends E> elementExpression) {
@@ -3256,7 +3256,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <E, C extends Collection<? super E>> JpaExpression<C> collectionRemove(
 			Expression<C> collectionExpression,
 			E element) {
@@ -3264,7 +3264,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <C extends Collection<?>> JpaExpression<C> collectionRemoveIndex(
 			Expression<C> collectionExpression,
 			Expression<Integer> indexExpression) {
@@ -3272,7 +3272,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <C extends Collection<?>> JpaExpression<C> collectionRemoveIndex(
 			Expression<C> collectionExpression,
 			Integer index) {
@@ -3280,7 +3280,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <C extends Collection<?>> JpaExpression<C> collectionSlice(
 			Expression<C> collectionExpression,
 			Expression<Integer> lowerIndexExpression,
@@ -3289,7 +3289,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <C extends Collection<?>> JpaExpression<C> collectionSlice(
 			Expression<C> collectionExpression,
 			Expression<Integer> lowerIndexExpression,
@@ -3298,7 +3298,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <C extends Collection<?>> JpaExpression<C> collectionSlice(
 			Expression<C> collectionExpression,
 			Integer lowerIndex,
@@ -3307,7 +3307,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <C extends Collection<?>> JpaExpression<C> collectionSlice(
 			Expression<C> collectionExpression,
 			Integer lowerIndex,
@@ -3316,7 +3316,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <E, C extends Collection<? super E>> JpaExpression<C> collectionReplace(
 			Expression<C> collectionExpression,
 			Expression<? extends E> oldElementExpression,
@@ -3325,7 +3325,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <E, C extends Collection<? super E>> JpaExpression<C> collectionReplace(
 			Expression<C> collectionExpression,
 			Expression<? extends E> oldElementExpression,
@@ -3334,7 +3334,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <E, C extends Collection<? super E>> JpaExpression<C> collectionReplace(
 			Expression<C> collectionExpression,
 			E oldElement,
@@ -3343,7 +3343,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <E, C extends Collection<? super E>> JpaExpression<C> collectionReplace(
 			Expression<C> collectionExpression,
 			E oldElement,
@@ -3352,7 +3352,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <C extends Collection<?>> JpaExpression<C> collectionTrim(
 			Expression<C> arrayExpression,
 			Expression<Integer> elementCountExpression) {
@@ -3360,7 +3360,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <C extends Collection<?>> JpaExpression<C> collectionTrim(
 			Expression<C> arrayExpression,
 			Integer elementCount) {
@@ -3368,19 +3368,19 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <C extends Collection<?>> JpaExpression<C> collectionReverse(Expression<C> collectionExpression) {
 		return criteriaBuilder.collectionReverse( collectionExpression );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <C extends Collection<?>> JpaExpression<C> collectionSort(Expression<C> collectionExpression) {
 		return criteriaBuilder.collectionSort( collectionExpression );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <C extends Collection<?>> JpaExpression<C> collectionSort(
 			Expression<C> collectionExpression,
 			boolean descending) {
@@ -3388,7 +3388,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <C extends Collection<?>> JpaExpression<C> collectionSort(
 			Expression<C> collectionExpression,
 			Expression<Boolean> descendingExpression) {
@@ -3396,7 +3396,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <C extends Collection<?>> JpaExpression<C> collectionSort(
 			Expression<C> collectionExpression,
 			boolean descending,
@@ -3405,7 +3405,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <C extends Collection<?>> JpaExpression<C> collectionSort(
 			Expression<C> collectionExpression,
 			Expression<Boolean> descendingExpression,
@@ -3414,7 +3414,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <T> JpaExpression<Collection<T>> collectionFill(
 			Expression<T> elementExpression,
 			Expression<Integer> elementCountExpression) {
@@ -3422,25 +3422,25 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <T> JpaExpression<Collection<T>> collectionFill(Expression<T> elementExpression, Integer elementCount) {
 		return criteriaBuilder.collectionFill( elementExpression, elementCount );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <T> JpaExpression<Collection<T>> collectionFill(T element, Expression<Integer> elementCountExpression) {
 		return criteriaBuilder.collectionFill( element, elementCountExpression );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <T> JpaExpression<Collection<T>> collectionFill(T element, Integer elementCount) {
 		return criteriaBuilder.collectionFill( element, elementCount );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public JpaExpression<String> collectionToString(
 			Expression<? extends Collection<?>> collectionExpression,
 			Expression<String> separatorExpression) {
@@ -3448,39 +3448,39 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public JpaExpression<String> collectionToString(
 			Expression<? extends Collection<?>> collectionExpression,
 			String separator) {
 		return criteriaBuilder.collectionToString( collectionExpression, separator );
 	}
 
-	@Incubating
+	@Incubating(since = "6.3")
 	@Override
 	public JpaExpression<String> collectionToString(Expression<? extends Collection<?>> collectionExpression, Expression<String> separatorExpression, Expression<String> defaultExpression) {
 		return criteriaBuilder.collectionToString( collectionExpression, separatorExpression, defaultExpression );
 	}
 
-	@Incubating
+	@Incubating(since = "6.3")
 	@Override
 	public JpaExpression<String> collectionToString(Expression<? extends Collection<?>> collectionExpression, Expression<String> separatorExpression, String defaultValue) {
 		return criteriaBuilder.collectionToString( collectionExpression, separatorExpression, defaultValue );
 	}
 
-	@Incubating
+	@Incubating(since = "6.3")
 	@Override
 	public JpaExpression<String> collectionToString(Expression<? extends Collection<?>> collectionExpression, String separator, Expression<String> defaultExpression) {
 		return criteriaBuilder.collectionToString( collectionExpression, separator, defaultExpression );
 	}
 
-	@Incubating
+	@Incubating(since = "6.3")
 	@Override
 	public JpaExpression<String> collectionToString(Expression<? extends Collection<?>> collectionExpression, String separator, String defaultValue) {
 		return criteriaBuilder.collectionToString( collectionExpression, separator, defaultValue );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <E> JpaPredicate collectionContains(
 			Expression<? extends Collection<E>> collectionExpression,
 			Expression<? extends E> elementExpression) {
@@ -3488,19 +3488,19 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <E> JpaPredicate collectionContains(Expression<? extends Collection<E>> collectionExpression, E element) {
 		return criteriaBuilder.collectionContains( collectionExpression, element );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <E> JpaPredicate collectionContains(Collection<E> collection, Expression<E> elementExpression) {
 		return criteriaBuilder.collectionContains( collection, elementExpression );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <E> JpaPredicate collectionContainsNullable(
 			Expression<? extends Collection<E>> collectionExpression,
 			Expression<? extends E> elementExpression) {
@@ -3508,7 +3508,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <E> JpaPredicate collectionContainsNullable(
 			Expression<? extends Collection<E>> collectionExpression,
 			E element) {
@@ -3516,13 +3516,13 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <E> JpaPredicate collectionContainsNullable(Collection<E> collection, Expression<E> elementExpression) {
 		return criteriaBuilder.collectionContainsNullable( collection, elementExpression );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <E> JpaPredicate collectionIncludes(
 			Expression<? extends Collection<E>> collectionExpression,
 			Expression<? extends Collection<? extends E>> subCollectionExpression) {
@@ -3530,7 +3530,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <E> JpaPredicate collectionIncludes(
 			Expression<? extends Collection<E>> collectionExpression,
 			Collection<? extends E> subCollection) {
@@ -3538,7 +3538,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <E> JpaPredicate collectionIncludes(
 			Collection<E> collection,
 			Expression<? extends Collection<? extends E>> subArrayExpression) {
@@ -3546,7 +3546,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <E> JpaPredicate collectionIncludesNullable(
 			Expression<? extends Collection<E>> collectionExpression,
 			Expression<? extends Collection<? extends E>> subCollectionExpression) {
@@ -3554,7 +3554,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <E> JpaPredicate collectionIncludesNullable(
 			Expression<? extends Collection<E>> collectionExpression,
 			Collection<? extends E> subCollection) {
@@ -3562,7 +3562,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <E> JpaPredicate collectionIncludesNullable(
 			Collection<E> collection,
 			Expression<? extends Collection<? extends E>> subCollectionExpression) {
@@ -3570,7 +3570,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <E> JpaPredicate collectionIntersects(
 			Expression<? extends Collection<E>> collectionExpression1,
 			Expression<? extends Collection<? extends E>> collectionExpression2) {
@@ -3578,7 +3578,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <E> JpaPredicate collectionIntersects(
 			Expression<? extends Collection<E>> collectionExpression1,
 			Collection<? extends E> collection2) {
@@ -3586,7 +3586,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <E> JpaPredicate collectionIntersects(
 			Collection<E> collection1,
 			Expression<? extends Collection<? extends E>> collectionExpression2) {
@@ -3594,7 +3594,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <E> JpaPredicate collectionIntersectsNullable(
 			Expression<? extends Collection<E>> collectionExpression1,
 			Expression<? extends Collection<? extends E>> collectionExpression2) {
@@ -3602,7 +3602,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <E> JpaPredicate collectionIntersectsNullable(
 			Expression<? extends Collection<E>> collectionExpression1,
 			Collection<? extends E> collection2) {
@@ -3610,7 +3610,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <E> JpaPredicate collectionIntersectsNullable(
 			Collection<E> collection1,
 			Expression<? extends Collection<? extends E>> collectionExpression2) {
@@ -3618,13 +3618,13 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public JpaJsonValueExpression<String> jsonValue(Expression<?> jsonDocument, String jsonPath) {
 		return criteriaBuilder.jsonValue( jsonDocument, jsonPath );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <T> JpaJsonValueExpression<T> jsonValue(
 			Expression<?> jsonDocument,
 			String jsonPath,
@@ -3633,13 +3633,13 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public JpaJsonValueExpression<String> jsonValue(Expression<?> jsonDocument, Expression<String> jsonPath) {
 		return criteriaBuilder.jsonValue( jsonDocument, jsonPath );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <T> JpaJsonValueExpression<T> jsonValue(
 			Expression<?> jsonDocument,
 			Expression<String> jsonPath,
@@ -3648,145 +3648,145 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public JpaJsonQueryExpression jsonQuery(Expression<?> jsonDocument, String jsonPath) {
 		return criteriaBuilder.jsonQuery( jsonDocument, jsonPath );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public JpaJsonQueryExpression jsonQuery(Expression<?> jsonDocument, Expression<String> jsonPath) {
 		return criteriaBuilder.jsonQuery( jsonDocument, jsonPath );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public JpaJsonExistsExpression jsonExists(Expression<?> jsonDocument, String jsonPath) {
 		return criteriaBuilder.jsonExists( jsonDocument, jsonPath );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public JpaJsonExistsExpression jsonExists(Expression<?> jsonDocument, Expression<String> jsonPath) {
 		return criteriaBuilder.jsonExists( jsonDocument, jsonPath );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public JpaExpression<String> jsonObject(Map<?, ? extends Expression<?>> keyValues) {
 		return criteriaBuilder.jsonObject( keyValues );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public JpaExpression<String> jsonObjectWithNulls(Map<?, ? extends Expression<?>> keyValues) {
 		return criteriaBuilder.jsonObjectWithNulls( keyValues );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public JpaExpression<String> jsonArray(Expression<?>... values) {
 		return criteriaBuilder.jsonArray( values );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public JpaExpression<String> jsonArrayWithNulls(Expression<?>... values) {
 		return criteriaBuilder.jsonArrayWithNulls( values );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public JpaExpression<String> jsonArrayAgg(Expression<?> value) {
 		return criteriaBuilder.jsonArrayAgg( value );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public JpaExpression<String> jsonArrayAggWithNulls(Expression<?> value) {
 		return criteriaBuilder.jsonArrayAggWithNulls( value );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public JpaExpression<String> jsonArrayAgg(Expression<?> value, JpaOrder... orderBy) {
 		return criteriaBuilder.jsonArrayAgg( value, orderBy );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public JpaExpression<String> jsonArrayAgg(Expression<?> value, Predicate filter) {
 		return criteriaBuilder.jsonArrayAgg( value, filter );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public JpaExpression<String> jsonArrayAgg(Expression<?> value, Predicate filter, JpaOrder... orderBy) {
 		return criteriaBuilder.jsonArrayAgg( value, filter, orderBy );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public JpaExpression<String> jsonArrayAggWithNulls(Expression<?> value, JpaOrder... orderBy) {
 		return criteriaBuilder.jsonArrayAggWithNulls( value, orderBy );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public JpaExpression<String> jsonArrayAggWithNulls(Expression<?> value, Predicate filter) {
 		return criteriaBuilder.jsonArrayAggWithNulls( value, filter );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public JpaExpression<String> jsonArrayAggWithNulls(Expression<?> value, Predicate filter, JpaOrder... orderBy) {
 		return criteriaBuilder.jsonArrayAggWithNulls( value, filter, orderBy );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public JpaExpression<String> jsonObjectAgg(Expression<?> key, Expression<?> value) {
 		return criteriaBuilder.jsonObjectAgg( key, value );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public JpaExpression<String> jsonObjectAggWithNulls(Expression<?> key, Expression<?> value) {
 		return criteriaBuilder.jsonObjectAggWithNulls( key, value );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public JpaExpression<String> jsonObjectAggWithUniqueKeys(Expression<?> key, Expression<?> value) {
 		return criteriaBuilder.jsonObjectAggWithUniqueKeys( key, value );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public JpaExpression<String> jsonObjectAggWithUniqueKeysAndNulls(Expression<?> key, Expression<?> value) {
 		return criteriaBuilder.jsonObjectAggWithUniqueKeysAndNulls( key, value );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public JpaExpression<String> jsonObjectAgg(Expression<?> key, Expression<?> value, Predicate filter) {
 		return criteriaBuilder.jsonObjectAgg( key, value, filter );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public JpaExpression<String> jsonObjectAggWithNulls(Expression<?> key, Expression<?> value, Predicate filter) {
 		return criteriaBuilder.jsonObjectAggWithNulls( key, value, filter );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public JpaExpression<String> jsonObjectAggWithUniqueKeys(Expression<?> key, Expression<?> value, Predicate filter) {
 		return criteriaBuilder.jsonObjectAggWithUniqueKeys( key, value, filter );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public JpaExpression<String> jsonObjectAggWithUniqueKeysAndNulls(
 			Expression<?> key,
 			Expression<?> value,
@@ -3795,49 +3795,49 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public JpaExpression<String> jsonSet(Expression<?> jsonDocument, String jsonPath, Expression<?> value) {
 		return criteriaBuilder.jsonSet( jsonDocument, jsonPath, value );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public JpaExpression<String> jsonSet(Expression<?> jsonDocument, Expression<String> jsonPath, Expression<?> value) {
 		return criteriaBuilder.jsonSet( jsonDocument, jsonPath, value );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public JpaExpression<String> jsonSet(Expression<?> jsonDocument, String jsonPath, Object value) {
 		return criteriaBuilder.jsonSet( jsonDocument, jsonPath, value );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public JpaExpression<String> jsonSet(Expression<?> jsonDocument, Expression<String> jsonPath, Object value) {
 		return criteriaBuilder.jsonSet( jsonDocument, jsonPath, value );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public JpaExpression<String> jsonRemove(Expression<?> jsonDocument, String jsonPath) {
 		return criteriaBuilder.jsonRemove( jsonDocument, jsonPath );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public JpaExpression<String> jsonRemove(Expression<?> jsonDocument, Expression<String> jsonPath) {
 		return criteriaBuilder.jsonRemove( jsonDocument, jsonPath );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public JpaExpression<String> jsonInsert(Expression<?> jsonDocument, String jsonPath, Expression<?> value) {
 		return criteriaBuilder.jsonInsert( jsonDocument, jsonPath, value );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public JpaExpression<String> jsonInsert(
 			Expression<?> jsonDocument,
 			Expression<String> jsonPath,
@@ -3846,25 +3846,25 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public JpaExpression<String> jsonInsert(Expression<?> jsonDocument, String jsonPath, Object value) {
 		return criteriaBuilder.jsonInsert( jsonDocument, jsonPath, value );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public JpaExpression<String> jsonInsert(Expression<?> jsonDocument, Expression<String> jsonPath, Object value) {
 		return criteriaBuilder.jsonInsert( jsonDocument, jsonPath, value );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public JpaExpression<String> jsonReplace(Expression<?> jsonDocument, String jsonPath, Expression<?> value) {
 		return criteriaBuilder.jsonReplace( jsonDocument, jsonPath, value );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public JpaExpression<String> jsonReplace(
 			Expression<?> jsonDocument,
 			Expression<String> jsonPath,
@@ -3873,300 +3873,300 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public JpaExpression<String> jsonReplace(Expression<?> jsonDocument, String jsonPath, Object value) {
 		return criteriaBuilder.jsonReplace( jsonDocument, jsonPath, value );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public JpaExpression<String> jsonReplace(Expression<?> jsonDocument, Expression<String> jsonPath, Object value) {
 		return criteriaBuilder.jsonReplace( jsonDocument, jsonPath, value );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public JpaExpression<String> jsonMergepatch(Expression<?> document, Expression<?> patch) {
 		return criteriaBuilder.jsonMergepatch( document, patch );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public JpaExpression<String> jsonMergepatch(Expression<?> document, String patch) {
 		return criteriaBuilder.jsonMergepatch( document, patch );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public JpaExpression<String> jsonMergepatch(String document, Expression<?> patch) {
 		return criteriaBuilder.jsonMergepatch( document, patch );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public JpaXmlElementExpression xmlelement(String elementName) {
 		return criteriaBuilder.xmlelement( elementName );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public JpaExpression<String> xmlcomment(String comment) {
 		return criteriaBuilder.xmlcomment( comment );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public JpaExpression<String> xmlforest(Expression<?>... elements) {
 		return criteriaBuilder.xmlforest( elements );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public JpaExpression<String> xmlforest(List<? extends Expression<?>> elements) {
 		return criteriaBuilder.xmlforest( elements );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public JpaExpression<String> xmlconcat(Expression<?>... elements) {
 		return criteriaBuilder.xmlconcat( elements );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public JpaExpression<String> xmlconcat(List<? extends Expression<?>> elements) {
 		return criteriaBuilder.xmlconcat( elements );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public JpaExpression<String> xmlpi(String elementName) {
 		return criteriaBuilder.xmlpi( elementName );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public JpaExpression<String> xmlpi(String elementName, Expression<String> content) {
 		return criteriaBuilder.xmlpi( elementName, content );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public JpaExpression<String> xmlquery(String query, Expression<?> xmlDocument) {
 		return criteriaBuilder.xmlquery( query, xmlDocument );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public JpaExpression<String> xmlquery(Expression<String> query, Expression<?> xmlDocument) {
 		return criteriaBuilder.xmlquery( query, xmlDocument );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public JpaExpression<Boolean> xmlexists(String query, Expression<?> xmlDocument) {
 		return criteriaBuilder.xmlexists( query, xmlDocument );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public JpaExpression<Boolean> xmlexists(Expression<String> query, Expression<?> xmlDocument) {
 		return criteriaBuilder.xmlexists( query, xmlDocument );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public JpaExpression<String> xmlagg(JpaOrder order, Expression<?> argument) {
 		return criteriaBuilder.xmlagg( order, argument );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public JpaExpression<String> xmlagg(JpaOrder order, JpaPredicate filter, Expression<?> argument) {
 		return criteriaBuilder.xmlagg( order, filter, argument );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public JpaExpression<String> xmlagg(JpaOrder order, JpaWindow window, Expression<?> argument) {
 		return criteriaBuilder.xmlagg( order, window, argument );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public JpaExpression<String> xmlagg(JpaOrder order, JpaPredicate filter, JpaWindow window, Expression<?> argument) {
 		return criteriaBuilder.xmlagg( order, filter, window, argument );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <T> JpaExpression<T> named(Expression<T> expression, String name) {
 		return criteriaBuilder.named( expression, name );
 	}
 
-	@Incubating
+	@Incubating(since = "6.3")
 	@Override
 	public <E> JpaSetReturningFunction<E> setReturningFunction(String name, Expression<?>... args) {
 		return criteriaBuilder.setReturningFunction( name, args );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <E> JpaSetReturningFunction<E> unnestArray(Expression<E[]> array) {
 		return criteriaBuilder.unnestArray( array );
 	}
 
 	@Override
-	@Incubating
+	@Incubating(since = "6.3")
 	public <E> JpaSetReturningFunction<E> unnestCollection(Expression<? extends Collection<E>> collection) {
 		return criteriaBuilder.unnestCollection( collection );
 	}
 
-	@Incubating
+	@Incubating(since = "6.3")
 	@Override
 	public <E extends Number> JpaSetReturningFunction<E> generateSeries(E start, E stop) {
 		return criteriaBuilder.generateSeries( start, stop );
 	}
 
-	@Incubating
+	@Incubating(since = "6.3")
 	@Override
 	public <E extends Number> JpaSetReturningFunction<E> generateSeries(E start, Expression<E> stop) {
 		return criteriaBuilder.generateSeries( start, stop );
 	}
 
-	@Incubating
+	@Incubating(since = "6.3")
 	@Override
 	public <E extends Number> JpaSetReturningFunction<E> generateSeries(Expression<E> start, E stop) {
 		return criteriaBuilder.generateSeries( start, stop );
 	}
 
-	@Incubating
+	@Incubating(since = "6.3")
 	@Override
 	public <E extends Number> JpaSetReturningFunction<E> generateSeries(Expression<E> start, Expression<E> stop) {
 		return criteriaBuilder.generateSeries( start, stop );
 	}
 
-	@Incubating
+	@Incubating(since = "6.3")
 	@Override
 	public <E extends Number> JpaSetReturningFunction<E> generateSeries(E start, Expression<E> stop, Expression<E> step) {
 		return criteriaBuilder.generateSeries( start, stop, step );
 	}
 
-	@Incubating
+	@Incubating(since = "6.3")
 	@Override
 	public <E extends Number> JpaSetReturningFunction<E> generateSeries(Expression<E> start, E stop, Expression<E> step) {
 		return criteriaBuilder.generateSeries( start, stop, step );
 	}
 
-	@Incubating
+	@Incubating(since = "6.3")
 	@Override
 	public <E extends Number> JpaSetReturningFunction<E> generateSeries(Expression<E> start, Expression<E> stop, E step) {
 		return criteriaBuilder.generateSeries( start, stop, step );
 	}
 
-	@Incubating
+	@Incubating(since = "6.3")
 	@Override
 	public <E extends Number> JpaSetReturningFunction<E> generateSeries(E start, Expression<E> stop, E step) {
 		return criteriaBuilder.generateSeries( start, stop, step );
 	}
 
-	@Incubating
+	@Incubating(since = "6.3")
 	@Override
 	public <E extends Number> JpaSetReturningFunction<E> generateSeries(Expression<E> start, E stop, E step) {
 		return criteriaBuilder.generateSeries( start, stop, step );
 	}
 
-	@Incubating
+	@Incubating(since = "6.3")
 	@Override
 	public <E extends Number> JpaSetReturningFunction<E> generateSeries(E start, E stop, Expression<E> step) {
 		return criteriaBuilder.generateSeries( start, stop, step );
 	}
 
-	@Incubating
+	@Incubating(since = "6.3")
 	@Override
 	public <E extends Number> JpaSetReturningFunction<E> generateSeries(E start, E stop, E step) {
 		return criteriaBuilder.generateSeries( start, stop, step );
 	}
 
-	@Incubating
+	@Incubating(since = "6.3")
 	@Override
 	public <E extends Number> JpaSetReturningFunction<E> generateSeries(Expression<E> start, Expression<E> stop, Expression<E> step) {
 		return criteriaBuilder.generateSeries( start, stop, step );
 	}
 
-	@Incubating
+	@Incubating(since = "6.3")
 	@Override
 	public <E extends Temporal> JpaSetReturningFunction<E> generateTimeSeries(E start, Expression<E> stop, Expression<? extends TemporalAmount> step) {
 		return criteriaBuilder.generateTimeSeries( start, stop, step );
 	}
 
-	@Incubating
+	@Incubating(since = "6.3")
 	@Override
 	public <E extends Temporal> JpaSetReturningFunction<E> generateTimeSeries(Expression<E> start, E stop, Expression<? extends TemporalAmount> step) {
 		return criteriaBuilder.generateTimeSeries( start, stop, step );
 	}
 
-	@Incubating
+	@Incubating(since = "6.3")
 	@Override
 	public <E extends Temporal> JpaSetReturningFunction<E> generateTimeSeries(E start, E stop, Expression<? extends TemporalAmount> step) {
 		return criteriaBuilder.generateTimeSeries( start, stop, step );
 	}
 
-	@Incubating
+	@Incubating(since = "6.3")
 	@Override
 	public <E extends Temporal> JpaSetReturningFunction<E> generateTimeSeries(Expression<E> start, Expression<E> stop, TemporalAmount step) {
 		return criteriaBuilder.generateTimeSeries( start, stop, step );
 	}
 
-	@Incubating
+	@Incubating(since = "6.3")
 	@Override
 	public <E extends Temporal> JpaSetReturningFunction<E> generateTimeSeries(Expression<E> start, E stop, TemporalAmount step) {
 		return criteriaBuilder.generateTimeSeries( start, stop, step );
 	}
 
-	@Incubating
+	@Incubating(since = "6.3")
 	@Override
 	public <E extends Temporal> JpaSetReturningFunction<E> generateTimeSeries(E start, Expression<E> stop, TemporalAmount step) {
 		return criteriaBuilder.generateTimeSeries( start, stop, step );
 	}
 
-	@Incubating
+	@Incubating(since = "6.3")
 	@Override
 	public <E extends Temporal> JpaSetReturningFunction<E> generateTimeSeries(E start, E stop, TemporalAmount step) {
 		return criteriaBuilder.generateTimeSeries( start, stop, step );
 	}
 
-	@Incubating
+	@Incubating(since = "6.3")
 	@Override
 	public <E extends Temporal> JpaSetReturningFunction<E> generateTimeSeries(Expression<E> start, Expression<E> stop, Expression<? extends TemporalAmount> step) {
 		return criteriaBuilder.generateTimeSeries( start, stop, step );
 	}
 
-	@Incubating
+	@Incubating(since = "6.3")
 	@Override
 	public JpaJsonTableFunction jsonTable(Expression<?> jsonDocument) {
 		return criteriaBuilder.jsonTable( jsonDocument );
 	}
 
-	@Incubating
+	@Incubating(since = "6.3")
 	@Override
 	public JpaJsonTableFunction jsonTable(Expression<?> jsonDocument, String jsonPath) {
 		return criteriaBuilder.jsonTable( jsonDocument, jsonPath );
 	}
 
-	@Incubating
+	@Incubating(since = "6.3")
 	@Override
 	public JpaJsonTableFunction jsonTable(Expression<?> jsonDocument, Expression<String> jsonPath) {
 		return criteriaBuilder.jsonTable( jsonDocument, jsonPath );
 	}
 
-	@Incubating
+	@Incubating(since = "6.3")
 	@Override
 	public JpaXmlTableFunction xmlTable(String xpath, Expression<?> xmlDocument) {
 		return criteriaBuilder.xmlTable( xpath, xmlDocument );
 	}
 
-	@Incubating
+	@Incubating(since = "6.3")
 	@Override
 	public JpaXmlTableFunction xmlTable(Expression<String> xpath, Expression<?> xmlDocument) {
 		return criteriaBuilder.xmlTable( xpath, xmlDocument );

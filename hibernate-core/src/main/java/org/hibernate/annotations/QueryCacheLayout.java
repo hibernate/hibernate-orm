@@ -28,7 +28,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  */
 @Target({TYPE, FIELD, METHOD})
 @Retention(RUNTIME)
-@Incubating
+@Incubating(since = "6.5")
 public @interface QueryCacheLayout {
 
 	/**

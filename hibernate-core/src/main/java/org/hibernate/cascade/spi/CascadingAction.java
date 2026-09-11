@@ -8,7 +8,6 @@ import java.util.Iterator;
 import java.util.List;
 
 import jakarta.annotation.Nullable;
-import org.hibernate.Incubating;
 import org.hibernate.Internal;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.spi.EventSource;
@@ -131,6 +130,6 @@ public interface CascadingAction<T> {
 	 *
 	 * @since 7
 	 */
-	@Incubating @Nullable
+	@Nullable
 	ForeignKeyDirection directionAffectedByCascadeDelete();
 }

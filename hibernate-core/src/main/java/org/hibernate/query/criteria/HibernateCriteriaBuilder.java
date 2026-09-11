@@ -95,7 +95,7 @@ import jakarta.persistence.criteria.TemporalField;
  * @author Steve Ebersole
  * @author Yoobin Yoon
  */
-@Incubating
+@Incubating(since = "6.3")
 public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 
 	/**
@@ -247,7 +247,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * @param expressions The value expressions in row order
 	 * @return the values row
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaValues values(Expression<?>... expressions);
 
 	/**
@@ -256,7 +256,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * @param expressions The value expressions in row order
 	 * @return the values row
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaValues values(List<? extends Expression<?>> expressions);
 
 	/**
@@ -968,7 +968,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * A literal {@link Duration}, for example, "five days" or "30 minutes".
 	 * @since 6.3
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<Duration> duration(long magnitude, TemporalUnit unit);
 
 	/**
@@ -978,7 +978,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * @return the magnitude of the duration measured in the given units
 	 * @since 6.3
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<Long> durationByUnit(TemporalUnit unit, Expression<Duration> duration);
 
 	/**
@@ -2090,7 +2090,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * @param nullPrecedence The null precedence
 	 * @return the ordering corresponding to the CTE attribute
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaSearchOrder search(JpaCteCriteriaAttribute cteAttribute, SortDirection sortOrder, Nulls nullPrecedence);
 
 	/**
@@ -2099,7 +2099,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * @param sortOrder The sort order
 	 * @return the ordering corresponding to the CTE attribute
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaSearchOrder search(JpaCteCriteriaAttribute cteAttribute, SortDirection sortOrder);
 
 	/**
@@ -2107,7 +2107,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * @param cteAttribute The CTE attribute used to define the ordering
 	 * @return the ascending ordering corresponding to the CTE attribute
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaSearchOrder search(JpaCteCriteriaAttribute cteAttribute);
 
 	/**
@@ -2115,7 +2115,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * @param x The CTE attribute used to define the ordering
 	 * @return the ascending ordering corresponding to the CTE attribute
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaSearchOrder asc(JpaCteCriteriaAttribute x);
 
 	/**
@@ -2123,7 +2123,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * @param x The CTE attribute used to define the ordering
 	 * @return the descending ordering corresponding to the CTE attribute
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaSearchOrder desc(JpaCteCriteriaAttribute x);
 
 	/**
@@ -2132,7 +2132,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * @param nullsFirst Whether <code>null</code> should be sorted first
 	 * @return the ascending ordering corresponding to the CTE attribute
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaSearchOrder asc(JpaCteCriteriaAttribute x, boolean nullsFirst);
 
 	/**
@@ -2141,7 +2141,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * @param nullsFirst Whether <code>null</code> should be sorted first
 	 * @return the descending ordering corresponding to the CTE attribute
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaSearchOrder desc(JpaCteCriteriaAttribute x, boolean nullsFirst);
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2159,7 +2159,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @return the native SQL expression
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaExpression<T> sql(String pattern, Class<T> type, Expression<?>... arguments);
 
 	/**
@@ -2175,7 +2175,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @return the format expression
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaFunction<String> format(Expression<? extends TemporalAccessor> datetime, String pattern);
 
 	/**
@@ -2185,7 +2185,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @return the extracted value
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaFunction<Integer> year(Expression<? extends TemporalAccessor> datetime);
 
 	/**
@@ -2195,7 +2195,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @return the extracted value
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaFunction<Integer> month(Expression<? extends TemporalAccessor> datetime);
 
 	/**
@@ -2205,7 +2205,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @return the extracted value
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaFunction<Integer> day(Expression<? extends TemporalAccessor> datetime);
 
 	/**
@@ -2215,7 +2215,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @return the extracted value
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaFunction<Integer> hour(Expression<? extends TemporalAccessor> datetime);
 
 	/**
@@ -2225,7 +2225,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @return the extracted value
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaFunction<Integer> minute(Expression<? extends TemporalAccessor> datetime);
 
 	/**
@@ -2235,7 +2235,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @return the extracted value
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaFunction<Float> second(Expression<? extends TemporalAccessor> datetime);
 
 	/**
@@ -2250,55 +2250,55 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @return the truncated value
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T extends TemporalAccessor> JpaFunction<T> truncate(Expression<T> datetime, TemporalUnit temporalUnit);
 
 	/**
 	 * @see #overlay(Expression, Expression, Expression, Expression)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaFunction<String> overlay(Expression<String> string, String replacement, int start);
 
 	/**
 	 * @see #overlay(Expression, Expression, Expression, Expression)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaFunction<String> overlay(Expression<String> string, Expression<String> replacement, int start);
 
 	/**
 	 * @see #overlay(Expression, Expression, Expression, Expression)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaFunction<String> overlay(Expression<String> string, String replacement, Expression<Integer> start);
 
 	/**
 	 * @see #overlay(Expression, Expression, Expression, Expression)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaFunction<String> overlay(Expression<String> string, Expression<String> replacement, Expression<Integer> start);
 
 	/**
 	 * @see #overlay(Expression, Expression, Expression, Expression)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaFunction<String> overlay(Expression<String> string, String replacement, int start, int length);
 
 	/**
 	 * @see #overlay(Expression, Expression, Expression, Expression)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaFunction<String> overlay(Expression<String> string, Expression<String> replacement, int start, int length);
 
 	/**
 	 * @see #overlay(Expression, Expression, Expression, Expression)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaFunction<String> overlay(Expression<String> string, String replacement, Expression<Integer> start, int length);
 
 	/**
 	 * @see #overlay(Expression, Expression, Expression, Expression)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaFunction<String> overlay(
 			Expression<String> string,
 			Expression<String> replacement,
@@ -2308,13 +2308,13 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * @see #overlay(Expression, Expression, Expression, Expression)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaFunction<String> overlay(Expression<String> string, String replacement, int start, Expression<Integer> length);
 
 	/**
 	 * @see #overlay(Expression, Expression, Expression, Expression)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaFunction<String> overlay(
 			Expression<String> string,
 			Expression<String> replacement,
@@ -2324,7 +2324,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * @see #overlay(Expression, Expression, Expression, Expression)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaFunction<String> overlay(
 			Expression<String> string,
 			String replacement,
@@ -2344,7 +2344,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @return the overlay expression
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaFunction<String> overlay(
 			Expression<String> string,
 			Expression<String> replacement,
@@ -2354,67 +2354,67 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * @see #pad(Trimspec, Expression, Expression, Expression)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaFunction<String> pad(Expression<String> x, int length);
 
 	/**
 	 * @see #pad(Trimspec, Expression, Expression, Expression)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaFunction<String> pad(Trimspec ts, Expression<String> x, int length);
 
 	/**
 	 * @see #pad(Trimspec, Expression, Expression, Expression)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaFunction<String> pad(Expression<String> x, Expression<Integer> length);
 
 	/**
 	 * @see #pad(Trimspec, Expression, Expression, Expression)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaFunction<String> pad(Trimspec ts, Expression<String> x, Expression<Integer> length);
 
 	/**
 	 * @see #pad(Trimspec, Expression, Expression, Expression)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaFunction<String> pad(Expression<String> x, int length, char padChar);
 
 	/**
 	 * @see #pad(Trimspec, Expression, Expression, Expression)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaFunction<String> pad(Trimspec ts, Expression<String> x, int length, char padChar);
 
 	/**
 	 * @see #pad(Trimspec, Expression, Expression, Expression)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaFunction<String> pad(Expression<String> x, Expression<Integer> length, char padChar);
 
 	/**
 	 * @see #pad(Trimspec, Expression, Expression, Expression)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaFunction<String> pad(Trimspec ts, Expression<String> x, Expression<Integer> length, char padChar);
 
 	/**
 	 * @see #pad(Trimspec, Expression, Expression, Expression)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaFunction<String> pad(Expression<String> x, int length, Expression<Character> padChar);
 
 	/**
 	 * @see #pad(Trimspec, Expression, Expression, Expression)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaFunction<String> pad(Trimspec ts, Expression<String> x, int length, Expression<Character> padChar);
 
 	/**
 	 * @see #pad(Trimspec, Expression, Expression, Expression)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaFunction<String> pad(Expression<String> x, Expression<Integer> length, Expression<Character> padChar);
 
 	/**
@@ -2429,7 +2429,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @return the pad expression
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaFunction<String> pad(
 			Trimspec ts,
 			Expression<String> x,
@@ -2470,7 +2470,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * @see #left(Expression, Expression)
 	 */
 	@Nonnull
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaFunction<String> left(@Nonnull Expression<String> x, int length);
 
 	/**
@@ -2482,14 +2482,14 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * @return the left expression
 	 */
 	@Nonnull
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaFunction<String> left(@Nonnull Expression<String> x, @Nonnull Expression<Integer> length);
 
 	/**
 	 * @see #right(Expression, Expression)
 	 */
 	@Nonnull
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaFunction<String> right(@Nonnull Expression<String> x, int length);
 
 	/**
@@ -2501,28 +2501,28 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * @return the left expression
 	 */
 	@Nonnull
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaFunction<String> right(@Nonnull Expression<String> x, @Nonnull Expression<Integer> length);
 
 	/**
 	 * @see #replace(Expression, Expression, Expression)
 	 */
 	@Nonnull
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaFunction<String> replace(@Nonnull Expression<String> x, @Nonnull String pattern, @Nonnull String replacement);
 
 	/**
 	 * @see #replace(Expression, Expression, Expression)
 	 */
 	@Nonnull
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaFunction<String> replace(@Nonnull Expression<String> x, @Nonnull String pattern, @Nonnull Expression<String> replacement);
 
 	/**
 	 * @see #replace(Expression, Expression, Expression)
 	 */
 	@Nonnull
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaFunction<String> replace(@Nonnull Expression<String> x, @Nonnull Expression<String> pattern, @Nonnull String replacement);
 
 	/**
@@ -2535,13 +2535,13 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * @return the replace expression
 	 */
 	@Nonnull
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaFunction<String> replace(@Nonnull Expression<String> x, @Nonnull Expression<String> pattern, @Nonnull Expression<String> replacement);
 
 	/**
 	 * Create an expression that applies the named collation to a string expression.
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaFunction<String> collate(Expression<String> x, String collation);
 
 	/**
@@ -2552,13 +2552,13 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @return the base-10 logarithm
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<Double> log10(Expression<? extends Number> x);
 
 	/**
 	 * @see #log(Expression, Expression)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<Double> log(Number b, Expression<? extends Number> x);
 
 	/**
@@ -2569,7 +2569,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @return the arbitrary-base logarithm
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<Double> log(Expression<? extends Number> b, Expression<? extends Number> x);
 
 	/**
@@ -2577,7 +2577,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @return the pi expression
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<Double> pi();
 
 	/**
@@ -2587,7 +2587,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @return the sine
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<Double> sin(Expression<? extends Number> x);
 
 	/**
@@ -2597,7 +2597,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @return the cosine
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<Double> cos(Expression<? extends Number> x);
 
 	/**
@@ -2607,7 +2607,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @return the tangent
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<Double> tan(Expression<? extends Number> x);
 
 	/**
@@ -2617,7 +2617,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @return the inverse sine
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<Double> asin(Expression<? extends Number> x);
 
 	/**
@@ -2627,7 +2627,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @return the inverse cosine
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<Double> acos(Expression<? extends Number> x);
 
 	/**
@@ -2637,19 +2637,19 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @return the inverse tangent
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<Double> atan(Expression<? extends Number> x);
 
 	/**
 	 * @see #atan2(Expression, Expression)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<Double> atan2(Number y, Expression<? extends Number> x);
 
 	/**
 	 * @see #atan2(Expression, Expression)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<Double> atan2(Expression<? extends Number> y, Number x);
 
 	/**
@@ -2660,7 +2660,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @return the 2-argument inverse tangent
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<Double> atan2(Expression<? extends Number> y, Expression<? extends Number> x);
 
 	/**
@@ -2670,7 +2670,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @return the hyperbolic sine
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<Double> sinh(Expression<? extends Number> x);
 
 	/**
@@ -2680,7 +2680,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @return the hyperbolic cosine
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<Double> cosh(Expression<? extends Number> x);
 
 	/**
@@ -2690,7 +2690,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @return the hyperbolic tangent
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<Double> tanh(Expression<? extends Number> x);
 
 	/**
@@ -2701,7 +2701,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @return the angle in degrees
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<Double> degrees(Expression<? extends Number> x);
 
 	/**
@@ -2712,7 +2712,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @return the angle in radians
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<Double> radians(Expression<? extends Number> x);
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2723,7 +2723,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @return the empty window
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaWindow createWindow();
 
 	/**
@@ -2731,13 +2731,13 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @return the window frame
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaWindowFrame frameUnboundedPreceding();
 
 	/**
 	 * @see #frameBetweenPreceding(Expression)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaWindowFrame frameBetweenPreceding(int offset);
 
 	/**
@@ -2747,7 +2747,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @return the window frame
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaWindowFrame frameBetweenPreceding(Expression<?> offset);
 
 	/**
@@ -2755,13 +2755,13 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @return the window frame
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaWindowFrame frameCurrentRow();
 
 	/**
 	 * @see #frameBetweenFollowing(Expression)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaWindowFrame frameBetweenFollowing(int offset);
 
 	/**
@@ -2771,7 +2771,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @return the window frame
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaWindowFrame frameBetweenFollowing(Expression<?> offset);
 
 	/**
@@ -2779,7 +2779,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @return the window frame
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaWindowFrame frameUnboundedFollowing();
 
 	/**
@@ -2794,7 +2794,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @return the window function expression
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaExpression<T> windowFunction(String name, Class<T> type, JpaWindow window, Expression<?>... args);
 
 	/**
@@ -2806,7 +2806,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @see #windowFunction
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<Long> rowNumber(JpaWindow window);
 
 	/**
@@ -2820,7 +2820,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @see #windowFunction
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaExpression<T> firstValue(Expression<T> argument, JpaWindow window);
 
 	/**
@@ -2834,13 +2834,13 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @see #windowFunction
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaExpression<T> lastValue(Expression<T> argument, JpaWindow window);
 
 	/**
 	 * @see #nthValue(Expression, Expression, JpaWindow) nthValue
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaExpression<T> nthValue(Expression<T> argument, int n, JpaWindow window);
 
 	/**
@@ -2855,7 +2855,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @see #windowFunction
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaExpression<T> nthValue(Expression<T> argument, Expression<Integer> n, JpaWindow window);
 
 	/**
@@ -2867,7 +2867,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @see #windowFunction
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<Long> rank(JpaWindow window);
 
 	/**
@@ -2879,7 +2879,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @see #windowFunction
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<Long> denseRank(JpaWindow window);
 
 	/**
@@ -2891,7 +2891,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @see #windowFunction
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<Double> percentRank(JpaWindow window);
 
 	/**
@@ -2903,7 +2903,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @see #windowFunction
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<Double> cumeDist(JpaWindow window);
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2912,7 +2912,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * @see #functionAggregate(String, Class, JpaPredicate, JpaWindow, Expression...)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaExpression<T> functionAggregate(
 			String name,
 			Class<T> type,
@@ -2922,7 +2922,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * @see #functionAggregate(String, Class, JpaPredicate, JpaWindow, Expression...)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaExpression<T> functionAggregate(
 			String name,
 			Class<T> type,
@@ -2941,7 +2941,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @return the aggregate function expression
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaExpression<T> functionAggregate(
 			String name,
 			Class<T> type,
@@ -2952,13 +2952,13 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * @see #sum(Expression, JpaPredicate, JpaWindow)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<N extends Number> JpaExpression<Number> sum(Expression<N> argument, JpaPredicate filter);
 
 	/**
 	 * @see #sum(Expression, JpaPredicate, JpaWindow)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<N extends Number> JpaExpression<Number> sum(Expression<N> argument, JpaWindow window);
 
 	/**
@@ -2973,19 +2973,19 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @see #functionAggregate(String, Class, JpaPredicate, JpaWindow, Expression...)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<N extends Number> JpaExpression<Number> sum(Expression<N> argument, JpaPredicate filter, JpaWindow window);
 
 	/**
 	 * @see #avg(Expression, JpaPredicate, JpaWindow)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<N extends Number> JpaExpression<Double> avg(Expression<N> argument, JpaPredicate filter);
 
 	/**
 	 * @see #avg(Expression, JpaPredicate, JpaWindow)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<N extends Number> JpaExpression<Double> avg(Expression<N> argument, JpaWindow window);
 
 	/**
@@ -3000,19 +3000,19 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @see #functionAggregate(String, Class, JpaPredicate, JpaWindow, Expression...)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<N extends Number> JpaExpression<Double> avg(Expression<N> argument, JpaPredicate filter, JpaWindow window);
 
 	/**
 	 * @see #count(Expression, JpaPredicate, JpaWindow)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<Long> count(Expression<?> argument, JpaPredicate filter);
 
 	/**
 	 * @see #count(Expression, JpaPredicate, JpaWindow)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<Long> count(Expression<?> argument, JpaWindow window);
 
 	/**
@@ -3026,7 +3026,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @see #functionAggregate(String, Class, JpaPredicate, JpaWindow, Expression...)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<Long> count(Expression<?> argument, JpaPredicate filter, JpaWindow window);
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -3035,13 +3035,13 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * @see #functionWithinGroup(String, Class, JpaOrder, JpaPredicate, JpaWindow, Expression...)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaExpression<T> functionWithinGroup(String name, Class<T> type, JpaOrder order, Expression<?>... args);
 
 	/**
 	 * @see #functionWithinGroup(String, Class, JpaOrder, JpaPredicate, JpaWindow, Expression...)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaExpression<T> functionWithinGroup(
 			String name,
 			Class<T> type,
@@ -3052,7 +3052,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * @see #functionWithinGroup(String, Class, JpaOrder, JpaPredicate, JpaWindow, Expression...)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaExpression<T> functionWithinGroup(
 			String name,
 			Class<T> type,
@@ -3073,7 +3073,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @return the ordered set-aggregate function expression
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaExpression<T> functionWithinGroup(
 			String name,
 			Class<T> type,
@@ -3085,25 +3085,25 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * @see #listagg(JpaOrder, JpaPredicate, JpaWindow, Expression, Expression)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<String> listagg(JpaOrder order, Expression<String> argument, String separator);
 
 	/**
 	 * @see #listagg(JpaOrder, JpaPredicate, JpaWindow, Expression, Expression)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<String> listagg(JpaOrder order, Expression<String> argument, Expression<String> separator);
 
 	/**
 	 * @see #listagg(JpaOrder, JpaPredicate, JpaWindow, Expression, Expression)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<String> listagg(JpaOrder order, JpaPredicate filter, Expression<String> argument, String separator);
 
 	/**
 	 * @see #listagg(JpaOrder, JpaPredicate, JpaWindow, Expression, Expression)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<String> listagg(
 			JpaOrder order,
 			JpaPredicate filter,
@@ -3113,13 +3113,13 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * @see #listagg(JpaOrder, JpaPredicate, JpaWindow, Expression, Expression)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<String> listagg(JpaOrder order, JpaWindow window, Expression<String> argument, String separator);
 
 	/**
 	 * @see #listagg(JpaOrder, JpaPredicate, JpaWindow, Expression, Expression)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<String> listagg(
 			JpaOrder order,
 			JpaWindow window,
@@ -3129,7 +3129,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * @see #listagg(JpaOrder, JpaPredicate, JpaWindow, Expression, Expression)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<String> listagg(
 			JpaOrder order,
 			JpaPredicate filter,
@@ -3150,7 +3150,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @see #functionWithinGroup(String, Class, JpaOrder, JpaPredicate, JpaWindow, Expression...)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<String> listagg(
 			JpaOrder order,
 			JpaPredicate filter,
@@ -3161,13 +3161,13 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * @see #mode(JpaPredicate, JpaWindow, Expression, SortDirection, Nulls)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaExpression<T> mode(Expression<T> sortExpression, SortDirection sortOrder, Nulls nullPrecedence);
 
 	/**
 	 * @see #mode(JpaPredicate, JpaWindow, Expression, SortDirection, Nulls)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaExpression<T> mode(
 			JpaPredicate filter,
 			Expression<T> sortExpression,
@@ -3177,7 +3177,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * @see #mode(JpaPredicate, JpaWindow, Expression, SortDirection, Nulls)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaExpression<T> mode(
 			JpaWindow window,
 			Expression<T> sortExpression,
@@ -3198,7 +3198,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @see #functionWithinGroup(String, Class, JpaOrder, JpaPredicate, JpaWindow, Expression...)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaExpression<T> mode(
 			JpaPredicate filter,
 			JpaWindow window,
@@ -3209,7 +3209,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * @see #percentileCont(Expression, JpaPredicate, JpaWindow, Expression, SortDirection, Nulls)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaExpression<T> percentileCont(
 			Expression<? extends Number> argument,
 			Expression<T> sortExpression,
@@ -3219,7 +3219,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * @see #percentileCont(Expression, JpaPredicate, JpaWindow, Expression, SortDirection, Nulls)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaExpression<T> percentileCont(
 			Expression<? extends Number> argument,
 			JpaPredicate filter,
@@ -3230,7 +3230,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * @see #percentileCont(Expression, JpaPredicate, JpaWindow, Expression, SortDirection, Nulls)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaExpression<T> percentileCont(
 			Expression<? extends Number> argument,
 			JpaWindow window,
@@ -3252,7 +3252,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @see #functionWithinGroup(String, Class, JpaOrder, JpaPredicate, JpaWindow, Expression...)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaExpression<T> percentileCont(
 			Expression<? extends Number> argument,
 			JpaPredicate filter,
@@ -3264,7 +3264,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * @see #percentileDisc(Expression, JpaPredicate, JpaWindow, Expression, SortDirection, Nulls)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaExpression<T> percentileDisc(
 			Expression<? extends Number> argument,
 			Expression<T> sortExpression,
@@ -3274,7 +3274,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * @see #percentileDisc(Expression, JpaPredicate, JpaWindow, Expression, SortDirection, Nulls)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaExpression<T> percentileDisc(
 			Expression<? extends Number> argument,
 			JpaPredicate filter,
@@ -3285,7 +3285,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * @see #percentileDisc(Expression, JpaPredicate, JpaWindow, Expression, SortDirection, Nulls)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaExpression<T> percentileDisc(
 			Expression<? extends Number> argument,
 			JpaWindow window,
@@ -3307,7 +3307,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @see #functionWithinGroup(String, Class, JpaOrder, JpaPredicate, JpaWindow, Expression...)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaExpression<T> percentileDisc(
 			Expression<? extends Number> argument,
 			JpaPredicate filter,
@@ -3319,19 +3319,19 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * @see #rank(JpaOrder, JpaPredicate, JpaWindow, Expression...)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<Long> rank(JpaOrder order, Expression<?>... arguments);
 
 	/**
 	 * @see #rank(JpaOrder, JpaPredicate, JpaWindow, Expression...)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<Long> rank(JpaOrder order, JpaPredicate filter, Expression<?>... arguments);
 
 	/**
 	 * @see #rank(JpaOrder, JpaPredicate, JpaWindow, Expression...)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<Long> rank(JpaOrder order, JpaWindow window, Expression<?>... arguments);
 
 	/**
@@ -3346,25 +3346,25 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @see #functionWithinGroup(String, Class, JpaOrder, JpaPredicate, JpaWindow, Expression...)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<Long> rank(JpaOrder order, JpaPredicate filter, JpaWindow window, Expression<?>... arguments);
 
 	/**
 	 * @see #percentRank(JpaOrder, JpaPredicate, JpaWindow, Expression...)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<Double> percentRank(JpaOrder order, Expression<?>... arguments);
 
 	/**
 	 * @see #percentRank(JpaOrder, JpaPredicate, JpaWindow, Expression...)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<Double> percentRank(JpaOrder order, JpaPredicate filter, Expression<?>... arguments);
 
 	/**
 	 * @see #percentRank(JpaOrder, JpaPredicate, JpaWindow, Expression...)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<Double> percentRank(JpaOrder order, JpaWindow window, Expression<?>... arguments);
 
 	/**
@@ -3379,7 +3379,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @see #functionWithinGroup(String, Class, JpaOrder, JpaPredicate, JpaWindow, Expression...)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<Double> percentRank(
 			JpaOrder order,
 			JpaPredicate filter,
@@ -3394,21 +3394,21 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * @see #arrayAgg(JpaOrder, JpaPredicate, JpaWindow, Expression)
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaExpression<T[]> arrayAgg(JpaOrder order, Expression<? extends T> argument);
 
 	/**
 	 * @see #arrayAgg(JpaOrder, JpaPredicate, JpaWindow, Expression)
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaExpression<T[]> arrayAgg(JpaOrder order, JpaPredicate filter, Expression<? extends T> argument);
 
 	/**
 	 * @see #arrayAgg(JpaOrder, JpaPredicate, JpaWindow, Expression)
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaExpression<T[]> arrayAgg(JpaOrder order, JpaWindow window, Expression<? extends T> argument);
 
 	/**
@@ -3424,7 +3424,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * @see #functionWithinGroup(String, Class, JpaOrder, JpaPredicate, JpaWindow, Expression...)
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaExpression<T[]> arrayAgg(
 			JpaOrder order,
 			JpaPredicate filter,
@@ -3436,7 +3436,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaExpression<T[]> arrayLiteral(T... elements);
 
 	/**
@@ -3444,7 +3444,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaExpression<Integer> arrayLength(Expression<T[]> arrayExpression);
 
 	/**
@@ -3452,7 +3452,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaExpression<Integer> arrayPosition(Expression<T[]> arrayExpression, T element);
 
 	/**
@@ -3460,7 +3460,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaExpression<Integer> arrayPosition(Expression<T[]> arrayExpression, Expression<T> elementExpression);
 
 	/**
@@ -3468,7 +3468,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaExpression<int[]> arrayPositions(Expression<T[]> arrayExpression, Expression<T> elementExpression);
 
 	/**
@@ -3476,7 +3476,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaExpression<int[]> arrayPositions(Expression<T[]> arrayExpression, T element);
 
 	/**
@@ -3484,7 +3484,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaExpression<List<Integer>> arrayPositionsList(Expression<T[]> arrayExpression, Expression<T> elementExpression);
 
 	/**
@@ -3492,7 +3492,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaExpression<List<Integer>> arrayPositionsList(Expression<T[]> arrayExpression, T element);
 
 	/**
@@ -3500,7 +3500,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaExpression<T[]> arrayConcat(Expression<T[]> arrayExpression1, Expression<T[]> arrayExpression2);
 
 	/**
@@ -3508,7 +3508,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaExpression<T[]> arrayConcat(Expression<T[]> arrayExpression1, T[] array2);
 
 	/**
@@ -3516,7 +3516,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaExpression<T[]> arrayConcat(T[] array1, Expression<T[]> arrayExpression2);
 
 	/**
@@ -3524,7 +3524,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaExpression<T[]> arrayAppend(Expression<T[]> arrayExpression, Expression<T> elementExpression);
 
 	/**
@@ -3532,7 +3532,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaExpression<T[]> arrayAppend(Expression<T[]> arrayExpression, T element);
 
 	/**
@@ -3540,7 +3540,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaExpression<T[]> arrayPrepend(Expression<T> elementExpression, Expression<T[]> arrayExpression);
 
 	/**
@@ -3548,7 +3548,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaExpression<T[]> arrayPrepend(T element, Expression<T[]> arrayExpression);
 
 	/**
@@ -3556,7 +3556,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaExpression<T> arrayGet(Expression<T[]> arrayExpression, Expression<Integer> indexExpression);
 
 	/**
@@ -3564,7 +3564,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaExpression<T> arrayGet(Expression<T[]> arrayExpression, Integer index);
 
 	/**
@@ -3572,14 +3572,14 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaExpression<T[]> arraySet(Expression<T[]> arrayExpression, Expression<Integer> indexExpression, Expression<T> elementExpression);
 	/**
 	 * Creates array copy with given element at given 1-based index.
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaExpression<T[]> arraySet(Expression<T[]> arrayExpression, Expression<Integer> indexExpression, T element);
 
 	/**
@@ -3587,7 +3587,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaExpression<T[]> arraySet(Expression<T[]> arrayExpression, Integer index, Expression<T> elementExpression);
 
 	/**
@@ -3595,7 +3595,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaExpression<T[]> arraySet(Expression<T[]> arrayExpression, Integer index, T element);
 
 	/**
@@ -3603,7 +3603,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaExpression<T[]> arrayRemove(Expression<T[]> arrayExpression, Expression<T> elementExpression);
 
 	/**
@@ -3611,7 +3611,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaExpression<T[]> arrayRemove(Expression<T[]> arrayExpression, T element);
 
 	/**
@@ -3619,7 +3619,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaExpression<T[]> arrayRemoveIndex(Expression<T[]> arrayExpression, Expression<Integer> indexExpression);
 
 	/**
@@ -3627,7 +3627,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaExpression<T[]> arrayRemoveIndex(Expression<T[]> arrayExpression, Integer index);
 
 	/**
@@ -3636,7 +3636,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaExpression<T[]> arraySlice(Expression<T[]> arrayExpression, Expression<Integer> lowerIndexExpression, Expression<Integer> upperIndexExpression);
 
 	/**
@@ -3645,7 +3645,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaExpression<T[]> arraySlice(Expression<T[]> arrayExpression, Expression<Integer> lowerIndexExpression, Integer upperIndex);
 
 	/**
@@ -3654,7 +3654,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaExpression<T[]> arraySlice(Expression<T[]> arrayExpression, Integer lowerIndex, Expression<Integer> upperIndexExpression);
 
 	/**
@@ -3663,7 +3663,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaExpression<T[]> arraySlice(Expression<T[]> arrayExpression, Integer lowerIndex, Integer upperIndex);
 
 	/**
@@ -3671,7 +3671,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaExpression<T[]> arrayReplace(Expression<T[]> arrayExpression, Expression<T> oldElementExpression, Expression<T> newElementExpression);
 
 	/**
@@ -3679,7 +3679,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaExpression<T[]> arrayReplace(Expression<T[]> arrayExpression, Expression<T> oldElementExpression, T newElement);
 
 	/**
@@ -3687,7 +3687,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaExpression<T[]> arrayReplace(Expression<T[]> arrayExpression, T oldElement, Expression<T> newElementExpression);
 
 	/**
@@ -3695,7 +3695,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaExpression<T[]> arrayReplace(Expression<T[]> arrayExpression, T oldElement, T newElement);
 
 	/**
@@ -3703,7 +3703,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaExpression<T[]> arrayTrim(Expression<T[]> arrayExpression, Expression<Integer> elementCountExpression);
 
 	/**
@@ -3711,7 +3711,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaExpression<T[]> arrayTrim(Expression<T[]> arrayExpression, Integer elementCount);
 
 	/**
@@ -3719,7 +3719,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 7.2
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaExpression<T[]> arrayReverse(Expression<T[]> arrayExpression);
 
 	/**
@@ -3727,7 +3727,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 7.2
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaExpression<T[]> arraySort(Expression<T[]> arrayExpression);
 
 	/**
@@ -3735,7 +3735,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 7.2
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaExpression<T[]> arraySort(Expression<T[]> arrayExpression, boolean descending);
 
 	/**
@@ -3743,7 +3743,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 7.2
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaExpression<T[]> arraySort(Expression<T[]> arrayExpression, Expression<Boolean> descendingExpression);
 
 	/**
@@ -3751,7 +3751,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 7.2
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaExpression<T[]> arraySort(Expression<T[]> arrayExpression, boolean descending, boolean nullsFirst);
 
 	/**
@@ -3759,7 +3759,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 7.2
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaExpression<T[]> arraySort(Expression<T[]> arrayExpression, Expression<Boolean> descendingExpression, Expression<Boolean> nullsFirstExpression);
 
 	/**
@@ -3767,7 +3767,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaExpression<T[]> arrayFill(Expression<T> elementExpression, Expression<Integer> elementCountExpression);
 
 	/**
@@ -3775,7 +3775,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaExpression<T[]> arrayFill(Expression<T> elementExpression, Integer elementCount);
 
 	/**
@@ -3783,7 +3783,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaExpression<T[]> arrayFill(T element, Expression<Integer> elementCountExpression);
 
 	/**
@@ -3791,7 +3791,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaExpression<T[]> arrayFill(T element, Integer elementCount);
 
 	/**
@@ -3799,7 +3799,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<String> arrayToString(Expression<? extends Object[]> arrayExpression, Expression<String> separatorExpression);
 
 	/**
@@ -3807,7 +3807,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<String> arrayToString(Expression<? extends Object[]> arrayExpression, String separator);
 
 	/**
@@ -3816,7 +3816,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 7.1
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<String> arrayToString(Expression<? extends Object[]> arrayExpression, Expression<String> separatorExpression, Expression<String> defaultExpression);
 
 	/**
@@ -3825,7 +3825,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 7.1
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<String> arrayToString(Expression<? extends Object[]> arrayExpression, Expression<String> separatorExpression, String defaultValue);
 
 	/**
@@ -3834,7 +3834,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 7.1
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<String> arrayToString(Expression<? extends Object[]> arrayExpression, String separator, Expression<String> defaultExpression);
 
 	/**
@@ -3843,7 +3843,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 7.1
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<String> arrayToString(Expression<? extends Object[]> arrayExpression, String separator, String defaultValue);
 
 	/**
@@ -3851,7 +3851,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaPredicate arrayContains(Expression<T[]> arrayExpression, Expression<T> elementExpression);
 
 	/**
@@ -3859,7 +3859,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaPredicate arrayContains(Expression<T[]> arrayExpression, T element);
 
 	/**
@@ -3867,7 +3867,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaPredicate arrayContains(T[] array, Expression<T> elementExpression);
 
 	/**
@@ -3875,7 +3875,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaPredicate arrayContainsNullable(Expression<T[]> arrayExpression, Expression<T> elementExpression);
 
 	/**
@@ -3883,7 +3883,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaPredicate arrayContainsNullable(Expression<T[]> arrayExpression, T element);
 
 	/**
@@ -3891,7 +3891,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaPredicate arrayContainsNullable(T[] array, Expression<T> elementExpression);
 
 	/**
@@ -3899,7 +3899,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.6
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaPredicate arrayIncludes(Expression<T[]> arrayExpression, Expression<T[]> subArrayExpression);
 
 	/**
@@ -3907,7 +3907,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.6
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaPredicate arrayIncludes(Expression<T[]> arrayExpression, T[] subArray);
 
 	/**
@@ -3915,7 +3915,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.6
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaPredicate arrayIncludes(T[] array, Expression<T[]> subArrayExpression);
 
 	/**
@@ -3923,7 +3923,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.6
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaPredicate arrayIncludesNullable(Expression<T[]> arrayExpression, Expression<T[]> subArrayExpression);
 
 	/**
@@ -3931,7 +3931,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.6
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaPredicate arrayIncludesNullable(Expression<T[]> arrayExpression, T[] subArray);
 
 	/**
@@ -3939,7 +3939,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.6
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaPredicate arrayIncludesNullable(T[] array, Expression<T[]> subArrayExpression);
 
 	/**
@@ -3947,7 +3947,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.6
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaPredicate arrayIntersects(Expression<T[]> arrayExpression1, Expression<T[]> arrayExpression2);
 
 	/**
@@ -3955,7 +3955,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.6
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaPredicate arrayIntersects(Expression<T[]> arrayExpression1, T[] array2);
 
 	/**
@@ -3963,7 +3963,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.6
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaPredicate arrayIntersects(T[] array1, Expression<T[]> arrayExpression2);
 
 	/**
@@ -3971,7 +3971,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.6
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaPredicate arrayIntersectsNullable(Expression<T[]> arrayExpression1, Expression<T[]> arrayExpression2);
 
 	/**
@@ -3979,7 +3979,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.6
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaPredicate arrayIntersectsNullable(Expression<T[]> arrayExpression1, T[] array2);
 
 	/**
@@ -3987,7 +3987,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.6
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaPredicate arrayIntersectsNullable(T[] array1, Expression<T[]> arrayExpression2);
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -3998,7 +3998,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<E, C extends Collection<E>> JpaExpression<C> collectionLiteral(E... elements);
 
 	/**
@@ -4006,7 +4006,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<Integer> collectionLength(Expression<? extends Collection<?>> collectionExpression);
 
 	/**
@@ -4014,7 +4014,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<E> JpaExpression<Integer> collectionPosition(Expression<? extends Collection<? extends E>> collectionExpression, E element);
 
 	/**
@@ -4022,7 +4022,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<E> JpaExpression<Integer> collectionPosition(Expression<? extends Collection<? extends E>> collectionExpression, Expression<E> elementExpression);
 
 	/**
@@ -4030,7 +4030,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaExpression<int[]> collectionPositions(Expression<? extends Collection<? super T>> collectionExpression, Expression<T> elementExpression);
 
 	/**
@@ -4038,7 +4038,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaExpression<int[]> collectionPositions(Expression<? extends Collection<? super T>> collectionExpression, T element);
 
 	/**
@@ -4046,7 +4046,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaExpression<List<Integer>> collectionPositionsList(Expression<? extends Collection<? super T>> collectionExpression, Expression<T> elementExpression);
 
 	/**
@@ -4054,7 +4054,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaExpression<List<Integer>> collectionPositionsList(Expression<? extends Collection<? super T>> collectionExpression, T element);
 
 	/**
@@ -4062,7 +4062,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<E, C extends Collection<? super E>> JpaExpression<C> collectionConcat(Expression<C> collectionExpression1, Expression<? extends Collection<? extends E>> collectionExpression2);
 
 	/**
@@ -4070,7 +4070,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<E, C extends Collection<? super E>> JpaExpression<C> collectionConcat(Expression<C> collectionExpression1, Collection<? extends E> collection2);
 
 	/**
@@ -4078,7 +4078,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<E, C extends Collection<? super E>> JpaExpression<C> collectionConcat(C collection1, Expression<? extends Collection<? extends E>> collectionExpression2);
 
 	/**
@@ -4086,7 +4086,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<E, C extends Collection<? super E>> JpaExpression<C> collectionAppend(Expression<C> collectionExpression, Expression<? extends E> elementExpression);
 
 	/**
@@ -4094,7 +4094,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<E, C extends Collection<? super E>> JpaExpression<C> collectionAppend(Expression<C> collectionExpression, E element);
 
 	/**
@@ -4102,7 +4102,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<E, C extends Collection<? super E>> JpaExpression<C> collectionPrepend(Expression<? extends E> elementExpression, Expression<C> collectionExpression);
 
 	/**
@@ -4110,7 +4110,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<E, C extends Collection<? super E>> JpaExpression<C> collectionPrepend(E element, Expression<C> collectionExpression);
 
 	/**
@@ -4118,7 +4118,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<E> JpaExpression<E> collectionGet(Expression<? extends Collection<E>> collectionExpression, Expression<Integer> indexExpression);
 
 	/**
@@ -4126,7 +4126,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<E> JpaExpression<E> collectionGet(Expression<? extends Collection<E>> collectionExpression, Integer index);
 
 	/**
@@ -4134,7 +4134,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<E, C extends Collection<? super E>> JpaExpression<C> collectionSet(Expression<C> collectionExpression, Expression<Integer> indexExpression, Expression<? extends E> elementExpression);
 
 	/**
@@ -4142,7 +4142,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<E, C extends Collection<? super E>> JpaExpression<C> collectionSet(Expression<C> collectionExpression, Expression<Integer> indexExpression, E element);
 
 	/**
@@ -4150,7 +4150,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<E, C extends Collection<? super E>> JpaExpression<C> collectionSet(Expression<C> collectionExpression, Integer index, Expression<? extends E> elementExpression);
 
 	/**
@@ -4158,7 +4158,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<E, C extends Collection<? super E>> JpaExpression<C> collectionSet(Expression<C> collectionExpression, Integer index, E element);
 
 	/**
@@ -4166,7 +4166,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<E, C extends Collection<? super E>> JpaExpression<C> collectionRemove(Expression<C> collectionExpression, Expression<? extends E> elementExpression);
 
 	/**
@@ -4174,7 +4174,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<E, C extends Collection<? super E>> JpaExpression<C> collectionRemove(Expression<C> collectionExpression, E element);
 
 	/**
@@ -4182,7 +4182,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<C extends Collection<?>> JpaExpression<C> collectionRemoveIndex(Expression<C> collectionExpression, Expression<Integer> indexExpression);
 
 	/**
@@ -4190,7 +4190,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<C extends Collection<?>> JpaExpression<C> collectionRemoveIndex(Expression<C> collectionExpression, Integer index);
 
 	/**
@@ -4199,7 +4199,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<C extends Collection<?>> JpaExpression<C> collectionSlice(Expression<C> collectionExpression, Expression<Integer> lowerIndexExpression, Expression<Integer> upperIndexExpression);
 
 	/**
@@ -4208,7 +4208,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<C extends Collection<?>> JpaExpression<C> collectionSlice(Expression<C> collectionExpression, Expression<Integer> lowerIndexExpression, Integer upperIndex);
 
 	/**
@@ -4217,7 +4217,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<C extends Collection<?>> JpaExpression<C> collectionSlice(Expression<C> collectionExpression, Integer lowerIndex, Expression<Integer> upperIndexExpression);
 
 	/**
@@ -4226,7 +4226,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<C extends Collection<?>> JpaExpression<C> collectionSlice(Expression<C> collectionExpression, Integer lowerIndex, Integer upperIndex);
 
 	/**
@@ -4234,7 +4234,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<E, C extends Collection<? super E>> JpaExpression<C> collectionReplace(Expression<C> collectionExpression, Expression<? extends E> oldElementExpression, Expression<? extends E> newElementExpression);
 
 	/**
@@ -4242,7 +4242,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<E, C extends Collection<? super E>> JpaExpression<C> collectionReplace(Expression<C> collectionExpression, Expression<? extends E> oldElementExpression, E newElement);
 
 	/**
@@ -4250,7 +4250,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<E, C extends Collection<? super E>> JpaExpression<C> collectionReplace(Expression<C> collectionExpression, E oldElement, Expression<? extends E> newElementExpression);
 
 	/**
@@ -4258,7 +4258,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<E, C extends Collection<? super E>> JpaExpression<C> collectionReplace(Expression<C> collectionExpression, E oldElement, E newElement);
 
 	/**
@@ -4266,7 +4266,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<C extends Collection<?>> JpaExpression<C> collectionTrim(Expression<C> arrayExpression, Expression<Integer> elementCountExpression);
 
 	/**
@@ -4274,7 +4274,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<C extends Collection<?>> JpaExpression<C> collectionTrim(Expression<C> arrayExpression, Integer elementCount);
 
 	/**
@@ -4282,7 +4282,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 7.2
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<C extends Collection<?>> JpaExpression<C> collectionReverse(Expression<C> collectionExpression);
 
 	/**
@@ -4290,7 +4290,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 7.2
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<C extends Collection<?>> JpaExpression<C> collectionSort(Expression<C> collectionExpression);
 
 	/**
@@ -4298,7 +4298,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 7.2
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<C extends Collection<?>> JpaExpression<C> collectionSort(Expression<C> collectionExpression, boolean descending);
 
 	/**
@@ -4306,7 +4306,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 7.2
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<C extends Collection<?>> JpaExpression<C> collectionSort(
 			Expression<C> collectionExpression,
 			Expression<Boolean> descendingExpression);
@@ -4316,7 +4316,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 7.2
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<C extends Collection<?>> JpaExpression<C> collectionSort(
 			Expression<C> collectionExpression,
 			boolean descending,
@@ -4327,7 +4327,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 7.2
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<C extends Collection<?>> JpaExpression<C> collectionSort(
 			Expression<C> collectionExpression,
 			Expression<Boolean> descendingExpression,
@@ -4338,7 +4338,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaExpression<Collection<T>> collectionFill(Expression<T> elementExpression, Expression<Integer> elementCountExpression);
 
 	/**
@@ -4346,7 +4346,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaExpression<Collection<T>> collectionFill(Expression<T> elementExpression, Integer elementCount);
 
 	/**
@@ -4354,7 +4354,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaExpression<Collection<T>> collectionFill(T element, Expression<Integer> elementCountExpression);
 
 	/**
@@ -4362,7 +4362,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaExpression<Collection<T>> collectionFill(T element, Integer elementCount);
 
 	/**
@@ -4370,7 +4370,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<String> collectionToString(Expression<? extends Collection<?>> collectionExpression, Expression<String> separatorExpression);
 
 	/**
@@ -4378,7 +4378,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<String> collectionToString(Expression<? extends Collection<?>> collectionExpression, String separator);
 
 	/**
@@ -4387,7 +4387,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 7.1
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<String> collectionToString(Expression<? extends Collection<?>> collectionExpression, Expression<String> separatorExpression, Expression<String> defaultExpression);
 
 	/**
@@ -4396,7 +4396,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 7.1
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<String> collectionToString(Expression<? extends Collection<?>> collectionExpression, Expression<String> separatorExpression, String defaultValue);
 
 	/**
@@ -4405,7 +4405,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 7.1
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<String> collectionToString(Expression<? extends Collection<?>> collectionExpression, String separator, Expression<String> defaultExpression);
 
 	/**
@@ -4414,7 +4414,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 7.1
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<String> collectionToString(Expression<? extends Collection<?>> collectionExpression, String separator, String defaultValue);
 
 	/**
@@ -4422,7 +4422,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<E> JpaPredicate collectionContains(Expression<? extends Collection<E>> collectionExpression, Expression<? extends E> elementExpression);
 
 	/**
@@ -4430,7 +4430,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<E> JpaPredicate collectionContains(Expression<? extends Collection<E>> collectionExpression, E element);
 
 	/**
@@ -4438,7 +4438,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<E> JpaPredicate collectionContains(Collection<E> collection, Expression<E> elementExpression);
 
 	/**
@@ -4446,7 +4446,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<E> JpaPredicate collectionContainsNullable(Expression<? extends Collection<E>> collectionExpression, Expression<? extends E> elementExpression);
 
 	/**
@@ -4454,7 +4454,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<E> JpaPredicate collectionContainsNullable(Expression<? extends Collection<E>> collectionExpression, E element);
 
 	/**
@@ -4462,7 +4462,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<E> JpaPredicate collectionContainsNullable(Collection<E> collection, Expression<E> elementExpression);
 
 	/**
@@ -4470,7 +4470,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<E> JpaPredicate collectionIncludes(Expression<? extends Collection<E>> collectionExpression, Expression<? extends Collection<? extends E>> subCollectionExpression);
 
 	/**
@@ -4478,7 +4478,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<E> JpaPredicate collectionIncludes(Expression<? extends Collection<E>> collectionExpression, Collection<? extends E> subCollection);
 
 	/**
@@ -4486,7 +4486,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<E> JpaPredicate collectionIncludes(Collection<E> collection, Expression<? extends Collection<? extends E>> subCollectionExpression);
 
 	/**
@@ -4494,7 +4494,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<E> JpaPredicate collectionIncludesNullable(Expression<? extends Collection<E>> collectionExpression, Expression<? extends Collection<? extends E>> subCollectionExpression);
 
 	/**
@@ -4502,7 +4502,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<E> JpaPredicate collectionIncludesNullable(Expression<? extends Collection<E>> collectionExpression, Collection<? extends E> subCollection);
 
 	/**
@@ -4510,7 +4510,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<E> JpaPredicate collectionIncludesNullable(Collection<E> collection, Expression<? extends Collection<? extends E>> subCollectionExpression);
 
 	/**
@@ -4518,7 +4518,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.6
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<E> JpaPredicate collectionIntersects(Expression<? extends Collection<E>> collectionExpression1, Expression<? extends Collection<? extends E>> collectionExpression2);
 
 	/**
@@ -4526,7 +4526,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.6
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<E> JpaPredicate collectionIntersects(Expression<? extends Collection<E>> collectionExpression1, Collection<? extends E> collection2);
 
 	/**
@@ -4534,7 +4534,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.6
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<E> JpaPredicate collectionIntersects(Collection<E> collection1, Expression<? extends Collection<? extends E>> collectionExpression2);
 
 	/**
@@ -4542,7 +4542,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.6
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<E> JpaPredicate collectionIntersectsNullable(Expression<? extends Collection<E>> collectionExpression1, Expression<? extends Collection<? extends E>> collectionExpression2);
 
 	/**
@@ -4550,7 +4550,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.6
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<E> JpaPredicate collectionIntersectsNullable(Expression<? extends Collection<E>> collectionExpression1, Collection<? extends E> collection2);
 
 	/**
@@ -4558,7 +4558,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 6.6
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<E> JpaPredicate collectionIntersectsNullable(Collection<E> collection1, Expression<? extends Collection<? extends E>> collectionExpression2);
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -4568,7 +4568,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * @see #jsonValue(Expression, String, Class)
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaJsonValueExpression<String> jsonValue(Expression<?> jsonDocument, String jsonPath);
 
 	/**
@@ -4576,14 +4576,14 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaJsonValueExpression<T> jsonValue(Expression<?> jsonDocument, String jsonPath, Class<T> returningType);
 
 	/**
 	 * @see #jsonValue(Expression, Expression, Class)
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaJsonValueExpression<String> jsonValue(Expression<?> jsonDocument, Expression<String> jsonPath);
 
 	/**
@@ -4591,21 +4591,21 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaJsonValueExpression<T> jsonValue(Expression<?> jsonDocument, Expression<String> jsonPath, Class<T> returningType);
 
 	/**
 	 * @see #jsonQuery(Expression, Expression)
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaJsonQueryExpression jsonQuery(Expression<?> jsonDocument, String jsonPath);
 
 	/**
 	 * Queries values by JSON path from a JSON document.
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaJsonQueryExpression jsonQuery(Expression<?> jsonDocument, Expression<String> jsonPath);
 
 	/**
@@ -4613,7 +4613,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaJsonExistsExpression jsonExists(Expression<?> jsonDocument, String jsonPath);
 
 	/**
@@ -4621,7 +4621,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaJsonExistsExpression jsonExists(Expression<?> jsonDocument, Expression<String> jsonPath);
 
 	/**
@@ -4629,7 +4629,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<String> jsonObject(Map<?, ? extends Expression<?>> keyValues);
 
 	/**
@@ -4637,7 +4637,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<String> jsonObjectWithNulls(Map<?, ? extends Expression<?>> keyValues);
 
 	/**
@@ -4645,7 +4645,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<String> jsonArray(Expression<?>... values);
 
 	/**
@@ -4653,7 +4653,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<String> jsonArrayWithNulls(Expression<?>... values);
 
 	/**
@@ -4661,7 +4661,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<String> jsonArrayAgg(Expression<?> value);
 
 	/**
@@ -4670,7 +4670,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<String> jsonArrayAgg(Expression<?> value, JpaOrder... orderBy);
 
 	/**
@@ -4679,7 +4679,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<String> jsonArrayAgg(Expression<?> value, Predicate filter);
 
 	/**
@@ -4689,7 +4689,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<String> jsonArrayAgg(Expression<?> value, Predicate filter, JpaOrder... orderBy);
 
 	/**
@@ -4697,7 +4697,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<String> jsonArrayAggWithNulls(Expression<?> value);
 
 	/**
@@ -4706,7 +4706,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<String> jsonArrayAggWithNulls(Expression<?> value, JpaOrder... orderBy);
 
 	/**
@@ -4715,7 +4715,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<String> jsonArrayAggWithNulls(Expression<?> value, Predicate filter);
 
 	/**
@@ -4725,7 +4725,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<String> jsonArrayAggWithNulls(Expression<?> value, Predicate filter, JpaOrder... orderBy);
 
 	/**
@@ -4733,7 +4733,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<String> jsonObjectAgg(Expression<?> key, Expression<?> value);
 
 	/**
@@ -4741,7 +4741,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<String> jsonObjectAggWithNulls(Expression<?> key, Expression<?> value);
 
 	/**
@@ -4749,7 +4749,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<String> jsonObjectAggWithUniqueKeys(Expression<?> key, Expression<?> value);
 
 	/**
@@ -4757,7 +4757,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<String> jsonObjectAggWithUniqueKeysAndNulls(Expression<?> key, Expression<?> value);
 
 	/**
@@ -4765,7 +4765,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<String> jsonObjectAgg(Expression<?> key, Expression<?> value, Predicate filter);
 
 	/**
@@ -4773,7 +4773,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<String> jsonObjectAggWithNulls(Expression<?> key, Expression<?> value, Predicate filter);
 
 	/**
@@ -4781,7 +4781,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<String> jsonObjectAggWithUniqueKeys(Expression<?> key, Expression<?> value, Predicate filter);
 
 	/**
@@ -4789,7 +4789,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<String> jsonObjectAggWithUniqueKeysAndNulls(Expression<?> key, Expression<?> value, Predicate filter);
 
 	/**
@@ -4797,7 +4797,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<String> jsonSet(Expression<?> jsonDocument, String jsonPath, Expression<?> value);
 
 	/**
@@ -4805,7 +4805,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<String> jsonSet(Expression<?> jsonDocument, Expression<String> jsonPath, Expression<?> value);
 
 	/**
@@ -4813,7 +4813,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<String> jsonSet(Expression<?> jsonDocument, String jsonPath, Object value);
 
 	/**
@@ -4821,7 +4821,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<String> jsonSet(Expression<?> jsonDocument, Expression<String> jsonPath, Object value);
 
 	/**
@@ -4829,7 +4829,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<String> jsonRemove(Expression<?> jsonDocument, String jsonPath);
 
 	/**
@@ -4837,7 +4837,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<String> jsonRemove(Expression<?> jsonDocument, Expression<String> jsonPath);
 
 	/**
@@ -4845,7 +4845,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<String> jsonInsert(Expression<?> jsonDocument, String jsonPath, Expression<?> value);
 
 	/**
@@ -4853,7 +4853,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<String> jsonInsert(Expression<?> jsonDocument, Expression<String> jsonPath, Expression<?> value);
 
 	/**
@@ -4861,7 +4861,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<String> jsonInsert(Expression<?> jsonDocument, String jsonPath, Object value);
 
 	/**
@@ -4869,7 +4869,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<String> jsonInsert(Expression<?> jsonDocument, Expression<String> jsonPath, Object value);
 
 	/**
@@ -4877,7 +4877,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<String> jsonReplace(Expression<?> jsonDocument, String jsonPath, Expression<?> value);
 
 	/**
@@ -4885,7 +4885,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<String> jsonReplace(Expression<?> jsonDocument, Expression<String> jsonPath, Expression<?> value);
 
 	/**
@@ -4893,7 +4893,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<String> jsonReplace(Expression<?> jsonDocument, String jsonPath, Object value);
 
 	/**
@@ -4901,7 +4901,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<String> jsonReplace(Expression<?> jsonDocument, Expression<String> jsonPath, Object value);
 
 	/**
@@ -4909,7 +4909,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<String> jsonMergepatch(Expression<?> document, Expression<?> patch);
 
 	/**
@@ -4917,7 +4917,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<String> jsonMergepatch(Expression<?> document, String patch);
 
 	/**
@@ -4925,7 +4925,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<String> jsonMergepatch(String document, Expression<?> patch);
 
 	/**
@@ -4933,7 +4933,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaXmlElementExpression xmlelement(String elementName);
 
 	/**
@@ -4941,7 +4941,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<String> xmlcomment(String comment);
 
 	/**
@@ -4950,7 +4950,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * @since 7.0
 	 * @see #named(Expression, String)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<String> xmlforest(Expression<?>... elements);
 
 	/**
@@ -4959,7 +4959,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * @since 7.0
 	 * @see #named(Expression, String)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<String> xmlforest(List<? extends Expression<?>> elements);
 
 	/**
@@ -4967,7 +4967,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<String> xmlconcat(Expression<?>... elements);
 
 	/**
@@ -4975,7 +4975,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<String> xmlconcat(List<? extends Expression<?>> elements);
 
 	/**
@@ -4983,7 +4983,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<String> xmlpi(String elementName);
 
 	/**
@@ -4991,7 +4991,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<String> xmlpi(String elementName, Expression<String> content);
 
 	/**
@@ -4999,7 +4999,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<String> xmlquery(String query, Expression<?> xmlDocument);
 
 	/**
@@ -5007,7 +5007,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<String> xmlquery(Expression<String> query, Expression<?> xmlDocument);
 
 	/**
@@ -5015,7 +5015,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<Boolean> xmlexists(String query, Expression<?> xmlDocument);
 
 	/**
@@ -5023,25 +5023,25 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<Boolean> xmlexists(Expression<String> query, Expression<?> xmlDocument);
 
 	/**
 	 * @see #xmlagg(JpaOrder, JpaPredicate, JpaWindow, Expression)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<String> xmlagg(JpaOrder order, Expression<?> argument);
 
 	/**
 	 * @see #xmlagg(JpaOrder, JpaPredicate, JpaWindow, Expression)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<String> xmlagg(JpaOrder order, JpaPredicate filter, Expression<?> argument);
 
 	/**
 	 * @see #xmlagg(JpaOrder, JpaPredicate, JpaWindow, Expression)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<String> xmlagg(JpaOrder order, JpaWindow window, Expression<?> argument);
 
 	/**
@@ -5056,7 +5056,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @see #functionWithinGroup(String, Class, JpaOrder, JpaPredicate, JpaWindow, Expression...)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaExpression<String> xmlagg(
 			JpaOrder order,
 			JpaPredicate filter,
@@ -5071,7 +5071,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * @see #xmlforest(Expression[])
 	 * @see #xmlforest(List)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<T> JpaExpression<T> named(Expression<T> expression, String name);
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -5084,7 +5084,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * @see JpaSelectCriteria#from(JpaSetReturningFunction)
 	 * @see JpaFrom#join(JpaSetReturningFunction)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<E> JpaSetReturningFunction<E> setReturningFunction(String name, Expression<?>... args);
 
 	/**
@@ -5093,7 +5093,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * @since 7.0
 	 * @see JpaFrom#join(JpaSetReturningFunction)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<E> JpaSetReturningFunction<E> unnestArray(Expression<E[]> array);
 
 	/**
@@ -5102,7 +5102,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * @since 7.0
 	 * @see JpaFrom#join(JpaSetReturningFunction)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<E> JpaSetReturningFunction<E> unnestCollection(Expression<? extends Collection<E>> collection);
 
 	/**
@@ -5112,7 +5112,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * @see JpaSelectCriteria#from(JpaSetReturningFunction)
 	 * @see JpaFrom#join(JpaSetReturningFunction)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<E extends Number> JpaSetReturningFunction<E> generateSeries(E start, E stop);
 
 	/**
@@ -5122,7 +5122,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * @see JpaSelectCriteria#from(JpaSetReturningFunction)
 	 * @see JpaFrom#join(JpaSetReturningFunction)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<E extends Number> JpaSetReturningFunction<E> generateSeries(E start, Expression<E> stop);
 
 	/**
@@ -5132,7 +5132,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * @see JpaSelectCriteria#from(JpaSetReturningFunction)
 	 * @see JpaFrom#join(JpaSetReturningFunction)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<E extends Number> JpaSetReturningFunction<E> generateSeries(Expression<E> start, E stop);
 
 	/**
@@ -5142,7 +5142,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * @see JpaSelectCriteria#from(JpaSetReturningFunction)
 	 * @see JpaFrom#join(JpaSetReturningFunction)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<E extends Number> JpaSetReturningFunction<E> generateSeries(Expression<E> start, Expression<E> stop);
 
 	/**
@@ -5152,7 +5152,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * @see JpaSelectCriteria#from(JpaSetReturningFunction)
 	 * @see JpaFrom#join(JpaSetReturningFunction)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<E extends Number> JpaSetReturningFunction<E> generateSeries(E start, Expression<E> stop, Expression<E> step);
 
 	/**
@@ -5162,7 +5162,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * @see JpaSelectCriteria#from(JpaSetReturningFunction)
 	 * @see JpaFrom#join(JpaSetReturningFunction)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<E extends Number> JpaSetReturningFunction<E> generateSeries(Expression<E> start, E stop, Expression<E> step);
 
 	/**
@@ -5172,7 +5172,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * @see JpaSelectCriteria#from(JpaSetReturningFunction)
 	 * @see JpaFrom#join(JpaSetReturningFunction)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<E extends Number> JpaSetReturningFunction<E> generateSeries(Expression<E> start, Expression<E> stop, E step);
 
 	/**
@@ -5182,7 +5182,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * @see JpaSelectCriteria#from(JpaSetReturningFunction)
 	 * @see JpaFrom#join(JpaSetReturningFunction)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<E extends Number> JpaSetReturningFunction<E> generateSeries(E start, Expression<E> stop, E step);
 
 	/**
@@ -5192,7 +5192,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * @see JpaSelectCriteria#from(JpaSetReturningFunction)
 	 * @see JpaFrom#join(JpaSetReturningFunction)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<E extends Number> JpaSetReturningFunction<E> generateSeries(Expression<E> start, E stop, E step);
 
 	/**
@@ -5202,7 +5202,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * @see JpaSelectCriteria#from(JpaSetReturningFunction)
 	 * @see JpaFrom#join(JpaSetReturningFunction)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<E extends Number> JpaSetReturningFunction<E> generateSeries(E start, E stop, Expression<E> step);
 
 	/**
@@ -5212,7 +5212,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * @see JpaSelectCriteria#from(JpaSetReturningFunction)
 	 * @see JpaFrom#join(JpaSetReturningFunction)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<E extends Number> JpaSetReturningFunction<E> generateSeries(E start, E stop, E step);
 
 	/**
@@ -5222,7 +5222,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * @see JpaSelectCriteria#from(JpaSetReturningFunction)
 	 * @see JpaFrom#join(JpaSetReturningFunction)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<E extends Number> JpaSetReturningFunction<E> generateSeries(Expression<E> start, Expression<E> stop, Expression<E> step);
 
 	/**
@@ -5232,7 +5232,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * @see JpaSelectCriteria#from(JpaSetReturningFunction)
 	 * @see JpaFrom#join(JpaSetReturningFunction)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<E extends Temporal> JpaSetReturningFunction<E> generateTimeSeries(E start, Expression<E> stop, Expression<? extends TemporalAmount> step);
 
 	/**
@@ -5242,7 +5242,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * @see JpaSelectCriteria#from(JpaSetReturningFunction)
 	 * @see JpaFrom#join(JpaSetReturningFunction)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<E extends Temporal> JpaSetReturningFunction<E> generateTimeSeries(Expression<E> start, E stop, Expression<? extends TemporalAmount> step);
 
 	/**
@@ -5252,7 +5252,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * @see JpaSelectCriteria#from(JpaSetReturningFunction)
 	 * @see JpaFrom#join(JpaSetReturningFunction)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<E extends Temporal> JpaSetReturningFunction<E> generateTimeSeries(E start, E stop, Expression<? extends TemporalAmount> step);
 
 	/**
@@ -5262,7 +5262,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * @see JpaSelectCriteria#from(JpaSetReturningFunction)
 	 * @see JpaFrom#join(JpaSetReturningFunction)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<E extends Temporal> JpaSetReturningFunction<E> generateTimeSeries(Expression<E> start, Expression<E> stop, TemporalAmount step);
 
 	/**
@@ -5272,7 +5272,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * @see JpaSelectCriteria#from(JpaSetReturningFunction)
 	 * @see JpaFrom#join(JpaSetReturningFunction)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<E extends Temporal> JpaSetReturningFunction<E> generateTimeSeries(Expression<E> start, E stop, TemporalAmount step);
 
 	/**
@@ -5282,7 +5282,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * @see JpaSelectCriteria#from(JpaSetReturningFunction)
 	 * @see JpaFrom#join(JpaSetReturningFunction)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<E extends Temporal> JpaSetReturningFunction<E> generateTimeSeries(E start, Expression<E> stop, TemporalAmount step);
 
 	/**
@@ -5292,7 +5292,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * @see JpaSelectCriteria#from(JpaSetReturningFunction)
 	 * @see JpaFrom#join(JpaSetReturningFunction)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<E extends Temporal> JpaSetReturningFunction<E> generateTimeSeries(E start, E stop, TemporalAmount step);
 
 	/**
@@ -5302,7 +5302,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * @see JpaSelectCriteria#from(JpaSetReturningFunction)
 	 * @see JpaFrom#join(JpaSetReturningFunction)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	<E extends Temporal> JpaSetReturningFunction<E> generateTimeSeries(Expression<E> start, Expression<E> stop, Expression<? extends TemporalAmount> step);
 
 	/**
@@ -5312,7 +5312,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * @see JpaSelectCriteria#from(JpaSetReturningFunction)
 	 * @see JpaFrom#join(JpaSetReturningFunction)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaJsonTableFunction jsonTable(Expression<?> jsonDocument);
 
 	/**
@@ -5322,7 +5322,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * @see JpaSelectCriteria#from(JpaSetReturningFunction)
 	 * @see JpaFrom#join(JpaSetReturningFunction)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaJsonTableFunction jsonTable(Expression<?> jsonDocument, String jsonPath);
 
 	/**
@@ -5332,7 +5332,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * @see JpaSelectCriteria#from(JpaSetReturningFunction)
 	 * @see JpaFrom#join(JpaSetReturningFunction)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaJsonTableFunction jsonTable(Expression<?> jsonDocument, Expression<String> jsonPath);
 
 	/**
@@ -5342,7 +5342,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * @see JpaSelectCriteria#from(JpaSetReturningFunction)
 	 * @see JpaFrom#join(JpaSetReturningFunction)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaXmlTableFunction xmlTable(String xpath, Expression<?> xmlDocument);
 
 	/**
@@ -5352,7 +5352,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * @see JpaSelectCriteria#from(JpaSetReturningFunction)
 	 * @see JpaFrom#join(JpaSetReturningFunction)
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	JpaXmlTableFunction xmlTable(Expression<String> xpath, Expression<?> xmlDocument);
 
 	/**

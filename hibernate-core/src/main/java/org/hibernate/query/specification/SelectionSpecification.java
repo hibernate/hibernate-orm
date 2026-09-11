@@ -79,7 +79,7 @@ import java.util.List;
  * @see ProjectionSpecification
  * @see SimpleProjectionSpecification
  */
-@Incubating
+@Incubating(since = "7.0", group = "query-specifications")
 public interface SelectionSpecification<T> extends QuerySpecification<T> {
 	/**
 	 * Adds an ordering to the selection specification.
@@ -290,7 +290,7 @@ public interface SelectionSpecification<T> extends QuerySpecification<T> {
 	 * @since 7.2
 	 */
 	@Nonnull
-	@Incubating
+	@Incubating(since = "8.0", group = "query-specifications")
 	default ProjectionSpecification<T> createProjection() {
 		return ProjectionSpecification.create( this );
 	}
@@ -306,7 +306,7 @@ public interface SelectionSpecification<T> extends QuerySpecification<T> {
 	 * @since 7.2
 	 */
 	@Nonnull
-	@Incubating
+	@Incubating(since = "8.0", group = "query-specifications")
 	default <X> SimpleProjectionSpecification<T,X> createProjection(@Nonnull SingularAttribute<? super T, X> attribute) {
 		return SimpleProjectionSpecification.create( this, attribute );
 	}
@@ -322,7 +322,7 @@ public interface SelectionSpecification<T> extends QuerySpecification<T> {
 	 * @since 7.3
 	 */
 	@Nonnull
-	@Incubating
+	@Incubating(since = "8.0", group = "query-specifications")
 	default SimpleProjectionSpecification<T,Long> createCountProjection() {
 		return SimpleProjectionSpecification.count( this );
 	}
@@ -339,7 +339,7 @@ public interface SelectionSpecification<T> extends QuerySpecification<T> {
 	 * @since 7.3
 	 */
 	@Nonnull
-	@Incubating
+	@Incubating(since = "8.0", group = "query-specifications")
 	default SimpleProjectionSpecification<T,Boolean> createExistsProjection() {
 		return SimpleProjectionSpecification.exists( this );
 	}
@@ -355,7 +355,7 @@ public interface SelectionSpecification<T> extends QuerySpecification<T> {
 	 * @since 7.2
 	 */
 	@Nonnull
-	@Incubating
+	@Incubating(since = "8.0", group = "query-specifications")
 	default <X> SimpleProjectionSpecification<T,X> createProjection(@Nonnull Path<T, X> path) {
 		return SimpleProjectionSpecification.create( this, path );
 	}

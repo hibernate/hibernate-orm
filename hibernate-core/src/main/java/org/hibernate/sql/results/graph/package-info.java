@@ -13,7 +13,7 @@
 /// @see org.hibernate.sql.results.graph.Fetch
 /// @author Steve Ebersole
 /// @since 8.0
-@Incubating
+@Incubating(since = "6.0", group = "result-processing")
 @SPI(SPI.Role.USE)
 package org.hibernate.sql.results.graph;
 

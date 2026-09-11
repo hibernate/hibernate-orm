@@ -166,7 +166,7 @@ public interface PersistenceSettings {
 	 *
 	 * @since 5.4
 	 */
-	@Incubating
+	@Incubating(since = "6.2")
 	String JPA_CALLBACKS_ENABLED = "hibernate.jpa_callbacks.enabled";
 
 	/**
@@ -184,7 +184,7 @@ public interface PersistenceSettings {
 	 *
 	 * @since 8.0
 	 */
-	@Incubating
+	@Incubating(since = "8.0")
 	String BIDIRECTIONALITY_MANAGEMENT = "hibernate.bidirectionality_management";
 
 	/**

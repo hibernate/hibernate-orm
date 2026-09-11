@@ -13,7 +13,7 @@ import org.hibernate.sql.ast.spi.translation.SqlAstNodeRenderingMode;
 /**
  * @since 7.0
  */
-@Incubating
+@Incubating(since = "6.2")
 public class NamedSetReturningFunctionDescriptorBuilder {
 
 	private final SqmFunctionRegistry registry;

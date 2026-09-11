@@ -15,7 +15,7 @@ import org.hibernate.jpa.event.spi.CallbackType;
 ///
 /// @author Steve Ebersole
 /// @since 8.0
-@Incubating
+@Incubating(since = "8.0", group = "action-queue")
 public class PreDeleteHandling implements PreExecutionCallback {
 	private final EntityDeleteAction action;
 	private boolean invoked;

@@ -37,8 +37,21 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * List&lt;Document&gt; documents;
  * </pre>
  * <p>
+ * If a restriction declared by an entity should be applied to a to-one
+ * association to that entity type, the association should be mapped to
+ * an {@linkplain jakarta.persistence.JoinTable association table}.
+ * <pre>
+ * &#64;ManyToOne
+ * &#64;JoinTable(name = "application_document")
+ * Document document;
+ * </pre>
+ * The {@code SQLRestriction} annotation may not be directly applied to
+ * a field or property annotated {@link jakarta.persistence.OneToOne} or
+ * {@link jakarta.persistence.ManyToOne}, and restrictions on foreign
+ * key associations are dangerous.
+ * <p>
  * The {@link SQLJoinTableRestriction} annotation lets a restriction be
- * applied to an {@linkplain jakarta.persistence.JoinTable association table}:
+ * applied to the columns of an association table:
  * <pre>
  * &#64;ManyToMany
  * &#64;JoinTable(name = "collaborations")

@@ -18,6 +18,7 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Test;
 
@@ -83,7 +84,7 @@ public class TablePerClassWithTwoPersistentClassesTest {
 	}
 
 	@Test
-	public void test(DomainModelScope domainModelScope) {
+	public void test(DomainModelScope domainModelScope, SessionFactoryScope scope) {
 		var tables = domainModelScope.getDomainModel().collectTableMappings();
 		assertTable( tables, "Base_AUD", table -> {
 			assertFalse( table.containsColumn( new Column( "str1" ) ) );
@@ -100,6 +101,9 @@ public class TablePerClassWithTwoPersistentClassesTest {
 			assertTrue( table.containsColumn( new Column( "str1" ) ) );
 			assertFalse( table.containsColumn( new Column( "str2" ) ) );
 			assertTrue( table.containsColumn( new Column( "str3" ) ) );
+		} );
+
+		scope.inTransaction( s -> {
 		} );
 
 	}

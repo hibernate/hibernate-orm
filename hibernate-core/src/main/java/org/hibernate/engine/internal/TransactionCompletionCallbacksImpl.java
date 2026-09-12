@@ -86,4 +86,9 @@ public class TransactionCompletionCallbacksImpl implements TransactionCompletion
 			afterTransactionProcesses.executePendingBulkOperationCleanUpActions();
 		}
 	}
+
+	@Override
+	public void clearBeforeTransactionCallbacks(){
+		beforeTransactionProcesses.clear();
+	}
 }

@@ -338,6 +338,179 @@ public class HQLScrollFetchTest {
 		);
 	}
 
+	@Test
+	@JiraKey("HHH-10815")
+	public void testScrollableResultsGetRowNumber(SessionFactoryScope scope) {
+		createFiveParentsWithNoChild( scope );
+
+		scope.inTransaction(
+				s -> {
+					try (
+							ScrollableResults<Parent> fetchResult = s.createQuery(
+									"from Parent p left join fetch p.children order by p.id",
+									Parent.class
+							).scroll();
+
+							ScrollableResults<Parent> standardResult = s.createQuery(
+									"from Parent p order by p.id",
+									Parent.class
+							).scroll()
+					) {
+						standardResult.first();
+						fetchResult.first();
+
+						assertEquals(
+								0,
+								standardResult.getRowNumber(),
+								"row number must be 0 on first result"
+						);
+						assertEquals(
+								0,
+								fetchResult.getRowNumber(),
+								"row number must be 0 on first result"
+						);
+
+						standardResult.next();
+						fetchResult.next();
+
+						assertEquals(
+								1,
+								standardResult.getRowNumber(),
+								"row number must be 1 on next result"
+						);
+						assertEquals(
+								1,
+								fetchResult.getRowNumber(),
+								"row number must be 1 on next result"
+						);
+
+						standardResult.last();
+						fetchResult.last();
+
+						assertEquals(
+								standardResult.getRowNumber(),
+								fetchResult.getRowNumber(),
+								"Both results should have the same row number"
+						);
+					}
+				}
+		);
+	}
+
+	@Test
+	@JiraKey("HHH-10815")
+	public void testScrollableResultsSetRowNumber(SessionFactoryScope scope) {
+		createFiveParentsWithNoChild( scope );
+
+		scope.inTransaction(
+				s -> {
+					try (
+							ScrollableResults<Parent> fetchResult = s.createQuery(
+									"from Parent p left join fetch p.children order by p.id",
+									Parent.class
+							).scroll();
+
+							ScrollableResults<Parent> standardResult = s.createQuery(
+									"from Parent p order by p.id",
+									Parent.class
+							).scroll()
+					) {
+						for ( int rowNumber = 0; rowNumber < 5; rowNumber++ ) {
+							assertTrue( standardResult.setRowNumber( rowNumber ) );
+							assertTrue( fetchResult.setRowNumber( rowNumber ) );
+
+							assertEquals(
+									standardResult.get(),
+									fetchResult.get(),
+									"Both results should point to the same row"
+							);
+
+							assertEquals(
+									rowNumber,
+									standardResult.getRowNumber()
+							);
+
+							assertEquals(
+									rowNumber,
+									fetchResult.getRowNumber()
+							);
+						}
+					}
+				}
+		);
+	}
+
+	@Test
+	@JiraKey("HHH-10815")
+	public void testScrollableResultsSetNegativeRowNumber(SessionFactoryScope scope) {
+		createFiveParentsWithNoChild( scope );
+
+		scope.inTransaction(
+				s -> {
+					try (
+							ScrollableResults<Parent> fetchResult = s.createQuery(
+									"from Parent p left join fetch p.children order by p.id",
+									Parent.class
+							).scroll();
+
+							ScrollableResults<Parent> standardResult = s.createQuery(
+									"from Parent p order by p.id",
+									Parent.class
+							).scroll()
+					) {
+						assertTrue( standardResult.setRowNumber( -1 ) );
+						assertTrue( fetchResult.setRowNumber( -1 ) );
+
+						assertEquals(
+								standardResult.get(),
+								fetchResult.get()
+						);
+
+						assertEquals(
+								4,
+								standardResult.getRowNumber()
+						);
+
+						assertEquals(
+								4,
+								fetchResult.getRowNumber()
+						);
+
+						assertTrue( standardResult.setRowNumber( -2 ) );
+						assertTrue( fetchResult.setRowNumber( -2 ) );
+
+						assertEquals(
+								standardResult.get(),
+								fetchResult.get()
+						);
+
+						assertEquals(
+								3,
+								standardResult.getRowNumber()
+						);
+
+						assertEquals(
+								3,
+								fetchResult.getRowNumber()
+						);
+					}
+				}
+		);
+	}
+
+	private void createFiveParentsWithNoChild(SessionFactoryScope scope) {
+		scope.getSessionFactory().getSchemaManager().truncate();
+
+		scope.inTransaction(
+				s -> {
+					for ( int i = 0; i < 5; i++ ) {
+						Parent p = new Parent( "parent" + i );
+						s.persist( p );
+					}
+				}
+		);
+	}
+
 	private void assertResultFromOneUser(Parent parent) {
 		assertEquals(
 				3,

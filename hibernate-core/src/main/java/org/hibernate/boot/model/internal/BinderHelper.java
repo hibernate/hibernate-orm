@@ -808,6 +808,118 @@ public class BinderHelper {
 		return any;
 	}
 
+	/**
+	 * Infer the Java type of the {@linkplain Any#getKeyDescriptor() key} of an {@code @Any}
+	 * association, for mappings which specify neither {@code @AnyKeyJavaType} nor
+	 * {@code @AnyKeyJavaClass}.
+	 * <p>
+	 * When every target entity is known, that is, when all discriminator values are mapped
+	 * explicitly with {@code @AnyDiscriminatorValue}, the type is read from the identifiers of
+	 * those entities, which must all agree.
+	 * <p>
+	 * Otherwise the set of targets is open: any entity may be a target, since discriminator
+	 * values are resolved by name at runtime. There is then nothing reliable to read, and we
+	 * fall back on the convention that the key has the same type as the identifier of the
+	 * entity declaring the association. A mapping which does not follow that convention must
+	 * specify its key type explicitly.
+	 *
+	 * @return the inferred type, or {@code null} when no inference is possible
+	 */
+	static java.lang.reflect.Type implicitAnyKeyJavaType(
+			MemberDetails member,
+			PropertyHolder propertyHolder,
+			MetadataBuildingContext context) {
+		final var implicitValues =
+				member.getDirectAnnotationUsage( AnyDiscriminatorImplicitValues.class );
+		if ( implicitValues != null
+				&& implicitValues.value() == AnyDiscriminatorImplicitValues.Strategy.CUSTOM ) {
+			// only the user strategy knows which entities may be targeted
+			return null;
+		}
+		final List<Class<?>> targets = new ArrayList<>();
+		processAnyDiscriminatorValues(
+				member,
+				valueMapping -> targets.add( valueMapping.entity() ),
+				context.getBootstrapContext().getModelsContext()
+		);
+		return implicitValues == null && !targets.isEmpty()
+				? identifierTypeOfTargets( targets, context )
+				: identifierTypeOfDeclaringEntity( propertyHolder, context );
+	}
+
+	private static java.lang.reflect.Type identifierTypeOfTargets(
+			List<Class<?>> targets,
+			MetadataBuildingContext context) {
+		Class<?> keyType = null;
+		Class<?> keyTarget = null;
+		for ( var target : targets ) {
+			final var entityBinding = entityBinding( target, context );
+			if ( entityBinding == null ) {
+				// not an entity of this model: better to leave the type unresolved
+				return null;
+			}
+			final var targetType = identifierType( entityBinding, context );
+			if ( targetType == null ) {
+				return null;
+			}
+			else if ( keyType == null ) {
+				keyType = targetType;
+				keyTarget = target;
+			}
+			else if ( !keyType.equals( targetType ) ) {
+				throw new MappingException( "Could not infer key type for '@Any' mapping:"
+						+ " target entity '" + target.getName() + "' is identified by '"
+						+ targetType.getName() + "' but '" + keyTarget.getName()
+						+ "' is identified by '" + keyType.getName()
+						+ "' (specify '@AnyKeyJavaType' or '@AnyKeyJavaClass')" );
+			}
+		}
+		return keyType;
+	}
+
+	/**
+	 * Note that the entity name is not necessarily the class name, so the binding cannot
+	 * simply be looked up by name.
+	 */
+	private static PersistentClass entityBinding(Class<?> entityClass, MetadataBuildingContext context) {
+		final var collector = context.getMetadataCollector();
+		final var byEntityName = collector.getEntityBinding( entityClass.getName() );
+		if ( byEntityName != null ) {
+			return byEntityName;
+		}
+		for ( var binding : collector.getEntityBindings() ) {
+			if ( entityClass.getName().equals( binding.getClassName() ) ) {
+				return binding;
+			}
+		}
+		return null;
+	}
+
+	private static java.lang.reflect.Type identifierTypeOfDeclaringEntity(
+			PropertyHolder propertyHolder,
+			MetadataBuildingContext context) {
+		final var declaringEntity = propertyHolder.getPersistentClass();
+		return declaringEntity == null ? null : identifierType( declaringEntity.getRootClass(), context );
+	}
+
+	private static Class<?> identifierType(PersistentClass entityBinding, MetadataBuildingContext context) {
+		final var identifier = entityBinding.getIdentifier();
+		if ( identifier == null ) {
+			return null;
+		}
+		else if ( identifier.getColumnSpan() > 1 ) {
+			// note that getSelectableType() would happily return the type of the first column
+			throw new MappingException( "Could not infer key type for '@Any' mapping:"
+					+ " entity '" + entityBinding.getEntityName() + "' has a composite identifier"
+					+ " (specify '@AnyKeyJavaType' or '@AnyKeyJavaClass')" );
+		}
+		else {
+			return identifier.getSelectableType( context.getMetadataCollector(), 0 )
+					.getMappedJavaType()
+					.getJavaTypeClass();
+		}
+	}
+
 	private static void processAnyDiscriminatorValues(
 			MemberDetails property,
 			Consumer<AnyDiscriminatorValue> consumer,

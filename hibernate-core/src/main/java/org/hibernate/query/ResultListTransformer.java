@@ -27,7 +27,7 @@ import org.hibernate.NonUniqueResultException;
  *
  * @since 6.0
  */
-@Incubating
+@Incubating(since = "6.0")
 @FunctionalInterface
 public interface ResultListTransformer<T> {
 	/**

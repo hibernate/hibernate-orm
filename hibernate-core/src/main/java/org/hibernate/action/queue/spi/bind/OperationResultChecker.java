@@ -13,7 +13,7 @@ import java.sql.SQLException;
 ///
 /// @author Steve Ebersole
 /// @since 8.0
-@Incubating
+@Incubating(since = "8.0", group = "action-queue")
 @FunctionalInterface
 public interface OperationResultChecker {
 	/// Check the result of a JDBC operation

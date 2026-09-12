@@ -489,7 +489,7 @@ public interface SessionFactoryBuilder {
 	 * @see org.hibernate.cfg.AvailableSettings#QUERY_CACHE_LAYOUT
 	 * @since 6.5
 	 */
-	@Incubating
+	@Incubating(since = "6.5")
 	SessionFactoryBuilder applyQueryCacheLayout(CacheLayout cacheLayout);
 
 	/**
@@ -742,7 +742,7 @@ public interface SessionFactoryBuilder {
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#JSON_FORMAT_MAPPER
 	 */
-	@Incubating
+	@Incubating(since = "6.2")
 	SessionFactoryBuilder applyJsonFormatMapper(FormatMapper jsonFormatMapper);
 
 	/**
@@ -754,7 +754,7 @@ public interface SessionFactoryBuilder {
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#XML_FORMAT_MAPPER
 	 */
-	@Incubating
+	@Incubating(since = "6.2")
 	SessionFactoryBuilder applyXmlFormatMapper(FormatMapper xmlFormatMapper);
 
 	/**

@@ -25,7 +25,7 @@ public interface SqmCopyContext {
 	 *
 	 * @since 6.4
 	 */
-	@Incubating
+	@Incubating(since = "6.2")
 	default boolean copyFetchedFlag() {
 		return true;
 	}
@@ -36,7 +36,7 @@ public interface SqmCopyContext {
 	 *
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "6.2")
 	default @Nullable SqmQuerySource getQuerySource() {
 		return null;
 	}

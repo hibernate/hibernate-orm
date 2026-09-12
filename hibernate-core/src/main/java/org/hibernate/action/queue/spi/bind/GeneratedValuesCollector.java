@@ -32,7 +32,7 @@ import static org.hibernate.generator.values.internal.GeneratedValuesHelper.noCu
 ///
 /// @author Steve Ebersole
 /// @since 8.0
-@Incubating
+@Incubating(since = "8.0", group = "action-queue")
 public final class GeneratedValuesCollector {
 	public static @Nullable GeneratedValuesCollector forInsert(
 			EntityPersister entityPersister,

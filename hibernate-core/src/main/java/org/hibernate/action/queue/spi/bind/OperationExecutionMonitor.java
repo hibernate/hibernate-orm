@@ -15,7 +15,7 @@ import org.hibernate.engine.spi.SessionImplementor;
 ///
 /// @author Steve Ebersole
 /// @since 8.0
-@Incubating
+@Incubating(since = "8.0", group = "action-queue")
 public interface OperationExecutionMonitor {
 	/// Invoked immediately before an operation enters physical execution.
 	void beforeExecution(SessionImplementor session);

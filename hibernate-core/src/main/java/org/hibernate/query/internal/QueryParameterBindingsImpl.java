@@ -11,7 +11,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.function.BiConsumer;
 
-import org.hibernate.Incubating;
 import org.hibernate.QueryParameterException;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.cache.MutableCacheKeyBuilder;
@@ -42,7 +41,6 @@ import static org.hibernate.internal.util.collections.CollectionHelper.mapOfSize
  * @author Steve Ebersole
  * @author Chris Cranford
  */
-@Incubating
 public class QueryParameterBindingsImpl implements QueryParameterBindings {
 	public static final QueryParameterBindings EMPTY = from( ParameterMetadataImpl.EMPTY, null );
 

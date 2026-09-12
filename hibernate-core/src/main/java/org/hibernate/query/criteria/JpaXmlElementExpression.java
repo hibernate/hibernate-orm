@@ -14,7 +14,7 @@ import jakarta.persistence.criteria.Expression;
  * A special expression for the {@code xmlelement} function.
  * @since 7.0
  */
-@Incubating
+@Incubating(since = "6.3")
 public interface JpaXmlElementExpression extends JpaExpression<String> {
 
 	/**

@@ -13,7 +13,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 /**
  * @author Steve Ebersole
  */
-@Incubating
+@Incubating(since = "6.0", group = "sql-execution")
 public interface JdbcCallRefCursorExtractor {
 	ResultSet extractResultSet(CallableStatement callableStatement, SharedSessionContractImplementor session);
 }

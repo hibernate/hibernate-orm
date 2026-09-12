@@ -11,7 +11,7 @@ import org.hibernate.Incubating;
  * A special node for column defined for a {@code xmltable} function.
  * @since 7.0
  */
-@Incubating
+@Incubating(since = "6.3")
 public interface JpaXmlTableColumnNode<T> {
 
 	/**

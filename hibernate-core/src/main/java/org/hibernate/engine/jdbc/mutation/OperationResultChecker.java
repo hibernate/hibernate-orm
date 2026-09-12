@@ -14,7 +14,7 @@ import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
  *
  * @author Steve Ebersole
  */
-@Incubating
+@Incubating(since = "6.2")
 @FunctionalInterface
 public interface OperationResultChecker {
 	/**

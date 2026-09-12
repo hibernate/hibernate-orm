@@ -16,7 +16,7 @@ import org.hibernate.persister.state.internal.SoftDeleteStateManagement;
  * @deprecated This is no longer needed after the
  *             introduction of {@link Stateful}.
  */
-@Incubating @Deprecated(forRemoval = true)
+@Incubating(since = "7.4") @Deprecated(forRemoval = true)
 public interface SoftDeletable extends Stateful {
 
 	String INDICATOR = "indicator";

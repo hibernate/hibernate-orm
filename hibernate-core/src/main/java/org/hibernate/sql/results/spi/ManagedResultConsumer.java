@@ -16,7 +16,7 @@ import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
  *
  * @since 6.6
  */
-@Incubating
+@Incubating(since = "6.0", group = "result-processing")
 public class ManagedResultConsumer implements ResultsConsumer<Void, Object> {
 
 	public static final ManagedResultConsumer INSTANCE = new ManagedResultConsumer();

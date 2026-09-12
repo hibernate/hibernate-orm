@@ -22,7 +22,7 @@ import static org.hibernate.SPI.Role.USE;
 ///
 /// @author Steve Ebersole
 /// @since 8.0
-@Incubating
+@Incubating(since = "8.0")
 @SPI(USE)
 public final class LobDataExtraction {
 	private LobDataExtraction() {

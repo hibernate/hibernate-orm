@@ -33,7 +33,7 @@ import org.hibernate.persister.collection.CollectionPersister;
 ///
 /// @since 8.0
 /// @author Steve Ebersole
-@Incubating
+@Incubating(since = "8.0", group = "action-queue")
 public record CollectionMutationInput(
 		@Nullable PersistentCollection<?> collection,
 		@Nonnull CollectionTransition transition,

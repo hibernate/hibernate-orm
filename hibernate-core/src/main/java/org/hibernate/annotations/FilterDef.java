@@ -127,6 +127,6 @@ public @interface FilterDef {
 	 * would be to nullify a to-one association,
 	 * {@link org.hibernate.EntityFilterException} is thrown.
 	 */
-	@Incubating
+	@Incubating(since = "6.6")
 	boolean applyToLoadByKey() default false;
 }

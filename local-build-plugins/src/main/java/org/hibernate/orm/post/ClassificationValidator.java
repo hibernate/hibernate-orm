@@ -7,6 +7,7 @@ package org.hibernate.orm.post;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import static org.hibernate.orm.post.ClassificationModel.Category.API;
 import static org.hibernate.orm.post.ClassificationModel.Category.INTERNAL;
@@ -22,6 +23,9 @@ import static org.hibernate.orm.post.ClassificationModel.ReferenceTarget.HIBERNA
 ///
 /// @author Steve Ebersole
 public final class ClassificationValidator {
+	private static final Pattern RELEASE_FAMILY = Pattern.compile( "[1-9][0-9]*\\.[0-9]+" );
+	private static final Pattern INCUBATION_GROUP = Pattern.compile( "[a-z][a-z0-9]*(?:-[a-z0-9]+)*" );
+
 	public ValidationResult validate(
 			ClassificationModel model,
 			ValidationAllowlist allowlist) {
@@ -35,9 +39,53 @@ public final class ClassificationValidator {
 		final List<ValidationDiagnostic> diagnostics = new ArrayList<>();
 		final ClassificationGraph graph = new ClassificationGraph( model );
 		validateClassificationStatus( model, diagnostics );
+		validateIncubationMetadata( model, diagnostics );
 		validateDependencies( model, graph, scope, diagnostics );
 		validateReachability( model, graph, diagnostics );
 		return ValidationResult.complete( diagnostics, allowlist, ValidationCause.Domain.CLASSIFICATION );
+	}
+
+	private static void validateIncubationMetadata(
+			ClassificationModel model,
+			List<ValidationDiagnostic> diagnostics) {
+		for ( ClassificationModel.Element element : model.getElements() ) {
+			for ( ClassificationModel.LifecycleOrigin origin : element.getLifecycle().getOrigins() ) {
+				if ( origin.getState() != ClassificationModel.LifecycleState.INCUBATING
+						|| origin.getKind() != ClassificationModel.LifecycleOriginKind.DIRECT
+						|| !origin.getSourceElementId().equals( element.getId() ) ) {
+					continue;
+				}
+				if ( origin.getSince() == null || !RELEASE_FAMILY.matcher( origin.getSince() ).matches() ) {
+					diagnostics.add(
+							declarationDiagnostic(
+									ValidationCause.INVALID_INCUBATION_SINCE,
+									element,
+									"Invalid @Incubating since value: " + String.valueOf( origin.getSince() )
+							)
+					);
+				}
+				if ( origin.getGroup() != null
+						&& !origin.getGroup().isEmpty()
+						&& !INCUBATION_GROUP.matcher( origin.getGroup() ).matches() ) {
+					diagnostics.add(
+							declarationDiagnostic(
+									ValidationCause.INVALID_INCUBATION_GROUP,
+									element,
+									"Invalid @Incubating group value: " + origin.getGroup()
+							)
+					);
+				}
+				if ( element.getClassificationStatus() == RESOLVED && element.getCategory() == INTERNAL ) {
+					diagnostics.add(
+							declarationDiagnostic(
+									ValidationCause.INTERNAL_INCUBATION,
+									element,
+									"Internal declaration has a direct @Incubating origin"
+							)
+					);
+				}
+			}
+		}
 	}
 
 	private static void validateClassificationStatus(

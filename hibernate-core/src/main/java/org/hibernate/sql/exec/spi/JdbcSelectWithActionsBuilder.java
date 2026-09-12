@@ -19,7 +19,7 @@ import org.hibernate.sql.exec.internal.lock.LoadedValuesCollectorFactory;
 ///
 /// @author Steve Ebersole
 /// @author Andrea Boriero
-@Incubating
+@Incubating(since = "6.0", group = "sql-execution")
 // Used by Hibernate Reactive
 public interface JdbcSelectWithActionsBuilder {
 	/// The primary selection.

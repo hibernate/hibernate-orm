@@ -15,7 +15,7 @@ import org.hibernate.Incubating;
 ///
 /// @since 8.0
 /// @author Steve Ebersole
-@Incubating
+@Incubating(since = "8.0")
 public interface UuidCapableJavaType<T> extends BasicJavaType<T> {
 	/// The transformer used to convert generated UUID values to and from the
 	/// represented Java type.

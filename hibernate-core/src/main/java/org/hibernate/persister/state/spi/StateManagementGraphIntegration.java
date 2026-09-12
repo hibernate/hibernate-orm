@@ -19,7 +19,7 @@ import org.hibernate.persister.entity.EntityPersister;
 ///
 /// @author Steve Ebersole
 /// @since 8.0
-@Incubating
+@Incubating(since = "8.0")
 public interface StateManagementGraphIntegration {
 	/// The graph integration used by the standard state-management model.  It
 	/// does not contribute any alternate graph mutation plans.

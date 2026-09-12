@@ -50,7 +50,7 @@ import java.lang.annotation.Annotation;
  *
  * @author Gavin King
  */
-@Incubating
+@Incubating(since = "6.2")
 public interface TypeBinder<A extends Annotation> {
 	/**
 	 * Perform some custom configuration of the model relating to the given annotated

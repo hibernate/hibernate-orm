@@ -773,7 +773,7 @@ public class BasicValue extends SimpleValue
 		}
 	}
 
-	@Incubating
+	@Incubating(since = "7.0")
 	public java.lang.reflect.Type impliedJavaType(TypeConfiguration typeConfiguration) {
 		if ( resolvedJavaType != null ) {
 			return resolvedJavaType;
@@ -1314,7 +1314,7 @@ public class BasicValue extends SimpleValue
 		return javaTypeClass == Byte[].class || javaTypeClass == Character[].class;
 	}
 
-	@Incubating
+	@Incubating(since = "6.2")
 	public void setExplicitJdbcTypeCode(Integer jdbcTypeCode) {
 		this.jdbcTypeCode = jdbcTypeCode;
 	}

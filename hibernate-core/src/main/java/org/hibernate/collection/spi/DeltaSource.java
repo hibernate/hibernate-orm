@@ -12,7 +12,7 @@ import org.hibernate.Incubating;
 ///
 /// @since 8.0
 /// @author Steve Ebersole
-@Incubating
+@Incubating(since = "8.0", group = "collection-delta")
 public enum DeltaSource {
 	/// Changes discovered by comparing current state with stored loaded state.
 	SNAPSHOT_COMPARISON,

@@ -16,7 +16,7 @@ import org.hibernate.sql.ast.spi.query.cte.CteSearchClauseKind;
 /**
  * A CTE (common table expression) criteria.
  */
-@Incubating
+@Incubating(since = "6.3")
 public interface JpaCteCriteria<T> extends JpaCriteriaNode {
 
 	/**

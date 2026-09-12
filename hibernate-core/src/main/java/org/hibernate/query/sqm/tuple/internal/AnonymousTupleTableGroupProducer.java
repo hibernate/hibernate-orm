@@ -12,7 +12,6 @@ import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
-import org.hibernate.Incubating;
 import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.spi.IndexedConsumer;
@@ -60,7 +59,6 @@ import org.hibernate.type.descriptor.java.JavaType;
  *
  * @author Christian Beikov
  */
-@Incubating
 public class AnonymousTupleTableGroupProducer implements TableGroupProducer, MappingType, SetReturningFunctionType {
 
 	private final String aliasStem;

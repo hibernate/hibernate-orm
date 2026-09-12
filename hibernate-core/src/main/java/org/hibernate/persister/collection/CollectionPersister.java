@@ -141,22 +141,22 @@ public interface CollectionPersister extends Restrictable {
 		return true;
 	}
 
-	@Internal @Incubating
+	@Internal
 	RowMutationOperations getRowMutationOperations();
 
-	@Internal @Incubating
+	@Internal
 	boolean isRowInsertEnabled();
 
-	@Internal @Incubating
+	@Internal
 	boolean isRowDeleteEnabled();
 
-	@Internal @Incubating
+	@Internal
 	boolean[] getIndexColumnIsSettable();
 
-	@Internal @Incubating
+	@Internal
 	boolean[] getElementColumnIsSettable();
 
-	@Internal @Incubating
+	@Internal
 	UnaryOperator<Object> getIndexIncrementer();
 
 	/**
@@ -172,7 +172,7 @@ public interface CollectionPersister extends Restrictable {
 	@Nonnull
 	CacheEntryStructure getCacheEntryStructure();
 
-	@Incubating
+	@Incubating(since = "6.5")
 	boolean useShallowQueryCacheLayout();
 
 	/**

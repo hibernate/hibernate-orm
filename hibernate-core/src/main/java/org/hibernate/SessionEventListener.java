@@ -23,7 +23,7 @@ import java.io.Serializable;
  *
  * @author Steve Ebersole
  */
-@Incubating
+@Incubating(since = "6.2")
 public interface SessionEventListener extends Serializable {
 	default void transactionCompletion(boolean successful) {}
 

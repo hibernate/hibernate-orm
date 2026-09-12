@@ -23,7 +23,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 /// @Column(length=64) // the maximum length of the strings in the array
 /// String[] strings;
 /// ```
-@Incubating
+@Incubating(since = "6.3")
 @Target({FIELD, METHOD})
 @Retention( RUNTIME )
 public @interface Array {

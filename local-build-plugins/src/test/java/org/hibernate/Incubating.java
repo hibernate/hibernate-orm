@@ -21,4 +21,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Target({ PACKAGE, TYPE, ANNOTATION_TYPE, METHOD, FIELD, CONSTRUCTOR })
 @Retention(RUNTIME)
 public @interface Incubating {
+	String since();
+
+	String group() default "";
 }

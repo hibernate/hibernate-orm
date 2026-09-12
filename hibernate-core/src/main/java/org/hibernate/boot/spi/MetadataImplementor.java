@@ -62,7 +62,7 @@ public interface MetadataImplementor extends Metadata {
 	 */
 	List<PersistenceUnitCallbackDefinition> getPersistenceUnitLifecycleCallbackDefinitions();
 
-	@Incubating
+	@Incubating(since = "6.2")
 	void orderColumns(boolean forceOrdering);
 
 	void validate() throws MappingException;

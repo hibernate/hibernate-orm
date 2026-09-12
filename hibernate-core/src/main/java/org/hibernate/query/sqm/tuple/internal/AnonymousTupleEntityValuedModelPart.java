@@ -11,7 +11,6 @@ import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
-import org.hibernate.Incubating;
 import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
@@ -77,7 +76,6 @@ import static org.hibernate.internal.util.collections.CollectionHelper.arrayList
 /**
  * @author Christian Beikov
  */
-@Incubating
 public class AnonymousTupleEntityValuedModelPart
 		implements EntityValuedModelPart, EntityMappingType, TableGroupJoinProducer, ValuedModelPart,
 		LazyTableGroup.ParentTableGroupUseChecker {

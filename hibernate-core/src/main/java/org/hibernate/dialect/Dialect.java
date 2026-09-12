@@ -629,7 +629,7 @@ public abstract class Dialect implements ConversionContext, AlterTableSupport,
 	/// [#columnType].
 	///
 	/// @since 7.4
-	@Incubating
+	@Incubating(since = "7.4")
 	@SPI({ USE, IMPLEMENT })
 	protected String narrowCastType(int sqlTypeCode) {
 		return columnType(
@@ -1846,7 +1846,7 @@ public abstract class Dialect implements ConversionContext, AlterTableSupport,
 	/// @return the non-null semantic native identifier-generation type
 	/// @see org.hibernate.annotations.NativeGenerator
 	/// @since 7.0
-	@Incubating
+	@Incubating(since = "7.0")
 	@SPI({ IMPLEMENT, SUPPLY })
 	public GenerationType getNativeValueGenerationStrategy() {
 		return getIdentityColumnSupport().supportsIdentityColumns()
@@ -1899,7 +1899,7 @@ public abstract class Dialect implements ConversionContext, AlterTableSupport,
 	/// @return the non-null row-level-security strategy
 	/// @since 8.0
 	/// @see RowLevelSecurity
-	@Incubating
+	@Incubating(since = "8.0", group = "row-level-security")
 	@SPI({ USE, IMPLEMENT, SUPPLY })
 	public RowLevelSecurity getRowLevelSecurity() {
 		return RowLevelSecurityStrategies.none();
@@ -3031,7 +3031,7 @@ public abstract class Dialect implements ConversionContext, AlterTableSupport,
 	/// partitioning.
 	///
 	/// @since 7.1
-	@Incubating
+	@Incubating(since = "7.1")
 	@SPI({ USE, IMPLEMENT })
 	public boolean addPartitionKeyToPrimaryKey() {
 		return false;
@@ -3360,7 +3360,7 @@ public abstract class Dialect implements ConversionContext, AlterTableSupport,
 	/// @return the non-null temporal-table support strategy
 	/// @since 8.0
 	/// @see TemporalTableSupport
-	@Incubating
+	@Incubating(since = "7.4")
 	@SPI({ IMPLEMENT, SUPPLY })
 	public TemporalTableSupport getTemporalTableSupport() {
 		return TemporalTableSupports.standard(
@@ -3541,7 +3541,7 @@ public abstract class Dialect implements ConversionContext, AlterTableSupport,
 	///
 	/// @deprecated This temporary schema-management workaround will be removed
 	/// once affected databases no longer require it.
-	@Incubating
+	@Incubating(since = "7.4")
 	@Deprecated(forRemoval = true)
 	public boolean throttleDdl() {
 		return false;

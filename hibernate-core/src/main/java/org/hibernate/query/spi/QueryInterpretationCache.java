@@ -21,7 +21,7 @@ import org.hibernate.query.sqm.spi.InterpretationsKeySource;
  *
  * @author Steve Ebersole
  */
-@Incubating
+@Incubating(since = "6.0")
 public interface QueryInterpretationCache {
 	interface Key {
 		/**

@@ -22,7 +22,7 @@ import org.hibernate.sql.spi.mutation.MutationOperation;
 ///
 /// @author Steve Ebersole
 /// @since 8.0
-@Incubating
+@Incubating(since = "8.0", group = "action-queue")
 public record CollectionJdbcOperations(
 		CollectionMutationTarget target,
 		TableDescriptor tableDescriptor,

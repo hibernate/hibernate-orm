@@ -5,7 +5,6 @@
 package org.hibernate.action.queue.internal.cyclebreak;
 
 import jakarta.annotation.Nullable;
-import org.hibernate.Incubating;
 import org.hibernate.action.queue.spi.plan.FlushOperation;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
@@ -15,7 +14,6 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 /// See [UniqueSwapUpdateFactory].
 ///
 /// @author Steve Ebersole
-@Incubating
 public class FixupSynthesizer {
 	private final FkFixupUpdateFactory nullableFkUpdateFactory;
 	private final UniqueSwapUpdateFactory uniqueSwapUpdateFactory;

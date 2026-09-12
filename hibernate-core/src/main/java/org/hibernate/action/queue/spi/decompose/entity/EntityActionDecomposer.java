@@ -33,7 +33,7 @@ import java.util.function.Consumer;
 ///
 /// @author Steve Ebersole
 /// @since 8.0
-@Incubating
+@Incubating(since = "8.0", group = "action-queue")
 public interface EntityActionDecomposer<A extends Executable> {
 	/// Decompose the [action][Executable] into its constituent [table operations][FlushOperation].
 	///

@@ -19,7 +19,7 @@ import org.hibernate.query.sqm.tree.spi.update.SqmUpdateStatement;
  *
  * @author Gavin King
  */
-@Incubating
+@Incubating(since = "7.2", group = "query-specifications")
 public interface Assignment<T> {
 
 	/**

@@ -27,7 +27,7 @@ import org.hibernate.sql.spi.mutation.jdbc.PreparableMutationOperation;
  *
  * @author Steve Ebersole
  */
-@Incubating
+@Incubating(since = "8.0")
 @JavaServiceLoadable
 public interface BatchBuilder extends Service {
 	/**

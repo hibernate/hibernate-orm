@@ -424,7 +424,7 @@ public interface Interceptor extends EntityManager.CreationOption, EntityAgent.C
 	 *
 	 * @since 7.1
 	 */
-	@Incubating
+	@Incubating(since = "7.1")
 	default void preMerge(Object entity, Object[] state, String[] propertyNames, Type[] propertyTypes) {}
 
 	/**
@@ -444,7 +444,7 @@ public interface Interceptor extends EntityManager.CreationOption, EntityAgent.C
 	 *
 	 * @since 7.1
 	 */
-	@Incubating
+	@Incubating(since = "7.1")
 	default void postMerge(
 			Object source, Object target, Object id,
 			Object[] targetState, Object[] originalState,

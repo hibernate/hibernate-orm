@@ -12,7 +12,7 @@ import jakarta.persistence.criteria.Expression;
  * A special expression for the {@code json_query} function.
  * @since 7.0
  */
-@Incubating
+@Incubating(since = "6.3")
 public interface JpaJsonQueryExpression extends JpaExpression<String>, JpaJsonQueryNode {
 
 	/**

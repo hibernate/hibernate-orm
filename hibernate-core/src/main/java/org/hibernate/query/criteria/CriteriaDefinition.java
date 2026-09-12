@@ -115,7 +115,7 @@ import java.util.function.Function;
  *
  * @author Gavin King
  */
-@Incubating
+@Incubating(since = "6.3")
 public abstract class CriteriaDefinition<R>
 		extends HibernateCriteriaBuilderDelegate
 		implements JpaCriteriaQuery<R> {
@@ -224,7 +224,7 @@ public abstract class CriteriaDefinition<R>
 		return entityManager.createQuery( query );
 	}
 
-	@Incubating
+	@Incubating(since = "6.3")
 	@Nonnull
 	public JpaCriteriaQuery<R> restrict(@Nonnull Predicate predicate) {
 		final JpaPredicate existing = getRestriction();

@@ -13,7 +13,6 @@ import java.util.function.UnaryOperator;
 
 import jakarta.annotation.Nullable;
 
-import org.hibernate.Incubating;
 import org.hibernate.action.queue.spi.decompose.collection.CollectionMutationTarget;
 import org.hibernate.action.queue.spi.meta.CollectionTableDescriptor;
 import org.hibernate.audit.ModificationType;
@@ -53,7 +52,6 @@ import org.hibernate.type.Type;
 ///
 /// @author Steve Ebersole
 /// @since 8.0
-@Incubating
 @org.hibernate.Internal
 public class CollectionAuditSupport {
 

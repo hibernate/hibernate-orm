@@ -31,7 +31,7 @@ import org.hibernate.query.sqm.tree.spi.insert.SqmInsertValuesStatement;
  *
  * @author Gavin King
  */
-@Incubating
+@Incubating(since = "6.3")
 public interface JpaCriteriaInsertValues<T> extends JpaCriteriaInsert<T> {
 
 	/**

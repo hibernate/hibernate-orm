@@ -13,7 +13,7 @@ import org.hibernate.type.BindableType;
  *
  * @author Steve Ebersole
  */
-@Incubating
+@Incubating(since = "8.0")
 public interface QueryParameter<T> extends jakarta.persistence.Parameter<T> {
 	/**
 	 * Determine if this a named parameter or ordinal.

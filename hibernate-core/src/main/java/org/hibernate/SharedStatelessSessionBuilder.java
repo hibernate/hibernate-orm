@@ -61,7 +61,7 @@ import java.util.function.UnaryOperator;
  *
  * @author Steve Ebersole
  */
-@Incubating
+@Incubating(since = "7.2")
 public interface SharedStatelessSessionBuilder extends StatelessSessionBuilder, CommonSharedBuilder {
 	/**
 	 * Open the stateless session.

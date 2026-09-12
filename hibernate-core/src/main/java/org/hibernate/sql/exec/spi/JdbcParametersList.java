@@ -15,7 +15,7 @@ import org.hibernate.sql.ast.spi.query.expression.JdbcParameter;
  * Also as nice side effect, avoid any potential type pollution
  * problems during access.
  */
-@Incubating
+@Incubating(since = "6.0", group = "sql-execution")
 public interface JdbcParametersList {
 
 	JdbcParametersList EMPTY = new JdbcParametersListMulti( new JdbcParameter[]{} );

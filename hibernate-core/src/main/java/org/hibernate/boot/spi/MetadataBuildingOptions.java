@@ -147,7 +147,7 @@ public interface MetadataBuildingOptions {
 	 * @since 7.0
 	 * @see org.hibernate.cfg.MappingSettings#XML_FORMAT_MAPPER_LEGACY_FORMAT
 	 */
-	@Incubating
+	@Incubating(since = "7.0")
 	boolean isXmlFormatMapperLegacyFormatEnabled();
 
 	/**

@@ -16,6 +16,6 @@ import org.hibernate.Incubating;
  *
  * @since 7.0
  */
-@Incubating
+@Incubating(since = "7.0")
 public interface DiagnosticEvent {
 }

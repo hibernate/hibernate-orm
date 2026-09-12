@@ -40,7 +40,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  */
 @Target({METHOD, FIELD})
 @Retention(RUNTIME)
-@Incubating
+@Incubating(since = "7.2")
 public @interface EmbeddedTable {
 	/**
 	 * The name of the table in which the embedded value is stored.

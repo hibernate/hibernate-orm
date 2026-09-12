@@ -43,7 +43,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  */
 @Target({METHOD, FIELD})
 @Retention( RUNTIME)
-@Incubating
+@Incubating(since = "6.5")
 @Deprecated(since = "7.0", forRemoval = true)
 public @interface FractionalSeconds {
 	/**

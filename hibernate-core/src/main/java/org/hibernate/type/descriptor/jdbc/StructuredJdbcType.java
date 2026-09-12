@@ -17,7 +17,7 @@ import static org.hibernate.SPI.Role.USE;
 /// [AggregateJdbcType#resolveAggregateJdbcType(org.hibernate.metamodel.mapping.EmbeddableMappingType, String, org.hibernate.metamodel.spi.RuntimeModelCreationContext)].
 ///
 /// @see AggregateJdbcType#resolveAggregateJdbcType(org.hibernate.metamodel.mapping.EmbeddableMappingType, String, org.hibernate.metamodel.spi.RuntimeModelCreationContext)
-@Incubating
+@Incubating(since = "7.0")
 @SPI({ USE, IMPLEMENT, SUPPLY })
 public interface StructuredJdbcType extends AggregateJdbcType, SqlTypedJdbcType {
 

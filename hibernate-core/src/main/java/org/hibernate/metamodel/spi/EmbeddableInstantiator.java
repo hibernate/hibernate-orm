@@ -24,7 +24,7 @@ import static org.hibernate.SPI.Role.USE;
 ///
 /// @see org.hibernate.annotations.EmbeddableInstantiator#value()
 /// @see org.hibernate.annotations.EmbeddableInstantiatorRegistration#instantiator()
-@Incubating
+@Incubating(since = "5.4")
 @SPI({ USE, IMPLEMENT, SUPPLY })
 public interface EmbeddableInstantiator extends Instantiator {
 	/**

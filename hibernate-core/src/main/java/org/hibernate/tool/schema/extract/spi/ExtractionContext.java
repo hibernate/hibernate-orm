@@ -25,7 +25,7 @@ import org.hibernate.service.ServiceRegistry;
  * @author Steve Ebersole
  * @author Gail Badner
  */
-@Incubating
+@Incubating(since = "5.1")
 public interface ExtractionContext {
 	ServiceRegistry getServiceRegistry();
 	JdbcEnvironment getJdbcEnvironment();
@@ -33,7 +33,7 @@ public interface ExtractionContext {
 	Connection getJdbcConnection();
 	DatabaseMetaData getJdbcDatabaseMetaData();
 
-	@Incubating
+	@Incubating(since = "8.0")
 	default <T> T getQueryResults(
 			String queryString,
 			Object[] positionalParameters,
@@ -53,7 +53,7 @@ public interface ExtractionContext {
 	Identifier getDefaultCatalog();
 	Identifier getDefaultSchema();
 
-	@Incubating
+	@Incubating(since = "8.0")
 	interface ResultSetProcessor<T> {
 		T process(ResultSet resultSet) throws SQLException;
 	}
@@ -62,7 +62,7 @@ public interface ExtractionContext {
 	 * In conjunction with {@link #getDatabaseObjectAccess()} provides access to
 	 * information about known database objects to the extractor.
 	 */
-	@Incubating
+	@Incubating(since = "8.0")
 	interface DatabaseObjectAccess {
 		@Nullable TableInformation locateTableInformation(QualifiedTableName tableName);
 		SequenceInformation locateSequenceInformation(QualifiedSequenceName sequenceName);

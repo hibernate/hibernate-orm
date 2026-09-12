@@ -110,6 +110,10 @@ public class ClassificationMetadataJsonTests {
 		assertFalse( references.get( 0 ).containsKey( "targetScope" ) );
 		assertNotNull( spi.get( "structure" ) );
 		assertEquals( List.of( "INCUBATING" ), spi.get( "lifecycle" ) );
+		final List<Map<String, Object>> lifecycleOrigins = (List<Map<String, Object>>) spi.get( "lifecycleOrigins" );
+		assertEquals( 1, lifecycleOrigins.size() );
+		assertEquals( "8.0", lifecycleOrigins.get( 0 ).get( "since" ) );
+		assertEquals( "metadata-fixture", lifecycleOrigins.get( 0 ).get( "group" ) );
 		assertEquals( 2, elements.stream().filter( (element) -> !element.containsKey( "lifecycle" ) ).count() );
 		assertFalse( serialized.contains( "reachabilityPaths" ) );
 		assertFalse( serialized.contains( "applicationApiStatus" ) );
@@ -133,6 +137,21 @@ public class ClassificationMetadataJsonTests {
 				)
 		);
 		assertThrows( IllegalArgumentException.class, () -> json.read( "{}" ) );
+	}
+
+	@Test
+	public void versionOneReaderFallsBackToFlattenedLifecycle() {
+		final String serialized = json.write( metadata() ).replaceAll( ",?\\s*\"lifecycleOrigins\"\\s*:\\s*\\[[^]]*]", "" );
+		final ClassificationModel.LifecycleOrigin origin = json.read( serialized )
+				.getModel()
+				.getElement( "type:fixture.Provider" )
+				.getLifecycle()
+				.getOrigins()
+				.first();
+		assertEquals( INCUBATING, origin.getState() );
+		assertEquals( DIRECT, origin.getKind() );
+		assertNull( origin.getSince() );
+		assertNull( origin.getGroup() );
 	}
 
 	@Test
@@ -318,7 +337,13 @@ public class ClassificationMetadataJsonTests {
 		);
 		builder.addLifecycleOrigin(
 				"type:fixture.Provider",
-				new ClassificationModel.LifecycleOrigin( INCUBATING, DIRECT, "type:fixture.Provider" )
+				new ClassificationModel.LifecycleOrigin(
+						INCUBATING,
+						DIRECT,
+						"type:fixture.Provider",
+						"8.0",
+						"metadata-fixture"
+				)
 		);
 		builder.addReference(
 				"type:fixture.Provider",

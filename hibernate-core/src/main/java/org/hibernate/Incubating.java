@@ -22,13 +22,27 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * developed and therefore may change at a later time; a "tech preview".
  * The user of such an API is considered an early adopter who helps shape
  * the final definition of the API.
+ * This annotation is an internal contract intended for Hibernate's own
+ * lifecycle management.
  *
  * @implNote Defined with {@code RUNTIME} retention so tooling can see it
  *
  * @author Steve Ebersole
  */
+@Internal
 @Target({PACKAGE, TYPE, ANNOTATION_TYPE, METHOD, FIELD, CONSTRUCTOR})
 @Retention(RUNTIME)
 @Documented
 public @interface Incubating {
+	/**
+	 * The major/minor release family in which the annotated element began
+	 * incubation, for example {@code "8.1"}.
+	 */
+	String since();
+
+	/**
+	 * An optional lower-kebab-case identifier linking elements which should be
+	 * considered for de-incubation as one logical unit.
+	 */
+	String group() default "";
 }

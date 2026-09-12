@@ -19,7 +19,7 @@ import org.hibernate.metamodel.model.domain.JpaMetamodel;
  *
  * @author Steve Ebersole
  */
-@Incubating
+@Incubating(since = "5.4")
 public interface RuntimeMetamodels {
 	/**
 	 * Access to the JPA / domain metamodel.

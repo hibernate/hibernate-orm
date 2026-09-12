@@ -37,7 +37,7 @@ import jakarta.persistence.metamodel.EntityType;
 /**
  * @author Steve Ebersole
  */
-@Incubating
+@Incubating(since = "6.2")
 public class SqmInsertSelectStatement<T> extends AbstractSqmInsertStatement<T> implements JpaCriteriaInsertSelect<T> {
 	private SqmQueryPart<?> selectQueryPart;
 

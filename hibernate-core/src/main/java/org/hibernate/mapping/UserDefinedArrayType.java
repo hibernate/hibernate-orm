@@ -11,7 +11,7 @@ import org.hibernate.boot.model.relational.Namespace;
 /**
  * A mapping model object representing a named relational database array type.
  */
-@Incubating
+@Incubating(since = "6.6")
 public class UserDefinedArrayType extends AbstractUserDefinedType {
 
 	private Integer arraySqlTypeCode;

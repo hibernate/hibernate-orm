@@ -19,7 +19,7 @@ import jakarta.persistence.metamodel.PluralAttribute;
  *
  * @since 6.0
  */
-@Incubating
+@Incubating(since = "5.4")
 public enum CollectionClassification {
 	/**
 	 * An Object or primitive array.  Roughly follows the semantics

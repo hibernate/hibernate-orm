@@ -8,7 +8,7 @@
 ///
 /// @author Steve Ebersole
 /// @since 8.0
-@Incubating
+@Incubating(since = "7.1", group = "dialect-locking")
 package org.hibernate.dialect.lock.spi;
 
 import org.hibernate.Incubating;

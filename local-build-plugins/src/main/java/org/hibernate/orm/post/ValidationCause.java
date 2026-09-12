@@ -32,6 +32,21 @@ public enum ValidationCause {
 			Severity.ERROR,
 			"Classify the retained declaration as API, SPI, or INTERNAL, or remove it from the supported surface."
 	),
+	INVALID_INCUBATION_SINCE(
+			Domain.CLASSIFICATION,
+			Severity.ERROR,
+			"Specify the release family using the major.minor form required by @Incubating.since()."
+	),
+	INVALID_INCUBATION_GROUP(
+			Domain.CLASSIFICATION,
+			Severity.ERROR,
+			"Use a lower-kebab-case incubation group identifier or leave @Incubating.group() empty."
+	),
+	INTERNAL_INCUBATION(
+			Domain.CLASSIFICATION,
+			Severity.ERROR,
+			"Remove @Incubating from the internal declaration."
+	),
 	INVALID_SPI_ROLE_DECLARATION(
 			Domain.SPI,
 			Severity.ERROR,

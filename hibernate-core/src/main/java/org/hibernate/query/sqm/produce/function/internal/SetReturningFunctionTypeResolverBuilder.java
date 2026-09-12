@@ -4,7 +4,6 @@
  */
 package org.hibernate.query.sqm.produce.function.internal;
 
-import org.hibernate.Incubating;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
@@ -27,7 +26,6 @@ import java.util.List;
 /**
  * @since 7.0
  */
-@Incubating
 public class SetReturningFunctionTypeResolverBuilder implements SetReturningFunctionTypeResolver.Builder {
 
 	private final LinkedHashMap<String, TypeResolver> typeResolvers = new LinkedHashMap<>();

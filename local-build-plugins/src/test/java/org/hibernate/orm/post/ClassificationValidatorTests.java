@@ -34,6 +34,9 @@ import static org.hibernate.orm.post.ClassificationModel.Role.USE;
 import static org.hibernate.orm.post.ValidationCause.CONFLICTING_CLASSIFICATION;
 import static org.hibernate.orm.post.ValidationCause.FORBIDDEN_CATEGORY_DEPENDENCY;
 import static org.hibernate.orm.post.ValidationCause.INVALID_CATEGORY_REACHABILITY;
+import static org.hibernate.orm.post.ValidationCause.INTERNAL_INCUBATION;
+import static org.hibernate.orm.post.ValidationCause.INVALID_INCUBATION_GROUP;
+import static org.hibernate.orm.post.ValidationCause.INVALID_INCUBATION_SINCE;
 import static org.hibernate.orm.post.ValidationCause.UNCLASSIFIED_HIBERNATE_DECLARATION;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -182,6 +185,56 @@ public class ClassificationValidatorTests {
 		reference( builder, "type:fixture.Internal", "type:fixture.SpiValue" );
 		reference( builder, "type:fixture.Internal", "type:fixture.Internal" );
 		assertFalse( validate( builder.build() ).hasFailures() );
+	}
+
+	@Test
+	public void incubationMetadataRequiresReleaseFamilyAndLowerKebabGroup() {
+		final ClassificationModel.Builder builder = ClassificationModel.builder();
+		root( builder, "type:fixture.MissingSince", API );
+		incubating( builder, "type:fixture.MissingSince", null, null );
+		root( builder, "type:fixture.BlankSince", API );
+		incubating( builder, "type:fixture.BlankSince", " ", null );
+		root( builder, "type:fixture.BadSince", API );
+		incubating( builder, "type:fixture.BadSince", "8.1.0", null );
+		root( builder, "type:fixture.BadGroup", API );
+		incubating( builder, "type:fixture.BadGroup", "8.1", "Bad Group" );
+
+		final ValidationResult result = validate( builder.build() );
+		assertDiagnostic( result, INVALID_INCUBATION_SINCE, "type:fixture.MissingSince", "type:fixture.MissingSince" );
+		assertDiagnostic( result, INVALID_INCUBATION_SINCE, "type:fixture.BlankSince", "type:fixture.BlankSince" );
+		assertDiagnostic( result, INVALID_INCUBATION_SINCE, "type:fixture.BadSince", "type:fixture.BadSince" );
+		assertDiagnostic( result, INVALID_INCUBATION_GROUP, "type:fixture.BadGroup", "type:fixture.BadGroup" );
+	}
+
+	@Test
+	public void incubationMetadataAllowsEmptyAndMixedVersionGroups() {
+		final ClassificationModel.Builder builder = ClassificationModel.builder();
+		root( builder, "type:fixture.EmptyGroup", API );
+		incubating( builder, "type:fixture.EmptyGroup", "6.2", "" );
+		root( builder, "type:fixture.EarlierGroupMember", API );
+		incubating( builder, "type:fixture.EarlierGroupMember", "7.0", "shared-feature" );
+		root( builder, "type:fixture.LaterGroupMember", API );
+		incubating( builder, "type:fixture.LaterGroupMember", "8.1", "shared-feature" );
+
+		final ValidationResult result = validate( builder.build() );
+		assertFalse(
+				result.getDiagnostics().stream()
+						.anyMatch( diagnostic -> diagnostic.getCause() == INVALID_INCUBATION_SINCE
+								|| diagnostic.getCause() == INVALID_INCUBATION_GROUP )
+		);
+	}
+
+	@Test
+	public void directInternalIncubationIsRejected() {
+		final ClassificationModel.Builder builder = ClassificationModel.builder();
+		root( builder, "type:fixture.InternalIncubation", INTERNAL );
+		incubating( builder, "type:fixture.InternalIncubation", "8.1", null );
+		assertDiagnostic(
+				validate( builder.build() ),
+				INTERNAL_INCUBATION,
+				"type:fixture.InternalIncubation",
+				"type:fixture.InternalIncubation"
+		);
 	}
 
 	@Test
@@ -448,6 +501,23 @@ public class ClassificationValidatorTests {
 
 	private static void reference(ClassificationModel.Builder builder, String source, String target) {
 		reference( builder, source, target, METHOD_RETURN );
+	}
+
+	private static void incubating(
+			ClassificationModel.Builder builder,
+			String id,
+			String since,
+			String group) {
+		builder.addLifecycleOrigin(
+				id,
+				new ClassificationModel.LifecycleOrigin(
+						ClassificationModel.LifecycleState.INCUBATING,
+						ClassificationModel.LifecycleOriginKind.DIRECT,
+						id,
+						since,
+						group
+				)
+		);
 	}
 
 	private static void reference(

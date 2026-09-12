@@ -18,7 +18,7 @@ import jakarta.annotation.Nullable;
  *
  * @since 6.5
  */
-@Incubating
+@Incubating(since = "6.3")
 public interface JpaConflictClause<T> {
 
 	/**

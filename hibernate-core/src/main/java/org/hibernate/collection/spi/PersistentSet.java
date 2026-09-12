@@ -32,7 +32,7 @@ import org.hibernate.type.Type;
  *
  * @author Gavin King
  */
-@Incubating
+@Incubating(since = "6.0")
 public class PersistentSet<E> extends AbstractPersistentCollection<E> implements Set<E> {
 	protected Set<E> set;
 	@Serial

@@ -12,7 +12,7 @@ import jakarta.persistence.criteria.Expression;
  * A special expression for the {@code json_exists} function.
  * @since 7.0
  */
-@Incubating
+@Incubating(since = "6.3")
 public interface JpaJsonExistsExpression extends JpaExpression<Boolean>, JpaJsonExistsNode {
 
 	/**

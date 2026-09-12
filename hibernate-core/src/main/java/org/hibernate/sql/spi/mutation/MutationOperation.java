@@ -71,7 +71,7 @@ import static org.hibernate.SPI.Role.USE;
  * @since 8.0
  * @author Steve Ebersole
  */
-@Incubating
+@Incubating(since = "8.0")
 @SPI({ USE, SUPPLY })
 public interface MutationOperation extends JdbcValueDescriptorAccess {
 	/**

@@ -268,6 +268,12 @@ public class JandexClassificationClassifierTests {
 						(origin) -> origin.getKind() == ClassificationModel.LifecycleOriginKind.DIRECT
 				)
 		);
+		final ClassificationModel.LifecycleOrigin incubation = element.getLifecycle().getOrigins().stream()
+				.filter( origin -> origin.getState() == ClassificationModel.LifecycleState.INCUBATING )
+				.findFirst()
+				.orElseThrow();
+		assertEquals( "8.1", incubation.getSince() );
+		assertNull( incubation.getGroup() );
 
 		final ClassificationModel.Element inherited = required( classify(), methodId( DirectRoot.class, "apiValue" ) );
 		assertTrue( inherited.getLifecycle().isIncubating() );
@@ -275,6 +281,8 @@ public class JandexClassificationClassifierTests {
 				inherited.getLifecycle().getOrigins().stream().anyMatch(
 						(origin) -> origin.getKind() == ClassificationModel.LifecycleOriginKind.ENCLOSING_TYPE
 								&& origin.getSourceElementId().equals( DIRECT_ROOT_ID )
+								&& origin.getSince().equals( "8.0" )
+								&& origin.getGroup().equals( "classifier-fixture" )
 				)
 		);
 	}
@@ -509,7 +517,7 @@ public class JandexClassificationClassifierTests {
 		return "field:" + type.getName() + "#" + fieldName;
 	}
 
-	@Incubating
+	@Incubating(since = "8.0", group = "classifier-fixture")
 	@SPI({ IMPLEMENT, SUPPLY })
 	public static class DirectRoot {
 		public ApiValue field;
@@ -580,7 +588,7 @@ public class JandexClassificationClassifierTests {
 	}
 
 	@SPI
-	@Incubating
+	@Incubating(since = "8.1")
 	@Deprecated(forRemoval = true)
 	@Remove
 	public interface LifecycleContract {

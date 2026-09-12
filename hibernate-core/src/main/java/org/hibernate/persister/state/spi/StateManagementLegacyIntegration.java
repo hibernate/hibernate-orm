@@ -25,7 +25,7 @@ import org.hibernate.persister.entity.mutation.UpdateCoordinator;
 /// @author Gavin King
 /// @author Steve Ebersole
 /// @since 8.0
-@Incubating
+@Incubating(since = "8.0")
 public interface StateManagementLegacyIntegration {
 	/// Creates the entity insert coordinator for the given persister.
 	InsertCoordinator createInsertCoordinator(EntityPersister persister);

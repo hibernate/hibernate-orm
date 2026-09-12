@@ -28,7 +28,7 @@ import org.hibernate.sql.model.MutationTarget;
  * coordinators or {@link GraphEntityMutationTarget} for graph-based decomposers
  */
 @Deprecated(since = "8.0", forRemoval = true)
-@Incubating
+@Incubating(since = "6.2")
 public interface EntityMutationTarget
 		extends MutationTarget<EntityTableMapping, EntityTableDescriptor>,
 				LegacyEntityMutationTarget,

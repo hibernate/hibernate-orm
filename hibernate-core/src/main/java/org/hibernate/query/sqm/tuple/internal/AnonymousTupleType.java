@@ -11,7 +11,6 @@ import java.util.Map;
 
 import jakarta.annotation.Nonnull;
 import org.hibernate.AssertionFailure;
-import org.hibernate.Incubating;
 import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
@@ -49,7 +48,6 @@ import static org.hibernate.internal.util.collections.CollectionHelper.linkedMap
 /**
  * @author Christian Beikov
  */
-@Incubating
 public class AnonymousTupleType<T>
 		implements TupleType<T>, SqmDomainType<T>, SqmPathSource<T> {
 

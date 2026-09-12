@@ -16,7 +16,7 @@
  *
  * @see org.hibernate.type.descriptor.converter.spi.BasicValueConverter
  */
-@Incubating
+@Incubating(since = "6.2")
 package org.hibernate.type.descriptor.converter.spi;
 
 import org.hibernate.Incubating;

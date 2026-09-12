@@ -470,7 +470,7 @@ public interface JdbcSettings extends C3p0Settings, AgroalSettings, HikariCPSett
 	 *
 	 * @since 6.2
 	 */
-	@Incubating
+	@Incubating(since = "6.2")
 	String DIALECT_NATIVE_PARAM_MARKERS = "hibernate.dialect.native_param_markers";
 
 	/**
@@ -506,7 +506,7 @@ public interface JdbcSettings extends C3p0Settings, AgroalSettings, HikariCPSett
 	 *
 	 * @since 7
 	 */
-	@Incubating // this was added for symmetry with LOG_JDBC_WARNINGS
+	@Incubating(since = "7.0") // this was added for symmetry with LOG_JDBC_WARNINGS
 	String LOG_JDBC_ERRORS = "hibernate.jdbc.log.errors";
 
 	/**

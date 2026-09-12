@@ -51,7 +51,7 @@ import java.util.function.Function;
  *
  * @author Gavin King
  */
-@Incubating
+@Incubating(since = "7.2", group = "query-specifications")
 public interface ProjectionSpecification<T> extends QuerySpecification<Object[]> {
 
 	/**

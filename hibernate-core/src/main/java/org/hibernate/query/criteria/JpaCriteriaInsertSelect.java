@@ -33,7 +33,7 @@ import org.hibernate.query.sqm.tree.spi.insert.SqmInsertSelectStatement;
  *
  * @author Steve Ebersole
  */
-@Incubating
+@Incubating(since = "6.3")
 public interface JpaCriteriaInsertSelect<T> extends JpaCriteriaInsert<T> {
 
 	/**

@@ -14,7 +14,7 @@ import org.hibernate.boot.Metadata;
  *
  * @since 6.2
  */
-@Incubating
+@Incubating(since = "6.2")
 public interface SchemaTruncator {
 	/**
 	 * Perform schema truncation from the indicated source(s) to the indicated target(s).

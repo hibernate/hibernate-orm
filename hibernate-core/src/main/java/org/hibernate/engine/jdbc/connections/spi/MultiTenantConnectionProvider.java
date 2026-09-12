@@ -83,7 +83,7 @@ public interface MultiTenantConnectionProvider<T> extends Service, Wrapped {
 	 *
 	 * @since 7.2
 	 */
-	@Incubating
+	@Incubating(since = "7.2")
 	default Connection getReadOnlyConnection(T tenantIdentifier)
 			throws SQLException {
 		return getConnection( tenantIdentifier );
@@ -117,7 +117,7 @@ public interface MultiTenantConnectionProvider<T> extends Service, Wrapped {
 	 *
 	 * @since 7.2
 	 */
-	@Incubating
+	@Incubating(since = "7.2")
 	default void releaseReadOnlyConnection(T tenantIdentifier, Connection connection)
 			throws SQLException {
 		releaseConnection( tenantIdentifier, connection );
@@ -152,7 +152,7 @@ public interface MultiTenantConnectionProvider<T> extends Service, Wrapped {
 	 * call {@link org.hibernate.context.spi.MultiTenancy#getTenantSchemaMapper}
 	 * to obtain the {@link org.hibernate.context.spi.TenantSchemaMapper}.
 	 */
-	@Incubating
+	@Incubating(since = "7.2")
 	default boolean handlesConnectionSchema() {
 		return false;
 	}
@@ -164,7 +164,7 @@ public interface MultiTenantConnectionProvider<T> extends Service, Wrapped {
 	 * @return {@code true} if the connection provider handles this;
 	 *         {@code false} if the client should set the read-only mode
 	 */
-	@Incubating
+	@Incubating(since = "7.2")
 	default boolean handlesConnectionReadOnly() {
 		return false;
 	}

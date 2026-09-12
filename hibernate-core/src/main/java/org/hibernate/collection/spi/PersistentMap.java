@@ -35,7 +35,7 @@ import org.hibernate.type.Type;
  *
  * @author Gavin King
  */
-@Incubating
+@Incubating(since = "6.0")
 public class PersistentMap<K,E> extends AbstractPersistentCollection<E> implements Map<K,E> {
 
 	protected Map<K,E> map;

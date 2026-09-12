@@ -13,6 +13,7 @@ import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -340,11 +341,24 @@ public final class ClassificationModel {
 		private final LifecycleState state;
 		private final LifecycleOriginKind kind;
 		private final String sourceElementId;
+		private final String since;
+		private final String group;
 
 		public LifecycleOrigin(LifecycleState state, LifecycleOriginKind kind, String sourceElementId) {
+			this( state, kind, sourceElementId, null, null );
+		}
+
+		public LifecycleOrigin(
+				LifecycleState state,
+				LifecycleOriginKind kind,
+				String sourceElementId,
+				String since,
+				String group) {
 			this.state = state;
 			this.kind = kind;
 			this.sourceElementId = sourceElementId;
+			this.since = since;
+			this.group = group;
 		}
 
 		public LifecycleState getState() {
@@ -359,13 +373,31 @@ public final class ClassificationModel {
 			return sourceElementId;
 		}
 
+		/// The release family in which this lifecycle origin began, or `null`
+		/// when the lifecycle state does not define one.
+		public String getSince() {
+			return since;
+		}
+
+		/// The logical incubation group, or `null` when this origin is ungrouped
+		/// or the lifecycle state does not define grouping.
+		public String getGroup() {
+			return group;
+		}
+
 		@Override
 		public int compareTo(LifecycleOrigin other) {
 			int comparison = state.compareTo( other.state );
 			if ( comparison == 0 ) {
 				comparison = kind.compareTo( other.kind );
 			}
-			return comparison == 0 ? sourceElementId.compareTo( other.sourceElementId ) : comparison;
+			if ( comparison == 0 ) {
+				comparison = sourceElementId.compareTo( other.sourceElementId );
+			}
+			if ( comparison == 0 ) {
+				comparison = compareNullable( since, other.since );
+			}
+			return comparison == 0 ? compareNullable( group, other.group ) : comparison;
 		}
 
 		@Override
@@ -379,12 +411,24 @@ public final class ClassificationModel {
 			int result = state.hashCode();
 			result = 31 * result + kind.hashCode();
 			result = 31 * result + sourceElementId.hashCode();
+			result = 31 * result + Objects.hashCode( since );
+			result = 31 * result + Objects.hashCode( group );
 			return result;
 		}
 
 		@Override
 		public String toString() {
-			return state + ":" + kind + "(" + sourceElementId + ")";
+			return state + ":" + kind + "(" + sourceElementId
+					+ (since == null ? "" : ",since=" + since)
+					+ (group == null ? "" : ",group=" + group)
+					+ ")";
+		}
+
+		private static int compareNullable(String first, String second) {
+			if ( first == null ) {
+				return second == null ? 0 : -1;
+			}
+			return second == null ? 1 : first.compareTo( second );
 		}
 	}
 

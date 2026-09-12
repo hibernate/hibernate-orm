@@ -28,7 +28,7 @@ import java.util.stream.Stream;
 ///
 /// @author Steve Ebersole
 /// @since 8.0
-@Incubating
+@Incubating(since = "8.0", group = "action-queue")
 public record EntityTableDescriptor(
 		String name,
 		int relativePosition,

@@ -21,7 +21,7 @@ import org.hibernate.query.named.spi.NamedQueryMemento;
  *
  * @author Steve Ebersole
  */
-@Incubating
+@Incubating(since = "6.0")
 public interface NamedCallableQueryMemento extends NamedQueryMemento<Object> {
 	/**
 	 * Informational access to the name of the database function or procedure

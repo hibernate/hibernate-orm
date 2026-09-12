@@ -44,7 +44,7 @@ import java.lang.annotation.Annotation;
  *
  * @since 7.3
  */
-@Incubating
+@Incubating(since = "7.3")
 @SPI({ USE, IMPLEMENT })
 public interface AnnotationBasedUserType<A extends Annotation, J> extends UserType<J> {
 	/**

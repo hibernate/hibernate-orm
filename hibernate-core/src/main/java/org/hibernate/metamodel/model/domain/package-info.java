@@ -14,7 +14,7 @@
  *
  * @see jakarta.persistence.metamodel
  */
-@Incubating
+@Incubating(since = "5.4")
 package org.hibernate.metamodel.model.domain;
 
 import org.hibernate.Incubating;

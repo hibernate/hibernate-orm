@@ -6,7 +6,7 @@
 /// Supported construction contracts and reusable implementations for mapping-model mutations.
 ///
 /// @author Steve Ebersole
-@Incubating
+@Incubating(since = "6.0", group = "sql-mutation-model")
 package org.hibernate.sql.ast.spi.model.builder;
 
 import org.hibernate.Incubating;

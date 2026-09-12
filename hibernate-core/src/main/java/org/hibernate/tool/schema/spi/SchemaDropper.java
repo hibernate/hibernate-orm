@@ -10,7 +10,7 @@ import org.hibernate.boot.Metadata;
 /**
  * Service delegate for handling schema dropping.
  */
-@Incubating
+@Incubating(since = "5.1")
 public interface SchemaDropper {
 	/**
 	 * Perform a schema drop from the indicated source(s) to the indicated target(s).

@@ -11,7 +11,7 @@ import org.hibernate.Incubating;
 /**
  * Describes the attribute of a {@link JpaCteCriteriaType}.
  */
-@Incubating
+@Incubating(since = "6.3")
 public interface JpaCteCriteriaAttribute extends JpaCriteriaNode {
 
 	/**

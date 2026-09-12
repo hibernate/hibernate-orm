@@ -37,7 +37,7 @@ import static java.util.Collections.addAll;
  *
  * @author Gavin King
  */
-@Incubating
+@Incubating(since = "6.0")
 @AllowReflection // We need the ability to create arrays of the same type as in the model.
 public class PersistentArrayHolder<E> extends AbstractPersistentCollection<E> {
 

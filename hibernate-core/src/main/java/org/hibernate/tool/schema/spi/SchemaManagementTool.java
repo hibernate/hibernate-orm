@@ -21,7 +21,7 @@ import org.hibernate.tool.schema.internal.exec.JdbcContext;
  *
  * @author Steve Ebersole
  */
-@Incubating
+@Incubating(since = "5.1")
 @JavaServiceLoadable
 public interface SchemaManagementTool extends Service {
 	SchemaCreator getSchemaCreator(Map<String,Object> options);

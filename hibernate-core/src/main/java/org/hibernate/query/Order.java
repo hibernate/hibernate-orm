@@ -68,7 +68,7 @@ import static org.hibernate.query.SortDirection.DESCENDING;
  *
  * @since 6.3
  */
-@Incubating
+@Incubating(since = "6.3", group = "query-specifications")
 public interface Order<X> {
 
 	/**
@@ -341,7 +341,7 @@ public interface Order<X> {
 	 *
 	 * @since 8.0
 	 */
-	@Incubating
+	@Incubating(since = "8.0", group = "query-specifications")
 	default void apply(CriteriaQuery<?> query, Root<?> root, CriteriaBuilder builder) {
 		requireNonNull( query, "missing query" );
 		requireNonNull( root, "missing root" );

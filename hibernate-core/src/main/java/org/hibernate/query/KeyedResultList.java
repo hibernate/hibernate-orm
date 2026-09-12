@@ -58,7 +58,7 @@ import java.util.List;
  *
  * @author Gavin King
  */
-@Incubating
+@Incubating(since = "6.5")
 public class KeyedResultList<R> {
 	private final List<R> resultList;
 	private final List<List<?>> keyList;

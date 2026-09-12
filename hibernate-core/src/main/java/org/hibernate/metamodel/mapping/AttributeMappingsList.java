@@ -25,7 +25,7 @@ import org.hibernate.metamodel.mapping.internal.ImmutableAttributeMappingList;
  *
  * @since 6.2
  */
-@Incubating
+@Incubating(since = "5.4")
 public interface AttributeMappingsList {
 
 	int size();

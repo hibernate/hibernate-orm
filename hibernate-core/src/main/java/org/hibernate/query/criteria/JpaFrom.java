@@ -84,7 +84,7 @@ public interface JpaFrom<O,T> extends JpaPath<T>, JpaFetchParent<O,T>, From<O,T>
 	/**
 	 * Create a derived join for the given subquery.
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	@Nonnull
 	<X> JpaDerivedJoin<X> join(@Nonnull Subquery<X> subquery);
 
@@ -96,7 +96,7 @@ public interface JpaFrom<O,T> extends JpaPath<T>, JpaFetchParent<O,T>, From<O,T>
 	/**
 	 * Create a lateral derived join for the given subquery.
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	@Nonnull
 	<X> JpaDerivedJoin<X> joinLateral(@Nonnull Subquery<X> subquery);
 
@@ -118,7 +118,7 @@ public interface JpaFrom<O,T> extends JpaPath<T>, JpaFetchParent<O,T>, From<O,T>
 	 * @see #join(JpaSetReturningFunction, SqmJoinType)
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	@Nonnull
 	<X> JpaFunctionJoin<X> join(@Nonnull JpaSetReturningFunction<X> function);
 
@@ -129,7 +129,7 @@ public interface JpaFrom<O,T> extends JpaPath<T>, JpaFetchParent<O,T>, From<O,T>
 	 * @see #join(JpaSetReturningFunction, SqmJoinType, boolean)
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	@Nonnull
 	<X> JpaFunctionJoin<X> join(@Nonnull JpaSetReturningFunction<X> function, @Nonnull SqmJoinType joinType);
 
@@ -139,7 +139,7 @@ public interface JpaFrom<O,T> extends JpaPath<T>, JpaFetchParent<O,T>, From<O,T>
 	 * @see #joinLateral(JpaSetReturningFunction, SqmJoinType)
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	@Nonnull
 	<X> JpaFunctionJoin<X> joinLateral(@Nonnull JpaSetReturningFunction<X> function);
 
@@ -150,7 +150,7 @@ public interface JpaFrom<O,T> extends JpaPath<T>, JpaFetchParent<O,T>, From<O,T>
 	 * @see #join(JpaSetReturningFunction, SqmJoinType, boolean)
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	@Nonnull
 	<X> JpaFunctionJoin<X> joinLateral(@Nonnull JpaSetReturningFunction<X> function, @Nonnull SqmJoinType joinType);
 
@@ -161,7 +161,7 @@ public interface JpaFrom<O,T> extends JpaPath<T>, JpaFetchParent<O,T>, From<O,T>
 	 *
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	@Nonnull
 	<X> JpaFunctionJoin<X> join(@Nonnull JpaSetReturningFunction<X> function, @Nonnull SqmJoinType joinType, boolean lateral);
 
@@ -171,7 +171,7 @@ public interface JpaFrom<O,T> extends JpaPath<T>, JpaFetchParent<O,T>, From<O,T>
 	 * @see #joinArray(String, SqmJoinType)
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	@Nonnull
 	<X> JpaFunctionJoin<X> joinArray(@Nonnull String arrayAttributeName);
 
@@ -182,7 +182,7 @@ public interface JpaFrom<O,T> extends JpaPath<T>, JpaFetchParent<O,T>, From<O,T>
 	 * @see #joinLateral(JpaSetReturningFunction, SqmJoinType)
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	@Nonnull
 	<X> JpaFunctionJoin<X> joinArray(@Nonnull String arrayAttributeName, @Nonnull SqmJoinType joinType);
 
@@ -192,7 +192,7 @@ public interface JpaFrom<O,T> extends JpaPath<T>, JpaFetchParent<O,T>, From<O,T>
 	 * @see #joinArray(SingularAttribute, SqmJoinType)
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	@Nonnull
 	<X> JpaFunctionJoin<X> joinArray(@Nonnull SingularAttribute<? super T, X[]> arrayAttribute);
 
@@ -203,7 +203,7 @@ public interface JpaFrom<O,T> extends JpaPath<T>, JpaFetchParent<O,T>, From<O,T>
 	 * @see #joinLateral(JpaSetReturningFunction, SqmJoinType)
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	@Nonnull
 	<X> JpaFunctionJoin<X> joinArray(@Nonnull SingularAttribute<? super T, X[]> arrayAttribute, @Nonnull SqmJoinType joinType);
 
@@ -213,7 +213,7 @@ public interface JpaFrom<O,T> extends JpaPath<T>, JpaFetchParent<O,T>, From<O,T>
 	 * @see #joinArrayCollection(String, SqmJoinType)
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	@Nonnull
 	<X> JpaFunctionJoin<X> joinArrayCollection(@Nonnull String collectionAttributeName);
 
@@ -224,7 +224,7 @@ public interface JpaFrom<O,T> extends JpaPath<T>, JpaFetchParent<O,T>, From<O,T>
 	 * @see #joinLateral(JpaSetReturningFunction, SqmJoinType)
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	@Nonnull
 	<X> JpaFunctionJoin<X> joinArrayCollection(@Nonnull String collectionAttributeName, @Nonnull SqmJoinType joinType);
 
@@ -234,7 +234,7 @@ public interface JpaFrom<O,T> extends JpaPath<T>, JpaFetchParent<O,T>, From<O,T>
 	 * @see #joinArrayCollection(SingularAttribute, SqmJoinType)
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	@Nonnull
 	<X> JpaFunctionJoin<X> joinArrayCollection(@Nonnull SingularAttribute<? super T, ? extends Collection<X>> collectionAttribute);
 
@@ -245,14 +245,14 @@ public interface JpaFrom<O,T> extends JpaPath<T>, JpaFetchParent<O,T>, From<O,T>
 	 * @see #joinLateral(JpaSetReturningFunction, SqmJoinType)
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	@Nonnull
 	<X> JpaFunctionJoin<X> joinArrayCollection(@Nonnull SingularAttribute<? super T, ? extends Collection<X>> collectionAttribute, @Nonnull SqmJoinType joinType);
 
 	/**
 	 * Create a join to the given CTE.
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	@Nonnull
 	<X> JpaJoin<?, X> join(@Nonnull JpaCteCriteria<X> cte);
 
@@ -265,14 +265,14 @@ public interface JpaFrom<O,T> extends JpaPath<T>, JpaFetchParent<O,T>, From<O,T>
 	/**
 	 * Create a cross join to the given entity type.
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	@Nonnull
 	<X> JpaCrossJoin<T, X> crossJoin(@Nonnull Class<X> entityJavaType);
 
 	/**
 	 * Create a cross join to the given entity type.
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	@Nonnull
 	<X> JpaCrossJoin<T, X> crossJoin(@Nonnull EntityDomainType<X> entity);
 
@@ -444,7 +444,7 @@ public interface JpaFrom<O,T> extends JpaPath<T>, JpaFetchParent<O,T>, From<O,T>
 	/**
 	 * Create an expression for the identifier of this from element.
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	@Nonnull
 	JpaExpression<?> id();
 }

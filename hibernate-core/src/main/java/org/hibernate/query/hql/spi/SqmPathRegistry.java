@@ -23,7 +23,7 @@ import org.hibernate.spi.NavigablePath;
  * @author Andrea Boriero
  * @author Steve Ebersole
  */
-@Incubating
+@Incubating(since = "6.0")
 public interface SqmPathRegistry {
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

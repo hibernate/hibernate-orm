@@ -20,7 +20,7 @@ import org.hibernate.action.queue.spi.bind.DelayedValueAccess;
 ///
 /// @author Steve Ebersole
 /// @since 8.0
-@Incubating
+@Incubating(since = "8.0", group = "action-queue")
 public interface DecompositionContext {
 	/// Check if an entity is being inserted in the current flush.
 	///

@@ -5,9 +5,7 @@
 package org.hibernate.generator.internal;
 
 import org.hibernate.HibernateException;
-import org.hibernate.Incubating;
 
-@Incubating
 public class CompositeValueGenerationException extends HibernateException {
 	public CompositeValueGenerationException(String message) {
 		super(message);

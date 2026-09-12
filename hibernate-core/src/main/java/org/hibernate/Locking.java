@@ -20,7 +20,7 @@ import java.util.Locale;
  *
  * @author Steve Ebersole
  */
-@Incubating
+@Incubating(since = "7.1")
 public interface Locking {
 
 	/**

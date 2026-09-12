@@ -29,7 +29,7 @@ import static java.lang.annotation.ElementType.METHOD;
  *
  * @since 6.0
  */
-@Incubating
+@Incubating(since = "6.0")
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ FIELD, METHOD })
 public @interface TimeZoneColumn {

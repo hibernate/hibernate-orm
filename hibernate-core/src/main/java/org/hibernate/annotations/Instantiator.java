@@ -20,7 +20,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  */
 @Target({ CONSTRUCTOR })
 @Retention(RUNTIME)
-@Incubating
+@Incubating(since = "6.2")
 public @interface Instantiator {
 	/**
 	 * The persistent attribute names the constructor parameters at the respective index assigns the value to.

@@ -60,14 +60,14 @@ public @interface UuidGenerator {
 		 * version 6.
 		 * @see UuidVersion6Strategy
 		 */
-		@Incubating
+		@Incubating(since = "7.0")
 		VERSION_6,
 		/**
 		 * Use a time-based generation strategy consistent with RFC 4122
 		 * version 7.
 		 * @see UuidVersion7Strategy
 		 */
-		@Incubating
+		@Incubating(since = "7.0")
 		VERSION_7
 	}
 
@@ -82,6 +82,6 @@ public @interface UuidGenerator {
 	 * @apiNote If algorithm is specified, it is expected that {@linkplain #style()} be
 	 * {@linkplain Style#AUTO}.
 	 */
-	@Incubating
+	@Incubating(since = "6.6")
 	Class<? extends UuidValueGenerator> algorithm() default UuidValueGenerator.class;
 }

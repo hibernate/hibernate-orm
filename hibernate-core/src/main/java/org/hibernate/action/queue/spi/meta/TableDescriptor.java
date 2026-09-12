@@ -12,7 +12,7 @@ import org.hibernate.sql.spi.mutation.TableMapping;
 ///
 /// @author Steve Ebersole
 /// @since 8.0
-@Incubating
+@Incubating(since = "8.0", group = "action-queue")
 public interface TableDescriptor {
 	/// The table's name.
 	String name();

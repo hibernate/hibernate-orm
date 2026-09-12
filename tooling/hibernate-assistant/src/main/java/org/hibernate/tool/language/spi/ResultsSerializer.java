@@ -15,7 +15,7 @@ import java.util.List;
  * with special care towards Hibernate-specific complexities like
  * laziness and circular associations.
  */
-@Incubating
+@Incubating(since = "7.3")
 public interface ResultsSerializer {
 	/**
 	 * Serialize the given list of {@code values}, that have been returned by the provided {@code query} into a JSON string format.

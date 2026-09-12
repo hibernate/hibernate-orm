@@ -7,7 +7,7 @@
 ///
 /// @author Steve Ebersole
 /// @since 8.0
-@Incubating
+@Incubating(since = "6.0", group = "result-processing")
 package org.hibernate.sql.ast.spi.result;
 
 import org.hibernate.Incubating;

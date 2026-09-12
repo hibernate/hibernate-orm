@@ -12,7 +12,7 @@ import org.hibernate.metamodel.model.domain.EntityDomainType;
  *
  * @since 7.2
  */
-@Incubating
+@Incubating(since = "5.4")
 @FunctionalInterface
 public interface GraphParserEntityNameResolver {
 	EntityDomainType<?> resolveEntityName(String entityName);

@@ -23,7 +23,7 @@ import org.hibernate.spi.NavigablePath;
 /**
  * @author Christian Beikov
  */
-@Incubating
+@Incubating(since = "6.2")
 public class SqmFunctionRoot<E> extends SqmRoot<E> implements JpaFunctionRoot<E> {
 
 	private final SqmSetReturningFunction<E> function;

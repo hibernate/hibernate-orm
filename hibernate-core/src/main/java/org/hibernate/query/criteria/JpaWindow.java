@@ -15,7 +15,7 @@ import jakarta.persistence.criteria.Order;
  *
  * @author Marco Belladelli
  */
-@Incubating
+@Incubating(since = "6.3")
 public interface JpaWindow {
 	/**
 	 * Add partition by expressions to the window.

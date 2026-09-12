@@ -64,7 +64,7 @@ public sealed interface Selectable permits Column, Formula {
 
 	String getTemplate(Dialect dialect, TypeConfiguration typeConfiguration);
 
-	@Incubating
+	@Incubating(since = "6.2")
 	default String getWriteExpr() {
 		final String customWriteExpression = getCustomWriteExpression();
 		return customWriteExpression == null || customWriteExpression.isEmpty()
@@ -72,7 +72,7 @@ public sealed interface Selectable permits Column, Formula {
 				: customWriteExpression;
 	}
 
-	@Incubating
+	@Incubating(since = "6.2")
 	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	default String getWriteExpr(JdbcMapping jdbcMapping, Dialect dialect, MappingContext mappingContext) {
 		final Size size = this instanceof Column column ? column.getColumnSize( dialect, mappingContext ) : null;

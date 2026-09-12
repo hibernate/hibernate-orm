@@ -16,7 +16,7 @@ import org.hibernate.Incubating;
 ///
 /// @since 8.0
 /// @author Steve Ebersole
-@Incubating
+@Incubating(since = "8.0", group = "collection-delta")
 public sealed interface CollectionChange {
 	/// An element newly present at its current position.
 	record Addition(Object element, @Nullable Object currentPosition) implements CollectionChange {

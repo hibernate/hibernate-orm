@@ -14,7 +14,7 @@ import org.hibernate.boot.Metadata;
  *
  * @since 6.2
  */
-@Incubating
+@Incubating(since = "7.2")
 public interface GeneratorSynchronizer {
 	/**
 	 * Perform sequence resynchronization from the indicated source(s) to the indicated target(s).

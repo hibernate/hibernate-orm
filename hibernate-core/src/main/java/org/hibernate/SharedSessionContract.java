@@ -1037,7 +1037,7 @@ public interface SharedSessionContract extends EntityHandler, AutoCloseable, Ser
 	 *
 	 * @since 7.2
 	 */
-	@Incubating
+	@Incubating(since = "7.2")
 	SharedStatelessSessionBuilder statelessWithOptions();
 
 	/**

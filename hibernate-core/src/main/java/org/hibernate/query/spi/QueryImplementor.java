@@ -34,7 +34,7 @@ import java.util.Map;
 /**
  * @author Steve Ebersole
  */
-@Incubating
+@Incubating(since = "5.2")
 public interface QueryImplementor<T> extends Query<T>, CommonQueryContractImplementor {
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

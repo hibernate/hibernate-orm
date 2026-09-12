@@ -62,17 +62,17 @@ public interface StatelessSessionBuilder extends CommonBuilder {
 	@Nonnull
 	StatelessSessionBuilder tenantIdentifier(Object tenantIdentifier);
 
-	@Incubating
+	@Incubating(since = "7.2")
 	@Override
 	@Nonnull
 	StatelessSessionBuilder readOnly(boolean readOnly);
 
-	@Incubating
+	@Incubating(since = "8.0")
 	@Override
 	@Nonnull
 	StatelessSessionBuilder jdbcBatchSize(int batchSize);
 
-	@Incubating
+	@Incubating(since = "7.2")
 	@Override
 	@Nonnull
 	StatelessSessionBuilder initialCacheMode(@Nonnull CacheMode cacheMode);

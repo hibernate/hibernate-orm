@@ -39,7 +39,7 @@ import org.hibernate.sql.results.graph.FetchParent;
  *
  * @since 6.0
  */
-@Incubating
+@Incubating(since = "6.0")
 public interface CollectionSemantics<CE, E> {
 	/**
 	 * Obtain the interpreter responsible for selecting the semantic and physical

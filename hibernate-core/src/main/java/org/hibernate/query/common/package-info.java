@@ -9,7 +9,7 @@
  *
  * @see org.hibernate.query.common.TemporalUnit
  */
-@Incubating
+@Incubating(since = "7.0")
 package org.hibernate.query.common;
 
 import org.hibernate.Incubating;

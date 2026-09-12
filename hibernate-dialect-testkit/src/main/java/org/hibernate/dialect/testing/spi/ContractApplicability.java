@@ -15,7 +15,7 @@ import static org.hibernate.SPI.Role.USE;
 ///
 /// @author Steve Ebersole
 /// @since 8.0
-@Incubating
+@Incubating(since = "8.0", group = "dialect-testkit")
 @SPI(USE)
 public final class ContractApplicability {
 	private static final ContractApplicability APPLICABLE = new ContractApplicability( true, "" );

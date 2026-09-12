@@ -18,7 +18,7 @@ import java.util.Objects;
 /**
  * @author Marco Belladelli
  */
-@Incubating
+@Incubating(since = "6.2")
 public class SqmWindowFrame extends AbstractSqmNode implements JpaWindowFrame {
 	private final FrameKind kind;
 	private final @Nullable SqmExpression<?> expression;

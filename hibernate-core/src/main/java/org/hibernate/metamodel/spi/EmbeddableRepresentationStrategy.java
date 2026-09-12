@@ -12,7 +12,7 @@ import org.hibernate.bytecode.spi.ReflectionOptimizer;
  *
  * @todo (6.x) add `@EmbeddableRepresentationStrategy` - see https://hibernate.atlassian.net/browse/HHH-14951
  */
-@Incubating
+@Incubating(since = "5.4")
 public interface EmbeddableRepresentationStrategy extends ManagedTypeRepresentationStrategy {
 	/**
 	 * Create a delegate capable of instantiating instances of the represented type.

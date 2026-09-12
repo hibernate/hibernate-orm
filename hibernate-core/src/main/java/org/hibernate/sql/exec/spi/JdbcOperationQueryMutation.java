@@ -21,7 +21,7 @@ import static org.hibernate.SPI.Role.USE;
 /// @author Steve Ebersole
 /// @see org.hibernate.sql.ast.spi.translation.SqlAstTranslator#translate
 @SPI({ USE, SUPPLY })
-@Incubating
+@Incubating(since = "6.0", group = "sql-execution")
 public interface JdbcOperationQueryMutation extends JdbcOperationQuery, JdbcMutation {
 
 }

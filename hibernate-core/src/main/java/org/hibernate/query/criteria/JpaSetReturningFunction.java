@@ -10,7 +10,7 @@ import org.hibernate.Incubating;
 /**
  * A set returning function criteria.
  */
-@Incubating
+@Incubating(since = "6.3")
 public interface JpaSetReturningFunction<T> extends JpaCriteriaNode {
 
 	/**

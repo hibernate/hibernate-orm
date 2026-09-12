@@ -41,7 +41,7 @@ import java.util.List;
  *
  * @author Gavin King
  */
-@Incubating
+@Incubating(since = "6.3")
 public class Page {
 	private final int size;
 	private final int number;

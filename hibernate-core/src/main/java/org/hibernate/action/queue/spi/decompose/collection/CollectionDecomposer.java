@@ -35,7 +35,7 @@ import java.util.function.Consumer;
 ///
 /// @author Steve Ebersole
 /// @since 8.0
-@Incubating
+@Incubating(since = "8.0", group = "action-queue")
 public interface CollectionDecomposer {
 	/// Decomposes collection (re)create actions.
 	void decomposeRecreate(

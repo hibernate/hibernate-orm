@@ -28,7 +28,7 @@ import static org.hibernate.jpa.internal.util.ConfigurationHelper.getInteger;
  *
  * @since 7.0
  */
-@Incubating
+@Incubating(since = "7.0")
 public interface Timeouts {
 	/**
 	 * Timeout of 1 second.

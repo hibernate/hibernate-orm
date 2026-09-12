@@ -66,7 +66,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  */
 @Target({METHOD, FIELD, TYPE, PACKAGE, MODULE})
 @Retention(RUNTIME)
-@Incubating
+@Incubating(since = "8.0")
 @IdGeneratorType(GenericGeneratorGeneration.class)
 public @interface GenericGenerator {
 	/**

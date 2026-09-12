@@ -187,7 +187,7 @@ import static java.lang.annotation.RetentionPolicy.CLASS;
  */
 @Target(METHOD)
 @Retention(CLASS)
-@Incubating
+@Incubating(since = "6.3")
 public @interface Find {
 	String[] enabledFetchProfiles() default {};
 }

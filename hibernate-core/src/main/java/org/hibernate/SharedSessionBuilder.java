@@ -84,6 +84,7 @@ public interface SharedSessionBuilder extends SessionBuilder, CommonSharedBuilde
 
 	@Override
 	@Nonnull
+	@SPI(SPI.Role.SUPPLY)
 	SharedSessionBuilder interceptor();
 
 	/**
@@ -198,6 +199,7 @@ public interface SharedSessionBuilder extends SessionBuilder, CommonSharedBuilde
 
 	@Override
 	@Nonnull
+	@SPI(SPI.Role.SUPPLY)
 	SharedSessionBuilder interceptor(@Nullable Interceptor interceptor);
 
 	@Override

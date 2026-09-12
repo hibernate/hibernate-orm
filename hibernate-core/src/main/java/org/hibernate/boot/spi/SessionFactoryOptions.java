@@ -51,8 +51,12 @@ import jakarta.persistence.criteria.Nulls;
 /**
  * Aggregator of special options used to build the {@link org.hibernate.SessionFactory}.
  *
- * @apiNote This type belongs to an SPI package. Due to a historical mistake, it is exposed
- * via the deprecated method {@link org.hibernate.SessionFactory#getSessionFactoryOptions}.
+ * @apiNote This is an SPI contract. Access it by unwrapping a
+ * {@link org.hibernate.SessionFactory} to {@link SessionFactoryImplementor} and calling
+ * {@link SessionFactoryImplementor#getSessionFactoryOptions()}.
+ * The legacy SPI accessor {@link org.hibernate.SessionFactory#getSessionFactoryOptions()}
+ * is deprecated and marked for removal; the accessor on {@code SessionFactoryImplementor}
+ * remains supported.
  *
  * @since 5.0
  *

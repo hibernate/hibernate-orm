@@ -7,7 +7,7 @@ package org.hibernate;
 import java.util.Collection;
 
 import org.hibernate.annotations.FilterDef;
-import org.hibernate.engine.spi.FilterDefinition;
+import org.hibernate.engine.FilterDefinition;
 
 /**
  * Allows control over an enabled {@linkplain FilterDef filter} at runtime.
@@ -47,12 +47,7 @@ public interface Filter {
 	 * named filter.
 	 *
 	 * @return The filter definition
-	 *
-	 * @deprecated There is no plan to remove this operation, but its use
-	 *             should be avoided since {@link FilterDefinition} is an
-	 *             SPI type, and so this operation is a layer-breaker.
 	 */
-	@Deprecated(since = "6.2")
 	FilterDefinition getFilterDefinition();
 
 	/**

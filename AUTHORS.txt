@@ -6,6 +6,7 @@
 
 Red Hat, Inc.
 Oracle, Corporation.
+OpenValue Düsseldorf GmbH
 
 # Individual contributors
 
@@ -225,6 +226,7 @@ msvticket <marten.svantesson@ticket.se>
 Mustafa Ulu <mustafau@sabanciuniv.edu>
 Nathan Xu <nathan.qingyang.xu@gmail.com>
 Nguyen Nhu Phuc <phucnn.work@gmail.com>
+Niklas Enns <niklas.enns@openvalue.de>
 Nikolay Shestakov <ns@xtesseract.com>
 Norbert Wirges <norbert.wirges@werum.com>
 Oliver Breidenbach <olly.breidenbach@googlemail.com>

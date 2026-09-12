@@ -13,6 +13,7 @@ import org.hibernate.ConnectionAcquisitionMode;
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.Incubating;
 import org.hibernate.Interceptor;
+import org.hibernate.SPI;
 
 import java.sql.Connection;
 import java.time.Instant;
@@ -36,10 +37,13 @@ public interface CommonSharedBuilder extends CommonBuilder {
 	@Nonnull
 	CommonSharedBuilder connection();
 
-	/// Signifies the interceptor from the original session should be used to create the new session.
+	/// Supply the original session’s [Interceptor] to the new session.
+	/// Both sessions share the same instance, which must be thread-safe if they run concurrently.
 	///
 	/// @return `this`, for method chaining
+	/// @see Interceptor
 	@Nonnull
+	@SPI(SPI.Role.SUPPLY)
 	CommonSharedBuilder interceptor();
 
 	/// Signifies that the SQL statement inspector from the original session should be used to create the new session.
@@ -52,8 +56,12 @@ public interface CommonSharedBuilder extends CommonBuilder {
 	@Nonnull
 	CommonSharedBuilder noStatementInspector();
 
+	/// {@inheritDoc}
+	///
+	/// @see Interceptor
 	@Override
 	@Nonnull
+	@SPI(SPI.Role.SUPPLY)
 	CommonSharedBuilder interceptor(@Nullable Interceptor interceptor);
 
 	@Override

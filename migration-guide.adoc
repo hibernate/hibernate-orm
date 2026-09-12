@@ -421,6 +421,24 @@ StatelessSessionLazyDelegator` is implemented. Consumers of this class must exte
 and implement the abstract `delegate()` method, thus providing the required Session to
 it.
 
+[[interceptor-spi]]
+=== Interceptor classification
+
+`Interceptor`, previously considered an API simply because it was not yet classified,
+is classified as an SPI with the `IMPLEMENT` and `SUPPLY` roles. Implementing its callbacks
+and supplying an instance to Hibernate remain supported. Hibernate continues to invoke them
+during session operations.
+
+The interceptor registration methods on `SessionBuilder`, `StatelessSessionBuilder`,
+their shared-session variants, `CommonBuilder`, `CommonSharedBuilder`,
+`SessionFactoryBuilder`, and `Configuration` are now SPI supply points instead
+of API.
+
+These classification changes do not change Java signatures or runtime behavior.
+Existing implementations and registration calls require no source changes.
+The affected contracts now carry the SPI compatibility promise within an `X.Y`
+release family, instead of the API promise across a major version.
+
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Changes in Behavior

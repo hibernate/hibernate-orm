@@ -61,7 +61,6 @@ import org.hibernate.type.StandardBasicTypes;
 import static java.util.Collections.addAll;
 import static java.util.Collections.unmodifiableList;
 import static java.util.function.Function.identity;
-import static org.hibernate.boot.model.internal.AuditHelper.resolveExcludedColumns;
 import static org.hibernate.internal.util.collections.ArrayHelper.to2DStringArray;
 import static org.hibernate.internal.util.collections.ArrayHelper.toStringArray;
 
@@ -496,7 +495,6 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 			List<String> extraSelectExpressions) {
 		final var factory = getFactory();
 		final var sqlStringGenerationContext = factory.getSqlStringGenerationContext();
-		var excluded = resolveExcludedColumns(model.getProperties());
 		if ( !model.hasSubclasses() ) {
 			final String qualifiedName = model.getTable().getQualifiedName( sqlStringGenerationContext );
 			return tableNameResolver != null ? tableNameResolver.apply( qualifiedName ) : qualifiedName;
@@ -505,11 +503,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 			final Set<Column> columns = new LinkedHashSet<>();
 			for ( var table : model.getSubclassTableClosure() ) {
 				if ( !table.isAbstractUnionTable() ) {
-					for ( Column column : table.getColumns() ) {
-						if ( !excluded.contains( column.getCanonicalName() ) ) {
-							columns.add( column );
-						}
-					}
+					columns.addAll( table.getColumns() );
 				}
 			}
 			final var dialect = factory.getJdbcServices().getDialect();
@@ -528,9 +522,8 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 						}
 					}
 					subquery.append( "select " );
-					excluded = resolveExcludedColumns(persistentClass.getProperties());
 					for ( var column : columns ) {
-						if ( !table.containsColumn( column ) || excluded.contains( column.getCanonicalName() )) {
+						if ( !table.containsColumn( column ) ) {
 							subquery.append( getSelectClauseNullString( column, dialect ) )
 									.append( " as " );
 						}

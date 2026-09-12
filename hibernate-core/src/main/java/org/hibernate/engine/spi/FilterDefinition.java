@@ -29,7 +29,7 @@ import jakarta.annotation.Nullable;
  *
  * @author Steve Ebersole
  */
-public class FilterDefinition implements Serializable {
+public class FilterDefinition implements org.hibernate.engine.FilterDefinition, Serializable {
 	private final String filterName;
 	private final String defaultFilterCondition;
 	private final Map<String, JdbcMapping> explicitParamJaMappings = new HashMap<>();
@@ -70,6 +70,7 @@ public class FilterDefinition implements Serializable {
 	 *
 	 * @return The filter name for this configuration.
 	 */
+	@Override
 	public String getFilterName() {
 		return filterName;
 	}
@@ -79,6 +80,7 @@ public class FilterDefinition implements Serializable {
 	 *
 	 * @return The parameters named by this configuration.
 	 */
+	@Override
 	public Set<String> getParameterNames() {
 		// Local variable helps static nullness inference.
 		Set<String> keys = explicitParamJaMappings.keySet();
@@ -101,6 +103,7 @@ public class FilterDefinition implements Serializable {
 		return resolver == null ? null : resolver.getBeanInstance();
 	}
 
+	@Override
 	public String getDefaultFilterCondition() {
 		return defaultFilterCondition;
 	}
@@ -111,6 +114,7 @@ public class FilterDefinition implements Serializable {
 	 *
 	 * @return The flag value.
 	 */
+	@Override
 	public boolean isAppliedToLoadByKey() {
 		return applyToLoadByKey;
 	}
@@ -130,6 +134,7 @@ public class FilterDefinition implements Serializable {
 	 *
 	 * @return The flag value.
 	 */
+	@Override
 	public boolean isAutoEnabled() {
 		return autoEnabled;
 	}

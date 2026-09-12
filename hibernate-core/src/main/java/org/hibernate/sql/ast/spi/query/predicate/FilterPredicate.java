@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.Filter;
+import org.hibernate.internal.FilterImpl;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
@@ -78,7 +79,7 @@ public class FilterPredicate implements Predicate {
 			for ( int i = 0; i < parameterCount; i++ ) {
 				final String paramName = parameterNames.get( i );
 				final Object paramValue = filter.getParameterValue( paramName );
-				final var jdbcMapping = filter.getFilterDefinition().getParameterJdbcMapping( paramName );
+				final var jdbcMapping = ( (FilterImpl) filter ).getFilterDefinition().getParameterJdbcMapping( paramName );
 				parameters.add( new FilterFragmentParameter( filter.getName(), paramName, jdbcMapping, paramValue ) );
 			}
 			return parameters;

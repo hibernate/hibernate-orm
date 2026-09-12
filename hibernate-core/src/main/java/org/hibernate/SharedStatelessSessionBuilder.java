@@ -76,10 +76,12 @@ public interface SharedStatelessSessionBuilder extends StatelessSessionBuilder, 
 
 	@Override
 	@Nonnull
+	@SPI(SPI.Role.SUPPLY)
 	SharedStatelessSessionBuilder interceptor();
 
 	@Override
 	@Nonnull
+	@SPI(SPI.Role.SUPPLY)
 	SharedStatelessSessionBuilder interceptor(@Nullable Interceptor interceptor);
 
 	@Override

@@ -49,19 +49,27 @@ import org.hibernate.type.Type;
  *          value of an updated property in a {@code @PreUpdate} callback, and do not
  *          provide a well-defined way to intercept changes to collections.
  *          <p>
- *          Note that this API exposes the interface {@link Type}, which in modern
- *          versions of Hibernate is considered an SPI. This is unfortunate, and might
- *          change in the future, but is bearable for now.
+ *          Implementations are supplied to Hibernate, which invokes their callbacks.
+ *          Direct invocation of these callbacks is not a supported provider contract.
  *
+ * @see org.hibernate.engine.creation.CommonBuilder#interceptor(Interceptor)
+ * @see org.hibernate.engine.creation.CommonSharedBuilder#interceptor(Interceptor)
+ * @see org.hibernate.engine.creation.CommonSharedBuilder#interceptor()
  * @see SessionBuilder#interceptor(Interceptor)
+ * @see StatelessSessionBuilder#interceptor(Interceptor)
+ * @see SharedSessionBuilder#interceptor(Interceptor)
+ * @see SharedStatelessSessionBuilder#interceptor(Interceptor)
+ * @see SharedStatelessSessionBuilder#interceptor()
  * @see SharedSessionBuilder#interceptor()
  * @see org.hibernate.cfg.Configuration#setInterceptor(Interceptor)
  *
  * @see org.hibernate.boot.SessionFactoryBuilder#applyInterceptor(Interceptor)
  * @see org.hibernate.boot.SessionFactoryBuilder#applyStatelessInterceptor(Class)
+ * @see org.hibernate.boot.SessionFactoryBuilder#applyStatelessInterceptor(java.util.function.Supplier)
  *
  * @author Gavin King
  */
+@SPI(value = {SPI.Role.IMPLEMENT, SPI.Role.SUPPLY})
 public interface Interceptor extends EntityManager.CreationOption, EntityAgent.CreationOption {
 	/**
 	 * Called just before an object is initialized. The interceptor may change the {@code state}, which will

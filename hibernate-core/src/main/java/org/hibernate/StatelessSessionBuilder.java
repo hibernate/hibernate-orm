@@ -48,6 +48,7 @@ public interface StatelessSessionBuilder extends CommonBuilder {
 
 	@Override
 	@Nonnull
+	@SPI(SPI.Role.SUPPLY)
 	StatelessSessionBuilder interceptor(@Nullable Interceptor interceptor);
 
 	@Override

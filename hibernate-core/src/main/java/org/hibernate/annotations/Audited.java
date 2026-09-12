@@ -253,4 +253,63 @@ public @interface Audited {
 		 */
 		String catalog() default "";
 	}
+
+
+	/**
+	 * The {@code Audited.Override} annotation is used to override the auditing behavior of a single property
+	 * inherited from a superclass, or that of a sub-property inside an {@linkplain Embeddable embedded} component.
+	 * For example, a property whose auditing has been enabled in a superclass
+	 * can be excluded in its inheritors by leveraging the {@code Audited.Override} annotation and setting
+	 * {@code isAudited} to {@code false}. The reverse is also possible: a previously {@linkplain Excluded excluded}
+	 * property can be revoked with an {@code Audited.Override}.
+	 *
+	 * @see jakarta.persistence.Embedded
+	 * @see jakarta.persistence.Embeddable
+	 * @see jakarta.persistence.MappedSuperclass
+	 * @see jakarta.persistence.AssociationOverride
+	 */
+	@Target({TYPE, METHOD, FIELD})
+	@Retention(RUNTIME)
+	@Repeatable(Overrides.class)
+	@interface Override {
+
+		/**
+		 * Name of the field (or property) whose mapping is being overridden.
+		 */
+		String name() default "";
+
+		/**
+		 * Indicates if the field (or property) is audited; defaults to {@code true}.
+		 */
+		boolean isAudited() default true;
+
+		/**
+		 * New {@link CollectionTable} used for this field (or property). Its value
+		 * is ignored if {@link #isAudited()} equals to {@code false}.
+		 */
+		CollectionTable collectionTable() default @CollectionTable( name = "");
+
+	}
+
+	/**
+	 * The {@code AuditingOverrides} annotation is used to override the auditing
+	 * behavior for one or more fields (or properties) inside an embedded
+	 * component.
+	 *
+	 * @see jakarta.persistence.Embedded
+	 * @see jakarta.persistence.Embeddable
+	 * @see jakarta.persistence.MappedSuperclass
+	 * @see jakarta.persistence.AssociationOverride
+	 * @see jakarta.persistence.AssociationOverrides
+	 * @see Override
+	 */
+	@Target({TYPE, METHOD, FIELD})
+	@Retention(RUNTIME)
+	@interface Overrides {
+		/**
+		 * An array of {@link Override} values, to define the new auditing
+		 * behavior.
+		 */
+		Override[] value();
+	}
 }

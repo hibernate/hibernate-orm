@@ -56,6 +56,7 @@ public interface SessionBuilder extends CommonBuilder {
 
 	@Override
 	@Nonnull
+	@SPI(SPI.Role.SUPPLY)
 	SessionBuilder interceptor(@Nullable Interceptor interceptor);
 
 	@Override

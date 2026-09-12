@@ -13,6 +13,7 @@ import org.hibernate.ConnectionAcquisitionMode;
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.Incubating;
 import org.hibernate.Interceptor;
+import org.hibernate.SPI;
 import org.hibernate.Session;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.StatelessSession;
@@ -55,11 +56,14 @@ public interface CommonBuilder {
 	@Nonnull
 	CommonBuilder connectionHandling(@Nonnull ConnectionAcquisitionMode acquisitionMode, @Nonnull ConnectionReleaseMode releaseMode);
 
-	/// Adds a specific interceptor to the session options.
+	/// Supply an [Interceptor] for the session being built.
+	/// Hibernate invokes its callbacks during that session’s lifecycle.
+	/// If the instance is also supplied to other sessions, it must be thread-safe.
 	///
 	/// @param interceptor The interceptor to use.
 	/// @return `this`, for method chaining
 	@Nonnull
+	@SPI(SPI.Role.SUPPLY)
 	CommonBuilder interceptor(@Nullable Interceptor interceptor);
 
 	/// Specifies that no {@link Interceptor} should be used.  This indicates to

@@ -65,7 +65,7 @@ public class QueryExporter extends AbstractExporter {
 			if(transaction!=null) {
 				transaction.rollback();
 			}
-			throw new RuntimeException("Error occured while trying to execute query", he);
+			throw new RuntimeException("Error occurred while trying to execute query", he);
 		}
 		finally {
 			if(session!=null) {

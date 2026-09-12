@@ -20,7 +20,7 @@ import jakarta.annotation.Nullable;
 import org.hibernate.Internal;
 import org.hibernate.internal.build.AllowReflection;
 import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.internal.util.collections.StandardStack;
+import org.hibernate.spi.StandardStack;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
@@ -53,7 +53,7 @@ public class JsonHelper {
 	 * @param options wrapping options
 	 * @return serialized values
 	 * @param <X> the type of the returned value
-	 * @throws SQLException if error occured during mapping of types
+	 * @throws SQLException if error occurred during mapping of types
 	 */
 	private static <X> X consumeJsonDocumentItems(JsonDocumentReader reader, EmbeddableMappingType embeddableMappingType, boolean returnEmbeddable, WrapperOptions options)
 			throws SQLException {

@@ -16,6 +16,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceException;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.fail;
 
 /**
@@ -35,6 +36,16 @@ public class EntityManagerFactoryUnwrapTest {
 	public void testEntityManagerCanBeUnwrappedToSessionFactoryImplementor(EntityManagerFactoryScope scope) {
 		SessionFactoryImplementor sessionFactoryImplementor = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
 		assertNotNull( sessionFactoryImplementor, "Unwrapping to SPI class SessionFactoryImplementor should be ok" );
+	}
+
+	@Test
+	@SuppressWarnings("removal")
+	public void testSessionFactoryOptionsAccessThroughUnwrap(EntityManagerFactoryScope scope) {
+		final SessionFactory sessionFactory = scope.getEntityManagerFactory().unwrap( SessionFactory.class );
+		assertSame(
+				sessionFactory.getSessionFactoryOptions(),
+				sessionFactory.unwrap( SessionFactoryImplementor.class ).getSessionFactoryOptions()
+		);
 	}
 
 	@Test

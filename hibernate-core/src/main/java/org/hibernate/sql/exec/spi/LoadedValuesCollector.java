@@ -36,6 +36,17 @@ public interface LoadedValuesCollector {
 			EntityKey entityKey);
 
 	/**
+	 * Register an entity, indicating whether it was already managed before this load.
+	 */
+	default void registerEntity(
+			NavigablePath navigablePath,
+			EntityMappingType entityDescriptor,
+			EntityKey entityKey,
+			boolean reloaded) {
+		registerEntity( navigablePath, entityDescriptor, entityKey );
+	}
+
+	/**
 	 * Register a loading collection.
 	 *
 	 * @param navigablePath The NavigablePath relative to the SQL AST used to load the entity
@@ -68,7 +79,15 @@ public interface LoadedValuesCollector {
 	record LoadedEntityRegistration(
 			NavigablePath navigablePath,
 			EntityMappingType entityDescriptor,
-			EntityKey entityKey) implements LoadedPartRegistration {
+			EntityKey entityKey,
+			boolean reloaded) implements LoadedPartRegistration {
+		public LoadedEntityRegistration(
+				NavigablePath navigablePath,
+				EntityMappingType entityDescriptor,
+				EntityKey entityKey) {
+			this( navigablePath, entityDescriptor, entityKey, false );
+		}
+
 		@Override
 		public EntityMappingType modelPart() {
 			return entityDescriptor();

@@ -27,12 +27,18 @@ public class LoadedValuesCollectorImpl implements LoadedValuesCollector {
 	}
 
 	public void registerEntity(NavigablePath navigablePath, EntityMappingType entityDescriptor, EntityKey entityKey) {
+		registerEntity( navigablePath, entityDescriptor, entityKey, false );
+	}
+
+	@Override
+	public void registerEntity(
+			NavigablePath navigablePath, EntityMappingType entityDescriptor, EntityKey entityKey, boolean reloaded) {
 		if ( pathsToLock.contains( navigablePath ) ) {
 			if ( entitiesToLock == null ) {
 				entitiesToLock = new ArrayList<>();
 			}
 			entitiesToLock.add(
-					new LoadedValuesCollector.LoadedEntityRegistration( navigablePath, entityDescriptor, entityKey ) );
+					new LoadedValuesCollector.LoadedEntityRegistration( navigablePath, entityDescriptor, entityKey, reloaded ) );
 		}
 	}
 

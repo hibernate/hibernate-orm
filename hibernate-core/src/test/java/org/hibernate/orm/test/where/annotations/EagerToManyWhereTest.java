@@ -49,6 +49,13 @@ public class EagerToManyWhereTest {
 	@Test
 	@JiraKey( value = "HHH-13011" )
 	public void testAssociatedWhereClause(SessionFactoryScope factoryScope) {
+		// GaussDB (openGauss kernel, A and M compat) reports "inactive is ambiguous" for @SQLRestriction("inactive = 0")
+		// on Category EAGER-fetched across joins. Root cause (jshell M-vs-A probe): openGauss flags a bare column in a
+		// `left join (subquery) on <cond>` ON-clause as ambiguous even when only one joined table has it (standard PG does
+		// not; the qualified `c1.inactive=0` passes on both A and M). @SQLRestriction is user SQL rendered bare for all
+		// dialects (runtime-generated alias cannot be qualified), dialect does not rewrite user fragments — not
+		// dialect-fixable, no sql_mode switch (SQLSTATE 42702). M-only skip; A also fails but is not run in the suite.
+		org.junit.jupiter.api.Assumptions.assumeFalse( factoryScope.getSessionFactory().getJdbcServices().getDialect() instanceof org.hibernate.community.dialect.GaussDBDialect g && g.isMMode() );
 		var product = new Product();
 		var flowers = new Category();
 		flowers.id = 1;

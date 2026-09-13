@@ -5,9 +5,12 @@
 package org.hibernate.orm.test.jpa.lock;
 
 import jakarta.persistence.LockModeType;
+import jakarta.persistence.OptimisticLockException;
 import jakarta.persistence.PersistenceException;
 import jakarta.persistence.RollbackException;
 
+import org.hibernate.LockMode;
+import org.hibernate.Session;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
@@ -15,11 +18,17 @@ import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.MethodSource;
+
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Jpa(annotatedClasses = { Lockable.class, UnversionedLock.class })
 class QueryLockingManagedEntityTest {
@@ -86,6 +95,65 @@ class QueryLockingManagedEntityTest {
 						.getSingleResult() );
 				scope.inTransaction( other -> other.find( Lockable.class, first.getId() ).setName( "changed" ) );
 				assertThrows( RollbackException.class, transaction::commit );
+			}
+			finally {
+				if ( transaction.isActive() ) {
+					transaction.rollback();
+				}
+			}
+		} );
+	}
+
+	static Stream<Arguments> pessimisticQueriesFromNone() {
+		return Stream.of( LockModeType.PESSIMISTIC_READ, LockModeType.PESSIMISTIC_WRITE )
+				.flatMap( mode -> Stream.of(
+						Arguments.of( mode, false, false ),
+						Arguments.of( mode, false, true ),
+						Arguments.of( mode, true, false ),
+						Arguments.of( mode, true, true )
+				) );
+	}
+
+	@ParameterizedTest(name = "{0}, loadInTransaction={1}, concurrentUpdate={2}")
+	@MethodSource("pessimisticQueriesFromNone")
+	void testPessimisticQueryFromNone(
+			LockModeType mode, boolean loadInTransaction, boolean concurrentUpdate,
+			EntityManagerFactoryScope scope) {
+		scope.inEntityManager( em -> {
+			final var transaction = em.getTransaction();
+			try {
+				if ( loadInTransaction ) {
+					transaction.begin();
+				}
+				final var managed = em.find( Lockable.class, first.getId() );
+				if ( loadInTransaction ) {
+					transaction.commit();
+				}
+				// Both a load outside a transaction and a completed transaction leave the entry at NONE.
+				assertEquals( LockMode.NONE, em.unwrap( Session.class ).getCurrentLockMode( managed ) );
+				if ( concurrentUpdate ) {
+					scope.inTransaction( writer -> {
+						final var updated = writer.find( Lockable.class, first.getId() );
+						updated.setName( "changed" );
+						writer.flush();
+						assertEquals( managed.getVersion() + 1, updated.getVersion() );
+					} );
+				}
+				transaction.begin();
+				assertEquals( LockMode.NONE, em.unwrap( Session.class ).getCurrentLockMode( managed ) );
+				final var query = em.createQuery( "from Lockable where id = :id", Lockable.class )
+						.setParameter( "id", first.getId() )
+						.setLockMode( mode );
+				if ( concurrentUpdate ) {
+					assertThrows( OptimisticLockException.class, query::getSingleResult );
+					assertTrue( transaction.getRollbackOnly() );
+				}
+				else {
+					assertSame( managed, query.getSingleResult() );
+					assertEquals( mode, em.getLockMode( managed ) );
+					assertFalse( transaction.getRollbackOnly() );
+					transaction.commit();
+				}
 			}
 			finally {
 				if ( transaction.isActive() ) {

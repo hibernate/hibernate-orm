@@ -1432,7 +1432,7 @@ public class EntityInitializerImpl
 					final var entryLockMode = entityEntry.getLockMode();
 					if ( entryLockMode.lessThan( data.lockMode ) ) {
 						//we only check the version when _upgrading_ lock modes
-						if ( versionAssembler != null && entryLockMode != LockMode.NONE ) {
+						if ( versionAssembler != null ) {
 							checkVersion( data, entityEntry, rowProcessingState );
 						}
 						if ( data.lockMode.requiresVersion() && data.entityHolder.getEntityInitializer() == null ) {

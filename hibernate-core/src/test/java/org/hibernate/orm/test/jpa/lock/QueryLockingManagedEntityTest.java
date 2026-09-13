@@ -29,6 +29,8 @@ import java.util.stream.Stream;
 import static org.hibernate.jpa.HibernateHints.HINT_FOLLOW_ON_STRATEGY;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -70,6 +72,13 @@ class QueryLockingManagedEntityTest {
 
 	private void testManagedAndNewQueryResults(
 			LockModeType mode, Locking.FollowOn followOn, EntityManagerFactoryScope scope) {
+		// Use different starting versions so that each result must be checked against its own version.
+		second = scope.fromTransaction( em -> {
+			final var entity = em.find( Lockable.class, second.getId() );
+			entity.setName( "updated second" );
+			return entity;
+		} );
+		assertNotEquals( first.getVersion(), second.getVersion() );
 		scope.inTransaction( em -> {
 			final var managed = em.find( Lockable.class, first.getId() );
 			// Each entity appears in multiple rows, and only the first is already managed.
@@ -83,7 +92,8 @@ class QueryLockingManagedEntityTest {
 				assertSame( managed, results.get( 0 ) );
 				final int increment = mode == LockModeType.PESSIMISTIC_FORCE_INCREMENT ? 1 : 0;
 				for ( var result : results ) {
-					assertEquals( first.getVersion() + increment, result.getVersion() );
+					final var initial = result.getId().equals( first.getId() ) ? first : second;
+					assertEquals( initial.getVersion() + increment, result.getVersion() );
 					if ( LockMode.fromJpaLockMode( mode ).isPessimistic() ) {
 						assertEquals( mode, em.getLockMode( result ) );
 					}
@@ -133,7 +143,8 @@ class QueryLockingManagedEntityTest {
 						.setLockMode( mode )
 						.getSingleResult() );
 				scope.inTransaction( other -> other.find( Lockable.class, first.getId() ).setName( "changed" ) );
-				assertThrows( RollbackException.class, transaction::commit );
+				final var exception = assertThrows( RollbackException.class, transaction::commit );
+				assertInstanceOf( OptimisticLockException.class, exception.getCause() );
 			}
 			finally {
 				if ( transaction.isActive() ) {

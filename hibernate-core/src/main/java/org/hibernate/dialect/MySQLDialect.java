@@ -139,6 +139,7 @@ import org.hibernate.type.descriptor.jdbc.NullJdbcType;
 import org.hibernate.type.descriptor.jdbc.OrdinalEnumJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
+import java.sql.SQLException;
 import java.sql.Types;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -157,6 +158,7 @@ import static org.hibernate.SPI.Role.SUPPLY;
 import static org.hibernate.cfg.SchemaToolingSettings.STORAGE_ENGINE;
 import static org.hibernate.dialect.lock.internal.MySQLLockingSupport.MYSQL_LOCKING_SUPPORT;
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
+import static org.hibernate.jdbc.spi.JdbcExceptionHelper.extractErrorCode;
 import static org.hibernate.jdbc.spi.JdbcExceptionHelper.extractSqlState;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.StringHelper.split;
@@ -1238,6 +1240,12 @@ public class MySQLDialect extends Dialect implements CurrentTemporalSupport, Tem
 	}
 
 	// Overridden informational metadata ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	@Override
+	public boolean causesRollback(SQLException sqlException) {
+		// InnoDB rolls back the transaction for a deadlock, but ordinarily only the statement for a lock timeout.
+		return extractErrorCode( sqlException ) == 1213;
+	}
 
 	@Override
 	@SPI({ IMPLEMENT, SUPPLY })

@@ -72,6 +72,11 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 	}
 
 	@Override
+	public LoadedValuesCollector getLoadedValuesCollector() {
+		return loadedValuesCollector;
+	}
+
+	@Override
 	public JdbcValuesSourceProcessingOptions getProcessingOptions() {
 		return processingOptions;
 	}

@@ -5,11 +5,13 @@
 package org.hibernate.orm.test.jpa.lock;
 
 import jakarta.persistence.LockModeType;
+import jakarta.persistence.FlushModeType;
 import jakarta.persistence.OptimisticLockException;
 import jakarta.persistence.PersistenceException;
 import jakarta.persistence.RollbackException;
 
 import org.hibernate.LockMode;
+import org.hibernate.Locking;
 import org.hibernate.Session;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
@@ -24,6 +26,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import java.util.stream.Stream;
 
+import static org.hibernate.jpa.HibernateHints.HINT_FOLLOW_ON_STRATEGY;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
@@ -54,11 +57,25 @@ class QueryLockingManagedEntityTest {
 	@ParameterizedTest
 	@EnumSource(LockModeType.class)
 	void testManagedAndNewQueryResults(LockModeType mode, EntityManagerFactoryScope scope) {
+		testManagedAndNewQueryResults( mode, Locking.FollowOn.ALLOW, scope );
+	}
+
+	@ParameterizedTest
+	@EnumSource(value = LockModeType.class, names = {
+			"PESSIMISTIC_READ", "PESSIMISTIC_WRITE", "PESSIMISTIC_FORCE_INCREMENT"
+	})
+	void testManagedAndNewQueryResultsWithFollowOnLocking(LockModeType mode, EntityManagerFactoryScope scope) {
+		testManagedAndNewQueryResults( mode, Locking.FollowOn.FORCE, scope );
+	}
+
+	private void testManagedAndNewQueryResults(
+			LockModeType mode, Locking.FollowOn followOn, EntityManagerFactoryScope scope) {
 		scope.inTransaction( em -> {
 			final var managed = em.find( Lockable.class, first.getId() );
 			// Each entity appears in multiple rows, and only the first is already managed.
 			final var query = em.createQuery(
 					"select l from Lockable l cross join Lockable other order by l.id", Lockable.class )
+					.setHint( HINT_FOLLOW_ON_STRATEGY, followOn )
 					.setLockMode( mode );
 			for ( int i = 0; i < 2; i++ ) {
 				final var results = query.getResultList();
@@ -67,6 +84,9 @@ class QueryLockingManagedEntityTest {
 				final int increment = mode == LockModeType.PESSIMISTIC_FORCE_INCREMENT ? 1 : 0;
 				for ( var result : results ) {
 					assertEquals( first.getVersion() + increment, result.getVersion() );
+					if ( LockMode.fromJpaLockMode( mode ).isPessimistic() ) {
+						assertEquals( mode, em.getLockMode( result ) );
+					}
 				}
 			}
 		} );
@@ -78,6 +98,25 @@ class QueryLockingManagedEntityTest {
 			assertEquals( first.getVersion() + increment, em.find( Lockable.class, first.getId() ).getVersion() );
 			assertEquals( second.getVersion() + increment, em.find( Lockable.class, second.getId() ).getVersion() );
 		} );
+	}
+
+	@ParameterizedTest
+	@EnumSource(value = LockModeType.class, names = { "PESSIMISTIC_READ", "PESSIMISTIC_WRITE" })
+	void testFollowOnLockingPreservesManagedState(LockModeType mode, EntityManagerFactoryScope scope) {
+		scope.inTransaction( em -> {
+			final var managed = em.find( Lockable.class, first.getId() );
+			managed.setName( "local change" );
+			assertSame( managed, em.createQuery( "from Lockable where id = :id", Lockable.class )
+					.setParameter( "id", first.getId() )
+					.setFlushMode( FlushModeType.COMMIT )
+					.setHint( HINT_FOLLOW_ON_STRATEGY, Locking.FollowOn.FORCE )
+					.setLockMode( mode )
+					.getSingleResult() );
+			assertEquals( mode, em.getLockMode( managed ) );
+			assertEquals( "local change", managed.getName() );
+		} );
+		scope.inTransaction( em -> assertEquals(
+				"local change", em.find( Lockable.class, first.getId() ).getName() ) );
 	}
 
 	@ParameterizedTest
@@ -119,6 +158,20 @@ class QueryLockingManagedEntityTest {
 	void testPessimisticQueryFromNone(
 			LockModeType mode, boolean loadInTransaction, boolean concurrentUpdate,
 			EntityManagerFactoryScope scope) {
+		testPessimisticQueryFromNone( mode, loadInTransaction, concurrentUpdate, Locking.FollowOn.ALLOW, scope );
+	}
+
+	@ParameterizedTest(name = "{0}, loadInTransaction={1}, concurrentUpdate={2}")
+	@MethodSource("pessimisticQueriesFromNone")
+	void testPessimisticFollowOnQueryFromNone(
+			LockModeType mode, boolean loadInTransaction, boolean concurrentUpdate,
+			EntityManagerFactoryScope scope) {
+		testPessimisticQueryFromNone( mode, loadInTransaction, concurrentUpdate, Locking.FollowOn.FORCE, scope );
+	}
+
+	private void testPessimisticQueryFromNone(
+			LockModeType mode, boolean loadInTransaction, boolean concurrentUpdate,
+			Locking.FollowOn followOn, EntityManagerFactoryScope scope) {
 		scope.inEntityManager( em -> {
 			final var transaction = em.getTransaction();
 			try {
@@ -143,6 +196,7 @@ class QueryLockingManagedEntityTest {
 				assertEquals( LockMode.NONE, em.unwrap( Session.class ).getCurrentLockMode( managed ) );
 				final var query = em.createQuery( "from Lockable where id = :id", Lockable.class )
 						.setParameter( "id", first.getId() )
+						.setHint( HINT_FOLLOW_ON_STRATEGY, followOn )
 						.setLockMode( mode );
 				if ( concurrentUpdate ) {
 					assertThrows( OptimisticLockException.class, query::getSingleResult );

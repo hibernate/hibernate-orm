@@ -33,8 +33,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SessionFactory
 @DomainModel(annotatedClasses = {
-		SingleTableInheritanceTest.SingleInheritanceBase.class,
-		SingleTableInheritanceTest.SingleInheritanceSub.class,
+		SingleTableInheritanceTest.Base.class,
+		SingleTableInheritanceTest.Sub.class,
 		SingleTableInheritanceTest.EntityWithExcludedProperty.class,
 		SingleTableInheritanceTest.EntityThatOverridesTheProperty3.class,
 })
@@ -79,16 +79,16 @@ public class SingleTableInheritanceTest {
 
 
 	}
-	@Entity(name = "SingleInheritanceBase")
+	@Entity(name = "Base")
 	@Table
-	static class SingleInheritanceBase extends LowerMSCThatExcludesTheProperty {
+	static class Base extends LowerMSCThatExcludesTheProperty {
 
 	}
 	@MappedSuperclass
 	@Audited.Overrides(
 			{@Audited.Override(name = "str1", isAudited = true)} // <-- revocation of str1
 	)
-	static class UpperSecondMSCThatRevokesTheExclusion extends SingleInheritanceBase {
+	static class UpperSecondMSCThatRevokesTheExclusion extends Base {
 
 	}
 	@MappedSuperclass
@@ -99,25 +99,25 @@ public class SingleTableInheritanceTest {
 	static class LowerSecondMSCThatDoesNothing extends UpperSecondMSCThatRevokesTheExclusion{
 
 	}
-	@Entity(name = "SingleInheritanceSub")
-	static class SingleInheritanceSub extends LowerSecondMSCThatDoesNothing {
+	@Entity(name = "Sub")
+	static class Sub extends LowerSecondMSCThatDoesNothing {
 
 	}
 	@Test
 	public void twoGroups(DomainModelScope domainModelScope, SessionFactoryScope scope) {
 		var tables = domainModelScope.getDomainModel().collectTableMappings();
-		assertTable( tables, "SingleInheritanceBase_AUD", table -> {
+		assertTable( tables, "Base_AUD", table -> {
 			assertTrue( table.containsColumn( new Column( "str1" ) ) );
 			assertTrue( table.containsColumn( new Column( "str2" ) ) );
 		} );
 		scope.inTransaction( s -> {
-			var baseEntity = new SingleInheritanceBase();
+			var baseEntity = new Base();
 			baseEntity.id = 0;
 			baseEntity.str1 = "v";
 			baseEntity.str2 = "w";
 			s.persist( baseEntity );
 
-			var subEntity = new SingleInheritanceSub();
+			var subEntity = new Sub();
 			subEntity.id = 1;
 			subEntity.str1 = "v";
 			subEntity.str2 = "w";
@@ -127,11 +127,11 @@ public class SingleTableInheritanceTest {
 		scope.inTransaction( s -> {
 			var statelessSession = s.getSessionFactory().withStatelessOptions().atChangeset( AuditLog.ALL_CHANGESETS )
 					.openStatelessSession();
-			var auditedBase = statelessSession.createSelectionQuery("from SingleInheritanceBase b where Type(b) = SingleInheritanceBase", SingleInheritanceBase.class).getSingleResult();
+			var auditedBase = statelessSession.createSelectionQuery("from Base b where Type(b) = Base", Base.class).getSingleResult();
 			assertNull( auditedBase.str1 );
 			assertNotNull( auditedBase.str2 );
 
-			var auditedSub = statelessSession.createSelectionQuery("from SingleInheritanceSub", SingleInheritanceSub.class).getSingleResult();
+			var auditedSub = statelessSession.createSelectionQuery("from Sub", Sub.class).getSingleResult();
 			assertNotNull( auditedSub.str1 );
 			assertNull( auditedSub.str2 );
 		} );

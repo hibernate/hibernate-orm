@@ -231,9 +231,11 @@ public class ExceptionConverterImpl implements ExceptionConverter {
 			return new OptimisticLockException( message, lockException, entity );
 		}
 		else if ( exception instanceof PessimisticEntityLockException lockException ) {
-			// assume a lock timeout occurred if a timeout or NO WAIT was specified
-			return !isMarkedForRollback( lockException.getCause() )
-				&& hasTimeout( lockOptions )
+			final var cause = lockException.getCause();
+			return !isMarkedForRollback( cause )
+				// A database-default timeout need not have been requested via LockOptions,
+				// but assume a lock timeout occurred if a timeout or NO WAIT was specified
+				&& ( cause instanceof org.hibernate.exception.LockTimeoutException || hasTimeout( lockOptions ) )
 					// per spec, we only throw this exception if the tx is not aborted
 					? new LockTimeoutException( message, lockException, entity )
 					// per spec, we must throw this exception if the tx was aborted

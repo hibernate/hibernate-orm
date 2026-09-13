@@ -1,6 +1,15 @@
 Hibernate 6 Changelog
 =======================
 
+Changes in 6.6.57.Final (September 13, 2026)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/40440
+
+
+** Task
+    * HHH-20848 Drop meaningless "provided" dependency to ant in hibernate-envers
+
 Changes in 6.6.56.Final (August 23, 2026)
 ------------------------------------------------------------------------------------------------------------------------
 

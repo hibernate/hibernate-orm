@@ -48,10 +48,15 @@ import org.hibernate.testing.transaction.TransactionUtil;
 import org.hibernate.testing.util.ExceptionUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import org.jboss.logging.Logger;
 
 import jakarta.persistence.LockModeType;
+import jakarta.persistence.OptimisticLockException;
+import jakarta.persistence.RollbackException;
 import jakarta.persistence.LockTimeoutException;
 import jakarta.persistence.PersistenceException;
 import jakarta.persistence.PessimisticLockException;
@@ -64,6 +69,8 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTimeout;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -442,51 +449,75 @@ public class LockTest extends EntityManagerFactoryBasedFunctionalTest {
 				: "UPDATE Lock_ SET name = :name where id = :id";
 	}
 
-	@Test
-	public void testLockRead() {
-		final Lock lock = new Lock();
-		lock.setName( "name" );
+	@ParameterizedTest
+	@ValueSource(booleans = { false, true })
+	public void testLockRead(boolean withChanges) {
+		testOptimisticLock( LockModeType.READ, withChanges );
+	}
 
+	@ParameterizedTest
+	@ValueSource(booleans = { false, true })
+	public void testLockOptimistic(boolean withChanges) {
+		testOptimisticLock( LockModeType.OPTIMISTIC, withChanges );
+	}
+
+	private void testOptimisticLock(LockModeType mode, boolean withChanges) {
+		final var lock = new Lock( "name" );
 		doInJPA( this::entityManagerFactory, em -> {
 			em.persist( lock );
 		} );
 
 		doInJPA( this::entityManagerFactory, em -> {
-			Lock _lock = em.getReference( Lock.class, lock.getId() );
-			em.lock( _lock, LockModeType.READ );
-			_lock.setName( "surname" );
+			final var managed = em.getReference( Lock.class, lock.getId() );
+			em.lock( managed, mode );
+			assertEquals( LockModeType.OPTIMISTIC, em.getLockMode( managed ) );
+			if ( withChanges ) {
+				// Commit must validate the version produced by this transaction's own flush.
+				managed.setName( "surname" );
+			}
 		} );
 
 		doInJPA( this::entityManagerFactory, em -> {
-			Lock _lock = em.find( Lock.class, lock.getId() );
-			assertEquals( "surname", _lock.getName() );
-			em.remove( _lock );
+			final var result = em.find( Lock.class, lock.getId() );
+			assertEquals( withChanges ? "surname" : "name", result.getName() );
+			assertEquals( lock.getVersion() + (withChanges ? 1 : 0), result.getVersion(),
+					"Only a change to the entity should increment the version" );
 		} );
 	}
 
-	@Test
-	public void testLockOptimistic() {
-		final Lock lock = new Lock();
-		lock.setName( "name" );
-
+	@ParameterizedTest
+	@EnumSource(value = LockModeType.class, names = { "READ", "OPTIMISTIC" })
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsConcurrentTransactions.class)
+	@SkipForDialect(dialectClass = InformixDialect.class,
+			reason = "This test class uses REPEATABLE_READ on Informix, so the reader blocks the writer")
+	public void testOptimisticLockDetectsConcurrentUpdate(LockModeType mode) {
+		final var lock = new Lock( "name" );
 		doInJPA( this::entityManagerFactory, em -> {
 			em.persist( lock );
 		} );
-
+		try ( var em = entityManagerFactory().createEntityManager() ) {
+			final var transaction = em.getTransaction();
+			transaction.begin();
+			try {
+				final var managed = em.find( Lock.class, lock.getId() );
+				em.lock( managed, mode );
+				// Only the competing transaction changes the entity.
+				doInJPA( this::entityManagerFactory, writer -> {
+					writer.find( Lock.class, lock.getId() ).setName( "renamed" );
+				} );
+				final var failure = assertThrows( RollbackException.class, transaction::commit );
+				assertInstanceOf( OptimisticLockException.class, failure.getCause() );
+			}
+			finally {
+				if ( transaction.isActive() ) {
+					transaction.rollback();
+				}
+			}
+		}
 		doInJPA( this::entityManagerFactory, em -> {
-			Lock _lock = em.getReference( Lock.class, lock.getId() );
-			em.lock( _lock, LockModeType.OPTIMISTIC );
-			_lock.setName( "surname" );
-		} );
-
-		doInJPA( this::entityManagerFactory, em -> {
-			Lock _lock = em.find( Lock.class, lock.getId() );
-			assertEquals( "surname", _lock.getName() );
-		} );
-
-		doInJPA( this::entityManagerFactory, em -> {
-			Lock _lock = em.find( Lock.class, lock.getId() );
-			em.remove( _lock );
+			final var result = em.find( Lock.class, lock.getId() );
+			assertEquals( "renamed", result.getName() );
+			assertEquals( lock.getVersion() + 1, result.getVersion() );
 		} );
 	}
 

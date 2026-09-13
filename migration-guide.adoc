@@ -763,6 +763,16 @@ change column COL COL datetime(0);
 ----
 
 
+[[locking-queries-managed-entities]]
+=== Version checks for locking queries
+
+A query requesting a pessimistic lock now checks the version of an already managed versioned entity even when
+its current lock mode is `NONE`. If another transaction has changed its version, the query throws
+`OptimisticLockException` instead of acquiring the lock on the stale instance. This includes entities
+loaded outside a transaction or retained in the persistence context after an earlier transaction.
+This behavior is consistent with `EntityManager.lock()`. Queries which request no lock are unaffected.
+
+
 [[optimistic-lock-mode-version-check]]
 === Version check for `LockModeType.OPTIMISTIC`
 

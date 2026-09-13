@@ -66,6 +66,7 @@ class QueryLockingManagedEntityTest {
 	@EnumSource(value = LockModeType.class, names = {
 			"PESSIMISTIC_READ", "PESSIMISTIC_WRITE", "PESSIMISTIC_FORCE_INCREMENT"
 	})
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSelectLocking.class)
 	void testManagedAndNewQueryResultsWithFollowOnLocking(LockModeType mode, EntityManagerFactoryScope scope) {
 		testManagedAndNewQueryResults( mode, Locking.FollowOn.FORCE, scope );
 	}
@@ -112,6 +113,7 @@ class QueryLockingManagedEntityTest {
 
 	@ParameterizedTest
 	@EnumSource(value = LockModeType.class, names = { "PESSIMISTIC_READ", "PESSIMISTIC_WRITE" })
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSelectLocking.class)
 	void testFollowOnLockingPreservesManagedState(LockModeType mode, EntityManagerFactoryScope scope) {
 		scope.inTransaction( em -> {
 			final var managed = em.find( Lockable.class, first.getId() );
@@ -174,6 +176,7 @@ class QueryLockingManagedEntityTest {
 
 	@ParameterizedTest(name = "{0}, loadInTransaction={1}, concurrentUpdate={2}")
 	@MethodSource("pessimisticQueriesFromNone")
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSelectLocking.class)
 	void testPessimisticFollowOnQueryFromNone(
 			LockModeType mode, boolean loadInTransaction, boolean concurrentUpdate,
 			EntityManagerFactoryScope scope) {

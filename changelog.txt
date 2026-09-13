@@ -1,6 +1,35 @@
 Hibernate 7 Changelog
 =======================
 
+Changes in 7.4.8.Final (September 13, 2026)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/40444
+
+
+** Bug
+    * HHH-20855 SQL Server temporal rounding causing trouble with sub-micro input values
+    * HHH-20849 org.hibernate.query.range.Range#suffix wrongly expects pattern
+    * HHH-20806 Join elimination in 7.x skips @SQLRestriction when querying by to-one association id
+    * HHH-20805 MySQL schema update fails, if foreignkey related index is unique
+    * HHH-20804 StatefulPersistenceContext.clear() does not release newEntityHolder
+    * HHH-20801 AnyType.guessEntityPersister uses the wrapped proxy instead of the unwrapped implementation in its fallback → UnknownEntityTypeException during flush logging
+    * HHH-20782 @FilterJoinTable throws NPE when used with explicit HQL join
+    * HHH-20744 UnknownTableReferenceException when querying the non-owning side of a one-to-one-mapping with a pessimistic lock mode
+    * HHH-20675 @FilterDef(applyToLoadByKey = true) breaks JOIN FETCH of a JOINED-inheritance to-one association: subclass table joins dropped from FROM while their columns remain in SELECT (invalid SQL)
+    * HHH-20632 Regression: UnknownTableReferenceException fetching an @Any discriminator through treat() (since 7.4.0, HHH-16730)
+    * HHH-20343 HTE (Bulk ID) temporary table ignores PhysicalNamingStrategy when using SequenceGenerator
+    * HHH-19486 SQLGrammarException when joining to subquery with Case expression
+    * HHH-19485 AssertionError when using Subquery with Case in Criteria API
+    * HHH-18911 Usage of ConcreteProxy in lazy loaded ManyToOne reference
+
+** Deprecation
+    * HHH-20862 Deprecate reflection optimizer and related property access APIs
+
+** Task
+    * HHH-20851 Upgrade to ant 1.10.18
+    * HHH-20848 Drop meaningless "provided" dependency to ant in hibernate-envers
+
 Changes in 7.4.7.Final (August 30, 2026)
 ------------------------------------------------------------------------------------------------------------------------
 

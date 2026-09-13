@@ -898,6 +898,12 @@ public class SQLServerDialect extends AbstractTransactSQLDialect implements Curr
 	}
 
 	@Override
+	public boolean causesRollback(SQLException sqlException) {
+		// SQL Server rolls back the transaction chosen as a deadlock victim.
+		return extractErrorCode( sqlException ) == 1205;
+	}
+
+	@Override
 	@SPI({ IMPLEMENT, SUPPLY })
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
 		return (sqlException, message, sql) -> {

@@ -129,6 +129,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 
 
 import static org.hibernate.dialect.array.spi.ArraySupport.MultiValuedParameterStrategy.EXPANDED;
+import java.sql.SQLException;
 import java.sql.Types;
 import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
@@ -891,6 +892,12 @@ public class H2Dialect extends Dialect implements CurrentTemporalSupport, Tempor
 						extractUsingTemplate( "constraint violation: \"", ":", sqle.getMessage() );
 				default -> null;
 			} );
+
+	@Override
+	public boolean causesRollback(SQLException sqlException) {
+		// H2 rolls back the transaction chosen as a deadlock victim.
+		return extractErrorCode( sqlException ) == 40001;
+	}
 
 	@Override
 	@SPI({ IMPLEMENT, SUPPLY })

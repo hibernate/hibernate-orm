@@ -22,6 +22,12 @@ public class DB2LockingSupport extends LockingSupportParameterized implements Lo
 	private static final String LUW_SHARE_CLAUSE = " for read only with rs use and keep share locks";
 	private static final String LUW_UPDATE_CLAUSE = " for read only with rs use and keep update locks";
 	private static final String I_UPDATE_CLAUSE = " for update with rs";
+	/**
+	 * Waits for the outcome of an uncommitted write instead of reading the
+	 * currently committed row, regardless of the {@code CUR_COMMIT} setting,
+	 * without retaining any lock.
+	 */
+	private static final String LUW_CURRENT_READ_CLAUSE = " with cs wait for outcome";
 
 	/**
 	 * Builds a locking-strategy for DB2 LUW.
@@ -31,7 +37,11 @@ public class DB2LockingSupport extends LockingSupportParameterized implements Lo
 				RowLockStrategy.NONE,
 				supportsSkipLocked,
 				LUW_SHARE_CLAUSE,
-				LUW_UPDATE_CLAUSE
+				LUW_UPDATE_CLAUSE,
+				// with CUR_COMMIT enabled (the default for new databases), plain reads
+				// return the currently committed row instead of waiting
+				false,
+				LUW_CURRENT_READ_CLAUSE
 		);
 	}
 
@@ -43,7 +53,9 @@ public class DB2LockingSupport extends LockingSupportParameterized implements Lo
 				RowLockStrategy.NONE,
 				true,
 				I_UPDATE_CLAUSE,
-				I_UPDATE_CLAUSE
+				I_UPDATE_CLAUSE,
+				true,
+				null
 		);
 	}
 
@@ -56,7 +68,9 @@ public class DB2LockingSupport extends LockingSupportParameterized implements Lo
 				RowLockStrategy.NONE,
 				true,
 				LUW_SHARE_CLAUSE,
-				LUW_UPDATE_CLAUSE
+				LUW_UPDATE_CLAUSE,
+				true,
+				null
 		);
 	}
 
@@ -69,30 +83,45 @@ public class DB2LockingSupport extends LockingSupportParameterized implements Lo
 				RowLockStrategy.COLUMN,
 				true,
 				LUW_SHARE_CLAUSE,
-				LUW_UPDATE_CLAUSE
+				LUW_UPDATE_CLAUSE,
+				// readers wait for uncommitted updates even with currently-committed access
+				true,
+				null
 		);
 	}
 
 	private final boolean supportsSkipLocked;
 	private final String shareClause;
 	private final String updateClause;
+	private final String currentReadClause;
 
 	private DB2LockingSupport(
 			RowLockStrategy rowLockStrategy,
 			boolean supportsSkipLocked,
 			String shareClause,
-			String updateClause) {
+			String updateClause,
+			boolean readsWaitForUncommittedWrites,
+			String currentReadClause) {
 		super(
 				PessimisticLockStyle.CLAUSE,
 				rowLockStrategy,
 				false,
 				false,
 				supportsSkipLocked,
-				OuterJoinLockingType.FULL
+				OuterJoinLockingType.FULL,
+				readsWaitForUncommittedWrites
 		);
 		this.supportsSkipLocked = supportsSkipLocked;
 		this.shareClause = shareClause;
 		this.updateClause = updateClause;
+		this.currentReadClause = currentReadClause;
+	}
+
+	@Override
+	public String renderCurrentReadClause() {
+		return currentReadClause != null && !readsWaitForUncommittedWrites()
+				? currentReadClause
+				: super.renderCurrentReadClause();
 	}
 
 	@Override

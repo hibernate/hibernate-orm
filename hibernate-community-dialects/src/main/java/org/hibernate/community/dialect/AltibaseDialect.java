@@ -173,7 +173,9 @@ public class AltibaseDialect extends Dialect implements CurrentTemporalSupport, 
 			LockTimeoutType.QUERY,
 			LockTimeoutType.QUERY,
 			LockTimeoutType.NONE,
-			OuterJoinLockingType.UNSUPPORTED
+			OuterJoinLockingType.UNSUPPORTED,
+			// Altibase uses multiversion concurrency control
+			false
 	);
 
 	@SuppressWarnings("unused")

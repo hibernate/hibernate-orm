@@ -33,6 +33,7 @@ public class LockingSupportParameterized implements LockingSupport, LockingSuppo
 	private final LockTimeoutType supportsSkipLockedType;
 
 	private final OuterJoinLockingType outerJoinLockingType;
+	private final boolean readsWaitForUncommittedWrites;
 
 	public LockingSupportParameterized(
 			PessimisticLockStyle pessimisticLockStyle,
@@ -41,12 +42,24 @@ public class LockingSupportParameterized implements LockingSupport, LockingSuppo
 			LockTimeoutType noWaitType,
 			LockTimeoutType skipLockedType,
 			OuterJoinLockingType outerJoinLockingType) {
+		this( pessimisticLockStyle, rowLockStrategy, waitType, noWaitType, skipLockedType, outerJoinLockingType, true );
+	}
+
+	public LockingSupportParameterized(
+			PessimisticLockStyle pessimisticLockStyle,
+			RowLockStrategy rowLockStrategy,
+			LockTimeoutType waitType,
+			LockTimeoutType noWaitType,
+			LockTimeoutType skipLockedType,
+			OuterJoinLockingType outerJoinLockingType,
+			boolean readsWaitForUncommittedWrites) {
 		this.pessimisticLockStyle = pessimisticLockStyle;
 		this.rowLockStrategy = rowLockStrategy;
 		this.supportsWaitType = waitType;
 		this.supportsNoWaitType = noWaitType;
 		this.supportsSkipLockedType = skipLockedType;
 		this.outerJoinLockingType = outerJoinLockingType;
+		this.readsWaitForUncommittedWrites = readsWaitForUncommittedWrites;
 	}
 
 	public LockingSupportParameterized(
@@ -56,13 +69,25 @@ public class LockingSupportParameterized implements LockingSupport, LockingSuppo
 			boolean supportsNoWait,
 			boolean supportsSkipLocked,
 			OuterJoinLockingType outerJoinLockingType) {
+		this( pessimisticLockStyle, rowLockStrategy, supportsWait, supportsNoWait, supportsSkipLocked, outerJoinLockingType, true );
+	}
+
+	public LockingSupportParameterized(
+			PessimisticLockStyle pessimisticLockStyle,
+			RowLockStrategy rowLockStrategy,
+			boolean supportsWait,
+			boolean supportsNoWait,
+			boolean supportsSkipLocked,
+			OuterJoinLockingType outerJoinLockingType,
+			boolean readsWaitForUncommittedWrites) {
 		this(
 				pessimisticLockStyle,
 				rowLockStrategy,
 				supportsWait ? QUERY : NONE,
 				supportsNoWait ? QUERY : NONE,
 				supportsSkipLocked ? QUERY : NONE,
-				outerJoinLockingType
+				outerJoinLockingType,
+				readsWaitForUncommittedWrites
 		);
 	}
 
@@ -132,6 +157,11 @@ public class LockingSupportParameterized implements LockingSupport, LockingSuppo
 	@Override
 	public OuterJoinLockingType getOuterJoinLockingType() {
 		return outerJoinLockingType;
+	}
+
+	@Override
+	public boolean readsWaitForUncommittedWrites() {
+		return readsWaitForUncommittedWrites;
 	}
 
 	@Override

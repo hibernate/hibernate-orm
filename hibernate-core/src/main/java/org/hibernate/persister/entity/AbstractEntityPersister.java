@@ -2221,7 +2221,18 @@ public abstract class AbstractEntityPersister
 
 
 	/**
-	 * Generate the SQL that selects the version number by id
+	 * Generate the SQL that selects the version number by id.
+	 * <p>
+	 * The select is used to verify, just before the transaction commits, that
+	 * the version of an entity locked in {@link LockMode#OPTIMISTIC} mode is
+	 * still current, and so it is rendered as a "current read": on a database
+	 * where a plain read does not wait for the outcome of a concurrent
+	 * uncommitted write to the row, and might return a stale snapshot, the
+	 * dialect renders whatever makes the read wait for any concurrent writer
+	 * and see the current version.
+	 *
+	 * @see SimpleSelect#setCurrentRead(boolean)
+	 * @see org.hibernate.dialect.lock.spi.LockingSupport.Metadata#readsWaitForUncommittedWrites()
 	 */
 	public String generateSelectVersionString() {
 		final var select = new SimpleSelect( getFactory() ).setTableName( getVersionedTableName() );
@@ -2234,7 +2245,7 @@ public abstract class AbstractEntityPersister
 		if ( getFactory().getSessionFactoryOptions().isCommentsEnabled() ) {
 			select.setComment( "get version " + getEntityName() );
 		}
-		return select.addRestriction( rootTableKeyColumnNames ).toStatementString();
+		return select.setCurrentRead( true ).addRestriction( rootTableKeyColumnNames ).toStatementString();
 	}
 
 	protected GeneratedValuesProcessor createGeneratedValuesProcessor(

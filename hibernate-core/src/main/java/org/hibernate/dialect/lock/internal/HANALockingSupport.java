@@ -46,7 +46,9 @@ public class HANALockingSupport extends LockingSupportParameterized implements L
 				supportsWait,
 				supportsWait,
 				supportsSkipLocked,
-				OuterJoinLockingType.IDENTIFIED
+				OuterJoinLockingType.IDENTIFIED,
+				// HANA uses multiversion concurrency control
+				false
 		);
 		this.supportsWait = supportsWait;
 		this.supportsSkipLocked = supportsSkipLocked;

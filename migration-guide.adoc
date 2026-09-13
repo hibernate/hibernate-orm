@@ -189,6 +189,31 @@ session.getTransaction().commit();
 ----
 
 
+[[optimistic-lock-mode-version-check]]
+=== Version check for `LockModeType.OPTIMISTIC`
+
+For an entity locked in `OPTIMISTIC` mode (or, equivalently, `READ`), Hibernate verifies just before the
+transaction commits that the version of the entity in the database is still the version which was read.
+On a database with multiversion concurrency control, or with "currently committed" read semantics, a plain
+`select` does not wait for a concurrent transaction which has modified the row but not yet committed, and
+under snapshot isolation returns the version as of the start of the transaction, so the check could miss a
+concurrent modification.
+
+On such databases the version check is now a "current read" which waits for the outcome of any concurrent
+write to the row and fails if the version changed. On PostgreSQL, MySQL, MariaDB, Oracle, H2, HANA and
+CockroachDB, and with the community dialects for GaussDB, TiDB, Firebird, Altibase, CUBRID, TimesTen and
+SingleStore, it uses the same syntax as `PESSIMISTIC_READ` (`for share`, `lock in share mode`, or
+`for update` where the database has no share lock). On SQL Server it uses the `readcommittedlock` table
+hint, and on DB2 LUW the `wait for outcome` clause, since on those databases whether a plain read waits
+depends on configuration (`READ_COMMITTED_SNAPSHOT` and `CUR_COMMIT` respectively) which the dialect cannot
+detect; neither form retains a lock beyond the statement. Databases whose plain reads already wait for
+uncommitted writes are unaffected.
+
+A custom `Dialect` for a database with multiversion reads should report this via
+`LockingSupport.Metadata#readsWaitForUncommittedWrites()`, and may customize the rendering via
+`LockingSupport#renderCurrentReadTableHint()` and `LockingSupport#renderCurrentReadClause()`.
+
+
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // XSD changes
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

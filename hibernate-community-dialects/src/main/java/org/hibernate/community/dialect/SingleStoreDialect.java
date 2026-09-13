@@ -266,7 +266,9 @@ public class SingleStoreDialect extends Dialect implements CurrentTemporalSuppor
 				LockTimeoutType.NONE,
 				LockTimeoutType.NONE,
 				LockTimeoutType.NONE,
-				OuterJoinLockingType.UNSUPPORTED
+				OuterJoinLockingType.UNSUPPORTED,
+				// SingleStore uses multiversion concurrency control
+				false
 		);
 	}
 

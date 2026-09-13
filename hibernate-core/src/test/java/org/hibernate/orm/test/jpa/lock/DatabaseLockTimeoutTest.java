@@ -14,6 +14,8 @@ import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.junit.jupiter.api.Test;
 
+import java.sql.Connection;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
@@ -38,14 +40,29 @@ class DatabaseLockTimeoutTest {
 				transaction.begin();
 				try {
 					final var managed = em.find( Lockable.class, locked.getId() );
-					scope.inTransaction( holder -> {
-						holder.find( Lockable.class, locked.getId(), LockModeType.PESSIMISTIC_WRITE );
-						// Use H2's configured database timeout without supplying a JPA timeout hint.
-						final var exception = assertThrows( LockTimeoutException.class,
-								() -> em.lock( managed, LockModeType.PESSIMISTIC_WRITE ) );
-						assertSame( managed, exception.getObject() );
-						assertInstanceOf( PessimisticEntityLockException.class, exception.getCause() );
-						assertFalse( transaction.getRollbackOnly() );
+					em.runWithConnection( (Connection connection) -> {
+						try ( var statement = connection.createStatement() ) {
+							final int originalTimeout;
+							try ( var result = statement.executeQuery( "call lock_timeout()" ) ) {
+								result.next();
+								originalTimeout = result.getInt( 1 );
+							}
+							statement.executeUpdate( "set lock_timeout 100" );
+							try {
+								scope.inTransaction( holder -> {
+									holder.find( Lockable.class, locked.getId(), LockModeType.PESSIMISTIC_WRITE );
+									// Use the connection's timeout without supplying a JPA timeout hint.
+									final var exception = assertThrows( LockTimeoutException.class,
+											() -> em.lock( managed, LockModeType.PESSIMISTIC_WRITE ) );
+									assertSame( managed, exception.getObject() );
+									assertInstanceOf( PessimisticEntityLockException.class, exception.getCause() );
+									assertFalse( transaction.getRollbackOnly() );
+								} );
+							}
+							finally {
+								statement.executeUpdate( "set lock_timeout " + originalTimeout );
+							}
+						}
 					} );
 					em.find( Lockable.class, other.getId() ).setName( "updated after timeout" );
 					transaction.commit();

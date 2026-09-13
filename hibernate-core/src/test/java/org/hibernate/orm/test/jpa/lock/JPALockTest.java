@@ -4,6 +4,10 @@
  */
 package org.hibernate.orm.test.jpa.lock;
 
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.OptimisticLockException;
+import jakarta.persistence.RollbackException;
+
 import org.hibernate.LockMode;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
@@ -21,8 +25,12 @@ import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 
 /**
@@ -79,10 +87,11 @@ public class JPALockTest extends AbstractJPATest {
 	 * <p>
 	 * EJB3 LockModeType.READ actually maps to the Hibernate LockMode.OPTIMISTIC
 	 */
-	@Test
+	@ParameterizedTest
+	@EnumSource(value = LockModeType.class, names = { "READ", "OPTIMISTIC" })
 	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "Cockroach uses SERIALIZABLE by default and fails to acquire a write lock after a TX in between committed changes to a row")
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsConcurrentTransactions.class)
-	public void testLockModeTypeRead() {
+	public void testLockModeTypeRead(LockModeType mode) {
 		if ( !readCommittedIsolationMaintained( "ejb3 lock tests" ) ) {
 			return;
 		}
@@ -113,13 +122,16 @@ public class JPALockTest extends AbstractJPATest {
 			Transaction t2 = s2.beginTransaction();
 			Item item2 = s2.get( Item.class, itemId );
 			assertEquals( initialName, item2.getName(), "isolation not maintained" );
+			s2.lock( item2, mode );
+			assertEquals( LockModeType.OPTIMISTIC, s2.getLockMode( item2 ) );
 
 			s1.getTransaction().commit();
 			s1.close();
 
 			item2 = s2.get( Item.class, itemId );
 			assertEquals( initialName, item2.getName(), "repeatable read not maintained" );
-			t2.commit();
+			final var failure = assertThrows( RollbackException.class, t2::commit );
+			assertInstanceOf( OptimisticLockException.class, failure.getCause() );
 			s2.close();
 		}
 		finally {

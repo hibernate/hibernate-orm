@@ -4,6 +4,10 @@
  */
 package org.hibernate.community.dialect;
 
+import java.sql.SQLException;
+
+import static org.hibernate.jdbc.spi.JdbcExceptionHelper.extractSqlStateClassCode;
+
 import org.hibernate.dialect.type.spi.DirectJavaTimeJdbcSupport;
 import org.hibernate.dialect.type.spi.DirectJavaTimeJdbcSupports;
 import org.hibernate.dialect.identifier.spi.KeywordRegistration;
@@ -682,6 +686,12 @@ public class DerbyLegacyDialect extends Dialect implements CurrentTemporalSuppor
 			}
 			return null;
 		} );
+	}
+
+	@Override
+	public boolean causesRollback(SQLException sqlException) {
+		// Derby reports transaction rollback using SQL state class 40.
+		return "40".equals( extractSqlStateClassCode( sqlException ) );
 	}
 
 	@Override

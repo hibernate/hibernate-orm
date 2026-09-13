@@ -4,6 +4,10 @@
  */
 package org.hibernate.community.dialect;
 
+import java.sql.SQLException;
+
+import static org.hibernate.jdbc.spi.JdbcExceptionHelper.extractSqlStateClassCode;
+
 import org.hibernate.dialect.temporaltype.spi.TemporalOperationSupport;
 import org.hibernate.dialect.temporaltype.spi.TemporalOperationSupports;
 
@@ -530,6 +534,12 @@ public class IngresDialect extends Dialect implements CurrentTemporalSupport, Te
 	@Override
 	public RowValueSupport getRowValueSupport() {
 		return RowValueSupport.NONE;
+	}
+
+	@Override
+	public boolean causesRollback(SQLException sqlException) {
+		// Transaction rollback is reported using SQL state class 40.
+		return "40".equals( extractSqlStateClassCode( sqlException ) );
 	}
 
 }

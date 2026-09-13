@@ -1143,6 +1143,12 @@ public class CockroachLegacyDialect extends Dialect implements CurrentTemporalSu
 			} );
 
 	@Override
+	public boolean causesRollback(SQLException sqlException) {
+		// A statement failure invalidates the transaction.
+		return true;
+	}
+
+	@Override
 	@SPI({ IMPLEMENT, SUPPLY })
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
 		return (sqlException, message, sql) -> {

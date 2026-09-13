@@ -653,6 +653,12 @@ public class SybaseASELegacyDialect extends SybaseLegacyDialect implements Curre
 			} );
 
 	@Override
+	public boolean causesRollback(SQLException sqlException) {
+		// ASE rolls back the transaction chosen as a deadlock victim.
+		return extractErrorCode( sqlException ) == 1205;
+	}
+
+	@Override
 	@SPI({ IMPLEMENT, SUPPLY })
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
 		if ( getVersion().isBefore( 15, 7 ) ) {

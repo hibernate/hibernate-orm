@@ -4,6 +4,8 @@
  */
 package org.hibernate.community.dialect;
 
+import java.sql.SQLException;
+
 import org.hibernate.dialect.temporaltype.spi.TemporalValueSemantics;
 
 import org.hibernate.dialect.temporaltype.spi.CurrentTimestampSelection;
@@ -1135,6 +1137,12 @@ public class PostgreSQLLegacyDialect extends Dialect implements CurrentTemporalS
 				}
 				return null;
 			} );
+
+	@Override
+	public boolean causesRollback(SQLException sqlException) {
+		// A statement failure invalidates the transaction.
+		return true;
+	}
 
 	@Override
 	@SPI({ IMPLEMENT, SUPPLY })

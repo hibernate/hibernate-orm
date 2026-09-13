@@ -637,6 +637,15 @@ public class HANADialect extends Dialect implements CurrentTemporalSupport, Temp
 	}
 
 	@Override
+	public boolean causesRollback(SQLException sqlException) {
+		// A lock wait timeout, unavailable resource, or deadlock rolls back the transaction. NOWAIT does not.
+		return switch ( extractErrorCode( sqlException ) ) {
+			case 131, 132, 133 -> true;
+			default -> false;
+		};
+	}
+
+	@Override
 	@SPI({ IMPLEMENT, SUPPLY })
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
 		return (sqlException, message, sql) ->

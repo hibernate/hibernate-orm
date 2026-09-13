@@ -100,7 +100,7 @@ public class ExceptionConverterImpl implements ExceptionConverter {
 		}
 		else if ( exception instanceof org.hibernate.QueryTimeoutException queryTimeoutException ) {
 			final var converted =
-					isMarkedForRollback( queryTimeoutException )
+					causesRollback( queryTimeoutException )
 							// per spec, we must throw this exception if the tx was aborted
 							? new PersistenceException( exception.getMessage(), exception )
 							// per spec, we only throw this exception if the tx is not aborted
@@ -231,15 +231,10 @@ public class ExceptionConverterImpl implements ExceptionConverter {
 			return new OptimisticLockException( message, lockException, entity );
 		}
 		else if ( exception instanceof PessimisticEntityLockException lockException ) {
-			final var cause = lockException.getCause();
-			return !isMarkedForRollback( cause )
-				// A database-default timeout need not have been requested via LockOptions,
-				// but assume a lock timeout occurred if a timeout or NO WAIT was specified
-				&& ( cause instanceof org.hibernate.exception.LockTimeoutException || hasTimeout( lockOptions ) )
-					// per spec, we only throw this exception if the tx is not aborted
-					? new LockTimeoutException( message, lockException, entity )
-					// per spec, we must throw this exception if the tx was aborted
-					: new PessimisticLockException( message, lockException, entity );
+			// JPA distinguishes transaction rollback from statement rollback, regardless of the requested timeout.
+			return causesRollback( lockException.getCause() )
+					? new PessimisticLockException( message, lockException, entity )
+					: new LockTimeoutException( message, lockException, entity );
 		}
 		else {
 			throw new AssertionFailure( "Unrecognized exception type" );
@@ -248,30 +243,12 @@ public class ExceptionConverterImpl implements ExceptionConverter {
 
 	protected PersistenceException wrapLockException(org.hibernate.PessimisticLockException exception, LockOptions lockOptions) {
 		final String message = exception.getMessage();
-		final boolean markedForRollback = isMarkedForRollback( exception );
-		if ( exception instanceof org.hibernate.exception.LockTimeoutException ) {
-			return markedForRollback
-					// per spec, we must throw this exception if the tx was aborted
-					? new PessimisticLockException( message, exception )
-					// per spec, we only throw this exception if the tx is not aborted
-					: new LockTimeoutException( message, exception );
-		}
-		else {
-			// assume a lock timeout occurred if a timeout or NO WAIT was specified
-			return !markedForRollback && hasTimeout( lockOptions )
-					// per spec, we only throw this exception if the tx is not aborted
-					? new LockTimeoutException( message, exception )
-					// per spec, we must throw this exception if the tx was aborted
-					: new PessimisticLockException( message, exception );
-		}
+		return causesRollback( exception )
+				? new PessimisticLockException( message, exception )
+				: new LockTimeoutException( message, exception );
 	}
 
-	private static boolean hasTimeout(LockOptions lockOptions) {
-		return lockOptions != null
-			&& lockOptions.getTimeout().milliseconds() > -1;
-	}
-
-	private boolean isMarkedForRollback(JDBCException exception) {
+	private boolean causesRollback(JDBCException exception) {
 		return session.getJdbcServices().getDialect().causesRollback( exception.getSQLException() );
 	}
 

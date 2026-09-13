@@ -4,6 +4,10 @@
  */
 package org.hibernate.community.dialect;
 
+import java.sql.SQLException;
+
+import static org.hibernate.jdbc.spi.JdbcExceptionHelper.extractSqlStateClassCode;
+
 import org.hibernate.dialect.schema.spi.ConstraintDropMode;
 import org.hibernate.dialect.schema.spi.SchemaDropSupport;
 
@@ -392,6 +396,12 @@ public class MimerSQLDialect extends Dialect implements CurrentTemporalSupport, 
 	@Override
 	public RowValueSupport getRowValueSupport() {
 		return RowValueSupport.NONE;
+	}
+
+	@Override
+	public boolean causesRollback(SQLException sqlException) {
+		// Transaction validation failures use SQL state class 40.
+		return "40".equals( extractSqlStateClassCode( sqlException ) );
 	}
 
 }

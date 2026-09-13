@@ -4,6 +4,10 @@
  */
 package org.hibernate.dialect;
 
+import java.sql.SQLException;
+
+import static org.hibernate.jdbc.spi.JdbcExceptionHelper.extractErrorCode;
+
 import java.time.LocalDate;
 import org.hibernate.dialect.temporaltype.spi.TemporalValueSemantics;
 
@@ -1436,6 +1440,12 @@ public class SpannerDialect extends Dialect implements CurrentTemporalSupport, T
 	@Override
 	public TupleCountSupport getTupleCountSupport() {
 		return TupleCountSupport.NONE;
+	}
+
+	@Override
+	public boolean causesRollback(SQLException sqlException) {
+		// The JDBC driver reports an aborted transaction using gRPC status code 10.
+		return extractErrorCode( sqlException ) == 10;
 	}
 
 	@Override

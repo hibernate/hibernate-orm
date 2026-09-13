@@ -3341,6 +3341,8 @@ public abstract class Dialect implements ConversionContext, AlterTableSupport,
 	/// Inspect the original database exception when the policy depends on its
 	/// error code, SQL state, or subtype. This decision is independent of how
 	/// Hibernate converts the exception.
+	/// This determines both JDBC rollback state and whether a pessimistic lock
+	/// failure becomes a JPA `PessimisticLockException` or `LockTimeoutException`.
 	///
 	/// @param sqlException the original database exception
 	/// @return `true` when the failed statement invalidates the transaction

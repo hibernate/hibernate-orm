@@ -436,6 +436,18 @@ abstract public class DialectFeatureChecks {
 		}
 	}
 
+	/**
+	 * Whether a plain read returns the last committed state of a row without waiting
+	 * for a concurrent uncommitted write, as on databases with multiversion reads.
+	 *
+	 * @see org.hibernate.dialect.lock.spi.LockingSupport.Metadata#readsWaitForUncommittedWrites()
+	 */
+	public static class ReadsDoNotWaitForUncommittedWrites implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return !dialect.getLockingSupport().getMetadata().readsWaitForUncommittedWrites();
+		}
+	}
+
 	public static class SupportsNoWait implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return dialect.getLockingSupport()

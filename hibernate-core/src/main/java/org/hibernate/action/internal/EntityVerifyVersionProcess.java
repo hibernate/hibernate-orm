@@ -14,6 +14,15 @@ import static org.hibernate.pretty.MessageHelper.infoString;
 /**
  * A {@link BeforeTransactionCompletionProcess} impl to verify an entity
  * version as part of before-transaction-completion processing.
+ * <p>
+ * The current version is read from the database using the persister's
+ * version select, which is rendered as a "current read": on databases
+ * where a plain read would not wait for a concurrent uncommitted write
+ * to the row, the dialect renders whatever makes the read wait and see
+ * the current version rather than a snapshot.
+ *
+ * @see org.hibernate.dialect.lock.spi.LockingSupport#renderCurrentReadClause()
+ * @see org.hibernate.dialect.lock.spi.LockingSupport.Metadata#readsWaitForUncommittedWrites()
  *
  * @author Scott Marlow
  */

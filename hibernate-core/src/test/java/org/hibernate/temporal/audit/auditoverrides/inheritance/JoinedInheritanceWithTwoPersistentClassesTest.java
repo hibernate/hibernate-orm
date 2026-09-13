@@ -71,7 +71,7 @@ public class JoinedInheritanceWithTwoPersistentClassesTest {
 		String str3;
 	}
 
-	@Entity
+	@Entity(name = "SubSub")
 	@Audited.Overrides( {
 			@Audited.Override(name = "str3", isAudited = true), // <-- revokes initial exclusion of str3
 	} )
@@ -102,6 +102,13 @@ public class JoinedInheritanceWithTwoPersistentClassesTest {
 			subEntity.str1 = "v";
 			subEntity.str2 = "w";
 			s.persist( subEntity );
+
+			var subsub = new SubSub();
+			subsub.id = 2;
+			subsub.str1 = "v";
+			subsub.str2 = "w";
+			subsub.str3 = "x";
+			s.persist( subsub );
 		} );
 
 		scope.inTransaction( s -> {
@@ -111,9 +118,15 @@ public class JoinedInheritanceWithTwoPersistentClassesTest {
 			assertNull( auditedBase.str1 );
 			assertNotNull( auditedBase.str2 );
 
-			var auditedSub = statelessSession.createSelectionQuery("from Sub", Sub.class).getSingleResult();
+			var auditedSub = statelessSession.createSelectionQuery("from Sub s where Type(s) = Sub", Sub.class).getSingleResult();
 			assertNotNull( auditedSub.str1 );
 			assertNull( auditedSub.str2 );
+			assertNull( auditedSub.str3 );
+
+			var auditedSubSub = statelessSession.createSelectionQuery("from SubSub", SubSub.class).getSingleResult();
+			assertNotNull( auditedSubSub.str1 );
+			assertNull( auditedSubSub.str2 );
+			assertNotNull( auditedSubSub.str3 );
 		} );
 
 

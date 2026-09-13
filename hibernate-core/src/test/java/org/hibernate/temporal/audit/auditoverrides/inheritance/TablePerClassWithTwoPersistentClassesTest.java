@@ -63,7 +63,7 @@ public class TablePerClassWithTwoPersistentClassesTest {
 		@Id
 		long id;
 
-		//@Audited.Excluded //TODO uncomment when https://github.com/hibernate/hibernate-orm/pull/13382 is merged
+		@Audited.Excluded
 		String str1;
 
 		String str2;
@@ -90,9 +90,9 @@ public class TablePerClassWithTwoPersistentClassesTest {
 	public void test(DomainModelScope domainModelScope, SessionFactoryScope scope) {
 		var tables = domainModelScope.getDomainModel().collectTableMappings();
 		assertTable( tables, "Base_AUD", table -> {
-			//assertFalse( table.containsColumn( new Column( "str1" ) ) ); //TODO uncomment when https://github.com/hibernate/hibernate-orm/pull/13382 is merged
-			assertTrue( table.containsColumn( new Column( "str1" ) ) );
+			assertFalse( table.containsColumn( new Column( "str1" ) ) );
 			assertTrue( table.containsColumn( new Column( "str2" ) ) );
+			assertFalse( table.containsColumn( new Column( "str3" ) ) );
 		} );
 
 		assertTable( tables, "Sub_AUD", table -> {
@@ -119,19 +119,35 @@ public class TablePerClassWithTwoPersistentClassesTest {
 			subEntity.str1 = "v";
 			subEntity.str2 = "w";
 			s.persist( subEntity );
+
+			var subSubEntity = new Sub();
+			subSubEntity.id = 2;
+			subSubEntity.str1 = "v";
+			subSubEntity.str2 = "w";
+			subSubEntity.str3 = "x";
+			s.persist( subSubEntity );
 		} );
 
 		scope.inTransaction( s -> {
 			var statelessSession = s.getSessionFactory().withStatelessOptions().atChangeset( AuditLog.ALL_CHANGESETS )
 					.openStatelessSession();
-			var auditedBase = statelessSession.createSelectionQuery("from Base b where Type(b) = Base", Base.class).getSingleResult();
-			//assertNull( auditedBase.str1 ); //TODO uncomment when https://github.com/hibernate/hibernate-orm/pull/13382 is merged
-			assertNotNull( auditedBase.str1 );
-			assertNotNull( auditedBase.str2 );
+			var auditedBase = statelessSession.createSelectionQuery("from Base", Base.class).getResultList();
+			if ( auditedBase instanceof Base base ) {
+				assertNull( base.str1 );
+				assertNotNull( base.str2 );
+			}
 
-			var auditedSub = statelessSession.createSelectionQuery("from Sub", Sub.class).getSingleResult();
-			assertNotNull( auditedSub.str1 );
-			assertNull( auditedSub.str2 );
+			if ( auditedBase instanceof Sub sub ) {
+				assertNotNull( sub.str1 );
+				assertNull( sub.str2 );
+				assertNull( sub.str3 );
+			}
+
+			if ( auditedBase instanceof SubSub subsub ) {
+				assertNotNull( subsub.str1 );
+				assertNull( subsub.str2 );
+				assertNotNull( subsub.str3 );
+			}
 		} );
 
 	}

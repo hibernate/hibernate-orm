@@ -4,6 +4,10 @@
  */
 package org.hibernate.community.dialect;
 
+import java.sql.SQLException;
+
+import static org.hibernate.jdbc.spi.JdbcExceptionHelper.extractErrorCode;
+
 import org.hibernate.SPI;
 import static org.hibernate.SPI.Role.USE;
 
@@ -331,6 +335,12 @@ public class MaxDBDialect extends Dialect {
 	@Override
 	public RowValueSupport getRowValueSupport() {
 		return RowValueSupport.NONE;
+	}
+
+	@Override
+	public boolean causesRollback(SQLException sqlException) {
+		// A deadlock or transaction timeout causes an implicit rollback reported as -911.
+		return extractErrorCode( sqlException ) == -911;
 	}
 
 }

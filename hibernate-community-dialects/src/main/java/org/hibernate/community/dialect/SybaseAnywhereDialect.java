@@ -4,6 +4,10 @@
  */
 package org.hibernate.community.dialect;
 
+import java.sql.SQLException;
+
+import static org.hibernate.jdbc.spi.JdbcExceptionHelper.extractSqlStateClassCode;
+
 import org.hibernate.dialect.schema.spi.ConstraintDropMode;
 import org.hibernate.dialect.schema.spi.SchemaDropSupport;
 
@@ -224,6 +228,12 @@ public class SybaseAnywhereDialect extends AbstractSybaseDialect implements Curr
 				.tableExpression( tableExpression )
 				.selectOnlyFromClause( " from " + tableExpression )
 				.build();
+	}
+
+	@Override
+	public boolean causesRollback(SQLException sqlException) {
+		// With the default rollback_on_deadlock setting, deadlocks abort the transaction.
+		return "40".equals( extractSqlStateClassCode( sqlException ) );
 	}
 
 }

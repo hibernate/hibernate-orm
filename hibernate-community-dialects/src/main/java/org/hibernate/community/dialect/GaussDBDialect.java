@@ -4,6 +4,8 @@
  */
 package org.hibernate.community.dialect;
 
+import java.sql.SQLException;
+
 import org.hibernate.dialect.temporaltype.spi.TemporalValueSemantics;
 
 import org.hibernate.dialect.temporaltype.spi.CurrentTimestampSelection;
@@ -809,6 +811,11 @@ public class GaussDBDialect extends Dialect implements CurrentTemporalSupport, T
 				}
 				return null;
 			} );
+
+	@Override
+	public boolean causesRollback(SQLException sqlException) {
+		return true;
+	}
 
 	@Override
 	@SPI({ IMPLEMENT, SUPPLY })

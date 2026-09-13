@@ -125,6 +125,8 @@ import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+
+import static org.hibernate.jdbc.spi.JdbcExceptionHelper.extractErrorCode;
 import java.sql.Types;
 import java.util.List;
 
@@ -1125,6 +1127,12 @@ public class MySQLLegacyDialect extends Dialect implements CurrentTemporalSuppor
 	@Override
 	public LockingSupport getLockingSupport() {
 		return lockingSupport;
+	}
+
+	@Override
+	public boolean causesRollback(SQLException sqlException) {
+		// InnoDB rolls back the transaction chosen as a deadlock victim.
+		return extractErrorCode( sqlException ) == 1213;
 	}
 
 	@Override

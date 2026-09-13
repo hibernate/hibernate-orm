@@ -4,6 +4,10 @@
  */
 package org.hibernate.community.dialect;
 
+import java.sql.SQLException;
+
+import static org.hibernate.jdbc.spi.JdbcExceptionHelper.extractErrorCode;
+
 import org.hibernate.dialect.temporaltype.spi.TemporalValueSemantics;
 
 import org.hibernate.dialect.temporaltype.spi.CurrentTimestampSelection;
@@ -927,6 +931,12 @@ public class H2LegacyDialect extends Dialect implements CurrentTemporalSupport, 
 				}
 				return null;
 			} );
+
+	@Override
+	public boolean causesRollback(SQLException sqlException) {
+		// A deadlock rolls back the transaction, while a lock timeout does not.
+		return extractErrorCode( sqlException ) == 40001;
+	}
 
 	@Override
 	@SPI({ IMPLEMENT, SUPPLY })

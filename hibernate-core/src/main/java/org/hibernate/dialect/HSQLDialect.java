@@ -97,10 +97,12 @@ import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractors;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import java.sql.SQLException;
 import java.sql.Types;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.jdbc.spi.JdbcExceptionHelper.extractErrorCode;
+import static org.hibernate.jdbc.spi.JdbcExceptionHelper.extractSqlState;
 import static org.hibernate.type.SqlTypes.DOUBLE;
 import static org.hibernate.type.SqlTypes.NCLOB;
 
@@ -558,6 +560,12 @@ public class HSQLDialect extends Dialect implements CurrentTemporalSupport, Temp
 						case -10 -> extractUsingTemplate( " column: ", "\n", sqle.getMessage() );
 						default -> null;
 					});
+
+	@Override
+	public boolean causesRollback(SQLException sqlException) {
+		// A transaction conflict is reported as 40001. A statement timeout uses 40502 instead.
+		return "40001".equals( extractSqlState( sqlException ) );
+	}
 
 	@Override
 	@SPI({ IMPLEMENT, SUPPLY })

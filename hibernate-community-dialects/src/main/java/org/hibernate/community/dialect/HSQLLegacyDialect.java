@@ -4,6 +4,10 @@
  */
 package org.hibernate.community.dialect;
 
+import java.sql.SQLException;
+
+import static org.hibernate.jdbc.spi.JdbcExceptionHelper.extractSqlState;
+
 import org.hibernate.dialect.identifier.spi.KeywordRegistration;
 
 import java.util.List;
@@ -604,6 +608,12 @@ public class HSQLLegacyDialect extends Dialect implements CurrentTemporalSupport
 				}
 				return null;
 			} );
+
+	@Override
+	public boolean causesRollback(SQLException sqlException) {
+		// A transaction conflict uses 40001, while a statement timeout uses 40502.
+		return "40001".equals( extractSqlState( sqlException ) );
+	}
 
 	@Override
 	@SPI({ IMPLEMENT, SUPPLY })

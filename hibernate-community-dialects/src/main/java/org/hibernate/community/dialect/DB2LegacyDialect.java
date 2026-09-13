@@ -4,6 +4,10 @@
  */
 package org.hibernate.community.dialect;
 
+import java.sql.SQLException;
+
+import static org.hibernate.jdbc.spi.JdbcExceptionHelper.extractErrorCode;
+
 import org.hibernate.dialect.type.spi.DirectJavaTimeJdbcSupport;
 import org.hibernate.dialect.type.spi.DirectJavaTimeJdbcSupports;
 import org.hibernate.dialect.identifier.spi.KeywordRegistration;
@@ -1207,6 +1211,12 @@ public class DB2LegacyDialect extends Dialect implements CurrentTemporalSupport,
 					}
 				}
 		);
+	}
+
+	@Override
+	public boolean causesRollback(SQLException sqlException) {
+		// SQL0911N reports a transaction rollback for a deadlock or a lock timeout.
+		return extractErrorCode( sqlException ) == -911;
 	}
 
 	@Override

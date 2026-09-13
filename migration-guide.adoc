@@ -199,6 +199,13 @@ loaded outside a transaction or retained in the persistence context after an ear
 This behavior is consistent with `EntityManager.lock()`. Queries which request no lock are unaffected.
 
 
+[[pessimistic-lock-failure-exceptions]]
+=== Exceptions for pessimistic lock failures
+
+Hibernate now more consistently chooses between `PessimisticLockException` and `LockTimeoutException`
+based on whether the database locking failure aborts the transaction or only the statement.
+
+
 [[optimistic-lock-mode-version-check]]
 === Version check for `LockModeType.OPTIMISTIC`
 

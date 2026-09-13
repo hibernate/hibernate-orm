@@ -4,6 +4,10 @@
  */
 package org.hibernate.community.dialect;
 
+import java.sql.SQLException;
+
+import static org.hibernate.jdbc.spi.JdbcExceptionHelper.extractErrorCode;
+
 import org.hibernate.dialect.identifier.spi.KeywordRegistration;
 
 import org.hibernate.dialect.temporaltype.spi.TemporalOperationSupport;
@@ -571,6 +575,15 @@ public class TeradataDialect extends Dialect implements TemporalOperationSupport
 	 */
 	public List<String> renderCommands(TruncateRequest request) {
 		return request.tableNames().stream().map( name -> "delete from " + name + " all" ).toList();
+	}
+
+	@Override
+	public boolean causesRollback(SQLException sqlException) {
+		// Deadlocks, transaction timeouts, and queue table lock conflicts abort the transaction.
+		return switch ( extractErrorCode( sqlException ) ) {
+			case 2631, 3111, 3127 -> true;
+			default -> false;
+		};
 	}
 
 }

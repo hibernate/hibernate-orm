@@ -4,6 +4,10 @@
  */
 package org.hibernate.community.dialect;
 
+import java.sql.SQLException;
+
+import static org.hibernate.jdbc.spi.JdbcExceptionHelper.extractErrorCode;
+
 import org.hibernate.dialect.identifier.spi.KeywordRegistration;
 
 import org.hibernate.dialect.temporaltype.spi.CurrentTimestampSelection;
@@ -886,6 +890,12 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect implement
 					}
 				}
 		);
+	}
+
+	@Override
+	public boolean causesRollback(SQLException sqlException) {
+		// SQL Server rolls back the transaction chosen as a deadlock victim.
+		return extractErrorCode( sqlException ) == 1205;
 	}
 
 	@Override

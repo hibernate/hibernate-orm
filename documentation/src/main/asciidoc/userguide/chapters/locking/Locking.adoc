@@ -315,7 +315,7 @@ Jakarta Persistence comes with its own {jpaJavadocUrlPrefix}LockModeType.html[`L
 |`LockModeType`|`LockMode`|Description
 
 |`NONE`|`NONE` |The absence of a lock. All objects switch to this lock mode at the end of a transaction. Objects associated with the session via a call to `update()` or `saveOrUpdate()` also start out in this lock mode.
-|`READ` and `OPTIMISTIC`|`READ` | The entity version is checked towards the end of the currently running transaction.
+|`READ` and `OPTIMISTIC`|`READ` | The entity version is checked towards the end of the currently running transaction. On databases where a plain read would not wait for a concurrent uncommitted write to the row, the check is performed as a locking read, so that it sees the current version.
 |`WRITE` and `OPTIMISTIC_FORCE_INCREMENT`|`WRITE` | The entity version is incremented automatically even if the entity has not changed.
 |`PESSIMISTIC_FORCE_INCREMENT`|`PESSIMISTIC_FORCE_INCREMENT` | The entity is locked pessimistically and its version is incremented automatically even if the entity has not changed.
 |`PESSIMISTIC_READ`|`PESSIMISTIC_READ` | The entity is locked pessimistically using a shared lock if the database supports such a feature. Otherwise, an explicit lock is used.

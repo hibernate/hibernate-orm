@@ -48,6 +48,7 @@ public class LockingSupportSimple implements LockingSupport, LockingSupport.Meta
 	private final LockTimeoutType lockTimeoutType;
 	private final OuterJoinLockingType joinLockingType;
 	private final ConnectionLockTimeoutStrategy connectionStrategy;
+	private final boolean readsWaitForUncommittedWrites;
 
 	public LockingSupportSimple(
 			PessimisticLockStyle lockStyle,
@@ -63,11 +64,22 @@ public class LockingSupportSimple implements LockingSupport, LockingSupport.Meta
 			LockTimeoutType lockTimeoutType,
 			OuterJoinLockingType joinLockingType,
 			ConnectionLockTimeoutStrategy connectionStrategy) {
+		this( lockStyle, rowLockStrategy, lockTimeoutType, joinLockingType, connectionStrategy, true );
+	}
+
+	public LockingSupportSimple(
+			PessimisticLockStyle lockStyle,
+			RowLockStrategy rowLockStrategy,
+			LockTimeoutType lockTimeoutType,
+			OuterJoinLockingType joinLockingType,
+			ConnectionLockTimeoutStrategy connectionStrategy,
+			boolean readsWaitForUncommittedWrites) {
 		this.lockStyle = lockStyle;
 		this.rowLockStrategy = rowLockStrategy;
 		this.lockTimeoutType = lockTimeoutType;
 		this.joinLockingType = joinLockingType;
 		this.connectionStrategy = connectionStrategy;
+		this.readsWaitForUncommittedWrites = readsWaitForUncommittedWrites;
 	}
 
 	@Override
@@ -103,6 +115,11 @@ public class LockingSupportSimple implements LockingSupport, LockingSupport.Meta
 	@Override
 	public OuterJoinLockingType getOuterJoinLockingType() {
 		return joinLockingType;
+	}
+
+	@Override
+	public boolean readsWaitForUncommittedWrites() {
+		return readsWaitForUncommittedWrites;
 	}
 
 	@Override

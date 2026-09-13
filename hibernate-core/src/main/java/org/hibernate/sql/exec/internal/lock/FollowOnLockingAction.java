@@ -43,6 +43,7 @@ import java.util.Locale;
 import java.util.Map;
 
 import static java.util.Collections.emptyMap;
+import static org.hibernate.loader.ast.internal.LoaderHelper.upgradeLock;
 import static org.hibernate.sql.exec.SqlExecLogger.SQL_EXEC_LOGGER;
 
 /**
@@ -96,6 +97,17 @@ public class FollowOnLockingAction implements PostAction {
 		LockingHelper.logLoadedValues( loadedValuesCollector );
 
 		final var session = executionContext.getSession();
+		final var lockOptions = new LockOptions( lockMode )
+				.setTimeout( lockTimeout )
+				.setLockScope( lockScope )
+				.setFollowOnStrategy( Locking.FollowOn.DISALLOW );
+		for ( var registration : loadedValuesCollector.getCollectedEntities() ) {
+			if ( registration.reloaded() ) {
+				// Check the existing version and preserve managed state instead of refreshing it.
+				final var holder = session.getPersistenceContextInternal().getEntityHolder( registration.entityKey() );
+				upgradeLock( holder.getEntity(), holder.getEntityEntry(), lockOptions, session );
+			}
+		}
 
 		// NOTE: we deal with effective graphs here to make sure embedded associations are treated as lazy
 		final var effectiveEntityGraph = session.getLoadQueryInfluencers().getEffectiveEntityGraph();
@@ -261,7 +273,8 @@ public class FollowOnLockingAction implements PostAction {
 	// Used by Hibernate Reactive
 	protected Map<EntityMappingType, List<EntityKey>> segmentLoadedValues(LoadedValuesCollector loadedValuesCollector) {
 		final Map<EntityMappingType, List<EntityKey>> map = new IdentityHashMap<>();
-		LockingHelper.segmentLoadedValues( loadedValuesCollector.getCollectedEntities(), map );
+		LockingHelper.segmentLoadedValues( loadedValuesCollector.getCollectedEntities().stream()
+				.filter( registration -> !registration.reloaded() ).toList(), map );
 		return map;
 	}
 

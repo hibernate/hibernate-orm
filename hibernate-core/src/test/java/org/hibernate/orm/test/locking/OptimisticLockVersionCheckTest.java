@@ -15,6 +15,7 @@ import org.hibernate.Session;
 import org.hibernate.StaleStateException;
 import org.hibernate.dialect.lock.spi.LockingStrategyException;
 import org.hibernate.exception.LockAcquisitionException;
+import org.hibernate.exception.SnapshotIsolationException;
 import org.hibernate.dialect.lock.PessimisticLockStyle;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -235,6 +236,7 @@ public class OptimisticLockVersionCheckTest {
 	private static boolean isLockConflict(Throwable throwable) {
 		for ( var cause = throwable; cause != null; cause = cause.getCause() ) {
 			if ( cause instanceof LockAcquisitionException
+					|| cause instanceof SnapshotIsolationException
 					|| cause instanceof org.hibernate.exception.LockTimeoutException
 					|| cause instanceof LockingStrategyException
 					|| cause instanceof StaleStateException

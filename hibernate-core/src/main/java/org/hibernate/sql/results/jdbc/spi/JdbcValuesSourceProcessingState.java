@@ -15,6 +15,7 @@ import org.hibernate.sql.results.spi.LoadContexts;
 import org.hibernate.sql.results.graph.collection.LoadingCollectionEntry;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.exec.spi.ExecutionContext;
+import org.hibernate.sql.exec.spi.LoadedValuesCollector;
 
 /**
  * Provides a context for processing the processing of the complete
@@ -35,6 +36,10 @@ public interface JdbcValuesSourceProcessingState {
 	}
 
 	JdbcValuesSourceProcessingOptions getProcessingOptions();
+
+	default LoadedValuesCollector getLoadedValuesCollector() {
+		return null;
+	}
 
 	PreLoadEvent getPreLoadEvent();
 	PostLoadEvent getPostLoadEvent();

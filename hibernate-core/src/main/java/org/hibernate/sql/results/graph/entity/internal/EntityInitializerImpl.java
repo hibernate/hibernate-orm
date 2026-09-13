@@ -1602,9 +1602,14 @@ public class EntityInitializerImpl
 	}
 
 	protected void registerReloadedEntity(EntityInitializerData data) {
+		final var processingState = data.getRowProcessingState().getJdbcValuesSourceProcessingState();
+		final var loadedValuesCollector = processingState.getLoadedValuesCollector();
+		if ( loadedValuesCollector != null && data.entityHolder.getEntityInitializer() == null ) {
+			loadedValuesCollector.registerEntity( getNavigablePath(), data.concreteDescriptor, data.entityKey, true );
+		}
 		if ( data.hasCallbackActions ) {
 			// This is only needed for follow-on locking, so skip registering the entity if there is no callback
-			data.entityHolder.markAsReloaded( data.getRowProcessingState().getJdbcValuesSourceProcessingState() );
+			data.entityHolder.markAsReloaded( processingState );
 		}
 	}
 

@@ -11,6 +11,7 @@ import jakarta.persistence.InheritanceType;
 import jakarta.persistence.Table;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.annotations.Audited;
+import org.hibernate.audit.AuditLog;
 import org.hibernate.cfg.StateManagementSettings;
 import org.hibernate.mapping.Column;
 import org.hibernate.temporal.spi.ChangesetIdentifierSupplier;
@@ -18,10 +19,13 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Test;
 
 import static org.hibernate.temporal.audit.auditoverrides.inheritance.SingleTableInheritanceTest.assertTable;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
@@ -43,7 +47,7 @@ public class JoinedInheritanceWithTwoPersistentClassesTest {
 		}
 	}
 
-	@Entity
+	@Entity(name = "Base")
 	@Table(name = "Base")
 	@Audited
 	@Inheritance(strategy = InheritanceType.JOINED)
@@ -57,12 +61,11 @@ public class JoinedInheritanceWithTwoPersistentClassesTest {
 		String str2;
 	}
 
-	@Entity
+	@Entity(name = "Sub")
 	@Audited.Overrides( {
 			@Audited.Override(name = "str1", isAudited = true), // <-- revokes initial exclusion of str1
 			@Audited.Override(name = "str2", isAudited = false)
 	} )
-
 	static class Sub extends Base {
 		@Audited.Excluded
 		String str3;
@@ -76,16 +79,43 @@ public class JoinedInheritanceWithTwoPersistentClassesTest {
 	}
 
 	@Test
-	public void test(DomainModelScope domainModelScope) {
+	public void test(DomainModelScope domainModelScope, SessionFactoryScope scope) {
 		var tables = domainModelScope.getDomainModel().collectTableMappings();
 		assertTable( tables, "Base_AUD", table -> {
 			assertTrue( table.containsColumn( new Column( "str1" ) ) );
 			assertTrue( table.containsColumn( new Column( "str2" ) ) );
 		} );
 
-		assertTable( tables, "JoinedInheritanceWithTwoPersistentClassesTest$Sub_AUD", table -> {
+		assertTable( tables, "Sub_AUD", table -> {
 			assertTrue( table.containsColumn( new Column( "str3" ) ) );
 		} );
+
+		scope.inTransaction( s -> {
+			var baseEntity = new Base();
+			baseEntity.id = 0;
+			baseEntity.str1 = "v";
+			baseEntity.str2 = "w";
+			s.persist( baseEntity );
+
+			var subEntity = new Sub();
+			subEntity.id = 1;
+			subEntity.str1 = "v";
+			subEntity.str2 = "w";
+			s.persist( subEntity );
+		} );
+
+		scope.inTransaction( s -> {
+			var statelessSession = s.getSessionFactory().withStatelessOptions().atChangeset( AuditLog.ALL_CHANGESETS )
+					.openStatelessSession();
+			var auditedBase = statelessSession.createSelectionQuery("from Base b where Type(b) = Base", Base.class).getSingleResult();
+			assertNull( auditedBase.str1 );
+			assertNotNull( auditedBase.str2 );
+
+			var auditedSub = statelessSession.createSelectionQuery("from Sub", Sub.class).getSingleResult();
+			assertNotNull( auditedSub.str1 );
+			assertNull( auditedSub.str2 );
+		} );
+
 
 	}
 

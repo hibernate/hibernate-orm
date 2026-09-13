@@ -1084,6 +1084,12 @@ public class DB2Dialect extends Dialect implements CurrentTemporalSupport, Tempo
 	}
 
 	@Override
+	public boolean causesRollback(SQLException sqlException) {
+		// SQL0911N reports a transaction rollback for either a deadlock or a lock timeout.
+		return extractErrorCode( sqlException ) == -911;
+	}
+
+	@Override
 	@SPI({ IMPLEMENT, SUPPLY })
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
 		return (sqlException, message, sql) ->

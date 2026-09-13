@@ -96,6 +96,25 @@ public class OptimisticLockVersionCheckTest {
 		}
 	}
 
+	@ParameterizedTest(name = "queryManagedEntity = {0}")
+	@ValueSource(booleans = { false, true })
+	void testUncontendedUpdateCommits(boolean queryManagedEntity, SessionFactoryScope scope) throws Exception {
+		final var versions = scope.fromTransaction( session -> new int[] {
+				session.find( Doctor.class, ALICE ).version,
+				session.find( Doctor.class, BOB ).version
+		} );
+		// Exercise the same flush and commit path without another transaction to conflict with.
+		assertThat( goOffCall( scope, ALICE, BOB, new CyclicBarrier( 1 ), queryManagedEntity, true ) ).isTrue();
+		scope.inTransaction( session -> {
+			final var alice = session.find( Doctor.class, ALICE );
+			final var bob = session.find( Doctor.class, BOB );
+			assertThat( alice.onCall ).isFalse();
+			assertThat( alice.version ).isEqualTo( versions[0] + 1 );
+			assertThat( bob.onCall ).isTrue();
+			assertThat( bob.version ).isEqualTo( versions[1] );
+		} );
+	}
+
 	/**
 	 * Both transactions finish reading before either writes. This also covers databases
 	 * where reads wait for writers, including those which serialize writes to a table.

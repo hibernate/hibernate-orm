@@ -51,6 +51,13 @@ public class MySQLLockingSupport implements LockingSupport, LockingSupport.Metad
 	}
 
 	@Override
+	public boolean readsWaitForUncommittedWrites() {
+		// InnoDB uses multiversion concurrency control: a plain read returns the last committed state of a row
+		// without waiting for the outcome of a concurrent uncommitted write
+		return false;
+	}
+
+	@Override
 	public LockingClauseRenderer getLockingClauseRenderer() {
 		return this;
 	}

@@ -27,6 +27,13 @@ import java.sql.Connection;
  * @author Steve Ebersole
  */
 public class TransactSQLLockingSupport extends LockingSupportParameterized {
+	/**
+	 * Reads with locking, and so waits for the outcome of an uncommitted write,
+	 * regardless of the {@code READ_COMMITTED_SNAPSHOT} setting, releasing the
+	 * share lock at the end of the statement.
+	 */
+	public static final String SQL_SERVER_CURRENT_READ_HINT = " with (readcommittedlock,rowlock)";
+
 	public static final LockingSupport SQL_SERVER = new TransactSQLLockingSupport(
 			PessimisticLockStyle.TABLE_HINT,
 			LockTimeoutType.CONNECTION,
@@ -35,7 +42,10 @@ public class TransactSQLLockingSupport extends LockingSupportParameterized {
 			RowLockStrategy.TABLE,
 			OuterJoinLockingType.IDENTIFIED,
 			SQLServerImpl.IMPL,
-			TransactSQLLockingSupport::renderSqlServerTableLockHint
+			TransactSQLLockingSupport::renderSqlServerTableLockHint,
+			// plain reads wait unless READ_COMMITTED_SNAPSHOT is enabled, which cannot be detected
+			false,
+			SQL_SERVER_CURRENT_READ_HINT
 	);
 
 	public static final LockingSupport SYBASE = new TransactSQLLockingSupport(
@@ -92,6 +102,7 @@ public class TransactSQLLockingSupport extends LockingSupportParameterized {
 
 	private final ConnectionLockTimeoutStrategy connectionLockTimeoutStrategy;
 	private final TableLockHintRenderer tableLockHintRenderer;
+	private final String currentReadTableHint;
 
 	public TransactSQLLockingSupport(
 			PessimisticLockStyle pessimisticLockStyle,
@@ -102,16 +113,55 @@ public class TransactSQLLockingSupport extends LockingSupportParameterized {
 			OuterJoinLockingType outerJoinLockingType,
 			ConnectionLockTimeoutStrategy connectionLockTimeoutStrategy,
 			TableLockHintRenderer tableLockHintRenderer) {
+		this(
+				pessimisticLockStyle,
+				wait,
+				noWait,
+				skipLocked,
+				rowLockStrategy,
+				outerJoinLockingType,
+				connectionLockTimeoutStrategy,
+				tableLockHintRenderer,
+				true,
+				null
+		);
+	}
+
+	/**
+	 * @param readsWaitForUncommittedWrites See {@link Metadata#readsWaitForUncommittedWrites()}
+	 * @param currentReadTableHint The hint rendered for a {@linkplain #renderCurrentReadTableHint
+	 * current read}, or {@code null} to use the share-lock hint
+	 */
+	public TransactSQLLockingSupport(
+			PessimisticLockStyle pessimisticLockStyle,
+			LockTimeoutType wait,
+			LockTimeoutType noWait,
+			LockTimeoutType skipLocked,
+			RowLockStrategy rowLockStrategy,
+			OuterJoinLockingType outerJoinLockingType,
+			ConnectionLockTimeoutStrategy connectionLockTimeoutStrategy,
+			TableLockHintRenderer tableLockHintRenderer,
+			boolean readsWaitForUncommittedWrites,
+			String currentReadTableHint) {
 		super(
 				pessimisticLockStyle,
 				rowLockStrategy,
 				wait,
 				noWait,
 				skipLocked,
-				outerJoinLockingType
+				outerJoinLockingType,
+				readsWaitForUncommittedWrites
 		);
 		this.connectionLockTimeoutStrategy = connectionLockTimeoutStrategy;
 		this.tableLockHintRenderer = tableLockHintRenderer;
+		this.currentReadTableHint = currentReadTableHint;
+	}
+
+	@Override
+	public String renderCurrentReadTableHint(String tableExpression) {
+		return currentReadTableHint != null && !readsWaitForUncommittedWrites()
+				? currentReadTableHint
+				: super.renderCurrentReadTableHint( tableExpression );
 	}
 
 	@Override

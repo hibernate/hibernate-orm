@@ -82,6 +82,27 @@ public final class StandardLockingSupports {
 		);
 	}
 
+	/// Creates a profile using one timeout classification for every timeout value,
+	/// additionally specifying whether plain reads wait for uncommitted writes.
+	///
+	/// @see LockingSupport.Metadata#readsWaitForUncommittedWrites()
+	public static LockingSupport simple(
+			PessimisticLockStyle pessimisticLockStyle,
+			RowLockStrategy rowLockStrategy,
+			LockTimeoutType lockTimeoutType,
+			OuterJoinLockingType outerJoinLockingType,
+			ConnectionLockTimeoutStrategy connectionLockTimeoutStrategy,
+			boolean readsWaitForUncommittedWrites) {
+		return new LockingSupportSimple(
+				Objects.requireNonNull( pessimisticLockStyle, "pessimisticLockStyle" ),
+				Objects.requireNonNull( rowLockStrategy, "rowLockStrategy" ),
+				Objects.requireNonNull( lockTimeoutType, "lockTimeoutType" ),
+				Objects.requireNonNull( outerJoinLockingType, "outerJoinLockingType" ),
+				Objects.requireNonNull( connectionLockTimeoutStrategy, "connectionLockTimeoutStrategy" ),
+				readsWaitForUncommittedWrites
+		);
+	}
+
 	/// Creates a statement-clause profile with independent timeout classifications.
 	public static LockingSupport parameterized(
 			PessimisticLockStyle pessimisticLockStyle,
@@ -97,6 +118,29 @@ public final class StandardLockingSupports {
 				Objects.requireNonNull( noWaitType, "noWaitType" ),
 				Objects.requireNonNull( skipLockedType, "skipLockedType" ),
 				Objects.requireNonNull( outerJoinLockingType, "outerJoinLockingType" )
+		);
+	}
+
+	/// Creates a statement-clause profile with independent timeout classifications,
+	/// additionally specifying whether plain reads wait for uncommitted writes.
+	///
+	/// @see LockingSupport.Metadata#readsWaitForUncommittedWrites()
+	public static LockingSupport parameterized(
+			PessimisticLockStyle pessimisticLockStyle,
+			RowLockStrategy rowLockStrategy,
+			LockTimeoutType waitType,
+			LockTimeoutType noWaitType,
+			LockTimeoutType skipLockedType,
+			OuterJoinLockingType outerJoinLockingType,
+			boolean readsWaitForUncommittedWrites) {
+		return new LockingSupportParameterized(
+				Objects.requireNonNull( pessimisticLockStyle, "pessimisticLockStyle" ),
+				Objects.requireNonNull( rowLockStrategy, "rowLockStrategy" ),
+				Objects.requireNonNull( waitType, "waitType" ),
+				Objects.requireNonNull( noWaitType, "noWaitType" ),
+				Objects.requireNonNull( skipLockedType, "skipLockedType" ),
+				Objects.requireNonNull( outerJoinLockingType, "outerJoinLockingType" ),
+				readsWaitForUncommittedWrites
 		);
 	}
 
@@ -186,7 +230,10 @@ public final class StandardLockingSupports {
 				RowLockStrategy.TABLE,
 				OuterJoinLockingType.IDENTIFIED,
 				TransactSQLLockingSupport.SQLServerImpl.IMPL,
-				TransactSQLLockingSupport.sqlServerTableLockHintRenderer( requiredVersion )
+				TransactSQLLockingSupport.sqlServerTableLockHintRenderer( requiredVersion ),
+				// depends on READ_COMMITTED_SNAPSHOT, which cannot be detected
+				false,
+				TransactSQLLockingSupport.SQL_SERVER_CURRENT_READ_HINT
 		);
 	}
 

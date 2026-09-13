@@ -413,7 +413,9 @@ public class CUBRIDDialect extends Dialect implements CurrentTemporalSupport, Te
 			RowLockStrategy.NONE,
 			LockTimeoutType.NONE,
 			OuterJoinLockingType.FULL,
-			ConnectionLockTimeoutStrategy.NONE
+			ConnectionLockTimeoutStrategy.NONE,
+			// CUBRID uses multiversion concurrency control
+			false
 	);
 
 	@Override

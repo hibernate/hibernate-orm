@@ -32,6 +32,13 @@ public class TimesTenLockingSupport implements LockingSupport, LockingSupport.Me
 	}
 
 	@Override
+	public boolean readsWaitForUncommittedWrites() {
+		// TimesTen uses row-level versioning for reads: a plain read returns the last committed state of a row
+		// without waiting for the outcome of a concurrent uncommitted write
+		return false;
+	}
+
+	@Override
 	public LockingClauseRenderer getLockingClauseRenderer() {
 		return this;
 	}

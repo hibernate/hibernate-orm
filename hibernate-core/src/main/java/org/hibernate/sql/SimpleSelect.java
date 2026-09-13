@@ -9,6 +9,7 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.lock.internal.LockingSqlRewriterSupport;
+import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.lock.internal.TableLockHintRendererSupport;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -38,6 +39,7 @@ public class SimpleSelect implements RestrictionRenderingContext {
 	protected List<Restriction> restrictions = new ArrayList<>();
 
 	protected LockOptions lockOptions = new LockOptions( LockMode.READ );
+	private boolean currentRead;
 
 	private final Dialect dialect;
 	private final ParameterMarkerStrategy parameterMarkerStrategy;
@@ -156,6 +158,21 @@ public class SimpleSelect implements RestrictionRenderingContext {
 		return this;
 	}
 
+	/**
+	 * Specify that this select is a "current read", which must return the
+	 * latest committed state of the selected rows, waiting for the outcome
+	 * of any concurrent uncommitted write to them, instead of returning
+	 * state from a snapshot. On a database where a plain read already
+	 * behaves this way, nothing extra is rendered.
+	 *
+	 * @see LockingSupport#renderCurrentReadTableHint(String)
+	 * @see LockingSupport#renderCurrentReadClause()
+	 */
+	public SimpleSelect setCurrentRead(boolean currentRead) {
+		this.currentRead = currentRead;
+		return this;
+	}
+
 	public SimpleSelect setOrderBy(String orderBy) {
 		this.orderBy = orderBy;
 		return this;
@@ -189,7 +206,9 @@ public class SimpleSelect implements RestrictionRenderingContext {
 				).sql()
 				: buf.toString();
 
-		return selectString;
+		return currentRead
+				? selectString + dialect.getLockingSupport().renderCurrentReadClause()
+				: selectString;
 	}
 
 	private void applyComment(StringBuilder buf) {
@@ -226,6 +245,9 @@ public class SimpleSelect implements RestrictionRenderingContext {
 				lockOptions,
 				tableName
 		) );
+		if ( currentRead ) {
+			buf.append( dialect.getLockingSupport().renderCurrentReadTableHint( tableName ) );
+		}
 		if ( tableName.charAt( 0 ) == '(' ) {
 			buf.append( " r" );
 		}

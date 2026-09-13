@@ -149,7 +149,6 @@ public class TablePerClassWithTwoPersistentClassesTest {
 				assertNotNull( subsub.str3 );
 			}
 		} );
-
 	}
 
 }

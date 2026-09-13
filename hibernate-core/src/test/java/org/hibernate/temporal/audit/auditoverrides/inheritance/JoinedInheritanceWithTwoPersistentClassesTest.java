@@ -128,8 +128,6 @@ public class JoinedInheritanceWithTwoPersistentClassesTest {
 			assertNull( auditedSubSub.str2 );
 			assertNotNull( auditedSubSub.str3 );
 		} );
-
-
 	}
 
 }

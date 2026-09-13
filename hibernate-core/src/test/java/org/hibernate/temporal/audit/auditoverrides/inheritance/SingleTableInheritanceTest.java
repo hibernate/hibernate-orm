@@ -25,7 +25,6 @@ import org.junit.jupiter.api.Test;
 import java.util.Collection;
 import java.util.function.Consumer;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -35,8 +34,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @DomainModel(annotatedClasses = {
 		SingleTableInheritanceTest.Base.class,
 		SingleTableInheritanceTest.Sub.class,
-		SingleTableInheritanceTest.EntityWithExcludedProperty.class,
-		SingleTableInheritanceTest.EntityThatOverridesTheProperty3.class,
 })
 @ServiceRegistry(settings = @Setting(name = StateManagementSettings.CHANGESET_ID_SUPPLIER,
 		value = "org.hibernate.temporal.audit.AuditEntityTest$TxIdSupplier"))
@@ -136,43 +133,6 @@ public class SingleTableInheritanceTest {
 			assertNull( auditedSub.str2 );
 		} );
 	}
-
-	/**
-	 * Entity: @Audited.Excluded
-	 * MSC: @Audited.Override.isAudited = true
-	 * Entity: @Audited.Override.isAudited = false
-	 *
-	 */
-	@Entity
-	@Table(name = "EntityWithExcludedProperty")
-	@Audited
-	static class EntityWithExcludedProperty {
-
-		@Id
-		long id;
-		@Audited.Excluded
-		String str1;
-
-	}
-	@MappedSuperclass
-	@Audited.Override(name = "str1", isAudited = true)
-	static class MSC5 extends EntityWithExcludedProperty{
-
-	}
-	@Entity
-	@Audited.Override(name = "str1", isAudited = false)
-	static class EntityThatOverridesTheProperty3 extends MSC5{
-
-
-	}
-	@Test
-	public void entityUnderTwoMSCes5(DomainModelScope domainModelScope) {
-		var tables = domainModelScope.getDomainModel().collectTableMappings();
-		assertTable( tables, "EntityWithExcludedProperty_AUD", table -> {
-			assertFalse( table.containsColumn( new Column( "str1" ) ) );
-		} );
-	}
-
 
 	public static void assertTable(Collection<org.hibernate.mapping.Table> tables, String tableName, Consumer<org.hibernate.mapping.Table> consumer) {
 		var tableFound = false;

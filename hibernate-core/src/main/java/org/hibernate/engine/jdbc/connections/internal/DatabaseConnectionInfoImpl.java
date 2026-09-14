@@ -6,6 +6,7 @@ package org.hibernate.engine.jdbc.connections.internal;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Locale;
 import java.util.Map;
 
 import jakarta.annotation.Nullable;
@@ -257,7 +258,7 @@ public class DatabaseConnectionInfoImpl implements DatabaseConnectionInfo {
 				\tMinimum pool size: %s
 				\tMaximum pool size: %s"""
 				.formatted(
-						handleEmpty( jdbcUrl ),
+						handleEmpty( redactJdbcUrl( jdbcUrl ) ),
 						handleEmpty( jdbcDriver ),
 						handleEmpty( dialectClass ),
 						handleEmpty( dialectVersion ),
@@ -270,6 +271,62 @@ public class DatabaseConnectionInfoImpl implements DatabaseConnectionInfo {
 						handleEmpty( poolMinSize ),
 						handleEmpty( poolMaxSize )
 				);
+	}
+
+	static String redactJdbcUrl(String url) {
+		if ( url == null ) {
+			return null;
+		}
+
+		final int queryStart = url.indexOf( '?' );
+		final StringBuilder redacted = new StringBuilder( url );
+		redactUserInfo( redacted, queryStart < 0 ? url.length() : queryStart );
+		final int redactedQueryStart = redacted.indexOf( "?" );
+		if ( redactedQueryStart < 0 || redactedQueryStart == redacted.length() - 1 ) {
+			return redacted.toString();
+		}
+
+		final StringBuilder result = new StringBuilder( redacted.length() );
+		result.append( redacted, 0, redactedQueryStart + 1 );
+		int parameterStart = redactedQueryStart + 1;
+		for ( int i = parameterStart; i <= redacted.length(); i++ ) {
+			if ( i < redacted.length() && redacted.charAt( i ) != '&' && redacted.charAt( i ) != ';' ) {
+				continue;
+			}
+			appendRedactedParameter( result, redacted, parameterStart, i );
+			if ( i < redacted.length() ) {
+				result.append( redacted.charAt( i ) );
+			}
+			parameterStart = i + 1;
+		}
+		return result.toString();
+	}
+
+	private static void redactUserInfo(StringBuilder url, int end) {
+		final int authorityStart = url.indexOf( "//" );
+		final int at = url.indexOf( "@", authorityStart + 2 );
+		if ( authorityStart < 0 || at < 0 || at >= end ) {
+			return;
+		}
+		final int colon = url.indexOf( ":", authorityStart + 2 );
+		if ( colon >= 0 && colon < at ) {
+			url.replace( colon + 1, at, "***" );
+		}
+	}
+
+	private static void appendRedactedParameter(StringBuilder target, StringBuilder url, int start, int end) {
+		final int equals = url.indexOf( "=", start );
+		if ( equals < 0 || equals >= end || !isSensitiveParameter( url.substring( start, equals ) ) ) {
+			target.append( url, start, end );
+			return;
+		}
+		target.append( url, start, equals + 1 ).append( "***" );
+	}
+
+	private static boolean isSensitiveParameter(String parameter) {
+		final String name = parameter.toLowerCase( Locale.ROOT );
+		return name.contains( "password" ) || name.contains( "secret" ) || name.contains( "token" )
+				|| name.equals( "pwd" );
 	}
 
 	private static String handleEmpty(String value) {

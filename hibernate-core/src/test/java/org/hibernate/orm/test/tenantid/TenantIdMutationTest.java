@@ -243,6 +243,26 @@ class TenantIdMutationTest {
 	}
 
 	@Test
+	void upsertCanCreateOwnedTables(SessionFactoryScope scope) {
+		final Owner owner = new Owner();
+		owner.values.add( "original" );
+		mutate( scope, "mine", Operation.UPSERT, owner );
+		inTenant( scope, "mine", session -> {
+			final Owner stored = session.find( Owner.class, owner.id );
+			assertNotNull( stored );
+			assertEquals( "mine", stored.tenant );
+			assertEquals( "original", stored.detail );
+			assertEquals( List.of( "original" ), stored.values );
+		} );
+	}
+
+	@Test
+	void removeTransientAssignedIdentifier(SessionFactoryScope scope) {
+		inTenant( scope, "mine", session -> session.remove( new PlainItem() ) );
+		inTenant( scope, "mine", session -> assertNull( session.find( PlainItem.class, 1L ) ) );
+	}
+
+	@Test
 	void rootUpsertPreservesExplicitTenant(SessionFactoryScope scope) {
 		final Item item = new Item();
 		item.tenant = "yours";

@@ -152,6 +152,12 @@ public class DefaultDeleteEventListener implements DeleteEventListener {
 		final var source = event.getSession();
 		final var persister = source.getEntityPersister( event.getEntityName(), entity );
 		if ( ForeignKeys.isTransient( persister.getEntityName(), entity, null, source ) ) {
+			// A tenant-filtered snapshot also reports a foreign row as absent.
+			// Do not mistake a detached instance of that row for a transient entity.
+			final Object id = persister.getIdentifier( entity, source );
+			if ( id != null ) {
+				TenantIdHelper.checkTenantId( id, persister, source, true );
+			}
 			deleteTransientEntity( source, entity, persister, transientEntities );
 		}
 		else {

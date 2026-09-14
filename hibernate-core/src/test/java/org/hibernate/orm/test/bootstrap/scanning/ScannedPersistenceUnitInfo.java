@@ -147,6 +147,26 @@ public class ScannedPersistenceUnitInfo implements PersistenceUnitInfo {
 	}
 
 	@Override
+	public List<String> getManagedPackageDescriptors() {
+		return List.of();
+	}
+
+	@Override
+	public List<String> getAllPackageDescriptors() {
+		return getManagedPackageDescriptors();
+	}
+
+	@Override
+	public List<String> getManagedModuleDescriptors() {
+		return List.of();
+	}
+
+	@Override
+	public List<String> getAllModuleDescriptors() {
+		return getManagedModuleDescriptors();
+	}
+
+	@Override
 	public boolean excludeUnlistedClasses() {
 		return descriptor.isExcludeUnlistedClasses();
 	}

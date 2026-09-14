@@ -83,6 +83,26 @@ public class DelegatingPersistenceUnitInfo implements PersistenceUnitInfo {
 	}
 
 	@Override
+	public List<String> getManagedPackageDescriptors() {
+		return delegate.getManagedPackageDescriptors();
+	}
+
+	@Override
+	public List<String> getAllPackageDescriptors() {
+		return delegate.getAllPackageDescriptors();
+	}
+
+	@Override
+	public List<String> getManagedModuleDescriptors() {
+		return delegate.getManagedModuleDescriptors();
+	}
+
+	@Override
+	public List<String> getAllModuleDescriptors() {
+		return delegate.getAllModuleDescriptors();
+	}
+
+	@Override
 	public boolean excludeUnlistedClasses() {
 		return delegate.excludeUnlistedClasses();
 	}

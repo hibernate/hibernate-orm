@@ -205,6 +205,7 @@ public class BatchImpl implements Batch {
 
 	protected void abortBatch(Exception cause) {
 		try {
+			close();
 			jdbcCoordinator.abortBatch();
 		}
 		catch (RuntimeException e) {
@@ -323,6 +324,10 @@ public class BatchImpl implements Batch {
 				BATCH_MESSAGE_LOGGER.batchContainedStatementsOnRelease();
 			}
 		}
+		close();
+	}
+
+	private void close(){
 		releaseStatements();
 		observers.clear();
 	}

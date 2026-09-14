@@ -126,7 +126,7 @@ public class AntlrBasedSQLFormatterTest {
 
 	private record SqlFixture(String id, String sql, String expected) {
 		public void verify() {
-				String actual = INSTANCE.format( sql );
+				String actual = INSTANCE.format( sql ).replace( "\r", "" );
 				assertEquals( expected, actual, "Sql formatting of \"%s\" failed".formatted(id) );
 			}
 		}

@@ -218,17 +218,13 @@ concurrent modification.
 
 On such databases the version check is now a "current read" which waits for the outcome of any concurrent
 write to the row and fails if the version changed. On PostgreSQL, MySQL, MariaDB, Oracle, H2, HANA and
-CockroachDB, and with the community dialects for GaussDB, TiDB, Firebird, Altibase, CUBRID, TimesTen and
-SingleStore, it uses the same syntax as `PESSIMISTIC_READ` (`for share`, `lock in share mode`, or
-`for update` where the database has no share lock). On SQL Server it uses the `readcommittedlock` table
-hint, and on DB2 LUW the `wait for outcome` clause, since on those databases whether a plain read waits
-depends on configuration (`READ_COMMITTED_SNAPSHOT` and `CUR_COMMIT` respectively) which the dialect cannot
-detect; neither form retains a lock beyond the statement. Databases whose plain reads already wait for
-uncommitted writes are unaffected.
-
-A custom `Dialect` for a database with multiversion reads should report this via
-`LockingSupport.Metadata#readsWaitForUncommittedWrites()`, and may customize the rendering via
-`LockingSupport#renderCurrentReadTableHint()` and `LockingSupport#renderCurrentReadClause()`.
+CockroachDB, and with the community dialects for GaussDB, TiDB, Firebird, Altibase, CUBRID, TimesTen, and
+Informix, it uses the same syntax as `PESSIMISTIC_READ` (`for share`, `lock in share mode`, or `for update`
+where the database has no share lock). On SQL Server it uses the `readcommittedlock` table  hint, and on
+DB2 LUW the `wait for outcome` clause, since on those databases whether a plain read waits depends on
+configuration (`READ_COMMITTED_SNAPSHOT` and `CUR_COMMIT` respectively) which the dialect cannot detect;
+neither form retains a lock beyond the statement. Databases whose plain reads already wait for uncommitted
+writes are unaffected.
 
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

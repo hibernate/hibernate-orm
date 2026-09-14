@@ -35,7 +35,7 @@ import static org.hibernate.SPI.Role.USE;
 /// @author Steve Ebersole
 /// @see org.hibernate.dialect.Dialect#getLockingSupport()
 /// @see org.hibernate.dialect.AbstractSybaseDialect#getLockingSupport()
-@Incubating
+@Incubating(since = "7.1", group = "dialect-locking")
 @SPI({ USE, IMPLEMENT, SUPPLY })
 public interface LockingSupport {
 	/// The renderer for a complete statement-level locking clause. Return

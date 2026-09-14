@@ -13,7 +13,7 @@ import org.hibernate.Incubating;
  * @author Gavin King
  * @since 7.2
  */
-@Incubating
+@Incubating(since = "8.0")
 public interface PreFlushEventListener {
 	void onAutoPreFlush(PreFlushEvent event) throws HibernateException;
 }

@@ -40,7 +40,7 @@ import static java.util.Collections.emptyList;
 /**
  * @since 7.0
  */
-@Incubating
+@Incubating(since = "6.2")
 public class SelfRenderingSqmSetReturningFunction<T> extends SqmSetReturningFunction<T> {
 	private final @Nullable ArgumentsValidator argumentsValidator;
 	private final SetReturningFunctionTypeResolver setReturningTypeResolver;

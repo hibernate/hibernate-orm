@@ -28,7 +28,7 @@ import org.hibernate.persister.collection.BasicCollectionPersister;
  *
  * @author Doug Currie
  */
-@Incubating
+@Incubating(since = "6.0")
 public class PersistentSortedMap<K,E> extends PersistentMap<K,E> implements SortedMap<K,E> {
 	protected Comparator<? super K> comparator;
 	@Serial

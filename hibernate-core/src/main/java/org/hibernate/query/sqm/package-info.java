@@ -42,7 +42,7 @@
  *
  * @apiNote This entire package is in an incubating state.
  */
-@Incubating
+@Incubating(since = "6.2")
 package org.hibernate.query.sqm;
 
 import org.hibernate.Incubating;

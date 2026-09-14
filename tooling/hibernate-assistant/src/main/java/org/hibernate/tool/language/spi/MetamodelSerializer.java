@@ -12,7 +12,7 @@ import org.hibernate.Incubating;
  * Hibernate metamodel, that is, the classes and mapping information
  * that constitute the persistence layer.
  */
-@Incubating
+@Incubating(since = "7.3")
 public interface MetamodelSerializer {
 	/**
 	 * Utility method that generates a textual representation of the mapping information

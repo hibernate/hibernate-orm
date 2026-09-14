@@ -31,7 +31,7 @@ import java.util.Map;
 ///
 /// @author Steve Ebersole
 /// @since 8.0
-@Incubating
+@Incubating(since = "8.0", group = "action-queue")
 public class FlushOperation implements OperationResultChecker {
 	private final TableDescriptor tableDescriptor;
 	private final MutationKind kind;

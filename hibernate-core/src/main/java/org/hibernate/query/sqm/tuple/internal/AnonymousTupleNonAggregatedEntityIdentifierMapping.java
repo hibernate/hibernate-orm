@@ -6,7 +6,6 @@ package org.hibernate.query.sqm.tuple.internal;
 
 import java.util.Set;
 
-import org.hibernate.Incubating;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.IdentifierValue;
@@ -26,7 +25,6 @@ import jakarta.annotation.Nullable;
 /**
  * @author Christian Beikov
  */
-@Incubating
 public class AnonymousTupleNonAggregatedEntityIdentifierMapping extends AnonymousTupleEmbeddableValuedModelPart
 		implements NonAggregatedIdentifierMapping {
 

@@ -21,7 +21,7 @@ import org.hibernate.query.spi.QueryEngine;
  *
  * @author Steve Ebersole
  */
-@Incubating
+@Incubating(since = "6.2")
 public interface SqmCreationContext extends BindingContext {
 
 	/**

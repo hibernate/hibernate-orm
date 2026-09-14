@@ -6,7 +6,6 @@ package org.hibernate.metamodel.mapping.internal;
 
 import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
 
-import org.hibernate.Incubating;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
@@ -52,7 +51,6 @@ import static org.hibernate.sql.results.spi.ListResultsConsumer.UniqueSemantic.F
  * @author Steve Ebersole
  * @author Marco Belladelli
  */
-@Incubating
 public class GeneratedValuesProcessor {
 	private final SelectStatement selectStatement;
 	private final JdbcSelect jdbcSelect;

@@ -10,7 +10,7 @@
  *
  * @see org.hibernate.type.format.FormatMapper
  */
-@Incubating
+@Incubating(since = "6.2")
 @SPI
 package org.hibernate.type.format;
 

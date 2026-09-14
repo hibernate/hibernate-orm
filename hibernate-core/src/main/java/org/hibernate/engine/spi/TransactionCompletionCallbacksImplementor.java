@@ -11,7 +11,7 @@ import org.hibernate.Incubating;
  *
  * @author Gavin King
  */
-@Incubating
+@Incubating(since = "8.0")
 public interface TransactionCompletionCallbacksImplementor extends TransactionCompletionCallbacks {
 	/**
 	 * Are there any registered before-completion callbacks?

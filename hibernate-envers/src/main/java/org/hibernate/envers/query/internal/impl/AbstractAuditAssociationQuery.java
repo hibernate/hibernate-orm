@@ -15,7 +15,6 @@ import jakarta.persistence.criteria.JoinType;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
-import org.hibernate.Incubating;
 import org.hibernate.LockMode;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.boot.internal.EnversService;
@@ -42,7 +41,6 @@ import org.hibernate.envers.query.projection.AuditProjection;
  * @author Felix Feisst (feisst dot felix at gmail dot com)
  * @author Chris Cranford
  */
-@Incubating
 public abstract class AbstractAuditAssociationQuery<Q extends AuditQueryImplementor>
 		implements AuditAssociationQuery<Q>, AuditQueryImplementor {
 

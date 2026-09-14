@@ -42,7 +42,7 @@ public interface JpaCriteriaQuery<T> extends CriteriaQuery<T>, JpaQueryableCrite
 	 *
 	 * @since 7.1
 	 */
-	@Incubating
+	@Incubating(since = "6.3")
 	@Nonnull
 	JpaCriteriaQuery<Boolean> createExistsQuery();
 

@@ -18,7 +18,7 @@ import org.hibernate.sql.ast.spi.model.ColumnValueBinding;
  *
  * @since 7.4
  */
-@Incubating
+@Incubating(since = "5.4")
 public interface TemporalMapping extends AuxiliaryMapping {
 
 	SelectableMapping getStartingColumnMapping();

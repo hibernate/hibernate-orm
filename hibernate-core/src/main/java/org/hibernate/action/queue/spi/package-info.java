@@ -5,7 +5,7 @@
 /// mutations without depending on the graph queue's implementation details.
 ///
 /// @author Steve Ebersole
-@Incubating
+@Incubating(since = "8.0", group = "action-queue")
 package org.hibernate.action.queue.spi;
 
 import org.hibernate.Incubating;

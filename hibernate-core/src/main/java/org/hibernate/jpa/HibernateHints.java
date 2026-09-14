@@ -320,7 +320,7 @@ public interface HibernateHints {
 	 *
 	 * @since 7.4
 	 */
-	@Incubating
+	@Incubating(since = "7.4")
 	String HINT_LIMIT_IN_MEMORY = "org.hibernate.limitInMemory";
 
 	/**

@@ -21,7 +21,7 @@ import org.hibernate.sql.spi.mutation.jdbc.PreparableMutationOperation;
 ///
 /// @author Steve Ebersole
 /// @since 8.0
-@Incubating
+@Incubating(since = "8.0", group = "action-queue")
 public record StatementShapeKey(String tableExpression, MutationKind kind, int shapeHash) implements BatchKey, OperationGroupKey {
 
 	public static StatementShapeKey forInsert(String tableName, FlushOperation flushOperation) {

@@ -80,7 +80,7 @@ public interface Value extends Serializable {
 
 	Type getType() throws MappingException;
 
-	@Incubating
+	@Incubating(since = "6.2")
 	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	default JdbcMapping getSelectableType(MappingContext mappingContext, int index) throws MappingException {
 		return getType( mappingContext, getType(), index );
@@ -171,7 +171,7 @@ public interface Value extends Serializable {
 	void setNonUpdatable();
 	void setNonInsertable();
 
-	@Incubating
+	@Incubating(since = "6.2")
 	@Remove
 	default MetadataBuildingContext getBuildingContext() {
 		throw new UnsupportedOperationException( "Value#getBuildingContext is not implemented by: " + getClass().getName() );
@@ -186,7 +186,7 @@ public interface Value extends Serializable {
 
 	boolean isColumnUpdateable(int index);
 
-	@Incubating
+	@Incubating(since = "6.2")
 	default String getExtraCreateTableInfo() {
 		return "";
 	}

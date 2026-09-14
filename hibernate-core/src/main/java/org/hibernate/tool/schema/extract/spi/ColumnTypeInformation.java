@@ -14,7 +14,7 @@ import org.hibernate.Incubating;
  * @author Christoph Sturm
  * @author Steve Ebersole
  */
-@Incubating
+@Incubating(since = "6.1")
 public interface ColumnTypeInformation {
 
 	ColumnTypeInformation EMPTY = new ColumnTypeInformation() {

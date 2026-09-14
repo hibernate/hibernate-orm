@@ -15,7 +15,7 @@ import jakarta.persistence.AttributeConverter;
  * @see AttributeConverter
  * @since 6.2
  */
-@Incubating
+@Incubating(since = "6.2")
 public interface ConverterRegistry {
 	/**
 	 * Apply the descriptor for an {@link AttributeConverter}

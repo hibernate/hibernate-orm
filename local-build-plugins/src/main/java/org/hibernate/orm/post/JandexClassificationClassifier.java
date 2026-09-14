@@ -591,13 +591,18 @@ public final class JandexClassificationClassifier {
 		if ( target == null ) {
 			return;
 		}
-		if ( target.hasDeclaredAnnotation( INCUBATING_ANNOTATION ) ) {
+		final AnnotationInstance incubating = target.declaredAnnotation( INCUBATING_ANNOTATION );
+		if ( incubating != null ) {
+			final AnnotationValue since = incubating.value( "since" );
+			final AnnotationValue group = incubating.value( "group" );
 			model.addLifecycleOrigin(
 					elementId,
 					new ClassificationModel.LifecycleOrigin(
 							ClassificationModel.LifecycleState.INCUBATING,
 							originKind,
-							sourceElementId
+							sourceElementId,
+							since == null ? null : since.asString(),
+							group == null || group.asString().isEmpty() ? null : group.asString()
 					)
 			);
 		}

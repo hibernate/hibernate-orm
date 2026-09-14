@@ -24,7 +24,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 ///
 /// @author Steve Ebersole
 /// @since 8.0
-@Incubating
+@Incubating(since = "8.0", group = "action-queue")
 public interface GroupedRowBindPlan extends BindPlan {
 	/// The number of immutable row bindings represented by this plan.
 	int getBindingCount();

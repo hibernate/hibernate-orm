@@ -33,7 +33,7 @@ public interface AuditQuery {
 			JoinType joinType,
 			String alias);
 
-	@Incubating
+	@Incubating(since = "6.0", group = "envers-association-query")
 	AuditAssociationQuery<? extends AuditQuery> traverseRelation(
 			String associationName,
 			JoinType joinType,

@@ -10,7 +10,7 @@ import org.hibernate.Incubating;
  * A special expression for the {@code xmltable} function.
  * @since 7.0
  */
-@Incubating
+@Incubating(since = "6.3")
 public interface JpaXmlTableFunction {
 
 	/**

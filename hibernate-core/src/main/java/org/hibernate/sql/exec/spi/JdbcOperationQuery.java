@@ -15,7 +15,7 @@ import java.util.Map;
  *
  * @author Steve Ebersole
  */
-@Incubating
+@Incubating(since = "6.0", group = "sql-execution")
 public interface JdbcOperationQuery extends JdbcOperation, CacheableJdbcOperation {
 	/**
 	 * The parameters which were inlined into the query as literals.

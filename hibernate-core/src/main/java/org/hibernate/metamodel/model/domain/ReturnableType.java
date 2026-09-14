@@ -12,6 +12,6 @@ import org.hibernate.Incubating;
  *
  * @author Steve Ebersole
  */
-@Incubating
+@Incubating(since = "5.4")
 public interface ReturnableType<T> extends SimpleDomainType<T> {
 }

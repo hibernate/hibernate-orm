@@ -25,7 +25,7 @@ import org.hibernate.persister.collection.BasicCollectionPersister;
  *
  * @author Doug Currie
  */
-@Incubating
+@Incubating(since = "6.0")
 public class PersistentSortedSet<E> extends PersistentSet<E> implements SortedSet<E> {
 	protected Comparator<? super E> comparator;
 	@Serial

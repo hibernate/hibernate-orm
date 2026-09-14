@@ -18,7 +18,7 @@ import static org.hibernate.cache.spi.entry.CacheEntryHelper.buildStructuredCach
 ///
 /// @author Steve Ebersole
 /// @since 8.0
-@Incubating
+@Incubating(since = "8.0", group = "action-queue")
 public class InsertCacheHandling {
 	public static class CacheInsert {
 		private Object cacheEntry;

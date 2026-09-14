@@ -14,7 +14,7 @@ import org.hibernate.Incubating;
  *
  * @author Steve Ebersole
  */
-@Incubating
+@Incubating(since = "6.2")
 public interface PreparedStatementGroup {
 	/**
 	 * The number of statements in this group

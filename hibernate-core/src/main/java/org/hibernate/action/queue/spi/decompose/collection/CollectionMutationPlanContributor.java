@@ -35,7 +35,7 @@ import org.hibernate.sql.spi.mutation.MutationOperation;
 ///
 /// @author Steve Ebersole
 /// @since 8.0
-@Incubating
+@Incubating(since = "8.0", group = "action-queue")
 public interface CollectionMutationPlanContributor {
 	/// The contributor used by the standard state-management model.  It does
 	/// not contribute any alternate collection mutation plans.

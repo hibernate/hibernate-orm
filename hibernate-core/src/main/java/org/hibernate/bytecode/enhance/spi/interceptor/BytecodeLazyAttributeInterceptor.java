@@ -11,7 +11,7 @@ import org.hibernate.Incubating;
 /**
  * @author Steve Ebersole
  */
-@Incubating
+@Incubating(since = "5.3")
 public interface BytecodeLazyAttributeInterceptor extends SessionAssociableInterceptor {
 	/**
 	 * The name of the entity this interceptor is meant to intercept

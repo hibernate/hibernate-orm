@@ -32,7 +32,7 @@ import static org.hibernate.type.internal.BindingTypeHelper.resolveBindType;
  *
  * @author Steve Ebersole
  */
-@Incubating
+@Incubating(since = "6.0", group = "sql-execution")
 public interface JdbcParameterBindings {
 	void addBinding(JdbcParameter parameter, JdbcParameterBinding binding);
 

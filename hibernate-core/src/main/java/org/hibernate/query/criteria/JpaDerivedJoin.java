@@ -22,7 +22,7 @@ import org.hibernate.Incubating;
  *
  * @see JpaFrom#join(Subquery)
  */
-@Incubating
+@Incubating(since = "6.3")
 public interface JpaDerivedJoin<T> extends JpaDerivedFrom<T>, JpaJoin<T,T> {
 	/**
 	 * Specifies whether the subquery part can access previous from node aliases.

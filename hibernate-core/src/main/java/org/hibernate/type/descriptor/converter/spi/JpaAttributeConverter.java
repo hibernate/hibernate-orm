@@ -19,7 +19,7 @@ import org.hibernate.type.descriptor.java.JavaType;
  *
  * @author Steve Ebersole
  */
-@Incubating
+@Incubating(since = "6.2")
 public interface JpaAttributeConverter<O,R> extends BasicValueConverter<O,R> {
 	/**
 	 * A {@link JavaType} representing the JPA {@link AttributeConverter}.

@@ -16,7 +16,7 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
  *
  * @author Steve Ebersole
  */
-@Incubating
+@Incubating(since = "6.0", group = "sql-execution")
 public interface Callback {
 	/**
 	 * Register a callback action

@@ -74,7 +74,7 @@ public interface OnExecutionGenerator extends Generator {
 	 *
 	 * @since 7.4
 	 */
-	@Incubating
+	@Incubating(since = "7.4")
 	default boolean referenceColumnsInSql(Dialect dialect, EventType eventType) {
 		return referenceColumnsInSql( dialect );
 	}
@@ -96,7 +96,7 @@ public interface OnExecutionGenerator extends Generator {
 	 *
 	 * @since 7.4
 	 */
-	@Incubating
+	@Incubating(since = "7.4")
 	default boolean writePropertyValue(EventType eventType) {
 		return writePropertyValue();
 	}
@@ -127,7 +127,7 @@ public interface OnExecutionGenerator extends Generator {
 	 *
 	 * @since 7.4
 	 */
-	@Incubating
+	@Incubating(since = "7.4")
 	default String[] getReferencedColumnValues(Dialect dialect, EventType eventType) {
 		return getReferencedColumnValues( dialect );
 	}
@@ -140,7 +140,7 @@ public interface OnExecutionGenerator extends Generator {
 	 *
 	 * @since 7.4
 	 */
-	@Incubating
+	@Incubating(since = "7.4")
 	default boolean[] getColumnInclusions(Dialect dialect, EventType eventType) {
 		return null;
 	}
@@ -175,7 +175,7 @@ public interface OnExecutionGenerator extends Generator {
 	 * {@link org.hibernate.id.IdentityGenerator}. And the need for customized behavior for
 	 * identity columns is the reason why this layer-breaking method exists.
 	 */
-	@Incubating
+	@Incubating(since = "6.2")
 	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	default InsertGeneratedIdentifierDelegate getGeneratedIdentifierDelegate(EntityPersister persister) {
 		final var factory = persister.getFactory();
@@ -203,7 +203,7 @@ public interface OnExecutionGenerator extends Generator {
 	 * The default implementation uses the {@link org.hibernate.annotations.NaturalId @NaturalId}
 	 * property, if there is one.
 	 */
-	@Incubating
+	@Incubating(since = "6.2")
 	@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 	default String[] getUniqueKeyPropertyNames(EntityPersister persister) {
 		return getNaturalIdPropertyNames( persister );

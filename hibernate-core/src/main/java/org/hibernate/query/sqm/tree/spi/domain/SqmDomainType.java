@@ -8,7 +8,7 @@ import org.hibernate.Incubating;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.query.sqm.spi.SqmBindableType;
 
-@Incubating
+@Incubating(since = "6.2")
 public interface SqmDomainType<T>
 		extends DomainType<T>, SqmBindableType<T> {
 

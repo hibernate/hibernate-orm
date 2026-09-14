@@ -38,7 +38,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  *
  * @author Steve Ebersole
  */
-@Incubating
+@Incubating(since = "6.0")
 public interface BootstrapContext {
 	/**
 	 * The service registry available to bootstrapping
@@ -60,7 +60,7 @@ public interface BootstrapContext {
 	/**
 	 * Access to the {@code hibernate-models} {@linkplain ModelsContext}
 	 */
-	@Incubating
+	@Incubating(since = "8.0")
 	ModelsContext getModelsContext();
 
 	/**

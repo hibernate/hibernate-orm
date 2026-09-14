@@ -37,7 +37,7 @@ import java.util.List;
  *
  * @since 7.0
  */
-@Incubating
+@Incubating(since = "7.0", group = "query-specifications")
 public interface Path<X,U> {
 	jakarta.persistence.criteria.Path<U> path(Root<? extends X> root);
 

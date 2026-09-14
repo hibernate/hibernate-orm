@@ -73,7 +73,7 @@ public interface SqlAstTranslator<T extends JdbcOperation> extends SqlAstWalker 
 	 *
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "6.0")
 	@SPI(SPI.Role.USE)
 	void renderNamedSetReturningFunction(String functionName, List<? extends SqlAstNode> sqlAstArguments, SetReturningFunctionType tupleType, String tableIdentifierVariable, SqlAstNodeRenderingMode argumentRenderingMode);
 

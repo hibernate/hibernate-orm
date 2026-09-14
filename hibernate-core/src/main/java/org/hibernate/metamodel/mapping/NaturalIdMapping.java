@@ -35,7 +35,7 @@ import org.hibernate.loader.ast.spi.NaturalIdLoader;
 /// @see org.hibernate.KeyType#NATURAL
 ///
 /// @author Steve Ebersole
-@Incubating
+@Incubating(since = "5.4")
 public interface NaturalIdMapping extends VirtualModelPart {
 	String PART_NAME = "{natural-id}";
 

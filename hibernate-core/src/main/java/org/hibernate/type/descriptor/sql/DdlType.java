@@ -85,7 +85,7 @@ public interface DdlType extends Serializable {
 	 *
 	 * @deprecated not appropriate for named enum or array types
 	 */
-	@Incubating
+	@Incubating(since = "6.1")
 	@Deprecated(since = "6.3")
 	String[] getRawTypeNames();
 }

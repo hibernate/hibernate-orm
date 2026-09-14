@@ -13,7 +13,6 @@ import org.hibernate.action.queue.spi.CollectionTransition;
 import org.hibernate.action.queue.spi.PlanningOptions;
 
 import org.hibernate.HibernateException;
-import org.hibernate.Incubating;
 import org.hibernate.Internal;
 import org.hibernate.PropertyValueException;
 import org.hibernate.action.internal.AbstractEntityInsertAction;
@@ -59,7 +58,6 @@ import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 /// See [FlushCoordinator].
 ///
 /// @author Steve Ebersole
-@Incubating
 public class GraphBasedActionQueue implements ActionQueue {
 	private final SessionImplementor session;
 	private final FlushCoordinator flushCoordinator;

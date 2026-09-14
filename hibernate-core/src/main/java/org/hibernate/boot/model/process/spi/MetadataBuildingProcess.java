@@ -62,12 +62,14 @@ import org.hibernate.boot.spi.EffectiveMappingDefaults;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.JpaOrmXmlPersistenceUnitDefaultAware;
 import org.hibernate.boot.spi.MappingDefaults;
+import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.mapping.Table;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.models.internal.MutableClassDetailsRegistry;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
@@ -78,7 +80,6 @@ import org.hibernate.type.descriptor.java.ByteArrayJavaType;
 import org.hibernate.type.descriptor.java.CharacterArrayJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeConstructor;
-import org.hibernate.type.descriptor.jdbc.JavaTimeJdbcType;
 import org.hibernate.type.descriptor.jdbc.JsonArrayJdbcTypeConstructor;
 import org.hibernate.type.descriptor.jdbc.JsonAsStringArrayJdbcTypeConstructor;
 import org.hibernate.type.descriptor.jdbc.JsonAsStringJdbcType;
@@ -850,11 +851,11 @@ public class MetadataBuildingProcess {
 
 		final var timestampWithTimeZoneOverride = getTimestampWithTimeZoneOverride( options, jdbcTypeRegistry );
 		if ( timestampWithTimeZoneOverride != null ) {
-			adaptTimestampTypesToDefaultTimeZoneStorage( typeConfiguration, timestampWithTimeZoneOverride );
+			adaptTimestampTypesToDefaultTimeZoneStorage( typeConfiguration, timestampWithTimeZoneOverride, serviceRegistry );
 		}
 		final var timeWithTimeZoneOverride = getTimeWithTimeZoneOverride( options, jdbcTypeRegistry );
 		if ( timeWithTimeZoneOverride != null ) {
-			adaptTimeTypesToDefaultTimeZoneStorage( typeConfiguration, timeWithTimeZoneOverride );
+			adaptTimeTypesToDefaultTimeZoneStorage( typeConfiguration, timeWithTimeZoneOverride, serviceRegistry );
 		}
 		final int preferredSqlTypeCodeForInstant = getPreferredSqlTypeCodeForInstant( serviceRegistry );
 		if ( preferredSqlTypeCodeForInstant != SqlTypes.TIMESTAMP_UTC ) {
@@ -914,10 +915,11 @@ public class MetadataBuildingProcess {
 
 	private static void adaptTimeTypesToDefaultTimeZoneStorage(
 			TypeConfiguration typeConfiguration,
-			JdbcType timestampWithTimeZoneOverride) {
+			JdbcType timestampWithTimeZoneOverride,
+			ServiceRegistry serviceRegistry) {
 		final var javaTypeRegistry = typeConfiguration.getJavaTypeRegistry();
 		final var basicTypeRegistry = typeConfiguration.getBasicTypeRegistry();
-		if ( !( basicTypeRegistry.getRegisteredType( OffsetTime.class ).getJdbcType() instanceof JavaTimeJdbcType ) ) {
+		if ( !isDirectJavaTimeJdbcAccessEnabled( OffsetTime.class, serviceRegistry ) ) {
 			basicTypeRegistry.register(
 					new NamedBasicTypeImpl<>(
 							javaTypeRegistry.resolveDescriptor( OffsetTime.class ),
@@ -933,11 +935,11 @@ public class MetadataBuildingProcess {
 
 	private static void adaptTimestampTypesToDefaultTimeZoneStorage(
 			TypeConfiguration typeConfiguration,
-			JdbcType timestampWithTimeZoneOverride) {
+			JdbcType timestampWithTimeZoneOverride,
+			ServiceRegistry serviceRegistry) {
 		final var javaTypeRegistry = typeConfiguration.getJavaTypeRegistry();
 		final var basicTypeRegistry = typeConfiguration.getBasicTypeRegistry();
-		if ( !( basicTypeRegistry.getRegisteredType( OffsetDateTime.class ).getJdbcType()
-				instanceof JavaTimeJdbcType ) ) {
+		if ( !isDirectJavaTimeJdbcAccessEnabled( OffsetDateTime.class, serviceRegistry ) ) {
 			basicTypeRegistry.register(
 					new NamedBasicTypeImpl<>(
 							javaTypeRegistry.resolveDescriptor( OffsetDateTime.class ),
@@ -949,8 +951,7 @@ public class MetadataBuildingProcess {
 					OffsetDateTime.class.getName()
 			);
 		}
-		if ( !( basicTypeRegistry.getRegisteredType( ZonedDateTime.class ).getJdbcType()
-				instanceof JavaTimeJdbcType ) ) {
+		if ( !isDirectJavaTimeJdbcAccessEnabled( ZonedDateTime.class, serviceRegistry ) ) {
 			basicTypeRegistry.register(
 					new NamedBasicTypeImpl<>(
 							javaTypeRegistry.resolveDescriptor( ZonedDateTime.class ),
@@ -962,6 +963,14 @@ public class MetadataBuildingProcess {
 					ZonedDateTime.class.getName()
 			);
 		}
+	}
+
+	private static boolean isDirectJavaTimeJdbcAccessEnabled(Class<?> javaTimeType, ServiceRegistry serviceRegistry) {
+		return MetadataBuildingContext.isPreferJavaTimeJdbcTypesEnabled( serviceRegistry )
+				&& serviceRegistry.requireService( JdbcServices.class )
+						.getDialect()
+						.getDirectJavaTimeJdbcSupport()
+						.supports( javaTimeType );
 	}
 
 	private static JdbcType getTimeWithTimeZoneOverride(MetadataBuildingOptions options, JdbcTypeRegistry jdbcTypeRegistry) {

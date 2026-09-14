@@ -86,17 +86,19 @@ public interface IdentifierSupport {
 	default IdentifierHelper buildIdentifierHelper(IdentifierHelperBuildRequest request) {
 		final var builder = request.builder();
 		final var jdbcMetadata = request.jdbcMetadata();
-		final var keywordSupport = request.keywordSupport();
 		if ( jdbcMetadata.isJdbcMetadataAccessible() ) {
 			builder.setUnquotedCaseStrategy( jdbcMetadata.getUnquotedIdentifierCaseStrategy() );
 			builder.setQuotedCaseStrategy( jdbcMetadata.getQuotedIdentifierCaseStrategy() );
 		}
+		final var keywordSupport = request.keywordSupport();
 		builder.applyReservedWords( keywordSupport.getKeywords() );
-		builder.applyReservedWords(
-				jdbcMetadata.getSqlKeywords().stream()
-						.filter( keywordSupport::acceptsJdbcKeyword )
-						.toList()
-		);
+		if ( jdbcMetadata.isJdbcMetadataAccessible() ) {
+			builder.applyReservedWords(
+					jdbcMetadata.getSqlKeywords().stream()
+							.filter( keywordSupport::acceptsJdbcKeyword )
+							.toList()
+			);
+		}
 		builder.setNameQualifierSupport( request.nameQualifierSupport() );
 		return builder.build();
 	}

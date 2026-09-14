@@ -8,12 +8,14 @@ import jakarta.persistence.FindOption;
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.CacheMode;
+import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.StatelessSessionImplementor;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.spi.RootGraphImplementor;
+import org.hibernate.internal.StatelessLocking;
 import org.hibernate.persister.entity.EntityPersister;
 
 import java.util.List;
@@ -44,6 +46,16 @@ public class StatelessFindMultipleByKeyOperation<T> extends AbstractFindMultiple
 	@Override
 	protected StatelessSessionImplementor getSession() {
 		return loadAccessContext.getStatelessSession();
+	}
+
+	@Override
+	public LockMode getLockMode() {
+		return StatelessLocking.getEffectiveLockMode( super.getLockMode() );
+	}
+
+	@Override
+	public LockOptions getLockOptions() {
+		return StatelessLocking.getEffectiveLockOptions( super.getLockOptions(), getSession() );
 	}
 
 	@Override

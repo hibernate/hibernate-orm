@@ -481,6 +481,13 @@ class StatefulPersistenceContext implements PersistenceContext {
 						.setPersister( holder.getDescriptor() );
 				listenerGroup.fireEventOnEachListener( postLoadEvent, PostLoadEventListener::onPostLoad );
 			}
+			else if ( listenerGroup != null && getSession().isStateless() ) {
+				// Stateless loads do not fire post-load events, but must still perform forced increments.
+				final var entry = holder.getEntityEntry();
+				if ( entry.getLockMode().requiresVersion() ) {
+					holder.getDescriptor().lock( entry.getId(), entry.getVersion(), entity, entry.getLockMode(), getSession() );
+				}
+			}
 			if ( callback != null ) {
 				callback.invokeAfterLoadActions( entity, holder.getDescriptor(), getSession() );
 			}

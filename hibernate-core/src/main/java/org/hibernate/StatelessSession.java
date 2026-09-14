@@ -64,6 +64,16 @@ import java.util.List;
  *     transaction is not automatically marked for rollback.
  * </ul>
  * <p>
+ * Explicit lock modes behave differently to a stateful session.The lock
+ * modes {@link jakarta.persistence.LockModeType#OPTIMISTIC OPTIMISTIC}
+ * and {@link jakarta.persistence.LockModeType#OPTIMISTIC_FORCE_INCREMENT
+ * OPTIMISTIC_FORCE_INCREMENT} are implemented as immediate pessimistic
+ * locks, as explicitly permitted by the JPA specification. The lock modes
+ * {@link jakarta.persistence.LockModeType#OPTIMISTIC_FORCE_INCREMENT
+ * OPTIMISTIC_FORCE_INCREMENT} and
+ * {@link jakarta.persistence.LockModeType#PESSIMISTIC_FORCE_INCREMENT
+ * PESSIMISTIC_FORCE_INCREMENT} both increment the version immediately.
+ * <p>
  * Since version 7, the configuration property
  * {@value org.hibernate.cfg.BatchSettings#STATEMENT_BATCH_SIZE} has no effect
  * on a stateless session. Automatic batching may be enabled by explicitly

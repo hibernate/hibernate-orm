@@ -129,21 +129,25 @@ public class GeneratorAnnotationHelper {
 		// lastly, on the package
 		final var packageInfo = idMember.getDeclaringType().getPackage();
 		if ( packageInfo != null ) {
-			for ( A generatorAnnotation:
-					packageInfo.getRepeatedAnnotationUsages( generatorAnnotationType, modelsContext ) ) {
-				if ( nameExtractor != null ) {
-					final String registrationName = nameExtractor.apply( generatorAnnotation );
-					if ( registrationName.isEmpty() ) {
-						if ( possibleMatch == null ) {
-							possibleMatch = generatorAnnotation;
+			// MissingPackageInfoDetails.getRepeatedAnnotationUsages() may return null
+			final var packageAnnotations =
+					packageInfo.getRepeatedAnnotationUsages( generatorAnnotationType, modelsContext );
+			if ( packageAnnotations != null ) {
+				for ( A generatorAnnotation : packageAnnotations ) {
+					if ( nameExtractor != null ) {
+						final String registrationName = nameExtractor.apply( generatorAnnotation );
+						if ( registrationName.isEmpty() ) {
+							if ( possibleMatch == null ) {
+								possibleMatch = generatorAnnotation;
+							}
+						}
+						else if ( registrationName.equals( matchName ) ) {
+							return generatorAnnotation;
 						}
 					}
-					else if ( registrationName.equals( matchName ) ) {
+					else {
 						return generatorAnnotation;
 					}
-				}
-				else {
-					return generatorAnnotation;
 				}
 			}
 		}

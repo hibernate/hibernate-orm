@@ -188,6 +188,8 @@ import static org.hibernate.dialect.literal.spi.StandardDateTimeLiteralRendering
 /**
  * A dialect for Microsoft SQL Server 2014 and above.
  * <p>
+ * This dialect does not support SQL Server's {@code SNAPSHOT} isolation level.
+ * <p>
  * Please refer to the
  * <a href="https://learn.microsoft.com/en-us/sql/t-sql/language-reference">SQL Server documentation</a>.
  *

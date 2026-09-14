@@ -849,7 +849,7 @@ public class HibernateProcessor extends AbstractProcessor {
 							&& alreadyExistingMetaEntity == null
 							// let a handwritten metamodel "override" the generated one
 							// (this is used in the Jakarta Data TCK)
-							&& !hasHandwrittenMetamodel(element) ) {
+							&& !hasHandwrittenMetamodel(typeElement) ) {
 						final var parentDataEntity =
 								parentMetadata( parent, context::getDataMetaEntity );
 						final var dataMetaEntity =
@@ -868,10 +868,26 @@ public class HibernateProcessor extends AbstractProcessor {
 		}
 	}
 
-	private static boolean hasHandwrittenMetamodel(Element element) {
-		return element.getEnclosingElement().getEnclosedElements()
-				.stream().anyMatch(e -> e.getSimpleName()
-						.contentEquals('_' + element.getSimpleName().toString()));
+	private boolean hasHandwrittenMetamodel(TypeElement element) {
+		final var dataMetamodelName = '_' + element.getSimpleName().toString();
+		final boolean dataMetamodelTypeExists = element.getEnclosingElement().getEnclosedElements()
+				.stream().anyMatch( e -> e.getSimpleName().contentEquals( dataMetamodelName ) );
+		if ( !dataMetamodelTypeExists ) {
+			return false;
+		}
+        return hasMetamodelSourceFile( element, dataMetamodelName );
+    }
+
+    private boolean hasMetamodelSourceFile(TypeElement entity, String dataMetamodelName) {
+		final var packageName = context.getElementUtils().getPackageOf( entity ).getQualifiedName();
+		try (var source = context.getProcessingEnvironment().getFiler()
+				.getResource( StandardLocation.SOURCE_PATH, packageName, dataMetamodelName + ".java" )
+				.openInputStream()) {
+			return true;
+		}
+		catch (IOException ignored) {
+			return false;
+		}
 	}
 
 	private void indexEntityName(TypeElement typeElement) {

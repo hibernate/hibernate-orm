@@ -15,7 +15,6 @@ import javax.tools.Diagnostic;
 import javax.tools.DiagnosticCollector;
 import javax.tools.JavaFileObject;
 import javax.tools.ToolProvider;
-import java.io.File;
 import java.util.List;
 import java.util.Locale;
 import java.util.stream.Collectors;
@@ -151,9 +150,9 @@ class DataTest {
 		final var compiler = ToolProvider.getSystemJavaCompiler();
 		try ( var fileManager = compiler.getStandardFileManager( diagnostics, Locale.ROOT, null ) ) {
 			final var sourceFiles = List.of(
-					sourceFile( Author.class ),
-					sourceFile( Book.class ),
-					sourceFile( InvalidPositionalParameterRepository.class )
+					TestUtil.getSourceFile( Author.class ),
+					TestUtil.getSourceFile( Book.class ),
+					TestUtil.getSourceFile( InvalidPositionalParameterRepository.class )
 			);
 			final var task = compiler.getTask(
 					null,
@@ -191,12 +190,5 @@ class DataTest {
 		return messages.stream()
 				.filter( message -> message.contains( text ) )
 				.count();
-	}
-
-	private static File sourceFile(Class<?> type) {
-		return new File(
-				TestUtil.getSourceBaseDir( type ),
-				type.getName().replace( '.', File.separatorChar ) + ".java"
-		);
 	}
 }

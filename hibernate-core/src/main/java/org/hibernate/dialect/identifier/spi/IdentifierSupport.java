@@ -87,8 +87,10 @@ public interface IdentifierSupport {
 		final var builder = request.builder();
 		final var jdbcMetadata = request.jdbcMetadata();
 		final var keywordSupport = request.keywordSupport();
-		builder.setUnquotedCaseStrategy( jdbcMetadata.getUnquotedIdentifierCaseStrategy() );
-		builder.setQuotedCaseStrategy( jdbcMetadata.getQuotedIdentifierCaseStrategy() );
+		if ( jdbcMetadata.isJdbcMetadataAccessible() ) {
+			builder.setUnquotedCaseStrategy( jdbcMetadata.getUnquotedIdentifierCaseStrategy() );
+			builder.setQuotedCaseStrategy( jdbcMetadata.getQuotedIdentifierCaseStrategy() );
+		}
 		builder.applyReservedWords( keywordSupport.getKeywords() );
 		builder.applyReservedWords(
 				jdbcMetadata.getSqlKeywords().stream()

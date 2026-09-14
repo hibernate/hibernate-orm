@@ -14,6 +14,7 @@ import java.util.function.Supplier;
 import jakarta.annotation.Nullable;
 import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.internal.TenantIdHelper;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
@@ -172,6 +173,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			int[] incomingDirtyAttributeIndexes,
 			boolean hasDirtyCollection,
 			SharedSessionContractImplementor session) {
+		TenantIdHelper.checkIdentifierTenant( id, entityPersister(), session );
 		final var versionMapping = entityPersister().getVersionMapping();
 		if ( versionMapping != null ) {
 			final var generatedValuesAccess =
@@ -545,6 +547,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		);
 
 		bindPartitionColumnValueBindings( loadedState, session, mutationExecutor.getJdbcValueBindings() );
+		bindTenantRestriction( session, mutationExecutor.getJdbcValueBindings() );
 
 		// restrict the key
 		mutatingTableDetails.getKeyMapping().breakDownKeyJdbcValues(
@@ -860,6 +863,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		// no snapshot when called from StatelessSession.update()
 		bindPartitionColumnValueBindings( oldValues == null ? values : oldValues,
 				session, mutationExecutor.getJdbcValueBindings() );
+		bindTenantRestriction( session, mutationExecutor.getJdbcValueBindings() );
 
 		try {
 			return mutationExecutor.execute(
@@ -1099,6 +1103,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		// no snapshot when called from StatelessSession.update()
 		bindPartitionColumnValueBindings( oldValues == null ? values : oldValues,
 				session, mutationExecutor.getJdbcValueBindings() );
+		bindTenantRestriction( session, mutationExecutor.getJdbcValueBindings() );
 
 		try {
 			return mutationExecutor.execute(
@@ -1271,6 +1276,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			final var tableUpdateBuilder = (TableUpdateBuilder<?>) builder;
 			applyKeyRestriction( rowId, persister, tableUpdateBuilder, tableMapping );
 			applyPartitionKeyRestriction( tableUpdateBuilder );
+			applyTenantRestriction( tableUpdateBuilder );
 		} );
 	}
 
@@ -1790,6 +1796,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 
 			applyVersionOptimisticLocking( updateBuilder );
 			applyPartitionKeyRestriction( updateBuilder );
+			applyTenantRestriction( updateBuilder );
 
 			//noinspection resource
 			final var jdbcMutation = factory()

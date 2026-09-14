@@ -9,6 +9,7 @@ import org.hibernate.StaleObjectStateException;
 import org.hibernate.StaleStateException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.OptimisticLockStyle;
+import org.hibernate.engine.internal.TenantIdHelper;
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
@@ -95,6 +96,21 @@ public abstract class AbstractMutationCoordinator {
 		}
 		else {
 			return false;
+		}
+	}
+
+	protected void applyTenantRestriction(RestrictedTableMutationBuilder<?, ?> builder) {
+		TenantIdHelper.applyTenantRestriction( entityPersister(), builder );
+	}
+
+	protected void bindTenantRestriction(SharedSessionContractImplementor session, JdbcValueBindings bindings) {
+		final var tenantMapping = TenantIdHelper.tenantIdMapping( entityPersister() );
+		if ( tenantMapping != null ) {
+			bindings.bindValue(
+					TenantIdHelper.isRoot( session ) ? null : session.getTenantIdentifierValue(),
+					tenantMapping.getSelectable( 0 ),
+					ParameterUsage.TENANT
+			);
 		}
 	}
 

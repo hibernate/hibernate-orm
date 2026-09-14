@@ -6,6 +6,7 @@ package org.hibernate.action.queue.internal.decompose.entity;
 
 
 import jakarta.annotation.Nullable;
+import org.hibernate.engine.internal.TenantIdHelper;
 import org.hibernate.action.queue.internal.cyclebreak.CycleBreakPatcher;
 import org.hibernate.action.queue.spi.bind.BindPlan;
 import org.hibernate.action.queue.spi.bind.Checkers;
@@ -139,6 +140,9 @@ public class EntityUpdateBindPlan implements BindPlan, OperationResultChecker {
 			JdbcValueBindings valueBindings,
 			FlushOperation flushOperation,
 			SharedSessionContractImplementor session) {
+		TenantIdHelper.checkIdentifierTenant( identifier, entityPersister, session );
+		TenantIdHelper.bindTenantRestriction( entityPersister, tableDescriptor.name(), valueBindings, session );
+
 		decomposeForUpdate( valueBindings, flushOperation, session );
 
 		if (flushOperation.getBindingPatch() != null) {

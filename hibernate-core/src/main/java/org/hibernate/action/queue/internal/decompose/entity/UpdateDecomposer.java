@@ -4,6 +4,7 @@
  */
 package org.hibernate.action.queue.internal.decompose.entity;
 
+import org.hibernate.engine.internal.TenantIdHelper;
 import org.hibernate.action.queue.spi.decompose.entity.EntityMutationPlanContributor;
 import org.hibernate.action.queue.spi.decompose.entity.UpdateCacheHandling;
 
@@ -889,6 +890,7 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 	}
 
 	private void applyKeyRestriction(EntityTableDescriptor tableDescriptor, TableUpdateBuilder<?> tableUpdateBuilder, Object rowId) {
+		TenantIdHelper.applyTenantRestriction( entityPersister, tableUpdateBuilder );
 		if ( rowId != null
 				&& tableDescriptor.isIdentifierTable()
 				&& entityPersister.getRowIdMapping() != null ) {

@@ -18,5 +18,10 @@ public enum ParameterUsage {
 	/**
 	 * The parameter is used in the where clause
 	 */
-	RESTRICT
+	RESTRICT,
+
+	/**
+	 * A restriction bound from the session tenant, independently of entity state.
+	 */
+	TENANT
 }

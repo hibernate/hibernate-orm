@@ -5,6 +5,7 @@
 package org.hibernate.action.queue.internal.decompose.entity;
 
 
+import org.hibernate.engine.internal.TenantIdHelper;
 import org.hibernate.action.queue.spi.bind.BindPlan;
 import org.hibernate.action.queue.spi.bind.Checkers;
 import org.hibernate.action.queue.spi.bind.JdbcValueBindings;
@@ -106,6 +107,9 @@ public class EntityDeleteBindPlan implements BindPlan, OperationResultChecker {
 			JdbcValueBindings valueBindings,
 			FlushOperation flushOperation,
 			SharedSessionContractImplementor session) {
+		TenantIdHelper.checkIdentifierTenant( identifier, entityPersister, session );
+		TenantIdHelper.bindTenantRestriction( entityPersister, tableDescriptor.name(), valueBindings, session );
+
 
 		// Bind the identifier for the WHERE clause
 		breakDownKeyJdbcValue( valueBindings, session );

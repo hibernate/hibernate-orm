@@ -97,6 +97,7 @@ import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.engine.jdbc.env.spi.SchemaNameResolver;
 import org.hibernate.exception.ConstraintViolationException;
+import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.SQLGrammarException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
@@ -763,6 +764,8 @@ public class CUBRIDDialect extends Dialect implements CurrentTemporalSupport, Te
 					ConstraintViolationException.ConstraintKind.NOT_NULL,
 					getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
 			case -493 -> new SQLGrammarException( message, sqlException, sql );
+			//the deadlock victim, the same code causesRollback() reports as fatal to the transaction
+			case -72 -> new LockAcquisitionException( message, sqlException, sql );
 			default -> null;
 		};
 	}

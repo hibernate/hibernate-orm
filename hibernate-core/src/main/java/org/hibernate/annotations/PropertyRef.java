@@ -63,7 +63,7 @@ import jakarta.persistence.OneToMany;
  */
 @Target({ElementType.FIELD,ElementType.METHOD,ElementType.ANNOTATION_TYPE})
 @Retention(RetentionPolicy.RUNTIME)
-@Incubating
+@Incubating(since = "7.0")
 public @interface PropertyRef {
 	/**
 	 * The name of the attribute on the target entity which defines the foreign-key target.

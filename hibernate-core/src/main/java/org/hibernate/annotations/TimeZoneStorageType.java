@@ -65,7 +65,7 @@ import org.hibernate.type.TimeZoneStorageStrategy;
  * @see TimeZoneStorage
  * @see TimeZoneStorageStrategy
  */
-@Incubating
+@Incubating(since = "8.0")
 public enum TimeZoneStorageType {
 	/**
 	 * Stores the timezone by using the {@code with time zone}

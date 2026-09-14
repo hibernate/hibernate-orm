@@ -29,7 +29,7 @@ import java.util.Set;
 ///
 /// @author Steve Ebersole
 /// @since 8.0
-@Incubating
+@Incubating(since = "8.0", group = "action-queue")
 public interface ActionQueue extends TransactionCompletionCallbacks {
 
 	/// Clear all pending actions.

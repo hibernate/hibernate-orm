@@ -53,7 +53,7 @@ import jakarta.annotation.Nullable;
  *
  * @author Gavin King
  */
-@Incubating
+@Incubating(since = "6.0")
 public interface PersistentCollection<E> extends LazyInitializable, InstanceIdentity {
 	/**
 	 * Get the owning entity. Note that the owner is only
@@ -340,7 +340,7 @@ public interface PersistentCollection<E> extends LazyInitializable, InstanceIden
 	 *
 	 * @since 8.0
 	 */
-	@Incubating
+	@Incubating(since = "8.0", group = "collection-delta")
 	default Iterator<?> getAddedEntities(CollectionPersister persister) {
 		// Default implementation returns empty - subclasses should override
 		return java.util.Collections.emptyIterator();
@@ -364,7 +364,7 @@ public interface PersistentCollection<E> extends LazyInitializable, InstanceIden
 	 *
 	 * @since 8.0
 	 */
-	@Incubating
+	@Incubating(since = "8.0", group = "collection-delta")
 	default CollectionChangeSet getChangeSet(CollectionPersister persister) {
 		// Default implementation returns null - only indexed collections override
 		return null;
@@ -431,7 +431,7 @@ public interface PersistentCollection<E> extends LazyInitializable, InstanceIden
 	 *
 	 * @since 8.0
 	 */
-	@Incubating
+	@Incubating(since = "8.0", group = "collection-delta")
 	default void afterInitializationSnapshot() {
 	}
 
@@ -458,7 +458,7 @@ public interface PersistentCollection<E> extends LazyInitializable, InstanceIden
 	 *
 	 * @since 8.0
 	 */
-	@Incubating
+	@Incubating(since = "8.0", group = "collection-delta")
 	default List<QueuedCollectionOperation> getQueuedOperations() {
 		return List.of();
 	}
@@ -556,7 +556,7 @@ public interface PersistentCollection<E> extends LazyInitializable, InstanceIden
 	 *
 	 * @since 8.0
 	 */
-	@Incubating
+	@Incubating(since = "8.0", group = "collection-delta")
 	default long getMutationGeneration() {
 		return 0;
 	}

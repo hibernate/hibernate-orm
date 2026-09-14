@@ -4,7 +4,6 @@
  */
 package org.hibernate.internal.find;
 
-import org.hibernate.Incubating;
 
 /// Models the ability to get reference to an entity by a key, either primary or natural.
 ///
@@ -14,7 +13,6 @@ import org.hibernate.Incubating;
 /// @param <T> The entity type.
 ///
 /// @author Steve Ebersole
-@Incubating
 public interface GetReferenceOperation<T> {
 	/// Perform the operation based on the given key.
 	///

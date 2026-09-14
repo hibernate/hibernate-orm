@@ -13,7 +13,7 @@
  *          between {@link org.hibernate.persister.collection.BasicCollectionPersister}
  *          and {@link org.hibernate.persister.collection.OneToManyPersister}.
  */
-@Incubating
+@Incubating(since = "6.2")
 package org.hibernate.persister.collection.mutation;
 
 import org.hibernate.Incubating;

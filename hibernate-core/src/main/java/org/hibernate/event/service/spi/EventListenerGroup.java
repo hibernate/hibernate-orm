@@ -104,7 +104,7 @@ public interface EventListenerGroup<T> {
 	 *
 	 * @param <U> the kind of event
 	 */
-	@Incubating
+	@Incubating(since = "5.4")
 	<U> void fireLazyEventOnEachListener(
 			@Nonnull Supplier<U> eventSupplier,
 			@Nonnull BiConsumer<T,U> actionOnEvent);
@@ -116,7 +116,7 @@ public interface EventListenerGroup<T> {
 	 *
 	 * @param <U> the kind of event
 	 */
-	@Incubating
+	@Incubating(since = "5.4")
 	<U> void fireEventOnEachListener(
 			@Nonnull U event,
 			@Nonnull BiConsumer<T,U> actionOnEvent);
@@ -127,7 +127,7 @@ public interface EventListenerGroup<T> {
 	 * having this additional variant allows using the optimal iteration more extensively and
 	 * reduce allocations.
 	 */
-	@Incubating
+	@Incubating(since = "5.4")
 	<U,X> void fireEventOnEachListener(
 			@Nonnull U event,
 			@Nonnull X param,
@@ -148,7 +148,7 @@ public interface EventListenerGroup<T> {
 	 * @param <RL> the type of ReactiveListener: each listener of type T will be cast to this type
 	 * @return the composite completion stage of invoking fun(event) on each listener.
 	 */
-	@Incubating
+	@Incubating(since = "5.4")
 	@Nonnull
 	<R, U, RL> CompletionStage<R> fireEventOnEachListener(
 			@Nonnull U event,
@@ -170,7 +170,7 @@ public interface EventListenerGroup<T> {
 	 * @param <X> an additional parameter to be passed to the function fun
 	 * @return the composite completion stage of invoking fun(event) on each listener.
 	 */
-	@Incubating
+	@Incubating(since = "5.4")
 	@Nonnull
 	<R, U, RL, X> CompletionStage<R> fireEventOnEachListener(
 			@Nonnull U event,
@@ -197,7 +197,7 @@ public interface EventListenerGroup<T> {
 	 * @param <RL> the type of ReactiveListener: each listener of type T will be to this type
 	 * @return the composite completion stage of invoking fun(event) on each listener.
 	 */
-	@Incubating
+	@Incubating(since = "5.4")
 	@Nonnull
 	<R, U, RL> CompletionStage<R> fireLazyEventOnEachListener(
 			@Nonnull Supplier<U> eventSupplier,

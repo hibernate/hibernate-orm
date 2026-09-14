@@ -121,7 +121,7 @@ import static org.hibernate.query.sqm.internal.TypecheckUtil.isNumberArray;
  * @see org.hibernate.boot.model.TypeContributor
  * @see org.hibernate.boot.model.TypeContributions
  */
-@Incubating
+@Incubating(since = "5.3")
 public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 //	private static final CoreMessageLogger LOG = messageLogger( Scope.class );
 
@@ -1050,12 +1050,12 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 				: (MutabilityPlan<J>) scope.getManagedBeanRegistry().getBean( planClass ).getBeanInstance();
 	}
 
-	@Internal @Incubating // find a new home for this operation
+	@Internal  // find a new home for this operation
 	public final FormatMapper getJsonFormatMapper() {
 		return getSessionFactory().getSessionFactoryOptions().getJsonFormatMapper();
 	}
 
-	@Internal @Incubating // find a new home for this operation
+	@Internal  // find a new home for this operation
 	public final FormatMapper getXmlFormatMapper() {
 		return getSessionFactory().getSessionFactoryOptions().getXmlFormatMapper();
 	}

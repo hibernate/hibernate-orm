@@ -87,7 +87,7 @@ public interface Stack<T> {
 	 * @param <X> the return type of the function
 	 * @param <Y> the type of the fixed parameter
 	 */
-	@Incubating
+	@Incubating(since = "8.0")
 	<X,Y> X findCurrentFirstWithParameter(Y parameter, BiFunction<T, Y, X> biFunction);
 
 }

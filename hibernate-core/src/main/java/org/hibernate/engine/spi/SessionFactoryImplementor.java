@@ -196,7 +196,7 @@ public interface SessionFactoryImplementor extends SessionFactory {
 	 *
 	 * @since 7.2
 	 */
-	@Incubating
+	@Incubating(since = "7.2")
 	@Nullable
 	Object resolveTenantIdentifier();
 
@@ -212,7 +212,7 @@ public interface SessionFactoryImplementor extends SessionFactory {
 	 *
 	 * @since 7.0
 	 */
-	@Internal @Incubating
+	@Internal
 	@Nonnull
 	EventListenerGroups getEventListenerGroups();
 
@@ -221,7 +221,7 @@ public interface SessionFactoryImplementor extends SessionFactory {
 	 *
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "7.0")
 	ParameterMarkerStrategy getParameterMarkerStrategy();
 
 	/**
@@ -229,7 +229,7 @@ public interface SessionFactoryImplementor extends SessionFactory {
 	 *
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "7.0")
 	@Nonnull
 	JdbcValuesMappingProducerProvider getJdbcValuesMappingProducerProvider();
 
@@ -238,7 +238,7 @@ public interface SessionFactoryImplementor extends SessionFactory {
 	 *
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "7.0")
 	@Nonnull
 	EntityCopyObserverFactory getEntityCopyObserver();
 
@@ -247,7 +247,7 @@ public interface SessionFactoryImplementor extends SessionFactory {
 	 *
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "7.0")
 	@Nonnull
 	ClassLoaderService getClassLoaderService();
 
@@ -256,7 +256,7 @@ public interface SessionFactoryImplementor extends SessionFactory {
 	 *
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "7.0")
 	@Nullable
 	ManagedBeanRegistry getManagedBeanRegistry();
 
@@ -265,7 +265,7 @@ public interface SessionFactoryImplementor extends SessionFactory {
 	 *
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "7.0")
 	@Nonnull
 	EventListenerRegistry getEventListenerRegistry();
 
@@ -355,7 +355,7 @@ public interface SessionFactoryImplementor extends SessionFactory {
 	@Nullable
 	String bestGuessEntityName(@Nonnull Object object);
 
-	@Incubating
+	@Incubating(since = "7.2")
 	@Nullable
 	default JdbcSelectWithActionsBuilder getJdbcSelectWithActionsBuilder(){
 		return new JdbcSelectWithActions.Builder();
@@ -367,13 +367,13 @@ public interface SessionFactoryImplementor extends SessionFactory {
 		return GraphParser.parse( rootEntityClass, graphText.toString(), unwrap( SessionFactoryImplementor.class ) );
 	}
 
-	@Override @Incubating
+	@Override @Incubating(since = "7.2")
 	@Nonnull
 	default <T> RootGraph<T> parseEntityGraph(@Nonnull String rootEntityName, @Nonnull CharSequence graphText) {
 		return GraphParser.parse( rootEntityName, graphText.toString(), unwrap( SessionFactoryImplementor.class ) );
 	}
 
-	@Override @Incubating
+	@Override @Incubating(since = "7.2")
 	@Nonnull
 	default <T> RootGraph<T> parseEntityGraph(@Nonnull CharSequence graphText) {
 		return GraphParser.parse( graphText.toString(), unwrap( SessionFactoryImplementor.class ) );

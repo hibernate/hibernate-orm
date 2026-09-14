@@ -27,7 +27,7 @@ import static org.hibernate.SPI.Role.SUPPLY;
 /// @see QueryEngine#getHqlTranslator()
 ///
 /// @author Steve Ebersole
-@Incubating
+@Incubating(since = "8.0")
 @SPI({ IMPLEMENT, SUPPLY })
 public interface HqlTranslator {
 	/**

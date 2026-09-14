@@ -16,7 +16,7 @@ import jakarta.persistence.metamodel.Attribute.PersistentAttributeType;
  *
  * @see PersistentAttributeType
  */
-@Incubating
+@Incubating(since = "5.4")
 public enum AttributeClassification {
 	/**
 	 * @see jakarta.persistence.Basic

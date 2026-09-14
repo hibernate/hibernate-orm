@@ -13,7 +13,7 @@ import org.hibernate.Incubating;
 ///
 /// @since 8.0
 /// @author Steve Ebersole
-@Incubating
+@Incubating(since = "8.0", group = "collection-delta")
 public sealed interface SemanticCollectionChange {
 	/// No separate semantic difference was materialized.
 	record None() implements SemanticCollectionChange {

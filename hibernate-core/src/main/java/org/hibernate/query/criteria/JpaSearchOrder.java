@@ -14,7 +14,7 @@ import org.hibernate.query.SortDirection;
  *
  * @see JpaCteCriteria
  */
-@Incubating
+@Incubating(since = "6.3")
 public interface JpaSearchOrder extends JpaCriteriaNode {
 	/**
 	 * Return the sort direction.

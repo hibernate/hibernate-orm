@@ -15,7 +15,7 @@ import java.io.ObjectInputStream;
 ///
 /// @author Steve Ebersole
 /// @since 8.0
-@Incubating
+@Incubating(since = "8.0", group = "action-queue")
 public interface ActionQueueFactory extends Service {
 	/// Reports which [queue][ActionQueue] type was configured to be used.
 	QueueType getConfiguredQueueType();

@@ -146,7 +146,7 @@ public interface Graph<J> extends GraphNode<J>, jakarta.persistence.Graph<J> {
 	 *
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "5.4")
 	<Y extends J> SubGraph<Y> addTreatedSubgraph(ManagedType<Y> type);
 
 
@@ -223,7 +223,7 @@ public interface Graph<J> extends GraphNode<J>, jakarta.persistence.Graph<J> {
 	 *
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "5.4")
 	<AJ> SubGraph<AJ> addTreatedSubgraph(Attribute<? super J, ? super AJ> attribute, ManagedType<AJ> type)
 			throws CannotContainSubGraphException;
 
@@ -302,7 +302,7 @@ public interface Graph<J> extends GraphNode<J>, jakarta.persistence.Graph<J> {
 	 *
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "5.4")
 	<AJ> SubGraph<AJ> addTreatedElementSubgraph(PluralAttribute<? super J, ?, ? super AJ> attribute, ManagedType<AJ> type)
 			throws CannotContainSubGraphException;
 
@@ -372,7 +372,7 @@ public interface Graph<J> extends GraphNode<J>, jakarta.persistence.Graph<J> {
 	 *
 	 * @since 7.0
 	 */
-	@Incubating
+	@Incubating(since = "5.4")
 	<AJ> SubGraph<AJ> addTreatedMapKeySubgraph(MapAttribute<? super J, ? super AJ, ?> attribute, ManagedType<AJ> type)
 			throws CannotContainSubGraphException;
 

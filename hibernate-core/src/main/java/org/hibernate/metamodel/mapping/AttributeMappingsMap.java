@@ -29,7 +29,7 @@ import org.hibernate.metamodel.mapping.internal.ImmutableAttributeMappingsMap;
  *
  * @since 6.2
  */
-@Incubating
+@Incubating(since = "5.4")
 public interface AttributeMappingsMap {
 
 	void forEachValue(Consumer<? super AttributeMapping> action);

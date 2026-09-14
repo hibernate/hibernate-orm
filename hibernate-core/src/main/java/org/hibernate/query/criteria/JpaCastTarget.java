@@ -13,7 +13,7 @@ import org.hibernate.Incubating;
  *
  * @since 7.0
  */
-@Incubating
+@Incubating(since = "6.3")
 public interface JpaCastTarget<T> {
 
 	/**

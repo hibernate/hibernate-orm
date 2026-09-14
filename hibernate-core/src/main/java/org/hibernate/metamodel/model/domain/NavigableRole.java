@@ -28,7 +28,7 @@ import static org.hibernate.internal.util.StringHelper.isEmpty;
  *
  * @author Steve Ebersole
  */
-@Incubating
+@Incubating(since = "5.4")
 public final class NavigableRole implements DotIdentifierSequence, Serializable {
 	public static final String IDENTIFIER_MAPPER_PROPERTY = NavigablePath.IDENTIFIER_MAPPER_PROPERTY;
 

@@ -8,7 +8,7 @@
  *
  * @author Steve Ebersole
  */
-@Incubating
+@Incubating(since = "8.0")
 package org.hibernate.sql.spi.mutation.jdbc;
 
 import org.hibernate.Incubating;

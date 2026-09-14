@@ -8,7 +8,7 @@ import org.hibernate.Incubating;
 import org.jboss.logging.Logger;
 import org.junit.jupiter.api.Assertions;
 
-@Incubating
+@Incubating(since = "7.4")
 public class LogLevelContext implements AutoCloseable {
 
 	private final String name;

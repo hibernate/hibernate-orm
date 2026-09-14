@@ -25,7 +25,7 @@ import org.hibernate.engine.jdbc.mutation.group.PreparedStatementGroup;
 ///
 /// @author Steve Ebersole
 /// @since 8.0
-@Incubating
+@Incubating(since = "8.0")
 public interface GroupedBatch extends Batch {
 	/// The group of prepared statements managed by this batch.
 	///

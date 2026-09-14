@@ -14,7 +14,7 @@ import jakarta.persistence.ParameterMode;
  *
  * @author Steve Ebersole
  */
-@Incubating
+@Incubating(since = "7.0")
 public interface ProcedureParameter<T> extends QueryParameter<T> {
 	/**
 	 * Retrieves the parameter "mode".  Only really pertinent in regards to procedure/function calls.

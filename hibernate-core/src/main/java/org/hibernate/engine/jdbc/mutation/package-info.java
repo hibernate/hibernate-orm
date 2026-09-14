@@ -17,7 +17,7 @@
  *
  * @author Steve Ebersole
  */
-@Incubating
+@Incubating(since = "6.2")
 package org.hibernate.engine.jdbc.mutation;
 
 import org.hibernate.Incubating;

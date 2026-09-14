@@ -23,7 +23,7 @@ import static org.hibernate.SPI.Role.USE;
 ///
 /// @author Steve Ebersole
 /// @see Dialect#getInformationExtractor(ExtractionContext)
-@Incubating
+@Incubating(since = "5.1")
 @SPI({ USE, IMPLEMENT, SUPPLY })
 public interface InformationExtractor {
 

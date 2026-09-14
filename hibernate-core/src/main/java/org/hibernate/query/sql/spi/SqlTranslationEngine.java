@@ -19,7 +19,7 @@ import java.util.Set;
  *
  * @author Gavin King
  */
-@Incubating
+@Incubating(since = "7.0")
 public interface SqlTranslationEngine extends SqlAstCreationContext {
 	// TODO: consider implementing SqlStringGenerationContext
 

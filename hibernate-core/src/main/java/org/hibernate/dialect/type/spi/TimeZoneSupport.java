@@ -20,7 +20,7 @@ import static org.hibernate.SPI.Role.USE;
 /// @author Steve Ebersole
 /// @since 8.0
 /// @see org.hibernate.dialect.Dialect#getTimeZoneSupport()
-@Incubating
+@Incubating(since = "8.0")
 @SPI(USE)
 public enum TimeZoneSupport {
 	/// The `with time zone` types retain the original zone. A round trip

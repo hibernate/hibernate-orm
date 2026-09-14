@@ -20,7 +20,7 @@ import jakarta.annotation.Nullable;
 /**
  * @since 7.0
  */
-@Incubating
+@Incubating(since = "6.2")
 public abstract class AbstractSqmSetReturningFunctionDescriptor implements SqmSetReturningFunctionDescriptor {
 	private final ArgumentsValidator argumentsValidator;
 	private final SetReturningFunctionTypeResolver setReturningTypeResolver;

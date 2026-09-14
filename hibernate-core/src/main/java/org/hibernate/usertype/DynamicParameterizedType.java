@@ -46,7 +46,7 @@ public interface DynamicParameterizedType extends ParameterizedType {
 
 		Class<?> getReturnedClass();
 
-		@Incubating
+		@Incubating(since = "6.5")
 		default Type getReturnedJavaType() {
 			return getReturnedClass();
 		}

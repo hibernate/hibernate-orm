@@ -10,7 +10,7 @@ import org.hibernate.Incubating;
 ///
 /// @since 8.0
 /// @author Steve Ebersole
-@Incubating
+@Incubating(since = "8.0", group = "adjustable-settings")
 public interface AdjustableSettings {
 	/// Toggle whether Hibernate should log SQL to [stdout][System#out].
 	///

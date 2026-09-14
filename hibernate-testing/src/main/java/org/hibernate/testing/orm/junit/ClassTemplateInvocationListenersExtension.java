@@ -21,7 +21,7 @@ import static org.junit.platform.commons.support.HierarchyTraversalMode.BOTTOM_U
  * with the {@link EntityManagerFactoryExtension entity manager} and {@link SessionFactoryExtension
  * session factory} extensions.
  */
-@Incubating
+@Incubating(since = "7.2")
 public class ClassTemplateInvocationListenersExtension
 		implements BeforeClassTemplateInvocationCallback, AfterClassTemplateInvocationCallback {
 	@Override

@@ -45,6 +45,6 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  */
 @Target( TYPE )
 @Retention( RUNTIME )
-@Incubating
+@Incubating(since = "6.6")
 public @interface ConcreteProxy {
 }

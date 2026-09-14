@@ -33,7 +33,7 @@ import jakarta.annotation.Nullable;
  *
  * @since 7.0
  */
-@Incubating
+@Incubating(since = "6.2")
 public class SqmJsonExistsExpression extends AbstractSqmJsonPathExpression<Boolean> implements JpaJsonExistsExpression {
 	private ErrorBehavior errorBehavior = ErrorBehavior.UNSPECIFIED;
 

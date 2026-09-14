@@ -32,7 +32,7 @@ import java.util.function.UnaryOperator;
  *
  * @author Steve Ebersole
  */
-@Incubating
+@Incubating(since = "7.2")
 public interface CommonBuilder {
 	/// Open the session using the specified options.
 	@Nonnull
@@ -172,7 +172,7 @@ public interface CommonBuilder {
 	/// @see org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider#releaseReadOnlyConnection(Object, Connection)
 	///
 	/// @since 7.2
-	@Incubating
+	@Incubating(since = "8.0")
 	@Nonnull
 	CommonBuilder readOnly(boolean readOnly);
 
@@ -228,7 +228,7 @@ public interface CommonBuilder {
 	 *
 	 * @see org.hibernate.annotations.Temporal
 	 */
-	@Incubating
+	@Incubating(since = "8.0")
 	@Nonnull
 	CommonBuilder asOf(@Nullable Instant instant);
 
@@ -244,7 +244,7 @@ public interface CommonBuilder {
 	 *
 	 * @see org.hibernate.annotations.Temporal
 	 */
-	@Incubating
+	@Incubating(since = "8.0")
 	@Nonnull
 	CommonBuilder atChangeset(@Nullable Object changesetId);
 }

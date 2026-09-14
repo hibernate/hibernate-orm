@@ -14,7 +14,7 @@ import org.hibernate.Incubating;
  *
  * @since 7.2
  */
-@Incubating
+@Incubating(since = "7.2")
 public interface TransactionCompletionCallbacks {
 	/**
 	 * Commonality for {@linkplain BeforeCompletionCallback before} and

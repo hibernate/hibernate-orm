@@ -7,7 +7,6 @@ package org.hibernate.query.sqm.tuple.internal;
 import java.util.function.BiConsumer;
 
 import jakarta.annotation.Nullable;
-import org.hibernate.Incubating;
 import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
@@ -42,7 +41,6 @@ import org.hibernate.type.descriptor.java.JavaType;
 /**
  * @author Christian Beikov
  */
-@Incubating
 public class AnonymousTupleBasicValuedModelPart implements OwnedValuedModelPart, MappingType, BasicValuedModelPart {
 
 	private static final FetchOptions FETCH_OPTIONS = FetchOptions.valueOf( FetchTiming.IMMEDIATE, FetchStyle.JOIN );

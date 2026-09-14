@@ -37,7 +37,7 @@ import static org.hibernate.SPI.Role.USE;
 /// @see LiteralSupport#appendDateTimeLiteral(SqlAppender, TemporalAccessor, TemporalType, TimeZone)
 /// @see LiteralSupport#appendDateTimeLiteral(SqlAppender, Date, TemporalType, TimeZone)
 /// @see LiteralSupport#appendDateTimeLiteral(SqlAppender, Calendar, TemporalType, TimeZone)
-@Incubating
+@Incubating(since = "8.0")
 @SPI(USE)
 public final class StandardDateTimeLiteralRendering {
 	private static final DateTimeFormatter TIME_WITH_NUMERIC_OFFSET =

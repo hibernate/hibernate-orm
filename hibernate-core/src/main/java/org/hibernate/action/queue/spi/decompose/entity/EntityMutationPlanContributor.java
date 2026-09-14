@@ -52,7 +52,7 @@ import org.hibernate.sql.ast.spi.model.TableMutation;
 ///
 /// @author Steve Ebersole
 /// @since 8.0
-@Incubating
+@Incubating(since = "8.0", group = "action-queue")
 public interface EntityMutationPlanContributor {
 	/// The contributor used by the standard state-management model.  It does
 	/// not contribute any alternate mutation plans.

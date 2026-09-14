@@ -1304,10 +1304,10 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 
 	boolean canUseReferenceCacheEntries();
 
-	@Incubating
+	@Incubating(since = "6.5")
 	boolean useShallowQueryCacheLayout();
 
-	@Incubating
+	@Incubating(since = "6.5")
 	boolean storeDiscriminatorInShallowQueryCacheLayout();
 
 	boolean hasFilterForLoadByKey();
@@ -1315,7 +1315,7 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	/**
 	 * @return Metadata for each unique key defined
 	 */
-	@Incubating
+	@Incubating(since = "6.2")
 	Iterable<UniqueKeyEntry> uniqueKeyEntries();
 
 	/**
@@ -1501,7 +1501,7 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	@Deprecated(since = "7.0", forRemoval = true)
 	String[] toColumns(String propertyName);
 
-	@Incubating
+	@Incubating(since = "7.4")
 	boolean excludedFromTemporalVersioning(int[] dirtyAttributeIndexes, boolean hasDirtyCollection);
 
 	boolean isSharedColumn(String columnExpression);

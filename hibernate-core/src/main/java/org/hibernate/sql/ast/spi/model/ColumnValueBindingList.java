@@ -7,7 +7,6 @@ package org.hibernate.sql.ast.spi.model;
 import java.util.ArrayList;
 
 import jakarta.annotation.Nullable;
-import org.hibernate.Incubating;
 import org.hibernate.Internal;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -48,7 +47,7 @@ public class ColumnValueBindingList extends ArrayList<ColumnValueBinding> implem
 		}
 	}
 
-	@Internal @Incubating
+	@Internal
 	public void addRestriction(ColumnValueBinding valueBinding) {
 		add( valueBinding );
 	}

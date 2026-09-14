@@ -12,7 +12,7 @@ package org.hibernate;
  *
  * @since 7.0
  */
-@Incubating
+@Incubating(since = "7.2")
 public class DetachedObjectException extends UnmanagedObjectException {
 	public DetachedObjectException(String message) {
 		super( message );

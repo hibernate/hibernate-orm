@@ -74,7 +74,7 @@ import org.hibernate.id.BulkInsertionCapableIdentifierGenerator;
 import org.hibernate.id.CompositeNestedGeneratedValueGenerator;
 import org.hibernate.id.OptimizableGenerator;
 import org.hibernate.id.insert.InsertReturningDelegate;
-import org.hibernate.id.insert.UpdateVersionProbeDelegate;
+import org.hibernate.id.insert.UpdateVersionSelectDelegate;
 import org.hibernate.internal.util.ImmutableBitSet;
 import org.hibernate.spi.IndexedConsumer;
 import org.hibernate.internal.util.collections.LockModeEnumMap;
@@ -3617,7 +3617,7 @@ public abstract class AbstractEntityPersister
 			generatedProperties.add( getVersionMapping() );
 			return getDialect().getGeneratedValuesSupport().supports( UPDATE_RETURNING )
 					? new InsertReturningDelegate( this, UPDATE, generatedProperties )
-					: new UpdateVersionProbeDelegate( this, generatedProperties );
+					: new UpdateVersionSelectDelegate( this, generatedProperties );
 		}
 		else {
 			return getGeneratedValuesDelegate( this, UPDATE );

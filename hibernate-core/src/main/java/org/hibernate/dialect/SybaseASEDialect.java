@@ -731,8 +731,11 @@ public class SybaseASEDialect extends SybaseDialect implements CurrentTemporalSu
 
 	@Override
 	public boolean causesRollback(SQLException sqlException) {
-		// ASE rolls back the transaction chosen as a deadlock victim.
-		return extractErrorCode( sqlException ) == 1205;
+		// ASE rolls back the transaction on either a deadlock or a lock wait timeout.
+		return switch ( extractErrorCode( sqlException ) ) {
+			case 1205, 12205 -> true;
+			default -> false;
+		};
 	}
 
 	@Override

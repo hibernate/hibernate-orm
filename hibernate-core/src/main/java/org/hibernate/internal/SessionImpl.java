@@ -2036,6 +2036,10 @@ public class SessionImpl
 			internalClear();
 		}
 
+		if ( !successful ) {
+			actionQueue.getTransactionCompletionCallbacks().clearBeforeTransactionCallbacks();
+		}
+
 		persistenceContext.afterTransactionCompletion();
 		actionQueue.afterTransactionCompletion( successful );
 

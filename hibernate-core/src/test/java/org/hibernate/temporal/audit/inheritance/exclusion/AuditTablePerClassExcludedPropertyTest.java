@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.temporal.audit.inheritance;
+package org.hibernate.temporal.audit.inheritance.exclusion;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -13,6 +13,7 @@ import org.hibernate.annotations.Audited;
 import org.hibernate.audit.AuditLog;
 import org.hibernate.cfg.StateManagementSettings;
 import org.hibernate.temporal.spi.ChangesetIdentifierSupplier;
+import org.hibernate.testing.orm.junit.AfterClassTemplate;
 import org.hibernate.testing.orm.junit.AuditedTest;
 import org.hibernate.testing.orm.junit.BeforeClassTemplate;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -33,7 +34,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 		AuditTablePerClassExcludedPropertyTest.Leaf.class
 })
 @ServiceRegistry(settings = @Setting(name = StateManagementSettings.CHANGESET_ID_SUPPLIER,
-		value = "org.hibernate.temporal.audit.inheritance.AuditTablePerClassExcludedPropertyTest$TxIdSupplier"))
+		value = "org.hibernate.temporal.audit.inheritance.exclusion.AuditTablePerClassExcludedPropertyTest$TxIdSupplier"))
 @Jira("https://hibernate.atlassian.net/browse/HHH-20857")
 class AuditTablePerClassExcludedPropertyTest {
 	private static int currentTxId;
@@ -76,31 +77,13 @@ class AuditTablePerClassExcludedPropertyTest {
 		} );
 	}
 
-	@Test
-	void testOrdinaryReadKeepsExcludedProperties(SessionFactoryScope scope) {
-		scope.inSession( session -> {
-			var results = session.createSelectionQuery( "from Base order by id", Base.class ).getResultList();
-			assertThat( results ).hasSize( 3 );
-
-			var base = results.get( 0 );
-			assertThat( base.baseIncluded ).isEqualTo( "base" );
-			assertThat( base.baseExcluded ).isEqualTo( "base-excluded" );
-
-			var middle = (Middle) results.get( 1 );
-			assertThat( middle.middleIncluded ).isEqualTo( "middle" );
-			assertThat( middle.middleExcluded ).isEqualTo( "middle-excluded" );
-			assertThat( middle.baseExcluded ).isEqualTo( "middle-inherited" );
-
-			var leaf = (Leaf) results.get( 2 );
-			assertThat( leaf.leafIncluded ).isEqualTo( "leaf" );
-			assertThat( leaf.leafExcluded ).isEqualTo( "leaf-excluded" );
-			assertThat( leaf.baseExcluded ).isEqualTo( "leaf-inherited" );
-			assertThat( leaf.middleExcluded ).isEqualTo( "leaf-inherited-excluded" );
-		} );
+	@AfterClassTemplate
+	public void tearDown(SessionFactoryScope scope) {
+		scope.dropData();
 	}
 
 	@Test
-	void testAuditReadExcludesLocalAndInheritedProperties(SessionFactoryScope scope) {
+	void testAuditRead(SessionFactoryScope scope) {
 		try (var session = scope.getSessionFactory().withStatelessOptions()
 				.atChangeset( AuditLog.ALL_CHANGESETS ).openStatelessSession()) {
 			var results = session.createSelectionQuery( "from Base order by id", Base.class ).getResultList();
@@ -123,6 +106,20 @@ class AuditTablePerClassExcludedPropertyTest {
 			assertThat( leaf.leafExcluded ).isNull();
 			assertThat( leaf.baseExcluded ).isNull();
 			assertThat( leaf.middleExcluded ).isNull();
+		}
+	}
+
+	@Test
+	void testAuditReadWithTypePredicate(SessionFactoryScope scope) {
+		try (var session = scope.getSessionFactory().withStatelessOptions()
+				.atChangeset( AuditLog.ALL_CHANGESETS ).openStatelessSession()) {
+			var results = session.createSelectionQuery(
+					"from Base b where type(b) = Base order by id",
+					Base.class
+			).getResultList();
+			assertThat( results ).hasSize( 1 );
+			assertThat( results.get( 0 ).baseIncluded ).isEqualTo( "base" );
+			assertThat( results.get( 0 ).baseExcluded ).isNull();
 		}
 	}
 

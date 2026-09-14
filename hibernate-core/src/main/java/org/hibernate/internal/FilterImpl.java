@@ -57,6 +57,7 @@ public class FilterImpl implements Filter, Serializable {
 		this.applyToLoadByKey = definition.isAppliedToLoadByKey();
 	}
 
+	@Override
 	public FilterDefinition getFilterDefinition() {
 		return definition;
 	}

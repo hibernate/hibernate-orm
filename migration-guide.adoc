@@ -75,6 +75,21 @@ See the link:{releaseSeriesBase}#whats-new[website] for the list of new features
 
 This section describes changes to contracts (classes, interfaces, methods, etc.) which are considered https://hibernate.org/community/compatibility-policy/#api[API].
 
+=== Filter definition API
+
+`SessionFactory.getFilterDefinition(String)` and `Filter.getFilterDefinition()`
+now return the API interface `org.hibernate.engine.FilterDefinition`.
+Their deprecations have been removed. The interface exposes the filter name,
+parameter names, default condition, automatic enablement, and load-by-key flag.
+The existing SPI class implements this interface, so the returned objects and
+the behavior for unknown filter names are unchanged.
+
+The changed return types are a binary compatibility break: callers compiled
+against the old API declarations must be recompiled. Source code assigning the
+result to `org.hibernate.engine.spi.FilterDefinition` must use the API interface
+or migrate to SPI access if it needs JDBC mappings, parameter resolvers, or
+argument processing. See <<filter-definition-spi>>.
+
 [[session-replicate]]
 === Removed `Session.replicate()`
 
@@ -274,6 +289,27 @@ The annotation processor now propagates security annotations from the `jakarta.a
 == Changes to SPI
 
 This section describes changes to contracts (classes, interfaces, methods, etc.) which are considered https://hibernate.org/community/compatibility-policy/#spi[SPI].
+
+[[filter-definition-spi]]
+=== Filter definition API/SPI split
+
+`org.hibernate.engine.spi.FilterDefinition` remains SPI and now implements the
+API interface `org.hibernate.engine.FilterDefinition`. Its constructors, JDBC
+parameter mappings, managed parameter resolvers, and argument processing remain
+unchanged. The public API getters no longer return the SPI class.
+
+Integrations requiring the SPI definition should use:
+
+[source,java]
+----
+sessionFactory.unwrap(SessionFactoryImplementor.class)
+        .getFilterDefinition(filterName);
+----
+
+`SessionFactoryImplementor` is in `org.hibernate.engine.spi` and retains its SPI
+return type. Internal `FilterImpl` access also retains its covariant SPI return;
+`FilterImpl` is not a supported provider access path. For an enabled `Filter`,
+use its name to look up the SPI definition through `SessionFactoryImplementor`.
 
 [[sql-ast-translator-stability]]
 === SQL AST and translator changes

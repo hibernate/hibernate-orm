@@ -6,10 +6,11 @@ package org.hibernate.testing.orm.jpa;
 
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.SharedCacheMode;
 import jakarta.persistence.ValidationMode;
@@ -21,6 +22,7 @@ import javax.sql.DataSource;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 import org.jspecify.annotations.NonNull;
 
+import static java.util.Collections.addAll;
 import static java.util.Collections.emptyList;
 
 /**
@@ -33,98 +35,117 @@ import static java.util.Collections.emptyList;
  * @author Steve Ebersole
  */
 public class PersistenceUnitInfoImpl implements PersistenceUnitInfo {
+	@Nonnull
 	private final String name;
-
+	@Nonnull
 	private final Properties properties = new Properties();
-
+	@Nullable
 	private String scopeAnnotationName;
-	private List<String> qualifierAnnotationNames = List.of();
-	private SharedCacheMode cacheMode;
-	private ValidationMode validationMode;
+	@Nullable
+	private List<String> qualifierAnnotationNames;
+	@Nonnull
+	private SharedCacheMode cacheMode = SharedCacheMode.ENABLE_SELECTIVE;
+	@Nonnull
+	private ValidationMode validationMode = ValidationMode.AUTO;
+	@Nonnull
 	private FetchType defaultToOneFetchType = FetchType.EAGER;
-	private PersistenceUnitTransactionType transactionType;
+	@Nonnull
+	private PersistenceUnitTransactionType transactionType =
+			PersistenceUnitTransactionType.RESOURCE_LOCAL;
 
+	@Nullable
 	private List<String> mappingFiles;
+	@Nullable
 	private List<String> managedClassNames;
 	private boolean excludeUnlistedClasses;
 	private ClassLoader classLoader;
 	public List<String> managedPackageDescriptors = List.of();
 	public List<String> managedModuleDescriptors = List.of();
 
-	public PersistenceUnitInfoImpl(String name) {
+	public PersistenceUnitInfoImpl(@Nonnull String name) {
 		this.name = name;
 	}
 
 	@Override
+	@Nonnull
 	public String getPersistenceUnitName() {
 		return name;
 	}
 
 	@Override
+	@Nullable
 	public String getScopeAnnotationName() {
 		return scopeAnnotationName;
 	}
 
-	public void setScopeAnnotationName(String scopeAnnotationName) {
+	public void setScopeAnnotationName(@Nullable String scopeAnnotationName) {
 		this.scopeAnnotationName = scopeAnnotationName;
 	}
 
 	@Override
+	@Nullable
 	public List<String> getQualifierAnnotationNames() {
 		return qualifierAnnotationNames;
 	}
 
-	public void setQualifierAnnotationNames(List<String> qualifierAnnotationNames) {
+	public void setQualifierAnnotationNames(@Nullable List<String> qualifierAnnotationNames) {
 		this.qualifierAnnotationNames = qualifierAnnotationNames;
 	}
 
 	@Override
+	@Nonnull
 	public Properties getProperties() {
 		return properties;
 	}
 
 	@Override
+	@Nullable
 	public String getPersistenceProviderClassName() {
 		return HibernatePersistenceProvider.class.getName();
 	}
 
 	@Override
+	@Nonnull
 	public PersistenceUnitTransactionType getTransactionType() {
 		return transactionType;
 	}
 
-	public void setTransactionType(@SuppressWarnings("removal") PersistenceUnitTransactionType transactionType) {
+	public void setTransactionType(@Nonnull PersistenceUnitTransactionType transactionType) {
 		this.transactionType = transactionType;
 	}
 
 	@Override
+	@Nonnull
 	public SharedCacheMode getSharedCacheMode() {
 		return cacheMode;
 	}
 
-	public void setCacheMode(SharedCacheMode cacheMode) {
+	public void setCacheMode(@Nonnull SharedCacheMode cacheMode) {
 		this.cacheMode = cacheMode;
 	}
 
 	@Override
+	@Nonnull
 	public ValidationMode getValidationMode() {
 		return validationMode;
 	}
 
 	@Override
+	@Nonnull
 	public FetchType getDefaultToOneFetchType() {
 		return defaultToOneFetchType;
 	}
 
-	public void setDefaultToOneFetchType(FetchType defaultToOneFetchType) {
+	public void setDefaultToOneFetchType(@Nonnull FetchType defaultToOneFetchType) {
 		this.defaultToOneFetchType = defaultToOneFetchType;
 	}
 
-	public void setValidationMode(ValidationMode validationMode) {
+	public void setValidationMode(@Nonnull ValidationMode validationMode) {
 		this.validationMode = validationMode;
 	}
 
 	@Override
+	@Nonnull
 	public List<String> getMappingFileNames() {
 		return mappingFiles == null ? emptyList() : mappingFiles;
 	}
@@ -133,10 +154,11 @@ public class PersistenceUnitInfoImpl implements PersistenceUnitInfo {
 		if ( this.mappingFiles == null ) {
 			this.mappingFiles = new ArrayList<>();
 		}
-		Collections.addAll( this.mappingFiles, mappingFiles );
+		addAll( this.mappingFiles, mappingFiles );
 	}
 
 	@Override
+	@Nonnull
 	public List<String> getManagedClassNames() {
 		return managedClassNames == null ? emptyList() : managedClassNames;
 	}
@@ -152,6 +174,7 @@ public class PersistenceUnitInfoImpl implements PersistenceUnitInfo {
 	}
 
 	@Override
+	@Nonnull
 	public List<String> getAllClassNames() {
 		return getManagedClassNames();
 	}
@@ -166,11 +189,11 @@ public class PersistenceUnitInfoImpl implements PersistenceUnitInfo {
 		return managedModuleDescriptors;
 	}
 
-	public void applyManagedClassNames(String... managedClassNames) {
+	public void applyManagedClassNames(@Nonnull String... managedClassNames) {
 		if ( this.managedClassNames == null ) {
 			this.managedClassNames = new ArrayList<>();
 		}
-		Collections.addAll( this.managedClassNames, managedClassNames );
+		addAll( this.managedClassNames, managedClassNames );
 	}
 
 	@Override
@@ -183,45 +206,52 @@ public class PersistenceUnitInfoImpl implements PersistenceUnitInfo {
 	}
 
 	@Override
+	@Nonnull
 	public ClassLoader getClassLoader() {
 		return classLoader;
 	}
 
-	public void setClassLoader(ClassLoader classLoader) {
+	public void setClassLoader(@Nonnull ClassLoader classLoader) {
 		this.classLoader = classLoader;
 	}
 
 	@Override
+	@Nonnull
 	public String getPersistenceXMLSchemaVersion() {
 		return null;
 	}
 
 	@Override
+	@Nullable
 	public DataSource getJtaDataSource() {
 		return null;
 	}
 
 	@Override
+	@Nullable
 	public DataSource getNonJtaDataSource() {
 		return null;
 	}
 
 	@Override
+	@Nonnull
 	public List<URL> getJarFileUrls() {
 		return null;
 	}
 
 	@Override
+	@Nonnull
 	public URL getPersistenceUnitRootUrl() {
 		return null;
 	}
 
 	@Override
-	public void addTransformer(ClassTransformer transformer) {
+	public void addTransformer(@Nonnull ClassTransformer transformer) {
 
 	}
 
 	@Override
+	@Nonnull
 	public ClassLoader getNewTempClassLoader() {
 		return null;
 	}

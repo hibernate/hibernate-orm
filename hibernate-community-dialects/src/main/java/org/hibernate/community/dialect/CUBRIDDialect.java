@@ -1241,7 +1241,7 @@ public class CUBRIDDialect extends Dialect implements CurrentTemporalSupport, Te
 	}
 
 	@Override
-	@SPI({ IMPLEMENT, SUPPLY })
+	@SPI({ USE, IMPLEMENT, SUPPLY })
 	public DmlTargetColumnQualifierSupport getDmlTargetColumnQualifierSupport() {
 		//a joined DELETE/UPDATE requires the table alias to qualify columns
 		return DmlTargetColumnQualifierSupport.TABLE_ALIAS;

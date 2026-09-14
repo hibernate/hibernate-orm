@@ -6,6 +6,7 @@ package org.hibernate.action.internal;
 
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
+import org.hibernate.engine.internal.RootTenantCache;
 import org.hibernate.action.spi.AfterTransactionCompletionProcess;
 import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
 import org.hibernate.cache.CacheException;
@@ -151,6 +152,7 @@ public abstract class CollectionAction implements ComparableExecutable {
 
 	@Override
 	public final void beforeExecutions() throws CacheException {
+		RootTenantCache.invalidateCollection( key, getPersister(), getSession() );
 		// We need to obtain the lock before any actions are executed, since this may be an inverse="true"
 		// bidirectional association, and it is one of the earlier entity actions which actually updates
 		// the database. This action is responsible for second-level cache invalidation only.

@@ -6,6 +6,7 @@ package org.hibernate.action.internal;
 
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
+import org.hibernate.engine.internal.RootTenantCache;
 import org.hibernate.AssertionFailure;
 import org.hibernate.CacheMode;
 import org.hibernate.cache.CacheException;
@@ -102,6 +103,7 @@ public class EntityUpdateAction extends EntityAction {
 		dirtyFields = dirtyProperties;
 		this.hasDirtyCollection = hasDirtyCollection;
 		this.rowId = rowId;
+		RootTenantCache.invalidateEntity( id, persister, session );
 
 		final var naturalIdMapping = persister.getNaturalIdMapping();
 		previousNaturalIdValues =

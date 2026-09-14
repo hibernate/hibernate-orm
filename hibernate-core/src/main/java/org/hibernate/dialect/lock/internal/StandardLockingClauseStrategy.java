@@ -120,6 +120,7 @@ public class StandardLockingClauseStrategy extends AbstractLockingClauseStrategy
 		final TableGroup joinedGroup = join.getJoinedGroup();
 		if ( join.isInitialized()
 			&& join.getJoinType() != SqlAstJoinType.INNER
+			&& join.getJoinType() != SqlAstJoinType.CROSS
 			&& !joinedGroup.isVirtual() ) {
 			return true;
 		}

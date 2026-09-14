@@ -38,6 +38,7 @@ import org.hibernate.generator.EventType;
 import org.hibernate.generator.Generator;
 import org.hibernate.generator.OnExecutionGenerator;
 import org.hibernate.generator.values.GeneratedValues;
+import org.hibernate.generator.values.internal.GeneratedValuesMappingProducer;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
@@ -388,48 +389,20 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 
 	private boolean supportsDatabaseDirtinessCheck(EntityVersionMapping versionMapping) {
 		final var persister = entityPersister();
-		if ( versionMapping == null
-				|| persister.isVersionPropertyGenerated()
-				|| persister.getUpdateDelegate() == null
-				|| persister.getIdentifierTableMapping().getUpdateDetails().getCustomSql() != null ) {
-			return false;
-		}
-
-		boolean hasExcludedProperty = false;
-		final boolean[] updateability = persister.getPropertyUpdateability();
-		final boolean[] versionability = persister.getPropertyVersionability();
-		for ( int i = 0; i < updateability.length; i++ ) {
-			final var attribute = persister.getAttributeMapping( i );
-			if ( versionability[i] && attribute.isPluralAttributeMapping() ) {
-				// A root-table update cannot compare the contents of a collection table.
-				return false;
-			}
-			else if ( updateability[i] ) {
-				if ( attribute != versionMapping.getVersionAttribute() ) {
-					if ( versionability[i] ) {
-						if ( !(attribute instanceof SingularAttributeMapping singularAttribute) ) {
-							return false;
-						}
-						else {
-							for ( int selectableIndex = 0; selectableIndex < singularAttribute.getJdbcTypeCount(); selectableIndex++ ) {
-								final var selectable = singularAttribute.getSelectable( selectableIndex );
-								if ( !selectable.isFormula() && selectable.isUpdateable() ) {
-									if ( !physicalTableMappingForMutation( persister, selectable ).isIdentifierTable()
-										|| !selectable.getJdbcMapping().getJdbcType().isComparable()
-										|| !"?".equals( selectable.getWriteExpression() ) ) {
-										return false;
-									}
-								}
-							}
-						}
-					}
-					else {
-						hasExcludedProperty = true;
-					}
+		final var updateDelegate = persister.getUpdateDelegate();
+		if ( versionMapping != null && !persister.isVersionPropertyGenerated()
+				&& updateDelegate != null
+				&& updateDelegate.getGeneratedValuesMappingProducer()
+						instanceof GeneratedValuesMappingProducer mappingProducer ) {
+			// The persister adds the application-generated version to the delegate's results
+			// only when it has determined that a database dirtiness check is supported.
+			for ( var resultBuilder : mappingProducer.getResultBuilders() ) {
+				if ( resultBuilder.getModelPart() == versionMapping ) {
+					return true;
 				}
 			}
 		}
-		return hasExcludedProperty;
+		return false;
 	}
 
 	private static boolean isDirty(

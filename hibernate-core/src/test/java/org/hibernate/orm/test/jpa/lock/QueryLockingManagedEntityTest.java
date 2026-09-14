@@ -13,11 +13,14 @@ import jakarta.persistence.RollbackException;
 import org.hibernate.LockMode;
 import org.hibernate.Locking;
 import org.hibernate.Session;
+import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -67,7 +70,7 @@ class QueryLockingManagedEntityTest {
 	@ParameterizedTest
 	@EnumSource(LockModeType.class)
 	void testManagedAndNewStreamResults(LockModeType mode, EntityManagerFactoryScope scope) {
-		testManagedAndNewQueryResults( mode, Locking.FollowOn.ALLOW, true, scope );
+		testManagedAndNewQueryResults( mode, Locking.FollowOn.DISALLOW, true, scope );
 	}
 
 	@ParameterizedTest
@@ -85,6 +88,10 @@ class QueryLockingManagedEntityTest {
 	})
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSelectLocking.class)
 	@FailureExpected(reason = "Follow-on locking runs before streamed results have been consumed")
+	@SkipForDialect(dialectClass = SQLServerDialect.class, matchSubTypes = true,
+			reason = "The dialect always uses inline locking, even when follow-on locking is forced")
+	@SkipForDialect(dialectClass = SybaseASEDialect.class, matchSubTypes = true,
+			reason = "The dialect always uses inline locking, even when follow-on locking is forced")
 	void testManagedAndNewStreamResultsWithFollowOnLocking(LockModeType mode, EntityManagerFactoryScope scope) {
 		testManagedAndNewQueryResults( mode, Locking.FollowOn.FORCE, true, scope );
 	}

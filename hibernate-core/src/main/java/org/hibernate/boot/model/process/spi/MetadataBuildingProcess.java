@@ -54,7 +54,6 @@ import org.hibernate.boot.models.internal.DomainModelCategorizationCollector;
 import org.hibernate.boot.models.xml.spi.XmlPreProcessor;
 import org.hibernate.boot.models.xml.spi.XmlProcessor;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.AdditionalMappingContributions;
 import org.hibernate.boot.spi.AdditionalMappingContributor;
 import org.hibernate.boot.spi.BootstrapContext;
@@ -397,14 +396,11 @@ public class MetadataBuildingProcess {
 		);
 		managedResources.getAnnotatedPackageNames()
 				.forEach( packageName -> {
-					try {
-						final Class<?> packageInfoClass =
-								modelsContext.getClassLoading()
-										.classForName( packageName + ".package-info" );
+					final Class<?> packageInfoClass =
+							modelsContext.getClassLoading()
+									.findClassForName( packageName + ".package-info" );
+					if ( packageInfoClass != null ) {
 						allKnownClassNames.add( packageInfoClass.getName() );
-					}
-					catch (ClassLoadingException classLoadingException) {
-						// no package-info, so there can be no annotations... just skip it
 					}
 				} );
 		managedResources.getAnnotatedClassReferences()

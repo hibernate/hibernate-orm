@@ -9,6 +9,17 @@ import jakarta.persistence.QueryFlushMode;
 import org.hibernate.LockMode;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.engine.spi.LoadQueryInfluencers;
+import org.hibernate.LockOptions;
+import org.hibernate.loader.ast.internal.LoaderSelectBuilder;
+import org.hibernate.query.spi.QueryOptions;
+import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
+import org.hibernate.sql.ast.spi.creation.SqlAliasBaseManager;
+import org.hibernate.sql.exec.internal.BaseExecutionContext;
+import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
+import org.hibernate.sql.exec.spi.JdbcParametersList;
+import org.hibernate.sql.results.internal.RowTransformerSingularReturnImpl;
+import org.hibernate.sql.results.spi.ListResultsConsumer;
 import org.hibernate.generator.internal.TenantIdGeneration;
 import org.hibernate.id.CompositeNestedGeneratedValueGenerator;
 import org.hibernate.type.ComponentType;
@@ -19,6 +30,7 @@ import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
 
 import static org.hibernate.generator.EventType.INSERT;
+import static java.util.Collections.singletonList;
 
 /**
  * Tenant ownership checks for mutations which start with an unloaded or detached entity.
@@ -149,17 +161,41 @@ public final class TenantIdHelper {
 						.setQueryFlushMode( QueryFlushMode.NO_FLUSH )
 						.setHibernateLockMode( LockMode.PESSIMISTIC_WRITE )
 						.getSingleResultOrNull();
-				if ( owner != null || allowMissing && persister.getDatabaseSnapshot( id, session ) == null ) {
+				if ( owner != null || allowMissing && !rowExists( id, persister, session ) ) {
 					return;
 				}
 				throw new StaleObjectStateException( persister.getEntityName(), id );
 			}
 			final Object[] snapshot = persister.getDatabaseSnapshot( id, session );
-			if ( snapshot == null ? !allowMissing
+			if ( snapshot == null ? !allowMissing || rowExists( id, persister, session )
 					: !session.getFactory().getTenantIdentifierJavaType().areEqual(
 							snapshot[tenantMapping.getStateArrayPosition()], session.getTenantIdentifierValue() ) ) {
 				throw new StaleObjectStateException( persister.getEntityName(), id );
 			}
 		}
+	}
+
+	private static boolean rowExists(
+			Object id, EntityPersister persister, SharedSessionContractImplementor session) {
+		// A tenant-filtered snapshot cannot distinguish an absent row from another tenant's row.
+		// Before treating a row as absent, check existence without reading entity state.
+		final var factory = session.getFactory();
+		final var identifier = persister.getIdentifierMapping();
+		final var parameters = JdbcParametersList.newBuilder();
+		final var select = LoaderSelectBuilder.createSelect(
+				persister, singletonList( identifier ), identifier, null, 1,
+				new LoadQueryInfluencers( factory ), LockOptions.NONE, parameters::add,
+				new SqlAliasBaseManager(), factory
+		);
+		final var jdbcParameters = parameters.build();
+		final var bindings = new JdbcParameterBindingsImpl( jdbcParameters.size() );
+		bindings.registerParametersForEachJdbcValue( id, identifier, jdbcParameters, session );
+		final var jdbcSelect = factory.getJdbcServices().getJdbcEnvironment().getSqlAstTranslatorFactory()
+				.buildTranslator( new SqlAstTranslationRequest.Select( factory, select ) )
+				.translate( bindings, QueryOptions.NONE );
+		return !session.getJdbcServices().getJdbcSelectExecutor().list(
+				jdbcSelect, bindings, new BaseExecutionContext( session ),
+				RowTransformerSingularReturnImpl.instance(), null, ListResultsConsumer.UniqueSemantic.FILTER, 1
+		).isEmpty();
 	}
 }

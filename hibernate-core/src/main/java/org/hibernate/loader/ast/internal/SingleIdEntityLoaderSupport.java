@@ -9,6 +9,8 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.ast.spi.SingleIdEntityLoader;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 
+import static org.hibernate.binder.internal.TenantIdBinder.FILTER_NAME;
+
 /**
  * @author Steve Ebersole
  */
@@ -30,6 +32,13 @@ public abstract class SingleIdEntityLoaderSupport<T> implements SingleIdEntityLo
 
 	@Override
 	public Object[] loadDatabaseSnapshot(Object id, SharedSessionContractImplementor session) {
+		final var tenantFilter = session.getLoadQueryInfluencers().getEnabledFilter( FILTER_NAME );
+		if ( tenantFilter != null ) {
+			// Filter parameter values are captured in the SQL operation, so this
+			// executor must not be shared with sessions belonging to other tenants.
+			return new DatabaseSnapshotExecutor( entityDescriptor, sessionFactory, tenantFilter )
+					.loadDatabaseSnapshot( id, session );
+		}
 		if ( databaseSnapshotExecutor == null ) {
 			databaseSnapshotExecutor = new DatabaseSnapshotExecutor( entityDescriptor, sessionFactory );
 		}

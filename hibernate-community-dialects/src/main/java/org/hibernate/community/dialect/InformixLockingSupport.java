@@ -48,6 +48,16 @@ public class InformixLockingSupport
 	}
 
 	@Override
+	public boolean readsWaitForUncommittedWrites() {
+		// With the LAST COMMITTED option, or the USELASTCOMMITTED server parameter, a plain read
+		// returns the last committed version of a row instead of waiting for, or failing on, an
+		// in-flight write. Neither is visible to the dialect, so the version check reads with
+		// 'for update', which always waits or fails, and whose update lock is released when the
+		// cursor closes unless the session retains update locks.
+		return false;
+	}
+
+	@Override
 	public RowLockStrategy getWriteRowLockStrategy() {
 		return RowLockStrategy.COLUMN;
 	}

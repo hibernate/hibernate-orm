@@ -13,6 +13,7 @@ import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.SubselectFetch;
+import org.hibernate.internal.StatelessLocking;
 import org.hibernate.internal.scrollable.EmptyScrollableResults;
 import org.hibernate.internal.util.MutableObject;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
@@ -424,6 +425,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 	}
 
 	private <T, X> T withCacheableSqmInterpretation(DomainQueryExecutionContext executionContext, X context, SqmInterpreter<T, X> interpreter) {
+		executionContext = StatelessLocking.getExecutionContext( executionContext );
 		final var session = executionContext.getSession();
 		final var queryOptions = executionContext.getQueryOptions();
 

@@ -16,6 +16,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.StatelessSessionImplementor;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.spi.RootGraphImplementor;
+import org.hibernate.internal.StatelessLocking;
 import org.hibernate.loader.internal.CacheLoadHelper;
 import org.hibernate.persister.entity.EntityPersister;
 
@@ -113,5 +114,10 @@ public class StatelessFindByKeyOperation<T> extends AbstractFindByKeyOperation<T
 
 	private LockMode getNullSafeLockMode() {
 		return getLockMode() == null ? LockMode.NONE : getLockMode();
+	}
+
+	@Override
+	public LockMode getLockMode() {
+		return StatelessLocking.getEffectiveLockMode( super.getLockMode() );
 	}
 }

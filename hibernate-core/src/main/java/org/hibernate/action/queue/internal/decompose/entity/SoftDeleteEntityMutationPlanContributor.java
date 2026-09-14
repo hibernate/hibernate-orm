@@ -4,6 +4,7 @@
  */
 package org.hibernate.action.queue.internal.decompose.entity;
 
+import org.hibernate.engine.internal.TenantIdHelper;
 import org.hibernate.action.queue.spi.decompose.entity.EntityMutationPlanContributor;
 
 import java.util.Map;
@@ -97,6 +98,7 @@ public class SoftDeleteEntityMutationPlanContributor implements EntityMutationPl
 		);
 
 		tableUpdateBuilder.addKeyRestrictions( rootTableDescriptor.keyDescriptor() );
+		TenantIdHelper.applyTenantRestriction( entityPersister, tableUpdateBuilder );
 		applySoftDelete( softDeleteMapping, tableUpdateBuilder );
 		applyPartitionKeyRestrictionForSoftDelete( tableUpdateBuilder );
 

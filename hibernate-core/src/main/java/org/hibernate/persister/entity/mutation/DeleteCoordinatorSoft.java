@@ -34,6 +34,7 @@ public class DeleteCoordinatorSoft extends AbstractDeleteCoordinator {
 		final var tableUpdateBuilder = new TableUpdateBuilderStandard<>( entityPersister(), rootTableMapping, factory() );
 
 		applyKeyRestriction( rowId, entityPersister(), tableUpdateBuilder, rootTableMapping );
+		applyTenantRestriction( tableUpdateBuilder );
 		applySoftDelete( entityPersister().getSoftDeleteMapping(), tableUpdateBuilder );
 		applyPartitionKeyRestriction( tableName -> tableUpdateBuilder );
 		applyOptimisticLocking(

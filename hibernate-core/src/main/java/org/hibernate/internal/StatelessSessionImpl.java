@@ -33,6 +33,7 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.creation.internal.SharedSessionCreationOptions;
 import org.hibernate.engine.creation.internal.options.StatelessOptions;
 import org.hibernate.engine.internal.TransactionCompletionCallbacksImpl;
+import org.hibernate.engine.internal.TenantIdHelper;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.PersistenceContext;
@@ -586,6 +587,10 @@ public class StatelessSessionImpl
 		checkNotReadOnly();
 		final var persister = getEntityPersister( entityName, entity );
 		final Object id = persister.getIdentifier( entity, this );
+		TenantIdHelper.checkIdentifierTenant( id, persister, this );
+		if ( persister.hasMultipleTables() || persister.hasOwnedCollections() ) {
+			TenantIdHelper.checkTenantId( id, persister, this, false );
+		}
 		final Object version = persister.getVersion( entity );
 		if ( !firePreDelete(entity, id, persister) ) {
 			runInterceptorCallback(
@@ -686,6 +691,10 @@ public class StatelessSessionImpl
 		final var persister = getEntityPersister( entityName, entity );
 		checkLobVersioning( persister );
 		final Object id = persister.getIdentifier( entity, this );
+		TenantIdHelper.checkIdentifierTenant( id, persister, this );
+		if ( persister.hasMultipleTables() || persister.hasOwnedCollections() ) {
+			TenantIdHelper.checkTenantId( id, persister, this, false );
+		}
 		final Object[] state = persister.getValues( entity );
 		final Object oldVersion;
 		if ( persister.isVersioned() ) {
@@ -850,8 +859,14 @@ public class StatelessSessionImpl
 	private void doUpsert(String entityName, Object entity) {
 		checkNotReadOnly();
 		final var persister = getEntityPersister( entityName, entity );
+		TenantIdHelper.initializeIdentifierTenant( entity, persister, this );
 		final Object id = idToUpsert( entity, persister );
+		TenantIdHelper.checkIdentifierTenant( id, persister, this );
+		if ( persister.hasMultipleTables() || persister.hasOwnedCollections() ) {
+			TenantIdHelper.checkTenantId( id, persister, this, true );
+		}
 		final Object[] state = persister.getValues( entity );
+		TenantIdHelper.initializeTenantId( entity, state, persister, this );
 		if ( !firePreUpsert(entity, id, state, persister) ) {
 			runInterceptorCallback(
 					() -> getInterceptor().onUpsert( entity, id, state, persister.getPropertyNames(), persister.getPropertyTypes() ) );

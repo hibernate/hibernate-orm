@@ -643,7 +643,12 @@ public class SessionImpl
 		checkOpen();
 		try {
 			pulseTransactionCoordinator();
-			checkTransactionNeededForLock( lockEvent.getLockMode() );
+			if ( isJpaBootstrap() ) {
+				checkTransactionNeededForUpdateOperation();
+			}
+			else {
+				checkTransactionNeededForLock( lockEvent.getLockMode() );
+			}
 			eventListenerGroups.eventListenerGroup_LOCK
 					.fireEventOnEachListener( lockEvent,
 							LockEventListener::onLock );

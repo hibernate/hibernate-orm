@@ -396,6 +396,11 @@ public interface JdbcSelectExecutor {
 			}
 
 			@Override
+			public boolean upgradeLocks() {
+				return context.upgradeLocks();
+			}
+
+			@Override
 			@Nullable
 			public Set<String> getEnabledFetchProfiles() {
 				return null;

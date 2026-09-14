@@ -25,13 +25,14 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hibernate.dialect.generated.spi.GeneratedValuesSupport.Capability.UPDATE_RETURNING;
 
 /// Corollary to [OptimisticLockTest] using JPA's [ExcludedFromVersioning] instead of
 /// Hibernate's [org.hibernate.annotations.OptimisticLock].
 ///
 /// @author Steve Ebersole
 @DomainModel(annotatedClasses = { ExcludedFromVersioningTests.Phone.class, ExcludedFromVersioningTests.Counter.class })
-@SessionFactory
+@SessionFactory(useCollectingStatementObserver = true)
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsConcurrentTransactions.class)
 public class ExcludedFromVersioningTests {
 	private static final Logger log = Logger.getLogger( ExcludedFromVersioningTests.class );
@@ -81,10 +82,12 @@ public class ExcludedFromVersioningTests {
 		} );
 
 		phone.incrementCallCount();
+		factoryScope.getCollectingStatementObserver().clear();
 		factoryScope.getSessionFactory()
 				.runInTransaction( EntityAgent.class,
 						agent -> agent.update( phone ) );
 
+		assertVersionSelect( factoryScope );
 		assertThat( phone.getVersion() ).isZero();
 		factoryScope.inTransaction( session -> {
 			final var reloaded = session.find( Phone.class, phone.getId() );
@@ -93,10 +96,12 @@ public class ExcludedFromVersioningTests {
 		} );
 
 		phone.setNumber( "+123-456-7890" );
+		factoryScope.getCollectingStatementObserver().clear();
 		factoryScope.getSessionFactory()
 				.runInTransaction( EntityAgent.class,
 						agent -> agent.update( phone ) );
 
+		assertVersionSelect( factoryScope );
 		assertThat( phone.getVersion() ).isOne();
 		factoryScope.inTransaction( session -> {
 			final var reloaded = session.find( Phone.class, phone.getId() );
@@ -115,16 +120,47 @@ public class ExcludedFromVersioningTests {
 		} );
 
 		counter.excludedValue++;
+		factoryScope.getCollectingStatementObserver().clear();
 		factoryScope.getSessionFactory()
 				.runInTransaction( EntityAgent.class,
 						agent -> agent.update( counter ) );
 
+		assertVersionSelect( factoryScope );
 		assertThat( counter.version ).isZero();
 		factoryScope.inTransaction( session -> {
 			final var reloaded = session.find( Counter.class, counter.id );
 			assertThat( reloaded.excludedValue ).isOne();
 			assertThat( reloaded.version ).isZero();
 		} );
+	}
+
+	@Test @JiraKey("HHH-20828")
+	void testEntityAgentUpdateWithoutChanges(SessionFactoryScope factoryScope) {
+		final var phone = factoryScope.fromTransaction( session -> {
+			final var created = new Phone();
+			created.setId( 1L );
+			session.persist( created );
+			return created;
+		} );
+
+		factoryScope.getCollectingStatementObserver().clear();
+		factoryScope.getSessionFactory()
+				.runInTransaction( EntityAgent.class, agent -> agent.update( phone ) );
+
+		assertVersionSelect( factoryScope );
+		assertThat( phone.getVersion() ).isZero();
+		factoryScope.inTransaction( session ->
+				assertThat( session.find( Phone.class, phone.getId() ).getVersion() ).isZero() );
+	}
+
+	private static void assertVersionSelect(SessionFactoryScope factoryScope) {
+		if ( !factoryScope.getSessionFactory().getJdbcServices().getDialect()
+				.getGeneratedValuesSupport().supports( UPDATE_RETURNING ) ) {
+			final var observer = factoryScope.getCollectingStatementObserver();
+			observer.assertQueries().hasSize( 2 );
+			observer.assertQuery( 0 ).startsWith( "update " );
+			observer.assertQuery( 1 ).startsWith( "select version as version_ from " );
+		}
 	}
 
 	@Entity(name = "Phone")

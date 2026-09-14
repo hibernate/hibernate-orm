@@ -89,6 +89,7 @@ import org.hibernate.jpa.event.spi.CallbackType;
 import org.hibernate.loader.ast.internal.LoaderHelper;
 import org.hibernate.loader.ast.spi.CascadingFetchProfile;
 import org.hibernate.loader.internal.CacheLoadHelper;
+import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.spi.QueryParameterBindings;
@@ -680,6 +681,7 @@ public class StatelessSessionImpl
 	private void doUpdate(String entityName, Object entity) {
 		checkNotReadOnly();
 		final var persister = getEntityPersister( entityName, entity );
+		checkLobVersioning( persister );
 		final Object id = persister.getIdentifier( entity, this );
 		TenantIdHelper.validateAssignedTenantId( entity, id, persister, this );
 		if ( persister.hasMultipleTables() || persister.hasOwnedCollections() ) {
@@ -720,6 +722,45 @@ public class StatelessSessionImpl
 			if ( statistics.isStatisticsEnabled() ) {
 				statistics.updateEntity( persister.getEntityName() );
 			}
+		}
+	}
+
+	private static void checkLobVersioning(EntityPersister persister) {
+		if ( !persister.isVersioned() || persister.isVersionPropertyGenerated() ) {
+			return;
+		}
+		final var updateability = persister.getPropertyUpdateability();
+		final var versionability = persister.getPropertyVersionability();
+		final var generators = persister.getGenerators();
+		boolean hasExcludedProperty = false;
+		String lobAttribute = null;
+		for ( int i = 0; i < updateability.length; i++ ) {
+			final var generator = generators[i];
+			final boolean generatedOnUpdate = generator != null
+					&& generator.generatedOnExecution() && generator.generatesOnUpdate();
+			if ( generatedOnUpdate && versionability[i] ) {
+				// Update-generated versioned values already require an ordinary version increment.
+				return;
+			}
+			if ( updateability[i] || generatedOnUpdate ) {
+				if ( !versionability[i] ) {
+					hasExcludedProperty = true;
+				}
+				else if ( persister.getAttributeMapping( i ) instanceof SingularAttributeMapping attribute ) {
+					for ( int j = 0; j < attribute.getJdbcTypeCount(); j++ ) {
+						final var selectable = attribute.getSelectable( j );
+						if ( !selectable.isFormula() && selectable.isUpdateable()
+								&& selectable.getJdbcMapping().getJdbcType().isLob() ) {
+							lobAttribute = attribute.getAttributeName();
+						}
+					}
+				}
+			}
+		}
+		if ( hasExcludedProperty && lobAttribute != null ) {
+			throw new HibernateException( "Cannot update entity '" + persister.getEntityName()
+					+ "' without a snapshot: non-excluded LOB attribute '" + lobAttribute
+					+ "' prevents honoring @ExcludedFromVersioning" );
 		}
 	}
 

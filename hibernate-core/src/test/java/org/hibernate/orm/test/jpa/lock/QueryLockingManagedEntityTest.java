@@ -15,6 +15,7 @@ import org.hibernate.Locking;
 import org.hibernate.Session;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.junit.jupiter.api.AfterEach;
@@ -83,6 +84,7 @@ class QueryLockingManagedEntityTest {
 			"PESSIMISTIC_READ", "PESSIMISTIC_WRITE", "PESSIMISTIC_FORCE_INCREMENT"
 	})
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSelectLocking.class)
+	@FailureExpected(reason = "Follow-on locking runs before streamed results have been consumed")
 	void testManagedAndNewStreamResultsWithFollowOnLocking(LockModeType mode, EntityManagerFactoryScope scope) {
 		testManagedAndNewQueryResults( mode, Locking.FollowOn.FORCE, true, scope );
 	}

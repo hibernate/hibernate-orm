@@ -24,6 +24,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import java.util.List;
 import java.util.stream.Stream;
 
 import static org.hibernate.jpa.HibernateHints.HINT_FOLLOW_ON_STRATEGY;
@@ -59,7 +60,13 @@ class QueryLockingManagedEntityTest {
 	@ParameterizedTest
 	@EnumSource(LockModeType.class)
 	void testManagedAndNewQueryResults(LockModeType mode, EntityManagerFactoryScope scope) {
-		testManagedAndNewQueryResults( mode, Locking.FollowOn.ALLOW, scope );
+		testManagedAndNewQueryResults( mode, Locking.FollowOn.ALLOW, false, scope );
+	}
+
+	@ParameterizedTest
+	@EnumSource(LockModeType.class)
+	void testManagedAndNewStreamResults(LockModeType mode, EntityManagerFactoryScope scope) {
+		testManagedAndNewQueryResults( mode, Locking.FollowOn.ALLOW, true, scope );
 	}
 
 	@ParameterizedTest
@@ -68,11 +75,20 @@ class QueryLockingManagedEntityTest {
 	})
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSelectLocking.class)
 	void testManagedAndNewQueryResultsWithFollowOnLocking(LockModeType mode, EntityManagerFactoryScope scope) {
-		testManagedAndNewQueryResults( mode, Locking.FollowOn.FORCE, scope );
+		testManagedAndNewQueryResults( mode, Locking.FollowOn.FORCE, false, scope );
+	}
+
+	@ParameterizedTest
+	@EnumSource(value = LockModeType.class, names = {
+			"PESSIMISTIC_READ", "PESSIMISTIC_WRITE", "PESSIMISTIC_FORCE_INCREMENT"
+	})
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSelectLocking.class)
+	void testManagedAndNewStreamResultsWithFollowOnLocking(LockModeType mode, EntityManagerFactoryScope scope) {
+		testManagedAndNewQueryResults( mode, Locking.FollowOn.FORCE, true, scope );
 	}
 
 	private void testManagedAndNewQueryResults(
-			LockModeType mode, Locking.FollowOn followOn, EntityManagerFactoryScope scope) {
+			LockModeType mode, Locking.FollowOn followOn, boolean stream, EntityManagerFactoryScope scope) {
 		// Use different starting versions so that each result must be checked against its own version.
 		second = scope.fromTransaction( em -> {
 			final var entity = em.find( Lockable.class, second.getId() );
@@ -88,7 +104,15 @@ class QueryLockingManagedEntityTest {
 					.setHint( HINT_FOLLOW_ON_STRATEGY, followOn )
 					.setLockMode( mode );
 			for ( int i = 0; i < 2; i++ ) {
-				final var results = query.getResultList();
+				final List<Lockable> results;
+				if ( stream ) {
+					try ( var resultStream = query.getResultStream() ) {
+						results = resultStream.toList();
+					}
+				}
+				else {
+					results = query.getResultList();
+				}
 				assertEquals( 2, results.stream().distinct().count() );
 				assertSame( managed, results.get( 0 ) );
 				final int increment = mode == LockModeType.PESSIMISTIC_FORCE_INCREMENT ? 1 : 0;
@@ -135,15 +159,33 @@ class QueryLockingManagedEntityTest {
 	@EnumSource(value = LockModeType.class, names = { "READ", "OPTIMISTIC", "WRITE", "OPTIMISTIC_FORCE_INCREMENT" })
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsConcurrentTransactions.class)
 	void testConcurrentUpdateAfterQuery(LockModeType mode, EntityManagerFactoryScope scope) {
+		testConcurrentUpdateAfterQuery( mode, false, scope );
+	}
+
+	@ParameterizedTest
+	@EnumSource(value = LockModeType.class, names = { "READ", "OPTIMISTIC", "WRITE", "OPTIMISTIC_FORCE_INCREMENT" })
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsConcurrentTransactions.class)
+	void testConcurrentUpdateAfterStream(LockModeType mode, EntityManagerFactoryScope scope) {
+		testConcurrentUpdateAfterQuery( mode, true, scope );
+	}
+
+	private void testConcurrentUpdateAfterQuery(LockModeType mode, boolean stream, EntityManagerFactoryScope scope) {
 		scope.inEntityManager( em -> {
 			final var transaction = em.getTransaction();
 			transaction.begin();
 			try {
 				final var managed = em.find( Lockable.class, first.getId() );
-				assertSame( managed, em.createQuery( "from Lockable where id = :id", Lockable.class )
+				final var query = em.createQuery( "from Lockable where id = :id", Lockable.class )
 						.setParameter( "id", first.getId() )
-						.setLockMode( mode )
-						.getSingleResult() );
+						.setLockMode( mode );
+				if ( stream ) {
+					try ( var resultStream = query.getResultStream() ) {
+						assertSame( managed, resultStream.findFirst().orElseThrow() );
+					}
+				}
+				else {
+					assertSame( managed, query.getSingleResult() );
+				}
 				scope.inTransaction( other -> other.find( Lockable.class, first.getId() ).setName( "changed" ) );
 				final var exception = assertThrows( RollbackException.class, transaction::commit );
 				assertInstanceOf( OptimisticLockException.class, exception.getCause() );

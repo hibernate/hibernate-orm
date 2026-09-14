@@ -86,6 +86,26 @@ public class PersistenceUnitInfoAdapter implements PersistenceUnitInfo {
 		return getManagedClassNames();
 	}
 
+	@Override
+	public List<String> getManagedPackageDescriptors() {
+		return List.of();
+	}
+
+	@Override
+	public List<String> getAllPackageDescriptors() {
+		return getManagedPackageDescriptors();
+	}
+
+	@Override
+	public List<String> getManagedModuleDescriptors() {
+		return List.of();
+	}
+
+	@Override
+	public List<String> getAllModuleDescriptors() {
+		return getManagedModuleDescriptors();
+	}
+
 	public boolean excludeUnlistedClasses() {
 		return false;
 	}

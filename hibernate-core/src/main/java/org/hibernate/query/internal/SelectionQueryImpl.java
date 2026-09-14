@@ -32,6 +32,7 @@ import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.spi.RootGraphImplementor;
+import org.hibernate.internal.StatelessLocking;
 import org.hibernate.internal.util.OptionsHelper;
 import org.hibernate.internal.util.collections.IdentitySet;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
@@ -1206,7 +1207,8 @@ public class SelectionQueryImpl<R>
 	private SelectQueryPlan<R> resolveQueryPlan() {
 		final var queryCache = getInterpretationCache();
 		if ( queryCache.isEnabled() ) {
-			final var cacheKey = createInterpretationsKey( this );
+			final var cacheKey = createInterpretationsKey( this,
+					StatelessLocking.getEffectiveLockOptions( queryOptions.getLockOptions(), session ) );
 			return cacheKey == null
 					? buildSelectQueryPlan()
 					: queryCache.resolveSelectQueryPlan( cacheKey, this::buildSelectQueryPlan );

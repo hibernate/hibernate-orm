@@ -21,6 +21,10 @@ import org.hibernate.query.sqm.tree.spi.SqmStatement;
 public final class SqmInterpretationsKey implements QueryInterpretationCache.Key {
 
 	public static SqmInterpretationsKey createInterpretationsKey(InterpretationsKeySource keySource) {
+		return createInterpretationsKey( keySource, keySource.getQueryOptions().getLockOptions() );
+	}
+
+	public static SqmInterpretationsKey createInterpretationsKey(InterpretationsKeySource keySource, LockOptions lockOptions) {
 		if ( isCacheable ( keySource ) ) {
 			final Object query = keySource.getQueryStringCacheKey();
 			return new SqmInterpretationsKey(
@@ -28,7 +32,7 @@ public final class SqmInterpretationsKey implements QueryInterpretationCache.Key
 					keySource.unnamedParameterIndices(),
 					query instanceof SqmStatement<?> statement ? statement.cacheHashCode() : query.hashCode(),
 					keySource.getResultType(),
-					keySource.getQueryOptions().getLockOptions(),
+					lockOptions,
 					memoryEfficientDefensiveSetCopy( keySource.getLoadQueryInfluencers().getEnabledFetchProfileNames() ),
 					keySource.getLoadQueryInfluencers().getTemporalIdentifier() != null
 			);

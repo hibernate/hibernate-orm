@@ -1810,7 +1810,7 @@ public class StatelessSessionImpl
 	}
 
 	private LockMode getNullSafeLockMode(LockMode lockMode) {
-		return lockMode == null ? LockMode.NONE : lockMode;
+		return lockMode == null ? LockMode.NONE : StatelessLocking.getEffectiveLockMode( lockMode );
 	}
 
 	protected Object lockCacheItem(Object id, Object previousVersion, EntityPersister persister) {

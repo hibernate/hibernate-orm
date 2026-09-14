@@ -79,7 +79,9 @@ class PessimisticLockFailureTest {
 		final var locked = new CountDownLatch( 1 );
 		final var release = new CountDownLatch( 1 );
 		final var holder = new Thread( () -> scope.inTransaction( em -> {
-			em.find( Account.class, 1, LockModeType.PESSIMISTIC_WRITE );
+			// Flush a write since some dialects obtain compatible shared locks for a locking select.
+			em.find( Account.class, 1, LockModeType.PESSIMISTIC_WRITE ).setName( "held by another transaction" );
+			em.flush();
 			locked.countDown();
 			try {
 				// hold the lock until the other transaction has given up, but not forever

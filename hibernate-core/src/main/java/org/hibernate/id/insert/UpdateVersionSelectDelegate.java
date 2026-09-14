@@ -23,26 +23,43 @@ import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.mutation.EntityTableMapping;
+import org.hibernate.sql.SimpleSelect;
 import org.hibernate.sql.spi.mutation.jdbc.PreparableMutationOperation;
 import org.hibernate.sql.ast.spi.model.builder.TableMutationBuilder;
 import org.hibernate.sql.ast.spi.model.builder.TableUpdateBuilderStandard;
 
 import static java.sql.Statement.NO_GENERATED_KEYS;
 import static org.hibernate.engine.jdbc.mutation.internal.ModelMutationHelper.identifiedResultsCheck;
+import static org.hibernate.generator.values.internal.GeneratedValuesHelper.getGeneratedValues;
 
 /**
  * Resolves an application-generated version after a conditional update on dialects which do not
- * support update returning. The primary update is followed by a select of the version column,
- * using the dialect's current-read semantics without selecting an entity snapshot.
+ * support update returning. The primary update is followed by a select of the version column
+ * and any other generated columns, using the dialect's current-read semantics without
+ * selecting an entity snapshot.
  */
 public class UpdateVersionSelectDelegate extends AbstractGeneratedValuesMutationDelegate {
 	private final EntityTableMapping tableMapping;
 	private final EntityVersionMapping versionMapping;
+	private final String generatedValuesSelect;
 
 	public UpdateVersionSelectDelegate(EntityPersister persister, List<? extends ModelPart> generatedProperties) {
 		super( persister, EventType.UPDATE, true, false, generatedProperties );
 		tableMapping = persister.getIdentifierTableMapping();
 		versionMapping = persister.getVersionMapping();
+		if ( generatedProperties.size() > 1 ) {
+			final var select = new SimpleSelect( persister.getFactory() )
+					.setTableName( tableMapping.getTableName() )
+					.setCurrentRead( true );
+			for ( var property : generatedProperties ) {
+				select.addColumn( property.asBasicValuedModelPart().getSelectionExpression() );
+			}
+			tableMapping.getKeyMapping().forEachKeyColumn( (i, column) -> select.addRestriction( column.getColumnName() ) );
+			generatedValuesSelect = select.toStatementString();
+		}
+		else {
+			generatedValuesSelect = null;
+		}
 	}
 
 	@Override
@@ -113,6 +130,9 @@ public class UpdateVersionSelectDelegate extends AbstractGeneratedValuesMutation
 	}
 
 	private GeneratedValues selectVersion(Object id, SharedSessionContractImplementor session) {
+		if ( generatedValuesSelect != null ) {
+			return selectGeneratedValues( id, session );
+		}
 		final Object version = persister.getCurrentVersion( id, session );
 		if ( version == null ) {
 			throw new StaleObjectStateException( persister.getEntityName(), id );
@@ -120,6 +140,30 @@ public class UpdateVersionSelectDelegate extends AbstractGeneratedValuesMutation
 		final var generatedValues = new GeneratedValuesImpl( 1 );
 		generatedValues.addGeneratedValue( versionMapping, version );
 		return generatedValues;
+	}
+
+	private GeneratedValues selectGeneratedValues(Object id, SharedSessionContractImplementor session) {
+		final var jdbcCoordinator = session.getJdbcCoordinator();
+		final var statement = jdbcCoordinator.getStatementPreparer().prepareStatement( generatedValuesSelect );
+		final var resourceRegistry = jdbcCoordinator.getLogicalConnection().getResourceRegistry();
+		try {
+			persister.getIdentifierType().nullSafeSet( statement, id, 1, session );
+			final var resultSet = jdbcCoordinator.getResultSetReturn().extract( statement, generatedValuesSelect );
+			try {
+				return getGeneratedValues( resultSet, statement, persister, EventType.UPDATE, session );
+			}
+			finally {
+				resourceRegistry.release( resultSet, statement );
+			}
+		}
+		catch (SQLException e) {
+			throw session.getJdbcServices().getSqlExceptionHelper().convert(
+					e, "Could not retrieve generated values: " + persister.getEntityName(), generatedValuesSelect );
+		}
+		finally {
+			resourceRegistry.release( statement );
+			jdbcCoordinator.afterStatementExecution();
+		}
 	}
 
 	private static void logSql(String sql, SharedSessionContractImplementor session) {

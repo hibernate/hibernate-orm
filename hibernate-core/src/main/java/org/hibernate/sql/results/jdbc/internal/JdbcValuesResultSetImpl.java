@@ -13,7 +13,7 @@ import org.hibernate.QueryTimeoutException;
 import org.hibernate.cache.spi.QueryKey;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.exception.DataException;
-import org.hibernate.exception.LockTimeoutException;
+import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.query.spi.Limit;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.ast.spi.query.select.SqlSelection;
@@ -310,7 +310,7 @@ public class JdbcValuesResultSetImpl extends AbstractJdbcValues {
 						.getSqlExceptionHelper().convert( cause, message );
 		if ( jdbcException instanceof QueryTimeoutException
 				|| jdbcException instanceof DataException
-				|| jdbcException instanceof LockTimeoutException ) {
+				|| jdbcException instanceof LockAcquisitionException ) {
 			// So far, the exception helper threw these exceptions more or less directly during conversion,
 			// so to retain the same behavior, we throw that directly now as well instead of wrapping it
 			throw jdbcException;

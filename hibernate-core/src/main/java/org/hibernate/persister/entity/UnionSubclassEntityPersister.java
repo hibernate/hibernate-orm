@@ -36,6 +36,7 @@ import org.hibernate.persister.filter.internal.StaticFilterAliasGenerator;
 import org.hibernate.internal.util.collections.JoinedList;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.metamodel.mapping.AuditMapping;
 import org.hibernate.metamodel.mapping.DiscriminatorValue;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -585,7 +586,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 				tablesToUnion.add( persister.getRootTableName() );
 			}
 			// Collect selectables grouped by the table names in which they appear
-			persister.collectSelectableOwners( selectables );
+			persister.collectSelectableOwners( selectables, auxMapping instanceof AuditMapping );
 		}
 
 		if ( tablesToUnion.isEmpty() ) {
@@ -657,7 +658,9 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		return unionSubquery.append( ")" ).toString();
 	}
 
-	private void collectSelectableOwners(LinkedHashMap<String, Map<String, SelectableMapping>> selectables) {
+	private void collectSelectableOwners(
+			LinkedHashMap<String, Map<String, SelectableMapping>> selectables,
+			boolean auditMapping) {
 		if ( !isAbstract() ) {
 			final SelectableConsumer selectableConsumer = (i, selectable) -> {
 				var selectableMapping = selectables.computeIfAbsent(
@@ -674,7 +677,11 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 			}
 			final var attributeMappings = getAttributeMappings();
 			for ( int i = 0, size = attributeMappings.size(); i < size; i++ ) {
-				attributeMappings.get( i ).forEachSelectable( selectableConsumer );
+				final var attributeMapping = attributeMappings.get( i );
+				// If this entity is audited, skip collecting audit-excluded selectable mappings
+				if ( !auditMapping || !isPropertyAuditedExcluded( attributeMapping.getStateArrayPosition() ) ) {
+					attributeMapping.forEachSelectable( selectableConsumer );
+				}
 			}
 		}
 	}

@@ -15,6 +15,8 @@ import jakarta.persistence.FindOption;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.PersistenceException;
 import jakarta.transaction.SystemException;
+import org.hibernate.engine.internal.TenantIdHelper;
+import org.hibernate.engine.internal.RootTenantCache;
 import org.hibernate.AssertionFailure;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
@@ -33,7 +35,6 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.creation.internal.SharedSessionCreationOptions;
 import org.hibernate.engine.creation.internal.options.StatelessOptions;
 import org.hibernate.engine.internal.TransactionCompletionCallbacksImpl;
-import org.hibernate.engine.internal.TenantIdHelper;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.PersistenceContext;
@@ -1829,6 +1830,7 @@ public class StatelessSessionImpl
 	}
 
 	protected Object lockCacheItem(Object id, Object previousVersion, EntityPersister persister) {
+		RootTenantCache.invalidateEntity( id, persister, this );
 		return writingToCache( persister, cache -> {
 			final Object cacheKey = cache.generateCacheKey(
 					id,
@@ -1848,6 +1850,7 @@ public class StatelessSessionImpl
 	}
 
 	protected Object lockCacheItem(Object key, CollectionPersister persister) {
+		RootTenantCache.invalidateCollection( key, persister, this );
 		return usingCache( persister, cache -> {
 			final Object cacheKey = cache.generateCacheKey(
 					key,

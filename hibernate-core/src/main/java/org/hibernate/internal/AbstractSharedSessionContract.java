@@ -24,6 +24,7 @@ import jakarta.persistence.criteria.CriteriaStatement;
 import jakarta.persistence.metamodel.Metamodel;
 import jakarta.persistence.sql.EntityMapping;
 import jakarta.persistence.sql.ResultSetMapping;
+import org.hibernate.engine.internal.TenantIdHelper;
 import org.hibernate.CacheMode;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.StatementObserver;
@@ -1634,7 +1635,7 @@ abstract class AbstractSharedSessionContract
 	@Override
 	@Nonnull
 	public CacheMode getCacheMode() {
-		return cacheMode;
+		return TenantIdHelper.isRoot( this ) ? CacheMode.IGNORE : cacheMode;
 	}
 
 	@Override

@@ -8,10 +8,11 @@ import java.util.List;
 
 import org.hibernate.dialect.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.dialect.sql.ast.spi.DerivedTableRenderingSupport;
+import org.hibernate.dialect.sql.ast.spi.PaginationRenderingPlan;
 import org.hibernate.dialect.sql.ast.spi.PaginationRenderingSupport;
 import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
 import org.hibernate.dialect.sql.ast.spi.StandardDerivedTableRenderingSupport;
-import org.hibernate.dialect.sql.ast.spi.StandardPaginationRenderingSupport;
+import org.hibernate.query.common.FetchClauseType;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.sql.ast.spi.Statement;
 import org.hibernate.sql.ast.spi.query.delete.DeleteStatement;
@@ -43,7 +44,10 @@ public class CUBRIDSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 
 	@Override
 	protected PaginationRenderingSupport getPaginationRenderingSupport() {
-		return StandardPaginationRenderingSupport.COMBINED_LIMIT;
+		//'limit' cannot express 'with ties' or a percentage, so emulate those with a row-numbering window
+		return request -> request.hasFetch() && request.fetchClauseType() != FetchClauseType.ROWS_ONLY
+				? new PaginationRenderingPlan.Window( true )
+				: new PaginationRenderingPlan.CombinedLimit();
 	}
 
 	@Override

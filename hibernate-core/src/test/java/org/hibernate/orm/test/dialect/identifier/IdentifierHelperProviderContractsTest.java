@@ -8,6 +8,7 @@ import java.lang.reflect.Proxy;
 import java.util.Set;
 
 import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.SybaseDialect;
@@ -117,8 +118,42 @@ public class IdentifierHelperProviderContractsTest {
 		assertThat( helper.isReservedWord( "select" ) ).isTrue();
 		assertThat( helper.applyGlobalQuoting( "integer" ).isQuoted() ).isFalse();
 		assertThat( helper.toMetaDataCatalogName( new Identifier( "catalog", false ) ) ).isNull();
-		assertThat( helper.toMetaDataSchemaName( new Identifier( "schema", false ) ) ).isEqualTo( "schema" );
-		assertThat( helper.toMetaDataObjectName( new Identifier( "table", false ) ) ).isEqualTo( "table" );
+		// HANA sets unquotedCaseStrategy=UPPER before calling super; with the
+		// isJdbcMetadataAccessible guard, super no longer overwrites it
+		assertThat( helper.toMetaDataSchemaName( new Identifier( "schema", false ) ) ).isEqualTo( "SCHEMA" );
+		assertThat( helper.toMetaDataObjectName( new Identifier( "table", false ) ) ).isEqualTo( "TABLE" );
+	}
+
+	@Test
+	void baseDefaultSkipsCaseStrategyWhenJdbcMetadataUnavailable() {
+		// When isJdbcMetadataAccessible() returns false, the base IdentifierSupport
+		// default must NOT call getUnquotedIdentifierCaseStrategy() or
+		// getQuotedIdentifierCaseStrategy() — those may throw in environments
+		// without a JDBC connection (e.g. Hibernate Reactive).
+		final JdbcMetadata throwingMetadata = (JdbcMetadata) Proxy.newProxyInstance(
+				JdbcMetadata.class.getClassLoader(),
+				new Class<?>[] { JdbcMetadata.class },
+				(proxy, method, arguments) -> switch ( method.getName() ) {
+					case "isJdbcMetadataAccessible" -> false;
+					case "getUnquotedIdentifierCaseStrategy", "getQuotedIdentifierCaseStrategy" ->
+							throw new UnsupportedOperationException( "JDBC metadata not accessible" );
+					case "getSqlKeywords" -> Set.of();
+					default -> null;
+				}
+		);
+		final var builder = IdentifierHelperBuilder.from( null );
+		final var request = new IdentifierHelperBuildRequest(
+				builder,
+				throwingMetadata,
+				() -> Set.of( "select" ),
+				NameQualifierSupport.SCHEMA
+		);
+		// Must not throw — the base implementation should skip case strategy calls
+		final IdentifierHelper helper = new H2Dialect().getIdentifierSupport().buildIdentifierHelper( request );
+		assertThat( helper ).isNotNull();
+		// Builder defaults (UPPER/MIXED) should be preserved
+		assertThat( builder.getUnquotedCaseStrategy() ).isEqualTo( IdentifierCaseStrategy.UPPER );
+		assertThat( builder.getQuotedCaseStrategy() ).isEqualTo( IdentifierCaseStrategy.MIXED );
 	}
 
 	@Test

@@ -13,6 +13,7 @@ import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
 import java.util.Locale;
@@ -25,14 +26,15 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.internal.build.AllowReflection;
 import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.property.access.internal.PropertyAccessStrategyGetterImpl;
-import org.hibernate.property.access.spi.Getter;
 
 import jakarta.persistence.Transient;
+import org.hibernate.property.access.spi.PropertyAccessBuildingException;
 
 import static org.hibernate.internal.util.StringHelper.decapitalize;
 import static java.lang.Character.isLowerCase;
 import static java.lang.Thread.currentThread;
+import static org.hibernate.property.access.internal.AccessStrategyHelper.fieldOrNull;
+import static org.hibernate.property.access.internal.AccessStrategyHelper.getAccessType;
 
 /**
  * Utility class for various reflection operations.
@@ -229,7 +231,7 @@ public final class ReflectHelper {
 			ClassLoaderService classLoaderService) throws MappingException {
 		try {
 			final var clazz = classLoaderService.classForName( className );
-			return getter( clazz, name ).getReturnTypeClass();
+			return getReturnTypeClass( member( clazz, name ));
 		}
 		catch ( ClassLoadingException e ) {
 			throw new MappingException( "class " + className + " not found while looking for property: " + name, e );
@@ -242,7 +244,7 @@ public final class ReflectHelper {
 			ClassLoaderService classLoaderService) throws MappingException {
 		try {
 			final var clazz = classLoaderService.classForName( className );
-			return getter( clazz, name ).getReturnType();
+			return getReturnType( member( clazz, name ));
 		}
 		catch ( ClassLoadingException e ) {
 			throw new MappingException( "class " + className + " not found while looking for property: " + name, e );
@@ -258,11 +260,59 @@ public final class ReflectHelper {
 	 * @throws MappingException Indicates we were unable to locate the property.
 	 */
 	public static Class<?> reflectedPropertyClass(Class<?> clazz, String name) throws MappingException {
-		return getter( clazz, name ).getReturnTypeClass();
+		return getReturnTypeClass( member( clazz, name ));
 	}
 
-	private static Getter getter(Class<?> clazz, String name) throws MappingException {
-		return PropertyAccessStrategyGetterImpl.INSTANCE.buildPropertyAccess( clazz, name, true ).getGetter();
+	public static Type reflectedPropertyType(Class<?> clazz, String name) throws MappingException {
+		return getReturnType( member( clazz, name ));
+	}
+
+	private static Type getReturnType(Member member) {
+		if ( member instanceof Method method ) {
+			return method.getGenericReturnType();
+		}
+		else if ( member instanceof Field field ) {
+			return field.getGenericType();
+		}
+		else {
+			throw new IllegalArgumentException( "Member " + member + " is not a valid member type" );
+		}
+	}
+
+	private static Class<?> getReturnTypeClass(Member member) {
+		if ( member instanceof Method method ) {
+			return method.getReturnType();
+		}
+		else if ( member instanceof Field field ) {
+			return field.getType();
+		}
+		else {
+			throw new IllegalArgumentException( "Member " + member + " is not a valid member type" );
+		}
+	}
+
+	private static Member member(Class<?> containerJavaType, String propertyName) throws MappingException {
+		final var propertyAccessType = getAccessType( containerJavaType, propertyName );
+		return switch ( propertyAccessType ) {
+			case FIELD -> {
+				final var field = fieldOrNull( containerJavaType, propertyName );
+				if ( field == null ) {
+					throw new PropertyAccessBuildingException(
+							"Could not locate field for property named [" + containerJavaType.getName() + "#" + propertyName + "]"
+					);
+				}
+				yield field;
+			}
+			case PROPERTY -> {
+				final var getterMethod = getterMethodOrNull( containerJavaType, propertyName );
+				if ( getterMethod == null ) {
+					throw new PropertyAccessBuildingException(
+							"Could not locate getter for property named [" + containerJavaType.getName() + "#" + propertyName + "]"
+					);
+				}
+				yield getterMethod;
+			}
+		};
 	}
 
 	/**

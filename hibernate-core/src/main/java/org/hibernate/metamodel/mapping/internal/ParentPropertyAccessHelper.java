@@ -12,6 +12,7 @@ import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBasicImpl;
 import org.hibernate.property.access.internal.PropertyAccessStrategyFieldImpl;
 import org.hibernate.property.access.spi.PropertyAccess;
+import org.hibernate.property.access.spi.PropertyAccessorService;
 
 import static org.hibernate.internal.util.ReflectHelper.getterMethodOrNull;
 import static org.hibernate.property.access.internal.AccessStrategyHelper.fieldOrNull;
@@ -22,6 +23,7 @@ final class ParentPropertyAccessHelper {
 	}
 
 	static PropertyAccess parentPropertyAccess(
+			PropertyAccessorService propertyAccessorService,
 			String parentInjectionAttributeName,
 			EmbeddableMappingType embeddableMappingType) {
 		if ( parentInjectionAttributeName == null ) {
@@ -33,24 +35,24 @@ final class ParentPropertyAccessHelper {
 		// Falling back to generic mixed access would incorrectly prefer a field for getter-based mappings.
 		if ( hasParentAnnotation( fieldOrNull( embeddableJavaType, parentInjectionAttributeName ) ) ) {
 			return PropertyAccessStrategyFieldImpl.INSTANCE.buildPropertyAccess(
+					propertyAccessorService,
 					embeddableJavaType,
 					parentInjectionAttributeName,
-					true
-			);
+					true );
 		}
 		else if ( hasParentAnnotation( getterMethodOrNull( embeddableJavaType, parentInjectionAttributeName ) ) ) {
 			return PropertyAccessStrategyBasicImpl.INSTANCE.buildPropertyAccess(
+					propertyAccessorService,
 					embeddableJavaType,
 					parentInjectionAttributeName,
-					true
-			);
+					true );
 		}
 		else {
 			return PropertyAccessStrategyBasicImpl.INSTANCE.buildPropertyAccess(
+					propertyAccessorService,
 					embeddableJavaType,
 					parentInjectionAttributeName,
-					true
-			);
+					true );
 		}
 	}
 

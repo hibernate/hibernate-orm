@@ -57,6 +57,8 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.MetaType;
 import org.hibernate.type.descriptor.java.JavaType;
 
+import jakarta.annotation.Nullable;
+
 import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper.getSelectablePath;
 import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper.getTableIdentifierExpression;
 import static org.hibernate.query.sqm.ComparisonOperator.EQUAL;
@@ -416,6 +418,14 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 	 * fetching an {@code @Any} whose target entity declares another {@code @Any} - the declaring
 	 * table is only exposed by the table group registered under the treated path, while
 	 * {@link NavigablePath#getParent()} deliberately skips over the {@code treat()}.
+	 * <p>
+	 * The {@code treat()} does not necessarily name one of the entities the {@code @Any} lists as a
+	 * discriminator value: when the inner {@code @Any} is declared by a <em>subclass</em> of such an
+	 * entity, the path is {@code treat(owner.any as TheSubclass)} while
+	 * {@link #addConcreteEntityTableGroupJoin} only ever registers table groups under
+	 * {@code treat(owner.any as TheListedEntity)}. The declaring table is then a table of the listed
+	 * entity's persister - typically a secondary table of the subclass - so the table group joined for
+	 * that listed entity is the one to use.
 	 *
 	 * @param anyPath the path of the any-valued mapping itself
 	 *
@@ -426,13 +436,59 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 	 */
 	static TableGroup getTableGroup(NavigablePath anyPath, FromClauseAccess fromClauseAccess) {
 		final var realParent = anyPath.getRealParent();
-		if ( realParent instanceof TreatedNavigablePath ) {
-			final var treatedTableGroup = fromClauseAccess.findTableGroup( realParent );
+		if ( realParent instanceof TreatedNavigablePath treatedPath ) {
+			final var treatedTableGroup = fromClauseAccess.findTableGroup( treatedPath );
 			if ( treatedTableGroup != null ) {
 				return treatedTableGroup;
 			}
+			final var declaringTableGroup = findTableGroupDeclaringSubtype( treatedPath, fromClauseAccess );
+			if ( declaringTableGroup != null ) {
+				return declaringTableGroup;
+			}
 		}
 		return fromClauseAccess.getTableGroup( anyPath.getParent() );
+	}
+
+	/**
+	 * Find, among the concrete entity table groups joined for the {@code @Any} association the given
+	 * treated path applies to (see {@link #addConcreteEntityTableGroupJoin}), the one whose entity
+	 * hierarchy contains the treated entity, that is, the table group exposing the treated subclass's
+	 * tables.
+	 * <p>
+	 * Should several listed entities of the same hierarchy match - which happens when the {@code @Any}
+	 * lists both an entity and one of its subclasses - the most derived one is returned, since it is the
+	 * only one whose table group joins the tables of the treated subclass.
+	 *
+	 * @return {@code null} when no joined entity hierarchy contains the treated entity, leaving the
+	 * caller to fall back to the real parent
+	 */
+	private static @Nullable TableGroup findTableGroupDeclaringSubtype(
+			TreatedNavigablePath treatedPath,
+			FromClauseAccess fromClauseAccess) {
+		final var associationTableGroup = fromClauseAccess.findTableGroup( treatedPath.getRealParent() );
+		if ( associationTableGroup == null ) {
+			return null;
+		}
+		// TreatedNavigablePath stores its target entity name as its local name, prefixed with '#'
+		final String treatedEntityName = treatedPath.getLocalName().substring( 1 );
+		TableGroup match = null;
+		EntityMappingType matchedEntity = null;
+		for ( TableGroupJoin join : associationTableGroup.getNestedTableGroupJoins() ) {
+			final var joinedGroup = join.getJoinedGroup();
+			if ( joinedGroup.getModelPart() instanceof EntityMappingType joinedEntity
+					&& joinedEntity.getEntityPersister().isSubclassEntityName( treatedEntityName ) ) {
+				if ( joinedEntity.getEntityName().equals( treatedEntityName ) ) {
+					return joinedGroup;
+				}
+				if ( matchedEntity == null
+						|| matchedEntity.getEntityPersister()
+								.isSubclassEntityName( joinedEntity.getEntityName() ) ) {
+					match = joinedGroup;
+					matchedEntity = joinedEntity;
+				}
+			}
+		}
+		return match;
 	}
 
 	TableGroup createRootTableGroupJoin(

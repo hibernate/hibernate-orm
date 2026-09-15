@@ -23,11 +23,10 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.nio.charset.Charset;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Locale;
 import javax.tools.Diagnostic;
 
 import org.jboss.logging.Logger;
@@ -332,26 +331,16 @@ public class TestUtil {
 
 	private static void compile(File classesDir, File generatedSourcesDir, List<String> options, File[] sourceFiles)
 			throws Exception {
-		var compiler = javax.tools.ToolProvider.getSystemJavaCompiler();
-		var diagnostics = new javax.tools.DiagnosticCollector<javax.tools.JavaFileObject>();
-		try ( var fileManager = compiler.getStandardFileManager( diagnostics, Locale.ROOT, Charset.defaultCharset() ) ) {
-			fileManager.setLocation( javax.tools.StandardLocation.CLASS_OUTPUT, List.of( classesDir ) );
-			fileManager.setLocation( javax.tools.StandardLocation.SOURCE_OUTPUT, List.of( generatedSourcesDir ) );
-			var classpath = new java.util.ArrayList<File>();
-			for ( File f : fileManager.getLocation( javax.tools.StandardLocation.CLASS_PATH ) ) {
-				classpath.add( f );
-			}
-			classpath.add( classesDir );
-			fileManager.setLocation( javax.tools.StandardLocation.CLASS_PATH, classpath );
-
-			var task = compiler.getTask(
-					null, fileManager, diagnostics,
-					options,
-					null,
-					fileManager.getJavaFileObjectsFromFiles( List.of( sourceFiles ) )
-			);
-			assertTrue( task.call(), "Compilation failed: " + diagnostics.getDiagnostics() );
-		}
+		final var compilerOptions = new ArrayList<>( options );
+		compilerOptions.addAll( List.of(
+				"-d", classesDir.getAbsolutePath(),
+				"-s", generatedSourcesDir.getAbsolutePath()
+		) );
+		final List<Diagnostic<?>> diagnostics = new ArrayList<>();
+		assertTrue(
+				CompilationExtension.compile( List.of( sourceFiles ), compilerOptions, diagnostics ),
+				"Compilation failed: " + diagnostics
+		);
 	}
 
 	public static File getSourceBaseDir(Class<?> testClass) {

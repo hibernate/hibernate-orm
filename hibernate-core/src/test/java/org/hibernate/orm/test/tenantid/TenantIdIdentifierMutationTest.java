@@ -10,6 +10,7 @@ import java.util.List;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.IdClass;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PersistenceException;
 
 import org.hibernate.PropertyValueException;
@@ -27,12 +28,14 @@ import org.junit.jupiter.params.provider.EnumSource;
 
 import static org.hibernate.cfg.MultiTenancySettings.MULTI_TENANT_IDENTIFIER_RESOLVER;
 import static org.hibernate.cfg.MultiTenancySettings.MULTI_TENANT_RLS_ENABLED;
+import static jakarta.persistence.CascadeType.REMOVE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@DomainModel(annotatedClasses = TenantIdIdentifierMutationTest.Item.class)
+@DomainModel(annotatedClasses = { TenantIdIdentifierMutationTest.Item.class, TenantIdIdentifierMutationTest.Parent.class })
 @SessionFactory(useCollectingStatementInspector = true)
 @ServiceRegistry(settings = {
 		@Setting(name = MULTI_TENANT_IDENTIFIER_RESOLVER,
@@ -46,6 +49,47 @@ class TenantIdIdentifierMutationTest {
 	}
 
 	enum Operation { UPDATE, DELETE, UPSERT, UPDATE_MULTIPLE, DELETE_MULTIPLE, UPSERT_MULTIPLE, REMOVE, REMOVE_REFERENCE }
+
+	@Test
+	void removeTransientIdentifierWithUnassignedTenant(SessionFactoryScope scope) {
+		scope.inTransaction( session -> session.persist( new Item() ) );
+		final Item transientItem = new Item();
+		final var inspector = scope.getCollectingStatementInspector();
+		inspector.clear();
+		scope.inTransaction( session -> session.remove( transientItem ) );
+		assertNull( transientItem.tenant );
+		assertEquals( 1L, transientItem.id );
+		assertTrue( inspector.getSqlQueries().stream().allMatch( sql -> sql.startsWith( "select " ) ) );
+		scope.inTransaction( session ->
+				assertNotNull( session.find( Item.class, new Key( 1L, "mine" ) ) ) );
+	}
+
+	@Test
+	void removeTransientIdentifierStillCascades(SessionFactoryScope scope) {
+		final Item child = new Item();
+		child.id = 2L;
+		scope.inTransaction( session -> session.persist( child ) );
+		final Parent transientItem = new Parent();
+		scope.inTransaction( session -> {
+			transientItem.child = session.find( Item.class, new Key( child.id, child.tenant ) );
+			session.remove( transientItem );
+		} );
+		assertNull( transientItem.tenant );
+		scope.inTransaction( session ->
+				assertNull( session.find( Item.class, new Key( child.id, child.tenant ) ) ) );
+	}
+
+	@ParameterizedTest
+	@EnumSource(value = Operation.class, names = { "UPDATE", "DELETE", "UPDATE_MULTIPLE", "DELETE_MULTIPLE" })
+	void statelessMissingIdentifierTenantIsRejectedBeforeSql(Operation operation, SessionFactoryScope scope) {
+		final Item item = new Item();
+		scope.getCollectingStatementInspector().clear();
+		final var exception = assertThrows( PropertyValueException.class,
+				() -> mutate( scope, "mine", operation, item ) );
+		assertEquals( "tenant", exception.getPropertyName() );
+		assertNull( item.tenant );
+		scope.getCollectingStatementInspector().assertExecutedCount( 0 );
+	}
 
 	@ParameterizedTest
 	@EnumSource(Operation.class)
@@ -132,6 +176,14 @@ class TenantIdIdentifierMutationTest {
 		@Id Long id = 1L;
 		@Id @TenantId String tenant;
 		String name = "original";
+	}
+
+	@Entity(name = "TenantIdentifierMutationParent")
+	@IdClass(Key.class)
+	static class Parent {
+		@Id Long id = 1L;
+		@Id @TenantId String tenant;
+		@ManyToOne(cascade = REMOVE) Item child;
 	}
 
 	public record Key(Long id, String tenant) implements Serializable {

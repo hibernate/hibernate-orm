@@ -154,8 +154,9 @@ public class DefaultDeleteEventListener implements DeleteEventListener {
 		if ( ForeignKeys.isTransient( persister.getEntityName(), entity, null, source ) ) {
 			// A tenant-filtered snapshot also reports a foreign row as absent.
 			// Do not mistake a detached instance of that row for a transient entity.
+			// An unassigned tenant component of the identifier cannot name a stored row.
 			final Object id = persister.getIdentifier( entity, source );
-			if ( id != null ) {
+			if ( id != null && !TenantIdHelper.hasUnassignedIdentifierTenant( id, persister, source ) ) {
 				TenantIdHelper.checkTenantId( id, persister, source, true );
 			}
 			deleteTransientEntity( source, entity, persister, transientEntities );

@@ -12,6 +12,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.IdClass;
 import jakarta.persistence.PersistenceException;
 
+import org.hibernate.PropertyValueException;
 import org.hibernate.annotations.TenantId;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -29,9 +30,10 @@ import static org.hibernate.cfg.MultiTenancySettings.MULTI_TENANT_RLS_ENABLED;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @DomainModel(annotatedClasses = TenantIdIdentifierMutationTest.Item.class)
-@SessionFactory
+@SessionFactory(useCollectingStatementInspector = true)
 @ServiceRegistry(settings = {
 		@Setting(name = MULTI_TENANT_IDENTIFIER_RESOLVER,
 				value = "org.hibernate.orm.test.tenantid.TenantIdMutationTest$Resolver"),
@@ -51,7 +53,16 @@ class TenantIdIdentifierMutationTest {
 		final Item item = new Item();
 		scope.inTransaction( session -> session.persist( item ) );
 		item.name = "changed";
-		assertThrows( PersistenceException.class, () -> mutate( scope, "yours", operation, item ) );
+		scope.getCollectingStatementInspector().clear();
+		if ( operation == Operation.REMOVE || operation == Operation.REMOVE_REFERENCE ) {
+			assertThrows( PersistenceException.class, () -> mutate( scope, "yours", operation, item ) );
+		}
+		else {
+			final var exception = assertThrows( PropertyValueException.class, () -> mutate( scope, "yours", operation, item ) );
+			assertEquals( "tenant", exception.getPropertyName() );
+			assertTrue( exception.getMessage().contains( "mine != yours" ), exception.getMessage() );
+			scope.getCollectingStatementInspector().assertExecutedCount( 0 );
+		}
 		scope.inTransaction( session -> assertEquals( "original", session.find( Item.class, new Key( 1L, "mine" ) ).name ) );
 		mutate( scope, "mine", operation, item );
 	}

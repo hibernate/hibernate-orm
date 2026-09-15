@@ -18,6 +18,7 @@ import jakarta.persistence.PersistenceException;
 import jakarta.persistence.SecondaryTable;
 import jakarta.persistence.Version;
 
+import org.hibernate.PropertyValueException;
 import org.hibernate.Session;
 import org.hibernate.StatelessSession;
 import org.hibernate.annotations.TenantId;
@@ -44,6 +45,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @DomainModel(annotatedClasses = { TenantIdMutationTest.Item.class, TenantIdMutationTest.PlainItem.class, TenantIdMutationTest.Owner.class, TenantIdMutationTest.PartitionedItem.class, TenantIdMutationTest.SoftItem.class })
 @SessionFactory(useCollectingStatementInspector = true)
@@ -98,6 +100,45 @@ class TenantIdMutationTest {
 	static Stream<Arguments> mutations() {
 		return Stream.of( Operation.values() ).flatMap( operation ->
 				Stream.of( "mine", "yours", null ).map( tenant -> Arguments.of( operation, tenant ) ) );
+	}
+
+	@ParameterizedTest
+	@EnumSource(value = Operation.class, names = { "REMOVE", "REMOVE_REFERENCE" }, mode = EnumSource.Mode.EXCLUDE)
+	void statelessTenantMismatchIsRejectedBeforeSql(Operation operation, SessionFactoryScope scope) {
+		for ( Base entity : List.of( new Item(), new PlainItem(), new Owner() ) ) {
+			assertTenantMismatch( operation, entity, "yours", scope );
+		}
+	}
+
+	@ParameterizedTest
+	@EnumSource(value = Operation.class, names = { "UPDATE", "DELETE", "UPDATE_MULTIPLE", "DELETE_MULTIPLE" })
+	void statelessMissingTenantIsRejectedBeforeSql(Operation operation, SessionFactoryScope scope) {
+		for ( Base entity : List.of( new Item(), new PlainItem(), new Owner() ) ) {
+			assertTenantMismatch( operation, entity, null, scope );
+		}
+	}
+
+	private static void assertTenantMismatch(Operation operation, Base entity, String suppliedTenant, SessionFactoryScope scope) {
+		inTenant( scope, "mine", session -> session.persist( entity ) );
+		entity.tenant = suppliedTenant;
+		final Integer version = entity instanceof Item item ? item.version : null;
+		final var inspector = scope.getCollectingStatementInspector();
+		inspector.clear();
+		final var exception = assertThrows( PropertyValueException.class,
+				() -> mutate( scope, "mine", operation, entity ) );
+		inspector.assertExecutedCount( 0 );
+		assertEquals( entity.getClass().getName(), exception.getEntityName() );
+		assertEquals( "tenant", exception.getPropertyName() );
+		assertTrue( exception.getMessage().contains( suppliedTenant + " != mine" ), exception.getMessage() );
+		assertEquals( suppliedTenant, entity.tenant );
+		if ( entity instanceof Item item ) {
+			assertEquals( version, item.version );
+		}
+		inTenant( scope, "mine", session -> {
+			final Base stored = session.find( entity.getClass(), entity.id );
+			assertNotNull( stored );
+			assertEquals( "mine", stored.tenant );
+		} );
 	}
 
 	@ParameterizedTest

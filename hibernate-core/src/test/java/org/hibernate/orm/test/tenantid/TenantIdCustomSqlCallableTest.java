@@ -35,7 +35,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 
 @DomainModel(annotatedClasses = { TenantIdCustomSqlCallableTest.Legacy.class, TenantIdCustomSqlCallableTest.WithTenant.class })
 @SessionFactory
-@RequiresDialect(PostgreSQLDialect.class)
+@RequiresDialect(value = PostgreSQLDialect.class, matchSubTypes = false)
 @ServiceRegistry(settings = {
 		@Setting(name = FLUSH_QUEUE_TYPE, value = "legacy"),
 		@Setting(name = MULTI_TENANT_IDENTIFIER_RESOLVER,

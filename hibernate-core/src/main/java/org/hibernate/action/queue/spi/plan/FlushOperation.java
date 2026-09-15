@@ -21,6 +21,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.sql.spi.mutation.MutationOperation;
 import org.hibernate.sql.spi.mutation.ValuesAnalysis;
 
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -166,10 +167,11 @@ public class FlushOperation implements OperationResultChecker {
 	@Override
 	public boolean checkResult(
 			int affectedRowCount,
+			PreparedStatement statement,
 			int batchPosition,
 			String sqlString,
 			SessionFactoryImplementor sessionFactory) throws SQLException {
-		return bindPlan.checkResult( this, affectedRowCount, batchPosition, sqlString, sessionFactory );
+		return bindPlan.checkResult( this, affectedRowCount, statement, batchPosition, sqlString, sessionFactory );
 	}
 
 	public BindingPatch getBindingPatch() {

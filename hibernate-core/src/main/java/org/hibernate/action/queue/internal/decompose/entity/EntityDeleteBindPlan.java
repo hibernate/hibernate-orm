@@ -21,6 +21,7 @@ import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.ModelPart.JdbcValueBiConsumer;
 import org.hibernate.persister.entity.EntityPersister;
 
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 /// @author Steve Ebersole
@@ -291,12 +292,14 @@ public class EntityDeleteBindPlan implements BindPlan, OperationResultChecker {
 	public boolean checkResult(
 			FlushOperation flushOperation,
 			int affectedRowCount,
+			PreparedStatement statement,
 			int batchPosition,
 			String sqlString,
 			SessionFactoryImplementor sessionFactory) throws SQLException {
 		return checkResult(
 				(EntityTableDescriptor) flushOperation.getMutatingTableDescriptor(),
 				affectedRowCount,
+				statement,
 				batchPosition,
 				sqlString,
 				sessionFactory
@@ -306,21 +309,24 @@ public class EntityDeleteBindPlan implements BindPlan, OperationResultChecker {
 	@Override
 	public boolean checkResult(
 			int affectedRowCount,
+			PreparedStatement statement,
 			int batchPosition,
 			String sqlString,
 			SessionFactoryImplementor sessionFactory) throws SQLException {
-		return checkResult( tableDescriptor, affectedRowCount, batchPosition, sqlString, sessionFactory );
+		return checkResult( tableDescriptor, affectedRowCount, statement, batchPosition, sqlString, sessionFactory );
 	}
 
 	private boolean checkResult(
 			EntityTableDescriptor tableDescriptor,
 			int affectedRowCount,
+			PreparedStatement statement,
 			int batchPosition,
 			String sqlString,
 			SessionFactoryImplementor sessionFactory) throws SQLException {
 		return Checkers.identifiedResultsCheck(
 				tableDescriptor.deleteDetails().getExpectation(),
 				affectedRowCount,
+				statement,
 				batchPosition,
 				entityPersister,
 				tableDescriptor,

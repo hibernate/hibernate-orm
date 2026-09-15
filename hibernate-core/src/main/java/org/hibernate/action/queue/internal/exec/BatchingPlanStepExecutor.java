@@ -25,7 +25,7 @@ import java.util.function.Consumer;
 /// PlanStepExecutor with support for JDBC batching.
 ///
 /// @author Steve Ebersole
-public class BatchingPlanStepExecutor extends AbstractStepExecutor implements BatchObserver {
+public class BatchingPlanStepExecutor extends StandardPlanStepExecutor implements BatchObserver {
 	private final int batchSize;
 
 	private StatementShapeKey batchKey;
@@ -68,7 +68,16 @@ public class BatchingPlanStepExecutor extends AbstractStepExecutor implements Ba
 	}
 
 	@Override
-	protected void executePreparable(PreparableMutationOperation preparable, FlushOperation flushOperation) {
+	public void executePreparable(PreparableMutationOperation preparable, FlushOperation flushOperation) {
+		if ( !preparable.canBeBatched( flushOperation.getShapeKey(), batchSize ) ) {
+			if ( batchKey != null ) {
+				executeBatch();
+			}
+			super.beforePhysicalExecution( flushOperation );
+			super.executePreparable( preparable, flushOperation );
+			return;
+		}
+
 		if ( flushOperation.getBindPlan() instanceof GroupedRowBindPlan groupedRowBindPlan ) {
 			final int bindingCount = groupedRowBindPlan.getBindingCount();
 			for ( int bindingIndex = 0; bindingIndex < bindingCount; bindingIndex++ ) {
@@ -127,7 +136,8 @@ public class BatchingPlanStepExecutor extends AbstractStepExecutor implements Ba
 		if ( operationIsNoop
 				|| flushOperation.isExecutionSkipped()
 				|| flushOperation.getBindPlan().getGeneratedValuesCollector() != null
-				|| !(flushOperation.getJdbcOperation() instanceof PreparableMutationOperation) ) {
+				|| !(flushOperation.getJdbcOperation() instanceof PreparableMutationOperation preparable)
+				|| !preparable.canBeBatched( flushOperation.getShapeKey(), batchSize ) ) {
 			super.afterOperationExecution( flushOperation, newlyManagedEntityConsumer, fixupOperationConsumer );
 		}
 	}

@@ -26,6 +26,7 @@ import org.hibernate.metamodel.mapping.ModelPart.JdbcValueBiConsumer;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.spi.mutation.ValuesAnalysis;
 
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 import static org.hibernate.action.queue.internal.decompose.entity.BindPlanHelper.shouldBindJdbcValue;
@@ -443,12 +444,14 @@ public class EntityUpdateBindPlan implements BindPlan, OperationResultChecker {
 	public boolean checkResult(
 			FlushOperation flushOperation,
 			int affectedRowCount,
+			PreparedStatement statement,
 			int batchPosition,
 			String sqlString,
 			SessionFactoryImplementor sessionFactory) throws SQLException {
 		return checkResult(
 				(EntityTableDescriptor) flushOperation.getMutatingTableDescriptor(),
 				affectedRowCount,
+				statement,
 				batchPosition,
 				sqlString,
 				sessionFactory
@@ -458,21 +461,24 @@ public class EntityUpdateBindPlan implements BindPlan, OperationResultChecker {
 	@Override
 	public boolean checkResult(
 			int affectedRowCount,
+			PreparedStatement statement,
 			int batchPosition,
 			String sqlString,
 			SessionFactoryImplementor sessionFactory) throws SQLException {
-		return checkResult( tableDescriptor, affectedRowCount, batchPosition, sqlString, sessionFactory );
+		return checkResult( tableDescriptor, affectedRowCount, statement, batchPosition, sqlString, sessionFactory );
 	}
 
 	private boolean checkResult(
 			EntityTableDescriptor tableDescriptor,
 			int affectedRowCount,
+			PreparedStatement statement,
 			int batchPosition,
 			String sqlString,
 			SessionFactoryImplementor sessionFactory) throws SQLException {
 		return Checkers.identifiedResultsCheck(
 				tableDescriptor.updateDetails().getExpectation(),
 				affectedRowCount,
+				statement,
 				batchPosition,
 				entityPersister,
 				tableDescriptor,

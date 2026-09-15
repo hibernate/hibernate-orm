@@ -159,6 +159,22 @@ class StatelessLockingTest {
 				final var query = agent.createQuery( QUERY, Lockable.class ).setLockMode( mode );
 				final var inspector = scope.getCollectingStatementInspector();
 				inspector.clear();
+				final var concurrency = scope.getEntityManagerFactory()
+						.unwrap( org.hibernate.engine.spi.SessionFactoryImplementor.class )
+						.getJdbcServices().getJdbcEnvironment().getTransactionConcurrency();
+				final boolean supported = java.util.stream.Stream.of(
+						org.hibernate.dialect.lock.spi.Operation.READ,
+						org.hibernate.dialect.lock.spi.Operation.SHARED_LOCK_READ,
+						org.hibernate.dialect.lock.spi.Operation.UPDATE_LOCK_READ )
+						.filter( concurrency::supports ).map( concurrency::getReadGuarantees )
+						.anyMatch( g -> g.preventsDirtyReads() && g.preventsConcurrentModification()
+								&& g.holdsRowLockUntilTransactionCompletion() );
+				if ( !supported ) {
+					org.junit.jupiter.api.Assertions.assertThrows( org.hibernate.HibernateException.class, query::getResultList );
+					assertEquals( List.of(), inspector.getSqlQueries() );
+					transaction.rollback();
+					return;
+				}
 				query.getResultList();
 				optimisticSql = List.copyOf( inspector.getSqlQueries() );
 				assertEquals( OPTIMISTIC, query.getLockMode() );

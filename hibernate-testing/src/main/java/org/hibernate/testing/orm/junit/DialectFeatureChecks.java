@@ -440,11 +440,16 @@ abstract public class DialectFeatureChecks {
 	 * Whether a plain read returns the last committed state of a row without waiting
 	 * for a concurrent uncommitted write, as on databases with multiversion reads.
 	 *
-	 * @see org.hibernate.dialect.lock.spi.LockingSupport.Metadata#readsWaitForUncommittedWrites()
+	 * @deprecated Inspect the factory JdbcEnvironment TransactionConcurrency and
+	 * require a known NONE result for WRITE to READ. This legacy dialect-only
+	 * check conservatively returns false because it has no resolved configuration.
 	 */
+	@Deprecated(since = "8.0")
 	public static class ReadsDoNotWaitForUncommittedWrites implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
-			return !dialect.getLockingSupport().getMetadata().readsWaitForUncommittedWrites();
+			// A dialect-only check cannot establish configuration-dependent behavior.
+			// Tests should inspect the factory's TransactionConcurrency instead.
+			return false;
 		}
 	}
 

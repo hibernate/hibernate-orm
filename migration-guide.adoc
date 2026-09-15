@@ -189,44 +189,6 @@ session.getTransaction().commit();
 ----
 
 
-[[locking-queries-managed-entities]]
-=== Version checks for locking queries
-
-A query requesting a pessimistic lock now checks the version of an already managed versioned entity even when
-its current lock mode is `NONE`. If another transaction has changed its version, the query throws
-`OptimisticLockException` instead of acquiring the lock on the stale instance. This includes entities
-loaded outside a transaction or retained in the persistence context after an earlier transaction.
-This behavior is consistent with `EntityManager.lock()`. Queries which request no lock are unaffected.
-
-
-[[pessimistic-lock-failure-exceptions]]
-=== Exceptions for pessimistic lock failures
-
-Hibernate now more consistently chooses between `PessimisticLockException` and `LockTimeoutException`
-based on whether the database locking failure aborts the transaction or only the statement.
-
-
-[[optimistic-lock-mode-version-check]]
-=== Version check for `LockModeType.OPTIMISTIC`
-
-For an entity locked in `OPTIMISTIC` mode (or, equivalently, `READ`), Hibernate verifies just before the
-transaction commits that the version of the entity in the database is still the version which was read.
-On a database with multiversion concurrency control, or with "currently committed" read semantics, a plain
-`select` does not wait for a concurrent transaction which has modified the row but not yet committed, and
-under snapshot isolation returns the version as of the start of the transaction, so the check could miss a
-concurrent modification.
-
-On such databases the version check is now a "current read" which waits for the outcome of any concurrent
-write to the row and fails if the version changed. On PostgreSQL, MySQL, MariaDB, Oracle, H2, HANA and
-CockroachDB, and with the community dialects for GaussDB, TiDB, Firebird, Altibase, CUBRID, TimesTen, and
-Informix, it uses the same syntax as `PESSIMISTIC_READ` (`for share`, `lock in share mode`, or `for update`
-where the database has no share lock). On SQL Server it uses the `readcommittedlock` table  hint, and on
-DB2 LUW the `wait for outcome` clause, since on those databases whether a plain read waits depends on
-configuration (`READ_COMMITTED_SNAPSHOT` and `CUR_COMMIT` respectively) which the dialect cannot detect;
-neither form retains a lock beyond the statement. Databases whose plain reads already wait for uncommitted
-writes are unaffected.
-
-
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // XSD changes
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -33,6 +33,11 @@ public class InformixLockingSupport
 	}
 
 	@Override
+	public org.hibernate.dialect.lock.spi.TransactionConcurrencyResolver getTransactionConcurrencyResolver() {
+		return org.hibernate.community.dialect.lock.internal.InformixTransactionConcurrencyResolver.INSTANCE;
+	}
+
+	@Override
 	public Metadata getMetadata() {
 		return this;
 	}

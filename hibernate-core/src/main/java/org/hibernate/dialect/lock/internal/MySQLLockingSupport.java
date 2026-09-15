@@ -4,6 +4,9 @@
  */
 package org.hibernate.dialect.lock.internal;
 
+
+import org.hibernate.dialect.lock.spi.TransactionConcurrencyResolver;
+
 import jakarta.persistence.Timeout;
 import org.hibernate.HibernateException;
 import org.hibernate.Timeouts;
@@ -43,6 +46,11 @@ public class MySQLLockingSupport implements LockingSupport, LockingSupport.Metad
 
 	public MySQLLockingSupport(DatabaseVersion version) {
 		laterThanVersion8 = version.isSameOrAfter( 8 );
+	}
+
+	@Override
+	public TransactionConcurrencyResolver getTransactionConcurrencyResolver() {
+		return MySQLTransactionConcurrencyResolver.INSTANCE;
 	}
 
 	@Override

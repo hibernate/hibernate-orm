@@ -4,6 +4,10 @@
  */
 package org.hibernate.dialect.lock.internal;
 
+
+import org.hibernate.dialect.lock.spi.TransactionConcurrencyResolver;
+import org.hibernate.dialect.lock.spi.TransactionConcurrency;
+
 import org.hibernate.dialect.lock.PessimisticLockStyle;
 import org.hibernate.dialect.lock.spi.LockingClauseRenderer;
 import org.hibernate.dialect.lock.spi.LockingClauseRequest;
@@ -118,10 +122,13 @@ public class DB2LockingSupport extends LockingSupportParameterized implements Lo
 	}
 
 	@Override
-	public String renderCurrentReadClause() {
-		return currentReadClause != null && !readsWaitForUncommittedWrites()
-				? currentReadClause
-				: super.renderCurrentReadClause();
+	public TransactionConcurrencyResolver getTransactionConcurrencyResolver() {
+		return new DB2TransactionConcurrencyResolver( currentReadClause != null, !shareClause.equals( updateClause ) );
+	}
+
+	@Override
+	public String renderCurrentReadClause(TransactionConcurrency concurrency) {
+		return currentReadClause != null ? currentReadClause : super.renderCurrentReadClause( concurrency );
 	}
 
 	@Override

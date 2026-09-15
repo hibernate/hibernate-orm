@@ -27,6 +27,11 @@ public class TimesTenLockingSupport implements LockingSupport, LockingSupport.Me
 	public static final TimesTenLockingSupport TIMES_TEN_LOCKING_SUPPORT = new TimesTenLockingSupport();
 
 	@Override
+	public org.hibernate.dialect.lock.spi.TransactionConcurrencyResolver getTransactionConcurrencyResolver() {
+		return TimesTenTransactionConcurrencyResolver.INSTANCE;
+	}
+
+	@Override
 	public Metadata getMetadata() {
 		return this;
 	}

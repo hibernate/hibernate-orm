@@ -141,8 +141,11 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 		return null;
 	}
 
+	/*
+	 * Hibernate Reactive overrides this to provide an error in case it's called in a reactive scenario
+	 */
 	@Override
-	public final void performMutation(
+	public void performMutation(
 			JdbcValueBindings jdbcValueBindings,
 			ValuesAnalysis incomingValuesAnalysis,
 			SharedSessionContractImplementor session) {

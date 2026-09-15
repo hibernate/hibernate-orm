@@ -36,6 +36,7 @@ import org.hibernate.persister.filter.internal.StaticFilterAliasGenerator;
 import org.hibernate.internal.util.collections.JoinedList;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.metamodel.mapping.AuditMapping;
 import org.hibernate.metamodel.mapping.DiscriminatorValue;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -500,20 +501,24 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 			return tableNameResolver != null ? tableNameResolver.apply( qualifiedName ) : qualifiedName;
 		}
 		else {
+			final var classes =
+					new JoinedList<>( List.of( model ),
+							unmodifiableList( model.getSubclasses() ) );
 			final Set<Column> columns = new LinkedHashSet<>();
-			for ( var table : model.getSubclassTableClosure() ) {
+			for ( var persistentClass : classes ) {
+				final var table = persistentClass.getTable();
 				if ( !table.isAbstractUnionTable() ) {
 					columns.addAll( table.getColumns() );
 				}
 			}
 			final var dialect = factory.getJdbcServices().getDialect();
 			final var subquery = new StringBuilder().append( "(" );
-			final var classes =
-					new JoinedList<>( List.of( model ),
-							unmodifiableList( model.getSubclasses() ) );
+			// A non-null table name resolver means we use auxiliary-table columns for the projection
+			final boolean useAuxiliaryTables = tableNameResolver != null;
 			for ( var persistentClass : classes ) {
 				final var table = persistentClass.getTable();
 				if ( !table.isAbstractUnionTable() ) {
+					final var projectionTable = useAuxiliaryTables ? persistentClass.getAuxiliaryTable() : table;
 					//TODO: move to .sql package!!
 					if ( subquery.length() > 1 ) {
 						subquery.append( " union " );
@@ -523,7 +528,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 					}
 					subquery.append( "select " );
 					for ( var column : columns ) {
-						if ( !table.containsColumn( column ) ) {
+						if ( !projectionTable.containsColumn( column ) ) {
 							subquery.append( getSelectClauseNullString( column, dialect ) )
 									.append( " as " );
 						}
@@ -581,7 +586,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 				tablesToUnion.add( persister.getRootTableName() );
 			}
 			// Collect selectables grouped by the table names in which they appear
-			persister.collectSelectableOwners( selectables );
+			persister.collectSelectableOwners( selectables, auxMapping instanceof AuditMapping );
 		}
 
 		if ( tablesToUnion.isEmpty() ) {
@@ -653,7 +658,9 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		return unionSubquery.append( ")" ).toString();
 	}
 
-	private void collectSelectableOwners(LinkedHashMap<String, Map<String, SelectableMapping>> selectables) {
+	private void collectSelectableOwners(
+			LinkedHashMap<String, Map<String, SelectableMapping>> selectables,
+			boolean auditMapping) {
 		if ( !isAbstract() ) {
 			final SelectableConsumer selectableConsumer = (i, selectable) -> {
 				var selectableMapping = selectables.computeIfAbsent(
@@ -670,7 +677,11 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 			}
 			final var attributeMappings = getAttributeMappings();
 			for ( int i = 0, size = attributeMappings.size(); i < size; i++ ) {
-				attributeMappings.get( i ).forEachSelectable( selectableConsumer );
+				final var attributeMapping = attributeMappings.get( i );
+				// If this entity is audited, skip collecting audit-excluded selectable mappings
+				if ( !auditMapping || !isPropertyAuditedExcluded( attributeMapping.getStateArrayPosition() ) ) {
+					attributeMapping.forEachSelectable( selectableConsumer );
+				}
 			}
 		}
 	}

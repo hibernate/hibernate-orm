@@ -48,6 +48,8 @@ public class FetchingScrollableResultsImpl<R> extends AbstractScrollableResults<
 						? null
 						: queryOptions.getEffectiveLimit().getMaxRows();
 		beforeFirst = true;
+		afterLast = false;
+		currentPosition = 0;
 	}
 
 	@Override
@@ -72,6 +74,7 @@ public class FetchingScrollableResultsImpl<R> extends AbstractScrollableResults<
 				// no rows to read
 				currentPosition = 0;
 				beforeFirst = false;
+				afterLast = true;
 				return false;
 			}
 		}
@@ -81,11 +84,8 @@ public class FetchingScrollableResultsImpl<R> extends AbstractScrollableResults<
 		beforeFirst = false;
 		currentPosition++;
 
-		if ( last ) {
-			if ( maxPosition == null ) {
-				// we just hit the last position
-				maxPosition = currentPosition;
-			}
+		if ( last && maxPosition == null ) {
+			maxPosition = currentPosition;
 		}
 
 		afterScrollOperation();
@@ -200,7 +200,38 @@ public class FetchingScrollableResultsImpl<R> extends AbstractScrollableResults<
 
 	@Override
 	public boolean position(int position) {
-		return setRowNumber( position );
+		if ( position == 1 ) {
+			return first();
+		}
+		else if ( position == -1 || maxPosition != null && position == maxPosition ) {
+			return last();
+		}
+		else if ( position < 0 && maxPosition == null ) {
+			/*
+			 * We need to discover the end before resolving a negative
+			 * position such as -2.
+			 */
+			while ( next() ) {
+				// continue until after the last logical row
+			}
+			return scroll( position );
+		}
+		else {
+			final int targetPosition =
+					position < 0
+							? maxPosition + position + 1
+							: position;
+			if ( targetPosition <= 0 ) {
+				afterLast();
+				return false;
+			}
+			if ( maxPosition != null && targetPosition > maxPosition ) {
+				afterLast();
+				return false;
+			}
+
+			return scroll( targetPosition - currentPosition );
+		}
 	}
 
 	@Override
@@ -269,7 +300,9 @@ public class FetchingScrollableResultsImpl<R> extends AbstractScrollableResults<
 
 	@Override
 	public int getRowNumber() {
-		return currentPosition - 1;
+		return currentPosition == 0 || afterLast
+				? -1
+				: currentPosition - 1;
 	}
 
 	@Override
@@ -279,23 +312,7 @@ public class FetchingScrollableResultsImpl<R> extends AbstractScrollableResults<
 
 	@Override
 	public boolean setRowNumber(int rowNumber) {
-		if ( rowNumber == 1 ) {
-			return first();
-		}
-		else if ( rowNumber == -1 || maxPosition != null && rowNumber == maxPosition ) {
-			return last();
-		}
-		else if ( rowNumber < 0 && maxPosition == null ) {
-			while ( next() ) {
-				// skip all the way to the end (inefficiently)
-			}
-			return scroll( rowNumber );
-		}
-		else {
-			// rowNumber -1 is the same as maxPosition
-			final int targetRowNumber = rowNumber < 0 ? maxPosition + rowNumber + 1 : rowNumber;
-			return scroll( targetRowNumber - currentPosition );
-		}
+		return position( rowNumber >= 0 ? rowNumber + 1 : rowNumber );
 	}
 
 	private boolean prepareCurrentRow() {

@@ -2232,7 +2232,7 @@ public abstract class AbstractEntityPersister
 	 * and see the current version.
 	 *
 	 * @see SimpleSelect#setCurrentRead(boolean)
-	 * @see org.hibernate.dialect.lock.spi.LockingSupport.Metadata#readsWaitForUncommittedWrites()
+	 * @see org.hibernate.dialect.lock.spi.ReadGuarantees#isCurrentRead()
 	 */
 	public String generateSelectVersionString() {
 		final var select = new SimpleSelect( getFactory() ).setTableName( getVersionedTableName() );

@@ -4,6 +4,8 @@
  */
 package org.hibernate.boot.model.relational.internal;
 
+import org.hibernate.dialect.lock.spi.TransactionConcurrency;
+
 import java.util.function.BooleanSupplier;
 
 import org.hibernate.Internal;
@@ -58,6 +60,11 @@ public final class PersistenceUnitJdbcEnvironment implements JdbcEnvironment {
 	@Override
 	public JdbcMetadata getJdbcMetadata() {
 		return delegate.getJdbcMetadata();
+	}
+
+	@Override
+	public TransactionConcurrency getTransactionConcurrency() {
+		return delegate.getTransactionConcurrency();
 	}
 
 	@Override

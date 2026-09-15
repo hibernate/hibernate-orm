@@ -4,6 +4,10 @@
  */
 package org.hibernate.sql;
 
+import org.hibernate.dialect.lock.spi.Operation;
+
+import org.hibernate.dialect.lock.spi.TransactionConcurrency;
+
 import org.hibernate.Internal;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
@@ -42,12 +46,14 @@ public class SimpleSelect implements RestrictionRenderingContext {
 	private boolean currentRead;
 
 	private final Dialect dialect;
+	private final TransactionConcurrency concurrency;
 	private final ParameterMarkerStrategy parameterMarkerStrategy;
 	private int parameterCount;
 
 	public SimpleSelect(final SessionFactoryImplementor factory) {
 		final JdbcServices jdbcServices = factory.getJdbcServices();
 		this.dialect = jdbcServices.getDialect();
+		this.concurrency = jdbcServices.getJdbcEnvironment().getTransactionConcurrency();
 		this.parameterMarkerStrategy = jdbcServices.getParameterMarkerStrategy();
 	}
 
@@ -57,6 +63,7 @@ public class SimpleSelect implements RestrictionRenderingContext {
 
 	public SimpleSelect(Dialect dialect, ParameterMarkerStrategy parameterMarkerStrategy) {
 		this.dialect = dialect;
+		this.concurrency = null;
 		this.parameterMarkerStrategy = parameterMarkerStrategy;
 	}
 
@@ -165,8 +172,8 @@ public class SimpleSelect implements RestrictionRenderingContext {
 	 * state from a snapshot. On a database where a plain read already
 	 * behaves this way, nothing extra is rendered.
 	 *
-	 * @see LockingSupport#renderCurrentReadTableHint(String)
-	 * @see LockingSupport#renderCurrentReadClause()
+	 * @see LockingSupport#renderCurrentReadTableHint(String, TransactionConcurrency)
+	 * @see LockingSupport#renderCurrentReadClause(TransactionConcurrency)
 	 */
 	public SimpleSelect setCurrentRead(boolean currentRead) {
 		this.currentRead = currentRead;
@@ -206,9 +213,18 @@ public class SimpleSelect implements RestrictionRenderingContext {
 				).sql()
 				: buf.toString();
 
-		return currentRead
-				? selectString + dialect.getLockingSupport().renderCurrentReadClause()
+		return needsExplicitCurrentRead()
+				? selectString + dialect.getLockingSupport().renderCurrentReadClause( concurrency )
 				: selectString;
+	}
+
+	private boolean needsExplicitCurrentRead() {
+		if ( currentRead && concurrency == null ) {
+			throw new IllegalStateException( "Current reads require a SimpleSelect constructed with a SessionFactory" );
+		}
+		return currentRead && (!concurrency.getReadGuarantees( Operation.READ ).isCurrentRead()
+				&& concurrency.supports( Operation.CURRENT_READ )
+				&& concurrency.getReadGuarantees( Operation.CURRENT_READ ).isCurrentRead());
 	}
 
 	private void applyComment(StringBuilder buf) {
@@ -245,8 +261,8 @@ public class SimpleSelect implements RestrictionRenderingContext {
 				lockOptions,
 				tableName
 		) );
-		if ( currentRead ) {
-			buf.append( dialect.getLockingSupport().renderCurrentReadTableHint( tableName ) );
+		if ( needsExplicitCurrentRead() ) {
+			buf.append( dialect.getLockingSupport().renderCurrentReadTableHint( tableName, concurrency ) );
 		}
 		if ( tableName.charAt( 0 ) == '(' ) {
 			buf.append( " r" );

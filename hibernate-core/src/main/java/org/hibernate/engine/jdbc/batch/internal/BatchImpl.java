@@ -218,6 +218,7 @@ public class BatchImpl implements GroupedBatch {
 
 	protected void abortBatch(Exception cause) {
 		try {
+			close();
 			jdbcCoordinator.abortBatch();
 		}
 		catch (RuntimeException e) {
@@ -356,6 +357,10 @@ public class BatchImpl implements GroupedBatch {
 				BATCH_MESSAGE_LOGGER.batchContainedStatementsOnRelease();
 			}
 		}
+		close();
+	}
+
+	private void close(){
 		releaseStatements();
 		observers.clear();
 	}

@@ -55,9 +55,6 @@ public class DeleteCoordinatorStandard extends AbstractDeleteCoordinator {
 				applyKeyRestriction( rowId, entityPersister(), (TableDeleteBuilder) builder,
 						(EntityTableMappingImpl) builder.getMutatingTable().getTableMapping() ) );
 
-		deleteGroupBuilder.forEachTableMutationBuilder( builder ->
-				applyTenantRestriction( (TableDeleteBuilder) builder ) );
-
 		if ( applyVersion ) {
 			// apply any optimistic locking
 			applyOptimisticLocking(
@@ -68,6 +65,8 @@ public class DeleteCoordinatorStandard extends AbstractDeleteCoordinator {
 			);
 			applyPartitionKeyRestriction( deleteGroupBuilder::findTableDetailsBuilder );
 		}
+		deleteGroupBuilder.forEachTableMutationBuilder( builder ->
+				applyTenantRestriction( (TableDeleteBuilder) builder ) );
 	}
 
 }

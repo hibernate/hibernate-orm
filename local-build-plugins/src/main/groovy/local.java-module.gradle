@@ -365,4 +365,20 @@ configurations.configureEach {
             details.useVersion libs.versions.byteBuddy.get()
         }
     }
+    if (org.hibernate.orm.env.CiEnvironment.isCiEnvironment()) {
+        // Disable cache for changing modules (SNAPSHOTs)
+        resolutionStrategy {
+            cacheChangingModulesFor 0, 'seconds'
+        }
+
+        // Automatically mark SNAPSHOT dependencies as changing
+        incoming.beforeResolve {
+            dependencies.withType(ExternalModuleDependency).configureEach { dep ->
+                if (dep.version?.endsWith('-SNAPSHOT')) {
+                    dep.changing = true
+                }
+            }
+        }
+    }
 }
+

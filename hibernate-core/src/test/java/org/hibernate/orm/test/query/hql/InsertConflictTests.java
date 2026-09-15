@@ -97,8 +97,12 @@ public class InsertConflictTests {
 							"on conflict(id) do nothing"
 					).executeUpdate();
 					if ( scope.getSessionFactory().getJdbcServices().getDialect() instanceof MySQLDialect ) {
-						// Strange MySQL returns 2 if the conflict action updates a row
+						// Since JDBC set the MySQL CLIENT_FOUND_ROWS flag, the updated count is 1 even if values didn't change
 						// Also see https://dev.mysql.com/doc/refman/8.0/en/insert-on-duplicate.html
+						assertEquals( 1, updated );
+					}
+					else if ( scope.getSessionFactory().getJdbcServices().getDialect() instanceof SybaseASEDialect ) {
+						// Sybase seems to report all matched rows as affected and ignores additional predicates
 						assertEquals( 1, updated );
 					}
 					else {

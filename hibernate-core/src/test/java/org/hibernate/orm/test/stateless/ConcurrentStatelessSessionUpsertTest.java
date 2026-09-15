@@ -7,7 +7,9 @@ package org.hibernate.orm.test.stateless;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import org.hibernate.internal.util.MutableObject;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
@@ -27,6 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 		ConcurrentStatelessSessionUpsertTest.Person.class
 })
 @SessionFactory
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsConcurrentTransactions.class)
 public class ConcurrentStatelessSessionUpsertTest {
 
 	@AfterEach
@@ -36,33 +39,43 @@ public class ConcurrentStatelessSessionUpsertTest {
 
 	@Test
 	public void testUpsertIndividualAgainstLongRunningLockConflictFirst(SessionFactoryScope scope) {
-		testUpsertAgainstLongRunningLockConflictLast( scope, true, false );
+		testUpsertAgainstLongRunningLockConflictLast( scope, InsertionPosition.BEGINNING, false );
+	}
+
+	@Test
+	public void testUpsertIndividualAgainstLongRunningLockConflictMiddle(SessionFactoryScope scope) {
+		testUpsertAgainstLongRunningLockConflictLast( scope, InsertionPosition.MIDDLE, false );
 	}
 
 	@Test
 	public void testUpsertIndividualAgainstLongRunningLockConflictLast(SessionFactoryScope scope) {
-		testUpsertAgainstLongRunningLockConflictLast( scope, false, false );
+		testUpsertAgainstLongRunningLockConflictLast( scope, InsertionPosition.END, false );
 	}
 
 	@Test
 	public void testUpsertMultipleAgainstLongRunningLockConflictFirst(SessionFactoryScope scope) {
-		testUpsertAgainstLongRunningLockConflictLast( scope, true, true );
+		testUpsertAgainstLongRunningLockConflictLast( scope, InsertionPosition.BEGINNING, true );
+	}
+
+	@Test
+	public void testUpsertMultipleAgainstLongRunningLockConflictMiddle(SessionFactoryScope scope) {
+		testUpsertAgainstLongRunningLockConflictLast( scope, InsertionPosition.MIDDLE, true );
 	}
 
 	@Test
 	public void testUpsertMultipleAgainstLongRunningLockConflictLast(SessionFactoryScope scope) {
-		testUpsertAgainstLongRunningLockConflictLast( scope, false, true );
+		testUpsertAgainstLongRunningLockConflictLast( scope, InsertionPosition.END, true );
 	}
 
-	public void testUpsertAgainstLongRunningLockConflictLast(SessionFactoryScope scope, boolean first, boolean multiple) {
+	public void testUpsertAgainstLongRunningLockConflictLast(SessionFactoryScope scope, InsertionPosition position, boolean multiple) {
 		final var futureHolder = new MutableObject<Future<?>>();
 		scope.inStatelessTransaction( session -> {
 			// Insert the single person that would produce a constraint violation in the TX
 			// that spans across the other transactions
 			session.insert(new Person(100, "person"));
 			futureHolder.set( multiple
-					? testConcurrentUpsertMultiple( scope, first )
-					: testConcurrentUpsertIndividual( scope, first )
+					? testConcurrentUpsertMultiple( scope, position )
+					: testConcurrentUpsertIndividual( scope, position )
 			);
 			waitUntilMergeIsBlocked();
 		} );
@@ -85,10 +98,10 @@ public class ConcurrentStatelessSessionUpsertTest {
 		}
 	}
 
-	private Future<?> testConcurrentUpsertMultiple(SessionFactoryScope scope, boolean first) {
+	private Future<?> testConcurrentUpsertMultiple(SessionFactoryScope scope, InsertionPosition position) {
 		final var executor = Executors.newFixedThreadPool( 1 );
 		try {
-			final List<Person> people = buildPeople( 5, first );
+			final List<Person> people = buildPeople( 5, position );
 			return executor.submit(() -> scope.inStatelessTransaction( statelessSession -> statelessSession.upsertMultiple( people ) ) );
 		}
 		finally {
@@ -96,10 +109,10 @@ public class ConcurrentStatelessSessionUpsertTest {
 		}
 	}
 
-	private Future<?> testConcurrentUpsertIndividual(SessionFactoryScope scope, boolean first) {
+	private Future<?> testConcurrentUpsertIndividual(SessionFactoryScope scope, InsertionPosition position) {
 		final var executor = Executors.newFixedThreadPool( 1 );
 		try {
-			final List<Person> people = buildPeople( 5, first );
+			final List<Person> people = buildPeople( 5, position );
 			return executor.submit(() -> scope.inStatelessTransaction( statelessSession -> {
 				for ( Person person : people ) {
 					statelessSession.upsert( person );
@@ -120,14 +133,27 @@ public class ConcurrentStatelessSessionUpsertTest {
 		}
 	}
 
-	private static List<Person> buildPeople(int count, boolean first) {
+	private static List<Person> buildPeople(int count, InsertionPosition position) {
 		final var people = new ArrayList<Person>();
 		for ( int i = 0; i < count; i++ ) {
 			final var p = new Person( i, "person_ " + i );
 			people.add( p );
 		}
-		people.add(first ? 0 : people.size(), new Person(100, "person_100"));
+		people.add(
+				switch ( position ) {
+					case BEGINNING -> 0;
+					case MIDDLE -> (int) Math.ceil( count / 2D );
+					case END -> people.size();
+				},
+				new Person( 100, "person_100" )
+		);
 		return people;
+	}
+
+	enum InsertionPosition {
+		BEGINNING,
+		MIDDLE,
+		END
 	}
 
 	@Entity(name = "Person")

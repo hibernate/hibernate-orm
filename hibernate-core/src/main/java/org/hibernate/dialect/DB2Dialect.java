@@ -81,7 +81,6 @@ import org.hibernate.dialect.rowsecurity.internal.DB2RowLevelSecurity;
 import org.hibernate.dialect.rowsecurity.spi.RowLevelSecurity;
 import org.hibernate.dialect.sequence.spi.SequenceSupport;
 import org.hibernate.dialect.sql.ast.spi.DB2SqlAstTranslator;
-import org.hibernate.dialect.sql.ast.spi.PostgreSQLSqlAstTranslator;
 import org.hibernate.dialect.temporal.internal.DB2TemporalTableSupport;
 import org.hibernate.dialect.temporal.spi.TemporalTableSupport;
 import org.hibernate.dialect.temptable.spi.TemporaryTableStrategies;
@@ -415,7 +414,7 @@ public class DB2Dialect extends Dialect implements CurrentTemporalSupport, Tempo
 			OptionalTableUpdateOperationRequest request) {
 		final var optionalTableUpdate = request.update();
 		final var factory = request.sessionFactory();
-		return new PostgreSQLSqlAstTranslator<>( new SqlAstTranslationRequest.ModelMutation<>( factory, optionalTableUpdate ) )
+		return new DB2SqlAstTranslator<>( new SqlAstTranslationRequest.ModelMutation<>( factory, optionalTableUpdate ) )
 				.createMergeOperation( optionalTableUpdate );
 	}
 	/// Create the unique-key strategy used by this Dialect instance.

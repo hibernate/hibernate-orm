@@ -51,7 +51,11 @@ public abstract class SqlAstTranslatorWithMerge<T extends JdbcOperation> extends
 		);
 	}
 
-	private static Expectation expectation(OptionalTableUpdate optionalTableUpdate) {
+	protected Expectation expectation(OptionalTableUpdate optionalTableUpdate) {
+		return mergeExpectation( optionalTableUpdate );
+	}
+
+	private static Expectation mergeExpectation(OptionalTableUpdate optionalTableUpdate) {
 		return optionalTableUpdate.getValueBindings().stream()
 					.anyMatch( ColumnValueBinding::isAttributeUpdatable )
 				? optionalTableUpdate.getMutatingTable().isOptional()
@@ -86,20 +90,20 @@ public abstract class SqlAstTranslatorWithMerge<T extends JdbcOperation> extends
 
 		// `merge into <target-table> [as] t`
 		renderMergeInto( optionalTableUpdate );
-		appendSql( " " );
+		appendSql( ' ' );
 
 		// using (select col_1, col_2, ... from dual) as s
 		renderMergeUsing( optionalTableUpdate );
-		appendSql( " " );
+		appendSql( ' ' );
 
 		// on (t.key = s.key)
 		renderMergeOn( optionalTableUpdate );
-		appendSql( " " );
+		appendSql( ' ' );
 
 		// when not matched
 		//	 then insert ...
 		renderMergeInsert( optionalTableUpdate );
-		appendSql( " " );
+		appendSql( ' ' );
 
 		if ( optionalTableUpdate.getMutatingTable().isOptional() ) {
 			// when matched
@@ -108,7 +112,7 @@ public abstract class SqlAstTranslatorWithMerge<T extends JdbcOperation> extends
 			//		and ...
 			//   then delete
 			renderMergeDelete( optionalTableUpdate );
-			appendSql( " " );
+			appendSql( ' ' );
 		}
 
 		// when matched
@@ -151,26 +155,26 @@ public abstract class SqlAstTranslatorWithMerge<T extends JdbcOperation> extends
 		appendSql( "as s" );
 	}
 
-	private void renderMergeUsingQuery(OptionalTableUpdate optionalTableUpdate) {
+	protected void renderMergeUsingQuery(OptionalTableUpdate optionalTableUpdate) {
 		final List<ColumnValueBinding> valueBindings = optionalTableUpdate.getValueBindings();
 		final List<ColumnValueBinding> keyBindings = optionalTableUpdate.getKeyBindings();
 
-		appendSql( "select " );
+		appendSql( "select" );
 
-		for ( int i = 0; i < keyBindings.size(); i++ ) {
-			if ( i > 0 ) {
-				appendSql( ", " );
-			}
-			renderMergeUsingQuerySelection( keyBindings.get( i ) );
+		char separator = ' ';
+		for ( ColumnValueBinding keyBinding : keyBindings ) {
+			appendSql( separator );
+			renderMergeUsingQuerySelection( keyBinding );
+			separator = ',';
 		}
-		for ( int i = 0; i < valueBindings.size(); i++ ) {
-			appendSql( ", " );
-			renderMergeUsingQuerySelection( valueBindings.get( i ) );
+		for ( ColumnValueBinding valueBinding : valueBindings ) {
+			appendSql( ',' );
+			renderMergeUsingQuerySelection( valueBinding );
 		}
 
 		final String selectionTable = StringHelper.nullIfEmpty( getSelectOnlyFromClause() );
 		if ( selectionTable != null ) {
-			appendSql( " " );
+			appendSql( ' ' );
 			appendSql( selectionTable );
 		}
 	}
@@ -179,7 +183,7 @@ public abstract class SqlAstTranslatorWithMerge<T extends JdbcOperation> extends
 	@SPI(IMPLEMENT)
 	protected void renderMergeUsingQuerySelection(ColumnValueBinding selectionBinding) {
 		renderColumnWrite( selectionBinding );
-		appendSql( " " );
+		appendSql( ' ' );
 		appendSql( selectionBinding.getColumnReference().getColumnExpression() );
 	}
 
@@ -188,19 +192,16 @@ public abstract class SqlAstTranslatorWithMerge<T extends JdbcOperation> extends
 	protected void renderMergeOn(OptionalTableUpdate optionalTableUpdate) {
 		appendSql( "on (" );
 
-		final List<ColumnValueBinding> keyBindings = optionalTableUpdate.getKeyBindings();
-		for ( int i = 0; i < keyBindings.size(); i++ ) {
-			final ColumnValueBinding keyBinding = keyBindings.get( i );
-			if ( i > 0 ) {
-				appendSql( " and " );
-			}
+		String separator = "";
+		for ( ColumnValueBinding keyBinding : optionalTableUpdate.getKeyBindings() ) {
+			appendSql( separator );
 			keyBinding.getColumnReference().appendReadExpression( this, "t" );
-			appendSql( "=" );
+			appendSql( '=' );
 			keyBinding.getColumnReference().appendReadExpression( this, "s" );
+			separator = " and ";
 		}
-		// todo : optimistic locks?
 
-		appendSql( ")" );
+		appendSql( ')' );
 	}
 
 	/// Renders the `when not matched` insert arm.
@@ -209,31 +210,34 @@ public abstract class SqlAstTranslatorWithMerge<T extends JdbcOperation> extends
 		final List<ColumnValueBinding> valueBindings = optionalTableUpdate.getValueBindings();
 		final List<ColumnValueBinding> keyBindings = optionalTableUpdate.getKeyBindings();
 
-		final StringBuilder valuesList = new StringBuilder();
-
-		appendSql( "when not matched then insert (" );
-		for ( int i = 0; i < keyBindings.size(); i++ ) {
-			if ( i > 0 ) {
-				appendSql( ", " );
-				valuesList.append( ", " );
-			}
-			final ColumnValueBinding keyBinding = keyBindings.get( i );
+		appendSql( "when not matched then insert " );
+		char separator = '(';
+		for ( ColumnValueBinding keyBinding : keyBindings ) {
+			appendSql( separator );
 			appendSql( keyBinding.getColumnReference().getColumnExpression() );
-			keyBinding.getColumnReference().appendReadExpression( "s", valuesList::append );
+			separator = ',';
 		}
-		for ( int i = 0; i < valueBindings.size(); i++ ) {
-			final ColumnValueBinding valueBinding = valueBindings.get( i );
+		for ( ColumnValueBinding valueBinding : valueBindings ) {
 			if ( valueBinding.isAttributeInsertable() ) {
-				appendSql( ", " );
-				valuesList.append( ", " );
+				appendSql( ',' );
 				appendSql( valueBinding.getColumnReference().getColumnExpression() );
-				valueBinding.getColumnReference().appendReadExpression( "s", valuesList::append );
 			}
 		}
 
-		appendSql( ") values (" );
-		appendSql( valuesList.toString() );
-		appendSql( ")" );
+		appendSql( ") values " );
+		separator = '(';
+		for ( ColumnValueBinding keyBinding : keyBindings ) {
+			appendSql( separator );
+			keyBinding.getColumnReference().appendReadExpression( this, "s" );
+			separator = ',';
+		}
+		for ( ColumnValueBinding valueBinding : valueBindings ) {
+			if ( valueBinding.isAttributeInsertable() ) {
+				appendSql( ',' );
+				valueBinding.getColumnReference().appendReadExpression( this, "s" );
+			}
+		}
+		appendSql( ')' );
 	}
 
 	/// Renders the `when matched` delete arm for an optional table.
@@ -243,8 +247,7 @@ public abstract class SqlAstTranslatorWithMerge<T extends JdbcOperation> extends
 		final List<ColumnValueBinding> optimisticLockBindings = optionalTableUpdate.getOptimisticLockBindings();
 
 		renderWhenMatched( optimisticLockBindings );
-		for ( int i = 0; i < valueBindings.size(); i++ ) {
-			final ColumnValueBinding binding = valueBindings.get( i );
+		for ( ColumnValueBinding binding : valueBindings ) {
 			appendSql( " and " );
 			binding.getColumnReference().appendReadExpression( this, "s" );
 			appendSql( " is null" );
@@ -260,20 +263,15 @@ public abstract class SqlAstTranslatorWithMerge<T extends JdbcOperation> extends
 
 		if ( valueBindings.stream().anyMatch( ColumnValueBinding::isAttributeUpdatable ) ) {
 			renderWhenMatched( optimisticLockBindings );
-			appendSql( " then update set " );
-			boolean first = true;
-			for ( int i = 0; i < valueBindings.size(); i++ ) {
-				final ColumnValueBinding binding = valueBindings.get( i );
+			appendSql( " then update set" );
+			char separator = ' ';
+			for ( ColumnValueBinding binding : valueBindings ) {
 				if ( binding.isAttributeUpdatable() ) {
-					if ( first ) {
-						first = false;
-					}
-					else {
-						appendSql( ", " );
-					}
+					appendSql( separator );
 					binding.getColumnReference().appendColumnForWrite( this, null );
 					appendSql( "=" );
 					binding.getColumnReference().appendColumnForWrite( this, "s" );
+					separator = ',';
 				}
 			}
 		}
@@ -281,11 +279,10 @@ public abstract class SqlAstTranslatorWithMerge<T extends JdbcOperation> extends
 
 	private void renderWhenMatched(List<ColumnValueBinding> optimisticLockBindings) {
 		appendSql( "when matched" );
-		for (int i = 0; i < optimisticLockBindings.size(); i++) {
-			final ColumnValueBinding binding = optimisticLockBindings.get( i );
-			appendSql(" and ");
-			binding.getColumnReference().appendColumnForWrite( this, "t" );
-			appendSql("<=");
+		for ( ColumnValueBinding binding : optimisticLockBindings ) {
+			appendSql( " and " );
+			binding.getColumnReference().appendReadExpression( this, "t" );
+			appendSql( "=" );
 			binding.getValueExpression().accept( this );
 		}
 	}

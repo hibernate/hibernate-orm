@@ -91,6 +91,9 @@ public class MutationExecutorStandard extends AbstractMutationExecutor implement
 		for ( int i = mutationOperationGroup.getNumberOfOperations() - 1; i >= 0; i-- ) {
 			final MutationOperation operation = mutationOperationGroup.getOperation( i );
 			if ( operation instanceof SelfExecutingUpdateOperation selfExecutingUpdateOperation ) {
+				// These operations execute before batched work, so the identifier-table
+				// update must also execute without batching to check its restrictions first.
+				hasAnyNonBatchedJdbcOperations = true;
 				if ( selfExecutingMutations == null ) {
 					selfExecutingMutations = new ArrayList<>();
 				}

@@ -23,9 +23,11 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import javax.tools.Diagnostic;
 
 import org.jboss.logging.Logger;
@@ -332,7 +334,7 @@ public class TestUtil {
 			throws Exception {
 		var compiler = javax.tools.ToolProvider.getSystemJavaCompiler();
 		var diagnostics = new javax.tools.DiagnosticCollector<javax.tools.JavaFileObject>();
-		try ( var fileManager = compiler.getStandardFileManager( diagnostics, null, null ) ) {
+		try ( var fileManager = compiler.getStandardFileManager( diagnostics, Locale.ROOT, Charset.defaultCharset() ) ) {
 			fileManager.setLocation( javax.tools.StandardLocation.CLASS_OUTPUT, List.of( classesDir ) );
 			fileManager.setLocation( javax.tools.StandardLocation.SOURCE_OUTPUT, List.of( generatedSourcesDir ) );
 			var classpath = new java.util.ArrayList<File>();

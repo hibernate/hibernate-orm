@@ -772,6 +772,9 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 		if ( entityPersister.hasPartitionedSelectionMapping() ) {
 			applyPartitionedSelectionRestrictions( builders );
 		}
+		for ( var builder : builders.values() ) {
+			TenantIdHelper.applyTenantRestriction( entityPersister, builder );
+		}
 	}
 
 
@@ -859,6 +862,9 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 		if ( entityPersister.hasPartitionedSelectionMapping() ) {
 			applyPartitionedSelectionRestrictions( builders );
 		}
+		for ( var builder : builders.values() ) {
+			TenantIdHelper.applyTenantRestriction( entityPersister, builder );
+		}
 	}
 
 	private boolean shouldIncludeInDynamicUpdate(
@@ -890,7 +896,6 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 	}
 
 	private void applyKeyRestriction(EntityTableDescriptor tableDescriptor, TableUpdateBuilder<?> tableUpdateBuilder, Object rowId) {
-		TenantIdHelper.applyTenantRestriction( entityPersister, tableUpdateBuilder );
 		if ( rowId != null
 				&& tableDescriptor.isIdentifierTable()
 				&& entityPersister.getRowIdMapping() != null ) {

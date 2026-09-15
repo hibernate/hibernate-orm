@@ -535,7 +535,6 @@ public class DeleteDecomposerStandard extends AbstractDecomposer<EntityDeleteAct
 		tableDeleteBuilders.forEach( (name, builder) -> {
 			// Apply key restrictions for all tables
 			applyKeyRestriction( builder, rowId );
-			TenantIdHelper.applyTenantRestriction( entityPersister, builder );
 			if ( builder.getMutatingTable().getTableMapping().isIdentifierTable() ) {
 				entityPersister.addDiscriminatorToDelete( builder );
 			}
@@ -552,6 +551,7 @@ public class DeleteDecomposerStandard extends AbstractDecomposer<EntityDeleteAct
 			);
 			applyPartitionRestrictions( tableDeleteBuilders );
 		}
+		tableDeleteBuilders.values().forEach( builder -> TenantIdHelper.applyTenantRestriction( entityPersister, builder ) );
 	}
 
 	private void applyKeyRestriction(TableDeleteBuilder builder, Object rowId) {

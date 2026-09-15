@@ -98,13 +98,13 @@ public class SoftDeleteEntityMutationPlanContributor implements EntityMutationPl
 		);
 
 		tableUpdateBuilder.addKeyRestrictions( rootTableDescriptor.keyDescriptor() );
-		TenantIdHelper.applyTenantRestriction( entityPersister, tableUpdateBuilder );
 		applySoftDelete( softDeleteMapping, tableUpdateBuilder );
 		applyPartitionKeyRestrictionForSoftDelete( tableUpdateBuilder );
 
 		if ( entityPersister.optimisticLockStyle().isVersion() && entityPersister.getVersionMapping() != null ) {
 			tableUpdateBuilder.addOptimisticLockRestriction( entityPersister.getVersionMapping() );
 		}
+		TenantIdHelper.applyTenantRestriction( entityPersister, tableUpdateBuilder );
 
 		return (TableUpdate<?>) tableUpdateBuilder.buildMutation();
 	}

@@ -16,6 +16,8 @@ import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.internal.TenantIdHelper;
 import org.hibernate.engine.OptimisticLockStyle;
+import org.hibernate.jdbc.Expectation;
+import org.hibernate.sql.spi.mutation.TableMapping;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
@@ -1786,7 +1788,14 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		else {
 			final var identifierTableMapping = entityPersister().getIdentifierTableMapping();
 			final AbstractTableUpdateBuilder<JdbcMutationOperation> updateBuilder =
-					newTableUpdateBuilder( identifierTableMapping );
+					identifierTableMapping.getUpdateDetails().getCustomSql() == null
+							? newTableUpdateBuilder( identifierTableMapping )
+							// A custom update expects all mapped values, not just the version.
+							: new TableUpdateBuilderStandard<>( entityPersister(),
+									new MutatingTableReference( identifierTableMapping ),
+									new TableMapping.MutationDetails(
+											MutationType.UPDATE, new Expectation.RowCount(), null, false ),
+									null, factory() );
 
 			updateBuilder.setSqlComment( "forced version increment for " + entityPersister().getRolePath() );
 

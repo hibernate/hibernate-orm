@@ -20,11 +20,14 @@ import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
 import javax.tools.ToolProvider;
 import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Method;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 public class CompilationExtension
@@ -105,18 +108,24 @@ public class CompilationExtension
 	}
 
 	private void compile(List<File> sourceFiles, List<Diagnostic<?>> compilationDiagnostics, CompilationTestInfo compilationTestInfo) throws Exception {
-		List<String> options = createJavaOptions(compilationTestInfo);
+		compile( sourceFiles, createJavaOptions( compilationTestInfo ), compilationDiagnostics );
+	}
 
+	static boolean compile(List<File> sourceFiles, List<String> options, List<Diagnostic<?>> compilationDiagnostics)
+			throws IOException {
 		JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
 		DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<JavaFileObject>();
-		StandardJavaFileManager fileManager = compiler.getStandardFileManager( diagnostics, null, null );
-		Iterable<? extends JavaFileObject> compilationUnits = fileManager.getJavaFileObjectsFromFiles(
-				sourceFiles
-		);
-
-		compileSources( options, compiler, diagnostics, fileManager, compilationUnits );
-		compilationDiagnostics.addAll( diagnostics.getDiagnostics() );
-		fileManager.close();
+		try ( StandardJavaFileManager fileManager = compiler.getStandardFileManager(
+				diagnostics,
+				Locale.ROOT,
+				Charset.defaultCharset() ) ) {
+			Iterable<? extends JavaFileObject> compilationUnits = fileManager.getJavaFileObjectsFromFiles(
+					sourceFiles
+			);
+			final boolean successful = compileSources( options, compiler, diagnostics, fileManager, compilationUnits );
+			compilationDiagnostics.addAll( diagnostics.getDiagnostics() );
+			return successful;
+		}
 	}
 
 	private List<String> createJavaOptions(CompilationTestInfo compilationTestInfo) {
@@ -152,18 +161,19 @@ public class CompilationExtension
 		return options;
 	}
 
-	private void compileSources(List<String> options,
-								JavaCompiler compiler,
-								DiagnosticCollector<JavaFileObject> diagnostics,
-								StandardJavaFileManager fileManager,
-								Iterable<? extends JavaFileObject> compilationUnits) {
+	private static boolean compileSources(List<String> options,
+									JavaCompiler compiler,
+									DiagnosticCollector<JavaFileObject> diagnostics,
+									StandardJavaFileManager fileManager,
+									Iterable<? extends JavaFileObject> compilationUnits) {
 		JavaCompiler.CompilationTask task = compiler.getTask(
 				null, fileManager, diagnostics, options, null, compilationUnits
 		);
-		task.call();
+		final boolean successful = task.call();
 		for ( Diagnostic<?> diagnostic : diagnostics.getDiagnostics() ) {
 			log.debug( diagnostic.getMessage( null ) );
 		}
+		return successful;
 	}
 
 	private static class CompilationTestInfo {

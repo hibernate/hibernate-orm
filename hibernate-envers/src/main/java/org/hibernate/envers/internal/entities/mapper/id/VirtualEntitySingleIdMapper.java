@@ -14,8 +14,7 @@ import org.hibernate.envers.internal.entities.EntityConfiguration;
 import org.hibernate.envers.internal.entities.PropertyData;
 import org.hibernate.envers.internal.tools.OrmTools;
 import org.hibernate.envers.internal.tools.ReflectionTools;
-import org.hibernate.property.access.spi.Getter;
-import org.hibernate.property.access.spi.Setter;
+import org.hibernate.property.access.spi.PropertyValueAccessor;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.service.ServiceRegistry;
@@ -61,13 +60,13 @@ public class VirtualEntitySingleIdMapper extends SingleIdMapper {
 			return;
 		}
 
-		final Getter getter = ReflectionTools.getGetter(
+		final PropertyValueAccessor getter = ReflectionTools.getPropertyValueAccessor(
 				objFrom.getClass(),
 				propertyData,
 				getServiceRegistry()
 		);
 
-		final Setter setter = ReflectionTools.getSetter(
+		final PropertyValueAccessor setter = ReflectionTools.getPropertyValueAccessor(
 				objTo.getClass(),
 				propertyData,
 				getServiceRegistry()
@@ -99,7 +98,7 @@ public class VirtualEntitySingleIdMapper extends SingleIdMapper {
 			return false;
 		}
 
-		final Setter setter = ReflectionTools.getSetter(
+		final PropertyValueAccessor setter = ReflectionTools.getPropertyValueAccessor(
 				obj.getClass(),
 				propertyData,
 				getServiceRegistry()

@@ -15,7 +15,7 @@ import org.hibernate.envers.internal.tools.ReflectionTools;
 import org.hibernate.envers.internal.tools.Tools;
 import org.hibernate.envers.tools.Pair;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
-import org.hibernate.property.access.spi.Getter;
+import org.hibernate.property.access.spi.PropertyValueAccessor;
 
 import java.io.Serializable;
 import java.util.List;
@@ -114,16 +114,16 @@ public class MultiPropertyMapper extends AbstractPropertyMapper implements Exten
 				continue;
 			}
 
-			Getter getter;
+			PropertyValueAccessor getter;
 			if ( unproxiedNewObj != null ) {
-				getter = ReflectionTools.getGetter(
+				getter = ReflectionTools.getPropertyValueAccessor(
 						unproxiedNewObj.getClass(),
 						propertyData,
 						session.getFactory().getServiceRegistry()
 				);
 			}
 			else if ( unproxiedOldObj != null ) {
-				getter = ReflectionTools.getGetter(
+				getter = ReflectionTools.getPropertyValueAccessor(
 						unproxiedOldObj.getClass(),
 						propertyData,
 						session.getFactory().getServiceRegistry()
@@ -159,16 +159,16 @@ public class MultiPropertyMapper extends AbstractPropertyMapper implements Exten
 				continue;
 			}
 
-			Getter getter;
+			PropertyValueAccessor getter;
 			if ( unproxiedNewObj != null ) {
-				getter = ReflectionTools.getGetter(
+				getter = ReflectionTools.getPropertyValueAccessor(
 						unproxiedNewObj.getClass(),
 						propertyData,
 						session.getFactory().getServiceRegistry()
 				);
 			}
 			else if ( unproxiedOldObj != null ) {
-				getter = ReflectionTools.getGetter(
+				getter = ReflectionTools.getPropertyValueAccessor(
 						unproxiedOldObj.getClass(),
 						propertyData,
 						session.getFactory().getServiceRegistry()

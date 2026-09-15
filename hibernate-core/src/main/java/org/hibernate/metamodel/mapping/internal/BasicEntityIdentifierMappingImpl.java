@@ -113,7 +113,7 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 		unsavedStrategy = UnsavedValueFactory.getUnsavedIdentifierValue(
 				bootEntityDescriptor.getIdentifier(),
 				getJavaType(),
-				propertyAccess.getGetter(),
+				propertyAccess.getPropertyValueAccessor(),
 				instanceCreator
 		);
 	}
@@ -149,12 +149,12 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 		if ( lazyInitializer != null ) {
 			return lazyInitializer.getInternalIdentifier();
 		}
-		return propertyAccess.getGetter().get( entity );
+		return propertyAccess.getPropertyValueAccessor().get( entity );
 	}
 
 	@Override
 	public void setIdentifier(Object entity, Object id, SharedSessionContractImplementor session) {
-		propertyAccess.getSetter().set( entity, id );
+		propertyAccess.getPropertyValueAccessor().set( entity, id );
 	}
 
 	@Override

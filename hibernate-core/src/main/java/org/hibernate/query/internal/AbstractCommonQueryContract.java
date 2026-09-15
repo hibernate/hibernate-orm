@@ -34,6 +34,8 @@ import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies;
+import org.hibernate.property.access.spi.PropertyAccess;
+import org.hibernate.property.access.spi.PropertyAccessorService;
 import org.hibernate.query.QueryArgumentException;
 import jakarta.persistence.QueryFlushMode;
 import org.hibernate.query.QueryParameter;
@@ -1618,12 +1620,14 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		final var beanClass = bean.getClass();
 		for ( String paramName : getParameterMetadata().getNamedParameterNames() ) {
 			try {
-				final var getter =
-						BuiltInPropertyAccessStrategies.BASIC.getStrategy()
-								.buildPropertyAccess( beanClass, paramName, true )
-								.getGetter();
+				final PropertyAccess propertyAccess = BuiltInPropertyAccessStrategies.BASIC.getStrategy()
+						.buildPropertyAccess(
+								getSessionFactory().getServiceRegistry().requireService( PropertyAccessorService.class ),
+								beanClass, paramName, true );
+				final var getter = propertyAccess.getGetter();
+				final var propertyValueAccessor = propertyAccess.getPropertyValueAccessor();
 				final var returnType = getter.getReturnTypeClass();
-				final Object object = getter.get( bean );
+				final Object object = propertyValueAccessor.get( bean );
 				if ( Collection.class.isAssignableFrom( returnType ) ) {
 					if ( object == null ) {
 						throw new IllegalArgumentException( "Null value not allowed for multi-valued parameter ':" + paramName + "'" );

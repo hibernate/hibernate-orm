@@ -4,6 +4,12 @@
  */
 package org.hibernate.orm.test.locking;
 
+import org.junit.jupiter.api.Assumptions;
+
+import org.hibernate.dialect.lock.spi.BlockingDuration;
+
+import org.hibernate.dialect.lock.spi.Operation;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.LockModeType;
@@ -40,7 +46,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * Tests the version check performed just before commit for an entity
  * locked in {@link LockModeType#OPTIMISTIC} mode.
  *
- * @see org.hibernate.dialect.lock.spi.LockingSupport.Metadata#readsWaitForUncommittedWrites()
+ * @see org.hibernate.dialect.lock.spi.ReadGuarantees#isCurrentRead()
  */
 @DomainModel(annotatedClasses = OptimisticLockVersionCheckTest.Doctor.class)
 @SessionFactory(useCollectingStatementInspector = true)
@@ -73,9 +79,11 @@ public class OptimisticLockVersionCheckTest {
 		assertThat( versionCheck.toLowerCase() ).startsWith( "select" );
 
 		final var lockingSupport = scope.getSessionFactory().getJdbcServices().getDialect().getLockingSupport();
-		final String hint = lockingSupport.renderCurrentReadTableHint( "Doctor" );
-		final String clause = lockingSupport.renderCurrentReadClause();
-		if ( lockingSupport.getMetadata().readsWaitForUncommittedWrites() ) {
+		final var concurrency = scope.getSessionFactory().getJdbcServices().getJdbcEnvironment().getTransactionConcurrency();
+		final boolean ordinaryCurrent = concurrency.getReadGuarantees( Operation.READ ).isCurrentRead();
+		final String hint = ordinaryCurrent ? "" : lockingSupport.renderCurrentReadTableHint( "Doctor", concurrency );
+		final String clause = ordinaryCurrent ? "" : lockingSupport.renderCurrentReadClause( concurrency );
+		if ( ordinaryCurrent ) {
 			// a plain read already waits for a concurrent writer, so nothing extra may be rendered
 			assertThat( hint ).isEmpty();
 			assertThat( clause ).isEmpty();
@@ -136,9 +144,12 @@ public class OptimisticLockVersionCheckTest {
 	 */
 	@ParameterizedTest(name = "queryManagedEntity = {0}")
 	@ValueSource(booleans = { false, true })
-	@RequiresDialectFeature(feature = DialectFeatureChecks.ReadsDoNotWaitForUncommittedWrites.class)
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsConcurrentTransactions.class)
 	void testWriteSkewPreventedAfterBothFlush(boolean queryManagedEntity, SessionFactoryScope scope) throws Exception {
+		final var concurrency = scope.getSessionFactory().getJdbcServices().getJdbcEnvironment().getTransactionConcurrency();
+		Assumptions.assumeTrue(
+				concurrency.getBlockingDuration( Operation.WRITE,
+						Operation.READ ) == BlockingDuration.NONE );
 		assertWriteSkewPrevented( scope, queryManagedEntity, true );
 	}
 

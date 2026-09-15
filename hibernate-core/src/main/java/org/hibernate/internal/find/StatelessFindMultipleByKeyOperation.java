@@ -50,7 +50,7 @@ public class StatelessFindMultipleByKeyOperation<T> extends AbstractFindMultiple
 
 	@Override
 	public LockMode getLockMode() {
-		return StatelessLocking.getEffectiveLockMode( super.getLockMode() );
+		return StatelessLocking.getEffectiveLockMode( super.getLockMode(), getSession() );
 	}
 
 	@Override

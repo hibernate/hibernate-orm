@@ -5,6 +5,9 @@
 package org.hibernate.internal;
 
 import org.hibernate.LockMode;
+import org.hibernate.HibernateException;
+import org.hibernate.dialect.lock.spi.Operation;
+import org.hibernate.dialect.lock.spi.TransactionConcurrency;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.internal.DelegatingDomainQueryExecutionContext;
@@ -20,20 +23,37 @@ public final class StatelessLocking {
 	private StatelessLocking() {
 	}
 
-	public static LockMode getEffectiveLockMode(LockMode lockMode) {
-		return lockMode == LockMode.OPTIMISTIC ? LockMode.PESSIMISTIC_READ
-				: lockMode == LockMode.OPTIMISTIC_FORCE_INCREMENT ? LockMode.PESSIMISTIC_FORCE_INCREMENT
-				: lockMode;
+	public static LockMode getEffectiveLockMode(LockMode lockMode, SharedSessionContractImplementor session) {
+		if ( lockMode == LockMode.OPTIMISTIC ) {
+			final var concurrency = session.getJdbcServices().getJdbcEnvironment().getTransactionConcurrency();
+			if ( protectsUntilCompletion( concurrency, Operation.SHARED_LOCK_READ ) ) {
+				return LockMode.PESSIMISTIC_READ;
+			}
+			if ( protectsUntilCompletion( concurrency, Operation.UPDATE_LOCK_READ ) ) {
+				return LockMode.PESSIMISTIC_WRITE;
+			}
+			throw new HibernateException( "Stateless optimistic locking requires transaction-long row protection; no strategy established for "
+					+ concurrency.getName() );
+		}
+		return lockMode == LockMode.OPTIMISTIC_FORCE_INCREMENT ? LockMode.PESSIMISTIC_FORCE_INCREMENT : lockMode;
+	}
+
+	private static boolean protectsUntilCompletion(TransactionConcurrency concurrency, Operation operation) {
+		if ( !concurrency.supports( operation ) ) {
+			return false;
+		}
+		final var guarantees = concurrency.getReadGuarantees( operation );
+		return guarantees.preventsDirtyReads() && guarantees.preventsConcurrentModification()
+				&& guarantees.holdsRowLockUntilTransactionCompletion();
 	}
 
 	public static LockOptions getEffectiveLockOptions(LockOptions lockOptions, SharedSessionContractImplementor session) {
-		if ( session.isStateless() ) {
-			final var effectiveLockMode = getEffectiveLockMode( lockOptions.getLockMode() );
-			if ( effectiveLockMode != lockOptions.getLockMode() ) {
-				return lockOptions.makeCopy().setLockMode( effectiveLockMode );
-			}
+		if ( !session.isStateless() ) {
+			return lockOptions;
 		}
-		return lockOptions;
+		final var effectiveLockMode = getEffectiveLockMode( lockOptions.getLockMode(), session );
+		return effectiveLockMode == lockOptions.getLockMode()
+				? lockOptions : lockOptions.makeCopy().setLockMode( effectiveLockMode );
 	}
 
 	public static DomainQueryExecutionContext getExecutionContext(DomainQueryExecutionContext context) {

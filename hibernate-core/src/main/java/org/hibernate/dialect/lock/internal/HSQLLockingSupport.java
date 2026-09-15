@@ -28,6 +28,11 @@ public class HSQLLockingSupport implements LockingSupport, LockingSupport.Metada
 	}
 
 	@Override
+	public org.hibernate.dialect.lock.spi.TransactionConcurrencyResolver getTransactionConcurrencyResolver() {
+		return HSQLTransactionConcurrencyResolver.INSTANCE;
+	}
+
+	@Override
 	public Metadata getMetadata() {
 		return this;
 	}

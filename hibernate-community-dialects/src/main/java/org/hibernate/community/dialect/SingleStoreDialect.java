@@ -267,8 +267,7 @@ public class SingleStoreDialect extends Dialect implements CurrentTemporalSuppor
 				LockTimeoutType.NONE,
 				LockTimeoutType.NONE,
 				OuterJoinLockingType.UNSUPPORTED,
-				// SingleStore uses multiversion concurrency control
-				false
+				new org.hibernate.community.dialect.lock.internal.SingleStoreTransactionConcurrencyResolver( isForUpdateLockingEnabled )
 		);
 	}
 

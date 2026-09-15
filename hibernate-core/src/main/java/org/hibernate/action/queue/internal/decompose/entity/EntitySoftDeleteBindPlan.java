@@ -61,7 +61,7 @@ public class EntitySoftDeleteBindPlan implements BindPlan, OperationResultChecke
 			FlushOperation flushOperation,
 			SharedSessionContractImplementor session) {
 		TenantIdHelper.checkIdentifierTenant( identifier, entityPersister, session );
-		TenantIdHelper.bindTenantRestriction( entityPersister, tableDescriptor.name(), valueBindings, session );
+		TenantIdHelper.bindTenantRestriction( entityPersister, flushOperation.getJdbcOperation(), valueBindings, session );
 
 		// NOTE: We do NOT bind the soft delete value or non-deleted restriction here.
 		// These are literal values (e.g., true/false or CURRENT_TIMESTAMP) that are

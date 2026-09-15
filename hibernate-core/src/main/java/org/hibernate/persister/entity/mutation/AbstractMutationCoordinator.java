@@ -103,14 +103,19 @@ public abstract class AbstractMutationCoordinator {
 		TenantIdHelper.applyTenantRestriction( entityPersister(), builder );
 	}
 
-	protected void bindTenantRestriction(SharedSessionContractImplementor session, JdbcValueBindings bindings) {
+	protected void bindTenantRestriction(
+			SharedSessionContractImplementor session, JdbcValueBindings bindings, MutationOperationGroup operationGroup) {
 		final var tenantMapping = TenantIdHelper.tenantIdMapping( entityPersister() );
 		if ( tenantMapping != null ) {
-			bindings.bindValue(
-					TenantIdHelper.isRoot( session ) ? null : session.getTenantIdentifierValue(),
-					tenantMapping.getSelectable( 0 ),
-					ParameterUsage.TENANT
-			);
+			final var selectable = tenantMapping.getSelectable( 0 );
+			final String tableName = entityPersister().physicalTableNameForMutation( selectable );
+			final var operation = operationGroup.getOperation( tableName );
+			if ( operation != null
+					&& operation.findValueDescriptor( selectable.getSelectionExpression(), ParameterUsage.TENANT ) != null ) {
+				bindings.bindValue(
+						TenantIdHelper.isRoot( session ) ? null : session.getTenantIdentifierValue(),
+						tableName, selectable.getSelectionExpression(), ParameterUsage.TENANT );
+			}
 		}
 	}
 

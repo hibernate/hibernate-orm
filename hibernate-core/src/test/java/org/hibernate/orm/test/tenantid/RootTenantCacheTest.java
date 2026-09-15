@@ -9,6 +9,8 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.Embeddable;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Version;
@@ -20,6 +22,7 @@ import org.hibernate.LockMode;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.NaturalId;
+import org.hibernate.annotations.HQLSelect;
 import org.hibernate.annotations.NaturalIdCache;
 import org.hibernate.annotations.TenantId;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -45,7 +48,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@DomainModel(annotatedClasses = RootTenantCacheTest.Item.class)
+@DomainModel(annotatedClasses = { RootTenantCacheTest.Item.class, RootTenantCacheTest.EmbeddedItem.class })
 @SessionFactory(generateStatistics = true)
 @ServiceRegistry(settings = {
 		@Setting(name = MULTI_TENANT_IDENTIFIER_RESOLVER, value = "org.hibernate.orm.test.tenantid.TenantIdMutationTest$Resolver"),
@@ -73,6 +76,18 @@ class RootTenantCacheTest {
 			assertEquals( List.of( "before" ), loaded.values );
 		} );
 		return item;
+	}
+
+	@Test
+	void rootInvalidatesEmbeddedTenantWithProvidedLoader(SessionFactoryScope scope) {
+		inTenant( scope, "mine", session -> session.persist( new EmbeddedItem() ) );
+		inTenant( scope, "mine", session -> assertEquals( "before", session.find( EmbeddedItem.class, 1L ).name ) );
+		final var statistics = scope.getSessionFactory().getStatistics();
+		statistics.clear();
+		inTenant( scope, "mine", session -> assertEquals( "before", session.find( EmbeddedItem.class, 1L ).name ) );
+		assertEquals( 1, statistics.getSecondLevelCacheHitCount() );
+		inTenant( scope, "root", session -> session.find( EmbeddedItem.class, 1L ).name = "after" );
+		inTenant( scope, "mine", session -> assertEquals( "after", session.find( EmbeddedItem.class, 1L ).name ) );
 	}
 
 	@ParameterizedTest
@@ -227,6 +242,20 @@ class RootTenantCacheTest {
 
 	private static void inTenant(SessionFactoryScope scope, String tenant, Consumer<SessionImplementor> action) {
 		scope.inTransaction( factory -> factory.withOptions().tenantIdentifier( tenant ).openSession(), action );
+	}
+
+	@Entity(name = "EmbeddedRootCacheItem")
+	@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+	@HQLSelect(query = "from EmbeddedRootCacheItem where id=?1")
+	static class EmbeddedItem {
+		@Id Long id = 1L;
+		@Embedded TenantDetails details = new TenantDetails();
+		String name = "before";
+	}
+
+	@Embeddable
+	static class TenantDetails {
+		@TenantId String tenant;
 	}
 
 	@Entity(name = "RootCacheItem")

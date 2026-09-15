@@ -73,8 +73,7 @@ public final class RootTenantCache {
 		final Object tenant;
 		if ( mapping != null ) {
 			// Detached state may contain a different tenant, and root writes may omit it.
-			final Object[] snapshot = persister.getDatabaseSnapshot( id, session );
-			tenant = snapshot == null ? null : snapshot[mapping.getStateArrayPosition()];
+			tenant = TenantIdHelper.getTenantId( id, persister, session );
 		}
 		else if ( persister.getGenerator() instanceof TenantIdGeneration ) {
 			tenant = id;

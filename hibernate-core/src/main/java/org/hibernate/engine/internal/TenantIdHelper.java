@@ -4,7 +4,7 @@
  */
 package org.hibernate.engine.internal;
 
-import jakarta.persistence.QueryFlushMode;
+import java.sql.SQLException;
 
 import org.hibernate.LockMode;
 import org.hibernate.StaleObjectStateException;
@@ -21,13 +21,19 @@ import org.hibernate.sql.exec.spi.JdbcParametersList;
 import org.hibernate.sql.results.internal.RowTransformerSingularReturnImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 import org.hibernate.generator.internal.TenantIdGeneration;
+import org.hibernate.generator.Generator;
+import org.hibernate.generator.internal.CompositeGeneratorBuilder.CompositeGenerator;
 import org.hibernate.id.CompositeNestedGeneratedValueGenerator;
 import org.hibernate.type.ComponentType;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.sql.ast.spi.model.builder.RestrictedTableMutationBuilder;
 import org.hibernate.action.queue.spi.bind.JdbcValueBindings;
 import org.hibernate.metamodel.mapping.AttributeMapping;
+import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.sql.SimpleSelect;
+import org.hibernate.sql.spi.mutation.MutationOperation;
+import org.hibernate.type.Type;
 
 import static org.hibernate.generator.EventType.INSERT;
 import static java.util.Collections.singletonList;
@@ -40,31 +46,78 @@ public final class TenantIdHelper {
 	}
 
 	public static AttributeMapping tenantIdMapping(EntityPersister persister) {
-		final var generators = persister.getGenerators();
+		final var mapping = tenantIdMapping( persister, persister.getGenerators() );
+		return mapping == null ? null : mapping.leafAttribute();
+	}
+
+	private static TenantIdMapping tenantIdMapping(ManagedMappingType type, Generator[] generators) {
 		for ( int i = 0; i < generators.length; i++ ) {
-			if ( generators[i] instanceof TenantIdGeneration ) {
-				return persister.getAttributeMapping( i );
+			final var attribute = type.getAttributeMapping( i );
+			if ( generators[i] instanceof TenantIdGeneration generator ) {
+				return new TenantIdMapping( attribute, generator, null );
+			}
+			else if ( generators[i] instanceof CompositeGenerator composite ) {
+				final var nested = tenantIdMapping(
+						attribute.asEmbeddedAttributeMapping().getEmbeddableTypeDescriptor(),
+						composite.generators().toArray( Generator[]::new ) );
+				if ( nested != null ) {
+					return new TenantIdMapping( attribute, null, nested );
+				}
 			}
 		}
 		return null;
+	}
+
+	private record TenantIdMapping(AttributeMapping attribute, TenantIdGeneration generator, TenantIdMapping nested) {
+		AttributeMapping leafAttribute() {
+			return nested == null ? attribute : nested.leafAttribute();
+		}
+
+		void validate(Object owner, SharedSessionContractImplementor session) {
+			final Object value = owner == null ? null : attribute.getValue( owner );
+			if ( nested == null ) {
+				generator.validateTenantId( session, value );
+			}
+			else {
+				nested.validate( value, session );
+			}
+		}
+
+		Object generate(Object value, Object entity, Type type, SharedSessionContractImplementor session) {
+			if ( nested == null ) {
+				return generator.generate( session, entity, value, INSERT );
+			}
+			final var componentType = (ComponentType) type;
+			final Object[] values = value == null
+					? new Object[componentType.getPropertyNames().length]
+					: componentType.getPropertyValues( value, session );
+			final int position = nested.attribute.getStateArrayPosition();
+			values[position] = nested.generate( values[position], entity, componentType.getSubtypes()[position], session );
+			return value == null
+					? attribute.asEmbeddedAttributeMapping().getEmbeddableTypeDescriptor()
+						.getRepresentationStrategy().getInstantiator().instantiate( () -> values )
+					: componentType.replacePropertyValues( value, values, session );
+		}
 	}
 
 	public static void applyTenantRestriction(EntityPersister persister, RestrictedTableMutationBuilder<?, ?> builder) {
 		final var tenantMapping = tenantIdMapping( persister );
 		if ( tenantMapping != null && builder.getOptimisticLockBindings() != null ) {
 			final var selectable = tenantMapping.getSelectable( 0 );
-			if ( selectable.getContainingTableExpression().equals( builder.getMutatingTable().getTableName() ) ) {
+			if ( persister.physicalTableNameForMutation( selectable ).equals( builder.getMutatingTable().getTableName() ) ) {
 				builder.getOptimisticLockBindings().addTenantRestriction( selectable );
 			}
 		}
 	}
 
 	public static void bindTenantRestriction(
-			EntityPersister persister, String tableName, JdbcValueBindings bindings, SharedSessionContractImplementor session) {
+			EntityPersister persister, MutationOperation operation, JdbcValueBindings bindings,
+			SharedSessionContractImplementor session) {
 		final var tenantMapping = tenantIdMapping( persister );
 		if ( tenantMapping != null ) {
 			final var selectable = tenantMapping.getSelectable( 0 );
-			if ( selectable.getContainingTableExpression().equals( tableName ) ) {
+			if ( persister.physicalTableNameForMutation( selectable ).equals( operation.getTableDetails().getTableName() )
+					&& operation.findValueDescriptor( selectable.getSelectionExpression(), ParameterUsage.TENANT ) != null ) {
 				bindings.bindValue( isRoot( session ) ? null : session.getTenantIdentifierValue(),
 						selectable.getSelectionExpression(), ParameterUsage.TENANT );
 			}
@@ -101,11 +154,9 @@ public final class TenantIdHelper {
 	public static void validateTenantId(
 			Object entity, Object id, EntityPersister persister, SharedSessionContractImplementor session) {
 		checkIdentifierTenant( id, persister, session );
-		final var tenantMapping = tenantIdMapping( persister );
+		final var tenantMapping = tenantIdMapping( persister, persister.getGenerators() );
 		if ( tenantMapping != null ) {
-			final int position = tenantMapping.getStateArrayPosition();
-			final var generator = (TenantIdGeneration) persister.getGenerators()[position];
-			generator.validateTenantId( session, persister.getValue( entity, position ) );
+			tenantMapping.validate( entity, session );
 		}
 	}
 
@@ -138,11 +189,10 @@ public final class TenantIdHelper {
 
 	public static void initializeTenantId(
 			Object entity, Object[] state, EntityPersister persister, SharedSessionContractImplementor session) {
-		final var tenantMapping = tenantIdMapping( persister );
+		final var tenantMapping = tenantIdMapping( persister, persister.getGenerators() );
 		if ( tenantMapping != null ) {
-			final int position = tenantMapping.getStateArrayPosition();
-			final var generator = (TenantIdGeneration) persister.getGenerators()[position];
-			state[position] = generator.generate( session, entity, state[position], INSERT );
+			final int position = tenantMapping.attribute.getStateArrayPosition();
+			state[position] = tenantMapping.generate( state[position], entity, persister.getPropertyTypes()[position], session );
 			persister.setValue( entity, position, state[position] );
 		}
 	}
@@ -156,35 +206,82 @@ public final class TenantIdHelper {
 		checkIdentifierTenant( id, persister, session );
 		final var tenantMapping = tenantIdMapping( persister );
 		if ( tenantMapping != null && !isRoot( session ) ) {
-			if ( session.isTransactionInProgress()
-					&& ( persister.hasMultipleTables() || persister.hasOwnedCollections() ) ) {
-				// Keep the owner stable while its other tables are being mutated.
-				final String tenantPath = "e." + tenantMapping.getAttributeName();
-				final Object owner = session.createSelectionQuery(
-						"select " + tenantPath + " from " + persister.getEntityName()
-								+ " e where id(e) = :id and " + tenantPath + " = :tenant", Object.class )
-						.setParameter( "id", id )
-						.setParameter( "tenant", session.getTenantIdentifierValue() )
-						.setQueryFlushMode( QueryFlushMode.NO_FLUSH )
-						.setHibernateLockMode( LockMode.PESSIMISTIC_WRITE )
-						.getSingleResultOrNull();
-				if ( owner != null || allowMissing && !rowExists( id, persister, session ) ) {
-					return;
-				}
-				throw new StaleObjectStateException( persister.getEntityName(), id );
-			}
-			final Object[] snapshot = persister.getDatabaseSnapshot( id, session );
-			if ( snapshot == null ? !allowMissing || rowExists( id, persister, session )
-					: !session.getFactory().getTenantIdentifierJavaType().areEqual(
-							snapshot[tenantMapping.getStateArrayPosition()], session.getTenantIdentifierValue() ) ) {
+			final boolean lock = session.isTransactionInProgress()
+					&& ( persister.hasMultipleTables() || persister.hasOwnedCollections() );
+			if ( selectTenantId( id, persister, tenantMapping, true, lock, session ) == null
+					&& ( !allowMissing || rowExists( id, persister, session ) ) ) {
 				throw new StaleObjectStateException( persister.getEntityName(), id );
 			}
 		}
 	}
 
+	static Object getTenantId(Object id, EntityPersister persister, SharedSessionContractImplementor session) {
+		return selectTenantId( id, persister, tenantIdMapping( persister ), false, false, session );
+	}
+
+	private static Object selectTenantId(
+			Object id, EntityPersister persister, AttributeMapping tenantMapping,
+			boolean restrictTenant, boolean lock, SharedSessionContractImplementor session) {
+		final var selectable = tenantMapping.getSelectable( 0 );
+		final String tableName = persister.physicalTableNameForMutation( selectable );
+		final var select = new SimpleSelect( session.getFactory() )
+				.setTableName( tableName )
+				.addColumn( selectable.getSelectionExpression() )
+				.setLockMode( lock ? LockMode.PESSIMISTIC_WRITE : LockMode.NONE );
+		for ( var table : persister.getTableMappings() ) {
+			if ( tableName.equals( table.getTableName() ) ) {
+				for ( var column : table.getKeyMapping().getKeyColumns() ) {
+					select.addRestriction( column.getColumnName() );
+				}
+				break;
+			}
+		}
+		if ( restrictTenant ) {
+			select.addRestriction( selectable.getSelectionExpression() );
+		}
+		// Select only the current row when history shares the entity's physical table.
+		if ( persister.getTemporalMapping() != null
+				&& session.getFactory().getSessionFactoryOptions().getTemporalTableStrategy()
+						== org.hibernate.temporal.TemporalTableStrategy.SINGLE_TABLE ) {
+			select.addWhereToken( persister.getTemporalMapping().getEndingColumnMapping().getSelectionExpression() + " is null" );
+		}
+		final String sql = select.toStatementString();
+		final var jdbcMapping = selectable.getJdbcMapping();
+		final var coordinator = session.getJdbcCoordinator();
+		final var resources = coordinator.getLogicalConnection().getResourceRegistry();
+		try {
+			final var statement = coordinator.getStatementPreparer().prepareStatement( sql );
+			try {
+				persister.getIdentifierType().nullSafeSet( statement, id, 1, session );
+				if ( restrictTenant ) {
+					jdbcMapping.getJdbcValueBinder().bind( statement,
+							jdbcMapping.convertToRelationalValue( session.getTenantIdentifierValue() ),
+							persister.getIdentifierMapping().getJdbcTypeCount() + 1, session );
+				}
+				final var resultSet = coordinator.getResultSetReturn().extract( statement, sql );
+				try {
+					return resultSet.next()
+							? jdbcMapping.convertToDomainValue( jdbcMapping.getJdbcValueExtractor().extract( resultSet, 1, session ) )
+							: null;
+				}
+				finally {
+					resources.release( resultSet, statement );
+				}
+			}
+			finally {
+				resources.release( statement );
+				coordinator.afterStatementExecution();
+			}
+		}
+		catch ( SQLException e ) {
+			throw session.getJdbcServices().getSqlExceptionHelper()
+					.convert( e, "Could not check tenant ownership of " + persister.getEntityName(), sql );
+		}
+	}
+
 	private static boolean rowExists(
 			Object id, EntityPersister persister, SharedSessionContractImplementor session) {
-		// A tenant-filtered snapshot cannot distinguish an absent row from another tenant's row.
+		// A tenant-restricted query cannot distinguish an absent row from another tenant's row.
 		// Before treating a row as absent, check existence without reading entity state.
 		final var factory = session.getFactory();
 		final var identifier = persister.getIdentifierMapping();

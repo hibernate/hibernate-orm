@@ -140,7 +140,7 @@ public abstract class AbstractDeleteCoordinator
 			MutationOperationGroup operationGroup,
 			SharedSessionContractImplementor session) {
 		applyLocking( null, loadedState, mutationExecutor, session );
-		bindTenantRestriction( session, mutationExecutor.getJdbcValueBindings() );
+		bindTenantRestriction( session, mutationExecutor.getJdbcValueBindings(), operationGroup );
 		applyId( id, null, mutationExecutor, operationGroup, session );
 	}
 
@@ -305,7 +305,8 @@ public abstract class AbstractDeleteCoordinator
 		bindPartitionColumnValueBindings( loadedState, session,
 				mutationExecutor.getJdbcValueBindings() );
 
-		bindTenantRestriction( session, mutationExecutor.getJdbcValueBindings() );
+		bindTenantRestriction( session, mutationExecutor.getJdbcValueBindings(),
+				applyVersion ? staticOperationGroup : resolveNoVersionDeleteGroup( session ) );
 		applyId( id, rowId, mutationExecutor, staticOperationGroup, session );
 	}
 

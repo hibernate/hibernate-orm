@@ -7,11 +7,13 @@ package org.hibernate.orm.test.tenantid;
 import java.util.function.Consumer;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.Id;
 import jakarta.persistence.Column;
 import jakarta.persistence.SecondaryTable;
 
 import org.hibernate.Hibernate;
+import org.hibernate.KeyType;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.NaturalId;
@@ -35,6 +37,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @DomainModel(annotatedClasses = {
 		TenantIdNaturalIdTest.Item.class,
@@ -52,6 +56,48 @@ class TenantIdNaturalIdTest {
 	@AfterEach
 	void cleanup(SessionFactoryScope scope) {
 		scope.getSessionFactory().getSchemaManager().truncate();
+	}
+
+	@ParameterizedTest
+	@ValueSource(strings = { "mine", "yours", "root" })
+	void referenceByNaturalKey(String tenant, SessionFactoryScope scope) {
+		inTenant( scope, "mine", session -> session.persist( new Item() ) );
+		inTenant( scope, tenant, session -> {
+			if ( tenant.equals( "yours" ) ) {
+				final var exception = assertThrows( EntityNotFoundException.class,
+						() -> session.getReference( Item.class, "secret", KeyType.NATURAL ) );
+				assertTrue( exception.getMessage().contains( "natural id" ) );
+				assertTrue( exception.getMessage().contains( Item.class.getName() ) );
+				assertNull( session.bySimpleNaturalId( Item.class ).getReference( "secret" ) );
+			}
+			else {
+				final var reference = session.getReference( Item.class, "secret", KeyType.NATURAL );
+				assertFalse( Hibernate.isInitialized( reference ) );
+				assertEquals( 1L, session.getIdentifier( reference ) );
+			}
+			assertThrows( EntityNotFoundException.class,
+					() -> session.getReference( Item.class, "missing", KeyType.NATURAL ) );
+		} );
+	}
+
+	@ParameterizedTest
+	@ValueSource(strings = { "mine", "yours", "root" })
+	void referenceByCompoundNaturalKey(String tenant, SessionFactoryScope scope) {
+		inTenant( scope, "mine", session -> session.persist( new CompoundItem() ) );
+		inTenant( scope, tenant, session -> {
+			final var key = java.util.Map.of( "code", "secret", "region", "eu" );
+			if ( tenant.equals( "yours" ) ) {
+				assertThrows( EntityNotFoundException.class,
+						() -> session.getReference( CompoundItem.class, key, KeyType.NATURAL ) );
+			}
+			else {
+				final var reference = session.getReference( CompoundItem.class, key, KeyType.NATURAL );
+				assertFalse( Hibernate.isInitialized( reference ) );
+				assertEquals( 1L, session.getIdentifier( reference ) );
+			}
+			assertThrows( EntityNotFoundException.class, () -> session.getReference(
+					CompoundItem.class, java.util.Map.of( "code", "missing", "region", "eu" ), KeyType.NATURAL ) );
+		} );
 	}
 
 	@ParameterizedTest

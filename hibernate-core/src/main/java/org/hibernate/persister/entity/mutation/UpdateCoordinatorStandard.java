@@ -584,7 +584,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		);
 
 		bindPartitionColumnValueBindings( loadedState, session, mutationExecutor.getJdbcValueBindings() );
-		bindTenantRestriction( session, mutationExecutor.getJdbcValueBindings() );
+		bindTenantRestriction( session, mutationExecutor.getJdbcValueBindings(), versionUpdateGroup );
 
 		// restrict the key
 		mutatingTableDetails.getKeyMapping().breakDownKeyJdbcValues(
@@ -902,7 +902,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		// no snapshot when called from StatelessSession.update()
 		bindPartitionColumnValueBindings( oldValues == null ? values : oldValues,
 				session, mutationExecutor.getJdbcValueBindings() );
-		bindTenantRestriction( session, mutationExecutor.getJdbcValueBindings() );
+		bindTenantRestriction( session, mutationExecutor.getJdbcValueBindings(), staticUpdateGroup );
 
 		try {
 			return mutationExecutor.execute(
@@ -1181,7 +1181,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		// no snapshot when called from StatelessSession.update()
 		bindPartitionColumnValueBindings( oldValues == null ? values : oldValues,
 				session, mutationExecutor.getJdbcValueBindings() );
-		bindTenantRestriction( session, mutationExecutor.getJdbcValueBindings() );
+		bindTenantRestriction( session, mutationExecutor.getJdbcValueBindings(), dynamicUpdateGroup );
 
 		try {
 			return mutationExecutor.execute(

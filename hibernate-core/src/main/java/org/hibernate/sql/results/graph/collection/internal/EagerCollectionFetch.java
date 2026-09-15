@@ -37,8 +37,9 @@ public class EagerCollectionFetch extends CollectionFetch {
 	private final @Nullable DomainResult<?> collectionKeyResult;
 	private final DomainResult<?> collectionValueKeyResult;
 
+	private final @Nullable Fetch identifierFetch;
+	private final @Nullable Fetch indexFetch;
 	private final Fetch elementFetch;
-	private final Fetch indexFetch;
 
 	private final ImmutableFetchList fetches;
 
@@ -113,6 +114,20 @@ public class EagerCollectionFetch extends CollectionFetch {
 				creationState
 		);
 
+		if ( fetchedAttribute.getIdentifierDescriptor() != null ) {
+			identifierFetch = fetchParent.generateFetchableFetch(
+					fetchedAttribute.getIdentifierDescriptor(),
+					fetchedPath.append( CollectionPart.Nature.ID.getName() ),
+					FetchTiming.IMMEDIATE,
+					true,
+					null,
+					creationState
+			);
+		}
+		else {
+			identifierFetch = null;
+		}
+
 		fetches = creationState.visitFetches( this );
 		if ( fetchedAttribute.getIndexDescriptor() != null ) {
 			assert fetches.size() == 2;
@@ -133,14 +148,10 @@ public class EagerCollectionFetch extends CollectionFetch {
 
 		final CollectionSemantics<?, ?> collectionSemantics = getFetchedMapping().getCollectionDescriptor().getCollectionSemantics();
 		initializerProducer = collectionSemantics.createInitializerProducer(
-				fetchedPath,
 				fetchedAttribute,
-				fetchParent,
-				true,
-				null,
+				identifierFetch,
 				indexFetch,
-				elementFetch,
-				creationState
+				elementFetch
 		);
 	}
 
@@ -226,6 +237,9 @@ public class EagerCollectionFetch extends CollectionFetch {
 	public void collectValueIndexesToCache(BitSet valueIndexes) {
 		if ( collectionKeyResult != null ) {
 			collectionKeyResult.collectValueIndexesToCache( valueIndexes );
+		}
+		if ( identifierFetch != null ) {
+			identifierFetch.collectValueIndexesToCache( valueIndexes );
 		}
 		if ( !getFetchedMapping().getCollectionDescriptor().useShallowQueryCacheLayout() ) {
 			collectionValueKeyResult.collectValueIndexesToCache( valueIndexes );

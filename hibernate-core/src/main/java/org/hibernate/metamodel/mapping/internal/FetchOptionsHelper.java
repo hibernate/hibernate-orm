@@ -99,11 +99,7 @@ public final class FetchOptionsHelper {
 			SessionFactoryImplementor sessionFactory) {
 		switch ( style ) {
 			case JOIN: {
-				if ( lazy ) {
-					CORE_LOGGER.fetchModeJoinWithLazyWarning( role );
-					return FetchTiming.DELAYED;
-				}
-				return FetchTiming.IMMEDIATE;
+				return determineJoinStyleFetchTiming( lazy, role );
 			}
 			case BATCH:
 			case SUBSELECT:
@@ -113,6 +109,14 @@ public final class FetchOptionsHelper {
 						: FetchTiming.IMMEDIATE;
 			}
 		}
+	}
+
+	public static FetchTiming determineJoinStyleFetchTiming(boolean lazy, String role) {
+		if ( lazy ) {
+			CORE_LOGGER.fetchModeJoinWithLazyWarning( role );
+			return FetchTiming.DELAYED;
+		}
+		return FetchTiming.IMMEDIATE;
 	}
 
 	private static boolean isSubsequentSelectDelayed(AssociationType type, SessionFactoryImplementor sessionFactory) {

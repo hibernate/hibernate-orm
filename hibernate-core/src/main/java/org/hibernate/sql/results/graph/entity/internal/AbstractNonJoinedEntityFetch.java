@@ -7,7 +7,6 @@ package org.hibernate.sql.results.graph.entity.internal;
 import java.util.BitSet;
 
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -21,6 +20,7 @@ import org.hibernate.sql.results.graph.InitializerProducer;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.graph.entity.EntityFetch;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
+import org.hibernate.sql.results.graph.entity.EntityValuedFetchable;
 import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 
 /**
@@ -29,7 +29,7 @@ import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 public abstract class AbstractNonJoinedEntityFetch implements EntityFetch,
 		InitializerProducer<AbstractNonJoinedEntityFetch> {
 	private final NavigablePath navigablePath;
-	private final ToOneAttributeMapping fetchedModelPart;
+	private final EntityValuedFetchable fetchedModelPart;
 	private final FetchParent fetchParent;
 	private final DomainResult<?> keyResult;
 	private final BasicFetch<?> discriminatorFetch;
@@ -37,7 +37,7 @@ public abstract class AbstractNonJoinedEntityFetch implements EntityFetch,
 
 	public AbstractNonJoinedEntityFetch(
 			NavigablePath navigablePath,
-			ToOneAttributeMapping fetchedModelPart,
+			EntityValuedFetchable fetchedModelPart,
 			FetchParent fetchParent,
 			DomainResult<?> keyResult,
 			boolean selectDiscriminator,
@@ -53,7 +53,7 @@ public abstract class AbstractNonJoinedEntityFetch implements EntityFetch,
 
 	protected AbstractNonJoinedEntityFetch(
 			NavigablePath navigablePath,
-			ToOneAttributeMapping fetchedModelPart,
+			EntityValuedFetchable fetchedModelPart,
 			FetchParent fetchParent,
 			DomainResult<?> keyResult,
 			BasicFetch<?> discriminatorFetch,
@@ -72,12 +72,12 @@ public abstract class AbstractNonJoinedEntityFetch implements EntityFetch,
 	}
 
 	@Override
-	public ToOneAttributeMapping getFetchedMapping() {
+	public EntityValuedFetchable getFetchedMapping() {
 		return fetchedModelPart;
 	}
 
 	@Override
-	public ToOneAttributeMapping getEntityValuedModelPart() {
+	public EntityValuedFetchable getEntityValuedModelPart() {
 		return fetchedModelPart;
 	}
 

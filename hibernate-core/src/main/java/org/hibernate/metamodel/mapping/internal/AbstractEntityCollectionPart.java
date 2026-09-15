@@ -7,6 +7,7 @@ package org.hibernate.metamodel.mapping.internal;
 import java.util.HashSet;
 import java.util.Set;
 
+import jakarta.annotation.Nullable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.engine.FetchStyle;
@@ -55,6 +56,9 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 	private final Nature nature;
 	private final CollectionPersister collectionDescriptor;
 	private final EntityMappingType associatedEntityTypeDescriptor;
+	private final FetchStyle fetchStyle;
+	private final FetchTiming fetchTiming;
+	private final @Nullable String referencedPropertyName;
 	private final NotFoundAction notFoundAction;
 
 	protected final Set<String> targetKeyPropertyNames;
@@ -64,14 +68,23 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 			Collection collectionBootDescriptor,
 			CollectionPersister collectionDescriptor,
 			EntityMappingType associatedEntityTypeDescriptor,
+			FetchStyle fetchStyle,
+			FetchTiming fetchTiming,
 			NotFoundAction notFoundAction,
 			MappingModelCreationProcess creationProcess) {
+		this.fetchStyle = fetchStyle;
+		this.fetchTiming = fetchTiming;
 		this.navigableRole = collectionDescriptor.getNavigableRole().appendContainer( nature.getName() );
 		this.nature = nature;
 		this.collectionDescriptor = collectionDescriptor;
 		this.associatedEntityTypeDescriptor = associatedEntityTypeDescriptor;
 		this.notFoundAction = notFoundAction;
 
+		this.referencedPropertyName = resolveReferencedPropertyName(
+				nature,
+				collectionDescriptor,
+				collectionBootDescriptor
+		);
 		this.targetKeyPropertyNames = resolveTargetKeyPropertyNames(
 				nature,
 				collectionDescriptor,
@@ -89,7 +102,10 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 		this.nature = original.nature;
 		this.collectionDescriptor = original.collectionDescriptor;
 		this.associatedEntityTypeDescriptor = original.associatedEntityTypeDescriptor;
+		this.fetchStyle = original.fetchStyle;
+		this.fetchTiming = original.fetchTiming;
 		this.notFoundAction = original.notFoundAction;
+		this.referencedPropertyName = original.referencedPropertyName;
 		this.targetKeyPropertyNames = original.targetKeyPropertyNames;
 	}
 
@@ -128,11 +144,6 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 	}
 
 	@Override
-	public int getFetchableKey() {
-		return nature == Nature.INDEX || !collectionDescriptor.hasIndex() ? 0 : 1;
-	}
-
-	@Override
 	public EntityMappingType getAssociatedEntityMappingType() {
 		return associatedEntityTypeDescriptor;
 	}
@@ -149,12 +160,12 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 
 	@Override
 	public FetchStyle getStyle() {
-		return FetchStyle.JOIN;
+		return fetchStyle;
 	}
 
 	@Override
 	public FetchTiming getTiming() {
-		return FetchTiming.IMMEDIATE;
+		return fetchTiming;
 	}
 
 	@Override
@@ -171,6 +182,21 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 	@Override
 	public boolean isUnwrapProxy() {
 		return false;
+	}
+
+	@Override
+	public boolean isLazy() {
+		return false;
+	}
+
+	@Override
+	public @Nullable String getReferencedPropertyName() {
+		return referencedPropertyName;
+	}
+
+	@Override
+	public boolean isInternalLoadNullable() {
+		return hasNotFoundAction();
 	}
 
 	@Override
@@ -199,7 +225,6 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 				// should be an instance of the associated entity
 				: getAssociatedEntityMappingType().getIdentifierMapping().getIdentifier( value );
 	}
-
 
 	@Override
 	public EntityFetch generateFetch(
@@ -266,7 +291,7 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 
 	protected abstract AssociationKey resolveFetchAssociationKey();
 
-	private TableGroup resolveTableGroup(NavigablePath fetchablePath, DomainResultCreationState creationState) {
+	protected TableGroup resolveTableGroup(NavigablePath fetchablePath, DomainResultCreationState creationState) {
 		final var fromClauseAccess = creationState.getSqlAstCreationState().getFromClauseAccess();
 		return fromClauseAccess.resolveTableGroup( fetchablePath, navigablePath -> {
 			final var parentTableGroup =
@@ -333,6 +358,29 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Initialization
 
+	private static String resolveReferencedPropertyName(
+			Nature nature,
+			CollectionPersister collectionDescriptor,
+			Collection collectionBootDescriptor) {
+		final Value bootModelValue =
+				nature == Nature.INDEX
+						? ((IndexedCollection) collectionBootDescriptor).getIndex()
+						: collectionBootDescriptor.getElement();
+
+		if ( bootModelValue instanceof OneToMany ) {
+			final String mappedByProperty = collectionDescriptor.getMappedByProperty();
+			return isEmpty( mappedByProperty )
+							? null
+							: mappedByProperty;
+		}
+		else if ( bootModelValue instanceof ToOne toOne ) {
+			return toOne.getReferencedPropertyName();
+		}
+		else {
+			throw new AssertionFailure( "Expected a OneToMany or ToOne" );
+		}
+	}
+
 	private static Set<String> resolveTargetKeyPropertyNames(
 			Nature nature,
 			CollectionPersister collectionDescriptor,
@@ -347,21 +395,7 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 				creationProcess.getCreationContext().getMetadata()
 						.getEntityBinding( elementTypeDescriptor.getEntityName() );
 
-		final String referencedPropertyName;
-		if ( bootModelValue instanceof OneToMany ) {
-			final String mappedByProperty = collectionDescriptor.getMappedByProperty();
-			referencedPropertyName =
-					isEmpty( mappedByProperty )
-							? null
-							: mappedByProperty;
-		}
-		else if ( bootModelValue instanceof ToOne toOne ) {
-			referencedPropertyName = toOne.getReferencedPropertyName();
-		}
-		else {
-			throw new AssertionFailure( "Expected a OneToMany or ToOne" );
-		}
-
+		final String referencedPropertyName =  resolveReferencedPropertyName(nature, collectionDescriptor, collectionBootDescriptor);
 		if ( referencedPropertyName == null ) {
 			final Set<String> targetKeyPropertyNames = new HashSet<>( 2 );
 			targetKeyPropertyNames.add( EntityIdentifierMapping.ID_ROLE_NAME );

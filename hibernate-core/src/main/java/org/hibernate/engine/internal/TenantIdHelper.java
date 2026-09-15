@@ -129,6 +129,24 @@ public final class TenantIdHelper {
 		return resolver != null && resolver.isRoot( session.getTenantIdentifierValue() );
 	}
 
+	/**
+	 * Whether a composite identifier contains an unassigned generated tenant id.
+	 * Such an incomplete primary key cannot identify a stored row.
+	 */
+	public static boolean hasUnassignedIdentifierTenant(
+			Object id, EntityPersister persister, SharedSessionContractImplementor session) {
+		if ( id != null && persister.getGenerator() instanceof CompositeNestedGeneratedValueGenerator composite ) {
+			final var type = (ComponentType) persister.getIdentifierType();
+			for ( var plan : composite.getGenerationPlans() ) {
+				if ( plan.getGenerator() instanceof TenantIdGeneration
+						&& type.getPropertyValue( id, plan.getPropertyIndex(), session ) == null ) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
 	public static void checkIdentifierTenant(
 			Object id, EntityPersister persister, SharedSessionContractImplementor session) {
 		if ( !isRoot( session ) ) {

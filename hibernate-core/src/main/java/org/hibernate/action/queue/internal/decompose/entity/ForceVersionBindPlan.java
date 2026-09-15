@@ -18,6 +18,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 /// @author Steve Ebersole
@@ -85,12 +86,14 @@ public class ForceVersionBindPlan implements BindPlan, OperationResultChecker {
 	@Override
 	public boolean checkResult(
 			int affectedRowCount,
+			PreparedStatement statement,
 			int batchPosition,
 			String sqlString,
 			SessionFactoryImplementor sessionFactory) throws SQLException {
 		return Checkers.identifiedResultsCheck(
 				tableDescriptor.updateDetails().getExpectation(),
 				affectedRowCount,
+				statement,
 				batchPosition,
 				persister,
 				tableDescriptor,

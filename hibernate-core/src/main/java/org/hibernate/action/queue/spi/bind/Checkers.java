@@ -13,8 +13,9 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.jdbc.TooManyRowsAffectedException;
 import org.hibernate.sql.spi.mutation.MutationTarget;
-import org.hibernate.stat.spi.StatisticsImplementor;
 
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.Locale;
 
 /// @author Steve Ebersole
@@ -25,23 +26,26 @@ public class Checkers {
 	public static boolean identifiedResultsCheck(
 			Expectation expectation,
 			int affectedRowCount,
+			PreparedStatement statement,
 			int batchPosition,
 			MutationTarget mutationTarget,
 			TableDescriptor mutatingTable,
 			Object id,
 			String sqlString,
-			SessionFactoryImplementor sessionFactory) {
+			SessionFactoryImplementor sessionFactory) throws SQLException {
 		try {
 			expectation.verifyOutcome(
 					affectedRowCount,
-					null,
+					statement,
 					batchPosition,
 					sqlString
 			);
 		}
 		catch (StaleStateException e) {
-			if ( !mutatingTable.isOptional() && affectedRowCount == 0 ) {
-				final StatisticsImplementor statistics = sessionFactory.getStatistics();
+			// For an OUT parameter, the JDBC update count is not the checked row count.
+			if ( !mutatingTable.isOptional()
+					&& (affectedRowCount == 0 || expectation instanceof Expectation.OutParameter) ) {
+				final var statistics = sessionFactory.getStatistics();
 				if ( statistics.isStatisticsEnabled() ) {
 					statistics.optimisticFailure( mutationTarget.getNavigableRole().getFullPath() );
 				}
@@ -59,9 +63,6 @@ public class Checkers {
 							id
 					)
 			);
-		}
-		catch (Throwable t) {
-			return false;
 		}
 
 		return true;

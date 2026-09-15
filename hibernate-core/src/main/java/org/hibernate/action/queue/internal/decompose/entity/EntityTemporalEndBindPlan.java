@@ -5,6 +5,7 @@
 package org.hibernate.action.queue.internal.decompose.entity;
 
 
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 import org.hibernate.action.queue.spi.bind.BindPlan;
@@ -214,12 +215,14 @@ public class EntityTemporalEndBindPlan implements BindPlan, OperationResultCheck
 	@Override
 	public boolean checkResult(
 			int affectedRowCount,
+			PreparedStatement statement,
 			int batchPosition,
 			String sqlString,
 			SessionFactoryImplementor sessionFactory) throws SQLException {
 		return Checkers.identifiedResultsCheck(
 				tableDescriptor.updateDetails().getExpectation(),
 				affectedRowCount,
+				statement,
 				batchPosition,
 				entityPersister,
 				tableDescriptor,

@@ -25,6 +25,11 @@ public class TiDBLockingSupport implements LockingSupport, LockingSupport.Metada
 	public static final TiDBLockingSupport TIDB_LOCKING_SUPPORT = new TiDBLockingSupport();
 
 	@Override
+	public org.hibernate.dialect.lock.spi.TransactionConcurrencyResolver getTransactionConcurrencyResolver() {
+		return TiDBTransactionConcurrencyResolver.INSTANCE;
+	}
+
+	@Override
 	public Metadata getMetadata() {
 		return this;
 	}

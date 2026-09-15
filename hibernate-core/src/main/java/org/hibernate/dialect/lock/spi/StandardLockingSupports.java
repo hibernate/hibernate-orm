@@ -82,10 +82,11 @@ public final class StandardLockingSupports {
 		);
 	}
 
-	/// Creates a profile using one timeout classification for every timeout value,
-	/// additionally specifying whether plain reads wait for uncommitted writes.
+	/// Legacy profile factory retaining the old read-blocking metadata.
+	/// The boolean is not used for concurrency resolution or current-read rendering.
 	///
-	/// @see LockingSupport.Metadata#readsWaitForUncommittedWrites()
+	/// @deprecated Use the overload accepting [TransactionConcurrencyResolver].
+	@Deprecated(since = "8.0", forRemoval = true)
 	public static LockingSupport simple(
 			PessimisticLockStyle pessimisticLockStyle,
 			RowLockStrategy rowLockStrategy,
@@ -101,6 +102,38 @@ public final class StandardLockingSupports {
 				Objects.requireNonNull( connectionLockTimeoutStrategy, "connectionLockTimeoutStrategy" ),
 				readsWaitForUncommittedWrites
 		);
+	}
+
+	/// Creates a simple SQL strategy with an explicit concurrency resolver.
+	///
+	/// @since 8.0
+	public static LockingSupport simple(
+			PessimisticLockStyle style, RowLockStrategy rowLockStrategy,
+			LockTimeoutType timeoutType, OuterJoinLockingType outerJoinType,
+			ConnectionLockTimeoutStrategy timeoutStrategy, TransactionConcurrencyResolver resolver) {
+		Objects.requireNonNull( resolver, "resolver" );
+		return new LockingSupportSimple( style, rowLockStrategy, timeoutType, outerJoinType, timeoutStrategy ) {
+			@Override
+			public TransactionConcurrencyResolver getTransactionConcurrencyResolver() {
+				return resolver;
+			}
+		};
+	}
+
+	/// Creates a parameterized SQL strategy with an explicit concurrency resolver.
+	///
+	/// @since 8.0
+	public static LockingSupport parameterized(
+			PessimisticLockStyle style, RowLockStrategy rowLockStrategy,
+			LockTimeoutType waitType, LockTimeoutType noWaitType, LockTimeoutType skipLockedType,
+			OuterJoinLockingType outerJoinType, TransactionConcurrencyResolver resolver) {
+		Objects.requireNonNull( resolver, "resolver" );
+		return new LockingSupportParameterized( style, rowLockStrategy, waitType, noWaitType, skipLockedType, outerJoinType ) {
+			@Override
+			public TransactionConcurrencyResolver getTransactionConcurrencyResolver() {
+				return resolver;
+			}
+		};
 	}
 
 	/// Creates a statement-clause profile with independent timeout classifications.
@@ -121,10 +154,11 @@ public final class StandardLockingSupports {
 		);
 	}
 
-	/// Creates a statement-clause profile with independent timeout classifications,
-	/// additionally specifying whether plain reads wait for uncommitted writes.
+	/// Legacy profile factory retaining the old read-blocking metadata.
+	/// The boolean is not used for concurrency resolution or current-read rendering.
 	///
-	/// @see LockingSupport.Metadata#readsWaitForUncommittedWrites()
+	/// @deprecated Use the overload accepting [TransactionConcurrencyResolver].
+	@Deprecated(since = "8.0", forRemoval = true)
 	public static LockingSupport parameterized(
 			PessimisticLockStyle pessimisticLockStyle,
 			RowLockStrategy rowLockStrategy,

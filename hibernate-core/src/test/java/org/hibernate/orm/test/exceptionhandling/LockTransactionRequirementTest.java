@@ -66,6 +66,10 @@ class LockTransactionRequirementTest extends BaseJpaOrNativeBootstrapFunctionalT
 		persistEntity();
 		try ( var session = sessionFactory().openStatelessSession() ) {
 			final var entity = new Lockable();
+			if ( !jpaBootstrap && !supportsStatelessOptimistic() ) {
+				assertThrows( org.hibernate.HibernateException.class, () -> session.refresh( entity, LockModeType.OPTIMISTIC ) );
+				return;
+			}
 			checkWithoutTransaction( () -> session.refresh( entity, LockModeType.OPTIMISTIC ) );
 			if ( !jpaBootstrap ) {
 				assertEquals( "original", entity.name );
@@ -76,6 +80,19 @@ class LockTransactionRequirementTest extends BaseJpaOrNativeBootstrapFunctionalT
 	@Test
 	void testStatelessRefreshWithLockWithTransaction() {
 		persistEntity();
+		if ( !supportsStatelessOptimistic() ) {
+			try ( var session = sessionFactory().openStatelessSession() ) {
+				final var transaction = session.beginTransaction();
+				try {
+					assertThrows( org.hibernate.HibernateException.class,
+							() -> session.refresh( new Lockable(), LockModeType.OPTIMISTIC ) );
+				}
+				finally {
+					transaction.rollback();
+				}
+			}
+			return;
+		}
 		sessionFactory().inStatelessTransaction( session -> {
 			final var entity = new Lockable();
 			session.refresh( entity, LockModeType.OPTIMISTIC );
@@ -102,6 +119,17 @@ class LockTransactionRequirementTest extends BaseJpaOrNativeBootstrapFunctionalT
 			session.refresh( entity, LockModeType.NONE );
 			assertEquals( "original", entity.name );
 		}
+	}
+
+	private boolean supportsStatelessOptimistic() {
+		final var concurrency = sessionFactory().getJdbcServices().getJdbcEnvironment().getTransactionConcurrency();
+		return java.util.stream.Stream.of(
+				org.hibernate.dialect.lock.spi.Operation.READ,
+				org.hibernate.dialect.lock.spi.Operation.SHARED_LOCK_READ,
+				org.hibernate.dialect.lock.spi.Operation.UPDATE_LOCK_READ )
+				.filter( concurrency::supports ).map( concurrency::getReadGuarantees )
+				.anyMatch( g -> g.preventsDirtyReads() && g.preventsConcurrentModification()
+						&& g.holdsRowLockUntilTransactionCompletion() );
 	}
 
 	private void checkWithoutTransaction(Runnable action) {

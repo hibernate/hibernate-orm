@@ -47,6 +47,11 @@ public class GaussDBLockingSupport
 	}
 
 	@Override
+	public org.hibernate.dialect.lock.spi.TransactionConcurrencyResolver getTransactionConcurrencyResolver() {
+		return GaussDBTransactionConcurrencyResolver.INSTANCE;
+	}
+
+	@Override
 	public Metadata getMetadata() {
 		return this;
 	}

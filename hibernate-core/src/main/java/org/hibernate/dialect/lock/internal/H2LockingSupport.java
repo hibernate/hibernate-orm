@@ -4,6 +4,9 @@
  */
 package org.hibernate.dialect.lock.internal;
 
+
+import org.hibernate.dialect.lock.spi.TransactionConcurrencyResolver;
+
 import jakarta.persistence.Timeout;
 import org.hibernate.Timeouts;
 import org.hibernate.dialect.lock.spi.ConnectionLockTimeoutStrategy;
@@ -30,6 +33,11 @@ public class H2LockingSupport implements LockingSupport, LockingSupport.Metadata
 
 	private H2LockingSupport(boolean supportsForUpdateOptions) {
 		this.supportsForUpdateOptions = supportsForUpdateOptions;
+	}
+
+	@Override
+	public TransactionConcurrencyResolver getTransactionConcurrencyResolver() {
+		return H2TransactionConcurrencyResolver.INSTANCE;
 	}
 
 	@Override

@@ -4,6 +4,9 @@
  */
 package org.hibernate.dialect.lock.internal;
 
+
+import org.hibernate.dialect.lock.spi.TransactionConcurrencyResolver;
+
 import org.hibernate.Timeouts;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.lock.PessimisticLockStyle;
@@ -52,6 +55,11 @@ public class HANALockingSupport extends LockingSupportParameterized implements L
 		);
 		this.supportsWait = supportsWait;
 		this.supportsSkipLocked = supportsSkipLocked;
+	}
+
+	@Override
+	public TransactionConcurrencyResolver getTransactionConcurrencyResolver() {
+		return HANATransactionConcurrencyResolver.INSTANCE;
 	}
 
 	@Override

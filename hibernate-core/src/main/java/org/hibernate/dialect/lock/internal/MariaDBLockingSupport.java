@@ -4,6 +4,9 @@
  */
 package org.hibernate.dialect.lock.internal;
 
+
+import org.hibernate.dialect.lock.spi.TransactionConcurrencyResolver;
+
 import jakarta.persistence.Timeout;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.lock.spi.ConnectionLockTimeoutStrategy;
@@ -46,6 +49,11 @@ public class MariaDBLockingSupport implements LockingSupport, LockingSupport.Met
 
 	public MariaDBLockingSupport(DatabaseVersion databaseVersion) {
 		this( databaseVersion.isSameOrAfter( 10, 6 ), true, true );
+	}
+
+	@Override
+	public TransactionConcurrencyResolver getTransactionConcurrencyResolver() {
+		return MySQLTransactionConcurrencyResolver.INSTANCE;
 	}
 
 	@Override

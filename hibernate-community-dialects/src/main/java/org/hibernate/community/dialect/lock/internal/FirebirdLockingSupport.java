@@ -26,6 +26,11 @@ public final class FirebirdLockingSupport implements LockingSupport, LockingSupp
 	}
 
 	@Override
+	public org.hibernate.dialect.lock.spi.TransactionConcurrencyResolver getTransactionConcurrencyResolver() {
+		return FirebirdTransactionConcurrencyResolver.INSTANCE;
+	}
+
+	@Override
 	public Metadata getMetadata() {
 		return this;
 	}

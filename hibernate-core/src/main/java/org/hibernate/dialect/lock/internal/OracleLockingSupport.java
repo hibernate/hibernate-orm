@@ -4,6 +4,9 @@
  */
 package org.hibernate.dialect.lock.internal;
 
+
+import org.hibernate.dialect.lock.spi.TransactionConcurrencyResolver;
+
 import jakarta.persistence.Timeout;
 import org.hibernate.Timeouts;
 import org.hibernate.dialect.DatabaseVersion;
@@ -41,6 +44,11 @@ public class OracleLockingSupport implements LockingSupport, LockingSupport.Meta
 	public OracleLockingSupport(DatabaseVersion version) {
 		supportsNoWait = version.isSameOrAfter( 9 );
 		supportsSkipLocked = version.isSameOrAfter( 10 );
+	}
+
+	@Override
+	public TransactionConcurrencyResolver getTransactionConcurrencyResolver() {
+		return OracleTransactionConcurrencyResolver.INSTANCE;
 	}
 
 	@Override

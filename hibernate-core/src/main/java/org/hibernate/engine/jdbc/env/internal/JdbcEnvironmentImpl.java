@@ -4,11 +4,17 @@
  */
 package org.hibernate.engine.jdbc.env.internal;
 
+import org.hibernate.engine.jdbc.env.JdbcMetadataOnBoot;
+
+import org.hibernate.dialect.lock.spi.TransactionConcurrency;
+
+import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.cfg.JdbcSettings;
+import org.hibernate.cfg.TransactionSettings;
 import org.hibernate.cfg.MappingSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.identifier.spi.IdentifierHelperBuildRequest;
@@ -50,6 +56,7 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 	private final SqlExceptionHelper sqlExceptionHelper;
 	private final ExtractedDatabaseMetaDataImpl extractedMetaDataSupport;
 	private final JdbcMetadata jdbcMetadata;
+	private final TransactionConcurrency transactionConcurrency;
 	private final Identifier currentCatalog;
 	private final Identifier currentSchema;
 	private final IdentifierHelper identifierHelper;
@@ -84,6 +91,10 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 
 		extractedMetaDataSupport = new ExtractedDatabaseMetaDataImpl( this );
 		jdbcMetadata = new JdbcMetadataImpl( extractedMetaDataSupport, dialect.getJdbcMetadataOverrides() );
+		transactionConcurrency = resolveTransactionConcurrency(
+				dialect, jdbcMetadata, null,
+				cfgService.getSettings().get( TransactionSettings.TRANSACTION_CONCURRENCY ),
+				JdbcMetadataOnBoot.DISALLOW );
 
 		identifierHelper = identifierHelper(
 				dialect,
@@ -189,6 +200,9 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 		extractedMetaDataSupport =
 				new ExtractedDatabaseMetaDataImpl( this, jdbcConnectionAccess, databaseMetaData );
 		jdbcMetadata = new JdbcMetadataImpl( extractedMetaDataSupport, dialect.getJdbcMetadataOverrides() );
+		transactionConcurrency = resolveTransactionConcurrency(
+				dialect, jdbcMetadata, databaseMetaData.getConnection(), null,
+				JdbcMetadataOnBoot.ALLOW );
 
 		final var identifierHelperBuilder = IdentifierHelperBuilder.from( this );
 		identifierHelperBuilder.setNameQualifierSupport( nameQualifierSupport );
@@ -270,6 +284,10 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 		extractedMetaDataSupport =
 				new ExtractedDatabaseMetaDataImpl( this, jdbcConnectionAccess, databaseMetaData );
 		jdbcMetadata = new JdbcMetadataImpl( extractedMetaDataSupport, dialect.getJdbcMetadataOverrides() );
+		transactionConcurrency = resolveTransactionConcurrency(
+				dialect, jdbcMetadata, databaseMetaData.getConnection(),
+				cfgService.getSettings().get( TransactionSettings.TRANSACTION_CONCURRENCY ),
+				JdbcEnvironmentInitiator.jdbcMetadataAccess( cfgService.getSettings() ) );
 
 		identifierHelper = identifierHelper(
 				dialect,
@@ -304,6 +322,11 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 	@Override
 	public SqlAstTranslatorFactory getSqlAstTranslatorFactory() {
 		return sqlAstTranslatorFactory;
+	}
+
+	@Override
+	public TransactionConcurrency getTransactionConcurrency() {
+		return transactionConcurrency;
 	}
 
 	@Override
@@ -362,4 +385,14 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 			}
 		}
 	}
+	private static TransactionConcurrency resolveTransactionConcurrency(
+			Dialect dialect, JdbcMetadata metadata, Connection connection,
+			Object declaration, JdbcMetadataOnBoot access) {
+		if ( declaration instanceof TransactionConcurrency supplied ) {
+			return supplied;
+		}
+		return dialect.getLockingSupport().getTransactionConcurrencyResolver()
+				.resolve( dialect, metadata, connection, declaration, access );
+	}
+
 }

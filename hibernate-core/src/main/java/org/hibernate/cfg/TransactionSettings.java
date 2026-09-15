@@ -11,6 +11,53 @@ import jakarta.persistence.spi.PersistenceUnitInfo;
  * @author Steve Ebersole
  */
 public interface TransactionSettings {
+	/// Declares the factory's transaction concurrency baseline without changing
+	/// connection settings. Accepts an
+	/// [org.hibernate.dialect.lock.spi.TransactionConcurrency] instance or a
+	/// textual name recognized by the dialect's
+	/// [org.hibernate.dialect.lock.spi.TransactionConcurrencyResolver].
+	///
+	/// A supplied descriptor is used as-is, bypassing concurrency resolution,
+	/// probing, and validation. The caller is responsible for its accuracy and
+	/// immutability. Other bootstrap JDBC metadata access is unaffected.
+	///
+	/// The built-in resolvers accept the following names, ignoring case and
+	/// leading or trailing whitespace:
+	///
+	/// - `READ_UNCOMMITTED`: declares JDBC read-uncommitted isolation.
+	/// - `READ_COMMITTED`: declares JDBC read-committed isolation, leaving the
+	///   choice of locking or versioned ordinary reads to database observations
+	///   and established dialect facts. The name alone does not resolve that choice.
+	/// - `LOCKING_READ_COMMITTED`: declares read-committed isolation with
+	///   locking ordinary reads.
+	/// - `READ_COMMITTED_SNAPSHOT`: declares read-committed isolation with
+	///   versioned ordinary reads. This is distinct from transaction-level `SNAPSHOT`.
+	/// - `REPEATABLE_READ`: declares JDBC repeatable-read isolation, with
+	///   behavior resolved for the dialect.
+	/// - `SERIALIZABLE`: declares JDBC serializable isolation, with behavior
+	///   resolved for the dialect.
+	/// - `SNAPSHOT`: declares the dialect's transaction-level snapshot configuration.
+	///   The corresponding dialect resolver maps this to the native snapshot isolation value
+	///   for SQL Server and H2, repeatable-read for PostgreSQL and MySQL, and
+	///   serializable for Oracle. The Firebird and TiDB community resolvers map
+	///   it to repeatable-read. Resolvers without a snapshot mapping reject this name.
+	///
+	/// These names declare configurations, not portable sets of identical
+	/// guarantees. A dialect-specific resolver may recognize additional names.
+	/// Unknown names and named declarations contradicting known observations or
+	/// established dialect facts fail bootstrap.
+	///
+	/// The declaration supplies facts unavailable during bootstrap, especially
+	/// when JDBC metadata access is disabled. If omitted, resolution uses only
+	/// available observations and established dialect facts, leaving missing
+	/// information unknown. This setting does not imply that a connection
+	/// provider honors the separate connection-isolation setting.
+	///
+	/// @since 8.0
+	/// @see org.hibernate.dialect.lock.spi.TransactionConcurrencies
+	/// @see JdbcSettings#ISOLATION
+	String TRANSACTION_CONCURRENCY = "hibernate.transaction.concurrency";
+
 	/**
 	 * Specify the {@link org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder}
 	 * implementation to use for creating instances of

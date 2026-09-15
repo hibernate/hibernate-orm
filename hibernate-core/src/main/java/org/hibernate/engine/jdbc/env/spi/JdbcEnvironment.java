@@ -4,6 +4,8 @@
  */
 package org.hibernate.engine.jdbc.env.spi;
 
+import org.hibernate.dialect.lock.spi.TransactionConcurrency;
+
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
@@ -34,6 +36,11 @@ public interface JdbcEnvironment extends Service {
 	///
 	/// @since 8.0
 	JdbcMetadata getJdbcMetadata();
+
+	/// Immutable concurrency baseline resolved before factory SQL generation.
+	/// Factory connections must use a consistent isolation configuration.
+	/// No connection settings are changed by resolution.
+	TransactionConcurrency getTransactionConcurrency();
 
 	/// Obtain the raw JDBC driver and bootstrap-connection observations.
 	///

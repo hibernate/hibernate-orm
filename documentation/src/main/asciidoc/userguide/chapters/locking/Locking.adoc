@@ -22,6 +22,29 @@ Hibernate provides mechanisms for implementing both types of locking in your app
 [[locking-optimistic]]
 === Optimistic
 
+Hibernate resolves a transaction concurrency baseline during bootstrap and uses it when selecting the current read needed to verify an optimistic lock's version.
+Resolution considers the bootstrap connection's isolation and database-specific configuration, including SQL Server's `READ_COMMITTED_SNAPSHOT` setting and TiDB's transaction mode.
+It does not change connection isolation.
+
+The `hibernate.transaction.concurrency` setting declares the baseline when it cannot be observed, especially when `hibernate.boot.allow_jdbc_metadata_access` is `DISALLOW`.
+Its registered names are `READ_UNCOMMITTED`, `READ_COMMITTED`, `LOCKING_READ_COMMITTED`, `READ_COMMITTED_SNAPSHOT`, `REPEATABLE_READ`, `SNAPSHOT`, and `SERIALIZABLE`.
+Names are interpreted by the dialect: for example, `SNAPSHOT` is distinct from statement-level `READ_COMMITTED_SNAPSHOT`.
+Programmatic configuration may instead supply a `TransactionConcurrency` instance, constructed using `TransactionConcurrencies.builder()`.
+An explicitly supplied instance is used as-is, bypassing concurrency resolution, probing, and validation; its accuracy and immutability are the caller's responsibility.
+A known contradiction between a named declaration and observed behavior fails bootstrap.
+
+With metadata access `ALLOW`, a failed concurrency query leaves the affected facts unresolved without discarding other JDBC metadata.
+With `REQUIRE`, a failure of a supported query fails bootstrap.
+`DISALLOW` performs no JDBC access for concurrency resolution.
+An unsupported query is not an execution failure and may be compensated for by a declaration.
+
+All connections used by a factory must have a consistent concurrency configuration.
+The declaration does not configure a connection pool, does not replace `hibernate.connection.isolation`, and does not support session-specific overrides.
+If neither an ordinary read nor a dialect current-read strategy establishes the required guarantee, Hibernate rejects the affected optimistic version validation instead of relying on a potentially stale snapshot.
+Stateless optimistic locking requires a read that retains row protection through transaction completion.
+Hibernate uses a shared-lock or update-lock read, or an ordinary read when the resolved configuration already guarantees that protection.
+A current read that provides only freshness, or a stable snapshot that permits concurrent modification, is insufficient for this purpose.
+
 When your application uses long transactions or conversations that span several database transactions,
 you can store versioning data so that if the same entity is updated by two conversations, the last to commit changes is informed of the conflict,
 and does not override the other conversation's work.
@@ -464,4 +487,3 @@ include::{extrasdir}/locking-follow-on-explicit-example.sql[]
 ====
 The follow-on-locking mechanism should be explicitly enabled only if the currently executing query fails because the `FOR UPDATE` clause cannot be applied, meaning that the Dialect resolving mechanism needs to be further improved.
 ====
-

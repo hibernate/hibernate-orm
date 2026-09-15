@@ -826,15 +826,36 @@ On a database with multiversion concurrency control, or with "currently committe
 under snapshot isolation returns the version as of the start of the transaction, so the check could miss a
 concurrent modification.
 
-On such databases the version check is now a "current read" which waits for the outcome of any concurrent
-write to the row and fails if the version changed. On PostgreSQL, MySQL, MariaDB, Oracle, H2, HANA and
-CockroachDB, and with the community dialects for GaussDB, TiDB, Firebird, Altibase, CUBRID, TimesTen, and
-Informix, it uses the same syntax as `PESSIMISTIC_READ` (`for share`, `lock in share mode`, or `for update`
-where the database has no share lock). On SQL Server it uses the `readcommittedlock` table  hint, and on
-DB2 LUW the `wait for outcome` clause, since on those databases whether a plain read waits depends on
-configuration (`READ_COMMITTED_SNAPSHOT` and `CUR_COMMIT` respectively) which the dialect cannot detect;
-neither form retains a lock beyond the statement. Databases whose plain reads already wait for uncommitted
-writes are unaffected.
+Hibernate now resolves a `TransactionConcurrency` descriptor during bootstrap and uses its read guarantees
+to choose between an ordinary read and the dialect's explicit current-read strategy. The descriptor considers
+connection isolation and relevant database configuration. SQL Server retains its `readcommittedlock` hint,
+and DB2 LUW retains `wait for outcome`. These provide freshness without promising transaction-long row protection.
+Other dialects use their explicit shared or update-lock read strategy. CockroachDB uses `for update` when
+shared-lock support has not been established. Informix update-lock retention and CockroachDB serializable
+lock durability are not assumed from the availability of locking syntax.
+
+For stateless sessions, implementing `OPTIMISTIC` requires protection through transaction completion,
+since there is no persistence context to retain a deferred version check. Hibernate chooses an explicit
+shared-lock read when the descriptor establishes that protection, otherwise an update-lock read that
+establishes it. An ordinary read may also supply this protection when the resolved configuration
+already retains its locks through transaction completion. Freshness or snapshot stability alone is insufficient. `OPTIMISTIC_FORCE_INCREMENT`
+continues to perform an immediate version increment.
+
+The `hibernate.transaction.concurrency` setting accepts a named baseline or an authoritative
+`TransactionConcurrency` instance. Instances are used as-is. Named baselines are resolved against available
+observations. If the required current-read or retained-protection guarantee is not established, the affected
+optimistic operation fails instead of relying on unknown behavior. In particular, TiDB's current-read
+strategy requires pessimistic transaction mode, which is probed when JDBC access is permitted.
+HSQLDB similarly probes its transaction-control model to establish whether ordinary reads are current.
+Its `for update` clause does not establish row-lock guarantees; unsupported optimistic operations still fail.
+Sybase ASE uses its retained shared-lock strategy when the isolation level honors `holdlock`.
+Spanner probes the JDBC read-lock mode to establish the retained protection provided by pessimistic
+serializable transactions; snapshot or unobserved modes do not imply the same guarantees.
+
+The old dialect-wide `readsWaitForUncommittedWrites()` metadata is deprecated. The descriptor-free current-read
+rendering methods have been removed. Custom locking support should supply a concurrency resolver and implement the
+rendering methods accepting `TransactionConcurrency`. Dialect-only `SimpleSelect` construction cannot
+request a current read; use the factory constructor so that the resolved descriptor is available.
 
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

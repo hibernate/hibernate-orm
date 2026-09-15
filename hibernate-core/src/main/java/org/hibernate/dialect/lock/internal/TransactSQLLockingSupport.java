@@ -4,6 +4,10 @@
  */
 package org.hibernate.dialect.lock.internal;
 
+
+import org.hibernate.dialect.lock.spi.TransactionConcurrencyResolver;
+import org.hibernate.dialect.lock.spi.TransactionConcurrency;
+
 import jakarta.persistence.Timeout;
 import org.hibernate.HibernateException;
 import org.hibernate.Timeouts;
@@ -158,10 +162,17 @@ public class TransactSQLLockingSupport extends LockingSupportParameterized {
 	}
 
 	@Override
-	public String renderCurrentReadTableHint(String tableExpression) {
-		return currentReadTableHint != null && !readsWaitForUncommittedWrites()
-				? currentReadTableHint
-				: super.renderCurrentReadTableHint( tableExpression );
+	public TransactionConcurrencyResolver getTransactionConcurrencyResolver() {
+		if ( this == SYBASE || this == SYBASE_ASE || this == SYBASE_LEGACY ) {
+			return SybaseASETransactionConcurrencyResolver.INSTANCE;
+		}
+		return SQL_SERVER_CURRENT_READ_HINT.equals( currentReadTableHint )
+				? SQLServerTransactionConcurrencyResolver.INSTANCE : StandardTransactionConcurrencyResolver.INSTANCE;
+	}
+
+	@Override
+	public String renderCurrentReadTableHint(String tableExpression, TransactionConcurrency concurrency) {
+		return currentReadTableHint != null ? currentReadTableHint : super.renderCurrentReadTableHint( tableExpression, concurrency );
 	}
 
 	@Override

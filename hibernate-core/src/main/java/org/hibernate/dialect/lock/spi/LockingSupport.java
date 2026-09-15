@@ -4,6 +4,8 @@
  */
 package org.hibernate.dialect.lock.spi;
 
+import org.hibernate.dialect.lock.internal.StandardTransactionConcurrencyResolver;
+
 
 import jakarta.persistence.Timeout;
 import org.hibernate.Incubating;
@@ -42,6 +44,86 @@ import static org.hibernate.SPI.Role.USE;
 @Incubating(since = "7.1", group = "dialect-locking")
 @SPI({ USE, IMPLEMENT, SUPPLY })
 public interface LockingSupport {
+	/// Resolves environment-specific concurrency facts without retaining or
+	/// modifying a connection. The resolved descriptor belongs to JdbcEnvironment,
+	/// not to this potentially shared dialect profile.
+	default TransactionConcurrencyResolver getTransactionConcurrencyResolver() {
+		return StandardTransactionConcurrencyResolver.INSTANCE;
+	}
+
+	/// Renders the table hint, if any, which makes a simple single-table
+	/// `select` a *current read*: a read which returns the latest committed
+	/// state of the selected rows, waiting for the outcome of any concurrent
+	/// uncommitted write to them, instead of returning state from a snapshot.
+	/// A conflicting write may instead cause the read to fail. A successful
+	/// current read does not itself guarantee that the state remains unchanged
+	/// until transaction completion.
+	/// Hibernate performs a current read for the version check it executes
+	/// just before commit for an entity locked in [LockMode#OPTIMISTIC] mode.
+	///
+	/// The caller uses the resolved [TransactionConcurrency] to decide whether
+	/// an ordinary [Operation#READ] already provides [ReadGuarantees#isCurrentRead()].
+	/// If so, the caller omits explicit current-read rendering. Otherwise, the
+	/// caller must establish that [Operation#CURRENT_READ] is supported and
+	/// provides that guarantee before invoking this method. This method renders
+	/// the explicit strategy; it does not repeat that decision.
+	///
+	/// By default, a [PessimisticLockStyle#TABLE_HINT] profile renders its
+	/// share-lock hint, and other profiles render nothing. A profile may
+	/// override this to render a cheaper form which waits for the outcome of
+	/// concurrent writes but retains no lock.
+	///
+	/// @param tableExpression The table reference the hint will follow
+	/// @param concurrency The resolved transaction concurrency descriptor
+	/// @return The table hint, or an empty string if this profile uses no table hint
+	///
+	/// @see #renderCurrentReadClause(TransactionConcurrency)
+	/// @see TransactionConcurrency#getReadGuarantees(Operation)
+	@SPI({ USE, IMPLEMENT })
+	default String renderCurrentReadTableHint(String tableExpression, TransactionConcurrency concurrency) {
+		if ( getMetadata().getPessimisticLockStyle() == PessimisticLockStyle.TABLE_HINT ) {
+			return TableLockHintRendererSupport.renderHint(
+					this,
+					LockMode.PESSIMISTIC_READ,
+					Timeouts.WAIT_FOREVER,
+					tableExpression
+			);
+		}
+		return "";
+	}
+
+	/// Renders the clause, if any, which, appended to a simple single-table
+	/// `select`, makes it a current read, as described for
+	/// [#renderCurrentReadTableHint(String, TransactionConcurrency)].
+	///
+	/// The caller consults the resolved [TransactionConcurrency] and omits
+	/// explicit current-read rendering when an ordinary [Operation#READ] is
+	/// already current. Otherwise, the caller must establish that
+	/// [Operation#CURRENT_READ] is supported and provides
+	/// [ReadGuarantees#isCurrentRead()] before invoking this method.
+	///
+	/// By default, a [PessimisticLockStyle#CLAUSE] profile renders its share-lock
+	/// clause, and other profiles render nothing. A profile may override this
+	/// to render a cheaper form which waits for the outcome of concurrent writes
+	/// but retains no lock.
+	///
+	/// @param concurrency The resolved transaction concurrency descriptor
+	/// @return The clause, or an empty string if this profile uses no locking clause
+	///
+	/// @see #renderCurrentReadTableHint(String, TransactionConcurrency)
+	/// @see TransactionConcurrency#getReadGuarantees(Operation)
+	@SPI({ USE, IMPLEMENT })
+	default String renderCurrentReadClause(TransactionConcurrency concurrency) {
+		if ( getMetadata().getPessimisticLockStyle() == PessimisticLockStyle.CLAUSE ) {
+			return getLockingClauseRenderer().render( new LockingClauseRequest(
+					PessimisticLockKind.SHARE,
+					Timeouts.WAIT_FOREVER,
+					List.of()
+			) );
+		}
+		return "";
+	}
+
 	/// The renderer for a complete statement-level locking clause. Return
 	/// [LockingClauseRenderer#NO_OP] when this profile does not use one.
 	///
@@ -80,57 +162,6 @@ public interface LockingSupport {
 		return FollowOnLockingPolicy.NEVER;
 	}
 
-	/// Renders the table hint, if any, which makes a simple single-table
-	/// `select` a *current read*: a read which returns the latest committed
-	/// state of the selected rows, waiting for the outcome of any concurrent
-	/// uncommitted write to them, instead of returning state from a snapshot.
-	/// Hibernate performs a current read for the version check it executes
-	/// just before commit for an entity locked in [LockMode#OPTIMISTIC] mode.
-	///
-	/// When plain reads [already wait][Metadata#readsWaitForUncommittedWrites]
-	/// nothing is rendered, since a plain read is already a current read.
-	/// Otherwise, by default, a [PessimisticLockStyle#TABLE_HINT] profile
-	/// renders its share-lock hint, and other profiles render nothing. A
-	/// profile may override this to render a cheaper form which waits for
-	/// the outcome of concurrent writes but retains no lock.
-	///
-	/// @param tableExpression The table reference the hint will follow
-	///
-	/// @since 8.0
-	/// @see #renderCurrentReadClause()
-	/// @see Metadata#readsWaitForUncommittedWrites()
-	@SPI(SUPPLY)
-	default String renderCurrentReadTableHint(String tableExpression) {
-		final Metadata metadata = getMetadata();
-		return !metadata.readsWaitForUncommittedWrites()
-			&& metadata.getPessimisticLockStyle() == PessimisticLockStyle.TABLE_HINT
-				? TableLockHintRendererSupport.renderHint(
-						this, LockMode.PESSIMISTIC_READ, Timeouts.WAIT_FOREVER, tableExpression )
-				: "";
-	}
-
-	/// Renders the clause, if any, which, appended to a simple single-table
-	/// `select`, makes it a current read, as described for
-	/// [#renderCurrentReadTableHint].
-	///
-	/// When plain reads [already wait][Metadata#readsWaitForUncommittedWrites]
-	/// nothing is rendered. Otherwise, by default, a [PessimisticLockStyle#CLAUSE]
-	/// profile renders its share-lock clause, and other profiles render nothing.
-	/// A profile may override this to render a cheaper form which waits for
-	/// the outcome of concurrent writes but retains no lock.
-	///
-	/// @since 8.0
-	/// @see #renderCurrentReadTableHint(String)
-	/// @see Metadata#readsWaitForUncommittedWrites()
-	@SPI(SUPPLY)
-	default String renderCurrentReadClause() {
-		final Metadata metadata = getMetadata();
-		return !metadata.readsWaitForUncommittedWrites()
-			&& metadata.getPessimisticLockStyle() == PessimisticLockStyle.CLAUSE
-				? getLockingClauseRenderer().render(
-						new LockingClauseRequest( PessimisticLockKind.SHARE, Timeouts.WAIT_FOREVER, List.of() ) )
-				: "";
-	}
 
 	/// Immutable capability metadata consistent with this profile's renderers and
 	/// strategies.
@@ -187,27 +218,12 @@ public interface LockingSupport {
 			return RowLockStrategy.NONE;
 		}
 
-		/// Whether an ordinary, non-locking `select` waits for the outcome of any
-		/// uncommitted write to the rows it reads, as it does on a database with
-		/// lock-based readers. A database with multiversion concurrency control,
-		/// or with "currently committed" semantics, instead returns the last
-		/// committed state of the row without waiting, and must report `false`.
+		/// Legacy dialect-wide assumption, unused by concurrency resolution and
+		/// current-read rendering.
 		///
-		/// Hibernate uses this to decide whether the version check it performs
-		/// just before commit for an entity locked in
-		/// [org.hibernate.LockMode#OPTIMISTIC] mode must be rendered as a
-		/// [current read][LockingSupport#renderCurrentReadClause], so that the
-		/// check waits for a concurrent writer of the row and sees the current
-		/// version rather than a snapshot. When plain reads already wait, the
-		/// check is a plain read.
-		///
-		/// Report `false` whenever the behavior depends on database configuration
-		/// which the Dialect cannot detect, for example `READ_COMMITTED_SNAPSHOT`
-		/// on SQL Server or `CUR_COMMIT` on DB2 LUW.
-		///
-		/// @since 8.0
-		/// @see LockingSupport#renderCurrentReadTableHint(String)
-		/// @see LockingSupport#renderCurrentReadClause()
+		/// @deprecated Inspect [ReadGuarantees#isCurrentRead()] on the factory's
+		/// [TransactionConcurrency] instead.
+		@Deprecated(since = "8.0", forRemoval = true)
 		default boolean readsWaitForUncommittedWrites() {
 			return true;
 		}

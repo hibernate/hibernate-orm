@@ -32,6 +32,11 @@ public final class StatelessLocking {
 			if ( protectsUntilCompletion( concurrency, Operation.UPDATE_LOCK_READ ) ) {
 				return LockMode.PESSIMISTIC_WRITE;
 			}
+			if ( protectsUntilCompletion( concurrency, Operation.READ ) ) {
+				// Keep a locking request so loaders bypass the second-level cache.
+				// The database provides protection even when the dialect renders no clause.
+				return LockMode.PESSIMISTIC_READ;
+			}
 			throw new HibernateException( "Stateless optimistic locking requires transaction-long row protection; no strategy established for "
 					+ concurrency.getName() );
 		}

@@ -41,7 +41,8 @@ An unsupported query is not an execution failure and may be compensated for by a
 All connections used by a factory must have a consistent concurrency configuration.
 The declaration does not configure a connection pool, does not replace `hibernate.connection.isolation`, and does not support session-specific overrides.
 If neither an ordinary read nor a dialect current-read strategy establishes the required guarantee, Hibernate rejects the affected optimistic version validation instead of relying on a potentially stale snapshot.
-Stateless optimistic locking requires a shared-lock or update-lock read that retains row protection through transaction completion.
+Stateless optimistic locking requires a read that retains row protection through transaction completion.
+Hibernate uses a shared-lock or update-lock read, or an ordinary read when the resolved configuration already guarantees that protection.
 A current read that provides only freshness, or a stable snapshot that permits concurrent modification, is insufficient for this purpose.
 
 When your application uses long transactions or conversations that span several database transactions,

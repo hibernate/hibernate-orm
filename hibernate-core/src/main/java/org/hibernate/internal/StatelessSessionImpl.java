@@ -1288,7 +1288,7 @@ public class StatelessSessionImpl
 
 	private void doRefresh(String entityName, Object entity, LockMode lockMode) {
 		if ( getSessionFactoryOptions().isJpaBootstrap()
-				&& getNullSafeLockMode( lockMode ) != LockMode.NONE ) {
+				&& lockMode != null && lockMode != LockMode.NONE ) {
 			checkTransactionNeededForUpdateOperation( "No active transaction" );
 		}
 		final var persister = getEntityPersister( entityName, entity );

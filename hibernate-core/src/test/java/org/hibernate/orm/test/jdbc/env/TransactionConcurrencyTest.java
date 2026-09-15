@@ -221,6 +221,7 @@ class TransactionConcurrencyTest {
 				.applySetting( JdbcSettings.ALLOW_METADATA_ON_BOOT, access )
 				.applySetting( JdbcSettings.DRIVER, "org.h2.Driver" )
 				.applySetting( JdbcSettings.URL, "jdbc:h2:mem:descriptor_override_" + access )
+				.applySetting( org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProvider.INIT_SQL, "" )
 				.applySetting( TransactionSettings.TRANSACTION_CONCURRENCY, declaration )
 				.build() ) {
 			assertThat( registry.requireService( JdbcEnvironment.class ).getTransactionConcurrency() )
@@ -524,6 +525,64 @@ class TransactionConcurrencyTest {
 		when( entry.getPersister().getCurrentVersion( entry.getId(), session ) ).thenReturn( 1 );
 		new EntityVerifyVersionProcess( entity ).doBeforeTransactionCompletion( session );
 		verify( entry.getPersister() ).getCurrentVersion( entry.getId(), session );
+	}
+
+	@Test
+	void spannerSerializableReadsUseObservedLockingMode() throws Exception {
+		for ( Dialect dialect : new Dialect[] { new org.hibernate.dialect.SpannerDialect(),
+				new org.hibernate.dialect.SpannerPostgreSQLDialect() } ) {
+			final var connection = mock( Connection.class );
+			final var statement = mock( Statement.class );
+			final var rows = mock( ResultSet.class );
+			when( connection.createStatement() ).thenReturn( statement );
+			when( statement.executeQuery( anyString() ) ).thenReturn( rows );
+			when( rows.next() ).thenReturn( true );
+			when( rows.getString( 1 ) ).thenReturn( "READ_LOCK_MODE_UNSPECIFIED" );
+			final var result = resolve( dialect, metadata( Connection.TRANSACTION_SERIALIZABLE ), connection, null, JdbcMetadataOnBoot.ALLOW );
+			assertThat( result.getReadGuarantees( READ ).isCurrentRead() ).isTrue();
+			assertThat( result.getBlockingDuration( READ, WRITE ) ).isEqualTo( TRANSACTION );
+			assertThat( sql( dialect, result ) ).doesNotContain( "for update" );
+			assertVersionValidationAllowed( result );
+			verify( statement ).executeQuery( dialect instanceof org.hibernate.dialect.SpannerPostgreSQLDialect
+					? "show spanner.read_lock_mode" : "show variable read_lock_mode" );
+			verify( statement ).close();
+			verify( rows ).close();
+			when( rows.getString( 1 ) ).thenReturn( "OPTIMISTIC" );
+			final var optimistic = resolve( dialect, metadata( Connection.TRANSACTION_SERIALIZABLE ), connection, null, JdbcMetadataOnBoot.ALLOW );
+			assertThat( optimistic.getReadGuarantees( READ ).isCurrentRead() ).isFalse();
+			assertThat( optimistic.getReadGuarantees( READ ).preventsConcurrentModification() ).isFalse();
+			assertThat( optimistic.supports( CURRENT_READ ) ).isFalse();
+			verify( connection, never() ).setTransactionIsolation( anyInt() );
+		}
+	}
+
+	@Test
+	void retainedOrdinaryReadPreservesCacheBypassingLockMode() {
+		final var session = mock( SharedSessionContractImplementor.class, RETURNS_DEEP_STUBS );
+		final var concurrency = TransactionConcurrencies.builder( "retained ordinary read" )
+				.read( READ, new Guarantees( true, true, true, true, true ) ).build();
+		when( session.getJdbcServices().getJdbcEnvironment().getTransactionConcurrency() ).thenReturn( concurrency );
+		assertThat( org.hibernate.internal.StatelessLocking.getEffectiveLockMode( org.hibernate.LockMode.OPTIMISTIC, session ) )
+				.isEqualTo( org.hibernate.LockMode.PESSIMISTIC_READ );
+	}
+
+	@ParameterizedTest
+	@EnumSource(JdbcMetadataOnBoot.class)
+	void spannerProbeRespectsAccessPolicy(JdbcMetadataOnBoot access) throws Exception {
+		final var connection = mock( Connection.class );
+		when( connection.createStatement() ).thenThrow( new SQLException( "unsupported" ) );
+		final var dialect = new org.hibernate.dialect.SpannerDialect();
+		if ( access == JdbcMetadataOnBoot.REQUIRE ) {
+			assertThatThrownBy( () -> resolve( dialect, metadata( Connection.TRANSACTION_SERIALIZABLE ), connection, null, access ) )
+					.isInstanceOf( TransactionConcurrencyResolutionException.class );
+		}
+		else {
+			assertThat( resolve( dialect, metadata( Connection.TRANSACTION_SERIALIZABLE ), connection, null, access )
+					.getReadGuarantees( READ ).isCurrentRead() ).isFalse();
+		}
+		if ( access == JdbcMetadataOnBoot.DISALLOW ) {
+			verifyNoInteractions( connection );
+		}
 	}
 
 	private static TransactionConcurrency resolve(

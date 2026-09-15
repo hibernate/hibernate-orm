@@ -29,6 +29,18 @@ public class EnvironmentSettingsPlugin implements Plugin<Settings> {
 		if ( ciNode != null ) {
 			settings.getExtensions().add( "ci.node", ciNode );
 		}
+
+		settings.getExtensions().getExtraProperties().set(
+				"isCiEnvironment", CiEnvironment.isCiEnvironment()
+		);
+		settings.getExtensions().getExtraProperties().set(
+				"populateRemoteBuildCache",
+				Boolean.parseBoolean( CiEnvironment.getSetting( "POPULATE_REMOTE_GRADLE_CACHE" ).orElse( "false" ) )
+		);
+		settings.getExtensions().getExtraProperties().set(
+				"useRemoteCache",
+				!Boolean.parseBoolean( CiEnvironment.getSetting( "DISABLE_REMOTE_GRADLE_CACHE" ).orElse( "false" ) )
+		);
 	}
 
 	private static String getP(Settings settings, String key) {

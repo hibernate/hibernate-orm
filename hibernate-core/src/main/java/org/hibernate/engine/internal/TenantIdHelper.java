@@ -7,6 +7,7 @@ package org.hibernate.engine.internal;
 import java.sql.SQLException;
 
 import org.hibernate.LockMode;
+import org.hibernate.jdbc.Expectation;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
@@ -33,13 +34,15 @@ import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.SimpleSelect;
 import org.hibernate.sql.spi.mutation.MutationOperation;
+import org.hibernate.sql.spi.mutation.MutationType;
+import org.hibernate.sql.spi.mutation.jdbc.PreparableMutationOperation;
 import org.hibernate.type.Type;
 
 import static org.hibernate.generator.EventType.INSERT;
 import static java.util.Collections.singletonList;
 
 /**
- * Tenant ownership checks for mutations which start with an unloaded or detached entity.
+ * Tenant ownership checks for entity mutations.
  */
 public final class TenantIdHelper {
 	private TenantIdHelper() {
@@ -127,6 +130,31 @@ public final class TenantIdHelper {
 	public static boolean isRoot(SharedSessionContractImplementor session) {
 		final var resolver = session.getFactory().getCurrentTenantIdentifierResolver();
 		return resolver != null && resolver.isRoot( session.getTenantIdentifierValue() );
+	}
+
+	public static boolean needsMultiTableUpdateCheck(
+			EntityPersister persister, SharedSessionContractImplementor session) {
+		return persister.hasMultipleTables() && !isRoot( session ) && tenantIdMapping( persister ) != null;
+	}
+
+	/**
+	 * Whether successful execution of this update establishes and locks tenant ownership.
+	 * Custom SQL and optional row counts cannot provide this guarantee.
+	 */
+	public static boolean checksTenantId(EntityPersister persister, MutationOperation operation) {
+		if ( operation instanceof PreparableMutationOperation preparable
+				&& operation.getMutationType() == MutationType.UPDATE
+				&& !operation.getTableDetails().isOptional()
+				&& operation.getTableDetails().getUpdateDetails().getCustomSql() == null
+				&& preparable.getExpectation() instanceof Expectation.RowCount ) {
+			final var tenantMapping = tenantIdMapping( persister );
+			if ( tenantMapping != null ) {
+				final var selectable = tenantMapping.getSelectable( 0 );
+				return persister.physicalTableNameForMutation( selectable ).equals( operation.getTableDetails().getTableName() )
+					&& operation.findValueDescriptor( selectable.getSelectionExpression(), ParameterUsage.TENANT ) != null;
+			}
+		}
+		return false;
 	}
 
 	/**

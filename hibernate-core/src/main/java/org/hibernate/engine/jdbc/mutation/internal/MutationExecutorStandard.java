@@ -11,6 +11,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import org.hibernate.engine.internal.TenantIdHelper;
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
 import org.hibernate.engine.jdbc.batch.spi.GroupedBatch;
 import org.hibernate.engine.jdbc.batch.spi.StaleStateMapper;
@@ -22,9 +23,11 @@ import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementGroup;
 import org.hibernate.engine.jdbc.mutation.spi.BatchKeyAccess;
 import org.hibernate.engine.jdbc.mutation.spi.JdbcValueDescriptorAccess;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.values.GeneratedValues;
 import org.hibernate.generator.values.GeneratedValuesMutationDelegate;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.mutation.EntityMutationTarget;
 import org.hibernate.sql.model.EntityMutationOperationGroup;
 import org.hibernate.sql.spi.mutation.MutationOperation;
@@ -88,10 +91,12 @@ public class MutationExecutorStandard extends AbstractMutationExecutor implement
 		List<SelfExecutingUpdateOperation> selfExecutingMutations = null;
 
 		boolean hasAnyNonBatchedJdbcOperations = false;
+		boolean hasSelfExecutingOperations = false;
 
 		for ( int i = mutationOperationGroup.getNumberOfOperations() - 1; i >= 0; i-- ) {
 			final MutationOperation operation = mutationOperationGroup.getOperation( i );
 			if ( operation instanceof SelfExecutingUpdateOperation selfExecutingUpdateOperation ) {
+				hasSelfExecutingOperations = true;
 				if ( selfExecutingMutations == null ) {
 					selfExecutingMutations = new ArrayList<>();
 				}
@@ -102,7 +107,9 @@ public class MutationExecutorStandard extends AbstractMutationExecutor implement
 				final TableMapping tableDetails = operation.getTableDetails();
 				final boolean canBeBatched;
 
-				if ( tableDetails.isIdentifierTable() && hasAnyNonBatchedJdbcOperations ) {
+				if ( tableDetails.isIdentifierTable()
+						&& ( hasAnyNonBatchedJdbcOperations
+								|| hasSelfExecutingOperations && requiresImmediateTenantCheck( operation, session ) ) ) {
 					canBeBatched = false;
 				}
 				else {
@@ -173,9 +180,19 @@ public class MutationExecutorStandard extends AbstractMutationExecutor implement
 		}
 	}
 
+	private boolean requiresImmediateTenantCheck(MutationOperation operation, SharedSessionContractImplementor session) {
+		// A managed update may rely on this statement to establish tenant ownership.
+		// Execute and check it before the self-executing secondary-table mutations.
+		// Stateless mutations already check ownership before reaching this executor.
+		return session instanceof SessionImplementor
+			&& mutationOperationGroup.getMutationTarget() instanceof EntityPersister persister
+			&& TenantIdHelper.needsMultiTableUpdateCheck( persister, session )
+			&& TenantIdHelper.checksTenantId( persister, operation );
+	}
+
 	//Used by Hibernate Reactive
 	protected PreparedStatementGroup getBatchedPreparedStatementGroup() {
-		return this.batch != null ? this.batch.getStatementGroup() : null;
+		return batch == null ? null : batch.getStatementGroup();
 	}
 
 	//Used by Hibernate Reactive

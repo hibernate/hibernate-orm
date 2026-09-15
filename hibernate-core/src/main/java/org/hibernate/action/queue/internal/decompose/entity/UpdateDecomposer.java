@@ -12,6 +12,7 @@ import org.hibernate.action.internal.EntityUpdateAction;
 import org.hibernate.action.queue.spi.MutationKind;
 import org.hibernate.action.queue.spi.StatementShapeKey;
 import org.hibernate.action.queue.spi.bind.PostExecutionCallback;
+import org.hibernate.action.queue.spi.bind.PreExecutionCallback;
 import org.hibernate.action.queue.internal.decompose.collection.DecompositionSupport;
 import org.hibernate.action.queue.spi.bind.GeneratedValuesCollector;
 import org.hibernate.action.queue.spi.decompose.DecompositionContext;
@@ -23,6 +24,7 @@ import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.event.spi.PreUpdateEvent;
@@ -126,6 +128,63 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 
 	@Override
 	public void decompose(
+			EntityUpdateAction action,
+			int ordinalBase,
+			SharedSessionContractImplementor session,
+			DecompositionContext decompositionContext,
+			Consumer<FlushOperation> operationConsumer) {
+		if ( TenantIdHelper.needsMultiTableUpdateCheck( entityPersister, session ) ) {
+			final List<FlushOperation> operations = new ArrayList<>();
+			decomposeUpdate( action, ordinalBase, session, decompositionContext, operations::add );
+			applyTenantOwnershipCheck( action, operations );
+			operations.forEach( operationConsumer );
+		}
+		else {
+			decomposeUpdate( action, ordinalBase, session, decompositionContext, operationConsumer );
+		}
+	}
+
+	private void applyTenantOwnershipCheck(EntityUpdateAction action, List<FlushOperation> operations) {
+		final String tenantTable = entityPersister.physicalTableNameForMutation(
+				TenantIdHelper.tenantIdMapping( entityPersister ).getSelectable( 0 ) );
+		if ( operations.stream().noneMatch( operation -> operation.getKind() != MutationKind.NO_OP
+				&& !tenantTable.equals( operation.getTableExpression() ) ) ) {
+			return;
+		}
+		final var ownerUpdate = operations.stream()
+				.filter( operation -> operation.getKind() == MutationKind.UPDATE
+						&& TenantIdHelper.checksTenantId( entityPersister, operation.getJdbcOperation() ) )
+				.findFirst().orElse( null );
+		if ( ownerUpdate != null ) {
+			for ( var operation : operations ) {
+				if ( operation.getKind() != MutationKind.NO_OP && operation != ownerUpdate ) {
+					operation.setExecutionPrerequisite( ownerUpdate );
+				}
+			}
+			return;
+		}
+		final PreExecutionCallback ownershipCheck = new PreExecutionCallback() {
+			private boolean checked;
+
+			@Override
+			public boolean beforeExecution(SessionImplementor session) {
+				if ( !checked ) {
+					TenantIdHelper.checkTenantId( action.getId(), entityPersister, session, false );
+					checked = true;
+				}
+				return true;
+			}
+		};
+		for ( var operation : operations ) {
+			if ( operation.getKind() != MutationKind.NO_OP ) {
+				final var previous = operation.getPreExecutionCallback();
+				operation.setPreExecutionCallback( previous == null ? ownershipCheck : session ->
+						previous.beforeExecution( session ) && ownershipCheck.beforeExecution( session ) );
+			}
+		}
+	}
+
+	private void decomposeUpdate(
 			EntityUpdateAction action,
 			int ordinalBase,
 			SharedSessionContractImplementor session,

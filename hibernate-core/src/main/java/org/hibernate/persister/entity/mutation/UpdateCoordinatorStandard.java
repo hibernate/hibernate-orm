@@ -23,11 +23,13 @@ import org.hibernate.engine.jdbc.batch.spi.BatchKey;
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.MutationExecutor;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
+import org.hibernate.engine.jdbc.mutation.TableInclusionChecker;
 import org.hibernate.engine.jdbc.mutation.internal.MutationQueryOptions;
 import org.hibernate.engine.jdbc.mutation.internal.NoBatchKeyAccess;
 import org.hibernate.engine.jdbc.mutation.spi.BatchKeyAccess;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.generator.EventType;
@@ -886,6 +888,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			Object[] oldValues,
 			UpdateValuesAnalysisImpl valuesAnalysis,
 			SharedSessionContractImplementor session) {
+		checkTenantIdBeforeUpdate( id, staticUpdateGroup, valuesAnalysis.tablesNeedingUpdate::contains, session );
 
 		final var mutationExecutor = executor( session, staticUpdateGroup, false );
 
@@ -1163,6 +1166,11 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		);
 
 		// and then execute them
+		final TableInclusionChecker inclusionChecker = tableMapping ->
+				tableMapping.isOptional() && !valuesAnalysis.tablesWithNonNullValues.contains( tableMapping )
+						? valuesAnalysis.dirtyAttributeIndexes.length > 0
+						: valuesAnalysis.tablesNeedingUpdate.contains( tableMapping );
+		checkTenantIdBeforeUpdate( id, dynamicUpdateGroup, inclusionChecker, session );
 
 		final var mutationExecutor = executor( session, dynamicUpdateGroup, true );
 
@@ -1189,11 +1197,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			return mutationExecutor.execute(
 					entity,
 					valuesAnalysis,
-					tableMapping ->
-							tableMapping.isOptional() && !valuesAnalysis.tablesWithNonNullValues.contains( tableMapping )
-									// the table is optional, and we have null values for all of its columns
-									? valuesAnalysis.dirtyAttributeIndexes.length > 0
-									: valuesAnalysis.tablesNeedingUpdate.contains( tableMapping ),
+					inclusionChecker,
 					(statementDetails, affectedRowCount, batchPosition) ->
 							resultCheck( id, statementDetails, affectedRowCount, batchPosition ),
 					session,
@@ -1209,6 +1213,32 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			SharedSessionContractImplementor session, MutationOperationGroup group, boolean dynamicUpdate) {
 		return mutationExecutorService
 				.createExecutor( resolveBatchKeyAccess( dynamicUpdate, session ), group, session );
+	}
+
+	private void checkTenantIdBeforeUpdate(
+			Object id, MutationOperationGroup group, TableInclusionChecker inclusionChecker,
+			SharedSessionContractImplementor session) {
+		final var persister = entityPersister();
+		// Stateless mutations already check stored ownership before reaching this coordinator.
+		if ( session instanceof SessionImplementor && TenantIdHelper.needsMultiTableUpdateCheck( persister, session ) ) {
+			final String tenantTable = persister.physicalTableNameForMutation(
+					TenantIdHelper.tenantIdMapping( persister ).getSelectable( 0 ) );
+			boolean updatesOtherTable = false;
+			for ( int i = 0; i < group.getNumberOfOperations(); i++ ) {
+				final var operation = group.getOperation( i );
+				if ( inclusionChecker.include( operation.getTableDetails() ) ) {
+					// The legacy executor executes and checks the identifier-table update first.
+					if ( operation.getTableDetails().isIdentifierTable() && TenantIdHelper.checksTenantId( persister, operation ) ) {
+						return;
+					}
+					updatesOtherTable |= !tenantTable.equals( operation.getTableDetails().getTableName() );
+				}
+			}
+			if ( updatesOtherTable ) {
+				session.getJdbcCoordinator().executeBatch();
+				TenantIdHelper.checkTenantId( id, persister, session, false );
+			}
+		}
 	}
 
 	private MutationExecutor updateVersionExecutor(

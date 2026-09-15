@@ -11,6 +11,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.MappedSuperclass;
+import jakarta.persistence.OptimisticLockException;
 import jakarta.persistence.PersistenceException;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
@@ -115,6 +116,27 @@ class TenantIdCustomSqlTest {
 	static Stream<Arguments> versionIncrements() {
 		return Stream.of( Mapping.VERSIONED_LEGACY, Mapping.VERSIONED_TENANT ).flatMap( mapping ->
 				Stream.of( false, true ).map( root -> Arguments.of( mapping, root ) ) );
+	}
+
+	static Stream<Arguments> staleVersions() {
+		return Stream.of( Mapping.VERSIONED_LEGACY, Mapping.VERSIONED_TENANT ).flatMap( mapping ->
+				Stream.of( false, true ).map( delete -> Arguments.of( mapping, delete ) ) );
+	}
+
+	@ParameterizedTest
+	@MethodSource("staleVersions")
+	void versionRestrictionIsRequiredWithOrWithoutTenantParameter(Mapping mapping, boolean delete, SessionFactoryScope scope) {
+		final VersionedBase item = (VersionedBase) mapping.constructor.get();
+		scope.inTransaction( session -> session.persist( item ) );
+		scope.inTransaction( session -> session.createNativeMutationQuery(
+				"update " + item.getClass().getAnnotation( Table.class ).name() + " set version=version+1 where id=1" )
+				.executeUpdate() );
+		assertThrows( OptimisticLockException.class, () -> mutate( scope, "mine", true, item, delete ) );
+		scope.inTransaction( session -> {
+			final var stored = session.find( item.getClass(), item.id );
+			assertEquals( "original", stored.name );
+			assertEquals( 1, stored.version );
+		} );
 	}
 
 	@ParameterizedTest

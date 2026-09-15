@@ -62,6 +62,7 @@ public class FlushOperation implements OperationResultChecker {
 	// remove the entity from persistence context (e.g., DELETE operations)
 	private PostExecutionCallback postExecutionCallback;
 	private PreExecutionCallback preExecutionCallback;
+	private FlushOperation executionPrerequisite;
 	private OperationExecutionMonitor executionMonitor;
 	private boolean executionSkipped;
 	private CollectionMutationCompletion collectionMutationCompletion;
@@ -264,6 +265,15 @@ public class FlushOperation implements OperationResultChecker {
 
 	public PreExecutionCallback getPreExecutionCallback() {
 		return preExecutionCallback;
+	}
+
+	/// An operation whose execution and result checking must precede this operation.
+	public FlushOperation getExecutionPrerequisite() {
+		return executionPrerequisite;
+	}
+
+	public void setExecutionPrerequisite(FlushOperation executionPrerequisite) {
+		this.executionPrerequisite = executionPrerequisite;
 	}
 
 	public OperationExecutionMonitor getExecutionMonitor() {

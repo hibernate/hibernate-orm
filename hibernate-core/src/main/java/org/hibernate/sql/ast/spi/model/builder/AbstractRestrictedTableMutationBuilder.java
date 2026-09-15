@@ -77,6 +77,8 @@ public abstract class AbstractRestrictedTableMutationBuilder<O extends MutationO
 	/**
 	 * Custom SQL may use the original parameter list or append the session tenant.
 	 * Remove the tenant descriptor as well as its restriction when it is omitted.
+	 * The count cannot identify omitted or reordered non-tenant parameters:
+	 * the custom SQL must preserve the original parameter list and its order.
 	 */
 	protected void adjustCustomSqlTenantRestriction(TableMapping.MutationDetails details, int parameterCount) {
 		if ( optimisticLockBindings.stream().anyMatch( binding -> binding instanceof TenantIdColumnValueBinding ) ) {

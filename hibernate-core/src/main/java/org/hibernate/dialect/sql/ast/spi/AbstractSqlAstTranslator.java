@@ -1770,8 +1770,14 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			}
 		}
 		else if ( plan instanceof InsertConflictRenderingPlan.Merge ) {
-			if ( request.action() != InsertConflictAction.DO_UPDATE ) {
-				throw new IllegalQueryOperationException( "A merge conflict plan requires a do-update action" );
+			if ( request.action() == InsertConflictAction.DO_NOTHING ) {
+				if ( !request.hasConstraintColumns() ){
+					throw new IllegalQueryOperationException(
+							"A merge conflict plan requires constraint columns for the do-nothing action" );
+				}
+			}
+			else if ( request.action() != InsertConflictAction.DO_UPDATE ) {
+				throw new IllegalQueryOperationException( "A merge conflict plan requires a do-nothing action with constraint columns or do-update action" );
 			}
 			if ( request.constraintName() != null ) {
 				throw new IllegalQueryOperationException( "Merge conflict handling does not support a constraint name" );

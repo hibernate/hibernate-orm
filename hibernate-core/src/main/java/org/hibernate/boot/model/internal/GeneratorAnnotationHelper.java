@@ -16,7 +16,6 @@ import org.hibernate.boot.model.relational.ExportableProducer;
 import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.annotations.internal.GenericGeneratorAnnotation;
 import org.hibernate.boot.models.spi.GenericGeneratorRegistration;
-import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.generator.AnnotationBasedGenerator;
@@ -32,9 +31,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.models.spi.AnnotationDescriptor;
 import org.hibernate.models.spi.ClassDetails;
-import org.hibernate.models.spi.ClassDetailsRegistry;
 import org.hibernate.models.spi.MemberDetails;
-import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.type.descriptor.java.UuidCapableJavaType;
 
 import java.lang.annotation.Annotation;
@@ -54,7 +51,6 @@ import static org.hibernate.id.IdentifierGenerator.GENERATOR_NAME;
 import static org.hibernate.id.IdentifierGenerator.ENTITY_NAME;
 import static org.hibernate.id.IdentifierGenerator.JPA_ENTITY_NAME;
 import static org.hibernate.id.OptimizableGenerator.INCREMENT_PARAM;
-import static org.hibernate.internal.util.StringHelper.qualifier;
 
 /**
  * Helper for dealing with generators defined via annotations
@@ -131,47 +127,32 @@ public class GeneratorAnnotationHelper {
 		}
 
 		// lastly, on the package
-		final var packageInfo = locatePackageInfoDetails( idMember.getDeclaringType(), context );
+		final var packageInfo = idMember.getDeclaringType().getPackage();
 		if ( packageInfo != null ) {
-			for ( A generatorAnnotation:
-					packageInfo.getRepeatedAnnotationUsages( generatorAnnotationType, modelsContext ) ) {
-				if ( nameExtractor != null ) {
-					final String registrationName = nameExtractor.apply( generatorAnnotation );
-					if ( registrationName.isEmpty() ) {
-						if ( possibleMatch == null ) {
-							possibleMatch = generatorAnnotation;
+			// MissingPackageInfoDetails.getRepeatedAnnotationUsages() may return null
+			final var packageAnnotations =
+					packageInfo.getRepeatedAnnotationUsages( generatorAnnotationType, modelsContext );
+			if ( packageAnnotations != null ) {
+				for ( A generatorAnnotation : packageAnnotations ) {
+					if ( nameExtractor != null ) {
+						final String registrationName = nameExtractor.apply( generatorAnnotation );
+						if ( registrationName.isEmpty() ) {
+							if ( possibleMatch == null ) {
+								possibleMatch = generatorAnnotation;
+							}
+						}
+						else if ( registrationName.equals( matchName ) ) {
+							return generatorAnnotation;
 						}
 					}
-					else if ( registrationName.equals( matchName ) ) {
+					else {
 						return generatorAnnotation;
 					}
-				}
-				else {
-					return generatorAnnotation;
 				}
 			}
 		}
 
 		return possibleMatch;
-	}
-
-	public static ClassDetails locatePackageInfoDetails(ClassDetails classDetails, MetadataBuildingContext buildingContext) {
-		return locatePackageInfoDetails( classDetails, buildingContext.getBootstrapContext().getModelsContext() );
-	}
-
-	public static ClassDetails locatePackageInfoDetails(ClassDetails classDetails, ModelsContext modelContext) {
-		return locatePackageInfoDetails( classDetails, modelContext.getClassDetailsRegistry() );
-	}
-
-	public static ClassDetails locatePackageInfoDetails(ClassDetails classDetails, ClassDetailsRegistry classDetailsRegistry) {
-		final String packageInfoFqn = qualifier( classDetails.getName() ) + ".package-info";
-		try {
-			return classDetailsRegistry.resolveClassDetails( packageInfoFqn );
-		}
-		catch (ClassLoadingException e) {
-			// means there is no package-info
-			return null;
-		}
 	}
 
 	public static void handleSequenceGenerator(

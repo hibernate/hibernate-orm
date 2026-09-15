@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Properties;
 
 import org.hibernate.jpa.HibernatePersistenceProvider;
+import org.jspecify.annotations.NonNull;
 
 public class PersistenceUnitInfoAdapter implements PersistenceUnitInfo {
 	private final Properties properties;
@@ -85,8 +86,28 @@ public class PersistenceUnitInfoAdapter implements PersistenceUnitInfo {
 	}
 
 	@Override
+	public @NonNull List<String> getManagedPackageDescriptors() {
+		return Collections.emptyList();
+	}
+
+	@Override
+	public @NonNull List<String> getManagedModuleDescriptors() {
+		return Collections.emptyList();
+	}
+
+	@Override
 	public List<String> getAllClassNames() {
 		return getManagedClassNames();
+	}
+
+	@Override
+	public @NonNull List<String> getAllPackageDescriptors() {
+		return Collections.emptyList();
+	}
+
+	@Override
+	public @NonNull List<String> getAllModuleDescriptors() {
+		return Collections.emptyList();
 	}
 
 	@Override

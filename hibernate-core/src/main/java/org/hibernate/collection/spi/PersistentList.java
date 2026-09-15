@@ -500,14 +500,17 @@ public class PersistentList<E> extends AbstractPersistentCollection<E> implement
 		// Single pass through current collection
 		for (int currentPos = 0; currentPos < list.size(); currentPos++) {
 			final Object element = list.get(currentPos);
+			if (element == null) {
+				// a null element has no row of its own; it only leaves a gap in the order column
+				continue;
+			}
+
 			int snapshotPos = -1;
-			if ( element != null ) {
-				for ( int i = 0; i < snapshot.size(); i++ ) {
-					if ( !processedSnapshotElements[i]
-							&& elementType.isEqual( snapshot.get( i ), element, persister.getFactory() ) ) {
-						snapshotPos = i;
-						break;
-					}
+			for ( int i = 0; i < snapshot.size(); i++ ) {
+				if ( !processedSnapshotElements[i]
+						&& elementType.isEqual( snapshot.get( i ), element, persister.getFactory() ) ) {
+					snapshotPos = i;
+					break;
 				}
 			}
 

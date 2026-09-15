@@ -586,7 +586,7 @@ public class StatelessSessionImpl
 		checkNotReadOnly();
 		final var persister = getEntityPersister( entityName, entity );
 		final Object id = persister.getIdentifier( entity, this );
-		TenantIdHelper.checkIdentifierTenant( id, persister, this );
+		TenantIdHelper.validateTenantId( entity, id, persister, this );
 		if ( persister.hasMultipleTables() || persister.hasOwnedCollections() ) {
 			TenantIdHelper.checkTenantId( id, persister, this, false );
 		}
@@ -689,7 +689,7 @@ public class StatelessSessionImpl
 		checkNotReadOnly();
 		final var persister = getEntityPersister( entityName, entity );
 		final Object id = persister.getIdentifier( entity, this );
-		TenantIdHelper.checkIdentifierTenant( id, persister, this );
+		TenantIdHelper.validateTenantId( entity, id, persister, this );
 		if ( persister.hasMultipleTables() || persister.hasOwnedCollections() ) {
 			TenantIdHelper.checkTenantId( id, persister, this, false );
 		}
@@ -803,11 +803,11 @@ public class StatelessSessionImpl
 		TenantIdHelper.initializeIdentifierTenant( entity, persister, this );
 		final Object id = idToUpsert( entity, persister );
 		TenantIdHelper.checkIdentifierTenant( id, persister, this );
+		final Object[] state = persister.getValues( entity );
+		TenantIdHelper.initializeTenantId( entity, state, persister, this );
 		if ( persister.hasMultipleTables() || persister.hasOwnedCollections() ) {
 			TenantIdHelper.checkTenantId( id, persister, this, true );
 		}
-		final Object[] state = persister.getValues( entity );
-		TenantIdHelper.initializeTenantId( entity, state, persister, this );
 		if ( !firePreUpsert(entity, id, state, persister) ) {
 			runInterceptorCallback(
 					() -> getInterceptor().onUpsert( entity, id, state, persister.getPropertyNames(), persister.getPropertyTypes() ) );

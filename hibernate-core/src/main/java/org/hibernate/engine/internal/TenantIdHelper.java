@@ -80,25 +80,32 @@ public final class TenantIdHelper {
 			Object id, EntityPersister persister, SharedSessionContractImplementor session) {
 		if ( !isRoot( session ) ) {
 			final var generator = persister.getGenerator();
-			if ( generator instanceof TenantIdGeneration ) {
-				checkIdentifierTenantValue( id, id, persister, session );
+			if ( generator instanceof TenantIdGeneration tenantGenerator ) {
+				tenantGenerator.validateTenantId( session, id );
 			}
 			else if ( id != null && generator instanceof CompositeNestedGeneratedValueGenerator composite ) {
 				final var type = (ComponentType) persister.getIdentifierType();
 				for ( var plan : composite.getGenerationPlans() ) {
-					if ( plan.getGenerator() instanceof TenantIdGeneration ) {
-						checkIdentifierTenantValue( id,
-								type.getPropertyValue( id, plan.getPropertyIndex(), session ), persister, session );
+					if ( plan.getGenerator() instanceof TenantIdGeneration tenantGenerator ) {
+						tenantGenerator.validateTenantId( session,
+								type.getPropertyValue( id, plan.getPropertyIndex(), session ) );
 					}
 				}
 			}
 		}
 	}
 
-	private static void checkIdentifierTenantValue(
-			Object id, Object tenant, EntityPersister persister, SharedSessionContractImplementor session) {
-		if ( !session.getFactory().getTenantIdentifierJavaType().areEqual( tenant, session.getTenantIdentifierValue() ) ) {
-			throw new StaleObjectStateException( persister.getEntityName(), id );
+	/**
+	 * Validate the detached tenant value before any SQL or changes to the entity state.
+	 */
+	public static void validateTenantId(
+			Object entity, Object id, EntityPersister persister, SharedSessionContractImplementor session) {
+		checkIdentifierTenant( id, persister, session );
+		final var tenantMapping = tenantIdMapping( persister );
+		if ( tenantMapping != null ) {
+			final int position = tenantMapping.getStateArrayPosition();
+			final var generator = (TenantIdGeneration) persister.getGenerators()[position];
+			generator.validateTenantId( session, persister.getValue( entity, position ) );
 		}
 	}
 

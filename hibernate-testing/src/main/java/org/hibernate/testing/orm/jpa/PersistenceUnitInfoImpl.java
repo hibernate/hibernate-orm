@@ -19,6 +19,7 @@ import jakarta.persistence.PersistenceUnitTransactionType;
 import javax.sql.DataSource;
 
 import org.hibernate.jpa.HibernatePersistenceProvider;
+import org.jspecify.annotations.NonNull;
 
 import static java.util.Collections.emptyList;
 
@@ -47,6 +48,8 @@ public class PersistenceUnitInfoImpl implements PersistenceUnitInfo {
 	private List<String> managedClassNames;
 	private boolean excludeUnlistedClasses;
 	private ClassLoader classLoader;
+	public List<String> managedPackageDescriptors = List.of();
+	public List<String> managedModuleDescriptors = List.of();
 
 	public PersistenceUnitInfoImpl(String name) {
 		this.name = name;
@@ -139,8 +142,28 @@ public class PersistenceUnitInfoImpl implements PersistenceUnitInfo {
 	}
 
 	@Override
+	public @NonNull List<String> getManagedPackageDescriptors() {
+		return managedPackageDescriptors;
+	}
+
+	@Override
+	public @NonNull List<String> getManagedModuleDescriptors() {
+		return managedModuleDescriptors;
+	}
+
+	@Override
 	public List<String> getAllClassNames() {
 		return getManagedClassNames();
+	}
+
+	@Override
+	public @NonNull List<String> getAllPackageDescriptors() {
+		return managedPackageDescriptors;
+	}
+
+	@Override
+	public @NonNull List<String> getAllModuleDescriptors() {
+		return managedModuleDescriptors;
 	}
 
 	public void applyManagedClassNames(String... managedClassNames) {

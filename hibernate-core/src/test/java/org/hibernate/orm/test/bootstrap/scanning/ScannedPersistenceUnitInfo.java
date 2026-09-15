@@ -19,6 +19,7 @@ import org.hibernate.boot.scan.spi.ScanningResult;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jpa.boot.internal.ParsedPersistenceXmlDescriptor;
 import org.hibernate.scan.jandex.IndexBuildingScanner;
+import org.jspecify.annotations.NonNull;
 
 import javax.sql.DataSource;
 import java.io.InputStream;
@@ -31,6 +32,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
+import static java.util.Collections.emptyList;
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 import static org.hibernate.internal.util.collections.CollectionHelper.combine;
 import static org.hibernate.orm.test.bootstrap.scanning.ScanningContextTestingImpl.SCANNING_CONTEXT;
@@ -142,8 +144,28 @@ public class ScannedPersistenceUnitInfo implements PersistenceUnitInfo {
 	}
 
 	@Override
+	public @NonNull List<String> getManagedPackageDescriptors() {
+		return emptyList();
+	}
+
+	@Override
+	public @NonNull List<String> getManagedModuleDescriptors() {
+		return emptyList();
+	}
+
+	@Override
 	public List<String> getAllClassNames() {
 		return combine( getManagedClassNames(), discoveredClasses );
+	}
+
+	@Override
+	public @NonNull List<String> getAllPackageDescriptors() {
+		return emptyList();
+	}
+
+	@Override
+	public @NonNull List<String> getAllModuleDescriptors() {
+		return emptyList();
 	}
 
 	@Override

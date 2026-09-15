@@ -7,7 +7,6 @@ package org.hibernate.orm.test.bootstrap;
 import java.io.File;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -50,6 +49,7 @@ import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.hibernate.testing.orm.junit.JiraKey;
 
+import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
@@ -67,6 +67,8 @@ import jakarta.persistence.ValidationMode;
 import jakarta.persistence.spi.ClassTransformer;
 import jakarta.persistence.spi.PersistenceUnitInfo;
 import jakarta.persistence.PersistenceUnitTransactionType;
+
+import static java.util.Collections.emptyList;
 
 /**
  * @author Vlad Mihalcea
@@ -668,12 +670,12 @@ public class BootstrapTest {
 
 		@Override
 		public List<String> getMappingFileNames() {
-			return Collections.emptyList();
+			return emptyList();
 		}
 
 		@Override
 		public List<URL> getJarFileUrls() {
-			return Collections.emptyList();
+			return emptyList();
 		}
 
 		@Override
@@ -687,8 +689,28 @@ public class BootstrapTest {
 		}
 
 		@Override
+		public @NonNull List<String> getManagedPackageDescriptors() {
+			return emptyList();
+		}
+
+		@Override
+		public @NonNull List<String> getManagedModuleDescriptors() {
+			return emptyList();
+		}
+
+		@Override
 		public List<String> getAllClassNames() {
 			return managedClassNames;
+		}
+
+		@Override
+		public @NonNull List<String> getAllPackageDescriptors() {
+			return emptyList();
+		}
+
+		@Override
+		public @NonNull List<String> getAllModuleDescriptors() {
+			return emptyList();
 		}
 
 		@Override

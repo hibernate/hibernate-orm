@@ -4,6 +4,12 @@
  */
 package org.hibernate.dialect.lock.internal;
 
+import org.hibernate.dialect.lock.spi.Operation;
+
+import org.hibernate.dialect.lock.spi.TransactionConcurrency;
+
+import org.hibernate.dialect.lock.spi.TransactionConcurrencyResolver;
+
 import jakarta.persistence.Timeout;
 import org.hibernate.HibernateException;
 import org.hibernate.dialect.lock.spi.RowLockStrategy;
@@ -41,6 +47,18 @@ public class CockroachLockingSupport
 		supportsLockingClause = !isLegacy;
 		rowLockStrategy = isLegacy ? RowLockStrategy.NONE : RowLockStrategy.TABLE;
 		supportsNoWait = !isLegacy;
+	}
+
+	@Override
+	public TransactionConcurrencyResolver getTransactionConcurrencyResolver() {
+		return new CockroachTransactionConcurrencyResolver( supportsLockingClause );
+	}
+
+	@Override
+	public String renderCurrentReadClause(TransactionConcurrency concurrency) {
+		return !supportsLockingClause ? ""
+				: concurrency.supports( Operation.SHARED_LOCK_READ )
+				? " for share" : " for update";
 	}
 
 	@Override

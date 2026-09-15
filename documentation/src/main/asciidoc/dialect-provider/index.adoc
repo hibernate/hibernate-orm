@@ -897,6 +897,11 @@ for the complete contracts.
 |`getLockingSupport()`, `getLockingClauseStrategy(...)`
 |Use the stable profile for capabilities and the per-request strategy for clause selection.
 
+|Transaction concurrency
+|`TransactionConcurrency`, `TransactionConcurrencyResolver`
+|`LockingSupport#getTransactionConcurrencyResolver()`
+|Resolve the factory's read guarantees and operation conflicts from database configuration and available bootstrap facts.
+
 |Entity locking
 |`EntityLockingStrategyFactory`
 |`getEntityLockingStrategyFactory()`
@@ -939,7 +944,8 @@ include::{provider-fixture-main-dir}/ExampleDialect.java[tags=custom-locking-str
 
 `Dialect#getLockingSupport()` supplies one cohesive, stable profile for the
 Dialect lifetime. Its metadata, clause renderer, table-hint renderer,
-completed-SQL rewriter, follow-on policy, and connection-timeout strategy must
+completed-SQL rewriter, follow-on policy, connection-timeout strategy, and
+transaction-concurrency resolver must
 describe the same database behavior. The profile and all reusable components
 must be immutable or thread-safe; per-query target collection belongs to the
 `LockingClauseStrategy` created for that translation.
@@ -948,7 +954,7 @@ Choose the narrowest supported approach:
 
 * Use a named `StandardLockingSupports` factory when extending a maintained
   database family. These factories preserve Hibernate's version thresholds and
-  coordinated syntax and timeout behavior.
+  coordinated syntax, timeout behavior, and concurrency resolution.
 * Use `StandardLockingSupports.simple(...)` when every timeout has one
   classification, or `parameterized(...)` when wait, no-wait, and skip-locked
   differ. These factories return the SPI interface and do not expose the
@@ -979,6 +985,108 @@ closing, and exception conversion. MySQL-compatible providers may use
 `StandardConnectionLockTimeoutStrategies.mysql(waitForeverValue)` when their
 only variation is the value representing an effectively unbounded wait.
 
+==== Resolving transaction concurrency
+
+link:{doc-javadoc-url}org/hibernate/dialect/lock/spi/TransactionConcurrency.html[`TransactionConcurrency`]
+describes database behavior for the factory's connections. Hibernate uses its
+answers when implementing lock modes, including optimistic version checks and
+stateless-session locking. JDBC isolation constants alone do not establish these
+answers: for example, SQL Server's read-committed behavior also depends on
+`READ_COMMITTED_SNAPSHOT`.
+
+Supply a provider-owned
+link:{doc-javadoc-url}org/hibernate/dialect/lock/spi/TransactionConcurrencyResolver.html[`TransactionConcurrencyResolver`]
+through `LockingSupport#getTransactionConcurrencyResolver()`, or use a
+`StandardLockingSupports.simple(...)` or `parameterized(...)` overload accepting
+a resolver. Named database-family factories already supply their associated
+resolvers. The default resolver is conservative; it does not infer database
+guarantees from the availability of locking syntax. The deprecated
+`LockingSupport.Metadata#readsWaitForUncommittedWrites()` flag does not supply
+the concurrency descriptor.
+
+The resolver is reusable, but its result belongs to the factory's
+`JdbcEnvironment` and is available from `JdbcEnvironment#getTransactionConcurrency()`.
+Do not store the resolved result on a potentially shared Dialect or locking
+profile. Return an immutable descriptor; `TransactionConcurrencies.builder(...)`
+is available for constructing one. Connection isolation and relevant database
+settings must remain consistent across the factory. This contract describes
+that configuration; it does not change connections or coordinate active sessions.
+
+===== Bootstrap and declarations
+
+Resolution runs with the connection already borrowed by bootstrap, or with a
+`null` connection when JDBC access is unavailable. Use the supplied metadata,
+established database facts, and any declaration to resolve behavior. Leave
+missing facts unknown. In particular, a database's default isolation does not
+prove which isolation the factory's connections use.
+
+When a connection is supplied and `JdbcMetadataOnBoot` permits access, query it
+for settings needed to distinguish configurations. Do not acquire another
+connection, retain or close the supplied connection, or change its settings.
+Close statements and result sets created by the resolver. A failed supported
+probe may leave facts unknown under `ALLOW`; under `REQUIRE`, it must fail
+resolution. A fact for which no probe is supported may remain unknown under
+either policy.
+
+`hibernate.transaction.concurrency`, defined by
+link:{doc-javadoc-url}org/hibernate/cfg/TransactionSettings.html#TRANSACTION_CONCURRENCY[`TransactionSettings.TRANSACTION_CONCURRENCY`],
+accepts a named declaration or a `TransactionConcurrency` instance. The setting's
+Javadoc lists the standard names and their meanings. Providers may document
+additional names. A name supplies otherwise unavailable facts, including when
+JDBC access is disabled; it must not override contradictory observations or
+established database facts. Reject invalid names, contradictions, and required
+probe failures with `TransactionConcurrencyResolutionException` so bootstrap
+fallback does not hide them.
+
+A supplied descriptor instance is authoritative: bootstrap uses it unchanged
+without invoking the resolver. Direct resolver calls receiving an instance must
+also return it unchanged without probing or validation. The caller is responsible
+for its accuracy and immutability. Neither form of declaration configures
+connection isolation.
+
+===== Operations, guarantees, and rendered SQL
+
+Describe actual database operations using `Operation`, independently of the
+Hibernate lock mode which requested them:
+
+* `READ` is an ordinary read under the configured isolation. It may itself
+  acquire locks or provide current committed state.
+* `CURRENT_READ` is the explicit strategy for reading current committed state,
+  resolving conflicting uncommitted writes before succeeding. It may instead
+  fail on a conflict, and need not retain a lock after the statement.
+* `SHARED_LOCK_READ` and `UPDATE_LOCK_READ` describe the actual row lock acquired.
+  Implementing `PESSIMISTIC_READ` with an update lock does not establish support
+  for `SHARED_LOCK_READ`.
+* `WRITE` modifies or deletes an existing row and has no read guarantees.
+
+`getBlockingDuration(precedingOperation, concurrentOperation)` describes how long
+protection established by the first operation can exclude the second operation
+in another transaction on the same existing row. Direction matters. This is a
+static database rule, not a measurement of active sessions or elapsed wait time.
+`UNKNOWN` and `CONDITIONAL` do not prove exclusion. Predicate locks, phantoms,
+schema locks, escalation, and incidental internal waits are outside this contract.
+
+Use `ReadGuarantees` to distinguish stable snapshot visibility, current committed
+state, prevention of concurrent modification, and a row lock retained until
+transaction completion. A stable snapshot or possible serialization failure
+does not establish protection against modification. Report only guarantees
+which Hibernate may rely on for the resolved configuration.
+
+Keep the explicit `CURRENT_READ` guarantees consistent with
+`LockingSupport#renderCurrentReadTableHint(String, TransactionConcurrency)` and
+`renderCurrentReadClause(TransactionConcurrency)`. Hibernate first checks whether
+ordinary `READ` already provides `isCurrentRead()`. Otherwise, it requires a
+supported `CURRENT_READ` with that guarantee before requesting the explicit
+strategy. The default renderers use the profile's share-lock hint or clause;
+override them when the database needs a different strategy. A cheaper hint which
+waits for writes but retains no lock must not advertise transaction-long protection.
+
+Provider tests should cover resolution with and without JDBC, named declarations
+and contradictions, authoritative descriptor instances, and optional versus
+required probe failures. Test configuration variants affecting concurrency, and
+verify the claimed read guarantees and directional conflicts using separate
+transactions against the database, including the SQL rendered for explicit reads.
+
 === Cross-strategy consistency
 
 Focused strategies remain independent, but some combinations must describe one
@@ -987,6 +1095,9 @@ valid database configuration.
 [cols="35,65",options="header"]
 |===
 |Supplied behavior |Must agree with
+
+|Transaction concurrency descriptor
+|The configured isolation and database settings, actual locks acquired, and current-read hints or clauses rendered by the locking profile.
 
 |Multi-table mutation profile
 |The selected CTE and local/global/persistent temporary-table capabilities.

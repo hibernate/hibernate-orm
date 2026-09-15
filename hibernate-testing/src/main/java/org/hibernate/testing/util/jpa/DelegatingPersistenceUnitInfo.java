@@ -10,6 +10,8 @@ import jakarta.persistence.ValidationMode;
 import jakarta.persistence.spi.ClassTransformer;
 import jakarta.persistence.spi.PersistenceUnitInfo;
 import jakarta.persistence.PersistenceUnitTransactionType;
+import org.jspecify.annotations.NonNull;
+
 import javax.sql.DataSource;
 import java.net.URL;
 import java.util.List;
@@ -78,8 +80,28 @@ public class DelegatingPersistenceUnitInfo implements PersistenceUnitInfo {
 	}
 
 	@Override
+	public @NonNull List<String> getManagedPackageDescriptors() {
+		return delegate.getManagedPackageDescriptors();
+	}
+
+	@Override
+	public @NonNull List<String> getManagedModuleDescriptors() {
+		return delegate.getManagedModuleDescriptors();
+	}
+
+	@Override
 	public List<String> getAllClassNames() {
 		return delegate.getAllClassNames();
+	}
+
+	@Override
+	public @NonNull List<String> getAllPackageDescriptors() {
+		return delegate.getAllPackageDescriptors();
+	}
+
+	@Override
+	public @NonNull List<String> getAllModuleDescriptors() {
+		return delegate.getAllModuleDescriptors();
 	}
 
 	@Override

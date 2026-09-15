@@ -13,6 +13,7 @@ import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.cascade.spi.CascadePoint;
 import org.hibernate.cascade.spi.CascadePropertySelection;
 import org.hibernate.cascade.spi.CascadeStyle;
+import org.hibernate.cascade.spi.CascadeStyles;
 import org.hibernate.cascade.spi.CascadingAction;
 import org.hibernate.cascade.spi.CascadingActions;
 import org.hibernate.cascade.spi.PropertySelectionKind;
@@ -192,6 +193,21 @@ public final class Cascade {
 			}
 			else {
 				entry = null;
+			}
+
+			final var identifierCascadeStyle = persister.getIdentifierCascadeStyle();
+			if ( identifierCascadeStyle != CascadeStyles.NONE
+				&& action.appliesTo( persister.getIdentifierType(), identifierCascadeStyle ) ) {
+				cascadeProperty(
+						context,
+						-1,
+						parent,
+						persister.getIdentifier( parent, eventSource ),
+						persister.getIdentifierType(),
+						identifierCascadeStyle,
+						persister.getIdentifierPropertyName(),
+						false
+				);
 			}
 
 			final Type[] types = persister.getPropertyTypes();

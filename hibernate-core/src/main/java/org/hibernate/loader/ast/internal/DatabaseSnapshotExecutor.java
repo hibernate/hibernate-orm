@@ -7,6 +7,7 @@ package org.hibernate.loader.ast.internal;
 import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
 
 import org.hibernate.LockOptions;
+import org.hibernate.Filter;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -38,6 +39,7 @@ import java.util.List;
 import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_OBJECT_ARRAY;
 import static org.hibernate.loader.LoaderLogging.LOADER_LOGGER;
 import static org.hibernate.pretty.MessageHelper.infoString;
+import static java.util.Collections.singletonMap;
 
 /**
  * @author Steve Ebersole
@@ -52,6 +54,13 @@ class DatabaseSnapshotExecutor {
 	DatabaseSnapshotExecutor(
 			EntityMappingType entityDescriptor,
 			SessionFactoryImplementor sessionFactory) {
+		this( entityDescriptor, sessionFactory, null );
+	}
+
+	DatabaseSnapshotExecutor(
+			EntityMappingType entityDescriptor,
+			SessionFactoryImplementor sessionFactory,
+			Filter tenantFilter) {
 		this.entityDescriptor = entityDescriptor;
 		var jdbcParametersBuilder =
 				JdbcParametersList.newBuilder( entityDescriptor.getIdentifierMapping().getJdbcTypeCount() );
@@ -82,6 +91,17 @@ class DatabaseSnapshotExecutor {
 
 		rootQuerySpec.getFromClause().addRoot( rootTableGroup );
 		state.getFromClauseAccess().registerTableGroup( rootPath, rootTableGroup );
+		if ( tenantFilter != null ) {
+			// Snapshots ignore application filters, but must respect tenant isolation.
+			entityDescriptor.applyFilterRestrictions(
+					rootQuerySpec::applyPredicate,
+					rootTableGroup,
+					true,
+					singletonMap( tenantFilter.getName(), tenantFilter ),
+					true,
+					state
+			);
+		}
 
 		// We produce the same state array as if we were creating an entity snapshot
 		final List<DomainResult<?>> domainResults = new ArrayList<>();

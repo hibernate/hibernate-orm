@@ -6,6 +6,7 @@ package org.hibernate.sql.ast.internal.model.builder;
 
 import org.hibernate.action.queue.spi.meta.TableDescriptorAsTableMapping;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
+import org.hibernate.engine.internal.TenantIdHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.ast.spi.model.builder.ColumnValueBindingBuilder;
@@ -14,6 +15,7 @@ import org.hibernate.sql.ast.spi.model.ColumnValueBinding;
 import org.hibernate.sql.ast.spi.model.ColumnValueParameter;
 import org.hibernate.sql.ast.spi.model.MutatingTableReference;
 import org.hibernate.sql.ast.spi.model.TableUpdateStandard;
+import org.hibernate.sql.ast.spi.model.TenantIdColumnValueBinding;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,6 +28,7 @@ public class VersionUpdateBuilder implements TableMutationBuilder<TableUpdateSta
 	private final MutatingTableReference tableReference;
 
 	private final List<ColumnValueBinding> restrictionBindings = new ArrayList<>();
+	private final List<ColumnValueBinding> tenantBindings = new ArrayList<>();
 	private final ColumnValueBinding newVersionBinding;
 
 	private final List<ColumnValueParameter> parameterBinders;
@@ -72,6 +75,15 @@ public class VersionUpdateBuilder implements TableMutationBuilder<TableUpdateSta
 				(o) -> parameterBinders.add( (ColumnValueParameter) o )
 		);
 		restrictionBindings.add( oldVersionBinding );
+		final var tenantMapping = TenantIdHelper.tenantIdMapping( mutationTarget );
+		if ( tenantMapping != null ) {
+			final var selectable = tenantMapping.getSelectable( 0 );
+			if ( mutationTarget.physicalTableNameForMutation( selectable ).equals( tableReference.getTableName() ) ) {
+				tenantBindings.add( new TenantIdColumnValueBinding( ColumnValueBindingBuilder.createValueBinding(
+						"?", selectable, tableReference, ParameterUsage.TENANT,
+						parameter -> parameterBinders.add( (ColumnValueParameter) parameter ) ) ) );
+			}
+		}
 	}
 
 	@Override
@@ -108,7 +120,7 @@ public class VersionUpdateBuilder implements TableMutationBuilder<TableUpdateSta
 				sql,
 				List.of( newVersionBinding ),
 				restrictionBindings,
-				List.of(),
+				tenantBindings,
 				parameterBinders
 		);
 	}

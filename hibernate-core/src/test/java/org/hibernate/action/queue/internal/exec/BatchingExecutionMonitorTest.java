@@ -5,6 +5,7 @@
 package org.hibernate.action.queue.internal.exec;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -60,6 +61,7 @@ class BatchingExecutionMonitorTest {
 		final var tableDescriptor = mock( TableDescriptor.class );
 		final var shapeKey = mock( StatementShapeKey.class );
 		final var jdbcOperation = mock( PreparableMutationOperation.class );
+		when( jdbcOperation.canBeBatched( shapeKey, 5 ) ).thenReturn( true );
 		final var bindPlan = mock( BindPlan.class );
 		doReturn( List.of( mock( JdbcParameterBinder.class ) ) ).when( jdbcOperation ).getParameterBinders();
 		final var operation = new FlushOperation(
@@ -115,6 +117,7 @@ class BatchingExecutionMonitorTest {
 
 		final var shapeKey = mock( StatementShapeKey.class );
 		final var jdbcOperation = mock( PreparableMutationOperation.class );
+		when( jdbcOperation.canBeBatched( shapeKey, 5 ) ).thenReturn( true );
 		doReturn( List.of( mock( JdbcParameterBinder.class ) ) ).when( jdbcOperation ).getParameterBinders();
 		final var operation = new FlushOperation(
 				mock( TableDescriptor.class ),
@@ -168,6 +171,7 @@ class BatchingExecutionMonitorTest {
 		final var tableDescriptor = mock( TableDescriptor.class );
 		final var shapeKey = mock( StatementShapeKey.class );
 		final var jdbcOperation = mock( PreparableMutationOperation.class );
+		when( jdbcOperation.canBeBatched( shapeKey, 5 ) ).thenReturn( true );
 		doReturn( List.of( mock( JdbcParameterBinder.class ) ) ).when( jdbcOperation ).getParameterBinders();
 		final var bindPlan = new RecordingGroupedBindPlan( 4 );
 		final var operation = new FlushOperation(
@@ -203,7 +207,7 @@ class BatchingExecutionMonitorTest {
 		doAnswer( invocation -> {
 			observer.get().batchExplicitlyExecuted();
 			for ( int i = 0; i < resultCheckers.size(); i++ ) {
-				resultCheckers.get( i ).checkResult( 1, i, "insert", sessionFactory );
+				resultCheckers.get( i ).checkResult( 1, null, i, "insert", sessionFactory );
 			}
 			return null;
 		} ).when( batch ).execute();
@@ -242,6 +246,7 @@ class BatchingExecutionMonitorTest {
 		@Override
 		public boolean checkResult(
 				int affectedRowCount,
+				PreparedStatement statement,
 				int batchPosition,
 				String sqlString,
 				SessionFactoryImplementor sessionFactory) {

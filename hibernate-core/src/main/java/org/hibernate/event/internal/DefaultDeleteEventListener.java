@@ -16,6 +16,7 @@ import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.cascade.internal.Cascade;
 import org.hibernate.cascade.spi.CascadePoint;
 import org.hibernate.engine.internal.ForeignKeys;
+import org.hibernate.engine.internal.TenantIdHelper;
 import org.hibernate.engine.internal.Nullability;
 import org.hibernate.engine.internal.Nullability.NullabilityCheckType;
 import org.hibernate.cascade.spi.CascadingActions;
@@ -94,6 +95,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener {
 				if ( factory.getSessionFactoryOptions().isJpaBootstrap() && entityHolder == null ) {
 					throw new IllegalArgumentException( "Given entity is not associated with the persistence context" );
 				}
+				TenantIdHelper.checkIdentifierTenant( id, persister, source );
 				// optimization for deleting certain entities without loading them
 				persistenceContext.reassociateProxy( object, id );
 				if ( !persistenceContext.containsDeletedUnloadedEntityKey( key ) ) {
@@ -150,6 +152,13 @@ public class DefaultDeleteEventListener implements DeleteEventListener {
 		final var source = event.getSession();
 		final var persister = source.getEntityPersister( event.getEntityName(), entity );
 		if ( ForeignKeys.isTransient( persister.getEntityName(), entity, null, source ) ) {
+			// A tenant-filtered snapshot also reports a foreign row as absent.
+			// Do not mistake a detached instance of that row for a transient entity.
+			// An unassigned tenant component of the identifier cannot name a stored row.
+			final Object id = persister.getIdentifier( entity, source );
+			if ( id != null && !TenantIdHelper.hasUnassignedIdentifierTenant( id, persister, source ) ) {
+				TenantIdHelper.checkTenantId( id, persister, source, true );
+			}
 			deleteTransientEntity( source, entity, persister, transientEntities );
 		}
 		else {
@@ -172,6 +181,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener {
 					+ persister.getEntityName() + "' because it has a null identifier" );
 		}
 
+		TenantIdHelper.checkTenantId( id, persister, source, false );
 		final var key = source.generateEntityKey( id, persister);
 		final Object version = persister.getVersion( entity );
 
@@ -275,6 +285,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener {
 	 */
 	private boolean canBeDeletedWithoutLoading(@Nonnull EventSource source, @Nonnull EntityPersister persister) {
 		return source.getInterceptor() == EmptyInterceptor.INSTANCE
+			&& TenantIdHelper.tenantIdMapping( persister ) == null
 			&& !persister.hasSubclasses() //TODO: should be unnecessary, using EntityPersister.getSubclassPropertyTypeClosure(), etc
 			&& !persister.hasCascadeDelete()
 			&& !persister.hasNaturalIdentifier()

@@ -12,6 +12,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.sql.spi.mutation.ValuesAnalysis;
 
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 /// Represents JDBC parameter binding for graph-based operation execution
@@ -93,12 +94,13 @@ public interface BindPlan {
 	default boolean checkResult(
 			FlushOperation flushOperation,
 			int affectedRowCount,
+			PreparedStatement statement,
 			int batchPosition,
 			String sqlString,
 			SessionFactoryImplementor sessionFactory) throws SQLException {
 		final OperationResultChecker resultChecker = getOperationResultChecker();
 		return resultChecker == null
-				|| resultChecker.checkResult( affectedRowCount, batchPosition, sqlString, sessionFactory );
+			|| resultChecker.checkResult( affectedRowCount, statement, batchPosition, sqlString, sessionFactory );
 	}
 
 	default ValuesAnalysis getValuesAnalysis() {

@@ -13,10 +13,12 @@ import org.hibernate.action.queue.spi.bind.OperationResultChecker;
 import org.hibernate.action.queue.spi.meta.EntityTableDescriptor;
 import org.hibernate.action.queue.spi.plan.FlushOperation;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
+import org.hibernate.engine.internal.TenantIdHelper;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 /// @author Steve Ebersole
@@ -72,6 +74,8 @@ public class ForceVersionBindPlan implements BindPlan, OperationResultChecker {
 				session
 		);
 		jdbcValueBindings.bindRestriction( -1, oldVersion, persister.getVersionMapping() );
+		TenantIdHelper.checkIdentifierTenant( entityId, persister, session );
+		TenantIdHelper.bindTenantRestriction( persister, flushOperation.getJdbcOperation(), jdbcValueBindings, session );
 	}
 
 	@Override
@@ -82,12 +86,14 @@ public class ForceVersionBindPlan implements BindPlan, OperationResultChecker {
 	@Override
 	public boolean checkResult(
 			int affectedRowCount,
+			PreparedStatement statement,
 			int batchPosition,
 			String sqlString,
 			SessionFactoryImplementor sessionFactory) throws SQLException {
 		return Checkers.identifiedResultsCheck(
 				tableDescriptor.updateDetails().getExpectation(),
 				affectedRowCount,
+				statement,
 				batchPosition,
 				persister,
 				tableDescriptor,

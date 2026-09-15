@@ -266,7 +266,7 @@ public abstract class AbstractStepExecutor implements PlanStepExecutor {
 			int bindingIndex) {
 		try (var stmnt = session.getJdbcCoordinator()
 				.getStatementPreparer()
-				.prepareStatement( preparable.getSqlString() )) {
+				.prepareStatement( preparable.getSqlString(), preparable.isCallable() )) {
 			preparable.getExpectation().prepare( stmnt );
 			var valueBindings = new JdbcValueBindings( flushOperation.getMutatingTableDescriptor(), preparable );
 			final var bindPlan = flushOperation.getBindPlan();
@@ -284,7 +284,10 @@ public abstract class AbstractStepExecutor implements PlanStepExecutor {
 
 			final var resultChecker = flushOperation.getOperationResultChecker();
 			if ( resultChecker != null ) {
-				resultChecker.checkResult( affectedRowCount, -1, preparable.getSqlString(), session.getFactory() );
+				resultChecker.checkResult( affectedRowCount, stmnt, -1, preparable.getSqlString(), session.getFactory() );
+			}
+			else if ( preparable.isCallable() ) {
+				preparable.getExpectation().verifyOutcome( affectedRowCount, stmnt, -1, preparable.getSqlString() );
 			}
 
 			session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( stmnt );

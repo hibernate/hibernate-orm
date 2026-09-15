@@ -5,6 +5,7 @@
 package org.hibernate.internal.find;
 
 import jakarta.annotation.Nonnull;
+import jakarta.persistence.EntityNotFoundException;
 import org.hibernate.Incubating;
 import org.hibernate.KeyType;
 import org.hibernate.LockOptions;
@@ -54,7 +55,7 @@ public class StatefulGetReferenceOperation<T> implements GetReferenceOperation<T
 
 		final Object cachedResolution = naturalIdResolutions.findCachedIdByNaturalId( normalizedKey, entityDescriptor );
 		if ( cachedResolution == INVALID_NATURAL_ID_REFERENCE ) {
-			return null;
+			throw naturalIdNotFound();
 		}
 
 		if ( cachedResolution != null ) {
@@ -62,8 +63,16 @@ public class StatefulGetReferenceOperation<T> implements GetReferenceOperation<T
 		}
 
 		final var loadedResolution = entityDescriptor.getNaturalIdLoader().resolveNaturalIdToId( normalizedKey, session );
+		if ( loadedResolution == null ) {
+			throw naturalIdNotFound();
+		}
 		naturalIdResolutions.cacheResolutionFromLoad( loadedResolution, normalizedKey, entityDescriptor );
 		return getReferenceById( loadedResolution );
+	}
+
+	private EntityNotFoundException naturalIdNotFound() {
+		return new EntityNotFoundException(
+				"No entity of type '" + entityDescriptor.getEntityName() + "' exists with the given natural id" );
 	}
 
 	private T getReferenceById(Object key) {

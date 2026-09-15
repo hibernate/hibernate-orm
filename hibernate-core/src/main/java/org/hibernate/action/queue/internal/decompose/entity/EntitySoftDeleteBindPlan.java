@@ -6,6 +6,7 @@ package org.hibernate.action.queue.internal.decompose.entity;
 
 
 import jakarta.annotation.Nullable;
+import org.hibernate.engine.internal.TenantIdHelper;
 import org.hibernate.action.queue.spi.bind.BindPlan;
 import org.hibernate.action.queue.spi.bind.Checkers;
 import org.hibernate.action.queue.spi.bind.JdbcValueBindings;
@@ -18,6 +19,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 /// Specialized BindPlan for soft delete operations.
@@ -59,6 +61,9 @@ public class EntitySoftDeleteBindPlan implements BindPlan, OperationResultChecke
 			JdbcValueBindings valueBindings,
 			FlushOperation flushOperation,
 			SharedSessionContractImplementor session) {
+		TenantIdHelper.checkIdentifierTenant( identifier, entityPersister, session );
+		TenantIdHelper.bindTenantRestriction( entityPersister, flushOperation.getJdbcOperation(), valueBindings, session );
+
 		// NOTE: We do NOT bind the soft delete value or non-deleted restriction here.
 		// These are literal values (e.g., true/false or CURRENT_TIMESTAMP) that are
 		// already embedded in the SQL statement. They have no parameters to bind.
@@ -194,12 +199,14 @@ public class EntitySoftDeleteBindPlan implements BindPlan, OperationResultChecke
 	@Override
 	public boolean checkResult(
 			int affectedRowCount,
+			PreparedStatement statement,
 			int batchPosition,
 			String sqlString,
 			SessionFactoryImplementor sessionFactory) throws SQLException {
 		return Checkers.identifiedResultsCheck(
 				tableDescriptor.deleteDetails().getExpectation(),
 				affectedRowCount,
+				statement,
 				batchPosition,
 				entityPersister,
 				tableDescriptor,

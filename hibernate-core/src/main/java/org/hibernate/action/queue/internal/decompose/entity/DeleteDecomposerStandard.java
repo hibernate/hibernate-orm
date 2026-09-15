@@ -4,6 +4,7 @@
  */
 package org.hibernate.action.queue.internal.decompose.entity;
 
+import org.hibernate.engine.internal.TenantIdHelper;
 import org.hibernate.action.queue.spi.decompose.entity.EntityMutationPlanContributor;
 import org.hibernate.action.queue.spi.decompose.entity.PreDeleteHandling;
 import org.hibernate.action.queue.spi.decompose.entity.PostDeleteHandling;
@@ -550,6 +551,7 @@ public class DeleteDecomposerStandard extends AbstractDecomposer<EntityDeleteAct
 			);
 			applyPartitionRestrictions( tableDeleteBuilders );
 		}
+		tableDeleteBuilders.values().forEach( builder -> TenantIdHelper.applyTenantRestriction( entityPersister, builder ) );
 	}
 
 	private void applyKeyRestriction(TableDeleteBuilder builder, Object rowId) {

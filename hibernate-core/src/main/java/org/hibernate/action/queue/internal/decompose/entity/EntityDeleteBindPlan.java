@@ -5,6 +5,7 @@
 package org.hibernate.action.queue.internal.decompose.entity;
 
 
+import org.hibernate.engine.internal.TenantIdHelper;
 import org.hibernate.action.queue.spi.bind.BindPlan;
 import org.hibernate.action.queue.spi.bind.Checkers;
 import org.hibernate.action.queue.spi.bind.JdbcValueBindings;
@@ -20,6 +21,7 @@ import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.ModelPart.JdbcValueBiConsumer;
 import org.hibernate.persister.entity.EntityPersister;
 
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 /// @author Steve Ebersole
@@ -106,6 +108,9 @@ public class EntityDeleteBindPlan implements BindPlan, OperationResultChecker {
 			JdbcValueBindings valueBindings,
 			FlushOperation flushOperation,
 			SharedSessionContractImplementor session) {
+		TenantIdHelper.checkIdentifierTenant( identifier, entityPersister, session );
+		TenantIdHelper.bindTenantRestriction( entityPersister, flushOperation.getJdbcOperation(), valueBindings, session );
+
 
 		// Bind the identifier for the WHERE clause
 		breakDownKeyJdbcValue( valueBindings, session );
@@ -287,12 +292,14 @@ public class EntityDeleteBindPlan implements BindPlan, OperationResultChecker {
 	public boolean checkResult(
 			FlushOperation flushOperation,
 			int affectedRowCount,
+			PreparedStatement statement,
 			int batchPosition,
 			String sqlString,
 			SessionFactoryImplementor sessionFactory) throws SQLException {
 		return checkResult(
 				(EntityTableDescriptor) flushOperation.getMutatingTableDescriptor(),
 				affectedRowCount,
+				statement,
 				batchPosition,
 				sqlString,
 				sessionFactory
@@ -302,21 +309,24 @@ public class EntityDeleteBindPlan implements BindPlan, OperationResultChecker {
 	@Override
 	public boolean checkResult(
 			int affectedRowCount,
+			PreparedStatement statement,
 			int batchPosition,
 			String sqlString,
 			SessionFactoryImplementor sessionFactory) throws SQLException {
-		return checkResult( tableDescriptor, affectedRowCount, batchPosition, sqlString, sessionFactory );
+		return checkResult( tableDescriptor, affectedRowCount, statement, batchPosition, sqlString, sessionFactory );
 	}
 
 	private boolean checkResult(
 			EntityTableDescriptor tableDescriptor,
 			int affectedRowCount,
+			PreparedStatement statement,
 			int batchPosition,
 			String sqlString,
 			SessionFactoryImplementor sessionFactory) throws SQLException {
 		return Checkers.identifiedResultsCheck(
 				tableDescriptor.deleteDetails().getExpectation(),
 				affectedRowCount,
+				statement,
 				batchPosition,
 				entityPersister,
 				tableDescriptor,

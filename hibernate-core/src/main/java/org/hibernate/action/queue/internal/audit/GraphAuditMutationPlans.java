@@ -4,6 +4,7 @@
  */
 package org.hibernate.action.queue.internal.audit;
 
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 import org.hibernate.action.queue.spi.bind.BindPlan;
@@ -171,6 +172,7 @@ final class GraphAuditMutationPlans {
 		@Override
 		public boolean checkResult(
 				int affectedRowCount,
+				PreparedStatement statement,
 				int batchPosition,
 				String sqlString,
 				org.hibernate.engine.spi.SessionFactoryImplementor sessionFactory) throws SQLException {
@@ -217,6 +219,7 @@ final class GraphAuditMutationPlans {
 		@Override
 		public boolean checkResult(
 				int affectedRowCount,
+				PreparedStatement statement,
 				int batchPosition,
 				String sqlString,
 				org.hibernate.engine.spi.SessionFactoryImplementor sessionFactory) {

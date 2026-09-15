@@ -14,6 +14,7 @@ import org.hibernate.action.queue.spi.meta.EntityTableDescriptor;
 import org.hibernate.action.queue.spi.meta.TableDescriptorAsTableMapping;
 import org.hibernate.action.queue.spi.plan.FlushOperation;
 import org.hibernate.engine.OptimisticLockStyle;
+import org.hibernate.engine.internal.TenantIdHelper;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.BeforeExecutionGenerator;
@@ -291,6 +292,7 @@ public class TemporalEntityMutationPlanContributor implements EntityMutationPlan
 		addVersionRestriction( updateBuilder, tableDescriptor );
 		addNonVersionOptimisticLockRestrictions( updateBuilder, tableDescriptor, loadedState, effectiveOptLockStyle, session );
 		addPartitionedSelectionRestrictions( updateBuilder, tableDescriptor, loadedState );
+		TenantIdHelper.applyTenantRestriction( entityPersister, updateBuilder );
 
 		return updateBuilder.buildMutation().createMutationOperation( null, sessionFactory );
 	}

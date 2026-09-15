@@ -219,13 +219,25 @@ public class SpannerPostgreSQLDialect extends PostgreSQLDialect implements Curre
 	private boolean useIntegerForPrimaryKey;
 	private boolean useEmulator;
 
+	private static final LockingSupport EMULATOR_LOCKING_SUPPORT = new NoLockingSupport() {
+		@Override
+		public org.hibernate.dialect.lock.spi.TransactionConcurrencyResolver getTransactionConcurrencyResolver() {
+			return new org.hibernate.dialect.lock.internal.SpannerTransactionConcurrencyResolver( true, false );
+		}
+	};
+
 	private final LockingSupport SPANNER_LOCKING_SUPPORT = new LockingSupportSimple(
 			PessimisticLockStyle.CLAUSE,
 			RowLockStrategy.NONE,
 			LockTimeoutType.NONE,
 			OuterJoinLockingType.FULL,
 			ConnectionLockTimeoutStrategy.NONE
-	);
+	) {
+		@Override
+		public org.hibernate.dialect.lock.spi.TransactionConcurrencyResolver getTransactionConcurrencyResolver() {
+			return new org.hibernate.dialect.lock.internal.SpannerTransactionConcurrencyResolver( true, true );
+		}
+	};
 
 	protected final static DatabaseVersion MINIMUM_POSTGRES_VERSION = DatabaseVersion.make( 15 );
 
@@ -424,7 +436,7 @@ public class SpannerPostgreSQLDialect extends PostgreSQLDialect implements Curre
 
 	@Override
 	public LockingSupport getLockingSupport() {
-		return useEmulator ? NoLockingSupport.NO_LOCKING_SUPPORT : SPANNER_LOCKING_SUPPORT;
+		return useEmulator ? EMULATOR_LOCKING_SUPPORT : SPANNER_LOCKING_SUPPORT;
 	}
 
 	@Override

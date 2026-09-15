@@ -790,8 +790,7 @@ public class CUBRIDDialect extends Dialect implements CurrentTemporalSupport, Te
 			LockTimeoutType.NONE,
 			OuterJoinLockingType.FULL,
 			ConnectionLockTimeoutStrategy.NONE,
-			// CUBRID uses multiversion concurrency control
-			false
+			org.hibernate.community.dialect.lock.internal.CUBRIDTransactionConcurrencyResolver.INSTANCE
 	);
 
 	@Override

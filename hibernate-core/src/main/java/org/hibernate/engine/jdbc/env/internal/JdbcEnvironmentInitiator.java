@@ -4,6 +4,8 @@
  */
 package org.hibernate.engine.jdbc.env.internal;
 
+import org.hibernate.dialect.lock.spi.TransactionConcurrencyResolutionException;
+
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.HibernateException;
@@ -420,6 +422,11 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 					},
 					false
 			);
+		}
+		catch ( TransactionConcurrencyResolutionException e ) {
+			// An observed contradiction must not become an unverified declaration
+			// by retrying bootstrap without the JDBC observations.
+			throw e;
 		}
 		catch ( Exception e ) {
 			if ( jdbcMetadataAccess == JdbcMetadataOnBoot.REQUIRE ) {

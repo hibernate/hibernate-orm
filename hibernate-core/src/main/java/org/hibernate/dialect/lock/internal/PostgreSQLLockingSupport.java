@@ -4,6 +4,9 @@
  */
 package org.hibernate.dialect.lock.internal;
 
+
+import org.hibernate.dialect.lock.spi.TransactionConcurrencyResolver;
+
 import jakarta.persistence.Timeout;
 import org.hibernate.HibernateException;
 import org.hibernate.Timeouts;
@@ -40,6 +43,11 @@ public class PostgreSQLLockingSupport
 	public PostgreSQLLockingSupport(boolean supportsNoWait, boolean supportsSkipLocked) {
 		this.supportsNoWait = supportsNoWait;
 		this.supportsSkipLocked = supportsSkipLocked;
+	}
+
+	@Override
+	public TransactionConcurrencyResolver getTransactionConcurrencyResolver() {
+		return PostgreSQLTransactionConcurrencyResolver.INSTANCE;
 	}
 
 	@Override

@@ -251,7 +251,12 @@ public class SpannerDialect extends Dialect implements CurrentTemporalSupport, T
 			LockTimeoutType.NONE,
 			OuterJoinLockingType.FULL,
 			ConnectionLockTimeoutStrategy.NONE
-	);
+	) {
+		@Override
+		public org.hibernate.dialect.lock.spi.TransactionConcurrencyResolver getTransactionConcurrencyResolver() {
+			return new org.hibernate.dialect.lock.internal.SpannerTransactionConcurrencyResolver( false, true );
+		}
+	};
 
 	public SpannerDialect() {
 		super( ZERO_VERSION );

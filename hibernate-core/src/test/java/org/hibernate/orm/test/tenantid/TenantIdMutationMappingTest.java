@@ -31,6 +31,8 @@ import org.hibernate.annotations.HQLSelect;
 import org.hibernate.annotations.TenantId;
 import org.hibernate.dialect.sql.ast.internal.SpannerSqlAstTranslator;
 import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.dialect.SpannerDialect;
+import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
 import org.hibernate.engine.internal.TenantIdHelper;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -105,12 +107,40 @@ class TenantIdMutationMappingTest {
 		inTenant( scope, "mine", session -> assertEquals( "updated", session.find( type, 1L ).value() ) );
 	}
 
-	@Test
-	void upsertWithoutUpdatableAttributes(SessionFactoryScope scope) {
+	@ParameterizedTest
+	@ValueSource(strings = { "mine", "root" })
+	void upsertWithoutUpdatableAttributes(String tenant, SessionFactoryScope scope) {
 		final var item = new Empty();
 		inStatelessTenant( scope, "mine", session -> session.upsert( item ) );
-		inStatelessTenant( scope, "mine", session -> session.upsert( item ) );
+		inStatelessTenant( scope, tenant, session -> session.upsert( item ) );
 		inTenant( scope, "mine", session -> assertEquals( "mine", session.find( Empty.class, 1L ).tenant ) );
+	}
+
+	@Test
+	@RequiresDialect(SpannerDialect.class)
+	@RequiresDialect(SpannerPostgreSQLDialect.class)
+	void upsertWithoutUpdatableAttributesChecksStoredTenant(SessionFactoryScope scope) {
+		final var item = new Empty();
+		inStatelessTenant( scope, "mine", session -> session.upsert( item ) );
+		item.tenant = "yours";
+		final var inspector = scope.getCollectingStatementInspector();
+		inspector.clear();
+		inStatelessTenant( scope, "yours", session -> session.upsert( item ) );
+		if ( scope.getSessionFactory().getJdbcServices().getDialect() instanceof SpannerDialect ) {
+			// GoogleSQL ignores the insert because the key already exists.
+			inspector.assertExecutedCount( 1 );
+			final var sql = inspector.getSqlQueries().get( 0 );
+			assertTrue( sql.startsWith( "insert or ignore into " ), sql );
+		}
+		else {
+			// The tenant restriction prevents the update from matching the existing row.
+			// The fallback insert leaves that row untouched because its key already exists.
+			inspector.assertExecutedCount( 2 );
+			inspector.assertIsUpdate( 0 );
+			inspector.assertIsInsert( 1 );
+		}
+		inTenant( scope, "mine", session -> assertEquals( "mine", session.find( Empty.class, 1L ).tenant ) );
+		inTenant( scope, "yours", session -> assertNull( session.find( Empty.class, 1L ) ) );
 	}
 
 	@Test
@@ -133,7 +163,7 @@ class TenantIdMutationMappingTest {
 	}
 
 	@Test
-	@RequiresDialect(PostgreSQLDialect.class)
+	@RequiresDialect(value = PostgreSQLDialect.class, matchSubTypes = false)
 	void ownershipLocksTenantTable(SessionFactoryScope scope) {
 		inTenant( scope, "mine", session -> session.persist( new JoinedSub() ) );
 		inStatelessTenant( scope, "mine", session -> {

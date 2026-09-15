@@ -150,7 +150,7 @@ class TenantIdCustomSqlTest {
 	}
 
 	private static void assertTenantLast(String sql) {
-		assertTrue( sql.matches( ".*tenant=coalesce\\(\\?,tenant\\)" ), sql );
+		assertTrue( sql.matches( ".*tenant=coalesce\\(\\?,(?:\\w+\\.)?tenant\\)" ), sql );
 	}
 
 	@ParameterizedTest

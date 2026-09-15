@@ -30,7 +30,10 @@ public class RowValueSupportTest {
 	void communityDialectsPreserveEveryRowValueFeature() {
 		assertProfile( new AltibaseDialect(), EQUALITY_COMPARISON, ORDERING_COMPARISON,
 				DISTINCTNESS_COMPARISON, IN_LIST, IN_SUBQUERY );
-		assertProfile( new CUBRIDDialect(), EQUALITY_COMPARISON, DISTINCTNESS_COMPARISON, IN_LIST );
+		// CUBRID parses (a, b) as a collection literal before 11.0
+		assertProfile( new CUBRIDDialect() );
+		assertProfile( new CUBRIDDialect( DatabaseVersion.make( 11, 0 ) ), EQUALITY_COMPARISON,
+				ORDERING_COMPARISON, DISTINCTNESS_COMPARISON, IN_LIST, IN_SUBQUERY );
 		assertProfile( new CockroachLegacyDialect(), ROW_CONSTRUCTOR, EQUALITY_COMPARISON,
 				ORDERING_COMPARISON, DISTINCTNESS_COMPARISON, IN_LIST, IN_SUBQUERY );
 		assertProfile( new DB2LegacyDialect(), IN_SUBQUERY );

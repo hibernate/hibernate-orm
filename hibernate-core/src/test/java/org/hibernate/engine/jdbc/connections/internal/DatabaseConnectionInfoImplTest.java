@@ -12,8 +12,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class DatabaseConnectionInfoImplTest {
 	@Test
-	void redactPasswordWithoutChangingTheOriginalUrl() {
-		final String url = "jdbc:mariadb://host/database?user=graphql&password=secret&useSsl=true";
+	void omitMariaDbJdbcParametersFromLoggingWithoutChangingTheOriginalUrl() {
+		final String url = "jdbc:mariadb://host/database?user=dbUsername&password=dbPassword&useSsl=true";
 		final DatabaseConnectionInfoImpl info = new DatabaseConnectionInfoImpl(
 				null,
 				url,
@@ -32,33 +32,33 @@ class DatabaseConnectionInfoImplTest {
 		);
 
 		assertThat( info.toInfoString() )
-				.contains( "password=***" )
-				.doesNotContain( "password=secret" );
+				.contains( "Database JDBC URL [jdbc:mariadb://host/database]" )
+				.doesNotContain( "dbUsername" )
+				.doesNotContain( "dbPassword" );
 		assertThat( info.getJdbcUrl() ).isEqualTo( url );
-		assertThat( DatabaseConnectionInfoImpl.redactJdbcUrl( url ) )
-				.isEqualTo( "jdbc:mariadb://host/database?user=graphql&password=***&useSsl=true" );
-		assertThat( url ).contains( "password=secret" );
+		assertThat( url ).contains( "password=dbPassword" );
 	}
 
 	@Test
-	void redactSensitiveParametersCaseInsensitively() {
-		assertThat( DatabaseConnectionInfoImpl.redactJdbcUrl(
-				"jdbc:mariadb://host/database?PASSWORD=secret;pwd=other&token=value&name=kept" ) )
-				.isEqualTo( "jdbc:mariadb://host/database?PASSWORD=***;pwd=***&token=***&name=kept" );
-	}
+	void preserveJdbcParametersForOtherDrivers() {
+		final String url = "jdbc:h2:mem:test?password=secret";
+		final DatabaseConnectionInfoImpl info = new DatabaseConnectionInfoImpl(
+				null,
+				url,
+				"H2 JDBC Driver",
+				H2Dialect.class,
+				new H2Dialect().getVersion(),
+				true,
+				true,
+				null,
+				null,
+				null,
+				null,
+				null,
+				null,
+				null
+		);
 
-	@Test
-	void preserveEncodedParameterValuesAndUrlsWithoutQueryParameters() {
-		assertThat( DatabaseConnectionInfoImpl.redactJdbcUrl(
-				"jdbc:mariadb://host/database?password=a%26b&name=value" ) )
-				.isEqualTo( "jdbc:mariadb://host/database?password=***&name=value" );
-		assertThat( DatabaseConnectionInfoImpl.redactJdbcUrl( "jdbc:mariadb://host/database" ) )
-				.isEqualTo( "jdbc:mariadb://host/database" );
-	}
-
-	@Test
-	void redactCredentialsInUserInfo() {
-		assertThat( DatabaseConnectionInfoImpl.redactJdbcUrl( "jdbc:mariadb://user:secret@host/database" ) )
-				.isEqualTo( "jdbc:mariadb://user:***@host/database" );
+		assertThat( info.toInfoString() ).contains( "Database JDBC URL [" + url + "]" );
 	}
 }

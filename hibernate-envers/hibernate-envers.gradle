@@ -65,6 +65,14 @@ tasks.withType( Test.class ).configureEach { test ->
         test.maxParallelForks = testThreads
         test.systemProperty 'maxParallelForks', test.maxParallelForks
     }
+    else if ( project.db == "sybase" || project.db == "sybase_jconn" ) {
+        // The free SAP ASE Developer Edition limits 'number of user connections' to 25,
+        // so we cap the fork count to stay within that budget (2 forks * pool_size 5 = 10,
+        // leaving headroom for system connections).
+        def testThreads = project.findProperty( "test.threads" )
+        test.maxParallelForks = testThreads == null ? 2 : Integer.parseInt( testThreads.toString() )
+        test.systemProperty 'maxParallelForks', test.maxParallelForks
+    }
     else if ( project.db == "oracle_test_pilot_database" ) {
         // Since Oracle TestPilot databases run on separate machines, but latency is a bit higher,
         // use double the threads for testing, to hide the effect of the latency a bit

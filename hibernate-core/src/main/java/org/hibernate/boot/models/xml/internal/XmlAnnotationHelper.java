@@ -184,7 +184,6 @@ import java.util.UUID;
 import java.util.function.Consumer;
 
 import static java.lang.Boolean.FALSE;
-import static java.lang.Boolean.TRUE;
 import static java.util.Collections.emptyList;
 import static org.hibernate.boot.models.HibernateAnnotations.FILTER;
 import static org.hibernate.boot.models.HibernateAnnotations.FILTER_JOIN_TABLE;
@@ -1835,8 +1834,9 @@ public class XmlAnnotationHelper {
 			final SecondaryRowAnnotation rowUsage = SECONDARY_ROW.createUsage( xmlDocumentContext.getModelBuildingContext() );
 			rowUsages[i] = rowUsage;
 			rowUsage.table( tableUsage.name() );
-			rowUsage.optional( jaxbSecondaryTable.isOptional() == TRUE );
-			rowUsage.owned( jaxbSecondaryTable.isOwned() == TRUE );
+			// A missing attribute (null) must fall back to the @SecondaryRow annotation defaults (owned=true, optional=true)
+			rowUsage.optional( jaxbSecondaryTable.isOptional() != FALSE );
+			rowUsage.owned( jaxbSecondaryTable.isOwned() != FALSE );
 		}
 	}
 

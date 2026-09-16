@@ -23,7 +23,7 @@ ant = "1.10.18"
 graalvm = "25.3.4.1"
 commonsCollections = "4.6.0"
 freemarker = "2.3.35"
-eclipseJdtCore = "3.46.0"
+eclipseJdtCore = "3.47.0"
 
 # Jakarta Libs
 jpa = "4.0.0-SNAPSHOT" # Can be replaced with ${jakartaJpaVersion} / gradle.libs.versions.jpa

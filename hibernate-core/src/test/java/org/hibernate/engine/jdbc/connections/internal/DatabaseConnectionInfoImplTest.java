@@ -61,4 +61,53 @@ class DatabaseConnectionInfoImplTest {
 
 		assertThat( info.toInfoString() ).contains( "Database JDBC URL [" + url + "]" );
 	}
+
+	@Test
+	void omitMariaDbJdbcParametersWhenUsingMysqlScheme() {
+		final String url = "jdbc:mysql://host/database?permitMysqlScheme=true&user=dbUsername&password=dbPassword";
+		final DatabaseConnectionInfoImpl info = new DatabaseConnectionInfoImpl(
+				null,
+				url,
+				"MySQL Connector/J",
+				H2Dialect.class,
+				new H2Dialect().getVersion(),
+				true,
+				true,
+				null,
+				null,
+				null,
+				null,
+				null,
+				null,
+				null
+		);
+
+		assertThat( info.toInfoString() )
+				.contains( "Database JDBC URL [jdbc:mysql://host/database]" )
+				.doesNotContain( "dbUsername" )
+				.doesNotContain( "dbPassword" );
+	}
+
+	@Test
+	void preserveJdbcParametersForMysqlSchemeWithoutMariaDbFlag() {
+		final String url = "jdbc:mysql://host/database?user=dbUsername&password=dbPassword";
+		final DatabaseConnectionInfoImpl info = new DatabaseConnectionInfoImpl(
+				null,
+				url,
+				"MySQL Connector/J",
+				H2Dialect.class,
+				new H2Dialect().getVersion(),
+				true,
+				true,
+				null,
+				null,
+				null,
+				null,
+				null,
+				null,
+				null
+		);
+
+		assertThat( info.toInfoString() ).contains( "Database JDBC URL [" + url + "]" );
+	}
 }

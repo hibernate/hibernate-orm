@@ -13,6 +13,7 @@ import java.util.Properties;
 
 import jakarta.persistence.spi.PersistenceUnitInfo;
 
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.internal.util.ReflectHelper;
@@ -244,6 +245,14 @@ public class EntityManagerFactoryExtension
 			findEntityManagerFactoryScope( context.getRequiredTestMethod(), optionalJpa, context );
 		}
 		// else assume the annotation is defined on the class-level...
+		TransactionConcurrencyFeatureChecks.evaluate( context, () -> {
+			final var scope = optionalJpa.isPresent()
+					? findEntityManagerFactoryScope( context.getRequiredTestMethod(), optionalJpa, context )
+					: findEntityManagerFactoryScope( context.getRequiredTestInstance(),
+							findAnnotation( context.getRequiredTestClass(), Jpa.class ), context );
+			return scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class )
+					.getJdbcServices().getJdbcEnvironment().getTransactionConcurrency();
+		} );
 	}
 
 	@Override

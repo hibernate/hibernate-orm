@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.exceptionhandling;
 
+import org.hibernate.testing.orm.TransactionConcurrencyChecks;
 import java.util.Map;
 
 import jakarta.persistence.Entity;
@@ -123,13 +124,7 @@ class LockTransactionRequirementTest extends BaseJpaOrNativeBootstrapFunctionalT
 
 	private boolean supportsStatelessOptimistic() {
 		final var concurrency = sessionFactory().getJdbcServices().getJdbcEnvironment().getTransactionConcurrency();
-		return java.util.stream.Stream.of(
-				org.hibernate.dialect.lock.spi.Operation.READ,
-				org.hibernate.dialect.lock.spi.Operation.SHARED_LOCK_READ,
-				org.hibernate.dialect.lock.spi.Operation.UPDATE_LOCK_READ )
-				.filter( concurrency::supports ).map( concurrency::getReadGuarantees )
-				.anyMatch( g -> g.preventsDirtyReads() && g.preventsConcurrentModification()
-						&& g.holdsRowLockUntilTransactionCompletion() );
+		return TransactionConcurrencyChecks.supportsStatelessOptimisticLocking( concurrency );
 	}
 
 	private void checkWithoutTransaction(Runnable action) {

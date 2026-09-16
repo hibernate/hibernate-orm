@@ -16,6 +16,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.SQLServerDialect;
 
+import org.hibernate.testing.orm.junit.PermitsWriteAfterReadStatement;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
@@ -34,7 +35,7 @@ import static org.junit.jupiter.api.Assertions.fail;
  * @author Steve Ebersole
  */
 @RequiresDialectFeature(
-		feature = DialectFeatureChecks.DoesRepeatableReadCauseReadersToBlockWritersCheck.class, reverse = true,
+		feature = PermitsWriteAfterReadStatement.class,
 		comment = "potential deadlock"
 )
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsConcurrentTransactions.class)

@@ -7,6 +7,7 @@ package org.hibernate.orm.test.jpa.lock;
 import java.math.BigDecimal;
 
 import jakarta.persistence.OptimisticLockException;
+import org.hibernate.dialect.lock.spi.Operation;
 import org.hibernate.LockMode;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
@@ -20,11 +21,13 @@ import org.hibernate.orm.test.jpa.model.AbstractJPATest;
 import org.hibernate.orm.test.jpa.model.Item;
 import org.hibernate.orm.test.jpa.model.Part;
 
+import org.hibernate.testing.orm.junit.PermitsWriteAfterReadStatement;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.testing.jdbc.SQLServerSnapshotIsolationConnectionProvider;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.VersionMatchMode;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 
@@ -40,8 +43,6 @@ import static org.junit.jupiter.api.Assertions.fail;
  *
  * @author Steve Ebersole
  */
-@RequiresDialectFeature(feature = DialectFeatureChecks.DoesReadCommittedCauseWritersToBlockReadersCheck.class, reverse = true)
-@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsConcurrentTransactions.class)
 public class RepeatableReadTest extends AbstractJPATest {
 
 	private final SQLServerSnapshotIsolationConnectionProvider connectionProvider = new SQLServerSnapshotIsolationConnectionProvider();
@@ -63,6 +64,8 @@ public class RepeatableReadTest extends AbstractJPATest {
 
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsConcurrentTransactions.class)
+	@RequiresDialectFeature(feature = PermitsWriteAfterReadStatement.class)
 	public void testStaleVersionedInstanceFoundInQueryResult() {
 		String check = "EJB3 Specification";
 		Item it = new Item( check );
@@ -110,10 +113,13 @@ public class RepeatableReadTest extends AbstractJPATest {
 	@SkipForDialect(dialectClass = MariaDBDialect.class, majorVersion = 11, minorVersion = 6, microVersion = 2,
 			versionMatchMode = VersionMatchMode.SAME_OR_NEWER,
 			reason = "MariaDB will throw an error DB_RECORD_CHANGED when acquiring a lock on a record that have changed")
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsConcurrentTransactions.class)
+	@RequiresDialectFeature(feature = PermitsWriteAfterReadStatement.class)
 	public void testStaleVersionedInstanceFoundOnLock() {
-		if ( !readCommittedIsolationMaintained( "repeatable read tests" ) ) {
-			return;
-		}
+		Assumptions.assumeTrue(
+				sessionFactory().getJdbcServices().getJdbcEnvironment().getTransactionConcurrency()
+						.getReadGuarantees( Operation.READ ).preventsDirtyReads(),
+				"Requires ordinary reads to prevent dirty reads" );
 		String check = "EJB3 Specification";
 		Item it = new Item( check );
 		inTransaction(
@@ -183,6 +189,8 @@ public class RepeatableReadTest extends AbstractJPATest {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsConcurrentTransactions.class)
+	@RequiresDialectFeature(feature = PermitsWriteAfterReadStatement.class)
 	public void testStaleNonVersionedInstanceFoundInQueryResult() {
 		String check = "Lock Modes";
 		Part p = new Part( new Item( "EJB3 Specification" ), check, "3.3.5.3", new BigDecimal( "0.0" ) );
@@ -232,10 +240,13 @@ public class RepeatableReadTest extends AbstractJPATest {
 	@SkipForDialect(dialectClass = MariaDBDialect.class, majorVersion = 11, minorVersion = 6, microVersion = 2,
 			versionMatchMode = VersionMatchMode.SAME_OR_NEWER,
 			reason = "MariaDB will throw an error DB_RECORD_CHANGED when acquiring a lock on a record that have changed")
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsConcurrentTransactions.class)
+	@RequiresDialectFeature(feature = PermitsWriteAfterReadStatement.class)
 	public void testStaleNonVersionedInstanceFoundOnLock() {
-		if ( !readCommittedIsolationMaintained( "repeatable read tests" ) ) {
-			return;
-		}
+		Assumptions.assumeTrue(
+				sessionFactory().getJdbcServices().getJdbcEnvironment().getTransactionConcurrency()
+						.getReadGuarantees( Operation.READ ).preventsDirtyReads(),
+				"Requires ordinary reads to prevent dirty reads" );
 		String check = "Lock Modes";
 		Part p = new Part( new Item( "EJB3 Specification" ), check, "3.3.5.3", new BigDecimal( "0.0" ) );
 		inTransaction(

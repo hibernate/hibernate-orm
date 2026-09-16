@@ -269,6 +269,10 @@ public class DialectFilterExtension implements ExecutionCondition {
 		);
 
 		for ( RequiresDialectFeature effectiveRequiresDialectFeature : effectiveRequiresDialectFeatures ) {
+			if ( TransactionConcurrencyFeatureChecks.isDeferred( effectiveRequiresDialectFeature ) ) {
+				TransactionConcurrencyFeatureChecks.validateScope( context );
+				continue;
+			}
 			try {
 				final Class<? extends DialectFeatureCheck> featureClass = effectiveRequiresDialectFeature.feature();
 				final DialectFeatureCheck featureCheck = featureClass.getConstructor().newInstance();

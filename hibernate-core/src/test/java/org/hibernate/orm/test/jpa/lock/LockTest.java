@@ -16,6 +16,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import jakarta.persistence.Timeout;
+import org.hibernate.dialect.lock.spi.Operation;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
@@ -37,6 +39,8 @@ import org.hibernate.dialect.SQLServerDialect;
 
 import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.dialect.lock.internal.PessimisticEntityLockException;
+import org.hibernate.testing.orm.ConcurrencyCheckResult;
+import org.hibernate.testing.orm.TransactionConcurrencyChecks;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryBasedFunctionalTest;
 import org.hibernate.testing.orm.junit.RequiresDialect;
@@ -46,6 +50,7 @@ import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.VersionMatchMode;
 import org.hibernate.testing.transaction.TransactionUtil;
 import org.hibernate.testing.util.ExceptionUtil;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -488,9 +493,16 @@ public class LockTest extends EntityManagerFactoryBasedFunctionalTest {
 	@ParameterizedTest
 	@EnumSource(value = LockModeType.class, names = { "READ", "OPTIMISTIC" })
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsConcurrentTransactions.class)
-	@SkipForDialect(dialectClass = InformixDialect.class,
-			reason = "This test class uses REPEATABLE_READ on Informix, so the reader blocks the writer")
 	public void testOptimisticLockDetectsConcurrentUpdate(LockModeType mode) {
+		final var concurrency = entityManagerFactory()
+				.unwrap( SessionFactoryImplementor.class )
+				.getJdbcServices().getJdbcEnvironment().getTransactionConcurrency();
+		Assumptions.assumeTrue(
+				TransactionConcurrencyChecks.permitsWriteAfterReadStatement( concurrency )
+						== ConcurrencyCheckResult.MATCH,
+				() -> "Requires a completed ordinary read to permit a competing write; descriptor="
+						+ concurrency.getName() + ", READ -> WRITE=" + concurrency.getBlockingDuration(
+								Operation.READ, Operation.WRITE ) );
 		final var lock = new Lock( "name" );
 		doInJPA( this::entityManagerFactory, em -> {
 			em.persist( lock );

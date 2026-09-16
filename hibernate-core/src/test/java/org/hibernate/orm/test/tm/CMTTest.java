@@ -17,9 +17,9 @@ import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorBuilderImpl;
 
+import org.hibernate.testing.orm.junit.PermitsReadWhileWriteUncommitted;
 import org.hibernate.testing.jta.JtaAwareConnectionProviderImpl;
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
-import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -273,7 +273,7 @@ public class CMTTest {
 
 	@Test
 	@RequiresDialectFeature(
-			feature = DialectFeatureChecks.DoesReadCommittedCauseWritersToBlockReadersCheck.class, reverse = true,
+			feature = PermitsReadWhileWriteUncommitted.class,
 			comment = "write locks block readers"
 	)
 	@SkipForDialect(dialectClass = CockroachDialect.class,

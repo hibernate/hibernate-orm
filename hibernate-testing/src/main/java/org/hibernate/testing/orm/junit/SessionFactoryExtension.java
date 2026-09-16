@@ -92,6 +92,7 @@ public class SessionFactoryExtension
 		if ( sfAnnRef.isEmpty() ) {
 			// assume the annotations are defined on the class-level...
 			// will be validated by the parameter-resolver or SFS-extension
+			evaluateConcurrencyChecks( context );
 			return;
 		}
 
@@ -99,6 +100,13 @@ public class SessionFactoryExtension
 		final SessionFactoryScope created = createSessionFactoryScope( context.getRequiredTestInstance(), sfAnnRef, domainModelScope, context );
 		final ExtensionContext.Store extensionStore = locateExtensionStore( context.getRequiredTestInstance(), context );
 		extensionStore.put( SESSION_FACTORY_KEY, created );
+		evaluateConcurrencyChecks( context );
+	}
+
+	private static void evaluateConcurrencyChecks(ExtensionContext context) {
+		TransactionConcurrencyFeatureChecks.evaluate( context, () ->
+				findSessionFactoryScope( context.getRequiredTestInstance(), context ).getSessionFactory()
+						.getJdbcServices().getJdbcEnvironment().getTransactionConcurrency() );
 	}
 
 	private static ExtensionContext.Store locateExtensionStore(Object testInstance, ExtensionContext context) {

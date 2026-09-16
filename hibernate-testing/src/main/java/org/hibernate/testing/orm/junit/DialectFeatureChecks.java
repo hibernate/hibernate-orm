@@ -395,12 +395,16 @@ abstract public class DialectFeatureChecks {
 		}
 	}
 
+	/// @deprecated Use the effective factory's TransactionConcurrency instead.
+	@Deprecated(since = "8.0")
 	public static class DoesReadCommittedCauseWritersToBlockReadersCheck implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return DialectTestSupport.doesReadCommittedCauseWritersToBlockReaders( dialect );
 		}
 	}
 
+	/// @deprecated Use the effective factory's TransactionConcurrency instead.
+	@Deprecated(since = "8.0")
 	public static class DoesRepeatableReadCauseReadersToBlockWritersCheck implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return DialectTestSupport.doesRepeatableReadCauseReadersToBlockWriters( dialect );

@@ -12,7 +12,9 @@ import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import org.hibernate.community.dialect.CUBRIDDialect;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -79,6 +81,7 @@ public class JoinedInheritanceTreatQueryTest {
 
 	@Test
 	@Jira("https://hibernate.atlassian.net/browse/HHH-19883")
+	@SkipForDialect(dialectClass = CUBRIDDialect.class, reason = "CUBRID's grammar has no production for a parenthesized joined table")
 	public void testTreatedJoinWithCondition(SessionFactoryScope scope) {
 		final SQLStatementInspector inspector = scope.getCollectingStatementInspector();
 		inspector.clear();
@@ -95,6 +98,7 @@ public class JoinedInheritanceTreatQueryTest {
 
 	@Test
 	@Jira("https://hibernate.atlassian.net/browse/HHH-19883")
+	@SkipForDialect(dialectClass = CUBRIDDialect.class, reason = "CUBRID's grammar has no production for a parenthesized joined table")
 	public void testMultipleTreatedJoinWithCondition(SessionFactoryScope scope) {
 		final SQLStatementInspector inspector = scope.getCollectingStatementInspector();
 		inspector.clear();

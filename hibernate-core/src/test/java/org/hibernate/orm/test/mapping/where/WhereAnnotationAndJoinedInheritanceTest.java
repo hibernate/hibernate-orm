@@ -7,8 +7,10 @@ package org.hibernate.orm.test.mapping.where;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.community.dialect.CUBRIDDialect;
 import org.hibernate.annotations.SQLRestriction;
 
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.Jpa;
@@ -64,6 +66,7 @@ public class WhereAnnotationAndJoinedInheritanceTest {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = CUBRIDDialect.class, reason = "CUBRID's grammar has no production for a parenthesized joined table")
 	public void testCriteriaQuery(EntityManagerFactoryScope scope) {
 		scope.inTransaction(
 				entityManager -> {
@@ -112,6 +115,7 @@ public class WhereAnnotationAndJoinedInheritanceTest {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = CUBRIDDialect.class, reason = "CUBRID's grammar has no production for a parenthesized joined table")
 	public void testCriteriaQuery2(EntityManagerFactoryScope scope) {
 		scope.inTransaction(
 				entityManager -> {

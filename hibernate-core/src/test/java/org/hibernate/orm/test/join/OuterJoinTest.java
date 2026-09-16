@@ -15,6 +15,8 @@ import jakarta.persistence.PrimaryKeyJoinColumn;
 import jakarta.persistence.Table;
 import jakarta.persistence.Tuple;
 
+import org.hibernate.community.dialect.CUBRIDDialect;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
@@ -414,6 +416,7 @@ public class OuterJoinTest {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = CUBRIDDialect.class, reason = "CUBRID has no parenthesized joined table, and this outer join of a nested group cannot be flattened without changing which rows are null-extended")
 	public void testJoinOrderWithRightNormalJoinWithInnerImplicitJoins(EntityManagerFactoryScope scope) {
 		scope.inTransaction( em -> {
 			List<Tuple> resultList = em.createQuery(

@@ -5,6 +5,7 @@
 package org.hibernate.orm.test.type;
 
 import org.hibernate.community.dialect.AltibaseDialect;
+import org.hibernate.community.dialect.CUBRIDDialect;
 import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.community.dialect.DerbyDialect;
@@ -89,6 +90,7 @@ public class EnumArrayTest {
 
 	@Test
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "When length 0 byte array is inserted, Altibase returns with null")
+	@SkipForDialect(dialectClass = CUBRIDDialect.class, reason = "the CUBRID JDBC driver rejects a zero-length byte[] host variable with a type conversion error")
 	public void testById(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			TableWithEnumArrays tableRecord;
@@ -104,6 +106,7 @@ public class EnumArrayTest {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = CUBRIDDialect.class, reason = "the CUBRID JDBC driver rejects a zero-length byte[] host variable with a type conversion error")
 	public void testQueryById(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			TypedQuery<TableWithEnumArrays> tq = em.createNamedQuery( "TableWithEnumArrays.JPQL.getById", TableWithEnumArrays.class );
@@ -130,6 +133,7 @@ public class EnumArrayTest {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = CUBRIDDialect.class, reason = "the CUBRID JDBC driver rejects a zero-length byte[] host variable with a type conversion error")
 	public void testNativeQueryById(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			TypedQuery<TableWithEnumArrays> tq = em.createNamedQuery( "TableWithEnumArrays.Native.getById", TableWithEnumArrays.class );

@@ -10,6 +10,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import org.hibernate.community.dialect.TiDBDialect;
+import org.hibernate.community.dialect.CUBRIDDialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.HANADialect;
@@ -175,6 +176,7 @@ public class LocalTimeTest extends AbstractJavaTimeTypeTests<LocalTime, LocalTim
 					+ " its equals() method ends up returning false in this test.")
 	@SkipForDialect(dialectClass = HSQLDialect.class,
 			reason = "Timezone issue?")
+	@SkipForDialect(dialectClass = CUBRIDDialect.class, reason = "CUBRID JDBC driver binds java.sql.Time at zero offset but reads it back at the JVM default offset, so the time round-trips shifted")
 	public void writeThenNativeRead(SessionFactoryScope factoryScope) {
 		super.writeThenNativeRead( factoryScope );
 	}

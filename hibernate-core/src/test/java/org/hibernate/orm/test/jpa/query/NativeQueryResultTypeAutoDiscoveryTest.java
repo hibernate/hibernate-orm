@@ -14,6 +14,7 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.Nationalized;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.community.dialect.AltibaseDialect;
+import org.hibernate.community.dialect.CUBRIDDialect;
 import org.hibernate.community.dialect.DerbyDialect;
 import org.hibernate.community.dialect.FirebirdDialect;
 import org.hibernate.community.dialect.GaussDBDialect;
@@ -145,6 +146,7 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 	@SkipForDialect(dialectClass = OracleDialect.class, reason = "No support for the bit datatype so we use number(1,0)")
 	@SkipForDialect(dialectClass = DB2Dialect.class, majorVersion = 10, reason = "No support for the bit datatype so we use smallint")
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "No support for the bit datatype so we use char(1)")
+	@SkipForDialect(dialectClass = CUBRIDDialect.class, reason = "CUBRID has no distinct BOOLEAN/BIT/TINYINT type; they all map to smallint")
 	public void booleanType(EntityManagerFactoryScope scope) {
 		doTest( scope, BooleanEntity.class, true );
 	}
@@ -154,6 +156,7 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 	@SkipForDialect(dialectClass = OracleDialect.class, reason = "No support for the bit datatype so we use number(1,0)")
 	@SkipForDialect(dialectClass = DB2Dialect.class, majorVersion = 10, reason = "No support for the bit datatype so we use smallint")
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "No support for the bit datatype so we use char(1)")
+	@SkipForDialect(dialectClass = CUBRIDDialect.class, reason = "CUBRID has no distinct BOOLEAN/BIT/TINYINT type; they all map to smallint")
 	public void bitType(EntityManagerFactoryScope scope) {
 		doTest( scope, BitEntity.class, false );
 	}
@@ -173,6 +176,7 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "type:resolved.Turns tinyints into shorts in result sets and advertises the type as short in the metadata")
 	@SkipForDialect(dialectClass = SpannerPostgreSQLDialect.class, reason = "Spanner maps integer types to bigint")
 	@SkipForDialect(dialectClass = SpannerDialect.class, reason = "Spanner maps integer types to bigint")
+	@SkipForDialect(dialectClass = CUBRIDDialect.class, reason = "CUBRID has no distinct BOOLEAN/BIT/TINYINT type; they all map to smallint")
 	public void tinyintType(EntityManagerFactoryScope scope) {
 		doTest( scope, TinyintEntity.class, (byte)127 );
 	}
@@ -205,6 +209,7 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Value is too big for the maximum allowed precision of Altibase")
 	@SkipForDialect(dialectClass = InformixDialect.class, reason = "The scale exceeds the maximum precision specified")
 	@SkipForDialect(dialectClass = SpannerDialect.class, reason = "The value too big for standard Spanner Numeric precision limits (38.9)")
+	@SkipForDialect(dialectClass = CUBRIDDialect.class, reason = "Value is too big for the maximum allowed precision of CUBRID")
 	public void numericType(EntityManagerFactoryScope scope) {
 		doTest( scope, NumericEntity.class, new BigDecimal( "5464384284258458485484848458.48465843584584684" ) );
 	}
@@ -219,6 +224,7 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Value is too big for the maximum allowed precision of Altibase")
 	@SkipForDialect(dialectClass = InformixDialect.class, reason = "The scale exceeds the maximum precision specified")
 	@SkipForDialect(dialectClass = SpannerDialect.class, reason = "The value too big for standard Spanner Numeric precision limits (38.9)")
+	@SkipForDialect(dialectClass = CUBRIDDialect.class, reason = "Value is too big for the maximum allowed precision of CUBRID")
 	public void decimalType(EntityManagerFactoryScope scope) {
 		doTest( scope, DecimalEntity.class, new BigDecimal( "5464384284258458485484848458.48465843584584684" )  );
 	}

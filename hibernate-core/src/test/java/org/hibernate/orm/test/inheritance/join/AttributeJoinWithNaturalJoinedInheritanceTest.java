@@ -6,6 +6,8 @@ package org.hibernate.orm.test.inheritance.join;
 
 import java.util.List;
 
+import org.hibernate.community.dialect.CUBRIDDialect;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -70,6 +72,7 @@ public class AttributeJoinWithNaturalJoinedInheritanceTest {
 
 	@Test
 	@Jira("https://hibernate.atlassian.net/browse/HHH-19883")
+	@SkipForDialect(dialectClass = CUBRIDDialect.class, reason = "CUBRID's grammar has no production for a parenthesized joined table")
 	public void testTreatedJoinWithCondition(SessionFactoryScope scope) {
 		scope.inTransaction( s -> {
 			final ChildEntityA childEntityA1 = new SubChildEntityA1( 11 );

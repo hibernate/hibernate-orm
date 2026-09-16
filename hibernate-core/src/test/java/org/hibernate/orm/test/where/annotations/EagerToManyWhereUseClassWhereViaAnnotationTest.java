@@ -15,6 +15,8 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import org.hibernate.annotations.SQLJoinTableRestriction;
 import org.hibernate.annotations.SQLRestriction;
+import org.hibernate.community.dialect.CUBRIDDialect;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -50,6 +52,7 @@ public class EagerToManyWhereUseClassWhereViaAnnotationTest {
 
 	@Test
 	@JiraKey( value = "HHH-15936" )
+	@SkipForDialect(dialectClass = CUBRIDDialect.class, reason = "CUBRID has no parenthesized joined table, and this outer join of a nested group cannot be flattened without changing which rows are null-extended")
 	public void testAssociatedWhereClause(SessionFactoryScope factoryScope) {
 		var product = new Product();
 		var flowers = new Category();

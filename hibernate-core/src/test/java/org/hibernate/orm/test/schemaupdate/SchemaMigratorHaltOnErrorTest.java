@@ -12,6 +12,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
 import org.hibernate.community.dialect.AltibaseDialect;
+import org.hibernate.community.dialect.CUBRIDDialect;
 import org.hibernate.community.dialect.FirebirdDialect;
 import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.DB2Dialect;
@@ -51,6 +52,7 @@ import org.junit.jupiter.api.Test;
 )
 public class SchemaMigratorHaltOnErrorTest {
 	@Test
+	@SkipForDialect(dialectClass = CUBRIDDialect.class, reason = "CUBRIDDialect auto-quotes reserved keywords, so the reserved-word DDL this test expects to fail is instead quoted and succeeds")
 	void testHaltOnError(EntityManagerFactoryScope factoryScope) {
 		try {
 			factoryScope.getEntityManagerFactory();

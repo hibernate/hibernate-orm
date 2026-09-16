@@ -10,6 +10,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.TimeZone;
 
 import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.community.dialect.CUBRIDDialect;
 import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.SybaseDialect;
@@ -68,6 +69,7 @@ public class UTCNormalizedInstantTest {
 
 	@SkipForDialect(dialectClass = InformixDialect.class,
 			reason = "Informix driver misbehaves")
+	@SkipForDialect(dialectClass = CUBRIDDialect.class, reason = "CUBRID JDBC driver does not pick up a change of the JVM default time zone consistently between bind and read, so the instant reads back shifted")
 	@Test void testWithSystemTimeZone(SessionFactoryScope scope) {
 		final TimeZone timeZoneBefore = TimeZone.getDefault();
 		TimeZone.setDefault( TimeZone.getTimeZone( "CET" ) );

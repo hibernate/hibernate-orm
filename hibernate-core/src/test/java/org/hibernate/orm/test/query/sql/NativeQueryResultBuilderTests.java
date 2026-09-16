@@ -10,6 +10,7 @@ import java.sql.Types;
 import java.time.Instant;
 import java.util.List;
 
+import org.hibernate.community.dialect.CUBRIDDialect;
 import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.DB2Dialect;
@@ -24,6 +25,7 @@ import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.testing.orm.domain.gambit.BasicEntity;
 import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.hibernate.testing.orm.junit.VersionMatchMode;
 import org.hibernate.type.descriptor.converter.spi.JpaAttributeConverter;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
@@ -97,6 +99,7 @@ public class NativeQueryResultBuilderTests {
 	@SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true)
 	@SkipForDialect(dialectClass = OracleDialect.class)
 	@SkipForDialect(dialectClass = InformixDialect.class)
+	@SkipForDialect(dialectClass = CUBRIDDialect.class, majorVersion = 11, minorVersion = 2, versionMatchMode = VersionMatchMode.OLDER, reason = "CUBRID returns count() as an int before 11.2, so the implicit native query result type is Integer instead of Long")
 	public void fullyImplicitTest2(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -315,6 +318,7 @@ public class NativeQueryResultBuilderTests {
 
 	@Test
 	@JiraKey("HHH-18629")
+	@SkipForDialect(dialectClass = CUBRIDDialect.class, reason = "DATA is a CUBRID reserved word, so the native query fails to parse")
 	public void testNativeQueryWithResultClass(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

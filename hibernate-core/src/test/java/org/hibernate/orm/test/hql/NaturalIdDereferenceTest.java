@@ -4,8 +4,10 @@
  */
 package org.hibernate.orm.test.hql;
 
+import org.hibernate.community.dialect.CUBRIDDialect;
 import org.hibernate.annotations.NaturalId;
 
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -238,6 +240,7 @@ public class NaturalIdDereferenceTest {
 	 * This results in three joins in total.
 	 */
 	@Test
+	@SkipForDialect(dialectClass = CUBRIDDialect.class, reason = "CUBRID's grammar has no production for a parenthesized joined table")
 	public void dereferenceNaturalIdInJoin(SessionFactoryScope scope) {
 		SQLStatementInspector sqlStatementInterceptor = scope.getCollectingStatementInspector();
 		sqlStatementInterceptor.clear();

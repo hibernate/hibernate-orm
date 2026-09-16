@@ -44,6 +44,33 @@ Hibernate Data Repositories now implements Jakarta Data 1.1, including support f
 - asynchronous repositories backed by Jakarta Concurrency or Hibernate Reactive.
 
 
+[[default-list-semantics]]
+== Default list semantics by package or module
+
+The new `@DefaultListSemantics` annotation selects how Hibernate interprets eligible `java.util.List`
+attributes declared in a package or module: `BAG` does not persist element positions, while `LIST`
+uses an implicit order column.
+
+For example, declare the following in `package-info.java`:
+
+[source,java]
+----
+@DefaultListSemantics(LIST)
+package org.example.domain;
+
+import org.hibernate.annotations.DefaultListSemantics;
+import static org.hibernate.annotations.DefaultListSemantics.Classification.LIST;
+----
+
+A package annotation overrides the module annotation and applies only to that exact package, not its subpackages.
+Explicit collection mapping metadata continues to take precedence. Lists ordered by `@OrderBy` or `@SQLOrder`,
+and unowned to-many associations, retain bag semantics unless explicit list-index metadata is present.
+
+See the link:{userGuideBase}#collection-list[User Guide] for the classification rules and
+link:{migrationGuide}#default-list-semantics[Migration Guide] for replacing the deprecated
+`hibernate.mapping.default_list_semantics` setting.
+
+
 [[graph-flushing]]
 == Graph-based Flushing
 

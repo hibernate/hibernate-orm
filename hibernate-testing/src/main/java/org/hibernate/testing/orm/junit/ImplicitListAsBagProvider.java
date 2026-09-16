@@ -13,13 +13,14 @@ import org.hibernate.metamodel.CollectionClassification;
  * {@link org.hibernate.annotations.CollectionId} or other annotations hinting at
  * the classification to use.
  *
- * Historically, Hibernate classified these as BAG.  6.0 changes that to LIST (with an
- * implied {@link jakarta.persistence.OrderColumn}).
+ * Supplies BAG for the deprecated default list semantics setting.
  *
- * This setting provider is used to enable the legacy classification
+ * @deprecated Use {@link org.hibernate.annotations.DefaultListSemantics} on a package or module.
+ * Scheduled for removal in 9.0.
  *
  * @author Steve Ebersole
  */
+@Deprecated(since = "8.0", forRemoval = true)
 public class ImplicitListAsBagProvider implements SettingProvider.Provider<CollectionClassification> {
 	@Override
 	public CollectionClassification getSetting() {

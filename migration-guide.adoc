@@ -231,6 +231,39 @@ The `@GenericGenerator` annotation was deprecated in Hibernate 6.5.
 Instead of removing it completely, we have modernized it and reversed its deprecation.
 Code still using `@GenericGenerator` must adapt to its reworked definition.
 
+[[default-list-semantics]]
+=== Deprecated default list semantics setting
+
+The `hibernate.mapping.default_list_semantics` setting and `MappingSettings.DEFAULT_LIST_SEMANTICS`
+constant are deprecated for removal in ORM 9.0. Use `@DefaultListSemantics` on a package or module instead.
+
+For example, replace `hibernate.mapping.default_list_semantics=LIST` with the following declaration
+in each applicable `package-info.java`, or with the equivalent annotation on `module-info.java`:
+
+[source,java]
+----
+@DefaultListSemantics(LIST)
+package org.example.domain;
+
+import org.hibernate.annotations.DefaultListSemantics;
+import static org.hibernate.annotations.DefaultListSemantics.Classification.LIST;
+----
+
+Use `BAG` instead of `LIST` to retain bag semantics in an annotated scope.
+Package defaults override module defaults and do not extend to subpackages.
+Inherited attributes use the package and module of their declaring type; embedded attributes use those
+of the embeddable. When migrating a persistence-unit-wide setting, cover all applicable declaring packages
+or modules before removing the setting.
+
+During the transition, the setting remains a fallback where neither annotation applies. Explicit use logs a
+deprecation warning even when an annotation overrides its effect. With no annotation or configured default,
+Hibernate continues to use `BAG`.
+
+This replacement preserves the existing classification rules: explicit mappings take precedence, and lists
+with retrieval ordering or unowned to-many associations do not acquire an implicit order column.
+See the link:{userGuideBase}#collection-list[User Guide] for the complete decision tree.
+
+
 === Deprecated OptimisticLock Annotation
 
 The venerable `@OptimisticLock` annotation was deprecated in favor of the new JPA-standard `@ExcludedFromVersioning` annotation.

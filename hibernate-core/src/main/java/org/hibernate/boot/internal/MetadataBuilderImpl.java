@@ -233,6 +233,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 	}
 
 	@Override
+	@Deprecated(since = "8.0", forRemoval = true)
 	public MetadataBuilder applyImplicitListSemantics(CollectionClassification classification) {
 		if ( classification != null ) {
 			options.mappingDefaults.implicitListClassification = classification;
@@ -526,6 +527,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 			implicitListClassification = configService.getSetting(
 					DEFAULT_LIST_SEMANTICS,
 					value -> {
+						DEPRECATION_LOGGER.deprecatedSetting( DEFAULT_LIST_SEMANTICS, "@DefaultListSemantics" );
 						final var classification = CollectionClassification.interpretSetting( value );
 						if ( classification != CollectionClassification.LIST
 							&& classification != CollectionClassification.BAG ) {
@@ -613,6 +615,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		}
 
 		@Override
+		@Deprecated(since = "8.0", forRemoval = true)
 		public CollectionClassification getImplicitListClassification() {
 			return implicitListClassification;
 		}

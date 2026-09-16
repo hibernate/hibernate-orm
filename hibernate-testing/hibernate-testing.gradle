@@ -19,6 +19,8 @@ dependencies {
     api libs.test.junitJupiterParams
 
     api libs.test.hamcrest
+    api libs.test.shrinkwrap
+
     api libs.test.assertjCore
 
     api libs.test.mockito

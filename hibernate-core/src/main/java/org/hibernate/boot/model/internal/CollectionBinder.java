@@ -42,6 +42,7 @@ import org.hibernate.annotations.CollectionIdJdbcType;
 import org.hibernate.annotations.CollectionIdJdbcTypeCode;
 import org.hibernate.annotations.CollectionType;
 import org.hibernate.annotations.CompositeType;
+import org.hibernate.annotations.DefaultListSemantics;
 import org.hibernate.annotations.EmbeddedTable;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchProfileOverride;
@@ -1004,7 +1005,7 @@ public abstract class CollectionBinder {
 			}
 
 			// otherwise, return the implicit classification for List attributes
-			return buildingContext.getBuildingOptions().getMappingDefaults().getImplicitListClassification();
+			return determineDefaultListSemantics( property, buildingContext );
 		}
 
 		if ( java.util.SortedSet.class.isAssignableFrom( semanticJavaType ) ) {
@@ -1030,6 +1031,33 @@ public abstract class CollectionBinder {
 		}
 
 		return null;
+	}
+
+	private static CollectionClassification determineDefaultListSemantics(
+			MemberDetails property,
+			MetadataBuildingContext buildingContext) {
+		final var declaringType = property.getDeclaringType();
+		if ( !declaringType.isRealClass() ) {
+			return buildingContext.getBuildingOptions().getMappingDefaults().getImplicitListClassification();
+		}
+		final var modelsContext = buildingContext.getBootstrapContext().getModelsContext();
+		final var packageInfo = GeneratorAnnotationHelper.locatePackageInfoDetails( declaringType, modelsContext );
+		if ( packageInfo != null ) {
+			final var annotation = packageInfo.getDirectAnnotationUsage( DefaultListSemantics.class );
+			if ( annotation != null ) {
+				return CollectionClassification.valueOf( annotation.value().name() );
+			}
+		}
+
+		final var module = declaringType.toJavaClass().getModule();
+		if ( module.isNamed() ) {
+			final var moduleDetails = modelsContext.getModuleDetailsRegistry().resolveModuleDetails( module );
+			final var annotation = moduleDetails.getDirectAnnotationUsage( DefaultListSemantics.class );
+			if ( annotation != null ) {
+				return CollectionClassification.valueOf( annotation.value().name() );
+			}
+		}
+		return buildingContext.getBuildingOptions().getMappingDefaults().getImplicitListClassification();
 	}
 
 	private static Class<?> determineSemanticJavaType(MemberDetails property) {

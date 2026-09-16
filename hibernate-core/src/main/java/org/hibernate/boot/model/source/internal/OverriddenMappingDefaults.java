@@ -35,6 +35,12 @@ public class OverriddenMappingDefaults implements EffectiveMappingDefaults {
 	private final EnumSet<CascadeType> cascadeTypes;
 	private final CollectionClassification implicitListClassification;
 
+	/**
+	 * @deprecated Use {@link Builder} for other defaults and {@link org.hibernate.annotations.DefaultListSemantics}
+	 * for list semantics.
+	 * Scheduled for removal in 9.0.
+	 */
+	@Deprecated(since = "8.0", forRemoval = true)
 	public OverriddenMappingDefaults(
 			String implicitSchemaName,
 			String implicitCatalogName,
@@ -139,6 +145,7 @@ public class OverriddenMappingDefaults implements EffectiveMappingDefaults {
 	}
 
 	@Override
+	@Deprecated(since = "8.0", forRemoval = true)
 	public CollectionClassification getDefaultListClassification() {
 		return implicitListClassification;
 	}
@@ -268,10 +275,20 @@ public class OverriddenMappingDefaults implements EffectiveMappingDefaults {
 			return this;
 		}
 
+		/**
+		 * @deprecated Use {@link org.hibernate.annotations.DefaultListSemantics} on a package or module.
+		 * Scheduled for removal in 9.0.
+		 */
+		@Deprecated(since = "8.0", forRemoval = true)
 		public CollectionClassification getImplicitListClassification() {
 			return implicitListClassification;
 		}
 
+		/**
+		 * @deprecated Use {@link org.hibernate.annotations.DefaultListSemantics} on a package or module.
+		 * Scheduled for removal in 9.0.
+		 */
+		@Deprecated(since = "8.0", forRemoval = true)
 		public Builder setImplicitListClassification(CollectionClassification implicitListClassification) {
 			if ( implicitListClassification != null ) {
 				this.implicitListClassification = implicitListClassification;

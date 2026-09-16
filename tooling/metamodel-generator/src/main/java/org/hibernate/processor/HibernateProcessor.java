@@ -870,15 +870,10 @@ public class HibernateProcessor extends AbstractProcessor {
 
 	private boolean hasHandwrittenMetamodel(TypeElement element) {
 		final var dataMetamodelName = '_' + element.getSimpleName().toString();
-		final boolean dataMetamodelTypeExists = element.getEnclosingElement().getEnclosedElements()
-				.stream().anyMatch( e -> e.getSimpleName().contentEquals( dataMetamodelName ) );
-		if ( !dataMetamodelTypeExists ) {
-			return false;
-		}
-        return hasMetamodelSourceFile( element, dataMetamodelName );
-    }
+		return hasMetamodelSourceFile( element, dataMetamodelName );
+	}
 
-    private boolean hasMetamodelSourceFile(TypeElement entity, String dataMetamodelName) {
+	private boolean hasMetamodelSourceFile(TypeElement entity, String dataMetamodelName) {
 		final var packageName = context.getElementUtils().getPackageOf( entity ).getQualifiedName();
 		try (var source = context.getProcessingEnvironment().getFiler()
 				.getResource( StandardLocation.SOURCE_PATH, packageName, dataMetamodelName + ".java" )

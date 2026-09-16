@@ -19,6 +19,7 @@ import jakarta.persistence.Version;
 
 import org.hibernate.Session;
 import org.hibernate.StatelessSession;
+import org.hibernate.engine.spi.StatelessSessionImplementor;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.Temporal;
@@ -202,32 +203,12 @@ class TenantIdTemporalMutationTest {
 	}
 
 	private static void inTenant(SessionFactoryScope scope, String tenant, Consumer<Session> action) {
-		try ( var session = scope.getSessionFactory().withOptions().tenantIdentifier( tenant ).openSession() ) {
-			final var transaction = session.beginTransaction();
-			try {
-				action.accept( session );
-				transaction.commit();
-			}
-			finally {
-				if ( transaction.isActive() ) {
-					transaction.rollback();
-				}
-			}
-		}
+		scope.inTransaction( factory -> factory.withOptions().tenantIdentifier( tenant ).openSession(), action::accept );
 	}
 
 	private static void inStatelessTenant(SessionFactoryScope scope, String tenant, Consumer<StatelessSession> action) {
 		try ( var session = scope.getSessionFactory().withStatelessOptions().tenantIdentifier( tenant ).openStatelessSession() ) {
-			final var transaction = session.beginTransaction();
-			try {
-				action.accept( session );
-				transaction.commit();
-			}
-			finally {
-				if ( transaction.isActive() ) {
-					transaction.rollback();
-				}
-			}
+			scope.inStatelessTransaction( (StatelessSessionImplementor) session, action::accept );
 		}
 	}
 

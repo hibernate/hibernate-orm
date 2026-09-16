@@ -4,6 +4,8 @@
  */
 package org.hibernate.action.queue.internal.decompose.entity;
 
+import static org.hibernate.engine.internal.TenantIdHelper.MissingRowPolicy.THROW;
+
 import org.hibernate.engine.internal.TenantIdHelper;
 import org.hibernate.action.queue.spi.decompose.entity.EntityMutationPlanContributor;
 import org.hibernate.action.queue.spi.decompose.entity.UpdateCacheHandling;
@@ -167,9 +169,14 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 			private boolean checked;
 
 			@Override
+			public boolean requiresBatchFlush() {
+				return !checked;
+			}
+
+			@Override
 			public boolean beforeExecution(SessionImplementor session) {
 				if ( !checked ) {
-					TenantIdHelper.checkTenantId( action.getId(), entityPersister, session, false );
+					TenantIdHelper.checkStoredTenantOwnership( action.getId(), entityPersister, session, THROW );
 					checked = true;
 				}
 				return true;
@@ -178,8 +185,17 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 		for ( var operation : operations ) {
 			if ( operation.getKind() != MutationKind.NO_OP ) {
 				final var previous = operation.getPreExecutionCallback();
-				operation.setPreExecutionCallback( previous == null ? ownershipCheck : session ->
-						previous.beforeExecution( session ) && ownershipCheck.beforeExecution( session ) );
+				operation.setPreExecutionCallback( previous == null ? ownershipCheck : new PreExecutionCallback() {
+					@Override
+					public boolean requiresBatchFlush() {
+						return previous.requiresBatchFlush() || ownershipCheck.requiresBatchFlush();
+					}
+
+					@Override
+					public boolean beforeExecution(SessionImplementor session) {
+						return previous.beforeExecution( session ) && ownershipCheck.beforeExecution( session );
+					}
+				} );
 			}
 		}
 	}

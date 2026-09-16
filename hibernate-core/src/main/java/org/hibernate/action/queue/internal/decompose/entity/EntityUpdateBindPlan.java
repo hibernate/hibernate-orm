@@ -141,7 +141,7 @@ public class EntityUpdateBindPlan implements BindPlan, OperationResultChecker {
 			JdbcValueBindings valueBindings,
 			FlushOperation flushOperation,
 			SharedSessionContractImplementor session) {
-		TenantIdHelper.checkIdentifierTenant( identifier, entityPersister, session );
+		TenantIdHelper.validateIdentifierTenant( identifier, entityPersister, session );
 		TenantIdHelper.bindTenantRestriction( entityPersister, flushOperation.getJdbcOperation(), valueBindings, session );
 
 		decomposeForUpdate( valueBindings, flushOperation, session );

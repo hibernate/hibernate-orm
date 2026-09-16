@@ -25,6 +25,7 @@ import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.HQLSelect;
 import org.hibernate.annotations.NaturalIdCache;
 import org.hibernate.annotations.TenantId;
+import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -48,8 +49,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@DomainModel(annotatedClasses = { RootTenantCacheTest.Item.class, RootTenantCacheTest.EmbeddedItem.class })
-@SessionFactory(generateStatistics = true)
+@DomainModel(annotatedClasses = { RootTenantCacheTest.Item.class, RootTenantCacheTest.EmbeddedItem.class, RootTenantCacheTest.RestrictedItem.class })
+@SessionFactory(generateStatistics = true, useCollectingStatementInspector = true)
 @ServiceRegistry(settings = {
 		@Setting(name = MULTI_TENANT_IDENTIFIER_RESOLVER, value = "org.hibernate.orm.test.tenantid.TenantIdMutationTest$Resolver"),
 		@Setting(name = MULTI_TENANT_RLS_ENABLED, value = "false"),
@@ -88,6 +89,38 @@ class RootTenantCacheTest {
 		assertEquals( 1, statistics.getSecondLevelCacheHitCount() );
 		inTenant( scope, "root", session -> session.find( EmbeddedItem.class, 1L ).name = "after" );
 		inTenant( scope, "mine", session -> assertEquals( "after", session.find( EmbeddedItem.class, 1L ).name ) );
+	}
+
+	@Test
+	void rootInvalidatesRowExcludedByStaticRestriction(SessionFactoryScope scope) {
+		inTenant( scope, "mine", session -> session.persist( new RestrictedItem() ) );
+		inTenant( scope, "mine", session -> session.find( RestrictedItem.class, 1L ).name = "hidden" );
+		TenantIdMutationMappingTest.inStatelessTenant( scope, "root", session -> {
+			final var item = new RestrictedItem();
+			item.version = 1;
+			item.name = "after";
+			session.update( item );
+		} );
+		inTenant( scope, "mine", session -> assertEquals( "after", session.find( RestrictedItem.class, 1L ).name ) );
+	}
+
+	@Test
+	void rootInvalidationReadsOnlyOwnerAndVersion(SessionFactoryScope scope) {
+		prime( scope );
+		inTenant( scope, "root", session -> {
+			final var item = session.find( Item.class, 1L );
+			final var inspector = scope.getCollectingStatementInspector();
+			inspector.clear();
+			item.code = "after";
+			session.flush();
+			final var selects = inspector.getSqlQueries().stream().filter( sql -> sql.startsWith( "select " ) ).toList();
+			assertEquals( 1, selects.size() );
+			final String projection = selects.get( 0 ).substring( 0, selects.get( 0 ).indexOf( " from " ) );
+			assertTrue( projection.contains( "tenant" ) );
+			assertTrue( projection.contains( "version" ) );
+			assertFalse( projection.contains( "code" ) );
+		} );
+		inTenant( scope, "mine", session -> assertEquals( "after", session.find( Item.class, 1L ).code ) );
 	}
 
 	@ParameterizedTest
@@ -244,11 +277,22 @@ class RootTenantCacheTest {
 		scope.inTransaction( factory -> factory.withOptions().tenantIdentifier( tenant ).openSession(), action );
 	}
 
+	@Entity(name = "RestrictedRootCacheItem")
+	@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+	@SQLRestriction("name <> 'hidden'")
+	static class RestrictedItem {
+		@Id Long id = 1L;
+		@Version int version;
+		@TenantId String tenant;
+		String name = "before";
+	}
+
 	@Entity(name = "EmbeddedRootCacheItem")
 	@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 	@HQLSelect(query = "from EmbeddedRootCacheItem where id=?1")
 	static class EmbeddedItem {
 		@Id Long id = 1L;
+		@Version int version;
 		@Embedded TenantDetails details = new TenantDetails();
 		String name = "before";
 	}

@@ -111,7 +111,8 @@ public class BatchingPlanStepExecutor extends StandardPlanStepExecutor implement
 
 	@Override
 	protected boolean beforeOperationExecution(FlushOperation flushOperation) {
-		if ( flushOperation.getPreExecutionCallback() != null && batchKey != null ) {
+		final var callback = flushOperation.getPreExecutionCallback();
+		if ( batchKey != null && callback != null && callback.requiresBatchFlush() ) {
 			executeBatch();
 		}
 		return super.beforeOperationExecution( flushOperation );

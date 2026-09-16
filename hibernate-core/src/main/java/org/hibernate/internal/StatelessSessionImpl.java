@@ -4,6 +4,10 @@
  */
 package org.hibernate.internal;
 
+import static org.hibernate.engine.internal.TenantIdHelper.MissingRowPolicy.ALLOW;
+
+import static org.hibernate.engine.internal.TenantIdHelper.MissingRowPolicy.THROW;
+
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.CacheRetrieveMode;
@@ -588,9 +592,9 @@ public class StatelessSessionImpl
 		checkNotReadOnly();
 		final var persister = getEntityPersister( entityName, entity );
 		final Object id = persister.getIdentifier( entity, this );
-		TenantIdHelper.validateTenantId( entity, id, persister, this );
+		TenantIdHelper.validateAssignedTenantId( entity, id, persister, this );
 		if ( persister.hasMultipleTables() || persister.hasOwnedCollections() ) {
-			TenantIdHelper.checkTenantId( id, persister, this, false );
+			TenantIdHelper.checkStoredTenantOwnership( id, persister, this, THROW );
 		}
 		final Object version = persister.getVersion( entity );
 		if ( !firePreDelete(entity, id, persister) ) {
@@ -692,9 +696,9 @@ public class StatelessSessionImpl
 		final var persister = getEntityPersister( entityName, entity );
 		checkLobVersioning( persister );
 		final Object id = persister.getIdentifier( entity, this );
-		TenantIdHelper.validateTenantId( entity, id, persister, this );
+		TenantIdHelper.validateAssignedTenantId( entity, id, persister, this );
 		if ( persister.hasMultipleTables() || persister.hasOwnedCollections() ) {
-			TenantIdHelper.checkTenantId( id, persister, this, false );
+			TenantIdHelper.checkStoredTenantOwnership( id, persister, this, THROW );
 		}
 		final Object[] state = persister.getValues( entity );
 		final Object oldVersion;
@@ -862,11 +866,11 @@ public class StatelessSessionImpl
 		final var persister = getEntityPersister( entityName, entity );
 		TenantIdHelper.initializeIdentifierTenant( entity, persister, this );
 		final Object id = idToUpsert( entity, persister );
-		TenantIdHelper.checkIdentifierTenant( id, persister, this );
+		TenantIdHelper.validateIdentifierTenant( id, persister, this );
 		final Object[] state = persister.getValues( entity );
 		TenantIdHelper.initializeTenantId( entity, state, persister, this );
 		if ( persister.hasMultipleTables() || persister.hasOwnedCollections() ) {
-			TenantIdHelper.checkTenantId( id, persister, this, true );
+			TenantIdHelper.checkStoredTenantOwnership( id, persister, this, ALLOW );
 		}
 		if ( !firePreUpsert(entity, id, state, persister) ) {
 			runInterceptorCallback(

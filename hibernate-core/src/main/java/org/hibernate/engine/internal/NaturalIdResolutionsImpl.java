@@ -235,7 +235,7 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 			Object naturalIdValues,
 			Object previousNaturalIdValues,
 			CachedNaturalIdValueSource source) {
-		if ( TenantIdHelper.isRoot( session() ) ) {
+		if ( session().isRootTenant() ) {
 			return;
 		}
 		final var cacheAccess = persister.getNaturalIdMapping().getCacheAccess();

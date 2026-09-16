@@ -18,7 +18,9 @@ import org.hibernate.sql.ast.spi.model.ColumnValueBindingList;
 import org.hibernate.sql.ast.spi.model.MutatingTableReference;
 import org.hibernate.sql.ast.spi.model.RestrictedTableMutation;
 import org.hibernate.sql.ast.spi.model.TenantIdColumnValueBinding;
-import org.hibernate.sql.JdbcParameterCounter;
+import java.util.List;
+
+import org.hibernate.sql.ast.spi.model.ColumnValueParameter;
 
 import static org.hibernate.SPI.Role.IMPLEMENT;
 
@@ -80,13 +82,14 @@ public abstract class AbstractRestrictedTableMutationBuilder<O extends MutationO
 	 * The count cannot identify omitted or reordered non-tenant parameters:
 	 * the custom SQL must preserve the original parameter list and its order.
 	 */
-	protected void adjustCustomSqlTenantRestriction(TableMapping.MutationDetails details, int parameterCount) {
+	protected void adjustCustomSqlTenantRestriction(TableMapping.MutationDetails details, List<ColumnValueParameter> parameters) {
 		if ( optimisticLockBindings.stream().anyMatch( binding -> binding instanceof TenantIdColumnValueBinding ) ) {
-			final int expected = parameterCount + details.getExpectation().getNumberOfParametersUsed();
-			final int actual = JdbcParameterCounter.count( details.getCustomSql(), getJdbcServices().getDialect() );
+			final int expected = parameters.size() + details.getExpectation().getNumberOfParametersUsed();
+			final int actual = details.getCustomSqlParameterCount( getJdbcServices().getDialect() );
 			if ( actual == expected - 1 ) {
 				optimisticLockBindings.removeIf( binding -> binding instanceof TenantIdColumnValueBinding );
 				getParameters().removeIf( parameter -> parameter.getUsage() == ParameterUsage.TENANT );
+				parameters.removeIf( parameter -> parameter.getUsage() == ParameterUsage.TENANT );
 			}
 			else if ( actual != expected ) {
 				throw new MappingException(

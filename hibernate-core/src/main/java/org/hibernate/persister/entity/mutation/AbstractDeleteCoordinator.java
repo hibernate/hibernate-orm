@@ -74,7 +74,7 @@ public abstract class AbstractDeleteCoordinator
 			Object id,
 			Object version,
 			SharedSessionContractImplementor session) {
-		TenantIdHelper.checkIdentifierTenant( id, entityPersister(), session );
+		TenantIdHelper.validateIdentifierTenant( id, entityPersister(), session );
 		final boolean isImpliedOptimisticLocking = entityPersister().optimisticLockStyle().isAllOrDirty();
 
 		final var entry = session.getPersistenceContextInternal().getEntry( entity );

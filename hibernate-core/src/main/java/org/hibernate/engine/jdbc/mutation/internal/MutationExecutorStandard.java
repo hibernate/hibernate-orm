@@ -90,13 +90,9 @@ public class MutationExecutorStandard extends AbstractMutationExecutor implement
 		List<PreparableMutationOperation> nonBatchedJdbcMutations = null;
 		List<SelfExecutingUpdateOperation> selfExecutingMutations = null;
 
-		boolean hasAnyNonBatchedJdbcOperations = false;
-		boolean hasSelfExecutingOperations = false;
-
 		for ( int i = mutationOperationGroup.getNumberOfOperations() - 1; i >= 0; i-- ) {
 			final MutationOperation operation = mutationOperationGroup.getOperation( i );
 			if ( operation instanceof SelfExecutingUpdateOperation selfExecutingUpdateOperation ) {
-				hasSelfExecutingOperations = true;
 				if ( selfExecutingMutations == null ) {
 					selfExecutingMutations = new ArrayList<>();
 				}
@@ -108,8 +104,8 @@ public class MutationExecutorStandard extends AbstractMutationExecutor implement
 				final boolean canBeBatched;
 
 				if ( tableDetails.isIdentifierTable()
-						&& ( hasAnyNonBatchedJdbcOperations
-								|| hasSelfExecutingOperations && requiresImmediateTenantCheck( operation, session ) ) ) {
+						&& ( nonBatchedJdbcMutations != null
+								|| selfExecutingMutations != null && requiresImmediateTenantCheck( operation, session ) ) ) {
 					canBeBatched = false;
 				}
 				else {
@@ -124,7 +120,6 @@ public class MutationExecutorStandard extends AbstractMutationExecutor implement
 					statementLocationMap.put( tableDetails.getTableName(), StatementLocation.BATCHED );
 				}
 				else {
-					hasAnyNonBatchedJdbcOperations = true;
 					if ( nonBatchedJdbcMutations == null ) {
 						nonBatchedJdbcMutations = new ArrayList<>();
 					}

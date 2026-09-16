@@ -13,6 +13,12 @@ import org.hibernate.engine.spi.SessionImplementor;
 /// @since 8.0
 @Incubating(since = "8.0", group = "action-queue")
 public interface PreExecutionCallback {
+	/// Whether pending JDBC work must execute before invoking this callback.
+	/// A callback which has already completed its database checks may return `false`.
+	default boolean requiresBatchFlush() {
+		return true;
+	}
+
 	/// @return `true` to execute the operation; `false` to skip it.
 	boolean beforeExecution(SessionImplementor session);
 }

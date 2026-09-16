@@ -24,6 +24,7 @@ import jakarta.persistence.Version;
 
 import org.hibernate.Session;
 import org.hibernate.StatelessSession;
+import org.hibernate.engine.spi.StatelessSessionImplementor;
 import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
@@ -168,7 +169,7 @@ class TenantIdMutationMappingTest {
 		inTenant( scope, "mine", session -> session.persist( new JoinedSub() ) );
 		inStatelessTenant( scope, "mine", session -> {
 			final var persister = scope.getSessionFactory().getMappingMetamodel().getEntityDescriptor( JoinedSub.class );
-			TenantIdHelper.checkTenantId( 1L, persister, (SharedSessionContractImplementor) session, false );
+			TenantIdHelper.checkStoredTenantOwnership( 1L, persister, (SharedSessionContractImplementor) session, TenantIdHelper.MissingRowPolicy.THROW );
 			final var exception = assertThrows( PersistenceException.class, () -> inTenant( scope, "root", other ->
 					other.createNativeQuery( "select id from TenantJoined where id=1 for update nowait", Long.class )
 							.getSingleResult() ) );
@@ -268,17 +269,8 @@ class TenantIdMutationMappingTest {
 	}
 
 	static void inStatelessTenant(SessionFactoryScope scope, String tenant, Consumer<StatelessSession> action) {
-		try (var session = scope.getSessionFactory().withStatelessOptions().tenantIdentifier( tenant ).openStatelessSession()) {
-			final var transaction = session.beginTransaction();
-			try {
-				action.accept( session );
-				transaction.commit();
-			}
-			finally {
-				if ( transaction.isActive() ) {
-					transaction.rollback();
-				}
-			}
+		try ( var session = scope.getSessionFactory().withStatelessOptions().tenantIdentifier( tenant ).openStatelessSession() ) {
+			scope.inStatelessTransaction( (StatelessSessionImplementor) session, action::accept );
 		}
 	}
 

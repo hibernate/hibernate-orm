@@ -74,7 +74,7 @@ public class ForceVersionBindPlan implements BindPlan, OperationResultChecker {
 				session
 		);
 		jdbcValueBindings.bindRestriction( -1, oldVersion, persister.getVersionMapping() );
-		TenantIdHelper.checkIdentifierTenant( entityId, persister, session );
+		TenantIdHelper.validateIdentifierTenant( entityId, persister, session );
 		TenantIdHelper.bindTenantRestriction( persister, flushOperation.getJdbcOperation(), jdbcValueBindings, session );
 	}
 

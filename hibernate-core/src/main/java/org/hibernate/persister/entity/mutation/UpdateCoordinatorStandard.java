@@ -4,6 +4,8 @@
  */
 package org.hibernate.persister.entity.mutation;
 
+import static org.hibernate.engine.internal.TenantIdHelper.MissingRowPolicy.THROW;
+
 import org.hibernate.dialect.sql.ast.spi.SqlAstTranslationRequest;
 
 import java.util.ArrayList;
@@ -187,7 +189,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			int[] incomingDirtyAttributeIndexes,
 			boolean hasDirtyCollection,
 			SharedSessionContractImplementor session) {
-		TenantIdHelper.checkIdentifierTenant( id, entityPersister(), session );
+		TenantIdHelper.validateIdentifierTenant( id, entityPersister(), session );
 		final var versionMapping = entityPersister().getVersionMapping();
 		final boolean databaseDirtinessCheck =
 				incomingOldValues == null
@@ -1236,7 +1238,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			}
 			if ( updatesOtherTable ) {
 				session.getJdbcCoordinator().executeBatch();
-				TenantIdHelper.checkTenantId( id, persister, session, false );
+				TenantIdHelper.checkStoredTenantOwnership( id, persister, session, THROW );
 			}
 		}
 	}

@@ -57,8 +57,7 @@ public class TenantIdGeneration implements BeforeExecutionGenerator {
 		final Object tenantId = session.getTenantIdentifierValue();
 		if ( currentValue != null ) {
 			validateTenantId( session, currentValue );
-			final var resolver = session.getSessionFactory().getCurrentTenantIdentifierResolver();
-			if ( resolver != null && resolver.isRoot( tenantId ) ) {
+			if ( session.isRootTenant() ) {
 				// the "root" tenant is allowed to set the tenant id explicitly
 				return currentValue;
 			}
@@ -72,8 +71,7 @@ public class TenantIdGeneration implements BeforeExecutionGenerator {
 	public void validateTenantId(SharedSessionContractImplementor session, Object currentValue) {
 		final var sessionFactory = session.getSessionFactory();
 		final Object tenantId = session.getTenantIdentifierValue();
-		final var resolver = sessionFactory.getCurrentTenantIdentifierResolver();
-		if ( resolver == null || !resolver.isRoot( tenantId ) ) {
+		if ( !session.isRootTenant() ) {
 			final var tenantIdJavaType = sessionFactory.getTenantIdentifierJavaType();
 			if ( !tenantIdJavaType.areEqual( currentValue, tenantId ) ) {
 				throw new PropertyValueException(

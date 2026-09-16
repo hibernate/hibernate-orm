@@ -130,7 +130,7 @@ class TenantIdSecondaryTableBatchingTest implements ServiceRegistryProducer {
 		int batches = 0;
 		int updates = 0;
 		for ( var entry : connectionProvider.getPreparedStatementsAndSql().entrySet() ) {
-			if ( entry.getValue().startsWith( "update " + type.getAnnotation( Table.class ).name() + " set " ) ) {
+			if ( entry.getValue().startsWith( "update " + type.getAnnotation( Table.class ).name() + " " ) ) {
 				additions += connectionProvider.spyContext.getCalls( PreparedStatement.class.getMethod( "addBatch" ), entry.getKey() ).size();
 				batches += connectionProvider.spyContext.getCalls( PreparedStatement.class.getMethod( "executeBatch" ), entry.getKey() ).size();
 				updates += connectionProvider.spyContext.getCalls( PreparedStatement.class.getMethod( "executeUpdate" ), entry.getKey() ).size();

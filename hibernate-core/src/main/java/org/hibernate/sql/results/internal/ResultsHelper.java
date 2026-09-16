@@ -6,7 +6,6 @@ package org.hibernate.sql.results.internal;
 
 import jakarta.persistence.CacheStoreMode;
 
-import org.hibernate.engine.internal.TenantIdHelper;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.cache.spi.entry.CollectionCacheEntry;
 import org.hibernate.collection.spi.PersistentCollection;
@@ -243,7 +242,7 @@ public class ResultsHelper {
 	}
 
 	private static boolean isCachePutEnabled(SharedSessionContractImplementor session, CacheStoreMode cacheStoreMode) {
-		if ( TenantIdHelper.isRoot( session ) ) {
+		if ( session.isRootTenant() ) {
 			return false;
 		}
 		return cacheStoreMode == null

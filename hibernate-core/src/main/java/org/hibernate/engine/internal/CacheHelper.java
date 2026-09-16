@@ -46,7 +46,7 @@ public final class CacheHelper {
 			EntityPersister persister,
 			boolean isNaturalKey,
 			CachedDomainDataAccess cacheAccess) {
-		if ( TenantIdHelper.isRoot( session ) ) {
+		if ( session.isRootTenant() ) {
 			return null;
 		}
 		final var eventListenerManager = session.getEventListenerManager();
@@ -76,7 +76,7 @@ public final class CacheHelper {
 			Object cacheKey,
 			CollectionPersister persister,
 			CachedDomainDataAccess cacheAccess) {
-		if ( TenantIdHelper.isRoot( session ) ) {
+		if ( session.isRootTenant() ) {
 			return null;
 		}
 		final var eventListenerManager = session.getEventListenerManager();

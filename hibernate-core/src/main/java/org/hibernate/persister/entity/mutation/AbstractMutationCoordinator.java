@@ -113,7 +113,7 @@ public abstract class AbstractMutationCoordinator {
 			if ( operation != null
 					&& operation.findValueDescriptor( selectable.getSelectionExpression(), ParameterUsage.TENANT ) != null ) {
 				bindings.bindValue(
-						TenantIdHelper.isRoot( session ) ? null : session.getTenantIdentifierValue(),
+						session.isRootTenant() ? null : session.getTenantIdentifierValue(),
 						tableName, selectable.getSelectionExpression(), ParameterUsage.TENANT );
 			}
 		}

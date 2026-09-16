@@ -4,6 +4,10 @@
  */
 package org.hibernate.event.internal;
 
+import static org.hibernate.engine.internal.TenantIdHelper.MissingRowPolicy.ALLOW;
+
+import static org.hibernate.engine.internal.TenantIdHelper.MissingRowPolicy.THROW;
+
 import org.hibernate.CacheMode;
 import org.hibernate.DetachedObjectException;
 import org.hibernate.LockMode;
@@ -95,7 +99,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener {
 				if ( factory.getSessionFactoryOptions().isJpaBootstrap() && entityHolder == null ) {
 					throw new IllegalArgumentException( "Given entity is not associated with the persistence context" );
 				}
-				TenantIdHelper.checkIdentifierTenant( id, persister, source );
+				TenantIdHelper.validateIdentifierTenant( id, persister, source );
 				// optimization for deleting certain entities without loading them
 				persistenceContext.reassociateProxy( object, id );
 				if ( !persistenceContext.containsDeletedUnloadedEntityKey( key ) ) {
@@ -157,7 +161,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener {
 			// An unassigned tenant component of the identifier cannot name a stored row.
 			final Object id = persister.getIdentifier( entity, source );
 			if ( id != null && !TenantIdHelper.hasUnassignedIdentifierTenant( id, persister, source ) ) {
-				TenantIdHelper.checkTenantId( id, persister, source, true );
+				TenantIdHelper.checkStoredTenantOwnership( id, persister, source, ALLOW );
 			}
 			deleteTransientEntity( source, entity, persister, transientEntities );
 		}
@@ -181,7 +185,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener {
 					+ persister.getEntityName() + "' because it has a null identifier" );
 		}
 
-		TenantIdHelper.checkTenantId( id, persister, source, false );
+		TenantIdHelper.checkStoredTenantOwnership( id, persister, source, THROW );
 		final var key = source.generateEntityKey( id, persister);
 		final Object version = persister.getVersion( entity );
 

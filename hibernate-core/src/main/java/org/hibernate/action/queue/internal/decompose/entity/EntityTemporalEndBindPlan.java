@@ -73,7 +73,7 @@ public class EntityTemporalEndBindPlan implements BindPlan, OperationResultCheck
 			JdbcValueBindings valueBindings,
 			FlushOperation flushOperation,
 			SharedSessionContractImplementor session) {
-		TenantIdHelper.checkIdentifierTenant( identifier, entityPersister, session );
+		TenantIdHelper.validateIdentifierTenant( identifier, entityPersister, session );
 		TenantIdHelper.bindTenantRestriction( entityPersister, flushOperation.getJdbcOperation(), valueBindings, session );
 		bindTemporalEndingValue( valueBindings, session );
 		bindKey( valueBindings, session );

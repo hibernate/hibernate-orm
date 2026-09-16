@@ -98,26 +98,10 @@ public class VersionUpdateBuilder implements TableMutationBuilder<TableUpdateSta
 
 	@Override
 	public TableUpdateStandard buildMutation() {
-		var sqlBuffer = new StringBuilder( "update " );
-		sqlBuffer.append( tableReference.getTableName() );
-		sqlBuffer.append( " set " ).append( newVersionBinding.getColumnReference().getColumnExpression() ).append( " = ? " );
-		sqlBuffer.append( " where " );
-		boolean first = true;
-		for ( int i = 0; i < restrictionBindings.size(); i++ ) {
-			if ( !first ) {
-				sqlBuffer.append( " and " );
-			}
-			first = false;
-
-			var restrictionBinding = restrictionBindings.get( i );
-			sqlBuffer.append( restrictionBinding.getColumnReference().getColumnExpression() ).append( " = ? " );
-		}
-
-		var sql = sqlBuffer.toString();
 		return new TableUpdateStandard(
 				tableReference,
 				mutationTarget,
-				sql,
+				"update version for " + mutationTarget.getEntityName(),
 				List.of( newVersionBinding ),
 				restrictionBindings,
 				tenantBindings,

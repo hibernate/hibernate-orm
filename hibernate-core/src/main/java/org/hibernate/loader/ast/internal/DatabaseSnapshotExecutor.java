@@ -12,6 +12,7 @@ import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.sqm.sql.spi.FromClauseIndex;
@@ -61,6 +62,14 @@ class DatabaseSnapshotExecutor {
 			EntityMappingType entityDescriptor,
 			SessionFactoryImplementor sessionFactory,
 			Filter tenantFilter) {
+		this( entityDescriptor, sessionFactory, tenantFilter, null );
+	}
+
+	DatabaseSnapshotExecutor(
+			EntityMappingType entityDescriptor,
+			SessionFactoryImplementor sessionFactory,
+			Filter tenantFilter,
+			List<? extends ModelPart> partsToSelect) {
 		this.entityDescriptor = entityDescriptor;
 		var jdbcParametersBuilder =
 				JdbcParametersList.newBuilder( entityDescriptor.getIdentifierMapping().getJdbcTypeCount() );
@@ -103,7 +112,7 @@ class DatabaseSnapshotExecutor {
 			);
 		}
 
-		// We produce the same state array as if we were creating an entity snapshot
+		// Full snapshots follow entity state order. Targeted snapshots follow the requested projection.
 		final List<DomainResult<?>> domainResults = new ArrayList<>();
 
 		final var sqlExpressionResolver = state.getSqlExpressionResolver();
@@ -134,21 +143,29 @@ class DatabaseSnapshotExecutor {
 		);
 		jdbcParameters = jdbcParametersBuilder.build();
 
-
-		entityDescriptor.forEachAttributeMapping(
-				attributeMapping -> {
-					final var snapshotDomainResult =
-							attributeMapping.createSnapshotDomainResult(
-									rootPath.append( attributeMapping.getAttributeName() ),
-									rootTableGroup,
-									null,
-									state
-					);
-					if ( snapshotDomainResult != null ) {
-						domainResults.add( snapshotDomainResult );
+		if ( partsToSelect == null ) {
+			entityDescriptor.forEachAttributeMapping(
+					attributeMapping -> {
+						final var snapshotDomainResult =
+								attributeMapping.createSnapshotDomainResult(
+										rootPath.append( attributeMapping.getAttributeName() ),
+										rootTableGroup,
+										null,
+										state
+						);
+						if ( snapshotDomainResult != null ) {
+							domainResults.add( snapshotDomainResult );
+						}
 					}
-				}
-		);
+			);
+		}
+		else {
+			// A targeted snapshot ignores static restrictions just like a full snapshot.
+			for ( var part : partsToSelect ) {
+				domainResults.add( part.createDomainResult(
+						rootPath.append( part.getPartName() ), rootTableGroup, null, state ) );
+			}
+		}
 
 		final var selectStatement = new SelectStatement( rootQuerySpec, domainResults );
 		jdbcSelect =

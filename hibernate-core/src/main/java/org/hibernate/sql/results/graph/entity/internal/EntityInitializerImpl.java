@@ -13,7 +13,6 @@ import java.util.function.Supplier;
 import jakarta.annotation.Nonnull;
 import jakarta.persistence.CacheStoreMode;
 
-import org.hibernate.engine.internal.TenantIdHelper;
 import org.hibernate.EntityFilterException;
 import org.hibernate.FetchNotFoundException;
 import org.hibernate.Hibernate;
@@ -2003,7 +2002,7 @@ public class EntityInitializerImpl
 	}
 
 	private boolean isCachePutEnabled(SharedSessionContractImplementor session) {
-		if ( TenantIdHelper.isRoot( session ) ) {
+		if ( session.isRootTenant() ) {
 			return false;
 		}
 		final var cacheStoreMode = fetchOptions.cacheStoreMode();

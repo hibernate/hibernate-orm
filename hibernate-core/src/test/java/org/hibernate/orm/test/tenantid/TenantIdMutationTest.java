@@ -406,19 +406,7 @@ class TenantIdMutationTest {
 	}
 
 	private static void inTenant(SessionFactoryScope scope, String tenant, Consumer<Session> action) {
-		try ( var session = scope.getSessionFactory().withOptions().tenantIdentifier( tenant ).openSession() ) {
-			final var transaction = session.beginTransaction();
-			try {
-				action.accept( session );
-				transaction.commit();
-			}
-			catch (RuntimeException e) {
-				if ( transaction.isActive() ) {
-					transaction.rollback();
-				}
-				throw e;
-			}
-		}
+		scope.inTransaction( factory -> factory.withOptions().tenantIdentifier( tenant ).openSession(), action::accept );
 	}
 
 	@MappedSuperclass

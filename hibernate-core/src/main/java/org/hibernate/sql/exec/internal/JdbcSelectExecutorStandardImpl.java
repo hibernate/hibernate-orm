@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
-import org.hibernate.engine.internal.TenantIdHelper;
 import org.hibernate.CacheMode;
 import org.hibernate.cache.spi.QueryKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -434,7 +433,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 	}
 
 	private static CacheMode resolveCacheMode(ExecutionContext executionContext) {
-		if ( TenantIdHelper.isRoot( executionContext.getSession() ) ) {
+		if ( executionContext.getSession().isRootTenant() ) {
 			return CacheMode.IGNORE;
 		}
 		final var queryOptions = executionContext.getQueryOptions();

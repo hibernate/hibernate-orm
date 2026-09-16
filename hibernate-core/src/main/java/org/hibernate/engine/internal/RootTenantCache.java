@@ -6,11 +6,8 @@ package org.hibernate.engine.internal;
 
 import org.hibernate.cache.spi.access.CachedDomainDataAccess;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.generator.internal.TenantIdGeneration;
-import org.hibernate.id.CompositeNestedGeneratedValueGenerator;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.type.ComponentType;
 
 /**
  * Invalidates owning-tenant cache entries before mutations by a root tenant.
@@ -22,14 +19,17 @@ public final class RootTenantCache {
 
 	public static void invalidateEntity(
 			Object id, EntityPersister persister, SharedSessionContractImplementor session) {
-		if ( TenantIdHelper.isRoot( session ) ) {
+		if ( session.isRootTenant() ) {
 			if ( persister.canWriteToCache() ) {
-				final String tenant = tenantIdentifier( id, persister, session );
+				final var loader = persister.getTenantIdLoader();
+				final var snapshot = loader == null ? null : loader.loadCacheSnapshot( id, session );
+				final String tenant = snapshot == null
+						? tenantIdentifier( id, persister, session ) : tenantIdentifier( snapshot.tenantId(), session );
 				if ( tenant != null ) {
 					final var cache = persister.getCacheAccessStrategy();
 					final Object key = cache.generateCacheKey( id, persister, session.getFactory(), tenant );
-					final Object[] snapshot = persister.isVersioned() ? persister.getDatabaseSnapshot( id, session ) : null;
-					final Object version = snapshot == null ? null : snapshot[persister.getVersionPropertyIndex()];
+					final Object version = snapshot != null ? snapshot.version()
+							: persister.isVersioned() ? persister.getCurrentVersion( id, session ) : null;
 					invalidateItem( key, version, cache, session );
 				}
 			}
@@ -47,7 +47,7 @@ public final class RootTenantCache {
 
 	public static void invalidateCollection(
 			Object key, CollectionPersister persister, SharedSessionContractImplementor session) {
-		if ( TenantIdHelper.isRoot( session ) && persister.hasCache() ) {
+		if ( session.isRootTenant() && persister.hasCache() ) {
 			final var owner = persister.getOwnerEntityPersister();
 			final String property = persister.getCollectionType().getLHSPropertyName();
 			final Object id = property == null ? key : owner.getIdByUniqueKey( key, property, session );
@@ -69,28 +69,17 @@ public final class RootTenantCache {
 
 	private static String tenantIdentifier(
 			Object id, EntityPersister persister, SharedSessionContractImplementor session) {
-		final var mapping = TenantIdHelper.tenantIdMapping( persister );
-		final Object tenant;
-		if ( mapping != null ) {
-			// Detached state may contain a different tenant, and root writes may omit it.
-			tenant = TenantIdHelper.getTenantId( id, persister, session );
-		}
-		else if ( persister.getGenerator() instanceof TenantIdGeneration ) {
-			tenant = id;
-		}
-		else if ( persister.getGenerator() instanceof CompositeNestedGeneratedValueGenerator composite ) {
-			final var type = (ComponentType) persister.getIdentifierType();
-			for ( var plan : composite.getGenerationPlans() ) {
-				if ( plan.getGenerator() instanceof TenantIdGeneration ) {
-					return session.getFactory().getTenantIdentifierJavaType().toString(
-							type.getPropertyValue( id, plan.getPropertyIndex(), session ) );
-				}
-			}
+		final var mapping = persister.getTenantIdMapping();
+		if ( mapping == null ) {
 			return null;
 		}
-		else {
-			return null;
-		}
+		// Detached state may contain a different tenant, and root writes may omit it.
+		final var loader = persister.getTenantIdLoader();
+		return tenantIdentifier( loader == null
+				? mapping.getTenantIdFromIdentifier( id, session ) : loader.loadTenantId( id, session ), session );
+	}
+
+	private static String tenantIdentifier(Object tenant, SharedSessionContractImplementor session) {
 		return tenant == null ? null : session.getFactory().getTenantIdentifierJavaType().toString( tenant );
 	}
 }

@@ -29,10 +29,6 @@ plugins {
     alias(libs.plugins.hibernateBuildSettingsDoc)
 }
 
-repositories {
-	mavenCentral()
-}
-
 def hibernateVersion = ormBuildDetails.hibernateVersion
 def jpaVersion = ormBuildDetails.jpaVersion
 

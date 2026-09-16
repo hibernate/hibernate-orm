@@ -4,6 +4,9 @@
  */
 package org.hibernate.boot.model.process.spi;
 
+import java.util.List;
+import org.hibernate.models.spi.ClassDetails;
+
 import java.util.Collection;
 import java.util.Map;
 
@@ -24,6 +27,12 @@ import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
  * @author Steve Ebersole
  */
 public interface ManagedResources {
+
+	/// Supplied model handles, including dynamic types.
+	default Collection<ClassDetails> getClassDetails() {
+		return List.of();
+	}
+
 
 	/**
 	 * Informational access to the AttributeConverter definitions known about.  Changes to made to

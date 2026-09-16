@@ -16,7 +16,6 @@ import org.hibernate.boot.model.relational.ExportableProducer;
 import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.annotations.internal.GenericGeneratorAnnotation;
 import org.hibernate.boot.models.spi.GenericGeneratorRegistration;
-import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.generator.AnnotationBasedGenerator;
@@ -164,14 +163,12 @@ public class GeneratorAnnotationHelper {
 	}
 
 	public static ClassDetails locatePackageInfoDetails(ClassDetails classDetails, ClassDetailsRegistry classDetailsRegistry) {
-		final String packageInfoFqn = qualifier( classDetails.getName() ) + ".package-info";
-		try {
-			return classDetailsRegistry.resolveClassDetails( packageInfoFqn );
-		}
-		catch (ClassLoadingException e) {
-			// means there is no package-info
+		final String packageName = qualifier( classDetails.getName() );
+		if ( packageName.isEmpty() ) {
 			return null;
 		}
+		final var packageDetails = classDetailsRegistry.resolvePackageDetails( packageName );
+		return packageDetails.isRealClass() ? packageDetails : null;
 	}
 
 	public static void handleSequenceGenerator(

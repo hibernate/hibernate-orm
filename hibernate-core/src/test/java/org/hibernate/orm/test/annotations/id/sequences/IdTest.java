@@ -50,11 +50,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 				BreakDance.class, Monkey.class, DedicatedSequenceEntity1.class,
 				DedicatedSequenceEntity2.class
 		},
-		annotatedPackageNames = {
-				"org.hibernate.orm.test.annotations",
-				"org.hibernate.orm.test.annotations.id",
-				"org.hibernate.orm.test.annotations.id.generationmappings"
-		},
 		xmlMappings = "org/hibernate/orm/test/annotations/orm.xml"
 
 )

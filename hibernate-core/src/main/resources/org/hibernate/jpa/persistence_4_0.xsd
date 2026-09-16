@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-    Copyright (c) 2008, 2024 Oracle and/or its affiliates. All rights reserved.
+    Copyright (c) 2008, 2026 Oracle and/or its affiliates. All rights reserved.
 
     This program and the accompanying materials are made available under the
     terms of the Eclipse Public License v. 2.0 which is available at
@@ -172,7 +172,9 @@
                 <xsd:annotation>
                   <xsd:documentation>
 
-                    Jar file that is to be scanned for managed classes.
+                    A jar file that is scanned for program elements belonging
+                    to the persistence unit, including managed persistence
+                    classes and other discoverable types and descriptors.
 
                   </xsd:documentation>
                 </xsd:annotation>
@@ -185,9 +187,40 @@
                 <xsd:annotation>
                   <xsd:documentation>
 
-                    Managed class to be included in the persistence unit and
-                    to scan for annotations.  It should be annotated
-                    with either @Entity, @Embeddable or @MappedSuperclass.
+                    An ordinary Java type to be included in the persistence
+                    unit and scanned for discoverable annotation types.
+
+                  </xsd:documentation>
+                </xsd:annotation>
+              </xsd:element>
+
+              <!-- **************************************************** -->
+
+              <xsd:element name="package-descriptor" type="xsd:string"
+                           minOccurs="0" maxOccurs="unbounded">
+                <xsd:annotation>
+                  <xsd:documentation>
+
+                    The qualified name of a package descriptor whose
+                    annotations belong to the persistence unit. The name does
+                    not include ".package-info". This element does not include
+                    the ordinary Java types in the package.
+
+                  </xsd:documentation>
+                </xsd:annotation>
+              </xsd:element>
+
+              <!-- **************************************************** -->
+
+              <xsd:element name="module-descriptor" type="xsd:string"
+                           minOccurs="0" maxOccurs="unbounded">
+                <xsd:annotation>
+                  <xsd:documentation>
+
+                    The declared JPMS name of a module descriptor whose
+                    annotations belong to the persistence unit. The name is
+                    not "module-info". This element does not include the
+                    ordinary Java types or package descriptors in the module.
 
                   </xsd:documentation>
                 </xsd:annotation>
@@ -200,10 +233,10 @@
                 <xsd:annotation>
                   <xsd:documentation>
 
-                    When set to true then only listed classes and jars will
-                    be scanned for persistent classes, otherwise the
-                    enclosing jar or directory will also be scanned.
-                    Not applicable to Java SE persistence units.
+                    When set to true, only explicitly listed jars are scanned
+                    for program elements bearing discoverable annotation
+                    types; otherwise, the enclosing jar or directory is also
+                    scanned. Not applicable to Java SE persistence units.
 
                   </xsd:documentation>
                 </xsd:annotation>
@@ -257,6 +290,17 @@
 
                     The validation mode to be used for the persistence unit.
 
+                  </xsd:documentation>
+                </xsd:annotation>
+              </xsd:element>
+
+
+              <!-- **************************************************** -->
+
+              <xsd:element name="entity-listener" type="xsd:string" minOccurs="0" maxOccurs="unbounded">
+                <xsd:annotation>
+                  <xsd:documentation>
+                    Names a jakarta.persistence.EntityListener class
                   </xsd:documentation>
                 </xsd:annotation>
               </xsd:element>

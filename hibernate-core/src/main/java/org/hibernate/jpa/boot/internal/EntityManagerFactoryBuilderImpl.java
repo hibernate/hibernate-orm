@@ -4,6 +4,14 @@
  */
 package org.hibernate.jpa.boot.internal;
 
+import java.net.URL;
+import java.util.HashSet;
+import java.util.Set;
+import org.hibernate.boot.model.process.internal.EnhancementCandidates;
+import org.hibernate.boot.model.process.internal.ManagedResourceValidation;
+import org.hibernate.boot.model.process.internal.MappingSourceHelper;
+import org.hibernate.boot.scan.spi.ScanningResult;
+
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.PersistenceException;
@@ -17,7 +25,6 @@ import org.hibernate.boot.CacheRegionDefinition.CacheRegionType;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.beanvalidation.BeanValidationIntegrator;
-import org.hibernate.boot.cfgxml.spi.CfgXmlAccessService;
 import org.hibernate.boot.model.TypeContributor;
 import org.hibernate.boot.model.convert.internal.ConverterDescriptors;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
@@ -44,7 +51,6 @@ import org.hibernate.bytecode.spi.ClassTransformer;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.MappingSettings;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jpa.HibernatePersistenceConfiguration;
 import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
 import org.hibernate.jpa.boot.spi.IntegratorProvider;
@@ -165,6 +171,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	private final Map<String,Object> configurationValues;
 	private final StandardServiceRegistry standardServiceRegistry;
 	private final ManagedResources managedResources;
+	private final Set<String> automaticMappingUrls = new HashSet<>();
 	private final MetadataBuilderImplementor metamodelBuilder;
 
 	public  EntityManagerFactoryBuilderImpl(HibernatePersistenceConfiguration cfg) {
@@ -181,14 +188,15 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			registryBuilder.applySettings( configurationValues );
 			standardServiceRegistry = registryBuilder.build();
 
-			persistenceUnit = new PersistenceConfigurationDescriptor( cfg, standardServiceRegistry );
+			final var discovery = performScanning( cfg, standardServiceRegistry );
+			persistenceUnit = new PersistenceConfigurationDescriptor( cfg, discovery );
 
 			final var metadataSources = new MetadataSources( standardServiceRegistry );
 			metamodelBuilder =
 					(MetadataBuilderImplementor)
 							metadataSources.getMetadataBuilder( standardServiceRegistry );
 			applyMappingResources( metadataSources );
-			applyScanning( cfg, metadataSources, standardServiceRegistry );
+			applyDiscoveredMappings( discovery, metadataSources );
 			applyMetamodelBuilderSettings( mergedSettings, getConverterDescriptors( metadataSources ) );
 			applyMetadataBuilderContributor();
 			setupMappingReferences( metadataSources );
@@ -196,7 +204,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 					MetadataBuildingProcess.prepare( metadataSources, metamodelBuilder.getBootstrapContext() );
 			setupValidation();
 
-			setupEnhancement( persistenceUnit, metadataSources );
+			setupEnhancement( persistenceUnit );
 			// for the time being we want to revoke access to the temp ClassLoader if one was passed
 			metamodelBuilder.applyTempClassLoader( null );
 		}
@@ -207,18 +215,14 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		}
 	}
 
-	private void applyScanning(HibernatePersistenceConfiguration cfg, MetadataSources metadataSources, StandardServiceRegistry standardServiceRegistry) {
-		var scanningResult = performScanning( cfg, standardServiceRegistry );
+	private void applyDiscoveredMappings(ScanningResult scanningResult, MetadataSources metadataSources) {
 
-		scanningResult.discoveredModules().forEach( metadataSources::addModule );
-
-		scanningResult.discoveredPackages().forEach( metadataSources::addPackage );
-
-		scanningResult.discoveredClasses().forEach( metadataSources::addAnnotatedClassName );
-
+		if ( !metamodelBuilder.getMetadataBuildingOptions().isXmlMappingEnabled() ) {
+			return;
+		}
 		scanningResult.mappingFiles().forEach( (mappingFileUri) -> {
 			try {
-				metadataSources.addURL( mappingFileUri.toURL() );
+				addAutomaticMapping( mappingFileUri.toURL(), metadataSources );
 			}
 			catch (MalformedURLException e) {
 				throw new HibernateException( "Unable to handle discovered mapping file : " + mappingFileUri, e );
@@ -336,7 +340,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			managedResources =
 					MetadataBuildingProcess.prepare( metadataSources, metamodelBuilder.getBootstrapContext() );
 			setupValidation();
-			setupEnhancement( persistenceUnit, metadataSources );
+			setupEnhancement( persistenceUnit );
 			// for the time being we want to revoke access to the temp ClassLoader if one was passed
 			metamodelBuilder.applyTempClassLoader( null );
 		}
@@ -378,19 +382,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	}
 
 	private void setupMappingReferences(MetadataSources metadataSources) {
-		// todo : would be nice to have MetadataBuilder still do the handling of CfgXmlAccessService here
-		//		another option is to immediately handle them here (probably in mergeSettings?) as we encounter them...
-		final var aggregatedConfig =
-				standardServiceRegistry.requireService( CfgXmlAccessService.class )
-						.getAggregatedConfig();
-		if ( aggregatedConfig != null ) {
-			final var mappingReferences = aggregatedConfig.getMappingReferences();
-			if ( mappingReferences != null ) {
-				for ( var mappingReference : mappingReferences ) {
-					mappingReference.apply( metadataSources );
-				}
-			}
-		}
+		MappingSourceHelper.applyConfigurationMappings( metadataSources, standardServiceRegistry );
 	}
 
 	private void setupValidation() {
@@ -407,7 +399,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		}
 	}
 
-	private void setupEnhancement(PersistenceUnitDescriptor persistenceUnit, MetadataSources metadataSources) {
+	private void setupEnhancement(PersistenceUnitDescriptor persistenceUnit) {
 		if ( persistenceUnit.isClassTransformerRegistrationDisabled() ) {
 			return;
 		}
@@ -440,34 +432,28 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 					throw new PersistenceException( "Enhancement requires a temp class loader, but none was given"
 							+ exceptionHeader() );
 				}
-				discoverTypesToTransform( metadataSources, classTransformer, classLoader );
+				discoverTypesToTransform( classTransformer, classLoader );
 			}
 		}
 	}
 
-	private static void discoverTypesToTransform(
-			MetadataSources metadataSources, ClassTransformer classTransformer, ClassLoader classLoader) {
-		for ( var binding : metadataSources.getHbmXmlBindings() ) {
-			final var hibernateMapping = binding.getRoot();
-			final String packageName = hibernateMapping.getPackage();
-			for ( var clazz : hibernateMapping.getClazz() ) {
-				final String className =
-						packageName == null || packageName.isEmpty()
-								? clazz.getName()
-								: packageName + '.' + clazz.getName();
+	private void discoverTypesToTransform(ClassTransformer transformer, ClassLoader loader) {
+		if ( persistenceUnit instanceof PersistenceUnitInfoDescriptor ) {
+			EnhancementCandidates.forContainer( persistenceUnit.getAllClassNames() )
+					.forEach( name -> transformer.discoverTypes( loader, name ) );
+		}
+		else {
+			EnhancementCandidates.forResources( managedResources ).forEach( (name, hbm) -> {
 				try {
-					classTransformer.discoverTypes(classLoader, className );
+					transformer.discoverTypes( loader, name );
 				}
-				catch (EnhancementException ex) {
-					JPA_LOGGER.enhancementDiscoveryFailed( className, ex );
+				catch (EnhancementException e) {
+					if ( !hbm ) {
+						throw e;
+					}
+					JPA_LOGGER.enhancementDiscoveryFailed( name, e );
 				}
-			}
-		}
-		for ( String annotatedClassName : metadataSources.getAnnotatedClassNames() ) {
-			classTransformer.discoverTypes( classLoader, annotatedClassName );
-		}
-		for ( Class<?> annotatedClass : metadataSources.getAnnotatedClasses() ) {
-			classTransformer.discoverTypes( classLoader, annotatedClass.getName() );
+			} );
 		}
 	}
 
@@ -1449,16 +1435,17 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 
 	private void applyMappingResources(MetadataSources metadataSources) {
 		assert persistenceUnit != null;
+		if ( persistenceUnit instanceof PersistenceConfigurationDescriptor configuration ) {
+			configuration.getManagedClasses().forEach( metadataSources::addAnnotatedClass );
+		}
 
-		persistenceUnit.getAllClassNames().forEach( (name) -> {
-			if ( name.endsWith( "package-info" ) ) {
-				// this makes a difference for some reason in AnnotationMetadataSourceProcessorImpl
-				metadataSources.addPackage( StringHelper.qualifier( name ) );
-			}
-			else {
-				metadataSources.addAnnotatedClassName( name );
-			}
+		persistenceUnit.getAllClassNames().forEach( name -> {
+			ManagedResourceValidation.validateClassName(
+					name, "getAllClassNames() entry '{class}'", "getAllPackageDescriptors() returning \"{package}\"", "getAllModuleDescriptors()" );
+			metadataSources.addAnnotatedClassName( name );
 		} );
+		persistenceUnit.getAllPackageDescriptors().forEach( metadataSources::addPackageDescriptor );
+		persistenceUnit.getAllModuleDescriptors().forEach( metadataSources::addModuleDescriptor );
 
 		if ( !metamodelBuilder.getMetadataBuildingOptions().isXmlMappingEnabled() ) {
 			BOOT_LOGGER.ignoringXmlMappings(
@@ -1469,6 +1456,10 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		else {
 			persistenceUnit.getMappingFileNames().forEach( name -> {
 				metadataSources.addResource( name );
+				final var explicitUrl = standardServiceRegistry.requireService( ClassLoaderService.class ).locateResource( name );
+				if ( explicitUrl != null ) {
+					automaticMappingUrls.add( explicitUrl.toExternalForm() );
+				}
 			} );
 			addStandardMappings( persistenceUnit, metadataSources );
 
@@ -1485,7 +1476,13 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 
 	private void addStandardMappings(PersistenceUnitDescriptor persistenceUnit, MetadataSources metadataSources) {
 		var ormXmlUrls = standardServiceRegistry.requireService( ClassLoaderService.class ).locateResources( "META-INF/orm.xml" );
-		ormXmlUrls.forEach( metadataSources::addURL );
+		ormXmlUrls.forEach( url -> addAutomaticMapping( url, metadataSources ) );
+	}
+
+	private void addAutomaticMapping(URL url, MetadataSources sources) {
+		if ( automaticMappingUrls.add( url.toExternalForm() ) ) {
+			sources.addURL( url );
+		}
 	}
 
 	private List<ConverterDescriptor<?, ?>> getConverterDescriptors(MetadataSources metadataSources) {

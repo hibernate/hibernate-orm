@@ -45,9 +45,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 				DedicatedSequenceEntity2.class,
 				AbstractTPCAutoEntity.class,
 				TPCAutoEntity1.class
-		},
-		annotatedPackageNames = {
-				"org.hibernate.orm.test.annotations.id.generationmappings"
 		}
 )
 @SessionFactory(

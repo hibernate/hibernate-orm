@@ -20,7 +20,6 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @DomainModel(
-		annotatedPackageNames = "org.hibernate.orm.test.any.annotations",
 		annotatedClasses = {
 				StringProperty.class,
 				IntegerProperty.class,

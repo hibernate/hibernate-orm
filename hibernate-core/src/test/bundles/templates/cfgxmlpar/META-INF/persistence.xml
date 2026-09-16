@@ -11,6 +11,7 @@
              version="1.0">
     <persistence-unit name="cfgxmlpar" transaction-type="RESOURCE_LOCAL">
         <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
+        <exclude-unlisted-classes>false</exclude-unlisted-classes>
         <properties>
             <property name="hibernate.cfg_xml_file" value="/org/hibernate/orm/test/jpa/pack/cfgxmlpar/hibernate.cfg.xml"/>
         </properties>

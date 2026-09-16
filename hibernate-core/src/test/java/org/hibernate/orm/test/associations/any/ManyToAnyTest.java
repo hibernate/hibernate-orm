@@ -19,8 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 				IntegerProperty.class,
 				StringProperty.class,
 				PropertyRepository.class
-		},
-		annotatedPackageNames = "org.hibernate.orm.test.associations.any"
+		}
 )
 @SessionFactory
 public class ManyToAnyTest {

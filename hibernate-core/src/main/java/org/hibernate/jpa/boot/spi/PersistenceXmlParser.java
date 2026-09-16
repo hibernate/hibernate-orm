@@ -4,6 +4,9 @@
  */
 package org.hibernate.jpa.boot.spi;
 
+import org.hibernate.MappingException;
+import org.hibernate.boot.model.process.internal.ManagedResourceValidation;
+
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -172,7 +175,13 @@ public final class PersistenceXmlParser {
 			else {
 				final var persistenceUnitDescriptor =
 						new ParsedPersistenceXmlDescriptor( persistenceUnitRootUrl );
-				bindPersistenceUnit( jaxbPersistenceUnit, persistenceUnitDescriptor );
+				try {
+					bindPersistenceUnit( jaxbPersistenceUnit, persistenceUnitDescriptor );
+				}
+				catch (MappingException e) {
+					throw new MappingException( "Persistence unit '" + jaxbPersistenceUnit.getName()
+							+ "' in " + xmlUrl + ": " + e.getMessage(), e );
+				}
 				// per JPA spec, any settings passed in to PersistenceProvider
 				// bootstrap methods should override values found in persistence.xml
 				applyIntegrationOverrides( integration, defaultTransactionType, persistenceUnitDescriptor );
@@ -199,7 +208,13 @@ public final class PersistenceXmlParser {
 		persistenceUnitDescriptor.setSharedCacheMode( jaxbPersistenceUnit.getSharedCacheMode() );
 		persistenceUnitDescriptor.setValidationMode( jaxbPersistenceUnit.getValidationMode() );
 		persistenceUnitDescriptor.setExcludeUnlistedClasses( handleBoolean( jaxbPersistenceUnit.isExcludeUnlistedClasses() ) );
+		jaxbPersistenceUnit.getClasses().forEach( className ->
+				ManagedResourceValidation.validateClassName(
+						className, "<class>{class}</class>",
+						"<package-descriptor>{package}</package-descriptor>", "<module-descriptor/>" ) );
 		persistenceUnitDescriptor.addClasses( jaxbPersistenceUnit.getClasses() );
+		persistenceUnitDescriptor.addPackageDescriptors( jaxbPersistenceUnit.getPackageDescriptors() );
+		persistenceUnitDescriptor.addModuleDescriptors( jaxbPersistenceUnit.getModuleDescriptors() );
 		persistenceUnitDescriptor.addMappingFiles( jaxbPersistenceUnit.getMappingFiles() );
 		persistenceUnitDescriptor.addJarFileRefs( jaxbPersistenceUnit.getJarFiles() );
 

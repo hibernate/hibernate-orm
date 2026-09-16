@@ -4,6 +4,9 @@
  */
 package org.hibernate.boot.jaxb.internal;
 
+import java.net.URI;
+import org.hibernate.boot.archive.internal.StandardArchiveDescriptorFactory;
+
 import org.hibernate.boot.MappingException;
 import org.hibernate.boot.MappingNotFoundException;
 import org.hibernate.boot.jaxb.Origin;
@@ -68,6 +71,17 @@ public class UrlXmlSource {
 			MappingBinder binder) {
 		JAXB_LOGGER.tracef( "Reading mapping document from URL: %s", origin.getName() );
 		try {
+			final var external = url.toExternalForm();
+			final int separator = external.lastIndexOf( "!/" );
+			if ( separator > external.indexOf( "!/" ) ) {
+				final var archive = StandardArchiveDescriptorFactory.INSTANCE
+						.buildArchiveDescriptor( URI.create( external.substring( 0, separator ) ).toURL() );
+				final var entry = archive.findEntry( external.substring( separator + 2 ) );
+				if ( entry == null ) {
+					throw new MappingNotFoundException( origin );
+				}
+				return InputStreamXmlSource.fromStream( entry.getStreamAccess().accessInputStream(), origin, true, binder );
+			}
 			return InputStreamXmlSource.fromStream( url.openStream(), origin, true, binder );
 		}
 		catch (UnknownHostException e) {

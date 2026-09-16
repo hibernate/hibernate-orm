@@ -4,6 +4,14 @@
  */
 package org.hibernate.boot.model.process.spi;
 
+import org.hibernate.MappingException;
+import org.hibernate.boot.model.process.internal.ManagedClassDetails;
+import org.hibernate.boot.model.process.internal.ManagedResourceValidation;
+import org.hibernate.boot.model.process.internal.ManagedResourcesBuilder;
+import org.hibernate.boot.models.spi.GlobalRegistrations;
+import org.hibernate.boot.models.xml.spi.PersistenceUnitMetadata;
+import org.hibernate.models.internal.jdk.JdkClassDetails;
+import org.hibernate.models.spi.ModelsContext;
 
 import java.io.InputStream;
 import java.sql.Types;
@@ -17,7 +25,9 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashSet;
+import org.hibernate.boot.models.xml.internal.XmlPreProcessingResultImpl;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -54,7 +64,6 @@ import org.hibernate.boot.models.internal.DomainModelCategorizationCollector;
 import org.hibernate.boot.models.xml.spi.XmlPreProcessor;
 import org.hibernate.boot.models.xml.spi.XmlProcessor;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.AdditionalMappingContributions;
 import org.hibernate.boot.spi.AdditionalMappingContributor;
 import org.hibernate.boot.spi.BootstrapContext;
@@ -68,9 +77,7 @@ import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.mapping.Table;
-import org.hibernate.models.internal.MutableClassDetailsRegistry;
 import org.hibernate.models.spi.ClassDetails;
-import org.hibernate.models.spi.ClassDetailsRegistry;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.WrapperArrayHandling;
@@ -92,7 +99,6 @@ import org.hibernate.type.internal.NamedBasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.CompositeUserType;
 
-import static org.hibernate.internal.util.collections.CollectionHelper.mutableJoin;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getPreferredSqlTypeCodeForArray;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getPreferredSqlTypeCodeForDuration;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getPreferredSqlTypeCodeForInstant;
@@ -228,7 +234,6 @@ public class MetadataBuildingProcess {
 				: new NoOpMetadataSourceProcessorImpl();
 
 		final AnnotationMetadataSourceProcessorImpl annotationProcessor = new AnnotationMetadataSourceProcessorImpl(
-				managedResources,
 				domainModelSource,
 				rootMetadataBuildingContext
 		);
@@ -367,125 +372,107 @@ public class MetadataBuildingProcess {
 			InFlightMetadataCollector metadataCollector,
 			BootstrapContext bootstrapContext,
 			MappingDefaults optionDefaults) {
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		// 	- pre-process the XML
-		// 	- collect all known classes
-		// 	- resolve (possibly building) Jandex index
-		// 	- build the ModelsContext
-		//
-		// INPUTS:
-		//		- serviceRegistry
-		//		- managedResources
-		//		- bootstrapContext (supplied Jandex index, if one)
-		//
-		// OUTPUTS:
-		//		- xmlPreProcessingResult
-		//		- allKnownClassNames (technically could be included in xmlPreProcessingResult)
-		//		- ModelsContext
+		return processManagedResources( managedResources, bootstrapContext, optionDefaults,
+				bootstrapContext.getModelsContext(), metadataCollector.getPersistenceUnitMetadata(),
+				metadataCollector.getGlobalRegistrations() );
+	}
 
-		final var aggregatedPersistenceUnitMetadata = metadataCollector.getPersistenceUnitMetadata();
-		final var modelsContext = bootstrapContext.getModelsContext();
-		final var xmlPreProcessingResult =
-				XmlPreProcessor.preProcessXmlResources( managedResources,
-						aggregatedPersistenceUnitMetadata );
+	@Internal
+	public static DomainModelSource processManagedResources(
+			ManagedResources managedResources,
+			BootstrapContext bootstrapContext,
+			MappingDefaults optionDefaults,
+			ModelsContext modelsContext,
+			PersistenceUnitMetadata aggregatedPersistenceUnitMetadata,
+			GlobalRegistrations globalRegistrations) {
+		final var registry = modelsContext.getClassDetailsRegistry();
+		final var xml = bootstrapContext.getMetadataBuildingOptions().isXmlMappingEnabled()
+				? XmlPreProcessor.preProcessXmlResources( managedResources, aggregatedPersistenceUnitMetadata )
+				: new XmlPreProcessingResultImpl( aggregatedPersistenceUnitMetadata );
+		final var javaTypes = new LinkedHashMap<String, ClassDetails>();
+		final var dynamicTypes = new LinkedHashMap<String, ClassDetails>();
+		final var packages = new LinkedHashMap<String, ClassDetails>();
+		final var modules = new LinkedHashMap<String, DomainModelSource.ModuleDescriptor>();
 
-		final var allKnownClassNames = mutableJoin(
-				managedResources.getAnnotatedClassReferences().stream()
-						.map( Class::getName ).toList(),
-				managedResources.getAnnotatedClassNames(),
-				xmlPreProcessingResult.getMappedClasses()
-		);
-		managedResources.getAnnotatedPackageNames()
-				.forEach( packageName -> {
-					try {
-						final Class<?> packageInfoClass =
-								modelsContext.getClassLoading()
-										.classForName( packageName + ".package-info" );
-						allKnownClassNames.add( packageInfoClass.getName() );
-					}
-					catch (ClassLoadingException classLoadingException) {
-						// no package-info, so there can be no annotations... just skip it
-					}
-				} );
-		managedResources.getAnnotatedClassReferences()
-				.forEach( clazz -> allKnownClassNames.add( clazz.getName() ) );
-
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		// 	- process metadata-complete XML
-		//	- collect overlay XML
-		//	- process annotations (including those from metadata-complete XML)
-		//	- apply overlay XML
-		//
-		// INPUTS:
-		//		- "options" (areIdGeneratorsGlobal, etc)
-		//		- xmlPreProcessingResult
-		//		- ModelsContext
-		//
-		// OUTPUTS
-		//		- rootEntities
-		//		- mappedSuperClasses
-		//  	- embeddables
-
-		final var classDetailsRegistry = modelsContext.getClassDetailsRegistry();
-		final var modelCategorizationCollector =
-				new DomainModelCategorizationCollector(
-						metadataCollector.getGlobalRegistrations(),
-						modelsContext
-				);
-
-		final HashSet<String> categorizedClassNames = new HashSet<>();
-		// apply known classes
-		allKnownClassNames.forEach( className -> {
-			if ( categorizedClassNames.add( className ) ) {
-				// not known yet
-				applyKnownClass( classDetailsRegistry.resolveClassDetails( className ),
-						categorizedClassNames, classDetailsRegistry, modelCategorizationCollector );
+		managedResources.getClassDetails().forEach( details ->
+				ManagedClassDetails.register( details, registry ) );
+		final var identities = new ManagedResourcesBuilder();
+		for ( var type : managedResources.getAnnotatedClassReferences() ) {
+			identities.addClass( type );
+			var details = registry.findClassDetails( type.getName() );
+			if ( details == null ) {
+				details = new JdkClassDetails( type, modelsContext );
+				ManagedClassDetails.register( details, registry );
 			}
-		} );
+			addJavaType( details, javaTypes );
+		}
+		for ( var name : managedResources.getAnnotatedClassNames() ) {
+			ManagedResourceValidation.validateClassName( name );
+			addJavaType( registry.resolveClassDetails( name ), javaTypes );
+		}
+		managedResources.getClassDetails().forEach( details -> addManagedType( details, javaTypes, dynamicTypes ) );
+		for ( var name : xml.getMappedClasses() ) {
+			ManagedResourceValidation.validateClassName( name );
+			addJavaType( registry.resolveClassDetails( name ), javaTypes );
+		}
+		for ( var packageName : new LinkedHashSet<>( managedResources.getAnnotatedPackageNames() ) ) {
+			packages.put( packageName, registry.resolveExplicitPackageDetails( packageName ) );
+		}
+		for ( var moduleName : managedResources.getAnnotatedModuleNames() ) {
+			modules.computeIfAbsent( moduleName, name -> new DomainModelSource.ModuleDescriptor(
+					name, modelsContext.getModuleDetailsRegistry().resolveModuleDetails( name ) ) );
+		}
 
-		final var rootMappingDefaults =
-				new RootMappingDefaults( optionDefaults, aggregatedPersistenceUnitMetadata );
-		final var xmlProcessingResult = XmlProcessor.processXml(
-				xmlPreProcessingResult,
-				aggregatedPersistenceUnitMetadata,
-				modelCategorizationCollector::apply,
-				modelsContext,
-				bootstrapContext,
-				rootMappingDefaults
-		);
-
-
-		// apply known "names" - generally this handles dynamic models
-		xmlPreProcessingResult.getMappedNames().forEach( (mappedName) -> {
-			if ( categorizedClassNames.add( mappedName ) ) {
-				// not known yet
-				applyKnownClass( classDetailsRegistry.resolveClassDetails( mappedName ),
-						categorizedClassNames, classDetailsRegistry, modelCategorizationCollector );
+		final var categorizer = new DomainModelCategorizationCollector( globalRegistrations, modelsContext );
+		final var categorized = new HashSet<String>();
+		javaTypes.values().forEach( details -> applyKnownClass( details, categorized, categorizer ) );
+		dynamicTypes.values().forEach( details -> applyKnownClass( details, categorized, categorizer ) );
+		packages.values().forEach( categorizer::apply );
+		final var defaults = new RootMappingDefaults( optionDefaults, aggregatedPersistenceUnitMetadata );
+		for ( var name : xml.getMappedNames() ) {
+			final var existing = registry.findClassDetails( name );
+			if ( existing != null && existing.getClassName() != null && !existing.getClassName().isEmpty() ) {
+				throw new MappingException( "Dynamic model name conflicts with Java type '" + name + "'" );
 			}
-		} );
+		}
+		final var processedXml = XmlProcessor.processXml( xml, aggregatedPersistenceUnitMetadata,
+				categorizer::apply, modelsContext, bootstrapContext, defaults );
+		for ( var name : xml.getMappedNames() ) {
+			final var details = registry.resolveClassDetails( name );
+			if ( details.getClassName() != null && !details.getClassName().isEmpty() ) {
+				throw new MappingException( "Dynamic model name conflicts with Java type '" + name + "'" );
+			}
+			dynamicTypes.putIfAbsent( name, details );
+			applyKnownClass( details, categorized, categorizer );
+		}
+		processedXml.apply();
+		return new DomainModelSource( registry, List.copyOf( javaTypes.values() ), List.copyOf( dynamicTypes.values() ),
+				List.copyOf( packages.values() ), List.copyOf( modules.values() ),
+				categorizer.getGlobalRegistrations(), defaults, aggregatedPersistenceUnitMetadata );
+	}
 
-		xmlProcessingResult.apply();
+	private static void addJavaType(ClassDetails details, Map<String, ClassDetails> javaTypes) {
+		if ( details.getClassName() == null || details.getClassName().isEmpty() ) {
+			throw new MappingException( "Java type declaration conflicts with dynamic model '" + details.getName() + "'" );
+		}
+		javaTypes.putIfAbsent( details.getName(), details );
+	}
 
-		return new DomainModelSource(
-				classDetailsRegistry,
-				mutableJoin( allKnownClassNames,
-						xmlPreProcessingResult.getMappedNames() ),
-				modelCategorizationCollector.getGlobalRegistrations(),
-				rootMappingDefaults,
-				aggregatedPersistenceUnitMetadata
-		);
+	private static void addManagedType(
+			ClassDetails details,
+			Map<String, ClassDetails> javaTypes,
+			Map<String, ClassDetails> dynamicTypes) {
+		final var target = details.getClassName() == null || details.getClassName().isEmpty() ? dynamicTypes : javaTypes;
+		target.putIfAbsent( details.getName(), details );
 	}
 
 	private static void applyKnownClass(
-			ClassDetails classDetails,
-			HashSet<String> categorizedClassNames,
-			ClassDetailsRegistry classDetailsRegistry,
-			DomainModelCategorizationCollector modelCategorizationCollector) {
-		modelCategorizationCollector.apply( classDetails );
-		final var superClass = classDetails.getSuperClass();
-		if ( superClass != null && superClass != ClassDetails.OBJECT_CLASS_DETAILS ) {
-			if ( categorizedClassNames.add( superClass.getClassName() ) ) {
-				applyKnownClass( superClass, categorizedClassNames, classDetailsRegistry, modelCategorizationCollector );
+			ClassDetails details, Set<String> categorized, DomainModelCategorizationCollector categorizer) {
+		if ( categorized.add( details.getName() ) ) {
+			categorizer.apply( details );
+			final var superClass = details.getSuperClass();
+			if ( superClass != null && superClass != ClassDetails.OBJECT_CLASS_DETAILS ) {
+				applyKnownClass( superClass, categorized, categorizer );
 			}
 		}
 	}
@@ -569,11 +556,8 @@ public class MetadataBuildingProcess {
 				additionalClassDetails = new ArrayList<>();
 			}
 			additionalClassDetails.add( classDetails );
-			rootMetadataBuildingContext.getBootstrapContext()
-					.getModelsContext()
-					.getClassDetailsRegistry()
-					.as( MutableClassDetailsRegistry.class )
-					.addClassDetails( classDetails.getName(), classDetails );
+			ManagedClassDetails.register(
+					classDetails, rootMetadataBuildingContext.getBootstrapContext().getModelsContext().getClassDetailsRegistry() );
 		}
 
 		@Override

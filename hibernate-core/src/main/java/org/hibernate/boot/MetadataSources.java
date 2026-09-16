@@ -4,6 +4,8 @@
  */
 package org.hibernate.boot;
 
+import static org.hibernate.boot.model.process.internal.ManagedResourceValidation.validateClassName;
+
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.Remove;
@@ -38,7 +40,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 
-import static java.util.Collections.addAll;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
 import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
@@ -237,6 +238,7 @@ public class MetadataSources implements Serializable {
 	 * @return this (for method chaining)
 	 */
 	public MetadataSources addAnnotatedClass(Class<?> annotatedClass) {
+		validateClassName( annotatedClass.getName() );
 		if ( annotatedClasses == null ) {
 			annotatedClasses = new LinkedHashSet<>();
 		}
@@ -252,7 +254,9 @@ public class MetadataSources implements Serializable {
 			if ( this.annotatedClasses == null ) {
 				this.annotatedClasses = new LinkedHashSet<>();
 			}
-			addAll( this.annotatedClasses, annotatedClasses );
+			for ( var annotatedClass : annotatedClasses ) {
+				addAnnotatedClass( annotatedClass );
+			}
 		}
 		return this;
 	}
@@ -268,6 +272,7 @@ public class MetadataSources implements Serializable {
 	 * @return this (for method chaining)
 	 */
 	public MetadataSources addAnnotatedClassName(String annotatedClassName) {
+		validateClassName( annotatedClassName );
 		if ( annotatedClassNames == null ) {
 			annotatedClassNames = new LinkedHashSet<>();
 		}
@@ -280,7 +285,9 @@ public class MetadataSources implements Serializable {
 	 */
 	public MetadataSources addAnnotatedClassNames(String... annotatedClassNames) {
 		if ( annotatedClassNames != null && annotatedClassNames.length > 0 ) {
-			addAll( this.annotatedClassNames, annotatedClassNames );
+			for ( var annotatedClassName : annotatedClassNames ) {
+				addAnnotatedClassName( annotatedClassName );
+			}
 		}
 		return this;
 	}
@@ -299,8 +306,15 @@ public class MetadataSources implements Serializable {
 	 * @param packageName java package name without trailing '.', cannot be {@code null}
 	 *
 	 * @return this (for method chaining)
+	 * @deprecated Use {@link #addPackageDescriptor(String)}.
 	 */
+	@Deprecated
 	public MetadataSources addPackage(String packageName) {
+		return addPackageDescriptor( packageName );
+	}
+
+	/// Register annotations declared by this package descriptor.
+	public MetadataSources addPackageDescriptor(String packageName) {
 		if ( packageName == null ) {
 			throw new IllegalArgumentException( "The specified package name cannot be null" );
 		}
@@ -326,8 +340,15 @@ public class MetadataSources implements Serializable {
 	 * @param packageRef Java Package reference
 	 *
 	 * @return this (for method chaining)
+	 * @deprecated Use {@link #addPackageDescriptor(Package)}.
 	 */
+	@Deprecated
 	public MetadataSources addPackage(Package packageRef) {
+		return addPackageDescriptor( packageRef );
+	}
+
+	/// Register annotations declared by this package descriptor.
+	public MetadataSources addPackageDescriptor(Package packageRef) {
 		addPackageInternal( packageRef.getName() );
 		return this;
 	}
@@ -338,8 +359,15 @@ public class MetadataSources implements Serializable {
 	 * @param module The module to process for annotations
 	 *
 	 * @return this (for method chaining)
+	 * @deprecated Use {@link #addModuleDescriptor(Module)}.
 	 */
+	@Deprecated
 	public MetadataSources addModule(Module module) {
+		return addModuleDescriptor( module );
+	}
+
+	/// Register annotations declared by this module descriptor.
+	public MetadataSources addModuleDescriptor(Module module) {
 		if ( module == null ) {
 			throw new IllegalArgumentException( "The specified module cannot be null" );
 		}
@@ -356,8 +384,15 @@ public class MetadataSources implements Serializable {
 	 * @param moduleName The name of the module to process for annotations
 	 *
 	 * @return this (for method chaining)
+	 * @deprecated Use {@link #addModuleDescriptor(String)}.
 	 */
+	@Deprecated
 	public MetadataSources addModule(String moduleName) {
+		return addModuleDescriptor( moduleName );
+	}
+
+	/// Register annotations declared by this module descriptor.
+	public MetadataSources addModuleDescriptor(String moduleName) {
 		if ( moduleName == null ) {
 			throw new IllegalArgumentException( "The specified module name cannot be null" );
 		}

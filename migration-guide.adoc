@@ -75,6 +75,36 @@ See the link:{releaseSeriesBase}#whats-new[website] for the list of new features
 
 This section describes changes to contracts (classes, interfaces, methods, etc.) which are considered https://hibernate.org/community/compatibility-policy/#api[API].
 
+=== Managed package and module descriptors
+
+Register package metadata using `MetadataSources.addPackageDescriptor(String)` or
+`addPackageDescriptor(Package)`, and module metadata using `addModuleDescriptor(String)`
+or `addModuleDescriptor(Module)`. The former `addPackage` and `addModule` methods remain
+as deprecated forwarding aliases.
+
+Explicit package registration now requires a resolvable `package-info.class`.
+Bootstrap fails if the descriptor is missing, including for an existing package
+without package-info and when using the deprecated `addPackage` aliases. Remove
+registrations that do not identify a descriptor, or supply the intended descriptor.
+Implicit package annotation lookup from a class continues to tolerate absence.
+
+A class input may no longer name `package-info` or `module-info`. For example, replace
+`<class>com.acme.package-info</class>` with
+`<package-descriptor>com.acme</package-descriptor>` in `persistence.xml`.
+This check also applies to older XML documents upgraded by Hibernate's reader.
+Use JPA's managed package/module descriptor APIs for programmatic configuration and
+its separate explicit/complete descriptor lists for container integrations.
+Registering a descriptor contributes its annotations without enrolling classes in
+its package or module.
+
+Scanner results contain separate class, package, module, and mapping-resource inventories.
+The Jandex scanner uses selected archives as the candidate inventory, including when a
+prebuilt index is supplied. The supplied index may contribute annotation definitions,
+but cannot enroll resources outside those archives. `jpaScan()` excludes root discovery
+when `exclude-unlisted-classes` is true or omitted; listed JARs and the root standard
+mapping resource are still considered.
+
+
 === Filter definition API
 
 `SessionFactory.getFilterDefinition(String)` and `Filter.getFilterDefinition()`

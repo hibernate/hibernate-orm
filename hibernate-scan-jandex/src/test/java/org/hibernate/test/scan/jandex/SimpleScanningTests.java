@@ -4,7 +4,9 @@
  */
 package org.hibernate.test.scan.jandex;
 
-import jakarta.persistence.spi.Discoverable;
+import org.hibernate.boot.archive.spi.ArchiveException;
+import org.hibernate.boot.jaxb.configuration.spi.JaxbPersistenceImpl;
+
 import org.hibernate.boot.archive.internal.StandardArchiveDescriptorFactory;
 import org.hibernate.boot.scan.internal.ScanningContextImpl;
 import org.hibernate.boot.scan.spi.ScanningResult;
@@ -12,10 +14,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.scan.jandex.ScanningProviderImpl;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
-import org.jboss.jandex.AnnotationInstance;
-import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.DotName;
-import org.jboss.jandex.Index;
 import org.jboss.jandex.IndexView;
 import org.jboss.jandex.Indexer;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
@@ -31,8 +30,6 @@ import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static java.util.function.Function.identity;
-import static java.util.stream.Collectors.toMap;
 
 /// @author Steve Ebersole
 public class SimpleScanningTests {
@@ -63,6 +60,34 @@ public class SimpleScanningTests {
 		assertDiscoveredClasses( scanResult );
 	}
 
+	@Test
+	void selectedArchivesBoundProvidedIndex(@TempDir File stagingDir) throws IOException {
+		final var archive = ShrinkWrap.create( JavaArchive.class, "selected.jar" )
+				.addClasses( Book.class, Entity.class )
+				.addAsManifestResource( new org.jboss.shrinkwrap.api.asset.StringAsset( "deliberately not XML" ), "orm.xml" );
+		final var file = new File( stagingDir, "selected.jar" );
+		archive.as( ZipExporter.class ).exportTo( file, true );
+		for ( var settings : List.of( Map.<String, Object>of(), Map.<String, Object>of( ScanningProviderImpl.JANDEX_INDEX, buildJandexIndex() ) ) ) {
+			final var context = new ScanningContextImpl( new StandardArchiveDescriptorFactory(), settings );
+			final var scanner = new ScanningProviderImpl().builderScanner( context );
+			org.assertj.core.api.Assertions.assertThatThrownBy( () -> scanner.scan( new File( stagingDir, "missing.jar" ).toURI().toURL() ) )
+					.isInstanceOf( ArchiveException.class );
+			final var result = scanner.scan( file.toURI().toURL() );
+			assertThat( result.discoveredClasses() ).containsExactly( Book.class.getName() );
+			assertThat( result.mappingFiles() ).hasSize( 1 );
+			org.assertj.core.api.Assertions.assertThatThrownBy( () -> result.discoveredClasses().clear() )
+					.isInstanceOf( UnsupportedOperationException.class );
+			final var unit = new JaxbPersistenceImpl.JaxbPersistenceUnitImpl();
+			final var root = context.getArchiveDescriptorFactory().buildArchiveDescriptor( file.toURI().toURL() );
+			for ( Boolean exclude : new Boolean[] { null, true, false } ) {
+				unit.setExcludeUnlistedClasses( exclude );
+				final var jpaResult = scanner.jpaScan( root, unit );
+				assertThat( jpaResult.discoveredClasses() ).hasSize( Boolean.FALSE.equals( exclude ) ? 1 : 0 );
+				assertThat( jpaResult.mappingFiles() ).hasSize( 1 );
+			}
+		}
+	}
+
 	private void assertDiscoveredClasses(ScanningResult scanResult) {
 		assertThat( scanResult.discoveredClasses() )
 				.contains(
@@ -82,36 +107,16 @@ public class SimpleScanningTests {
 			indexer.indexClass( SecondClass.class );
 			indexer.indexClass( Entity.class );
 			indexer.indexClass( SuperCoolFeature.class );
-			return addRepositoryAnnotation( indexer.complete() );
+			return indexer.complete();
 		}
 		catch (IOException e) {
 			throw new RuntimeException( "Unable to build Jandex index", e );
 		}
 	}
 
-	private IndexView addRepositoryAnnotation(Index index) {
-		final ClassInfo repositoryClass =
-				index.getClassByName( DotName.createSimple( BookRepository.class.getName() ) );
-		return Index.create(
-				Map.of(
-						DotName.createSimple( Discoverable.class.getName() ),
-						List.copyOf( index.getAnnotations( Discoverable.class ) ),
-						DotName.createSimple( Entity.class.getName() ),
-						List.copyOf( index.getAnnotations( Entity.class ) ),
-						DotName.createSimple( SuperCoolFeature.class.getName() ),
-						List.copyOf( index.getAnnotations( SuperCoolFeature.class ) ),
-						JAKARTA_DATA_REPOSITORY,
-						List.of( AnnotationInstance.create( JAKARTA_DATA_REPOSITORY, repositoryClass, List.of() ) )
-				),
-				Map.of(),
-				Map.of(),
-				index.getKnownClasses().stream().collect( toMap( ClassInfo::name, identity() ) )
-		);
-	}
-
 	private File buildJar(String fileName, File stagingDir) {
 		var jarArchive = ShrinkWrap.create( JavaArchive.class, fileName );
-		jarArchive.addClasses( Book.class, BookRepository.class, FirstClass.class, SecondClass.class );
+		jarArchive.addClasses( Book.class, BookRepository.class, FirstClass.class, SecondClass.class, Entity.class, SuperCoolFeature.class );
 		var exportedArchive = new File( stagingDir, fileName );
 		jarArchive.as( ZipExporter.class ).exportTo( exportedArchive, true );
 		return exportedArchive;

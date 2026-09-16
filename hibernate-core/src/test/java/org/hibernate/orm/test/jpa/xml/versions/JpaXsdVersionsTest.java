@@ -20,6 +20,7 @@ import org.hibernate.orm.test.jpa.pack.defaultpar.Lighter;
 import org.hibernate.orm.test.jpa.pack.defaultpar_1_0.Lighter1;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 
+import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -30,6 +31,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+
+import static java.util.Collections.emptyList;
 
 /**
  * "smoke" tests for JEE bootstrapping of HEM via a {@link PersistenceUnitInfo}
@@ -148,8 +151,28 @@ public class JpaXsdVersionsTest {
 		}
 
 		@Override
+		public @NonNull List<String> getManagedPackageDescriptors() {
+			return emptyList();
+		}
+
+		@Override
+		public @NonNull List<String> getManagedModuleDescriptors() {
+			return emptyList();
+		}
+
+		@Override
 		public List<String> getAllClassNames() {
 			return managedClassNames;
+		}
+
+		@Override
+		public @NonNull List<String> getAllPackageDescriptors() {
+			return emptyList();
+		}
+
+		@Override
+		public @NonNull List<String> getAllModuleDescriptors() {
+			return emptyList();
 		}
 
 		public String getPersistenceProviderClassName() {

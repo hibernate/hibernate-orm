@@ -4,6 +4,10 @@
  */
 package org.hibernate.boot.model.source.internal.annotations;
 
+import java.util.stream.Stream;
+import org.hibernate.models.spi.AnnotationTarget;
+import org.hibernate.models.spi.ClassDetails;
+
 import java.util.List;
 import java.util.Set;
 
@@ -22,16 +26,31 @@ public class DomainModelSource {
 	private final GlobalRegistrations globalRegistrations;
 	private final RootMappingDefaults effectiveMappingDefaults;
 	private final PersistenceUnitMetadata persistenceUnitMetadata;
-	private final List<String> allKnownClassNames;
+	private final List<ClassDetails> managedJavaTypes;
+	private final List<ClassDetails> dynamicManagedTypes;
+	private final List<ClassDetails> packageDescriptors;
+	private final List<ModuleDescriptor> moduleDescriptors;
+
+	/// Resolved module metadata, kept separate from ordinary types.
+	///
+	/// @author Steve Ebersole
+	public record ModuleDescriptor(String name, AnnotationTarget target) {
+	}
 
 	public DomainModelSource(
 			ClassDetailsRegistry classDetailsRegistry,
-			List<String> allKnownClassNames,
+			List<ClassDetails> managedJavaTypes,
+			List<ClassDetails> dynamicManagedTypes,
+			List<ClassDetails> packageDescriptors,
+			List<ModuleDescriptor> moduleDescriptors,
 			GlobalRegistrations globalRegistrations,
 			RootMappingDefaults effectiveMappingDefaults,
 			PersistenceUnitMetadata persistenceUnitMetadata) {
 		this.classDetailsRegistry = classDetailsRegistry;
-		this.allKnownClassNames = allKnownClassNames;
+		this.managedJavaTypes = List.copyOf( managedJavaTypes );
+		this.dynamicManagedTypes = List.copyOf( dynamicManagedTypes );
+		this.packageDescriptors = List.copyOf( packageDescriptors );
+		this.moduleDescriptors = List.copyOf( moduleDescriptors );
 		this.globalRegistrations = globalRegistrations;
 		this.effectiveMappingDefaults = effectiveMappingDefaults;
 		this.persistenceUnitMetadata = persistenceUnitMetadata;
@@ -61,7 +80,23 @@ public class DomainModelSource {
 		return globalRegistrations.getJpaConverters();
 	}
 
-	public List<String> getManagedClassNames() {
-		return allKnownClassNames;
+	public List<ClassDetails> getManagedJavaTypes() {
+		return managedJavaTypes;
+	}
+
+	public List<ClassDetails> getDynamicManagedTypes() {
+		return dynamicManagedTypes;
+	}
+
+	public List<ClassDetails> getPackageDescriptors() {
+		return packageDescriptors;
+	}
+
+	public List<ModuleDescriptor> getModuleDescriptors() {
+		return moduleDescriptors;
+	}
+
+	public List<ClassDetails> getManagedTypes() {
+		return Stream.concat( managedJavaTypes.stream(), dynamicManagedTypes.stream() ).toList();
 	}
 }

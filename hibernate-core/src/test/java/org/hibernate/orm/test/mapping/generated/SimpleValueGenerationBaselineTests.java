@@ -67,7 +67,8 @@ public class SimpleValueGenerationBaselineTests {
 			name = "it";
 
 			vmCreatedSqlDate = new java.sql.Date( System.currentTimeMillis() );
-			vmCreatedSqlTime = new Time( System.currentTimeMillis() );
+			// Keep this loading baseline independent of fractional-second rounding at midnight.
+			vmCreatedSqlTime = Time.valueOf( "12:00:00" );
 			vmCreatedSqlTimestamp = new Timestamp( System.currentTimeMillis() );
 		}
 	}

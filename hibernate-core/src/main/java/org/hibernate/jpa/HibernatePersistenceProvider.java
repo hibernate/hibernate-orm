@@ -4,6 +4,8 @@
  */
 package org.hibernate.jpa;
 
+import org.hibernate.boot.model.process.internal.EnhancementCandidates;
+
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.PersistenceConfiguration;
 import jakarta.persistence.PersistenceException;
@@ -271,6 +273,7 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 
 	@Override
 	public ClassTransformer getClassTransformer(PersistenceUnitInfo persistenceUnit, Map<?, ?> integrationSettings) {
+		final var enhancementCandidates = EnhancementCandidates.forContainer( persistenceUnit );
 		var transformerKey = TransformerKey.from( persistenceUnit );
 		if ( !TransformerTracker.canSupplyTransformer( transformerKey ) ) {
 			if ( JPA_LOGGER.isTraceEnabled() ) {
@@ -335,7 +338,7 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 
 			// NOTE : the ClassTransformer method is called discoverType, but in reality it
 			// pre-enhances the classes...
-			persistenceUnit.getAllClassNames().forEach( (className) -> {
+			enhancementCandidates.forEach( (className) -> {
 				classTransformer.discoverTypes( classLoader, className );
 			} );
 

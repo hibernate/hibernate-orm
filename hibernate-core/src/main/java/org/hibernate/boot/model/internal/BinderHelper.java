@@ -21,7 +21,6 @@ import org.hibernate.annotations.AnyDiscriminatorValues;
 import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.annotations.SqlFragmentAlias;
-import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.engine.FetchStyle;
@@ -1080,14 +1079,9 @@ public class BinderHelper {
 		}
 		else {
 			final var modelsContext = context.getBootstrapContext().getModelsContext();
-			try {
-				return modelsContext.getClassDetailsRegistry()
-						.resolveClassDetails( packageName + ".package-info" )
-						.getAnnotationUsage( annotationType, modelsContext );
-			}
-			catch (ClassLoadingException ignore) {
-				return null;
-			}
+			return modelsContext.getClassDetailsRegistry()
+					.resolvePackageDetails( packageName )
+					.getAnnotationUsage( annotationType, modelsContext );
 		}
 	}
 }

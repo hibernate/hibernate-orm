@@ -77,7 +77,7 @@ public class MappingReference {
 				break;
 			}
 			case PACKAGE: {
-				metadataSources.addPackage( getReference() );
+				metadataSources.addPackageDescriptor( getReference() );
 				break;
 			}
 			case JAR: {

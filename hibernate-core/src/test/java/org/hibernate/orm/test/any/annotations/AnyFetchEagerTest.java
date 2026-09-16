@@ -16,7 +16,6 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 @DomainModel(
-		annotatedPackageNames = "org.hibernate.orm.test.any.annotations",
 		annotatedClasses = {
 				StringProperty.class,
 				IntegerProperty.class,

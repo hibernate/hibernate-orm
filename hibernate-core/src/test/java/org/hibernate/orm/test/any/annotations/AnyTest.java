@@ -23,7 +23,6 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 @DomainModel(
-		annotatedPackageNames = "org.hibernate.orm.test.any.annotations",
 		annotatedClasses = {
 				StringProperty.class,
 				IntegerProperty.class,

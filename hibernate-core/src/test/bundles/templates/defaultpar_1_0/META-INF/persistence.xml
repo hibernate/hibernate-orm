@@ -12,6 +12,7 @@
     <persistence-unit name="defaultpar_1_0">
         <mapping-file>org/hibernate/orm/test/jpa/pack/defaultpar_1_0/Mouse.hbm.xml</mapping-file>
         <class>org.hibernate.orm.test.jpa.pack.defaultpar.Lighter</class>
+        <exclude-unlisted-classes>false</exclude-unlisted-classes>
         <properties>
             <property name="hibernate.dialect" value="@db.dialect@"/>
             <property name="hibernate.connection.driver_class" value="@jdbc.driver@"/>

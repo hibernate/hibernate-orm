@@ -23,7 +23,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 @RequiresDialect(SQLServerDialect.class)
 @RequiresDialect(SybaseDialect.class)
 @DomainModel(
-		annotatedPackageNames = "org.hibernate.orm.test.annotations.lob",
 		annotatedClasses = {
 				LongStringHolder.class
 		}

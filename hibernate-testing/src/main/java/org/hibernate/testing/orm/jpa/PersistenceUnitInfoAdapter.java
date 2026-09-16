@@ -17,6 +17,7 @@ import jakarta.persistence.PersistenceUnitTransactionType;
 import javax.sql.DataSource;
 
 import org.hibernate.jpa.HibernatePersistenceProvider;
+import org.jspecify.annotations.NonNull;
 
 import static java.lang.System.identityHashCode;
 import static java.util.Collections.emptyList;
@@ -82,8 +83,28 @@ public class PersistenceUnitInfoAdapter implements PersistenceUnitInfo {
 	}
 
 	@Override
+	public @NonNull List<String> getManagedPackageDescriptors() {
+		return emptyList();
+	}
+
+	@Override
+	public @NonNull List<String> getManagedModuleDescriptors() {
+		return emptyList();
+	}
+
+	@Override
 	public List<String> getAllClassNames() {
 		return getManagedClassNames();
+	}
+
+	@Override
+	public @NonNull List<String> getAllPackageDescriptors() {
+		return emptyList();
+	}
+
+	@Override
+	public @NonNull List<String> getAllModuleDescriptors() {
+		return emptyList();
 	}
 
 	public boolean excludeUnlistedClasses() {

@@ -4,10 +4,10 @@
  */
 package org.hibernate.orm.test.boot.models;
 
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.model.process.internal.ManagedResourcesBuilder;
+
 import org.hibernate.boot.internal.BootstrapContextImpl;
 import org.hibernate.boot.internal.MetadataBuilderImpl;
-import org.hibernate.boot.internal.RootMappingDefaults;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmDiscriminatorSubclassEntityType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmHibernateMapping;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmJoinedSubclassEntityType;
@@ -16,18 +16,14 @@ import org.hibernate.boot.jaxb.hbm.transform.HbmXmlTransformer;
 import org.hibernate.boot.jaxb.hbm.transform.UnsupportedFeatureHandling;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.jaxb.spi.Binding;
-import org.hibernate.boot.model.process.internal.ManagedResourcesImpl;
 import org.hibernate.boot.model.process.spi.ManagedResources;
 import org.hibernate.boot.model.process.spi.MetadataBuildingProcess;
 import org.hibernate.boot.models.internal.ClassLoaderServiceLoading;
-import org.hibernate.boot.models.internal.DomainModelCategorizationCollector;
 import org.hibernate.boot.models.internal.GlobalRegistrationsImpl;
 import org.hibernate.boot.models.internal.ModelsHelper;
 import org.hibernate.boot.models.xml.internal.PersistenceUnitMetadataImpl;
 import org.hibernate.boot.models.xml.spi.XmlPreProcessingResult;
 import org.hibernate.boot.models.xml.spi.XmlPreProcessor;
-import org.hibernate.boot.models.xml.spi.XmlProcessingResult;
-import org.hibernate.boot.models.xml.spi.XmlProcessor;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
@@ -38,7 +34,6 @@ import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.models.internal.BasicModelsContextImpl;
 import org.hibernate.models.jandex.internal.JandexIndexerHelper;
 import org.hibernate.models.jandex.internal.JandexModelsContextImpl;
-import org.hibernate.models.spi.ClassDetailsRegistry;
 import org.hibernate.models.spi.ClassLoading;
 import org.hibernate.models.spi.ModelsContext;
 import org.jboss.jandex.ClassInfo;
@@ -214,24 +209,9 @@ public class SourceModelTestHelper {
 			);
 			mappingXmlBindings.addAll( transformed );
 
-			final MetadataSources newSources = new MetadataSources( bootstrapContext.getServiceRegistry() );
-			if ( managedResources.getAnnotatedClassReferences() != null ) {
-				managedResources.getAnnotatedClassReferences().forEach( newSources::addAnnotatedClass );
-			}
-			if ( managedResources.getAnnotatedClassNames() != null ) {
-				managedResources.getAnnotatedClassNames().forEach( newSources::addAnnotatedClassName );
-			}
-			if ( managedResources.getAnnotatedPackageNames() != null ) {
-				managedResources.getAnnotatedPackageNames().forEach( newSources::addPackage );
-			}
-			if ( managedResources.getExtraQueryImports() != null ) {
-				managedResources.getExtraQueryImports().forEach( newSources::addQueryImport );
-			}
-			for ( Binding<JaxbEntityMappingsImpl> mappingXmlBinding : mappingXmlBindings ) {
-				newSources.addMappingXmlBinding( mappingXmlBinding );
-			}
-
-			managedResources = ManagedResourcesImpl.baseline( newSources, bootstrapContext );
+			final var transformedResources = new ManagedResourcesBuilder().addNonXmlResources( managedResources );
+			mappingXmlBindings.forEach( transformedResources::addXmlBinding );
+			managedResources = transformedResources.build();
 		}
 
 		final ClassLoaderService classLoaderService =
@@ -243,7 +223,7 @@ public class SourceModelTestHelper {
 		final XmlPreProcessingResult xmlPreProcessingResult =
 				XmlPreProcessor.preProcessXmlResources( managedResources, persistenceUnitMetadata );
 
-		final List<String> allKnownClassNames = mutableJoin(
+		final List<String> indexClassNames = mutableJoin(
 				managedResources.getAnnotatedClassReferences().stream().map( Class::getName ).toList(),
 				managedResources.getAnnotatedClassNames(),
 				xmlPreProcessingResult.getMappedClasses()
@@ -252,45 +232,26 @@ public class SourceModelTestHelper {
 		managedResources.getAnnotatedPackageNames().forEach( (packageName) -> {
 			try {
 				final Class<?> packageInfoClass = classLoading.classForName( packageName + ".package-info" );
-				allKnownClassNames.add( packageInfoClass.getName() );
+				indexClassNames.add( packageInfoClass.getName() );
 			}
 			catch (ClassLoadingException classLoadingException) {
 				// no package-info, so there can be no annotations... just skip it
 			}
 		} );
-		managedResources.getAnnotatedClassReferences().forEach( (clazz) -> allKnownClassNames.add( clazz.getName() ) );
+		managedResources.getAnnotatedClassReferences().forEach( (clazz) -> indexClassNames.add( clazz.getName() ) );
 
 		final IndexView jandexIndex = buildJandexIndex
-				? buildJandexIndex( classLoading, allKnownClassNames )
+				? buildJandexIndex( classLoading, indexClassNames )
 				: null;
 
-		final ModelsContext ModelsContext =
+		final ModelsContext modelsContext =
 				createModelsContext( jandexIndex, classLoading );
 
-		final RootMappingDefaults rootMappingDefaults =
-				new RootMappingDefaults( metadataBuildingOptions.getMappingDefaults(), persistenceUnitMetadata );
-
-		final GlobalRegistrationsImpl globalRegistrations =
-				new GlobalRegistrationsImpl( ModelsContext, bootstrapContext );
-		final DomainModelCategorizationCollector modelCategorizationCollector = new DomainModelCategorizationCollector(
-				globalRegistrations,
-				ModelsContext
-		);
-
-		final XmlProcessingResult xmlProcessingResult = XmlProcessor.processXml(
-				xmlPreProcessingResult,
-				persistenceUnitMetadata,
-				modelCategorizationCollector::apply,
-				ModelsContext,
-				bootstrapContext,
-				rootMappingDefaults
-		);
-
-		final ClassDetailsRegistry classDetailsRegistry = ModelsContext.getClassDetailsRegistry();
-		allKnownClassNames.forEach( (className) ->
-				modelCategorizationCollector.apply( classDetailsRegistry.resolveClassDetails( className ) ) );
-		xmlPreProcessingResult.getMappedNames().forEach( (className) ->
-				modelCategorizationCollector.apply( classDetailsRegistry.resolveClassDetails( className ) ) );
+		MetadataBuildingProcess.processManagedResources(
+				managedResources, bootstrapContext, metadataBuildingOptions.getMappingDefaults(),
+				modelsContext, new PersistenceUnitMetadataImpl(),
+				new GlobalRegistrationsImpl( modelsContext, bootstrapContext ) );
+		final var classDetailsRegistry = modelsContext.getClassDetailsRegistry();
 
 		// `XmlPreProcessor#preProcessXmlResources` skips hbm.xml files.
 		// we want to look at them here to collect known managed-types
@@ -300,9 +261,8 @@ public class SourceModelTestHelper {
 			}
 		} );
 
-		xmlProcessingResult.apply();
 
-		return ModelsContext;
+		return modelsContext;
 	}
 
 	private static ModelsContext createModelsContext(

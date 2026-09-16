@@ -4,15 +4,15 @@
  */
 package org.hibernate.boot.model.process.internal;
 
-import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import org.hibernate.boot.BootLogging;
+import org.hibernate.models.spi.ClassDetails;
+
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
-import org.hibernate.Internal;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.jaxb.spi.JaxbBindableMappingDescriptor;
@@ -21,123 +21,90 @@ import org.hibernate.boot.model.process.spi.ManagedResources;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.cfg.MappingSettings;
 
-import jakarta.persistence.AttributeConverter;
-
-import static java.util.Collections.unmodifiableCollection;
-import static java.util.Collections.unmodifiableList;
-import static java.util.Collections.unmodifiableSet;
-import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
 
 
-/**
- * @author Steve Ebersole
- */
-public class ManagedResourcesImpl implements ManagedResources {
-	private final Map<Class<? extends AttributeConverter<?,?>>, ConverterDescriptor<?,?>> attributeConverterDescriptorMap = new HashMap<>();
-	private final Set<Class<?>> annotatedClassReferences = new LinkedHashSet<>();
-	private final Set<String> annotatedClassNames = new LinkedHashSet<>();
-	private final Set<String> annotatedPackageNames = new LinkedHashSet<>();
-	private final Set<String> annotatedModuleNames = new LinkedHashSet<>();
-	private final List<Binding<? extends JaxbBindableMappingDescriptor>> mappingFileBindings = new ArrayList<>();
-	private Map<String, Class<?>> extraQueryImports;
+/// Structurally immutable snapshot of one resource batch.
+///
+/// @author Steve Ebersole
+public final class ManagedResourcesImpl implements ManagedResources {
+	private final List<ConverterDescriptor<?, ?>> attributeConverterDescriptors;
+	private final List<Class<?>> annotatedClassReferences;
+	private final List<String> annotatedClassNames;
+	private final List<ClassDetails> classDetails;
+	private final List<String> annotatedPackageNames;
+	private final List<String> annotatedModuleNames;
+	private final List<Binding<? extends JaxbBindableMappingDescriptor>> xmlMappingBindings;
+	private final Map<String, Class<?>> extraQueryImports;
 
-	public static ManagedResourcesImpl baseline(MetadataSources sources, BootstrapContext bootstrapContext) {
-		final var managedResources = new ManagedResourcesImpl();
-		bootstrapContext.getAttributeConverters().forEach( managedResources::addAttributeConverterDefinition );
-		managedResources.annotatedClassReferences.addAll( sources.getAnnotatedClasses() );
-		managedResources.annotatedClassNames.addAll( sources.getAnnotatedClassNames() );
-		managedResources.annotatedPackageNames.addAll( sources.getAnnotatedPackages() );
-		managedResources.annotatedModuleNames.addAll( sources.getAnnotatedModuleNames() );
-		handleXmlMappings( sources, managedResources, bootstrapContext );
-		managedResources.extraQueryImports = sources.getExtraQueryImports();
-		return managedResources;
+	ManagedResourcesImpl(ManagedResourcesBuilder builder) {
+		attributeConverterDescriptors = List.copyOf( builder.converters.values() );
+		annotatedClassReferences = List.copyOf( builder.classes.values() );
+		annotatedClassNames = List.copyOf( builder.classNames );
+		classDetails = List.copyOf( builder.details.values() );
+		annotatedPackageNames = List.copyOf( builder.packages );
+		annotatedModuleNames = List.copyOf( builder.modules );
+		xmlMappingBindings = List.copyOf( builder.mappings );
+		extraQueryImports = Collections.unmodifiableMap( new LinkedHashMap<>( builder.imports ) );
 	}
 
-	private static void handleXmlMappings(
-			MetadataSources sources,
-			ManagedResourcesImpl impl,
-			BootstrapContext bootstrapContext) {
-		if ( !bootstrapContext.getMetadataBuildingOptions().isXmlMappingEnabled() ) {
-			BOOT_LOGGER.ignoringXmlMappings(
-					sources.getMappingXmlBindings().size(),
-					MappingSettings.XML_MAPPING_ENABLED
-			);
+	public static ManagedResourcesImpl baseline(MetadataSources sources, BootstrapContext context) {
+		final var builder = new ManagedResourcesBuilder();
+		context.getAttributeConverters().forEach( builder::addAttributeConverter );
+		sources.getAnnotatedClasses().forEach( builder::addClass );
+		sources.getAnnotatedClassNames().forEach( builder::addClassName );
+		sources.getAnnotatedPackages().forEach( builder::addPackageDescriptor );
+		sources.getAnnotatedModuleNames().forEach( builder::addModuleDescriptor );
+		if ( context.getMetadataBuildingOptions().isXmlMappingEnabled() ) {
+			sources.getMappingXmlBindings().forEach( builder::addXmlBinding );
+			sources.getHbmXmlBindings().forEach( builder::addXmlBinding );
 		}
 		else {
-			impl.mappingFileBindings.addAll( sources.getMappingXmlBindings() );
-			impl.mappingFileBindings.addAll( sources.getHbmXmlBindings() );
+			BootLogging.BOOT_LOGGER.ignoringXmlMappings(
+					sources.getMappingXmlBindings().size(), MappingSettings.XML_MAPPING_ENABLED );
 		}
-	}
-
-	public ManagedResourcesImpl() {
+		if ( sources.getExtraQueryImports() != null ) {
+			sources.getExtraQueryImports().forEach( builder::addQueryImport );
+		}
+		return new ManagedResourcesImpl( builder );
 	}
 
 	@Override
-	public Collection<ConverterDescriptor<?,?>> getAttributeConverterDescriptors() {
-		return unmodifiableCollection( attributeConverterDescriptorMap.values() );
+	public Collection<ConverterDescriptor<?, ?>> getAttributeConverterDescriptors() {
+		return attributeConverterDescriptors;
 	}
 
 	@Override
 	public Collection<Class<?>> getAnnotatedClassReferences() {
-		return unmodifiableSet( annotatedClassReferences );
+		return annotatedClassReferences;
 	}
 
 	@Override
 	public Collection<String> getAnnotatedClassNames() {
-		return unmodifiableSet( annotatedClassNames );
+		return annotatedClassNames;
+	}
+
+	@Override
+	public Collection<ClassDetails> getClassDetails() {
+		return classDetails;
 	}
 
 	@Override
 	public Collection<String> getAnnotatedPackageNames() {
-		return unmodifiableSet( annotatedPackageNames );
+		return annotatedPackageNames;
 	}
 
 	@Override
 	public Collection<String> getAnnotatedModuleNames() {
-		return unmodifiableSet( annotatedModuleNames );
+		return annotatedModuleNames;
 	}
 
 	@Override
 	public Collection<Binding<? extends JaxbBindableMappingDescriptor>> getXmlMappingBindings() {
-		return unmodifiableList( mappingFileBindings );
+		return xmlMappingBindings;
 	}
 
 	@Override
 	public Map<String, Class<?>> getExtraQueryImports() {
 		return extraQueryImports;
-	}
-
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// @Internal
-
-	@Internal
-	public void addAttributeConverterDefinition(ConverterDescriptor<?,?> descriptor) {
-		attributeConverterDescriptorMap.put( descriptor.getAttributeConverterClass(), descriptor );
-	}
-
-	@Internal
-	public void addAnnotatedClassReference(Class<?> annotatedClassReference) {
-		annotatedClassReferences.add( annotatedClassReference );
-	}
-
-	@Internal
-	public void addAnnotatedClassName(String annotatedClassName) {
-		annotatedClassNames.add( annotatedClassName );
-	}
-
-	@Internal
-	public void addAnnotatedPackageName(String annotatedPackageName) {
-		annotatedPackageNames.add( annotatedPackageName );
-	}
-
-	@Internal
-	public void addAnnotatedModuleName(String moduleName) {
-		annotatedModuleNames.add( moduleName );
-	}
-
-	@Internal
-	public void addXmlBinding(Binding<? extends JaxbBindableMappingDescriptor> binding) {
-		mappingFileBindings.add( binding );
 	}
 }

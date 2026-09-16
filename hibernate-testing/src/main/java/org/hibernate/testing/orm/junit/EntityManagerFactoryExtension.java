@@ -7,6 +7,7 @@ package org.hibernate.testing.orm.junit;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
@@ -132,7 +133,7 @@ public class EntityManagerFactoryExtension
 
 	private static void managedClassesAndMappings(Jpa jpa, PersistenceUnitInfoImpl pui) {
 		if ( jpa.annotatedPackageNames().length > 0 ) {
-			pui.applyManagedClassNames( jpa.annotatedPackageNames() );
+			pui.managedPackageDescriptors = List.of( jpa.annotatedPackageNames() );
 		}
 
 		if ( jpa.annotatedClassNames().length > 0 ) {

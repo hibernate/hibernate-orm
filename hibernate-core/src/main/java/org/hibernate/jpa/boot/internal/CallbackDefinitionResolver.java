@@ -11,7 +11,6 @@ import jakarta.persistence.ExcludeSuperclassListeners;
 import jakarta.persistence.MappedSuperclass;
 import org.hibernate.boot.models.JpaEventListenerStyle;
 import org.hibernate.boot.models.spi.LifecycleEventHandler;
-import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.jpa.boot.spi.CallbackDefinition;
@@ -232,17 +231,12 @@ public final class CallbackDefinitionResolver {
 			ModelsContext sourceModelContext) {
 		final String packageName = qualifier( entityClass.getName() );
 		if ( !isEmpty( packageName ) ) {
-			try {
-				applyListeners(
-						sourceModelContext.getClassDetailsRegistry()
-								.resolveClassDetails( packageName + ".package-info" ),
-						entityClass,
-						listOfListeners,
-						sourceModelContext
-				);
-			}
-			catch (ClassLoadingException ignore) {
-			}
+			applyListeners(
+					sourceModelContext.getClassDetailsRegistry().resolvePackageDetails( packageName ),
+					entityClass,
+					listOfListeners,
+					sourceModelContext
+			);
 		}
 	}
 

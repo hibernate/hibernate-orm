@@ -4,6 +4,9 @@
  */
 package org.hibernate.scan.jandex;
 
+import java.util.HashSet;
+import org.jboss.jandex.AnnotationTarget;
+
 import jakarta.persistence.spi.Discoverable;
 import org.hibernate.boot.scan.internal.ResultCollector;
 import org.jboss.jandex.DotName;
@@ -17,34 +20,38 @@ import org.jboss.jandex.IndexView;
 public class IndexScanner {
 	private static final DotName JAKARTA_DATA_REPOSITORY = DotName.createSimple( "jakarta.data.repository.Repository" );
 
-	/// Find the managed classes and add them to the result collector.
-	///
-	/// @param jandexIndex The Jandex index to scan.
-	/// @param resultCollector The collector of results.
-	public static void scanForClasses(IndexView jandexIndex, ResultCollector resultCollector) {
-		// Find all uses of the `@Discoverable` annotation.  This will be a list of annotations
-		// we actually want to scan for.
-		var discoverableUses = jandexIndex.getAnnotations( Discoverable.class );
-
-		// `discoverableUses` are the annotations, annotated with `@Discoverable`, for which we want to scan
-		discoverableUses.forEach( discoverableUse ->
-				addDiscoveredClasses( discoverableUse.target().asClass().name(), jandexIndex, resultCollector ) );
-
-		// Treat Jakarta Data repositories as if they were annotated with an annotation marked `@Discoverable`.
-		addDiscoveredClasses( JAKARTA_DATA_REPOSITORY, jandexIndex, resultCollector );
-
-		// Discover modules whose module-info has annotations
-		for ( var moduleInfo : jandexIndex.getKnownModules() ) {
-			resultCollector.addModule( moduleInfo.name().toString() );
+	/// Classify discoverable program elements from the candidate index only.
+	/// Lookup metadata may include annotation definitions outside the scan boundaries.
+	public static void scanForResources(IndexView candidates, IndexView lookup, ResultCollector collector) {
+		final var discoverable = new HashSet<DotName>();
+		lookup.getAnnotations( Discoverable.class ).forEach( use -> {
+			if ( use.target().kind() == AnnotationTarget.Kind.CLASS ) {
+				discoverable.add( use.target().asClass().name() );
+			}
+		} );
+		discoverable.add( JAKARTA_DATA_REPOSITORY );
+		for ( var annotationName : discoverable ) {
+			for ( var use : candidates.getAnnotations( annotationName ) ) {
+				if ( use.target().kind() == AnnotationTarget.Kind.CLASS ) {
+					final var type = use.target().asClass();
+					if ( type.isModule() ) {
+						collector.addModule( type.module().name().toString() );
+					}
+					else {
+						collector.addClass( type.name().toString() );
+					}
+				}
+			}
 		}
-	}
-
-	private static void addDiscoveredClasses(
-			DotName discoveredAnnotationType,
-			IndexView jandexIndex,
-			ResultCollector resultCollector) {
-		jandexIndex.getAnnotations( discoveredAnnotationType )
-				.forEach( discoveredAnnotationUse ->
-						resultCollector.addClass( discoveredAnnotationUse.target().asClass().name().toString() ) );
+		// Module descriptors have separate Jandex storage, including when several
+		// archives each contain a classfile named module-info.
+		for ( var module : candidates.getKnownModules() ) {
+			// we only collect modules here which have annotations marked as "discoverable"
+			if ( module.annotations()
+					.stream()
+					.anyMatch( annotation -> discoverable.contains( annotation.name() ) ) ) {
+				collector.addModule( module.name().toString() );
+			}
+		}
 	}
 }

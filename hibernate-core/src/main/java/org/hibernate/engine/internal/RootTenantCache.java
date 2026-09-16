@@ -4,6 +4,8 @@
  */
 package org.hibernate.engine.internal;
 
+import jakarta.annotation.Nullable;
+
 import org.hibernate.cache.spi.access.CachedDomainDataAccess;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -21,16 +23,11 @@ public final class RootTenantCache {
 			Object id, EntityPersister persister, SharedSessionContractImplementor session) {
 		if ( session.isRootTenant() ) {
 			if ( persister.canWriteToCache() ) {
-				final var loader = persister.getTenantIdLoader();
-				final var snapshot = loader == null ? null : loader.loadCacheSnapshot( id, session );
-				final String tenant = snapshot == null
-						? tenantIdentifier( id, persister, session ) : tenantIdentifier( snapshot.tenantId(), session );
-				if ( tenant != null ) {
+				final var state = entityCacheState( id, persister, session );
+				if ( state != null ) {
 					final var cache = persister.getCacheAccessStrategy();
-					final Object key = cache.generateCacheKey( id, persister, session.getFactory(), tenant );
-					final Object version = snapshot != null ? snapshot.version()
-							: persister.isVersioned() ? persister.getCurrentVersion( id, session ) : null;
-					invalidateItem( key, version, cache, session );
+					final Object key = cache.generateCacheKey( id, persister, session.getFactory(), state.tenantIdentifier() );
+					invalidateItem( key, state.version(), cache, session );
 				}
 			}
 			if ( persister.hasNaturalIdCache() ) {
@@ -43,6 +40,22 @@ public final class RootTenantCache {
 				cache.removeAll( session );
 			}
 		}
+	}
+
+	private record EntityCacheState(String tenantIdentifier, Object version) {}
+
+	private static @Nullable EntityCacheState entityCacheState(
+			Object id, EntityPersister persister, SharedSessionContractImplementor session) {
+		final var loader = persister.getTenantIdLoader();
+		final var snapshot = loader == null ? null : loader.loadCacheSnapshot( id, session );
+		final String tenant = snapshot == null
+				? tenantIdentifier( id, persister, session ) : tenantIdentifier( snapshot.tenantId(), session );
+		if ( tenant == null ) {
+			return null;
+		}
+		final Object version = snapshot != null ? snapshot.version()
+				: persister.isVersioned() ? persister.getCurrentVersion( id, session ) : null;
+		return new EntityCacheState( tenant, version );
 	}
 
 	public static void invalidateCollection(

@@ -148,54 +148,44 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 
 	private void applyTenantOwnershipCheck(EntityUpdateAction action, List<FlushOperation> operations) {
 		final String tenantTable = entityPersister.physicalTableNameForMutation(
-				TenantIdHelper.tenantIdMapping( entityPersister ).getSelectable( 0 ) );
-		if ( operations.stream().noneMatch( operation -> operation.getKind() != MutationKind.NO_OP
-				&& !tenantTable.equals( operation.getTableExpression() ) ) ) {
-			return;
-		}
-		final var ownerUpdate = operations.stream()
-				.filter( operation -> operation.getKind() == MutationKind.UPDATE
-						&& TenantIdHelper.checksTenantId( entityPersister, operation.getJdbcOperation() ) )
-				.findFirst().orElse( null );
-		if ( ownerUpdate != null ) {
+				TenantIdHelper.tenantIdAttribute( entityPersister ).getSelectable( 0 ) );
+		if ( operations.stream()
+				.anyMatch( operation -> operation.getKind() != MutationKind.NO_OP
+										&& !tenantTable.equals( operation.getTableExpression() ) ) ) {
+			for ( var flushOperation : operations ) {
+				if ( flushOperation.getKind() == MutationKind.UPDATE
+						&& TenantIdHelper.checksTenantId( entityPersister, flushOperation.getJdbcOperation() ) ) {
+					for ( var operation : operations ) {
+						if ( operation.getKind() != MutationKind.NO_OP && operation != flushOperation ) {
+							operation.setExecutionPrerequisite( flushOperation );
+						}
+					}
+					return;
+				}
+			}
+			final var ownershipCheck = new PreExecutionCallback() {
+				private boolean checked;
+
+				@Override
+				public boolean requiresBatchFlush() {
+					return !checked;
+				}
+
+				@Override
+				public boolean beforeExecution(SessionImplementor session) {
+					if ( !checked ) {
+						TenantIdHelper.checkStoredTenantOwnership( action.getId(), entityPersister, session, THROW );
+						checked = true;
+					}
+					return true;
+				}
+			};
 			for ( var operation : operations ) {
-				if ( operation.getKind() != MutationKind.NO_OP && operation != ownerUpdate ) {
-					operation.setExecutionPrerequisite( ownerUpdate );
+				if ( operation.getKind() != MutationKind.NO_OP ) {
+					final var previous = operation.getPreExecutionCallback();
+					operation.setPreExecutionCallback(
+							previous == null ? ownershipCheck : previous.and( ownershipCheck ) );
 				}
-			}
-			return;
-		}
-		final PreExecutionCallback ownershipCheck = new PreExecutionCallback() {
-			private boolean checked;
-
-			@Override
-			public boolean requiresBatchFlush() {
-				return !checked;
-			}
-
-			@Override
-			public boolean beforeExecution(SessionImplementor session) {
-				if ( !checked ) {
-					TenantIdHelper.checkStoredTenantOwnership( action.getId(), entityPersister, session, THROW );
-					checked = true;
-				}
-				return true;
-			}
-		};
-		for ( var operation : operations ) {
-			if ( operation.getKind() != MutationKind.NO_OP ) {
-				final var previous = operation.getPreExecutionCallback();
-				operation.setPreExecutionCallback( previous == null ? ownershipCheck : new PreExecutionCallback() {
-					@Override
-					public boolean requiresBatchFlush() {
-						return previous.requiresBatchFlush() || ownershipCheck.requiresBatchFlush();
-					}
-
-					@Override
-					public boolean beforeExecution(SessionImplementor session) {
-						return previous.beforeExecution( session ) && ownershipCheck.beforeExecution( session );
-					}
-				} );
 			}
 		}
 	}

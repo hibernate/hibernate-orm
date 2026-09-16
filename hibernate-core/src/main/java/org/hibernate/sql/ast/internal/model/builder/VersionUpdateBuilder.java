@@ -15,7 +15,6 @@ import org.hibernate.sql.ast.spi.model.ColumnValueBinding;
 import org.hibernate.sql.ast.spi.model.ColumnValueParameter;
 import org.hibernate.sql.ast.spi.model.MutatingTableReference;
 import org.hibernate.sql.ast.spi.model.TableUpdateStandard;
-import org.hibernate.sql.ast.spi.model.TenantIdColumnValueBinding;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -75,14 +74,11 @@ public class VersionUpdateBuilder implements TableMutationBuilder<TableUpdateSta
 				(o) -> parameterBinders.add( (ColumnValueParameter) o )
 		);
 		restrictionBindings.add( oldVersionBinding );
-		final var tenantMapping = TenantIdHelper.tenantIdMapping( mutationTarget );
-		if ( tenantMapping != null ) {
-			final var selectable = tenantMapping.getSelectable( 0 );
-			if ( mutationTarget.physicalTableNameForMutation( selectable ).equals( tableReference.getTableName() ) ) {
-				tenantBindings.add( new TenantIdColumnValueBinding( ColumnValueBindingBuilder.createValueBinding(
-						"?", selectable, tableReference, ParameterUsage.TENANT,
-						parameter -> parameterBinders.add( (ColumnValueParameter) parameter ) ) ) );
-			}
+		final var tenantColumn = TenantIdHelper.tenantIdColumn( mutationTarget, tableReference.getTableName() );
+		if ( tenantColumn != null ) {
+			tenantBindings.add( ColumnValueBindingBuilder.createTenantRestriction(
+					tenantColumn, tableReference,
+					parameter -> parameterBinders.add( (ColumnValueParameter) parameter ) ) );
 		}
 	}
 

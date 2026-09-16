@@ -105,13 +105,13 @@ public abstract class AbstractMutationCoordinator {
 
 	protected void bindTenantRestriction(
 			SharedSessionContractImplementor session, JdbcValueBindings bindings, MutationOperationGroup operationGroup) {
-		final var tenantMapping = TenantIdHelper.tenantIdMapping( entityPersister() );
+		final var tenantMapping = TenantIdHelper.tenantIdAttribute( entityPersister() );
 		if ( tenantMapping != null ) {
 			final var selectable = tenantMapping.getSelectable( 0 );
 			final String tableName = entityPersister().physicalTableNameForMutation( selectable );
 			final var operation = operationGroup.getOperation( tableName );
 			if ( operation != null
-					&& operation.findValueDescriptor( selectable.getSelectionExpression(), ParameterUsage.TENANT ) != null ) {
+					&& TenantIdHelper.tenantIdColumn( entityPersister(), operation ) != null ) {
 				bindings.bindValue(
 						session.isRootTenant() ? null : session.getTenantIdentifierValue(),
 						tableName, selectable.getSelectionExpression(), ParameterUsage.TENANT );

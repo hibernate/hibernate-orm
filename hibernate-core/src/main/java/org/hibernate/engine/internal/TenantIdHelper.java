@@ -4,6 +4,8 @@
  */
 package org.hibernate.engine.internal;
 
+import jakarta.annotation.Nullable;
+
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -11,6 +13,7 @@ import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.sql.ast.spi.model.builder.RestrictedTableMutationBuilder;
 import org.hibernate.action.queue.spi.bind.JdbcValueBindings;
 import org.hibernate.metamodel.mapping.AttributeMapping;
+import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.spi.mutation.MutationOperation;
 import org.hibernate.sql.spi.mutation.MutationType;
@@ -23,17 +26,43 @@ public final class TenantIdHelper {
 	private TenantIdHelper() {
 	}
 
-	public static AttributeMapping tenantIdMapping(EntityPersister persister) {
+	/**
+	 * The tenant attribute outside the identifier. Identifier tenant columns already
+	 * participate in key restrictions and do not need a separate tenant restriction.
+	 */
+	public static @Nullable AttributeMapping tenantIdAttribute(EntityPersister persister) {
 		final var mapping = persister.getTenantIdMapping();
 		return mapping == null ? null : mapping.getAttributeMapping();
 	}
 
-	public static void applyTenantRestriction(EntityPersister persister, RestrictedTableMutationBuilder<?, ?> builder) {
-		final var tenantMapping = tenantIdMapping( persister );
-		if ( tenantMapping != null && builder.getOptimisticLockBindings() != null ) {
+	public static @Nullable SelectableMapping tenantIdColumn(EntityPersister persister, String tableName) {
+		final var tenantMapping = tenantIdAttribute( persister );
+		if ( tenantMapping != null ) {
 			final var selectable = tenantMapping.getSelectable( 0 );
-			if ( persister.physicalTableNameForMutation( selectable ).equals( builder.getMutatingTable().getTableName() ) ) {
-				builder.getOptimisticLockBindings().addTenantRestriction( selectable );
+			if ( persister.physicalTableNameForMutation( selectable ).equals( tableName ) ) {
+				return selectable;
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * The tenant column only if this operation has a parameter for its restriction.
+	 * Custom SQL may omit that parameter.
+	 */
+	public static @Nullable SelectableMapping tenantIdColumn(EntityPersister persister, MutationOperation operation) {
+		final var selectable = tenantIdColumn( persister, operation.getTableDetails().getTableName() );
+		return selectable != null
+				&& operation.findValueDescriptor( selectable.getSelectionExpression(), ParameterUsage.TENANT ) != null
+				? selectable : null;
+	}
+
+	public static void applyTenantRestriction(EntityPersister persister, RestrictedTableMutationBuilder<?, ?> builder) {
+		final var bindings = builder.getOptimisticLockBindings();
+		if ( bindings != null ) {
+			final var selectable = tenantIdColumn( persister, builder.getMutatingTable().getTableName() );
+			if ( selectable != null ) {
+				bindings.addTenantRestriction( selectable );
 			}
 		}
 	}
@@ -41,20 +70,16 @@ public final class TenantIdHelper {
 	public static void bindTenantRestriction(
 			EntityPersister persister, MutationOperation operation, JdbcValueBindings bindings,
 			SharedSessionContractImplementor session) {
-		final var tenantMapping = tenantIdMapping( persister );
-		if ( tenantMapping != null ) {
-			final var selectable = tenantMapping.getSelectable( 0 );
-			if ( persister.physicalTableNameForMutation( selectable ).equals( operation.getTableDetails().getTableName() )
-					&& operation.findValueDescriptor( selectable.getSelectionExpression(), ParameterUsage.TENANT ) != null ) {
-				bindings.bindValue( session.isRootTenant() ? null : session.getTenantIdentifierValue(),
-						selectable.getSelectionExpression(), ParameterUsage.TENANT );
-			}
+		final var selectable = tenantIdColumn( persister, operation );
+		if ( selectable != null ) {
+			bindings.bindValue( session.isRootTenant() ? null : session.getTenantIdentifierValue(),
+					selectable.getSelectionExpression(), ParameterUsage.TENANT );
 		}
 	}
 
 	public static boolean needsMultiTableUpdateCheck(
 			EntityPersister persister, SharedSessionContractImplementor session) {
-		return persister.hasMultipleTables() && !session.isRootTenant() && tenantIdMapping( persister ) != null;
+		return persister.hasMultipleTables() && !session.isRootTenant() && tenantIdAttribute( persister ) != null;
 	}
 
 	/**
@@ -62,19 +87,12 @@ public final class TenantIdHelper {
 	 * Custom SQL and optional row counts cannot provide this guarantee.
 	 */
 	public static boolean checksTenantId(EntityPersister persister, MutationOperation operation) {
-		if ( operation instanceof PreparableMutationOperation preparable
-				&& operation.getMutationType() == MutationType.UPDATE
-				&& !operation.getTableDetails().isOptional()
-				&& operation.getTableDetails().getUpdateDetails().getCustomSql() == null
-				&& preparable.getExpectation() instanceof Expectation.RowCount ) {
-			final var tenantMapping = tenantIdMapping( persister );
-			if ( tenantMapping != null ) {
-				final var selectable = tenantMapping.getSelectable( 0 );
-				return persister.physicalTableNameForMutation( selectable ).equals( operation.getTableDetails().getTableName() )
-					&& operation.findValueDescriptor( selectable.getSelectionExpression(), ParameterUsage.TENANT ) != null;
-			}
-		}
-		return false;
+		return operation instanceof PreparableMutationOperation preparable
+			&& operation.getMutationType() == MutationType.UPDATE
+			&& !operation.getTableDetails().isOptional()
+			&& operation.getTableDetails().getUpdateDetails().getCustomSql() == null
+			&& preparable.getExpectation() instanceof Expectation.RowCount
+			&& tenantIdColumn( persister, operation ) != null;
 	}
 
 	/**

@@ -1224,7 +1224,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		// Stateless mutations already check stored ownership before reaching this coordinator.
 		if ( session instanceof SessionImplementor && TenantIdHelper.needsMultiTableUpdateCheck( persister, session ) ) {
 			final String tenantTable = persister.physicalTableNameForMutation(
-					TenantIdHelper.tenantIdMapping( persister ).getSelectable( 0 ) );
+					TenantIdHelper.tenantIdAttribute( persister ).getSelectable( 0 ) );
 			boolean updatesOtherTable = false;
 			for ( int i = 0; i < group.getNumberOfOperations(); i++ ) {
 				final var operation = group.getOperation( i );

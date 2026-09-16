@@ -9240,7 +9240,10 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		final Object value = parameter.getValue();
 		final JdbcMapping valueMapping = parameter.getValueMapping();
 
-		if ( value instanceof Iterable<?> iterable
+		if ( parameter.getJdbcParameter() != null ) {
+			visitParameterAsParameter( parameter.getJdbcParameter() );
+		}
+		else if ( value instanceof Iterable<?> iterable
 				&& !valueMapping.getJavaTypeDescriptor().isInstance( value ) ) {
 			processIterableFilterParameterValue( valueMapping, iterable.iterator() );
 		}

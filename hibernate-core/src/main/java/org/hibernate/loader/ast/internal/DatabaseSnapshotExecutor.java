@@ -19,12 +19,16 @@ import org.hibernate.query.sqm.sql.spi.FromClauseIndex;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.creation.SqlAliasBaseManager;
 import org.hibernate.sql.ast.spi.query.expression.ColumnReference;
+import org.hibernate.sql.ast.spi.query.expression.JdbcParameter;
 import org.hibernate.sql.ast.spi.query.expression.QueryLiteral;
 import org.hibernate.sql.ast.spi.query.predicate.ComparisonPredicate;
+import org.hibernate.sql.ast.spi.query.predicate.FilterPredicate;
 import org.hibernate.sql.ast.spi.query.select.QuerySpec;
 import org.hibernate.sql.ast.spi.query.select.SelectStatement;
 import org.hibernate.sql.exec.internal.BaseExecutionContext;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
+import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
+import org.hibernate.sql.exec.internal.JdbcParameterImpl;
 import org.hibernate.sql.exec.internal.SqlTypedMappingJdbcParameter;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
 import org.hibernate.sql.exec.spi.JdbcSelect;
@@ -38,6 +42,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_OBJECT_ARRAY;
+import static org.hibernate.binder.internal.TenantIdBinder.PARAMETER_NAME;
 import static org.hibernate.loader.LoaderLogging.LOADER_LOGGER;
 import static org.hibernate.pretty.MessageHelper.infoString;
 import static java.util.Collections.singletonMap;
@@ -51,6 +56,7 @@ class DatabaseSnapshotExecutor {
 
 	private final JdbcSelect jdbcSelect;
 	private final JdbcParametersList jdbcParameters;
+	private final JdbcParameter tenantIdParameter;
 
 	DatabaseSnapshotExecutor(
 			EntityMappingType entityDescriptor,
@@ -100,10 +106,23 @@ class DatabaseSnapshotExecutor {
 
 		rootQuerySpec.getFromClause().addRoot( rootTableGroup );
 		state.getFromClauseAccess().registerTableGroup( rootPath, rootTableGroup );
+		tenantIdParameter = tenantFilter == null ? null : new JdbcParameterImpl(
+				tenantFilter.getFilterDefinition().getParameterJdbcMapping( PARAMETER_NAME ) );
 		if ( tenantFilter != null ) {
 			// Snapshots ignore application filters, but must respect tenant isolation.
 			entityDescriptor.applyFilterRestrictions(
-					rootQuerySpec::applyPredicate,
+					predicate -> {
+						// Keep the filter's SQL, including formulas and table aliases, but bind
+						// the tenant at execution time so the plan can be shared across sessions.
+						for ( var fragment : ((FilterPredicate) predicate).getFragments() ) {
+							if ( fragment.getParameters() != null ) {
+								for ( var parameter : fragment.getParameters() ) {
+									parameter.setJdbcParameter( tenantIdParameter );
+								}
+							}
+						}
+						rootQuerySpec.applyPredicate( predicate );
+					},
 					rootTableGroup,
 					true,
 					singletonMap( tenantFilter.getName(), tenantFilter ),
@@ -174,7 +193,10 @@ class DatabaseSnapshotExecutor {
 						.translate( null, QueryOptions.NONE );
 	}
 
-	Object[] loadDatabaseSnapshot(Object id, SharedSessionContractImplementor session) {
+	/**
+	 * @param tenantId the current tenant filter parameter value, or {@code null} for an unrestricted executor
+	 */
+	Object[] loadDatabaseSnapshot(Object id, Object tenantId, SharedSessionContractImplementor session) {
 		if ( LOADER_LOGGER.isTraceEnabled() ) {
 			LOADER_LOGGER.trace( "Retrieving snapshot of current persistent state for "
 					+ infoString( entityDescriptor, id ) );
@@ -192,6 +214,11 @@ class DatabaseSnapshotExecutor {
 						session
 				);
 		assert offset == jdbcParameters.size();
+		if ( tenantIdParameter != null ) {
+			final var jdbcMapping = tenantIdParameter.getExpressionType().getSingleJdbcMapping();
+			jdbcParameterBindings.addBinding( tenantIdParameter,
+					new JdbcParameterBindingImpl( jdbcMapping, jdbcMapping.convertToRelationalValue( tenantId ) ) );
+		}
 
 		final List<?> list =
 				session.getJdbcServices().getJdbcSelectExecutor().list(

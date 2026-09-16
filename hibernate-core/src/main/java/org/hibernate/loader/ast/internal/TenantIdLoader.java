@@ -61,7 +61,7 @@ public class TenantIdLoader {
 		if ( cacheInvalidationPlan == null ) {
 			return new Snapshot( loadTenantId( id, session ), null );
 		}
-		final Object[] row = cacheInvalidationPlan.loadDatabaseSnapshot( id, session );
+		final Object[] row = cacheInvalidationPlan.loadDatabaseSnapshot( id, null, session );
 		return row == null ? new Snapshot( null, null ) : new Snapshot( row[0], row[1] );
 	}
 

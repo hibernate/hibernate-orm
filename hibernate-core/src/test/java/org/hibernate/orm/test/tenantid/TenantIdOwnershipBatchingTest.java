@@ -115,7 +115,7 @@ class TenantIdOwnershipBatchingTest implements ServiceRegistryProducer {
 	static class Item {
 		@Id Long id;
 		@TenantId String tenant;
-		@Column(name = "first_value", table = "ownership_batch_first") String first = "original";
+		@Column(name = "first_payload", table = "ownership_batch_first") String first = "original";
 		@Column(name = "second_value", table = "ownership_batch_second") String second = "original";
 	}
 }

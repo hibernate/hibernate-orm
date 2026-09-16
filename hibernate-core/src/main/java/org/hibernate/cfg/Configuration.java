@@ -4,6 +4,8 @@
  */
 package org.hibernate.cfg;
 
+import java.util.Collection;
+
 import java.io.File;
 import java.io.InputStream;
 import java.net.URL;
@@ -808,7 +810,7 @@ public class Configuration {
 	 * @throws MappingException in case there is an error in the mapping data
 	 */
 	public Configuration addPackage(String packageName) throws MappingException {
-		metadataSources.addPackage( packageName );
+		metadataSources.addPackageDescriptor( packageName );
 		return this;
 	}
 
@@ -1342,7 +1344,7 @@ public class Configuration {
 		return sqlResultSetMappings;
 	}
 
-	public java.util.Collection<NamedEntityGraphDefinition> getNamedEntityGraphs() {
+	public Collection<NamedEntityGraphDefinition> getNamedEntityGraphs() {
 		return namedEntityGraphMap.values();
 	}
 

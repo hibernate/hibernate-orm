@@ -4,6 +4,10 @@
  */
 package org.hibernate.jpa.boot.spi;
 
+import java.util.LinkedHashSet;
+import java.util.Set;
+import org.hibernate.boot.model.process.internal.ManagedResourceValidation;
+
 import jakarta.persistence.FetchType;
 import jakarta.persistence.PersistenceConfiguration;
 import jakarta.persistence.PersistenceUnitTransactionType;
@@ -11,34 +15,18 @@ import jakarta.persistence.SchemaManagementAction;
 import jakarta.persistence.SharedCacheMode;
 import jakarta.persistence.ValidationMode;
 import jakarta.annotation.Nonnull;
-import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.Remove;
-import org.hibernate.boot.archive.internal.StandardArchiveDescriptorFactory;
-import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
 import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.boot.scan.internal.ProvidedScannerProvider;
-import org.hibernate.boot.scan.internal.ScannerLogger;
-import org.hibernate.boot.scan.internal.ScanningContextImpl;
-import org.hibernate.boot.scan.internal.StandardScanningProvider;
-import org.hibernate.boot.scan.spi.Scanner;
-import org.hibernate.boot.scan.spi.ScanningProvider;
 import org.hibernate.boot.scan.spi.ScanningResult;
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.bytecode.spi.ClassTransformer;
-import org.hibernate.cfg.PersistenceSettings;
-import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jpa.HibernatePersistenceConfiguration;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 import org.hibernate.tool.schema.Action;
 
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
-import java.util.Locale;
 import java.util.Properties;
 import java.util.function.BiConsumer;
 
@@ -60,30 +48,56 @@ public class PersistenceConfigurationDescriptor implements PersistenceUnitDescri
 
 	private final Properties properties;
 	private final List<String> managedClassNames;
-	private final List<String> discoveredClassNames;
-
+	private final List<Class<?>> managedClasses;
+	private final ScanningResult discovery;
 	public PersistenceConfigurationDescriptor(
-			@Nonnull HibernatePersistenceConfiguration persistenceConfiguration,
-			@Nonnull StandardServiceRegistry standardServiceRegistry) {
-		this.persistenceConfiguration = persistenceConfiguration;
-		this.properties = persistenceConfigurationProperties( persistenceConfiguration );
-		this.managedClassNames = persistenceConfiguration.managedClasses().stream().map( Class::getName ).toList();
-
-		final ScanningResult scanningResult = performScanning( persistenceConfiguration, standardServiceRegistry );
-		this.discoveredClassNames = combineDiscoveredClasses( scanningResult );
+			@Nonnull HibernatePersistenceConfiguration configuration,
+			@Nonnull StandardServiceRegistry registry) {
+		this( configuration );
 	}
 
-	private List<String> combineDiscoveredClasses(ScanningResult scanningResult) {
-		final ArrayList<String> names = new ArrayList<>( scanningResult.discoveredClasses() );
-		scanningResult.discoveredPackages().stream().map( packageName -> packageName + ".package-info" ).forEach( names::add );
-		return names;
+	public PersistenceConfigurationDescriptor(@Nonnull PersistenceConfiguration configuration) {
+		this( configuration, ScanningResult.NONE );
 	}
 
-	public PersistenceConfigurationDescriptor(@Nonnull PersistenceConfiguration persistenceConfiguration) {
-		this.persistenceConfiguration = persistenceConfiguration;
-		this.properties = persistenceConfigurationProperties( persistenceConfiguration );
-		this.managedClassNames = persistenceConfiguration.managedClasses().stream().map( Class::getName ).toList();
-		this.discoveredClassNames = List.of();
+	public PersistenceConfigurationDescriptor(PersistenceConfiguration configuration, ScanningResult discovery) {
+		this.discovery = discovery;
+		this.persistenceConfiguration = configuration;
+		this.properties = persistenceConfigurationProperties( configuration );
+		this.managedClasses = List.copyOf( configuration.managedClasses() );
+		this.managedClassNames = managedClasses.stream().map( Class::getName ).distinct().toList();
+		managedClassNames.forEach( name -> ManagedResourceValidation.validateClassName(
+				name, "managedClass({class})", "managedPackageDescriptor(\"{package}\")", "managedModuleDescriptor()" ) );
+	}
+
+	public List<Class<?>> getManagedClasses() {
+		return managedClasses;
+	}
+
+	@Override
+	public List<String> getManagedPackageDescriptors() {
+		return List.copyOf( new LinkedHashSet<>( persistenceConfiguration.managedPackageDescriptors() ) );
+	}
+
+	@Override
+	public List<String> getManagedModuleDescriptors() {
+		return List.copyOf( new LinkedHashSet<>( persistenceConfiguration.managedModuleDescriptors() ) );
+	}
+
+	@Override
+	public List<String> getAllPackageDescriptors() {
+		return complete( getManagedPackageDescriptors(), discovery.discoveredPackages() );
+	}
+
+	@Override
+	public List<String> getAllModuleDescriptors() {
+		return complete( getManagedModuleDescriptors(), discovery.discoveredModules() );
+	}
+
+	private static List<String> complete(List<String> explicit, Set<String> discovered) {
+		final var names = new LinkedHashSet<>( explicit );
+		names.addAll( discovered );
+		return List.copyOf( names );
 	}
 
 	private static Properties persistenceConfigurationProperties(PersistenceConfiguration persistenceConfiguration) {
@@ -165,7 +179,7 @@ public class PersistenceConfigurationDescriptor implements PersistenceUnitDescri
 
 	@Override
 	public List<String> getAllClassNames() {
-		return CollectionHelper.combine(  managedClassNames, discoveredClassNames );
+		return complete( managedClassNames, discovery.discoveredClasses() );
 	}
 
 	@Override
@@ -228,189 +242,6 @@ public class PersistenceConfigurationDescriptor implements PersistenceUnitDescri
 		return persistenceConfiguration instanceof HibernatePersistenceConfiguration configuration
 				? configuration.jarFileUrls()
 				: null;
-	}
-
-	private static ScanningResult performScanning(
-			HibernatePersistenceConfiguration persistenceConfiguration,
-			StandardServiceRegistry serviceRegistry) {
-		final URL[] boundaries = collectUrls( persistenceConfiguration );
-		if ( boundaries == null ) {
-			return ScanningResult.NONE;
-		}
-
-		final var classLoaderService = serviceRegistry.requireService( ClassLoaderService.class );
-		final var configurationService = serviceRegistry.requireService( ConfigurationService.class );
-		final var archiveDescriptorFactory = determineArchiveDescriptorFactory( configurationService, classLoaderService );
-		final var scanningContext = new ScanningContextImpl(
-				archiveDescriptorFactory,
-				configurationService.getSettings()
-		);
-		final ScanningProvider scanningProvider = determineScanningProvider( configurationService, classLoaderService );
-		final Scanner scanner = scanningProvider.builderScanner( scanningContext );
-		return scanner.scan( boundaries );
-	}
-
-	private static URL[] collectUrls(HibernatePersistenceConfiguration cfg) {
-		if ( cfg.rootUrl() == null && CollectionHelper.isEmpty( cfg.jarFileUrls() ) ) {
-			return null;
-		}
-
-		return combinedUrls( cfg.rootUrl(), cfg.jarFileUrls() ).toArray(new URL[0]);
-	}
-
-	private static List<URL> combinedUrls(URL rootUrl, List<URL> jarFileUrls) {
-		final int size = CollectionHelper.size( jarFileUrls ) + ( rootUrl == null ? 0 : 1);
-		final List<URL> combined = new ArrayList<>( size );
-		if ( rootUrl != null ) {
-			combined.add( rootUrl );
-		}
-		if ( jarFileUrls != null ) {
-			combined.addAll( jarFileUrls );
-		}
-		return combined;
-	}
-
-	private static ScanningProvider determineScanningProvider(
-			@Nonnull ConfigurationService configurationService,
-			@Nonnull ClassLoaderService classLoaderService) {
-		var configuredProvider = determineScanningProviderFromSetting( configurationService, classLoaderService );
-		if ( configuredProvider != null ) {
-			return configuredProvider;
-		}
-
-		var configuredScanner = determineScannerFromSetting( configurationService, classLoaderService );
-		if ( configuredScanner != null ) {
-			return new ProvidedScannerProvider( configuredScanner );
-		}
-
-		final Collection<ScanningProvider> scanningProviders = classLoaderService.loadJavaServices( ScanningProvider.class );
-		if ( scanningProviders.isEmpty() ) {
-			ScannerLogger.SCANNER_LOGGER.noScannerFactoryAvailable();
-			return new StandardScanningProvider();
-		}
-		else {
-			final ScanningProvider first = scanningProviders.iterator().next();
-			if ( scanningProviders.size() > 1 ) {
-				ScannerLogger.SCANNER_LOGGER.multipleScannerFactoriesAvailable( first.getClass().getName() );
-			}
-			return first;
-		}
-	}
-
-	private static ScanningProvider determineScanningProviderFromSetting(
-			@Nonnull ConfigurationService configurationService,
-			@Nonnull ClassLoaderService classLoaderService) {
-		var providerSetting = configurationService.getSettings().get( PersistenceSettings.SCANNING );
-		if ( providerSetting == null ) {
-			return null;
-		}
-
-		// might be any of the 3 standard forms
-		if ( providerSetting instanceof ScanningProvider instance ) {
-			return instance;
-		}
-		else if ( providerSetting instanceof Class<?> implClass ) {
-			try {
-				return (ScanningProvider) implClass.getDeclaredConstructor().newInstance();
-			}
-			catch (Exception e) {
-				throw new HibernateException(
-						String.format( Locale.ROOT,
-								"Unable to instantiate ScanningProvider `%s`",
-								implClass.getName()
-						),
-						e
-				);
-			}
-		}
-		else {
-			var implClassName = providerSetting.toString();
-			var implClass = classLoaderService.classForName( implClassName );
-			try {
-				return (ScanningProvider) implClass.getDeclaredConstructor().newInstance();
-			}
-			catch (Exception e) {
-				throw new HibernateException(
-						String.format( Locale.ROOT,
-								"Unable to instantiate ScanningProvider `%s`",
-								implClass.getName()
-						),
-						e
-				);
-			}
-		}
-	}
-
-	private static Scanner determineScannerFromSetting(
-			@Nonnull ConfigurationService configurationService,
-			@Nonnull ClassLoaderService classLoaderService) {
-		var setting = configurationService.getSettings().get( PersistenceSettings.SCANNER );
-		if ( setting == null ) {
-			return null;
-		}
-
-		// might be any of the 3 standard forms
-		if ( setting instanceof Scanner instance ) {
-			return instance;
-		}
-		else if ( setting instanceof Class<?> implClass ) {
-			try {
-				return (Scanner) implClass.getDeclaredConstructor().newInstance();
-			}
-			catch (Exception e) {
-				throw new HibernateException(
-						String.format( Locale.ROOT,
-								"Unable to instantiate Scanner `%s`",
-								implClass.getName()
-						),
-						e
-				);
-			}
-		}
-		else {
-			var implClassName = setting.toString();
-			var implClass = classLoaderService.classForName( implClassName );
-			try {
-				return (Scanner) implClass.getDeclaredConstructor().newInstance();
-			}
-			catch (Exception e) {
-				throw new HibernateException(
-						String.format( Locale.ROOT,
-								"Unable to instantiate Scanner `%s`",
-								implClass.getName()
-						),
-						e
-				);
-			}
-		}
-	}
-
-	private static ArchiveDescriptorFactory determineArchiveDescriptorFactory(
-			@Nonnull ConfigurationService configurationService,
-			@Nonnull ClassLoaderService classLoaderService) {
-		final Object setting = configurationService.getSettings().get( PersistenceSettings.SCANNER_ARCHIVE_INTERPRETER );
-		if ( setting instanceof ArchiveDescriptorFactory ref ) {
-			return ref;
-		}
-		else if ( setting instanceof Class<?> implClass ) {
-			try {
-				return (ArchiveDescriptorFactory) implClass.getDeclaredConstructor().newInstance();
-			}
-			catch (Exception e) {
-				throw new HibernateException( "Unable to instantiate configured ArchiveDescriptorFactory - " + implClass.getName(), e );
-			}
-		}
-		else if ( setting != null ) {
-			var implClassName = setting.toString();
-			var implClass = classLoaderService.classForName( implClassName );
-			try {
-				return (ArchiveDescriptorFactory) implClass.getDeclaredConstructor().newInstance();
-			}
-			catch (Exception e) {
-				throw new HibernateException( "Unable to instantiate configured ArchiveDescriptorFactory - " + implClass.getName(), e );
-			}
-		}
-		return new StandardArchiveDescriptorFactory();
 	}
 
 }

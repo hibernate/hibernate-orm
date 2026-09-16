@@ -197,6 +197,9 @@
 
                             <!-- **************************************************** -->
 
+                            <xsd:element name="package-descriptor" type="xsd:string" minOccurs="0" maxOccurs="unbounded"/>
+                            <xsd:element name="module-descriptor" type="xsd:string" minOccurs="0" maxOccurs="unbounded"/>
+
                             <xsd:element name="exclude-unlisted-classes" type="xsd:boolean"
                                          default="true" minOccurs="0">
                                 <xsd:annotation>

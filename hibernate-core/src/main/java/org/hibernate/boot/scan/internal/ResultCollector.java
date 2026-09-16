@@ -8,7 +8,6 @@ import org.hibernate.boot.scan.spi.ScanningResult;
 import org.hibernate.internal.util.StringHelper;
 
 import java.net.URI;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -30,7 +29,7 @@ public class ResultCollector {
 	}
 
 	public void addClass(String className) {
-		if ( className.endsWith( "package-info" ) ) {
+		if ( className.equals( "package-info" ) || className.endsWith( ".package-info" ) ) {
 			addPackage( StringHelper.qualifier( className ) );
 		}
 		else if ( className.equals( "module-info" ) ) {
@@ -49,10 +48,10 @@ public class ResultCollector {
 
 	public ScanningResult toResult() {
 		return new ScanningResultImpl(
-				Collections.unmodifiableSet( discoveredModules ),
-				Collections.unmodifiableSet( discoveredPackages ),
-				Collections.unmodifiableSet( discoveredClasses ),
-				Collections.unmodifiableSet( discoveredMappings )
+				discoveredModules,
+				discoveredPackages,
+				discoveredClasses,
+				discoveredMappings
 		);
 	}
 }

@@ -4,6 +4,8 @@
  */
 package org.hibernate.jpa.boot.internal;
 
+import org.hibernate.boot.model.process.internal.EnhancementCandidates;
+
 import java.net.URL;
 import java.util.List;
 import java.util.Properties;
@@ -22,7 +24,6 @@ import jakarta.persistence.ValidationMode;
 import jakarta.persistence.spi.PersistenceUnitInfo;
 import jakarta.persistence.PersistenceUnitTransactionType;
 
-
 import static org.hibernate.jpa.internal.JpaLogger.JPA_LOGGER;
 
 /// Wraps a JPA {@linkplain PersistenceUnitInfo} as Hibernate's {@linkplain PersistenceUnitDescriptor}
@@ -38,6 +39,7 @@ public class PersistenceUnitInfoDescriptor implements PersistenceUnitDescriptor 
 	}
 
 	public PersistenceUnitInfoDescriptor(PersistenceUnitInfo persistenceUnitInfo, boolean disableClassTransformerRegistration) {
+		EnhancementCandidates.forContainer( persistenceUnitInfo );
 		this.persistenceUnitInfo = persistenceUnitInfo;
 		this.disableClassTransformerRegistration = disableClassTransformerRegistration;
 	}
@@ -120,6 +122,26 @@ public class PersistenceUnitInfoDescriptor implements PersistenceUnitDescriptor 
 	@Override
 	public List<String> getAllClassNames() {
 		return persistenceUnitInfo.getAllClassNames();
+	}
+
+	@Override
+	public List<String> getManagedPackageDescriptors() {
+		return persistenceUnitInfo.getManagedPackageDescriptors();
+	}
+
+	@Override
+	public List<String> getManagedModuleDescriptors() {
+		return persistenceUnitInfo.getManagedModuleDescriptors();
+	}
+
+	@Override
+	public List<String> getAllPackageDescriptors() {
+		return persistenceUnitInfo.getAllPackageDescriptors();
+	}
+
+	@Override
+	public List<String> getAllModuleDescriptors() {
+		return persistenceUnitInfo.getAllModuleDescriptors();
 	}
 
 	@Override

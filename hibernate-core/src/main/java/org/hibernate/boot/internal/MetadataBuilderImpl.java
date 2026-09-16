@@ -4,6 +4,11 @@
  */
 package org.hibernate.boot.internal;
 
+import java.util.Collection;
+import org.hibernate.boot.model.process.internal.ManagedResourcesBuilder;
+import org.hibernate.boot.model.process.internal.ManagedResourcesImpl;
+import org.hibernate.boot.model.process.internal.MappingSourceHelper;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -421,17 +426,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 
 	@Override
 	public MetadataImplementor build() {
-		final var aggregatedConfig =
-				options.serviceRegistry.requireService( CfgXmlAccessService.class )
-						.getAggregatedConfig();
-		if ( aggregatedConfig != null ) {
-			final var mappingReferences = aggregatedConfig.getMappingReferences();
-			if ( mappingReferences != null ) {
-				for ( var mappingReference : mappingReferences ) {
-					mappingReference.apply( sources );
-				}
-			}
-		}
+		MappingSourceHelper.applyConfigurationMappings( sources, options.serviceRegistry );
 
 		final var bootModel = MetadataBuildingProcess.build( sources, bootstrapContext, options );
 
@@ -456,27 +451,14 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 						)
 				);
 
-				final var newSources = new MetadataSources( bootstrapContext.getServiceRegistry() );
-				if ( sources.getAnnotatedClasses() != null ) {
-					sources.getAnnotatedClasses().forEach( newSources::addAnnotatedClass );
-				}
-				if ( sources.getAnnotatedClassNames() != null ) {
-					sources.getAnnotatedClassNames().forEach( newSources::addAnnotatedClassName );
-				}
-				if ( sources.getAnnotatedPackages() != null ) {
-					sources.getAnnotatedPackages().forEach( newSources::addPackage );
-				}
-				if ( sources.getAnnotatedModuleNames() != null ) {
-					sources.getAnnotatedModuleNames().forEach( newSources::addModule );
-				}
-				if ( sources.getExtraQueryImports() != null ) {
-					sources.getExtraQueryImports().forEach( newSources::addQueryImport );
-				}
-				for ( var mappingXmlBinding : transformed ) {
-					newSources.addMappingXmlBinding( mappingXmlBinding );
-				}
-
-				return (MetadataImplementor) newSources.buildMetadata();
+				final var transformedResources = new ManagedResourcesBuilder()
+						.addNonXmlResources( ManagedResourcesImpl.baseline( sources, bootstrapContext ) );
+				transformed.forEach( transformedResources::addXmlBinding );
+				final var transformedBuilder = new MetadataBuilderImpl(
+						new MetadataSources( bootstrapContext.getServiceRegistry() ), bootstrapContext.getServiceRegistry() );
+				// Initial preparation already admitted configuration references and non-XML resources.
+				return MetadataBuildingProcess.complete( transformedResources.build(),
+						transformedBuilder.bootstrapContext, transformedBuilder.options );
 			}
 		}
 
@@ -536,8 +518,8 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 											Locale.ROOT,
 											"'%s' should specify either '%s' or '%s' (was '%s')",
 											DEFAULT_LIST_SEMANTICS,
-											java.util.List.class.getName(),
-											java.util.Collection.class.getName(),
+											List.class.getName(),
+											Collection.class.getName(),
 											classification.name()
 									)
 							);

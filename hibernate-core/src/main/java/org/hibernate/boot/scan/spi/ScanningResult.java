@@ -12,7 +12,9 @@ import java.net.URI;
 import java.net.URL;
 import java.util.Set;
 
-/// Defines the result from archive scanning.
+/// Categorized discoveries from archive scanning, excluding explicit declarations.
+/// All collections are non-null and duplicate-free. Hibernate-produced results
+/// are structurally immutable snapshots.
 ///
 /// @see Scanner#scan(URL...)
 /// @see Scanner#jpaScan(ArchiveDescriptor, JaxbPersistenceImpl.JaxbPersistenceUnitImpl)
@@ -28,7 +30,7 @@ public interface ScanningResult {
 	/// All discovered package names (without `package-info`).
 	Set<String> discoveredPackages();
 
-	/// All discovered class names.
+	/// Discovered ordinary type names, never package-info or module-info.
 	Set<String> discoveredClasses();
 
 	/// All `META-INF/orm.xml` files discovered across all unit archives.

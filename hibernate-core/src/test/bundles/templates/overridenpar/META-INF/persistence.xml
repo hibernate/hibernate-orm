@@ -9,6 +9,7 @@
              version="2.0">
     <persistence-unit name="overridenpar">
         <jta-data-source>java:/unreachableDS</jta-data-source>
+		<exclude-unlisted-classes>false</exclude-unlisted-classes>
 		<properties>
             <property name="hibernate.dialect" value="@db.dialect@"/>
             <property name="hibernate.hbm2ddl.auto" value="create-drop"/>

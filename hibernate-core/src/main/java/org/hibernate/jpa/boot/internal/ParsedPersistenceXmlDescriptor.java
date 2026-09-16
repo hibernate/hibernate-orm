@@ -4,6 +4,8 @@
  */
 package org.hibernate.jpa.boot.internal;
 
+import java.util.LinkedHashSet;
+
 import jakarta.persistence.FetchType;
 import jakarta.persistence.PersistenceUnitTransactionType;
 import jakarta.persistence.SharedCacheMode;
@@ -38,6 +40,8 @@ public class ParsedPersistenceXmlDescriptor implements PersistenceUnitDescriptor
 	private FetchType defaultToOneFetchType;
 	private boolean useQuotedIdentifiers;
 	private final List<String> classes = new ArrayList<>();
+	private final List<String> packageDescriptors = new ArrayList<>();
+	private final List<String> moduleDescriptors = new ArrayList<>();
 	private final List<String> mappingFiles = new ArrayList<>();
 	private final List<URL> jarFileUrls = new ArrayList<>();
 
@@ -178,6 +182,24 @@ public class ParsedPersistenceXmlDescriptor implements PersistenceUnitDescriptor
 
 	public void addClasses(List<String> classes) {
 		this.classes.addAll( classes );
+	}
+
+	@Override
+	public List<String> getManagedPackageDescriptors() {
+		return List.copyOf( new LinkedHashSet<>( packageDescriptors ) );
+	}
+
+	@Override
+	public List<String> getManagedModuleDescriptors() {
+		return List.copyOf( new LinkedHashSet<>( moduleDescriptors ) );
+	}
+
+	public void addPackageDescriptors(List<String> names) {
+		packageDescriptors.addAll( names );
+	}
+
+	public void addModuleDescriptors(List<String> names) {
+		moduleDescriptors.addAll( names );
 	}
 
 	@Override

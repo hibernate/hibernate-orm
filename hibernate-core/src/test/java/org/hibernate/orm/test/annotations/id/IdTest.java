@@ -44,10 +44,6 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 				SoundSystem.class, Furniture.class, GoalKeeper.class,
 				BreakDance.class, Monkey.class, Hotel.class
 		},
-		annotatedPackageNames = {
-				"org.hibernate.orm.test.annotations",
-				"org.hibernate.orm.test.annotations.id"
-		},
 		xmlMappings = "org/hibernate/orm/test/annotations/orm.xml"
 )
 @SessionFactory

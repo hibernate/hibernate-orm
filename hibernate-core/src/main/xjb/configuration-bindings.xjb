@@ -26,6 +26,12 @@
             <bindings node=".//xsd:element[@name='class']">
                 <property name="classes"/>
             </bindings>
+            <bindings node=".//xsd:element[@name='package-descriptor']">
+                <property name="packageDescriptors"/>
+            </bindings>
+            <bindings node=".//xsd:element[@name='module-descriptor']">
+                <property name="moduleDescriptors"/>
+            </bindings>
             <bindings node=".//xsd:element[@name='jar-file']">
                 <property name="jarFiles"/>
             </bindings>

@@ -140,46 +140,31 @@ public final class AnnotationBinder {
 	}
 
 	public static void bindPackage(ClassLoaderService cls, String packageName, MetadataBuildingContext context) {
-		final Package pack = cls.packageForNameOrNull( packageName );
-		if ( pack != null ) {
-			final var packageInfo =
-					modelsContext( context ).getClassDetailsRegistry()
-							.resolveClassDetails( pack.getName() + ".package-info" );
-
-			registerGlobalGenerators( packageInfo, context );
-
-			bindTypeDescriptorRegistrations( packageInfo, context );
-			bindEmbeddableInstantiatorRegistrations( packageInfo, context );
-			bindUserTypeRegistrations( packageInfo, context );
-			bindCompositeUserTypeRegistrations( packageInfo, context );
-			bindConverterRegistrations( packageInfo, context );
-
-			bindQueries( packageInfo, context );
-			bindFilterDefs( packageInfo, context );
-
-			bindNamedEntityGraphs( packageInfo, context );
-		}
-		else {
-			BOOT_LOGGER.packageNotFound( packageName );
-		}
+		final var packageDetails = modelsContext( context ).getClassDetailsRegistry()
+				.resolveExplicitPackageDetails( packageName );
+		bindDescriptor( packageDetails, context );
 	}
 
 	public static void bindModule(String moduleName, MetadataBuildingContext context) {
 		final var moduleDetails = modelsContext( context ).getModuleDetailsRegistry()
 				.resolveModuleDetails( moduleName );
 
-		registerGlobalGenerators( moduleDetails, context );
+		bindDescriptor( moduleDetails, context );
+	}
 
-		bindTypeDescriptorRegistrations( moduleDetails, context );
-		bindEmbeddableInstantiatorRegistrations( moduleDetails, context );
-		bindUserTypeRegistrations( moduleDetails, context );
-		bindCompositeUserTypeRegistrations( moduleDetails, context );
-		bindConverterRegistrations( moduleDetails, context );
+	public static void bindDescriptor(AnnotationTarget descriptor, MetadataBuildingContext context) {
+		registerGlobalGenerators( descriptor, context );
 
-		bindQueries( moduleDetails, context );
-		bindFilterDefs( moduleDetails, context );
+		bindTypeDescriptorRegistrations( descriptor, context );
+		bindEmbeddableInstantiatorRegistrations( descriptor, context );
+		bindUserTypeRegistrations( descriptor, context );
+		bindCompositeUserTypeRegistrations( descriptor, context );
+		bindConverterRegistrations( descriptor, context );
 
-		bindNamedEntityGraphs( moduleDetails, context );
+		bindQueries( descriptor, context );
+		bindFilterDefs( descriptor, context );
+
+		bindNamedEntityGraphs( descriptor, context );
 	}
 
 	private static void bindNamedEntityGraphs(AnnotationTarget annotationTarget, MetadataBuildingContext context) {
@@ -479,10 +464,14 @@ public final class AnnotationBinder {
 		bindFetchProfiles( annotatedClass, context );
 	}
 
+	public static void bindFetchProfilesForDescriptor(AnnotationTarget descriptor, MetadataBuildingContext context) {
+		bindFetchProfiles( descriptor, context );
+	}
+
 	public static void bindFetchProfilesForPackage(String packageName, MetadataBuildingContext context) {
 		final var packageInfoClassDetails =
 				context.getMetadataCollector().getClassDetailsRegistry()
-						.findClassDetails( packageName + ".package-info" );
+						.findPackageDetails( packageName );
 		if ( packageInfoClassDetails != null ) {
 			bindFetchProfiles( packageInfoClassDetails, context );
 		}

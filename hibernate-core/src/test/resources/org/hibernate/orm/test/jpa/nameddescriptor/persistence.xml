@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  SPDX-License-Identifier: Apache-2.0
+  Copyright Red Hat Inc. and Hibernate Authors
+-->
+<persistence xmlns="https://jakarta.ee/xml/ns/persistence" version="4.0">
+    <persistence-unit name="package-descriptor-queries" transaction-type="RESOURCE_LOCAL">
+        <class>org.hibernate.orm.test.jpa.nameddescriptor.PackageDescriptorNamedQueriesTest$Book</class>
+        <package-descriptor>org.hibernate.orm.test.jpa.nameddescriptor</package-descriptor>
+        <exclude-unlisted-classes>true</exclude-unlisted-classes>
+        <properties>
+            <property name="hibernate.hbm2ddl.auto" value="create-drop"/>
+        </properties>
+    </persistence-unit>
+</persistence>

@@ -4,6 +4,10 @@
  */
 package org.hibernate.boot.archive.internal;
 
+import java.net.MalformedURLException;
+import java.net.URI;
+import org.hibernate.boot.archive.spi.ArchiveException;
+
 import org.hibernate.boot.archive.spi.ArchiveDescriptor;
 import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
 import org.hibernate.internal.util.StringHelper;
@@ -28,10 +32,29 @@ public class StandardArchiveDescriptorFactory implements ArchiveDescriptorFactor
 
 	@Override
 	public ArchiveDescriptor buildArchiveDescriptor(URL url, String entry) {
+		final String external = url.toExternalForm();
+		final int separator = external.indexOf( "!/" );
+		if ( separator >= 0 ) {
+			try {
+				final var container = URI.create( external.substring( external.startsWith( "jar:" ) ? 4 : 0, separator ) ).toURL();
+				final String path = external.substring( separator + 2 ).replaceAll( "/+$", "" );
+				if ( path.isEmpty() ) {
+					return buildArchiveDescriptor( container, entry );
+				}
+				if ( "file".equals( container.getProtocol() ) && new File( extractLocalFilePath( container ) ).isDirectory() ) {
+					return buildArchiveDescriptor( new File( new File( extractLocalFilePath( container ) ), path ).toURI().toURL(), entry );
+				}
+				if ( path.endsWith( ".jar" ) || path.endsWith( ".par" ) || path.endsWith( ".war" ) ) {
+					return new NestedJarDescriptor( URI.create( "jar:" + container + "!/" + path ).toURL() );
+				}
+				return buildArchiveDescriptor( container, path + ( StringHelper.isEmpty( entry ) ? "/" : "/" + entry ) );
+			}
+			catch (MalformedURLException e) {
+				throw new ArchiveException( "Invalid archive boundary " + url, e );
+			}
+		}
 		final String protocol = url.getProtocol();
-//		if ( "jar".equals( protocol ) ) {
-//			return new JarProtocolArchiveDescriptor( this, url, entry );
-//		}
+
 
 		if ( StringHelper.isEmpty( protocol )
 				|| "file".equals( protocol )

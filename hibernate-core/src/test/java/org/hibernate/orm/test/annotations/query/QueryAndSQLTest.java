@@ -69,9 +69,6 @@ import static org.junit.jupiter.api.Assertions.fail;
 				Attrvalue.class,
 				Employee.class,
 				Employeegroup.class
-		},
-		annotatedPackageNames = {
-				"org.hibernate.test.annotations.query"
 		}
 )
 @SessionFactory

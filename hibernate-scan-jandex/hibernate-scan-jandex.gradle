@@ -13,4 +13,5 @@ dependencies {
 
 	testImplementation project( ':hibernate-testing' )
 	testImplementation libs.test.shrinkwrap
+	testImplementation libs.jakarta.data
 }

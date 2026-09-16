@@ -26,7 +26,7 @@ import java.util.jar.JarFile;
 import java.util.jar.JarInputStream;
 import java.util.zip.ZipEntry;
 
-import static org.hibernate.internal.log.UrlMessageBundle.URL_MESSAGE_LOGGER;
+
 
 /// An `ArchiveDescriptor` implementation leveraging the [JarFile] API for processing.
 ///
@@ -84,7 +84,7 @@ public class JarFileBasedArchiveDescriptor extends AbstractArchiveDescriptor {
 								entryConsumer.accept( new ArchiveEntryImpl(
 										name,
 										relativeName,
-										URI.create( "jar:" + archiveUrl.toExternalForm() + "!/" + relativeName ),
+										URI.create( "jar:" + archiveUrl.toExternalForm() + "!/" + name ),
 										buildByteBasedInputStreamAccess( name, jarInputStream )
 								) );
 							}
@@ -116,7 +116,7 @@ public class JarFileBasedArchiveDescriptor extends AbstractArchiveDescriptor {
 					entryConsumer.accept( new ArchiveEntryImpl(
 							name,
 							relativeName,
-							URI.create( "jar:" + archiveUrl.toExternalForm() + "!/" + relativeName ),
+							URI.create( "jar:" + archiveUrl.toExternalForm() + "!/" + name ),
 							inputStreamAccess
 					) );
 				}
@@ -143,12 +143,11 @@ public class JarFileBasedArchiveDescriptor extends AbstractArchiveDescriptor {
 			}
 		}
 		catch (IOException e) {
-			URL_MESSAGE_LOGGER.logUnableToFindFileByUrl( getArchiveUrl(), e );
+			throw new ArchiveException( "Unable to open selected archive " + getArchiveUrl(), e );
 		}
 		catch (URISyntaxException e) {
-			URL_MESSAGE_LOGGER.logMalformedUrl( getArchiveUrl(), e );
+			throw new ArchiveException( "Invalid selected archive " + getArchiveUrl(), e );
 		}
-		return null;
 	}
 
 	@Override
@@ -159,7 +158,7 @@ public class JarFileBasedArchiveDescriptor extends AbstractArchiveDescriptor {
 		}
 
 		try {
-			final JarEntry jarEntry = jarFile.getJarEntry( path );
+			final JarEntry jarEntry = jarFile.getJarEntry( entryBasePrefix == null ? path : entryBasePrefix + path );
 			if ( jarEntry == null ) {
 				return null;
 			}
@@ -183,7 +182,7 @@ public class JarFileBasedArchiveDescriptor extends AbstractArchiveDescriptor {
 			return new ArchiveEntryImpl(
 					name,
 					relativeName,
-					URI.create( "jar:" + archiveUrl.toExternalForm() + "!/" + relativeName ),
+					URI.create( "jar:" + archiveUrl.toExternalForm() + "!/" + name ),
 					inputStreamAccess
 			);
 		}

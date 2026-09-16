@@ -4,6 +4,8 @@
  */
 package org.hibernate.boot.model.source.internal.annotations;
 
+import org.hibernate.boot.model.internal.AnnotationBinder;
+
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -15,9 +17,7 @@ import org.hibernate.annotations.FetchMode;
 import org.hibernate.boot.internal.MetadataBuildingContextRootImpl;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
-import org.hibernate.boot.model.process.spi.ManagedResources;
 import org.hibernate.boot.model.source.spi.MetadataSourceProcessor;
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.mapping.FetchProfile;
 import org.hibernate.mapping.MetadataSource;
@@ -26,10 +26,6 @@ import org.hibernate.models.spi.ClassDetails;
 import static org.hibernate.boot.model.internal.AnnotationBinder.bindClass;
 import static org.hibernate.boot.model.internal.AnnotationBinder.bindDefaults;
 import static org.hibernate.boot.model.internal.AnnotationBinder.bindFetchProfilesForClass;
-import static org.hibernate.boot.model.internal.AnnotationBinder.bindFetchProfilesForModule;
-import static org.hibernate.boot.model.internal.AnnotationBinder.bindFetchProfilesForPackage;
-import static org.hibernate.boot.model.internal.AnnotationBinder.bindModule;
-import static org.hibernate.boot.model.internal.AnnotationBinder.bindPackage;
 import static org.hibernate.boot.model.internal.AnnotationBinder.buildInheritanceStates;
 import static org.hibernate.boot.model.internal.EntityBinder.isEntity;
 import static org.hibernate.boot.model.internal.EntityBinder.isMappedSuperclass;
@@ -48,39 +44,18 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 	private final DomainModelSource domainModelSource;
 
 	private final MetadataBuildingContextRootImpl rootMetadataBuildingContext;
-	private final ClassLoaderService classLoaderService;
-
-	private final LinkedHashSet<String> annotatedModuleNames = new LinkedHashSet<>();
-	private final LinkedHashSet<String> annotatedPackages = new LinkedHashSet<>();
 	private final LinkedHashSet<ClassDetails> knownClasses = new LinkedHashSet<>();
 
 	/**
 	 * Normal constructor used while processing {@linkplain org.hibernate.boot.MetadataSources mapping sources}
 	 */
 	public AnnotationMetadataSourceProcessorImpl(
-			ManagedResources managedResources,
 			DomainModelSource domainModelSource,
 			MetadataBuildingContextRootImpl rootMetadataBuildingContext) {
 		this.domainModelSource = domainModelSource;
 		this.rootMetadataBuildingContext = rootMetadataBuildingContext;
 
-		final var bootstrapContext = rootMetadataBuildingContext.getBootstrapContext();
-
-		classLoaderService = bootstrapContext.getClassLoaderService();
-		assert classLoaderService != null;
-
-		applyManagedClasses( domainModelSource, knownClasses );
-
-		final var classDetailsRegistry = domainModelSource.getClassDetailsRegistry();
-		for ( String className : managedResources.getAnnotatedClassNames() ) {
-			knownClasses.add( classDetailsRegistry.resolveClassDetails( className ) );
-		}
-		for ( var annotatedClass : managedResources.getAnnotatedClassReferences() ) {
-			knownClasses.add( classDetailsRegistry.resolveClassDetails( annotatedClass.getName() ) );
-		}
-
-		annotatedModuleNames.addAll( managedResources.getAnnotatedModuleNames() );
-		annotatedPackages.addAll( managedResources.getAnnotatedPackageNames() );
+		knownClasses.addAll( domainModelSource.getManagedTypes() );
 	}
 
 	/**
@@ -105,7 +80,7 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 						rootMetadataBuildingContext.getMetadataCollector(),
 						context,
 						options.getMappingDefaults() );
-		new AnnotationMetadataSourceProcessorImpl( managedResources, additionalDomainModelSource, rootMetadataBuildingContext )
+		new AnnotationMetadataSourceProcessorImpl( additionalDomainModelSource, rootMetadataBuildingContext )
 				.processEntityHierarchies( new LinkedHashSet<>() );
 	}
 
@@ -116,12 +91,10 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 				.adjustDefaultNamespace( defaults.getImplicitCatalogName(), defaults.getImplicitSchemaName() );
 
 		bindDefaults( rootMetadataBuildingContext );
-		for ( String annotatedModuleName : annotatedModuleNames ) {
-			bindModule( annotatedModuleName, rootMetadataBuildingContext );
-		}
-		for ( String annotatedPackage : annotatedPackages ) {
-			bindPackage( classLoaderService, annotatedPackage, rootMetadataBuildingContext );
-		}
+		domainModelSource.getModuleDescriptors().forEach( descriptor ->
+				AnnotationBinder.bindDescriptor( descriptor.target(), rootMetadataBuildingContext ) );
+		domainModelSource.getPackageDescriptors().forEach( descriptor ->
+				AnnotationBinder.bindDescriptor( descriptor, rootMetadataBuildingContext ) );
 	}
 
 	@Override
@@ -215,8 +188,7 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 				buildInheritanceStates( orderedClasses, rootMetadataBuildingContext );
 
 		for ( var clazz : orderedClasses ) {
-			if ( !processedEntityNames.contains( clazz.getName() )
-					&& !clazz.getName().endsWith( ".package-info" ) ) {
+			if ( !processedEntityNames.contains( clazz.getName() ) ) {
 				bindClass( clazz, inheritanceStatePerClass, rootMetadataBuildingContext );
 				bindFetchProfilesForClass( clazz, rootMetadataBuildingContext );
 				processedEntityNames.add( clazz.getName() );
@@ -280,12 +252,10 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 
 	@Override
 	public void postProcessEntityHierarchies() {
-		for ( String annotatedModuleName : annotatedModuleNames ) {
-			bindFetchProfilesForModule( annotatedModuleName, rootMetadataBuildingContext );
-		}
-		for ( String annotatedPackage : annotatedPackages ) {
-			bindFetchProfilesForPackage( annotatedPackage, rootMetadataBuildingContext );
-		}
+		domainModelSource.getModuleDescriptors().forEach( descriptor ->
+				AnnotationBinder.bindFetchProfilesForDescriptor( descriptor.target(), rootMetadataBuildingContext ) );
+		domainModelSource.getPackageDescriptors().forEach( descriptor ->
+				AnnotationBinder.bindFetchProfilesForDescriptor( descriptor, rootMetadataBuildingContext ) );
 	}
 
 	@Override
@@ -296,11 +266,4 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 	public void finishUp() {
 	}
 
-	private static void applyManagedClasses(
-			DomainModelSource domainModelSource,
-			LinkedHashSet<ClassDetails> knownClasses) {
-		final var classDetailsRegistry = domainModelSource.getClassDetailsRegistry();
-		domainModelSource.getManagedClassNames()
-				.forEach( className -> knownClasses.add( classDetailsRegistry.resolveClassDetails( className ) ) );
-	}
 }

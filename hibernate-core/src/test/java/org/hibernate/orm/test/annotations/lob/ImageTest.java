@@ -33,8 +33,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.fail;
 @DomainModel(
 		annotatedClasses = {
 				ImageHolder.class
-		},
-		annotatedPackageNames = "org.hibernate.orm.test.annotations.lob"
+		}
 )
 @SessionFactory
 @ServiceRegistry(

@@ -9,7 +9,9 @@ import org.hibernate.boot.jaxb.configuration.spi.JaxbPersistenceImpl;
 
 import java.net.URL;
 
-/// Coordinates discovery of managed classes.
+/// Discovers ordinary types, package descriptors, module descriptors, and mapping resources.
+/// Results contain discoveries only; entry-point adapters separately admit explicit declarations.
+/// A supplied index must not expand the requested archive boundaries.
 ///
 /// @author Steve Ebersole
 public interface Scanner {

@@ -7,7 +7,7 @@ asm = "9.10.1"
 # make sure to remove the now unnecessary net.bytebuddy.experimental=true in relevant CI jobs (Jenkinsfile).
 byteBuddy = "1.18.13"
 geolatte = "1.12"
-hibernateModels = "1.3.1"
+hibernateModels = "1.3.3"
 jandex = "3.6.0"
 jackson = "2.22.2"
 jackson3 = "3.2.2"
@@ -26,7 +26,7 @@ freemarker = "2.3.35"
 eclipseJdtCore = "3.47.0"
 
 # Jakarta Libs
-jpa = "4.0.0-SNAPSHOT" # Can be replaced with ${jakartaJpaVersion} / gradle.libs.versions.jpa
+jpa = "4.0.0-M7" # Can be replaced with ${jakartaJpaVersion} / gradle.libs.versions.jpa
 annotation = "3.0.0"
 cdi = "5.0.0.CR1"
 inject = "2.0.1"

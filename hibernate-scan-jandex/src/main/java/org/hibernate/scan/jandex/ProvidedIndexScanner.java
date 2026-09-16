@@ -6,7 +6,6 @@ package org.hibernate.scan.jandex;
 
 import org.hibernate.boot.archive.spi.ArchiveDescriptor;
 import org.hibernate.boot.jaxb.configuration.spi.JaxbPersistenceImpl;
-import org.hibernate.boot.scan.internal.ResultCollector;
 import org.hibernate.boot.scan.spi.Scanner;
 import org.hibernate.boot.scan.spi.ScanningContext;
 import org.hibernate.boot.scan.spi.ScanningResult;
@@ -29,22 +28,13 @@ public class ProvidedIndexScanner implements Scanner {
 
 	@Override
 	public ScanningResult scan(URL... boundaries) {
-		var resultCollector = new ResultCollector();
-		IndexScanner.scanForClasses( jandexIndex, resultCollector );
-		return resultCollector.toResult();
+		// An IndexView has no archive provenance. Use it for annotation definitions,
+		// but derive candidates from the requested archives.
+		return new IndexBuildingScanner( scanningContext, jandexIndex ).scan( boundaries );
 	}
 
 	@Override
 	public ScanningResult jpaScan(ArchiveDescriptor rootArchive, JaxbPersistenceImpl.JaxbPersistenceUnitImpl jaxbUnit) {
-		// todo (jpa4) : exclude-unlisted-classes poses a problem with an existing Jandex
-		//		in that there is no distinction in the Jandex about "source"[1] - we'd either need to
-		//		skip or do discovery across all archives
-		// [1] there "might be" in that a CompositeIndex is used under the covers, thought not sure we can properly leverage that here.
-		var resultCollector = new ResultCollector();
-		for ( String jarFileRef : jaxbUnit.getJarFiles() ) {
-			final var jarArchive = rootArchive.resolveJarFileReference( jarFileRef );
-		}
-		IndexScanner.scanForClasses( jandexIndex, resultCollector );
-		return resultCollector.toResult();
+		return new IndexBuildingScanner( scanningContext, jandexIndex ).jpaScan( rootArchive, jaxbUnit );
 	}
 }

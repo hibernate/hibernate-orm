@@ -83,6 +83,26 @@ public interface PersistenceUnitDescriptor {
 	/// @see jakarta.persistence.spi.PersistenceUnitInfo#getAllClassNames()
 	List<String> getAllClassNames();
 
+	/// Explicit package descriptor names.
+	default List<String> getManagedPackageDescriptors() {
+		return List.of();
+	}
+
+	/// Complete package descriptor names.
+	default List<String> getAllPackageDescriptors() {
+		return getManagedPackageDescriptors();
+	}
+
+	/// Explicit module descriptor names.
+	default List<String> getManagedModuleDescriptors() {
+		return List.of();
+	}
+
+	/// Complete module descriptor names.
+	default List<String> getAllModuleDescriptors() {
+		return getManagedModuleDescriptors();
+	}
+
 	/// Names of mapping-files explicitly listed in the persistence-unit.
 	///
 	/// @see jakarta.persistence.spi.PersistenceUnitInfo#getMappingFileNames

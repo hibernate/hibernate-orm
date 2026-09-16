@@ -25,15 +25,12 @@ import javax.sql.DataSource;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URL;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
-import static java.util.Collections.emptyList;
-import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 import static org.hibernate.internal.util.collections.CollectionHelper.combine;
 import static org.hibernate.orm.test.bootstrap.scanning.ScanningContextTestingImpl.SCANNING_CONTEXT;
 
@@ -43,7 +40,7 @@ import static org.hibernate.orm.test.bootstrap.scanning.ScanningContextTestingIm
 public class ScannedPersistenceUnitInfo implements PersistenceUnitInfo {
 	private final ParsedPersistenceXmlDescriptor descriptor;
 	private final ClassLoader unitClassLoader;
-	private final Collection<String> discoveredClasses;
+	private final ScanningResult scanningResult;
 	private final List<String> mappingFiles;
 
 	public ScannedPersistenceUnitInfo(
@@ -52,7 +49,7 @@ public class ScannedPersistenceUnitInfo implements PersistenceUnitInfo {
 			ScanningResult scanningResult) {
 		this.descriptor = descriptor;
 		this.unitClassLoader = unitClassLoader;
-		this.discoveredClasses = discoveredClassNames( scanningResult );
+		this.scanningResult = scanningResult;
 		this.mappingFiles = combineMappingFiles( descriptor.getMappingFileNames(), scanningResult.mappingFiles() );
 	}
 
@@ -72,17 +69,6 @@ public class ScannedPersistenceUnitInfo implements PersistenceUnitInfo {
 		return  results;
 	}
 
-	private static Collection<String> discoveredClassNames(ScanningResult scanningResult) {
-		final List<String> names = arrayList( CollectionHelper.size( scanningResult.discoveredClasses() ) + CollectionHelper.size( scanningResult.discoveredPackages() ) );
-		if ( CollectionHelper.isNotEmpty( scanningResult.discoveredClasses() ) ) {
-			names.addAll( scanningResult.discoveredClasses() );
-		}
-		if ( CollectionHelper.isNotEmpty( scanningResult.discoveredPackages() ) ) {
-//			names.addAll( scanningResult.getDiscoveredPackages() );
-			scanningResult.discoveredPackages().forEach( (packageName) -> names.add( packageName + ".package-info" ) );
-		}
-		return names;
-	}
 
 	@Override
 	public String getPersistenceUnitName() {
@@ -145,27 +131,27 @@ public class ScannedPersistenceUnitInfo implements PersistenceUnitInfo {
 
 	@Override
 	public @NonNull List<String> getManagedPackageDescriptors() {
-		return emptyList();
+		return descriptor.getManagedPackageDescriptors();
 	}
 
 	@Override
 	public @NonNull List<String> getManagedModuleDescriptors() {
-		return emptyList();
+		return descriptor.getManagedModuleDescriptors();
 	}
 
 	@Override
 	public List<String> getAllClassNames() {
-		return combine( getManagedClassNames(), discoveredClasses );
+		return combine( getManagedClassNames(), scanningResult.discoveredClasses() );
 	}
 
 	@Override
 	public @NonNull List<String> getAllPackageDescriptors() {
-		return emptyList();
+		return combine( getManagedPackageDescriptors(), scanningResult.discoveredPackages() );
 	}
 
 	@Override
 	public @NonNull List<String> getAllModuleDescriptors() {
-		return emptyList();
+		return combine( getManagedModuleDescriptors(), scanningResult.discoveredModules() );
 	}
 
 	@Override
@@ -246,6 +232,8 @@ public class ScannedPersistenceUnitInfo implements PersistenceUnitInfo {
 			descriptor.setSharedCacheMode( jaxbPersistenceUnit.getSharedCacheMode() );
 			descriptor.setValidationMode( jaxbPersistenceUnit.getValidationMode() );
 			descriptor.addClasses( jaxbPersistenceUnit.getClasses() );
+			descriptor.addPackageDescriptors( jaxbPersistenceUnit.getPackageDescriptors() );
+			descriptor.addModuleDescriptors( jaxbPersistenceUnit.getModuleDescriptors() );
 			descriptor.addMappingFiles( jaxbPersistenceUnit.getMappingFiles() );
 			descriptor.getProperties().putAll( extractProperties( jaxbPersistenceUnit.getPropertyContainer() ) );
 

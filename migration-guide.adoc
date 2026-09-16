@@ -1019,6 +1019,14 @@ No DDL changes are needed. The default `REV`/`REVTYPE` column names and encoding
 [[artifact-changes]]
 == Changes in published artifacts
 
+[[osgi-metadata]]
+=== Removal of OSGi metadata
+
+Hibernate ORM JARs no longer include OSGi metadata in their manifests, including
+`Bundle-*`, `Import-Package`, `Export-Package`, and `Require-Capability` headers.
+Applications deploying Hibernate ORM in an OSGi environment must supply the required bundle metadata themselves.
+The `Automatic-Module-Name` manifest attribute is retained for use on the Java module path.
+
 [[dependency-changes-relocation]]
 === Relocation POMs from `org.hibernate` are no longer published
 

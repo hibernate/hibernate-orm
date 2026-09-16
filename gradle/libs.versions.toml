@@ -119,7 +119,6 @@ pluginPublish = "2.1.1"
 kotlin = "2.4.0"
 mavenPluginDev = "1.0.3"
 hibernateBuild = "2.3.0"
-bnd = "7.3.0"
 nexusPublish = "2.0.0"
 ideaExt = "1.4.1"
 taskTree = "4.0.1"
@@ -271,8 +270,6 @@ pluginPublish = { id = "com.gradle.plugin-publish", version.ref = "pluginPublish
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 mavenPluginDev = { id = "org.gradlex.maven-plugin-development", version.ref = "mavenPluginDev" }
 versionInjection = { id = "org.hibernate.build.version-injection", version.ref = "hibernateBuild" }
-bndPlugin = { id = "biz.aQute.bnd", version.ref = "bnd" }
-bndBuilder = { id = "biz.aQute.bnd.builder", version.ref = "bnd" }
 
 nexusPublish = { id = "io.github.gradle-nexus.publish-plugin", version.ref = "nexusPublish" }
 ideaExt = { id = "org.jetbrains.gradle.plugin.idea-ext", version.ref = "ideaExt" }

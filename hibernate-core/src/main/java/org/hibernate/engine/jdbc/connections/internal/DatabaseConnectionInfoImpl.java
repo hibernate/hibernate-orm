@@ -6,7 +6,6 @@ package org.hibernate.engine.jdbc.connections.internal;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.Locale;
 import java.util.Map;
 
 import jakarta.annotation.Nullable;
@@ -274,11 +273,15 @@ public class DatabaseConnectionInfoImpl implements DatabaseConnectionInfo {
 	}
 
 	private String jdbcUrlForLogging() {
-		if ( jdbcUrl == null || jdbcDriver == null || !jdbcDriver.toLowerCase( Locale.ROOT ).contains( "mariadb" ) ) {
+		if ( jdbcUrl != null && ( jdbcUrl.startsWith( "jdbc:mariadb:" )
+				|| ( jdbcUrl.startsWith( "jdbc:mysql:" ) && jdbcUrl.contains( "permitMysqlScheme" ) ) ) ) {
+			// MariaDB injects the password into the JDBC URL, so we try to remove it for logging
+			final int queryStart = jdbcUrl.indexOf( '?' );
+			return queryStart < 0 ? jdbcUrl : jdbcUrl.substring( 0, queryStart );
+		}
+		else {
 			return jdbcUrl;
 		}
-		final int queryStart = jdbcUrl.indexOf( '?' );
-		return queryStart < 0 ? jdbcUrl : jdbcUrl.substring( 0, queryStart );
 	}
 
 	private static String handleEmpty(String value) {

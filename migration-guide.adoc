@@ -836,6 +836,18 @@ configuration (`READ_COMMITTED_SNAPSHOT` and `CUR_COMMIT` respectively) which th
 neither form retains a lock beyond the statement. Databases whose plain reads already wait for uncommitted
 writes are unaffected.
 
+[[native-generator-default-allocation-size]]
+=== Default allocation size for `@NativeGenerator`
+
+When `@NativeGenerator` was introduced in Hibernate ORM 7.0, it defaulted to an allocation size of `1` for,
+in case the `@SequenceGenerator` or `@TableGenerator` annotations had their allocation size set to their default of `50`.
+Other values were respected, so this behavior was slightly unintuitive, yet the reasoning behind the choice was not
+documented.
+To make the behavior less surprising, it was now changed to respect the allocation size of `50`.
+
+This requires that, if sequences are used, the sequence is altered to change the allocation size from `1` to `50`.
+Alternatively, users can configure the allocation size to match the legacy value `1` by defining
+`@NativeGenerator(sequenceForm = @SequenceGenerator(allocationSize = 1), tableForm = @TableGenerator(allocationSize = 1)`.
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // XSD changes

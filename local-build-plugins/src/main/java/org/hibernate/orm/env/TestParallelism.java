@@ -21,6 +21,11 @@ public class TestParallelism {
 			"hana", "tidb", "spanner", "hana_cloud", "oracle"
 	);
 
+	// The free SAP ASE Developer Edition limits 'number of user connections' to 25,
+	// so we cap the fork count to stay within that budget (2 forks * pool_size 5 = 10,
+	// leaving headroom for system connections).
+	private static final Set<String> SYBASE_DBS = Set.of( "sybase", "sybase_jconn" );
+
 	/**
 	 * Resolves the number of parallel test forks for the given database.
 	 *
@@ -34,6 +39,13 @@ public class TestParallelism {
 			// As soon as we hit 16+ threads, the returns are diminishing, so divide by 2
 			int cpus = Runtime.getRuntime().availableProcessors();
 			int threads = cpus >= 16 ? cpus / 2 : cpus;
+			if ( testThreadsOverride != null ) {
+				threads = Integer.parseInt( testThreadsOverride );
+			}
+			return OptionalInt.of( threads );
+		}
+		else if ( SYBASE_DBS.contains( db ) ) {
+			int threads = 2;
 			if ( testThreadsOverride != null ) {
 				threads = Integer.parseInt( testThreadsOverride );
 			}

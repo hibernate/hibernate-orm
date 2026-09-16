@@ -1,5 +1,7 @@
 services:
   sybase:
+    # The free SAP ASE Developer Edition in this image limits 'number of user connections'
+    # to 25 (legal range 5-25). This cannot be raised without a commercial license.
     image: ${SYBASE_IMAGE:-docker.io/nguoianphu/docker-sybase@sha256:0fe38c4dafdb43dc5e5d0c1554006bc57efa7ed1a705aaef820ddbabf024c538}
     container_name: sybase
     environment:

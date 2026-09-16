@@ -574,85 +574,101 @@ sybase() {
         export SYBASE_ALLOW_ASYNC_IO=0
     fi
     compose_up "latest/sybase/docker-compose.yaml"
+    sybase_setup
+}
 
-    export SYBASE_DB=hibernate_orm_test
-    export SYBASE_USER=hibernate_orm_test
-    export SYBASE_PASSWORD=hibernate_orm_test
-    $CONTAINER_CLI exec sybase bash -c "source /opt/sybase/SYBASE.sh;
-cat <<-EOSQL > init1.sql
+# Sybase ASE requires explicit disk allocation for every database, so we create a dedicated
+# device holding one database per parallel test worker (96m of data + 50m of log each).
+sybase_setup() {
+    DB_COUNT=2
+    local db_user="hibernate_orm_test"
+    local db_password="hibernate_orm_test"
+    # 250m per database: 96m of data, 50m of log and a bit of headroom
+    local device_size=$((DB_COUNT * 250))
+
+    {
+        echo "use master"
+        echo "go"
+        echo "disk resize name='master', size='256m'"
+        echo "go"
+        echo "disk init name='testdev', physname='/opt/sybase/data/test.dat', size='${device_size}m'"
+        echo "go"
+        for n in $(seq 1 $DB_COUNT); do
+            echo "create database hibernate_orm_test_${n} on testdev = '96m'"
+            echo "go"
+            echo "sp_dboption hibernate_orm_test_${n}, \"single user\", true"
+            echo "go"
+            echo "alter database hibernate_orm_test_${n} log on testdev = '50m'"
+            echo "go"
+            echo "use hibernate_orm_test_${n}"
+            echo "go"
+            echo "checkpoint"
+            echo "go"
+            echo "use master"
+            echo "go"
+            echo "sp_dboption hibernate_orm_test_${n}, \"single user\", false"
+            echo "go"
+        done
+        echo "create login ${db_user} with password ${db_password}"
+        echo "go"
+        echo "exec sp_configure 'enable xml', 1"
+        echo "go"
+        echo "exec sp_configure 'heap memory per user', 0, '64K'"
+        echo "go"
+        echo "sp_dboption tempdb, 'ddl in tran', true"
+        echo "go"
+    } | $CONTAINER_CLI exec -i sybase bash -c "source /opt/sybase/SYBASE.sh; /opt/sybase/OCS-16_0/bin/isql -Usa -P myPassword -S MYSYBASE"
+
+    for n in $(seq 1 $DB_COUNT); do
+        local db_name="hibernate_orm_test_${n}"
+        $CONTAINER_CLI exec -i sybase bash -c "source /opt/sybase/SYBASE.sh; /opt/sybase/OCS-16_0/bin/isql -Usa -P myPassword -S MYSYBASE" <<EOSQL
 use master
 go
-disk resize name='master', size='256m'
+exec sp_dboption ${db_name}, 'abort tran on log full', true
 go
-create database $SYBASE_DB on master = '96m'
+exec sp_dboption ${db_name}, 'allow nulls by default', true
 go
-sp_dboption $SYBASE_DB, \"single user\", true
+exec sp_dboption ${db_name}, 'ddl in tran', true
 go
-alter database $SYBASE_DB log on master = '50m'
+exec sp_dboption ${db_name}, 'trunc log on chkpt', true
 go
-use $SYBASE_DB
+exec sp_dboption ${db_name}, 'full logging for select into', true
 go
-exec sp_extendsegment logsegment, $SYBASE_DB, master
+exec sp_dboption ${db_name}, 'full logging for alter table', true
 go
-use master
+sp_dboption ${db_name}, "select into", true
 go
-sp_dboption $SYBASE_DB, \"single user\", false
+use ${db_name}
 go
-use $SYBASE_DB
+sp_adduser '${db_user}', '${db_user}', null
 go
-checkpoint
+grant create default to ${db_user}
 go
-use master
+grant create table to ${db_user}
 go
-create login $SYBASE_USER with password $SYBASE_PASSWORD
+grant create view to ${db_user}
 go
-exec sp_configure 'enable xml', 1
+grant create rule to ${db_user}
 go
-exec sp_configure 'heap memory per user', 0, '64K'
+grant create function to ${db_user}
 go
-exec sp_dboption $SYBASE_DB, 'abort tran on log full', true
-go
-exec sp_dboption $SYBASE_DB, 'allow nulls by default', true
-go
-exec sp_dboption $SYBASE_DB, 'ddl in tran', true
-go
-exec sp_dboption $SYBASE_DB, 'trunc log on chkpt', true
-go
-exec sp_dboption $SYBASE_DB, 'full logging for select into', true
-go
-exec sp_dboption $SYBASE_DB, 'full logging for alter table', true
-go
-sp_dboption $SYBASE_DB, \"select into\", true
-go
-sp_dboption tempdb, 'ddl in tran', true
-go
-EOSQL
-
-/opt/sybase/OCS-16_0/bin/isql -Usa -P myPassword -S MYSYBASE -i ./init1.sql
-
-echo =============== CREATING DB ==========================
-cat <<-EOSQL > init2.sql
-use $SYBASE_DB
-go
-sp_adduser '$SYBASE_USER', '$SYBASE_USER', null
-go
-grant create default to $SYBASE_USER
-go
-grant create table to $SYBASE_USER
-go
-grant create view to $SYBASE_USER
-go
-grant create rule to $SYBASE_USER
-go
-grant create function to $SYBASE_USER
-go
-grant create procedure to $SYBASE_USER
+grant create procedure to ${db_user}
 go
 commit
 go
 EOSQL
+    done
 
-/opt/sybase/OCS-16_0/bin/isql -Usa -P myPassword -S MYSYBASE -i ./init2.sql"
+    # isql exits with 0 even when statements fail, so we explicitly verify each database
+    for n in $(seq 1 $DB_COUNT); do
+        local db_name="hibernate_orm_test_${n}"
+        local check_output
+        if ! check_output=$($CONTAINER_CLI exec sybase bash -c "source /opt/sybase/SYBASE.sh; printf 'use ${db_name}\ngo\nselect db_name()\ngo\n' | /opt/sybase/OCS-16_0/bin/isql -U${db_user} -P${db_password} -S MYSYBASE" 2>&1) || [[ "$check_output" != *"$db_name"* ]]; then
+            echo "Error: database $db_name is not ready:"
+            echo "$check_output"
+            exit 1
+        fi
+    done
     echo "Sybase successfully started"
 }
 

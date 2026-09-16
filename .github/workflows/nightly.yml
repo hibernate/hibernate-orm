@@ -1,0 +1,24 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright Red Hat Inc. and Hibernate Authors
+
+name: Nightly
+
+on:
+  schedule:
+    - cron: '25 3 * * *'
+  workflow_dispatch:
+
+permissions: { }
+
+jobs:
+  reproducible-build-check:
+    strategy:
+      fail-fast: false
+      matrix:
+        branch: [ 'main', '8.0', '7.4', '7.2', '7.1', '6.6' ]
+    uses: hibernate/.github/.github/workflows/reproducible-build-check.yml@main
+    with:
+      branch: ${{ matrix.branch }}
+    permissions:
+      contents: read
+    secrets: inherit

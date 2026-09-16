@@ -11,6 +11,7 @@ import org.hibernate.Filter;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.internal.FilterImpl;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.query.spi.QueryOptions;
@@ -107,7 +108,7 @@ class DatabaseSnapshotExecutor {
 		rootQuerySpec.getFromClause().addRoot( rootTableGroup );
 		state.getFromClauseAccess().registerTableGroup( rootPath, rootTableGroup );
 		tenantIdParameter = tenantFilter == null ? null : new JdbcParameterImpl(
-				tenantFilter.getFilterDefinition().getParameterJdbcMapping( PARAMETER_NAME ) );
+				((FilterImpl) tenantFilter).getFilterDefinition().getParameterJdbcMapping( PARAMETER_NAME ) );
 		if ( tenantFilter != null ) {
 			// Snapshots ignore application filters, but must respect tenant isolation.
 			entityDescriptor.applyFilterRestrictions(

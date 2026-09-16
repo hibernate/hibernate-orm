@@ -128,24 +128,32 @@ abstract public class DialectChecks {
 		}
 	}
 
+	/// @deprecated Use the effective factory's TransactionConcurrency instead.
+	@Deprecated(since = "8.0")
 	public static class DoesReadCommittedCauseWritersToBlockReadersCheck implements DialectCheck {
 		public boolean isMatch(Dialect dialect) {
 			return DialectTestSupport.doesReadCommittedCauseWritersToBlockReaders( dialect );
 		}
 	}
 
+	/// @deprecated Use the effective factory's TransactionConcurrency instead.
+	@Deprecated(since = "8.0")
 	public static class DoesReadCommittedNotCauseWritersToBlockReadersCheck implements DialectCheck {
 		public boolean isMatch(Dialect dialect) {
 			return ! DialectTestSupport.doesReadCommittedCauseWritersToBlockReaders( dialect );
 		}
 	}
 
+	/// @deprecated Use the effective factory's TransactionConcurrency instead.
+	@Deprecated(since = "8.0")
 	public static class DoesRepeatableReadCauseReadersToBlockWritersCheck implements DialectCheck {
 		public boolean isMatch(Dialect dialect) {
 			return DialectTestSupport.doesRepeatableReadCauseReadersToBlockWriters( dialect );
 		}
 	}
 
+	/// @deprecated Use the effective factory's TransactionConcurrency instead.
+	@Deprecated(since = "8.0")
 	public static class DoesRepeatableReadNotCauseReadersToBlockWritersCheck implements DialectCheck {
 		public boolean isMatch(Dialect dialect) {
 			return ! DialectTestSupport.doesRepeatableReadCauseReadersToBlockWriters( dialect );

@@ -16,6 +16,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 /**
  * Annotation used to indicate that a test should be run only when the current dialect supports the
  * specified feature.
+ * <p>
+ * Checks implementing {@link TransactionConcurrencyFeatureCheck} are deferred
+ * until the effective factory is available, before user before-each methods.
+ * An unmet or undetermined deferred check aborts the test invocation; bootstrap
+ * failures remain failures. Such checks require a managed factory scope.
  *
  * @author Andrea Boriero
  */
@@ -32,7 +37,9 @@ public @interface RequiresDialectFeature {
 	Class<? extends DialectFeatureCheck> feature();
 
 	/**
-	 * @return Whether the decision of {@link #feature()} is reversed
+	 * @return Whether the decision of {@link #feature()} is reversed.
+	 * For concurrency-aware checks, an undetermined result remains unmet even
+	 * when reversed.
 	 */
 	boolean reverse() default false;
 

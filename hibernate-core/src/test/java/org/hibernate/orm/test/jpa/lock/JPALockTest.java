@@ -8,6 +8,7 @@ import jakarta.persistence.LockModeType;
 import jakarta.persistence.OptimisticLockException;
 import jakarta.persistence.RollbackException;
 
+import org.hibernate.dialect.lock.spi.Operation;
 import org.hibernate.LockMode;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
@@ -19,10 +20,12 @@ import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.orm.test.jpa.model.AbstractJPATest;
 import org.hibernate.orm.test.jpa.model.Item;
 
+import org.hibernate.testing.orm.junit.PermitsReadWhileWriteUncommitted;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.testing.jdbc.SQLServerSnapshotIsolationConnectionProvider;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -39,7 +42,6 @@ import static org.junit.jupiter.api.Assertions.fail;
  *
  * @author Steve Ebersole
  */
-@RequiresDialectFeature(feature = DialectFeatureChecks.DoesReadCommittedCauseWritersToBlockReadersCheck.class, reverse = true)
 public class JPALockTest extends AbstractJPATest {
 
 	private SQLServerSnapshotIsolationConnectionProvider connectionProvider = new SQLServerSnapshotIsolationConnectionProvider();
@@ -91,10 +93,12 @@ public class JPALockTest extends AbstractJPATest {
 	@EnumSource(value = LockModeType.class, names = { "READ", "OPTIMISTIC" })
 	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "Cockroach uses SERIALIZABLE by default and fails to acquire a write lock after a TX in between committed changes to a row")
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsConcurrentTransactions.class)
+	@RequiresDialectFeature(feature = PermitsReadWhileWriteUncommitted.class)
 	public void testLockModeTypeRead(LockModeType mode) {
-		if ( !readCommittedIsolationMaintained( "ejb3 lock tests" ) ) {
-			return;
-		}
+		Assumptions.assumeTrue(
+				sessionFactory().getJdbcServices().getJdbcEnvironment().getTransactionConcurrency()
+						.getReadGuarantees( Operation.READ ).preventsDirtyReads(),
+				"Requires ordinary reads to prevent dirty reads" );
 		final String initialName = "lock test";
 		// set up some test data
 		Item it = new Item();
@@ -189,10 +193,12 @@ public class JPALockTest extends AbstractJPATest {
 	 */
 	@Test
 	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "Cockroach uses SERIALIZABLE by default and fails to acquire a write lock after a TX in between committed changes to a row")
+	@RequiresDialectFeature(feature = PermitsReadWhileWriteUncommitted.class)
 	public void testLockModeTypeWrite() {
-		if ( !readCommittedIsolationMaintained( "ejb3 lock tests" ) ) {
-			return;
-		}
+		Assumptions.assumeTrue(
+				sessionFactory().getJdbcServices().getJdbcEnvironment().getTransactionConcurrency()
+						.getReadGuarantees( Operation.READ ).preventsDirtyReads(),
+				"Requires ordinary reads to prevent dirty reads" );
 		final String initialName = "lock test";
 		// set up some test data
 		Item it = new Item();

@@ -16,6 +16,7 @@ import jakarta.persistence.Version;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.testing.orm.TransactionConcurrencyChecks;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.Setting;
@@ -162,13 +163,8 @@ class StatelessLockingTest {
 				final var concurrency = scope.getEntityManagerFactory()
 						.unwrap( org.hibernate.engine.spi.SessionFactoryImplementor.class )
 						.getJdbcServices().getJdbcEnvironment().getTransactionConcurrency();
-				final boolean supported = java.util.stream.Stream.of(
-						org.hibernate.dialect.lock.spi.Operation.READ,
-						org.hibernate.dialect.lock.spi.Operation.SHARED_LOCK_READ,
-						org.hibernate.dialect.lock.spi.Operation.UPDATE_LOCK_READ )
-						.filter( concurrency::supports ).map( concurrency::getReadGuarantees )
-						.anyMatch( g -> g.preventsDirtyReads() && g.preventsConcurrentModification()
-								&& g.holdsRowLockUntilTransactionCompletion() );
+				final boolean supported = TransactionConcurrencyChecks
+						.supportsStatelessOptimisticLocking( concurrency );
 				if ( !supported ) {
 					org.junit.jupiter.api.Assertions.assertThrows( org.hibernate.HibernateException.class, query::getResultList );
 					assertEquals( List.of(), inspector.getSqlQueries() );

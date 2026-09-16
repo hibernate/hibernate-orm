@@ -102,6 +102,8 @@ public final class DialectTestSupport {
 	/// `DialectFeatureCheck`.
 	///
 	/// @since 8.0
+	/// @deprecated Use the effective factory's TransactionConcurrency instead.
+	@Deprecated(since = "8.0")
 	public static boolean doesReadCommittedCauseWritersToBlockReaders(Dialect dialect) {
 		requireNonNull( dialect );
 		if ( dialect instanceof SQLServerDialect || dialect instanceof SQLServerLegacyDialect ) {
@@ -136,6 +138,8 @@ public final class DialectTestSupport {
 	/// `DialectFeatureCheck`.
 	///
 	/// @since 8.0
+	/// @deprecated Use the effective factory's TransactionConcurrency instead.
+	@Deprecated(since = "8.0")
 	public static boolean doesRepeatableReadCauseReadersToBlockWriters(Dialect dialect) {
 		requireNonNull( dialect );
 		if ( dialect instanceof SQLServerDialect || dialect instanceof SQLServerLegacyDialect ) {

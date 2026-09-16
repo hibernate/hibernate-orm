@@ -92,14 +92,14 @@ public class StandardGraphBuilder implements GraphBuilder {
 
 		long nodeId = 1;
 		boolean hasExecutionPrerequisites = false;
-		for ( FlushOperationGroup g : sortedGroups ) {
-			final GroupNode n = new GroupNode( g, nodeId++ );
-			nodes.add( n );
+		for ( var group : sortedGroups ) {
+			final var node = new GroupNode( group, nodeId++ );
+			nodes.add( node );
 
 			// Pre-initialize edge lists for all nodes to avoid computeIfAbsent overhead
-			outgoing.put( n, new ArrayList<>() );
+			outgoing.put( node, new ArrayList<>() );
 			if ( !hasExecutionPrerequisites ) {
-				for ( var operation : g.operations() ) {
+				for ( var operation : group.operations() ) {
 					if ( operation.getExecutionPrerequisite() != null ) {
 						hasExecutionPrerequisites = true;
 						break;
@@ -107,14 +107,19 @@ public class StandardGraphBuilder implements GraphBuilder {
 				}
 			}
 
-			if ( g.kind() == MutationKind.INSERT ) {
-				insertNodeByTable.computeIfAbsent( (g.tableExpression()), k -> new ArrayList<>() ).add( n );
-			}
-			else if ( g.kind() == MutationKind.UPDATE || g.kind() == MutationKind.UPDATE_ORDER ) {
-				updateNodeByTable.computeIfAbsent( (g.tableExpression()), k -> new ArrayList<>() ).add( n );
-			}
-			else if ( g.kind() == MutationKind.DELETE ) {
-				deleteNodeByTable.computeIfAbsent( (g.tableExpression()), k -> new ArrayList<>() ).add( n );
+			switch ( group.kind() ) {
+				case INSERT ->
+						insertNodeByTable.computeIfAbsent( group.tableExpression(),
+										k -> new ArrayList<>() )
+								.add( node );
+				case UPDATE, UPDATE_ORDER ->
+						updateNodeByTable.computeIfAbsent( group.tableExpression(),
+										k -> new ArrayList<>() )
+								.add( node );
+				case DELETE ->
+						deleteNodeByTable.computeIfAbsent( group.tableExpression(),
+										k -> new ArrayList<>() )
+								.add( node );
 			}
 		}
 

@@ -75,10 +75,8 @@ public class BatchingPlanStepExecutor extends StandardPlanStepExecutor implement
 			}
 			super.beforePhysicalExecution( flushOperation );
 			super.executePreparable( preparable, flushOperation );
-			return;
 		}
-
-		if ( flushOperation.getBindPlan() instanceof GroupedRowBindPlan groupedRowBindPlan ) {
+		else if ( flushOperation.getBindPlan() instanceof GroupedRowBindPlan groupedRowBindPlan ) {
 			final int bindingCount = groupedRowBindPlan.getBindingCount();
 			for ( int bindingIndex = 0; bindingIndex < bindingCount; bindingIndex++ ) {
 				prepareBatch( flushOperation, preparable );
@@ -90,15 +88,15 @@ public class BatchingPlanStepExecutor extends StandardPlanStepExecutor implement
 						bindingIndex == bindingCount - 1
 				);
 			}
-			return;
 		}
-
-		prepareBatch( flushOperation, preparable );
-		applyToBatch( preparable, flushOperation, flushOperation.getBindPlan(), -1, true );
+		else {
+			prepareBatch( flushOperation, preparable );
+			applyToBatch( preparable, flushOperation, flushOperation.getBindPlan(), -1, true );
+		}
 	}
 
 	private void prepareBatch(FlushOperation flushOperation, PreparableMutationOperation preparable) {
-		final StatementShapeKey operationShapeKey = flushOperation.getShapeKey();
+		final var operationShapeKey = flushOperation.getShapeKey();
 		if ( batchKey == null ) {
 			newBatch( operationShapeKey, preparable );
 		}
@@ -106,7 +104,6 @@ public class BatchingPlanStepExecutor extends StandardPlanStepExecutor implement
 			executeBatch();
 			newBatch( operationShapeKey, preparable );
 		}
-
 	}
 
 	@Override
@@ -237,7 +234,7 @@ public class BatchingPlanStepExecutor extends StandardPlanStepExecutor implement
 
 	private void runFailureCallbacks(int batchCount) {
 		for ( int i = 0; i < batchCount; i++ ) {
-			final FlushOperation operation = batchOperations[i];
+			final var operation = batchOperations[i];
 			if ( operation != null ) {
 				afterFailedExecution( operation );
 			}
@@ -246,7 +243,7 @@ public class BatchingPlanStepExecutor extends StandardPlanStepExecutor implement
 
 	private void runBeforeBatchCallbacks(int batchCount) {
 		for ( int i = 0; i < batchCount; i++ ) {
-			final FlushOperation operation = batchOperations[i];
+			final var operation = batchOperations[i];
 			if ( operation != null ) {
 				super.beforePhysicalExecution( operation );
 			}

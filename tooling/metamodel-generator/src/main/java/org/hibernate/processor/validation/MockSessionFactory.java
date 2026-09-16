@@ -718,6 +718,7 @@ public abstract class MockSessionFactory
 		}
 
 		@Override
+		@Deprecated(since = "8.0", forRemoval = true)
 		public CollectionClassification getImplicitListClassification() {
 			return null;
 		}

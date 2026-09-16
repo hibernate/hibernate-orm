@@ -512,7 +512,10 @@ public interface MappingSettings {
 	 * @since 6.0
 	 *
 	 * @see org.hibernate.annotations.Bag
+	 * @deprecated Use {@link org.hibernate.annotations.DefaultListSemantics} on a package or module.
+	 * Scheduled for removal in 9.0.
 	 */
+	@Deprecated(since = "8.0", forRemoval = true)
 	String DEFAULT_LIST_SEMANTICS = "hibernate.mapping.default_list_semantics";
 
 	/**

@@ -143,9 +143,10 @@ public interface EffectiveMappingDefaults {
 	AccessType getDefaultCacheAccessType();
 
 	/**
-	 * @deprecated No longer supported
+	 * @deprecated No longer supported. Use {@link org.hibernate.annotations.DefaultListSemantics}
+	 * on a package or module. Scheduled for removal in 9.0.
 	 */
-	@Deprecated
+	@Deprecated(forRemoval = true)
 	default CollectionClassification getDefaultListClassification() {
 		return CollectionClassification.LIST;
 	}

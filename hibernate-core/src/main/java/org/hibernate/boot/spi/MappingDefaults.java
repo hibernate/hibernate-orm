@@ -136,6 +136,10 @@ public interface MappingDefaults {
 	 * with no explicit configuration
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#DEFAULT_LIST_SEMANTICS
+	 *
+	 * @deprecated Use {@link org.hibernate.annotations.DefaultListSemantics} on a package or module.
+	 * Scheduled for removal in 9.0.
 	 */
+	@Deprecated(since = "8.0", forRemoval = true)
 	CollectionClassification getImplicitListClassification();
 }

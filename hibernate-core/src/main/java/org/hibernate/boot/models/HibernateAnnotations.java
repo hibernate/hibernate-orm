@@ -283,6 +283,12 @@ public interface HibernateAnnotations {
 			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.ANNOTATION ),
 			false
 	);
+	OrmAnnotationDescriptor<DefaultListSemantics, DefaultListSemanticsAnnotation> DEFAULT_LIST_SEMANTICS = new OrmAnnotationDescriptor<>(
+			DefaultListSemantics.class,
+			DefaultListSemanticsAnnotation.class,
+			EnumSet.of( Kind.PACKAGE, Kind.MODULE ),
+			false
+	);
 	OrmAnnotationDescriptor<DiscriminatorFormula, DiscriminatorFormulaAnnotation> DISCRIMINATOR_FORMULA = new OrmAnnotationDescriptor<>(
 			DiscriminatorFormula.class,
 			DiscriminatorFormulaAnnotation.class,

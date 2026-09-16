@@ -33,6 +33,7 @@ public class TestDelegatingMetadataBuilderImplementor extends AbstractDelegating
 	}
 
 	@Override
+	@Deprecated(since = "8.0", forRemoval = true)
 	public MetadataBuilder applyImplicitListSemantics(CollectionClassification classification) {
 		return delegate().applyImplicitListSemantics( classification );
 	}

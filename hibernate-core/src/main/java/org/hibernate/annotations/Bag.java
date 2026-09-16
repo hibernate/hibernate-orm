@@ -16,9 +16,9 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 /// [bag][org.hibernate.metamodel.CollectionClassification#BAG] - that the order of
 /// the list elements is not significant, and should not be persistent.
 ///
-/// This annotation is not necessary, and has no effect, unless the configuration
-/// property {@value org.hibernate.cfg.AvailableSettings#DEFAULT_LIST_SEMANTICS}
-/// is set to {@link org.hibernate.metamodel.CollectionClassification#LIST}.
+/// This annotation is not necessary unless the default list semantics are
+/// [LIST][DefaultListSemantics.Classification#LIST], for example via
+/// [DefaultListSemantics] on the declaring package or module.
 /// However, its use is still encouraged, since the explicit annotation serves
 /// as useful documentation.
 ///

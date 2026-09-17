@@ -131,11 +131,11 @@ public class TenantIdMappingImpl implements TenantIdMapping {
 
 	private static TenantAttribute findTenantAttribute(ManagedMappingType type, Generator[] generators) {
 		for ( int i = 0; i < generators.length; i++ ) {
-			final var attribute = type.getAttributeMapping( i );
 			if ( generators[i] instanceof TenantIdGeneration generator ) {
-				return new TenantAttribute( attribute, generator, null );
+				return new TenantAttribute( type.getAttributeMapping( i ), generator, null );
 			}
 			else if ( generators[i] instanceof CompositeGenerator composite ) {
+				final var attribute = type.getAttributeMapping( i );
 				final var nested = findTenantAttribute(
 						attribute.asEmbeddedAttributeMapping().getEmbeddableTypeDescriptor(),
 						composite.generators().toArray( Generator[]::new ) );

@@ -2036,6 +2036,9 @@ public class EntityInitializerImpl
 		if ( session.isRootTenant() ) {
 			return false;
 		}
+		if ( session.isRootTenant() ) {
+			return false;
+		}
 		final var cacheStoreMode = fetchOptions.cacheStoreMode();
 		return cacheStoreMode == null
 				? session.getCacheMode().isPutEnabled()

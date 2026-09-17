@@ -702,7 +702,7 @@ abstract class BaseEntityPersister implements Serializable {
 			final var builder =
 					new CompositeGeneratorBuilder( entityName, mappingProperty, context.getDialect() );
 			for ( var property : component.getProperties() ) {
-				builder.add( createGenerator( property, context ) );
+				builder.add( buildGenerator( entityName, property, context ) );
 			}
 			return builder.build();
 		}

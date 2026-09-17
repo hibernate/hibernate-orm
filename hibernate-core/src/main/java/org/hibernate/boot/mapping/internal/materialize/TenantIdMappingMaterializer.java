@@ -79,19 +79,28 @@ public class TenantIdMappingMaterializer {
 			BindingContext bindingContext) {
 		validateAndRegisterFilterDefinition( tenantIdType, bindingState );
 
-		final Property property = new PropertyMappingMaterializer().createProperty( attributeName, memberDetails );
-		typeBinding.addProperty( property );
+		final Property property;
+		if ( memberDetails.hasDirectAnnotationUsage( jakarta.persistence.Id.class ) ) {
+			// The identifier already has a mapping; do not create a second tenant property.
+			property = typeBinding.getIdentifierProperty() != null
+					? typeBinding.getIdentifierProperty()
+					: ( (org.hibernate.mapping.Component) typeBinding.getIdentifier() ).getProperty( attributeName );
+		}
+		else {
+			property = new PropertyMappingMaterializer().createProperty( attributeName, memberDetails );
+			typeBinding.addProperty( property );
 
-		new BasicValueMappingMaterializer().materializeTenantIdBasicValue(
-				memberDetails,
-				resolvedType,
-				valueIntent,
-				property,
-				typeBinding.getRootTable(),
-				bindingOptions,
-				bindingState,
-				bindingContext
-		);
+			new BasicValueMappingMaterializer().materializeTenantIdBasicValue(
+					memberDetails,
+					resolvedType,
+					valueIntent,
+					property,
+					typeBinding.getRootTable(),
+					bindingOptions,
+					bindingState,
+					bindingContext
+			);
+		}
 
 		typeBinding.addFilter(
 				FILTER_NAME,

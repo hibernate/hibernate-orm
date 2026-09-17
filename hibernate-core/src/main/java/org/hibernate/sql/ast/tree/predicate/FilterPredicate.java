@@ -12,6 +12,7 @@ import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.sql.ast.SqlAstWalker;
+import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 
@@ -90,6 +91,7 @@ public class FilterPredicate implements Predicate {
 		private final String parameterName;
 		private final JdbcMapping valueMapping;
 		private final Object value;
+		private JdbcParameter jdbcParameter;
 
 		FilterFragmentParameter(String filterName, String parameterName, JdbcMapping valueMapping, Object value) {
 			this.filterName = filterName;
@@ -112,6 +114,21 @@ public class FilterPredicate implements Predicate {
 
 		public Object getValue() {
 			return value;
+		}
+
+		/**
+		 * An externally bound scalar parameter, or {@code null} to use the captured filter value.
+		 */
+		public JdbcParameter getJdbcParameter() {
+			return jdbcParameter;
+		}
+
+		/**
+		 * Use an execution-time binding instead of the captured filter value.
+		 * The caller must supply a binding for this parameter on every execution.
+		 */
+		public void setJdbcParameter(JdbcParameter jdbcParameter) {
+			this.jdbcParameter = jdbcParameter;
 		}
 	}
 

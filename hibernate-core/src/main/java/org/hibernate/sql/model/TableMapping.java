@@ -6,6 +6,7 @@ package org.hibernate.sql.model;
 
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.metamodel.mapping.TableDetails;
+import org.hibernate.query.sql.internal.ParameterParser;
 
 /**
  * Describes a table as far as Hibernate understands it from mapping details
@@ -80,6 +81,7 @@ public interface TableMapping extends TableDetails {
 		private final String customSql;
 		private final boolean callable;
 		private final boolean dynamicMutation;
+		private volatile int customSqlParameterCount = -1;
 
 		public MutationDetails(
 				MutationType mutationType,
@@ -129,6 +131,17 @@ public interface TableMapping extends TableDetails {
 		 */
 		public String getCustomSql() {
 			return customSql;
+		}
+
+		/**
+		 * Count placeholders once for this mapping. The expected binding
+		 * count is still checked separately for each generated mutation shape.
+		 */
+		public int getCustomSqlParameterCount() {
+			if ( customSqlParameterCount < 0 ) {
+				customSqlParameterCount = ParameterParser.countJdbcParameters( customSql );
+			}
+			return customSqlParameterCount;
 		}
 
 		/**

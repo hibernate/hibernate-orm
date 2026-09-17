@@ -132,6 +132,11 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
+	public boolean isRootTenant() {
+		return delegate.isRootTenant();
+	}
+
+	@Override
 	public Object getTenantIdentifierValue() {
 		return delegate.getTenantIdentifierValue();
 	}

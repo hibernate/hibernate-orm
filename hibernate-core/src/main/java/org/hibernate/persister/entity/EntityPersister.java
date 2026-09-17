@@ -40,6 +40,7 @@ import org.hibernate.generator.Generator;
 import org.hibernate.generator.internal.VersionGeneration;
 import org.hibernate.generator.values.GeneratedValues;
 import org.hibernate.id.IdentifierGenerator;
+import org.hibernate.loader.ast.internal.TenantIdLoader;
 import org.hibernate.persister.filter.FilterAliasGenerator;
 import org.hibernate.persister.filter.internal.TableGroupFilterAliasGenerator;
 import org.hibernate.loader.ast.spi.MultiIdLoadOptions;
@@ -996,6 +997,10 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 * @return null if there is no row in the database
 	 */
 	Object[] getDatabaseSnapshot(Object id, SharedSessionContractImplementor session) throws HibernateException;
+
+	default TenantIdLoader getTenantIdLoader() {
+		return null;
+	}
 
 	Object getIdByUniqueKey(Object key, String uniquePropertyName, SharedSessionContractImplementor session);
 

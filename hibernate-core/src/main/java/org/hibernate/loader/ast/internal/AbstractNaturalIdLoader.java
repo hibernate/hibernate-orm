@@ -206,6 +206,7 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 		final var factory = session.getFactory();
 		final var entityPath = new NavigablePath( entityDescriptor.getRootPathName() );
 		final var rootQuerySpec = new QuerySpec( true );
+		final var influencers = session.getLoadQueryInfluencers();
 
 		final var sqlAstCreationState = new LoaderSqlAstCreationState(
 				rootQuerySpec,
@@ -214,7 +215,7 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 				LockOptions.NONE,
 				(fetchParent, creationState) -> ImmutableFetchList.EMPTY,
 				true,
-				new LoadQueryInfluencers( factory ),
+				influencers,
 				factory.getSqlTranslationEngine()
 		);
 
@@ -229,6 +230,15 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 
 		rootQuerySpec.getFromClause().addRoot( rootTableGroup );
 		sqlAstCreationState.getFromClauseAccess().registerTableGroup( entityPath, rootTableGroup );
+		entityDescriptor.applyBaseRestrictions(
+				rootQuerySpec::applyPredicate,
+				rootTableGroup,
+				true,
+				influencers.getEnabledFilters(),
+				true,
+				null,
+				sqlAstCreationState
+		);
 
 		final var domainResult =
 				entityDescriptor.getIdentifierMapping().createDomainResult(

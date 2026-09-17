@@ -44,6 +44,7 @@ abstract class AbstractTemporalUpdateCoordinator extends AbstractMutationCoordin
 		applyTemporalEnding( tableUpdateBuilder, temporalMapping );
 		applyPartitionKeyRestriction( tableUpdateBuilder );
 		applyOptimisticLocking( tableUpdateBuilder );
+		applyTenantRestriction( tableUpdateBuilder );
 
 		return createMutationOperationGroup( tableUpdateBuilder );
 	}
@@ -73,6 +74,7 @@ abstract class AbstractTemporalUpdateCoordinator extends AbstractMutationCoordin
 						endUpdateGroup, session );
 		try {
 			final var jdbcValueBindings = mutationExecutor.getJdbcValueBindings();
+			bindTenantRestriction( session, jdbcValueBindings, endUpdateGroup );
 			for ( int i = 0; i < endUpdateGroup.getNumberOfOperations(); i++ ) {
 				breakDownKeyJdbcValues( id, rowId, session, jdbcValueBindings,
 						(EntityTableMapping) endUpdateGroup.getOperation( i ).getTableDetails() );

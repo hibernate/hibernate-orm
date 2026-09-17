@@ -91,6 +91,7 @@ public class TableDeleteBuilderStandard
 	@Override
 	public TableDelete buildMutation() {
 		if ( isCustomSql ) {
+			adjustCustomSqlTenantRestriction( getMutatingTable().getTableMapping().getDeleteDetails(), getParameters() );
 			return new TableDeleteCustomSql(
 					getMutatingTable(),
 					getMutationTarget(),

@@ -5,7 +5,6 @@
 package org.hibernate.sql.results.internal;
 
 
-import org.hibernate.SharedSessionContract;
 import org.hibernate.cache.spi.entry.CollectionCacheEntry;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CollectionEntry;
@@ -78,12 +77,13 @@ public class ResultsHelper {
 	}
 
 	private static boolean addToCache(
-			SharedSessionContract session,
+			SharedSessionContractImplementor session,
 			CollectionEntry collectionEntry,
 			CollectionPersister collectionDescriptor,
 			boolean hasNoQueuedAdds) {
 		return hasNoQueuedAdds  // there were no queued additions
 			&& collectionDescriptor.hasCache()  // the collection role has a cache
+			&& !session.isRootTenant()
 			&& session.getCacheMode().isPutEnabled()  // the session cache mode allows puts
 			&& !collectionEntry.isDoremove();  // this is not a forced initialization during flush
 	}

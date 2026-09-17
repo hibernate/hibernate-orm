@@ -36,6 +36,7 @@ import org.hibernate.sql.model.ast.MutatingTableReference;
 import org.hibernate.sql.model.ast.TableDelete;
 import org.hibernate.sql.model.ast.TableInsert;
 import org.hibernate.sql.model.ast.TableUpdate;
+import org.hibernate.sql.model.ast.TenantIdColumnValueBinding;
 import org.hibernate.sql.model.internal.OptionalTableUpdate;
 import org.hibernate.sql.model.internal.TableDeleteCustomSql;
 import org.hibernate.sql.model.internal.TableDeleteStandard;
@@ -575,6 +576,12 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 	}
 
 	private ColumnValueBinding getReferenceBinding() {
+		for ( var binding : optimisticLockBindings ) {
+			if ( binding instanceof TenantIdColumnValueBinding ) {
+				// Spanner rejects assignments to primary keys, even key=key.
+				return binding;
+			}
+		}
 		if ( !keyBindings.isEmpty() ) {
 			return keyBindings.get( 0 );
 		}

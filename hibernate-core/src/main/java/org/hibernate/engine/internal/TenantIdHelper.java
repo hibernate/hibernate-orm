@@ -1,0 +1,164 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
+package org.hibernate.engine.internal;
+
+import jakarta.annotation.Nullable;
+
+import org.hibernate.StaleObjectStateException;
+import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
+import org.hibernate.engine.jdbc.mutation.ParameterUsage;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.jdbc.Expectation;
+import org.hibernate.metamodel.mapping.AttributeMapping;
+import org.hibernate.metamodel.mapping.SelectableMapping;
+import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.sql.model.MutationOperation;
+import org.hibernate.sql.model.MutationType;
+import org.hibernate.sql.model.PreparableMutationOperation;
+import org.hibernate.sql.model.ast.builder.RestrictedTableMutationBuilder;
+
+/**
+ * Tenant ownership checks for entity mutations.
+ */
+public final class TenantIdHelper {
+	private TenantIdHelper() {
+	}
+
+	/**
+	 * The tenant attribute outside the identifier. Identifier tenant columns already
+	 * participate in key restrictions and do not need a separate tenant restriction.
+	 */
+	public static @Nullable AttributeMapping tenantIdAttribute(EntityPersister persister) {
+		final var mapping = persister.getTenantIdMapping();
+		return mapping == null ? null : mapping.getAttributeMapping();
+	}
+
+	public static @Nullable SelectableMapping tenantIdColumn(EntityPersister persister, String tableName) {
+		final var tenantMapping = tenantIdAttribute( persister );
+		if ( tenantMapping != null ) {
+			final var selectable = tenantMapping.getSelectable( 0 );
+			if ( persister.physicalTableNameForMutation( selectable ).equals( tableName ) ) {
+				return selectable;
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * The tenant column only if this operation has a parameter for its restriction.
+	 * Custom SQL may omit that parameter.
+	 */
+	public static @Nullable SelectableMapping tenantIdColumn(EntityPersister persister, MutationOperation operation) {
+		final var selectable = tenantIdColumn( persister, operation.getTableDetails().getTableName() );
+		return selectable != null
+				&& operation.findValueDescriptor( selectable.getSelectionExpression(), ParameterUsage.TENANT ) != null
+				? selectable : null;
+	}
+
+	public static void applyTenantRestriction(EntityPersister persister, RestrictedTableMutationBuilder<?, ?> builder) {
+		final var bindings = builder.getOptimisticLockBindings();
+		if ( bindings != null ) {
+			final var selectable = tenantIdColumn( persister, builder.getMutatingTable().getTableName() );
+			if ( selectable != null ) {
+				bindings.addTenantRestriction( selectable );
+			}
+		}
+	}
+
+	public static void bindTenantRestriction(
+			EntityPersister persister, MutationOperation operation, JdbcValueBindings bindings,
+			SharedSessionContractImplementor session) {
+		final var selectable = tenantIdColumn( persister, operation );
+		if ( selectable != null ) {
+			bindings.bindValue( session.isRootTenant() ? null : session.getTenantIdentifierValue(),
+					operation.getTableDetails().getTableName(), selectable.getSelectionExpression(), ParameterUsage.TENANT );
+		}
+	}
+
+	public static boolean needsMultiTableUpdateCheck(
+			EntityPersister persister, SharedSessionContractImplementor session) {
+		return persister.hasMultipleTables() && !session.isRootTenant() && tenantIdAttribute( persister ) != null;
+	}
+
+	/**
+	 * Whether successful execution of this update establishes and locks tenant ownership.
+	 * Custom SQL and optional row counts cannot provide this guarantee.
+	 */
+	public static boolean checksTenantId(EntityPersister persister, MutationOperation operation) {
+		return operation instanceof PreparableMutationOperation preparable
+			&& operation.getMutationType() == MutationType.UPDATE
+			&& !operation.getTableDetails().isOptional()
+			&& operation.getTableDetails().getUpdateDetails().getCustomSql() == null
+			&& preparable.getExpectation() instanceof Expectation.RowCount
+			&& tenantIdColumn( persister, operation ) != null;
+	}
+
+	/**
+	 * Whether a composite identifier contains an unassigned generated tenant id.
+	 * Such an incomplete primary key cannot identify a stored row.
+	 */
+	public static boolean hasUnassignedIdentifierTenant(
+			Object id, EntityPersister persister, SharedSessionContractImplementor session) {
+		final var mapping = persister.getTenantIdMapping();
+		return mapping != null && mapping.hasUnassignedIdentifierTenant( id, session );
+	}
+
+	public static void validateIdentifierTenant(
+			Object id, EntityPersister persister, SharedSessionContractImplementor session) {
+		final var mapping = persister.getTenantIdMapping();
+		if ( mapping != null ) {
+			mapping.validateIdentifier( id, session );
+		}
+	}
+
+	/**
+	 * Validate the detached tenant value before any SQL or changes to the entity state.
+	 */
+	public static void validateAssignedTenantId(
+			Object entity, Object id, EntityPersister persister, SharedSessionContractImplementor session) {
+		final var mapping = persister.getTenantIdMapping();
+		if ( mapping != null ) {
+			mapping.validateAssignedValue( entity, id, session );
+		}
+	}
+
+	public static void initializeIdentifierTenant(
+			Object entity, EntityPersister persister, SharedSessionContractImplementor session) {
+		final var mapping = persister.getTenantIdMapping();
+		if ( mapping != null ) {
+			mapping.initializeIdentifier( entity, session );
+		}
+	}
+
+	public static void initializeTenantId(
+			Object entity, Object[] state, EntityPersister persister, SharedSessionContractImplementor session) {
+		final var mapping = persister.getTenantIdMapping();
+		if ( mapping != null ) {
+			mapping.initialize( entity, state, session );
+		}
+	}
+
+	/**
+	 * Check the stored owner before scheduling collection or secondary-table mutations.
+	 * The supplied entity state cannot establish ownership of a database row.
+	 */
+	public static void checkStoredTenantOwnership(
+			Object id, EntityPersister persister, SharedSessionContractImplementor session, MissingRowPolicy missingRowPolicy) {
+		validateIdentifierTenant( id, persister, session );
+		final var loader = persister.getTenantIdLoader();
+		if ( loader != null && !session.isRootTenant() ) {
+			final boolean lock = session.isTransactionInProgress()
+					&& ( persister.hasMultipleTables() || persister.hasOwnedCollections() );
+			if ( !loader.belongsToTenant( id, lock, session )
+					&& ( missingRowPolicy == MissingRowPolicy.THROW || loader.rowExists( id, session ) ) ) {
+				throw new StaleObjectStateException( persister.getEntityName(), id );
+			}
+		}
+	}
+
+	public enum MissingRowPolicy {
+		ALLOW, THROW
+	}
+}

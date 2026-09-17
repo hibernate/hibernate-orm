@@ -13,6 +13,7 @@ import org.hibernate.generator.Generator;
 import org.hibernate.generator.OnExecutionGenerator;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
+import org.hibernate.type.ComponentType;
 
 import java.util.ArrayList;
 import java.util.EnumMap;
@@ -26,7 +27,15 @@ import static org.hibernate.generator.EventTypeSets.NONE;
  * Handles value generation for composite properties.
  */
 @Internal
-class CompositeGeneratorBuilder {
+public class CompositeGeneratorBuilder {
+	/**
+	 * Access to the generators of embeddable attributes in mapping order.
+	 */
+	@Internal
+	public interface CompositeGenerator extends Generator {
+		List<Generator> generators();
+	}
+
 	private final String entityName;
 	private final Property mappingProperty;
 	private final Dialect dialect;
@@ -302,7 +311,7 @@ class CompositeGeneratorBuilder {
 			Property mappingProperty,
 			List<Property> properties,
 			EnumSet<EventType> eventTypes)
-				implements BeforeExecutionGenerator {
+				implements BeforeExecutionGenerator, CompositeGenerator {
 		@Override
 		public EnumSet<EventType> getEventTypes() {
 			return eventTypes;
@@ -315,11 +324,8 @@ class CompositeGeneratorBuilder {
 
 		@Override
 		public Object generate(SharedSessionContractImplementor session, Object owner, Object currentValue, EventType eventType) {
-			final var persister = session.getEntityPersister( entityName, owner );
-			final int index = persister.getPropertyIndex( mappingProperty.getName() );
-			final var descriptor =
-					persister.getAttributeMapping( index ).asEmbeddedAttributeMapping()
-							.getEmbeddableTypeDescriptor();
+			final var componentType = (ComponentType) mappingProperty.getType();
+			final var descriptor = componentType.getMappingModelPart().getEmbeddableTypeDescriptor();
 			final int size = properties.size();
 			if ( currentValue == null ) {
 				final var generatedValues = new Object[size];
@@ -334,17 +340,16 @@ class CompositeGeneratorBuilder {
 				return descriptor.getRepresentationStrategy().getInstantiator().instantiate( () -> generatedValues );
 			}
 			else {
+				final Object[] values = componentType.getPropertyValues( currentValue, session );
 				for ( int i = 0; i < size; i++ ) {
 					final var generator = generators.get( i );
 					if ( generator instanceof BeforeExecutionGenerator beforeExecutionGenerator
 							&& generator.getEventTypes().contains( eventType )
 							&& generator.generatedBeforeExecution( owner, session ) ) {
-						final Object value = descriptor.getValue( currentValue, i );
-						final Object generatedValue = beforeExecutionGenerator.generate( session, owner, value, eventType );
-						descriptor.setValue( currentValue, i, generatedValue );
+						values[i] = beforeExecutionGenerator.generate( session, owner, values[i], eventType );
 					}
 				}
-				return currentValue;
+				return componentType.replacePropertyValues( currentValue, values, session );
 			}
 		}
 	}
@@ -354,7 +359,7 @@ class CompositeGeneratorBuilder {
 			List<Generator> generators,
 			CompositeOnExecutionGenerator onExecutionGenerator,
 			CompositeBeforeExecutionGenerator beforeExecutionGenerator)
-				implements OnExecutionGenerator, BeforeExecutionGenerator {
+				implements OnExecutionGenerator, BeforeExecutionGenerator, CompositeGenerator {
 
 		@Override
 		public EnumSet<EventType> getEventTypes() {

@@ -11,6 +11,7 @@ import java.util.function.BiConsumer;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.model.MutationTarget;
+import org.hibernate.sql.model.TableMapping;
 import org.hibernate.sql.model.ast.AbstractTableUpdate;
 import org.hibernate.sql.model.ast.ColumnValueBinding;
 import org.hibernate.sql.model.ast.ColumnValueParameter;
@@ -28,6 +29,8 @@ import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
 public class TableUpdateCustomSql
 		extends AbstractTableUpdate<JdbcMutationOperation>
 		implements CustomSqlMutation<JdbcMutationOperation> {
+	private final TableMapping.MutationDetails mutationDetails;
+
 	public TableUpdateCustomSql(
 			MutatingTableReference mutatingTable,
 			MutationTarget<?> mutationTarget,
@@ -36,6 +39,7 @@ public class TableUpdateCustomSql
 			List<ColumnValueBinding> keyRestrictionBindings,
 			List<ColumnValueBinding> optLockRestrictionBindings) {
 		super( mutatingTable, mutationTarget, sqlComment, valueBindings, keyRestrictionBindings, optLockRestrictionBindings );
+		this.mutationDetails = mutatingTable.getTableMapping().getUpdateDetails();
 	}
 
 	public TableUpdateCustomSql(
@@ -46,7 +50,21 @@ public class TableUpdateCustomSql
 			List<ColumnValueBinding> keyRestrictionBindings,
 			List<ColumnValueBinding> optLockRestrictionBindings,
 			List<ColumnValueParameter> parameters) {
+		this( mutatingTable, mutationTarget, mutatingTable.getTableMapping().getUpdateDetails(), sqlComment,
+				valueBindings, keyRestrictionBindings, optLockRestrictionBindings, parameters );
+	}
+
+	public TableUpdateCustomSql(
+			MutatingTableReference mutatingTable,
+			MutationTarget<?> mutationTarget,
+			TableMapping.MutationDetails mutationDetails,
+			String sqlComment,
+			List<ColumnValueBinding> valueBindings,
+			List<ColumnValueBinding> keyRestrictionBindings,
+			List<ColumnValueBinding> optLockRestrictionBindings,
+			List<ColumnValueParameter> parameters) {
 		super( mutatingTable, mutationTarget, sqlComment, valueBindings, keyRestrictionBindings, optLockRestrictionBindings, parameters );
+		this.mutationDetails = mutationDetails;
 	}
 
 	@Override
@@ -56,12 +74,12 @@ public class TableUpdateCustomSql
 
 	@Override
 	public String getCustomSql() {
-		return getMutatingTable().getTableMapping().getUpdateDetails().getCustomSql();
+		return mutationDetails.getCustomSql();
 	}
 
 	@Override
 	public boolean isCallable() {
-		return getMutatingTable().getTableMapping().getUpdateDetails().isCallable();
+		return mutationDetails.isCallable();
 	}
 
 	@Override

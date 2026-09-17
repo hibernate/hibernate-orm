@@ -4,6 +4,10 @@
  */
 package org.hibernate.loader.ast.internal;
 
+import org.hibernate.Filter;
+import org.hibernate.internal.FilterImpl;
+import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -17,10 +21,13 @@ import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
+import org.hibernate.sql.ast.tree.predicate.FilterPredicate;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.BaseExecutionContext;
+import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
+import org.hibernate.sql.exec.internal.JdbcParameterImpl;
 import org.hibernate.sql.exec.internal.SqlTypedMappingJdbcParameter;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
 import org.hibernate.sql.exec.spi.JdbcSelect;
@@ -33,6 +40,8 @@ import org.hibernate.type.StandardBasicTypes;
 import java.util.ArrayList;
 import java.util.List;
 
+import static java.util.Collections.singletonMap;
+import static org.hibernate.binder.internal.TenantIdBinder.PARAMETER_NAME;
 import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_OBJECT_ARRAY;
 import static org.hibernate.loader.LoaderLogging.LOADER_LOGGER;
 import static org.hibernate.pretty.MessageHelper.infoString;
@@ -46,10 +55,26 @@ class DatabaseSnapshotExecutor {
 
 	private final JdbcSelect jdbcSelect;
 	private final JdbcParametersList jdbcParameters;
+	private final JdbcParameter tenantIdParameter;
 
 	DatabaseSnapshotExecutor(
 			EntityMappingType entityDescriptor,
 			SessionFactoryImplementor sessionFactory) {
+		this( entityDescriptor, sessionFactory, null );
+	}
+
+	DatabaseSnapshotExecutor(
+			EntityMappingType entityDescriptor,
+			SessionFactoryImplementor sessionFactory,
+			Filter tenantFilter) {
+		this( entityDescriptor, sessionFactory, tenantFilter, null );
+	}
+
+	DatabaseSnapshotExecutor(
+			EntityMappingType entityDescriptor,
+			SessionFactoryImplementor sessionFactory,
+			Filter tenantFilter,
+			List<? extends ModelPart> partsToSelect) {
 		this.entityDescriptor = entityDescriptor;
 		var jdbcParametersBuilder =
 				JdbcParametersList.newBuilder( entityDescriptor.getIdentifierMapping().getJdbcTypeCount() );
@@ -80,8 +105,32 @@ class DatabaseSnapshotExecutor {
 
 		rootQuerySpec.getFromClause().addRoot( rootTableGroup );
 		state.getFromClauseAccess().registerTableGroup( rootPath, rootTableGroup );
+		tenantIdParameter = tenantFilter == null ? null : new JdbcParameterImpl(
+				((FilterImpl) tenantFilter).getFilterDefinition().getParameterJdbcMapping( PARAMETER_NAME ) );
+		if ( tenantFilter != null ) {
+			// Snapshots ignore application filters, but must respect tenant isolation.
+			entityDescriptor.applyFilterRestrictions(
+					predicate -> {
+						// Keep the filter's SQL, including formulas and table aliases, but bind
+						// the tenant at execution time so the plan can be shared across sessions.
+						for ( var fragment : ((FilterPredicate) predicate).getFragments() ) {
+							if ( fragment.getParameters() != null ) {
+								for ( var parameter : fragment.getParameters() ) {
+									parameter.setJdbcParameter( tenantIdParameter );
+								}
+							}
+						}
+						rootQuerySpec.applyPredicate( predicate );
+					},
+					rootTableGroup,
+					true,
+					singletonMap( tenantFilter.getName(), tenantFilter ),
+					true,
+					state
+			);
+		}
 
-		// We produce the same state array as if we were creating an entity snapshot
+		// Full snapshots follow entity state order. Targeted snapshots follow the requested projection.
 		final List<DomainResult<?>> domainResults = new ArrayList<>();
 
 		final var sqlExpressionResolver = state.getSqlExpressionResolver();
@@ -112,21 +161,29 @@ class DatabaseSnapshotExecutor {
 		);
 		jdbcParameters = jdbcParametersBuilder.build();
 
-
-		entityDescriptor.forEachAttributeMapping(
-				attributeMapping -> {
-					final var snapshotDomainResult =
-							attributeMapping.createSnapshotDomainResult(
-									rootPath.append( attributeMapping.getAttributeName() ),
-									rootTableGroup,
-									null,
-									state
-					);
-					if ( snapshotDomainResult != null ) {
-						domainResults.add( snapshotDomainResult );
+		if ( partsToSelect == null ) {
+			entityDescriptor.forEachAttributeMapping(
+					attributeMapping -> {
+						final var snapshotDomainResult =
+								attributeMapping.createSnapshotDomainResult(
+										rootPath.append( attributeMapping.getAttributeName() ),
+										rootTableGroup,
+										null,
+										state
+						);
+						if ( snapshotDomainResult != null ) {
+							domainResults.add( snapshotDomainResult );
+						}
 					}
-				}
-		);
+			);
+		}
+		else {
+			// A targeted snapshot ignores static restrictions just like a full snapshot.
+			for ( var part : partsToSelect ) {
+				domainResults.add( part.createDomainResult(
+						rootPath.append( part.getPartName() ), rootTableGroup, null, state ) );
+			}
+		}
 
 		final var selectStatement = new SelectStatement( rootQuerySpec, domainResults );
 		jdbcSelect =
@@ -135,7 +192,10 @@ class DatabaseSnapshotExecutor {
 						.translate( null, QueryOptions.NONE );
 	}
 
-	Object[] loadDatabaseSnapshot(Object id, SharedSessionContractImplementor session) {
+	/**
+	 * @param tenantId the current tenant filter parameter value, or {@code null} for an unrestricted executor
+	 */
+	Object[] loadDatabaseSnapshot(Object id, Object tenantId, SharedSessionContractImplementor session) {
 		if ( LOADER_LOGGER.isTraceEnabled() ) {
 			LOADER_LOGGER.trace( "Retrieving snapshot of current persistent state for "
 					+ infoString( entityDescriptor, id ) );
@@ -153,6 +213,11 @@ class DatabaseSnapshotExecutor {
 						session
 				);
 		assert offset == jdbcParameters.size();
+		if ( tenantIdParameter != null ) {
+			final var jdbcMapping = tenantIdParameter.getExpressionType().getSingleJdbcMapping();
+			jdbcParameterBindings.addBinding( tenantIdParameter,
+					new JdbcParameterBindingImpl( jdbcMapping, jdbcMapping.convertToRelationalValue( tenantId ) ) );
+		}
 
 		final List<?> list =
 				session.getJdbcServices().getJdbcSelectExecutor().list(

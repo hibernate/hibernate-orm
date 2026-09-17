@@ -14,6 +14,10 @@ import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.OptimisticLockStyle;
+import org.hibernate.engine.internal.TenantIdHelper;
+import org.hibernate.engine.jdbc.mutation.TableInclusionChecker;
+import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.jdbc.Expectation;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
@@ -38,6 +42,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.sql.model.MutationType;
+import org.hibernate.sql.model.TableMapping;
 import org.hibernate.sql.model.ast.MutatingTableReference;
 import org.hibernate.sql.model.ast.builder.AbstractTableUpdateBuilder;
 import org.hibernate.sql.model.ast.builder.MutationGroupBuilder;
@@ -49,6 +54,7 @@ import org.hibernate.sql.model.internal.MutationOperationGroupFactory;
 import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
 
 import static org.hibernate.engine.OptimisticLockStyle.DIRTY;
+import static org.hibernate.engine.internal.TenantIdHelper.MissingRowPolicy.THROW;
 import static org.hibernate.engine.internal.Versioning.isVersionIncrementRequired;
 import static org.hibernate.generator.EventType.UPDATE;
 import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
@@ -170,6 +176,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			int[] incomingDirtyAttributeIndexes,
 			boolean hasDirtyCollection,
 			SharedSessionContractImplementor session) {
+		TenantIdHelper.validateIdentifierTenant( id, entityPersister(), session );
 		final var versionMapping = entityPersister().getVersionMapping();
 		if ( versionMapping != null ) {
 			final var generatedValuesAccess =
@@ -541,6 +548,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		);
 
 		bindPartitionColumnValueBindings( loadedState, session, mutationExecutor.getJdbcValueBindings() );
+		bindTenantRestriction( session, mutationExecutor.getJdbcValueBindings(), versionUpdateGroup );
 
 		// restrict the key
 		mutatingTableDetails.getKeyMapping().breakDownKeyJdbcValues(
@@ -838,6 +846,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			Object[] oldValues,
 			UpdateValuesAnalysisImpl valuesAnalysis,
 			SharedSessionContractImplementor session) {
+		checkTenantIdBeforeUpdate( id, staticUpdateGroup, valuesAnalysis.tablesNeedingUpdate::contains, session );
 
 		final var mutationExecutor = executor( session, staticUpdateGroup, false );
 
@@ -856,6 +865,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		// no snapshot when called from StatelessSession.update()
 		bindPartitionColumnValueBindings( oldValues == null ? values : oldValues,
 				session, mutationExecutor.getJdbcValueBindings() );
+		bindTenantRestriction( session, mutationExecutor.getJdbcValueBindings(), staticUpdateGroup );
 
 		try {
 			return mutationExecutor.execute(
@@ -1075,6 +1085,11 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		);
 
 		// and then execute them
+		final TableInclusionChecker inclusionChecker = tableMapping ->
+				tableMapping.isOptional() && !valuesAnalysis.tablesWithNonNullValues.contains( tableMapping )
+						? valuesAnalysis.dirtyAttributeIndexes.length > 0
+						: valuesAnalysis.tablesNeedingUpdate.contains( tableMapping );
+		checkTenantIdBeforeUpdate( id, dynamicUpdateGroup, inclusionChecker, session );
 
 		final var mutationExecutor = executor( session, dynamicUpdateGroup, true );
 
@@ -1095,16 +1110,13 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		// no snapshot when called from StatelessSession.update()
 		bindPartitionColumnValueBindings( oldValues == null ? values : oldValues,
 				session, mutationExecutor.getJdbcValueBindings() );
+		bindTenantRestriction( session, mutationExecutor.getJdbcValueBindings(), dynamicUpdateGroup );
 
 		try {
 			return mutationExecutor.execute(
 					entity,
 					valuesAnalysis,
-					tableMapping ->
-							tableMapping.isOptional() && !valuesAnalysis.tablesWithNonNullValues.contains( tableMapping )
-									// the table is optional, and we have null values for all of its columns
-									? valuesAnalysis.dirtyAttributeIndexes.length > 0
-									: valuesAnalysis.tablesNeedingUpdate.contains( tableMapping ),
+					inclusionChecker,
 					(statementDetails, affectedRowCount, batchPosition) ->
 							resultCheck( id, statementDetails, affectedRowCount, batchPosition ),
 					session,
@@ -1120,6 +1132,32 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			SharedSessionContractImplementor session, MutationOperationGroup group, boolean dynamicUpdate) {
 		return mutationExecutorService
 				.createExecutor( resolveBatchKeyAccess( dynamicUpdate, session ), group, session );
+	}
+
+	private void checkTenantIdBeforeUpdate(
+			Object id, MutationOperationGroup group, TableInclusionChecker inclusionChecker,
+			SharedSessionContractImplementor session) {
+		final var persister = entityPersister();
+		// Stateless mutations already check stored ownership before reaching this coordinator.
+		if ( session instanceof SessionImplementor && TenantIdHelper.needsMultiTableUpdateCheck( persister, session ) ) {
+			final String tenantTable = persister.physicalTableNameForMutation(
+					TenantIdHelper.tenantIdAttribute( persister ).getSelectable( 0 ) );
+			boolean updatesOtherTable = false;
+			for ( int i = 0; i < group.getNumberOfOperations(); i++ ) {
+				final var operation = group.getOperation( i );
+				if ( inclusionChecker.include( operation.getTableDetails() ) ) {
+					// The legacy executor executes and checks the identifier-table update first.
+					if ( operation.getTableDetails().isIdentifierTable() && TenantIdHelper.checksTenantId( persister, operation ) ) {
+						return;
+					}
+					updatesOtherTable |= !tenantTable.equals( operation.getTableDetails().getTableName() );
+				}
+			}
+			if ( updatesOtherTable ) {
+				session.getJdbcCoordinator().executeBatch();
+				TenantIdHelper.checkStoredTenantOwnership( id, persister, session, THROW );
+			}
+		}
 	}
 
 	private MutationExecutor updateVersionExecutor(
@@ -1267,6 +1305,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			final var tableUpdateBuilder = (TableUpdateBuilder<?>) builder;
 			applyKeyRestriction( rowId, persister, tableUpdateBuilder, tableMapping );
 			applyPartitionKeyRestriction( tableUpdateBuilder );
+			applyTenantRestriction( tableUpdateBuilder );
 		} );
 	}
 
@@ -1777,7 +1816,14 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		else {
 			final var identifierTableMapping = entityPersister().getIdentifierTableMapping();
 			final AbstractTableUpdateBuilder<JdbcMutationOperation> updateBuilder =
-					newTableUpdateBuilder( identifierTableMapping );
+					identifierTableMapping.getUpdateDetails().getCustomSql() == null
+							? newTableUpdateBuilder( identifierTableMapping )
+							// A custom update expects all mapped values, not just the version.
+							: new TableUpdateBuilderStandard<>( entityPersister(),
+									new MutatingTableReference( identifierTableMapping ),
+									new TableMapping.MutationDetails(
+											MutationType.UPDATE, new Expectation.RowCount(), null, false ),
+									null, factory() );
 
 			updateBuilder.setSqlComment( "forced version increment for " + entityPersister().getRolePath() );
 
@@ -1787,6 +1833,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 
 			applyVersionOptimisticLocking( updateBuilder );
 			applyPartitionKeyRestriction( updateBuilder );
+			applyTenantRestriction( updateBuilder );
 
 			//noinspection resource
 			final var jdbcMutation = factory()

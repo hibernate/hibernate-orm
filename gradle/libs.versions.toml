@@ -8,7 +8,7 @@ asm = "9.11.1"
 # See ByteBuddyExperimentalJdkFlagTest: CI will fail if you forget.
 byteBuddy = "1.18.17"
 geolatte = "1.13"
-hibernateModels = "2.0.0.Alpha2"
+hibernateModels = "2.0.0.Alpha3"
 hibernateAccessor = "0.1.0.CR1"
 jandex = "3.6.1"
 jackson = "2.23.0"

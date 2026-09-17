@@ -157,6 +157,18 @@ public class PersistenceUnitInfoDescriptor implements PersistenceUnitDescriptor 
 		return disableClassTransformerRegistration;
 	}
 
+	/// Registers the fallback transformer when the container has not requested one directly.
+	public void registerClassTransformer(java.util.Map<?, ?> settings) {
+		if ( disableClassTransformerRegistration || persistenceUnitInfo.getNewTempClassLoader() == null ) {
+			return;
+		}
+		final var transformer = org.hibernate.jpa.internal.enhance.ContainerEnhancement.createTransformer( persistenceUnitInfo, settings );
+		if ( transformer != null ) {
+			classTransformer = (ClassTransformer) transformer;
+			persistenceUnitInfo.addTransformer( transformer );
+		}
+	}
+
 	@Override
 	public ClassTransformer pushClassTransformer(EnhancementModel model, EnhancementOptions options, BytecodeProvider provider) {
 		if ( this.classTransformer != null ) {

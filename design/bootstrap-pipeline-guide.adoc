@@ -158,21 +158,79 @@ broad map late in the pipeline.
 
 == Mapping Sources And Preparation
 
-`MappingSources` is the internal collection of source declarations.  It may
-contain annotated classes and class names, packages, XML resources, or other
-entry-point-specific descriptions.  Discovery is not categorization.
+`MappingSources` collects declarations in distinct ordinary-class, package-descriptor,
+module-descriptor, and XML categories. Discovery is not categorization. Class names
+are deduplicated without loading; supplied `Class` and `ClassDetails` handles retain
+their identity. Distinct handles with the same name are rejected rather than
+silently selecting a class loader or replacing a customized model.
 
-`PreparedMappingSources` is the normalized input to categorization.  Preparation
-resolves class and package references, reads XML, applies source ordering, and
-produces the uniform descriptors needed by the categorizer.
+`PreparedMappingSources` is the structurally immutable input to categorization.
+Preparation registers supplied handles, resolves explicit package descriptors,
+resolves ordinary classes, binds enabled XML, and resolves module descriptors.
+Module references are registered before resolving their names, allowing modules
+from child layers. Class inputs ending in `package-info` or `module-info` fail with
+an actionable descriptor-registration diagnostic.
 
-=== Package metadata
+Explicit XML declarations retain their order and multiplicity. Automatically
+discovered mapping locations are deduplicated, including against explicit resource
+locations. Disabling XML prevents binding explicit and discovered XML alike,
+including through the direct preparation overloads.
 
-Package annotations and package-level registrations are source facts.  Package
-discovery must happen before categorization decides defaults and global
-registrations.  Avoid looking up `package-info` opportunistically from a
-binder: doing so bypasses source ordering and makes archive behavior differ
-from live bootstrap.
+Container bootstrap consumes the container's complete inventories without provider
+scanning. Programmatic discovery runs once when archive boundaries are available.
+Archive discovery and `includeUnlistedStructuralTypes` remain independent: the
+latter controls categorization of reachable structural types, not archive scope.
+Both container transformer entry points share creation and discovery logic, using
+only the complete ordinary-class inventory. Package and module descriptors never
+become enhancement candidates.
+
+=== Package and module metadata
+
+Explicit package descriptors use Models' `resolveExplicitPackageDetails()` and
+fail if the descriptor cannot be resolved. Implicit navigation uses
+`resolvePackageDetails()`, which may cache missing package details. A cached missing
+result does not make subsequent explicit registration valid.
+
+The categorizer consumes resolved handles directly. XML-only Java classes and
+XML-created dynamic models join the managed-type view at their required phase;
+package and module descriptors are processed separately. There is no mixed
+class/package/module name inventory to resolve again downstream.
+
+Descriptor-derived registrations become semantic mapping data and survive metadata
+archive restoration without rediscovering descriptors. Scoped annotation lookups
+use the tolerant package API; they must not turn an absent `package-info` into an
+ordinary class-loading failure.
+
+=== Consolidation regression coverage
+
+[cols="1,2",options="header"]
+|===
+|Contract |Regression coverage
+|Category separation, supplied-handle identity, descriptor-only registrations,
+strict explicit packages, Java/dynamic XML overlays
+|`ManagedResourcesTests`, `PreparedMappingSourcesTests`, and the source-model suites
+|Immutable prepared batches, explicit XML multiplicity, discovered XML deduplication,
+disabled XML, entry-point adapters
+|`PreparedMappingSourcesTests` and `MappingSourcesTests`
+|Complete container inventories, no provider rediscovery, both transformer entry points
+|`ManagedResourcesTests.bothTransformerPathsUseCompleteContainerInventory`
+|Descriptor registrations survive metadata archives
+|`ManagedResourcesTests.descriptorRegistrationsSurviveArchiveRestoration`
+and `BootModelSerializationTest`
+|Archive boundaries, descriptors, supplied indexes, root exclusions
+|`ScannerTest` and `hibernate-scan-jandex` tests
+|Additional batches, customized/dynamic classes and converters
+|`AdditionalMappingContributorTests`, `AdditionalMappingContributorBasicColumnTests`,
+and `AdditionalMappingContributorAttributeConverterRegistrationTest`
+|Package/module runtime registrations
+|Global-registration binding tests and package-descriptor named-query tests
+|===
+
+The 8.x requirements for `MetadataSources`, `MetadataBuilder`, cfg.xml bootstrap,
+and HBM transformation do not restore those removed entry points in 9.0. Their
+supported source contracts transfer to the pipeline products above. Additional
+contributions remain a separate prepared batch; they do not recategorize the
+initial source universe.
 
 === XML preprocessing and overlays
 

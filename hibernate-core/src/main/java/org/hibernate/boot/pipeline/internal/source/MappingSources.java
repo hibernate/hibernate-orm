@@ -7,6 +7,9 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashSet;
+import java.util.LinkedHashMap;
+import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.MappingException;
 import java.util.List;
 
 import org.hibernate.boot.pipeline.internal.settings.ResolvedBootstrapSettings;
@@ -19,7 +22,7 @@ import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 import jakarta.persistence.PersistenceConfiguration;
 
 import static java.util.Collections.addAll;
-import static org.hibernate.internal.util.StringHelper.qualifier;
+import org.hibernate.boot.model.process.internal.ManagedResourceValidation;
 
 /// Mapping sources collected from a bootstrap entry point.
 ///
@@ -31,14 +34,16 @@ import static org.hibernate.internal.util.StringHelper.qualifier;
 /// @since 9.0
 /// @author Steve Ebersole
 public class MappingSources {
-	private final LinkedHashSet<Class<?>> managedClasses = new LinkedHashSet<>();
+	private final LinkedHashMap<String, ClassDetails> managedDetails = new LinkedHashMap<>();
+	private final LinkedHashMap<String, Module> modules = new LinkedHashMap<>();
+	private final LinkedHashMap<String, Class<?>> managedClasses = new LinkedHashMap<>();
 	private final LinkedHashSet<String> managedClassNames = new LinkedHashSet<>();
 	private final LinkedHashSet<String> moduleNames = new LinkedHashSet<>();
 	private final LinkedHashSet<String> packageNames = new LinkedHashSet<>();
-	private final LinkedHashSet<String> mappingResources = new LinkedHashSet<>();
-	private final LinkedHashSet<URI> mappingFileUris = new LinkedHashSet<>();
-	private final LinkedHashSet<URL> mappingFileUrls = new LinkedHashSet<>();
-	private final LinkedHashSet<XmlMappingSource> xmlMappingSources = new LinkedHashSet<>();
+	private final List<String> mappingResources = new ArrayList<>();
+	private final List<URI> mappingFileUris = new ArrayList<>();
+	private final List<URL> mappingFileUrls = new ArrayList<>();
+	private final List<XmlMappingSource> xmlMappingSources = new ArrayList<>();
 	private boolean includeUnlistedStructuralTypes = true;
 
 	public MappingSources() {
@@ -99,10 +104,39 @@ public class MappingSources {
 		this.includeUnlistedStructuralTypes = includeUnlistedStructuralTypes;
 	}
 
+	public MappingSources addClassDetails(ClassDetails details) {
+		ManagedResourceValidation.validateClassName( details.getName() );
+		final var previous = managedDetails.putIfAbsent( details.getName(), details );
+		if ( previous != null && previous != details ) {
+			throw new MappingException( "Conflicting ClassDetails for '" + details.getName() + "'" );
+		}
+		return this;
+	}
+
+	public List<ClassDetails> managedClassDetails() {
+		return List.copyOf( managedDetails.values() );
+	}
+
+	public List<Module> modules() {
+		return List.copyOf( modules.values() );
+	}
+
+	public MappingSources addPackageDescriptor(String name) {
+		return addPackage( name );
+	}
+
+	public MappingSources addModuleDescriptor(String name) {
+		return addModule( name );
+	}
+
 	/// Add a managed class.
 	public MappingSources addManagedClass(Class<?> managedClass) {
 		if ( managedClass != null ) {
-			managedClasses.add( managedClass );
+			ManagedResourceValidation.validateClassName( managedClass.getName() );
+			final var previous = managedClasses.putIfAbsent( managedClass.getName(), managedClass );
+			if ( previous != null && previous != managedClass ) {
+				throw new MappingException( "Conflicting class handle for '" + managedClass.getName() + "'" );
+			}
 		}
 		return this;
 	}
@@ -110,7 +144,7 @@ public class MappingSources {
 	/// Add managed classes.
 	public MappingSources addManagedClasses(Class<?>... managedClasses) {
 		if ( managedClasses != null && managedClasses.length > 0 ) {
-			addAll( this.managedClasses, managedClasses );
+			java.util.Arrays.stream( managedClasses ).forEach( this::addManagedClass );
 		}
 		return this;
 	}
@@ -126,6 +160,7 @@ public class MappingSources {
 	/// Add a managed class name without loading the class.
 	public MappingSources addManagedClassName(String managedClassName) {
 		if ( managedClassName != null ) {
+			ManagedResourceValidation.validateClassName( managedClassName );
 			managedClassNames.add( managedClassName );
 		}
 		return this;
@@ -134,7 +169,7 @@ public class MappingSources {
 	/// Add managed class names without loading the classes.
 	public MappingSources addManagedClassNames(String... managedClassNames) {
 		if ( managedClassNames != null && managedClassNames.length > 0 ) {
-			addAll( this.managedClassNames, managedClassNames );
+			java.util.Arrays.stream( managedClassNames ).forEach( this::addManagedClassName );
 		}
 		return this;
 	}
@@ -150,7 +185,7 @@ public class MappingSources {
 	/// Add package-level metadata by package name.
 	public MappingSources addPackage(String packageName) {
 		if ( packageName != null ) {
-			packageNames.add( packageName );
+			packageNames.add( packageName.endsWith( "." ) ? packageName.substring( 0, packageName.length() - 1 ) : packageName );
 		}
 		return this;
 	}
@@ -170,7 +205,14 @@ public class MappingSources {
 
 	/// Add metadata from a named module.
 	public MappingSources addModule(Module module) {
-		return module != null && module.isNamed() ? addModule( module.getName() ) : this;
+		if ( module == null || !module.isNamed() ) {
+			throw new IllegalArgumentException( "An explicit module descriptor requires a named module" );
+		}
+		final var previous = modules.putIfAbsent( module.getName(), module );
+		if ( previous != null && previous != module ) {
+			throw new MappingException( "Conflicting module handle for '" + module.getName() + "'" );
+		}
+		return addModule( module.getName() );
 	}
 
 	/// Add metadata from a module name.
@@ -284,7 +326,7 @@ public class MappingSources {
 
 	/// Managed Java classes explicitly contributed by the entry point.
 	public List<Class<?>> managedClasses() {
-		return List.copyOf( managedClasses );
+		return List.copyOf( managedClasses.values() );
 	}
 
 	/// Managed Java class names contributed without loading the classes.
@@ -350,7 +392,7 @@ public class MappingSources {
 	}
 
 	public static MappingSources from(MappingSources mappingSources) {
-		return new MappingSources(
+		final var copy = new MappingSources(
 				mappingSources.managedClasses(),
 				mappingSources.managedClassNames(),
 				mappingSources.packageNames(),
@@ -360,6 +402,9 @@ public class MappingSources {
 				mappingSources.xmlMappingSources(),
 				mappingSources.includeUnlistedStructuralTypes()
 		).addModules( mappingSources.moduleNames() );
+		mappingSources.managedClassDetails().forEach( copy::addClassDetails );
+		mappingSources.modules().forEach( copy::addModule );
+		return copy;
 	}
 
 	/// Adapts Jakarta Persistence's programmatic bootstrap configuration to
@@ -380,7 +425,8 @@ public class MappingSources {
 		return new MappingSources(
 				persistenceConfiguration.managedClasses(),
 				persistenceConfiguration.mappingFiles()
-		);
+		).addPackages( persistenceConfiguration.managedPackageDescriptors() )
+				.addModules( persistenceConfiguration.managedModuleDescriptors() );
 	}
 
 	/// Adapts Hibernate's persistence-unit descriptor abstraction to neutral
@@ -395,18 +441,12 @@ public class MappingSources {
 			PersistenceUnitDescriptor persistenceUnitDescriptor,
 			ResolvedBootstrapSettings bootstrapSettings,
 			ContributionDiscoveryContext context) {
-		final var managedClassNames = new ArrayList<String>();
-		final var packageNames = new ArrayList<String>();
-		for ( var className : persistenceUnitDescriptor.getAllClassNames() ) {
-			if ( className.endsWith( ".package-info" ) ) {
-				packageNames.add( qualifier( className ) );
-			}
-			else {
-				managedClassNames.add( className );
-			}
-		}
+		final var managedClassNames = new ArrayList<>( persistenceUnitDescriptor.getAllClassNames() );
+		persistenceUnitDescriptor.getManagedClassNames().forEach( ManagedResourceValidation::validateClassName );
+		final var packageNames = new ArrayList<>( persistenceUnitDescriptor.getAllPackageDescriptors() );
 		final var classLoaderService = context == null ? null : context.classLoaderService();
 		final var scanningResult = classLoaderService == null || bootstrapSettings == null
+				|| persistenceUnitDescriptor instanceof org.hibernate.jpa.boot.internal.PersistenceUnitInfoDescriptor
 				? ScanningResult.NONE
 				: HibernatePersistenceConfigurationScanner.performScanning(
 						persistenceUnitDescriptor,
@@ -427,11 +467,13 @@ public class MappingSources {
 				managedClassNames,
 				packageNames,
 				mappingResources,
-				scanningResult.mappingFiles(),
-				mappingFileUrls,
+				List.of(),
+				List.of(),
 				List.of(),
 				!persistenceUnitDescriptor.isExcludeUnlistedClasses()
-		).addModules( scanningResult.discoveredModules() );
+		).addModules( persistenceUnitDescriptor.getAllModuleDescriptors() )
+				.addModules( scanningResult.discoveredModules() )
+				.addDiscoveredMappings( scanningResult.mappingFiles(), mappingFileUrls, classLoaderService );
 	}
 
 	/// Adapts Hibernate's programmatic JPA bootstrap configuration to neutral
@@ -449,7 +491,8 @@ public class MappingSources {
 					persistenceConfiguration.mappingFiles(),
 					persistenceConfiguration.mappingFileUris(),
 					persistenceConfiguration.mappingFileUrls()
-			);
+			).addPackages( persistenceConfiguration.managedPackageDescriptors() )
+					.addModules( persistenceConfiguration.managedModuleDescriptors() );
 		}
 		final ScanningResult scanningResult = HibernatePersistenceConfigurationScanner.performScanning(
 				persistenceConfiguration,
@@ -460,16 +503,48 @@ public class MappingSources {
 		final var managedClassNames = new ArrayList<>( persistenceConfiguration.managedClassNames() );
 		managedClassNames.addAll( scanningResult.discoveredClasses() );
 		final var packageNames = new ArrayList<>( persistenceConfiguration.packageNames() );
+		packageNames.addAll( persistenceConfiguration.managedPackageDescriptors() );
 		packageNames.addAll( scanningResult.discoveredPackages() );
-		final var mappingFileUris = new ArrayList<>( persistenceConfiguration.mappingFileUris() );
-		mappingFileUris.addAll( scanningResult.mappingFiles() );
 		return new MappingSources(
 				persistenceConfiguration.managedClasses(),
 				managedClassNames,
 				packageNames,
 				persistenceConfiguration.mappingFiles(),
-				mappingFileUris,
+				persistenceConfiguration.mappingFileUris(),
 				persistenceConfiguration.mappingFileUrls()
-		).addModules( scanningResult.discoveredModules() );
+		).addModules( persistenceConfiguration.managedModuleDescriptors() )
+				.addModules( scanningResult.discoveredModules() )
+				.addDiscoveredMappings( scanningResult.mappingFiles(), List.of(), context.classLoaderService() );
 	}
+	private MappingSources addDiscoveredMappings(
+			Collection<URI> discoveredUris,
+			Collection<URL> discoveredUrls,
+			org.hibernate.boot.registry.classloading.spi.ClassLoaderService classLoading) {
+		if ( discoveredUris.isEmpty() && discoveredUrls.isEmpty() ) {
+			return this;
+		}
+		final var known = new LinkedHashSet<URI>();
+		mappingFileUris.forEach( uri -> known.add( uri.normalize() ) );
+		mappingFileUrls.forEach( url -> known.add( URI.create( url.toExternalForm() ).normalize() ) );
+		if ( classLoading != null ) {
+			mappingResources.forEach( name -> {
+				final var url = classLoading.locateResource( name );
+				if ( url != null ) {
+					known.add( URI.create( url.toExternalForm() ).normalize() );
+				}
+			} );
+		}
+		discoveredUris.forEach( uri -> {
+			if ( known.add( uri.normalize() ) ) {
+				addMappingUri( uri );
+			}
+		} );
+		discoveredUrls.forEach( url -> {
+			if ( known.add( URI.create( url.toExternalForm() ).normalize() ) ) {
+				addMappingUrl( url );
+			}
+		} );
+		return this;
+	}
+
 }

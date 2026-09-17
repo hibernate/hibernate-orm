@@ -32,16 +32,10 @@ import org.hibernate.jpa.internal.util.PersistenceUtilHelper.MetadataCache;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.unmodifiableMap;
-import static org.hibernate.cfg.BytecodeSettings.BYTECODE_PROVIDER_INSTANCE;
-import static org.hibernate.cfg.BytecodeSettings.ENHANCER_ENABLE_ASSOCIATION_MANAGEMENT;
-import static org.hibernate.cfg.BytecodeSettings.ENHANCER_ENABLE_DIRTY_TRACKING;
-import static org.hibernate.cfg.BytecodeSettings.ENHANCER_ENABLE_LAZY_INITIALIZATION;
-import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
 import static org.hibernate.jpa.boot.spi.ProviderChecker.isProvider;
 import static org.hibernate.jpa.internal.JpaLogger.JPA_LOGGER;
 

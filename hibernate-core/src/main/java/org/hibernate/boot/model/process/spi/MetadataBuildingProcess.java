@@ -520,8 +520,8 @@ public class MetadataBuildingProcess {
 		private final MetadataBuildingContextRootImpl rootMetadataBuildingContext;
 		private final EntityHierarchyBuilder hierarchyBuilder = new EntityHierarchyBuilder();
 
-		private List<Class<?>> additionalEntityClasses;
-		private List<ClassDetails> additionalClassDetails;
+		private Map<String, List<Class<?>>> additionalEntityClassesByContributor;
+		private Map<String, List<ClassDetails>> additionalClassDetailsByContributor;
 		private Map<String, List<JaxbEntityMappingsImpl>> additionalJaxbMappingsByContributor;
 		private boolean extraHbmXml = false;
 
@@ -544,18 +544,23 @@ public class MetadataBuildingProcess {
 
 		@Override
 		public void contributeEntity(Class<?> entityType) {
-			if ( additionalEntityClasses == null ) {
-				additionalEntityClasses = new ArrayList<>();
+			if ( additionalEntityClassesByContributor == null ) {
+				additionalEntityClassesByContributor = new LinkedHashMap<>();
 			}
-			additionalEntityClasses.add( entityType );
+			additionalEntityClassesByContributor
+					.computeIfAbsent( currentContributor, k -> new ArrayList<>() )
+					.add( entityType );
 		}
 
 		@Override
 		public void contributeManagedClass(ClassDetails classDetails) {
-			if ( additionalClassDetails == null ) {
-				additionalClassDetails = new ArrayList<>();
+			if ( additionalClassDetailsByContributor == null ) {
+				additionalClassDetailsByContributor = new LinkedHashMap<>();
 			}
-			additionalClassDetails.add( classDetails );
+			additionalClassDetailsByContributor
+					.computeIfAbsent( currentContributor, k -> new ArrayList<>() )
+					.add( classDetails );
+
 			ManagedClassDetails.register(
 					classDetails, rootMetadataBuildingContext.getBootstrapContext().getModelsContext().getClassDetailsRegistry() );
 		}
@@ -628,31 +633,43 @@ public class MetadataBuildingProcess {
 
 		public void complete() {
 			// annotations / orm.xml
-			if ( additionalEntityClasses != null || additionalClassDetails != null || additionalJaxbMappingsByContributor != null ) {
-				// Process contributed classes with the default "orm" context
-				AnnotationMetadataSourceProcessorImpl.processAdditionalMappings(
-						additionalEntityClasses,
-						additionalClassDetails,
-						additionalJaxbMappingsByContributor == null
-								? null
-								: additionalJaxbMappingsByContributor.remove( "orm" ),
-						rootMetadataBuildingContext,
-						options
-				);
-				// Process remaining contributors' xml mappings with their contributor context
+			if ( additionalEntityClassesByContributor != null || additionalClassDetailsByContributor != null || additionalJaxbMappingsByContributor != null ) {
+				final var allContributors = new LinkedHashSet<String>();
+				if ( additionalEntityClassesByContributor != null ) {
+					allContributors.addAll( additionalEntityClassesByContributor.keySet() );
+				}
+				if ( additionalClassDetailsByContributor != null ) {
+					allContributors.addAll( additionalClassDetailsByContributor.keySet() );
+				}
 				if ( additionalJaxbMappingsByContributor != null ) {
-					for ( var entry : additionalJaxbMappingsByContributor.entrySet() ) {
-						AnnotationMetadataSourceProcessorImpl.processAdditionalMappings(
-								null,
-								null,
-								entry.getValue(),
-								new MetadataBuildingContextRootImpl(
-										entry.getKey(),
+					allContributors.addAll( additionalJaxbMappingsByContributor.keySet() );
+				}
+				for ( var contributor : allContributors ) {
+					final var classes = additionalEntityClassesByContributor == null
+							? null
+							: additionalEntityClassesByContributor.get( contributor );
+					final var classDetails = additionalClassDetailsByContributor == null
+							? null
+							: additionalClassDetailsByContributor.get( contributor );
+					final var jaxbMappings = additionalJaxbMappingsByContributor == null
+							? null
+							: additionalJaxbMappingsByContributor.get( contributor );
+
+					if ( classes != null ||  classDetails != null || jaxbMappings != null ) {
+						final var context = "orm".equals( contributor )
+								? rootMetadataBuildingContext
+								: new MetadataBuildingContextRootImpl(
+										contributor,
 										rootMetadataBuildingContext.getBootstrapContext(),
 										options,
 										metadataCollector,
 										rootMetadataBuildingContext.getEffectiveDefaults()
-								),
+								);
+						AnnotationMetadataSourceProcessorImpl.processAdditionalMappings(
+								classes,
+								classDetails,
+								jaxbMappings,
+								context,
 								options
 						);
 					}

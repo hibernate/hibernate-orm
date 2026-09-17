@@ -45,16 +45,16 @@ public abstract class AbstractSqmInsertStatement<T> extends AbstractSqmDmlStatem
 	private @Nullable List<SqmPath<?>> insertionTargetPaths;
 	private @Nullable SqmConflictClause<T> conflictClause;
 
-	protected AbstractSqmInsertStatement(SqmRoot<T> targetRoot, SqmQuerySource querySource, NodeBuilder nodeBuilder) {
+	protected AbstractSqmInsertStatement(@Nonnull SqmRoot<T> targetRoot, @Nonnull SqmQuerySource querySource, @Nonnull NodeBuilder nodeBuilder) {
 		super( targetRoot, querySource, nodeBuilder );
 	}
 
 	protected AbstractSqmInsertStatement(
-			NodeBuilder builder,
-			SqmQuerySource querySource,
+			@Nonnull NodeBuilder builder,
+			@Nonnull SqmQuerySource querySource,
 			@Nullable Set<SqmParameter<?>> parameters,
-			Map<String, SqmCteStatement<?>> cteStatements,
-			SqmRoot<T> target,
+			@Nonnull Map<String, SqmCteStatement<?>> cteStatements,
+			@Nonnull SqmRoot<T> target,
 			@Nullable List<SqmPath<?>> insertionTargetPaths,
 			@Nullable SqmConflictClause<T> conflictClause) {
 		super( builder, querySource, parameters, cteStatements, target );
@@ -62,7 +62,7 @@ public abstract class AbstractSqmInsertStatement<T> extends AbstractSqmDmlStatem
 		this.conflictClause = conflictClause;
 	}
 
-	protected @Nullable List<SqmPath<?>> copyInsertionTargetPaths(SqmCopyContext context) {
+	protected @Nullable List<SqmPath<?>> copyInsertionTargetPaths(@Nonnull SqmCopyContext context) {
 		if ( insertionTargetPaths == null ) {
 			return null;
 		}
@@ -75,13 +75,13 @@ public abstract class AbstractSqmInsertStatement<T> extends AbstractSqmDmlStatem
 		}
 	}
 
-	void setConflictClause(SqmConflictClause<T> conflictClause) {
+	void setConflictClause(@Nullable SqmConflictClause<T> conflictClause) {
 		this.conflictClause = conflictClause;
 	}
 
 	protected void verifyInsertTypesMatch(
-			List<SqmPath<?>> insertionTargetPaths,
-			List<? extends SqmTypedNode<?>> expressions) {
+			@Nonnull List<SqmPath<?>> insertionTargetPaths,
+			@Nonnull List<? extends SqmTypedNode<?>> expressions) {
 		final int size = insertionTargetPaths.size();
 		final int expressionsSize = expressions.size();
 		if ( size != expressionsSize ) {
@@ -153,7 +153,7 @@ public abstract class AbstractSqmInsertStatement<T> extends AbstractSqmDmlStatem
 		return this;
 	}
 
-	public void addInsertTargetStateField(SqmPath<?> stateField) {
+	public void addInsertTargetStateField(@Nonnull SqmPath<?> stateField) {
 		if ( insertionTargetPaths == null ) {
 			insertionTargetPaths = new ArrayList<>();
 		}
@@ -161,7 +161,7 @@ public abstract class AbstractSqmInsertStatement<T> extends AbstractSqmDmlStatem
 	}
 
 	@Override
-	public void visitInsertionTargetPaths(Consumer<SqmPath<?>> consumer) {
+	public void visitInsertionTargetPaths(@Nonnull Consumer<SqmPath<?>> consumer) {
 		if ( insertionTargetPaths != null ) {
 			insertionTargetPaths.forEach( consumer );
 		}
@@ -192,7 +192,7 @@ public abstract class AbstractSqmInsertStatement<T> extends AbstractSqmDmlStatem
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		appendHqlCteString( hql, context );
 		hql.append( "insert into " );
 		hql.append( getTarget().getEntityName() );
@@ -225,7 +225,7 @@ public abstract class AbstractSqmInsertStatement<T> extends AbstractSqmDmlStatem
 	}
 
 	@Override
-	public boolean isCompatible(Object object) {
+	public boolean isCompatible(@Nullable Object object) {
 		return object instanceof AbstractSqmInsertStatement<?> that
 			&& super.isCompatible( that )
 			&& SqmCacheable.areCompatible( getInsertionTargetPaths(), that.getInsertionTargetPaths() )

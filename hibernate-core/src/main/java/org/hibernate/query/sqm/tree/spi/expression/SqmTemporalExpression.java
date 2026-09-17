@@ -21,7 +21,7 @@ public interface SqmTemporalExpression<T extends Temporal & Comparable<? super T
 
 	@Nonnull
 	@Override
-	SqmTemporalExpression<T> coalesce(T y);
+	SqmTemporalExpression<T> coalesce(@Nonnull T y);
 
 	@Nonnull
 	@Override
@@ -29,5 +29,5 @@ public interface SqmTemporalExpression<T extends Temporal & Comparable<? super T
 
 	@Nonnull
 	@Override
-	SqmTemporalExpression<T> nullif(T y);
+	SqmTemporalExpression<T> nullif(@Nonnull T y);
 }

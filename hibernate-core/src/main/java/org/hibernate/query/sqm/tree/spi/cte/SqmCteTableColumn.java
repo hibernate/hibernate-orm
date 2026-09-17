@@ -54,8 +54,12 @@ public class SqmCteTableColumn implements JpaCteCriteriaAttribute, SqmCacheable 
 	}
 
 	@Override
-	public @Nullable Class<?> getJavaType() {
-		return typeExpressible == null ? null : typeExpressible.getJavaType();
+	public @Nonnull Class<?> getJavaType() {
+		final var javaType = typeExpressible == null ? null : typeExpressible.getJavaType();
+		if ( javaType == null ) {
+			throw new IllegalStateException( "Could not determine the Java type of CTE column '" + columnName + "'" );
+		}
+		return javaType;
 	}
 
 	@Override

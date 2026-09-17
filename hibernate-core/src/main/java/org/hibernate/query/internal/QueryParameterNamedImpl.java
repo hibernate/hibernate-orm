@@ -35,7 +35,7 @@ public class QueryParameterNamedImpl<T> extends AbstractQueryParameter<T> {
 				parameter.allowMultiValuedBinding(),
 				parameter.getAnticipatedType(),
 				parameter instanceof SqmJpaCriteriaParameterWrapper<T> wrapper
-						? wrapper.getJpaCriteriaParameter().getJavaType() : null
+						? wrapper.getJpaCriteriaParameter().getJavaTypeIfKnown() : null
 		);
 	}
 

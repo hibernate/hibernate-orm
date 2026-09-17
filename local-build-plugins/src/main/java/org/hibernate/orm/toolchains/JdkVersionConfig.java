@@ -4,6 +4,8 @@
  */
 package org.hibernate.orm.toolchains;
 
+import jakarta.annotation.Nonnull;
+
 import java.util.HashSet;
 import java.util.Set;
 
@@ -13,7 +15,6 @@ import org.gradle.api.Project;
 import org.gradle.api.initialization.Settings;
 import org.gradle.jvm.toolchain.JavaLanguageVersion;
 
-import org.jetbrains.annotations.NotNull;
 
 import static java.util.Objects.requireNonNullElse;
 
@@ -128,7 +129,7 @@ public class JdkVersionConfig {
 		return versions;
 	}
 
-	@NotNull
+	@Nonnull
 	public static JdkVersionConfig createVersionConfig(
 			JavaLanguageVersion explicitMainVersion,
 			JavaLanguageVersion explicitTestVersion,

@@ -34,7 +34,7 @@ public class SqmSelectClause extends AbstractSqmNode
 
 	public SqmSelectClause(
 			boolean distinct,
-			NodeBuilder nodeBuilder) {
+			@Nonnull NodeBuilder nodeBuilder) {
 		super( nodeBuilder );
 		this.distinct = distinct;
 	}
@@ -42,14 +42,15 @@ public class SqmSelectClause extends AbstractSqmNode
 	public SqmSelectClause(
 			boolean distinct,
 			int expectedNumberOfSelections,
-			NodeBuilder nodeBuilder) {
+			@Nonnull NodeBuilder nodeBuilder) {
 		super( nodeBuilder );
 		this.distinct = distinct;
 		this.selections = arrayList( expectedNumberOfSelections );
 	}
 
+	@Nonnull
 	@Override
-	public SqmSelectClause copy(SqmCopyContext context) {
+	public SqmSelectClause copy(@Nonnull SqmCopyContext context) {
 		final SqmSelectClause selectClause = new SqmSelectClause( distinct, nodeBuilder() );
 		if ( selections != null ) {
 			selectClause.selections = new ArrayList<>( selections.size() );
@@ -68,30 +69,32 @@ public class SqmSelectClause extends AbstractSqmNode
 		this.distinct = distinct;
 	}
 
+	@Nonnull
 	public List<SqmSelection<?>> getSelections() {
 		return selections == null ? emptyList() : unmodifiableList( selections );
 	}
 
-	public void addSelection(SqmSelection<?> selection) {
+	public void addSelection(@Nonnull SqmSelection<?> selection) {
 		if ( selections == null ) {
 			selections = new ArrayList<>();
 		}
 		selections.add( selection );
 	}
 
+	@Nonnull
 	@Override
-	public SqmSelection<?> add(SqmExpression<?> expression, String alias) {
+	public SqmSelection<?> add(@Nonnull SqmExpression<?> expression, @Nullable String alias) {
 		final SqmSelection<?> selection = new SqmSelection<>( expression, alias, nodeBuilder()  );
 		addSelection( selection );
 		return selection;
 	}
 
 	@Override
-	public void add(SqmSelection<?> aliasExpression) {
+	public void add(@Nonnull SqmSelection<?> aliasExpression) {
 		addSelection( aliasExpression );
 	}
 
-	public void setSelection(SqmSelection<?> sqmSelection) {
+	public void setSelection(@Nonnull SqmSelection<?> sqmSelection) {
 		if ( selections != null ) {
 			selections.clear();
 		}
@@ -99,7 +102,7 @@ public class SqmSelectClause extends AbstractSqmNode
 		addSelection( sqmSelection );
 	}
 
-	public void setSelection(SqmSelectableNode<?> selectableNode) {
+	public void setSelection(@Nonnull SqmSelectableNode<?> selectableNode) {
 		setSelection( new SqmSelection<>( selectableNode, selectableNode.getAlias(), nodeBuilder() ) );
 	}
 
@@ -107,11 +110,13 @@ public class SqmSelectClause extends AbstractSqmNode
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// JPA stuff
 
+	@Nonnull
 	public JpaSelection<?> resolveJpaSelection() {
 		// NOTE : JPA's `Selection` contract is really better named `Selectable`
 		return selections != null && selections.size() == 1 ? selections.get( 0 ).getSelectableNode() : this;
 	}
 
+	@Nonnull
 	@Override
 	public List<SqmSelectableNode<?>> getSelectionItems() {
 		final List<SqmSelectableNode<?>> subSelections = new ArrayList<>();
@@ -164,7 +169,7 @@ public class SqmSelectClause extends AbstractSqmNode
 	}
 
 	@Override
-	public boolean isCompatible(Object other) {
+	public boolean isCompatible(@Nullable Object other) {
 		return other instanceof SqmSelectClause that
 			&& distinct == that.distinct
 			&& SqmCacheable.areCompatible( this.selections, that.selections );

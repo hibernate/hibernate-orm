@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.spi.expression;
 
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.query.sqm.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.spi.SqmCacheable;
@@ -21,15 +22,16 @@ public class SqmOverflow<T> extends AbstractSqmExpression<T> {
 	private final @Nullable SqmExpression<T> fillerExpression;
 	private final boolean withCount;
 
-	public SqmOverflow(SqmExpression<T> separatorExpression, @Nullable SqmExpression<T> fillerExpression, boolean withCount) {
+	public SqmOverflow(@Nonnull SqmExpression<T> separatorExpression, @Nullable SqmExpression<T> fillerExpression, boolean withCount) {
 		super( separatorExpression.getNodeType(), separatorExpression.nodeBuilder() );
 		this.separatorExpression = separatorExpression;
 		this.fillerExpression = fillerExpression;
 		this.withCount = withCount;
 	}
 
+	@Nonnull
 	@Override
-	public SqmOverflow<T> copy(SqmCopyContext context) {
+	public SqmOverflow<T> copy(@Nonnull SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -46,6 +48,7 @@ public class SqmOverflow<T> extends AbstractSqmExpression<T> {
 		return expression;
 	}
 
+	@Nonnull
 	public SqmExpression<T> getSeparatorExpression() {
 		return separatorExpression;
 	}
@@ -58,13 +61,14 @@ public class SqmOverflow<T> extends AbstractSqmExpression<T> {
 		return withCount;
 	}
 
+	@Nullable
 	@Override
-	public <X> X accept(SemanticQueryWalker<X> walker) {
+	public <X> X accept(@Nonnull SemanticQueryWalker<X> walker) {
 		return walker.visitOverflow( this );
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		separatorExpression.appendHqlString( hql, context );
 		hql.append( " on overflow " );
 		if ( fillerExpression == null ) {
@@ -99,7 +103,7 @@ public class SqmOverflow<T> extends AbstractSqmExpression<T> {
 	}
 
 	@Override
-	public boolean isCompatible(Object object) {
+	public boolean isCompatible(@Nullable Object object) {
 		return object instanceof SqmOverflow<?> that
 			&& this.withCount == that.withCount
 			&& this.separatorExpression.isCompatible( that.separatorExpression )

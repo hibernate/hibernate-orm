@@ -4,6 +4,8 @@
  */
 package org.hibernate.dialect.function.xml;
 
+import jakarta.annotation.Nonnull;
+
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -68,8 +70,9 @@ public class SQLServerXmlAggFunction extends XmlAggFunction {
 				queryEngine.getCriteriaBuilder(),
 				getName()
 		) {
+			@Nonnull
 			@Override
-			public Expression convertToSqlAst(SqmToSqlAstConverter walker) {
+			public Expression convertToSqlAst(@Nonnull SqmToSqlAstConverter walker) {
 				// SQL Server can't aggregate an argument that contains a subquery,
 				// which is a bummer because xmlelement and xmlforest implementations require subqueries,
 				// but we can apply a trick to make this still work.

@@ -29,22 +29,22 @@ public abstract class AbstractSqmStatement<T> extends AbstractSqmNode implements
 	private @Nullable Set<SqmParameter<?>> parameters;
 
 	public AbstractSqmStatement(
-			SqmQuerySource querySource,
-			NodeBuilder builder) {
+			@Nonnull SqmQuerySource querySource,
+			@Nonnull NodeBuilder builder) {
 		super( builder );
 		this.querySource = querySource;
 	}
 
 	protected AbstractSqmStatement(
-			NodeBuilder builder,
-			SqmQuerySource querySource,
+			@Nonnull NodeBuilder builder,
+			@Nonnull SqmQuerySource querySource,
 			@Nullable Set<SqmParameter<?>> parameters) {
 		super( builder );
 		this.querySource = querySource;
 		this.parameters = parameters;
 	}
 
-	protected @Nullable Set<SqmParameter<?>> copyParameters(SqmCopyContext context) {
+	protected @Nullable Set<SqmParameter<?>> copyParameters(@Nonnull SqmCopyContext context) {
 		if ( parameters == null ) {
 			return null;
 		}
@@ -57,19 +57,21 @@ public abstract class AbstractSqmStatement<T> extends AbstractSqmNode implements
 		}
 	}
 
+	@Nonnull
 	@Override
 	public SqmQuerySource getQuerySource() {
 		return querySource;
 	}
 
 	@Override
-	public void addParameter(SqmParameter<?> parameter) {
+	public void addParameter(@Nonnull SqmParameter<?> parameter) {
 		if ( parameters == null ) {
 			parameters = new LinkedHashSet<>();
 		}
 		parameters.add( parameter );
 	}
 
+	@Nonnull
 	@Override
 	public Set<SqmParameter<?>> getSqmParameters() {
 		if ( querySource == SqmQuerySource.CRITERIA ) {
@@ -81,6 +83,7 @@ public abstract class AbstractSqmStatement<T> extends AbstractSqmNode implements
 		}
 	}
 
+	@Nonnull
 	@Override
 	public ParameterResolutions resolveParameters() {
 		return SqmUtil.resolveParameters( this );
@@ -98,6 +101,7 @@ public abstract class AbstractSqmStatement<T> extends AbstractSqmNode implements
 
 	private int aliasCounter = 0;
 
+	@Nonnull
 	@Override
 	public String generateAlias() {
 		return "var_" + (++aliasCounter);

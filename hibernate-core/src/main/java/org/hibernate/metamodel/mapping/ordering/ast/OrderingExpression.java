@@ -58,7 +58,7 @@ public interface OrderingExpression extends Node {
 					queryEngine.getSqmFunctionRegistry()
 							.findFunctionDescriptor( "collate" )
 							.generateSqmExpression(
-									new SqmSelfRenderingExpression<>( walker -> expression, null, null ),
+									new SqmSelfRenderingExpression<>( walker -> expression, null, queryEngine.getCriteriaBuilder() ),
 									null,
 									queryEngine
 							)

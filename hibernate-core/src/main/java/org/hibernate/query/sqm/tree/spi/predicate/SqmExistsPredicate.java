@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.spi.predicate;
 
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.query.sqm.spi.NodeBuilder;
 import org.hibernate.query.sqm.spi.SemanticQueryWalker;
@@ -19,23 +20,24 @@ public class SqmExistsPredicate extends AbstractNegatableSqmPredicate {
 	private final SqmExpression<?> expression;
 
 	public SqmExistsPredicate(
-			SqmExpression<?> expression,
-			NodeBuilder nodeBuilder) {
+			@Nonnull SqmExpression<?> expression,
+			@Nonnull NodeBuilder nodeBuilder) {
 		this( expression, false, nodeBuilder );
 	}
 
 	public SqmExistsPredicate(
-			SqmExpression<?> expression,
+			@Nonnull SqmExpression<?> expression,
 			boolean negated,
-			NodeBuilder nodeBuilder) {
+			@Nonnull NodeBuilder nodeBuilder) {
 		super( negated, nodeBuilder );
 		this.expression = expression;
 
 		expression.applyInferableType( expression.getNodeType() );
 	}
 
+	@Nonnull
 	@Override
-	public SqmExistsPredicate copy(SqmCopyContext context) {
+	public SqmExistsPredicate copy(@Nonnull SqmCopyContext context) {
 		final SqmExistsPredicate existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -52,17 +54,19 @@ public class SqmExistsPredicate extends AbstractNegatableSqmPredicate {
 		return predicate;
 	}
 
+	@Nonnull
 	public SqmExpression<?> getExpression() {
 		return expression;
 	}
 
+	@Nullable
 	@Override
-	public <T> T accept(SemanticQueryWalker<T> walker) {
+	public <T> T accept(@Nonnull SemanticQueryWalker<T> walker) {
 		return walker.visitExistsPredicate( this );
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		if ( isNegated() ) {
 			hql.append( "not exists " );
 		}
@@ -87,7 +91,7 @@ public class SqmExistsPredicate extends AbstractNegatableSqmPredicate {
 	}
 
 	@Override
-	public boolean isCompatible(Object object) {
+	public boolean isCompatible(@Nullable Object object) {
 		return object instanceof SqmExistsPredicate that
 			&& this.isNegated() == that.isNegated()
 			&& this.expression.isCompatible( that.expression );
@@ -100,6 +104,7 @@ public class SqmExistsPredicate extends AbstractNegatableSqmPredicate {
 		return result;
 	}
 
+	@Nonnull
 	@Override
 	protected SqmNegatablePredicate createNegatedNode() {
 		return new SqmExistsPredicate( expression, !isNegated(), nodeBuilder() );

@@ -30,7 +30,7 @@ public class QueryParameterIdentifiedImpl<T> extends AbstractQueryParameter<T> {
 				parameter.getUnnamedParameterId(),
 				parameter.allowMultiValuedBinding(),
 				parameter.getAnticipatedType(),
-				parameter.getJpaCriteriaParameter().getJavaType()
+				parameter.getJpaCriteriaParameter().getJavaTypeIfKnown()
 		);
 	}
 

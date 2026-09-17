@@ -4,6 +4,8 @@
  */
 package org.hibernate.sql.results.internal;
 
+import jakarta.annotation.Nonnull;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -29,7 +31,7 @@ public class TupleImpl implements Tuple {
 	}
 
 	@Override
-	public <X> X get(TupleElement<X> tupleElement) {
+	public <X> X get(@Nonnull TupleElement<X> tupleElement) {
 		final Integer index = tupleMetadata.get( tupleElement );
 		if ( index == null ) {
 			throw new IllegalArgumentException(
@@ -37,11 +39,12 @@ public class TupleImpl implements Tuple {
 			);
 		}
 		// index should be "in range" by nature of size check in ctor
-		return cast( tupleElement.getJavaType(), row[index] );
+		final Object value = row[index];
+		return value == null ? null : cast( tupleElement.getJavaType(), value );
 	}
 
 	@Override
-	public <X> X get(String alias, Class<X> type) {
+	public <X> X get(@Nonnull String alias, @Nonnull Class<X> type) {
 		final Object untyped = get( alias );
 		if ( untyped != null ) {
 			if ( !isInstance( type, untyped ) ) {
@@ -59,7 +62,7 @@ public class TupleImpl implements Tuple {
 	}
 
 	@Override
-	public Object get(String alias) {
+	public Object get(@Nonnull String alias) {
 		final Integer index = tupleMetadata.get( alias );
 		if ( index == null ) {
 			throw new IllegalArgumentException(
@@ -71,7 +74,7 @@ public class TupleImpl implements Tuple {
 	}
 
 	@Override
-	public <X> X get(int i, Class<X> type) {
+	public <X> X get(int i, @Nonnull Class<X> type) {
 		final Object result = get( i );
 		if ( result != null && !isInstance( type, result ) ) {
 			throw new IllegalArgumentException(
@@ -97,11 +100,13 @@ public class TupleImpl implements Tuple {
 	}
 
 	@Override
+	@Nonnull
 	public Object[] toArray() {
 		return row;
 	}
 
 	@Override
+	@Nonnull
 	public List<TupleElement<?>> getElements() {
 		return tupleMetadata.getList();
 	}

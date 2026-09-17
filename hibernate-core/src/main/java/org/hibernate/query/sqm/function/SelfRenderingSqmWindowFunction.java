@@ -4,10 +4,13 @@
  */
 package org.hibernate.query.sqm.function;
 
+import jakarta.annotation.Nullable;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.sqm.spi.NodeBuilder;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
@@ -29,30 +32,31 @@ import org.hibernate.sql.ast.spi.query.expression.Expression;
 public class SelfRenderingSqmWindowFunction<T> extends SelfRenderingSqmFunction<T>
 		implements SqmWindowFunction<T> {
 
-	private final SqmPredicate filter;
-	private final Boolean respectNulls;
-	private final Boolean fromFirst;
+	private final @Nullable SqmPredicate filter;
+	private final @Nullable Boolean respectNulls;
+	private final @Nullable Boolean fromFirst;
 
 	public SelfRenderingSqmWindowFunction(
-			SqmFunctionDescriptor descriptor,
-			FunctionRenderer renderer,
-			List<? extends SqmTypedNode<?>> arguments,
-			SqmPredicate filter,
-			Boolean respectNulls,
-			Boolean fromFirst,
-			ReturnableType<T> impliedResultType,
-			ArgumentsValidator argumentsValidator,
-			FunctionReturnTypeResolver returnTypeResolver,
-			NodeBuilder nodeBuilder,
-			String name) {
+			@Nonnull SqmFunctionDescriptor descriptor,
+			@Nonnull FunctionRenderer renderer,
+			@Nonnull List<? extends SqmTypedNode<?>> arguments,
+			@Nullable SqmPredicate filter,
+			@Nullable Boolean respectNulls,
+			@Nullable Boolean fromFirst,
+			@Nullable ReturnableType<T> impliedResultType,
+			@Nullable ArgumentsValidator argumentsValidator,
+			@Nonnull FunctionReturnTypeResolver returnTypeResolver,
+			@Nonnull NodeBuilder nodeBuilder,
+			@Nonnull String name) {
 		super( descriptor, renderer, arguments, impliedResultType, argumentsValidator, returnTypeResolver, nodeBuilder, name );
 		this.filter = filter;
 		this.respectNulls = respectNulls;
 		this.fromFirst = fromFirst;
 	}
 
+	@Nonnull
 	@Override
-	public SelfRenderingSqmWindowFunction<T> copy(SqmCopyContext context) {
+	public SelfRenderingSqmWindowFunction<T> copy(@Nonnull SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -81,8 +85,9 @@ public class SelfRenderingSqmWindowFunction<T> extends SelfRenderingSqmFunction<
 		return expression;
 	}
 
+	@Nonnull
 	@Override
-	public Expression convertToSqlAst(SqmToSqlAstConverter walker) {
+	public Expression convertToSqlAst(@Nonnull SqmToSqlAstConverter walker) {
 		final ReturnableType<?> resultType = resolveResultType( walker );
 
 		List<SqlAstNode> arguments = resolveSqlAstArguments( getArguments(), walker );
@@ -102,23 +107,26 @@ public class SelfRenderingSqmWindowFunction<T> extends SelfRenderingSqmFunction<
 		);
 	}
 
+	@Nullable
 	@Override
 	public SqmPredicate getFilter() {
 		return filter;
 	}
 
+	@Nullable
 	@Override
 	public Boolean getRespectNulls() {
 		return respectNulls;
 	}
 
+	@Nullable
 	@Override
 	public Boolean getFromFirst() {
 		return fromFirst;
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		final List<? extends SqmTypedNode<?>> arguments = getArguments();
 		hql.append( getFunctionName() );
 		hql.append( '(' );
@@ -161,7 +169,7 @@ public class SelfRenderingSqmWindowFunction<T> extends SelfRenderingSqmFunction<
 	}
 
 	@Override
-	public boolean equals(Object o) {
+	public boolean equals(@Nullable Object o) {
 		return super.equals( o )
 			&& o instanceof SelfRenderingSqmWindowFunction<?> that
 			&& Objects.equals( filter, that.filter )
@@ -179,7 +187,7 @@ public class SelfRenderingSqmWindowFunction<T> extends SelfRenderingSqmFunction<
 	}
 
 	@Override
-	public boolean isCompatible(Object o) {
+	public boolean isCompatible(@Nullable Object o) {
 		return super.isCompatible( o )
 			&& o instanceof SelfRenderingSqmWindowFunction<?> that
 			&& SqmCacheable.areCompatible( filter, that.filter )

@@ -21,7 +21,7 @@ public class SqmCorrelatedSingularJoin<O, T> extends SqmSingularJoin<O, T> imple
 	private final SqmCorrelatedRootJoin<O> correlatedRootJoin;
 	private final SqmSingularJoin<O, T> correlationParent;
 
-	public SqmCorrelatedSingularJoin(SqmSingularJoin<O, T> correlationParent) {
+	public SqmCorrelatedSingularJoin(@Nonnull SqmSingularJoin<O, T> correlationParent) {
 		super(
 				correlationParent.getLhs(),
 				correlationParent.getNavigablePath(),
@@ -36,21 +36,22 @@ public class SqmCorrelatedSingularJoin<O, T> extends SqmSingularJoin<O, T> imple
 	}
 
 	private SqmCorrelatedSingularJoin(
-			SqmFrom<?, O> lhs,
-			SqmSingularPersistentAttribute<? super O, T> joinedNavigable,
+			@Nonnull SqmFrom<?, O> lhs,
+			@Nonnull SqmSingularPersistentAttribute<? super O, T> joinedNavigable,
 			@Nullable String alias,
-			SqmJoinType joinType,
+			@Nonnull SqmJoinType joinType,
 			boolean fetched,
-			NodeBuilder nodeBuilder,
-			SqmCorrelatedRootJoin<O> correlatedRootJoin,
-			SqmSingularJoin<O, T> correlationParent) {
+			@Nonnull NodeBuilder nodeBuilder,
+			@Nonnull SqmCorrelatedRootJoin<O> correlatedRootJoin,
+			@Nonnull SqmSingularJoin<O, T> correlationParent) {
 		super( lhs, correlationParent.getNavigablePath(), joinedNavigable, alias, joinType, fetched, nodeBuilder );
 		this.correlatedRootJoin = correlatedRootJoin;
 		this.correlationParent = correlationParent;
 	}
 
+	@Nonnull
 	@Override
-	public SqmCorrelatedSingularJoin<O, T> copy(SqmCopyContext context) {
+	public SqmCorrelatedSingularJoin<O, T> copy(@Nonnull SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -78,6 +79,7 @@ public class SqmCorrelatedSingularJoin<O, T> extends SqmSingularJoin<O, T> imple
 		return correlationParent;
 	}
 
+	@Nonnull
 	@Override
 	public SqmPath<T> getWrappedPath() {
 		return correlationParent;
@@ -88,25 +90,27 @@ public class SqmCorrelatedSingularJoin<O, T> extends SqmSingularJoin<O, T> imple
 		return true;
 	}
 
+	@Nonnull
 	@Override
 	public SqmRoot<O> getCorrelatedRoot() {
 		return correlatedRootJoin;
 	}
 
+	@Nullable
 	@Override
-	public <X> X accept(SemanticQueryWalker<X> walker) {
+	public <X> X accept(@Nonnull SemanticQueryWalker<X> walker) {
 		return walker.visitCorrelatedSingularJoin( this );
 	}
 
 	@Override
-	public boolean deepEquals(SqmFrom<?, ?> other) {
+	public boolean deepEquals(@Nonnull SqmFrom<?, ?> other) {
 		return super.deepEquals( other )
 			&& other instanceof SqmCorrelatedSingularJoin<?, ?> that
 			&& correlationParent.equals( that.correlationParent );
 	}
 
 	@Override
-	public boolean isDeepCompatible(SqmFrom<?, ?> other) {
+	public boolean isDeepCompatible(@Nonnull SqmFrom<?, ?> other) {
 		return super.isDeepCompatible( other )
 			&& other instanceof SqmCorrelatedSingularJoin<?, ?> that
 			&& correlationParent.isCompatible( that.correlationParent );

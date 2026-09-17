@@ -47,5 +47,5 @@ public interface SqmTreatedAttributeJoin<L,R,R1 extends R> extends SqmAttributeJ
 
 	@Override
 	@Nonnull
-	SqmTreatedAttributeJoin<L,R,R1> copy(SqmCopyContext context);
+	SqmTreatedAttributeJoin<L,R,R1> copy(@Nonnull SqmCopyContext context);
 }

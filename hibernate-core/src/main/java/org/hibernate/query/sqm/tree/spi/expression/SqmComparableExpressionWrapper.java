@@ -19,11 +19,12 @@ public class SqmComparableExpressionWrapper<C extends Comparable<? super C>>
 		implements SqmComparableExpressionImplementor<C>, SqmExpressionWrapper<C> {
 	private final SqmExpression<C> wrappedExpression;
 
-	public SqmComparableExpressionWrapper(SqmExpression<C> wrappedExpression) {
+	public SqmComparableExpressionWrapper(@Nonnull SqmExpression<C> wrappedExpression) {
 		super( wrappedExpression.getNodeType(), wrappedExpression.nodeBuilder() );
 		this.wrappedExpression = wrappedExpression;
 	}
 
+	@Nonnull
 	@Override
 	public SqmExpression<C> getWrappedExpression() {
 		return wrappedExpression;
@@ -37,7 +38,7 @@ public class SqmComparableExpressionWrapper<C extends Comparable<? super C>>
 
 	@Nonnull
 	@Override
-	public SqmComparableExpression<C> coalesce(C y) {
+	public SqmComparableExpression<C> coalesce(@Nonnull C y) {
 		return new SqmComparableExpressionWrapper<>( nodeBuilder().coalesce( this, y ) );
 	}
 
@@ -49,27 +50,29 @@ public class SqmComparableExpressionWrapper<C extends Comparable<? super C>>
 
 	@Nonnull
 	@Override
-	public SqmComparableExpression<C> nullif(C y) {
+	public SqmComparableExpression<C> nullif(@Nonnull C y) {
 		return new SqmComparableExpressionWrapper<>( nodeBuilder().nullif( this, y ) );
 	}
 
+	@Nonnull
 	@Override
-	public SqmExpression<C> copy(SqmCopyContext context) {
+	public SqmExpression<C> copy(@Nonnull SqmCopyContext context) {
 		return wrappedExpression.copy( context );
 	}
 
+	@Nullable
 	@Override
-	public <X> X accept(SemanticQueryWalker<X> walker) {
+	public <X> X accept(@Nonnull SemanticQueryWalker<X> walker) {
 		return wrappedExpression.accept( walker );
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		wrappedExpression.appendHqlString( hql, context );
 	}
 
 	@Override
-	public boolean isCompatible(Object object) {
+	public boolean isCompatible(@Nullable Object object) {
 		return equals( object );
 	}
 

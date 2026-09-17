@@ -4,6 +4,7 @@
  */
 package org.hibernate.dialect.function;
 
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.SelectableMapping;
@@ -63,14 +64,15 @@ public class SybaseASEGenerateSeriesFunction extends NumberSeriesGenerateSeriesF
 				queryEngine.getCriteriaBuilder(),
 				getName()
 		) {
+			@Nonnull
 			@Override
 			public TableGroup convertToSqlAst(
-					NavigablePath navigablePath,
-					String identifierVariable,
+					@Nonnull NavigablePath navigablePath,
+					@Nonnull String identifierVariable,
 					boolean lateral,
 					boolean canUseInnerJoins,
 					boolean withOrdinality,
-					SqmToSqlAstConverter walker) {
+					@Nonnull SqmToSqlAstConverter walker) {
 				// Register a transformer that adds a join predicate "start+(step*(ordinal-1))<=stop"
 				final FunctionTableGroup functionTableGroup = (FunctionTableGroup) super.convertToSqlAst(
 						navigablePath,

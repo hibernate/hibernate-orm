@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.sqm.tree.spi.expression;
 
+import jakarta.annotation.Nonnull;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -49,7 +51,7 @@ public class SqmWindow extends AbstractSqmNode implements JpaWindow, SqmVisitabl
 	private @Nullable SqmExpression<?> endExpression;
 	private FrameExclusion exclusion;
 
-	public SqmWindow(NodeBuilder nodeBuilder) {
+	public SqmWindow(@Nonnull NodeBuilder nodeBuilder) {
 		this(
 				nodeBuilder,
 				new ArrayList<>(),
@@ -64,15 +66,15 @@ public class SqmWindow extends AbstractSqmNode implements JpaWindow, SqmVisitabl
 	}
 
 	public SqmWindow(
-			NodeBuilder nodeBuilder,
-			List<SqmExpression<?>> partitions,
-			List<SqmSortSpecification> orderList,
-			FrameMode mode,
-			FrameKind startKind,
+			@Nonnull NodeBuilder nodeBuilder,
+			@Nonnull List<SqmExpression<?>> partitions,
+			@Nonnull List<SqmSortSpecification> orderList,
+			@Nonnull FrameMode mode,
+			@Nonnull FrameKind startKind,
 			@Nullable SqmExpression<?> startExpression,
-			FrameKind endKind,
+			@Nonnull FrameKind endKind,
 			@Nullable SqmExpression<?> endExpression,
-			FrameExclusion exclusion) {
+			@Nonnull FrameExclusion exclusion) {
 		super( nodeBuilder );
 		this.partitions = partitions;
 		this.orderList = orderList;
@@ -84,10 +86,12 @@ public class SqmWindow extends AbstractSqmNode implements JpaWindow, SqmVisitabl
 		this.exclusion = exclusion;
 	}
 
+	@Nonnull
 	public List<SqmExpression<?>> getPartitions() {
 		return partitions;
 	}
 
+	@Nonnull
 	public List<SqmSortSpecification> getOrderList() {
 		return orderList;
 	}
@@ -100,38 +104,46 @@ public class SqmWindow extends AbstractSqmNode implements JpaWindow, SqmVisitabl
 		return endExpression;
 	}
 
+	@Nonnull
 	public FrameMode getMode() {
 		return mode;
 	}
 
+	@Nonnull
 	public FrameKind getStartKind() {
 		return startKind;
 	}
 
+	@Nonnull
 	public FrameKind getEndKind() {
 		return endKind;
 	}
 
+	@Nonnull
 	public FrameExclusion getExclusion() {
 		return exclusion;
 	}
 
+	@Nonnull
 	@Override
-	public JpaWindow frameRows(JpaWindowFrame startFrame, JpaWindowFrame endFrame) {
+	public JpaWindow frameRows(@Nullable JpaWindowFrame startFrame, @Nullable JpaWindowFrame endFrame) {
 		return this.setFrames( ROWS, startFrame, endFrame );
 	}
 
+	@Nonnull
 	@Override
-	public JpaWindow frameRange(JpaWindowFrame startFrame, JpaWindowFrame endFrame) {
+	public JpaWindow frameRange(@Nullable JpaWindowFrame startFrame, @Nullable JpaWindowFrame endFrame) {
 		return this.setFrames( RANGE, startFrame, endFrame );
 	}
 
+	@Nonnull
 	@Override
-	public JpaWindow frameGroups(JpaWindowFrame startFrame, JpaWindowFrame endFrame) {
+	public JpaWindow frameGroups(@Nullable JpaWindowFrame startFrame, @Nullable JpaWindowFrame endFrame) {
 		return this.setFrames( GROUPS, startFrame, endFrame );
 	}
 
-	private SqmWindow setFrames(FrameMode frameMode, JpaWindowFrame startFrame, JpaWindowFrame endFrame) {
+	@Nonnull
+	private SqmWindow setFrames(@Nonnull FrameMode frameMode, @Nullable JpaWindowFrame startFrame, @Nullable JpaWindowFrame endFrame) {
 		this.mode = frameMode;
 		if ( startFrame != null ) {
 			this.startKind = startFrame.getKind();
@@ -144,29 +156,33 @@ public class SqmWindow extends AbstractSqmNode implements JpaWindow, SqmVisitabl
 		return this;
 	}
 
+	@Nonnull
 	@Override
-	public JpaWindow frameExclude(FrameExclusion frameExclusion) {
+	public JpaWindow frameExclude(@Nonnull FrameExclusion frameExclusion) {
 		this.exclusion = frameExclusion;
 		return this;
 	}
 
+	@Nonnull
 	@Override
-	public JpaWindow partitionBy(Expression<?>... expressions) {
+	public JpaWindow partitionBy(@Nonnull Expression<?>... expressions) {
 		for ( Expression<?> expression : expressions ) {
 			this.partitions.add( (SqmExpression<?>) expression );
 		}
 		return this;
 	}
 
+	@Nonnull
 	@Override
-	public JpaWindow orderBy(Order... orders) {
+	public JpaWindow orderBy(@Nonnull Order... orders) {
 		for ( Order order : orders ) {
 			this.orderList.add( (SqmSortSpecification) order );
 		}
 		return this;
 	}
 
-	public SqmWindow copy(SqmCopyContext context) {
+	@Nonnull
+	public SqmWindow copy(@Nonnull SqmCopyContext context) {
 		final SqmWindow existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -195,13 +211,14 @@ public class SqmWindow extends AbstractSqmNode implements JpaWindow, SqmVisitabl
 		);
 	}
 
+	@Nullable
 	@Override
-	public <X> X accept(SemanticQueryWalker<X> walker) {
+	public <X> X accept(@Nonnull SemanticQueryWalker<X> walker) {
 		return walker.visitWindow( this );
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		boolean needsWhitespace = false;
 		if ( !this.partitions.isEmpty() ) {
 			needsWhitespace = true;
@@ -265,7 +282,7 @@ public class SqmWindow extends AbstractSqmNode implements JpaWindow, SqmVisitabl
 		}
 	}
 
-	private static void renderFrameKind(StringBuilder sb, FrameKind kind, @Nullable SqmExpression<?> expression, SqmRenderContext context) {
+	private static void renderFrameKind(@Nonnull StringBuilder sb, @Nonnull FrameKind kind, @Nullable SqmExpression<?> expression, @Nonnull SqmRenderContext context) {
 		switch ( kind ) {
 			case CURRENT_ROW:
 				sb.append( "current row" );
@@ -316,7 +333,7 @@ public class SqmWindow extends AbstractSqmNode implements JpaWindow, SqmVisitabl
 	}
 
 	@Override
-	public boolean isCompatible(Object object) {
+	public boolean isCompatible(@Nullable Object object) {
 		return object instanceof SqmWindow sqmWindow
 			&& SqmCacheable.areCompatible( partitions, sqmWindow.partitions )
 			&& SqmCacheable.areCompatible( orderList, sqmWindow.orderList )

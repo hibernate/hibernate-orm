@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.sqm.tree.spi.expression;
 
+import jakarta.annotation.Nonnull;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -36,19 +38,19 @@ public class SqmTuple<T>
 		implements JpaCompoundSelection<T> {
 	private final List<SqmExpression<?>> groupedExpressions;
 
-	public SqmTuple(NodeBuilder nodeBuilder, SqmExpression<?>... groupedExpressions) {
+	public SqmTuple(@Nonnull NodeBuilder nodeBuilder, @Nonnull SqmExpression<?>... groupedExpressions) {
 		this( Arrays.asList( groupedExpressions ), nodeBuilder );
 	}
 
-	public SqmTuple(NodeBuilder nodeBuilder, SqmBindableType<T> type, SqmExpression<?>... groupedExpressions) {
+	public SqmTuple(@Nonnull NodeBuilder nodeBuilder, @Nullable SqmBindableType<T> type, @Nonnull SqmExpression<?>... groupedExpressions) {
 		this( Arrays.asList( groupedExpressions ), type, nodeBuilder );
 	}
 
-	public SqmTuple(List<SqmExpression<?>> groupedExpressions, NodeBuilder nodeBuilder) {
+	public SqmTuple(@Nonnull List<SqmExpression<?>> groupedExpressions, @Nonnull NodeBuilder nodeBuilder) {
 		this( groupedExpressions, null, nodeBuilder );
 	}
 
-	public SqmTuple(List<SqmExpression<?>> groupedExpressions, @Nullable SqmBindableType<T> type, NodeBuilder nodeBuilder) {
+	public SqmTuple(@Nonnull List<SqmExpression<?>> groupedExpressions, @Nullable SqmBindableType<T> type, @Nonnull NodeBuilder nodeBuilder) {
 		super( type, nodeBuilder );
 		if ( groupedExpressions.isEmpty() ) {
 			throw new SemanticException( "Tuple constructor must have at least one element" );
@@ -59,8 +61,9 @@ public class SqmTuple<T>
 		}
 	}
 
+	@Nonnull
 	@Override
-	public SqmTuple<T> copy(SqmCopyContext context) {
+	public SqmTuple<T> copy(@Nonnull SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -77,17 +80,19 @@ public class SqmTuple<T>
 		return expression;
 	}
 
+	@Nonnull
 	public List<SqmExpression<?>> getGroupedExpressions() {
 		return groupedExpressions;
 	}
 
+	@Nullable
 	@Override
-	public <X> X accept(SemanticQueryWalker<X> walker) {
+	public <X> X accept(@Nonnull SemanticQueryWalker<X> walker) {
 		return walker.visitTuple( this );
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		hql.append( '(' );
 		groupedExpressions.get( 0 ).appendHqlString( hql, context );
 		for ( int i = 1; i < groupedExpressions.size(); i++ ) {
@@ -109,7 +114,7 @@ public class SqmTuple<T>
 	}
 
 	@Override
-	public boolean isCompatible(Object object) {
+	public boolean isCompatible(@Nullable Object object) {
 		return object instanceof SqmTuple<?> that
 			&& SqmCacheable.areCompatible( this.groupedExpressions, that.groupedExpressions );
 	}
@@ -119,6 +124,7 @@ public class SqmTuple<T>
 		return SqmCacheable.cacheHashCode( groupedExpressions );
 	}
 
+	@Nonnull
 	@Override
 	public String asLoggableText() {
 		return toString();
@@ -129,6 +135,7 @@ public class SqmTuple<T>
 		return true;
 	}
 
+	@Nonnull
 	@Override
 	public List<? extends JpaSelection<?>> getSelectionItems() {
 		return getGroupedExpressions();

@@ -5,7 +5,6 @@
 package org.hibernate.query.criteria;
 
 import jakarta.annotation.Nonnull;
-import jakarta.annotation.Nullable;
 import org.hibernate.Incubating;
 
 /**
@@ -27,7 +26,9 @@ public interface JpaCteCriteriaAttribute extends JpaCriteriaNode {
 
 	/**
 	 * The java type of the attribute.
+	 *
+	 * @throws IllegalStateException if the Java type has not yet been determined
 	 */
-	@Nullable
+	@Nonnull
 	Class<?> getJavaType();
 }

@@ -25,17 +25,18 @@ import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 public class SqmCollectionSize extends AbstractSqmExpression<Integer> {
 	private final SqmPath<?> pluralPath;
 
-	public SqmCollectionSize(SqmPath<?> pluralPath, NodeBuilder nodeBuilder) {
+	public SqmCollectionSize(@Nonnull SqmPath<?> pluralPath, @Nonnull NodeBuilder nodeBuilder) {
 		this( pluralPath, nodeBuilder.getIntegerType(), nodeBuilder );
 	}
 
-	public SqmCollectionSize(SqmPath<?> pluralPath, SqmBindableType<Integer> sizeType, NodeBuilder nodeBuilder) {
+	public SqmCollectionSize(@Nonnull SqmPath<?> pluralPath, @Nonnull SqmBindableType<Integer> sizeType, @Nonnull NodeBuilder nodeBuilder) {
 		super( sizeType, nodeBuilder );
 		this.pluralPath = pluralPath;
 	}
 
+	@Nonnull
 	@Override
-	public SqmCollectionSize copy(SqmCopyContext context) {
+	public SqmCollectionSize copy(@Nonnull SqmCopyContext context) {
 		final SqmCollectionSize existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -52,6 +53,7 @@ public class SqmCollectionSize extends AbstractSqmExpression<Integer> {
 		return expression;
 	}
 
+	@Nonnull
 	public SqmPath<?> getPluralPath() {
 		return pluralPath;
 	}
@@ -61,18 +63,20 @@ public class SqmCollectionSize extends AbstractSqmExpression<Integer> {
 		return castNonNull( super.getNodeType() );
 	}
 
+	@Nullable
 	@Override
-	public <T> T accept(SemanticQueryWalker<T> walker) {
+	public <T> T accept(@Nonnull SemanticQueryWalker<T> walker) {
 		return walker.visitPluralAttributeSizeFunction( this );
 	}
 
+	@Nonnull
 	@Override
 	public String asLoggableText() {
 		return "SIZE(" + pluralPath.asLoggableText() + ")";
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		hql.append( "size(" );
 		pluralPath.appendHqlString( hql, context );
 		hql.append( ')' );
@@ -90,7 +94,7 @@ public class SqmCollectionSize extends AbstractSqmExpression<Integer> {
 	}
 
 	@Override
-	public boolean isCompatible(Object object) {
+	public boolean isCompatible(@Nullable Object object) {
 		return object instanceof SqmCollectionSize that
 			&& this.pluralPath.isCompatible( that.pluralPath );
 	}

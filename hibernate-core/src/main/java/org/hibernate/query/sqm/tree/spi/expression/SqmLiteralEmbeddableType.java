@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.spi.expression;
 
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.query.hql.HqlInterpretationException;
@@ -33,18 +34,20 @@ public class SqmLiteralEmbeddableType<T>
 	final SqmEmbeddableDomainType<T> embeddableDomainType;
 
 	public SqmLiteralEmbeddableType(
-			SqmEmbeddableDomainType<T> embeddableDomainType,
-			NodeBuilder nodeBuilder) {
+			@Nonnull SqmEmbeddableDomainType<T> embeddableDomainType,
+			@Nonnull NodeBuilder nodeBuilder) {
 		super( getDiscriminatorType( embeddableDomainType, nodeBuilder), nodeBuilder );
 		this.embeddableDomainType = embeddableDomainType;
 	}
 
+	@Nonnull
 	public EmbeddableDomainType<T> getEmbeddableDomainType() {
 		return embeddableDomainType;
 	}
 
+	@Nonnull
 	@Override
-	public SqmLiteralEmbeddableType<T> copy(SqmCopyContext context) {
+	public SqmLiteralEmbeddableType<T> copy(@Nonnull SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -60,34 +63,38 @@ public class SqmLiteralEmbeddableType<T>
 	public void internalApplyInferableType(@Nullable SqmBindableType<?> type) {
 	}
 
+	@Nullable
 	@Override
-	public <X> X accept(SemanticQueryWalker<X> walker) {
+	public <X> X accept(@Nonnull SemanticQueryWalker<X> walker) {
 		return walker.visitEmbeddableTypeLiteralExpression( this );
 	}
 
+	@Nonnull
 	@Override
 	public String asLoggableText() {
 		return "TYPE(" + embeddableDomainType + ")";
 	}
 
+	@Nonnull
 	@Override
 	public SemanticPathPart resolvePathPart(
-			String name,
+			@Nonnull String name,
 			boolean isTerminal,
-			SqmCreationState creationState) {
+			@Nonnull SqmCreationState creationState) {
 		throw new HqlInterpretationException( "Cannot dereference an embeddable name" );
 	}
 
+	@Nonnull
 	@Override
 	public SqmPath<?> resolveIndexedAccess(
-			SqmExpression<?> selector,
+			@Nonnull SqmExpression<?> selector,
 			boolean isTerminal,
-			SqmCreationState creationState) {
+			@Nonnull SqmCreationState creationState) {
 		throw new HqlInterpretationException( "Cannot dereference an embeddable name" );
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		hql.append( embeddableDomainType.getTypeName() );
 	}
 
@@ -103,7 +110,7 @@ public class SqmLiteralEmbeddableType<T>
 	}
 
 	@Override
-	public boolean isCompatible(Object object) {
+	public boolean isCompatible(@Nullable Object object) {
 		return equals( object );
 	}
 

@@ -4,6 +4,7 @@
  */
 package org.hibernate.metamodel.model.domain.internal;
 
+import jakarta.annotation.Nullable;
 import jakarta.annotation.Nonnull;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.query.sqm.spi.DiscriminatorSqmPath;
@@ -32,21 +33,23 @@ public class EntityDiscriminatorSqmPath<T> extends AbstractSqmPath<T> implements
 	private final EntityMappingType entityDescriptor;
 
 	protected EntityDiscriminatorSqmPath(
-			NavigablePath navigablePath,
-			SqmPathSource referencedPathSource,
-			SqmPath<?> lhs,
-			SqmEntityDomainType entityDomainType,
-			EntityMappingType entityDescriptor,
-			NodeBuilder nodeBuilder) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull SqmPathSource referencedPathSource,
+			@Nullable SqmPath<?> lhs,
+			@Nonnull SqmEntityDomainType entityDomainType,
+			@Nonnull EntityMappingType entityDescriptor,
+			@Nonnull NodeBuilder nodeBuilder) {
 		super( navigablePath, referencedPathSource, lhs, nodeBuilder );
 		this.entityDomainType = entityDomainType;
 		this.entityDescriptor = entityDescriptor;
 	}
 
+	@Nonnull
 	public EntityDomainType getEntityDomainType() {
 		return entityDomainType;
 	}
 
+	@Nonnull
 	public EntityMappingType getEntityDescriptor() {
 		return entityDescriptor;
 	}
@@ -62,8 +65,9 @@ public class EntityDiscriminatorSqmPath<T> extends AbstractSqmPath<T> implements
 		return (EntityDiscriminatorSqmPathSource) getReferencedPathSource();
 	}
 
+	@Nonnull
 	@Override
-	public EntityDiscriminatorSqmPath copy(SqmCopyContext context) {
+	public EntityDiscriminatorSqmPath copy(@Nonnull SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -76,8 +80,9 @@ public class EntityDiscriminatorSqmPath<T> extends AbstractSqmPath<T> implements
 		}
 	}
 
+	@Nullable
 	@Override
-	public <X> X accept(SemanticQueryWalker<X> walker) {
+	public <X> X accept(@Nonnull SemanticQueryWalker<X> walker) {
 		return entityDescriptor.hasSubclasses()
 				? walker.visitDiscriminatorPath( this )
 				: walker.visitEntityTypeLiteralExpression(

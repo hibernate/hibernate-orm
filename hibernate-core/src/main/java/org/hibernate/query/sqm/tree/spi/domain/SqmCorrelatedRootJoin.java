@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.spi.domain;
 
+import jakarta.annotation.Nullable;
 import jakarta.annotation.Nonnull;
 import org.hibernate.query.sqm.spi.NodeBuilder;
 import org.hibernate.query.sqm.spi.SemanticQueryWalker;
@@ -20,14 +21,15 @@ import org.hibernate.spi.NavigablePath;
 public class SqmCorrelatedRootJoin<T> extends SqmRoot<T> implements SqmCorrelation<T, T> {
 
 	public SqmCorrelatedRootJoin(
-			NavigablePath navigablePath,
-			SqmPathSource<T> referencedNavigable,
-			NodeBuilder nodeBuilder) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull SqmPathSource<T> referencedNavigable,
+			@Nonnull NodeBuilder nodeBuilder) {
 		super( navigablePath, referencedNavigable, nodeBuilder );
 	}
 
+	@Nonnull
 	@Override
-	public SqmCorrelatedRootJoin<T> copy(SqmCopyContext context) {
+	public SqmCorrelatedRootJoin<T> copy(@Nonnull SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -46,8 +48,9 @@ public class SqmCorrelatedRootJoin<T> extends SqmRoot<T> implements SqmCorrelati
 
 	// Need to suppress argument warnings because correlatedJoin which is under initialization is passed to addSqmJoin,
 	// which expects an initialized argument. We know this is safe though because we only store the instance
+	@Nonnull
 	@SuppressWarnings({"unchecked", "argument"})
-	public static <X, J extends SqmJoin<X, ?>> SqmCorrelatedRootJoin<X> create(J correlationParent, J correlatedJoin) {
+	public static <X, J extends SqmJoin<X, ?>> SqmCorrelatedRootJoin<X> create(@Nonnull J correlationParent, @Nonnull J correlatedJoin) {
 		final SqmFrom<?, X> parentPath = (SqmFrom<?, X>) correlationParent.getParentPath();
 		final SqmCorrelatedRootJoin<X> rootJoin;
 		if ( parentPath == null ) {
@@ -74,6 +77,7 @@ public class SqmCorrelatedRootJoin<T> extends SqmRoot<T> implements SqmCorrelati
 		return this;
 	}
 
+	@Nonnull
 	@Override
 	public SqmPath<T> getWrappedPath() {
 		return getCorrelationParent();
@@ -84,13 +88,15 @@ public class SqmCorrelatedRootJoin<T> extends SqmRoot<T> implements SqmCorrelati
 		return true;
 	}
 
+	@Nonnull
 	@Override
 	public SqmRoot<T> getCorrelatedRoot() {
 		return this;
 	}
 
+	@Nullable
 	@Override
-	public <X> X accept(SemanticQueryWalker<X> walker) {
+	public <X> X accept(@Nonnull SemanticQueryWalker<X> walker) {
 		return walker.visitCorrelatedRootJoin( this );
 	}
 }

@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.spi.predicate;
 
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.internal.QueryHelper;
@@ -26,19 +27,19 @@ public class SqmComparisonPredicate extends AbstractNegatableSqmPredicate {
 	private final SqmExpression<?> rightHandExpression;
 
 	public SqmComparisonPredicate(
-			SqmExpression<?> leftHandExpression,
-			ComparisonOperator operator,
-			SqmExpression<?> rightHandExpression,
-			NodeBuilder nodeBuilder) {
+			@Nonnull SqmExpression<?> leftHandExpression,
+			@Nonnull ComparisonOperator operator,
+			@Nonnull SqmExpression<?> rightHandExpression,
+			@Nonnull NodeBuilder nodeBuilder) {
 		this( leftHandExpression, operator, rightHandExpression, false, nodeBuilder );
 	}
 
 	private SqmComparisonPredicate(
-			SqmExpression<?> leftHandExpression,
-			ComparisonOperator operator,
-			SqmExpression<?> rightHandExpression,
+			@Nonnull SqmExpression<?> leftHandExpression,
+			@Nonnull ComparisonOperator operator,
+			@Nonnull SqmExpression<?> rightHandExpression,
 			boolean negated,
-			NodeBuilder nodeBuilder) {
+			@Nonnull NodeBuilder nodeBuilder) {
 		super( negated, nodeBuilder );
 
 		// CriteriaBuilder does not check its arguments, so check these here instead
@@ -61,7 +62,7 @@ public class SqmComparisonPredicate extends AbstractNegatableSqmPredicate {
 		rightHandExpression.applyInferableType( expressibleType );
 	}
 
-	private SqmComparisonPredicate(SqmComparisonPredicate affirmativeForm) {
+	private SqmComparisonPredicate(@Nonnull SqmComparisonPredicate affirmativeForm) {
 		super( true, affirmativeForm.nodeBuilder() );
 		this.leftHandExpression = affirmativeForm.leftHandExpression;
 		this.rightHandExpression = affirmativeForm.rightHandExpression;
@@ -69,8 +70,9 @@ public class SqmComparisonPredicate extends AbstractNegatableSqmPredicate {
 		assertComparable( leftHandExpression, rightHandExpression, affirmativeForm.nodeBuilder() );
 	}
 
+	@Nonnull
 	@Override
-	public SqmComparisonPredicate copy(SqmCopyContext context) {
+	public SqmComparisonPredicate copy(@Nonnull SqmCopyContext context) {
 		final SqmComparisonPredicate existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -89,14 +91,17 @@ public class SqmComparisonPredicate extends AbstractNegatableSqmPredicate {
 		return predicate;
 	}
 
+	@Nonnull
 	public SqmExpression<?> getLeftHandExpression() {
 		return leftHandExpression;
 	}
 
+	@Nonnull
 	public SqmExpression<?> getRightHandExpression() {
 		return rightHandExpression;
 	}
 
+	@Nonnull
 	public ComparisonOperator getSqmOperator() {
 		return operator;
 	}
@@ -106,18 +111,20 @@ public class SqmComparisonPredicate extends AbstractNegatableSqmPredicate {
 		this.operator = this.operator.negated();
 	}
 
+	@Nonnull
 	@Override
 	protected SqmNegatablePredicate createNegatedNode() {
 		return new SqmComparisonPredicate( this );
 	}
 
+	@Nullable
 	@Override
-	public <T> T accept(SemanticQueryWalker<T> walker) {
+	public <T> T accept(@Nonnull SemanticQueryWalker<T> walker) {
 		return walker.visitComparisonPredicate( this );
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		leftHandExpression.appendHqlString( hql, context );
 		hql.append( ' ' );
 		hql.append( operator.sqlText() );
@@ -144,7 +151,7 @@ public class SqmComparisonPredicate extends AbstractNegatableSqmPredicate {
 	}
 
 	@Override
-	public boolean isCompatible(Object object) {
+	public boolean isCompatible(@Nullable Object object) {
 		return object instanceof SqmComparisonPredicate that
 			&& this.isNegated() == that.isNegated()
 			&& this.operator == that.operator

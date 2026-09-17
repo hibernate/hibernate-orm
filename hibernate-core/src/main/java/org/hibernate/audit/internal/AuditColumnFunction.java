@@ -7,9 +7,10 @@ package org.hibernate.audit.internal;
 import java.util.ArrayList;
 import java.util.List;
 
+import jakarta.annotation.Nullable;
+import jakarta.annotation.Nonnull;
 import org.hibernate.audit.ModificationType;
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.spi.NodeBuilder;
@@ -98,11 +99,11 @@ public class AuditColumnFunction extends AbstractSqmFunctionDescriptor {
 		private final boolean changesetId;
 
 		AuditColumnSqmFunction(
-				AuditColumnFunction descriptor,
+				@Nonnull AuditColumnFunction descriptor,
 				boolean changesetId,
-				List<? extends SqmTypedNode<?>> arguments,
-				ReturnableType<T> impliedResultType,
-				QueryEngine queryEngine) {
+				@Nonnull List<? extends SqmTypedNode<?>> arguments,
+				@Nullable ReturnableType<T> impliedResultType,
+				@Nonnull QueryEngine queryEngine) {
 			super(
 					descriptor,
 					PASSTHROUGH_RENDERER,
@@ -117,15 +118,15 @@ public class AuditColumnFunction extends AbstractSqmFunctionDescriptor {
 		}
 
 		private AuditColumnSqmFunction(
-				SqmFunctionDescriptor descriptor,
-				FunctionRenderer renderer,
+				@Nonnull SqmFunctionDescriptor descriptor,
+				@Nonnull FunctionRenderer renderer,
 				boolean changesetId,
-				List<? extends SqmTypedNode<?>> arguments,
-				ReturnableType<T> impliedResultType,
-				ArgumentsValidator argumentsValidator,
-				FunctionReturnTypeResolver returnTypeResolver,
-				NodeBuilder nodeBuilder,
-				String name) {
+				@Nonnull List<? extends SqmTypedNode<?>> arguments,
+				@Nullable ReturnableType<T> impliedResultType,
+				@Nullable ArgumentsValidator argumentsValidator,
+				@Nonnull FunctionReturnTypeResolver returnTypeResolver,
+				@Nonnull NodeBuilder nodeBuilder,
+				@Nonnull String name) {
 			super(
 					descriptor, renderer, arguments, impliedResultType,
 					argumentsValidator, returnTypeResolver, nodeBuilder, name
@@ -133,8 +134,9 @@ public class AuditColumnFunction extends AbstractSqmFunctionDescriptor {
 			this.changesetId = changesetId;
 		}
 
+		@Nonnull
 		@Override
-		public AuditColumnSqmFunction<T> copy(SqmCopyContext context) {
+		public AuditColumnSqmFunction<T> copy(@Nonnull SqmCopyContext context) {
 			final var existing = context.getCopy( this );
 			if ( existing != null ) {
 				return existing;
@@ -159,8 +161,9 @@ public class AuditColumnFunction extends AbstractSqmFunctionDescriptor {
 			);
 		}
 
+		@Nonnull
 		@Override
-		public Expression convertToSqlAst(SqmToSqlAstConverter walker) {
+		public Expression convertToSqlAst(@Nonnull SqmToSqlAstConverter walker) {
 			final var entityPath = (SqmPath<?>) getArguments().get( 0 );
 
 			final var tableGroup = walker.getFromClauseAccess()
@@ -179,7 +182,7 @@ public class AuditColumnFunction extends AbstractSqmFunctionDescriptor {
 			final String originalTable = changesetId
 					? entityMapping.getMappedTableDetails().getTableName()
 					: entityMapping.getIdentifierTableDetails().getTableName();
-			final SelectableMapping selectableMapping = changesetId
+			final var selectableMapping = changesetId
 					? auditMapping.getChangesetIdMapping( originalTable )
 					: auditMapping.getModificationTypeMapping( originalTable );
 

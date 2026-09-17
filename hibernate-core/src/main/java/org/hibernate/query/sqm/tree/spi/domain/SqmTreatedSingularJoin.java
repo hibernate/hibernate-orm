@@ -30,15 +30,15 @@ public class SqmTreatedSingularJoin<O,T, S extends T>
 	private final SqmTreatableDomainType<S> treatTarget;
 
 	public SqmTreatedSingularJoin(
-			SqmSingularJoin<O,T> wrappedPath,
-			SqmTreatableDomainType<S> treatTarget,
+			@Nonnull SqmSingularJoin<O,T> wrappedPath,
+			@Nonnull SqmTreatableDomainType<S> treatTarget,
 			@Nullable String alias) {
 		this( wrappedPath, treatTarget, alias, false );
 	}
 
 	public SqmTreatedSingularJoin(
-			SqmSingularJoin<O,T> wrappedPath,
-			SqmTreatableDomainType<S> treatTarget,
+			@Nonnull SqmSingularJoin<O,T> wrappedPath,
+			@Nonnull SqmTreatableDomainType<S> treatTarget,
 			@Nullable String alias,
 			boolean fetched) {
 		//noinspection unchecked
@@ -58,9 +58,9 @@ public class SqmTreatedSingularJoin<O,T, S extends T>
 	}
 
 	private SqmTreatedSingularJoin(
-			NavigablePath navigablePath,
-			SqmSingularJoin<O,T> wrappedPath,
-			SqmTreatableDomainType<S> treatTarget,
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull SqmSingularJoin<O,T> wrappedPath,
+			@Nonnull SqmTreatableDomainType<S> treatTarget,
 			@Nullable String alias,
 			boolean fetched) {
 		//noinspection unchecked
@@ -80,7 +80,7 @@ public class SqmTreatedSingularJoin<O,T, S extends T>
 
 	@Override
 	@Nonnull
-	public SqmTreatedSingularJoin<O, T, S> copy(SqmCopyContext context) {
+	public SqmTreatedSingularJoin<O, T, S> copy(@Nonnull SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -99,6 +99,7 @@ public class SqmTreatedSingularJoin<O,T, S extends T>
 		return path;
 	}
 
+	@Nonnull
 	@Override
 	public SqmSingularJoin<O,T> getWrappedPath() {
 		return wrappedPath;
@@ -121,18 +122,20 @@ public class SqmTreatedSingularJoin<O,T, S extends T>
 		return (SqmSingularPersistentAttribute<? super O, S>) super.getReferencedPathSource();
 	}
 
+	@Nonnull
 	@Override
 	public SqmPathSource<S> getReferencedPathSource() {
 		return treatTarget;
 	}
 
+	@Nonnull
 	@Override
 	public SqmPathSource<S> getResolvedModel() {
 		return treatTarget;
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		hql.append( "treat(" );
 		wrappedPath.appendHqlString( hql, context );
 		hql.append( " as " );

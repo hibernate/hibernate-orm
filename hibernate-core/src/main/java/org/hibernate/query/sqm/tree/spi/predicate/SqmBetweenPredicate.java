@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.spi.predicate;
 
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.query.internal.QueryHelper;
 import org.hibernate.query.sqm.spi.NodeBuilder;
@@ -25,11 +26,11 @@ public class SqmBetweenPredicate extends AbstractNegatableSqmPredicate {
 	private final SqmExpression<?> upperBound;
 
 	public SqmBetweenPredicate(
-			SqmExpression<?> expression,
-			SqmExpression<?> lowerBound,
-			SqmExpression<?> upperBound,
+			@Nonnull SqmExpression<?> expression,
+			@Nonnull SqmExpression<?> lowerBound,
+			@Nonnull SqmExpression<?> upperBound,
 			boolean negated,
-			NodeBuilder nodeBuilder) {
+			@Nonnull NodeBuilder nodeBuilder) {
 		super( negated, nodeBuilder );
 		this.expression = expression;
 		this.lowerBound = lowerBound;
@@ -49,8 +50,9 @@ public class SqmBetweenPredicate extends AbstractNegatableSqmPredicate {
 		upperBound.applyInferableType( expressibleType );
 	}
 
+	@Nonnull
 	@Override
-	public SqmBetweenPredicate copy(SqmCopyContext context) {
+	public SqmBetweenPredicate copy(@Nonnull SqmCopyContext context) {
 		final SqmBetweenPredicate existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -69,25 +71,29 @@ public class SqmBetweenPredicate extends AbstractNegatableSqmPredicate {
 		return predicate;
 	}
 
+	@Nonnull
 	public SqmExpression<?> getExpression() {
 		return expression;
 	}
 
+	@Nonnull
 	public SqmExpression<?> getLowerBound() {
 		return lowerBound;
 	}
 
+	@Nonnull
 	public SqmExpression<?> getUpperBound() {
 		return upperBound;
 	}
 
+	@Nullable
 	@Override
-	public <T> T accept(SemanticQueryWalker<T> walker) {
+	public <T> T accept(@Nonnull SemanticQueryWalker<T> walker) {
 		return walker.visitBetweenPredicate( this );
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		expression.appendHqlString( hql, context );
 		if ( isNegated() ) {
 			hql.append( " not" );
@@ -117,7 +123,7 @@ public class SqmBetweenPredicate extends AbstractNegatableSqmPredicate {
 	}
 
 	@Override
-	public boolean isCompatible(Object object) {
+	public boolean isCompatible(@Nullable Object object) {
 		return object instanceof SqmBetweenPredicate that
 			&& this.isNegated() == that.isNegated()
 			&& expression.isCompatible( that.expression )
@@ -134,6 +140,7 @@ public class SqmBetweenPredicate extends AbstractNegatableSqmPredicate {
 		return result;
 	}
 
+	@Nonnull
 	@Override
 	protected SqmNegatablePredicate createNegatedNode() {
 		return new SqmBetweenPredicate( expression, lowerBound, upperBound, ! isNegated(), nodeBuilder() );

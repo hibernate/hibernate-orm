@@ -36,7 +36,7 @@ final class QueryParameterBindingParameter<T> implements QueryParameterImplement
 			return queryParameter.getParameterTypeIfKnown();
 		}
 		if ( parameter instanceof JpaCriteriaParameter<T> criteriaParameter ) {
-			return criteriaParameter.getJavaType();
+			return criteriaParameter.getJavaTypeIfKnown();
 		}
 		try {
 			return parameter.getParameterType();

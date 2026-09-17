@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.spi.expression;
 
+import jakarta.annotation.Nonnull;
 import org.hibernate.query.sqm.spi.NodeBuilder;
 import org.hibernate.query.sqm.spi.SemanticQueryWalker;
 import org.hibernate.query.sqm.spi.SqmBindableType;
@@ -21,7 +22,7 @@ public class SqmAny<T> extends AbstractSqmExpression<T> {
 
 	private final SqmSubQuery<T> subquery;
 
-	public SqmAny(SqmSubQuery<T> subquery, NodeBuilder criteriaBuilder) {
+	public SqmAny(@Nonnull SqmSubQuery<T> subquery, @Nonnull NodeBuilder criteriaBuilder) {
 		super( subquery.getNodeType(), criteriaBuilder );
 		this.subquery = subquery;
 	}
@@ -36,8 +37,9 @@ public class SqmAny<T> extends AbstractSqmExpression<T> {
 		return subquery.getTupleLength();
 	}
 
+	@Nonnull
 	@Override
-	public SqmAny<T> copy(SqmCopyContext context) {
+	public SqmAny<T> copy(@Nonnull SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -53,17 +55,19 @@ public class SqmAny<T> extends AbstractSqmExpression<T> {
 		return expression;
 	}
 
+	@Nonnull
 	public SqmSubQuery<T> getSubquery() {
 		return subquery;
 	}
 
+	@Nullable
 	@Override
-	public <X> X accept(SemanticQueryWalker<X> walker) {
+	public <X> X accept(@Nonnull SemanticQueryWalker<X> walker) {
 		return walker.visitAny( this );
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		hql.append( "any " );
 		subquery.appendHqlString( hql, context );
 	}
@@ -80,7 +84,7 @@ public class SqmAny<T> extends AbstractSqmExpression<T> {
 	}
 
 	@Override
-	public boolean isCompatible(Object object) {
+	public boolean isCompatible(@Nullable Object object) {
 		return object instanceof SqmAny<?> sqmAny
 			&& subquery.isCompatible( sqmAny.subquery );
 	}

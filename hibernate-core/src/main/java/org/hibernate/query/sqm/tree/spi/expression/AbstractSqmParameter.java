@@ -27,7 +27,7 @@ public abstract class AbstractSqmParameter<T> extends AbstractSqmExpression<T> i
 	public AbstractSqmParameter(
 			boolean canBeMultiValued,
 			@Nullable SqmBindableType<T> inherentType,
-			NodeBuilder nodeBuilder) {
+			@Nonnull NodeBuilder nodeBuilder) {
 		super( inherentType, nodeBuilder );
 		this.canBeMultiValued = canBeMultiValued;
 	}

@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.spi.expression;
 
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.type.BindableType;
 import org.hibernate.query.sqm.spi.NodeBuilder;
@@ -23,7 +24,7 @@ import java.util.Objects;
 public class ValueBindJpaCriteriaParameter<T> extends JpaCriteriaParameter<T> {
 	private final @Nullable T value;
 
-	public ValueBindJpaCriteriaParameter(@Nullable BindableType<? super T> type, @Nullable T value, NodeBuilder nodeBuilder) {
+	public ValueBindJpaCriteriaParameter(@Nullable BindableType<? super T> type, @Nullable T value, @Nonnull NodeBuilder nodeBuilder) {
 		super( null, type, false, nodeBuilder );
 		assert value == null || type == null
 			|| ( type instanceof SqmBindableType<? super T> bindable
@@ -33,17 +34,19 @@ public class ValueBindJpaCriteriaParameter<T> extends JpaCriteriaParameter<T> {
 		this.value = value;
 	}
 
-	private ValueBindJpaCriteriaParameter(ValueBindJpaCriteriaParameter<T> original) {
+	private ValueBindJpaCriteriaParameter(@Nonnull ValueBindJpaCriteriaParameter<T> original) {
 		super( original );
 		this.value = original.value;
 	}
 
+	@Nonnull
 	@Override
-	public ValueBindJpaCriteriaParameter<T> copy(SqmCopyContext context) {
+	public ValueBindJpaCriteriaParameter<T> copy(@Nonnull SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		return existing != null
 				? existing
-				: context.registerCopy( this, new ValueBindJpaCriteriaParameter<>( this ) );
+				: context.registerCopy( this,
+						new ValueBindJpaCriteriaParameter<>( this ) );
 	}
 
 	public @Nullable T getValue() {
@@ -51,7 +54,7 @@ public class ValueBindJpaCriteriaParameter<T> extends JpaCriteriaParameter<T> {
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		SqmLiteral.appendHqlString( hql, getJavaTypeDescriptor(), value );
 	}
 

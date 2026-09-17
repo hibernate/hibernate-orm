@@ -18,7 +18,7 @@ public interface SqmTextExpression extends SqmComparableExpression<String>, JpaT
 
 	@Nonnull
 	@Override
-	SqmTextExpression coalesce(String y);
+	SqmTextExpression coalesce(@Nonnull String y);
 
 	@Nonnull
 	@Override
@@ -26,5 +26,5 @@ public interface SqmTextExpression extends SqmComparableExpression<String>, JpaT
 
 	@Nonnull
 	@Override
-	SqmTextExpression nullif(String y);
+	SqmTextExpression nullif(@Nonnull String y);
 }

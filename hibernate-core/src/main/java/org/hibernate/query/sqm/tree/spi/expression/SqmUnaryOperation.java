@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.spi.expression;
 
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.query.sqm.spi.NodeBuilder;
 import org.hibernate.query.sqm.spi.SemanticQueryWalker;
@@ -23,9 +24,9 @@ public class SqmUnaryOperation<T> extends AbstractSqmExpression<T> implements Sq
 	private final SqmExpression<T> operand;
 
 	public SqmUnaryOperation(
-			UnaryArithmeticOperator operation,
-			SqmExpression<T> operand,
-			NodeBuilder nodeBuilder) {
+			@Nonnull UnaryArithmeticOperator operation,
+			@Nonnull SqmExpression<T> operand,
+			@Nonnull NodeBuilder nodeBuilder) {
 		//noinspection unchecked
 		this(
 				operation,
@@ -38,17 +39,18 @@ public class SqmUnaryOperation<T> extends AbstractSqmExpression<T> implements Sq
 	}
 
 	public SqmUnaryOperation(
-			UnaryArithmeticOperator operation,
-			SqmExpression<T> operand,
+			@Nonnull UnaryArithmeticOperator operation,
+			@Nonnull SqmExpression<T> operand,
 			@Nullable SqmBindableType<T> inherentType,
-			NodeBuilder nodeBuilder) {
+			@Nonnull NodeBuilder nodeBuilder) {
 		super( inherentType, nodeBuilder );
 		this.operation = operation;
 		this.operand = operand;
 	}
 
+	@Nonnull
 	@Override
-	public SqmUnaryOperation<T> copy(SqmCopyContext context) {
+	public SqmUnaryOperation<T> copy(@Nonnull SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -66,25 +68,29 @@ public class SqmUnaryOperation<T> extends AbstractSqmExpression<T> implements Sq
 		return expression;
 	}
 
+	@Nonnull
 	public SqmExpression<T> getOperand() {
 		return operand;
 	}
 
+	@Nonnull
 	public UnaryArithmeticOperator getOperation() {
 		return operation;
 	}
 
+	@Nullable
 	@Override
-	public <X> X accept(SemanticQueryWalker<X> walker) {
+	public <X> X accept(@Nonnull SemanticQueryWalker<X> walker) {
 		return walker.visitUnaryOperationExpression( this );
 	}
 
+	@Nonnull
 	@Override
 	public String asLoggableText() {
 		return operation.getOperatorChar() + operand.asLoggableText();
 	}
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		hql.append( operation.getOperatorChar() );
 		operand.appendHqlString( hql, context );
 	}
@@ -104,7 +110,7 @@ public class SqmUnaryOperation<T> extends AbstractSqmExpression<T> implements Sq
 	}
 
 	@Override
-	public boolean isCompatible(Object object) {
+	public boolean isCompatible(@Nullable Object object) {
 		return object instanceof SqmUnaryOperation<?> that
 				&& operation == that.getOperation()
 				&& operand.isCompatible( that.getOperand() );

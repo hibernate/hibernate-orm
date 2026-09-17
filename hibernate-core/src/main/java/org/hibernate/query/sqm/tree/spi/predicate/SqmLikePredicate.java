@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.spi.predicate;
 
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.query.internal.QueryHelper;
 import org.hibernate.query.sqm.spi.NodeBuilder;
@@ -29,29 +30,29 @@ public class SqmLikePredicate extends AbstractNegatableSqmPredicate {
 	private final boolean isCaseSensitive;
 
 	public SqmLikePredicate(
-			SqmExpression<?> matchExpression,
-			SqmExpression<?> pattern,
+			@Nonnull SqmExpression<?> matchExpression,
+			@Nonnull SqmExpression<?> pattern,
 			@Nullable SqmExpression<?> escapeCharacter,
-			NodeBuilder nodeBuilder) {
+			@Nonnull NodeBuilder nodeBuilder) {
 		this( matchExpression, pattern, escapeCharacter, false, nodeBuilder );
 	}
 
 	public SqmLikePredicate(
-			SqmExpression<?> matchExpression,
-			SqmExpression<?> pattern,
+			@Nonnull SqmExpression<?> matchExpression,
+			@Nonnull SqmExpression<?> pattern,
 			@Nullable SqmExpression<?> escapeCharacter,
 			boolean negated,
-			NodeBuilder nodeBuilder) {
+			@Nonnull NodeBuilder nodeBuilder) {
 		this( matchExpression, pattern, escapeCharacter, negated, true, nodeBuilder );
 	}
 
 	public SqmLikePredicate(
-			SqmExpression<?> matchExpression,
-			SqmExpression<?> pattern,
+			@Nonnull SqmExpression<?> matchExpression,
+			@Nonnull SqmExpression<?> pattern,
 			@Nullable SqmExpression<?> escapeCharacter,
 			boolean negated,
 			boolean isCaseSensitive,
-			NodeBuilder nodeBuilder) {
+			@Nonnull NodeBuilder nodeBuilder) {
 		super( negated, nodeBuilder );
 		this.matchExpression = matchExpression;
 		this.pattern = pattern;
@@ -74,23 +75,24 @@ public class SqmLikePredicate extends AbstractNegatableSqmPredicate {
 	}
 
 	public SqmLikePredicate(
-			SqmExpression<?> matchExpression,
-			SqmExpression<?> pattern,
-			NodeBuilder nodeBuilder) {
+			@Nonnull SqmExpression<?> matchExpression,
+			@Nonnull SqmExpression<?> pattern,
+			@Nonnull NodeBuilder nodeBuilder) {
 		this( matchExpression, pattern, null, nodeBuilder );
 	}
 
 	public SqmLikePredicate(
-			SqmExpression<?> matchExpression,
-			SqmExpression<?> pattern,
+			@Nonnull SqmExpression<?> matchExpression,
+			@Nonnull SqmExpression<?> pattern,
 			boolean negated,
 			boolean isCaseSensitive,
-			NodeBuilder nodeBuilder) {
+			@Nonnull NodeBuilder nodeBuilder) {
 		this( matchExpression, pattern, null, negated, isCaseSensitive, nodeBuilder );
 	}
 
+	@Nonnull
 	@Override
-	public SqmLikePredicate copy(SqmCopyContext context) {
+	public SqmLikePredicate copy(@Nonnull SqmCopyContext context) {
 		final SqmLikePredicate existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -110,10 +112,12 @@ public class SqmLikePredicate extends AbstractNegatableSqmPredicate {
 		return predicate;
 	}
 
+	@Nonnull
 	public SqmExpression<?> getMatchExpression() {
 		return matchExpression;
 	}
 
+	@Nonnull
 	public SqmExpression<?> getPattern() {
 		return pattern;
 	}
@@ -126,13 +130,14 @@ public class SqmLikePredicate extends AbstractNegatableSqmPredicate {
 		return isCaseSensitive;
 	}
 
+	@Nullable
 	@Override
-	public <T> T accept(SemanticQueryWalker<T> walker) {
+	public <T> T accept(@Nonnull SemanticQueryWalker<T> walker) {
 		return walker.visitLikePredicate( this );
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		matchExpression.appendHqlString( hql, context );
 		if ( isNegated() ) {
 			hql.append( " not" );
@@ -166,7 +171,7 @@ public class SqmLikePredicate extends AbstractNegatableSqmPredicate {
 	}
 
 	@Override
-	public boolean isCompatible(Object object) {
+	public boolean isCompatible(@Nullable Object object) {
 		return object instanceof SqmLikePredicate that
 			&& this.isNegated() == that.isNegated()
 			&& isCaseSensitive == that.isCaseSensitive
@@ -185,6 +190,7 @@ public class SqmLikePredicate extends AbstractNegatableSqmPredicate {
 		return result;
 	}
 
+	@Nonnull
 	@Override
 	protected SqmNegatablePredicate createNegatedNode() {
 		return new SqmLikePredicate(

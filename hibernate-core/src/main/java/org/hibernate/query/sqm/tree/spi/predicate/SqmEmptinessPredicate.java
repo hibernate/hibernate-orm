@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.spi.predicate;
 
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.query.sqm.spi.NodeBuilder;
 import org.hibernate.query.sqm.spi.SemanticQueryWalker;
@@ -19,15 +20,16 @@ public class SqmEmptinessPredicate extends AbstractNegatableSqmPredicate {
 	private final SqmPluralValuedSimplePath<?> pluralPath;
 
 	public SqmEmptinessPredicate(
-			SqmPluralValuedSimplePath<?> pluralPath,
+			@Nonnull SqmPluralValuedSimplePath<?> pluralPath,
 			boolean negated,
-			NodeBuilder nodeBuilder) {
+			@Nonnull NodeBuilder nodeBuilder) {
 		super( negated, nodeBuilder );
 		this.pluralPath = pluralPath;
 	}
 
+	@Nonnull
 	@Override
-	public SqmEmptinessPredicate copy(SqmCopyContext context) {
+	public SqmEmptinessPredicate copy(@Nonnull SqmCopyContext context) {
 		final SqmEmptinessPredicate existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -44,17 +46,19 @@ public class SqmEmptinessPredicate extends AbstractNegatableSqmPredicate {
 		return predicate;
 	}
 
+	@Nonnull
 	public SqmPluralValuedSimplePath<?> getPluralPath() {
 		return pluralPath;
 	}
 
+	@Nullable
 	@Override
-	public <T> T accept(SemanticQueryWalker<T> walker) {
+	public <T> T accept(@Nonnull SemanticQueryWalker<T> walker) {
 		return walker.visitIsEmptyPredicate( this );
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		pluralPath.appendHqlString( hql, context );
 		if ( isNegated() ) {
 			hql.append( " is not empty" );
@@ -79,7 +83,7 @@ public class SqmEmptinessPredicate extends AbstractNegatableSqmPredicate {
 	}
 
 	@Override
-	public boolean isCompatible(Object object) {
+	public boolean isCompatible(@Nullable Object object) {
 		return object instanceof SqmEmptinessPredicate that
 			&& this.isNegated() == that.isNegated()
 			&& pluralPath.isCompatible( that.pluralPath );
@@ -92,6 +96,7 @@ public class SqmEmptinessPredicate extends AbstractNegatableSqmPredicate {
 		return result;
 	}
 
+	@Nonnull
 	@Override
 	protected SqmNegatablePredicate createNegatedNode() {
 		return new SqmEmptinessPredicate( pluralPath, !isNegated(), nodeBuilder() );

@@ -29,6 +29,7 @@ public interface SqmSelectQuery<T> extends SqmQuery<T>, JpaSelectCriteria<T>, Sq
 	@Override
 	SqmSelectQuery<T> distinct(boolean distinct);
 
+	@Nonnull
 	@Override
-	SqmSelectQuery<T> copy(SqmCopyContext context);
+	SqmSelectQuery<T> copy(@Nonnull SqmCopyContext context);
 }

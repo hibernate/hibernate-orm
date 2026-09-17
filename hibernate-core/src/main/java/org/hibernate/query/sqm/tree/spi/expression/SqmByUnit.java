@@ -22,17 +22,18 @@ public class SqmByUnit extends AbstractSqmExpression<Long> {
 	private final SqmExpression<?> duration;
 
 	public SqmByUnit(
-			SqmDurationUnit<?> unit,
-			SqmExpression<?> duration,
-			SqmBindableType<Long> longType,
-			NodeBuilder nodeBuilder) {
+			@Nonnull SqmDurationUnit<?> unit,
+			@Nonnull SqmExpression<?> duration,
+			@Nonnull SqmBindableType<Long> longType,
+			@Nonnull NodeBuilder nodeBuilder) {
 		super( longType, nodeBuilder );
 		this.unit = unit;
 		this.duration = duration;
 	}
 
+	@Nonnull
 	@Override
-	public SqmByUnit copy(SqmCopyContext context) {
+	public SqmByUnit copy(@Nonnull SqmCopyContext context) {
 		final SqmByUnit existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -50,10 +51,12 @@ public class SqmByUnit extends AbstractSqmExpression<Long> {
 		return expression;
 	}
 
+	@Nonnull
 	public SqmDurationUnit<?> getUnit() {
 		return unit;
 	}
 
+	@Nonnull
 	public SqmExpression<?> getDuration() {
 		return duration;
 	}
@@ -63,13 +66,14 @@ public class SqmByUnit extends AbstractSqmExpression<Long> {
 		return castNonNull( super.getNodeType() );
 	}
 
+	@Nullable
 	@Override
-	public <X> X accept(SemanticQueryWalker<X> walker) {
+	public <X> X accept(@Nonnull SemanticQueryWalker<X> walker) {
 		return walker.visitByUnit( this );
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		duration.appendHqlString( hql, context );
 		hql.append( " by " );
 		hql.append( unit.getUnit() );
@@ -90,7 +94,7 @@ public class SqmByUnit extends AbstractSqmExpression<Long> {
 	}
 
 	@Override
-	public boolean isCompatible(Object object) {
+	public boolean isCompatible(@Nullable Object object) {
 		return object instanceof SqmByUnit that
 			&& this.unit.isCompatible( that.unit )
 			&& this.duration.isCompatible( that.duration );

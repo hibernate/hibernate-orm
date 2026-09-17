@@ -2030,8 +2030,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	@Override
 	public <T> SqmExpression<T> nullLiteral(@Nonnull Class<T> resultClass) {
 		if ( resultClass.isEnum() ) {
-			// No basic types are registered for enum java types, we have to use an untyped null literal in this case
-			return new SqmLiteralNull<>( this );
+			// Retain the declared Java type while allowing the enum mapping to be inferred from context.
+			return new SqmLiteralNull<>( null,
+					getTypeConfiguration().getJavaTypeRegistry().resolveDescriptor( resultClass ), this );
 		}
 		else {
 			final var basicTypeForJavaType =
@@ -4291,13 +4292,13 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	@Override
 	@SuppressWarnings("unchecked")
 	public <T> SqmExpression<T> firstValue(Expression<T> argument, JpaWindow window) {
-		return (SqmExpression<T>) windowFunction( "first_value", argument.getJavaType(), window, argument );
+		return (SqmExpression<T>) windowFunction( "first_value", ((SqmExpression<T>) argument).getJavaTypeIfKnown(), window, argument );
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public <T> SqmExpression<T> lastValue(Expression<T> argument, JpaWindow window) {
-		return (SqmExpression<T>) windowFunction( "last_value", argument.getJavaType(), window, argument );
+		return (SqmExpression<T>) windowFunction( "last_value", ((SqmExpression<T>) argument).getJavaTypeIfKnown(), window, argument );
 	}
 
 	@Override
@@ -4308,7 +4309,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	@Override
 	@SuppressWarnings("unchecked")
 	public <T> SqmExpression<T> nthValue(Expression<T> argument, Expression<Integer> n, JpaWindow window) {
-		return (SqmExpression<T>) windowFunction( "nth_value", argument.getJavaType(), window, argument, n );
+		return (SqmExpression<T>) windowFunction( "nth_value", ((SqmExpression<T>) argument).getJavaTypeIfKnown(), window, argument, n );
 	}
 
 	@Override
@@ -4572,7 +4573,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 			Nulls nullPrecedence) {
 		return (SqmExpression<T>) functionWithinGroup(
 				"mode",
-				sortExpression.getJavaType(),
+				((SqmExpression<T>) sortExpression).getJavaTypeIfKnown(),
 				sort( (SqmExpression<T>) sortExpression, sortOrder, nullPrecedence ),
 				filter,
 				window
@@ -4619,7 +4620,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 			Nulls nullPrecedence) {
 		return (SqmExpression<T>) functionWithinGroup(
 				"percentile_cont",
-				sortExpression.getJavaType(),
+				((SqmExpression<T>) sortExpression).getJavaTypeIfKnown(),
 				sort( (SqmExpression<T>) sortExpression, sortOrder, nullPrecedence ),
 				filter,
 				window,
@@ -4667,7 +4668,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 			Nulls nullPrecedence) {
 		return (SqmExpression<T>) functionWithinGroup(
 				"percentile_disc",
-				sortExpression.getJavaType(),
+				((SqmExpression<T>) sortExpression).getJavaTypeIfKnown(),
 				sort( (SqmExpression<T>) sortExpression, sortOrder, nullPrecedence ),
 				filter,
 				window,

@@ -4,6 +4,7 @@
  */
 package org.hibernate.dialect.function.json;
 
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.QueryException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -98,14 +99,15 @@ public class H2JsonTableFunction extends JsonTableFunction {
 				(SqmExpression<?>) sqmArguments.get( 0 ),
 				sqmArguments.size() > 1 ? (SqmExpression<String>) sqmArguments.get( 1 ) : null
 		) {
+			@Nonnull
 			@Override
 			public TableGroup convertToSqlAst(
-					NavigablePath navigablePath,
-					String identifierVariable,
+					@Nonnull NavigablePath navigablePath,
+					@Nonnull String identifierVariable,
 					boolean lateral,
 					boolean canUseInnerJoins,
 					boolean withOrdinality,
-					SqmToSqlAstConverter walker) {
+					@Nonnull SqmToSqlAstConverter walker) {
 				// Register a transformer that adds a join predicate "array_length(array) <= index"
 				final FunctionTableGroup functionTableGroup = (FunctionTableGroup) super.convertToSqlAst(
 						navigablePath,

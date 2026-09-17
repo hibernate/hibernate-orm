@@ -32,30 +32,31 @@ public class SqmCaseSimple<T, R>
 	private final List<WhenFragment<? extends T, ? extends R>> whenFragments;
 	private @Nullable SqmExpression<? extends R> otherwise;
 
-	public SqmCaseSimple(SqmExpression<T> fixture, NodeBuilder nodeBuilder) {
+	public SqmCaseSimple(@Nonnull SqmExpression<T> fixture, @Nonnull NodeBuilder nodeBuilder) {
 		this( fixture, null, 10, nodeBuilder );
 	}
 
-	public SqmCaseSimple(SqmExpression<T> fixture, int estimatedWhenSize, NodeBuilder nodeBuilder) {
+	public SqmCaseSimple(@Nonnull SqmExpression<T> fixture, int estimatedWhenSize, @Nonnull NodeBuilder nodeBuilder) {
 		this( fixture, null, estimatedWhenSize, nodeBuilder );
 	}
 
-	public SqmCaseSimple(SqmExpression<T> fixture, @Nullable SqmBindableType<R> inherentType, NodeBuilder nodeBuilder) {
+	public SqmCaseSimple(@Nonnull SqmExpression<T> fixture, @Nullable SqmBindableType<R> inherentType, @Nonnull NodeBuilder nodeBuilder) {
 		this( fixture, inherentType, 10, nodeBuilder );
 	}
 
 	private SqmCaseSimple(
-			SqmExpression<T> fixture,
+			@Nonnull SqmExpression<T> fixture,
 			@Nullable SqmBindableType<R> inherentType,
 			int estimatedWhenSize,
-			NodeBuilder nodeBuilder) {
+			@Nonnull NodeBuilder nodeBuilder) {
 		super( inherentType, nodeBuilder );
 		this.whenFragments = new ArrayList<>( estimatedWhenSize );
 		this.fixture = fixture;
 	}
 
+	@Nonnull
 	@Override
-	public SqmCaseSimple<T, R> copy(SqmCopyContext context) {
+	public SqmCaseSimple<T, R> copy(@Nonnull SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -79,10 +80,12 @@ public class SqmCaseSimple<T, R>
 		return caseSearched;
 	}
 
+	@Nonnull
 	public SqmExpression<T> getFixture() {
 		return fixture;
 	}
 
+	@Nonnull
 	public List<WhenFragment<? extends T,? extends R>> getWhenFragments() {
 		return whenFragments;
 	}
@@ -91,13 +94,13 @@ public class SqmCaseSimple<T, R>
 		return otherwise;
 	}
 
-	public void otherwise(SqmExpression<? extends R> otherwiseExpression) {
+	public void otherwise(@Nonnull SqmExpression<? extends R> otherwiseExpression) {
 		this.otherwise = otherwiseExpression;
 
 		applyInferableResultType( otherwiseExpression.getNodeType() );
 	}
 
-	public void when(SqmExpression<? extends T> test, SqmExpression<? extends R> result) {
+	public void when(@Nonnull SqmExpression<? extends T> test, @Nonnull SqmExpression<? extends R> result) {
 		whenFragments.add( new WhenFragment<>( test, result ) );
 
 		// TODO: currently does nothing, but it would be nice if it worked!
@@ -129,11 +132,13 @@ public class SqmCaseSimple<T, R>
 		}
 	}
 
+	@Nullable
 	@Override
-	public <X> X accept(SemanticQueryWalker<X> walker) {
+	public <X> X accept(@Nonnull SemanticQueryWalker<X> walker) {
 		return walker.visitSimpleCaseExpression( this );
 	}
 
+	@Nonnull
 	@Override
 	public String asLoggableText() {
 		return "<simple-case>";
@@ -186,7 +191,7 @@ public class SqmCaseSimple<T, R>
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		hql.append( "case " );
 		fixture.appendHqlString( hql, context );
 		for ( WhenFragment<? extends T, ? extends R> whenFragment : whenFragments ) {
@@ -221,7 +226,7 @@ public class SqmCaseSimple<T, R>
 	}
 
 	@Override
-	public boolean isCompatible(Object object) {
+	public boolean isCompatible(@Nullable Object object) {
 		return object instanceof SqmCaseSimple<?, ?> that
 			&& this.fixture.isCompatible( that.fixture )
 			&& SqmCacheable.areCompatible( this.whenFragments, that.whenFragments )
@@ -247,14 +252,14 @@ public class SqmCaseSimple<T, R>
 
 	@Nonnull
 	@Override
-	public JpaSimpleCase<T, R> when(T condition, @Nullable R result) {
+	public JpaSimpleCase<T, R> when(@Nullable T condition, @Nullable R result) {
 		when( nodeBuilder().value( condition ), nodeBuilder().value( result ) );
 		return this;
 	}
 
 	@Nonnull
 	@Override
-	public JpaSimpleCase<T, R> when(T condition, @Nonnull Expression<? extends R> result) {
+	public JpaSimpleCase<T, R> when(@Nullable T condition, @Nonnull Expression<? extends R> result) {
 		when( nodeBuilder().value( condition, fixture ), (SqmExpression<? extends R>) result );
 		return this;
 	}

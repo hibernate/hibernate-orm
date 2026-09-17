@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.spi.expression;
 
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.HibernateException;
 import org.hibernate.type.BindableType;
@@ -84,8 +85,10 @@ public interface SqmParameter<T> extends SqmExpression<T>, JpaParameterExpressio
 	/**
 	 * Make a copy
 	 */
+	@Nonnull
 	SqmParameter<T> copy();
 
+	@Nonnull
 	@Override
-	SqmParameter<T> copy(SqmCopyContext context);
+	SqmParameter<T> copy(@Nonnull SqmCopyContext context);
 }

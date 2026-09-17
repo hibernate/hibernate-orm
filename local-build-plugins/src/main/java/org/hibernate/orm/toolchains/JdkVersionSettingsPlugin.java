@@ -4,6 +4,8 @@
  */
 package org.hibernate.orm.toolchains;
 
+import jakarta.annotation.Nonnull;
+
 import org.gradle.StartParameter;
 import org.gradle.api.Action;
 import org.gradle.api.JavaVersion;
@@ -11,7 +13,6 @@ import org.gradle.api.Plugin;
 import org.gradle.api.initialization.Settings;
 import org.gradle.api.invocation.Gradle;
 import org.gradle.jvm.toolchain.JavaLanguageVersion;
-import org.jetbrains.annotations.NotNull;
 
 import static org.hibernate.orm.toolchains.JdkVersionConfig.MAIN_JDK_VERSION;
 import static org.hibernate.orm.toolchains.JdkVersionConfig.TEST_JDK_VERSION;
@@ -66,7 +67,7 @@ public class JdkVersionSettingsPlugin implements Plugin<Settings> {
 		} );
 	}
 
-	@NotNull
+	@Nonnull
 	private JavaLanguageVersion getJavaLanguageVersion(Settings settings, String name) {
 		final StartParameter startParameter = settings.getStartParameter();
 		final String fromSysProp = startParameter.getSystemPropertiesArgs().get( name );

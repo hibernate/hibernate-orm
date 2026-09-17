@@ -38,16 +38,17 @@ public abstract class AbstractSqmJoin<L, R> extends AbstractSqmFrom<L, R> implem
 	private @Nullable SqmPredicate onClausePredicate;
 
 	public AbstractSqmJoin(
-			NavigablePath navigablePath,
-			SqmPathSource<R> referencedNavigable,
-			SqmFrom<?, L> lhs,
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull SqmPathSource<R> referencedNavigable,
+			@Nonnull SqmFrom<?, L> lhs,
 			@Nullable String alias,
-			SqmJoinType joinType,
-			NodeBuilder nodeBuilder) {
+			@Nonnull SqmJoinType joinType,
+			@Nonnull NodeBuilder nodeBuilder) {
 		super( navigablePath, referencedNavigable, lhs, alias, nodeBuilder );
 		this.joinType = joinType;
 	}
 
+	@Nonnull
 	@Override
 	public SqmJoinType getSqmJoinType() {
 		return joinType;
@@ -71,7 +72,7 @@ public abstract class AbstractSqmJoin<L, R> extends AbstractSqmFrom<L, R> implem
 		onClausePredicate = predicate;
 	}
 
-	public void applyRestriction(SqmPredicate restriction) {
+	public void applyRestriction(@Nonnull SqmPredicate restriction) {
 		onClausePredicate =
 				onClausePredicate == null
 						? restriction
@@ -110,7 +111,7 @@ public abstract class AbstractSqmJoin<L, R> extends AbstractSqmFrom<L, R> implem
 		return SqmJoin.super.on( restrictions );
 	}
 
-	protected void copyTo(AbstractSqmJoin<L, R> target, SqmCopyContext context) {
+	protected void copyTo(@Nonnull AbstractSqmJoin<L, R> target, @Nonnull SqmCopyContext context) {
 		super.copyTo( target, context );
 		target.onClausePredicate = onClausePredicate == null ? null : onClausePredicate.copy( context );
 	}
@@ -184,7 +185,7 @@ public abstract class AbstractSqmJoin<L, R> extends AbstractSqmFrom<L, R> implem
 	// is fine for the purpose of matching nodes "syntactically".
 
 	@Override
-	public boolean deepEquals(SqmFrom<?, ?> object) {
+	public boolean deepEquals(@Nonnull SqmFrom<?, ?> object) {
 		return super.deepEquals( object )
 			&& object instanceof AbstractSqmJoin<?,?> thatJoin
 			&& joinType == thatJoin.getSqmJoinType()
@@ -192,7 +193,7 @@ public abstract class AbstractSqmJoin<L, R> extends AbstractSqmFrom<L, R> implem
 	}
 
 	@Override
-	public boolean isDeepCompatible(SqmFrom<?, ?> object) {
+	public boolean isDeepCompatible(@Nonnull SqmFrom<?, ?> object) {
 		return super.isDeepCompatible( object )
 			&& object instanceof AbstractSqmJoin<?,?> thatJoin
 			&& joinType == thatJoin.getSqmJoinType()

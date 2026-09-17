@@ -36,18 +36,19 @@ public class SqmJpaCriteriaParameterWrapper<T>
 
 	public SqmJpaCriteriaParameterWrapper(
 			@Nullable BindableType<T> type,
-			JpaCriteriaParameter<T> jpaCriteriaParameter,
+			@Nonnull JpaCriteriaParameter<T> jpaCriteriaParameter,
 			int criteriaParameterId,
 			int unnamedParameterId,
-			NodeBuilder criteriaBuilder) {
+			@Nonnull NodeBuilder criteriaBuilder) {
 		super( toSqmType( type, criteriaBuilder ), criteriaBuilder );
 		this.jpaCriteriaParameter = jpaCriteriaParameter;
 		this.criteriaParameterId = criteriaParameterId;
 		this.unnamedParameterId = unnamedParameterId;
 	}
 
+	@Nonnull
 	@Override
-	public SqmJpaCriteriaParameterWrapper<T> copy(SqmCopyContext context) {
+	public SqmJpaCriteriaParameterWrapper<T> copy(@Nonnull SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -75,6 +76,7 @@ public class SqmJpaCriteriaParameterWrapper<T>
 		return null;
 	}
 
+	@Nonnull
 	public JpaCriteriaParameter<T> getJpaCriteriaParameter() {
 		return jpaCriteriaParameter;
 	}
@@ -115,6 +117,7 @@ public class SqmJpaCriteriaParameterWrapper<T>
 		return getNodeType();
 	}
 
+	@Nonnull
 	@Override
 	public SqmParameter<T> copy() {
 		return new SqmJpaCriteriaParameterWrapper<>(
@@ -137,8 +140,9 @@ public class SqmJpaCriteriaParameterWrapper<T>
 	 * sure we ultimately get the complete set of {@code JdbcParameter}
 	 * references.
 	 */
+	@Nullable
 	@Override
-	public <X> X accept(SemanticQueryWalker<X> walker) {
+	public <X> X accept(@Nonnull SemanticQueryWalker<X> walker) {
 		throw new UnsupportedOperationException(
 				"""
 				Direct SemanticQueryWalker visitation of a SqmJpaCriteriaParameterWrapper \
@@ -153,12 +157,12 @@ public class SqmJpaCriteriaParameterWrapper<T>
 	}
 
 	@Override
-	public void visitSubSelectableNodes(Consumer<SqmSelectableNode<?>> jpaSelectionConsumer) {
+	public void visitSubSelectableNodes(@Nonnull Consumer<SqmSelectableNode<?>> jpaSelectionConsumer) {
 		// nothing to do
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		jpaCriteriaParameter.appendHqlString( hql, context );
 	}
 
@@ -174,7 +178,7 @@ public class SqmJpaCriteriaParameterWrapper<T>
 	}
 
 	@Override
-	public boolean isCompatible(Object object) {
+	public boolean isCompatible(@Nullable Object object) {
 		return equals( object );
 	}
 

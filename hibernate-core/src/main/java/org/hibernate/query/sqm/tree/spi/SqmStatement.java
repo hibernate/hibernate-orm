@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.sqm.tree.spi;
 
+import jakarta.annotation.Nonnull;
+
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
@@ -20,18 +22,22 @@ import org.hibernate.query.sqm.tree.spi.expression.SqmParameter;
  * @author Steve Ebersole
  */
 public interface SqmStatement<T> extends SqmQuery<T>, JpaQueryableCriteria<T>, SqmVisitableNode {
+	@Nonnull
 	SqmQuerySource getQuerySource();
 
 	/**
 	 * Access to the (potentially still growing) collection of parameters for the statement.
 	 *
 	 */
+	@Nonnull
 	Set<SqmParameter<?>> getSqmParameters();
 
+	@Nonnull
 	ParameterResolutions resolveParameters();
 
+	@Nonnull
 	@Override
-	SqmStatement<T> copy(SqmCopyContext context);
+	SqmStatement<T> copy(@Nonnull SqmCopyContext context);
 
 	interface ParameterResolutions {
 		ParameterResolutions EMPTY = new ParameterResolutions() {

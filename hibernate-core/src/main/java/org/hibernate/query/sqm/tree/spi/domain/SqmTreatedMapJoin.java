@@ -28,15 +28,15 @@ public class SqmTreatedMapJoin<L, K, V, S extends V> extends SqmMapJoin<L, K, S>
 	private final SqmTreatableDomainType<S> treatTarget;
 
 	public SqmTreatedMapJoin(
-			SqmMapJoin<L, K, V> wrappedPath,
-			SqmTreatableDomainType<S> treatTarget,
+			@Nonnull SqmMapJoin<L, K, V> wrappedPath,
+			@Nonnull SqmTreatableDomainType<S> treatTarget,
 			@Nullable String alias) {
 		this( wrappedPath, treatTarget, alias, false );
 	}
 
 	public SqmTreatedMapJoin(
-			SqmMapJoin<L, K, V> wrappedPath,
-			SqmTreatableDomainType<S> treatTarget,
+			@Nonnull SqmMapJoin<L, K, V> wrappedPath,
+			@Nonnull SqmTreatableDomainType<S> treatTarget,
 			@Nullable String alias,
 			boolean fetched) {
 		super(
@@ -55,9 +55,9 @@ public class SqmTreatedMapJoin<L, K, V, S extends V> extends SqmMapJoin<L, K, S>
 	}
 
 	private SqmTreatedMapJoin(
-			NavigablePath navigablePath,
-			SqmMapJoin<L, K, V> wrappedPath,
-			SqmTreatableDomainType<S> treatTarget,
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull SqmMapJoin<L, K, V> wrappedPath,
+			@Nonnull SqmTreatableDomainType<S> treatTarget,
 			@Nullable String alias,
 			boolean fetched) {
 		//noinspection unchecked
@@ -76,7 +76,7 @@ public class SqmTreatedMapJoin<L, K, V, S extends V> extends SqmMapJoin<L, K, S>
 
 	@Override
 	@Nonnull
-	public SqmTreatedMapJoin<L, K, V, S> copy(SqmCopyContext context) {
+	public SqmTreatedMapJoin<L, K, V, S> copy(@Nonnull SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -95,6 +95,7 @@ public class SqmTreatedMapJoin<L, K, V, S extends V> extends SqmMapJoin<L, K, S>
 		return path;
 	}
 
+	@Nonnull
 	@Override
 	public SqmMapJoin<L,K,V> getWrappedPath() {
 		return wrappedPath;
@@ -117,11 +118,13 @@ public class SqmTreatedMapJoin<L, K, V, S extends V> extends SqmMapJoin<L, K, S>
 		return (SqmMapPersistentAttribute<L, K, S>) super.getReferencedPathSource();
 	}
 
+	@Nonnull
 	@Override
 	public SqmTreatableDomainType<S> getReferencedPathSource() {
 		return treatTarget;
 	}
 
+	@Nonnull
 	@Override
 	public SqmPathSource<S> getResolvedModel() {
 		return treatTarget;
@@ -166,7 +169,7 @@ public class SqmTreatedMapJoin<L, K, V, S extends V> extends SqmMapJoin<L, K, S>
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		hql.append( "treat(" );
 		wrappedPath.appendHqlString( hql, context );
 		hql.append( " as " );

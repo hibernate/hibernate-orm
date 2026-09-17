@@ -22,13 +22,14 @@ import org.hibernate.query.sqm.tree.spi.SqmRenderContext;
 public class SqmGroupedPredicate extends AbstractSqmPredicate {
 	private final SqmPredicate subPredicate;
 
-	public SqmGroupedPredicate(SqmPredicate subPredicate, NodeBuilder nodeBuilder) {
+	public SqmGroupedPredicate(@Nonnull SqmPredicate subPredicate, @Nonnull NodeBuilder nodeBuilder) {
 		super( subPredicate.getExpressible(), nodeBuilder );
 		this.subPredicate = subPredicate;
 	}
 
+	@Nonnull
 	@Override
-	public SqmGroupedPredicate copy(SqmCopyContext context) {
+	public SqmGroupedPredicate copy(@Nonnull SqmCopyContext context) {
 		final SqmGroupedPredicate existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -44,12 +45,14 @@ public class SqmGroupedPredicate extends AbstractSqmPredicate {
 		return predicate;
 	}
 
+	@Nonnull
 	public SqmPredicate getSubPredicate() {
 		return subPredicate;
 	}
 
+	@Nullable
 	@Override
-	public <T> T accept(SemanticQueryWalker<T> walker) {
+	public <T> T accept(@Nonnull SemanticQueryWalker<T> walker) {
 		return walker.visitGroupedPredicate( this );
 	}
 
@@ -73,7 +76,7 @@ public class SqmGroupedPredicate extends AbstractSqmPredicate {
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		hql.append( '(' );
 		subPredicate.appendHqlString( hql, context );
 		hql.append( ')' );
@@ -91,7 +94,7 @@ public class SqmGroupedPredicate extends AbstractSqmPredicate {
 	}
 
 	@Override
-	public boolean isCompatible(Object object) {
+	public boolean isCompatible(@Nullable Object object) {
 		return object instanceof SqmGroupedPredicate that
 			&& subPredicate.isCompatible( that.subPredicate );
 	}

@@ -6,6 +6,7 @@ package org.hibernate.query.restriction;
 
 import org.hibernate.Internal;
 import org.hibernate.query.sqm.ComparisonOperator;
+import org.hibernate.query.criteria.JpaTupleElement;
 import org.hibernate.query.sqm.spi.NodeBuilder;
 
 import jakarta.data.constraint.AtLeast;
@@ -607,7 +608,7 @@ public final class JakartaDataRestriction {
 			return builder.literal( value );
 		}
 		else {
-			final var javaType = wrapperType( expression.getJavaType() );
+			final var javaType = wrapperType( javaTypeIfKnown( expression ) );
 			return javaType == null
 					? builder.nullLiteral( Object.class )
 					: builder.nullLiteral( javaType );
@@ -626,7 +627,7 @@ public final class JakartaDataRestriction {
 	private static void verifyExpressionType(
 			Expression<?> expression,
 			Class<?> expectedType) {
-		final var expressionType = expression.getJavaType();
+		final var expressionType = javaTypeIfKnown( expression );
 		if ( expressionType != null ) {
 			final var javaType = wrapperType( expressionType );
 			if ( !expectedType.isAssignableFrom( javaType ) ) {
@@ -639,8 +640,8 @@ public final class JakartaDataRestriction {
 	private static void verifyAssignableExpressionType(
 			Expression<?> expression,
 			Expression<?> valueExpression) {
-		final var expressionType = wrapperType( expression.getJavaType() );
-		final var valueType = wrapperType( valueExpression.getJavaType() );
+		final var expressionType = wrapperType( javaTypeIfKnown( expression ) );
+		final var valueType = wrapperType( javaTypeIfKnown( valueExpression ) );
 		if ( expressionType != null && valueType != null && !expressionType.isAssignableFrom( valueType ) ) {
 			throw new IllegalArgumentException(
 					"Expected '" + expressionType.getName() + "' expression but got '" + valueType.getName() + "'" );
@@ -648,11 +649,17 @@ public final class JakartaDataRestriction {
 	}
 
 	private static void verifyValueType(Expression<?> expression, Object value) {
-		final var expressionType = wrapperType( expression.getJavaType() );
+		final var expressionType = wrapperType( javaTypeIfKnown( expression ) );
 		if ( value != null && expressionType != null && !expressionType.isInstance( value ) ) {
 			throw new IllegalArgumentException(
 					"Expected '" + expressionType.getName() + "' value but got '" + value.getClass().getName() + "'" );
 		}
+	}
+
+	private static Class<?> javaTypeIfKnown(Expression<?> expression) {
+		return expression instanceof JpaTupleElement<?> tupleElement
+				? tupleElement.getJavaTypeIfKnown()
+				: expression.getJavaType();
 	}
 
 	private static Class<?> wrapperType(Class<?> javaType) {

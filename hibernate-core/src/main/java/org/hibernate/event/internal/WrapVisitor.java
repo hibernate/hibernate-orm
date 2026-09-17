@@ -29,7 +29,6 @@ import static org.hibernate.event.internal.EventListenerLogging.EVENT_LISTENER_L
 import static org.hibernate.persister.entity.AbstractEntityPersister.getCollectionKey;
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
-import org.jetbrains.annotations.NotNull;
 
 /**
  * Wrap collections in {@linkplain PersistentCollection collection wrappers}.
@@ -146,11 +145,11 @@ public class WrapVisitor extends ProxyVisitor {
 	}
 
 	private static void scheduleRemoval(
-			@NotNull CollectionPersister persister,
-			@NotNull EventSource session,
-			@NotNull PersistenceContext persistenceContext,
-			@NotNull PersistentCollection<?> collectionToRemove,
-			@NotNull Object key) {
+			@Nonnull CollectionPersister persister,
+			@Nonnull EventSource session,
+			@Nonnull PersistenceContext persistenceContext,
+			@Nonnull PersistentCollection<?> collectionToRemove,
+			@Nonnull Object key) {
 		if ( persistenceContext.getCollectionFlushActionTracker()
 				instanceof FlushProcessingContext flushProcessingContext ) {
 			flushProcessingContext.queueCollectionRemove(

@@ -14,7 +14,7 @@ import org.hibernate.query.sqm.tree.spi.predicate.SqmPredicate;
  */
 public interface SqmBooleanExpressionImplementor
 		extends SqmComparableExpressionImplementor<Boolean>, SqmBooleanExpression {
-	SqmCriteriaNodeBuilder nodeBuilder();
+	@Nonnull SqmCriteriaNodeBuilder nodeBuilder();
 
 	@Nonnull
 	@Override
@@ -54,7 +54,7 @@ public interface SqmBooleanExpressionImplementor
 
 	@Nonnull
 	@Override
-	default SqmBooleanExpression coalesce(Boolean y) {
+	default SqmBooleanExpression coalesce(@Nonnull Boolean y) {
 		return new SqmBooleanExpressionWrapper( nodeBuilder().coalesce( this, y ) );
 	}
 
@@ -66,7 +66,7 @@ public interface SqmBooleanExpressionImplementor
 
 	@Nonnull
 	@Override
-	default SqmBooleanExpression nullif(Boolean y) {
+	default SqmBooleanExpression nullif(@Nonnull Boolean y) {
 		return new SqmBooleanExpressionWrapper( nodeBuilder().nullif( this, y ) );
 	}
 }

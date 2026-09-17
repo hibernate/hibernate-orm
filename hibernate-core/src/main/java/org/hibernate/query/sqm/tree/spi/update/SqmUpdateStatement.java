@@ -55,7 +55,7 @@ public class SqmUpdateStatement<T>
 	private boolean versioned;
 	private SqmSetClause setClause = new SqmSetClause();
 
-	public SqmUpdateStatement(NodeBuilder nodeBuilder) {
+	public SqmUpdateStatement(@Nonnull NodeBuilder nodeBuilder) {
 		super( SqmQuerySource.HQL, nodeBuilder );
 	}
 
@@ -63,7 +63,7 @@ public class SqmUpdateStatement<T>
 	 * @deprecated was previously used for HQL. Use {@link SqmUpdateStatement#SqmUpdateStatement(NodeBuilder)} instead
 	 */
 	@Deprecated(forRemoval = true)
-	public SqmUpdateStatement(SqmRoot<T> target, NodeBuilder nodeBuilder) {
+	public SqmUpdateStatement(@Nonnull SqmRoot<T> target, @Nonnull NodeBuilder nodeBuilder) {
 		super( target, SqmQuerySource.HQL, nodeBuilder );
 	}
 
@@ -71,11 +71,11 @@ public class SqmUpdateStatement<T>
 	 * @deprecated was previously used for Criteria. Use {@link SqmUpdateStatement#SqmUpdateStatement(Class, SqmCriteriaNodeBuilder)} instead.
 	 */
 	@Deprecated(forRemoval = true)
-	public SqmUpdateStatement(SqmRoot<T> target, SqmQuerySource querySource, NodeBuilder nodeBuilder) {
+	public SqmUpdateStatement(@Nonnull SqmRoot<T> target, @Nonnull SqmQuerySource querySource, @Nonnull NodeBuilder nodeBuilder) {
 		super( target, querySource, nodeBuilder );
 	}
 
-	public SqmUpdateStatement(Class<T> targetEntity, SqmCriteriaNodeBuilder nodeBuilder) {
+	public SqmUpdateStatement(@Nonnull Class<T> targetEntity, @Nonnull SqmCriteriaNodeBuilder nodeBuilder) {
 		super(
 				new SqmRoot<>(
 						nodeBuilder.getDomainModel().entity( targetEntity ),
@@ -89,20 +89,20 @@ public class SqmUpdateStatement<T>
 	}
 
 	public SqmUpdateStatement(
-			NodeBuilder builder,
-			SqmQuerySource querySource,
+			@Nonnull NodeBuilder builder,
+			@Nonnull SqmQuerySource querySource,
 			@Nullable Set<SqmParameter<?>> parameters,
-			Map<String, SqmCteStatement<?>> cteStatements,
-			SqmRoot<T> target) {
+			@Nonnull Map<String, SqmCteStatement<?>> cteStatements,
+			@Nonnull SqmRoot<T> target) {
 		this( builder, querySource, parameters, cteStatements, target, false );
 	}
 
 	private SqmUpdateStatement(
-			NodeBuilder builder,
-			SqmQuerySource querySource,
+			@Nonnull NodeBuilder builder,
+			@Nonnull SqmQuerySource querySource,
 			@Nullable Set<SqmParameter<?>> parameters,
-			Map<String, SqmCteStatement<?>> cteStatements,
-			SqmRoot<T> target,
+			@Nonnull Map<String, SqmCteStatement<?>> cteStatements,
+			@Nonnull SqmRoot<T> target,
 			boolean versioned) {
 		super( builder, querySource, parameters, cteStatements, target );
 		this.versioned = versioned;
@@ -113,7 +113,7 @@ public class SqmUpdateStatement<T>
 	 *           All it does is change the SqmQuerySource to CRITERIA
 	 *           in order to allow correct parameter handing.
 	 */
-	public SqmUpdateStatement(SqmUpdateStatement<?> original) {
+	public SqmUpdateStatement(@Nonnull SqmUpdateStatement<?> original) {
 		super(
 				original.nodeBuilder(),
 				CRITERIA,
@@ -126,8 +126,9 @@ public class SqmUpdateStatement<T>
 		versioned = original.isVersioned();
 	}
 
+	@Nonnull
 	@Override
-	public SqmUpdateStatement<T> copy(SqmCopyContext context) {
+	public SqmUpdateStatement<T> copy(@Nonnull SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -193,11 +194,12 @@ public class SqmUpdateStatement<T>
 		}
 	}
 
+	@Nonnull
 	public SqmSetClause getSetClause() {
 		return setClause;
 	}
 
-	public void setSetClause(SqmSetClause setClause) {
+	public void setSetClause(@Nonnull SqmSetClause setClause) {
 		this.setClause = setClause;
 	}
 
@@ -254,12 +256,14 @@ public class SqmUpdateStatement<T>
 		return versioned;
 	}
 
+	@Nonnull
 	@Override
 	public SqmUpdateStatement<T> versioned() {
 		this.versioned = true;
 		return this;
 	}
 
+	@Nonnull
 	@Override
 	public SqmUpdateStatement<T> versioned(boolean versioned) {
 		this.versioned = versioned;
@@ -300,8 +304,9 @@ public class SqmUpdateStatement<T>
 		return this;
 	}
 
+	@Nullable
 	@Override
-	public <X> X accept(SemanticQueryWalker<X> walker) {
+	public <X> X accept(@Nonnull SemanticQueryWalker<X> walker) {
 		return walker.visitUpdateStatement( this );
 	}
 
@@ -311,16 +316,16 @@ public class SqmUpdateStatement<T>
 		return new SqmSubQuery<>( this, type, nodeBuilder() );
 	}
 
-	public <Y> void applyAssignment(SqmPath<Y> targetPath, SqmExpression<? extends Y> value) {
+	public <Y> void applyAssignment(@Nonnull SqmPath<Y> targetPath, @Nonnull SqmExpression<? extends Y> value) {
 		applyAssignment( new SqmAssignment<>( targetPath, value ) );
 	}
 
-	public <Y> void applyAssignment(SqmAssignment<Y> assignment) {
+	public <Y> void applyAssignment(@Nonnull SqmAssignment<Y> assignment) {
 		setClause.addAssignment( assignment );
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		appendHqlCteString( hql, context );
 		hql.append( "update " );
 		if ( versioned ) {
@@ -352,7 +357,7 @@ public class SqmUpdateStatement<T>
 	}
 
 	@Override
-	public boolean isCompatible(Object object) {
+	public boolean isCompatible(@Nullable Object object) {
 		return object instanceof SqmUpdateStatement<?> that
 			&& super.isCompatible( that )
 			&& this.versioned == that.versioned

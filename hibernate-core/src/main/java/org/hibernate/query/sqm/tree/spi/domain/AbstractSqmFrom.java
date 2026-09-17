@@ -82,11 +82,11 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	private @Nullable List<SqmTreatedFrom<O,T,?>> treats;
 
 	protected AbstractSqmFrom(
-			NavigablePath navigablePath,
-			SqmPathSource<T> referencedNavigable,
-			SqmFrom<?, ?> lhs,
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull SqmPathSource<T> referencedNavigable,
+			@Nonnull SqmFrom<?, ?> lhs,
 			@Nullable String alias,
-			NodeBuilder nodeBuilder) {
+			@Nonnull NodeBuilder nodeBuilder) {
 		super( navigablePath, referencedNavigable, lhs, nodeBuilder );
 		if ( lhs == null ) {
 			throw new IllegalArgumentException( "LHS cannot be null" );
@@ -98,9 +98,9 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	 * Intended for use with {@link SqmRoot}
 	 */
 	protected AbstractSqmFrom(
-			EntityDomainType<T> entityType,
+			@Nonnull EntityDomainType<T> entityType,
 			@Nullable String alias,
-			NodeBuilder nodeBuilder) {
+			@Nonnull NodeBuilder nodeBuilder) {
 		super(
 				buildRootNavigablePath( entityType.getHibernateEntityName(), alias ),
 				(SqmEntityDomainType<T>) entityType,
@@ -115,10 +115,10 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	 * Intended for use with {@link SqmTreatedRoot} to {@link SqmRoot}
 	 */
 	protected AbstractSqmFrom(
-			NavigablePath navigablePath,
-			SqmPathSource<T> entityType,
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull SqmPathSource<T> entityType,
 			@Nullable String alias,
-			NodeBuilder nodeBuilder) {
+			@Nonnull NodeBuilder nodeBuilder) {
 		super( navigablePath, entityType, null, nodeBuilder );
 		this.alias = alias;
 	}
@@ -127,13 +127,13 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	 * Intended for use with {@link SqmCorrelatedRootJoin} through {@link SqmRoot}
 	 */
 	protected AbstractSqmFrom(
-			NavigablePath navigablePath,
-			SqmPathSource<T> referencedNavigable,
-			NodeBuilder nodeBuilder) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull SqmPathSource<T> referencedNavigable,
+			@Nonnull NodeBuilder nodeBuilder) {
 		super( navigablePath, referencedNavigable, null, nodeBuilder );
 	}
 
-	protected void copyTo(AbstractSqmFrom<O, T> target, SqmCopyContext context) {
+	protected void copyTo(@Nonnull AbstractSqmFrom<O, T> target, @Nonnull SqmCopyContext context) {
 		super.copyTo( target, context );
 		final var joins = this.joins;
 		if ( joins != null ) {
@@ -145,8 +145,9 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 		}
 	}
 
+	@Nonnull
 	private ArrayList<SqmTreatedFrom<O, T, ?>> copyTreats(
-			SqmCopyContext context, List<SqmTreatedFrom<O, T, ?>> treats) {
+			@Nonnull SqmCopyContext context, @Nonnull List<SqmTreatedFrom<O, T, ?>> treats) {
 		final ArrayList<SqmTreatedFrom<O, T, ?>> newTreats =
 				new ArrayList<>( treats.size() );
 		for ( var treat : treats ) {
@@ -155,8 +156,9 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 		return newTreats;
 	}
 
+	@Nonnull
 	private static <T> ArrayList<SqmJoin<T, ?>> copyJoins(
-			SqmCopyContext context, List<SqmJoin<T, ?>> joins) {
+			@Nonnull SqmCopyContext context, @Nonnull List<SqmJoin<T, ?>> joins) {
 		final ArrayList<SqmJoin<T, ?>> newJoins =
 				new ArrayList<>( joins.size() );
 		for ( var join : joins ) {
@@ -175,11 +177,12 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 		this.alias = explicitAlias;
 	}
 
+	@Nonnull
 	@Override
 	public SqmPath<?> resolvePathPart(
-			String name,
+			@Nonnull String name,
 			boolean isTerminal,
-			SqmCreationState creationState) {
+			@Nonnull SqmCreationState creationState) {
 		// Try to resolve an existing attribute join without ON clause
 		SqmPath<?> resolvedPath = null;
 		for ( var sqmJoin : getSqmJoins() ) {
@@ -245,7 +248,7 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	}
 
 	@Override
-	public void addSqmJoin(SqmJoin<T, ?> join) {
+	public void addSqmJoin(@Nonnull SqmJoin<T, ?> join) {
 		if ( joins == null ) {
 			joins = new ArrayList<>();
 		}
@@ -276,7 +279,7 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	}
 
 	@Override
-	public void visitSqmJoins(Consumer<SqmJoin<T, ?>> consumer) {
+	public void visitSqmJoins(@Nonnull Consumer<SqmJoin<T, ?>> consumer) {
 		if ( joins != null ) {
 			joins.forEach( consumer );
 		}
@@ -289,7 +292,7 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	}
 
 	protected <S extends T> @Nullable SqmTreatedFrom<O,T,S> findTreat(
-			ManagedDomainType<S> targetType, @Nullable String alias) {
+			@Nonnull ManagedDomainType<S> targetType, @Nullable String alias) {
 		if ( treats != null ) {
 			for ( var treat : treats ) {
 				if ( treat.getTreatTarget() == targetType
@@ -303,7 +306,8 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 		return null;
 	}
 
-	protected <S extends T, X extends SqmTreatedFrom<O,T,S>> X addTreat(X treat) {
+	@Nonnull
+	protected <S extends T, X extends SqmTreatedFrom<O,T,S>> X addTreat(@Nonnull X treat) {
 		if ( treats == null ) {
 			treats = new ArrayList<>();
 		}
@@ -700,7 +704,8 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 		return join( subquery, joinType, lateral, generateAlias() );
 	}
 
-	public <X> JpaDerivedJoin<X> join(Subquery<X> subquery, SqmJoinType joinType, boolean lateral, String alias) {
+	@Nonnull
+	public <X> JpaDerivedJoin<X> join(@Nonnull Subquery<X> subquery, @Nonnull SqmJoinType joinType, boolean lateral, @Nullable String alias) {
 		validateComplianceFromSubQuery();
 		//noinspection unchecked
 		final var derivedJoin =
@@ -721,7 +726,8 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 		return join( cte, joinType, generateAlias() );
 	}
 
-	public <X> SqmJoin<?, X> join(JpaCteCriteria<X> cte, SqmJoinType joinType, String alias) {
+	@Nonnull
+	public <X> SqmJoin<?, X> join(@Nonnull JpaCteCriteria<X> cte, @Nonnull SqmJoinType joinType, @Nullable String alias) {
 		validateComplianceFromSubQuery();
 		//noinspection unchecked
 		final var cteJoin =
@@ -919,9 +925,10 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 		);
 	}
 
+	@Nonnull
 	private <A> SqmAttributeJoin<T, A> buildJoin(
-			SqmPathSource<A> joinedPathSource,
-			SqmJoinType joinType,
+			@Nonnull SqmPathSource<A> joinedPathSource,
+			@Nonnull SqmJoinType joinType,
 			boolean fetched) {
 		if ( fetched ) {
 			final var compatibleFetchJoin =
@@ -936,7 +943,8 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 		return sqmJoin;
 	}
 
-	private <A> SqmAttributeJoin<T, A> buildAttributeJoin(SqmPathSource<A> joinedPathSource, SqmJoinType joinType, boolean fetched) {
+	@Nonnull
+	private <A> SqmAttributeJoin<T, A> buildAttributeJoin(@Nonnull SqmPathSource<A> joinedPathSource, @Nonnull SqmJoinType joinType, boolean fetched) {
 		if ( joinedPathSource instanceof SqmSingularPersistentAttribute<?, A> ) {
 			return buildSingularJoin( (SqmSingularPersistentAttribute<T, A>) joinedPathSource, joinType, fetched );
 		}
@@ -965,9 +973,10 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 		}
 	}
 
+	@Nonnull
 	private <A> SqmSingularJoin<T, A> buildSingularJoin(
-			SqmSingularPersistentAttribute<? super T, A> attribute,
-			SqmJoinType joinType,
+			@Nonnull SqmSingularPersistentAttribute<? super T, A> attribute,
+			@Nonnull SqmJoinType joinType,
 			boolean fetched) {
 		if ( attribute.getPathType() instanceof ManagedDomainType ) {
 			return new SqmSingularJoin<>(
@@ -983,9 +992,10 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 		throw new SemanticException( "Attribute '" + attribute + "' is not joinable" );
 	}
 
+	@Nonnull
 	private <E> SqmBagJoin<T, E> buildBagJoin(
-			BagPersistentAttribute<? super T, E> attribute,
-			SqmJoinType joinType,
+			@Nonnull BagPersistentAttribute<? super T, E> attribute,
+			@Nonnull SqmJoinType joinType,
 			boolean fetched) {
 		return new SqmBagJoin<>(
 				this,
@@ -997,9 +1007,10 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 		);
 	}
 
+	@Nonnull
 	private <E> SqmListJoin<T, E> buildListJoin(
-			ListPersistentAttribute<? super T, E> attribute,
-			SqmJoinType joinType,
+			@Nonnull ListPersistentAttribute<? super T, E> attribute,
+			@Nonnull SqmJoinType joinType,
 			boolean fetched) {
 		return new SqmListJoin<>(
 				this,
@@ -1011,9 +1022,10 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 		);
 	}
 
+	@Nonnull
 	private <K, V> SqmMapJoin<T, K, V> buildMapJoin(
-			MapPersistentAttribute<? super T, K, V> attribute,
-			SqmJoinType joinType,
+			@Nonnull MapPersistentAttribute<? super T, K, V> attribute,
+			@Nonnull SqmJoinType joinType,
 			boolean fetched) {
 		return new SqmMapJoin<>(
 				this,
@@ -1025,9 +1037,10 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 		);
 	}
 
+	@Nonnull
 	private <E> SqmSetJoin<T, E> buildSetJoin(
-			SetPersistentAttribute<? super T, E> attribute,
-			SqmJoinType joinType,
+			@Nonnull SetPersistentAttribute<? super T, E> attribute,
+			@Nonnull SqmJoinType joinType,
 			boolean fetched) {
 		return new SqmSetJoin<>(
 				this,
@@ -1070,7 +1083,7 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		hql.append( resolveAlias( context ) );
 	}
 
@@ -1091,6 +1104,7 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 
 	private int aliasCounter = 0;
 
+	@Nonnull
 	private String generateAlias() {
 		final String prefix;
 		if ( alias == null ) {
@@ -1110,14 +1124,14 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	// Since the navigablePath contains the alias, no need to check this separately here
 
 	@Override
-	public boolean deepEquals(SqmFrom<?, ?> object) {
+	public boolean deepEquals(@Nonnull SqmFrom<?, ?> object) {
 		return equals( object )
 			&& SqmFrom.areDeepEqual( getSqmJoins(), object.getSqmJoins() )
 			&& SqmFrom.areDeepEqual( getSqmTreats(), object.getSqmTreats() );
 	}
 
 	@Override
-	public boolean isDeepCompatible(SqmFrom<?, ?> object) {
+	public boolean isDeepCompatible(@Nonnull SqmFrom<?, ?> object) {
 		return isCompatible( object )
 				&& SqmFrom.areDeepCompatible( getSqmJoins(), object.getSqmJoins() )
 				&& SqmFrom.areDeepCompatible( getSqmTreats(), object.getSqmTreats() );

@@ -4,6 +4,9 @@
  */
 package org.hibernate.dialect.function;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.util.Collections;
 import java.util.List;
 
@@ -32,6 +35,8 @@ import org.hibernate.sql.ast.spi.query.expression.Expression;
 import org.hibernate.sql.ast.spi.query.predicate.Predicate;
 import org.hibernate.sql.ast.spi.query.select.SortSpecification;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * @author Christian Beikov
@@ -131,11 +136,11 @@ public class InverseDistributionFunction extends AbstractSqmSelfRenderingFunctio
 	protected class SelfRenderingInverseDistributionFunction<T> extends SelfRenderingSqmOrderedSetAggregateFunction<T> {
 
 		public SelfRenderingInverseDistributionFunction(
-				List<? extends SqmTypedNode<?>> arguments,
-				SqmPredicate filter,
-				SqmOrderByClause withinGroupClause,
-				ReturnableType<T> impliedResultType,
-				QueryEngine queryEngine) {
+				@Nonnull List<? extends SqmTypedNode<?>> arguments,
+				@Nonnull SqmPredicate filter,
+				@Nonnull SqmOrderByClause withinGroupClause,
+				@Nullable ReturnableType<T> impliedResultType,
+				@Nonnull QueryEngine queryEngine) {
 			super(
 					InverseDistributionFunction.this,
 					InverseDistributionFunction.this,
@@ -155,22 +160,22 @@ public class InverseDistributionFunction extends AbstractSqmSelfRenderingFunctio
 		}
 
 		@Override
+		@Nullable
 		protected ReturnableType<?> determineResultType(
-				SqmToSqlAstConverter converter,
-				TypeConfiguration typeConfiguration) {
-			return (ReturnableType<?>)
-					getWithinGroup().getSortSpecifications().get( 0 )
-							.getSortExpression()
-							.getExpressible()
-							.getSqmType();
+				@Nullable SqmToSqlAstConverter converter,
+				@Nonnull TypeConfiguration typeConfiguration) {
+			final var expressible = requireNonNull( getWithinGroup() )
+					.getSortSpecifications().get( 0 ).getSortExpression().getExpressible();
+			return expressible == null ? null : (ReturnableType<?>) expressible.getSqmType();
 		}
 
+		@Nullable
 		@Override
 		@org.hibernate.SPI(org.hibernate.SPI.Role.USE)
 		protected MappingModelExpressible<?> getMappingModelExpressible(
-				SqmToSqlAstConverter walker,
-				ReturnableType<?> resultType,
-				List<SqlAstNode> arguments) {
+				@Nonnull SqmToSqlAstConverter walker,
+				@Nullable ReturnableType<?> resultType,
+				@Nonnull List<SqlAstNode> arguments) {
 			MappingModelExpressible<?> mapping;
 			if ( resultType instanceof MappingModelExpressible<?> mappingModelExpressible) {
 				// here we have a BasicType, which can be cast
@@ -182,10 +187,11 @@ public class InverseDistributionFunction extends AbstractSqmSelfRenderingFunctio
 				// and we have no way to get a BasicValuedMapping
 				// from it directly
 				final Expression expression = (Expression)
-						getWithinGroup().getSortSpecifications().get( 0 )
+						requireNonNull( getWithinGroup() ).getSortSpecifications().get( 0 )
 								.getSortExpression()
 								.accept( walker );
-				final JdbcMappingContainer expressionType = expression.getExpressionType();
+				final JdbcMappingContainer expressionType =
+						expression == null ? null : expression.getExpressionType();
 				if ( expressionType instanceof BasicValuedMapping basicValuedMapping ) {
 					return basicValuedMapping;
 				}

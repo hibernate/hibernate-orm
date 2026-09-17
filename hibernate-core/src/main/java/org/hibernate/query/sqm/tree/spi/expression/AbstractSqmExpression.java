@@ -28,12 +28,12 @@ import static org.hibernate.query.internal.QueryHelper.highestPrecedenceType2;
  */
 public abstract class AbstractSqmExpression<T> extends AbstractJpaSelection<T> implements SqmExpression<T> {
 
-	public AbstractSqmExpression(@Nullable SqmBindableType<? super T> type, NodeBuilder criteriaBuilder) {
+	public AbstractSqmExpression(@Nullable SqmBindableType<? super T> type, @Nonnull NodeBuilder criteriaBuilder) {
 		super( type, criteriaBuilder );
 	}
 
 	@Override
-	public SqmCriteriaNodeBuilder nodeBuilder() {
+	public @Nonnull SqmCriteriaNodeBuilder nodeBuilder() {
 		return (SqmCriteriaNodeBuilder) super.nodeBuilder();
 	}
 
@@ -82,7 +82,7 @@ public abstract class AbstractSqmExpression<T> extends AbstractJpaSelection<T> i
 
 	@Nonnull
 	@Override
-	public SqmPredicate equalTo(Object value) {
+	public SqmPredicate equalTo(@Nonnull Object value) {
 		return nodeBuilder().equal( this, value );
 	}
 
@@ -94,7 +94,7 @@ public abstract class AbstractSqmExpression<T> extends AbstractJpaSelection<T> i
 
 	@Nonnull
 	@Override
-	public SqmPredicate notEqualTo(Object value) {
+	public SqmPredicate notEqualTo(@Nonnull Object value) {
 		return nodeBuilder().notEqual( this, value );
 	}
 
@@ -104,6 +104,7 @@ public abstract class AbstractSqmExpression<T> extends AbstractJpaSelection<T> i
 		return nodeBuilder().cast( this, castTarget );
 	}
 
+	@Nonnull
 	@Override
 	public <R> SqmCaseSimple<T, R> selectCase() {
 		return nodeBuilder().selectCase( this );
@@ -154,7 +155,7 @@ public abstract class AbstractSqmExpression<T> extends AbstractJpaSelection<T> i
 
 	@Nonnull
 	@Override
-	public SqmExpression<T> coalesce(T y) {
+	public SqmExpression<T> coalesce(@Nonnull T y) {
 		return nodeBuilder().coalesce( this, y );
 	}
 
@@ -166,7 +167,7 @@ public abstract class AbstractSqmExpression<T> extends AbstractJpaSelection<T> i
 
 	@Nonnull
 	@Override
-	public SqmExpression<T> nullif(T y) {
+	public SqmExpression<T> nullif(@Nonnull T y) {
 		return nodeBuilder().nullif( this, y );
 	}
 

@@ -20,6 +20,6 @@ public interface SqmCteContainer extends SqmNode, JpaCteContainer {
 	Collection<SqmCteStatement<?>> getCteStatements();
 
 	@Nullable
-	SqmCteStatement<?> getCteStatement(String cteLabel);
+	SqmCteStatement<?> getCteStatement(@Nonnull String cteLabel);
 
 }

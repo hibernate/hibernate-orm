@@ -21,29 +21,30 @@ public class SqmComparableValuedSimplePath<C extends Comparable<? super C>>
 		extends SqmBasicValuedSimplePath<C>
 		implements SqmComparableExpressionImplementor<C> {
 	public SqmComparableValuedSimplePath(
-			NavigablePath navigablePath,
-			SqmPathSource<C> referencedPathSource,
-			SqmPath<?> lhs,
-			NodeBuilder nodeBuilder) {
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull SqmPathSource<C> referencedPathSource,
+			@Nullable SqmPath<?> lhs,
+			@Nonnull NodeBuilder nodeBuilder) {
 		this( navigablePath, referencedPathSource, lhs, null, nodeBuilder );
 	}
 
 	public SqmComparableValuedSimplePath(
-			NavigablePath navigablePath,
-			SqmPathSource<C> referencedPathSource,
-			SqmPath<?> lhs,
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull SqmPathSource<C> referencedPathSource,
+			@Nullable SqmPath<?> lhs,
 			@Nullable String explicitAlias,
-			NodeBuilder nodeBuilder) {
+			@Nonnull NodeBuilder nodeBuilder) {
 		super( navigablePath, referencedPathSource, lhs, explicitAlias, nodeBuilder );
 	}
 
+	@Nonnull
 	@Override
 	protected SqmComparableValuedSimplePath<C> createCopy(
-			NavigablePath navigablePath,
-			SqmPathSource<C> referencedPathSource,
-			SqmPath<?> lhs,
+			@Nonnull NavigablePath navigablePath,
+			@Nonnull SqmPathSource<C> referencedPathSource,
+			@Nullable SqmPath<?> lhs,
 			@Nullable String explicitAlias,
-			NodeBuilder nodeBuilder) {
+			@Nonnull NodeBuilder nodeBuilder) {
 		return new SqmComparableValuedSimplePath<>(
 				navigablePath,
 				referencedPathSource,
@@ -61,7 +62,7 @@ public class SqmComparableValuedSimplePath<C extends Comparable<? super C>>
 
 	@Nonnull
 	@Override
-	public SqmComparableExpression<C> coalesce(C y) {
+	public SqmComparableExpression<C> coalesce(@Nonnull C y) {
 		return new SqmComparableExpressionWrapper<>( nodeBuilder().coalesce( this, y ) );
 	}
 
@@ -73,7 +74,7 @@ public class SqmComparableValuedSimplePath<C extends Comparable<? super C>>
 
 	@Nonnull
 	@Override
-	public SqmComparableExpression<C> nullif(C y) {
+	public SqmComparableExpression<C> nullif(@Nonnull C y) {
 		return new SqmComparableExpressionWrapper<>( nodeBuilder().nullif( this, y ) );
 	}
 }

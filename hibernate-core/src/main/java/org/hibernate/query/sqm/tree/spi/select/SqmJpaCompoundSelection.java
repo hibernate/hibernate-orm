@@ -46,16 +46,17 @@ public class SqmJpaCompoundSelection<T>
 	private final JavaType<T> javaType;
 
 	public SqmJpaCompoundSelection(
-			List<? extends SqmSelectableNode<?>> selectableNodes,
-			JavaType<T> javaType,
-			NodeBuilder criteriaBuilder) {
+			@Nonnull List<? extends SqmSelectableNode<?>> selectableNodes,
+			@Nonnull JavaType<T> javaType,
+			@Nonnull NodeBuilder criteriaBuilder) {
 		super( null, criteriaBuilder );
 		this.selectableNodes = selectableNodes;
 		this.javaType = javaType;
 	}
 
+	@Nonnull
 	@Override
-	public SqmJpaCompoundSelection<T> copy(SqmCopyContext context) {
+	public SqmJpaCompoundSelection<T> copy(@Nonnull SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -75,20 +76,23 @@ public class SqmJpaCompoundSelection<T>
 	}
 
 	@Override
+	@Nonnull
 	public JavaType<T> getJavaTypeDescriptor() {
 		return javaType;
 	}
 
+	@Nonnull
 	@Override
 	public JavaType<T> getExpressibleJavaType() {
 		return getJavaTypeDescriptor();
 	}
 
 	@Override
-	public Class<T> getJavaType() {
+	public @Nonnull Class<T> getJavaType() {
 		return getJavaTypeDescriptor().getJavaTypeClass();
 	}
 
+	@Nonnull
 	@Override
 	public List<? extends SqmSelectableNode<?>> getSelectionItems() {
 		return selectableNodes;
@@ -110,13 +114,14 @@ public class SqmJpaCompoundSelection<T>
 		return true;
 	}
 
+	@Nullable
 	@Override
-	public <X> X accept(SemanticQueryWalker<X> walker) {
+	public <X> X accept(@Nonnull SemanticQueryWalker<X> walker) {
 		return walker.visitJpaCompoundSelection( this );
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		appendSelectableNode( hql, context, selectableNodes.get( 0 ) );
 		for ( int i = 1; i < selectableNodes.size(); i++ ) {
 			hql.append(", ");
@@ -124,7 +129,7 @@ public class SqmJpaCompoundSelection<T>
 		}
 	}
 
-	private static void appendSelectableNode(StringBuilder hql, SqmRenderContext context, SqmSelectableNode<?> sqmSelectableNode) {
+	private static void appendSelectableNode(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context, @Nonnull SqmSelectableNode<?> sqmSelectableNode) {
 		sqmSelectableNode.appendHqlString( hql, context );
 		if ( sqmSelectableNode.getAlias() != null ) {
 			hql.append( " as " ).append( sqmSelectableNode.getAlias() );
@@ -152,7 +157,7 @@ public class SqmJpaCompoundSelection<T>
 	}
 
 	@Override
-	public boolean isCompatible(Object object) {
+	public boolean isCompatible(@Nullable Object object) {
 		if ( !(object instanceof SqmJpaCompoundSelection<?> that)
 			|| selectableNodes.size() != that.selectableNodes.size() ) {
 			return false;
@@ -172,7 +177,7 @@ public class SqmJpaCompoundSelection<T>
 	}
 
 	@Override
-	public void visitSubSelectableNodes(Consumer<SqmSelectableNode<?>> jpaSelectionConsumer) {
+	public void visitSubSelectableNodes(@Nonnull Consumer<SqmSelectableNode<?>> jpaSelectionConsumer) {
 		selectableNodes.forEach( jpaSelectionConsumer );
 	}
 

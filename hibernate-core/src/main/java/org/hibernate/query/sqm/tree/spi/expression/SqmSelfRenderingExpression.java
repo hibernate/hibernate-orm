@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.sqm.tree.spi.expression;
 
+import jakarta.annotation.Nonnull;
+
 import java.util.function.Function;
 
 import jakarta.annotation.Nullable;
@@ -21,15 +23,16 @@ public class SqmSelfRenderingExpression<T> extends AbstractSqmExpression<T> {
 	private final Function<SemanticQueryWalker<?>, Expression> renderer;
 
 	public SqmSelfRenderingExpression(
-			Function<SemanticQueryWalker<?>, Expression> renderer,
+			@Nonnull Function<SemanticQueryWalker<?>, Expression> renderer,
 			@Nullable SqmBindableType<T> type,
-			NodeBuilder criteriaBuilder) {
+			@Nonnull NodeBuilder criteriaBuilder) {
 		super( type, criteriaBuilder );
 		this.renderer = renderer;
 	}
 
+	@Nonnull
 	@Override
-	public SqmSelfRenderingExpression<T> copy(SqmCopyContext context) {
+	public SqmSelfRenderingExpression<T> copy(@Nonnull SqmCopyContext context) {
 		final var existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
@@ -42,14 +45,15 @@ public class SqmSelfRenderingExpression<T> extends AbstractSqmExpression<T> {
 		return expression;
 	}
 
+	@Nullable
 	@Override
-	public <X> X accept(SemanticQueryWalker<X> walker) {
+	public <X> X accept(@Nonnull SemanticQueryWalker<X> walker) {
 		//noinspection unchecked
 		return (X) renderer.apply( walker );
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+	public void appendHqlString(@Nonnull StringBuilder hql, @Nonnull SqmRenderContext context) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -58,7 +62,7 @@ public class SqmSelfRenderingExpression<T> extends AbstractSqmExpression<T> {
 	// so basing equality on the object identity is fine
 
 	@Override
-	public boolean isCompatible(Object object) {
+	public boolean isCompatible(@Nullable Object object) {
 		return this == object;
 	}
 

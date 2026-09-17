@@ -34,10 +34,12 @@ import org.hibernate.dialect.PostgresPlusDialect;
 import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
@@ -50,7 +52,6 @@ import org.hibernate.type.descriptor.jdbc.CharJdbcType;
 import org.hibernate.type.descriptor.jdbc.NumericJdbcType;
 import org.hibernate.type.descriptor.jdbc.RealJdbcType;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
@@ -146,9 +147,8 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 	@SkipForDialect(dialectClass = OracleDialect.class, reason = "No support for the bit datatype so we use number(1,0)")
 	@SkipForDialect(dialectClass = DB2Dialect.class, majorVersion = 10, reason = "No support for the bit datatype so we use smallint")
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "No support for the bit datatype so we use char(1)")
+	@RequiresDialectFeature(feature = DialectFeatureChecks.NotGaussDBMMode.class, comment = "GaussDB M mode maps boolean to tinyint(1); gsjdbc4 reports TINYINT -> Byte, not Boolean")
 	public void booleanType(EntityManagerFactoryScope scope) {
-		// GaussDB M mode maps boolean to tinyint(1); gsjdbc4 reports TINYINT -> Byte, not Boolean
-		Assumptions.assumeFalse( scope.getDialect() instanceof GaussDBDialect g && g.isMMode() );
 		doTest( scope, BooleanEntity.class, true );
 	}
 
@@ -157,9 +157,8 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 	@SkipForDialect(dialectClass = OracleDialect.class, reason = "No support for the bit datatype so we use number(1,0)")
 	@SkipForDialect(dialectClass = DB2Dialect.class, majorVersion = 10, reason = "No support for the bit datatype so we use smallint")
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "No support for the bit datatype so we use char(1)")
+	@RequiresDialectFeature(feature = DialectFeatureChecks.NotGaussDBMMode.class, comment = "GaussDB M mode maps bit to tinyint(1); gsjdbc4 reports TINYINT -> Byte, not Boolean")
 	public void bitType(EntityManagerFactoryScope scope) {
-		// GaussDB M mode maps bit to tinyint(1); gsjdbc4 reports TINYINT -> Byte, not Boolean
-		Assumptions.assumeFalse( scope.getDialect() instanceof GaussDBDialect g && g.isMMode() );
 		doTest( scope, BitEntity.class, false );
 	}
 
@@ -196,9 +195,8 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 	@SkipForDialect(dialectClass = MariaDBDialect.class, reason = "Turns reals into doubles in result sets and advertises the type as double in the metadata")
 	@SkipForDialect(dialectClass = TiDBDialect.class, reason = "Turns reals into doubles in result sets and advertises the type as double in the metadata")
 	@SkipForDialect(dialectClass = HSQLDialect.class, reason = "Turns reals into doubles in result sets and advertises the type as double in the metadata")
+	@RequiresDialectFeature(feature = DialectFeatureChecks.NotGaussDBMMode.class, comment = "GaussDB M mode maps real to double; gsjdbc4 reports DOUBLE, not Float (like MySQL)")
 	public void realType(EntityManagerFactoryScope scope) {
-		// GaussDB M mode maps real to double; gsjdbc4 reports DOUBLE, not Float (like MySQL)
-		Assumptions.assumeFalse( scope.getDialect() instanceof GaussDBDialect g && g.isMMode() );
 		doTest( scope, RealEntity.class, 15516.125f );
 	}
 

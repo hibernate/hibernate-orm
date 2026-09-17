@@ -201,12 +201,8 @@ public class CriteriaWindowFunctionTest {
 	@SkipForDialect(dialectClass = SQLServerDialect.class, reason = "No support for nth_value function")
 	@SkipForDialect(dialectClass = DB2Dialect.class, majorVersion = 10, reason = "No support for nth_value function")
 	@SkipForDialect(dialectClass = InformixDialect.class, reason = "No support for nth_value function")
+	@RequiresDialectFeature(feature = DialectFeatureChecks.NotGaussDBMMode.class, comment = "GaussDB M mode (MySQL kernel) rejects the nth_value() over(...) syntax even though the function is registered; A mode (openGauss PG kernel) supports nth_value as a standard window function. Unlike testRank, where the function is unregistered and A mode also fails.")
 	public void testNthValue(SessionFactoryScope scope) {
-		// GaussDB M mode (MySQL kernel) reports "syntax error at or near nth_value" for nth_value() over(...);
-		// the function is registered, but the M-mode DB rejects the syntax. A mode (openGauss PG kernel) supports
-		// nth_value as a standard window function, so M-only skip (unlike testRank, where the function is unregistered
-		// and A mode also fails).
-		org.junit.jupiter.api.Assumptions.assumeFalse( scope.getSessionFactory().getJdbcServices().getDialect() instanceof org.hibernate.community.dialect.GaussDBDialect g && g.isMMode() );
 		scope.inTransaction(
 				session -> {
 					HibernateCriteriaBuilder cb = session.getCriteriaBuilder();

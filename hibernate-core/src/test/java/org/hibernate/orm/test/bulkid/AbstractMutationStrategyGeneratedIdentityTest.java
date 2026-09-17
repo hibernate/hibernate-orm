@@ -15,6 +15,8 @@ import org.hibernate.dialect.AbstractTransactSQLDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
@@ -55,13 +57,12 @@ public abstract class AbstractMutationStrategyGeneratedIdentityTest {
 	@SkipForDialect(dialectClass = AbstractTransactSQLDialect.class, matchSubTypes = true,
 			reason = "T-SQL complains IDENTITY_INSERT is off when a value for an identity column is provided")
 	@SkipForDialect(dialectClass = InformixDialect.class, reason = "Informix counts from 1 like a normal person")
+	// Same root cause as the MySQLDialect skip above, but GaussDBDialect is not a MySQLDialect subtype:
+	// M mode (MySQL kernel) ignores the explicitly-provided id=0 for an IDENTITY (auto_increment) column
+	// and generates its own value, so the joined-subclass inserts end up with mismatched ids -> FK
+	// violation. A mode (PG kernel) accepts an explicit id for IDENTITY/SERIAL.
+	@RequiresDialectFeature(feature = DialectFeatureChecks.NotGaussDBMMode.class)
 	public void testInsertStatic(SessionFactoryScope scope) {
-		// GaussDB M mode (MySQL kernel) ignores the explicitly-provided id=0 for an IDENTITY (auto_increment)
-		// column and generates its own value, so the joined-subclass INSERT into Person(id=0) and Engineer(id=0)
-		// end up with mismatched ids -> FK violation "insert or update on table Engineer". Same root cause as the
-		// @SkipForDialect(MySQLDialect matchSubTypes) above (GaussDBDialect is not a MySQLDialect subtype, so it
-		// does not apply). A mode (PG kernel) accepts an explicit id for IDENTITY/SERIAL, so M-only skip.
-		org.junit.jupiter.api.Assumptions.assumeFalse( scope.getSessionFactory().getJdbcServices().getDialect() instanceof org.hibernate.community.dialect.GaussDBDialect g && g.isMMode() );
 		scope.inTransaction( session -> {
 			session.createMutationQuery(
 							"insert into Engineer(id, name, employed, fellow) values (0, :name, :employed, false)" )

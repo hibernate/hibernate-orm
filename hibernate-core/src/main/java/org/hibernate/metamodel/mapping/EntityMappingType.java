@@ -371,6 +371,13 @@ public interface EntityMappingType
 	EntityVersionMapping getVersionMapping();
 
 	/**
+	 * Tenant metadata, or {@code null} for entities without a tenant id.
+	 */
+	default TenantIdMapping getTenantIdMapping() {
+		return null;
+	}
+
+	/**
 	 * The type of optimistic locking, if any, defined for this entity mapping
 	 */
 	default OptimisticLockStyle optimisticLockStyle() {

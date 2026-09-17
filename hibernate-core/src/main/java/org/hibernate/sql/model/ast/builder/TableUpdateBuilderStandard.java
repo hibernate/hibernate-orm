@@ -9,6 +9,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.MutationTarget;
 import org.hibernate.sql.model.TableMapping;
+import org.hibernate.sql.model.ast.AbstractTableUpdate;
 import org.hibernate.sql.model.ast.MutatingTableReference;
 import org.hibernate.sql.model.ast.RestrictedTableMutation;
 import org.hibernate.sql.model.internal.OptionalTableUpdate;
@@ -26,6 +27,7 @@ import static java.util.Collections.emptyList;
 public class TableUpdateBuilderStandard<O extends MutationOperation>
 		extends AbstractTableUpdateBuilder<O> {
 	private final String whereFragment;
+	private final TableMapping.MutationDetails mutationDetails;
 
 	public TableUpdateBuilderStandard(
 			MutationTarget<?> mutationTarget,
@@ -33,6 +35,7 @@ public class TableUpdateBuilderStandard<O extends MutationOperation>
 			SessionFactoryImplementor sessionFactory) {
 		super( mutationTarget, tableMapping, sessionFactory );
 		this.whereFragment = null;
+		this.mutationDetails = tableMapping.getUpdateDetails();
 	}
 
 	public TableUpdateBuilderStandard(
@@ -47,7 +50,17 @@ public class TableUpdateBuilderStandard<O extends MutationOperation>
 			MutatingTableReference tableReference,
 			SessionFactoryImplementor sessionFactory,
 			String whereFragment) {
+		this( mutationTarget, tableReference, tableReference.getTableMapping().getUpdateDetails(), whereFragment, sessionFactory );
+	}
+
+	public TableUpdateBuilderStandard(
+			MutationTarget<?> mutationTarget,
+			MutatingTableReference tableReference,
+			TableMapping.MutationDetails mutationDetails,
+			String whereFragment,
+			SessionFactoryImplementor sessionFactory) {
 		super( mutationTarget, tableReference, sessionFactory );
+		this.mutationDetails = mutationDetails;
 		this.whereFragment = whereFragment;
 	}
 
@@ -65,15 +78,20 @@ public class TableUpdateBuilderStandard<O extends MutationOperation>
 					new TableUpdateNoSet( getMutatingTable(), getMutationTarget() );
 		}
 
-		if ( getMutatingTable().getTableMapping().getUpdateDetails().getCustomSql() != null ) {
+		if ( mutationDetails.getCustomSql() != null ) {
+			final var parameters = AbstractTableUpdate.collectParameters(
+					valueBindings, getKeyRestrictionBindings(), getOptimisticLockBindings() );
+			adjustCustomSqlTenantRestriction( mutationDetails, parameters );
 			return (RestrictedTableMutation<O>)
 					new TableUpdateCustomSql(
 							getMutatingTable(),
 							getMutationTarget(),
+							mutationDetails,
 							getSqlComment(),
 							valueBindings,
 							getKeyRestrictionBindings(),
-							getOptimisticLockBindings()
+							getOptimisticLockBindings(),
+							parameters
 					);
 		}
 
@@ -97,7 +115,7 @@ public class TableUpdateBuilderStandard<O extends MutationOperation>
 						getKeyRestrictionBindings(),
 						getOptimisticLockBindings(),
 						whereFragment,
-						null,
+						mutationDetails.getExpectation(),
 						emptyList()
 				);
 	}

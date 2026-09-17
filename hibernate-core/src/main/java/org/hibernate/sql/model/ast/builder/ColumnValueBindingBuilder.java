@@ -18,6 +18,7 @@ import org.hibernate.sql.model.ast.ColumnValueParameter;
 import org.hibernate.sql.model.ast.ColumnValueParameterList;
 import org.hibernate.sql.model.ast.ColumnWriteFragment;
 import org.hibernate.sql.model.ast.MutatingTableReference;
+import org.hibernate.sql.model.ast.TenantIdColumnValueBinding;
 import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
@@ -34,6 +35,14 @@ public class ColumnValueBindingBuilder {
 	private static final String SPLIT_REGEX = "[^\\s\"']+|\"([^\"]*)\"|'([^']*)'";
 	private static final Pattern SPLIT_PATTERN = Pattern.compile( SPLIT_REGEX );
 
+
+	public static TenantIdColumnValueBinding createTenantRestriction(
+			SelectableMapping selectableMapping,
+			MutatingTableReference mutatingTableReference,
+			Consumer<Object> parameterConsumer) {
+		return new TenantIdColumnValueBinding( createValueBinding(
+				"?", selectableMapping, mutatingTableReference, ParameterUsage.TENANT, parameterConsumer ) );
+	}
 
 	public static ColumnValueBinding createValueBinding(
 			@Nullable String writeExpression,

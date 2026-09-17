@@ -69,9 +69,12 @@ import org.hibernate.id.BulkInsertionCapableIdentifierGenerator;
 import org.hibernate.id.CompositeNestedGeneratedValueGenerator;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.OptimizableGenerator;
+import org.hibernate.loader.ast.internal.TenantIdLoader;
 import org.hibernate.metamodel.mapping.AuditMapping;
 import org.hibernate.metamodel.mapping.AuxiliaryMapping;
 import org.hibernate.metamodel.mapping.TemporalMapping;
+import org.hibernate.metamodel.mapping.TenantIdMapping;
+import org.hibernate.metamodel.mapping.internal.TenantIdMappingImpl;
 import org.hibernate.persister.filter.internal.FilterHelper;
 import org.hibernate.internal.util.ImmutableBitSet;
 import org.hibernate.internal.util.IndexedConsumer;
@@ -422,6 +425,8 @@ public abstract class AbstractEntityPersister
 	private EntityIdentifierMapping identifierMapping;
 	private NaturalIdMapping naturalIdMapping;
 	private EntityVersionMapping versionMapping;
+	private TenantIdMapping tenantIdMapping;
+	private TenantIdLoader tenantIdLoader;
 	private EntityRowIdMapping rowIdMapping;
 	private EntityDiscriminatorMapping discriminatorMapping;
 	private AuxiliaryMapping auxiliaryMapping;
@@ -3352,6 +3357,8 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public void prepareLoaders() {
+		tenantIdLoader = tenantIdMapping == null || tenantIdMapping.getAttributeMapping() == null
+				? null : new TenantIdLoader( this );
 		// Hibernate Reactive needs to override the loaders
 		singleIdLoader = buildSingleIdEntityLoader();
 		multiIdLoader = buildMultiIdLoader();
@@ -3368,6 +3375,7 @@ public abstract class AbstractEntityPersister
 
 	private void doLateInit() {
 		tableMappings = buildTableMappings();
+		tenantIdMapping = TenantIdMappingImpl.create( this );
 
 		final List<AttributeMapping> insertGeneratedAttributes =
 				hasInsertGeneratedProperties()
@@ -5818,6 +5826,16 @@ public abstract class AbstractEntityPersister
 	@Override
 	public EntityVersionMapping getVersionMapping() {
 		return versionMapping;
+	}
+
+	@Override
+	public TenantIdMapping getTenantIdMapping() {
+		return tenantIdMapping;
+	}
+
+	@Override
+	public TenantIdLoader getTenantIdLoader() {
+		return tenantIdLoader;
 	}
 
 	@Override

@@ -4,9 +4,11 @@
  */
 package org.hibernate.internal;
 
+import static org.hibernate.engine.internal.TenantIdHelper.MissingRowPolicy.ALLOW;
 import jakarta.persistence.EntityGraph;
 import jakarta.persistence.PersistenceException;
 import jakarta.transaction.SystemException;
+import org.hibernate.engine.internal.RootTenantCache;
 import org.hibernate.AssertionFailure;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
@@ -24,6 +26,7 @@ import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.creation.internal.SessionCreationOptions;
 import org.hibernate.engine.creation.internal.SharedSessionCreationOptions;
+import org.hibernate.engine.internal.TenantIdHelper;
 import org.hibernate.engine.internal.TransactionCompletionCallbacksImpl;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
@@ -78,6 +81,7 @@ import java.util.function.BiConsumer;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.PersistenceContexts.createPersistenceContext;
+import static org.hibernate.engine.internal.TenantIdHelper.MissingRowPolicy.THROW;
 import static org.hibernate.engine.internal.Versioning.incrementVersion;
 import static org.hibernate.engine.internal.Versioning.seedVersion;
 import static org.hibernate.engine.internal.Versioning.setVersion;
@@ -364,6 +368,10 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		checkNotReadOnly();
 		final var persister = getEntityPersister( entityName, entity );
 		final Object id = persister.getIdentifier( entity, this );
+		TenantIdHelper.validateAssignedTenantId( entity, id, persister, this );
+		if ( persister.hasMultipleTables() || persister.hasOwnedCollections() ) {
+			TenantIdHelper.checkStoredTenantOwnership( id, persister, this, THROW );
+		}
 		final Object version = persister.getVersion( entity );
 		if ( !firePreDelete(entity, id, persister) ) {
 			getInterceptor().onDelete( entity, id, persister.getPropertyNames(), persister.getPropertyTypes() );
@@ -443,6 +451,10 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		checkNotReadOnly();
 		final var persister = getEntityPersister( entityName, entity );
 		final Object id = persister.getIdentifier( entity, this );
+		TenantIdHelper.validateAssignedTenantId( entity, id, persister, this );
+		if ( persister.hasMultipleTables() || persister.hasOwnedCollections() ) {
+			TenantIdHelper.checkStoredTenantOwnership( id, persister, this, THROW );
+		}
 		final Object[] state = persister.getValues( entity );
 		final Object oldVersion;
 		if ( persister.isVersioned() ) {
@@ -530,8 +542,14 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		checkOpen();
 		checkNotReadOnly();
 		final var persister = getEntityPersister( entityName, entity );
+		TenantIdHelper.initializeIdentifierTenant( entity, persister, this );
 		final Object id = idToUpsert( entity, persister );
+		TenantIdHelper.validateIdentifierTenant( id, persister, this );
 		final Object[] state = persister.getValues( entity );
+		TenantIdHelper.initializeTenantId( entity, state, persister, this );
+		if ( persister.hasMultipleTables() || persister.hasOwnedCollections() ) {
+			TenantIdHelper.checkStoredTenantOwnership( id, persister, this, ALLOW );
+		}
 		if ( !firePreUpsert(entity, id, state, persister) ) {
 			getInterceptor().onUpsert( entity, id, state, persister.getPropertyNames(), persister.getPropertyTypes() );
 			final Object oldVersion = versionToUpsert( entity, persister, state );
@@ -1487,6 +1505,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	}
 
 	protected Object lockCacheItem(Object id, Object previousVersion, EntityPersister persister) {
+		RootTenantCache.invalidateEntity( id, persister, this );
 		if ( persister.canWriteToCache() ) {
 			final var cache = persister.getCacheAccessStrategy();
 			final Object cacheKey = cache.generateCacheKey(
@@ -1513,6 +1532,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	}
 
 	protected Object lockCacheItem(Object key, CollectionPersister persister) {
+		RootTenantCache.invalidateCollection( key, persister, this );
 		if ( persister.hasCache() ) {
 			final var cache = persister.getCacheAccessStrategy();
 			final Object cacheKey = cache.generateCacheKey(

@@ -9,6 +9,7 @@ import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.engine.internal.RootTenantCache;
 import org.hibernate.engine.spi.ComparableExecutable;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.EventSource;
@@ -68,6 +69,7 @@ public abstract class CollectionAction implements ComparableExecutable {
 
 	@Override
 	public final void beforeExecutions() throws CacheException {
+		RootTenantCache.invalidateCollection( key, getPersister(), getSession() );
 		// We need to obtain the lock before any actions are executed, since this may be an inverse="true"
 		// bidirectional association, and it is one of the earlier entity actions which actually updates
 		// the database. This action is responsible for second-level cache invalidation only.

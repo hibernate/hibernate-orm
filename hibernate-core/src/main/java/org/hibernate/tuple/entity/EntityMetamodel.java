@@ -625,7 +625,7 @@ public class EntityMetamodel implements Serializable {
 			final var builder =
 					new CompositeGeneratorBuilder( entityName, mappingProperty, context.getDialect() );
 			for ( var property : component.getProperties() ) {
-				builder.add( property.createGenerator( context ) );
+				builder.add( buildGenerator( entityName, property, context ) );
 			}
 			return builder.build();
 		}

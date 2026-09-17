@@ -5,6 +5,7 @@
 package org.hibernate.persister.entity.mutation;
 
 import org.hibernate.engine.OptimisticLockStyle;
+import org.hibernate.engine.internal.TenantIdHelper;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.MutationExecutor;
@@ -72,6 +73,7 @@ public abstract class AbstractDeleteCoordinator
 			Object id,
 			Object version,
 			SharedSessionContractImplementor session) {
+		TenantIdHelper.validateIdentifierTenant( id, entityPersister(), session );
 		final boolean isImpliedOptimisticLocking = entityPersister().optimisticLockStyle().isAllOrDirty();
 
 		final var entry = session.getPersistenceContextInternal().getEntry( entity );
@@ -137,6 +139,7 @@ public abstract class AbstractDeleteCoordinator
 			MutationOperationGroup operationGroup,
 			SharedSessionContractImplementor session) {
 		applyLocking( null, loadedState, mutationExecutor, session );
+		bindTenantRestriction( session, mutationExecutor.getJdbcValueBindings(), operationGroup );
 		applyId( id, null, mutationExecutor, operationGroup, session );
 	}
 
@@ -301,6 +304,8 @@ public abstract class AbstractDeleteCoordinator
 		bindPartitionColumnValueBindings( loadedState, session,
 				mutationExecutor.getJdbcValueBindings() );
 
+		bindTenantRestriction( session, mutationExecutor.getJdbcValueBindings(),
+				applyVersion ? staticOperationGroup : resolveNoVersionDeleteGroup( session ) );
 		applyId( id, rowId, mutationExecutor, staticOperationGroup, session );
 	}
 

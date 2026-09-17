@@ -64,6 +64,8 @@ public class DeleteCoordinatorStandard extends AbstractDeleteCoordinator {
 			);
 			applyPartitionKeyRestriction( deleteGroupBuilder::findTableDetailsBuilder );
 		}
+		deleteGroupBuilder.forEachTableMutationBuilder( builder ->
+				applyTenantRestriction( (TableDeleteBuilder) builder ) );
 	}
 
 }

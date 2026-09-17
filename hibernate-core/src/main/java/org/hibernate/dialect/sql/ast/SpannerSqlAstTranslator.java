@@ -293,6 +293,9 @@ public class SpannerSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 			if ( tableUpdate.getNumberOfOptimisticLockBindings() > 0 ) {
 				tableUpdate.forEachOptimisticLockBinding( (position, columnValueBinding) -> {
 					appendSql( " and " );
+					if ( renderTenantRestriction( columnValueBinding, alias ) ) {
+						return;
+					}
 					appendSql( alias + "." );
 					appendSql( columnValueBinding.getColumnReference().getColumnExpression() );
 					if ( columnValueBinding.getValueExpression() == null

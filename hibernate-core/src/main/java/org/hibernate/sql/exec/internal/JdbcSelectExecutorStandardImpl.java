@@ -428,6 +428,9 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 	}
 
 	private static CacheMode resolveCacheMode(ExecutionContext executionContext) {
+		if ( executionContext.getSession().isRootTenant() ) {
+			return CacheMode.IGNORE;
+		}
 		final var queryOptions = executionContext.getQueryOptions();
 		return coalesceSuppliedValues(
 				() -> queryOptions == null ? null : queryOptions.getCacheMode(),

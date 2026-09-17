@@ -1791,6 +1791,7 @@ public class EntityInitializerImpl
 		if ( data.concreteDescriptor.canWriteToCache()
 				// No need to put into the entity cache if this is coming from the query cache already
 				&& !data.getRowProcessingState().isQueryCacheHit()
+				&& !session.isRootTenant()
 				&& session.getCacheMode().isPutEnabled()
 				// Don't cache temporal snapshots in the 2LC
 				&& ( data.entityKey == null || !data.entityKey.isTemporal() ) ) {

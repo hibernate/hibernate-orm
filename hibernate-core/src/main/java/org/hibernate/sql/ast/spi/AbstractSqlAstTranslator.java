@@ -11,6 +11,7 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.Locking;
 import org.hibernate.Timeouts;
+import org.hibernate.sql.model.ast.TenantIdColumnValueBinding;
 import org.hibernate.temporal.TemporalTableStrategy;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
@@ -7789,7 +7790,10 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		final Object value = parameter.getValue();
 		final JdbcMapping valueMapping = parameter.getValueMapping();
 
-		if ( value instanceof Iterable<?> iterable
+		if ( parameter.getJdbcParameter() != null ) {
+			visitParameterAsParameter( parameter.getJdbcParameter() );
+		}
+		else if ( value instanceof Iterable<?> iterable
 				&& !valueMapping.getJavaTypeDescriptor().isInstance( value ) ) {
 			processIterableFilterParameterValue( valueMapping, iterable.iterator() );
 		}
@@ -8858,6 +8862,9 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			if ( tableUpdate.getNumberOfOptimisticLockBindings() > 0 ) {
 				tableUpdate.forEachOptimisticLockBinding( (position, columnValueBinding) -> {
 					sqlBuffer.append( " and " );
+					if ( renderTenantRestriction( columnValueBinding, null ) ) {
+						return;
+					}
 					sqlBuffer.append( columnValueBinding.getColumnReference().getColumnExpression() );
 					if ( columnValueBinding.getValueExpression() == null
 							|| columnValueBinding.getValueExpression().getFragment() == null ) {
@@ -8874,6 +8881,23 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		finally {
 			getCurrentClauseStack().pop();
 		}
+	}
+
+	/**
+	 * Render an equality restriction whose null parameter denotes a root tenant.
+	 * Qualify both references when a merge exposes source and target columns.
+	 */
+	protected final boolean renderTenantRestriction(ColumnValueBinding binding, String qualifier) {
+		if ( binding instanceof TenantIdColumnValueBinding ) {
+			binding.getColumnReference().appendReadExpression( this, qualifier );
+			appendSql( "=coalesce(" );
+			binding.getValueExpression().accept( this );
+			appendSql( "," );
+			binding.getColumnReference().appendReadExpression( this, qualifier );
+			appendSql( ")" );
+			return true;
+		}
+		return false;
 	}
 
 	private void applySqlComment(String comment) {
@@ -8922,6 +8946,12 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					sqlBuffer.append( " and " );
 
 					tableDelete.forEachOptimisticLockBinding( (columnPosition, columnValueBinding) -> {
+						if ( renderTenantRestriction( columnValueBinding, null ) ) {
+							if ( columnPosition < tableDelete.getNumberOfOptimisticLockBindings() - 1 ) {
+								sqlBuffer.append( " and " );
+							}
+							return;
+						}
 						sqlBuffer.append( columnValueBinding.getColumnReference().getColumnExpression() );
 						if ( columnValueBinding.getValueExpression() == null ) {
 							sqlBuffer.append( " is null" );

@@ -151,6 +151,11 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
+	public boolean isRootTenant() {
+		return delegate.isRootTenant();
+	}
+
+	@Override
 	@Nonnull
 	public UUID getSessionIdentifier() {
 		return delegate.getSessionIdentifier();

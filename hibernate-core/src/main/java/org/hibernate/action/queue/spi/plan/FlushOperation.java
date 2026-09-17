@@ -21,6 +21,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.sql.spi.mutation.MutationOperation;
 import org.hibernate.sql.spi.mutation.ValuesAnalysis;
 
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -61,6 +62,7 @@ public class FlushOperation implements OperationResultChecker {
 	// remove the entity from persistence context (e.g., DELETE operations)
 	private PostExecutionCallback postExecutionCallback;
 	private PreExecutionCallback preExecutionCallback;
+	private FlushOperation executionPrerequisite;
 	private OperationExecutionMonitor executionMonitor;
 	private boolean executionSkipped;
 	private CollectionMutationCompletion collectionMutationCompletion;
@@ -166,10 +168,11 @@ public class FlushOperation implements OperationResultChecker {
 	@Override
 	public boolean checkResult(
 			int affectedRowCount,
+			PreparedStatement statement,
 			int batchPosition,
 			String sqlString,
 			SessionFactoryImplementor sessionFactory) throws SQLException {
-		return bindPlan.checkResult( this, affectedRowCount, batchPosition, sqlString, sessionFactory );
+		return bindPlan.checkResult( this, affectedRowCount, statement, batchPosition, sqlString, sessionFactory );
 	}
 
 	public BindingPatch getBindingPatch() {
@@ -262,6 +265,15 @@ public class FlushOperation implements OperationResultChecker {
 
 	public PreExecutionCallback getPreExecutionCallback() {
 		return preExecutionCallback;
+	}
+
+	/// An operation whose execution and result checking must precede this operation.
+	public FlushOperation getExecutionPrerequisite() {
+		return executionPrerequisite;
+	}
+
+	public void setExecutionPrerequisite(FlushOperation executionPrerequisite) {
+		this.executionPrerequisite = executionPrerequisite;
 	}
 
 	public OperationExecutionMonitor getExecutionMonitor() {

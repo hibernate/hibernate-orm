@@ -88,6 +88,7 @@ public class DeleteCoordinatorTemporal extends AbstractDeleteCoordinator {
 				loadedState,
 				session
 		);
+		applyTenantRestriction( tableUpdateBuilder );
 
 		return createMutationOperationGroup( tableUpdateBuilder );
 	}

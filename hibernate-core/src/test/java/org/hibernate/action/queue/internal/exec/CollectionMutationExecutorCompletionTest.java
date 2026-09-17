@@ -5,6 +5,7 @@
 package org.hibernate.action.queue.internal.exec;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.List;
 
@@ -196,6 +197,7 @@ class CollectionMutationExecutorCompletionTest {
 		@Override
 		public boolean checkResult(
 				int affectedRowCount,
+				PreparedStatement statement,
 				int batchPosition,
 				String sqlString,
 				SessionFactoryImplementor sessionFactory) throws SQLException {

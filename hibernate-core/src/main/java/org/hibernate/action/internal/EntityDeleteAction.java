@@ -7,6 +7,7 @@ package org.hibernate.action.internal;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.cache.spi.access.SoftLock;
+import org.hibernate.engine.internal.RootTenantCache;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.PostCommitDeleteEventListener;
@@ -52,6 +53,7 @@ public class EntityDeleteAction extends EntityAction {
 		this.version = version;
 		this.isCascadeDeleteEnabled = isCascadeDeleteEnabled;
 		this.state = state;
+		RootTenantCache.invalidateEntity( id, persister, session );
 	}
 
 	/**
@@ -66,6 +68,7 @@ public class EntityDeleteAction extends EntityAction {
 		version = null;
 		isCascadeDeleteEnabled = false;
 		state = null;
+		RootTenantCache.invalidateEntity( id, persister, session );
 	}
 
 	public Object getVersion() {

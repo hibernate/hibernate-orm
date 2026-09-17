@@ -38,6 +38,7 @@ import org.hibernate.sql.ast.spi.model.TableInsertCustomSql;
 import org.hibernate.sql.ast.spi.model.TableInsertStandard;
 import org.hibernate.sql.ast.spi.model.TableUpdateCustomSql;
 import org.hibernate.sql.ast.spi.model.TableUpdateStandard;
+import org.hibernate.sql.ast.spi.model.TenantIdColumnValueBinding;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -537,6 +538,12 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 	}
 
 	private ColumnValueBinding getReferenceBinding() {
+		for ( var binding : optimisticLockBindings ) {
+			if ( binding instanceof TenantIdColumnValueBinding ) {
+				// Spanner rejects assignments to primary keys, even key=key.
+				return binding;
+			}
+		}
 		if ( !keyBindings.isEmpty() ) {
 			return keyBindings.get( 0 );
 		}

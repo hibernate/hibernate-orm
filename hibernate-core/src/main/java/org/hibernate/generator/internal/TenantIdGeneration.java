@@ -54,28 +54,35 @@ public class TenantIdGeneration implements BeforeExecutionGenerator {
 
 	@Override
 	public Object generate(SharedSessionContractImplementor session, Object owner, Object currentValue, EventType eventType) {
-		final var sessionFactory = session.getSessionFactory();
 		final Object tenantId = session.getTenantIdentifierValue();
 		if ( currentValue != null ) {
-			final var resolver = sessionFactory.getCurrentTenantIdentifierResolver();
-			if ( resolver != null && resolver.isRoot( tenantId ) ) {
+			validateTenantId( session, currentValue );
+			if ( session.isRootTenant() ) {
 				// the "root" tenant is allowed to set the tenant id explicitly
 				return currentValue;
 			}
-			else {
-				final var tenantIdJavaType = sessionFactory.getTenantIdentifierJavaType();
-				if ( !tenantIdJavaType.areEqual( currentValue, tenantId ) ) {
-					throw new PropertyValueException(
-							"assigned tenant id differs from current tenant id ["
-									+ tenantIdJavaType.toString( currentValue )
-									+ " != "
-									+ tenantIdJavaType.toString( tenantId ) + "]",
-							entityName,
-							propertyName
-					);
-				}
-			}
 		}
 		return tenantId;
+	}
+
+	/**
+	 * Validate a supplied tenant id without generating a value or accessing the database.
+	 */
+	public void validateTenantId(SharedSessionContractImplementor session, Object currentValue) {
+		final var sessionFactory = session.getSessionFactory();
+		final Object tenantId = session.getTenantIdentifierValue();
+		if ( !session.isRootTenant() ) {
+			final var tenantIdJavaType = sessionFactory.getTenantIdentifierJavaType();
+			if ( !tenantIdJavaType.areEqual( currentValue, tenantId ) ) {
+				throw new PropertyValueException(
+						"assigned tenant id differs from current tenant id ["
+								+ ( currentValue == null ? "null" : tenantIdJavaType.toString( currentValue ) )
+								+ " != "
+								+ tenantIdJavaType.toString( tenantId ) + "]",
+						entityName,
+						propertyName
+				);
+			}
+		}
 	}
 }

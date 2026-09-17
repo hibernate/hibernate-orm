@@ -121,6 +121,9 @@ import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityRowIdMapping;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
+import org.hibernate.metamodel.mapping.TenantIdMapping;
+import org.hibernate.metamodel.mapping.internal.TenantIdMappingImpl;
+import org.hibernate.loader.ast.internal.TenantIdLoader;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.LegacyAuxiliaryMutationSupport;
@@ -3747,6 +3750,8 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public void prepareLoaders() {
+		tenantIdLoader = tenantIdMapping == null || tenantIdMapping.getAttributeMapping() == null
+				? null : new TenantIdLoader( this );
 		// Hibernate Reactive needs to override the loaders
 		singleIdLoader = buildSingleIdEntityLoader();
 		multiIdLoader = buildMultiIdLoader();
@@ -6918,6 +6923,16 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Nullable
+	@Override
+	public TenantIdMapping getTenantIdMapping() {
+		return tenantIdMapping;
+	}
+
+	@Override
+	public TenantIdLoader getTenantIdLoader() {
+		return tenantIdLoader;
+	}
+
 	@Override
 	public EntityRowIdMapping getRowIdMapping() {
 		return rowIdMapping;

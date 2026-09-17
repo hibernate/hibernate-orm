@@ -57,6 +57,9 @@ import org.hibernate.models.internal.dynamic.DynamicClassDetails;
 import org.hibernate.models.internal.jdk.JdkClassDetails;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.testing.util.ServiceRegistryUtil;
+import org.hibernate.testing.orm.module.TestModule;
+import org.jboss.shrinkwrap.api.ShrinkWrap;
+import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.hibernate.testing.util.jpa.PersistenceUnitInfoAdapter;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -336,12 +339,20 @@ class ManagedResourcesTests {
 	}
 
 	@Test
-	void resolvedTypesRetainSuppliedDetailsAndSeparateDescriptors() {
+	void resolvedTypesRetainSuppliedDetailsAndSeparateDescriptors(@TempDir Path directory) throws Exception {
+		final var module = TestModule.load( ShrinkWrap.create( JavaArchive.class, "inventory.jar" )
+				.addClass( org.hibernate.orm.test.boot.models.inventory.UnlistedEntity.class ), """
+				/// @author Steve Ebersole
+				@org.hibernate.annotations.FilterDef(name = "moduleInventoryFilter")
+				module test.inventory {}
+				""", directory, FilterDef.class );
 		try ( var registry = new StandardServiceRegistryBuilder().build() ) {
 			final var options = new MetadataBuilderImpl.MetadataBuildingOptionsImpl( registry );
 			final var bootstrap = new BootstrapContextImpl( registry, options );
 			options.setBootstrapContext( bootstrap );
 			final var context = bootstrap.getModelsContext();
+			// Name lookup alone cannot find a module in a child layer.
+			final var moduleDetails = context.getModuleDetailsRegistry().resolveModuleDetails( module.module() );
 			final var details = new JdkClassDetails( SampleType.class, context );
 			final var dynamic = new DynamicClassDetails( "DynamicModel", context );
 			final var xmlSources = new MetadataSources( registry ).addResource( "mappings/models/dynamic/dynamic-simple.xml" );
@@ -356,7 +367,7 @@ class ManagedResourcesTests {
 			final var resources = resourceBuilder.addClass( SampleType.class ).addClassName( SampleType.class.getName() )
 					.addClassDetails( details ).addClassDetails( details ).addClassDetails( dynamic )
 					.addPackageDescriptor( "org.hibernate.orm.test.boot.models.inventory" )
-					.addModuleDescriptor( "java.base" ).build();
+					.addModuleDescriptor( module.module().getName() ).build();
 			final var source = MetadataBuildingProcess.processManagedResources( resources, bootstrap, options.getMappingDefaults(),
 					context, new PersistenceUnitMetadataImpl(), new GlobalRegistrationsImpl( context, bootstrap ) );
 			assertThat( source.getManagedJavaTypes() ).contains( details );
@@ -365,7 +376,9 @@ class ManagedResourcesTests {
 			assertThat( source.getDynamicManagedTypes() ).extracting( ClassDetails::getName ).containsExactly( "DynamicModel", "SimpleEntity" );
 			assertThat( source.getPackageDescriptors() ).extracting( ClassDetails::getName )
 					.containsExactly( "org.hibernate.orm.test.boot.models.inventory.package-info" );
-			assertThat( source.getModuleDescriptors() ).extracting( descriptor -> descriptor.name() ).containsExactly( "java.base" );
+			assertThat( source.getModuleDescriptors() ).extracting( descriptor -> descriptor.name() ).containsExactly( module.module().getName() );
+			assertThat( source.getModuleDescriptors().get( 0 ).target() ).isSameAs( moduleDetails );
+			assertThat( moduleDetails.getDirectAnnotationUsage( FilterDef.class ).name() ).isEqualTo( "moduleInventoryFilter" );
 			assertThat( source.getManagedTypes() ).hasSize( 4 ).contains( details, dynamic );
 			assertThat( source.getManagedTypes() ).noneMatch( type -> type.getName().endsWith( "package-info" ) );
 			assertThat( context.getClassDetailsRegistry().findClassDetails( SampleType.class.getName() ) ).isSameAs( details );

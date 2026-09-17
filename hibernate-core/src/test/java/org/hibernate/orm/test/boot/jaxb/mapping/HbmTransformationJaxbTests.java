@@ -2064,6 +2064,43 @@ public class HbmTransformationJaxbTests {
 	}
 
 	@Test
+	@JiraKey( "HHH-20854" )
+	public void testCollectionKeyNotNullPreserved(ServiceRegistryScope scope) {
+		transformAndVerify( "xml/jaxb/mapping/collection-key-not-null/hbm.xml", scope, transformed -> {
+			assertThat( transformed.getEntities() ).hasSize( 1 );
+
+			final JaxbEntityImpl entity = transformed.getEntities().get( 0 );
+			assertThat( entity.getClazz() ).isEqualTo( "SimpleEntity" );
+
+			// Find the element-collection (list with element type)
+			assertThat( entity.getAttributes().getElementCollectionAttributes() )
+					.as( "Should have one element-collection" )
+					.hasSize( 1 );
+
+			final var elementCollection = entity.getAttributes().getElementCollectionAttributes().get( 0 );
+			assertThat( elementCollection.getName() ).isEqualTo( "items" );
+
+			// Verify that the join column has nullable="false" from HBM's not-null="true"
+			assertThat( elementCollection.getCollectionTable() )
+					.as( "Element collection should have collection table" )
+					.isNotNull();
+
+			assertThat( elementCollection.getCollectionTable().getJoinColumns() )
+					.as( "Collection table should have join columns" )
+					.isNotEmpty();
+
+			final var joinColumn = elementCollection.getCollectionTable().getJoinColumns().get( 0 );
+			assertThat( joinColumn.getName() )
+					.as( "Join column should be named parent_id" )
+					.isEqualTo( "parent_id" );
+
+			assertThat( joinColumn.isNullable() )
+					.as( "Join column should be non-nullable (HBM had not-null='true')" )
+					.isFalse();
+		} );
+	}
+
+	@Test
 	@JiraKey( "HHH-20834" )
 	public void testJoinedSubclassOnDeleteTransformation(ServiceRegistryScope scope) {
 		transformAndVerify( "xml/jaxb/mapping/on-delete-joined-subclass/hbm.xml", scope, transformed -> {
@@ -2232,6 +2269,63 @@ public class HbmTransformationJaxbTests {
 			assertThat( tagsCollection.getOnDelete() )
 					.as( "element-collection with key on-delete='cascade' should have on-delete" )
 					.isEqualTo( OnDeleteAction.CASCADE );
+		} );
+	}
+
+	@Test
+	@JiraKey( "HHH-20852" )
+	public void testManyToOneUniqueOrphanRemovalTransformedToOneToOne(ServiceRegistryScope scope) {
+		transformAndVerify( "xml/jaxb/mapping/many-to-one-unique-orphan-removal/hbm.xml", scope, transformed -> {
+			assertThat( transformed.getEntities() ).hasSize( 2 );
+			assertThat( transformed.getPackage() ).isEqualTo( "org.hibernate.orm.test.orphan.one2one.fk.reversed.bidirectional" );
+
+			// Find the Employee entity
+			final JaxbEntityImpl employeeEntity = transformed.getEntities().stream()
+					.filter( e -> "Employee".equals( e.getClazz() ) )
+					.findFirst()
+					.orElseThrow();
+
+			// Verify that the many-to-one with unique="true" and cascade="all,delete-orphan"
+			// was converted to a one-to-one
+			assertThat( employeeEntity.getAttributes().getManyToOneAttributes() )
+					.as( "many-to-one with unique='true' and delete-orphan should be converted to one-to-one" )
+					.isEmpty();
+
+			assertThat( employeeEntity.getAttributes().getOneToOneAttributes() )
+					.as( "should have one-to-one attribute" )
+					.hasSize( 1 );
+
+			final JaxbOneToOneImpl infoAttr = employeeEntity.getAttributes().getOneToOneAttributes().get( 0 );
+			assertThat( infoAttr.getName() )
+					.as( "one-to-one should be named 'info'" )
+					.isEqualTo( "info" );
+			assertThat( infoAttr.isOrphanRemoval() )
+					.as( "one-to-one should have orphan-removal='true'" )
+					.isTrue();
+
+			// Verify join column was preserved
+			assertThat( infoAttr.getJoinColumnOrJoinFormula() )
+					.as( "one-to-one should have join column" )
+					.isNotEmpty();
+
+			// Find the EmployeeInfo entity
+			final JaxbEntityImpl employeeInfoEntity = transformed.getEntities().stream()
+					.filter( e -> "EmployeeInfo".equals( e.getClazz() ) )
+					.findFirst()
+					.orElseThrow();
+
+			// Verify the inverse side one-to-one remains
+			assertThat( employeeInfoEntity.getAttributes().getOneToOneAttributes() )
+					.as( "EmployeeInfo should have one-to-one attribute" )
+					.hasSize( 1 );
+
+			final JaxbOneToOneImpl employeeAttr = employeeInfoEntity.getAttributes().getOneToOneAttributes().get( 0 );
+			assertThat( employeeAttr.getName() )
+					.as( "one-to-one should be named 'employee'" )
+					.isEqualTo( "employee" );
+			assertThat( employeeAttr.getMappedBy() )
+					.as( "inverse side should have mapped-by='info'" )
+					.isEqualTo( "info" );
 		} );
 	}
 }

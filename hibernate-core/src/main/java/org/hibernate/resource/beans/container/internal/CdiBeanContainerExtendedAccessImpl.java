@@ -13,6 +13,7 @@ import org.hibernate.resource.beans.container.spi.ContainedBeanImplementor;
 import org.hibernate.resource.beans.container.spi.ExtendedBeanManager;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
 
+
 import static org.hibernate.resource.beans.internal.BeansMessageLogger.BEANS_MSG_LOGGER;
 
 /**
@@ -61,6 +62,11 @@ public class CdiBeanContainerExtendedAccessImpl
 		else {
 			return lifecycleStrategy.createBean( name, beanType, fallbackProducer, this );
 		}
+	}
+
+	@Override
+	public boolean isBootstrapSafe() {
+		return true;
 	}
 
 	@Override

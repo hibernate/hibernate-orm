@@ -10,11 +10,12 @@ import java.util.Map;
 
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.boot.spi.MetadataBuildingOptions;
+import org.hibernate.boot.pipeline.internal.MappingResolutionOptions;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.type.TimeZoneStorageStrategy;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import org.junit.jupiter.api.Test;
@@ -138,18 +139,21 @@ public class CommunityFunctionProviderContractsTest {
 				CommunityFunctionProviderContractsTest.class.getClassLoader(),
 				new Class<?>[] { MetadataBuildingContext.class },
 				(proxy, method, arguments) -> switch ( method.getName() ) {
-					case "getPreferredSqlTypeCodeForBoolean" -> Types.BOOLEAN;
-					case "getBuildingOptions" -> metadataBuildingOptions();
+					case "getBuildingPlan" -> mappingResolutionOptions();
 					default -> defaultValue( method.getReturnType() );
 				}
 		);
 	}
 
-	private static MetadataBuildingOptions metadataBuildingOptions() {
-		return (MetadataBuildingOptions) Proxy.newProxyInstance(
+	private static MappingResolutionOptions mappingResolutionOptions() {
+		return (MappingResolutionOptions) Proxy.newProxyInstance(
 				CommunityFunctionProviderContractsTest.class.getClassLoader(),
-				new Class<?>[] { MetadataBuildingOptions.class },
-				(proxy, method, arguments) -> defaultValue( method.getReturnType() )
+				new Class<?>[] { MappingResolutionOptions.class },
+				(proxy, method, arguments) -> switch ( method.getName() ) {
+					case "getPreferredSqlTypeCodeForBoolean" -> Types.BOOLEAN;
+					case "getDefaultTimeZoneStorage" -> TimeZoneStorageStrategy.NATIVE;
+					default -> defaultValue( method.getReturnType() );
+				}
 		);
 	}
 

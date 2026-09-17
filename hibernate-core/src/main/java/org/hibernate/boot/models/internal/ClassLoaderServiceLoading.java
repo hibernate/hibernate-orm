@@ -9,6 +9,7 @@ import java.util.Collection;
 
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
+import org.hibernate.models.UnknownClassException;
 import org.hibernate.models.spi.ClassLoading;
 
 /**
@@ -25,7 +26,12 @@ public class ClassLoaderServiceLoading implements ClassLoading {
 
 	@Override
 	public <T> Class<T> classForName(String name) {
-		return classLoaderService.classForName( name );
+		try {
+			return classLoaderService.classForName( name );
+		}
+		catch (ClassLoadingException e) {
+			throw new UnknownClassException( "Unable to load class: " + name, e );
+		}
 	}
 
 	@Override

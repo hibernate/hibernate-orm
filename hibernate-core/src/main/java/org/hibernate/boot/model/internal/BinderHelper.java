@@ -21,7 +21,6 @@ import org.hibernate.annotations.AnyDiscriminatorValues;
 import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.annotations.SqlFragmentAlias;
-import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.engine.FetchStyle;
@@ -67,7 +66,6 @@ import static org.hibernate.boot.model.internal.BasicValueBinder.Kind.ANY_KEY;
 import static org.hibernate.boot.model.internal.ForeignKeyType.NON_PRIMARY_KEY_REFERENCE;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
-import static org.hibernate.internal.util.StringHelper.qualifier;
 import static org.hibernate.internal.util.StringHelper.qualify;
 import static org.hibernate.internal.util.collections.ArrayHelper.forEach;
 import static org.hibernate.models.spi.TypeDetailsHelper.resolveRawClass;
@@ -1074,20 +1072,13 @@ public class BinderHelper {
 //		where context.getMetadataCollector() can cache some of this - either the annotations themselves
 //		or even just the XPackage resolutions
 
-		final String packageName = qualifier( classDetails.getName() );
-		if ( isEmpty( packageName ) ) {
+		final var packageDetails = classDetails.getPackage();
+		if ( packageDetails == null ) {
 			return null;
 		}
 		else {
 			final var modelsContext = context.getBootstrapContext().getModelsContext();
-			try {
-				return modelsContext.getClassDetailsRegistry()
-						.resolveClassDetails( packageName + ".package-info" )
-						.getAnnotationUsage( annotationType, modelsContext );
-			}
-			catch (ClassLoadingException ignore) {
-				return null;
-			}
+			return packageDetails.getAnnotationUsage( annotationType, modelsContext );
 		}
 	}
 }

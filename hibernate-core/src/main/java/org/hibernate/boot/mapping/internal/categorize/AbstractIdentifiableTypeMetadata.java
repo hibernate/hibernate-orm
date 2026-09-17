@@ -306,17 +306,8 @@ public abstract class AbstractIdentifiableTypeMetadata
 			return null;
 		}
 
-		final String packageInfoName = className.substring( 0, packageEnd ) + ".package-info";
-		var packageInfo = getModelContext().getClassDetailsRegistry().findClassDetails( packageInfoName );
-		if ( packageInfo == null ) {
-			try {
-				packageInfo = getModelContext().getClassDetailsRegistry().resolveClassDetails( packageInfoName );
-			}
-			catch (RuntimeException ignored) {
-				return null;
-			}
-		}
-		return packageInfo;
+		return getModelContext().getClassDetailsRegistry()
+				.resolvePackageDetails( className.substring( 0, packageEnd ) );
 	}
 
 	protected List<JpaEventListener> collectCompleteEventListeners(CategorizationContext modelContext) {

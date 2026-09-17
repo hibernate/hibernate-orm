@@ -4,7 +4,6 @@
  */
 package org.hibernate.boot.pipeline.internal.source;
 
-import jakarta.annotation.Nonnull;
 import jakarta.persistence.PersistenceConfiguration;
 import org.hibernate.InvalidMappingException;
 import org.hibernate.boot.jaxb.Origin;
@@ -14,8 +13,8 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.pipeline.internal.settings.ResolvedMappingSettings;
 import org.hibernate.boot.pipeline.internal.settings.SettingsResolver;
-import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
-import org.hibernate.internal.util.StringHelper;
+import org.hibernate.boot.model.process.internal.ManagedClassDetails;
+import org.hibernate.boot.model.process.internal.ManagedResourceValidation;
 import org.hibernate.jpa.HibernatePersistenceConfiguration;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 import org.hibernate.models.spi.ClassDetails;
@@ -28,7 +27,6 @@ import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -44,6 +42,13 @@ public record PreparedMappingSources(
 		boolean includeUnlistedStructuralTypes,
 		Collection<ModuleDetails> moduleDetails) {
 
+	public PreparedMappingSources {
+		managedClassDetails = managedClassDetails == null ? List.of() : List.copyOf( managedClassDetails );
+		packageDetails = packageDetails == null ? List.of() : List.copyOf( packageDetails );
+		xmlMappings = xmlMappings == null ? List.of() : List.copyOf( xmlMappings );
+		moduleDetails = moduleDetails == null ? List.of() : List.copyOf( moduleDetails );
+	}
+
 	public PreparedMappingSources(
 			Collection<ClassDetails> managedClassDetails,
 			Collection<ClassDetails> packageDetails,
@@ -57,21 +62,6 @@ public record PreparedMappingSources(
 			Collection<ClassDetails> packageDetails,
 			Collection<Binding<JaxbEntityMappingsImpl>> xmlMappings) {
 		this( managedClassDetails, packageDetails, xmlMappings, true );
-	}
-
-	@Nonnull
-	public Collection<ClassDetails> managedClassDetails() {
-		return managedClassDetails == null ? Collections.emptyList() : managedClassDetails;
-	}
-
-	@Nonnull
-	public Collection<ClassDetails> packageDetails() {
-		return packageDetails == null ? Collections.emptyList() : packageDetails;
-	}
-
-	@Nonnull
-	public Collection<Binding<JaxbEntityMappingsImpl>> xmlMappings() {
-		return xmlMappings == null ? Collections.emptyList() : xmlMappings;
 	}
 
 	/// Creates prepared mapping sources from Hibernate's descriptor for persistence-unit
@@ -110,49 +100,7 @@ public record PreparedMappingSources(
 			PersistenceUnitDescriptor persistenceUnitDescriptor,
 			MappingSourcePreparationContext context,
 			ResolvedMappingSettings mappingSettings) {
-		var classLoading = context.getClassLoaderService();
-		var classDetailsRegistry = context.modelsContext().getClassDetailsRegistry();
-
-		var managedClassDetails = new ArrayList<ClassDetails>();
-		var packageDetailsList = new ArrayList<ClassDetails>();
-		persistenceUnitDescriptor.getManagedClassNames().forEach( (managedClassName) -> {
-			var classDetails = classDetailsRegistry.resolveClassDetails( managedClassName );
-			if ( StringHelper.isEmpty( classDetails.getClassName() ) ) {
-				managedClassDetails.add( classDetails );
-			}
-			else {
-				applyClassDetails( classDetails, managedClassDetails, packageDetailsList );
-			}
-		} );
-
-		final List<Binding<JaxbEntityMappingsImpl>> xmlBindings;
-		if ( !mappingSettings.xmlMappingEnabled()
-				|| persistenceUnitDescriptor.getMappingFileNames().isEmpty() ) {
-			xmlBindings = Collections.emptyList();
-		}
-		else {
-			xmlBindings = new ArrayList<>();
-
-			var mappingFileBinder = context.createMappingBinder();
-			persistenceUnitDescriptor.getMappingFileNames().forEach( (mappingFile) -> {
-				try (var mappingFileStream = classLoading.locateResourceStream( mappingFile )) {
-					xmlBindings.add( mappingFileBinder.bind(
-							mappingFileStream,
-							new Origin( SourceType.RESOURCE, mappingFile )
-					) );
-				}
-				catch (IOException e) {
-					throw new RuntimeException( "Error accessing mapping file - " + mappingFile, e );
-				}
-			} );
-		}
-
-		return new PreparedMappingSources(
-				managedClassDetails,
-				packageDetailsList,
-				xmlBindings,
-				!persistenceUnitDescriptor.isExcludeUnlistedClasses()
-		);
+		return from( MappingSources.from( persistenceUnitDescriptor ), context, mappingSettings );
 	}
 
 	/// Creates prepared mapping sources from Hibernate's JPA
@@ -223,23 +171,22 @@ public record PreparedMappingSources(
 
 		var managedClassDetails = new ArrayList<ClassDetails>();
 		var packageDetailsList = new ArrayList<ClassDetails>();
+		mappingSources.managedClassDetails().forEach( details -> ManagedClassDetails.register( details, classDetailsRegistry ) );
+		mappingSources.modules().forEach( context.modelsContext().getModuleDetailsRegistry()::resolveModuleDetails );
+		mappingSources.packageNames().forEach( name -> applyPackageDetails( name, classDetailsRegistry, packageDetailsList ) );
 		mappingSources.managedClasses().forEach( (managedClass) -> {
 			applyClassDetails(
-					classDetailsRegistry.resolveClassDetails( managedClass.getName() ),
-					managedClassDetails,
-					packageDetailsList
+					ManagedClassDetails.resolve( managedClass, context.modelsContext() ),
+					managedClassDetails
 			);
 		} );
 		mappingSources.managedClassNames().forEach( (managedClassName) -> {
 			applyClassDetails(
 					classDetailsRegistry.resolveClassDetails( managedClassName ),
-					managedClassDetails,
-					packageDetailsList
+					managedClassDetails
 			);
 		} );
-		mappingSources.packageNames().forEach( (packageName) -> {
-			applyPackageDetails( packageName, classDetailsRegistry, packageDetailsList );
-		} );
+		mappingSources.managedClassDetails().forEach( details -> applyClassDetails( details, managedClassDetails ) );
 
 		final var xmlBindings = new ArrayList<Binding<JaxbEntityMappingsImpl>>();
 		if ( mappingSettings.xmlMappingEnabled() ) {
@@ -294,56 +241,16 @@ public record PreparedMappingSources(
 	public static PreparedMappingSources from(
 			PersistenceConfiguration persistenceConfiguration,
 			MappingSourcePreparationContext context) {
-		var classLoading = context.getClassLoaderService();
-		var classDetailsRegistry = context.modelsContext().getClassDetailsRegistry();
-
-		var managedClassDetails = new ArrayList<ClassDetails>();
-		var packageDetailsList = new ArrayList<ClassDetails>();
-		persistenceConfiguration.managedClasses().forEach( (managedClass) -> {
-			var classDetails = classDetailsRegistry.resolveClassDetails( managedClass.getName() );
-			if ( StringHelper.isEmpty( classDetails.getClassName() ) ) {
-				managedClassDetails.add( classDetails );
-			}
-			else {
-				applyClassDetails( classDetails, managedClassDetails, packageDetailsList );
-			}
-		} );
-
-		final List<Binding<JaxbEntityMappingsImpl>> xmlBindings;
-		if ( persistenceConfiguration.mappingFiles().isEmpty() ) {
-			xmlBindings = Collections.emptyList();
-		}
-		else {
-			xmlBindings = new ArrayList<>();
-
-			var mappingFileBinder = context.createMappingBinder();
-			persistenceConfiguration.mappingFiles().forEach( (mappingFile) -> {
-				try (var mappingFileStream = classLoading.locateResourceStream( mappingFile )) {
-					xmlBindings.add( mappingFileBinder.bind(
-							mappingFileStream,
-							new Origin( SourceType.RESOURCE, mappingFile )
-					) );
-				}
-				catch (IOException e) {
-					throw new RuntimeException( "Error accessing mapping file - " + mappingFile, e );
-				}
-			} );
-		}
-
-		return new PreparedMappingSources( managedClassDetails, packageDetailsList, xmlBindings );
+		final var settings = SettingsResolver.resolveBootstrapSettings( persistenceConfiguration.properties(), true );
+		return from( MappingSources.from( persistenceConfiguration ), context,
+				SettingsResolver.resolveMappingSettings( settings, persistenceConfiguration.defaultToOneFetchType() ) );
 	}
 
 	private static void applyClassDetails(
 			ClassDetails classDetails,
-			Collection<ClassDetails> managedClassDetails,
-			Collection<ClassDetails> packageDetails) {
-		if ( StringHelper.isEmpty( classDetails.getClassName() ) ) {
-			managedClassDetails.add( classDetails );
-		}
-		else if ( classDetails.getClassName().endsWith( "package-info" ) ) {
-			packageDetails.add( classDetails );
-		}
-		else {
+			Collection<ClassDetails> managedClassDetails) {
+		ManagedResourceValidation.validateClassName( classDetails.getName() );
+		if ( !managedClassDetails.contains( classDetails ) ) {
 			managedClassDetails.add( classDetails );
 		}
 	}
@@ -352,15 +259,7 @@ public record PreparedMappingSources(
 			String packageName,
 			ClassDetailsRegistry classDetailsRegistry,
 			Collection<ClassDetails> packageDetails) {
-		try {
-			final ClassDetails packageInfoDetails = classDetailsRegistry.resolveClassDetails( packageName + ".package-info" );
-			if ( packageInfoDetails.getClassName().endsWith( "package-info" ) ) {
-				packageDetails.add( packageInfoDetails );
-			}
-		}
-		catch (ClassLoadingException ignored) {
-			// An annotated package name does not require a loadable package-info class.
-		}
+		packageDetails.add( classDetailsRegistry.resolveExplicitPackageDetails( packageName ) );
 	}
 
 	private static Binding<JaxbEntityMappingsImpl> bindMappingFile(

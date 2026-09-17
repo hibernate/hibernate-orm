@@ -59,7 +59,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.mapping.Table;
 import org.hibernate.models.spi.ClassDetails;
-import org.hibernate.models.spi.MutableClassDetailsRegistry;
 import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -671,9 +670,8 @@ public class MappingResolutionPipeline {
 		@Override
 		public void contributeEntity(Class<?> entityType) {
 			contributeManagedClass(
-					metadataBuildingContext.getModelsContext()
-							.getClassDetailsRegistry()
-							.resolveClassDetails( entityType.getName() )
+					org.hibernate.boot.model.process.internal.ManagedClassDetails.resolve(
+							entityType, metadataBuildingContext.getModelsContext() )
 			);
 		}
 
@@ -683,10 +681,8 @@ public class MappingResolutionPipeline {
 				additionalManagedClassDetails = new ArrayList<>();
 			}
 			additionalManagedClassDetails.add( classDetails );
-			metadataBuildingContext.getModelsContext()
-					.getClassDetailsRegistry()
-					.as( MutableClassDetailsRegistry.class )
-					.addClassDetails( classDetails.getName(), classDetails );
+			org.hibernate.boot.model.process.internal.ManagedClassDetails.register(
+					classDetails, metadataBuildingContext.getModelsContext().getClassDetailsRegistry() );
 		}
 
 		@Override

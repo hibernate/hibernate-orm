@@ -17,7 +17,6 @@ import org.hibernate.boot.mapping.internal.xml.XmlProcessingResult;
 import org.hibernate.boot.mapping.internal.xml.XmlProcessor;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.pipeline.internal.MappingResolutionOptions;
 import org.hibernate.models.UnknownClassException;
@@ -201,29 +200,25 @@ public class SourceModelTestHelper {
 		final XmlPreProcessingResult xmlPreProcessingResult =
 				XmlPreProcessor.preProcessXmlResources( managedResources, persistenceUnitMetadata );
 
-		final List<String> allKnownClassNames = mutableJoin(
+		final List<String> managedClassNames = mutableJoin(
 				managedResources.getAnnotatedClassReferences().stream().map( Class::getName ).toList(),
 				managedResources.getAnnotatedClassNames(),
 				xmlPreProcessingResult.getMappedClasses()
 		);
 
-		managedResources.getAnnotatedPackageNames().forEach( (packageName) -> {
-			try {
-				final Class<?> packageInfoClass = classLoading.classForName( packageName + ".package-info" );
-				allKnownClassNames.add( packageInfoClass.getName() );
-			}
-			catch (ClassLoadingException classLoadingException) {
-				// no package-info, so there can be no annotations... just skip it
-			}
-		} );
-		managedResources.getAnnotatedClassReferences().forEach( (clazz) -> allKnownClassNames.add( clazz.getName() ) );
-
+		final var indexedClassNames = new java.util.ArrayList<>( managedClassNames );
+		managedResources.getAnnotatedPackageNames().forEach( packageName -> indexedClassNames.add( packageName + ".package-info" ) );
 		final IndexView jandexIndex = buildJandexIndex
-				? buildJandexIndex( classLoading, allKnownClassNames )
+				? buildJandexIndex( classLoading, indexedClassNames )
 				: null;
 
 		final ModelsContext ModelsContext =
 				createModelsContext( jandexIndex, classLoading );
+
+		final var registry = ModelsContext.getClassDetailsRegistry();
+		managedResources.getAnnotatedPackageNames().forEach( registry::resolveExplicitPackageDetails );
+		managedResources.getClassDetails().forEach( details ->
+				org.hibernate.boot.model.process.internal.ManagedClassDetails.register( details, registry ) );
 
 		final RootMappingDefaults rootMappingDefaults =
 				new RootMappingDefaults( metadataBuildingOptions.getMappingDefaults(), persistenceUnitMetadata );
@@ -249,10 +244,16 @@ public class SourceModelTestHelper {
 		);
 
 		final ClassDetailsRegistry classDetailsRegistry = ModelsContext.getClassDetailsRegistry();
-		allKnownClassNames.forEach( (className) ->
+		managedClassNames.forEach( (className) ->
 				modelCategorizationCollector.apply( classDetailsRegistry.resolveClassDetails( className ) ) );
 		xmlPreProcessingResult.getMappedNames().forEach( (className) ->
 				modelCategorizationCollector.apply( classDetailsRegistry.resolveClassDetails( className ) ) );
+
+		managedResources.getClassDetails().forEach( modelCategorizationCollector::apply );
+		managedResources.getAnnotatedPackageNames().forEach( name ->
+				modelCategorizationCollector.applyPackageDescriptor( registry.resolveExplicitPackageDetails( name ) ) );
+		managedResources.getAnnotatedModuleNames().forEach( name ->
+				modelCategorizationCollector.apply( ModelsContext.getModuleDetailsRegistry().resolveModuleDetails( name ) ) );
 
 		xmlProcessingResult.apply();
 

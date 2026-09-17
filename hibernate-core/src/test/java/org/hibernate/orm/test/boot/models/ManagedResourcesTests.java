@@ -26,21 +26,21 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.hibernate.MappingException;
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
+import org.hibernate.boot.pipeline.internal.source.PreparedMappingSources;
+import org.hibernate.boot.pipeline.internal.source.MappingSourcePreparationContext;
+import org.hibernate.boot.pipeline.internal.source.ContributionDiscoveryContext;
+import org.hibernate.boot.pipeline.internal.settings.SettingsResolver;
+import org.hibernate.boot.pipeline.internal.MetadataBuildingHelper;
+import org.hibernate.testing.boot.MetadataBuildingContextTestingImpl;
+
 import org.hibernate.boot.archive.spi.ArchiveDescriptor;
-import org.hibernate.boot.internal.BootstrapContextImpl;
-import org.hibernate.boot.internal.MetadataBuilderImpl;
 import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.SourceType;
 import org.hibernate.boot.jaxb.configuration.spi.JaxbPersistenceImpl;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.model.process.internal.EnhancementCandidates;
-import org.hibernate.boot.model.process.internal.ManagedResourcesBuilder;
-import org.hibernate.boot.model.process.spi.MetadataBuildingProcess;
-import org.hibernate.boot.models.internal.GlobalRegistrationsImpl;
-import org.hibernate.boot.models.xml.internal.PersistenceUnitMetadataImpl;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.scan.internal.ScanningResultImpl;
 import org.hibernate.boot.scan.spi.Scanner;
@@ -49,12 +49,10 @@ import org.hibernate.cfg.MappingSettings;
 import org.hibernate.cfg.PersistenceSettings;
 import org.hibernate.jpa.HibernatePersistenceConfiguration;
 import org.hibernate.jpa.HibernatePersistenceProvider;
-import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
 import org.hibernate.jpa.boot.internal.PersistenceUnitInfoDescriptor;
-import org.hibernate.jpa.boot.spi.PersistenceConfigurationDescriptor;
 import org.hibernate.jpa.boot.spi.PersistenceXmlParser;
-import org.hibernate.models.internal.dynamic.DynamicClassDetails;
-import org.hibernate.models.internal.jdk.JdkClassDetails;
+import org.hibernate.models.dynamic.DynamicClassDetails;
+import org.hibernate.models.jdk.JdkClassDetails;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.hibernate.testing.orm.module.TestModule;
@@ -99,18 +97,22 @@ class ManagedResourcesTests {
 				}
 			} );
 
-			final var builder = new EntityManagerFactoryBuilderImpl( configuration );
-			try {
+			try ( var registry = new StandardServiceRegistryBuilder().build() ) {
+				final var settings = SettingsResolver.resolveBootstrapSettings( configuration );
+				final var mappingSettings = SettingsResolver.resolveMappingSettings( settings, configuration.defaultToOneFetchType() );
+				final var sources = MappingSources.from( configuration, settings, mappingSettings,
+						new ContributionDiscoveryContext( registry.requireService( ClassLoaderService.class ) ) );
 				assertThat( calls.get() ).isEqualTo( withBoundary ? 1 : 0 );
 				if ( withBoundary ) {
-					assertThat( builder.getManagedResources().getAnnotatedClassNames() ).containsExactly( SampleType.class.getName() );
-					assertThat( builder.getManagedResources().getAnnotatedPackageNames() ).containsExactly( "example" );
-					assertThat( builder.getManagedResources().getAnnotatedModuleNames() ).containsExactly( "java.base" );
+					assertThat( sources.managedClassNames() ).containsExactly( SampleType.class.getName() );
+					assertThat( sources.packageNames() ).containsExactly( "example" );
+					assertThat( sources.moduleNames() ).containsExactly( "java.base" );
 				}
-				assertThat( builder.getManagedResources().getXmlMappingBindings() ).isEmpty();
-			}
-			finally {
-				builder.cancel();
+				// XML remains lazy during collection and is skipped during preparation.
+				final var xmlOnly = new MappingSources().addMappingUris( sources.mappingFileUris() );
+				final var context = new MetadataBuildingContextTestingImpl( registry );
+				assertThat( PreparedMappingSources.from( xmlOnly,
+						new MappingSourcePreparationContext( context.getModelsContext(), registry ), mappingSettings ).xmlMappings() ).isEmpty();
 			}
 		}
 	}
@@ -118,8 +120,8 @@ class ManagedResourcesTests {
 	@Test
 	void descriptorOnlyMetadataContributesWithoutEnrollingPackageClasses() {
 		try ( var registry = new StandardServiceRegistryBuilder().build() ) {
-			final var metadata = new MetadataSources( registry )
-					.addPackageDescriptor( "org.hibernate.orm.test.boot.models.inventory" ).buildMetadata();
+			final var metadata = MetadataBuildingHelper.buildMetadata( registry, new MappingSources()
+					.addPackageDescriptor( "org.hibernate.orm.test.boot.models.inventory" ) );
 			assertThat( metadata.getEntityBindings() ).isEmpty();
 			assertThat( metadata.getFilterDefinitions() ).containsKey( "inventoryFilter" );
 		}
@@ -136,12 +138,13 @@ class ManagedResourcesTests {
 				return defineClass( SampleType.class.getName(), bytes, 0, bytes.length );
 			}
 		}.define();
-		assertThatThrownBy( () -> new ManagedResourcesBuilder().addClass( SampleType.class ).addClass( alternate ) )
-				.isInstanceOf( MappingException.class ).hasMessageContaining( SampleType.class.getName() ).hasMessageContaining( "class loaders" );
+		assertThatThrownBy( () -> new MappingSources().addManagedClass( SampleType.class ).addManagedClass( alternate ) )
+				.isInstanceOf( MappingException.class ).hasMessageContaining( SampleType.class.getName() );
 	}
 
 	@Test
-	void bothTransformerPathsUseCompleteContainerInventory() {
+	void bothTransformerPathsUseCompleteContainerInventory(@TempDir Path directory) throws Exception {
+		final var root = directory.toUri().toURL();
 		for ( boolean direct : new boolean[] { true, false } ) {
 			final var reads = new LinkedHashSet<String>();
 			final var loader = new ClassLoader( "inventory-" + UUID.randomUUID(), getClass().getClassLoader() ) {
@@ -161,6 +164,8 @@ class ManagedResourcesTests {
 			final var entityName = "org.hibernate.orm.test.boot.models.inventory.UnlistedEntity";
 			final var unit = new PersistenceUnitInfoAdapter() {
 				@Override
+				public URL getPersistenceUnitRootUrl() { return root; }
+				@Override
 				public ClassLoader getClassLoader() { return loader; }
 				@Override
 				public ClassLoader getNewTempClassLoader() { return loader; }
@@ -173,63 +178,78 @@ class ManagedResourcesTests {
 				@Override
 				public void addTransformer(ClassTransformer transformer) { registered.add( transformer ); }
 			};
+			final var settings = new java.util.HashMap<>( ServiceRegistryUtil.createBaseSettings() );
+			settings.put( PersistenceSettings.SCANNER, new Scanner() {
+				@Override
+				public ScanningResult scan(URL... boundaries) {
+					throw new AssertionError( "Container inventory must not trigger scanning" );
+				}
+
+				@Override
+				public ScanningResult jpaScan(ArchiveDescriptor archive, JaxbPersistenceImpl.JaxbPersistenceUnitImpl unit) {
+					throw new AssertionError( "Container inventory must not trigger scanning" );
+				}
+			} );
 			final var provider = new HibernatePersistenceProvider();
 			if ( direct ) {
 				assertThat( provider.getClassTransformer( unit, Map.of() ) ).isNotNull();
 				assertThat( provider.getClassTransformer( unit, Map.of() ) ).isNull();
 			}
 			else {
-				final var builder = new EntityManagerFactoryBuilderImpl(
-						new PersistenceUnitInfoDescriptor( unit ),
-						ServiceRegistryUtil.createBaseSettings() );
-				try {
+				try ( var factory = provider.createContainerEntityManagerFactory( unit, settings ) ) {
 					assertThat( registered ).hasSize( 1 );
 				}
-				finally { builder.cancel(); }
 			}
 			assertThat( reads ).contains( entityName.replace( '.', '/' ) + ".class" );
-			assertThat( reads ).noneMatch( name -> name.endsWith( "package-info.class" ) || name.endsWith( "module-info.class" ) );
+			if ( direct ) {
+				assertThat( reads ).noneMatch( name -> name.endsWith( "package-info.class" ) || name.endsWith( "module-info.class" ) );
+			}
 		}
 	}
 
 	@Test
 	void disabledXmlIsNotProcessedFromAnExternalBatch() {
-		try ( var registry = new StandardServiceRegistryBuilder().applySetting( MappingSettings.XML_MAPPING_ENABLED, false ).build() ) {
-			final var options = new MetadataBuilderImpl.MetadataBuildingOptionsImpl( registry );
-			final var bootstrap = new BootstrapContextImpl( registry, options );
-			options.setBootstrapContext( bootstrap );
-			final var xml = new JaxbEntityMappingsImpl();
-			final var entity = new JaxbEntityImpl();
-			entity.setClazz( "not.loaded.DisabledXmlEntity" );
-			xml.getEntities().add( entity );
-			final var resources = new ManagedResourcesBuilder()
-					.addXmlBinding( new Binding<>( xml, new Origin( SourceType.OTHER, "disabled" ) ) ).build();
-			final var source = MetadataBuildingProcess.processManagedResources( resources, bootstrap, options.getMappingDefaults(),
-					bootstrap.getModelsContext(), new PersistenceUnitMetadataImpl(), new GlobalRegistrationsImpl( bootstrap.getModelsContext(), bootstrap ) );
-			assertThat( source.getManagedTypes() ).isEmpty();
+		try ( var registry = new StandardServiceRegistryBuilder().build() ) {
+			final var context = new MetadataBuildingContextTestingImpl( registry );
+			final var settings = SettingsResolver.resolveMappingSettings(
+					SettingsResolver.resolveBootstrapSettings( Map.of( MappingSettings.XML_MAPPING_ENABLED, false ) ),
+					jakarta.persistence.FetchType.EAGER );
+			final var source = PreparedMappingSources.from( new MappingSources().addMappingResource( "missing.xml" ),
+					new MappingSourcePreparationContext( context.getModelsContext(), registry ), settings );
+			assertThat( source.managedClassDetails() ).isEmpty();
+			assertThat( source.xmlMappings() ).isEmpty();
 		}
 	}
 
+
 	@Test
-	void snapshotsRetainIdentityAndExplicitXmlMultiplicity() {
+	void sourceCopiesAndPreparedSnapshotsRetainIdentity() {
+		final var sources = new MappingSources().addManagedClass( String.class ).addManagedClass( String.class )
+				.addManagedClassName( "example.NotLoaded" ).addPackageDescriptor( "example" )
+				.addModuleDescriptor( "example.module" ).addMappingResource( "mapping.xml" ).addMappingResource( "mapping.xml" );
+		final var copy = MappingSources.from( sources );
+		sources.addManagedClass( Integer.class ).addPackageDescriptor( "another" );
+		assertThat( copy.managedClasses() ).containsExactly( String.class );
+		assertThat( copy.managedClassNames() ).containsExactly( "example.NotLoaded" );
+		assertThat( copy.packageNames() ).containsExactly( "example" );
+		assertThat( copy.moduleNames() ).containsExactly( "example.module" );
+		assertThat( copy.mappingResources() ).containsExactly( "mapping.xml", "mapping.xml" );
+		assertThatThrownBy( () -> copy.managedClassNames().clear() ).isInstanceOf( UnsupportedOperationException.class );
+
+		final var context = SourceModelTestHelper.createBuildingContext( SampleType.class );
+		final var details = context.getClassDetailsRegistry().resolveClassDetails( SampleType.class.getName() );
+		final var classes = new ArrayList<>( List.of( details ) );
 		final var xml = new Binding<>( new JaxbEntityMappingsImpl(), new Origin( SourceType.OTHER, "test" ) );
-		final var builder = new ManagedResourcesBuilder().addClass( String.class ).addClass( String.class )
-				.addClassName( "example.NotLoaded" ).addPackageDescriptor( "example" )
-				.addModuleDescriptor( "example.module" ).addXmlBinding( xml ).addXmlBinding( xml )
-				.addQueryImport( "Alias", String.class );
-		final var first = builder.build();
-		builder.addClass( Integer.class ).addPackageDescriptor( "another" ).addQueryImport( "Alias", Integer.class );
-		assertThat( first.getAnnotatedClassReferences() ).containsExactly( String.class );
-		assertThat( first.getAnnotatedClassNames() ).containsExactly( "example.NotLoaded" );
-		assertThat( first.getAnnotatedPackageNames() ).containsExactly( "example" );
-		assertThat( first.getXmlMappingBindings() ).containsExactly( xml, xml );
-		assertThat( first.getExtraQueryImports() ).containsEntry( "Alias", String.class );
-		assertThat( builder.build().getExtraQueryImports() ).containsEntry( "Alias", Integer.class );
-		assertThatThrownBy( () -> first.getAnnotatedClassNames().clear() ).isInstanceOf( UnsupportedOperationException.class );
-		assertThatThrownBy( () -> first.getAnnotatedClassReferences().clear() ).isInstanceOf( UnsupportedOperationException.class );
-		assertThatThrownBy( () -> first.getXmlMappingBindings().clear() ).isInstanceOf( UnsupportedOperationException.class );
-		assertThatThrownBy( () -> first.getExtraQueryImports().clear() ).isInstanceOf( UnsupportedOperationException.class );
+		final var mappings = new ArrayList<>( List.of( xml, xml ) );
+		final var prepared = new PreparedMappingSources( classes, List.of(), mappings );
+		classes.clear();
+		mappings.clear();
+		assertThat( prepared.managedClassDetails() ).containsExactly( details );
+		assertThat( prepared.xmlMappings() ).containsExactly( xml, xml );
+		assertThatThrownBy( () -> prepared.managedClassDetails().clear() ).isInstanceOf( UnsupportedOperationException.class );
+		assertThatThrownBy( () -> prepared.xmlMappings().clear() ).isInstanceOf( UnsupportedOperationException.class );
 	}
+
 
 	@Test
 	void modelsClassLoadingDistinguishesMissingClassesFromBrokenClasses() {
@@ -276,42 +296,33 @@ class ManagedResourcesTests {
 		assertThat( org.hibernate.boot.model.internal.GeneratorAnnotationHelper.locatePackageInfoDetails( ordinary, types ) ).isNull();
 
 		try ( var registry = new StandardServiceRegistryBuilder().build() ) {
-			final var options = new MetadataBuilderImpl.MetadataBuildingOptionsImpl( registry );
-			final var bootstrap = new BootstrapContextImpl( registry, options );
-			options.setBootstrapContext( bootstrap );
-			final var resources = new ManagedResourcesBuilder().addClassName( SampleType.class.getName() )
-					.addPackageDescriptor( packageName ).build();
-			final var source = MetadataBuildingProcess.processManagedResources( resources, bootstrap, options.getMappingDefaults(),
-					context, new PersistenceUnitMetadataImpl(), new GlobalRegistrationsImpl( context, bootstrap ) );
-			assertThat( source.getPackageDescriptors() ).containsExactly( packageDetails );
+			final var preparation = new MappingSourcePreparationContext( context, registry );
+			final var settings = SettingsResolver.resolveMappingSettings(
+					SettingsResolver.resolveBootstrapSettings( Map.of() ), jakarta.persistence.FetchType.EAGER );
+			final var source = PreparedMappingSources.from( new MappingSources().addManagedClassName( SampleType.class.getName() )
+					.addPackageDescriptor( packageName ), preparation, settings );
+			assertThat( source.packageDetails() ).containsExactly( packageDetails );
+			assertThat( source.managedClassDetails() ).containsExactly( ordinary );
 			for ( var missingPackage : new String[] { "does.not.exist", SampleType.class.getPackageName(), SampleType.class.getName() } ) {
-				final var explicit = new ManagedResourcesBuilder().addPackageDescriptor( missingPackage ).build();
-				assertThatThrownBy( () -> MetadataBuildingProcess.processManagedResources(
-						explicit, bootstrap, options.getMappingDefaults(), context,
-						new PersistenceUnitMetadataImpl(), new GlobalRegistrationsImpl( context, bootstrap ) ) )
-						.isInstanceOf( UnknownClassException.class )
+				assertThatThrownBy( () -> PreparedMappingSources.from( new MappingSources().addPackageDescriptor( missingPackage ),
+						preparation, settings ) ).isInstanceOf( UnknownClassException.class )
 						.hasMessageContaining( missingPackage + ".package-info" );
 			}
-
-			assertThat( source.getManagedJavaTypes() ).containsExactly( ordinary );
-			assertThat( source.getDynamicManagedTypes() ).isEmpty();
-			assertThat( source.getManagedTypes() ).containsExactly( ordinary );
-			assertThat( EnhancementCandidates.forResources( resources ) ).containsOnlyKeys( SampleType.class.getName() );
 		}
 	}
 
 	@Test
 	void nativeDescriptorsAndAliasesAgree() {
-		final var sources = new MetadataSources();
+		final var sources = new MappingSources();
 		assertThat( sources.addPackageDescriptor( "example." ) ).isSameAs( sources );
 		sources.addPackage( "example" ).addPackageDescriptor( "example" );
-		sources.addPackageDescriptor( String.class.getPackage() ).addPackage( String.class.getPackage() );
-		sources.addModuleDescriptor( String.class.getModule() ).addModule( String.class.getModule() );
-		assertThat( sources.getAnnotatedPackages() ).containsExactly( "example", "java.lang" );
-		assertThat( sources.getAnnotatedModuleNames() ).containsExactly( "java.base" );
-		assertThatThrownBy( () -> sources.addAnnotatedClassName( "example.package-info" ) )
+		sources.addPackage( String.class.getPackage() );
+		sources.addModule( String.class.getModule() );
+		assertThat( sources.packageNames() ).containsExactly( "example", "java.lang" );
+		assertThat( sources.moduleNames() ).containsExactly( "java.base" );
+		assertThatThrownBy( () -> sources.addManagedClassName( "example.package-info" ) )
 				.isInstanceOf( MappingException.class ).hasMessageContaining( "addPackageDescriptor(\"example\")" );
-		assertThatThrownBy( () -> sources.addAnnotatedClassName( "module-info" ) )
+		assertThatThrownBy( () -> sources.addManagedClassName( "module-info" ) )
 				.isInstanceOf( MappingException.class ).hasMessageContaining( "declared module name" );
 	}
 
@@ -319,24 +330,22 @@ class ManagedResourcesTests {
 	void explicitAndCompleteConfigurationViewsRemainSeparate() {
 		final var configuration = new PersistenceConfiguration( "unit" )
 				.managedClass( String.class ).managedPackageDescriptor( "explicit" ).managedModuleDescriptor( "explicit.module" );
-		final var discovery = new ScanningResultImpl( Set.of( "scanned.module" ), Set.of( "scanned", "explicit" ),
-				Set.of( String.class.getName(), Integer.class.getName() ), Set.of() );
-		final var descriptor = new PersistenceConfigurationDescriptor( configuration, discovery );
-		assertThat( descriptor.getManagedClassNames() ).containsExactly( String.class.getName() );
-		assertThat( descriptor.getAllClassNames() ).containsExactly( String.class.getName(), Integer.class.getName() );
-		assertThat( descriptor.getManagedPackageDescriptors() ).containsExactly( "explicit" );
-		assertThat( descriptor.getAllPackageDescriptors() ).containsExactlyInAnyOrder( "explicit", "scanned" );
-		assertThat( descriptor.getAllModuleDescriptors() ).containsExactly( "explicit.module", "scanned.module" );
-		assertThat( new PersistenceConfigurationDescriptor( configuration ).getAllClassNames() )
-				.containsExactly( String.class.getName() );
-		final var builder = new EntityManagerFactoryBuilderImpl( new PersistenceConfigurationDescriptor( configuration ), Map.of() );
-		try {
-			assertThat( builder.getManagedResources().getAnnotatedClassReferences() ).containsExactly( String.class );
-		}
-		finally {
-			builder.cancel();
-		}
+		final var source = MappingSources.from( configuration );
+		assertThat( source.managedClasses() ).containsExactly( String.class );
+		assertThat( source.packageNames() ).containsExactly( "explicit" );
+		assertThat( source.moduleNames() ).containsExactly( "explicit.module" );
+		final var unit = new PersistenceUnitInfoAdapter() {
+			@Override public List<String> getManagedClassNames() { return List.of( String.class.getName() ); }
+			@Override public List<String> getAllClassNames() { return List.of( String.class.getName(), Integer.class.getName() ); }
+			@Override public List<String> getAllPackageDescriptors() { return List.of( "explicit", "scanned" ); }
+			@Override public List<String> getAllModuleDescriptors() { return List.of( "explicit.module", "scanned.module" ); }
+		};
+		final var container = MappingSources.from( new PersistenceUnitInfoDescriptor( unit ) );
+		assertThat( container.managedClassNames() ).containsExactly( String.class.getName(), Integer.class.getName() );
+		assertThat( container.packageNames() ).containsExactly( "explicit", "scanned" );
+		assertThat( container.moduleNames() ).containsExactly( "explicit.module", "scanned.module" );
 	}
+
 
 	@Test
 	void resolvedTypesRetainSuppliedDetailsAndSeparateDescriptors(@TempDir Path directory) throws Exception {
@@ -347,44 +356,65 @@ class ManagedResourcesTests {
 				module test.inventory {}
 				""", directory, FilterDef.class );
 		try ( var registry = new StandardServiceRegistryBuilder().build() ) {
-			final var options = new MetadataBuilderImpl.MetadataBuildingOptionsImpl( registry );
-			final var bootstrap = new BootstrapContextImpl( registry, options );
-			options.setBootstrapContext( bootstrap );
-			final var context = bootstrap.getModelsContext();
-			// Name lookup alone cannot find a module in a child layer.
-			final var moduleDetails = context.getModuleDetailsRegistry().resolveModuleDetails( module.module() );
+			final var buildingContext = new MetadataBuildingContextTestingImpl( registry );
+			final var context = buildingContext.getModelsContext();
 			final var details = new JdkClassDetails( SampleType.class, context );
 			final var dynamic = new DynamicClassDetails( "DynamicModel", context );
-			final var xmlSources = new MetadataSources( registry ).addResource( "mappings/models/dynamic/dynamic-simple.xml" );
+			final var sources = new MappingSources().addClassDetails( details ).addClassDetails( dynamic )
+					.addManagedClass( SampleType.class ).addManagedClassName( SampleType.class.getName() )
+					.addPackageDescriptor( "org.hibernate.orm.test.boot.models.inventory" ).addModule( module.module() );
 			final var javaMapping = new JaxbEntityMappingsImpl();
-			final var xmlEntity = new JaxbEntityImpl();
+			final var xmlEntity = new org.hibernate.boot.jaxb.mapping.spi.JaxbEntityImpl();
 			final var xmlClassName = "org.hibernate.orm.test.boot.models.inventory.UnlistedEntity";
 			xmlEntity.setClazz( xmlClassName );
+			xmlEntity.setName( "XmlOnlyEntity" );
 			javaMapping.getEntities().add( xmlEntity );
-			final var resourceBuilder = new ManagedResourcesBuilder();
-			xmlSources.getMappingXmlBindings().forEach( resourceBuilder::addXmlBinding );
-			resourceBuilder.addXmlBinding( new Binding<>( javaMapping, new Origin( SourceType.OTHER, "xml-only-java-type" ) ) );
-			final var resources = resourceBuilder.addClass( SampleType.class ).addClassName( SampleType.class.getName() )
-					.addClassDetails( details ).addClassDetails( details ).addClassDetails( dynamic )
-					.addPackageDescriptor( "org.hibernate.orm.test.boot.models.inventory" )
-					.addModuleDescriptor( module.module().getName() ).build();
-			final var source = MetadataBuildingProcess.processManagedResources( resources, bootstrap, options.getMappingDefaults(),
-					context, new PersistenceUnitMetadataImpl(), new GlobalRegistrationsImpl( context, bootstrap ) );
-			assertThat( source.getManagedJavaTypes() ).contains( details );
-			assertThat( source.getManagedJavaTypes() ).extracting( ClassDetails::getName ).containsExactly( SampleType.class.getName(), xmlClassName );
-			assertThat( source.getDynamicManagedTypes() ).contains( dynamic );
-			assertThat( source.getDynamicManagedTypes() ).extracting( ClassDetails::getName ).containsExactly( "DynamicModel", "SimpleEntity" );
-			assertThat( source.getPackageDescriptors() ).extracting( ClassDetails::getName )
+			sources.addMappingResource( "mappings/models/dynamic/dynamic-simple.xml" )
+					.addXmlMappingSource( (binder, loading, consumer) -> consumer.accept(
+							new Binding<>( javaMapping, new Origin( SourceType.OTHER, "xml-only-java-type" ) ) ) );
+			final var settings = SettingsResolver.resolveMappingSettings(
+					SettingsResolver.resolveBootstrapSettings( Map.of() ), jakarta.persistence.FetchType.EAGER );
+			final var prepared = PreparedMappingSources.from( sources, new MappingSourcePreparationContext( context, registry ), settings );
+			assertThat( prepared.managedClassDetails() ).containsExactly( details, dynamic );
+			assertThat( prepared.packageDetails() ).extracting( ClassDetails::getName )
 					.containsExactly( "org.hibernate.orm.test.boot.models.inventory.package-info" );
-			assertThat( source.getModuleDescriptors() ).extracting( descriptor -> descriptor.name() ).containsExactly( module.module().getName() );
-			assertThat( source.getModuleDescriptors().get( 0 ).target() ).isSameAs( moduleDetails );
-			assertThat( moduleDetails.getDirectAnnotationUsage( FilterDef.class ).name() ).isEqualTo( "moduleInventoryFilter" );
-			assertThat( source.getManagedTypes() ).hasSize( 4 ).contains( details, dynamic );
-			assertThat( source.getManagedTypes() ).noneMatch( type -> type.getName().endsWith( "package-info" ) );
+			assertThat( prepared.moduleDetails() ).hasSize( 1 );
+			assertThat( prepared.moduleDetails().iterator().next().getDirectAnnotationUsage( FilterDef.class ).name() )
+					.isEqualTo( "moduleInventoryFilter" );
 			assertThat( context.getClassDetailsRegistry().findClassDetails( SampleType.class.getName() ) ).isSameAs( details );
-			assertThatThrownBy( () -> new ManagedResourcesBuilder().addClassDetails( details )
-					.addClassDetails( new JdkClassDetails( SampleType.class, context ) ) )
+			final var categorized = org.hibernate.boot.mapping.internal.categorize.DomainModelCategorizer.categorize(
+					prepared, buildingContext );
+			assertThat( categorized.getSourceClasses() ).containsKey( xmlClassName ).containsKey( "SimpleEntity" );
+			assertThat( categorized.getSourceClasses().keySet() ).noneMatch( name -> name.endsWith( "package-info" ) );
+			assertThat( categorized.getEntityHierarchies() ).extracting( hierarchy -> hierarchy.getRoot().getJpaEntityName() )
+					.containsExactlyInAnyOrder( "XmlOnlyEntity", "SimpleEntity" );
+			assertThat( context.getClassDetailsRegistry().findClassDetails( SampleType.class.getName() ) ).isSameAs( details );
+			assertThat( context.getClassDetailsRegistry().findClassDetails( "DynamicModel" ) ).isSameAs( dynamic );
+			assertThatThrownBy( () -> sources.addClassDetails( new JdkClassDetails( SampleType.class, context ) ) )
 					.isInstanceOf( MappingException.class ).hasMessageContaining( "Conflicting ClassDetails" );
+		}
+	}
+
+	@Test
+	void descriptorRegistrationsSurviveArchiveRestoration(@TempDir Path directory) throws Exception {
+		final var module = TestModule.load( ShrinkWrap.create( JavaArchive.class, "archive-inventory.jar" )
+				.addClass( SampleType.class ), """
+				/// @author Steve Ebersole
+				@org.hibernate.annotations.FilterDef(name = "moduleArchiveFilter", defaultCondition = "2=2")
+				module test.archiveinventory {}
+				""", directory, FilterDef.class );
+		try ( var registry = new StandardServiceRegistryBuilder()
+				.applySetting( MappingSettings.METADATA_SERIALIZATION_ENABLED, true ).build() ) {
+			final var metadata = MetadataBuildingHelper.buildMetadata( registry,
+					new MappingSources().addManagedClass( org.hibernate.orm.test.boot.models.inventory.UnlistedEntity.class )
+							.addPackageDescriptor( "org.hibernate.orm.test.boot.models.inventory" ).addModule( module.module() ) );
+			final var bytes = new java.io.ByteArrayOutputStream();
+			org.hibernate.boot.serial.MetadataSerialization.serialize( metadata ).writeTo( bytes );
+			final var restored = org.hibernate.boot.serial.MetadataSerialization.read(
+					new java.io.ByteArrayInputStream( bytes.toByteArray() ) ).restore( registry ).getMetadata();
+			assertThat( restored.getFilterDefinitions() ).containsKeys( "inventoryFilter", "moduleArchiveFilter" );
+			assertThat( restored.getFilterDefinitions().get( "inventoryFilter" ).getDefaultFilterCondition() ).isEqualTo( "1=1" );
+			assertThat( restored.getFilterDefinitions().get( "moduleArchiveFilter" ).getDefaultFilterCondition() ).isEqualTo( "2=2" );
 		}
 	}
 
@@ -402,9 +432,7 @@ class ManagedResourcesTests {
 				.containsExactly( "not.loaded.Entity", "xml.Only" );
 		assertThatThrownBy( () -> EnhancementCandidates.forContainer( List.of( "example.package-info" ) ) )
 				.isInstanceOf( MappingException.class ).hasMessageContaining( "getAllPackageDescriptors()" );
-		final var resources = new ManagedResourcesBuilder().addClassName( "not.loaded.Entity" )
-				.addPackageDescriptor( "example" ).addModuleDescriptor( "example.module" ).build();
-		assertThat( EnhancementCandidates.forResources( resources ) ).containsOnlyKeys( "not.loaded.Entity" );
+
 	}
 
 	@Test

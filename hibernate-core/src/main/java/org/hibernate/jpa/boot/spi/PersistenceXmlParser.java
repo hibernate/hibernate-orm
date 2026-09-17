@@ -167,7 +167,8 @@ public final class PersistenceXmlParser {
 			JPA_LOGGER.attemptingToParsePersistenceXml( xmlUrl.toExternalForm() );
 		}
 
-		final URL persistenceUnitRootUrl = getJarURLFromURLEntry( xmlUrl, "/META-INF/persistence.xml" );
+		final URL persistenceUnitRootUrl = getJarURLFromURLEntry( xmlUrl,
+				xmlUrl.getPath().endsWith( "/META-INF/persistence.xml" ) ? "/META-INF/persistence.xml" : "/persistence.xml" );
 		for ( var jaxbPersistenceUnit : loadUrlWithJaxb( xmlUrl ).getPersistenceUnit() ) {
 			if ( persistenceUnits.containsKey( jaxbPersistenceUnit.getName() ) ) {
 				JPA_LOGGER.duplicatedPersistenceUnitName( jaxbPersistenceUnit.getName() );

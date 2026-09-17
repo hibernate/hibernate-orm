@@ -50,6 +50,32 @@ public class PreparedMappingSourcesTests {
 	}
 
 	@Test
+	void explicitXmlMultiplicitySurvivesPreparation(ServiceRegistryScope registryScope) {
+		final var context = new MetadataBuildingContextTestingImpl( registryScope.getRegistry() );
+		final var sources = new MappingSources().addMappingResource( MAPPING_FILE ).addMappingResource( MAPPING_FILE );
+		final var prepared = PreparedMappingSources.from( sources,
+				new MappingSourcePreparationContext( context.getModelsContext(), registryScope.getRegistry() ),
+				SettingsResolver.resolveMappingSettings( SettingsResolver.resolveBootstrapSettings( Map.of() ), jakarta.persistence.FetchType.EAGER ) );
+		assertThat( prepared.xmlMappings() ).hasSize( 2 );
+		org.assertj.core.api.Assertions.assertThatThrownBy( () -> prepared.xmlMappings().clear() )
+				.isInstanceOf( UnsupportedOperationException.class );
+	}
+
+	@Test
+	void plainPersistenceConfigurationHonorsXmlDisabled(ServiceRegistryScope registryScope) {
+		final var context = new MetadataBuildingContextTestingImpl( registryScope.getRegistry() );
+		final var configuration = new jakarta.persistence.PersistenceConfiguration( "plain" )
+				.managedClass( SimpleEntity.class ).managedPackageDescriptor( PACKAGE_NAME )
+				.mappingFile( "does-not-exist.xml" ).property( MappingSettings.XML_MAPPING_ENABLED, false );
+		final var prepared = PreparedMappingSources.from( configuration,
+				new MappingSourcePreparationContext( context.getModelsContext(), registryScope.getRegistry() ) );
+		assertThat( prepared.xmlMappings() ).isEmpty();
+		assertThat( prepared.managedClassDetails() ).extracting( org.hibernate.models.spi.ClassDetails::getName )
+				.containsExactly( SimpleEntity.class.getName() );
+		assertThat( prepared.packageDetails() ).hasSize( 1 );
+	}
+
+	@Test
 	void xmlMappingDisabledIgnoresExplicitMappingResources(ServiceRegistryScope registryScope) {
 		var buildingContext = new MetadataBuildingContextTestingImpl( registryScope.getRegistry() );
 		final var bootstrapSettings = SettingsResolver.resolveBootstrapSettings(
@@ -199,7 +225,7 @@ public class PreparedMappingSourcesTests {
 
 		var config = new HibernatePersistenceConfiguration( "test" );
 		config.managedClass( SimpleEntity.class );
-		config.managedClass( classLoading.classForName( PACKAGE_NAME + ".package-info" ) );
+		config.managedPackageDescriptor( PACKAGE_NAME );
 		config.mappingFile( MAPPING_FILE );
 
 		var modelSources = PreparedMappingSources.from(
@@ -221,7 +247,7 @@ public class PreparedMappingSourcesTests {
 
 		var pui = new PersistenceUnitInfoAdapter();
 		pui.managedClassNames.add( SimpleEntity.class.getName() );
-		pui.managedClassNames.add( PACKAGE_NAME + ".package-info" );
+		pui.packageNames.add( PACKAGE_NAME );
 		pui.mappingFiles.add( MAPPING_FILE );
 
 		var puiWrapper = new PersistenceUnitInfoDescriptor( pui );
@@ -261,6 +287,17 @@ public class PreparedMappingSourcesTests {
 
 	private static class PersistenceUnitInfoAdapter extends org.hibernate.testing.orm.jpa.PersistenceUnitInfoAdapter {
 		private final List<String> managedClassNames = new ArrayList<>();
+		private final List<String> packageNames = new ArrayList<>();
+
+		@Override
+		public List<String> getManagedPackageDescriptors() {
+			return packageNames;
+		}
+
+		@Override
+		public List<String> getAllPackageDescriptors() {
+			return packageNames;
+		}
 		private final List<String> mappingFiles = new ArrayList<>();
 		private boolean excludeUnlistedClasses;
 

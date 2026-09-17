@@ -134,8 +134,9 @@ public class MappingSourcesTests {
 	void adaptsPersistenceUnitDescriptorSources() {
 		final var persistenceUnitDescriptor = new TestPersistenceUnitDescriptor(
 				new Properties(),
-				List.of( MappedEntity.class.getName(), PACKAGE_NAME + ".package-info" ),
-				List.of( "org/hibernate/orm/test/boot/models/source/available.xml" )
+				List.of( MappedEntity.class.getName() ),
+				List.of( "org/hibernate/orm/test/boot/models/source/available.xml" ),
+				null, List.of(), true, List.of( PACKAGE_NAME )
 		);
 		final var bootstrapSettings = SettingsResolver.resolveBootstrapSettings(
 				persistenceUnitDescriptor,
@@ -190,13 +191,47 @@ public class MappingSourcesTests {
 		assertThat( mappingSources.includeUnlistedStructuralTypes() ).isFalse();
 	}
 
+	@Test
+	void discoveryDoesNotDuplicateExplicitXml(ServiceRegistryScope registryScope) throws Exception {
+		final var loading = registryScope.getRegistry().requireService( ClassLoaderService.class );
+		final var resource = "org/hibernate/orm/test/boot/models/source/available.xml";
+		final var uri = loading.locateResource( resource ).toURI();
+		final Scanner scanner = new Scanner() {
+			@Override
+			public ScanningResult scan(URL... boundaries) {
+				return new ScanningResultImpl( Set.of(), Set.of(), Set.of(), Set.of( uri ) );
+			}
+
+			@Override
+			public ScanningResult jpaScan(org.hibernate.boot.archive.spi.ArchiveDescriptor archive,
+					org.hibernate.boot.jaxb.configuration.spi.JaxbPersistenceImpl.JaxbPersistenceUnitImpl unit) {
+				throw new AssertionError( "Programmatic configuration uses boundary scanning" );
+			}
+		};
+		final var configuration = new HibernatePersistenceConfiguration( "xml-discovery", URI.create( "file:/root/" ).toURL() );
+		configuration.mappingFile( resource ).mappingFile( resource );
+		configuration.property( PersistenceSettings.SCANNER, scanner );
+		final var settings = SettingsResolver.resolveBootstrapSettings( configuration );
+		final var sources = MappingSources.from( configuration, settings,
+				SettingsResolver.resolveMappingSettings( settings, configuration.defaultToOneFetchType() ),
+				new ContributionDiscoveryContext( loading ) );
+		assertThat( sources.mappingResources() ).containsExactly( resource, resource );
+		assertThat( sources.mappingFileUris() ).isEmpty();
+	}
+
 	private record TestPersistenceUnitDescriptor(
 			Properties properties,
 			List<String> classNames,
 			List<String> mappingFileNames,
 			URL rootUrl,
 			List<URL> jarFileUrls,
-			boolean excludeUnlistedClasses) implements PersistenceUnitDescriptor {
+			boolean excludeUnlistedClasses,
+			List<String> packageNames) implements PersistenceUnitDescriptor {
+		private TestPersistenceUnitDescriptor(Properties properties, List<String> classNames, List<String> mappingFileNames,
+				URL rootUrl, List<URL> jarFileUrls, boolean excludeUnlistedClasses) {
+			this( properties, classNames, mappingFileNames, rootUrl, jarFileUrls, excludeUnlistedClasses, List.of() );
+		}
+
 		private TestPersistenceUnitDescriptor(
 				Properties properties,
 				List<String> classNames,
@@ -237,6 +272,11 @@ public class MappingSourcesTests {
 		@Override
 		public List<String> getManagedClassNames() {
 			return classNames;
+		}
+
+		@Override
+		public List<String> getAllPackageDescriptors() {
+			return packageNames;
 		}
 
 		@Override

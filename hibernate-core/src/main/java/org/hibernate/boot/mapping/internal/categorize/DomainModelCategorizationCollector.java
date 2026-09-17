@@ -144,7 +144,13 @@ public class DomainModelCategorizationCollector {
 		getGlobalRegistrations().collectNamedEntityGraphRegistrations( moduleDetails );
 	}
 
+	public void applyPackageDescriptor(ClassDetails packageDetails) {
+		collectGlobalRegistrations( packageDetails );
+		getGlobalRegistrations().collectIdGenerators( packageDetails );
+	}
+
 	public void apply(ClassDetails classDetails) {
+		org.hibernate.boot.model.process.internal.ManagedResourceValidation.validateClassName( classDetails.getName() );
 		sourceClasses.putIfAbsent( classDetails.getName(), classDetails );
 		collectGlobalRegistrations( classDetails );
 

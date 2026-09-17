@@ -8,7 +8,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.hibernate.cfg.Environment;
-import org.hibernate.jpa.boot.spi.Bootstrap;
+import org.hibernate.boot.pipeline.internal.BootstrapPipeline;
+import org.hibernate.jpa.boot.spi.PersistenceXmlParser;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
 
@@ -26,7 +27,8 @@ public class PackageDescriptorXmlNamedQueriesTest {
 		final Map<String, Object> settings = new HashMap<>();
 		Environment.getProperties().forEach( (key, value) -> settings.put( key.toString(), value ) );
 		ServiceRegistryUtil.applySettings( settings );
-		try ( var factory = Bootstrap.getEntityManagerFactoryBuilder( xml, "package-descriptor-queries", settings ).build() ) {
+		try ( var factory = BootstrapPipeline.build( PersistenceXmlParser.create().parse( java.util.List.of( xml ) )
+				.get( "package-descriptor-queries" ), settings ) ) {
 			PackageDescriptorNamedQueriesTest.verifyNamedQueriesAndStatement( factory );
 		}
 	}

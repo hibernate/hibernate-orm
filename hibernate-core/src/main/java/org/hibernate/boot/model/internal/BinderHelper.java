@@ -7,7 +7,6 @@ package org.hibernate.boot.model.internal;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.CascadeType;
 import org.hibernate.MappingException;
-import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.mapping.Component;
@@ -217,27 +216,12 @@ public class BinderHelper {
 			ClassDetails classDetails,
 			MetadataBuildingContext context) {
 
-// todo (soft-delete) : or if we want caching of this per package
-//  +
-//				final SoftDelete fromPackage = context.getMetadataCollector().resolvePackageAnnotation( packageName, SoftDelete.class );
-//  +
-//		where context.getMetadataCollector() can cache some of this - either the annotations themselves
-//		or even just the XPackage resolutions
-
 		final String packageName = qualifier( classDetails.getName() );
 		if ( isEmpty( packageName ) ) {
 			return null;
 		}
-		else {
-			final var modelsContext = context.getModelsContext();
-			try {
-				return modelsContext.getClassDetailsRegistry()
-						.resolveClassDetails( packageName + ".package-info" )
-						.getAnnotationUsage( annotationType, modelsContext );
-			}
-			catch (ClassLoadingException ignore) {
-				return null;
-			}
-		}
+		final var modelsContext = context.getModelsContext();
+		return modelsContext.getClassDetailsRegistry().resolvePackageDetails( packageName )
+				.getAnnotationUsage( annotationType, modelsContext );
 	}
 }

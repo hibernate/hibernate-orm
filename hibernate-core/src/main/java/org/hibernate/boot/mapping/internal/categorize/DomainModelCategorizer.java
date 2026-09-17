@@ -67,7 +67,6 @@ public class DomainModelCategorizer {
 		//
 		// OUTPUTS:
 		//		- availableXmlMappings
-		//		- allKnownClassNames (technically could be included in xmlPreProcessingResult)
 		//		- modelsContext
 
 		final var persistenceUnitMetadata = metadataBuildingContext.getMetadataCollector().getPersistenceUnitMetadata();
@@ -80,9 +79,7 @@ public class DomainModelCategorizer {
 			defaultsAware.apply( persistenceUnitMetadata );
 		}
 
-		final List<String> allKnownClassNames = new ArrayList<>( xmlPreProcessingResult.getMappedClasses() );
-		resolvedMappingSources.managedClassDetails().forEach( (classDetails) -> allKnownClassNames.add( classDetails.getName() ) );
-		resolvedMappingSources.packageDetails().forEach( (packageDetails) -> allKnownClassNames.add( packageDetails.getName() ) );
+
 
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -112,6 +109,9 @@ public class DomainModelCategorizer {
 				)
 		);
 
+		xmlPreProcessingResult.getMappedClasses().forEach(
+				org.hibernate.boot.model.process.internal.ManagedResourceValidation::validateClassName );
+
 		final RootMappingDefaults mappingDefaults = rootMappingDefaults( metadataBuildingContext );
 		final org.hibernate.boot.mapping.internal.xml.XmlProcessingResult xmlProcessingResult = XmlProcessor.processXml(
 				xmlPreProcessingResult,
@@ -126,14 +126,14 @@ public class DomainModelCategorizer {
 
 		resolvedMappingSources.moduleDetails().forEach( modelCategorizationCollector::apply );
 
-		allKnownClassNames.forEach( (className) -> {
-			final ClassDetails classDetails = mutableClassDetailsRegistry.resolveClassDetails( className );
-			modelCategorizationCollector.apply( classDetails );
-		} );
-		xmlPreProcessingResult.getMappedNames().forEach( (className) -> {
-			final ClassDetails classDetails = mutableClassDetailsRegistry.resolveClassDetails( className );
-			modelCategorizationCollector.apply( classDetails );
-		} );
+		final var managedTypes = new LinkedHashMap<String, ClassDetails>();
+		resolvedMappingSources.managedClassDetails().forEach( details -> managedTypes.put( details.getName(), details ) );
+		xmlPreProcessingResult.getMappedClasses().forEach( name ->
+				managedTypes.computeIfAbsent( name, mutableClassDetailsRegistry::resolveClassDetails ) );
+		xmlPreProcessingResult.getMappedNames().forEach( name ->
+				managedTypes.computeIfAbsent( name, mutableClassDetailsRegistry::resolveClassDetails ) );
+		managedTypes.values().forEach( modelCategorizationCollector::apply );
+		resolvedMappingSources.packageDetails().forEach( modelCategorizationCollector::applyPackageDescriptor );
 
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

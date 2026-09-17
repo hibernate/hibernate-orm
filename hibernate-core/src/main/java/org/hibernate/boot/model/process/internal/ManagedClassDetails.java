@@ -5,7 +5,9 @@
 package org.hibernate.boot.model.process.internal;
 
 import org.hibernate.MappingException;
-import org.hibernate.models.internal.MutableClassDetailsRegistry;
+import org.hibernate.models.spi.ModelsContext;
+import org.hibernate.models.jdk.JdkClassDetails;
+import org.hibernate.models.spi.MutableClassDetailsRegistry;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
 
@@ -26,4 +28,20 @@ public final class ManagedClassDetails {
 			registry.as( MutableClassDetailsRegistry.class ).addClassDetails( details.getName(), details );
 		}
 	}
+
+	public static ClassDetails resolve(Class<?> type, ModelsContext context) {
+		ManagedResourceValidation.validateClassName( type.getName() );
+		final var registry = context.getClassDetailsRegistry();
+		final var existing = registry.findClassDetails( type.getName() );
+		if ( existing != null ) {
+			if ( !existing.isRealClass() || existing.toJavaClass() != type ) {
+				throw new MappingException( "Conflicting class handle for '" + type.getName() + "'" );
+			}
+			return existing;
+		}
+		final var details = new JdkClassDetails( type, context );
+		register( details, registry );
+		return details;
+	}
+
 }

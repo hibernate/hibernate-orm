@@ -479,6 +479,10 @@ public class BootstrapPipeline {
 			PersistenceUnitDescriptor persistenceUnitDescriptor,
 			Map<?, ?> integrationSettings,
 			org.hibernate.boot.registry.BootstrapServiceRegistry bootstrapServiceRegistry) {
+		if ( persistenceUnitDescriptor instanceof org.hibernate.jpa.boot.internal.PersistenceUnitInfoDescriptor container ) {
+			container.registerClassTransformer( integrationSettings );
+		}
+
 		final var bootstrapSettings = SettingsResolver.resolveBootstrapSettings(
 				persistenceUnitDescriptor,
 				integrationSettings

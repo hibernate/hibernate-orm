@@ -38,5 +38,5 @@ public interface JpaCoalesce<T> extends JpaExpression<T>, CriteriaBuilder.Coales
 	 */
 	@Nonnull
 	@SuppressWarnings("unchecked")
-	JpaCoalesce<T> values(T... values);
+	JpaCoalesce<T> values(@Nonnull T... values);
 }

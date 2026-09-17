@@ -48,13 +48,14 @@ public interface JpaQueryStructure<T> extends JpaQueryPart<T> {
 	/**
 	 * Return the query selection.
 	 */
+	@Nonnull
 	JpaSelection<T> getSelection();
 
 	/**
 	 * Set the query selection.
 	 */
 	@Nonnull
-	JpaQueryStructure<T> setSelection(JpaSelection<T> selection);
+	JpaQueryStructure<T> setSelection(@Nonnull JpaSelection<T> selection);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -63,18 +64,20 @@ public interface JpaQueryStructure<T> extends JpaQueryPart<T> {
 	/**
 	 * Return the query roots.
 	 */
+	@Nonnull
 	Set<? extends JpaRoot<?>> getRoots();
 
 	/**
 	 * Return the query roots as a list.
 	 */
+	@Nonnull
 	List<? extends JpaRoot<?>> getRootList();
 
 	/**
 	 * Add a query root.
 	 */
 	@Nonnull
-	JpaQueryStructure<T> addRoot(JpaRoot<?> root);
+	JpaQueryStructure<T> addRoot(@Nonnull JpaRoot<?> root);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -98,19 +101,19 @@ public interface JpaQueryStructure<T> extends JpaQueryPart<T> {
 	 * Set the restriction.
 	 */
 	@Nonnull
-	JpaQueryStructure<T> setRestriction(BooleanExpression... restrictions);
+	JpaQueryStructure<T> setRestriction(@Nonnull BooleanExpression... restrictions);
 
 	/**
 	 * Set the restriction.
 	 */
 	@Nonnull
-	JpaQueryStructure<T> setRestriction(Predicate... restrictions);
+	JpaQueryStructure<T> setRestriction(@Nullable Predicate... restrictions);
 
 	/**
 	 * Set the restriction.
 	 */
 	@Nonnull
-	JpaQueryStructure<T> setRestriction(List<Predicate> restrictions);
+	JpaQueryStructure<T> setRestriction(@Nonnull List<Predicate> restrictions);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -126,13 +129,13 @@ public interface JpaQueryStructure<T> extends JpaQueryPart<T> {
 	 * Set the grouping expressions.
 	 */
 	@Nonnull
-	JpaQueryStructure<T> setGroupingExpressions(List<? extends Expression<?>> grouping);
+	JpaQueryStructure<T> setGroupingExpressions(@Nonnull List<? extends Expression<?>> grouping);
 
 	/**
 	 * Set the grouping expressions.
 	 */
 	@Nonnull
-	JpaQueryStructure<T> setGroupingExpressions(Expression<?>... grouping);
+	JpaQueryStructure<T> setGroupingExpressions(@Nonnull Expression<?>... grouping);
 
 	/**
 	 * Return the group restriction.
@@ -156,19 +159,19 @@ public interface JpaQueryStructure<T> extends JpaQueryPart<T> {
 	 * Set the group restriction.
 	 */
 	@Nonnull
-	JpaQueryStructure<T> setGroupRestriction(Predicate... restrictions);
+	JpaQueryStructure<T> setGroupRestriction(@Nullable Predicate... restrictions);
 
 	/**
 	 * Set the group restriction.
 	 */
 	@Nonnull
-	JpaQueryStructure<T> setGroupRestriction(BooleanExpression... restrictions);
+	JpaQueryStructure<T> setGroupRestriction(@Nullable BooleanExpression... restrictions);
 
 	/**
 	 * Set the group restriction.
 	 */
 	@Nonnull
-	JpaQueryStructure<T> setGroupRestriction(List<Predicate> restrictions);
+	JpaQueryStructure<T> setGroupRestriction(@Nonnull List<Predicate> restrictions);
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Covariant overrides
@@ -178,7 +181,7 @@ public interface JpaQueryStructure<T> extends JpaQueryPart<T> {
 	 */
 	@Override
 	@Nonnull
-	JpaQueryStructure<T> setSortSpecifications(List<? extends JpaOrder> sortSpecifications);
+	JpaQueryStructure<T> setSortSpecifications(@Nonnull List<? extends JpaOrder> sortSpecifications);
 
 	/**
 	 * Set the query offset.
@@ -199,5 +202,5 @@ public interface JpaQueryStructure<T> extends JpaQueryPart<T> {
 	 */
 	@Override
 	@Nonnull
-	JpaQueryStructure<T> setFetch(@Nullable JpaExpression<? extends Number> fetch, FetchClauseType fetchClauseType);
+	JpaQueryStructure<T> setFetch(@Nullable JpaExpression<? extends Number> fetch, @Nonnull FetchClauseType fetchClauseType);
 }

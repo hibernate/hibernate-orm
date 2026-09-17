@@ -25,6 +25,7 @@ public interface JpaPath<T> extends JpaExpression<T>, Path<T> {
 	/**
 	 * Get this path's NavigablePath
 	 */
+	@Nonnull
 	NavigablePath getNavigablePath();
 
 	/**

@@ -44,11 +44,13 @@ public interface JpaSearchOrder extends JpaCriteriaNode {
 	 * Switch the ordering.
 	 * @return a new <code>Order</code> instance with the reversed ordering
 	 */
+	@Nonnull
 	JpaSearchOrder reverse();
 
 	/**
 	 * Return the CTE attribute that is used for ordering.
 	 * @return CTE attribute used for ordering
 	 */
+	@Nonnull
 	JpaCteCriteriaAttribute getAttribute();
 }

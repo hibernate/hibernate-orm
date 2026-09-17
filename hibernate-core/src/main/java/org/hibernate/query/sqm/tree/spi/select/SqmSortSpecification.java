@@ -67,6 +67,7 @@ public class SqmSortSpecification implements JpaOrder, SqmCacheable {
 		return sortExpression;
 	}
 
+	@Nonnull
 	@Override
 	public SortDirection getSortDirection() {
 		return sortOrder;
@@ -80,8 +81,9 @@ public class SqmSortSpecification implements JpaOrder, SqmCacheable {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// JPA
 
+	@Nonnull
 	@Override
-	public JpaOrder nullPrecedence(Nulls nullPrecedence) {
+	public JpaOrder nullPrecedence(@Nonnull Nulls nullPrecedence) {
 		this.nullPrecedence = nullPrecedence;
 		return this;
 	}

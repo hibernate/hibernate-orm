@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.criteria;
 
+import jakarta.annotation.Nullable;
 import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Expression;
@@ -24,21 +25,21 @@ public interface JpaSimpleCase<C,R> extends JpaExpression<R>, CriteriaBuilder.Si
 	 */
 	@Nonnull
 	@Override
-	JpaSimpleCase<C, R> when(C condition, R result);
+	JpaSimpleCase<C, R> when(@Nullable C condition, @Nullable R result);
 
 	/**
 	 * Add a when-then clause to this simple case expression.
 	 */
 	@Nonnull
 	@Override
-	JpaSimpleCase<C, R> when(C condition, @Nonnull Expression<? extends R> result);
+	JpaSimpleCase<C, R> when(@Nullable C condition, @Nonnull Expression<? extends R> result);
 
 	/**
 	 * Add a when-then clause to this simple case expression.
 	 */
 	@Nonnull
 	@Override
-	JpaSimpleCase<C, R> when(@Nonnull Expression<? extends C> condition, R result);
+	JpaSimpleCase<C, R> when(@Nonnull Expression<? extends C> condition, @Nullable R result);
 
 	/**
 	 * Add a when-then clause to this simple case expression.
@@ -52,7 +53,7 @@ public interface JpaSimpleCase<C,R> extends JpaExpression<R>, CriteriaBuilder.Si
 	 */
 	@Nonnull
 	@Override
-	JpaSimpleCase<C,R> otherwise(R result);
+	JpaSimpleCase<C,R> otherwise(@Nullable R result);
 
 	/**
 	 * Set the otherwise result of this simple case expression.

@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.criteria;
 
+import jakarta.annotation.Nullable;
 import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Expression;
@@ -17,7 +18,7 @@ public interface JpaSearchedCase<T> extends JpaExpression<T>, CriteriaBuilder.Ca
 	 */
 	@Nonnull
 	@Override
-	JpaSearchedCase<T> when(@Nonnull Expression<Boolean> condition, T result);
+	JpaSearchedCase<T> when(@Nonnull Expression<Boolean> condition, @Nullable T result);
 
 	/**
 	 * Add a when-then clause to this searched case expression.
@@ -31,7 +32,7 @@ public interface JpaSearchedCase<T> extends JpaExpression<T>, CriteriaBuilder.Ca
 	 */
 	@Nonnull
 	@Override
-	JpaExpression<T> otherwise(T result);
+	JpaExpression<T> otherwise(@Nullable T result);
 
 	/**
 	 * Set the otherwise result of this searched case expression.

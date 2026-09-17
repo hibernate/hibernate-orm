@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import jakarta.annotation.Nullable;
 import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.BooleanExpression;
 import org.hibernate.jpa.spi.JpaCompliance;
@@ -107,719 +108,951 @@ public interface NodeBuilder extends HibernateCriteriaBuilder, SqmCreationContex
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Array functions for array types
 
+	@Nonnull
 	@Override
-	<T> SqmExpression<T[]> arrayAgg(JpaOrder order, Expression<? extends T> argument);
+	<T> SqmExpression<T[]> arrayAgg(@Nullable JpaOrder order, @Nonnull Expression<? extends T> argument);
 
+	@Nonnull
 	@Override
-	<T> SqmExpression<T[]> arrayAgg(JpaOrder order, JpaPredicate filter, Expression<? extends T> argument);
+	<T> SqmExpression<T[]> arrayAgg(@Nullable JpaOrder order, @Nullable JpaPredicate filter, @Nonnull Expression<? extends T> argument);
 
+	@Nonnull
 	@Override
-	<T> SqmExpression<T[]> arrayAgg(JpaOrder order, JpaWindow window, Expression<? extends T> argument);
+	<T> SqmExpression<T[]> arrayAgg(@Nullable JpaOrder order, @Nullable JpaWindow window, @Nonnull Expression<? extends T> argument);
 
+	@Nonnull
 	@Override
 	<T> SqmExpression<T[]> arrayAgg(
-			JpaOrder order,
-			JpaPredicate filter,
-			JpaWindow window,
-			Expression<? extends T> argument);
+			@Nullable JpaOrder order,
+			@Nullable JpaPredicate filter,
+			@Nullable JpaWindow window,
+			@Nonnull Expression<? extends T> argument);
 
+	@Nonnull
 	@Override
-	<T> SqmExpression<T[]> arrayLiteral(T... elements);
+	<T> SqmExpression<T[]> arrayLiteral(@Nullable T... elements);
 
+	@Nonnull
 	@Override
-	<T> SqmExpression<Integer> arrayLength(Expression<T[]> arrayExpression);
+	<T> SqmExpression<Integer> arrayLength(@Nonnull Expression<T[]> arrayExpression);
 
+	@Nonnull
 	@Override
-	<T> SqmExpression<Integer> arrayPosition(Expression<T[]> arrayExpression, T element);
+	<T> SqmExpression<Integer> arrayPosition(@Nonnull Expression<T[]> arrayExpression, @Nullable T element);
 
+	@Nonnull
 	@Override
-	<T> SqmExpression<Integer> arrayPosition(Expression<T[]> arrayExpression, Expression<T> elementExpression);
+	<T> SqmExpression<Integer> arrayPosition(@Nonnull Expression<T[]> arrayExpression, @Nonnull Expression<T> elementExpression);
 
+	@Nonnull
 	@Override
-	<T> SqmExpression<int[]> arrayPositions(Expression<T[]> arrayExpression, Expression<T> elementExpression);
+	<T> SqmExpression<int[]> arrayPositions(@Nonnull Expression<T[]> arrayExpression, @Nonnull Expression<T> elementExpression);
 
+	@Nonnull
 	@Override
-	<T> SqmExpression<int[]> arrayPositions(Expression<T[]> arrayExpression, T element);
+	<T> SqmExpression<int[]> arrayPositions(@Nonnull Expression<T[]> arrayExpression, @Nullable T element);
 
+	@Nonnull
 	@Override
-	<T> SqmExpression<List<Integer>> arrayPositionsList(Expression<T[]> arrayExpression, Expression<T> elementExpression);
+	<T> SqmExpression<List<Integer>> arrayPositionsList(@Nonnull Expression<T[]> arrayExpression, @Nonnull Expression<T> elementExpression);
 
+	@Nonnull
 	@Override
-	<T> SqmExpression<List<Integer>> arrayPositionsList(Expression<T[]> arrayExpression, T element);
+	<T> SqmExpression<List<Integer>> arrayPositionsList(@Nonnull Expression<T[]> arrayExpression, @Nullable T element);
 
+	@Nonnull
 	@Override
-	<T> SqmExpression<T[]> arrayConcat(Expression<T[]> arrayExpression1, Expression<T[]> arrayExpression2);
+	<T> SqmExpression<T[]> arrayConcat(@Nonnull Expression<T[]> arrayExpression1, @Nonnull Expression<T[]> arrayExpression2);
 
+	@Nonnull
 	@Override
-	<T> SqmExpression<T[]> arrayConcat(Expression<T[]> arrayExpression1, T[] array2);
+	<T> SqmExpression<T[]> arrayConcat(@Nonnull Expression<T[]> arrayExpression1, @Nullable T[] array2);
 
+	@Nonnull
 	@Override
-	<T> SqmExpression<T[]> arrayConcat(T[] array1, Expression<T[]> arrayExpression2);
+	<T> SqmExpression<T[]> arrayConcat(@Nullable T[] array1, @Nonnull Expression<T[]> arrayExpression2);
 
+	@Nonnull
 	@Override
-	<T> SqmExpression<T[]> arrayAppend(Expression<T[]> arrayExpression, Expression<T> elementExpression);
+	<T> SqmExpression<T[]> arrayAppend(@Nonnull Expression<T[]> arrayExpression, @Nonnull Expression<T> elementExpression);
 
+	@Nonnull
 	@Override
-	<T> SqmExpression<T[]> arrayAppend(Expression<T[]> arrayExpression, T element);
+	<T> SqmExpression<T[]> arrayAppend(@Nonnull Expression<T[]> arrayExpression, @Nullable T element);
 
+	@Nonnull
 	@Override
-	<T> SqmExpression<T[]> arrayPrepend(Expression<T> elementExpression, Expression<T[]> arrayExpression);
+	<T> SqmExpression<T[]> arrayPrepend(@Nonnull Expression<T> elementExpression, @Nonnull Expression<T[]> arrayExpression);
 
+	@Nonnull
 	@Override
-	<T> SqmExpression<T[]> arrayPrepend(T element, Expression<T[]> arrayExpression);
+	<T> SqmExpression<T[]> arrayPrepend(@Nullable T element, @Nonnull Expression<T[]> arrayExpression);
 
+	@Nonnull
 	@Override
-	<T> SqmExpression<T> arrayGet(Expression<T[]> arrayExpression, Expression<Integer> indexExpression);
+	<T> SqmExpression<T> arrayGet(@Nonnull Expression<T[]> arrayExpression, @Nonnull Expression<Integer> indexExpression);
 
+	@Nonnull
 	@Override
-	<T> SqmExpression<T> arrayGet(Expression<T[]> arrayExpression, Integer index);
+	<T> SqmExpression<T> arrayGet(@Nonnull Expression<T[]> arrayExpression, @Nullable Integer index);
 
+	@Nonnull
 	@Override
-	<T> SqmExpression<T[]> arraySet(Expression<T[]> arrayExpression, Expression<Integer> indexExpression, Expression<T> elementExpression);
+	<T> SqmExpression<T[]> arraySet(@Nonnull Expression<T[]> arrayExpression, @Nonnull Expression<Integer> indexExpression, @Nonnull Expression<T> elementExpression);
 
+	@Nonnull
 	@Override
-	<T> SqmExpression<T[]> arraySet(Expression<T[]> arrayExpression, Expression<Integer> indexExpression, T element);
+	<T> SqmExpression<T[]> arraySet(@Nonnull Expression<T[]> arrayExpression, @Nonnull Expression<Integer> indexExpression, @Nullable T element);
 
+	@Nonnull
 	@Override
-	<T> SqmExpression<T[]> arraySet(Expression<T[]> arrayExpression, Integer index, Expression<T> elementExpression);
+	<T> SqmExpression<T[]> arraySet(@Nonnull Expression<T[]> arrayExpression, @Nullable Integer index, @Nonnull Expression<T> elementExpression);
 
+	@Nonnull
 	@Override
-	<T> SqmExpression<T[]> arraySet(Expression<T[]> arrayExpression, Integer index, T element);
+	<T> SqmExpression<T[]> arraySet(@Nonnull Expression<T[]> arrayExpression, @Nullable Integer index, @Nullable T element);
 
+	@Nonnull
 	@Override
-	<T> SqmExpression<T[]> arrayRemove(Expression<T[]> arrayExpression, Expression<T> elementExpression);
+	<T> SqmExpression<T[]> arrayRemove(@Nonnull Expression<T[]> arrayExpression, @Nonnull Expression<T> elementExpression);
 
+	@Nonnull
 	@Override
-	<T> SqmExpression<T[]> arrayRemove(Expression<T[]> arrayExpression, T element);
+	<T> SqmExpression<T[]> arrayRemove(@Nonnull Expression<T[]> arrayExpression, @Nullable T element);
 
+	@Nonnull
 	@Override
-	<T> SqmExpression<T[]> arrayRemoveIndex(Expression<T[]> arrayExpression, Expression<Integer> indexExpression);
+	<T> SqmExpression<T[]> arrayRemoveIndex(@Nonnull Expression<T[]> arrayExpression, @Nonnull Expression<Integer> indexExpression);
 
+	@Nonnull
 	@Override
-	<T> SqmExpression<T[]> arrayRemoveIndex(Expression<T[]> arrayExpression, Integer index);
+	<T> SqmExpression<T[]> arrayRemoveIndex(@Nonnull Expression<T[]> arrayExpression, @Nullable Integer index);
 
+	@Nonnull
 	@Override
-	<T> SqmExpression<T[]> arraySlice(Expression<T[]> arrayExpression, Expression<Integer> lowerIndexExpression, Expression<Integer> upperIndexExpression);
+	<T> SqmExpression<T[]> arraySlice(@Nonnull Expression<T[]> arrayExpression, @Nonnull Expression<Integer> lowerIndexExpression, @Nonnull Expression<Integer> upperIndexExpression);
 
+	@Nonnull
 	@Override
-	<T> SqmExpression<T[]> arraySlice(Expression<T[]> arrayExpression, Expression<Integer> lowerIndexExpression, Integer upperIndex);
+	<T> SqmExpression<T[]> arraySlice(@Nonnull Expression<T[]> arrayExpression, @Nonnull Expression<Integer> lowerIndexExpression, @Nullable Integer upperIndex);
 
+	@Nonnull
 	@Override
-	<T> SqmExpression<T[]> arraySlice(Expression<T[]> arrayExpression, Integer lowerIndex, Expression<Integer> upperIndexExpression);
+	<T> SqmExpression<T[]> arraySlice(@Nonnull Expression<T[]> arrayExpression, @Nullable Integer lowerIndex, @Nonnull Expression<Integer> upperIndexExpression);
 
+	@Nonnull
 	@Override
-	<T> SqmExpression<T[]> arraySlice(Expression<T[]> arrayExpression, Integer lowerIndex, Integer upperIndex);
+	<T> SqmExpression<T[]> arraySlice(@Nonnull Expression<T[]> arrayExpression, @Nullable Integer lowerIndex, @Nullable Integer upperIndex);
 
+	@Nonnull
 	@Override
-	<T> SqmExpression<T[]> arrayReplace(Expression<T[]> arrayExpression, Expression<T> oldElementExpression, Expression<T> newElementExpression);
+	<T> SqmExpression<T[]> arrayReplace(@Nonnull Expression<T[]> arrayExpression, @Nonnull Expression<T> oldElementExpression, @Nonnull Expression<T> newElementExpression);
 
+	@Nonnull
 	@Override
-	<T> SqmExpression<T[]> arrayReplace(Expression<T[]> arrayExpression, Expression<T> oldElementExpression, T newElement);
+	<T> SqmExpression<T[]> arrayReplace(@Nonnull Expression<T[]> arrayExpression, @Nonnull Expression<T> oldElementExpression, @Nullable T newElement);
 
+	@Nonnull
 	@Override
-	<T> SqmExpression<T[]> arrayReplace(Expression<T[]> arrayExpression, T oldElement, Expression<T> newElementExpression);
+	<T> SqmExpression<T[]> arrayReplace(@Nonnull Expression<T[]> arrayExpression, @Nullable T oldElement, @Nonnull Expression<T> newElementExpression);
 
+	@Nonnull
 	@Override
-	<T> SqmExpression<T[]> arrayReplace(Expression<T[]> arrayExpression, T oldElement, T newElement);
+	<T> SqmExpression<T[]> arrayReplace(@Nonnull Expression<T[]> arrayExpression, @Nullable T oldElement, @Nullable T newElement);
 
+	@Nonnull
 	@Override
-	<T> SqmExpression<T[]> arrayTrim(Expression<T[]> arrayExpression, Expression<Integer> elementCountExpression);
+	<T> SqmExpression<T[]> arrayTrim(@Nonnull Expression<T[]> arrayExpression, @Nonnull Expression<Integer> elementCountExpression);
 
+	@Nonnull
 	@Override
-	<T> SqmExpression<T[]> arrayTrim(Expression<T[]> arrayExpression, Integer elementCount);
+	<T> SqmExpression<T[]> arrayTrim(@Nonnull Expression<T[]> arrayExpression, @Nullable Integer elementCount);
 
+	@Nonnull
 	@Override
-	<T> SqmExpression<T[]> arrayReverse(Expression<T[]> arrayExpression);
+	<T> SqmExpression<T[]> arrayReverse(@Nonnull Expression<T[]> arrayExpression);
 
+	@Nonnull
 	@Override
-	<T> SqmExpression<T[]> arraySort(Expression<T[]> arrayExpression);
+	<T> SqmExpression<T[]> arraySort(@Nonnull Expression<T[]> arrayExpression);
 
+	@Nonnull
 	@Override
-	<T> SqmExpression<T[]> arraySort(Expression<T[]> arrayExpression, boolean descending);
+	<T> SqmExpression<T[]> arraySort(@Nonnull Expression<T[]> arrayExpression, boolean descending);
 
+	@Nonnull
 	@Override
-	<T> SqmExpression<T[]> arraySort(Expression<T[]> arrayExpression, Expression<Boolean> descendingExpression);
+	<T> SqmExpression<T[]> arraySort(@Nonnull Expression<T[]> arrayExpression, @Nonnull Expression<Boolean> descendingExpression);
 
+	@Nonnull
 	@Override
-	<T> SqmExpression<T[]> arraySort(Expression<T[]> arrayExpression, boolean descending, boolean nullsFirst);
+	<T> SqmExpression<T[]> arraySort(@Nonnull Expression<T[]> arrayExpression, boolean descending, boolean nullsFirst);
 
+	@Nonnull
 	@Override
-	<T> SqmExpression<T[]> arraySort(Expression<T[]> arrayExpression, Expression<Boolean> descendingExpression, Expression<Boolean> nullsFirstExpression);
+	<T> SqmExpression<T[]> arraySort(@Nonnull Expression<T[]> arrayExpression, @Nonnull Expression<Boolean> descendingExpression, @Nonnull Expression<Boolean> nullsFirstExpression);
 
+	@Nonnull
 	@Override
-	<T> SqmExpression<T[]> arrayFill(Expression<T> elementExpression, Expression<Integer> elementCountExpression);
+	<T> SqmExpression<T[]> arrayFill(@Nonnull Expression<T> elementExpression, @Nonnull Expression<Integer> elementCountExpression);
 
+	@Nonnull
 	@Override
-	<T> SqmExpression<T[]> arrayFill(Expression<T> elementExpression, Integer elementCount);
+	<T> SqmExpression<T[]> arrayFill(@Nonnull Expression<T> elementExpression, @Nullable Integer elementCount);
 
+	@Nonnull
 	@Override
-	<T> SqmExpression<T[]> arrayFill(T element, Expression<Integer> elementCountExpression);
+	<T> SqmExpression<T[]> arrayFill(@Nullable T element, @Nonnull Expression<Integer> elementCountExpression);
 
+	@Nonnull
 	@Override
-	<T> SqmExpression<T[]> arrayFill(T element, Integer elementCount);
+	<T> SqmExpression<T[]> arrayFill(@Nullable T element, @Nullable Integer elementCount);
 
+	@Nonnull
 	@Override
-	SqmExpression<String> arrayToString(Expression<? extends Object[]> arrayExpression, Expression<String> separatorExpression);
+	SqmExpression<String> arrayToString(@Nonnull Expression<? extends Object[]> arrayExpression, @Nonnull Expression<String> separatorExpression);
 
+	@Nonnull
 	@Override
-	SqmExpression<String> arrayToString(Expression<? extends Object[]> arrayExpression, String separator);
+	SqmExpression<String> arrayToString(@Nonnull Expression<? extends Object[]> arrayExpression, @Nullable String separator);
 
+	@Nonnull
 	@Override
-	SqmExpression<String> arrayToString(Expression<? extends Object[]> arrayExpression, Expression<String> separatorExpression, Expression<String> defaultExpression);
+	SqmExpression<String> arrayToString(@Nonnull Expression<? extends Object[]> arrayExpression, @Nonnull Expression<String> separatorExpression, @Nonnull Expression<String> defaultExpression);
 
+	@Nonnull
 	@Override
-	SqmExpression<String> arrayToString(Expression<? extends Object[]> arrayExpression, Expression<String> separatorExpression, String defaultValue);
+	SqmExpression<String> arrayToString(@Nonnull Expression<? extends Object[]> arrayExpression, @Nonnull Expression<String> separatorExpression, @Nullable String defaultValue);
 
+	@Nonnull
 	@Override
-	SqmExpression<String> arrayToString(Expression<? extends Object[]> arrayExpression, String separator, Expression<String> defaultExpression);
+	SqmExpression<String> arrayToString(@Nonnull Expression<? extends Object[]> arrayExpression, @Nullable String separator, @Nonnull Expression<String> defaultExpression);
 
+	@Nonnull
 	@Override
-	SqmExpression<String> arrayToString(Expression<? extends Object[]> arrayExpression, String separator, String defaultValue);
+	SqmExpression<String> arrayToString(@Nonnull Expression<? extends Object[]> arrayExpression, @Nullable String separator, @Nullable String defaultValue);
 
+	@Nonnull
 	@Override
-	<T> SqmPredicate arrayContains(Expression<T[]> arrayExpression, Expression<T> elementExpression);
+	<T> SqmPredicate arrayContains(@Nonnull Expression<T[]> arrayExpression, @Nonnull Expression<T> elementExpression);
 
+	@Nonnull
 	@Override
-	<T> SqmPredicate arrayContains(Expression<T[]> arrayExpression, T element);
+	<T> SqmPredicate arrayContains(@Nonnull Expression<T[]> arrayExpression, @Nullable T element);
 
+	@Nonnull
 	@Override
-	<T> SqmPredicate arrayContains(T[] array, Expression<T> elementExpression);
+	<T> SqmPredicate arrayContains(@Nullable T[] array, @Nonnull Expression<T> elementExpression);
 
+	@Nonnull
 	@Override
-	<T> SqmPredicate arrayContainsNullable(Expression<T[]> arrayExpression, Expression<T> elementExpression);
+	<T> SqmPredicate arrayContainsNullable(@Nonnull Expression<T[]> arrayExpression, @Nonnull Expression<T> elementExpression);
 
+	@Nonnull
 	@Override
-	<T> SqmPredicate arrayContainsNullable(Expression<T[]> arrayExpression, T element);
+	<T> SqmPredicate arrayContainsNullable(@Nonnull Expression<T[]> arrayExpression, @Nullable T element);
 
+	@Nonnull
 	@Override
-	<T> SqmPredicate arrayContainsNullable(T[] array, Expression<T> elementExpression);
+	<T> SqmPredicate arrayContainsNullable(@Nullable T[] array, @Nonnull Expression<T> elementExpression);
 
+	@Nonnull
 	@Override
-	<T> SqmPredicate arrayIncludes(Expression<T[]> arrayExpression, Expression<T[]> subArrayExpression);
+	<T> SqmPredicate arrayIncludes(@Nonnull Expression<T[]> arrayExpression, @Nonnull Expression<T[]> subArrayExpression);
 
+	@Nonnull
 	@Override
-	<T> SqmPredicate arrayIncludes(Expression<T[]> arrayExpression, T[] subArray);
+	<T> SqmPredicate arrayIncludes(@Nonnull Expression<T[]> arrayExpression, @Nullable T[] subArray);
 
+	@Nonnull
 	@Override
-	<T> SqmPredicate arrayIncludes(T[] array, Expression<T[]> subArrayExpression);
+	<T> SqmPredicate arrayIncludes(@Nullable T[] array, @Nonnull Expression<T[]> subArrayExpression);
 
+	@Nonnull
 	@Override
-	<T> SqmPredicate arrayIncludesNullable(Expression<T[]> arrayExpression, Expression<T[]> subArrayExpression);
+	<T> SqmPredicate arrayIncludesNullable(@Nonnull Expression<T[]> arrayExpression, @Nonnull Expression<T[]> subArrayExpression);
 
+	@Nonnull
 	@Override
-	<T> SqmPredicate arrayIncludesNullable(Expression<T[]> arrayExpression, T[] subArray);
+	<T> SqmPredicate arrayIncludesNullable(@Nonnull Expression<T[]> arrayExpression, @Nullable T[] subArray);
 
+	@Nonnull
 	@Override
-	<T> SqmPredicate arrayIncludesNullable(T[] array, Expression<T[]> subArrayExpression);
+	<T> SqmPredicate arrayIncludesNullable(@Nullable T[] array, @Nonnull Expression<T[]> subArrayExpression);
 
+	@Nonnull
 	@Override
-	<T> SqmPredicate arrayIntersects(Expression<T[]> arrayExpression1, Expression<T[]> arrayExpression2);
+	<T> SqmPredicate arrayIntersects(@Nonnull Expression<T[]> arrayExpression1, @Nonnull Expression<T[]> arrayExpression2);
 
+	@Nonnull
 	@Override
-	<T> SqmPredicate arrayIntersects(Expression<T[]> arrayExpression1, T[] array2);
+	<T> SqmPredicate arrayIntersects(@Nonnull Expression<T[]> arrayExpression1, @Nullable T[] array2);
 
+	@Nonnull
 	@Override
-	<T> SqmPredicate arrayIntersects(T[] array1, Expression<T[]> arrayExpression2);
+	<T> SqmPredicate arrayIntersects(@Nullable T[] array1, @Nonnull Expression<T[]> arrayExpression2);
 
+	@Nonnull
 	@Override
-	<T> SqmPredicate arrayIntersectsNullable(Expression<T[]> arrayExpression1, Expression<T[]> arrayExpression2);
+	<T> SqmPredicate arrayIntersectsNullable(@Nonnull Expression<T[]> arrayExpression1, @Nonnull Expression<T[]> arrayExpression2);
 
+	@Nonnull
 	@Override
-	<T> SqmPredicate arrayIntersectsNullable(Expression<T[]> arrayExpression1, T[] array2);
+	<T> SqmPredicate arrayIntersectsNullable(@Nonnull Expression<T[]> arrayExpression1, @Nullable T[] array2);
 
+	@Nonnull
 	@Override
-	<T> SqmPredicate arrayIntersectsNullable(T[] array1, Expression<T[]> arrayExpression2);
+	<T> SqmPredicate arrayIntersectsNullable(@Nullable T[] array1, @Nonnull Expression<T[]> arrayExpression2);
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Array functions for collection types
 
+	@Nonnull
 	@Override
-	<E, C extends Collection<E>> SqmExpression<C> collectionLiteral(E... elements);
+	<E, C extends Collection<E>> SqmExpression<C> collectionLiteral(@Nullable E... elements);
 
+	@Nonnull
 	@Override
-	SqmExpression<Integer> collectionLength(Expression<? extends Collection<?>> collectionExpression);
+	SqmExpression<Integer> collectionLength(@Nonnull Expression<? extends Collection<?>> collectionExpression);
 
+	@Nonnull
 	@Override
-	<E> SqmExpression<Integer> collectionPosition(Expression<? extends Collection<? extends E>> collectionExpression, E element);
+	<E> SqmExpression<Integer> collectionPosition(@Nonnull Expression<? extends Collection<? extends E>> collectionExpression, @Nullable E element);
 
+	@Nonnull
 	@Override
-	<E> SqmExpression<Integer> collectionPosition(Expression<? extends Collection<? extends E>> collectionExpression, Expression<E> elementExpression);
+	<E> SqmExpression<Integer> collectionPosition(@Nonnull Expression<? extends Collection<? extends E>> collectionExpression, @Nonnull Expression<E> elementExpression);
 
+	@Nonnull
 	@Override
-	<T> SqmExpression<int[]> collectionPositions(Expression<? extends Collection<? super T>> collectionExpression, Expression<T> elementExpression);
+	<T> SqmExpression<int[]> collectionPositions(@Nonnull Expression<? extends Collection<? super T>> collectionExpression, @Nonnull Expression<T> elementExpression);
 
+	@Nonnull
 	@Override
-	<T> SqmExpression<int[]> collectionPositions(Expression<? extends Collection<? super T>> collectionExpression, T element);
+	<T> SqmExpression<int[]> collectionPositions(@Nonnull Expression<? extends Collection<? super T>> collectionExpression, @Nullable T element);
 
+	@Nonnull
 	@Override
-	<T> SqmExpression<List<Integer>> collectionPositionsList(Expression<? extends Collection<? super T>> collectionExpression, Expression<T> elementExpression);
+	<T> SqmExpression<List<Integer>> collectionPositionsList(@Nonnull Expression<? extends Collection<? super T>> collectionExpression, @Nonnull Expression<T> elementExpression);
 
+	@Nonnull
 	@Override
-	<T> SqmExpression<List<Integer>> collectionPositionsList(Expression<? extends Collection<? super T>> collectionExpression, T element);
+	<T> SqmExpression<List<Integer>> collectionPositionsList(@Nonnull Expression<? extends Collection<? super T>> collectionExpression, @Nullable T element);
 
+	@Nonnull
 	@Override
-	<E, C extends Collection<? super E>> SqmExpression<C> collectionConcat(Expression<C> collectionExpression1, Expression<? extends Collection<? extends E>> collectionExpression2);
+	<E, C extends Collection<? super E>> SqmExpression<C> collectionConcat(@Nonnull Expression<C> collectionExpression1, @Nonnull Expression<? extends Collection<? extends E>> collectionExpression2);
 
+	@Nonnull
 	@Override
-	<E, C extends Collection<? super E>> SqmExpression<C> collectionConcat(Expression<C> collectionExpression1, Collection<? extends E> collection2);
+	<E, C extends Collection<? super E>> SqmExpression<C> collectionConcat(@Nonnull Expression<C> collectionExpression1, @Nullable Collection<? extends E> collection2);
 
+	@Nonnull
 	@Override
-	<E, C extends Collection<? super E>> SqmExpression<C> collectionConcat(C collection1, Expression<? extends Collection<? extends E>> collectionExpression2);
+	<E, C extends Collection<? super E>> SqmExpression<C> collectionConcat(@Nullable C collection1, @Nonnull Expression<? extends Collection<? extends E>> collectionExpression2);
 
+	@Nonnull
 	@Override
-	<E, C extends Collection<? super E>> SqmExpression<C> collectionAppend(Expression<C> collectionExpression, Expression<? extends E> elementExpression);
+	<E, C extends Collection<? super E>> SqmExpression<C> collectionAppend(@Nonnull Expression<C> collectionExpression, @Nonnull Expression<? extends E> elementExpression);
 
+	@Nonnull
 	@Override
-	<E, C extends Collection<? super E>> SqmExpression<C> collectionAppend(Expression<C> collectionExpression, E element);
+	<E, C extends Collection<? super E>> SqmExpression<C> collectionAppend(@Nonnull Expression<C> collectionExpression, @Nullable E element);
 
+	@Nonnull
 	@Override
-	<E, C extends Collection<? super E>> SqmExpression<C> collectionPrepend(Expression<? extends E> elementExpression, Expression<C> collectionExpression);
+	<E, C extends Collection<? super E>> SqmExpression<C> collectionPrepend(@Nonnull Expression<? extends E> elementExpression, @Nonnull Expression<C> collectionExpression);
 
+	@Nonnull
 	@Override
-	<E, C extends Collection<? super E>> SqmExpression<C> collectionPrepend(E element, Expression<C> collectionExpression);
+	<E, C extends Collection<? super E>> SqmExpression<C> collectionPrepend(@Nullable E element, @Nonnull Expression<C> collectionExpression);
 
+	@Nonnull
 	@Override
-	<E> SqmExpression<E> collectionGet(Expression<? extends Collection<E>> collectionExpression, Expression<Integer> indexExpression);
+	<E> SqmExpression<E> collectionGet(@Nonnull Expression<? extends Collection<E>> collectionExpression, @Nonnull Expression<Integer> indexExpression);
 
+	@Nonnull
 	@Override
-	<E> SqmExpression<E> collectionGet(Expression<? extends Collection<E>> collectionExpression, Integer index);
+	<E> SqmExpression<E> collectionGet(@Nonnull Expression<? extends Collection<E>> collectionExpression, @Nullable Integer index);
 
+	@Nonnull
 	@Override
-	<E, C extends Collection<? super E>> SqmExpression<C> collectionSet(Expression<C> collectionExpression, Expression<Integer> indexExpression, Expression<? extends E> elementExpression);
+	<E, C extends Collection<? super E>> SqmExpression<C> collectionSet(@Nonnull Expression<C> collectionExpression, @Nonnull Expression<Integer> indexExpression, @Nonnull Expression<? extends E> elementExpression);
 
+	@Nonnull
 	@Override
-	<E, C extends Collection<? super E>> SqmExpression<C> collectionSet(Expression<C> collectionExpression, Expression<Integer> indexExpression, E element);
+	<E, C extends Collection<? super E>> SqmExpression<C> collectionSet(@Nonnull Expression<C> collectionExpression, @Nonnull Expression<Integer> indexExpression, @Nullable E element);
 
+	@Nonnull
 	@Override
-	<E, C extends Collection<? super E>> SqmExpression<C> collectionSet(Expression<C> collectionExpression, Integer index, Expression<? extends E> elementExpression);
+	<E, C extends Collection<? super E>> SqmExpression<C> collectionSet(@Nonnull Expression<C> collectionExpression, @Nullable Integer index, @Nonnull Expression<? extends E> elementExpression);
 
+	@Nonnull
 	@Override
-	<E, C extends Collection<? super E>> SqmExpression<C> collectionSet(Expression<C> collectionExpression, Integer index, E element);
+	<E, C extends Collection<? super E>> SqmExpression<C> collectionSet(@Nonnull Expression<C> collectionExpression, @Nullable Integer index, @Nullable E element);
 
+	@Nonnull
 	@Override
-	<E, C extends Collection<? super E>> SqmExpression<C> collectionRemove(Expression<C> collectionExpression, Expression<? extends E> elementExpression);
+	<E, C extends Collection<? super E>> SqmExpression<C> collectionRemove(@Nonnull Expression<C> collectionExpression, @Nonnull Expression<? extends E> elementExpression);
 
+	@Nonnull
 	@Override
-	<E, C extends Collection<? super E>> SqmExpression<C> collectionRemove(Expression<C> collectionExpression, E element);
+	<E, C extends Collection<? super E>> SqmExpression<C> collectionRemove(@Nonnull Expression<C> collectionExpression, @Nullable E element);
 
+	@Nonnull
 	@Override
-	<C extends Collection<?>> SqmExpression<C> collectionRemoveIndex(Expression<C> collectionExpression, Expression<Integer> indexExpression);
+	<C extends Collection<?>> SqmExpression<C> collectionRemoveIndex(@Nonnull Expression<C> collectionExpression, @Nonnull Expression<Integer> indexExpression);
 
+	@Nonnull
 	@Override
-	<C extends Collection<?>> SqmExpression<C> collectionRemoveIndex(Expression<C> collectionExpression, Integer index);
+	<C extends Collection<?>> SqmExpression<C> collectionRemoveIndex(@Nonnull Expression<C> collectionExpression, @Nullable Integer index);
 
+	@Nonnull
 	@Override
-	<C extends Collection<?>> SqmExpression<C> collectionSlice(Expression<C> collectionExpression, Expression<Integer> lowerIndexExpression, Expression<Integer> upperIndexExpression);
+	<C extends Collection<?>> SqmExpression<C> collectionSlice(@Nonnull Expression<C> collectionExpression, @Nonnull Expression<Integer> lowerIndexExpression, @Nonnull Expression<Integer> upperIndexExpression);
 
+	@Nonnull
 	@Override
-	<C extends Collection<?>> SqmExpression<C> collectionSlice(Expression<C> collectionExpression, Expression<Integer> lowerIndexExpression, Integer upperIndex);
+	<C extends Collection<?>> SqmExpression<C> collectionSlice(@Nonnull Expression<C> collectionExpression, @Nonnull Expression<Integer> lowerIndexExpression, @Nullable Integer upperIndex);
 
+	@Nonnull
 	@Override
-	<C extends Collection<?>> SqmExpression<C> collectionSlice(Expression<C> collectionExpression, Integer lowerIndex, Expression<Integer> upperIndexExpression);
+	<C extends Collection<?>> SqmExpression<C> collectionSlice(@Nonnull Expression<C> collectionExpression, @Nullable Integer lowerIndex, @Nonnull Expression<Integer> upperIndexExpression);
 
+	@Nonnull
 	@Override
-	<C extends Collection<?>> SqmExpression<C> collectionSlice(Expression<C> collectionExpression, Integer lowerIndex, Integer upperIndex);
+	<C extends Collection<?>> SqmExpression<C> collectionSlice(@Nonnull Expression<C> collectionExpression, @Nullable Integer lowerIndex, @Nullable Integer upperIndex);
 
+	@Nonnull
 	@Override
-	<E, C extends Collection<? super E>> SqmExpression<C> collectionReplace(Expression<C> collectionExpression, Expression<? extends E> oldElementExpression, Expression<? extends E> newElementExpression);
+	<E, C extends Collection<? super E>> SqmExpression<C> collectionReplace(@Nonnull Expression<C> collectionExpression, @Nonnull Expression<? extends E> oldElementExpression, @Nonnull Expression<? extends E> newElementExpression);
 
+	@Nonnull
 	@Override
-	<E, C extends Collection<? super E>> SqmExpression<C> collectionReplace(Expression<C> collectionExpression, Expression<? extends E> oldElementExpression, E newElement);
+	<E, C extends Collection<? super E>> SqmExpression<C> collectionReplace(@Nonnull Expression<C> collectionExpression, @Nonnull Expression<? extends E> oldElementExpression, @Nullable E newElement);
 
+	@Nonnull
 	@Override
-	<E, C extends Collection<? super E>> SqmExpression<C> collectionReplace(Expression<C> collectionExpression, E oldElement, Expression<? extends E> newElementExpression);
+	<E, C extends Collection<? super E>> SqmExpression<C> collectionReplace(@Nonnull Expression<C> collectionExpression, @Nullable E oldElement, @Nonnull Expression<? extends E> newElementExpression);
 
+	@Nonnull
 	@Override
-	<E, C extends Collection<? super E>> SqmExpression<C> collectionReplace(Expression<C> collectionExpression, E oldElement, E newElement);
+	<E, C extends Collection<? super E>> SqmExpression<C> collectionReplace(@Nonnull Expression<C> collectionExpression, @Nullable E oldElement, @Nullable E newElement);
 
+	@Nonnull
 	@Override
-	<C extends Collection<?>> SqmExpression<C> collectionTrim(Expression<C> arrayExpression, Expression<Integer> elementCountExpression);
+	<C extends Collection<?>> SqmExpression<C> collectionTrim(@Nonnull Expression<C> arrayExpression, @Nonnull Expression<Integer> elementCountExpression);
 
+	@Nonnull
 	@Override
-	<C extends Collection<?>> SqmExpression<C> collectionTrim(Expression<C> arrayExpression, Integer elementCount);
+	<C extends Collection<?>> SqmExpression<C> collectionTrim(@Nonnull Expression<C> arrayExpression, @Nullable Integer elementCount);
 
+	@Nonnull
 	@Override
-	<C extends Collection<?>> SqmExpression<C> collectionReverse(Expression<C> collectionExpression);
+	<C extends Collection<?>> SqmExpression<C> collectionReverse(@Nonnull Expression<C> collectionExpression);
 
+	@Nonnull
 	@Override
-	<C extends Collection<?>> SqmExpression<C> collectionSort(Expression<C> collectionExpression);
+	<C extends Collection<?>> SqmExpression<C> collectionSort(@Nonnull Expression<C> collectionExpression);
 
+	@Nonnull
 	@Override
-	<C extends Collection<?>> SqmExpression<C> collectionSort(Expression<C> collectionExpression, boolean descending);
+	<C extends Collection<?>> SqmExpression<C> collectionSort(@Nonnull Expression<C> collectionExpression, boolean descending);
 
+	@Nonnull
 	@Override
 	<C extends Collection<?>> SqmExpression<C> collectionSort(
-			Expression<C> collectionExpression,
-			Expression<Boolean> descendingExpression);
+			@Nonnull Expression<C> collectionExpression,
+			@Nonnull Expression<Boolean> descendingExpression);
 
+	@Nonnull
 	@Override
 	<C extends Collection<?>> SqmExpression<C> collectionSort(
-			Expression<C> collectionExpression,
+			@Nonnull Expression<C> collectionExpression,
 			boolean descending,
 			boolean nullsFirst);
 
+	@Nonnull
 	@Override
 	<C extends Collection<?>> SqmExpression<C> collectionSort(
-			Expression<C> collectionExpression,
-			Expression<Boolean> descendingExpression,
-			Expression<Boolean> nullsFirstExpression);
+			@Nonnull Expression<C> collectionExpression,
+			@Nonnull Expression<Boolean> descendingExpression,
+			@Nonnull Expression<Boolean> nullsFirstExpression);
 
+	@Nonnull
 	@Override
-	<T> SqmExpression<Collection<T>> collectionFill(Expression<T> elementExpression, Expression<Integer> elementCountExpression);
+	<T> SqmExpression<Collection<T>> collectionFill(@Nonnull Expression<T> elementExpression, @Nonnull Expression<Integer> elementCountExpression);
 
+	@Nonnull
 	@Override
-	<T> SqmExpression<Collection<T>> collectionFill(Expression<T> elementExpression, Integer elementCount);
+	<T> SqmExpression<Collection<T>> collectionFill(@Nonnull Expression<T> elementExpression, @Nullable Integer elementCount);
 
+	@Nonnull
 	@Override
-	<T> SqmExpression<Collection<T>> collectionFill(T element, Expression<Integer> elementCountExpression);
+	<T> SqmExpression<Collection<T>> collectionFill(@Nullable T element, @Nonnull Expression<Integer> elementCountExpression);
 
+	@Nonnull
 	@Override
-	<T> SqmExpression<Collection<T>> collectionFill(T element, Integer elementCount);
+	<T> SqmExpression<Collection<T>> collectionFill(@Nullable T element, @Nullable Integer elementCount);
 
+	@Nonnull
 	@Override
-	SqmExpression<String> collectionToString(Expression<? extends Collection<?>> collectionExpression, Expression<String> separatorExpression);
+	SqmExpression<String> collectionToString(@Nonnull Expression<? extends Collection<?>> collectionExpression, @Nonnull Expression<String> separatorExpression);
 
+	@Nonnull
 	@Override
-	SqmExpression<String> collectionToString(Expression<? extends Collection<?>> collectionExpression, String separator);
+	SqmExpression<String> collectionToString(@Nonnull Expression<? extends Collection<?>> collectionExpression, @Nullable String separator);
 
+	@Nonnull
 	@Override
-	SqmExpression<String> collectionToString(Expression<? extends Collection<?>> collectionExpression, Expression<String> separatorExpression, Expression<String> defaultExpression);
+	SqmExpression<String> collectionToString(@Nonnull Expression<? extends Collection<?>> collectionExpression, @Nonnull Expression<String> separatorExpression, @Nonnull Expression<String> defaultExpression);
 
+	@Nonnull
 	@Override
-	SqmExpression<String> collectionToString(Expression<? extends Collection<?>> collectionExpression, Expression<String> separatorExpression, String defaultValue);
+	SqmExpression<String> collectionToString(@Nonnull Expression<? extends Collection<?>> collectionExpression, @Nonnull Expression<String> separatorExpression, @Nullable String defaultValue);
 
+	@Nonnull
 	@Override
-	SqmExpression<String> collectionToString(Expression<? extends Collection<?>> collectionExpression, String separator, Expression<String> defaultExpression);
+	SqmExpression<String> collectionToString(@Nonnull Expression<? extends Collection<?>> collectionExpression, @Nullable String separator, @Nonnull Expression<String> defaultExpression);
 
+	@Nonnull
 	@Override
-	SqmExpression<String> collectionToString(Expression<? extends Collection<?>> collectionExpression, String separator, String defaultValue);
+	SqmExpression<String> collectionToString(@Nonnull Expression<? extends Collection<?>> collectionExpression, @Nullable String separator, @Nullable String defaultValue);
 
+	@Nonnull
 	@Override
-	<E> SqmPredicate collectionContains(Expression<? extends Collection<E>> collectionExpression, Expression<? extends E> elementExpression);
+	<E> SqmPredicate collectionContains(@Nonnull Expression<? extends Collection<E>> collectionExpression, @Nonnull Expression<? extends E> elementExpression);
 
+	@Nonnull
 	@Override
-	<E> SqmPredicate collectionContains(Expression<? extends Collection<E>> collectionExpression, E element);
+	<E> SqmPredicate collectionContains(@Nonnull Expression<? extends Collection<E>> collectionExpression, @Nullable E element);
 
+	@Nonnull
 	@Override
-	<E> SqmPredicate collectionContains(Collection<E> collection, Expression<E> elementExpression);
+	<E> SqmPredicate collectionContains(@Nonnull Collection<E> collection, @Nonnull Expression<E> elementExpression);
 
+	@Nonnull
 	@Override
-	<E> SqmPredicate collectionContainsNullable(Expression<? extends Collection<E>> collectionExpression, Expression<? extends E> elementExpression);
+	<E> SqmPredicate collectionContainsNullable(@Nonnull Expression<? extends Collection<E>> collectionExpression, @Nonnull Expression<? extends E> elementExpression);
 
+	@Nonnull
 	@Override
-	<E> SqmPredicate collectionContainsNullable(Expression<? extends Collection<E>> collectionExpression, E element);
+	<E> SqmPredicate collectionContainsNullable(@Nonnull Expression<? extends Collection<E>> collectionExpression, @Nullable E element);
 
+	@Nonnull
 	@Override
-	<E> SqmPredicate collectionContainsNullable(Collection<E> collection, Expression<E> elementExpression);
+	<E> SqmPredicate collectionContainsNullable(@Nonnull Collection<E> collection, @Nonnull Expression<E> elementExpression);
 
+	@Nonnull
 	@Override
-	<E> SqmPredicate collectionIncludes(Expression<? extends Collection<E>> collectionExpression, Expression<? extends Collection<? extends E>> subCollectionExpression);
+	<E> SqmPredicate collectionIncludes(@Nonnull Expression<? extends Collection<E>> collectionExpression, @Nonnull Expression<? extends Collection<? extends E>> subCollectionExpression);
 
+	@Nonnull
 	@Override
-	<E> SqmPredicate collectionIncludes(Expression<? extends Collection<E>> collectionExpression, Collection<? extends E> subCollection);
+	<E> SqmPredicate collectionIncludes(@Nonnull Expression<? extends Collection<E>> collectionExpression, @Nullable Collection<? extends E> subCollection);
 
+	@Nonnull
 	@Override
-	<E> SqmPredicate collectionIncludes(Collection<E> collection, Expression<? extends Collection<? extends E>> subArrayExpression);
+	<E> SqmPredicate collectionIncludes(@Nullable Collection<E> collection, @Nonnull Expression<? extends Collection<? extends E>> subArrayExpression);
 
+	@Nonnull
 	@Override
-	<E> SqmPredicate collectionIncludesNullable(Expression<? extends Collection<E>> collectionExpression, Expression<? extends Collection<? extends E>> subCollectionExpression);
+	<E> SqmPredicate collectionIncludesNullable(@Nonnull Expression<? extends Collection<E>> collectionExpression, @Nonnull Expression<? extends Collection<? extends E>> subCollectionExpression);
 
+	@Nonnull
 	@Override
-	<E> SqmPredicate collectionIncludesNullable(Expression<? extends Collection<E>> collectionExpression, Collection<? extends E> subCollection);
+	<E> SqmPredicate collectionIncludesNullable(@Nonnull Expression<? extends Collection<E>> collectionExpression, @Nullable Collection<? extends E> subCollection);
 
+	@Nonnull
 	@Override
-	<E> SqmPredicate collectionIncludesNullable(Collection<E> collection, Expression<? extends Collection<? extends E>> subCollectionExpression);
+	<E> SqmPredicate collectionIncludesNullable(@Nullable Collection<E> collection, @Nonnull Expression<? extends Collection<? extends E>> subCollectionExpression);
 
+	@Nonnull
 	@Override
-	<E> SqmPredicate collectionIntersects(Expression<? extends Collection<E>> collectionExpression1, Expression<? extends Collection<? extends E>> collectionExpression2);
+	<E> SqmPredicate collectionIntersects(@Nonnull Expression<? extends Collection<E>> collectionExpression1, @Nonnull Expression<? extends Collection<? extends E>> collectionExpression2);
 
+	@Nonnull
 	@Override
-	<E> SqmPredicate collectionIntersects(Expression<? extends Collection<E>> collectionExpression1, Collection<? extends E> collection2);
+	<E> SqmPredicate collectionIntersects(@Nonnull Expression<? extends Collection<E>> collectionExpression1, @Nullable Collection<? extends E> collection2);
 
+	@Nonnull
 	@Override
-	<E> SqmPredicate collectionIntersects(Collection<E> collection1, Expression<? extends Collection<? extends E>> collectionExpression2);
+	<E> SqmPredicate collectionIntersects(@Nullable Collection<E> collection1, @Nonnull Expression<? extends Collection<? extends E>> collectionExpression2);
 
+	@Nonnull
 	@Override
-	<E> SqmPredicate collectionIntersectsNullable(Expression<? extends Collection<E>> collectionExpression1, Expression<? extends Collection<? extends E>> collectionExpression2);
+	<E> SqmPredicate collectionIntersectsNullable(@Nonnull Expression<? extends Collection<E>> collectionExpression1, @Nonnull Expression<? extends Collection<? extends E>> collectionExpression2);
 
+	@Nonnull
 	@Override
-	<E> SqmPredicate collectionIntersectsNullable(Expression<? extends Collection<E>> collectionExpression1, Collection<? extends E> collection2);
+	<E> SqmPredicate collectionIntersectsNullable(@Nonnull Expression<? extends Collection<E>> collectionExpression1, @Nullable Collection<? extends E> collection2);
 
+	@Nonnull
 	@Override
-	<E> SqmPredicate collectionIntersectsNullable(Collection<E> collection1, Expression<? extends Collection<? extends E>> collectionExpression2);
+	<E> SqmPredicate collectionIntersectsNullable(@Nullable Collection<E> collection1, @Nonnull Expression<? extends Collection<? extends E>> collectionExpression2);
 
+	@Nonnull
 	@Override
 	<T> SqmJsonValueExpression<T> jsonValue(
-			Expression<?> jsonDocument,
-			Expression<String> jsonPath,
-			Class<T> returningType);
+			@Nonnull Expression<?> jsonDocument,
+			@Nonnull Expression<String> jsonPath,
+			@Nullable Class<T> returningType);
 
+	@Nonnull
 	@Override
-	SqmJsonValueExpression<String> jsonValue(Expression<?> jsonDocument, Expression<String> jsonPath);
+	SqmJsonValueExpression<String> jsonValue(@Nonnull Expression<?> jsonDocument, @Nonnull Expression<String> jsonPath);
 
+	@Nonnull
 	@Override
-	<T> SqmJsonValueExpression<T> jsonValue(Expression<?> jsonDocument, String jsonPath, Class<T> returningType);
+	<T> SqmJsonValueExpression<T> jsonValue(@Nonnull Expression<?> jsonDocument, @Nullable String jsonPath, @Nullable Class<T> returningType);
 
+	@Nonnull
 	@Override
-	SqmJsonValueExpression<String> jsonValue(Expression<?> jsonDocument, String jsonPath);
+	SqmJsonValueExpression<String> jsonValue(@Nonnull Expression<?> jsonDocument, @Nullable String jsonPath);
 
+	@Nonnull
 	@Override
-	SqmJsonQueryExpression jsonQuery(Expression<?> jsonDocument, Expression<String> jsonPath);
+	SqmJsonQueryExpression jsonQuery(@Nonnull Expression<?> jsonDocument, @Nonnull Expression<String> jsonPath);
 
+	@Nonnull
 	@Override
-	SqmJsonQueryExpression jsonQuery(Expression<?> jsonDocument, String jsonPath);
+	SqmJsonQueryExpression jsonQuery(@Nonnull Expression<?> jsonDocument, @Nullable String jsonPath);
 
+	@Nonnull
 	@Override
-	SqmJsonExistsExpression jsonExists(Expression<?> jsonDocument, Expression<String> jsonPath);
+	SqmJsonExistsExpression jsonExists(@Nonnull Expression<?> jsonDocument, @Nonnull Expression<String> jsonPath);
 
+	@Nonnull
 	@Override
-	SqmJsonExistsExpression jsonExists(Expression<?> jsonDocument, String jsonPath);
+	SqmJsonExistsExpression jsonExists(@Nonnull Expression<?> jsonDocument, @Nullable String jsonPath);
 
+	@Nonnull
 	@Override
-	SqmExpression<String> jsonArrayWithNulls(Expression<?>... values);
+	SqmExpression<String> jsonArrayWithNulls(@Nonnull Expression<?>... values);
 
+	@Nonnull
 	@Override
-	SqmExpression<String> jsonArray(Expression<?>... values);
+	SqmExpression<String> jsonArray(@Nonnull Expression<?>... values);
 
+	@Nonnull
 	@Override
-	SqmExpression<String> jsonObjectWithNulls(Map<?, ? extends Expression<?>> keyValues);
+	SqmExpression<String> jsonObjectWithNulls(@Nonnull Map<?, ? extends Expression<?>> keyValues);
 
+	@Nonnull
 	@Override
-	SqmExpression<String> jsonObject(Map<?, ? extends Expression<?>> keyValues);
+	SqmExpression<String> jsonObject(@Nonnull Map<?, ? extends Expression<?>> keyValues);
 
+	@Nonnull
 	@Override
-	SqmExpression<String> jsonArrayAgg(Expression<?> value);
+	SqmExpression<String> jsonArrayAgg(@Nonnull Expression<?> value);
 
+	@Nonnull
 	@Override
-	SqmExpression<String> jsonArrayAggWithNulls(Expression<?> value);
+	SqmExpression<String> jsonArrayAggWithNulls(@Nonnull Expression<?> value);
 
+	@Nonnull
 	@Override
-	SqmExpression<String> jsonArrayAggWithNulls(Expression<?> value, Predicate filter, JpaOrder... orderBy);
+	SqmExpression<String> jsonArrayAggWithNulls(@Nonnull Expression<?> value, @Nullable Predicate filter, @Nonnull JpaOrder... orderBy);
 
+	@Nonnull
 	@Override
-	SqmExpression<String> jsonArrayAggWithNulls(Expression<?> value, Predicate filter);
+	SqmExpression<String> jsonArrayAggWithNulls(@Nonnull Expression<?> value, @Nullable Predicate filter);
 
+	@Nonnull
 	@Override
-	SqmExpression<String> jsonArrayAggWithNulls(Expression<?> value, JpaOrder... orderBy);
+	SqmExpression<String> jsonArrayAggWithNulls(@Nonnull Expression<?> value, @Nonnull JpaOrder... orderBy);
 
+	@Nonnull
 	@Override
-	SqmExpression<String> jsonArrayAgg(Expression<?> value, Predicate filter, JpaOrder... orderBy);
+	SqmExpression<String> jsonArrayAgg(@Nonnull Expression<?> value, @Nullable Predicate filter, @Nonnull JpaOrder... orderBy);
 
+	@Nonnull
 	@Override
-	SqmExpression<String> jsonArrayAgg(Expression<?> value, Predicate filter);
+	SqmExpression<String> jsonArrayAgg(@Nonnull Expression<?> value, @Nullable Predicate filter);
 
+	@Nonnull
 	@Override
-	SqmExpression<String> jsonArrayAgg(Expression<?> value, JpaOrder... orderBy);
+	SqmExpression<String> jsonArrayAgg(@Nonnull Expression<?> value, @Nonnull JpaOrder... orderBy);
 
+	@Nonnull
 	@Override
-	SqmExpression<String> jsonObjectAggWithUniqueKeysAndNulls(Expression<?> key, Expression<?> value);
+	SqmExpression<String> jsonObjectAggWithUniqueKeysAndNulls(@Nonnull Expression<?> key, @Nonnull Expression<?> value);
 
+	@Nonnull
 	@Override
-	SqmExpression<String> jsonObjectAggWithUniqueKeys(Expression<?> key, Expression<?> value);
+	SqmExpression<String> jsonObjectAggWithUniqueKeys(@Nonnull Expression<?> key, @Nonnull Expression<?> value);
 
+	@Nonnull
 	@Override
-	SqmExpression<String> jsonObjectAggWithNulls(Expression<?> key, Expression<?> value);
+	SqmExpression<String> jsonObjectAggWithNulls(@Nonnull Expression<?> key, @Nonnull Expression<?> value);
 
+	@Nonnull
 	@Override
-	SqmExpression<String> jsonObjectAgg(Expression<?> key, Expression<?> value);
+	SqmExpression<String> jsonObjectAgg(@Nonnull Expression<?> key, @Nonnull Expression<?> value);
 
+	@Nonnull
 	@Override
-	SqmExpression<String> jsonObjectAggWithUniqueKeysAndNulls(Expression<?> key, Expression<?> value, Predicate filter);
+	SqmExpression<String> jsonObjectAggWithUniqueKeysAndNulls(@Nonnull Expression<?> key, @Nonnull Expression<?> value, @Nullable Predicate filter);
 
+	@Nonnull
 	@Override
-	SqmExpression<String> jsonObjectAggWithUniqueKeys(Expression<?> key, Expression<?> value, Predicate filter);
+	SqmExpression<String> jsonObjectAggWithUniqueKeys(@Nonnull Expression<?> key, @Nonnull Expression<?> value, @Nullable Predicate filter);
 
+	@Nonnull
 	@Override
-	SqmExpression<String> jsonObjectAggWithNulls(Expression<?> key, Expression<?> value, Predicate filter);
+	SqmExpression<String> jsonObjectAggWithNulls(@Nonnull Expression<?> key, @Nonnull Expression<?> value, @Nullable Predicate filter);
 
+	@Nonnull
 	@Override
-	SqmExpression<String> jsonObjectAgg(Expression<?> key, Expression<?> value, Predicate filter);
+	SqmExpression<String> jsonObjectAgg(@Nonnull Expression<?> key, @Nonnull Expression<?> value, @Nullable Predicate filter);
 
+	@Nonnull
 	@Override
-	SqmExpression<String> jsonSet(Expression<?> jsonDocument, Expression<String> jsonPath, Object value);
+	SqmExpression<String> jsonSet(@Nonnull Expression<?> jsonDocument, @Nonnull Expression<String> jsonPath, @Nullable Object value);
 
+	@Nonnull
 	@Override
-	SqmExpression<String> jsonSet(Expression<?> jsonDocument, String jsonPath, Object value);
+	SqmExpression<String> jsonSet(@Nonnull Expression<?> jsonDocument, @Nullable String jsonPath, @Nullable Object value);
 
+	@Nonnull
 	@Override
-	SqmExpression<String> jsonSet(Expression<?> jsonDocument, Expression<String> jsonPath, Expression<?> value);
+	SqmExpression<String> jsonSet(@Nonnull Expression<?> jsonDocument, @Nonnull Expression<String> jsonPath, @Nonnull Expression<?> value);
 
+	@Nonnull
 	@Override
-	SqmExpression<String> jsonSet(Expression<?> jsonDocument, String jsonPath, Expression<?> value);
+	SqmExpression<String> jsonSet(@Nonnull Expression<?> jsonDocument, @Nullable String jsonPath, @Nonnull Expression<?> value);
 
+	@Nonnull
 	@Override
-	SqmExpression<String> jsonRemove(Expression<?> jsonDocument, String jsonPath);
+	SqmExpression<String> jsonRemove(@Nonnull Expression<?> jsonDocument, @Nullable String jsonPath);
 
+	@Nonnull
 	@Override
-	SqmExpression<String> jsonRemove(Expression<?> jsonDocument, Expression<String> jsonPath);
+	SqmExpression<String> jsonRemove(@Nonnull Expression<?> jsonDocument, @Nonnull Expression<String> jsonPath);
 
+	@Nonnull
 	@Override
-	SqmExpression<String> jsonInsert(Expression<?> jsonDocument, Expression<String> jsonPath, Object value);
+	SqmExpression<String> jsonInsert(@Nonnull Expression<?> jsonDocument, @Nonnull Expression<String> jsonPath, @Nullable Object value);
 
+	@Nonnull
 	@Override
-	SqmExpression<String> jsonInsert(Expression<?> jsonDocument, String jsonPath, Object value);
+	SqmExpression<String> jsonInsert(@Nonnull Expression<?> jsonDocument, @Nullable String jsonPath, @Nullable Object value);
 
+	@Nonnull
 	@Override
-	SqmExpression<String> jsonInsert(Expression<?> jsonDocument, Expression<String> jsonPath, Expression<?> value);
+	SqmExpression<String> jsonInsert(@Nonnull Expression<?> jsonDocument, @Nonnull Expression<String> jsonPath, @Nonnull Expression<?> value);
 
+	@Nonnull
 	@Override
-	SqmExpression<String> jsonInsert(Expression<?> jsonDocument, String jsonPath, Expression<?> value);
+	SqmExpression<String> jsonInsert(@Nonnull Expression<?> jsonDocument, @Nullable String jsonPath, @Nonnull Expression<?> value);
 
+	@Nonnull
 	@Override
-	SqmExpression<String> jsonReplace(Expression<?> jsonDocument, Expression<String> jsonPath, Object value);
+	SqmExpression<String> jsonReplace(@Nonnull Expression<?> jsonDocument, @Nonnull Expression<String> jsonPath, @Nullable Object value);
 
+	@Nonnull
 	@Override
-	SqmExpression<String> jsonReplace(Expression<?> jsonDocument, String jsonPath, Object value);
+	SqmExpression<String> jsonReplace(@Nonnull Expression<?> jsonDocument, @Nullable String jsonPath, @Nullable Object value);
 
+	@Nonnull
 	@Override
-	SqmExpression<String> jsonReplace(Expression<?> jsonDocument, Expression<String> jsonPath, Expression<?> value);
+	SqmExpression<String> jsonReplace(@Nonnull Expression<?> jsonDocument, @Nonnull Expression<String> jsonPath, @Nonnull Expression<?> value);
 
+	@Nonnull
 	@Override
-	SqmExpression<String> jsonReplace(Expression<?> jsonDocument, String jsonPath, Expression<?> value);
+	SqmExpression<String> jsonReplace(@Nonnull Expression<?> jsonDocument, @Nullable String jsonPath, @Nonnull Expression<?> value);
 
+	@Nonnull
 	@Override
-	SqmExpression<String> jsonMergepatch(String document, Expression<?> patch);
+	SqmExpression<String> jsonMergepatch(@Nullable String document, @Nonnull Expression<?> patch);
 
+	@Nonnull
 	@Override
-	SqmExpression<String> jsonMergepatch(Expression<?> document, String patch);
+	SqmExpression<String> jsonMergepatch(@Nonnull Expression<?> document, @Nullable String patch);
 
+	@Nonnull
 	@Override
-	SqmExpression<String> jsonMergepatch(Expression<?> document, Expression<?> patch);
+	SqmExpression<String> jsonMergepatch(@Nonnull Expression<?> document, @Nonnull Expression<?> patch);
 
+	@Nonnull
 	@Override
-	SqmXmlElementExpression xmlelement(String elementName);
+	SqmXmlElementExpression xmlelement(@Nonnull String elementName);
 
+	@Nonnull
 	@Override
-	SqmExpression<String> xmlcomment(String comment);
+	SqmExpression<String> xmlcomment(@Nullable String comment);
 
+	@Nonnull
 	@Override
-	<T> SqmExpression<T> named(Expression<T> expression, String name);
+	<T> SqmExpression<T> named(@Nonnull Expression<T> expression, @Nonnull String name);
 
+	@Nonnull
 	@Override
-	SqmExpression<String> xmlforest(List<? extends Expression<?>> elements);
+	SqmExpression<String> xmlforest(@Nonnull List<? extends Expression<?>> elements);
 
+	@Nonnull
 	@Override
-	SqmExpression<String> xmlforest(Expression<?>... elements);
+	SqmExpression<String> xmlforest(@Nonnull Expression<?>... elements);
 
+	@Nonnull
 	@Override
-	SqmExpression<String> xmlconcat(Expression<?>... elements);
+	SqmExpression<String> xmlconcat(@Nonnull Expression<?>... elements);
 
+	@Nonnull
 	@Override
-	SqmExpression<String> xmlconcat(List<? extends Expression<?>> elements);
+	SqmExpression<String> xmlconcat(@Nonnull List<? extends Expression<?>> elements);
 
+	@Nonnull
 	@Override
-	SqmExpression<String> xmlpi(String elementName);
+	SqmExpression<String> xmlpi(@Nonnull String elementName);
 
+	@Nonnull
 	@Override
-	SqmExpression<String> xmlpi(String elementName, Expression<String> content);
+	SqmExpression<String> xmlpi(@Nonnull String elementName, @Nonnull Expression<String> content);
 
+	@Nonnull
 	@Override
-	SqmExpression<String> xmlquery(String query, Expression<?> xmlDocument);
+	SqmExpression<String> xmlquery(@Nullable String query, @Nonnull Expression<?> xmlDocument);
 
+	@Nonnull
 	@Override
-	SqmExpression<String> xmlquery(Expression<String> query, Expression<?> xmlDocument);
+	SqmExpression<String> xmlquery(@Nonnull Expression<String> query, @Nonnull Expression<?> xmlDocument);
 
+	@Nonnull
 	@Override
-	SqmExpression<Boolean> xmlexists(String query, Expression<?> xmlDocument);
+	SqmExpression<Boolean> xmlexists(@Nullable String query, @Nonnull Expression<?> xmlDocument);
 
+	@Nonnull
 	@Override
-	SqmExpression<Boolean> xmlexists(Expression<String> query, Expression<?> xmlDocument);
+	SqmExpression<Boolean> xmlexists(@Nonnull Expression<String> query, @Nonnull Expression<?> xmlDocument);
 
+	@Nonnull
 	@Override
-	SqmExpression<String> xmlagg(JpaOrder order, Expression<?> argument);
+	SqmExpression<String> xmlagg(@Nullable JpaOrder order, @Nonnull Expression<?> argument);
 
+	@Nonnull
 	@Override
-	SqmExpression<String> xmlagg(JpaOrder order, JpaPredicate filter, Expression<?> argument);
+	SqmExpression<String> xmlagg(@Nullable JpaOrder order, @Nullable JpaPredicate filter, @Nonnull Expression<?> argument);
 
+	@Nonnull
 	@Override
-	SqmExpression<String> xmlagg(JpaOrder order, JpaWindow window, Expression<?> argument);
+	SqmExpression<String> xmlagg(@Nullable JpaOrder order, @Nullable JpaWindow window, @Nonnull Expression<?> argument);
 
+	@Nonnull
 	@Override
-	SqmExpression<String> xmlagg(JpaOrder order, JpaPredicate filter, JpaWindow window, Expression<?> argument);
+	SqmExpression<String> xmlagg(@Nullable JpaOrder order, @Nullable JpaPredicate filter, @Nullable JpaWindow window, @Nonnull Expression<?> argument);
 
+	@Nonnull
 	@Override
-	<E> SqmSetReturningFunction<E> setReturningFunction(String name, Expression<?>... args);
+	<E> SqmSetReturningFunction<E> setReturningFunction(@Nonnull String name, @Nonnull Expression<?>... args);
 
+	@Nonnull
 	@Override
-	<E> SqmSetReturningFunction<E> unnestArray(Expression<E[]> array);
+	<E> SqmSetReturningFunction<E> unnestArray(@Nonnull Expression<E[]> array);
 
+	@Nonnull
 	@Override
-	<E> SqmSetReturningFunction<E> unnestCollection(Expression<? extends Collection<E>> collection);
+	<E> SqmSetReturningFunction<E> unnestCollection(@Nonnull Expression<? extends Collection<E>> collection);
 
+	@Nonnull
 	@Override
-	<E extends Temporal> SqmSetReturningFunction<E> generateTimeSeries(Expression<E> start, Expression<E> stop, Expression<? extends TemporalAmount> step);
+	<E extends Temporal> SqmSetReturningFunction<E> generateTimeSeries(@Nonnull Expression<E> start, @Nonnull Expression<E> stop, @Nonnull Expression<? extends TemporalAmount> step);
 
+	@Nonnull
 	@Override
-	<E extends Temporal> SqmSetReturningFunction<E> generateTimeSeries(E start, E stop, TemporalAmount step);
+	<E extends Temporal> SqmSetReturningFunction<E> generateTimeSeries(@Nullable E start, @Nullable E stop, @Nullable TemporalAmount step);
 
+	@Nonnull
 	@Override
-	<E extends Temporal> SqmSetReturningFunction<E> generateTimeSeries(E start, Expression<E> stop, TemporalAmount step);
+	<E extends Temporal> SqmSetReturningFunction<E> generateTimeSeries(@Nullable E start, @Nonnull Expression<E> stop, @Nullable TemporalAmount step);
 
+	@Nonnull
 	@Override
-	<E extends Temporal> SqmSetReturningFunction<E> generateTimeSeries(Expression<E> start, E stop, TemporalAmount step);
+	<E extends Temporal> SqmSetReturningFunction<E> generateTimeSeries(@Nonnull Expression<E> start, @Nullable E stop, @Nullable TemporalAmount step);
 
+	@Nonnull
 	@Override
-	<E extends Temporal> SqmSetReturningFunction<E> generateTimeSeries(Expression<E> start, Expression<E> stop, TemporalAmount step);
+	<E extends Temporal> SqmSetReturningFunction<E> generateTimeSeries(@Nonnull Expression<E> start, @Nonnull Expression<E> stop, @Nullable TemporalAmount step);
 
+	@Nonnull
 	@Override
-	<E extends Temporal> SqmSetReturningFunction<E> generateTimeSeries(E start, E stop, Expression<? extends TemporalAmount> step);
+	<E extends Temporal> SqmSetReturningFunction<E> generateTimeSeries(@Nullable E start, @Nullable E stop, @Nonnull Expression<? extends TemporalAmount> step);
 
+	@Nonnull
 	@Override
-	<E extends Temporal> SqmSetReturningFunction<E> generateTimeSeries(Expression<E> start, E stop, Expression<? extends TemporalAmount> step);
+	<E extends Temporal> SqmSetReturningFunction<E> generateTimeSeries(@Nonnull Expression<E> start, @Nullable E stop, @Nonnull Expression<? extends TemporalAmount> step);
 
+	@Nonnull
 	@Override
-	<E extends Temporal> SqmSetReturningFunction<E> generateTimeSeries(E start, Expression<E> stop, Expression<? extends TemporalAmount> step);
+	<E extends Temporal> SqmSetReturningFunction<E> generateTimeSeries(@Nullable E start, @Nonnull Expression<E> stop, @Nonnull Expression<? extends TemporalAmount> step);
 
+	@Nonnull
 	@Override
-	<E extends Number> SqmSetReturningFunction<E> generateSeries(Expression<E> start, Expression<E> stop, Expression<E> step);
+	<E extends Number> SqmSetReturningFunction<E> generateSeries(@Nonnull Expression<E> start, @Nonnull Expression<E> stop, @Nonnull Expression<E> step);
 
+	@Nonnull
 	@Override
-	<E extends Number> SqmSetReturningFunction<E> generateSeries(E start, E stop, E step);
+	<E extends Number> SqmSetReturningFunction<E> generateSeries(@Nullable E start, @Nullable E stop, @Nullable E step);
 
+	@Nonnull
 	@Override
-	<E extends Number> SqmSetReturningFunction<E> generateSeries(E start, E stop, Expression<E> step);
+	<E extends Number> SqmSetReturningFunction<E> generateSeries(@Nullable E start, @Nullable E stop, @Nonnull Expression<E> step);
 
+	@Nonnull
 	@Override
-	<E extends Number> SqmSetReturningFunction<E> generateSeries(Expression<E> start, E stop, E step);
+	<E extends Number> SqmSetReturningFunction<E> generateSeries(@Nonnull Expression<E> start, @Nullable E stop, @Nullable E step);
 
+	@Nonnull
 	@Override
-	<E extends Number> SqmSetReturningFunction<E> generateSeries(E start, Expression<E> stop, E step);
+	<E extends Number> SqmSetReturningFunction<E> generateSeries(@Nullable E start, @Nonnull Expression<E> stop, @Nullable E step);
 
+	@Nonnull
 	@Override
-	<E extends Number> SqmSetReturningFunction<E> generateSeries(Expression<E> start, Expression<E> stop, E step);
+	<E extends Number> SqmSetReturningFunction<E> generateSeries(@Nonnull Expression<E> start, @Nonnull Expression<E> stop, @Nullable E step);
 
+	@Nonnull
 	@Override
-	<E extends Number> SqmSetReturningFunction<E> generateSeries(Expression<E> start, E stop, Expression<E> step);
+	<E extends Number> SqmSetReturningFunction<E> generateSeries(@Nonnull Expression<E> start, @Nullable E stop, @Nonnull Expression<E> step);
 
+	@Nonnull
 	@Override
-	<E extends Number> SqmSetReturningFunction<E> generateSeries(E start, Expression<E> stop, Expression<E> step);
+	<E extends Number> SqmSetReturningFunction<E> generateSeries(@Nullable E start, @Nonnull Expression<E> stop, @Nonnull Expression<E> step);
 
+	@Nonnull
 	@Override
-	<E extends Number> SqmSetReturningFunction<E> generateSeries(Expression<E> start, Expression<E> stop);
+	<E extends Number> SqmSetReturningFunction<E> generateSeries(@Nonnull Expression<E> start, @Nonnull Expression<E> stop);
 
+	@Nonnull
 	@Override
-	<E extends Number> SqmSetReturningFunction<E> generateSeries(Expression<E> start, E stop);
+	<E extends Number> SqmSetReturningFunction<E> generateSeries(@Nonnull Expression<E> start, @Nullable E stop);
 
+	@Nonnull
 	@Override
-	<E extends Number> SqmSetReturningFunction<E> generateSeries(E start, Expression<E> stop);
+	<E extends Number> SqmSetReturningFunction<E> generateSeries(@Nullable E start, @Nonnull Expression<E> stop);
 
+	@Nonnull
 	@Override
-	<E extends Number> SqmSetReturningFunction<E> generateSeries(E start, E stop);
+	<E extends Number> SqmSetReturningFunction<E> generateSeries(@Nullable E start, @Nullable E stop);
 
+	@Nonnull
 	@Override
-	SqmJsonTableFunction<?> jsonTable(Expression<?> jsonDocument);
+	SqmJsonTableFunction<?> jsonTable(@Nonnull Expression<?> jsonDocument);
 
+	@Nonnull
 	@Override
-	SqmJsonTableFunction<?> jsonTable(Expression<?> jsonDocument, String jsonPath);
+	SqmJsonTableFunction<?> jsonTable(@Nonnull Expression<?> jsonDocument, @Nullable String jsonPath);
 
+	@Nonnull
 	@Override
-	SqmJsonTableFunction<?> jsonTable(Expression<?> jsonDocument, Expression<String> jsonPath);
+	SqmJsonTableFunction<?> jsonTable(@Nonnull Expression<?> jsonDocument, @Nullable Expression<String> jsonPath);
 
+	@Nonnull
 	@Override
-	SqmXmlTableFunction<?> xmlTable(String xpath, Expression<?> xmlDocument);
+	SqmXmlTableFunction<?> xmlTable(@Nullable String xpath, @Nonnull Expression<?> xmlDocument);
 
+	@Nonnull
 	@Override
-	SqmXmlTableFunction<?> xmlTable(Expression<String> xpath, Expression<?> xmlDocument);
+	SqmXmlTableFunction<?> xmlTable(@Nonnull Expression<String> xpath, @Nonnull Expression<?> xmlDocument);
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Covariant overrides
@@ -832,8 +1065,9 @@ public interface NodeBuilder extends HibernateCriteriaBuilder, SqmCreationContex
 	@Override
 	<T> SqmSelectStatement<T> createQuery(@Nonnull Class<T> resultClass);
 
+	@Nonnull
 	@Override
-	<T> SqmSelectStatement<T> createQuery(String hql, Class<T> resultClass);
+	<T> SqmSelectStatement<T> createQuery(@Nonnull String hql, @Nonnull Class<T> resultClass);
 
 	@Nonnull
 	@Override
@@ -843,8 +1077,9 @@ public interface NodeBuilder extends HibernateCriteriaBuilder, SqmCreationContex
 	@Override
 	<Y> JpaCompoundSelection<Y> construct(@Nonnull Class<Y> resultClass, @Nonnull Selection<?>... selections);
 
+	@Nonnull
 	@Override
-	<Y> JpaCompoundSelection<Y> construct(Class<Y> resultClass, List<? extends Selection<?>> arguments);
+	<Y> JpaCompoundSelection<Y> construct(@Nonnull Class<Y> resultClass, @Nonnull List<? extends Selection<?>> arguments);
 
 	@Nonnull
 	@Override
@@ -870,56 +1105,71 @@ public interface NodeBuilder extends HibernateCriteriaBuilder, SqmCreationContex
 	@Override
 	<T> SqmDeleteStatement<T> createCriteriaDelete(@Nonnull Class<T> targetEntity);
 
+	@Nonnull
 	@Override
-	<T> SqmInsertValuesStatement<T> createCriteriaInsertValues(Class<T> targetEntity);
+	<T> SqmInsertValuesStatement<T> createCriteriaInsertValues(@Nonnull Class<T> targetEntity);
 
+	@Nonnull
 	@Override
-	<T> SqmInsertSelectStatement<T> createCriteriaInsertSelect(Class<T> targetEntity);
+	<T> SqmInsertSelectStatement<T> createCriteriaInsertSelect(@Nonnull Class<T> targetEntity);
 
+	@Nonnull
 	@Override
-	SqmValues values(Expression<?>... expressions);
+	SqmValues values(@Nonnull Expression<?>... expressions);
 
+	@Nonnull
 	@Override
-	SqmValues values(List<? extends Expression<?>> expressions);
+	SqmValues values(@Nonnull List<? extends Expression<?>> expressions);
 
 	@Nonnull
 	@Override
 	<N extends Number> SqmExpression<N> abs(@Nonnull Expression<N> x);
 
+	@Nonnull
 	@Override
-	<X, T> SqmExpression<X> cast(JpaExpression<T> expression, Class<X> castTargetJavaType);
+	<X, T> SqmExpression<X> cast(@Nonnull JpaExpression<T> expression, @Nonnull Class<X> castTargetJavaType);
 
+	@Nonnull
 	@Override
-	<X, T> SqmExpression<X> cast(JpaExpression<T> expression, JpaCastTarget<X> castTarget);
+	<X, T> SqmExpression<X> cast(@Nonnull JpaExpression<T> expression, @Nonnull JpaCastTarget<X> castTarget);
 
+	@Nonnull
 	@Override
-	<X> SqmCastTarget<X> castTarget(Class<X> castTargetJavaType);
+	<X> SqmCastTarget<X> castTarget(@Nonnull Class<X> castTargetJavaType);
 
+	@Nonnull
 	@Override
-	<X> SqmCastTarget<X> castTarget(Class<X> castTargetJavaType, long length);
+	<X> SqmCastTarget<X> castTarget(@Nonnull Class<X> castTargetJavaType, long length);
 
+	@Nonnull
 	@Override
-	<X> SqmCastTarget<X> castTarget(Class<X> castTargetJavaType, int precision, int scale);
+	<X> SqmCastTarget<X> castTarget(@Nonnull Class<X> castTargetJavaType, int precision, int scale);
 
+	@Nonnull
 	@Override
-	SqmPredicate wrap(Expression<Boolean> expression);
+	SqmPredicate wrap(@Nonnull Expression<Boolean> expression);
 
+	@Nonnull
 	@Override @SuppressWarnings("unchecked")
-	SqmPredicate wrap(Expression<Boolean>... expressions);
+	SqmPredicate wrap(@Nonnull Expression<Boolean>... expressions);
 
+	@Nonnull
 	@Override
-	SqmPredicate wrap(BooleanExpression... expressions);
+	SqmPredicate wrap(@Nonnull BooleanExpression... expressions);
 
 	SqmPredicate wrap(List<? extends Expression<Boolean>> restrictions);
 
+	@Nonnull
 	@Override
-	SqmExpression<?> fk(Path<?> path);
+	SqmExpression<?> fk(@Nonnull Path<?> path);
 
+	@Nonnull
 	@Override
-	SqmExpression<?> id(Path<?> path);
+	SqmExpression<?> id(@Nonnull Path<?> path);
 
+	@Nonnull
 	@Override
-	SqmExpression<?> version(Path<?> path);
+	SqmExpression<?> version(@Nonnull Path<?> path);
 
 	@Nonnull
 	@Override
@@ -993,6 +1243,7 @@ public interface NodeBuilder extends HibernateCriteriaBuilder, SqmCreationContex
 	@Override
 	SqmExpression<Long> countDistinct(@Nonnull Expression<?> x);
 
+	@Nonnull
 	@Override
 	SqmExpression<Long> count();
 
@@ -1006,11 +1257,11 @@ public interface NodeBuilder extends HibernateCriteriaBuilder, SqmCreationContex
 
 	@Nonnull
 	@Override
-	<N extends Number> SqmExpression<N> sum(@Nonnull Expression<? extends N> x, N y);
+	<N extends Number> SqmExpression<N> sum(@Nonnull Expression<? extends N> x, @Nullable N y);
 
 	@Nonnull
 	@Override
-	<N extends Number> SqmExpression<N> sum(N x, @Nonnull Expression<? extends N> y);
+	<N extends Number> SqmExpression<N> sum(@Nullable N x, @Nonnull Expression<? extends N> y);
 
 	@Nonnull
 	@Override
@@ -1018,11 +1269,11 @@ public interface NodeBuilder extends HibernateCriteriaBuilder, SqmCreationContex
 
 	@Nonnull
 	@Override
-	<N extends Number> SqmExpression<N> prod(@Nonnull Expression<? extends N> x, N y);
+	<N extends Number> SqmExpression<N> prod(@Nonnull Expression<? extends N> x, @Nullable N y);
 
 	@Nonnull
 	@Override
-	<N extends Number> SqmExpression<N> prod(N x, @Nonnull Expression<? extends N> y);
+	<N extends Number> SqmExpression<N> prod(@Nullable N x, @Nonnull Expression<? extends N> y);
 
 	@Nonnull
 	@Override
@@ -1030,11 +1281,11 @@ public interface NodeBuilder extends HibernateCriteriaBuilder, SqmCreationContex
 
 	@Nonnull
 	@Override
-	<N extends Number> SqmExpression<N> diff(@Nonnull Expression<? extends N> x, N y);
+	<N extends Number> SqmExpression<N> diff(@Nonnull Expression<? extends N> x, @Nullable N y);
 
 	@Nonnull
 	@Override
-	<N extends Number> SqmExpression<N> diff(N x, @Nonnull Expression<? extends N> y);
+	<N extends Number> SqmExpression<N> diff(@Nullable N x, @Nonnull Expression<? extends N> y);
 
 	@Nonnull
 	@Override
@@ -1042,11 +1293,11 @@ public interface NodeBuilder extends HibernateCriteriaBuilder, SqmCreationContex
 
 	@Nonnull
 	@Override
-	SqmExpression<Number> quot(@Nonnull Expression<? extends Number> x, Number y);
+	SqmExpression<Number> quot(@Nonnull Expression<? extends Number> x, @Nullable Number y);
 
 	@Nonnull
 	@Override
-	SqmExpression<Number> quot(Number x, @Nonnull Expression<? extends Number> y);
+	SqmExpression<Number> quot(@Nullable Number x, @Nonnull Expression<? extends Number> y);
 
 	SqmExpression<Number> quotPortable(Expression<? extends Number> x, Expression<? extends Number> y);
 
@@ -1056,11 +1307,11 @@ public interface NodeBuilder extends HibernateCriteriaBuilder, SqmCreationContex
 
 	@Nonnull
 	@Override
-	SqmExpression<Integer> mod(@Nonnull Expression<Integer> x, Integer y);
+	SqmExpression<Integer> mod(@Nonnull Expression<Integer> x, @Nullable Integer y);
 
 	@Nonnull
 	@Override
-	SqmExpression<Integer> mod(Integer x, @Nonnull Expression<Integer> y);
+	SqmExpression<Integer> mod(@Nullable Integer x, @Nonnull Expression<Integer> y);
 
 	@Nonnull
 	@Override
@@ -1098,11 +1349,13 @@ public interface NodeBuilder extends HibernateCriteriaBuilder, SqmCreationContex
 	@Override
 	<T> SqmExpression<T> literal(@Nonnull T value);
 
+	@Nonnull
 	@Override
-	<T> List<? extends SqmExpression<T>> literals(T[] values);
+	<T> List<? extends SqmExpression<T>> literals(@Nullable T[] values);
 
+	@Nonnull
 	@Override
-	<T> List<? extends SqmExpression<T>> literals(List<T> values);
+	<T> List<? extends SqmExpression<T>> literals(@Nullable List<T> values);
 
 	@Nonnull
 	@Override
@@ -1133,8 +1386,9 @@ public interface NodeBuilder extends HibernateCriteriaBuilder, SqmCreationContex
 	@Override
 	SqmExpression<String> concat(@Nonnull String x, @Nonnull Expression<String> y);
 
+	@Nonnull
 	@Override
-	SqmExpression<String> concat(String x, String y);
+	SqmExpression<String> concat(@Nullable String x, @Nullable String y);
 
 	@Nonnull
 	@Override
@@ -1216,6 +1470,7 @@ public interface NodeBuilder extends HibernateCriteriaBuilder, SqmCreationContex
 	@Override
 	SqmFunction<Time> currentTime();
 
+	@Nonnull
 	SqmFunction<Instant> currentInstant();
 
 	@Nonnull
@@ -1246,8 +1501,9 @@ public interface NodeBuilder extends HibernateCriteriaBuilder, SqmCreationContex
 	@Override
 	<Y> SqmModifiedSubQueryExpression<Y> any(@Nonnull Subquery<Y> subquery);
 
+	@Nonnull
 	@Override
-	<K, L extends List<?>> SqmExpression<Set<K>> indexes(L list);
+	<K, L extends List<?>> SqmExpression<Set<K>> indexes(@Nonnull L list);
 
 	@Nonnull
 	@Override
@@ -1268,7 +1524,7 @@ public interface NodeBuilder extends HibernateCriteriaBuilder, SqmCreationContex
 
 	@Nonnull
 	@Override
-	<Y> JpaCoalesce<Y> coalesce(@Nonnull Expression<? extends Y> x, Y y);
+	<Y> JpaCoalesce<Y> coalesce(@Nonnull Expression<? extends Y> x, @Nullable Y y);
 
 	@Nonnull
 	@Override
@@ -1276,7 +1532,7 @@ public interface NodeBuilder extends HibernateCriteriaBuilder, SqmCreationContex
 
 	@Nonnull
 	@Override
-	<Y> SqmExpression<Y> nullif(@Nonnull Expression<Y> x, Y y);
+	<Y> SqmExpression<Y> nullif(@Nonnull Expression<Y> x, @Nullable Y y);
 
 	@Nonnull
 	@Override
@@ -1344,7 +1600,7 @@ public interface NodeBuilder extends HibernateCriteriaBuilder, SqmCreationContex
 
 	@Nonnull
 	@Override
-	SqmPredicate equal(@Nonnull Expression<?> x, Object y);
+	SqmPredicate equal(@Nonnull Expression<?> x, @Nullable Object y);
 
 	@Nonnull
 	@Override
@@ -1352,19 +1608,23 @@ public interface NodeBuilder extends HibernateCriteriaBuilder, SqmCreationContex
 
 	@Nonnull
 	@Override
-	SqmPredicate notEqual(@Nonnull Expression<?> x, Object y);
+	SqmPredicate notEqual(@Nonnull Expression<?> x, @Nullable Object y);
 
+	@Nonnull
 	@Override
-	SqmPredicate distinctFrom(Expression<?> x, Expression<?> y);
+	SqmPredicate distinctFrom(@Nonnull Expression<?> x, @Nonnull Expression<?> y);
 
+	@Nonnull
 	@Override
-	SqmPredicate distinctFrom(Expression<?> x, Object y);
+	SqmPredicate distinctFrom(@Nonnull Expression<?> x, @Nullable Object y);
 
+	@Nonnull
 	@Override
-	SqmPredicate notDistinctFrom(Expression<?> x, Expression<?> y);
+	SqmPredicate notDistinctFrom(@Nonnull Expression<?> x, @Nonnull Expression<?> y);
 
+	@Nonnull
 	@Override
-	SqmPredicate notDistinctFrom(Expression<?> x, Object y);
+	SqmPredicate notDistinctFrom(@Nonnull Expression<?> x, @Nullable Object y);
 
 	@Nonnull
 	@Override
@@ -1372,7 +1632,7 @@ public interface NodeBuilder extends HibernateCriteriaBuilder, SqmCreationContex
 
 	@Nonnull
 	@Override
-	<Y extends Comparable<? super Y>> SqmPredicate greaterThan(@Nonnull Expression<? extends Y> x, Y y);
+	<Y extends Comparable<? super Y>> SqmPredicate greaterThan(@Nonnull Expression<? extends Y> x, @Nullable Y y);
 
 	@Nonnull
 	@Override
@@ -1382,7 +1642,7 @@ public interface NodeBuilder extends HibernateCriteriaBuilder, SqmCreationContex
 
 	@Nonnull
 	@Override
-	<Y extends Comparable<? super Y>> SqmPredicate greaterThanOrEqualTo(@Nonnull Expression<? extends Y> x, Y y);
+	<Y extends Comparable<? super Y>> SqmPredicate greaterThanOrEqualTo(@Nonnull Expression<? extends Y> x, @Nullable Y y);
 
 	@Nonnull
 	@Override
@@ -1390,7 +1650,7 @@ public interface NodeBuilder extends HibernateCriteriaBuilder, SqmCreationContex
 
 	@Nonnull
 	@Override
-	<Y extends Comparable<? super Y>> SqmPredicate lessThan(@Nonnull Expression<? extends Y> x, Y y);
+	<Y extends Comparable<? super Y>> SqmPredicate lessThan(@Nonnull Expression<? extends Y> x, @Nullable Y y);
 
 	@Nonnull
 	@Override
@@ -1400,7 +1660,7 @@ public interface NodeBuilder extends HibernateCriteriaBuilder, SqmCreationContex
 
 	@Nonnull
 	@Override
-	<Y extends Comparable<? super Y>> SqmPredicate lessThanOrEqualTo(@Nonnull Expression<? extends Y> x, Y y);
+	<Y extends Comparable<? super Y>> SqmPredicate lessThanOrEqualTo(@Nonnull Expression<? extends Y> x, @Nullable Y y);
 
 	@Nonnull
 	@Override
@@ -1415,12 +1675,12 @@ public interface NodeBuilder extends HibernateCriteriaBuilder, SqmCreationContex
 
 	@Nonnull
 	@Override
-	<Y extends Comparable<? super Y>> SqmPredicate between(@Nonnull Expression<? extends Y> value, Y lower, Y upper);
+	<Y extends Comparable<? super Y>> SqmPredicate between(@Nonnull Expression<? extends Y> value, @Nullable Y lower, @Nullable Y upper);
 
 	@Nonnull
 	@Override
 	<Y extends Comparable<? super Y>> SqmPredicate between(
-			Y value,
+			@Nullable Y value,
 			@Nonnull Expression<? extends Y> lower,
 			@Nonnull Expression<? extends Y> upper);
 
@@ -1430,7 +1690,7 @@ public interface NodeBuilder extends HibernateCriteriaBuilder, SqmCreationContex
 
 	@Nonnull
 	@Override
-	SqmPredicate gt(@Nonnull Expression<? extends Number> x, Number y);
+	SqmPredicate gt(@Nonnull Expression<? extends Number> x, @Nullable Number y);
 
 	@Nonnull
 	@Override
@@ -1438,7 +1698,7 @@ public interface NodeBuilder extends HibernateCriteriaBuilder, SqmCreationContex
 
 	@Nonnull
 	@Override
-	SqmPredicate ge(@Nonnull Expression<? extends Number> x, Number y);
+	SqmPredicate ge(@Nonnull Expression<? extends Number> x, @Nullable Number y);
 
 	@Nonnull
 	@Override
@@ -1446,7 +1706,7 @@ public interface NodeBuilder extends HibernateCriteriaBuilder, SqmCreationContex
 
 	@Nonnull
 	@Override
-	SqmPredicate lt(@Nonnull Expression<? extends Number> x, Number y);
+	SqmPredicate lt(@Nonnull Expression<? extends Number> x, @Nullable Number y);
 
 	@Nonnull
 	@Override
@@ -1454,7 +1714,7 @@ public interface NodeBuilder extends HibernateCriteriaBuilder, SqmCreationContex
 
 	@Nonnull
 	@Override
-	SqmPredicate le(@Nonnull Expression<? extends Number> x, Number y);
+	SqmPredicate le(@Nonnull Expression<? extends Number> x, @Nullable Number y);
 
 	@Nonnull
 	@Override
@@ -1470,7 +1730,7 @@ public interface NodeBuilder extends HibernateCriteriaBuilder, SqmCreationContex
 
 	@Nonnull
 	@Override
-	<E, C extends Collection<E>> SqmPredicate isMember(E elem, @Nonnull Expression<C> collection);
+	<E, C extends Collection<E>> SqmPredicate isMember(@Nullable E elem, @Nonnull Expression<C> collection);
 
 	@Nonnull
 	@Override
@@ -1478,7 +1738,7 @@ public interface NodeBuilder extends HibernateCriteriaBuilder, SqmCreationContex
 
 	@Nonnull
 	@Override
-	<E, C extends Collection<E>> SqmPredicate isNotMember(E elem, @Nonnull Expression<C> collection);
+	<E, C extends Collection<E>> SqmPredicate isNotMember(@Nullable E elem, @Nonnull Expression<C> collection);
 
 	@Nonnull
 	@Override
@@ -1532,14 +1792,17 @@ public interface NodeBuilder extends HibernateCriteriaBuilder, SqmCreationContex
 	@Override
 	<T> SqmInPredicate<T> in(@Nonnull Expression<? extends T> expression);
 
+	@Nonnull
 	@Override
-	<T> SqmInPredicate<T> in(Expression<? extends T> expression, Expression<? extends T>... values);
+	<T> SqmInPredicate<T> in(@Nonnull Expression<? extends T> expression, @Nonnull Expression<? extends T>... values);
 
+	@Nonnull
 	@Override
-	<T> SqmInPredicate<T> in(Expression<? extends T> expression, T... values);
+	<T> SqmInPredicate<T> in(@Nonnull Expression<? extends T> expression, @Nonnull T... values);
 
+	@Nonnull
 	@Override
-	<T> SqmInPredicate<T> in(Expression<? extends T> expression, Collection<T> values);
+	<T> SqmInPredicate<T> in(@Nonnull Expression<? extends T> expression, @Nonnull Collection<T> values);
 
 	<T> SqmInPredicate<T> in(Expression<? extends T> expression, SqmSubQuery<T> subQuery);
 
@@ -1547,33 +1810,41 @@ public interface NodeBuilder extends HibernateCriteriaBuilder, SqmCreationContex
 	@Override
 	SqmPredicate exists(@Nonnull Subquery<?> subquery);
 
+	@Nonnull
 	@Override
-	<M extends Map<?, ?>> SqmPredicate isMapEmpty(JpaExpression<M> mapExpression);
+	<M extends Map<?, ?>> SqmPredicate isMapEmpty(@Nonnull JpaExpression<M> mapExpression);
 
+	@Nonnull
 	@Override
-	<M extends Map<?, ?>> SqmPredicate isMapNotEmpty(JpaExpression<M> mapExpression);
+	<M extends Map<?, ?>> SqmPredicate isMapNotEmpty(@Nonnull JpaExpression<M> mapExpression);
 
+	@Nonnull
 	@Override
-	<M extends Map<?,?>> SqmExpression<Integer> mapSize(JpaExpression<M> mapExpression);
+	<M extends Map<?,?>> SqmExpression<Integer> mapSize(@Nonnull JpaExpression<M> mapExpression);
 
+	@Nonnull
 	@Override
-	<M extends Map<?, ?>> SqmExpression<Integer> mapSize(M map);
+	<M extends Map<?, ?>> SqmExpression<Integer> mapSize(@Nonnull M map);
 
+	@Nonnull
 	@Override
-	SqmSortSpecification sort(JpaExpression<?> sortExpression, SortDirection sortOrder, Nulls nullPrecedence);
+	SqmSortSpecification sort(@Nonnull JpaExpression<?> sortExpression, @Nonnull SortDirection sortOrder, @Nonnull Nulls nullPrecedence);
 
+	@Nonnull
 	@Override
 	SqmSortSpecification sort(
-			JpaExpression<?> sortExpression,
-			SortDirection sortOrder,
-			Nulls nullPrecedence,
+			@Nonnull JpaExpression<?> sortExpression,
+			@Nonnull SortDirection sortOrder,
+			@Nonnull Nulls nullPrecedence,
 			boolean ignoreCase);
 
+	@Nonnull
 	@Override
-	SqmSortSpecification sort(JpaExpression<?> sortExpression, SortDirection sortOrder);
+	SqmSortSpecification sort(@Nonnull JpaExpression<?> sortExpression, @Nonnull SortDirection sortOrder);
 
+	@Nonnull
 	@Override
-	SqmSortSpecification sort(JpaExpression<?> sortExpression);
+	SqmSortSpecification sort(@Nonnull JpaExpression<?> sortExpression);
 
 	@Nonnull
 	@Override

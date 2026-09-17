@@ -4,6 +4,9 @@
  */
 package org.hibernate.query.criteria;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.Incubating;
 
 /**
@@ -18,7 +21,8 @@ public interface JpaJsonTableColumnsNode {
 	 *
 	 * @return The {@link JpaJsonExistsNode} for the column
 	 */
-	JpaJsonExistsNode existsColumn(String columnName);
+	@Nonnull
+	JpaJsonExistsNode existsColumn(@Nonnull String columnName);
 
 	/**
 	 * Defines a boolean column on the result type with the given name for which the value can be obtained
@@ -26,14 +30,16 @@ public interface JpaJsonTableColumnsNode {
 	 *
 	 * @return The {@link JpaJsonExistsNode} for the column
 	 */
-	JpaJsonExistsNode existsColumn(String columnName, String jsonPath);
+	@Nonnull
+	JpaJsonExistsNode existsColumn(@Nonnull String columnName, @Nullable String jsonPath);
 
 	/**
 	 * Like {@link #queryColumn(String, String)}, but uses the column name as JSON path expression.
 	 *
 	 * @return The {@link JpaJsonQueryNode} for the column
 	 */
-	JpaJsonQueryNode queryColumn(String columnName);
+	@Nonnull
+	JpaJsonQueryNode queryColumn(@Nonnull String columnName);
 
 	/**
 	 * Defines a string column on the result type with the given name for which the value can be obtained
@@ -41,42 +47,48 @@ public interface JpaJsonTableColumnsNode {
 	 *
 	 * @return The {@link JpaJsonQueryNode} for the column
 	 */
-	JpaJsonQueryNode queryColumn(String columnName, String jsonPath);
+	@Nonnull
+	JpaJsonQueryNode queryColumn(@Nonnull String columnName, @Nullable String jsonPath);
 
 	/**
 	 * Like {@link #valueColumn(String, Class, String)} but uses the column name as JSON path expression.
 	 *
 	 * @return The {@link JpaJsonValueNode} for the column
 	 */
-	<T> JpaJsonValueNode<T> valueColumn(String columnName, Class<T> type);
+	@Nonnull
+	<T> JpaJsonValueNode<T> valueColumn(@Nonnull String columnName, @Nonnull Class<T> type);
 
 	/**
 	 * Defines a column on the result type with the given name and type for which the value can be obtained by the given JSON path expression.
 	 *
 	 * @return The {@link JpaJsonValueNode} for the column
 	 */
-	<T> JpaJsonValueNode<T> valueColumn(String columnName, Class<T> type, String jsonPath);
+	@Nonnull
+	<T> JpaJsonValueNode<T> valueColumn(@Nonnull String columnName, @Nonnull Class<T> type, @Nullable String jsonPath);
 
 	/**
 	 * Like {@link #valueColumn(String, Class, String)} but uses the column name as JSON path expression.
 	 *
 	 * @return The {@link JpaJsonValueNode} for the column
 	 */
-	<T> JpaJsonValueNode<T> valueColumn(String columnName, JpaCastTarget<T> type);
+	@Nonnull
+	<T> JpaJsonValueNode<T> valueColumn(@Nonnull String columnName, @Nonnull JpaCastTarget<T> type);
 
 	/**
 	 * Defines a column on the result type with the given name and type for which the value can be obtained by the given JSON path expression.
 	 *
 	 * @return The {@link JpaJsonValueNode} for the column
 	 */
-	<T> JpaJsonValueNode<T> valueColumn(String columnName, JpaCastTarget<T> type, String jsonPath);
+	@Nonnull
+	<T> JpaJsonValueNode<T> valueColumn(@Nonnull String columnName, @Nonnull JpaCastTarget<T> type, @Nullable String jsonPath);
 
 	/**
 	 * Defines nested columns that are accessible by the given JSON path.
 	 *
 	 * @return a new columns node for the nested JSON path
 	 */
-	JpaJsonTableColumnsNode nested(String jsonPath);
+	@Nonnull
+	JpaJsonTableColumnsNode nested(@Nonnull String jsonPath);
 
 	/**
 	 * Defines a long typed column on the result type with the given name which is set to the ordinality i.e.
@@ -84,5 +96,6 @@ public interface JpaJsonTableColumnsNode {
 	 *
 	 * @return {@code this} for method chaining
 	 */
-	JpaJsonTableColumnsNode ordinalityColumn(String columnName);
+	@Nonnull
+	JpaJsonTableColumnsNode ordinalityColumn(@Nonnull String columnName);
 }

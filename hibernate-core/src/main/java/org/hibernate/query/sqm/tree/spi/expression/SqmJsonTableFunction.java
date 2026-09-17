@@ -431,29 +431,34 @@ public class SqmJsonTableFunction<T> extends SelfRenderingSqmSetReturningFunctio
 			return 1;
 		}
 
+		@Nonnull
 		@Override
 		public JpaJsonExistsNode.ErrorBehavior getErrorBehavior() {
 			return errorBehavior;
 		}
 
+		@Nonnull
 		@Override
 		public JpaJsonExistsNode unspecifiedOnError() {
 			errorBehavior = ErrorBehavior.UNSPECIFIED;
 			return this;
 		}
 
+		@Nonnull
 		@Override
 		public JpaJsonExistsNode errorOnError() {
 			errorBehavior = ErrorBehavior.ERROR;
 			return this;
 		}
 
+		@Nonnull
 		@Override
 		public JpaJsonExistsNode trueOnError() {
 			errorBehavior = ErrorBehavior.TRUE;
 			return this;
 		}
 
+		@Nonnull
 		@Override
 		public JpaJsonExistsNode falseOnError() {
 			errorBehavior = ErrorBehavior.FALSE;
@@ -580,99 +585,116 @@ public class SqmJsonTableFunction<T> extends SelfRenderingSqmSetReturningFunctio
 			return 1;
 		}
 
+		@Nonnull
 		@Override
 		public WrapMode getWrapMode() {
 			return wrapMode;
 		}
 
+		@Nonnull
 		@Override
 		public ErrorBehavior getErrorBehavior() {
 			return errorBehavior;
 		}
 
+		@Nonnull
 		@Override
 		public EmptyBehavior getEmptyBehavior() {
 			return emptyBehavior;
 		}
 
+		@Nonnull
 		@Override
 		public JpaJsonQueryNode withoutWrapper() {
 			wrapMode = WrapMode.WITHOUT_WRAPPER;
 			return this;
 		}
 
+		@Nonnull
 		@Override
 		public JpaJsonQueryNode withWrapper() {
 			wrapMode = WrapMode.WITH_WRAPPER;
 			return this;
 		}
 
+		@Nonnull
 		@Override
 		public JpaJsonQueryNode withConditionalWrapper() {
 			wrapMode = WrapMode.WITH_CONDITIONAL_WRAPPER;
 			return this;
 		}
 
+		@Nonnull
 		@Override
 		public JpaJsonQueryNode unspecifiedWrapper() {
 			wrapMode = WrapMode.UNSPECIFIED;
 			return this;
 		}
 
+		@Nonnull
 		@Override
 		public JpaJsonQueryNode unspecifiedOnError() {
 			errorBehavior = ErrorBehavior.UNSPECIFIED;
 			return this;
 		}
 
+		@Nonnull
 		@Override
 		public JpaJsonQueryNode errorOnError() {
 			errorBehavior = ErrorBehavior.ERROR;
 			return this;
 		}
 
+		@Nonnull
 		@Override
 		public JpaJsonQueryNode nullOnError() {
 			errorBehavior = ErrorBehavior.NULL;
 			return this;
 		}
 
+		@Nonnull
 		@Override
 		public JpaJsonQueryNode emptyArrayOnError() {
 			errorBehavior = ErrorBehavior.EMPTY_ARRAY;
 			return this;
 		}
 
+		@Nonnull
 		@Override
 		public JpaJsonQueryNode emptyObjectOnError() {
 			errorBehavior = ErrorBehavior.EMPTY_OBJECT;
 			return this;
 		}
 
+		@Nonnull
 		@Override
 		public JpaJsonQueryNode unspecifiedOnEmpty() {
 			emptyBehavior = EmptyBehavior.UNSPECIFIED;
 			return this;
 		}
 
+		@Nonnull
 		@Override
 		public JpaJsonQueryNode errorOnEmpty() {
 			emptyBehavior = EmptyBehavior.ERROR;
 			return this;
 		}
 
+		@Nonnull
 		@Override
 		public JpaJsonQueryNode nullOnEmpty() {
 			emptyBehavior = EmptyBehavior.NULL;
 			return this;
 		}
 
+		@Nonnull
 		@Override
 		public JpaJsonQueryNode emptyArrayOnEmpty() {
 			emptyBehavior = EmptyBehavior.EMPTY_ARRAY;
 			return this;
 		}
 
+		@Nonnull
 		@Override
 		public JpaJsonQueryNode emptyObjectOnEmpty() {
 			emptyBehavior = EmptyBehavior.EMPTY_OBJECT;
@@ -820,11 +842,13 @@ public class SqmJsonTableFunction<T> extends SelfRenderingSqmSetReturningFunctio
 			return 1;
 		}
 
+		@Nonnull
 		@Override
 		public ErrorBehavior getErrorBehavior() {
 			return errorBehavior;
 		}
 
+		@Nonnull
 		@Override
 		public EmptyBehavior getEmptyBehavior() {
 			return emptyBehavior;
@@ -840,6 +864,7 @@ public class SqmJsonTableFunction<T> extends SelfRenderingSqmSetReturningFunctio
 			return emptyDefaultExpression;
 		}
 
+		@Nonnull
 		@Override
 		public JpaJsonValueNode<X> unspecifiedOnError() {
 			this.errorDefaultExpression = null;
@@ -847,6 +872,7 @@ public class SqmJsonTableFunction<T> extends SelfRenderingSqmSetReturningFunctio
 			return this;
 		}
 
+		@Nonnull
 		@Override
 		public JpaJsonValueNode<X> errorOnError() {
 			this.errorDefaultExpression = null;
@@ -854,6 +880,7 @@ public class SqmJsonTableFunction<T> extends SelfRenderingSqmSetReturningFunctio
 			return this;
 		}
 
+		@Nonnull
 		@Override
 		public JpaJsonValueNode<X> nullOnError() {
 			this.errorDefaultExpression = null;
@@ -861,14 +888,16 @@ public class SqmJsonTableFunction<T> extends SelfRenderingSqmSetReturningFunctio
 			return this;
 		}
 
+		@Nonnull
 		@Override
-		public JpaJsonValueNode<X> defaultOnError(Expression<?> expression) {
+		public JpaJsonValueNode<X> defaultOnError(@Nonnull Expression<?> expression) {
 			//noinspection unchecked
 			this.errorDefaultExpression = (SqmExpression<X>) expression;
 			this.errorBehavior = ErrorBehavior.DEFAULT;
 			return this;
 		}
 
+		@Nonnull
 		@Override
 		public JpaJsonValueNode<X> unspecifiedOnEmpty() {
 			this.emptyDefaultExpression = null;
@@ -876,6 +905,7 @@ public class SqmJsonTableFunction<T> extends SelfRenderingSqmSetReturningFunctio
 			return this;
 		}
 
+		@Nonnull
 		@Override
 		public JpaJsonValueNode<X> errorOnEmpty() {
 			this.emptyDefaultExpression = null;
@@ -883,6 +913,7 @@ public class SqmJsonTableFunction<T> extends SelfRenderingSqmSetReturningFunctio
 			return this;
 		}
 
+		@Nonnull
 		@Override
 		public JpaJsonValueNode<X> nullOnEmpty() {
 			this.emptyDefaultExpression = null;
@@ -890,8 +921,9 @@ public class SqmJsonTableFunction<T> extends SelfRenderingSqmSetReturningFunctio
 			return this;
 		}
 
+		@Nonnull
 		@Override
-		public JpaJsonValueNode<X> defaultOnEmpty(Expression<?> expression) {
+		public JpaJsonValueNode<X> defaultOnEmpty(@Nonnull Expression<?> expression) {
 			//noinspection unchecked
 			this.emptyDefaultExpression = (SqmExpression<X>) expression;
 			this.emptyBehavior = EmptyBehavior.DEFAULT;
@@ -1042,13 +1074,15 @@ public class SqmJsonTableFunction<T> extends SelfRenderingSqmSetReturningFunctio
 		}
 
 
+		@Nonnull
 		@Override
-		public JpaJsonExistsNode existsColumn(String columnName) {
+		public JpaJsonExistsNode existsColumn(@Nonnull String columnName) {
 			return existsColumn( columnName, null );
 		}
 
+		@Nonnull
 		@Override
-		public JpaJsonExistsNode existsColumn(String columnName, @Nullable String jsonPath) {
+		public JpaJsonExistsNode existsColumn(@Nonnull String columnName, @Nullable String jsonPath) {
 			final BasicType<Boolean> type = table.nodeBuilder().getBooleanType();
 			table.addColumn( columnName );
 			final ExistsColumnDefinition existsColumnDefinition = new ExistsColumnDefinition( columnName, type, jsonPath );
@@ -1056,13 +1090,15 @@ public class SqmJsonTableFunction<T> extends SelfRenderingSqmSetReturningFunctio
 			return existsColumnDefinition;
 		}
 
+		@Nonnull
 		@Override
-		public JpaJsonQueryNode queryColumn(String columnName) {
+		public JpaJsonQueryNode queryColumn(@Nonnull String columnName) {
 			return queryColumn( columnName, null );
 		}
 
+		@Nonnull
 		@Override
-		public JpaJsonQueryNode queryColumn(String columnName, @Nullable String jsonPath) {
+		public JpaJsonQueryNode queryColumn(@Nonnull String columnName, @Nullable String jsonPath) {
 			final BasicType<String> type = table.nodeBuilder().getTypeConfiguration().getBasicTypeRegistry()
 					.resolve( String.class, SqlTypes.JSON );
 			table.addColumn( columnName );
@@ -1071,23 +1107,27 @@ public class SqmJsonTableFunction<T> extends SelfRenderingSqmSetReturningFunctio
 			return queryColumnDefinition;
 		}
 
+		@Nonnull
 		@Override
-		public <X> JpaJsonValueNode<X> valueColumn(String columnName, Class<X> type) {
+		public <X> JpaJsonValueNode<X> valueColumn(@Nonnull String columnName, @Nonnull Class<X> type) {
 			return valueColumn( columnName, type, null );
 		}
 
+		@Nonnull
 		@Override
-		public <X> JpaJsonValueNode<X> valueColumn(String columnName, Class<X> type, @Nullable String jsonPath) {
+		public <X> JpaJsonValueNode<X> valueColumn(@Nonnull String columnName, @Nonnull Class<X> type, @Nullable String jsonPath) {
 			return valueColumn( columnName, table.nodeBuilder().castTarget( type ), jsonPath );
 		}
 
+		@Nonnull
 		@Override
-		public <X> JpaJsonValueNode<X> valueColumn(String columnName, JpaCastTarget<X> type) {
+		public <X> JpaJsonValueNode<X> valueColumn(@Nonnull String columnName, @Nonnull JpaCastTarget<X> type) {
 			return valueColumn( columnName, type, null );
 		}
 
+		@Nonnull
 		@Override
-		public <X> JpaJsonValueNode<X> valueColumn(String columnName, JpaCastTarget<X> type, @Nullable String jsonPath) {
+		public <X> JpaJsonValueNode<X> valueColumn(@Nonnull String columnName, @Nonnull JpaCastTarget<X> type, @Nullable String jsonPath) {
 			final SqmCastTarget<?> sqmCastTarget = (SqmCastTarget<?>) type;
 			table.addColumn( columnName );
 			final ValueColumnDefinition<X> valueColumnDefinition = new ValueColumnDefinition<>(
@@ -1099,16 +1139,18 @@ public class SqmJsonTableFunction<T> extends SelfRenderingSqmSetReturningFunctio
 			return valueColumnDefinition;
 		}
 
+		@Nonnull
 		@Override
-		public JpaJsonTableColumnsNode nested(String jsonPath) {
+		public JpaJsonTableColumnsNode nested(@Nonnull String jsonPath) {
 			table.checkTypeResolved();
 			final NestedColumns nestedColumnDefinition = new NestedColumns( jsonPath, table );
 			columnDefinitions.add( nestedColumnDefinition );
 			return nestedColumnDefinition;
 		}
 
+		@Nonnull
 		@Override
-		public JpaJsonTableColumnsNode ordinalityColumn(String columnName) {
+		public JpaJsonTableColumnsNode ordinalityColumn(@Nonnull String columnName) {
 			final BasicType<Long> type = table.nodeBuilder().getLongType();
 			table.addColumn( columnName );
 			columnDefinitions.add( new OrdinalityColumnDefinition( columnName, type ) );

@@ -38,7 +38,7 @@ public interface JpaQueryGroup<T> extends JpaQueryPart<T> {
 	 */
 	@Override
 	@Nonnull
-	JpaQueryGroup<T> setOffset(@Nonnull JpaExpression<? extends Number> offset);
+	JpaQueryGroup<T> setOffset(@Nullable JpaExpression<? extends Number> offset);
 
 	/**
 	 * Set the query fetch limit.
@@ -52,6 +52,6 @@ public interface JpaQueryGroup<T> extends JpaQueryPart<T> {
 	 */
 	@Override
 	@Nonnull
-	JpaQueryGroup<T> setFetch(@Nullable JpaExpression<? extends Number> fetch, FetchClauseType fetchClauseType);
+	JpaQueryGroup<T> setFetch(@Nullable JpaExpression<? extends Number> fetch, @Nonnull FetchClauseType fetchClauseType);
 
 }

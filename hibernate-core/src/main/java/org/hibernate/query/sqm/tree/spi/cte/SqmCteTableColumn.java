@@ -48,6 +48,7 @@ public class SqmCteTableColumn implements JpaCteCriteriaAttribute, SqmCacheable 
 		return cteTable;
 	}
 
+	@Nonnull
 	@Override
 	public String getName() {
 		return columnName;

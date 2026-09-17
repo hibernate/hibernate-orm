@@ -22,6 +22,7 @@ public interface JpaCteCriteriaAttribute extends JpaCriteriaNode {
 	/**
 	 * The name of the attribute.
 	 */
+	@Nonnull
 	String getName();
 
 	/**

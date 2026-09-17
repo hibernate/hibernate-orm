@@ -286,13 +286,15 @@ public class SqmXmlTableFunction<T> extends SelfRenderingSqmSetReturningFunction
 			);
 		}
 
+		@Nonnull
 		@Override
-		public JpaXmlTableColumnNode<String> defaultValue(String value) {
+		public JpaXmlTableColumnNode<String> defaultValue(@Nullable String value) {
 			return defaultExpression( table.nodeBuilder().value( value ) );
 		}
 
+		@Nonnull
 		@Override
-		public JpaXmlTableColumnNode<String> defaultExpression(Expression<String> expression) {
+		public JpaXmlTableColumnNode<String> defaultExpression(@Nonnull Expression<String> expression) {
 			table.checkTypeResolved();
 			this.defaultExpression = (SqmExpression<String>) expression;
 			return this;
@@ -390,13 +392,15 @@ public class SqmXmlTableFunction<T> extends SelfRenderingSqmSetReturningFunction
 			);
 		}
 
+		@Nonnull
 		@Override
-		public JpaXmlTableColumnNode<X> defaultValue(X value) {
+		public JpaXmlTableColumnNode<X> defaultValue(@Nullable X value) {
 			return defaultExpression( table.nodeBuilder().value( value ) );
 		}
 
+		@Nonnull
 		@Override
-		public JpaXmlTableColumnNode<X> defaultExpression(Expression<X> expression) {
+		public JpaXmlTableColumnNode<X> defaultExpression(@Nonnull Expression<X> expression) {
 			table.checkTypeResolved();
 			this.defaultExpression = (SqmExpression<X>) expression;
 			return this;

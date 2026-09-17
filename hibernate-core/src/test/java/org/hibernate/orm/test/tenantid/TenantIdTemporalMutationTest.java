@@ -106,6 +106,7 @@ class TenantIdTemporalMutationTest {
 	@ValueSource(booleans = { false, true })
 	void managedMutationRejectsReusedIdentifier(boolean remove, SessionFactoryScope scope) {
 		inTenant( scope, "mine", session -> session.persist( new PlainItem() ) );
+		awaitTimestampTick();
 		try ( var session = scope.getSessionFactory().withOptions().tenantIdentifier( "mine" ).openSession() ) {
 			final var transaction = session.beginTransaction();
 			try {
@@ -150,6 +151,7 @@ class TenantIdTemporalMutationTest {
 		awaitTimestampTick();
 		inTenant( scope, tenant, session -> session.find( Item.class, 1L ).name = "changed" );
 		assertRows( scope, new Item(), "mine", "changed", 1, 2 );
+		awaitTimestampTick();
 		inTenant( scope, tenant, session -> session.remove( session.find( Item.class, 1L ) ) );
 		assertRows( scope, new Item(), "mine", "changed", 0, 2 );
 	}
@@ -159,6 +161,7 @@ class TenantIdTemporalMutationTest {
 	void upsertInsertsWhenOnlyHistoryOrNoRowExists(boolean history, SessionFactoryScope scope) {
 		if ( history ) {
 			inTenant( scope, "yours", session -> session.persist( new Item() ) );
+			awaitTimestampTick();
 			inTenant( scope, "yours", session -> session.remove( session.find( Item.class, 1L ) ) );
 			awaitTimestampTick();
 		}

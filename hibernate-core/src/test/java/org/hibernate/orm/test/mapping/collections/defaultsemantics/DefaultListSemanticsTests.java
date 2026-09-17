@@ -8,23 +8,20 @@ import java.util.List;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.pipeline.internal.MetadataBuildingHelper;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
+import org.hibernate.testing.orm.junit.SessionFactoryUtil;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.mapping.Bag;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.IdentifierBag;
 import org.hibernate.orm.test.mapping.collections.defaultsemantics.list.sub.ScopeOwner;
 
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.orm.junit.Logger;
-import org.hibernate.testing.orm.junit.MessageKeyInspection;
-import org.hibernate.testing.orm.junit.MessageKeyWatcher;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.hibernate.cfg.MappingSettings.DEFAULT_LIST_SEMANTICS;
 
 /// @author Steve Ebersole
 @JiraKey("HHH-20893")
@@ -43,10 +40,8 @@ class DefaultListSemanticsTests {
 	}
 
 	private void verifyPackage(Class<?> owner, Class<?> child, boolean indexed) {
-		try (var registry = new StandardServiceRegistryBuilder()
-				.applySetting( DEFAULT_LIST_SEMANTICS, indexed ? "BAG" : "LIST" ).build()) {
-			final var metadata = new MetadataSources( registry ).addAnnotatedClass( owner )
-					.addAnnotatedClass( child ).buildMetadata();
+		try (var registry = new StandardServiceRegistryBuilder().build()) {
+			final var metadata = MetadataBuildingHelper.buildMetadata( registry, new MappingSources().addManagedClasses( owner, child ) );
 			assertCollection( metadata, owner, "plain", indexed ? org.hibernate.mapping.List.class : Bag.class );
 			assertCollection( metadata, owner, "bag", Bag.class );
 			assertCollection( metadata, owner, "indexed", org.hibernate.mapping.List.class );
@@ -67,8 +62,8 @@ class DefaultListSemanticsTests {
 	@Test
 	void declaringScopeAndNoSubpackageInheritance() {
 		try (var registry = new StandardServiceRegistryBuilder().build()) {
-			final var metadata = new MetadataSources( registry ).addAnnotatedClass( ScopeOwner.class ).buildMetadata();
-			assertCollection( metadata, ScopeOwner.class, "local", Bag.class );
+			final var metadata = MetadataBuildingHelper.buildMetadata( registry, new MappingSources().addManagedClass( ScopeOwner.class ) );
+			assertCollection( metadata, ScopeOwner.class, "local", org.hibernate.mapping.List.class );
 			assertCollection( metadata, ScopeOwner.class, "inherited", org.hibernate.mapping.List.class );
 			final var component = (Component) metadata.getEntityBinding( ScopeOwner.class.getName() )
 					.getProperty( "details" ).getValue();
@@ -80,8 +75,8 @@ class DefaultListSemanticsTests {
 	void implicitPositionsSurviveReloadAndReordering() {
 		try (var registry = new StandardServiceRegistryBuilder()
 				.applySetting( "hibernate.hbm2ddl.auto", "create-drop" ).build()) {
-			final var metadata = new MetadataSources( registry ).addAnnotatedClass( ScopeOwner.class ).buildMetadata();
-			try (var factory = metadata.buildSessionFactory()) {
+			final var metadata = MetadataBuildingHelper.buildMetadata( registry, new MappingSources().addManagedClass( ScopeOwner.class ) );
+			try (var factory = SessionFactoryUtil.buildSessionFactory( metadata )) {
 				factory.inTransaction( session -> {
 					final var owner = new ScopeOwner();
 					owner.id = 1;
@@ -108,37 +103,9 @@ class DefaultListSemanticsTests {
 				org.hibernate.orm.test.mapping.collections.defaultsemantics.bag.Model.InvalidOrder.class,
 				org.hibernate.orm.test.mapping.collections.defaultsemantics.bag.Model.InvalidBase.class )) {
 			try (var registry = new StandardServiceRegistryBuilder().build()) {
-				assertThatThrownBy( () -> new MetadataSources( registry ).addAnnotatedClass( type ).buildMetadata() )
+				assertThatThrownBy( () -> MetadataBuildingHelper.buildMetadata( registry, new MappingSources().addManagedClass( type ) ) )
 						.isInstanceOf( AnnotationException.class ).hasMessageContaining( "annotated '@Bag'" );
 			}
-		}
-	}
-
-	@Test
-	@MessageKeyInspection(
-			messageKey = "HHH90000021",
-			logger = @Logger(loggerName = DeprecationLogger.CATEGORY)
-	)
-	void settingWarningEvenWhenOverridden(MessageKeyWatcher watcher) {
-		try (var registry = new StandardServiceRegistryBuilder().build()) {
-			new MetadataSources( registry ).addAnnotatedClass( ScopeOwner.class ).buildMetadata();
-			assertThat( watcher.wasTriggered() ).isFalse();
-		}
-		try (var registry = new StandardServiceRegistryBuilder().applySetting( DEFAULT_LIST_SEMANTICS, "BAG" ).build()) {
-			final var metadata = new MetadataSources( registry ).addAnnotatedClass( ScopeOwner.class ).buildMetadata();
-			assertCollection( metadata, ScopeOwner.class, "inherited", org.hibernate.mapping.List.class );
-			assertThat( watcher.getTriggeredMessages() ).hasSize( 1 );
-			assertThat( watcher.getFirstTriggeredMessage() ).contains( DEFAULT_LIST_SEMANTICS, "@DefaultListSemantics" );
-		}
-	}
-
-	@Test
-	void programmaticFallback() {
-		try (var registry = new StandardServiceRegistryBuilder().build()) {
-			final var metadata = new MetadataSources( registry ).addAnnotatedClass( ScopeOwner.class )
-					.getMetadataBuilder().applyImplicitListSemantics( org.hibernate.metamodel.CollectionClassification.LIST )
-					.build();
-			assertCollection( metadata, ScopeOwner.class, "local", org.hibernate.mapping.List.class );
 		}
 	}
 

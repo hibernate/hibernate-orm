@@ -8,7 +8,8 @@ import java.nio.file.Path;
 
 import jakarta.persistence.Entity;
 import org.hibernate.annotations.DefaultListSemantics;
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.pipeline.internal.MetadataBuildingHelper;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.mapping.Bag;
@@ -55,8 +56,7 @@ class ModuleDefaultListSemanticsTests {
 		try (var registry = new StandardServiceRegistryBuilder( bootstrap )
 				.applySetting( "hibernate.mapping.default_list_semantics", semantics.equals( "LIST" ) ? "BAG" : "LIST" )
 				.build()) {
-			final var metadata = new MetadataSources( registry )
-					.addAnnotatedClass( plain ).addAnnotatedClass( bag ).addAnnotatedClass( list ).buildMetadata();
+			final var metadata = MetadataBuildingHelper.buildMetadata( registry, new MappingSources().addManagedClasses( plain, bag, list ) );
 			assertThat( metadata.getEntityBinding( plain.getName() ).getProperty( "names" ).getValue() )
 					.isInstanceOf( semantics.equals( "LIST" ) ? org.hibernate.mapping.List.class : Bag.class );
 			assertThat( metadata.getEntityBinding( bag.getName() ).getProperty( "names" ).getValue() )

@@ -232,7 +232,7 @@ public record CollectionSource(
 			ClassDetails hierarchyRootType,
 			ModelsContext modelsContext) {
 		final CollectionTable collectionTable = member.getDirectAnnotationUsage( CollectionTable.class );
-		final CollectionClassification classification = determineClassification( member, collectionType );
+		final CollectionClassification classification = determineClassification( member, collectionType, modelsContext );
 		final AssociationOverride associationOverride = locateAssociationOverride(
 				member,
 				ownerType,
@@ -536,7 +536,7 @@ public record CollectionSource(
 		return TypeDetails.classType( classDetails );
 	}
 
-	private static CollectionClassification determineClassification(MemberDetails member, TypeDetails collectionType) {
+	private static CollectionClassification determineClassification(MemberDetails member, TypeDetails collectionType, ModelsContext modelsContext) {
 		if ( collectionType.getTypeKind() == TypeDetails.Kind.ARRAY ) {
 			return CollectionClassification.ARRAY;
 		}
@@ -571,9 +571,14 @@ public record CollectionSource(
 			if ( !hasExplicitListIndex( member ) && ( isUnownedToMany( member ) || isUnidirectionalOneToMany( member ) ) ) {
 				return CollectionClassification.BAG;
 			}
-			return member.hasDirectAnnotationUsage( Bag.class )
-					? CollectionClassification.BAG
-					: CollectionClassification.LIST;
+			if ( member.hasDirectAnnotationUsage( Bag.class ) ) {
+				if ( hasExplicitListIndex( member ) ) {
+					throw new AnnotationException( "Property '" + member.getDeclaringType().getName() + "."
+							+ member.resolveAttributeName() + "' is annotated '@Bag' and specifies list-index metadata" );
+				}
+				return CollectionClassification.BAG;
+			}
+			return hasExplicitListIndex( member ) ? CollectionClassification.LIST : defaultListClassification( member, modelsContext );
 		}
 		if ( collectionType.isImplementor( Map.class ) ) {
 			if ( isSorted( member, collectionType ) ) {
@@ -585,6 +590,28 @@ public record CollectionSource(
 			return CollectionClassification.MAP;
 		}
 		return CollectionClassification.BAG;
+	}
+
+	private static CollectionClassification defaultListClassification(MemberDetails member, ModelsContext modelsContext) {
+		final var declaringType = member.getDeclaringType();
+		if ( declaringType.isRealClass() ) {
+			final var packageDetails = org.hibernate.boot.model.internal.GeneratorAnnotationHelper.locatePackageInfoDetails( declaringType, modelsContext );
+			if ( packageDetails != null ) {
+				final var annotation = packageDetails.getDirectAnnotationUsage( org.hibernate.annotations.DefaultListSemantics.class );
+				if ( annotation != null ) {
+					return CollectionClassification.valueOf( annotation.value().name() );
+				}
+			}
+			final var module = declaringType.toJavaClass().getModule();
+			if ( module.isNamed() ) {
+				final var annotation = modelsContext.getModuleDetailsRegistry().resolveModuleDetails( module )
+						.getDirectAnnotationUsage( org.hibernate.annotations.DefaultListSemantics.class );
+				if ( annotation != null ) {
+					return CollectionClassification.valueOf( annotation.value().name() );
+				}
+			}
+		}
+		return CollectionClassification.LIST;
 	}
 
 	private static AttributeOverride locateAttributeOverride(

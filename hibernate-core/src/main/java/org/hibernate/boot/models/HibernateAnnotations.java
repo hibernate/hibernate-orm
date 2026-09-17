@@ -111,6 +111,12 @@ public interface HibernateAnnotations {
 			EnumSet.of( Kind.ANNOTATION ),
 			false
 	);
+	MutableAnnotationDescriptor<DefaultListSemantics, DefaultListSemanticsAnnotation> DEFAULT_LIST_SEMANTICS = Creator.createCompleteAnnotationDescriptor(
+			DefaultListSemantics.class,
+			DefaultListSemanticsAnnotation.class,
+			EnumSet.of( Kind.PACKAGE, Kind.MODULE ),
+			false
+	);
 	MutableAnnotationDescriptor<Bag, BagAnnotation> BAG = Creator.createCompleteAnnotationDescriptor(
 			Bag.class,
 			BagAnnotation.class,

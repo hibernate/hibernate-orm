@@ -20,6 +20,7 @@ import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.generator.GeneratorCreationContext;
+import org.hibernate.internal.build.AllowReflection;
 
 import static org.hibernate.internal.util.ReflectHelper.ensureAccessibility;
 
@@ -191,6 +192,8 @@ public final class GeneratorAnnotationSnapshot implements Serializable {
 	}
 
 	private record ArrayValue(MemberValue[] elements) implements MemberValue {
+		// Annotation members require their exact declared array type, resolved at runtime.
+		@AllowReflection
 		@Override
 		public Object resolve(Class<?> expectedType, ClassLoaderService classLoaderService) {
 			final Class<?> componentType = expectedType.getComponentType();
@@ -264,13 +267,34 @@ public final class GeneratorAnnotationSnapshot implements Serializable {
 	}
 
 	private static Object cloneArray(Object value) {
-		if ( value == null || !value.getClass().isArray() ) {
-			return value;
+		if ( value instanceof Object[] values ) {
+			return values.clone();
 		}
-		final int length = Array.getLength( value );
-		final Object clone = Array.newInstance( value.getClass().getComponentType(), length );
-		System.arraycopy( value, 0, clone, 0, length );
-		return clone;
+		if ( value instanceof boolean[] values ) {
+			return values.clone();
+		}
+		if ( value instanceof byte[] values ) {
+			return values.clone();
+		}
+		if ( value instanceof short[] values ) {
+			return values.clone();
+		}
+		if ( value instanceof int[] values ) {
+			return values.clone();
+		}
+		if ( value instanceof long[] values ) {
+			return values.clone();
+		}
+		if ( value instanceof char[] values ) {
+			return values.clone();
+		}
+		if ( value instanceof float[] values ) {
+			return values.clone();
+		}
+		if ( value instanceof double[] values ) {
+			return values.clone();
+		}
+		return value;
 	}
 
 	private static boolean memberValueEquals(Object first, Object second) {

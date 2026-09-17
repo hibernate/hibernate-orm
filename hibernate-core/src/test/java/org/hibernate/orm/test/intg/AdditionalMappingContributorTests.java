@@ -156,6 +156,29 @@ public class AdditionalMappingContributorTests {
 		} );
 	}
 
+	@Test
+	@BootstrapServiceRegistry(
+			javaServices = @JavaService(
+					role = AdditionalMappingContributor.class,
+					impl = AdditionalMappingContributorTests.ClassEmptyXmlMapsContributorImpl.class
+			)
+	)
+	@DomainModel
+	@SessionFactory
+	@SuppressWarnings("JUnitMalformedDeclaration")
+	void verifyEntityAndOrmXmlContribution(DomainModelScope domainModelScope, SessionFactoryScope sessionFactoryScope) {
+		final PersistentClass binding = domainModelScope.getDomainModel().getEntityBinding( Entity6.class.getName() );
+		assertThat( binding ).isNotNull();
+		assertThat( binding.getIdentifierProperty() ).isNotNull();
+		assertThat( binding.getProperties() ).hasSize( 1 );
+
+		sessionFactoryScope.inTransaction( (session) -> {
+			//noinspection deprecation
+			final List<?> results = session.createSelectionQuery( "from Entity6", Entity6.class ).list();
+			assertThat( results ).hasSize( 0 );
+		} );
+	}
+
 	@Entity(name = "Entity1")
 	@Table(name = "Entity1")
 	public static class Entity1 {
@@ -262,6 +285,12 @@ public class AdditionalMappingContributorTests {
 	@SuppressWarnings("unused")
 	@Table(name = "Entity5")
 	public static class Entity5 {
+		private Integer id;
+		private String name;
+	}
+
+	@SuppressWarnings("unused")
+	public static class Entity6 {
 		private Integer id;
 		private String name;
 	}
@@ -403,6 +432,31 @@ public class AdditionalMappingContributorTests {
 					}
 			);
 			contributions.contributeManagedClass( entity6Details );
+		}
+	}
+
+	public static class ClassEmptyXmlMapsContributorImpl implements AdditionalMappingContributor {
+
+		@Override
+		public String getContributorName() {
+			return "some-custom-contributor";
+		}
+
+		@Override
+		public void contribute(
+				AdditionalMappingContributions contributions,
+				InFlightMetadataCollector metadata,
+				ResourceStreamLocator resourceStreamLocator,
+				MetadataBuildingContext buildingContext) {
+			contributions.contributeEntity( Entity6.class );
+			try (final InputStream stream = resourceStreamLocator.locateResourceStream(
+					"mappings/intg/contributed-mapping-another.xml" )) {
+				contributions.contributeBinding( stream );
+			}
+			catch (IOException e) {
+				throw new RuntimeException( e );
+			}
+
 		}
 	}
 }

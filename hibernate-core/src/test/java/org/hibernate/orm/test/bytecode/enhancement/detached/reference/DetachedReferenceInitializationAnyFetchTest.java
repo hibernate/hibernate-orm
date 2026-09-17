@@ -45,7 +45,33 @@ public class DetachedReferenceInitializationAnyFetchTest {
 			// put a different instance of EntityB in the persistence context
 			final var ignored = session.find( EntityB.class, 1L );
 
-			fetchQuery( entityB, session );
+			fetchQuery( 1L, entityB, ignored, session );
+		} );
+	}
+
+	@Test
+	public void testDetachedAndPersistentEntityInconsistentNullAssociation(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final var entityB = session.find( EntityB.class, 1L );
+			session.clear();
+
+			// put a different instance of EntityB in the persistence context
+			final var ignored = session.find( EntityB.class, 1L );
+
+			fetchQuery( null, entityB, ignored, session );
+		} );
+	}
+
+	@Test
+	public void testDetachedAndPersistentEntityInconsistentNonNullAssociation(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final var entityB = session.find( EntityB.class, 1L );
+			session.clear();
+
+			// put a different instance of EntityB in the persistence context
+			final var ignored = session.find( EntityB.class, 1L );
+
+			fetchQuery( 1L, null, ignored, session );
 		} );
 	}
 
@@ -59,7 +85,35 @@ public class DetachedReferenceInitializationAnyFetchTest {
 			final var ignored = session.getReference( EntityB.class, 1L );
 			Hibernate.initialize( ignored );
 
-			fetchQuery( entityB, session );
+			fetchQuery( 1L, entityB, ignored, session );
+		} );
+	}
+
+	@Test
+	public void testDetachedEntityAndPersistentInitializedProxyInconsistentNullAssociation(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final var entityB = session.find( EntityB.class, 1L );
+			session.clear();
+
+			// put a different instance of EntityB in the persistence context
+			final var ignored = session.getReference( EntityB.class, 1L );
+			Hibernate.initialize( ignored );
+
+			fetchQuery( null, entityB, ignored, session );
+		} );
+	}
+
+	@Test
+	public void testDetachedEntityAndPersistentInitializedProxyInconsistentNonNullAssociation(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final var entityB = session.find( EntityB.class, 1L );
+			session.clear();
+
+			// put a different instance of EntityB in the persistence context
+			final var ignored = session.getReference( EntityB.class, 1L );
+			Hibernate.initialize( ignored );
+
+			fetchQuery( 1L, null, ignored, session );
 		} );
 	}
 
@@ -72,7 +126,33 @@ public class DetachedReferenceInitializationAnyFetchTest {
 			// put a different instance of EntityB in the persistence context
 			final var ignored = session.getReference( EntityB.class, 1L );
 
-			fetchQuery( entityB, session );
+			fetchQuery( 1L, entityB, ignored, session );
+		} );
+	}
+
+	@Test
+	public void testDetachedEntityAndPersistentProxyInconsistentNullAssociation(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final var entityB = session.find( EntityB.class, 1L );
+			session.clear();
+
+			// put a different instance of EntityB in the persistence context
+			final var ignored = session.getReference( EntityB.class, 1L );
+
+			fetchQuery( null, entityB, ignored, session );
+		} );
+	}
+
+	@Test
+	public void testDetachedEntityAndPersistentProxyInconsistentNonNullAssociation(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final var entityB = session.find( EntityB.class, 1L );
+			session.clear();
+
+			// put a different instance of EntityB in the persistence context
+			final var ignored = session.getReference( EntityB.class, 1L );
+
+			fetchQuery( 1L, null, ignored, session );
 		} );
 	}
 
@@ -85,7 +165,33 @@ public class DetachedReferenceInitializationAnyFetchTest {
 			// put a different instance of EntityB in the persistence context
 			final var ignored = session.find( EntityB.class, 1L );
 
-			fetchQuery( entityB, session );
+			fetchQuery( 1L, entityB, ignored, session );
+		} );
+	}
+
+	@Test
+	public void testDetachedProxyAndPersistentEntityInconsistentNullAssociation(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final var entityB = session.getReference( EntityB.class, 1L );
+			session.clear();
+
+			// put a different instance of EntityB in the persistence context
+			final var ignored = session.find( EntityB.class, 1L );
+
+			fetchQuery( null, entityB, ignored, session );
+		} );
+	}
+
+	@Test
+	public void testDetachedProxyAndPersistentEntityInconsistentNonNullAssociation(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final var entityB = session.getReference( EntityB.class, 1L );
+			session.clear();
+
+			// put a different instance of EntityB in the persistence context
+			final var ignored = session.find( EntityB.class, 1L );
+
+			fetchQuery( 1L, null, ignored, session );
 		} );
 	}
 
@@ -99,7 +205,35 @@ public class DetachedReferenceInitializationAnyFetchTest {
 			final var ignored = session.getReference( EntityB.class, 1L );
 			Hibernate.initialize( ignored );
 
-			fetchQuery( entityB, session );
+			fetchQuery( 1L, entityB, ignored, session );
+		} );
+	}
+
+	@Test
+	public void testDetachedProxyAndPersistentInitializedProxyInconsistentNullAssociation(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final var entityB = session.getReference( EntityB.class, 1L );
+			session.clear();
+
+			// put a different instance of EntityB in the persistence context
+			final var ignored = session.getReference( EntityB.class, 1L );
+			Hibernate.initialize( ignored );
+
+			fetchQuery( null, entityB, ignored, session );
+		} );
+	}
+
+	@Test
+	public void testDetachedProxyAndPersistentInitializedProxyInconsistentNonNullAssociation(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final var entityB = session.getReference( EntityB.class, 1L );
+			session.clear();
+
+			// put a different instance of EntityB in the persistence context
+			final var ignored = session.getReference( EntityB.class, 1L );
+			Hibernate.initialize( ignored );
+
+			fetchQuery( 1L, null, ignored, session );
 		} );
 	}
 
@@ -112,7 +246,33 @@ public class DetachedReferenceInitializationAnyFetchTest {
 			// put a different instance of EntityB in the persistence context
 			final var ignored = session.getReference( EntityB.class, 1L );
 
-			fetchQuery( entityB, session );
+			fetchQuery( 1L, entityB, ignored, session );
+		} );
+	}
+
+	@Test
+	public void testDetachedAndPersistentProxyInconsistentNullAssociation(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final var entityB = session.getReference( EntityB.class, 1L );
+			session.clear();
+
+			// put a different instance of EntityB in the persistence context
+			final var ignored = session.getReference( EntityB.class, 1L );
+
+			fetchQuery( null, entityB, ignored, session );
+		} );
+	}
+
+	@Test
+	public void testDetachedAndPersistentProxyInconsistentNonNullAssociation(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final var entityB = session.getReference( EntityB.class, 1L );
+			session.clear();
+
+			// put a different instance of EntityB in the persistence context
+			final var ignored = session.getReference( EntityB.class, 1L );
+
+			fetchQuery( 1L, null, ignored, session );
 		} );
 	}
 
@@ -126,7 +286,35 @@ public class DetachedReferenceInitializationAnyFetchTest {
 			// put a different instance of EntityB in the persistence context
 			final var ignored = session.find( EntityB.class, 1L );
 
-			fetchQuery( entityB, session );
+			fetchQuery( 1L, entityB, ignored, session );
+		} );
+	}
+
+	@Test
+	public void testDetachedInitializedProxyAndPersistentEntityInconsistentNullAssociation(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final var entityB = session.getReference( EntityB.class, 1L );
+			Hibernate.initialize( entityB );
+			session.clear();
+
+			// put a different instance of EntityB in the persistence context
+			final var ignored = session.find( EntityB.class, 1L );
+
+			fetchQuery( null, entityB, ignored, session );
+		} );
+	}
+
+	@Test
+	public void testDetachedInitializedProxyAndPersistentEntityInconsistentNonNullAssociation(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final var entityB = session.getReference( EntityB.class, 1L );
+			Hibernate.initialize( entityB );
+			session.clear();
+
+			// put a different instance of EntityB in the persistence context
+			final var ignored = session.find( EntityB.class, 1L );
+
+			fetchQuery( 1L, null, ignored, session );
 		} );
 	}
 
@@ -141,7 +329,37 @@ public class DetachedReferenceInitializationAnyFetchTest {
 			final var ignored = session.getReference( EntityB.class, 1L );
 			Hibernate.initialize( ignored );
 
-			fetchQuery( entityB, session );
+			fetchQuery( 1L, entityB, ignored, session );
+		} );
+	}
+
+	@Test
+	public void testDetachedAndPersistentInitializedProxyInconsistentNullAssociation(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final var entityB = session.getReference( EntityB.class, 1L );
+			Hibernate.initialize( entityB );
+			session.clear();
+
+			// put a different instance of EntityB in the persistence context
+			final var ignored = session.getReference( EntityB.class, 1L );
+			Hibernate.initialize( ignored );
+
+			fetchQuery( null, entityB, ignored, session );
+		} );
+	}
+
+	@Test
+	public void testDetachedAndPersistentInitializedProxyInconsistentNonNullAssociation(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final var entityB = session.getReference( EntityB.class, 1L );
+			Hibernate.initialize( entityB );
+			session.clear();
+
+			// put a different instance of EntityB in the persistence context
+			final var ignored = session.getReference( EntityB.class, 1L );
+			Hibernate.initialize( ignored );
+
+			fetchQuery( 1L, null, ignored, session );
 		} );
 	}
 
@@ -155,7 +373,35 @@ public class DetachedReferenceInitializationAnyFetchTest {
 			// put a different instance of EntityB in the persistence context
 			final var ignored = session.getReference( EntityB.class, 1L );
 
-			fetchQuery( entityB, session );
+			fetchQuery( 1L, entityB, ignored, session );
+		} );
+	}
+
+	@Test
+	public void testDetachedInitializedProxyAndPersistentProxyInconsistentNullAssociation(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final var entityB = session.getReference( EntityB.class, 1L );
+			Hibernate.initialize( entityB );
+			session.clear();
+
+			// put a different instance of EntityB in the persistence context
+			final var ignored = session.getReference( EntityB.class, 1L );
+
+			fetchQuery( null, entityB, ignored, session );
+		} );
+	}
+
+	@Test
+	public void testDetachedInitializedProxyAndPersistentProxyInconsistentNonNullAssociation(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final var entityB = session.getReference( EntityB.class, 1L );
+			Hibernate.initialize( entityB );
+			session.clear();
+
+			// put a different instance of EntityB in the persistence context
+			final var ignored = session.getReference( EntityB.class, 1L );
+
+			fetchQuery( 1L, null, ignored, session );
 		} );
 	}
 
@@ -176,17 +422,16 @@ public class DetachedReferenceInitializationAnyFetchTest {
 		} );
 	}
 
-	private void fetchQuery(EntityB entityB, SessionImplementor session) {
+	private void fetchQuery(Long bId, EntityB entityB, EntityB managedB, SessionImplementor session) {
 		final var entityA = new EntityA();
 		entityA.id = 1L;
+		entityA.bId = bId;
+		entityA.bType = bId == null ? null : "B";
 		entityA.b = entityB;
 		session.persist( entityA );
 
 		final var wasDetachedInitialized = Hibernate.isInitialized( entityB );
-
-		final var id = session.getSessionFactory().getPersistenceUnitUtil().getIdentifier( entityB );
-		final var reference = session.getReference( EntityB.class, id );
-		final var wasManagedInitialized = Hibernate.isInitialized( reference );
+		final var wasManagedInitialized = Hibernate.isInitialized( managedB );
 
 		final var result = session.createQuery(
 				"from EntityA a",
@@ -196,20 +441,28 @@ public class DetachedReferenceInitializationAnyFetchTest {
 		assertThat( Hibernate.isInitialized( entityB ) ).isEqualTo( wasDetachedInitialized );
 		assertThat( result.b ).isSameAs( entityB );
 
-		// We cannot create a proxy for the non-enhanced case
-		assertThat( Hibernate.isInitialized( reference ) ).isEqualTo( wasManagedInitialized || !( reference instanceof PrimeAmongSecondarySupertypes ) );
-		assertThat( reference ).isNotSameAs( entityB );
+		if ( bId == null ) {
+			assertThat( Hibernate.isInitialized( managedB ) ).isSameAs( wasManagedInitialized );
+		}
+		else {
+			// We cannot create a proxy for the non-enhanced case
+			assertThat( Hibernate.isInitialized( managedB ) ).isEqualTo( wasManagedInitialized || !( managedB instanceof PrimeAmongSecondarySupertypes ) );
+		}
+		assertThat( managedB ).isNotSameAs( entityB );
 	}
 
 	@Entity(name = "EntityA")
 	static class EntityA {
 		@Id
 		private Long id;
-
+		@Column(name = "b_id")
+		private Long bId;
+		@Column(name = "b_type")
+		private String bType;
 		@Any(fetch = FetchType.LAZY)
 		@AnyKeyJavaClass(Long.class)
-		@JoinColumn(name = "b_id") //the foreign key column
-		@Column(name = "b_type")   //the discriminator column
+		@JoinColumn(name = "b_id", insertable = false, updatable = false) //the foreign key column
+		@Column(name = "b_type", insertable = false, updatable = false)   //the discriminator column
 		@AnyDiscriminatorValue(discriminator = "B", entity = EntityB.class)
 		private Object b;
 	}

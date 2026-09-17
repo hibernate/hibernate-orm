@@ -113,9 +113,8 @@ public final class DialectContext {
 			case 0 -> 1_000;
 			case 1 -> 100;
 			case 2 -> 10;
-			// Instead of waiting 1 millisecond, let's wait 3 to not run into issues with e.g. Sybase,
-			// which has a resolution of 1/300th of a second for timestamps
-			default -> 3;
+			// Wait at least 4 milliseconds to exceed Sybase's timestamp resolution of 1/300 second.
+			default -> 4;
 		};
 		try {
 			Thread.sleep( sleepMillis );

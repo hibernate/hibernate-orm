@@ -34,6 +34,8 @@ import org.hibernate.sql.ast.tree.select.QueryGroup;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
+
+import java.util.List;
 import org.hibernate.sql.exec.internal.JdbcOperationQueryInsertImpl;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.exec.spi.JdbcOperationQueryInsert;
@@ -210,6 +212,39 @@ public class GaussDBSqlAstTranslator<T extends JdbcOperation> extends SqlAstTran
 		// Emulate DO NOTHING via `ON DUPLICATE KEY UPDATE col=col` (MySQL-standard) &mdash; `UPDATE NOTHING`
 		// is not valid GaussDB/MySQL syntax and raises "syntax error at end of input".
 		visitOnDuplicateKeyConflictClause( conflictClause );
+	}
+
+	@Override
+	protected void visitOnDuplicateKeyConflictClause(ConflictClause conflictClause) {
+		if ( conflictClause != null
+				&& conflictClause.getConstraintName() == null
+				&& conflictClause.getAssignments().isEmpty()
+				&& getDialect() instanceof GaussDBDialect g && !g.isMMode() ) {
+			// A mode (openGauss Oracle-compatible) rejects updating primary/unique key columns in
+			// ON DUPLICATE KEY UPDATE, but the base emulation of DO NOTHING renders
+			// `<first target column>=<first target column>`, which is the key column for typical
+			// inserts. Assign some other inserted column to itself instead &mdash; the identifier
+			// columns are rendered first, so the last target column is used. If the insert targets
+			// the key column only, the key column is used and DO NOTHING cannot be emulated in A mode.
+			final InsertSelectStatement statement = (InsertSelectStatement) getStatementStack().getCurrent();
+			final List<ColumnReference> targetColumns = statement.getTargetColumns();
+			final ColumnReference columnReference = targetColumns.get( targetColumns.size() - 1 );
+			getClauseStack().push( Clause.CONFLICT );
+			try {
+				appendSql( " on duplicate key update" );
+				getClauseStack().push( Clause.SET );
+				appendSql( ' ' );
+				appendSql( columnReference.getColumnExpression() );
+				appendSql( '=' );
+				visitColumnReference( columnReference );
+			}
+			finally {
+				getClauseStack().pop();
+				getClauseStack().pop();
+			}
+			return;
+		}
+		super.visitOnDuplicateKeyConflictClause( conflictClause );
 	}
 
 	@Override

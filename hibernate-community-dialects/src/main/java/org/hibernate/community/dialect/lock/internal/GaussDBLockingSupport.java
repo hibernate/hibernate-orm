@@ -64,7 +64,11 @@ public class GaussDBLockingSupport implements LockingSupport, LockingSupport.Met
 
 	@Override
 	public Level getSupportedLevel() {
-		return Level.SUPPORTED;
+		// Report NONE: GaussDB's `lockwait_timeout` governs object-lock waits, not DML row locks,
+		// so a connection-level lock timeout does not time out a concurrent row update, which the
+		// contract of this strategy promises. Claiming SUPPORTED would make the standard feature
+		// checks (SupportsConnectionLockTimeouts) advertise behavior the database does not provide.
+		return Level.NONE;
 	}
 
 	@Override
@@ -72,9 +76,9 @@ public class GaussDBLockingSupport implements LockingSupport, LockingSupport.Met
 		return switch ( timeout.milliseconds() ) {
 			case NO_WAIT_MILLI -> supportsNoWait ? QUERY : LockTimeoutType.NONE;
 			case SKIP_LOCKED_MILLI -> supportsSkipLocked ? QUERY : LockTimeoutType.NONE;
-			case WAIT_FOREVER_MILLI -> LockTimeoutType.NONE;
-			// we can apply a timeout via the connection
-			default -> LockTimeoutType.CONNECTION;
+			// Not applied on the connection (see getSupportedLevel): report NONE so the core
+			// never tries to set a connection-level lock timeout.
+			default -> LockTimeoutType.NONE;
 		};
 	}
 

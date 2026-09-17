@@ -104,24 +104,21 @@ public class GaussDBFunctionRegistry {
 		functionFactory.soundex(); //was introduced apparently
 		functionFactory.locate_positionSubstring();
 		functionFactory.windowFunctions();
-		// A mode (openGauss PG kernel) supports hypothetical-set aggregates (rank / dense_rank /
-		// percent_rank / cume_dist) as both WITHIN GROUP ordered-set and window (OVER) functions.
-		// M mode (MySQL-compatible) rejects the WITHIN GROUP syntax ("Function rank(...) does not
-		// exist"), so register them only in A mode.
-		if ( !mMode ) {
-			functionFactory.hypotheticalOrderedSetAggregates();
-		}
+		// Neither A mode (openGauss PG kernel) nor M mode (MySQL-compatible) supports hypothetical-set
+		// WITHIN GROUP ordered-set aggregates: e.g. rank(x) within group (order by y) renders
+		// "Function rank(integer,integer) does not exist", treating the within-group ORDER BY as a
+		// second argument. Register the window-emulation variants instead, which render standard
+		// window (OVER) constructs that both modes support.
+		functionFactory.hypotheticalOrderedSetAggregates_windowEmulation();
 		functionFactory.listagg_stringAgg( "varchar" );
 		functionFactory.arrayAggregate();
 		functionFactory.arraySlice_operator();
 		functionFactory.makeDateTimeTimestamp();
 		// M mode (MySQL-compatible) does not support ordered-set aggregate functions with WITHIN
-		// GROUP — it reports "Function rank(integer,integer) does not exist", treating the
-		// within-group ORDER BY expression as a second argument; window-emulation (OVER) is also
-		// unsupported. A mode supports the hypothetical-set variants (registered above). The
-		// inverse-distribution variants (percentile_cont / percentile_disc / mode) are not
-		// registered for either mode, so SupportsInverseDistributionFunctions returns false and
-		// those tests are skipped instead of failing against unsupported syntax.
+		// GROUP (see above), and the inverse-distribution variants (percentile_cont /
+		// percentile_disc / mode) are not registered for either mode, so
+		// SupportsInverseDistributionFunctions returns false and those tests are skipped instead
+		// of failing against unsupported syntax.
 		if ( mMode ) {
 			// M mode (MySQL-compatible) lacks PostgreSQL's encode/date_trunc/to_char(datetime);
 			// use MySQL equivalents. format=date_format is also required by trunc's FORMAT

@@ -24,7 +24,9 @@ import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.SpannerPostgreSQLDialect;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
@@ -74,14 +76,8 @@ public class FormulaTests {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.NotGaussDBMMode.class, comment = "GaussDB M mode (MySQL kernel) treats || as logical OR, so the @Formula (rate * 100) || '%' yields true instead of the expected string; the MySQLDialect @DialectOverride.Formula does not apply because GaussDBDialect is not a MySQLDialect subtype, and @Formula is user SQL the dialect does not rewrite; A mode (PG kernel) supports || as concatenation.")
 	void testCriteria(SessionFactoryScope scope) {
-		// GaussDB M mode treats `||` as logical OR (MySQL kernel), so the default @Formula
-		// "(rate * 100) || '%'" evaluates (1.25) || '%' = true -> "t" instead of "1.25%". The
-		// @DialectOverride.Formula(dialect=MySQLDialect, concat(...)) would fix it, but
-		// GaussDBDialect is not a MySQLDialect subtype so the override does not apply, and @Formula
-		// is user SQL the dialect does not rewrite (same inherent class as RefreshEntityWithLazyProperty
-		// / FormulaFromHbm `||`). A mode (PG kernel) supports `||` as concat, so M-only skip.
-		org.junit.jupiter.api.Assumptions.assumeFalse( scope.getSessionFactory().getJdbcServices().getDialect() instanceof org.hibernate.community.dialect.GaussDBDialect g && g.isMMode() );
 		scope.inTransaction( session -> {
 			final CriteriaBuilder criteriaBuilder = scope.getSessionFactory().getCriteriaBuilder();
 			final CriteriaQuery<Account> criteria = criteriaBuilder.createQuery( Account.class );

@@ -24,7 +24,7 @@ public class PostgreSQLDatabaseCleaner implements DatabaseCleaner {
 	private static final Logger LOG = Logger.getLogger( PostgreSQLDatabaseCleaner.class.getName() );
 
 	private final List<String> ignoredTables = new ArrayList<>();
-	private final Map<String, String> truncateSqlPerSchema = new HashMap<>();
+	protected final Map<String, String> truncateSqlPerSchema = new HashMap<>();
 
 	@Override
 	public boolean isApplicable(Connection connection) {
@@ -76,7 +76,7 @@ public class PostgreSQLDatabaseCleaner implements DatabaseCleaner {
 		);
 	}
 
-	private void clearSchema0(Connection c, Function<Statement, ResultSet> schemasProvider) {
+	protected void clearSchema0(Connection c, Function<Statement, ResultSet> schemasProvider) {
 		try (Statement s = c.createStatement()) {
 			ResultSet rs;
 			final List<String> sqls = new ArrayList<>();
@@ -86,20 +86,22 @@ public class PostgreSQLDatabaseCleaner implements DatabaseCleaner {
 			LOG.log( Level.FINEST, "Collect schema objects: START" );
 			Map<String, List<String>> schemaExtensions = new HashMap<>();
 			try (Statement s2 = c.createStatement()) {
+				// Select the raw names and build the statements in Java: `||` string
+				// concatenation is not available in GaussDB MySQL-compatible (M) mode.
 				rs = s2.executeQuery(
-						"SELECT ns.nspname, 'CREATE EXTENSION ' || e.extname || ' SCHEMA \"' || ns.nspname || '\"' FROM pg_extension e JOIN pg_catalog.pg_namespace ns ON e.extnamespace = ns.oid WHERE e.extname <> 'plpgsql'"
+						"SELECT ns.nspname, e.extname FROM pg_extension e JOIN pg_catalog.pg_namespace ns ON e.extnamespace = ns.oid WHERE e.extname <> 'plpgsql'"
 				);
 				while ( rs.next() ) {
 					schemaExtensions.computeIfAbsent( rs.getString( 1 ), k -> new ArrayList<>() )
-							.add( rs.getString( 2 ) );
+							.add( "CREATE EXTENSION " + rs.getString( 2 ) + " SCHEMA " + quoteIdentifier( c, rs.getString( 1 ) ) );
 				}
 			}
 			rs = schemasProvider.apply( s );
 			while ( rs.next() ) {
 				String schema = rs.getString( 1 );
-				sqls.add( "DROP SCHEMA \"" + schema + "\" CASCADE" );
-				sqls.add( "CREATE SCHEMA \"" + schema + "\"" );
-				sqls.add( "GRANT ALL ON SCHEMA \"" + schema + "\" TO \"" + user + "\"" );
+				sqls.add( "DROP SCHEMA " + quoteIdentifier( c, schema ) + ( dropSchemaCascade( c ) ? " CASCADE" : "" ) );
+				sqls.add( "CREATE SCHEMA " + quoteIdentifier( c, schema ) );
+				sqls.add( "GRANT ALL ON SCHEMA " + quoteIdentifier( c, schema ) + " TO " + quoteIdentifier( c, user ) );
 				List<String> extensions = schemaExtensions.get( schema );
 				if ( extensions != null ) {
 					sqls.addAll( extensions );
@@ -176,13 +178,9 @@ public class PostgreSQLDatabaseCleaner implements DatabaseCleaner {
 					String tableSchema = rs.getString( 1 );
 					String tableName = rs.getString( 2 );
 					if ( !ignoredTables.contains( tableName ) ) {
-						sb.append( '"' );
-						sb.append( tableSchema );
-						sb.append( '"' );
+						sb.append( quoteIdentifier( connection, tableSchema ) );
 						sb.append( '.' );
-						sb.append( '"' );
-						sb.append( tableName );
-						sb.append( '"' );
+						sb.append( quoteIdentifier( connection, tableName ) );
 						sb.append( ',' );
 					}
 				}
@@ -226,23 +224,29 @@ public class PostgreSQLDatabaseCleaner implements DatabaseCleaner {
 	}
 
 	/**
-	 * Whether {@code TRUNCATE ... RESTART IDENTITY} can be appended. GaussDB in MySQL-compatible mode
-	 * (datcompatibility "B"/"M") rejects {@code RESTART IDENTITY} with a syntax error, so only
-	 * {@code CASCADE} is used there. Real PostgreSQL has no {@code pg_database.datcompatibility} column,
-	 * so the query fails and {@code RESTART IDENTITY} is kept (A mode / true PostgreSQL support it).
+	 * Whether {@code TRUNCATE ... RESTART IDENTITY} can be appended. Real PostgreSQL supports it;
+	 * subclasses for databases that do not (e.g. {@link GaussDBDatabaseCleaner} for GaussDB in
+	 * MySQL-compatible mode) may override this.
 	 */
-	private static boolean useRestartIdentity(Connection connection) {
-		try (Statement stmt = connection.createStatement();
-				ResultSet rs = stmt.executeQuery(
-						"select datcompatibility from pg_database where datname = current_database()" )) {
-			if ( rs.next() ) {
-				final String mode = rs.getString( 1 );
-				return !"M".equals( mode ) && !"B".equals( mode );
-			}
-		}
-		catch (SQLException e) {
-			// not GaussDB — assume real PostgreSQL, which supports RESTART IDENTITY
-		}
+	protected boolean useRestartIdentity(Connection connection) {
+		return true;
+	}
+
+	/**
+	 * Quotes the given identifier for DDL statements. Real PostgreSQL uses double quotes;
+	 * subclasses may override this, e.g. for databases that interpret double quotes as string
+	 * literals (like GaussDB in MySQL-compatible mode, which needs backticks).
+	 */
+	protected String quoteIdentifier(Connection connection, String identifier) {
+		return "\"" + identifier + "\"";
+	}
+
+	/**
+	 * Whether {@code DROP SCHEMA ... CASCADE} can be used. Real PostgreSQL requires it to drop
+	 * non-empty schemas; subclasses may override this for databases that reject the CASCADE
+	 * keyword but drop schema contents anyway (like GaussDB in MySQL-compatible mode).
+	 */
+	protected boolean dropSchemaCascade(Connection connection) {
 		return true;
 	}
 

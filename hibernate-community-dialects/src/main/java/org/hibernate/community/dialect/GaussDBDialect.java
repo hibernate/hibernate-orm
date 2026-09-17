@@ -16,7 +16,6 @@ import org.hibernate.Timeouts;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.community.dialect.identity.GaussDBIdentityColumnSupport;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.community.dialect.lock.internal.GaussDBLockingSupport;
 import org.hibernate.community.dialect.sequence.GaussDBMModeSequenceInformationExtractor;
 import org.hibernate.community.dialect.sequence.GaussDBMModeSequenceSupport;
@@ -37,6 +36,7 @@ import org.hibernate.dialect.temptable.TemporaryTableStrategy;
 import org.hibernate.query.sqm.mutation.spi.AfterUseAction;
 import org.hibernate.community.dialect.aggregate.GaussDBAggregateSupport;
 import org.hibernate.dialect.aggregate.AggregateSupport;
+import org.hibernate.dialect.aggregate.AggregateSupportImpl;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.MySQLIdentityColumnSupport;
 import org.hibernate.dialect.lock.spi.LockingSupport;
@@ -190,14 +190,13 @@ public class GaussDBDialect extends Dialect {
 	/**
 	 * Configuration key to explicitly set the GaussDB compatibility mode (e.g. {@code =M}). Used when
 	 * JDBC metadata is unavailable on boot ({@code hibernate.temp.use_jdbc_metadata_defaults=false}),
-	 * where the {@code datcompatibility} probe cannot run; the gaussdb test profile sets it to {@code M}.
+	 * where the {@code datcompatibility} probe cannot run; the gaussdb test profile sets it explicitly.
 	 */
 	public final static String GAUSSDB_COMPATIBILITY_MODE = "hibernate.dialect.gaussdb.compatibility_mode";
 
-	// GaussDB compatibility mode of the target database (pg_database.datcompatibility):
-	// "A" = Oracle-compatible, "B"/"M" = MySQL-compatible, "pg" = PostgreSQL-compatible.
-	// Defaults to "A"; detection runs from the DialectResolutionInfo constructor.
-	private String compatibilityMode = "A";
+	// The compatibility mode of the target database (pg_database.datcompatibility), determined by
+	// GaussDBServerConfiguration.fromDialectResolutionInfo() and read into this field by the constructor.
+	private final GaussDBServerConfiguration serverConfiguration;
 
 	private final UniqueDelegate uniqueDelegate = new CreateTableUniqueDelegate(this);
 	private final StandardTableExporter gaussDBTableExporter = new StandardTableExporter( this ) {
@@ -217,75 +216,44 @@ public class GaussDBDialect extends Dialect {
 	}
 
 	public GaussDBDialect(DialectResolutionInfo info) {
-		this( info.makeCopyOrDefault( MINIMUM_VERSION ));
-		detectCompatibilityMode( info );
+		this( info, GaussDBServerConfiguration.fromDialectResolutionInfo( info ) );
+	}
+
+	public GaussDBDialect(DialectResolutionInfo info, GaussDBServerConfiguration serverConfiguration) {
+		this( info.makeCopyOrDefault( MINIMUM_VERSION ), serverConfiguration );
 		registerKeywords( info );
 	}
 
 	public GaussDBDialect(DatabaseVersion version) {
+		this( version, GaussDBServerConfiguration.DEFAULT );
+	}
+
+	public GaussDBDialect(DatabaseVersion version, GaussDBServerConfiguration serverConfiguration) {
 		super( version );
+		this.serverConfiguration = serverConfiguration;
+		// initDefaultProperties() ran during super() construction while the compatibility mode was still
+		// the default, so re-run it now that the real mode is known, so mode-dependent defaults such as
+		// USE_GET_GENERATED_KEYS (see getDefaultUseGetGeneratedKeys()) are computed correctly.
+		// M mode must disable getGeneratedKeys: gsjdbc4 implements it by rewriting the INSERT with a
+		// RETURNING clause, which single-node M mode rejects ("Unsupported function. only supported in
+		// distributed database").
+		initDefaultProperties();
 		// M mode reserves `excluded` as a keyword (PostgreSQL treats it as non-reserved, usable as a column name),
 		// so identifiers named "excluded" must be quoted. GaussDB upserts use ON DUPLICATE KEY (not ON CONFLICT's
 		// EXCLUDED alias), so quoting the identifier is safe.
 		registerKeyword( "excluded" );
 	}
 
-	private void detectCompatibilityMode(DialectResolutionInfo info) {
-		// The compatibility mode (A=Oracle, M/B=MySQL) drives nearly every M-mode override. Prefer an
-		// explicit `hibernate.dialect.gaussdb.compatibility_mode` config value: it works even when JDBC
-		// metadata is disallowed on boot (hibernate.temp.use_jdbc_metadata_defaults=false, e.g. the
-		// SchemaUpdate tests), where metadata is null and the datcompatibility probe below cannot run —
-		// without it the dialect would silently default to "A" and break information_schema.sequences
-		// extraction (M mode has no such view). Fall back to probing datcompatibility when no explicit
-		// mode is configured.
-		final Map<String, Object> configValues = info.getConfigurationValues();
-		if ( configValues != null ) {
-			final Object configured = configValues.get( GAUSSDB_COMPATIBILITY_MODE );
-			if ( configured != null ) {
-				final String mode = configured.toString().trim();
-				if ( !mode.isEmpty() ) {
-					applyCompatibilityMode( mode );
-					return;
-				}
-			}
-		}
-		final DatabaseMetaData metaData = info.getDatabaseMetadata();
-		if ( metaData == null ) {
-			return;
-		}
-		try ( java.sql.Statement statement = metaData.getConnection().createStatement();
-				ResultSet rs = statement.executeQuery(
-						"select datcompatibility from pg_database where datname = current_database()" ) ) {
-			if ( rs.next() ) {
-				final String mode = rs.getString( 1 );
-				if ( mode != null ) {
-					applyCompatibilityMode( mode.trim() );
-				}
-			}
-		}
-		catch (SQLException e) {
-			// keep default ("A") on detection failure
-		}
-	}
-
-	private void applyCompatibilityMode(String mode) {
-		this.compatibilityMode = mode;
-		// initDefaultProperties() ran during super() construction while compatibilityMode was still the
-		// default "A", so re-sync the USE_GET_GENERATED_KEYS default now that the real mode is known.
-		// M mode must disable getGeneratedKeys: gsjdbc4 implements it by rewriting the INSERT with a
-		// RETURNING clause, which single-node M mode rejects ("Unsupported function. only supported in
-		// distributed database").
-		getDefaultProperties().setProperty(
-				AvailableSettings.USE_GET_GENERATED_KEYS,
-				Boolean.toString( !isMMode() )
-		);
-	}
-
 	/**
 	 * Whether the target database runs in MySQL-compatible mode (datcompatibility "B" or "M").
+	 * <p>
+	 * {@code serverConfiguration} is assigned only after {@code super()} construction, during which
+	 * this method can already be called (e.g. from {@link #getDefaultUseGetGeneratedKeys()} via
+	 * {@code initDefaultProperties()}); treat that phase as A mode, matching the historical default,
+	 * and re-run {@code initDefaultProperties()} once the real mode is known.
 	 */
 	public boolean isMMode() {
-		return "M".equals( compatibilityMode ) || "B".equals( compatibilityMode );
+		return serverConfiguration != null && serverConfiguration.getCompatibilityMode().isMySQLCompatible();
 	}
 
 	/**
@@ -1464,7 +1432,12 @@ public class GaussDBDialect extends Dialect {
 
 	@Override
 	public AggregateSupport getAggregateSupport() {
-		return GaussDBAggregateSupport.valueOf( this );
+		// M mode (MySQL-compatible) has no PG-style aggregate support: CREATE TYPE ... AS (...) is a
+		// syntax error, the XML function family is unavailable and the JSON aggregate read/write
+		// expressions are not adapted, so report no aggregate support at all (the base implementation;
+		// its probes throw UnsupportedOperationException, which the standard feature checks interpret
+		// as "not supported"). A mode (openGauss PG kernel) supports them through GaussDBAggregateSupport.
+		return isMMode() ? AggregateSupportImpl.INSTANCE : GaussDBAggregateSupport.valueOf( this );
 	}
 
 	@Override
@@ -1800,7 +1773,13 @@ public class GaussDBDialect extends Dialect {
 
 		jdbcTypeRegistry.addDescriptorIfAbsent( GaussDBCastingInetJdbcType.INSTANCE );
 		jdbcTypeRegistry.addDescriptorIfAbsent( GaussDBCastingIntervalSecondJdbcType.INSTANCE );
-		jdbcTypeRegistry.addDescriptorIfAbsent( GaussDBStructuredJdbcType.INSTANCE );
+		if ( !isMMode() ) {
+			// M mode (MySQL-compatible) does not support PG-style composite types
+			// (CREATE TYPE ... AS (...) is a syntax error), so don't register the structured
+			// type descriptor there; @Struct mappings are disabled anyway (see supportsStructTypes()).
+			// A mode (openGauss PG kernel) supports them.
+			jdbcTypeRegistry.addDescriptorIfAbsent( GaussDBStructuredJdbcType.INSTANCE );
+		}
 		jdbcTypeRegistry.addDescriptorIfAbsent( GaussDBCastingJsonJdbcType.JSON_INSTANCE );
 		jdbcTypeRegistry.addTypeConstructorIfAbsent( GaussDBCastingJsonArrayJdbcTypeConstructor.JSON_INSTANCE );
 

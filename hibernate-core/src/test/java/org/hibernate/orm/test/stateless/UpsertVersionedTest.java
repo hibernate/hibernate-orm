@@ -8,15 +8,15 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Version;
 import org.hibernate.StaleStateException;
-import org.hibernate.community.dialect.GaussDBDialect;
 import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQLDialect;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.RequiresDialects;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
@@ -54,12 +54,8 @@ public class UpsertVersionedTest {
 		});
 	}
 
+	@RequiresDialectFeature(feature = DialectFeatureChecks.NotGaussDBMMode.class, comment = "GaussDB M-mode ON DUPLICATE KEY UPDATE always returns affected=1 (no MySQL 0/1/2 distinction), so the INSERT...ON DUPLICATE KEY DO-NOTHING fallback returns 1 (read as new row inserted) instead of 0 (stale), defeating versioned upsert stale detection; A mode (PG ON CONFLICT semantics) is unaffected.")
 	@Test void testStaleUpsert(SessionFactoryScope scope) {
-		// GaussDB M-mode ON DUPLICATE KEY UPDATE always returns affected=1 (no MySQL 0/1/2 distinction),
-		// so the INSERT...ON DUPLICATE KEY DO-NOTHING fallback returns 1 (read as "new row inserted")
-		// instead of 0 (stale), defeating versioned upsert stale detection.
-		// A mode (PG ON CONFLICT semantics) is unaffected, so it is not skipped (zero regression).
-		Assumptions.assumeFalse( scope.getSessionFactory().getJdbcServices().getDialect() instanceof GaussDBDialect g && g.isMMode() );
 		scope.getSessionFactory().getSchemaManager().truncate();
 		scope.inStatelessTransaction( s -> {
 			s.insert(new Record(789L, 1L, "hello world"));

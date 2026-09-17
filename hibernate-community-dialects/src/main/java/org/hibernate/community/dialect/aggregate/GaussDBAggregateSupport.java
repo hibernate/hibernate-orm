@@ -56,6 +56,10 @@ import static org.hibernate.type.SqlTypes.XML_ARRAY;
 /**
  * Aggregate support for {@link org.hibernate.community.dialect.GaussDBDialect}.
  * <p>
+ * This class is only used in A mode (openGauss PG kernel): the JSON aggregate read/write
+ * expressions are not adapted for M mode (MySQL-compatible), so the dialect reports no
+ * aggregate support at all there (see {@code GaussDBDialect#getAggregateSupport}).
+ * <p>
  * GaussDB in MySQL-compatibility (M) mode does not support the {@code jsonb} type at all
  * (creating a {@code jsonb} table fails with a syntax error), so the dialect uses the
  * {@code json} type instead. The PostgreSQL {@code ->}/{@code ->>} operators <em>do</em>

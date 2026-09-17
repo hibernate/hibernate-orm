@@ -15,7 +15,9 @@ import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.persister.entity.EntityPersister;
 
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
@@ -52,16 +54,8 @@ public class UUIDBinaryTest {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.NotGaussDBMMode.class, comment = "GaussDB M mode maps BINARY to the MySQL binary type, and the gsjdbc4 driver sends byte parameters as bytea oids which the M-mode binary column accepts for insert but rejects for where id = ? comparisons (no implicit cast) - a driver-level limitation the dialect cannot fix; A mode (PG kernel) uses bytea, where setBytes/getBytes work.")
 	public void testUsage(SessionFactoryScope scope) {
-		// GaussDB M mode maps BINARY to MySQL `binary($l)` (dolphin extension; M mode rejects PG `bytea`).
-		// gsjdbc4 setBytes() sends a bytea oid that the M-mode binary column accepts for `insert ... values(?)`
-		// (the SharedDriverManagerConnectionProvider patches TypeInfoCache to infer the param type from the
-		// column) but REJECTS for a `where id=?` comparison param — "invalid byte sequence for encoding UTF8"
-		// (bytea->binary has no implicit cast), and `cast(? as binary)`/`?::binary` cannot work around it
-		// (any-typed / length-doubled "exceeds 16"). This is a deep gsjdbc4 + M-mode-binary driver limitation,
-		// not dialect-fixable (BINARY sqlType must map to a binary column; see tasks/lessons.md "P6 遗留").
-		// A mode (PG kernel) uses bytea and setBytes/getBytes work, so M-only skip.
-		org.junit.jupiter.api.Assumptions.assumeFalse( scope.getSessionFactory().getJdbcServices().getDialect() instanceof org.hibernate.community.dialect.GaussDBDialect g && g.isMMode() );
 		final MappingMetamodel domainModel = scope.getSessionFactory().getRuntimeMetamodels().getMappingMetamodel();
 		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor( Node.class );
 		final JdbcMapping jdbcMapping = entityDescriptor.getIdentifierMapping().getSingleJdbcMapping();

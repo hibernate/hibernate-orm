@@ -8,7 +8,6 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
-import org.hibernate.community.dialect.GaussDBDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
@@ -168,7 +167,6 @@ public class OrderedSetAggregateTest {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsHypotheticalSetFunctions.class)
-	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "GaussDB does not support hypothetical-set WITHIN GROUP (treats the within-group ORDER BY as a second argument, e.g. 'Function rank(integer,integer) does not exist'); only window (OVER) usage works")
 	public void testHypotheticalSetPercentRank(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -180,7 +178,6 @@ public class OrderedSetAggregateTest {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsHypotheticalSetFunctions.class)
-	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "GaussDB does not support hypothetical-set WITHIN GROUP (treats the within-group ORDER BY as a second argument, e.g. 'Function rank(integer,integer) does not exist'); only window (OVER) usage works")
 	public void testHypotheticalSetRank(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -192,7 +189,6 @@ public class OrderedSetAggregateTest {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsHypotheticalSetFunctions.class)
-	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "GaussDB does not support hypothetical-set WITHIN GROUP (treats the within-group ORDER BY as a second argument, e.g. 'Function rank(integer,integer) does not exist'); only window (OVER) usage works")
 	public void testHypotheticalSetRankWithGroupByHavingOrderByLimit(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

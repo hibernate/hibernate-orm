@@ -5,17 +5,18 @@
 package org.hibernate.test.scan.jandex;
 
 import jakarta.persistence.spi.Discoverable;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
-import javax.tools.ToolProvider;
 import org.hibernate.boot.archive.internal.StandardArchiveDescriptorFactory;
 import org.hibernate.boot.jaxb.configuration.spi.JaxbPersistenceImpl.JaxbPersistenceUnitImpl;
 import org.hibernate.boot.scan.internal.ScanningContextImpl;
 import org.hibernate.scan.jandex.ScanningProviderImpl;
+import org.hibernate.testing.orm.module.TestModule;
+import org.hibernate.test.scan.jandex.fixture.DescriptorMarker;
 import org.jboss.jandex.Indexer;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
+import org.jboss.shrinkwrap.api.asset.ByteArrayAsset;
 import org.jboss.shrinkwrap.api.exporter.ZipExporter;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.jupiter.api.Test;
@@ -65,32 +66,22 @@ class DescriptorScanningTests {
 	}
 
 	private JavaArchive module(Path directory, String suffix, boolean discoverable, Indexer indexer) throws Exception {
-		final var source = Files.createDirectories( directory.resolve( suffix ).resolve( "src" ) );
-		final var output = Files.createDirectories( directory.resolve( suffix ).resolve( "classes" ) );
 		final var packageName = "fixture." + suffix;
-		final var descriptor = source.resolve( "module-info.java" );
-		Files.writeString( descriptor, "/// @author Steve Ebersole\n" + ( discoverable ? "@" + packageName + ".Marker\n" : "" )
-				+ "module " + packageName + " { requires jakarta.persistence; }" );
-		final var marker = source.resolve( "Marker.java" );
-		Files.writeString( marker, """
-				package %s;
-				import jakarta.persistence.spi.Discoverable;
-				/// @author Steve Ebersole
-				@Discoverable
-				@java.lang.annotation.Retention(java.lang.annotation.RetentionPolicy.RUNTIME)
-				@java.lang.annotation.Target({java.lang.annotation.ElementType.MODULE, java.lang.annotation.ElementType.PACKAGE})
-				public @interface Marker {}
-				""".formatted( packageName ) );
-		final var packageInfo = source.resolve( "package-info.java" );
-		Files.writeString( packageInfo, "/// @author Steve Ebersole\n" + ( discoverable ? "@" + packageName + ".Marker\n" : "" ) + "package " + packageName + ";" );
-		assertThat( ToolProvider.getSystemJavaCompiler().run( null, null, null,
-				"--module-path", Path.of( Discoverable.class.getProtectionDomain().getCodeSource().getLocation().toURI() ).toString(),
-				"-d", output.toString(), descriptor.toString(), marker.toString(), packageInfo.toString() ) ).isZero();
-		final var archive = ShrinkWrap.create( JavaArchive.class, suffix + ".jar" );
-		try ( var files = Files.walk( output ) ) {
-			for ( var file : files.filter( path -> path.toString().endsWith( ".class" ) ).toList() ) {
-				archive.addAsResource( file.toFile(), output.relativize( file ).toString() );
-				try ( var stream = Files.newInputStream( file ) ) {
+		final var archive = ShrinkWrap.create( JavaArchive.class, suffix + ".jar" )
+				.addClass( DescriptorMarker.class );
+		if ( discoverable ) {
+			archive.addClass( Class.forName( packageName + ".package-info" ) );
+		}
+		final var declaration = ( discoverable ? "@" + DescriptorMarker.class.getName() + "\n" : "" )
+				+ "module " + packageName + " {}";
+		final var module = TestModule.load( archive, declaration, directory, DescriptorMarker.class, Discoverable.class );
+		try ( var stream = module.module().getResourceAsStream( "module-info.class" ) ) {
+			assertThat( stream ).isNotNull();
+			archive.add( new ByteArrayAsset( stream.readAllBytes() ), "module-info.class" );
+		}
+		for ( var entry : archive.getContent().entrySet() ) {
+			if ( entry.getKey().get().endsWith( ".class" ) ) {
+				try ( var stream = entry.getValue().getAsset().openStream() ) {
 					indexer.index( stream );
 				}
 			}

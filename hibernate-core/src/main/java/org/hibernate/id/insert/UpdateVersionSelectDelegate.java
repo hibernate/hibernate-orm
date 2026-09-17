@@ -117,7 +117,7 @@ public class UpdateVersionSelectDelegate extends AbstractGeneratedValuesMutation
 			operation.getBindPlan().bindValues( valueBindings, operation, session );
 			valueBindings.beforeStatement( statement, session );
 			final int rowCount = session.getJdbcCoordinator().getResultSetReturn().executeUpdate( statement, sql );
-			operation.checkResult( rowCount, -1, sql, session.getFactory() );
+			operation.checkResult( rowCount, statement, -1, sql, session.getFactory() );
 		}
 		catch (SQLException e) {
 			throw session.getJdbcServices().getSqlExceptionHelper().convert( e, "Unable to execute update", sql );

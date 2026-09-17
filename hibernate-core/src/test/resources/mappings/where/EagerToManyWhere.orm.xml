@@ -21,7 +21,7 @@
             </one-to-many>
 
             <one-to-many name="categoriesWithDescOneToMany" fetch="EAGER" fetch-mode="JOIN" target-entity="Category" classification="SET">
-                <sql-restriction>description is not null</sql-restriction>
+                <sql-restriction>description_txt is not null</sql-restriction>
                 <join-column name="productWithDescOneToManyId"/>
             </one-to-many>
 
@@ -33,7 +33,7 @@
             </many-to-many>
 
             <many-to-many name="categoriesWithDescManyToMany" fetch="EAGER" fetch-mode="JOIN" target-entity="Category" classification="SET">
-                <sql-restriction>description is not null</sql-restriction>
+                <sql-restriction>description_txt is not null</sql-restriction>
                 <join-table name="categoriesWithDescManyToMany">
                     <join-column name="productId"/>
                     <inverse-join-column name="categoryId"/>
@@ -41,7 +41,7 @@
             </many-to-many>
 
             <many-to-many name="categoriesWithDescIdLt4ManyToMany" fetch="EAGER" fetch-mode="JOIN" target-entity="Category" classification="SET">
-                <sql-restriction>description is not null</sql-restriction>
+                <sql-restriction>description_txt is not null</sql-restriction>
                 <join-table name="categoriesWithDescIdLt4MToM">
                     <join-column name="productId"/>
                     <inverse-join-column name="categoryId"/>
@@ -53,7 +53,7 @@
 
     <entity class="Category" access="PROPERTY">
         <table name="CATEGORY"/>
-        <sql-restriction>inactive = 0</sql-restriction>
+        <sql-restriction>inactive_flag = 0</sql-restriction>
 
         <attributes>
             <id name="id">
@@ -62,9 +62,9 @@
 
             <basic name="name"/>
 
-            <basic name="description"/>
+            <basic name="description" column="description_txt"/>
 
-            <basic name="inactive"/>
+            <basic name="inactive" column="inactive_flag"/>
         </attributes>
     </entity>
 

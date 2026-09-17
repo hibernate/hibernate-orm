@@ -34,9 +34,9 @@ public class EagerToManyWhereUseClassWhereTest {
 	@JiraKey( "HHH-13011" )
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsNestedJoinGroups.class)
 	public void testAssociatedWhereClause(SessionFactoryScope factoryScope) {
-		// GaussDB M mode reports "inactive is ambiguous" for the where fragment on Category when EAGER-fetched
-		// across multiple joins; user-supplied SQL is not table-qualified and the dialect does not rewrite it.
-		org.junit.jupiter.api.Assumptions.assumeFalse( factoryScope.getSessionFactory().getJdbcServices().getDialect() instanceof org.hibernate.community.dialect.GaussDBDialect g && g.isMMode() );
+		// The Category flag column is named `inactive_flag` (rather than `inactive`) to avoid the
+		// bare `inactive` column clash that makes A mode report "inactive is ambiguous" for the
+		// where fragment when Category is EAGER-fetched across joins.
 		var product = new Product();
 		var flowers = new Category();
 		flowers.setId( 1 );

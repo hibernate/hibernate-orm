@@ -6,6 +6,7 @@ import org.hibernate.dialect.sql.ast.spi.DoNothingSyntax;
 import org.hibernate.dialect.sql.ast.spi.PaginationRenderingPlan;
 import org.hibernate.dialect.sql.ast.spi.PaginationRenderingSupport;
 import org.hibernate.dialect.sql.ast.spi.InsertConflictRenderingSupport;
+import org.hibernate.dialect.sql.ast.spi.InsertConflictRenderingPlan;
 import org.hibernate.dialect.sql.ast.spi.StandardInsertConflictRenderingSupport;
 import org.hibernate.dialect.sql.ast.spi.SelectItemReferenceStrategy;
 import org.hibernate.dialect.sql.ast.spi.TableReferenceAliasContext;
@@ -119,13 +120,23 @@ public class GaussDBSqlAstTranslator<T extends JdbcOperation> extends PostgreSQL
 			// because M mode has no implicit `excluded` pseudo-row (MySQL-standard).
 			return StandardInsertConflictRenderingSupport.ON_DUPLICATE_KEY_VALUES_FUNCTION;
 		}
-		// A mode (openGauss): the MySQL-family syntax supports the implicit `excluded` pseudo-row,
-		// but the `nothing` action raises "syntax error at end of input" on 505.2, so emulate
-		// DO NOTHING via self-assignment as well.
-		return StandardInsertConflictRenderingSupport.onDuplicateKey(
-				DoNothingSyntax.SELF_ASSIGNMENT,
-				ValuesRowReferenceStyle.IMPLICIT_EXCLUDED
-		);
+		// A mode (openGauss): the MySQL-family syntax supports the implicit `excluded` pseudo-row, but
+		// A mode rejects updating primary/unique key columns in ON DUPLICATE KEY UPDATE, and the base
+		// self-assignment emulation renders `<first target column>=<first target column>`, which is the
+		// key column for typical inserts. So DO NOTHING (without constraint columns or a predicate) is
+		// emulated through constraint-violation handling instead; anything else renders as
+		// `on duplicate key update`.
+		return request -> switch ( request.action() ) {
+			case NONE -> new InsertConflictRenderingPlan.None();
+			case DO_NOTHING -> !request.hasConstraintColumns() && request.predicate() == null
+					? new InsertConflictRenderingPlan.ConstraintViolation()
+					: new InsertConflictRenderingPlan.OnDuplicateKey(
+							DoNothingSyntax.SELF_ASSIGNMENT,
+							ValuesRowReferenceStyle.IMPLICIT_EXCLUDED );
+			case DO_UPDATE -> new InsertConflictRenderingPlan.OnDuplicateKey(
+					DoNothingSyntax.SELF_ASSIGNMENT,
+					ValuesRowReferenceStyle.IMPLICIT_EXCLUDED );
+		};
 	}
 
 	@Override

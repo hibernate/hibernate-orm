@@ -1,5 +1,6 @@
 package org.hibernate.orm.test.where.annotations;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -14,7 +15,9 @@ import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
@@ -50,9 +53,9 @@ public class EagerToManyWhereUseClassWhereViaAnnotationTest {
 	@JiraKey( value = "HHH-15936" )
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsNestedJoinGroups.class)
 	public void testAssociatedWhereClause(SessionFactoryScope factoryScope) {
-		// GaussDB M mode reports "inactive is ambiguous" for the @SQLRestriction on Category when EAGER-fetched
-		// across multiple joins; user-supplied SQL is not table-qualified and the dialect does not rewrite it.
-		org.junit.jupiter.api.Assumptions.assumeFalse( factoryScope.getSessionFactory().getJdbcServices().getDialect() instanceof org.hibernate.community.dialect.GaussDBDialect g && g.isMMode() );
+		// The Category flag column is named `inactive_flag` (rather than `inactive`) to avoid the
+		// bare `inactive` column clash that makes A mode report "inactive is ambiguous" for the
+		// @SQLRestriction when Category is EAGER-fetched across joins.
 		var product = new Product();
 		var flowers = new Category();
 		flowers.id = 1;
@@ -182,7 +185,7 @@ public class EagerToManyWhereUseClassWhereViaAnnotationTest {
 
 	@Entity(name = "Category")
 	@Table(name = "CATEGORY")
-	@SQLRestriction("inactive = 0")
+	@SQLRestriction("inactive_flag = 0")
 	public static class Category {
 		@Id
 		private int id;
@@ -191,6 +194,7 @@ public class EagerToManyWhereUseClassWhereViaAnnotationTest {
 
 		private String description;
 
+		@Column(name = "inactive_flag")
 		private int inactive;
 	}
 }

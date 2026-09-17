@@ -12,9 +12,11 @@ import java.util.function.Consumer;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
+import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SubselectFetch;
+import org.hibernate.loader.ast.spi.CascadingFetchProfile;
 import org.hibernate.loader.ast.spi.Loadable;
 import org.hibernate.loader.ast.spi.Loader;
 import org.hibernate.metamodel.CollectionClassification;
@@ -411,7 +413,7 @@ public class LoaderSelectBuilder {
 				loadQueryInfluencers,
 				lockOptions != null ? lockOptions : new LockOptions(),
 				determineGraphTraversalState( loadQueryInfluencers, creationContext.getJpaMetamodel() ),
-				determineWhetherToForceIdSelection( numberOfKeysToLoad, restrictedParts ),
+				determineWhetherToForceIdSelection( loadable, numberOfKeysToLoad, restrictedParts, loadQueryInfluencers ),
 				jdbcParameterConsumer,
 				sqlAliasBasGenerator
 		);
@@ -442,7 +444,11 @@ public class LoaderSelectBuilder {
 		);
 	}
 
-	private static boolean determineWhetherToForceIdSelection(int numberOfKeysToLoad, List<ModelPart> restrictedParts) {
+	private static boolean determineWhetherToForceIdSelection(
+			Loadable loadable,
+			int numberOfKeysToLoad,
+			List<ModelPart> restrictedParts,
+			LoadQueryInfluencers influencers) {
 		if ( numberOfKeysToLoad > 1 ) {
 			return true;
 		}
@@ -461,7 +467,9 @@ public class LoaderSelectBuilder {
 			}
 		}
 
-		return false;
+		// Force identifier selection if the identifier type cascades on refresh
+		return influencers.getEnabledCascadingFetchProfile() == CascadingFetchProfile.REFRESH
+				&& loadable.asEntityMappingType().getEntityPersister().getIdentifierCascadeStyle().doCascade( CascadingActions.REFRESH );
 	}
 
 	private static EntityGraphTraversalState determineGraphTraversalState(

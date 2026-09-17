@@ -12,6 +12,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CascadeStyle;
+import org.hibernate.engine.spi.CascadeStyles;
 import org.hibernate.engine.spi.CascadingAction;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.Status;
@@ -93,6 +94,25 @@ public final class Cascade {
 			}
 			else {
 				entry = null;
+			}
+
+			final var identifierCascadeStyle = persister.getIdentifierCascadeStyle();
+			if ( identifierCascadeStyle != CascadeStyles.NONE
+				&& action.appliesTo( persister.getIdentifierType(), identifierCascadeStyle ) ) {
+				cascadeProperty(
+						action,
+						cascadePoint,
+						eventSource,
+						persister.getEntityName(),
+						null,
+						parent,
+						persister.getIdentifier( parent, eventSource ),
+						persister.getIdentifierType(),
+						identifierCascadeStyle,
+						persister.getIdentifierPropertyName(),
+						anything,
+						false
+				);
 			}
 
 			final Type[] types = persister.getPropertyTypes();

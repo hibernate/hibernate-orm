@@ -132,9 +132,8 @@ public final class DialectContext {
 			default -> dialect instanceof InformixDialect
 					// informix clock has low resolution on Mac, so wait longer
 					? 1_200
-					// Instead of waiting 1 millisecond, let's wait 3 to not run into issues with e.g. Sybase,
-					// which has a resolution of 1/300th of a second for timestamps
-					: 3;
+					// Wait at least 4 milliseconds to exceed Sybase's timestamp resolution of 1/300 second.
+					: 4;
 		};
 		try {
 			Thread.sleep( sleepMillis );

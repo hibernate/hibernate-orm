@@ -101,6 +101,14 @@ public interface SharedSessionContractImplementor
 	}
 
 	/**
+	 * Whether this session has access to all tenant partitions.
+	 */
+	default boolean isRootTenant() {
+		final var resolver = getFactory().getCurrentTenantIdentifierResolver();
+		return resolver != null && resolver.isRoot( getTenantIdentifierValue() );
+	}
+
+	/**
 	 * Obtain the {@link TypeConfiguration} for the factory which created this session.
 	 */
 	@Override

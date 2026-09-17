@@ -6,6 +6,7 @@ package org.hibernate.sql.ast.internal.model.builder;
 
 import org.hibernate.action.queue.spi.meta.TableDescriptorAsTableMapping;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
+import org.hibernate.engine.internal.TenantIdHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.ast.spi.model.builder.ColumnValueBindingBuilder;
@@ -26,6 +27,7 @@ public class VersionUpdateBuilder implements TableMutationBuilder<TableUpdateSta
 	private final MutatingTableReference tableReference;
 
 	private final List<ColumnValueBinding> restrictionBindings = new ArrayList<>();
+	private final List<ColumnValueBinding> tenantBindings = new ArrayList<>();
 	private final ColumnValueBinding newVersionBinding;
 
 	private final List<ColumnValueParameter> parameterBinders;
@@ -72,6 +74,12 @@ public class VersionUpdateBuilder implements TableMutationBuilder<TableUpdateSta
 				(o) -> parameterBinders.add( (ColumnValueParameter) o )
 		);
 		restrictionBindings.add( oldVersionBinding );
+		final var tenantColumn = TenantIdHelper.tenantIdColumn( mutationTarget, tableReference.getTableName() );
+		if ( tenantColumn != null ) {
+			tenantBindings.add( ColumnValueBindingBuilder.createTenantRestriction(
+					tenantColumn, tableReference,
+					parameter -> parameterBinders.add( (ColumnValueParameter) parameter ) ) );
+		}
 	}
 
 	@Override
@@ -86,29 +94,13 @@ public class VersionUpdateBuilder implements TableMutationBuilder<TableUpdateSta
 
 	@Override
 	public TableUpdateStandard buildMutation() {
-		var sqlBuffer = new StringBuilder( "update " );
-		sqlBuffer.append( tableReference.getTableName() );
-		sqlBuffer.append( " set " ).append( newVersionBinding.getColumnReference().getColumnExpression() ).append( " = ? " );
-		sqlBuffer.append( " where " );
-		boolean first = true;
-		for ( int i = 0; i < restrictionBindings.size(); i++ ) {
-			if ( !first ) {
-				sqlBuffer.append( " and " );
-			}
-			first = false;
-
-			var restrictionBinding = restrictionBindings.get( i );
-			sqlBuffer.append( restrictionBinding.getColumnReference().getColumnExpression() ).append( " = ? " );
-		}
-
-		var sql = sqlBuffer.toString();
 		return new TableUpdateStandard(
 				tableReference,
 				mutationTarget,
-				sql,
+				"update version for " + mutationTarget.getEntityName(),
 				List.of( newVersionBinding ),
 				restrictionBindings,
-				List.of(),
+				tenantBindings,
 				parameterBinders
 		);
 	}

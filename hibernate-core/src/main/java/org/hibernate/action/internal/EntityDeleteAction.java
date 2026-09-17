@@ -6,6 +6,7 @@ package org.hibernate.action.internal;
 
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
+import org.hibernate.engine.internal.RootTenantCache;
 import org.hibernate.AssertionFailure;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -62,6 +63,7 @@ public class EntityDeleteAction extends EntityAction {
 		this.version = version;
 		this.isCascadeDeleteEnabled = isCascadeDeleteEnabled;
 		this.state = state;
+		RootTenantCache.invalidateEntity( id, persister, session );
 	}
 
 	/**
@@ -80,6 +82,7 @@ public class EntityDeleteAction extends EntityAction {
 		version = null;
 		isCascadeDeleteEnabled = false;
 		state = null;
+		RootTenantCache.invalidateEntity( id, persister, session );
 	}
 
 	@Override

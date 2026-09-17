@@ -15,6 +15,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 
+import java.sql.PreparedStatement;
 import java.util.Map;
 
 /// @author Steve Ebersole
@@ -58,7 +59,7 @@ public class FixupBindPlan implements BindPlan, OperationResultChecker {
 	}
 
 	@Override
-	public boolean checkResult(int affectedRowCount, int batchPosition, String sqlString, SessionFactoryImplementor f) {
+	public boolean checkResult(int affectedRowCount, PreparedStatement statement, int batchPosition, String sqlString, SessionFactoryImplementor f) {
 		// technically we could make sure 1 row was affected...
 		return true;
 	}

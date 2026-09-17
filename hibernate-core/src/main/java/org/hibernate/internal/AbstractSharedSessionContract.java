@@ -236,6 +236,7 @@ abstract class AbstractSharedSessionContract
 	private final Interceptor interceptor;
 
 	private final Object tenantIdentifier;
+	private final boolean rootTenant;
 	private final boolean readOnly;
 	private final TimeZone jdbcTimeZone;
 
@@ -289,6 +290,8 @@ abstract class AbstractSharedSessionContract
 						.createTransactionContext( this );
 
 		tenantIdentifier = getTenantId( factoryOptions, options );
+		final var tenantResolver = factory.getCurrentTenantIdentifierResolver();
+		rootTenant = tenantResolver != null && tenantResolver.isRoot( tenantIdentifier );
 		readOnly = options.isReadOnly();
 		jdbcBatchSize = options.getJdbcBatchSize();
 		cacheMode = options.getInitialCacheMode();
@@ -801,13 +804,10 @@ abstract class AbstractSharedSessionContract
 			if ( tenantIdentifier == null ) {
 				throw new HibernateException( "SessionFactory configured for multi-tenancy, but no tenant identifier specified" );
 			}
-			else {
-				final var resolver = factory.getCurrentTenantIdentifierResolver();
-				if ( resolver==null || !resolver.isRoot( tenantIdentifier ) ) {
-					// turn on the filter, unless this is the "root" tenant with access to all partitions
-					loadQueryInfluencers.enableFilter( TenantIdBinder.FILTER_NAME )
-							.setParameter( TenantIdBinder.PARAMETER_NAME, tenantIdentifier );
-				}
+			else if ( !rootTenant ) {
+				// turn on the filter, unless this is the "root" tenant with access to all partitions
+				loadQueryInfluencers.enableFilter( TenantIdBinder.FILTER_NAME )
+						.setParameter( TenantIdBinder.PARAMETER_NAME, tenantIdentifier );
 			}
 		}
 	}
@@ -1035,6 +1035,11 @@ abstract class AbstractSharedSessionContract
 	@Override
 	public final Object getTenantIdentifierValue() {
 		return tenantIdentifier;
+	}
+
+	@Override
+	public final boolean isRootTenant() {
+		return rootTenant;
 	}
 
 	@Override
@@ -1281,11 +1286,9 @@ abstract class AbstractSharedSessionContract
 			}
 
 			if ( !useDatabaseUserForRowLevelSecurity() ) {
-				final var resolver = factory.getCurrentTenantIdentifierResolver();
-				final boolean root = resolver != null && resolver.isRoot( tenantIdentifier );
 				try {
 					getRowLevelSecurity()
-							.setTenantIdentifier( connection, getTenantIdentifier(), root );
+							.setTenantIdentifier( connection, getTenantIdentifier(), rootTenant );
 				}
 				catch (SQLException e) {
 					throw getJdbcServices().getSqlExceptionHelper()
@@ -1634,7 +1637,7 @@ abstract class AbstractSharedSessionContract
 	@Override
 	@Nonnull
 	public CacheMode getCacheMode() {
-		return cacheMode;
+		return rootTenant ? CacheMode.IGNORE : cacheMode;
 	}
 
 	@Override

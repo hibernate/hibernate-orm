@@ -241,7 +241,10 @@ public class ResultsHelper {
 		} );
 	}
 
-	private static boolean isCachePutEnabled(SharedSessionContract session, CacheStoreMode cacheStoreMode) {
+	private static boolean isCachePutEnabled(SharedSessionContractImplementor session, CacheStoreMode cacheStoreMode) {
+		if ( session.isRootTenant() ) {
+			return false;
+		}
 		return cacheStoreMode == null
 				? session.getCacheMode().isPutEnabled()
 				: cacheStoreMode != CacheStoreMode.BYPASS;

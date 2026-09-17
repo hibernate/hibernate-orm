@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -90,21 +91,35 @@ public class StandardGraphBuilder implements GraphBuilder {
 		sortedGroups.sort( comparingInt( FlushOperationGroup::ordinal ) );
 
 		long nodeId = 1;
-		for ( FlushOperationGroup g : sortedGroups ) {
-			final GroupNode n = new GroupNode( g, nodeId++ );
-			nodes.add( n );
+		boolean hasExecutionPrerequisites = false;
+		for ( var group : sortedGroups ) {
+			final var node = new GroupNode( group, nodeId++ );
+			nodes.add( node );
 
 			// Pre-initialize edge lists for all nodes to avoid computeIfAbsent overhead
-			outgoing.put( n, new ArrayList<>() );
+			outgoing.put( node, new ArrayList<>() );
+			if ( !hasExecutionPrerequisites ) {
+				for ( var operation : group.operations() ) {
+					if ( operation.getExecutionPrerequisite() != null ) {
+						hasExecutionPrerequisites = true;
+						break;
+					}
+				}
+			}
 
-			if ( g.kind() == MutationKind.INSERT ) {
-				insertNodeByTable.computeIfAbsent( (g.tableExpression()), k -> new ArrayList<>() ).add( n );
-			}
-			else if ( g.kind() == MutationKind.UPDATE || g.kind() == MutationKind.UPDATE_ORDER ) {
-				updateNodeByTable.computeIfAbsent( (g.tableExpression()), k -> new ArrayList<>() ).add( n );
-			}
-			else if ( g.kind() == MutationKind.DELETE ) {
-				deleteNodeByTable.computeIfAbsent( (g.tableExpression()), k -> new ArrayList<>() ).add( n );
+			switch ( group.kind() ) {
+				case INSERT ->
+						insertNodeByTable.computeIfAbsent( group.tableExpression(),
+										k -> new ArrayList<>() )
+								.add( node );
+				case UPDATE, UPDATE_ORDER ->
+						updateNodeByTable.computeIfAbsent( group.tableExpression(),
+										k -> new ArrayList<>() )
+								.add( node );
+				case DELETE ->
+						deleteNodeByTable.computeIfAbsent( group.tableExpression(),
+										k -> new ArrayList<>() )
+								.add( node );
 			}
 		}
 
@@ -119,6 +134,9 @@ public class StandardGraphBuilder implements GraphBuilder {
 		);
 
 		edgeId = createInsertToOrderUpdateEdges( insertNodeByTable, updateNodeByTable, outgoing, edgeId );
+		if ( hasExecutionPrerequisites ) {
+			edgeId = createExecutionPrerequisiteEdges( nodes, outgoing, edgeId );
+		}
 
 		// Create unique-slot ordering edges from runtime release/occupy facts.
 		if ( planningOptions.orderByUniqueKeySlots() ) {
@@ -148,6 +166,33 @@ public class StandardGraphBuilder implements GraphBuilder {
 		}
 
 		return new Graph( nodes, outgoing );
+	}
+
+	private long createExecutionPrerequisiteEdges(
+			List<GroupNode> nodes, Map<GroupNode, List<GraphEdge>> outgoing, long edgeId) {
+		final Map<FlushOperation, GroupNode> nodesByOperation = new IdentityHashMap<>();
+		for ( var node : nodes ) {
+			for ( var operation : node.group().operations() ) {
+				nodesByOperation.put( operation, node );
+			}
+		}
+		for ( var node : nodes ) {
+			final Set<GroupNode> prerequisites = new HashSet<>();
+			for ( var operation : node.group().operations() ) {
+				final var prerequisite = operation.getExecutionPrerequisite();
+				if ( prerequisite != null ) {
+					final var prerequisiteNode = nodesByOperation.get( prerequisite );
+					if ( prerequisiteNode == null ) {
+						throw new IllegalStateException( "Flush operation prerequisite is missing from the execution graph" );
+					}
+					if ( prerequisiteNode != node && prerequisites.add( prerequisiteNode ) ) {
+						outgoing.get( prerequisiteNode ).add( GraphEdge.requiredOrder(
+								prerequisiteNode, node, prerequisiteNode, node, Util.EMPTY_SELECTABLES, null, edgeId++ ) );
+					}
+				}
+			}
+		}
+		return edgeId;
 	}
 
 	private boolean hasMultiOperationUpdateGroups(List<FlushOperationGroup> groups) {

@@ -240,7 +240,7 @@ public class SingleStatementBatchImpl implements SingleStatementBatch {
 			return;
 		}
 		try {
-			if ( !resultChecker.checkResult( 0, batchPosition, sqlString, session.getFactory() ) ) {
+			if ( !resultChecker.checkResult( 0, statement, batchPosition, sqlString, session.getFactory() ) ) {
 				throw staleStateException;
 			}
 		}

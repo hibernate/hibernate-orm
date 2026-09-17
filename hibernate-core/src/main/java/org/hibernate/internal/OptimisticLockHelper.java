@@ -8,6 +8,7 @@ import org.hibernate.action.spi.AfterTransactionCompletionProcess;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.internal.CacheHelper.CacheLock;
+import org.hibernate.engine.internal.RootTenantCache;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
@@ -26,6 +27,7 @@ public final class OptimisticLockHelper {
 
 	public static void forceVersionIncrement(Object object, EntityEntry entry, SharedSessionContractImplementor session) {
 		final var persister = entry.getPersister();
+		RootTenantCache.invalidateEntity( entry.getId(), persister, session );
 		final Object previousVersion = entry.getVersion();
 		final var cacheLock = writingToCache( persister, cache -> {
 			final Object cacheKey = cache.generateCacheKey(

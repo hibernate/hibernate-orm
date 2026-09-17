@@ -27,6 +27,7 @@ import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.mutation.TemporalMutationHelper;
 
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.List;
 
@@ -290,12 +291,14 @@ public class EntityInsertBindPlan implements BindPlan, OperationResultChecker {
 	public boolean checkResult(
 			FlushOperation flushOperation,
 			int affectedRowCount,
+			PreparedStatement statement,
 			int batchPosition,
 			String sqlString,
 			SessionFactoryImplementor sessionFactory) throws SQLException {
 		return checkResult(
 				(EntityTableDescriptor) flushOperation.getMutatingTableDescriptor(),
 				affectedRowCount,
+				statement,
 				batchPosition,
 				sqlString,
 				sessionFactory
@@ -305,21 +308,24 @@ public class EntityInsertBindPlan implements BindPlan, OperationResultChecker {
 	@Override
 	public boolean checkResult(
 			int affectedRowCount,
+			PreparedStatement statement,
 			int batchPosition,
 			String sqlString,
 			SessionFactoryImplementor sessionFactory) throws SQLException {
-		return checkResult( tableDescriptor, affectedRowCount, batchPosition, sqlString, sessionFactory );
+		return checkResult( tableDescriptor, affectedRowCount, statement, batchPosition, sqlString, sessionFactory );
 	}
 
 	private boolean checkResult(
 			EntityTableDescriptor tableDescriptor,
 			int affectedRowCount,
+			PreparedStatement statement,
 			int batchPosition,
 			String sqlString,
 			SessionFactoryImplementor sessionFactory) throws SQLException {
 		return Checkers.identifiedResultsCheck(
 				tableDescriptor.insertDetails().getExpectation(),
 				affectedRowCount,
+				statement,
 				batchPosition,
 				entityPersister,
 				tableDescriptor,

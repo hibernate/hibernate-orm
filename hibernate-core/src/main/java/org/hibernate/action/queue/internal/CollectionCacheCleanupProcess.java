@@ -7,6 +7,7 @@ package org.hibernate.action.queue.internal;
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 
+import org.hibernate.engine.internal.RootTenantCache;
 import org.hibernate.action.spi.AfterTransactionCompletionProcess;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -38,6 +39,7 @@ final class CollectionCacheCleanupProcess implements AfterTransactionCompletionP
 			SessionImplementor session) {
 		final var resolvedMutation = mutation.resolveKey( session );
 		final var persister = resolvedMutation.getPersister();
+		RootTenantCache.invalidateCollection( resolvedMutation.getKey(), persister, session );
 		return usingCache(
 				persister,
 				cache -> {

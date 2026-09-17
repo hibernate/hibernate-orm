@@ -280,6 +280,9 @@ public abstract class SqlAstTranslatorWithMerge<T extends JdbcOperation> extends
 		for (int i = 0; i < optimisticLockBindings.size(); i++) {
 			final ColumnValueBinding binding = optimisticLockBindings.get( i );
 			appendSql(" and ");
+			if ( renderTenantRestriction( binding, "t" ) ) {
+				continue;
+			}
 			binding.getColumnReference().appendColumnForWrite( this, "t" );
 			appendSql("<=");
 			binding.getValueExpression().accept( this );

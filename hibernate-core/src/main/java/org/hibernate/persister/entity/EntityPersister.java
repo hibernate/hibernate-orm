@@ -8,6 +8,7 @@ import jakarta.persistence.Entity;
 import jakarta.annotation.Nullable;
 import jakarta.annotation.Nonnull;
 import org.hibernate.HibernateException;
+import org.hibernate.loader.ast.internal.TenantIdLoader;
 import org.hibernate.Incubating;
 import org.hibernate.Internal;
 import org.hibernate.LockMode;
@@ -938,6 +939,10 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 * @return null if there is no row in the database
 	 */
 	Object[] getDatabaseSnapshot(Object id, SharedSessionContractImplementor session) throws HibernateException;
+
+	default TenantIdLoader getTenantIdLoader() {
+		return null;
+	}
 
 	Object getIdByUniqueKey(Object key, String uniquePropertyName, SharedSessionContractImplementor session);
 

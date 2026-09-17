@@ -4,6 +4,9 @@
  */
 package org.hibernate.action.queue.internal.decompose.entity;
 
+import static org.hibernate.engine.internal.TenantIdHelper.MissingRowPolicy.THROW;
+
+import org.hibernate.engine.internal.TenantIdHelper;
 import org.hibernate.action.queue.spi.decompose.entity.EntityMutationPlanContributor;
 import org.hibernate.action.queue.spi.decompose.entity.UpdateCacheHandling;
 
@@ -11,6 +14,7 @@ import org.hibernate.action.internal.EntityUpdateAction;
 import org.hibernate.action.queue.spi.MutationKind;
 import org.hibernate.action.queue.spi.StatementShapeKey;
 import org.hibernate.action.queue.spi.bind.PostExecutionCallback;
+import org.hibernate.action.queue.spi.bind.PreExecutionCallback;
 import org.hibernate.action.queue.internal.decompose.collection.DecompositionSupport;
 import org.hibernate.action.queue.spi.bind.GeneratedValuesCollector;
 import org.hibernate.action.queue.spi.decompose.DecompositionContext;
@@ -22,6 +26,7 @@ import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.event.spi.PreUpdateEvent;
@@ -125,6 +130,67 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 
 	@Override
 	public void decompose(
+			EntityUpdateAction action,
+			int ordinalBase,
+			SharedSessionContractImplementor session,
+			DecompositionContext decompositionContext,
+			Consumer<FlushOperation> operationConsumer) {
+		if ( TenantIdHelper.needsMultiTableUpdateCheck( entityPersister, session ) ) {
+			final List<FlushOperation> operations = new ArrayList<>();
+			decomposeUpdate( action, ordinalBase, session, decompositionContext, operations::add );
+			applyTenantOwnershipCheck( action, operations );
+			operations.forEach( operationConsumer );
+		}
+		else {
+			decomposeUpdate( action, ordinalBase, session, decompositionContext, operationConsumer );
+		}
+	}
+
+	private void applyTenantOwnershipCheck(EntityUpdateAction action, List<FlushOperation> operations) {
+		final String tenantTable = entityPersister.physicalTableNameForMutation(
+				TenantIdHelper.tenantIdAttribute( entityPersister ).getSelectable( 0 ) );
+		if ( operations.stream()
+				.anyMatch( operation -> operation.getKind() != MutationKind.NO_OP
+										&& !tenantTable.equals( operation.getTableExpression() ) ) ) {
+			for ( var flushOperation : operations ) {
+				if ( flushOperation.getKind() == MutationKind.UPDATE
+						&& TenantIdHelper.checksTenantId( entityPersister, flushOperation.getJdbcOperation() ) ) {
+					for ( var operation : operations ) {
+						if ( operation.getKind() != MutationKind.NO_OP && operation != flushOperation ) {
+							operation.setExecutionPrerequisite( flushOperation );
+						}
+					}
+					return;
+				}
+			}
+			final var ownershipCheck = new PreExecutionCallback() {
+				private boolean checked;
+
+				@Override
+				public boolean requiresBatchFlush() {
+					return !checked;
+				}
+
+				@Override
+				public boolean beforeExecution(SessionImplementor session) {
+					if ( !checked ) {
+						TenantIdHelper.checkStoredTenantOwnership( action.getId(), entityPersister, session, THROW );
+						checked = true;
+					}
+					return true;
+				}
+			};
+			for ( var operation : operations ) {
+				if ( operation.getKind() != MutationKind.NO_OP ) {
+					final var previous = operation.getPreExecutionCallback();
+					operation.setPreExecutionCallback(
+							previous == null ? ownershipCheck : previous.and( ownershipCheck ) );
+				}
+			}
+		}
+	}
+
+	private void decomposeUpdate(
 			EntityUpdateAction action,
 			int ordinalBase,
 			SharedSessionContractImplementor session,
@@ -771,6 +837,9 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 		if ( entityPersister.hasPartitionedSelectionMapping() ) {
 			applyPartitionedSelectionRestrictions( builders );
 		}
+		for ( var builder : builders.values() ) {
+			TenantIdHelper.applyTenantRestriction( entityPersister, builder );
+		}
 	}
 
 
@@ -857,6 +926,9 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction>
 		// Apply partitioned selection restrictions if needed
 		if ( entityPersister.hasPartitionedSelectionMapping() ) {
 			applyPartitionedSelectionRestrictions( builders );
+		}
+		for ( var builder : builders.values() ) {
+			TenantIdHelper.applyTenantRestriction( entityPersister, builder );
 		}
 	}
 

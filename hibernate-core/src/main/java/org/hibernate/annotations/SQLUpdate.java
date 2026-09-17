@@ -23,10 +23,18 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * The given {@linkplain #sql SQL statement} must have exactly the number of JDBC
  * {@code ?} parameters that Hibernate expects, that is, one for each column
  * mapped by the entity, in the exact order Hibernate expects. In particular,
- * the {@linkplain jakarta.persistence.Id primary key} columns come last unless
- * the entity is {@linkplain jakarta.persistence.Version versioned}, in which case
+ * the {@linkplain jakarta.persistence.Id primary key} columns follow the updated
+ * column values. If the entity is {@linkplain jakarta.persistence.Version versioned},
  * there must be a second JDBC parameter for the version column, which comes
  * after the primary key.
+ * <p>
+ * When the affected table has a {@linkplain TenantId tenant id} column outside
+ * the primary key, the statement may declare one additional JDBC parameter,
+ * after all the usual parameters, for the session tenant id.
+ * The additional tenant parameter is bound to {@code null} for a
+ * {@linkplain org.hibernate.context.spi.CurrentTenantIdentifierResolver#isRoot root tenant},
+ * so that, for example, the custom SQL may end with {@code and tenant_id=coalesce(?,tenant_id)}.
+ * A tenant id that belongs to the primary key retains its usual primary key parameter.
  * <p>
  * If a column should <em>not</em> be written as part of the update statement,
  * and has no corresponding JDBC parameter in the custom SQL, it must be mapped

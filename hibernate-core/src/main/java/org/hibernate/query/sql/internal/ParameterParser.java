@@ -5,17 +5,23 @@
 package org.hibernate.query.sql.internal;
 
 import java.util.BitSet;
+import org.hibernate.MappingException;
 import org.hibernate.QueryException;
 import org.hibernate.QueryParameterException;
-import org.hibernate.internal.log.DeprecationLogger;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.query.ParameterLabelException;
 import org.hibernate.query.sql.spi.ParameterRecognizer;
 
+import static java.lang.Character.isDigit;
+import static java.lang.Character.isJavaIdentifierStart;
+import static java.lang.Character.isWhitespace;
+import static java.lang.Character.toLowerCase;
+import static java.lang.Integer.parseInt;
+import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
+import static org.hibernate.internal.util.StringHelper.firstIndexOfChar;
+
 /**
- * The single available method {@link #parse} is responsible for parsing a
- * native query string and recognizing tokens defining named of ordinal
- * parameters and providing callbacks about each recognition.
+ * Parses SQL strings, recognizing native query parameters or counting JDBC
+ * parameter markers in custom SQL.
  *
  * @author Steve Ebersole
  */
@@ -39,9 +45,8 @@ public class ParameterParser {
 	 * Performs the actual parsing and tokenizing of the query string making appropriate
 	 * callbacks to the given recognizer upon recognition of the various tokens.
 	 * <p>
-	 * Note that currently, this only knows how to deal with a single output
-	 * parameter (for callable statements).  If we later add support for
-	 * multiple output params, this, obviously, needs to change.
+	 * Native queries support named and numbered parameters and Hibernate's escaping
+	 * conventions. JDBC function-call syntax is not supported by this entry point.
 	 *
 	 * @param sqlString The string to be parsed/tokenized.
 	 * @param recognizer The thing which handles recognition events.
@@ -50,6 +55,27 @@ public class ParameterParser {
 	 */
 	public static void parse(String sqlString, ParameterRecognizer recognizer, boolean nativeJdbcParametersIgnored) throws QueryException {
 		checkIsNotAFunctionCall( sqlString );
+		parse( sqlString, recognizer, nativeJdbcParametersIgnored, false );
+	}
+
+	/**
+	 * Counts JDBC parameter markers using the same quote and comment rules as
+	 * {@link #parse}. Includes callable return parameters, without interpreting
+	 * named parameters, numbered labels, or Hibernate's native query escapes.
+	 *
+	 * @throws MappingException if quoted text or a block comment is unterminated
+	 */
+	public static int countJdbcParameters(String sqlString) {
+		final var counter = new JdbcParameterRecognizer();
+		parse( sqlString, counter, false, true );
+		return counter.count;
+	}
+
+	private static void parse(
+			String sqlString,
+			ParameterRecognizer recognizer,
+			boolean nativeJdbcParametersIgnored,
+			boolean jdbcParametersOnly) {
 		final int stringLength = sqlString.length();
 
 		boolean inSingleQuotes = false;
@@ -119,6 +145,14 @@ public class ParameterParser {
 				inSingleQuotes = true;
 				recognizer.other( c );
 			}
+			else if ( jdbcParametersOnly ) {
+				if ( c == '?' ) {
+					recognizer.ordinalParameter( indx );
+				}
+				else {
+					recognizer.other( c );
+				}
+			}
 			// special handling for backslash
 			else if ( '\\' == c ) {
 				// skip sending the backslash and instead send then next character, treating is as a literal
@@ -127,9 +161,9 @@ public class ParameterParser {
 			// otherwise
 			else {
 				if ( c == ':' ) {
-					if ( indx < stringLength - 1 && Character.isJavaIdentifierStart( sqlString.charAt( indx + 1 ) ) ) {
+					if ( indx < stringLength - 1 && isJavaIdentifierStart( sqlString.charAt( indx + 1 ) ) ) {
 						// named parameter
-						final int right = StringHelper.firstIndexOfChar( sqlString, HQL_SEPARATORS_BITSET, indx + 1 );
+						final int right = firstIndexOfChar( sqlString, HQL_SEPARATORS_BITSET, indx + 1 );
 						final int chopLocation = right < 0 ? sqlString.length() : right;
 						final String param = sqlString.substring( indx + 1, chopLocation );
 						if ( param.isEmpty() ) {
@@ -148,7 +182,7 @@ public class ParameterParser {
 								&& sqlString.charAt( indx + 2 ) == ':'
 								&& sqlString.charAt( indx + 3 ) == ':' ) {
 							// Detect the :: operator, escaped as ::::
-							DeprecationLogger.DEPRECATION_LOGGER.deprecatedNativeQueryColonEscaping( "::::", "::" );
+							DEPRECATION_LOGGER.deprecatedNativeQueryColonEscaping( "::::", "::" );
 							recognizer.other( ':' );
 							recognizer.other( ':' );
 							indx += 3;
@@ -157,7 +191,7 @@ public class ParameterParser {
 								&& sqlString.charAt( indx + 1 ) == ':'
 								&& sqlString.charAt( indx + 2 ) == '=' ) {
 							// Detect the := operator, escaped as ::=
-							DeprecationLogger.DEPRECATION_LOGGER.deprecatedNativeQueryColonEscaping( "::=", ":=" );
+							DEPRECATION_LOGGER.deprecatedNativeQueryColonEscaping( "::=", ":=" );
 							recognizer.other( ':' );
 							recognizer.other( '=' );
 							indx += 2;
@@ -175,14 +209,14 @@ public class ParameterParser {
 				}
 				else if ( c == '?' ) {
 					// could be either a positional or JPA-style ordinal parameter
-					if ( indx < stringLength - 1 && Character.isDigit( sqlString.charAt( indx + 1 ) ) ) {
+					if ( indx < stringLength - 1 && isDigit( sqlString.charAt( indx + 1 ) ) ) {
 						// a peek ahead showed this as a JPA-positional parameter
-						final int right = StringHelper.firstIndexOfChar( sqlString, HQL_SEPARATORS, indx + 1 );
+						final int right = firstIndexOfChar( sqlString, HQL_SEPARATORS, indx + 1 );
 						final int chopLocation = right < 0 ? sqlString.length() : right;
 						final String param = sqlString.substring( indx + 1, chopLocation );
 						// make sure this "name" is an integral
 						try {
-							recognizer.jpaPositionalParameter( Integer.parseInt( param ), indx );
+							recognizer.jpaPositionalParameter( parseInt( param ), indx );
 							indx = chopLocation - 1;
 						}
 						catch( NumberFormatException e ) {
@@ -201,11 +235,42 @@ public class ParameterParser {
 			}
 		}
 
+		if ( jdbcParametersOnly ) {
+			if ( inSingleQuotes || inDoubleQuotes ) {
+				throw new MappingException( "Unterminated quoted text in custom SQL: " + sqlString );
+			}
+			if ( inDelimitedComment ) {
+				throw new MappingException( "Unterminated comment in custom SQL: " + sqlString );
+			}
+		}
 		recognizer.complete();
 	}
 
 	public static void parse(String sqlString, ParameterRecognizer recognizer) throws QueryException {
 		parse( sqlString, recognizer, false );
+	}
+
+	private static class JdbcParameterRecognizer implements ParameterRecognizer {
+		private int count;
+
+		@Override
+		public void ordinalParameter(int sourcePosition) {
+			count++;
+		}
+
+		@Override
+		public void namedParameter(String name, int sourcePosition) {
+			throw new UnsupportedOperationException( "JDBC SQL does not use named parameters" );
+		}
+
+		@Override
+		public void jpaPositionalParameter(int label, int sourcePosition) {
+			throw new UnsupportedOperationException( "JDBC SQL does not use numbered parameter labels" );
+		}
+
+		@Override
+		public void other(char character) {
+		}
 	}
 
 	private static void checkIsNotAFunctionCall(String sqlString) {
@@ -225,8 +290,8 @@ public class ParameterParser {
 		boolean matches = true;
 		final int max = checkString.length();
 		for ( int i = 0; i < max; i++ ) {
-			final char c = Character.toLowerCase( checkString.charAt( i ) );
-			if ( Character.isWhitespace( c ) ) {
+			final char c = toLowerCase( checkString.charAt( i ) );
+			if ( isWhitespace( c ) ) {
 				continue;
 			}
 			if ( c == fixture.charAt( fixturePosition ) ) {
@@ -240,7 +305,6 @@ public class ParameterParser {
 		if ( matches ) {
 			throw new UnsupportedOperationException(
 					"Recognizing native query as a function call is no longer supported" );
-
 		}
 	}
 

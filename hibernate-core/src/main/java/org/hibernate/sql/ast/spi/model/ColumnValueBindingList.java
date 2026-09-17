@@ -56,6 +56,11 @@ public class ColumnValueBindingList extends ArrayList<ColumnValueBinding> implem
 		add( createValueBinding( column, column.getWriteExpression() ) );
 	}
 
+	@Internal
+	public void addTenantRestriction(SelectableMapping column) {
+		add( ColumnValueBindingBuilder.createTenantRestriction( column, mutatingTable, parameters::apply ) );
+	}
+
 	public void addNullRestriction(SelectableMapping column) {
 		add( createValueBinding( column, null ) );
 	}

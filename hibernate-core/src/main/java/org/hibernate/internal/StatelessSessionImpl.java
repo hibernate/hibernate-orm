@@ -4,6 +4,10 @@
  */
 package org.hibernate.internal;
 
+import static org.hibernate.engine.internal.TenantIdHelper.MissingRowPolicy.ALLOW;
+
+import static org.hibernate.engine.internal.TenantIdHelper.MissingRowPolicy.THROW;
+
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.CacheRetrieveMode;
@@ -15,6 +19,8 @@ import jakarta.persistence.FindOption;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.PersistenceException;
 import jakarta.transaction.SystemException;
+import org.hibernate.engine.internal.TenantIdHelper;
+import org.hibernate.engine.internal.RootTenantCache;
 import org.hibernate.AssertionFailure;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
@@ -586,6 +592,10 @@ public class StatelessSessionImpl
 		checkNotReadOnly();
 		final var persister = getEntityPersister( entityName, entity );
 		final Object id = persister.getIdentifier( entity, this );
+		TenantIdHelper.validateAssignedTenantId( entity, id, persister, this );
+		if ( persister.hasMultipleTables() || persister.hasOwnedCollections() ) {
+			TenantIdHelper.checkStoredTenantOwnership( id, persister, this, THROW );
+		}
 		final Object version = persister.getVersion( entity );
 		if ( !firePreDelete(entity, id, persister) ) {
 			runInterceptorCallback(
@@ -686,6 +696,10 @@ public class StatelessSessionImpl
 		final var persister = getEntityPersister( entityName, entity );
 		checkLobVersioning( persister );
 		final Object id = persister.getIdentifier( entity, this );
+		TenantIdHelper.validateAssignedTenantId( entity, id, persister, this );
+		if ( persister.hasMultipleTables() || persister.hasOwnedCollections() ) {
+			TenantIdHelper.checkStoredTenantOwnership( id, persister, this, THROW );
+		}
 		final Object[] state = persister.getValues( entity );
 		final Object oldVersion;
 		if ( persister.isVersioned() ) {
@@ -850,8 +864,14 @@ public class StatelessSessionImpl
 	private void doUpsert(String entityName, Object entity) {
 		checkNotReadOnly();
 		final var persister = getEntityPersister( entityName, entity );
+		TenantIdHelper.initializeIdentifierTenant( entity, persister, this );
 		final Object id = idToUpsert( entity, persister );
+		TenantIdHelper.validateIdentifierTenant( id, persister, this );
 		final Object[] state = persister.getValues( entity );
+		TenantIdHelper.initializeTenantId( entity, state, persister, this );
+		if ( persister.hasMultipleTables() || persister.hasOwnedCollections() ) {
+			TenantIdHelper.checkStoredTenantOwnership( id, persister, this, ALLOW );
+		}
 		if ( !firePreUpsert(entity, id, state, persister) ) {
 			runInterceptorCallback(
 					() -> getInterceptor().onUpsert( entity, id, state, persister.getPropertyNames(), persister.getPropertyTypes() ) );
@@ -1874,6 +1894,7 @@ public class StatelessSessionImpl
 	}
 
 	protected Object lockCacheItem(Object id, Object previousVersion, EntityPersister persister) {
+		RootTenantCache.invalidateEntity( id, persister, this );
 		return writingToCache( persister, cache -> {
 			final Object cacheKey = cache.generateCacheKey(
 					id,
@@ -1893,6 +1914,7 @@ public class StatelessSessionImpl
 	}
 
 	protected Object lockCacheItem(Object key, CollectionPersister persister) {
+		RootTenantCache.invalidateCollection( key, persister, this );
 		return usingCache( persister, cache -> {
 			final Object cacheKey = cache.generateCacheKey(
 					key,

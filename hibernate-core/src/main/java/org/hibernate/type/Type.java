@@ -49,8 +49,6 @@ import jakarta.annotation.Nullable;
  * @see org.hibernate.type.BasicTypeRegistry#register(BasicType)
  * @see org.hibernate.type.BasicTypeRegistry#register(BasicType, String)
  * @see org.hibernate.type.BasicTypeRegistry#register(BasicType, String...)
- * @see org.hibernate.boot.MetadataBuilder#applyBasicType(BasicType)
- * @see org.hibernate.boot.MetadataBuilder#applyBasicType(BasicType, String...)
  *
  * @author Gavin King
  * @author Steve Ebersole

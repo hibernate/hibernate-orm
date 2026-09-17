@@ -40,8 +40,6 @@ import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 /// @see BasicTypeRegistry#register(BasicType)
 /// @see BasicTypeRegistry#register(BasicType, String)
 /// @see BasicTypeRegistry#register(BasicType, String...)
-/// @see MetadataBuilder#applyBasicType(BasicType)
-/// @see MetadataBuilder#applyBasicType(BasicType, String...)
 ///
 /// @author Steve Ebersole
 @SPI({ USE, IMPLEMENT, SUPPLY })

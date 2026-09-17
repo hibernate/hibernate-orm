@@ -33,7 +33,6 @@ import static org.hibernate.SPI.Role.USE;
 /// @see org.hibernate.annotations.CollectionIdMutability#value()
 /// @see org.hibernate.annotations.MapKeyMutability#value()
 /// @see org.hibernate.annotations.Mutability#value()
-/// @see org.hibernate.mapping.BasicValue#setExplicitMutabilityPlanAccess(java.util.function.Function)
 /// @see JavaType#getMutabilityPlan()
 ///
 /// @author Steve Ebersole

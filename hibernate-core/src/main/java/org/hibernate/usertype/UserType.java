@@ -271,7 +271,6 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
  * @see org.hibernate.boot.model.TypeContributions#contributeType(UserType)
  * @see org.hibernate.boot.model.TypeContributions#contributeType(UserType, String...)
  * @see org.hibernate.type.BasicTypeRegistry#register(UserType, String...)
- * @see org.hibernate.boot.MetadataBuilder#applyBasicType(UserType, String...)
  *
  * @author Gavin King
  */

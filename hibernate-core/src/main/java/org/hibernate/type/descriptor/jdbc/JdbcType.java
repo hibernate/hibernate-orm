@@ -70,7 +70,6 @@ import static org.hibernate.SPI.Role.USE;
 /// @see org.hibernate.annotations.JdbcTypeRegistration#value()
 /// @see org.hibernate.annotations.ListIndexJdbcType#value()
 /// @see org.hibernate.annotations.MapKeyJdbcType#value()
-/// @see org.hibernate.mapping.BasicValue#setExplicitJdbcTypeAccess(java.util.function.Function)
 ///
 /// @author Steve Ebersole
 @SPI({ USE, IMPLEMENT, SUPPLY })

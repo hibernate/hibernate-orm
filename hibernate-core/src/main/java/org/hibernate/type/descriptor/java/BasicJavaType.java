@@ -31,7 +31,6 @@ import static org.hibernate.SPI.Role.USE;
 /// @see org.hibernate.annotations.JavaTypeRegistration#descriptorClass()
 /// @see org.hibernate.annotations.ListIndexJavaType#value()
 /// @see org.hibernate.annotations.MapKeyJavaType#value()
-/// @see org.hibernate.mapping.BasicValue#setExplicitJavaTypeAccess(java.util.function.Function)
 @SPI({ USE, IMPLEMENT, SUPPLY })
 public interface BasicJavaType<T> extends JavaType<T> {
 	/**

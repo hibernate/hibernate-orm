@@ -89,6 +89,9 @@ public class TableUpdateBuilderStandard<O extends MutationOperation>
 		}
 
 		if ( mutationDetails.getCustomSql() != null ) {
+			final var parameters = AbstractTableUpdate.collectParameters(
+					valueBindings, getKeyRestrictionBindings(), getOptimisticLockBindings() );
+			adjustCustomSqlTenantRestriction( mutationDetails, parameters );
 			return (LogicalTableUpdate<O>) new TableUpdateCustomSql(
 					getMutatingTable(),
 					getMutationTarget(),
@@ -97,7 +100,7 @@ public class TableUpdateBuilderStandard<O extends MutationOperation>
 					valueBindings,
 					getKeyRestrictionBindings(),
 					getOptimisticLockBindings(),
-					AbstractTableUpdate.collectParameters( valueBindings, getKeyRestrictionBindings(), getOptimisticLockBindings() )
+					parameters
 			);
 		}
 
@@ -121,7 +124,7 @@ public class TableUpdateBuilderStandard<O extends MutationOperation>
 				getKeyRestrictionBindings(),
 				getOptimisticLockBindings(),
 				whereFragment,
-				null,
+				mutationDetails.getExpectation(),
 				emptyList()
 		);
 	}

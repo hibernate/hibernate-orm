@@ -4,6 +4,7 @@
  */
 package org.hibernate.engine.jdbc.batch.spi;
 
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 import org.hibernate.Incubating;
@@ -29,6 +30,7 @@ public interface BatchedResultChecker {
 	/// Check the result for one row of a JDBC batch.
 	///
 	/// @param affectedRowCount the row count reported for this batch entry
+	/// @param statement the executed batch statement
 	/// @param batchPosition zero-based position of the row within the executed JDBC batch
 	/// @param sqlString SQL string for the batch statement
 	/// @param sessionFactory the session factory associated with execution
@@ -39,6 +41,7 @@ public interface BatchedResultChecker {
 	/// @throws SQLException if result checking needs to report a JDBC failure
 	boolean checkResult(
 			int affectedRowCount,
+			PreparedStatement statement,
 			int batchPosition,
 			String sqlString,
 			SessionFactoryImplementor sessionFactory) throws SQLException;

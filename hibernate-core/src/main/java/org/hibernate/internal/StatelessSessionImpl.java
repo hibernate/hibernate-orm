@@ -4,6 +4,12 @@
  */
 package org.hibernate.internal;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.BiConsumer;
+
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.CacheRetrieveMode;
@@ -15,6 +21,7 @@ import jakarta.persistence.FindOption;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.PersistenceException;
 import jakarta.transaction.SystemException;
+
 import org.hibernate.AssertionFailure;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
@@ -32,6 +39,8 @@ import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.creation.internal.SharedSessionCreationOptions;
 import org.hibernate.engine.creation.internal.options.StatelessOptions;
+import org.hibernate.engine.internal.RootTenantCache;
+import org.hibernate.engine.internal.TenantIdHelper;
 import org.hibernate.engine.internal.TransactionCompletionCallbacksImpl;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
@@ -85,12 +94,6 @@ import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.type.TypeHelper;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.function.BiConsumer;
-
 import static java.lang.Boolean.parseBoolean;
 import static java.lang.Integer.parseInt;
 import static org.hibernate.cfg.BatchSettings.STATEMENT_BATCH_SIZE;
@@ -102,6 +105,8 @@ import static org.hibernate.cfg.QuerySettings.CRITERIA_COPY_TREE;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.PersistenceContexts.createPersistenceContext;
+import static org.hibernate.engine.internal.TenantIdHelper.MissingRowPolicy.ALLOW;
+import static org.hibernate.engine.internal.TenantIdHelper.MissingRowPolicy.THROW;
 import static org.hibernate.engine.internal.Versioning.incrementVersion;
 import static org.hibernate.engine.internal.Versioning.seedVersion;
 import static org.hibernate.engine.internal.Versioning.setVersion;
@@ -572,6 +577,10 @@ public class StatelessSessionImpl
 		checkNotReadOnly();
 		final var persister = getEntityPersister( entityName, entity );
 		final Object id = persister.getIdentifier( entity, this );
+		TenantIdHelper.validateAssignedTenantId( entity, id, persister, this );
+		if ( persister.hasMultipleTables() || persister.hasOwnedCollections() ) {
+			TenantIdHelper.checkStoredTenantOwnership( id, persister, this, THROW );
+		}
 		final Object version = persister.getVersion( entity );
 		if ( !firePreDelete(entity, id, persister) ) {
 			runInterceptorCallback(
@@ -671,6 +680,10 @@ public class StatelessSessionImpl
 		checkNotReadOnly();
 		final var persister = getEntityPersister( entityName, entity );
 		final Object id = persister.getIdentifier( entity, this );
+		TenantIdHelper.validateAssignedTenantId( entity, id, persister, this );
+		if ( persister.hasMultipleTables() || persister.hasOwnedCollections() ) {
+			TenantIdHelper.checkStoredTenantOwnership( id, persister, this, THROW );
+		}
 		final Object[] state = persister.getValues( entity );
 		final Object oldVersion;
 		if ( persister.isVersioned() ) {
@@ -778,8 +791,14 @@ public class StatelessSessionImpl
 	private void doUpsert(String entityName, Object entity) {
 		checkNotReadOnly();
 		final var persister = getEntityPersister( entityName, entity );
+		TenantIdHelper.initializeIdentifierTenant( entity, persister, this );
 		final Object id = idToUpsert( entity, persister );
+		TenantIdHelper.validateIdentifierTenant( id, persister, this );
 		final Object[] state = persister.getValues( entity );
+		TenantIdHelper.initializeTenantId( entity, state, persister, this );
+		if ( persister.hasMultipleTables() || persister.hasOwnedCollections() ) {
+			TenantIdHelper.checkStoredTenantOwnership( id, persister, this, ALLOW );
+		}
 		if ( !firePreUpsert(entity, id, state, persister) ) {
 			runInterceptorCallback(
 					() -> getInterceptor().onUpsert( entity, id, state, persister.getPropertyNames(), persister.getPropertyTypes() ) );
@@ -1800,6 +1819,7 @@ public class StatelessSessionImpl
 	}
 
 	protected Object lockCacheItem(Object id, Object previousVersion, EntityPersister persister) {
+		RootTenantCache.invalidateEntity( id, persister, this );
 		if ( persister.canWriteToCache() ) {
 			final var cache = persister.getCacheAccessStrategy();
 			final Object cacheKey = cache.generateCacheKey(
@@ -1826,6 +1846,7 @@ public class StatelessSessionImpl
 	}
 
 	protected Object lockCacheItem(Object key, CollectionPersister persister) {
+		RootTenantCache.invalidateCollection( key, persister, this );
 		if ( persister.hasCache() ) {
 			final var cache = persister.getCacheAccessStrategy();
 			final Object cacheKey = cache.generateCacheKey(

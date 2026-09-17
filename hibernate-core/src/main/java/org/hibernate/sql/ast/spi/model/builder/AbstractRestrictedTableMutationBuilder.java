@@ -5,6 +5,7 @@
 package org.hibernate.sql.ast.spi.model.builder;
 
 import org.hibernate.SPI;
+import org.hibernate.MappingException;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.SelectableMapping;
@@ -16,6 +17,10 @@ import org.hibernate.sql.ast.spi.model.ColumnValueBinding;
 import org.hibernate.sql.ast.spi.model.ColumnValueBindingList;
 import org.hibernate.sql.ast.spi.model.MutatingTableReference;
 import org.hibernate.sql.ast.spi.model.RestrictedTableMutation;
+import org.hibernate.sql.ast.spi.model.TenantIdColumnValueBinding;
+import java.util.List;
+
+import org.hibernate.sql.ast.spi.model.ColumnValueParameter;
 
 import static org.hibernate.SPI.Role.IMPLEMENT;
 
@@ -69,6 +74,30 @@ public abstract class AbstractRestrictedTableMutationBuilder<O extends MutationO
 	@Override
 	public ColumnValueBindingList getOptimisticLockBindings() {
 		return optimisticLockBindings;
+	}
+
+	/**
+	 * Custom SQL may use the original parameter list or append the session tenant.
+	 * Remove the tenant descriptor as well as its restriction when it is omitted.
+	 * The count cannot identify omitted or reordered non-tenant parameters:
+	 * the custom SQL must preserve the original parameter list and its order.
+	 */
+	protected void adjustCustomSqlTenantRestriction(TableMapping.MutationDetails details, List<ColumnValueParameter> parameters) {
+		if ( optimisticLockBindings.stream().anyMatch( binding -> binding instanceof TenantIdColumnValueBinding ) ) {
+			final int expected = parameters.size() + details.getExpectation().getNumberOfParametersUsed();
+			final int actual = details.getCustomSqlParameterCount();
+			if ( actual == expected - 1 ) {
+				optimisticLockBindings.removeIf( binding -> binding instanceof TenantIdColumnValueBinding );
+				getParameters().removeIf( parameter -> parameter.getUsage() == ParameterUsage.TENANT );
+				parameters.removeIf( parameter -> parameter.getUsage() == ParameterUsage.TENANT );
+			}
+			else if ( actual != expected ) {
+				throw new MappingException(
+						"Custom SQL " + details.getMutationType() + " for '" + getMutationTarget().getRolePath()
+						+ "' on table '" + getMutatingTable().getTableName() + "' has " + actual + " JDBC parameters, but expected "
+						+ (expected - 1) + " without the tenant id or " + expected + " with the tenant id as the last parameter" );
+			}
+		}
 	}
 
 	@Override

@@ -944,6 +944,8 @@ public interface Session extends SharedSessionContract, EntityManager {
 	///            database
 	/// @param keyType Whether the given `key` should be treated as an
 	///                [id][KeyType#IDENTIFIER] or as a [natural id][KeyType#NATURAL]
+	/// @throws jakarta.persistence.EntityNotFoundException if the given natural id
+	///         does not resolve to an entity visible to this session
 	/// @since 8.0
 	@Nonnull
 	<T> T getReference(@Nonnull Class<T> entityType, @Nonnull Object key, @Nonnull KeyType keyType);

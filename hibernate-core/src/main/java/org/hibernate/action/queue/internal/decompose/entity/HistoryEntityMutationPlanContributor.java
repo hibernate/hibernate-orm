@@ -6,6 +6,7 @@ package org.hibernate.action.queue.internal.decompose.entity;
 
 import org.hibernate.action.queue.spi.decompose.entity.EntityMutationPlanContributor;
 
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -583,12 +584,14 @@ public class HistoryEntityMutationPlanContributor implements EntityMutationPlanC
 		@Override
 		public boolean checkResult(
 				int affectedRowCount,
+				PreparedStatement statement,
 				int batchPosition,
 				String sqlString,
 				SessionFactoryImplementor sessionFactory) throws SQLException {
 			return Checkers.identifiedResultsCheck(
 					historyTableDescriptor.insertDetails().getExpectation(),
 					affectedRowCount,
+					statement,
 					batchPosition,
 					entityPersister,
 					historyTableDescriptor,
@@ -654,12 +657,14 @@ public class HistoryEntityMutationPlanContributor implements EntityMutationPlanC
 		@Override
 		public boolean checkResult(
 				int affectedRowCount,
+				PreparedStatement statement,
 				int batchPosition,
 				String sqlString,
 				SessionFactoryImplementor sessionFactory) throws SQLException {
 			return Checkers.identifiedResultsCheck(
 					historyTableDescriptor.updateDetails().getExpectation(),
 					affectedRowCount,
+					statement,
 					batchPosition,
 					entityPersister,
 					historyTableDescriptor,
@@ -764,12 +769,14 @@ public class HistoryEntityMutationPlanContributor implements EntityMutationPlanC
 		@Override
 		public boolean checkResult(
 				int affectedRowCount,
+				PreparedStatement statement,
 				int batchPosition,
 				String sqlString,
 				SessionFactoryImplementor sessionFactory) throws SQLException {
 			return Checkers.identifiedResultsCheck(
 					historyTableDescriptor.updateDetails().getExpectation(),
 					affectedRowCount,
+					statement,
 					batchPosition,
 					entityPersister,
 					historyTableDescriptor,

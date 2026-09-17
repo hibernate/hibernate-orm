@@ -4,6 +4,8 @@
  */
 package org.hibernate.persister.entity.mutation;
 
+import java.sql.SQLException;
+
 import org.hibernate.Internal;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
@@ -16,6 +18,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.values.GeneratedValues;
 import org.hibernate.metamodel.mapping.TemporalMapping;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.sql.SimpleSelect;
 import org.hibernate.sql.model.MutationOperationGroup;
 
 /**
@@ -31,6 +34,7 @@ public class MergeCoordinatorTemporal extends AbstractTemporalUpdateCoordinator 
 	private final MutationOperationGroup endingUpdateGroup;
 	private final BasicBatchKey batchKey;
 	private final UpdateCoordinator versionUpdateDelegate;
+	private final String currentRowSelectSql;
 
 	public MergeCoordinatorTemporal(EntityPersister entityPersister, SessionFactoryImplementor factory) {
 		super( entityPersister, factory );
@@ -38,6 +42,19 @@ public class MergeCoordinatorTemporal extends AbstractTemporalUpdateCoordinator 
 		this.endingUpdateGroup = buildEndingUpdateGroup( entityPersister.getIdentifierTableMapping(), temporalMapping );
 		this.batchKey = new BasicBatchKey( entityPersister.getEntityName() + "#TEMPORAL_MERGE" );
 		this.versionUpdateDelegate = new MergeCoordinatorStandard( entityPersister, factory );
+		this.currentRowSelectSql = buildCurrentRowSelect();
+	}
+
+	private String buildCurrentRowSelect() {
+		final var tableMapping = entityPersister().getIdentifierTableMapping();
+		final var select = new SimpleSelect( factory() )
+				.setTableName( tableMapping.getTableName() )
+				.addColumn( "1" );
+		for ( var column : tableMapping.getKeyMapping().getKeyColumns() ) {
+			select.addRestriction( column.getColumnName() );
+		}
+		return select.addWhereToken( temporalMapping.getEndingColumnMapping().getSelectionExpression() + " is null" )
+				.toStatementString();
 	}
 
 	@Override
@@ -115,7 +132,31 @@ public class MergeCoordinatorTemporal extends AbstractTemporalUpdateCoordinator 
 	}
 
 	private boolean currentRowExists(Object id, SharedSessionContractImplementor session) {
-		return entityPersister().getDatabaseSnapshot( id, session ) != null;
+		// A snapshot filtered by tenant cannot distinguish an absent row from a foreign row.
+		// Only a missing current row permits insertion, regardless of tenant or application filters.
+		final var coordinator = session.getJdbcCoordinator();
+		final var resources = coordinator.getLogicalConnection().getResourceRegistry();
+		try {
+			final var statement = coordinator.getStatementPreparer().prepareStatement( currentRowSelectSql );
+			try {
+				entityPersister().getIdentifierType().nullSafeSet( statement, id, 1, session );
+				final var resultSet = coordinator.getResultSetReturn().extract( statement, currentRowSelectSql );
+				try {
+					return resultSet.next();
+				}
+				finally {
+					resources.release( resultSet, statement );
+				}
+			}
+			finally {
+				resources.release( statement );
+				coordinator.afterStatementExecution();
+			}
+		}
+		catch ( SQLException e ) {
+			throw session.getJdbcServices().getSqlExceptionHelper()
+					.convert( e, "Could not check current temporal row of " + entityPersister().getEntityName(), currentRowSelectSql );
+		}
 	}
 
 	@Override

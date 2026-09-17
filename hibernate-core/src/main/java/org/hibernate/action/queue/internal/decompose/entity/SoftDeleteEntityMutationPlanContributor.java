@@ -4,6 +4,7 @@
  */
 package org.hibernate.action.queue.internal.decompose.entity;
 
+import org.hibernate.engine.internal.TenantIdHelper;
 import org.hibernate.action.queue.spi.decompose.entity.EntityMutationPlanContributor;
 
 import java.util.Map;
@@ -107,6 +108,7 @@ public class SoftDeleteEntityMutationPlanContributor implements EntityMutationPl
 		if ( entityPersister.optimisticLockStyle().isVersion() && entityPersister.getVersionMapping() != null ) {
 			tableUpdateBuilder.addOptimisticLockRestriction( entityPersister.getVersionMapping() );
 		}
+		TenantIdHelper.applyTenantRestriction( entityPersister, tableUpdateBuilder );
 
 		return (TableUpdate<?>) tableUpdateBuilder.buildMutation();
 	}

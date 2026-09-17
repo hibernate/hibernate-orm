@@ -25,7 +25,7 @@ import java.util.function.Consumer;
 /// PlanStepExecutor with support for JDBC batching.
 ///
 /// @author Steve Ebersole
-public class BatchingPlanStepExecutor extends AbstractStepExecutor implements BatchObserver {
+public class BatchingPlanStepExecutor extends StandardPlanStepExecutor implements BatchObserver {
 	private final int batchSize;
 
 	private StatementShapeKey batchKey;
@@ -68,8 +68,15 @@ public class BatchingPlanStepExecutor extends AbstractStepExecutor implements Ba
 	}
 
 	@Override
-	protected void executePreparable(PreparableMutationOperation preparable, FlushOperation flushOperation) {
-		if ( flushOperation.getBindPlan() instanceof GroupedRowBindPlan groupedRowBindPlan ) {
+	public void executePreparable(PreparableMutationOperation preparable, FlushOperation flushOperation) {
+		if ( !preparable.canBeBatched( flushOperation.getShapeKey(), batchSize ) ) {
+			if ( batchKey != null ) {
+				executeBatch();
+			}
+			super.beforePhysicalExecution( flushOperation );
+			super.executePreparable( preparable, flushOperation );
+		}
+		else if ( flushOperation.getBindPlan() instanceof GroupedRowBindPlan groupedRowBindPlan ) {
 			final int bindingCount = groupedRowBindPlan.getBindingCount();
 			for ( int bindingIndex = 0; bindingIndex < bindingCount; bindingIndex++ ) {
 				prepareBatch( flushOperation, preparable );
@@ -81,15 +88,15 @@ public class BatchingPlanStepExecutor extends AbstractStepExecutor implements Ba
 						bindingIndex == bindingCount - 1
 				);
 			}
-			return;
 		}
-
-		prepareBatch( flushOperation, preparable );
-		applyToBatch( preparable, flushOperation, flushOperation.getBindPlan(), -1, true );
+		else {
+			prepareBatch( flushOperation, preparable );
+			applyToBatch( preparable, flushOperation, flushOperation.getBindPlan(), -1, true );
+		}
 	}
 
 	private void prepareBatch(FlushOperation flushOperation, PreparableMutationOperation preparable) {
-		final StatementShapeKey operationShapeKey = flushOperation.getShapeKey();
+		final var operationShapeKey = flushOperation.getShapeKey();
 		if ( batchKey == null ) {
 			newBatch( operationShapeKey, preparable );
 		}
@@ -97,12 +104,12 @@ public class BatchingPlanStepExecutor extends AbstractStepExecutor implements Ba
 			executeBatch();
 			newBatch( operationShapeKey, preparable );
 		}
-
 	}
 
 	@Override
 	protected boolean beforeOperationExecution(FlushOperation flushOperation) {
-		if ( flushOperation.getPreExecutionCallback() != null && batchKey != null ) {
+		final var callback = flushOperation.getPreExecutionCallback();
+		if ( batchKey != null && callback != null && callback.requiresBatchFlush() ) {
 			executeBatch();
 		}
 		return super.beforeOperationExecution( flushOperation );
@@ -127,7 +134,8 @@ public class BatchingPlanStepExecutor extends AbstractStepExecutor implements Ba
 		if ( operationIsNoop
 				|| flushOperation.isExecutionSkipped()
 				|| flushOperation.getBindPlan().getGeneratedValuesCollector() != null
-				|| !(flushOperation.getJdbcOperation() instanceof PreparableMutationOperation) ) {
+				|| !(flushOperation.getJdbcOperation() instanceof PreparableMutationOperation preparable)
+				|| !preparable.canBeBatched( flushOperation.getShapeKey(), batchSize ) ) {
 			super.afterOperationExecution( flushOperation, newlyManagedEntityConsumer, fixupOperationConsumer );
 		}
 	}
@@ -226,7 +234,7 @@ public class BatchingPlanStepExecutor extends AbstractStepExecutor implements Ba
 
 	private void runFailureCallbacks(int batchCount) {
 		for ( int i = 0; i < batchCount; i++ ) {
-			final FlushOperation operation = batchOperations[i];
+			final var operation = batchOperations[i];
 			if ( operation != null ) {
 				afterFailedExecution( operation );
 			}
@@ -235,7 +243,7 @@ public class BatchingPlanStepExecutor extends AbstractStepExecutor implements Ba
 
 	private void runBeforeBatchCallbacks(int batchCount) {
 		for ( int i = 0; i < batchCount; i++ ) {
-			final FlushOperation operation = batchOperations[i];
+			final var operation = batchOperations[i];
 			if ( operation != null ) {
 				super.beforePhysicalExecution( operation );
 			}

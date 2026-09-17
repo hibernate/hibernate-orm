@@ -42,6 +42,7 @@ public class DeleteCoordinatorSoft extends AbstractDeleteCoordinator {
 				loadedState,
 				session
 		);
+		applyTenantRestriction( tableUpdateBuilder );
 
 		return createMutationOperationGroup( tableUpdateBuilder );
 	}

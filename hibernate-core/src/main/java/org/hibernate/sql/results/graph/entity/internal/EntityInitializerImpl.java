@@ -2003,6 +2003,9 @@ public class EntityInitializerImpl
 	}
 
 	private boolean isCachePutEnabled(SharedSessionContractImplementor session) {
+		if ( session.isRootTenant() ) {
+			return false;
+		}
 		final var cacheStoreMode = fetchOptions.cacheStoreMode();
 		return cacheStoreMode == null
 				? session.getCacheMode().isPutEnabled()

@@ -220,7 +220,8 @@ public interface Expectation {
 		public final void verifyOutcome(int rowCount, PreparedStatement statement, int batchPosition, String sql) {
 			final int result;
 			try {
-				result = toCallableStatement( statement ).getInt( parameterIndex() );
+				final var count = toCallableStatement( statement ).getBigDecimal( parameterIndex() );
+				result = count == null ? 0 : count.intValue();
 			}
 			catch ( SQLException sqle ) {
 				sqlExceptionHelper.logExceptions( sqle, "Could not extract row count from CallableStatement" );

@@ -4,6 +4,9 @@
  */
 package org.hibernate.query;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 /**
  * Indicates an attempt to create a {@linkplain SelectionQuery} instance
  * with a non-selection query (generally a mutation query)
@@ -11,11 +14,11 @@ package org.hibernate.query;
  * @author Steve Ebersole
  */
 public class IllegalSelectQueryException extends IllegalQueryOperationException {
-	public IllegalSelectQueryException(String message) {
+	public IllegalSelectQueryException(@Nonnull String message) {
 		super( message );
 	}
 
-	public IllegalSelectQueryException(String message, String queryString) {
+	public IllegalSelectQueryException(@Nonnull String message, @Nullable String queryString) {
 		super( message, queryString, null );
 	}
 }

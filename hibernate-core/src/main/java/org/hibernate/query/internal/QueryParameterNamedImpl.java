@@ -6,11 +6,13 @@ package org.hibernate.query.internal;
 
 import java.util.Objects;
 
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.type.BindableType;
 import org.hibernate.query.spi.AbstractQueryParameter;
 import org.hibernate.query.named.spi.NamedQueryMemento;
 import org.hibernate.query.sqm.tree.spi.expression.SqmParameter;
+import org.hibernate.query.sqm.tree.spi.expression.SqmJpaCriteriaParameterWrapper;
 
 /**
  * QueryParameter impl for named-parameters in HQL, JPQL or Criteria queries.
@@ -31,7 +33,9 @@ public class QueryParameterNamedImpl<T> extends AbstractQueryParameter<T> {
 		return new QueryParameterNamedImpl<>(
 				parameter.getName(),
 				parameter.allowMultiValuedBinding(),
-				parameter.getAnticipatedType()
+				parameter.getAnticipatedType(),
+				parameter instanceof SqmJpaCriteriaParameterWrapper<T> wrapper
+						? wrapper.getJpaCriteriaParameter().getJavaType() : null
 		);
 	}
 
@@ -42,18 +46,29 @@ public class QueryParameterNamedImpl<T> extends AbstractQueryParameter<T> {
 	private final String name;
 
 	private QueryParameterNamedImpl(String name, boolean allowMultiValuedBinding, @Nullable BindableType<T> anticipatedType) {
-		super( allowMultiValuedBinding, anticipatedType );
+		this( name, allowMultiValuedBinding, anticipatedType, null );
+	}
+
+	private QueryParameterNamedImpl(
+			String name,
+			boolean allowMultiValuedBinding,
+			@Nullable BindableType<T> anticipatedType,
+			@Nullable Class<T> declaredJavaType) {
+		super( allowMultiValuedBinding, anticipatedType, declaredJavaType );
 		this.name = name;
 	}
 
 	@Override
+	@Nonnull
 	public String getName() {
 		return name;
 	}
 
 	@Override
+	@Nonnull
 	public NamedQueryMemento.ParameterMemento toMemento() {
-		return session -> new QueryParameterNamedImpl<>( getName(), allowsMultiValuedBinding(), getHibernateType() );
+		return session -> new QueryParameterNamedImpl<>(
+				getName(), allowsMultiValuedBinding(), getHibernateType(), declaredJavaType );
 	}
 
 	@Override

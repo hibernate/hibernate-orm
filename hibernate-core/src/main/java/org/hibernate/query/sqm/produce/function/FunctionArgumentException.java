@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.sqm.produce.function;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.query.SemanticException;
 
 /**
@@ -14,7 +16,7 @@ import org.hibernate.query.SemanticException;
  * @since 6.3
  */
 public class FunctionArgumentException extends SemanticException {
-	public FunctionArgumentException(String message) {
+	public FunctionArgumentException(@Nonnull String message) {
 		super(message);
 	}
 }

@@ -2091,7 +2091,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 						// a Collection-valued, multi-valued parameter
 						? new MultiValueParameterType<>( (Class<T>) Collection.class )
 						: basicType;
-		return new JpaCriteriaParameter<>( name, parameterType, notBasic, this );
+		return new JpaCriteriaParameter<>( name, parameterType, paramClass, notBasic, this );
 	}
 
 	@Nonnull

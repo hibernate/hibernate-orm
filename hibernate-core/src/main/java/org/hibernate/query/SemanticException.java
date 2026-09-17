@@ -4,6 +4,7 @@
  */
 package org.hibernate.query;
 
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.QueryException;
 
@@ -21,7 +22,7 @@ public class SemanticException extends QueryException {
 	 *             about the query which caused the failure
 	 */
 	@Deprecated(since = "6.3")
-	public SemanticException(String message) {
+	public SemanticException(@Nonnull String message) {
 		super( message );
 	}
 
@@ -30,15 +31,15 @@ public class SemanticException extends QueryException {
 	 *             about the query which caused the failure
 	 */
 	@Deprecated(since = "6.3")
-	public SemanticException(String message, @Nullable Exception cause) {
+	public SemanticException(@Nonnull String message, @Nullable Exception cause) {
 		super( message, cause );
 	}
 
-	public SemanticException(String message, @Nullable String queryString) {
+	public SemanticException(@Nonnull String message, @Nullable String queryString) {
 		super( message, queryString );
 	}
 
-	public SemanticException(String message, @Nullable String queryString, @Nullable Exception cause) {
+	public SemanticException(@Nonnull String message, @Nullable String queryString, @Nullable Exception cause) {
 		super( message, queryString, cause );
 	}
 }

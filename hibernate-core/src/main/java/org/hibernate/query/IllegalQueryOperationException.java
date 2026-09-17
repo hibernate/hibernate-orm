@@ -4,6 +4,9 @@
  */
 package org.hibernate.query;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.QueryException;
 
 /**
@@ -17,11 +20,11 @@ import org.hibernate.QueryException;
  * @author Steve Ebersole
  */
 public class IllegalQueryOperationException extends QueryException {
-	public IllegalQueryOperationException(String message) {
+	public IllegalQueryOperationException(@Nonnull String message) {
 		super( message );
 	}
 
-	public IllegalQueryOperationException(String message, String queryString, Exception cause) {
+	public IllegalQueryOperationException(@Nonnull String message, @Nullable String queryString, @Nullable Exception cause) {
 		super( message, queryString, cause );
 	}
 }

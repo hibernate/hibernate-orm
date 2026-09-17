@@ -6,6 +6,7 @@ package org.hibernate.query.sqm.tree.spi.expression;
 
 import java.util.function.Consumer;
 
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.query.sqm.tree.spi.jpa.ParameterCollector;
 import org.hibernate.type.BindableType;
@@ -100,7 +101,7 @@ public class SqmJpaCriteriaParameterWrapper<T>
 	}
 
 	@Override
-	public @Nullable Class<T> getParameterType() {
+	public @Nonnull Class<T> getParameterType() {
 		return jpaCriteriaParameter.getParameterType();
 	}
 

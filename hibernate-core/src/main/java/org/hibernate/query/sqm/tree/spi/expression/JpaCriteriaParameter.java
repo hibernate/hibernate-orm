@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.spi.expression;
 
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.query.ParameterMetadata;
@@ -34,6 +35,7 @@ public class JpaCriteriaParameter<T>
 		implements SqmParameter<T>, QueryParameterImplementor<T> {
 
 	private final @Nullable String name;
+	private final @Nullable Class<T> declaredJavaType;
 	private boolean allowsMultiValuedBinding;
 
 	public JpaCriteriaParameter(
@@ -41,14 +43,25 @@ public class JpaCriteriaParameter<T>
 			@Nullable BindableType<? super T> type,
 			boolean allowsMultiValuedBinding,
 			NodeBuilder nodeBuilder) {
+		this( name, type, null, allowsMultiValuedBinding, nodeBuilder );
+	}
+
+	public JpaCriteriaParameter(
+			@Nullable String name,
+			@Nullable BindableType<? super T> type,
+			@Nullable Class<T> declaredJavaType,
+			boolean allowsMultiValuedBinding,
+			NodeBuilder nodeBuilder) {
 		super( nodeBuilder.resolveExpressible( type ), nodeBuilder );
 		this.name = name;
+		this.declaredJavaType = declaredJavaType;
 		this.allowsMultiValuedBinding = allowsMultiValuedBinding;
 	}
 
 	protected JpaCriteriaParameter(JpaCriteriaParameter<T> original) {
 		super( original.getNodeType(), original.nodeBuilder() );
 		this.name = original.name;
+		this.declaredJavaType = original.declaredJavaType;
 		this.allowsMultiValuedBinding = original.allowsMultiValuedBinding;
 	}
 
@@ -101,13 +114,13 @@ public class JpaCriteriaParameter<T>
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
-	public void applyAnticipatedType(BindableType type) {
+	public void applyAnticipatedType(@Nullable BindableType type) {
 		super.internalApplyInferableType( nodeBuilder().resolveExpressible( type ) );
 	}
 
 	@Override
 	public SqmParameter<T> copy() {
-		return new JpaCriteriaParameter<>( getName(), getAnticipatedType(), allowMultiValuedBinding(), nodeBuilder() );
+		return new JpaCriteriaParameter<>( this );
 	}
 
 	@Override
@@ -116,7 +129,20 @@ public class JpaCriteriaParameter<T>
 	}
 
 	@Override
-	public @Nullable Class<T> getParameterType() {
+	public @Nonnull Class<T> getParameterType() {
+		final var javaType = getJavaType();
+		if ( javaType == null ) {
+			throw new IllegalStateException( "Could not determine the Java type of Criteria parameter"
+					+ (name == null ? "" : " '" + name + "'") );
+		}
+		return javaType;
+	}
+
+	@Override
+	public @Nullable Class<T> getJavaType() {
+		if ( declaredJavaType != null ) {
+			return declaredJavaType;
+		}
 		final SqmExpressible<T> nodeType = getNodeType();
 		return nodeType == null ? null : nodeType.getExpressibleJavaType().getJavaTypeClass();
 	}
@@ -132,6 +158,7 @@ public class JpaCriteriaParameter<T>
 	}
 
 	@Override
+	@Nonnull
 	public NamedCallableQueryMemento.ParameterMemento toMemento() {
 		throw new UnsupportedOperationException( "ParameterMemento cannot be extracted from Criteria query parameter" );
 	}

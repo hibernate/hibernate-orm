@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.internal;
 
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.hibernate.query.named.spi.NamedQueryMemento;
 import org.hibernate.query.spi.AbstractQueryParameter;
@@ -28,14 +29,19 @@ public class QueryParameterIdentifiedImpl<T> extends AbstractQueryParameter<T> {
 		return new QueryParameterIdentifiedImpl<>(
 				parameter.getUnnamedParameterId(),
 				parameter.allowMultiValuedBinding(),
-				parameter.getAnticipatedType()
+				parameter.getAnticipatedType(),
+				parameter.getJpaCriteriaParameter().getJavaType()
 		);
 	}
 
 	private final int unnamedParameterId;
 
-	private QueryParameterIdentifiedImpl(int unnamedParameterId, boolean allowMultiValuedBinding, @Nullable BindableType<T> anticipatedType) {
-		super( allowMultiValuedBinding, anticipatedType );
+	private QueryParameterIdentifiedImpl(
+			int unnamedParameterId,
+			boolean allowMultiValuedBinding,
+			@Nullable BindableType<T> anticipatedType,
+			@Nullable Class<T> declaredJavaType) {
+		super( allowMultiValuedBinding, anticipatedType, declaredJavaType );
 		this.unnamedParameterId = unnamedParameterId;
 	}
 
@@ -44,8 +50,10 @@ public class QueryParameterIdentifiedImpl<T> extends AbstractQueryParameter<T> {
 	}
 
 	@Override
+	@Nonnull
 	public NamedQueryMemento.ParameterMemento toMemento() {
-		return session -> new QueryParameterIdentifiedImpl<>( unnamedParameterId, allowsMultiValuedBinding(), getHibernateType() );
+		return session -> new QueryParameterIdentifiedImpl<>(
+				unnamedParameterId, allowsMultiValuedBinding(), getHibernateType(), declaredJavaType );
 	}
 
 	@Override

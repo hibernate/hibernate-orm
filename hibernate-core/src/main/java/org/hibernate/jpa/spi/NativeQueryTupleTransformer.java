@@ -4,6 +4,7 @@
  */
 package org.hibernate.jpa.spi;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.Tuple;
 import jakarta.persistence.TupleElement;
 import org.hibernate.HibernateException;
@@ -28,11 +29,13 @@ public class NativeQueryTupleTransformer implements TypedTupleTransformer<Tuple>
 	public static final NativeQueryTupleTransformer INSTANCE = new NativeQueryTupleTransformer();
 
 	@Override
-	public Tuple transformTuple(Object[] tuple, String[] aliases) {
+	@Nonnull
+	public Tuple transformTuple(@Nonnull Object[] tuple, @Nonnull String[] aliases) {
 		return new NativeTupleImpl( tuple, aliases );
 	}
 
 	@Override
+	@Nonnull
 	public Class<Tuple> getTransformedType() {
 		return Tuple.class;
 	}

@@ -326,15 +326,15 @@ public interface ProcedureCall
 
 	@Override
 	@Nonnull
-	ProcedureCall addSynchronizedQuerySpace(String querySpace);
+	ProcedureCall addSynchronizedQuerySpace(@Nonnull String querySpace);
 
 	@Override
 	@Nonnull
-	ProcedureCall addSynchronizedEntityName(String entityName) throws MappingException;
+	ProcedureCall addSynchronizedEntityName(@Nonnull String entityName) throws MappingException;
 
 	@Override
 	@Nonnull
-	ProcedureCall addSynchronizedEntityClass(@SuppressWarnings("rawtypes") Class entityClass) throws MappingException;
+	ProcedureCall addSynchronizedEntityClass(@Nonnull @SuppressWarnings("rawtypes") Class entityClass) throws MappingException;
 
 	@Override
 	@Nonnull
@@ -410,11 +410,11 @@ public interface ProcedureCall
 
 	@Override
 	@Nonnull
-	ProcedureCall registerStoredProcedureParameter(int position, Class<?> type, ParameterMode mode);
+	ProcedureCall registerStoredProcedureParameter(int position, @Nonnull Class<?> type, @Nonnull ParameterMode mode);
 
 	@Override
 	@Nonnull
-	ProcedureCall registerStoredProcedureParameter(String parameterName, Class<?> type, ParameterMode mode);
+	ProcedureCall registerStoredProcedureParameter(@Nonnull String parameterName, @Nonnull Class<?> type, @Nonnull ParameterMode mode);
 
 	@Override
 	@Nonnull

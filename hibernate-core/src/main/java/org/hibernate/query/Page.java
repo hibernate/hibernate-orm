@@ -4,6 +4,8 @@
  */
 package org.hibernate.query;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.Incubating;
 
 import java.util.List;
@@ -101,6 +103,7 @@ public class Page {
 	 * @param size the number of results on the initial page.
 	 * @param number the number of the page, where {@code 0} is the first page.
 	 */
+	@Nonnull
 	public static Page page(int size, int number) {
 		return new Page( size, number );
 	}
@@ -109,6 +112,7 @@ public class Page {
 	 * Obtain an initial page with the given size.
 	 * @param size the number of results on the initial page.
 	 */
+	@Nonnull
 	public static Page first(int size) {
 		return new Page( size, 0 );
 	}
@@ -116,6 +120,7 @@ public class Page {
 	/**
 	 * Obtain the next page with the same size as this page.
 	 */
+	@Nonnull
 	public Page next() {
 		return new Page( size, number+1 );
 	}
@@ -124,6 +129,7 @@ public class Page {
 	 * Obtain the previous page with the same size as this page.
 	 * @throws IllegalStateException if this is the first page
 	 */
+	@Nonnull
 	public Page previous() {
 		if ( isFirst() ) {
 			throw new IllegalStateException("already at first page");
@@ -131,6 +137,7 @@ public class Page {
 		return new Page( size, number-1 );
 	}
 
+	@Nonnull
 	public Page first() {
 		return first( size );
 	}
@@ -144,7 +151,8 @@ public class Page {
 	 *
 	 * @since 6.5
 	 */
-	public <R> KeyedPage<R> keyedBy(Order<? super R> keyDefinition) {
+	@Nonnull
+	public <R> KeyedPage<R> keyedBy(@Nonnull Order<? super R> keyDefinition) {
 		if ( keyDefinition == null )  {
 			throw new IllegalArgumentException("Key definition must not null");
 		}
@@ -160,7 +168,8 @@ public class Page {
 	 *
 	 * @since 6.5
 	 */
-	public <R> KeyedPage<R> keyedBy(List<Order<? super R>> keyDefinition) {
+	@Nonnull
+	public <R> KeyedPage<R> keyedBy(@Nonnull List<Order<? super R>> keyDefinition) {
 		if ( keyDefinition == null || keyDefinition.isEmpty() )  {
 			throw new IllegalArgumentException("Key definition must not be empty or null");
 		}

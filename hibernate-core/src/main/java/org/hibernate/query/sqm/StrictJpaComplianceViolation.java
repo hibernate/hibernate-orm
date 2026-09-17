@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.sqm;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.query.SemanticException;
 
 /**
@@ -38,29 +40,33 @@ public class StrictJpaComplianceViolation extends SemanticException {
 		MIXED_POSITIONAL_NAMED_PARAMETERS( "mix of positional and named parameters" ),
 		;
 
+		@Nonnull
 		private final String description;
 
-		Type(String description) {
+		Type(@Nonnull String description) {
 			this.description = description;
 		}
 
+		@Nonnull
 		public String description() {
 			return description;
 		}
 	}
 
+	@Nonnull
 	private final Type type;
 
-	public StrictJpaComplianceViolation(Type type) {
+	public StrictJpaComplianceViolation(@Nonnull Type type) {
 		super( "Strict JPA query language compliance was violated: " + type.description );
 		this.type = type;
 	}
 
-	public StrictJpaComplianceViolation(String message, Type type) {
+	public StrictJpaComplianceViolation(@Nonnull String message, @Nonnull Type type) {
 		super( message );
 		this.type = type;
 	}
 
+	@Nonnull
 	public Type getType() {
 		return type;
 	}

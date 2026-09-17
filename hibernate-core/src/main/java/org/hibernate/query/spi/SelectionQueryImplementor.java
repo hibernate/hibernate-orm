@@ -110,7 +110,8 @@ public interface SelectionQueryImplementor<R>
 	SelectionQueryImplementor<R> setFirstResult(int startPosition);
 
 	@Override
-	SelectionQueryImplementor<R> setPage(Page page);
+	@Nonnull
+	SelectionQueryImplementor<R> setPage(@Nonnull Page page);
 
 	@Override
 	@SuppressWarnings("removal")
@@ -136,6 +137,7 @@ public interface SelectionQueryImplementor<R>
 
 	@Override
 	@SuppressWarnings("removal")
+	@Nonnull
 	SelectionQueryImplementor<R> setCacheRegion(@Nullable String cacheRegion);
 
 	@Override
@@ -143,7 +145,8 @@ public interface SelectionQueryImplementor<R>
 	SelectionQueryImplementor<R> setLockMode(@Nonnull LockModeType lockMode);
 
 	@Override
-	SelectionQueryImplementor<R> setLockTimeout(Timeout lockTimeout);
+	@Nonnull
+	SelectionQueryImplementor<R> setLockTimeout(@Nullable Timeout lockTimeout);
 
 	@Override
 	@Nonnull

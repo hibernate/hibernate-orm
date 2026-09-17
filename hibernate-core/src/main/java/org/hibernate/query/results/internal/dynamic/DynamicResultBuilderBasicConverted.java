@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.results.internal.dynamic;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.AttributeConverter;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
@@ -71,6 +72,7 @@ public class DynamicResultBuilderBasicConverted<O,R> implements DynamicResultBui
 	}
 
 	@Override
+	@Nonnull
 	public DynamicResultBuilderBasicConverted<?,?> cacheKeyInstance() {
 		return this;
 	}

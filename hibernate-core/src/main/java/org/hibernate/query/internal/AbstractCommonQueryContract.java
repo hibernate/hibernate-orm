@@ -113,6 +113,7 @@ import static org.hibernate.type.descriptor.converter.internal.ConverterHelper.c
 public abstract class AbstractCommonQueryContract implements CommonQueryContractImplementor {
 	protected final SharedSessionContractImplementor session;
 	protected final MutableQueryOptions queryOptions;
+	private Map<QueryParameterImplementor<?>, QueryParameterImplementor<?>> parametersWithBindings;
 
 	@SuppressWarnings("removal")
 	public AbstractCommonQueryContract(SharedSessionContractImplementor session) {
@@ -275,6 +276,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	}
 
 	@Override
+	@Nonnull
 	public FlushMode getEffectiveFlushMode() {
 		return FlushModeTypeHelper.toHibernateFlushMode( queryOptions.getQueryFlushMode(), getSession() );
 	}
@@ -844,7 +846,27 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	@Nonnull
 	public Set<Parameter<?>> getParameters() {
 		session.checkOpen( false );
-		return unmodifiableSet( getParameterMetadata().getRegistrations() );
+		final Set<Parameter<?>> parameters = new HashSet<>();
+		for ( var parameter : getParameterMetadata().getRegistrations() ) {
+			parameters.add( parameterWithBinding( getParameterMetadata().resolve( parameter ) ) );
+		}
+		return unmodifiableSet( parameters );
+	}
+
+	private <T> QueryParameterImplementor<T> parameterWithBinding(QueryParameterImplementor<T> parameter) {
+		if ( QueryParameterBindingParameter.getParameterTypeIfKnown( parameter ) != null ) {
+			return parameter;
+		}
+		// The parameter's declared type is unavailable, but this query's binding may supply it.
+		if ( parametersWithBindings == null ) {
+			parametersWithBindings = new HashMap<>();
+		}
+		@SuppressWarnings("unchecked")
+		final var result = (QueryParameterImplementor<T>) parametersWithBindings.computeIfAbsent(
+				parameter,
+				key -> new QueryParameterBindingParameter<>( parameter, getQueryParameterBindings().getBinding( parameter ) )
+		);
+		return result;
 	}
 
 	@Override
@@ -860,7 +882,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	public QueryParameterImplementor<?> getParameter(@Nonnull String name) {
 		session.checkOpen( false );
 		try {
-			return getParameterMetadata().getQueryParameter( name );
+			return parameterWithBinding( getParameterMetadata().getQueryParameter( name ) );
 		}
 		catch ( HibernateException e ) {
 			throw getExceptionConverter().convert( e );
@@ -872,7 +894,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	public <T> QueryParameterImplementor<T> getParameter(@Nonnull String name, @Nonnull Class<T> type) {
 		session.checkOpen( false );
 		try {
-			final var parameter = getParameterMetadata().getQueryParameter( name );
+			final var parameter = parameterWithBinding( getParameterMetadata().getQueryParameter( name ) );
 			final var parameterType = parameter.getParameterType();
 			if ( !type.isAssignableFrom( parameterType ) ) {
 				throw new IllegalArgumentException(
@@ -894,7 +916,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	public QueryParameterImplementor<?> getParameter(int position) {
 		session.checkOpen( false );
 		try {
-			return getParameterMetadata().getQueryParameter( position );
+			return parameterWithBinding( getParameterMetadata().getQueryParameter( position ) );
 		}
 		catch ( HibernateException e ) {
 			throw getExceptionConverter().convert( e );
@@ -906,7 +928,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	public <T> QueryParameterImplementor<T> getParameter(int position, @Nonnull Class<T> type) {
 		session.checkOpen( false );
 		try {
-			final var parameter = getParameterMetadata().getQueryParameter( position );
+			final var parameter = parameterWithBinding( getParameterMetadata().getQueryParameter( position ) );
 			final var parameterType = parameter.getParameterType();
 			if ( !type.isAssignableFrom( parameterType ) ) {
 				throw new IllegalArgumentException(
@@ -924,6 +946,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	}
 
 	@Override
+	@Nullable
 	public <T> T getParameterValue(@Nonnull Parameter<T> param) {
 		session.checkOpen( false );
 		final var parameter = getParameterMetadata().resolve( param );
@@ -947,6 +970,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	}
 
 	@Override
+	@Nullable
 	public Object getParameterValue(@Nonnull String name) {
 		session.checkOpen( false );
 		final var binding = getQueryParameterBindings().getBinding( name );
@@ -1053,7 +1077,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	}
 
 	protected <P> QueryParameterImplementor<P> getQueryParameter(QueryParameterImplementor<P> parameter) {
-		return parameter;
+		return QueryParameterBindingParameter.unwrap( parameter );
 	}
 
 	@Override
@@ -1279,12 +1303,12 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 			@Nonnull Parameter<P> parameter,
 			@Nullable P value) {
 		if ( value instanceof TypedParameterValue<?> typedParameterValue ) {
-			final var parameterType = parameter.getParameterType();
+			final var parameterType = QueryParameterBindingParameter.getParameterTypeIfKnown( parameter );
 			final var type = typedParameterValue.type();
 			if ( type == null ) {
 				throw new IllegalArgumentException( "TypedParameterValue has no type" );
 			}
-			if ( !parameterType.isAssignableFrom( type.getJavaType() ) ) {
+			if ( parameterType != null && !parameterType.isAssignableFrom( type.getJavaType() ) ) {
 				throw new QueryArgumentException( "Given TypedParameterValue is not assignable to given Parameter type",
 						parameterType, typedParameterValue.value() );
 			}

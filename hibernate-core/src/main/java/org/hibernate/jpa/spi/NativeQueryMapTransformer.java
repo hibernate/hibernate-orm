@@ -4,6 +4,8 @@
  */
 package org.hibernate.jpa.spi;
 
+import jakarta.annotation.Nonnull;
+
 import org.hibernate.query.TupleTransformer;
 
 import java.util.HashMap;
@@ -23,7 +25,8 @@ public class NativeQueryMapTransformer implements TupleTransformer<Map<String,Ob
 	public static final NativeQueryMapTransformer INSTANCE = new NativeQueryMapTransformer();
 
 	@Override
-	public Map<String,Object> transformTuple(Object[] tuple, String[] aliases) {
+	@Nonnull
+	public Map<String,Object> transformTuple(@Nonnull Object[] tuple, @Nonnull String[] aliases) {
 		Map<String,Object> map = new HashMap<>( aliases.length );
 		for ( int i = 0; i < aliases.length; i++ ) {
 			map.put( aliases[i].toLowerCase(ROOT), tuple[i] );

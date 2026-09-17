@@ -344,6 +344,7 @@ public class SelectionQueryImpl<R>
 	}
 
 	@Override
+	@Nullable
 	public Class<R> getResultType() {
 		return actualResultType;
 	}
@@ -360,19 +361,19 @@ public class SelectionQueryImpl<R>
 
 	@Override
 	@Nonnull
-	public <X> SelectionQueryImplementor<X> asSelectionQuery(Class<X> type) {
+	public <X> SelectionQueryImplementor<X> asSelectionQuery(@Nonnull Class<X> type) {
 		return new SelectionQueryImpl<>( this, type, null, null );
 	}
 
 	@Override
 	@Nonnull
-	public <X> SelectionQueryImplementor<X> asSelectionQuery(EntityGraph<X> entityGraph) {
+	public <X> SelectionQueryImplementor<X> asSelectionQuery(@Nonnull EntityGraph<X> entityGraph) {
 		return asSelectionQuery( entityGraph, GraphSemantic.LOAD );
 	}
 
 	@Override
 	@Nonnull
-	public <X> SelectionQueryImplementor<X> asSelectionQuery(EntityGraph<X> entityGraph, GraphSemantic graphSemantic) {
+	public <X> SelectionQueryImplementor<X> asSelectionQuery(@Nonnull EntityGraph<X> entityGraph, @Nonnull GraphSemantic graphSemantic) {
 		return new SelectionQueryImpl<>(
 				this,
 				entityGraph.getGraphedType().getJavaType(),
@@ -441,7 +442,8 @@ public class SelectionQueryImpl<R>
 	}
 
 	@Override
-	public SelectionQueryImplementor<R> setPage(Page page) {
+	@Nonnull
+	public SelectionQueryImplementor<R> setPage(@Nonnull Page page) {
 		setMaxResults( page.getMaxResults() );
 		setFirstResult( page.getFirstResult() );
 		return this;
@@ -571,6 +573,7 @@ public class SelectionQueryImpl<R>
 	}
 
 	@Override
+	@Nonnull
 	public SelectionQueryImplementor<R> setCacheRegion(@Nullable String cacheRegion) {
 		queryOptions.setResultCacheRegionName( cacheRegion );
 		return this;
@@ -1039,7 +1042,8 @@ public class SelectionQueryImpl<R>
 	}
 
 	@Override
-	public KeyedResultList<R> getKeyedResultList(KeyedPage<R> keyedPage) {
+	@Nonnull
+	public KeyedResultList<R> getKeyedResultList(@Nonnull KeyedPage<R> keyedPage) {
 		if ( keyedPage == null ) {
 			throw new IllegalArgumentException( "KeyedPage was null" );
 		}

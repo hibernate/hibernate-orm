@@ -9,6 +9,8 @@ import java.util.List;
 import javax.money.Monetary;
 import javax.money.MonetaryAmount;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.Tuple;
 
 import org.hibernate.testing.util.uuid.SafeRandomUUIDGenerator;
@@ -172,12 +174,14 @@ public class ResultsShapeTests {
 
 	private final TypedTupleTransformer<Order> ORDER_TUPLE_TRANSFORMER = new TypedTupleTransformer<>() {
 		@Override
+		@Nonnull
 		public Class<Order> getTransformedType() {
 			return Order.class;
 		}
 
 		@Override
-		public Order transformTuple(Object[] tuple, String[] aliases) {
+		@Nullable
+		public Order transformTuple(@Nonnull Object[] tuple, @Nonnull String[] aliases) {
 			return (Order) tuple[0];
 		}
 	};

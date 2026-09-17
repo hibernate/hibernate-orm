@@ -6,12 +6,11 @@ package org.hibernate.resource.beans.container.internal;
 
 import jakarta.enterprise.inject.spi.BeanManager;
 import org.hibernate.Internal;
-import org.hibernate.resource.beans.container.spi.AbstractCdiBeanContainer;
-import org.hibernate.resource.beans.container.spi.BeanLifecycleStrategy;
 import org.hibernate.resource.beans.container.spi.ContainedBean;
-import org.hibernate.resource.beans.container.spi.ContainedBeanImplementor;
 import org.hibernate.resource.beans.container.spi.ExtendedBeanManager;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
+import org.hibernate.resource.beans.spi.ManagedBean;
+
 
 import static org.hibernate.resource.beans.internal.BeansMessageLogger.BEANS_MSG_LOGGER;
 
@@ -32,7 +31,7 @@ public class CdiBeanContainerExtendedAccessImpl
 	}
 
 	@Override
-	protected <B> ContainedBeanImplementor<B> createBean(
+	protected <B> ContainedBean<B> createBean(
 			Class<B> beanType,
 			BeanLifecycleStrategy lifecycleStrategy,
 			BeanInstanceProducer fallbackProducer) {
@@ -45,7 +44,7 @@ public class CdiBeanContainerExtendedAccessImpl
 	}
 
 	@Override
-	protected <B> ContainedBeanImplementor<B> createBean(
+	protected <B> ContainedBean<B> createBean(
 			String name,
 			Class<B> beanType,
 			BeanLifecycleStrategy lifecycleStrategy,
@@ -64,9 +63,15 @@ public class CdiBeanContainerExtendedAccessImpl
 	}
 
 	@Override
+	protected <B> ContainedBean<B> createBootstrapSafeBean(
+			Class<B> beanType, LifecycleOptions options, BeanInstanceProducer producer) {
+		return createBean( beanType, options, producer );
+	}
+
+	@Override
 	public void beanManagerInitialized(BeanManager beanManager) {
 		this.usableBeanManager = beanManager;
-		forEachBean( ContainedBeanImplementor::initialize );
+		forEachBean( ContainedBean::initialize );
 	}
 
 	@Override
@@ -88,12 +93,12 @@ public class CdiBeanContainerExtendedAccessImpl
 		return usableBeanManager;
 	}
 
-	private class BeanImpl<B> implements ContainedBeanImplementor<B> {
+	private class BeanImpl<B> implements ContainedBean<B> {
 		private final Class<B> beanType;
 		private final BeanLifecycleStrategy lifecycleStrategy;
 		private final BeanInstanceProducer fallbackProducer;
 
-		private ContainedBeanImplementor<B> delegateContainedBean;
+		private ContainedBean<B> delegateContainedBean;
 
 		private BeanImpl(
 				Class<B> beanType,
@@ -110,7 +115,7 @@ public class CdiBeanContainerExtendedAccessImpl
 		}
 
 		@Override
-		public void initialize() {
+		public synchronized void initialize() {
 			if ( delegateContainedBean == null ) {
 				delegateContainedBean = lifecycleStrategy.createBean( beanType, fallbackProducer, DUMMY_BEAN_CONTAINER );
 			}
@@ -118,7 +123,7 @@ public class CdiBeanContainerExtendedAccessImpl
 		}
 
 		@Override
-		public B getBeanInstance() {
+		public synchronized B getBeanInstance() {
 			if ( delegateContainedBean == null ) {
 				initialize();
 			}
@@ -126,19 +131,21 @@ public class CdiBeanContainerExtendedAccessImpl
 		}
 
 		@Override
-		public void release() {
-			delegateContainedBean.release();
+		public synchronized void release() {
+			if ( delegateContainedBean != null ) {
+				delegateContainedBean.release();
+			}
 			delegateContainedBean = null;
 		}
 	}
 
-	private class NamedBeanImpl<B> implements ContainedBeanImplementor<B> {
+	private class NamedBeanImpl<B> implements ContainedBean<B> {
 		private final String name;
 		private final Class<B> beanType;
 		private final BeanLifecycleStrategy lifecycleStrategy;
 		private final BeanInstanceProducer fallbackProducer;
 
-		private ContainedBeanImplementor<B> delegateContainedBean;
+		private ContainedBean<B> delegateContainedBean;
 
 		private NamedBeanImpl(
 				String name,
@@ -157,7 +164,7 @@ public class CdiBeanContainerExtendedAccessImpl
 		}
 
 		@Override
-		public void initialize() {
+		public synchronized void initialize() {
 			if ( delegateContainedBean == null ) {
 				delegateContainedBean =
 						lifecycleStrategy.createBean( name, beanType, fallbackProducer, DUMMY_BEAN_CONTAINER );
@@ -166,7 +173,7 @@ public class CdiBeanContainerExtendedAccessImpl
 		}
 
 		@Override
-		public B getBeanInstance() {
+		public synchronized B getBeanInstance() {
 			if ( delegateContainedBean == null ) {
 				initialize();
 			}
@@ -174,8 +181,10 @@ public class CdiBeanContainerExtendedAccessImpl
 		}
 
 		@Override
-		public void release() {
-			delegateContainedBean.release();
+		public synchronized void release() {
+			if ( delegateContainedBean != null ) {
+				delegateContainedBean.release();
+			}
 			delegateContainedBean = null;
 		}
 	}
@@ -203,6 +212,17 @@ public class CdiBeanContainerExtendedAccessImpl
 				BeanInstanceProducer fallbackProducer) {
 			// todo (5.3) : should this throw an exception instead?
 			return CdiBeanContainerExtendedAccessImpl.this.getBean( beanName, beanType, lifecycleOptions, fallbackProducer );
+		}
+
+		@Override
+		public <B> ContainedBean<B> getBootstrapSafeBean(
+				Class<B> beanType, LifecycleOptions options, BeanInstanceProducer producer) {
+			return CdiBeanContainerExtendedAccessImpl.this.getBootstrapSafeBean( beanType, options, producer );
+		}
+
+		@Override
+		public void releaseBean(ManagedBean<?> bean) {
+			CdiBeanContainerExtendedAccessImpl.this.releaseBean( bean );
 		}
 
 		@Override

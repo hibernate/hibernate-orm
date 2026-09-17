@@ -9,8 +9,7 @@ import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.inject.spi.BeanManager;
 
 import org.hibernate.resource.beans.container.spi.BeanContainer;
-import org.hibernate.resource.beans.container.spi.BeanLifecycleStrategy;
-import org.hibernate.resource.beans.container.spi.ContainedBeanImplementor;
+import org.hibernate.resource.beans.container.spi.ContainedBean;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
 
 import static org.hibernate.resource.beans.internal.BeansMessageLogger.BEANS_MSG_LOGGER;
@@ -34,7 +33,7 @@ public class ContainerManagedLifecycleStrategy implements BeanLifecycleStrategy 
 
 
 	@Override
-	public <B> ContainedBeanImplementor<B> createBean(
+	public <B> ContainedBean<B> createBean(
 			Class<B> beanClass,
 			BeanInstanceProducer fallbackProducer,
 			BeanContainer beanContainer) {
@@ -42,7 +41,7 @@ public class ContainerManagedLifecycleStrategy implements BeanLifecycleStrategy 
 	}
 
 	@Override
-	public <B> ContainedBeanImplementor<B> createBean(
+	public <B> ContainedBean<B> createBean(
 			String beanName,
 			Class<B> beanClass,
 			BeanInstanceProducer fallbackProducer,
@@ -52,7 +51,7 @@ public class ContainerManagedLifecycleStrategy implements BeanLifecycleStrategy 
 
 
 
-	private static abstract class AbstractBeanImpl<B> implements ContainedBeanImplementor<B> {
+	private static abstract class AbstractBeanImpl<B> implements ContainedBean<B> {
 		final Class<B> beanType;
 
 		BeanInstanceProducer fallbackProducer;
@@ -76,7 +75,7 @@ public class ContainerManagedLifecycleStrategy implements BeanLifecycleStrategy 
 		}
 
 		@Override
-		public B getBeanInstance() {
+		public synchronized B getBeanInstance() {
 			if ( beanInstance == null ) {
 				initialize();
 			}
@@ -84,7 +83,7 @@ public class ContainerManagedLifecycleStrategy implements BeanLifecycleStrategy 
 		}
 
 		@Override
-		public void initialize() {
+		public synchronized void initialize() {
 			if ( beanInstance != null ) {
 				return;
 			}
@@ -108,7 +107,7 @@ public class ContainerManagedLifecycleStrategy implements BeanLifecycleStrategy 
 		protected abstract Instance<B> resolveContainerInstance();
 
 		@Override
-		public void release() {
+		public synchronized void release() {
 			if ( beanInstance == null ) {
 				return;
 			}

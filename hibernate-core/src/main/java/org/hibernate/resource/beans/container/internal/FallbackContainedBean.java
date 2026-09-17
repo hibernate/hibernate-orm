@@ -2,15 +2,15 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.resource.beans.container.spi;
+package org.hibernate.resource.beans.container.internal;
 
+import org.hibernate.resource.beans.container.spi.ContainedBean;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
-import org.hibernate.resource.beans.spi.ManagedBean;
 
 /**
  * @author Steve Ebersole
  */
-public class FallbackContainedBean<B> implements ContainedBean<B>, ManagedBean<B> {
+public class FallbackContainedBean<B> implements ContainedBean<B> {
 	private final Class<B> beanType;
 
 	private final B beanInstance;
@@ -34,5 +34,14 @@ public class FallbackContainedBean<B> implements ContainedBean<B>, ManagedBean<B
 	@Override
 	public B getBeanInstance() {
 		return beanInstance;
+	}
+	@Override
+	public void initialize() {
+		// The producer already created the instance in the constructor.
+	}
+
+	@Override
+	public void release() {
+		// BeanInstanceProducer does not define a destruction contract.
 	}
 }

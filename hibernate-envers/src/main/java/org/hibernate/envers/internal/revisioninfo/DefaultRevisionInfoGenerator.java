@@ -19,7 +19,7 @@ import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
 import org.hibernate.resource.beans.internal.Helper;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
-import org.hibernate.resource.beans.spi.ProvidedInstanceManagedBeanImpl;
+import org.hibernate.resource.beans.internal.ProvidedInstanceManagedBeanImpl;
 import org.hibernate.service.ServiceRegistry;
 
 /**

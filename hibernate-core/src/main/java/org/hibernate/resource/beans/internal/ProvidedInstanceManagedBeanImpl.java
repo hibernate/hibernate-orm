@@ -2,9 +2,10 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.resource.beans.spi;
+package org.hibernate.resource.beans.internal;
 
 import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.resource.beans.spi.ManagedBean;
 
 /**
  * {@link ManagedBean} implementation for cases where we have been handed an actual

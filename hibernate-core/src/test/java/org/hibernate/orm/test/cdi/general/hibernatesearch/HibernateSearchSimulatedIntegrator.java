@@ -9,7 +9,7 @@ import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.resource.beans.container.spi.BeanContainer;
-import org.hibernate.resource.beans.container.spi.ContainedBeanImplementor;
+import org.hibernate.resource.beans.container.spi.ContainedBean;
 import org.hibernate.resource.beans.container.spi.ExtendedBeanManager;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
@@ -30,18 +30,18 @@ public class HibernateSearchSimulatedIntegrator implements Integrator, BeanConta
 
 	private final BeanInstanceProducer fallbackBeanInstanceProducer;
 
-	private ContainedBeanImplementor<TheApplicationScopedBean> applicationScopedBean1;
-	private ContainedBeanImplementor<TheApplicationScopedBean> applicationScopedBean2;
-	private ContainedBeanImplementor<TheDependentBean> dependentBean1;
-	private ContainedBeanImplementor<TheDependentBean> dependentBean2;
-	private ContainedBeanImplementor<TheReflectionInstantiatedBean> reflectionInstantiatedBean1;
-	private ContainedBeanImplementor<TheReflectionInstantiatedBean> reflectionInstantiatedBean2;
-	private ContainedBeanImplementor<TheNamedApplicationScopedBean> namedApplicationScopedBean1;
-	private ContainedBeanImplementor<TheNamedApplicationScopedBean> namedApplicationScopedBean2;
-	private ContainedBeanImplementor<TheNamedDependentBean> namedDependentBean1;
-	private ContainedBeanImplementor<TheNamedDependentBean> namedDependentBean2;
-	private ContainedBeanImplementor<TheReflectionInstantiatedBean> namedReflectionInstantiatedBean1;
-	private ContainedBeanImplementor<TheReflectionInstantiatedBean> namedReflectionInstantiatedBean2;
+	private ContainedBean<TheApplicationScopedBean> applicationScopedBean1;
+	private ContainedBean<TheApplicationScopedBean> applicationScopedBean2;
+	private ContainedBean<TheDependentBean> dependentBean1;
+	private ContainedBean<TheDependentBean> dependentBean2;
+	private ContainedBean<TheReflectionInstantiatedBean> reflectionInstantiatedBean1;
+	private ContainedBean<TheReflectionInstantiatedBean> reflectionInstantiatedBean2;
+	private ContainedBean<TheNamedApplicationScopedBean> namedApplicationScopedBean1;
+	private ContainedBean<TheNamedApplicationScopedBean> namedApplicationScopedBean2;
+	private ContainedBean<TheNamedDependentBean> namedDependentBean1;
+	private ContainedBean<TheNamedDependentBean> namedDependentBean2;
+	private ContainedBean<TheReflectionInstantiatedBean> namedReflectionInstantiatedBean1;
+	private ContainedBean<TheReflectionInstantiatedBean> namedReflectionInstantiatedBean2;
 
 	public HibernateSearchSimulatedIntegrator(BeanInstanceProducer fallbackBeanInstanceProducer) {
 		this.fallbackBeanInstanceProducer = fallbackBeanInstanceProducer;
@@ -69,67 +69,67 @@ public class HibernateSearchSimulatedIntegrator implements Integrator, BeanConta
 		assertThat( beanContainer, CoreMatchers.notNullValue() );
 
 
-		applicationScopedBean1 = (ContainedBeanImplementor) beanContainer.getBean(
+		applicationScopedBean1 = beanContainer.getBean(
 				TheApplicationScopedBean.class,
 				this,
 				fallbackBeanInstanceProducer
 		);
-		applicationScopedBean2 = (ContainedBeanImplementor) beanContainer.getBean(
+		applicationScopedBean2 = beanContainer.getBean(
 				TheApplicationScopedBean.class,
 				this,
 				fallbackBeanInstanceProducer
 		);
-		dependentBean1 = (ContainedBeanImplementor) beanContainer.getBean(
+		dependentBean1 = beanContainer.getBean(
 				TheDependentBean.class,
 				this,
 				fallbackBeanInstanceProducer
 		);
-		dependentBean2 = (ContainedBeanImplementor) beanContainer.getBean(
+		dependentBean2 = beanContainer.getBean(
 				TheDependentBean.class,
 				this,
 				fallbackBeanInstanceProducer
 		);
-		reflectionInstantiatedBean1 = (ContainedBeanImplementor) beanContainer.getBean(
+		reflectionInstantiatedBean1 = beanContainer.getBean(
 				TheReflectionInstantiatedBean.class,
 				this,
 				fallbackBeanInstanceProducer
 		);
-		reflectionInstantiatedBean2 = (ContainedBeanImplementor) beanContainer.getBean(
+		reflectionInstantiatedBean2 = beanContainer.getBean(
 				TheReflectionInstantiatedBean.class,
 				this,
 				fallbackBeanInstanceProducer
 		);
-		namedApplicationScopedBean1 = (ContainedBeanImplementor) beanContainer.getBean(
+		namedApplicationScopedBean1 = beanContainer.getBean(
 				TheMainNamedApplicationScopedBeanImpl.NAME,
 				TheNamedApplicationScopedBean.class,
 				this,
 				fallbackBeanInstanceProducer
 		);
-		namedApplicationScopedBean2 = (ContainedBeanImplementor) beanContainer.getBean(
+		namedApplicationScopedBean2 = beanContainer.getBean(
 				TheMainNamedApplicationScopedBeanImpl.NAME,
 				TheNamedApplicationScopedBean.class,
 				this,
 				fallbackBeanInstanceProducer
 		);
-		namedDependentBean1 = (ContainedBeanImplementor) beanContainer.getBean(
+		namedDependentBean1 = beanContainer.getBean(
 				TheMainNamedDependentBeanImpl.NAME,
 				TheNamedDependentBean.class,
 				this,
 				fallbackBeanInstanceProducer
 		);
-		namedDependentBean2 = (ContainedBeanImplementor) beanContainer.getBean(
+		namedDependentBean2 = beanContainer.getBean(
 				TheMainNamedDependentBeanImpl.NAME,
 				TheNamedDependentBean.class,
 				this,
 				fallbackBeanInstanceProducer
 		);
-		namedReflectionInstantiatedBean1 = (ContainedBeanImplementor) beanContainer.getBean(
+		namedReflectionInstantiatedBean1 = beanContainer.getBean(
 				TheReflectionInstantiatedBean.class.getName(),
 				TheReflectionInstantiatedBean.class,
 				this,
 				fallbackBeanInstanceProducer
 		);
-		namedReflectionInstantiatedBean2 = (ContainedBeanImplementor) beanContainer.getBean(
+		namedReflectionInstantiatedBean2 = beanContainer.getBean(
 				TheReflectionInstantiatedBean.class.getName(),
 				TheReflectionInstantiatedBean.class,
 				this,

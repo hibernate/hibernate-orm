@@ -13,7 +13,7 @@ import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.orm.test.multitenancy.AbstractMultiTenancyTest;
 import org.hibernate.orm.test.multitenancy.ConfigurableMultiTenantConnectionProvider;
-import org.hibernate.resource.beans.container.spi.BeanContainer;
+import org.hibernate.resource.beans.container.internal.AbstractBeanContainer;
 import org.hibernate.resource.beans.container.spi.ContainedBean;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
 
@@ -36,14 +36,24 @@ public class MultiTenantConnectionProviderFromBeanContainerTest extends Abstract
 
 		providerFromBeanContainer = new ConfigurableMultiTenantConnectionProvider( connectionProviderMap);
 		settings.put( AvailableSettings.ALLOW_EXTENSIONS_IN_CDI, "true" );
-		settings.put( AvailableSettings.BEAN_CONTAINER, new BeanContainer() {
+		settings.put( AvailableSettings.BEAN_CONTAINER, new AbstractBeanContainer() {
 			@Override
 			@SuppressWarnings("unchecked")
-			public <B> ContainedBean<B> getBean(
+			protected <B> ContainedBean<B> createBean(
 					Class<B> beanType,
 					LifecycleOptions lifecycleOptions,
 					BeanInstanceProducer fallbackProducer) {
 				return new ContainedBean<>() {
+					@Override
+					public void initialize() {
+						// No deferred initialization.
+					}
+
+					@Override
+					public void release() {
+						// No resources owned by this handle.
+					}
+
 					@Override
 					public B getBeanInstance() {
 						return (B) (beanType == MultiTenantConnectionProvider.class ? providerFromBeanContainer : fallbackProducer.produceBeanInstance( beanType ) );
@@ -56,12 +66,22 @@ public class MultiTenantConnectionProviderFromBeanContainerTest extends Abstract
 			}
 
 			@Override
-			public <B> ContainedBean<B> getBean(
+			protected <B> ContainedBean<B> createBean(
 					String name,
 					Class<B> beanType,
 					LifecycleOptions lifecycleOptions,
 					BeanInstanceProducer fallbackProducer) {
 				return new ContainedBean<>() {
+					@Override
+					public void initialize() {
+						// No deferred initialization.
+					}
+
+					@Override
+					public void release() {
+						// No resources owned by this handle.
+					}
+
 					@Override
 					public B getBeanInstance() {
 						return fallbackProducer.produceBeanInstance( beanType );

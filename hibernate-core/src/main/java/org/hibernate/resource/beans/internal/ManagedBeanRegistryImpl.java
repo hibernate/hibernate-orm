@@ -4,32 +4,43 @@
  */
 package org.hibernate.resource.beans.internal;
 
-import java.util.HashMap;
-import java.util.Map;
+import jakarta.annotation.Nonnull;
 
-import org.hibernate.AssertionFailure;
+import org.hibernate.resource.beans.container.internal.FallbackBeanContainerImpl;
 import org.hibernate.resource.beans.container.spi.BeanContainer;
-import org.hibernate.resource.beans.container.spi.FallbackContainedBean;
+import org.hibernate.resource.beans.spi.BeanInstanceCaching;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.service.spi.Stoppable;
 
 /**
- * Abstract support (template pattern) for {@link ManagedBeanRegistry} implementations
+ * Applies Hibernate's acquisition policies to the configured bean container.
  *
  * @author Steve Ebersole
  */
 public class ManagedBeanRegistryImpl implements ManagedBeanRegistry, BeanContainer.LifecycleOptions, Stoppable {
-	private final Map<String,ManagedBean<?>> registrations = new HashMap<>();
-
 	private final BeanContainer beanContainer;
 
+	private static final BeanContainer.LifecycleOptions UNCACHED_LIFECYCLE_OPTIONS =
+			new BeanContainer.LifecycleOptions() {
+				@Override
+				public boolean canUseCachedReferences() {
+					return false;
+				}
+				@Override
+				public boolean useJpaCompliantCreation() {
+					return true;
+				}
+			};
+
+
 	public ManagedBeanRegistryImpl(BeanContainer beanContainer) {
-		this.beanContainer = beanContainer;
+		this.beanContainer = beanContainer == null ? new FallbackBeanContainerImpl() : beanContainer;
 	}
 
 	@Override
+	@Nonnull
 	public BeanContainer getBeanContainer() {
 		return beanContainer;
 	}
@@ -45,72 +56,44 @@ public class ManagedBeanRegistryImpl implements ManagedBeanRegistry, BeanContain
 	}
 
 	@Override
+	public <T> ManagedBean<T> getBootstrapSafeBean(Class<T> beanClass) {
+		return beanContainer.getBootstrapSafeBean( beanClass, this, FallbackBeanInstanceProducer.INSTANCE );
+	}
+
+	@Override
 	public <T> ManagedBean<T> getBean(Class<T> beanClass) {
 		return getBean( beanClass, FallbackBeanInstanceProducer.INSTANCE );
 	}
 
 	@Override
-	public <T> ManagedBean<T> getBean(Class<T> beanClass, BeanInstanceProducer fallbackBeanInstanceProducer) {
-		final String beanClassName = beanClass.getName();
-		final var existing = registrations.get( beanClassName );
-		if ( existing != null ) {
-			if ( !beanClass.equals( existing.getBeanClass() ) ) {
-				throw new AssertionFailure( "Wrong type of bean: " + beanClassName );
-			}
-			//noinspection unchecked (safe since we just checked)
-			return (ManagedBean<T>) existing;
-		}
-		else {
-			final var bean = createBean( beanClass, fallbackBeanInstanceProducer );
-			registrations.put( beanClassName, bean );
-			return bean;
-		}
+	public <T> ManagedBean<T> getBean(Class<T> beanClass, BeanInstanceProducer producer) {
+		return beanContainer.getBean( beanClass, this, producer );
 	}
 
 	@Override
-	public <T> ManagedBean<? extends T> getBean(String beanName, Class<T> beanContract) {
-		return getBean( beanName, beanContract, FallbackBeanInstanceProducer.INSTANCE );
+	public <T> ManagedBean<? extends T> getBean(String name, Class<T> beanContract) {
+		return getBean( name, beanContract, FallbackBeanInstanceProducer.INSTANCE );
 	}
 
 	@Override
-	public <T> ManagedBean<? extends T> getBean(
-			String beanName,
-			Class<T> beanContract,
-			BeanInstanceProducer fallbackBeanInstanceProducer) {
-		final String key = beanContract.getName() + ':' + beanName;
-		final var existing = registrations.get( key );
-		if ( existing != null ) {
-			if ( !beanContract.isAssignableFrom( existing.getBeanClass() ) ) {
-				throw new AssertionFailure( "Wrong type of bean: " + key );
-			}
-			//noinspection unchecked (safe since we just checked)
-			return (ManagedBean<? extends T>) existing;
-		}
-		else {
-			final var bean = createBean( beanName, beanContract, fallbackBeanInstanceProducer );
-			registrations.put( key, bean );
-			return bean;
-		}
+	public <T> ManagedBean<? extends T> getBean(String name, Class<T> beanContract, BeanInstanceProducer producer) {
+		return beanContainer.getBean( name, beanContract, this, producer );
 	}
 
-	private <T> ManagedBean<T> createBean(Class<T> beanClass, BeanInstanceProducer fallbackBeanInstanceProducer) {
-		return beanContainer == null
-				? new FallbackContainedBean<>( beanClass, fallbackBeanInstanceProducer )
-				: beanContainer.getBean( beanClass, this, fallbackBeanInstanceProducer );
+	@Override
+	public <T> ManagedBean<T> getBean(Class<T> beanClass, BeanInstanceCaching caching) {
+		return beanContainer.getBean( beanClass,
+				caching == BeanInstanceCaching.ALLOW ? this : UNCACHED_LIFECYCLE_OPTIONS,
+				FallbackBeanInstanceProducer.INSTANCE );
 	}
 
-	private <T> ManagedBean<? extends T> createBean(
-			String beanName, Class<T> beanContract, BeanInstanceProducer fallbackBeanInstanceProducer) {
-		return beanContainer == null
-				? new FallbackContainedBean<>( beanName, beanContract, fallbackBeanInstanceProducer )
-				: beanContainer.getBean( beanName, beanContract, this, fallbackBeanInstanceProducer );
+	@Override
+	public void releaseBean(ManagedBean<?> bean) {
+		beanContainer.releaseBean( bean );
 	}
 
 	@Override
 	public void stop() {
-		if ( beanContainer != null ) {
-			beanContainer.stop();
-		}
-		registrations.clear();
+		beanContainer.stop();
 	}
 }

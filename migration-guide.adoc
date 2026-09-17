@@ -1174,3 +1174,41 @@ This section describes changes to dependencies used by Hibernate ORM.
 
 The `hibernate-micrometer` module no longer pulls `io.micrometer:micrometer-core` as a transitive runtime dependency.
 Applications using this module must now explicitly add `io.micrometer:micrometer-core` to their classpath.
+
+[[bean-container-lifecycle]]
+== Bean container lifecycle
+
+`ContainedBeanImplementor` has been removed; its `initialize()` and `release()` methods
+are now declared by `ContainedBean`. Custom handles must implement these lifecycle hooks.
+Already initialized handles may use a no-op `initialize()`, and handles with no cleanup
+requirements may use a no-op `release()`. Release must not initialize an unresolved bean.
+`ManagedBean` remains the consumer-facing access contract. Consumers should release through
+the registry or owning `BeanContainer`, so cache eviction and lifecycle bookkeeping occur.
+
+`BeanLifecycleStrategy` and `AbstractCdiBeanContainer` have moved from
+`org.hibernate.resource.beans.container.spi` to `org.hibernate.resource.beans.container.internal`.
+They are Hibernate implementation details; external containers express the requested lifecycle
+policy through `BeanContainer.LifecycleOptions`.
+
+`FallbackContainedBean` has likewise moved from `beans.container.spi` to `beans.container.internal`.
+`ProvidedInstanceManagedBeanImpl` and `ManagedBeanRegistryInitiator` have moved from
+`beans.spi` to `beans.internal` (all under `org.hibernate.resource`).
+
+`ManagedBeanRegistry#getBeanContainer()` is now annotated `@Nonnull` and always returns a container.
+When no backing container is configured, Hibernate uses `FallbackBeanContainerImpl`.
+Use `BeanContainer#isFallback()` to distinguish this case.
+The fallback container uses the supplied `BeanInstanceProducer`, including custom producers.
+
+`BeanContainer` implementations must implement `getBootstrapSafeBean()` and `releaseBean()`.
+Bootstrap-safe acquisition must return a handle without requiring the backing container to be ready.
+Releasing a handle must remove its cache and lifecycle registrations and destroy its instance, if any,
+without initializing an unresolved bean. Releasing an already-released or foreign handle has no effect.
+Callers must finish using a shared bean before explicitly releasing it.
+
+`AbstractBeanContainer` supplies concurrent reusable-reference caching and deferred acquisition.
+It does not track distinct beans for destruction; implementations needing destruction must track
+and release those beans, as `AbstractCdiBeanContainer` does.
+The registry no longer maintains a second cache or destruction list.
+Custom containers are responsible for honoring `LifecycleOptions`; disabling cached references
+must bypass their caches, while JPA-compliant creation controls independent instance creation.
+Container shutdown must occur after acquisition, instance access, and explicit release have completed.

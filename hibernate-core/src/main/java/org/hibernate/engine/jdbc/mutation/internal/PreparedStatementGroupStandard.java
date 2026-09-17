@@ -49,7 +49,6 @@ public class PreparedStatementGroupStandard extends AbstractPreparedStatementGro
 		this.mutationTarget = mutationTarget;
 		this.jdbcMutations = jdbcMutations;
 
-
 		this.statementMap = createStatementDetailsMap( jdbcMutations, mutationType, generatedValuesDelegate, session );
 	}
 
@@ -67,6 +66,16 @@ public class PreparedStatementGroupStandard extends AbstractPreparedStatementGro
 			}
 		}
 		return count;
+	}
+
+	@Override
+	public boolean canRetry() {
+		for ( PreparableMutationOperation jdbcMutation : jdbcMutations ) {
+			if ( jdbcMutation.canRetry() ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	@Override

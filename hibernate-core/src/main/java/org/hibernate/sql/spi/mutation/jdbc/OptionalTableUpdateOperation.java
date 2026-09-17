@@ -191,9 +191,21 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 					// Ignore primary key violation if the insert is composed of just the primary key
 					// or if we skipped the UPDATE attempt because no columns were updatable
 					if ( valueBindings.stream().anyMatch( ColumnValueBinding::isAttributeUpdatable ) ) {
-						// assume it was the primary key constraint which was violated,
-						// due to a new version of the row existing in the database
-						throw new StaleStateException( mutationTarget.getRolePath(), cve );
+						if ( optimisticLockBindings.isEmpty() && !tableMapping.isOptional() ) {
+							// In a concurrent insert-or-update scenario, the insert can fail, so we need to retry the
+							// update one last time to ensure we write the correct data for this transaction
+							final boolean updated = performUpdate( jdbcValueBindings, session );
+							if ( !updated ) {
+								// The row might have been deleted again in the meantime,
+								// so report a stale state instead of trying again
+								throw new StaleStateException( mutationTarget.getRolePath(), cve );
+							}
+						}
+						else {
+							// assume it was the primary key constraint which was violated,
+							// due to a new version of the row existing in the database
+							throw new StaleStateException( mutationTarget.getRolePath(), cve );
+						}
 					}
 				}
 				else {

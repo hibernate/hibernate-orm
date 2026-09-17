@@ -17,7 +17,9 @@ import org.hibernate.query.sqm.tree.spi.cte.SqmCteTable;
 import org.hibernate.query.sqm.tree.spi.cte.SqmCteTableColumn;
 import org.hibernate.query.sqm.tree.spi.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.spi.expression.SqmNumericExpressionWrapper;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 
@@ -201,6 +203,7 @@ class CriteriaJavaTypeTest {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsWindowFunctions.class)
 	void windowFunctionWithUnresolvedArgument(SessionFactoryScope scope) {
 		final var builder = scope.getSessionFactory().getCriteriaBuilder();
 		final var expression = builder.firstValue( builder.value( null ), builder.createWindow() );

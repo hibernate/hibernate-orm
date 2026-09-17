@@ -110,6 +110,14 @@ hibernate-asciidoctor-theme = "6.1.2.Final"
 hibernate-extensions = "3.2.1.Final"
 asciidoctorj = "3.0.0"
 
+# Compilation (static checks)
+jetbrainsAnnotations = "26.1.0"
+jspecify = "1.0.0"
+errorprone = "2.50.0"
+nullaway = "0.14.1"
+## For custom NullAway LibraryModels
+guava = "33.7.1-jre"
+
 # Plugins
 develocity = "4.4.2"
 customUserData = "2.6.0"
@@ -156,6 +164,14 @@ commonsCollections = { group = "org.apache.commons", name = "commons-collections
 eclipseJdtCore = { group = "org.eclipse.jdt", name = "org.eclipse.jdt.core", version.ref = "eclipseJdtCore" }
 freemarker = { group = "org.freemarker", name = "freemarker", version.ref = "freemarker" }
 oracleucp = { group = "com.oracle.database.jdbc", name = "ucp17", version.ref = "oracle" }
+
+# Compilation (static checks)
+compilation-jetbrainsAnnotations = { group = "org.jetbrains", name = "annotations", version.ref = "jetbrainsAnnotations" }
+compilation-jspecify = { group = "org.jspecify", name = "jspecify", version.ref = "jspecify" }
+compilation-errorprone = { group = "com.google.errorprone", name = "error_prone_core", version.ref = "errorprone" }
+compilation-nullaway = { group = "com.uber.nullaway", name = "nullaway", version.ref = "nullaway" }
+## For custom NullAway LibraryModels
+compilation-guava = { group = "com.google.guava", name = "guava", version.ref = "guava" }
 
 # Jakarta
 jakarta-jpa = { group = "jakarta.persistence", name = "jakarta.persistence-api", version.ref = "jpa" }

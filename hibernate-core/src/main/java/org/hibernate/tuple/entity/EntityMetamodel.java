@@ -40,6 +40,7 @@ import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.tuple.IdentifierProperty;
 import org.hibernate.tuple.NonIdentifierAttribute;
 import org.hibernate.type.AssociationType;
@@ -127,6 +128,7 @@ public class EntityMetamodel implements Serializable {
 	private final boolean hasCacheableNaturalId;
 
 	private boolean lazy; //not final because proxy factory creation can fail
+	private final CascadeStyle identifierCascadeStyle;
 	private final boolean hasCascades;
 	private final boolean hasToOnes;
 	private final boolean hasCascadePersist;
@@ -229,6 +231,7 @@ public class EntityMetamodel implements Serializable {
 
 		final boolean supportsCascadeDelete = creationContext.getDialect().supportsCascadeDelete();
 
+		boolean hasIdentifierMapperProperty = false;
 		int tempVersionProperty = NO_VERSION_INDX;
 		boolean foundCascade = false;
 		boolean foundToOne = false;
@@ -260,6 +263,9 @@ public class EntityMetamodel implements Serializable {
 
 			if ( "id".equals( property.getName() ) ) {
 				foundNonIdentifierPropertyNamedId = true;
+			}
+			if ( NavigablePath.IDENTIFIER_MAPPER_PROPERTY.equals( property.getName() ) ) {
+				hasIdentifierMapperProperty = true;
 			}
 
 			// temporary ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -393,6 +399,55 @@ public class EntityMetamodel implements Serializable {
 
 		versionGenerator = tempVersionGenerator;
 
+		final var identifierProperty = persistentClass.getIdentifierProperty();
+		if ( identifierProperty != null ) {
+			final CascadeStyle idCascade = identifierProperty.getCascadeStyle();
+			identifierCascadeStyle = idCascade;
+			if ( idCascade != CascadeStyles.NONE ) {
+				foundCascade = true;
+				if ( idCascade.doCascade( CascadingActions.PERSIST )
+						|| idCascade.doCascade( CascadingActions.PERSIST_ON_FLUSH ) ) {
+					foundCascadePersist = true;
+				}
+				if ( idCascade.doCascade( CascadingActions.REMOVE ) ) {
+					foundCascadeDelete = true;
+				}
+			}
+			if ( indicatesToOne( persistentClass.getIdentifier().getType() ) ) {
+				foundToOne = true;
+			}
+		}
+		else if ( !hasIdentifierMapperProperty
+				&& persistentClass.getIdentifier().getType() instanceof ComponentType componentType ) {
+			CascadeStyle idCascade = CascadeStyles.NONE;
+			final Type[] subtypes = componentType.getSubtypes();
+			for ( int k = 0; k < subtypes.length; k++ ) {
+				if ( componentType.getCascadeStyle( k ) != CascadeStyles.NONE ) {
+					idCascade = CascadeStyles.ALL;
+					break;
+				}
+			}
+			identifierCascadeStyle = idCascade;
+			if ( idCascade != CascadeStyles.NONE ) {
+				foundCascade = true;
+				if ( idCascade.doCascade( CascadingActions.PERSIST )
+						|| idCascade.doCascade( CascadingActions.PERSIST_ON_FLUSH ) ) {
+					foundCascadePersist = true;
+				}
+				if ( idCascade.doCascade( CascadingActions.REMOVE ) ) {
+					foundCascadeDelete = true;
+				}
+			}
+			for ( final Type subtype : subtypes ) {
+				if ( indicatesToOne( subtype ) ) {
+					foundToOne = true;
+					break;
+				}
+			}
+		}
+		else {
+			identifierCascadeStyle = CascadeStyles.NONE;
+		}
 		hasCascades = foundCascade;
 		hasToOnes = foundToOne;
 		hasCascadePersist = foundCascadePersist;
@@ -812,6 +867,10 @@ public class EntityMetamodel implements Serializable {
 
 	public boolean hasLazyProperties() {
 		return hasLazyProperties;
+	}
+
+	public CascadeStyle getIdentifierCascadeStyle() {
+		return identifierCascadeStyle;
 	}
 
 	public boolean hasCascades() {

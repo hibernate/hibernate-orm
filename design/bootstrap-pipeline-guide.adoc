@@ -199,7 +199,9 @@ class/package/module name inventory to resolve again downstream.
 Descriptor-derived registrations become semantic mapping data and survive metadata
 archive restoration without rediscovering descriptors. Scoped annotation lookups
 use the tolerant package API; they must not turn an absent `package-info` into an
-ordinary class-loading failure.
+ordinary class-loading failure. Package/module `@DefaultListSemantics` overrides
+are retained from main, with the 9.0 fallback of indexed lists when neither scope
+specifies a default.
 
 === Consolidation regression coverage
 
@@ -222,8 +224,9 @@ and `BootModelSerializationTest`
 |Additional batches, customized/dynamic classes and converters
 |`AdditionalMappingContributorTests`, `AdditionalMappingContributorBasicColumnTests`,
 and `AdditionalMappingContributorAttributeConverterRegistrationTest`
-|Package/module runtime registrations
-|Global-registration binding tests and package-descriptor named-query tests
+|Package/module scoped defaults and runtime registrations
+|`DefaultListSemanticsTests`, `ModuleDefaultListSemanticsTests`, global-registration
+binding tests, and package-descriptor named-query tests
 |===
 
 The 8.x requirements for `MetadataSources`, `MetadataBuilder`, cfg.xml bootstrap,

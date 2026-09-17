@@ -25,6 +25,8 @@ import org.hibernate.testing.orm.junit.SessionFactoryScope;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -69,15 +71,18 @@ class CriteriaJavaTypeTest {
 		}
 	}
 
-	@Test
-	void enumNullLiteralKeepsContextualMapping(SessionFactoryScope scope) {
+	@ParameterizedTest
+	@ValueSource(booleans = { true, false })
+	void enumNullLiteralKeepsContextualMapping(boolean nullOnLeft, SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final var builder = session.getCriteriaBuilder();
 			for ( var attribute : new String[] { "status", "ordinalStatus" } ) {
 				final var criteria = builder.createQuery( Item.class );
 				final var root = criteria.from( Item.class );
 				final var literal = builder.nullLiteral( Status.class );
-				criteria.select( root ).where( builder.equal( root.get( attribute ), literal ) );
+				criteria.select( root ).where( nullOnLeft
+						? builder.equal( literal, root.get( attribute ) )
+						: builder.equal( root.get( attribute ), literal ) );
 				assertEquals( 0, session.createQuery( criteria ).getResultList().size() );
 				assertSame( Status.class, literal.getJavaType() );
 			}

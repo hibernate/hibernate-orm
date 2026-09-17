@@ -12,6 +12,8 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -34,12 +36,15 @@ class SqmSqlAstNullabilityTest {
 		} );
 	}
 
-	@Test
-	void sqlNullOperandIsAllowed(SessionFactoryScope scope) {
+	@ParameterizedTest
+	@ValueSource(booleans = { true, false })
+	void sqlNullOperandIsAllowed(boolean nullOnLeft, SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final var builder = session.getCriteriaBuilder();
 			final var query = builder.createQuery( Integer.class );
-			query.select( builder.sum( builder.nullLiteral( Integer.class ), builder.literal( 1 ) ) );
+			query.select( nullOnLeft
+					? builder.sum( builder.nullLiteral( Integer.class ), builder.literal( 1 ) )
+					: builder.sum( builder.literal( 1 ), builder.nullLiteral( Integer.class ) ) );
 			assertNull( session.createQuery( query ).getSingleResult() );
 		} );
 	}

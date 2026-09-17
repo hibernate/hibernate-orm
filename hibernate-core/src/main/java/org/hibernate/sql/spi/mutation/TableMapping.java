@@ -5,8 +5,7 @@
 package org.hibernate.sql.spi.mutation;
 
 import org.hibernate.jdbc.Expectation;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.sql.JdbcParameterCounter;
+import org.hibernate.query.sql.internal.ParameterParser;
 import org.hibernate.metamodel.mapping.TableDetails;
 
 /**
@@ -135,12 +134,12 @@ public interface TableMapping extends TableDetails {
 		}
 
 		/**
-		 * Count placeholders once for this mapping's dialect. The expected binding
+		 * Count placeholders once for this mapping. The expected binding
 		 * count is still checked separately for each generated mutation shape.
 		 */
-		public int getCustomSqlParameterCount(Dialect dialect) {
+		public int getCustomSqlParameterCount() {
 			if ( customSqlParameterCount < 0 ) {
-				customSqlParameterCount = JdbcParameterCounter.count( customSql, dialect );
+				customSqlParameterCount = ParameterParser.countJdbcParameters( customSql );
 			}
 			return customSqlParameterCount;
 		}

@@ -85,7 +85,7 @@ public abstract class AbstractRestrictedTableMutationBuilder<O extends MutationO
 	protected void adjustCustomSqlTenantRestriction(TableMapping.MutationDetails details, List<ColumnValueParameter> parameters) {
 		if ( optimisticLockBindings.stream().anyMatch( binding -> binding instanceof TenantIdColumnValueBinding ) ) {
 			final int expected = parameters.size() + details.getExpectation().getNumberOfParametersUsed();
-			final int actual = details.getCustomSqlParameterCount( getJdbcServices().getDialect() );
+			final int actual = details.getCustomSqlParameterCount();
 			if ( actual == expected - 1 ) {
 				optimisticLockBindings.removeIf( binding -> binding instanceof TenantIdColumnValueBinding );
 				getParameters().removeIf( parameter -> parameter.getUsage() == ParameterUsage.TENANT );

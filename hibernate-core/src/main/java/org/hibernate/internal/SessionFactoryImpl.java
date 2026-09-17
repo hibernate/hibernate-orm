@@ -344,7 +344,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		autoEnabledFilters = runtimeComponents.autoEnabledFilters();
 		tenantIdentifierJavaType = runtimeComponents.tenantIdentifierJavaType();
 
-		entityNameResolver = new CoordinatingEntityNameResolver( this, getInterceptor() );
+		entityNameResolver = new CoordinatingEntityNameResolver( this, getInterceptor() == null ? EmptyInterceptor.INSTANCE : getInterceptor() );
 		schemaManager = new SchemaManagerImpl( this, bootMetamodel );
 
 		changesetCoordinator = standardServiceComponents.changesetCoordinator();

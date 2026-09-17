@@ -4,13 +4,15 @@
  */
 package org.hibernate.metamodel.mapping.ordering;
 
+import org.hibernate.metamodel.mapping.ordering.spi.OrderByFragment;
+
 import jakarta.persistence.criteria.Nulls;
 import org.hibernate.query.SortDirection;
-import org.hibernate.sql.ast.spi.SqlAstCreationState;
-import org.hibernate.sql.ast.tree.expression.SelfRenderingSqlFragmentExpression;
-import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.select.QuerySpec;
-import org.hibernate.sql.ast.tree.select.SortSpecification;
+import org.hibernate.sql.ast.spi.creation.SqlAstCreationState;
+import org.hibernate.sql.ast.spi.query.expression.SelfRenderingSqlFragmentExpression;
+import org.hibernate.sql.ast.spi.query.from.TableGroup;
+import org.hibernate.sql.ast.spi.query.select.QuerySpec;
+import org.hibernate.sql.ast.spi.query.select.SortSpecification;
 
 /**
  * Applies a native SQL order-by fragment supplied by {@link org.hibernate.annotations.SQLOrder}.

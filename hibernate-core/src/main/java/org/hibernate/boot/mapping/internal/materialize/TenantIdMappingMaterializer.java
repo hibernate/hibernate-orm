@@ -14,8 +14,9 @@ import org.hibernate.boot.mapping.internal.context.BindingState;
 import org.hibernate.boot.mapping.internal.context.TenantIdPropertyHandoff;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.dialect.rowsecurity.RowLevelSecurity;
-import org.hibernate.dialect.rowsecurity.RowLevelSecurity.TenantIdentifierSource;
+import org.hibernate.dialect.rowsecurity.spi.RowLevelSecurity;
+import org.hibernate.dialect.rowsecurity.internal.RowLevelSecurityDdlMaterializer;
+import org.hibernate.dialect.rowsecurity.spi.TenantIdentifierSource;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Formula;
@@ -161,15 +162,16 @@ public class TenantIdMappingMaterializer {
 			final var table = property.getValue().getTable();
 			if ( property.getSelectables().get( 0 ) instanceof Column column
 					&& table.isPhysicalTable() && !table.isView() ) {
-				rowLevelSecurity.addTenantIdTableInitCommands(
-						collector,
+				RowLevelSecurityDdlMaterializer.materialize(
+						rowLevelSecurity,
+						hasTenantCredentialsMapper( buildingContext )
+								&& rowLevelSecurity.supportsTenantIdentifierSource( TenantIdentifierSource.DATABASE_USER )
+									? TenantIdentifierSource.DATABASE_USER
+									: TenantIdentifierSource.SESSION,
 						table,
 						column,
 						collector,
-						hasTenantCredentialsMapper( buildingContext )
-								&& rowLevelSecurity.supportsTenantIdentifierSource( TenantIdentifierSource.DATABASE_USER )
-								? TenantIdentifierSource.DATABASE_USER
-								: TenantIdentifierSource.SESSION
+						buildingContext.getBootstrapContext().getConfigurationService().getSettings()
 				);
 			}
 		}

@@ -33,7 +33,7 @@ import org.hibernate.mapping.MappingHelper;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
-import org.hibernate.metamodel.mapping.EmbeddableDiscriminatorConverter;
+import org.hibernate.metamodel.mapping.internal.EmbeddableDiscriminatorConverter;
 import org.hibernate.metamodel.mapping.internal.DiscriminatorTypeImpl;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;

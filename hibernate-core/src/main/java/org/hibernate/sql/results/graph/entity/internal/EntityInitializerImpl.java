@@ -622,7 +622,12 @@ public class EntityInitializerImpl
 			data.entityHolder = null;
 
 			final var rowProcessingState = data.getRowProcessingState();
-			if ( !entityKeyOnly && useEmbeddedIdentifierInstanceAsEntity( data ) ) {
+			// Refresh must resolve identifier fetches so association-valued identifiers
+			// participate in the cascading fetch profile.
+			if ( !entityKeyOnly
+					&& rowProcessingState.getSession().getLoadQueryInfluencers().getEnabledCascadingFetchProfile()
+							!= CascadingFetchProfile.REFRESH
+					&& useEmbeddedIdentifierInstanceAsEntity( data ) ) {
 				data.usingEmbeddedIdentifierInstanceAsEntity = true;
 				resolveEntityKey( data, rowProcessingState.getEntityId() );
 				resolveInstance( data );

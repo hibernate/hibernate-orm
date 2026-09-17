@@ -16,7 +16,7 @@ import jakarta.annotation.Nullable;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.relational.internal.PersistenceUnitJdbcEnvironment;
-import org.hibernate.boot.spi.MappingResolutionOptions;
+import org.hibernate.boot.pipeline.internal.MappingResolutionOptions;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
@@ -64,8 +64,8 @@ public class Database implements Serializable {
 		dialect = determineDialect( buildingOptions );
 
 		setImplicitNamespaceName(
-				toIdentifier( buildingPlan.getMappingDefaults().getImplicitCatalogName() ),
-				toIdentifier( buildingPlan.getMappingDefaults().getImplicitSchemaName() )
+				toIdentifier( buildingOptions.getMappingDefaults().getImplicitCatalogName() ),
+				toIdentifier( buildingOptions.getMappingDefaults().getImplicitSchemaName() )
 		);
 	}
 

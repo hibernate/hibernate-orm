@@ -18,7 +18,7 @@ import org.hibernate.boot.spi.MetadataImplementor;
 ///
 /// @since 9.0
 /// @author Steve Ebersole
-@Incubating
+@Incubating(since = "9.0")
 public interface NamedLoaderQueryResolver {
 	/// Resolve the named selection query used by a custom loader.
 	///

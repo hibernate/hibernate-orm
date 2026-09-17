@@ -4,11 +4,6 @@
  */
 package org.hibernate.dialect.aggregate.internal;
 
-import org.hibernate.dialect.aggregate.spi.AggregateAuxiliaryObject;
-import org.hibernate.dialect.aggregate.spi.AggregateAuxiliaryObjectRequest;
-import org.hibernate.dialect.aggregate.spi.AggregateSqlAuxiliaryObject;
-import org.hibernate.dialect.aggregate.spi.AggregateSupport;
-
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -16,6 +11,10 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
+import org.hibernate.dialect.aggregate.spi.AggregateAuxiliaryObject;
+import org.hibernate.dialect.aggregate.spi.AggregateAuxiliaryObjectRequest;
+import org.hibernate.dialect.aggregate.spi.AggregateSqlAuxiliaryObject;
+import org.hibernate.dialect.aggregate.spi.AggregateSupport;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.type.internal.DB2StructJdbcType;
 import org.hibernate.sql.spi.StringBuilderSqlAppender;
@@ -607,6 +606,7 @@ public class DB2AggregateSupport extends AggregateSupportImpl implements Aggrega
 			return List.of();
 		}
 		final String columnType = request.aggregateColumn().sqlTypeName();
+		final var mappingContext = AggregateColumnDescriptorAdapter.mappingContext( request.aggregateColumn() );
 		final TypeConfiguration typeConfiguration = request.typeConfiguration();
 		final boolean legacyXmlFormatEnabled = request.legacyXmlFormat();
 		final List<Column> aggregatedColumns = AggregateColumnDescriptorAdapter.columns( request.components() );

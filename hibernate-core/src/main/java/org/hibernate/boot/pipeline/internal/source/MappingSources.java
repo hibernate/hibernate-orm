@@ -37,6 +37,7 @@ import static org.hibernate.internal.util.StringHelper.qualifier;
 public class MappingSources {
 	private final LinkedHashSet<Class<?>> managedClasses = new LinkedHashSet<>();
 	private final LinkedHashSet<String> managedClassNames = new LinkedHashSet<>();
+	private final LinkedHashSet<String> moduleNames = new LinkedHashSet<>();
 	private final LinkedHashSet<String> packageNames = new LinkedHashSet<>();
 	private final LinkedHashSet<String> mappingResources = new LinkedHashSet<>();
 	private final LinkedHashSet<URI> mappingFileUris = new LinkedHashSet<>();
@@ -169,6 +170,30 @@ public class MappingSources {
 			packageNames.forEach( this::addPackage );
 		}
 		return this;
+	}
+
+	/// Add metadata from a named module.
+	public MappingSources addModule(Module module) {
+		return module != null && module.isNamed() ? addModule( module.getName() ) : this;
+	}
+
+	/// Add metadata from a module name.
+	public MappingSources addModule(String moduleName) {
+		if ( moduleName != null ) {
+			moduleNames.add( moduleName );
+		}
+		return this;
+	}
+
+	public MappingSources addModules(Collection<String> names) {
+		if ( names != null ) {
+			names.forEach( this::addModule );
+		}
+		return this;
+	}
+
+	public List<String> moduleNames() {
+		return List.copyOf( moduleNames );
 	}
 
 	/// Add a classpath mapping resource name.
@@ -338,7 +363,7 @@ public class MappingSources {
 				mappingSources.mappingFileUrls(),
 				mappingSources.xmlMappingSources(),
 				mappingSources.includeUnlistedStructuralTypes()
-		);
+		).addModules( mappingSources.moduleNames() );
 	}
 
 	/// Adapts Jakarta Persistence's programmatic bootstrap configuration to
@@ -410,7 +435,7 @@ public class MappingSources {
 				mappingFileUrls,
 				List.of(),
 				!persistenceUnitDescriptor.isExcludeUnlistedClasses()
-		);
+		).addModules( scanningResult.discoveredModules() );
 	}
 
 	/// Adapts Hibernate's programmatic JPA bootstrap configuration to neutral
@@ -449,6 +474,6 @@ public class MappingSources {
 				persistenceConfiguration.mappingFiles(),
 				mappingFileUris,
 				persistenceConfiguration.mappingFileUrls()
-		);
+		).addModules( scanningResult.discoveredModules() );
 	}
 }

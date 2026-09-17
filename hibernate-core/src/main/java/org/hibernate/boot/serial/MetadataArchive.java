@@ -21,7 +21,7 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 ///
 /// @since 9.0
 /// @author Steve Ebersole
-@Incubating
+@Incubating(since = "9.0")
 public interface MetadataArchive {
 	/// Writes this archive to `output`, flushing but not closing the stream.
 	///

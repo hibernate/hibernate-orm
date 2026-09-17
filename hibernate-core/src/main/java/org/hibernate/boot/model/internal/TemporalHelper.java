@@ -35,7 +35,6 @@ import org.hibernate.mapping.Table;
 import org.hibernate.persister.state.internal.HistoryStateManagement;
 import org.hibernate.persister.state.internal.NativeTemporalStateManagement;
 import org.hibernate.persister.state.internal.TemporalStateManagement;
-import org.hibernate.temporal.spi.ChangesetCoordinator;
 import org.hibernate.temporal.TemporalTableStrategy;
 
 import static org.hibernate.cfg.StateManagementSettings.TEMPORAL_TABLE_STRATEGY;

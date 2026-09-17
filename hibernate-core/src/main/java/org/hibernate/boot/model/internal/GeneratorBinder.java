@@ -958,6 +958,9 @@ public class GeneratorBinder {
 		else if ( generatorClass == org.hibernate.id.IdentityGenerator.class ) {
 			handleIdentityStrategy( identifierValue );
 		}
+		else if ( generatorClass == org.hibernate.id.uuid.UuidGenerator.class ) {
+			identifierValue.setCustomIdGeneratorCreator( GeneratorAnnotationHelper.uuidGeneratorDescriptor( null ) );
+		}
 		else {
 			instantiateNamedStrategyGenerator( identifierValue, generatorClass, configuration );
 		}

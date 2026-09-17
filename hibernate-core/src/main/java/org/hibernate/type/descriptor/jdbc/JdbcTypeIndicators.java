@@ -98,6 +98,15 @@ public interface JdbcTypeIndicators {
 	}
 
 	/**
+	 * Whether resolving this recommendation should report a direct Java Time
+	 * fallback. Registry-only resolutions may suppress diagnostics until an
+	 * attribute actually requests the mapping.
+	 */
+	default boolean isDirectJavaTimeJdbcFallbackLoggingEnabled() {
+		return true;
+	}
+
+	/**
 	 * @see org.hibernate.cfg.MappingSettings#PREFER_NATIVE_ENUM_TYPES
 	 */
 	default boolean isPreferNativeEnumTypesEnabled() {

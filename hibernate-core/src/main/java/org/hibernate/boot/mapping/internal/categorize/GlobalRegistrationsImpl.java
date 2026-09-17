@@ -18,6 +18,7 @@ import java.util.Set;
 import java.util.function.Supplier;
 import java.util.function.Function;
 
+import org.hibernate.models.spi.ModuleDetails;
 import org.hibernate.AnnotationException;
 import org.hibernate.DuplicateMappingException;
 import org.hibernate.annotations.FetchProfile;
@@ -738,6 +739,17 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 		}
 	}
 
+	public void collectNamedEntityGraphRegistrations(ModuleDetails moduleDetails) {
+		moduleDetails.forEachAnnotationUsage( org.hibernate.annotations.NamedEntityGraph.class, modelsContext, usage ->
+				collectNamedEntityGraphRegistration(
+						usage.name(),
+						null,
+						NamedEntityGraphDefinition.Source.PARSED,
+						NamedGraphCreators.parsed( usage )
+				)
+		);
+	}
+
 	public void collectNamedEntityGraphRegistrations(ClassDetails classDetails) {
 		classDetails.forEachAnnotationUsage( NamedEntityGraph.class, modelsContext, usage -> {
 			if ( !classDetails.hasDirectAnnotationUsage( Entity.class ) && StringHelper.isEmpty( usage.name() ) ) {
@@ -1299,7 +1311,7 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 		// todo : add support for @IdGeneratorType in mapping.xsd?
 	}
 
-	public void collectIdGenerators(ClassDetails classDetails) {
+	public void collectIdGenerators(AnnotationTarget classDetails) {
 		classDetails.forEachAnnotationUsage(
 				SequenceGenerator.class,
 				modelsContext,
@@ -1354,7 +1366,7 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 		collectSequenceGenerator( usage.name(), usage );
 	}
 
-	public void collectSequenceGenerator(ClassDetails classDetails, SequenceGenerator usage) {
+	public void collectSequenceGenerator(AnnotationTarget classDetails, SequenceGenerator usage) {
 		collectSequenceGenerator( registrationName( classDetails, usage.name() ), usage );
 	}
 
@@ -1424,7 +1436,7 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 		collectTableGenerator( usage.name(), usage );
 	}
 
-	public void collectTableGenerator(ClassDetails classDetails, TableGenerator usage) {
+	public void collectTableGenerator(AnnotationTarget classDetails, TableGenerator usage) {
 		collectTableGenerator( registrationName( classDetails, usage.name() ), usage );
 	}
 
@@ -1482,7 +1494,7 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 		}
 	}
 
-	private static String registrationName(ClassDetails classDetails, String name) {
+	private static String registrationName(AnnotationTarget classDetails, String name) {
 		if ( !name.isBlank() ) {
 			return name;
 		}
@@ -1490,7 +1502,7 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 		final Entity entityAnnotation = classDetails.getDirectAnnotationUsage( Entity.class );
 		return entityAnnotation != null && !entityAnnotation.name().isEmpty()
 				? entityAnnotation.name()
-				: unqualify( classDetails.getName() );
+				: classDetails instanceof ClassDetails namedClass ? unqualify( namedClass.getName() ) : name;
 	}
 
 	@SuppressWarnings("unchecked")

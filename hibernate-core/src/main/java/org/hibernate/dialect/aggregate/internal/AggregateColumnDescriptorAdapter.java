@@ -5,6 +5,7 @@
 package org.hibernate.dialect.aggregate.internal;
 
 import java.util.List;
+import org.hibernate.type.MappingContext;
 
 import jakarta.annotation.Nullable;
 import org.hibernate.boot.model.relational.Namespace;
@@ -26,35 +27,37 @@ import static java.util.Objects.requireNonNull;
  */
 public final class AggregateColumnDescriptorAdapter implements AggregateColumnDescriptor {
 	private final Column column;
+	private final MappingContext mappingContext;
 	private final Namespace namespace;
 	private final List<AggregateColumnDescriptor> components;
 
-	private AggregateColumnDescriptorAdapter(Column column, Namespace namespace) {
+	private AggregateColumnDescriptorAdapter(Column column, Namespace namespace, MappingContext mappingContext) {
 		this.column = column;
+		this.mappingContext = mappingContext;
 		this.namespace = namespace;
 		this.components = column instanceof AggregateColumn aggregateColumn
-				? descriptors( aggregateColumn.getComponent().getAggregatedColumns(), namespace )
+				? descriptors( aggregateColumn.getComponent().getAggregatedColumns(), namespace, mappingContext )
 				: List.of();
 	}
 
 	public static AggregateColumnDescriptorAdapter aggregate(
 			AggregateColumn column,
-			Namespace namespace) {
-		return new AggregateColumnDescriptorAdapter( column, namespace );
+			Namespace namespace, MappingContext mappingContext) {
+		return new AggregateColumnDescriptorAdapter( column, namespace, mappingContext );
 	}
 
-	public static List<AggregateColumnDescriptor> descriptors(List<Column> columns, Namespace namespace) {
+	public static List<AggregateColumnDescriptor> descriptors(List<Column> columns, Namespace namespace, MappingContext mappingContext) {
 		return columns.stream()
-				.map( column -> (AggregateColumnDescriptor) new AggregateColumnDescriptorAdapter( column, namespace ) )
+				.map( column -> (AggregateColumnDescriptor) new AggregateColumnDescriptorAdapter( column, namespace, mappingContext ) )
 				.toList();
 	}
 
-	public static SqlTypedMapping mapping(Column column) {
-		return new ColumnMapping( column );
+	public static SqlTypedMapping mapping(Column column, MappingContext mappingContext) {
+		return new ColumnMapping( column, mappingContext );
 	}
 
-	public static int effectiveSqlTypeCode(AggregateColumn column) {
-		final int jdbcTypeCode = column.getType().getJdbcType().getDefaultSqlTypeCode();
+	public static int effectiveSqlTypeCode(AggregateColumn column, MappingContext mappingContext) {
+		final int jdbcTypeCode = column.getType( mappingContext ).getJdbcType().getDefaultSqlTypeCode();
 		return jdbcTypeCode == SqlTypes.ARRAY ? column.getTypeCode() : jdbcTypeCode;
 	}
 
@@ -77,6 +80,10 @@ public final class AggregateColumnDescriptorAdapter implements AggregateColumnDe
 		return descriptors.stream()
 				.map( descriptor -> ((AggregateColumnDescriptorAdapter) descriptor).column )
 				.toList();
+	}
+
+	public static MappingContext mappingContext(AggregateColumnDescriptor descriptor) {
+		return ((AggregateColumnDescriptorAdapter) descriptor).mappingContext;
 	}
 
 	public Namespace namespace() {
@@ -102,7 +109,7 @@ public final class AggregateColumnDescriptorAdapter implements AggregateColumnDe
 
 	@Override
 	public SqlTypedMapping typeMapping() {
-		return mapping( column );
+		return mapping( column, mappingContext );
 	}
 
 	@Override
@@ -135,14 +142,14 @@ public final class AggregateColumnDescriptorAdapter implements AggregateColumnDe
 	private static final class ColumnMapping extends SqlTypedMappingImpl {
 		private final Column column;
 
-		private ColumnMapping(Column column) {
+		private ColumnMapping(Column column, MappingContext mappingContext) {
 			super(
 					column.getLength(),
 					column.getArrayLength(),
 					column.getPrecision(),
 					column.getScale(),
 					column.getTemporalPrecision(),
-					column.getType()
+					column.getType( mappingContext )
 			);
 			this.column = column;
 		}

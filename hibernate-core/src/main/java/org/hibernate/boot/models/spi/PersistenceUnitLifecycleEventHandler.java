@@ -57,7 +57,7 @@ public class PersistenceUnitLifecycleEventHandler {
 	@Nonnull
 	public static PersistenceUnitLifecycleEventHandler from(@Nonnull ClassDetails listenerClassDetails) {
 		final List<CallbackMethod> callbackMethods = new ArrayList<>();
-		listenerClassDetails.forEachMethod( (index, methodDetails) -> {
+		listenerClassDetails.getMethods().forEach( methodDetails -> {
 			applyAnnotatedCallback(
 					listenerClassDetails,
 					methodDetails,

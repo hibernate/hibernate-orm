@@ -135,7 +135,7 @@ public class MappingResolutionPipeline {
 			MappingCustomizations mappingCustomizations,
 			FunctionRegistryCustomizations functionCustomizations,
 			ServiceRegistry serviceRegistry) {
-		final var typeConfiguration = new TypeConfiguration();
+		final var typeConfiguration = MappingResolutionOptionsImpl.createTypeConfiguration( serviceRegistry );
 		final var standardServiceRegistry = getStandardServiceRegistry( serviceRegistry );
 		final var buildingPlan = new MappingResolutionOptionsImpl( standardServiceRegistry, typeConfiguration );
 		final var bootstrapContext = new BootstrapContextImpl( standardServiceRegistry, typeConfiguration );

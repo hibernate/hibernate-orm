@@ -451,7 +451,7 @@ public interface HibernateAnnotations {
 			EnumSet.of( Kind.CLASS ),
 			false
 	);
-	MutableAnnotationDescriptor<Instantiator, InstantiatorAnnotation> INSTANTIATOR = new MutableAnnotationDescriptor<>(
+	MutableAnnotationDescriptor<Instantiator, InstantiatorAnnotation> INSTANTIATOR = Creator.createCompleteAnnotationDescriptor(
 			Instantiator.class,
 			InstantiatorAnnotation.class,
 			EnumSet.of( Kind.CONSTRUCTOR ),

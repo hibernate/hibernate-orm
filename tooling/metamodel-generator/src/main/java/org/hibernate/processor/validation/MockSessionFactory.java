@@ -53,7 +53,6 @@ import org.hibernate.collection.spi.CollectionSemanticsResolver;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.type.spi.TimeZoneSupport;
-import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.query.internal.NativeQueryInterpreterStandardImpl;
@@ -999,23 +998,6 @@ public abstract class MockSessionFactory
 	@Override
 	public SqmFunctionRegistry getFunctionRegistry() {
 		return functionRegistry;
-	}
-
-	@Override
-	public void registerAdHocBasicType(BasicType<?> basicType) {
-		// No-op
-	}
-
-	@Override
-	public <T> BasicType<T> resolveAdHocBasicType(String key) {
-		// No-op
-		return null;
-	}
-
-	@Override
-	public <T> BasicType<T> findAdHocBasicType(JavaType<T> javaType, JdbcType jdbcType) {
-		// No-op
-		return null;
 	}
 
 	@Override

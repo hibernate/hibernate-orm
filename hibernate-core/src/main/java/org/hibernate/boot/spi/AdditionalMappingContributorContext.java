@@ -14,7 +14,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 ///
 /// @since 9.0
 /// @author Steve Ebersole
-@Incubating
+@Incubating(since = "9.0")
 public interface AdditionalMappingContributorContext {
 	/// Access to the Hibernate Models context
 	ModelsContext getModelsContext();

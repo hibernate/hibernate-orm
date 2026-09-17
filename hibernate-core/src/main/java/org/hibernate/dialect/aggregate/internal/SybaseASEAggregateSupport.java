@@ -4,6 +4,8 @@
  */
 package org.hibernate.dialect.aggregate.internal;
 
+import org.hibernate.type.MappingContext;
+
 import org.hibernate.dialect.aggregate.spi.AggregateSupport;
 
 import org.hibernate.dialect.Dialect;

@@ -119,16 +119,18 @@ final class AggregateMappingFinalizer {
 		final String aggregateReadExpression =
 				aggregateReadTemplate.replace( Template.TEMPLATE + ".", "" );
 		final String aggregateAssignmentExpression =
-				aggregateColumn.getAggregateAssignmentExpressionTemplate( dialect, metadataCollector )
+				aggregateColumn.getAggregateAssignmentExpressionTemplate( dialect, metadataCollector, typeConfiguration )
 						.replace( Template.TEMPLATE + ".", "" );
 		final Namespace auxiliaryNamespace = database.getDefaultNamespace();
 		final var aggregateDescriptor = AggregateColumnDescriptorAdapter.aggregate(
 				aggregateColumn,
-				auxiliaryNamespace
+				auxiliaryNamespace,
+				metadataCollector
 		);
 		final var componentDescriptors = AggregateColumnDescriptorAdapter.descriptors(
 				aggregatedColumns,
-				auxiliaryNamespace
+				auxiliaryNamespace,
+				metadataCollector
 		);
 		final boolean legacyXmlFormat = context.getBuildingPlan().isXmlFormatMapperLegacyFormatEnabled();
 		if ( addAuxiliaryObjects ) {
@@ -174,8 +176,8 @@ final class AggregateMappingFinalizer {
 		for ( var subColumn : aggregatedColumns ) {
 			final String selectableExpression = subColumn.getText( dialect );
 			final String customReadExpression;
-			final int aggregateTypeCode = effectiveAggregateTypeCode( aggregateColumn );
-			final var columnMapping = AggregateColumnDescriptorAdapter.mapping( subColumn );
+			final int aggregateTypeCode = AggregateColumnDescriptorAdapter.effectiveSqlTypeCode( aggregateColumn, metadataCollector );
+			final var columnMapping = AggregateColumnDescriptorAdapter.mapping( subColumn, metadataCollector );
 			final String assignmentExpression = aggregateSupport.aggregateComponentAssignmentExpression(
 					new AggregateComponentAssignmentRequest(
 							aggregateAssignmentExpression,
@@ -240,10 +242,6 @@ final class AggregateMappingFinalizer {
 		return memberColumns;
 	}
 
-	private static int effectiveAggregateTypeCode(AggregateColumn aggregateColumn) {
-		final int jdbcTypeCode = aggregateColumn.getType().getJdbcType().getDefaultSqlTypeCode();
-		return jdbcTypeCode == SqlTypes.ARRAY ? aggregateColumn.getTypeCode() : jdbcTypeCode;
-	}
 
 	private static void validateComponent(Component component, String basePath, boolean inArray) {
 		for ( Property property : component.getProperties() ) {

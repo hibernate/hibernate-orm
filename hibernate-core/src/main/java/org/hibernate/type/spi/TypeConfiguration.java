@@ -177,6 +177,12 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		return ddlTypeRegistry;
 	}
 
+	/// Whether bootstrap or runtime services are available for contextual type resolution.
+	@Internal
+	public boolean isScoped() {
+		return scope.metadataBuildingContext != null || scope.sessionFactory != null;
+	}
+
 	public JdbcTypeIndicators getCurrentBaseSqlTypeIndicators() {
 		return scope;
 	}

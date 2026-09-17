@@ -15,7 +15,7 @@ import java.util.concurrent.TimeUnit;
 import org.hibernate.Interceptor;
 import org.hibernate.LockMode;
 import org.hibernate.SessionFactory;
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.cfg.Configuration;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cascade.spi.CascadePoint;
 import org.hibernate.cascade.spi.CascadePropertySelection;
@@ -471,10 +471,9 @@ public class CascadeTraversalBenchmark {
 		final var registry = serviceRegistryBuilder( terminalEffectSink )
 				.build();
 		final var mapping = mapping( shape, route );
-		return new MetadataSources( registry )
+		return new Configuration()
 				.addInputStream( new ByteArrayInputStream( mapping.getBytes( StandardCharsets.UTF_8 ) ) )
-				.buildMetadata()
-				.buildSessionFactory();
+				.buildSessionFactory( registry );
 	}
 
 	private static StandardServiceRegistryBuilder serviceRegistryBuilder(Interceptor interceptor) {
@@ -490,11 +489,10 @@ public class CascadeTraversalBenchmark {
 	private static SessionFactory buildEnhancedSessionFactory(TerminalEffectSink terminalEffectSink) {
 		final var registry = serviceRegistryBuilder( terminalEffectSink )
 				.build();
-		return new MetadataSources( registry )
+		return new Configuration()
 					.addAnnotatedClass( CascadeTraversalBenchmarkModel.Root.class )
 					.addAnnotatedClass( CascadeTraversalBenchmarkModel.Child.class )
-					.buildMetadata()
-					.buildSessionFactory();
+					.buildSessionFactory( registry );
 	}
 
 	private static Object createEnhancedRoot(
@@ -547,58 +545,49 @@ public class CascadeTraversalBenchmark {
 	}
 
 	private static String mapping(FixtureShape shape, Route route) {
-		final String cascade = route == Route.CHECK_ON_FLUSH ? "" : " cascade=\"all\"";
+		final String cascade = route == Route.CHECK_ON_FLUSH ? "" : "<cascade><cascade-all/></cascade>";
 		final var mapping = new StringBuilder( 32_768 );
-		mapping.append( "<?xml version=\"1.0\"?>\n" )
-				.append( "<!DOCTYPE hibernate-mapping PUBLIC \"-//Hibernate/Hibernate Mapping DTD 3.0//EN\" " )
-				.append( "\"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd\">\n" )
-				.append( "<hibernate-mapping default-lazy=\"false\">\n" )
-				.append( "  <class entity-name=\"CascadeChild\" table=\"cascade_child\">\n" )
-				.append( "    <id name=\"id\" type=\"long\" column=\"id\"/>\n" )
-				.append( "    <property name=\"name\" type=\"string\" column=\"name\"/>\n" )
-				.append( "  </class>\n" )
-				.append( "  <class entity-name=\"" ).append( shape.entityName )
-				.append( "\" table=\"cascade_root\">\n" )
-				.append( "    <id name=\"id\" type=\"long\" column=\"id\"/>\n" );
-
+		mapping.append( "<entity-mappings xmlns=\"http://www.hibernate.org/xsd/orm/mapping\" version=\"9.0\">" )
+				.append( "<entity name=\"CascadeChild\" metadata-complete=\"true\"><table name=\"cascade_child\"/><attributes>" )
+				.append( "<id name=\"id\"><column name=\"id\"/><target>Long</target></id>" )
+				.append( "<basic name=\"name\"><column name=\"name\"/><target>String</target></basic>" )
+				.append( "</attributes></entity><entity name=\"" ).append( shape.entityName )
+				.append( "\" metadata-complete=\"true\"><table name=\"cascade_root\"/><attributes>" )
+				.append( "<id name=\"id\"><column name=\"id\"/><target>Long</target></id>" );
 		for ( int i = 0; i < shape.propertyCount - shape.associationCount; i++ ) {
-			mapping.append( "    <property name=\"basic" ).append( i )
-					.append( "\" type=\"string\" column=\"basic_" ).append( i ).append( "\"/>\n" );
+			mapping.append( "<basic name=\"basic" ).append( i ).append( "\"><column name=\"basic_" )
+					.append( i ).append( "\"/><target>String</target></basic>" );
 		}
 		for ( int i = 0; i < shape.associationCount; i++ ) {
-			mapping.append( "    <many-to-one name=\"association" ).append( i )
-					.append( "\" entity-name=\"CascadeChild\"" ).append( cascade ).append( " column=\"child_" )
-					.append( i ).append( "\"/>\n" );
+			mapping.append( "<many-to-one name=\"association" ).append( i )
+					.append( "\" target-entity=\"CascadeChild\" fetch=\"EAGER\"><join-column name=\"child_" )
+					.append( i ).append( "\"/>" ).append( cascade ).append( "</many-to-one>" );
 		}
 		if ( shape.componentDepth > 0 ) {
-			appendComponent( mapping, 1, shape.componentDepth, cascade );
+			mapping.append( "<embedded name=\"component1\"><target>CascadeComponent1</target></embedded>" );
 		}
 		if ( shape.collections ) {
 			for ( int i = 0; i < FixtureShape.COLLECTION_COUNT; i++ ) {
-				mapping.append( "    <bag name=\"collection" ).append( i )
-						.append( "\"" ).append( cascade ).append( " table=\"cascade_collection_" ).append( i )
-						.append( "\">\n" )
-						.append( "      <key column=\"root_id\"/>\n" )
-						.append( "      <one-to-many entity-name=\"CascadeChild\"/>\n" )
-						.append( "    </bag>\n" );
+				mapping.append( "<one-to-many name=\"collection" ).append( i )
+						.append( "\" target-entity=\"CascadeChild\" fetch=\"EAGER\" classification=\"BAG\">" )
+						.append( "<join-column name=\"root_id\"/>" ).append( cascade ).append( "</one-to-many>" );
 			}
 		}
-
-		return mapping.append( "  </class>\n</hibernate-mapping>\n" ).toString();
-	}
-
-	private static void appendComponent(StringBuilder mapping, int level, int depth, String cascade) {
-		mapping.append( "    ".repeat( level ) )
-				.append( "<dynamic-component name=\"component" ).append( level ).append( "\">\n" );
-		if ( level == depth ) {
-			mapping.append( "    ".repeat( level + 1 ) )
-					.append( "<many-to-one name=\"association\" entity-name=\"CascadeChild\" " )
-					.append( cascade ).append( " column=\"component_child\"/>\n" );
+		mapping.append( "</attributes></entity>" );
+		for ( int level = 1; level <= shape.componentDepth; level++ ) {
+			mapping.append( "<embeddable name=\"CascadeComponent" ).append( level )
+					.append( "\" metadata-complete=\"true\"><attributes>" );
+			if ( level == shape.componentDepth ) {
+				mapping.append( "<many-to-one name=\"association\" target-entity=\"CascadeChild\" fetch=\"EAGER\">" )
+						.append( "<join-column name=\"component_child\"/>" ).append( cascade ).append( "</many-to-one>" );
+			}
+			else {
+				mapping.append( "<embedded name=\"component" ).append( level + 1 )
+						.append( "\"><target>CascadeComponent" ).append( level + 1 ).append( "</target></embedded>" );
+			}
+			mapping.append( "</attributes></embeddable>" );
 		}
-		else {
-			appendComponent( mapping, level + 1, depth, cascade );
-		}
-		mapping.append( "    ".repeat( level ) ).append( "</dynamic-component>\n" );
+		return mapping.append( "</entity-mappings>" ).toString();
 	}
 
 	private static class TerminalEffectSink

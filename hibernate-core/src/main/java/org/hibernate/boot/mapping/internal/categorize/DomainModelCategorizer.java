@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.hibernate.boot.spi.JpaOrmXmlPersistenceUnitDefaultAware;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.TargetEmbeddable;
 import org.hibernate.boot.mapping.internal.context.RootMappingDefaults;
@@ -75,6 +76,10 @@ public class DomainModelCategorizer {
 				persistenceUnitMetadata
 		);
 
+		if ( metadataBuildingContext.getBuildingPlan() instanceof JpaOrmXmlPersistenceUnitDefaultAware defaultsAware ) {
+			defaultsAware.apply( persistenceUnitMetadata );
+		}
+
 		final List<String> allKnownClassNames = new ArrayList<>( xmlPreProcessingResult.getMappedClasses() );
 		resolvedMappingSources.managedClassDetails().forEach( (classDetails) -> allKnownClassNames.add( classDetails.getName() ) );
 		resolvedMappingSources.packageDetails().forEach( (packageDetails) -> allKnownClassNames.add( packageDetails.getName() ) );
@@ -118,6 +123,8 @@ public class DomainModelCategorizer {
 		);
 
 		xmlProcessingResult.apply();
+
+		resolvedMappingSources.moduleDetails().forEach( modelCategorizationCollector::apply );
 
 		allKnownClassNames.forEach( (className) -> {
 			final ClassDetails classDetails = mutableClassDetailsRegistry.resolveClassDetails( className );

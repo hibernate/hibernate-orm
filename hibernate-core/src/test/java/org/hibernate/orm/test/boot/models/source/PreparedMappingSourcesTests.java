@@ -150,6 +150,11 @@ public class PreparedMappingSourcesTests {
 					public ScanningResult scan(URL... urls) {
 						return new ScanningResult() {
 							@Override
+							public Set<String> discoveredModules() {
+								return Set.of();
+							}
+
+							@Override
 							public Set<String> discoveredPackages() {
 								return Set.of( PACKAGE_NAME );
 							}

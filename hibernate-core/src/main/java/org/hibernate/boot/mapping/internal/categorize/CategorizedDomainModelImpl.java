@@ -11,7 +11,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.boot.mapping.spi.CategorizedDomainModel;
-import org.hibernate.internal.util.IndexedConsumer;
+import org.hibernate.spi.IndexedConsumer;
 import org.hibernate.internal.util.KeyedConsumer;
 import org.hibernate.models.spi.ClassDetails;
 

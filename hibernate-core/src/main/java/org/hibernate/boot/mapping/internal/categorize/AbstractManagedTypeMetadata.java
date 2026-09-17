@@ -5,7 +5,7 @@
 package org.hibernate.boot.mapping.internal.categorize;
 
 import org.hibernate.boot.mapping.spi.ManagedTypeMetadata;
-import org.hibernate.internal.util.IndexedConsumer;
+import org.hibernate.spi.IndexedConsumer;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
 

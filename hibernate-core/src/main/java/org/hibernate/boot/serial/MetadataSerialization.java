@@ -65,7 +65,7 @@ import org.hibernate.boot.serial.internal.MetadataArchiveImpl;
 ///
 /// @since 9.0
 /// @author Steve Ebersole
-@Incubating
+@Incubating(since = "9.0")
 public final class MetadataSerialization {
 	private MetadataSerialization() {
 	}

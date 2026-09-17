@@ -128,6 +128,22 @@ public class DomainModelCategorizationCollector {
 		// todo : named graphs
 	}
 
+	public void apply(org.hibernate.models.spi.ModuleDetails moduleDetails) {
+		getGlobalRegistrations().collectJavaTypeRegistrations( moduleDetails );
+		getGlobalRegistrations().collectJdbcTypeRegistrations( moduleDetails );
+		getGlobalRegistrations().collectConverterRegistrations( moduleDetails );
+		getGlobalRegistrations().collectUserTypeRegistrations( moduleDetails );
+		getGlobalRegistrations().collectCompositeUserTypeRegistrations( moduleDetails );
+		getGlobalRegistrations().collectCollectionTypeRegistrations( moduleDetails );
+		getGlobalRegistrations().collectEmbeddableInstantiatorRegistrations( moduleDetails );
+		getGlobalRegistrations().collectFilterDefinitions( moduleDetails );
+		getGlobalRegistrations().collectFetchProfiles( moduleDetails );
+		getGlobalRegistrations().collectNamedQueryRegistrations( moduleDetails );
+		getGlobalRegistrations().collectSqlResultSetMappingRegistrations( moduleDetails );
+		getGlobalRegistrations().collectIdGenerators( moduleDetails );
+		getGlobalRegistrations().collectNamedEntityGraphRegistrations( moduleDetails );
+	}
+
 	public void apply(ClassDetails classDetails) {
 		sourceClasses.putIfAbsent( classDetails.getName(), classDetails );
 		collectGlobalRegistrations( classDetails );

@@ -12,6 +12,9 @@ import jakarta.annotation.Nullable;
 import jakarta.persistence.ConstraintMode;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.SharedCacheMode;
+import org.hibernate.dialect.array.spi.ArraySupport;
+import org.hibernate.internal.util.config.ConfigurationHelper;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.HibernateException;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.TimeZoneStorageType;
@@ -35,7 +38,7 @@ import org.hibernate.cfg.JpaComplianceSettings;
 import org.hibernate.cfg.MappingSettings;
 import org.hibernate.context.spi.MultiTenancy;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.TimeZoneSupport;
+import org.hibernate.dialect.type.spi.TimeZoneSupport;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.service.spi.ServiceException;
@@ -105,8 +108,21 @@ public class MappingResolutionOptionsImpl
 	private final boolean metadataSerializationEnabled;
 	private final MappingResolutionDetailsCollector resolutionDetailsCollector;
 
+	static TypeConfiguration createTypeConfiguration(ServiceRegistry serviceRegistry) {
+		final var configurationService = serviceRegistry.requireService( ConfigurationService.class );
+		final var dialect = serviceRegistry.requireService( JdbcServices.class ).getDialect();
+		return new TypeConfiguration(
+				ConfigurationHelper.getBoolean(
+						MappingSettings.JAVA_TIME_USE_DIRECT_JDBC,
+						configurationService.getSettings(),
+						MappingSettings.JAVA_TIME_USE_DIRECT_JDBC_DEFAULT
+				),
+				dialect.getDirectJavaTimeJdbcSupport()
+		);
+	}
+
 	public MappingResolutionOptionsImpl(StandardServiceRegistry serviceRegistry) {
-		this( serviceRegistry, new TypeConfiguration() );
+		this( serviceRegistry, createTypeConfiguration( serviceRegistry ) );
 	}
 
 	public MappingResolutionOptionsImpl(
@@ -574,7 +590,7 @@ public class MappingResolutionOptionsImpl
 	}
 
 	private static WrapperArrayHandling pickWrapperArrayHandling(Dialect dialect) {
-		if ( dialect.supportsStandardArrays()
+		if ( dialect.getArraySupport().supports( ArraySupport.Capability.STANDARD_ARRAY )
 			&& ( dialect.getPreferredSqlTypeCodeForArray() == SqlTypes.ARRAY
 				|| dialect.getPreferredSqlTypeCodeForArray() == SqlTypes.SQLXML ) ) {
 			return WrapperArrayHandling.ALLOW;

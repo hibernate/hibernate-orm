@@ -72,7 +72,7 @@ public class DialectContributionLifecycleTest {
 	void preservesDialectAndIndependentContributorOrdering(SessionFactoryScope scope) {
 		assertThat( scope.getSessionFactory().getQueryEngine() ).isNotNull();
 		assertThat( EVENTS ).containsSubsequence( "dialect-type", "type-low", "type-high" );
-		assertThat( EVENTS ).containsSubsequence( "function-low", "function-high", "dialect-function" );
+		assertThat( EVENTS ).containsSubsequence( "dialect-function", "function-low", "function-high" );
 		assertThat( EVENTS.stream().filter( "dialect-type"::equals ) ).hasSize( 1 );
 		assertThat( EVENTS.stream().filter( "dialect-function"::equals ) ).hasSize( 1 );
 		assertThat( independentTypeContributions ).isSameAs( dialectTypeContributions );

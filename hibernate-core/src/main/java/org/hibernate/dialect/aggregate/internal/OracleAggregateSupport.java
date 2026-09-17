@@ -30,7 +30,6 @@ import org.hibernate.sql.ast.spi.query.expression.Expression;
 import org.hibernate.sql.ast.spi.query.expression.Literal;
 import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.MappingContext;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;

@@ -4,6 +4,8 @@
  */
 package org.hibernate.boot.mapping.internal.categorize;
 
+import org.hibernate.models.spi.AnnotationTarget;
+
 import jakarta.persistence.Access;
 import jakarta.persistence.AccessType;
 import jakarta.persistence.EntityListeners;
@@ -261,6 +263,12 @@ public abstract class AbstractIdentifiableTypeMetadata
 	private void applyLocalEventListeners(Consumer<JpaEventListener> consumer) {
 		final ClassDetails classDetails = getClassDetails();
 
+		if ( classDetails.isRealClass() ) {
+			final var module = classDetails.toJavaClass().getModule();
+			if ( module.isNamed() ) {
+				applyEventListeners( getModelContext().getModelsContext().getModuleDetailsRegistry().resolveModuleDetails( module ), consumer );
+			}
+		}
 		final ClassDetails packageInfo = packageInfoDetails( classDetails );
 		if ( packageInfo != null ) {
 			applyEventListeners( packageInfo, consumer );
@@ -268,7 +276,7 @@ public abstract class AbstractIdentifiableTypeMetadata
 		applyEventListeners( classDetails, consumer );
 	}
 
-	private void applyEventListeners(ClassDetails listenerSource, Consumer<JpaEventListener> consumer) {
+	private void applyEventListeners(AnnotationTarget listenerSource, Consumer<JpaEventListener> consumer) {
 		final EntityListeners entityListenersAnnotation = listenerSource.getDirectAnnotationUsage( EntityListeners.class );
 		if ( entityListenersAnnotation == null ) {
 			return;

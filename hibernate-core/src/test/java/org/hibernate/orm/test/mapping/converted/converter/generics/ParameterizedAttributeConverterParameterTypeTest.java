@@ -14,7 +14,6 @@ import jakarta.persistence.Id;
 
 import org.hibernate.boot.pipeline.internal.source.MappingSources;
 import org.hibernate.boot.model.convert.internal.ConverterDescriptors;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.orm.test.boot.MetadataBuildingTestHelper;
 import org.hibernate.type.descriptor.converter.spi.JpaAttributeConverter;
 import org.hibernate.type.internal.ConvertedBasicTypeImpl;

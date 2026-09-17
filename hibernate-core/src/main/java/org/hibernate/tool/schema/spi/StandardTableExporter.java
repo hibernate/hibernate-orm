@@ -32,7 +32,6 @@ import org.hibernate.mapping.PrimaryKey;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
 import org.hibernate.sql.Template;
-import org.hibernate.type.SqlTypes;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import static java.util.Collections.addAll;
@@ -395,8 +394,8 @@ public class StandardTableExporter implements Exporter<Table> {
 									subColumnName,
 									aggregatePath,
 									subColumnName,
-									AggregateColumnDescriptorAdapter.effectiveSqlTypeCode( aggregateColumn ),
-									AggregateColumnDescriptorAdapter.mapping( subColumn ),
+									AggregateColumnDescriptorAdapter.effectiveSqlTypeCode( aggregateColumn, metadata ),
+									AggregateColumnDescriptorAdapter.mapping( subColumn, metadata ),
 									typeConfiguration
 							)
 					);

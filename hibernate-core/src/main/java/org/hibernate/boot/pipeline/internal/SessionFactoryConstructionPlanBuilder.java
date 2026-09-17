@@ -116,6 +116,7 @@ public final class SessionFactoryConstructionPlanBuilder {
 		return new SessionFactoryIntegratorLifecycle(
 				metadata,
 				runtimeComponents.managedBeanRegistry(),
+				runtimeComponents.modelsContext(),
 				sessionFactoryReference,
 				standardServiceComponents.serviceRegistry()
 		);

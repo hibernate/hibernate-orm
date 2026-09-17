@@ -63,7 +63,8 @@ public class VersionResolution<E> implements BasicValue.Resolution<E> {
 
 					@Override
 					public boolean isDirectJavaTimeJdbcAccessEnabled(Class<?> javaTimeType) {
-						return context.isDirectJavaTimeJdbcAccessEnabled( javaTimeType );
+						return mappingPreferences.isPreferJavaTimeJdbcTypesEnabled()
+								&& services.getJdbcServices().getDialect().getDirectJavaTimeJdbcSupport().supports( javaTimeType );
 					}
 
 					@Override

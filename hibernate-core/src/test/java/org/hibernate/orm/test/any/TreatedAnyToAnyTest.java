@@ -55,7 +55,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  * </p>
  *
  * <pre>
- * org.hibernate.sql.ast.tree.from.UnknownTableReferenceException:
+ * org.hibernate.sql.ast.spi.query.from.UnknownTableReferenceException:
  *     Unable to determine TableReference (`TPUBLICATION`) for
  *     `treat(container.reference as Publication).destinataire.{discriminator}`
  *         at AnyDiscriminatorPart.generateFetch(AnyDiscriminatorPart.java:334)

@@ -4,6 +4,8 @@
  */
 package org.hibernate.boot.mapping.internal.binders;
 
+import org.hibernate.dialect.constraint.spi.CheckConstraintPlacement;
+
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.mapping.CheckConstraint;
@@ -39,7 +41,7 @@ final class EntityConstraintFinalizer {
 		}
 
 		final var dialect = context.getMetadataCollector().getDatabase().getDialect();
-		if ( !dialect.supportsTableCheck() ) {
+		if ( !dialect.getCheckConstraintSupport().supports( CheckConstraintPlacement.TABLE ) ) {
 			return;
 		}
 

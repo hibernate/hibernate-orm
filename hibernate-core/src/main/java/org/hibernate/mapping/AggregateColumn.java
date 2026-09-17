@@ -112,8 +112,8 @@ public final class AggregateColumn extends Column {
 										"",
 										getAggregateReadExpressionTemplate( dialect, mappingContext, typeConfiguration, parent.getComponent() ),
 										simpleAggregateName,
-										AggregateColumnDescriptorAdapter.effectiveSqlTypeCode( parent ),
-										AggregateColumnDescriptorAdapter.mapping( aggregateColumn ),
+										AggregateColumnDescriptorAdapter.effectiveSqlTypeCode( parent, mappingContext ),
+										AggregateColumnDescriptorAdapter.mapping( aggregateColumn, mappingContext ),
 										typeConfiguration
 								)
 						);
@@ -123,13 +123,14 @@ public final class AggregateColumn extends Column {
 		return aggregateColumn.isAggregateArray() ? Template.TEMPLATE : Template.TEMPLATE + "." + simpleAggregateName;
 	}
 
-	public String getAggregateAssignmentExpressionTemplate(Dialect dialect, MappingContext mappingContext) {
-		return getAggregateAssignmentExpressionTemplate( dialect, mappingContext, component );
+	public String getAggregateAssignmentExpressionTemplate(Dialect dialect, MappingContext mappingContext, TypeConfiguration typeConfiguration) {
+		return getAggregateAssignmentExpressionTemplate( dialect, mappingContext, typeConfiguration, component );
 	}
 
 	private static String getAggregateAssignmentExpressionTemplate(
 			Dialect dialect,
 			MappingContext mappingContext,
+			TypeConfiguration typeConfiguration,
 			Component component) {
 		final var aggregateColumn = component.getAggregateColumn();
 		final var parent = component.getParentAggregateColumn();
@@ -139,10 +140,10 @@ public final class AggregateColumn extends Column {
 				: dialect.getAggregateSupport()
 						.aggregateComponentAssignmentExpression(
 								new AggregateComponentAssignmentRequest(
-										getAggregateAssignmentExpressionTemplate( dialect, mappingContext, parent.getComponent() ),
+										getAggregateAssignmentExpressionTemplate( dialect, mappingContext, typeConfiguration, parent.getComponent() ),
 										simpleAggregateName,
-										AggregateColumnDescriptorAdapter.effectiveSqlTypeCode( parent ),
-										AggregateColumnDescriptorAdapter.mapping( aggregateColumn ),
+										AggregateColumnDescriptorAdapter.effectiveSqlTypeCode( parent, mappingContext ),
+										AggregateColumnDescriptorAdapter.mapping( aggregateColumn, mappingContext ),
 										typeConfiguration
 								)
 						);

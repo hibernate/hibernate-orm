@@ -158,7 +158,6 @@ dependencies {
     reportAggregation project(':hibernate-community-dialects')
 
 	migrationCompatibilityArtifacts project( ':hibernate-core' )
-	migrationCompatibilityArtifacts project( ':hibernate-envers' )
 	migrationCompatibilityArtifacts project( ':hibernate-jcache' )
 	migrationCompatibilityArtifacts project( ':hibernate-micrometer' )
 	migrationCompatibilityArtifacts project( ':hibernate-spatial' )

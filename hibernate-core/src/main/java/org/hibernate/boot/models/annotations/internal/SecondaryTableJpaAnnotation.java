@@ -45,7 +45,9 @@ public class SecondaryTableJpaAnnotation implements SecondaryTable, CommonTableD
 		this.catalog = "";
 		this.schema = "";
 		this.pkJoinColumns = new jakarta.persistence.PrimaryKeyJoinColumn[0];
-		this.foreignKey = JpaAnnotations.FOREIGN_KEY.createUsage( modelContext );
+		final var defaultForeignKey = JpaAnnotations.FOREIGN_KEY.createUsage( modelContext );
+		defaultForeignKey.value( jakarta.persistence.ConstraintMode.PROVIDER_DEFAULT );
+		this.foreignKey = defaultForeignKey;
 		this.uniqueConstraints = new jakarta.persistence.UniqueConstraint[0];
 		this.indexes = new jakarta.persistence.Index[0];
 		this.check = new jakarta.persistence.CheckConstraint[0];

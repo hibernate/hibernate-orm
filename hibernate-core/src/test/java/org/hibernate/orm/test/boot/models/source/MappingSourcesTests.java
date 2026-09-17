@@ -313,6 +313,7 @@ public class MappingSourcesTests {
 		public ScanningResult scan(URL... boundaries) {
 			this.boundaries = Arrays.asList( boundaries );
 			return new ScanningResultImpl(
+					Set.of(),
 					Set.of( "example.packageinfo" ),
 					Set.of( "example.ScannedEntity" ),
 					Set.of( URI.create( "file:/persistence-root/lib/META-INF/orm.xml" ) )

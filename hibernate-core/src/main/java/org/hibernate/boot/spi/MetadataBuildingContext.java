@@ -40,6 +40,11 @@ import static org.hibernate.temporal.TemporalTableStrategy.AUTO;
 public interface MetadataBuildingContext {
 	BootstrapContext getBootstrapContext();
 
+	default boolean isDirectJavaTimeJdbcAccessEnabled(Class<?> javaTimeType) {
+		return getBuildingPlan().isPreferJavaTimeJdbcTypesEnabled()
+				&& getJdbcServices().getDialect().getDirectJavaTimeJdbcSupport().supports( javaTimeType );
+	}
+
 	MappingResolutionServices getServiceComponents();
 
 	/**

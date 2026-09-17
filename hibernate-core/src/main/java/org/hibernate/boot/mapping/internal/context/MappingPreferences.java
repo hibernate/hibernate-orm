@@ -23,7 +23,7 @@ import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
 ///
 /// @since 9.0
 /// @author Steve Ebersole
-@Incubating
+@Incubating(since = "9.0")
 public interface MappingPreferences {
 	/// The preferred JDBC type for storing boolean values.
 	///
@@ -96,7 +96,11 @@ public interface MappingPreferences {
 
 			@Override
 			public int getPreferredSqlTypeCodeForInstant() {
-				return ConfigurationHelper.getPreferredSqlTypeCodeForInstant( configurationService );
+				final int preferred = ConfigurationHelper.getPreferredSqlTypeCodeForInstant( configurationService );
+				return preferred == org.hibernate.type.SqlTypes.INSTANT
+						&& !dialect.getDirectJavaTimeJdbcSupport().supports( java.time.Instant.class )
+						? org.hibernate.type.SqlTypes.TIMESTAMP_UTC
+						: preferred;
 			}
 
 			@Override
@@ -106,7 +110,7 @@ public interface MappingPreferences {
 
 			@Override
 			public boolean isPreferJavaTimeJdbcTypesEnabled() {
-				return getBoolean( JAVA_TIME_USE_DIRECT_JDBC, configurationService.getSettings() );
+				return getBoolean( JAVA_TIME_USE_DIRECT_JDBC, configurationService.getSettings(), MappingSettings.JAVA_TIME_USE_DIRECT_JDBC_DEFAULT );
 			}
 
 			@Override

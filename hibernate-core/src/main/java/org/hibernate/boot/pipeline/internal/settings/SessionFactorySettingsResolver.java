@@ -49,7 +49,7 @@ import org.hibernate.cfg.SessionEventSettings;
 import org.hibernate.cfg.TransactionSettings;
 import org.hibernate.cfg.ValidationSettings;
 import org.hibernate.context.spi.MultiTenancy;
-import org.hibernate.dialect.TimeZoneSupport;
+import org.hibernate.dialect.type.spi.TimeZoneSupport;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.jpa.internal.MutableJpaComplianceImpl;
 import org.hibernate.jpa.internal.JpaEntityNotFoundDelegate;

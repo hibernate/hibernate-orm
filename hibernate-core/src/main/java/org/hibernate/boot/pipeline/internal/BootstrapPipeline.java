@@ -307,7 +307,7 @@ public class BootstrapPipeline {
 
 	private static MappingResolutionResult resolveMetadata(EntryPointBootstrapRequest bootstrapRequest) {
 		final var standardServiceRegistry = bootstrapRequest.standardServiceRegistry();
-		final var typeConfiguration = new TypeConfiguration();
+		final var typeConfiguration = MappingResolutionOptionsImpl.createTypeConfiguration( standardServiceRegistry );
 		final var mappingResolutionOptions =
 				new MappingResolutionOptionsImpl( standardServiceRegistry, typeConfiguration );
 		final var bootstrapContext = createBootstrapContext(
@@ -354,7 +354,7 @@ public class BootstrapPipeline {
 	/// @return the built SessionFactory
 	public static SessionFactoryImplementor build(BootstrapPipelineRequest request) {
 		Objects.requireNonNull( request );
-		final var typeConfiguration = new TypeConfiguration();
+		final var typeConfiguration = MappingResolutionOptionsImpl.createTypeConfiguration( request.serviceRegistry() );
 		final var standardServiceRegistry = getStandardServiceRegistry( request.serviceRegistry() );
 		final var mappingResolutionOptions =
 				new MappingResolutionOptionsImpl( standardServiceRegistry, typeConfiguration );
@@ -406,7 +406,7 @@ public class BootstrapPipeline {
 	}
 
 	private static void generateSchema(EntryPointBootstrapRequest bootstrapRequest) {
-		final var typeConfiguration = new TypeConfiguration();
+		final var typeConfiguration = MappingResolutionOptionsImpl.createTypeConfiguration( bootstrapRequest.standardServiceRegistry() );
 		final var mappingResolutionOptions = new MappingResolutionOptionsImpl(
 				bootstrapRequest.standardServiceRegistry(),
 				typeConfiguration

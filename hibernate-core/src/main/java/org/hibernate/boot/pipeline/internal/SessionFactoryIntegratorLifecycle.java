@@ -6,6 +6,9 @@ package org.hibernate.boot.pipeline.internal;
 
 import java.util.ArrayList;
 
+import org.hibernate.models.spi.ClassDetailsRegistry;
+import org.hibernate.models.spi.ModuleDetailsRegistry;
+import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.boot.spi.MetadataImplementor;
@@ -33,10 +36,26 @@ public class SessionFactoryIntegratorLifecycle implements SessionFactoryObserver
 	public SessionFactoryIntegratorLifecycle(
 			MetadataImplementor metadata,
 			ManagedBeanRegistry managedBeanRegistry,
+			ModelsContext modelsContext,
 			SessionFactoryAccess sessionFactoryAccess,
 			ServiceRegistry serviceRegistry) {
 		this.metadata = metadata;
-		this.integratorContext = () -> managedBeanRegistry;
+		this.integratorContext = new Integrator.Context() {
+			@Override
+			public ManagedBeanRegistry getManagedBeanRegistry() {
+				return managedBeanRegistry;
+			}
+
+			@Override
+			public ClassDetailsRegistry getClassDetailsRegistry() {
+				return modelsContext.getClassDetailsRegistry();
+			}
+
+			@Override
+			public ModuleDetailsRegistry getModuleDetailsRegistry() {
+				return modelsContext.getModuleDetailsRegistry();
+			}
+		};
 		this.sessionFactoryAccess = sessionFactoryAccess;
 		this.serviceRegistry = serviceRegistry;
 	}

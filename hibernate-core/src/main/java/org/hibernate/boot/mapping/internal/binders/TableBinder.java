@@ -10,6 +10,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.StringTokenizer;
 
+import org.hibernate.dialect.unique.spi.UniqueKeyRepresentation;
+import org.hibernate.dialect.unique.spi.UniqueKeyRepresentationRequest;
 import org.hibernate.annotations.SecondaryRow;
 import org.hibernate.annotations.RowId;
 import org.hibernate.annotations.Subselect;
@@ -709,7 +711,10 @@ public class TableBinder {
 				optional,
 				owned,
 				primaryKeyJoinColumns( secondaryTableAnn.pkJoinColumns() ),
-				ForeignKeySource.from( secondaryTableAnn ),
+				ForeignKeySource.firstSpecified(
+						ForeignKeySource.from( secondaryTableAnn ),
+						ForeignKeySource.fromFirstSpecifiedPrimaryKeyJoinColumn( secondaryTableAnn.pkJoinColumns() )
+				),
 				binding
 		);
 	}
@@ -867,10 +872,13 @@ public class TableBinder {
 			}
 
 			if ( indexAnn.unique()
-					&& !hasFormula
-					&& jdbcEnvironment.getDialect().supportsUniqueConstraints()
-					&& StringHelper.isEmpty( indexAnn.type() )
-					&& StringHelper.isEmpty( indexAnn.using() ) ) {
+					&& jdbcEnvironment.getDialect().getUniqueDelegate().representation(
+							new UniqueKeyRepresentationRequest(
+									hasFormula,
+									!StringHelper.isEmpty( indexAnn.type() ),
+									!StringHelper.isEmpty( indexAnn.using() )
+							)
+					) == UniqueKeyRepresentation.CONSTRAINT ) {
 				final ArrayList<Column> uniqueKeyColumns = new ArrayList<>( selectables.length );
 				for ( Selectable selectable : selectables ) {
 					uniqueKeyColumns.add( (Column) selectable );

@@ -4,7 +4,8 @@
  */
 package org.hibernate.orm.test.jpa.xml;
 
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
+import org.hibernate.boot.pipeline.internal.MetadataBuildingHelper;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 
@@ -21,13 +22,13 @@ public class DelimitedIdentifiersScopeTest {
 	@Test
 	void xmlDefaultIsScopedToThePersistenceUnit(ServiceRegistryScope scope) {
 		final var serviceRegistry = scope.getRegistry();
-		final var quotedMetadata = (MetadataImplementor) new MetadataSources( serviceRegistry )
-				.addAnnotatedClass( DelimitedIdentifiersTest.SequenceGeneratedEntity.class )
-				.addResource( "org/hibernate/orm/test/jpa/xml/delimited-identifiers.xml" )
-				.buildMetadata();
-		final var unquotedMetadata = (MetadataImplementor) new MetadataSources( serviceRegistry )
-				.addAnnotatedClass( DelimitedIdentifiersTest.SequenceGeneratedEntity.class )
-				.buildMetadata();
+		final var quotedMetadata = (MetadataImplementor) MetadataBuildingHelper.buildMetadata( serviceRegistry, new MappingSources()
+				.addManagedClass( DelimitedIdentifiersTest.SequenceGeneratedEntity.class )
+				.addMappingResource( "org/hibernate/orm/test/jpa/xml/delimited-identifiers.xml" )
+				);
+		final var unquotedMetadata = (MetadataImplementor) MetadataBuildingHelper.buildMetadata( serviceRegistry, new MappingSources()
+				.addManagedClass( DelimitedIdentifiersTest.SequenceGeneratedEntity.class )
+				);
 
 		assertThat( quotedMetadata.getEntityBinding( DelimitedIdentifiersTest.SequenceGeneratedEntity.class.getName() )
 				.getTable().isQuoted() )

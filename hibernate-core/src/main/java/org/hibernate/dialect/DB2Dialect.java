@@ -55,7 +55,6 @@ import org.hibernate.dialect.sql.ast.spi.ValuesListSupport;
 import jakarta.persistence.TemporalType;
 import jakarta.annotation.Nullable;
 import org.hibernate.SPI;
-import org.hibernate.Timeouts;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;

@@ -15,25 +15,18 @@ import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Column;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
-import org.hibernate.testing.orm.junit.ImplicitListAsListProvider;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.Setting;
-import org.hibernate.testing.orm.junit.SettingProvider;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hibernate.cfg.MappingSettings.DEFAULT_LIST_SEMANTICS;
 import static org.hibernate.cfg.MappingSettings.IMPLICIT_NAMING_STRATEGY;
 
 @JiraKey("HHH-20696")
 @ServiceRegistry(
-		settingProviders = @SettingProvider(
-				settingName = DEFAULT_LIST_SEMANTICS,
-				provider = ImplicitListAsListProvider.class
-		),
 		settings = @Setting(
 				name = IMPLICIT_NAMING_STRATEGY,
 				value = "org.hibernate.orm.test.namingstrategy.MetadataBuilderImplicitListIndexColumnNameTest$CustomImplicitNamingStrategy"

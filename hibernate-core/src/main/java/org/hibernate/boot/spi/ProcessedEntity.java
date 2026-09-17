@@ -21,7 +21,7 @@ import jakarta.persistence.AccessType;
 ///
 /// @since 9.0
 /// @author Steve Ebersole
-@Incubating
+@Incubating(since = "9.0")
 public interface ProcessedEntity {
 	/// The Hibernate entity name used to identify the entity binding.
 	String getEntityName();

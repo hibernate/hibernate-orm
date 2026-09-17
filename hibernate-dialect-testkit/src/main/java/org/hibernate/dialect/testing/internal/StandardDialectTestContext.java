@@ -9,7 +9,10 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
+import org.hibernate.boot.pipeline.internal.MetadataBuildingHelper;
+import org.hibernate.boot.pipeline.internal.SessionFactoryPipeline;
+import org.hibernate.boot.internal.SessionFactoryOptionsCollector;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
@@ -70,11 +73,10 @@ public final class StandardDialectTestContext implements DialectTestContextAcces
 
 		serviceRegistry = new StandardServiceRegistryBuilder().applySettings( settings ).build();
 		try {
-			metadata = (MetadataImplementor) new MetadataSources( serviceRegistry )
-					.addAnnotatedClass( ContractEntity.class )
-					.buildMetadata();
+			metadata = MetadataBuildingHelper.buildMetadata( serviceRegistry,
+					new MappingSources().addManagedClass( ContractEntity.class ) );
 			metadata.validate();
-			sessionFactory = (SessionFactoryImplementor) metadata.buildSessionFactory();
+			sessionFactory = SessionFactoryPipeline.build( metadata, new SessionFactoryOptionsCollector() );
 		}
 		catch (RuntimeException failure) {
 			StandardServiceRegistryBuilder.destroy( serviceRegistry );

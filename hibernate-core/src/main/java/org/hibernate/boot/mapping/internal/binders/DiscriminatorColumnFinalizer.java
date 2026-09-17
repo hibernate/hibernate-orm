@@ -70,7 +70,7 @@ final class DiscriminatorColumnFinalizer {
 	}
 
 	private static String checkConstraint(RootClass rootClass, Column column, Dialect dialect, MappingContext mappingContext) {
-		return dialect.getCheckCondition(
+		return dialect.getEnumSupport().getCheckCondition(
 				column.getQuotedName( dialect ),
 				discriminatorValues( rootClass ),
 				column.getType( mappingContext ).getJdbcType()

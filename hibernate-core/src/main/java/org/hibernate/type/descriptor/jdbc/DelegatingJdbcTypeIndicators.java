@@ -53,6 +53,11 @@ public class DelegatingJdbcTypeIndicators implements JdbcTypeIndicators {
 	}
 
 	@Override
+	public boolean isDirectJavaTimeJdbcFallbackLoggingEnabled() {
+		return delegate.isDirectJavaTimeJdbcFallbackLoggingEnabled();
+	}
+
+	@Override
 	public boolean isPreferNativeEnumTypesEnabled() {
 		return delegate.isPreferNativeEnumTypesEnabled();
 	}

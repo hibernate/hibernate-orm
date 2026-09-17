@@ -594,9 +594,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 		this.queryOptions = request.queryOptions();
 		this.loadQueryInfluencers = request.loadQueryInfluencers();
-		this.syntheticTableGroupSupport = creationContext.getSessionFactory()
-				.getJdbcServices()
-				.getDialect()
+		this.syntheticTableGroupSupport = creationContext.getDialect()
 				.getSyntheticTableGroupSupport();
 		this.parameterMapping = request.parameterMapping();
 		this.domainParameterBindings = request.parameterBindings();

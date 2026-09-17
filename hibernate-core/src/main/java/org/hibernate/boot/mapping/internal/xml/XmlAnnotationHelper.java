@@ -255,20 +255,20 @@ public class XmlAnnotationHelper {
 		if ( jaxbEntity.isDynamicInsert() != null && jaxbEntity.isDynamicInsert() ) {
 			classDetails.applyAnnotationUsage(
 					HibernateAnnotations.DYNAMIC_INSERT,
-					xmlDocumentContext.getModelBuildingContext()
+					xmlDocumentContext.getModelsContext()
 			);
 		}
 		if ( jaxbEntity.isDynamicUpdate() != null && jaxbEntity.isDynamicUpdate() ) {
 			classDetails.applyAnnotationUsage(
 					HibernateAnnotations.DYNAMIC_UPDATE,
-					xmlDocumentContext.getModelBuildingContext()
+					xmlDocumentContext.getModelsContext()
 			);
 		}
 		if ( jaxbEntity.getOptimisticLocking() != null ) {
 			final OptimisticLockingAnnotation optimisticLocking =
 					(OptimisticLockingAnnotation) classDetails.applyAnnotationUsage(
 							HibernateAnnotations.OPTIMISTIC_LOCKING,
-							xmlDocumentContext.getModelBuildingContext()
+							xmlDocumentContext.getModelsContext()
 					);
 			optimisticLocking.type( OptimisticLockType.valueOf( jaxbEntity.getOptimisticLocking().name() ) );
 		}
@@ -1475,7 +1475,7 @@ public class XmlAnnotationHelper {
 			return;
 		}
 
-		final ModelsContext modelContext = xmlDocumentContext.getModelBuildingContext();
+		final ModelsContext modelContext = xmlDocumentContext.getModelsContext();
 		final SQLSelectAnnotation sqlSelectAnn = (SQLSelectAnnotation) target.applyAnnotationUsage(
 				HibernateAnnotations.SQL_SELECT,
 				modelContext
@@ -1523,7 +1523,7 @@ public class XmlAnnotationHelper {
 
 		final HQLSelectAnnotation hqlSelectAnn = (HQLSelectAnnotation) target.applyAnnotationUsage(
 				HibernateAnnotations.HQL_SELECT,
-				xmlDocumentContext.getModelBuildingContext()
+				xmlDocumentContext.getModelsContext()
 		);
 		hqlSelectAnn.query( hqlSelect );
 	}
@@ -2093,7 +2093,7 @@ public class XmlAnnotationHelper {
 		if ( onDeleteAction != null ) {
 			final OnDeleteAnnotation onDelete = (OnDeleteAnnotation) classDetails.applyAnnotationUsage(
 					ON_DELETE,
-					xmlDocumentContext.getModelBuildingContext()
+					xmlDocumentContext.getModelsContext()
 			);
 			onDelete.action( onDeleteAction );
 		}

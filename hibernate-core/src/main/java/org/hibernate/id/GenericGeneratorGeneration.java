@@ -51,10 +51,13 @@ public class GenericGeneratorGeneration
 
 	@Override
 	public void initialize(GenericGenerator annotation, GeneratorCreationContext context) {
-		delegate = GeneratorBinder.instantiateGenerator(
-				Helper.getBeanContainer( context.getServiceRegistry() ),
-				generatorType( annotation, context )
-		);
+		final var generatorType = generatorType( annotation, context );
+		delegate = generatorType == org.hibernate.id.uuid.UuidGenerator.class
+				? org.hibernate.boot.model.internal.GeneratorAnnotationHelper.uuidGeneratorDescriptor( null ).createGenerator( context )
+				: GeneratorBinder.instantiateGenerator(
+						Helper.getBeanContainer( context.getServiceRegistry() ),
+						generatorType
+				);
 
 		configure( annotation, context );
 

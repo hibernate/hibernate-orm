@@ -19,6 +19,7 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jpa.HibernatePersistenceConfiguration;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.models.spi.ModuleDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
 
 import java.io.IOException;
@@ -40,7 +41,16 @@ public record PreparedMappingSources(
 		Collection<ClassDetails> managedClassDetails,
 		Collection<ClassDetails> packageDetails,
 		Collection<Binding<JaxbEntityMappingsImpl>> xmlMappings,
-		boolean includeUnlistedStructuralTypes) {
+		boolean includeUnlistedStructuralTypes,
+		Collection<ModuleDetails> moduleDetails) {
+
+	public PreparedMappingSources(
+			Collection<ClassDetails> managedClassDetails,
+			Collection<ClassDetails> packageDetails,
+			Collection<Binding<JaxbEntityMappingsImpl>> xmlMappings,
+			boolean includeUnlistedStructuralTypes) {
+		this( managedClassDetails, packageDetails, xmlMappings, includeUnlistedStructuralTypes, List.of() );
+	}
 
 	public PreparedMappingSources(
 			Collection<ClassDetails> managedClassDetails,
@@ -267,7 +277,10 @@ public record PreparedMappingSources(
 				managedClassDetails,
 				packageDetailsList,
 				xmlBindings,
-				mappingSources.includeUnlistedStructuralTypes()
+				mappingSources.includeUnlistedStructuralTypes(),
+			mappingSources.moduleNames().stream()
+					.map( context.modelsContext().getModuleDetailsRegistry()::resolveModuleDetails )
+					.toList()
 		);
 	}
 

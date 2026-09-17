@@ -5,16 +5,16 @@
 package org.hibernate.orm.test.boot.models.bind.tenancy;
 
 import org.hibernate.annotations.TenantId;
-import org.hibernate.boot.Metadata;
-import org.hibernate.boot.model.relational.InitCommand;
 import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.boot.mapping.internal.binders.TenantIdBinder;
 import org.hibernate.boot.mapping.internal.view.TenantIdBindingView;
 import org.hibernate.boot.mapping.internal.categorize.EntityHierarchyImpl;
 import org.hibernate.boot.mapping.internal.categorize.EntityTypeMetadataImpl;
-import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.dialect.rowsecurity.RowLevelSecurity;
+import org.hibernate.dialect.rowsecurity.spi.RowLevelSecurity;
+import org.hibernate.dialect.rowsecurity.spi.RowLevelSecurityDdl;
+import org.hibernate.dialect.rowsecurity.spi.RowLevelSecurityDdlRequest;
+import org.hibernate.dialect.rowsecurity.spi.TenantIdentifierSource;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
@@ -149,8 +149,10 @@ public class SimpleTenancyTests {
 					final var table = metadata.getEntityBinding( ProtectedEntityWithStringTenant.class.getName() )
 							.getTable();
 
-					assertThat( table.getInitCommands( null ) )
-							.extracting( command -> command.initCommands()[0] )
+					final var sqlContext = org.hibernate.boot.model.relational.internal.SqlStringGenerationContextImpl.fromExplicit(
+							metadata.getDatabase().getJdbcEnvironment(), metadata.getDatabase(), null, null );
+					assertThat( metadata.getDatabase().getAuxiliaryDatabaseObjects() )
+							.extracting( object -> object.sqlCreateStrings( sqlContext )[0] )
 							.containsExactly( "rls:protected_entity:tenant_id:SESSION" );
 				},
 				scope.getRegistry(),
@@ -247,14 +249,20 @@ public class SimpleTenancyTests {
 		}
 
 		@Override
-		public void addTenantIdTableInitCommands(
-				InFlightMetadataCollector collector,
-				org.hibernate.mapping.Table table,
-				org.hibernate.mapping.Column tenantIdentifierColumn,
-				Metadata metadata,
-				TenantIdentifierSource tenantIdentifierSource) {
-			table.addInitCommand( ignored -> new InitCommand(
-					"rls:" + table.getName() + ":" + tenantIdentifierColumn.getName() + ":" + tenantIdentifierSource
+		public boolean supportsTenantIdentifierSource(TenantIdentifierSource source) {
+			return source == TenantIdentifierSource.SESSION;
+		}
+
+		@Override
+		public void setTenantIdentifier(java.sql.Connection connection, String tenantIdentifier, boolean root) {
+		}
+
+		@Override
+		public java.util.List<RowLevelSecurityDdl> getTenantTableDdl(RowLevelSecurityDdlRequest request) {
+			return java.util.List.of( new RowLevelSecurityDdl(
+					"rls:" + request.tableExportIdentifier(), RowLevelSecurityDdl.Phase.AFTER_TABLES,
+					java.util.List.of( "rls:" + request.qualifiedTableName() + ":" + request.tenantColumnName() + ":" + request.tenantIdentifierSource() ),
+					java.util.List.of(), java.util.Set.of()
 			) );
 		}
 	}

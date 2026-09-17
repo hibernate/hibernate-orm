@@ -20,7 +20,7 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.collection.internal.StandardCollectionSemanticsResolver;
 import org.hibernate.collection.spi.CollectionSemanticsResolver;
-import org.hibernate.dialect.TimeZoneSupport;
+import org.hibernate.dialect.type.spi.TimeZoneSupport;
 import org.hibernate.type.WrapperArrayHandling;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.CompositeUserType;
@@ -164,7 +164,7 @@ public interface MappingResolutionOptions {
 	///
 	/// @since 7.0
 	/// @see org.hibernate.cfg.MappingSettings#XML_FORMAT_MAPPER_LEGACY_FORMAT
-	@Incubating
+	@Incubating(since = "9.0")
 	boolean isXmlFormatMapperLegacyFormatEnabled();
 
 	/// @return the [TypeConfiguration] belonging to the [BootstrapContext]

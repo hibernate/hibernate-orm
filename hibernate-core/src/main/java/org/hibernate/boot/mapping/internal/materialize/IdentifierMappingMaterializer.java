@@ -634,6 +634,9 @@ public class IdentifierMappingMaterializer {
 							idClassValue == null ? toOne : idClassValue,
 							idClassMember
 					);
+					if ( idClassProperty.getValue() instanceof ToOne ) {
+						applyToOneIdentifierPropertyOptions( idAttribute, type, idClassProperty, associationMember );
+					}
 					idValue.addProperty( idClassProperty );
 				}
 			}

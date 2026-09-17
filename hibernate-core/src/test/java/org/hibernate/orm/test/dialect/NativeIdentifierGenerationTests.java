@@ -21,19 +21,15 @@ import org.hibernate.dialect.identity.spi.IdentityColumnSupportBase;
 import org.hibernate.generator.Generator;
 import org.hibernate.id.IdentityGenerator;
 import org.hibernate.id.IncrementGenerator;
-import org.hibernate.id.UUIDGenerator;
-import org.hibernate.id.UUIDHexGenerator;
+import org.hibernate.id.uuid.UuidGenerator;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
-import org.hibernate.mapping.SimpleValue;
 
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatNullPointerException;
-import static org.mockito.Answers.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 /// Verifies typed native identifier-generation selection and its legacy
 /// `"native"` bootstrap consumers.
@@ -45,18 +41,15 @@ public class NativeIdentifierGenerationTests {
 			GenerationType.SEQUENCE, SequenceStyleGenerator.class,
 			GenerationType.AUTO, SequenceStyleGenerator.class,
 			GenerationType.TABLE, org.hibernate.id.enhanced.TableGenerator.class,
-			GenerationType.UUID, UUIDGenerator.class
+			GenerationType.UUID, UuidGenerator.class
 	);
 
 	@Test
-	void bothLegacyConsumersMapEveryTypedNativeValueDirectly() {
+	void nativeStrategyMapsEveryTypedValueDirectly() {
 		for ( var entry : NATIVE_GENERATORS.entrySet() ) {
 			final Dialect dialect = dialectReturning( entry.getKey() );
-			assertThat( GeneratorStrategies.mapLegacyNamedGenerator( "native", dialect ) )
+			assertThat( GeneratorStrategies.resolveLegacyGeneratorClass( "native", dialect ) )
 					.as( "named native mapping for " + entry.getKey() )
-					.isEqualTo( entry.getValue() );
-			assertThat( GeneratorStrategies.generatorClass( "native", idValue( dialect ) ) )
-					.as( "generator class native mapping for " + entry.getKey() )
 					.isEqualTo( entry.getValue() );
 		}
 	}
@@ -92,36 +85,59 @@ public class NativeIdentifierGenerationTests {
 	void nullProviderAnswerIsRejectedByBothLegacyConsumers() {
 		final Dialect dialect = dialectReturning( null );
 		assertThatNullPointerException()
-				.isThrownBy( () -> GeneratorStrategies.mapLegacyNamedGenerator( "native", dialect ) )
-				.withMessage( "Dialect#getNativeValueGenerationStrategy() returned null" );
-		assertThatNullPointerException()
-				.isThrownBy( () -> GeneratorStrategies.generatorClass( "native", idValue( dialect ) ) )
+				.isThrownBy( () -> GeneratorStrategies.resolveLegacyGeneratorClass( "native", dialect ) )
 				.withMessage( "Dialect#getNativeValueGenerationStrategy() returned null" );
 	}
 
 	@Test
-	void explicitLegacyAliasesAndUnknownNamesKeepTheirBehavior() {
-		assertThat( GeneratorStrategies.mapLegacyNamedGenerator( "uuid", baseDialect() ) )
-				.isEqualTo( UUIDHexGenerator.class );
-		assertThat( GeneratorStrategies.mapLegacyNamedGenerator( "uuid.hex", baseDialect() ) )
-				.isEqualTo( UUIDHexGenerator.class );
-		assertThat( GeneratorStrategies.mapLegacyNamedGenerator( "uuid2", baseDialect() ) )
-				.isEqualTo( UUIDGenerator.class );
-		assertThat( GeneratorStrategies.mapLegacyNamedGenerator( "unknown", baseDialect() ) ).isNull();
-
-		assertThat( GeneratorStrategies.generatorClass( "uuid", null ) ).isEqualTo( UUIDHexGenerator.class );
-		assertThat( GeneratorStrategies.generatorClass( "uuid.hex", null ) ).isEqualTo( UUIDHexGenerator.class );
-		assertThat( GeneratorStrategies.generatorClass( "uuid2", null ) ).isEqualTo( UUIDGenerator.class );
-
-		final SimpleValue idValue = idValue( baseDialect() );
+	void removedUuidAliasesAreNotResolvedAndClassNamesStillWork() {
+		for ( var alias : java.util.List.of( "uuid", "uuid.hex", "uuid2", "unknown" ) ) {
+			assertThat( GeneratorStrategies.resolveLegacyGeneratorClass( alias, baseDialect() ) ).isNull();
+		}
 		final ClassLoaderService classLoaderService = mock( ClassLoaderService.class );
-		when( idValue.getBuildingContext().getBootstrapContext().getClassLoaderService() )
-				.thenReturn( classLoaderService );
-		doReturn( IncrementGenerator.class )
-				.when( classLoaderService )
-				.classForName( IncrementGenerator.class.getName() );
-		assertThat( GeneratorStrategies.generatorClass( IncrementGenerator.class.getName(), idValue ) )
+		doReturn( IncrementGenerator.class ).when( classLoaderService ).classForName( IncrementGenerator.class.getName() );
+		assertThat( GeneratorStrategies.resolveGeneratorClass( IncrementGenerator.class.getName(), baseDialect(), classLoaderService ) )
 				.isEqualTo( IncrementGenerator.class );
+	}
+
+	@Test
+	void nativeUuidStrategyBuildsTheModernGenerator() {
+		final var configuration = new org.hibernate.cfg.Configuration();
+		configuration.getProperties().put( org.hibernate.cfg.AvailableSettings.DIALECT, new org.hibernate.dialect.H2Dialect() {
+			@Override
+			public GenerationType getNativeValueGenerationStrategy() {
+				return GenerationType.UUID;
+			}
+		} );
+		configuration.setProperty( org.hibernate.cfg.AvailableSettings.ALLOW_METADATA_ON_BOOT, "false" );
+		configuration.addAnnotatedClass( NativeUuidEntity.class );
+		final String mapping = """
+				<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping" version="9.0">
+					<entity class="org.hibernate.orm.test.dialect.NativeIdentifierGenerationTests$NativeUuidEntity">
+						<attributes>
+							<id name="id">
+								<generated-value generator="native-id"/>
+								<generic-generator name="native-id" class="native"/>
+							</id>
+						</attributes>
+					</entity>
+				</entity-mappings>
+				""";
+		configuration.addInputStream( new java.io.ByteArrayInputStream( mapping.getBytes( java.nio.charset.StandardCharsets.UTF_8 ) ) );
+		try ( var factory = configuration.buildSessionFactory() ) {
+			final var entity = factory.unwrap( org.hibernate.engine.spi.SessionFactoryImplementor.class )
+					.getMappingMetamodel().getEntityDescriptor( NativeUuidEntity.class );
+			assertThat( entity.getGenerator() ).isInstanceOfSatisfying(
+					org.hibernate.id.GenericGeneratorGeneration.class,
+					generator -> assertThat( generator.getDelegate() ).isInstanceOf( UuidGenerator.class )
+			);
+		}
+	}
+
+	@jakarta.persistence.Entity
+	public static class NativeUuidEntity {
+		@jakarta.persistence.Id
+		public java.util.UUID id;
 	}
 
 	private static Dialect dialectReturning(GenerationType generationType) {
@@ -138,9 +154,4 @@ public class NativeIdentifierGenerationTests {
 		};
 	}
 
-	private static SimpleValue idValue(Dialect dialect) {
-		final SimpleValue idValue = mock( SimpleValue.class, RETURNS_DEEP_STUBS );
-		when( idValue.getMetadata().getDatabase().getDialect() ).thenReturn( dialect );
-		return idValue;
-	}
 }

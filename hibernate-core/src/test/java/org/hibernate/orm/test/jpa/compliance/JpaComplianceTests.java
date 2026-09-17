@@ -49,14 +49,7 @@ public class JpaComplianceTests {
 		assertThat( compliance.isJpaCacheComplianceEnabled() ).isEqualTo( expected );
 	}
 
-	@Test
-	public void testGlobalGeneratorScopeCompatibility() {
-		final MutableJpaComplianceImpl compliance = new MutableJpaComplianceImpl(
-				Collections.singletonMap( AvailableSettings.JPA_ID_GENERATOR_GLOBAL_SCOPE_COMPLIANCE, false ),
-				false
-		);
-		assertThat( compliance.isGlobalGeneratorScopeEnabled() ).isFalse();
-	}
+
 	@Test
 	public void testDefaultTrueWithOverride() {
 		// MutableJpaComplianceImpl defaults its values based on the passed

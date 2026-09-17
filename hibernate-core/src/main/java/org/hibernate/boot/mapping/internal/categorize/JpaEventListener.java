@@ -274,7 +274,7 @@ public class JpaEventListener {
 		final MutableObject<MethodDetails> postUpsertMethod = new MutableObject<>();
 		final MutableObject<MethodDetails> postLoadMethod = new MutableObject<>();
 
-		listenerClassDetails.forEachMethod( (index, methodDetails) -> {
+		listenerClassDetails.getMethods().forEach( methodDetails -> {
 			if ( jaxbMapping.getPrePersist() != null
 					&& methodDetails.getName().equals( jaxbMapping.getPrePersist().getMethodName() )
 					&& matchesSignature( consumerType, methodDetails ) ) {
@@ -433,7 +433,7 @@ public class JpaEventListener {
 		final MutableObject<MethodDetails> postUpsertMethod = new MutableObject<>();
 		final MutableObject<MethodDetails> postLoadMethod = new MutableObject<>();
 
-		listenerClassDetails.forEachMethod( (index, methodDetails) -> {
+		listenerClassDetails.getMethods().forEach( methodDetails -> {
 			if ( methodDetails.hasDirectAnnotationUsage( PrePersist.class )
 					&& matchesSignature( consumerType, methodDetails ) ) {
 				prePersistMethod.set( methodDetails );
@@ -547,7 +547,7 @@ public class JpaEventListener {
 			ClassDetails listenerClassDetails,
 			ClassDetails targetClassDetails,
 			List<JpaEventListener> descriptors) {
-		listenerClassDetails.forEachMethod( (index, methodDetails) -> {
+		listenerClassDetails.getMethods().forEach( methodDetails -> {
 			collectListenerMethod( listenerClassDetails, targetClassDetails, methodDetails, PrePersist.class, CallbackType.PRE_PERSIST, descriptors );
 			collectListenerMethod( listenerClassDetails, targetClassDetails, methodDetails, PostPersist.class, CallbackType.POST_PERSIST, descriptors );
 			collectListenerMethod( listenerClassDetails, targetClassDetails, methodDetails, PreInsert.class, CallbackType.PRE_INSERT, descriptors );

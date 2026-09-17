@@ -5,7 +5,8 @@
 package org.hibernate.orm.integrationtest.java.module.test;
 
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
+import org.hibernate.boot.pipeline.internal.MetadataBuildingHelper;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.collection.internal.CustomCollectionTypeSemantics;
@@ -211,12 +212,12 @@ public class ModuleLevelAnnotationsIT {
 						"jdbc:h2:mem:module_annotations;DB_CLOSE_DELAY=-1" )
 				.applySetting( "hibernate.connection.username", "sa" )
 				.build();
-		var metadataSources = new MetadataSources( serviceRegistry );
+		var metadataSources = new MappingSources();
 		for ( var clazz : entityClasses ) {
-			metadataSources.addAnnotatedClass( clazz );
+			metadataSources.addManagedClass( clazz );
 		}
 		metadataSources.addModule( getClass().getModule() );
-		return new CloseableMetadata( metadataSources.buildMetadata(), serviceRegistry );
+		return new CloseableMetadata( MetadataBuildingHelper.buildMetadata( serviceRegistry, metadataSources ), serviceRegistry );
 	}
 
 	private record CloseableMetadata(Metadata metadata,

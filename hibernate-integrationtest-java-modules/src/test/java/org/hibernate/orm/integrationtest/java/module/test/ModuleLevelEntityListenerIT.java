@@ -5,7 +5,7 @@
 package org.hibernate.orm.integrationtest.java.module.test;
 
 import org.hibernate.SessionFactory;
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.cfg.Configuration;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.orm.integrationtest.java.module.test.annotation.ModuleAnnotationEntity;
 import org.hibernate.orm.integrationtest.java.module.test.listener.EventTracker;
@@ -37,13 +37,13 @@ public class ModuleLevelEntityListenerIT {
 				.applySetting( "hibernate.hbm2ddl.auto", "create-drop" )
 				.build();
 
-		var metadataSources = new MetadataSources( serviceRegistry );
+		var metadataSources = new Configuration();
 		metadataSources.addAnnotatedClass( ListenerEntity.class );
 		metadataSources.addAnnotatedClass( ExcludingEntity.class );
 		metadataSources.addAnnotatedClass( ModuleAnnotationEntity.class );
 		metadataSources.addModule( ModuleLevelEntityListenerIT.class.getModule() );
 
-		sessionFactory = metadataSources.buildMetadata().buildSessionFactory();
+		sessionFactory = metadataSources.buildSessionFactory( serviceRegistry );
 	}
 
 	@AfterAll

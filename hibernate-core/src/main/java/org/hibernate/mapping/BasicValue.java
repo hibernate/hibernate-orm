@@ -12,7 +12,6 @@ import org.hibernate.Incubating;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.SPI;
-import org.hibernate.models.spi.TypeDetails;
 import org.hibernate.boot.serial.internal.SourceJavaType;
 import org.hibernate.type.TimeZoneStorageStrategy;
 import org.hibernate.annotations.SoftDeleteType;
@@ -32,7 +31,6 @@ import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 
-import static org.hibernate.SPI.Role.SUPPLY;
 import static org.hibernate.SPI.Role.USE;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
@@ -554,7 +552,7 @@ public class BasicValue extends SimpleValue {
 		return visitor.accept(this);
 	}
 
-	@Incubating
+	@Incubating(since = "9.0")
 	public void setExplicitJdbcTypeCode(Integer jdbcTypeCode) {
 		this.jdbcTypeCode = jdbcTypeCode;
 	}

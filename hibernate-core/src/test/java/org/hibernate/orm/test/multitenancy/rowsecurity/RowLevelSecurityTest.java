@@ -297,9 +297,8 @@ class RowLevelSecurityTest {
 				.applySetting( DIALECT, SQLServer2016Dialect.class )
 				.build();
 		try {
-			final var metadata = new MetadataSources( registry )
-					.addAnnotatedClass( SchemaStringDocument.class )
-					.buildMetadata();
+			final var metadata = org.hibernate.boot.pipeline.internal.MetadataBuildingHelper.buildMetadata( registry,
+					new org.hibernate.boot.pipeline.internal.source.MappingSources().addManagedClass( SchemaStringDocument.class ) );
 			final org.hibernate.mapping.Table table =
 					metadata.getEntityBinding( SchemaStringDocument.class.getName() ).getTable();
 			final var context =

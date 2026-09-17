@@ -12,8 +12,6 @@ import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementHelper;
 import org.hibernate.cascade.spi.CascadeStyle;
 import org.hibernate.cascade.spi.CascadeStyles;
-import org.hibernate.generator.Generator;
-import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.jpa.boot.spi.CallbackDefinition;
 import org.hibernate.metamodel.RepresentationMode;

@@ -28,7 +28,7 @@ import jakarta.persistence.Table;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.cfg.Configuration;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.action.queue.internal.GraphBasedActionQueue;
@@ -598,11 +598,10 @@ public class CollectionFlushProcessingBenchmark {
 				.applySetting( AvailableSettings.FLUSH_QUEUE_TYPE, queueType )
 				.build();
 
-		return new MetadataSources( registry )
+		return new Configuration()
 				.addAnnotatedClass( FlushOwner.class )
 				.addAnnotatedClass( BenchmarkMarker.class )
-				.buildMetadata()
-				.buildSessionFactory();
+				.buildSessionFactory( registry );
 	}
 
 	private static FlushOwner newOwner(long id, int size) {

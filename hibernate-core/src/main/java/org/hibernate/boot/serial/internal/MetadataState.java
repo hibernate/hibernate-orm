@@ -46,7 +46,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.mapping.DiscriminatorType;
-import org.hibernate.metamodel.mapping.EmbeddableDiscriminatorConverter;
+import org.hibernate.metamodel.mapping.internal.EmbeddableDiscriminatorConverter;
 import org.hibernate.metamodel.mapping.internal.DiscriminatorTypeImpl;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
@@ -131,8 +131,8 @@ public final class MetadataState implements Serializable {
 	}
 
 	MetadataImpl restore(StandardServiceRegistry serviceRegistry, ModelsContext modelsContext) {
-		final var restoredTypeConfiguration = new TypeConfiguration();
-		final var restoredOptions = new MappingResolutionOptionsImpl( serviceRegistry, restoredTypeConfiguration );
+		final var restoredOptions = new MappingResolutionOptionsImpl( serviceRegistry );
+		final var restoredTypeConfiguration = restoredOptions.getTypeConfiguration();
 		final var restoredContext = new BootstrapContextImpl(
 				serviceRegistry,
 				restoredTypeConfiguration,

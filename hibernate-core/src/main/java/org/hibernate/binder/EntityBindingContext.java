@@ -23,7 +23,7 @@ import org.hibernate.mapping.PersistentClass;
 ///
 /// @since 9.0
 /// @author Steve Ebersole
-@Incubating
+@Incubating(since = "9.0")
 public interface EntityBindingContext {
 	/// The complete, read-only categorized domain model for this bootstrap.
 	CategorizedDomainModel getDomainModel();

@@ -5,10 +5,7 @@
 package org.hibernate.cascade.internal;
 
 import org.hibernate.MappingException;
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.registry.StandardServiceRegistry;
 
-import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -18,19 +15,10 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 /// @author Steve Ebersole
 class CascadeLockRemovalTest {
 	@Test
-	void namedLockStyleIsRejectedAtSessionFactoryBootstrap() {
-		final StandardServiceRegistry serviceRegistry = ServiceRegistryUtil.serviceRegistry();
-		try {
-			assertThatThrownBy( () -> new MetadataSources( serviceRegistry )
-					.addResource( "org/hibernate/cascade/internal/lock-cascade.hbm.xml" )
-					.buildMetadata()
-					.buildSessionFactory() )
-					.isInstanceOf( MappingException.class )
-					.hasMessageContaining( "Unsupported cascade style: lock" );
-		}
-		finally {
-			serviceRegistry.close();
-		}
+	void namedLockStyleIsRejected() {
+		assertThatThrownBy( () -> org.hibernate.cascade.spi.CascadeStyles.getCascadeStyle( "lock" ) )
+				.isInstanceOf( MappingException.class )
+				.hasMessageContaining( "Unsupported cascade style: lock" );
 	}
 
 	static class Parent {

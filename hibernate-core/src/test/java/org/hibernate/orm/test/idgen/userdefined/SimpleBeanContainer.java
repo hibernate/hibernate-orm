@@ -6,24 +6,34 @@ package org.hibernate.orm.test.idgen.userdefined;
 
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.hibernate.resource.beans.container.spi.BeanContainer;
+import org.hibernate.resource.beans.container.internal.AbstractBeanContainer;
 import org.hibernate.resource.beans.container.spi.ContainedBean;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
 
 /**
  * @author Yanming Zhou
  */
-public class SimpleBeanContainer implements BeanContainer {
+public class SimpleBeanContainer extends AbstractBeanContainer {
 
 	public static final long INITIAL_VALUE = 23L;
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public <B> ContainedBean<B> getBean(
+	protected <B> ContainedBean<B> createBean(
 			Class<B> beanType,
 			LifecycleOptions lifecycleOptions,
 			BeanInstanceProducer fallbackProducer) {
 		return new ContainedBean<>() {
+			@Override
+			public void initialize() {
+				// No deferred initialization.
+			}
+
+			@Override
+			public void release() {
+				// No resources owned by this handle.
+			}
+
 			@Override
 			public B getBeanInstance() {
 				return (B) (beanType == SimpleGenerator.class ?
@@ -37,7 +47,7 @@ public class SimpleBeanContainer implements BeanContainer {
 	}
 
 	@Override
-	public <B> ContainedBean<B> getBean(
+	protected <B> ContainedBean<B> createBean(
 			String name,
 			Class<B> beanType,
 			LifecycleOptions lifecycleOptions,

@@ -9,7 +9,7 @@ import jakarta.persistence.AttributeConverter;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.query.results.internal.ResultSetMappingSqlSelection;
-import org.hibernate.resource.beans.spi.ProvidedInstanceManagedBeanImpl;
+import org.hibernate.resource.beans.internal.ProvidedInstanceManagedBeanImpl;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;

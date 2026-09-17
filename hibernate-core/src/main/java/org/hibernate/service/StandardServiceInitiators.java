@@ -36,7 +36,7 @@ import org.hibernate.persister.internal.PersisterFactoryInitiator;
 import org.hibernate.property.access.internal.PropertyAccessStrategyResolverInitiator;
 import org.hibernate.property.access.internal.PropertyAccessorServiceInitiator;
 import org.hibernate.query.sqm.mutation.internal.SqmMultiTableMutationStrategyProviderInitiator;
-import org.hibernate.resource.beans.spi.ManagedBeanRegistryInitiator;
+import org.hibernate.resource.beans.internal.ManagedBeanRegistryInitiator;
 import org.hibernate.resource.transaction.internal.TransactionCoordinatorBuilderInitiator;
 import org.hibernate.service.internal.SessionFactoryServiceRegistryFactoryInitiator;
 import org.hibernate.service.internal.ChangesetCoordinatorInitiator;

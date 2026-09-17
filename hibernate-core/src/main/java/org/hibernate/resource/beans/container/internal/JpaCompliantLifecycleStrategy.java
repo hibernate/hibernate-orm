@@ -11,8 +11,7 @@ import jakarta.enterprise.inject.spi.BeanManager;
 import jakarta.enterprise.inject.spi.InjectionTarget;
 
 import org.hibernate.resource.beans.container.spi.BeanContainer;
-import org.hibernate.resource.beans.container.spi.BeanLifecycleStrategy;
-import org.hibernate.resource.beans.container.spi.ContainedBeanImplementor;
+import org.hibernate.resource.beans.container.spi.ContainedBean;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
 
 import static org.hibernate.resource.beans.internal.BeansMessageLogger.BEANS_MSG_LOGGER;
@@ -39,7 +38,7 @@ public class JpaCompliantLifecycleStrategy implements BeanLifecycleStrategy {
 	}
 
 	@Override
-	public <B> ContainedBeanImplementor<B> createBean(
+	public <B> ContainedBean<B> createBean(
 			Class<B> beanClass,
 			BeanInstanceProducer fallbackProducer,
 			BeanContainer beanContainer) {
@@ -51,7 +50,7 @@ public class JpaCompliantLifecycleStrategy implements BeanLifecycleStrategy {
 	}
 
 	@Override
-	public <B> ContainedBeanImplementor<B> createBean(
+	public <B> ContainedBean<B> createBean(
 			String beanName,
 			Class<B> beanClass,
 			BeanInstanceProducer fallbackProducer,
@@ -66,7 +65,7 @@ public class JpaCompliantLifecycleStrategy implements BeanLifecycleStrategy {
 
 
 
-	private static class BeanImpl<B> implements ContainedBeanImplementor<B> {
+	private static class BeanImpl<B> implements ContainedBean<B> {
 		private final Class<B> beanType;
 
 		private final BeanInstanceProducer fallbackProducer;
@@ -89,7 +88,7 @@ public class JpaCompliantLifecycleStrategy implements BeanLifecycleStrategy {
 		}
 
 		@Override
-		public B getBeanInstance() {
+		public synchronized B getBeanInstance() {
 			if ( beanInstance == null ) {
 				initialize();
 			}
@@ -98,7 +97,7 @@ public class JpaCompliantLifecycleStrategy implements BeanLifecycleStrategy {
 		}
 
 		@Override
-		public void initialize() {
+		public synchronized void initialize() {
 			if ( beanInstance != null ) {
 				return;
 			}
@@ -158,7 +157,7 @@ public class JpaCompliantLifecycleStrategy implements BeanLifecycleStrategy {
 		}
 
 		@Override
-		public void release() {
+		public synchronized void release() {
 			if ( beanInstance == null ) {
 				return;
 			}
@@ -184,7 +183,7 @@ public class JpaCompliantLifecycleStrategy implements BeanLifecycleStrategy {
 	}
 
 
-	private static class NamedBeanImpl<B> implements ContainedBeanImplementor<B> {
+	private static class NamedBeanImpl<B> implements ContainedBean<B> {
 		private final Class<B> beanType;
 		private final String beanName;
 
@@ -213,7 +212,7 @@ public class JpaCompliantLifecycleStrategy implements BeanLifecycleStrategy {
 		}
 
 		@Override
-		public B getBeanInstance() {
+		public synchronized B getBeanInstance() {
 			if ( beanInstance == null ) {
 				initialize();
 			}
@@ -221,7 +220,7 @@ public class JpaCompliantLifecycleStrategy implements BeanLifecycleStrategy {
 		}
 
 		@Override
-		public void initialize() {
+		public synchronized void initialize() {
 			if ( beanInstance != null ) {
 				return;
 			}
@@ -276,7 +275,7 @@ public class JpaCompliantLifecycleStrategy implements BeanLifecycleStrategy {
 		}
 
 		@Override
-		public void release() {
+		public synchronized void release() {
 			if ( beanInstance == null ) {
 				return;
 			}

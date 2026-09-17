@@ -7,7 +7,7 @@ package org.hibernate.boot.model.convert.internal;
 import org.hibernate.boot.model.convert.spi.JpaAttributeConverterCreationContext;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.resource.beans.spi.ManagedBean;
-import org.hibernate.resource.beans.spi.ProvidedInstanceManagedBeanImpl;
+import org.hibernate.resource.beans.internal.ProvidedInstanceManagedBeanImpl;
 
 import jakarta.persistence.AttributeConverter;
 

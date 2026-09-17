@@ -40,9 +40,11 @@ public final class Helper {
 
 	@Nullable
 	public static BeanContainer getBeanContainer(ServiceRegistry serviceRegistry) {
-		return allowExtensionsInCdi( serviceRegistry )
-				? serviceRegistry.requireService( ManagedBeanRegistry.class ).getBeanContainer()
-				: null;
+		if ( !allowExtensionsInCdi( serviceRegistry ) ) {
+			return null;
+		}
+		final var container = serviceRegistry.requireService( ManagedBeanRegistry.class ).getBeanContainer();
+		return container.isFallback() ? null : container;
 	}
 
 	@Nullable

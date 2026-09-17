@@ -15,7 +15,7 @@ import org.hibernate.boot.model.internal.DelayedParameterizedTypeBean;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
 import org.hibernate.resource.beans.spi.ManagedBean;
-import org.hibernate.resource.beans.spi.ProvidedInstanceManagedBeanImpl;
+import org.hibernate.resource.beans.internal.ProvidedInstanceManagedBeanImpl;
 import org.hibernate.usertype.AnnotationBasedUserType;
 import org.hibernate.usertype.ParameterizedType;
 import org.hibernate.usertype.UserCollectionType;

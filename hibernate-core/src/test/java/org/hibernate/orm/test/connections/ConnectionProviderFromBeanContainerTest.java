@@ -8,7 +8,7 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
-import org.hibernate.resource.beans.container.spi.BeanContainer;
+import org.hibernate.resource.beans.container.internal.AbstractBeanContainer;
 import org.hibernate.resource.beans.container.spi.ContainedBean;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
 import org.hibernate.service.ServiceRegistry;
@@ -38,14 +38,24 @@ public class ConnectionProviderFromBeanContainerTest {
 	private Map<String, Object> createSettings() {
 		Map<String, Object> settings = new HashMap<>();
 		settings.put( AvailableSettings.ALLOW_EXTENSIONS_IN_CDI, "true" );
-		settings.put( AvailableSettings.BEAN_CONTAINER, new BeanContainer() {
+		settings.put( AvailableSettings.BEAN_CONTAINER, new AbstractBeanContainer() {
 			@Override
 			@SuppressWarnings("unchecked")
-			public <B> ContainedBean<B> getBean(
+			protected <B> ContainedBean<B> createBean(
 					Class<B> beanType,
 					LifecycleOptions lifecycleOptions,
 					BeanInstanceProducer fallbackProducer) {
 				return new ContainedBean<>() {
+					@Override
+					public void initialize() {
+						// No deferred initialization.
+					}
+
+					@Override
+					public void release() {
+						// No resources owned by this handle.
+					}
+
 					@Override
 					public B getBeanInstance() {
 						return (B) (beanType == DummyConnectionProvider.class ?
@@ -60,12 +70,22 @@ public class ConnectionProviderFromBeanContainerTest {
 			}
 
 			@Override
-			public <B> ContainedBean<B> getBean(
+			protected <B> ContainedBean<B> createBean(
 					String name,
 					Class<B> beanType,
 					LifecycleOptions lifecycleOptions,
 					BeanInstanceProducer fallbackProducer) {
 				return new ContainedBean<>() {
+					@Override
+					public void initialize() {
+						// No deferred initialization.
+					}
+
+					@Override
+					public void release() {
+						// No resources owned by this handle.
+					}
+
 					@Override
 					public B getBeanInstance() {
 						return fallbackProducer.produceBeanInstance( beanType );

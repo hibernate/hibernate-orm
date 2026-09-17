@@ -6,9 +6,7 @@ package org.hibernate.resource.beans.container.internal;
 
 import jakarta.enterprise.inject.spi.BeanManager;
 
-import org.hibernate.resource.beans.container.spi.AbstractCdiBeanContainer;
-import org.hibernate.resource.beans.container.spi.BeanLifecycleStrategy;
-import org.hibernate.resource.beans.container.spi.ContainedBeanImplementor;
+import org.hibernate.resource.beans.container.spi.ContainedBean;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
 
 /**
@@ -27,7 +25,13 @@ public class CdiBeanContainerDelayedAccessImpl extends AbstractCdiBeanContainer 
 	}
 
 	@Override
-	protected <B> ContainedBeanImplementor<B> createBean(
+	protected <B> ContainedBean<B> createBootstrapSafeBean(
+			Class<B> beanType, LifecycleOptions options, BeanInstanceProducer producer) {
+		return createBean( beanType, options, producer );
+	}
+
+	@Override
+	protected <B> ContainedBean<B> createBean(
 			Class<B> beanType,
 			BeanLifecycleStrategy lifecycleStrategy,
 			BeanInstanceProducer fallbackProducer) {
@@ -35,7 +39,7 @@ public class CdiBeanContainerDelayedAccessImpl extends AbstractCdiBeanContainer 
 	}
 
 	@Override
-	protected <B> ContainedBeanImplementor<B> createBean(
+	protected <B> ContainedBean<B> createBean(
 			String name,
 			Class<B> beanType,
 			BeanLifecycleStrategy lifecycleStrategy,
@@ -43,12 +47,12 @@ public class CdiBeanContainerDelayedAccessImpl extends AbstractCdiBeanContainer 
 		return new NamedBeanImpl<>( name, beanType, lifecycleStrategy, fallbackProducer );
 	}
 
-	private class BeanImpl<B> implements ContainedBeanImplementor<B> {
+	private class BeanImpl<B> implements ContainedBean<B> {
 		private final Class<B> beanType;
 		private final BeanLifecycleStrategy lifecycleStrategy;
 		private final BeanInstanceProducer fallbackProducer;
 
-		private ContainedBeanImplementor<B> delegateBean;
+		private ContainedBean<B> delegateBean;
 
 		private BeanImpl(
 				Class<B> beanType,
@@ -65,14 +69,14 @@ public class CdiBeanContainerDelayedAccessImpl extends AbstractCdiBeanContainer 
 		}
 
 		@Override
-		public void initialize() {
+		public synchronized void initialize() {
 			if ( delegateBean == null ) {
 				delegateBean = lifecycleStrategy.createBean( beanType, fallbackProducer, CdiBeanContainerDelayedAccessImpl.this );
 			}
 		}
 
 		@Override
-		public B getBeanInstance() {
+		public synchronized B getBeanInstance() {
 			if ( delegateBean == null ) {
 				initialize();
 			}
@@ -80,18 +84,20 @@ public class CdiBeanContainerDelayedAccessImpl extends AbstractCdiBeanContainer 
 		}
 
 		@Override
-		public void release() {
-			delegateBean.release();
+		public synchronized void release() {
+			if ( delegateBean != null ) {
+				delegateBean.release();
+			}
 		}
 	}
 
-	private class NamedBeanImpl<B> implements ContainedBeanImplementor<B> {
+	private class NamedBeanImpl<B> implements ContainedBean<B> {
 		private final String name;
 		private final Class<B> beanType;
 		private final BeanLifecycleStrategy lifecycleStrategy;
 		private final BeanInstanceProducer fallbackProducer;
 
-		private ContainedBeanImplementor<B> delegateBean;
+		private ContainedBean<B> delegateBean;
 
 		private NamedBeanImpl(
 				String name,
@@ -110,14 +116,14 @@ public class CdiBeanContainerDelayedAccessImpl extends AbstractCdiBeanContainer 
 		}
 
 		@Override
-		public void initialize() {
+		public synchronized void initialize() {
 			if ( delegateBean == null ) {
 				delegateBean = lifecycleStrategy.createBean( name, beanType, fallbackProducer, CdiBeanContainerDelayedAccessImpl.this );
 			}
 		}
 
 		@Override
-		public B getBeanInstance() {
+		public synchronized B getBeanInstance() {
 			if ( delegateBean == null ) {
 				initialize();
 			}
@@ -125,8 +131,10 @@ public class CdiBeanContainerDelayedAccessImpl extends AbstractCdiBeanContainer 
 		}
 
 		@Override
-		public void release() {
-			delegateBean.release();
+		public synchronized void release() {
+			if ( delegateBean != null ) {
+				delegateBean.release();
+			}
 		}
 	}
 }

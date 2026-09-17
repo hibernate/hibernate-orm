@@ -686,7 +686,7 @@ class BootModelSerializationTest {
 
 		@Override
 		public String[] getReferencedColumnValues(Dialect dialect) {
-			return new String[] { dialect.currentTimestamp() };
+			return new String[] { dialect.getCurrentTemporalSupport().currentTimestamp() };
 		}
 	}
 

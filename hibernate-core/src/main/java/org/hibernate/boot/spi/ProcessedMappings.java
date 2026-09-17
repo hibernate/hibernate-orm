@@ -16,7 +16,7 @@ import jakarta.annotation.Nullable;
 ///
 /// @since 9.0
 /// @author Steve Ebersole
-@Incubating
+@Incubating(since = "9.0")
 public interface ProcessedMappings {
 	/**
 	 * Hibernate entity names known before additional contributions are applied.

@@ -390,8 +390,8 @@ public class StandardTableExporter implements Exporter<Table> {
 									subColumnName,
 									aggregatePath,
 									subColumnName,
-									AggregateColumnDescriptorAdapter.effectiveSqlTypeCode( aggregateColumn ),
-									AggregateColumnDescriptorAdapter.mapping( subColumn ),
+									AggregateColumnDescriptorAdapter.effectiveSqlTypeCode( aggregateColumn, metadata ),
+									AggregateColumnDescriptorAdapter.mapping( subColumn, metadata ),
 									typeConfiguration
 							)
 					);

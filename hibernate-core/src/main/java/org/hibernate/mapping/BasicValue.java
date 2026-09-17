@@ -548,7 +548,7 @@ public class BasicValue extends SimpleValue {
 		return visitor.accept(this);
 	}
 
-	@Incubating
+	@Incubating(since = "9.0")
 	public void setExplicitJdbcTypeCode(Integer jdbcTypeCode) {
 		this.jdbcTypeCode = jdbcTypeCode;
 	}

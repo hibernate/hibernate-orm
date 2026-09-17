@@ -1,6 +1,6 @@
 package org.hibernate.boot.mapping.internal.categorize;
 
-import org.hibernate.internal.util.IndexedConsumer;
+import org.hibernate.spi.IndexedConsumer;
 
 /// Indexed visitor for persistent attributes.
 ///

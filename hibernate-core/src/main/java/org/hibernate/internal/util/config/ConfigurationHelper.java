@@ -7,6 +7,7 @@ import java.util.Properties;
 import java.util.function.Supplier;
 
 import jakarta.annotation.Nonnull;
+import org.hibernate.Incubating;
 import org.hibernate.Internal;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
@@ -428,14 +429,14 @@ public final class ConfigurationHelper {
 		return typeCode != null ? typeCode : dialect.getPreferredSqlTypeCodeForBoolean();
 	}
 
-	@Incubating
+	@Incubating(since = "9.0")
 	public static synchronized int getPreferredSqlTypeCodeForBoolean(ConfigurationService configurationService, Dialect dialect) {
 		final Integer typeCode =
 				getConfiguredTypeCode( configurationService, PREFERRED_BOOLEAN_JDBC_TYPE );
 		return typeCode != null ? typeCode : dialect.getPreferredSqlTypeCodeForBoolean();
 	}
 
-	@Incubating
+	@Incubating(since = "9.0")
 	public static synchronized int getPreferredSqlTypeCodeForDuration(ServiceRegistry serviceRegistry) {
 		final Integer explicitSetting =
 				getConfiguredTypeCode( serviceRegistry, PREFERRED_DURATION_JDBC_TYPE );
@@ -443,7 +444,7 @@ public final class ConfigurationHelper {
 
 	}
 
-	@Incubating
+	@Incubating(since = "9.0")
 	public static synchronized int getPreferredSqlTypeCodeForDuration(ConfigurationService configurationService) {
 		final Integer explicitSetting =
 				getConfiguredTypeCode( configurationService, PREFERRED_DURATION_JDBC_TYPE );
@@ -451,7 +452,7 @@ public final class ConfigurationHelper {
 
 	}
 
-	@Incubating
+	@Incubating(since = "9.0")
 	public static synchronized int getPreferredSqlTypeCodeForUuid(ServiceRegistry serviceRegistry) {
 		final Integer explicitSetting =
 				getConfiguredTypeCode( serviceRegistry, PREFERRED_UUID_JDBC_TYPE );
@@ -459,7 +460,7 @@ public final class ConfigurationHelper {
 
 	}
 
-	@Incubating
+	@Incubating(since = "9.0")
 	public static synchronized int getPreferredSqlTypeCodeForUuid(ConfigurationService configurationService) {
 		final Integer explicitSetting =
 				getConfiguredTypeCode( configurationService, PREFERRED_UUID_JDBC_TYPE );
@@ -467,7 +468,7 @@ public final class ConfigurationHelper {
 
 	}
 
-	@Incubating
+	@Incubating(since = "9.0")
 	public static synchronized int getPreferredSqlTypeCodeForInstant(ServiceRegistry serviceRegistry) {
 		final Integer explicitSetting = getExplicitPreferredSqlTypeCodeForInstant( serviceRegistry );
 		if ( explicitSetting == null ) {
@@ -488,7 +489,7 @@ public final class ConfigurationHelper {
 		return getConfiguredTypeCode( serviceRegistry, PREFERRED_INSTANT_JDBC_TYPE );
 	}
 
-	@Incubating
+	@Incubating(since = "9.0")
 	public static synchronized int getPreferredSqlTypeCodeForInstant(ConfigurationService configurationService) {
 		final Integer explicitSetting =
 				getConfiguredTypeCode( configurationService, PREFERRED_INSTANT_JDBC_TYPE );
@@ -496,7 +497,7 @@ public final class ConfigurationHelper {
 
 	}
 
-	@Incubating
+	@Incubating(since = "9.0")
 	public static synchronized int getPreferredSqlTypeCodeForArray(ServiceRegistry serviceRegistry) {
 		final Integer explicitSetting =
 				getConfiguredTypeCode( serviceRegistry, PREFERRED_ARRAY_JDBC_TYPE );
@@ -506,7 +507,7 @@ public final class ConfigurationHelper {
 						.getDialect().getPreferredSqlTypeCodeForArray();
 	}
 
-	@Incubating
+	@Incubating(since = "9.0")
 	public static synchronized int getPreferredSqlTypeCodeForArray(ConfigurationService configurationService, Dialect dialect) {
 		final Integer explicitSetting =
 				getConfiguredTypeCode( configurationService, PREFERRED_ARRAY_JDBC_TYPE );

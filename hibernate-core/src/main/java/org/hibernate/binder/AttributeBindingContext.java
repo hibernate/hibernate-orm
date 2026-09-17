@@ -28,7 +28,7 @@ import org.hibernate.mapping.Property;
 ///
 /// @since 9.0
 /// @author Steve Ebersole
-@Incubating
+@Incubating(since = "9.0")
 public interface AttributeBindingContext {
 	/// The complete, read-only categorized domain model for this bootstrap.
 	///

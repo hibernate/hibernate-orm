@@ -12,6 +12,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.TableGenerator;
 
+import org.hibernate.type.descriptor.java.UuidCapableJavaType;
 import org.hibernate.annotations.IdGeneratorType;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.UuidGenerator;
@@ -194,8 +195,10 @@ final class IdentifierGeneratorResolutionResolver {
 			}
 		}
 
-		if ( member.getType().isImplementor( UUID.class )
-				|| member.getType().isImplementor( String.class ) ) {
+		final var javaType = context.getDatabase().getTypeConfiguration().getJavaTypeRegistry()
+				.findDescriptor( member.getType().determineRawClass().toJavaClass() );
+		if ( javaType instanceof UuidCapableJavaType<?> uuidType
+				&& uuidType.prefersUuidGeneration() ) {
 			return uuid( hierarchy, attribute, member, context );
 		}
 
@@ -352,7 +355,12 @@ final class IdentifierGeneratorResolutionResolver {
 				member.getDeclaringType(),
 				context.getModelsContext()
 		);
-		return packageInfo == null ? null : findGeneratorAnnotation( packageInfo, context );
+		match = packageInfo == null ? null : findGeneratorAnnotation( packageInfo, context );
+		if ( match != null ) {
+			return match;
+		}
+		final var module = GeneratorAnnotationHelper.locateModuleDetails( member.getDeclaringType(), context.getModelsContext() );
+		return module == null ? null : findGeneratorAnnotation( module, context );
 	}
 
 	private static Annotation findGeneratorAnnotation(

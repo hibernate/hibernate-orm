@@ -139,7 +139,7 @@ public final class SessionFactoryRuntimeComponentsBuilder {
 			String defaultCatalog,
 			String defaultSchema) {
 		return SqlStringGenerationContextImpl.fromExplicit(
-				jdbcServices.getJdbcEnvironment(),
+				metadata.getDatabase().getJdbcEnvironment(),
 				metadata.getDatabase(),
 				defaultCatalog,
 				defaultSchema

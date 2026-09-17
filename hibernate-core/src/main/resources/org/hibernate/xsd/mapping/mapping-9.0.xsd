@@ -319,6 +319,8 @@
                 <xsd:element name="primary-key-foreign-key"
                              type="orm:foreign-key"
                              minOccurs="0"/>
+                <!-- hbm : on-delete cascade for joined-subclass : @OnDelete at class level -->
+                <xsd:element name="on-delete" type="orm:on-delete-type" minOccurs="0"/>
             </xsd:sequence>
 
             <!-- hbm : the database specific way to reference a rowid -->
@@ -1176,6 +1178,8 @@
                 </xsd:sequence>
             </xsd:choice>
             <xsd:element name="collection-table" type="orm:collection-table" minOccurs="0"/>
+            <!-- hbm : on-delete cascade for collection key : @OnDelete on collection field -->
+            <xsd:element name="on-delete" type="orm:on-delete-type" minOccurs="0"/>
         </xsd:sequence>
         <xsd:attribute name="name" type="xsd:string" use="required"/>
         <xsd:attribute name="target-class" type="xsd:string"/>
@@ -1291,6 +1295,16 @@
                     </xsd:documentation>
                 </xsd:annotation>
             </xsd:element>
+
+            <!--
+                A composite identifier is an embeddable, not a scalar value, so only a custom
+                generator (declared inline via generic-generator or referenced by name from
+                generated-value) can produce it. The scalar strategies (sequence/table/uuid)
+                cannot populate an embeddable and are therefore intentionally not allowed here.
+            -->
+            <xsd:element name="generated-value" type="orm:generated-value" minOccurs="0"/>
+            <xsd:element name="generic-generator" type="orm:generic-id-generator" minOccurs="0"/>
+
             <xsd:element name="attribute-override" type="orm:attribute-override"
                          minOccurs="0" maxOccurs="unbounded"/>
         </xsd:sequence>
@@ -1941,6 +1955,8 @@
 
             <xsd:element name="cascade" type="orm:cascade-type"
                          minOccurs="0"/>
+            <!-- hbm : on-delete cascade for collection key : @OnDelete on collection field -->
+            <xsd:element name="on-delete" type="orm:on-delete-type" minOccurs="0"/>
         </xsd:sequence>
         <xsd:attribute name="name" type="xsd:string" use="required"/>
         <xsd:attribute name="target-entity" type="xsd:string"/>
@@ -2628,6 +2644,8 @@
                     <xsd:element name="primary-key-foreign-key"
                                  type="orm:foreign-key"
                                  minOccurs="0"/>
+                    <!-- hbm : on-delete cascade for joined-subclass : @OnDelete at class level -->
+                    <xsd:element name="on-delete" type="orm:on-delete-type" minOccurs="0"/>
                 </xsd:sequence>
                 <xsd:sequence>
                     <xsd:sequence>
@@ -3413,8 +3431,8 @@
         </xsd:annotation>
         <xsd:sequence>
             <xsd:element name="sql" type="xsd:string"/>
-            <xsd:element name="result-set-mapping" type="orm:sql-result-set-mapping"/>
-            <xsd:element name="synchronize" type="orm:synchronized-table" maxOccurs="unbounded"/>
+            <xsd:element name="result-set-mapping" type="orm:sql-result-set-mapping" minOccurs="0"/>
+            <xsd:element name="synchronize" type="orm:synchronized-table" minOccurs="0" maxOccurs="unbounded"/>
         </xsd:sequence>
     </xsd:complexType>
 
@@ -3797,6 +3815,11 @@
             <xsd:element name="batch-size" type="xsd:int" minOccurs="0"/>
 
             <xsd:element name="sql-restriction" type="xsd:string" minOccurs="0"/>
+
+            <xsd:choice minOccurs="0">
+                <xsd:element name="sql-select" type="orm:sql-select"/>
+                <xsd:element name="hql-select" type="xsd:string"/>
+            </xsd:choice>
 
             <xsd:element name="sql-insert" type="orm:custom-sql" minOccurs="0"/>
             <xsd:element name="sql-update" type="orm:custom-sql" minOccurs="0"/>

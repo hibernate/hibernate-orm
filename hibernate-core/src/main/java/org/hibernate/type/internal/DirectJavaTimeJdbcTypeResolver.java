@@ -68,7 +68,7 @@ public final class DirectJavaTimeJdbcTypeResolver {
 				mappedJavaTimeType,
 				indicators::isDirectJavaTimeJdbcAccessEnabled
 		);
-		if ( indicators.isPreferJavaTimeJdbcTypesEnabled() ) {
+		if ( indicators.isDirectJavaTimeJdbcFallbackLoggingEnabled() && indicators.isPreferJavaTimeJdbcTypesEnabled() ) {
 			if ( directJdbcTypeCode == null ) {
 				indicators.getTypeConfiguration().logDirectJavaTimeJdbcFallback( mappedJavaTimeType, null );
 			}

@@ -55,7 +55,6 @@ import org.hibernate.collection.spi.CollectionSemanticsResolver;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.type.spi.TimeZoneSupport;
-import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.query.internal.NativeQueryInterpreterStandardImpl;

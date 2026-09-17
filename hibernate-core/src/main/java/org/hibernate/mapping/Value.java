@@ -166,7 +166,7 @@ public interface Value extends Serializable {
 
 	boolean isColumnUpdateable(int index);
 
-	@Incubating
+	@Incubating(since = "9.0")
 	default String getExtraCreateTableInfo(Database database) {
 		return "";
 	}

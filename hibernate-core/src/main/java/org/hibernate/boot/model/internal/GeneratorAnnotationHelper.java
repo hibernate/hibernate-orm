@@ -1,5 +1,7 @@
 package org.hibernate.boot.model.internal;
 
+import org.hibernate.models.spi.ModuleDetails;
+
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.TableGenerator;
 import jakarta.annotation.Nullable;
@@ -90,6 +92,14 @@ public class GeneratorAnnotationHelper {
 				}
 			};
 
+	public static ModuleDetails locateModuleDetails(ClassDetails classDetails, ModelsContext modelsContext) {
+		if ( !classDetails.isRealClass() ) {
+			return null;
+		}
+		final var module = classDetails.toJavaClass().getModule();
+		return module.isNamed() ? modelsContext.getModuleDetailsRegistry().resolveModuleDetails( module ) : null;
+	}
+
 	public static <A extends Annotation> A findLocalizedMatch(
 			AnnotationDescriptor<A> generatorAnnotationType,
 			MemberDetails idMember,
@@ -179,6 +189,28 @@ public class GeneratorAnnotationHelper {
 		if ( packageInfo != null ) {
 			for ( A generatorAnnotation :
 					packageInfo.getRepeatedAnnotationUsages( generatorAnnotationType, modelsContext ) ) {
+				if ( nameExtractor != null ) {
+					final String registrationName = nameExtractor.apply( generatorAnnotation );
+					if ( registrationName.isEmpty() ) {
+						if ( possibleMatch == null ) {
+							possibleMatch = generatorAnnotation;
+						}
+					}
+					else if ( registrationName.equals( matchName ) ) {
+						return generatorAnnotation;
+					}
+				}
+				else {
+					return generatorAnnotation;
+				}
+			}
+		}
+
+		// Finally, on the declaring module
+		final var moduleDetails = locateModuleDetails( idMember.getDeclaringType(), modelsContext );
+		if ( moduleDetails != null ) {
+			for ( A generatorAnnotation:
+					moduleDetails.getRepeatedAnnotationUsages( generatorAnnotationType, modelsContext ) ) {
 				if ( nameExtractor != null ) {
 					final String registrationName = nameExtractor.apply( generatorAnnotation );
 					if ( registrationName.isEmpty() ) {

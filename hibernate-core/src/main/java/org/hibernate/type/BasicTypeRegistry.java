@@ -1,7 +1,5 @@
 package org.hibernate.type;
 
-import org.hibernate.SPI;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -10,6 +8,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
 import jakarta.annotation.Nullable;
+import org.hibernate.SPI;
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
@@ -107,7 +106,7 @@ public class BasicTypeRegistry implements Serializable {
 	}
 
 	private <T> JdbcType getJdbcType(BasicTypeReference<T> typeReference, JavaType<T> javaType) {
-		if ( useRecommendedJdbcType( typeReference ) ) {
+		if ( typeConfiguration.isScoped() && useRecommendedJdbcType( typeReference ) ) {
 			return getRecommendedJdbcType( typeReference, javaType );
 		}
 		return getJdbcTypeRegistry().getDescriptor( typeReference.getSqlTypeCode() );
@@ -115,7 +114,12 @@ public class BasicTypeRegistry implements Serializable {
 
 	private <T> JdbcType getRecommendedJdbcType(BasicTypeReference<T> typeReference, JavaType<T> javaType) {
 		try {
-			return javaType.getRecommendedJdbcType( typeConfiguration.getCurrentBaseSqlTypeIndicators() );
+			return javaType.getRecommendedJdbcType( new DelegatingJdbcTypeIndicators( typeConfiguration.getCurrentBaseSqlTypeIndicators() ) {
+				@Override
+				public boolean isDirectJavaTimeJdbcFallbackLoggingEnabled() {
+					return false;
+				}
+			} );
 		}
 		catch (UnknownServiceException ignore) {
 			return getJdbcTypeRegistry().getDescriptor( typeReference.getSqlTypeCode() );

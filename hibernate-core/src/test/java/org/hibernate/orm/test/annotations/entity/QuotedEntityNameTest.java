@@ -5,7 +5,8 @@ import jakarta.persistence.Id;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.annotations.processing.Exclude;
-import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.pipeline.internal.source.MappingSources;
+import org.hibernate.boot.pipeline.internal.MetadataBuildingHelper;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 
@@ -37,9 +38,9 @@ class QuotedEntityNameTest {
 		try {
 			final AnnotationException exception = assertThrows(
 					AnnotationException.class,
-					() -> new MetadataSources( serviceRegistry )
-							.addAnnotatedClass( entityClass )
-							.buildMetadata()
+					() -> MetadataBuildingHelper.buildMetadata( serviceRegistry, new MappingSources()
+							.addManagedClass( entityClass )
+							)
 			);
 			assertTrue( exception.getMessage().contains( "is quoted" ) );
 		}

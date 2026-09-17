@@ -29,7 +29,7 @@ public final class TypeContributionCoordinator {
 			ServiceRegistry serviceRegistry) {
 		serviceRegistry.requireService( JdbcServices.class )
 				.getDialect()
-				.contribute( typeContributions, serviceRegistry );
+				.contributeTypes( typeContributions, serviceRegistry );
 
 		sortedTypeContributors( serviceRegistry, programmaticContributors )
 				.forEach( contributor -> contributor.contribute( typeContributions, serviceRegistry ) );

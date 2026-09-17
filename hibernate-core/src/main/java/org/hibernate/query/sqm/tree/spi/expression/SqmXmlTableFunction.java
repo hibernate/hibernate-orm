@@ -382,7 +382,7 @@ public class SqmXmlTableFunction<T> extends SelfRenderingSqmSetReturningFunction
 		public XmlTableColumnDefinition convertToSqlAst(SqmToSqlAstConverter walker) {
 			return new XmlTableValueColumnDefinition(
 					name,
-					(CastTarget) type.accept( walker ),
+					(CastTarget) walker.visitWithRequiredResult( type ),
 					xpath,
 					defaultExpression == null
 							? null

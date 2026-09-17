@@ -4,6 +4,8 @@
  */
 package org.hibernate.sql.results.internal;
 
+import jakarta.annotation.Nullable;
+
 import jakarta.persistence.TupleElement;
 import org.hibernate.InstantiationException;
 import org.hibernate.query.criteria.JpaTupleElement;
@@ -51,6 +53,7 @@ public class RowTransformerConstructorImpl<T> implements RowTransformer<T> {
 		constructor.setAccessible( true );
 	}
 
+	@Nullable
 	private static Class<?> resolveElementJavaType(TupleElement<?> element) {
 		if ( element instanceof SqmExpressibleAccessor<?> accessor ) {
 			final SqmExpressible<?> expressible = accessor.getExpressible();

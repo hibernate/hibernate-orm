@@ -761,7 +761,7 @@ public class SqmJsonTableFunction<T> extends SelfRenderingSqmSetReturningFunctio
 		public JsonTableColumnDefinition convertToSqlAst(SqmToSqlAstConverter walker) {
 			return new JsonTableValueColumnDefinition(
 					name,
-					(org.hibernate.sql.ast.spi.query.expression.CastTarget) type.accept( walker ),
+					(org.hibernate.sql.ast.spi.query.expression.CastTarget) walker.visitWithRequiredResult( type ),
 					jsonPath,
 					switch ( errorBehavior ) {
 						case UNSPECIFIED -> null;
@@ -769,7 +769,7 @@ public class SqmJsonTableFunction<T> extends SelfRenderingSqmSetReturningFunctio
 						case ERROR -> JsonValueErrorBehavior.ERROR;
 						case DEFAULT -> JsonValueErrorBehavior.defaultOnError(
 								(org.hibernate.sql.ast.spi.query.expression.Expression)
-										castNonNull( errorDefaultExpression ).accept( walker )
+										walker.visitWithRequiredResult( castNonNull( errorDefaultExpression ) )
 						);
 					},
 					switch ( emptyBehavior ) {
@@ -778,7 +778,7 @@ public class SqmJsonTableFunction<T> extends SelfRenderingSqmSetReturningFunctio
 						case ERROR -> JsonValueEmptyBehavior.ERROR;
 						case DEFAULT -> JsonValueEmptyBehavior.defaultOnEmpty(
 								(org.hibernate.sql.ast.spi.query.expression.Expression)
-										castNonNull( emptyDefaultExpression ).accept( walker )
+										walker.visitWithRequiredResult( castNonNull( emptyDefaultExpression ) )
 						);
 					}
 			);

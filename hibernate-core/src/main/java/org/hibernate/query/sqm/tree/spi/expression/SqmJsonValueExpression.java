@@ -243,14 +243,14 @@ public class SqmJsonValueExpression<T> extends AbstractSqmJsonPathExpression<T> 
 			case NULL -> arguments.add( JsonValueErrorBehavior.NULL );
 			case ERROR -> arguments.add( JsonValueErrorBehavior.ERROR );
 			case DEFAULT -> arguments.add( JsonValueErrorBehavior.defaultOnError(
-					(Expression) castNonNull( errorDefaultExpression ).accept( walker )
+					(Expression) walker.visitWithRequiredResult( castNonNull( errorDefaultExpression ) )
 			) );
 		}
 		switch ( emptyBehavior ) {
 			case NULL -> arguments.add( JsonValueEmptyBehavior.NULL );
 			case ERROR -> arguments.add( JsonValueEmptyBehavior.ERROR );
 			case DEFAULT -> arguments.add( JsonValueEmptyBehavior.defaultOnEmpty(
-					(Expression) castNonNull( emptyDefaultExpression ).accept( walker )
+					(Expression) walker.visitWithRequiredResult( castNonNull( emptyDefaultExpression ) )
 			) );
 		}
 		return new SelfRenderingFunctionSqlAstExpression(

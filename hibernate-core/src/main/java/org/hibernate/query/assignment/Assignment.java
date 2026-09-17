@@ -5,6 +5,8 @@
 package org.hibernate.query.assignment;
 
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.metamodel.SingularAttribute;
 import org.hibernate.Incubating;
 import org.hibernate.query.restriction.Path;
@@ -26,7 +28,8 @@ public interface Assignment<T> {
 	 * An assigment of the given literal value to the given attribute
 	 * of the root entity.
 	 */
-	static <T,X> Assignment<T> set(SingularAttribute<T,X> attribute, X value) {
+	@Nonnull
+	static <T,X> Assignment<T> set(@Nonnull SingularAttribute<T,X> attribute, @Nullable X value) {
 		return new AttributeAssignment<>( attribute, value );
 	}
 
@@ -34,7 +37,8 @@ public interface Assignment<T> {
 	 * An assigment of the given literal value to the entity or embeddable
 	 * field or property identified by the given path from the root entity.
 	 */
-	static <T,X> Assignment<T> set(Path<T,X> path, X value) {
+	@Nonnull
+	static <T,X> Assignment<T> set(@Nonnull Path<T,X> path, @Nullable X value) {
 		return new PathAssignment<>( path, value );
 	}
 
@@ -43,7 +47,8 @@ public interface Assignment<T> {
 	 * by the given path from the root entity to the given attribute of the
 	 * root entity.
 	 */
-	static <T,X> Assignment<T> set(SingularAttribute<T,X> attribute, Path<T,X> value) {
+	@Nonnull
+	static <T,X> Assignment<T> set(@Nonnull SingularAttribute<T,X> attribute, @Nonnull Path<T,X> value) {
 		return new PathToAttributeAssignment<>( attribute, value );
 	}
 
@@ -52,9 +57,10 @@ public interface Assignment<T> {
 	 * entity or embeddable field or property, each identified by a given path
 	 * from the root entity.
 	 */
-	static <T,X> Assignment<T> set(Path<T,X> path, Path<T,X> value) {
+	@Nonnull
+	static <T,X> Assignment<T> set(@Nonnull Path<T,X> path, @Nonnull Path<T,X> value) {
 		return new PathToPathAssignment<>( path, value );
 	}
 
-	void apply(SqmUpdateStatement<? extends T> update);
+	void apply(@Nonnull SqmUpdateStatement<? extends T> update);
 }

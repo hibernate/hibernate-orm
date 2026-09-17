@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.restriction;
 
+import jakarta.annotation.Nonnull;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
@@ -16,15 +17,17 @@ import jakarta.persistence.criteria.Root;
  *
  * @author Gavin King
  */
-record Disjunction<X>(java.util.List<? extends Restriction<? super X>> restrictions)
+record Disjunction<X>(@Nonnull java.util.List<? extends Restriction<? super X>> restrictions)
 		implements Restriction<X> {
+	@Nonnull
 	@Override
 	public Restriction<X> negated() {
 		return new Conjunction<>( restrictions.stream().map( Restriction::negated ).toList() );
 	}
 
+	@Nonnull
 	@Override
-	public Predicate toPredicate(Root<? extends X> root, CriteriaBuilder builder) {
+	public Predicate toPredicate(@Nonnull Root<? extends X> root, @Nonnull CriteriaBuilder builder) {
 		return builder.or( restrictions.stream()
 				.map( restriction -> restriction.toPredicate( root, builder ) )
 				.toList() );

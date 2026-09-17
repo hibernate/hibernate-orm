@@ -4274,7 +4274,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	}
 
 	@Override
-	public <T> SqmExpression<T> windowFunction(String name, Class<T> type, JpaWindow window, Expression<?>... args) {
+	public <T> SqmExpression<T> windowFunction(String name, @Nullable Class<T> type, JpaWindow window, Expression<?>... args) {
 		SqmExpression<T> function = getFunctionDescriptor( name ).generateSqmExpression(
 				expressionList( args ),
 				null,
@@ -4425,14 +4425,14 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	// Ordered-Set Aggregate functions
 
 	@Override
-	public <T> SqmExpression<T> functionWithinGroup(String name, Class<T> type, JpaOrder order, Expression<?>... args) {
+	public <T> SqmExpression<T> functionWithinGroup(String name, @Nullable Class<T> type, JpaOrder order, Expression<?>... args) {
 		return functionWithinGroup( name, type, order, null, null, args );
 	}
 
 	@Override
 	public <T> SqmExpression<T> functionWithinGroup(
 			String name,
-			Class<T> type,
+			@Nullable Class<T> type,
 			JpaOrder order,
 			JpaPredicate filter,
 			Expression<?>... args) {
@@ -4442,7 +4442,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	@Override
 	public <T> SqmExpression<T> functionWithinGroup(
 			String name,
-			Class<T> type,
+			@Nullable Class<T> type,
 			JpaOrder order,
 			JpaWindow window,
 			Expression<?>... args) {
@@ -4452,7 +4452,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	@Override
 	public <T> SqmExpression<T> functionWithinGroup(
 			String name,
-			Class<T> type,
+			@Nullable Class<T> type,
 			@Nullable JpaOrder order,
 			@Nullable JpaPredicate filter,
 			@Nullable JpaWindow window,

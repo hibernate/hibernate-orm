@@ -4,6 +4,8 @@
  */
 package org.hibernate.sql.results.internal;
 
+import jakarta.annotation.Nullable;
+
 import jakarta.annotation.Nonnull;
 
 import java.util.Arrays;
@@ -31,6 +33,7 @@ public class TupleImpl implements Tuple {
 	}
 
 	@Override
+	@Nullable
 	public <X> X get(@Nonnull TupleElement<X> tupleElement) {
 		final Integer index = tupleMetadata.get( tupleElement );
 		if ( index == null ) {

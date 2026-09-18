@@ -7,6 +7,8 @@ package org.hibernate.query.spi;
 import java.util.Map;
 
 import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import org.hibernate.SPI;
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -21,6 +23,9 @@ import org.hibernate.query.sqm.sql.spi.SqmTranslatorFactory;
 
 /**
  * User configuration options related to the {@link QueryEngine}.
+ * <p>
+ * Custom translators, strategies, and the custom function registry are optional.
+ * A {@code null} value indicates that no custom implementation was supplied.
  *
  * @author Steve Ebersole
  */
@@ -34,6 +39,7 @@ public interface QueryEngineOptions {
 	 * @see HqlTranslator
 	 */
 	@SPI(SPI.Role.SUPPLY)
+	@Nullable
 	HqlTranslator getCustomHqlTranslator();
 
 	/**
@@ -46,10 +52,12 @@ public interface QueryEngineOptions {
 	 * @see SqmTranslatorFactory
 	 */
 	@SPI(SPI.Role.SUPPLY)
+	@Nullable
 	SqmTranslatorFactory getCustomSqmTranslatorFactory();
 
 	/**
 	 * User defined SQM functions available for use in HQL and Criteria.
+	 * Returns an empty map if no custom functions were supplied.
 	 * <p>
 	 * Ultimately made available to the {@link SqmTranslatorFactory} for use
 	 * in translating an SQM tree.
@@ -57,6 +65,7 @@ public interface QueryEngineOptions {
 	 * Can be used in conjunction with {@link #getCustomSqmFunctionRegistry()},
 	 * but generally one or the other will be used.
 	 */
+	@Nonnull
 	Map<String, SqmFunctionDescriptor> getCustomSqlFunctionMap();
 
 	/**
@@ -65,6 +74,7 @@ public interface QueryEngineOptions {
 	 * Can be used in conjunction with {@link #getCustomSqlFunctionMap()}, but generally
 	 * one or the other will be used.
 	 */
+	@Nullable
 	SqmFunctionRegistry getCustomSqmFunctionRegistry();
 
 	/**
@@ -73,6 +83,7 @@ public interface QueryEngineOptions {
 	 *
 	 * @see org.hibernate.cfg.QuerySettings#QUERY_MULTI_TABLE_MUTATION_STRATEGY
 	 */
+	@Nullable
 	SqmMultiTableMutationStrategy getCustomSqmMultiTableMutationStrategy();
 
 	/**
@@ -81,6 +92,7 @@ public interface QueryEngineOptions {
 	 *
 	 * @see org.hibernate.cfg.QuerySettings#QUERY_MULTI_TABLE_INSERT_STRATEGY
 	 */
+	@Nullable
 	SqmMultiTableInsertStrategy getCustomSqmMultiTableInsertStrategy();
 
 	/**
@@ -89,7 +101,10 @@ public interface QueryEngineOptions {
 	 *
 	 * @see org.hibernate.cfg.QuerySettings#QUERY_MULTI_TABLE_MUTATION_STRATEGY
 	 */
-	SqmMultiTableMutationStrategy resolveCustomSqmMultiTableMutationStrategy(EntityMappingType rootEntityDescriptor, RuntimeModelCreationContext creationContext);
+	@Nullable
+	SqmMultiTableMutationStrategy resolveCustomSqmMultiTableMutationStrategy(
+			@Nonnull EntityMappingType rootEntityDescriptor,
+			@Nonnull RuntimeModelCreationContext creationContext);
 
 	/**
 	 * Contract for handling SQM trees representing insertion (INSERT) queries where the
@@ -97,16 +112,21 @@ public interface QueryEngineOptions {
 	 *
 	 * @see org.hibernate.cfg.QuerySettings#QUERY_MULTI_TABLE_INSERT_STRATEGY
 	 */
-	SqmMultiTableInsertStrategy resolveCustomSqmMultiTableInsertStrategy(EntityMappingType rootEntityDescriptor, RuntimeModelCreationContext creationContext);
+	@Nullable
+	SqmMultiTableInsertStrategy resolveCustomSqmMultiTableInsertStrategy(
+			@Nonnull EntityMappingType rootEntityDescriptor,
+			@Nonnull RuntimeModelCreationContext creationContext);
 
 	/**
 	 * @see org.hibernate.cfg.JpaComplianceSettings
 	 */
+	@Nonnull
 	JpaCompliance getJpaCompliance();
 
 	/**
 	 * @see org.hibernate.cfg.QuerySettings#CRITERIA_VALUE_HANDLING_MODE
 	 */
+	@Nonnull
 	ValueHandlingMode getCriteriaValueHandlingMode();
 
 	/**
@@ -133,8 +153,10 @@ public interface QueryEngineOptions {
 	 */
 	boolean isPortableIntegerDivisionEnabled();
 
+	@Nullable
 	String getSessionFactoryName();
 
+	@Nonnull
 	String getUuid();
 
 	boolean isSafeModeEnabled();

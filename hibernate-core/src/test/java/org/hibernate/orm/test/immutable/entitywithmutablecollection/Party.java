@@ -13,7 +13,7 @@ public class Party implements Serializable {
 	private long version;
 	private Contract contract;
 	private String name;
-	private Set infos = new HashSet();
+	private Set<Info> infos = new HashSet<>();
 
 	public Party() {
 		super();
@@ -55,11 +55,11 @@ public class Party implements Serializable {
 		this.contract = contract;
 	}
 
-	public Set getInfos() {
+	public Set<Info> getInfos() {
 		return infos;
 	}
 
-	public void setInfos(Set infos) {
+	public void setInfos(Set<Info> infos) {
 		this.infos = infos;
 	}
 }

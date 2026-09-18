@@ -54,7 +54,7 @@ import static org.junit.jupiter.api.Assertions.fail;
  * @author Réda Housni Alaoui
  */
 @DomainModel(
-		xmlMappings = "org/hibernate/orm/test/querycache/Item.hbm.xml",
+		xmlMappings = "org/hibernate/orm/test/querycache/Item.orm.xml",
 		annotatedClasses = {
 				CompositeKey.class,
 				EntityWithCompositeKey.class,

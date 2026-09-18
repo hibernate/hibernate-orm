@@ -23,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * @author Steve Ebersole
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
-@DomainModel(xmlMappings = "org/hibernate/orm/test/subclassfilter/discrim-subclass.hbm.xml")
+@DomainModel(xmlMappings = "org/hibernate/orm/test/subclassfilter/discrim-subclass.orm.xml")
 @SessionFactory
 public class DiscrimSubclassFilterTest {
 

@@ -28,9 +28,7 @@ import jakarta.persistence.criteria.Root;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@DomainModel(
-		xmlMappings = "org/hibernate/orm/test/hqlfetchscroll/ParentChild.hbm.xml"
-)
+@DomainModel(xmlMappings = "org/hibernate/orm/test/hqlfetchscroll/ParentChild.orm.xml")
 @SessionFactory
 public class CriteriaScrollFetchTest {
 

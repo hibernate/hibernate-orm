@@ -14,7 +14,7 @@ import java.util.Set;
  */
 public class Order {
 	private Id id;
-	private Set items = new HashSet();
+	private Set<String> items = new HashSet<>();
 
 	public Order() {
 	}
@@ -31,11 +31,11 @@ public class Order {
 		this.id = id;
 	}
 
-	public Set getItems() {
+	public Set<String> getItems() {
 		return items;
 	}
 
-	public void setItems(Set items) {
+	public void setItems(Set<String> items) {
 		this.items = items;
 	}
 

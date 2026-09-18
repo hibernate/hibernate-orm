@@ -25,7 +25,7 @@ import static org.hibernate.Hibernate.getLobHelper;
 @JiraKey( value = "HHH-2680" )
 @RequiresDialectFeature( feature = DialectFeatureChecks.SupportsExpectedLobUsagePattern.class )
 @RequiresDialectFeature( feature = DialectFeatureChecks.SupportsLobValueChangePropagation.class )
-@DomainModel(xmlMappings = "org/hibernate/orm/test/lob/LobMappings.hbm.xml")
+@DomainModel(xmlMappings = "mappings/lob/LobMappings.orm.xml")
 @SessionFactory
 public class LobMergeTest {
 	private static final int LOB_SIZE = 10000;

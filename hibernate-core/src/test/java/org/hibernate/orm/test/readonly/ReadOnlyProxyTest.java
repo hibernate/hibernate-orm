@@ -37,8 +37,8 @@ import static org.junit.jupiter.api.Assertions.fail;
  */
 @DomainModel(
 		xmlMappings = {
-				"org/hibernate/orm/test/readonly/DataPoint.hbm.xml",
-				"org/hibernate/orm/test/readonly/TextHolder.hbm.xml"
+				"org/hibernate/orm/test/readonly/DataPoint.orm.xml",
+				"org/hibernate/orm/test/readonly/TextHolder.orm.xml"
 		}
 )
 public class ReadOnlyProxyTest extends AbstractReadOnlyTest {

@@ -19,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
  * @author Gail Badner
  */
 @DomainModel(
-		xmlMappings = "org/hibernate/orm/test/readonly/VersionedNode.hbm.xml"
+		xmlMappings = "org/hibernate/orm/test/readonly/VersionedNode.orm.xml"
 )
 public class ReadOnlyVersionedNodesTest extends AbstractReadOnlyTest {
 

@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+				 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+				 version="7.0">
+	<package>org.hibernate.orm.test.lob</package>
+
+	<entity class="LobAsLastValueEntity" metadata-complete="true" access="FIELD">
+		<attributes>
+			<id name="id">
+				<generated-value/>
+			</id>
+			<basic name="details">
+				<column name="details" column-definition="clob" length="4000"/>
+			</basic>
+			<basic name="title">
+				<column length="4000"/>
+				<lob/>
+			</basic>
+			<basic name="name">
+				<column length="120"/>
+			</basic>
+		</attributes>
+	</entity>
+</entity-mappings>

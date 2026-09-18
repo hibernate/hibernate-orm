@@ -95,22 +95,22 @@ import static org.junit.Assert.assertEquals;
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsTemporaryTable.class)
 @DomainModel(
 		xmlMappings = {
-				"/org/hibernate/orm/test/hql/Animal.hbm.xml",
-				"/org/hibernate/orm/test/hql/FooBarCopy.hbm.xml",
-				"/org/hibernate/orm/test/hql/SimpleEntityWithAssociation.hbm.xml",
-				"/org/hibernate/orm/test/hql/CrazyIdFieldNames.hbm.xml",
-				"/org/hibernate/orm/test/hql/Image.hbm.xml",
-				"/org/hibernate/orm/test/hql/ComponentContainer.hbm.xml",
-				"/org/hibernate/orm/test/hql/VariousKeywordPropertyEntity.hbm.xml",
-				"/org/hibernate/orm/test/hql/Constructor.hbm.xml",
+				"/org/hibernate/orm/test/hql/Animal.orm.xml",
+				"/org/hibernate/orm/test/hql/FooBarCopy.orm.xml",
+				"/org/hibernate/orm/test/hql/SimpleEntityWithAssociation.orm.xml",
+				"/org/hibernate/orm/test/hql/CrazyIdFieldNames.orm.xml",
+				"/org/hibernate/orm/test/hql/Image.orm.xml",
+				"/org/hibernate/orm/test/hql/ComponentContainer.orm.xml",
+				"/org/hibernate/orm/test/hql/VariousKeywordPropertyEntity.orm.xml",
+				"/org/hibernate/orm/test/hql/Constructor.orm.xml",
 				"/org/hibernate/orm/test/batchfetch/ProductLine.xml",
 				"/org/hibernate/orm/test/cid/Customer.orm.xml",
 				"/org/hibernate/orm/test/cid/Order.orm.xml",
 				"/org/hibernate/orm/test/cid/LineItem.orm.xml",
 				"/org/hibernate/orm/test/cid/Product.orm.xml",
 				"/org/hibernate/orm/test/any/xml/Properties.xml",
-				"/org/hibernate/orm/test/legacy/Commento.hbm.xml",
-				"/org/hibernate/orm/test/legacy/Marelo.hbm.xml"
+				"/org/hibernate/orm/test/legacy/Commento.orm.xml",
+				"/org/hibernate/orm/test/legacy/Marelo.orm.xml"
 		},
 		annotatedClasses = {
 				Department.class,

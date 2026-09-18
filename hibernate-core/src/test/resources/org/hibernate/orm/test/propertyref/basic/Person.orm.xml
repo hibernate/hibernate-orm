@@ -1,0 +1,108 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 version="8.0">
+
+    <entity class="org.hibernate.orm.test.propertyref.basic.Person"
+            access="PROPERTY" metadata-complete="true">
+        <table name="PROPREF_PERS"/>
+        <attributes>
+            <id name="id">
+                <generated-value generator="increment"/>
+                <generic-generator name="increment" class="increment"/>
+            </id>
+            <basic name="name">
+                <column name="name" length="100"/>
+            </basic>
+            <basic name="userId">
+                <column name="person_userid" length="8" unique="true" nullable="false"/>
+            </basic>
+            <one-to-one name="address"
+                        target-entity="org.hibernate.orm.test.propertyref.basic.Address"
+                        mapped-by="person"
+                        fetch="EAGER">
+                <cascade>
+                    <cascade-all/>
+                </cascade>
+            </one-to-one>
+            <one-to-many name="accounts"
+                         target-entity="org.hibernate.orm.test.propertyref.basic.Account"
+                         mapped-by="user"
+                         classification="SET"/>
+            <element-collection name="systems"
+                                target-class="java.lang.String"
+                                classification="BAG">
+                <column name="SYSTEM_ID"/>
+                <collection-table name="USER_SYSTEM">
+                    <join-column name="USER_ID" referenced-column-name="person_userid"/>
+                </collection-table>
+            </element-collection>
+        </attributes>
+    </entity>
+
+    <entity class="org.hibernate.orm.test.propertyref.basic.Address"
+            access="PROPERTY" metadata-complete="true">
+        <table name="PROPREF_ADDR"/>
+        <attributes>
+            <id name="id">
+                <generated-value generator="increment"/>
+                <generic-generator name="increment" class="increment"/>
+            </id>
+            <basic name="address">
+                <column name="address" length="300"/>
+            </basic>
+            <basic name="zip">
+                <column name="zip" length="5"/>
+            </basic>
+            <basic name="country">
+                <column name="country" length="25"/>
+            </basic>
+            <many-to-one name="person"
+                         target-entity="org.hibernate.orm.test.propertyref.basic.Person">
+                <join-column name="person" unique="true" nullable="false"/>
+            </many-to-one>
+        </attributes>
+    </entity>
+
+    <entity class="org.hibernate.orm.test.propertyref.basic.Account"
+            access="PROPERTY" metadata-complete="true">
+        <table name="PROPREF_ACCT"/>
+        <attributes>
+            <id name="accountId">
+                <column name="accountId" length="32"/>
+                <generated-value generator="uuid-hex"/>
+                <generic-generator name="uuid-hex" class="uuid.hex"/>
+            </id>
+            <basic name="type">
+                <column name="`type`" nullable="false"/>
+            </basic>
+            <many-to-one name="user"
+                         target-entity="org.hibernate.orm.test.propertyref.basic.Person">
+                <join-column name="userId" referenced-column-name="person_userid"/>
+            </many-to-one>
+        </attributes>
+    </entity>
+
+    <entity class="org.hibernate.orm.test.propertyref.basic.Group"
+            access="PROPERTY" metadata-complete="true">
+        <table name="PROPREF_GRP"/>
+        <attributes>
+            <id name="name"/>
+            <many-to-many name="users"
+                          target-entity="org.hibernate.orm.test.propertyref.basic.Person"
+                          classification="SET">
+                <join-table name="PROPREF_USERGROUP">
+                    <join-column name="groupName"/>
+                    <inverse-join-column name="userId" referenced-column-name="person_userid"/>
+                </join-table>
+                <cascade>
+                    <cascade-merge/>
+                </cascade>
+            </many-to-many>
+        </attributes>
+    </entity>
+
+</entity-mappings>

@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 version="8.0">
+
+    <package>org.hibernate.orm.test.mapping.generated</package>
+
+    <entity class="ComponentOwner" metadata-complete="true" access="PROPERTY">
+        <table name="part_gen_comp"/>
+        <attributes>
+            <id name="id">
+                <generated-value generator="id-generator"/>
+                <generic-generator name="id-generator" class="increment"/>
+            </id>
+            <basic name="name"/>
+            <embedded name="component">
+                <target>org.hibernate.orm.test.mapping.generated.ComponentOwner$Component</target>
+            </embedded>
+        </attributes>
+    </entity>
+
+    <embeddable class="org.hibernate.orm.test.mapping.generated.ComponentOwner$Component"
+                metadata-complete="true">
+        <attributes>
+            <basic name="generated">
+                <column name="GENED"/>
+                <generated>ALWAYS</generated>
+            </basic>
+        </attributes>
+    </embeddable>
+
+    <database-object>
+        <create>
+            CREATE OR REPLACE TRIGGER t_iu_part_gen_comp
+            BEFORE INSERT OR UPDATE ON part_gen_comp
+            FOR EACH ROW
+            BEGIN
+                IF INSERTING THEN
+                    :new.gened := 1;
+                ELSE
+                    :new.gened := :old.gened + 1;
+                END IF;
+            END;
+        </create>
+        <drop>
+            DROP TRIGGER t_iu_part_gen_comp
+        </drop>
+        <dialect-scope name="org.hibernate.dialect.OracleDialect"/>
+    </database-object>
+
+</entity-mappings>

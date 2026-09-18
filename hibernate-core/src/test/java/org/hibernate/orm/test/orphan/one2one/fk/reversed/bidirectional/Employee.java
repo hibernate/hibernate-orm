@@ -6,8 +6,6 @@ package org.hibernate.orm.test.orphan.one2one.fk.reversed.bidirectional;
 
 
 /**
- * TODO : javadoc
- *
  * @author Steve Ebersole
  */
 public class Employee {

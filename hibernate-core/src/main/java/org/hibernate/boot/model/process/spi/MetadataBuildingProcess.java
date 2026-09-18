@@ -4,15 +4,6 @@
  */
 package org.hibernate.boot.model.process.spi;
 
-import org.hibernate.MappingException;
-import org.hibernate.boot.model.process.internal.ManagedClassDetails;
-import org.hibernate.boot.model.process.internal.ManagedResourceValidation;
-import org.hibernate.boot.model.process.internal.ManagedResourcesBuilder;
-import org.hibernate.boot.models.spi.GlobalRegistrations;
-import org.hibernate.boot.models.xml.spi.PersistenceUnitMetadata;
-import org.hibernate.models.internal.jdk.JdkClassDetails;
-import org.hibernate.models.spi.ModelsContext;
-
 import java.io.InputStream;
 import java.sql.Types;
 import java.time.Duration;
@@ -25,7 +16,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashSet;
-import org.hibernate.boot.models.xml.internal.XmlPreProcessingResultImpl;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -33,9 +23,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-import jakarta.persistence.AttributeConverter;
 import org.hibernate.AssertionFailure;
 import org.hibernate.Internal;
+import org.hibernate.MappingException;
 import org.hibernate.Remove;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.internal.InFlightMetadataCollectorImpl;
@@ -50,6 +40,9 @@ import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.TypeContributor;
 import org.hibernate.boot.model.convert.internal.ConverterDescriptors;
 import org.hibernate.boot.model.convert.spi.RegisteredConversion;
+import org.hibernate.boot.model.process.internal.ManagedClassDetails;
+import org.hibernate.boot.model.process.internal.ManagedResourceValidation;
+import org.hibernate.boot.model.process.internal.ManagedResourcesBuilder;
 import org.hibernate.boot.model.process.internal.ManagedResourcesImpl;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Sequence;
@@ -61,6 +54,9 @@ import org.hibernate.boot.model.source.internal.hbm.MappingDocument;
 import org.hibernate.boot.model.source.internal.hbm.ModelBinder;
 import org.hibernate.boot.model.source.spi.MetadataSourceProcessor;
 import org.hibernate.boot.models.internal.DomainModelCategorizationCollector;
+import org.hibernate.boot.models.spi.GlobalRegistrations;
+import org.hibernate.boot.models.xml.internal.XmlPreProcessingResultImpl;
+import org.hibernate.boot.models.xml.spi.PersistenceUnitMetadata;
 import org.hibernate.boot.models.xml.spi.XmlPreProcessor;
 import org.hibernate.boot.models.xml.spi.XmlProcessor;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
@@ -71,13 +67,17 @@ import org.hibernate.boot.spi.EffectiveMappingDefaults;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.JpaOrmXmlPersistenceUnitDefaultAware;
 import org.hibernate.boot.spi.MappingDefaults;
+import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.mapping.Table;
+import org.hibernate.models.internal.jdk.JdkClassDetails;
 import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.models.spi.ModelsContext;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.WrapperArrayHandling;
@@ -85,7 +85,6 @@ import org.hibernate.type.descriptor.java.ByteArrayJavaType;
 import org.hibernate.type.descriptor.java.CharacterArrayJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeConstructor;
-import org.hibernate.type.descriptor.jdbc.JavaTimeJdbcType;
 import org.hibernate.type.descriptor.jdbc.JsonArrayJdbcTypeConstructor;
 import org.hibernate.type.descriptor.jdbc.JsonAsStringArrayJdbcTypeConstructor;
 import org.hibernate.type.descriptor.jdbc.JsonAsStringJdbcType;
@@ -95,9 +94,12 @@ import org.hibernate.type.descriptor.jdbc.XmlAsStringArrayJdbcTypeConstructor;
 import org.hibernate.type.descriptor.jdbc.XmlAsStringJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
+import org.hibernate.type.internal.DirectJavaTimeJdbcTypeResolver;
 import org.hibernate.type.internal.NamedBasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.CompositeUserType;
+
+import jakarta.persistence.AttributeConverter;
 
 import static org.hibernate.internal.util.config.ConfigurationHelper.getPreferredSqlTypeCodeForArray;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getPreferredSqlTypeCodeForDuration;
@@ -834,11 +836,11 @@ public class MetadataBuildingProcess {
 
 		final var timestampWithTimeZoneOverride = getTimestampWithTimeZoneOverride( options, jdbcTypeRegistry );
 		if ( timestampWithTimeZoneOverride != null ) {
-			adaptTimestampTypesToDefaultTimeZoneStorage( typeConfiguration, timestampWithTimeZoneOverride );
+			adaptTimestampTypesToDefaultTimeZoneStorage( typeConfiguration, timestampWithTimeZoneOverride, serviceRegistry );
 		}
 		final var timeWithTimeZoneOverride = getTimeWithTimeZoneOverride( options, jdbcTypeRegistry );
 		if ( timeWithTimeZoneOverride != null ) {
-			adaptTimeTypesToDefaultTimeZoneStorage( typeConfiguration, timeWithTimeZoneOverride );
+			adaptTimeTypesToDefaultTimeZoneStorage( typeConfiguration, timeWithTimeZoneOverride, serviceRegistry );
 		}
 		final int preferredSqlTypeCodeForInstant = getPreferredSqlTypeCodeForInstant( serviceRegistry );
 		if ( preferredSqlTypeCodeForInstant != SqlTypes.TIMESTAMP_UTC ) {
@@ -898,10 +900,11 @@ public class MetadataBuildingProcess {
 
 	private static void adaptTimeTypesToDefaultTimeZoneStorage(
 			TypeConfiguration typeConfiguration,
-			JdbcType timestampWithTimeZoneOverride) {
+			JdbcType timestampWithTimeZoneOverride,
+			ServiceRegistry serviceRegistry) {
 		final var javaTypeRegistry = typeConfiguration.getJavaTypeRegistry();
 		final var basicTypeRegistry = typeConfiguration.getBasicTypeRegistry();
-		if ( !( basicTypeRegistry.getRegisteredType( OffsetTime.class ).getJdbcType() instanceof JavaTimeJdbcType ) ) {
+		if ( !isDirectJavaTimeJdbcAccessEnabled( OffsetTime.class, serviceRegistry ) ) {
 			basicTypeRegistry.register(
 					new NamedBasicTypeImpl<>(
 							javaTypeRegistry.resolveDescriptor( OffsetTime.class ),
@@ -917,11 +920,11 @@ public class MetadataBuildingProcess {
 
 	private static void adaptTimestampTypesToDefaultTimeZoneStorage(
 			TypeConfiguration typeConfiguration,
-			JdbcType timestampWithTimeZoneOverride) {
+			JdbcType timestampWithTimeZoneOverride,
+			ServiceRegistry serviceRegistry) {
 		final var javaTypeRegistry = typeConfiguration.getJavaTypeRegistry();
 		final var basicTypeRegistry = typeConfiguration.getBasicTypeRegistry();
-		if ( !( basicTypeRegistry.getRegisteredType( OffsetDateTime.class ).getJdbcType()
-				instanceof JavaTimeJdbcType ) ) {
+		if ( !isDirectJavaTimeJdbcAccessEnabled( OffsetDateTime.class, serviceRegistry ) ) {
 			basicTypeRegistry.register(
 					new NamedBasicTypeImpl<>(
 							javaTypeRegistry.resolveDescriptor( OffsetDateTime.class ),
@@ -933,8 +936,7 @@ public class MetadataBuildingProcess {
 					OffsetDateTime.class.getName()
 			);
 		}
-		if ( !( basicTypeRegistry.getRegisteredType( ZonedDateTime.class ).getJdbcType()
-				instanceof JavaTimeJdbcType ) ) {
+		if ( !isDirectJavaTimeJdbcAccessEnabled( ZonedDateTime.class, serviceRegistry ) ) {
 			basicTypeRegistry.register(
 					new NamedBasicTypeImpl<>(
 							javaTypeRegistry.resolveDescriptor( ZonedDateTime.class ),
@@ -946,6 +948,18 @@ public class MetadataBuildingProcess {
 					ZonedDateTime.class.getName()
 			);
 		}
+	}
+
+	private static boolean isDirectJavaTimeJdbcAccessEnabled(Class<?> mappedJavaTimeType, ServiceRegistry serviceRegistry) {
+		if ( !MetadataBuildingContext.isPreferJavaTimeJdbcTypesEnabled( serviceRegistry ) ) {
+			return false;
+		}
+
+		final var support = serviceRegistry.requireService( JdbcServices.class )
+				.getDialect()
+				.getDirectJavaTimeJdbcSupport();
+
+		return DirectJavaTimeJdbcTypeResolver.resolve( mappedJavaTimeType, support::supports ) != null;
 	}
 
 	private static JdbcType getTimeWithTimeZoneOverride(MetadataBuildingOptions options, JdbcTypeRegistry jdbcTypeRegistry) {
